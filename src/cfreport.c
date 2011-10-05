@@ -114,7 +114,7 @@ const char *ID = "The reporting agent is a merger between the older\n"
                  "data stored in cfengine's embedded databases in human\n"
                  "readable form.";
 
-const struct option OPTIONS[31] =
+const struct option OPTIONS[32] =
       {
       { "help",no_argument,0,'h' },
       { "class-regex",required_argument,0,'c'},
@@ -150,10 +150,11 @@ const struct option OPTIONS[31] =
       { NULL,0,0,'\0' }
       };
 
-const char *HINTS[31] =
+const char *HINTS[32] =
       {
       "Print the help message",
       "Specify a class regular expression to search for",
+      "Enable CSV output mode in hub queries",
       "Set debugging level 0,1,2,3",
       "Output verbose information about the behaviour of the agent",
       "Output information about actions performed by the agent",

@@ -1145,6 +1145,7 @@ enum cfl_view
    cfl_view_aggr_repairedreason,
    cfl_view_aggr_notkeptreason,
    cfl_view_aggr_filechange,
+   cfl_view_aggr_software,
    cfl_view_software,
    cfl_view_log_repair,
    cfl_view_log_notkept,

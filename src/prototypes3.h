@@ -819,6 +819,7 @@ void PrependFullItem(struct Item **liststart,char *itemstring,char *classes,int 
 void PurgeItemList(struct Item **list,char *name);
 struct Item *ReturnItemIn(struct Item *list,char *item);
 struct Item *ReturnItemInClass(struct Item *list,char *item,char *classes);
+struct Item *ReturnItemAtIndex(struct Item *list,int index);
 int GetItemIndex(struct Item *list,char *item);
 struct Item *EndOfList(struct Item *start);
 int IsItemInRegion(char *item,struct Item *begin,struct Item *end,struct Attributes a,struct Promise *pp);

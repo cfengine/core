@@ -1195,11 +1195,12 @@ return cfsrv_nostatus;
 
 char *CFCON_VIEWS[] = { "Comp",  // NOTE: must match cfl_view enum
                         "VirtBundleComp",
-                        "Repaired",
-                        "NotKept",
-                        "RepairedReason",                           
-                        "NotKeptReason",
-                        "FileChange",
+                        "AggrRepaired",
+                        "AggrNotKept",
+                        "AggrRepairedReason",
+                        "AggrNotKeptReason",
+                        "AggrFileChange",
+                        "AggrSoftware",
                         "Software",
                         "RepairLog",
                         "NotKeptLog",

@@ -1200,6 +1200,7 @@ void AssertThreadLocked(pthread_mutex_t *name, char *fname);
 #endif
 
 void PurgeLocks(void);
+int ShiftChange(void);
 
 /* timeout.c */
 

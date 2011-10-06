@@ -281,7 +281,7 @@ CfOut(cf_verbose,""," -> Resetting interface...\n");
 
 memset(&IFR, 0, sizeof(IFR));
 strncpy(IFR.ifr_name,vifdev,sizeof(IFR.ifr_name)); 
-netmask.sin_addr.s_addr = inet_network(vnetmask);
+//netmask.sin_addr.s_addr = inet_network(vnetmask);
 netmask.sin_family = AF_INET;
 IFR.ifr_addr = *((struct sockaddr *) &netmask);
 

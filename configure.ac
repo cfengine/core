@@ -528,9 +528,6 @@ AC_REPLACE_FUNCS(strdup)
 AC_CHECK_DECLS(round, [], [], [[#include <math.h>]])
 AC_REPLACE_FUNCS(round)
 
-AC_CHECK_DECLS(inet_network, [], [], [[#include <arpa/inet.h>]])
-AC_REPLACE_FUNCS(inet_network)
-
 AC_CHECK_FUNCS(getpwent setpwent endpwent)
 
 AC_CHECK_FUNCS(getcwd getnetgrent waitpid seteuid setegid setreuid setregid)

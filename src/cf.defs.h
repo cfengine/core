@@ -398,9 +398,6 @@ int setegid (gid_t egid);
 #if !HAVE_DECL_SETLINEBUF
 void setlinebuf(FILE *stream);
 #endif
-#if !HAVE_DECL_INET_NETWORK
-in_addr_t inet_network(const char *cp);
-#endif
 
 /*******************************************************************/
 /* Preprocessor tricks                                             */

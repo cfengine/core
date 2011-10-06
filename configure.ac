@@ -1011,7 +1011,15 @@ dnl ######################################################################
 dnl Now make the Makefiles
 dnl ######################################################################
 
-AC_CONFIG_FILES([Makefile pub/Makefile src/Makefile src/cf3lex.l docs/Makefile examples/Makefile examples/example_config/Makefile masterfiles/Makefile])
+AC_CONFIG_FILES([Makefile
+	pub/Makefile
+	src/Makefile
+	src/cf3lex.l
+	docs/Makefile
+	examples/Makefile
+	examples/example_config/Makefile
+	masterfiles/Makefile
+	tests/unit/Makefile])
 
 m4_indir(incstart[]incend, [nova/output.m4])
 m4_indir(incstart[]incend, [constellation/output.m4])

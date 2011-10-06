@@ -74,7 +74,7 @@ while (!feof(fp))
       }
    else if (strncmp(cpuname, "cpu", 3) == 0)
       {
-      if (sscanf(cpuname, "cpu%d", &cpuidx) == 1)
+      if (sscanf(cpuname, "cpu%ld", &cpuidx) == 1)
          {
          if (cpuidx < 0 || cpuidx >= MON_CPU_MAX)
             {

@@ -331,7 +331,7 @@ if (OKProtoReply(recvbuffer))
 
    /* Use %?d here to avoid memory overflow attacks */
 
-   Debug("Mode = %d,%d\n",d2,d3);
+   Debug("Mode = %ld,%ld\n",d2,d3);
    
    Debug("OK: type=%d\n mode=%o\n lmode=%o\n uid=%d\n gid=%d\n size=%ld\n atime=%d\n mtime=%d ino=%d nlnk=%d, dev=%d\n",
  cfst.cf_type,cfst.cf_mode,cfst.cf_lmode,cfst.cf_uid,cfst.cf_gid,(long)cfst.cf_size,

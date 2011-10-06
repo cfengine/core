@@ -3777,7 +3777,7 @@ snprintf(buffer,CF_BUFSIZE-1,"%ld",cftime);
 if (cftime < 0)
    {
    Debug("AGO overflowed, truncating at zero\n");
-   snprintf(buffer,CF_BUFSIZE-1,"%ld",0);
+   strcpy(buffer, "0");
    }
 
 rval.item = xstrdup(buffer);

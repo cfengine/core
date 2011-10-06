@@ -69,18 +69,12 @@ void FailedTransfer(int sd,char *sendbuffer,char *filename);
 void ReplyNothing (struct cfd_connection *conn);
 struct cfd_connection *NewConn (int sd);
 void DeleteConn (struct cfd_connection *conn);
-time_t SecondsTillAuto (void);
-void SetAuto (int seconds);
 int cfscanf (char *in, int len1, int len2, char *out1, char *out2, char *out3);
 int AuthenticationDialogue (struct cfd_connection *conn,char *buffer, int buffersize);
-int IsKnownHost (RSA *oldkey,RSA *newkey,char *addr,char *user);
-void AddToKeyDB (RSA *key,char *addr);
 int SafeOpen (char *filename);
 void SafeClose (int fd);
 int OptionFound(char *args, char *pos, char *word);
 in_addr_t GetInetAddr (char *host);
-
-extern struct BodySyntax CFS_CONTROLBODY[];
 
 char CFRUNCOMMAND[CF_BUFSIZE];
 time_t CFDSTARTTIME;

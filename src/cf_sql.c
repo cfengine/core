@@ -599,23 +599,3 @@ switch (cfdb->type)
 
 return result;
 }
-
-
-/*****************************************************************************/
-
-static void Debugcfdb(CfdbConn *cfdb)
-{
-printf("SIZE of CfdbConn: %d = %d\n",sizeof(CfdbConn),sizeof(*cfdb));
-printf( "cfdb->result = %d\n",cfdb->result);
-printf( "cfdb->row = %d\n",cfdb->row);
-printf( "cfdb->column = %d\n",cfdb->column);
-printf( "cfdb->maxcolumns = %d\n",cfdb->maxcolumns);
-printf( "cfdb->maxrows = %d\n",cfdb->maxrows);
-printf( "cfdb->type = %d\n",cfdb->type);
-}
-
-/*****************************************************************************/
-
-/* EOF */
-
-

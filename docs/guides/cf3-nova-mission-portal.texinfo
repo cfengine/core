@@ -87,7 +87,7 @@ of user interaction with CFEngine Nova and can be accessed after the successful 
 * Finders::
 * Viewers::
 * Editors::
-* Settings::
+* Mission Portal Administration::
 @end menu
 
 @image{img-mission-portal-nova-2-1,15cm,,Mission Portal}
@@ -212,6 +212,7 @@ The Library contains finders for documents, topics, a notes archive, and (extern
 @end itemize
 
 
+@c ----------------------------------------------------
 @node
 @section Finders
 
@@ -232,6 +233,7 @@ Finders are modules that make it simple and intuitive to browse and search for o
 @sp 1
 
 
+@c ----------------------------------------------------
 @page
 @node
 @subsection Host finder
@@ -253,6 +255,7 @@ The class finder is located in the Mission Engineering room and will display a l
 @center Figure: Class finder.
 @sp 1
 
+@c ----------------------------------------------------
 @node
 @subsection Promise finder
 
@@ -595,16 +598,16 @@ logs.
 
 
 @node 
-@section Mission Portal Settings
+@section Mission Portal Administration
 
 @menu
-* Mission Portal Configuration::
+* Mission Portal Settings::
 * Mission Portal User Admin::
 @end menu
 
 
 @node 
-@subsection Mission Portal Configuration
+@subsection Mission Portal Settings
 
 Configure and view various settings for the Mission Portal.
 

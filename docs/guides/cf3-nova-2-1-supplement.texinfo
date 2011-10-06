@@ -362,7 +362,7 @@ service nodes a simple process of matching hosts to services from a required
 list.
 
 The ability to look up syntax on the fly, from the web or the command
-line, can be save experienced users considerable time. Using the tools
+line, can save experienced users considerable time. Using the tools
 for database interaction, the process of setting up a CFEngine
 knowledge base at your organization is fully automated and you only
 have to think about local customizations you want to make.
@@ -401,7 +401,7 @@ possible translate identical requirements across multiple platforms
 with different implementations.  Native ACLs are also supported.
 
 Fault tolerant features have been added in Nova to functions for retrieval
-of data from network connections. It is risky to rely of data from a
+of data from network connections. It is risky to rely on data from a
 network when configuring hosts. If the network connection could fail, erroneous
 data might be written to a local configuration. Nova adds local caching to
 network results and works opportunistically to provide the latest known
@@ -794,7 +794,7 @@ methods:
 Technical IT administrators can document which promises or bundles of promises
 are directed towards specific goals by adding a simple reference
 The Nova Knowledge Map will then build a narrative around these references
-and tie the goals to the services in the catalogue (See the Planning tab).
+and tie the goals to the services in the catalogue (See the Planning room in the Mission Portal).
 
 
 @node Business value reports, Simple insight into IT compliance, Nova attends to business goals, Business Integration

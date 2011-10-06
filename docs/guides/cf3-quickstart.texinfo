@@ -280,7 +280,7 @@ We recommend the following reading:
 
 @itemize 
 @item CFEngine Concepts: @url{http://cfengine.com/manuals/cf3-conceptguide.html}
-@item Get started, first promises: @url{http://cfengine.com/manuals/cf3-tutorial#First-promises.html}
+@item Get started, first promises: @url{http://cfengine.com/manuals/cf3-tutorial#First-promises}
 @end itemize
 
 @noindent For a complete overview:

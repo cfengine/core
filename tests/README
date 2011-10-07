@@ -1,0 +1,9 @@
+==============================================================================
+CFEngine testsuite
+==============================================================================
+
+For the information how to run acceptance testsuite, see the
+tests/acceptance/README.
+
+Unit tests are run by 'make check'
+

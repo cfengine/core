@@ -50,14 +50,6 @@ MAINTAINERCLEANFILES = Makefile.in aclocal.m4 config.guess config.sub \
 #
 ACLOCAL_AMFLAGS = -I m4
 
-check:
-	@echo "In order to run testsuite, you need to run the following command:"
-	@echo "  cd tests; ./testall --agent=\$workdir/bin/cf-agent"
-	@echo "where \$workdir is the work directory for CFEngine (/var/cfengine by default)."
-	@echo
-	@echo "You need to have sudo to run testsuite (in order to test functionality which"
-	@echo "is only available to root). Refer to $(srcdir)/tests/README for further info."
-
 dist-hook:
 	mkdir $(distdir)/tests
 	(cd $(srcdir)/tests && find . -name README -o -name testall -o -name '*.cf*' -a \! -path '*succeeded*' | tar -c -f - -T-) | tar -x -C $(distdir)/tests -v -f -

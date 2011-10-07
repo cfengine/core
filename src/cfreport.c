@@ -1209,14 +1209,14 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
 
       if (PURGE == 'y')
          {
-         if (now - then > CF_WEEK)
+         if (now - then > SECONDS_PER_WEEK)
             {
             DeleteDB(dbp,key);
             }
 
          CfOut(cf_inform,"","Deleting expired entry for %s\n",eventname);
 
-         if (measure < 0 || average < 0 || measure > 4*CF_WEEK)
+         if (measure < 0 || average < 0 || measure > 4*SECONDS_PER_WEEK)
             {
             DeleteDB(dbp,key);
             }
@@ -1387,7 +1387,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
 
       if (PURGE == 'y')
          {
-         if (now - then > CF_WEEK*52)
+         if (now - then > SECONDS_PER_WEEK*52)
             {
             DeleteDB(dbp,key);
             }
@@ -2085,7 +2085,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    FPE[i] = FPQ[i] = NULL;
    }
 
-for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE_INTERVAL)
+for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+SECONDS_PER_WEEK; now += CF_MEASURE_INTERVAL)
    {
    strcpy(timekey,GenTimeKey(now));
 
@@ -2145,7 +2145,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    FPE[i] = FPQ[i] = NULL;
    }
 
-for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE_INTERVAL)
+for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+SECONDS_PER_WEEK; now += CF_MEASURE_INTERVAL)
    {
    strcpy(timekey,GenTimeKey(now));
 
@@ -2258,7 +2258,7 @@ if (!OpenDB(VINPUTFILE,&dbp))
 
 if (ReadDB(dbp,"DATABASE_AGE",&AGE,sizeof(double)))
    {
-   CfOut(cf_inform,""," ?? Database age is %.1f (weeks)\n\n",AGE/CF_WEEK*CF_MEASURE_INTERVAL);
+   CfOut(cf_inform,""," ?? Database age is %.1f (weeks)\n\n",AGE/SECONDS_PER_WEEK*CF_MEASURE_INTERVAL);
    }
 
 CloseDB(dbp);
@@ -2327,7 +2327,7 @@ else
 
 now = CF_MONDAY_MORNING;
 
-while (now < CF_MONDAY_MORNING + CF_WEEK)
+while (now < CF_MONDAY_MORNING + SECONDS_PER_WEEK)
    {
    memset(&entry,0,sizeof(entry));
 
@@ -2611,7 +2611,7 @@ void DiskArrivals(void)
   void *value;
   CF_DB *dbp = NULL;
   const struct dirent *dirp;
-  double *array = xmalloc((int)CF_WEEK);
+  double *array = xmalloc((int)SECONDS_PER_WEEK);
 
 if ((dirh = OpenDirLocal(CFWORKDIR)) == NULL)
    {
@@ -2640,7 +2640,7 @@ for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
       count = 0.0;
       index = 0;
 
-      for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE_INTERVAL)
+      for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+SECONDS_PER_WEEK; now += CF_MEASURE_INTERVAL)
          {
          strcpy(timekey,GenTimeKey(now));
 
@@ -2736,12 +2736,12 @@ void PeerIntermittency()
   struct QPoint entry;
   struct Item *ip, *hostlist = NULL;
   double average,var;
-  time_t now = time(NULL), then, lastseen = CF_WEEK;
+  time_t now = time(NULL), then, lastseen = SECONDS_PER_WEEK;
 
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
 MapName(name);
 
-average = (double) CF_HOUR;  /* It will take a week for a host to be deemed reliable */
+average = (double) SECONDS_PER_HOUR;  /* It will take a week for a host to be deemed reliable */
 var = 0;
 
 if (!OpenDB(name,&dbp))
@@ -2805,7 +2805,7 @@ for (ip = hostlist; ip != NULL; ip=ip->next)
       return;
       }
 
-   for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE_INTERVAL)
+   for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+SECONDS_PER_WEEK; now += CF_MEASURE_INTERVAL)
       {
       memset(&key,0,sizeof(key));
       memset(&value,0,sizeof(value));

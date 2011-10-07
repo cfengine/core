@@ -169,7 +169,7 @@ cf_chmod(AVDB,0644);
 
 if (ReadDB(dbp,"DATABASE_AGE",&AGE,sizeof(double)))
    {
-   WAGE = AGE / CF_WEEK * CF_MEASURE_INTERVAL;
+   WAGE = AGE / SECONDS_PER_WEEK * CF_MEASURE_INTERVAL;
    Debug("\n\nPrevious DATABASE_AGE %f\n\n",AGE);
    }
 else
@@ -608,7 +608,7 @@ if (!OpenDB(AVDB,&dbp))
 memset(&entry,0,sizeof(entry));
 
 AGE++;
-WAGE = AGE / CF_WEEK * CF_MEASURE_INTERVAL;
+WAGE = AGE / SECONDS_PER_WEEK * CF_MEASURE_INTERVAL;
 
 if (ReadDB(dbp,timekey,&entry,sizeof(struct Averages)))
    {

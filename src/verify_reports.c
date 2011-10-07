@@ -364,7 +364,7 @@ static void VerifyFriendConnections(int hours,struct Attributes a,struct Promise
   void *value;
   int ksize,vsize;
   int secs = SECONDS_PER_HOUR*hours, criterion, overdue;
-  time_t now = time(NULL),lsea = (time_t)CF_WEEK, tthen, then;
+  time_t now = time(NULL),lsea = (time_t)SECONDS_PER_WEEK, tthen, then;
   char name[CF_BUFSIZE],hostname[CF_BUFSIZE],datebuf[CF_MAXVARSIZE];
   char addr[CF_BUFSIZE],type[CF_BUFSIZE],output[CF_BUFSIZE];
   struct QPoint entry;
@@ -429,7 +429,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
 
    if (LASTSEENEXPIREAFTER < 0)
       {
-      lsea = (time_t)CF_WEEK;
+      lsea = (time_t)SECONDS_PER_WEEK;
       }
    else
       {
@@ -522,12 +522,12 @@ static void VerifyFriendReliability(struct Attributes a,struct Promise *pp)
   struct QPoint entry;
   struct Item *ip, *hostlist = NULL;
   double average,var,sum,sum_av,expect,actual;
-  time_t now = time(NULL), then, lastseen = CF_WEEK;
+  time_t now = time(NULL), then, lastseen = SECONDS_PER_WEEK;
 
 CfOut(cf_verbose,"","CheckFriendReliability()\n");
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
 
-average = (double) CF_HOUR;  /* It will take a week for a host to be deemed reliable */
+average = (double) SECONDS_PER_HOUR;  /* It will take a week for a host to be deemed reliable */
 var = 0;
 
 if (!OpenDB(name,&dbp))
@@ -575,7 +575,7 @@ for (ip = hostlist; ip != NULL; ip=ip->next)
 
    total = 0.0;
 
-   for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE_INTERVAL)
+   for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+SECONDS_PER_WEEK; now += CF_MEASURE_INTERVAL)
       {
       strcpy(timekey,GenTimeKey(now));
       
@@ -603,12 +603,12 @@ for (ip = hostlist; ip != NULL; ip=ip->next)
 
       for (i = 0; i < CF_RELIABLE_CLASSES; i++)
          {
-         if (lastseen >= i*CF_HOUR && lastseen < (i+1)*CF_HOUR)
+         if (lastseen >= i*SECONDS_PER_HOUR && lastseen < (i+1)*SECONDS_PER_HOUR)
             {
             n[i]++;
             }
          
-         if (average >= (double)(i*CF_HOUR) && average < (double)((i+1)*CF_HOUR))
+         if (average >= (double)(i*SECONDS_PER_HOUR) && average < (double)((i+1)*SECONDS_PER_HOUR))
             {
             n_av[i]++;
             }

@@ -786,11 +786,11 @@ typedef enum
 #define ATTR     11
 #define CF_NETATTR   7 /* icmp udp dns tcpsyn tcpfin tcpack */
 #define PH_LIMIT 10
-#define CF_MONTH  (time_t)(3600*24*30)
-#define CF_WEEK   (7.0*24.0*3600.0)
-#define CF_HOUR   3600
-#define CF_DAY    3600*24
-#define CF_RELIABLE_CLASSES 7*24         /* CF_WEEK/CF_HOUR */
+//#define CF_MONTH  (time_t)(3600*24*30)
+//#define CF_WEEK   (7.0*24.0*3600.0) DEPRECATED: use SECONDS_PER_WEEK
+//#define CF_HOUR   3600
+//#define CF_DAY    3600*24
+#define CF_RELIABLE_CLASSES 7*24         /* WEEK/HOUR */
 #define CF_MEASURE_INTERVAL (5.0*60.0)
 #define CF_SHIFT_INTERVAL (6*3600.0)
 

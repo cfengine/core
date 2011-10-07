@@ -706,7 +706,7 @@ memset(&entry, 0, sizeof(entry));
 
 if (ReadDB(dbp,"lock_horizon",&entry,sizeof(entry)))
    {
-   if (now - entry.time < CF_MONTH)
+   if (now - entry.time < SECONDS_PER_WEEK * 4)
       {
       CfOut(cf_verbose,""," -> No lock purging scheduled");
       CloseLock(dbp);

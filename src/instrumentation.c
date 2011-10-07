@@ -100,7 +100,7 @@ static void NotePerformance(char *eventname,time_t t,double value)
   char name[CF_BUFSIZE];
   struct Event e,newe;
   double lastseen,delta2;
-  int lsea = CF_WEEK;
+  int lsea = SECONDS_PER_WEEK;
   time_t now = time(NULL);
 
 Debug("PerformanceEvent(%s,%.1f s)\n",eventname,value);
@@ -161,7 +161,7 @@ void NoteClassUsage(struct AlphaList baselist)
   char *key,name[CF_BUFSIZE];
   int i,j,ksize,vsize;
   struct Event e,entry,newe;
-  double lsea = CF_WEEK * 52; /* expire after a year */
+  double lsea = SECONDS_PER_WEEK * 52; /* expire after (about) a year */
   time_t now = time(NULL);
   struct Item *ip,*list = NULL;
   double lastseen,delta2;

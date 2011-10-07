@@ -118,7 +118,7 @@ int GetTimeSlot(time_t here_and_now)
   
 strcpy(timekey,GenTimeKey(here_and_now));
 
-for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE_INTERVAL,slot++)
+for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+SECONDS_PER_WEEK; now += CF_MEASURE_INTERVAL,slot++)
    {
    if (strcmp(timekey,GenTimeKey(now)) == 0)
       {
@@ -135,7 +135,7 @@ static char *PrintTimeSlot(int slot)
 
 { time_t now,i;
   
-for (now = CF_MONDAY_MORNING, i = 0; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_MEASURE_INTERVAL,i++)
+for (now = CF_MONDAY_MORNING, i = 0; now < CF_MONDAY_MORNING+SECONDS_PER_WEEK; now += CF_MEASURE_INTERVAL,i++)
    {
    if (i == slot)
       {
@@ -163,7 +163,7 @@ sscanf(cstr,"%s %*s %*s %d",cbuf,&chour);
 
 // Format Tue Sep 28 14:58:27 CEST 2010
 
-for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+CF_WEEK; now += CF_SHIFT_INTERVAL,slot++)
+for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+SECONDS_PER_WEEK; now += CF_SHIFT_INTERVAL,slot++)
    {
    snprintf(str,sizeof(str),"%s",cf_strtimestamp_utc(now,timebuf)); 
    sscanf(str,"%s %*s %*s %d",buf,&hour);

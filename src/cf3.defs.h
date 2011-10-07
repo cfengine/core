@@ -1146,6 +1146,7 @@ enum cfl_view
    cfl_view_aggr_notkeptreason,
    cfl_view_aggr_filechange,
    cfl_view_aggr_software,
+   cfl_view_aggr_classes,
    cfl_view_software,
    cfl_view_log_repair,
    cfl_view_log_notkept,
@@ -1981,7 +1982,7 @@ cfrep_t;
   || strncmp(c,"Day",3) == 0 || strcmp(c,"license_expired") == 0               \
   || strcmp(c,"any") == 0 || strcmp(c,"from_cfexecd") == 0                     \
   || IsStrIn(c,MONTH_TEXT) || IsStrIn(c,DAY_TEXT)                  \
-  || IsStrIn(c,SHIFT_TEXT))
+  || IsStrIn(c,SHIFT_TEXT)) || strncmp(c,"Lcycle",6) == 0
 
 // Date time classes 
 #define ISCLASS_DATETIME(c)						\

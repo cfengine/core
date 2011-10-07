@@ -185,30 +185,6 @@ for (i = 0; i < CF_ALPHABETSIZE; i++)
          Debug("Ignoring class %s (not packing)", ip->name);
          continue;
          }
-
-      for (j = 0; j < 4; j++)
-         {
-         if (strcmp(ip->name,SHIFT_TEXT[j]) == 0)
-            {
-            continue;
-            }
-         }
-
-      for (j = 0; j < 7; j++)
-         {
-         if (strcmp(ip->name,DAY_TEXT[j]) == 0)
-            {
-            continue;
-            }
-         }
-
-      for (j = 0; j < 12; j++)
-         {
-         if (strcmp(ip->name,MONTH_TEXT[j]) == 0)
-            {
-            continue;
-            }
-         }
    
       IdempPrependItem(&list,ip->name,NULL);
       }

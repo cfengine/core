@@ -35,7 +35,6 @@
 #include "cf3.extern.h"
 
 #undef VERSION
-#undef Verbose
 
 #include "conf.h"
 

@@ -170,10 +170,6 @@ extern char *VUNMOUNTCOMM[];
 
 extern char *SIGNALS[];
 
-#ifndef MINGW
-extern char *tzname[2]; /* see man ctime */
-#endif
-
 extern int EDITFILESIZE;
 extern int EDITBINFILESIZE;
 extern int VIFELAPSED;

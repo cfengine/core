@@ -436,7 +436,6 @@ struct Audit *AUDITPTR;
 struct Audit *VAUDIT = NULL; 
 CF_DB  *AUDITDBP = NULL;
 
-char GRAPHDIR[CF_BUFSIZE] = {0};
 char CFLOCK[CF_BUFSIZE] = {0};
 char CFLOG[CF_BUFSIZE] = {0};
 char CFLAST[CF_BUFSIZE] = {0}; 

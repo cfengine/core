@@ -310,7 +310,6 @@ strcpy(WEBDRIVER,"");
 strcpy(LICENSE_COMPANY,"");
 strcpy(MANDIR,".");
 strcpy(SQL_DATABASE,"cf_kmdb");
-strcpy(GRAPHDIR,"");
 SHOWREPORTS = false;
 
 if (InsertTopic("any","any"))
@@ -441,13 +440,6 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_views].lval) == 0)
       {
       CfOut(cf_verbose,""," -> Option %s has been deprecated in this release",cp->lval);
-      continue;
-      }
-   
-   if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_graph_dir].lval) == 0)
-      {
-      strncpy(GRAPHDIR,retval,CF_MAXVARSIZE);
-      CfOut(cf_verbose,"","SET graph_directory = %s\n",GRAPHDIR);
       continue;
       }
    

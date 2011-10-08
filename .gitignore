@@ -72,6 +72,10 @@ docs/*.8
 tests/*.log
 tests/.succeeded
 
+# unit tests
+
+tests/unit/*_test
+
 # gcov/lcov
 
 *.gcno

@@ -31,8 +31,6 @@
 #ifndef CFENGINE_CF3_DEFS_H
 #define CFENGINE_CF3_DEFS_H
 
-/* These files are hard links to the cfengine 2 sources */
-
 #include "cf.defs.h"
 #include "cf.extern.h"
 

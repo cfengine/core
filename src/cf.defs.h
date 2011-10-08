@@ -31,8 +31,6 @@
 #ifndef CFENGINE_CF_DEFS_H
 #define CFENGINE_CF_DEFS_H
 
-/* Hard link this file between cf2/cf3 for consistent update */
-
 #include "conf.h"
 
 #ifdef NT

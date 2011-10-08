@@ -455,7 +455,6 @@ int RPCTIMEOUT = 60;			/* seconds */
 pid_t ALARM_PID = -1;
 int SKIPIDENTIFY = false;
 int EDITFILESIZE = 10000;
-int EDITBINFILESIZE = 100000;
 int VIFELAPSED = 1;
 int VEXPIREAFTER = 120;
 int CHECKSUMUPDATES = false;

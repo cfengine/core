@@ -62,7 +62,6 @@ printf("Cfengine - Level 1 self-diagnostic \n");
 printf("----------------------------------------------------------\n\n");
 
 SDIntegerDefault("editfilesize",EDITFILESIZE);
-SDIntegerDefault("editbinaryfilesize",EDITBINFILESIZE);
 
 
 printf(" -> Internal consistency done\n\n");

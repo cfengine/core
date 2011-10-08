@@ -556,7 +556,8 @@ int ShellCommandReturnsZero(char *comm,int useshell);
 int GetExecOutput(char *command,char *buffer,int useshell);
 void ActAsDaemon(int preserve);
 char *ShEscapeCommand(char *s);
-int ArgSplitCommand(char *comm,char arg[CF_MAXSHELLARGS][CF_BUFSIZE]);
+char **ArgSplitCommand(const char *comm);
+void ArgFree(char **args);
 
 /* files_copy.c */
 

@@ -262,41 +262,86 @@ return buffer;
 
 /**********************************************************************/
 
-int ArgSplitCommand(char *comm,char arg[CF_MAXSHELLARGS][CF_BUFSIZE])
+#define INITIAL_ARGS 8
 
-{ char *sp;
-  int i = 0;
+char **ArgSplitCommand(const char *comm)
+{
+const char *s = comm;
 
-for (sp = comm; sp < comm+strlen(comm); sp++)
+int argc = 0;
+int argslen = INITIAL_ARGS;
+char **args = xmalloc(argslen * sizeof(char*));
+
+while (*s != '\0')
    {
-   if (i >= CF_MAXSHELLARGS-1)
+   const char *end;
+   char *arg;
+
+   if (isspace(*s)) /* Skip whitespace */
       {
-      CfOut(cf_error,"","Too many arguments in embedded script");
-      FatalError("Use a wrapper");
+      s++;
+      continue;
       }
-   
-   while (*sp == ' ' || *sp == '\t')
+
+   switch (*s)
       {
-      sp++;
+      case '"': /* Look for matching quote */
+      case '\'':
+      case '`':
+         {
+         char delim = *s++; /* Skip first delimeter */
+         end = strchr(s, delim);
+         break;
+         }
+      default: /* Look for whitespace */
+         end = strpbrk(s, " \f\n\r\t\v");
+         break;
       }
-   
-   switch (*sp)
+
+   if (end == NULL) /* Delimeter was not found, remaining string is the argument */
       {
-      case '\0': return(i-1);
-   
-      case '\"': sscanf (++sp,"%[^\"]",arg[i]);
-          break;
-      case '\'': sscanf (++sp,"%[^\']",arg[i]);
-          break;
-      case '`':  sscanf (++sp,"%[^`]",arg[i]);
-          break;
-      default:   sscanf (sp,"%s",arg[i]);
-          break;
+      arg = xstrdup(s);
+      s += strlen(arg);
       }
-   
-   sp += strlen(arg[i]);
-   i++;
+   else
+      {
+      arg = xstrndup(s, end - s);
+      s = end;
+      if (*s == '"' || *s =='\'' || *s == '`') /* Skip second delimeter */
+          s++;
+      }
+
+   /* Argument */
+
+   if (argc == argslen)
+      {
+      argslen *= 2;
+      args = xrealloc(args, argslen * sizeof(char*));
+      }
+
+   args[argc++] = arg;
    }
- 
- return (i);
+
+/* Trailing NULL */
+
+if (argc == argslen)
+   {
+   argslen += 1;
+   args = xrealloc(args, argslen * sizeof(char*));
+   }
+args[argc++] = NULL;
+
+return args;
+}
+
+/**********************************************************************/
+
+void ArgFree(char **args)
+{
+char **arg = args;
+for (; *arg; ++arg)
+   {
+   free(*arg);
+   }
+free(args);
 }

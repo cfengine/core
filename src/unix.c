@@ -173,28 +173,14 @@ return false;
 
 int Unix_ShellCommandReturnsZero(char *comm,int useshell)
 
-{ int status, i, argc = 0;
+{ int status, i;
   pid_t pid;
-  char arg[CF_MAXSHELLARGS][CF_BUFSIZE];
-  char **argv;
   char esc_command[CF_BUFSIZE];
 
 if (!useshell)
    {
    /* Build argument array */
 
-   for (i = 0; i < CF_MAXSHELLARGS; i++)
-      {
-      memset (arg[i],0,CF_BUFSIZE);
-      }
-
-   argc = ArgSplitCommand(comm,arg);
-
-   if (argc == -1)
-      {
-      CfOut(cf_error,"","Too many arguments in %s\n",comm);
-      return false;
-      }
    }
 
 if ((pid = fork()) < 0)
@@ -217,22 +203,13 @@ else if (pid == 0)                     /* child */
       }
    else
       {
-      argv = xmalloc((argc+1)*sizeof(char *));
+      char **argv = ArgSplitCommand(comm);
 
-      for (i = 0; i < argc; i++)
+      if (execv(argv[0],argv) == -1)
          {
-         argv[i] = arg[i];
-         }
-
-      argv[i] = (char *) NULL;
-
-      if (execv(arg[0],argv) == -1)
-         {
-         CfOut(cf_error,"execv","Command %s failed (%d args)",argv[0],argc - 1);
+         CfOut(cf_error,"execv","Command %s failed",argv[0]);
          exit(1);
          }
-
-      free((char *)argv);
       }
    }
 else                                    /* parent */

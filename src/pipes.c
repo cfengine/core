@@ -192,8 +192,7 @@ int    MAX_FD = 128; /* Max number of simultaneous pipes */
 
 static FILE *Unix_cf_popen(char *command,char *type)
 
- { static char arg[CF_MAXSHELLARGS][CF_BUFSIZE];
-   int i, argc, pd[2];
+ { int i, pd[2];
    char **argv;
    pid_t pid;
    FILE *pp = NULL;
@@ -270,22 +269,13 @@ if (pid == 0)
          }
       }
    
-   argc = ArgSplitCommand(command,arg);
-   argv = xmalloc((argc+1)*sizeof(char *));
+   argv = ArgSplitCommand(command);
    
-   for (i = 0; i < argc; i++)
+   if (execv(argv[0],argv) == -1)
       {
-      argv[i] = arg[i];
+      CfOut(cf_error,"execv","Couldn't run %s",argv[0]);
       }
-   
-   argv[i] = (char *) NULL;
-   
-   if (execv(arg[0],argv) == -1)
-      {
-      CfOut(cf_error,"execv","Couldn't run %s",arg[0]);
-      }
-   
-   free((char *)argv);
+
    _exit(1);
    }
 else
@@ -335,8 +325,7 @@ return NULL; /* Cannot reach here */
 
 static FILE *Unix_cf_popensetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv)
     
- { static char arg[CF_MAXSHELLARGS][CF_BUFSIZE];
-   int i, argc, pd[2];
+ { int i, pd[2];
    char **argv;
    pid_t pid;
    FILE *pp = NULL;
@@ -412,22 +401,14 @@ if (pid == 0)
          }
       }
    
-   argc = ArgSplitCommand(command,arg);
-   argv = xmalloc((argc+1)*sizeof(char *));
-   
-   for (i = 0; i < argc; i++)
-      {
-      argv[i] = arg[i];
-      }
-   
-   argv[i] = (char *) NULL;
+   argv = ArgSplitCommand(command);
    
    if (chrootv && strlen(chrootv) != 0)
       {
       if (chroot(chrootv) == -1)
          {
          CfOut(cf_error,"chroot","Couldn't chroot to %s\n",chrootv);
-         free((char *)argv);
+         ArgFree(argv);
          return NULL;
          }
       }
@@ -437,23 +418,21 @@ if (pid == 0)
       if (chdir(chdirv) == -1)
          {
          CfOut(cf_error,"chdir","Couldn't chdir to %s\n",chdirv);
-         free((char *)argv);
+         ArgFree(argv);
          return NULL;
          }
       }
    
    if (!CfSetuid(uid,gid))
       {
-      free((char *)argv);
       _exit(1);
       }
    
-   if (execv(arg[0],argv) == -1)
+   if (execv(argv[0],argv) == -1)
       {
-      CfOut(cf_error,"execv","Couldn't run %s",arg[0]);
+      CfOut(cf_error,"execv","Couldn't run %s",argv[0]);
       }
-   
-   free((char *)argv);
+
    _exit(1);
    }
 else

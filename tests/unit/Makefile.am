@@ -1,3 +1,5 @@
+AM_CFLAGS = $(NOVA_CFLAGS) $(CONSTELLATION_CFLAGS)
+
 check_PROGRAMS = \
 	alphalist_test	\
 	assoc_test		\

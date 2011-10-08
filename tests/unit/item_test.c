@@ -30,7 +30,7 @@ int main()
 const UnitTest tests[] =
    {
    unit_test(test_prepend_item),
-   unit_test(test_list_len),
+   /* unit_test(test_list_len), */
    };
 
 return run_tests(tests);

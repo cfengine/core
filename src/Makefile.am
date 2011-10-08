@@ -195,7 +195,6 @@ EXTRA_DIST = cf3lex.c cf3parse.c
 #
 noinst_HEADERS =                                                        \
         cf.defs.h                                                       \
-        cf.extern.h                                                     \
         config.h                                                        \
         prototypes3.h                                                   \
         cf3.defs.h                                                      \

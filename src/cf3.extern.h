@@ -35,6 +35,166 @@
 
 /* See variables in cf3globals.c and syntax.c */
 
+#include "../pub/getopt.h"
+
+extern pid_t ALARM_PID;
+extern RSA *PRIVKEY, *PUBKEY;
+extern char PUBKEY_DIGEST[CF_MAXVARSIZE];
+extern char BINDINTERFACE[CF_BUFSIZE];
+extern struct sock ECGSOCKS[ATTR];
+extern char *TCPNAMES[CF_NETATTR];
+
+extern struct Audit *AUDITPTR;
+extern struct Audit *VAUDIT; 
+
+extern int PR_KEPT;
+extern int PR_REPAIRED;
+extern int PR_NOTKEPT;
+
+extern char CONTEXTID[32];
+extern char PADCHAR;
+extern struct Item *IPADDRESSES;
+
+extern char PIDFILE[CF_BUFSIZE];
+extern char  STR_CFENGINEPORT[16];
+extern unsigned short SHORT_CFENGINEPORT;
+extern time_t CONNTIMEOUT;
+extern time_t RECVTIMEOUT;
+
+extern char CFLOCK[CF_BUFSIZE];
+extern char CFLOG[CF_BUFSIZE];
+extern char CFLAST[CF_BUFSIZE];
+extern char LOCKDB[CF_BUFSIZE];
+
+extern int CFSIGNATURE; /*?*/
+
+extern char CFPUBKEYFILE[CF_BUFSIZE];
+extern char CFPRIVKEYFILE[CF_BUFSIZE];
+extern char CFWORKDIR[CF_BUFSIZE];
+extern char AVDB[CF_MAXVARSIZE];
+
+extern char VYEAR[];
+extern char VDAY[];
+extern char VMONTH[];
+extern char VSHIFT[];
+
+extern char *CLASSTEXT[];
+extern char *CLASSATTRIBUTES[CF_CLASSATTR][CF_ATTRDIM];
+extern char VINPUTFILE[];
+extern CF_DB *AUDITDBP;
+extern int AUDIT;
+extern char REPOSCHAR;
+extern char PURGE;
+extern int  CHECKSUMUPDATES;
+
+extern int ERRORCOUNT;
+extern time_t CFSTARTTIME;
+extern time_t CFINITSTARTTIME;
+
+extern struct utsname VSYSNAME;
+extern mode_t DEFAULTMODE;
+extern char *PROTOCOL[];
+extern char VIPADDRESS[];
+extern char VPREFIX[];
+extern int VRECURSE;
+extern int RPCTIMEOUT;
+
+extern int SKIPIDENTIFY;
+extern char  DEFAULTCOPYTYPE;
+
+extern char VDOMAIN[CF_MAXVARSIZE];
+extern char VMAILSERVER[CF_BUFSIZE];
+extern struct Item *VDEFAULTROUTE;
+extern char *VREPOSITORY;
+extern enum classes VSYSTEMHARDCLASS;
+extern char VFQNAME[];
+extern char VUQNAME[];
+extern char LOGFILE[];
+
+extern struct Item *VNEGHEAP;
+extern struct Item *VDELCLASSES;
+extern struct Item *ABORTHEAP;
+
+extern struct Mounted *MOUNTED;             /* Files systems already mounted */
+extern struct Item *VSETUIDLIST;
+extern struct Item *SUSPICIOUSLIST;
+extern struct Item *SCHEDULE;
+extern struct Item *NONATTACKERLIST;
+extern struct Item *MULTICONNLIST;
+extern struct Item *TRUSTKEYLIST;
+extern struct Item *DHCPLIST;
+extern struct Item *ALLOWUSERLIST;
+extern struct Item *SKIPVERIFY;
+extern struct Item *ATTACKERLIST;
+extern struct AlphaList VHEAP; 
+extern struct AlphaList VADDCLASSES;
+extern struct Rlist *PRIVCLASSHEAP;
+
+extern struct Item *VREPOSLIST;
+
+extern struct Auth *VADMIT;
+extern struct Auth *VDENY;
+extern struct Auth *VADMITTOP;
+extern struct Auth *VDENYTOP;
+extern struct Auth *VARADMIT;
+extern struct Auth *VARADMITTOP;
+extern struct Auth *VARDENY;
+extern struct Auth *VARDENYTOP;
+
+extern int DEBUG;
+extern int D1;
+extern int D2;
+extern int D3;
+extern int D4;
+
+extern int PARSING;
+
+extern int VERBOSE;
+extern int EXCLAIM;
+extern int INFORM;
+
+extern int LOGGING;
+extern int CFPARANOID;
+
+extern int DONTDO;
+extern int IGNORELOCK;
+extern int MINUSF;
+
+extern int NOSPLAY;
+
+extern char *VPSCOMM[];
+extern char *VPSOPTS[];
+extern char *VMOUNTCOMM[];
+extern char *VMOUNTOPTS[];
+extern char *VRESOLVCONF[];
+extern char *VHOSTEQUIV[];
+extern char *VFSTAB[];
+extern char *VMAILDIR[];
+extern char *VNETSTAT[];
+extern char *VEXPORTS[];
+extern char *VROUTE[];
+extern char *VROUTEADDFMT[];
+extern char *VROUTEDELFMT[];
+
+extern char *VUNMOUNTCOMM[];
+
+extern char *SIGNALS[];
+
+extern int EDITFILESIZE;
+extern int VIFELAPSED;
+extern int VEXPIREAFTER;
+
+extern char *OBS[CF_OBSERVABLES][2];
+
+extern char *CF_DIGEST_TYPES[10][2];
+extern int CF_DIGEST_SIZES[10];
+
+/* Windows version constants */
+
+extern unsigned int WINVER_MAJOR;
+extern unsigned int WINVER_MINOR;
+extern unsigned int WINVER_BUILD;
+
 extern struct Topic *TOPICHASH[CF_HASHTABLESIZE];
 extern struct PromiseParser P;
 extern int REQUIRE_COMMENTS;
@@ -45,7 +205,7 @@ extern bool ALLCLASSESREPORT;
 extern int LICENSES;
 extern int AM_NOVA;
 extern int AM_CONSTELLATION;
-extern char EXPIRY[32];
+extern char EXPIRY[CF_SMALLBUF];
 extern char LICENSE_COMPANY[CF_SMALLBUF];
 extern int IGNORE_MISSING_INPUTS;
 extern int IGNORE_MISSING_BUNDLES;
@@ -141,9 +301,6 @@ extern const char *SHIFT_TEXT[];
 #  define FILE_SEPARATOR_STR "/"
 #endif
 
-extern char *BASIC_REPORTS[cfrep_unknown][2];
-extern char *CDP_REPORTS[cdp_unknown][2];
-
 extern char SQL_DATABASE[CF_MAXVARSIZE];
 extern char SQL_OWNER[CF_MAXVARSIZE];
 extern char SQL_PASSWD[CF_MAXVARSIZE];
@@ -154,98 +311,5 @@ extern enum cfdbtype SQL_TYPE;
 extern double VAL_KEPT;
 extern double VAL_REPAIRED;
 extern double VAL_NOTKEPT;
-
-extern double METER_KEPT[meter_endmark];
-extern double METER_REPAIRED[meter_endmark];
-extern double Q_MEAN;
-extern double Q_SIGMA;
-
-/***********************************************************/
-/* SYNTAX MODULES                                          */
-/***********************************************************/
-
-#ifndef CF3_MOD_COMMON
-extern struct SubTypeSyntax CF_COMMON_SUBTYPES[];
-extern struct SubTypeSyntax *CF_ALL_SUBTYPES[];
-extern struct BodySyntax CF_COMMON_BODIES[];
-
-extern struct BodySyntax CF_VARBODY[];
-extern struct BodySyntax CF_CLASSBODY[];
-extern struct BodySyntax CFG_CONTROLBODY[];
-extern struct BodySyntax CFH_CONTROLBODY[];
-extern struct BodySyntax CFA_CONTROLBODY[];
-extern struct SubTypeSyntax CF_ALL_BODIES[];
-#endif
-
-#ifndef CF3_MOD_ENVIRON
-extern struct SubTypeSyntax CF_ENVIRONMENT_SUBTYPES[];
-#endif
-
-#ifndef CF3_MOD_OUTPUTS
-extern struct SubTypeSyntax CF_OUTPUTS_SUBTYPES[];
-#endif
-
-#ifndef CF3_MOD_FUNCTIONS
-extern struct FnCallType CF_FNCALL_TYPES[];
-#endif
-
-#ifndef CF3_MOD_ACCESS
-extern struct SubTypeSyntax CF_REMACCESS_SUBTYPES[];
-
-extern struct BodySyntax CF_REMACCESS_BODIES[];
-#endif
-
-#ifndef CF_MOD_INTERFACES
-extern struct SubTypeSyntax CF_INTERFACES_SUBTYPES[];
-#endif
-
-#ifndef CF3_MOD_STORAGE
-extern struct SubTypeSyntax CF_STORAGE_SUBTYPES[];
-#endif
-
-#ifndef CF3_MOD_DATABASES
-extern struct SubTypeSyntax CF_DATABASES_SUBTYPES[];
-#endif
-
-#ifndef CF3_MOD_KNOWLEGDE
-extern struct SubTypeSyntax CF_KNOWLEDGE_SUBTYPES[];
-#endif
-
-#ifndef CF3_MOD_PACKAGES
-extern struct SubTypeSyntax CF_PACKAGES_SUBTYPES[];
-#endif
-
-#ifndef CF3_MOD_REPORT
-extern struct SubTypeSyntax CF_REPORT_SUBTYPES[];
-
-extern struct BodySyntax CF_REPORT_BODIES[];
-#endif
-
-
-#ifndef CF3_MOD_FILES
-extern struct SubTypeSyntax CF_FILES_SUBTYPES[];
-
-extern struct BodySyntax CF_COMMON_EDITBODIES[];
-#endif
-
-#ifndef CF3_MOD_EXEC
-extern struct SubTypeSyntax CF_EXEC_SUBTYPES[];
-#endif
-
-#ifndef CF3_MOD_METHODS
-extern struct SubTypeSyntax CF_METHOD_SUBTYPES[];
-#endif
-
-#ifndef CF3_MOD_PROCESS
-extern struct SubTypeSyntax CF_PROCESS_SUBTYPES[];
-#endif
-
-#ifndef CF3_MOD_PROCESS
-extern struct SubTypeSyntax CF_MEASUREMENT_SUBTYPES[];
-#endif
-
-#ifndef CF3_MOD_SERVICES
-extern struct SubTypeSyntax CF_SERVICES_SUBTYPES[];
-#endif
 
 #endif

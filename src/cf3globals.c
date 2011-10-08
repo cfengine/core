@@ -184,7 +184,7 @@ struct SubTypeSyntax CF_NOSTYPE = {NULL,NULL,NULL};
 /* Object variables                                                  */
 /*********************************************************************/
 
-char *DAY_TEXT[] =
+const char *DAY_TEXT[] =
    {
    "Monday",
    "Tuesday",
@@ -196,7 +196,7 @@ char *DAY_TEXT[] =
    NULL
    };
 
-char *MONTH_TEXT[] =
+const char *MONTH_TEXT[] =
    {
    "January",
    "February",
@@ -213,7 +213,7 @@ char *MONTH_TEXT[] =
    NULL
    };
 
-char *SHIFT_TEXT[] =
+const char *SHIFT_TEXT[] =
    {
    "Night",
    "Morning",

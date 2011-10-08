@@ -32,7 +32,7 @@
 #define CFENGINE_CF3_DEFS_H
 
 #include "cf.defs.h"
-#include "cf.extern.h"
+#include "cf3.extern.h"
 
 #undef VERSION
 #undef Verbose
@@ -1948,6 +1948,14 @@ typedef enum basic_reports
    }
 cfrep_t;
 
+extern char *BASIC_REPORTS[cfrep_unknown+1][2];
+extern char *CDP_REPORTS[cdp_unknown+1][2];
+
+extern double METER_KEPT[meter_endmark];
+extern double METER_REPAIRED[meter_endmark];
+extern double Q_MEAN;
+extern double Q_SIGMA;
+
 /*************************************************************************/
 /* definitions for test suite                                            */
 /*************************************************************************/
@@ -1990,6 +1998,94 @@ cfrep_t;
    || strncmp(c,"Day",3) == 0 || IsStrIn(c,MONTH_TEXT)		\
   || IsStrIn(c,DAY_TEXT) || IsStrIn(c,SHIFT_TEXT)                 \
   || strncmp(c,"Lcycle",6) == 0)
+
+/***********************************************************/
+/* SYNTAX MODULES                                          */
+/***********************************************************/
+
+#ifndef CF3_MOD_COMMON
+extern struct SubTypeSyntax CF_COMMON_SUBTYPES[];
+extern struct SubTypeSyntax *CF_ALL_SUBTYPES[];
+extern struct BodySyntax CF_COMMON_BODIES[];
+
+extern struct BodySyntax CF_VARBODY[];
+extern struct BodySyntax CF_CLASSBODY[];
+extern struct BodySyntax CFG_CONTROLBODY[];
+extern struct BodySyntax CFH_CONTROLBODY[];
+extern struct BodySyntax CFA_CONTROLBODY[];
+extern struct SubTypeSyntax CF_ALL_BODIES[];
+#endif
+
+#ifndef CF3_MOD_ENVIRON
+extern struct SubTypeSyntax CF_ENVIRONMENT_SUBTYPES[];
+#endif
+
+#ifndef CF3_MOD_OUTPUTS
+extern struct SubTypeSyntax CF_OUTPUTS_SUBTYPES[];
+#endif
+
+#ifndef CF3_MOD_FUNCTIONS
+extern struct FnCallType CF_FNCALL_TYPES[];
+#endif
+
+#ifndef CF3_MOD_ACCESS
+extern struct SubTypeSyntax CF_REMACCESS_SUBTYPES[];
+
+extern struct BodySyntax CF_REMACCESS_BODIES[];
+#endif
+
+#ifndef CF_MOD_INTERFACES
+extern struct SubTypeSyntax CF_INTERFACES_SUBTYPES[];
+#endif
+
+#ifndef CF3_MOD_STORAGE
+extern struct SubTypeSyntax CF_STORAGE_SUBTYPES[];
+#endif
+
+#ifndef CF3_MOD_DATABASES
+extern struct SubTypeSyntax CF_DATABASES_SUBTYPES[];
+#endif
+
+#ifndef CF3_MOD_KNOWLEGDE
+extern struct SubTypeSyntax CF_KNOWLEDGE_SUBTYPES[];
+#endif
+
+#ifndef CF3_MOD_PACKAGES
+extern struct SubTypeSyntax CF_PACKAGES_SUBTYPES[];
+#endif
+
+#ifndef CF3_MOD_REPORT
+extern struct SubTypeSyntax CF_REPORT_SUBTYPES[];
+
+extern struct BodySyntax CF_REPORT_BODIES[];
+#endif
+
+
+#ifndef CF3_MOD_FILES
+extern struct SubTypeSyntax CF_FILES_SUBTYPES[];
+
+extern struct BodySyntax CF_COMMON_EDITBODIES[];
+#endif
+
+#ifndef CF3_MOD_EXEC
+extern struct SubTypeSyntax CF_EXEC_SUBTYPES[];
+#endif
+
+#ifndef CF3_MOD_METHODS
+extern struct SubTypeSyntax CF_METHOD_SUBTYPES[];
+#endif
+
+#ifndef CF3_MOD_PROCESS
+extern struct SubTypeSyntax CF_PROCESS_SUBTYPES[];
+#endif
+
+#ifndef CF3_MOD_PROCESS
+extern struct SubTypeSyntax CF_MEASUREMENT_SUBTYPES[];
+#endif
+
+#ifndef CF3_MOD_SERVICES
+extern struct SubTypeSyntax CF_SERVICES_SUBTYPES[];
+#endif
 
 #include "prototypes3.h"
 

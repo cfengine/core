@@ -97,7 +97,7 @@ else
    *end = 0;
    }
 
-pcre_free(rx);
+free(rx);
 return rc >= 0;
 }
 
@@ -149,7 +149,7 @@ if ((rc = pcre_exec(rx,NULL,teststring,strlen(teststring),0,0,ovector,OVECCOUNT)
       }
    }
 
-pcre_free(rx);
+free(rx);
 
 return backreference;
 }
@@ -158,7 +158,7 @@ bool ValidateRegEx(const char *regex)
 {
 pcre *rx = CompileRegExp(regex);
 bool regex_valid = rx != NULL;
-pcre_free(rx);
+free(rx);
 return regex_valid;
 }
 

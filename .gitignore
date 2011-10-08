@@ -69,8 +69,8 @@ docs/*.8
 
 # tests
 
-tests/*.log
-tests/.succeeded
+tests/acceptance/*.log
+tests/acceptance/.succeeded
 
 # unit tests
 

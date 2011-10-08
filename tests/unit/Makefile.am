@@ -3,7 +3,7 @@ check_PROGRAMS = \
 	assoc_test		\
 	item_test
 
-MOCKERY_SOURCES = cmockery.c mock_cfstream.c
+MOCKERY_SOURCES = cmockery.c
 
 alphalist_test_SOURCES = $(MOCKERY_SOURCES) alphalist_test.c
 alphalist_test_LDADD = ../../src/libpromises.la

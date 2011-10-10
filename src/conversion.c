@@ -1193,51 +1193,6 @@ return cfsrv_nostatus;
 
 /*********************************************************************/
 
-char *CFCON_VIEWS[] = { "Comp",  // NOTE: must match cfl_view enum
-                        "VirtBundleComp",
-                        "AggrRepaired",
-                        "AggrNotKept",
-                        "AggrRepairedReason",
-                        "AggrNotKeptReason",
-                        "AggrFileChange",
-                        "AggrSoftware",
-                        "AggrClasses",                        
-                        "Software",
-                        "RepairLog",
-                        "NotKeptLog",
-                        "HubStatus",
-                        "HubMeter",
-                        NULL };
-
-
-
-enum cfl_view Str2View(char *s)
-
-{ static   int i;
-
-for (i = 0; CFCON_VIEWS[i] != NULL; i++)
-   {
-   if (strcmp(s,CFCON_VIEWS[i]) == 0)
-      {
-      return i;
-      }
-   }
-
-return cfl_view_error;
-}
-
-/*********************************************************************/
-
-char *View2Str(enum cfl_view view)
-{
- if(view >= cfl_view_error)
-    {
-    return "VIEWERROR";
-    }
-
- return CFCON_VIEWS[view];
-}
-
 /*********************************************************************/
 
 char *Dtype2Str(enum cfdatatype dtype)

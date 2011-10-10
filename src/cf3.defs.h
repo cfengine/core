@@ -1133,26 +1133,6 @@ enum cfd_menu
 
 /*************************************************************************/
 
-enum cfl_view
-   {
-   cfl_view_comp,
-   cfl_view_virtbundlecomp,
-   cfl_view_aggr_repaired,
-   cfl_view_aggr_notkept,
-   cfl_view_aggr_repairedreason,
-   cfl_view_aggr_notkeptreason,
-   cfl_view_aggr_filechange,
-   cfl_view_aggr_software,
-   cfl_view_aggr_classes,
-   cfl_view_software,
-   cfl_view_log_repair,
-   cfl_view_log_notkept,
-   cfl_view_hub_status,
-   cfl_view_hub_meter,
-   cfl_view_error
-   };
-
-
 /*************************************************************************/
 /* Runtime constraint structures                                         */
 /*************************************************************************/

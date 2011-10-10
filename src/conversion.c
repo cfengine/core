@@ -1193,32 +1193,6 @@ return cfsrv_nostatus;
 
 /*********************************************************************/
 
-enum cfl_view Str2View(char *s)
-
-{ static char *views[] = { "Comp",  // NOTE: must match cfl_view enum
-                           "VirtBundleComp",
-			   "Repaired",
-			   "NotKept",
-			   "RepairedReason",                           
-			   "NotKeptReason",
-                           "FileChange",
-                           "Software",
-			   NULL };
-  int i;
-
-for (i = 0; views[i] != NULL; i++)
-   {
-   if (strcmp(s,views[i]) == 0)
-      {
-      return i;
-      }
-   }
-
-return cfl_view_error;
-}
-
-/*********************************************************************/
-
 char *Dtype2Str(enum cfdatatype dtype)
 {
   switch(dtype)

@@ -69,7 +69,6 @@ extern struct BodySyntax CFRE_CONTROLBODY[];
 
 extern struct BodySyntax CFRP_CONTROLBODY[];
 
-int CSV = false;
 int HTML = false;
 int GRAPH = false;
 int TITLES = false;
@@ -119,6 +118,7 @@ const struct option OPTIONS[31] =
       {
       { "help",no_argument,0,'h' },
       { "class-regex",required_argument,0,'c'},
+      { "csv",no_argument,0,'C'},
       { "debug",optional_argument,0,'d' },
       { "verbose",no_argument,0,'v' },
       { "inform",no_argument,0,'I' },
@@ -289,7 +289,7 @@ void CheckOpts(int argc,char **argv)
   int optindex = 0;
   int c;
 
-while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMIRSKE:x:i:q:1:p:k:c:",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"Cghd:vVf:st:ar:PXHLMIRSKE:x:i:q:1:p:k:c:",OPTIONS,&optindex)) != EOF)
    {
    switch ((char) c)
       {
@@ -392,6 +392,10 @@ while ((c=getopt_long(argc,argv,"ghd:vVf:st:ar:PXHLMIRSKE:x:i:q:1:p:k:c:",OPTION
           HTML = true;
           break;
 
+      case 'C':
+          CSV = true;
+          break;
+          
       case 'P':
           PURGE = 'y';
           break;

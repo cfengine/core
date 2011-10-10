@@ -97,6 +97,7 @@ extern FILE *FREPORT_HTML;
 extern FILE *FREPORT_TXT;
 extern FILE *FKNOW;
 extern struct FnCallStatus FNCALL_STATUS;
+extern int CSV;
 
 extern struct SubTypeSyntax CF_NOSTYPE;
 extern char *CF_DATATYPES[];

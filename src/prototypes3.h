@@ -1164,6 +1164,7 @@ int ThreadLock(enum cf_thread_mutex name);
 int ThreadUnlock(enum cf_thread_mutex name);
 void AssertThreadLocked(enum cf_thread_mutex name, char *fname);
 void PurgeLocks(void);
+int ShiftChange(void);
 
 /* timeout.c */
 

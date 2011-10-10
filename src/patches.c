@@ -199,7 +199,7 @@ return strncmp(buf1,buf2,n);
 
 /*********************************************************************/
 
-int cf_strcmp(char *s1,char *s2)
+int cf_strcmp(const char *s1, const char *s2)
 
 {
 /* Windows native eventually? */
@@ -208,7 +208,7 @@ return strcmp(s1,s2);
 
 /*********************************************************************/
 
-int cf_strncmp(char *s1,char *s2,size_t n)
+int cf_strncmp(const char *s1, const char *s2, size_t n)
 
 {
 /* Windows native eventually? */
@@ -217,7 +217,7 @@ return strncmp(s1,s2,n);
 
 /*********************************************************************/
 
-char *cf_strcpy(char *s1,char *s2)
+char *cf_strcpy(char *s1, const char *s2)
 
 {
 /* Windows native eventually? */
@@ -226,7 +226,7 @@ return strcpy(s1,s2);
 
 /*********************************************************************/
 
-char *cf_strncpy(char *s1,char *s2,size_t n)
+char *cf_strncpy(char *s1, const char *s2, size_t n)
 
 {
 /* Windows native eventually? */
@@ -235,7 +235,7 @@ return strncpy(s1,s2,n);
 
 /*********************************************************************/
 
-char *cf_strdup(char *s)
+char *cf_strdup(const char *s)
 
 {
 return strdup(s);
@@ -243,7 +243,7 @@ return strdup(s);
 
 /*********************************************************************/
 
-int cf_strlen(char *s)
+int cf_strlen(const char *s)
     
 {
 return strlen(s);
@@ -251,7 +251,7 @@ return strlen(s);
 
 /*********************************************************************/
 
-char *cf_strchr(char *s, int c)
+char *cf_strchr(const char *s, int c)
     
 {
 return strchr(s,c);

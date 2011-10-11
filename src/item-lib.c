@@ -125,6 +125,27 @@ return NULL;
 
 /*********************************************************************/
 
+struct Item *ReturnItemAtIndex(struct Item *list,int index)
+
+{ struct Item *ptr;
+ int i = 0;
+
+for (ptr = list; ptr != NULL; ptr=ptr->next)
+   {
+
+   if (i == index)
+      {
+      return ptr;
+      }
+
+   i++;
+   }
+ 
+return NULL;
+}
+
+/*********************************************************************/
+
 int GetItemIndex(struct Item *list,char *item)
 /*
  * Returns index of first occurence of item.

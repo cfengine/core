@@ -54,7 +54,7 @@ static int PrependPatchItem(struct CfPackageItem **list,char *item,struct CfPack
 static int PrependMultiLinePackageItem(struct CfPackageItem **list,char *item,int reset,struct Attributes a,struct Promise *pp);
 static int ExecPackageCommand(char *command,int verify,int setCmdClasses,struct Attributes a,struct Promise *pp);
 static void ReportSoftware(struct CfPackageManager *list);
-static const char *GetSoftwareCacheFilename(char *buffer);
+
 static void InvalidateSoftwareCache(void);
 static void ExecutePackageSchedule(struct CfPackageManager *schedule);
 static void DeletePackageManagers(struct CfPackageManager *newlist);
@@ -2280,12 +2280,3 @@ for (mp = list; mp != NULL; mp = mp->next)
 fclose(fout);
 }
 
-/*****************************************************************************/
-
-/* Buffer should be at least CF_BUFSIZE large */
-static const char *GetSoftwareCacheFilename(char *buffer)
-{
-snprintf(buffer,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,SOFTWARE_PACKAGES_CACHE);
-MapName(buffer);
-return buffer;
-}

@@ -1290,6 +1290,16 @@ while((inCount < inSz) && (outCount < outSz))
  return true;
 }
 
+/*****************************************************************************/
+
+/* Buffer should be at least CF_MAXVARSIZE large */
+const char *GetSoftwareCacheFilename(char *buffer)
+{
+snprintf(buffer,CF_MAXVARSIZE,"%s/state/%s",CFWORKDIR,SOFTWARE_PACKAGES_CACHE);
+MapName(buffer);
+return buffer;
+}
+
 /*********************************************************************/
 
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
@@ -1307,3 +1317,4 @@ return (void*)tid;  // index into thread array ?
 #endif  /* NOT MINGW */
 }
 #endif  /* HAVE PTHREAD */
+

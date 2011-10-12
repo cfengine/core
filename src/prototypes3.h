@@ -658,7 +658,8 @@ void ReplaceChar(char *in, char *out, int outSz, char from, char to);
 void ReplaceTrailingChar(char *str, char from, char to);
 void ReplaceTrailingStr(char *str, char *from, char to);
 int ReplaceStr(char *in, char *out, int outSz, char* from, char *to);
-    
+const char *GetSoftwareCacheFilename(char *buffer);
+
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
 void *ThreadUniqueName(pthread_t tid);
 #endif  /* HAVE PTHREAD */

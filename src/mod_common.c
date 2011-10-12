@@ -285,7 +285,8 @@ struct BodySyntax CFRE_CONTROLBODY[] = /* enum cfrecontrol */
 struct BodySyntax CFH_CONTROLBODY[] = /* enum cfh_control */
    {
    {"export_zenoss",cf_opts,CF_BOOL,"Make data available for Zenoss integration in docroot/reports/summary.z"},
-   {"federation",cf_slist,"","The list of cfengine servers supporting constellation integration with this hub"},
+   {"federation",cf_slist,"","The list of CFEngine servers supporting constellation integration with this hub"},
+   {"exclude_hosts",cf_slist,"","A list of IP addresses of hosts to exclude from report collection"},
    {"hub_schedule",cf_slist,"","The class schedule used by cf-hub for report collation"},
    {"port",cf_int,"1024,99999","Default port for contacting hub nodes"},
    {NULL,cf_notype,NULL,NULL}

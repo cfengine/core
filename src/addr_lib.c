@@ -7,7 +7,9 @@ int FuzzySetMatch(char *s1,char *s2)
 
 /* Match two IP strings - with : or . in hex or decimal
    s1 is the test string, and s2 is the reference e.g.
-   FuzzySetMatch("128.39.74.10/23","128.39.75.56") == 0 */
+   FuzzySetMatch("128.39.74.10/23","128.39.75.56") == 0
+
+   Returns 0 on match. */
 
 { short isCIDR = false, isrange = false, isv6 = false, isv4 = false;
   char address[CF_ADDRSIZE];

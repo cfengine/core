@@ -408,6 +408,7 @@ enum cfhcontrol
    {
    cfh_export_zenoss,
    cfh_federation,
+   cfh_exclude_hosts,
    cfh_schedule,
    cfh_port,
    cfh_notype

@@ -2785,7 +2785,7 @@ buffer[0] = '\0';
 
 /* begin fn specific content */
 
-if (GetRegistryValue(finalargs->item,finalargs->next->item,buffer))
+if (GetRegistryValue(finalargs->item,finalargs->next->item,buffer,sizeof(buffer)))
    {
    SetFnCallReturnStatus("registryvalue",FNCALL_SUCCESS,NULL,NULL);
    }

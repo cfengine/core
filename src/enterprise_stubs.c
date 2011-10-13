@@ -865,12 +865,12 @@ Nova_VerifyRegistryPromise(a,pp);
 
 /*****************************************************************************/
 
-int GetRegistryValue(char *key,char *value,char *buffer)
+int GetRegistryValue(char *key,char *name,char *buf, int bufSz)
 
 {
 #ifdef HAVE_NOVA
 # ifdef NT
-return Nova_CopyRegistryValue(key,value,buffer);
+return Nova_GetRegistryValueAsString(key, name, buf, bufSz);
 # endif
 return 0;
 #else

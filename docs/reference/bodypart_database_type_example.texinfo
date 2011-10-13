@@ -1,6 +1,6 @@
 
 @verbatim
 
-database_type => "@var{ms_registry}";
+database_type => "ms_registry";
 
 @end verbatim

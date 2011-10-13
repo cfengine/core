@@ -458,7 +458,7 @@ void NotePromiseCompliance(struct Promise *pp,double val,enum cf_status status,c
 time_t GetPromiseCompliance(struct Promise *pp,double *value,double *average,double *var,time_t *lastseen);
 void SyntaxCompletion(char *s);
 void SyntaxExport(void);
-int GetRegistryValue(char *key,char *value,char *buffer);
+int GetRegistryValue(char *key,char *name,char *buf, int bufSz);
 void NoteVarUsage(void);
 void NoteVarUsageDB(void);
 void SummarizeVariables(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);

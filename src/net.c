@@ -147,13 +147,6 @@ for (already = 0; already != toget; already += got)
       }
 
    Debug("    (Concatenated %d from stream)\n",got);
-
-   if (strncmp(buffer,"AUTH",4) == 0 && (already == CF_BUFSIZE))
-      {
-      fraction = 0;
-      buffer[already] = '\0';
-      return already;
-      }
    }
 
 buffer[already] = '\0';

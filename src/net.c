@@ -143,8 +143,7 @@ for (already = 0; already != toget; already += got)
       {
       Debug("Transmission empty or timed out...\n");
       fraction = 0;
-      buffer[already] = '\0';
-      return already;
+      break;
       }
 
    Debug("    (Concatenated %d from stream)\n",got);
@@ -157,8 +156,8 @@ for (already = 0; already != toget; already += got)
       }
    }
 
-buffer[toget] = '\0';
-return toget;
+buffer[already] = '\0';
+return already;
 }
 
 

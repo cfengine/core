@@ -124,9 +124,14 @@ that for other operating systems Nova runs on, so the Nova getting
 started document available at @url{http://software.cfengine.com}
 applies to the Windows version as well.
 
-The Windows @code{msi}-packages will get silently installed (no prompts) to
-@code{Cfengine} under your program files directory
-(e.g. @code{C:\Program Files\Cfengine} on English Windows versions).
+The Windows @code{msi}-packages will get silently installed (no
+prompts) to @code{Cfengine} under your program files directory
+(e.g. @code{C:\Program Files\Cfengine} on English Windows
+versions). It is important that the installer is run with
+Administrative priviliges. To ensure this, open a @code{Command
+Prompt} in Administrative mode and run @samp{msiexec -i
+cfengine-nova-VERSION-ARCH.msi} (replace @code{VERSION} and
+@code{ARCH} appropriately).
 
 Note that you need a policy hub to bootstrap to in order for
 the license to get downloaded and verified. This is required even if

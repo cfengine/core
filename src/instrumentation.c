@@ -476,12 +476,20 @@ ThreadUnlock(cft_db_lastseen);
 
 /*****************************************************************************/
 
-bool RemoveHostFromLastSeen(const char *hostname)
+bool RemoveHostFromLastSeen(const char *hostname, char *hostkey)
 {
 char ip[CF_BUFSIZE];
-char digest[CF_BUFSIZE];
-strcpy(ip, Hostname2IPString(hostname));
-IPString2KeyDigest(ip, digest);
+char digest[CF_BUFSIZE]={0};
+
+if(!hostkey)
+   {
+   strcpy(ip, Hostname2IPString(hostname));
+   IPString2KeyDigest(ip, digest);
+   }
+else
+   {
+   snprintf(digest,sizeof(digest),"%s",hostkey);
+   }
 
 if (!ThreadLock(cft_db_lastseen))
    {

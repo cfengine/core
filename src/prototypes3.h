@@ -866,7 +866,7 @@ void EndMeasurePromise(struct timespec start,struct Promise *pp);
 void NoteClassUsage(struct AlphaList list);
 void LastSaw(char *username,char *ipaddress,unsigned char digest[EVP_MAX_MD_SIZE+1],enum roles role);
 double GAverage(double anew,double aold,double p);
-bool RemoveHostFromLastSeen(const char *hostname);
+bool RemoveHostFromLastSeen(const char *hostname, char *hostkey);
 
 /* install.c */
 

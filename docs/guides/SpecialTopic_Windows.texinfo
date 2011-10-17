@@ -64,24 +64,33 @@ Copyright @copyright{} 2011 CFEngine AS
 @end ifinfo
 
 @ifnottex
-@node  reportarch, What Windows versions are supported?
-@top  
-@menu
-@end menu
-
-
-
+@node  Top, , (dir), (dir)
+@top Windows Managment with CFEngine Nova
 @end ifnottex
+
 @iftex
 @contents
 @end iftex
 
-@ifhtml
-@html
-<a href="#Contents"><h1>COMPLETE TABLE OF CONTENTS</h1></a>
-<h2>Summary of contents</h2>
-@end html
-@end ifhtml
+@menu
+* System requirements::         
+* Installation::                
+* Testing policies locally::    
+* Windows registry management::  
+* Windows service management::  
+* File and folder permissions::  
+* Windows-aware features in CFE Nova::  
+* Windows special variables::   
+* Windows hard classes::        
+* Notes on windows policies::   
+@end menu
+
+@c @ifhtml
+@c @html
+@c <a href="#Contents"><h1>COMPLETE TABLE OF CONTENTS</h1></a>
+@c <h2>Summary of contents</h2>
+@c end html
+@c @end ifhtml
 
 
 
@@ -93,7 +102,7 @@ Copyright @copyright{} 2011 CFEngine AS
 
 @c policy sharing with Unix - bundles at least.
 
-@node  What Windows versions are supported?
+@node  System requirements, Installation, Top, Top
 @unnumberedsec System requirements
 @sp 1
 
@@ -115,7 +124,7 @@ All software dependencies are bundled with the CFEngine Nova
 package. The total disk consumption is about 70 @code{MB}, and the
 memory usage is less than 30 @code{MB}.
 
-@node   Installation,  , What Windows versions are supported?
+@node  Installation, Testing policies locally, System requirements, Top
 @unnumberedsec Installation
 @sp 1
 
@@ -140,6 +149,7 @@ policy hub needs to run a flavour of Linux, as noted in the Nova
 getting started document.
 
 
+@node  Testing policies locally, Windows registry management, Installation, Top
 @unnumberedsec Testing policies locally
 
 After correctly bootstrapping, however, you can stop the CFEngine Nova
@@ -175,7 +185,7 @@ should generate no output, which indicates correct syntax and license.
 To execute the policy, run @code{cf-agent.exe -K}. You should see the
 following output.
 
-@image{winhello,8cm,,Hello, Windows output,png}
+@center @image{winhello,8cm,, Windows output,png}
 
 We now have a basic skeleton policy that we can test our Windows
 promises with. These can later be integrated at the policy hub to
@@ -184,6 +194,7 @@ general skeleton for the rest of this document, modifying the contents
 of the @code{test} bundle only.
 
 
+@node  Windows registry management, Windows service management, Testing policies locally, Top
 @unnumberedsec Windows registry management
 
 CFEngine Nova supports fine-grained management of the Windows
@@ -211,7 +222,7 @@ correct, followed by @code{cf-agent.exe -KI}. Note that we added the
 existing state of the system and any actions done to ensure the
 desired state. The output should look like the following.
 
-@image{winreg,13cm,,Windows registry output,png}
+@center @image{winreg,13cm,,Windows registry output,png}
 
 When we run @code{cf-agent.exe} twice, the second run will do nothing
 because the first run has already corrected the value. This is
@@ -231,13 +242,14 @@ use are also available in the
 reference manual}. 
 
 
+@node  Windows service management, File and folder permissions, Windows registry management, Top
 @unnumberedsec Windows service management
 
 CFEngine Nova can maintain complete control of the state of all
 Windows services. For example, services prone to security issues or
 errors can easily be given a disabled state.
 
-@image{winservice-disabled_policy,8cm,,Disabled Windows service,png}
+@center @image{winservice-disabled_policy,8cm,,Disabled Windows service,png}
 
 A service can also be given a running state, in which case CFEngine
 Nova ensures that it is running, and starts it if it is not, with
@@ -250,7 +262,7 @@ Note that the name of a service in Windows may be different from its
 ``Display name''. CFEngine Nova policies use the name, not the display
 name, due to the need of uniqueness.
 
-@image{winservice-properties_name,7cm,,Windows service name and Display name,png}
+@center @image{winservice-properties_name,7cm,,Windows service name and Display name,png}
 
 A complete example of a service management bundle is show below.
 
@@ -280,6 +292,7 @@ Windows hosts, and that Remote registry is disabled on all Windows
 2008 servers.
 
 
+@node  File and folder permissions, Windows-aware features in CFE Nova, Windows service management, Top
 @unnumberedsec File and folder permissions
 
 CFEngine Nova can ensure the permissions or Access Control Lists
@@ -320,6 +333,7 @@ CFEngine reference manual} contains a description of all the available
 @code{ACL} options. Also refer to the the CFEngine Nova Owner's manual
 for a more in-depth discussion of the @code{ACL} options available.
 
+@node  Windows-aware features in CFE Nova, Windows special variables, File and folder permissions, Top
 @unnumberedsec Windows-aware features in CFE Nova
 
 CFEngine Nova integrates with the Windows operating system in multiple
@@ -350,9 +364,10 @@ type. The Nova event logs can be found under the ``System'' logs.
 @item Generic error @tab 108 @tab Error
 @end multitable
 
-@image{winevent-notkept-storage,10cm,,Promise not kept in Event Viewer,png}
+@center @image{winevent-notkept-storage,10cm,,Promise not kept in Event Viewer,png}
 
 
+@node  Windows special variables, Windows hard classes, Windows-aware features in CFE Nova, Top
 @unnumberedsec Windows special variables
 Three new special variables have been added to the Windows version of
 CFEngine Nova.
@@ -375,6 +390,7 @@ the current system. For example, @code{sys.winprogdir} is often
 different on Windows versions in distinct languages.
 
 
+@node  Windows hard classes, Notes on windows policies, Windows special variables, Top
 @unnumberedsec Windows hard classes
 The Windows version of CFEngine Nova defines hard classes to pinpoint
 the exact version of Windows that it is running on, the service pack
@@ -413,6 +429,7 @@ Note that all defined hard classes for a given system is shown by
 running @code{cf-promises -v}.
 
 
+@node  Notes on windows policies,  , Windows hard classes, Top
 @unnumberedsec Notes on windows policies
 A potential problem source when writing policies for windows is that
 paths to executables often contain spaces. This makes it impossible

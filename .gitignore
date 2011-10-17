@@ -57,7 +57,6 @@ src/cf3parse.h
 src/cf3parse.output
 src/conf.h
 src/conf.h.in
-src/conf.h.in~
 docs/reference/cf3-Reference.texinfo
 docs/reference/cf3-Reference.log
 
@@ -89,7 +88,12 @@ constellation
 galaxy
 
 # tags
+
 TAGS
 pub/TAGS
 src/TAGS
 tests/unit/TAGS
+
+# emacs
+
+*~

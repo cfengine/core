@@ -87,3 +87,9 @@ tests/unit/*_test
 nova
 constellation
 galaxy
+
+# tags
+TAGS
+pub/TAGS
+src/TAGS
+tests/unit/TAGS

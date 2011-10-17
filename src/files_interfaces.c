@@ -514,7 +514,7 @@ if (S_ISDIR(ssb.st_mode))
 
    if ((dirh = OpenDirForPromise(sourcedir,attr,pp)) == NULL)
       {
-      CfOut(cf_verbose,"opendir","Can't open directory %s\n",sourcedir);
+      cfPS(cf_verbose,CF_FAIL,"opendir",pp,attr,"Can't open directory %s\n",sourcedir);
       DeleteClientCache(attr,pp);
       return;
       }
@@ -523,7 +523,7 @@ if (S_ISDIR(ssb.st_mode))
    
    if (cfstat(destdir,&dsb) == -1)
       {
-      CfOut(cf_error,"stat","Can't stat directory %s\n",destdir);
+      cfPS(cf_error,CF_FAIL,"stat",pp,attr,"Can't stat directory %s\n",destdir);
       }
    else
       {
@@ -555,7 +555,7 @@ if (S_ISDIR(ssb.st_mode))
          {
          if (cf_stat(sourcefile,&ssb,attr,pp) == -1)
             {
-            CfOut(cf_inform,"stat","Can't stat source file (notlinked) %s\n",sourcefile);
+            cfPS(cf_inform,CF_FAIL,"stat",pp,attr,"Can't stat source file (notlinked) %s\n",sourcefile);
             DeleteClientCache(attr,pp);       
             return;
             }
@@ -564,7 +564,7 @@ if (S_ISDIR(ssb.st_mode))
          {
          if (cf_lstat(sourcefile,&ssb,attr,pp) == -1)
             {
-            CfOut(cf_inform,"lstat","Can't stat source file %s\n",sourcefile);
+            cfPS(cf_inform,CF_FAIL,"lstat",pp,attr,"Can't stat source file %s\n",sourcefile);
             DeleteClientCache(attr,pp);       
             return;
             }

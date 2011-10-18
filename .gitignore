@@ -95,3 +95,9 @@ cscope.*
 # emacs
 
 *~
+\#*#
+
+# eclipse
+
+.cproject
+.project

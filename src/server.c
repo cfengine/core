@@ -1513,10 +1513,6 @@ while (true && (count < 10))  /* arbitrary check to avoid infinite loop, DoS att
 
    if (ReceiveTransaction(conn->sd_reply,recvbuffer,NULL) == -1)
       {
-      if (errno == EINTR) 
-         {
-         continue;
-         }
       }
 
    Debug("Got class buffer %s\n",recvbuffer);

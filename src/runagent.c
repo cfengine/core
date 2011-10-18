@@ -692,11 +692,6 @@ while (true)
 
    if ((n_read = ReceiveTransaction(conn->sd,recvbuffer,NULL)) == -1)
       {
-      if (errno == EINTR) 
-         {
-         continue;
-         }
-      
       break;
       }
 

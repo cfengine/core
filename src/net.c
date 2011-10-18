@@ -133,6 +133,11 @@ for (already = 0; already != toget; already += got)
    {
    got = recv(sd,buffer+already,toget-already,0);
 
+   if (got == -1 && errno == EINTR)
+      {
+      continue;
+      }
+
    if (got == -1)
       {
       CfOut(cf_verbose,"recv","Couldn't recv");
@@ -173,17 +178,20 @@ do
    Debug("Attempting to send %d bytes\n",tosend-already);
 
    sent = send(sd,buffer+already,tosend-already,flags);
-   
-   switch(sent)
+
+   if (sent == -1 && errno == EINTR)
       {
-      case -1:
-          CfOut(cf_verbose,"send","Couldn't send");
-          return -1;
-      default:
-          Debug("SendSocketStream, sent %d\n",sent);
-          already += sent;
-          break;
+      continue;
       }
+
+   if (sent == -1)
+      {
+      CfOut(cf_verbose,"send","Couldn't send");
+      return -1;
+      }
+
+   Debug("SendSocketStream, sent %d\n",sent);
+   already += sent;
    }
 while (already < tosend); 
 

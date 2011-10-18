@@ -1,4 +1,24 @@
-3.2.0
+3.2.2   (Bugfix and Stability release)
+
+	Enabled compilation in "large files" mode under AIX
+
+	Alleviated problem with broken file transfers over unstable
+	Internet links.
+
+	Full list of issues fixed is available on
+	https://cfengine.com/bugtracker/changelog_page.php
+
+3.2.1   (Bugfix and Stability release)
+
+	Fixed compilation under HP-UX and Solaris
+
+	Enabled compilation using HP ANSI C compiler
+
+	Full list of issues fixed is available on
+	https://cfengine.com/bugtracker/changelog_page.php
+
+3.2.0   (Feature release)
+
 	New bootstrap method with single-command bootstrapping:
 	- cf-agent --bootstrap --policy-server 123.456.789.123
 	- Associated policy template files are added, partially maintained
@@ -52,7 +72,8 @@
 	Full list of issues fixed is available on
 	https://cfengine.com/bugtracker/changelog_page.php
 
-3.1.5
+3.1.5   (Bugfix and Stability release)
+
 	New class parser, '||' is no longer allowed in expressions (use '|').
 
 	Class setting in the promise types insert_lines, delete_lines,

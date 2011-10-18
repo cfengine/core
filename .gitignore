@@ -90,9 +90,7 @@ galaxy
 # tags
 
 TAGS
-pub/TAGS
-src/TAGS
-tests/unit/TAGS
+cscope.*
 
 # emacs
 

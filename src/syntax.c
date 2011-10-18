@@ -768,6 +768,13 @@ if (IsCf3VarString(s))
 
 val = Str2Int(s);
 
+if (val == CF_NOINT)
+   {
+   snprintf(output,CF_BUFSIZE,"Int item on rhs of lval \'%s\' given as \'%s\' could not be parsed",lval,s);
+   ReportError(output);
+   return;
+   }
+
 if (val > max || val < min)
    {
    snprintf(output,CF_BUFSIZE,"Int item on rhs of lval \'%s\' given as {%s => %ld} is out of bounds (should be in [%s])",lval,s,val,range);

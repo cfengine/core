@@ -1779,18 +1779,19 @@ else
 
 if (lstat(new,&dstat) == -1)
    {
-   CfOut(cf_inform,"stat","Can't stat new file %s - another agent has picked it up?\n",new);
+   cfPS(cf_inform,CF_FAIL,"stat",pp,attr,"Can't stat new file %s - another agent has picked it up?\n",new);
    return false;
    }
 
 if (S_ISREG(dstat.st_mode) && dstat.st_size != sstat.st_size)
    {
-   CfOut(cf_error,""," !! New file %s seems to have been corrupted in transit (dest %d and src %d), aborting!\n",new, (int) dstat.st_size, (int) sstat.st_size);
+   cfPS(cf_error,CF_FAIL,"",pp,attr," !! New file %s seems to have been corrupted in transit (dest %d and src %d), aborting!\n",new, (int) dstat.st_size, (int) sstat.st_size);
 
    if (backupok)
       {
-      cf_rename(backup,dest); /* ignore failure */
+      cf_rename(backup,dest); /* ignore failure of this call, as there is nothing more we can do */
       }
+   
    return false;
    }
 
@@ -1800,12 +1801,13 @@ if (attr.copy.verify)
 
    if (CompareFileHashes(source,new,&sstat,&dstat,attr,pp))
       {
-      CfOut(cf_verbose,""," !! New file %s seems to have been corrupted in transit, aborting!\n",new);
+      cfPS(cf_verbose,CF_FAIL,"",pp,attr," !! New file %s seems to have been corrupted in transit, aborting!\n",new);
 
       if (backupok)
          {
-         cf_rename(backup,dest); /* ignore failure */
+         cf_rename(backup,dest);
          }
+      
       return false;
       }
    else
@@ -1895,7 +1897,7 @@ else
    
    if (cf_rename(new,dest) == -1)
       {
-      CfOut(cf_error,"cf_rename"," !! Could not install copy file as %s, directory in the way?\n",dest);
+      cfPS(cf_error,CF_FAIL,"cf_rename",pp,attr," !! Could not install copy file as %s, directory in the way?\n",dest);
 
       if (backupok)
          {

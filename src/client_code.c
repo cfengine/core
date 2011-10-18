@@ -678,7 +678,7 @@ snprintf(cfchangedstr,255,"%s%s",CF_CHANGEDSTR1,CF_CHANGEDSTR2);
   
 if ((strlen(new) > CF_BUFSIZE-20))
    {
-   CfOut(cf_error,"","Filename too long");
+   cfPS(cf_error,CF_INTERPT,"",pp,attr,"Filename too long");               
    return false;
    }
  
@@ -686,7 +686,7 @@ unlink(new);  /* To avoid link attacks */
   
 if ((dd = open(new,O_WRONLY|O_CREAT|O_TRUNC|O_EXCL|O_BINARY, 0600)) == -1)
    {
-   CfOut(cf_error,"open"," !! NetCopy to destination %s:%s security - failed attempt to exploit a race? (Not copied)\n",pp->this_server,new);
+   cfPS(cf_error,CF_INTERPT,"open",pp,attr," !! NetCopy to destination %s:%s security - failed attempt to exploit a race? (Not copied)\n",pp->this_server,new);
    unlink(new);
    return false;
    }
@@ -767,7 +767,7 @@ while (!done)
    
    if ((value > 0) && strncmp(buf+CF_INBAND_OFFSET,"BAD: ",5) == 0)
       {
-      CfOut(cf_inform,"","Network access to cleartext %s:%s denied\n",pp->this_server,source);      
+      cfPS(cf_inform,CF_INTERPT,"",pp,attr,"Network access to cleartext %s:%s denied\n",pp->this_server,source);      
       close(dd);
       free(buf);
       return false;
@@ -832,7 +832,7 @@ snprintf(cfchangedstr,255,"%s%s",CF_CHANGEDSTR1,CF_CHANGEDSTR2);
   
 if ((strlen(new) > CF_BUFSIZE-20))
    {
-   CfOut(cf_error,"","Filename too long");
+   cfPS(cf_error,CF_INTERPT,"",pp,attr,"Filename too long");               
    return false;
    }
  
@@ -840,7 +840,7 @@ unlink(new);  /* To avoid link attacks */
   
 if ((dd = open(new,O_WRONLY|O_CREAT|O_TRUNC|O_EXCL|O_BINARY, 0600)) == -1)
    {
-   CfOut(cf_error,"open"," !! NetCopy to destination %s:%s security - failed attempt to exploit a race? (Not copied)\n",pp->this_server,new);
+   cfPS(cf_error,CF_INTERPT,"open",pp,attr," !! NetCopy to destination %s:%s security - failed attempt to exploit a race? (Not copied)\n",pp->this_server,new);
    unlink(new);
    return false;
    }

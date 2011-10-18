@@ -4183,20 +4183,29 @@ rval.rtype = CF_SCALAR;
 return rval;
 }
 
+/*********************************************************************/
+
 static struct Rval FnCallReadStringArray(struct FnCall *fp, struct Rlist *args)
 {
 return ReadArray(fp, args, cf_str, false);
 }
+
+
+/*********************************************************************/
 
 static struct Rval FnCallReadStringArrayIndex(struct FnCall *fp, struct Rlist *args)
 {
 return ReadArray(fp, args, cf_str, true);
 }
 
+/*********************************************************************/
+
 static struct Rval FnCallReadIntArray(struct FnCall *fp, struct Rlist *args)
 {
 return ReadArray(fp, args, cf_int, false);
 }
+
+/*********************************************************************/
 
 static struct Rval FnCallReadRealArray(struct FnCall *fp, struct Rlist *args)
 {
@@ -4281,20 +4290,28 @@ rval.rtype = CF_SCALAR;
 return rval;
 }
 
+/*********************************************************************/
+
 static struct Rval FnCallParseStringArray(struct FnCall *fp, struct Rlist *args)
 {
 return ParseArray(fp, args, cf_str, false);
 }
+
+/*********************************************************************/
 
 static struct Rval FnCallParseStringArrayIndex(struct FnCall *fp, struct Rlist *args)
 {
 return ParseArray(fp, args, cf_str, true);
 }
 
+/*********************************************************************/
+
 static struct Rval FnCallParseIntArray(struct FnCall *fp, struct Rlist *args)
 {
 return ParseArray(fp, args, cf_int, false);
 }
+
+/*********************************************************************/
 
 static struct Rval FnCallParseRealArray(struct FnCall *fp, struct Rlist *args)
 {

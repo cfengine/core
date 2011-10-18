@@ -964,6 +964,7 @@ memset(&get_args,0,sizeof(get_args));
 
 if ((received = ReceiveTransaction(conn->sd_reply,recvbuffer,NULL)) == -1)
    {
+   DestroyServerConnection(conn);
    return false;
    }
 
@@ -1513,6 +1514,9 @@ while (true && (count < 10))  /* arbitrary check to avoid infinite loop, DoS att
 
    if (ReceiveTransaction(conn->sd_reply,recvbuffer,NULL) == -1)
       {
+      DestroyServerConnection(conn);
+      CfOut(cf_verbose, "ReceiveTransaction", "Unable to read data from network");
+      return false;
       }
 
    Debug("Got class buffer %s\n",recvbuffer);
@@ -2610,6 +2614,7 @@ ThreadUnlock(cft_system);
 /* proposition C2 */ 
 if ((len_n = ReceiveTransaction(conn->sd_reply,recvbuffer,NULL)) == -1)
    {
+   DestroyServerConnection(conn);
    CfOut(cf_inform,"","Protocol error 1 in RSA authentation from IP %s\n",conn->hostname);
    RSA_free(newkey);
    return false;
@@ -2634,6 +2639,7 @@ if ((newkey->n = BN_mpi2bn(recvbuffer,len_n,NULL)) == NULL)
 
 if ((len_e = ReceiveTransaction(conn->sd_reply,recvbuffer,NULL)) == -1)
    {
+   DestroyServerConnection(conn);
    CfOut(cf_inform,"","Protocol error 3 in RSA authentation from IP %s\n",conn->hostname);
    RSA_free(newkey);
    return false;
@@ -2738,6 +2744,7 @@ memset(in,0,CF_BUFSIZE);
 
 if (ReceiveTransaction(conn->sd_reply,in,NULL) == -1)
    {
+   DestroyServerConnection(conn);
    BN_free(counter_challenge);
    free(out);
    RSA_free(newkey);   
@@ -2772,6 +2779,7 @@ memset(in,0,CF_BUFSIZE);
 
 if ((keylen = ReceiveTransaction(conn->sd_reply,in,NULL)) == -1)
    {
+   DestroyServerConnection(conn);
    BN_free(counter_challenge);
    free(out);
    RSA_free(newkey); 

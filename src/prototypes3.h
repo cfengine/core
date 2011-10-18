@@ -189,6 +189,7 @@ int CompareHashNet(char *file1,char *file2,struct Attributes attr,struct Promise
 int CopyRegularFileNet(char *source,char *new,off_t size,struct Attributes attr,struct Promise *pp);
 int EncryptCopyRegularFileNet(char *source,char *new,off_t size,struct Attributes attr,struct Promise *pp);
 int ServerConnect(struct cfagent_connection *conn,char *host,struct Attributes attr, struct Promise *pp);
+void DestroyServerConnection(struct cfagent_connection *conn);
 
 /* Only for OpenDirForPromise implementation */
 CFDIR *OpenDirRemote(const char *dirname,struct Attributes attr,struct Promise *pp);

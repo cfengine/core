@@ -291,6 +291,7 @@ if (SendTransaction(conn->sd,sendbuffer,tosend,CF_DONE) == -1)
 
 if (ReceiveTransaction(conn->sd,recvbuffer,NULL) == -1)
    {
+   DestroyServerConnection(conn);
    return -1;
    }
 
@@ -341,6 +342,7 @@ if (OKProtoReply(recvbuffer))
    
    if (ReceiveTransaction(conn->sd,recvbuffer,NULL) == -1)
       {
+      DestroyServerConnection(conn);
       return -1;
       }
    
@@ -472,11 +474,7 @@ while (true)
    {
    if ((n = ReceiveTransaction(conn->sd,recvbuffer,NULL)) == -1)
       {
-      if (errno == EINTR) 
-         {
-         continue;
-         }
-
+      DestroyServerConnection(conn);
       free((char *)cfdirh);
       return NULL;
       }
@@ -628,6 +626,7 @@ if (SendTransaction(conn->sd,sendbuffer,tosend,CF_DONE) == -1)
 
 if (ReceiveTransaction(conn->sd,recvbuffer,NULL) == -1)
    {
+   DestroyServerConnection(conn);
    cfPS(cf_error,CF_INTERPT,"recv",pp,attr,"Failed send");
    CfOut(cf_verbose,"","No answer from host, assuming checksum ok to avoid remote copy for now...\n");
    return false;
@@ -715,11 +714,7 @@ while (!done)
    
    if ((n_read = RecvSocketStream(conn->sd,buf,toget,0)) == -1)
       {
-      if (errno == EINTR) 
-         {
-         continue;
-         }
-      
+      DestroyServerConnection(conn);
       cfPS(cf_error,CF_INTERPT,"recv",pp,attr,"Error in client-server stream");
       close(dd);
       free(buf);
@@ -863,6 +858,7 @@ while (more)
    {
    if ((cipherlen = ReceiveTransaction(conn->sd,buf,&more)) == -1)
       {
+      DestroyServerConnection(conn);
       free(buf);
       return false;
       }
@@ -1141,6 +1137,24 @@ for (rp = SERVERLIST; rp != NULL; rp=rp->next)
    }
 
 return false;
+}
+
+/*********************************************************************/
+
+/*
+ * We need to destroy connection as it has got an fatal (or non-fatal) error
+ */
+void DestroyServerConnection(struct cfagent_connection *conn)
+{
+struct Rlist *entry = KeyInRlist(SERVERLIST, conn->remoteip);
+
+ServerDisconnection(conn);
+
+if (entry != NULL)
+   {
+   entry->item = NULL; /* Has been freed by ServerDisconnection */
+   DeleteRlistEntry(&SERVERLIST, entry);
+   }
 }
 
 /*********************************************************************/

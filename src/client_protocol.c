@@ -275,6 +275,7 @@ memset(in,0,CF_BUFSIZE);
 
 if (ReceiveTransaction(conn->sd,in,NULL) == -1)
    {
+   DestroyServerConnection(conn);
    cfPS(cf_error,CF_INTERPT,"recv",pp,attr,"Protocol transaction broken off (1)");
    return false;
    }
@@ -292,6 +293,7 @@ memset(in,0,CF_BUFSIZE);
 
 if (ReceiveTransaction(conn->sd,in,NULL) == -1)
    {
+   DestroyServerConnection(conn);
    cfPS(cf_error,CF_INTERPT,"recv",pp,attr,"Protocol transaction broken off (2)");
    return false;   
    }
@@ -334,6 +336,7 @@ encrypted_len = ReceiveTransaction(conn->sd,in,NULL);
 
 if (encrypted_len <= 0)
    {
+   DestroyServerConnection(conn);
    CfOut(cf_error,"","Protocol transaction sent illegal cipher length");
    return false;      
    }
@@ -381,6 +384,7 @@ if (server_pubkey == NULL)
    /* proposition S4 - conditional */  
    if ((len = ReceiveTransaction(conn->sd,in,NULL)) <= 0)
       {
+      DestroyServerConnection(conn);
       CfOut(cf_error,"","Protocol error in RSA authentation from IP %s\n",pp->this_server);
       return false;
       }
@@ -393,10 +397,11 @@ if (server_pubkey == NULL)
       return false;
       }
 
-   /* proposition S5 - conditional */  
+   /* proposition S5 - conditional */
 
-   if ((len=ReceiveTransaction(conn->sd,in,NULL)) == 0)
+   if ((len=ReceiveTransaction(conn->sd,in,NULL)) <= 0)
       {
+      DestroyServerConnection(conn);
       cfPS(cf_inform,CF_INTERPT,"",pp,attr,"Protocol error in RSA authentation from IP %s\n",pp->this_server);
       RSA_free(newkey);
       return false;
@@ -473,6 +478,7 @@ if (SendTransaction(conn->sd,sendbuffer,tosend,CF_DONE) == -1)
 
 if (ReceiveTransaction(conn->sd,recvbuffer,NULL) == -1)
    {
+   DestroyServerConnection(conn);
    cfPS(cf_inform,CF_INTERPT,"send",pp,attr,"Reply failed while checking version");
    conn->protoversion = 0;
    return;

@@ -330,6 +330,8 @@ constraint:           id                        /* BUNDLE ONLY */
                            CheckConstraint(P.currenttype,P.blockid,P.lval,P.rval,P.rtype,ss);                           
                            AppendConstraint(&(P.currentpromise->conlist),P.lval,P.rval,P.rtype,"any",P.isbody);
                            
+                           CheckPromise(P.currentpromise);
+
                            P.rval = NULL;
                            strcpy(P.lval,"no lval");
                            P.currentRlist = NULL;

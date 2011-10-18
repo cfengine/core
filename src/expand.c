@@ -1039,9 +1039,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
          ok_redefine = true;
          }
       }
-   else if (strcmp(cp->lval,"string") == 0 || strcmp(cp->lval,"slist") == 0 ||
-            strcmp(cp->lval,"int") == 0 || strcmp(cp->lval,"ilist") == 0 ||
-            strcmp(cp->lval,"real") == 0 || strcmp(cp->lval,"rlist") == 0)
+   else if (IsDataType(cp->lval))
       {
       i++;
       rval = cp->rval;

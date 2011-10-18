@@ -1164,9 +1164,11 @@ struct SubTypeSyntax CheckSubType(char *btype,char *type);
 void CheckConstraint(char *type,char *name,char *lval,void *rval,char rvaltype,struct SubTypeSyntax ss);
 void CheckSelection(char *type,char *name,char *lval,void *rval,char rvaltype);
 void CheckConstraintTypeMatch(char *lval,void *rval,char rvaltype,enum cfdatatype dt,char *range,int level);
+void CheckPromise(struct Promise *pp);
 int CheckParseClass(char *lv,char *s,char *range);
 enum cfdatatype StringDataType(char *scopeid,char *string);
 enum cfdatatype ExpectedDataType(char *lvalname);
+bool IsDataType(const char *s);
 
 /* sysinfo.c */
 

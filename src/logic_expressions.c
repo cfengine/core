@@ -197,19 +197,21 @@ switch (expr->op)
    case OR:
    case AND:
       {
-      ExpressionValue lhs = EvalExpression(expr->val.andor.lhs,
-                                           nameevalfn,
-                                           varrefevalfn,
-                                           param);
+      ExpressionValue lhs = EXP_ERROR, rhs = EXP_ERROR;
+
+      lhs = EvalExpression(expr->val.andor.lhs,
+	                   nameevalfn,
+	                   varrefevalfn,
+	                   param);
       if (lhs == EXP_ERROR)
          {
          return EXP_ERROR;
          }
 
-      ExpressionValue rhs = EvalExpression(expr->val.andor.rhs,
-                                           nameevalfn,
-                                           varrefevalfn,
-                                           param);
+      rhs = EvalExpression(expr->val.andor.rhs,
+	                   nameevalfn,
+                           varrefevalfn,
+                           param);
 
       if (rhs == EXP_ERROR)
          {
@@ -245,6 +247,7 @@ switch (expr->op)
 
    case EVAL:
       {
+      ExpressionValue ret = EXP_ERROR;
       char *name = EvalStringExpression(expr->val.eval.name,
                                         varrefevalfn,
                                         param);
@@ -254,7 +257,7 @@ switch (expr->op)
          return EXP_ERROR;
          }
 
-      ExpressionValue ret = (*nameevalfn)(name, param);
+      ret = (*nameevalfn)(name, param);
       free(name);
       return ret;
       }

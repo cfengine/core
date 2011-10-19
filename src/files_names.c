@@ -1225,6 +1225,7 @@ void ReplaceTrailingStr(char *str, char *from, char to)
 {
  int strLen;
  int fromLen;
+ char *startCmp = NULL;
 
  strLen = strlen(str);
  fromLen = strlen(from);
@@ -1234,7 +1235,7 @@ void ReplaceTrailingStr(char *str, char *from, char to)
     return;
     }
 
- char *startCmp = str + strLen - fromLen;
+ startCmp = str + strLen - fromLen;
  
  if(strcmp(startCmp, from) == 0)
     {

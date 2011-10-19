@@ -27,18 +27,19 @@ else
 
 #ifndef MINGW
 CFDIR *OpenDirLocal(const char *dirname)
-{
-CFDIR *ret = xcalloc(1, sizeof(CFDIR));
-DIR *dirh;
 
-ret->dirh = dirh  = opendir(dirname);
+{ CFDIR *ret = xcalloc(1, sizeof(CFDIR));
+  DIR *dirh = NULL;
+  size_t dirent_buf_size = -1;
+
+ret->dirh = dirh = opendir(dirname);
 if (dirh == NULL)
    {
    free(ret);
    return NULL;
    }
 
-size_t dirent_buf_size = GetDirentBufferSize(GetNameMax(dirh));
+dirent_buf_size = GetDirentBufferSize(GetNameMax(dirh));
 if (dirent_buf_size == (size_t)-1)
    {
    FatalError("Unable to determine directory entry buffer size for directory %s", dirname);

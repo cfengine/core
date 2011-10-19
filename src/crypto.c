@@ -400,14 +400,15 @@ fclose(fp);
  *  -1 if there was an error
  */
 static int RemovePublicKey(const char *id)
-{
-char keysdir[CF_BUFSIZE];
+
+{ CFDIR *dirh = NULL;
+  int removed = 0;
+  char keysdir[CF_BUFSIZE];
+  const struct dirent *dirp;
+  char suffix[CF_BUFSIZE];
+
 snprintf(keysdir, CF_BUFSIZE, "%s/ppkeys", CFWORKDIR);
 MapName(keysdir);
-CFDIR *dirh;
-const struct dirent *dirp;
-char suffix[CF_BUFSIZE];
-int removed = 0;
 
 if ((dirh = OpenDirLocal(keysdir)) == NULL)
    {

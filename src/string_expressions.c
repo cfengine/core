@@ -218,7 +218,7 @@ else
 static char *EvalConcat(const StringExpression *expr, VarRefEvaluator evalfn,
                         void *param)
 {
-char *lhs, *rhs;
+char *lhs, *rhs, *res;
 
 lhs = EvalStringExpression(expr->val.concat.lhs, evalfn, param);
 if (!lhs)
@@ -233,7 +233,7 @@ if (!rhs)
    return NULL;
    }
 
-char *res = xmalloc(strlen(lhs) + strlen(rhs) + 1);
+res = xmalloc(strlen(lhs) + strlen(rhs) + 1);
 sprintf(res, "%s%s", lhs, rhs);
 free(lhs);
 free(rhs);

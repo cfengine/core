@@ -112,6 +112,7 @@ static void AddTimeClass(time_t time)
 struct tm parsed_time;
 struct tm gmt_parsed_time;
 char buf[CF_BUFSIZE];
+int day_text_index, quarter, interval_start, interval_end;
 
 if (localtime_r(&time, &parsed_time) == NULL)
    {
@@ -147,7 +148,7 @@ NewClass(MONTH_TEXT[parsed_time.tm_mon]);
    Tuesday is 2 in tm_wday, 1 in DAY_TEXT
    ...
    Sunday  is 0 in tm_wday, 6 in DAY_TEXT */
-int day_text_index = (parsed_time.tm_wday + 6) % 7;
+day_text_index = (parsed_time.tm_wday + 6) % 7;
 NewClass(DAY_TEXT[day_text_index]);
 
 /* Day */
@@ -173,7 +174,7 @@ NewClass(buf);
 
 /* Quarter */
 
-int quarter = parsed_time.tm_min / 15 + 1;
+quarter = parsed_time.tm_min / 15 + 1;
 
 snprintf(buf, CF_BUFSIZE, "Q%d", quarter);
 NewClass(buf);
@@ -185,8 +186,8 @@ NewClass(buf);
 snprintf(buf, CF_BUFSIZE, "Min%02d", parsed_time.tm_min);
 NewClass(buf);
 
-int interval_start = (parsed_time.tm_min / 5) * 5;
-int interval_end = (interval_start + 5) % 60;
+interval_start = (parsed_time.tm_min / 5) * 5;
+interval_end = (interval_start + 5) % 60;
 
 snprintf(buf, CF_BUFSIZE, "Min%02d_%02d", interval_start, interval_end);
 NewClass(buf);

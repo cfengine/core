@@ -455,13 +455,13 @@ bool IsProcessNameRunning(char *procNameRegex)
 
  for (ip = PROCESSTABLE->next; ip != NULL; ip=ip->next)  // iterate over ps lines
     {
+    char *lineSplit[CF_PROCCOLS];
+
     if(EMPTY(ip->name))
        {
        continue;
        }
-    
-    char *lineSplit[CF_PROCCOLS];
-    
+        
     if (!SplitProcLine(ip->name,colHeaders,start,end,lineSplit))
        {
        CfOut(cf_error, "", "!! IsProcessNameRunning: Could not split process line \"%s\"", ip->name);

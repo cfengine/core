@@ -300,11 +300,11 @@ static int SelectOwnerMatch(char *path,struct stat *lstatptr,struct Rlist *crit)
   struct Rlist *rp;
   char ownerName[CF_BUFSIZE];
   int gotOwner;
+  char buffer[CF_SMALLBUF];
 
 InitAlphaList(&leafattrib);
   
 #ifndef MINGW  // no uids on Windows
-char buffer[CF_SMALLBUF];
 sprintf(buffer,"%d",lstatptr->st_uid);
 PrependAlphaList(&leafattrib,buffer); 
 #endif  /* MINGW */

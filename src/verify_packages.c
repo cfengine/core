@@ -2237,9 +2237,9 @@ for (sp = version; *sp != '\0'; sp++)
 static void InvalidateSoftwareCache(void)
 {
 char name[CF_BUFSIZE];
-GetSoftwareCacheFilename(name);
-
 struct utimbuf epoch = { 0, 0 };
+
+GetSoftwareCacheFilename(name);
 
 if (utime(name, &epoch) != 0)
    {

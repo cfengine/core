@@ -236,6 +236,7 @@ int CheckPromises(enum cfagenttype ag)
   char filename[CF_MAXVARSIZE];
   struct stat sb;
   int fd;
+  bool outsideRepo = false;
 
 if ((ag != cf_agent) && (ag != cf_executor) && (ag != cf_server))
    {
@@ -256,7 +257,7 @@ if (cfstat(cfpromises,&sb) == -1)
 
 snprintf(cmd, sizeof(cmd), "\"%s\" -f \"", cfpromises);
 
-bool outsideRepo = IsFileOutsideDefaultRepository(VINPUTFILE);
+outsideRepo = IsFileOutsideDefaultRepository(VINPUTFILE);
 
 if (outsideRepo)
    {

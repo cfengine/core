@@ -400,6 +400,7 @@ char vbuff[CF_BUFSIZE];
 for (i = 0; i < CF_NETATTR; i++)
    {
    struct stat statbuf;
+   double entropy;
    time_t now = time(NULL);
 
    Debug("save incoming %s\n",TCPNAMES[i]);
@@ -418,7 +419,7 @@ for (i = 0; i < CF_NETATTR; i++)
 
    SaveTCPEntropyData(NETIN_DIST[i],i,"in");
 
-   double entropy = MonEntropyCalculate(NETIN_DIST[i]);
+   entropy = MonEntropyCalculate(NETIN_DIST[i]);
    MonEntropyClassesSet(TCPNAMES[i], "in", entropy);
    DeleteItemList(NETIN_DIST[i]);
    NETIN_DIST[i] = NULL;
@@ -427,6 +428,7 @@ for (i = 0; i < CF_NETATTR; i++)
 for (i = 0; i < CF_NETATTR; i++)
    {
    struct stat statbuf;
+   double entropy;
    time_t now = time(NULL);
 
    Debug("save outgoing %s\n",TCPNAMES[i]);
@@ -445,7 +447,7 @@ for (i = 0; i < CF_NETATTR; i++)
 
    SaveTCPEntropyData(NETOUT_DIST[i],i,"out");
 
-   double entropy = MonEntropyCalculate(NETOUT_DIST[i]);
+   entropy = MonEntropyCalculate(NETOUT_DIST[i]);
    MonEntropyClassesSet(TCPNAMES[i], "out", entropy);
    DeleteItemList(NETOUT_DIST[i]);
    NETOUT_DIST[i] = NULL;

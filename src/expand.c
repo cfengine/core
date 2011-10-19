@@ -1001,10 +1001,12 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
              break;
 
          case CF_FNCALL:
+             {
+             bool excluded = false;
              /* eval it: e.g. ifvarclass => not("a_class") */
 
              res = EvaluateFunctionCall(cp->rval,NULL);
-             bool excluded = IsExcluded(res.item);
+             excluded = IsExcluded(res.item);
 
              DeleteRvalItem(res.item,res.rtype);
 
@@ -1012,7 +1014,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
                 {
                 return;
                 }
-             
+             }
              break;
              
          default:

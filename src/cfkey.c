@@ -232,9 +232,11 @@ CloseDB(dbp);
 /*****************************************************************************/
 
 static int RemoveKeys(const char *host)
-{
- RemoveHostFromLastSeen(host,NULL);
-int removed_keys = RemovePublicKeys(remove_keys_host);
+
+{ int removed_keys;
+
+RemoveHostFromLastSeen(host,NULL);
+removed_keys = RemovePublicKeys(remove_keys_host);
 
 if (removed_keys < 0)
    {

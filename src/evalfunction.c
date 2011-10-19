@@ -692,10 +692,11 @@ return rval;
 static struct Rval FnCallConcat(struct FnCall *fp, struct Rlist *finalargs)
 {
 struct Rval rval;
-struct Rlist *arg;
+struct Rlist *arg = NULL;
 char id[CF_BUFSIZE];
-snprintf(id, CF_BUFSIZE, "built-in FnCall concat-arg");
 char result[CF_BUFSIZE] = "";
+
+snprintf(id, CF_BUFSIZE, "built-in FnCall concat-arg");
 
 /* We need to check all the arguments, ArgTemplate does not check varadic functions */
 for(arg = finalargs; arg; arg = arg->next)
@@ -4958,8 +4959,9 @@ switch (*line)
        
        if (CheckID(name))
           {
+          struct Rlist *list = NULL;
           CfOut(cf_verbose,"","Defined variable: %s in context %s with value: %s\n",name,context,content);
-          struct Rlist *list = ParseShownRlist(content);
+          list = ParseShownRlist(content);
           NewList(context,name,list,cf_slist);
           }
        break;

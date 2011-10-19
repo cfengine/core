@@ -428,7 +428,7 @@ void setlinebuf(FILE *stream);
 #define CF_MAXFARGS 8
 #define CF_MAX_IP_LEN 64       /* numerical ip length */
 #define CF_PROCCOLS 16
-//#define CF_HASHTABLESIZE 7919 /* prime number */
+/* #define CF_HASHTABLESIZE 7919  prime number */
 #define CF_HASHTABLESIZE 8192
 #define CF_MACROALPHABET 61    /* a-z, A-Z plus a bit */
 #define CF_ALPHABETSIZE 256

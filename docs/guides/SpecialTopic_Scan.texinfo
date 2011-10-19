@@ -33,8 +33,8 @@
 @cartouche
 @quotation
 
-CFEngine has sophisticated functionality for scanning hosts for
-anomalous content, looking at log messages and unauthorized file
+CFEngine has sophisticated functionality for scanning hosts to find
+anomalous content, for looking through log messages and detecting unauthorized file
 changes. This can form the basis of a host based intrusion shield,
 either alone or in conjunction with other tools.
 
@@ -67,77 +67,55 @@ Copyright @copyright{} October 2011 CFEngine AS
 @end ifinfo
 
 @ifnottex
-@node Top, Architecture Principles, (dir), (dir)
+@node Top, , (dir), (dir)
 @top Security scanning with CFEngine
 @end ifnottex
 
 @contents
 
-@node
-@chapter Security Scans
+@node File scanning
+@chapter File scanning
 
-@node
-@unnumberedsec Intrusion detection
+CFEngine has sophisticated functionality for scanning hosts to find
+anomalous content, for looking through log messages and detecting unauthorized file
+changes. This can form the basis of a host based intrusion shield,
+either alone or in conjunction with other tools.
 
-CFEngine is not designed to be an intrusion detection or intrusion
-prevention system, but it can be used as part of an integrated
-stratey for this.
-
-What is an intrusion or an attempted intrusion? This can be difficult
-to define. If someone tries to login at root once? If someone tries to
-login at root fifty times? Port scanning, a SATAN or ISS scan? Someone
-trying a known security hole? There is no certain way to identify 
-the intentions behind observed change.
-
-The aim of an intrusion detection system is to detect events that can
-be plausibly connected to incidents or break-ins, hopefully while they
-are still in progress so that something can be done about them.
-
-Intrusion detection is a special form of fault-diagnosis. Faults (in a
-security system) are events that are not supposed to happen, but the
-fact is that they do happen. As with all fault diagnosis systems,
-Intrusion Detection Systems (IDS) give the wrong answers from time to
-time. Because it is so difficult to define what intrusion actually
-means in a generic sense intrusion detection systems tend to err on
-the side of caution and report many false positives, i.e. false
-alarms.
-
-One way of doing fault diagnosis is to compare a system to a working
-specification continuously. This is essentially what CFEngine does
-with systems.
-
-@node
-@unnumberedsec Change Detection
-
-Change monitoring is about detecting when stored data, or other
-measurable aspects of a computer system change. A change detection
-system is not normally concerned with the reason for a change, but if
-you are monitoring for change then we shall take it for granted
-somehow that you are expecting to find changes that you didn't plan
-for yourself.
-
-@node
-@subsection Laying tripwires with cryptographic hashes
-
-The most important bulk of information on a computer is its filesystem
-data. Change detection for filesystems uses a technique made famous in
-the original open source program Tripwire, which collects a snapshot
-of the system in the form of a database of file checksums
-(cryptographic hashes) and permissions and rechecked the system
-against this database at regular intervals. Tripwire examines files,
-and looks for change in their contents or their attributes. This is a
-very simple (even simplistic) view of change. If a legitimate change
-is made to the system, such a system responds to this as a potential
-threat. Databases must then be altered, or rebuilt.
+This document describes how to scan systems for potential security
+incidents and vulnerabilities, and view reports across your system
+using the Mission Portal.
 
 
+@node File change detection: tripwires, , Security scanning, Security scanning
+@section File change detection: tripwires
+
+File change monitoring is about detecting when file information on a
+computer system changes. You might or might not know that files
+are going to change. Expected changes are not usually a problem,
+but unexpected change can be problematic or even sinister.
+
+The bulk of information on a computer is its filesystem data. Change
+detection for filesystems uses a technique made famous in the original
+open source program Tripwire, which collects a snapshot of the system
+in the form of a database of file checksums (cryptographic hashes) and
+then periodically rechecks the system against this database to see
+what has changed. Using cryptographic hashes is an efficient way of
+detecting change as it reduces file contents to a unique number, just
+a few bytes long.
+
+If as much as a single bit of information changes, the file hash will
+change by a noticable amount.  This is a very simple (even simplistic)
+view of change. If a legitimate change is made to the system, such a
+system responds to this as a potential threat. Databases must then be
+altered, or rebuilt.
+
+@cartouche
 A cryptographic hash (also called a digest) is an algorithm that reads
 (digests) a file and computes a single number (the hash value) that is
 based on the contents. If so much as a single bit in the file changes
 then the value of the hash will change. You can compute hash values
 manually, for example:
 
- 
 @verbatim
 
 host$ openssl md5 /etc/passwd
@@ -149,55 +127,43 @@ There are several kinds of hash function. The most common ones are MD5
 and SHA1. Recently both of the algorithms that create these hashes
 have been superceded by the newer SHA2.
 
-@cartouche
-Note that the FIPS 140-2 standard for encryption does not recognize
+@sp 1
+Note that the FIPS 140-2 US government standard for encryption does not recognize
 the MD5 hash algorithm. The default algorithm for enterprise grade
 CFEngine is now SHA256.
 @end cartouche
 
 
-@node
-@subsection Computing hashes
+@sp 1
 
-CFEngine has adopted part of the Tripwire model, but with a few
-provisoes. Tripwire assumes that all change is unauthorized and is
-bad. CFEngine cannot reasonably take this viewpoint. CFEngine expects
-systems to change dynamically, so it allows users to define a policy
-for what changes are considered to be okay.
+To use the hash based change detection we first ask CFEengine to
+compute file hashes for specified files and enter them into a
+database. Then, the same promise on subsequent runs will re-collect
+the data and compare the result to what has been stored in the database.
 
-Integrity checks on files whose contents are supposed to be static are
-a good way to detect tampering with the system, from whatever
-source. Running MD5 or SHA1 checksums of files regularly provides us
-with a way of determining even the smallest changes to file contents.
-
-To use the checksum based change detection we first ask cfengine to
-collect MD5 hash data for specified files. Here is an excerpt from a
-cfengine configuration program that would check the /usr/local
-filesystem for file changes. Note that it excludes files such as log
-files that we therefore allow to change (log files are supposed to
-change):
+Here is a simple CFEngine promise that would check the
+@file{/usr/local} filesystem for file changes. Note that it excludes
+files such as log files that we therefore allow to change (log files
+are supposed to change):
 
 @verbatim
 files:
-
-  "/home/mark/tmp/web" -> "me"
-
-   changes      => detect_all_change,
-   depth_search => recurse("inf");
-
+  "/usr/local"
+     changes      => detect_all_change,
+     depth_search => recurse("inf");
 @end verbatim
 
-The first time we run this, cfengine collects data and treats all
-files as unchanged. It builds a database of the checksums. The next
+The first time this promise is kept, CFEngine collects data and treats all
+files as @i{unchanged}. It builds a database of the checksums. The next
 time the rule is checked, cfagent recomputes the checksums and
 compares the new values to the `reference' values stored in the
 database. If no change has occurred, the two should match. If they
 differ, then the file as changed and a warning is issued.
 
 @verbatim
-     cf3:nexus: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-     cf3:nexus: SECURITY ALERT: Checksum (md5) for /etc/passwd changed!
-     cf3:nexus: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   cf3: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   cf3: SECURITY ALERT: Checksum (sha256) for /etc/passwd changed!
+   cf3: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 @end verbatim
 
 This message is designed to be visible. If you do not want the
@@ -209,15 +175,17 @@ body agent control
 {
 exclamation => "false";
 }
-
 @end verbatim
+
+
+@node Automatic updating of the database or not
+@section Automatic updating of the database -- or not
 
 The next question to ask is: what happens if the change that was
 detected is actually okay (which is almost always the case). If you
 activate this option:
 
 @verbatim
-
 
 body changes lay_a_tripwire
 {
@@ -234,8 +202,8 @@ the default, then warning messages will be printed each time the rule
 is checked.
 
 
-@node
-@unnumberedsec file_change.log
+@node file_change.log, , File change detection: tripwires, Security scanning
+@section file_change.log
 
 The file file_hash_event_history contains a separate text log of file
 changes.
@@ -250,19 +218,25 @@ The first column is a time stamp.
 
 
 
-@node
-@unnumberedsec File change reports in Nova and Constellation
+@node File change reports in Nova and Constellation, , file_change.log, Security scanning
+@section File change reports in Nova and Constellation
 
 In the commercially supported editions of CFEngine, users have access
 to a number of reports about file changes.
 
-SCREENSHOT
+@sp 1
+@image{file_change_diffs,15cm}
+@sp 1
+
+@sp 1
+@image{file_change_log,15cm}
+@sp 1
 
 
 
 
-@node
-@unnumberedsec Tamperproof data
+@node Tamperproof data, , File change reports in Nova and Constellation, Security scanning
+@section Tamperproof data
 
 Message digests are supposed to be unbreakable, tamperproof
 technologies, but of course everything can be broken by a sufficiently
@@ -278,27 +252,14 @@ detect a change in the checksum database itself.
 
 Consider the following code: 
 
+@cartouche
 @verbatim
-########################################################
-#
-# Change detect
-#
-########################################################
-
-body common control
-
-{
-bundlesequence  => { "neighbourhood_watch"  };
-}
-
-########################################################
-
 bundle agent neighbourhood_watch
-
 {
 vars:
 
-  "neighbours" slist => peers("/var/cfengine/inputs/hostlist","#.*",4);
+  "neighbours" slist => peers("/var/cfengine/inputs/hostlist","#.*",4),
+             comment => "Get my neighbours from a list of all hosts";
 
 files:
 
@@ -313,7 +274,6 @@ files:
   # Define the actual children to watch over .........................
 
    "/usr/bin"         
-
       comment     => "Watch over the system binaries - changes are mostly updates",
       changes      => detect_all_change,
       depth_search => recurse("inf"),
@@ -321,6 +281,7 @@ files:
 
 }
 @end verbatim
+@end cartouche
 
 It works by building a list of neighbours for each host. The function
 SelectPartitionNeighbours can be used for this. Using a file which
@@ -370,10 +331,110 @@ avalanche of messages if a change is detected. This does make messages
 visible however.
 
 
+@node Change detection bundle summary,  , Tamperproof data, Tamperproof data
+@subsection Change detection bundle summary
 
-@node 
-@unnumberedsec Scanning logs with cf-monitord
-@sp 1
+@cartouche
+@verbatim
+
+bundle agent change_management
+{
+vars:
+
+  "watch_files" slist =>  {
+                          "/etc/passwd", 
+                          "/etc/shadow", 
+                          "/etc/group", 
+                          "/etc/services" 
+                          };
+
+  "watch_dirs" slist =>   {
+                          "/usr"
+                          };
+
+
+  "neighbours"   slist => peers("/var/cfengine/inputs/hostlist","#.*",4),
+               comment => "Partition the network into groups using a host list";
+
+files:
+
+   # Basic change detection
+
+   "$(watch_dirs)"
+      comment      => "Change detection on the directories",
+      changes      => detect_all_change,
+      depth_search => recurse("inf");
+
+   "$(watch_files)" 
+      comment      => "Change detection on important files",
+      changes      => diff;  # diff_noupdate
+
+  # Redundant cross monitoring ... neighbourhood watch
+
+  "$(sys.workdir)/nw/$(neighbours)_checksum_digests.db"
+
+     comment => "Watching our peers remote hash tables for changes - cross check",
+   copy_from => remote_cp("$(sys.workdir)/checksum_digests.db","$(neighbours)"),
+  depends_on => { "grant_hash_tables" },
+      action => neighbourwatch("File hash changes observed on $(neighbours) (neighbourhood watch)");
+}
+
+#######################################################
+
+body action neighbourwatch(s)
+{
+ifelapsed    => "30";
+log_string   => "$(s)";
+log_repaired => "stdout";
+}
+
+@end verbatim
+@end cartouche
+
+
+
+@node Process and network scanning
+@chapter Process and network scanning
+
+Looking at file changes is a very static view of system change -- basically you assume that
+the system should not change from some initial snaphot, or at the very least you warn about
+every change. However, many aspects of a system change all the time, e.g. the network connections
+to and from the host, the processes running on the system.
+
+CFEngine's cf-montord has the ability to learn the trends and
+behaviour of any countable or measurable value on the system. Over
+time, it employs machine-learning methods from artificial intelligence
+to build a normalcy profile for the system. Any significant deviations from
+these profiles can be reported and responded to in policy.
+
+
+
+
+
+
+
+@node Threshold monitoring,  , Breakin, Scanning logs with cf-monitord
+@section Threshold monitoring
+
+@verbatim
+vars:
+
+ "probes" slist => { "www", "smtp", "ssh" };
+
+classes:
+
+ "$(probes)_threshold" expression => isgreaterthan("$(mon.$(probes))","50");
+
+reports:
+
+  "Help $(probes)!" ifvarclass => "$(probes)_threshold";
+
+@end verbatim
+
+
+
+@node Log scanning
+@chapter Log scanning
 
 In CFEngine Nova and above, you can extract data from the
 system in sophisticated ways from files or pipes, using Perl
@@ -385,8 +446,8 @@ You might want to scan a log for instances of a particular
 message and trace this number over time.
 
 
-@node  Scanning log files for patterns, FTP, measurements promises, Monitoring customization
-@unnumberedsubsec Scanning log files for patterns
+@node  Scanning log files for patterns, FTP, Scanning logs with cf-monitord, Scanning logs with cf-monitord
+@section Scanning log files for patterns
 @sp 1
 
 You will have to scan the log file for each separate summary
@@ -437,8 +498,8 @@ expireafter => "10";
 }
 @end verbatim
 
-@node  FTP, DNS, Scanning log files for patterns, Monitoring customization
-@unnumberedsubsec Scanning syslog for FTP statistics
+@node  FTP, DNS, Scanning log files for patterns, Scanning logs with cf-monitord
+@section Scanning syslog for FTP statistics
 @sp 1
 
 There are many things that you can set CFEngine at monitoring.  For example,
@@ -514,8 +575,8 @@ expireafter => "10";
 }
 @end verbatim
 
-@node  DNS, Email, FTP, Monitoring customization
-@unnumberedsubsec Scanning DNS logs for query statistics
+@node  DNS, Email, FTP, Scanning logs with cf-monitord
+@section Scanning DNS logs for query statistics
 @sp 1
 
 Another thing you might want to do is monitor the types of queries that your
@@ -563,8 +624,8 @@ expireafter => "10";
 }
 @end verbatim
 
-@node  Email, Milter, DNS, Monitoring customization
-@unnumberedsubsec Scanning syslog for email statistics
+@node  Email, Milter, DNS, Scanning logs with cf-monitord
+@section Scanning syslog for email statistics
 @sp 1
 
 Email is another syslog-based facility that you may want to use CFEngine to
@@ -636,8 +697,8 @@ expireafter => "10";
 @end verbatim
 
 
-@node  Milter, Breakin, Email, Monitoring customization
-@unnumberedsubsec Scanning syslog for email milter failures
+@node  Milter, Breakin, Email, Scanning logs with cf-monitord
+@section Scanning syslog for email milter failures
 @sp 1
 
 Milters are relatively new in sendmail, and some have problems.  You can also
@@ -692,8 +753,8 @@ commands:
 @end verbatim
 
 
-@node  Breakin, Threshold monitoring, Milter, Monitoring customization
-@unnumberedsubsec Scanning syslog for breakin attempts
+@node  Breakin, Threshold monitoring, Milter, Scanning logs with cf-monitord
+@section Scanning syslog for breakin attempts
 @sp 1
 
 A lot of script-kiddies will probe your site for vulnerabilities, using
@@ -788,31 +849,26 @@ promises.
 
 
 
-@node Threshold monitoring, Summary Monitoring, Breakin, Monitoring customization
-@unnumberedsubsec Threshold monitoring
+@node Intrusion detection,  , TCP dump, Security scanning
+@chapter Intrusion detection
 
-@verbatim
-vars:
+Intrusion detection is a highly specialized area.  CFEngine is not
+designed specifically to be an intrusion detection or intrusion
+prevention system, but it has many features that can be used as part
+of an integrated stratey against intrusions.
 
- "probes" slist => { "www", "smtp", "ssh" };
+What is an intrusion or an attempted intrusion? This can be difficult
+to define. If someone tries to login as root once? If someone tries to
+login at root fifty times? Is port scanning a sign, or perhaps a SATAN
+or ISS scan? Someone trying a known security hole? There is no certain
+way to identify the intentions behind activity we observe on a system.
 
-classes:
-
- "$(probes)_threshold" expression => isgreaterthan("$(mon.$(probes))","50");
-
-reports:
-
-  "Help $(probes)!" ifvarclass => "$(probes)_threshold";
-
-@end verbatim
-
-
-
-@node
-@unnumberedsec TCP dump
-
-CFEngine cf-montord has the ability to interact with tcpdump, if it is installed on your
-system. You can collect data.
+The aim of an intrusion detection system is to detect events that can
+be plausibly connected to incidents or break-ins, hopefully while they
+are still in progress so that something can be done about them.
+One way of doing fault diagnosis is to compare a system to a working
+specification continuously. This is essentially what CFEngine does
+with systems.
 
 
 @bye

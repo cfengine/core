@@ -110,9 +110,6 @@ A time-stamped log of which files have experienced content changes
 since the last observation, as determined by the hashing algorithms in
 CFEngine.
 
-@item state/nova_*.tcdb
-Enterprise level CFEngine's use these data for storing custom system measurements.
-
 @item state/vars.out
 Enterprise level versions of CFEngine use this log to communicate variable
 data.

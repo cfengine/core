@@ -33,8 +33,14 @@
 @cartouche
 @quotation
 
+CFEngine has sophisticated functionality for scanning hosts for
+anomalous content, looking at log messages and unauthorized file
+changes. This can form the basis of a host based intrusion shield,
+either alone or in conjunction with other tools.
+
 This document describes how to scan systems for potential security
-incidents and vulnerabilities.
+incidents and vulnerabilities, and view reports across your system
+using the Mission Portal.
 
 @end quotation
 @end cartouche
@@ -62,23 +68,30 @@ Copyright @copyright{} October 2011 CFEngine AS
 
 @ifnottex
 @node Top, Architecture Principles, (dir), (dir)
-@top Security scanning
+@top Security scanning with CFEngine
 @end ifnottex
 
 @contents
 
+@node
+@chapter Security Scans
 
 @node
 @unnumberedsec Intrusion detection
 
+CFEngine is not designed to be an intrusion detection or intrusion
+prevention system, but it can be used as part of an integrated
+stratey for this.
 
 What is an intrusion or an attempted intrusion? This can be difficult
 to define. If someone tries to login at root once? If someone tries to
-login at root fifty times? Port scanning, SATAN or ISS scan? Someone
-trying a known security hole? These things are quite uncertain. The
-aim of an intrusion detection system is to detect events that can be
-plausibly connected to break-ins, hopefully while they are still in
-progress so that something can be done about them.
+login at root fifty times? Port scanning, a SATAN or ISS scan? Someone
+trying a known security hole? There is no certain way to identify 
+the intentions behind observed change.
+
+The aim of an intrusion detection system is to detect events that can
+be plausibly connected to incidents or break-ins, hopefully while they
+are still in progress so that something can be done about them.
 
 Intrusion detection is a special form of fault-diagnosis. Faults (in a
 security system) are events that are not supposed to happen, but the
@@ -90,18 +103,8 @@ the side of caution and report many false positives, i.e. false
 alarms.
 
 One way of doing fault diagnosis is to compare a system to a working
-specification continuously. This is essentially what cfengine does
+specification continuously. This is essentially what CFEngine does
 with systems.
-
-There are many approaches to intrusion detection. These go well beyond
-the scope of this document. Suffice it to say that cfengine is not
-meant to be an intrusion detection system specifically. One thing
-cfengine can detect however is change, and unexpected changes can
-sometimes be interpreted as tell-tale signs of something unauthorized
-happening. So there is scope for using cfengine as part of a
-host-based intrusion system. CFEngine does not, however, try to
-examine and diagnose network traffic.
-
 
 @node
 @unnumberedsec Change Detection
@@ -118,14 +121,14 @@ for yourself.
 
 The most important bulk of information on a computer is its filesystem
 data. Change detection for filesystems uses a technique made famous in
-the program Tripwire, which collects a snapshot" of the system in the
-form of a database of file checksums (cryptographic hashes) and
-permissions and rechecked the system against this database at regular
-intervals. Tripwire examines files, and looks for change in their
-contents or their attributes. This is a very simple (even simplistic)
-view of change. If a legitimate change is made to the system, such a
-system responds to this as a potential threat. Databases must then be
-altered, or rebuilt.
+the original open source program Tripwire, which collects a snapshot
+of the system in the form of a database of file checksums
+(cryptographic hashes) and permissions and rechecked the system
+against this database at regular intervals. Tripwire examines files,
+and looks for change in their contents or their attributes. This is a
+very simple (even simplistic) view of change. If a legitimate change
+is made to the system, such a system responds to this as a potential
+threat. Databases must then be altered, or rebuilt.
 
 
 A cryptographic hash (also called a digest) is an algorithm that reads
@@ -237,16 +240,25 @@ is checked.
 The file file_hash_event_history contains a separate text log of file
 changes.
 
-     Sun Sep  7 09:42:49 2008,/usr/local/sbin/cfMonitord
-     Sun Sep  7 09:42:49 2008,/usr/local/sbin/cfexecd
-     Sun Sep  7 09:42:49 2008,/usr/local/sbin/cfkey_1220624104_Fri_Sep__5_16_15_15_2008_.cfsaved
-     Sun Sep  7 09:42:49 2008,/usr/local/lib/libgd.so.2.0.0
-     Sun Sep  7 09:42:49 2008,/usr/local/lib/libpromises.la
-     Sun Sep  7 09:42:49 2008,/usr/local/lib/libcfengine.a
-     Sun Sep  7 09:42:49 2008,/usr/local/lib/libgd.la
-     Sun Sep  7 09:42:49 2008,/usr/local/lib/libgd.a
-     Sun Sep  7 09:42:49 2008,/usr/local/lib/libcfengine.la
-     Sun Sep  7 09:42:49 2008,/usr/local/lib/libpromises.a
+@verbatim
+host$ sudo more /var/cfengine/state/file_change.log 
+[sudo] password for you: 
+1308904847,/etc/passwd
+1308904847,/etc/shadow
+@end verbatim
+The first column is a time stamp.
+
+
+
+@node
+@unnumberedsec File change reports in Nova and Constellation
+
+In the commercially supported editions of CFEngine, users have access
+to a number of reports about file changes.
+
+SCREENSHOT
+
+
 
 
 @node

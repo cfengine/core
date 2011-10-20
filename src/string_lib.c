@@ -61,24 +61,29 @@ return buffer;
 
 /*********************************************************************/
 
-char *ToLowerStr (char *str)
+void ToLowerStrInplace(char *str)
+{
+for (; *str != '\0'; str++)
+   {
+   *str = ToLower(*str);
+   }
+}
 
-{ static char buffer[CF_BUFSIZE];
-  int i;
+/*********************************************************************/
 
-memset(buffer,0,CF_BUFSIZE);
+char *ToLowerStr(const char *str)
+
+{
+static char buffer[CF_BUFSIZE];
 
 if (strlen(str) >= CF_BUFSIZE-1)
    {
    FatalError("String too long in ToLowerStr: %s", str);
    }
 
-for (i = 0; (str[i] != '\0') && (i < CF_BUFSIZE-1); i++)
-   {
-   buffer[i] = ToLower(str[i]);
-   }
+strlcpy(buffer, str, CF_BUFSIZE);
 
-buffer[i] = '\0';
+ToLowerStrInplace(buffer);
 
 return buffer;
 }

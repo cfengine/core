@@ -649,10 +649,6 @@ void FreeStringArray(char **strs);
 int IsAbsoluteFileName(const char *f);
 bool IsFileOutsideDefaultRepository(const char *f);
 int RootDirLength(char *f);
-char ToLower (char ch);
-char ToUpper (char ch);
-char *ToUpperStr (char *str);
-char *ToLowerStr (char *str);
 int SubStrnCopyChr(char *to,char *from,int len,char sep);
 int CountChar(char *string,char sp);
 void ReplaceChar(char *in, char *out, int outSz, char from, char to);
@@ -1140,6 +1136,14 @@ void Summarize(void);
 
 void HandleSignals(int signum);
 void SelfTerminatePrelude(void);
+
+/* string_lib.c */
+
+char ToLower (char ch);
+char ToUpper (char ch);
+char *ToUpperStr (char *str);
+char *ToLowerStr(const char *str);
+void ToLowerStrInplace(char *str);
 
 /* sockaddr.c */
 

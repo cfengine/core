@@ -1,24 +1,14 @@
 
-
-In CFEngine 2, one has two separate actions:
-
-@smallexample
- processes
- shellcommands
-@end smallexample
-
-@noindent In CFEngine 3 we have
+In CFEngine 3 we have
 
 @smallexample
  processes
  commands
 @end smallexample
 
-CFEngine 2 got this ontology about right intuitively, but not
-quite. It allowed a @samp{restart} command to appear in a process
-promise, which is really a command execution. This has been
-changed in CFEngine 3 so that there is a cleaner separation. Let's see
-why.
+@noindent so that there is a clean separation between detection (promises
+about the process table) and certain repairs (promises to execute
+commands that start processes). Let's see why.
 
 Executions are about jobs, services, scripts etc. They are properties
 of an executable file. The referring `promiser' is a file
@@ -100,8 +90,7 @@ bundlesequence => { Update, @(globals.all_services)  };
 
 The bundle for this can look like this:
 @verbatim
-bundle agent Service("$(service)")
-
+bundle agent Service(service")
 {
 processes:
 
@@ -123,7 +112,6 @@ An alternative would be self-contained:
 
 @verbatim
 bundle agent Service
-
 {
 vars:
 
@@ -156,27 +144,3 @@ out_of_range_define => "$(s)_up";
 }
 
 @end verbatim
-
-
-Is this a step backwards?
-The CFEngine 3 approach might seem like a step backwards from the simple CFEngine 2 statement:
-@verbatim
-processes:
-
-  "httpd" restart "/etc/init.d/apache restart"
-@end verbatim
-
-However, it allows several improvements.
-
-You can do other things in between stopping and starting the service,
-like file editing, or security sweeps.  You can use templates to
-simplify the syntax in bulk for several process checks or restarts.
-
-@verbatim
-processes:
-
-  "$(service.list)"
-
-@end verbatim
-If you don't want any delay in stopping and starting the service, then
-place these promises in a private bundle with nothing in between them.

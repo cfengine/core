@@ -22,7 +22,54 @@ PrependItem(&list, "two", NULL);
 PrependItem(&list, "three", NULL);
 assert_int_equal(ListLen(list), 3);
 DeleteItemList(list);
-assert_int_equal(ListLen(list), 0);
+}
+
+static void test_list_select_last_matching_finds_first(void **state)
+{
+struct Item *list = NULL, *match = NULL, *prev = NULL;
+bool result = false;
+
+AppendItem(&list, "abc", NULL);
+AppendItem(&list, "def", NULL);
+AppendItem(&list, "ghi", NULL);
+AppendItem(&list, "jkl", NULL);
+
+result = SelectLastItemMatching("abc", list, NULL, &match, &prev);
+assert_true(result);
+assert_int_equal(match, list);
+assert_int_equal(prev, CF_UNDEFINED_ITEM);
+}
+
+static void test_list_select_last_matching_finds_last(void **state)
+{
+struct Item *list = NULL, *match = NULL, *prev = NULL;
+bool result;
+
+AppendItem(&list, "abc", NULL);
+AppendItem(&list, "def", NULL);
+AppendItem(&list, "ghi", NULL);
+AppendItem(&list, "abc", NULL);
+
+result = SelectLastItemMatching("abc", list, NULL, &match, &prev);
+assert_true(result);
+assert_int_equal(match, list->next->next->next);
+assert_int_equal(prev, list->next->next);
+}
+
+static void test_list_select_last_matching_not_found(void **state)
+{
+struct Item *list = NULL, *match = NULL, *prev = NULL;
+bool result;
+
+AppendItem(&list, "abc", NULL);
+AppendItem(&list, "def", NULL);
+AppendItem(&list, "ghi", NULL);
+AppendItem(&list, "abc", NULL);
+
+result = SelectLastItemMatching("xyz", list, NULL, &match, &prev);
+assert_false(result);
+assert_int_equal(match, CF_UNDEFINED_ITEM);
+assert_int_equal(prev, CF_UNDEFINED_ITEM);
 }
 
 int main()
@@ -30,7 +77,10 @@ int main()
 const UnitTest tests[] =
    {
    unit_test(test_prepend_item),
-   /* unit_test(test_list_len), */
+   unit_test(test_list_len),
+   unit_test(test_list_select_last_matching_finds_first),
+   unit_test(test_list_select_last_matching_finds_last),
+   unit_test(test_list_select_last_matching_not_found)
    };
 
 return run_tests(tests);

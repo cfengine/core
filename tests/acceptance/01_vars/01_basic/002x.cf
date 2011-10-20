@@ -1,0 +1,58 @@
+#######################################################
+#
+# Test that a variable cannot be defined twice in the
+# same promise.
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+    "twice" 
+      string => "plus ca change..",
+      int => 42;
+}
+
+#######################################################
+
+bundle agent check
+{
+reports:
+    DEBUG::
+	"Assignment should fail";
+    cfengine_3:
+	"$(this.promise_filename) Pass";
+}
+
+#######################################################
+
+bundle agent fini
+{
+vars:
+	"dummy" string => "dummy";
+}

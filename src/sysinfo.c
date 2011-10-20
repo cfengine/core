@@ -38,7 +38,9 @@
 #include <sys/syssgi.h>
 #endif
 
-static void FindDomainName(char *hostname);
+void CalculateDomainName(const char *nodename, const char *dnsname,
+                         char *fqname, char *uqname, char *domain);
+
 static int Linux_Fedora_Version(void);
 static int Linux_Redhat_Version(void);
 static void Linux_Oracle_VM_Server_Version(void);
@@ -90,6 +92,97 @@ void SetSignals()
 
 /*******************************************************************/
 
+void CalculateDomainName(const char *nodename, const char *dnsname,
+                         char *fqname, char *uqname, char *domain)
+{
+char *ptr;
+
+if (strstr(dnsname,"."))
+   {
+   strlcpy(fqname, dnsname, CF_BUFSIZE);
+   }
+else
+   {
+   strlcpy(fqname, nodename, CF_BUFSIZE);
+   }
+
+if (strncmp(nodename, fqname, strlen(nodename)) == 0
+    && fqname[strlen(nodename)] == '.')
+   {
+   /* If hostname is not qualified */
+   strcpy(domain, fqname + strlen(nodename) + 1);
+   strcpy(uqname,nodename);
+   }
+else
+   {
+   /* If hostname is qualified */
+
+   char *p = strchr(nodename, '.');
+   if (p != NULL)
+      {
+      strlcpy(uqname, nodename, MIN(CF_BUFSIZE, p - nodename + 1));
+      }
+   else
+      {
+      strcpy(uqname, nodename);
+      }
+
+   strcpy(domain, "");
+   }
+}
+
+/*******************************************************************/
+
+void DetectDomainName(const char *orig_nodename)
+{
+char nodename[CF_BUFSIZE];
+strcpy(nodename, orig_nodename);
+ToLowerStrInplace(nodename);
+
+char dnsname[CF_BUFSIZE] = "";
+char fqn[CF_BUFSIZE];
+
+if (gethostname(fqn, sizeof(fqn)) != -1)
+   {
+   struct hostent *hp;
+   if ((hp = gethostbyname(fqn)))
+      {
+      strncpy(dnsname, hp->h_name, CF_MAXVARSIZE);
+      ToLowerStrInplace(dnsname);
+      }
+   }
+
+CalculateDomainName(nodename, dnsname, VFQNAME, VUQNAME, VDOMAIN);
+
+/*
+ * VFQNAME = a.b.c.d ->
+ * NewClass("a.b.c.d")
+ * NewClass("b.c.d")
+ * NewClass("c.d")
+ * NewClass("d")
+ */
+char *ptr = VFQNAME;
+do
+   {
+   NewClass(ptr);
+
+   ptr = strchr(ptr, '.');
+   if (ptr != NULL)
+       ptr++;
+   }
+while (ptr != NULL);
+
+NewClass(VUQNAME);
+NewClass(VDOMAIN);
+
+NewScalar("sys", "host", nodename, cf_str);
+NewScalar("sys", "uqhost", VUQNAME, cf_str);
+NewScalar("sys", "fqhost", VFQNAME, cf_str);
+NewScalar("sys", "domain", VDOMAIN, cf_str);
+}
+
+/*******************************************************************/
+
 void GetNameInfo3()
 
 { int i,found = false;
@@ -123,8 +216,6 @@ if (VSYSTEMHARDCLASS != unused1)
    /* Already have our name - so avoid memory leaks by recomputing */
    return;
    }
-
-VFQNAME[0] = VUQNAME[0] = '\0';
 
 if (uname(&VSYSNAME) == -1)
    {
@@ -202,39 +293,11 @@ if (strcmp(VSYSNAME.machine == 'i86pc') == 0)
    }
 #endif
 
+DetectDomainName(VSYSNAME.nodename);
 
-FindDomainName(VSYSNAME.nodename);
 
-if (!StrStr(VSYSNAME.nodename,VDOMAIN))
-   {
-   strcpy(VUQNAME,ToLowerStr(VSYSNAME.nodename));
-   NewClass(ToLowerStr(VUQNAME));
-   snprintf(VFQNAME,CF_BUFSIZE,"%s.%s",VUQNAME,ToLowerStr(VDOMAIN));
-   NewClass(ToLowerStr(VFQNAME));
-   }
-else
-   {
-   int n = 0;
-   strcpy(VFQNAME,ToLowerStr(VSYSNAME.nodename));
-   NewClass(VFQNAME);
 
-   while(VSYSNAME.nodename[n++] != '.' && VSYSNAME.nodename[n] != '\0')
-      {
-      }
 
-   strncpy(VUQNAME,ToLowerStr(VSYSNAME.nodename),n);
-
-   if (VUQNAME[n-1] == '.')
-      {
-      VUQNAME[n-1] = '\0';
-      }
-   else
-      {
-      VUQNAME[n] = '\0';
-      }
-
-   NewClass(VUQNAME);
-   }
 
 if ((tloc = time((time_t *)NULL)) == -1)
    {
@@ -259,9 +322,6 @@ Chop(workbuf);
 
 NewScalar("sys","date",workbuf,cf_str);
 NewScalar("sys","cdate",CanonifyName(workbuf),cf_str);
-NewScalar("sys","host",VSYSNAME.nodename,cf_str);
-NewScalar("sys","uqhost",VUQNAME,cf_str);
-NewScalar("sys","fqhost",VFQNAME,cf_str);
 NewScalar("sys","os",VSYSNAME.sysname,cf_str);
 NewScalar("sys","release",VSYSNAME.release,cf_str);
 NewScalar("sys","version",VSYSNAME.version,cf_str);
@@ -390,15 +450,6 @@ NewScalar("sys","winprogdir86","/dev/null",cf_str);
 LoadSlowlyVaryingObservations();
 EnterpriseContext();
 
-if (strlen(VDOMAIN) > 0)
-   {
-   NewScalar("sys","domain",VDOMAIN,cf_str);
-   }
-else
-   {
-   NewScalar("sys","domain","undefined_domain",cf_str);
-   NewClass("undefined_domain");
-   }
 
 sprintf(workbuf,"%u_bit",(unsigned)sizeof(long)*8);
 NewClass(workbuf);
@@ -612,77 +663,6 @@ for (ip = IPADDRESSES; ip != NULL; ip=ip->next)
 
 Debug("(%s) is not one of my interfaces\n",adr);
 return false;
-}
-
-/*********************************************************************/
-
-static void FindDomainName(char *hostname)
-
-{ char fqn[CF_MAXVARSIZE] = {0};
-  char *ptr;
-  char buffer[CF_BUFSIZE];
-
-strcpy(VFQNAME,hostname); /* By default VFQNAME = hostname (nodename) */
-
-if (strstr(VFQNAME,".") == 0)
-   {
-   /* The nodename is not full qualified - try to find the FQDN hostname */
-
-   if (gethostname(fqn, sizeof(fqn)) != -1)
-      {
-      struct hostent *hp;
-
-      if ((hp = gethostbyname(fqn)))
-         {
-         if (strstr(hp->h_name,"."))
-            {
-            /* We find a FQDN hostname So we change the VFQNAME variable */
-            strncpy(VFQNAME,hp->h_name,CF_MAXVARSIZE);
-            VFQNAME[CF_MAXVARSIZE-1]= '\0';
-            }
-         }
-      }
-   }
-
-strcpy(buffer,VFQNAME);
-NewClass(buffer);
-NewClass(ToLowerStr(buffer));
-
-if (strstr(VFQNAME,"."))
-   {
-   /* If VFQNAME is full qualified we can create VDOMAIN variable */
-   ptr = strchr(VFQNAME, '.');
-   strcpy(VDOMAIN, ++ptr);
-   DeleteClass("undefined_domain");
-   }
-
-if (strstr(VFQNAME,".") == 0 && (strcmp(VDOMAIN,CF_START_DOMAIN) != 0))
-   {
-   strcat(VFQNAME,".");
-   strcat(VFQNAME,VDOMAIN);
-   }
-
-if (strstr(VFQNAME,"."))
-   {
-   /* Add some domain hierarchy classes */
-   for (ptr=VFQNAME; *ptr != '\0'; ptr++)
-      {
-      if (*ptr == '.')
-         {
-         if (*(ptr+1) != '\0')
-            {
-            Debug("Defining domain #%s#\n",(ptr+1));
-            NewClass(ptr+1);
-            }
-         else
-            {
-            Debug("Domain rejected\n");
-            }
-         }
-      }
-   }
-
-NewClass(VDOMAIN);
 }
 
 /*******************************************************************/

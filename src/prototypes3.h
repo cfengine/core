@@ -645,6 +645,7 @@ void Chop(char *str);
 void StripTrailingNewline(char *str);
 bool IsStrIn(const char *str, const char **strs);
 bool IsStrCaseIn(const char *str, const char **strs);
+char **String2StringArray(char *str, char separator);
 void FreeStringArray(char **strs);
 int IsAbsoluteFileName(const char *f);
 bool IsFileOutsideDefaultRepository(const char *f);

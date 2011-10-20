@@ -935,6 +935,59 @@ return false;
 
 /*********************************************************************/
 
+char **String2StringArray(char *str, char separator)
+/** 
+ * Parse CSVs into char **.
+ * MEMORY NOTE: Caller must free return value with FreeStringArray().
+ **/
+{
+ char *sp,*esp;
+ int i = 0, len;
+
+ if(str == NULL)
+    {
+    return NULL;
+    }
+ 
+ for(sp = str; *sp != '\0'; sp++)
+    {
+    if(*sp == separator)
+       {
+       i++;
+       }
+    }
+ 
+ char **arr = (char **)calloc(i+2, sizeof(char *));
+ 
+ sp = str;
+ i = 0;
+ 
+ while(sp)
+    {
+       esp = strchr(sp,separator);
+       
+       if(esp)
+          {
+          len = esp - sp;
+          esp++;
+          }
+       else
+          {
+          len = strlen(sp);
+          }
+       
+       arr[i] = calloc(len+1, sizeof(char));
+       strncpy(arr[i], sp, len);
+       
+       sp = esp;
+       i++;
+    }
+
+ return arr;
+}
+
+/*********************************************************************/
+
 void FreeStringArray(char **strs)
 
 { int i;

@@ -139,6 +139,21 @@ ClassAuditLog(&dummyp,dummyattr,"Cfagent closing",CF_NOP,"");
 
 /*****************************************************************************/
 
+/*
+ * Vars, classes and similar promises which do not affect the system itself (but
+ * just support evalution) do not need to be counted as repaired/failed, as they
+ * may change every iteration and introduce lot of churn in reports without
+ * giving any value.
+ */
+static bool IsPromiseValuableForStatus(const struct Promise *pp)
+{
+return pp
+   && pp->agentsubtype != NULL
+   && !IsStrIn(pp->agentsubtype,NO_STATUS_TYPES);
+}
+
+/*****************************************************************************/
+
 void ClassAuditLog(struct Promise *pp,struct Attributes attr,char *str,char status,char *reason)
 
 { time_t now = time(NULL);
@@ -154,14 +169,7 @@ void ClassAuditLog(struct Promise *pp,struct Attributes attr,char *str,char stat
 
   Debug("ClassAuditLog(%s)\n",str);
 
-  // never count vars or classes as repaired (creates messy reports)
-
-if (pp && (pp->agentsubtype == NULL || IsStrIn(pp->agentsubtype,NO_STATUS_TYPES)))
-   {
-   return;
-   }
-
-if (pp && IsStrIn(pp->agentsubtype,NO_LOG_TYPES))
+if (pp && pp->agentsubtype && IsStrIn(pp->agentsubtype,NO_LOG_TYPES))
    {
    log = false;
    }
@@ -169,12 +177,15 @@ if (pp && IsStrIn(pp->agentsubtype,NO_LOG_TYPES))
 switch(status)
    {
    case CF_CHG:
-       
-       if (!EDIT_MODEL)
-          {
-          PR_REPAIRED++;       
-          VAL_REPAIRED += attr.transaction.value_repaired;
-          }
+
+      if (IsPromiseValuableForStatus(pp))
+         {
+         if (!EDIT_MODEL)
+            {
+            PR_REPAIRED++;
+            VAL_REPAIRED += attr.transaction.value_repaired;
+            }
+         }
 
        AddAllClasses(attr.classes.change,attr.classes.persist,attr.classes.timer);
        DeleteAllClasses(attr.classes.del_change);
@@ -188,8 +199,11 @@ switch(status)
        
    case CF_WARN:
 
-       PR_NOTKEPT++;
-       VAL_NOTKEPT += attr.transaction.value_notkept;
+      if (IsPromiseValuableForStatus(pp))
+         {
+         PR_NOTKEPT++;
+         VAL_NOTKEPT += attr.transaction.value_notkept;
+         }
        
        if (log)
           {
@@ -199,8 +213,12 @@ switch(status)
        
    case CF_TIMEX:
 
-       PR_NOTKEPT++;
-       VAL_NOTKEPT += attr.transaction.value_notkept;
+      if (IsPromiseValuableForStatus(pp))
+         {
+         PR_NOTKEPT++;
+         VAL_NOTKEPT += attr.transaction.value_notkept;
+         }
+
        AddAllClasses(attr.classes.timeout,attr.classes.persist,attr.classes.timer);
        DeleteAllClasses(attr.classes.del_notkept);
 
@@ -214,8 +232,12 @@ switch(status)
 
    case CF_FAIL:
 
-       PR_NOTKEPT++;
-       VAL_NOTKEPT += attr.transaction.value_notkept;
+      if (IsPromiseValuableForStatus(pp))
+         {
+         PR_NOTKEPT++;
+         VAL_NOTKEPT += attr.transaction.value_notkept;
+         }
+
        AddAllClasses(attr.classes.failure,attr.classes.persist,attr.classes.timer);
        DeleteAllClasses(attr.classes.del_notkept);
 
@@ -228,8 +250,12 @@ switch(status)
        
    case CF_DENIED:
 
-       PR_NOTKEPT++;
-       VAL_NOTKEPT += attr.transaction.value_notkept;
+      if (IsPromiseValuableForStatus(pp))
+         {
+         PR_NOTKEPT++;
+         VAL_NOTKEPT += attr.transaction.value_notkept;
+         }
+
        AddAllClasses(attr.classes.denied,attr.classes.persist,attr.classes.timer);
        DeleteAllClasses(attr.classes.del_notkept);
 
@@ -242,8 +268,12 @@ switch(status)
        
    case CF_INTERPT:
 
-       PR_NOTKEPT++;
-       VAL_NOTKEPT += attr.transaction.value_notkept;
+      if (IsPromiseValuableForStatus(pp))
+         {
+         PR_NOTKEPT++;
+         VAL_NOTKEPT += attr.transaction.value_notkept;
+         }
+
        AddAllClasses(attr.classes.interrupt,attr.classes.persist,attr.classes.timer);
        DeleteAllClasses(attr.classes.del_notkept);
 
@@ -266,8 +296,12 @@ switch(status)
           SummarizeTransaction(attr,pp,attr.transaction.log_kept);
           }
        
-       PR_KEPT++;
-       VAL_KEPT += attr.transaction.value_kept;
+      if (IsPromiseValuableForStatus(pp))
+         {
+         PR_KEPT++;
+         VAL_KEPT += attr.transaction.value_kept;
+         }
+
        break;
    }
 

@@ -1,0 +1,82 @@
+#######################################################
+#
+# Test that 'classes' body works on 'vars' promises
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+  "foo"
+     string => execresult("/nonexisting", "noshell"),
+     classes => setclasses("nonexisting_t", "nonexisting_f");
+
+  "bar"
+     string => execresult("/bin/true", "noshell"),
+     classes => setclasses("true_t", "true_f");
+}
+
+body classes setclasses(t,f)
+{
+promise_repaired => { "$(t)" };
+promise_kept => { "$(t)" };
+repair_failed   => { "$(f)" };
+repair_denied   => { "$(f)" };
+repair_timeout  => { "$(f)" };
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+  "ok" expression => "!nonexisting_f.!nonexisting_t.true_t.!true_f";
+
+reports:
+  DEBUG.nonexisting_t::
+    "nonexisting_t";
+  DEBUG.nonexisting_f::
+    "nonexisting_f";
+  DEBUG.true_t::
+    "true_t";
+  DEBUG.true_f::
+    "true_f";
+
+  ok::
+    "$(this.promise_filename) Pass";
+  !ok::
+    "$(this.promise_filename) FAIL";
+}
+
+#######################################################
+
+bundle agent fini
+{
+vars:
+	"dummy" string => "dummy";
+}

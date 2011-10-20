@@ -18,12 +18,12 @@
 @c ***********************************************************************
 @c %** start of header
 @setfilename st-scan.info
-@settitle Security Scanning with CFEngine
+@settitle Security Scanning and Tripwires with CFEngine
 @setchapternewpage odd
 @c %** end of header
 
 @titlepage
-@title Security Scanning with CFEngine
+@title Security Scanning and Tripwires with CFEngine
 @subtitle A CFEngine Special Topics Handbook
 @author CFEngine AS
 
@@ -68,7 +68,7 @@ Copyright @copyright{} October 2011 CFEngine AS
 
 @ifnottex
 @node Top, , (dir), (dir)
-@top Security scanning with CFEngine
+@top Security scanning and tripwires with CFEngine
 @end ifnottex
 
 @contents
@@ -94,25 +94,24 @@ computer system changes. You might or might not know that files
 are going to change. Expected changes are not usually a problem,
 but unexpected change can be problematic or even sinister.
 
-The bulk of information on a computer is its filesystem data. Change
+The bulk of information on a computer is its file data. Change
 detection for filesystems uses a technique made famous in the original
 open source program Tripwire, which collects a snapshot of the system
 in the form of a database of file checksums (cryptographic hashes) and
 then periodically rechecks the system against this database to see
 what has changed. Using cryptographic hashes is an efficient way of
 detecting change as it reduces file contents to a unique number, just
-a few bytes long.
+a few bytes long, which can be stored for later comparison to detect change.
 
 If as much as a single bit of information changes, the file hash will
 change by a noticable amount.  This is a very simple (even simplistic)
-view of change. If a legitimate change is made to the system, such a
-system responds to this as a potential threat. Databases must then be
-altered, or rebuilt.
+view of change, but it is effective at warning about potential
+incursions to the system.
 
 @cartouche
 A cryptographic hash (also called a digest) is an algorithm that reads
-(digests) a file and computes a single number (the hash value) that is
-based on the contents. If so much as a single bit in the file changes
+(digests) a file and computes a single number (the hash value) 
+based on its contents. If so much as a single bit in the file changes
 then the value of the hash will change. You can compute hash values
 manually, for example:
 
@@ -124,8 +123,8 @@ MD5(/etc/passwd)= 1fbd82252c441d0e9539f8f7271ec2fe
 @end verbatim
 
 There are several kinds of hash function. The most common ones are MD5
-and SHA1. Recently both of the algorithms that create these hashes
-have been superceded by the newer SHA2.
+and SHA1. Recently both of these algorithms 
+have been superceded by the newer SHA2 set.
 
 @sp 1
 Note that the FIPS 140-2 US government standard for encryption does not recognize
@@ -136,15 +135,14 @@ CFEngine is now SHA256.
 
 @sp 1
 
-To use the hash based change detection we first ask CFEengine to
+To use hash based change detection we use @file{files} promises
+and the @code{changes} feature; first we ask CFEengine to
 compute file hashes for specified files and enter them into a
 database. Then, the same promise on subsequent runs will re-collect
 the data and compare the result to what has been stored in the database.
 
-Here is a simple CFEngine promise that would check the
-@file{/usr/local} filesystem for file changes. Note that it excludes
-files such as log files that we therefore allow to change (log files
-are supposed to change):
+Here is a simple CFEngine promise that checks for changes in
+@file{/usr/local}:
 
 @verbatim
 files:
@@ -153,12 +151,15 @@ files:
      depth_search => recurse("inf");
 @end verbatim
 
-The first time this promise is kept, CFEngine collects data and treats all
-files as @i{unchanged}. It builds a database of the checksums. The next
-time the rule is checked, cfagent recomputes the checksums and
+@noindent This example uses the standard library template @samp{detect_all_change}.
+
+The first time this promise is kept, CFEngine collects data and treats
+all files as @i{unchanged}. It builds a database of the checksums. The
+next time the rule is checked, cfagent recomputes the checksums and
 compares the new values to the `reference' values stored in the
 database. If no change has occurred, the two should match. If they
-differ, then the file as changed and a warning is issued.
+differ, then the file as changed and a warning is issued either on the
+command line (if you are testing manually) or by email.
 
 @verbatim
    cf3: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -178,28 +179,136 @@ exclamation => "false";
 @end verbatim
 
 
-@node Automatic updating of the database or not
-@section Automatic updating of the database -- or not
 
-The next question to ask is: what happens if the change that was
-detected is actually okay (which is almost always the case). If you
-activate this option:
+@node Example change management
+@section Example change management
 
+Try the following complete example.
+@cartouche
 @verbatim
+body common control
+{
+bundlesequence => { "test_change" };
+inputs => { "LapTop/cfengine/copbl/cfengine_stdlib.cf" };
+}
 
-body changes lay_a_tripwire
+bundle agent test_change
+{
+files:
+
+  "/tmp"
+       changes => detect_all_change,
+   depth_search => recurse("inf");
+}
+@end verbatim
+@end cartouche
+@sp 1
+@noindent This example shows how we use standard library templates to 
+scan a directory and (recursively) all of its sub-directories and their
+contents. 
+
+The first time we run this, we get a lot of messages about new files being detected.
+This learns and defines the baseline for future comparisons:
+@cartouche
+@smallexample
+host$ ~/LapTop/cfengine/core/src/cf-agent -f ~/test.cf -K
+
+ !! File /tmp/.X0-lock was not in sha512 database - new file found
+I: Made in version 'not specified' of '/home/a10004/test.cf' near line 14
+ !! File /tmp/pulse-5weilfdGWBDj/pid was not in sha512 database - new file found
+I: Made in version 'not specified' of '/home/a10004/test.cf' near line 14
+@end smallexample
+@end cartouche
+@noindent Next we can create a new file in the directory:
+@verbatim 
+host$ touch /tmp/blablabla
+host$ ~/LapTop/cfengine/core/src/cf-agent -f ~/test.cf -K
+
+ !! File /tmp/blablabla was not in sha512 database - new file found
+I: Made in version 'not specified' of '/home/a10004/test.cf' near line 14
+@end verbatim
+
+@noindent Next we edit the contents of the file
+@cartouche
+@smallexample
+host$ echo sldjfkdsf > /tmp/blablabla 
+host$ ~/LapTop/cfengine/core/src/cf-agent -f ~/test.cf -K
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ALERT: Hash (sha512) for /tmp/blablabla changed!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ -> Updating hash for /tmp/blablabla to SHA=63fc10a0c57dc8cbd2c259b4d0bb81e1b4e5cf23f1fdc8b8
+I: Made in version 'not specified' of '/home/a10004/test.cf' near line 14
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ALERT: Last modified time for /tmp/blablabla changed Thu Oct 20 08:46:58 2011 -> Thu Oct 20 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+@end smallexample
+@end cartouche
+@noindent Note the different messages here. The first message notes that the contents of the file
+have changed. The second indicates that the database has been updated with the new hash of the
+file so that this message will not be regenerated on every subsequent run of CFEngine. Finally,
+it notes that the modification time on the file changed. These messages reflect the default settings
+in the @samp{detect_all_change} template (see below).
+
+Finally, if we remove a file from a monitored directory, we see the following:
+@cartouche
+@smallexample
+host$ rm /tmp/blablabla 
+host$ ~/LapTop/cfengine/core/src/cf-agent -f ~/test.cf -K
+
+ALERT: /tmp/blablabla file no longer exists!
+I: Made in version 'not specified' of '/home/a10004/test.cf' near line 14
+@end smallexample
+@end cartouche
+In this example, we used the standard library template @samp{detect_all_change},
+which is defined as follows:
+@verbatim
+body changes detect_all_change
+{
+hash           => "best";
+report_changes => "all";
+update_hashes  => "yes";
+}
+@end verbatim
+
+This is the most exacting option, but it costs CPU time to compute two different hashes 
+for cross-referencing as well as for reading 
+disk files and it costs disk space in storing both content hashes and additional
+file attribute information. Moreover, it resets its learned database each time a change
+is made.
+
+There are several alternatives. To save CPU and disk, we can just monitor content:
+@verbatim
+body changes detect_content
 {
 hash           => "md5";
 report_changes => "content";
-update         => "yes";
+update_hashes  => "yes";
 }
-
+@end verbatim
+@noindent To prevent the database being updated, we can use:
+@verbatim
+body changes noupdate
+{
+hash           => "sha256";
+report_changes => "content";
+update_hashes  => "no";
+}
 @end verbatim
 
-Then, as soon as a change has been detected, the database is updated
-and the message will not be repeated. If this is set to off, which is
-the default, then warning messages will be printed each time the rule
-is checked.
+Finally, commercially supported versions of CFEngine will support
+detection of file difference reports in the Mission Portal, if enabled
+in policy:
+@verbatim
+body changes diff # Generates diff report (Nova and above)
+{
+hash           => "sha256";
+report_changes => "content";
+report_diffs   => "true";
+update_hashes  => "yes";
+}
+@end verbatim
 
 
 @node file_change.log, , File change detection: tripwires, Security scanning
@@ -214,19 +323,24 @@ host$ sudo more /var/cfengine/state/file_change.log
 1308904847,/etc/passwd
 1308904847,/etc/shadow
 @end verbatim
-The first column is a time stamp.
-
-
+The first column is a time stamp. If you are using one of the commercial versions
+of CFEngine, you can see a more user friendly report for the entire enterprise or
+for a single host in the next section.
 
 @node File change reports in Nova and Constellation, , file_change.log, Security scanning
 @section File change reports in Nova and Constellation
 
 In the commercially supported editions of CFEngine, users have access
-to a number of reports about file changes.
+to a number of reports about file changes. A report of file changes and the
+times at which the changes were detected is available in the file change report:
 
 @sp 1
 @image{file_change_diffs,15cm}
 @sp 1
+
+@noindent CFEngine does not record the actual changes unless you mention files
+explicitly by name, and the report is mostly useful if the file is a text file.
+In that case, you will see a change report:
 
 @sp 1
 @image{file_change_log,15cm}
@@ -242,15 +356,17 @@ Message digests are supposed to be unbreakable, tamperproof
 technologies, but of course everything can be broken by a sufficiently
 determined attacker. Suppose someone wanted to edit a file and alter
 the cfengine checksum database to cover their tracks. If they had
-broken into your system, this is potentially easy to do. How can we
+broken into your system, this is potentially doable, though not easy. How can we
 detect whether this has happened or not?
 
-A simple solution to this problem is to use another checksum-based
+A simple solution to this is to exploit the fact that CFEngine is a
+distributed system, and to make neighbouring hosts work together to
+watch over one another. We can use the same idea for change detection,
+but now remotely across networked hosts: we
+use another checksum-based
 operation to copy the database to a completely different host. By
 using a copy operation based on a checksum value, we can also remotely
 detect a change in the checksum database itself.
-
-Consider the following code: 
 
 @cartouche
 @verbatim
@@ -267,14 +383,15 @@ files:
 
   "$(sys.workdir)/nw/$(neighbours)_checksum_digests.db"
 
-     comment => "Watch our peers remote hash tables and keep a local copy",
-    copyfrom => remote_cp("$(sys.workdir)/checksum_digests.db",$(neighbours)),
+     comment => "Watch our peers remote hash tables!",
+    copy_from => 
+           remote_cp("$(sys.workdir)/checksum_digests.db",$(neighbours)),
   depends_on => { "grant_hash_tables" };
 
   # Define the actual children to watch over .........................
 
    "/usr/bin"         
-      comment     => "Watch over the system binaries - changes are mostly updates",
+      comment     => "Watch over the system binaries",
       changes      => detect_all_change,
       depth_search => recurse("inf"),
       action       => measure;
@@ -283,46 +400,59 @@ files:
 @end verbatim
 @end cartouche
 
-It works by building a list of neighbours for each host. The function
-SelectPartitionNeighbours can be used for this. Using a file which
-contains a list of all hosts running cfengine (e.g. the cfrun.hosts
-file), we create a list of hosts to copy databases from. Each host in
-the network therefore takes on the responsibility to watch over its
-neighbours.
+We must have a file @file{hostlist} containing a list of all participating hosts; it is
+best to list IP addresses, one per line, but host names will also do.
+This works as follows.
+
+Each host extracts from the host lists a list of (in this case three) neighbours,
+since we have set a neighbourhood size of 4. The CFEngine built-in function
+@samp{peers()} can be used for this. Each host in
+the network takes on the responsibility to watch over its
+neighbours by promising to copy the change databases for its neighbours
+only if they have changed. Any changes are then logged as alerts.
 
 The copy rule attempts to copy the database to some file in a
-safekeeping directory. We label the destination file with $(this)
-which becomes the name of the server from which the file was
-collected. Finally, we backup any successful copies using a timestamp
-to retain a complete record of all changes on the remote host. Each
-time a change is detected, a copy will be kept of the old. The rule
-contains triggers to issue alerts and warnings too just to make sure
-the message will be heard.
-
+safekeeping directory @code{$(sys.workdir)/nw}. 
 In theory, all four neigbours should signal this change. If an
 attacker had detailed knowledge of the system, he or she might be able
-to subvert one or two of these before the change was detected, but it
+to subvert one of these before the change was detected, but it
 is unlikely that all four could be covered up. At any rate, this
 approach maximizes the chances of change detection.
 
-Finally, in order to make this copy, you must, of course, grant access to the database in cfservd.conf. 
+Finally, in order to make this copy, you must, of course, grant access to the database in 
+by granting access to the database in a bundle of server promises:
 
 @verbatim
-     # cfservd.conf
+bundle server access_rules()
+{
+vars:
 
-     admit:
+  # List here the IP masks that we grant access to on the server
 
-     any::
+    "acl" slist => { 
+                   "$(sys.policy_hub)/24",
+                   "128.39.89.233", 
+                   "2001:700:700:3.*"
+                   },
+       comment => "Define an acl for the machines to be granted accesses",
+        handle => "common_def_vars_acl"; 
 
-       /var/cfengine/checksum_digests.db  mydomain.tld
+access:
+
+  "/var/cfengine/checksum_digests.tcdb"
+
+     handle => "grant_hash_tables",
+    admit   => { @(acl) },
+    maproot => { @(acl) };
+
 @end verbatim
 
 Let us now consider what happens if an attacker changes a file an
 edits the checksum database. Each of the four hosts that has been
 designated a neighbour will attempt to update their own copy of the
 database. If the database has been tampered with, they will detect a
-change in the md5 checksums of the remote copy versus the
-original. The file will therefore be copied.
+change in the hashes of the remote copy versus the original. The file
+will therefore be copied.
 
 It is not a big problem that others have a copy of your checksum
 database. They cannot see the contents of your files from this. A
@@ -332,7 +462,9 @@ visible however.
 
 
 @node Change detection bundle summary,  , Tamperproof data, Tamperproof data
-@subsection Change detection bundle summary
+@section Change detection bundle summary
+
+A typical promise structure for doing change management.
 
 @cartouche
 @verbatim
@@ -352,14 +484,10 @@ vars:
                           "/usr"
                           };
 
-
   "neighbours"   slist => peers("/var/cfengine/inputs/hostlist","#.*",4),
-               comment => "Partition the network into groups using a host list";
+               comment => "Partition the network into groups";
 
 files:
-
-   # Basic change detection
-
    "$(watch_dirs)"
       comment      => "Change detection on the directories",
       changes      => detect_all_change,
@@ -373,10 +501,11 @@ files:
 
   "$(sys.workdir)/nw/$(neighbours)_checksum_digests.db"
 
-     comment => "Watching our peers remote hash tables for changes - cross check",
-   copy_from => remote_cp("$(sys.workdir)/checksum_digests.db","$(neighbours)"),
+     comment => "Watching our peers remote hashes  - cross check",
+   copy_from => 
+           remote_cp("$(sys.workdir)/checksum_digests.db","$(neighbours)"),
   depends_on => { "grant_hash_tables" },
-      action => neighbourwatch("File hash changes observed on $(neighbours) (neighbourhood watch)");
+      action => neighbourwatch("File changes observed on $(neighbours)");
 }
 
 #######################################################
@@ -399,22 +528,227 @@ log_repaired => "stdout";
 Looking at file changes is a very static view of system change -- basically you assume that
 the system should not change from some initial snaphot, or at the very least you warn about
 every change. However, many aspects of a system change all the time, e.g. the network connections
-to and from the host, the processes running on the system.
+to and from the host, the processes running on the system. 
 
-CFEngine's cf-montord has the ability to learn the trends and
+The system might attain some kind of @i{statistical} normalcy, which can be learnt
+over time, but it that is based on a kind of equilibrium with its environment, not
+of locking down the system completely. 
+
+CFEngine's @code{cf-montord} has the ability to learn the trends and
 behaviour of any countable or measurable value on the system. Over
 time, it employs machine-learning methods from artificial intelligence
 to build a normalcy profile for the system. Any significant deviations from
 these profiles can be reported and responded to in policy.
 
+@sp 1 
+@cartouche
+In the Special Topics Guide @i{Monitoring with CFEngine}, you will find more information about
+about how to use CFEngine's monitoring daemon @code{cf-monitord} to watch over changes
+to the system that are dynamical.
+@end cartouche
+
+
+@node Watching processes
+@section Watching processes
+
+CFEngine does not encourage the watching of systems without repair,
+i.e.  simply informing humans about changes without fixing
+problems. After all, if you have a chance to repair something that is
+already encoded into policy, why wouldn't you simply do it? However,
+in certain mission critical environments you might want a specific
+alert about changes even though a repair was made. If certain
+conditions are not supposed to happen, it is good to know that they did.
+
+In the following example, we look for a number of very specific
+processes in the process table, using our own promise-bdy template.
+Then we use a standard library template @code{check_range} to
+set policy for an acceptable range of such processes on the system.
+
+This combines two kinds of checks: how many of a particular process
+is acceptable at any given moment, and the precise parameters
+satsified: in this case, the amount of memory used by the process.
+
+@sp 1
+@cartouche
+@verbatim
+bundle agent count_important_processes
+{
+processes:
+
+ ".*"
+
+    process_select  => my_proc_finder("myprocess"),
+    process_count   => check_range("myprocess",1,10);
+}
+
+########################################################
+
+body process_select my_proc_finder(p)
+
+{
+process_owner  => { "root", "bin" };
+command        => "$(p)";
+pid            => "100,199";
+vsize          => "0,1000";
+process_result => "command.(process_owner|vsize)";
+}
+
+@end verbatim
+@end cartouche
+@noindent This example therefore searches for processes called @samp{myprocess}
+running as root or bin that use between 0 and 1000 KB of virtual memory
+and have a process ID between 100 and 199.
+Although this example is a little contrived, it shows how different
+criteria can be combined to watch for very specific promises.
+
+
+@node Watching other system variables
+@section Watching other system variables
+
+
+When @code{cf-monitord} is running, it collects information about a
+running processes and network connections to well-known ports. There
+is a list of standard ports and system attributes examined by
+CFEngine, and you can extend this using @code{measurements} promises.
+
+@sp 1 
+@cartouche
+In the Special Topics Guide @i{Monitoring with CFEngine}, you will find more information about
+about how to use CFEngine's monitoring daemon @code{cf-monitord} to watch over changes
+to the system that are dynamical.
+@end cartouche
+@sp 1
+
+The information learnt by the monitoring daemon is stored in an
+embedded database so that CFEngine can learn the normal behaviour of
+the system. It does this by gathering statistics using a very
+lightweight, smart algorithm that avoids storing large amounts
+of data. The result is that every monitored value can be characterized
+by an expectation value and an estimate of the standard-deviation
+of the values measured. 
+
+CFEngine is smart enough to realize that what us normal at one time of
+day is not necessarily normal all the time, so it learns what is
+normal within each five minute interval of the days of the week. Based
+on this published model, it is possible to detect anomalies in
+behaviour quite accurately, provided enough data are available.
+
+@sp 1
+@cartouche
+Looking for statistical anomalies on little-used hosts is a waste of time. 
+If it is normal that nothing happens, then everything that happens
+in anomalous.
+@end cartouche
+@sp 1
+
+You do not need to provide any special configuration in the monitor
+daemon to be able to
+use the basic anomaly measures, however if you want to interface with
+a packet analyser, you will need to configure that as it is resource
+intensive.
+
+@cartouche
+If you have @code{tcpdump} available on your system, it is also possible
+to get CFEngine to interface to it an measure general packet types
+travelling on the local network.
+
+@verbatim
+body monitor control
+{
+tcpdump => "false";
+tcpdumpcommand => "/usr/sbin/tcpdump -t -n -v";
+}
+@end verbatim
+@end cartouche
+@sp 1
+
+@noindent CFEngine monitoring is normally very lightweight, but occupying
+the network interface for packet analysis is quite the opposite!
+
+
+The following example bundle shows we can use the classes set the by
+monitoring daemon simply to warn about anomalous statistical
+states. Notice that we define what anomalous means in the policy
+itself, by setting a class based on the current state in relation to
+the learnt state, e.g. @code{rootprocs_high_dev1}, meaning that the
+current state is between zero and one standard deviation above the
+expectation value, or average. An `anomaly' is defined syntactically
+to be more than two standard deviations above or below average.
+
+Entropy measures can also be used to see how much entropy (variation)
+there is in the source IP addresses from which the connections arise.
+This allows us to distinguish between focused traffic from a single source, and
+traffic arriving from many sources.
 
 
 
+@cartouche
+@verbatim
+bundle agent anomalies
+{
+reports:
+
+rootprocs_high_dev1::
+
+  "RootProc anomaly high 1 dev on $(sys.host) at $(mon.env_time) 
+   measured value $(mon.value_rootprocs) with
+   average $(mon.av_rootprocs) pm $(mon.dev_rootprocs)"
+
+   showstate => { "rootprocs" };
+
+ entropy_www_in_high.www_in_high_anomaly::
+
+   "HIGH ENTROPY Incoming www anomaly high anomaly dev!! on 
+   $(sys.host) at $(mon.env_time) - measured value $(mon.value_www_in)    
+   av $(mon.av_www_in) pm $(mon.dev_www_in)"
+   
+      showstate => { "incoming.www" };
+
+ entropy_www_in_low.anomaly_hosts.www_in_high_anomaly::
+
+   "LOW ENTROPY Incoming www anomaly high anomaly dev!! on 
+   $(sys.host) at $(mon.env_time) - measured value $(svalue_www_in) 
+   av $(av_www_in) pm $(dev_www_in)"
+
+     showstate => { "incoming.www" };
+
+ entropy_tcpsyn_in_low.anomaly_hosts.tcpsyn_in_high_dev2::
+
+   "Anomalous number of new TCP connections on $(sys.host) at 
+   $(mon.env_time)  - measured value $(mon.value_tcpsyn_in) av 
+     $(mon.av_tcpsyn_in) pm $(mon.dev_tcpsyn_in)"
+
+     showstate => { "incoming.tcpsyn" };
+
+ entropy_dns_in_low.anomaly_hosts.dns_in_high_anomaly::
+
+   "Anomalous (3dev) incoming DNS packets on $(sys.host) 
+     at $(mon.env_time) - measured value $(mon.value_dns_in) 
+      av $(av_dns_in) pm $(mon.dev_dns_in)"
+   
+     showstate => { "incoming.dns" };
+
+ anomaly_hosts.icmp_in_high_anomaly.!entropy_icmp_in_high::
+
+   "Anomalous low entropy (3dev) incoming ICMP traffic on $(sys.host) 
+    at $(mon.env_time) - measured value $(mon.value_icmp_in) 
+    av $(mon.av_icmp_in) pm $(mon.dev_icmp_in)"
+   
+     showstate => { "incoming.icmp" };
+
+}
+@end verbatim
+@end cartouche
 
 
 
 @node Threshold monitoring,  , Breakin, Scanning logs with cf-monitord
 @section Threshold monitoring
+
+The values learned by the monitoring daemon are made available to the
+agent as variables in the system context @samp{mon}, e.g. @samp{$(mon.www_in)}.
+We can use these values at any time to set policy, either for alerting or
+fixing the system.
 
 @verbatim
 vars:
@@ -423,15 +757,18 @@ vars:
 
 classes:
 
- "$(probes)_threshold" expression => isgreaterthan("$(mon.$(probes))","50");
+ "$(probes)_threshold" expression => isgreaterthan("$(mon.$(probes)_in)","50");
 
 reports:
 
-  "Help $(probes)!" ifvarclass => "$(probes)_threshold";
+  "Help me $(probes)!" ifvarclass => "$(probes)_threshold";
 
 @end verbatim
 
-
+@noindent The value of the CFEngine's component integration is to have transparent
+access to the detailed running state of the system at all times. It is possible to
+defined quite complex policies, and to respond to incidents based on the specific
+data discovered.
 
 @node Log scanning
 @chapter Log scanning

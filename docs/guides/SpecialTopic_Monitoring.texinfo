@@ -18,7 +18,7 @@
 @c ***********************************************************************
 @c %** start of header
 @setfilename st-monitoring.info
-@settitle Reporting
+@settitle Monitoring with CFEngine
 @setchapternewpage odd
 @c %** end of header
 

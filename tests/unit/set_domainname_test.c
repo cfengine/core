@@ -1,0 +1,284 @@
+#include "cf3.defs.h"
+#include "cf3.extern.h"
+
+#include <setjmp.h>
+#include <cmockery.h>
+
+
+/* Global variables we care about */
+
+char VFQNAME[CF_MAXVARSIZE];
+char VUQNAME[CF_MAXVARSIZE];
+char VDOMAIN[CF_MAXVARSIZE];
+
+/* */
+
+static struct hostent h =
+   {
+   .h_name = "laptop.intra.cfengine.com"
+   };
+
+int gethostname(char *name, size_t len)
+{
+strcpy(name, "laptop.intra");
+}
+
+struct hostent *gethostbyname(const char *name)
+{
+assert_string_equal(name, "laptop.intra");
+return &h;
+}
+
+typedef struct ExpectedClasses
+   {
+   const char *name;
+   bool found;
+   } ExpectedClasses;
+
+ExpectedClasses expected_classes[] =
+   {
+   {"laptop.intra.cfengine.com"},
+   {"intra.cfengine.com"},
+   {"cfengine.com"},
+   {"com"},
+   {"laptop.intra"},
+   };
+
+void NewClass(const char *classname)
+{
+int i;
+for (i = 0; i < sizeof(expected_classes)/sizeof(expected_classes[0]); ++i)
+   {
+   if (!strcmp(classname, expected_classes[i].name))
+      {
+      expected_classes[i].found = true;
+      return;
+      }
+   }
+fail();
+}
+
+typedef struct ExpectedVars
+   {
+   const char *name;
+   const char *value;
+   bool found;
+   } ExpectedVars;
+
+ExpectedVars expected_vars[] =
+   {
+   {"host", "laptop.intra"},
+   {"fqhost", "laptop.intra.cfengine.com"},
+   {"uqhost", "laptop.intra"},
+   {"domain", "cfengine.com"},
+   };
+
+void NewScalar(const char *namespace, const char *varname, const char *value, enum cfdatatype type)
+{
+int i;
+
+assert_string_equal(namespace, "sys");
+assert_int_equal(type, cf_str);
+
+for (i = 0; i < sizeof(expected_vars)/sizeof(expected_vars[0]); ++i)
+   {
+   if (!strcmp(varname, expected_vars[i].name))
+      {
+      assert_string_equal(value, expected_vars[i].value);
+      expected_vars[i].found = true;
+      return;
+      }
+   }
+fprintf(stderr, "${%s.%s} <- %s (%c)\n", namespace, varname, value, type);
+fail();
+}
+
+static void test_set_names(void **state)
+{
+int i = 0;
+
+DetectDomainName("laptop.intra");
+
+for (i = 0; i < sizeof(expected_classes)/sizeof(expected_classes[0]); ++i)
+   {
+   assert_int_equal(expected_classes[i].found, true);
+   }
+
+for(i = 0; i < sizeof(expected_vars)/sizeof(expected_vars[0]); ++i)
+   {
+   assert_int_equal(expected_vars[i].found, true);
+   }
+}
+
+int main()
+{
+const UnitTest tests[] =
+   {
+   unit_test(test_set_names),
+   };
+
+return run_tests(tests);
+}
+
+
+
+
+/* Stub out functions we do not use in test */
+
+void StripTrailingNewline(char *str)
+{
+fail();
+}
+
+void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
+{
+fail();
+}
+
+const char *NameVersion(void)
+{
+fail();
+}
+
+int Unix_GetCurrentUserName(char *userName, int userNameLen)
+{
+fail();
+}
+
+void Unix_FindV6InterfaceInfo(void)
+{
+fail();
+}
+
+int cfstat(const char *path, struct stat *buf)
+{
+fail();
+}
+
+void FatalError(char *s, ...)
+{
+fail();
+exit(42);
+}
+
+void DeleteItemList (struct Item *item)
+{
+fail();
+}
+
+struct Item *SplitString(char *string,char sep)
+{
+fail();
+}
+
+void Nova_SaveDocumentRoot(void)
+{
+fail();
+}
+
+void Chop(char *str)
+{
+fail();
+}
+
+char *cf_ctime(const time_t *timep)
+{
+fail();
+}
+
+char *CanonifyName(const char *str)
+{
+fail();
+}
+
+int FullTextMatch (const char *regptr, const char *cmpptr)
+{
+fail();
+}
+
+const char *Version(void)
+{
+fail();
+}
+
+const char *Nova_Version(void)
+{
+fail();
+}
+
+char *Constellation_Version(void)
+{
+fail();
+}
+
+void LoadSlowlyVaryingObservations(void)
+{
+fail();
+}
+
+void HashPubKey(RSA *key,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type)
+{
+fail();
+}
+
+char *MapName(char *s)
+{
+fail();
+}
+
+char *HashPrint(enum cfhashes type,unsigned char digest[EVP_MAX_MD_SIZE+1])
+{
+fail();
+}
+
+void Unix_GetInterfaceInfo(enum cfagenttype ag)
+{
+fail();
+}
+
+void EnterpriseContext(void)
+{
+fail();
+}
+
+int StrnCmp (char *s1,char *s2,size_t n)
+{
+fail();
+}
+
+int CfReadLine(char *buff,int size,FILE *fp)
+{
+fail();
+}
+
+bool IsDefinedClass(const char *class)
+{
+fail();
+}
+
+void DeleteVariable(char *scope,char *id)
+{
+fail();
+}
+
+/* Stub out variables */
+
+int DEBUG, D1, D2;
+enum cfagenttype THIS_AGENT_TYPE;
+struct Item *IPADDRESSES;
+struct utsname VSYSNAME;
+enum classes VSYSTEMHARDCLASS;
+char CFWORKDIR[CF_BUFSIZE];
+char PUBKEY_DIGEST[CF_MAXVARSIZE];
+enum cfhashes CF_DEFAULT_DIGEST;
+char *SIGNALS[highest_signal];
+char *CLASSATTRIBUTES[CF_CLASSATTR][CF_ATTRDIM];
+char *VFSTAB[];
+char *VRESOLVCONF[];
+char *VMAILDIR[];
+char *VEXPORTS[];
+char EXPIRY[CF_SMALLBUF];
+RSA *PUBKEY;
+char *CLASSTEXT[] = {};
+char VIPADDRESS[18];
+

@@ -5,7 +5,10 @@ check_PROGRAMS = \
 	arg_split_test \
 	assoc_test \
 	item_test \
-	rlist_test
+	rlist_test \
+	domainname_test \
+	set_domainname_test \
+	str_test
 
 MOCKERY_SOURCES = cmockery.c
 
@@ -23,5 +26,15 @@ item_test_LDADD = ../../src/libpromises.la
 
 rlist_test_SOURCES = $(MOCKERY_SOURCES) rlist_test.c
 rlist_test_LDADD = ../../src/libpromises.la
+
+domainname_test_SOURCES = $(MOCKERY_SOURCES) domainname_test.c
+domainname_test_LDADD = ../../src/libpromises.la
+
+set_domainname_test_SOURCES = $(MOCKERY_SOURCES) set_domainname_test.c \
+	../../src/sysinfo.c ../../src/alloc.c ../../src/string_lib.c
+set_domainname_test_LDADD = ../../pub/libcfpub.la
+
+str_test_SOURCES = $(MOCKERY_SOURCES) str_test.c ../../src/string_lib.c
+str_test_LDADD = ../../pub/libcfpub.la
 
 TESTS = $(check_PROGRAMS)

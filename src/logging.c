@@ -37,7 +37,7 @@ static void AddAllClasses(struct Rlist *list,int persist,enum statepolicy policy
 static void DeleteAllClasses(struct Rlist *list);
 
 static const char *NO_STATUS_TYPES[] = { "vars", "classes", NULL };
-static const char *NO_LOG_TYPES[] = { "insert_lines", "delete_lines", "replace_patterns", "field_edits", NULL };
+static const char *NO_LOG_TYPES[] = { "vars", "classes", "insert_lines", "delete_lines", "replace_patterns", "field_edits", NULL };
 
 /*****************************************************************************/
 
@@ -154,6 +154,20 @@ return pp
 
 /*****************************************************************************/
 
+/*
+ * Vars, classes and subordinate promises (like edit_line) do not need to be
+ * logged, as they exist to support other promises.
+ */
+
+static bool IsPromiseValuableForLogging(const struct Promise *pp)
+{
+return pp
+   && pp->agentsubtype != NULL
+   && !IsStrIn(pp->agentsubtype,NO_LOG_TYPES);
+}
+
+/*****************************************************************************/
+
 void ClassAuditLog(struct Promise *pp,struct Attributes attr,char *str,char status,char *reason)
 
 { time_t now = time(NULL);
@@ -165,14 +179,7 @@ void ClassAuditLog(struct Promise *pp,struct Attributes attr,char *str,char stat
   int lineno = pp->lineno;
   char name[CF_BUFSIZE];
 
-  bool log = true;
-
   Debug("ClassAuditLog(%s)\n",str);
-
-if (pp && pp->agentsubtype && IsStrIn(pp->agentsubtype,NO_LOG_TYPES))
-   {
-   log = false;
-   }
 
 switch(status)
    {
@@ -190,7 +197,7 @@ switch(status)
        AddAllClasses(attr.classes.change,attr.classes.persist,attr.classes.timer);
        DeleteAllClasses(attr.classes.del_change);
        
-       if (log)
+       if (IsPromiseValuableForLogging(pp))
           {
           NotePromiseCompliance(pp,0.5,cfn_repaired,reason);
           SummarizeTransaction(attr,pp,attr.transaction.log_repaired);
@@ -205,7 +212,7 @@ switch(status)
          VAL_NOTKEPT += attr.transaction.value_notkept;
          }
        
-       if (log)
+       if (IsPromiseValuableForLogging(pp))
           {
           NotePromiseCompliance(pp,1.0,cfn_notkept,reason);
           }
@@ -222,8 +229,7 @@ switch(status)
        AddAllClasses(attr.classes.timeout,attr.classes.persist,attr.classes.timer);
        DeleteAllClasses(attr.classes.del_notkept);
 
-       
-       if(log)
+       if (IsPromiseValuableForLogging(pp))
           {
           NotePromiseCompliance(pp,0.0,cfn_notkept,reason);
           SummarizeTransaction(attr,pp,attr.transaction.log_failed);
@@ -241,7 +247,7 @@ switch(status)
        AddAllClasses(attr.classes.failure,attr.classes.persist,attr.classes.timer);
        DeleteAllClasses(attr.classes.del_notkept);
 
-       if(log)
+       if (IsPromiseValuableForLogging(pp))
           {
           NotePromiseCompliance(pp,0.0,cfn_notkept,reason);
           SummarizeTransaction(attr,pp,attr.transaction.log_failed);
@@ -259,7 +265,7 @@ switch(status)
        AddAllClasses(attr.classes.denied,attr.classes.persist,attr.classes.timer);
        DeleteAllClasses(attr.classes.del_notkept);
 
-       if(log)
+       if (IsPromiseValuableForLogging(pp))
           {
           NotePromiseCompliance(pp,0.0,cfn_notkept,reason);
           SummarizeTransaction(attr,pp,attr.transaction.log_failed);
@@ -277,7 +283,7 @@ switch(status)
        AddAllClasses(attr.classes.interrupt,attr.classes.persist,attr.classes.timer);
        DeleteAllClasses(attr.classes.del_notkept);
 
-       if(log)
+       if (IsPromiseValuableForLogging(pp))
           {       
           NotePromiseCompliance(pp,0.0,cfn_notkept,reason);
           SummarizeTransaction(attr,pp,attr.transaction.log_failed);
@@ -290,7 +296,7 @@ switch(status)
        AddAllClasses(attr.classes.kept,attr.classes.persist,attr.classes.timer);
        DeleteAllClasses(attr.classes.del_kept);
 
-       if(log)
+       if (IsPromiseValuableForLogging(pp))
           {
           NotePromiseCompliance(pp,1.0,cfn_nop,reason);
           SummarizeTransaction(attr,pp,attr.transaction.log_kept);

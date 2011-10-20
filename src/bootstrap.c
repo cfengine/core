@@ -54,6 +54,24 @@ During commercial bootstrap:
 
 /*****************************************************************************/
 
+#if defined(__CYGWIN__) || defined(__ANDROID__)
+
+static bool BootstrapAllowed(void)
+{
+return true;
+}
+
+#elif !defined(__MINGW32__)
+
+static bool BootstrapAllowed(void)
+{
+return IsPrivileged();
+}
+
+#endif
+
+/*****************************************************************************/
+
 void CheckAutoBootstrap()
 
 { struct stat sb;
@@ -71,10 +89,9 @@ printf(" -> Operating System Release is %s\n",VSYSNAME.release);
 printf(" -> Architecture = %s\n",VSYSNAME.machine);
 printf(" -> Internal soft-class is %s\n",CLASSTEXT[VSYSTEMHARDCLASS]);
 
-if (!IsPrivileged())
+if (!BootstrapAllowed())
    {
-   CfOut(cf_error,""," !! You need root/administrator permissions to boostrap Cfengine");
-   FatalError("Insufficient privilege");
+   FatalError(" !! Not enough privileges to bootstrap CFEngine");
    }
 
 if (IsDefinedClass("redhat"))

@@ -510,7 +510,8 @@ YieldCurrentLock(thislock);
 /* Level                                                                   */
 /***************************************************************************/
 
-static int SelectRegion(struct Item *start,struct Item **begin_ptr,struct Item **end_ptr,struct Attributes a,struct Promise *pp)
+static int SelectRegion(struct Item *start,struct Item **begin_ptr,struct Item **end_ptr,
+		                struct Attributes a,struct Promise *pp)
 
 /*
 
@@ -559,21 +560,21 @@ for (ip = start; ip != NULL; ip = ip->next)
       }
    }
 
-*begin_ptr = beg;
-*end_ptr = end;
-
 if (beg == CF_UNDEFINED_ITEM && a.region.select_start)
    {
    cfPS(cf_verbose,CF_INTERPT,"",pp,a," !! The promised start pattern (%s) was not found when selecting edit region in %s",a.region.select_start,pp->this_server);
    return false;
    }
 
-/*if (end == CF_UNDEFINED_ITEM)
+
+if (end == CF_UNDEFINED_ITEM)
    {
    end = NULL;
-   return false;
    }
-*/
+
+*begin_ptr = beg;
+*end_ptr = end;
+
 return true;
 }
 

@@ -4965,6 +4965,9 @@ switch (*line)
           NewList(context,name,list,cf_slist);
           }
        break;
+
+   case '\0':
+	   break;
        
    default:
        if (print)

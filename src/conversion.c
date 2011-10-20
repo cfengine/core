@@ -689,7 +689,7 @@ else
 
 /****************************************************************************/
 
-long Str2Int(char *s)
+long Str2Int(const char *s)
 
 { long a = CF_NOINT;
   char c = 'X';
@@ -1009,7 +1009,7 @@ return (mode_t)a;
 
 /****************************************************************************/
 
-double Str2Double(char *s)
+double Str2Double(const char *s)
 
 { double a = CF_NODOUBLE;
   char remainder[CF_BUFSIZE];

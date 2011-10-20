@@ -36,6 +36,9 @@ static void ExtractOperationLock(char *op);
 static void AddAllClasses(struct Rlist *list,int persist,enum statepolicy policy);
 static void DeleteAllClasses(struct Rlist *list);
 
+static const char *NO_STATUS_TYPES[] = { "vars", "classes", NULL };
+static const char *NO_LOG_TYPES[] = { "insert_lines", "delete_lines", "replace_patterns", "field_edits", NULL };
+
 /*****************************************************************************/
 
 void BeginAudit()
@@ -146,20 +149,19 @@ void ClassAuditLog(struct Promise *pp,struct Attributes attr,char *str,char stat
   double keyval;
   int lineno = pp->lineno;
   char name[CF_BUFSIZE];
-  const char *noStatusTypes[] = { "vars", "classes", NULL };
-  const char *noLogTypes[] = { "insert_lines", "delete_lines", "replace_patterns", "field_edits", NULL };
+
   bool log = true;
 
   Debug("ClassAuditLog(%s)\n",str);
 
   // never count vars or classes as repaired (creates messy reports)
 
-if (pp && (pp->agentsubtype == NULL || IsStrIn(pp->agentsubtype,noStatusTypes)))
+if (pp && (pp->agentsubtype == NULL || IsStrIn(pp->agentsubtype,NO_STATUS_TYPES)))
    {
    return;
    }
 
-if (pp && IsStrIn(pp->agentsubtype,noLogTypes))
+if (pp && IsStrIn(pp->agentsubtype,NO_LOG_TYPES))
    {
    log = false;
    }

@@ -965,8 +965,38 @@ else
 fi
 
 dnl
+dnl Code coverage
 dnl
-dnl
+
+AC_ARG_ENABLE(coverage, AS_HELP_STRING([--enable-coverage], [Enable code coverage]),
+              [use_coverage=$enableval], [use_coverage=no])
+
+if test "x$use_coverage" = "xyes"; then
+  if test "$GCC" != "yes"; then
+    AC_MSG_ERROR([GCC is required for --enable-coverage])
+  fi
+
+  AC_CHECK_PROG(LCOV, lcov, lcov)
+  AC_CHECK_PROG(LCOV_GENHTML, genhtml, genhtml)
+
+  if test -z "$LCOV"; then
+    AC_MSG_ERROR([Cannot find lcov from the LTP package])
+  fi
+
+  if test -z "$LCOV_GENHTML"; then
+    AC_MSG_ERROR([Could not find genhtml from the LTP package])
+  fi
+
+  dnl Remove all optimization flags from CFLAGS
+  changequote({,})
+  CFLAGS=`echo "$CFLAGS" | $SED -e 's/-O[0-9]*//g'`
+  changequote([,])
+
+  dnl Add the special gcc flags
+  CFLAGS="$CFLAGS -O0 -fprofile-arcs -ftest-coverage"
+  LDFLAGS="$LDFLAGS -lgcov"
+fi
+
 
 dnl ######################################################################
 dnl Summarize

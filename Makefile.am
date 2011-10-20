@@ -53,3 +53,16 @@ ACLOCAL_AMFLAGS = -I m4
 dist-hook:
 	mkdir $(distdir)/tests
 	(cd $(srcdir)/tests && find . -name README -o -name testall -o -name '*.cf*' -a \! -path '*succeeded*' | tar -c -f - -T-) | tar -x -C $(distdir)/tests -v -f -
+
+#
+# Code coverage
+#
+
+coverage:
+	-$(MAKE) check -k
+	$(LCOV) --capture --directory . --output-file cfengine-lcov.info --test-name CFENGINE --no-checksum --compat-libtool
+	$(LCOV) --remove cfengine-lcov.info '/usr/include/*' --output-file cfengine-lcov.info
+	LANG=C $(LCOV_GENHTML) --prefix . --output-directory coverage-html --title "CFEngine Code Coverage" --legend --show-details cfengine-lcov.info
+	@echo
+	@echo " Code coverage information: file://$(abs_top_builddir)/coverage-html/index.html"
+	@echo

@@ -13,6 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+/* LCOV_EXCL_START */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -1787,3 +1790,5 @@ int _run_tests(const UnitTest * const tests, const size_t number_of_tests) {
     fail_if_blocks_allocated(check_point, "run_tests");
     return (int)total_failed;
 }
+
+/* LCOV_EXCL_STOP */

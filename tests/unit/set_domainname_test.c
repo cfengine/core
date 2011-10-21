@@ -47,7 +47,7 @@ ExpectedClasses expected_classes[] =
 void NewClass(const char *classname)
 {
 int i;
-for (i = 0; i < sizeof(expected_classes)/sizeof(expected_classes[0]); ++i)
+for (i = 0; i < sizeof(expected_classes)/sizeof(expected_classes[0]); ++i) /* LCOV_EXCL_LINE */
    {
    if (!strcmp(classname, expected_classes[i].name))
       {
@@ -55,7 +55,7 @@ for (i = 0; i < sizeof(expected_classes)/sizeof(expected_classes[0]); ++i)
       return;
       }
    }
-fail();
+fail(); /* LCOV_EXCL_LINE */
 }
 
 typedef struct ExpectedVars
@@ -80,7 +80,7 @@ int i;
 assert_string_equal(namespace, "sys");
 assert_int_equal(type, cf_str);
 
-for (i = 0; i < sizeof(expected_vars)/sizeof(expected_vars[0]); ++i)
+for (i = 0; i < sizeof(expected_vars)/sizeof(expected_vars[0]); ++i) /* LCOV_EXCL_LINE */
    {
    if (!strcmp(varname, expected_vars[i].name))
       {
@@ -89,8 +89,8 @@ for (i = 0; i < sizeof(expected_vars)/sizeof(expected_vars[0]); ++i)
       return;
       }
    }
-fprintf(stderr, "${%s.%s} <- %s (%c)\n", namespace, varname, value, type);
-fail();
+fprintf(stderr, "${%s.%s} <- %s (%c)\n", namespace, varname, value, type); /* LCOV_EXCL_LINE */
+fail(); /* LCOV_EXCL_LINE */
 }
 
 static void test_set_names(void **state)
@@ -121,7 +121,7 @@ return run_tests(tests);
 }
 
 
-
+/* LCOV_EXCL_START */
 
 /* Stub out functions we do not use in test */
 
@@ -282,3 +282,4 @@ RSA *PUBKEY;
 char *CLASSTEXT[] = {};
 char VIPADDRESS[18];
 
+/* LCOV_EXCL_STOP */

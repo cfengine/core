@@ -2,6 +2,8 @@ AUTOMAKE_OPTIONS = foreign
 
 MAKEFLAGS = $(if $(filter-out 0,$(V)),,--no-print-directory --quiet)
 
+LCOV_FLAGS = $(if $(filter-out 0,$(V)),,-q)
+
 SUBDIRS = pub $(NOVA_SUBDIR) $(CONSTELLATION_SUBDIR) src docs examples masterfiles tests/unit $(CFMOD_SUBDIR)
 
 DIST_SUBDIRS = pub src docs examples masterfiles
@@ -60,9 +62,9 @@ dist-hook:
 
 coverage:
 	-$(MAKE) check -k
-	$(LCOV) --capture --directory . --output-file cfengine-lcov.info --test-name CFENGINE --no-checksum --compat-libtool
-	$(LCOV) --remove cfengine-lcov.info '/usr/include/*' --output-file cfengine-lcov.info
-	LANG=C $(LCOV_GENHTML) --prefix . --output-directory coverage-html --title "CFEngine Code Coverage" --legend --show-details cfengine-lcov.info
+	$(LCOV) $(LCOV_FLAGS) --capture --directory . --output-file cfengine-lcov.info --test-name CFENGINE --no-checksum --compat-libtool
+	$(LCOV) $(LCOV_FLAGS) --remove cfengine-lcov.info '/usr/include/*' --output-file cfengine-lcov.info
+	LANG=C $(LCOV_GENHTML) $(LCOV_FLAGS) --prefix . --output-directory coverage-html --title "CFEngine Code Coverage" --legend --show-details cfengine-lcov.info
 	@echo
 	@echo " Code coverage information: file://$(abs_top_builddir)/coverage-html/index.html"
 	@echo

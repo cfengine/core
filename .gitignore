@@ -80,6 +80,7 @@ tests/unit/*_test
 *.gcno
 *.gcda
 *.trace
+cfengine-lcov-base.info
 cfengine-lcov.info
 coverage-html/
 

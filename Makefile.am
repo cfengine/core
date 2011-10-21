@@ -30,7 +30,7 @@ MOSTLYCLEANFILES = *~
 # Get everything removed down to where rebuilding requires:
 # "make; make install"
 # 
-CLEANFILES =
+CLEANFILES = cfengine-lcov-base.info cfengine-lcov.info
 
 #
 # Get everything removed down to where rebuilding requires:
@@ -61,8 +61,11 @@ dist-hook:
 #
 
 coverage:
+	find -L $(srcdir) -name '*.gcda' -delete
 	-$(MAKE) check -k
+	$(LCOV) $(LCOV_FLAGS) --capture --initial --directory . --output-file cfengine-lcov-base.info
 	$(LCOV) $(LCOV_FLAGS) --capture --directory . --output-file cfengine-lcov.info --test-name CFENGINE --no-checksum --compat-libtool
+	$(LCOV) $(LCOV_FLAGS) -a cfengine-lcov-base.info -a cfengine-lcov.info --output-file cfengine-lcov.info
 	$(LCOV) $(LCOV_FLAGS) --remove cfengine-lcov.info '/usr/include/*' --output-file cfengine-lcov.info
 	LANG=C $(LCOV_GENHTML) $(LCOV_FLAGS) --prefix . --output-directory coverage-html --title "CFEngine Code Coverage" --legend --show-details cfengine-lcov.info
 	@echo

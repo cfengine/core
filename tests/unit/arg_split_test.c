@@ -88,6 +88,7 @@ const UnitTest tests[] =
    unit_test(test_split_quoted_beginning),
    unit_test(test_split_quoted_middle),
    unit_test(test_split_quoted_end),
+   unit_test(test_complex_quoting),
    unit_test(test_arguments_resize_for_null),
    unit_test(test_arguments_resize),
    };

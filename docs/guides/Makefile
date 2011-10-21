@@ -4,7 +4,7 @@ all: build_solutions_guide cf3-solutions.texinfo SpecialTopic_Adoption.pdf  Spec
      SpecialTopic_Reporting.pdf SpecialTopic_BDMA.pdf\
      SpecialTopic_Knowledge.pdf SpecialTopic_Rollback.pdf\
      SpecialTopic_Change.pdf    SpecialTopic_Modules.pdf\
-     SpecialTopic_Schedule.pdf  SpecialTopic_Teamwork.pdf\
+     SpecialTopic_Schedule.pdf  SpecialTopic_Teamwork.pdf SpecialTopic_Scan.pdf\
      SpecialTopic_Monitoring.pdf  cf3-glossary.pdf cf_Quickref3.pdf \
      SpecialTopic_DistributedScheduling.pdf  SpecialTopic_Iteration.pdf\
      SpecialTopic_Hierarchy.pdf SpecialTopic_Federation.pdf    cf3-upgrade.pdf \

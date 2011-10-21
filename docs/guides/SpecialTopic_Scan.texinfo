@@ -461,6 +461,7 @@ avalanche of messages if a change is detected. This does make messages
 visible however.
 
 
+
 @node Change detection bundle summary,  , Tamperproof data, Tamperproof data
 @section Change detection bundle summary
 
@@ -503,7 +504,7 @@ files:
 
      comment => "Watching our peers remote hashes  - cross check",
    copy_from => 
-           remote_cp("$(sys.workdir)/checksum_digests.db","$(neighbours)"),
+           remote_dcp("$(sys.workdir)/checksum_digests.db","$(neighbours)"),
   depends_on => { "grant_hash_tables" },
       action => neighbourwatch("File changes observed on $(neighbours)");
 }
@@ -519,7 +520,46 @@ log_repaired => "stdout";
 
 @end verbatim
 @end cartouche
+@noindent Note that the @file{remote_dcp} template uses a digest-comparison when comparing
+the files.
 
+With this promise in place, you will not merely be warned about file
+changes, but you will immediately remediate the erroneous file
+change. By default, CFEngine backs up files when they are replaced by
+appending a suffix @file{.cfbackup}, or timestamp. If you want to go
+and look at the erroneous file for forensic evaluation, this backup
+contains the evidence of changes.
+
+
+@node Reversion of file changes from a trusted source
+@section Reversion of file changes from a trusted source
+
+Detecting changes to files is only half of battle against unauthorized
+change.  In most cases you will also want to revert back to a trusted
+version. A recommended approach here is to maintain a trusted
+repository of source files, and to ask CFEngine to compare the current
+version of the file to master version using a cryptographic hash.
+
+Suppose we want to manage a particular file (of any type or for any purpose)
+called @file{fileX}, which is to be located in some directory
+@file{/destination} of a host. We arrange for some other host
+(that is considered `secure') to have a trusted version the file
+in some directory called @file{/mastersources}@footnote{Perhaps this master source
+has its own version control system for tracking intended changes in the master versions;
+we shall not discuss that here.}. A promise that synchronized the
+
+@verbatim
+  "/destination/fileX"
+
+     comment => "Copy fileX from a trusted source",
+   copy_from => 
+           remote_dcp("/mastersources/fileX","masterhost"),
+  depends_on => { "grant_fileX" },
+      action => neighbourwatch("File changes observed on fileX");
+
+@end verbatim
+@noindent We assume here that access to the masterfile has been granted to the
+host.
 
 
 @node Process and network scanning

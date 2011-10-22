@@ -991,6 +991,7 @@ else if (XML)
 if (!NewDBCursor(dbp,&dbcp))
    {
    CfOut(cf_inform,""," !! Unable to scan last-seen database");
+   CloseDB(dbp);
    return;
    }
 

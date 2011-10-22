@@ -228,7 +228,7 @@ while ((c=getopt_long(argc,argv,"Ihbd:vVf:mMz:St:ruT",OPTIONS,&optindex)) != EOF
 
 #ifdef HAVE_CONSTELLATION
           strcpy(TOPIC_CMD,optarg);
-          CfGenerateStoriesCmdLine(TOPIC_CMD,cfi_cause);
+          CfGenerateStories(TOPIC_CMD,cfi_cause);
 #endif
           exit(0);
           break;

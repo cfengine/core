@@ -228,7 +228,7 @@ while ((c=getopt_long(argc,argv,"Ihbd:vVf:mMz:St:ruT",OPTIONS,&optindex)) != EOF
 
 #ifdef HAVE_CONSTELLATION
           strcpy(TOPIC_CMD,optarg);
-          CfGenerateStories(TOPIC_CMD,cfi_cause);
+          CfGenerateStoriesCmdLine(TOPIC_CMD,cfi_cause);
 #endif
           exit(0);
           break;
@@ -616,7 +616,7 @@ if (strcmp("reports",pp->agentsubtype) == 0)
 void CfGenerateStories(char *query,enum storytype type)
 {
 #ifdef HAVE_CONSTELLATION
-Constellation_CfGenerateStories(query,type);
+Constellation_GenerateStoriesCmdLine(query,type);
 #endif
 }
 

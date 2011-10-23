@@ -350,16 +350,9 @@ if (BooleanControl("control_agent",CFA_CONTROLBODY[cfa_intermittency].lval))
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
 MapName(name);
 
-if (!ThreadLock(cft_db_lastseen))
-   {
-   CfOut(cf_error, "", "!! Could not lock last-seen DB");
-   return;
-   }
-
 if (!OpenDB(name,&dbp))
    {
    CfOut(cf_inform,""," !! Unable to open last seen db");
-   ThreadUnlock(cft_db_lastseen);
    return;
    }
 
@@ -424,7 +417,6 @@ if (strcmp(rkey+1,PUBKEY_DIGEST) == 0)
          CloseDB(dbpent);
          }
       
-      ThreadUnlock(cft_db_lastseen);
       return;
       }
    }
@@ -446,8 +438,6 @@ if (intermittency && dbpent)
    }
 
 CloseDB(dbp);
-
-ThreadUnlock(cft_db_lastseen);
 }
 
 /*****************************************************************************/
@@ -467,44 +457,29 @@ else
    snprintf(digest,sizeof(digest),"%s",hostkey);
    }
 
-if (!ThreadLock(cft_db_lastseen))
+CF_DB *dbp;
+char name[CF_BUFSIZE], key[CF_BUFSIZE];
+snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
+MapName(name);
+
+if (!OpenDB(name, &dbp))
    {
-   CfOut(cf_error, "", " !! Could not lock last-seen DB");
+   CfOut(cf_error, "", " !! Unable to open last seen DB");
    return false;
    }
-else
-   {
-   CF_DB *dbp;
-   char name[CF_BUFSIZE], key[CF_BUFSIZE];
-   snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
-   MapName(name);
 
-   if (!OpenDB(name, &dbp))
-      {
-      CfOut(cf_error, "", " !! Unable to open last seen DB");
-      ThreadUnlock(cft_db_lastseen);
-      return false;
-      }
+snprintf(key, CF_BUFSIZE, "-%s", digest);
+DeleteComplexKeyDB(dbp, key, strlen(key) + 1);
+snprintf(key, CF_BUFSIZE, "+%s", digest);
+DeleteComplexKeyDB(dbp, key, strlen(key) + 1);
 
-   snprintf(key, CF_BUFSIZE, "-%s", digest);
-   DeleteComplexKeyDB(dbp, key, strlen(key) + 1);
-   snprintf(key, CF_BUFSIZE, "+%s", digest);
-   DeleteComplexKeyDB(dbp, key, strlen(key) + 1);
-
-   CloseDB(dbp);
-   ThreadUnlock(cft_db_lastseen);
-   return true;
-   }
+CloseDB(dbp);
+return true;
 }
 
 /*****************************************************************************/
 
 static void PurgeMultipleIPReferences(CF_DB *dbp,char *rkey,char *ipaddress)
-
-/**
- *  WARNING: This function is *NOT* thread-safe.
- *           It must be wrapped with calls to ThreadLock/ThreadUnlock(cft_db_lastseen)
- */
 
 { CF_DBC *dbcp;
   struct CfKeyHostSeen q,newq; 

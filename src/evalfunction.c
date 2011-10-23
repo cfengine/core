@@ -217,18 +217,8 @@ static struct Rval FnCallHostsSeen(struct FnCall *fp,struct Rlist *finalargs)
  snprintf(name,CF_BUFSIZE-1,"%s%c%s",CFWORKDIR,FILE_SEPARATOR,CF_LASTDB_FILE);
 
  // last-seen may be used by cf-serverd when (re-)reading policy
- if (!ThreadLock(cft_db_lastseen))
-   {
-   CfOut(cf_error, "", "!! Could not lock last-seen DB");
-   SetFnCallReturnStatus("hostsseen",FNCALL_FAILURE,NULL,NULL);
-   rval.item = NULL;
-   rval.rtype = CF_LIST;
-   return rval;
-   }
-
  if (!OpenDB(name,&dbp))
     {
-    ThreadUnlock(cft_db_lastseen);
     SetFnCallReturnStatus("hostsseen",FNCALL_FAILURE,NULL,NULL);
     rval.item = NULL;
     rval.rtype = CF_LIST;
@@ -242,7 +232,6 @@ static struct Rval FnCallHostsSeen(struct FnCall *fp,struct Rlist *finalargs)
  if (!NewDBCursor(dbp,&dbcp))
     {
     CloseDB(dbp);
-    ThreadUnlock(cft_db_lastseen);
     Debug("Failed to obtain cursor for database\n");
     SetFnCallReturnStatus("hostsseen",FNCALL_FAILURE,NULL,NULL);
     CfOut(cf_error,""," !! Error reading from last-seen database: ");
@@ -272,7 +261,6 @@ static struct Rval FnCallHostsSeen(struct FnCall *fp,struct Rlist *finalargs)
 
  DeleteDBCursor(dbp,dbcp);
  CloseDB(dbp);
- ThreadUnlock(cft_db_lastseen);
    
  returnlist = GetHostsFromLastseenDB(addresses, horizon,
                                      strcmp(format, "address") == 0,

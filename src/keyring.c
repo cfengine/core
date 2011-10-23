@@ -259,9 +259,7 @@ for (rp = SERVER_KEYSEEN; rp !=  NULL; rp=rp->next)
       char timebuf[26];
       CfOut(cf_verbose,""," -> Last saw %s (alias %s) at %s (noexpiry %.1lf <= %.1lf)\n",kp->name,kp->address,cf_strtimestamp_local(now,timebuf),lastseen/3600,lsea/3600);
 
-      ThreadLock(cft_db_lastseen);
       WriteDB(dbp,kp->name,&newq,sizeof(newq));
-      ThreadUnlock(cft_db_lastseen);
       
       if (intermittency)
          {

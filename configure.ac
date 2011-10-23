@@ -21,7 +21,7 @@ dnl
 dnl 'svnversion' need to be removed before release and added back after.
 dnl
 
-AM_INIT_AUTOMAKE(cfengine, 3.2.3)   dnl remember to set version
+AM_INIT_AUTOMAKE(cfengine, 3.2.4.a1.svnversion)   dnl remember to set version
 AM_MAINTAINER_MODE([enable])
 
 AC_DEFINE(BUILD_YEAR, esyscmd([date +%Y | tr -d '\n']), "Software build year")

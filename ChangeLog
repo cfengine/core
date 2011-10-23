@@ -1,3 +1,13 @@
+3.2.3   (Bugfix and Stability release)
+
+	A few tiny memory leaks fixed
+
+	Improved performance of cf-serverd under heavy load with
+	TokyoCabinet database
+
+	Full list of issues fixed is available on
+	https://cfengine.com/bugtracker/changelog_page.php
+
 3.2.2   (Bugfix and Stability release)
 
 	Enabled compilation in "large files" mode under AIX

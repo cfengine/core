@@ -528,6 +528,9 @@ AC_REPLACE_FUNCS(round)
 AC_CHECK_DECLS(strdup)
 AC_REPLACE_FUNCS(strdup)
 
+AC_CHECK_DECLS(nanosleep)
+AC_REPLACE_FUNCS(nanosleep)
+
 AC_CHECK_FUNCS(getcwd getnetgrent waitpid seteuid setegid setreuid setregid)
 AC_CHECK_FUNCS(uname gethostname chflags)
 AC_CHECK_FUNCS(strstr strsep putenv drand48 srand48 getaddrinfo)

@@ -33,25 +33,24 @@
 #include "../src/conf.h"
 #endif
 
-#include <time.h>
+#ifdef __MINGW32__
 
-#if !HAVE_DECL_NANOSLEEP
+#include <time.h>
+#include <windows.h>
+
 int nanosleep(const struct timespec *rqtp, struct timespec *rmtp);
-#endif
 
 int nanosleep(const struct timespec *rqtp, struct timespec *rmtp)
 {
-struct timeval tv =
-   {
-   .tv_sec = rptq->tv_sec,
-   .tv_usec = (rptq->tv_nsec + 1000 - 1) / 1000,
-   };
-
 if (rmtp)
    {
    rmtp->tv_sec = 0;
    rmtp->tv_nsec = 0;
    }
 
-return select(0, NULL, NULL, &tv);
+DWORD timeout = rqtp->tv_sec * 1000L + (rqtp->tv_nsec + 999999) / 1000000;
+Sleep(timeout);
+return 0;
 }
+
+#endif

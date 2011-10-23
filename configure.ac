@@ -1052,7 +1052,8 @@ AC_CONFIG_FILES([Makefile
 	examples/Makefile
 	examples/example_config/Makefile
 	masterfiles/Makefile
-	tests/unit/Makefile])
+	tests/unit/Makefile
+	tests/load/Makefile])
 
 m4_indir(incstart[]incend, [nova/output.m4])
 m4_indir(incstart[]incend, [constellation/output.m4])

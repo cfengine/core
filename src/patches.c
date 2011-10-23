@@ -616,7 +616,7 @@ struct tm tm;
 
 if (localtime_r(&time, &tm) == NULL)
    {
-   CfOut(cf_error, "localtime_r", "Unable to parse passed timestamp");
+   CfOut(cf_verbose, "localtime_r", "Unable to parse passed timestamp");
    return NULL;
    }
 
@@ -631,7 +631,7 @@ struct tm tm;
 
 if (gmtime_r(&time, &tm) == NULL)
    {
-   CfOut(cf_error, "gmtime_r", "Unable to parse passed timestamp");
+   CfOut(cf_verbose, "gmtime_r", "Unable to parse passed timestamp");
    return NULL;
    }
 

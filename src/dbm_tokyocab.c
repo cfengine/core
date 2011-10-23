@@ -78,7 +78,7 @@ while (attempts--)
       {
       CfOut(cf_error, "", "!! tchdbopen: Unable to open database \"%s\": %s",
             filename, tchdberrmsg(err_code));
-      tchdbnew(hdbp->hdb);
+      tchdbdel((*hdbp)->hdb);
       free(*hdbp);
       return false;
       }
@@ -92,7 +92,7 @@ while (attempts--)
 
 CfOut(cf_error, "", "!! TCDB_OpenDB: Unable to lock database \"%s\", lock is held by another thread", filename);
 
-tchdbnew(hdbp->hdb);
+tchdbdel((*hdbp)->hdb);
 free(*hdbp);
 return false;
 }

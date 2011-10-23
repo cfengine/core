@@ -67,13 +67,20 @@ Copyright @copyright{} October 2011 CFEngine AS
 @end ifinfo
 
 @ifnottex
-@node Top, , (dir), (dir)
+@node Top, File scanning, (dir), (dir)
 @top Security scanning and tripwires with CFEngine
 @end ifnottex
 
 @contents
 
-@node File scanning
+@menu
+* File scanning::               
+* Process and network scanning::  
+* Log scanning::                
+* Intrusion detection::         
+@end menu
+
+@node File scanning, Process and network scanning, Top, Top
 @chapter File scanning
 
 CFEngine has sophisticated functionality for scanning hosts to find
@@ -86,7 +93,18 @@ incidents and vulnerabilities, and view reports across your system
 using the Mission Portal.
 
 
-@node File change detection: tripwires, , Security scanning, Security scanning
+
+@menu
+* File change detection and tripwires::  
+* Example change management::   
+* file_change.log::             
+* File change reports in Nova and Constellation::  
+* Tamperproof data::            
+* Change detection bundle summary::  
+* Reversion of file changes from a trusted source::  
+@end menu
+
+@node File change detection and tripwires, Example change management, File scanning, File scanning
 @section File change detection: tripwires
 
 File change monitoring is about detecting when file information on a
@@ -180,7 +198,7 @@ exclamation => "false";
 
 
 
-@node Example change management
+@node Example change management, file_change.log, File change detection and tripwires, File scanning
 @section Example change management
 
 Try the following complete example.
@@ -311,7 +329,7 @@ update_hashes  => "yes";
 @end verbatim
 
 
-@node file_change.log, , File change detection: tripwires, Security scanning
+@node file_change.log, File change reports in Nova and Constellation, Example change management, File scanning
 @section file_change.log
 
 The file file_hash_event_history contains a separate text log of file
@@ -327,7 +345,7 @@ The first column is a time stamp. If you are using one of the commercial version
 of CFEngine, you can see a more user friendly report for the entire enterprise or
 for a single host in the next section.
 
-@node File change reports in Nova and Constellation, , file_change.log, Security scanning
+@node File change reports in Nova and Constellation, Tamperproof data, file_change.log, File scanning
 @section File change reports in Nova and Constellation
 
 In the commercially supported editions of CFEngine, users have access
@@ -349,7 +367,7 @@ In that case, you will see a change report:
 
 
 
-@node Tamperproof data, , File change reports in Nova and Constellation, Security scanning
+@node Tamperproof data, Change detection bundle summary, File change reports in Nova and Constellation, File scanning
 @section Tamperproof data
 
 Message digests are supposed to be unbreakable, tamperproof
@@ -462,7 +480,7 @@ visible however.
 
 
 
-@node Change detection bundle summary,  , Tamperproof data, Tamperproof data
+@node Change detection bundle summary, Reversion of file changes from a trusted source, Tamperproof data, File scanning
 @section Change detection bundle summary
 
 A typical promise structure for doing change management.
@@ -531,7 +549,7 @@ and look at the erroneous file for forensic evaluation, this backup
 contains the evidence of changes.
 
 
-@node Reversion of file changes from a trusted source
+@node Reversion of file changes from a trusted source,  , Change detection bundle summary, File scanning
 @section Reversion of file changes from a trusted source
 
 Detecting changes to files is only half of battle against unauthorized
@@ -562,7 +580,7 @@ we shall not discuss that here.}. A promise that synchronized the
 host.
 
 
-@node Process and network scanning
+@node Process and network scanning, Log scanning, File scanning, Top
 @chapter Process and network scanning
 
 Looking at file changes is a very static view of system change -- basically you assume that
@@ -588,7 +606,13 @@ to the system that are dynamical.
 @end cartouche
 
 
-@node Watching processes
+@menu
+* Watching processes::          
+* Watching other system variables::  
+* Threshold monitoring::        
+@end menu
+
+@node Watching processes, Watching other system variables, Process and network scanning, Process and network scanning
 @section Watching processes
 
 CFEngine does not encourage the watching of systems without repair,
@@ -642,7 +666,7 @@ Although this example is a little contrived, it shows how different
 criteria can be combined to watch for very specific promises.
 
 
-@node Watching other system variables
+@node Watching other system variables, Threshold monitoring, Watching processes, Process and network scanning
 @section Watching other system variables
 
 
@@ -782,7 +806,7 @@ rootprocs_high_dev1::
 
 
 
-@node Threshold monitoring,  , Breakin, Scanning logs with cf-monitord
+@node Threshold monitoring,  , Watching other system variables, Process and network scanning
 @section Threshold monitoring
 
 The values learned by the monitoring daemon are made available to the
@@ -810,7 +834,7 @@ access to the detailed running state of the system at all times. It is possible 
 defined quite complex policies, and to respond to incidents based on the specific
 data discovered.
 
-@node Log scanning
+@node Log scanning, Intrusion detection, Process and network scanning, Top
 @chapter Log scanning
 
 In CFEngine Nova and above, you can extract data from the
@@ -823,7 +847,16 @@ You might want to scan a log for instances of a particular
 message and trace this number over time.
 
 
-@node  Scanning log files for patterns, FTP, Scanning logs with cf-monitord, Scanning logs with cf-monitord
+@menu
+* Scanning log files for patterns::  
+* FTP::                         
+* DNS::                         
+* Email::                       
+* Milter::                      
+* Breakin::                     
+@end menu
+
+@node  Scanning log files for patterns, FTP, Log scanning, Log scanning
 @section Scanning log files for patterns
 @sp 1
 
@@ -875,7 +908,7 @@ expireafter => "10";
 }
 @end verbatim
 
-@node  FTP, DNS, Scanning log files for patterns, Scanning logs with cf-monitord
+@node  FTP, DNS, Scanning log files for patterns, Log scanning
 @section Scanning syslog for FTP statistics
 @sp 1
 
@@ -952,7 +985,7 @@ expireafter => "10";
 }
 @end verbatim
 
-@node  DNS, Email, FTP, Scanning logs with cf-monitord
+@node  DNS, Email, FTP, Log scanning
 @section Scanning DNS logs for query statistics
 @sp 1
 
@@ -1001,7 +1034,7 @@ expireafter => "10";
 }
 @end verbatim
 
-@node  Email, Milter, DNS, Scanning logs with cf-monitord
+@node  Email, Milter, DNS, Log scanning
 @section Scanning syslog for email statistics
 @sp 1
 
@@ -1074,7 +1107,7 @@ expireafter => "10";
 @end verbatim
 
 
-@node  Milter, Breakin, Email, Scanning logs with cf-monitord
+@node  Milter, Breakin, Email, Log scanning
 @section Scanning syslog for email milter failures
 @sp 1
 
@@ -1130,7 +1163,7 @@ commands:
 @end verbatim
 
 
-@node  Breakin, Threshold monitoring, Milter, Scanning logs with cf-monitord
+@node  Breakin,  , Milter, Log scanning
 @section Scanning syslog for breakin attempts
 @sp 1
 
@@ -1226,7 +1259,7 @@ promises.
 
 
 
-@node Intrusion detection,  , TCP dump, Security scanning
+@node Intrusion detection,  , Log scanning, Top
 @chapter Intrusion detection
 
 Intrusion detection is a highly specialized area.  CFEngine is not

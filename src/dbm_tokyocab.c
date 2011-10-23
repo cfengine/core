@@ -53,6 +53,14 @@ int attempts = MAXATTEMPTS;
 *hdbp = xcalloc(1, sizeof(CF_TCDB));
 (*hdbp)->hdb = tchdbnew();
 
+/*
+ * Tokyo Cabinet prevents a database to be opened by the several threads in the
+ * single process (apparently due to shortcoming in fcntl F_SETLK
+ * semantics). CFEngine only opens a database for a short period of time, but
+ * does it from several processes and several threads in single process, so
+ * failure to open a database in intermittent one (unless there is stale DB
+ * connection somewhere, so looping indefinitely is not a good idea).
+ */
 while (attempts--)
    {
    /*

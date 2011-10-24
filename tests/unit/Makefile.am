@@ -39,9 +39,7 @@ set_domainname_test_LDADD = ../../pub/libcfpub.la
 str_test_SOURCES = $(MOCKERY_SOURCES) str_test.c ../../src/string_lib.c
 str_test_LDADD = ../../pub/libcfpub.la
 
-json_test_includedir = ../../src
-json_test_include_HEADERS = ../../src/json.h
-json_test_SOURCES = $(MOCKERY_SOURCES) json_test.c
+json_test_SOURCES = $(MOCKERY_SOURCES) json_test.c ../../src/json.h
 json_test_LDADD = ../../src/libpromises.la
 
 

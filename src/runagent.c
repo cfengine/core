@@ -346,7 +346,9 @@ int HailServer(char *host,struct Attributes a,struct Promise *pp)
  char sendbuffer[CF_BUFSIZE],recvbuffer[CF_BUFSIZE],peer[CF_MAXVARSIZE],ipv4[CF_MAXVARSIZE],digest[CF_MAXVARSIZE],user[CF_SMALLBUF];
   long gotkey;
   char reply[8];
+#ifdef HAVE_CONSTELLATION
   struct Item *queries;
+#endif
   
 a.copy.portnumber = (short)ParseHostname(host,peer);
 

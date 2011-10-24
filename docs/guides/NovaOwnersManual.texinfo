@@ -137,9 +137,9 @@ Operating system choices for the hub are:
 
 @example
  Debian 5,6
- Ubuntu 8,9,10
- RedHat 4,5
- SuSE   11
+ Ubuntu 8,10
+ RHEL/CentOS 5,6
+ SLES/openSuSE   11
 @end example
 
 Nova provides a version of CFEngine running natively on Windows, with
@@ -641,11 +641,11 @@ Comments:
 @verbatim
    $ rm -rf /var/www/*
 @end verbatim
-[RedHat/CentOS]
+[RHEL/CentOS]
 @verbatim
    $ rm -rf /var/www/html/*
 @end verbatim
-[SUSE]
+[SLES/openSUSE]
 @verbatim
    $ rm -rf /srv/www/htdocs/*
 @end verbatim

@@ -3,7 +3,7 @@
 \input texinfo
 @selectaltfont{cmbright}
 @setlogo{CFEngineFrontPage}
-
+@c 
 @c *********************************************************************
 @c
 @c  This is a TEXINFO file. It generates both TEX documentation and

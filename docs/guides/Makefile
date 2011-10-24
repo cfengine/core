@@ -14,7 +14,7 @@ all: build_solutions_guide cf3-solutions.texinfo SpecialTopic_Adoption.pdf  Spec
      SpecialTopic_Vision.pdf SpecialTopic_Security.pdf SpecialTopic_Comparison.pdf\
      SpecialTopic_ContentDrivenPolicies.pdf SpecialTopic_Cloud.pdf SpecialTopic_OpenNebula.pdf \
      SpecialTopic_RBAC.pdf SpecialTopic_Windows.pdf\
-     cf3-bestpractice.pdf SpecialTopic_Editing.pdf cfnova.pdf cf3-solutions.pdf cf3-conceptguide.pdf cf3-quickstart.pdf cf3-nova-2-1-supplement.pdf cf3-nova-mission-portal.pdf cf3-constellation-mission-obs.pdf
+     cf3-bestpractice.pdf SpecialTopic_Editing.pdf cfnova.pdf cf3-solutions.pdf cf3-conceptguide.pdf cf3-quickstart.pdf cf3-nova-2-1-supplement.pdf cf3-nova-mission-portal.pdf cf3-constellation-mission-obs.pdf NovaOwnersManual.pdf
 
 
 

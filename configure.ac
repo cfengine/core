@@ -1052,6 +1052,8 @@ AC_CONFIG_FILES([Makefile
 	examples/Makefile
 	examples/example_config/Makefile
 	masterfiles/Makefile
+	tests/Makefile
+	tests/acceptance/Makefile
 	tests/unit/Makefile
 	tests/load/Makefile])
 

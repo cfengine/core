@@ -70,6 +70,7 @@ docs/*.8
 
 tests/acceptance/*.log
 tests/acceptance/.succeeded
+tests/acceptance/workdir
 
 # unit tests
 

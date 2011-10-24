@@ -25,6 +25,7 @@
 
 LOG=test.log
 SUMMARY=summary.log
+BASE_WORKDIR=$(pwd)/workdir
 QUIET=
 NOVA=
 STAGING=
@@ -92,7 +93,16 @@ runtest() {
   ) >> $LOG
 
   if [ -z "$SKIP" ]; then
-    OUT=$(sudo $AGENT -Kf "$TEST" -D AUTO,DEBUG 2>&1)
+
+    FLATNAME=$(echo "$TEST" | sed 's,[./],_,g')
+
+    # Prepare workdir
+    WORKDIR=$BASE_WORKDIR/$FLATNAME
+    mkdir -p $WORKDIR/bin
+    ln -sf $AGENT $WORKDIR/bin
+    ln -sf $(dirname $AGENT)/cf-promises $WORKDIR/bin
+
+    OUT=$(sudo CFENGINE_TEST_OVERRIDE_WORKDIR=$WORKDIR $AGENT -Kf "$TEST" -D AUTO,DEBUG 2>&1)
     RETVAL=$?
     echo "$OUT" >> $LOG
     echo >> $LOG
@@ -111,8 +121,6 @@ runtest() {
         RESULT="FAILed to crash"
       fi
     fi
-
-    FLATNAME=$(echo "$TEST" | sed 's,[./],_,g')
 
     if [ "$RESULT" != Pass ] && [ -e .succeeded/"$FLATNAME" ]; then
       echo $TEST $RESULT '(UNEXPECTED FAILURE)' >> $SUMMARY
@@ -223,6 +231,10 @@ START_TIME=$(date +%s)
   echo ----------------------------------------------------------------------
   echo Total tests: $TESTS_COUNT
 ) > $LOG
+
+# Remove old workdirs if there any
+
+sudo rm -rf "$BASE_WORKDIR"
 
 for test in $TESTS; do
   if [ -n "$USE_VALGRIND" ]; then

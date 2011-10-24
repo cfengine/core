@@ -19,19 +19,12 @@ checked for in the future.
 Preparing for running tests
 ------------------------------------------------------------------------------
 
-* Compile and install CFEngine.
+* Compile CFEngine.
   - It is advised to use Tokyo Cabinet as it gives much better performance in
     test suite over Berkeley DB.
-  - You might want to run CFEngine from source tree. Then you need to provide it
-    with symlink from $workdir/bin/cf-promises to built src/cf-promises, as
-    cf-agent looks there for cf-promises. Building with --disable-shared in this
-    case might save a lot of headaches too.
-
-* Make sure there is no failsafe.cf in $workdir/inputs directory, otherwise some
-  tests will be erroneously marked as failed.
 
 * Make sure user you are running testsuite from has sudo rights. This is
-  necessary to test functionality which is only available for root user.
+  necessary to test functionality which is only available to the root user.
 
 ------------------------------------------------------------------------------
 Running testsuite

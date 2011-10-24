@@ -21,6 +21,7 @@ assert_int_equal(ap->rtype, ap2->rtype);
 assert_int_equal(ap->dtype, ap2->dtype);
 
 DeleteAssoc(ap);
+DeleteAssoc(ap2);
 }
 
 int main()

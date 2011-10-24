@@ -14,6 +14,8 @@ PrependRScalar(&list, "stuff", CF_SCALAR);
 PrependRScalar(&list, "more-stuff", CF_SCALAR);
 
 assert_string_equal(list->item, "more-stuff");
+
+DeleteRlist(list);
 }
 
 static void test_length(void **state)
@@ -27,6 +29,8 @@ assert_int_equal(RlistLen(list), 1);
 
 PrependRScalar(&list, "more-stuff", CF_SCALAR);
 assert_int_equal(RlistLen(list), 2);
+
+DeleteRlist(list);
 }
 
 static void test_prepend_scalar_idempotent(void **state)
@@ -38,6 +42,8 @@ IdempPrependRScalar(&list, "stuff", CF_SCALAR);
 
 assert_string_equal(list->item, "stuff");
 assert_int_equal(RlistLen(list), 1);
+
+DeleteRlist(list);
 }
 
 
@@ -52,6 +58,9 @@ copy = CopyRlist(list);
 
 assert_string_equal(list->item, copy->item);
 assert_string_equal(list->next->item, copy->next->item);
+
+DeleteRlist(list);
+DeleteRlist(copy);
 }
 
 int main()

@@ -1031,7 +1031,10 @@ if ((fp = fopen(file,"r")) == NULL)
 while (!feof(fp))
    {
    vbuff[0] = '\0';
-   fgets(vbuff,CF_BUFSIZE,fp);
+   if (fgets(vbuff,CF_BUFSIZE,fp) == NULL)
+      {
+      break;
+      }
 
    if (strstr(vbuff,"entropy"))
       {
@@ -1161,16 +1164,20 @@ sent=send(sd,vbuff,strlen(vbuff),0);
     Debug("%s",vbuff);    
     }
  
-sent = send(sd,vbuff,strlen(vbuff),0);
+send(sd,vbuff,strlen(vbuff),0);
 
 sprintf(vbuff,"To: %s\r\n\r\n",to); 
 Debug("%s",vbuff);
-sent = send(sd,vbuff,strlen(vbuff),0);
+send(sd,vbuff,strlen(vbuff),0);
 
 while(!feof(fp))
    {
    vbuff[0] = '\0';
-   fgets(vbuff,CF_BUFSIZE,fp);
+   if (fgets(vbuff,CF_BUFSIZE,fp) == NULL)
+      {
+      break;
+      }
+
    Debug("%s",vbuff);
    
    if (strlen(vbuff) > 0)

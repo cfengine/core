@@ -372,7 +372,11 @@ if (INTERACTIVE)
       
       while (true)
          {
-         fgets(reply,8,stdin);
+         if (fgets(reply,8,stdin) == NULL)
+            {
+            FatalError("EOF trying to read answer from terminal");
+            }
+
          Chop(reply);
          
          if (strcmp(reply,"yes")==0)

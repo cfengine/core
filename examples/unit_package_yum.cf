@@ -28,6 +28,7 @@
 body common control
 {
 bundlesequence => { "packages" };
+inputs => { "cfengine_stdlib.cf" }
 }
 
 #############################################
@@ -52,34 +53,4 @@ packages:
      package_method => yum;
 
 }
-#############################################
 
-body package_method yum
-
-{
-any::
-
- package_changes => "bulk";
-
- # Could use rpm for this
- package_list_command => "/usr/bin/yum list installed";
-
- # Remember to escape special characters like |
-
- package_list_name_regex    => "([^.]+).*";
- package_list_version_regex => "[^\s]\s+([^\s]+).*";
- package_list_arch_regex    => "[^.]+\.([^\s]+).*";
-
- package_installed_regex => ".*installed.*";
-
- package_name_convention => "$(name).$(arch)";
-
- # Use these only if not using a separate version/arch string
- # package_version_regex => "";
- # package_name_regex => "";
- # package_arch_regex => "";
-
-package_add_command => "/usr/bin/yum -y install";
-package_delete_command => "/bin/rpm -e";
-package_verify_command => "/bin/rpm -V";
-}

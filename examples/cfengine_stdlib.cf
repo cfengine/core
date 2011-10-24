@@ -2,7 +2,7 @@
 #  Copyright (C) Cfengine AS
 # 
 #  This program is free software; you can redistribute it and/or modify it
-#  under the terms of the GNU General Public License as published by the
+#  under the terms of the GNU Lesser General Public License LGPL as published by the
 #  Free Software Foundation; version 3.
 #   
 #  This program is distributed in the hope that it will be useful,
@@ -39,7 +39,7 @@
 # the online docs
 #
 
-# Subversion : $Rev: 61 $
+# Subversion : $Rev: 95 $
 # For Cfengine Core: 3.1.0
 
 ###################################################
@@ -57,6 +57,17 @@ insert_lines:
 
   "$(lines)"
     comment => "Append lines if they don't exist";
+}
+
+##
+
+bundle edit_line insert_file(templatefile)
+{
+insert_lines:
+
+   "$(templatefile)"
+            comment => "Insert the template file into the file being edited",
+        insert_type => "file";
 }
 
 ##
@@ -168,6 +179,43 @@ insert_lines:
 
 ##
 
+bundle edit_line replace_line_end(start,end)
+#
+# Lines starting with "$(start)" will get the ending given in "$(end)",
+# whitespaces will be left unmodified.
+# For example, replace_line_end("ftp", "2121/tcp") would replace
+# "ftp             21/tcp"
+# with 
+# "ftp             2121/tcp"
+{
+field_edits:
+
+   "\s*$(start)\s.*"
+      edit_field => line("(^|\s)$(start)\s*", "2", "$(end)","set");
+}
+
+##
+
+bundle edit_line append_to_line_end(start,end)
+#
+# Lines starting with "$(start)" and not ending with "$(end)"
+# will get appended with "$(end)", whitespaces will be left unmodified.
+# For example, append_to_line_end("kernel", "vga=791") would replace
+# "kernel /boot/vmlinuz root=/dev/sda7"
+# with 
+# "kernel /boot/vmlinuz root=/dev/sda7 resume=/dev/sda9 vga=791"
+#
+# WARNING: Be careful not to have multiple promises matching the same line,
+#          which would result in the line growing indefinetively.
+{
+field_edits:
+
+   "\s*$(start)\s.*"
+      edit_field => line("(^|\s)$(start)\s*", "2", "$(end)","append");
+}
+
+##
+
 bundle edit_line resolvconf(search,list)
 
  # search is the search domains with space
@@ -225,6 +273,44 @@ insert_lines:
 
          comment => "Insert a variable definition",
       ifvarclass => "!$(cindex[$(index)])_in_file";
+}
+
+##
+
+bundle edit_line set_variable_values2(file,v)
+#
+# Another implementation of set_variable_values.
+# The input and output should be exactly the same (except the file name), 
+# but in some Cfengine versions there are bugs, 
+# so this bundle can be used as a workaround.
+#
+{
+vars:
+
+  "index" slist => getindices("$(v)");
+
+  # Be careful if the index string contains funny chars
+
+  "cindex[$(index)]" string => canonify("$(index)");
+
+  "fieldc_$(cindex[$(index)])" int => getfields("$(index).*","$(file)","=","FIELD_$(cindex[$(index)])");
+
+classes:
+  "$(cindex[$(index)])_in_file" expression => strcmp("$(index)=$($(v)[$(index)])", "$(FIELD_$(index)[1])=$(FIELD_$(index)[2])");
+
+
+delete_lines:  # delete any lhs when no match
+  "$(index)=.*",
+    ifvarclass => "!$(cindex[$(index)])_in_file";
+
+
+insert_lines:
+
+  "$(index)=$($(v)[$(index)])",
+
+         comment => "Insert a variable definition",
+      ifvarclass => "!$(cindex[$(index)])_in_file";
+
 }
 
 ##
@@ -330,6 +416,45 @@ insert_lines:
 }
 
 ##
+
+bundle agent cronjob(commands,user,hours,mins)
+
+ # For adding lines to crontab for a user
+ # methods:
+ #  "cron" usebundle => cronjob("/bin/ls","mark","*","5,10");
+
+{
+vars:
+  SuSE::
+   "crontab" string => "/var/spool/cron/tabs";
+  redhat|fedora::
+   "crontab" string => "/var/spool/cron";
+ !(SuSE|redhat|fedora)::
+    "crontab" string => "/var/spool/cron/crontabs"; 
+
+files:
+
+!windows::
+  "$(crontab)/$(user)" 
+
+    comment => "A user's regular batch jobs are added to this file",
+     create => "true",
+  edit_line => append_if_no_line("$(mins) $(hours) * * * $(commands)"),
+      perms => mo("644","$(user)"),
+    classes => if_repaired("changed_crontab");
+
+processes:
+
+changed_crontab::
+   "cron"
+         comment => "Most crons need to be huped after file changes",
+         signals => { "hup" };
+
+}
+
+
+
+##
 ## editing bodies
 ##
 
@@ -357,6 +482,18 @@ extend_fields      => "true";
 allow_blank_fields => "true";
 }
 
+##
+
+body edit_field line(split,col,newval,method)
+{
+field_separator    => "$(split)";
+select_field       => "$(col)";
+value_separator    => " ";
+field_value        => "$(newval)";
+field_operation    => "$(method)";
+extend_fields      => "true";
+allow_blank_fields => "true";
+}
 
 ##
 
@@ -392,6 +529,13 @@ body edit_defaults empty
 empty_file_before_editing => "true";
 edit_backup => "false";
 max_file_size => "300000";
+}
+
+##
+
+body edit_defaults no_backup
+{
+edit_backup => "false";
 }
 
 ##
@@ -466,7 +610,7 @@ ifelapsed => "60";
 
 body action bg(elapsed,expire)
 {
-ifelapsed   => "$(elapsed)";    # run only every 8 hours
+ifelapsed   => "$(elapsed)";
 expireafter => "$(expire)";
 background  => "true";
 }
@@ -521,6 +665,14 @@ chdir => "$(s)";
 
 ##
 
+body contain in_dir_shell(s)
+{
+chdir => "$(s)";
+useshell => "true";
+}
+
+##
+
 body contain silent_in_dir(s)
 {
 chdir => "$(s)";
@@ -532,6 +684,14 @@ no_output => "true";
 body contain in_shell
 {
 useshell => "true";
+}
+
+##
+
+body contain in_shell_and_silent
+{
+useshell => "true";
+no_output => "true";
 }
 
 ##
@@ -623,6 +783,14 @@ promise_kept => { "$(x)" };
 }
 
 ##
+
+body classes cmd_repair(code,cl)
+{
+repaired_returncodes => { "$(code)" };
+promise_repaired => { "$(cl)" };
+}
+
+##
 ## Persistent classes
 ##
 
@@ -680,9 +848,26 @@ compare     => "mtime";
 
 ##
 
+body copy_from remote_dcp(from,server)
+{
+servers     => { "$(server)" };
+source      => "$(from)";
+compare     => "digest";
+}
+
+##
+
 body copy_from local_cp(from)
 {
 source      => "$(from)";
+}
+
+##
+
+body copy_from local_dcp(from)
+{
+source      => "$(from)";
+compare     => "digest";
 }
 
 ##
@@ -711,6 +896,7 @@ servers     => { "$(server)" };
 source      => "$(from)";
 purge       => "true";
 preserve    => "true";
+type_check  => "false";
 }
 
 ##
@@ -719,6 +905,15 @@ body copy_from no_backup_cp(from)
 {
 source      => "$(from)";
 copy_backup => "false";
+}
+
+##
+
+body copy_from no_backup_dcp(from)
+{
+source      => "$(from)";
+copy_backup => "false";
+compare     => "digest";
 }
 
 ##
@@ -808,6 +1003,15 @@ aces => { "@(acl)" };
 
 ##
 
+body acl ntfs(acl)
+{
+acl_type => "ntfs";
+acl_method => "overwrite";
+aces => { "@(acl)" };
+}
+
+##
+
 body acl strict
 # NOTE: May need to take ownership of file/dir
 # to be sure no-one else is allowed access
@@ -837,6 +1041,13 @@ body depth_search recurse_ignore(d,list)
 {
 depth => "$(d)";
 exclude_dirs => { @(list) };
+}
+
+##
+
+body depth_search include_base
+{
+include_basedir => "true";
 }
 
 ##
@@ -985,6 +1196,16 @@ report_diffs   => "true";
 update_hashes  => "yes";
 }
 
+##
+
+body changes diff_noupdate
+{
+hash           => "sha256";
+report_changes => "content";
+report_diffs   => "true";
+update_hashes  => "no";
+}
+
 ##--------------------------------------------------------------
 ## Packages promises
 ##--------------------------------------------------------------
@@ -994,7 +1215,11 @@ body package_method zypper
 {
 package_changes => "bulk";
 
-package_list_command => "/usr/bin/zypper packages";
+package_list_command => "/bin/rpm -qa --queryformat \"i | repos | %{name} | %{version}-%{release} | %{arch}\n\"";
+
+# set it to "0" to avoid caching of list during upgrade
+package_list_update_ifelapsed => "240";
+
 package_patch_list_command => "/usr/bin/zypper patches";
 package_installed_regex => "i.*";
 package_list_name_regex    => "[^|]+\|[^|]+\|\s+([^\s]+).*";
@@ -1006,12 +1231,12 @@ package_patch_name_regex    => "[^|]+\|\s+([^\s]+).*";
 package_patch_version_regex => "[^|]+\|[^|]+\|\s+([^\s]+).*";
 
 package_name_convention => "$(name)";
-package_add_command => "/usr/bin/zypper -non-interactive install";
-package_delete_command => "/usr/bin/zypper -non-interactive remove --force-resolution";
-package_update_command => "/usr/bin/zypper -non-interactive update";
+package_add_command => "/usr/bin/zypper --non-interactive install";
+package_delete_command => "/usr/bin/zypper --non-interactive remove --force-resolution";
+package_update_command => "/usr/bin/zypper --non-interactive update";
 
-package_patch_command => "/usr/bin/zypper -non-interactive patch$"; # $ means no args
-package_verify_command => "/usr/bin/zypper -non-interactive verify$";
+package_patch_command => "/usr/bin/zypper --non-interactive patch$"; # $ means no args
+package_verify_command => "/usr/bin/zypper --non-interactive verify$";
 }
 
 ##
@@ -1024,19 +1249,54 @@ package_list_name_regex    => "ii\s+([^\s]+).*";
 package_list_version_regex => "ii\s+[^\s]+\s+([^\s]+).*";
 package_installed_regex => ".*"; # all reported are installed
 package_name_convention => "$(name)";
-package_list_update_ifelapsed => "240";		# 4 hours
+
+# set it to "0" to avoid caching of list during upgrade
+package_list_update_ifelapsed => "240";
 
 have_aptitude::
    package_add_command => "/usr/bin/aptitude --assume-yes install";
    package_list_update_command => "/usr/bin/aptitude update";
    package_delete_command => "/usr/bin/aptitude --assume-yes remove";
    package_update_command =>  "/usr/bin/aptitude --assume-yes install";
+   package_verify_command =>  "/usr/bin/aptitude show";
+   package_noverify_regex => "(State: not installed|E: Unable to locate package .*)";
 
 !have_aptitude::
    package_add_command => "/usr/bin/apt-get --yes install";
    package_list_update_command => "/usr/bin/apt-get update";
    package_delete_command => "/usr/bin/apt-get --yes remove";
    package_update_command =>  "/usr/bin/apt-get --yes install";
+   package_verify_command => "/usr/bin/dpkg -s";
+   package_noverify_returncode => "1";
+}
+
+##
+
+body package_method dpkg_version(repo)
+{
+package_changes => "individual";
+package_list_command => "/usr/bin/dpkg -l";
+
+# set it to "0" to avoid caching of list during upgrade
+package_list_update_ifelapsed => "240";
+
+package_list_name_regex    => "ii\s+([^\s]+).*";
+package_list_version_regex => "ii\s+[^\s]+\s+([^\s]+).*";
+
+package_installed_regex => ".*"; # all reported are installed
+
+package_file_repositories => { "$(repo)" };
+
+debian.x86_64::
+   package_name_convention => "$(name)_$(version)_amd64.deb";
+
+debian.i686::
+   package_name_convention => "$(name)_$(version)_i386.deb";
+
+debian::
+   package_add_command => "/usr/bin/dpkg --install";
+   package_delete_command => "/usr/bin/dpkg --purge";
+   package_update_command =>  "/usr/bin/dpkg --install";
 }
 
 ##
@@ -1045,22 +1305,24 @@ body package_method rpm_version(repo)
 {
 package_changes => "individual";
 
-package_list_command => "/bin/rpm -qa --queryformat \"i | repos | %{name} | %{version} | %{arch}\n\"";
+package_list_command => "/bin/rpm -qa --queryformat \"i | repos | %{name} | %{version}-%{release} | %{arch}\n\"";
+
+# set it to "0" to avoid caching of list during upgrade
+package_list_update_ifelapsed => "240";
 
 package_list_name_regex    => "[^|]+\|[^|]+\|\s+([^\s|]+).*";
 package_list_version_regex => "[^|]+\|[^|]+\|[^|]+\|\s+([^\s|]+).*";
 package_list_arch_regex    => "[^|]+\|[^|]+\|[^|]+\|[^|]+\|\s+([^\s]+).*";
 
 package_installed_regex => "i.*";
- 
+
 package_file_repositories => { "$(repo)" };
 
-package_name_convention => "$(name)-$(version)-$(arch).rpm";
+package_name_convention => "$(name)-$(version).$(arch).rpm";
 
 package_add_command => "/bin/rpm -ivh ";
-package_delete_command => "/bin/rpm -e --nodeps";
-package_verify_command => "/bin/rpm -V";
 package_update_command => "/bin/rpm -Uvh ";
+package_delete_command => "/bin/rpm -e --nodeps";
 package_noverify_regex => ".*[^\s].*";
 }
 
@@ -1112,6 +1374,7 @@ body package_method yum
 {
 package_changes => "bulk";
 package_list_command => "/usr/bin/yum list installed";
+package_patch_list_command => "/usr/bin/yum check-update";
 
 # Remember to escape special characters like |
 
@@ -1119,11 +1382,20 @@ package_list_name_regex    => "([^.]+).*";
 package_list_version_regex => "[^\s]\s+([^\s]+).*";
 package_list_arch_regex    => "[^.]+\.([^\s]+).*";
 
-package_installed_regex => ".*installed.*";
+package_installed_regex => ".*(installed|\s+@).*";
 package_name_convention => "$(name).$(arch)";
 
+# set it to "0" to avoid caching of list during upgrade
+package_list_update_ifelapsed => "240";
+
+package_patch_installed_regex => "^\s.*";
+package_patch_name_regex    => "([^.]+).*";
+package_patch_version_regex => "[^\s]\s+([^\s]+).*";
+package_patch_arch_regex    => "[^.]+\.([^\s]+).*";
+
 package_add_command => "/usr/bin/yum -y install";
-package_delete_command => "/bin/rpm -e";
+package_update_command => "/usr/bin/yum -y update";
+package_delete_command => "/bin/rpm -e --nodeps";
 package_verify_command => "/bin/rpm -V";
 }
 
@@ -1141,6 +1413,7 @@ body package_method yum_rpm
 {
   package_changes => "bulk";
   package_list_command => "/bin/rpm -qa --qf '%{name} %{version}-%{release} %{arch}\n'";
+  package_patch_list_command => "/usr/bin/yum check-update";
 
   package_list_name_regex    => "^(\S+?)\s\S+?\s\S+$";
   package_list_version_regex => "^\S+?\s(\S+?)\s\S+$";
@@ -1149,9 +1422,14 @@ body package_method yum_rpm
   package_installed_regex => ".*";
   package_name_convention => "$(name)";
 
+  package_patch_installed_regex => "^\s.*";
+  package_patch_name_regex    => "([^.]+).*";
+  package_patch_version_regex => "[^\s]\s+([^\s]+).*";
+  package_patch_arch_regex    => "[^.]+\.([^\s]+).*";
+
   package_add_command    => "/usr/bin/yum -y install";
   package_update_command => "/usr/bin/yum -y update";
-  package_delete_command => "/bin/rpm -e --allmatches";
+  package_delete_command => "/bin/rpm -e --nodeps --allmatches";
   package_verify_command => "/bin/rpm -V";
 }
 
@@ -1177,6 +1455,34 @@ package_delete_command => "/usr/sbin/pkgrm -n -a /tmp/$(adminfile)";
 
 ##
 
+#
+# The following bundle is part of a package setup for solaris, see unit examples
+#
+
+bundle edit_line create_solaris_admin_file
+{
+insert_lines:
+		
+  "mail=
+instance=unique
+partial=nocheck
+runlevel=nocheck
+idepend=nocheck
+rdepend=nocheck
+space=nocheck
+setuid=nocheck
+conflict=nocheck
+action=nocheck
+networktimeout=60
+networkretries=3
+authentication=quit
+keystore=/var/sadm/security
+proxy=
+basedir=default";
+}
+
+##
+
 body package_method freebsd
 {
  package_changes => "individual";
@@ -1186,11 +1492,11 @@ body package_method freebsd
 
  # Remember to escape special characters like |
 
- package_list_name_regex    => "([^-]+).*";
- package_list_version_regex => "[^-]+-([^\s]+).*";
+ package_list_name_regex    => "([^\s]+)-.*";
+ package_list_version_regex => "[^\s]+-([^\s]+).*";
 
- package_name_regex    => "([^-]+).*";
- package_version_regex => "[^-]+-([^\s]+).*";
+ package_name_regex    => "([^\s]+)-.*";
+ package_version_regex => "[^\s]+-([^\s]+).*";
 
  package_installed_regex => ".*";
 
@@ -1219,22 +1525,28 @@ SuSE::
  package_patch_name_regex    => "[^|]+\|\s+([^\s]+).*";
  package_patch_version_regex => "[^|]+\|[^|]+\|\s+([^\s]+).*";
  package_name_convention => "$(name)";
- package_add_command => "/usr/bin/zypper -non-interactive install";
- package_delete_command => "/usr/bin/zypper -non-interactive remove --force-resolution";
- package_update_command => "/usr/bin/zypper -non-interactive update";
- package_patch_command => "/usr/bin/zypper -non-interactive patch$"; # $ means no args
- package_verify_command => "/usr/bin/zypper -non-interactive verify$";
+ package_add_command => "/usr/bin/zypper --non-interactive install";
+ package_delete_command => "/usr/bin/zypper --non-interactive remove --force-resolution";
+ package_update_command => "/usr/bin/zypper --non-interactive update";
+ package_patch_command => "/usr/bin/zypper --non-interactive patch$"; # $ means no args
+ package_verify_command => "/usr/bin/zypper --non-interactive verify$";
 
 redhat::
  package_changes => "bulk";
  package_list_command => "/usr/bin/yum list installed";
+ package_patch_list_command => "/usr/bin/yum check-update";
  package_list_name_regex    => "([^.]+).*";
  package_list_version_regex => "[^\s]\s+([^\s]+).*";
  package_list_arch_regex    => "[^.]+\.([^\s]+).*";
- package_installed_regex => ".*installed.*";
+ package_installed_regex => ".*(installed|\s+@).*";
  package_name_convention => "$(name).$(arch)";
+ package_list_update_ifelapsed => "240";
+ package_patch_installed_regex => "^\s.*";
+ package_patch_name_regex    => "([^.]+).*";
+ package_patch_version_regex => "[^\s]\s+([^\s]+).*";
+ package_patch_arch_regex    => "[^.]+\.([^\s]+).*";
  package_add_command => "/usr/bin/yum -y install";
- package_delete_command => "/bin/rpm -e";
+ package_delete_command => "/bin/rpm -e --nodeps";
  package_verify_command => "/bin/rpm -V";
 
 debian::
@@ -1251,20 +1563,24 @@ debian.have_aptitude::
    package_list_update_command => "/usr/bin/aptitude update";
    package_delete_command => "/usr/bin/aptitude --assume-yes remove";
    package_update_command =>  "/usr/bin/aptitude --assume-yes install";
+   package_verify_command =>  "/usr/bin/aptitude show";
+   package_noverify_regex => "(State: not installed|E: Unable to locate package .*)";
 
 debian.!have_aptitude::
    package_add_command => "/usr/bin/apt-get --yes install";
    package_list_update_command => "/usr/bin/apt-get update";
    package_delete_command => "/usr/bin/apt-get --yes remove";
    package_update_command =>  "/usr/bin/apt-get --yes install";
+   package_verify_command => "/usr/bin/dpkg -s";
+   package_noverify_returncode => "1";
 
 freebsd::
  package_changes => "individual";
  package_list_command => "/usr/sbin/pkg_info";
- package_list_name_regex    => "([^-]+).*";
- package_list_version_regex => "[^-]+-([^\s]+).*";
- package_name_regex    => "([^-]+).*";
- package_version_regex => "[^-]+-([^\s]+).*";
+ package_list_name_regex    => "([^\s]+)-.*";
+ package_list_version_regex => "[^\s]+-([^\s]+).*";
+ package_name_regex    => "([^\s]+)-.*";
+ package_version_regex => "[^\s]+-([^\s]+).*";
  package_installed_regex => ".*";
  package_name_convention => "$(name)-$(version)";
  package_add_command => "/usr/sbin/pkg_add -r";
@@ -1326,6 +1642,23 @@ process_result => "!command";
 
 ##
 
+body process_select days_older_than(d)
+{
+stime_range    => irange(ago(0,0,"$(d)",0,0,0),now);
+process_result => "stime";
+}
+
+##
+
+body process_count any_count(cl)
+
+{
+match_range => "0,0";
+out_of_range_define => { "$(cl)" };
+}
+
+##
+
 body process_count check_range(name,lower,upper)
 {
 match_range => irange("$(lower)","$(upper)");
@@ -1361,6 +1694,14 @@ body match_value scan_log(line)
 {
 select_line_matching => "$(line)";
 track_growing_file => "true";
+}
+
+##
+
+body match_value scan_changing_file(line)
+{
+select_line_matching => "$(line)";
+track_growing_file => "false";
 }
 
 ##

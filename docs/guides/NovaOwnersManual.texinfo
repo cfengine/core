@@ -28,7 +28,7 @@
 @c @smallbook
 @fonttextsize 10
 @page
-@vskip 0pt plus 1filll
+@vskip 0pt plus 1fill
 Copyright @copyright{} 2011 CFEngine AS.
 The features described herein are in provided for user convenience and imply no warranty whatsoever
 to the extent of applicable law.
@@ -79,7 +79,7 @@ to the extent of applicable law.
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node  Introduction, , Top, Top
+@node  Introduction, Requirements, Top, Top
 @chapter Introduction
 
 CFEngine 3 Nova is a commercially licensed version of the core CFEngine
@@ -98,7 +98,7 @@ well as greater integration facilities with database resources.
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node Requirements, , Introduction, Top
+@node Requirements, Installing CFEngine 3 Nova, Introduction, Top
 @chapter Requirements
 
 @menu

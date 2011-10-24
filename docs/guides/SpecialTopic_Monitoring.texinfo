@@ -907,7 +907,7 @@ commands:
 @end verbatim
 
 
-@node
+@node Breakin, Threshold monitoring, Milter, Monitoring customization
 @unnumberedsec Scanning syslog for breakin attempts
 @sp 1
 

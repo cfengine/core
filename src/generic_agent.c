@@ -461,7 +461,7 @@ CfOut(cf_verbose,"","-----------------------------------------------------------
 
 /* Define trusted directories */
 
-strcpy(CFWORKDIR, GetWorkdir());
+strcpy(CFWORKDIR, GetWorkDir());
 MapName(CFWORKDIR);
 
 Debug("Setting CFWORKDIR=%s\n", CFWORKDIR);

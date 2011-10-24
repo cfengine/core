@@ -242,7 +242,7 @@ void TestExpandVariables()
   struct Constraint *cp;
   struct FnCall *fp;
 
-  strcpy(CFWORKDIR,GetWorkdir());
+  strcpy(CFWORKDIR,GetWorkDir());
   MapName(CFWORKDIR);
   
 /* Still have diagnostic scope */

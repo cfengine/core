@@ -2001,14 +2001,14 @@ return Unix_GetCurrentUserName(userName, userNameLen);
 
 #if defined(__CYGWIN__)
 
-const char *GetWorkdir(void)
+static const char *GetDefaultWorkDir(void)
 {
     return WORKDIR;
 }
 
 #elif defined(__ANDROID__)
 
-const char *GetWorkdir(void)
+static const char *GetDefaultWorkDir(void)
 {
     /* getpwuid() on Android returns /data, so use compile-time default instead */
     return WORKDIR;
@@ -2016,7 +2016,7 @@ const char *GetWorkdir(void)
 
 #elif !defined(__MINGW32__)
 
-const char *GetWorkdir(void)
+static const char *GetDefaultWorkDir(void)
 {
 if (getuid() > 0)
    {
@@ -2042,3 +2042,11 @@ else
 }
 
 #endif
+
+/******************************************************************/
+
+const char *GetWorkDir(void)
+{
+const char *workdir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
+return workdir == NULL ? GetDefaultWorkDir() : workdir;
+}

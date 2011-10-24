@@ -1190,7 +1190,7 @@ int GetCurrentUserName(char *userName, int userNameLen);
 void Unix_GetInterfaceInfo(enum cfagenttype ag);
 void Unix_FindV6InterfaceInfo(void);
 #endif  /* NOT MINGW */
-const char *GetWorkdir(void);
+const char *GetWorkDir(void);
 
 /* transaction.c */
 

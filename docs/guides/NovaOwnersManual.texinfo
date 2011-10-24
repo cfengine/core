@@ -23,7 +23,6 @@
 @titlepage
 @title CFEngine 3 Nova Owner's Manual
 @subtitle CFEngine Enterprise Documentation
-@subtitle for CFEngine 3 Nova
 @subtitle Updated 21. October 2011
 @author CFEngine
 @c @smallbook
@@ -46,7 +45,7 @@ to the extent of applicable law.
 @end direntry
 @end ifinfo
 @ifnottex
-@node Top
+@node Top, , (dir), (dir)
 @top CFEngine 3 Nova Owner's Manual
 @end ifnottex
 @ifhtml
@@ -62,16 +61,25 @@ to the extent of applicable law.
 
 
 @menu
-* Introduction::
-* Requirements::
-* Installing CFEngine 3 Nova::
-* Mission Portal::
+* Introduction::                
+* Requirements::                
+* Installing CFEngine 3 Nova::  
+* Upgrading CFEngine Nova::     
+* Mission Portal::              
+* Monitoring extensions::       
+* File Access Control Lists::   
+* Server extensions::           
+* Environments and workflows::  
+* Virtualization::              
+* Content-Driven Policies::     
+* Windows-specific features in Nova::  
+* Configuration of external authentication::  
 @end menu
 
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node 
+@node  Introduction, , Top, Top
 @chapter Introduction
 
 CFEngine 3 Nova is a commercially licensed version of the core CFEngine
@@ -90,15 +98,15 @@ well as greater integration facilities with database resources.
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node
+@node Requirements, , Introduction, Top
 @chapter Requirements
 
 @menu
-* Hardware requirements::
-* Operating system support::
+* Hardware requirements::       
+* Operating system support::    
 @end menu
 
-@node
+@node Hardware requirements, , Requirements, Requirements
 @section Hardware requirements
 
 The default CFEngine 3 Nova architecture uses a single hub, or policy server, to publish changes of policy
@@ -113,7 +121,7 @@ For machines under CFEngine’s management (clients), a full installation of CFE
 
 
 @c --------------------------------------------------
-@node 
+@node  Operating system support,  , Hardware requirements, Requirements
 @section Operating system support
 
 CFEngine can be made to run on most operating systems. For efficiency
@@ -145,10 +153,16 @@ A working package manager is required on the hub/policy server to install an Apa
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node
+@node Installing CFEngine 3 Nova, Upgrading CFEngine Nova, Requirements, Top
 @chapter Installing CFEngine 3 Nova
 
-@node
+@menu
+* Installation procedure::      
+* Troubleshooting::             
+* Frequently Asked Questions::  
+@end menu
+
+@node Installation procedure, , Installing CFEngine 3 Nova, Installing CFEngine 3 Nova
 @section Installation procedure
 
 CFEngine 3 Nova is designed to be simple to install in its default configuration. The installation
@@ -284,10 +298,18 @@ Note that some of the displays in the Mission Portal may be blank when you log i
 
 
 @c -----------------------------------------------------
-@node
+@node Troubleshooting, Frequently Asked Questions, Installation procedure, Installing CFEngine 3 Nova
 @section Troubleshooting
 
-@node
+@menu
+* Apache HTTP error_log is your friend::  
+* Some report pages return HTTP error 404::  
+* First time login to Mission Portal fails::  
+* Cannot send emails from the Mission Portal::  
+* Warning messages on web pages in SLES/OpenSuSE Hub::  
+@end menu
+
+@node Apache HTTP error_log is your friend, , Troubleshooting, Troubleshooting
 @subsection Apache HTTP error_log is your friend
 The first place to diagnose (if all CFEngine processes and mongod are up and running) is:@*
 @i{RHEL 5,6 / CentOS 5}
@@ -302,12 +324,12 @@ The first place to diagnose (if all CFEngine processes and mongod are up and run
 @noindent This log file will often provide useful information on which components are not operating properly. 
 
 
-@node
+@node Some report pages return HTTP error 404, First time login to Mission Portal fails, Apache HTTP error_log is your friend, Troubleshooting
 @subsection Some report pages return HTTP error 404
 Confirm that Apache REWRITE module is ON. Restarting httpd/apache2 service is required if rewrite was disabled.
 
 
-@node First time login to Mission Portal fails
+@node First time login to Mission Portal fails, , Some report pages return HTTP error 404, Troubleshooting
 @subsection First time login to Mission Portal fails
 MongoDB needs to be initialized for authentication of the default user. Run the following command:
 @i{RHEL 5,6 / CentOS 5}
@@ -325,21 +347,21 @@ MongoDB needs to be initialized for authentication of the default user. Run the 
 
 @noindent Default user name and password is 'admin' and 'admin'.
 
-@node
+@node Cannot send emails from the Mission Portal, , First time login to Mission Portal fails, Troubleshooting
 @subsection Cannot send emails from the Mission Portal
 The default email address used by the system is "admin@@cfengine.com". To change this, edit @file{application/config/ion_auth.php} at the line containing:
 @verbatim
    $config['admin_email'] = "admin@cfengine.com";
 @end verbatim
 
-@node
+@node Warning messages on web pages in SLES/OpenSuSE Hub,  , Cannot send emails from the Mission Portal, Troubleshooting
 @subsection Warning messages on web pages in SLES/OpenSuSE Hub
 Warnings appear because the default environment is set to "Development" and in this context the Mission Portal will show all php errors to the user. Set the environment to "Production" to silence these warnings, they will still be logged in Apache Error_log. To edit the default environment, visit "index.php" in your default web root directory and change the following line to suit your needs:
 @verbatim
    define('ENVIRONMENT', 'Development');
 @end verbatim
 
-@node
+@node Knowledge map remains unpopulated, Frequently Asked Questions, Warning messages on web pages in SLES/OpenSuSE Hub, Troubleshooting
 
 @subsection Knowledge map remains unpopulated
    Try building the Knowledge map manually:@*
@@ -361,10 +383,14 @@ Warnings appear because the default environment is set to "Development" and in t
 
 
 @c -----------------------------------------------------
-@node Frequently Asked Questions
+@node Frequently Asked Questions,  , Troubleshooting, Installing CFEngine 3 Nova
 @section Frequently Asked Questions
 
-@node
+@c @menu
+@c * How do I install the prerequisites for the hub manually?::  
+@c @end menu
+
+@c @node How do I install the prerequisites for the hub manually?,  , Frequently Asked Questions, Frequently Asked Questions
 @subsection How do I install the prerequisites for the hub manually?
 
 See INSTALLATION.TXT (can be found on the CFEngine software download page: @url{https://cfengine.com/software/}) for a list of dependencies for the hub. 
@@ -414,7 +440,7 @@ Four steps need to be followed to correct this minor issue.
 
 
 @c ----------------------------------------------------
-@subsection On my hub, I get messages of connection failures to a database. For example, in @code{messages}, I can see something like @code{!! Could not open connection to report database for saving}. What should I do?
+@subsection On my hub, I get messages of connection failures to a database. For example, in @code{messages}, I can see something like @code{!! Could not open connection to report database for saving}. What should I do?, How do I upgrade from CFEngine Community 3 to CFEngine 3 Nova?, 
 
 This message comes from the @code{cf-hub} process. It is responsible
 for pulling reports from hosts that have contacted the hub to get
@@ -471,12 +497,7 @@ deleting @file{/var/cfengine/state/mongod.lock} if it exists.
 tools and documentation for repairing a database at
 @url{http://www.mongodb.org/}.
 
-Note that almost all of the @code{cfreport} database is recreated with data collected from clients every six hours, so
-deleting it is normally acceptable. 
-@c todo
-But CFEngine AS or CFEngine Inc
-can not be held responsible for data loss in this respect.
-
+Note that almost all of the @code{cfreport} database is recreated with data collected from clients. This happens every 5 minutes or 6 hours (depending on the probe), you may consider whether deleting the database is an acceptable solution. CFEngine AS or CFEngine Inc can not be held responsible for data loss in this respect.
 @end enumerate
 
 
@@ -495,7 +516,7 @@ some process files are now managed by CFEngine 3 Nova for user convenience.
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node 
+@node  Upgrading CFEngine Nova, Mission Portal, Installing CFEngine 3 Nova, Top
 @chapter Upgrading CFEngine Nova
 
 When upgrading the software from an earlier version, you should
@@ -517,7 +538,14 @@ in the standard way.
 
 
 @c ------------------------------------------------------
-@node
+@menu
+* Upgrade procedure::           
+* How can I do phased deployment?::  
+* What if I have multiple operating system platforms?::  
+* How do Nova policies update if I already have my own policy?::  
+@end menu
+
+@node Upgrade procedure, How can I do phased deployment?, Upgrading CFEngine Nova, Upgrading CFEngine Nova
 @section Upgrade procedure
 
 The following is a general procedure to upgrade to CFEngine 3 Nova from earlier versions. It is assumed that the packages are placed in the @file{/tmp} directory. To upgrade, start with the hub (policy server):
@@ -641,7 +669,7 @@ or
 
 
 @c -----------------------------------------------------
-@node
+@node How can I do phased deployment?, What if I have multiple operating system platforms?, Upgrade procedure, Upgrading CFEngine Nova
 @section How can I do phased deployment?
 
 Using CFEngine classes to select a subset of machines, you can deploy of updates on a small
@@ -649,7 +677,7 @@ number of test systems first.
 
 
 @c -----------------------------------------------------
-@node 
+@node  What if I have multiple operating system platforms?, How do Nova policies update if I already have my own policy?, How can I do phased deployment?, Upgrading CFEngine Nova
 @section What if I have multiple operating system platforms?
 
 As of version 1.1 of CFEngine Nova, CFEngine will look for updates in an operating specific
@@ -658,7 +686,7 @@ its package in the correct subdirectory and the client host will know where to l
 
 
 @c ------------------------------------------------------
-@node
+@node How do Nova policies update if I already have my own policy?,  , What if I have multiple operating system platforms?, Upgrading CFEngine Nova
 @section How do Nova policies update if I already have my own policy?
 
 New CFEngine package updates will not overwrite your existing policy. That means that they
@@ -676,33 +704,33 @@ If you require assistance upgrading, contact CFEngine Support.
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node 
+@node  Mission Portal, Mission Portal Rooms, Upgrading CFEngine Nova, Top
 @chapter Mission Portal
 
 @menu
-* Mission Portal Rooms::
-* Finders::
-* Viewers::
-* Editors::
-* Settings::
+* Mission Portal Rooms::        
+* Finders::                     
+* Viewers::                     
+* Editors::                     
+* Mission Portal Administration::  
 @end menu
 
 The Mission Portal is the centerpiece
 of user interaction with CFEngine 3 Nova. It can be accessed by connecting to the hub (policy server) with your web browser (for example at http://123.456.789.123; default port 80). From here you can get a complete overview of operations and performance, business and compliance, organizational knowledge and library.
 
-@image{img-mission-portal-nova-2-1,15cm,,Mission Portal}
+@image{img-missionportal,15cm,,Mission Portal}
 @center Figure: The mission portal
 
 
 @c *****COPY BELOW FROM cf3-nova-mission-portal.texinfo*******
-@node 
+@node  Mission Portal Rooms, Mission Status, Mission Portal, Mission Portal
 @section Mission Portal Rooms
 
 @menu
-* Mission Status::
-* Mission Engineering::
-* Mission Planning::
-* Mission Library::
+* Mission Status::              
+* Mission Engineering::         
+* Mission Planning::            
+* Mission Library::             
 @end menu
 
 There are four main rooms in the Mission Portal that offer insight into different aspects of operations:
@@ -718,7 +746,7 @@ Each of these rooms is a beginning from which you can refine your overview and s
 through information.
 
 @page
-@node 
+@node  Mission Status, Mission Engineering, Mission Portal Rooms, Mission Portal Rooms
 @subsection Mission Status
 
 Mission status is a high level summary of how well the entire system is behaving. 
@@ -739,7 +767,7 @@ A summary of Mission goals (as defined in user policy files; these examples are 
 
 
 @page
-@node
+@node Mission Engineering, Mission Planning, Mission Status, Mission Portal Rooms
 @subsection Mission Engineering
 
 Mission engineering illustrates the state of the system in relation to the desired state at all scales. Zoom in to specific areas and examine the impact of promises, query data, and extract reports.
@@ -765,7 +793,7 @@ The Mission Engineering room comes with six finder functions (modules that make 
 
 
 @page
-@node
+@node Mission Planning, Mission Library, Mission Engineering, Mission Portal Rooms
 @subsection Mission Planning
 
 Make changes to policies, goals determined by promises and implement specific tactics to achieve the desired state. Interact with data, approve changes and anomalies. Get an overview of users logged on to the Mission Portal, as well as their current activity.
@@ -794,7 +822,7 @@ Shows the latest activity entries. Type in a new activity to keep colleagues pos
 
 
 @page
-@node
+@node Mission Library, , Mission Planning, Mission Portal Rooms
 @subsection Mission Library
 
 The Library contains finders for documents, topics, a notes archive, and (external) link to the CFEngine community.
@@ -814,16 +842,17 @@ The Library contains finders for documents, topics, a notes archive, and (extern
 
 
 @c ----------------------------------------------------
-@node
+@node Finders, Host finder, Mission Portal Rooms, Mission Portal
 @section Finders
 
 @menu
-* Host finder::
-* Class finder::
-* Promise finder::
-* Report finder::
-* Summary report finder::
-* Topic finder::
+* Host finder::                 
+* Class finder::                
+* Promise finder::              
+* Report finder::               
+* Summary report finder::       
+* CDP report finder::           
+* Topic finder::                
 @end menu
 
 Finders are modules that make it simple and intuitive to browse and search for objects of a particular type. Some are located in the Mission Engineering room, others in the Mission Library or the generic search box in the top right corner.
@@ -836,7 +865,7 @@ Finders are modules that make it simple and intuitive to browse and search for o
 
 @c ----------------------------------------------------
 @page
-@node
+@node Host finder, Class finder, Finders, Finders
 @subsection Host finder
 
 The host finder is located in the Mission Engineering room and will display a list of hosts. Browse by scrolling through the list, click a letter corresponding to the first letter of a host name, or search for hosts in the search box (top right corner). Clicking on a host name will bring you to the host viewer.
@@ -846,7 +875,7 @@ The host finder is located in the Mission Engineering room and will display a li
 @center Figure: Host finder
 @sp 1
 
-@node
+@node Class finder, Promise finder, Host finder, Finders
 @subsection Class finder
 
 The class finder is located in the Mission Engineering room and will display a list of classes. Browse by scrolling through the list, click a letter corresponding to the first letter of a class name, or search for classes in the search box (top right corner; choose between searching all, time, soft or IP classes). Clicking on a class will bring you to a report for that class profile.
@@ -857,7 +886,7 @@ The class finder is located in the Mission Engineering room and will display a l
 @sp 1
 
 @c ----------------------------------------------------
-@node
+@node Promise finder, Report finder, Class finder, Finders
 @subsection Promise finder
 
 The promise finder is located in the Mission Engineering room and will display a list of promises. Browse by scrolling through the list, click a letter corresponding to the first letter of a promiser/bundle/handle name (set alternative in search box and click a letter in the right column), or search for promiser/bundle/handle in the search box (top right corner; choose between searching promiser, bundle, or handle). Clicking on a promise/bundle will bring you to the promise/bundle viewer.
@@ -867,7 +896,7 @@ The promise finder is located in the Mission Engineering room and will display a
 @center Figure: Promise finder
 @sp 1
 
-@node
+@node Report finder, Summary report finder, Promise finder, Finders
 @subsection Report finder
 
 The report finder is located in the Mission Engineering room and will display a list of standard report categories. Browse by scrolling through the list. Clicking on a report category will bring up a query table that will produce a report according to the entered query criteria.
@@ -900,7 +929,7 @@ The report finder is located in the Mission Engineering room and will display a 
 @end itemize
 
 
-@node
+@node Summary report finder, CDP report finder, Report finder, Finders
 @subsection Summary report finder
 
 Find the current state of knowledge about promise compliance. Search by promise handle and/or host group (host class) and/or specific host. Click the @code{Help?} link to open the Promise finder or Classes finder to view available promise handles or host groups (host classes), respectively.
@@ -918,7 +947,7 @@ The result shows the number of hosts and their compliance when a single promise 
 @sp 1
 
 
-@node
+@node CDP report finder, Topic finder, Summary report finder, Finders
 @subsection CDP report finder
 
 A Content-Driven Policy (CDP) is a text file with lines containing semi-colon separated fields, like a spreadsheet or tabular file. Each line in the file is parsed and results in a specific type of promise being made, depending on which type the Content-Driven Policy is. The CDP report finder lists template CDPs that come with CFEngine 3 Nova, click to view a report on the selected topic.
@@ -929,7 +958,7 @@ A Content-Driven Policy (CDP) is a text file with lines containing semi-colon se
 @sp 1
 
 
-@node
+@node Topic finder, , CDP report finder, Finders
 @subsection Topic finder
 
 The Topic finder is located in the Mission Library and will display a list of common topics. Browse by scrolling through the list, click a letter corresponding to the first letter of a topic name, or search for topics in the search box (top right corner). Clicking on a topic will bring you either to a document, web page or the Topic viewer (Knowledge map).
@@ -941,22 +970,22 @@ The Topic finder is located in the Mission Library and will display a list of co
 
 
 @page
-@node
+@node Viewers, Host viewer, Finders, Mission Portal
 @section Viewers
 
 @menu
-* Host viewer::
-* Bundle viewer::
-* Promise viewer::
-* Vital signs viewer::
-* Topics viewer (Knowledge map)::
-* Weakest hosts viewer::
-* Report viewer::
+* Host viewer::                 
+* Bundle viewer::               
+* Promise viewer::              
+* Vital signs viewer::          
+* Topics viewer (Knowledge map)::  
+* Weakest hosts viewer::        
+* Report viewer::               
 @end menu
 
 Viewers show info about the main objects at different scales of the system.
 
-@node
+@node Host viewer, Bundle viewer, Viewers, Viewers
 @subsection Host viewer
 
 Shows information about hosts, including name, status, operating system, vital signs, promises not kept, standard and custom reports, and more. View and make notes about the host.
@@ -991,7 +1020,7 @@ performance indicators.
 @end itemize
 
 
-@node
+@node Bundle viewer, Promise viewer, Host viewer, Viewers
 @subsection Bundle viewer
 
 The bundle viewer provides an interface to explore the context (class) in which a bundle is used and the promises made within that bundle. Tabs display other bundles using the one currently viewed and a general overview of all bundles. Navigate to interact with other views and get a complete picture of context, leads, references, affected objects, similar topics, and more.
@@ -1003,7 +1032,7 @@ The bundle viewer provides an interface to explore the context (class) in which 
 
 
 @page
-@node
+@node Promise viewer, Vital signs viewer, Bundle viewer, Viewers
 @subsection Promise viewer
 
 The promise viewer shows a promise definition and body. There are tabs for viewing leads (promise type, context, dependencies), other promises used in same bundle, other promises made by same promiser, and other promises of same type.
@@ -1014,7 +1043,7 @@ The promise viewer shows a promise definition and body. There are tabs for viewi
 @sp 1
 
 @page
-@node
+@node Vital signs viewer, Topics viewer (Knowledge map), Promise viewer, Viewers
 @subsection Vital signs viewer
 
 The Vital signs viewer shows an
@@ -1028,7 +1057,7 @@ This is the default behavior for a Nova installation.
 @center Figure: Vital signs viewer
 @sp 1
 
-@node
+@node Topics viewer (Knowledge map), , Vital signs viewer, Viewers
 @subsection Topics viewer (Knowledge map)
 
 The Topics viewer, or Knowledge map, is a @i{sematic web} of subject references and document pointers. In a semantic web, you are presented with links to
@@ -1049,7 +1078,7 @@ The Knowledge Map can be found by searching for a topic in the top right corner 
 
 The yellow sphere represents the current topic, surrounding (blue) spheres represent related topics, and the size of the spheres represents the number of associations each topic has. This map is navigable: click on a different topic to see a new view centered on that topic and its associations. The tabs will show leads, references, topics in the same context, and sub topics in the same context. Links can also lead to other viewers in the Mission Portal, documents and web pages related to the current topic.
 
-@node
+@node Weakest hosts viewer, , Topics viewer (Knowledge map), Viewers
 @subsection Weakest hosts viewer
 
 A link to the worst ranked hosts is located in the Mission Engineering room. This ranks all hosts that have reported to the hub @footnote{Blue hosts will not appear} according to their level of promises not kept during the last hour, with the worst host on top.
@@ -1059,7 +1088,7 @@ A link to the worst ranked hosts is located in the Mission Engineering room. Thi
 @center Figure: Weakest hosts
 @sp 1
 
-@node
+@node Report viewer,  , Weakest hosts viewer, Viewers
 @subsection Report viewer
 
 A significant capability of CFEngine 3 Nova is the existence of automated system reporting. A report is a tabular summary of CFEngine's internal information, tailored to a particular purpose. Reports describe
@@ -1093,15 +1122,15 @@ Reports are updated at different intervals, the default values are every 5 minut
 @end itemize
 
 
-@node
+@node Editors, , Viewers, Mission Portal
 @section Editors
 
 @menu
-* Policy editor::
-* Integration with subversion::
+* Policy editor::               
+* Integration with subversion::  
 @end menu
 
-@node
+@node Policy editor, , Editors, Editors
 @subsection Policy editor
 
 The CFEngine 3 Nova Mission Portal provides an editor for working on
@@ -1143,7 +1172,7 @@ menu and gives full-screen editing.
 The right hand panel shows basic file and Subversion commands. The @code{Save} button will store a local/version of the opened files without committing to the repository. 
 
 
-@node
+@node Integration with subversion,  , Policy editor, Editors
 @subsection Integration with subversion
 
 The default architecture proposes to work in close dialog with a version
@@ -1198,16 +1227,17 @@ logs.
 @c @sp 1
 
 
-@node 
+@node  Mission Portal Administration,  , Editors, Mission Portal
 @section Mission Portal Administration
 
 @menu
-* Mission Portal Settings::
-* Mission Portal User Admin::
+* Mission Portal Settings::     
+* Mission Portal User Admin::   
+* Troubleshooting - Mission Portal Logs::  
 @end menu
 
 
-@node 
+@node  Mission Portal Settings, , Mission Portal Administration, Mission Portal Administration
 @subsection Mission Portal Settings
 
 Configure and view various settings for the Mission Portal.
@@ -1224,7 +1254,7 @@ Configure and view various settings for the Mission Portal.
 @end itemize
 
 
-@node 
+@node  Mission Portal User Admin, , Mission Portal Settings, Mission Portal Administration
 @subsection Mission Portal User Admin
 
 For the moment, user management in the Mission Portal only concerns access to the Mission Portal settings page. It does not affect the ability to edit or approve policies in the policy editor. Access control and authorization for policies are handled by subversion's authentication system, see section on "Integration with subversion".
@@ -1237,7 +1267,7 @@ On a fresh install the default user "admin" belongs to the "admin" user group an
 @sp 1
 
 
-@node
+@node Troubleshooting - Mission Portal Logs,  , Mission Portal User Admin, Mission Portal Administration
 @subsection Troubleshooting - Mission Portal Logs
 
 The Mission Portal will log php errors, errors related to the configuration of external authentication (LDAP/Active Directory) and occurrences of the fall-back solution if external authentication fails. The log can be found in DOCROOT/application/logs (i.e. @code{/var/www/application/logs} for Ubuntu and @code{/var/www/html/application/logs} for Red Hat). The logs folder must be writable by apache, i.e. by 'www-data' user. 
@@ -1246,7 +1276,7 @@ The Mission Portal will log php errors, errors related to the configuration of e
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node 
+@node  Monitoring extensions, , Mission Portal, Top
 @chapter Monitoring extensions
 
 CFEngine 3 Nova incorporates a lightweight monitoring agent, whose aim
@@ -1290,7 +1320,7 @@ reports.
 * Uses for custom monitoring::  
 @end menu
 
-@node 
+@node  Integration of monitoring with knowledge base, , Monitoring extensions, Monitoring extensions
 @section Integration of monitoring with knowledge base
 
 CFEngine 3 Nova integrates monitoring reports with the automated base
@@ -1312,7 +1342,7 @@ data are and how confident it is in the values.
 
 
 @c ------------------------------------------------------
-@node 
+@node  Long term trends, , Integration of monitoring with knowledge base, Monitoring extensions
 @section Long term trends
 
 CFEngine normally operates with time-series data represented
@@ -1339,7 +1369,7 @@ a four-shift day:
 
 
 @c ------------------------------------------------------
-@node 
+@node  Custom promises to measure, , Long term trends, Monitoring extensions
 @section Custom promises to measure
 
 CFEngine 3 Nova adds a new promise type in bundles for the monitoring
@@ -1366,7 +1396,7 @@ measurements:
 
 
 @c ------------------------------------------------------
-@node 
+@node  Extraction strings and logging, , Custom promises to measure, Custom promises to measure
 @subsection Extraction strings and logging
 
 Let's take a generic example. Suppose we have a file of nonsense  @file{/tmp/testmeasure}
@@ -1442,7 +1472,7 @@ expireafter => "$(x)";
 
 
 @c ------------------------------------------------------
-@node 
+@node  Extracting one-off numerical data, , Extraction strings and logging, Custom promises to measure
 @subsection Extracting one-off numerical data
 
 In this example we extract an integer value from an existing file.
@@ -1484,7 +1514,7 @@ extraction_regex => "$(y)";
 
 
 @c ------------------------------------------------------
-@node 
+@node  Extraction to list variable,  , Extracting one-off numerical data, Custom promises to measure
 @subsection Extraction to list variable
 
 
@@ -1515,7 +1545,7 @@ extraction_regex => "(.*)";
 
 
 @c ------------------------------------------------------
-@node 
+@node  Uses for custom monitoring,  , Custom promises to measure, Monitoring extensions
 @section Uses for custom monitoring
 
 Unlike most other monitoring tools that use heavy-weight scripting
@@ -1539,17 +1569,20 @@ for insertion into a CMDB.
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node 
+@node  File Access Control Lists, , Monitoring extensions, Top
 @chapter File Access Control Lists
 
 @menu
 * Introduction::                
 * File ACL example::            
+* CFEngine 3 Generic ACL Syntax::  
+* POSIX ACL type::              
+* NT ACL type::                 
 @end menu
 
 
 @c ------------------------------------------------------
-@node 
+@node  Introduction, , File Access Control Lists, File Access Control Lists
 @section Introduction
 
 Access Control Lists (ACL) allow for a more fine-grained access control on
@@ -1598,7 +1631,7 @@ systems.
 
 
 @c ------------------------------------------------------
-@node 
+@node  File ACL example, , Introduction, File Access Control Lists
 @section File ACL example
 
 The form of a CFEngine files promise that uses ACLs is as follows:
@@ -1666,11 +1699,12 @@ acl_directory_inherit => "parent";
 * Deny permissions::            
 * Changing permissions::        
 * Effective permissions::       
+* Inheritance::                 
 @end menu
 
 
 @c ------------------------------------------------------
-@node 
+@node  Concepts, , File ACL example, File ACL example
 @subsection Concepts
 
 As mentioned, there are many different ACL APIs. For example, the
@@ -1688,7 +1722,7 @@ APIs is strong.
 
 
 @c ------------------------------------------------------
-@node 
+@node  Entity types, , Concepts, File ACL example
 @subsection Entity types
 
 All ACL APIs support three basic entity types: user, group and
@@ -1698,7 +1732,7 @@ type is called "other" in POSIX and "Everyone" in NTFS.
 
 
 @c ------------------------------------------------------
-@node 
+@node  Owners, , Entity types, File ACL example
 @subsection Owners
 
 All file system objects have an owner, which by default is the entity
@@ -1710,7 +1744,7 @@ independent ACL entry.
 
 
 @c ------------------------------------------------------
-@node 
+@node  Changing owner, , Owners, File ACL example
 @subsection Changing owner
 
 It is generally not possible for user A to set user B as the
@@ -1722,7 +1756,7 @@ ownership.
 
 
 @c ------------------------------------------------------
-@node 
+@node  Permissions, , Changing owner, File ACL example
 @subsection Permissions
 
 An entity can be given a set of permissions on a file system object
@@ -1746,7 +1780,7 @@ has access rights to the containing directory.
 
 
 @c ------------------------------------------------------
-@node 
+@node  Deny permissions, , Permissions, File ACL example
 @subsection Deny permissions
 
 If no permissions are given to a particular entity, the entity will be
@@ -1778,7 +1812,7 @@ when the ACLs are enforced by different platforms.
 
 
 @c ------------------------------------------------------
-@node 
+@node  Changing permissions, , Deny permissions, File ACL example
 @subsection Changing permissions
 
 Generally, only the owner may change permissions on a file system
@@ -1789,7 +1823,7 @@ permission ("Change Permissions") is needed to alter permissions.
 
 
 @c ------------------------------------------------------
-@node 
+@node  Effective permissions, , Changing permissions, File ACL example
 @subsection Effective permissions
 
 Unfortunately, even though two ACL APIs support all the permissions
@@ -1821,7 +1855,7 @@ computes the effective permissions in this way.
 
 
 @c ------------------------------------------------------
-@node 
+@node  Inheritance,  , Effective permissions, File ACL example
 @subsection Inheritance
 
  @c TODO: Correct to inherit to someone ?
@@ -1835,7 +1869,7 @@ and we will use the same terminology.
 
 
 @c ------------------------------------------------------
-@node 
+@node  CFEngine 3 Generic ACL Syntax, , File ACL example, File Access Control Lists
 @section CFEngine 3 Generic ACL Syntax
 
 @c FIXME: TODO: Say which OS's we are supporting, and which ACL types
@@ -1999,7 +2033,11 @@ permissions and attributes in all file systems (e.g. in POSIX, having
 
 
 @c ------------------------------------------------------
-@node 
+@menu
+* Generic syntax examples::     
+@end menu
+
+@node  Generic syntax examples,  , CFEngine 3 Generic ACL Syntax, CFEngine 3 Generic ACL Syntax
 @subsection Generic syntax examples
 
 @verbatim
@@ -2060,12 +2098,17 @@ See the following sections on native ACL types for more examples.
 
 
 @c ------------------------------------------------------
-@node 
+@node  POSIX ACL type, , CFEngine 3 Generic ACL Syntax, File Access Control Lists
 @section POSIX ACL type
 
 
 @c ------------------------------------------------------
-@node 
+@menu
+* POSIX-specific ACL syntax::   
+* Generic syntax mapping::      
+@end menu
+
+@node  POSIX-specific ACL syntax, , POSIX ACL type, POSIX ACL type
 @subsection POSIX-specific ACL syntax
 
 @b{Native permissions}
@@ -2093,7 +2136,7 @@ the rest of the required entries are specified.
 
 
 @c ------------------------------------------------------
-@node 
+@node  Generic syntax mapping,  , POSIX-specific ACL syntax, POSIX ACL type
 @subsection Generic syntax mapping
 
 @b{Entity types}
@@ -2174,12 +2217,16 @@ specify_inherit_aces => {"user:*:", "group:*:", "all:"};
 
 
 @c ------------------------------------------------------
-@node 
+@node  NT ACL type,  , POSIX ACL type, File Access Control Lists
 @section NT ACL type
 
 
 @c ------------------------------------------------------
-@node 
+@menu
+* NT-specific ACL syntax::      
+@end menu
+
+@node  NT-specific ACL syntax,  , NT ACL type, NT ACL type
 @subsection NT-specific ACL syntax
 
 @b{Native permissions}
@@ -2373,7 +2420,7 @@ specify_inherit_aces => {"user:Administrator:r"};
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node 
+@node  Server extensions, , File Access Control Lists, Top
 @chapter Server extensions
 
 CFEngine 3 Nova adds a simple server extension to the Community Edition
@@ -2383,11 +2430,11 @@ to systems.
 
 @menu
 * Server access resource type::  
-* Function remotescalar::       
+* Function @code{remotescalar}::  
 * Example remote scalar lookup::  
 @end menu
 
-@node 
+@node  Server access resource type, , Server extensions, Server extensions
 @section Server access resource type
 
 By default, access to resources granted by the server are
@@ -2414,7 +2461,7 @@ distributing password hashes on a need-to-know basis from a central location.
 The server configuration file need not be distributed to any client, thus
 only authorized systems will have access to the hashes.
 
-@node 
+@node  Function @code{remotescalar}, , Server access resource type, Server extensions
 @section Function @code{remotescalar}
 
 The client side of the literal look up function is:
@@ -2447,7 +2494,7 @@ Whether to encrypt the connection to the server.
 @end smallexample
 @end table
 
-@node 
+@node  Example remote scalar lookup,  , Function @code{remotescalar}, Server extensions
 @section Example remote scalar lookup
 
 @verbatim
@@ -2517,7 +2564,7 @@ access:
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node 
+@node  Environments and workflows, , Server extensions, Top
 @chapter Environments and workflows
 
 @menu
@@ -2525,7 +2572,7 @@ access:
 * Implementing workflows in Nova::  
 @end menu
 
-@node 
+@node  Environments in Nova, , Environments and workflows, Environments and workflows
 @section Environments in Nova
 @sp 1
 
@@ -2557,7 +2604,7 @@ to exist and to contain bundle `agent main', this bundle is included
 last from main promises.cf and should implement/include/use any
 environment-specific rules.
 
-@node 
+@node  Implementing workflows in Nova,  , Environments in Nova, Environments and workflows
 @section Implementing workflows in Nova
 
 Workflows are implemented easily with Nova, administrator starts with
@@ -2572,7 +2619,7 @@ environment's subdirectory to next one.
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node 
+@node  Virtualization, , Environments and workflows, Top
 @chapter Virtualization
 
 
@@ -2586,7 +2633,7 @@ environment's subdirectory to next one.
 * Example deployment::          
 @end menu
 
-@node 
+@node  What are virtualization and cloud computing?, , Virtualization, Virtualization
 @section What are virtualization and cloud computing?
 @sp 1
 
@@ -2602,7 +2649,7 @@ CFEngine thus integrates freely with other tools based on this library, such
 as @i{virsh} and the @i{Virtual Manager} graphical user interface.
 
 
-@node 
+@node  Why build virtualization support into CFEngine?, , What are virtualization and cloud computing?, Virtualization
 @section Why build virtualization support into CFEngine?
 @sp 1
 
@@ -2623,7 +2670,7 @@ machines in other time-zones that it is impractical to monitor by
 legacy methods.
 
 
-@node 
+@node  What can CFEngine do with virtual machines?, , Why build virtualization support into CFEngine?, Virtualization
 @section What can CFEngine do with virtual machines?
 @sp 1
 
@@ -2648,7 +2695,7 @@ implicit communication.  CFEngine does not currently support so-called
 @end cartouche
 @sp 1
 
-@node 
+@node  Environments promises, , What can CFEngine do with virtual machines?, Virtualization
 @section Environments promises
 @sp 1
 
@@ -2766,7 +2813,7 @@ env_spec_file =>
 You should consult the libvirt documentation for the details of the XML specification.
 
 
-@node 
+@node  Virtualization types supported, , Environments promises, Virtualization
 @section Virtualization types supported
 @sp 1
 
@@ -2803,7 +2850,7 @@ A Eucalyptus instance (future development)
 
 Once again, you must consult the libvirt documentation for details.
 
-@node 
+@node  Distinct states, , Virtualization types supported, Virtualization
 @section Distinct states
 @sp 1
 
@@ -2827,7 +2874,7 @@ suspended or down elsewhere.
 
 
 
-@node 
+@node  Example deployment,  , Distinct states, Virtualization
 @section Example deployment
 @sp 1
 
@@ -2875,7 +2922,7 @@ convergently.
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node 
+@node  Content-Driven Policies, Windows-specific features in Nova, Virtualization, Top
 @chapter Content-Driven Policies
 
 In Nova 2.0, Content-Driven Policies (CDP) were introduced to make
@@ -3009,7 +3056,7 @@ Knowledge Map on the policy hub.
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node Windows-specific features in Nova
+@node Windows-specific features in Nova, , Content-Driven Policies, Top
 @chapter Windows-specific features in Nova
 
 In this section, we will explore the Windows-specific features of the
@@ -3200,7 +3247,7 @@ mode.
 @c *****************************************************
 @c * APPENDIX
 @c *****************************************************
-@node
+@node Configuration of external authentication,  Configure LDAP, Windows-specific features in Nova, Top
 @appendix Configuration of external authentication
 
 External authentication is available for CFEngine 3 Nova and up, but by default the Mission Portal will use the embedded database to store user information (default user name and password are "admin" and "admin"). Note that users in the default database will be locked out of the Mission Portal upon configuration of external authentication. They will regain access if external authentication is deactivated by selecting the Database button on the Mission Portal Settings page (see below).
@@ -3208,7 +3255,13 @@ External authentication is available for CFEngine 3 Nova and up, but by default 
 To enable external authentication on a fresh install, log on to the Mission Portal with the default user and password and go to "Settings". Click "Mission Portal Settings" and enter the appropriate configuration for LDAP or Active Directory as described below.
 
 
-@node
+@menu
+* Configure LDAP::              
+* Configure Active Directory::  
+* Directory structure::         
+@end menu
+
+@node Configure LDAP, Configure Active Directory, Configuration of external authentication, Configuration of external authentication
 @section Configure LDAP
 
 Select the LDAP button and enter the appropriate configuration settings for your system.
@@ -3233,7 +3286,7 @@ Always check that the entered configuration is correct by clicking the "Test it"
 Also select which user group will have general administrator privileges in the Mission Portal. This group will be able to access the Mission Portal settings and configuration tools.
 
 @c ----------------------------------------------------------
-@node
+@node Configure Active Directory, Directory structure, Configure LDAP, Configuration of external authentication
 @section Configure Active Directory
 
 Select the Active Directory button.
@@ -3258,7 +3311,7 @@ Always check that the entered configuration is correct by clicking the "Test it"
 Also select which user group will have general administrator privileges in the Mission Portal. This group will be able to access the Mission Portal settings and configuration tools.
 
 
-@node
+@node Directory structure, Configure Active Directory, Configure Active Directory, Configuration of external authentication
 @section Directory structure
 
 The Mission Portal imposes some limitations on directory structure for the use of external authentication. All users have to be stored in a direct child directory of the root (base dn). You may use subdirectories if you need to organize users into categories, but do not put more than one user directory directly under the root (base dn) as the user search will only cover the first encountered directory.

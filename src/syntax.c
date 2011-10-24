@@ -34,6 +34,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#include "json.h"
+
 static int CheckParseString(char *lv,char *s,char *range);
 static void CheckParseInt(char *lv,char *s,char *range);
 static void CheckParseReal(char *lv,char *s,char *range);
@@ -586,6 +588,7 @@ switch (dt)
    default:
        snprintf(output,CF_BUFSIZE,"Unknown (unhandled) datatype for lval = %s (CheckConstraintTypeMatch)\n",lval);
        FatalError(output);
+       break;
    }
 
 Debug("end CheckConstraintTypeMatch---------\n");
@@ -1211,4 +1214,167 @@ else
    }
 }
 
+static char *PCREStringToJsonString(const char *pcre)
+{
+const char *src = pcre;
+char *dst = NULL;
+char *json = xcalloc((2 * strlen(pcre)) + 1, sizeof(char));
 
+for (dst = json; *src != '\0'; src++)
+   {
+   if (*src == '\"')
+      {
+      dst += sprintf(dst, "\\\"");
+      }
+   else if (*src == '\'')
+      {
+      dst += sprintf(dst, "\\\'");
+      }
+   else if (*src == '\\')
+      {
+      dst += sprintf(dst, "\\\\");
+      }
+   else
+      {
+      *dst = *src;
+      dst++;
+      }
+   }
+
+*dst = '\0';
+
+return json;
+}
+
+static JsonObject *ExportAttributesAsJson(struct BodySyntax attributes[])
+{
+JsonObject *json = NULL;
+int i = 0;
+
+if (attributes == NULL)
+   {
+   return json;
+   }
+
+for (i = 0; attributes[i].lval != NULL; i++)
+   {
+   if (attributes[i].range == CF_BUNDLE)
+      {
+      /* TODO: must handle edit_line somehow */
+      continue;
+      }
+   else if (attributes[i].dtype == cf_body)
+      {
+      JsonObject *json_attributes = ExportAttributesAsJson((struct BodySyntax *)attributes[i].range);
+      JsonObjectAppendObject(&json, attributes[i].lval, json_attributes);
+      DeleteJsonObject(json_attributes);
+      }
+   else
+      {
+      JsonObject *attribute = NULL;
+
+      JsonObjectAppendString(&attribute, "datatype", CF_DATATYPES[attributes[i].dtype]);
+
+      if (strlen(attributes[i].range) == 0)
+	 {
+	 JsonObjectAppendString(&attribute, "pcre-range", ".*");
+	 }
+      else if (attributes[i].dtype == cf_opts ||
+	       attributes[i].dtype == cf_olist)
+	 {
+	 JsonArray *options = NULL;
+	 char options_buffer[CF_BUFSIZE];
+	 char *option = NULL;
+
+	 strcpy(options_buffer, attributes[i].range);
+	 for (option = strtok(options_buffer, ","); option != NULL;
+	      option = strtok(NULL, ","))
+	    {
+	    JsonArrayAppendString(&options, option);
+	    }
+
+	 JsonObjectAppendArray(&attribute, "pcre-range", options);
+	 DeleteJsonArray(options);
+	 }
+      else
+	 {
+	 char *pcre_range = PCREStringToJsonString(attributes[i].range);
+	 JsonObjectAppendString(&attribute, "pcre-range", pcre_range);
+	 free(pcre_range);
+	 }
+
+      JsonObjectAppendObject(&json, attributes[i].lval, attribute);
+      DeleteJsonObject(attribute);
+      }
+   }
+
+return json;
+}
+
+static JsonObject *ExportBundleTypeAsJson(char *bundle_type)
+{
+JsonObject *json = NULL;
+struct SubTypeSyntax *st;
+int i = 0, j = 0;
+
+for (i = 0; i < CF3_MODULES; i++)
+   {
+   st = CF_ALL_SUBTYPES[i];
+
+   for (j = 0; st[j].btype != NULL; j++)
+      {
+      if (strcmp(bundle_type, st[j].btype) == 0 || strcmp("*", st[j].btype) == 0)
+	 {
+	 JsonObject *attributes = ExportAttributesAsJson(st[j].bs);
+	 JsonObjectAppendObject(&json, st[j].subtype, attributes);
+	 DeleteJsonObject(attributes);
+	 }
+      }
+   }
+
+return json;
+}
+
+static JsonObject *ExportControlBodiesAsJson()
+{
+JsonObject *control_bodies = NULL;
+int i = 0;
+
+for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
+   {
+   JsonObject *attributes = ExportAttributesAsJson(CF_ALL_BODIES[i].bs);
+   JsonObjectAppendObject(&control_bodies, CF_ALL_BODIES[i].btype, attributes);
+   DeleteJsonObject(attributes);
+   }
+
+return control_bodies;
+}
+
+void ShowSyntaxTree(FILE *out)
+{
+JsonObject *syntax_tree = NULL;
+
+   {
+   JsonObject * control_bodies = ExportControlBodiesAsJson();
+   JsonObjectAppendObject(&syntax_tree, "control-bodies", control_bodies);
+   DeleteJsonObject(control_bodies);
+   }
+
+   {
+   JsonObject *bundle_types = NULL;
+   int i = 0;
+
+   for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
+      {
+      JsonObject *bundle_type = ExportBundleTypeAsJson(CF_ALL_BODIES[i].btype);
+      JsonObjectAppendObject(&bundle_types, CF_ALL_BODIES[i].btype, bundle_type);
+      DeleteJsonObject(bundle_type);
+      }
+
+   JsonObjectAppendObject(&syntax_tree, "bundle-types", bundle_types);
+   DeleteJsonObject(bundle_types);
+   }
+
+ShowJsonObject(out, syntax_tree, 0);
+DeleteJsonObject(syntax_tree);
+}

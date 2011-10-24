@@ -1174,6 +1174,7 @@ int CheckParseClass(char *lv,char *s,char *range);
 enum cfdatatype StringDataType(char *scopeid,char *string);
 enum cfdatatype ExpectedDataType(char *lvalname);
 bool IsDataType(const char *s);
+void ShowSyntaxTree(FILE *out);
 
 /* sysinfo.c */
 

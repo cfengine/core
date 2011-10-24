@@ -178,7 +178,7 @@ const char *HINTS[32] =
       "Print graph data in high resolution",
       "Show data matching named criteria (compliance,file_changes,file_diffs,promises,setuid,software,summary,vars)",
       "Print a syntax summary for this cfengine version",
-      "Export a syntax tree in Javascript format",
+      "Export a syntax tree in JSON format",
       "Do not add error bars to the printed graphs",
       "Do not automatically scale the axes",
       "Generate verbose output",

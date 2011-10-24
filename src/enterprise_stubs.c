@@ -359,7 +359,7 @@ void SyntaxExport()
 #ifdef HAVE_NOVA
 Nova_SyntaxTree2JavaScript();
 #else
-printf("Syntax export is available in cfengine Nova,Constellation or Galaxy\n\n");
+ShowSyntaxTree(stdout);
 #endif
 }
 

@@ -202,6 +202,9 @@ switch(type)
       /* the rval is just a string */
       return xstrdup((char *)item);
 
+   case CF_ASSOC:
+      return CopyAssoc((struct CfAssoc *)item);
+
    case CF_FNCALL:
        /* the rval is a fncall */
        fp = (struct FnCall *)item;
@@ -510,6 +513,10 @@ switch(type)
    {
    case CF_SCALAR:
        Debug("Appending scalar to rval-list [%s]\n",(char *)item);
+       break;
+
+   case CF_ASSOC:
+       Debug("Appending assoc to rval-list [%s]\n",(char *)item);
        break;
 
    case CF_FNCALL:
@@ -981,6 +988,11 @@ switch(type)
        free((char *)rval);
        ThreadUnlock(cft_lock);
        break;
+
+   case CF_ASSOC:
+
+      DeleteAssoc((struct CfAssoc *)rval);
+      break;
 
    case CF_LIST:
      

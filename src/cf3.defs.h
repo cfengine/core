@@ -52,6 +52,7 @@
 #define CF_LIST   'l'
 #define CF_FNCALL 'f'
 #define CF_STACK  'k'
+#define CF_ASSOC  'a'
 
 #define CF_NOPROMISEE 'X'
 #define CF_UNDEFINED -1

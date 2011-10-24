@@ -117,7 +117,9 @@ libpromises_la_SOURCES =                                                \
         mod_process.c   			                        \
 	mod_environ.c							\
 	mod_outputs.c							\
-        unix.c
+        unix.c								\
+	json.h								\
+	json.c
 
 # Automake need to be guided due to symlinking
 libpromises_la_DEPENDENCIES = ../pub/libcfpub.la $(NOVA_LDADD) $(CONSTELLATION_LDADD)

@@ -972,7 +972,7 @@ return(rtn);
 
 static void MailResult(char *file,char *to)
 
-{ int sd, sent, count = 0, anomaly = false;
+{ int sd, count = 0, anomaly = false;
   char prev_file[CF_BUFSIZE],vbuff[CF_BUFSIZE];
   struct hostent *hp;
   struct sockaddr_in raddr;
@@ -1146,11 +1146,11 @@ else
    Debug("%s",vbuff);
    }
  
-sent = send(sd,vbuff,strlen(vbuff),0);
+send(sd,vbuff,strlen(vbuff),0);
 
 #if defined LINUX || defined NETBSD || defined FREEBSD || defined OPENBSD
 strftime(vbuff,CF_BUFSIZE,"Date: %a, %d %b %Y %H:%M:%S %z\r\n",localtime(&now));
-sent=send(sd,vbuff,strlen(vbuff),0);
+send(sd,vbuff,strlen(vbuff),0);
 #endif
 
  if (strlen(MAILFROM) == 0)
@@ -1185,13 +1185,13 @@ while(!feof(fp))
       vbuff[strlen(vbuff)-1] = '\r';
       strcat(vbuff, "\n");
       count++;
-      sent = send(sd,vbuff,strlen(vbuff),0);
+      send(sd,vbuff,strlen(vbuff),0);
       }
    
    if ((MAXLINES != INF_LINES) && (count > MAXLINES))
       {
       sprintf(vbuff,"\r\n[Mail truncated by cfengine. File is at %s on %s]\r\n",file,VFQNAME);
-      sent = send(sd,vbuff,strlen(vbuff),0);
+      send(sd,vbuff,strlen(vbuff),0);
       break;
       }
    } 

@@ -40,7 +40,7 @@
 #         Caption and Version fields 
 #         (Tables->Property->ProductName/ProductVersion).
 #
-#         For example, ProductName "Cfengine Nova" with ProductVersion
+#         For example, ProductName "CFEngine Nova" with ProductVersion
 #         "1.1.2" for 32-bit Windows will correspond to the filename
 #         "cfengine-nova-1.1.2-i686.msi".
 #

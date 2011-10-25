@@ -66,15 +66,20 @@ docs/doxygen
 
 docs/*.8
 
-# tests
+# acceptance tests
 
 tests/acceptance/*.log
 tests/acceptance/.succeeded
 tests/acceptance/workdir
+tests/acceptance/mock-package-manager
 
 # unit tests
 
 tests/unit/*_test
+
+# load tests
+
+tests/load/tcdb_load
 
 # gcov/lcov
 

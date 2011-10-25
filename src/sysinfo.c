@@ -58,6 +58,7 @@ static int Xen_Hv_Check(void);
 
 static FILE *ReadFirstLine(const char *filename, char *buf, int bufsize);
 static bool ReadLine(const char *filename, char *buf, int bufsize);
+static void CreateClassesFromCanonification(char *canonified);
 
 /**********************************************************************/
 
@@ -670,18 +671,41 @@ return false;
 void BuiltinClasses(void)
 {
 char vbuff[CF_BUFSIZE];
-char *sp;
 
 NewClass("any");      /* This is a reserved word / wildcard */
 
 snprintf(vbuff,CF_BUFSIZE,"cfengine_%s",CanonifyName(Version()));
+CreateClassesFromCanonification(vbuff);
 
-NewClass(vbuff);
-while ((sp = strrchr(vbuff, '_')))
-   {
-   *sp = 0;
-   NewClass(vbuff);
-   }
+#ifdef HAVE_CONSTELLATION
+
+snprintf(vbuff, sizeof(vbuff), "constellation_%s", CanonifyName(Constellation_Version()));
+CreateClassesFromCanonification(vbuff);
+
+#elif defined HAVE_NOVA
+
+snprintf(vbuff, sizeof(vbuff), "nova_%s", CanonifyName(Nova_Version()));
+CreateClassesFromCanonification(vbuff);
+
+#endif
+
+}
+
+/*******************************************************************/
+
+static void CreateClassesFromCanonification(char *canonified)
+{
+ char buf[CF_MAXVARSIZE];
+ strlcpy(buf, canonified, sizeof(buf));
+ 
+ NewClass(buf);
+
+ char *sp;
+ while ((sp = strrchr(buf, '_')))
+    {
+    *sp = 0;
+    NewClass(buf);
+    }
 }
 
 /*******************************************************************/

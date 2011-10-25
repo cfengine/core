@@ -592,7 +592,7 @@ struct Rlist *PrependRlist(struct Rlist **start,void *item, char type)
 switch(type)
    {
    case CF_SCALAR:
-       Debug("Prepending scalar to rval-list [%s]\n",item);
+       Debug("Prepending scalar to rval-list [%s]\n", (char*)item);
        break;
 
    case CF_LIST:
@@ -615,7 +615,7 @@ switch(type)
        Debug("\n");
        break;
    default:
-       Debug("Cannot prepend %c to rval-list [%s]\n",type,item);
+       Debug("Cannot prepend %c to rval-list [%s]\n",type,(char*)item);
        return NULL;
    }
 
@@ -661,7 +661,7 @@ switch(type)
        Debug("Expanding and appending list object, orthogonally\n");
        break;
    default:
-       Debug("Cannot append %c to rval-list [%s]\n",type,item);
+       Debug("Cannot append %c to rval-list [%s]\n",type,(char*)item);
        return NULL;
    }
 

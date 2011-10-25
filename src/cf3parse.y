@@ -365,7 +365,7 @@ rval:                  ID
                          P.rval = xstrdup(P.currentid);
                          P.rtype = CF_SCALAR;
                          P.isbody = true;
-                         Debug("Recorded IDRVAL %s\n",P.rval);
+                         Debug("Recorded IDRVAL %s\n", (char*)P.rval);
                          }
                      | QSTRING
                          {
@@ -373,7 +373,7 @@ rval:                  ID
                          P.currentstring = NULL;
                          P.rtype = CF_SCALAR;
                          P.isbody = false;
-                         Debug("Recorded scalarRVAL %s\n",P.rval);
+                         Debug("Recorded scalarRVAL %s\n", (char*)P.rval);
 
                          if (P.currentpromise)
                             {
@@ -389,7 +389,7 @@ rval:                  ID
                          P.currentstring = NULL;
                          P.rtype = CF_SCALAR;
                          P.isbody = false;
-                         Debug("Recorded saclarvariableRVAL %s\n",P.rval);
+                         Debug("Recorded saclarvariableRVAL %s\n", (char*)P.rval);
                          }
                      | list
                          {

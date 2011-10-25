@@ -233,7 +233,7 @@ for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
 
       if ((fluct < cum) || rp->next == NULL)
          {
-         snprintf(buffer,CF_MAXVARSIZE-1,"%s_%s",pp->promiser,rp->item);
+         snprintf(buffer,CF_MAXVARSIZE-1,"%s_%s",pp->promiser, (char*)rp->item);
          *(pp->donep) = true;
 
          if (strcmp(pp->bundletype,"common") == 0)
@@ -558,7 +558,7 @@ else
                
                for (rp = orlist; rp != NULL; rp=rp->next)
                   {
-                  snprintf(buff,CF_MAXVARSIZE,"%s.%s",rp->item,andstring);
+                  snprintf(buff,CF_MAXVARSIZE,"%s.%s", (char*)rp->item,andstring);
                   PrependRScalar(&list,buff,CF_SCALAR);
                   }
                }

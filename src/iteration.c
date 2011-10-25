@@ -178,7 +178,7 @@ else
    /* Update the current wheel */
    iterator->state_ptr = state->next;
 
-   Debug(" <- Incrementing wheel (%s) to \"%s\"\n",cp->lval,iterator->state_ptr->item);
+   Debug(" <- Incrementing wheel (%s) to \"%s\"\n",cp->lval, (char*)iterator->state_ptr->item);
 
    while (iterator->state_ptr && strcmp(iterator->state_ptr->item,CF_NULL_VALUE) == 0)
       {

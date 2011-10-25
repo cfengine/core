@@ -54,7 +54,7 @@ struct Constraint *AppendConstraint(struct Constraint **conlist,char *lval, void
 switch(type)
    {
    case CF_SCALAR:
-       Debug("   Appending Constraint: %s => %s\n",lval,rval);
+       Debug("   Appending Constraint: %s => %s\n",lval, (char*)rval);
        
        if (PARSING && strcmp(lval,"ifvarclass") == 0)
           {

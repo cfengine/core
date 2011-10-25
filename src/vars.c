@@ -859,7 +859,7 @@ int AddVariableHash(const char *scope, const char *lval, const void *rval, char 
 
 if (rtype == CF_SCALAR)
    {
-   Debug("AddVariableHash(%s.%s=%s (%s) rtype=%c)\n",scope,lval,rval,CF_DATATYPES[dtype],rtype);
+   Debug("AddVariableHash(%s.%s=%s (%s) rtype=%c)\n",scope,lval,(const char*)rval,CF_DATATYPES[dtype],rtype);
    }
 else
    {
@@ -1032,7 +1032,7 @@ while ((assoc = HashIteratorNext(&i)))
 
          if (rp->state_ptr)
             {
-            Debug("Rewriting expanded type for %s from %s to %s\n",assoc->lval,CF_DATATYPES[assoc->dtype],rp->state_ptr->item);
+            Debug("Rewriting expanded type for %s from %s to %s\n",assoc->lval,CF_DATATYPES[assoc->dtype], (char*)rp->state_ptr->item);
 
             // must first free existing rval in scope, then allocate new (should always be string)
             DeleteRvalItem(assoc->rval,assoc->rtype);

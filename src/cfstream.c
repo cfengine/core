@@ -255,7 +255,7 @@ if (level == cf_error)
          {
          case CF_SCALAR:
              
-             snprintf(output,CF_BUFSIZE-1,"I: The promise was made to: \'%s\'\n",pp->promisee);
+             snprintf(output,CF_BUFSIZE-1,"I: The promise was made to: \'%s\'\n", (char*)pp->promisee);
              AppendItem(&mess,output,NULL);
              break;
              
@@ -265,7 +265,7 @@ if (level == cf_error)
              
              for (rp = (struct Rlist *)pp->promisee; rp != NULL; rp=rp->next)
                 {
-                snprintf(output,CF_BUFSIZE-1,"I:     \'%s\'\n",rp->item);
+                snprintf(output,CF_BUFSIZE-1,"I:     \'%s\'\n", (char*)rp->item);
                 AppendItem(&mess,output,NULL);
                 }
              break;          

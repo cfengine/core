@@ -431,8 +431,8 @@ AppendVariables(GetScope(scope), &list);
 
 for (rp = AlphaSortRListNames(list); rp != NULL; rp = rp->next)
    {
-   fprintf(fout,"@node Variable %s.%s\n@subsection Variable %s.%s \n\n",scope,rp->item,scope,rp->item);
-   snprintf(filename,CF_BUFSIZE-1,"var_%s_%s.texinfo",scope,rp->item);
+   fprintf(fout,"@node Variable %s.%s\n@subsection Variable %s.%s \n\n", scope, (char*)rp->item, scope, (char*)rp->item);
+   snprintf(filename,CF_BUFSIZE-1,"var_%s_%s.texinfo", scope, (char*)rp->item);
    IncludeManualFile(fout,filename);
    }
 
@@ -486,7 +486,7 @@ if (type == cf_opts || type == cf_olist)
    
    for (rp = list; rp != NULL; rp=rp->next)
       {
-      fprintf(fout,"\n          @code{%s}",rp->item);
+      fprintf(fout,"\n          @code{%s}", (char*)rp->item);
       }
 
    fprintf(fout,"\n@end example\n");

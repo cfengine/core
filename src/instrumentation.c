@@ -103,7 +103,7 @@ static void NotePerformance(char *eventname,time_t t,double value)
   int lsea = SECONDS_PER_WEEK;
   time_t now = time(NULL);
 
-Debug("PerformanceEvent(%s,%.1f s)\n",eventname,value);
+CfDebug("PerformanceEvent(%s,%.1f s)\n",eventname,value);
 
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_PERFORMANCE);
 
@@ -139,7 +139,7 @@ else
 
 if (lastseen > (double)lsea)
    {
-   Debug("Performance record %s expired\n",eventname);
+   CfDebug("Performance record %s expired\n",eventname);
    DeleteDB(dbp,eventname);   
    }
 else
@@ -174,7 +174,7 @@ if (MINUSF)
    return;
    }
 
-Debug("RecordClassUsage\n");
+CfDebug("RecordClassUsage\n");
 
 for (i = 0; i < CF_ALPHABETSIZE; i++)
    {
@@ -182,7 +182,7 @@ for (i = 0; i < CF_ALPHABETSIZE; i++)
       {
       if (IGNORECLASS(ip->name))
          {
-         Debug("Ignoring class %s (not packing)", ip->name);
+         CfDebug("Ignoring class %s (not packing)", ip->name);
          continue;
          }
    
@@ -222,12 +222,12 @@ for (ip = list; ip != NULL; ip=ip->next)
    
    if (lastseen > lsea)
       {
-      Debug("Class usage record %s expired\n",ip->name);
+      CfDebug("Class usage record %s expired\n",ip->name);
       DeleteDB(dbp,ip->name);   
       }
    else
       {
-      Debug("Upgrading %s %f\n",ip->name,newe.Q.expect);
+      CfDebug("Upgrading %s %f\n",ip->name,newe.Q.expect);
       WriteDB(dbp,ip->name,&newe,sizeof(newe));
       }
    }
@@ -269,7 +269,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&stored,&vsize))
             
       if (lastseen > lsea)
          {
-         Debug("Class usage record %s expired\n",eventname);
+         CfDebug("Class usage record %s expired\n",eventname);
          DeleteDB(dbp,eventname);   
          }
       else if (!IsItemIn(list,eventname))
@@ -279,7 +279,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&stored,&vsize))
          newe.Q.expect = GAverage(0.0,av,0.5);
          delta2 = av*av;
          newe.Q.var = GAverage(delta2,var,0.5);
-         Debug("Downgrading class %s from %lf to %lf\n",eventname,entry.Q.expect,newe.Q.expect);
+         CfDebug("Downgrading class %s from %lf to %lf\n",eventname,entry.Q.expect,newe.Q.expect);
          WriteDB(dbp,eventname,&newe,sizeof(newe));         
          }
       }

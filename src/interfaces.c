@@ -419,7 +419,7 @@ while (!feof(pp))
    {
    CfReadLine(vbuff,CF_BUFSIZE,pp);
 
-   Debug("LINE: %s = %s?\n",vbuff,VDEFAULTROUTE->name);
+   CfDebug("LINE: %s = %s?\n",vbuff,VDEFAULTROUTE->name);
    
    if ((strncmp(vbuff,"default",7) == 0)||(strncmp(vbuff,"0.0.0.0",7) == 0))
       {
@@ -443,7 +443,7 @@ while (!feof(pp))
       }
    else
       {
-      Debug("No default route is yet registered\n");
+      CfDebug("No default route is yet registered\n");
       defaultokay = 0;
       }
    }
@@ -471,7 +471,7 @@ CfOut(cf_error,"","The default route is incorrect, trying to correct\n");
 
 if (strcmp(VROUTE[VSYSTEMHARDCLASS], "-") != 0)
    {
-   Debug ("Using route shell commands to set default route\n");
+   CfDebug("Using route shell commands to set default route\n");
 
    if (defaultokay == 2)
       {
@@ -511,7 +511,7 @@ if (strcmp(VROUTE[VSYSTEMHARDCLASS], "-") != 0)
 else
    {
 #if defined HAVE_RTENTRY || defined HAVE_ORTENTRY
-   Debug ("Using route ioctl to set default route\n");
+   CfDebug("Using route ioctl to set default route\n");
    if ((sk = socket(AF_INET,SOCK_RAW,0)) == -1)
       {
       CfOut(cf_error,"socket","System class: ", CLASSTEXT[VSYSTEMHARDCLASS]);

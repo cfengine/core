@@ -106,7 +106,7 @@ int TCDB_CloseDB(CF_TCDB *hdbp)
 char buf[CF_MAXVARSIZE];
 
 snprintf(buf, sizeof(buf), "CloseDB(%s)\n", tchdbpath(hdbp->hdb));
-Debug(buf);
+CfDebug(buf);
 
 if (!tchdbclose(hdbp->hdb))
    {
@@ -145,7 +145,7 @@ int TCDB_ReadComplexKeyDB(CF_TCDB *hdbp, char *key, int keySz,void *dest, int de
 if (tchdbget3(hdbp->hdb, key, keySz, dest, destSz) == -1)
    {
    errCode = tchdbecode(hdbp->hdb);
-   Debug("TCDB_ReadComplexKeyDB(%s): Could not read: %s\n", key, tchdberrmsg(errCode));
+   CfDebug("TCDB_ReadComplexKeyDB(%s): Could not read: %s\n", key, tchdberrmsg(errCode));
    return false;
    }
 
@@ -169,7 +169,7 @@ if (hdbp->valmemp != NULL)
 if (*result == NULL)
    {
    errCode = tchdbecode(hdbp->hdb);
-   Debug("TCDB_RevealDB(%s): Could not read: %s\n", key, tchdberrmsg(errCode));
+   CfDebug("TCDB_RevealDB(%s): Could not read: %s\n", key, tchdberrmsg(errCode));
    return false;
    }
 
@@ -207,7 +207,7 @@ int TCDB_DeleteComplexKeyDB(CF_TCDB *hdbp, char *key, int size)
 if (!tchdbout(hdbp->hdb, key, size))
    {
    errCode = tchdbecode(hdbp->hdb);
-   Debug("TCDB_DeleteComplexKeyDB(%s): Could not delete key: %s\n", key, tchdberrmsg(errCode));
+   CfDebug("TCDB_DeleteComplexKeyDB(%s): Could not delete key: %s\n", key, tchdberrmsg(errCode));
    return false;
    }
 
@@ -254,7 +254,7 @@ if(hdbcp->curval != NULL)
 
 if (*key == NULL)
    {
-   Debug("Got NULL-key in TCDB_NextDB()\n");
+   CfDebug("Got NULL-key in TCDB_NextDB()\n");
    return false;
    }
 

@@ -73,7 +73,7 @@ ThreadLock(cft_getaddr);
 PrependItemList(&VREPOSLIST,file);
 ThreadUnlock(cft_getaddr);
 
-Debug("Repository(%s)\n",file);
+CfDebug("Repository(%s)\n",file);
 
 strcpy (node,file);
 
@@ -101,7 +101,7 @@ if (!MakeParentDirectory(destination,attr.move_obstructions))
 
 if (cfstat(file,&sb) == -1)
    {
-   Debug("File %s promised to archive to the repository but it disappeared!\n",file);
+   CfDebug("File %s promised to archive to the repository but it disappeared!\n",file);
    return true;
    }
 

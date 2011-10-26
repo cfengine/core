@@ -59,7 +59,7 @@ snprintf(work,CF_INBAND_OFFSET,"%c %d",status,wlen);
 
 memcpy(work+CF_INBAND_OFFSET,buffer,wlen);
 
-Debug("Transaction Send[%s][Packed text]\n",work);
+CfDebug("Transaction Send[%s][Packed text]\n",work);
 
 if (SendSocketStream(sd,work,wlen+CF_INBAND_OFFSET,0) == -1)
    {
@@ -86,7 +86,7 @@ if (RecvSocketStream(sd,proto,CF_INBAND_OFFSET,0) == -1)   /* Get control channe
 
 sscanf(proto,"%c %u",&status,&len);
 
-Debug("Transaction Receive [%s][%s]\n",proto,proto+CF_INBAND_OFFSET);
+CfDebug("Transaction Receive [%s][%s]\n",proto,proto+CF_INBAND_OFFSET);
 
 if (len > CF_BUFSIZE - CF_INBAND_OFFSET)
    {
@@ -96,7 +96,7 @@ if (len > CF_BUFSIZE - CF_INBAND_OFFSET)
 
 if (strncmp(proto,"CAUTH",5) == 0)
    {
-   Debug("Version 1 protocol connection attempted - no you don't!!\n");
+   CfDebug("Version 1 protocol connection attempted - no you don't!!\n");
    return -1;
    }
 
@@ -120,7 +120,7 @@ int RecvSocketStream(int sd,char buffer[CF_BUFSIZE],int toget,int nothing)
 { int already, got;
   static int fraction;
 
-Debug("RecvSocketStream(%d)\n",toget);
+CfDebug("RecvSocketStream(%d)\n",toget);
 
 if (toget > CF_BUFSIZE-1)
    {
@@ -145,12 +145,12 @@ for (already = 0; already != toget; already += got)
 
    if (got == 0)   /* doesn't happen unless sock is closed */
       {
-      Debug("Transmission empty or timed out...\n");
+      CfDebug("Transmission empty or timed out...\n");
       fraction = 0;
       break;
       }
 
-   Debug("    (Concatenated %d from stream)\n",got);
+   CfDebug("    (Concatenated %d from stream)\n",got);
    }
 
 buffer[already] = '\0';
@@ -166,7 +166,7 @@ int SendSocketStream(int sd,char buffer[CF_BUFSIZE],int tosend,int flags)
 
 do
    {
-   Debug("Attempting to send %d bytes\n",tosend-already);
+   CfDebug("Attempting to send %d bytes\n",tosend-already);
 
    sent = send(sd,buffer+already,tosend-already,flags);
 
@@ -181,7 +181,7 @@ do
       return -1;
       }
 
-   Debug("SendSocketStream, sent %d\n",sent);
+   CfDebug("SendSocketStream, sent %d\n",sent);
    already += sent;
    }
 while (already < tosend);

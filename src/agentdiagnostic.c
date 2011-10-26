@@ -484,7 +484,7 @@ switch(p->type)
        
        if (CfCreateFile(file,NULL,a))
 	  {
-          Debug("MyCreate(): Created file \"%s\n ",file);
+          CfDebug("MyCreate(): Created file \"%s\n ",file);
           return 1;
 	  }
        break;
@@ -495,7 +495,7 @@ switch(p->type)
        strcat(buf, "/a");
        if(MakeParentDirectory(buf,true))
 	  {
-          Debug("MyCreate(): Created dir \"%s\n ",p->buf);
+          CfDebug("MyCreate(): Created dir \"%s\n ",p->buf);
           return 1;
 	  }
        break;
@@ -520,7 +520,7 @@ switch(p->action)
        snprintf(file,CF_BUFSIZE,"/tmp/%s",p->buf);      
        if (CfCreateFile(file,NULL,a))
 	  {
-          Debug("DoIt(): Created file \"%s\" ",file);
+          CfDebug("DoIt(): Created file \"%s\" ",file);
 	  }
        sleep(1); // this is just a workaround (for time difference for the touch operation) 
        //TODO: find better method
@@ -559,7 +559,7 @@ switch(p->action)
    case CF_EXECUTE: //106
        if (GetExecOutput(p->text,buf,false))
 	  {
-          Debug("DoIt(): Output of \"%s\": %s\n", p->text, buf);
+          CfDebug("DoIt(): Output of \"%s\": %s\n", p->text, buf);
 	  }
        break;
        
@@ -578,7 +578,7 @@ switch(p->action)
           case CF_EXTERNAL:
               if (GetExecOutput(p->text,buf,false))
                  {
-                 Debug("DoIt(): Output of \"%s\": %s\n", p->text, buf);
+                 CfDebug("DoIt(): Output of \"%s\": %s\n", p->text, buf);
                  }
               
               break;
@@ -608,7 +608,7 @@ switch(p->action)
               if ((pBuf = getenv(p->buf)) != NULL)
                  {
                  //if(strcmp)
-                 Debug("######## ENV = %s\n", buf);
+                 CfDebug("######## ENV = %s\n", buf);
                  return 1;
                  }
               
@@ -759,7 +759,7 @@ for (i = 0; i < nInput; i++)
       {      
       snprintf(actual[k].output,CF_EXPANDSIZE, "%s",output);
       actual[k].exec_ok = 1;
-      Debug("RunPolicies(%d): %s, %s\n%s\n", nInput,output, actual[k].id, command);
+      CfDebug("RunPolicies(%d): %s, %s\n%s\n", nInput,output, actual[k].id, command);
       }
    else
       {
@@ -884,7 +884,7 @@ int CompareOutput(struct cfoutput* a, int n1, struct input *m, int n2)
                       //			    printf("Kill Process: %s\n", m[j].expected[k].text);
                       if(FindProcess("apache2") > 0)
                          {
-                         Debug("CompareOutput(): Found Process \"%s\"\n", "apache2");
+                         CfDebug("CompareOutput(): Found Process \"%s\"\n", "apache2");
                          }
                       break;
                       
@@ -1253,7 +1253,7 @@ while(fgets(line, CF_SMALLBUF, inFile))
                }else
                {
                snprintf(in[n].id, CF_SMALLBUF, "%s",temp);
-               Debug("Parse(%d): %s\n", n, temp);
+               CfDebug("Parse(%d): %s\n", n, temp);
 	       in[n].predefinedId = -1;
                }
             }
@@ -1277,7 +1277,7 @@ while(fgets(line, CF_SMALLBUF, inFile))
                if (GetVariable("match","1",(void *)&retval,&rtype) != cf_notype) // get the sub-sections
                   {
                   section = GetSubSection(retval);
-                  Debug("Parse(%d): %s\n", section, retval);
+                  CfDebug("Parse(%d): %s\n", section, retval);
                   nLineCount = 0; // reset the count for commands in each sub-section
                   continue;
                   }
@@ -1326,7 +1326,7 @@ while(fgets(line, CF_SMALLBUF, inFile))
                       }
                    break;	
                default: // TODO: not required??
-                   Debug("Switch Default\n");
+                   CfDebug("Switch Default\n");
                    break;
                } /*switch*/
             } /* if -> inside block*/
@@ -1517,13 +1517,13 @@ if(FullTextMatch("[ \t]*([A-Za-z0-9_]+)[ \t]*[^A-Za-z0-9_/\"]\"(.+)\"[ \t]*,[ \t
                {
                snprintf(filename, CF_BUFSIZE, "%s", retval);
                }
-            Debug("GetExec(): %s\n",retval);
+            CfDebug("GetExec(): %s\n",retval);
             
             if (GetVariable("match","3",(void *)&retval,&rtype) != cf_notype)
                {
                snprintf(opts, 5, "%s", retval); // TODO: change 5 to some constant defn; opts = test options, eg. K, KF
                }
-            Debug("GetExec(): Options = %s\n", opts);
+            CfDebug("GetExec(): Options = %s\n", opts);
             }
          }
       }
@@ -1614,7 +1614,7 @@ else
 	     
           if (GetVariable("match","2",(void *)&retval,&rtype) != cf_notype)
              {
-             // Debug(" GetExpectedOutput(): type = %s\n", retval);
+             // CfDebug(" GetExpectedOutput(): type = %s\n", retval);
              o->type = GetType1(retval);
              }
           
@@ -1623,7 +1623,7 @@ else
              
              if((tmp = GetVarIndex(id, retval)) < 0)
                 {
-                Debug(" GetExpectedOutput(): Error!! Variable %s is not defined in test \"%s\"\n",retval, id);
+                CfDebug(" GetExpectedOutput(): Error!! Variable %s is not defined in test \"%s\"\n",retval, id);
                 o->var_index = -1;
                 }else
                 {
@@ -1633,7 +1633,7 @@ else
              }
           if (GetVariable("match","4",(void *)&retval,&rtype) != cf_notype)
              {
-             Debug(" GetExpectedOutput(): Buffer = %s\n", retval);
+             CfDebug(" GetExpectedOutput(): Buffer = %s\n", retval);
              snprintf(o->buf, CF_SMALLBUF,"%s",retval);
              }
 	  }
@@ -1649,13 +1649,13 @@ else
               snprintf(o->text, CF_BUFSIZE, "%s", retval);
               if (GetVariable("match","1",(void *)&retval,&rtype) != cf_notype)
 		 {
-                 // Debug(" GetExpectedOutput(): type = %s\n", retval);
+                 // CfDebug(" GetExpectedOutput(): type = %s\n", retval);
                  o->type = GetType1(retval);
 		 }
 
               if (GetVariable("match","3",(void *)&retval,&rtype) != cf_notype)
 		 {
-                 Debug(" GetExpectedOutput(): Buffer = %s\n", retval);
+                 CfDebug(" GetExpectedOutput(): Buffer = %s\n", retval);
                  snprintf(o->buf, CF_SMALLBUF,"%s",retval);
 		 }
               }
@@ -1674,7 +1674,7 @@ else
                          o->type = tmp;
                          }
                   
-                  Debug("GetExpectedOutput(2): TYPE = %s; %d\n",retval,o->type);
+                  CfDebug("GetExpectedOutput(2): TYPE = %s; %d\n",retval,o->type);
                   }
                
                if (GetVariable("match","2",(void *)&retval,&rtype) != cf_notype)
@@ -1683,7 +1683,7 @@ else
                      {
                      snprintf(o->buf, CF_BUFSIZE, "%s", retval);
                      }
-                  Debug("GetExpectedOutput(): NAME = %s\n", o->buf);
+                  CfDebug("GetExpectedOutput(): NAME = %s\n", o->buf);
                   }       
                
                if (GetVariable("match","3",(void *)&retval,&rtype) != cf_notype)
@@ -1695,7 +1695,7 @@ else
                      o->action= GetAction(retval);
                      }
                   
-                  Debug("GetExpectedOutput(): ACTION = %s, %d\n",retval, o->action);
+                  CfDebug("GetExpectedOutput(): ACTION = %s, %d\n",retval, o->action);
                   }
                }   
 
@@ -1709,12 +1709,12 @@ else
                   snprintf(o->text, CF_BUFSIZE, "%s", retval);
                   if (GetVariable("match","1",(void *)&retval,&rtype) != cf_notype)
                      {
-                     // Debug(" GetExpectedOutput(): type = %s\n", retval);
+                     // CfDebug(" GetExpectedOutput(): type = %s\n", retval);
                      o->type = GetType1(retval);
                      }
                   }
                   
-                  Debug("GetExpectedOutput(): %s\n",retval);
+                  CfDebug("GetExpectedOutput(): %s\n",retval);
 //	  return 1;
                   }
                }
@@ -2053,7 +2053,7 @@ else if (FullTextMatch("[ \t]*([A-Za-z0-9_]+)[ \t]*[^A-Za-z0-9_/\"]\"(.+)\"[ \t]
          {
 //		    if( RemoveChars(retval,unwanted))
          snprintf(p->text, CF_BUFSIZE, "%s", retval);
-         Debug("GetPrepareCleanup(): %s\n",retval);
+         CfDebug("GetPrepareCleanup(): %s\n",retval);
          }
       }
    }
@@ -2092,7 +2092,7 @@ if (len2 < 1)
 len1++; // +1 for the terminating \0
 
 snprintf(src, len1, "%s",s);
-Debug("RemoveChars(): src= %s \n ", src);
+CfDebug("RemoveChars(): src= %s \n ", src);
 for(i = 0; i < len1; i++)
    {
    ok = 1;
@@ -2137,12 +2137,12 @@ if (FullTextMatch("(.+);[ ]*#(.+)",tmp))
    if (GetVariable("match","1",(void *)&retval,&rtype) != cf_notype)
       {
       snprintf(s, CF_BUFSIZE, "%s", retval);
-      Debug("RemoveComment(): %s\n", retval);
+      CfDebug("RemoveComment(): %s\n", retval);
       }
    }
 else
    {
-   Debug("RemoveComment(): Comment not found\n");
+   CfDebug("RemoveComment(): Comment not found\n");
    return -1;
    }
 
@@ -2207,7 +2207,7 @@ for(i = 0; i < n; i++)
    {
    if(strcmp(data[i].id,s) == 0)
       {
-      Debug("Is Duplicate(): Found Duplicate: %s\n",s);
+      CfDebug("Is Duplicate(): Found Duplicate: %s\n",s);
       return 1;
       }
    }

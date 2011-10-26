@@ -91,7 +91,7 @@ char *sp;
 int i;
 char vbuff[CF_BUFSIZE];
 
-Debug("GatherSocketData()\n");
+CfDebug("GatherSocketData()\n");
 
 for (i = 0; i < ATTR; i++)
    {
@@ -216,7 +216,7 @@ for (i = 0; i < ATTR; i++)
    struct stat statbuf;
    time_t now = time(NULL);
 
-   Debug("save incoming %s\n",ECGSOCKS[i].name);
+   CfDebug("save incoming %s\n",ECGSOCKS[i].name);
    snprintf(vbuff,CF_MAXVARSIZE,"%s/state/cf_incoming.%s",CFWORKDIR,ECGSOCKS[i].name);
    if (cfstat(vbuff,&statbuf) != -1)
       {
@@ -231,7 +231,7 @@ for (i = 0; i < ATTR; i++)
    SetNetworkEntropyClasses(ECGSOCKS[i].name,"in",in[i]);
    RawSaveItemList(in[i],vbuff);
    DeleteItemList(in[i]);
-   Debug("Saved in netstat data in %s\n",vbuff);
+   CfDebug("Saved in netstat data in %s\n",vbuff);
    }
 
 for (i = 0; i < ATTR; i++)
@@ -239,7 +239,7 @@ for (i = 0; i < ATTR; i++)
    struct stat statbuf;
    time_t now = time(NULL);
 
-   Debug("save outgoing %s\n",ECGSOCKS[i].name);
+   CfDebug("save outgoing %s\n",ECGSOCKS[i].name);
    snprintf(vbuff,CF_MAXVARSIZE,"%s/state/cf_outgoing.%s",CFWORKDIR,ECGSOCKS[i].name);
 
    if (cfstat(vbuff,&statbuf) != -1)
@@ -254,7 +254,7 @@ for (i = 0; i < ATTR; i++)
 
    SetNetworkEntropyClasses(ECGSOCKS[i].name,"out",out[i]);
    RawSaveItemList(out[i],vbuff);
-   Debug("Saved out netstat data in %s\n",vbuff);
+   CfDebug("Saved out netstat data in %s\n",vbuff);
    DeleteItemList(out[i]);
    }
 }

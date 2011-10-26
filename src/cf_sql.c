@@ -482,7 +482,7 @@ cfdb->rowdata = NULL;
 cfdb->maxcolumns = 0;
 cfdb->maxrows = 0;
 
-Debug("Before Query succeeded: %s - %d,%d\n",query,cfdb->maxrows,cfdb->maxcolumns);
+CfDebug("Before Query succeeded: %s - %d,%d\n",query,cfdb->maxrows,cfdb->maxcolumns);
 
 switch (cfdb->type)
    {
@@ -499,7 +499,7 @@ switch (cfdb->type)
        break;
    }
 
-Debug("Query succeeded: (%s) %d,%d\n",query,cfdb->maxrows,cfdb->maxcolumns);
+CfDebug("Query succeeded: (%s) %d,%d\n",query,cfdb->maxrows,cfdb->maxcolumns);
 }
 
 /*****************************************************************************/

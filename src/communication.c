@@ -42,7 +42,7 @@ struct cfagent_connection *NewAgentConn()
 
 ap = xcalloc(1, sizeof(struct cfagent_connection));
 
-Debug("New server connection...\n");
+CfDebug("New server connection...\n");
 ap->sd = (int)CF_NOT_CONNECTED;
 ap->family = AF_INET; 
 ap->trust = false;
@@ -136,7 +136,7 @@ int IsIPV6Address(char *name)
 { char *sp;
  int count,max = 0; 
 
-Debug("IsIPV6Address(%s)\n",name);
+CfDebug("IsIPV6Address(%s)\n",name);
  
 if (name == NULL)
    {
@@ -173,7 +173,7 @@ for (sp = name; *sp != '\0'; sp++)
 
 if (max <= 2)
    {
-   Debug("Looks more like a MAC address");
+   CfDebug("Looks more like a MAC address");
    return false;
    }
  
@@ -198,7 +198,7 @@ int IsIPV4Address(char *name)
 { char *sp;
   int count = 0; 
 
-Debug("IsIPV4Address(%s)\n",name);
+CfDebug("IsIPV4Address(%s)\n",name);
  
 if (name == NULL)
    {
@@ -252,7 +252,7 @@ if ((err = getaddrinfo(hostname,NULL,&query,&response)) != 0)
 for (ap = response; ap != NULL; ap = ap->ai_next)
    {
    strncpy(ipbuffer,sockaddr_ntop(ap->ai_addr),64);
-   Debug("Found address (%s) for host %s\n",ipbuffer,hostname);
+   CfDebug("Found address (%s) for host %s\n",ipbuffer,hostname);
 
    if (strlen(ipbuffer) == 0)
       {
@@ -318,7 +318,7 @@ for (ap = response; ap != NULL; ap = ap->ai_next)
       return hostbuffer;
       }
    
-   Debug("Found address (%s) for host %s\n",hostbuffer,ipaddress);
+   CfDebug("Found address (%s) for host %s\n",hostbuffer,ipaddress);
    freeaddrinfo(response);
    return hostbuffer;
    }

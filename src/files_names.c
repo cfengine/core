@@ -48,7 +48,7 @@ void LocateFilePromiserGroup(char *wildpath,struct Promise *pp,void (*fnptr)(cha
   int create = GetBooleanConstraint("create",pp);
   char *pathtype = GetConstraint("pathtype",pp,CF_SCALAR);
 
-Debug("LocateFilePromiserGroup(%s)\n",wildpath);
+CfDebug("LocateFilePromiserGroup(%s)\n",wildpath);
 
 /* Do a search for promiser objects matching wildpath */
 
@@ -140,13 +140,13 @@ if (expandregex) /* Expand one regex link and hand down */
          
          if (!lastnode && !S_ISDIR(statbuf.st_mode))
             {
-            Debug("Skipping non-directory %s\n",dirp->d_name);
+            CfDebug("Skipping non-directory %s\n",dirp->d_name);
             continue;
             }
          
          if (FullTextMatch(regex,dirp->d_name))
             {
-            Debug("Link %s matched regex %s\n",dirp->d_name,regex);
+            CfDebug("Link %s matched regex %s\n",dirp->d_name,regex);
             }
          else
             {
@@ -183,7 +183,7 @@ if (expandregex) /* Expand one regex link and hand down */
 
             if (!FullTextMatch(pp->promiser,nextbuffer))
                {
-               Debug("Error recomputing references for \"%s\" in: %s",pp->promiser,nextbuffer);
+               CfDebug("Error recomputing references for \"%s\" in: %s",pp->promiser,nextbuffer);
                }
 
             /* If there were back references there could still be match.x vars to expand */
@@ -846,7 +846,7 @@ int CompressPath(char *dest,char *src)
   int nodelen;
   int rootlen;
 
-Debug("CompressPath(%s,%s)\n",dest,src);
+CfDebug("CompressPath(%s,%s)\n",dest,src);
 
 memset(dest,0,CF_BUFSIZE);
 
@@ -883,7 +883,7 @@ for (sp = src+rootlen; *sp != '\0'; sp++)
       {
       if (!ChopLastNode(dest))
          {
-         Debug("cfengine: used .. beyond top of filesystem!\n");
+         CfDebug("cfengine: used .. beyond top of filesystem!\n");
          return false;
          }
    

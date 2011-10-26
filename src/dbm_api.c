@@ -55,7 +55,7 @@ int OpenDB(char *filename, CF_DB **dbp)
 {
 int res;
 
-Debug("OpenDB(%s)\n", filename);
+CfDebug("OpenDB(%s)\n", filename);
 
 res = DoOpenDB(filename, dbp);
 
@@ -301,7 +301,7 @@ void CloseAllDB(void)
 { CF_DB *dbp = NULL;
   int i = 0;
 
-Debug("CloseAllDB()\n");
+CfDebug("CloseAllDB()\n");
 
 while (true)
    {
@@ -323,7 +323,7 @@ while (true)
    i++;
    }
 
-Debug("Closed %d open DB handles\n", i);
+CfDebug("Closed %d open DB handles\n", i);
 }
 
 /*****************************************************************************/

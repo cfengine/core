@@ -157,7 +157,7 @@ static void VerifyProcessOp(struct Item *procdata,struct Attributes a,struct Pro
   int matches = 0,do_signals = true,out_of_range,killed = 0,need_to_restart = true;
   struct Item *killlist = NULL;
 
-Debug("VerifyProcessOp\n");
+CfDebug("VerifyProcessOp\n");
 
 matches = FindPidMatches(procdata,&killlist,a,pp); 
 
@@ -434,7 +434,7 @@ for (sp = proc; *sp != '\0'; sp++)
       {
       if (start[col] != -1)
          {
-         Debug("End of %s is %d\n",title,offset-1);
+         CfDebug("End of %s is %d\n",title,offset-1);
          end[col++] = offset - 1;
          if (col > CF_PROCCOLS - 1)
             {
@@ -449,15 +449,15 @@ for (sp = proc; *sp != '\0'; sp++)
       {
       start[col] = offset;
       sscanf(sp,"%15s",title);
-      Debug("Start of %s is %d\n",title,offset);
+      CfDebug("Start of %s is %d\n",title,offset);
       names[col] = xstrdup(title);
-      Debug("Col[%d]=%s\n",col,names[col]);
+      CfDebug("Col[%d]=%s\n",col,names[col]);
       }
    }
 
 if (end[col] == -1)
    {
-   Debug("End of %s is %d\n",title,offset);
+   CfDebug("End of %s is %d\n",title,offset);
    end[col] = offset;
    }
 }

@@ -79,7 +79,7 @@ int CompareToFile(struct Item *liststart,char *file,struct Attributes a,struct P
   struct stat statbuf;
   struct Item *cmplist = NULL;
 
-Debug("CompareToFile(%s)\n",file);
+CfDebug("CompareToFile(%s)\n",file);
 
 if (cfstat(file,&statbuf) == -1)
    {

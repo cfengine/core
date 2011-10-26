@@ -101,7 +101,7 @@ if ((tloc = time((time_t *)NULL)) == -1)
 
 CFINITSTARTTIME = tloc;
 
-Debug("Job start time set to %s\n",cf_ctime(&tloc));
+CfDebug("Job start time set to %s\n",cf_ctime(&tloc));
 }
 
 /*********************************************************************/

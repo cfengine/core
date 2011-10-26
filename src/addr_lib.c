@@ -141,13 +141,13 @@ if (isv4)
 
             if (from < 0 || to < 0)
                {
-               Debug("Couldn't read range\n");
+               CfDebug("Couldn't read range\n");
                return -1;
                }
             
             if ((from > cmp) || (cmp > to))
                {
-               Debug("Out of range %ld > %ld > %ld (range %s)\n",from,cmp,to,buffer2);
+               CfDebug("Out of range %ld > %ld > %ld (range %s)\n",from,cmp,to,buffer2);
                return -1;
                }
             }
@@ -158,15 +158,15 @@ if (isv4)
             
             if (from != cmp)
                {
-               Debug("Unequal\n");
+               CfDebug("Unequal\n");
                return -1;
                }
             }
          
-         Debug("Matched octet %s with %s\n",buffer1,buffer2);
+         CfDebug("Matched octet %s with %s\n",buffer1,buffer2);
          }
       
-      Debug("Matched IP range\n");
+      CfDebug("Matched IP range\n");
       return 0;
       }
    }
@@ -231,7 +231,7 @@ if (isv6)
             
             if ((from >= cmp) || (cmp > to))
                {
-               Debug("%lx < %lx < %lx\n",from,cmp,to);
+               CfDebug("%lx < %lx < %lx\n",from,cmp,to);
                return -1;
                }
             }

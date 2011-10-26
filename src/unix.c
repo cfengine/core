@@ -270,7 +270,7 @@ int Unix_DoAllSignals(struct Item *siglist,struct Attributes a,struct Promise *p
   pid_t pid;
   int killed = false;
 
-Debug("DoSignals(%s)\n",pp->promiser);
+CfDebug("DoSignals(%s)\n",pp->promiser);
   
 if (siglist == NULL)
    {
@@ -403,7 +403,7 @@ if (unlink(name) == -1)
    {
    if (errno != ENOENT)
       {
-      Debug("Unable to remove existing file %s: %s\n", name, strerror(errno));
+      CfDebug("Unable to remove existing file %s: %s\n", name, strerror(errno));
       }
    }
 
@@ -463,7 +463,7 @@ void Unix_GetInterfaceInfo(enum cfagenttype ag)
   char name[CF_MAXVARSIZE];
   char last_name[CF_BUFSIZE];
 
-Debug("Unix_GetInterfaceInfo()\n");
+CfDebug("Unix_GetInterfaceInfo()\n");
 
 memset(ifbuf, 0, sizeof(ifbuf));
 
@@ -566,18 +566,18 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
             continue;
             }
 
-         Debug("Adding hostip %s..\n",inet_ntoa(sin->sin_addr));
+         CfDebug("Adding hostip %s..\n",inet_ntoa(sin->sin_addr));
          NewClass(inet_ntoa(sin->sin_addr));
 
          if ((hp = gethostbyaddr((char *)&(sin->sin_addr.s_addr),sizeof(sin->sin_addr.s_addr),AF_INET)) == NULL)
             {
-            Debug("No hostinformation for %s not found\n", inet_ntoa(sin->sin_addr));
+            CfDebug("No hostinformation for %s not found\n", inet_ntoa(sin->sin_addr));
             }
          else
             {
             if (hp->h_name != NULL)
                {
-               Debug("Adding hostname %s..\n",hp->h_name);
+               CfDebug("Adding hostname %s..\n",hp->h_name);
                NewClass(hp->h_name);
 
                if (hp->h_aliases != NULL)

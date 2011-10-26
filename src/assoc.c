@@ -68,7 +68,7 @@ if (ap == NULL)
    return;
    }
 
-Debug(" ----> Delete variable association %s\n",ap->lval);
+CfDebug(" ----> Delete variable association %s\n",ap->lval);
 
 if (ap->lval)
    {

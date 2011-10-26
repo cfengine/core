@@ -66,7 +66,7 @@ body:                  BODY
 
 typeid:                ID {
                           strncpy(P.blocktype,P.currentid,CF_MAXVARSIZE);
-                          Debug("Found block type %s for %s\n",P.blocktype,P.block);
+                          CfDebug("Found block type %s for %s\n",P.blocktype,P.block);
                           P.useargs = NULL;
                           };
 
@@ -74,7 +74,7 @@ typeid:                ID {
 
 blockid:               ID {
                           strncpy(P.blockid,P.currentid,CF_MAXVARSIZE);
-                          Debug("Found identifier %s for %s\n",P.currentid,P.block);
+                          CfDebug("Found identifier %s for %s\n",P.currentid,P.block);
                           };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -102,12 +102,12 @@ bundlebody:         '{'
                        {
                        if (RelevantBundle(THIS_AGENT,P.blocktype))
                           {
-                          Debug("We a compiling everything here\n");
+                          CfDebug("We a compiling everything here\n");
                           INSTALL_SKIP = false;                          
                           }
                        else if (strcmp(THIS_AGENT,P.blocktype) != 0)
                           {
-                          Debug("This is for a different agent\n");
+                          CfDebug("This is for a different agent\n");
                           INSTALL_SKIP = true;
                           }
                        
@@ -118,7 +118,7 @@ bundlebody:         '{'
                     '}'
                        {
                        INSTALL_SKIP = false;
-                       Debug("End promise bundle\n\n");
+                       CfDebug("End promise bundle\n\n");
                        };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -138,14 +138,14 @@ bodybody:            '{'
                         P.currentbody = AppendBody(&BODIES,P.blockid,P.blocktype,P.useargs);
                         P.useargs = NULL;
                         strcpy(P.currentid,"");
-                        Debug("Starting block\n");
+                        CfDebug("Starting block\n");
                         }
 
                       bodyattribs 
 
                       '}'
                         {
-                        Debug("End promise body\n");
+                        CfDebug("End promise body\n");
                         };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -236,7 +236,7 @@ promises:              promise                  /* BUNDLE ONLY */
 
 category:             CATEGORY                  /* BUNDLE ONLY */
                          {
-                         Debug("\n* Begin new promise type category %s in function \n\n",P.currenttype);
+                         CfDebug("\n* Begin new promise type category %s in function \n\n",P.currenttype);
                                                  
                          if (strcmp(P.block,"bundle") == 0)
                             {
@@ -265,7 +265,7 @@ promise:              promiser                    /* BUNDLE ONLY */
 
                       constraints ';'
                         {
-                        Debug("End implicit promise %s\n\n",P.promiser);
+                        CfDebug("End implicit promise %s\n\n",P.promiser);
                         strcpy(P.currentid,"");
                         P.currentRlist = NULL;
                         free(P.promiser);
@@ -295,7 +295,7 @@ promise:              promiser                    /* BUNDLE ONLY */
 
                      constraints ';'
                         {
-                        Debug("End full promise with promisee %s\n\n",P.promiser);
+                        CfDebug("End full promise with promisee %s\n\n",P.promiser);
 
                         /* Don't free these */
                         strcpy(P.currentid,"");
@@ -346,7 +346,7 @@ constraint:           id                        /* BUNDLE ONLY */
 
 class:                CLASS
                          {
-                         Debug("  New class context \'%s\' :: \n\n",P.currentclasses);
+                         CfDebug("  New class context \'%s\' :: \n\n",P.currentclasses);
                          };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -355,7 +355,7 @@ id:                    ID
                          {
                          strncpy(P.lval,P.currentid,CF_MAXVARSIZE);
                          P.currentRlist = NULL;
-                         Debug("Recorded LVAL %s\n",P.lval);
+                         CfDebug("Recorded LVAL %s\n",P.lval);
                          };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -365,7 +365,7 @@ rval:                  ID
                          P.rval = xstrdup(P.currentid);
                          P.rtype = CF_SCALAR;
                          P.isbody = true;
-                         Debug("Recorded IDRVAL %s\n", (char*)P.rval);
+                         CfDebug("Recorded IDRVAL %s\n", (char*)P.rval);
                          }
                      | QSTRING
                          {
@@ -373,7 +373,7 @@ rval:                  ID
                          P.currentstring = NULL;
                          P.rtype = CF_SCALAR;
                          P.isbody = false;
-                         Debug("Recorded scalarRVAL %s\n", (char*)P.rval);
+                         CfDebug("Recorded scalarRVAL %s\n", (char*)P.rval);
 
                          if (P.currentpromise)
                             {
@@ -389,7 +389,7 @@ rval:                  ID
                          P.currentstring = NULL;
                          P.rtype = CF_SCALAR;
                          P.isbody = false;
-                         Debug("Recorded saclarvariableRVAL %s\n", (char*)P.rval);
+                         CfDebug("Recorded saclarvariableRVAL %s\n", (char*)P.rval);
                          }
                      | list
                          {
@@ -440,7 +440,7 @@ litem:                 ID
 
                      | usefunction
                           {
-                          Debug("Install function call as list item from level %d\n",P.arg_nesting+1);
+                          CfDebug("Install function call as list item from level %d\n",P.arg_nesting+1);
                           AppendRlist((struct Rlist **)&P.currentRlist,(void *)P.currentfncall[P.arg_nesting+1],CF_FNCALL);
                           DeleteFnCall(P.currentfncall[P.arg_nesting+1]);
                           };
@@ -449,14 +449,14 @@ litem:                 ID
 
 functionid:            ID
                           {
-                          Debug("Found function identifier %s\n",P.currentid);
+                          CfDebug("Found function identifier %s\n",P.currentid);
                           }
                      | NAKEDVAR
                           {
                           strncpy(P.currentid,P.currentstring,CF_MAXVARSIZE); // Make a var look like an ID
                           free(P.currentstring);
                           P.currentstring = NULL;
-                          Debug("Found variable in place of a function identifier %s\n",P.currentid);
+                          CfDebug("Found variable in place of a function identifier %s\n",P.currentid);
                           };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -465,14 +465,14 @@ promiser:                QSTRING
                           {
                           P.promiser = P.currentstring;
                           P.currentstring = NULL;
-                          Debug("Promising object name \'%s\'\n",P.promiser);
+                          CfDebug("Promising object name \'%s\'\n",P.promiser);
                           };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 usefunction:          functionid givearglist
                          {
-                         Debug("Finished with function call, now at level %d\n\n",P.arg_nesting);
+                         CfDebug("Finished with function call, now at level %d\n\n",P.arg_nesting);
                          };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -484,13 +484,13 @@ givearglist:            '('
                               fatal_yyerror("Nesting of functions is deeper than recommended");
                               }
                            P.currentfnid[P.arg_nesting] = xstrdup(P.currentid);
-                           Debug("Start FnCall %s args level %d\n",P.currentfnid[P.arg_nesting],P.arg_nesting);
+                           CfDebug("Start FnCall %s args level %d\n",P.currentfnid[P.arg_nesting],P.arg_nesting);
                            }
 
                         gaitems
                         ')'
                            {
-                           Debug("End args level %d\n",P.arg_nesting);
+                           CfDebug("End args level %d\n",P.arg_nesting);
                            P.currentfncall[P.arg_nesting] = NewFnCall(P.currentfnid[P.arg_nesting],P.giveargs[P.arg_nesting]);
                            P.giveargs[P.arg_nesting] = NULL;                           
                            strcpy(P.currentid,"");

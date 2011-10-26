@@ -120,7 +120,7 @@ if (sqlite3_bind_text(stmt, 1, key, -1, SQLITE_TRANSIENT) != SQLITE_OK)
 ret = sqlite3_step(stmt);
 if (ret == SQLITE_DONE)
    {
-   Debug("Key %s does not exist in database.\n", key);
+   CfDebug("Key %s does not exist in database.\n", key);
    }
 else if (ret == SQLITE_ROW)
    {
@@ -165,7 +165,7 @@ if (sqlite3_bind_text(stmt, 1, key, keysize, SQLITE_TRANSIENT) != SQLITE_OK)
 ret = sqlite3_step(stmt);
 if (ret == SQLITE_DONE)
    {
-   Debug("Key %.*s does not exist in database", keysize, key);
+   CfDebug("Key %.*s does not exist in database", keysize, key);
    }
 else if (ret == SQLITE_ROW)
    {
@@ -202,7 +202,7 @@ if (SQLite3_RevealComplexKeyDB(dbp, key, keysize, &retvalue, &retsize))
       }
    else if (expectedsize > retsize)
       {
-      Debug("SQLite3_ReadComplexKeyDB: data for key %.s is larger than expected (%d > %d)",
+      CfDebug("SQLite3_ReadComplexKeyDB: data for key %.s is larger than expected (%d > %d)",
             keysize, key, retsize, expectedsize);
 
       memcpy(ptr, retvalue, retsize);
@@ -298,7 +298,7 @@ if (sqlite3_step(stmt) == SQLITE_DONE)
    {
    if (sqlite3_changes(dbp) == 0)
       {
-      Debug("Key %.*s requested for deletion is not found in database", keysize, key);
+      CfDebug("Key %.*s requested for deletion is not found in database", keysize, key);
       }
    retval = true;
    }

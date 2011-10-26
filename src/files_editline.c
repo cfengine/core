@@ -841,7 +841,7 @@ for (ip = initiator; ip != terminator && ip != NULL; ip = np)
       }
    else
       {
-      Debug(" -> Multi-line region didn't match text in the file");
+      CfDebug(" -> Multi-line region didn't match text in the file");
       }
       
    if (!SelectLine(ip->name,a,pp)) // Start search from location

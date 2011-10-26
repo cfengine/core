@@ -48,7 +48,7 @@ int SelectProcess(char *procentry,char **names,int *start,int *end,struct Attrib
   char *column[CF_PROCCOLS];
   struct Rlist *rp;
 
-Debug("SelectProcess(%s)\n",procentry);
+CfDebug("SelectProcess(%s)\n",procentry);
 
 InitAlphaList(&proc_attr);
 
@@ -232,7 +232,7 @@ if ((i = GetProcColumnIndex(name1,name2,names)) != -1)
       }
    else
       {   
-      Debug("Selection filter REJECTED counter range %s/%s = %s in [%ld,%ld] (= %ld secs)\n",name1,name2,line[i],min,max,value);
+      CfDebug("Selection filter REJECTED counter range %s/%s = %s in [%ld,%ld] (= %ld secs)\n",name1,name2,line[i],min,max,value);
       return false;
       }
    }
@@ -313,7 +313,7 @@ char *sp = NULL;
 char cols1[CF_PROCCOLS][CF_SMALLBUF] = { "" };
 char cols2[CF_PROCCOLS][CF_SMALLBUF] = { "" };
 
-Debug("SplitProcLine(%s)\n",proc); 
+CfDebug("SplitProcLine(%s)\n",proc); 
 
 if (proc == NULL || strlen(proc) == 0)
    {

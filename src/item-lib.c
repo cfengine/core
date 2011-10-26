@@ -353,7 +353,7 @@ int ListLen(struct Item *list)
 { int count = 0;
   struct Item *ip;
 
-Debug("Check ListLen\n");
+CfDebug("Check ListLen\n");
   
 for (ip = list; ip != NULL; ip=ip->next)
    {
@@ -659,7 +659,7 @@ struct Item *SplitString(char *string,char sep)
   char before[CF_BUFSIZE];
   int i = 0;
   
-Debug("SplitString([%s],%c=%d)\n",string,sep,sep);
+CfDebug("SplitString([%s],%c=%d)\n",string,sep,sep);
 
 for (sp = string; (*sp != '\0') ; sp++,i++)
    {
@@ -706,7 +706,7 @@ struct Item *SplitStringAsItemList(char *string,char sep)
   char format[9], *sp;
   char node[CF_MAXVARSIZE];
   
-Debug("SplitStringAsItemList(%s,%c)\n",string,sep);
+CfDebug("SplitStringAsItemList(%s,%c)\n",string,sep);
 
 sprintf(format,"%%255[^%c]",sep);   /* set format string to search */
 
@@ -851,7 +851,7 @@ static int IsFuzzyItemIn(struct Item *list,char *item)
 
 { struct Item *ptr; 
 
-Debug("\nFuzzyItemIn(LIST,%s)\n",item);
+CfDebug("\nFuzzyItemIn(LIST,%s)\n",item);
  
 if ((item == NULL) || (strlen(item) == 0))
    {
@@ -860,7 +860,7 @@ if ((item == NULL) || (strlen(item) == 0))
  
 for (ptr = list; ptr != NULL; ptr=ptr->next)
    {
-   Debug(" Try FuzzySetMatch(%s,%s)\n",ptr->name,item);
+   CfDebug(" Try FuzzySetMatch(%s,%s)\n",ptr->name,item);
    
    if (FuzzySetMatch(ptr->name,item) == 0)
       {
@@ -965,7 +965,7 @@ for (ip1 = list1,ip2 = list2; (ip1!=NULL)&&(ip2!=NULL); ip1=ip1->next,ip2=ip2->n
    {
    if (strcmp(ip1->name,ip2->name) != 0)
       {
-      Debug("OrderedListMatch failed on (%s,%s)\n",ip1->name,ip2->name);
+      CfDebug("OrderedListMatch failed on (%s,%s)\n",ip1->name,ip2->name);
       return false;
       }
    }

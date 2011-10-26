@@ -52,7 +52,7 @@ void CheckBundle(char *name,char *type)
   char output[CF_BUFSIZE];
   const char *reserved[] = { "sys", "const", "mon", "edit", "match", "mon", "this", NULL };
 
-Debug("Checking for bundle (%s,%s)\n",name,type);
+CfDebug("Checking for bundle (%s,%s)\n",name,type);
   
 if (IsStrIn(name,reserved))
    {
@@ -118,7 +118,7 @@ for  (i = 0; i < CF3_MODULES; i++)
          if ((strcmp(bundletype,ss[j].btype) == 0) || (strcmp("*",ss[j].btype) == 0))
             {
             /* Return a pointer to bodies for this subtype */
-            Debug("Subtype %s syntax ok for %s\n",subtype,bundletype);
+            CfDebug("Subtype %s syntax ok for %s\n",subtype,bundletype);
             return ss[j];
             }
          }
@@ -201,27 +201,27 @@ void CheckConstraint(char *type,char *name,char *lval,void *rval,char rvaltype,s
   struct BodySyntax *bs;
   char output[CF_BUFSIZE];
 
-Debug("CheckConstraint(%s,%s,",type,lval);
+CfDebug("CheckConstraint(%s,%s,",type,lval);
 
 if (DEBUG)
    {
    ShowRval(stdout,rval,rvaltype);
    }
 
-Debug(")\n");
+CfDebug(")\n");
 
 
 if (ss.subtype != NULL) /* In a bundle */
    {
    if (strcmp(ss.subtype,type) == 0)
       {
-      Debug("Found type %s's body syntax\n",type);
+      CfDebug("Found type %s's body syntax\n",type);
       
       bs = ss.bs;
       
       for (l = 0; bs[l].lval != NULL; l++)
          {
-         Debug1("CMP-bundle # (%s,%s)\n",lval,bs[l].lval);
+         CfDebug1("CMP-bundle # (%s,%s)\n",lval,bs[l].lval);
          
          if (strcmp(lval,bs[l].lval) == 0)
             {
@@ -229,17 +229,17 @@ if (ss.subtype != NULL) /* In a bundle */
                for this subtype */
             
             lmatch = true;
-            Debug("Matched syntatically correct bundle (lval,rval) item = (%s) to its rval\n",lval);
+            CfDebug("Matched syntatically correct bundle (lval,rval) item = (%s) to its rval\n",lval);
             
             if (bs[l].dtype == cf_body)
                {
-               Debug("Constraint syntax ok, but definition of body is elsewhere %s=%c\n",lval,rvaltype);
+               CfDebug("Constraint syntax ok, but definition of body is elsewhere %s=%c\n",lval,rvaltype);
                PrependRlist(&BODYPARTS,rval,rvaltype);
                return;
                }
             else if (bs[l].dtype == cf_bundle)
                {
-               Debug("Constraint syntax ok, but definition of relevant bundle is elsewhere %s=%c\n",lval,rvaltype);
+               CfDebug("Constraint syntax ok, but definition of relevant bundle is elsewhere %s=%c\n",lval,rvaltype);
                PrependRlist(&SUBBUNDLES,rval,rvaltype);
                return;
                }
@@ -260,11 +260,11 @@ if (ss.subtype != NULL) /* In a bundle */
 
 for (i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
    {
-   Debug1("CMP-common # %s,%s\n",lval,CF_COMMON_BODIES[i].lval);
+   CfDebug1("CMP-common # %s,%s\n",lval,CF_COMMON_BODIES[i].lval);
    
    if (strcmp(lval,CF_COMMON_BODIES[i].lval) == 0)
       {
-      Debug("Found a match for lval %s in the common constraint attributes\n",lval);
+      CfDebug("Found a match for lval %s in the common constraint attributes\n",lval);
       return;
       }
    }
@@ -272,11 +272,11 @@ for (i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
 
 for (i = 0; CF_COMMON_EDITBODIES[i].lval != NULL; i++)
    {
-   Debug1("CMP-common # %s,%s\n",lval,CF_COMMON_EDITBODIES[i].lval);
+   CfDebug1("CMP-common # %s,%s\n",lval,CF_COMMON_EDITBODIES[i].lval);
    
    if (strcmp(lval,CF_COMMON_EDITBODIES[i].lval) == 0)
       {
-      Debug("Found a match for lval %s in the common edit constraint attributes\n",lval);
+      CfDebug("Found a match for lval %s in the common edit constraint attributes\n",lval);
       return;
       }
    }
@@ -349,14 +349,14 @@ void CheckSelection(char *type,char *name,char *lval,void *rval,char rvaltype)
   struct BodySyntax *bs,*bs2;
   char output[CF_BUFSIZE];
   
-Debug("CheckSelection(%s,%s,",type,lval);
+CfDebug("CheckSelection(%s,%s,",type,lval);
 
 if (DEBUG)
    {
    ShowRval(stdout,rval,rvaltype);
    }
 
-Debug(")\n");
+CfDebug(")\n");
 
 /* Check internal control bodies etc */
 
@@ -364,7 +364,7 @@ for (i = 0; CF_ALL_BODIES[i].subtype != NULL; i++)
    {
    if (strcmp(CF_ALL_BODIES[i].subtype,name) == 0 && strcmp(type,CF_ALL_BODIES[i].btype) == 0)
       {
-      Debug("Found matching a body matching (%s,%s)\n",type,name);
+      CfDebug("Found matching a body matching (%s,%s)\n",type,name);
       
       bs = CF_ALL_BODIES[i].bs;
       
@@ -372,16 +372,16 @@ for (i = 0; CF_ALL_BODIES[i].subtype != NULL; i++)
          {
          if (strcmp(lval,bs[l].lval) == 0)
             {
-            Debug("Matched syntatically correct body (lval) item = (%s)\n",lval);
+            CfDebug("Matched syntatically correct body (lval) item = (%s)\n",lval);
             
             if (bs[l].dtype == cf_body)
                {
-               Debug("Constraint syntax ok, but definition of body is elsewhere\n");
+               CfDebug("Constraint syntax ok, but definition of body is elsewhere\n");
                return;
                }
             else if (bs[l].dtype == cf_bundle)
                {
-               Debug("Constraint syntax ok, but definition of bundle is elsewhere\n");
+               CfDebug("Constraint syntax ok, but definition of bundle is elsewhere\n");
                return;
                }
             else
@@ -400,7 +400,7 @@ for (i = 0; CF_ALL_BODIES[i].subtype != NULL; i++)
 
 for  (i = 0; i < CF3_MODULES; i++)
    {
-   Debug("Trying function module %d for matching lval %s\n",i,lval);
+   CfDebug("Trying function module %d for matching lval %s\n",i,lval);
    
    if ((ss = CF_ALL_SUBTYPES[i]) == NULL)
       {
@@ -414,7 +414,7 @@ for  (i = 0; i < CF3_MODULES; i++)
          continue;
          }
       
-      Debug("\nExamining subtype %s\n",ss[j].subtype);
+      CfDebug("\nExamining subtype %s\n",ss[j].subtype);
 
       for (l = 0; bs[l].range != NULL; l++)
          {
@@ -440,7 +440,7 @@ for  (i = 0; i < CF3_MODULES; i++)
                
                if (strcmp(lval,bs2[k].lval) == 0)
                   {
-                  Debug("Matched\n");
+                  CfDebug("Matched\n");
                   CheckConstraintTypeMatch(lval,rval,rvaltype,bs2[k].dtype,(char *)(bs2[k].range),0);
                   return;
                   }
@@ -472,17 +472,17 @@ if (rval == NULL)
    return;
    }
   
-Debug(" ------------------------------------------------\n");
+CfDebug(" ------------------------------------------------\n");
 
 if (dt == cf_bundle || dt == cf_body)
    {
-   Debug(" - Checking inline constraint/arg %s[%s] => mappedval (bundle/body)\n",lval,CF_DATATYPES[dt]);
+   CfDebug(" - Checking inline constraint/arg %s[%s] => mappedval (bundle/body)\n",lval,CF_DATATYPES[dt]);
    }
 else
    {
-   Debug(" - Checking inline constraint/arg %s[%s] => mappedval (%c) %s\n",lval,CF_DATATYPES[dt],rvaltype,range);
+   CfDebug(" - Checking inline constraint/arg %s[%s] => mappedval (%c) %s\n",lval,CF_DATATYPES[dt],rvaltype,range);
    }
-Debug(" ------------------------------------------------\n");
+CfDebug(" ------------------------------------------------\n");
 
 /* Get type of lval */
 
@@ -564,7 +564,7 @@ switch (dt)
 
    case cf_body:
    case cf_bundle:
-       Debug("Nothing to check for body reference\n");
+       CfDebug("Nothing to check for body reference\n");
        break;
        
    case cf_opts:
@@ -591,7 +591,7 @@ switch (dt)
        break;
    }
 
-Debug("end CheckConstraintTypeMatch---------\n");
+CfDebug("end CheckConstraintTypeMatch---------\n");
 }
             
 /****************************************************************************/
@@ -605,7 +605,7 @@ enum cfdatatype StringDataType(char *scopeid,char *string)
   int islist = false;
   char var[CF_BUFSIZE],exp[CF_EXPANDSIZE];
   
-Debug("StringDataType(%s)\n",string);
+CfDebug("StringDataType(%s)\n",string);
 
 /*-------------------------------------------------------
 What happens if we embed vars in a literal string
@@ -665,7 +665,7 @@ static int CheckParseString(char *lval,char *s,char *range)
 
 { char output[CF_BUFSIZE];
   
-Debug("\nCheckParseString(%s => %s/%s)\n",lval,s,range);
+CfDebug("\nCheckParseString(%s => %s/%s)\n",lval,s,range);
 
 if (s == NULL)
    {
@@ -679,7 +679,7 @@ if (strlen(range) == 0)
 
 if (IsNakedVar(s,'@')||IsNakedVar(s,'$'))
    {
-   Debug("Validation: Unable to verify variable expansion of %s at this stage\n",s);
+   CfDebug("Validation: Unable to verify variable expansion of %s at this stage\n",s);
    return false;
    }
 
@@ -704,7 +704,7 @@ if (FullTextMatch(range,s))
 
 if (IsCf3VarString(s))
    {
-   Debug("Validation: Unable to verify syntax of %s due to variable expansion at this stage\n",s);
+   CfDebug("Validation: Unable to verify syntax of %s due to variable expansion at this stage\n",s);
    }
 else
    {
@@ -727,7 +727,7 @@ if (s == NULL)
    return false;
    }
   
-Debug("\nCheckParseClass(%s => %s/%s)\n",lval,s,range);
+CfDebug("\nCheckParseClass(%s => %s/%s)\n",lval,s,range);
   
 if (strlen(range) == 0)
    {
@@ -754,7 +754,7 @@ static void CheckParseInt(char *lval,char *s,char *range)
   char output[CF_BUFSIZE];
   
 /* Numeric types are registered by range separated by comma str "min,max" */
-Debug("\nCheckParseInt(%s => %s/%s)\n",lval,s,range);
+CfDebug("\nCheckParseInt(%s => %s/%s)\n",lval,s,range);
 
 if (s == NULL)
    {
@@ -790,7 +790,7 @@ if (min == CF_HIGHINIT || max == CF_LOWINIT)
 
 if (IsCf3VarString(s))
    {
-   Debug("Validation: Unable to verify syntax of int \'%s\' due to variable expansion at this stage\n",s);
+   CfDebug("Validation: Unable to verify syntax of int \'%s\' due to variable expansion at this stage\n",s);
    return;
    }
 
@@ -810,7 +810,7 @@ if (val > max || val < min)
    return;
    }
 
-Debug("CheckParseInt - syntax verified\n\n");
+CfDebug("CheckParseInt - syntax verified\n\n");
 }
 
 /****************************************************************************/
@@ -828,7 +828,7 @@ if (s == NULL)
    }
   
 /* Numeric types are registered by range separated by comma str "min,max" */
-Debug("\nCheckParseIntRange(%s => %s/%s)\n",lval,s,range);
+CfDebug("\nCheckParseIntRange(%s => %s/%s)\n",lval,s,range);
 
 if (*s == '[' || *s == '(')
    {
@@ -865,7 +865,7 @@ if (min == CF_HIGHINIT || max == CF_LOWINIT)
 
 if (IsCf3VarString(s))
    {
-   Debug("Validation: Unable to verify syntax of int \'%s\' due to variable expansion at this stage\n",s);
+   CfDebug("Validation: Unable to verify syntax of int \'%s\' due to variable expansion at this stage\n",s);
    return;
    }
 
@@ -894,7 +894,7 @@ for (ip = rangep; ip != NULL; ip=ip->next)
 
 DeleteItemList(rangep);
 
-Debug("CheckParseIntRange - syntax verified\n\n");
+CfDebug("CheckParseIntRange - syntax verified\n\n");
 }
 
 /****************************************************************************/
@@ -906,7 +906,7 @@ static void CheckParseReal(char *lval,char *s,char *range)
   int n;
   char output[CF_BUFSIZE];
   
-Debug("\nCheckParseReal(%s => %s/%s)\n",lval,s,range);
+CfDebug("\nCheckParseReal(%s => %s/%s)\n",lval,s,range);
 
 if (s == NULL)
    {
@@ -921,7 +921,7 @@ if (strcmp(s,"inf") == 0)
 
 if (IsCf3VarString(s))
    {
-   Debug("Validation: Unable to verify syntax of real %s due to variable expansion at this stage\n",s);
+   CfDebug("Validation: Unable to verify syntax of real %s due to variable expansion at this stage\n",s);
    return;
    }
 
@@ -953,7 +953,7 @@ if (val > max || val < min)
    ReportError(output);
    }
 
-Debug("CheckParseReal - syntax verified\n\n");
+CfDebug("CheckParseReal - syntax verified\n\n");
 }
 
 /****************************************************************************/
@@ -970,7 +970,7 @@ if (s == NULL)
    return;
    }
   
-Debug("\nCheckParseRealRange(%s => %s/%s)\n",lval,s,range);
+CfDebug("\nCheckParseRealRange(%s => %s/%s)\n",lval,s,range);
 
 if (*s == '[' || *s == '(')
    {
@@ -986,7 +986,7 @@ if (strcmp(s,"inf") == 0)
 
 if (IsCf3VarString(s))
    {
-   Debug("Validation: Unable to verify syntax of real %s due to variable expansion at this stage\n",s);
+   CfDebug("Validation: Unable to verify syntax of real %s due to variable expansion at this stage\n",s);
    return;
    }
 
@@ -1033,7 +1033,7 @@ for (ip = rangep; ip != NULL; ip=ip->next)
 
 DeleteItemList(rangep);
 
-Debug("CheckParseRealRange - syntax verified\n\n");
+CfDebug("CheckParseRealRange - syntax verified\n\n");
 }
 
 /****************************************************************************/
@@ -1046,7 +1046,7 @@ static void CheckParseOpts(char *lval,char *s,char *range)
  
 /* List/menu types are separated by comma str "a,b,c,..." */
 
-Debug("\nCheckParseOpts(%s => %s/%s)\n",lval,s,range);
+CfDebug("\nCheckParseOpts(%s => %s/%s)\n",lval,s,range);
 
 if (s == NULL)
    {
@@ -1055,7 +1055,7 @@ if (s == NULL)
 
 if (IsNakedVar(s,'@')||IsNakedVar(s,'$'))
    {
-   Debug("Validation: Unable to verify variable expansion of %s at this stage\n",s);
+   CfDebug("Validation: Unable to verify variable expansion of %s at this stage\n",s);
    return;
    }
 
@@ -1072,7 +1072,7 @@ DeleteItemList(split);
 
 if (!err)
    {
-   Debug("CheckParseOpts - syntax verified\n\n");
+   CfDebug("CheckParseOpts - syntax verified\n\n");
    }
 }
 
@@ -1156,7 +1156,7 @@ static void CheckFnCallType(char *lval,const char *s,enum cfdatatype dtype,char 
   char output[CF_BUFSIZE];
   FnCallType *fn;
 
-Debug("CheckFnCallType(%s => %s/%s)\n",lval,s,range);
+CfDebug("CheckFnCallType(%s => %s/%s)\n",lval,s,range);
 
 if (s == NULL)
    {

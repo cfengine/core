@@ -117,7 +117,7 @@ int FileHashChanged(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],int w
   unsigned char dbdigest[EVP_MAX_MD_SIZE+1];
   CF_DB *dbp;
 
-Debug("HashChanged: key %s (type=%d) with data %s\n",filename,type,HashPrint(type,digest));
+CfDebug("HashChanged: key %s (type=%d) with data %s\n",filename,type,HashPrint(type,digest));
 
 size = FileHashSize(type);
 
@@ -133,7 +133,7 @@ if (ReadHash(dbp,type,filename,dbdigest))
       {
       if (digest[i] != dbdigest[i])
          {
-         Debug("Found cryptohash for %s in database but it didn't match\n",filename);
+         CfDebug("Found cryptohash for %s in database but it didn't match\n",filename);
          
          if (EXCLAIM)
             {
@@ -179,7 +179,7 @@ else
    snprintf(s,CF_BUFSIZE," !! File %s was not in %s database - new file found",filename,FileHashName(type));
    /* Key was not found, so install it */
    cfPS(warnlevel,CF_CHG,"",pp,attr,s);   
-   Debug("Storing checksum for %s in database %s\n",filename,HashPrint(type,digest));
+   CfDebug("Storing checksum for %s in database %s\n",filename,HashPrint(type,digest));
    WriteHash(dbp,type,filename,digest);
    LogHashChange(s);
    CloseDB(dbp);
@@ -194,11 +194,11 @@ int CompareFileHashes(char *file1,char *file2,struct stat *sstat,struct stat *ds
 { static unsigned char digest1[EVP_MAX_MD_SIZE+1], digest2[EVP_MAX_MD_SIZE+1];
   int i;
 
-Debug("CompareFileHashes(%s,%s)\n",file1,file2);
+CfDebug("CompareFileHashes(%s,%s)\n",file1,file2);
 
 if (sstat->st_size != dstat->st_size)
    {
-   Debug("File sizes differ, no need to compute checksum\n");
+   CfDebug("File sizes differ, no need to compute checksum\n");
    return true;
    }
   
@@ -215,7 +215,7 @@ if (attr.copy.servers == NULL || strcmp(attr.copy.servers->item,"localhost") == 
          }
       }
 
-   Debug("Files were identical\n");
+   CfDebug("Files were identical\n");
    return false;  /* only if files are identical */
    }
 else
@@ -231,11 +231,11 @@ int CompareBinaryFiles(char *file1,char *file2,struct stat *sstat,struct stat *d
 { int fd1, fd2,bytes1,bytes2;
   char buff1[BUFSIZ],buff2[BUFSIZ];
 
-Debug("CompareBinarySums(%s,%s)\n",file1,file2);
+CfDebug("CompareBinarySums(%s,%s)\n",file1,file2);
 
 if (sstat->st_size != dstat->st_size)
    {
-   Debug("File sizes differ, no need to compute checksum\n");
+   CfDebug("File sizes differ, no need to compute checksum\n");
    return true;
    }
   
@@ -266,7 +266,7 @@ if (attr.copy.servers == NULL || strcmp(attr.copy.servers->item,"localhost") == 
    }
 else
    {
-   Debug("Using network checksum instead\n");
+   CfDebug("Using network checksum instead\n");
    return CompareHashNet(file1,file2,attr,pp); /* client.c */
    }
 }
@@ -281,7 +281,7 @@ void HashFile(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhash
   unsigned char buffer[1024];
   const EVP_MD *md = NULL;
 
-Debug2("HashFile(%d,%s)\n",type,filename);
+CfDebug2("HashFile(%d,%s)\n",type,filename);
 
 if ((file = fopen(filename, "rb")) == NULL)
    {
@@ -314,7 +314,7 @@ static void HashList(struct Item *list,unsigned char digest[EVP_MAX_MD_SIZE+1],e
   int md_len;
   const EVP_MD *md = NULL;
 
-Debug2("HashList(%s)\n",FileHashName(type));
+CfDebug2("HashList(%s)\n",FileHashName(type));
 
 memset(digest,0,EVP_MAX_MD_SIZE+1);
 
@@ -324,7 +324,7 @@ EVP_DigestInit(&context,md);
 
 for (ip = list; ip != NULL; ip=ip->next) 
    {
-   Debug(" digesting %s\n",ip->name);
+   CfDebug(" digesting %s\n",ip->name);
    EVP_DigestUpdate(&context,ip->name,strlen(ip->name));
    }
 
@@ -339,7 +339,7 @@ void HashString(char *buffer,int len,unsigned char digest[EVP_MAX_MD_SIZE+1],enu
   const EVP_MD *md = NULL;
   int md_len;
 
-Debug2("HashString(%c)\n",type);
+CfDebug2("HashString(%c)\n",type);
 
 switch (type)
    {
@@ -372,7 +372,7 @@ void HashPubKey(RSA *key,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes t
   int md_len,i,buf_len, actlen;
   unsigned char *buffer;
 
-Debug("HashPubKey(%d)\n",type);
+CfDebug("HashPubKey(%d)\n",type);
 
 //RSA_print_fp(stdout,key,0);
 
@@ -430,8 +430,8 @@ int HashesMatch(unsigned char digest1[EVP_MAX_MD_SIZE+1],unsigned char digest2[E
 
 size = FileHashSize(type);
 
-Debug("1. CHECKING DIGEST type %d - size %d (%s)\n",type,size,HashPrint(type,digest1));
-Debug("2. CHECKING DIGEST type %d - size %d (%s)\n",type,size,HashPrint(type,digest2));
+CfDebug("1. CHECKING DIGEST type %d - size %d (%s)\n",type,size,HashPrint(type,digest1));
+CfDebug("2. CHECKING DIGEST type %d - size %d (%s)\n",type,size,HashPrint(type,digest2));
 
 for (i = 0; i < size; i++)
    {

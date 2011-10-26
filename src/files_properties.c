@@ -83,7 +83,7 @@ for (i = 0; skipfiles[i] != NULL; i++)
    {
    if (strcmp(nodename,skipfiles[i]) == 0)
       {
-      Debug("Filename %s/%s is classified as ignorable\n",path,nodename);
+      CfDebug("Filename %s/%s is classified as ignorable\n",path,nodename);
       return false;
       }
    }
@@ -133,7 +133,7 @@ if (statbuf.st_size == 0 && ! (VERBOSE||INFORM)) /* No sense in warning about em
    }
  
 CfOut(cf_error,"","Suspicious looking file object \"%s\" masquerading as hidden file in %s\n",nodename,path);
-Debug("Filename looks suspicious\n"); 
+CfDebug("Filename looks suspicious\n"); 
  
 if (S_ISLNK(statbuf.st_mode))
    {
@@ -154,7 +154,7 @@ return true;
 void SetSearchDevice(struct stat *sb,struct Promise *pp)
 
 {
-Debug("Registering root device as %d\n",sb->st_dev);
+CfDebug("Registering root device as %d\n",sb->st_dev);
 pp->rootdevice = sb->st_dev;
 }
 

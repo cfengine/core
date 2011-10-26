@@ -52,7 +52,7 @@ if (!attr.havedepthsearch)  /* if the search is trivial, make sure that we are i
    {
    char basedir[CF_BUFSIZE];
 
-   Debug(" -> Direct file reference %s, no search implied\n",name);
+   CfDebug(" -> Direct file reference %s, no search implied\n",name);
    snprintf(basedir, sizeof(basedir), "%s", name);
    ChopLastNode(basedir);
    chdir(basedir);
@@ -73,7 +73,7 @@ if (rlevel > CF_RECURSION_LIMIT)
 
 memset(path,0,CF_BUFSIZE); 
 
-Debug("To iterate is Human, to recurse is Divine...(%s)\n",name);
+CfDebug("To iterate is Human, to recurse is Divine...(%s)\n",name);
 
 if (!PushDirState(name,sb))
    {
@@ -188,7 +188,7 @@ if (chdir(name) == -1)
    }
 else
    {
-   Debug("Changed directory to %s\n",name);
+   CfDebug("Changed directory to %s\n",name);
    }
 
 CheckLinkSecurity(sb,name);
@@ -225,7 +225,7 @@ else if (goback)
 int SkipDirLinks(char *path,const char *lastnode,struct Recursion r)
 
 {
-Debug("SkipDirLinks(%s,%s)\n",path,lastnode);
+CfDebug("SkipDirLinks(%s,%s)\n",path,lastnode);
 
 if (r.exclude_dirs)
    {
@@ -255,7 +255,7 @@ static void CheckLinkSecurity(struct stat *sb,char *name)
 
 { struct stat security;
 
-Debug("Checking the inode and device to make sure we are where we think we are...\n"); 
+CfDebug("Checking the inode and device to make sure we are where we think we are...\n"); 
 
 if (cfstat(".",&security) == -1)
    {

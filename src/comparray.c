@@ -47,7 +47,7 @@ for (ap = *start; ap != NULL; ap = ap->next)
       }
    }
 
-Debug("FixCompressedArrayValue(%d,%s)\n",i,value);
+CfDebug("FixCompressedArrayValue(%d,%s)\n",i,value);
 
 ap = xmalloc(sizeof(struct CompressedArray));
 
@@ -84,7 +84,7 @@ int CompressedArrayElementExists(struct CompressedArray *start,int key)
 
 { struct CompressedArray *ap;
 
-Debug("CompressedArrayElementExists(%d)\n",key);
+CfDebug("CompressedArrayElementExists(%d)\n",key);
 
 for (ap = start; ap !=NULL; ap = ap->next)
    {

@@ -103,7 +103,7 @@ for (rp = bitlist; rp != NULL; rp=rp->next)
       }
    }
 
-Debug("ParseFlagString:[PLUS=%lo][MINUS=%lo]\n",*plusmask,*minusmask);
+CfDebug("ParseFlagString:[PLUS=%lo][MINUS=%lo]\n",*plusmask,*minusmask);
 return true;
 }
 

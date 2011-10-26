@@ -53,7 +53,7 @@ fp = (struct FnCall *)rval;
 
 if (FindFunction(fp->name))
    {
-   Debug("%s is a builtin function\n",fp->name);
+   CfDebug("%s is a builtin function\n",fp->name);
    return true;
    }
 else
@@ -68,7 +68,7 @@ struct FnCall *NewFnCall(char *name, struct Rlist *args)
 
 { struct FnCall *fp;
 
-Debug("Installing Function Call %s\n",name);
+CfDebug("Installing Function Call %s\n",name);
 
 fp = xmalloc(sizeof(struct FnCall));
 
@@ -76,12 +76,12 @@ fp->name = xstrdup(name);
 fp->args = args;
 fp->argc = RlistLen(args);
 
-Debug("Installed ");
+CfDebug("Installed ");
 if (DEBUG)
    {
    ShowFnCall(stdout,fp);
    }
-Debug("\n\n");
+CfDebug("\n\n");
 return fp;
 }
 
@@ -90,7 +90,7 @@ return fp;
 struct FnCall *CopyFnCall(struct FnCall *f)
 
 {
-Debug("CopyFnCall()\n");
+CfDebug("CopyFnCall()\n");
 return NewFnCall(f->name,CopyRlist(f->args));
 }
 
@@ -117,7 +117,7 @@ free(fp);
 struct FnCall *ExpandFnCall(char *contextid,struct FnCall *f,int expandnaked)
 
 {
- Debug("ExpandFnCall()\n");
+ CfDebug("ExpandFnCall()\n");
 //return NewFnCall(f->name,ExpandList(contextid,f->args,expandnaked));
 return NewFnCall(f->name,ExpandList(contextid,f->args,false));
 }

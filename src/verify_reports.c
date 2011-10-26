@@ -146,7 +146,7 @@ static void ShowState(char *type,struct Attributes a,struct Promise *pp)
   char *offset = NULL;
   FILE *fp;
 
-Debug("ShowState(%s)\n",type); 
+CfDebug("ShowState(%s)\n",type); 
 
 snprintf(buffer,CF_BUFSIZE-1,"%s/state/cf_%s",CFWORKDIR,type);
 
@@ -590,7 +590,7 @@ for (ip = hostlist; ip != NULL; ip=ip->next)
             }
          average = (double)entry.expect;
          var = (double)entry.var;
-         Debug("%s => then = %ld, lastseen = %ld, average=%.2f\n",hostname,then,lastseen,average);
+         CfDebug("%s => then = %ld, lastseen = %ld, average=%.2f\n",hostname,then,lastseen,average);
          }
       else
          {
@@ -627,7 +627,7 @@ for (ip = hostlist; ip != NULL; ip=ip->next)
       sum_av += p_av[i];
       }
 
-   Debug("Reliabilities sum to %.2f av %.2f\n\n",sum,sum_av);
+   CfDebug("Reliabilities sum to %.2f av %.2f\n\n",sum,sum_av);
 
    sum = sum_av = 0.0;
    

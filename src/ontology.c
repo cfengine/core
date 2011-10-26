@@ -292,7 +292,7 @@ static char *ClassifiedTopic(char *topic,char *context)
 
 { static char name[CF_MAXVARSIZE];
 
-Debug("CONTEXT(%s)/TOPIC(%s)",context,topic);
+CfDebug("CONTEXT(%s)/TOPIC(%s)",context,topic);
 
 if (context && strlen(context) > 0)
    {

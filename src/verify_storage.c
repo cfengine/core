@@ -386,7 +386,7 @@ if (childstat->st_dev != parentstat.st_dev)
    struct Rlist *rp;
    struct CfMount *entry;
 
-   Debug("[%s is on a different file system, not descending]\n",dir);
+   CfDebug("[%s is on a different file system, not descending]\n",dir);
 
    for (rp = MOUNTEDFSLIST; rp != NULL; rp=rp->next)
       {
@@ -402,7 +402,7 @@ if (childstat->st_dev != parentstat.st_dev)
       }
    }
 
-Debug("NotMountedFileSystem\n");
+CfDebug("NotMountedFileSystem\n");
 return(false);
 }
 

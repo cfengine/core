@@ -197,7 +197,7 @@ static FILE *Unix_cf_popen(char *command,char *type)
    pid_t pid;
    FILE *pp = NULL;
 
-Debug("Unix_cf_popen(%s)\n",command);
+CfDebug("Unix_cf_popen(%s)\n",command);
 
 if ((*type != 'r' && *type != 'w') || (type[1] != '\0'))
    {
@@ -330,7 +330,7 @@ static FILE *Unix_cf_popensetuid(char *command,char *type,uid_t uid,gid_t gid,ch
    pid_t pid;
    FILE *pp = NULL;
 
-Debug("Unix_cf_popensetuid(%s,%s,%d,%d)\n",command,type,uid,gid);
+CfDebug("Unix_cf_popensetuid(%s,%s,%d,%d)\n",command,type,uid,gid);
 
 if ((*type != 'r' && *type != 'w') || (type[1] != '\0'))
    {
@@ -489,7 +489,7 @@ static FILE *Unix_cf_popen_sh(char *command,char *type)
    FILE *pp = NULL;
    char esc_command[CF_BUFSIZE];
 
-Debug("Unix_cf_popen_sh(%s)\n",command);
+CfDebug("Unix_cf_popen_sh(%s)\n",command);
 
 if ((*type != 'r' && *type != 'w') || (type[1] != '\0'))
    {
@@ -616,7 +616,7 @@ static FILE *Unix_cf_popen_shsetuid(char *command,char *type,uid_t uid,gid_t gid
    FILE *pp = NULL;
    char esc_command[CF_BUFSIZE];
 
-Debug("Unix_cf_popen_shsetuid(%s,%s,%d,%d)\n",command,type,uid,gid);
+CfDebug("Unix_cf_popen_shsetuid(%s,%s,%d,%d)\n",command,type,uid,gid);
 
 if ((*type != 'r' && *type != 'w') || (type[1] != '\0'))
    {
@@ -767,7 +767,7 @@ int cf_pwait(pid_t pid)
 
 { int status;
 
-Debug("cf_pwait - Waiting for process %d\n",pid); 
+CfDebug("cf_pwait - Waiting for process %d\n",pid); 
 
 #ifdef HAVE_WAITPID
 
@@ -818,7 +818,7 @@ static int Unix_cf_pclose(FILE *pp)
 { int fd;
   pid_t pid;
 
-Debug("Unix_cf_pclose(pp)\n");
+CfDebug("Unix_cf_pclose(pp)\n");
 
 if (!ThreadLock(cft_count))
    {
@@ -870,7 +870,7 @@ static int Unix_cf_pclose_def(FILE *pfp,struct Attributes a,struct Promise *pp)
 { int fd, status;
   pid_t pid;
 
-Debug("Unix_cf_pclose_def(pfp)\n");
+CfDebug("Unix_cf_pclose_def(pfp)\n");
 
 if (!ThreadLock(cft_count))
    {
@@ -909,7 +909,7 @@ if (fclose(pfp) == EOF)
    return -1;
    }
 
-Debug("Unix_cf_pclose_def - Waiting for process %d\n",pid); 
+CfDebug("Unix_cf_pclose_def - Waiting for process %d\n",pid); 
 
 #ifdef HAVE_WAITPID
 

@@ -316,7 +316,7 @@ if (argv[optind] != NULL)
    FatalError("Aborted");
    }
 
-Debug("Set debugging\n");
+CfDebug("Set debugging\n");
 }
 
 /*******************************************************************/
@@ -1296,13 +1296,13 @@ for (ip = VNEGHEAP; ip != NULL; ip=ip->next)
 
 CfOut(cf_verbose,"","\n");
 
-Debug("     ?  Public class context:\n");
+CfDebug("     ?  Public class context:\n");
 
 for (i = 0; i < CF_ALPHABETSIZE; i++)
    {
    for (ip = VHEAP.list[i]; ip != NULL; ip=ip->next)
       {
-      Debug("     ?       %s\n",ip->name);
+      CfDebug("     ?       %s\n",ip->name);
       }
    }
 

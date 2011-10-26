@@ -1173,7 +1173,7 @@ while (!feof(fin))
 
    if (strcmp(thismanager,mgr) == 0)
       {
-      Debug("READPKG: %s\n",line);
+      CfDebug("READPKG: %s\n",line);
       PrependPackageItem(&list,name,version,arch,a,pp);
       }
    }
@@ -1201,9 +1201,9 @@ if (reset)
 
    if (strcmp(name,"") != 0 || strcmp(version,"") != 0)
       {
-      Debug(" -? Extracted package name \"%s\"\n",name);
-      Debug(" -?      with version \"%s\"\n",version);
-      Debug(" -?      with architecture \"%s\"\n",arch);
+      CfDebug(" -? Extracted package name \"%s\"\n",name);
+      CfDebug(" -?      with version \"%s\"\n",version);
+      CfDebug(" -?      with architecture \"%s\"\n",arch);
       
       PrependPackageItem(list,name,version,arch,a,pp);
       }
@@ -1266,10 +1266,10 @@ if (strcmp(name,"CF_NOMATCH") == 0 || strcmp(version,"CF_NOMATCH") == 0 || strcm
    return false;
    }
 
-Debug(" ?? Patch line: \"%s\"",item);
-Debug(" -?      with name \"%s\"\n",name);
-Debug(" -?      with version \"%s\"\n",version);
-Debug(" -?      with architecture \"%s\"\n",arch);
+CfDebug(" ?? Patch line: \"%s\"",item);
+CfDebug(" -?      with name \"%s\"\n",name);
+CfDebug(" -?      with version \"%s\"\n",version);
+CfDebug(" -?      with architecture \"%s\"\n",arch);
 
 if (PackageInItemList(chklist,name,version,arch))
    {
@@ -1740,7 +1740,7 @@ int FindLargestVersionAvail(char *matchName, char *matchVers, const char *refAny
   int match;
   CFDIR *dirh;
 
-  Debug("FindLargestVersionAvail()\n");
+  CfDebug("FindLargestVersionAvail()\n");
 
   match = false;
 
@@ -1796,8 +1796,8 @@ int FindLargestVersionAvail(char *matchName, char *matchVers, const char *refAny
     CloseDir(dirh);
     }
   
-  Debug("largest ver is \"%s\", name is \"%s\"\n", largestVer, largestVerName);
-  Debug("match=%d\n", match);
+  CfDebug("largest ver is \"%s\", name is \"%s\"\n", largestVer, largestVerName);
+  CfDebug("match=%d\n", match);
   
   if(match)
     {
@@ -2018,7 +2018,7 @@ static int ComparePackages(const char *n, const char *v, const char *a,struct Cf
   int cmp_result;
   int break_loop = false;
 
-Debug("Compare (%s,%s,%s) and (%s,%s,%s)\n",n,v,a,pi->name,pi->version,pi->arch);
+CfDebug("Compare (%s,%s,%s) and (%s,%s,%s)\n",n,v,a,pi->name,pi->version,pi->arch);
   
 if (CompareCSVName(n,pi->name) != 0)
    {

@@ -46,7 +46,7 @@ struct Rlist *NewIterationContext(char *scopeid,struct Rlist *namelist)
   struct CfAssoc *new;
   struct Rval newret;
 
-Debug("\n*\nNewIterationContext(from %s)\n*\n",scopeid);
+CfDebug("\n*\nNewIterationContext(from %s)\n*\n",scopeid);
 
 CopyScope("this",scopeid);
 
@@ -54,7 +54,7 @@ ptr=GetScope("this");
 
 if (namelist == NULL)
    {
-   Debug("No lists to iterate over\n");
+   CfDebug("No lists to iterate over\n");
    return NULL;
    }
 
@@ -144,7 +144,7 @@ if (state == NULL)
 
 /* Go ahead and increment */
 
-Debug(" -> Incrementing (%s) from \"%s\"\n", cp->lval, (char *)iterator->state_ptr->item);
+CfDebug(" -> Incrementing (%s) from \"%s\"\n", cp->lval, (char *)iterator->state_ptr->item);
 
 if (state->next == NULL)
    {
@@ -178,7 +178,7 @@ else
    /* Update the current wheel */
    iterator->state_ptr = state->next;
 
-   Debug(" <- Incrementing wheel (%s) to \"%s\"\n",cp->lval, (char*)iterator->state_ptr->item);
+   CfDebug(" <- Incrementing wheel (%s) to \"%s\"\n",cp->lval, (char*)iterator->state_ptr->item);
 
    while (iterator->state_ptr && strcmp(iterator->state_ptr->item,CF_NULL_VALUE) == 0)
       {

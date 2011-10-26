@@ -218,7 +218,7 @@ if (argv[optind] != NULL)
    CfOut(cf_error,"","Unexpected argument with no preceding option: %s\n",argv[optind]);
    }
 
-Debug("Set debugging\n");
+CfDebug("Set debugging\n");
 }
 
 /*******************************************************************/

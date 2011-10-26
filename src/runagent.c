@@ -169,7 +169,7 @@ if (HOSTLIST)
          else
             {
             pid = wait(&status);
-            Debug("child = %d, child number = %d\n", pid, count);
+            CfDebug("child = %d, child number = %d\n", pid, count);
             count--;
             }
          }
@@ -321,7 +321,7 @@ while ((c=getopt_long(argc,argv,"t:q:d:b:vnKhIif:D:VSxo:s:MH:",OPTIONS,&optindex
       }
   }
 
-Debug("Set debugging\n");
+CfDebug("Set debugging\n");
 }
 
 /*******************************************************************/

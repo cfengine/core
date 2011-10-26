@@ -245,7 +245,7 @@ for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
             NewBundleClass(buffer,pp->bundle);
             }
 
-         Debug(" ?? \'Strategy\' distribution class interval -> %s\n",buffer);
+         CfDebug(" ?? \'Strategy\' distribution class interval -> %s\n",buffer);
          return true;
          }
       }
@@ -323,7 +323,7 @@ if (strcmp(pp->bundletype,THIS_AGENT) == 0 || FullTextMatch("edit_.*",pp->bundle
    {
    if (EvalClassExpression(a.context.expression,pp))
       {
-      Debug(" ?> defining explicit class %s\n",pp->promiser);
+      CfDebug(" ?> defining explicit class %s\n",pp->promiser);
 
       if (!ValidClassName(pp->promiser))
          {
@@ -354,7 +354,7 @@ strncpy(class, oclass, CF_MAXVARSIZE);
 Chop(class);
 CanonifyNameInPlace(class);
 
-Debug("NewClass(%s)\n",class);
+CfDebug("NewClass(%s)\n",class);
 
 if (strlen(class) == 0)
    {
@@ -429,7 +429,7 @@ if (strlen(copy) == 0)
    return;
    }
 
-Debug("NewBundleClass(%s)\n",copy);
+CfDebug("NewBundleClass(%s)\n",copy);
 
 if (IsRegexItemIn(ABORTBUNDLEHEAP,copy))
    {
@@ -664,24 +664,24 @@ while ((*sp != '\0') && !((*sp == '|') && (bracklevel == 0)))
    {
    if (*sp == '(')
       {
-      Debug("+(\n");
+      CfDebug("+(\n");
       bracklevel++;
       }
 
    if (*sp == ')')
       {
-      Debug("-)\n");
+      CfDebug("-)\n");
       bracklevel--;
       }
 
-   Debug("(%c)",*sp);
+   CfDebug("(%c)",*sp);
    *spc++ = *sp++;
    len++;
    }
 
 *spc = '\0';
 
-Debug("\nGetORATom(%s)->%s\n",start,buffer);
+CfDebug("\nGetORATom(%s)->%s\n",start,buffer);
 return len;
 }
 
@@ -965,7 +965,7 @@ else
                                       NULL);
    FreeExpression(res.result);
 
-   Debug("Evaluate(%s) -> %d\n", class, r);
+   CfDebug("Evaluate(%s) -> %d\n", class, r);
 
    /* r is EvalResult which could be ERROR */
    return r == true;
@@ -1134,7 +1134,7 @@ if (!OpenDB(filename,&dbp))
 
 cf_chmod(filename,0644); 
 DeleteDB(dbp,name);
-Debug("Deleted any persistent state %s\n",name); 
+CfDebug("Deleted any persistent state %s\n",name); 
 CloseDB(dbp);
 }
 
@@ -1178,7 +1178,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    {
    memcpy((void *)&q,value,sizeof(struct CfState));
 
-   Debug(" - Found key %s...\n",key);
+   CfDebug(" - Found key %s...\n",key);
 
    if (now > q.expires)
       {
@@ -1431,7 +1431,7 @@ if (*classes == NULL)
 
 if (strchr(*classes,'$') || strchr(*classes,'@'))
    {
-   Debug("Class expression did not evaluate");
+   CfDebug("Class expression did not evaluate");
    return true;
    }
 

@@ -109,7 +109,7 @@ int VerifyFileLeaf(char *path,struct stat *sb,struct Attributes attr,struct Prom
  
 if (!SelectLeaf(path,sb,attr,pp))
    {
-   Debug("Skipping non-selected file %s\n",path);
+   CfDebug("Skipping non-selected file %s\n",path);
    return false;
    }
 
@@ -206,7 +206,7 @@ if (!IsAbsoluteFileName(file))
  
 if (strcmp(".",ReadLastNode(file)) == 0)
    {
-   Debug("File object \"%s \"seems to be a directory\n",file);
+   CfDebug("File object \"%s \"seems to be a directory\n",file);
 
    if (!DONTDO && attr.transaction.action != cfa_warn)
       {
@@ -639,7 +639,7 @@ if (a.perms.findertype == NULL)
    return 0;
    }
 
-Debug("VerifyFinderType of %s for %s\n", file,a.perms.findertype);
+CfDebug("VerifyFinderType of %s for %s\n", file,a.perms.findertype);
 
 if (strncmp(a.perms.findertype,"*",CF_BUFSIZE) == 0 || strncmp(a.perms.findertype,"",CF_BUFSIZE) == 0)
    {
@@ -675,7 +675,7 @@ if (fndrInfo.fi.fdType != *(long *)a.perms.findertype)
           /* setattrlist does not take back in the long ssize */
           retval = setattrlist(file, &attrs, &fndrInfo.created, 4*sizeof(struct timespec) + sizeof(FInfo), 0);
 
-          Debug("CheckFinderType setattrlist returned %d\n", retval);
+          CfDebug("CheckFinderType setattrlist returned %d\n", retval);
 
           if (retval >= 0)
              {
@@ -1296,7 +1296,7 @@ rsrcfork = 0;
 char * tmpstr;
 #endif
 
-Debug("Trying to create a parent directory for %s%s",
+CfDebug("Trying to create a parent directory for %s%s",
       parentandchild, force ? " (force applied)": "");
 
 if (!IsAbsoluteFileName(parentandchild))
@@ -1413,7 +1413,7 @@ for (sp = parentandchild+rootlen, spc = currentpath+rootlen; *sp != '\0'; sp++)
          }
       else if (cfstat(currentpath,&statbuf) == -1)
          {
-         Debug2("cfengine: Making directory %s, mode %o\n",currentpath,DEFAULTMODE);
+         CfDebug2("cfengine: Making directory %s, mode %o\n",currentpath,DEFAULTMODE);
 
          if (! DONTDO)
             {
@@ -1463,7 +1463,7 @@ for (sp = parentandchild+rootlen, spc = currentpath+rootlen; *sp != '\0'; sp++)
       }
    }
 
-Debug("Directory for %s exists. Okay\n",parentandchild);
+CfDebug("Directory for %s exists. Okay\n",parentandchild);
 return(true);
 }
 
@@ -1476,7 +1476,7 @@ static void TruncateFile(char *name)
 
 if (cfstat(name,&statbuf) == -1)
    {
-   Debug("cfengine: didn't find %s to truncate\n",name);
+   CfDebug("cfengine: didn't find %s to truncate\n",name);
    }
 else
    {
@@ -1567,7 +1567,7 @@ for (i = number-1; i > 0; i--)
 
    if (cf_rename(from,to) == -1)
       {
-      Debug("Rename failed in RotateFiles %s -> %s\n",name,from);
+      CfDebug("Rename failed in RotateFiles %s -> %s\n",name,from);
       }
 
    snprintf(from,CF_BUFSIZE,"%s.%d.gz",name,i);
@@ -1575,7 +1575,7 @@ for (i = number-1; i > 0; i--)
 
    if (cf_rename(from,to) == -1)
       {
-      Debug("Rename failed in RotateFiles %s -> %s\n",name,from);
+      CfDebug("Rename failed in RotateFiles %s -> %s\n",name,from);
       }
 
    snprintf(from,CF_BUFSIZE,"%s.%d.Z",name,i);
@@ -1583,7 +1583,7 @@ for (i = number-1; i > 0; i--)
 
    if (cf_rename(from,to) == -1)
       {
-      Debug("Rename failed in RotateFiles %s -> %s\n",name,from);
+      CfDebug("Rename failed in RotateFiles %s -> %s\n",name,from);
       }
 
    snprintf(from,CF_BUFSIZE,"%s.%d.bz",name,i);
@@ -1591,7 +1591,7 @@ for (i = number-1; i > 0; i--)
 
    if (cf_rename(from,to) == -1)
       {
-      Debug("Rename failed in RotateFiles %s -> %s\n",name,from);
+      CfDebug("Rename failed in RotateFiles %s -> %s\n",name,from);
       }
 
    snprintf(from,CF_BUFSIZE,"%s.%d.bz2",name,i);
@@ -1599,7 +1599,7 @@ for (i = number-1; i > 0; i--)
 
    if (cf_rename(from,to) == -1)
       {
-      Debug("Rename failed in RotateFiles %s -> %s\n",name,from);
+      CfDebug("Rename failed in RotateFiles %s -> %s\n",name,from);
       }
    }
 
@@ -1610,7 +1610,7 @@ dummyp.this_server = "localdisk";
 
 if (CopyRegularFileDisk(name,to,attr,&dummyp) == -1)
    {
-   Debug2("cfengine: copy failed in RotateFiles %s -> %s\n",name,to);
+   CfDebug2("cfengine: copy failed in RotateFiles %s -> %s\n",name,to);
    return;
    }
 
@@ -1790,7 +1790,7 @@ static int Unix_VerifyOwner(char *file,struct Promise *pp,struct Attributes attr
   uid_t uid = CF_SAME_OWNER;
   gid_t gid = CF_SAME_GROUP;
 
-Debug("Unix_VerifyOwner: %d\n",sb->st_uid);
+CfDebug("Unix_VerifyOwner: %d\n",sb->st_uid);
 
 for (ulp = attr.perms.owners; ulp != NULL; ulp=ulp->next)
    {
@@ -1864,19 +1864,19 @@ else
              {
              if (uid != CF_SAME_OWNER)
                 {
-                Debug("(Change owner to uid %d if possible)\n",uid);
+                CfDebug("(Change owner to uid %d if possible)\n",uid);
                 }
 
              if (gid != CF_SAME_GROUP)
                 {
-                Debug("Change group to gid %d if possible)\n",gid);
+                CfDebug("Change group to gid %d if possible)\n",gid);
                 }
              }
 
           if (!DONTDO && S_ISLNK(sb->st_mode))
              {
 #ifdef HAVE_LCHOWN
-             Debug("Using LCHOWN function\n");
+             CfDebug("Using LCHOWN function\n");
              if (lchown(file,uid,gid) == -1)
                 {
                 CfOut(cf_inform,"lchown"," !! Cannot set ownership on link %s!\n",file);
@@ -2113,7 +2113,7 @@ if ((attr.perms.plus != CF_SAMEMODE) && (attr.perms.minus != CF_SAMEMODE))
    newperm |= attr.perms.plus;
    newperm &= ~(attr.perms.minus);
 
-   Debug("Unix_VerifyFileAttributes(%s -> %o)\n",file,newperm);
+   CfDebug("Unix_VerifyFileAttributes(%s -> %o)\n",file,newperm);
    
    /* directories must have x set if r set, regardless  */
    
@@ -2121,7 +2121,7 @@ if ((attr.perms.plus != CF_SAMEMODE) && (attr.perms.minus != CF_SAMEMODE))
       {
       if (attr.perms.rxdirs)
          {
-         Debug("Directory...fixing x bits\n");
+         CfDebug("Directory...fixing x bits\n");
          
          if (newperm & S_IRUSR)
             {
@@ -2185,12 +2185,12 @@ VerifySetUidGid(file,dstat,dstat->st_mode,pp,attr);
 
 if ((newperm & 07777) == (dstat->st_mode & 07777))            /* file okay */
    {
-   Debug("File okay, newperm = %o, stat = %o\n",(newperm & 07777),(dstat->st_mode & 07777));
+   CfDebug("File okay, newperm = %o, stat = %o\n",(newperm & 07777),(dstat->st_mode & 07777));
    cfPS(cf_verbose,CF_NOP,"",pp,attr," -> File permissions on %s as promised\n",file);
    }
 else
    {
-   Debug("Trying to fix mode...newperm = %o, stat = %o\n",(newperm & 07777),(dstat->st_mode & 07777));
+   CfDebug("Trying to fix mode...newperm = %o, stat = %o\n",(newperm & 07777),(dstat->st_mode & 07777));
 
    switch (attr.transaction.action)
       {
@@ -2226,11 +2226,11 @@ newflags &= ~(attr.perms.minus_flags);
 
 if ((newflags & CHFLAGS_MASK) == (dstat->st_flags & CHFLAGS_MASK))    /* file okay */
    {
-   Debug("BSD File okay, flags = %lx, current = %lx\n",(newflags & CHFLAGS_MASK),(dstat->st_flags & CHFLAGS_MASK));
+   CfDebug("BSD File okay, flags = %lx, current = %lx\n",(newflags & CHFLAGS_MASK),(dstat->st_flags & CHFLAGS_MASK));
    }
 else
    {
-   Debug("BSD Fixing %s, newflags = %lx, flags = %lx\n",file,(newflags & CHFLAGS_MASK),(dstat->st_flags & CHFLAGS_MASK));
+   CfDebug("BSD Fixing %s, newflags = %lx, flags = %lx\n",file,(newflags & CHFLAGS_MASK),(dstat->st_flags & CHFLAGS_MASK));
 
    switch (attr.transaction.action)
       {
@@ -2275,7 +2275,7 @@ if (attr.touch)
    }
 
 umask(maskvalue);
-Debug("Unix_VerifyFileAttributes(Done)\n");
+CfDebug("Unix_VerifyFileAttributes(Done)\n");
 }
 
 /*****************************************************************************/
@@ -2288,7 +2288,7 @@ static void Unix_VerifyCopiedFileAttributes(char *file,struct stat *dstat,struct
 
 // If we get here, there is both a src and dest file
 
-Debug("VerifyCopiedFile(%s,+%o,-%o)\n",file,attr.perms.plus,attr.perms.minus);
+CfDebug("VerifyCopiedFile(%s,+%o,-%o)\n",file,attr.perms.plus,attr.perms.minus);
 
 save_uid = (attr.perms.owners)->uid;
 save_gid = (attr.perms.groups)->gid;

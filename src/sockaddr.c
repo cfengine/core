@@ -106,30 +106,30 @@ char *sockaddr_ntop(struct sockaddr *sa)
 switch (sa->sa_family)
    {
    case AF_INET:
-       Debug("IPV4 address\n");
+       CfDebug("IPV4 address\n");
        snprintf(addrbuf,20,"%.19s",inet_ntoa(((struct sockaddr_in *)sa)->sin_addr));
        break;
 
 #ifdef AF_LOCAL
    case AF_LOCAL:
-       Debug("Local socket\n") ;
+       CfDebug("Local socket\n") ;
        strcpy(addrbuf, "127.0.0.1") ;
        break;
 #endif
 
 #if defined(HAVE_GETADDRINFO)
    case AF_INET6:
-       Debug("IPV6 address\n");
+       CfDebug("IPV6 address\n");
        addr = &((struct sockaddr_in6 *)sa)->sin6_addr;
        inet_ntop(sa->sa_family,addr,addrbuf,sizeof(addrbuf));
        break;
 #endif
    default:
-       Debug("Address family was %d\n",sa->sa_family);
+       CfDebug("Address family was %d\n",sa->sa_family);
        FatalError("Software failure in sockaddr_ntop\n");
    }
 
-Debug("sockaddr_ntop(%s)\n",addrbuf);
+CfDebug("sockaddr_ntop(%s)\n",addrbuf);
 return addrbuf;
 }
 
@@ -159,7 +159,7 @@ switch (af)
       addr->sin_family = AF_INET;
       addr->sin_addr.s_addr = inet_addr(src);
 
-      Debug("Coded ipv4 %s\n",sockaddr_ntop((struct sockaddr *)genaddr));
+      CfDebug("Coded ipv4 %s\n",sockaddr_ntop((struct sockaddr *)genaddr));
 
       return addr->sin_addr.s_addr != INADDR_NONE;
       }
@@ -172,13 +172,13 @@ switch (af)
       addr->sin6_family = AF_INET6;
       err = inet_pton(AF_INET6, src, &addr->sin6_addr);
 
-      Debug("Coded ipv6 %s\n",sockaddr_ntop((struct sockaddr *)genaddr));
+      CfDebug("Coded ipv6 %s\n",sockaddr_ntop((struct sockaddr *)genaddr));
 
       return err > 0;
       }
 #endif
    default:
-      Debug("Address family was %d\n",af);
+      CfDebug("Address family was %d\n",af);
       FatalError("Software failure in sockaddr_pton\n");
    }
 }

@@ -54,7 +54,7 @@ struct Constraint *AppendConstraint(struct Constraint **conlist,char *lval, void
 switch(type)
    {
    case CF_SCALAR:
-       Debug("   Appending Constraint: %s => %s\n",lval, (char*)rval);
+       CfDebug("   Appending Constraint: %s => %s\n",lval, (char*)rval);
        
        if (PARSING && strcmp(lval,"ifvarclass") == 0)
           {
@@ -63,10 +63,10 @@ switch(type)
 
        break;
    case CF_FNCALL:
-       Debug("   Appending a function call to rhs\n");
+       CfDebug("   Appending a function call to rhs\n");
        break;
    case CF_LIST:
-       Debug("   Appending a list to rhs\n");
+       CfDebug("   Appending a list to rhs\n");
    }
 
 // Check class
@@ -135,11 +135,11 @@ void DeleteConstraintList(struct Constraint *conlist)
 
 { struct Constraint *cp, *next;
 
-Debug("DeleteConstraintList()\n");
+CfDebug("DeleteConstraintList()\n");
  
 for (cp = conlist; cp != NULL; cp = next)
    {
-   Debug("Delete lval = %s,%c\n",cp->lval,cp->type);
+   CfDebug("Delete lval = %s,%c\n",cp->lval,cp->type);
    
    next = cp->next;
 
@@ -703,7 +703,7 @@ static void PostCheckConstraint(char *type,char *bundle,char *lval,void *rval,ch
   struct BodySyntax *bs,*bs2;
   struct SubTypeSyntax *ssp;
 
-Debug("  Post Check Constraint %s: %s =>",type,lval);
+CfDebug("  Post Check Constraint %s: %s =>",type,lval);
 
 if (DEBUG)
    {
@@ -779,7 +779,7 @@ for (i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
    
    if (strcmp(lval,CF_COMMON_BODIES[i].lval) == 0)
       {
-      Debug("Found a match for lval %s in the common constraint attributes\n",lval);
+      CfDebug("Found a match for lval %s in the common constraint attributes\n",lval);
       CheckConstraintTypeMatch(lval,rval,rvaltype,CF_COMMON_BODIES[i].dtype,(char *)(CF_COMMON_BODIES[i].range),0);
       return;
       }
@@ -795,7 +795,7 @@ static int VerifyConstraintName(char *lval)
   struct BodySyntax *bs,*bs2;
   struct SubTypeSyntax *ssp;
 
-Debug("  Verify Constrant name %s\n",lval);
+CfDebug("  Verify Constrant name %s\n",lval);
 
 for  (i = 0; i < CF3_MODULES; i++)
    {

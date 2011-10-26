@@ -598,7 +598,7 @@ enum cfdatatype Typename2Datatype(char *name)
     
 { int i;
 
-Debug("typename2type(%s)\n",name);
+CfDebug("typename2type(%s)\n",name);
  
 for (i = 0; i < (int)cf_notype; i++)
    {
@@ -619,7 +619,7 @@ enum cfagenttype Agent2Type(char *name)
     
 { int i;
 
-Debug("Agent2Type(%s)\n",name);
+CfDebug("Agent2Type(%s)\n",name);
  
 for (i = 0; i < (int)cf_notype; i++)
    {
@@ -841,7 +841,7 @@ else               /* date Month */
       }
    }
 
-Debug("(%s)\n%ld=%s,%ld=%s,%ld,%ld,%ld\n",s,year,VYEAR,month,VMONTH,day,hour,min);
+CfDebug("(%s)\n%ld=%s,%ld=%s,%ld,%ld,%ld\n",s,year,VYEAR,month,VMONTH,day,hour,min);
 
 cftime = 0;
 cftime += min * 60;
@@ -856,7 +856,7 @@ for (i = 0; i < month - 1; i++)
 
 cftime += (year - 1970) * 365 * 24 * 3600;
 
-Debug("Time %s CORRESPONDS %s\n",s,cf_ctime(&cftime));
+CfDebug("Time %s CORRESPONDS %s\n",s,cf_ctime(&cftime));
 return (long) cftime;
 }
 

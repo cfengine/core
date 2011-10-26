@@ -41,7 +41,7 @@ void MonLoadGatherData(double *cf_this)
 double load[LOADAVG_5MIN], sum = 0.0;
 int i,n;
 
-Debug("GatherLoadData\n\n");
+CfDebug("GatherLoadData\n\n");
 
 if ((n = getloadavg(load,LOADAVG_5MIN)) == -1)
    {
@@ -65,7 +65,7 @@ CfOut(cf_verbose,"","Load Average = %.2lf\n",cf_this[ob_loadavg]);
 
 void MonLoadGatherData(double *cf_this)
 {
-Debug("Average load data is not available.\n");
+CfDebug("Average load data is not available.\n");
 }
 
 #endif

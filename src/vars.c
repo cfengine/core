@@ -74,7 +74,7 @@ if (GetVariable("match",lval,(void *)&retval,&rtype) != cf_notype)
    }
 
 NewScalar("match",lval,rval,cf_str);
-Debug("Setting local variable \"match.%s\" context; $(%s) = %s\n",lval,lval,rval);
+CfDebug("Setting local variable \"match.%s\" context; $(%s) = %s\n",lval,lval,rval);
 }
 
 /*******************************************************************/
@@ -84,7 +84,7 @@ void NewScalar(const char *scope, const char *lval, const char *rval, enum cfdat
 { struct Rval rvald;
   struct Scope *ptr;
 
-Debug("NewScalar(%s,%s,%s)\n",scope,lval,rval);
+CfDebug("NewScalar(%s,%s,%s)\n",scope,lval,rval);
 
 ptr = GetScope(scope);
 
@@ -111,7 +111,7 @@ static void IdempNewScalar(char *scope,char *lval,char *rval,enum cfdatatype dt)
 {
   struct Rval rvald;
  
-Debug("IdempNewScalar(%s,%s,%s)\n",scope,lval,rval);
+CfDebug("IdempNewScalar(%s,%s,%s)\n",scope,lval,rval);
 
 if (GetVariable(scope,lval,&rvald.item,&rvald.rtype) != cf_notype)
    {
@@ -135,7 +135,7 @@ if (scope == NULL)
 
 if (HashDeleteElement(scope->hashtable, lval) == false)
    {
-   Debug("Attempt to delete non-existent variable %s in scope %s\n", lval, scope_name);
+   CfDebug("Attempt to delete non-existent variable %s in scope %s\n", lval, scope_name);
    }
 }
 
@@ -208,7 +208,7 @@ enum cfdatatype GetVariable(const char *scope, const char *lval, void **returnv,
   char expbuf[CF_EXPANDSIZE];
   CfAssoc *assoc;
 
-Debug("\nGetVariable(%s,%s) type=(to be determined)\n",scope,lval);
+CfDebug("\nGetVariable(%s,%s) type=(to be determined)\n",scope,lval);
 
 if (lval == NULL)
    {
@@ -231,7 +231,7 @@ else
       {
       *returnv = (void*)lval;
       *rtype   = CF_SCALAR;
-      Debug("Couldn't expand array-like variable (%s) due to undefined dependencies\n",lval);
+      CfDebug("Couldn't expand array-like variable (%s) due to undefined dependencies\n",lval);
       return cf_notype;
       }
    }
@@ -240,7 +240,7 @@ if (IsQualifiedVariable(sval))
    {
    scopeid[0] = '\0';
    sscanf(sval,"%[^.].%s",scopeid,vlval);
-   Debug("Variable identifier %s is prefixed with scope id %s\n",vlval,scopeid);
+   CfDebug("Variable identifier %s is prefixed with scope id %s\n",vlval,scopeid);
    ptr = GetScope(scopeid);
    }
 else
@@ -249,7 +249,7 @@ else
    strcpy(scopeid,scope);
    }
 
-Debug("Looking for %s.%s\n",scopeid,vlval);
+CfDebug("Looking for %s.%s\n",scopeid,vlval);
 
 if (ptr == NULL)
    {
@@ -260,31 +260,31 @@ if (ptr == NULL)
 
 if (ptr == NULL)
    {
-   Debug("Scope for variable \"%s.%s\" does not seem to exist\n",scope,lval);
+   CfDebug("Scope for variable \"%s.%s\" does not seem to exist\n",scope,lval);
    *returnv = (void*)lval;
    *rtype   = CF_SCALAR;
    return cf_notype;
    }
 
-Debug("GetVariable(%s,%s): using scope '%s' for variable '%s'\n",scopeid,vlval,ptr->scope,vlval);
+CfDebug("GetVariable(%s,%s): using scope '%s' for variable '%s'\n",scopeid,vlval,ptr->scope,vlval);
 
 assoc = HashLookupElement(ptr->hashtable, vlval);
 
 if (assoc == NULL)
    {
-   Debug("No such variable found %s.%s\n\n",scopeid,lval);
+   CfDebug("No such variable found %s.%s\n\n",scopeid,lval);
    *returnv = (void*)lval;
    *rtype   = CF_SCALAR;
    return cf_notype;
    }
 
-Debug("return final variable type=%s, value={\n",CF_DATATYPES[assoc->dtype]);
+CfDebug("return final variable type=%s, value={\n",CF_DATATYPES[assoc->dtype]);
 
 if (DEBUG)
    {
    ShowRval(stdout,assoc->rval,assoc->rtype);
    }
-Debug("}\n");
+CfDebug("}\n");
 
 *returnv = assoc->rval;
 *rtype   = assoc->rtype;
@@ -306,7 +306,7 @@ if (ptr == NULL)
 
 if (HashDeleteElement(ptr->hashtable, id) == false)
    {
-   Debug("No variable matched %s\n",id);
+   CfDebug("No variable matched %s\n",id);
    }
 }
 
@@ -467,7 +467,7 @@ int IsCf3VarString(char *str)
   int dollar = false;
   int bracks = 0, vars = 0;
 
-Debug1("IsCf3VarString(%s) - syntax verify\n",str);
+CfDebug1("IsCf3VarString(%s) - syntax verify\n",str);
 
 if (str == NULL)
    {
@@ -537,7 +537,7 @@ if (dollar && (bracks != 0))
    return false;
    }
 
-Debug("Found %d variables in (%s)\n",vars,str); 
+CfDebug("Found %d variables in (%s)\n",vars,str); 
 return vars;
 }
 
@@ -550,7 +550,7 @@ static int IsCf3Scalar(char *str)
   int dollar = false;
   int bracks = 0, vars = 0;
 
-Debug1("IsCf3Scalar(%s) - syntax verify\n",str);
+CfDebug1("IsCf3Scalar(%s) - syntax verify\n",str);
 
 if (str == NULL)
    {
@@ -619,7 +619,7 @@ if (dollar && (bracks != 0))
    return false;
    }
 
-Debug("Found %d variables in (%s)\n",vars,str); 
+CfDebug("Found %d variables in (%s)\n",vars,str); 
 return vars;
 }
 
@@ -668,7 +668,7 @@ const char *ExtractInnerCf3VarString(const char *str,char *substr)
 { const char *sp;
   int bracks = 1;
 
-Debug("ExtractInnerVarString( %s ) - syntax verify\n",str);
+CfDebug("ExtractInnerVarString( %s ) - syntax verify\n",str);
 
 if (str == NULL || strlen(str) == 0)
    {
@@ -703,15 +703,15 @@ for (sp = str+2; *sp != '\0' ; sp++)       /* check for varitems */
              }
           else
              {
-             Debug("Illegal character found: '%c'\n", *sp);
-             Debug("Illegal character somewhere in variable \"%s\" or nested expansion",str);
+             CfDebug("Illegal character found: '%c'\n", *sp);
+             CfDebug("Illegal character somewhere in variable \"%s\" or nested expansion",str);
              }
       }
    
    if (bracks == 0)
       {
       strncpy(substr,str+2,sp-str-2);
-      Debug("Returning substring value %s\n",substr);
+      CfDebug("Returning substring value %s\n",substr);
       return substr;
       }
    }
@@ -741,7 +741,7 @@ const char *ExtractOuterCf3VarString(const char *str, char *substr)
   int bracks = 0, onebrack = false;
   int nobracks = true;
 
-Debug("ExtractOuterVarString(\"%s\") - syntax verify\n",str);
+CfDebug("ExtractOuterVarString(\"%s\") - syntax verify\n",str);
 
 memset(substr,0,CF_BUFSIZE);
  
@@ -776,7 +776,7 @@ for (sp = str; *sp != '\0' ; sp++)       /* check for varitems */
    if (dollar && (bracks == 0) && onebrack)
       {
       strncpy(substr,str,sp-str+1);
-      Debug("Extracted outer variable |%s|\n",substr);
+      CfDebug("Extracted outer variable |%s|\n",substr);
       return substr;
       }
    }
@@ -859,11 +859,11 @@ int AddVariableHash(const char *scope, const char *lval, const void *rval, char 
 
 if (rtype == CF_SCALAR)
    {
-   Debug("AddVariableHash(%s.%s=%s (%s) rtype=%c)\n",scope,lval,(const char*)rval,CF_DATATYPES[dtype],rtype);
+   CfDebug("AddVariableHash(%s.%s=%s (%s) rtype=%c)\n",scope,lval,(const char*)rval,CF_DATATYPES[dtype],rtype);
    }
 else
    {
-   Debug("AddVariableHash(%s.%s=(list) (%s) rtype=%c)\n",scope,lval,CF_DATATYPES[dtype],rtype);
+   CfDebug("AddVariableHash(%s.%s=(list) (%s) rtype=%c)\n",scope,lval,CF_DATATYPES[dtype],rtype);
    }
 
 if (lval == NULL || scope == NULL)
@@ -875,7 +875,7 @@ if (lval == NULL || scope == NULL)
 
 if (rval == NULL)
    {
-   Debug("No value to assignment - probably a parameter in an unused bundle/body\n");
+   CfDebug("No value to assignment - probably a parameter in an unused bundle/body\n");
    return false;
    }
 
@@ -969,7 +969,7 @@ if (assoc)
       assoc->rval = CopyRvalItem(rval, rtype);
       assoc->rtype = rtype;
       assoc->dtype = dtype;
-      Debug("Stored \"%s\" in context %s\n",lval,scope);
+      CfDebug("Stored \"%s\" in context %s\n",lval,scope);
       }
    }
 else
@@ -980,7 +980,7 @@ else
       }
    }
 
-Debug("Added Variable %s in scope %s with value (omitted)\n",lval,scope);
+CfDebug("Added Variable %s in scope %s with value (omitted)\n",lval,scope);
 return true;
 }
 
@@ -1032,7 +1032,7 @@ while ((assoc = HashIteratorNext(&i)))
 
          if (rp->state_ptr)
             {
-            Debug("Rewriting expanded type for %s from %s to %s\n",assoc->lval,CF_DATATYPES[assoc->dtype], (char*)rp->state_ptr->item);
+            CfDebug("Rewriting expanded type for %s from %s to %s\n",assoc->lval,CF_DATATYPES[assoc->dtype], (char*)rp->state_ptr->item);
 
             // must first free existing rval in scope, then allocate new (should always be string)
             DeleteRvalItem(assoc->rval,assoc->rtype);
@@ -1057,7 +1057,7 @@ while ((assoc = HashIteratorNext(&i)))
                break;
             }
 
-         Debug(" to %s\n",CF_DATATYPES[assoc->dtype]);
+         CfDebug(" to %s\n",CF_DATATYPES[assoc->dtype]);
          }
       }
    }

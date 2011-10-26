@@ -172,7 +172,7 @@ while ((c=getopt_long(argc,argv,"d:vnIf:VSxHTKMF",OPTIONS,&optindex)) != EOF)
       }
   }
 
-Debug("Set debugging\n");
+CfDebug("Set debugging\n");
 }
 
 /*****************************************************************************/
@@ -209,7 +209,7 @@ for (cp = ControlBodyConstraints(cf_monitor); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFM_CONTROLBODY[cfm_forgetrate].lval) == 0)
       {
       sscanf(retval,"%lf",&FORGETRATE);
-      Debug("forget rate = %f\n",FORGETRATE);
+      CfDebug("forget rate = %f\n",FORGETRATE);
       }
    }
 }

@@ -67,7 +67,7 @@ int GetExecOutput(char *command,char *buffer,int useshell)
   FILE *pp;
   int flatten_newlines = false;
 
-Debug("GetExecOutput(%s,%s) - use shell = %d\n",command,buffer,useshell);
+CfDebug("GetExecOutput(%s,%s) - use shell = %d\n",command,buffer,useshell);
   
 if (useshell)
    {
@@ -136,7 +136,7 @@ if (offset > 0)
    Chop(buffer); 
    }
 
-Debug("GetExecOutput got: [%s]\n",buffer);
+CfDebug("GetExecOutput got: [%s]\n",buffer);
  
 cf_pclose(pp);
 return true;

@@ -85,16 +85,16 @@ struct Promise *DeRefCopyPromise(char *scopeid,struct Promise *pp)
 
 if (pp->promisee)
    {
-   Debug("CopyPromise(%s->",pp->promiser);
+   CfDebug("CopyPromise(%s->",pp->promiser);
    if (DEBUG)
       {
       ShowRval(stdout,pp->promisee,pp->petype);
       }
-   Debug("\n");
+   CfDebug("\n");
    }
 else
    {
-   Debug("CopyPromise(%s->)\n",pp->promiser);
+   CfDebug("CopyPromise(%s->)\n",pp->promiser);
    }
 
 pcopy = xcalloc(1, sizeof(struct Promise));
@@ -135,7 +135,7 @@ pcopy->donep = pp->donep;
 pcopy->conn = pp->conn;
 pcopy->edcontext = pp->edcontext;
 
-Debug("Copying promise constraints\n\n");
+CfDebug("Copying promise constraints\n\n");
 
 /* No further type checking should be necessary here, already done by CheckConstraintTypeMatch */
 
@@ -184,7 +184,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       
       AppendConstraint(&(pcopy->conlist),cp->lval,xstrdup("true"),CF_SCALAR,cp->classes,false);
 
-      Debug("Handling body-lval \"%s\"\n",cp->lval);
+      CfDebug("Handling body-lval \"%s\"\n",cp->lval);
       
       if (bp->args != NULL)
          {
@@ -205,7 +205,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
     
          for (scp = bp->conlist; scp != NULL; scp = scp->next)
             {
-            Debug("Doing arg-mapped sublval = %s (promises.c)\n",scp->lval);
+            CfDebug("Doing arg-mapped sublval = %s (promises.c)\n",scp->lval);
             returnval = ExpandPrivateRval("body",scp->rval,scp->type);
             AppendConstraint(&(pcopy->conlist),scp->lval,returnval.item,returnval.rtype,scp->classes,false);
             }
@@ -224,7 +224,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
             {
             for (scp = bp->conlist; scp != NULL; scp = scp->next)
                {
-               Debug("Doing sublval = %s (promises.c)\n",scp->lval);
+               CfDebug("Doing sublval = %s (promises.c)\n",scp->lval);
                rnew = CopyRvalItem(scp->rval,scp->type);
                AppendConstraint(&(pcopy->conlist),scp->lval,rnew,scp->type,scp->classes,false);
                }
@@ -255,7 +255,7 @@ struct Promise *ExpandDeRefPromise(char *scopeid,struct Promise *pp)
   struct Constraint *cp;
   struct Rval returnval,final;
 
-Debug("ExpandDerefPromise()\n");
+CfDebug("ExpandDerefPromise()\n");
 
 pcopy = xcalloc(1, sizeof(struct Promise));
 
@@ -355,7 +355,7 @@ struct Promise *CopyPromise(char *scopeid,struct Promise *pp)
   struct Constraint *cp;
   struct Rval returnval,final;
 
-Debug("CopyPromise()\n");
+CfDebug("CopyPromise()\n");
 
 pcopy = xcalloc(1, sizeof(struct Promise));
 
@@ -617,7 +617,7 @@ if (pp == NULL)
    return;
    }
 
-Debug("DeletePromise(%s->[%c])\n",pp->promiser,pp->petype);
+CfDebug("DeletePromise(%s->[%c])\n",pp->promiser,pp->petype);
 
 ThreadLock(cft_policy);
 
@@ -649,7 +649,7 @@ static void DeleteDeRefPromise(char *scopeid,struct Promise *pp)
 
 { struct Constraint *cp;
 
-Debug("DeleteDeRefPromise()\n");
+CfDebug("DeleteDeRefPromise()\n");
 
 free(pp->promiser);
 

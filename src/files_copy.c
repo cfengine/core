@@ -43,7 +43,7 @@ void *CopyFileSources(char *destination,struct Attributes attr,struct Promise *p
   struct timespec start;
   char eventname[CF_BUFSIZE];
 
-Debug("CopyFileSources(%s,%s)", source, destination);
+CfDebug("CopyFileSources(%s,%s)", source, destination);
 
 if (pp->conn != NULL && !pp->conn->authenticated)
    {

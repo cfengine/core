@@ -40,13 +40,13 @@ struct Scope *GetScope(const char *scope)
  */
 { struct Scope *cp = NULL;
 
-Debug("Searching for scope context %s\n",scope);
+CfDebug("Searching for scope context %s\n",scope);
 
 for (cp = VSCOPE; cp != NULL; cp=cp->next)
    {
    if (strcmp(cp->scope,scope) == 0)
       {
-      Debug("Found scope reference %s\n",scope);
+      CfDebug("Found scope reference %s\n",scope);
       return cp;
       }
    }
@@ -79,7 +79,7 @@ void NewScope(char *name)
  */
 { struct Scope *ptr;
   
-Debug("Adding scope data %s\n", name);
+CfDebug("Adding scope data %s\n", name);
 
 if (!ThreadLock(cft_vscope))
    {
@@ -92,7 +92,7 @@ for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
    if (strcmp(ptr->scope,name) == 0)
       {
       ThreadUnlock(cft_vscope);
-      Debug("SCOPE Object %s already exists\n",name);
+      CfDebug("SCOPE Object %s already exists\n",name);
       return;
       }
    }
@@ -187,7 +187,7 @@ void DeleteAllScope()
 
 { struct Scope *ptr, *this;
   
-Debug("Deleting all scoped variables\n");
+CfDebug("Deleting all scoped variables\n");
 
 if (!ThreadLock(cft_vscope))
    {
@@ -200,7 +200,7 @@ ptr = VSCOPE;
 while (ptr != NULL)
    {
    this = ptr;
-   Debug(" -> Deleting scope %s\n",ptr->scope);
+   CfDebug(" -> Deleting scope %s\n",ptr->scope);
    HashClear(this->hashtable);
    free(this->scope);   
    ptr = this->next;
@@ -222,7 +222,7 @@ void DeleteScope(char *name)
 { struct Scope *ptr, *prev = NULL;
   int found = false;
  
-Debug1("Deleting scope %s\n", name);
+CfDebug1("Deleting scope %s\n", name);
 
 if (!ThreadLock(cft_vscope))
    {
@@ -235,7 +235,7 @@ for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
    {
    if (strcmp(ptr->scope,name) == 0)
       {
-      Debug("Object %s exists\n",name);
+      CfDebug("Object %s exists\n",name);
       found = true;
       break;
       }
@@ -247,7 +247,7 @@ for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
 
 if (!found)
    {
-   Debug("No such scope to delete\n");
+   CfDebug("No such scope to delete\n");
    ThreadUnlock(cft_vscope);
    return;
    }
@@ -291,7 +291,7 @@ void CopyScope(char *new, char *old)
  */
 { struct Scope *op, *np;
  
-Debug("\n*\nCopying scope data %s to %s\n*\n",old,new);
+CfDebug("\n*\nCopying scope data %s to %s\n*\n",old,new);
 
 NewScope(new);
 

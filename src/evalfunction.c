@@ -115,30 +115,30 @@ static struct Rlist *GetHostsFromLastseenDB(struct Item *addresses,
 
     if (entrytime < now - horizon)
        {
-       Debug("Old entry.\n");
+       CfDebug("Old entry.\n");
 
        if (KeyInRlist(recent, address))
           {
-          Debug("There is recent entry for this address. Do nothing.\n");
+          CfDebug("There is recent entry for this address. Do nothing.\n");
           }
        else
           {
-          Debug("Adding to list of aged hosts.\n");
+          CfDebug("Adding to list of aged hosts.\n");
           IdempPrependRScalar(&aged, address, CF_SCALAR);
           }
        }
     else
        {
        struct Rlist *r;
-       Debug("Recent entry.\n");
+       CfDebug("Recent entry.\n");
 
        if ((r = KeyInRlist(aged, address)))
           {
-          Debug("Purging from list of aged hosts.\n");
+          CfDebug("Purging from list of aged hosts.\n");
           DeleteRlistEntry(&aged, r);
           }
 
-       Debug ("Adding to list of recent hosts.\n");
+       CfDebug("Adding to list of recent hosts.\n");
        IdempPrependRScalar(&recent, address, CF_SCALAR);
        }
 
@@ -212,7 +212,7 @@ static struct Rval FnCallHostsSeen(struct FnCall *fp,struct Rlist *finalargs)
  policy = (char *)(finalargs->next->item);
  format = (char *)(finalargs->next->next->item);
 
- Debug("Calling hostsseen(%d,%s,%s)\n", horizon, policy, format);
+ CfDebug("Calling hostsseen(%d,%s,%s)\n", horizon, policy, format);
 
  snprintf(name,CF_BUFSIZE-1,"%s%c%s",CFWORKDIR,FILE_SEPARATOR,CF_LASTDB_FILE);
 
@@ -225,14 +225,14 @@ static struct Rval FnCallHostsSeen(struct FnCall *fp,struct Rlist *finalargs)
     return rval;
     }
 
- Debug("Database opened succesfully.\n");
+ CfDebug("Database opened succesfully.\n");
 
 /* Acquire a cursor for the database. */
 
  if (!NewDBCursor(dbp,&dbcp))
     {
     CloseDB(dbp);
-    Debug("Failed to obtain cursor for database\n");
+    CfDebug("Failed to obtain cursor for database\n");
     SetFnCallReturnStatus("hostsseen",FNCALL_FAILURE,NULL,NULL);
     CfOut(cf_error,""," !! Error reading from last-seen database: ");
     rval.item = NULL;
@@ -268,10 +268,10 @@ static struct Rval FnCallHostsSeen(struct FnCall *fp,struct Rlist *finalargs)
 
  DeleteItemList(addresses);
 
- Debug(" | Return value:\n");
+ CfDebug(" | Return value:\n");
  for(rp = returnlist; rp; rp = rp->next)
     {
-    Debug(" |  %s\n", (char *)rp->item);
+    CfDebug(" |  %s\n", (char *)rp->item);
     }
 
 
@@ -1248,7 +1248,7 @@ if (val > CF_BUFSIZE-1)
    val = CF_BUFSIZE - CF_BUFFERMARGIN;
    }
 
-Debug("Want to read %d bytes from port %d at %s\n",val,portnum,hostnameip);
+CfDebug("Want to read %d bytes from port %d at %s\n",val,portnum,hostnameip);
     
 conn = NewAgentConn();
 
@@ -2226,7 +2226,7 @@ pp = NewPromise("select_server","function");
 
 for (rp = hostnameip; rp != NULL; rp=rp->next)
    {
-   Debug("Want to read %d bytes from port %d at %s\n",val,portnum, (char *)rp->item);
+   CfDebug("Want to read %d bytes from port %d at %s\n",val,portnum, (char *)rp->item);
    
    conn = NewAgentConn();
    
@@ -2534,21 +2534,21 @@ else
 
    for (ip = IPADDRESSES; ip != NULL; ip = ip->next)
       {
-      Debug("Checking IP Range against RDNS %s\n",VIPADDRESS);
+      CfDebug("Checking IP Range against RDNS %s\n",VIPADDRESS);
       
       if (FuzzySetMatch(finalargs->item,VIPADDRESS) == 0)
          {
-         Debug("IPRange Matched\n");
+         CfDebug("IPRange Matched\n");
          strcpy(buffer,"any");
          break;
          }
       else
          {
-         Debug("Checking IP Range against iface %s\n",ip->name);
+         CfDebug("Checking IP Range against iface %s\n",ip->name);
          
          if (FuzzySetMatch(finalargs->item,ip->name) == 0)
             {
-            Debug("IPRange Matched\n");
+            CfDebug("IPRange Matched\n");
             strcpy(buffer,"any");
             break;
             }
@@ -3421,7 +3421,7 @@ if (IsRealNumber(argv0) && IsRealNumber(argv1))
    
    if ((a != CF_NOVAL) && (b != CF_NOVAL)) 
       {
-      Debug("%s and %s are numerical\n",argv0,argv1);
+      CfDebug("%s and %s are numerical\n",argv0,argv1);
       
       if (!strcmp(fp->name, "isgreaterthan"))
          {
@@ -3449,7 +3449,7 @@ if (IsRealNumber(argv0) && IsRealNumber(argv1))
    }
 else if (strcmp(argv0,argv1) > 0)
    {
-   Debug("%s and %s are NOT numerical\n",argv0,argv1);
+   CfDebug("%s and %s are NOT numerical\n",argv0,argv1);
    
    if (!strcmp(fp->name, "isgreaterthan"))
       {
@@ -3613,7 +3613,7 @@ if ((cftime=mktime(&tmv))== -1)
    CfOut(cf_inform,"","Illegal time value");
    }
 
-Debug("Time computed from input was: %s\n",cf_ctime(&cftime));
+CfDebug("Time computed from input was: %s\n",cf_ctime(&cftime));
 
 snprintf(buffer,CF_BUFSIZE-1,"%ld",cftime);
 
@@ -3701,7 +3701,7 @@ if ((cftime=mktime(&tmv))== -1)
    CfOut(cf_inform,"","Illegal time value");
    }
 
-Debug("Time computed from input was: %s\n",cf_ctime(&cftime));
+CfDebug("Time computed from input was: %s\n",cf_ctime(&cftime));
 
 if (now > cftime)
    {
@@ -3758,14 +3758,14 @@ cftime -= d[cfa_day] * 24 * 3600;
 cftime -= Months2Seconds(d[cfa_month]);
 cftime -= d[cfa_year] * 365 * 24 * 3600;
 
-Debug("Total negative offset = %.1f minutes\n",(double)(CFSTARTTIME-cftime)/60.0);
-Debug("Time computed from input was: %s\n",cf_ctime(&cftime));
+CfDebug("Total negative offset = %.1f minutes\n",(double)(CFSTARTTIME-cftime)/60.0);
+CfDebug("Time computed from input was: %s\n",cf_ctime(&cftime));
 
 snprintf(buffer,CF_BUFSIZE-1,"%ld",cftime);
 
 if (cftime < 0)
    {
-   Debug("AGO overflowed, truncating at zero\n");
+   CfDebug("AGO overflowed, truncating at zero\n");
    strcpy(buffer, "0");
    }
 
@@ -3851,7 +3851,7 @@ buffer[0] = '\0';
 
 cftime = CFSTARTTIME;
 
-Debug("Time computed from input was: %s\n",cf_ctime(&cftime));
+CfDebug("Time computed from input was: %s\n",cf_ctime(&cftime));
 
 snprintf(buffer,CF_BUFSIZE-1,"%ld",(long)cftime);
 
@@ -3881,7 +3881,7 @@ maxsize = Str2Int(finalargs->next->item);
 
 // Read once to validate structure of file in itemlist
 
-Debug("Read string data from file %s (up to %d)\n",filename,maxsize);
+CfDebug("Read string data from file %s (up to %d)\n",filename,maxsize);
 
 rval.item = CfReadFile(filename,maxsize);
 
@@ -3920,7 +3920,7 @@ maxsize = Str2Int(finalargs->next->next->next->next->item);
 
 // Read once to validate structure of file in itemlist
 
-Debug("Read string data from file %s\n",filename);
+CfDebug("Read string data from file %s\n",filename);
 snprintf(fnname,CF_MAXVARSIZE-1,"read%slist",CF_DATATYPES[type]);
 
 file_buffer = (char *)CfReadFile(filename,maxsize);
@@ -4046,11 +4046,11 @@ maxsize = Str2Int(finalargs->next->next->next->next->next->item);
 
 // Read once to validate structure of file in itemlist
 
-Debug("Read string data from file %s - , maxent %d, maxsize %d\n",filename,maxent,maxsize);
+CfDebug("Read string data from file %s - , maxent %d, maxsize %d\n",filename,maxent,maxsize);
 
 file_buffer = (char *)CfReadFile(filename,maxsize);
 
-Debug("FILE: %s\n",file_buffer);
+CfDebug("FILE: %s\n",file_buffer);
 
 if (file_buffer == NULL)
    {
@@ -4157,7 +4157,7 @@ maxsize = Str2Int(finalargs->next->next->next->next->next->item);
 
 // Read once to validate structure of file in itemlist
 
-Debug("Parse string data from string %s - , maxent %d, maxsize %d\n",instring,maxent,maxsize);
+CfDebug("Parse string data from string %s - , maxent %d, maxsize %d\n",instring,maxent,maxsize);
 
 if (instring == NULL)
    {
@@ -4620,7 +4620,7 @@ if (cfstat(filename,&sb) == -1)
    {
    if (THIS_AGENT_TYPE == cf_common)
       {
-      Debug("Could not examine file %s in readfile on this system",filename);
+      CfDebug("Could not examine file %s in readfile on this system",filename);
       }
    else
       {

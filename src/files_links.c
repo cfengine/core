@@ -49,7 +49,7 @@ return CF_FAIL;
   int nofile = false;
   struct stat sb;
       
-Debug("Linkfiles(%s -> %s)\n",destination,source);
+CfDebug("Linkfiles(%s -> %s)\n",destination,source);
 
 /*
 if (MatchRlistItem(attr.link.copy_patterns,lastnode))
@@ -75,9 +75,9 @@ else
 
 if (!IsAbsoluteFileName(to))         /* relative path, must still check if exists */
    {
-   Debug("Relative link destination detected: %s\n",to);
+   CfDebug("Relative link destination detected: %s\n",to);
    strcpy(absto,AbsLinkPath(destination,to));
-   Debug("Absolute path to relative link = %s, destination %s\n",absto,destination);
+   CfDebug("Absolute path to relative link = %s, destination %s\n",absto,destination);
    }
 else
    {
@@ -86,7 +86,7 @@ else
 
 if (cfstat(absto,&sb) == -1)
    {
-   Debug("No source file\n");
+   CfDebug("No source file\n");
    nofile = true;
    }
 
@@ -180,7 +180,7 @@ char VerifyAbsoluteLink(char *destination,char *source,struct Attributes attr,st
   char expand[CF_BUFSIZE];
   char linkto[CF_BUFSIZE];
   
-Debug("VerifyAbsoluteLink(%s,%s)\n",destination,source);
+CfDebug("VerifyAbsoluteLink(%s,%s)\n",destination,source);
 
 if (*source == '.')
    {
@@ -208,7 +208,7 @@ if (attr.link.when_no_file == cfa_force)
       }
    else
       {
-      Debug2("ExpandLinks returned %s\n",expand);
+      CfDebug2("ExpandLinks returned %s\n",expand);
       }
    }
 else
@@ -229,7 +229,7 @@ char VerifyRelativeLink(char *destination,char *source,struct Attributes attr,st
  char buff[CF_BUFSIZE],linkto[CF_BUFSIZE],add[CF_BUFSIZE];
   int levels=0;
   
-Debug("RelativeLink(%s,%s)\n",destination,source);
+CfDebug("RelativeLink(%s,%s)\n",destination,source);
 
 if (*source == '.')
    {
@@ -316,9 +316,9 @@ else
 
 if (!IsAbsoluteFileName(to))         /* relative path, must still check if exists */
    {
-   Debug("Relative link destination detected: %s\n",to);
+   CfDebug("Relative link destination detected: %s\n",to);
    strcpy(absto,AbsLinkPath(destination,to));
-   Debug("Absolute path to relative link = %s, destination %s\n",absto,destination);
+   CfDebug("Absolute path to relative link = %s, destination %s\n",absto,destination);
    }
 else
    {
@@ -337,7 +337,7 @@ if (!S_ISREG(ssb.st_mode))
    return CF_WARN;
    }
 
-Debug2("Trying to (hard) link %s -> %s\n",destination,to);
+CfDebug2("Trying to (hard) link %s -> %s\n",destination,to);
 
 if (cfstat(destination,&dsb) == -1)
    {
@@ -393,7 +393,7 @@ return false;
   char linkpath[CF_BUFSIZE],*sp;
   struct stat statbuf;
 
-Debug("KillGhostLink(%s)\n",name);
+CfDebug("KillGhostLink(%s)\n",name);
 
 memset(linkbuf,0,CF_BUFSIZE);
 memset(linkpath,0,CF_BUFSIZE); 
@@ -594,7 +594,7 @@ while (*sp != '\0')
             
             if (strcmp(dest,from) == 0)
                {
-               Debug2("No links to be expanded\n");
+               CfDebug2("No links to be expanded\n");
                return true;
                }
      
@@ -612,7 +612,7 @@ while (*sp != '\0')
             
             if (strcmp(dest,from) == 0)
                {
-               Debug2("No links to be expanded\n");
+               CfDebug2("No links to be expanded\n");
                return true;
                }
             
@@ -683,6 +683,6 @@ else
    }
  
 strcat(destination,sp);
-Debug("Reconstructed absolute linkname = %s\n",destination);
+CfDebug("Reconstructed absolute linkname = %s\n",destination);
 return destination; 
 }

@@ -86,7 +86,7 @@ int QDB_CloseDB(CF_QDB *qdbp)
 
   dbName = dpname(qdbp->depot);
   snprintf(buf, sizeof(buf), "CloseDB(%s)\n", dbName);
-  Debug(buf);
+  CfDebug(buf);
 
   ThreadLock(cft_system);
 
@@ -126,7 +126,7 @@ int QDB_ReadComplexKeyDB(CF_QDB *qdbp, char *key, int keySz,void *dest, int dest
 
   if(bytesRead == -1)
     {
-      Debug("QDB_ReadComplexKeyDB(%s): Could not read: %s\n", key, dperrmsg(dpecode));
+      CfDebug("QDB_ReadComplexKeyDB(%s): Could not read: %s\n", key, dperrmsg(dpecode));
       return false;
     }
 
@@ -151,7 +151,7 @@ int QDB_RevealDB(CF_QDB *qdbp, char *key, void **result, int *rsize)
 
   if(*result == NULL)
     {
-      Debug("QDB_RevealDB(%s): Could not read: %s\n", key, dperrmsg(dpecode));
+      CfDebug("QDB_RevealDB(%s): Could not read: %s\n", key, dperrmsg(dpecode));
       return false;
     }
 
@@ -198,7 +198,7 @@ int QDB_DeleteComplexKeyDB(CF_QDB *qdbp, char *key, int size)
 
 int QDB_NewDBCursor(CF_QDB *qdbp,CF_QDBC **qdbcp)
 {
-  Debug("Entering QDB_NewDBCursor()\n");
+  CfDebug("Entering QDB_NewDBCursor()\n");
 
   if(!dpiterinit(qdbp->depot))
     {
@@ -219,7 +219,7 @@ int QDB_NewDBCursor(CF_QDB *qdbp,CF_QDBC **qdbcp)
 
 int QDB_NextDB(CF_QDB *qdbp,CF_QDBC *qdbcp,char **key,int *ksize,void **value,int *vsize)
 {
-  Debug("Entering QDB_NextDB()\n");
+  CfDebug("Entering QDB_NextDB()\n");
 
   ThreadLock(cft_system);
 
@@ -240,7 +240,7 @@ int QDB_NextDB(CF_QDB *qdbp,CF_QDBC *qdbcp,char **key,int *ksize,void **value,in
   if(*key == NULL)
     {
       ThreadUnlock(cft_system);
-      Debug("Got NULL-key in QDB_NextDB(): %s\n", dperrmsg(dpecode));
+      CfDebug("Got NULL-key in QDB_NextDB(): %s\n", dperrmsg(dpecode));
       return false;
     }
 
@@ -268,7 +268,7 @@ int QDB_NextDB(CF_QDB *qdbp,CF_QDBC *qdbcp,char **key,int *ksize,void **value,in
 
 int QDB_DeleteDBCursor(CF_QDB *qdbp,CF_QDBC *qdbcp)
 {
-  Debug("Entering QDB_DeleteDBCursor()\n");
+  CfDebug("Entering QDB_DeleteDBCursor()\n");
 
   ThreadLock(cft_system);
 

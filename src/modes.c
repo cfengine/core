@@ -55,7 +55,7 @@ if (modestring == NULL)
    return true;
    }
 
-Debug("ParseModeString(%s)\n",modestring);
+CfDebug("ParseModeString(%s)\n",modestring);
 
 gotaction = false;
 
@@ -194,7 +194,7 @@ for (sp = modestring; true ; sp++)
              CfOut(cf_inform,"","Symbolic and numeric form for modes mixed");
              }
 
-          Debug1("[PLUS=%o][MINUS=%o]\n",*plusmask,*minusmask);
+          CfDebug1("[PLUS=%o][MINUS=%o]\n",*plusmask,*minusmask);
           return true;
           
       default:
@@ -236,7 +236,7 @@ return true;
 static int SetModeMask(char action,int value,int affected,mode_t *p,mode_t *m)
 
 {
-Debug1("SetMask(%c%o,%o)\n",action,value,affected);
+CfDebug1("SetMask(%c%o,%o)\n",action,value,affected);
 
 switch(action)
    {

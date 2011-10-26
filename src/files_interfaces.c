@@ -55,11 +55,11 @@ void SourceSearchAndCopy(char *from,char *to,int maxrecurse,struct Attributes at
 
 if (maxrecurse == 0)  /* reached depth limit */
    {
-   Debug("MAXRECURSE ran out, quitting at level %s\n",from);
+   CfDebug("MAXRECURSE ran out, quitting at level %s\n",from);
    return;
    }
 
-Debug("RecursiveCopy(%s,%s,lev=%d)\n",from,to,maxrecurse);
+CfDebug("RecursiveCopy(%s,%s,lev=%d)\n",from,to,maxrecurse);
 
 if (strlen(from) == 0)     /* Check for root dir */
    {
@@ -319,7 +319,7 @@ if (!a.havedepthsearch)  /* if the search is trivial, make sure that we are in t
    {
    char basedir[CF_BUFSIZE];
 
-   Debug(" -> Direct file reference %s, no search implied\n",path);
+   CfDebug(" -> Direct file reference %s, no search implied\n",path);
    snprintf(basedir, sizeof(basedir), "%s", path);
 
    if (strcmp(ReadLastNode(basedir),".") == 0)
@@ -481,11 +481,11 @@ void VerifyCopy(char *source,char *destination,struct Attributes attr,struct Pro
   const struct dirent *dirp;
   int found;
   
-Debug("VerifyCopy (source=%s destination=%s)\n",source,destination);
+CfDebug("VerifyCopy (source=%s destination=%s)\n",source,destination);
 
 if (attr.copy.link_type == cfa_notlinked)
    {
-   Debug("Treating links as files for %s\n",source);
+   CfDebug("Treating links as files for %s\n",source);
    found = cf_stat(source,&ssb,attr,pp);
    }
 else
@@ -594,7 +594,7 @@ static void PurgeLocalFiles(struct Item *filelist,char *localdir,struct Attribut
   const struct dirent *dirp;
   char filename[CF_BUFSIZE] = {0};
 
-Debug("PurgeLocalFiles(%s)\n",localdir);
+CfDebug("PurgeLocalFiles(%s)\n",localdir);
 
 if (strlen(localdir) < 2)
    {
@@ -714,7 +714,7 @@ struct stat dsb;
 int found;
 mode_t srcmode = ssb.st_mode;
 
-Debug2("CopyFile(%s,%s)\n",sourcefile,destfile);
+CfDebug2("CopyFile(%s,%s)\n",sourcefile,destfile);
 
 #ifdef MINGW
 if(attr.copy.copy_links != NULL)
@@ -742,7 +742,7 @@ if ((strcmp(sourcefile,destfile) == 0) && server && (strcmp(server,"localhost") 
 
 if (!SelectLeaf(sourcefile,&ssb,attr,pp))
    {
-   Debug("Skipping non-selected file %s\n",sourcefile);
+   CfDebug("Skipping non-selected file %s\n",sourcefile);
    return;
    }
 
@@ -1594,7 +1594,7 @@ int CopyRegularFile(char *source,char *dest,struct stat sstat,struct stat dstat,
   selinux_enabled = (is_selinux_enabled()>0);
 #endif
 
-Debug("CopyRegularFile(%s,%s)\n",source,dest);
+CfDebug("CopyRegularFile(%s,%s)\n",source,dest);
 
 discardbackup = (attr.copy.backup == cfa_nobackup || attr.copy.backup == cfa_repos_store);
     
@@ -1639,7 +1639,7 @@ if (sstat.st_nlink > 1)  /* Preserve hard links, if possible */
 
 if (attr.copy.servers != NULL && strcmp(attr.copy.servers->item,"localhost") != 0)
    {
-   Debug("This is a remote copy from server: %s\n",(char *)attr.copy.servers->item);
+   CfDebug("This is a remote copy from server: %s\n",(char *)attr.copy.servers->item);
    remote = true;
    }
 
@@ -1720,7 +1720,7 @@ if (!discardbackup)
    char stamp[CF_BUFSIZE];
    time_t stampnow;
 
-   Debug("Backup file %s\n",source);
+   CfDebug("Backup file %s\n",source);
 
    strncpy(backup,dest,CF_BUFSIZE);
 

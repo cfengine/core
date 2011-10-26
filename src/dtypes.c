@@ -44,7 +44,7 @@ for (i = 0; i < ATTR; i++)
    {
    if (strstr(s,ECGSOCKS[i].name))
       {
-      Debug("IsSocketType(%s=%s)\n",s,ECGSOCKS[i].name);
+      CfDebug("IsSocketType(%s=%s)\n",s,ECGSOCKS[i].name);
       
       return true;
       }
@@ -62,7 +62,7 @@ for (i = 0; i < CF_NETATTR; i++)
    {
    if (strstr(s,TCPNAMES[i]))
       {
-      Debug("IsTCPType(%s)\n",s); 
+      CfDebug("IsTCPType(%s)\n",s); 
       return true;
       }
    }

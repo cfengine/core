@@ -209,7 +209,7 @@ do
           FatalError("System error in GetMountInfo - no such class!");
       }
 
-   Debug("GOT: host=%s, source=%s, mounton=%s\n",host,source,mounton);
+   CfDebug("GOT: host=%s, source=%s, mounton=%s\n",host,source,mounton);
 
    if (nfs)
       {

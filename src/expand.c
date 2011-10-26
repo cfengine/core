@@ -101,9 +101,9 @@ void ExpandPromise(enum cfagenttype agent,char *scopeid,struct Promise *pp,void 
   struct Promise *pcopy;
 
 
-Debug("****************************************************\n");
-Debug("* ExpandPromises (scope = %s )\n",scopeid);
-Debug("****************************************************\n\n");
+CfDebug("****************************************************\n");
+CfDebug("* ExpandPromises (scope = %s )\n",scopeid);
+CfDebug("****************************************************\n\n");
 
 DeleteScope("match"); /* in case we expand something expired accidentially */
 
@@ -194,13 +194,13 @@ switch(type)
        
        for (rp = (struct Rlist *)fp->args; rp != NULL; rp=rp->next)
           {
-          Debug("Looking at arg for function-like object %s()\n",fp->name);
+          CfDebug("Looking at arg for function-like object %s()\n",fp->name);
           ScanRval(scopeid,scalarvars,listvars,(char *)rp->item,rp->type,pp);
           }
        break;
 
    default:
-       Debug("Unknown Rval type for scope %s",scopeid);
+       CfDebug("Unknown Rval type for scope %s",scopeid);
        break;
    }
 }
@@ -215,7 +215,7 @@ char rtype;
 void *rval;
 char v[CF_BUFSIZE],var[CF_EXPANDSIZE],exp[CF_EXPANDSIZE],temp[CF_BUFSIZE];
   
-Debug("ScanScalar(\"%s\")\n",string);
+CfDebug("ScanScalar(\"%s\")\n",string);
 
 if (string == NULL)
    {
@@ -270,17 +270,17 @@ for (sp = string; (*sp != '\0') ; sp++)
                }
             else if (rtype == CF_SCALAR)
                {
-               Debug("Scalar variable $(%s) found\n",var);
+               CfDebug("Scalar variable $(%s) found\n",var);
                IdempAppendRScalar(scal,var,CF_SCALAR);
                }
             }
          else
             {
-            Debug("Checking for nested vars, e.g. $(array[$(index)])....\n");
+            CfDebug("Checking for nested vars, e.g. $(array[$(index)])....\n");
             
             if (IsExpandable(var))
                {
-               Debug("Found embedded variables\n");
+               CfDebug("Found embedded variables\n");
                ScanScalar(scopeid,scal,its,var,level+1,pp);
                }
             }
@@ -295,7 +295,7 @@ for (sp = string; (*sp != '\0') ; sp++)
 int ExpandScalar(const char *string,char buffer[CF_EXPANDSIZE])
 
 {
-Debug("ExpandScalar(context=%s,id=%s)\n",CONTEXTID,string);
+CfDebug("ExpandScalar(context=%s,id=%s)\n",CONTEXTID,string);
 return ExpandPrivateScalar(CONTEXTID,string,buffer); 
 }
 
@@ -347,7 +347,7 @@ struct Rval ExpandPrivateRval(char *scopeid,void *rval,char type)
  struct FnCall *fp,*fpe;
  struct Rval returnval;
      
-Debug("ExpandPrivateRval(scope=%s,type=%c)\n",scopeid,type);
+CfDebug("ExpandPrivateRval(scope=%s,type=%c)\n",scopeid,type);
 
 /* Allocates new memory for the copy */
 
@@ -390,7 +390,7 @@ struct Rval ExpandBundleReference(char *scopeid,void *rval,char type)
  struct FnCall *fp,*fpe;
  struct Rval returnval;
      
-Debug("ExpandBundleReference(scope=%s,type=%c)\n",scopeid,type);
+CfDebug("ExpandBundleReference(scope=%s,type=%c)\n",scopeid,type);
 
 /* Allocates new memory for the copy */
 
@@ -453,7 +453,7 @@ if (string == 0 || strlen(string) == 0)
    return false;
    }
 
-Debug("\nExpandPrivateScalar(%s,%s)\n",scopeid,string);
+CfDebug("\nExpandPrivateScalar(%s,%s)\n",scopeid,string);
 
 for (sp = string; /* No exit */ ; sp++)       /* check for varitems */
    {
@@ -479,7 +479,7 @@ for (sp = string; /* No exit */ ; sp++)       /* check for varitems */
    strlcat(buffer,currentitem,CF_EXPANDSIZE);
    sp += strlen(currentitem);
 
-   Debug("  Aggregate result |%s|, scanning at \"%s\" (current delta %s)\n",buffer,sp,currentitem);
+   CfDebug("  Aggregate result |%s|, scanning at \"%s\" (current delta %s)\n",buffer,sp,currentitem);
    
    if (*sp == '\0')
       {
@@ -523,12 +523,12 @@ for (sp = string; /* No exit */ ; sp++)       /* check for varitems */
    
    if (IsCf3VarString(temp))
       {
-      Debug("  Nested variables - %s\n",temp);
+      CfDebug("  Nested variables - %s\n",temp);
       ExpandPrivateScalar(scopeid,temp,currentitem);
       }
    else
       {
-      Debug("  Delta - %s\n",temp);
+      CfDebug("  Delta - %s\n",temp);
       strncpy(currentitem,temp,CF_BUFSIZE-1);
       }
 
@@ -552,7 +552,7 @@ for (sp = string; /* No exit */ ; sp++)       /* check for varitems */
       case cf_ilist:
       case cf_rlist:
       case cf_notype:
-          Debug("  Currently non existent or list variable $(%s)\n",currentitem);
+          CfDebug("  Currently non existent or list variable $(%s)\n",currentitem);
           
           if (varstring == '}')
              {
@@ -568,7 +568,7 @@ for (sp = string; /* No exit */ ; sp++)       /* check for varitems */
           break;
 
       default:
-          Debug("Returning Unknown Scalar (%s => %s)\n\n",string,buffer);
+          CfDebug("Returning Unknown Scalar (%s => %s)\n\n",string,buffer);
           return false;
 
       }
@@ -579,13 +579,13 @@ for (sp = string; /* No exit */ ; sp++)       /* check for varitems */
 
 if (returnval)
    {
-   Debug("Returning complete scalar expansion (%s => %s)\n\n",string,buffer);
+   CfDebug("Returning complete scalar expansion (%s => %s)\n\n",string,buffer);
 
    /* Can we be sure this is complete? What about recursion */
    }
 else
    {
-   Debug("Returning partial / best effort scalar expansion (%s => %s)\n\n",string,buffer);
+   CfDebug("Returning partial / best effort scalar expansion (%s => %s)\n\n",string,buffer);
    }
 
 return returnval;
@@ -699,7 +699,7 @@ struct Rval EvaluateFinalRval(char *scopeid,void *rval,char rtype,int forcelist,
   char naked[CF_MAXVARSIZE];
   struct FnCall *fp;
 
-Debug("EvaluateFinalRval -- type %c\n",rtype);
+CfDebug("EvaluateFinalRval -- type %c\n",rtype);
 
 if ((rtype == CF_SCALAR) && IsNakedVar(rval,'@')) /* Treat lists specially here */
    {
@@ -750,7 +750,7 @@ switch (returnval.rtype)
              DeleteFnCall(fp);
              rp->item = newret.item;
              rp->type = newret.rtype;
-             Debug("Replacing function call with new type (%c)\n",rp->type);
+             CfDebug("Replacing function call with new type (%c)\n",rp->type);
              }
           else
              {
@@ -799,7 +799,7 @@ int IsExpandable(const char *str)
   int dollar = false;
   int bracks = 0, vars = 0;
 
-Debug1("IsExpandable(%s) - syntax verify\n",str);
+CfDebug1("IsExpandable(%s) - syntax verify\n",str);
 
 for (sp = str; *sp != '\0' ; sp++)       /* check for varitems */
    {
@@ -845,11 +845,11 @@ for (sp = str; *sp != '\0' ; sp++)       /* check for varitems */
  
 if (bracks != 0)
    {
-   Debug("If this is an expandable variable string then it contained syntax errors");
+   CfDebug("If this is an expandable variable string then it contained syntax errors");
    return false;
    }
 
-Debug("Found %d variables in (%s)\n",vars,str); 
+CfDebug("Found %d variables in (%s)\n",vars,str); 
 return vars;
 }
 
@@ -927,7 +927,7 @@ if (count != 0)
    return false;
    }
 
-Debug("IsNakedVar(%s,%c)!!\n",str,vtype);
+CfDebug("IsNakedVar(%s,%c)!!\n",str,vtype);
 return true;
 }
 
@@ -1314,7 +1314,7 @@ switch (rtype)
        if (IsCf3VarString(rval))
           {
           ExpandPrivateScalar(CONTEXTID,rval,exp);
-          Debug("bling %d-%s: (look for %s) in \"%s\" => %s \n",level,CONTEXTID,var,rval,exp);
+          CfDebug("bling %d-%s: (look for %s) in \"%s\" => %s \n",level,CONTEXTID,var,rval,exp);
 
           if (level > 3)
              {

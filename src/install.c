@@ -73,13 +73,13 @@ if (INSTALL_SKIP)
    return NULL;
    }
   
-Debug("Appending new bundle %s %s (",type,name);
+CfDebug("Appending new bundle %s %s (",type,name);
 
 if (DEBUG)
    {
    ShowRlist(stdout,args);
    }
-Debug(")\n");
+CfDebug(")\n");
 
 CheckBundle(name,type);
 
@@ -111,15 +111,15 @@ struct Body *AppendBody(struct Body **start,char *name, char *type, struct Rlist
 { struct Body *bp,*lp;
   struct Rlist *rp;
 
-Debug("Appending new promise body %s %s(",type,name);
+CfDebug("Appending new promise body %s %s(",type,name);
 
 CheckBody(name,type);
 
 for (rp = args; rp!= NULL; rp=rp->next)
    {
-   Debug("%s,",(char *)rp->item);
+   CfDebug("%s,",(char *)rp->item);
    }
-Debug(")\n");
+CfDebug(")\n");
 
 bp = xcalloc(1, sizeof(struct Body));
 
@@ -153,7 +153,7 @@ if (INSTALL_SKIP)
    return NULL;
    }
 
-Debug("Appending new type section %s\n",typename);
+CfDebug("Appending new type section %s\n",typename);
 
 if (bundle == NULL)
    {
@@ -209,7 +209,7 @@ if (type == NULL)
 
 /* Check here for broken promises - or later with more info? */
 
-Debug("Appending Promise from bundle %s %s if context %s\n",bundle,promiser,classes);
+CfDebug("Appending Promise from bundle %s %s if context %s\n",bundle,promiser,classes);
 
 pp = xcalloc(1, sizeof(struct Promise));
 

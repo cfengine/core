@@ -315,25 +315,25 @@ for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_mailfrom].lval) == 0)
       {
       strcpy(MAILFROM,retval);
-      Debug("mailfrom = %s\n",MAILFROM);
+      CfDebug("mailfrom = %s\n",MAILFROM);
       }
    
    if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_mailto].lval) == 0)
       {
       strcpy(MAILTO,retval);
-      Debug("mailto = %s\n",MAILTO);
+      CfDebug("mailto = %s\n",MAILTO);
       }
    
    if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_smtpserver].lval) == 0)
       {
       strcpy(VMAILSERVER,retval);
-      Debug("smtpserver = %s\n",VMAILSERVER);
+      CfDebug("smtpserver = %s\n",VMAILSERVER);
       }
 
    if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_execcommand].lval) == 0)
       {
       strcpy(EXECCOMMAND,retval);
-      Debug("exec_command = %s\n",EXECCOMMAND);
+      CfDebug("exec_command = %s\n",EXECCOMMAND);
       }
    
    if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_executorfacility].lval) == 0)
@@ -345,7 +345,7 @@ for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_mailmaxlines].lval) == 0)
       {
       MAXLINES = Str2Int(retval);
-      Debug("maxlines = %d\n",MAXLINES);
+      CfDebug("maxlines = %d\n",MAXLINES);
       }
 
    if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_splaytime].lval) == 0)
@@ -359,7 +359,7 @@ for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_schedule].lval) == 0)
       {
       struct Rlist *rp;
-      Debug("schedule ...\n");
+      CfDebug("schedule ...\n");
       DeleteItemList(SCHEDULE);
       SCHEDULE = NULL;
       
@@ -481,7 +481,7 @@ else
           * has changed (where cygwin's fork() would fail).
           */
          
-         Debug("Spawning %s\n", nargv[0]);
+         CfDebug("Spawning %s\n", nargv[0]);
 
          pid = _spawnvp((int)_P_NOWAIT,(char *)(nargv[0]),(char **)nargv);
 
@@ -826,7 +826,7 @@ while (!feof(pp) && CfReadLine(line,CF_BUFSIZE,pp))
    }
  
 cf_pclose(pp);
-Debug("Closing fp\n");
+CfDebug("Closing fp\n");
 fclose(fp);
 
 if (ONCE)
@@ -869,7 +869,7 @@ static int FileChecksum(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],c
   unsigned char buffer[1024];
   const EVP_MD *md = NULL;
 
-Debug2("FileChecksum(%c,%s)\n",type,filename);
+CfDebug2("FileChecksum(%c,%s)\n",type,filename);
 
 if ((file = fopen(filename,"rb")) == NULL)
    {
@@ -994,7 +994,7 @@ MapName(prev_file);
 if (statbuf.st_size == 0)
    {
    unlink(file);
-   Debug("Nothing to report in %s\n",file);
+   CfDebug("Nothing to report in %s\n",file);
    return;
    }
 
@@ -1013,11 +1013,11 @@ if ((strlen(VMAILSERVER) == 0) || (strlen(to) == 0))
 
 if (MAXLINES == 0)
    {
-   Debug("Not mailing: EmailMaxLines was zero\n");
+   CfDebug("Not mailing: EmailMaxLines was zero\n");
    return;
    }
  
-Debug("Mailing results of (%s) to (%s)\n",file,to);
+CfDebug("Mailing results of (%s) to (%s)\n",file,to);
  
 
 /* Check first for anomalies - for subject header */
@@ -1051,7 +1051,7 @@ if ((fp = fopen(file,"r")) == NULL)
    return;
    }
  
-Debug("Looking up hostname %s\n\n",VMAILSERVER);
+CfDebug("Looking up hostname %s\n\n",VMAILSERVER);
 
 if ((hp = gethostbyname(VMAILSERVER)) == NULL)
    {
@@ -1074,7 +1074,7 @@ raddr.sin_port = (unsigned int) server->s_port;
 raddr.sin_addr.s_addr = ((struct in_addr *)(hp->h_addr))->s_addr;
 raddr.sin_family = AF_INET;  
 
-Debug("Connecting...\n");
+CfDebug("Connecting...\n");
 
 if ((sd = socket(AF_INET,SOCK_STREAM,0)) == -1)
    {
@@ -1099,7 +1099,7 @@ if (!Dialogue(sd,NULL))
    }
  
 sprintf(vbuff,"HELO %s\r\n",VFQNAME); 
-Debug("%s",vbuff);
+CfDebug("%s",vbuff);
 
 if (!Dialogue(sd,vbuff))
    {
@@ -1109,12 +1109,12 @@ if (!Dialogue(sd,vbuff))
  if (strlen(MAILFROM) == 0)
     {
     sprintf(vbuff,"MAIL FROM: <cfengine@%s>\r\n",VFQNAME);
-    Debug("%s",vbuff);
+    CfDebug("%s",vbuff);
     }
  else
     {
     sprintf(vbuff,"MAIL FROM: <%s>\r\n",MAILFROM);
-    Debug("%s",vbuff);    
+    CfDebug("%s",vbuff);    
     }
 
 if (!Dialogue(sd,vbuff))
@@ -1123,7 +1123,7 @@ if (!Dialogue(sd,vbuff))
    }
  
 sprintf(vbuff,"RCPT TO: <%s>\r\n",to);
-Debug("%s",vbuff);
+CfDebug("%s",vbuff);
 
 if (!Dialogue(sd,vbuff))
    {
@@ -1138,12 +1138,12 @@ if (!Dialogue(sd,"DATA\r\n"))
 if (anomaly)
    {
    sprintf(vbuff,"Subject: %s **!! [%s/%s]\r\n",MailSubject(),VFQNAME,VIPADDRESS);
-   Debug("%s",vbuff);
+   CfDebug("%s",vbuff);
    }
 else
    {
    sprintf(vbuff,"Subject: %s [%s/%s]\r\n",MailSubject(),VFQNAME,VIPADDRESS);
-   Debug("%s",vbuff);
+   CfDebug("%s",vbuff);
    }
  
 send(sd,vbuff,strlen(vbuff),0);
@@ -1156,18 +1156,18 @@ send(sd,vbuff,strlen(vbuff),0);
  if (strlen(MAILFROM) == 0)
     {
     sprintf(vbuff,"From: cfengine@%s\r\n",VFQNAME);
-    Debug("%s",vbuff);
+    CfDebug("%s",vbuff);
     }
  else
     {
     sprintf(vbuff,"From: %s\r\n",MAILFROM);
-    Debug("%s",vbuff);    
+    CfDebug("%s",vbuff);    
     }
  
 send(sd,vbuff,strlen(vbuff),0);
 
 sprintf(vbuff,"To: %s\r\n\r\n",to); 
-Debug("%s",vbuff);
+CfDebug("%s",vbuff);
 send(sd,vbuff,strlen(vbuff),0);
 
 while(!feof(fp))
@@ -1178,7 +1178,7 @@ while(!feof(fp))
       break;
       }
 
-   Debug("%s",vbuff);
+   CfDebug("%s",vbuff);
    
    if (strlen(vbuff) > 0)
       {
@@ -1198,12 +1198,12 @@ while(!feof(fp))
 
 if (!Dialogue(sd,".\r\n"))
    {
-   Debug("mail_err\n");
+   CfDebug("mail_err\n");
    goto mail_err;
    }
  
 Dialogue(sd,"QUIT\r\n");
-Debug("Done sending mail\n");
+CfDebug("Done sending mail\n");
 fclose(fp);
 cf_closesocket(sd);
 return;
@@ -1228,11 +1228,11 @@ static int Dialogue(int sd,char *s)
 if ((s != NULL) && (*s != '\0'))
    {
    sent = send(sd,s,strlen(s),0);
-   Debug("SENT(%d)->%s",sent,s);
+   CfDebug("SENT(%d)->%s",sent,s);
    }
 else
    {
-   Debug("Nothing to send .. waiting for opening\n");
+   CfDebug("Nothing to send .. waiting for opening\n");
    }
 
 charpos = 0;
@@ -1251,7 +1251,7 @@ while (recv(sd,&ch,1,0))
       rfclinetype = ch;
       }
    
-   Debug("%c",ch);
+   CfDebug("%c",ch);
    
    if (ch == '\n' || ch == '\0')
       {

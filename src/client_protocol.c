@@ -90,7 +90,7 @@ if (!SKIPIDENTIFY)
    
    snprintf(localip,CF_MAX_IP_LEN-1,"%s",sockaddr_ntop((struct sockaddr *)&myaddr)); 
    
-   Debug("Identifying this agent as %s i.e. %s, with signature %d\n",localip,VFQNAME,CFSIGNATURE);
+   CfDebug("Identifying this agent as %s i.e. %s, with signature %d\n",localip,VFQNAME,CFSIGNATURE);
    
 #if defined(HAVE_GETADDRINFO)
    
@@ -147,7 +147,7 @@ GetCurrentUserName(uname, sizeof(uname));
 
 if ((strlen(VDOMAIN) > 0) && !IsIPV6Address(dnsname) && !strchr(dnsname,'.'))
    {
-   Debug("Appending domain %s to %s\n",VDOMAIN,dnsname);
+   CfDebug("Appending domain %s to %s\n",VDOMAIN,dnsname);
    strcat(dnsname,".");
    strncat(dnsname,VDOMAIN,CF_MAXVARSIZE/2);
    }  
@@ -165,7 +165,7 @@ if (strlen(dnsname) == 0)
 
 snprintf(sendbuff,CF_BUFSIZE-1,"CAUTH %s %s %s %d",localip,dnsname,uname,CFSIGNATURE);
 
-Debug("SENT:::%s\n",sendbuff);
+CfDebug("SENT:::%s\n",sendbuff);
  
 SendTransaction(sd,sendbuff,0,CF_DONE);
 return true;
@@ -328,7 +328,7 @@ else
 
 /* Receive counter challenge from server */ 
 
-Debug("Receive counter challenge from server\n");
+CfDebug("Receive counter challenge from server\n");
 
 /* proposition S3 */   
 memset(in,0,CF_BUFSIZE);  
@@ -360,7 +360,7 @@ else
    HashString(decrypted_cchall,nonce_len,digest,cf_md5);
    }
 
-Debug("Replying to counter challenge with hash\n"); 
+CfDebug("Replying to counter challenge with hash\n"); 
 
 if (FIPS_MODE)
    {
@@ -431,7 +431,7 @@ if (conn->session_key == NULL)
 
 encrypted_len = RSA_size(server_pubkey);
 
-Debug("Encrypt %d bytes of session key into %d RSA bytes\n",session_size,encrypted_len);
+CfDebug("Encrypt %d bytes of session key into %d RSA bytes\n",session_size,encrypted_len);
 
 out = xmalloc(encrypted_len);
 
@@ -466,7 +466,7 @@ static void CheckServerVersion(struct cfagent_connection *conn,struct Attributes
   char recvbuffer[CF_BUFSIZE];
   int tosend;
 
-Debug("CheckRemoteVersion\n");  
+CfDebug("CheckRemoteVersion\n");  
 snprintf(sendbuffer,CF_BUFSIZE,"VERSION");
 tosend = strlen(sendbuffer);
 
@@ -523,7 +523,7 @@ conn->session_key = (unsigned char *)bp->d;
 int BadProtoReply(char *buf)
 
 {
- Debug("Protoreply: (%s)\n",buf);
+ CfDebug("Protoreply: (%s)\n",buf);
  return (strncmp(buf,"BAD:",4) == 0);
 }
 

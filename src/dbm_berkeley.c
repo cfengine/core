@@ -114,7 +114,7 @@ else
 
    if (ret == DB_NOTFOUND || ret == DB_KEYEMPTY)
       {
-      Debug("Key %s does not exist in database.\n", key);
+      CfDebug("Key %s does not exist in database.\n", key);
       }
    else
       {
@@ -156,7 +156,7 @@ if ((ret = dbp->get(dbp,NULL,key,&value,0)) == 0)
          memcpy(ptr,value.data,value.size);
          }
 
-      Debug("READ %s\n",name);
+      CfDebug("READ %s\n",name);
 
       retval = true;
       }
@@ -165,7 +165,7 @@ else
    {
    if (ret == DB_NOTFOUND || ret == DB_KEYEMPTY)
       {
-      Debug("Key %.*s does not exist in database", keysize, name);
+      CfDebug("Key %.*s does not exist in database", keysize, name);
       }
    else
       {
@@ -204,7 +204,7 @@ else
    {
    if (ret == DB_NOTFOUND || ret == DB_KEYEMPTY)
       {
-      Debug("Key %s does not exist in database", name);
+      CfDebug("Key %s does not exist in database", name);
       }
    else
       {
@@ -231,7 +231,7 @@ value = BDB_NewDBValue(ptr,size);
 
 if ((ret = dbp->put(dbp,NULL,key,value,0)) == 0)
    {
-   Debug("WriteDB => %s\n",name);
+   CfDebug("WriteDB => %s\n",name);
 
    BDB_DeleteDBValue(key);
    BDB_DeleteDBValue(value);
@@ -268,7 +268,7 @@ else
    {
    if (ret == DB_NOTFOUND || ret == DB_KEYEMPTY)
       {
-      Debug("Trying to remove from database non-existing key %.*s\n",
+      CfDebug("Trying to remove from database non-existing key %.*s\n",
             size, name);
       }
    else

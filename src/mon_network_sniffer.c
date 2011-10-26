@@ -92,7 +92,7 @@ if (TCPDUMP)
 void MonNetworkSnifferEnable(bool enable)
 {
 TCPDUMP = enable;
-Debug("use tcpdump = %d\n",TCPDUMP);
+CfDebug("use tcpdump = %d\n",TCPDUMP);
 }
 
 /******************************************************************************/
@@ -132,7 +132,7 @@ while (!feof(TCPPIPE))
 
    if (strstr(tcpbuffer,"tcpdump:")) /* Error message protect sleeptime */
       {
-      Debug("Error - (%s)\n",tcpbuffer);
+      CfDebug("Error - (%s)\n",tcpbuffer);
       alarm(0);
       TCPDUMP = false;
       break;
@@ -213,7 +213,7 @@ if (strstr(arrival,"proto TCP") || strstr(arrival,"ack"))
 
    switch (flag)
       {
-      case 'S': Debug("%ld: TCP new connection from %s to %s - i am %s\n",iteration,src,dest,VIPADDRESS);
+      case 'S': CfDebug("%ld: TCP new connection from %s to %s - i am %s\n",iteration,src,dest,VIPADDRESS);
          if (isme_dest)
             {
             cf_this[ob_tcpsyn_in]++;
@@ -226,7 +226,7 @@ if (strstr(arrival,"proto TCP") || strstr(arrival,"ack"))
             }
          break;
 
-      case 'F': Debug("%ld: TCP end connection from %s to %s\n",iteration,src,dest);
+      case 'F': CfDebug("%ld: TCP end connection from %s to %s\n",iteration,src,dest);
          if (isme_dest)
             {
             cf_this[ob_tcpfin_in]++;
@@ -239,7 +239,7 @@ if (strstr(arrival,"proto TCP") || strstr(arrival,"ack"))
             }
          break;
 
-      default: Debug("%ld: TCP established from %s to %s\n",iteration,src,dest);
+      default: CfDebug("%ld: TCP established from %s to %s\n",iteration,src,dest);
 
          if (isme_dest)
             {
@@ -262,7 +262,7 @@ else if (strstr(arrival,".53"))
    isme_dest = IsInterfaceAddress(dest);
    isme_src = IsInterfaceAddress(src);
 
-   Debug("%ld: DNS packet from %s to %s\n",iteration,src,dest);
+   CfDebug("%ld: DNS packet from %s to %s\n",iteration,src,dest);
    if (isme_dest)
       {
       cf_this[ob_dns_in]++;
@@ -282,7 +282,7 @@ else if (strstr(arrival,"proto UDP"))
    isme_dest = IsInterfaceAddress(dest);
    isme_src = IsInterfaceAddress(src);
 
-   Debug("%ld: UDP packet from %s to %s\n",iteration,src,dest);
+   CfDebug("%ld: UDP packet from %s to %s\n",iteration,src,dest);
    if (isme_dest)
       {
       cf_this[ob_udp_in]++;
@@ -302,7 +302,7 @@ else if (strstr(arrival,"proto ICMP"))
    isme_dest = IsInterfaceAddress(dest);
    isme_src = IsInterfaceAddress(src);
 
-   Debug("%ld: ICMP packet from %s to %s\n",iteration,src,dest);
+   CfDebug("%ld: ICMP packet from %s to %s\n",iteration,src,dest);
 
    if (isme_dest)
       {
@@ -317,7 +317,7 @@ else if (strstr(arrival,"proto ICMP"))
    }
 else
    {
-   Debug("%ld: Miscellaneous undirected packet (%.100s)\n",iteration,arrival);
+   CfDebug("%ld: Miscellaneous undirected packet (%.100s)\n",iteration,arrival);
 
    cf_this[ob_tcpmisc_in]++;
 
@@ -327,7 +327,7 @@ else
 
    if (!isdigit((int)*src))
       {
-      Debug("Assuming continuation line...\n");
+      CfDebug("Assuming continuation line...\n");
       return;
       }
 
@@ -403,7 +403,7 @@ for (i = 0; i < CF_NETATTR; i++)
    double entropy;
    time_t now = time(NULL);
 
-   Debug("save incoming %s\n",TCPNAMES[i]);
+   CfDebug("save incoming %s\n",TCPNAMES[i]);
    snprintf(vbuff,CF_MAXVARSIZE,"%s/state/cf_incoming.%s",CFWORKDIR,TCPNAMES[i]);
 
    if (cfstat(vbuff,&statbuf) != -1)
@@ -431,7 +431,7 @@ for (i = 0; i < CF_NETATTR; i++)
    double entropy;
    time_t now = time(NULL);
 
-   Debug("save outgoing %s\n",TCPNAMES[i]);
+   CfDebug("save outgoing %s\n",TCPNAMES[i]);
    snprintf(vbuff,CF_MAXVARSIZE,"%s/state/cf_outgoing.%s",CFWORKDIR,TCPNAMES[i]);
 
    if (cfstat(vbuff,&statbuf) != -1)

@@ -218,7 +218,7 @@ XML = 0;
 void GenericDeInitialize()
 
 {
-Debug("GenericDeInitialize()\n");
+CfDebug("GenericDeInitialize()\n");
 
 CloseWmi();
 CloseNetwork();
@@ -464,7 +464,7 @@ CfOut(cf_verbose,"","-----------------------------------------------------------
 strcpy(CFWORKDIR, GetWorkDir());
 MapName(CFWORKDIR);
 
-Debug("Setting CFWORKDIR=%s\n", CFWORKDIR);
+CfDebug("Setting CFWORKDIR=%s\n", CFWORKDIR);
 
 /* On windows, use 'binary mode' as default for files */
 
@@ -938,9 +938,9 @@ if (statbuf.st_mode & (S_IWGRP | S_IWOTH))
    }
 #endif
 
-Debug("+++++++++++++++++++++++++++++++++++++++++++++++\n");
+CfDebug("+++++++++++++++++++++++++++++++++++++++++++++++\n");
 CfOut(cf_verbose,"","  > Parsing file %s\n",wfilename);
-Debug("+++++++++++++++++++++++++++++++++++++++++++++++\n");
+CfDebug("+++++++++++++++++++++++++++++++++++++++++++++++\n");
 
 PrependAuditFile(wfilename);
 
@@ -992,7 +992,7 @@ for (body = BODIES; body != NULL; body = body->next)
       {
       if (strcmp(body->name,"control") == 0)
          {
-         Debug("%s body for type %s\n",body->name,body->type);
+         CfDebug("%s body for type %s\n",body->name,body->type);
          return body->conlist;
          }
       }
@@ -1225,7 +1225,7 @@ static void CheckWorkingDirectories()
   char vbuff[CF_BUFSIZE];
   char output[CF_BUFSIZE];
 
-Debug("CheckWorkingDirectories()\n");
+CfDebug("CheckWorkingDirectories()\n");
 
 if (uname(&VSYSNAME) == -1)
    {
@@ -1561,7 +1561,7 @@ static void CheckVariablePromises(char *scope,struct Promise *varlist)
 { struct Promise *pp;
   int allow_redefine = false;
 
-Debug("CheckVariablePromises()\n");
+CfDebug("CheckVariablePromises()\n");
 
 for (pp = varlist; pp != NULL; pp=pp->next)
    {
@@ -1595,7 +1595,7 @@ static void CheckControlPromises(char *scope,char *agent,struct Constraint *cont
   char rettype;
   void *retval;
 
-Debug("CheckControlPromises(%s)\n",agent);
+CfDebug("CheckControlPromises(%s)\n",agent);
 
 for (i = 0; CF_ALL_BODIES[i].bs != NULL; i++)
    {
@@ -1941,7 +1941,7 @@ for (bdp = BODIES; bdp != NULL; bdp = bdp->next) /* get schedule */
    if (strcmp(bdp->name,"control") == 0)
       {
       snprintf(buf,CF_BUFSIZE,"%s_%s",bdp->name,bdp->type);
-      Debug("Initiate control variable convergence...%s\n",buf);
+      CfDebug("Initiate control variable convergence...%s\n",buf);
       DeleteScope(buf);
       SetNewScope(buf);
       CheckControlPromises(buf,bdp->type,bdp->conlist);

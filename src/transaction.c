@@ -162,7 +162,7 @@ RemoveDates(cc_operand);
 
 free(promise);
 
-Debug("AcquireLock(%s,%s), ExpireAfter=%d, IfElapsed=%d\n",cc_operator,cc_operand,attr.transaction.expireafter,attr.transaction.ifelapsed);
+CfDebug("AcquireLock(%s,%s), ExpireAfter=%d, IfElapsed=%d\n",cc_operator,cc_operand,attr.transaction.expireafter,attr.transaction.ifelapsed);
 
 for (i = 0; cc_operator[i] != '\0'; i++)
    {
@@ -178,7 +178,7 @@ snprintf(cflog,CF_BUFSIZE,"%s/cf3.%.40s.runlog",CFWORKDIR,host);
 snprintf(cflock,CF_BUFSIZE,"lock.%.100s.%s.%.100s_%d_%s",pp->bundle,cc_operator,cc_operand,sum,str_digest);
 snprintf(cflast,CF_BUFSIZE,"last.%.100s.%s.%.100s_%d_%s",pp->bundle,cc_operator,cc_operand,sum,str_digest);
 
-Debug("LOCK(%s)[%s]\n",pp->bundle,cflock);
+CfDebug("LOCK(%s)[%s]\n",pp->bundle,cflock);
 
 // Now see if we can get exclusivity to edit the locks
 
@@ -292,7 +292,7 @@ if (this.lock == (char *)CF_UNDEFINED)
    return;
    }
 
-Debug("Yielding lock %s\n",this.lock);
+CfDebug("Yielding lock %s\n",this.lock);
 
 if (RemoveLock(this.lock) == -1)
    {
@@ -462,7 +462,7 @@ static int WriteLock(char *name)
 { CF_DB *dbp;
   struct LockData entry;
 
-Debug("WriteLock(%s)\n",name);
+CfDebug("WriteLock(%s)\n",name);
 
 ThreadLock(cft_lock);
 if ((dbp = OpenLock()) == NULL)
@@ -491,7 +491,7 @@ static void LogLockCompletion(char *cflog,int pid,char *str,char *operator,char 
   struct stat statbuf;
   time_t tim;
 
-Debug("LockLogCompletion(%s)\n",str);
+CfDebug("LockLogCompletion(%s)\n",str);
 
 if (cflog == NULL)
    {
@@ -506,7 +506,7 @@ if ((fp = fopen(cflog,"a")) == NULL)
 
 if ((tim = time((time_t *)NULL)) == -1)
    {
-   Debug("Cfengine: couldn't read system clock\n");
+   CfDebug("Cfengine: couldn't read system clock\n");
    }
 
 sprintf(buffer,"%s",cf_ctime(&tim));
@@ -553,7 +553,7 @@ static time_t FindLockTime(char *name)
 { CF_DB *dbp;
   struct LockData entry;
 
-Debug("FindLockTime(%s)\n",name);
+CfDebug("FindLockTime(%s)\n",name);
 
 if ((dbp = OpenLock()) == NULL)
    {
@@ -611,7 +611,7 @@ if (!OpenDB(name,&dbp))
    return NULL;
    }
 
-Debug("OpenLock(%s)\n",name);
+CfDebug("OpenLock(%s)\n",name);
 
 return dbp;
 }

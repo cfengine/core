@@ -188,7 +188,7 @@ if ((result = EvalFileResult(attr.select.result,&leaf_attr)))
    //NewClassesFromString(fp->defines);
    }
  
-Debug("Select result \"%s\"on %s was %d\n",attr.select.result,path,result);
+CfDebug("Select result \"%s\"on %s was %d\n",attr.select.result,path,result);
 
 DeleteAlphaList(&leaf_attr);
 
@@ -324,14 +324,14 @@ for (rp = crit; rp != NULL; rp = rp->next)
    {
    if (EvalFileResult((char *)rp->item,&leafattrib))
       {
-      Debug(" - ? Select owner match\n");
+      CfDebug(" - ? Select owner match\n");
       DeleteAlphaList(&leafattrib);
       return true;
       }
 
    if (gotOwner && FullTextMatch((char *)rp->item,ownerName))
       {
-      Debug(" - ? Select owner match\n");
+      CfDebug(" - ? Select owner match\n");
       DeleteAlphaList(&leafattrib);
       return true;
       }
@@ -339,7 +339,7 @@ for (rp = crit; rp != NULL; rp = rp->next)
 #ifndef MINGW	  
    if (FullTextMatch((char *)rp->item,buffer))
       {
-      Debug(" - ? Select owner match\n");
+      CfDebug(" - ? Select owner match\n");
       DeleteAlphaList(&leafattrib);
       return true;
       }
@@ -522,7 +522,7 @@ ReplaceStr(command,buf,sizeof(buf),"${this.promiser}",filename);
 
 if (ShellCommandReturnsZero(buf,false))
    {
-   Debug(" - ? Select ExecProgram match for %s\n",buf);
+   CfDebug(" - ? Select ExecProgram match for %s\n",buf);
    return true;
    }
 else
@@ -584,21 +584,21 @@ for (rp = crit; rp != NULL; rp = rp->next)
    {
    if (EvalFileResult((char *)rp->item,&leafattrib))
       {
-      Debug(" - ? Select group match\n");
+      CfDebug(" - ? Select group match\n");
       DeleteAlphaList(&leafattrib);
       return true;
       }
 
    if (gr && FullTextMatch((char *)rp->item,gr->gr_name))
       {
-      Debug(" - ? Select owner match\n");
+      CfDebug(" - ? Select owner match\n");
       DeleteAlphaList(&leafattrib);
       return true;
       }
 
    if (FullTextMatch((char *)rp->item,buffer))
       {
-      Debug(" - ? Select owner match\n");
+      CfDebug(" - ? Select owner match\n");
       DeleteAlphaList(&leafattrib);
       return true;
       }

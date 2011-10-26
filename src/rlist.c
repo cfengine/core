@@ -180,7 +180,7 @@ void *CopyRvalItem(const void *item, char type)
   char rtype = CF_SCALAR;
   char naked[CF_BUFSIZE];
   
-Debug("CopyRvalItem(%c)\n",type);
+CfDebug("CopyRvalItem(%c)\n",type);
 
 if (item == NULL)
    {
@@ -346,7 +346,7 @@ struct Rlist *CopyRlist(struct Rlist *list)
 
 { struct Rlist *rp,*start = NULL;
 
-Debug("CopyRlist()\n");
+CfDebug("CopyRlist()\n");
   
 if (list == NULL)
    {
@@ -512,25 +512,25 @@ struct Rlist *AppendRlist(struct Rlist **start,void *item, char type)
 switch(type)
    {
    case CF_SCALAR:
-       Debug("Appending scalar to rval-list [%s]\n",(char *)item);
+       CfDebug("Appending scalar to rval-list [%s]\n",(char *)item);
        break;
 
    case CF_ASSOC:
-       Debug("Appending assoc to rval-list [%s]\n",(char *)item);
+       CfDebug("Appending assoc to rval-list [%s]\n",(char *)item);
        break;
 
    case CF_FNCALL:
-       Debug("Appending function to rval-list function call: ");
+       CfDebug("Appending function to rval-list function call: ");
        fp = (struct FnCall *)item;
        if (DEBUG)
           {
           ShowFnCall(stdout,fp);
           }
-       Debug("\n");
+       CfDebug("\n");
        break;
 
    case CF_LIST:
-       Debug("Expanding and appending list object\n");
+       CfDebug("Expanding and appending list object\n");
        
        for (rp = (struct Rlist *)item; rp != NULL; rp=rp->next)
           {
@@ -540,7 +540,7 @@ switch(type)
        return lp;
        
    default:
-       Debug("Cannot append %c to rval-list [%s]\n",type,(char *)item);
+       CfDebug("Cannot append %c to rval-list [%s]\n",type,(char *)item);
        return NULL;
    }
 
@@ -592,12 +592,12 @@ struct Rlist *PrependRlist(struct Rlist **start,void *item, char type)
 switch(type)
    {
    case CF_SCALAR:
-       Debug("Prepending scalar to rval-list [%s]\n", (char*)item);
+       CfDebug("Prepending scalar to rval-list [%s]\n", (char*)item);
        break;
 
    case CF_LIST:
        
-       Debug("Expanding and prepending list (ends up in reverse)\n");
+       CfDebug("Expanding and prepending list (ends up in reverse)\n");
 
        for (rp = (struct Rlist *)item; rp != NULL; rp=rp->next)
           {
@@ -606,16 +606,16 @@ switch(type)
        return lp;
 
    case CF_FNCALL:
-       Debug("Prepending function to rval-list function call: ");
+       CfDebug("Prepending function to rval-list function call: ");
        fp = (struct FnCall *)item;
        if (DEBUG)
           {
           ShowFnCall(stdout,fp);
           }
-       Debug("\n");
+       CfDebug("\n");
        break;
    default:
-       Debug("Cannot prepend %c to rval-list [%s]\n",type,(char*)item);
+       CfDebug("Cannot prepend %c to rval-list [%s]\n",type,(char*)item);
        return NULL;
    }
 
@@ -653,15 +653,15 @@ struct Rlist *OrthogAppendRlist(struct Rlist **start,void *item, char type)
 { struct Rlist *rp,*lp;
   struct CfAssoc *cp;
   
-Debug("OrthogAppendRlist\n");
+CfDebug("OrthogAppendRlist\n");
  
 switch(type)
    {
    case CF_LIST:
-       Debug("Expanding and appending list object, orthogonally\n");
+       CfDebug("Expanding and appending list object, orthogonally\n");
        break;
    default:
-       Debug("Cannot append %c to rval-list [%s]\n",type,(char*)item);
+       CfDebug("Cannot append %c to rval-list [%s]\n",type,(char*)item);
        return NULL;
    }
 
@@ -965,18 +965,18 @@ void DeleteRvalItem(void *rval, char type)
 
 { struct Rlist *clist, *next = NULL;
 
-Debug("DeleteRvalItem(%c)",type);
+CfDebug("DeleteRvalItem(%c)",type);
 
 if (DEBUG)
    {
    ShowRval(stdout,rval,type);
    }
 
-Debug("\n");
+CfDebug("\n");
 
 if (rval == NULL)
    {
-   Debug("DeleteRval NULL\n");
+   CfDebug("DeleteRval NULL\n");
    return;
    }
 
@@ -1022,7 +1022,7 @@ switch(type)
        break;
 
    default:
-       Debug("Nothing to do\n");
+       CfDebug("Nothing to do\n");
        return;
    }
 }
@@ -1180,7 +1180,7 @@ struct Rlist *SplitStringAsRList(char *string,char sep)
   char node[CF_MAXVARSIZE];
   int maxlen = strlen(string);
   
-Debug("SplitStringAsRList(%s)\n",string);
+CfDebug("SplitStringAsRList(%s)\n",string);
 
 if (string == NULL)
    {
@@ -1222,7 +1222,7 @@ if (string == NULL)
    return NULL;
    }
 
-Debug("\n\nSplit \"%s\" with regex \"%s\" (up to maxent %d)\n\n",string,regex,max);
+CfDebug("\n\nSplit \"%s\" with regex \"%s\" (up to maxent %d)\n\n",string,regex,max);
   
 sp = string;
   
@@ -1326,10 +1326,10 @@ if (strcmp(name,"CF_NOMATCH") == 0 || strcmp(version,"CF_NOMATCH") == 0 || strcm
    return false;
    }
 
-Debug(" -? Package line \"%s\"\n",item);
-Debug(" -?      with name \"%s\"\n",name);
-Debug(" -?      with version \"%s\"\n",version);
-Debug(" -?      with architecture \"%s\"\n",arch);
+CfDebug(" -? Package line \"%s\"\n",item);
+CfDebug(" -?      with name \"%s\"\n",name);
+CfDebug(" -?      with version \"%s\"\n",version);
+CfDebug(" -?      with architecture \"%s\"\n",arch);
 
 return PrependPackageItem(list,name,version,arch,a,pp);
 }

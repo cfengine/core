@@ -149,7 +149,7 @@ LoadHistogram();
 MonTempInit();
 MonOtherInit();
 
-Debug("Finished with initialization.\n");
+CfDebug("Finished with initialization.\n");
 }
 
 /*********************************************************************/
@@ -170,11 +170,11 @@ cf_chmod(AVDB,0644);
 if (ReadDB(dbp,"DATABASE_AGE",&AGE,sizeof(double)))
    {
    WAGE = AGE / SECONDS_PER_WEEK * CF_MEASURE_INTERVAL;
-   Debug("\n\nPrevious DATABASE_AGE %f\n\n",AGE);
+   CfDebug("\n\nPrevious DATABASE_AGE %f\n\n",AGE);
    }
 else
    {
-   Debug("No previous AGE\n");
+   CfDebug("No previous AGE\n");
    AGE = 0.0;
    }
 
@@ -299,7 +299,7 @@ while (true)
 
 static void GetQ(void)
 {
-Debug("========================= GET Q ==============================\n");
+CfDebug("========================= GET Q ==============================\n");
 
 MonEntropyClassesReset();
 
@@ -366,11 +366,11 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    newvals.Q[i].q = This[i];
    LOCALAV.Q[i].q = This[i];
 
-   Debug("Current %s.q %lf\n",name,currentvals->Q[i].q);
-   Debug("Current %s.var %lf\n",name,currentvals->Q[i].var);
-   Debug("Current %s.ex %lf\n",name,currentvals->Q[i].expect);
-   Debug("CF_THIS[%s] = %lf\n",name,CF_THIS[i]);
-   Debug("This[%s] = %lf\n",name,This[i]);
+   CfDebug("Current %s.q %lf\n",name,currentvals->Q[i].q);
+   CfDebug("Current %s.var %lf\n",name,currentvals->Q[i].var);
+   CfDebug("Current %s.ex %lf\n",name,currentvals->Q[i].expect);
+   CfDebug("CF_THIS[%s] = %lf\n",name,CF_THIS[i]);
+   CfDebug("This[%s] = %lf\n",name,This[i]);
 
    newvals.Q[i].expect = WAverage(This[i],currentvals->Q[i].expect,WAGE);
    LOCALAV.Q[i].expect = WAverage(newvals.Q[i].expect,LOCALAV.Q[i].expect,ITER);
@@ -420,7 +420,7 @@ if (++LDT_POS >= LDT_BUFSIZE)
 
    if (!LDT_FULL)
       {
-      Debug("LDT Buffer full at %d\n",LDT_BUFSIZE);
+      CfDebug("LDT Buffer full at %d\n",LDT_BUFSIZE);
       LDT_FULL = true;
       }
    }
@@ -491,7 +491,7 @@ static int anomaly[CF_OBSERVABLES][LDT_BUFSIZE];
 static double anomaly_chi[CF_OBSERVABLES];
 static double anomaly_chi_limit[CF_OBSERVABLES];
 
-Debug("Arm classes for %s\n",timekey);
+CfDebug("Arm classes for %s\n",timekey);
 
 for (i = 0; i < CF_OBSERVABLES; i++)
    {
@@ -615,12 +615,12 @@ if (ReadDB(dbp,timekey,&entry,sizeof(struct Averages)))
    int i;
    for (i = 0; i < CF_OBSERVABLES; i++)
       {
-      Debug("Previous values (%lf,..) for time index %s\n\n",entry.Q[i].expect,timekey);
+      CfDebug("Previous values (%lf,..) for time index %s\n\n",entry.Q[i].expect,timekey);
       }
    }
 else
    {
-   Debug("No previous value for time index %s\n",timekey);
+   CfDebug("No previous value for time index %s\n",timekey);
    }
 
 CloseDB(dbp);
@@ -777,7 +777,7 @@ static double SetClasses(char * name,double variable,double av_expect,double av_
 char buffer[CF_BUFSIZE],buffer2[CF_BUFSIZE];
 double dev,delta,sigma,ldelta,lsigma,sig;
 
-Debug("\n SetClasses(%s,X=%lf,avX=%lf,varX=%lf,lavX=%lf,lvarX=%lf,%s)\n",name,variable,av_expect,av_var,localav_expect,localav_var,timekey);
+CfDebug("\n SetClasses(%s,X=%lf,avX=%lf,varX=%lf,lavX=%lf,lvarX=%lf,%s)\n",name,variable,av_expect,av_var,localav_expect,localav_var,timekey);
 
 delta = variable - av_expect;
 sigma = sqrt(av_var);
@@ -785,19 +785,19 @@ ldelta = variable - localav_expect;
 lsigma = sqrt(localav_var);
 sig = sqrt(sigma*sigma+lsigma*lsigma);
 
-Debug(" delta = %lf,sigma = %lf, lsigma = %lf, sig = %lf\n",delta,sigma,lsigma,sig);
+CfDebug(" delta = %lf,sigma = %lf, lsigma = %lf, sig = %lf\n",delta,sigma,lsigma,sig);
 
 if (sigma == 0.0 || lsigma == 0.0)
    {
-   Debug(" No sigma variation .. can't measure class\n");
+   CfDebug(" No sigma variation .. can't measure class\n");
    return sig;
    }
 
-Debug("Setting classes for %s...\n",name);
+CfDebug("Setting classes for %s...\n",name);
 
 if (fabs(delta) < cf_noise_threshold) /* Arbitrary limits on sensitivity  */
    {
-   Debug(" Sensitivity too high ..\n");
+   CfDebug(" Sensitivity too high ..\n");
 
    buffer[0] = '\0';
    strcpy(buffer,name);

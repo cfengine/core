@@ -65,7 +65,7 @@ int MapBodyArgs(char *scopeid,struct Rlist *give,struct Rlist *take)
   struct Rval returnval;
   int len1,len2;
   
-Debug("MapBodyArgs(begin)\n");
+CfDebug("MapBodyArgs(begin)\n");
 
 len1 = RlistLen(give);
 len2 = RlistLen(take);
@@ -93,7 +93,7 @@ for (rpg = give, rpt = take; rpg != NULL && rpt != NULL; rpg=rpg->next,rpt=rpt->
 
           lval = (char *)rpt->item;
           rval = rpg->item;
-          Debug("MapBodyArgs(SCALAR,%s,%s)\n", lval, (char*)rval);
+          CfDebug("MapBodyArgs(SCALAR,%s,%s)\n", lval, (char*)rval);
           AddVariableHash(scopeid,lval,rval,CF_SCALAR,dtg,NULL,0);
           break;
 
@@ -141,7 +141,7 @@ for (rpg = give, rpt = take; rpg != NULL && rpt != NULL; rpg=rpg->next,rpt=rpt->
       }
    }
 
-Debug("MapBodyArgs(end)\n");
+CfDebug("MapBodyArgs(end)\n");
 return true;
 }
 
@@ -181,7 +181,7 @@ for (rp = fp->args; rp != NULL; rp = rp->next)
           break;
       }
 
-   Debug("EXPARG: %s.%s\n",CONTEXTID, (char*)rval.item);
+   CfDebug("EXPARG: %s.%s\n",CONTEXTID, (char*)rval.item);
    AppendRlist(&newargs,rval.item,rval.rtype);
    DeleteRvalItem(rval.item,rval.rtype);
    }
@@ -248,8 +248,8 @@ if (argnum != RlistLen(realargs) && fn->numargs != CF_VARARGS)
 
 for (rp = realargs; rp != NULL; rp=rp->next)
    {
-   Debug("finalarg: %s\n", (char*)rp->item);
+   CfDebug("finalarg: %s\n", (char*)rp->item);
    }
 
-Debug("End ArgTemplate\n");
+CfDebug("End ArgTemplate\n");
 }

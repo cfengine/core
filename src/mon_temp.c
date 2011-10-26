@@ -46,7 +46,7 @@ static bool GetLMSensors(double *cf_this);
 
 void MonTempGatherData(double *cf_this)
 {
-Debug("GatherSensorData()\n");
+CfDebug("GatherSensorData()\n");
 
 switch(VSYSTEMHARDCLASS)
    {
@@ -73,7 +73,7 @@ struct stat statbuf;
 
 if (cfstat("/proc/acpi/thermal_zone",&statbuf) != -1)
    {
-   Debug("Found an acpi service\n");
+   CfDebug("Found an acpi service\n");
    ACPI = true;
    }
 
@@ -81,7 +81,7 @@ if (cfstat("/usr/bin/sensors",&statbuf) != -1)
    {
    if (statbuf.st_mode & 0111)
       {
-      Debug("Found an lmsensor system\n");
+      CfDebug("Found an lmsensor system\n");
       LMSENSORS = true;
       }
    }
@@ -102,7 +102,7 @@ struct Attributes attr;
 memset(&attr,0,sizeof(attr));
 attr.transaction.audit = false;
 
-Debug("ACPI temperature\n");
+CfDebug("ACPI temperature\n");
 
 if ((dirh = OpenDirLocal("/proc/acpi/thermal_zone")) == NULL)
    {
@@ -147,7 +147,7 @@ for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
                break;
             }
 
-         Debug("Set temp%d to %lf\n",count,temp);
+         CfDebug("Set temp%d to %lf\n",count,temp);
          }
       }
    fclose(fp);
@@ -196,7 +196,7 @@ cf_pclose(pp);
 
 if (ListLen(list) > 0)
    {
-   Debug("LM Sensors seemed to return ok data\n");
+   CfDebug("LM Sensors seemed to return ok data\n");
    }
 else
    {
@@ -227,7 +227,7 @@ for (ip = list; ip != NULL; ip=ip->next)
                break;
             }
 
-         Debug("Set temp%d to %lf from what looks like cpu temperature\n",count,temp);
+         CfDebug("Set temp%d to %lf from what looks like cpu temperature\n",count,temp);
          }
       }
    }
@@ -262,7 +262,7 @@ for (ip = list; ip != NULL; ip=ip->next)
                break;
             }
 
-         Debug("Set temp%d to %lf from what looks like core temperatures\n",count,temp);
+         CfDebug("Set temp%d to %lf from what looks like core temperatures\n",count,temp);
          }
       }
    }
@@ -278,28 +278,28 @@ for (ip = list; ip != NULL; ip=ip->next)
    if (strncmp(ip->name,"CPU Temp:",strlen("CPU Temp:")) == 0  )
       {
       sscanf(ip->name,"%*[^:]: %lf",&temp);
-      Debug("Setting temp0 to CPU Temp\n");
+      CfDebug("Setting temp0 to CPU Temp\n");
       cf_this[ob_temp0] = temp;
       }
 
    if (strncmp(ip->name,"M/B Temp:",strlen("M/B Temp:")) == 0  )
       {
       sscanf(ip->name,"%*[^:]: %lf",&temp);
-      Debug("Setting temp0 to M/B Temp\n");
+      CfDebug("Setting temp0 to M/B Temp\n");
       cf_this[ob_temp1] = temp;
       }
 
    if (strncmp(ip->name,"Sys Temp:",strlen("Sys Temp:")) == 0  )
       {
       sscanf(ip->name,"%*[^:]: %lf",&temp);
-      Debug("Setting temp0 to Sys Temp\n");
+      CfDebug("Setting temp0 to Sys Temp\n");
       cf_this[ob_temp2] = temp;
       }
 
    if (strncmp(ip->name,"AUX Temp:",strlen("AUX Temp:")) == 0  )
       {
       sscanf(ip->name,"%*[^:]: %lf",&temp);
-      Debug("Setting temp0 to AUX Temp\n");
+      CfDebug("Setting temp0 to AUX Temp\n");
       cf_this[ob_temp3] = temp;
       }
    }
@@ -335,7 +335,7 @@ for (ip = list; ip != NULL; ip=ip->next)
                break;
             }
 
-         Debug("Set temp%d to %lf\n",count,temp);
+         CfDebug("Set temp%d to %lf\n",count,temp);
          }
       }
    }

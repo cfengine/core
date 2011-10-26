@@ -209,7 +209,7 @@ void GetNameInfo3()
   char name[CF_MAXVARSIZE],quoteName[CF_MAXVARSIZE],shortname[CF_MAXVARSIZE];
 
 
-Debug("GetNameInfo()\n");
+CfDebug("GetNameInfo()\n");
 
 if (VSYSTEMHARDCLASS != unused1)
    {
@@ -277,7 +277,7 @@ for (i = 0; CLASSATTRIBUTES[i][0] != '\0'; i++)
          }
       else
          {
-         Debug2("Cfengine: I recognize %s but not %s\n",VSYSNAME.sysname,VSYSNAME.machine);
+         CfDebug2("Cfengine: I recognize %s but not %s\n",VSYSNAME.sysname,VSYSNAME.machine);
          continue;
          }
       }
@@ -549,7 +549,7 @@ else
 
    for (i = 0; hp->h_aliases[i]!= NULL; i++)
       {
-      Debug("Adding alias %s..\n",hp->h_aliases[i]);
+      CfDebug("Adding alias %s..\n",hp->h_aliases[i]);
       NewClass(hp->h_aliases[i]);
       }
    }
@@ -632,7 +632,7 @@ while (!feof(fp))
          {
          DeleteVariable("mon",name);
          NewScalar("mon",name,value,cf_str);         
-         Debug(" -> Setting new monitoring scalar %s => %s",name,value);
+         CfDebug(" -> Setting new monitoring scalar %s => %s",name,value);
          }
       }
    else
@@ -657,12 +657,12 @@ for (ip = IPADDRESSES; ip != NULL; ip=ip->next)
    {
    if (StrnCmp(adr,ip->name,strlen(adr)) == 0)
       {
-      Debug("Identifying (%s) as one of my interfaces\n",adr);
+      CfDebug("Identifying (%s) as one of my interfaces\n",adr);
       return true;
       }
    }
 
-Debug("(%s) is not one of my interfaces\n",adr);
+CfDebug("(%s) is not one of my interfaces\n",adr);
 return false;
 }
 
@@ -1465,7 +1465,7 @@ else
    for (version = 9; version < 13; version++)
       {
       snprintf(vbuf,CF_BUFSIZE,"%s %d ",SUSE_SLES_ID,version);
-      Debug("Checking for suse [%s]\n",vbuf);
+      CfDebug("Checking for suse [%s]\n",vbuf);
 
       if (!strncmp(relstring, vbuf, strlen(vbuf)))
          {
@@ -1475,7 +1475,7 @@ else
       else
          {
          snprintf(vbuf,CF_BUFSIZE,"%s %d ",SUSE_SLED_ID,version);
-         Debug("Checking for suse [%s]\n",vbuf);
+         CfDebug("Checking for suse [%s]\n",vbuf);
          
          if (!strncmp(relstring, vbuf, strlen(vbuf)))
             {

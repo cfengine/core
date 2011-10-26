@@ -159,7 +159,7 @@ GetCurrentUserName(conn->username,CF_SMALLBUF);
 
 if (conn->sd == CF_NOT_CONNECTED)
    {   
-   Debug("Opening server connection to %s\n",server);
+   CfDebug("Opening server connection to %s\n",server);
    
    if (!ServerConnect(conn,server,attr,pp))
       {
@@ -178,7 +178,7 @@ if (conn->sd == CF_NOT_CONNECTED)
       return NULL;
       }
    
-   Debug("Remote IP set to %s\n",conn->remoteip);
+   CfDebug("Remote IP set to %s\n",conn->remoteip);
    
    if (!IdentifyAgent(conn->sd,conn->localip,conn->family))
       {
@@ -201,7 +201,7 @@ if (conn->sd == CF_NOT_CONNECTED)
    }
 else
    {
-   Debug("Server connection to %s already open on %d\n",server,conn->sd);
+   CfDebug("Server connection to %s already open on %d\n",server,conn->sd);
    }
 
 return conn; 
@@ -212,7 +212,7 @@ return conn;
 void ServerDisconnection(struct cfagent_connection *conn)
 
 {
-Debug("Closing current server connection\n");
+CfDebug("Closing current server connection\n");
 
 if (conn)
    {
@@ -240,7 +240,7 @@ int cf_remote_stat(char *file,struct stat *buf,char *stattype,struct Attributes 
   int ret,tosend,cipherlen;
   time_t tloc;
 
-Debug("cf_remotestat(%s,%s)\n",file,stattype);
+CfDebug("cf_remotestat(%s,%s)\n",file,stattype);
 memset(recvbuffer,0,CF_BUFSIZE); 
 
 if (strlen(file) > CF_BUFSIZE-30)
@@ -332,9 +332,9 @@ if (OKProtoReply(recvbuffer))
 
    /* Use %?d here to avoid memory overflow attacks */
 
-   Debug("Mode = %ld,%ld\n",d2,d3);
+   CfDebug("Mode = %ld,%ld\n",d2,d3);
    
-   Debug("OK: type=%d\n mode=%o\n lmode=%o\n uid=%d\n gid=%d\n size=%ld\n atime=%d\n mtime=%d ino=%d nlnk=%d, dev=%d\n",
+   CfDebug("OK: type=%d\n mode=%o\n lmode=%o\n uid=%d\n gid=%d\n size=%ld\n atime=%d\n mtime=%d ino=%d nlnk=%d, dev=%d\n",
  cfst.cf_type,cfst.cf_mode,cfst.cf_lmode,cfst.cf_uid,cfst.cf_gid,(long)cfst.cf_size,
  cfst.cf_atime,cfst.cf_mtime,cfst.cf_ino,cfst.cf_nlink,cfst.cf_dev);
 
@@ -346,7 +346,7 @@ if (OKProtoReply(recvbuffer))
       return -1;
       }
    
-   Debug("Linkbuffer: %s\n",recvbuffer);
+   CfDebug("Linkbuffer: %s\n",recvbuffer);
 
    if (strlen(recvbuffer) > 3)
       {
@@ -433,7 +433,7 @@ CFDIR *OpenDirRemote(const char *dirname,struct Attributes attr,struct Promise *
   char *sp;
   struct Item *files = NULL;
 
-Debug("CfOpenDir(%s:%s)\n",pp->this_server,dirname);
+CfDebug("CfOpenDir(%s:%s)\n",pp->this_server,dirname);
 
 if (strlen(dirname) > CF_BUFSIZE - 20)
    {
@@ -545,7 +545,7 @@ static void NewClientCache(struct cfstat *data,struct Promise *pp)
 
 { struct cfstat *sp;
 
-Debug("NewClientCache\n");
+CfDebug("NewClientCache\n");
 
 sp = xmalloc(sizeof(struct cfstat));
 
@@ -561,7 +561,7 @@ void DeleteClientCache(struct Attributes attr,struct Promise *pp)
 
 { struct cfstat *sp,*sps;
 
-Debug("DeleteClientCache\n");
+CfDebug("DeleteClientCache\n");
   
 sp = pp->cache;
 
@@ -585,7 +585,7 @@ int CompareHashNet(char *file1,char *file2,struct Attributes attr,struct Promise
   struct cfagent_connection *conn = pp->conn;
 
 HashFile(file2,d,CF_DEFAULT_DIGEST);
-Debug("Send digest of %s to server, %s\n",file2,HashPrint(CF_DEFAULT_DIGEST,d));
+CfDebug("Send digest of %s to server, %s\n",file2,HashPrint(CF_DEFAULT_DIGEST,d));
 
 memset(recvbuffer,0,CF_BUFSIZE);
 
@@ -634,12 +634,12 @@ if (ReceiveTransaction(conn->sd,recvbuffer,NULL) == -1)
 
 if (strcmp(CFD_TRUE,recvbuffer) == 0)
    {
-   Debug("Hash mismatch: (reply - %s)\n",recvbuffer);
+   CfDebug("Hash mismatch: (reply - %s)\n",recvbuffer);
    return true; /* mismatch */
    }
 else
    {
-   Debug("Hash matched ok: (reply - %s)\n",recvbuffer);
+   CfDebug("Hash matched ok: (reply - %s)\n",recvbuffer);
    return false;
    }
  
@@ -790,7 +790,7 @@ if (last_write_made_hole)
       }
    }
  
-Debug("End of CopyNetReg\n");
+CfDebug("End of CopyNetReg\n");
 close(dd);
 free(buf);
 return true;
@@ -887,7 +887,7 @@ while (more)
 
    if (!EVP_DecryptUpdate(&ctx,workbuf,&plainlen,buf,cipherlen))
       {
-      Debug("Decryption failed\n");
+      CfDebug("Decryption failed\n");
       close(dd);
       free(buf);
       return false;
@@ -895,7 +895,7 @@ while (more)
 
    if (!EVP_DecryptFinal_ex(&ctx,workbuf+plainlen,&finlen))
       {
-      Debug("Final decrypt failed\n");
+      CfDebug("Final decrypt failed\n");
       close(dd);
       free(buf);
       return false;
@@ -1305,7 +1305,7 @@ static int CacheStat(char *file,struct stat *statbuf,char *stattype,struct Attri
 
 { struct cfstat *sp;
 
-Debug("CacheStat(%s)\n",file);
+CfDebug("CacheStat(%s)\n",file);
 
 for (sp = pp->cache; sp != NULL; sp=sp->next)
    {
@@ -1314,7 +1314,7 @@ for (sp = pp->cache; sp != NULL; sp=sp->next)
       if (sp->cf_failed)  /* cached failure from cfopendir */
          {
          errno = EPERM;
-         Debug("Cached failure to stat\n");
+         CfDebug("Cached failure to stat\n");
          return -1;
          }
       
@@ -1336,12 +1336,12 @@ for (sp = pp->cache; sp != NULL; sp=sp->next)
       statbuf->st_ino   = sp->cf_ino;
       statbuf->st_nlink = sp->cf_nlink;      
       
-      Debug("Found in cache\n");
+      CfDebug("Found in cache\n");
       return true;
       }
    }
  
-Debug("Did not find in cache\n"); 
+CfDebug("Did not find in cache\n"); 
 return false;
 }
 

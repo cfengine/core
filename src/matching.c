@@ -217,12 +217,12 @@ backreference = FirstBackReference(rx, teststring);
 
 if (strlen(backreference) == 0)
    {
-   Debug("The regular expression \"%s\" yielded no matching back-reference\n",regexp);
+   CfDebug("The regular expression \"%s\" yielded no matching back-reference\n",regexp);
    strncpy(backreference,"CF_NOMATCH",CF_MAXVARSIZE);
    }
 else
    {
-   Debug("The regular expression \"%s\" yielded backreference \"%s\" on %s\n",regexp,backreference,teststring);
+   CfDebug("The regular expression \"%s\" yielded backreference \"%s\" on %s\n",regexp,backreference,teststring);
    }
 
 return backreference;
@@ -422,7 +422,7 @@ for (ptr = list; ptr != NULL; ptr=ptr->next)
 
    if (FullTextMatch(regex,ptr->name) || FullTextMatch(ptr->name,regex))
       {
-      Debug("IsRegexItem(%s,%s)\n",regex,ptr->name);
+      CfDebug("IsRegexItem(%s,%s)\n",regex,ptr->name);
       return(true);
       }
    }
@@ -575,7 +575,7 @@ for (rp = listofregex; rp != NULL; rp=rp->next)
    
    if (FullTextMatch(rp->item,teststring))
       {
-      Debug("MatchRlistItem(%s > %s)\n", (char *)rp->item, teststring);
+      CfDebug("MatchRlistItem(%s > %s)\n", (char *)rp->item, teststring);
       return true;
       }
    }
@@ -595,7 +595,7 @@ int FuzzyMatchParse(char *s)
   char address[CF_ADDRSIZE];
   int mask,count = 0;
 
-Debug("Check ParsingIPRange(%s)\n",s);
+CfDebug("Check ParsingIPRange(%s)\n",s);
 
 for (sp = s; *sp != '\0'; sp++)  /* Is this an address or hostname */
    {

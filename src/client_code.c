@@ -173,7 +173,7 @@ if (conn->sd == INVALID_SOCKET)
       return NULL;
       }
 
-   if (conn->sd == (int)INVALID_SOCKET)
+   if (conn->sd == INVALID_SOCKET)
       {
       return NULL;
       }
@@ -216,7 +216,7 @@ CfDebug("Closing current server connection\n");
 
 if (conn)
    {
-   if (conn->sd > 0)
+   if (conn->sd != INVALID_SOCKET)
       {
       cf_closesocket(conn->sd);
       conn->sd = INVALID_SOCKET;
@@ -1002,7 +1002,7 @@ if (!attr.copy.force_ipv4)
       
       if ((conn->sd = socket(ap->ai_family,ap->ai_socktype,ap->ai_protocol)) == INVALID_SOCKET)
          {
-         CfOut(cf_inform,"socket"," !! Couldn't open a socket");
+         CfOut(cf_error,"socket"," !! Couldn't open a socket");
          continue;
          }
 
@@ -1051,8 +1051,11 @@ if (!attr.copy.force_ipv4)
       }
    else
       {
-      cf_closesocket(conn->sd);
-      conn->sd = INVALID_SOCKET;
+      if(conn->sd != INVALID_SOCKET)
+         {
+         cf_closesocket(conn->sd);
+         conn->sd = INVALID_SOCKET;         
+         }
       }
    
    if (response != NULL)
@@ -1089,7 +1092,7 @@ if (!attr.copy.force_ipv4)
    
    CfOut(cf_verbose,"","Connect to %s = %s, port = (%u=%s)\n",host,inet_ntoa(cin.sin_addr),(int)ntohs(shortport),strport);
     
-   if ((conn->sd = socket(AF_INET,SOCK_STREAM,0)) == -1)
+   if ((conn->sd = socket(AF_INET,SOCK_STREAM,0)) == INVALID_SOCKET)
       {
       cfPS(cf_error,CF_INTERPT,"socket",pp,attr,"Couldn't open a socket");
       return false;

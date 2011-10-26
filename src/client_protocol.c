@@ -165,9 +165,14 @@ if (strlen(dnsname) == 0)
 
 snprintf(sendbuff,CF_BUFSIZE-1,"CAUTH %s %s %s %d",localip,dnsname,uname,CFSIGNATURE);
 
+if(SendTransaction(sd,sendbuff,0,CF_DONE) == -1)
+   {
+   CfOut(cf_error, "", "!! IdentifyAgent: Could not send auth response");
+   return false;
+   }
+
 CfDebug("SENT:::%s\n",sendbuff);
- 
-SendTransaction(sd,sendbuff,0,CF_DONE);
+
 return true;
 }
 

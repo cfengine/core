@@ -157,7 +157,7 @@ snprintf(conn->username,CF_SMALLBUF,"root");
 GetCurrentUserName(conn->username,CF_SMALLBUF);
 #endif  /* NOT MINGW */
 
-if (conn->sd == CF_NOT_CONNECTED)
+if (conn->sd == INVALID_SOCKET)
    {   
    CfDebug("Opening server connection to %s\n",server);
    
@@ -165,7 +165,7 @@ if (conn->sd == CF_NOT_CONNECTED)
       {
       CfOut(cf_inform,""," !! No server is responding on this port");
 
-      if (conn->sd != CF_NOT_CONNECTED)
+      if (conn->sd != INVALID_SOCKET)
          {
          ServerDisconnection(conn);
          }
@@ -173,7 +173,7 @@ if (conn->sd == CF_NOT_CONNECTED)
       return NULL;
       }
 
-   if (conn->sd == (int)CF_NOT_CONNECTED)
+   if (conn->sd == (int)INVALID_SOCKET)
       {
       return NULL;
       }
@@ -219,7 +219,7 @@ if (conn)
    if (conn->sd > 0)
       {
       cf_closesocket(conn->sd);
-      conn->sd = CF_NOT_CONNECTED;
+      conn->sd = INVALID_SOCKET;
       }
    DeleteAgentConn(conn);
    }
@@ -1000,7 +1000,7 @@ if (!attr.copy.force_ipv4)
       {
       CfOut(cf_verbose,""," -> Connect to %s = %s on port %s\n",host,sockaddr_ntop(ap->ai_addr),strport);
       
-      if ((conn->sd = socket(ap->ai_family,ap->ai_socktype,ap->ai_protocol)) == -1)
+      if ((conn->sd = socket(ap->ai_family,ap->ai_socktype,ap->ai_protocol)) == INVALID_SOCKET)
          {
          CfOut(cf_inform,"socket"," !! Couldn't open a socket");
          continue;
@@ -1016,7 +1016,7 @@ if (!attr.copy.force_ipv4)
             {
             cfPS(cf_error,CF_FAIL,"",pp,attr," !! Unable to lookup hostname or cfengine service: %s",gai_strerror(err));
             cf_closesocket(conn->sd);
-            conn->sd = CF_NOT_CONNECTED;
+            conn->sd = INVALID_SOCKET;
             return false;
             }
          
@@ -1052,7 +1052,7 @@ if (!attr.copy.force_ipv4)
    else
       {
       cf_closesocket(conn->sd);
-      conn->sd = CF_NOT_CONNECTED;
+      conn->sd = INVALID_SOCKET;
       }
    
    if (response != NULL)

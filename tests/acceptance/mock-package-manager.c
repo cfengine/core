@@ -11,9 +11,10 @@ const char *ID = "The CFEngine mock package manager tricks cf-agent into thinkin
 
 const struct option OPTIONS[] =
       {
-      { "list-installed",no_argument,0,'l' },
-      { "list-available",no_argument,0,'L' },
-      { "add",required_argument,0,'a' },
+      { "clear-installed", no_argument, 0, 'c' },
+      { "list-installed", no_argument, 0, 'l' },
+      { "list-available", no_argument, 0, 'L' },
+      { "add", required_argument, 0, 'a' },
       { "delete", required_argument, 0, 'd' },
       { "reinstall", required_argument, 0, 'r'},
       { "update", required_argument, 0, 'u'},
@@ -24,6 +25,9 @@ const struct option OPTIONS[] =
 
 const char *HINTS[] =
       {
+      "Clear all installed imaginary packages",
+      "List installed imarginary packages",
+      "List imaginary packages available to be installed",
       "Add an imaginary package",
       "Delete a previously imagined package",
       "Reinstall an imaginary package",
@@ -145,6 +149,12 @@ for (rp = package_entries; rp != NULL; rp = rp->next)
    }
 }
 
+static void ClearInstalledPackages()
+{
+FILE *packages_file = fopen(INSTALLED_PACKAGES_FILE_NAME, "w");
+fclose(packages_file);
+}
+
 static void AddPackage(struct Package *package)
 {
 if (FindPackage(INSTALLED_PACKAGES_FILE_NAME, package) == NULL)
@@ -208,6 +218,10 @@ while ((c = getopt_long(argc, argv, "rd:vnKIf:D:N:Vs:x:MBb:", OPTIONS, &option_i
 
    switch (c)
       {
+      case 'c':
+	 ClearInstalledPackages();
+	 break;
+
       case 'l':
 	 {
 	 struct Rlist *installed_packages = ReadPackageEntries(INSTALLED_PACKAGES_FILE_NAME);

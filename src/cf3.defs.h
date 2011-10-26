@@ -791,15 +791,6 @@ struct Rval
    char rtype;        /* Points to CF_SCALAR, CF_LIST, CF_FNCALL usually */
    };
 
-/*************************************************************************/
-
-struct Rlist
-   {
-   void *item;
-   char type;
-   struct Rlist *state_ptr; /* Points to "current" state/element of sub-list */
-   struct Rlist *next;
-   };
 
 /*************************************************************************/
 

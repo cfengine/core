@@ -86,7 +86,7 @@ libpromises_la_SOURCES =                                                \
         ontology.c							\
         constraints.c                                                   \
         iteration.c                                                     \
-        rlist.c                                                         \
+        rlist.c rlist.h                                                 \
         syntax.c                                                        \
         logging.c                                                       \
         signals.c                                                       \
@@ -118,8 +118,7 @@ libpromises_la_SOURCES =                                                \
 	mod_environ.c							\
 	mod_outputs.c							\
         unix.c								\
-	json.h								\
-	json.c
+	json.c json.h
 
 # Automake need to be guided due to symlinking
 libpromises_la_DEPENDENCIES = ../pub/libcfpub.la $(NOVA_LDADD) $(CONSTELLATION_LDADD)

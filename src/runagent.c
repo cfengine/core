@@ -195,6 +195,8 @@ if (BACKGROUND)
    }
 #endif
 
+DeletePromise(pp);
+
 return 0;
 }
 
@@ -437,6 +439,7 @@ else
 
    if (conn == NULL)
       {
+      DeleteRlist(a.copy.servers);
       CfOut(cf_verbose,""," -> No suitable server responded to hail\n");
       return false;
       }

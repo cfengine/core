@@ -34,6 +34,7 @@
 #include "cf3.extern.h"
 
 static void CheckServerVersion(struct cfagent_connection *conn,struct Attributes attr, struct Promise *pp);
+static void FreeRSAKey(RSA *key);
 
 /*********************************************************************/
 
@@ -222,7 +223,7 @@ else
 
 // Server pubkey is what we want to has as a unique ID
 
-snprintf(sendbuffer,CF_BUFSIZE,"SAUTH %c %d %d %c",dont_implicitly_trust_server,encrypted_len,nonce_len,enterprise_field);
+snprintf(sendbuffer,sizeof(sendbuffer),"SAUTH %c %d %d %c",dont_implicitly_trust_server,encrypted_len,nonce_len,enterprise_field);
  
 if ((out = malloc(encrypted_len)) == NULL)
    {
@@ -236,6 +237,7 @@ if (server_pubkey != NULL)
       err = ERR_get_error();
       cfPS(cf_error,CF_FAIL,"",pp,attr,"Public encryption failed = %s\n",ERR_reason_error_string(err));
       free(out);
+      FreeRSAKey(server_pubkey);
       return false;
       }
    
@@ -278,14 +280,15 @@ memset(in,0,CF_BUFSIZE);
 
 if (ReceiveTransaction(conn->sd,in,NULL) == -1)
    {
-   DestroyServerConnection(conn);
    cfPS(cf_error,CF_INTERPT,"recv",pp,attr,"Protocol transaction broken off (1)");
+   FreeRSAKey(server_pubkey);
    return false;
    }
 
 if (BadProtoReply(in))
    {
    CfOut(cf_error,"",in);
+   FreeRSAKey(server_pubkey);
    return false;
    }
 
@@ -296,8 +299,8 @@ memset(in,0,CF_BUFSIZE);
 
 if (ReceiveTransaction(conn->sd,in,NULL) == -1)
    {
-   DestroyServerConnection(conn);
    cfPS(cf_error,CF_INTERPT,"recv",pp,attr,"Protocol transaction broken off (2)");
+   FreeRSAKey(server_pubkey);
    return false;   
    }
 
@@ -318,6 +321,7 @@ if (HashesMatch(digest,in,CF_DEFAULT_DIGEST) || HashesMatch(digest,in,cf_md5)) /
          {
          CfOut(cf_error,""," !! Not authorized to trust the server=%s's public key (trustkey=false)\n",pp->this_server);
          PromiseRef(cf_verbose,pp);
+         FreeRSAKey(server_pubkey);
          return false;
          }
       }
@@ -325,6 +329,7 @@ if (HashesMatch(digest,in,CF_DEFAULT_DIGEST) || HashesMatch(digest,in,cf_md5)) /
 else
    {
    cfPS(cf_error,CF_INTERPT,"",pp,attr,"Challenge response from server %s/%s was incorrect!",pp->this_server,conn->remoteip);
+   FreeRSAKey(server_pubkey);
    return false;
    }
 
@@ -339,8 +344,8 @@ encrypted_len = ReceiveTransaction(conn->sd,in,NULL);
 
 if (encrypted_len <= 0)
    {
-   DestroyServerConnection(conn);
    CfOut(cf_error,"","Protocol transaction sent illegal cipher length");
+   FreeRSAKey(server_pubkey);
    return false;      
    }
 
@@ -353,6 +358,7 @@ if (RSA_private_decrypt(encrypted_len,in,decrypted_cchall,PRIVKEY,RSA_PKCS1_PADD
    {
    err = ERR_get_error();
    cfPS(cf_error,CF_INTERPT,"",pp,attr,"Private decrypt failed = %s, abandoning\n",ERR_reason_error_string(err));
+   FreeRSAKey(server_pubkey);
    return false;
    }
 
@@ -390,7 +396,6 @@ if (server_pubkey == NULL)
    /* proposition S4 - conditional */  
    if ((len = ReceiveTransaction(conn->sd,in,NULL)) <= 0)
       {
-      DestroyServerConnection(conn);
       CfOut(cf_error,"","Protocol error in RSA authentation from IP %s\n",pp->this_server);
       return false;
       }
@@ -399,7 +404,7 @@ if (server_pubkey == NULL)
       {
       err = ERR_get_error();
       cfPS(cf_error,CF_INTERPT,"",pp,attr,"Private key decrypt failed = %s\n",ERR_reason_error_string(err));
-      RSA_free(newkey);
+      FreeRSAKey(newkey);
       return false;
       }
 
@@ -407,9 +412,8 @@ if (server_pubkey == NULL)
 
    if ((len=ReceiveTransaction(conn->sd,in,NULL)) <= 0)
       {
-      DestroyServerConnection(conn);
       cfPS(cf_inform,CF_INTERPT,"",pp,attr,"Protocol error in RSA authentation from IP %s\n",pp->this_server);
-      RSA_free(newkey);
+      FreeRSAKey(newkey);
       return false;
       }
    
@@ -417,12 +421,12 @@ if (server_pubkey == NULL)
       {
       err = ERR_get_error();
       cfPS(cf_error,CF_INTERPT,"",pp,attr,"Public key decrypt failed = %s\n",ERR_reason_error_string(err));
-      RSA_free(newkey);
+      FreeRSAKey(newkey);
       return false;
       }
 
    server_pubkey = RSAPublicKey_dup(newkey);
-   RSA_free(newkey);
+   FreeRSAKey(newkey);
    }
  
 /* proposition C5 */
@@ -432,6 +436,7 @@ SetSessionKey(conn);
 if (conn->session_key == NULL)
    {
    CfOut(cf_error,"","A random session key could not be established");
+   FreeRSAKey(server_pubkey);
    return false;
    }
 
@@ -449,6 +454,7 @@ if (RSA_public_encrypt(session_size,conn->session_key,out,server_pubkey,RSA_PKCS
    err = ERR_get_error();
    cfPS(cf_error,CF_INTERPT,"",pp,attr,"Public encryption failed = %s\n",ERR_reason_error_string(err));
    free(out);
+   FreeRSAKey(server_pubkey);
    return false;
    }
 
@@ -460,11 +466,25 @@ if (server_pubkey != NULL)
    CfOut(cf_verbose,""," -> Public key identity of host \"%s\" is \"%s\"",conn->remoteip,HashPrint(CF_DEFAULT_DIGEST,conn->digest));
    SavePublicKey(conn->username,conn->remoteip,HashPrint(CF_DEFAULT_DIGEST,conn->digest),server_pubkey);  // FIXME: username is local
    LastSaw(conn->username,conn->remoteip,conn->digest,cf_connect);
-   RSA_free(server_pubkey);
    }
 
 free(out);
+FreeRSAKey(server_pubkey);
 return true; 
+}
+
+/*********************************************************************/
+
+static void FreeRSAKey(RSA *key)
+/* Maybe not needed - RSA_free(NULL) seems to work, but who knows
+ * with older OpenSSL versions */
+{
+ if(key == NULL)
+    {
+    return;
+    }
+ 
+ RSA_free(key);
 }
 
 /*********************************************************************/
@@ -487,7 +507,6 @@ if (SendTransaction(conn->sd,sendbuffer,tosend,CF_DONE) == -1)
 
 if (ReceiveTransaction(conn->sd,recvbuffer,NULL) == -1)
    {
-   DestroyServerConnection(conn);
    cfPS(cf_inform,CF_INTERPT,"send",pp,attr,"Reply failed while checking version");
    conn->protoversion = 0;
    return;
@@ -515,6 +534,11 @@ static void SetSessionKey(struct cfagent_connection *conn)
   int session_size = CfSessionKeySize(conn->encryption_type);
 
 bp = BN_new();
+
+if(bp == NULL)
+   {
+   FatalError("Could not allocate session key");
+   }
 
 // session_size is in bytes
 if(!BN_rand(bp,session_size*8,-1,0))

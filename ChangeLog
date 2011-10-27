@@ -1,3 +1,9 @@
+3.2.4   (Bugfix and Stability release)
+
+	Fixed failure in network transfer in case of misbehaving peer
+
+	A few tiny memory leaks on error paths fixed
+
 3.2.3   (Bugfix and Stability release)
 
 	A few tiny memory leaks fixed

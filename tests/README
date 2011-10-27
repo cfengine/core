@@ -5,5 +5,6 @@ CFEngine testsuite
 For the information how to run acceptance testsuite, see the
 tests/acceptance/README.
 
+For information on how to add unit tests, see tests/unit/README.
 Unit tests are run by 'make check'
 

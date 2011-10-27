@@ -1,0 +1,95 @@
+How to add unit tests
+=====================
+
+1. Make sure what you are trying to write is actually a unit test. A unit test
+   should execute in milliseconds. If you are testing functionality that e.g. requires
+   a generic agent to be set up, consider writing an acceptance test.
+   A unit test should test a small piece of code (a function) in isolation.
+
+2. You typically want to test some function of a datastructure, e.g. CfAssoc.
+   Check to see if a test suite (e.g. assoc_test.c), exists already. If not, create
+   one.
+
+   2.1 (Optional) Creating a new test suite
+
+      Create a new file, e.g. mystruct_test.c, preferably by copying some existing
+      file so you get the boilerplate.
+
+      In Makefile.am, append mystruct_test to check_PROGRAMS, and add an automake
+      entry such as
+
+      mystruct_test_SOURCES = $(MOCKERY_SOURCES) mystruct_test.c
+      mystruct_test_LDADD = ../../src/libpromises.la
+
+
+3. We are using cmockery as our testing framework. Google for it and read/skim
+   their basic intro page.
+
+4. Suppose you want to test your new ToString function for CfAssoc. In assoc_test.c,
+   you could do the following.
+
+   4.1 Write the test
+
+       static test_to_string(void **state)
+       {
+       /* assert some shit here */
+       }
+
+   4.2 In the main function of assoc_test.c, add the test to the suite
+
+       int main()
+       {
+       const UnitTest tests[] =
+          {
+          unit_test(test_create_destroy),
+          unit_test(test_copy),
+          unit_test(test_to_string)
+          };
+
+       return run_tests(tests);
+       }
+
+
+5. Mocking. Suppose you want to test some function that calls a database, but you
+   don't want to deal with setting up and managing the state of the database.
+   Furthermore, you don't actually want to test the database in this test.
+
+   What you need to do is to stub out the function. For example, suppose your tested
+   function calls some DB_Insert("host123", 42);
+
+   A mock function is a dummy replacement function with NOOP functionality, so in this
+   case, in your test suite, you could add a
+
+   static int written_measure = -1;
+
+   static void DB_Insert(const char* key, int measure)
+   {
+   written_measure = measure;
+   }
+
+   Then, if later your function tries to retrieve it back, you could do
+
+   static int DB_Query(const char*key)
+   {
+   return written_measure;
+   }
+
+   Now, the key is to not have the test link towards the actual definition of
+   the function, so in Makefile.am, rather than linking against all of libpromises,
+   you probably want to be more specific, for example
+
+   str_test_SOURCES = $(MOCKERY_SOURCES) str_test.c ../../src/string_lib.c
+   str_test_LDADD = ../../pub/libcfpub.la
+
+   Finally, if you made some mocking functions and you think it will be useful to
+   other tests later, consider extracting them in a separate file, e.g. db_mock.c.
+
+6. Memory checking. We don't really care about the quality of code in the unit tests,
+   but we do care that the code tested is not leaking memory. So it's important
+   to free everything you allocate in the test code. Then, to check to see if your
+   code leaks, you can run
+
+   valgrind --leak-check=yes .libs/lt-mystruct_test
+
+   Valgrind can do stuff beyond simple leak checking, so learning about it could
+   be a worthwhile investment.

@@ -1,0 +1,83 @@
+#######################################################
+#
+# Test that action => "warn" works correctly for rename { rotate => 1 } (Issue 841)
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+
+bundle common g
+{
+vars:
+  "testfile" string => "/tmp/TEST.cfengine";
+}
+
+#######################################################
+
+bundle agent init
+{
+files:
+  "$(g.testfile)"
+    move_obstructions => "true",
+    copy_from => init_copy;
+}
+
+body copy_from init_copy
+{
+  source => "/dev/null";
+  compare => "digest";
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
+  "$(g.testfile)"
+    rename => rotate,
+    action => warn_only;
+}
+
+body rename rotate
+{
+rotate => "1";
+}
+
+body action warn_only
+{
+action_policy => "warn";
+ifelapsed => "60";
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+  "filestillthere" expression => fileexists("$(g.testfile)");
+  "fileisnotrotated" not => fileexists("$(g.testfile).1");
+
+    "ok" and => { "filestillthere", "fileisnotrotated" };
+
+reports:
+    ok::
+	"$(this.promise_filename) Pass";
+    !ok::
+	"$(this.promise_filename) FAIL";
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(g.testfile)");
+}

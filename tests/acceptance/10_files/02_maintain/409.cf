@@ -1,0 +1,83 @@
+#######################################################
+#
+# Test that action => "warn" works correctly for rename => disable (Issue 841)
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+
+bundle common g
+{
+vars:
+  "testfile" string => "/tmp/TEST.cfengine";
+}
+
+#######################################################
+
+bundle agent init
+{
+files:
+  "$(g.testfile)"
+    move_obstructions => "true",
+    copy_from => init_copy;
+}
+
+body copy_from init_copy
+{
+  source => "/dev/null";
+  compare => "digest";
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
+  "$(g.testfile)"
+    rename => disable,
+    action => warn_only;
+}
+
+body rename disable
+{
+disable => "true";
+}
+
+body action warn_only
+{
+action_policy => "warn";
+ifelapsed => "60";
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+  "filestillthere" expression => fileexists("$(g.testfile)");
+  "fileisnotdisabled" not => fileexists("$(g.testfile).cfdisabled");
+
+    "ok" and => { "filestillthere", "fileisnotdisabled" };
+
+reports:
+    ok::
+	"$(this.promise_filename) Pass";
+    !ok::
+	"$(this.promise_filename) FAIL";
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(g.testfile)");
+}

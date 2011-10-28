@@ -787,6 +787,12 @@ if (attr.rename.disable)
    {
    char newname[CF_BUFSIZE];
 
+   if (attr.transaction.action == cfa_warn)
+      {
+      cfPS(cf_error, CF_WARN, "", pp, attr, " !! %s '%s' should be renamed", S_ISDIR(sb->st_mode) ? "Directory" : "File", path);
+      return;
+      }
+
    if (attr.rename.newname && strlen(attr.rename.newname) > 0)
       {
       if (IsAbsPath(attr.rename.newname))
@@ -872,7 +878,11 @@ if (attr.rename.disable)
 
 if (attr.rename.rotate == 0)
    {
-   if (! DONTDO)
+   if (attr.transaction.action == cfa_warn)
+      {
+      cfPS(cf_error, CF_WARN, "", pp, attr, " !! File '%s' should be truncated", path);
+      }
+   else if (! DONTDO)
       {
       TruncateFile(path);
       cfPS(cf_inform,CF_CHG,"",pp,attr," -> Truncating (emptying) %s\n",path);
@@ -886,7 +896,11 @@ if (attr.rename.rotate == 0)
 
 if (attr.rename.rotate > 0)
    {
-   if (!DONTDO)
+   if (attr.transaction.action == cfa_warn)
+      {
+      cfPS(cf_error, CF_WARN, "", pp, attr, " !! File '%s' should be rotated", path);
+      }
+   else if (!DONTDO)
       {
       RotateFiles(path,attr.rename.rotate);
       cfPS(cf_inform,CF_CHG,"",pp,attr," -> Rotating files %s in %d fifo\n",path,attr.rename.rotate);

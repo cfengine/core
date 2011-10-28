@@ -1,0 +1,11 @@
+body common control
+{
+  bundlesequence => { "main" };
+}
+
+bundle agent main
+{
+files:
+  "/dev/null"
+    transformer => "/bin/true $(this.promiser)";
+}

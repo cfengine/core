@@ -1225,11 +1225,11 @@ if (attr.transformer == NULL || file == NULL)
    }
 
 ExpandScalar(attr.transformer,comm);
-CfOut(cf_inform,"","Transforming: %s ",comm);
+CfOut(cf_inform,"","I: Transforming: %s ",comm);
 
 if (!IsExecutable(GetArg0(comm)))
    {
-   cfPS(cf_inform,CF_FAIL,"",pp,attr,"Transformer %s %s failed",attr.transformer,file);
+   cfPS(cf_inform,CF_FAIL,"",pp,attr,"I: Transformer %s %s failed",attr.transformer,file);
    return false;
    }
 
@@ -1249,7 +1249,7 @@ if (!DONTDO)
    
    if ((pop = cf_popen(comm,"r")) == NULL)
       {
-      cfPS(cf_inform,CF_FAIL,"",pp,attr,"Transformer %s %s failed",attr.transformer,file);
+      cfPS(cf_inform,CF_FAIL,"",pp,attr,"I: Transformer %s %s failed",attr.transformer,file);
       YieldCurrentLock(thislock);
       return false;
       }

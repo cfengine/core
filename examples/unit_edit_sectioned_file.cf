@@ -73,7 +73,7 @@ bundle edit_line AppendIfNoLine(parameter,two)
 
   insert_lines:
 
-   "$(parameter) and $(two)-$(list)" location => "append";
+   "$(parameter) and $(two)-$(list)" location => append;
 
    "NEW Special-insert!!!" select_region => MySection("New section");
    "set variable = value" select_region => MySection("New section");

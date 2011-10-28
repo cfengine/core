@@ -10,6 +10,7 @@ body common control
 bundlesequence  => { "zenoss_host", "zenoss_client"  };
 syslog_host     => "zenoss_syslog.example.org";
 syslog_port     => "514";
+inputs => {"cfengine_stdlib.cf"};
 }
 
 ########################################################
@@ -56,7 +57,7 @@ files:
   "/etc/passwd"
 
   comment => "Check passwd security, tell zenoss if permissions were wrong",
-     mode => mog("644","root","root"),
+    perms => mog("644","root","root"),
    action => tell_zenoss_repaired("passwd file had incorrect permissions");
 
 commands:
@@ -81,7 +82,7 @@ ifelapsed    => "10"; # Every 10 mins
 
 body action tell_zenoss_failed(x)
 {
-log_notkept => "udp_syslog";
+log_failed => "udp_syslog";
 log_string  => "zenoss_cfengine_integration $(x) persistent problem";
 ifelapsed   => "10"; # Every 10 mins
 }

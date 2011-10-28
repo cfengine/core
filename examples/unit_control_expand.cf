@@ -20,6 +20,7 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 
+
 bundle common g
 {
 classes:
@@ -28,7 +29,7 @@ classes:
 
 vars:
 
-   "bundle" slist => { "bundle1", "bundle2", @(extra) };
+   "bundle" slist => { "bundle1", "bundle2", @(g.extra) };
 
   any::
 
@@ -48,7 +49,6 @@ vars:
 
 body common control
 {
-# inputs => { @(g.bundle) };
 bundlesequence  => { @(g.bundle) };
 }
 
@@ -59,6 +59,12 @@ bundle agent bundle1
 vars:
 
   "var1" string => "anything";
+  "bundle"  slist => { @(g.bundle) };
+
+reports:
+
+	linux::
+		"$(bundle)";
 }
 
 bundle agent bundle2

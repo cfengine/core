@@ -22,11 +22,9 @@
 
 #########################################################
 
-body monitor control()
+body monitor control
    {
    #version => "1.2.3.4";
-
-   threshold => "0.3"; 
 
    forgetrate => "0.7";
 

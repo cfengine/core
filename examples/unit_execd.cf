@@ -20,6 +20,10 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 
+body common control
+{
+	bundlesequence => { "cf_null" };
+}
 
 body executor control
 
@@ -30,5 +34,5 @@ smtpserver => "MAIL-out.hio.no";
 mailmaxlines => "50";
 schedule => { "Min00_05", "Min30_35"  };
 
-execcommand => "/var/cfengine/bin/cfAgent";
+exec_command => "/var/cfengine/bin/cf-agent";
 }

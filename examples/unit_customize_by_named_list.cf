@@ -88,7 +88,7 @@ files:
 # library template
 #########################################################
 
-body copyfrom buildvm(from)
+body copy_from buildvm(from)
 
 {
 source      => "$(from)";

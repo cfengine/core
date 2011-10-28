@@ -20,3 +20,40 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 
+body common control
+{
+  bundlesequence => { "cleanup" };
+}
+
+bundle agent cleanup
+{
+files:
+  # This will not delete the parent
+
+  "/home/mark/tmp/testcopy"
+    delete => tidyfiles,
+    file_select => changed_within_1_year,
+    depth_search => recurse;
+
+  #Now delete the parent.
+
+  "/home/mark/tmp/testcopy"
+     delete => tidyfiles;
+}
+
+body delete tidyfiles
+{
+  dirlinks => "delete";
+  rmdirs => "true";
+}
+
+body file_select changed_within_1_year
+{
+  mtime => irange(ago(1,0,0,0,0,0),now);
+  file_result => "mtime";
+}
+
+body depth_search recurse
+{
+  depth => "inf";
+}

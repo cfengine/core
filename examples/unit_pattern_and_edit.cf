@@ -48,7 +48,7 @@ bundle edit_line AppendIfNoLine(x)
   {
   insert_lines:
 
-   "Line $(x)" location => "append";
+   "Line $(x)" location => append;
   }
 
 ########################################################

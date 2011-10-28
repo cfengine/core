@@ -24,7 +24,7 @@
 
 body common control
 {
-bundlesequence => { "none" };
+bundlesequence => {"cf_null"};
 }
 
 body reporter control

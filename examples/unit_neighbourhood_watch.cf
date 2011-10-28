@@ -1,4 +1,4 @@
-#  Copyright (C) Cfengine AS
+a#  Copyright (C) Cfengine AS
 
 #  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
 
@@ -48,8 +48,8 @@ files:
   "$(sys.workdir)/nw/$(neighbours)_checksum_digests.db"
 
      comment => "Watch our peers remote hash tables and keep a local copy",
-    copyfrom => rcp("$(sys.workdir)/checksum_digests.db",$(neighbours)),
-  depends_on => { "grant_hash_tables" };
+     copy_from => rcp("$(sys.workdir)/checksum_digests.db",$(neighbours)),
+     depends_on => { "grant_hash_tables" };
 
   # Define the actual children to watch over .........................
 
@@ -88,4 +88,9 @@ body depth_search recurse(d)
 
 {
 depth        => "$(d)";
+}
+
+body action measure
+{
+measurement_class => "$(this.promiser) long job scan of /usr";
 }

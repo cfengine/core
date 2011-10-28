@@ -28,15 +28,14 @@
 # but you must choose version 2 XOR version 3
 #
 
-body control common 
+body common control
 
 {
 
 # Reads default 
 #   /var/cfengine/inputs/promises.cf
 #   /var/cfengine/inputs/failsafe.cf
-
-bundlesequence = { "cfengine3", "cfengine2" };
+bundlesequence => { "cfengine3", "cfengine2" };
 }
 
 ###########################################
@@ -57,5 +56,7 @@ bundle agent cfengine3
 {
 
 # Stuff
+commands:
 
+"/var/cfengine/bin/cf-agent";
 }

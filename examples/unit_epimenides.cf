@@ -31,7 +31,7 @@ bundle common g
 vars:
 
   "head" string => "Swallow my ${tail}";
-  "tail" string => "behind my ${head}";
+  "tail" string => "behind my ";
 
 reports:
 

@@ -20,33 +20,18 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 
-
-body common control
-{
-myclass1::
-
-    bundlesequence  => { @(categories.common), "extra1" };
-    inputs          => { @(categories.in1), @(categories.in_any) };
- 
-myclass2::
-
-    bundlesequence  => { @(categories.common), "extra2" };
-    inputs          => { @(categories.in1), @(categories.in_any) };
- 
-}
-
 bundle common categories
 {
 classes:
 
-   "myclass1" expression => "xxany"; 
-   "myclass2" expression => "xxany"; 
+   "myclass1" expression => "any";
+   "myclass2" expression => "any";
 
 vars:
           
   "common" slist => {
                     "update.cf",
-                    }
+                    };
 
   "extra1" slist => { 
                     "reasons to be cheerful, part 1",
@@ -70,3 +55,25 @@ vars:
  }
 
 
+body common control
+{
+myclass1::
+
+    bundlesequence  => { @(categories.common), "extra1" };
+    inputs          => { @(categories.in1), @(categories.in_any) };
+
+myclass2::
+
+   bundlesequence  => { @(categories.common), "extra2" };
+   inputs          => { @(categories.in1), @(categories.in_any) };
+
+}
+
+
+
+bundle edit_line name
+{
+ reports:
+  cfengine_3::
+   "xxx";
+}

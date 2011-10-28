@@ -29,8 +29,6 @@
 body common control
 
 {
-any::
-
   bundlesequence  => { "testbundle" };   
 }
 
@@ -39,5 +37,7 @@ any::
 bundle agent testbundle
 
 {
-
+	reports:
+		linux::
+		"This is a test bundle";
 }

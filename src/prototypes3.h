@@ -61,6 +61,7 @@ void *xmalloc(size_t size);
 void *xrealloc(void *ptr, size_t size);
 char *xstrdup(const char *str);
 char *xstrndup(const char *str, size_t n);
+void *xmemdup(const void *mem, size_t size);
 
 /* agent.c */
 

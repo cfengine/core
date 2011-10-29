@@ -372,6 +372,9 @@ char *strstr (char *s1,char *s2);
 #if !HAVE_DECL_STRDUP
 char *strdup (const char *str);
 #endif
+#if !HAVE_DECL_MEMDUP
+void *memdup(const void *mem, size_t size);
+#endif
 #ifndef HAVE_STRRCHR
 char *strrchr (char *str,char ch);
 #endif

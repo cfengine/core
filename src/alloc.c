@@ -71,3 +71,10 @@ char *xstrndup(const char *str, size_t n)
 return CheckResult(strndup(str, n), "xstrndup", true);
 }
 
+/*****************************************************************************/
+
+void *xmemdup(const void *data, size_t size)
+{
+return CheckResult(memdup(data, size), "xmemdup", size != 0);
+}
+

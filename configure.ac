@@ -531,6 +531,9 @@ AC_REPLACE_FUNCS(round)
 AC_CHECK_DECLS(nanosleep)
 AC_REPLACE_FUNCS(nanosleep)
 
+AC_CHECK_DECLS(memdup)
+AC_REPLACE_FUNCS(memdup)
+
 AC_CHECK_FUNCS(getpwent setpwent endpwent)
 
 AC_CHECK_FUNCS(getcwd getnetgrent waitpid seteuid setegid setreuid setregid)

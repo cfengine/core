@@ -108,6 +108,8 @@ runtest() {
     echo >> $LOG
     echo "Return code is $RETVAL." >> $LOG
 
+    sudo rm -rf $WORKDIR
+
     if [ -z "$EXPECTED_CRASH" ]; then
       if [ $RETVAL -eq 0 ] && echo "$OUT" | grep -q -F -e "R: $TEST Pass"; then
         RESULT=Pass
@@ -231,10 +233,6 @@ START_TIME=$(date +%s)
   echo ----------------------------------------------------------------------
   echo Total tests: $TESTS_COUNT
 ) > $LOG
-
-# Remove old workdirs if there any
-
-sudo rm -rf "$BASE_WORKDIR"
 
 for test in $TESTS; do
   if [ -n "$USE_VALGRIND" ]; then

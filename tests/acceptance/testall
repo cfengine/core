@@ -30,13 +30,27 @@ QUIET=
 NOVA=
 STAGING=
 NETWORK=1
-DEFAGENT=/var/cfengine/bin/cf-agent
-AGENT=${DEFAGENT}
 
 PASSED_TESTS=0
 FAILED_TESTS=0
 FAILED_TO_CRASH_TESTS=0
 SKIPPED_TESTS=0
+
+curdir() {
+  case $(dirname "$0") in
+    .)
+      echo $(pwd);;
+    *)
+      case "$0" in
+        /*) dirname "$0";;
+        *) echo $(pwd)/$(dirname "$0");;
+      esac
+      ;;
+  esac
+}
+
+DEFAGENT=$(dirname $(dirname $(curdir)))/src/cf-agent
+AGENT=${DEFAGENT}
 
 usage() {
   echo "testall [-q] [--no-nova] [--staging] [--no-network] [--agent=<agent>] [<test> <test>...]"

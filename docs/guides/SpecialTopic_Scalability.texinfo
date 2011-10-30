@@ -366,6 +366,7 @@ about the whole.
 * Avoiding network traffic::    
 * Defining classes::            
 * Copernicus Knowledge Map::    
+* System Tuning and Hub Optimization::  
 @end menu
 
 @node Policy guidelines for comprehension, Performance impact of promises, Scalable policy strategy, Scalable policy strategy
@@ -557,7 +558,7 @@ and is therefore encouraged.
 
 
 
-@node Copernicus Knowledge Map,  , Defining classes, Scalable policy strategy
+@node Copernicus Knowledge Map, System Tuning and Hub Optimization, Defining classes, Scalable policy strategy
 @section Using the Copernicus Knowledge Map
 
 The Copernicus Knowledge Map is an integral part of the commercial CFEngine products.
@@ -587,6 +588,139 @@ Use the knowledge map to:
 @item Avoid repetition.
 @item Understand relevance and impact.
 @end itemize
+
+
+@node System Tuning and Hub Optimization,  , Copernicus Knowledge Map, Scalable policy strategy
+@section System Tuning and Hub Optimization
+
+CFEngine uses MongoDB as its repository of information for each Nova and Constellation hub.
+The performance of a hub depends on the combination of hardware and software. The CFEngine
+hub falls under the category or role of database server, and this requires fairly specific
+optimizations. For example, NUMA architecture processing is known to lead to severe
+processing bottlenecks on database servers, and so NUMA kernel modules should be switched off.
+Below are some of the optimizations that should be looked into for the CFEngine hubs.
+
+@menu
+* Tuning the linux kernel for thousands of hosts::  
+* Tuning the MongoDB for thousands of hosts::  
+@end menu
+
+@node Tuning the linux kernel for thousands of hosts, Tuning the MongoDB for thousands of hosts, System Tuning and Hub Optimization, System Tuning and Hub Optimization
+@subsection Tuning the linux kernel for thousands of hosts
+
+Although CFEngine communicates with the Mongo database over a local socket, it
+still uses TCP as its connection protocol and is therefore subject to kernel
+optimizations.
+
+Every write and read connection to the Mongo database makes a kernel
+TCP connection. With the extreme density of connections, this is
+somewhat like a high volume webserver. The standard `play safe' kernel
+settings are too conservative for this kind of performance. The main
+bottleneck eventually becomes the FIN_WAIT timeout, which leaves file descriptors
+occupied and non-recyclable for too long. We recommend
+reducing this waiting time to free up descriptors faster:
+
+@verbatim
+echo "1024 61000" > /proc/sys/net/ipv4/ip_local_port_range
+echo "5" > /proc/sys/net/ipv4/tcp_fin_timeout
+@end verbatim
+@noindent This will clear old connections faster, allowing new ones be created and old threads to terminate faster.
+
+@node Tuning the MongoDB for thousands of hosts,  , Tuning the linux kernel for thousands of hosts, System Tuning and Hub Optimization
+@subsection Tuning the MongoDB for thousands of hosts
+
+Some points to consider when scaling the MongoDB:
+@itemize
+@item For installations of one or two thousand hosts per hub, one approaches
+the throughput limitations of x86 hardware and the Mongo database. One
+can expect to see MongoDB writes dominating the system
+resources. MongoDB does extensive caching'in RAM, so maximizing
+installed RAM is an important strategy -- however disk access priorities
+will also play a role.
+
+To make sure that server connection performance does not suffer as a result
+of aggressive database writing, we can lower the priority of the MongoDB
+process
+@verbatim
+ionice -c2 -n0 /var/cfengine/bin/mongod 
+@end verbatim
+@noindent or, using the PID 
+@verbatim
+ionice -c2 -n0 -p PID
+@end verbatim
+
+@item If the MongoDB database is located on the same disk as the last-seen
+database (as is default under @file{/var/cfengine}, there will be
+contention between last-seen and mongodb updates, which can slow down
+both processes unnecessarily. Ideally, these
+should be separate disks with independent queues, even independent
+controllers. RAID configurations can also slow down performance, so
+only hardware RAID should be considered.
+
+
+@item Non-Uniform Memory Access (NUMA) hardware
+works poorly with all databases. If your server uses such hardware,
+you should try to switch off this feature to improve write stability.
+NUMA tries to bind memory to specific cores for speed, but in doing so it
+can prevent free allocation of memory and lead to paging and swapping, thereafter
+thrashing as the system grinds to a halt. Processes become CPU bound as threads 
+attempt to work around the memory manegement constraints, and performance worses
+by a factor of ten or more.
+
+Some users report that using this approach is sufficient:
+@verbatim
+numactl --interleave=all /var/cfengine/bin/mongod # (other args)
+echo 0 > /proc/sys/vm/zone_reclaim_mode
+@end verbatim
+@noindent However, in our experience, only removing the kernel modules
+supporting NUMA and rebooting the kernel will solve the NUMA contention issue.
+
+Setting:
+@verbatim
+numa=off
+@end verbatim
+@noindent in the kernel boot parameters, e.g. in @file{grub.conf}:
+
+@cartouche
+@smallexample
+# grub.conf generated by anaconda
+#
+# Note that you do not have to rerun grub after making changes to this file
+# NOTICE:  You do not have a /boot partition.  This means that
+#          all kernel and initrd paths are relative to /, eg.
+#          root (hd0,0)
+#          kernel /boot/vmlinuz-version ro root=/dev/sda1
+#          initrd /boot/initrd-version.img
+#boot=/dev/sda
+default=0
+timeout=5
+splashimage=(hd0,0)/boot/grub/splash.xpm.gz
+hiddenmenu
+title MY Linux Server (2.6.32-100.26.2.el5uek)
+  root (hd0,0)
+  kernel /boot/vmlinuz-2.6.32-100.26.2.el5 ro root=/dev/sda1 rhgb quiet @b{numa=off}
+  initrd /boot/initrd-2.6.32-100.26.2.el5.img
+@end smallexample
+@end cartouche
+
+@item Finally, @code{splaytime} on the client nodes will help to spread out
+the incoming connections over the update interval of the hub. The hub
+defaults to 5 minute updates, so a complete update of policy should be
+spread over less than or equal to the same scheduled cycle time. Alternatively the cycle
+for policy updates can be extended and the splaying can be even longer.
+
+@verbatim
+
+body executor control
+{
+splaytime => "4";
+}
+
+@end verbatim
+
+@end itemize
+
+
 
 @c ************************************************************************
 
@@ -953,8 +1087,6 @@ update horizon is.
 
 
 @menu
-* Tuning the linux kernel for thousands of hosts::  
-* Tuning the MongoDB for thousands of hosts::  
 * The role of caching and indexing::  
 * Deterministic queue::         
 * Push versus pull::            
@@ -962,83 +1094,12 @@ update horizon is.
 
 
 
-@node Tuning the linux kernel for thousands of hosts, Tuning the MongoDB for thousands of hosts, Optimizations affecting scalability, Optimizations affecting scalability
-@subsection Tuning the linux kernel for thousands of hosts
-
-Every write and read connection to the Mongo database makes a kernel TCP connection. With the
-extreme density of connections, this is somewhat like a high volume webserver. The standard
-`play safe' kernel settings are too conservative for this kind of performance. The main bottleneck
-eventually becomes the FIN_WAIT timeout. We recommend reducing this:
-
-@verbatim
-echo "1024 61000" > /proc/sys/net/ipv4/ip_local_port_range
-echo "5" > /proc/sys/net/ipv4/tcp_fin_timeout
-@end verbatim
-@noindent This will clear old connections faster, allowing new ones be created and old threads to terminate faster.
-
-@node Tuning the MongoDB for thousands of hosts, The role of caching and indexing, Tuning the linux kernel for thousands of hosts, Optimizations affecting scalability
-@subsection Tuning the MongoDB for thousands of hosts
-
-Some points to consider when scaling the MongoDB:
-@itemize
-@item For installations of one or two thousand hosts per hub, one approaches
-the throughput limitations of x86 hardware and the Mongo database. One
-can expect to see MongoDB writes dominating the system
-resources. MongoDB does extensive caching'in RAM, so maximizing
-installed RAM is an important strategy -- however disk access priorities
-will also play a role.
-
-To make sure that server connection performance does not suffer as a result
-of aggressive database writing, we can lower the priority of the MongoDB
-process
-@verbatim
-ionice -c2 -n0 /var/cfengine/bin/mongod 
-@end verbatim
-@noindent or, using the PID 
-@verbatim
-ionice -c2 -n0 -p PID
-@end verbatim
-
-@item If the MongoDB database is located on the same disk as the last-seen
-database (as is default under @file{/var/cfengine}, there will be
-contention between last-seen and mongodb updates, which can slow down
-both processes unnecessarily. Ideally, these
-should be separate disks with independent queues, even independent
-controllers. RAID configurations can also slow down performance, so
-only hardware RAID should be considered.
-
-
-@item According to Mongo developers, Non-Uniform Memory Access (NUMA) hardware
-works poorly with MongoDB. If your server uses such hardware,  you should try to
-switch off this feature to improve write stability.
-
-@verbatim
-numactl --interleave=all /var/cfengine/bin/mongod # (other args)
-echo 0 > /proc/sys/vm/zone_reclaim_mode
-@end verbatim
-
-@item Finally, @code{splaytime} on the client nodes will help to spread out
-the incoming connections over the update interval of the hub. The hub
-defaults to 5 minute updates, so a complete update of policy should be
-spread over less than or equal to the same scheduled cycle time. Alternatively the cycle
-for policy updates can be extended and the splaying can be even longer.
-
-@verbatim
-
-body executor control
-{
-splaytime => "4";
-}
-
-@end verbatim
-
-@end itemize
-
-@node The role of caching and indexing, Deterministic queue, Tuning the MongoDB for thousands of hosts, Optimizations affecting scalability
+@node The role of caching and indexing, Deterministic queue, Optimizations affecting scalability, Optimizations affecting scalability
 @subsection The role of caching and indexing
 
 To assist the speed of policy processing by @code{cf-agent}, choose
 class names evenly throughout the alphabet to make searching easier.
+CFEngine arranges for indexing and cachine to be performed automatically.
 
 @node Deterministic queue, Push versus pull, The role of caching and indexing, Optimizations affecting scalability
 @subsection Deterministic queue

@@ -953,6 +953,7 @@ update horizon is.
 
 
 @menu
+* Tuning the linux kernel for thousands of hosts::  
 * Tuning the MongoDB for thousands of hosts::  
 * The role of caching and indexing::  
 * Deterministic queue::         
@@ -961,8 +962,8 @@ update horizon is.
 
 
 
-@node Tuning the kernel for thousands of hosts
-@subsection Tuning the kernel for thousands of hosts
+@node Tuning the linux kernel for thousands of hosts, Tuning the MongoDB for thousands of hosts, Optimizations affecting scalability, Optimizations affecting scalability
+@subsection Tuning the linux kernel for thousands of hosts
 
 Every write and read connection to the Mongo database makes a kernel TCP connection. With the
 extreme density of connections, this is somewhat like a high volume webserver. The standard
@@ -975,7 +976,7 @@ echo "5" > /proc/sys/net/ipv4/tcp_fin_timeout
 @end verbatim
 @noindent This will clear old connections faster, allowing new ones be created and old threads to terminate faster.
 
-@node Tuning the MongoDB for thousands of hosts, The role of caching and indexing, Optimizations affecting scalability, Optimizations affecting scalability
+@node Tuning the MongoDB for thousands of hosts, The role of caching and indexing, Tuning the linux kernel for thousands of hosts, Optimizations affecting scalability
 @subsection Tuning the MongoDB for thousands of hosts
 
 Some points to consider when scaling the MongoDB:

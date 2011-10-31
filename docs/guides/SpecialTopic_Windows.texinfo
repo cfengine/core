@@ -398,6 +398,28 @@ type. The Nova event logs can be found under the ``System'' logs.
 
 @center @image{winevent-notkept-storage,10cm,,Promise not kept in Event Viewer,png}
 
+By default, only promise not repaired and generic error events are
+logged to avoid flooding the Event Log. You can turn on verbose
+logging to log all messages, like the following example.
+
+
+@verbatim
+
+body common control
+{
+inputs => { "cfengine_stdlib.cf" };
+bundlesequence  => { "main" };
+}
+
+bundle agent main
+{
+files:
+"C:\test.txt"
+  create => "true",
+  action => log_verbose;
+}
+
+@end verbatim
 
 @node  Windows special variables, Windows hard classes, Windows-aware features in CFE Nova, Top
 @unnumberedsec Windows special variables
@@ -490,7 +512,7 @@ bundle agent main
 commands:
 
 "\"C:\Program Files\Some Dir\program name.bat\" --silent --batch"
-  action => ifwin_bg;
+  action => in_shell_bg;
 }
 
 @end verbatim

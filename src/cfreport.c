@@ -60,6 +60,7 @@ void OpenMagnifyFiles(void);
 void CloseMagnifyFiles(void);
 void EraseAverages(void);
 void RemoveHostSeen(char *hosts);
+static void ImportNovaReports(void);
 
 extern struct BodySyntax CFRE_CONTROLBODY[];
 
@@ -549,25 +550,46 @@ if (!EMPTY(NOVA_EXPORT_TYPE))
 
 if (!EMPTY(NOVA_IMPORT_FILE))
    {
-   if (IsDefinedClass("am_policy_hub"))
-      {
-      if(Nova_ImportHostReports(NOVA_IMPORT_FILE))
-         {
-         GenericDeInitialize();
-         exit(0);
-         }
-      else
-         {
-         GenericDeInitialize();
-         exit(1);
-         }
-      }
-   else
-      {
-      CfOut(cf_error, "", "Importing reports is only possible on Nova policy hubs");
-      }
+   ImportNovaReports();
    }
-#endif
+#endif  /* HAVE_NOVA */
+}
+
+/*****************************************************************************/
+
+static void ImportNovaReports(void)
+{
+ #ifdef HAVE_LIBMONGOC
+ if (IsDefinedClass("am_policy_hub"))
+    {
+    mongo_connection dbconn;
+    
+    if(!CFDB_Open(&dbconn, "127.0.0.1", CFDB_PORT))
+       {
+       CfOut(cf_error, "", "!! Could not connect to database -- skipping import");
+       GenericDeInitialize();
+       exit(0);
+       }
+    
+    if(Nova_ImportHostReports(&dbconn, NOVA_IMPORT_FILE))
+       {
+       GenericDeInitialize();
+       exit(0);
+       }
+    else
+       {
+       GenericDeInitialize();
+       exit(1);
+       }
+    }
+ else
+    {
+    CfOut(cf_error, "", "Importing reports is only possible on Nova policy hubs");
+    }
+
+#else  /* NOT HAVE_LIBMONGOC */
+ CfOut(cf_error, "", "Importing reports is only possible on Nova policy hubs");
+#endif 
 }
 
 /*****************************************************************************/

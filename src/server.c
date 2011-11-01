@@ -2302,8 +2302,6 @@ if (!OpenDB(filename,&dbp))
    return NULL;
    }
 
-/* Acquire a cursor for the database. */
-
 if (!NewDBCursor(dbp,&dbcp))
    {
    CfOut(cf_inform,""," !! Unable to scan persistence cache");

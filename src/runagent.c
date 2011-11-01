@@ -453,18 +453,31 @@ pp->cache = NULL;
 if (strlen(MENU) > 0)
    {
 #ifdef HAVE_NOVA
+   
+#ifdef HAVE_LIBMONGOC
+
+   mongo_connection dbconn;
+   if(!CFDB_Open(&dbconn, "127.0.0.1", CFDB_PORT))
+      {
+      ServerDisconnection(conn);
+      DeleteRlist(a.copy.servers);
+      return false;
+      }
      
    enum cfd_menu menu = String2Menu(MENU);
 
    switch(menu)
      {
      case cfd_menu_delta:
-         Nova_QueryForKnowledgeMap(conn,MENU,time(0) - SECONDS_PER_MINUTE * 10);
+         Nova_QueryClientForReports(&dbconn, conn,MENU,time(0) - SECONDS_PER_MINUTE * 10);
+         CFDB_Close(&dbconn);
          break;
      case cfd_menu_full:
-         Nova_QueryForKnowledgeMap(conn,MENU,time(0) - SECONDS_PER_WEEK);
+         Nova_QueryClientForReports(&dbconn, conn,MENU,time(0) - SECONDS_PER_WEEK);
+         CFDB_Close(&dbconn);
        break;
 
+       
      case cfd_menu_relay:
 #ifdef HAVE_CONSTELLATION
        queries = Constellation_CreateAllQueries();
@@ -476,6 +489,8 @@ if (strlen(MENU) > 0)
      default:
        break;
      }
+
+#endif  /* HAVE_LIBMONGOC */
 
 #endif  /* HAVE_NOVA */
    }

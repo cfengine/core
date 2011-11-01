@@ -631,6 +631,25 @@ echo "5" > /proc/sys/net/ipv4/tcp_fin_timeout
 
 Some points to consider when scaling the MongoDB:
 @itemize
+@item Indexing is a very important factor for scaling any database.
+CFEngine Nova automatically checks and the creates indices needed for
+scale as part of the schedule of @code{cf-hub}. The incices are
+checked every six hours.
+
+However, if the database schema changes, which may happen during
+upgrades of CFEngine Nova, the indices may have been changed as
+well. In large-scale environment we may not have time to wait up to
+six hours for the indices to get repaired, so this can be done 
+manually by running the following command on the hub.
+
+@verbatim
+/var/cfengine/bin/cf-hub --index
+@end verbatim
+
+Please make sure @code{cf-hub} is not running in the background while
+indices are being created, as this may slow the system down
+considerably under high load.
+
 @item For installations of one or two thousand hosts per hub, one approaches
 the throughput limitations of x86 hardware and the Mongo database. One
 can expect to see MongoDB writes dominating the system
@@ -702,6 +721,7 @@ title MY Linux Server (2.6.32-100.26.2.el5uek)
   initrd /boot/initrd-2.6.32-100.26.2.el5.img
 @end smallexample
 @end cartouche
+
 
 @item Finally, @code{splaytime} on the client nodes will help to spread out
 the incoming connections over the update interval of the hub. The hub

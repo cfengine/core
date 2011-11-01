@@ -254,11 +254,11 @@ if (*key == NULL)
 
 if (*value == NULL)
    {
-   free(*key);
-   
-   *key = NULL;
    errCode = tchdbecode(hdbp->hdb);
-   CfOut(cf_error, "", "!! tchdbget: Could not get value corrsponding to key \"%s\": %s", key, tchdberrmsg(errCode));
+   CfOut(cf_error, "", "!! tchdbget: Could not get value corresponding to key \"%s\": %s", *key, tchdberrmsg(errCode));
+
+   free(*key);
+   *key = NULL;
    return false;
    }
 

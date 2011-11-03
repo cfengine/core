@@ -1154,6 +1154,11 @@ CFEngine language. The editor provides syntax high-lighting and look-up to make 
 with CFEngine's extensive language easier. There is a tie-in for Subversion version
 control repositories; the Mission Portal will prompt you for the path and login credentials. Setup of a subversion repository has to be done separately.
 
+@sp 1
+@center @image{img-svncheckout,10cm,,SVN checkout}
+@center Figure: SVN checkout
+@sp 1
+
 The main key commands in the editor Window are:
 
 @table @i

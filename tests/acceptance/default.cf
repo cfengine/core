@@ -4,6 +4,9 @@ classes:
   "bin_sort" expression => fileexists("/bin/sort");
   "usr_bin_sort" expression => fileexists("/usr/bin/sort");
 
+  "bin_touch" expression => fileexists("/bin/touch");
+  "usr_bin_touch" expression => fileexists("/usr/bin/touch");
+
 vars:
   "cwd" string => execresult("/bin/pwd", "noshell");
 
@@ -13,6 +16,11 @@ vars:
     "sort" string => "/bin/sort";
   usr_bin_sort::
     "sort" string => "/usr/bin/sort";
+
+  bin_touch::
+    "touch" string => "/bin/touch";
+  usr_bin_touch::
+    "touch" string => "/usr/bin/touch";
 }
 
 bundle common paths_init(filename)

@@ -25,7 +25,7 @@ vars:
 bundle agent init
 {
 commands:
-  "/usr/bin/touch $(g.testfile)";
+  "$(G.touch) $(g.testfile)";
 }
 
 #######################################################

@@ -1230,6 +1230,11 @@ else if (value && strcmp(value,"timestamp") == 0)
    {
    e.backup = cfa_timestamp;
    }
+else if (value && strcmp(value,"rotate") == 0)
+   {	
+   e.backup = cfa_rotate;
+   e.rotate = GetIntConstraint("rotate", pp);
+   }
 else
    {
    e.backup = cfa_backup;

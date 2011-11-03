@@ -906,6 +906,7 @@ enum cfbackupoptions
    cfa_backup,
    cfa_nobackup,
    cfa_timestamp,
+   cfa_rotate,
    cfa_repos_store/* for internal use only */
    };
 
@@ -1528,6 +1529,7 @@ struct EditDefaults
    int empty_before_use;
    int maxfilesize;
    int joinlines;
+   int rotate;
    };
 
 /*************************************************************************/

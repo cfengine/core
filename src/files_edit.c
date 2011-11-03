@@ -265,6 +265,12 @@ if (cf_rename(file,backup) == -1)
    return false;
    }
 
+if (a.edits.backup == cfa_rotate)
+   {
+   RotateFiles(backup, a.edits.rotate);
+   unlink(backup);
+   }
+
 if (a.edits.backup != cfa_nobackup)
    {
    if (ArchiveToRepository(backup,a,pp))

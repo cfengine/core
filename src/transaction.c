@@ -200,7 +200,7 @@ if (elapsedtime < 0)
 
 if (elapsedtime < attr.transaction.ifelapsed)
    {
-   CfOut(cf_verbose,""," XX Nothing promised here [%.40s] (%u/%u minutes elapsed)\n",cflock,elapsedtime,attr.transaction.ifelapsed);
+   CfOut(cf_verbose,""," XX Nothing promised here [%.40s] (%u/%u minutes elapsed)\n",cflast,elapsedtime,attr.transaction.ifelapsed);
    ReleaseCriticalSection();
    return this;
    }

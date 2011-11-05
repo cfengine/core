@@ -40,8 +40,8 @@ static int RemoveLock(char *name);
 static void LogLockCompletion(char *cflog,int pid,char *str,char *operator,char *operand);
 static time_t FindLockTime(char *name);
 static pid_t FindLockPid(char *name);
-static CF_DB *OpenLock(void);
-static void CloseLock(CF_DB *dbp);
+CF_DB *OpenLock(void);
+void CloseLock(CF_DB *dbp);
 static void RemoveDates(char *s);
 
 /*****************************************************************************/
@@ -598,7 +598,7 @@ else
 
 /************************************************************************/
 
-static CF_DB *OpenLock()
+CF_DB *OpenLock()
 
 { char name[CF_BUFSIZE];
   CF_DB *dbp;
@@ -618,7 +618,7 @@ return dbp;
 
 /************************************************************************/
 
-static void CloseLock(CF_DB *dbp)
+void CloseLock(CF_DB *dbp)
 
 {
 if (dbp)

@@ -452,10 +452,8 @@ pp->cache = NULL;
 
 if (strlen(MENU) > 0)
    {
-#ifdef HAVE_NOVA
+#if defined(HAVE_NOVA) && defined(HAVE_LIBMONGOC)
    
-#ifdef HAVE_LIBMONGOC
-
    mongo_connection dbconn;
    if(!CFDB_Open(&dbconn, "127.0.0.1", CFDB_PORT))
       {
@@ -470,18 +468,16 @@ if (strlen(MENU) > 0)
      {
      case cfd_menu_delta:
          Nova_QueryClientForReports(&dbconn, conn,MENU,time(0) - SECONDS_PER_MINUTE * 10);
-         CFDB_Close(&dbconn);
          break;
      case cfd_menu_full:
          Nova_QueryClientForReports(&dbconn, conn,MENU,time(0) - SECONDS_PER_WEEK);
-         CFDB_Close(&dbconn);
        break;
 
        
      case cfd_menu_relay:
 #ifdef HAVE_CONSTELLATION
        queries = Constellation_CreateAllQueries();
-       Constellation_QueryRelay(conn,queries);
+       Constellation_QueryRelay(&dbconn, conn,queries);
        DeleteItemList(queries);
 #endif
 	 break;
@@ -490,9 +486,9 @@ if (strlen(MENU) > 0)
        break;
      }
 
-#endif  /* HAVE_LIBMONGOC */
+   CFDB_Close(&dbconn);
 
-#endif  /* HAVE_NOVA */
+#endif  /* HAVE_NOVA && HAVE_LIBMONGOC */
    }
 else
    {

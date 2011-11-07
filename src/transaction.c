@@ -35,13 +35,10 @@
 static void WaitForCriticalSection(void);
 static void ReleaseCriticalSection(void);
 static time_t FindLock(char *last);
-static int WriteLock(char *lock);
 static int RemoveLock(char *name);
 static void LogLockCompletion(char *cflog,int pid,char *str,char *operator,char *operand);
 static time_t FindLockTime(char *name);
 static pid_t FindLockPid(char *name);
-CF_DB *OpenLock(void);
-void CloseLock(CF_DB *dbp);
 static void RemoveDates(char *s);
 
 /*****************************************************************************/
@@ -457,7 +454,7 @@ else
 
 /************************************************************************/
 
-static int WriteLock(char *name)
+int WriteLock(char *name)
 
 { CF_DB *dbp;
   struct LockData entry;

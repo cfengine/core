@@ -1175,6 +1175,10 @@ void AssertThreadLocked(pthread_mutex_t *name, char *fname);
 void PurgeLocks(void);
 int ShiftChange(void);
 
+int WriteLock(char *lock);
+CF_DB *OpenLock(void);
+void CloseLock(CF_DB *dbp);
+
 /* timeout.c */
 
 void SetTimeOut(int timeout);

@@ -456,7 +456,7 @@ if (DEBUG)
    NewClass("debug_mode");
    }
 
-CfOut(cf_verbose,"","Cfengine - autonomous configuration engine - commence self-diagnostic prelude\n");
+CfOut(cf_verbose,"","CFEngine - autonomous configuration engine - commence self-diagnostic prelude\n");
 CfOut(cf_verbose,"","------------------------------------------------------------------------\n");
 
 /* Define trusted directories */

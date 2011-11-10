@@ -905,6 +905,20 @@ return true;
 
 /*********************************************************************/
 
+char *ScanPastChars(char *scanpast, char *input)
+{
+ char *pos = input;
+
+ while(*pos != '\0' && strchr(scanpast, *pos))
+    {
+    pos++;
+    }
+
+ return pos;
+}
+
+/*********************************************************************/
+
 bool IsStrIn(const char *str, const char **strs)
 {
 int i;

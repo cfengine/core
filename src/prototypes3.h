@@ -644,6 +644,7 @@ const char *ReadLastNode(const char *str);
 int CompressPath(char *dest,char *src);
 void Chop(char *str);
 void StripTrailingNewline(char *str);
+char *ScanPastChars(char *scanpast, char *input);
 bool IsStrIn(const char *str, const char **strs);
 bool IsStrCaseIn(const char *str, const char **strs);
 char **String2StringArray(char *str, char separator);

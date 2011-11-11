@@ -43,7 +43,7 @@ struct cfagent_connection *NewAgentConn()
 ap = xcalloc(1, sizeof(struct cfagent_connection));
 
 CfDebug("New server connection...\n");
-ap->sd = INVALID_SOCKET;
+ap->sd = SOCKET_INVALID;
 ap->family = AF_INET; 
 ap->trust = false;
 ap->encryption_type = 'c';

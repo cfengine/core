@@ -445,7 +445,7 @@ void setlinebuf(FILE *stream);
 #define CF_NOSIZE    -1
 #define CF_EXTRASPC 8      /* pads items during AppendItem for eol handling in editfiles */
 #define CF_INFINITY ((int)999999999)
-#define INVALID_SOCKET -1
+#define SOCKET_INVALID -1
 #define CF_COULD_NOT_CONNECT -2
 #define CF_RECURSION_LIMIT 100
 #define CF_MONDAY_MORNING 345600

@@ -87,13 +87,4 @@ $ ./autogen.sh --help
 RUNNING TESTSUITE
 -----------------
 
-$ ./configure --prefix=/var/cfengine
-$ make [-jN]
-$ sudo make install
-$ cd tests
-$ ./testall
-
-In meantime testsuite needs sudo permissions to run (due to testing various
-functionality available only for superuser). This might change in future.
-
-Results are generated in test.log (short) and testresult.log (detailed) files.
+Please refer to the instructions in tests/README file.

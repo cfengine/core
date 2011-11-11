@@ -66,10 +66,12 @@ Copyright @copyright{} 2010 CFEngine AS
 @ifnottex
 
 
+
 @node Top, What is convergent file editing?, (dir), (dir)
 @top Editing
 @menu
 * What is convergent file editing?::  
+* File templates::              
 * Why is file editing difficult?::  
 * What does file editing involve?::  
 * Editing bundles::             
@@ -77,11 +79,7 @@ Copyright @copyright{} 2010 CFEngine AS
 * Choosing an approach to file editing::  
 * Pitfalls to watch out for in file editing::  
 * Examples of file editing::    
-* Copying a file template into place::  
-* Contextual adaptation of a file template::  
-* Modifying the current state of a file::  
 @end menu
-
 
 @end ifnottex
 @iftex
@@ -95,7 +93,7 @@ Copyright @copyright{} 2010 CFEngine AS
 @end html
 @end ifhtml
 
-@node What is convergent file editing?, Why is file editing difficult?, Top, Top
+@node What is convergent file editing?, File templates, Top, Top
 @unnumberedsec What is convergent file editing?
 @sp 1
 
@@ -112,7 +110,347 @@ approaches to file management in which pre-adjusted copies of files
 are generated for all recipients at a single location and then
 distributed.
 
-@node Why is file editing difficult?, What does file editing involve?, What is convergent file editing?, Top
+@node File templates, Why is file editing difficult?, What is convergent file editing?, Top
+@unnumberedsec File templates
+@sp 1
+
+In many cases, users think about making templates for files and filling in the blanks using
+variables. This is a simple approach that works in quite a few cases, but not all. 
+
+File templates can be achived simply through the standard library, and you can store the
+template within a CFEngine configuration, or as a separate file.  For example:
+
+@verbatim
+#
+
+body common control 
+{
+bundlesequence => { "main" };
+inputs => { "LapTop/cfengine/copbl/cfengine_stdlib.cf" };
+}
+
+#
+
+bundle common data
+{
+vars:
+
+  "person" string => "Mary";
+  "animal" string => "a little lamb";
+}
+
+#
+
+bundle agent main
+{
+files:
+
+   "/tmp/my_result"
+
+        create => "true",
+     edit_line => expand_template("/tmp/my_template_source"),
+ edit_defaults => empty;
+}
+
+@end verbatim
+@noindent Suppose the file @file{my_template_source} contains the following
+text:
+
+@smallexample
+   This is a file template containing variables to expand
+
+   e.g $(data.person) had $(data.animal)
+@end smallexample
+@noindent Then we would have the file content:
+@smallexample
+host$ more /tmp/my_result
+   This is a file template containing variables to expand
+
+   e.g Mary had a little lamb
+@end smallexample
+A simple file like this could also be defined in-line, without a separate template file:
+@verbatim
+#
+
+body common control 
+{
+bundlesequence => { "main" };
+inputs => { "LapTop/cfengine/copbl/cfengine_stdlib.cf" };
+}
+
+#
+
+bundle common data
+{
+vars:
+
+  "person" string => "Mary";
+  "animal" string => "a little lamb";
+}
+
+#
+
+bundle agent main
+{
+vars:
+
+  "content" string => 
+
+    "This is a file template containing variables to expand
+e.g $(data.person) had $(data.animal)";
+
+files:
+
+   "/tmp/my_result"
+
+        create => "true",
+     edit_line => append_if_no_line("$(content)"),
+ edit_defaults => empty;
+}
+
+@end verbatim
+
+
+
+Here is a more complicated example, that includes list expansion. List expansion (iteration)
+adds some trickiness because it is an ordered process, which needs to be anchored somehow.
+@verbatim
+#
+
+body common control 
+{
+bundlesequence => { "main" };
+inputs => { "LapTop/cfengine/copbl/cfengine_stdlib.cf" };
+}
+
+#
+
+bundle common data
+{
+vars:
+
+  "person" string => "Mary";
+  "animal" string => "a little lamb";
+
+  "mylist" slist => { "one", "two", "three" };
+  "clocks" slist => { "five", "six", "seven" };
+
+  # or read the list from a file with readstringlist()
+
+}
+
+#
+
+bundle agent main
+{
+files:
+
+
+   "/tmp/my_result"
+
+        create => "true",
+     edit_line => my_expand_template,
+ edit_defaults => empty;
+}
+
+#
+
+bundle edit_line my_expand_template
+{
+vars:
+ 
+ # import the lists, due to current limitation
+
+ "mylist" slist => { @(data.mylist) };
+ "clocks" string => join(", ","data.clocks");
+ "other"  string => "eight";
+
+insert_lines:
+
+   "
+   This is a file template containing variables to expand
+
+   e.g $(data.person) had $(data.animal)
+
+   and it said: 
+   ";
+
+   "
+   $(mylist) o'clock ";
+   "
+   ROCK!
+   $(clocks) o'clock, $(other) o'clock
+   ";
+
+   "   ROCK!
+   The end.
+   "
+
+   insert_type => "preserve_block"; # So we keep duplicate line
+}
+
+@end verbatim
+This results in a file output containing:
+@smallexample
+host$ ~/LapTop/cfengine/core/src/cf-agent -f ./test.cf -K
+host$ more /tmp/my_result
+
+   This is a file template containing variables to expand
+
+   e.g Mary had a little lamb
+
+   and it said: 
+   
+   one o'clock 
+   two o'clock 
+   three o'clock 
+   ROCK!
+   five, six, seven o'clock, eight o'clock
+   ROCK!
+   The end.
+
+@end smallexample
+
+Splitting this example into several promises seems unnecessary and inconvenient, so we could use a special
+function @code{join()} to make pre-expand the scalar list and insert it as a single object:
+
+@verbatim
+#
+
+body common control 
+{
+bundlesequence => { "main" };
+inputs => { "LapTop/cfengine/copbl/cfengine_stdlib.cf" };
+}
+
+#
+
+bundle common data
+{
+vars:
+
+  "person" string => "Mary";
+  "animal" string => "a little lamb";
+
+  "mylist" slist => { "one", "two", "three", "" };
+  "clocks" slist => { "five", "six", "seven" };
+
+  # or read the list from a file with readstringlist()
+
+}
+
+#
+
+bundle agent main
+{
+files:
+
+
+   "/tmp/my_result"
+
+        create => "true",
+     edit_line => my_expand_template,
+ edit_defaults => empty;
+}
+
+#
+
+bundle edit_line my_expand_template
+{
+vars:
+ 
+ # import the lists, due to current limitation
+
+ "mylist" string => join(" o'clock$(const.n)  ","data.mylist");
+ "clocks" string => join(", ","data.clocks");
+ "other" string => "eight";
+
+insert_lines:
+
+   "
+   This is a file template containing variables to expand
+
+   e.g $(data.person) had $(data.animal)
+
+   and it said: 
+
+   $(mylist)
+   ROCK!
+   $(clocks) o'clock, $(other) o'clock
+   ROCK!
+   The end.
+   "
+
+   insert_type => "preserve_block"; # So we keep duplicate line
+}
+
+@end verbatim
+Finally, since this is now entirely contained within a single set of quotes (i.e. there is a single
+promiser), we could replace the in-line template with one read from a file:
+@verbatim
+#
+
+body common control 
+{
+bundlesequence => { "main" };
+inputs => { "LapTop/cfengine/copbl/cfengine_stdlib.cf" };
+}
+
+#
+
+bundle common data
+{
+vars:
+
+  "person" string => "Mary";
+  "animal" string => "a little lamb";
+
+  "mylist" slist => { "one", "two", "three", "" };
+  "clocks" slist => { "five", "six", "seven" };
+
+  # or read the list from a file with readstringlist()
+
+}
+
+#
+
+bundle agent main
+{
+files:
+
+
+   "/tmp/my_result"
+
+        create => "true",
+     edit_line => my_expand_template,
+ edit_defaults => empty;
+}
+
+#
+
+bundle edit_line my_expand_template
+{
+vars:
+ 
+ # import the lists, due to current limitation
+
+ "mylist" string => join(" o'clock$(const.n)  ","data.mylist");
+ "clocks" string => join(", ","data.clocks");
+ "other" string => "eight";
+
+insert_lines:
+
+   "/tmp/my_template_source"
+     expand_scalars => "true",
+     insert_type => "file"; 
+}
+
+@end verbatim
+@noindent
+
+
+
+@node Why is file editing difficult?, What does file editing involve?, File templates, Top
 @unnumberedsec Why is file editing difficult?
 @sp 1
 
@@ -156,8 +494,8 @@ the type of situation you need to describe.
 @sp 1
 @multitable @columnfractions .5 .5
 @item @b{For the approach} @tab @b{Against the approach}
-@item 1. Deterministic or certain approach. @tab Hard to specialize the result and the source must still be maintained by hand.
-@item 2. Deterministic or certain approach. @tab Limited specialization and must come from a single source, again maintained by hand.
+@item 1. Deterministic. @tab Hard to specialize the result and the source must still be maintained by hand.
+@item 2. Deterministic. @tab Limited specialization and must come from a single source, again maintained by hand.
 @item 3. Non-deterministic/partial model. @tab Full power to customize file even with multiple managers.
 @end multitable
 @sp 1
@@ -300,10 +638,16 @@ cases, simple line insertions are usually enough to configure files.
 The increasing introduction of XML for configuration is a major headache for configuration
 management.
 
-@node  Examples of file editing, Copying a file template into place, Pitfalls to watch out for in file editing, Top
+@node  Examples of file editing,  , Pitfalls to watch out for in file editing, Top
 @unnumberedsec Examples of file editing
 
-@node Copying a file template into place, Contextual adaptation of a file template, Examples of file editing, Top
+@menu
+* Copying a file template into place::  
+* Contextual adaptation of a file template::  
+* Modifying the current state of a file::  
+@end menu
+
+@node Copying a file template into place, Contextual adaptation of a file template, Examples of file editing, Examples of file editing
 @unnumberedsubsec Copying a file template into place
 
 Use this approach if a simple substution of data will solve the problem in all contexts.
@@ -327,7 +671,7 @@ files:
 @end verbatim
 @end cartouche
 
-@node  Contextual adaptation of a file template, Modifying the current state of a file, Copying a file template into place, Top
+@node  Contextual adaptation of a file template, Modifying the current state of a file, Copying a file template into place, Examples of file editing
 @unnumberedsubsec Contextual adaptation of a file template
 
 There are two approaches here:
@@ -387,7 +731,7 @@ replace_patterns:
 @end verbatim
 @end cartouche
 
-@node  Modifying the current state of a file,  , Contextual adaptation of a file template, Top
+@node  Modifying the current state of a file,  , Contextual adaptation of a file template, Examples of file editing
 @unnumberedsubsec Modifying the current state of a file
 
 Edit a file with multiple promises about its state, when you do not want

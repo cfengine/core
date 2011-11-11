@@ -1,8 +1,11 @@
 #include "cf3.defs.h"
 
-static const char *REPOSITORY_PACKAGES_FILE_NAME = "/tmp/cfengine-mock-package-manager-repository";
-static const char *INSTALLED_PACKAGES_FILE_NAME = "/tmp/cfengine-mock-package-manager-installed";
+static char AVAILABLE_PACKAGES_FILE_NAME[PATH_MAX];
+static char INSTALLED_PACKAGES_FILE_NAME[PATH_MAX];
+
 static const int MAX_PACKAGE_ENTRY_LENGTH = 256;
+
+#define DEFAULT_ARCHITECTURE "x666"
 
 #define Error(msg) fprintf(stderr, "%s:%d: %s", __FILE__, __LINE__, msg)
 
@@ -12,8 +15,10 @@ const char *ID = "The CFEngine mock package manager tricks cf-agent into thinkin
 const struct option OPTIONS[] =
       {
       { "clear-installed", no_argument, 0, 'c' },
+      { "clear-available", no_argument, 0, 'C' },
       { "list-installed", no_argument, 0, 'l' },
       { "list-available", no_argument, 0, 'L' },
+      { "populate-available", required_argument, 0, 'P' },
       { "add", required_argument, 0, 'a' },
       { "delete", required_argument, 0, 'd' },
       { "reinstall", required_argument, 0, 'r'},
@@ -26,8 +31,10 @@ const struct option OPTIONS[] =
 const char *HINTS[] =
       {
       "Clear all installed imaginary packages",
+      "Clear all available imaginary packages",
       "List installed imarginary packages",
       "List imaginary packages available to be installed",
+      "Add an imaginary package to list of available",
       "Add an imaginary package",
       "Delete a previously imagined package",
       "Reinstall an imaginary package",
@@ -37,61 +44,170 @@ const char *HINTS[] =
       NULL
       };
 
-struct Package
+typedef struct Package
    {
    char *name;
    char *version;
    char *arch;
-   };
+   } Package;
 
-static char *SerializePackage(struct Package *package)
+typedef struct PackagePattern
+   {
+   char *name;
+   char *version;
+   char *arch;
+   } PackagePattern;
+
+/******************************************************************************/
+
+char *xasprintf(const char *fmt, ...)
 {
-char *entry = xcalloc(MAX_PACKAGE_ENTRY_LENGTH, sizeof(char));
-snprintf(entry, MAX_PACKAGE_ENTRY_LENGTH, "%s:%s:%s",
-      package->name, package->version, package->arch);
+char *entry;
+va_list ap;
+va_start(ap, fmt);
+if (vasprintf(&entry, fmt, ap) == -1)
+   {
+   FatalError("Unable to allocate memory");
+   }
+va_end(ap);
 return entry;
 }
 
-static struct Package *DeserializePackage(const char *entry)
+/******************************************************************************/
+
+static char *SerializePackage(Package *package)
 {
-struct Package *package = xcalloc(1, sizeof(struct Package));
-char *entry_copy = NULL;
+return xasprintf("%s:%s:%s", package->name, package->version, package->arch);
+}
 
-if (entry == NULL)
-   {
-   return NULL;
-   }
+/******************************************************************************/
 
-entry_copy = xcalloc(strlen(entry), sizeof(char));
-strcpy(entry_copy, entry);
+static char *SerializePackagePattern(PackagePattern *pattern)
+{
+return xasprintf("%s:%s:%s", pattern->name ? pattern->name : "*",
+                 pattern->version ? pattern->version : "*",
+                 pattern->arch ? pattern->arch : "*");
+}
+
+/******************************************************************************/
+
+static Package *DeserializePackage(const char *entry)
+{
+Package *package = xcalloc(1, sizeof(Package));
+
+char *entry_copy = xstrdup(entry);
 
 package->name = strtok(entry_copy, ":");
 package->version = strtok(NULL, ":");
 package->arch = strtok(NULL, ":");
 
+if (package->name == NULL || strcmp(package->name, "*") == 0
+    || package->version == NULL || strcmp(package->version, "*") == 0
+    || package->arch == NULL || strcmp(package->arch, "*") == 0)
+   {
+   fprintf(stderr, "Incomplete package specification: %s:%s:%s\n",
+           package->name, package->version, package->arch);
+   exit(255);
+   }
+
 return package;
 }
+
+/******************************************************************************/
+
+static bool IsWildcard(const char *str)
+{
+return str && (strcmp(str, "*") == 0 || strcmp(str, "") == 0);
+}
+
+/******************************************************************************/
+
+static void CheckWellformedness(const char *str)
+{
+if (str && strchr(str, '*') != NULL)
+   {
+   fprintf(stderr, "* is encountered in pattern not as wildcard: '%s'\n", str);
+   exit(255);
+   }
+}
+
+/******************************************************************************/
+
+static PackagePattern *NewPackagePattern(const char *name, const char *version, const char *arch)
+{
+PackagePattern *pattern = xcalloc(1, sizeof(PackagePattern));
+pattern->name = name ? xstrdup(name) : NULL;
+pattern->version = version ? xstrdup(version) : NULL;
+pattern->arch = arch ? xstrdup(arch) : NULL;
+return pattern;
+}
+
+/******************************************************************************/
+
+static PackagePattern *DeserializePackagePattern(const char *entry)
+{
+//PackagePattern *pattern = xcalloc(1, sizeof(PackagePattern));
+
+char *entry_copy = xstrdup(entry);
+
+char *name = strtok(entry_copy, ":");
+if (IsWildcard(name))
+   {
+   name = NULL;
+   }
+CheckWellformedness(name);
+
+char *version = strtok(NULL, ":");
+if (IsWildcard(version))
+   {
+   version = NULL;
+   }
+CheckWellformedness(version);
+
+char *arch = strtok(NULL, ":");
+if (arch == NULL)
+   {
+   arch = DEFAULT_ARCHITECTURE;
+   }
+else if (IsWildcard(arch))
+   {
+   arch = NULL;
+   }
+CheckWellformedness(arch);
+
+if (strtok(NULL, ":") != NULL)
+   {
+   fprintf(stderr, "Too many delimiters are encountered in pattern: %s\n", entry);
+   exit(255);
+   }
+
+return NewPackagePattern(name, version, arch);
+}
+
+/******************************************************************************/
 
 static struct Rlist *ReadPackageEntries(const char *database_filename)
 {
 FILE *packages_file = fopen(database_filename, "r");
+struct Rlist *packages = NULL;
 
 if (packages_file != NULL)
    {
-   struct Rlist *packages = NULL;
    char serialized_package[MAX_PACKAGE_ENTRY_LENGTH];
 
    while (fscanf(packages_file, "%s\n", serialized_package) != EOF)
       {
-      AppendRlist(&packages, serialized_package, CF_SCALAR);
+      struct Package *package = DeserializePackage(serialized_package);
+      AppendRlistAlien(&packages, package);
       }
 
    fclose(packages_file);
-   return packages;
    }
 
-return NULL;
+return packages;
 }
+
+/******************************************************************************/
 
 static void SavePackages(const char *database_filename, struct Rlist *package_entries)
 {
@@ -100,121 +216,175 @@ FILE *packages_file = fopen(database_filename, "w");
 
 for (rp = package_entries; rp != NULL; rp = rp->next)
    {
-   fprintf(packages_file, "%s\n", (char *)rp->item);
+   fprintf(packages_file, "%s\n", SerializePackage((Package *)rp->item));
    }
 
 fclose(packages_file);
 }
 
-static bool IsPackageEqual(struct Package *a, struct Package *b)
+/******************************************************************************/
+
+static PackagePattern *MatchAllVersions(const Package *p)
 {
-return strcmp(a->name, b->name) == 0 &&
-       strcmp(a->version, b->version) == 0 &&
-       strcmp(a->arch, b->arch) == 0;
+return NewPackagePattern(p->name, NULL, p->arch);
 }
 
-static struct Package *FindPackage(const char *database_filename, struct Package *query_package)
+/******************************************************************************/
+
+static PackagePattern *MatchSame(const Package *p)
 {
-struct Rlist *available = NULL;
+return NewPackagePattern(p->name, p->version, p->arch);
+}
+
+/******************************************************************************/
+
+static bool MatchPackage(struct PackagePattern *a, struct Package *b)
+{
+return (a->name == NULL || strcmp(a->name, b->name) == 0) &&
+   (a->version == NULL || strcmp(a->version, b->version) == 0) &&
+   (a->arch == NULL || strcmp(a->arch, b->arch) == 0);
+}
+
+/******************************************************************************/
+
+static struct Rlist *FindPackages(const char *database_filename, struct PackagePattern *pattern)
+{
+struct Rlist *db = ReadPackageEntries(database_filename);
+struct Rlist *matching = NULL;
+
 struct Rlist *rp = NULL;
-
-available = ReadPackageEntries(database_filename);
-
-for (rp = available; rp != NULL; rp = rp->next)
+for (rp = db; rp != NULL; rp = rp->next)
    {
-   struct Package *package = DeserializePackage((const char *)rp->item);
+   Package *package = (Package *)rp->item;
 
-   if (IsPackageEqual(package, query_package))
+   if (MatchPackage(pattern, package))
       {
-      DeleteRlist(available);
-      return package;
-      }
-   else
-      {
-      free(package);
+      AppendRlistAlien(&matching, package);
       }
    }
 
-DeleteRlist(available);
-return false;
+return matching;
 }
+
+/******************************************************************************/
 
 static void ShowPackages(FILE* out, struct Rlist *package_entries)
 {
 struct Rlist *rp = NULL;
-
 for (rp = package_entries; rp != NULL; rp = rp->next)
    {
-   fprintf(out, "%s\n", (char *)rp->item);
+   fprintf(out, "%s\n", SerializePackage((Package *)rp->item));
    }
 }
 
-static void ClearInstalledPackages()
+/******************************************************************************/
+
+static void ClearPackageList(const char *db_file_name)
 {
-FILE *packages_file = fopen(INSTALLED_PACKAGES_FILE_NAME, "w");
+FILE *packages_file = fopen(db_file_name, "w");
+if (packages_file == NULL)
+   {
+   fprintf(stderr, "fopen(%s): %s", INSTALLED_PACKAGES_FILE_NAME, strerror(errno));
+   exit(255);
+   }
 fclose(packages_file);
 }
 
-static void AddPackage(struct Package *package)
+/******************************************************************************/
+
+static void ClearInstalledPackages(void)
 {
-if (FindPackage(INSTALLED_PACKAGES_FILE_NAME, package) == NULL)
+ClearPackageList(INSTALLED_PACKAGES_FILE_NAME);
+}
+
+/******************************************************************************/
+
+static void ClearAvailablePackages(void)
+{
+ClearPackageList(AVAILABLE_PACKAGES_FILE_NAME);
+}
+
+/******************************************************************************/
+
+static void AddPackage(struct PackagePattern *pattern)
+{
+fprintf(stderr, "Trying to install all packages matching pattern %s\n", SerializePackagePattern(pattern));
+
+struct Rlist *matching_available
+   = FindPackages(AVAILABLE_PACKAGES_FILE_NAME, pattern);
+
+if (matching_available == NULL)
    {
-   struct Rlist *installed_packages = ReadPackageEntries(INSTALLED_PACKAGES_FILE_NAME);
-   char *package_entry = SerializePackage(package);
-
-   AppendRlist(&installed_packages, package_entry, CF_SCALAR);
-   SavePackages(INSTALLED_PACKAGES_FILE_NAME, installed_packages);
-
-   free(package_entry);
-   DeleteRlist(installed_packages);
+   fprintf(stderr, "Unable to find any package matching %s\n", SerializePackagePattern(pattern));
+   exit(1);
    }
-}
 
-static void DeletePackage(struct Package *query_package)
-{
-struct Rlist *delete_entry = NULL;
-struct Rlist *installed_package_entries = ReadPackageEntries(INSTALLED_PACKAGES_FILE_NAME);
-
+struct Rlist *rp;
+for (rp = matching_available; rp; rp = rp->next)
    {
-   char *serialized_query_package = SerializePackage(query_package);
-   delete_entry = KeyInRlist(installed_package_entries, serialized_query_package);
-   free(serialized_query_package);
+   Package *p = (Package *)rp->item;
+
+   PackagePattern *pat = MatchAllVersions((Package *)rp->item);
+   if (FindPackages(INSTALLED_PACKAGES_FILE_NAME, pat) != NULL)
+      {
+      fprintf(stderr, "Package %s is already installed.\n", SerializePackage(p));
+      exit(1);
+      }
    }
 
-DeleteRlistEntry(&installed_package_entries, delete_entry);
+struct Rlist *installed_packages = ReadPackageEntries(INSTALLED_PACKAGES_FILE_NAME);
 
-SavePackages(INSTALLED_PACKAGES_FILE_NAME, installed_package_entries);
+for (rp = matching_available; rp; rp = rp->next)
+   {
+   Package *p = (Package *)rp->item;
+
+   AppendRlistAlien(&installed_packages, p);
+   fprintf(stderr, "Succesfully installed package %s\n", SerializePackage(p));
+   }
+
+SavePackages(INSTALLED_PACKAGES_FILE_NAME, installed_packages);
+exit(0);
 }
 
-static void ReinstallPackage(struct Package *package)
+/******************************************************************************/
+
+static void PopulateAvailable(const char *arg)
 {
-AddPackage(package);
+Package *p = DeserializePackage(arg);
+PackagePattern *pattern = MatchSame(p);
+
+if (FindPackages(AVAILABLE_PACKAGES_FILE_NAME, pattern) != NULL)
+   {
+   fprintf(stderr, "Skipping already available package %s\n",
+           SerializePackage(p));
+   return;
+   }
+
+struct Rlist *available_packages = ReadPackageEntries(AVAILABLE_PACKAGES_FILE_NAME);
+AppendRlistAlien(&available_packages, p);
+SavePackages(AVAILABLE_PACKAGES_FILE_NAME, available_packages);
 }
 
-static void UpdatePackage(struct Package *package)
-{
-}
-
-static void AddUpdatePackage(struct Package *package)
-{
-
-}
-
-static void VerifyPackage(struct Package *package)
-{
-
-}
+/******************************************************************************/
 
 int main(int argc, char *argv[])
 {
 extern char *optarg;
 int option_index = 0;
-char c = '\0';
-char arg[CF_BUFSIZE];
+char c;
 
-while ((c = getopt_long(argc, argv, "rd:vnKIf:D:N:Vs:x:MBb:", OPTIONS, &option_index)) != EOF)
+char *workdir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
+
+snprintf(AVAILABLE_PACKAGES_FILE_NAME, 256,
+         "%s/cfengine-mock-package-manager-available",
+         workdir ? workdir : "/tmp");
+snprintf(INSTALLED_PACKAGES_FILE_NAME, 256,
+         "%s/cfengine-mock-package-manager-installed",
+         workdir ? workdir : "/tmp");
+
+while ((c = getopt_long(argc, argv, "", OPTIONS, &option_index)) != EOF)
    {
-   struct Package *package = DeserializePackage(optarg);
+   struct PackagePattern *pattern = NULL;
 
    switch (c)
       {
@@ -222,45 +392,52 @@ while ((c = getopt_long(argc, argv, "rd:vnKIf:D:N:Vs:x:MBb:", OPTIONS, &option_i
 	 ClearInstalledPackages();
 	 break;
 
+      case 'C':
+         ClearAvailablePackages();
+         break;
+
       case 'l':
 	 {
 	 struct Rlist *installed_packages = ReadPackageEntries(INSTALLED_PACKAGES_FILE_NAME);
 	 ShowPackages(stdout, installed_packages);
-	 DeleteRlist(installed_packages);
 	 }
 	 break;
 
       case 'L':
 	 {
-	 struct Rlist *available_packages = ReadPackageEntries(REPOSITORY_PACKAGES_FILE_NAME);
+	 struct Rlist *available_packages = ReadPackageEntries(AVAILABLE_PACKAGES_FILE_NAME);
 	 ShowPackages(stdout, available_packages);
-	 DeleteRlist(available_packages);
 	 }
 	 break;
 
       case 'a':
-	 AddPackage(package);
+         pattern = DeserializePackagePattern(optarg);
+	 AddPackage(pattern);
 	 break;
 
-      case 'd':
-      	 DeletePackage(package);
-      	 break;
+      case 'P':
+         PopulateAvailable(optarg);
+         break;
 
-      case 'r':
-	 ReinstallPackage(package);
-	 break;
+      /* case 'd': */
+      /* 	 DeletePackage(pattern); */
+      /* 	 break; */
 
-      case 'u':
-	 UpdatePackage(package);
-	 break;
+      /* case 'r': */
+      /*    ReinstallPackage(pattern); */
+      /*    break; */
 
-      case 'U':
-	 AddUpdatePackage(package);
-	 break;
+      /* case 'u': */
+      /*    UpdatePackage(pattern); */
+      /*    break; */
 
-      case 'v':
-      	 VerifyPackage(package);
-      	 break;
+      /* case 'U': */
+      /*    AddUpdatePackage(pattern); */
+      /*    break; */
+
+      /* case 'v': */
+      /* 	 VerifyPackage(pattern); */
+      /* 	 break; */
 
       default:
 	 Syntax("mock-package-manager - pretend that you are managing packages!",OPTIONS,HINTS,ID);

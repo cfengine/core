@@ -1,0 +1,74 @@
+#######################################################
+#
+# Test missing basic package commands
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../default.cf" };
+  bundlesequence  => { default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+  "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+packages:
+  "a:b:c"
+    package_policy => "add",
+    package_method => mock,
+    classes => test_set_class("fail","ok");
+}
+
+body package_method mock
+{
+  package_changes => "individual";
+  package_list_command => "/bin/true";
+
+  package_list_name_regex => "^[^:]*";
+  package_list_version_regex => ":(?<=:).*(?=:)";
+  package_list_arch_regex => "[^:]\w+$";
+  package_installed_regex => "^[^:]*";
+
+  package_update_command => "/bin/true";
+  package_delete_command => "/bin/true";
+  package_verify_command => "/bin/true";
+}
+
+body classes test_set_class(ok_class,notok_class)
+{
+promise_kept => { "$(ok_class)" };
+promise_repaired => { "$(ok_class)" };
+repair_failed => { "$(notok_class)" };
+}
+
+#######################################################
+
+bundle agent check
+{
+reports:
+  ok.!fail::
+    "$(this.promise_filename) Pass";
+  !ok|fail::
+    "$(this.promise_filename) FAIL";
+}
+
+#######################################################
+
+bundle agent fini
+{
+vars:
+  "dummy" string => "dummy";
+}

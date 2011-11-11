@@ -1,0 +1,102 @@
+#######################################################
+#
+# Test add a package
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../default.cf" };
+  bundlesequence  => { "G", "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+  "pm" string => concat(dirname("$(G.cwd)/$(this.promise_filename)"), "/../mock-package-manager");
+}
+
+#######################################################
+
+bundle agent init
+{
+commands:
+  "$(g.pm) --clear-installed";
+  "$(g.pm) --clear-available";
+  "$(g.pm) --populate-available imagisoft:1.0i:teapot";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+  "name" string => "imagisoft";
+  "version" string => "1.0i";
+  "arch" string => "teapot";
+
+packages:
+  "$(name):$(version):$(arch)"
+    package_policy => "add",
+    package_method => mock,
+    classes => test_set_class("pass","fail");
+}
+
+body package_method mock
+{
+  package_changes => "individual";
+  package_list_command => "$(g.pm) --list-installed";
+
+  package_list_name_regex => "^[^:]*";
+  package_list_version_regex => ":(?<=:).*(?=:)";
+  package_list_arch_regex => "[^:]\w+$";
+  package_installed_regex => "^[^:]*";
+
+  package_add_command => "$(g.pm) --add ";
+  package_update_command => "$(g.pm) --update ";
+  package_delete_command => "$(g.pm) --delete ";
+  package_verify_command => "$(g.pm) --verify ";
+}
+
+body classes test_set_class(ok_class,notok_class)
+{
+promise_kept => { "$(ok_class)" };
+promise_repaired => { "$(ok_class)" };
+repair_failed => { "$(notok_class)" };
+}
+
+#######################################################
+
+bundle agent check
+{
+vars:
+  "pkgs" string => execresult("$(g.pm) --list-installed", "noshell");
+
+classes:
+  "has_pkg" expression => regcmp("imagisoft:1\.0i:teapot", "$(pkgs)");
+
+  "ok" expression => "pass.!fail.has_pkg";
+
+reports:
+    ok::
+	"$(this.promise_filename) Pass";
+    !ok::
+	"$(this.promise_filename) FAIL";
+}
+
+body classes succesfully_executed(class)
+{
+kept_returncodes => { "0" };
+promise_kept => { "$(class)" };
+}
+
+#######################################################
+
+bundle agent fini
+{
+vars:
+	"dummy" string => "dummy";
+}

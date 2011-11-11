@@ -728,12 +728,6 @@ for (pm = schedule; pm != NULL; pm = pm->next)
       {
       case cfa_addpack:
 
-          if (a.packages.package_add_command == NULL)
-             {
-             cfPS(cf_verbose,CF_FAIL,"",pp,a,"Package package add command undefined");
-             return false;
-             }
-
           CfOut(cf_verbose,"","Execute scheduled package addition");
 
           command_string = xmalloc(estimated_size + strlen(a.packages.package_add_command) + 2);
@@ -1530,12 +1524,6 @@ switch(policy)
        if (a.packages.package_delete_command == NULL)
           {
           cfPS(cf_verbose,CF_FAIL,"",pp,a,"Package delete command undefined");
-          return;
-          }
-
-       if (a.packages.package_add_command == NULL)
-          {
-          cfPS(cf_verbose,CF_FAIL,"",pp,a,"Package add command undefined");
           return;
           }
 

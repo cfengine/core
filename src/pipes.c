@@ -487,7 +487,6 @@ static FILE *Unix_cf_popen_sh(char *command,char *type)
  { int i,pd[2];
    pid_t pid;
    FILE *pp = NULL;
-   char esc_command[CF_BUFSIZE];
 
 CfDebug("Unix_cf_popen_sh(%s)\n",command);
 
@@ -560,8 +559,7 @@ if (pid == 0)
          }
       }
 
-   strncpy(esc_command,ShEscapeCommand(command),CF_BUFSIZE-1);
-   execl("/bin/sh","sh","-c",esc_command,NULL);
+   execl("/bin/sh", "sh", "-c", command, NULL);
    _exit(1);
    }
 else
@@ -614,7 +612,6 @@ static FILE *Unix_cf_popen_shsetuid(char *command,char *type,uid_t uid,gid_t gid
  { int i,pd[2];
    pid_t pid;
    FILE *pp = NULL;
-   char esc_command[CF_BUFSIZE];
 
 CfDebug("Unix_cf_popen_shsetuid(%s,%s,%d,%d)\n",command,type,uid,gid);
 
@@ -710,8 +707,7 @@ if (pid == 0)
       _exit(1);
       }
 
-   strncpy(esc_command,ShEscapeCommand(command),CF_BUFSIZE-1);
-   execl("/bin/sh","sh","-c",esc_command,NULL);
+   execl("/bin/sh", "sh", "-c", command, NULL);
    _exit(1);
    }
 else

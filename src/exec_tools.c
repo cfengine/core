@@ -201,67 +201,6 @@ for (fd = STDERR_FILENO + 1; fd < maxfd; ++fd)
 
 /**********************************************************************/
 
-/*
- * We need to be careful escaping commands:
- *
- * \ loses its magic inside single quotes, so we should not double it while
- * being there.
- *
- * single quotes start only with ', not with \'
- */
-char *ShEscapeCommand(char *s)
-
-{ static char buffer[CF_BUFSIZE];
-  char *spf,*spto;
-  bool in_single_quotes = false;
-  bool after_backslash = false;
-
-memset(buffer,0,CF_BUFSIZE);
-
-spto = buffer;
-
-for (spf = s; *spf != '\0'; spf++)
-   {
-   if (*spf == '\'')
-      {
-      if (in_single_quotes) /* ' in single quotes always terminates */
-         {
-         in_single_quotes = false;
-         }
-      else
-         {
-         if (!after_backslash) /* \' does not start single quotes */
-            {
-            in_single_quotes = true;
-            }
-         }
-      }
-
-   if (*spf == '\\')
-      {
-      if (!after_backslash) /* \\ does not count next character as escaped */
-         {
-         after_backslash = true;
-         }
-
-      if (!in_single_quotes) /* Double the backslash outside of single quotes */
-         {
-         *spto++ = '\\';
-         }
-      }
-   else
-      {
-      after_backslash = false;
-      }
-
-   *spto++ = *spf;
-   }
-
-return buffer;
-}
-
-/**********************************************************************/
-
 #define INITIAL_ARGS 8
 
 char **ArgSplitCommand(const char *comm)

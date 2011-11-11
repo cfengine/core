@@ -175,7 +175,6 @@ int Unix_ShellCommandReturnsZero(char *comm,int useshell)
 
 { int status, i;
   pid_t pid;
-  char esc_command[CF_BUFSIZE];
 
 if (!useshell)
    {
@@ -193,11 +192,9 @@ else if (pid == 0)                     /* child */
 
    if (useshell)
       {
-      strncpy(esc_command,ShEscapeCommand(comm),CF_BUFSIZE-1);
-
-      if (execl("/bin/sh","sh","-c",esc_command,NULL) == -1)
+      if (execl("/bin/sh", "sh", "-c", comm, NULL) == -1)
          {
-         CfOut(cf_error,"execl","Command %s failed",esc_command);
+         CfOut(cf_error, "execl", "Command %s failed", comm);
          exit(1);
          }
       }

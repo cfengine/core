@@ -224,6 +224,9 @@ if $AGENT -V | grep -q 'Nova'; then
 fi
 
 if [ $# -gt 0 ]; then
+  # We need to run all specified tests
+  STAGING=1
+  NETWORK=1
   for test in "$@"; do
     if ! expr "$test" : '[/.]' >/dev/null; then
       test="./$test"

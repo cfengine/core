@@ -39,6 +39,45 @@ static void ShowRlistState(FILE *fp,struct Rlist *list);
 
 /*******************************************************************/
 
+char *ScalarValue(struct Rlist *rlist)
+{
+if (rlist->type != CF_SCALAR)
+   {
+   FatalError("Internal error: Rlist value contains type %c instead of expected scalar",
+              rlist->type);
+   }
+
+return (char *)rlist->item;
+}
+
+/*******************************************************************/
+
+struct FnCall *FnCallValue(struct Rlist *rlist)
+{
+if (rlist->type != CF_FNCALL)
+   {
+   FatalError("Internal error: Rlist value contains type %c instead of expected FnCall",
+              rlist->type);
+   }
+
+return (struct FnCall *)rlist->item;
+}
+
+/*******************************************************************/
+
+struct Rlist *ListValue(struct Rlist *rlist)
+{
+if (rlist->type != CF_LIST)
+   {
+   FatalError("Internal error: Rlist value contains type %c instead of expected List",
+              rlist->type);
+   }
+
+return (struct FnCall *)rlist->item;
+}
+
+/*******************************************************************/
+
 struct Rlist *KeyInRlist(struct Rlist *list,char *key)
 
 { struct Rlist *rp;

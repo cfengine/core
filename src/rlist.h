@@ -12,6 +12,10 @@ struct Rlist
    struct Rlist *next;
    };
 
+char *ScalarFalue(struct Rlist *rlist);
+struct FnCall *FnCallValue(struct Rlist *rlist);
+struct Rlist *ListValue(struct Rlist *rlist);
+
 int PrintRval(char *buffer,int bufsize,void *item,char type);
 int PrintRlist(char *buffer,int bufsize,struct Rlist *list);
 int GetStringListElement(char *strList, int index, char *outBuf, int outBufSz);

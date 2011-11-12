@@ -260,10 +260,10 @@ return -1;
 int FuzzyHostParse(char *arg1,char *arg2)
 
 {
-  long start = -1, end = -1, where = -1;
+  long start = -1, end = -1;
   int n;
 
-n = sscanf(arg2,"%ld-%ld%n",&start,&end,&where);
+n = sscanf(arg2,"%ld-%ld",&start,&end);
 
 if (n != 2)
    {

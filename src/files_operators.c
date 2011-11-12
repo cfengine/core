@@ -1522,7 +1522,7 @@ if (strcmp(file,prevFile) == 0)
    return;
    }
 
-snprintf(prevFile,sizeof(prevFile),file);
+strlcpy(prevFile, file, CF_MAXVARSIZE);
 
 /* This is inefficient but we don't want to lose any data */
 

@@ -103,10 +103,7 @@ int TCDB_CloseDB(CF_TCDB *hdbp)
 
 { int errCode;
 
-char buf[CF_MAXVARSIZE];
-
-snprintf(buf, sizeof(buf), "CloseDB(%s)\n", tchdbpath(hdbp->hdb));
-CfDebug(buf);
+CfDebug("CloseDB(%s)\n", tchdbpath(hdbp->hdb));
 
 if (!tchdbclose(hdbp->hdb))
    {

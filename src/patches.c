@@ -128,17 +128,11 @@ char *MapNameForward(char *s)
 
 /* Like MapName(), but maps all slashes to forward */
 
-{ char *sp;
- 
-for (sp = s; *sp != '\0'; sp++)
+{
+while ((s = strchr(s, '\\')))
    {
-   switch(*sp)
-      {
-      case '\\':
-	  *sp = '/';
-      }
+   *s = '/';
    }
-
 return s;
 }
 

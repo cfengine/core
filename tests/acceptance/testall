@@ -144,9 +144,9 @@ CFENGINE_TEST_OVERRIDE_WORKDIR=$WORKDIR exec $AGENT -Kf \"$TEST\" -D AUTO,DEBUG 
     fi
 
     if [ "$RESULT" != Pass ] && [ -e .succeeded/"$FLATNAME" ]; then
-      echo $TEST $RESULT '(UNEXPECTED FAILURE)' >> $SUMMARY
+      echo $RESULT $TEST '(UNEXPECTED FAILURE)' >> $SUMMARY
     else
-      echo $TEST $RESULT >> $SUMMARY
+      echo $RESULT $TEST >> $SUMMARY
     fi
 
     if [ -z "$QUIET" ]; then
@@ -184,7 +184,7 @@ CFENGINE_TEST_OVERRIDE_WORKDIR=$WORKDIR exec $AGENT -Kf \"$TEST\" -D AUTO,DEBUG 
       FAILED_TO_CRASH_TESTS=$(($FAILED_TO_CRASH_TESTS + 1))
     fi
   else
-    echo $TEST Skipped >> $SUMMARY
+    echo Skip $TEST >> $SUMMARY
 
     if [ -z "$QUIET" ]; then
       echo Skipped
@@ -245,16 +245,24 @@ else
   TESTS=$(find $(dirname $0) -name '[0-9][0-9][0-9]*.cf' | sort)
 fi
 
+#
+# fd 7 is a /dev/null for quiet execution and stdout for default one
+#
+if [ -z "$QUIET" ]; then
+  exec 7>&1
+else
+  exec 7>/dev/null
+fi
+
 TESTS_COUNT=$(echo $TESTS | wc -w)
 START_TIME=$(date +%s)
-
-: > $SUMMARY
 
 ( echo ======================================================================
   echo Testsuite started at $(date "+%F %T")
   echo ----------------------------------------------------------------------
   echo Total tests: $TESTS_COUNT
-) > $LOG
+  echo
+) | tee $LOG | tee $SUMMARY >&7
 
 for test in $TESTS; do
   if [ -n "$USE_VALGRIND" ]; then
@@ -269,12 +277,14 @@ END_TIME=$(date +%s)
 ( echo
   echo ======================================================================
   echo Testsuite finished at $(date  "+%F %T") \($(($END_TIME - $START_TIME)) seconds\)
-  echo
+) | tee -a $LOG | tee -a $SUMMARY >&7
+
+( echo
   echo Passed tests: $PASSED_TESTS
   echo Failed tests: $FAILED_TESTS
   echo Failed to crash tests: $FAILED_TO_CRASH_TESTS
   echo Skipped tests: $SKIPPED_TESTS
-) | tee -a $LOG
+) | tee -a $LOG | tee -a $SUMMARY
 
 if [ "$FAILED_TESTS" -ne 0 ] || [ "$FAILED_TO_CRASH_TESTS" -ne 0 ]; then
   exit 1

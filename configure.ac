@@ -937,6 +937,17 @@ else
 	AC_SUBST(GCC_CFLAG)
 fi
 
+if test x"$GCC" = "xyes" && test x"$HP_UX_AC" != "xyes"; then
+   save_CFLAGS="$CFLAGS"
+   CFLAGS="$CFLAGS $GCC_CFLAG"
+
+   AC_MSG_CHECKING(for -Wno-pointer-sign)
+   AC_COMPILE_IFELSE([int main() {}], [AC_MSG_RESULT(yes)], [
+   AC_MSG_RESULT(no)
+   GCC_CFLAG=`echo $GCC_CFLAG | sed -e 's/-Wno-pointer-sign//'`])
+
+   CFLAGS="$save_CFLAGS"
+fi
 
 dnl #####################################################################
 dnl Hostname and Version stuff

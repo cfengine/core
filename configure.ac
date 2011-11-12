@@ -508,7 +508,8 @@ AC_CHECK_DECLS(strnlen)
 AC_REPLACE_FUNCS(strnlen)
 
 AC_CHECK_DECLS(strndup)
-AC_REPLACE_FUNCS(strndup)
+AC_REPLACE_FUNCS(strndup, [], [], [#define _GNU_SOURCE 1
+AC_INCLUDES_DEFAULT])
 
 AC_CHECK_DECLS(setlinebuf)
 AC_REPLACE_FUNCS(setlinebuf)

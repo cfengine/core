@@ -36,7 +36,9 @@ extern int CFA_MAXTHREADS;
 extern struct cfagent_connection *COMS;
 
 static void TruncateFile(char *name);
+#ifdef DARWIN
 static int VerifyFinderType(char *file,struct stat *statbuf,struct Attributes a,struct Promise *pp);
+#endif
 static int TransformFile(char *file,struct Attributes attr,struct Promise *pp);
 static void VerifyName(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp);
 static void VerifyDelete(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp);

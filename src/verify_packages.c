@@ -1357,23 +1357,24 @@ return false;
 
 static void SchedulePackageOp(const char *name, const char *version, const char *arch,int installed,int matched,int no_version_specified,struct Attributes a,struct Promise *pp)
 
-{ struct CfPackageManager *manager;
- char reference[CF_EXPANDSIZE],reference2[CF_EXPANDSIZE];
-  char refAnyVer[CF_EXPANDSIZE];
-  char refAnyVerEsc[CF_EXPANDSIZE];
-  char largestVerAvail[CF_MAXVARSIZE];
-  char largestPackAvail[CF_MAXVARSIZE];
-  char instVer[CF_MAXVARSIZE];
-  char instArch[CF_MAXVARSIZE];
-  char idBuf[CF_MAXVARSIZE];
-  char *id_del;
-  char id[CF_EXPANDSIZE];
-  char *pathName = NULL;
-  int package_select_in_range = false;
-  enum package_actions policy;
+{
+struct CfPackageManager *manager;
+char reference[CF_EXPANDSIZE],reference2[CF_EXPANDSIZE];
+char refAnyVer[CF_EXPANDSIZE];
+char refAnyVerEsc[CF_EXPANDSIZE];
+char largestVerAvail[CF_MAXVARSIZE];
+char largestPackAvail[CF_MAXVARSIZE];
+char instVer[CF_MAXVARSIZE];
+char instArch[CF_MAXVARSIZE];
+char idBuf[CF_MAXVARSIZE];
+char *id_del;
+char id[CF_EXPANDSIZE];
+char *pathName = NULL;
+int package_select_in_range = false;
+enum package_actions policy;
 
-  CfOut(cf_verbose, "", "Checking if package (%s,%s,%s) is at the desired state (installed=%d,matched=%d)",
-	name, version, arch, installed, matched);
+CfOut(cf_verbose, "", "Checking if package (%s,%s,%s) is at the desired state (installed=%d,matched=%d)",
+      name, version, arch, installed, matched);
  
 /* Now we need to know the name-convention expected by the package manager */
 
@@ -1385,19 +1386,19 @@ if (a.packages.package_name_convention || a.packages.package_delete_convention)
    NewScalar("cf_pack_context","arch",arch,cf_str);
 
    if(a.packages.package_delete_convention && (a.packages.package_policy == cfa_deletepack))
-     {
-     ExpandScalar(a.packages.package_delete_convention,reference);
-     strlcpy(id, reference, CF_EXPANDSIZE);
-     }
+      {
+      ExpandScalar(a.packages.package_delete_convention,reference);
+      strlcpy(id, reference, CF_EXPANDSIZE);
+      }
    else if(a.packages.package_name_convention)
-     {
-     ExpandScalar(a.packages.package_name_convention,reference);
-     strlcpy(id, reference, CF_EXPANDSIZE);
-     }
+      {
+      ExpandScalar(a.packages.package_name_convention,reference);
+      strlcpy(id, reference, CF_EXPANDSIZE);
+      }
    else
-     {
-     strlcpy(id, name, CF_EXPANDSIZE);
-     }
+      {
+      strlcpy(id, name, CF_EXPANDSIZE);
+      }
 
    DeleteScope("cf_pack_context");
    }
@@ -1410,9 +1411,9 @@ else
 CfOut(cf_verbose,""," -> Package promises to refer to itself as \"%s\" to the manager\n",id);
 
 if(strchr(id, '*'))
-  {
-  CfOut(cf_verbose,"","!! Package name contians '*' -- perhaps a missing attribute (name/version/arch) should be specified");
-  }
+   {
+   CfOut(cf_verbose,"","!! Package name contians '*' -- perhaps a missing attribute (name/version/arch) should be specified");
+   }
 
 
 if (a.packages.package_select == cfa_eq || a.packages.package_select == cfa_ge ||
@@ -1423,80 +1424,78 @@ if (a.packages.package_select == cfa_eq || a.packages.package_select == cfa_ge |
    }
 
 
- policy = a.packages.package_policy;
+policy = a.packages.package_policy;
 
- if(policy == cfa_addupdate)
+if(policy == cfa_addupdate)
    {
    if(!installed)
-     {
-     policy = cfa_addpack;
-     }
+      {
+      policy = cfa_addpack;
+      }
    else
-     {
-     policy = cfa_update;
-     }
+      {
+      policy = cfa_update;
+      }
    }
 
 switch(policy)
    {
    case cfa_addpack:
 
-       if (installed == 0)
-          {
-          if((a.packages.package_file_repositories != NULL) &&
-             (a.packages.package_select == cfa_gt || a.packages.package_select == cfa_ge))
-             {
-             
-             SetNewScope("cf_pack_context_anyver");
-             NewScalar("cf_pack_context_anyver","name",name,cf_str);
-             NewScalar("cf_pack_context_anyver","version","(.*)",cf_str);
-             NewScalar("cf_pack_context_anyver","arch",arch,cf_str);
-             ExpandScalar(a.packages.package_name_convention,refAnyVer);
-             DeleteScope("cf_pack_context_anyver");
-             
-             
-             EscapeSpecialChars(refAnyVer, refAnyVerEsc, sizeof(refAnyVerEsc), "(.*)");
-             
-             if(FindLargestVersionAvail(largestPackAvail, largestVerAvail, refAnyVerEsc, version, a.packages.package_select, a.packages.package_file_repositories))
-                {
-                CfOut(cf_verbose, "", "Using latest version in file repositories; \"%s\"", largestPackAvail);
-                strlcpy(id, largestPackAvail, CF_EXPANDSIZE);
-                }
-             else
-                {
-                CfOut(cf_verbose, "", "No package in file repositories satisfy version constraint");
-                break;
-                }
-             }          
-          
-          CfOut(cf_verbose,""," -> Schedule package for addition\n");
-          manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_add_command,cfa_addpack,a.packages.package_changes);
-          PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
-          }
-       else
-          {
-          cfPS(cf_verbose,CF_NOP,"",pp,a," -> Package \"%s\" already installed, so we never add it again\n",pp->promiser);
-          }
-       break;
-       
+      if (installed == 0)
+         {
+         if((a.packages.package_file_repositories != NULL) &&
+            (a.packages.package_select == cfa_gt || a.packages.package_select == cfa_ge))
+            {
+            SetNewScope("cf_pack_context_anyver");
+            NewScalar("cf_pack_context_anyver","name",name,cf_str);
+            NewScalar("cf_pack_context_anyver","version","(.*)",cf_str);
+            NewScalar("cf_pack_context_anyver","arch",arch,cf_str);
+            ExpandScalar(a.packages.package_name_convention,refAnyVer);
+            DeleteScope("cf_pack_context_anyver");
+
+            EscapeSpecialChars(refAnyVer, refAnyVerEsc, sizeof(refAnyVerEsc), "(.*)");
+
+            if(FindLargestVersionAvail(largestPackAvail, largestVerAvail, refAnyVerEsc, version, a.packages.package_select, a.packages.package_file_repositories))
+               {
+               CfOut(cf_verbose, "", "Using latest version in file repositories; \"%s\"", largestPackAvail);
+               strlcpy(id, largestPackAvail, CF_EXPANDSIZE);
+               }
+            else
+               {
+               CfOut(cf_verbose, "", "No package in file repositories satisfy version constraint");
+               break;
+               }
+            }
+
+         CfOut(cf_verbose,""," -> Schedule package for addition\n");
+         manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_add_command,cfa_addpack,a.packages.package_changes);
+         PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
+         }
+      else
+         {
+         cfPS(cf_verbose,CF_NOP,"",pp,a," -> Package \"%s\" already installed, so we never add it again\n",pp->promiser);
+         }
+      break;
+
    case cfa_deletepack:
 
-       if (matched && package_select_in_range || installed && no_version_specified)
-          {
-          CfOut(cf_verbose,""," -> Schedule package for deletion\n");
+      if (matched && package_select_in_range || installed && no_version_specified)
+         {
+         CfOut(cf_verbose,""," -> Schedule package for deletion\n");
 
-	  // expand local repository in the name convetion, if present
-	  if(a.packages.package_file_repositories)
+         // expand local repository in the name convetion, if present
+         if(a.packages.package_file_repositories)
 	    {
 	    // remove any "$(repo)" from the name convention string
 
 	    if (strncmp(id, "$(firstrepo)", 12) == 0)
                {
                snprintf(idBuf, sizeof(idBuf), "%s", id + 12);
-               
+
                // and add the correct repo
                pathName = PrefixLocalRepository(a.packages.package_file_repositories, idBuf);
-               
+
                if(pathName)
                   {
                   strlcpy(id, pathName, CF_EXPANDSIZE);
@@ -1508,19 +1507,17 @@ switch(policy)
                   }
                }
 	    }
-          
-          manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_delete_command,cfa_deletepack,a.packages.package_changes);
-          PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
-          }
-       else
-          {
-          cfPS(cf_verbose,CF_NOP,"",pp,a," -> Package deletion is as promised -- no match\n");
-          }
-       
-       break;
-       
-   case cfa_reinstall:
 
+         manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_delete_command,cfa_deletepack,a.packages.package_changes);
+         PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
+         }
+      else
+         {
+         cfPS(cf_verbose,CF_NOP,"",pp,a," -> Package deletion is as promised -- no match\n");
+         }
+       break;
+
+   case cfa_reinstall:
        if (a.packages.package_delete_command == NULL)
           {
           cfPS(cf_verbose,CF_FAIL,"",pp,a,"Package delete command undefined");
@@ -1542,26 +1539,26 @@ switch(policy)
           {
           cfPS(cf_error,CF_FAIL,"",pp,a,"!! Package reinstallation cannot be promised -- insufficient version info or no match\n");
           }
-       
+
        break;
-       
+
    case cfa_update:
 
-       *instVer = '\0';
-       *instArch = '\0';
-       
-       if ((a.packages.package_file_repositories != NULL) &&
+      *instVer = '\0';
+      *instArch = '\0';
+
+      if ((a.packages.package_file_repositories != NULL) &&
 	  (a.packages.package_select == cfa_gt || a.packages.package_select == cfa_ge))
-          {          
-          SetNewScope("cf_pack_context_anyver");
-          NewScalar("cf_pack_context_anyver","name",name,cf_str);
-          NewScalar("cf_pack_context_anyver","version","(.*)",cf_str);
-          NewScalar("cf_pack_context_anyver","arch",arch,cf_str);
-          ExpandScalar(a.packages.package_name_convention,refAnyVer);
-          DeleteScope("cf_pack_context_anyver");
-                    
-          EscapeSpecialChars(refAnyVer, refAnyVerEsc, sizeof(refAnyVerEsc), "(.*)");
-	  
+         {
+         SetNewScope("cf_pack_context_anyver");
+         NewScalar("cf_pack_context_anyver","name",name,cf_str);
+         NewScalar("cf_pack_context_anyver","version","(.*)",cf_str);
+         NewScalar("cf_pack_context_anyver","arch",arch,cf_str);
+         ExpandScalar(a.packages.package_name_convention,refAnyVer);
+         DeleteScope("cf_pack_context_anyver");
+
+         EscapeSpecialChars(refAnyVer, refAnyVerEsc, sizeof(refAnyVerEsc), "(.*)");
+
           if (FindLargestVersionAvail(largestPackAvail, largestVerAvail, refAnyVerEsc, version, a.packages.package_select, a.packages.package_file_repositories))
 	     {
              CfOut(cf_verbose, "", "Using latest version in file repositories; \"%s\"", largestPackAvail);
@@ -1577,112 +1574,108 @@ switch(policy)
           {
           snprintf(largestVerAvail, sizeof(largestVerAvail), "%s", version);  // user-supplied version
           }
-       
-       
-       if (installed)
-          {
-          CfOut(cf_verbose, "", "Checking if latest available version is newer than installed...");
-	  
-          if (IsNewerThanInstalled(name, largestVerAvail, arch, instVer, instArch, a))
-             {
-             CfOut(cf_verbose, "", "Installed package (%s,%s,%s) is older than latest available (%s,%s,%s) - updating",
-                   name, instVer, instArch, name, largestVerAvail, arch);
-             }
-          else
-             {
-             CfOut(cf_verbose, "", "Installed package is up to date, not updating");
-             break;
-             }
-          }
-       
-       
-       if ((matched && package_select_in_range && !no_version_specified) || installed)
-          {
-          if (a.packages.package_update_command == NULL)
-             {
-             CfOut(cf_verbose,""," !! Package update command undefined - failing over to delete then add");
 
-	     // we need to have the version of installed package
-	     if (a.packages.package_delete_convention)
-                {
-                if (*instVer == '\0')
-		   {
-                   instVer[0] = '*';
-                   instVer[1] = '\0';
-		   }
-                
-                if (*instArch == '\0')
-		   {
-                   instArch[0] = '*';
-                   instArch[1] = '\0';
-		   }
-                
-                SetNewScope("cf_pack_context");
-                NewScalar("cf_pack_context","name",name,cf_str);
-                NewScalar("cf_pack_context","version",instVer,cf_str);
-                NewScalar("cf_pack_context","arch",instArch,cf_str);
-                ExpandScalar(a.packages.package_delete_convention,reference2);
-                id_del = reference2;
-                DeleteScope("cf_pack_context");
-                }
-	     else
-                {
-                id_del = id; // defaults to the package_name_convention
-                }
-             
-             
-	     CfOut(cf_verbose, "", "Scheduling package with id \"%s\" for deletion", id_del);
-             
-             manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_delete_command,cfa_deletepack,a.packages.package_changes);
-             PrependPackageItem(&(manager->pack_list),id_del,"any","any",a,pp);
+      if (installed)
+         {
+         CfOut(cf_verbose, "", "Checking if latest available version is newer than installed...");
+         if (IsNewerThanInstalled(name, largestVerAvail, arch, instVer, instArch, a))
+            {
+            CfOut(cf_verbose, "", "Installed package (%s,%s,%s) is older than latest available (%s,%s,%s) - updating",
+                  name, instVer, instArch, name, largestVerAvail, arch);
+            }
+         else
+            {
+            CfOut(cf_verbose, "", "Installed package is up to date, not updating");
+            break;
+            }
+         }
 
-             manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_add_command,cfa_addpack,a.packages.package_changes);
-             PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
-             }
-          else
-             {
-             CfOut(cf_verbose,""," -> Schedule package for update\n");
-             manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_update_command,cfa_update,a.packages.package_changes);
-             PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
-             }
-          }
-       else
-          {
-          cfPS(cf_error,CF_FAIL,"",pp,a,"!! Package \"%s\" cannot be updated -- no match or not installed",pp->promiser);
-          }
-       break;
-       
+      if ((matched && package_select_in_range && !no_version_specified) || installed)
+         {
+         if (a.packages.package_update_command == NULL)
+            {
+            CfOut(cf_verbose,""," !! Package update command undefined - failing over to delete then add");
+
+            // we need to have the version of installed package
+            if (a.packages.package_delete_convention)
+               {
+               if (*instVer == '\0')
+                  {
+                  instVer[0] = '*';
+                  instVer[1] = '\0';
+                  }
+
+               if (*instArch == '\0')
+                  {
+                  instArch[0] = '*';
+                  instArch[1] = '\0';
+                  }
+
+               SetNewScope("cf_pack_context");
+               NewScalar("cf_pack_context","name",name,cf_str);
+               NewScalar("cf_pack_context","version",instVer,cf_str);
+               NewScalar("cf_pack_context","arch",instArch,cf_str);
+               ExpandScalar(a.packages.package_delete_convention,reference2);
+               id_del = reference2;
+               DeleteScope("cf_pack_context");
+               }
+            else
+               {
+               id_del = id; // defaults to the package_name_convention
+               }
+
+            CfOut(cf_verbose, "", "Scheduling package with id \"%s\" for deletion", id_del);
+
+            manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_delete_command,cfa_deletepack,a.packages.package_changes);
+            PrependPackageItem(&(manager->pack_list),id_del,"any","any",a,pp);
+
+            manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_add_command,cfa_addpack,a.packages.package_changes);
+            PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
+            }
+         else
+            {
+            CfOut(cf_verbose,""," -> Schedule package for update\n");
+            manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_update_command,cfa_update,a.packages.package_changes);
+            PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
+            }
+         }
+      else
+         {
+         cfPS(cf_error,CF_FAIL,"",pp,a,"!! Package \"%s\" cannot be updated -- no match or not installed",pp->promiser);
+         }
+      break;
+
    case cfa_patch:
 
-       if (matched && !installed)
-          {
-          CfOut(cf_verbose,""," -> Schedule package for patching\n");
-          manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_patch_command,cfa_patch,a.packages.package_changes);
-          PrependPackageItem(&(manager->patch_list),id,"any","any",a,pp);
-          }
-       else
-          {
-          cfPS(cf_verbose,CF_NOP,"",pp,a," -> Package patch state of \"%s\" is as promised -- already installed\n",pp->promiser);
-          }
-       break;
+      if (matched && !installed)
+         {
+         CfOut(cf_verbose,""," -> Schedule package for patching\n");
+         manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_patch_command,cfa_patch,a.packages.package_changes);
+         PrependPackageItem(&(manager->patch_list),id,"any","any",a,pp);
+         }
+      else
+         {
+         cfPS(cf_verbose,CF_NOP,"",pp,a," -> Package patch state of \"%s\" is as promised -- already installed\n",pp->promiser);
+         }
+      break;
 
    case cfa_verifypack:
-       
-       if (matched && package_select_in_range || installed && no_version_specified)
-          {
-          CfOut(cf_verbose,""," -> Schedule package for verification\n");
-          manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_verify_command,cfa_verifypack,a.packages.package_changes);
-          PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
-          }
-       else
-          {
-          cfPS(cf_inform,CF_FAIL,"",pp,a,"!! Package \"%s\" cannot be verified -- no match\n",pp->promiser);
-          }
-       
-       break;
-       
+
+      if (matched && package_select_in_range || installed && no_version_specified)
+         {
+         CfOut(cf_verbose,""," -> Schedule package for verification\n");
+         manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_verify_command,cfa_verifypack,a.packages.package_changes);
+         PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
+         }
+      else
+         {
+         cfPS(cf_inform,CF_FAIL,"",pp,a,"!! Package \"%s\" cannot be verified -- no match\n",pp->promiser);
+         }
+
+      break;
+
    default:
-       break;
+      break;
    }
 }
 

@@ -193,8 +193,11 @@ struct utsname
 #undef nfstype
 #endif
 
+/* strndup is defined as a macro on many systems */
 #if !HAVE_DECL_STRNDUP
+#ifndef strndup
 char *strndup(const char *s, size_t n);
+#endif
 #endif
 
 #ifdef HAVE_UNISTD_H

@@ -193,12 +193,6 @@ struct utsname
 #undef nfstype
 #endif
 
-#ifndef HAVE_BCOPY
-#define bcopy(fr,to,n)  memcpy(to,fr,n)  /* Eliminate ucblib */
-#define bcmp(s1, s2, n) memcmp ((s1), (s2), (n))
-#define bzero(s, n)     memset ((s), 0, (n))
-#endif
-
 #if !HAVE_DECL_STRNDUP
 char *strndup(const char *s, size_t n);
 #endif

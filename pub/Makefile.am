@@ -12,8 +12,8 @@ libcfpub_la_SOURCES =							\
 libcfpub_la_LIBADD = $(LTLIBOBJS)
 
 EXTRA_DIST =								\
-	getopt.h							\
-	snprintf.h							
+	getopt.h
+
 #
 # Some basic clean ups
 #

@@ -3492,7 +3492,7 @@ if (from == CF_NOINT || to == CF_NOINT)
 
 if (from == CF_NOINT || to == CF_NOINT)
    {
-   snprintf(buffer,CF_BUFSIZE,"Error reading assumed int values %s=>%d,%s=>%d\n",(char *)(finalargs->item),from,(char *)(finalargs->next->item),to);
+   snprintf(buffer,CF_BUFSIZE,"Error reading assumed int values %s=>%ld,%s=>%ld\n",(char *)(finalargs->item),from,(char *)(finalargs->next->item),to);
    ReportError(buffer);
    }
 

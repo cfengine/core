@@ -928,15 +928,7 @@ HP_UX_AC=yes])
 
 AC_MSG_CHECKING(for GCC specific compile flags)
 if test x"$GCC" = "xyes" && test x"$HP_UX_AC" != x"yes"; then
-	
-dnl # -Wformat - to be considered
-
-	GCC_CFLAG="-std=gnu99 -g -Wreturn-type -Wmissing-prototypes"
-	case "$CFLAGS" in "-O"*|*" -O"*)
-		GCC_CFLAG="$GCC_CFLAG -Wuninitialized"
-		;;
-	esac
-
+	GCC_CFLAG="-std=gnu99 -g -Wall -Wno-pointer-sign"
 	AC_MSG_RESULT(yes)
 	AC_SUBST(GCC_CFLAG)
 else 

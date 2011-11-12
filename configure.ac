@@ -925,7 +925,7 @@ if test x"$GCC" = "xyes" && test x"$HP_UX_AC" != x"yes"; then
 	
 dnl # -Wformat - to be considered
 
-	GCC_CFLAG="-g -Wreturn-type -Wmissing-prototypes"
+	GCC_CFLAG="-std=gnu99 -g -Wreturn-type -Wmissing-prototypes"
 	case "$CFLAGS" in "-O"*|*" -O"*)
 		GCC_CFLAG="$GCC_CFLAG -Wuninitialized"
 		;;

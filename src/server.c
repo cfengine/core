@@ -766,7 +766,7 @@ strncat(filename,VINPUTFILE,CF_BUFSIZE-1-strlen(filename));
 
 MapName(filename);
 
-CfDebug("Checking file updates on %s (%x/%x)\n",filename, newstat.st_mtime, CFDSTARTTIME);
+CfDebug("Checking file updates on %s (%jd/%jd)\n",filename, (intmax_t)newstat.st_mtime, (intmax_t)CFDSTARTTIME);
 
 if (NewPromiseProposals())
    {
@@ -2977,14 +2977,14 @@ memset(sendbuffer,0,CF_BUFSIZE);
 
  /* send as plain text */
 
-CfDebug("OK: type=%d\n mode=%o\n lmode=%o\n uid=%d\n gid=%d\n size=%ld\n atime=%d\n mtime=%d\n",
+CfDebug("OK: type=%d\n mode=%o\n lmode=%o\n uid=%d\n gid=%d\n size=%ld\n atime=%jd\n mtime=%jd\n",
  cfst.cf_type,cfst.cf_mode,cfst.cf_lmode,cfst.cf_uid,cfst.cf_gid,(long)cfst.cf_size,
- cfst.cf_atime,cfst.cf_mtime);
+ (intmax_t)cfst.cf_atime,(intmax_t)cfst.cf_mtime);
 
-snprintf(sendbuffer,CF_BUFSIZE,"OK: %d %d %d %d %d %ld %d %d %d %d %d %d %d",
+snprintf(sendbuffer,CF_BUFSIZE,"OK: %d %d %d %d %d %ld %jd %jd %jd %d %d %d %d",
  cfst.cf_type,cfst.cf_mode,cfst.cf_lmode,cfst.cf_uid,cfst.cf_gid,(long)cfst.cf_size,
- cfst.cf_atime,cfst.cf_mtime,cfst.cf_ctime,cfst.cf_makeholes,cfst.cf_ino,
-  cfst.cf_nlink,cfst.cf_dev);
+ (intmax_t)cfst.cf_atime,(intmax_t)cfst.cf_mtime,(intmax_t)cfst.cf_ctime,
+ cfst.cf_makeholes,cfst.cf_ino,cfst.cf_nlink,cfst.cf_dev);
 
 SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
 
@@ -3019,7 +3019,7 @@ TranslatePath(filename,args->replyfile);
 
 cfstat(filename,&sb);
 
-CfDebug("CfGetFile(%s on sd=%d), size=%d\n",filename,sd,sb.st_size);
+CfDebug("CfGetFile(%s on sd=%d), size=%jd\n",filename,sd,(intmax_t)sb.st_size);
 
 /* Now check to see if we have remote permission */
 
@@ -3130,7 +3130,7 @@ TranslatePath(filename,args->replyfile);
 
 cfstat(filename,&sb);
 
-CfDebug("CfEncryptGetFile(%s on sd=%d), size=%d\n",filename,sd,sb.st_size);
+CfDebug("CfEncryptGetFile(%s on sd=%d), size=%jd\n",filename,sd,(intmax_t)sb.st_size);
 
 /* Now check to see if we have remote permission */
 

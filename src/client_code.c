@@ -271,7 +271,7 @@ if (attr.copy.encrypt)
       return -1;
       }
    
-   snprintf(in,CF_BUFSIZE-1,"SYNCH %d STAT %s",tloc,file);
+   snprintf(in,CF_BUFSIZE-1,"SYNCH %jd STAT %s",(intmax_t)tloc,file);
    cipherlen = EncryptString(conn->encryption_type,in,out,conn->session_key,strlen(in)+1);
    snprintf(sendbuffer,CF_BUFSIZE-1,"SSYNCH %d",cipherlen);
    memcpy(sendbuffer+CF_PROTO_OFFSET,out,cipherlen);
@@ -279,7 +279,7 @@ if (attr.copy.encrypt)
    }
 else
    {
-   snprintf(sendbuffer,CF_BUFSIZE,"SYNCH %d STAT %s",tloc,file);
+   snprintf(sendbuffer,CF_BUFSIZE,"SYNCH %jd STAT %s",(intmax_t)tloc,file);
    tosend = strlen(sendbuffer);
    }
 
@@ -334,9 +334,9 @@ if (OKProtoReply(recvbuffer))
 
    CfDebug("Mode = %ld,%ld\n",d2,d3);
    
-   CfDebug("OK: type=%d\n mode=%o\n lmode=%o\n uid=%d\n gid=%d\n size=%ld\n atime=%d\n mtime=%d ino=%d nlnk=%d, dev=%d\n",
+   CfDebug("OK: type=%d\n mode=%o\n lmode=%o\n uid=%d\n gid=%d\n size=%ld\n atime=%jd\n mtime=%jd ino=%d nlnk=%d, dev=%d\n",
  cfst.cf_type,cfst.cf_mode,cfst.cf_lmode,cfst.cf_uid,cfst.cf_gid,(long)cfst.cf_size,
- cfst.cf_atime,cfst.cf_mtime,cfst.cf_ino,cfst.cf_nlink,cfst.cf_dev);
+ (intmax_t)cfst.cf_atime,(intmax_t)cfst.cf_mtime,cfst.cf_ino,cfst.cf_nlink,cfst.cf_dev);
 
    memset(recvbuffer,0,CF_BUFSIZE);
    

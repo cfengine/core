@@ -2847,7 +2847,7 @@ for (ip = hostlist; ip != NULL; ip=ip->next)
          average = (double)entry.expect;
          var = (double)entry.var;
 
-         fprintf(fp2,"%d %lf %lf\n",now,average,sqrt(var));
+         fprintf(fp2,"%jd %lf %lf\n",(intmax_t)now,average,sqrt(var));
          }
       else
          {
@@ -2858,7 +2858,7 @@ for (ip = hostlist; ip != NULL; ip=ip->next)
          lastseen += CF_MEASURE_INTERVAL; /* infer based on no data */
          }
 
-      fprintf(fp1,"%d %d\n",now,lastseen);
+      fprintf(fp1,"%jd %jd\n",(intmax_t)now,(intmax_t)lastseen);
       }
 
    fclose(fp1);

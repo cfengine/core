@@ -542,7 +542,7 @@ if (lstat(from,&sb) == 0)
 
       if (attr.copy.backup == cfa_timestamp || attr.edits.backup == cfa_timestamp)
          {
-         sprintf(stamp, "_%d_%s",CFSTARTTIME,CanonifyName(cf_ctime(&now_stamp)));
+         sprintf(stamp, "_%jd_%s",(intmax_t)CFSTARTTIME,CanonifyName(cf_ctime(&now_stamp)));
          strcat(saved,stamp);
          }
 
@@ -576,7 +576,7 @@ if (lstat(from,&sb) == 0)
       saved[0] = '\0';
       strcpy(saved,from);
 
-      sprintf(stamp, "_%d_%s", CFSTARTTIME, CanonifyName(cf_ctime(&now_stamp)));
+      sprintf(stamp, "_%jd_%s", (intmax_t)CFSTARTTIME, CanonifyName(cf_ctime(&now_stamp)));
       strcat(saved,stamp);
       strcat(saved,CF_SAVED);
       strcat(saved,".dir");

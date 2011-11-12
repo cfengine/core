@@ -756,7 +756,7 @@ else
 
 strncpy(esc_command,MapName(cmd),CF_BUFSIZE-1);
    
-snprintf(line,CF_BUFSIZE-1,"_%d_%s",starttime,CanonifyName(cf_ctime(&starttime)));
+snprintf(line,CF_BUFSIZE-1,"_%jd_%s",(intmax_t)starttime,CanonifyName(cf_ctime(&starttime)));
 snprintf(filename,CF_BUFSIZE-1,"%s/outputs/cf_%s_%s_%p",CFWORKDIR,CanonifyName(VFQNAME),line,threadName);
 MapName(filename);
 

@@ -230,7 +230,7 @@ strcpy(backup,file);
 
 if (a.edits.backup == cfa_timestamp)
    {
-   snprintf(stamp,CF_BUFSIZE,"_%d_%s", CFSTARTTIME,CanonifyName(cf_ctime(&stamp_now)));
+   snprintf(stamp,CF_BUFSIZE,"_%jd_%s", (intmax_t)CFSTARTTIME,CanonifyName(cf_ctime(&stamp_now)));
    strcat(backup,stamp);
    }
 

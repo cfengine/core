@@ -4478,7 +4478,7 @@ if (df == CF_INFINITY)
    df = 0;
    }
 
-snprintf(buffer,CF_BUFSIZE-1,"%lld", df);
+snprintf(buffer,CF_BUFSIZE-1,"%jd", (intmax_t)df);
 
 rval.item = xstrdup(buffer);
 

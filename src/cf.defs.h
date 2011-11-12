@@ -33,6 +33,8 @@
 
 #include "conf.h"
 
+#define _GNU_SOURCE 1
+
 #ifdef NT
 #  define MAX_FILENAME 227
 #  define WINVER 0x501
@@ -256,8 +258,6 @@ size_t strlcat(char *destination, const char *source, size_t size);
 #  include <time.h>
 #endif
 
-#define _GNU_SOURCE
-
 #ifdef HAVE_TIME_H
 # include <time.h>
 #endif
@@ -299,10 +299,6 @@ size_t strlcat(char *destination, const char *source, size_t size);
 # include <linux/route.h>
 # include <linux/in.h>
 #endif
-#endif
-
-#ifndef HAVE_SNPRINTF
-#include "../pub/snprintf.h"
 #endif
 
 #ifndef CLOCK_REALTIME
@@ -399,6 +395,21 @@ int setegid (gid_t egid);
 #if !HAVE_DECL_SETLINEBUF
 void setlinebuf(FILE *stream);
 #endif
+#if HAVE_STDARG_H
+#include <stdarg.h>
+#if !HAVE_VSNPRINTF
+int rpl_vsnprintf(char *, size_t, const char *, va_list);
+#endif
+#if !HAVE_SNPRINTF
+int rpl_snprintf(char *, size_t, const char *, ...);
+#endif
+#if !HAVE_VASPRINTF
+int rpl_vasprintf(char **, const char *, va_list);
+#endif
+#if !HAVE_ASPRINTF
+int rpl_asprintf(char **, const char *, ...);
+#endif
+#endif	/* HAVE_STDARG_H */
 
 /*******************************************************************/
 /* Preprocessor tricks                                             */

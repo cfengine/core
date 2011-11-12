@@ -540,9 +540,14 @@ AC_CHECK_FUNCS(getcwd getnetgrent waitpid seteuid setegid setreuid setregid)
 AC_CHECK_FUNCS(uname gethostname chflags)
 AC_CHECK_FUNCS(strstr strsep putenv drand48 srand48 getaddrinfo)
 AC_CHECK_FUNCS(bcopy mkfifo statfs statvfs door)
-AC_CHECK_FUNCS(sysinfo setsid strrchr strerror snprintf sysconf)
+AC_CHECK_FUNCS(sysinfo setsid strrchr strerror sysconf)
 AC_CHECK_FUNCS(getzoneid getzonenamebyid)
 AC_CHECK_FUNCS(fpathconf)
+
+HW_FUNC_VSNPRINTF
+HW_FUNC_SNPRINTFF
+HW_FUNC_VASPRINTF
+HW_FUNC_ASPRINTF
 
 dnl dirfd might be a function or a macro
 

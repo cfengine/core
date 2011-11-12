@@ -1480,7 +1480,7 @@ switch(policy)
 
    case cfa_deletepack:
 
-      if (matched && package_select_in_range || installed && no_version_specified)
+      if ((matched && package_select_in_range) || (installed && no_version_specified))
          {
          CfOut(cf_verbose,""," -> Schedule package for deletion\n");
 
@@ -1527,7 +1527,7 @@ switch(policy)
        if (!no_version_specified)
           {
           CfOut(cf_verbose,""," -> Schedule package for reinstallation\n");
-          if (matched && package_select_in_range || installed && no_version_specified)
+          if ((matched && package_select_in_range) || (installed && no_version_specified))
              {
              manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_delete_command,cfa_deletepack,a.packages.package_changes);
              PrependPackageItem(&(manager->pack_list),id,"any","any",a,pp);
@@ -1661,7 +1661,7 @@ switch(policy)
 
    case cfa_verifypack:
 
-      if (matched && package_select_in_range || installed && no_version_specified)
+      if ((matched && package_select_in_range) || (installed && no_version_specified))
          {
          CfOut(cf_verbose,""," -> Schedule package for verification\n");
          manager = NewPackageManager(&PACKAGE_SCHEDULE,a.packages.package_verify_command,cfa_verifypack,a.packages.package_changes);

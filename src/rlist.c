@@ -73,7 +73,7 @@ if (rlist->type != CF_LIST)
               rlist->type);
    }
 
-return (struct FnCall *)rlist->item;
+return (struct Rlist *)rlist->item;
 }
 
 /*******************************************************************/

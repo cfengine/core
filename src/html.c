@@ -32,10 +32,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static char *URLControl(char *driver,char *url);
-
-/*****************************************************************************/
-
 void CfHtmlHeader(FILE *fp,char *title,char *css,char *webdriver,char *header)
 {
 if (title == NULL)
@@ -106,21 +102,4 @@ void CfHtmlTitle(FILE *fp,char *title)
 {
 fprintf(fp,"<h1>%s</h1>\n",title);
 }
-
-/*********************************************************************/
-
-char *URLControl(char *driver,char *url)
-
-{ static char transform[CF_BUFSIZE];
-
-if (strncmp(url,"http",4) == 0 || strstr(url,"php"))
-   {
-   return url;
-   }
-
-snprintf(transform,CF_BUFSIZE-1,"%s?quote=%s",driver,url);
-
-return transform;
-}
-
 

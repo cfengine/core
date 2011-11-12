@@ -101,7 +101,6 @@ static void VerifyExec(struct Attributes a, struct Promise *pp)
   char unsafeLine[CF_BUFSIZE], line[sizeof(unsafeLine)*2],eventname[CF_BUFSIZE];
   char comm[20];
   char execstr[CF_EXPANDSIZE];
-  struct timespec start;
   int outsourced,count = 0;
   mode_t maskval = 0;
   FILE *pfp;
@@ -148,7 +147,7 @@ PromiseBanner(pp);
 
 CfOut(cf_inform,""," -> Executing \'%s\' ...(timeout=%d,owner=%d,group=%d)\n",execstr,a.contain.timeout,a.contain.owner,a.contain.group);
 
-start = BeginMeasure();
+BeginMeasure();
 
 if (DONTDO && !a.contain.preview)
    {
@@ -321,7 +320,6 @@ else
 void PreviewProtocolLine(char *line, char *comm)
 
 { int i;
-  enum cfreport level = cf_error;
   char *message = line;
                
   /*
@@ -359,7 +357,6 @@ if (line[0] == ':')
           * prefix from the log message.
           */
 
-         level = i;
          message += prelen;
          break;
          }

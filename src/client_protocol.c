@@ -33,7 +33,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static void CheckServerVersion(struct cfagent_connection *conn,struct Attributes attr, struct Promise *pp);
 static void FreeRSAKey(RSA *key);
 
 /*********************************************************************/
@@ -481,43 +480,6 @@ static void FreeRSAKey(RSA *key)
     }
  
  RSA_free(key);
-}
-
-/*********************************************************************/
-
-static void CheckServerVersion(struct cfagent_connection *conn,struct Attributes attr, struct Promise *pp)
-
-{ char sendbuffer[CF_BUFSIZE];
-  char recvbuffer[CF_BUFSIZE];
-  int tosend;
-
-CfDebug("CheckRemoteVersion\n");  
-snprintf(sendbuffer,CF_BUFSIZE,"VERSION");
-tosend = strlen(sendbuffer);
-
-if (SendTransaction(conn->sd,sendbuffer,tosend,CF_DONE) == -1)
-   {
-   cfPS(cf_inform,CF_INTERPT,"send",pp,attr,"Transmission failed while checking version");
-   return;
-   }
-
-if (ReceiveTransaction(conn->sd,recvbuffer,NULL) == -1)
-   {
-   cfPS(cf_inform,CF_INTERPT,"send",pp,attr,"Reply failed while checking version");
-   conn->protoversion = 0;
-   return;
-   }
-
-if (BadProtoReply(recvbuffer))
-   {
-   conn->protoversion = 0;
-   return;
-   }
-else
-   {
-   conn->protoversion = 1;
-   return;
-   }
 }
 
 /*********************************************************************/

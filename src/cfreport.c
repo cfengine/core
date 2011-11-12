@@ -1389,7 +1389,6 @@ i = 0;
 
 while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    {
-   double measure;
    time_t then;
    char tbuf[CF_BUFSIZE];
 
@@ -1401,7 +1400,6 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
       memcpy(&entry,value,sizeof(entry));
 
       then    = entry.t;
-      measure = entry.Q.q;
       average = entry.Q.expect;
       var     = entry.Q.var;
 

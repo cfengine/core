@@ -562,7 +562,6 @@ void KeepFileAccessPromise(struct Promise *pp)
 { struct Constraint *cp;
   struct Rlist *rp;
   struct Auth *ap,*dp;
-  char *val;
 
 if (strlen(pp->promiser) != 1)
    {
@@ -592,8 +591,6 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
    switch (cp->type)
       {
       case CF_SCALAR:
-
-          val = (char *)cp->rval;
 
           if (strcmp(cp->lval,CF_REMACCESS_BODIES[cfs_encrypted].lval) == 0)
              {
@@ -641,7 +638,6 @@ void KeepLiteralAccessPromise(struct Promise *pp,char *type)
   struct Rlist *rp;
   struct Auth *ap,*dp;
   char *handle = GetConstraint("handle",pp,CF_SCALAR);
-  char *val;
 
 if (handle == NULL)
    {
@@ -684,8 +680,6 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
    switch (cp->type)
       {
       case CF_SCALAR:
-
-          val = (char *)cp->rval;
 
           if (strcmp(cp->lval,CF_REMACCESS_BODIES[cfs_encrypted].lval) == 0)
              {
@@ -732,7 +726,6 @@ void KeepQueryAccessPromise(struct Promise *pp,char *type)
 { struct Constraint *cp;
   struct Rlist *rp;
   struct Auth *ap,*dp;
-  char *val;
 
 if (!GetAuthPath(pp->promiser,VARADMIT))
    {
@@ -764,8 +757,6 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
    switch (cp->type)
       {
       case CF_SCALAR:
-
-          val = (char *)cp->rval;
 
           if (strcmp(cp->lval,CF_REMACCESS_BODIES[cfs_encrypted].lval) == 0)
              {

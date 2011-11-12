@@ -74,7 +74,7 @@ if (strcmp(a.database.type,"ms_registry") == 0)
 static void VerifySQLPromise(struct Attributes a,struct Promise *pp)
 
 { char database[CF_MAXVARSIZE],table[CF_MAXVARSIZE],query[CF_BUFSIZE];
-  char *sp,sep = 'x';
+  char *sp;
   int count = 0;
   CfdbConn cfdb;
   struct CfLock thislock;
@@ -97,7 +97,6 @@ for (sp = pp->promiser; *sp != '\0'; sp++)
    if (strchr("./\\", *sp))
       {
       count++;
-      sep = *sp;
       strncpy(table,sp+1,CF_MAXVARSIZE-1);
       sscanf(pp->promiser,"%[^.\\/]",database);
 

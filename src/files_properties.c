@@ -41,9 +41,9 @@
 
 int ConsiderFile(const char *nodename,char *path,struct Attributes attr,struct Promise *pp)
 
-{ int i, suspicious = true;
+{ int i;
   struct stat statbuf; 
-  char newname[CF_BUFSIZE],vbuff[CF_BUFSIZE];
+  char vbuff[CF_BUFSIZE];
   const char *sp;
   static char *skipfiles[] =
       {
@@ -96,13 +96,10 @@ if ((strcmp("[",nodename) == 0) && (strcmp("/usr/bin",path) == 0))
       }
    }
 
-suspicious = true;
-
 for (sp = nodename; *sp != '\0'; sp++)
    {
    if ((*sp > 31) && (*sp < 127))
       {
-      suspicious = false;
       break;
       }
    }
@@ -115,7 +112,6 @@ for (sp = nodename; *sp != '\0'; sp++) /* Check for files like ".. ." */
    {
    if ((*sp != '.') && ! isspace(*sp))
       {
-      suspicious = false;
       return true;
       }
    }

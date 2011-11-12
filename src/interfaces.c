@@ -107,7 +107,7 @@ char VNUMBROADCAST[256];
 
 void VerifyInterfacePromise(char *vifdev,char *vaddress,char *vnetmask,char *vbroadcast)
 
-{ int sk, flags, metric, isnotsane = false;
+{ int sk, isnotsane = false;
  
 CfOut(cf_verbose,"","Assumed interface name: %s %s %s\n",vifdev,vnetmask,vbroadcast);
 
@@ -144,7 +144,6 @@ if (ioctl(sk,SIOCGIFFLAGS, (caddr_t) &IFR) == -1)   /* Get the device status fla
    return;
    }
 
-flags = IFR.ifr_flags;
 strcpy(IFR.ifr_name,vifdev);                   /* copy this each time */
  
 if (ioctl(sk,SIOCGIFMETRIC, (caddr_t) &IFR) == -1)  /* Get the routing priority */
@@ -152,8 +151,6 @@ if (ioctl(sk,SIOCGIFMETRIC, (caddr_t) &IFR) == -1)  /* Get the routing priority 
    CfOut(cf_error,"ioctl","Error examining the routing metric\n");
    return;
    }
-
-metric = IFR.ifr_metric;
 
 isnotsane = GetPromisedIfStatus(sk,vifdev,vaddress,vnetmask,vbroadcast);
 

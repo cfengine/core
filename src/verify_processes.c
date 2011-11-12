@@ -55,7 +55,7 @@ VerifyProcesses(a,pp);
 
 static int ProcessSanityChecks(struct Attributes a,struct Promise *pp)
 
-{ int promised_zero, promised_any, ret = true;
+{ int promised_zero, ret = true;
 
 if (a.signals != NULL && a.process_stop != NULL)
    {
@@ -65,7 +65,6 @@ if (a.signals != NULL && a.process_stop != NULL)
    }
 
 promised_zero = (a.process_count.min_range == 0 && a.process_count.max_range == 0);
-promised_any = (a.process_count.min_range == CF_NOINT);
 
 if (a.restart_class)
    {

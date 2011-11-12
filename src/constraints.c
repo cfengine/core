@@ -49,7 +49,6 @@ struct Constraint *AppendConstraint(struct Constraint **conlist,char *lval, void
     
 { struct Constraint *cp,*lp;
   char *sp = NULL;
-  int i;
 
 switch(type)
    {

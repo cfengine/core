@@ -685,7 +685,6 @@ long Str2Int(const char *s)
 { long a = CF_NOINT;
   char c = 'X';
   char remainder[CF_BUFSIZE];
-  char output[CF_BUFSIZE];
 
 if (s == NULL)
    {

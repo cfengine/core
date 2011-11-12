@@ -44,7 +44,7 @@ int NR = 0;
 
 void SelfDiagnostic()
 
-{ int s1,s2,i,j;
+{ int i,j;
   char *names, *numbers, *pattern;
  
 if (VERBOSE || DEBUG)
@@ -367,22 +367,22 @@ else
 
 static void TestAgentPromises()
 
-{ struct Attributes a = {{0}};
-  struct Promise pp = {0};
+{
+struct Promise pp = {0};
 
 pp.conlist = NULL;
 pp.audit = NULL;
 
 printf("%d. Testing promise attribute completeness (with no desired intention)\n",++NR);
 
-a = GetFilesAttributes(&pp);
-a = GetReportsAttributes(&pp);
-a = GetExecAttributes(&pp);
-a = GetProcessAttributes(&pp);
-a = GetStorageAttributes(&pp);
-a = GetClassContextAttributes(&pp);
-a = GetTopicsAttributes(&pp);
-a = GetOccurrenceAttributes(&pp);
+GetFilesAttributes(&pp);
+GetReportsAttributes(&pp);
+GetExecAttributes(&pp);
+GetProcessAttributes(&pp);
+GetStorageAttributes(&pp);
+GetClassContextAttributes(&pp);
+GetTopicsAttributes(&pp);
+GetOccurrenceAttributes(&pp);
 GetMethodAttributes(&pp);
 GetInterfacesAttributes(&pp);
 GetInsertionAttributes(&pp);

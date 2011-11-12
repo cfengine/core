@@ -395,8 +395,6 @@ CloseDB(AUDITDBP);
 static void AddAllClasses(struct Rlist *list,int persist,enum statepolicy policy)
 
 { struct Rlist *rp;
-  int slot;
-  char *string;
  
 if (list == NULL)
    {

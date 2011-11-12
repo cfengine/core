@@ -118,7 +118,6 @@ return RecvSocketStream(sd,buffer,len,0);
 int RecvSocketStream(int sd,char buffer[CF_BUFSIZE],int toget,int nothing)
 
 { int already, got;
-  static int fraction;
 
 CfDebug("RecvSocketStream(%d)\n",toget);
 
@@ -146,7 +145,6 @@ for (already = 0; already != toget; already += got)
    if (got == 0)   /* doesn't happen unless sock is closed */
       {
       CfDebug("Transmission empty or timed out...\n");
-      fraction = 0;
       break;
       }
 

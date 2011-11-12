@@ -41,8 +41,8 @@ static void ClearFnCallStatus(void);
 
 int IsBuiltinFnCall(void *rval,char rtype)
 
-{ int i;
-  struct FnCall *fp;
+{
+struct FnCall *fp;
 
 if (rtype != CF_FNCALL)
    {

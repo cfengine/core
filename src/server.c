@@ -3012,10 +3012,8 @@ void CfGetFile(struct cfd_get_arg *args)
   char sendbuffer[CF_BUFSIZE+256],filename[CF_BUFSIZE];
   struct stat sb;
   int blocksize = 2048;
-  char *key;
 
 sd         = (args->connect)->sd_reply;
-key        = (args->connect)->session_key;
 
 TranslatePath(filename,args->replyfile);
 

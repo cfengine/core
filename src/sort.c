@@ -38,7 +38,7 @@
 
 struct Item *SortItemListNames(struct Item *list) /* Alphabetical */
 
-{ struct Item *p, *q, *e, *tail, *oldhead;
+{ struct Item *p, *q, *e, *tail;
   int insize, nmerges, psize, qsize, i;
 
 if (list == NULL)
@@ -51,7 +51,6 @@ insize = 1;
 while (true)
    {
    p = list;
-   oldhead = list;                /* only used for circular linkage */
    list = NULL;
    tail = NULL;
    
@@ -148,7 +147,7 @@ while (true)
 
 struct Item *SortItemListClasses(struct Item *list) /* Alphabetical */
 
-{ struct Item *p, *q, *e, *tail, *oldhead;
+{ struct Item *p, *q, *e, *tail;
   int insize, nmerges, psize, qsize, i;
 
 if (list == NULL)
@@ -161,7 +160,6 @@ insize = 1;
 while (true)
    {
    p = list;
-   oldhead = list;                /* only used for circular linkage */
    list = NULL;
    tail = NULL;
    
@@ -258,7 +256,7 @@ while (true)
 
 struct Item *SortItemListCounters(struct Item *list) /* Biggest first */
 
-{ struct Item *p, *q, *e, *tail, *oldhead;
+{ struct Item *p, *q, *e, *tail;
   int insize, nmerges, psize, qsize, i;
 
 if (list == NULL)
@@ -271,7 +269,6 @@ insize = 1;
 while (true)
    {
    p = list;
-   oldhead = list;                /* only used for circular linkage */
    list = NULL;
    tail = NULL;
    
@@ -369,7 +366,7 @@ while (true)
 
 struct Item *SortItemListTimes(struct Item *list) /* Biggest first */
 
-{ struct Item *p, *q, *e, *tail, *oldhead;
+{ struct Item *p, *q, *e, *tail;
   int insize, nmerges, psize, qsize, i;
 
 if (list == NULL)
@@ -382,7 +379,6 @@ insize = 1;
 while (true)
    {
    p = list;
-   oldhead = list;                /* only used for circular linkage */
    list = NULL;
    tail = NULL;
    
@@ -485,7 +481,7 @@ struct Rlist *SortRlist(struct Rlist *list, int (*CompareItems)())
  * true if i1 <= i2, false otherwise.
  **/
 
-{ struct Rlist *p = NULL, *q = NULL, *e = NULL, *tail = NULL, *oldhead = NULL;
+{ struct Rlist *p = NULL, *q = NULL, *e = NULL, *tail = NULL;
   int insize = 0, nmerges = 0, psize = 0, qsize = 0, i = 0;
 
 if (list == NULL)
@@ -498,7 +494,6 @@ insize = 1;
 while (true)
    {
    p = list;
-   oldhead = list;                /* only used for circular linkage */
    list = NULL;
    tail = NULL;
    
@@ -598,7 +593,7 @@ struct Rlist *AlphaSortRListNames(struct Rlist *list)
 
 /* Borrowed this algorithm from merge-sort implementation */
 
-{ struct Rlist *p, *q, *e, *tail, *oldhead;
+{ struct Rlist *p, *q, *e, *tail;
   int insize, nmerges, psize, qsize, i;
 
 if (list == NULL)
@@ -611,7 +606,6 @@ if (list == NULL)
  while (true)
     {
     p = list;
-    oldhead = list;                /* only used for circular linkage */
     list = NULL;
     tail = NULL;
     

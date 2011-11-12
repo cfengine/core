@@ -32,10 +32,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static void DeEscapeFilename(char *in,char *out);
-static int JoinFast(char *path,char *leaf,char **nextFree,int bufsize);
-static int StartJoinFast(char *path,char *leaf,char **nextFree,int bufsize);
-
 /*****************************************************************************/
 
 void LocateFilePromiserGroup(char *wildpath,struct Promise *pp,void (*fnptr)(char *path, struct Promise *ptr))
@@ -392,17 +388,6 @@ return JoinMargin(path,leaf,NULL,bufsize,CF_BUFFERMARGIN);
 
 /*********************************************************************/
 
-static int StartJoinFast(char *path,char *leaf,char **nextFree,int bufsize)
-
-{
-*path = '\0';
-*nextFree = path;
-
-return JoinMargin(path,leaf,nextFree,bufsize,CF_BUFFERMARGIN);
-}
-
-/*********************************************************************/
-
 int Join(char *path, const char *leaf, int bufsize)
 
 {
@@ -425,17 +410,6 @@ int JoinSilent(char *path, const char *leaf, int bufsize)
  
  return true;
 }
-
-/*********************************************************************/
-
-static int JoinFast(char *path,char *leaf,char **nextFree,int bufsize)
-/*
- * Faster stringjoin by keeping track of where we last stopped
- */
-{
-  return JoinMargin(path,leaf,nextFree,bufsize,CF_BUFFERMARGIN);
-}
-
 
 /*********************************************************************/
 
@@ -713,27 +687,6 @@ else
    {
    return sp + 1;
    }
-}
-
-/*****************************************************************************/
-
-static void DeEscapeFilename(char *in,char *out)
-
-{ char *sp_in,*sp_out = out;
-
-*sp_out = '\0';
-
-for (sp_in = in; *sp_in != '\0'; sp_in++)
-   {
-   if (*sp_in == '\\' && *(sp_in+1) == ' ')
-      {
-      sp_in++;
-      }
-
-   *sp_out++ = *sp_in;
-   }
-
-*sp_out = '\0';
 }
 
 /*****************************************************************************/

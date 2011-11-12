@@ -96,8 +96,6 @@ void SetSignals()
 void CalculateDomainName(const char *nodename, const char *dnsname,
                          char *fqname, char *uqname, char *domain)
 {
-char *ptr;
-
 if (strstr(dnsname,"."))
    {
    strlcpy(fqname, dnsname, CF_BUFSIZE);
@@ -134,7 +132,7 @@ else
 
 /*******************************************************************/
 
-void DetectDomainName(const char *orig_nodename)
+static void DetectDomainName(const char *orig_nodename)
 {
 char nodename[CF_BUFSIZE];
 strcpy(nodename, orig_nodename);
@@ -714,7 +712,9 @@ void OSClasses()
 
 { struct stat statbuf;
   char vbuff[CF_BUFSIZE];
+#ifndef LINUX
   char *sp;
+#endif
   struct passwd *pw;
 #ifndef LINUX
   char class[CF_BUFSIZE];

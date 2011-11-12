@@ -149,7 +149,7 @@ return true;
 
 struct Rlist *NewExpArgs(struct FnCall *fp, struct Promise *pp)
 
-{ int i, len, ref = 0;
+{ int len, ref = 0;
   struct Rval rval;
   struct Rlist *rp,*newargs = NULL;
   struct FnCall *subfp;

@@ -521,14 +521,13 @@ static void VerifyFriendReliability(struct Attributes a,struct Promise *pp)
   char name[CF_BUFSIZE],hostname[CF_BUFSIZE],timekey[CF_MAXVARSIZE];
   struct QPoint entry;
   struct Item *ip, *hostlist = NULL;
-  double average,var,sum,sum_av,expect,actual;
+  double average,sum,sum_av,expect,actual;
   time_t now = time(NULL), then, lastseen = SECONDS_PER_WEEK;
 
 CfOut(cf_verbose,"","CheckFriendReliability()\n");
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
 
 average = (double) SECONDS_PER_HOUR;  /* It will take a week for a host to be deemed reliable */
-var = 0;
 
 if (!OpenDB(name,&dbp))
    {
@@ -589,7 +588,6 @@ for (ip = hostlist; ip != NULL; ip=ip->next)
             lastseen = 0; /* Never seen before, so pretend */
             }
          average = (double)entry.expect;
-         var = (double)entry.var;
          CfDebug("%s => then = %ld, lastseen = %ld, average=%.2f\n",hostname,then,lastseen,average);
          }
       else

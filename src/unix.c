@@ -113,7 +113,7 @@ int Unix_IsExecutable(const char *file)
 
 { struct stat sb;
   gid_t grps[NGROUPS];
-  int i,n;
+  int n;
 
 if (cfstat(file,&sb) == -1)
    {
@@ -151,6 +151,7 @@ else
    
    if ((n = getgroups(NGROUPS,grps)) > 0)
       {
+      int i;
       for (i = 0; i < n; i++)
          {
          if (grps[i] == sb.st_gid)
@@ -173,7 +174,7 @@ return false;
 
 int Unix_ShellCommandReturnsZero(char *comm,int useshell)
 
-{ int status, i;
+{ int status;
   pid_t pid;
 
 if (!useshell)

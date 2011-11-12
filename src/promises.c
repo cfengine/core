@@ -439,17 +439,10 @@ static void DebugPromise(struct Promise *pp)
   struct Body *bp;
   struct FnCall *fp;
   struct Rlist *rp;
-  char *v,rettype;
+  char rettype;
   void *retval;
 
-if (GetVariable("control_common","version",&retval,&rettype) != cf_notype)
-   {
-   v = (char *)retval;
-   }
-else
-   {
-   v = "not specified";
-   }
+GetVariable("control_common","version",&retval,&rettype);
 
 if (pp->promisee != NULL)
    {

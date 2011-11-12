@@ -1025,21 +1025,11 @@ if (GENERATE_MANUAL)
 void VerifyOccurrenceGroup(char *file,struct Promise *pp)
     
 { struct Attributes a = {{0}};
-  enum representations rep_type;
   struct stat sb;
   char *sp,url[CF_BUFSIZE];
   struct Rval retval;
 
 a = GetOccurrenceAttributes(pp);
-
-if (a.rep_type)
-   {
-   rep_type = String2Representation(a.rep_type);
-   }
-else
-   {
-   rep_type = cfk_url;
-   }
 
 if (cfstat(file,&sb) == -1)
    {

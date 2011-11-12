@@ -32,8 +32,6 @@ int RawSaveItemList(struct Item *liststart,char *file)
 { struct Item *ip;
   char new[CF_BUFSIZE],backup[CF_BUFSIZE];
   FILE *fp;
-  time_t STAMPNOW;
-  STAMPNOW = time((time_t *)NULL);
 
 strcpy(new,file);
 strcat(new,CF_EDITED);

@@ -159,7 +159,7 @@ void NoteClassUsage(struct AlphaList baselist)
   CF_DBC *dbcp;
   void *stored;
   char *key,name[CF_BUFSIZE];
-  int i,j,ksize,vsize;
+  int i,ksize,vsize;
   struct Event e,entry,newe;
   double lsea = SECONDS_PER_WEEK * 52; /* expire after (about) a year */
   time_t now = time(NULL);
@@ -250,7 +250,7 @@ OpenDBTransaction(dbp);
 
 while(NextDB(dbp,dbcp,&key,&ksize,&stored,&vsize))
    {
-   double measure,av,var;
+   double av,var;
    time_t then;
    char eventname[CF_BUFSIZE];
 
@@ -262,7 +262,6 @@ while(NextDB(dbp,dbcp,&key,&ksize,&stored,&vsize))
       memcpy(&entry,stored,sizeof(entry));
       
       then    = entry.t;
-      measure = entry.Q.q;
       av = entry.Q.expect;
       var = entry.Q.var;
       lastseen = now - then;
@@ -299,8 +298,6 @@ DeleteItemList(list);
 void LastSaw(char *username,char *ipaddress,unsigned char digest[EVP_MAX_MD_SIZE+1],enum roles role)
 
 { char databuf[CF_BUFSIZE];
-  time_t now = time(NULL);
-  int known = false;
   char *mapip;
 
 if (strlen(ipaddress) == 0)
@@ -335,8 +332,7 @@ static void UpdateLastSawHost(char *rkey,char *ipaddress)
 { CF_DB *dbpent = NULL,*dbp = NULL;
   struct CfKeyHostSeen q,newq; 
   double lastseen,delta2;
-  void *stored;
-  char name[CF_BUFSIZE],*key;
+  char name[CF_BUFSIZE];
   time_t now = time(NULL);
   int intermittency = false;
   char timebuf[26];
@@ -482,10 +478,10 @@ return true;
 static void PurgeMultipleIPReferences(CF_DB *dbp,char *rkey,char *ipaddress)
 
 { CF_DBC *dbcp;
-  struct CfKeyHostSeen q,newq; 
-  double lastseen,delta2,lsea = LASTSEENEXPIREAFTER;
+  struct CfKeyHostSeen q; 
+  double lastseen,lsea = LASTSEENEXPIREAFTER;
   void *stored;
-  char name[CF_BUFSIZE],*key;
+  char *key;
   time_t now = time(NULL);
   int qsize,ksize,update_address,keys_match;
 

@@ -263,7 +263,7 @@ void VerifyFilePromise(char *path,struct Promise *pp)
 { struct stat osb,oslb,dsb;
   struct Attributes a = {{0}};
   struct CfLock thislock;
-  int exists,success,rlevel = 0;
+  int exists,rlevel = 0;
 
 a = GetFilesAttributes(pp);
 
@@ -404,7 +404,7 @@ if (exists && (a.havedelete||a.haverename||a.haveperms||a.havechange||a.transfor
       SetSearchDevice(&oslb,pp);
       }
    
-   success = DepthSearch(path,&oslb,rlevel,a,pp);
+   DepthSearch(path,&oslb,rlevel,a,pp);
    
    /* normally searches do not include the base directory */
    
@@ -415,7 +415,7 @@ if (exists && (a.havedelete||a.haverename||a.haveperms||a.havechange||a.transfor
       /* Handle this node specially */
 
       a.havedepthsearch = false;
-      success = DepthSearch(path,&oslb,rlevel,a,pp);
+      DepthSearch(path,&oslb,rlevel,a,pp);
       a.havedepthsearch = save_search;
       }
 

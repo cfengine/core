@@ -428,7 +428,7 @@ CFDIR *OpenDirRemote(const char *dirname,struct Attributes attr,struct Promise *
   char recvbuffer[CF_BUFSIZE];
   char in[CF_BUFSIZE];
   char out[CF_BUFSIZE];
-  int n, cipherlen = 0,plainlen = 0,tosend;
+  int n, cipherlen = 0,tosend;
   CFDIR *cfdirh;
   char *sp;
   struct Item *files = NULL;
@@ -487,7 +487,7 @@ while (true)
    if (attr.copy.encrypt)
       {
       memcpy(in,recvbuffer,n);
-      plainlen = DecryptString(conn->encryption_type,in,recvbuffer,conn->session_key,n);
+      DecryptString(conn->encryption_type,in,recvbuffer,conn->session_key,n);
       }
 
    if (FailedProtoReply(recvbuffer))

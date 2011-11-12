@@ -42,7 +42,6 @@ static void CheckWorkingDirectories(void);
 static void Cf3ParseFile(char *filename);
 static void Cf3ParseFiles(void);
 static int MissingInputFile(void);
-static void UnHashVariables(void);
 static void CheckControlPromises(char *scope,char *agent,struct Constraint *controllist);
 static void CheckVariablePromises(char *scope,struct Promise *varlist);
 static void CheckCommonClassPromises(struct Promise *classlist);
@@ -330,7 +329,7 @@ else
 
 void ReadPromises(enum cfagenttype ag,char *agents)
 
-{ char *v,rettype;
+{ char rettype;
   void *retval;
   char vbuff[CF_BUFSIZE];
 
@@ -356,14 +355,7 @@ OpenReports(agents);
 
 SetAuditVersion();
 
-if (GetVariable("control_common","version",&retval,&rettype) != cf_notype)
-   {
-   v = (char *)retval;
-   }
-else
-   {
-   v = "not specified";
-   }
+GetVariable("control_common","version",&retval,&rettype);
 
 snprintf(vbuff,CF_BUFSIZE-1,"Expanded promises for %s",agents);
 CfHtmlHeader(FREPORT_HTML,vbuff,STYLESHEET,WEBDRIVER,BANNER);
@@ -1592,8 +1584,6 @@ static void CheckControlPromises(char *scope,char *agent,struct Constraint *cont
   struct Rlist *rp;
   int i = 0;
   struct Rval returnval;
-  char rettype;
-  void *retval;
 
 CfDebug("CheckControlPromises(%s)\n",agent);
 
@@ -1949,23 +1939,11 @@ for (bdp = BODIES; bdp != NULL; bdp = bdp->next) /* get schedule */
    }
 }
 
-/*******************************************************************/
-
-static void UnHashVariables()
-
-{ struct Bundle *bp;
-
-for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
-   {
-   DeleteScope(bp->name);
-   }
-}
-
 /********************************************************************/
 
 static bool VerifyBundleSequence(enum cfagenttype agent)
 
-{ struct Rlist *rp,*params;
+{ struct Rlist *rp;
   char rettype,*name;
   void *retval = NULL;
   int ok = true;
@@ -2005,18 +1983,15 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
       {
       case CF_SCALAR:
          name = (char *)rp->item;
-         params = NULL;
          break;
 
       case CF_FNCALL:
          fp = (struct FnCall *)rp->item;
          name = (char *)fp->name;
-         params = (struct Rlist *)fp->args;
          break;
 
       default:
          name = NULL;
-         params = NULL;
          CfOut(cf_error,"","Illegal item found in bundlesequence: ");
          ShowRval(stdout,rp->item,rp->type);
          printf(" = %c\n",rp->type);

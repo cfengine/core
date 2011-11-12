@@ -603,7 +603,7 @@ enum cfdatatype StringDataType(char *scopeid,char *string)
   char rtype;
   void *rval;
   int islist = false;
-  char var[CF_BUFSIZE],exp[CF_EXPANDSIZE];
+  char var[CF_BUFSIZE];
   
 CfDebug("StringDataType(%s)\n",string);
 
@@ -620,7 +620,6 @@ vars:
 ---------------------------------------------------------*/
 
 var[0] = '\0';
-exp[0] = '\0';
 
 if (*string == '$')
    {
@@ -1151,7 +1150,7 @@ return strcmp(s,"string") == 0 || strcmp(s,"slist") == 0 ||
 
 static void CheckFnCallType(char *lval,const char *s,enum cfdatatype dtype,char *range)
 
-{ int i;
+{
   enum cfdatatype dt;
   char output[CF_BUFSIZE];
   FnCallType *fn;

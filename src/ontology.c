@@ -130,7 +130,7 @@ void AddTopicAssociation(struct Topic *this_tp,struct TopicAssociation **list,ch
 
 { struct TopicAssociation *ta = NULL,*texist;
   char fwd_context[CF_MAXVARSIZE];
-  struct Rlist *rp,*rpc;
+  struct Rlist *rp;
   struct Topic *new_tp;
   char contexttopic[CF_BUFSIZE],ntopic[CF_BUFSIZE],ncontext[CF_BUFSIZE];
 
@@ -486,10 +486,7 @@ struct TopicAssociation *AssociationExists(struct TopicAssociation *list,char *f
 
 { struct TopicAssociation *ta;
   int yfwd = false,ybwd = false;
-  enum cfreport level;
   char l[CF_BUFSIZE],r[CF_BUFSIZE];
-
-level = cf_verbose;
 
 if (fwd == NULL || (fwd && strlen(fwd) == 0))
    {

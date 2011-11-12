@@ -38,7 +38,6 @@ static int WriteHash(CF_DB *dbp,enum cfhashes type,char *name,unsigned char dige
 static char *NewIndexKey(char type,char *name, int *size);
 static void DeleteIndexKey(char *key);
 static void DeleteHashValue(struct Checksum_Value *value);
-static void HashList(struct Item *list,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type);
 static int FileHashSize(enum cfhashes id);
 
 /*******************************************************************/
@@ -303,32 +302,6 @@ else
    /* Digest length stored in md_len */
    fclose (file);
    }
-}
-
-/*******************************************************************/
-
-static void HashList(struct Item *list,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type)
-
-{ struct Item *ip;
-  EVP_MD_CTX context;
-  int md_len;
-  const EVP_MD *md = NULL;
-
-CfDebug2("HashList(%s)\n",FileHashName(type));
-
-memset(digest,0,EVP_MAX_MD_SIZE+1);
-
-md = EVP_get_digestbyname(FileHashName(type));
-
-EVP_DigestInit(&context,md);
-
-for (ip = list; ip != NULL; ip=ip->next) 
-   {
-   CfDebug(" digesting %s\n",ip->name);
-   EVP_DigestUpdate(&context,ip->name,strlen(ip->name));
-   }
-
-EVP_DigestFinal(&context,digest,&md_len);
 }
 
 /*******************************************************************/

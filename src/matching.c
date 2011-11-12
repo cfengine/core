@@ -125,16 +125,12 @@ static char *FirstBackReference(pcre *rx, const char *teststring)
 {
 static char backreference[CF_BUFSIZE];
 
-int ovector[OVECCOUNT],i,rc,match_len;
-const char *match_start;
+int ovector[OVECCOUNT],i,rc;
 
 memset(backreference,0,CF_BUFSIZE);
 
 if ((rc = pcre_exec(rx,NULL,teststring,strlen(teststring),0,0,ovector,OVECCOUNT)) >= 0)
    {
-   match_start = teststring + ovector[0];
-   match_len = ovector[1] - ovector[0];
-
    for (i = 1; i < rc; i++) /* make backref vars $(1),$(2) etc */
       {
       const char *backref_start = teststring + ovector[i*2];
@@ -546,8 +542,6 @@ for (ip = list; ip != NULL; ip = ip->next)
       {
       break;
       }
-
-   strcmp(final,work);
    }
 
 DeleteItemList(list);
@@ -725,7 +719,7 @@ if (isv4 && isrange)
  if (isv6 && isCIDR)
     {
     char address[CF_ADDRSIZE];
-    int mask,blocks;
+    int mask;
     
     if (strlen(s) < 20)
        {
@@ -742,7 +736,6 @@ if (isv4 && isrange)
     address[0] = '\0';
     mask = 0;
     sscanf(s,"%40[^/]/%d",address,&mask);
-    blocks = mask/8;
     
     if (mask % 8 != 0)
        {

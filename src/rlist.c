@@ -215,7 +215,7 @@ void *CopyRvalItem(const void *item, char type)
 
 { struct Rlist *rp,*srp,*start = NULL;
   struct FnCall *fp;
-  void *new,*rval;
+  void *rval;
   char rtype = CF_SCALAR;
   char naked[CF_BUFSIZE];
   
@@ -1254,7 +1254,7 @@ struct Rlist *SplitRegexAsRList(char *string,char *regex,int max,int blanks)
   char *sp;
   char node[CF_MAXVARSIZE];
   int start,end;
-  int delta, count = 0;
+  int count = 0;
 
 if (string == NULL)
    {
@@ -1272,7 +1272,6 @@ while ((count < max) && BlockTextMatch(regex,sp,&start,&end))
       break;
       }
 
-   delta = end - start;
    memset(node,0,CF_MAXVARSIZE);
    strncpy(node,sp,start);
 

@@ -32,9 +32,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static void ExtendList(char *scope,char *lval,void *rval,enum cfdatatype dt);
-static void IdempNewScalar(char *scope,char *lval,char *rval,enum cfdatatype dt);
-static void DeleteAllVariables(char *scope);
 static int IsCf3Scalar(char *str);
 static int CompareVariableValue(const void *rval,char rtype,struct CfAssoc *ap);
 
@@ -106,23 +103,6 @@ AddVariableHash(scope,lval,rval,CF_SCALAR,dt,NULL,0);
 
 /*******************************************************************/
 
-static void IdempNewScalar(char *scope,char *lval,char *rval,enum cfdatatype dt)
-
-{
-  struct Rval rvald;
- 
-CfDebug("IdempNewScalar(%s,%s,%s)\n",scope,lval,rval);
-
-if (GetVariable(scope,lval,&rvald.item,&rvald.rtype) != cf_notype)
-   {
-   return;
-   }
-
-AddVariableHash(scope,lval,rval,CF_SCALAR,dt,NULL,0);
-}
-
-/*******************************************************************/
-
 void DeleteScalar(const char *scope_name, const char *lval)
 
 {
@@ -153,49 +133,6 @@ if (GetVariable(scope,lval,&rvald.item,&rvald.rtype) != cf_notype)
  
 sp1 = xstrdup(lval);
 AddVariableHash(scope,sp1,rval,CF_LIST,dt,NULL,0);
-}
-
-/*******************************************************************/
-
-static void ExtendList(char *scope,char *lval,void *rval,enum cfdatatype dt)
-
-{
-  struct Rval rvald;
-  struct Rlist *list,*rp;
-
-if (GetVariable(scope,lval,&rvald.item,&rvald.rtype) != cf_notype)
-   {
-   list = rvald.item;
-   
-   switch(rvald.rtype)
-      {
-      case CF_SCALAR:
-          IdempAppendRlist(&list,rval,CF_SCALAR);
-          break;
-          
-      case CF_LIST:
-          for (rp = rval; rp != NULL; rp = rp->next)
-             {
-             IdempAppendRlist(&list,rval,CF_SCALAR);
-             }
-          break;
-          
-      case CF_FNCALL:
-          rp = IdempAppendRScalar(&list,"dummy",CF_SCALAR);
-          free(rp->item);
-          rp->item = rval;
-          rp->type = CF_FNCALL;
-          break;
-          
-      default:
-          CfOut(cf_error,"","Attempt to extend a list with something unknown");
-          break;
-      }
-   }
-else
-   {
-   NewList(scope,lval,rval,dt);
-   }
 }
 
 /*******************************************************************/
@@ -402,15 +339,6 @@ for (rp = args; rp != NULL; rp = rp->next)
    }
 
 return false;
-}
-
-/*******************************************************************/
-
-static void DeleteAllVariables(char *scope)
-{
-struct Scope *ptr;
-ptr = GetScope(scope);
-HashClear(ptr->hashtable);
 }
 
 /******************************************************************/
@@ -739,7 +667,6 @@ const char *ExtractOuterCf3VarString(const char *str, char *substr)
 { const char *sp;
   int dollar = false;
   int bracks = 0, onebrack = false;
-  int nobracks = true;
 
 CfDebug("ExtractOuterVarString(\"%s\") - syntax verify\n",str);
 
@@ -765,7 +692,6 @@ for (sp = str; *sp != '\0' ; sp++)       /* check for varitems */
       case '{': 
           bracks++;
           onebrack = true;
-          nobracks = false;
           break;
       case ')':
       case '}': 
@@ -993,7 +919,7 @@ void DeRefListsInHashtable(char *scope,struct Rlist *namelist,struct Rlist *dere
 
 { int len;
   struct Scope *ptr;
-  struct Rlist *rp,*state;
+  struct Rlist *rp;
   struct CfAssoc *cplist;
   HashIterator i;
   CfAssoc *assoc;
@@ -1021,8 +947,6 @@ while ((assoc = HashIteratorNext(&i)))
       if (strcmp(cplist->lval,assoc->lval) == 0)
          {
          /* Link up temp hash to variable lol */
-
-         state = (struct Rlist *)(cplist->rval);
 
          if (rp->state_ptr == NULL || rp->state_ptr->type == CF_FNCALL)
             {

@@ -780,8 +780,7 @@ else
 static int DeletePromisedLinesMatching(struct Item **start,struct Item *begin,struct Item *end,struct Attributes a,struct Promise *pp)
 
 { struct Item *ip,*np = NULL,*lp,*initiator = begin,*terminator = NULL;
-  int i,in_region = false, retval = false, matches, noedits = true;
-  char *sp,buf[CF_BUFSIZE];
+  int i, retval = false, matches, noedits = true;
 
 if (start == NULL)
    {

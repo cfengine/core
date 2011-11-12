@@ -44,9 +44,6 @@
  #include <libpq-fe.h>
 #endif
 
-static char *EscapeSQL(CfdbConn *cfdb,char *query);
-static void Debugcfdb(CfdbConn *cfdb);
-
 /* Cfengine connectors for sql databases. Note that there are significant
    differences in db admin functions in the various implementations. e.g.
    sybase/mysql "use database, create database" not in postgres.
@@ -184,14 +181,6 @@ if (mc->res)
    }
 }
 
-/*****************************************************************************/
-
-static void CfEscapeMysqlSQL(CfdbConn *c, const char *query, char *result)
-{
-struct CfDbMysqlConn *mc = c->data;
-mysql_real_escape_string(&mc->conn, result, query, strlen(query));
-}
-
 #else
 
 static void *CfConnectMysqlDB(const char *host,
@@ -217,10 +206,6 @@ static void CfFetchMysqlRow(CfdbConn *c)
 }
 
 static void CfDeleteMysqlQuery(CfdbConn *c)
-{
-}
-
-static void CfEscapeMysqlSQL(CfdbConn *c, const char *query, char *result)
 {
 }
 
@@ -346,11 +331,6 @@ PQclear(pc->res);
 
 /*****************************************************************************/
 
-static void CfEscapePostgresqlSQL(CfdbConn *c, const char *query, char *result)
-{
-PQescapeString(result, query, strlen(query));
-}
-
 #else
 
 static void *CfConnectPostgresqlDB(const char *host,
@@ -375,10 +355,6 @@ static void CfFetchPostgresqlRow(CfdbConn *c)
 }
 
 static void CfDeletePostgresqlQuery(CfdbConn *c)
-{
-}
-
-static void CfEscapePostgresqlSQL(CfdbConn *c, const char *query, char *result)
 {
 }
 
@@ -566,36 +542,4 @@ if (cfdb->rowdata)
    free(cfdb->rowdata);
    cfdb->rowdata = NULL;
    }
-}
-
-/*****************************************************************************/
-
-static char *EscapeSQL(CfdbConn *cfdb,char *query)
-
-{
-static char result[CF_BUFSIZE];
-
-if (!cfdb->connected)
-   {
-   return query;
-   }
-
-memset(result,0,CF_BUFSIZE);
-
-switch (cfdb->type)
-   {
-   case cfd_mysql:
-       CfEscapeMysqlSQL(cfdb, query, result);
-       break;
-
-   case cfd_postgres:
-       CfEscapePostgresqlSQL(cfdb, query, result);
-       break;
-
-   default:
-       CfOut(cf_verbose,"","There is no SQL database selected");
-       break;
-   }
-
-return result;
 }

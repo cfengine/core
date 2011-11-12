@@ -38,11 +38,10 @@ static void DeleteReferenceRlist(struct Rlist *list);
 
 struct Rlist *NewIterationContext(char *scopeid,struct Rlist *namelist)
 
-{ struct Rlist *this,*rp,*rps,*deref_listoflists = NULL;
+{ struct Rlist *rp,*rps,*deref_listoflists = NULL;
   char rtype;
   void *returnval;
   enum cfdatatype dtype;
-  struct Scope *ptr = NULL;
   struct CfAssoc *new;
   struct Rval newret;
 
@@ -50,7 +49,7 @@ CfDebug("\n*\nNewIterationContext(from %s)\n*\n",scopeid);
 
 CopyScope("this",scopeid);
 
-ptr=GetScope("this");
+GetScope("this");
 
 if (namelist == NULL)
    {
@@ -88,7 +87,7 @@ for (rp = namelist; rp != NULL; rp = rp->next)
 
    if ((new = NewAssoc(rp->item,returnval,rtype,dtype)))
       {
-      this = OrthogAppendRlist(&deref_listoflists,new,CF_LIST);
+      OrthogAppendRlist(&deref_listoflists,new,CF_LIST);
       rp->state_ptr = new->rval;
       
       while (rp->state_ptr && strcmp(rp->state_ptr->item,CF_NULL_VALUE) == 0)

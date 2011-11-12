@@ -380,10 +380,7 @@ static struct Rval FnCallGetUsers(struct FnCall *fp,struct Rlist *finalargs)
 { struct Rlist *newlist = NULL,*except_names,*except_uids;
   struct Rval rval;
   struct passwd *pw;
-  char buffer[CF_BUFSIZE];
   char *except_name,*except_uid;
-  
-buffer[0] = '\0';  
 
 /* begin fn specific content */
 
@@ -458,10 +455,7 @@ static struct Rval FnCallHost2IP(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
-  char buffer[CF_BUFSIZE];
   char *name;
-  
-buffer[0] = '\0';  
 
 /* begin fn specific content */
 
@@ -483,10 +477,7 @@ static struct Rval FnCallIP2Host(struct FnCall *fp,struct Rlist *finalargs)
 
 {
   struct Rval rval;
-  char buffer[CF_BUFSIZE];
   char *ip;
-  
-buffer[0] = '\0';  
 
 /* begin fn specific content */
 
@@ -2075,7 +2066,7 @@ static struct Rval FnCallLsDir(struct FnCall *fp,struct Rlist *finalargs)
 { struct Rval rval;
   char *dirname,*regex;
   char line[CF_BUFSIZE],retval[CF_SMALLBUF];
-  int lcount = 0,includepath;
+  int includepath;
   CFDIR *dirh = NULL;
   const struct dirent *dirp;
   struct Rlist *newlist = NULL;
@@ -2940,11 +2931,9 @@ static struct Rval FnCallPeers(struct FnCall *fp,struct Rlist *finalargs)
 
 { struct Rlist *rp,*newlist,*pruned;
   struct Rval rval;
-  char *split = "\n",buffer[CF_BUFSIZE];
+  char *split = "\n";
   char *filename,*comment,*file_buffer = NULL;
   int i,found,groupsize,maxent = 100000,maxsize = 100000;
-  
-buffer[0] = '\0';  
 
 /* begin fn specific content */
 
@@ -3145,10 +3134,8 @@ static struct Rval FnCallPeerLeaders(struct FnCall *fp,struct Rlist *finalargs)
 { struct Rlist *rp,*newlist,*pruned;
   struct Rval rval;
   char *split = "\n";
-  char *filename,*comment,*file_buffer = NULL,buffer[CF_MAXVARSIZE];
-  int i,found,groupsize,maxent = 100000,maxsize = 100000;
-  
-buffer[0] = '\0';  
+  char *filename,*comment,*file_buffer = NULL;
+  int i,groupsize,maxent = 100000,maxsize = 100000;
 
 /* begin fn specific content */
 
@@ -3184,7 +3171,6 @@ else
 /* Slice up the list and discard everything except our slice */
 
 i = 0;
-found = false;
 pruned = NULL;
 
 for (rp = newlist; rp != NULL; rp = rp->next)

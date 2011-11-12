@@ -33,11 +33,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static int OrderedListsMatch(struct Item *list1,struct Item *list2);
-static int IsClassedItemIn(struct Item *list,char *item);
-static int IsFuzzyItemIn(struct Item *list, char *item);
-static void IdempAppendItem(struct Item **liststart,char *itemstring,char *classes);
-
 /*********************************************************************/
 
 int ItemListSize(struct Item *list)
@@ -253,17 +248,6 @@ else
    }
 
 // counter+1 is the histogram of occurrences
-}
-
-/*********************************************************************/
-
-static void IdempAppendItem(struct Item **liststart,char *itemstring,char *classes)
-
-{
-if (!IsItemIn(*liststart,itemstring))
-   {
-   AppendItem(liststart,itemstring,classes);
-   }
 }
 
 /*********************************************************************/
@@ -840,39 +824,6 @@ return(false);
 
 /*********************************************************************/
 
-static int IsFuzzyItemIn(struct Item *list,char *item)
-
- /* This is for matching ranges of IP addresses, like CIDR e.g.
-
- Range1 = ( 128.39.89.250/24 )
- Range2 = ( 128.39.89.100-101 )
- 
- */
-
-{ struct Item *ptr; 
-
-CfDebug("\nFuzzyItemIn(LIST,%s)\n",item);
- 
-if ((item == NULL) || (strlen(item) == 0))
-   {
-   return true;
-   }
- 
-for (ptr = list; ptr != NULL; ptr=ptr->next)
-   {
-   CfDebug(" Try FuzzySetMatch(%s,%s)\n",ptr->name,item);
-   
-   if (FuzzySetMatch(ptr->name,item) == 0)
-      {
-      return(true);
-      }
-   }
- 
-return(false);
-}
-
-/*********************************************************************/
-
 void DeleteItemList(struct Item *item)  /* delete starting from item */
  
 { struct Item *ip, *next;
@@ -952,58 +903,6 @@ for (ptr = liststart; ptr != NULL; ptr=ptr->next)
       printf("CFDEBUG: [%s]\n",ptr->name);
       }
    }
-}
-
-/*********************************************************************/
-
-
-static int OrderedListsMatch(struct Item *list1,struct Item *list2)
-
-{ struct Item *ip1,*ip2;
-
-for (ip1 = list1,ip2 = list2; (ip1!=NULL)&&(ip2!=NULL); ip1=ip1->next,ip2=ip2->next)
-   {
-   if (strcmp(ip1->name,ip2->name) != 0)
-      {
-      CfDebug("OrderedListMatch failed on (%s,%s)\n",ip1->name,ip2->name);
-      return false;
-      }
-   }
-
-if (ip1 != ip2)
-   {
-   return false;
-   }
- 
-return true; 
-}
-
-
-/*********************************************************************/
-
-static int IsClassedItemIn(struct Item *list,char *item)
-
-{ struct Item *ptr; 
-
-if ((item == NULL) || (strlen(item) == 0))
-   {
-   return true;
-   }
- 
-for (ptr = list; ptr != NULL; ptr=ptr->next)
-   {
-   if (strcmp(ptr->name,item) == 0)
-      {
-      if (IsExcluded(ptr->classes))
-         {
-         continue;
-         }   
-
-      return(true);
-      }
-   }
- 
-return(false);
 }
 
 /*********************************************************************/

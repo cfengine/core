@@ -488,8 +488,6 @@ struct Item *classlist = NULL;
 int i,j,k;
 char buff[CF_BUFSIZE],ldt_buff[CF_BUFSIZE],name[CF_MAXVARSIZE];
 static int anomaly[CF_OBSERVABLES][LDT_BUFSIZE];
-static double anomaly_chi[CF_OBSERVABLES];
-static double anomaly_chi_limit[CF_OBSERVABLES];
 
 CfDebug("Arm classes for %s\n",timekey);
 
@@ -508,15 +506,11 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    if (!LDT_FULL)
       {
       anomaly[i][LDT_POS] = false;
-      anomaly_chi[i] = 0.0;
-      anomaly_chi_limit[i] = 0.0;
       }
 
    if (LDT_FULL && (CHI[i] > CHI_LIMIT[i]))
       {
       anomaly[i][LDT_POS] = true;                   /* Remember the last anomaly value */
-      anomaly_chi[i] = CHI[i];
-      anomaly_chi_limit[i] = CHI_LIMIT[i];
 
       CfOut(cf_verbose,"","LDT(%d) in %s chi = %.2f thresh %.2f \n",LDT_POS,name,CHI[i],CHI_LIMIT[i]);
 
@@ -573,17 +567,6 @@ for (i = 0; i < CF_OBSERVABLES; i++)
          strcat(ldt_buff,buff);
          }
       }
-
-    /* Not using these for now
-       snprintf(buff,CF_MAXVARSIZE,"ldtbuf_%s=%s",name,ldt_buff);
-       AppendItem(&classlist,buff,"");
-
-       snprintf(buff,CF_MAXVARSIZE,"ldtchi_%s=%.2f",name,anomaly_chi[i]);
-       AppendItem(&classlist,buff,"");
-
-       snprintf(buff,CF_MAXVARSIZE,"ldtlimit_%s=%.2f",name,anomaly_chi_limit[i]);
-       AppendItem(&classlist,buff,"");
-    */
     }
 
 SetMeasurementPromises(&classlist);

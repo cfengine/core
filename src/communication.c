@@ -32,8 +32,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static char *IPString2UQHostname(char *ipaddress);
-
 /*********************************************************************/
 
 struct cfagent_connection *NewAgentConn()
@@ -351,29 +349,6 @@ else
    }
 
 #endif
-
-return hostbuffer;
-}
-
-/*****************************************************************************/
-
-static char *IPString2UQHostname(char *ipaddress)
-
-/* Return an unqualified hostname */
-    
-{ static char hostbuffer[MAXHOSTNAMELEN];
-  char *sp;
-
-strcpy(hostbuffer,IPString2Hostname(ipaddress));
-
-for (sp = hostbuffer; *sp != '\0'; sp++)
-   {
-   if (*sp == '.')
-      {
-      *sp = '\0';
-      break;
-      }
-   }
 
 return hostbuffer;
 }

@@ -293,10 +293,6 @@ struct Constraint *cp;
 struct Body *bp;
 struct Rlist *rp;
 struct FnCall *fp;
-double av;
-double var;
-double val;
-time_t last;
 
 fprintf(FREPORT_HTML,"%s\n",CFH[cfx_line][cfb]);
 fprintf(FREPORT_HTML,"%s\n",CFH[cfx_promise][cfb]);
@@ -380,11 +376,6 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
       fprintf(FREPORT_TXT," if body context %s\n",cp->classes);
       }     
    }
-
-av = 0;
-var = 0;
-val = 0;
-last = 0;
 
 if (pp->audit)
    {

@@ -870,7 +870,7 @@ for(sp = strList; *sp != '\0'; sp++)
       elStart = sp + 2;
       }
      
-   else if((sp[0] == '\'') && sp[1] == ',' || sp[1] == '}')
+   else if((sp[0] == '\'') && (sp[1] == ',' || sp[1] == '}'))
       {
       elEnd = sp;
       

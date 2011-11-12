@@ -35,25 +35,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static int IntMin (int a,int b);
 static int UseUnixStandard(char *s);
 static char *cf_format_strtimestamp(struct tm *tm, char *buf);
-
-
-/*********************************************************/
-
-static int IntMin (int a,int b)
-
-{
-if (a > b)
-   {
-   return b;
-   }
-else     
-   {
-   return a;
-   }
-}
 
 /*********************************************************/
 

@@ -12,7 +12,7 @@ struct Rlist
    struct Rlist *next;
    };
 
-char *ScalarFalue(struct Rlist *rlist);
+char *ScalarValue(struct Rlist *rlist);
 struct FnCall *FnCallValue(struct Rlist *rlist);
 struct Rlist *ListValue(struct Rlist *rlist);
 

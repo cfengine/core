@@ -95,7 +95,6 @@ libpromises_la_SOURCES =                                                \
         cfstream.c                                                      \
         pipes.c                                                         \
         html.c                                                          \
-        interfaces.c                                                    \
         storage_tools.c                                                 \
         verify_reports.c                                                \
         verify_processes.c                                              \

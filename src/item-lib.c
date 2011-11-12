@@ -924,22 +924,13 @@ for (ptr = liststart; ptr != NULL; ptr=ptr->next)
 
 int DeleteItemGeneral(struct Item **list,char *string,enum matchtypes type)
 
-{ struct Item *ip,*last = NULL;
-  int match = 0, matchlen = 0;
+{
+struct Item *ip,*last = NULL;
+int match = 0;
 
 if (list == NULL)
    {
    return false;
-   }
- 
-switch (type)
-   {
-   case literalStart:
-       matchlen = strlen(string);
-       break;
-   case regexComplete:
-   case NOTregexComplete:
-       break;
    }
  
  for (ip = *list; ip != NULL; ip=ip->next)
@@ -952,10 +943,10 @@ switch (type)
     switch(type)
        {
        case NOTliteralStart:
-           match = (strncmp(ip->name, string, matchlen) != 0);
+           match = (strncmp(ip->name, string, strlen(string)) != 0);
            break;
        case literalStart:
-           match = (strncmp(ip->name, string, matchlen) == 0);
+           match = (strncmp(ip->name, string, strlen(string)) == 0);
            break;
        case NOTliteralComplete:
            match = (strcmp(ip->name, string) != 0);

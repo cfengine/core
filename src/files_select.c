@@ -42,7 +42,9 @@ static int SelectExecRegexMatch(char *filename,char *crit,char *prog);
 static int SelectIsSymLinkTo(char *filename,struct Rlist *crit);
 static int SelectExecProgram(char *filename,char *command);
 static int SelectSizeMatch(size_t size,size_t min,size_t max);
+#if defined HAVE_CHFLAGS
 static int SelectBSDMatch(struct stat *lstatptr,struct Rlist *bsdflags,struct Promise *pp);
+#endif
 #ifndef MINGW
 static int Unix_GetOwnerName(struct stat *lstatptr, char *owner, int ownerSz);
 static int SelectGroupMatch(struct stat *lstatptr,struct Rlist *crit);
@@ -141,7 +143,7 @@ if (SelectModeMatch(sb,attr.select.perms))
    PrependAlphaList(&leaf_attr,"mode");
    }
 
-#if defined HAVE_CHFLAGS 
+#if defined HAVE_CHFLAGS
 if (SelectBSDMatch(sb,attr.select.bsdflags,pp))
    {
    PrependAlphaList(&leaf_attr,"bsdflags");
@@ -383,6 +385,7 @@ return false;
 
 /*******************************************************************/
 
+#if defined HAVE_CHFLAGS
 static int SelectBSDMatch(struct stat *lstatptr,struct Rlist *bsdflags,struct Promise *pp)
 
 {
@@ -407,8 +410,8 @@ if ((newflags & CHFLAGS_MASK) == (lstatptr->st_flags & CHFLAGS_MASK))    /* file
 #endif
   
 return false;
-} 
-
+}
+#endif
 /*******************************************************************/
 
 static int SelectTimeMatch(time_t stattime,time_t fromtime,time_t totime)

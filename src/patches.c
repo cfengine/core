@@ -35,7 +35,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static int UseUnixStandard(char *s);
 static char *cf_format_strtimestamp(struct tm *tm, char *buf);
 
 /*********************************************************/
@@ -44,6 +43,8 @@ static char *cf_format_strtimestamp(struct tm *tm, char *buf);
  * MapName() is thread-safe, but the argument is modified. */
 
 #ifdef NT
+#  if defined(__MINGW32__)
+
 char *MapName(char *s)
 {
 char buffer[CF_BUFSIZE];
@@ -52,64 +53,19 @@ char *spf;
 
 memset(buffer,0,CF_BUFSIZE);
 
-if (UseUnixStandard(s))
+spto = buffer;
+
+for (spf = s; *spf != '\0'; spf++)
    {
-   spto = buffer;
-
-   for (spf = s; *spf != '\0'; spf++)
+   switch (*spf)
       {
-      if (IsFileSep(*spf) && IsFileSep(*(spf+1))) /* compress // or \\ */
-         {
-         continue;
-         }
+      case '/':
+         *spto++ = '\\';
+         break;
 
-      if (IsFileSep(*spf) && *(spf+1) != '\0' && *(spf+2) == ':') /* compress \c:\abc */
-         {
-         continue;
-         }
-
-      if (*(spf+1) != '\0' && (strncmp(spf+1,":\\",2) == 0 || strncmp(spf+1,":/",2) == 0 ))
-         {
-         /* For cygwin translation */
-         strcat(spto,"/cygdrive/");
-         /* Drive letter */
-         strncat(spto,spf,1); 
-         strcat(spto,"/");
-         spto += strlen("/cygdrive/c/");
-         spf += strlen("c:/") - 1;
-         continue;
-         }
-
-      switch (*spf)
-         {
-         case '\\':
-             *spto = '/';
-             break;
-
-         default:
-             *spto = *spf;
-             break;          
-         }
-      
-      spto++;
-      }
-   }
-else
-   {
-   spto = buffer;
-
-   for (spf = s; *spf != '\0'; spf++)
-      {
-      switch (*spf)
-         {
-         case '/':
-             *spto++ = '\\';
-             break;
-
-         default:
-             *spto++ = *spf;
-             break;          
-         }
+      default:
+         *spto++ = *spf;
+         break;
       }
    }
 
@@ -118,13 +74,74 @@ strncpy(s,buffer,MAX_FILENAME-1);
 
 return s;
 }
-#else
+
+#  elif defined(__CYGWIN__)
+
+char *MapName(char *s)
+{
+char buffer[CF_BUFSIZE];
+char *spto;
+char *spf;
+
+memset(buffer,0,CF_BUFSIZE);
+
+spto = buffer;
+
+for (spf = s; *spf != '\0'; spf++)
+   {
+   if (IsFileSep(*spf) && IsFileSep(*(spf+1))) /* compress // or \\ */
+      {
+      continue;
+      }
+
+   if (IsFileSep(*spf) && *(spf+1) != '\0' && *(spf+2) == ':') /* compress \c:\abc */
+      {
+      continue;
+      }
+
+   if (*(spf+1) != '\0' && (strncmp(spf+1,":\\",2) == 0 || strncmp(spf+1,":/",2) == 0 ))
+      {
+      /* For cygwin translation */
+      strcat(spto,"/cygdrive/");
+      /* Drive letter */
+      strncat(spto,spf,1);
+      strcat(spto,"/");
+      spto += strlen("/cygdrive/c/");
+      spf += strlen("c:/") - 1;
+      continue;
+      }
+
+   switch (*spf)
+      {
+      case '\\':
+         *spto = '/';
+         break;
+
+      default:
+         *spto = *spf;
+         break;
+      }
+
+   spto++;
+   }
+
+memset(s,0,MAX_FILENAME);
+strncpy(s,buffer,MAX_FILENAME-1);
+
+return s;
+}
+
+#  else /* !__MINGW32__ && !__CYGWIN__ */
+#    error Unknown NT-based compilation environment
+#  endif /* __MINGW32__ || __CYGWIN__ */
+#else /* !NT */
+
 char *MapName(char *s)
 {
 return s;
 }
 
-#endif  /* NT */
+#endif /* NT */
 
 /*********************************************************/
 
@@ -144,18 +161,6 @@ for (sp = s; *sp != '\0'; sp++)
    }
 
 return s;
-}
-
-/*********************************************************/
-
-static int UseUnixStandard(char *s)
-
-{
-#ifdef MINGW
-return false;
-#else
-return true;
-#endif
 }
 
 /*********************************************************/

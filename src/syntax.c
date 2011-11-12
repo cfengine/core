@@ -502,6 +502,9 @@ switch(rvaltype)
                  ReportError(output);
                  }
               break;
+          default:
+             /* Only lists are incompatible with scalars */
+             break;
           }
        break;
        

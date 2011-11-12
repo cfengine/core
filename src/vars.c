@@ -979,6 +979,9 @@ while ((assoc = HashIteratorNext(&i)))
                assoc->dtype = cf_real;
                assoc->rtype = CF_SCALAR;
                break;
+            default:
+               /* Only lists need to be converted */
+               break;
             }
 
          CfDebug(" to %s\n",CF_DATATYPES[assoc->dtype]);

@@ -399,7 +399,7 @@ for (i = 0; types[i] != NULL; i++)
    {
    if (s && strcmp(s,types[i]) == 0)
       {
-      return (enum version_cmp) i;      
+      return (enum action_policy) i;
       }
    }
 
@@ -1165,7 +1165,7 @@ return cfacl_noinherit;
 
 /*********************************************************************/
 
-enum cf_acl_inherit Str2ServicePolicy(char *string)
+enum cf_srv_policy Str2ServicePolicy(char *string)
 
 { static char *text[4] = { "start", "stop", "disable", NULL };
   int i;

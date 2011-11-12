@@ -2981,10 +2981,10 @@ CfDebug("OK: type=%d\n mode=%o\n lmode=%o\n uid=%d\n gid=%d\n size=%ld\n atime=%
  cfst.cf_type,cfst.cf_mode,cfst.cf_lmode,cfst.cf_uid,cfst.cf_gid,(long)cfst.cf_size,
  (intmax_t)cfst.cf_atime,(intmax_t)cfst.cf_mtime);
 
-snprintf(sendbuffer,CF_BUFSIZE,"OK: %d %d %d %d %d %ld %jd %jd %jd %d %d %d %d",
+snprintf(sendbuffer,CF_BUFSIZE,"OK: %d %d %d %d %d %ld %jd %jd %jd %d %d %d %jd",
  cfst.cf_type,cfst.cf_mode,cfst.cf_lmode,cfst.cf_uid,cfst.cf_gid,(long)cfst.cf_size,
  (intmax_t)cfst.cf_atime,(intmax_t)cfst.cf_mtime,(intmax_t)cfst.cf_ctime,
- cfst.cf_makeholes,cfst.cf_ino,cfst.cf_nlink,cfst.cf_dev);
+ cfst.cf_makeholes,cfst.cf_ino,cfst.cf_nlink,(intmax_t)cfst.cf_dev);
 
 SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
 

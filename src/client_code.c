@@ -334,9 +334,9 @@ if (OKProtoReply(recvbuffer))
 
    CfDebug("Mode = %ld,%ld\n",d2,d3);
    
-   CfDebug("OK: type=%d\n mode=%o\n lmode=%o\n uid=%d\n gid=%d\n size=%ld\n atime=%jd\n mtime=%jd ino=%d nlnk=%d, dev=%d\n",
+   CfDebug("OK: type=%d\n mode=%o\n lmode=%o\n uid=%d\n gid=%d\n size=%ld\n atime=%jd\n mtime=%jd ino=%d nlnk=%d, dev=%jd\n",
  cfst.cf_type,cfst.cf_mode,cfst.cf_lmode,cfst.cf_uid,cfst.cf_gid,(long)cfst.cf_size,
- (intmax_t)cfst.cf_atime,(intmax_t)cfst.cf_mtime,cfst.cf_ino,cfst.cf_nlink,cfst.cf_dev);
+ (intmax_t)cfst.cf_atime,(intmax_t)cfst.cf_mtime,cfst.cf_ino,cfst.cf_nlink,(intmax_t)cfst.cf_dev);
 
    memset(recvbuffer,0,CF_BUFSIZE);
    

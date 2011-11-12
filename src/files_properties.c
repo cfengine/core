@@ -150,7 +150,7 @@ return true;
 void SetSearchDevice(struct stat *sb,struct Promise *pp)
 
 {
-CfDebug("Registering root device as %d\n",sb->st_dev);
+CfDebug("Registering root device as %jd\n",(intmax_t)sb->st_dev);
 pp->rootdevice = sb->st_dev;
 }
 

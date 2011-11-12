@@ -372,7 +372,7 @@ else
 
 // Select predefined physics
 
-if (rp = GetListConstraint("is_part_of",pp))
+if ((rp = GetListConstraint("is_part_of",pp)))
    {
    switch (certainty)
       {
@@ -392,7 +392,7 @@ if (rp = GetListConstraint("is_part_of",pp))
 
    attr.associates = rp;
    }
-else if (rp = GetListConstraint("determines",pp))
+else if ((rp = GetListConstraint("determines",pp)))
    {
    switch (certainty)
       {
@@ -412,7 +412,7 @@ else if (rp = GetListConstraint("determines",pp))
 
    attr.associates = rp;
    }
-else if (rp = GetListConstraint("is_connected_to",pp))
+else if ((rp = GetListConstraint("is_connected_to",pp)))
    {
    switch (certainty)
       {
@@ -432,7 +432,7 @@ else if (rp = GetListConstraint("is_connected_to",pp))
 
    attr.associates = rp;
    }
-else if (rp = GetListConstraint("uses",pp))
+else if ((rp = GetListConstraint("uses",pp)))
    {
    switch (certainty)
       {
@@ -452,7 +452,7 @@ else if (rp = GetListConstraint("uses",pp))
 
    attr.associates = rp;
    }
-else if (rp = GetListConstraint("provides",pp))
+else if ((rp = GetListConstraint("provides",pp)))
    {
    switch (certainty)
       {
@@ -472,7 +472,7 @@ else if (rp = GetListConstraint("provides",pp))
 
    attr.associates = rp;
    }
-else if (rp = GetListConstraint("belongs_to",pp))
+else if ((rp = GetListConstraint("belongs_to",pp)))
    {
    switch (certainty)
       {
@@ -492,7 +492,7 @@ else if (rp = GetListConstraint("belongs_to",pp))
 
    attr.associates = rp;
    }
-else if (rp = GetListConstraint("affects",pp))
+else if ((rp = GetListConstraint("affects",pp)))
    {
    switch (certainty)
       {
@@ -512,7 +512,7 @@ else if (rp = GetListConstraint("affects",pp))
 
    attr.associates = rp;
    }
-else if (rp = GetListConstraint("causes",pp))
+else if ((rp = GetListConstraint("causes",pp)))
    {
    switch (certainty)
       {
@@ -532,7 +532,7 @@ else if (rp = GetListConstraint("causes",pp))
 
    attr.associates = rp;
    }
-else if (rp = GetListConstraint("caused_by",pp))
+else if ((rp = GetListConstraint("caused_by",pp)))
    {
    switch (certainty)
       {
@@ -552,7 +552,7 @@ else if (rp = GetListConstraint("caused_by",pp))
 
    attr.associates = rp;
    }
-else if (rp = GetListConstraint("needs",pp))
+else if ((rp = GetListConstraint("needs",pp)))
    {
    switch (certainty)
       {

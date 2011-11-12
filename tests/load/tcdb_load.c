@@ -36,9 +36,7 @@ for (i = 0; i < numthreads; ++i)
    {
    pthread_t tid;
 
-   void *p = (void*)i;
-
-   int ret = pthread_create(&tid, &attr, &contend, p);
+   int ret = pthread_create(&tid, &attr, &contend, NULL);
    if (ret != 0)
       {
       fprintf(stderr, "Unable to create thread: %s\n", strerror(ret));

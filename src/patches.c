@@ -47,31 +47,10 @@ static char *cf_format_strtimestamp(struct tm *tm, char *buf);
 
 char *MapName(char *s)
 {
-char buffer[CF_BUFSIZE];
-char *spto;
-char *spf;
-
-memset(buffer,0,CF_BUFSIZE);
-
-spto = buffer;
-
-for (spf = s; *spf != '\0'; spf++)
+while ((s = strchr(s, '/')))
    {
-   switch (*spf)
-      {
-      case '/':
-         *spto++ = '\\';
-         break;
-
-      default:
-         *spto++ = *spf;
-         break;
-      }
+   *s = '\\';
    }
-
-memset(s,0,MAX_FILENAME);
-strncpy(s,buffer,MAX_FILENAME-1);
-
 return s;
 }
 

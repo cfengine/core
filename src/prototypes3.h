@@ -1157,6 +1157,9 @@ void Unix_FindV6InterfaceInfo(void);
 #endif  /* NOT MINGW */
 const char *GetWorkDir(void);
 
+/* For unit tests */
+void DetectDomainName(const char *orig_nodename);
+
 /* transaction.c */
 
 void SummarizeTransaction(struct Attributes attr,struct Promise *pp,char *logname);

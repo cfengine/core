@@ -132,7 +132,7 @@ else
 
 /*******************************************************************/
 
-static void DetectDomainName(const char *orig_nodename)
+void DetectDomainName(const char *orig_nodename)
 {
 char nodename[CF_BUFSIZE];
 strcpy(nodename, orig_nodename);

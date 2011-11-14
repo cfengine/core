@@ -133,7 +133,7 @@ const char *HINTS[16] =
       "Print basic information about changes made to the system, i.e. promises repaired",
       "Generate reference manual from internal data",
       "Generate reference manpage from internal data",
-      "Look up stories for a given topic on the command line",
+      "Look up stories for a given topic on the command line (use \"any\" to list possible)",
       "Print a syntax summary of the optional keyword or this cfengine version",
       "Show all topic names in CFEngine",
       "Generate test data",
@@ -227,8 +227,15 @@ while ((c=getopt_long(argc,argv,"Ihbd:vVf:mMz:St:ruT",OPTIONS,&optindex)) != EOF
       case 'z':
 
 #ifdef HAVE_CONSTELLATION
-          strcpy(TOPIC_CMD,optarg);
-          CfGenerateStories(TOPIC_CMD,cfi_cause);
+          if (strcmp(optarg,"any") == 0)
+             {
+             Constellation_ListPossibleStoriesCmdLine();
+             }
+          else
+             {
+             strcpy(TOPIC_CMD,optarg);
+             CfGenerateStories(TOPIC_CMD,cfi_cause);
+             }
 #endif
           exit(0);
           break;

@@ -939,6 +939,10 @@ else
 NewScalar("sys","crontab",vbuff,cf_str);
 #endif
 
+#if defined(__ANDROID__)
+NewClass("android");
+#endif
+
 #if defined(HAVE_NOVA)
 Nova_SaveDocumentRoot();
 #endif

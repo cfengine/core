@@ -63,6 +63,7 @@ const struct option OPTIONS[] =
       { "analysis",no_argument,0,'a'},
       { "reports",no_argument,0,'r'},
       { "parse-tree",no_argument,0,'p'},
+      { "gcc-brief-format",no_argument,0,'g'},
       { NULL,0,0,'\0' }
       };
 
@@ -83,6 +84,7 @@ const char *HINTS[] =
       "Perform additional analysis of configuration",
       "Generate reports about configuration and insert into CFDB",
       "Print a parse tree for the policy file in JSON format",
+      "Use the GCC brief-format for output",
       NULL
       };
 
@@ -122,7 +124,7 @@ void CheckOpts(int argc,char **argv)
   int optindex = 0;
   int c;
   
-while ((c=getopt_long(argc,argv,"ad:vnIf:D:N:VSrxMb:",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"ad:vnIf:D:N:VSrxMbpg:",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -211,6 +213,10 @@ while ((c=getopt_long(argc,argv,"ad:vnIf:D:N:VSrxMb:",OPTIONS,&optindex)) != EOF
 
       case 'p':
 	  SHOW_PARSE_TREE = true;
+	  break;
+
+      case 'g':
+	  USE_GCC_BRIEF_FORMAT = true;
 	  break;
 
       default:  Syntax("cf-promises - cfengine's promise analyzer",OPTIONS,HINTS,ID);

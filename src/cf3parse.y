@@ -546,14 +546,28 @@ void yyerror(const char *s)
 
 if (sp == NULL)
    {
-   fprintf (stderr, "%s> %s:%d,%d: %s, near token \'NULL\'\n",VPREFIX,P.filename,P.line_no,P.line_pos,s);
+   if (USE_GCC_BRIEF_FORMAT)
+      {
+      fprintf (stderr, "%s:%d:%d: error: %s\n",P.filename,P.line_no,P.line_pos,s);
+      }
+   else
+      {
+      fprintf (stderr, "%s> %s:%d,%d: %s, near token \'NULL\'\n",VPREFIX,P.filename,P.line_no,P.line_pos,s);
+      }
    }
 else if (*sp == '\"' && strlen(sp) > 1)
    {
    sp++;
    }
 
-fprintf (stderr, "%s> %s:%d,%d: %s, near token \'%.20s\'\n",VPREFIX,P.filename,P.line_no,P.line_pos,s,sp);
+if (USE_GCC_BRIEF_FORMAT)
+   {
+   fprintf (stderr, "%s:%d:%d: error: %s, near token\n",P.filename,P.line_no,P.line_pos,s, sp);
+   }
+else
+   {
+   fprintf (stderr, "%s> %s:%d,%d: %s, near token \'%.20s\'\n",VPREFIX,P.filename,P.line_no,P.line_pos,s,sp);
+   }
 
 ERRORCOUNT++;
 

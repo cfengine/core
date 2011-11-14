@@ -273,6 +273,7 @@ extern enum cfagenttype THIS_AGENT_TYPE;
 extern int INSTALL_SKIP;
 extern int SHOWREPORTS;
 extern int SHOW_PARSE_TREE;
+extern int USE_GCC_BRIEF_FORMAT;
 extern char SYSLOGHOST[CF_MAXVARSIZE];
 extern unsigned short SYSLOGPORT;
 extern time_t PROMISETIME;

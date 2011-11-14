@@ -5,7 +5,7 @@ static void test_new_delete(void **state)
 {
 JsonObject *json = NULL;
 JsonObjectAppendString(&json, "first", "one");
-DeleteJsonObject(json);
+JsonObjectDelete(json);
 }
 
 static void test_show_object_simple(void **state)
@@ -22,13 +22,13 @@ fprintf(expected, "{\n"
 JsonObjectAppendString(&json, "first", "one");
 JsonObjectAppendString(&json, "second", "two");
 
-ShowJsonObject(actual, json, 0);
+JsonObjectPrint(actual, json, 0);
 
 assert_file_equal(expected, actual);
 fclose(expected);
 fclose(actual);
 
-DeleteJsonObject(json);
+JsonObjectDelete(json);
 }
 
 static void test_show_object_compound(void **state)
@@ -53,23 +53,21 @@ JsonObjectAppendString(&json, "first", "one");
    JsonObjectAppendString(&inner, "third", "three");
 
    JsonObjectAppendObject(&json, "second", inner);
-   DeleteJsonObject(inner);
    }
    {
    JsonObject *inner = NULL;
    JsonObjectAppendString(&inner, "fifth", "five");
 
    JsonObjectAppendObject(&json, "fourth", inner);
-   DeleteJsonObject(inner);
    }
 
-ShowJsonObject(actual, json, 0);
+JsonObjectPrint(actual, json, 0);
 
 assert_file_equal(expected, actual);
 fclose(expected);
 fclose(actual);
 
-DeleteJsonObject(json);
+JsonObjectDelete(json);
 }
 
 static void test_show_object_array(void **state)
@@ -88,16 +86,15 @@ fprintf(expected, "{\n"
    JsonArrayAppendString(&array, "two");
 
    JsonObjectAppendArray(&json, "first", array);
-   DeleteJsonArray(array);
    }
 
-ShowJsonObject(actual, json, 0);
+JsonObjectPrint(actual, json, 0);
 
 assert_file_equal(expected, actual);
 fclose(expected);
 fclose(actual);
 
-DeleteJsonObject(json);
+JsonObjectDelete(json);
 }
 
 static void test_show_array(void **state)
@@ -111,13 +108,13 @@ JsonArray *array = NULL;
 JsonArrayAppendString(&array, "snookie");
 JsonArrayAppendString(&array, "sitch");
 
-ShowJsonArray(actual, array);
+JsonArrayPrint(actual, array);
 
 assert_file_equal(expected, actual);
 fclose(expected);
 fclose(actual);
 
-DeleteJsonArray(array);
+JsonArrayDelete(array);
 }
 
 int main()

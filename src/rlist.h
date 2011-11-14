@@ -51,6 +51,8 @@ struct Rlist *SplitRegexAsRList(char *string,char *regex,int max,int purge);
 struct Rlist *SortRlist(struct Rlist *list, int (*CompareItems)());
 struct Rlist *AlphaSortRListNames(struct Rlist *list);
 
+struct Rlist *RlistAppendReference(struct Rlist **start,void *item, char type);
+
 void ShowRlist(FILE *fp,struct Rlist *list);
 void ShowRval(FILE *fp,void *rval,char type);
 

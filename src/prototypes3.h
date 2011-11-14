@@ -89,6 +89,7 @@ void DeleteExpArgs(struct Rlist *args);
 struct CfAssoc *NewAssoc(const char *lval, const void *rval, char rtype, enum cfdatatype dt);
 void DeleteAssoc(struct CfAssoc *ap);
 struct CfAssoc *CopyAssoc(struct CfAssoc *old);
+struct CfAssoc *AssocNewReference(const char *lval, void *rval, char rtype, enum cfdatatype dtype);
 
 /* attributes.c */
 

@@ -109,3 +109,25 @@ ShowRval(stdout,cp->rval,cp->rtype);
  
 printf("\nShowAssoc: dtype = %s\n",CF_DATATYPES[cp->dtype]);
 }
+
+/*******************************************************************/
+
+struct CfAssoc *AssocNewReference(const char *lval, void *rval,
+                                  char rtype, enum cfdatatype dtype)
+{
+struct CfAssoc *ap = NULL;
+
+ap = xmalloc(sizeof(struct CfAssoc));
+
+ap->lval = xstrdup(lval);
+ap->rval = rval;
+ap->dtype = dtype;
+ap->rtype = rtype;
+
+if (lval == NULL)
+   {
+   FatalError("Bad association in AssocNewReference\n");
+   }
+
+return ap;
+}

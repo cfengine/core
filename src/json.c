@@ -8,40 +8,71 @@ enum json_dtype
 
 static const int SPACES_PER_INDENT = 2;
 
-void DeleteJsonObject(JsonObject *object)
+static void JsonElementDelete(struct Rlist *element)
 {
-DeleteRlist(object);
+struct Rlist *rp = NULL, *next = NULL;
+for (rp = element; rp != NULL; rp = next)
+   {
+   next = rp->next;
+   switch (rp->type)
+      {
+      case CF_ASSOC:
+	 {
+	 struct CfAssoc *assoc = rp->item;
+	 switch (assoc->rtype)
+	    {
+	    case CF_LIST:
+	       JsonElementDelete(assoc->rval);
+	       break;
+
+	    default:
+	       /* don't free leaves */
+	       break;
+	    }
+	 free(assoc->lval);
+	 free(assoc);
+	 }
+	 break;
+
+      default:
+	 /* don't free leaves */
+	 break;
+      }
+   free(rp);
+   }
 }
 
-void DeleteJsonArray(JsonArray *array)
+void JsonObjectDelete(JsonObject *object)
 {
-DeleteRlist(array);
+JsonElementDelete(object);
+}
+
+void JsonArrayDelete(JsonArray *array)
+{
+JsonElementDelete(array);
 }
 
 void JsonObjectAppendObject(JsonObject **parent, const char *key, JsonObject *value)
 {
-struct CfAssoc *ap = NewAssoc(key, value, CF_LIST, (enum cfdatatype)json_dtype_object);
-AppendRlist(parent, ap, CF_ASSOC);
-DeleteAssoc(ap);
+struct CfAssoc *ap = AssocNewReference(key, value, CF_LIST, (enum cfdatatype)json_dtype_object);
+RlistAppendReference(parent, ap, CF_ASSOC);
 }
 
 void JsonObjectAppendString(JsonObject **parent, const char *key, const char *value)
 {
-struct CfAssoc *ap = NewAssoc(key, value, CF_SCALAR, cf_str);
-AppendRlist(parent, ap, CF_ASSOC);
-DeleteAssoc(ap);
+struct CfAssoc *ap = AssocNewReference(key, value, CF_SCALAR, cf_str);
+RlistAppendReference(parent, ap, CF_ASSOC);
 }
 
 void JsonObjectAppendArray(JsonObject **parent, const char *key, JsonArray *value)
 {
-struct CfAssoc *ap = NewAssoc(key, value, CF_LIST, (enum cfdatatype)json_dtype_array);
-AppendRlist(parent, ap, CF_ASSOC);
-DeleteAssoc(ap);
+struct CfAssoc *ap = AssocNewReference(key, value, CF_LIST, (enum cfdatatype)json_dtype_array);
+RlistAppendReference(parent, ap, CF_ASSOC);
 }
 
 void JsonArrayAppendString(JsonArray **parent, char *value)
 {
-AppendRlist(parent, value, CF_SCALAR);
+RlistAppendReference(parent, value, CF_SCALAR);
 }
 
 static void ShowIndent(FILE *out, int num)
@@ -52,12 +83,12 @@ for (i = 0; i < num * SPACES_PER_INDENT; i++)
    }
 }
 
-void ShowJsonString(FILE *out, const char *value)
+void JsonStringPrint(FILE *out, const char *value)
 {
 fprintf(out, "\"%s\"", value);
 }
 
-void ShowJsonArray(FILE *out, JsonArray *value)
+void JsonArrayPrint(FILE *out, JsonArray *value)
 {
 struct Rlist *rp = NULL;
 
@@ -67,12 +98,12 @@ for (rp = value; rp != NULL; rp = rp->next)
    switch (rp->type)
       {
       case CF_SCALAR:
-	 ShowJsonString(out, (const char*)rp->item);
+	 JsonStringPrint(out, (const char*)rp->item);
 	 break;
 
       default:
 	 /* TODO: not implemented, how to deal? */
-	 ShowJsonString(out, "");
+	 JsonStringPrint(out, "");
 	 break;
       }
 
@@ -85,7 +116,7 @@ fprintf(out, "]");
 
 }
 
-void ShowJsonObject(FILE *out, JsonObject *value, int indent_level)
+void JsonObjectPrint(FILE *out, JsonObject *value, int indent_level)
 {
 struct Rlist *rp = NULL;
 
@@ -105,12 +136,12 @@ for (rp = value; rp != NULL; rp = rp->next)
 	 switch (entry->dtype)
 	    {
 	    case cf_str:
-	       ShowJsonString(out, (const char*)entry->rval);
+	       JsonStringPrint(out, (const char*)entry->rval);
 	       break;
 
 	    default:
 	       /* TODO: not implemented, how to deal? */
-	       ShowJsonString(out, "");
+	       JsonStringPrint(out, "");
 	       break;
 	    }
 	 break;
@@ -119,11 +150,11 @@ for (rp = value; rp != NULL; rp = rp->next)
 	 switch ((enum json_dtype) entry->dtype)
 	    {
 	    case json_dtype_object:
-	       ShowJsonObject(out, entry->rval, indent_level + 1);
+	       JsonObjectPrint(out, entry->rval, indent_level + 1);
 	       break;
 
 	    case json_dtype_array:
-	       ShowJsonArray(out, entry->rval);
+	       JsonArrayPrint(out, entry->rval);
 	       break;
 
 	    default:

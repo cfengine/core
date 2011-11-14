@@ -1269,7 +1269,6 @@ for (i = 0; attributes[i].lval != NULL; i++)
       {
       JsonObject *json_attributes = ExportAttributesAsJson((struct BodySyntax *)attributes[i].range);
       JsonObjectAppendObject(&json, attributes[i].lval, json_attributes);
-      DeleteJsonObject(json_attributes);
       }
    else
       {
@@ -1296,17 +1295,14 @@ for (i = 0; attributes[i].lval != NULL; i++)
 	    }
 
 	 JsonObjectAppendArray(&attribute, "pcre-range", options);
-	 DeleteJsonArray(options);
 	 }
       else
 	 {
 	 char *pcre_range = PCREStringToJsonString(attributes[i].range);
 	 JsonObjectAppendString(&attribute, "pcre-range", pcre_range);
-	 free(pcre_range);
 	 }
 
       JsonObjectAppendObject(&json, attributes[i].lval, attribute);
-      DeleteJsonObject(attribute);
       }
    }
 
@@ -1329,7 +1325,6 @@ for (i = 0; i < CF3_MODULES; i++)
 	 {
 	 JsonObject *attributes = ExportAttributesAsJson(st[j].bs);
 	 JsonObjectAppendObject(&json, st[j].subtype, attributes);
-	 DeleteJsonObject(attributes);
 	 }
       }
    }
@@ -1346,7 +1341,6 @@ for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
    {
    JsonObject *attributes = ExportAttributesAsJson(CF_ALL_BODIES[i].bs);
    JsonObjectAppendObject(&control_bodies, CF_ALL_BODIES[i].btype, attributes);
-   DeleteJsonObject(attributes);
    }
 
 return control_bodies;
@@ -1359,7 +1353,6 @@ JsonObject *syntax_tree = NULL;
    {
    JsonObject * control_bodies = ExportControlBodiesAsJson();
    JsonObjectAppendObject(&syntax_tree, "control-bodies", control_bodies);
-   DeleteJsonObject(control_bodies);
    }
 
    {
@@ -1370,13 +1363,11 @@ JsonObject *syntax_tree = NULL;
       {
       JsonObject *bundle_type = ExportBundleTypeAsJson(CF_ALL_BODIES[i].btype);
       JsonObjectAppendObject(&bundle_types, CF_ALL_BODIES[i].btype, bundle_type);
-      DeleteJsonObject(bundle_type);
       }
 
    JsonObjectAppendObject(&syntax_tree, "bundle-types", bundle_types);
-   DeleteJsonObject(bundle_types);
    }
 
-ShowJsonObject(out, syntax_tree, 0);
-DeleteJsonObject(syntax_tree);
+JsonObjectPrint(out, syntax_tree, 0);
+JsonObjectDelete(syntax_tree);
 }

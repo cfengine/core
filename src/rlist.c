@@ -34,7 +34,6 @@
 
 static int IsRegexIn(struct Rlist *list,char *s);
 static int CompareRlist(struct Rlist *list1, struct Rlist *list2);
-static void DeleteRlistNoRef(struct Rlist *list);
 static void ShowRlistState(FILE *fp,struct Rlist *list);
 
 /*******************************************************************/
@@ -419,23 +418,6 @@ if (list != NULL)
          DeleteRvalItem(rl->item,rl->type);
          }
       
-      free(rl);
-      }
-   }
-}
-
-/*******************************************************************/
-
-static void DeleteRlistNoRef(struct Rlist *list)
-/* Delete a rlist, but not its references */
-
-{ struct Rlist *rl, *next;
-
-if(list != NULL)
-   {
-   for(rl = list; rl != NULL; rl = next)
-      {
-      next = rl->next;
       free(rl);
       }
    }
@@ -1296,4 +1278,36 @@ if (count < max)
    }
 
 return liststart;
+}
+
+/*******************************************************************/
+
+struct Rlist *RlistAppendReference(struct Rlist **start,void *item, char type)
+{
+struct Rlist *rp = NULL,*lp = *start;
+
+rp = xmalloc(sizeof(struct Rlist));
+
+if (*start == NULL)
+   {
+   *start = rp;
+   }
+else
+   {
+   for (lp = *start; lp->next != NULL; lp=lp->next)
+      {
+      }
+
+   lp->next = rp;
+   }
+
+rp->item = item;
+rp->type = type;
+
+ThreadLock(cft_lock);
+
+rp->next = NULL;
+
+ThreadUnlock(cft_lock);
+return rp;
 }

@@ -559,7 +559,7 @@ if (pid == 0)
          }
       }
 
-   execl("/bin/sh", "sh", "-c", command, NULL);
+   execl(SHELL_PATH, "sh", "-c", command, NULL);
    _exit(1);
    }
 else
@@ -707,7 +707,7 @@ if (pid == 0)
       _exit(1);
       }
 
-   execl("/bin/sh", "sh", "-c", command, NULL);
+   execl(SHELL_PATH, "sh", "-c", command, NULL);
    _exit(1);
    }
 else

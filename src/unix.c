@@ -193,7 +193,7 @@ else if (pid == 0)                     /* child */
 
    if (useshell)
       {
-      if (execl("/bin/sh", "sh", "-c", comm, NULL) == -1)
+      if (execl(SHELL_PATH, "sh", "-c", comm, NULL) == -1)
          {
          CfOut(cf_error, "execl", "Command %s failed", comm);
          exit(1);

@@ -878,6 +878,16 @@ AC_ARG_WITH(workdir,
 	]
 )
 
+AC_ARG_WITH(shell, [AS_HELP_STRING([--with-shell=PATH],
+                   [Specify path to POSIX-compatible shell (if not /bin/sh)])],
+                   [],
+                   [with_shell=/bin/sh])
+
+if "x$with_shell" = "xno"; then
+   AC_MSG_ERROR([Please specify full path to POSIX-compatible shell])
+fi
+AC_DEFINE_UNQUOTED(SHELL_PATH, "$with_shell", [Path to the POSIX-compatible shell])
+
 dnl #####################################################################
 dnl Fix for lex/flex
 dnl #####################################################################

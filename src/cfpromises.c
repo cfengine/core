@@ -47,7 +47,7 @@ const char *ID = "The promise agent is a validator and analysis tool for\n"
                  "of Cfengine. Configurations that make changes must be\n"
                  "approved by this validator before being executed.";
  
-const struct option OPTIONS[14] =
+const struct option OPTIONS[] =
       {
       { "help",no_argument,0,'h' },
       { "bundlesequence",required_argument,0,'b' },
@@ -62,11 +62,12 @@ const struct option OPTIONS[14] =
       { "diagnostic",no_argument,0,'x'},
       { "analysis",no_argument,0,'a'},
       { "reports",no_argument,0,'r'},
+      { "parse-tree",no_argument,0,'p'},
       { NULL,0,0,'\0' }
       };
 
 
-const char *HINTS[14] =
+const char *HINTS[] =
       {
       "Print the help message",
       "Use the specified bundlesequence for verification",
@@ -81,6 +82,7 @@ const char *HINTS[14] =
       "Activate internal diagnostics (developers only)",
       "Perform additional analysis of configuration",
       "Generate reports about configuration and insert into CFDB",
+      "Print a parse tree for the policy file in JSON format",
       NULL
       };
 
@@ -206,6 +208,10 @@ while ((c=getopt_long(argc,argv,"ad:vnIf:D:N:VSrxMb:",OPTIONS,&optindex)) != EOF
           printf("Self-analysis is not yet implemented.\n");
           exit(0);
           break;
+
+      case 'p':
+	  SHOW_PARSE_TREE = true;
+	  break;
 
       default:  Syntax("cf-promises - cfengine's promise analyzer",OPTIONS,HINTS,ID);
           exit(1);

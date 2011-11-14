@@ -359,7 +359,7 @@ void SyntaxExport()
 #ifdef HAVE_NOVA
 Nova_SyntaxTree2JavaScript();
 #else
-ShowSyntaxTree(stdout);
+SyntaxPrintAsJson(stdout);
 #endif
 }
 

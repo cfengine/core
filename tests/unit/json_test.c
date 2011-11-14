@@ -77,7 +77,10 @@ FILE *expected = tmpfile();
 FILE *actual = tmpfile();
 
 fprintf(expected, "{\n"
-      "  \"first\": [\"one\", \"two\"]\n"
+      "  \"first\": [\n"
+      "    \"one\",\n"
+      "    \"two\"\n"
+      "  ]\n"
       "}");
 
    {
@@ -102,13 +105,61 @@ static void test_show_array(void **state)
 FILE *expected = tmpfile();
 FILE *actual = tmpfile();
 
-fprintf(expected, "[\"snookie\", \"sitch\"]");
+fprintf(expected, "[\n"
+      "  \"snookie\",\n"
+      "  \"sitch\"\n"
+      "]");
 
 JsonArray *array = NULL;
 JsonArrayAppendString(&array, "snookie");
 JsonArrayAppendString(&array, "sitch");
 
-JsonArrayPrint(actual, array);
+JsonArrayPrint(actual, array, 0);
+
+assert_file_equal(expected, actual);
+fclose(expected);
+fclose(actual);
+
+JsonArrayDelete(array);
+}
+
+static void test_show_array_object(void **state)
+{
+FILE *expected = tmpfile();
+FILE *actual = tmpfile();
+
+fprintf(expected, "[\n"
+      "  {\n"
+      "    \"first\": \"one\"\n"
+      "  }\n"
+      "]");
+
+JsonArray *array = NULL;
+JsonObject *object = NULL;
+
+JsonObjectAppendString(&object, "first", "one");
+
+JsonArrayAppendObject(&array, object);
+
+JsonArrayPrint(actual, array, 0);
+
+assert_file_equal(expected, actual);
+fclose(expected);
+fclose(actual);
+
+JsonArrayDelete(array);
+}
+
+static void test_show_array_empty(void **state)
+{
+FILE *expected = tmpfile();
+FILE *actual = tmpfile();
+
+fprintf(expected, "[]");
+
+JsonArray *array = NULL;
+
+JsonArrayPrint(actual, array, 0);
 
 assert_file_equal(expected, actual);
 fclose(expected);
@@ -125,7 +176,9 @@ const UnitTest tests[] =
    unit_test(test_show_object_simple),
    unit_test(test_show_object_compound),
    unit_test(test_show_object_array),
-   unit_test(test_show_array)
+   unit_test(test_show_array),
+   unit_test(test_show_array_object),
+   unit_test(test_show_array_empty),
    };
 
 return run_tests(tests);

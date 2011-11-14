@@ -1216,6 +1216,9 @@ else
    }
 }
 
+
+/****************************************************************************/
+
 static char *PCREStringToJsonString(const char *pcre)
 {
 const char *src = pcre;
@@ -1346,7 +1349,7 @@ for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
 return control_bodies;
 }
 
-void ShowSyntaxTree(FILE *out)
+void SyntaxPrintAsJson(FILE *out)
 {
 JsonObject *syntax_tree = NULL;
 
@@ -1370,4 +1373,255 @@ JsonObject *syntax_tree = NULL;
 
 JsonObjectPrint(out, syntax_tree, 0);
 JsonObjectDelete(syntax_tree);
+}
+
+
+/****************************************************************************/
+
+
+static JsonObject *ExportAttributeValueAsJson(const char *rval, const char type)
+{
+JsonObject *json_attribute = NULL;
+
+switch (type)
+   {
+   case CF_SCALAR:
+      {
+      char buffer[CF_BUFSIZE];
+      EscapeQuotes((char *)rval, buffer, sizeof(buffer));
+
+      JsonObjectAppendString(&json_attribute, "type", "string");
+      JsonObjectAppendString(&json_attribute, "value", buffer);
+      }
+      return json_attribute;
+
+   case CF_LIST:
+      {
+      struct Rlist *rp = NULL;
+      JsonArray *list = NULL;
+      JsonObjectAppendString(&json_attribute, "type", "list");
+
+      for (rp = (struct Rlist *)rval; rp != NULL; rp = rp->next)
+	 {
+	 JsonArrayAppendObject(&list, ExportAttributeValueAsJson(rp->item, rp->type));
+	 }
+
+      JsonObjectAppendArray(&json_attribute, "value", list);
+      return json_attribute;
+      }
+
+   case CF_FNCALL:
+      {
+      struct Rlist *argp = NULL;
+      struct FnCall *call = (struct FnCall *)rval;
+
+      JsonObjectAppendString(&json_attribute, "type", "function-call");
+      JsonObjectAppendString(&json_attribute, "name", call->name);
+
+	 {
+	 JsonArray *arguments = NULL;
+
+	 for (argp = call->args; argp != NULL; argp = argp->next)
+	    {
+	    JsonArrayAppendObject(&arguments, ExportAttributeValueAsJson(argp->item, argp->type));
+	    }
+
+	 JsonObjectAppendArray(&json_attribute, "arguments", arguments);
+	 }
+
+      return json_attribute;
+      }
+
+   default:
+      FatalError("Attempted to export attribute of type: %s", type);
+      return NULL;
+   }
+}
+
+static JsonArray *ExportBodyClassesAsJson(struct Constraint *constraints)
+{
+JsonArray *json_classes = NULL;
+JsonObject *json_current_class = NULL;
+JsonArray *json_current_class_attributes = NULL;
+char *current_class = NULL;
+struct Constraint *cp = NULL;
+
+for (cp = constraints; cp != NULL; cp = cp->next)
+   {
+   JsonObject *json_attribute = NULL;
+
+   if (current_class == NULL || strcmp(cp->classes, current_class) != 0)
+	 {
+	 JsonObjectAppendArray(&json_current_class, "attributes", json_current_class_attributes);
+	 JsonArrayAppendObject(&json_classes, json_current_class);
+
+	 current_class = cp->classes;
+	 json_current_class = NULL;
+	 json_current_class_attributes = NULL;
+	 JsonObjectAppendString(&json_current_class, "name", cp->classes);
+	 }
+
+   JsonObjectAppendString(&json_attribute, "lval", cp->lval);
+   JsonObjectAppendObject(&json_attribute, "rval", ExportAttributeValueAsJson(cp->rval, cp->type));
+   JsonArrayAppendObject(&json_current_class_attributes, json_attribute);
+   }
+
+if (current_class != NULL)
+   {
+   JsonObjectAppendArray(&json_current_class, "attributes", json_current_class_attributes);
+   JsonArrayAppendObject(&json_classes, json_current_class);
+   }
+
+return json_classes;
+}
+
+static JsonArray *ExportBundleClassesAsJson(struct Promise *promises)
+{
+JsonArray *json_classes = NULL;
+JsonObject *json_current_class = NULL;
+JsonArray *json_current_class_promises = NULL;
+char *current_class = NULL;
+struct Promise *pp = NULL;
+
+for (pp = promises; pp != NULL; pp = pp->next)
+   {
+   JsonObject *json_promise = NULL;
+
+   if (current_class == NULL || strcmp(pp->classes, current_class) != 0)
+      {
+      JsonObjectAppendArray(&json_current_class, "promises", json_current_class_promises);
+      JsonArrayAppendObject(&json_classes, json_current_class);
+
+      current_class = pp->classes;
+      json_current_class = NULL;
+      json_current_class_promises = NULL;
+      JsonObjectAppendString(&json_current_class, "name", pp->classes);
+      }
+
+   JsonObjectAppendString(&json_promise, "promiser", pp->promiser);
+   JsonObjectAppendString(&json_promise, "promisee", pp->promisee);
+
+      {
+      JsonArray *json_promise_attributes = NULL;
+      struct Constraint *cp = NULL;
+
+      for (cp = pp->conlist; cp != NULL; cp = cp->next)
+	 {
+	 JsonObject *json_attribute = NULL;
+
+	 JsonObjectAppendString(&json_attribute, "lval", cp->lval);
+	 JsonObjectAppendObject(&json_attribute, "rval", ExportAttributeValueAsJson(cp->rval, cp->type));
+	 JsonArrayAppendObject(&json_promise_attributes, json_attribute);
+	 }
+
+      JsonObjectAppendArray(&json_promise, "attributes", json_promise_attributes);
+      }
+   JsonArrayAppendObject(&json_current_class_promises, json_promise);
+   }
+
+if (current_class != NULL)
+   {
+   JsonObjectAppendArray(&json_current_class, "promises", json_current_class_promises);
+   JsonArrayAppendObject(&json_classes, json_current_class);
+   }
+
+return json_classes;
+}
+
+static JsonObject *ExportBundleAsJson(struct Bundle *bundle)
+{
+JsonObject *json_bundle = NULL;
+
+JsonObjectAppendString(&json_bundle, "name", bundle->name);
+JsonObjectAppendString(&json_bundle, "bundle-type", bundle->type);
+
+   {
+   JsonArray *json_args = NULL;
+   struct Rlist *argp = NULL;
+
+   for (argp = bundle->args; argp != NULL; argp = argp->next)
+      {
+      JsonArrayAppendString(&json_args, argp->item);
+      }
+
+   JsonObjectAppendArray(&json_bundle, "arguments", json_args);
+   }
+
+   {
+   JsonArray *json_promise_types = NULL;
+   struct SubType *sp = NULL;
+
+   for (sp = bundle->subtypes; sp != NULL; sp = sp->next)
+      {
+      JsonObject *json_promise_type = NULL;
+
+      JsonObjectAppendString(&json_promise_type, "name", sp->name);
+      JsonObjectAppendArray(&json_promise_type, "classes", ExportBundleClassesAsJson(sp->promiselist));
+
+      JsonArrayAppendObject(&json_promise_types, json_promise_type);
+      }
+
+   JsonObjectAppendArray(&json_bundle, "promise-types", json_promise_types);
+   }
+
+return json_bundle;
+}
+
+
+static JsonObject *ExportBodyAsJson(struct Body *body)
+{
+JsonObject *json_body = NULL;
+
+JsonObjectAppendString(&json_body, "name", body->name);
+JsonObjectAppendString(&json_body, "type", body->type);
+
+   {
+   JsonArray *json_args = NULL;
+   struct Rlist *argp = NULL;
+
+   for (argp = body->args; argp != NULL; argp = argp->next)
+      {
+      JsonArrayAppendString(&json_args, argp->item);
+      }
+
+   JsonObjectAppendArray(&json_body, "arguments", json_args);
+   }
+
+JsonObjectAppendArray(&json_body, "classes", ExportBodyClassesAsJson(body->conlist));
+
+return json_body;
+}
+
+void PolicyPrintAsJson(FILE *out, const char *filename,
+                       struct Bundle *bundles, struct Body *bodies)
+{
+JsonObject *json_policy = NULL;
+
+   {
+   JsonArray *json_bundles = NULL;
+   struct Bundle *bp = NULL;
+
+   for (bp = bundles; bp != NULL; bp = bp->next)
+      {
+      JsonArrayAppendObject(&json_bundles, ExportBundleAsJson(bp));
+      }
+
+   JsonObjectAppendArray(&json_policy, "bundles", json_bundles);
+   }
+
+   {
+   JsonArray *json_bodies = NULL;
+   struct Body *bdp = NULL;
+
+   for (bdp = bodies; bdp != NULL; bdp = bdp->next)
+      {
+      JsonArrayAppendObject(&json_bodies, ExportBodyAsJson(bdp));
+      }
+
+   JsonObjectAppendArray(&json_policy, "bodies", json_bodies);
+   }
+
+
+JsonObjectPrint(out, json_policy, 0);
+JsonObjectDelete(json_policy);
 }

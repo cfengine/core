@@ -1135,7 +1135,8 @@ int CheckParseClass(char *lv,char *s,char *range);
 enum cfdatatype StringDataType(char *scopeid,char *string);
 enum cfdatatype ExpectedDataType(char *lvalname);
 bool IsDataType(const char *s);
-void ShowSyntaxTree(FILE *out);
+void SyntaxPrintAsJson(FILE *out);
+void PolicyPrintAsJson(FILE *out, const char *filename, struct Bundle *bundles, struct Body *bodies);
 
 /* sysinfo.c */
 

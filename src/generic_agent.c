@@ -206,6 +206,11 @@ if (ag != cf_keygen)
       CompilationReport(VINPUTFILE);
       }
 
+   if (SHOW_PARSE_TREE)
+      {
+      PolicyPrintAsJson(stdout, VINPUTFILE, BUNDLES, BODIES);
+      }
+
    CheckLicenses();
    }
 

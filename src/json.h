@@ -13,10 +13,13 @@ void JsonObjectAppendString(JsonObject **parent, const char *key, const char *va
 void JsonObjectAppendArray(JsonObject **parent, const char *key, JsonArray *value);
 void JsonObjectAppendObject(JsonObject **parent, const char *key, JsonObject *value);
 
-void JsonArrayAppendString(JsonArray **parent, char *value);
+void JsonArrayAppendObject(JsonArray **parent, JsonObject *value);
+void JsonArrayAppendString(JsonArray **parent, const char *value);
 
-void JsonStringPrint(FILE *out, const char *value);
-void JsonArrayPrint(FILE* out, JsonArray *value);
+size_t JsonArrayLength(JsonArray *array);
+
+void JsonStringPrint(FILE *out, const char *value, int indent_level);
+void JsonArrayPrint(FILE* out, JsonArray *value, int indent_level);
 void JsonObjectPrint(FILE* out, JsonObject *value, int indent_level);
 
 

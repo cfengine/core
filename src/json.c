@@ -1,10 +1,7 @@
 #include "json.h"
 
-enum json_dtype
-   {
-   json_dtype_object,
-   json_dtype_array
-   };
+#define JSON_OBJECT_TYPE 'o'
+#define JSON_ARRAY_TYPE 'a'
 
 static const int SPACES_PER_INDENT = 2;
 
@@ -21,12 +18,13 @@ for (rp = element; rp != NULL; rp = next)
 	 struct CfAssoc *assoc = rp->item;
 	 switch (assoc->rtype)
 	    {
-	    case CF_LIST:
+	    case JSON_OBJECT_TYPE:
+	    case JSON_ARRAY_TYPE:
 	       JsonElementDelete(assoc->rval);
 	       break;
 
 	    default:
-	       /* don't free leaves */
+	       free(assoc->rval);
 	       break;
 	    }
 	 free(assoc->lval);
@@ -35,7 +33,7 @@ for (rp = element; rp != NULL; rp = next)
 	 break;
 
       default:
-	 /* don't free leaves */
+	 free(rp->item);
 	 break;
       }
    free(rp);
@@ -54,66 +52,125 @@ JsonElementDelete(array);
 
 void JsonObjectAppendObject(JsonObject **parent, const char *key, JsonObject *value)
 {
-struct CfAssoc *ap = AssocNewReference(key, value, CF_LIST, (enum cfdatatype)json_dtype_object);
-RlistAppendReference(parent, ap, CF_ASSOC);
-}
+struct CfAssoc *ap = NULL;
 
-void JsonObjectAppendString(JsonObject **parent, const char *key, const char *value)
-{
-struct CfAssoc *ap = AssocNewReference(key, value, CF_SCALAR, cf_str);
+if (value == NULL)
+   {
+   return;
+   }
+
+ap = AssocNewReference(key, value, JSON_OBJECT_TYPE, cf_notype);
 RlistAppendReference(parent, ap, CF_ASSOC);
 }
 
 void JsonObjectAppendArray(JsonObject **parent, const char *key, JsonArray *value)
 {
-struct CfAssoc *ap = AssocNewReference(key, value, CF_LIST, (enum cfdatatype)json_dtype_array);
+struct CfAssoc *ap = NULL;
+
+if (value == NULL)
+   {
+   return;
+   }
+
+ap = AssocNewReference(key, value, JSON_ARRAY_TYPE, cf_notype);
 RlistAppendReference(parent, ap, CF_ASSOC);
 }
 
-void JsonArrayAppendString(JsonArray **parent, char *value)
+void JsonObjectAppendString(JsonObject **parent, const char *key, const char *value)
 {
-RlistAppendReference(parent, value, CF_SCALAR);
+struct CfAssoc *ap = NULL;
+
+if (value == NULL)
+   {
+   return;
+   }
+
+ap = AssocNewReference(key, xstrdup(value), CF_SCALAR, cf_str);
+RlistAppendReference(parent, ap, CF_ASSOC);
+}
+
+void JsonArrayAppendObject(JsonArray **parent, JsonObject *value)
+{
+if (value == NULL)
+   {
+   return;
+   }
+
+RlistAppendReference(parent, value, JSON_OBJECT_TYPE);
+}
+
+void JsonArrayAppendString(JsonArray **parent, const char *value)
+{
+if (value == NULL)
+   {
+   return;
+   }
+
+RlistAppendReference(parent, xstrdup(value), CF_SCALAR);
+}
+
+size_t JsonArrayLength(JsonArray *array)
+{
+return RlistLen(array);
 }
 
 static void ShowIndent(FILE *out, int num)
-{ int i;
+{
+int i = 0;
 for (i = 0; i < num * SPACES_PER_INDENT; i++)
    {
    fputc(' ', out);
    }
 }
 
-void JsonStringPrint(FILE *out, const char *value)
+void JsonStringPrint(FILE *out, const char *value, int indent_level)
 {
+ShowIndent(out, indent_level);
 fprintf(out, "\"%s\"", value);
 }
 
-void JsonArrayPrint(FILE *out, JsonArray *value)
+void JsonArrayPrint(FILE *out, JsonArray *value, int indent_level)
 {
 struct Rlist *rp = NULL;
 
-fprintf(out, "[");
+if (JsonArrayLength(value) == 0)
+   {
+   fprintf(out, "[]");
+   return;
+   }
+
+fprintf(out, "[\n");
 for (rp = value; rp != NULL; rp = rp->next)
    {
    switch (rp->type)
       {
       case CF_SCALAR:
-	 JsonStringPrint(out, (const char*)rp->item);
+	 JsonStringPrint(out, (const char*)rp->item, indent_level + 1);
+	 break;
+
+      case JSON_OBJECT_TYPE:
+	 ShowIndent(out, indent_level + 1);
+	 JsonObjectPrint(out, (JsonObject*)rp->item, indent_level + 1);
 	 break;
 
       default:
 	 /* TODO: not implemented, how to deal? */
-	 JsonStringPrint(out, "");
+	 JsonStringPrint(out, "", indent_level + 1);
 	 break;
       }
 
       if (rp->next != NULL)
 	 {
-	 fprintf(out, ", ");
+	 fprintf(out, ",\n");
+	 }
+      else
+	 {
+	 fprintf(out, "\n");
 	 }
    }
-fprintf(out, "]");
 
+ShowIndent(out, indent_level);
+fprintf(out, "]");
 }
 
 void JsonObjectPrint(FILE *out, JsonObject *value, int indent_level)
@@ -136,31 +193,26 @@ for (rp = value; rp != NULL; rp = rp->next)
 	 switch (entry->dtype)
 	    {
 	    case cf_str:
-	       JsonStringPrint(out, (const char*)entry->rval);
+	       JsonStringPrint(out, (const char*)entry->rval, 0);
 	       break;
 
 	    default:
 	       /* TODO: not implemented, how to deal? */
-	       JsonStringPrint(out, "");
+	       JsonStringPrint(out, "", indent_level + 1);
 	       break;
 	    }
 	 break;
 
-      case CF_LIST:
-	 switch ((enum json_dtype) entry->dtype)
-	    {
-	    case json_dtype_object:
-	       JsonObjectPrint(out, entry->rval, indent_level + 1);
-	       break;
+      case JSON_OBJECT_TYPE:
+	 JsonObjectPrint(out, entry->rval, indent_level + 1);
+	 break;
 
-	    case json_dtype_array:
-	       JsonArrayPrint(out, entry->rval);
-	       break;
+      case JSON_ARRAY_TYPE:
+	 JsonArrayPrint(out, entry->rval, indent_level + 1);
+	 break;
 
-	    default:
-	       /* TODO: internal error, how to deal? */
-	       break;
-	    }
+      default:
+	 /* TODO: internal error, how to deal? */
 	 break;
       }
       if (rp->next != NULL)
@@ -173,5 +225,3 @@ for (rp = value; rp != NULL; rp = rp->next)
 ShowIndent(out, indent_level);
 fprintf(out, "}");
 }
-
-

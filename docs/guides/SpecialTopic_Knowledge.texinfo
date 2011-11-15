@@ -203,7 +203,8 @@ This is a question every organization needs to ask itself.
 @sp 1
 
 CFEngine does a lot of work for you, but you need to do something to help
-yourself too. Your organization should create documents and references
+yourself too. As with all information, garbage in leads to garbage out.
+Your organization should create documents and references
 to capture its internal knowledge. If you are doing this well, it should not be
 a major task.
 
@@ -300,6 +301,115 @@ originates from internal management.
 
 
 @sp 1
+@unnumberedsec Stories and narratives
+
+In CFEngine Constellation you can ask the agent to brainstorm for you
+about topics, telling any stories is knows about topics. A story is a
+simply a path through the web of connected information that follows
+some kind of connectness. Most interesting stories have a thread of
+cause and effect. CFEngine attempts to reason forth narratives that
+might be sensible or which might offer some kind of insight. This is
+not usually a directly useful revelation, but more often a thought
+provoking stimulus for a human to take further.
+
+Machine intelligence is never a substitute for the real thing, at least
+not in our present day technologies, but it can be a useful amplifier of
+`leads' to get a smart human thinking about the right things.
+Most CFEngine stories relate to policy, and they are generated automatically
+by the knowledge engine, so you will not get any stories until you have
+something interesting in your policy.
+
+Stories can be used from the command-line, or as a tab within the 
+Constellation Mission Portal. The command line is useful for interactive
+thinking:
+
+A story can be quite simple:
+@smallexample
+atlas$ src/cf-know -z ftpusers
+F: "ftpusers" seems to affect "any::/etc/ftpusers" (with 50 % probability)
+
+  "ftpusers" (in any),
+   see also "/etc/ftpusers" (in any),
+@end smallexample
+@noindent Other stories could be more involved:
+@smallexample
+cf-know -z anomalies::cpu0_high_dev2
+
+F: "anomalies::cpu0_high_dev2" 
+seems to affect "any::performance" (with 100 % probability)
+
+  "cpu0_high_dev2" (in anomalies),
+   is a special case of "vital signs" (in any),
+   which is a generalization of "users_high_dev1" (in anomalies),
+   and this (users_high_dev1) is a special case of "performance" (in any)
+
+(Note also that performance, which was mentioned, is a generalization of 
+"anomalies::users_high_dev1")
+
+@end smallexample
+
+@noindent Stories can also be quite spurious, because knowledge itself can be spurious.
+For instance, some guesses might be quite wrong as the system gets the wrong end of the stick,
+so to speak, as it uses general patterns and these patterns always have exceptions:
+@smallexample
+atlas$ src/cf-know -z operating_systems::suse
+F: "operating_systems::suse" seems to affect "any::gnu/linux" (with 100 % probability)
+
+  "suse" (in operating_systems),
+   is a special case of "linux" (in any),
+   and this (linux) seems to refer to "gnu/linux" (in any)
+
+F: "operating_systems::suse" seems to affect "any::unitedlinux" (with 100 % probability)
+
+  "suse" (in operating_systems),
+   is a special case of "linux" (in any),
+   and this (linux) seems to refer to "unitedlinux" (in any)
+
+@end smallexample
+
+@smallexample
+F: "any::functions" seems to affect "any::arrays" (with 100 % probability)
+
+  "functions" (in any),
+   seems to refer to "functions which read" (in any),
+   which seems to refer to "functions which read arrays" (in any),
+   and this (functions which read arrays) seems to be referred to in "arrays" (in any)
+
+F: "any::functions" seems to affect "any::expression" (with 100 % probability)
+
+  "functions" (in any),
+   seems to refer to "functions which read" (in any),
+   which seems to refer to "functions which read classes" (in any),
+   which seems to be referred to in "class" (in data_types),
+   which seems to refer to "a cfengine class expression" (in any),
+   and this (a cfengine class expression) seems to be referred to in "expression" 
+(in any)
+...
+@end smallexample
+As you can see, the story generator looks for causative connections between the things
+that it knows about. Some topics are from the documentation, and some from your
+configuration policy.
+
+
+@smallexample
+F: "any::functions" seems to affect "any::readrealarray" (with 100 % probability)
+
+  "functions" (in any),
+   seems to refer to "functions which read" (in any),
+   which seems to be referred to in "class" (in data_types),
+   which seems to be referred to in "functions which return" (in any),
+   which seems to refer to "functions which return real" (in any),
+   which seems to be referred to in "real" (in vars_promises),
+   and this (real) seems to refer to "readrealarray" (in any)
+
+(Note also that readrealarray, which was mentioned, seems to refer to 
+"any::functions which read classes")
+(Note also that readrealarray, which was mentioned, seems to refer to 
+"any::functions which return class")
+@end smallexample
+
+
+@sp 1
 @unnumberedsec Creating your own map
 
 @sp 1
@@ -393,10 +503,10 @@ topics:
 @node Example company_knowledge.cf, Knowledge transfer, Types of information, Top
 @unnumberedsec Example @file{company_knowledge.cf}
 
-@verbatim
+@smallexample
 
 bundle knowledge company_knowledge
-{
+@{
 things:
 
  regions::
@@ -413,20 +523,20 @@ things:
 
    "Germany";
 
-   "UK"            synonyms => { "Great Britain" },
-              is_located_in => { "EMEA", "Europe" };
+   "UK"            synonyms => @{ "Great Britain" @},
+              is_located_in => @{ "EMEA", "Europe" @};
 
-   "Netherlands"   synonyms => { "Holland" },
-              is_located_in => { "EMEA", "Europe" };
+   "Netherlands"   synonyms => @{ "Holland" @},
+              is_located_in => @{ "EMEA", "Europe" @};
 
-   "Singapore"     is_located_in => { "APAC", "Asia" };
+   "Singapore"     is_located_in => @{ "APAC", "Asia" @};
 
  site_locations::
 
    # Use this for the names of 
 
-   "London_1"  is_located_in => { "London", "UK" };
-   "New_Jersey"  is_located_in => { "USA" };
+   "London_1"  is_located_in => @{ "London", "UK" @};
+   "New_Jersey"  is_located_in => @{ "USA" @};
 
  routers::
 
@@ -438,14 +548,14 @@ things:
 
   "192.23.45.0/24"         
                   comment => "Secure network, zone 0. Single octet for corporate offices",
-          is_connected_to => { "oslo-hub-123" };
+          is_connected_to => @{ "oslo-hub-123" @};
 
   "192.12.74.0/23"    comment => "Zone 1, double octet for the London office developer network",
-              is_connected_to => { "oslo-hub-123" };
+              is_connected_to => @{ "oslo-hub-123" @};
 
   "192.12.74.0/23"
                      comment => "Secure, single octet for the NYC office",
-             is_connected_to => { "nyc-hub-456" };
+             is_connected_to => @{ "nyc-hub-456" @};
 
 
 #######
@@ -504,24 +614,24 @@ occurrences:
  work_shifts::
 
     "http://www.example.com/shifts_and_rotas.ods"
-       represents => { "Spreadsheet" };
+       represents => @{ "Spreadsheet" @};
 
 
  current_projects::
 
     "http://www.example.com/scope_of_work.html"
-       represents => { "SOW" };
+       represents => @{ "SOW" @};
 
 
  software_licenses::
 
     "This CFEngine software license expires <b>$(sys.expires)</b>"
    representation => "literal",
-       represents => { "CFEngine Nova" };
+       represents => @{ "CFEngine Nova" @};
 
-}
+@}
 
-@end verbatim
+@end smallexample
 
 @sp 1
 @unnumberedsec What other special documents should an organization have?

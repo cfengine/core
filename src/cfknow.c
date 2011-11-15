@@ -113,7 +113,7 @@ const  struct option OPTIONS[16] =
       { "inform",no_argument,0,'I'},
       { "manual",no_argument,0,'m'},
       { "manpage",no_argument,0,'M'},
-      { "stories",required_argument,0,'z'},
+      { "tell-me-about",required_argument,0,'z'},
       { "syntax",required_argument,0,'S'},
       { "topics",no_argument,0,'T'},
       { "test",required_argument,0,'t'},

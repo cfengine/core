@@ -53,8 +53,10 @@ static int Linux_Mandriva_Version(void);
 static int Linux_Mandriva_Version_Real(char *filename, char *relstring, char *vendor);
 static int VM_Version(void);
 static int Xen_Domain(void);
+#ifdef XEN_CPUID_SUPPORT
 static void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx);
 static int Xen_Hv_Check(void);
+#endif
 
 static FILE *ReadFirstLine(const char *filename, char *buf, int bufsize);
 static bool ReadLine(const char *filename, char *buf, int bufsize);

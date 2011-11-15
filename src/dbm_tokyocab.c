@@ -36,12 +36,12 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#ifdef TCDB
+
 /* Arbitrary cutoff while trying to open blocked database */
 #define MAXATTEMPTS 1000
 
 static long GetSleepTime(void);
-
-#ifdef TCDB
 
 /*****************************************************************************/
 

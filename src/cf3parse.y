@@ -562,7 +562,7 @@ else if (*sp == '\"' && strlen(sp) > 1)
 
 if (USE_GCC_BRIEF_FORMAT)
    {
-   fprintf (stderr, "%s:%d:%d: error: %s, near token\n",P.filename,P.line_no,P.line_pos,s, sp);
+   fprintf (stderr, "%s:%d:%d: error: %s, near token \'%.20s\'\n",P.filename,P.line_no,P.line_pos,s, sp);
    }
 else
    {

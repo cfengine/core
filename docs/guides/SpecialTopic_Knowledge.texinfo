@@ -122,6 +122,16 @@ of knowledge: they spend their time reacting to emergencies cultivated
 by a lack of confidence and certainty, and they are too busy patching over holes that
 they never have time to learn enough to escape the pattern.
 
+
+@cartouche
+The Third Wave of configuration management emphasizes the role of knowledge
+in coping with the diversity and adaptability that modern organizations crave.
+This document is a beginning towards thinking about IT management in a new way:
+as a knowledge resource, or a set of insight-driven intentions that are
+maintained by smart machinery. This vision is about rehumanizing System Administration
+through a proper division of labour between Man and Machine.
+@end cartouche
+
 @node Risk and uncertainty, How should you begin?, What is knowledge management?, Top
 @unnumberedsec Risk and uncertainty
 
@@ -167,6 +177,14 @@ have goals or objectives in order to realize them and see results. You
 need to have intentions to make promises, and so on.  Ask yourself:
 does everyone in your team know your business goals, and how to
 translate their efforts into progess?
+
+
+
+
+
+
+
+
 
 @node The CFEngine Knowledge map, Pitfalls to avoid, How should you begin?, Top
 @unnumberedsec The CFEngine Knowledge map
@@ -236,6 +254,145 @@ captures this: @i{You should always make everything as simple as
 possible, but no simpler.}
 
 
+
+@node Using the Knowledge Map
+@unnumberedsec Using the Knowledge Map
+
+CFEngine's exploration of knowledge management is still in its infancy
+-- we are learning constantly about how to use state of the art
+technologies and techniques. This is still very much an experimental area
+that we continue to improve upon.
+
+Let's look at the current state of the smart index which we call the
+(Copernicus) Knowledge Map. If you go to the Mission Portal Library and
+search for a topic, you will land in the Knowledge Map. You will immediately
+see a graphical image and number of tabs that contain various different
+renditions of the information.
+
+Presently, these are called:
+@itemize
+@item Map - a visual view of a small neighbourhood of the closest related topics
+that places the search topic in the context of closely related items. The search
+topic might not be a the centre of this little universe, as other topics can 
+be more important. The size of the plantary balls is an indication of the topic's
+connectedness in the web.
+@item Leads - an explanation with full text for the nearest neighbours of the search topic.
+@item References - Actual document links or remarks made about the search topic.
+@item Same context - Other topics discussed in the same context.
+@end itemize
+
+@node Knowledge map example 1
+@unnumberedsubsec Knowledge map example 1
+
+You enter the knowledge map by searching, or being referred there by a link in
+the Mission Portal. Suppose we enter @samp{webserver} into the search field.
+CFEngine searches for matching topics in its index, and returns references in 
+different contexts. The context `any' represents an unspecific reference to the topic
+name:
+
+@image{km1,12cm,,DIKW,png}
+
+Suppose we click on the first of these in any context; this leads us to a special
+landing page about that particular topic which contains the four tabs mentioned above. 
+By default we end up in the graphical view. This gives an immediate impression of
+roughly where CFEngine considers this topic to lie in the scope of its knowledge.
+However, its value is rather limited.
+@image{km2,12cm,,DIKW,png}
+
+The next step is to walk through the tabs to `drill down' to actual
+content. The second tab points us to the `brainstorming' value of the
+associative links -- now with explanations in text.  If we select
+another tab we arrive at further leads for assisted thinking: these
+associative-thinking pointers can guide you to matters that are
+related and provide context for the current topic.
+
+@image{km3,12cm,,DIKW,png} 
+
+
+
+Leads are helpful if you didn't really know what you were
+looking for in the first place -- and you would like some explanation
+of what it what you guessed.
+
+
+If we select one of these, we go the landing page for that new topic in the advertised
+context.
+
+@image{km4,12cm,,DIKW,png}
+
+
+Note that several topics might be highlighted 
+in yellow on a page -- if they have been named, or if they are topics of special importance in
+this local cluster (meaning that they are highly referred to).
+
+In this view we are able to see, at a glance, that this somewhat
+Byzantine string is the name of a file, and that is pertains only to
+certain operating systems.  Walking through the tabs again, we see
+both where we came from and where we can go from here, with
+more detailed explanations.
+
+@image{km5,12cm,,DIKW,png}
+
+So far the map has only shown us topics -- or named subjects
+categorized by their context. This gives us a kind of compass for
+knowing what the topic is about, but it tells us little about the
+subject itself.  The third tab points us to actual expansive
+information about the topic, if any is known. This might be information
+from the documentation, external links or commentary and remarks made in
+policy. 
+
+@cartouche
+If there are no references to external information, this tab does not appear.
+Let's choose one of these references; now we are taken to a new topic
+altogether, where we see a new view of the system information.
+@end cartouche
+
+@image{km6,12cm,,DIKW,png}
+
+Because the topic name is categorized in the context of `promises', we
+know that (although this is the name of a file and it refers to
+RedHat-like operating systems) that this is also the object of a
+promise. The references page contains a link that then points us to
+actual information about this promise. The textual comment that was attributed
+to the promise in the policy itself, and a link to the promise's definiton.
+Clicking on the defintion link takes us the the promise-viewer.
+
+@image{km7,12cm,,DIKW,png}
+
+The Copernicus Knowledge Map view will take you a while to get used to -- use it
+to help you think about matters, and see how they fit together into a systematic
+overview of your environment.
+
+
+@node Knowledge map example 2
+@unnumberedsubsec Knowledge map example 2
+
+Let's look at another example. Suppose we enter @samp{vital signs} as
+the search text, and go to the leads. We find a long list of other
+topics. CFEngine says that `vital signs' generalizes, or is an
+umbrella concept, for these other concepts. 
+
+@image{km8,12cm,,DIKW,png}
+
+ One of these
+concepts is a class context that represents an anomaly
+detected by CFEngine @samp{loadavg_high_dev2}.
+Clicking on this, we see the
+significance of this concept quite easily from its relationship
+to other concepts:
+
+@image{km9,12cm,,DIKW,png}
+
+The load average being high might be an anomaly, but we also see that it
+refers to system performance, as does a whole bunch of other concepts.
+
+@cartouche
+The value of the semantic indexing is that it is information a casual user
+can actually learn from. By providing context and leads for further thinking,
+the Mission Portal becomes an quasi-intelligent assistant for working on
+the system.
+@end cartouche
+
 @node Types of information, Example company_knowledge.cf, Pitfalls to avoid, Top
 @unnumberedsec Types of information
 
@@ -300,8 +457,15 @@ originates from internal management.
 @end table
 
 
+
+
 @sp 1
 @unnumberedsec Stories and narratives
+
+In the foregoing section, we saw how leads in the Knowledge Map's
+semantic index could help us to see immediate relationships between
+system issues. The next question is: what about connections that are less 
+immediate or obvious?
 
 In CFEngine Constellation you can ask the agent to brainstorm for you
 about topics, telling any stories is knows about topics. A story is a
@@ -324,6 +488,7 @@ Constellation Mission Portal. The command line is useful for interactive
 thinking:
 
 A story can be quite simple:
+@cartouche
 @smallexample
 atlas$ src/cf-know --tell-me-about ftpusers
 F: "ftpusers" seems to affect "any::/etc/ftpusers" (with 50 % probability)
@@ -331,7 +496,9 @@ F: "ftpusers" seems to affect "any::/etc/ftpusers" (with 50 % probability)
   "ftpusers" (in any),
    see also "/etc/ftpusers" (in any),
 @end smallexample
+@end cartouche
 @noindent Other stories could be more involved:
+@cartouche
 @smallexample
 cf-know --tell-me-about anomalies::cpu0_high_dev2
 
@@ -347,10 +514,12 @@ seems to affect "any::performance" (with 100 % probability)
 "anomalies::users_high_dev1")
 
 @end smallexample
+@end cartouche
 
 @noindent Stories can also be quite spurious, because knowledge itself can be spurious.
 For instance, some guesses might be quite wrong as the system gets the wrong end of the stick,
 so to speak, as it uses general patterns and these patterns always have exceptions:
+@cartouche
 @smallexample
 atlas$ src/cf-know --tell-me-about operating_systems::suse
 
@@ -367,7 +536,9 @@ F: "operating_systems::suse" seems to affect "any::unitedlinux" (with 100 % prob
    and this (linux) seems to refer to "unitedlinux" (in any)
 
 @end smallexample
-
+@end cartouche
+@noindent Or:
+@cartouche
 @smallexample
 atlas$ src/cf-know --tell-me-about functions
 
@@ -389,11 +560,13 @@ F: "any::functions" seems to affect "any::expression" (with 100 % probability)
 (in any)
 ...
 @end smallexample
+@end cartouche
+
 As you can see, the story generator looks for causative connections between the things
 that it knows about. Some topics are from the documentation, and some from your
 configuration policy.
 
-
+@cartouche
 @smallexample
 F: "any::functions" seems to affect "any::readrealarray" (with 100 % probability)
 
@@ -410,7 +583,7 @@ F: "any::functions" seems to affect "any::readrealarray" (with 100 % probability
 (Note also that readrealarray, which was mentioned, seems to refer to 
 "any::functions which return class")
 @end smallexample
-
+@end cartouche
 
 @sp 1
 @unnumberedsec Creating your own map

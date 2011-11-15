@@ -325,7 +325,7 @@ thinking:
 
 A story can be quite simple:
 @smallexample
-atlas$ src/cf-know -z ftpusers
+atlas$ src/cf-know --tell-me-about ftpusers
 F: "ftpusers" seems to affect "any::/etc/ftpusers" (with 50 % probability)
 
   "ftpusers" (in any),
@@ -333,7 +333,7 @@ F: "ftpusers" seems to affect "any::/etc/ftpusers" (with 50 % probability)
 @end smallexample
 @noindent Other stories could be more involved:
 @smallexample
-cf-know -z anomalies::cpu0_high_dev2
+cf-know --tell-me-about anomalies::cpu0_high_dev2
 
 F: "anomalies::cpu0_high_dev2" 
 seems to affect "any::performance" (with 100 % probability)
@@ -352,7 +352,8 @@ seems to affect "any::performance" (with 100 % probability)
 For instance, some guesses might be quite wrong as the system gets the wrong end of the stick,
 so to speak, as it uses general patterns and these patterns always have exceptions:
 @smallexample
-atlas$ src/cf-know -z operating_systems::suse
+atlas$ src/cf-know --tell-me-about operating_systems::suse
+
 F: "operating_systems::suse" seems to affect "any::gnu/linux" (with 100 % probability)
 
   "suse" (in operating_systems),
@@ -368,6 +369,8 @@ F: "operating_systems::suse" seems to affect "any::unitedlinux" (with 100 % prob
 @end smallexample
 
 @smallexample
+atlas$ src/cf-know --tell-me-about functions
+
 F: "any::functions" seems to affect "any::arrays" (with 100 % probability)
 
   "functions" (in any),

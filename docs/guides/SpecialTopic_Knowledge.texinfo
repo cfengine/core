@@ -69,13 +69,13 @@ Copyright @copyright{} 2009 CFEngine AS
 
 @node Top, What is knowledge management?, (dir), (dir)
 @top Knowledge
-
 @menu
 * What is knowledge management?::  
 * Risk and uncertainty::        
 * How should you begin?::       
 * The CFEngine Knowledge map::  
 * Pitfalls to avoid::           
+* Using the Knowledge Map::     
 * Types of information::        
 * Example company_knowledge.cf::  
 * Knowledge transfer::          
@@ -215,7 +215,7 @@ Ask yourself: what are the places in this map, and what are the paths between th
 This is a question every organization needs to ask itself.
 
 @sp 1
-@node Pitfalls to avoid, Types of information, The CFEngine Knowledge map, Top
+@node Pitfalls to avoid, Using the Knowledge Map, The CFEngine Knowledge map, Top
 @unnumberedsec Pitfalls to avoid
 
 @sp 1
@@ -255,7 +255,7 @@ possible, but no simpler.}
 
 
 
-@node Using the Knowledge Map
+@node Using the Knowledge Map, Types of information, Pitfalls to avoid, Top
 @unnumberedsec Using the Knowledge Map
 
 CFEngine's exploration of knowledge management is still in its infancy
@@ -281,7 +281,12 @@ connectedness in the web.
 @item Same context - Other topics discussed in the same context.
 @end itemize
 
-@node Knowledge map example 1
+@menu
+* Knowledge map example 1::     
+* Knowledge map example 2::     
+@end menu
+
+@node Knowledge map example 1, Knowledge map example 2, Using the Knowledge Map, Using the Knowledge Map
 @unnumberedsubsec Knowledge map example 1
 
 You enter the knowledge map by searching, or being referred there by a link in
@@ -364,7 +369,7 @@ to help you think about matters, and see how they fit together into a systematic
 overview of your environment.
 
 
-@node Knowledge map example 2
+@node Knowledge map example 2,  , Knowledge map example 1, Using the Knowledge Map
 @unnumberedsubsec Knowledge map example 2
 
 Let's look at another example. Suppose we enter @samp{vital signs} as
@@ -393,7 +398,7 @@ the Mission Portal becomes an quasi-intelligent assistant for working on
 the system.
 @end cartouche
 
-@node Types of information, Example company_knowledge.cf, Pitfalls to avoid, Top
+@node Types of information, Example company_knowledge.cf, Using the Knowledge Map, Top
 @unnumberedsec Types of information
 
 @sp 1

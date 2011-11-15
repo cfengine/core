@@ -1158,14 +1158,14 @@ if (cmpsb.st_mode != sb->st_mode)
 
 if (cmpsb.st_uid != sb->st_uid)
    {
-   snprintf(message,CF_BUFSIZE-1,"ALERT: owner for %s changed %d -> %d",file,cmpsb.st_uid,sb->st_uid);
+   snprintf(message,CF_BUFSIZE-1,"ALERT: owner for %s changed %jd -> %jd",file,(uintmax_t)cmpsb.st_uid,(uintmax_t)sb->st_uid);
    CfOut(cf_error,"","%s",message);
    LogHashChange(message+strlen("ALERT: "));
    }
 
 if (cmpsb.st_gid != sb->st_gid)
    {
-   snprintf(message,CF_BUFSIZE-1,"ALERT: group for %s changed %d -> %d",file,cmpsb.st_gid,sb->st_gid);
+   snprintf(message,CF_BUFSIZE-1,"ALERT: group for %s changed %jd -> %jd",file,(uintmax_t)cmpsb.st_gid,(uintmax_t)sb->st_gid);
    CfOut(cf_error,"","%s",message);
    LogHashChange(message+strlen("ALERT: "));
    }
@@ -1806,7 +1806,7 @@ static int Unix_VerifyOwner(char *file,struct Promise *pp,struct Attributes attr
   uid_t uid = CF_SAME_OWNER;
   gid_t gid = CF_SAME_GROUP;
 
-CfDebug("Unix_VerifyOwner: %d\n",sb->st_uid);
+CfDebug("Unix_VerifyOwner: %jd\n",(uintmax_t)sb->st_uid);
 
 for (ulp = attr.perms.owners; ulp != NULL; ulp=ulp->next)
    {

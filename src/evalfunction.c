@@ -2485,7 +2485,7 @@ else
       }
    else if (!strcmp(fp->name, "filesize"))
       {
-      snprintf(buffer,CF_MAXVARSIZE,"%ld",statbuf.st_size);
+      snprintf(buffer,CF_MAXVARSIZE,"%jd",(uintmax_t)statbuf.st_size);
       }
 
    SetFnCallReturnStatus(fp->name,FNCALL_SUCCESS,NULL,NULL);

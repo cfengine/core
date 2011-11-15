@@ -283,7 +283,7 @@ Mission engineering illustrates the state of the system in relation to the desir
 
 @noindent Host Status:
 @itemize -
-@item The hosts are classified into red, yellow, green and blue according to the status of their compliance. A host is red if less than 80% of its promises are kept, yellow if 20% or more of its promises were repaired and host is now compliant, green if more than 80% of its promises are kept, and blue if there is no contact between the hub and the client. Clicking a link produces a list of the hosts in that category. 
+@item The hosts are classified into red, yellow, green and blue according to the status of their compliance. A host is red if less than 80% of its promises are kept (> 20% not compliant), yellow if 20% or more of its promises were repaired and host is now compliant (> 20% repaired, now compliant), green if more than 80% of its promises are kept (> 80% compliant), and blue if there is no contact between the hub and the client (host unreachable). Clicking a link produces a list of the hosts in that category.
 @item Worst available host rank: Display the weakest hosts (that have been in contact with the hub) over the last hour.
 @item Hub replication status: Display status of redundant monitoring hubs (if activated).
 @end itemize

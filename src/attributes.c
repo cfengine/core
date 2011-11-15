@@ -1210,7 +1210,7 @@ return f;
 
 struct EditDefaults GetEditDefaults(struct Promise *pp)
 
-{ struct EditDefaults e;
+{ struct EditDefaults e = { 0 };
   char *value;
 
 e.maxfilesize = GetIntConstraint("max_file_size",pp);

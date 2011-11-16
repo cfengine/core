@@ -580,7 +580,7 @@ if (BOOTSTRAP)
 
    if (!IsEnterprise() && cfstat(vbuff,&statbuf) == -1)
       {
-      snprintf(VINPUTFILE,CF_BUFSIZE-1,".%cfailsafe.cf",FILE_SEPARATOR);
+      snprintf(VINPUTFILE,CF_BUFSIZE-1,"failsafe.cf");
       }
    else
       {

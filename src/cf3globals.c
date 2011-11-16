@@ -606,32 +606,3 @@ char *OBS[CF_OBSERVABLES][2] =
     {"spare","unused"},
     {"spare","unused"},
     };
-
-/**********************************************************************************/
-/* Report names                                                                   */
-/**********************************************************************************/
-
-// See enum in cf3.defs.h
-
-char *BASIC_REPORTS[cfrep_unknown+1][2] =
-    {
-    {"Bundle profile","Status of promise bundles and when they were last verified"},
-    {"Business value report","Accumulated value of promises kept"},
-    {"Class profile","User defined classes observed on the system"},
-    {"Compliance by promise","Compliance of each promise individually"},
-    {"Compliance summary","Total summary of host compliance"},
-    {"File change log","Log of all detected changes to files from changes promises"},
-    {"File change diffs","Delta/difference comparison showing file changes"},
-    {"Last saw hosts","Log of when neighbouring hosts were last observed online"},
-    {"Patches available","A list of patches currently claimed to be available by the local package manager"},
-    {"Patch status","A list of (un)applied patches according to the local package manager"},
-    {"Performance","Execution time used to verify selected promises"},
-    {"Promises repaired log","Log of actual repairs made to the system"},
-    {"Promises repaired summary","Cumulative (histogram) summary of promises repaired"},
-    {"Promises not kept log","Log of promises that could not or would not be kept"},
-    {"Promises not kept summary","Cumulative (histogram) summary of promises not kept"},
-    {"Setuid/gid root programs","Current list of observed setuid/setgid root programs"},
-    {"Software installed","List of software packages claimed to be installed according to the local package manager"},
-    {"Variables","Table of variable values last observed"},
-    {NULL,NULL}
-    };

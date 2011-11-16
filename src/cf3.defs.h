@@ -1885,32 +1885,6 @@ meter_endmark
 /* definitions for reporting                                            */
 /*************************************************************************/
 
-typedef enum basic_reports
-   {
-   cfrep_bundle,
-   cfrep_business,
-   cfrep_classes,
-   cfrep_promise_compliance,
-   cfrep_total_compliance,
-   cfrep_change,
-   cfrep_diff,
-   cfrep_lastseen,
-   cfrep_patch_avail,
-   cfrep_patch_status,
-   cfrep_performance,
-   cfrep_repaired,
-   cfrep_repair_summary,
-   cfrep_notkept,
-   cfrep_notkept_summary,
-   cfrep_setuid,
-   cfrep_software_installed,
-   cfrep_variables,
-   cfrep_unknown
-   }
-cfrep_t;
-
-extern char *BASIC_REPORTS[cfrep_unknown+1][2];
-
 extern double METER_KEPT[meter_endmark];
 extern double METER_REPAIRED[meter_endmark];
 extern double Q_MEAN;

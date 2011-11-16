@@ -635,17 +635,3 @@ char *BASIC_REPORTS[cfrep_unknown+1][2] =
     {"Variables","Table of variable values last observed"},
     {NULL,NULL}
     };
-
-// See enum in cf3.defs.h
-
-char *CDP_REPORTS[cdp_unknown+1][2] =
-    {
-    {"ACLs","File access controls"},
-    {"Commands","Scheduled commands to execute"},
-    {"File Changes","File changes observed on the system"},
-    {"File Diffs","Delta/difference comparison showing file changes"},
-    {"Registry","Promised Windows registry setting status"},
-    {"Services","System services status"},
-    {NULL,NULL}
-    };
-        

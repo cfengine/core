@@ -1885,18 +1885,6 @@ meter_endmark
 /* definitions for reporting                                            */
 /*************************************************************************/
 
-typedef enum cdp_report
-   {
-   cdp_acls,
-   cdp_commands,
-   cdp_filechanges,
-   cdp_filediffs,
-   cdp_registry,
-   cdp_services,
-   cdp_unknown
-   }
-cdp_t;
-
 typedef enum basic_reports
    {
    cfrep_bundle,
@@ -1922,7 +1910,6 @@ typedef enum basic_reports
 cfrep_t;
 
 extern char *BASIC_REPORTS[cfrep_unknown+1][2];
-extern char *CDP_REPORTS[cdp_unknown+1][2];
 
 extern double METER_KEPT[meter_endmark];
 extern double METER_REPAIRED[meter_endmark];

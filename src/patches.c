@@ -47,9 +47,10 @@ static char *cf_format_strtimestamp(struct tm *tm, char *buf);
 
 char *MapName(char *s)
 {
-while ((s = strchr(s, '/')))
+char *c = s;
+while ((c = strchr(c, '/')))
    {
-   *s = '\\';
+   *c = '\\';
    }
 return s;
 }

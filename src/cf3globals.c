@@ -161,13 +161,6 @@ char FOOTER[CF_BUFSIZE] = {0};
 char STYLESHEET[CF_BUFSIZE] = {0};
 struct Topic *TOPICHASH[CF_HASHTABLESIZE];
 
-char SQL_DATABASE[CF_MAXVARSIZE] = {0};
-char SQL_OWNER[CF_MAXVARSIZE] = {0};
-char SQL_PASSWD[CF_MAXVARSIZE] = {0};
-char SQL_SERVER[CF_MAXVARSIZE] = {0};
-char SQL_CONNECT_NAME[CF_MAXVARSIZE] = {0};
-enum cfdbtype SQL_TYPE = cfd_notype;
-
 /*****************************************************************************/
 /* Windows version constants                                                 */
 /*****************************************************************************/

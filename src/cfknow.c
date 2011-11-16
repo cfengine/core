@@ -316,7 +316,6 @@ void ThisAgentInit()
 strcpy(WEBDRIVER,"");
 strcpy(LICENSE_COMPANY,"");
 strcpy(MANDIR,".");
-strcpy(SQL_DATABASE,"cf_kmdb");
 SHOWREPORTS = false;
 
 if (InsertTopic("any","any"))
@@ -368,42 +367,36 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_sql_type].lval) == 0)
       {
-      SQL_TYPE = Str2dbType(retval);
       CfOut(cf_verbose,""," -> Option %s has been deprecated in this release",cp->lval);
       continue;
       }
 
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_sql_database].lval) == 0)
       {
-      strncpy(SQL_DATABASE,retval,CF_MAXVARSIZE);
       CfOut(cf_verbose,""," -> Option %s has been deprecated in this release",cp->lval);
       continue;
       }
 
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_sql_owner].lval) == 0)
       {
-      strncpy(SQL_OWNER,retval,CF_MAXVARSIZE);
       CfOut(cf_verbose,""," -> Option %s has been deprecated in this release",cp->lval);
       continue;
       }
       
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_sql_passwd].lval) == 0)
       {
-      strncpy(SQL_PASSWD,retval,CF_MAXVARSIZE);
       CfOut(cf_verbose,""," -> Option %s has been deprecated in this release",cp->lval);
       continue;
       }
    
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_sql_server].lval) == 0)
       {
-      strncpy(SQL_SERVER,retval,CF_MAXVARSIZE);
       CfOut(cf_verbose,""," -> Option %s has been deprecated in this release",cp->lval);
       continue;
       }
 
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_sql_connect_db].lval) == 0)
       {
-      strncpy(SQL_CONNECT_NAME,retval,CF_MAXVARSIZE);
       CfOut(cf_verbose,""," -> Option %s has been deprecated in this release",cp->lval);
       continue;
       }

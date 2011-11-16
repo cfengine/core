@@ -551,7 +551,7 @@ pp.promiser = promiserBuf;
 pp.promisee = "cfengine";
 pp.classes = "any";
 pp.petype = CF_SCALAR;
-pp.lineno = 0;
+pp.line_number = 0;
 pp.audit = NULL;
 pp.conlist = NULL;
 

@@ -176,7 +176,7 @@ void ClassAuditLog(struct Promise *pp,struct Attributes attr,char *str,char stat
   struct Audit *ap = pp->audit;
   struct timespec t;
   double keyval;
-  int lineno = pp->lineno;
+  int lineno = pp->line_number;
   char name[CF_BUFSIZE];
 
   CfDebug("ClassAuditLog(%s)\n",str);
@@ -359,7 +359,8 @@ if (ap != NULL)
    
    if (ap->version == NULL || strlen(ap->version) == 0)
       {
-      CfDebug("Promised in %s bundle %s (unamed version last edited at %s) at/before line %d\n",ap->filename,pp->bundle,ap->date,lineno);
+      CfDebug("Promised in %s bundle %s (unamed version last edited at %s) at/before line %d\n",
+              ap->filename,pp->bundle,ap->date,lineno);
       newaudit.version[0] = '\0';
       }
    else
@@ -369,7 +370,7 @@ if (ap != NULL)
       }
    
    strncpy(newaudit.date,ap->date,CF_AUDIT_DATE);
-   newaudit.lineno = lineno;
+   newaudit.line_number = lineno;
    }
 else
    {
@@ -377,7 +378,7 @@ else
    strncpy(newaudit.comment,str,CF_AUDIT_COMMENT-1);
    strcpy(newaudit.filename,"schedule");
    strcpy(newaudit.version,"");
-   newaudit.lineno = 0;
+   newaudit.line_number = 0;
    }
 
 newaudit.status = status;

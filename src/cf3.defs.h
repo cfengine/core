@@ -681,6 +681,8 @@ struct Bundle
    struct Rlist *args;
    struct SubType *subtypes;
    struct Bundle *next;
+
+   int line_number;
    };
 
 /*************************************************************************/
@@ -692,6 +694,8 @@ struct Body
    struct Rlist *args;
    struct Constraint *conlist;
    struct Body *next;
+
+   int line_number;
    };
 
 /*************************************************************************/
@@ -701,6 +705,8 @@ struct SubType
    char *name;
    struct Promise *promiselist;
    struct SubType *next;
+
+   int line_number;
    };
 
 /*************************************************************************/
@@ -724,7 +730,6 @@ struct Promise
    char *promiser;
    void *promisee;              /* Can be a general rval */
    char  petype;                /* rtype of promisee - list or scalar recipient? */
-   int   lineno;
    char *bundle;
    struct Audit *audit;
    struct Constraint *conlist;
@@ -743,6 +748,8 @@ struct Promise
    struct CompressedArray *inode_cache;
    struct edit_context *edcontext;
    dev_t rootdevice;                          /* for caching during work*/
+
+   int line_number;
    };
 
 /*************************************************************************/
@@ -752,7 +759,7 @@ struct PromiseIdent
    char *handle;
    char *filename;
    char *classes;
-   int lineno;
+   int line_number;
    struct PromiseIdent *next;
    };
 
@@ -764,10 +771,11 @@ struct Constraint
    void *rval;    /* should point to either string, Rlist or FnCall */
    char type;     /* scalar, list, or function */
    char *classes; /* only used within bodies */
-   int lineno;
    int isbody;
    struct Audit *audit;
    struct Constraint *next;
+
+   int line_number;
    };
 
 /*************************************************************************/

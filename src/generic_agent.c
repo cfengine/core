@@ -1625,9 +1625,10 @@ for (cp = controllist; cp != NULL; cp=cp->next)
 
    DeleteVariable(scope,cp->lval);
 
-   if (!AddVariableHash(scope,cp->lval,returnval.item,returnval.rtype,GetControlDatatype(cp->lval,bp),cp->audit->filename,cp->lineno))
+   if (!AddVariableHash(scope,cp->lval,returnval.item,returnval.rtype,
+                        GetControlDatatype(cp->lval,bp),cp->audit->filename,cp->line_number))
       {
-      CfOut(cf_error,""," !! Rule from %s at/before line %d\n",cp->audit->filename,cp->lineno);
+      CfOut(cf_error,""," !! Rule from %s at/before line %d\n",cp->audit->filename,cp->line_number);
       }
 
    if (strcmp(cp->lval,CFG_CONTROLBODY[cfg_output_prefix].lval) == 0)

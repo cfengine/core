@@ -255,7 +255,7 @@ else
    }
 
 pp->audit = AUDITPTR;
-pp->lineno = P.line_no;
+pp->line_number = P.line_no;
 pp->bundle =  xstrdup(bundle);
 pp->promiser = sp;
 pp->promisee = promisee;  /* this is a list allocated separately */

@@ -103,16 +103,18 @@ bundlebody:         '{'
                        if (RelevantBundle(THIS_AGENT,P.blocktype))
                           {
                           CfDebug("We a compiling everything here\n");
-                          INSTALL_SKIP = false;                          
+                          INSTALL_SKIP = false;
                           }
                        else if (strcmp(THIS_AGENT,P.blocktype) != 0)
                           {
                           CfDebug("This is for a different agent\n");
                           INSTALL_SKIP = true;
                           }
-                       
+
                        P.currentbundle = AppendBundle(&BUNDLES,P.blockid,P.blocktype,P.useargs);
+                       P.currentbundle->line_number = P.line_no;
                        P.useargs = NULL;
+
                        }
                      statements
                     '}'
@@ -137,11 +139,12 @@ bodybody:            '{'
                         {
                         P.currentbody = AppendBody(&BODIES,P.blockid,P.blocktype,P.useargs);
                         P.useargs = NULL;
+                        P.currentbody->line_number = P.line_no;
                         strcpy(P.currentid,"");
                         CfDebug("Starting block\n");
                         }
 
-                      bodyattribs 
+                      bodyattribs
 
                       '}'
                         {
@@ -237,11 +240,12 @@ promises:              promise                  /* BUNDLE ONLY */
 category:             CATEGORY                  /* BUNDLE ONLY */
                          {
                          CfDebug("\n* Begin new promise type category %s in function \n\n",P.currenttype);
-                                                 
+
                          if (strcmp(P.block,"bundle") == 0)
                             {
                             CheckSubType(P.blocktype,P.currenttype); /* FIXME: unused? */
                             P.currentstype = AppendSubType(P.currentbundle,P.currenttype);
+                            P.currentstype->line_number = P.line_no;
                             }
                          };
 
@@ -250,7 +254,7 @@ category:             CATEGORY                  /* BUNDLE ONLY */
 promise:              promiser                    /* BUNDLE ONLY */
 
                       ARROW
- 
+
                       rval            /* This is full form with rlist promisees */
                         {
                         if (P.currentclasses == NULL)

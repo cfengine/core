@@ -380,7 +380,7 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
 if (pp->audit)
    {
    Indent(indent);
-   fprintf(FREPORT_HTML,"<p><small>Promise (version %s) belongs to bundle <b>%s</b> (type %s) in \'<i>%s</i>\' near line %d</small></p>\n",version,pp->bundle,pp->bundletype,pp->audit->filename,pp->lineno);
+   fprintf(FREPORT_HTML,"<p><small>Promise (version %s) belongs to bundle <b>%s</b> (type %s) in \'<i>%s</i>\' near line %d</small></p>\n",version,pp->bundle,pp->bundletype,pp->audit->filename,pp->line_number);
    }
 
 fprintf(FREPORT_HTML,"%s\n",CFH[cfx_promise][cfe]);
@@ -389,13 +389,13 @@ fprintf(FREPORT_HTML,"%s\n",CFH[cfx_line][cfe]);
 if (pp->audit)
    {
    Indent(indent);
-   fprintf(FREPORT_TXT,"Promise (version %s) belongs to bundle \'%s\' (type %s) in file \'%s\' near line %d\n",version,pp->bundle,pp->bundletype,pp->audit->filename,pp->lineno);
+   fprintf(FREPORT_TXT,"Promise (version %s) belongs to bundle \'%s\' (type %s) in file \'%s\' near line %d\n",version,pp->bundle,pp->bundletype,pp->audit->filename,pp->line_number);
    fprintf(FREPORT_TXT,"\n\n");
    }
 else
    {
    Indent(indent);
-   fprintf(FREPORT_TXT,"Promise (version %s) belongs to bundle \'%s\' (type %s) near line %d\n\n",version,pp->bundle,pp->bundletype,pp->lineno);
+   fprintf(FREPORT_TXT,"Promise (version %s) belongs to bundle \'%s\' (type %s) near line %d\n\n",version,pp->bundle,pp->bundletype,pp->line_number);
    }
 }
 

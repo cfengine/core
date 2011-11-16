@@ -98,7 +98,7 @@ if (classes != NULL)
    }
 
 cp->audit = AUDITPTR;
-cp->lineno = P.line_no;
+cp->line_number = P.line_no;
 cp->lval = sp;
 cp->rval = rval;
 cp->type = type;  /* literal, bodyname, builtin function */
@@ -640,9 +640,10 @@ if (handle)
    
    if ((prid = PromiseIdExists(handle)))
       {
-      if ((strcmp(prid->filename,pp->audit->filename) != 0) || (prid->lineno != pp->lineno))
+      if ((strcmp(prid->filename,pp->audit->filename) != 0) || (prid->line_number != pp->line_number))
          {
-         CfOut(cf_error,""," !! Duplicate promise handle -- previously used in file %s near line %d",prid->filename,prid->lineno);
+         CfOut(cf_error,""," !! Duplicate promise handle -- previously used in file %s near line %d",
+               prid->filename, prid->line_number);
          PromiseRef(cf_error,pp);
          }
       }
@@ -866,7 +867,7 @@ AssertThreadLocked(cft_policy,"NewPromiseId");
 ptr = xmalloc(sizeof(struct PromiseIdent));
 
 ptr->filename = xstrdup(pp->audit->filename);
-ptr->lineno = pp->lineno;
+ptr->line_number = pp->line_number;
 ptr->handle = xstrdup(handle);
 ptr->next = PROMISE_ID_LIST;
 PROMISE_ID_LIST = ptr;

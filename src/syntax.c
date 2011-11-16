@@ -1251,7 +1251,7 @@ for (dst = json; *src != '\0'; src++)
 return json;
 }
 
-static JsonObject *ExportAttributesAsJson(struct BodySyntax attributes[])
+static JsonObject *ExportAttributesSyntaxAsJson(struct BodySyntax attributes[])
 {
 JsonObject *json = NULL;
 int i = 0;
@@ -1270,7 +1270,7 @@ for (i = 0; attributes[i].lval != NULL; i++)
       }
    else if (attributes[i].dtype == cf_body)
       {
-      JsonObject *json_attributes = ExportAttributesAsJson((struct BodySyntax *)attributes[i].range);
+      JsonObject *json_attributes = ExportAttributesSyntaxAsJson((struct BodySyntax *)attributes[i].range);
       JsonObjectAppendObject(&json, attributes[i].lval, json_attributes);
       }
    else
@@ -1312,7 +1312,7 @@ for (i = 0; attributes[i].lval != NULL; i++)
 return json;
 }
 
-static JsonObject *ExportBundleTypeAsJson(char *bundle_type)
+static JsonObject *ExportBundleTypeSyntaxAsJson(char *bundle_type)
 {
 JsonObject *json = NULL;
 struct SubTypeSyntax *st;
@@ -1326,7 +1326,7 @@ for (i = 0; i < CF3_MODULES; i++)
       {
       if (strcmp(bundle_type, st[j].btype) == 0 || strcmp("*", st[j].btype) == 0)
 	 {
-	 JsonObject *attributes = ExportAttributesAsJson(st[j].bs);
+	 JsonObject *attributes = ExportAttributesSyntaxAsJson(st[j].bs);
 	 JsonObjectAppendObject(&json, st[j].subtype, attributes);
 	 }
       }
@@ -1335,14 +1335,14 @@ for (i = 0; i < CF3_MODULES; i++)
 return json;
 }
 
-static JsonObject *ExportControlBodiesAsJson()
+static JsonObject *ExportControlBodiesSyntaxAsJson()
 {
 JsonObject *control_bodies = NULL;
 int i = 0;
 
 for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
    {
-   JsonObject *attributes = ExportAttributesAsJson(CF_ALL_BODIES[i].bs);
+   JsonObject *attributes = ExportAttributesSyntaxAsJson(CF_ALL_BODIES[i].bs);
    JsonObjectAppendObject(&control_bodies, CF_ALL_BODIES[i].btype, attributes);
    }
 
@@ -1354,7 +1354,7 @@ void SyntaxPrintAsJson(FILE *out)
 JsonObject *syntax_tree = NULL;
 
    {
-   JsonObject * control_bodies = ExportControlBodiesAsJson();
+   JsonObject * control_bodies = ExportControlBodiesSyntaxAsJson();
    JsonObjectAppendObject(&syntax_tree, "control-bodies", control_bodies);
    }
 
@@ -1364,7 +1364,7 @@ JsonObject *syntax_tree = NULL;
 
    for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
       {
-      JsonObject *bundle_type = ExportBundleTypeAsJson(CF_ALL_BODIES[i].btype);
+      JsonObject *bundle_type = ExportBundleTypeSyntaxAsJson(CF_ALL_BODIES[i].btype);
       JsonObjectAppendObject(&bundle_types, CF_ALL_BODIES[i].btype, bundle_type);
       }
 
@@ -1378,6 +1378,12 @@ JsonObjectDelete(syntax_tree);
 
 /****************************************************************************/
 
+static void JsonObjectAppendLineNumber(JsonObject **parent, int line)
+{
+char buffer[6];
+snprintf(buffer, 6, "%d", line);
+JsonObjectAppendString(parent, "line", buffer);
+}
 
 static JsonObject *ExportAttributeValueAsJson(const char *rval, const char type)
 {
@@ -1461,6 +1467,7 @@ for (cp = constraints; cp != NULL; cp = cp->next)
 	 JsonObjectAppendString(&json_current_class, "name", cp->classes);
 	 }
 
+   JsonObjectAppendLineNumber(&json_attribute, cp->line_number);
    JsonObjectAppendString(&json_attribute, "lval", cp->lval);
    JsonObjectAppendObject(&json_attribute, "rval", ExportAttributeValueAsJson(cp->rval, cp->type));
    JsonArrayAppendObject(&json_current_class_attributes, json_attribute);
@@ -1498,6 +1505,7 @@ for (pp = promises; pp != NULL; pp = pp->next)
       JsonObjectAppendString(&json_current_class, "name", pp->classes);
       }
 
+   JsonObjectAppendLineNumber(&json_promise, pp->line_number);
    JsonObjectAppendString(&json_promise, "promiser", pp->promiser);
    JsonObjectAppendString(&json_promise, "promisee", pp->promisee);
 
@@ -1509,6 +1517,7 @@ for (pp = promises; pp != NULL; pp = pp->next)
 	 {
 	 JsonObject *json_attribute = NULL;
 
+	 JsonObjectAppendLineNumber(&json_attribute, cp->line_number);
 	 JsonObjectAppendString(&json_attribute, "lval", cp->lval);
 	 JsonObjectAppendObject(&json_attribute, "rval", ExportAttributeValueAsJson(cp->rval, cp->type));
 	 JsonArrayAppendObject(&json_promise_attributes, json_attribute);
@@ -1532,6 +1541,7 @@ static JsonObject *ExportBundleAsJson(struct Bundle *bundle)
 {
 JsonObject *json_bundle = NULL;
 
+JsonObjectAppendLineNumber(&json_bundle, bundle->line_number);
 JsonObjectAppendString(&json_bundle, "name", bundle->name);
 JsonObjectAppendString(&json_bundle, "bundle-type", bundle->type);
 
@@ -1555,6 +1565,7 @@ JsonObjectAppendString(&json_bundle, "bundle-type", bundle->type);
       {
       JsonObject *json_promise_type = NULL;
 
+      JsonObjectAppendLineNumber(&json_promise_type, sp->line_number);
       JsonObjectAppendString(&json_promise_type, "name", sp->name);
       JsonObjectAppendArray(&json_promise_type, "classes", ExportBundleClassesAsJson(sp->promiselist));
 
@@ -1572,6 +1583,7 @@ static JsonObject *ExportBodyAsJson(struct Body *body)
 {
 JsonObject *json_body = NULL;
 
+JsonObjectAppendLineNumber(&json_body, body->line_number);
 JsonObjectAppendString(&json_body, "name", body->name);
 JsonObjectAppendString(&json_body, "type", body->type);
 
@@ -1596,6 +1608,7 @@ void PolicyPrintAsJson(FILE *out, const char *filename,
                        struct Bundle *bundles, struct Body *bodies)
 {
 JsonObject *json_policy = NULL;
+JsonObjectAppendString(&json_policy, "name", filename);
 
    {
    JsonArray *json_bundles = NULL;

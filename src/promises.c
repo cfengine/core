@@ -122,7 +122,7 @@ if ((pp->promisee != NULL && pcopy->promisee == NULL))
 
 pcopy->bundletype = xstrdup(pp->bundletype);
 pcopy->audit = pp->audit;
-pcopy->lineno = pp->lineno;
+pcopy->line_number = pp->line_number;
 pcopy->petype = pp->petype;      /* rtype of promisee - list or scalar recipient? */
 pcopy->bundle = xstrdup(pp->bundle);
 pcopy->ref = pp->ref;
@@ -176,7 +176,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       {
       if (strcmp(bp->type,cp->lval) != 0)
          {
-         CfOut(cf_error,"","Body type mismatch for body reference \"%s\" in promise at line %d of %s (%s != %s)\n",bodyname,pp->lineno,(pp->audit)->filename,bp->type,cp->lval);
+         CfOut(cf_error,"","Body type mismatch for body reference \"%s\" in promise at line %d of %s (%s != %s)\n",bodyname,pp->line_number,(pp->audit)->filename,bp->type,cp->lval);
          ERRORCOUNT++;
          }
       
@@ -192,7 +192,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
          
          if (fp == NULL || fp->args == NULL)
             {
-            CfOut(cf_error,"","Argument mismatch for body reference \"%s\" in promise at line %d of %s\n",bodyname,pp->lineno,(pp->audit)->filename);
+            CfOut(cf_error,"","Argument mismatch for body reference \"%s\" in promise at line %d of %s\n",bodyname,pp->line_number,(pp->audit)->filename);
             }
          
          NewScope("body");
@@ -200,7 +200,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
          if (fp && bp && fp->args && bp->args && !MapBodyArgs("body",fp->args,bp->args))
             {
             ERRORCOUNT++;            
-            CfOut(cf_error,"","Number of arguments does not match for body reference \"%s\" in promise at line %d of %s\n",bodyname,pp->lineno,(pp->audit)->filename);
+            CfOut(cf_error,"","Number of arguments does not match for body reference \"%s\" in promise at line %d of %s\n",bodyname,pp->line_number,(pp->audit)->filename);
             }
     
          for (scp = bp->conlist; scp != NULL; scp = scp->next)
@@ -218,7 +218,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
          if (fp != NULL)
             {
-            CfOut(cf_error,"","An apparent body \"%s()\" was undeclared or could have incorrect args, but used in a promise near line %d of %s (possible unquoted literal value)",bodyname,pp->lineno,(pp->audit)->filename);
+            CfOut(cf_error,"","An apparent body \"%s()\" was undeclared or could have incorrect args, but used in a promise near line %d of %s (possible unquoted literal value)",bodyname,pp->line_number,(pp->audit)->filename);
             }
          else
             {
@@ -235,7 +235,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       {
       if (cp->isbody && !IsBundle(BUNDLES,bodyname))
          {
-         CfOut(cf_error,"","Apparent body \"%s()\" was undeclared, but used in a promise near line %d of %s (possible unquoted literal value)",bodyname,pp->lineno,(pp->audit)->filename);
+         CfOut(cf_error,"","Apparent body \"%s()\" was undeclared, but used in a promise near line %d of %s (possible unquoted literal value)",bodyname,pp->line_number,(pp->audit)->filename);
          }
       
       rnew = CopyRvalItem(cp->rval,cp->type);
@@ -292,7 +292,7 @@ pcopy->bundletype = xstrdup(pp->bundletype);
 pcopy->done = pp->done;
 pcopy->donep = pp->donep;
 pcopy->audit = pp->audit;
-pcopy->lineno = pp->lineno;
+pcopy->line_number = pp->line_number;
 pcopy->bundle = xstrdup(pp->bundle);
 pcopy->ref = pp->ref;
 pcopy->ref_alloc = pp->ref_alloc;
@@ -385,7 +385,7 @@ pcopy->bundletype = xstrdup(pp->bundletype);
 pcopy->done = pp->done;
 pcopy->donep = pp->donep;
 pcopy->audit = pp->audit;
-pcopy->lineno = pp->lineno;
+pcopy->line_number = pp->line_number;
 pcopy->bundle = xstrdup(pp->bundle);
 pcopy->ref = pp->ref;
 pcopy->ref_alloc = pp->ref_alloc;
@@ -690,11 +690,11 @@ else
 
 if (pp->audit)
    {
-   CfOut(level,"","Promise (version %s) belongs to bundle \'%s\' in file \'%s\' near line %d\n",v,pp->bundle,pp->audit->filename,pp->lineno);
+   CfOut(level,"","Promise (version %s) belongs to bundle \'%s\' in file \'%s\' near line %d\n",v,pp->bundle,pp->audit->filename,pp->line_number);
    }
 else
    {
-   CfOut(level,"","Promise (version %s) belongs to bundle \'%s\' near line %d\n",v,pp->bundle,pp->lineno);
+   CfOut(level,"","Promise (version %s) belongs to bundle \'%s\' near line %d\n",v,pp->bundle,pp->line_number);
    }
 
 if (pp->ref)

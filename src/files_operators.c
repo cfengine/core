@@ -1666,14 +1666,14 @@ promise.classes = "any";
 if (pp != NULL)
    {
    promise.bundletype = pp->bundletype;
-   promise.lineno = pp->lineno;
+   promise.line_number = pp->line_number;
    promise.bundle = xstrdup(pp->bundle);
    promise.ref = pp->ref;
    }
 else
    {
    promise.bundletype = "agent";
-   promise.lineno = 0;
+   promise.line_number = 0;
    promise.bundle = "embedded";
    promise.ref = "Embedded deletion of direction";
    }

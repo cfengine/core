@@ -1930,7 +1930,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
          fprintf(fout,"%s %s %s",CFRX[cfx_date][cfb],entry.date,CFRX[cfx_date][cfe]);
          fprintf(fout,"%s %s %s",CFRX[cfx_av][cfb],entry.filename,CFRX[cfx_av][cfe]);
          fprintf(fout,"%s %s %s",CFRX[cfx_version][cfb],entry.version,CFRX[cfx_version][cfe]);
-         fprintf(fout,"%s %d %s",CFRX[cfx_ref][cfb],entry.lineno,CFRX[cfx_ref][cfe]);
+         fprintf(fout,"%s %d %s",CFRX[cfx_ref][cfb],entry.line_number,CFRX[cfx_ref][cfe]);
          fprintf(fout,"%s",CFRX[cfx_entry][cfe]);
          }
       else if (HTML)
@@ -1944,7 +1944,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
          fprintf(fout,"%s %s %s",CFRH[cfx_date][cfb],entry.date,CFRH[cfx_date][cfe]);
          fprintf(fout,"%s %s %s",CFRH[cfx_av][cfb],entry.filename,CFRH[cfx_av][cfe]);
          fprintf(fout,"%s %s %s",CFRH[cfx_version][cfb],entry.version,CFRH[cfx_version][cfe]);
-         fprintf(fout,"%s %d %s",CFRH[cfx_ref][cfb],entry.lineno,CFRH[cfx_ref][cfe]);
+         fprintf(fout,"%s %d %s",CFRH[cfx_ref][cfb],entry.line_number,CFRH[cfx_ref][cfe]);
          fprintf(fout,"%s",CFRH[cfx_entry][cfe]);
 
          if (strstr(entry.comment,"closing"))
@@ -1977,11 +1977,11 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
             {
             if (strlen(entry.version) == 0)
                {
-               fprintf(fout,",%s,,%s,%d\n",entry.filename,entry.date,entry.lineno);
+               fprintf(fout,",%s,,%s,%d\n",entry.filename,entry.date,entry.line_number);
                }
             else
                {
-               fprintf(fout,",%s,%s,%s,%d\n",entry.filename,entry.version,entry.date,entry.lineno);
+               fprintf(fout,",%s,%s,%s,%d\n",entry.filename,entry.version,entry.date,entry.line_number);
                }
             }
          }
@@ -2009,11 +2009,13 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
             {
             if (strlen(entry.version) == 0)
                {
-               fprintf(fout,"Promised in %s (unamed version last edited at %s) at/before line %d\n",entry.filename,entry.date,entry.lineno);
+               fprintf(fout,"Promised in %s (unamed version last edited at %s) at/before line %d\n",
+                       entry.filename,entry.date,entry.line_number);
                }
             else
                {
-               fprintf(fout,"Promised in %s (version %s last edited at %s) at/before line %d\n",entry.filename,entry.version,entry.date,entry.lineno);
+               fprintf(fout,"Promised in %s (version %s last edited at %s) at/before line %d\n",
+                       entry.filename,entry.version,entry.date,entry.line_number);
                }
             }
          }

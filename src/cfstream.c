@@ -240,7 +240,8 @@ if (level == cf_error)
 
    if (pp && pp->audit)
       {
-      snprintf(output,CF_BUFSIZE-1,"I: Made in version \'%s\' of \'%s\' near line %d",v,pp->audit->filename,pp->lineno);
+      snprintf(output,CF_BUFSIZE-1,"I: Made in version \'%s\' of \'%s\' near line %d",
+	       v, pp->audit->filename, pp->line_number);
       }
    else
       {

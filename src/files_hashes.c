@@ -637,7 +637,7 @@ free((char *)chk_val);
 
 /*********************************************************************/
 
-char *FileHashName(enum cfhashes id)
+const char *FileHashName(enum cfhashes id)
 
 {
 return CF_DIGEST_TYPES[id][0];

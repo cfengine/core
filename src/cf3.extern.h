@@ -185,8 +185,8 @@ extern int VEXPIREAFTER;
 
 extern char *OBS[CF_OBSERVABLES][2];
 
-extern char *CF_DIGEST_TYPES[10][2];
-extern int CF_DIGEST_SIZES[10];
+extern const char *CF_DIGEST_TYPES[10][2];
+extern const int CF_DIGEST_SIZES[10];
 
 /* Windows version constants */
 
@@ -260,8 +260,8 @@ extern struct FnCallStatus FNCALL_STATUS;
 extern int CSV;
 
 extern struct SubTypeSyntax CF_NOSTYPE;
-extern char *CF_DATATYPES[];
-extern char *CF_AGENTTYPES[];
+extern const char *CF_DATATYPES[];
+extern const char *CF_AGENTTYPES[];
 extern char HASHDB[CF_BUFSIZE];
 extern int FSTAB_EDITS;
 

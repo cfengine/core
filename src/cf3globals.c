@@ -220,7 +220,7 @@ const char *SHIFT_TEXT[] =
 
 /*****************************************************************************/
 
-char *CF_DATATYPES[] = /* see enum cfdatatype */
+const char *CF_DATATYPES[] = /* see enum cfdatatype */
    {
    "string",
    "int",
@@ -242,7 +242,7 @@ char *CF_DATATYPES[] = /* see enum cfdatatype */
 
 /*****************************************************************************/
 
-char *CF_AGENTTYPES[] = /* see enum cfagenttype */
+const char *CF_AGENTTYPES[] = /* see enum cfagenttype */
    {
    CF_COMMONC,
    CF_AGENTC,
@@ -369,7 +369,7 @@ struct Rlist *GOALCATEGORIES = NULL;
 /* These string lengths should not exceed CF_MAXDIGESTNAMELEN
    characters for packing */
 
-char *CF_DIGEST_TYPES[10][2] =
+const char *CF_DIGEST_TYPES[10][2] =
      {
      {"md5","m"},
      {"sha224","c"},
@@ -383,7 +383,7 @@ char *CF_DIGEST_TYPES[10][2] =
      {NULL,NULL}
      };
 
-int CF_DIGEST_SIZES[10] =
+const int CF_DIGEST_SIZES[10] =
      {
      CF_MD5_LEN,
      CF_SHA224_LEN,

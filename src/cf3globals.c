@@ -344,30 +344,6 @@ pthread_mutex_t *cft_server_children = &MUTEXES[10];
 char VIPADDRESS[18] = {0};
 int  CFSIGNATURE = 0;
 
-char *PROTOCOL[] =
-   {
-   "EXEC",
-   "AUTH",  /* old protocol */
-   "GET",
-   "OPENDIR",
-   "SYNCH",
-   "CLASSES",
-   "MD5",
-   "SMD5",
-   "CAUTH",
-   "SAUTH",
-   "SSYNCH",
-   "SGET",
-   "VERSION",
-   "SOPENDIR",
-   "VAR",
-   "SVAR",
-   "CONTEXT",
-   "SCONTEXT",
-   "SQUERY",
-   NULL
-   };
-
 struct Item *IPADDRESSES = NULL;
 
 int PR_KEPT = 0;

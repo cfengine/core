@@ -79,6 +79,30 @@ in_addr_t GetInetAddr (char *host);
 char CFRUNCOMMAND[CF_BUFSIZE];
 time_t CFDSTARTTIME;
 
+static const char *PROTOCOL[] =
+   {
+   "EXEC",
+   "AUTH",  /* old protocol */
+   "GET",
+   "OPENDIR",
+   "SYNCH",
+   "CLASSES",
+   "MD5",
+   "SMD5",
+   "CAUTH",
+   "SAUTH",
+   "SSYNCH",
+   "SGET",
+   "VERSION",
+   "SOPENDIR",
+   "VAR",
+   "SVAR",
+   "CONTEXT",
+   "SCONTEXT",
+   "SQUERY",
+   NULL
+   };
+
 /*******************************************************************/
 /* Command line options                                            */
 /*******************************************************************/

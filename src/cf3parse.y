@@ -112,7 +112,10 @@ bundlebody:         '{'
                           }
 
                        P.currentbundle = AppendBundle(&BUNDLES,P.blockid,P.blocktype,P.useargs);
-                       P.currentbundle->line_number = P.line_no;
+                       if (P.currentbundle)
+                          {
+                          P.currentbundle->line_number = P.line_no;
+                          }
                        P.useargs = NULL;
 
                        }
@@ -139,7 +142,10 @@ bodybody:            '{'
                         {
                         P.currentbody = AppendBody(&BODIES,P.blockid,P.blocktype,P.useargs);
                         P.useargs = NULL;
-                        P.currentbody->line_number = P.line_no;
+                        if (P.currentbody)
+                           {
+                           P.currentbody->line_number = P.line_no;
+                           }
                         strcpy(P.currentid,"");
                         CfDebug("Starting block\n");
                         }
@@ -245,7 +251,10 @@ category:             CATEGORY                  /* BUNDLE ONLY */
                             {
                             CheckSubType(P.blocktype,P.currenttype); /* FIXME: unused? */
                             P.currentstype = AppendSubType(P.currentbundle,P.currenttype);
-                            P.currentstype->line_number = P.line_no;
+                            if (P.currentstype)
+                               {
+                               P.currentstype->line_number = P.line_no;
+                               }
                             }
                          };
 

@@ -30,8 +30,8 @@
 /* Created: Wed Aug  8 14:01:42 2007                                         */
 /*                                                                           */
 /*****************************************************************************/
- 
-#include "cf3.defs.h"
+
+#include "syntax.h"
 #include "cf3.extern.h"
 
 #include "json.h"

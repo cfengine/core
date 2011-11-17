@@ -88,7 +88,7 @@ libpromises_la_SOURCES =                                                \
         constraints.c                                                   \
         iteration.c                                                     \
         rlist.c rlist.h                                                 \
-        syntax.c                                                        \
+        syntax.c syntax.h                                               \
         logging.c                                                       \
         signals.c                                                       \
         transaction.c                                                   \

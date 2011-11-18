@@ -778,6 +778,11 @@ void CheckFileChanges(int argc,char **argv,int sd)
   char filename[CF_BUFSIZE];
   int ok;
 
+if (EnterpriseExpiry())
+   {
+   CfOut(cf_error,"","!! This enterprise license is invalid.");
+   }
+
 memset(&newstat,0,sizeof(struct stat));
 memset(filename,0,CF_BUFSIZE);
 

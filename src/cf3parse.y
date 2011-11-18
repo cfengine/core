@@ -16,6 +16,8 @@ static void fatal_yyerror(const char *s);
 
 #define YYMALLOC xmalloc
 
+static int INSTALL_SKIP = false;
+
 %}
 
 %token ID QSTRING CLASS CATEGORY BUNDLE BODY ASSIGN ARROW NAKEDVAR
@@ -111,9 +113,13 @@ bundlebody:         '{'
                           INSTALL_SKIP = true;
                           }
 
-                       P.currentbundle = AppendBundle(&BUNDLES,P.blockid,P.blocktype,P.useargs);
-                       if (P.currentbundle)
+                       if (INSTALL_SKIP)
                           {
+                          P.currentbundle = NULL;
+                          }
+                       else
+                          {
+                          P.currentbundle = AppendBundle(&BUNDLES,P.blockid,P.blocktype,P.useargs);
                           P.currentbundle->line_number = P.line_no;
                           }
                        P.useargs = NULL;
@@ -250,9 +256,13 @@ category:             CATEGORY                  /* BUNDLE ONLY */
                          if (strcmp(P.block,"bundle") == 0)
                             {
                             CheckSubType(P.blocktype,P.currenttype); /* FIXME: unused? */
-                            P.currentstype = AppendSubType(P.currentbundle,P.currenttype);
-                            if (P.currentstype)
+                            if (INSTALL_SKIP)
                                {
+                               P.currentstype = NULL;
+                               }
+                            else
+                               {
+                               P.currentstype = AppendSubType(P.currentbundle,P.currenttype);
                                P.currentstype->line_number = P.line_no;
                                }
                             }
@@ -266,13 +276,13 @@ promise:              promiser                    /* BUNDLE ONLY */
 
                       rval            /* This is full form with rlist promisees */
                         {
-                        if (P.currentclasses == NULL)
+                        if (INSTALL_SKIP)
                            {
-                           P.currentpromise = AppendPromise(P.currentstype,P.promiser,P.rval,P.rtype,"any",P.blockid,P.blocktype);
+                           P.currentclasses = NULL;
                            }
                         else
                            {
-                           P.currentpromise = AppendPromise(P.currentstype,P.promiser,P.rval,P.rtype,P.currentclasses,P.blockid,P.blocktype);
+                           P.currentpromise = AppendPromise(P.currentstype,P.promiser,P.rval,P.rtype,P.currentclasses ? P.currentclasses : "any",P.blockid,P.blocktype);
                            }
                         }
 

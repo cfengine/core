@@ -87,7 +87,6 @@ int AM_CONSTELLATION = false;
 int AM_PHP_MODULE = false;
 char EXPIRY[CF_SMALLBUF] = {0};
 char LICENSE_COMPANY[CF_SMALLBUF] = {0};
-int INSTALL_SKIP = false;
 int KEYTTL = 0;
 
 // These are used to measure graph complexity in know/agent

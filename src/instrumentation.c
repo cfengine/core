@@ -285,8 +285,8 @@ while(NextDB(dbp,dbcp,&key,&ksize,&stored,&vsize))
    }
 
 CommitDBTransaction(dbp);
-
 DeleteDBCursor(dbp,dbcp);
+
 CloseDB(dbp);
 DeleteItemList(list);
 }

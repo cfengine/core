@@ -42,6 +42,9 @@ Several risk factors are associated with managing huge systems,
 including loss of control under failures of the human-computer
 system. Strategies for avoiding these failure modes are discussed.
 
+Scaling gracefully is not just about handling volumes of machines, 
+but also about comprehensibility and manageability
+to human engineers. 
 @end quotation
 @end cartouche
 
@@ -1195,6 +1198,11 @@ bucket2::
 ...
 }
 @end verbatim
+
+Note this method is not suitable for bootstrapping hosts in a hub
+configuration, since that requires a one to one relationship documented
+in the @file{/var/cfengine/policy_server.dat} resource.
+
 
 @node Redundant reporting hubs and recovery,  , Balancing multiple policy servers, Redundancy and load balancing in the Nova hub
 @subsection Redundant reporting hubs and recovery

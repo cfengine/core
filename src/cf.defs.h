@@ -277,6 +277,7 @@ size_t strlcat(char *destination, const char *source, size_t size);
 # include <sys/ioctl.h>
 # include <net/if.h>
 # include <netinet/in.h>
+# include <netinet/tcp.h>
 # ifndef AOS
 #  include <arpa/inet.h>
 # endif

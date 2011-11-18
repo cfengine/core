@@ -887,6 +887,17 @@ else
    }
 }
 
+static void DisableSendDelays(int sockfd)
+{
+int yes = 1;
+if (setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY,
+               (void*)&yes, sizeof(yes)) == -1)
+   {
+   CfOut(cf_inform, "setsockopt(TCP_NODELAY)",
+         "Unable to disable Nagle algorithm, expect performance problems");
+   }
+}
+
 /*********************************************************************/
 /* Level 4                                                           */
 /*********************************************************************/
@@ -943,6 +954,8 @@ else
    }
 
 TRIES = 0;   /* As long as there is activity, we're not stuck */
+
+DisableSendDelays(conn->sd_reply);
  
 while (BusyWithConnection(conn))
    {

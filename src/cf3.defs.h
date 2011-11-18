@@ -849,10 +849,8 @@ typedef struct HashIterator
 /* Return value signalling                                         */
 /*******************************************************************/
 
-#define FNCALL_NOP     -1
 #define FNCALL_SUCCESS 0
 #define FNCALL_FAILURE 1
-#define FNCALL_ALERT   2
 
 struct FnCallStatus  /* from builtin functions */
    {

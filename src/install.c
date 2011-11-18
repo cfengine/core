@@ -68,6 +68,11 @@ struct Bundle *AppendBundle(struct Bundle **start,char *name, char *type, struct
 
 { struct Bundle *bp,*lp;
 
+if (INSTALL_SKIP)
+   {
+   return NULL;
+   }
+  
 CfDebug("Appending new bundle %s %s (",type,name);
 
 if (DEBUG)
@@ -142,6 +147,11 @@ return bp;
 struct SubType *AppendSubType(struct Bundle *bundle,char *typename)
 
 { struct SubType *tp,*lp;
+  
+if (INSTALL_SKIP)
+   {
+   return NULL;
+   }
 
 CfDebug("Appending new type section %s\n",typename);
 
@@ -185,6 +195,11 @@ struct Promise *AppendPromise(struct SubType *type,char *promiser, void *promise
 { struct Promise *pp,*lp;
   char *sp = NULL,*spe = NULL;
   char output[CF_BUFSIZE];
+
+if (INSTALL_SKIP)
+   {
+   return NULL;
+   }
 
 if (type == NULL)
    {

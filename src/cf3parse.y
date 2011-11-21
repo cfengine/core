@@ -283,8 +283,11 @@ promise:              promiser                    /* BUNDLE ONLY */
                            P.currentpromise = AppendPromise(P.currentstype,P.promiser,P.rval,P.rtype,P.currentclasses,P.blockid,P.blocktype);
                            }
 
-                        P.currentpromise->line_number = P.line_no;
-                        P.currentpromise->offset = P.offsets.last_string;
+                        if (P.currentpromise)
+                           {
+                           P.currentpromise->line_number = P.line_no;
+                           P.currentpromise->offset = P.offsets.last_string;
+                           }
                         }
 
                       constraints ';'
@@ -316,7 +319,10 @@ promise:              promiser                    /* BUNDLE ONLY */
                            P.currentpromise = AppendPromise(P.currentstype,P.promiser,NULL,CF_NOPROMISEE,P.currentclasses,P.blockid,P.blocktype);
                            }
 
-                        P.currentpromise->offset = P.offsets.last_string;
+                        if (P.currentpromise)
+                           {
+                           P.currentpromise->offset = P.offsets.last_string;
+                           }
                         }
 
                      constraints ';'

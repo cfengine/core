@@ -144,11 +144,106 @@ Normal ordering for packages is the following:
 
 We can discuss package promise repair in the following table.
 
-@image{package-behaviour,14cm,,Promise repair logic for packages.,png}
+Identified package matches version constraints
+@multitable @columnfractions .20 .80
+@item
+  add
+  @tab
+  never
+@item
+  delete
+  @tab
+  =,>=,<=
+@item
+  reinstall
+  @tab
+  =,>=,<=
+@item
+  upgrade
+  @tab
+  =,>=,<=
+@item
+  patch
+  @tab
+  =,>=,<=
+@end multitable
 
+Identified package matched by name, but not version
+@multitable @columnfractions .20 .40 .40
+@headitem
+  Command
+  @tab
+  Dumb manager
+  @tab
+  Smart manager
+@item
+  add
+  @tab
+  unable
+  @tab
+  Never
+@item
+  delete
+  @tab
+  unable
+  @tab
+  Attempt deletion
+@item
+  reinstall
+  @tab
+  unable
+  @tab
+  Attempt delete/add
+@item
+  upgrade
+  @tab
+  unable
+  @tab
+  Upgrade if capable
+@item
+  patch
+  @tab
+  unable
+  @tab
+  Patch if capable
+@end multitable
 
-
-
-
-
-
+Package not installed
+@multitable @columnfractions .20 .40 .40
+@headitem
+  Command
+  @tab
+  Dumb manager
+  @tab
+  Smart manager
+@item
+  add
+  @tab
+  Attempt to install named
+  @tab
+  Install any version
+@item
+  delete
+  @tab
+  unable
+  @tab
+  unable
+@item
+  reinstall
+  @tab
+  Attempt to install named
+  @tab
+  unable
+@item
+  upgrade
+  @tab
+  unable
+  @tab
+  unable
+@item
+  patch
+  @tab
+  unable
+  @tab
+  unable
+@end multitable

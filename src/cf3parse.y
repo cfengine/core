@@ -22,8 +22,8 @@ static void fatal_yyerror(const char *s);
 
 %%
 
-specification:       { yyerror("Something defined outside of a block or missing punctuation in input"); }
-                     | blocks;
+specification:       /* empty */
+                     | blocks
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 

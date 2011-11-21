@@ -86,7 +86,7 @@ usearglist:           '('
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-aitems:                 aitem           
+aitems:                 aitem
                       | aitem ',' aitems
                       |;
 
@@ -436,12 +436,12 @@ rval:                  ID
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 list:                '{'
-                      litems                     
-                     '}' ;
+                      litems
+                     '}';
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-litems:                litem            
+litems:                litem
                      | litem ',' litems
                      |;
 
@@ -530,8 +530,8 @@ givearglist:            '('
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-gaitems:               gaitem            
-                     | gaitems ',' gaitem 
+gaitems:               gaitem
+                     | gaitems ',' gaitem
                      |;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

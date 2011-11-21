@@ -2,6 +2,7 @@
 #define CFENGINE_SYNTAX_H
 
 #include "cf3.defs.h"
+#include <stdio.h>
 
 int LvalWantsBody(char *stype,char *lval);
 int CheckParseVariableName(char *name);
@@ -17,8 +18,14 @@ enum cfdatatype StringDataType(char *scopeid,char *string);
 enum cfdatatype ExpectedDataType(char *lvalname);
 bool IsDataType(const char *s);
 
+/* print a specification of the CFEngine language */
 void SyntaxPrintAsJson(FILE *out);
+
+/* print a parse tree of the given policy (bundles, bodies) */
 void PolicyPrintAsJson(FILE *out, const char *filename, struct Bundle *bundles, struct Body *bodies);
 
+/* print language elements using official formatting */
+void BodyPrettyPrint(FILE *out, struct Body *body);
+void BundlePrettyPrint(FILE *out, struct Bundle *bundle);
 
 #endif

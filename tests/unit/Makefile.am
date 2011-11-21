@@ -11,6 +11,8 @@ check_PROGRAMS = \
 	str_test \
 	json_test
 
+TESTS = $(check_PROGRAMS)
+
 TEST_SOURCES = test.c ../../src/alloc.c
 MOCKERY_SOURCES = cmockery.c $(TEST_SOURCES)
 
@@ -43,4 +45,3 @@ json_test_SOURCES = $(MOCKERY_SOURCES) json_test.c ../../src/json.h
 json_test_LDADD = ../../src/libpromises.la
 
 
-TESTS = $(check_PROGRAMS)

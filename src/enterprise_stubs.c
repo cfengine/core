@@ -1148,3 +1148,17 @@ void AddGoalsToDB(char *goal_patterns, char *goal_categories)
 }
 
 /*****************************************************************************/
+
+#ifndef HAVE_NOVA
+
+void SetSyslogHost(const char *host)
+{
+CfOut(cf_error, "", "!! Remote syslog functionality is only available in Nova");
+}
+
+void SetSyslogPort(uint16_t port)
+{
+CfOut(cf_error, "", "!! Remote syslog functionality is only available in Nova");
+}
+
+#endif

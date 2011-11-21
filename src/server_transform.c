@@ -390,12 +390,12 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
 
 if (GetVariable("control_common",CFG_CONTROLBODY[cfg_syslog_host].lval,&retval,&rettype) != cf_notype)
    {
-   SYSLOGPORT = (unsigned short)Str2Int(retval);
+   SetSyslogHost(Hostname2IPString(retval));
    }
 
 if (GetVariable("control_common",CFG_CONTROLBODY[cfg_syslog_port].lval,&retval,&rettype) != cf_notype)
    {
-   strncpy(SYSLOGHOST,Hostname2IPString(retval),CF_MAXVARSIZE-1);
+   SetSyslogPort(Str2Int(retval));
    }
 
 if (GetVariable("control_common",CFG_CONTROLBODY[cfg_fips_mode].lval,&retval,&rettype) != cf_notype)

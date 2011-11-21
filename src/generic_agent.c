@@ -480,9 +480,6 @@ CfDebug("Setting CFWORKDIR=%s\n", CFWORKDIR);
 _fmode = _O_BINARY;
 #endif
 
-strcpy(SYSLOGHOST,"localhost");
-SYSLOGPORT = htons(514);
-
 Cf3OpenLog(LOG_USER);
 
 if (!LOOKUP) /* cf-know should not do this in lookup mode */

@@ -482,6 +482,10 @@ int ForeignZone(char *s);
 void NewPromiser(struct Promise *pp);
 void AnalyzePromiseConflicts(void);
 void AddGoalsToDB(char *goal_patterns, char *goal_categories);
+
+void SetSyslogHost(const char *host);
+void SetSyslogPort(uint16_t port);
+
 /* env_context.c */
 
 /* - Parsing/evaluating expressions - */

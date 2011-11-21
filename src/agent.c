@@ -733,14 +733,14 @@ if (GetVariable("control_common",CFG_CONTROLBODY[cfg_fips_mode].lval,&retval,&re
 
 if (GetVariable("control_common",CFG_CONTROLBODY[cfg_syslog_port].lval,&retval,&rettype) != cf_notype)
    {
-   SYSLOGPORT = (unsigned short)Str2Int(retval);
-   CfOut(cf_verbose,"","SET syslog_port to %d",SYSLOGPORT);
+   SetSyslogPort(Str2Int(retval));
+   CfOut(cf_verbose,"","SET syslog_port to %s",retval);
    }
 
 if (GetVariable("control_common",CFG_CONTROLBODY[cfg_syslog_host].lval,&retval,&rettype) != cf_notype)
    {   
-   strncpy(SYSLOGHOST,Hostname2IPString(retval),CF_MAXVARSIZE-1);
-   CfOut(cf_verbose,"","SET syslog_host to %s",SYSLOGHOST);
+   SetSyslogHost(Hostname2IPString(retval));
+   CfOut(cf_verbose,"","SET syslog_host to %s",Hostname2IPString(retval));
    }
 
 #ifdef HAVE_NOVA

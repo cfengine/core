@@ -39,8 +39,8 @@ extern char *CFH[][2];
 static void VerifyPromises(enum cfagenttype ag);
 static void SetAuditVersion(void);
 static void CheckWorkingDirectories(void);
-static void Cf3ParseFile(char *filename);
-static void Cf3ParseFiles(void);
+static void Cf3ParseFile(char *filename, bool check_not_writable_by_others);
+static void Cf3ParseFiles(bool check_not_writable_by_others);
 static int MissingInputFile(void);
 static void CheckControlPromises(char *scope,char *agent,struct Constraint *controllist);
 static void CheckVariablePromises(char *scope,struct Promise *varlist);
@@ -334,20 +334,31 @@ else
 
 void ReadPromises(enum cfagenttype ag,char *agents)
 
-{ char rettype;
-  void *retval;
-  char vbuff[CF_BUFSIZE];
+{
+char rettype;
+void *retval;
+char vbuff[CF_BUFSIZE];
+bool check_not_writable_by_others = true;
 
-if (ag == cf_keygen)
-   {
-   return;
-   }
+switch (ag)
+{
+   case cf_common:
+      check_not_writable_by_others = false;
+      break;
+
+   case cf_keygen:
+      return;
+
+   default:
+      check_not_writable_by_others = true;
+      break;
+}
 
 DeleteAllPromiseIds(); // in case we are re-reading, delete old handles
 
 /* Parse the files*/
 
-Cf3ParseFiles();
+Cf3ParseFiles(check_not_writable_by_others);
 
 /* Now import some web variables that are set in cf-know/control for the report options */
 
@@ -591,7 +602,7 @@ if (BOOTSTRAP)
 
 /*******************************************************************/
 
-static void Cf3ParseFiles()
+static void Cf3ParseFiles(bool check_not_writable_by_others)
 
 { struct Rlist *rp,*sl;
 
@@ -599,7 +610,7 @@ PARSING = true;
 
 PROMISETIME = time(NULL);
 
-Cf3ParseFile(VINPUTFILE);
+Cf3ParseFile(VINPUTFILE, check_not_writable_by_others);
 
 // Expand any lists in this list now
 
@@ -628,13 +639,13 @@ if (VINPUTLIST != NULL)
          switch (returnval.rtype)
             {
             case CF_SCALAR:
-                Cf3ParseFile((char *)returnval.item);
+                Cf3ParseFile((char *)returnval.item, check_not_writable_by_others);
                 break;
 
             case CF_LIST:
                 for (sl = (struct Rlist *)returnval.item; sl != NULL; sl=sl->next)
                    {
-                   Cf3ParseFile((char *)sl->item);
+                   Cf3ParseFile((char *)sl->item, check_not_writable_by_others);
                    }
                 break;
             }
@@ -908,7 +919,7 @@ chmod(name,0644);
 /* Level                                                           */
 /*******************************************************************/
 
-static void Cf3ParseFile(char *filename)
+static void Cf3ParseFile(char *filename, bool check_not_writable_by_others)
 
 {
   struct stat statbuf;
@@ -928,7 +939,7 @@ if (cfstat(wfilename,&statbuf) == -1)
    }
 
 #ifndef NT
-if (statbuf.st_mode & (S_IWGRP | S_IWOTH))
+if (check_not_writable_by_others && (statbuf.st_mode & (S_IWGRP | S_IWOTH)))
    {
    CfOut(cf_error,"","File %s (owner %d) is writable by others (security exception)",wfilename,statbuf.st_uid);
    exit(1);

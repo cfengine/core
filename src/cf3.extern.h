@@ -269,7 +269,6 @@ extern int CFA_MAXTHREADS;
 extern char *THIS_BUNDLE;
 extern char THIS_AGENT[CF_MAXVARSIZE];
 extern enum cfagenttype THIS_AGENT_TYPE;
-extern int INSTALL_SKIP;
 extern int SHOWREPORTS;
 extern int SHOW_PARSE_TREE;
 extern int USE_GCC_BRIEF_FORMAT;

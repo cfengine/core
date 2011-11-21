@@ -14,6 +14,8 @@ extern char *yytext;
 
 static void fatal_yyerror(const char *s);
 
+static bool INSTALL_SKIP = false;
+
 #define YYMALLOC xmalloc
 
 %}
@@ -112,12 +114,17 @@ bundlebody:         '{'
                           INSTALL_SKIP = true;
                           }
 
-                       P.currentbundle = AppendBundle(&BUNDLES,P.blockid,P.blocktype,P.useargs);
-                       if (P.currentbundle)
+                       if (!INSTALL_SKIP)
                           {
+                          P.currentbundle = AppendBundle(&BUNDLES,P.blockid,P.blocktype,P.useargs);
                           P.currentbundle->line_number = P.line_no;
                           P.currentbundle->offset = P.offsets.last_block_id;
                           }
+                       else
+                          {
+                          P.currentbundle = NULL;
+                          }
+
                        P.useargs = NULL;
                        }
 
@@ -257,11 +264,15 @@ category:             CATEGORY                  /* BUNDLE ONLY */
                          if (strcmp(P.block,"bundle") == 0)
                             {
                             CheckSubType(P.blocktype,P.currenttype); /* FIXME: unused? */
-                            P.currentstype = AppendSubType(P.currentbundle,P.currenttype);
-                            if (P.currentstype)
+                            if (!INSTALL_SKIP)
                                {
+                               P.currentstype = AppendSubType(P.currentbundle,P.currenttype);
                                P.currentstype->line_number = P.line_no;
                                P.currentstype->offset = P.offsets.last_subtype_id;
+                               }
+                            else
+                               {
+                               P.currentstype = NULL;
                                }
                             }
                          };
@@ -274,19 +285,18 @@ promise:              promiser                    /* BUNDLE ONLY */
 
                       rval            /* This is full form with rlist promisees */
                         {
-                        if (P.currentclasses == NULL)
+                        if (!INSTALL_SKIP)
                            {
-                           P.currentpromise = AppendPromise(P.currentstype,P.promiser,P.rval,P.rtype,"any",P.blockid,P.blocktype);
+                           P.currentpromise = AppendPromise(P.currentstype, P.promiser,
+                              P.rval, P.rtype,
+                              P.currentclasses ? P.currentclasses : "any",
+                              P.blockid, P.blocktype);
+                           P.currentpromise->line_number = P.line_no;
+                           P.currentpromise->offset = P.offsets.last_string;
                            }
                         else
                            {
-                           P.currentpromise = AppendPromise(P.currentstype,P.promiser,P.rval,P.rtype,P.currentclasses,P.blockid,P.blocktype);
-                           }
-
-                        if (P.currentpromise)
-                           {
-                           P.currentpromise->line_number = P.line_no;
-                           P.currentpromise->offset = P.offsets.last_string;
+                           P.currentpromise = NULL;
                            }
                         }
 
@@ -310,18 +320,17 @@ promise:              promiser                    /* BUNDLE ONLY */
 
                      promiser
                         {
-                        if (P.currentclasses == NULL)
+                        if (!INSTALL_SKIP)
                            {
-                           P.currentpromise = AppendPromise(P.currentstype,P.promiser,NULL,CF_NOPROMISEE,"any",P.blockid,P.blocktype);
+                           P.currentpromise = AppendPromise(P.currentstype, P.promiser, NULL,
+                              CF_NOPROMISEE, P.currentclasses ? P.currentclasses : "any",
+                              P.blockid, P.blocktype);
+                           P.currentpromise->line_number = P.line_no;
+                           P.currentpromise->offset = P.offsets.last_string;
                            }
                         else
                            {
-                           P.currentpromise = AppendPromise(P.currentstype,P.promiser,NULL,CF_NOPROMISEE,P.currentclasses,P.blockid,P.blocktype);
-                           }
-
-                        if (P.currentpromise)
-                           {
-                           P.currentpromise->offset = P.offsets.last_string;
+                           P.currentpromise = NULL;
                            }
                         }
 

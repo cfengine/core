@@ -2697,7 +2697,7 @@ available, but use them with great care!
 
 
 @c ----------------------------------------------------------------------------
-@node Distributed discovery, Developer structures, Pattern matching and referencing, A simple crash course
+@node Distributed discovery,  , Pattern matching and referencing, A simple crash course
 @section Distributed discovery
 
 CFEngine's philosophy and modus operandi is to make machines as self-reliant
@@ -2747,17 +2747,6 @@ reports:
 }
 
 @end verbatim
-
-
-@c ----------------------------------------------------------------------------
-@node Developer structures,  , Distributed discovery, A simple crash course
-@section Developer structures
-
-Developers may note that the internal data-types follow a simple set
-of internal linked lists, as in the diagram below.
-
-@image{list_expand,10cm,,The type relationships in list expansion,png}
-
 
 @c -----------------------------------------------------------------------
 

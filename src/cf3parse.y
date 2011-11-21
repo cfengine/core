@@ -201,10 +201,11 @@ selection:            id                         /* BODY ONLY */
                               }
                            else
                               {
-                              cp =AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval,P.rtype,P.currentclasses,P.isbody);
+                              cp = AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval,P.rtype,P.currentclasses,P.isbody);
                               }
                            cp->line_number = P.line_no;
                            cp->offset = P.offsets.last_id;
+                           cp->class_offset = P.offsets.last_class_id;
                            }
                         else
                            {
@@ -293,6 +294,7 @@ promise:              promiser                    /* BUNDLE ONLY */
                               P.blockid, P.blocktype);
                            P.currentpromise->line_number = P.line_no;
                            P.currentpromise->offset = P.offsets.last_string;
+                           P.currentpromise->class_offset = P.offsets.last_class_id;
                            }
                         else
                            {
@@ -327,6 +329,7 @@ promise:              promiser                    /* BUNDLE ONLY */
                               P.blockid, P.blocktype);
                            P.currentpromise->line_number = P.line_no;
                            P.currentpromise->offset = P.offsets.last_string;
+                           P.currentpromise->class_offset = P.offsets.last_class_id;
                            }
                         else
                            {
@@ -373,6 +376,7 @@ constraint:           id                        /* BUNDLE ONLY */
                            cp = AppendConstraint(&(P.currentpromise->conlist),P.lval,P.rval,P.rtype,"any",P.isbody);
                            cp->line_number = P.line_no;
                            cp->offset = P.offsets.last_id;
+                           cp->class_offset = P.offsets.last_class_id;
                            CheckPromise(P.currentpromise);
 
                            P.rval = NULL;
@@ -389,6 +393,7 @@ constraint:           id                        /* BUNDLE ONLY */
 
 class:                CLASS
                          {
+                         P.offsets.last_class_id = P.offsets.current - strlen(P.currentclasses) - 2;
                          CfDebug("  New class context \'%s\' :: \n\n",P.currentclasses);
                          };
 

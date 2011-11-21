@@ -1512,6 +1512,7 @@ for (pp = promises; pp != NULL; pp = pp->next)
       current_class = pp->classes;
       json_current_class = NULL;
       json_current_class_promises = NULL;
+      JsonObjectAppendOffset(&json_current_class, pp->class_offset);
       JsonObjectAppendString(&json_current_class, "name", pp->classes);
       }
 

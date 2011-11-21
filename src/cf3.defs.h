@@ -140,6 +140,7 @@ struct PromiseParser
       size_t last_string;
       size_t last_block_id;
       size_t last_subtype_id;
+      size_t last_class_id;
       } offsets;
    };
 
@@ -761,8 +762,9 @@ struct Promise
    struct edit_context *edcontext;
    dev_t rootdevice;                          /* for caching during work*/
 
-   int line_number;
-   int offset;
+   size_t line_number;
+   size_t offset;
+   size_t class_offset;
    };
 
 /*************************************************************************/
@@ -788,8 +790,9 @@ struct Constraint
    struct Audit *audit;
    struct Constraint *next;
 
-   int line_number;
-   int offset;
+   size_t line_number;
+   size_t offset;
+   size_t class_offset;
    };
 
 /*************************************************************************/

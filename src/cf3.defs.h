@@ -132,6 +132,15 @@ struct PromiseParser
    char *currentfnid[CF_MAX_NESTING];
    struct Rlist *giveargs[CF_MAX_NESTING];
    struct FnCall *currentfncall[CF_MAX_NESTING];
+
+   struct OffsetState
+      {
+      size_t current;
+      size_t last_id;
+      size_t last_string;
+      size_t last_block_id;
+      size_t last_subtype_id;
+      } offsets;
    };
 
 /*************************************************************************/
@@ -683,6 +692,7 @@ struct Bundle
    struct Bundle *next;
 
    int line_number;
+   int offset;
    };
 
 /*************************************************************************/
@@ -696,6 +706,7 @@ struct Body
    struct Body *next;
 
    int line_number;
+   int offset;
    };
 
 /*************************************************************************/
@@ -707,6 +718,7 @@ struct SubType
    struct SubType *next;
 
    int line_number;
+   int offset;
    };
 
 /*************************************************************************/
@@ -750,6 +762,7 @@ struct Promise
    dev_t rootdevice;                          /* for caching during work*/
 
    int line_number;
+   int offset;
    };
 
 /*************************************************************************/
@@ -776,6 +789,7 @@ struct Constraint
    struct Constraint *next;
 
    int line_number;
+   int offset;
    };
 
 /*************************************************************************/

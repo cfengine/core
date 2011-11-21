@@ -36,13 +36,20 @@
 
 void *yyalloc(yy_size_t bytes)
 {
-   return xmalloc(bytes);
+return xmalloc(bytes);
 }
 
 void *yyrealloc(void *ptr, yy_size_t bytes)
 {
-  return xrealloc(ptr, bytes);
+return xrealloc(ptr, bytes);
 }
+
+static void yyuseraction()
+{
+P.offsets.current += yyleng;
+}
+
+#define YY_USER_ACTION yyuseraction();
 
 // Do not use lex - flex only
 
@@ -129,7 +136,9 @@ category   [a-zA-Z_]+:
                       }
 
 {id}                  {
-                      P.line_pos += strlen(yytext);
+                      size_t token_length = strlen(yytext);
+                      P.offsets.last_id = P.offsets.current - token_length;
+                      P.line_pos += token_length;
                       if (strlen(yytext) > CF_MAXVARSIZE-1)
                          {
                          yyerror("identifier too long");
@@ -180,18 +189,21 @@ category   [a-zA-Z_]+:
 {qstring}             {
                       char *tmp = NULL;
                       int less = 0;
+                      size_t token_length = strlen(yytext);
 
-                      P.line_pos += strlen(yytext);
+                      P.offsets.last_string = P.offsets.current - token_length;
+                      P.line_pos += token_length;
 
-                      tmp = xmalloc(strlen(yytext)+1);
+                      tmp = xmalloc(token_length + 1);
 
                       if ((less = DeEscapeQuotedString(yytext,tmp)) > 0)
-                         {        
-                         yyless(less);    
+                         {
+                         yyless(less);
+                         P.offsets.current -= less;
                          }
 
                       if (P.currentstring)
-                        {       
+                        {
                         free(P.currentstring);
                         }
 

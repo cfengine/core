@@ -74,6 +74,7 @@ typeid:                ID {
 
 blockid:               ID {
                           strncpy(P.blockid,P.currentid,CF_MAXVARSIZE);
+                          P.offsets.last_block_id = P.offsets.last_id;
                           CfDebug("Found identifier %s for %s\n",P.currentid,P.block);
                           };
 
@@ -115,10 +116,11 @@ bundlebody:         '{'
                        if (P.currentbundle)
                           {
                           P.currentbundle->line_number = P.line_no;
+                          P.currentbundle->offset = P.offsets.last_block_id;
                           }
                        P.useargs = NULL;
-
                        }
+
                      statements
                     '}'
                        {
@@ -141,11 +143,12 @@ statement:             category
 bodybody:            '{'
                         {
                         P.currentbody = AppendBody(&BODIES,P.blockid,P.blocktype,P.useargs);
-                        P.useargs = NULL;
                         if (P.currentbody)
                            {
                            P.currentbody->line_number = P.line_no;
+                           P.currentbody->offset = P.offsets.last_block_id;
                            }
+                        P.useargs = NULL;
                         strcpy(P.currentid,"");
                         CfDebug("Starting block\n");
                         }
@@ -183,14 +186,18 @@ selection:            id                         /* BODY ONLY */
 
                         if (!INSTALL_SKIP)
                            {
+                           struct Constraint *cp = NULL;
+
                            if (P.currentclasses == NULL)
                               {
-                              AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval,P.rtype,"any",P.isbody);
+                              cp = AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval,P.rtype,"any",P.isbody);
                               }
                            else
                               {
-                              AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval,P.rtype,P.currentclasses,P.isbody);
+                              cp =AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval,P.rtype,P.currentclasses,P.isbody);
                               }
+                           cp->line_number = P.line_no;
+                           cp->offset = P.offsets.last_id;
                            }
                         else
                            {
@@ -254,6 +261,7 @@ category:             CATEGORY                  /* BUNDLE ONLY */
                             if (P.currentstype)
                                {
                                P.currentstype->line_number = P.line_no;
+                               P.currentstype->offset = P.offsets.last_subtype_id;
                                }
                             }
                          };
@@ -274,6 +282,9 @@ promise:              promiser                    /* BUNDLE ONLY */
                            {
                            P.currentpromise = AppendPromise(P.currentstype,P.promiser,P.rval,P.rtype,P.currentclasses,P.blockid,P.blocktype);
                            }
+
+                        P.currentpromise->line_number = P.line_no;
+                        P.currentpromise->offset = P.offsets.last_string;
                         }
 
                       constraints ';'
@@ -297,13 +308,15 @@ promise:              promiser                    /* BUNDLE ONLY */
                      promiser
                         {
                         if (P.currentclasses == NULL)
-                           {                           
+                           {
                            P.currentpromise = AppendPromise(P.currentstype,P.promiser,NULL,CF_NOPROMISEE,"any",P.blockid,P.blocktype);
                            }
                         else
                            {
                            P.currentpromise = AppendPromise(P.currentstype,P.promiser,NULL,CF_NOPROMISEE,P.currentclasses,P.blockid,P.blocktype);
                            }
+
+                        P.currentpromise->offset = P.offsets.last_string;
                         }
 
                      constraints ';'
@@ -339,10 +352,12 @@ constraint:           id                        /* BUNDLE ONLY */
                         {
                         if (!INSTALL_SKIP)
                            {
+                           struct Constraint *cp = NULL;
                            struct SubTypeSyntax ss = CheckSubType(P.blocktype,P.currenttype);                           
                            CheckConstraint(P.currenttype,P.blockid,P.lval,P.rval,P.rtype,ss);                           
-                           AppendConstraint(&(P.currentpromise->conlist),P.lval,P.rval,P.rtype,"any",P.isbody);
-                           
+                           cp = AppendConstraint(&(P.currentpromise->conlist),P.lval,P.rval,P.rtype,"any",P.isbody);
+                           cp->line_number = P.line_no;
+                           cp->offset = P.offsets.last_id;
                            CheckPromise(P.currentpromise);
 
                            P.rval = NULL;

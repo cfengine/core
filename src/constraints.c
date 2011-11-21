@@ -98,11 +98,11 @@ if (classes != NULL)
    }
 
 cp->audit = AUDITPTR;
-cp->line_number = P.line_no;
 cp->lval = sp;
 cp->rval = rval;
 cp->type = type;  /* literal, bodyname, builtin function */
 cp->isbody = body;
+
 return cp;
 }
 

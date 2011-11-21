@@ -101,6 +101,7 @@ else
 bp->name = xstrdup(name);
 bp->type = xstrdup(type);
 bp->args = args;
+
 return bp;
 }
 
@@ -139,6 +140,7 @@ else
 bp->name = xstrdup(name);
 bp->type = xstrdup(type);
 bp->args = args;
+
 return bp;
 }
 
@@ -185,6 +187,7 @@ else
    }
 
 tp->name = xstrdup(typename);
+
 return tp;
 }
 
@@ -255,7 +258,6 @@ else
    }
 
 pp->audit = AUDITPTR;
-pp->line_number = P.line_no;
 pp->bundle =  xstrdup(bundle);
 pp->promiser = sp;
 pp->promisee = promisee;  /* this is a list allocated separately */
@@ -266,6 +268,7 @@ pp->donep = &(pp->done);
 pp->bundletype = xstrdup(bundletype); /* cache agent,common,server etc*/
 pp->agentsubtype = type->name;       /* Cache the typename */
 pp->ref_alloc = 'n';
+
 return pp;
 }
 

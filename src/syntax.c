@@ -1387,6 +1387,13 @@ snprintf(buffer, 6, "%d", line);
 JsonObjectAppendString(parent, "line", buffer);
 }
 
+static void JsonObjectAppendOffset(JsonObject **parent, int offset)
+{
+char buffer[6];
+snprintf(buffer, 6, "%d", offset);
+JsonObjectAppendString(parent, "offset", buffer);
+}
+
 static JsonObject *ExportAttributeValueAsJson(const char *rval, const char type)
 {
 JsonObject *json_attribute = NULL;
@@ -1470,6 +1477,7 @@ for (cp = constraints; cp != NULL; cp = cp->next)
 	 }
 
    JsonObjectAppendLineNumber(&json_attribute, cp->line_number);
+   JsonObjectAppendOffset(&json_attribute, cp->offset);
    JsonObjectAppendString(&json_attribute, "lval", cp->lval);
    JsonObjectAppendObject(&json_attribute, "rval", ExportAttributeValueAsJson(cp->rval, cp->type));
    JsonArrayAppendObject(&json_current_class_attributes, json_attribute);
@@ -1508,6 +1516,7 @@ for (pp = promises; pp != NULL; pp = pp->next)
       }
 
    JsonObjectAppendLineNumber(&json_promise, pp->line_number);
+   JsonObjectAppendOffset(&json_promise, pp->offset);
    JsonObjectAppendString(&json_promise, "promiser", pp->promiser);
    JsonObjectAppendString(&json_promise, "promisee", pp->promisee);
 
@@ -1520,6 +1529,7 @@ for (pp = promises; pp != NULL; pp = pp->next)
 	 JsonObject *json_attribute = NULL;
 
 	 JsonObjectAppendLineNumber(&json_attribute, cp->line_number);
+	 JsonObjectAppendOffset(&json_attribute, cp->offset);
 	 JsonObjectAppendString(&json_attribute, "lval", cp->lval);
 	 JsonObjectAppendObject(&json_attribute, "rval", ExportAttributeValueAsJson(cp->rval, cp->type));
 	 JsonArrayAppendObject(&json_promise_attributes, json_attribute);
@@ -1544,6 +1554,7 @@ static JsonObject *ExportBundleAsJson(struct Bundle *bundle)
 JsonObject *json_bundle = NULL;
 
 JsonObjectAppendLineNumber(&json_bundle, bundle->line_number);
+JsonObjectAppendOffset(&json_bundle, bundle->offset);
 JsonObjectAppendString(&json_bundle, "name", bundle->name);
 JsonObjectAppendString(&json_bundle, "bundle-type", bundle->type);
 
@@ -1568,6 +1579,7 @@ JsonObjectAppendString(&json_bundle, "bundle-type", bundle->type);
       JsonObject *json_promise_type = NULL;
 
       JsonObjectAppendLineNumber(&json_promise_type, sp->line_number);
+      JsonObjectAppendOffset(&json_promise_type, sp->offset);
       JsonObjectAppendString(&json_promise_type, "name", sp->name);
       JsonObjectAppendArray(&json_promise_type, "classes", ExportBundleClassesAsJson(sp->promiselist));
 
@@ -1586,6 +1598,7 @@ static JsonObject *ExportBodyAsJson(struct Body *body)
 JsonObject *json_body = NULL;
 
 JsonObjectAppendLineNumber(&json_body, body->line_number);
+JsonObjectAppendOffset(&json_body, body->offset);
 JsonObjectAppendString(&json_body, "name", body->name);
 JsonObjectAppendString(&json_body, "body-type", body->type);
 

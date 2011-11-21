@@ -167,14 +167,16 @@ category   [a-zA-Z_]+:
                          }
 
                       yytext[strlen(yytext)-2] = '\0';
-		      ValidateClassSyntax(yytext);
+                      ValidateClassSyntax(yytext);
                       P.currentclasses = xstrdup(yytext);
                       return CLASS;
                       }
 
 {category}            {
-                      P.line_pos += strlen(yytext);
-                      yytext[strlen(yytext)-1] = '\0';
+                      size_t token_size = strlen(yytext);
+                      P.line_pos += token_size;
+                      P.offsets.last_subtype_id = P.offsets.current - token_size;
+                      yytext[token_size - 1] = '\0';
                       strncpy(P.currenttype,yytext,CF_MAXVARSIZE);
 
                       if (P.currentclasses != NULL)

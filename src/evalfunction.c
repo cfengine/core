@@ -4500,7 +4500,7 @@ static struct Rval Unix_FnCallUserExists(struct FnCall *fp,struct Rlist *finalar
   struct Rval rval;
   char buffer[CF_BUFSIZE];
   struct passwd *pw;
-  uid_t uid = -1;
+  uid_t uid = CF_SAME_OWNER;
   char *arg = finalargs->item;
  
 buffer[0] = '\0';  
@@ -4513,7 +4513,7 @@ if (IsNumber(arg))
    {
    uid = Str2Uid(arg,NULL,NULL);
    
-   if (uid < 0)
+   if (uid == CF_SAME_OWNER || uid == CF_UNKNOWN_OWNER)
       {
       SetFnCallReturnStatus("userexists",FNCALL_FAILURE,"Illegal user id",NULL);   
       }
@@ -4548,7 +4548,7 @@ static struct Rval Unix_FnCallGroupExists(struct FnCall *fp,struct Rlist *finala
   struct Rval rval;
   char buffer[CF_BUFSIZE];
   struct group *gr;
-  gid_t gid = -1;
+  gid_t gid = CF_SAME_GROUP;
   char *arg = finalargs->item;
  
 buffer[0] = '\0';  
@@ -4561,7 +4561,7 @@ if (isdigit((int)*arg))
    {
    gid = Str2Gid(arg,NULL,NULL);
    
-   if (gid < 0)
+   if (gid == CF_SAME_GROUP || gid == CF_UNKNOWN_GROUP)
       {
       SetFnCallReturnStatus("groupexists",FNCALL_FAILURE,"Illegal group id",NULL);   
       }

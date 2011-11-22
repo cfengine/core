@@ -106,7 +106,7 @@ control bodies.
 @subsection cf-promises
 Promise validator -- used to verify that the promises used by the other
     components of CFEngine are syntactically valid.
-@code{cf-promises} does not execute any promises, but is can syntax-check
+@code{cf-promises} does not execute any promises, but can syntax-check
 all of them.
 
 @node cf-runagent
@@ -407,13 +407,6 @@ CFEngine decisions are made behind the scenes and the results of
 certain true/false propositions are cached in Booleans referred to as
 `classes'. There are no if-then-else statements in CFEngine; all
 decisions are made with classes.
-
-CFEngine runs on every computer individually and each time it wakes up
-the underlying generic agent platform discovers and classifies
-properties of the environment or context in which it runs.  This  
-information
-is effectively cached and may be used to make decisions about  
-configuration.
 
 Classes fall into hard (discovered) and soft (user-defined) types.  A
 single hard class can be one of several things:

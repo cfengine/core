@@ -1,7 +1,7 @@
 
 @verbatim
 
-body agent example
+body agent control
 {
 syslog => "true";
 }

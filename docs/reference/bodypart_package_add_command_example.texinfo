@@ -3,7 +3,7 @@
 
 body package_method rpm
 {
-package_add_command => "/bin echo /bin/rpm -i ";
+package_add_command => "/bin/rpm -i ";
 }
 
 @end verbatim

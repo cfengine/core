@@ -1,7 +1,7 @@
 
 
 @verbatim
-body knowledge control
+body common control
 {
 site_classes => { "datacenters","datacentres"  }; # locations is by default
 }

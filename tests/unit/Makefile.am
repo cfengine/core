@@ -9,7 +9,8 @@ check_PROGRAMS = \
 	domainname_test \
 	set_domainname_test \
 	str_test \
-	json_test
+	json_test \
+	evalfunction_test
 
 TESTS = $(check_PROGRAMS)
 
@@ -44,4 +45,6 @@ str_test_LDADD = ../../pub/libcfpub.la
 json_test_SOURCES = $(MOCKERY_SOURCES) json_test.c ../../src/json.h
 json_test_LDADD = ../../src/libpromises.la
 
+evalfunction_test_SOURCES = $(MOCKERY_SOURCES) evalfunction_test.c
+evalfunction_test_LDADD = ../../src/libpromises.la
 

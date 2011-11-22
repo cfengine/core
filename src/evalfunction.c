@@ -29,7 +29,7 @@
 /*                                                                           */
 /*****************************************************************************/
 
-#include "cf3.defs.h"
+#include "evalfunction.h"
 #include "cf3.extern.h"
 
 #include <libgen.h>
@@ -2596,34 +2596,34 @@ return rval;
 
 /*********************************************************************/
 
-static struct Rval FnCallHostInNetgroup(struct FnCall *fp,struct Rlist *finalargs)
+struct Rval FnCallHostInNetgroup(struct FnCall *fp, struct Rlist *finalargs)
 
 {
-  struct Rval rval;
-  char buffer[CF_BUFSIZE];
-  char *machine, *user, *domain;
+struct Rval rval;
+char buffer[CF_BUFSIZE];
+char *host, *user, *domain;
    
 buffer[0] = '\0';  
 
 /* begin fn specific content */
 
-strcpy(buffer,"!any");
+strcpy(buffer, "!any");
 
 setnetgrent(finalargs->item);
 
-while (getnetgrent(&machine,&user,&domain))
+while (getnetgrent(&host,&user,&domain))
    {
-   if (strcmp(machine,VUQNAME) == 0)
+   if (host == NULL || strcmp(host,VUQNAME) == 0)
       {
-      CfOut(cf_verbose,"","Matched %s in netgroup %s\n",machine,finalargs->item);
-      strcpy(buffer,"any");
+      CfOut(cf_verbose, "", "Matched %s in netgroup %s\n", host, finalargs->item);
+      strcpy(buffer, "any");
       break;
       }
    
-   if (strcmp(machine,VFQNAME) == 0)
+   if (host == NULL || strcmp(host,VFQNAME) == 0)
       {
-      CfOut(cf_verbose,"","Matched %s in netgroup %s\n",machine,finalargs->item);
-      strcpy(buffer,"any");
+      CfOut(cf_verbose, "", "Matched %s in netgroup %s\n", host, finalargs->item);
+      strcpy(buffer, "any");
       break;
       }
    }

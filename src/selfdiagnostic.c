@@ -300,68 +300,8 @@ ExpandPromiseAndDo(cf_common,"diagnostic",pcopy,scalarvars,listvars,NULL);
 /*****************************************************************************/
 
 static void TestRegularExpressions()
-
-{ int start,end;
-
-printf("%d. Testing regular expression engine\n",++NR);
-
-if (FullTextMatch("[a-z]*","1234abcd6789"))
-   {
-   CfOut(cf_error,"","Failed regular expression match 1\n");
-   }
-else
-   {
-   CfOut(cf_verbose,""," -> FullTextMatch - ok 1\n");
-   }
-
-if (FullTextMatch("[1-4]*[a-z]*.*","1234abcd6789"))
-   {
-   CfOut(cf_error,""," -> FullTextMatch - ok 2\n");
-   }
-else
-   {
-   CfOut(cf_error,"","Failed regular expression match 2\n");
-   }
-
-if (BlockTextMatch("#.*","line 1:\nline2: # comment to end\nline 3: blablab",&start,&end))
-   {
-   CfOut(cf_error,""," -> BlockTextMatch - ok\n");
-   
-   if (start != 15)
-      {
-      CfOut(cf_error,"","Start was not at 15 -> %d\n",start);
-      }
-   
-   if (end != 31)
-      {
-      CfOut(cf_error,"","Start was not at 31 -> %d\n",end);
-      }
-   }
-else
-   {
-   CfOut(cf_error,"","Failed regular expression match 3\n");
-   }
-
-if (BlockTextMatch("[a-z]+","1234abcd6789",&start,&end))
-   {
-   CfOut(cf_error,""," -> BlockTextMatch - ok\n");
-   
-   if (start != 4)
-      {
-      CfOut(cf_error,"","Start was not at 4 -> %d\n",start);
-      }
-   
-   if (end != 8)
-      {
-      CfOut(cf_error,"","Start was not at 8 -> %d\n",end);
-      }
-   }
-else
-   {
-   CfOut(cf_error,"","Failed regular expression match 3\n");
-   }
+{
 }
-
 
 /*****************************************************************************/
 

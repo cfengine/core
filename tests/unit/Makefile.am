@@ -10,7 +10,8 @@ check_PROGRAMS = \
 	set_domainname_test \
 	str_test \
 	json_test \
-	evalfunction_test
+	evalfunction_test \
+	regex_test
 
 TESTS = $(check_PROGRAMS)
 
@@ -48,3 +49,5 @@ json_test_LDADD = ../../src/libpromises.la
 evalfunction_test_SOURCES = $(MOCKERY_SOURCES) evalfunction_test.c
 evalfunction_test_LDADD = ../../src/libpromises.la
 
+regex_test_SOURCES = $(MOCKERY_SOURCES) regex_test.c
+regex_test_LDADD = ../../src/libpromises.la

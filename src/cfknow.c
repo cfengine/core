@@ -231,7 +231,13 @@ while ((c=getopt_long(argc,argv,"Ihbd:vVf:mMz:St:ruT",OPTIONS,&optindex)) != EOF
              {
              Constellation_ListPossibleStoriesCmdLine();
              }
-          else
+          else if (strncmp(optarg,"SHA=",4) == 0)
+             {
+             char buffer[CF_BUFSIZE];
+             Constellation_HostStory(optarg,buffer,CF_BUFSIZE);
+             printf("%s\n",buffer);
+             }
+          else              
              {
              strcpy(TOPIC_CMD,optarg);
              CfGenerateStories(TOPIC_CMD,cfi_cause);

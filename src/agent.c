@@ -135,7 +135,6 @@ const char *HINTS[15] =
 /*******************************************************************/
 
 int main(int argc,char *argv[])
-
 {
 int ret = 0;
 
@@ -149,7 +148,7 @@ Nova_NoteVarUsageDB();
 #endif
 PurgeLocks();
 
-if(BOOTSTRAP && !VerifyBootstrap())
+if (BOOTSTRAP && !VerifyBootstrap())
    {
    ret = 1;
    }

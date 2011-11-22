@@ -5194,7 +5194,7 @@ struct FnCallArg IP2HOST_ARGS[] =
 
 struct FnCallArg HOSTINNETGROUP_ARGS[] =
     {
-    {CF_ANYSTRING,cf_str,"Host name"},
+    {CF_ANYSTRING,cf_str,"Netgroup name"},
     {NULL,cf_notype,NULL}
     };
 

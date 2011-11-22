@@ -73,6 +73,7 @@ ENTROPIES = NULL; /*?*/
  *   Divisor is a uncertainity per digit, to normalize it to [0..1] we divide it
  *   by ln(N).
  */
+
 double MonEntropyCalculate(const struct Item *items)
 {
 double S = 0.0;
@@ -112,6 +113,7 @@ if (entropy > 0.9)
    {
    class_type = "high";
    }
+
 if (entropy < 0.2)
    {
    class_type = "low";

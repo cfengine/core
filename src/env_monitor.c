@@ -798,6 +798,8 @@ if (fabs(delta) < cf_noise_threshold) /* Arbitrary limits on sensitivity  */
       strcat(buffer,"_normal");
       }
 
+   AppendItem(classlist,buffer,"0");
+
    dev = sqrt(delta*delta/(1.0+sigma*sigma)+ldelta*ldelta/(1.0+lsigma*lsigma));
 
    if (dev > 2.0*sqrt(2.0))

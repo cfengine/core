@@ -397,9 +397,15 @@ if (strcmp(rkey+1,PUBKEY_DIGEST) == 0)
 
    for (ip = IPADDRESSES; ip != NULL; ip=ip->next)
       {
+      if (strcmp(VIPADDRESS,ip->name) == 0)
+         {
+         match = true;
+         break;
+         }
       if (strcmp(ipaddress,ip->name) == 0)
          {
          match = true;
+         break;
          }
       }
 

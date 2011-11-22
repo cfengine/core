@@ -647,7 +647,7 @@ do
    if (pp->audit && pp->audit->filename)
       {
       NewScalar("this","promise_filename",pp->audit->filename,cf_str);
-      snprintf(number,CF_SMALLBUF,"%d", pp->line_number);
+      snprintf(number,CF_SMALLBUF,"%zu", pp->line_number);
       NewScalar("this","promise_linenumber",number,cf_str);
       }
 

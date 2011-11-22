@@ -64,7 +64,7 @@ libpromises_la_SOURCES =                                                \
         fncall.c                                                        \
         cf3globals.c                                                    \
         reporting.c                                                     \
-        evalfunction.c                                                  \
+        evalfunction.c evalfunction.h                                   \
         sysinfo.c                                                       \
         conversion.c                                                    \
         scope.c                                                         \

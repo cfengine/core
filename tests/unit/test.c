@@ -1,6 +1,7 @@
 #include "test.h"
 #include "alloc.h"
 #include <stdlib.h>
+#include <string.h>
 
 char *file_read_string(FILE *in)
 {

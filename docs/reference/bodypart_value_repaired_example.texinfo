@@ -1,7 +1,7 @@
 
 @verbatim
 
-body transaction mydef
+body action mydef
 {
 value_kept     => "4.5";   # this promise is worth 4.5 dollars per hour
 value_repaired => "2.5";   # fixing this promise is worth 2.5 dollars per hour

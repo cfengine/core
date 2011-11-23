@@ -755,7 +755,7 @@ return av;
 
 /*****************************************************************************/
 
-static double SetClasses(char * name,double variable,double av_expect,double av_var,double localav_expect,double localav_var,struct Item **classlist,char *timekey)
+static double SetClasses(char *name,double variable,double av_expect,double av_var,double localav_expect,double localav_var,struct Item **classlist,char *timekey)
 {
 char buffer[CF_BUFSIZE],buffer2[CF_BUFSIZE];
 double dev,delta,sigma,ldelta,lsigma,sig;
@@ -769,10 +769,14 @@ lsigma = sqrt(localav_var);
 sig = sqrt(sigma*sigma+lsigma*lsigma);
 
 CfDebug(" delta = %lf,sigma = %lf, lsigma = %lf, sig = %lf\n",delta,sigma,lsigma,sig);
-
+   
 if (sigma == 0.0 || lsigma == 0.0)
    {
    CfDebug(" No sigma variation .. can't measure class\n");
+      
+   snprintf(buffer,CF_MAXVARSIZE,"entropy_%s.*",name);
+   MonEntropyPurgeUnused(buffer);
+
    return sig;
    }
 

@@ -460,6 +460,7 @@ void Unix_GetInterfaceInfo(enum cfagenttype ag)
   char ip[CF_MAXVARSIZE],hw_mac[CF_MAXVARSIZE];
   char name[CF_MAXVARSIZE];
   char last_name[CF_BUFSIZE];
+  struct Rlist *interfaces = NULL, *hardware = NULL, *ips = NULL;
 
 CfDebug("Unix_GetInterfaceInfo()\n");
 
@@ -596,6 +597,7 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
             strcpy(ip,"ipv4_");
             strcat(ip,VIPADDRESS);
             AppendItem(&IPADDRESSES,VIPADDRESS,"");
+            AppendRlist(&ips,VIPADDRESS,CF_SCALAR);
 
             for (sp = ip+strlen(ip)-1; (sp > ip); sp--)
                {
@@ -636,7 +638,8 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
             }
 
          AppendItem(&IPADDRESSES,inet_ntoa(sin->sin_addr),"");
-
+         AppendRlist(&ips,inet_ntoa(sin->sin_addr),CF_SCALAR);
+         
          for (sp = ip+strlen(ip)-1; (sp > ip); sp--)
             {
             if (*sp == '.')
@@ -698,19 +701,23 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
               (unsigned char)ifr.ifr_hwaddr.sa_data[5]);
 
        NewScalar("sys",name,hw_mac,cf_str);
+       AppendRlist(&hardware,hw_mac,CF_SCALAR);
+       AppendRlist(&interfaces,ifp->ifr_name,CF_SCALAR);
        
        snprintf(name,CF_MAXVARSIZE,"mac_%s",CanonifyName(hw_mac));
-       NewClass(name);
-              
+       NewClass(name);        
 #else
        NewScalar("sys",name,"mac_unknown",cf_str);       
        NewClass("mac_unknown");
 #endif
-
       }
    }
 
 close(fd);
+
+NewList("sys","interfaces",interfaces,cf_slist);
+NewList("sys","hardware_addresses",hardware,cf_slist);
+NewList("sys","ip_addresses",ips,cf_slist);
 }
 
 /*******************************************************************/

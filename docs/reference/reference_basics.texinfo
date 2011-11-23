@@ -1935,22 +1935,22 @@ following example:
 
 @verbatim
 
-bundle agent array
+bundle agent example
 
 {
 vars:
 
-  "v[index_1]" string => "value_1";
-  "v[index_2]" string => "value_2";
+  "array[cf-monitord]" string => "The monitor";
+  "array[cf-serverd]" string => "The server";
+  "array[cf-exced]" string => "The executor, not executioner";
 
-  "parameter_name" slist => getindices("v");
+  "component" slist => getindices("array");
 
-reports:
+commands:
 
-  Yr2008::
+  "/bin/echo $(component) is"
 
-   "Found index: $(parameter_name)";
-
+           args => "$(array[$(component)])";
 }
 
 @end verbatim

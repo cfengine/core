@@ -1,6 +1,9 @@
 3.3.0 (in development)
 	New function dirname() to complement lastnode()
 	New function lsdir() to list files in a directory
+	Detection of MAC address in classes/variables for supported kernels (Linux) $(sys.hardware_mac) and mac_00_ab_...
+	$(sys.cpus) variable and classes: 1_cpu:: 2_cpus:: etc on supported systems
+	
 
 3.2.0
 	New bootstrap method with single-command bootstrapping:

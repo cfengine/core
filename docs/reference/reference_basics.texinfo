@@ -2233,7 +2233,7 @@ that match parenethetic expressions. For instance, suppose we have the string:
 @end smallexample
 The pattern matches the entire string, and it
 contains two parenthesized subexpressions, which respectively match
-the fragments `has a ' and `lamb ...'. The regular
+the fragments `had a ' and `lamb ...'. The regular
 expression libraries assign @i{three} matches to this
 result, labelled 0, 1 and 2.
 
@@ -2372,7 +2372,7 @@ three
 [New section]
 
 four
-/* cf3 */
+/* five */
 six
 
 [final]

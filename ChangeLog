@@ -3,6 +3,7 @@
 	New function lsdir() to list files in a directory
 	Detection of MAC address in classes/variables for supported kernels (Linux) $(sys.hardware_mac) and mac_00_ab_...
 	$(sys.cpus) variable and classes: 1_cpu:: 2_cpus:: etc on supported systems
+	New system list variables describing multiple interfaces: $(sys.hardware) $(sys.ip_addresses) $(sys.interfaces)
 	
 
 3.2.0

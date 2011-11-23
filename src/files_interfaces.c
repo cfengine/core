@@ -418,6 +418,14 @@ if (exists && (a.havedelete||a.haverename||a.haveperms||a.havechange||a.transfor
       DepthSearch(path,&oslb,rlevel,a,pp);
       a.havedepthsearch = save_search;
       }
+   else
+      {
+      /* unless child nodes were repaired, set a promise kept class */
+      if (!IsDefinedClass("repaired"))
+	 {
+	 cfPS(cf_verbose, CF_NOP, "", pp, a, " -> Basedir \"%s\" not promising anything", path);
+	 }
+      }
 
    if (a.change.report_changes == cfa_contentchange || a.change.report_changes == cfa_allchanges)
       {

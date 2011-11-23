@@ -61,6 +61,7 @@ static int Xen_Hv_Check(void);
 static FILE *ReadFirstLine(const char *filename, char *buf, int bufsize);
 static bool ReadLine(const char *filename, char *buf, int bufsize);
 static void CreateClassesFromCanonification(char *canonified);
+static void GetCPUInfo(void);
 
 /**********************************************************************/
 
@@ -850,6 +851,7 @@ else if (Xen_Hv_Check())
    }
 #endif
 
+GetCPUInfo();
 
 #ifdef CFCYG
 
@@ -2080,4 +2082,57 @@ const char *GetWorkDir(void)
 {
 const char *workdir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
 return workdir == NULL ? GetDefaultWorkDir() : workdir;
+}
+
+/******************************************************************/
+
+static void GetCPUInfo()
+
+{ FILE *fp;
+  char buf[CF_BUFSIZE];
+  int count = 0;
+
+if ((fp=fopen("/proc/stat","r")) == NULL)
+   {
+   CfOut(cf_verbose,"","Unable to find proc/cpu data\n");
+   return;
+   }
+
+CfOut(cf_verbose,"","Reading /proc/stat utilization data -------\n");
+
+while (!feof(fp))
+   {
+   fgets(buf,CF_BUFSIZE,fp);
+   if (strncmp(buf,"cpu",3) == 0)
+      {
+      count++;
+      }      
+   }
+
+fclose(fp);
+count--;
+
+if (count < 1)
+   {
+   CfOut(cf_verbose,""," !! CPU detection makes no sense: got %d\n",count);
+   }
+else
+   {
+   CfOut(cf_verbose,"","-> Found %d cpu cores\n",count);
+   }
+
+switch (count)
+   {
+   case 1:
+       NewClass("1_cpu");
+       NewScalar("sys","cpus","1",cf_str);
+       break;
+   default:
+       snprintf(buf,CF_MAXVARSIZE,"%d_cpus",count);       
+       NewClass(buf);
+       snprintf(buf,CF_MAXVARSIZE,"%d",count);       
+       NewScalar("sys","cpus",buf,cf_str);
+   }
+
+
 }

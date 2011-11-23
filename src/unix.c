@@ -457,7 +457,7 @@ void Unix_GetInterfaceInfo(enum cfagenttype ag)
   struct sockaddr_in *sin;
   struct hostent *hp;
   char *sp, workbuf[CF_BUFSIZE];
-  char ip[CF_MAXVARSIZE];
+  char ip[CF_MAXVARSIZE],hw_mac[CF_MAXVARSIZE];
   char name[CF_MAXVARSIZE];
   char last_name[CF_BUFSIZE];
 
@@ -646,6 +646,8 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
                }
             }
 
+         // Set the IPv4 on interface array
+         
          strcpy(ip,inet_ntoa(sin->sin_addr));
 
          if (ag != cf_know)
@@ -680,6 +682,31 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
                }
             }
          }
+
+      // Set the hardware/mac address array
+
+      snprintf(name,CF_MAXVARSIZE,"hardware_mac[%s]",ifp->ifr_name);
+
+#ifdef SIOCGIFHWADDR
+       ioctl(fd, SIOCGIFHWADDR, &ifr);
+       snprintf(hw_mac,CF_MAXVARSIZE-1,"%.2x:%.2x:%.2x:%.2x:%.2x:%.2x",
+              (unsigned char)ifr.ifr_hwaddr.sa_data[0],
+              (unsigned char)ifr.ifr_hwaddr.sa_data[1],
+              (unsigned char)ifr.ifr_hwaddr.sa_data[2],
+              (unsigned char)ifr.ifr_hwaddr.sa_data[3],
+              (unsigned char)ifr.ifr_hwaddr.sa_data[4],
+              (unsigned char)ifr.ifr_hwaddr.sa_data[5]);
+
+       NewScalar("sys",name,hw_mac,cf_str);
+       
+       snprintf(name,CF_MAXVARSIZE,"mac_%s",CanonifyName(hw_mac));
+       NewClass(name);
+              
+#else
+       NewScalar("sys",name,"mac_unknown",cf_str);       
+       NewClass("mac_unknown");
+#endif
+
       }
    }
 

@@ -125,6 +125,15 @@ AppendItem(&ENTROPIES,class,"");
 
 /****************************************************************************/
 
+void MonEntropyPurgeUnused(char *name)
+    
+{
+// Don't set setentropy is there is no corresponding class
+DeleteItemMatching(&ENTROPIES,name);
+}
+
+/****************************************************************************/
+
 void MonEntropyClassesPublish(struct Item *classlist)
 {
 FILE *fp;

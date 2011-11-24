@@ -60,7 +60,6 @@ void OpenMagnifyFiles(void);
 void CloseMagnifyFiles(void);
 void EraseAverages(void);
 void RemoveHostSeen(char *hosts);
-static void ImportNovaReports(void);
 
 extern struct BodySyntax CFRE_CONTROLBODY[];
 
@@ -89,8 +88,10 @@ static struct Averages MAX,MIN;
 
 char OUTPUTDIR[CF_BUFSIZE],*sp;
 char REMOVEHOSTS[CF_BUFSIZE] = {0};
+#ifdef HAVE_NOVA
 char NOVA_EXPORT_TYPE[CF_MAXVARSIZE] = {0};
 char NOVA_IMPORT_FILE[CF_MAXVARSIZE] = {0};
+#endif
 
 int HUBQUERY = false;
 char PROMISEHANDLE[CF_MAXVARSIZE] = {0};
@@ -133,8 +134,10 @@ const struct option OPTIONS[32] =
       { "purge",no_argument,0,'P'},
       { "erasehistory",required_argument,0,'E' },
       { "filter",required_argument,0,'F'},
+#ifdef HAVE_NOVA
       { "nova-export",required_argument,0,'x'},
       { "nova-import",required_argument,0,'i'},
+#endif
       { "outputdir",required_argument,0,'o' },
       { "promise-handle",required_argument,0,'p'},
       { "query-hub",no_argument,0,'q'},
@@ -169,8 +172,10 @@ const char *HINTS[32] =
       "Purge data about peers not seen beyond the threshold horizon for assumed-dead",
       "Erase historical data from the cf-monitord monitoring database",
       "Specify a name regular expression for filtering results",
+#ifdef HAVE_NOVA
       "Export Nova reports to file - delta or full report",
       "Import Nova reports from file - specify the path (only on Nova policy hub)",
+#endif
       "Set output directory for printing graph data",
       "Specify a promise-handle to look up",
       "Query hub database interactively",
@@ -405,6 +410,7 @@ while ((c=getopt_long(argc,argv,"Cghd:vVf:st:ar:PXHLMIRSKE:x:i:1:p:k:c:qF:o:",OP
           PURGE = 'y';
           break;
 
+#ifdef HAVE_NOVA
       case 'x':          
           if((String2Menu(optarg) != cfd_menu_delta) &&
              (String2Menu(optarg) != cfd_menu_full))
@@ -419,6 +425,7 @@ while ((c=getopt_long(argc,argv,"Cghd:vVf:st:ar:PXHLMIRSKE:x:i:1:p:k:c:qF:o:",OP
       case 'i':          
           snprintf(NOVA_IMPORT_FILE, sizeof(NOVA_IMPORT_FILE), "%s", optarg);
           break;
+#endif /* HAVE_NOVA */
 
       /* Some options for querying hub data - only on commercial hubs */
 
@@ -550,46 +557,9 @@ if (!EMPTY(NOVA_EXPORT_TYPE))
 
 if (!EMPTY(NOVA_IMPORT_FILE))
    {
-   ImportNovaReports();
+   Nova_ImportReports(NOVA_IMPORT_FILE);
    }
 #endif  /* HAVE_NOVA */
-}
-
-/*****************************************************************************/
-
-static void ImportNovaReports(void)
-{
- #ifdef HAVE_LIBMONGOC
- if (IsDefinedClass("am_policy_hub"))
-    {
-    mongo_connection dbconn;
-    
-    if(!CFDB_Open(&dbconn, "127.0.0.1", CFDB_PORT))
-       {
-       CfOut(cf_error, "", "!! Could not connect to database -- skipping import");
-       GenericDeInitialize();
-       exit(0);
-       }
-    
-    if(Nova_ImportHostReports(&dbconn, NOVA_IMPORT_FILE))
-       {
-       GenericDeInitialize();
-       exit(0);
-       }
-    else
-       {
-       GenericDeInitialize();
-       exit(1);
-       }
-    }
- else
-    {
-    CfOut(cf_error, "", "Importing reports is only possible on Nova policy hubs");
-    }
-
-#else  /* NOT HAVE_LIBMONGOC */
- CfOut(cf_error, "", "Importing reports is only possible on Nova policy hubs");
-#endif 
 }
 
 /*****************************************************************************/

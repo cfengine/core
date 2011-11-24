@@ -32,7 +32,7 @@ How to add unit tests
 
        static test_to_string(void **state)
        {
-       /* assert some shit here */
+       /* assert some condition here */
        }
 
    4.2 In the main function of assoc_test.c, add the test to the suite

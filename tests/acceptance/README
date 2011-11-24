@@ -23,15 +23,16 @@ Preparing for running tests
   - It is advised to use Tokyo Cabinet as it gives much better performance in
     test suite over Berkeley DB.
 
-* Make sure user you are running testsuite from has sudo rights. This is
-  necessary to test functionality which is only available to the root user.
+* Install fakeroot(1). If this tool is not available for your operating system,
+  you may any other "fake root" environment or even sudo(1). Alternative tools
+  are specified by --gainroot option of `testall' script.
 
 ------------------------------------------------------------------------------
 Running testsuite
 ------------------------------------------------------------------------------
 
-Currently, all tests are assumed to be run by root.  All tests ought only to
-create files and directories in /tmp, and ought not to modify other files.
+All tests ought only to create files and directories in /tmp, and ought not to
+modify other files.
 
 Run
 

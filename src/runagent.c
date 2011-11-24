@@ -348,9 +348,6 @@ int HailServer(char *host,struct Attributes a,struct Promise *pp)
  char sendbuffer[CF_BUFSIZE],recvbuffer[CF_BUFSIZE],peer[CF_MAXVARSIZE],ipv4[CF_MAXVARSIZE],digest[CF_MAXVARSIZE],user[CF_SMALLBUF];
   long gotkey;
   char reply[8];
-#ifdef HAVE_CONSTELLATION
-  struct Item *queries;
-#endif
   
 a.copy.portnumber = (short)ParseHostname(host,peer);
 
@@ -447,48 +444,18 @@ else
 
 /* Check trust interaction*/
 
-
 pp->cache = NULL;
 
 if (strlen(MENU) > 0)
    {
-#if defined(HAVE_NOVA) && defined(HAVE_LIBMONGOC)
-   
-   mongo_connection dbconn;
-   if(!CFDB_Open(&dbconn, "127.0.0.1", CFDB_PORT))
+#if defined(HAVE_NOVA)
+   if (!Nova_ExecuteRunagent(conn, MENU))
       {
       ServerDisconnection(conn);
       DeleteRlist(a.copy.servers);
       return false;
       }
-     
-   enum cfd_menu menu = String2Menu(MENU);
-
-   switch(menu)
-     {
-     case cfd_menu_delta:
-         Nova_QueryClientForReports(&dbconn, conn,MENU,time(0) - SECONDS_PER_MINUTE * 10);
-         break;
-     case cfd_menu_full:
-         Nova_QueryClientForReports(&dbconn, conn,MENU,time(0) - SECONDS_PER_WEEK);
-       break;
-
-       
-     case cfd_menu_relay:
-#ifdef HAVE_CONSTELLATION
-       queries = Constellation_CreateAllQueries();
-       Constellation_QueryRelay(&dbconn, conn,queries);
-       DeleteItemList(queries);
 #endif
-	 break;
-
-     default:
-       break;
-     }
-
-   CFDB_Close(&dbconn);
-
-#endif  /* HAVE_NOVA && HAVE_LIBMONGOC */
    }
 else
    {

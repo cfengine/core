@@ -1032,7 +1032,7 @@ AC_MSG_RESULT(    Summary of options...)
 
 AC_MSG_RESULT([-> PCRE: $PCRE_PATH])
 
-if test "x$ac_cv_lib_mysqlclient_mysql_real_connect" != "xno"; then
+if test "x$ac_cv_lib_mysqlclient_mysql_real_connect" = "xyes"; then
   AC_MSG_RESULT([-> MySQL connector: $MYSQL_PATH])
 else
   AC_MSG_RESULT([-> MySQL connector: disabled])

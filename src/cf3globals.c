@@ -351,8 +351,6 @@ double VAL_NOTKEPT = 0;
 struct AlphaList VHEAP;
 struct AlphaList VADDCLASSES;
 struct Item *VNEGHEAP = NULL;
-struct Item *VDELCLASSES = NULL;
-struct Rlist *PRIVCLASSHEAP = NULL;
 
 struct Rlist *GOALS = NULL;
 struct Rlist *GOALCATEGORIES = NULL;

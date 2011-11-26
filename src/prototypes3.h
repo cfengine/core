@@ -517,6 +517,8 @@ void NegateClassesFromString(char *class,struct Item **heap);
 void AddPrefixedClasses(char *name,char *classlist);
 int IsHardClass (char *sp);
 void SaveClassEnvironment(void);
+void DeleteAllClasses(struct Rlist *list);
+void AddAllClasses(struct Rlist *list,int persist,enum statepolicy policy);
 
 /* env_monitor.c */
 

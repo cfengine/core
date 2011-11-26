@@ -34,10 +34,17 @@
 
 #include "logic_expressions.h"
 
+/*****************************************************************************/
+
 static bool ValidClassName(const char *str);
 static int GetORAtom(char *start,char *buffer);
 static int HasBrackets(char *s,struct Promise *pp);
 static int IsBracketed(char *s);
+
+/*****************************************************************************/
+
+static struct Item *VDELCLASSES = NULL;
+static struct Rlist *PRIVCLASSHEAP = NULL;
 
 /*****************************************************************************/
 /* Level                                                                     */
@@ -1469,3 +1476,73 @@ if (ALLCLASSESREPORT)
    }
 }
 
+
+/**********************************************************************/
+
+void DeleteAllClasses(struct Rlist *list)
+
+{ struct Rlist *rp;
+  char *string;
+  int slot;
+
+if (list == NULL)
+   {
+   return;
+   }
+
+for (rp = list; rp != NULL; rp=rp->next)
+   {
+   if (!CheckParseClass("class cancellation",(char *)rp->item,CF_IDRANGE))
+      {
+      return;
+      }
+
+   if (IsHardClass((char *)rp->item))
+      {
+      CfOut(cf_error,""," !! You cannot cancel a reserved hard class \"%s\" in post-condition classes", rp->item);
+      }
+
+   string = (char *)(rp->item);
+   slot = (int)*string;
+
+   CfOut(cf_verbose,""," -> Cancelling class %s\n",string);
+   DeletePersistentContext(string);
+   DeleteItemLiteral(&(VHEAP.list[slot]),CanonifyName(string));
+   DeleteItemLiteral(&(VADDCLASSES.list[slot]),CanonifyName(string));
+   AppendItem(&VDELCLASSES,CanonifyName(string),NULL);
+   }
+}
+
+/*****************************************************************************/
+
+void AddAllClasses(struct Rlist *list,int persist,enum statepolicy policy)
+
+{ struct Rlist *rp;
+
+if (list == NULL)
+   {
+   return;
+   }
+
+for (rp = list; rp != NULL; rp=rp->next)
+   {
+   char *classname = xstrdup(rp->item);
+   CanonifyNameInPlace(classname);
+
+   if (IsHardClass(classname))
+      {
+      CfOut(cf_error,""," !! You cannot use reserved hard class \"%s\" as post-condition class",classname);
+      }
+
+   if (persist > 0)
+      {
+      CfOut(cf_verbose,""," ?> defining persistent promise result class %s\n", classname);
+      NewPersistentContext(CanonifyName(rp->item),persist,policy);
+      }
+   else
+      {
+      CfOut(cf_verbose,""," ?> defining promise result class %s\n", classname);
+      }
+   IdempPrependAlphaList(&VHEAP, classname);
+   }
+}

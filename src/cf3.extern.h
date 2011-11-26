@@ -108,7 +108,6 @@ extern char VUQNAME[];
 extern char LOGFILE[];
 
 extern struct Item *VNEGHEAP;
-extern struct Item *VDELCLASSES;
 extern struct Item *ABORTHEAP;
 
 extern struct Mounted *MOUNTED;             /* Files systems already mounted */
@@ -124,7 +123,6 @@ extern struct Item *SKIPVERIFY;
 extern struct Item *ATTACKERLIST;
 extern struct AlphaList VHEAP; 
 extern struct AlphaList VADDCLASSES;
-extern struct Rlist *PRIVCLASSHEAP;
 
 extern struct Item *VREPOSLIST;
 

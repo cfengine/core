@@ -297,9 +297,6 @@ char TEST_ROOT_DIR[CF_BUFSIZE];
 
 #endif
 
-static void CheckInstalledLibraries(void);
-
-
 /*****************************************************************************/
 
 void AgentDiagnostic(char *file)
@@ -324,7 +321,6 @@ printf("----------------------------------------------------------\n\n");
 TestVariableScan();
 TestExpandPromise();
 TestExpandVariables();
-CheckInstalledLibraries();
 
 #ifdef BUILD_TESTSUITE
 
@@ -2458,40 +2454,3 @@ int FileExists(char *file)
 
 
 /*********************************************************/
-
-
-static void CheckInstalledLibraries(void)
-{
-  printf("---- INSTALLED LIBRARIES ----\n");
-
-
-   
-   #ifndef HAVE_LIBACL
-   printf("\t->LIBACL not found!!\n");
-   #endif
-   
-   #ifndef HAVE_LIBPTHREAD
-   printf("\t->LIBPTHREAD not found!!\n");
-   #endif
-
-   #if !defined(TCDB) && !defined(QDB) 
-   printf("\t->TCDB and QDB  not found!!\n");
-   #endif
-
-   #ifndef HAVE_LIBMYSQLCLIENT
-   printf("\t->LIBMYSQLCLIENT not found!!\n");
-   #endif
-
-   #ifdef HAVE_LIBPQ
-     printf("\t-> LIBPQ (postgresql) version ???\n");
-   #else
-     printf("\t!! LIBPQ (postgresql) not found\n");
-   #endif
-
-   #ifdef HAVE_NOVA
-   Nova_CheckInstalledLibraries();
-   #else
-   printf("\t->Nova not found!!\n");
-   #endif
-}
-

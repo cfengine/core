@@ -63,7 +63,6 @@ extern time_t CONNTIMEOUT;
 extern char CFLOCK[CF_BUFSIZE];
 extern char CFLOG[CF_BUFSIZE];
 extern char CFLAST[CF_BUFSIZE];
-extern char LOCKDB[CF_BUFSIZE];
 
 extern int CFSIGNATURE; /*?*/
 

@@ -924,7 +924,7 @@ char **String2StringArray(char *str, char separator)
        }
     }
  
- char **arr = (char **)calloc(i+2, sizeof(char *));
+ char **arr = (char **)xcalloc(i+2, sizeof(char *));
  
  sp = str;
  i = 0;
@@ -943,7 +943,7 @@ char **String2StringArray(char *str, char separator)
           len = strlen(sp);
           }
        
-       arr[i] = calloc(len+1, sizeof(char));
+       arr[i] = xcalloc(len+1, sizeof(char));
        strncpy(arr[i], sp, len);
        
        sp = esp;

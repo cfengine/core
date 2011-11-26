@@ -87,7 +87,6 @@ InitializeGA(argc,argv);
 
 SetReferenceTime(true);
 SetStartTime(false);
-SetSignals();
 SanitizeEnvironment();
 
 strcpy(THIS_AGENT,CF_AGENTTYPES[ag]);

@@ -175,8 +175,6 @@ extern char *VROUTEDELFMT[];
 
 extern char *VUNMOUNTCOMM[];
 
-extern char *SIGNALS[];
-
 extern int EDITFILESIZE;
 extern int VIFELAPSED;
 extern int VEXPIREAFTER;

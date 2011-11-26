@@ -32,12 +32,31 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+static const char *SIGNALS[] =
+   {
+   [SIGHUP] = "SIGHUP",
+   [SIGINT] = "SIGINT",
+   [SIGTRAP] = "SIGTRAP",
+   [SIGKILL] = "SIGKILL",
+   [SIGPIPE] = "SIGPIPE",
+   [SIGCONT] = "SIGCONT",
+   [SIGABRT] = "SIGABRT",
+   [SIGSTOP] = "SIGSTOP",
+   [SIGQUIT] = "SIGQUIT",
+   [SIGTERM] = "SIGTERM",
+   [SIGCHLD] = "SIGCHLD",
+   [SIGUSR1] = "SIGUSR1",
+   [SIGUSR2] = "SIGUSR2",
+   [SIGBUS] = "SIGBUS",
+   [SIGSEGV] = "SIGSEGV",
+   };
+
 void HandleSignals(int signum)
  
 {
 if (signum != SIGCHLD)
    {
-   CfOut(cf_error,"","Received signal %d (%s) while doing [%s]",signum,SIGNALS[signum],CFLOCK);
+   CfOut(cf_error,"","Received signal %d (%s) while doing [%s]",signum,SIGNALS[signum] ? SIGNALS[signum] : "NOSIG",CFLOCK);
    CfOut(cf_error,"","Logical start time %s ",cf_ctime(&CFSTARTTIME));
    CfOut(cf_error,"","This sub-task started really at %s\n",cf_ctime(&CFINITSTARTTIME));
    fflush(stdout);

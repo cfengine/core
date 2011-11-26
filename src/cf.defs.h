@@ -1062,30 +1062,6 @@ enum fileactions
 
 /*******************************************************************/
 
-enum SignalNames
-   {
-   cfnosignal,
-   cfhup,
-   cfint,
-   cfquit,
-   cfill,
-   cftrap,
-   cfiot,
-   cfemt,
-   cffpr,
-   cfkill,
-   cfbus,
-   cfsegv,
-   cfsys,
-   cfpipe,
-   cfalrm,
-   cfterm
-   };
-
-#define highest_signal 64
-
-/*******************************************************************/
-
 enum modestate
    {
    wild,

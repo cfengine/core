@@ -63,37 +63,6 @@ static bool ReadLine(const char *filename, char *buf, int bufsize);
 static void CreateClassesFromCanonification(char *canonified);
 static void GetCPUInfo(void);
 
-/**********************************************************************/
-
-void SetSignals()
-
-{ int i;
-
- SIGNALS[SIGHUP] = "SIGHUP";
- SIGNALS[SIGINT] = "SIGINT";
- SIGNALS[SIGTRAP] = "SIGTRAP";
- SIGNALS[SIGKILL] = "SIGKILL";
- SIGNALS[SIGPIPE] = "SIGPIPE";
- SIGNALS[SIGCONT] = "SIGCONT";
- SIGNALS[SIGABRT] = "SIGABRT";
- SIGNALS[SIGSTOP] = "SIGSTOP";
- SIGNALS[SIGQUIT] = "SIGQUIT";
- SIGNALS[SIGTERM] = "SIGTERM";
- SIGNALS[SIGCHLD] = "SIGCHLD";
- SIGNALS[SIGUSR1] = "SIGUSR1";
- SIGNALS[SIGUSR2] = "SIGUSR2";
- SIGNALS[SIGBUS] = "SIGBUS";
- SIGNALS[SIGSEGV] = "SIGSEGV";
-
- for (i = 0; i < highest_signal; i++)
-    {
-    if (SIGNALS[i] == NULL)
-       {
-       SIGNALS[i] = "NOSIG";
-       }
-    }
-}
-
 /*******************************************************************/
 
 void CalculateDomainName(const char *nodename, const char *dnsname,

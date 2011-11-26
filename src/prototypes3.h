@@ -1134,7 +1134,6 @@ void CfGetInterfaceInfo(enum cfagenttype ag);
 void Get3Environment(void);
 void BuiltinClasses(void);
 void OSClasses(void);
-void SetSignals(void);
 int IsInterfaceAddress(char *adr);
 int GetCurrentUserName(char *userName, int userNameLen);
 #ifndef MINGW

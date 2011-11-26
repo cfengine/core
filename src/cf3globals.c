@@ -409,8 +409,6 @@ char CFLAST[CF_BUFSIZE] = {0};
 char LOCKDB[CF_BUFSIZE] = {0};
 char LOGFILE[CF_MAXVARSIZE] = {0};
 
-char *SIGNALS[highest_signal];
-
 time_t CFSTARTTIME;
 time_t CFINITSTARTTIME;
 char  STR_CFENGINEPORT[16] = {0};

@@ -33,6 +33,24 @@ static struct Item *ALL_OUTGOING;
 
 /* Implementation */
 
+void MonNetworkInit(void)
+{
+for (int i = 0; i < ATTR; i++)
+   {
+   char vbuff[CF_BUFSIZE];
+
+   sprintf(vbuff,"%s/state/cf_incoming.%s",CFWORKDIR,ECGSOCKS[i].name);
+   MapName(vbuff);
+   CreateEmptyFile(vbuff);
+
+   sprintf(vbuff,"%s/state/cf_outgoing.%s",CFWORKDIR,ECGSOCKS[i].name);
+   MapName(vbuff);
+   CreateEmptyFile(vbuff);
+   }
+}
+
+/******************************************************************************/
+
 static void SetNetworkEntropyClasses(const char *service, const char *direction,
                                      const struct Item *list)
 {

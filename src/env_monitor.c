@@ -93,17 +93,6 @@ void MonInitialize(void)
 int i,j,k;
 char vbuff[CF_BUFSIZE];
 
-for (i = 0; i < ATTR; i++)
-   {
-   sprintf(vbuff,"%s/state/cf_incoming.%s",CFWORKDIR,ECGSOCKS[i].name);
-   MapName(vbuff);
-   CreateEmptyFile(vbuff);
-
-   sprintf(vbuff,"%s/state/cf_outgoing.%s",CFWORKDIR,ECGSOCKS[i].name);
-   MapName(vbuff);
-   CreateEmptyFile(vbuff);
-   }
-
 sprintf(vbuff,"%s/state/cf_users",CFWORKDIR);
 MapName(vbuff);
 CreateEmptyFile(vbuff);
@@ -146,6 +135,7 @@ LoadHistogram();
 
 /* Look for local sensors - this is unfortunately linux-centric */
 
+MonNetworkInit();
 MonTempInit();
 MonOtherInit();
 

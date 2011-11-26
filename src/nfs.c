@@ -32,6 +32,9 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+/* seconds */
+#define RPCTIMEOUT 60
+
 #ifndef MINGW
 static void AugmentMountInfo(struct Rlist **list,char *host,char *source,char *mounton,char *options);
 static int MatchFSInFstab(char *match);

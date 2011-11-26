@@ -96,7 +96,6 @@ extern mode_t DEFAULTMODE;
 extern char VIPADDRESS[];
 extern char VPREFIX[];
 extern int VRECURSE;
-extern int RPCTIMEOUT;
 
 extern int SKIPIDENTIFY;
 extern char  DEFAULTCOPYTYPE;

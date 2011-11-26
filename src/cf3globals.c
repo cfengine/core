@@ -417,7 +417,6 @@ char  STR_CFENGINEPORT[16] = {0};
 unsigned short SHORT_CFENGINEPORT;
 time_t CONNTIMEOUT = 10;	   /* seconds */
 time_t RECVTIMEOUT = 30;	   /* seconds */
-int RPCTIMEOUT = 60;			/* seconds */
 pid_t ALARM_PID = -1;
 int SKIPIDENTIFY = false;
 int EDITFILESIZE = 10000;

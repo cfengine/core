@@ -25,6 +25,13 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#undef malloc
+#undef calloc
+#undef realloc
+#undef strdup
+#undef strndup
+#undef memdup
+
 /*****************************************************************************/
 
 static void *CheckResult(void *ptr, const char *fn, bool check_result)

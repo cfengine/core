@@ -34,4 +34,30 @@ char *xstrdup(const char *str);
 char *xstrndup(const char *str, size_t n);
 void *xmemdup(const void *mem, size_t size);
 
+/*
+ * Prevent any code from using un-wrapped allocators.
+ *
+ * Use x* equivalents instead.
+ */
+
+#undef malloc
+#undef calloc
+#undef realloc
+#undef strdup
+#undef strndup
+#undef memdup
+#define malloc __error_unchecked_malloc
+#define calloc __error_unchecked_calloc
+#define realloc __error_unchecked_realloc
+#define strdup __error_unchecked_strdup
+#define strndup __error_unchecked_strndup
+#define memdup __error_unchecked_memdup
+
+void __error_unchecked_malloc(void);
+void __error_unchecked_calloc(void);
+void __error_unchecked_realloc(void);
+void __error_unchecked_strdup(void);
+void __error_unchecked_strndup(void);
+void __error_unchecked_memdup(void);
+
 #endif

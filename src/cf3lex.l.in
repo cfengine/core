@@ -44,6 +44,11 @@ void *yyrealloc(void *ptr, yy_size_t bytes)
 return xrealloc(ptr, bytes);
 }
 
+#undef malloc
+#undef realloc
+#define malloc xmalloc
+#define realloc xrealloc
+
 static void yyuseraction()
 {
 P.offsets.current += yyleng;

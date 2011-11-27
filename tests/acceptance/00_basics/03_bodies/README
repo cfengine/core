@@ -1,0 +1,8 @@
+The files in this directory are tests of bodies that occur "anywhere":
+
+0xx.cf	body action
+1xx.cf	body classes
+2xx.cf	body comments
+3xx.cf	body depends_on
+4xx.cf	body handle
+5xx.cf	body ifvarclass

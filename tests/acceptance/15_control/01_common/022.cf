@@ -1,0 +1,65 @@
+#######################################################
+#
+# Test domain - expect it to set the $(sys.domain) variable
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf" };
+  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+
+  domain => "puppetlabs.com";
+}
+
+bundle common g
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent check
+{
+vars:
+	"dummy" string => "dummy";
+
+classes:
+	"ok" expression => strcmp("$(sys.domain)", "puppetlabs.com");
+
+reports:
+    DEBUG::
+	"Expected $(sys.domain) to be puppetlabs.com";
+    ok::
+	"$(this.promise_filename) Pass";
+    !ok::
+	"$(this.promise_filename) FAIL";
+}
+
+#######################################################
+
+bundle agent fini
+{
+vars:
+	"dummy" string => "dummy";
+}

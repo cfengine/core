@@ -6,7 +6,11 @@
 ;; Maintainer: Ted Zlatanov <tzz@lifelogs.com>
 ;; Keywords: languages
 
-;; This file is part of GNU Emacs.
+;; This file is part of GNU Emacs, but has trivial compatibility
+;; modifications for Emacs versions before 24.  Emacs 24 and newer
+;; includes this code and you should use that version.  The following
+;; is the copyright notice from Emacs, which still applies to this
+;; code and all derivations thereof.
 
 ;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -24,24 +28,34 @@
 ;;; Commentary:
 
 ;; Provides support for editing GNU Cfengine files, including
-;; font-locking, Imenu and indention, but with no special keybindings.
+;; font-locking, Imenu and indentation, but with no special keybindings.
 
-;; Possible customization for auto-mode selection:
-;; (push '(("^cfagent.conf\\'" . cfengine-mode)) auto-mode-alist)
-;; (push '(("^cf\\." . cfengine-mode)) auto-mode-alist)
-;; (push '(("\\.cf\\'" . cfengine-mode)) auto-mode-alist)
+;; The CFEngine 3.x support doesn't have Imenu support but patches are
+;; welcome.
 
-;; Or, if you want to use the CFEngine 3.x support:
+;; You can set it up so either cfengine-mode (2.x and earlier) or
+;; cfengine3-mode (3.x) will be picked, depending on the buffer
+;; contents:
 
-;; (push '(("^cfagent.conf\\'" . cfengine3-mode)) auto-mode-alist)
-;; (push '(("^cf\\." . cfengine3-mode)) auto-mode-alist)
-;; (push '(("\\.cf\\'" . cfengine3-mode)) auto-mode-alist)
+;; (add-to-list 'auto-mode-alist '("\\.cf\\'" . cfengine-auto-mode))
+
+;; OR you can choose to always use a specific version, if you prefer
+;; it
+
+;; (add-to-list 'auto-mode-alist '("\\.cf\\'" . cfengine3-mode))
+;; (add-to-list 'auto-mode-alist '("^cf\\." . cfengine-mode))
+;; (add-to-list 'auto-mode-alist '("^cfagent.conf\\'" . cfengine-mode))
 
 ;; This is not the same as the mode written by Rolf Ebert
 ;; <ebert@waporo.muc.de>, distributed with cfengine-2.0.5.  It does
 ;; better fontification and indentation, inter alia.
 
 ;;; Code:
+
+;; compatibility with Emacsen where prog-mode doesn't exist
+(defalias 'cfengine-prog-mode (if (fboundp 'prog-mode)
+                                  'prog-mode
+                                'fundamental-mode))
 
 (defgroup cfengine ()
   "Editing Cfengine files."
@@ -92,6 +106,12 @@ This includes those for cfservd as well as cfagent.")
      'symbol-name
      '(string int real slist ilist rlist irange rrange counter))
     "List of the CFEngine 3.x variable types."))
+
+(defconst cfengine-font-lock-syntactic-keywords
+  ;; In the main syntax-table, backslash is marked as a punctuation, because
+  ;; of its use in DOS-style directory separators.  Here we try to recognize
+  ;; the cases where backslash is used as an escape inside strings.
+  '(("\\(\\(?:\\\\\\)+\\)\"" 1 "\\")))
 
 (defvar cfengine-font-lock-keywords
   `(;; Actions.
@@ -391,11 +411,20 @@ Intended as the value of `indent-line-function'."
 ;; CATEGORY: [a-zA-Z_]+:
 
 (defun cfengine-common-settings ()
-  (set (make-local-variable 'syntax-propertize-function)
-       ;; In the main syntax-table, \ is marked as a punctuation, because
-       ;; of its use in DOS-style directory separators.  Here we try to
-       ;; recognize the cases where \ is used as an escape inside strings.
-       (syntax-propertize-rules ("\\(\\(?:\\\\\\)+\\)\"" (1 "\\"))))
+  (if (fboundp 'syntax-propertize-rules)
+    (set (make-local-variable 'syntax-propertize-function)
+         ;; In the main syntax-table, \ is marked as a punctuation, because
+         ;; of its use in DOS-style directory separators.  Here we try to
+         ;; recognize the cases where \ is used as an escape inside strings.
+         (syntax-propertize-rules ("\\(\\(?:\\\\\\)+\\)\"" (1 "\\"))))
+
+    ;; Backwards compatibility without `syntax-propertize-function'.
+    (setq font-lock-defaults
+          '(cfengine-font-lock-keywords
+            nil nil nil beginning-of-line
+            (font-lock-syntactic-keywords
+             . cfengine-font-lock-syntactic-keywords))))
+
   (set (make-local-variable 'parens-require-spaces) nil)
   (set (make-local-variable 'comment-start)  "# ")
   (set (make-local-variable 'comment-start-skip)
@@ -416,7 +445,7 @@ Intended as the value of `indent-line-function'."
   (modify-syntax-entry ?\\ "." table))
 
 ;;;###autoload
-(define-derived-mode cfengine3-mode prog-mode "CFEngine3"
+(define-derived-mode cfengine3-mode cfengine-prog-mode "CFEngine3"
   "Major mode for editing cfengine input.
 There are no special keybindings by default.
 
@@ -436,7 +465,7 @@ to the action header."
        #'cfengine3-end-of-defun))
 
 ;;;###autoload
-(define-derived-mode cfengine-mode prog-mode "Cfengine"
+(define-derived-mode cfengine-mode cfengine-prog-mode "Cfengine"
   "Major mode for editing cfengine input.
 There are no special keybindings by default.
 
@@ -465,6 +494,18 @@ to the action header."
   (set (make-local-variable 'beginning-of-defun-function)
        #'cfengine-beginning-of-defun)
   (set (make-local-variable 'end-of-defun-function) #'cfengine-end-of-defun))
+
+;;;###autoload
+(defun cfengine-auto-mode ()
+  "Choose between `cfengine-mode' and `cfengine3-mode' depending
+on the buffer contents"
+  (let ((v3 nil))
+    (save-restriction
+      (goto-char (point-min))
+      (while (not (or (eobp) v3))
+        (setq v3 (looking-at (concat cfengine3-defuns-regex "\\>")))
+        (forward-line)))
+    (if v3 (cfengine3-mode) (cfengine-mode))))
 
 (provide 'cfengine3)
 (provide 'cfengine)

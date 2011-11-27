@@ -722,7 +722,7 @@ enum cfdatatype FunctionReturnType(const char *name);
 FnCallType *FindFunction(const char *name);
 void SetFnCallReturnStatus(char *fname,int status,char *message,char *fncall_classes);
 
-/* full-write.c */
+/* full_write.c */
 
 int FullWrite(int desc, const char *ptr, size_t len);
 
@@ -815,7 +815,7 @@ void CfHtmlFooter(FILE *fp,char *footer);
 void CfHtmlTitle(FILE *fp,char *title);
 int IsHtmlHeader(char *s);
 
-/* item-lib.c */
+/* item_lib.c */
 
 void PrependFullItem(struct Item **liststart,char *itemstring,char *classes,int counter,time_t t);
 void PurgeItemList(struct Item **list,char *name);

@@ -47,7 +47,7 @@ libpromises_la_SOURCES =                                                \
         modes.c                                                         \
         exec_tools.c                                                    \
         nfs.c                                                           \
-        item-lib.c                                                      \
+        item_lib.c                                                      \
 	string_lib.c                                                    \
 	files_lib.c                                                     \
 	addr_lib.c                                                      \
@@ -76,7 +76,7 @@ libpromises_la_SOURCES =                                                \
         crypto.c                                                        \
         sort.c                                                          \
 	keyring.c							\
-        full-write.c                                                    \
+        full_write.c                                                    \
         expand.c                                                        \
         matching.c                                                      \
         selfdiagnostic.c                                                \

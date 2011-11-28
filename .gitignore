@@ -72,6 +72,7 @@ tests/acceptance/*.log
 tests/acceptance/.succeeded
 tests/acceptance/workdir
 tests/acceptance/mock-package-manager
+tests/acceptance/dnswrapper.so
 
 # unit tests
 

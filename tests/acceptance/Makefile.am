@@ -11,7 +11,7 @@ dnswrapper_so_LINK = $(CCLD) $(dnswrapper_so_CFLAGS) $(CFLAGS) $(dnswrapper_so_L
 dnswrapper_so_CFLAGS = -fPIC -fpic
 dnswrapper_so_LDFLAGS = -shared
 
-TESTS_ENVIRONMENT = env LD_PRELOAD="$(abs_builddir)/dnswrapper.so"
+#TESTS_ENVIRONMENT = env LD_PRELOAD="$(abs_builddir)/dnswrapper.so"
 
 
 check_PROGRAMS += mock-package-manager

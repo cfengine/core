@@ -401,29 +401,6 @@ if (result != 0)
 return true;
 }
 
-/*****************************************************************************/
-
-/* Verifies that a given lock is taken (not neccessary by the current thread) */
-
-void AssertThreadLocked(pthread_mutex_t *mutex, char *fname)
-{
-int status = pthread_mutex_trylock(mutex);
-
-if (status == 0)
-   {
-   char mutexname[CF_BUFSIZE];
-   GetMutexName(mutex, mutexname);
-
-   FatalError("Assertion failed: unlocked mutex in %s: %s\n", fname, mutexname);
-   }
-
-if (status != EBUSY && status != EDEADLK)
-   {
-   CfOut(cf_error, "pthread_mutex_trylock", "!! Unable to test mutex state in %s", fname);
-   FatalError(NULL);
-   }
-}
-
 #endif
 
 /*****************************************************************************/

@@ -862,8 +862,6 @@ struct PromiseIdent *NewPromiseId(char *handle,struct Promise *pp)
 
 { struct PromiseIdent *ptr;
 
-AssertThreadLocked(cft_policy,"NewPromiseId");
-
 ptr = xmalloc(sizeof(struct PromiseIdent));
 
 ptr->filename = xstrdup(pp->audit->filename);
@@ -879,8 +877,6 @@ return ptr;
 static void DeleteAllPromiseIdsRecurse(struct PromiseIdent *key)
 
 {
-AssertThreadLocked(cft_policy, "DeleteAllPromiseIdsRecurse");
-
 if (key->next != NULL)
    {
    DeleteAllPromiseIdsRecurse(key->next);
@@ -916,8 +912,6 @@ ThreadUnlock(cft_policy);
 static struct PromiseIdent *PromiseIdExists(char *handle)
 
 { struct PromiseIdent *key;
-
-AssertThreadLocked(cft_policy, "PromiseIdExists");
 
 for (key = PROMISE_ID_LIST; key != NULL; key=key->next)
    {

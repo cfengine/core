@@ -1156,11 +1156,9 @@ void GetLockName(char *lockname,char *locktype,char *base,struct Rlist *params);
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
 int ThreadLock(pthread_mutex_t *name);
 int ThreadUnlock(pthread_mutex_t *name);
-void AssertThreadLocked(pthread_mutex_t *name, char *fname);
 #else
 #define ThreadLock(name) (1)
 #define ThreadUnlock(name) (1)
-#define AssertThreadLocked(name, fname)
 #endif
 
 void PurgeLocks(void);

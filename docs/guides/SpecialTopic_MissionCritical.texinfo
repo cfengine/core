@@ -71,6 +71,7 @@ Copyright @copyright{} 2011 CFEngine AS
 @end ifinfo
 
 @ifnottex
+
 @node Top, What are Mission Critical Operations?, (dir), (dir)
 @top CFEngine for Mission Critical Operations
 @menu
@@ -84,8 +85,10 @@ Copyright @copyright{} 2011 CFEngine AS
 * Redundant hub architecture::  
 * How do I make a change in mission-critical infrastructure?::  
 * Separating Policy Changes from ad-hoc Changes::  
-* Appendix::                    
+* Appendix 1::                  
+* Appendix 2::                  
 @end menu
+
 
 @end ifnottex
 @iftex
@@ -638,7 +641,7 @@ handle on change, using technology designed for stability with agility.
 CFEngine has the ability to change entire systems of thousands of
 hosts within a timeframe of 5 to 10 minutes.
 
-@node Separating Policy Changes from ad-hoc Changes, Appendix, How do I make a change in mission-critical infrastructure?, Top
+@node Separating Policy Changes from ad-hoc Changes, Appendix 1, How do I make a change in mission-critical infrastructure?, Top
 @unnumberedsec Separating Policy Changes from @i{ad-hoc} Changes
 @sp 1
 
@@ -681,8 +684,8 @@ form for your convenience.
 
 
 @page
-@node Appendix,  , Separating Policy Changes from ad-hoc Changes, Top
-@section Appendix MongoDB access from the command line.
+@node Appendix 1, Appendix 2, Separating Policy Changes from ad-hoc Changes, Top
+@unnumberedsec Appendix MongoDB access from the command line.
 
 
 
@@ -723,6 +726,54 @@ CFEngineNova:SECONDARY> db.notebook.find();
 
 @end verbatim
 @end cartouche
+
+
+
+@page
+@node Appendix 2,  , Appendix 1, Top
+@unnumberedsec Appendix Shutting down Mongo with replication
+
+
+Anytime you shutdown mongo, it will automatically failover. You can~t
+specifically tell which node to become primary, but you can use
+replFreeze and replSetStepDown to alter which is eligible to become
+primary (small difference).
+ 
+Basically we would freeze a node from becoming primary, then tell the
+primary to step down, which leaves only one node (see
+@url{http://www.mongodb.org/display/DOCS/Forcing+a+Member+to+be+Primary} for
+a good explanation).
+ 
+However, failover is the easy part. The other half to the action is
+that all client will receive a new policy_server.dat based on the new
+primary. This will create quite a flux in the system for a bit as it
+reconfigure. This will take 10-20 minutes for everyone to stabilize. I
+would reserve a full failover for when the primary will be down for an
+extended period of time.
+ 
+Since the outages you have are fairly quick, I would just shutdown
+mongo/cfengine (or freeze) the secondaries to prevent a
+failover. Shutting them down would prevent all client from getting new
+files, but that shouldn~t be an issue.
+ 
+If you freeze the secondaries, and leave CFE runnning, the clients
+will update from the secondaries (they will get a license error).
+ 
+To freeze the secondaries:
+ 
+On any node:
+@verbatim
+# mongo -host `IP OF THE SECONDARY' # or login to the node and run plain ´mongo¡.
+> rs.status()                       # this will show the status of the replicaSet
+> rs.freeze(seconds)                # how many seconds before the host can become primary.
+> exit
+@end verbatim
+ 
+Set the freeze for several hours (for four hours -
+@samp{rs.freeze(14400)}). Then shutdown cfengine on the primary as normal
+(@code{/etc/init.d/cfengine3 stop}). When you are done with the change, bring
+up cfengine (@code{cf-agent -f failsafe.cf}), then set the freeze time for 0
+seconds to unfreeze it (@samp{rs.freeze(0)}).
 
 
 

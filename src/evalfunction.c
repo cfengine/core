@@ -1954,7 +1954,7 @@ for (rp = (struct Rlist *)rval2.item; rp != NULL; rp=rp->next)
    size += strlen(rp->item) + strlen(join);
    }
 
-if ((joined = malloc(size)) == NULL)
+if ((joined = malloc(size + 1)) == NULL)
    {
    CfOut(cf_error,"malloc","Function \"join\" was not able to allocate memory\n",name);
    SetFnCallReturnStatus("join",FNCALL_FAILURE,"Memory error",NULL);

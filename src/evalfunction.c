@@ -1899,7 +1899,7 @@ for (rp = (struct Rlist *)rval2.item; rp != NULL; rp=rp->next)
    size += strlen(rp->item) + strlen(join);
    }
 
-joined = xmalloc(size);
+joined = xmalloc(size + 1);
 
 size = 0;
 

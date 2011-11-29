@@ -27,7 +27,6 @@ LOG=test.log
 SUMMARY=summary.log
 BASE_WORKDIR=$(pwd)/workdir
 QUIET=
-NOVA=
 STAGING=
 NETWORK=1
 GAINROOT=fakeroot
@@ -57,10 +56,8 @@ usage() {
   echo "testall [-q] [--gainroot=<command>] [--agent=<agent>] [--no-nova] [--staging] [--no-network] [<test> <test>...]"
   echo
   echo "If no test is given, all tests are run:"
-  echo "  Tests with names of form NNN.cf are expected to run succesfully"
-  echo "  Tests with names of form NNNx.cf are expected to crash"
-  echo "  Tests with names of form NNNn.cf and NNNnx.cf are run only under Nova"
-  echo "    (and may be disabled by --no-nova option)"
+  echo "  Tests with names of form <file>.cf are expected to run succesfully"
+  echo "  Tests with names of form <file>x.cf are expected to crash"
   echo "  Tests inside directories called 'staging' are not run"
   echo "    (unless --staging option is passed)"
   echo "  Tests inside directories called 'network' are not run"
@@ -91,10 +88,7 @@ runtest() {
     EXPECTED_CRASH=
   fi
 
-  if [ -z "$NOVA" ] && echo "$TEST" | grep -q -e 'nx\?\.cf'; then
-    SKIP=1
-    SKIPREASON="Nova tests are disabled"
-  elif [ -z "$STAGING" ] && echo "$TEST" | grep -q -e 'staging'; then
+  if [ -z "$STAGING" ] && echo "$TEST" | grep -q -e 'staging'; then
     SKIP=1
     SKIPREASON="Staging tests are disabled"
   elif [ -z "$NETWORK" ] && echo "$TEST" | grep -q -e 'network'; then
@@ -208,8 +202,6 @@ while true; do
       QUIET=1;;
     --gainroot=*)
       GAINROOT=${1#--gainroot=};;
-    --no-nova)
-      NOVA=;;
     --staging)
       STAGING=1;;
     --no-network)
@@ -224,10 +216,6 @@ while true; do
   esac
   shift
 done
-
-if $AGENT -V | grep -q 'Nova'; then
-  NOVA=1
-fi
 
 if [ $# -gt 0 ]; then
   # We need to run all specified tests

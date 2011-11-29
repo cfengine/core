@@ -11,7 +11,7 @@
 
 body common control
 {
-  inputs => { "../../default.cf" };
+  inputs => { "../../default.cf.sub" };
   bundlesequence  => { "g", default("$(this.promise_filename)") };   
   version => "1.0";
 nova_edition::

@@ -8,7 +8,7 @@ body common control
 {
   ignore_missing_bundles => "on";
 
-  inputs => { "../../default.cf" };
+  inputs => { "../../default.cf.sub" };
   bundlesequence  => { "g", "missing", default("$(this.promise_filename)") };   
   version => "1.0";
 nova_edition::

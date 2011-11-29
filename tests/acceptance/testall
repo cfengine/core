@@ -57,7 +57,7 @@ usage() {
   echo
   echo "If no test is given, all tests are run:"
   echo "  Tests with names of form <file>.cf are expected to run succesfully"
-  echo "  Tests with names of form <file>x.cf are expected to crash"
+  echo "  Tests with names of form <file>.x.cf are expected to crash"
   echo "  Tests inside directories called 'staging' are not run"
   echo "    (unless --staging option is passed)"
   echo "  Tests inside directories called 'network' are not run"
@@ -82,7 +82,7 @@ runtest() {
     echo -n "$TEST "
   fi
 
-  if echo "$TEST" | grep -q -F -e x.cf ; then
+  if echo "$TEST" | grep -q -F -e .x.cf ; then
     EXPECTED_CRASH=1
   else
     EXPECTED_CRASH=
@@ -229,14 +229,14 @@ if [ $# -gt 0 ]; then
     if [ -f $test ]; then
       TESTS="$TESTS $test"
     elif [ -d $test ]; then
-      ADDTESTS=$(find $test -name '[0-9][0-9][0-9]*.cf' | sort)
+      ADDTESTS=$(find $test -name '*.cf' | sort)
       TESTS="$TESTS $ADDTESTS"
     else
       echo "Unable to open test file/directory: $test"
     fi
   done
 else
-  TESTS=$(find $(dirname $0) -name '[0-9][0-9][0-9]*.cf' | sort)
+  TESTS=$(find $(dirname $0) -name '*.cf' | sort)
 fi
 
 #

@@ -58,7 +58,7 @@ run will be additionally marked in output as "(UNEXPECTED FAILURE)".
 
 You might run a subset of tests by passing either filenames:
 
-  ./testall --agent=$workdir/bin/cf-agent 01_vars/01_basic/001.cf 01_vars/01_basic/002x.cf
+  ./testall --agent=$workdir/bin/cf-agent 01_vars/01_basic/001.cf 01_vars/01_basic/002.x.cf
 
 or directories to 'testall':
 
@@ -79,11 +79,7 @@ compare files when testing file edits, or for cleaning up temporary files).
 
 Tests should be named with only digits (e.g., "001.cf") unless they are expected
 to crash (that is, if they contan syntax errors or other faults), in which case
-the filename should end in an 'x' (e.g., "001x.cf").
-
-Tests which use Nova-only features should have a name which ends in an 'n' if
-they are expected to pass, and 'nx' if they are expected to crash (e.g.,
-"007n.cf" or "007nx.cf").
+the filename should have an 'x' suffix (e.g., "001.x.cf").
 
 Tests which are not expected to pass yet (e.g. there is a bug in code which
 prevents tests from passing) should be placed in 'staging' subdirectory in the

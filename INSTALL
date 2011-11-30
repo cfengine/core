@@ -28,7 +28,7 @@ In order to build CFEngine you need the following tools and libraries installed:
 In order to build CFEngine checked out from Subversion, you need the following
 additional tools to regenerate build scripts and generate source code files:
 
-* GNU Automake
+* GNU Automake >= 1.10
 * GNU Autoconf >= 2.59
 * GNU Libtool >= 1.5.4
 * Yacc (note: GNU Bison 2.4.2 has troubles invoking m4)

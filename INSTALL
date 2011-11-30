@@ -31,7 +31,7 @@ additional tools to regenerate build scripts and generate source code files:
 * GNU Automake
 * GNU Autoconf >= 2.59
 * GNU Libtool >= 1.5.4
-* Yacc
+* Yacc (note: GNU Bison 2.4.2 has troubles invoking m4)
 * Lex
 
 Latest stable versions of the tools and libraries are generally advised.

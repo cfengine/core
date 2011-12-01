@@ -14,7 +14,7 @@ if LINUX
 # noinst/check libraries are "convenience" static ones unless explicitly
 # overriden.
 #
-noinst_PROGRAMS = dnswrapper.so
+noinst_PROGRAMS += dnswrapper.so
 dnswrapper_so_LINK = $(CCLD) $(dnswrapper_so_CFLAGS) $(CFLAGS) $(dnswrapper_so_LDFLAGS) $(LDFLAGS) -o $@
 dnswrapper_so_CFLAGS = -fPIC -fpic
 dnswrapper_so_LDFLAGS = -shared

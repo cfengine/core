@@ -39,7 +39,7 @@
 # the online docs
 #
 
-# Subversion : $Rev: 84 $
+# Subversion : $Rev: 103 $
 # For Cfengine Core: 3.1.0
 
 ###################################################
@@ -175,6 +175,43 @@ insert_lines:
  "$(list)"
 
    comment => "Append lines to the file if they don't already exist";
+}
+
+##
+
+bundle edit_line replace_line_end(start,end)
+#
+# Lines starting with "$(start)" will get the ending given in "$(end)",
+# whitespaces will be left unmodified.
+# For example, replace_line_end("ftp", "2121/tcp") would replace
+# "ftp             21/tcp"
+# with 
+# "ftp             2121/tcp"
+{
+field_edits:
+
+   "\s*$(start)\s.*"
+      edit_field => line("(^|\s)$(start)\s*", "2", "$(end)","set");
+}
+
+##
+
+bundle edit_line append_to_line_end(start,end)
+#
+# Lines starting with "$(start)" and not ending with "$(end)"
+# will get appended with "$(end)", whitespaces will be left unmodified.
+# For example, append_to_line_end("kernel", "vga=791") would replace
+# "kernel /boot/vmlinuz root=/dev/sda7"
+# with 
+# "kernel /boot/vmlinuz root=/dev/sda7 resume=/dev/sda9 vga=791"
+#
+# WARNING: Be careful not to have multiple promises matching the same line,
+#          which would result in the line growing indefinetively.
+{
+field_edits:
+
+   "\s*$(start)\s.*"
+      edit_field => line("(^|\s)$(start)\s*", "2", "$(end)","append");
 }
 
 ##
@@ -397,15 +434,18 @@ vars:
 
 files:
 
+!windows::
   "$(crontab)/$(user)" 
 
     comment => "A user's regular batch jobs are added to this file",
      create => "true",
-     edit_line => append_if_no_line("$(mins) $(hours) * * * $(commands)"),
-     perms => mo("644","$(user)");
+  edit_line => append_if_no_line("$(mins) $(hours) * * * $(commands)"),
+      perms => mo("644","$(user)"),
+    classes => if_repaired("changed_crontab");
 
 processes:
 
+changed_crontab::
    "cron"
          comment => "Most crons need to be huped after file changes",
          signals => { "hup" };
@@ -442,6 +482,18 @@ extend_fields      => "true";
 allow_blank_fields => "true";
 }
 
+##
+
+body edit_field line(split,col,newval,method)
+{
+field_separator    => "$(split)";
+select_field       => "$(col)";
+value_separator    => " ";
+field_value        => "$(newval)";
+field_operation    => "$(method)";
+extend_fields      => "true";
+allow_blank_fields => "true";
+}
 
 ##
 
@@ -595,6 +647,13 @@ log_string => "$(sys.date), $(message)";
 log_repaired => "$(log)";
 }
 
+###
+
+body action log_verbose
+{
+log_level => "verbose";
+}
+
 ##
 ## contain
 ##
@@ -632,6 +691,14 @@ no_output => "true";
 body contain in_shell
 {
 useshell => "true";
+}
+
+##
+
+body contain in_shell_bg
+{
+useshell => "true";
+background => "true";
 }
 
 ##
@@ -943,8 +1010,23 @@ owners => { "$(user)" };
 
 body acl access_generic(acl)
 # default/inherited ACLs are left unchanged,
-# applicable for both files and directory on all platforms
+# applicable for both files and directories on all platforms
 {
+acl_method => "overwrite";
+aces => { "@(acl)" };
+
+windows::
+acl_type => "ntfs";
+
+!windows::
+acl_type => "posix";
+}
+
+##
+
+body acl ntfs(acl)
+{
+acl_type => "ntfs";
 acl_method => "overwrite";
 aces => { "@(acl)" };
 }
@@ -980,6 +1062,13 @@ body depth_search recurse_ignore(d,list)
 {
 depth => "$(d)";
 exclude_dirs => { @(list) };
+}
+
+##
+
+body depth_search include_base
+{
+include_basedir => "true";
 }
 
 ##
@@ -1375,14 +1464,42 @@ body package_method solaris (pkgname, spoolfile, adminfile)
 {
 package_changes => "individual";
 package_list_command => "/usr/bin/pkginfo -l";
-package_multiline_start    =>  "\s*PKGINST:\s+[^\s]+";
-package_list_name_regex    => "\s*PKGINST:\s+([^\s]+)";
-package_list_version_regex => "\s*VERSION:\s+([^\s]+)";
+package_multiline_start    =>  "\s*PKGINST:\s+[^\s]+.*";
+package_list_name_regex    => "\s*PKGINST:\s+([^\s]+).*";
+package_list_version_regex => "\s*VERSION:\s+([^\s]+).*";
 package_list_arch_regex    => "\s*ARCH:\s+([^\s]+)";
 package_installed_regex => "\s*STATUS:\s*(completely|partially)\s+installed.*";
 package_name_convention => "$(name)";
 package_add_command => "/usr/sbin/pkgadd -n -a /tmp/$(adminfile) -d /tmp/$(spoolfile)";
 package_delete_command => "/usr/sbin/pkgrm -n -a /tmp/$(adminfile)";
+}
+
+##
+
+#
+# The following bundle is part of a package setup for solaris, see unit examples
+#
+
+bundle edit_line create_solaris_admin_file
+{
+insert_lines:
+		
+  "mail=
+instance=unique
+partial=nocheck
+runlevel=nocheck
+idepend=nocheck
+rdepend=nocheck
+space=nocheck
+setuid=nocheck
+conflict=nocheck
+action=nocheck
+networktimeout=60
+networkretries=3
+authentication=quit
+keystore=/var/sadm/security
+proxy=
+basedir=default";
 }
 
 ##
@@ -1489,6 +1606,34 @@ freebsd::
  package_name_convention => "$(name)-$(version)";
  package_add_command => "/usr/sbin/pkg_add -r";
  package_delete_command => "/usr/sbin/pkg_delete";
+}
+
+##
+
+#
+# Suggested by -- bronto -- CFE waits for return codes from some packages
+#
+
+body package_method aptget
+{
+package_changes => "bulk";
+package_list_command => "/usr/bin/dpkg -l";
+package_list_name_regex    => "ii\s+([^\s]+).*";
+package_list_version_regex => "ii\s+[^\s]+\s+([^\s]+).*";
+package_installed_regex => ".*"; # all reported are installed
+package_name_convention => "$(name)";
+
+# set it to "0" to avoid caching of list during upgrade
+package_list_update_ifelapsed => "240";
+
+# package_add_command => "/usr/bin/apt-get --force-yes --yes -q -o DPkg::Options::=--force-confold install";
+package_add_command => "/usr/bin/apt-get --yes -q -o DPkg::Options::=--force-confold install";
+package_list_update_command => "/usr/bin/apt-get update";
+package_delete_command => "/usr/bin/apt-get --yes -q remove";
+# package_update_command =>  "/usr/bin/apt-get --force-yes --yes -q -o DPkg::Options::=--force-confold install";
+package_update_command =>  "/usr/bin/apt-get --yes -q -o DPkg::Options::=--force-confold install";
+package_verify_command => "/usr/bin/dpkg -s";
+package_noverify_returncode => "1";
 }
 
 ##-------------------------------------------------------
@@ -1602,9 +1747,16 @@ track_growing_file => "true";
 
 ##
 
+body match_value scan_changing_file(line)
+{
+select_line_matching => "$(line)";
+track_growing_file => "false";
+}
+
+##
+
 body action sample_rate(x)
 {
 ifelapsed => "$(x)";
 expireafter => "10";
 }
-

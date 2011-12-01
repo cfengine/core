@@ -101,6 +101,8 @@ body agent control
  debian::
   environment => { 
                   "DEBIAN_FRONTEND=noninteractive",
+#                  "APT_LISTBUGS_FRONTEND=none",
+#                  "APT_LISTCHANGES_FRONTEND=none",
                  };
 
 }

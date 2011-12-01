@@ -32,7 +32,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-extern int CFA_MAXTHREADS;
 extern struct cfagent_connection *COMS;
 
 static void TruncateFile(char *name);

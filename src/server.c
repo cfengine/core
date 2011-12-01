@@ -151,14 +151,13 @@ const char *HINTS[15] =
 /* GLOBAL VARIABLES                                                */
 /*******************************************************************/
 
-int CLOCK_DRIFT = 3600;   /* 1hr */
+static int CLOCK_DRIFT = 3600;   /* 1hr */
+static int ACTIVE_THREADS;
+
 int CFD_MAXPROCESSES = 0;
-int ACTIVE_THREADS = 0;
 int NO_FORK = false;
-int CHECK_RFC931 = false;
 int CFD_INTERVAL = 0;
 int DENYBADCLOCKS = true;
-int MULTIPLECONNS = false;
 int TRIES = 0;
 int MAXTRIES = 5;
 int LOGCONNS = false;

@@ -48,11 +48,8 @@ extern struct BodySyntax CF_REMROLE_BODIES[];
 extern int CLOCK_DRIFT;
 extern int CFD_MAXPROCESSES;
 extern int NO_FORK;
-extern int CHECK_RFC931;
 extern int CFD_INTERVAL;
 extern int DENYBADCLOCKS;
-extern int MULTIPLECONNS;
-extern int TRIES;
 extern int MAXTRIES;
 extern int LOGCONNS;
 extern int LOGENCRYPT;
@@ -185,7 +182,6 @@ CFD_INTERVAL = 0;
 CHECKSUMUPDATES = true;
 DENYBADCLOCKS = true;
 CFRUNCOMMAND[0] = '\0';
-CHECK_RFC931 = false;
 
 /* Keep promised agent behaviour - control bodies */
 

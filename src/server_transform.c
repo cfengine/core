@@ -47,9 +47,7 @@ extern struct BodySyntax CF_REMROLE_BODIES[];
 
 extern int CLOCK_DRIFT;
 extern int CFD_MAXPROCESSES;
-extern int ACTIVE_THREADS;
 extern int NO_FORK;
-extern int MULTITHREAD;
 extern int CHECK_RFC931;
 extern int CFD_INTERVAL;
 extern int DENYBADCLOCKS;

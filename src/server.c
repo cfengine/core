@@ -155,7 +155,6 @@ int CLOCK_DRIFT = 3600;   /* 1hr */
 int CFD_MAXPROCESSES = 0;
 int ACTIVE_THREADS = 0;
 int NO_FORK = false;
-int MULTITHREAD = false;
 int CHECK_RFC931 = false;
 int CFD_INTERVAL = 0;
 int DENYBADCLOCKS = true;

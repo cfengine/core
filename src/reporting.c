@@ -807,7 +807,7 @@ for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
    printf("<tr><td>%s</td><td>%s()</td><td>%d args expected</td><td>%s</td></tr>\n",
           CF_DATATYPES[CF_FNCALL_TYPES[i].dtype],
           CF_FNCALL_TYPES[i].name,
-          CF_FNCALL_TYPES[i].numargs,
+          FnNumArgs(&CF_FNCALL_TYPES[i]),
           CF_FNCALL_TYPES[i].description
           );
    }

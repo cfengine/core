@@ -617,7 +617,7 @@ for (i = 0; args[i].pattern != NULL; i++)
       fprintf(fout,",");
       }
    }
-if (fn.numargs == CF_VARARGS)
+if (fn.varargs)
    {
    if (i != 0)
       {

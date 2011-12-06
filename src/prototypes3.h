@@ -531,6 +531,7 @@ struct Rval CallFunction(FnCallType *function, struct FnCall *fp, struct Rlist *
 
 void *CfReadFile(char *filename,int maxsize);
 void ModuleProtocol(char *command,char *line,int print);
+int FnNumArgs(const FnCallType *call_type);
 
 /* expand.c */
 

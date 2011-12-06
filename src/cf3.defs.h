@@ -660,10 +660,10 @@ typedef struct FnCallType
    {
    char *name;
    enum cfdatatype dtype;
-   int numargs;
    struct FnCallArg *args;
    struct Rval (*impl)(struct FnCall *, struct Rlist *);
    char *description;
+   bool varargs;
    } FnCallType;
 
 struct FnCallArg

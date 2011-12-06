@@ -149,23 +149,23 @@ return true;
 
 struct Rlist *NewExpArgs(struct FnCall *fp, struct Promise *pp)
 
-{ int len, ref = 0;
+{ int len;
   struct Rval rval;
   struct Rlist *rp,*newargs = NULL;
   struct FnCall *subfp;
   FnCallType *fn = FindFunction(fp->name);
 
-/* Check if numargs correct and expand recursion */
-  
-len = RlistLen(fp->args); 
+len = RlistLen(fp->args);
 
-ref = fn ? fn->numargs : 0;
-
-if ((ref != CF_VARARGS) && (ref != len))
+if (!fn->varargs)
    {
-   CfOut(cf_error,"","Arguments to function %s(.) do not tally. Expect %d not %d",fp->name,ref,len);
-   PromiseRef(cf_error,pp);
-   exit(1);
+   if (len != FnNumArgs(fn))
+      {
+      CfOut(cf_error,"","Arguments to function %s(.) do not tally. Expect %d not %d",
+            fp->name, FnNumArgs(fn), len);
+      PromiseRef(cf_error,pp);
+      exit(1);
+      }
    }
 
 for (rp = fp->args; rp != NULL; rp = rp->next)
@@ -221,7 +221,7 @@ for (argnum = 0; rp != NULL && argtemplate[argnum].pattern != NULL; argnum++)
     rp = rp->next;
     }
 
-if (argnum != RlistLen(realargs) && fn->numargs != CF_VARARGS)
+if (argnum != RlistLen(realargs) && !fn->varargs)
    {
    snprintf(output,CF_BUFSIZE,"Argument template mismatch handling function %s(",fp->name);
    ReportError(output);

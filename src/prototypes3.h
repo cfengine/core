@@ -962,6 +962,10 @@ int VerifyUnmount(char *name,struct Attributes a,struct Promise *pp);
 void MountAll(void);
 #endif  /* NOT MINGW */
 
+/* ontology.c */
+
+#include "ontology.h"
+
 /* patches.c */
 
 int IsPrivileged (void);

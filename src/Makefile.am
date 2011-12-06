@@ -47,6 +47,7 @@ libpromises_la_SOURCES =                                                \
         modes.c                                                         \
         exec_tools.c                                                    \
         nfs.c                                                           \
+        ontology.c ontology.h                                           \
         item_lib.c                                                      \
 	string_lib.c                                                    \
 	files_lib.c                                                     \
@@ -186,8 +187,7 @@ cf_runagent_SOURCES =                                                   \
 
 cf_know_SOURCES =                                                       \
         cfknow.c                                                        \
-        manual.c                                                        \
-        ontology.c ontology.h
+        manual.c
 
 EXTRA_DIST = cf3lex.c cf3parse.c
 

@@ -1092,7 +1092,8 @@ void SelfTerminatePrelude(void);
 
 char ToLower (char ch);
 char ToUpper (char ch);
-char *ToUpperStr (char *str);
+char *ToUpperStr(const char *str);
+void ToUpperStrInplace(char *str);
 char *ToLowerStr(const char *str);
 void ToLowerStrInplace(char *str);
 

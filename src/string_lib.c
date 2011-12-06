@@ -37,24 +37,27 @@ else
 
 /*********************************************************************/
 
-char *ToUpperStr (char *str)
+void ToUpperStrInplace(char *str)
+{
+for (; *str != '\0'; str++)
+   {
+   *str = ToUpper(*str);
+   }
+}
 
-{ static char buffer[CF_BUFSIZE];
-  int i;
+/*********************************************************************/
 
-memset(buffer,0,CF_BUFSIZE);
-  
+char *ToUpperStr(const char *str)
+{
+static char buffer[CF_BUFSIZE];
+
 if (strlen(str) >= CF_BUFSIZE)
    {
    FatalError("String too long in ToUpperStr: %s", str);
    }
 
-for (i = 0;  (str[i] != '\0') && (i < CF_BUFSIZE-1); i++)
-   {
-   buffer[i] = ToUpper(str[i]);
-   }
-
-buffer[i] = '\0';
+strlcpy(buffer, str, CF_BUFSIZE);
+ToUpperStrInplace(buffer);
 
 return buffer;
 }

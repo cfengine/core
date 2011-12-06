@@ -634,7 +634,7 @@ return (enum cfagenttype)i;
 
 /****************************************************************************/
 
-enum cfdatatype GetControlDatatype(char *varname,struct BodySyntax *bp)
+enum cfdatatype GetControlDatatype(const char *varname, const struct BodySyntax *bp)
 
 { int i = 0;
 

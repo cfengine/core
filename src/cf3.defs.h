@@ -636,10 +636,10 @@ enum knowledgecertainty
 
 struct BodySyntax
    {
-   char *lval;
+   const char *lval;
    enum cfdatatype dtype;
-   void *range;               /* either char or struct BodySyntax **/
-   char *description;
+   const void *range;               /* either char or struct BodySyntax **/
+   const char *description;
    const char *default_value;
    };
 
@@ -649,7 +649,7 @@ struct SubTypeSyntax
    {
    char *btype;
    char *subtype;
-   struct BodySyntax *bs;
+   const struct BodySyntax *bs;
    };
 
 /*************************************************************************/
@@ -1958,14 +1958,14 @@ extern double Q_SIGMA;
 #ifndef CF3_MOD_COMMON
 extern struct SubTypeSyntax CF_COMMON_SUBTYPES[];
 extern struct SubTypeSyntax *CF_ALL_SUBTYPES[];
-extern struct BodySyntax CF_COMMON_BODIES[];
+extern const struct BodySyntax CF_COMMON_BODIES[];
 
-extern struct BodySyntax CF_VARBODY[];
-extern struct BodySyntax CF_CLASSBODY[];
-extern struct BodySyntax CFG_CONTROLBODY[];
-extern struct BodySyntax CFH_CONTROLBODY[];
-extern struct BodySyntax CFA_CONTROLBODY[];
-extern struct SubTypeSyntax CF_ALL_BODIES[];
+extern const struct BodySyntax CF_VARBODY[];
+extern const struct BodySyntax CF_CLASSBODY[];
+extern const struct BodySyntax CFG_CONTROLBODY[];
+extern const struct BodySyntax CFH_CONTROLBODY[];
+extern const struct BodySyntax CFA_CONTROLBODY[];
+extern const struct SubTypeSyntax CF_ALL_BODIES[];
 #endif
 
 #ifndef CF3_MOD_ENVIRON
@@ -1983,7 +1983,7 @@ extern struct FnCallType CF_FNCALL_TYPES[];
 #ifndef CF3_MOD_ACCESS
 extern struct SubTypeSyntax CF_REMACCESS_SUBTYPES[];
 
-extern struct BodySyntax CF_REMACCESS_BODIES[];
+extern const struct BodySyntax CF_REMACCESS_BODIES[];
 #endif
 
 #ifndef CF_MOD_INTERFACES
@@ -2009,14 +2009,14 @@ extern struct SubTypeSyntax CF_PACKAGES_SUBTYPES[];
 #ifndef CF3_MOD_REPORT
 extern struct SubTypeSyntax CF_REPORT_SUBTYPES[];
 
-extern struct BodySyntax CF_REPORT_BODIES[];
+extern const struct BodySyntax CF_REPORT_BODIES[];
 #endif
 
 
 #ifndef CF3_MOD_FILES
 extern struct SubTypeSyntax CF_FILES_SUBTYPES[];
 
-extern struct BodySyntax CF_COMMON_EDITBODIES[];
+extern const struct BodySyntax CF_COMMON_EDITBODIES[];
 #endif
 
 #ifndef CF3_MOD_EXEC

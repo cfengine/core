@@ -38,13 +38,13 @@
 
 static const int PRETTY_PRINT_SPACES_PER_INDENT = 2;
 
-static int CheckParseString(char *lv,char *s,char *range);
-static void CheckParseInt(char *lv,char *s,char *range);
-static void CheckParseReal(char *lv,char *s,char *range);
-static void CheckParseRealRange(char *lval,char *s,char *range);
-static void CheckParseIntRange(char *lval,char *s,char *range);
-static void CheckParseOpts(char *lv,char *s,char *range);
-static void CheckFnCallType(char *lval,const char *s,enum cfdatatype dtype,char *range);
+static int CheckParseString(char *lv,char *s, const char *range);
+static void CheckParseInt(char *lv,char *s, const char *range);
+static void CheckParseReal(char *lv,char *s, const char *range);
+static void CheckParseRealRange(char *lval,char *s, const char *range);
+static void CheckParseIntRange(char *lval,char *s, const char *range);
+static void CheckParseOpts(char *lv,char *s, const char *range);
+static void CheckFnCallType(char *lval,const char *s,enum cfdatatype dtype, const char *range);
 
 /*********************************************************/
 
@@ -164,7 +164,7 @@ if (strcmp(pp->agentsubtype,"vars") == 0)
 enum cfdatatype ExpectedDataType(char *lvalname)
 
 { int i,j,k;
-  struct BodySyntax *bs;
+  const struct BodySyntax *bs;
   struct SubTypeSyntax *ss;
 
 for (i = 0; i < CF3_MODULES; i++)
@@ -200,7 +200,7 @@ void CheckConstraint(char *type,char *name,char *lval,void *rval,char rvaltype,s
 
 { int lmatch = false;
   int i,l, allowed = false;
-  struct BodySyntax *bs;
+  const struct BodySyntax *bs;
   char output[CF_BUFSIZE];
 
 CfDebug("CheckConstraint(%s,%s,",type,lval);
@@ -300,7 +300,7 @@ int LvalWantsBody(char *stype,char *lval)
 {
   int i,j,l;
   struct SubTypeSyntax *ss;
-  struct BodySyntax *bs;
+  const struct BodySyntax *bs;
 
 for  (i = 0; i < CF3_MODULES; i++)
    {
@@ -348,7 +348,7 @@ void CheckSelection(char *type,char *name,char *lval,void *rval,char rvaltype)
 { int lmatch = false;
   int i,j,k,l;
   struct SubTypeSyntax *ss;
-  struct BodySyntax *bs,*bs2;
+  const struct BodySyntax *bs,*bs2;
   char output[CF_BUFSIZE];
   
 CfDebug("CheckSelection(%s,%s,",type,lval);
@@ -422,7 +422,7 @@ for  (i = 0; i < CF3_MODULES; i++)
          {
          if (bs[l].dtype == cf_body)
             {
-            bs2 = (struct BodySyntax *)(bs[l].range);
+            bs2 = (const struct BodySyntax *)(bs[l].range);
 
             if (bs2 == NULL || bs2 == (void *)CF_BUNDLE)
                {
@@ -463,7 +463,7 @@ if (!lmatch)
 /* Level 1                                                                  */
 /****************************************************************************/
 
-void CheckConstraintTypeMatch(char *lval,void *rval,char rvaltype,enum cfdatatype dt,char *range,int level)
+void CheckConstraintTypeMatch(char *lval,void *rval,char rvaltype,enum cfdatatype dt, const char *range,int level)
 
 { struct Rlist *rp;
   struct Item *checklist;
@@ -665,7 +665,7 @@ return cf_str;
 /* Level 1                                                                  */
 /****************************************************************************/
 
-static int CheckParseString(char *lval,char *s,char *range)
+static int CheckParseString(char *lval,char *s, const char *range)
 
 { char output[CF_BUFSIZE];
   
@@ -722,7 +722,7 @@ return true;
 
 /****************************************************************************/
 
-int CheckParseClass(char *lval,char *s,char *range)
+int CheckParseClass(char *lval,char *s, const char *range)
 
 { char output[CF_BUFSIZE];
 
@@ -750,7 +750,7 @@ return false;
 
 /****************************************************************************/
 
-static void CheckParseInt(char *lval,char *s,char *range)
+static void CheckParseInt(char *lval,char *s, const char *range)
     
 { struct Item *split;
   int n;
@@ -819,7 +819,7 @@ CfDebug("CheckParseInt - syntax verified\n\n");
 
 /****************************************************************************/
 
-static void CheckParseIntRange(char *lval,char *s,char *range)
+static void CheckParseIntRange(char *lval,char *s, const char *range)
     
 { struct Item *split,*ip,*rangep;
   int n;
@@ -903,7 +903,7 @@ CfDebug("CheckParseIntRange - syntax verified\n\n");
 
 /****************************************************************************/
 
-static void CheckParseReal(char *lval,char *s,char *range)
+static void CheckParseReal(char *lval,char *s, const char *range)
     
 { struct Item *split;
   double max = (double)CF_LOWINIT, min = (double)CF_HIGHINIT, val;
@@ -962,7 +962,7 @@ CfDebug("CheckParseReal - syntax verified\n\n");
 
 /****************************************************************************/
 
-static void CheckParseRealRange(char *lval,char *s,char *range)
+static void CheckParseRealRange(char *lval,char *s, const char *range)
     
 { struct Item *split,*rangep,*ip;
   double max = (double)CF_LOWINIT, min = (double)CF_HIGHINIT, val;
@@ -1042,7 +1042,7 @@ CfDebug("CheckParseRealRange - syntax verified\n\n");
 
 /****************************************************************************/
 
-static void CheckParseOpts(char *lval,char *s,char *range)
+static void CheckParseOpts(char *lval,char *s, const char *range)
 
 { struct Item *split;
   int err = false;
@@ -1153,7 +1153,7 @@ return strcmp(s,"string") == 0 || strcmp(s,"slist") == 0 ||
 
 /****************************************************************************/
 
-static void CheckFnCallType(char *lval,const char *s,enum cfdatatype dtype,char *range)
+static void CheckFnCallType(char *lval,const char *s,enum cfdatatype dtype, const char *range)
 
 {
   enum cfdatatype dt;
@@ -1253,7 +1253,7 @@ for (dst = json; *src != '\0'; src++)
 return json;
 }
 
-static JsonObject *ExportAttributesSyntaxAsJson(struct BodySyntax attributes[])
+static JsonObject *ExportAttributesSyntaxAsJson(const struct BodySyntax attributes[])
 {
 JsonObject *json = NULL;
 int i = 0;
@@ -1272,7 +1272,7 @@ for (i = 0; attributes[i].lval != NULL; i++)
       }
    else if (attributes[i].dtype == cf_body)
       {
-      JsonObject *json_attributes = ExportAttributesSyntaxAsJson((struct BodySyntax *)attributes[i].range);
+      JsonObject *json_attributes = ExportAttributesSyntaxAsJson((const struct BodySyntax *)attributes[i].range);
       JsonObjectAppendObject(&json, attributes[i].lval, json_attributes);
       }
    else

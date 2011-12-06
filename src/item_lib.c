@@ -48,7 +48,7 @@ return size;
 
 /*********************************************************************/
 
-struct Item *ReturnItemIn(struct Item *list,char *item)
+struct Item *ReturnItemIn(struct Item *list, const char *item)
 
 { struct Item *ptr; 
 
@@ -193,7 +193,7 @@ return false;
 
 /*********************************************************************/
 
-struct Item *IdempPrependItem(struct Item **liststart,char *itemstring,char *classes)
+struct Item *IdempPrependItem(struct Item **liststart, const char *itemstring, const char *classes)
 
 { struct Item *ip;
 
@@ -228,7 +228,7 @@ return *liststart;
 
 /*********************************************************************/
 
-void IdempItemCount(struct Item **liststart,char *itemstring,char *classes)
+void IdempItemCount(struct Item **liststart, const char *itemstring, const char *classes)
 
 { struct Item *ip;
  
@@ -627,13 +627,13 @@ return false;
 
 /*********************************************************************/
 
-struct Item *SplitString(char *string,char sep)
+struct Item *SplitString(const char *string, char sep)
 
  /* Splits a string containing a separator like : 
     into a linked list of separate items, */
 
 { struct Item *liststart = NULL;
-  char *sp;
+  const char *sp;
   char before[CF_BUFSIZE];
   int i = 0;
   

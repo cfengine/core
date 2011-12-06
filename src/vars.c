@@ -572,7 +572,7 @@ return true;
 
 /*******************************************************************/
 
-int BooleanControl(char *scope,char *name)
+int BooleanControl(const char *scope, const char *name)
 
 { char varbuf[CF_BUFSIZE], rtype;
 

@@ -37,7 +37,7 @@ extern char MANDIR[CF_BUFSIZE];
 
 static void TexinfoHeader(FILE *fout);
 static void TexinfoFooter(FILE *fout);
-static void TexinfoBodyParts(FILE *fout,struct BodySyntax *bs,char *context);
+static void TexinfoBodyParts(FILE *fout,const struct BodySyntax *bs,char *context);
 static void TexinfoSubBodyParts(FILE *fout,struct BodySyntax *bs);
 static void TexinfoShowRange(FILE *fout,char *s,enum cfdatatype type);
 static void IncludeManualFile(FILE *fout,char *filename);
@@ -352,7 +352,7 @@ for (j = 0; st[j].btype != NULL; j++)
 /* Level                                                                     */
 /*****************************************************************************/
 
-static void TexinfoBodyParts(FILE *fout,struct BodySyntax *bs,char *context)
+static void TexinfoBodyParts(FILE *fout,const struct BodySyntax *bs,char *context)
 
 { int i;
  char filename[CF_BUFSIZE];

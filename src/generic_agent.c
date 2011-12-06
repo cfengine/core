@@ -1592,7 +1592,7 @@ for (pp = classlist; pp != NULL; pp=pp->next)
 static void CheckControlPromises(char *scope,char *agent,struct Constraint *controllist)
 
 { struct Constraint *cp;
-  struct BodySyntax *bp = NULL;
+  const struct BodySyntax *bp = NULL;
   struct Rlist *rp;
   int i = 0;
   struct Rval returnval;

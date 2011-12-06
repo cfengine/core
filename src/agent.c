@@ -83,7 +83,7 @@ void ClassBanner(enum typesequence type);
 void ParallelFindAndVerifyFilesPromises(struct Promise *pp);
 static bool VerifyBootstrap(void);
 
-extern struct BodySyntax CFA_CONTROLBODY[];
+extern const struct BodySyntax CFA_CONTROLBODY[];
 extern struct Rlist *SERVERLIST;
 
 /*******************************************************************/

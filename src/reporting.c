@@ -85,7 +85,7 @@ static void Indent(int i);
 static void ShowDataTypes(void);
 static void ShowBundleTypes(void);
 static void ShowPromiseTypesFor(char *s);
-static void ShowBodyParts(struct BodySyntax *bs);
+static void ShowBodyParts(const struct BodySyntax *bs);
 static void ShowRange(char *s,enum cfdatatype type);
 static void ShowBuiltinFunctions(void);
 
@@ -715,7 +715,7 @@ printf("</div>\n\n");
 
 /*******************************************************************/
 
-static void ShowBodyParts(struct BodySyntax *bs)
+static void ShowBodyParts(const struct BodySyntax *bs)
 
 { int i;
 
@@ -735,7 +735,7 @@ for (i = 0; bs[i].lval != NULL; i++)
    else if (bs[i].dtype == cf_body)
       {
       printf("<tr><td>%s</td><td>%s</td><td>",bs[i].lval,CF_DATATYPES[bs[i].dtype]);
-      ShowBodyParts((struct BodySyntax *)bs[i].range);
+      ShowBodyParts((const struct BodySyntax *)bs[i].range);
       printf("</td></tr>\n");
       }
    else
@@ -822,7 +822,7 @@ void ShowAllReservedWords()
 { int i,j,k,l;
  struct Item *ip,*list = NULL;
   struct SubTypeSyntax *ss;
-  struct BodySyntax *bs,*bs2;
+  const struct BodySyntax *bs,*bs2;
 
 for (i = 0; CF_ALL_BODIES[i].subtype != NULL; i++)
    {

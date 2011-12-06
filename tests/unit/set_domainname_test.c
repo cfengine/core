@@ -166,7 +166,7 @@ void DeleteItemList (struct Item *item)
 fail();
 }
 
-struct Item *SplitString(char *string,char sep)
+struct Item *SplitString(const char *string, char sep)
 {
 fail();
 }

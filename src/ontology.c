@@ -31,6 +31,7 @@
 
 #include "cf3.defs.h"
 #include "cf3.extern.h"
+#include "ontology.h"
 
 static char *GetTopicContext(char *topic_name);
 static int ClassifiedTopicMatch(char *ttopic1,char *ttopic2);

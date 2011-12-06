@@ -31,6 +31,7 @@
 
 #include "cf3.defs.h"
 #include "cf3.extern.h"
+#include "ontology.h"
 
 int main (int argc,char *argv[]);
 void CheckOpts(int argc,char **argv);

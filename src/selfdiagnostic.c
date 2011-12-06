@@ -35,7 +35,6 @@
 static void TestRegularExpressions(void);
 static void TestAgentPromises(void);
 static void TestFunctionIntegrity(void);
-static void SDIntegerDefault(char *ref,int cmp);
 static void TestHashEntropy(char *s,char *s1);
 
 int NR = 0;
@@ -61,9 +60,6 @@ else
 printf("----------------------------------------------------------\n");
 printf("Cfengine - Level 1 self-diagnostic \n");
 printf("----------------------------------------------------------\n\n");
-
-SDIntegerDefault("editfilesize",EDITFILESIZE);
-
 
 printf(" -> Internal consistency done\n\n");
 
@@ -332,32 +328,6 @@ GetReplaceAttributes(&pp);
 
 printf(" -> All non-listed items are accounted for\n");
 }
-
-/*****************************************************************************/
-
-static void SDIntegerDefault(char *ref,int cmp)
-
-{ char *def;
-  int intval;
-
-if ((def = GetControlDefault(ref)))
-   {
-   sscanf(def,"%d",&intval);
-   if (intval != cmp)
-      {
-      printf(" !! Mismatch in default specs for \"%s\" (%d/%d)\n",ref,intval,cmp);
-      }
-   else
-      {
-      printf(" -> %s ok (%d/%d)\n",ref,intval,cmp);
-      }
-   }
-else
-   {
-   printf(" !! Missing default specs for \"%s\"\n",ref);
-   }
-}
-
 
 /*****************************************************************************/
 

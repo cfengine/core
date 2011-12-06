@@ -640,12 +640,7 @@ struct BodySyntax
    enum cfdatatype dtype;
    void *range;               /* either char or struct BodySyntax **/
    char *description;
-   };
-
-struct BodyDefault
-   {
-   char *lval;
-   char *rval;
+   const char *default_value;
    };
 
 /*************************************************************************/

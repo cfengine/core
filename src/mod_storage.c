@@ -61,11 +61,11 @@
 
 struct BodySyntax CF_CHECKVOL_BODY[] =
    {
-   {"check_foreign",cf_opts,CF_BOOL,"true/false verify storage that is mounted from a foreign system on this host"},
+   {"check_foreign",cf_opts,CF_BOOL,"true/false verify storage that is mounted from a foreign system on this host", "false"},
    {"freespace",cf_str,"[0-9]+[MBkKgGmb%]","Absolute or percentage minimum disk space that should be available before warning"},
    {"sensible_size",cf_int,CF_VALRANGE,"Minimum size in bytes that should be used on a sensible-looking storage device"},
    {"sensible_count",cf_int,CF_VALRANGE,"Minimum number of files that should be defined on a sensible-looking storage device"},
-   {"scan_arrivals",cf_opts,CF_BOOL,"true/false generate pseudo-periodic disk change arrival distribution"},
+   {"scan_arrivals",cf_opts,CF_BOOL,"true/false generate pseudo-periodic disk change arrival distribution", "false"},
    {NULL,cf_notype,NULL,NULL}
    };
 
@@ -73,12 +73,12 @@ struct BodySyntax CF_CHECKVOL_BODY[] =
 
 struct BodySyntax CF_MOUNT_BODY[] =
    {
-   {"edit_fstab",cf_opts,CF_BOOL,"true/false add or remove entries to the file system table (\"fstab\")"},
+   {"edit_fstab",cf_opts,CF_BOOL,"true/false add or remove entries to the file system table (\"fstab\")", "false"},
    {"mount_type",cf_opts,"nfs,nfs2,nfs3,nfs4","Protocol type of remote file system"},
    {"mount_source",cf_str,CF_ABSPATHRANGE,"Path of remote file system to mount"},
    {"mount_server",cf_str,"","Hostname or IP or remote file system server"},
    {"mount_options",cf_slist,"","List of option strings to add to the file system table (\"fstab\")"},
-   {"unmount",cf_opts,CF_BOOL,"true/false unmount a previously mounted filesystem"},
+   {"unmount",cf_opts,CF_BOOL,"true/false unmount a previously mounted filesystem", "false"},
    {NULL,cf_notype,NULL,NULL}
    };
 

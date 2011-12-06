@@ -938,11 +938,6 @@ char *EscapeChar(char *str, int strSz, char esc);
 void AnchorRegex(char *regex, char *out, int outSz);
 int MatchPolicy(char *needle,char *haystack,struct Attributes a,struct Promise *pp);
 
-/* mod_defaults.c */
-
-char *GetControlDefault(char *bodypart);
-char *GetBodyDefault(char *bodypart);
-
 /* modes.c */
 
 int ParseModeString (char *modestring, mode_t *plusmask, mode_t *minusmask);

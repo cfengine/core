@@ -48,7 +48,7 @@ struct BodySyntax CF_PRINTFILE_BODY[] =
 struct BodySyntax CF_REPORT_BODIES[] =
    {
    {"friend_pattern",cf_str,"","Regular expression to keep selected hosts from the friends report list"},
-   {"intermittency",cf_real,"0,1","Real number threshold [0,1] of intermittency about current peers, report above"},
+   {"intermittency",cf_real,"0,1","Real number threshold [0,1] of intermittency about current peers, report above", "false"},
    {"lastseen",cf_int,CF_VALRANGE,"Integer time threshold in hours since current peers were last seen, report absence"},
    {"printfile",cf_body,CF_PRINTFILE_BODY,"Quote part of a file to standard output"},
    {"report_to_file",cf_str,CF_ABSPATHRANGE,"The path and filename to which output should be appended"},

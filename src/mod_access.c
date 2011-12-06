@@ -66,7 +66,7 @@ struct BodySyntax CF_REMACCESS_BODIES[] =
    {"admit",cf_slist,"","List of host names or IP addresses to grant access to file objects"},
    {"deny",cf_slist,"","List of host names or IP addresses to deny access to file objects"},
    {"maproot",cf_slist,"","List of host names or IP addresses to grant full read-privilege on the server"},
-   {"ifencrypted",cf_opts,CF_BOOL,"true/false whether the current file access promise is conditional on the connection from the client being encrypted"},
+   {"ifencrypted",cf_opts,CF_BOOL,"true/false whether the current file access promise is conditional on the connection from the client being encrypted", "false"},
    {"resource_type",cf_opts,"path,literal,context,query","The type of object being granted access (the default grants access to files)"},
    {NULL,cf_notype,NULL,NULL}
    };

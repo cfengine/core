@@ -355,7 +355,7 @@ for (j = 0; st[j].btype != NULL; j++)
 static void TexinfoBodyParts(FILE *fout,struct BodySyntax *bs,char *context)
 
 { int i;
- char filename[CF_BUFSIZE],*res;
+ char filename[CF_BUFSIZE];
   
 if (bs == NULL)
    {
@@ -377,14 +377,12 @@ for (i = 0; bs[i].lval != NULL; i++)
       }
    else
       {
+      const char *res = bs[i].default_value;
+
       fprintf(fout,"\n\n@node %s in %s\n@subsection @code{%s}\n@noindent @b{Type}: %s\n\n",bs[i].lval,context,bs[i].lval,CF_DATATYPES[bs[i].dtype]);
       TexinfoShowRange(fout,(char *)bs[i].range,bs[i].dtype);
 
-      if ((res = GetControlDefault(bs[i].lval)))
-         {
-         fprintf(fout,"@noindent @b{Default value:} %s\n",res);
-         }
-      else if ((res = GetBodyDefault(bs[i].lval)))
+      if (res)
          {
          fprintf(fout,"@noindent @b{Default value:} %s\n",res);
          }
@@ -503,7 +501,7 @@ else
 static void TexinfoSubBodyParts(FILE *fout,struct BodySyntax *bs)
 
 { int i;
- char filename[CF_BUFSIZE],*res;
+ char filename[CF_BUFSIZE];
   
 if (bs == NULL)
    {
@@ -525,15 +523,13 @@ for (i = 0; bs[i].lval != NULL; i++)
       }
    else
       {
+      const char *res = bs[i].default_value;
+
       fprintf(fout,"@item @code{%s}\n@b{Type}: %s\n\n",bs[i].lval,CF_DATATYPES[bs[i].dtype]);
       TexinfoShowRange(fout,(char *)bs[i].range,bs[i].dtype);
       fprintf(fout,"\n@noindent @b{Synopsis}: %s\n\n",bs[i].description);
 
-      if ((res = GetControlDefault(bs[i].lval)))
-         {
-         fprintf(fout,"\n@noindent @b{Default value:} %s\n",res);
-         }
-      else if ((res = GetBodyDefault(bs[i].lval)))
+      if (res)
          {
          fprintf(fout,"\n@noindent @b{Default value:} %s\n",res);
          }

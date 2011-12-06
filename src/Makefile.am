@@ -100,7 +100,6 @@ libpromises_la_SOURCES =                                                \
         verify_processes.c                                              \
         enterprise_stubs.c                                              \
 	bootstrap.c							\
-	mod_defaults.c							\
         mod_common.c                                                    \
         mod_access.c                                                    \
         mod_exec.c                                                      \

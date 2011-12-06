@@ -64,7 +64,7 @@ int ScheduleAgentOperations(struct Bundle *bp);
 
 /* agentdiagnostic.c */
 
-void AgentDiagnostic(char *inputfile);
+void AgentDiagnostic(void);
 
 /* alphalist.c */
 

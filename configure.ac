@@ -94,14 +94,6 @@ dnl ######################################################################
 dnl Checks for libraries.
 dnl ######################################################################
 
-AC_ARG_WITH(diagnostics,
-	AS_HELP_STRING(--with-diagnostics, [enable test suite]),[],
-	with_diagnostics=no)
-
-if test "x$with_diagnostics" = xyes; then
-   AC_DEFINE(BUILD_TESTSUITE, 1, [Build Test suite])
-fi
-
 dnl Now check for database connectors
 
 AC_ARG_WITH([sql],

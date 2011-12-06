@@ -297,7 +297,7 @@ while ((c=getopt_long(argc,argv,"rd:vnKIf:D:N:Vs:x:MBb:",OPTIONS,&optindex)) != 
           exit(0);
 
       case 'x':
-	 AgentDiagnostic(optarg);
+	 AgentDiagnostic();
           exit(0);
           
       case 'r':

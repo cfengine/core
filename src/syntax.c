@@ -1158,7 +1158,7 @@ static void CheckFnCallType(char *lval,const char *s,enum cfdatatype dtype, cons
 {
   enum cfdatatype dt;
   char output[CF_BUFSIZE];
-  FnCallType *fn;
+  const FnCallType *fn;
 
 CfDebug("CheckFnCallType(%s => %s/%s)\n",lval,s,range);
 

@@ -224,7 +224,7 @@ else
 
 enum cfdatatype FunctionReturnType(const char *name)
 {
-FnCallType *fn = FindFunction(name);
+const FnCallType *fn = FindFunction(name);
 return fn ? fn->dtype : cf_notype;
 }
 
@@ -234,7 +234,7 @@ struct Rval EvaluateFunctionCall(struct FnCall *fp,struct Promise *pp)
 
 { struct Rlist *expargs;
   struct Rval rval;
-  FnCallType *this = FindFunction(fp->name);
+  const FnCallType *this = FindFunction(fp->name);
 
 rval.item = NULL;
 rval.rtype = CF_NOPROMISEE;
@@ -307,7 +307,7 @@ return rval;
                 
 /*******************************************************************/
 
-FnCallType *FindFunction(const char *name)
+const FnCallType *FindFunction(const char *name)
 {
 int i;
 

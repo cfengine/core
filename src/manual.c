@@ -45,7 +45,7 @@ static void TexinfoPromiseTypesFor(FILE *fout,struct SubTypeSyntax *st);
 static void TexinfoSpecialFunction(FILE *fout,struct FnCallType fn);
 static void TexinfoVariables(FILE *fout,char *scope);
 static char *TexInfoEscape(char *s);
-static void PrintPattern(FILE *fout,char *pattern);
+static void PrintPattern(FILE *fout, const char *pattern);
 
 /*****************************************************************************/
 
@@ -603,7 +603,7 @@ fprintf(fout,"\n");
 static void TexinfoSpecialFunction(FILE *fout,struct FnCallType fn)
 
 { char filename[CF_BUFSIZE];
-  struct FnCallArg *args = fn.args;
+  const FnCallArg *args = fn.args;
   int i;
  
 fprintf(fout,"\n@noindent @b{Synopsis}: %s(",fn.name);
@@ -648,9 +648,10 @@ IncludeManualFile(fout,filename);
 
 /*****************************************************************************/
 
-static void PrintPattern(FILE *fout,char *pattern)
+static void PrintPattern(FILE *fout, const char *pattern)
 
-{ char *sp;
+{
+const char *sp;
 
 for (sp = pattern; *sp != '\0'; sp++)
    {

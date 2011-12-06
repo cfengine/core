@@ -81,7 +81,7 @@ struct AlphaList *CopyAlphaListPointers(struct AlphaList *al,struct AlphaList *a
 
 int MapBodyArgs(char *scopeid,struct Rlist *give,struct Rlist *take);
 struct Rlist *NewExpArgs(struct FnCall *fp, struct Promise *pp);
-void ArgTemplate(struct FnCall *fp,struct FnCallArg *argtemplate,struct Rlist *finalargs);
+void ArgTemplate(struct FnCall *fp, const FnCallArg *argtemplate, struct Rlist *finalargs);
 void DeleteExpArgs(struct Rlist *args);
 
 /* assoc.c */
@@ -527,11 +527,11 @@ void StartServer (int argc, char **argv);
 
 /* evalfunction.c */
 
-struct Rval CallFunction(FnCallType *function, struct FnCall *fp, struct Rlist *finalargs);
+struct Rval CallFunction(const FnCallType *function, struct FnCall *fp, struct Rlist *finalargs);
+int FnNumArgs(const FnCallType *call_type);
 
 void *CfReadFile(char *filename,int maxsize);
 void ModuleProtocol(char *command,char *line,int print);
-int FnNumArgs(const FnCallType *call_type);
 
 /* expand.c */
 
@@ -720,7 +720,7 @@ void DeleteFnCall(struct FnCall *fp);
 void ShowFnCall(FILE *fout,struct FnCall *fp);
 struct Rval EvaluateFunctionCall(struct FnCall *fp,struct Promise *pp);
 enum cfdatatype FunctionReturnType(const char *name);
-FnCallType *FindFunction(const char *name);
+const FnCallType *FindFunction(const char *name);
 void SetFnCallReturnStatus(char *fname,int status,char *message,char *fncall_classes);
 
 /* full_write.c */

@@ -4989,7 +4989,7 @@ return true;
 
 /*********************************************************************/
 
-struct Rval CallFunction(FnCallType *function, struct FnCall *fp, struct Rlist *expargs)
+struct Rval CallFunction(const FnCallType *function, struct FnCall *fp, struct Rlist *expargs)
 {
 ArgTemplate(fp, function->args, expargs);
 return (*function->impl)(fp, expargs);
@@ -5616,7 +5616,7 @@ struct FnCallArg USEREXISTS_ARGS[] =
 
 /* see cf3.defs.h enum fncalltype */
 
-struct FnCallType CF_FNCALL_TYPES[] = 
+const FnCallType CF_FNCALL_TYPES[] =
    {
    {"accessedbefore",cf_class,ACCESSEDBEFORE_ARGS,&FnCallIsAccessedBefore,"True if arg1 was accessed before arg2 (atime)"},
    {"accumulated",cf_int,ACCUM_ARGS,&FnCallAccumulatedDate,"Convert an accumulated amount of time into a system representation"},

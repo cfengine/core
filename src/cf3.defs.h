@@ -658,20 +658,20 @@ struct FnCall;
 
 typedef struct FnCallType
    {
-   char *name;
+   const char *name;
    enum cfdatatype dtype;
-   struct FnCallArg *args;
+   const struct FnCallArg *args;
    struct Rval (*impl)(struct FnCall *, struct Rlist *);
-   char *description;
+   const char *description;
    bool varargs;
    } FnCallType;
 
-struct FnCallArg
+typedef struct FnCallArg
    {
-   char *pattern;
+   const char *pattern;
    enum cfdatatype dtype;
-   char *description;
-   };
+   const char *description;
+   } FnCallArg;
 
 /*************************************************************************/
 
@@ -1977,7 +1977,7 @@ extern struct SubTypeSyntax CF_OUTPUTS_SUBTYPES[];
 #endif
 
 #ifndef CF3_MOD_FUNCTIONS
-extern struct FnCallType CF_FNCALL_TYPES[];
+extern const FnCallType CF_FNCALL_TYPES[];
 #endif
 
 #ifndef CF3_MOD_ACCESS

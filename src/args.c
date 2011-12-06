@@ -153,7 +153,7 @@ struct Rlist *NewExpArgs(struct FnCall *fp, struct Promise *pp)
   struct Rval rval;
   struct Rlist *rp,*newargs = NULL;
   struct FnCall *subfp;
-  FnCallType *fn = FindFunction(fp->name);
+  const FnCallType *fn = FindFunction(fp->name);
 
 len = RlistLen(fp->args);
 
@@ -201,12 +201,12 @@ DeleteRlist(args);
 
 /******************************************************************/
 
-void ArgTemplate(struct FnCall *fp,struct FnCallArg *argtemplate,struct Rlist *realargs)
+void ArgTemplate(struct FnCall *fp, const FnCallArg *argtemplate,struct Rlist *realargs)
 
 { int argnum,i;
   struct Rlist *rp = fp->args;
   char id[CF_BUFSIZE],output[CF_BUFSIZE];
-  FnCallType *fn = FindFunction(fp->name);
+  const FnCallType *fn = FindFunction(fp->name);
 
 snprintf(id,CF_MAXVARSIZE,"built-in FnCall %s-arg",fp->name);
 

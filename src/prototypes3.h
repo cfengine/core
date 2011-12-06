@@ -742,7 +742,7 @@ int NewPromiseProposals(void);
 void CompilationReport(char *filename);
 void HashVariables(char *name);
 void HashControls(void);
-void Cf3CloseLog(void);
+void CloseLog(void);
 struct Constraint *ControlBodyConstraints(enum cfagenttype agent);
 void SetFacility(const char *retval);
 struct Bundle *GetBundle(char *name,char *agent);

@@ -153,7 +153,7 @@ setsid();
 #endif
 
 CloseNetwork();
-Cf3CloseLog();
+CloseLog();
 
 fflush(NULL);
 fd = open(NULLFILE, O_RDWR, 0);

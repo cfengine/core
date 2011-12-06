@@ -227,7 +227,7 @@ CfDebug("GenericDeInitialize()\n");
 
 CloseWmi();
 CloseNetwork();
-Cf3CloseLog();
+CloseLog();
 CloseAllDB();
 }
 
@@ -409,15 +409,12 @@ openlog(VPREFIX,LOG_PID|LOG_NOWAIT|LOG_ODELAY,facility);
 
 /*****************************************************************************/
 
-void Cf3CloseLog()
-
+#if !defined(__MINGW32__)
+void CloseLog(void)
 {
-#ifdef MINGW
-NovaWin_CloseLog();
-#else
 closelog();
-#endif
 }
+#endif
 
 /*******************************************************************/
 /* Level 1                                                         */
@@ -1055,7 +1052,7 @@ void SetFacility(const char *retval)
 {
 CfOut(cf_verbose, "", "SET Syslog FACILITY = %s\n", retval);
 
-Cf3CloseLog();
+CloseLog();
 OpenLog(ParseFacility(retval));
 }
 

@@ -38,10 +38,11 @@
 
 static void MakeReport(struct Item *mess,int prefix);
 static void FileReport(struct Item *mess,int prefix,char *filename);
+
+#if !defined(__MINGW32__)
 static void MakeLog(struct Item *mess,enum cfreport level);
-#ifndef MINGW
-static void Unix_MakeLog(struct Item *mess,enum cfreport level);
-#endif  /* NOT MINGW */
+static void LogPromiseResult(char *promiser, char peeType, void *promisee, char status, enum cfreport log_level, struct Item *mess);
+#endif
 
 /*****************************************************************************/
 
@@ -355,12 +356,10 @@ switch(level)
        break;       
    }
 
-#ifdef MINGW
-if(pp != NULL)
-  {
-  NovaWin_LogPromiseResult(pp->promiser, pp->petype, pp->promisee, status, attr.transaction.log_level, mess);
-  }
-#endif
+if (pp != NULL)
+   {
+   LogPromiseResult(pp->promiser, pp->petype, pp->promisee, status, attr.transaction.log_level, mess);
+   }
 
 /* Now complete the exits status classes and auditing */
 
@@ -474,20 +473,9 @@ return Unix_GetErrorStr();
 
 /*********************************************************************************/
 
+#if !defined(__MINGW32__)
+
 static void MakeLog(struct Item *mess,enum cfreport level)
-{
-#ifdef MINGW
-NovaWin_MakeLog(mess, level);
-#else
-Unix_MakeLog(mess, level);
-#endif
-}
-
-/*********************************************************************************/
-
-#ifndef MINGW
-
-static void Unix_MakeLog(struct Item *mess,enum cfreport level)
 
 { struct Item *ip;
 
@@ -529,5 +517,8 @@ for (ip = mess; ip != NULL; ip = ip->next)
 ThreadUnlock(cft_output);
 }
 
-#endif  /* NOT MINGW */
+static void LogPromiseResult(char *promiser, char peeType, void *promisee, char status, enum cfreport log_level, struct Item *mess)
+{
+}
 
+#endif

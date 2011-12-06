@@ -50,7 +50,9 @@ static void OpenReports(char *agents);
 static void CloseReports(char *agents);
 static char *InputLocation(char *filename);
 extern void CheckOpts(int argc,char **argv);
-static void Cf3OpenLog(int facility);
+#if !defined(__MINGW32__)
+static void OpenLog(int facility);
+#endif
 static bool VerifyBundleSequence(enum cfagenttype agent);
 
 /*****************************************************************************/
@@ -398,15 +400,12 @@ CloseReports(agents);
 
 /*****************************************************************************/
 
-void Cf3OpenLog(int facility)
-
+#if !defined(__MINGW32__)
+static void OpenLog(int facility)
 {
-#ifdef MINGW
-NovaWin_OpenLog(facility);
-#else
 openlog(VPREFIX,LOG_PID|LOG_NOWAIT|LOG_ODELAY,facility);
-#endif
 }
+#endif
 
 /*****************************************************************************/
 
@@ -479,7 +478,7 @@ CfDebug("Setting CFWORKDIR=%s\n", CFWORKDIR);
 _fmode = _O_BINARY;
 #endif
 
-Cf3OpenLog(LOG_USER);
+OpenLog(LOG_USER);
 
 if (!LOOKUP) /* cf-know should not do this in lookup mode */
    {
@@ -1057,7 +1056,7 @@ void SetFacility(const char *retval)
 CfOut(cf_verbose, "", "SET Syslog FACILITY = %s\n", retval);
 
 Cf3CloseLog();
-Cf3OpenLog(ParseFacility(retval));
+OpenLog(ParseFacility(retval));
 }
 
 /**************************************************************/

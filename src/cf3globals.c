@@ -95,7 +95,6 @@ int CF_OCCUR = 0; // objects
 int CF_EDGES = 0; // links or promises between them
 
 struct Rlist *MOUNTEDFSLIST = NULL;
-struct Rlist *SERVERLIST = NULL;
 struct PromiseIdent *PROMISE_ID_LIST = NULL;
 struct Item *PROCESSTABLE = NULL;
 struct Item *PROCESSREFRESH = NULL;

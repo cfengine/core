@@ -84,7 +84,6 @@ void ParallelFindAndVerifyFilesPromises(struct Promise *pp);
 static bool VerifyBootstrap(void);
 
 extern const struct BodySyntax CFA_CONTROLBODY[];
-extern struct Rlist *SERVERLIST;
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -1136,8 +1135,8 @@ switch(type)
        
    case kp_files:
 
-       SERVERLIST = NULL;
-       break;
+      ConnectionsInit();
+      break;
 
    case kp_processes:
      
@@ -1190,31 +1189,8 @@ switch(type)
 
    case kp_files:
 
-       /* Cleanup shared connection array for non-threaded remote copies */
-       
-       for (rp = SERVERLIST; rp != NULL; rp = rp->next)
-          {
-          svp = (struct ServerItem *)rp->item;
-
-          if (svp == NULL)
-             {
-             continue;
-             }
-          
-          ServerDisconnection(svp->conn);
-          
-          if (svp->server)
-             {
-             free(svp->server);
-             }
-
-          rp->item = NULL;
-          }
-
-       DeleteRlist(SERVERLIST);
-       SERVERLIST = NULL;
-
-       break;
+      ConnectionsCleanup();
+      break;
 
    case kp_processes:
        break;

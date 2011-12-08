@@ -194,6 +194,9 @@ CFDIR *OpenDirRemote(const char *dirname,struct Attributes attr,struct Promise *
 /* Mark connection as free */
 void ServerNotBusy(struct cfagent_connection *conn);
 
+void ConnectionsInit(void);
+void ConnectionsCleanup(void);
+
 /* client_protocols.c */
 
 int IdentifyAgent(int sd,char *localip,int family);

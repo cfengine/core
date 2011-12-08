@@ -271,7 +271,6 @@ extern int ABORTBUNDLE;
 extern struct Item *ABORTBUNDLEHEAP;
 extern int LASTSEENEXPIREAFTER;
 extern char *DEFAULT_COPYTYPE;
-extern struct Rlist *SERVERLIST;
 extern struct Item *PROCESSTABLE;
 extern struct Item *PROCESSREFRESH;
 extern struct Item *FSTABLIST;

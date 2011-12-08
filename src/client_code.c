@@ -38,6 +38,8 @@
 /* seconds */
 #define RECVTIMEOUT 30
 
+struct Rlist *SERVERLIST = NULL;
+
 static void NewClientCache(struct cfstat *data,struct Promise *pp);
 static void CacheServerConnection(struct cfagent_connection *conn, const char *server);
 static void MarkServerOffline(const char *server);
@@ -1371,6 +1373,42 @@ for (i = 0; i < toget; i++)
    }
 }
 
+/*********************************************************************/
+
+void ConnectionsInit(void)
+{
+SERVERLIST = NULL;
+}
+
+/*********************************************************************/
+
+void ConnectionsCleanup(void)
+{
+struct Rlist *rp;
+struct ServerItem *svp;
+
+for (rp = SERVERLIST; rp != NULL; rp = rp->next)
+   {
+   svp = (struct ServerItem *)rp->item;
+
+   if (svp == NULL)
+      {
+      continue;
+      }
+
+   ServerDisconnection(svp->conn);
+
+   if (svp->server)
+      {
+      free(svp->server);
+      }
+
+   rp->item = NULL;
+   }
+
+DeleteRlist(SERVERLIST);
+SERVERLIST = NULL;
+}
 
 /*********************************************************************/
 

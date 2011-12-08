@@ -134,23 +134,6 @@ as a regular command does.
 /bin/echo $*
 
 @end smallexample
-@code{cf-agent} defines the classes as an environment variable so that programs
-have access to these. E.g. try the following module:
-
-@smallexample
-#!/usr/bin/perl
-
-print "Decoding $ENV@{CFALLCLASSES@}\n";
-
-@@allclasses = split (":","$ENV@{CFALLCLASSES@}");
-
-while ($c=shift(@@allclasses))
-  @{
-  $classes@{$c@} = 1;
-  print "$c is set\n";
-  @}
-
-@end smallexample
 
 Modules define variables in @code{cf-agent} by outputting strings of the form
 

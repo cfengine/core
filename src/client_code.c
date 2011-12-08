@@ -40,12 +40,16 @@
 
 static void NewClientCache(struct cfstat *data,struct Promise *pp);
 static void CacheServerConnection(struct cfagent_connection *conn, const char *server);
-static int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz);
 static void MarkServerOffline(const char *server);
 static struct cfagent_connection *ServerConnectionReady(const char *server);
 static bool ServerOffline(const char *server);
 static void FlushFileStream(int sd,int toget);
 static int CacheStat(const char *file,struct stat *statbuf,const char *stattype,struct Attributes attr,struct Promise *pp);
+
+#if !defined(__MINGW32__)
+static int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz);
+#endif
+
 
 /*********************************************************************/
 
@@ -1370,6 +1374,7 @@ for (i = 0; i < toget; i++)
 
 /*********************************************************************/
 
+#if !defined(___MINGW32__)
 static int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz)
 
 /** 
@@ -1377,13 +1382,6 @@ static int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, stru
  * successful. Returns true on success, false otherwise.
  * NB! Do not use recv() timeout - see note below.
  **/
-    
-#ifdef MINGW
-{
-return NovaWin_TryConnect(conn,tvp,cinp,cinpSz);
-}
-
-#else  /* NOT MINGW */
 
 { int res;
   long arg;
@@ -1474,6 +1472,4 @@ return NovaWin_TryConnect(conn,tvp,cinp,cinpSz);
   return true;
 }
 
-#endif  /* NOT MINGW */
-
-
+#endif  /* !defined(__MINGW32__) */

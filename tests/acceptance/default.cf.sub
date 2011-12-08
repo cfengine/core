@@ -11,6 +11,7 @@ vars:
   "cwd" string => execresult("/bin/pwd", "noshell");
 
   "testdir" string => "/tmp/TEST.cfengine";
+  "testfile" string => "/tmp/TEST.cfengine";
 
   bin_sort::
     "sort" string => "/bin/sort";

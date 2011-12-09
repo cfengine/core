@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -47,7 +47,7 @@ static int VerifyMountPromise(char *file,struct Attributes a,struct Promise *pp)
 void *FindAndVerifyStoragePromises(struct Promise *pp)
 
 {
-PromiseBanner(pp); 
+PromiseBanner(pp);
 FindStoragePromiserObjects(pp);
 
 return (void *)NULL;
@@ -59,7 +59,7 @@ static void FindStoragePromiserObjects(struct Promise *pp)
 
 {
 /* Check if we are searching over a regular expression */
- 
+
 LocateFilePromiserGroup(pp->promiser,pp,VerifyStoragePromise);
 }
 
@@ -121,18 +121,18 @@ if (a.havemount)
    VerifyMountPromise(path,a,pp);
    }
 #endif  /* NOT MINGW */
-   
+
 /* Then check file system */
 
 if (a.havevolume)
    {
    VerifyFileSystem(path,a,pp);
-   
+
    if (a.volume.freespace != CF_NOINT)
       {
       VerifyFreeSpace(path,a,pp);
       }
-   
+
    if (a.volume.scan_arrivals)
       {
       VolumeScanArrivals(path,a,pp);
@@ -241,7 +241,7 @@ static int VerifyFreeSpace(char *file,struct Attributes a,struct Promise *pp)
 
 { struct stat statbuf;
   long kilobytes;
-  
+
 #ifdef MINGW
 if (!a.volume.check_foreign)
 {
@@ -265,7 +265,7 @@ if (!a.volume.check_foreign)
       }
    }
 #endif  /* NOT MINGW */
-   
+
 kilobytes = a.volume.freespace;
 
 if (kilobytes < 0)
@@ -320,13 +320,13 @@ for (rp = list; rp != NULL; rp=rp->next)
       }
 
    /* Give primacy to the promised / affected object */
-   
+
    if (strcmp(name,mp->mounton) == 0)
       {
       /* We have found something mounted on the promiser dir */
 
       found = true;
-      
+
       if (a.mount.mount_source && (strcmp(mp->source,a.mount.mount_source) != 0))
          {
          CfOut(cf_inform,"","A different file system (%s:%s) is mounted on %s than what is promised\n",mp->host,mp->source,name);
@@ -362,7 +362,7 @@ static int IsForeignFileSystem (struct stat *childstat,char *dir)
 
 { struct stat parentstat;
   char vbuff[CF_BUFSIZE];
- 
+
 strncpy(vbuff,dir,CF_BUFSIZE-1);
 
 if (vbuff[strlen(vbuff)-1] == FILE_SEPARATOR)
@@ -417,12 +417,12 @@ static int VerifyMountPromise(char *name,struct Attributes a,struct Promise *pp)
 { char *options;
   char dir[CF_BUFSIZE];
   int changes = 0;
- 
+
 CfOut(cf_verbose,""," -> Verifying mounted file systems on %s\n",name);
 
 snprintf(dir,CF_BUFSIZE,"%s/.",name);
 
-if (!IsPrivileged())                            
+if (!IsPrivileged())
    {
    cfPS(cf_error,CF_INTERPT,"",pp,a,"Only root can mount filesystems.\n","");
    return false;
@@ -446,7 +446,7 @@ if (!FileSystemMountedCorrectly(MOUNTEDFSLIST,name,options,a,pp))
          {
          cfPS(cf_inform,CF_FAIL,"",pp,a," -> Filesystem %s was not mounted as promised, and no edits were promised in %s\n",name,VFSTAB[VSYSTEMHARDCLASS]);
          // Mount explicitly
-         VerifyMount(name,a,pp);               
+         VerifyMount(name,a,pp);
          }
       }
    else

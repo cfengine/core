@@ -22,15 +22,9 @@
   included file COSL.txt.
 */
 
+#define ALLOC_IMPL
 #include "cf3.defs.h"
 #include "cf3.extern.h"
-
-#undef malloc
-#undef calloc
-#undef realloc
-#undef strdup
-#undef strndup
-#undef memdup
 
 /*****************************************************************************/
 
@@ -83,5 +77,26 @@ return CheckResult(strndup(str, n), "xstrndup", true);
 void *xmemdup(const void *data, size_t size)
 {
 return CheckResult(memdup(data, size), "xmemdup", size != 0);
+}
+
+/*****************************************************************************/
+
+int xasprintf(char **strp, const char *fmt, ...)
+{
+va_list ap;
+va_start(ap, fmt);
+int res = xvasprintf(strp, fmt, ap);
+va_end(ap);
+return res;
+}
+
+/*****************************************************************************/
+
+int xvasprintf(char **strp, const char *fmt, va_list ap)
+{
+*strp = NULL;
+int res = vasprintf(strp, fmt, ap);
+CheckResult(*strp, "xvasprintf", true);
+return res;
 }
 

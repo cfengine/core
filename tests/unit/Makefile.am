@@ -17,7 +17,8 @@ check_PROGRAMS = \
 	str_test \
 	json_test \
 	evalfunction_test \
-	regex_test
+	regex_test \
+	alloc_test
 
 TESTS = $(check_PROGRAMS)
 

@@ -26,6 +26,7 @@
 #define CFENGINE_ALLOC_H
 
 #include <sys/types.h>
+#include <stdarg.h>
 
 void *xcalloc(size_t nmemb, size_t size);
 void *xmalloc(size_t size);
@@ -33,25 +34,31 @@ void *xrealloc(void *ptr, size_t size);
 char *xstrdup(const char *str);
 char *xstrndup(const char *str, size_t n);
 void *xmemdup(const void *mem, size_t size);
+int xasprintf(char **strp, const char *fmt, ...);
+int xvasprinf(char **strp, const char *fmt, va_list ap);
 
 /*
  * Prevent any code from using un-wrapped allocators.
  *
  * Use x* equivalents instead.
  */
-
+#if !defined(ALLOC_IMPL)
 #undef malloc
 #undef calloc
 #undef realloc
 #undef strdup
 #undef strndup
 #undef memdup
+#undef asprintf
+#undef vasprintf
 #define malloc __error_unchecked_malloc
 #define calloc __error_unchecked_calloc
 #define realloc __error_unchecked_realloc
 #define strdup __error_unchecked_strdup
 #define strndup __error_unchecked_strndup
 #define memdup __error_unchecked_memdup
+#define asprintf __error_unchecked_asprintf
+#define vasprintf __error_unchecked_vasprintf
 
 void __error_unchecked_malloc(void);
 void __error_unchecked_calloc(void);
@@ -59,5 +66,8 @@ void __error_unchecked_realloc(void);
 void __error_unchecked_strdup(void);
 void __error_unchecked_strndup(void);
 void __error_unchecked_memdup(void);
+void __error_unchecked_asprintf(void);
+void __error_unchecked_vasprintf(void);
+#endif
 
 #endif

@@ -60,33 +60,22 @@ typedef struct PackagePattern
 
 /******************************************************************************/
 
-char *xasprintf(const char *fmt, ...)
-{
-char *entry;
-va_list ap;
-va_start(ap, fmt);
-if (vasprintf(&entry, fmt, ap) == -1)
-   {
-   FatalError("Unable to allocate memory");
-   }
-va_end(ap);
-return entry;
-}
-
-/******************************************************************************/
-
 static char *SerializePackage(Package *package)
 {
-return xasprintf("%s:%s:%s", package->name, package->version, package->arch);
+char *s;
+xasprintf(&s, "%s:%s:%s", package->name, package->version, package->arch);
+return s;
 }
 
 /******************************************************************************/
 
 static char *SerializePackagePattern(PackagePattern *pattern)
 {
-return xasprintf("%s:%s:%s", pattern->name ? pattern->name : "*",
-                 pattern->version ? pattern->version : "*",
-                 pattern->arch ? pattern->arch : "*");
+char *s;
+xasprintf(&s, "%s:%s:%s", pattern->name ? pattern->name : "*",
+          pattern->version ? pattern->version : "*",
+          pattern->arch ? pattern->arch : "*");
+return s;
 }
 
 /******************************************************************************/

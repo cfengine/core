@@ -1412,7 +1412,7 @@ SERVERLIST = NULL;
 
 /*********************************************************************/
 
-#if !defined(___MINGW32__)
+#if !defined(__MINGW32__)
 static int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz)
 
 /** 

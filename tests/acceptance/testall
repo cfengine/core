@@ -27,7 +27,7 @@ LOG=test.log
 SUMMARY=summary.log
 BASE_WORKDIR=$(pwd)/workdir
 QUIET=
-STAGING_TESTS=${STAGING_TESTS:-}
+STAGING_TESTS=${STAGING_TESTS:-0}
 NETWORK_TESTS=${NETWORK_TESTS:-1}
 GAINROOT=fakeroot
 
@@ -88,10 +88,10 @@ runtest() {
     EXPECTED_CRASH=
   fi
 
-  if [ -z "$STAGING_TESTS" ] && echo "$TEST" | grep -q -e 'staging'; then
+  if [ "x$STAGING_TESTS" = "x0" ] && echo "$TEST" | grep -q -e 'staging'; then
     SKIP=1
     SKIPREASON="Staging tests are disabled"
-  elif [ -z "$NETWORK_TESTS" ] && echo "$TEST" | grep -q -e 'network'; then
+  elif [ "x$NETWORK_TESTS" = "x0" ] && echo "$TEST" | grep -q -e 'network'; then
     SKIP=1
     SKIPREASON="Network-dependent tests are disabled"
   else
@@ -205,7 +205,7 @@ while true; do
     --staging)
       STAGING_TESTS=1;;
     --no-network)
-      NETWORK_TESTS=;;
+      NETWORK_TESTS=0;;
     --agent=*)
       AGENT=${1#--agent=};;
     -*)

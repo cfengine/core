@@ -101,7 +101,7 @@ struct BodySyntax CF_CLASSBODY[] =
    {"dist",cf_rlist,CF_REALRANGE,"Generate a probabilistic class distribution (from strategies in cfengine 2)"},
    {"expression",cf_class,CF_CLASSRANGE,"Evaluate string expression of classes in normal form"},
    {"not",cf_class,CF_CLASSRANGE,"Evaluate the negation of string expression in normal form"},
-   {"select_class",cf_rlist,CF_CLASSRANGE,"Select one of the named list of classes to define based on host identity"},
+   {"select_class",cf_clist,CF_CLASSRANGE,"Select one of the named list of classes to define based on host identity"},
    {NULL,cf_notype,NULL,NULL}
    };
 

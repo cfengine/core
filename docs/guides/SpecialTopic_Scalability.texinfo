@@ -458,6 +458,11 @@ also central to human understanding, as it shows the principles or allows
 us to @i{`see the general in the particular, or the eternal in the transitory'}.
 @end itemize
 
+
+
+
+
+
 @node  Tactics for scaling policy,  , Strategy for scaling policy, Policy guidelines for comprehension
 @subsection Tactics for scaling policy
 
@@ -482,7 +487,67 @@ something that allows readers to understand the @i{reason} for the intention: @c
 promises elsewhere, and try to document the connections. If a policy
 have dependencies, encode these (see `Best practice for writing promises' in the Reference manual).
 
+@item When solving problems, think about how to model the data. For example, 
+one way to model groups is to try to classify the names in lists
+@verbatim
+"group" slist => { 
+                 classify("a.domain.com"), 
+                 classify("b.domain.com"), 
+                 .....4000x...
+                 };
+@end verbatim
+This is neat, and easy to read but it requires CFEngine to process
+a list linearly, which becomes increasingly inefficient and can take several
+seconds if a list contains thousands of hosts. Some improvement can be obtained
+by converting the domain strings manually:
+@verbatim
+"group" slist => { 
+                 "a_domain_com", 
+                 "b_domain_com", 
+                 .....4000x...
+                 };
+@end verbatim
+However, the linear scaling is still present.
+
+In this case, it is inefficient to process the list
+in memory, because we only need one out of thousands of the
+entries, thus it makes sense to prune the list in advance.
+
+To handle this, we can create a flat file of data in the format
+"hostname:group" using the builtin function @code{getfields()} to read
+one line from the file. 
+@verbatim
+vars:
+ "match_name" int => getfields("a.domain.com:.*","/my/file",":","group_data");
+
+classes:
+ "$(group_data[2])" expression => isgreaterthan("$(match_name)","0");;
+
+@end verbatim
+
+This assumes, of course, that each host is in
+one and only one class context. The saving in processing is large,
+however, as it can be carried out directly in the input buffer.
+Only one out of thousands of lines thus needs to be processes.
+Although the scaling is still linear in search, the allocation and read
+processes are heavily optimized by block device reading and much lower
+overhead.
+
+A module could also be used to the same effect to define the appropriate class
+context.
+
 @end itemize
+
+
+
+
+
+
+
+
+
+
+
 
 
 @node  Performance impact of promises, Avoiding network traffic, Policy guidelines for comprehension, Scalable policy strategy

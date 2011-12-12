@@ -1227,7 +1227,7 @@ if (a.havelink && !a.link.source)
 
 if (a.havecopy && a.copy.source && !FullTextMatch(CF_ABSPATHRANGE, a.copy.source))
    {
-   CfOut(cf_error,""," !! Non-absolute path in source attribute (have no invariant meaning): %s",path);
+   CfOut(cf_error,""," !! Non-absolute path in source attribute (have no invariant meaning): %s", a.copy.source);
    PromiseRef(cf_error,pp);
    FatalError("");
    }

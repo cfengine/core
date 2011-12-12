@@ -27,8 +27,8 @@ LOG=test.log
 SUMMARY=summary.log
 BASE_WORKDIR=$(pwd)/workdir
 QUIET=
-STAGING=
-NETWORK=1
+STAGING_TESTS=${STAGING_TESTS:-}
+NETWORK_TESTS=${NETWORK_TESTS:-1}
 GAINROOT=fakeroot
 
 PASSED_TESTS=0
@@ -88,10 +88,10 @@ runtest() {
     EXPECTED_CRASH=
   fi
 
-  if [ -z "$STAGING" ] && echo "$TEST" | grep -q -e 'staging'; then
+  if [ -z "$STAGING_TESTS" ] && echo "$TEST" | grep -q -e 'staging'; then
     SKIP=1
     SKIPREASON="Staging tests are disabled"
-  elif [ -z "$NETWORK" ] && echo "$TEST" | grep -q -e 'network'; then
+  elif [ -z "$NETWORK_TESTS" ] && echo "$TEST" | grep -q -e 'network'; then
     SKIP=1
     SKIPREASON="Network-dependent tests are disabled"
   else
@@ -203,9 +203,9 @@ while true; do
     --gainroot=*)
       GAINROOT=${1#--gainroot=};;
     --staging)
-      STAGING=1;;
+      STAGING_TESTS=1;;
     --no-network)
-      NETWORK=;;
+      NETWORK_TESTS=;;
     --agent=*)
       AGENT=${1#--agent=};;
     -*)
@@ -219,8 +219,8 @@ done
 
 if [ $# -gt 0 ]; then
   # We need to run all specified tests
-  STAGING=1
-  NETWORK=1
+  STAGING_TESTS=1
+  NETWORK_TESTS=1
   for test in "$@"; do
     if ! expr "$test" : '[/.]' >/dev/null; then
       test="./$test"

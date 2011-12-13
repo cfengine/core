@@ -137,8 +137,8 @@ int main(int argc,char *argv[])
 {
 int ret = 0;
 
-CheckOpts(argc,argv);
-GenericInitialize(argc,argv,"agent");
+struct GenericAgentConfig config = CheckOpts(argc,argv);
+GenericInitialize(argc,argv,"agent", config);
 ThisAgentInit();
 KeepPromises();
 NoteClassUsage(VHEAP);
@@ -161,12 +161,13 @@ return ret;
 /* Level 1                                                         */
 /*******************************************************************/
 
-void CheckOpts(int argc,char **argv)
+struct GenericAgentConfig CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
  char arg[CF_BUFSIZE],*sp;
   int optindex = 0;
   int c,alpha = false,v6 = false;
+  struct GenericAgentConfig config = GenericAgentDefaultConfig(cf_agent);
 
 /* Because of the MacOS linker we have to call this from each agent
    individually before Generic Initialize */
@@ -315,6 +316,8 @@ if (argv[optind] != NULL)
    }
 
 CfDebug("Set debugging\n");
+
+return config;
 }
 
 /*******************************************************************/

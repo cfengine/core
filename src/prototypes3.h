@@ -730,32 +730,7 @@ void SetFnCallReturnStatus(char *fname,int status,char *message,char *fncall_cla
 
 int FullWrite(int desc, const char *ptr, size_t len);
 
-/* generic_agent.c */
-
-void GenericInitialize(int argc,char **argv,char *agents);
-void GenericDeInitialize(void);
-void InitializeGA(int argc,char **argv);
-void CheckOpts(int argc,char **argv);
-void Syntax(const char *comp, const struct option options[], const char *hints[], const char *id);
-void ManPage(const char *component, const struct option options[], const char *hints[], const char *id);
-void PrintVersionBanner(const char *component);
-int CheckPromises(enum cfagenttype ag);
-void ReadPromises(enum cfagenttype ag,char *agents, bool verify);
-int NewPromiseProposals(void);
-void CompilationReport(char *filename);
-void HashVariables(char *name);
-void HashControls(void);
-void CloseLog(void);
-struct Constraint *ControlBodyConstraints(enum cfagenttype agent);
-void SetFacility(const char *retval);
-struct Bundle *GetBundle(char *name,char *agent);
-struct SubType *GetSubTypeForBundle(char *type,struct Bundle *bp);
-void CheckBundleParameters(char *scope,struct Rlist *args);
-void PromiseBanner(struct Promise *pp);
-void BannerBundle(struct Bundle *bp,struct Rlist *args);
-void BannerSubBundle(struct Bundle *bp,struct Rlist *args);
-void WritePID(char *filename);
-void OpenCompilationReportFiles(const char *fname);
+#include "generic_agent.h"
 
 /* granules.c  */
 

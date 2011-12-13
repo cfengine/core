@@ -183,8 +183,8 @@ struct Auth *VARDENYTOP = NULL;
 int main(int argc,char *argv[])
 
 {
-CheckOpts(argc,argv);
-GenericInitialize(argc,argv,"server");
+struct GenericAgentConfig config = CheckOpts(argc,argv);
+GenericInitialize(argc,argv,"server", config);
 ThisAgentInit();
 KeepPromises();
 Summarize();
@@ -195,13 +195,14 @@ return 0;
 
 /*******************************************************************/
 
-void CheckOpts(int argc,char **argv)
+struct GenericAgentConfig CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
   char ld_library_path[CF_BUFSIZE];
   char arg[CF_BUFSIZE];
   int optindex = 0;
   int c;
+  struct GenericAgentConfig config = GenericAgentDefaultConfig(cf_server);
   
 while ((c=getopt_long(argc,argv,"d:vIKf:D:N:VSxLFM",OPTIONS,&optindex)) != EOF)
   {
@@ -290,6 +291,8 @@ if (argv[optind] != NULL)
    }
 
 CfDebug("Set debugging\n");
+
+return config;
 }
 
 /*******************************************************************/

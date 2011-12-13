@@ -95,8 +95,8 @@ const char *HINTS[] =
 int main(int argc,char *argv[])
 
 {
-CheckOpts(argc,argv);
-GenericInitialize(argc,argv,"common");
+struct GenericAgentConfig config = CheckOpts(argc,argv);
+GenericInitialize(argc,argv,"common", config);
 ThisAgentInit();
 AnalyzePromiseConflicts();
 GenericDeInitialize();
@@ -117,12 +117,13 @@ else
 /* Level 1                                                         */
 /*******************************************************************/
 
-void CheckOpts(int argc,char **argv)
+struct GenericAgentConfig CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
   char arg[CF_BUFSIZE];
   int optindex = 0;
   int c;
+  struct GenericAgentConfig config = GenericAgentDefaultConfig(cf_common);
   
 while ((c=getopt_long(argc,argv,"ad:vnIf:D:N:VSrxMbpg:",OPTIONS,&optindex)) != EOF)
   {
@@ -231,6 +232,8 @@ if (argv[optind] != NULL)
    }
 
 CfDebug("Set debugging\n");
+
+return config;
 }
 
 /*******************************************************************/

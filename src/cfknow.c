@@ -34,7 +34,6 @@
 #include "ontology.h"
 
 int main (int argc,char *argv[]);
-void CheckOpts(int argc,char **argv);
 void ThisAgentInit(void);
 void KeepKnowControlPromises(void);
 void KeepKnowledgePromise(struct Promise *pp);
@@ -169,8 +168,8 @@ const char *HINTS[16] =
 int main(int argc,char *argv[])
 
 {
-CheckOpts(argc,argv); 
-GenericInitialize(argc,argv,"knowledge");
+struct GenericAgentConfig config = CheckOpts(argc,argv);
+GenericInitialize(argc,argv,"knowledge", config);
 ThisAgentInit();
 KeepKnowControlPromises();
 
@@ -198,12 +197,13 @@ return 0;
 /* Level 1                                                                   */
 /*****************************************************************************/
 
-void CheckOpts(int argc,char **argv)
+struct GenericAgentConfig CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
   char arg[CF_BUFSIZE];
   int optindex = 0;
   int c;
+  struct GenericAgentConfig config = GenericAgentDefaultConfig(cf_know);
 
 LOOKUP = false;
 
@@ -334,6 +334,7 @@ if (argv[optind] != NULL)
    CfOut(cf_error,"","Unexpected argument with no preceding option: %s\n",argv[optind]);
    }
 
+return config;
 }
 
 /*****************************************************************************/

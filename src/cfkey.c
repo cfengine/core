@@ -75,11 +75,11 @@ const char *HINTS[17] =
 int main(int argc,char *argv[])
 
 {
-CheckOpts(argc,argv);
+struct GenericAgentConfig config = CheckOpts(argc,argv);
 
 THIS_AGENT_TYPE = cf_keygen;
 
-GenericInitialize(argc,argv,"keygenerator");
+GenericInitialize(argc,argv,"keygenerator", config);
 
 if (SHOWHOSTS)
    {
@@ -100,11 +100,12 @@ return 0;
 /* Level                                                                     */
 /*****************************************************************************/
 
-void CheckOpts(int argc,char **argv)
+struct GenericAgentConfig CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
   int optindex = 0;
   int c;
+  struct GenericAgentConfig config = GenericAgentDefaultConfig(cf_keygen);
 
 while ((c=getopt_long(argc,argv,"d:vf:VMsr:",OPTIONS,&optindex)) != EOF)
   {
@@ -159,6 +160,8 @@ while ((c=getopt_long(argc,argv,"d:vf:VMsr:",OPTIONS,&optindex)) != EOF)
           
       }
   }
+
+return config;
 }
 /*****************************************************************************/
 

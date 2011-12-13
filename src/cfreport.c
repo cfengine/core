@@ -33,7 +33,6 @@
 #include "cf3.extern.h"
 
 int main (int argc,char *argv[]);
-void CheckOpts(int argc,char **argv);
 void ThisAgentInit(void);
 void KeepReportsControlPromises(void);
 void KeepReportsPromises(void);
@@ -277,10 +276,10 @@ char *CFRH[][2] =
 int main(int argc,char *argv[])
 
 { 
-CheckOpts(argc,argv);
+struct GenericAgentConfig config = CheckOpts(argc,argv);
 if (!HUBQUERY)
    {
-   GenericInitialize(argc,argv,"reporter");
+   GenericInitialize(argc,argv,"reporter", config);
    }
 ThisAgentInit();
 KeepReportsControlPromises();
@@ -293,11 +292,12 @@ return 0;
 /* Level 1                                                                   */
 /*****************************************************************************/
 
-void CheckOpts(int argc,char **argv)
+struct GenericAgentConfig CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
   int optindex = 0;
   int c;
+  struct GenericAgentConfig config = GenericAgentDefaultConfig(cf_report);
 
 while ((c=getopt_long(argc,argv,"Cghd:vVf:st:ar:PXHLMIRSKE:x:i:1:p:k:c:qF:o:",OPTIONS,&optindex)) != EOF)
    {
@@ -462,6 +462,7 @@ if (argv[optind] != NULL)
    CfOut(cf_error,"","Unexpected argument with no preceding option: %s\n",argv[optind]);
    }
 
+return config;
 }
 
 /*****************************************************************************/

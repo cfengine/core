@@ -30,8 +30,7 @@
 /*                                                                           */
 /*****************************************************************************/
 
-#include "cf3.defs.h"
-#include "cf3.extern.h"
+#include "generic_agent.h"
 
 extern FILE *yyin;
 extern char *CFH[][2];
@@ -49,10 +48,10 @@ static void PrependAuditFile(char *file);
 static void OpenReports(char *agents);
 static void CloseReports(char *agents);
 static char *InputLocation(char *filename);
-extern void CheckOpts(int argc,char **argv);
 #if !defined(__MINGW32__)
 static void OpenLog(int facility);
 #endif
+static void Cf3OpenLog(int facility);
 static bool VerifyBundleSequence(enum cfagenttype agent);
 
 /*****************************************************************************/
@@ -71,7 +70,7 @@ unsetenv("LC_MESSAGES");
 
 /*****************************************************************************/
 
-void GenericInitialize(int argc,char **argv,char *agents)
+void GenericInitialize(int argc,char **argv,char *agents, struct GenericAgentConfig config)
 
 { enum cfagenttype ag = Agent2Type(agents);
   char vbuff[CF_BUFSIZE];
@@ -2036,3 +2035,18 @@ for (rp = args; rp != NULL; rp = rp->next)
    }
 }
 
+/*******************************************************************/
+
+struct GenericAgentConfig GenericAgentDefaultConfig(enum cfagenttype agent_type)
+{
+struct GenericAgentConfig config = { 0 };
+
+switch (agent_type)
+   {
+   default:
+      config.verify_promises = true;
+      break;
+   }
+
+return config;
+}

@@ -123,8 +123,8 @@ int main(int argc,char *argv[])
   int status;
   int pid;
 
-CheckOpts(argc,argv);  
-GenericInitialize(argc,argv,"runagent");
+struct GenericAgentConfig config = CheckOpts(argc,argv);
+GenericInitialize(argc,argv,"runagent", config);
 ThisAgentInit();
 KeepControlPromises(); // Set RUNATTR using copy
 
@@ -202,11 +202,12 @@ return 0;
 
 /*******************************************************************/
 
-void CheckOpts(int argc,char **argv)
+struct GenericAgentConfig CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
   int optindex = 0;
   int c;
+  struct GenericAgentConfig config = GenericAgentDefaultConfig(cf_runagent);
 
 DEFINECLASSES[0] = '\0';
 SENDCLASSES[0] = '\0';  
@@ -324,6 +325,8 @@ while ((c=getopt_long(argc,argv,"t:q:d:b:vnKhIif:D:VSxo:s:MH:",OPTIONS,&optindex
   }
 
 CfDebug("Set debugging\n");
+
+return config;
 }
 
 /*******************************************************************/

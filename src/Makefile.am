@@ -20,7 +20,7 @@ libpromises_la_SOURCES =                                                \
         patches.c                                                       \
         attributes.c                                                    \
         install.c                                                       \
-        generic_agent.c                                                 \
+        generic_agent.c generic_agent.h                                 \
         dbm_api.c                                                       \
         dbm_berkeley.c                                                  \
         dbm_quick.c                                                     \

@@ -125,8 +125,8 @@ const char *HINTS[15] =
 int main(int argc,char *argv[])
 
 {
-CheckOpts(argc,argv);
-GenericInitialize(argc,argv,"executor");
+struct GenericAgentConfig config = CheckOpts(argc,argv);
+GenericInitialize(argc,argv,"executor", config);
 ThisAgentInit();
 KeepPromises();
 
@@ -152,13 +152,14 @@ return 0;
 /* Level 1                                                                   */
 /*****************************************************************************/
 
-void CheckOpts(int argc,char **argv)
+struct GenericAgentConfig CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
   char arg[CF_BUFSIZE];
   int optindex = 0;
   int c;
   char ld_library_path[CF_BUFSIZE];
+  struct GenericAgentConfig config = GenericAgentDefaultConfig(cf_executor);
 
 while ((c=getopt_long(argc,argv,"d:vnKIf:D:N:VxL:hFV1gMW",OPTIONS,&optindex)) != EOF)
   {
@@ -260,6 +261,8 @@ if (argv[optind] != NULL)
    {
    CfOut(cf_error,"","Unexpected argument with no preceding option: %s\n",argv[optind]);
    }
+
+return config;
 }
 
 /*****************************************************************************/

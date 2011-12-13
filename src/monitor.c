@@ -89,8 +89,8 @@ const char *HINTS[14] =
 
 int main(int argc,char *argv[])
 {
-CheckOpts(argc,argv);
-GenericInitialize(argc,argv,"monitor");
+struct GenericAgentConfig config = CheckOpts(argc,argv);
+GenericInitialize(argc,argv,"monitor", config);
 ThisAgentInit();
 KeepPromises();
 
@@ -100,11 +100,12 @@ return 0;
 
 /*******************************************************************/
 
-void CheckOpts(int argc,char **argv)
+struct GenericAgentConfig CheckOpts(int argc,char **argv)
 {
 extern char *optarg;
 int optindex = 0;
 int c;
+struct GenericAgentConfig config = GenericAgentDefaultConfig(cf_monitor);
 
 while ((c=getopt_long(argc,argv,"d:vnIf:VSxHTKMF",OPTIONS,&optindex)) != EOF)
    {
@@ -173,6 +174,8 @@ while ((c=getopt_long(argc,argv,"d:vnIf:VSxHTKMF",OPTIONS,&optindex)) != EOF)
   }
 
 CfDebug("Set debugging\n");
+
+return config;
 }
 
 /*****************************************************************************/

@@ -873,7 +873,7 @@ if (NewPromiseProposals())
       NewClass(THIS_AGENT);
 
       SetReferenceTime(true);
-      ReadPromises(cf_server,CF_SERVERC);
+      ReadPromises(cf_server, CF_SERVERC, true);
       KeepPromises();
       Summarize();
       

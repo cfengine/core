@@ -36,7 +36,7 @@
 extern FILE *yyin;
 extern char *CFH[][2];
 
-static void VerifyPromises(enum cfagenttype ag);
+static void VerifyPromises(void);
 static void SetAuditVersion(void);
 static void CheckWorkingDirectories(void);
 static void Cf3ParseFile(char *filename, bool check_not_writable_by_others);
@@ -193,13 +193,13 @@ if (ag != cf_keygen)
 
    if (ok)
       {
-      ReadPromises(ag,agents);
+      ReadPromises(ag, agents, true);
       }
    else
       {
       CfOut(cf_error,"","cf-agent was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
       snprintf(VINPUTFILE,CF_BUFSIZE-1,"failsafe.cf");
-      ReadPromises(ag,agents);
+      ReadPromises(ag, agents, true);
       }
    
    if (SHOWREPORTS)
@@ -333,7 +333,7 @@ else
 
 /*****************************************************************************/
 
-void ReadPromises(enum cfagenttype ag,char *agents)
+void ReadPromises(enum cfagenttype ag,char *agents, bool verify)
 
 {
 char rettype;
@@ -384,7 +384,10 @@ ShowContext();
 fprintf(FREPORT_HTML,"<div id=\"reporttext\">\n");
 fprintf(FREPORT_HTML,"%s",CFH[cfx_promise][cfb]);
 
-VerifyPromises(cf_common);
+if (verify)
+   {
+   VerifyPromises();
+   }
 
 fprintf(FREPORT_HTML,"%s",CFH[cfx_promise][cfe]);
 
@@ -1415,7 +1418,7 @@ if ((FREPORT_HTML = fopen(filename,"w")) == NULL)
 
 /*******************************************************************/
 
-static void VerifyPromises(enum cfagenttype agent)
+static void VerifyPromises(void)
 
 { struct Bundle *bp;
   struct SubType *sp;
@@ -1499,19 +1502,9 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
 
    for (sp = bp->subtypes; sp != NULL; sp = sp->next) /* get schedule */
       {
-      if (strcmp(sp->name,"classes") == 0)
-         {
-         /* these should not be evaluated here */
-
-	 if (agent != cf_common)
-	    {
-	    continue;
-	    }
-         }
-
       for (pp = sp->promiselist; pp != NULL; pp=pp->next)
          {
-         ExpandPromise(agent,scope,pp,NULL);
+         ExpandPromise(cf_common,scope,pp,NULL);
          }
       }
    }
@@ -1521,7 +1514,7 @@ HashControls();
 
 /* Now look once through the sequences bundles themselves */
 
-if (VerifyBundleSequence(agent) == false)
+if (VerifyBundleSequence(cf_common) == false)
    {
    FatalError("Errors in promise bundles");
    }

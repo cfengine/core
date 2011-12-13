@@ -740,7 +740,7 @@ void Syntax(const char *comp, const struct option options[], const char *hints[]
 void ManPage(const char *component, const struct option options[], const char *hints[], const char *id);
 void PrintVersionBanner(const char *component);
 int CheckPromises(enum cfagenttype ag);
-void ReadPromises(enum cfagenttype ag,char *agents);
+void ReadPromises(enum cfagenttype ag,char *agents, bool verify);
 int NewPromiseProposals(void);
 void CompilationReport(char *filename);
 void HashVariables(char *name);

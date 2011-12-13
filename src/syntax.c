@@ -1382,8 +1382,8 @@ JsonObjectDelete(syntax_tree);
 
 static void JsonObjectAppendSize(JsonObject **parent, const char *name, size_t value)
 {
-char buffer[6];
-snprintf(buffer, 6, "%ld", value);
+char buffer[10];
+snprintf(buffer, 10, "%ld", value);
 JsonObjectAppendString(parent, name, buffer);
 }
 
@@ -1447,77 +1447,74 @@ switch (type)
    }
 }
 
+static JsonObject *CreateContextAsJson(const char *name, size_t offset,
+      size_t offset_end, const char *children_name, JsonArray *children)
+{
+JsonObject *json = NULL;
+
+JsonObjectAppendString(&json, "name", name);
+JsonObjectAppendSize(&json, "offset", offset);
+JsonObjectAppendSize(&json, "offset-end", offset_end);
+JsonObjectAppendArray(&json, children_name, children);
+
+return json;
+}
+
 static JsonArray *ExportBodyClassesAsJson(struct Constraint *constraints)
 {
-JsonArray *json_classes = NULL;
-JsonObject *json_current_class = NULL;
-JsonArray *json_current_class_attributes = NULL;
-char *current_class = NULL;
+JsonArray *json_contexts = NULL;
+JsonObject *json_context = NULL;
+JsonArray *json_attributes = NULL;
+char *current_context = "any";
+size_t context_offset_start = -1;
+size_t context_offset_end = -1;
 struct Constraint *cp = NULL;
 
 for (cp = constraints; cp != NULL; cp = cp->next)
    {
    JsonObject *json_attribute = NULL;
 
-   if (current_class == NULL || strcmp(cp->classes, current_class) != 0)
-	 {
-	 JsonObjectAppendArray(&json_current_class, "attributes", json_current_class_attributes);
-	 JsonArrayAppendObject(&json_classes, json_current_class);
-
-	 current_class = cp->classes;
-	 json_current_class = NULL;
-	 json_current_class_attributes = NULL;
-	 JsonObjectAppendString(&json_current_class, "name", cp->classes);
-	 }
-
-   JsonObjectAppendSize(&json_attribute, "line", cp->offset.line);
    JsonObjectAppendSize(&json_attribute, "offset", cp->offset.start);
    JsonObjectAppendSize(&json_attribute, "offset-end", cp->offset.end);
 
+   context_offset_start = cp->offset.context;
+   context_offset_end = cp->offset.end;
+
    JsonObjectAppendString(&json_attribute, "lval", cp->lval);
    JsonObjectAppendObject(&json_attribute, "rval", ExportAttributeValueAsJson(cp->rval, cp->type));
-   JsonArrayAppendObject(&json_current_class_attributes, json_attribute);
+   JsonArrayAppendObject(&json_attributes, json_attribute);
+
+   if (cp->next == NULL || strcmp(current_context, cp->next->classes) != 0)
+      {
+      JsonArrayAppendObject(&json_contexts,
+      	    CreateContextAsJson(current_context,
+      		                context_offset_start,
+      			        context_offset_end,
+      			        "attributes",
+      			        json_attributes));
+
+      current_context = cp->classes;
+      }
    }
 
-if (current_class != NULL)
-   {
-   JsonObjectAppendArray(&json_current_class, "attributes", json_current_class_attributes);
-   JsonArrayAppendObject(&json_classes, json_current_class);
-   }
-
-return json_classes;
+return json_contexts;
 }
 
 static JsonArray *ExportBundleClassesAsJson(struct Promise *promises)
 {
-JsonArray *json_classes = NULL;
-JsonObject *json_current_class = NULL;
-JsonArray *json_current_class_promises = NULL;
-char *current_class = NULL;
+JsonArray *json_contexts = NULL;
+JsonObject *json_context = NULL;
+JsonArray *json_promises = NULL;
+char *current_context = "any";
+size_t context_offset_start = -1;
+size_t context_offset_end = -1;
 struct Promise *pp = NULL;
 
 for (pp = promises; pp != NULL; pp = pp->next)
    {
    JsonObject *json_promise = NULL;
 
-   if (current_class == NULL || strcmp(pp->classes, current_class) != 0)
-      {
-      JsonObjectAppendArray(&json_current_class, "promises", json_current_class_promises);
-      JsonArrayAppendObject(&json_classes, json_current_class);
-
-      current_class = pp->classes;
-      json_current_class = NULL;
-      json_current_class_promises = NULL;
-      JsonObjectAppendSize(&json_current_class, "offset", pp->offset.context);
-      JsonObjectAppendString(&json_current_class, "name", pp->classes);
-      }
-
-   JsonObjectAppendSize(&json_promise, "line", pp->offset.line);
    JsonObjectAppendSize(&json_promise, "offset", pp->offset.start);
-   JsonObjectAppendSize(&json_promise, "offset-end", pp->offset.end);
-
-   JsonObjectAppendString(&json_promise, "promiser", pp->promiser);
-   JsonObjectAppendString(&json_promise, "promisee", pp->promisee);
 
       {
       JsonArray *json_promise_attributes = NULL;
@@ -1527,34 +1524,45 @@ for (pp = promises; pp != NULL; pp = pp->next)
 	 {
 	 JsonObject *json_attribute = NULL;
 
-	 JsonObjectAppendSize(&json_attribute, "line", cp->offset.line);
 	 JsonObjectAppendSize(&json_attribute, "offset", cp->offset.start);
 	 JsonObjectAppendSize(&json_attribute, "offset-end", cp->offset.end);
+
+	 context_offset_end = cp->offset.end;
 
 	 JsonObjectAppendString(&json_attribute, "lval", cp->lval);
 	 JsonObjectAppendObject(&json_attribute, "rval", ExportAttributeValueAsJson(cp->rval, cp->type));
 	 JsonArrayAppendObject(&json_promise_attributes, json_attribute);
 	 }
 
+      JsonObjectAppendSize(&json_promise, "offset-end", context_offset_end);
+
+      JsonObjectAppendString(&json_promise, "promiser", pp->promiser);
+      JsonObjectAppendString(&json_promise, "promisee", pp->promisee);
+
       JsonObjectAppendArray(&json_promise, "attributes", json_promise_attributes);
       }
-   JsonArrayAppendObject(&json_current_class_promises, json_promise);
+   JsonArrayAppendObject(&json_promises, json_promise);
+
+   if (pp->next == NULL || strcmp(current_context, pp->next->classes) != 0)
+      {
+      JsonArrayAppendObject(&json_contexts,
+      	    CreateContextAsJson(current_context,
+      		                context_offset_start,
+      			        context_offset_end,
+      			        "promises",
+      			        json_promises));
+
+      current_context = pp->classes;
+      }
    }
 
-if (current_class != NULL)
-   {
-   JsonObjectAppendArray(&json_current_class, "promises", json_current_class_promises);
-   JsonArrayAppendObject(&json_classes, json_current_class);
-   }
-
-return json_classes;
+return json_contexts;
 }
 
 static JsonObject *ExportBundleAsJson(struct Bundle *bundle)
 {
 JsonObject *json_bundle = NULL;
 
-JsonObjectAppendSize(&json_bundle, "line", bundle->offset.line);
 JsonObjectAppendSize(&json_bundle, "offset", bundle->offset.start);
 JsonObjectAppendSize(&json_bundle, "offset-end", bundle->offset.end);
 
@@ -1581,7 +1589,6 @@ JsonObjectAppendString(&json_bundle, "bundle-type", bundle->type);
       {
       JsonObject *json_promise_type = NULL;
 
-      JsonObjectAppendSize(&json_promise_type, "line", sp->offset.line);
       JsonObjectAppendSize(&json_promise_type, "offset", sp->offset.start);
       JsonObjectAppendSize(&json_promise_type, "offset-end", sp->offset.end);
       JsonObjectAppendString(&json_promise_type, "name", sp->name);
@@ -1601,7 +1608,6 @@ static JsonObject *ExportBodyAsJson(struct Body *body)
 {
 JsonObject *json_body = NULL;
 
-JsonObjectAppendSize(&json_body, "line", body->offset.line);
 JsonObjectAppendSize(&json_body, "offset", body->offset.start);
 JsonObjectAppendSize(&json_body, "offset-end", body->offset.end);
 

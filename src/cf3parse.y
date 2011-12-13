@@ -132,6 +132,9 @@ bundlebody:         '{'
                     '}'
                        {
                        INSTALL_SKIP = false;
+                       P.offsets.last_id = -1;
+                       P.offsets.last_string = -1;
+                       P.offsets.last_class_id = -1;
                        P.currentbundle->offset.end = P.offsets.current;
                        CfDebug("End promise bundle\n\n");
                        };
@@ -165,6 +168,10 @@ bodybody:            '{'
 
                       '}'
                         {
+                        P.offsets.last_id = -1;
+                        P.offsets.last_string = -1;
+                        P.offsets.last_class_id = -1;
+                        P.currentbody->offset.end = P.offsets.current;
                         CfDebug("End promise body\n");
                         };
 
@@ -206,6 +213,7 @@ selection:            id                         /* BODY ONLY */
                               }
                            cp->offset.line = P.line_no;
                            cp->offset.start = P.offsets.last_id;
+                           cp->offset.end = P.offsets.current;
                            cp->offset.context = P.offsets.last_class_id;
                            }
                         else
@@ -377,7 +385,9 @@ constraint:           id                        /* BUNDLE ONLY */
                            cp = AppendConstraint(&(P.currentpromise->conlist),P.lval,P.rval,P.rtype,"any",P.isbody);
                            cp->offset.line = P.line_no;
                            cp->offset.start = P.offsets.last_id;
+                           cp->offset.end = P.offsets.current;
                            cp->offset.context = P.offsets.last_class_id;
+                           P.currentstype->offset.end = P.offsets.current;
                            CheckPromise(P.currentpromise);
 
                            P.rval = NULL;

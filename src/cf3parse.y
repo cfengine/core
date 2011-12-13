@@ -117,8 +117,8 @@ bundlebody:         '{'
                        if (!INSTALL_SKIP)
                           {
                           P.currentbundle = AppendBundle(&BUNDLES,P.blockid,P.blocktype,P.useargs);
-                          P.currentbundle->line_number = P.line_no;
-                          P.currentbundle->offset = P.offsets.last_block_id;
+                          P.currentbundle->offset.line = P.line_no;
+                          P.currentbundle->offset.start = P.offsets.last_block_id;
                           }
                        else
                           {
@@ -132,6 +132,7 @@ bundlebody:         '{'
                     '}'
                        {
                        INSTALL_SKIP = false;
+                       P.currentbundle->offset.end = P.offsets.current;
                        CfDebug("End promise bundle\n\n");
                        };
 
@@ -152,8 +153,8 @@ bodybody:            '{'
                         P.currentbody = AppendBody(&BODIES,P.blockid,P.blocktype,P.useargs);
                         if (P.currentbody)
                            {
-                           P.currentbody->line_number = P.line_no;
-                           P.currentbody->offset = P.offsets.last_block_id;
+                           P.currentbody->offset.line = P.line_no;
+                           P.currentbody->offset.start = P.offsets.last_block_id;
                            }
                         P.useargs = NULL;
                         strcpy(P.currentid,"");
@@ -203,9 +204,9 @@ selection:            id                         /* BODY ONLY */
                               {
                               cp = AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval,P.rtype,P.currentclasses,P.isbody);
                               }
-                           cp->line_number = P.line_no;
-                           cp->offset = P.offsets.last_id;
-                           cp->class_offset = P.offsets.last_class_id;
+                           cp->offset.line = P.line_no;
+                           cp->offset.start = P.offsets.last_id;
+                           cp->offset.context = P.offsets.last_class_id;
                            }
                         else
                            {
@@ -268,8 +269,8 @@ category:             CATEGORY                  /* BUNDLE ONLY */
                             if (!INSTALL_SKIP)
                                {
                                P.currentstype = AppendSubType(P.currentbundle,P.currenttype);
-                               P.currentstype->line_number = P.line_no;
-                               P.currentstype->offset = P.offsets.last_subtype_id;
+                               P.currentstype->offset.line = P.line_no;
+                               P.currentstype->offset.start = P.offsets.last_subtype_id;
                                }
                             else
                                {
@@ -292,9 +293,9 @@ promise:              promiser                    /* BUNDLE ONLY */
                               P.rval, P.rtype,
                               P.currentclasses ? P.currentclasses : "any",
                               P.blockid, P.blocktype);
-                           P.currentpromise->line_number = P.line_no;
-                           P.currentpromise->offset = P.offsets.last_string;
-                           P.currentpromise->class_offset = P.offsets.last_class_id;
+                           P.currentpromise->offset.line = P.line_no;
+                           P.currentpromise->offset.start = P.offsets.last_string;
+                           P.currentpromise->offset.context = P.offsets.last_class_id;
                            }
                         else
                            {
@@ -327,9 +328,9 @@ promise:              promiser                    /* BUNDLE ONLY */
                            P.currentpromise = AppendPromise(P.currentstype, P.promiser, NULL,
                               CF_NOPROMISEE, P.currentclasses ? P.currentclasses : "any",
                               P.blockid, P.blocktype);
-                           P.currentpromise->line_number = P.line_no;
-                           P.currentpromise->offset = P.offsets.last_string;
-                           P.currentpromise->class_offset = P.offsets.last_class_id;
+                           P.currentpromise->offset.line = P.line_no;
+                           P.currentpromise->offset.start = P.offsets.last_string;
+                           P.currentpromise->offset.context = P.offsets.last_class_id;
                            }
                         else
                            {
@@ -374,9 +375,9 @@ constraint:           id                        /* BUNDLE ONLY */
                            struct SubTypeSyntax ss = CheckSubType(P.blocktype,P.currenttype);                           
                            CheckConstraint(P.currenttype,P.blockid,P.lval,P.rval,P.rtype,ss);                           
                            cp = AppendConstraint(&(P.currentpromise->conlist),P.lval,P.rval,P.rtype,"any",P.isbody);
-                           cp->line_number = P.line_no;
-                           cp->offset = P.offsets.last_id;
-                           cp->class_offset = P.offsets.last_class_id;
+                           cp->offset.line = P.line_no;
+                           cp->offset.start = P.offsets.last_id;
+                           cp->offset.context = P.offsets.last_class_id;
                            CheckPromise(P.currentpromise);
 
                            P.rval = NULL;

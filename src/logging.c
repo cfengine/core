@@ -174,7 +174,7 @@ void ClassAuditLog(struct Promise *pp,struct Attributes attr,char *str,char stat
   struct Audit *ap = pp->audit;
   struct timespec t;
   double keyval;
-  int lineno = pp->line_number;
+  int lineno = pp->offset.line;
   char name[CF_BUFSIZE];
 
   CfDebug("ClassAuditLog(%s)\n",str);

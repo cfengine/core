@@ -57,7 +57,7 @@ if (strcmp(pp->classes,"any") == 0)
    return;
    }
 
-snprintf(unique_name,CF_EXPANDSIZE-1,"%s_%zu",pp->promiser,pp->line_number);
+snprintf(unique_name,CF_EXPANDSIZE-1,"%s_%zu",pp->promiser,pp->offset.line);
 thislock = AcquireLock(unique_name,VUQNAME,CFSTARTTIME,a,pp,false);
 
 if (thislock.lock == NULL)

@@ -647,7 +647,7 @@ do
    if (pp->audit && pp->audit->filename)
       {
       NewScalar("this","promise_filename",pp->audit->filename,cf_str);
-      snprintf(number,CF_SMALLBUF,"%zu", pp->line_number);
+      snprintf(number,CF_SMALLBUF,"%zu", pp->offset.line);
       NewScalar("this","promise_linenumber",number,cf_str);
       }
 
@@ -1180,7 +1180,7 @@ if (rval != NULL)
       }
 
    if (!AddVariableHash(scope,pp->promiser,rval,type,Typename2Datatype(cp->lval),
-                        cp->audit->filename, cp->line_number))
+                        cp->audit->filename, cp->offset.line))
       {
       CfOut(cf_verbose,"","Unable to converge %s.%s value (possibly empty or infinite regression)\n",scope,pp->promiser);
       PromiseRef(cf_verbose,pp);
@@ -1194,7 +1194,7 @@ if (rval != NULL)
 else
    {
    CfOut(cf_error,""," !! Variable %s has no promised value\n",pp->promiser);
-   CfOut(cf_error,""," !! Rule from %s at/before line %d\n",cp->audit->filename, cp->line_number);
+   CfOut(cf_error,""," !! Rule from %s at/before line %d\n",cp->audit->filename, cp->offset.line);
    cfPS(cf_noreport,CF_FAIL,"",pp,a," !! Couldn't add variable %s",pp->promiser);
    }     
 

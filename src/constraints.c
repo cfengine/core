@@ -640,7 +640,7 @@ if (handle)
    
    if ((prid = PromiseIdExists(handle)))
       {
-      if ((strcmp(prid->filename,pp->audit->filename) != 0) || (prid->line_number != pp->line_number))
+      if ((strcmp(prid->filename,pp->audit->filename) != 0) || (prid->line_number != pp->offset.line))
          {
          CfOut(cf_error,""," !! Duplicate promise handle -- previously used in file %s near line %d",
                prid->filename, prid->line_number);
@@ -865,7 +865,7 @@ struct PromiseIdent *NewPromiseId(char *handle,struct Promise *pp)
 ptr = xmalloc(sizeof(struct PromiseIdent));
 
 ptr->filename = xstrdup(pp->audit->filename);
-ptr->line_number = pp->line_number;
+ptr->line_number = pp->offset.line;
 ptr->handle = xstrdup(handle);
 ptr->next = PROMISE_ID_LIST;
 PROMISE_ID_LIST = ptr;

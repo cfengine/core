@@ -679,6 +679,14 @@ typedef struct FnCallArg
 
 /*************************************************************************/
 
+struct SourceOffset
+   {
+   size_t start;
+   size_t end;
+   size_t line;
+   size_t context;
+   };
+
 struct Bundle
    {
    char *type;
@@ -687,8 +695,7 @@ struct Bundle
    struct SubType *subtypes;
    struct Bundle *next;
 
-   int line_number;
-   int offset;
+   struct SourceOffset offset;
    };
 
 /*************************************************************************/
@@ -701,8 +708,7 @@ struct Body
    struct Constraint *conlist;
    struct Body *next;
 
-   int line_number;
-   int offset;
+   struct SourceOffset offset;
    };
 
 /*************************************************************************/
@@ -713,8 +719,7 @@ struct SubType
    struct Promise *promiselist;
    struct SubType *next;
 
-   int line_number;
-   int offset;
+   struct SourceOffset offset;
    };
 
 /*************************************************************************/
@@ -757,9 +762,7 @@ struct Promise
    struct edit_context *edcontext;
    dev_t rootdevice;                          /* for caching during work*/
 
-   size_t line_number;
-   size_t offset;
-   size_t class_offset;
+   struct SourceOffset offset;
    };
 
 /*************************************************************************/
@@ -785,9 +788,7 @@ struct Constraint
    struct Audit *audit;
    struct Constraint *next;
 
-   size_t line_number;
-   size_t offset;
-   size_t class_offset;
+   struct SourceOffset offset;
    };
 
 /*************************************************************************/

@@ -165,7 +165,7 @@ pp.promiser = "the originator";
 pp.promisee = "the recipient";
 pp.classes = "upper classes";
 pp.petype = CF_SCALAR;
-pp.line_number = 12;
+pp.offset.line = 12;
 pp.audit = NULL;
 pp.conlist = NULL;
 
@@ -220,7 +220,7 @@ pp.promiser = "the originator";
 pp.promisee = "the recipient with $(two)";
 pp.classes = "proletariat";
 pp.petype = CF_SCALAR;
-pp.line_number = 12;
+pp.offset.line = 12;
 pp.audit = NULL;
 pp.conlist = NULL;
 pp.agentsubtype = "none";

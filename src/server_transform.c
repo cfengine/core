@@ -37,6 +37,7 @@ static void KeepContextBundles(void);
 static void KeepServerPromise(struct Promise *pp);
 static void InstallServerAuthPath(char *path,struct Auth **list,struct Auth **listtop);
 static void KeepServerRolePromise(struct Promise *pp);
+static void KeepPromiseBundles(void);
 
 extern struct BodySyntax CFS_CONTROLBODY[];
 extern struct BodySyntax CF_REMROLE_BODIES[];
@@ -62,13 +63,11 @@ extern struct Auth *ROLESTOP;
 void KeepFileAccessPromise(struct Promise *pp);
 void KeepLiteralAccessPromise(struct Promise *pp, char *type);
 void KeepQueryAccessPromise(struct Promise *pp,char *type);
-
 /*******************************************************************/
 /* Level                                                           */
 /*******************************************************************/
 
-void KeepPromises()
-
+void KeepPromises(struct GenericAgentConfig config)
 {
 KeepContextBundles();
 KeepControlPromises();
@@ -444,7 +443,7 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
 
 /*********************************************************************/
 
-void KeepPromiseBundles()
+static void KeepPromiseBundles()
     
 { struct Bundle *bp;
   struct SubType *sp;

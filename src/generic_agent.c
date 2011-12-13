@@ -35,7 +35,7 @@
 extern FILE *yyin;
 extern char *CFH[][2];
 
-static void VerifyPromises(void);
+static void VerifyPromises(struct Rlist *bundlesequence);
 static void SetAuditVersion(void);
 static void CheckWorkingDirectories(void);
 static void Cf3ParseFile(char *filename, bool check_not_writable_by_others);
@@ -52,7 +52,7 @@ static char *InputLocation(char *filename);
 static void OpenLog(int facility);
 #endif
 static void Cf3OpenLog(int facility);
-static bool VerifyBundleSequence(enum cfagenttype agent);
+static bool VerifyBundleSequence(enum cfagenttype agent, struct Rlist *bundlesequence);
 
 /*****************************************************************************/
 
@@ -192,13 +192,13 @@ if (ag != cf_keygen)
 
    if (ok)
       {
-      ReadPromises(ag, agents, true);
+      ReadPromises(ag, agents, config);
       }
    else
       {
       CfOut(cf_error,"","cf-agent was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
       snprintf(VINPUTFILE,CF_BUFSIZE-1,"failsafe.cf");
-      ReadPromises(ag, agents, true);
+      ReadPromises(ag, agents, config);
       }
    
    if (SHOWREPORTS)
@@ -276,7 +276,7 @@ else
 
 strlcat(cmd, "\"", CF_BUFSIZE);
 
-if (CBUNDLESEQUENCE)
+if (CBUNDLESEQUENCE_STR)
    {
    strlcat(cmd, " -b \"", CF_BUFSIZE);
    strlcat(cmd, CBUNDLESEQUENCE_STR, CF_BUFSIZE);
@@ -332,7 +332,7 @@ else
 
 /*****************************************************************************/
 
-void ReadPromises(enum cfagenttype ag,char *agents, bool verify)
+void ReadPromises(enum cfagenttype ag,char *agents, struct GenericAgentConfig config)
 
 {
 char rettype;
@@ -383,10 +383,7 @@ ShowContext();
 fprintf(FREPORT_HTML,"<div id=\"reporttext\">\n");
 fprintf(FREPORT_HTML,"%s",CFH[cfx_promise][cfb]);
 
-if (verify)
-   {
-   VerifyPromises();
-   }
+VerifyPromises(config.bundlesequence);
 
 fprintf(FREPORT_HTML,"%s",CFH[cfx_promise][cfe]);
 
@@ -1417,7 +1414,7 @@ if ((FREPORT_HTML = fopen(filename,"w")) == NULL)
 
 /*******************************************************************/
 
-static void VerifyPromises(void)
+static void VerifyPromises(struct Rlist *bundlesequence)
 
 { struct Bundle *bp;
   struct SubType *sp;
@@ -1513,7 +1510,7 @@ HashControls();
 
 /* Now look once through the sequences bundles themselves */
 
-if (VerifyBundleSequence(cf_common) == false)
+if (VerifyBundleSequence(cf_common, bundlesequence) == false)
    {
    FatalError("Errors in promise bundles");
    }
@@ -1942,7 +1939,7 @@ for (bdp = BODIES; bdp != NULL; bdp = bdp->next) /* get schedule */
 
 /********************************************************************/
 
-static bool VerifyBundleSequence(enum cfagenttype agent)
+static bool VerifyBundleSequence(enum cfagenttype agent, struct Rlist *bundlesequence)
 
 { struct Rlist *rp;
   char rettype,*name;
@@ -1957,7 +1954,7 @@ if ((THIS_AGENT_TYPE != cf_agent) &&
    return true;
    }
 
-if (CBUNDLESEQUENCE)
+if (bundlesequence)
    {
    return true;
    }
@@ -2041,12 +2038,8 @@ struct GenericAgentConfig GenericAgentDefaultConfig(enum cfagenttype agent_type)
 {
 struct GenericAgentConfig config = { 0 };
 
-switch (agent_type)
-   {
-   default:
-      config.verify_promises = true;
-      break;
-   }
+config.bundlesequence = NULL;
+config.verify_promises = true;
 
 return config;
 }

@@ -102,7 +102,6 @@ struct Item *ROTATED = NULL;
 struct Item *FSTABLIST = NULL;
 struct Item *ABORTBUNDLEHEAP = NULL;
 struct Item *DONELIST = NULL;
-struct Rlist *CBUNDLESEQUENCE = NULL;
 struct Rlist *SERVER_KEYSEEN = NULL;
 
 char *CBUNDLESEQUENCE_STR;

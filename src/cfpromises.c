@@ -130,7 +130,7 @@ while ((c=getopt_long(argc,argv,"ad:vnIf:D:N:VSrxMbpg:",OPTIONS,&optindex)) != E
   switch ((char) c)
       {
       case 'f':
-          
+
           if (optarg && strlen(optarg) < 5)
              {
              snprintf(arg,CF_MAXVARSIZE," -f used but argument \"%s\" incorrect",optarg);
@@ -163,7 +163,7 @@ while ((c=getopt_long(argc,argv,"ad:vnIf:D:N:VSrxMbpg:",OPTIONS,&optindex)) != E
       case 'b':
          if (optarg)
             {
-            CBUNDLESEQUENCE = SplitStringAsRList(optarg, ',');
+            config.bundlesequence = SplitStringAsRList(optarg, ',');
             CBUNDLESEQUENCE_STR = optarg;
             }
          break;

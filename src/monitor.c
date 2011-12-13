@@ -28,8 +28,7 @@
 /*                                                                           */
 /*****************************************************************************/
 
-#include "cf3.defs.h"
-#include "cf3.extern.h"
+#include "generic_agent.h"
 #include "monitoring.h"
 
 /*****************************************************************************/
@@ -92,9 +91,9 @@ int main(int argc,char *argv[])
 struct GenericAgentConfig config = CheckOpts(argc,argv);
 GenericInitialize(argc,argv,"monitor", config);
 ThisAgentInit();
-KeepPromises();
+KeepPromises(config);
 
-StartServer(argc,argv);
+MonitorStartServer(argc, argv);
 return 0;
 }
 
@@ -180,7 +179,7 @@ return config;
 
 /*****************************************************************************/
 
-void KeepPromises(void)
+void KeepPromises(struct GenericAgentConfig config)
 {
 struct Constraint *cp;
 char rettype;
@@ -241,5 +240,5 @@ signal(SIGUSR2,HandleSignals);
 
 FORGETRATE = 0.6;
 
-MonInitialize();
+MonitorInitialize();
 }

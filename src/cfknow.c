@@ -70,6 +70,8 @@ static struct Topic *GetCanonizedTopic(struct Topic *list,char *topic_name);
 static struct TopicAssociation *AssociationExists(struct TopicAssociation *list,char *fwd,char *bwd);
 static struct Occurrence *OccurrenceExists(struct Occurrence *list,char *locator,enum representations repy_type,char *s);
 
+static void KeepPromiseBundles();
+
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
 /*******************************************************************/
@@ -496,7 +498,7 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
 
 /*****************************************************************************/
 
-void KeepPromiseBundles()
+static void KeepPromiseBundles()
     
 { struct Bundle *bp;
   struct SubType *sp;

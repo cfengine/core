@@ -49,11 +49,6 @@ int yylex (void);
 void yyerror (const char *s);
 int yyparse (void);
 
-/* Generic stubs for the agents */
-
-void ThisAgentInit(void);
-void KeepPromises(void);
-
 /* alloc.c */
 
 #include "alloc.h"
@@ -523,10 +518,7 @@ void SaveClassEnvironment(void);
 void DeleteAllClasses(struct Rlist *list);
 void AddAllClasses(struct Rlist *list,int persist,enum statepolicy policy);
 
-/* env_monitor.c */
-
-void MonInitialize(void);
-void StartServer (int argc, char **argv);
+#include "env_monitor.h"
 
 /* evalfunction.c */
 
@@ -1056,7 +1048,6 @@ void TestExpandVariables(void);
 
 /* server_transform.c */
 
-void KeepPromiseBundles(void);
 void KeepControlPromises(void);
 struct Auth *GetAuthPath(char *path,struct Auth *list);
 void Summarize(void);

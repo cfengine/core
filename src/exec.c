@@ -29,8 +29,7 @@
 /*                                                                           */
 /*****************************************************************************/
 
-#include "cf3.defs.h"
-#include "cf3.extern.h"
+#include "generic_agent.h"
 
 int main (int argc,char *argv[]);
 
@@ -62,7 +61,6 @@ extern struct BodySyntax CFEX_CONTROLBODY[];
 
 /*******************************************************************/
 
-void StartServer(int argc,char **argv);
 int ScheduleRun(void);
 static void *LocalExecThread(void *scheduled_run);
 static void LocalExec(bool scheduled_run);
@@ -71,6 +69,7 @@ static int CompareResult(char *filename,char *prev_file);
 static void MailResult(char *file,char *to);
 static int Dialogue(int sd,char *s);
 static void Apoptosis(void);
+static void StartServer(int argc,char **argv);
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -128,7 +127,7 @@ int main(int argc,char *argv[])
 struct GenericAgentConfig config = CheckOpts(argc,argv);
 GenericInitialize(argc,argv,"executor", config);
 ThisAgentInit();
-KeepPromises();
+KeepPromises(config);
 
 #ifdef MINGW
 if(NOWINSERVICE)
@@ -141,7 +140,7 @@ else
   }
 #else  /* NOT MINGW */
 
-StartServer(argc,argv);
+StartServer(argc, argv);
 
 #endif  /* NOT MINGW */
 
@@ -296,7 +295,7 @@ if (SCHEDULE == NULL)
 
 /*****************************************************************************/
 
-void KeepPromises()
+void KeepPromises(struct GenericAgentConfig config)
 
 { struct Constraint *cp;
   char rettype,splay[CF_BUFSIZE];
@@ -379,7 +378,7 @@ for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
 
 /*****************************************************************************/
 
-void StartServer(int argc,char **argv)
+static void StartServer(int argc,char **argv)
 
 { int time_to_run = false;
   time_t now = time(NULL);

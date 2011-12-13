@@ -88,7 +88,7 @@ static void KeepMonitorPromise(struct Promise *pp);
 
 /****************************************************************/
 
-void MonInitialize(void)
+void MonitorInitialize(void)
 {
 int i,j,k;
 char vbuff[CF_BUFSIZE];
@@ -224,7 +224,7 @@ fclose(fp);
 
 /*********************************************************************/
 
-void StartServer(int argc,char **argv)
+void MonitorStartServer(int argc,char **argv)
 {
 char timekey[CF_SMALLBUF];
 struct Averages averages;

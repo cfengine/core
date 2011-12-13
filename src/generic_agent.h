@@ -9,8 +9,12 @@
 
 struct GenericAgentConfig
    {
+   struct Rlist *bundlesequence;
    bool verify_promises;
    };
+
+void ThisAgentInit(void);
+void KeepPromises(struct GenericAgentConfig config);
 
 void GenericInitialize(int argc,char **argv,char *agents, struct GenericAgentConfig config);
 void GenericDeInitialize(void);
@@ -20,7 +24,7 @@ void Syntax(const char *comp, const struct option options[], const char *hints[]
 void ManPage(const char *component, const struct option options[], const char *hints[], const char *id);
 void PrintVersionBanner(const char *component);
 int CheckPromises(enum cfagenttype ag);
-void ReadPromises(enum cfagenttype ag,char *agents, bool verify);
+void ReadPromises(enum cfagenttype ag,char *agents, struct GenericAgentConfig config);
 int NewPromiseProposals(void);
 void CompilationReport(char *filename);
 void HashVariables(char *name);

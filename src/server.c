@@ -29,16 +29,14 @@
 /*                                                                           */
 /*****************************************************************************/
 
-#include "cf3.defs.h"
-#include "cf3.extern.h"
+#include "generic_agent.h"
 #include "cf3.server.h"
 
 int main (int argc,char *argv[]);
-void StartServer (int argc, char **argv);
 int OpenReceiverChannel (void);
 void PurgeOldConnections (struct Item **list,time_t now);
 void SpawnConnection (int sd_reply, char *ipaddr);
-void CheckFileChanges (int argc, char **argv, int sd);
+static void CheckFileChanges (int argc, char **argv, struct GenericAgentConfig config);
 void *HandleConnection (struct cfd_connection *conn);
 int BusyWithConnection (struct cfd_connection *conn);
 int MatchClasses (struct cfd_connection *conn);
@@ -75,6 +73,8 @@ int SafeOpen (char *filename);
 void SafeClose (int fd);
 int OptionFound(char *args, char *pos, char *word);
 in_addr_t GetInetAddr (char *host);
+
+static void StartServer (int argc, char **argv, struct GenericAgentConfig config);
 
 char CFRUNCOMMAND[CF_BUFSIZE];
 time_t CFDSTARTTIME;
@@ -186,10 +186,10 @@ int main(int argc,char *argv[])
 struct GenericAgentConfig config = CheckOpts(argc,argv);
 GenericInitialize(argc,argv,"server", config);
 ThisAgentInit();
-KeepPromises();
+KeepPromises(config);
 Summarize();
 
-StartServer(argc,argv);
+StartServer(argc, argv, config);
 return 0;
 }
 
@@ -308,7 +308,7 @@ KEYTTL = 24;
 
 /*******************************************************************/
 
-void StartServer(int argc,char **argv)
+static void StartServer(int argc,char **argv, struct GenericAgentConfig config)
 
 { char ipaddr[CF_MAXVARSIZE],intime[64];
   int sd,sd_reply;
@@ -398,7 +398,7 @@ while (true)
       {
       if (ACTIVE_THREADS == 0)
          {
-         CheckFileChanges(argc,argv,sd);
+         CheckFileChanges(argc, argv, config);
          }
       ThreadUnlock(cft_server_children);
       }
@@ -773,7 +773,7 @@ HandleConnection(conn);
 
 /**************************************************************/
 
-void CheckFileChanges(int argc,char **argv,int sd)
+void CheckFileChanges(int argc, char **argv, struct GenericAgentConfig config)
 
 { struct stat newstat;
   char filename[CF_BUFSIZE];
@@ -876,8 +876,8 @@ if (NewPromiseProposals())
       NewClass(THIS_AGENT);
 
       SetReferenceTime(true);
-      ReadPromises(cf_server, CF_SERVERC, true);
-      KeepPromises();
+      ReadPromises(cf_server, CF_SERVERC, config);
+      KeepPromises(config);
       Summarize();
       
       }

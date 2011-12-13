@@ -156,7 +156,7 @@ cf_serverd_SOURCES =                                                    \
 
 cf_monitord_SOURCES =                                                   \
         verify_measurements.c                                           \
-        env_monitor.c                                                   \
+        env_monitor.c env_monitor.h                                     \
         mon_cpu.c                                                       \
         mon_disk.c                                                      \
         mon_entropy.c                                                   \

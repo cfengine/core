@@ -29,8 +29,7 @@
 /*                                                                           */
 /*****************************************************************************/
 
-#include "cf3.defs.h"
-#include "cf3.extern.h"
+#include "generic_agent.h"
 
 /*******************************************************************/
 /* Agent specific variables                                        */
@@ -82,6 +81,9 @@ void DeleteTypeContext(enum typesequence type);
 void ClassBanner(enum typesequence type);
 void ParallelFindAndVerifyFilesPromises(struct Promise *pp);
 static bool VerifyBootstrap(void);
+
+static void KeepPromiseBundles(struct Rlist *bundlesequence);
+
 
 extern const struct BodySyntax CFA_CONTROLBODY[];
 
@@ -140,7 +142,7 @@ int ret = 0;
 struct GenericAgentConfig config = CheckOpts(argc,argv);
 GenericInitialize(argc,argv,"agent", config);
 ThisAgentInit();
-KeepPromises();
+KeepPromises(config);
 NoteClassUsage(VHEAP);
 #ifdef HAVE_NOVA
 Nova_NoteVarUsageDB();
@@ -173,32 +175,26 @@ struct GenericAgentConfig CheckOpts(int argc,char **argv)
    individually before Generic Initialize */
 
 POLICY_SERVER[0] = '\0';
-  
+
 while ((c=getopt_long(argc,argv,"rd:vnKIf:D:N:Vs:x:MBb:",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
       case 'f':
+	 if (optarg && strlen(optarg) < 5)
+	    {
+	    snprintf(arg,CF_MAXVARSIZE," -f used but argument \"%s\" incorrect",optarg);
+	    FatalError(arg);
+	    }
 
-          if (optarg == NULL)
-             {
-             FatalError(" -f used but no argument");
-             }
-
-          if (optarg && strlen(optarg) < 5)
-             {
-             snprintf(arg,CF_MAXVARSIZE," -f used but argument \"%s\" incorrect",optarg);
-             FatalError(arg);
-             }
-
-          strncpy(VINPUTFILE,optarg,CF_BUFSIZE-1);
-          MINUSF = true;
-          break;
+	 strncpy(VINPUTFILE,optarg,CF_BUFSIZE-1);
+	 MINUSF = true;
+	 break;
 
       case 'b':
           if (optarg)
              {
-             CBUNDLESEQUENCE = SplitStringAsRList(optarg,',');
+             config.bundlesequence = SplitStringAsRList(optarg,',');
              CBUNDLESEQUENCE_STR = optarg;
              }
           break;
@@ -359,13 +355,13 @@ if ((fp = fopen(filename,"a")) != NULL)
 
 /*******************************************************************/
 
-void KeepPromises()
+void KeepPromises(struct GenericAgentConfig config)
 
 { double efficiency;
  
 BeginAudit();
 KeepControlPromises();
-KeepPromiseBundles();
+KeepPromiseBundles(config.bundlesequence);
 EndAudit();
 
 // TOPICS counts the number of currently defined promises
@@ -751,7 +747,7 @@ Nova_Initialize();
 
 /*********************************************************************/
 
-void KeepPromiseBundles()
+static void KeepPromiseBundles(struct Rlist *bundlesequence)
     
 { struct Bundle *bp;
   struct Rlist *rp,*params;
@@ -760,10 +756,10 @@ void KeepPromiseBundles()
   void *retval;
   int ok = true;
 
-if (CBUNDLESEQUENCE)
+if (bundlesequence)
    {
    CfOut(cf_inform,""," >> Using command line specified bundlesequence");
-   retval = CBUNDLESEQUENCE;
+   retval = bundlesequence;
    rettype = CF_LIST;
    }
 else if (GetVariable("control_common","bundlesequence",&retval,&rettype) == cf_notype)

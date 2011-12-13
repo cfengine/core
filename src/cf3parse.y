@@ -135,7 +135,11 @@ bundlebody:         '{'
                        P.offsets.last_id = -1;
                        P.offsets.last_string = -1;
                        P.offsets.last_class_id = -1;
-                       P.currentbundle->offset.end = P.offsets.current;
+
+                       if (P.currentbundle)
+                          {
+                          P.currentbundle->offset.end = P.offsets.current;
+                          }
                        CfDebug("End promise bundle\n\n");
                        };
 
@@ -171,7 +175,10 @@ bodybody:            '{'
                         P.offsets.last_id = -1;
                         P.offsets.last_string = -1;
                         P.offsets.last_class_id = -1;
-                        P.currentbody->offset.end = P.offsets.current;
+                        if (P.currentbody)
+                           {
+                           P.currentbody->offset.end = P.offsets.current;
+                           }
                         CfDebug("End promise body\n");
                         };
 

@@ -44,7 +44,7 @@ vars:
 bundle agent default(filename)
 {
 vars:
-    "tests" slist => { "init", "test", "check", "fini" };
+    "tests" slist => { "init", "test", "check" };
 
 methods:
   "any"

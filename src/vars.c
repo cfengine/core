@@ -182,8 +182,8 @@ if (IsQualifiedVariable(sval))
    }
 else
    {
-   strcpy(vlval,sval);
-   strcpy(scopeid,scope);
+   strlcpy(vlval, sval, sizeof(vlval));
+   strlcpy(scopeid, scope, sizeof(scopeid));
    }
 
 CfDebug("Looking for %s.%s\n",scopeid,vlval);

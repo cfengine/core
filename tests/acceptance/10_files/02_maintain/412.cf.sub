@@ -6,15 +6,10 @@
 
 body common control
 {
-  bundlesequence  => { "g", "test" };   
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { "test" };
 nova_edition::
   host_licenses_paid => "5";
-}
-
-bundle common g
-{
-vars:
-  "testfile" string => "/tmp/TEST.cfengine";
 }
 
 #######################################################
@@ -22,16 +17,16 @@ vars:
 bundle agent test
 {
 files:
-  "$(g.testfile)"
+  "$(G.testfile)"
    edit_line => append_nonsense,
-	edit_defaults => rotate;
+        edit_defaults => rotate;
 }
 
 body edit_defaults rotate
 {
-	edit_backup => "rotate";
-	rotate => "4";
-	max_file_size => "300000";	
+        edit_backup => "rotate";
+        rotate => "4";
+        max_file_size => "300000";
 }
 
 bundle edit_line append_nonsense
@@ -39,6 +34,6 @@ bundle edit_line append_nonsense
 vars:
   "ns" string => execresult("/bin/date +%N", "noshell");
 insert_lines:
-	"$(ns)";
+        "$(ns)";
 }
 

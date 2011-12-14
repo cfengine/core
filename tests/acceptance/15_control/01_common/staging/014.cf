@@ -7,18 +7,12 @@
 body common control
 {
   inputs => { "../../default.cf.sub", "missing" };
-  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
   host_licenses_paid => "5";
 
-  ignore_missing_inputs => "on";	# Order should not matter!
-}
-
-bundle common g
-{
-vars:
-	"dummy" string => "dummy";
+  ignore_missing_inputs => "on";        # Order should not matter!
 }
 
 #######################################################
@@ -26,7 +20,7 @@ vars:
 bundle agent init
 {
 vars:
-	"dummy" string => "dummy";
+        "dummy" string => "dummy";
 }
 
 #######################################################
@@ -34,7 +28,7 @@ vars:
 bundle agent test
 {
 vars:
-	"dummy" string => "dummy";
+        "dummy" string => "dummy";
 }
 
 #######################################################
@@ -42,22 +36,15 @@ vars:
 bundle agent check
 {
 vars:
-	"dummy" string => "dummy";
+        "dummy" string => "dummy";
 
 classes:
-	"ok" expression => "any";
+        "ok" expression => "any";
 
 reports:
     ok::
-	"$(this.promise_filename) Pass";
+        "$(this.promise_filename) Pass";
     !ok::
-	"$(this.promise_filename) FAIL";
+        "$(this.promise_filename) FAIL";
 }
 
-#######################################################
-
-bundle agent fini
-{
-vars:
-	"dummy" string => "dummy";
-}

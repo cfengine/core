@@ -7,16 +7,10 @@
 body common control
 {
   inputs => { "../../default.cf.sub" };
-  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
   host_licenses_paid => "5";
-}
-
-bundle common g
-{
-vars:
-  "testfile" string => "/tmp/TEST.cfengine";
 }
 
 #######################################################
@@ -25,9 +19,9 @@ bundle agent init
 {
 vars:
   "expected" string => "*foobar*";
- 
+
 files:
-  "$(g.testfile).expected"
+  "$(G.testfile).expected"
     create => "true",
     edit_line => init_insert("$(init.expected)"),
     edit_defaults => init_empty;
@@ -50,7 +44,7 @@ bundle agent test
 {
 files:
 
-  "$(g.testfile).actual"
+  "$(G.testfile).actual"
     edit_line => set_value_rev,
     create => "true";
 }
@@ -67,15 +61,8 @@ insert_lines:
 bundle agent check
 {
 methods:
-	"any" usebundle => default_check_diff("$(g.testfile).actual",
-					      "$(g.testfile).expected",
-					      "$(this.promise_filename)");
+        "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                              "$(G.testfile).expected",
+                                              "$(this.promise_filename)");
 }
 
-#######################################################
-
-bundle agent fini
-{
-methods:
-	"any" usebundle => default_fini("$(g.testfile)");
-}

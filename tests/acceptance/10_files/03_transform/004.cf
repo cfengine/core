@@ -7,19 +7,12 @@
 body common control
 {
   inputs => { "../../default.cf.sub" };
-  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
   host_licenses_paid => "5";
 }
 
-bundle common g
-{
-vars:
-  "dummy" string => "dummy";
-}
-
-#######################################################
 
 bundle agent init
 {
@@ -43,7 +36,7 @@ bundle agent check
 classes:
   "prefixed" expression => regcmp(".*(\n|^)I: Transforming:.*(\n|$).*", $(test.out));
   "unprefixed" expression => regcmp(".*(\n|^)Transforming:.*(\n|$).*", $(test.out));
-  
+
   "ok" and => { "prefixed", "!unprefixed" };
 
 reports:
@@ -59,12 +52,4 @@ reports:
     "$(this.promise_filename) Pass";
   !ok::
     "$(this.promise_filename) FAIL";
-}
-
-#######################################################
-
-bundle agent fini
-{
-methods:
-	"any" usebundle => default_fini("$(G.testdir)");
 }

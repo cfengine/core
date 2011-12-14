@@ -7,16 +7,10 @@
 body common control
 {
   inputs => { "../../default.cf.sub" };
-  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
   host_licenses_paid => "5";
-}
-
-bundle common g
-{
-vars:
-	"dummy" string => "dummy";
 }
 
 #######################################################
@@ -25,29 +19,29 @@ bundle agent init
 {
 vars:
     any::
-	"files" slist => { "1", "2", "3" };
+        "files" slist => { "1", "2", "3" };
     bin_gzip::
-	"gzip" string => "/bin/gzip",
-	    policy => "free";
+        "gzip" string => "/bin/gzip",
+            policy => "free";
     usr_bin_gzip::
-	"gzip" string => "/usr/bin/gzip",
-	    policy => "free";
+        "gzip" string => "/usr/bin/gzip",
+            policy => "free";
 
 classes:
     "bin_gzip" expression => fileexists("/bin/gzip");
     "usr_bin_gzip" expression => fileexists("/usr/bin/gzip");
 
 files:
-	"$(G.testdir)/."
-	    create => "true";
+        "$(G.testdir)/."
+            create => "true";
 
-	"$(G.testdir)/$(files)"
-	    copy_from => init_copy("/etc/group");
+        "$(G.testdir)/$(files)"
+            copy_from => init_copy("/etc/group");
 }
 
 body copy_from init_copy(file)
 {
-	source => "$(file)";
+        source => "$(file)";
 }
 
 body classes init_set_class(class)
@@ -61,8 +55,8 @@ promise_repaired => { "$(class)" };
 bundle agent test
 {
 commands:
-	"$(sys.cf_agent) -f $(this.promise_filename) -D AUTO -K -b init,test_dry_run --dry-run"
-	contain => start_from_cwd;
+        "$(sys.cf_agent) -f $(this.promise_filename) -D AUTO -K -b init,test_dry_run --dry-run"
+        contain => start_from_cwd;
 }
 
 body contain start_from_cwd
@@ -73,25 +67,25 @@ body contain start_from_cwd
 bundle agent test_dry_run
 {
 files:
-	"$(G.testdir)"
-	    transformer => "$(init.gzip) $(this.promiser)",
-	    file_select => test_plain,
-	    depth_search => test_recurse;
+        "$(G.testdir)"
+            transformer => "$(init.gzip) $(this.promiser)",
+            file_select => test_plain,
+            depth_search => test_recurse;
 
 reports:
     !opt_dry_run::
-	"$(this.promise_filename) --dry-run FAIL";
+        "$(this.promise_filename) --dry-run FAIL";
 }
 
 body file_select test_plain
 {
-	file_types => { "plain" };
-	file_result => "file_types";
+        file_types => { "plain" };
+        file_result => "file_types";
 }
 
 body depth_search test_recurse
 {
-	depth => "inf";
+        depth => "inf";
 }
 
 #######################################################
@@ -99,32 +93,24 @@ body depth_search test_recurse
 bundle agent check
 {
 vars:
-	"files" slist => { @{init.files} };
+        "files" slist => { @{init.files} };
 
 classes:
-	"ok$(files)" expression => fileexists("$(G.testdir)/$(files)");
-	"no$(files)" expression => fileexists("$(G.testdir)/$(files).gz");
-	"ok" and => {
-		    "ok1", "ok2", "ok3",
-		    "!no1", "!no2", "!no3",
-		    };
+        "ok$(files)" expression => fileexists("$(G.testdir)/$(files)");
+        "no$(files)" expression => fileexists("$(G.testdir)/$(files).gz");
+        "ok" and => {
+                    "ok1", "ok2", "ok3",
+                    "!no1", "!no2", "!no3",
+                    };
 
 reports:
     DEBUG::
-	"$(G.testdir)/$(files) exists with no $(G.testdir)/$(files).gz"
-	    ifvarclass => "ok$(files).!no$(files)";
-	"$(G.testdir)/$(files).gz was created during --dry-run!"
-	    ifvarclass => "no$(files)";
+        "$(G.testdir)/$(files) exists with no $(G.testdir)/$(files).gz"
+            ifvarclass => "ok$(files).!no$(files)";
+        "$(G.testdir)/$(files).gz was created during --dry-run!"
+            ifvarclass => "no$(files)";
     ok::
-	"$(this.promise_filename) Pass";
+        "$(this.promise_filename) Pass";
     !ok::
-	"$(this.promise_filename) FAIL";
-}
-
-#######################################################
-
-bundle agent fini
-{
-methods:
-	"any" usebundle => default_fini("$(G.testdir)");
+        "$(this.promise_filename) FAIL";
 }

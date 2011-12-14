@@ -8,16 +8,10 @@
 body common control
 {
   inputs => { "../../default.cf.sub" };
-  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
   host_licenses_paid => "5";
-}
-
-bundle common g
-{
-vars:
-	"testfile" string => "/tmp/TEST.cfengine";
 }
 
 #######################################################
@@ -25,9 +19,9 @@ vars:
 bundle agent init
 {
 vars:
-	"states" slist => { "actual", "expected" };
+        "states" slist => { "actual", "expected" };
 
-	"actual" string =>
+        "actual" string =>
 "header
 header
 BEGIN
@@ -35,25 +29,25 @@ BEGIN
 END
 trailer
 trailer";
- 
-	"expected" string => "$(actual)";
- 
+
+        "expected" string => "$(actual)";
+
 files:
-	"$(g.testfile).$(states)"
-	    create => "true",
-	    edit_line => init_insert("$(init.$(states))"),
-	    edit_defaults => init_empty;
+        "$(G.testfile).$(states)"
+            create => "true",
+            edit_line => init_insert("$(init.$(states))"),
+            edit_defaults => init_empty;
 }
 
 bundle edit_line init_insert(str)
 {
 insert_lines:
-	"$(str)";
+        "$(str)";
 }
 
 body edit_defaults init_empty
 {
-	empty_file_before_editing => "true";
+        empty_file_before_editing => "true";
 }
 
 #######################################################
@@ -63,18 +57,18 @@ bundle agent test
 vars:
       "tstr" string =>
 "    Three potatoe";
- 
+
 files:
-	"$(g.testfile).actual"
-	    edit_line => test_delete("$(test.tstr)");
+        "$(G.testfile).actual"
+            edit_line => test_delete("$(test.tstr)");
 
 }
 
 bundle edit_line test_delete(str)
 {
 delete_lines:
-	"BEGIN$(const.n)$(str)$(const.n)END"
-	    select_region => test_select;
+        "BEGIN$(const.n)$(str)$(const.n)END"
+            select_region => test_select;
 }
 
 body select_region test_select
@@ -89,15 +83,8 @@ select_end => "END";
 bundle agent check
 {
 methods:
-	"any" usebundle => default_check_diff("$(g.testfile).actual",
-					      "$(g.testfile).expected",
-					      "$(this.promise_filename)");
+        "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                              "$(G.testfile).expected",
+                                              "$(this.promise_filename)");
 }
 
-#######################################################
-
-bundle agent fini
-{
-methods:
-	"any" usebundle => default_fini("$(g.testfile)");
-}

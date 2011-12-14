@@ -8,7 +8,7 @@
 body common control
 {
   inputs => { "../../default.cf.sub" };
-  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
   host_licenses_paid => "5";
@@ -17,16 +17,14 @@ nova_edition::
 bundle common g
 {
 vars:
-	"testfile" string => "/tmp/TEST.cfengine";
+        # This extracts the octal mode, and decimal nlink, uid, gid, size
+        "command" string => 'printf "%o" . " %d" x 4, (stat("$(G.testfile)"))[2]&07777, (stat(_))[3..5,7]';
 
-	# This extracts the octal mode, and decimal nlink, uid, gid, size
-	"command" string => 'printf "%o" . " %d" x 4, (stat("$(g.testfile)"))[2]&07777, (stat(_))[3..5,7]';
-
-	"source" string => "/etc/group";
-	"source_command" string => 'printf "%d", (stat("$(g.source)"))[7]';
-	"source_size" string => execresult(
-	    "/usr/bin/perl -le '$(g.source_command)'",
-	    "noshell");
+        "source" string => "/etc/group";
+        "source_command" string => 'printf "%d", (stat("$(g.source)"))[7]';
+        "source_size" string => execresult(
+            "/usr/bin/perl -le '$(g.source_command)'",
+            "noshell");
 }
 
 #######################################################
@@ -34,14 +32,14 @@ vars:
 bundle agent init
 {
 files:
-	"$(g.testfile)"
-	    delete => init_delete;
+        "$(G.testfile)"
+            delete => init_delete;
 }
 
 body delete init_delete
 {
-	dirlinks => "delete";
-	rmdirs   => "true";
+        dirlinks => "delete";
+        rmdirs   => "true";
 }
 
 #######################################################
@@ -52,10 +50,10 @@ vars:
     "mode" int => "0600";
 
 files:
-	"$(g.testfile)"
-	    create => "true",
-	    perms => test_og,
-	    copy_from => test_copy;
+        "$(G.testfile)"
+            create => "true",
+            perms => test_og,
+            copy_from => test_copy;
 }
 
 body perms test_og
@@ -73,8 +71,8 @@ freebsd::
 
 body copy_from test_copy
 {
-	source => "/etc/group";
-	compare => "binary";
+        source => "/etc/group";
+        compare => "binary";
 }
 
 #######################################################
@@ -82,29 +80,22 @@ body copy_from test_copy
 bundle agent check
 {
 vars:
-	"expect" string => "$(test.mode) 1 3 3 $(g.source_size)";
+        "expect" string => "$(test.mode) 1 3 3 $(g.source_size)";
 
-	"result" string => execresult(
-	    "/usr/bin/perl -le '$(g.command)'",
-	    "noshell");
+        "result" string => execresult(
+            "/usr/bin/perl -le '$(g.command)'",
+            "noshell");
 
 classes:
-	"ok" expression => strcmp("$(expect)", "$(result)");
+        "ok" expression => strcmp("$(expect)", "$(result)");
 
 reports:
     DEBUG::
-	"expected: '$(expect)'";
-	"got:      '$(result)'";
+        "expected: '$(expect)'";
+        "got:      '$(result)'";
     ok::
-	"$(this.promise_filename) Pass";
+        "$(this.promise_filename) Pass";
     !ok::
-	"$(this.promise_filename) FAIL";
+        "$(this.promise_filename) FAIL";
 }
 
-#######################################################
-
-bundle agent fini
-{
-methods:
-	"any" usebundle => default_fini("$(g.testfile)");
-}

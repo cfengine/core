@@ -7,16 +7,10 @@
 body common control
 {
   inputs => { "../../default.cf.sub" };
-  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
   host_licenses_paid => "5";
-}
-
-bundle common g
-{
-vars:
-	"testfile" string => "/tmp/TEST.cfengine";
 }
 
 #######################################################
@@ -24,17 +18,17 @@ vars:
 bundle agent init
 {
 vars:
-	"states" slist => { "actual", "expected" };
+        "states" slist => { "actual", "expected" };
 
-	"actual" string =>
+        "actual" string =>
 "BEGIN
     One potato
     Two potato
     Two potatos
     Four
 END";
- 
-	"expected" string =>
+
+        "expected" string =>
 "BEGIN
     One potato
     Two potato
@@ -42,23 +36,23 @@ END";
     Two potatos
     Four
 END";
- 
+
 files:
-	"$(g.testfile).$(states)"
-	    create => "true",
-	    edit_line => init_insert("$(init.$(states))"),
-	    edit_defaults => init_empty;
+        "$(G.testfile).$(states)"
+            create => "true",
+            edit_line => init_insert("$(init.$(states))"),
+            edit_defaults => init_empty;
 }
 
 bundle edit_line init_insert(str)
 {
 insert_lines:
-	"$(str)";
+        "$(str)";
 }
 
 body edit_defaults init_empty
 {
-	empty_file_before_editing => "true";
+        empty_file_before_editing => "true";
 }
 
 #######################################################
@@ -71,19 +65,19 @@ vars:
     Two potato
     Three potatoe
     Four";
- 
+
 files:
-	"$(g.testfile).actual"
-	    create => "true",
-	    edit_line => test_insert("$(test.tstr)");
+        "$(G.testfile).actual"
+            create => "true",
+            edit_line => test_insert("$(test.tstr)");
 
 }
 
 bundle edit_line test_insert(str)
 {
 insert_lines:
-	"$(str)"
-	    location => test_before_last(".*potato.*");
+        "$(str)"
+            location => test_before_last(".*potato.*");
 }
 
 body location test_before_last(line)
@@ -98,15 +92,8 @@ select_line_matching => "$(line)";
 bundle agent check
 {
 methods:
-	"any" usebundle => default_check_diff("$(g.testfile).actual",
-					      "$(g.testfile).expected",
-					      "$(this.promise_filename)");
+        "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                              "$(G.testfile).expected",
+                                              "$(this.promise_filename)");
 }
 
-#######################################################
-
-bundle agent fini
-{
-methods:
-	"any" usebundle => default_fini("$(g.testfile)");
-}

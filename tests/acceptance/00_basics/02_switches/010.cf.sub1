@@ -7,16 +7,10 @@
 body common control
 {
   inputs => { "../../default.cf.sub" };
-  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
   host_licenses_paid => "5";
-}
-
-bundle common g
-{
-vars:
-	"testfile" string => "/tmp/TEST.cfengine";
 }
 
 #######################################################
@@ -24,7 +18,7 @@ vars:
 bundle agent init
 {
 vars:
-	"dummy" string => "dummy";
+        "dummy" string => "dummy";
 }
 
 #######################################################
@@ -32,9 +26,9 @@ vars:
 bundle agent test
 {
 files:
-    "$(g.testfile)"
-	create => "true",
-	classes => set_bingo;
+    "$(G.testfile)"
+        create => "true",
+        classes => set_bingo;
 }
 
 body classes set_bingo
@@ -54,17 +48,10 @@ classes:
 
 reports:
     DEBUG::
-	"This is $(this.promise_filename), the setup stage of the test only";
+        "This is $(this.promise_filename), the setup stage of the test only";
     DEBUG.bingo::
-	"bingo is set in $(this.promise_filename)";
+        "bingo is set in $(this.promise_filename)";
     DEBUG.!bingo::
-	"bingo is not set in $(this.promise_filename)";
+        "bingo is not set in $(this.promise_filename)";
 }
 
-#######################################################
-
-bundle agent fini
-{
-methods:
-	"any" usebundle => default_fini("$(g.testfile)");
-}

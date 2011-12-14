@@ -6,16 +6,10 @@
 body common control
 {
   inputs => { "../../default.cf.sub" };
-  bundlesequence  => { g, default("$(this.promise_filename)") };   
+  bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
   host_licenses_paid => "5";
-}
-
-bundle common g
-{
-vars:
-	"testfile" string => "/tmp/TEST.cfengine";
 }
 
 #######################################################
@@ -23,17 +17,17 @@ vars:
 bundle agent init
 {
 files:
-	"$(g.testfile)"
-	    delete => init_delete;
+        "$(G.testfile)"
+            delete => init_delete;
 
-	"$(g.testfile).SOURCE"
-	    create => "true";
+        "$(G.testfile).SOURCE"
+            create => "true";
 }
 
 body delete init_delete
 {
-	dirlinks => "delete";
-	rmdirs   => "true";
+        dirlinks => "delete";
+        rmdirs   => "true";
 }
 
 #######################################################
@@ -41,15 +35,15 @@ body delete init_delete
 bundle agent test
 {
 files:
-	"$(g.testfile)"
-	    move_obstructions => "true",
-	    link_from => test_link;
+        "$(G.testfile)"
+            move_obstructions => "true",
+            link_from => test_link;
 }
 
 body link_from test_link
 {
-	source => "$(g.testfile).SOURCE";
-	link_type => "hardlink";
+        source => "$(G.testfile).SOURCE";
+        link_type => "hardlink";
 }
 
 #######################################################
@@ -57,21 +51,14 @@ body link_from test_link
 bundle agent check
 {
 classes:
-    "ok" expression => fileexists("$(g.testfile)");
+    "ok" expression => fileexists("$(G.testfile)");
 
 reports:
     DEBUG::
-	"This test should pass as a precursor to a bunch of related failures";
+        "This test should pass as a precursor to a bunch of related failures";
     ok::
-	"$(this.promise_filename) Pass";
+        "$(this.promise_filename) Pass";
     !ok::
-	"$(this.promise_filename) FAIL";
+        "$(this.promise_filename) FAIL";
 }
 
-#######################################################
-
-bundle agent fini
-{
-methods:
-        "any" usebundle => default_fini("$(g.testfile)");
-}

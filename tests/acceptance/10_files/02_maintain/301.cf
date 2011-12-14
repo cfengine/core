@@ -7,7 +7,7 @@
 body common control
 {
   inputs => { "../../default.cf.sub" };
-  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
   host_licenses_paid => "5";
@@ -15,12 +15,9 @@ nova_edition::
 
 bundle common g
 {
-vars:
-	"testfile" string => "/tmp/TEST.cfengine";
-
 classes:
-	"cxl_succ" expression => "any";
-	"cxl_fail" expression => "any";
+        "cxl_succ" expression => "any";
+        "cxl_fail" expression => "any";
 }
 
 #######################################################
@@ -28,9 +25,9 @@ classes:
 bundle agent init
 {
 files:
-	"$(g.testfile)"
-	    perms => init_mog,
-	    copy_from => init_copy("/etc/group");
+        "$(G.testfile)"
+            perms => init_mog,
+            copy_from => init_copy("/etc/group");
 }
 
 body perms init_mog
@@ -42,8 +39,8 @@ groups => { "bin" };
 
 body copy_from init_copy(fn)
 {
-	source => "$(fn)";
-	compare => "digest";
+        source => "$(fn)";
+        compare => "digest";
 }
 
 #######################################################
@@ -51,10 +48,10 @@ body copy_from init_copy(fn)
 bundle agent test
 {
 files:
-	"$(g.testfile)"
-	    perms => init_mog,
-	    copy_from => init_copy("/etc/group"),
-	    classes => test_classes("success", "failure", "failure", "failure", "cxl_succ", "cxl_fail", "cxl_fail");
+        "$(G.testfile)"
+            perms => init_mog,
+            copy_from => init_copy("/etc/group"),
+            classes => test_classes("success", "failure", "failure", "failure", "cxl_succ", "cxl_fail", "cxl_fail");
 }
 
 body classes test_classes(kep, rep, fai, xxx, cxl_kep, cxl_rep, cxl_nkp)
@@ -78,31 +75,24 @@ classes:
 
 reports:
     DEBUG.success::
-	"class 'success' was set (should be)";
+        "class 'success' was set (should be)";
     DEBUG.!success::
-	"class 'success' was not set (should be)";
+        "class 'success' was not set (should be)";
     DEBUG.cxl_succ::
-	"class 'cxl_succ' was still set (should not be)";
+        "class 'cxl_succ' was still set (should not be)";
     DEBUG.!cxl_succ::
-	"class 'cxl_succ' was not still set (should not be)";
+        "class 'cxl_succ' was not still set (should not be)";
     DEBUG.failure::
-	"class 'failure' was set (should not be)";
+        "class 'failure' was set (should not be)";
     DEBUG.!failure::
-	"class 'failure' was not set (should not be)";
+        "class 'failure' was not set (should not be)";
     DEBUG.cxl_fail::
-	"class 'cxl_fail' was still set (should be)";
+        "class 'cxl_fail' was still set (should be)";
     DEBUG.!cxl_fail::
-	"class 'cxl_fail' was not still set (should not be)";
+        "class 'cxl_fail' was not still set (should not be)";
     ok::
-	"$(this.promise_filename) Pass";
+        "$(this.promise_filename) Pass";
     !ok::
-	"$(this.promise_filename) FAIL";
+        "$(this.promise_filename) FAIL";
 }
 
-#######################################################
-
-bundle agent fini
-{
-methods:
-	"any" usebundle => default_fini("$(g.testfile)");
-}

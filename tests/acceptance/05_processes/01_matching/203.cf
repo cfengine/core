@@ -7,16 +7,10 @@
 body common control
 {
   inputs => { "../../default.cf.sub" };
-  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
   host_licenses_paid => "5";
-}
-
-bundle common g
-{
-vars:
-	"dummy" string => "dummy";
 }
 
 #######################################################
@@ -24,7 +18,7 @@ vars:
 bundle agent init
 {
 vars:
-	"dummy" string => "dummy";
+        "dummy" string => "dummy";
 }
 
 #######################################################
@@ -32,9 +26,9 @@ vars:
 bundle agent test
 {
 processes:
-	".*"
-	    process_select => test_select_high_users,
-	    classes => test_set_class("found", "not_found");
+        ".*"
+            process_select => test_select_high_users,
+            classes => test_set_class("found", "not_found");
 }
 
 body classes test_set_class(t,f)
@@ -46,8 +40,8 @@ repair_failed => { "$(f)" };
 
 body process_select test_select_high_users
 {
-ttime_range => irange(0, accumulated(9,0,0,0,0,0));	# Anything
-process_result => "ttime";				# Everything
+ttime_range => irange(0, accumulated(9,0,0,0,0,0));        # Anything
+process_result => "ttime";                                # Everything
 }
 
 
@@ -56,19 +50,12 @@ process_result => "ttime";				# Everything
 bundle agent check
 {
 classes:
-	"ok" expression => "found.!not_found";
+        "ok" expression => "found.!not_found";
 
 reports:
     ok::
-	"$(this.promise_filename) Pass";
+        "$(this.promise_filename) Pass";
     !ok::
-	"$(this.promise_filename) FAIL";
+        "$(this.promise_filename) FAIL";
 }
 
-#######################################################
-
-bundle agent fini
-{
-vars:
-	"dummy" string => "dummy";
-}

@@ -7,16 +7,10 @@
 body common control
 {
   inputs => { "../../default.cf.sub" };
-  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
   host_licenses_paid => "5";
-}
-
-bundle common g
-{
-vars:
-	"dummy" string => "dummy";
 }
 
 #######################################################
@@ -32,7 +26,7 @@ vars:
 bundle agent test
 {
 files:
-    "/tmp/$(G.testdir)/."
+    "$(G.testdir)/."
       create => "true",
       move_obstructions => "true",
       copy_from => update_nobackup;
@@ -50,12 +44,4 @@ bundle agent check
 reports:
   cfengine_3::
     "$(this.promise_filename) Pass";
-}
-
-#######################################################
-
-bundle agent fini
-{
-methods:
-	"any" usebundle => default_fini("$(G.testdir)");
 }

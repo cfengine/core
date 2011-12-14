@@ -7,25 +7,19 @@
 body common control
 {
   inputs => { "../../default.cf.sub" };
-  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
   host_licenses_paid => "5";
 }
 
 
-bundle common g
-{
-vars:
-  "testfile" string => "/tmp/TEST.cfengine";
-}
-
 #######################################################
 
 bundle agent init
 {
 files:
-  "$(g.testfile)"
+  "$(G.testfile)"
     move_obstructions => "true",
     copy_from => init_copy;
 }
@@ -41,7 +35,7 @@ body copy_from init_copy
 bundle agent test
 {
 files:
-  "$(g.testfile)"
+  "$(G.testfile)"
     rename => disable,
     action => warn_only;
 }
@@ -62,22 +56,15 @@ ifelapsed => "60";
 bundle agent check
 {
 classes:
-  "filestillthere" expression => fileexists("$(g.testfile)");
-  "fileisnotdisabled" not => fileexists("$(g.testfile).cfdisabled");
+  "filestillthere" expression => fileexists("$(G.testfile)");
+  "fileisnotdisabled" not => fileexists("$(G.testfile).cfdisabled");
 
     "ok" and => { "filestillthere", "fileisnotdisabled" };
 
 reports:
     ok::
-	"$(this.promise_filename) Pass";
+        "$(this.promise_filename) Pass";
     !ok::
-	"$(this.promise_filename) FAIL";
+        "$(this.promise_filename) FAIL";
 }
 
-#######################################################
-
-bundle agent fini
-{
-methods:
-	"any" usebundle => default_fini("$(g.testfile)");
-}

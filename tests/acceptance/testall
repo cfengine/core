@@ -110,12 +110,12 @@ runtest() {
 
     # Prepare workdir
     WORKDIR=$BASE_WORKDIR/$FLATNAME
-    mkdir -p $WORKDIR/bin
+    mkdir -p $WORKDIR/bin $WORKDIR/tmp
     ln -sf $AGENT $WORKDIR/bin
     ln -sf $(dirname $AGENT)/cf-promises $WORKDIR/bin
 
     echo "#!/bin/sh
-CFENGINE_TEST_OVERRIDE_WORKDIR=$WORKDIR exec $AGENT -Kf \"$TEST\" -D AUTO,DEBUG 2>&1
+CFENGINE_TEST_OVERRIDE_WORKDIR=$WORKDIR TEMP=$WORKDIR/tmp exec $AGENT -Kf \"$TEST\" -D AUTO,DEBUG 2>&1
 " > $WORKDIR/runtest
     chmod +x $WORKDIR/runtest
 

@@ -7,25 +7,19 @@
 body common control
 {
   inputs => { "../../default.cf.sub" };
-  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
   host_licenses_paid => "5";
 }
 
 
-bundle common g
-{
-vars:
-  "testfile" string => "/tmp/TEST.cfengine";
-}
-
 #######################################################
 
 bundle agent init
 {
 commands:
-  "$(G.touch) $(g.testfile)";
+  "$(G.touch) $(G.testfile)";
 }
 
 #######################################################
@@ -43,23 +37,16 @@ commands:
 bundle agent check
 {
 classes:
-  "filestillthere" expression => fileexists("$(g.testfile)");
-  "fileisrotated" expression => fileexists("$(g.testfile).cf-before-edit.1");
-  "nounnamedbackup" not => fileexists("$(g.testfile).cf-before-edit");
+  "filestillthere" expression => fileexists("$(G.testfile)");
+  "fileisrotated" expression => fileexists("$(G.testfile).cf-before-edit.1");
+  "nounnamedbackup" not => fileexists("$(G.testfile).cf-before-edit");
 
     "ok" and => { "filestillthere", "fileisrotated", "nounnamedbackup" };
 
 reports:
     ok::
-	"$(this.promise_filename) Pass";
+        "$(this.promise_filename) Pass";
     !ok::
-	"$(this.promise_filename) FAIL";
+        "$(this.promise_filename) FAIL";
 }
 
-#######################################################
-
-bundle agent fini
-{
-methods:
-	"any" usebundle => default_fini("$(g.testfile)");
-}

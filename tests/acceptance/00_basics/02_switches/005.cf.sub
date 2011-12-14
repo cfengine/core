@@ -7,16 +7,10 @@
 body common control
 {
   inputs => { "../../default.cf.sub" };
-  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
   host_licenses_paid => "5";
-}
-
-bundle common g
-{
-vars:
-	"dummy" string => "dummy";
 }
 
 #######################################################
@@ -24,7 +18,7 @@ vars:
 bundle agent init
 {
 vars:
-	"dummy" string => "dummy";
+        "dummy" string => "dummy";
 }
 
 #######################################################
@@ -32,7 +26,7 @@ vars:
 bundle agent test
 {
 vars:
-	"dummy" string => "dummy";
+        "dummy" string => "dummy";
 }
 
 #######################################################
@@ -44,18 +38,11 @@ classes:
 
 reports:
     DEBUG::
-	"This should pass if you run it with: -N ok";
-	"Look at $(fn[1]) to see which flags are passed in";
+        "This should pass if you run it with: -N ok";
+        "Look at $(fn[1]) to see which flags are passed in";
     ok::
-	"$(fn[1]) FAIL";
+        "$(fn[1]) FAIL";
     !ok::
-	"$(fn[1]) Pass";
+        "$(fn[1]) Pass";
 }
 
-#######################################################
-
-bundle agent fini
-{
-vars:
-	"dummy" string => "dummy";
-}

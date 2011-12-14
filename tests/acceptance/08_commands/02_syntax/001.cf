@@ -7,16 +7,10 @@
 body common control
 {
   inputs => { "../../default.cf.sub" };
-  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
   host_licenses_paid => "5";
-}
-
-bundle common g
-{
-vars:
-  "testfile" string => "/tmp/TEST.cfengine";
 }
 
 #######################################################
@@ -24,7 +18,7 @@ vars:
 bundle agent init
 {
 files:
-  "$(g.testfile)"
+  "$(G.testfile)"
     create => "true",
     edit_defaults => empty,
     edit_line => setup_lines;
@@ -48,10 +42,10 @@ insert_lines:
 bundle agent test
 {
 vars:
-  "all_lines" string => execresult("/bin/egrep -c '.' $(g.testfile)", "useshell");
-  "re_lines" string => execresult("/bin/egrep -c 'a.test' $(g.testfile)", "useshell");
-  "lit_lines" string => execresult("/bin/egrep -c 'a\.test' $(g.testfile)", "useshell");
-  "doubleslash_lit_lines" string => execresult("/bin/egrep -c 'a\\.test' $(g.testfile)", "useshell");
+  "all_lines" string => execresult("/bin/egrep -c '.' $(G.testfile)", "useshell");
+  "re_lines" string => execresult("/bin/egrep -c 'a.test' $(G.testfile)", "useshell");
+  "lit_lines" string => execresult("/bin/egrep -c 'a\.test' $(G.testfile)", "useshell");
+  "doubleslash_lit_lines" string => execresult("/bin/egrep -c 'a\\.test' $(G.testfile)", "useshell");
 }
 
 #######################################################
@@ -78,10 +72,3 @@ reports:
     "$(this.promise_filename) FAIL";
 }
 
-#######################################################
-
-bundle agent fini
-{
-vars:
-	"dummy" string => "dummy";
-}

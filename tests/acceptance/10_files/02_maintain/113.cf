@@ -8,7 +8,7 @@
 body common control
 {
   inputs => { "../../default.cf.sub" };
-  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
   host_licenses_paid => "5";
@@ -17,11 +17,10 @@ nova_edition::
 bundle common g
 {
 vars:
-	"testfile" string => "/tmp/TEST.cfengine";
-        "sourcefile" string => "$(testfile).SOURCE";
+        "sourcefile" string => "$(G.testfile).SOURCE";
 
-	# This extracts the inode number
-	"command" string => 'printf "%d", (stat("$(g.testfile)"))[1]';
+        # This extracts the inode number
+        "command" string => 'printf "%d", (stat("$(G.testfile)"))[1]';
 
 }
 
@@ -30,8 +29,8 @@ vars:
 bundle agent init
 {
 files:
-	"$(g.testfile)"
-	    delete => init_delete;
+        "$(G.testfile)"
+            delete => init_delete;
 
         "$(g.sourcefile)"
             create => "true";
@@ -39,8 +38,8 @@ files:
 
 body delete init_delete
 {
-	dirlinks => "delete";
-	rmdirs   => "true";
+        dirlinks => "delete";
+        rmdirs   => "true";
 }
 
 #######################################################
@@ -48,16 +47,16 @@ body delete init_delete
 bundle agent test
 {
 files:
-	"$(g.testfile)"
-	    create => "true",
-	    move_obstructions => "true",
-	    link_from => test_link;
+        "$(G.testfile)"
+            create => "true",
+            move_obstructions => "true",
+            link_from => test_link;
 }
 
 body link_from test_link
 {
-	source => "$(g.sourcefile)";
-	link_type => "hardlink";
+        source => "$(g.sourcefile)";
+        link_type => "hardlink";
 }
 
 #######################################################
@@ -65,32 +64,25 @@ body link_from test_link
 bundle agent check
 {
 vars:
-	"source_command" string => 'printf "%d", (stat("$(g.sourcefile)"))[1]';
-	"source_ino" string => execresult(
-	    "/usr/bin/perl -le '$(source_command)'",
-	    "noshell");
+        "source_command" string => 'printf "%d", (stat("$(g.sourcefile)"))[1]';
+        "source_ino" string => execresult(
+            "/usr/bin/perl -le '$(source_command)'",
+            "noshell");
 
-	"result" string => execresult(
-	    "/usr/bin/perl -le '$(g.command)'",
-	    "noshell");
+        "result" string => execresult(
+            "/usr/bin/perl -le '$(g.command)'",
+            "noshell");
 
 classes:
-	"ok" expression => strcmp("$(source_ino)", "$(result)");
+        "ok" expression => strcmp("$(source_ino)", "$(result)");
 
 reports:
     DEBUG::
-	"expected: '$(source_ino)'";
-	"got:      '$(result)'";
+        "expected: '$(source_ino)'";
+        "got:      '$(result)'";
     ok::
-	"$(this.promise_filename) Pass";
+        "$(this.promise_filename) Pass";
     !ok::
-	"$(this.promise_filename) FAIL";
+        "$(this.promise_filename) FAIL";
 }
 
-#######################################################
-
-bundle agent fini
-{
-methods:
-	"any" usebundle => default_fini("$(g.testfile)");
-}

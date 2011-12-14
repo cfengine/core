@@ -8,16 +8,10 @@
 body common control
 {
   inputs => { "../../default.cf.sub" };
-  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
   host_licenses_paid => "5";
-}
-
-bundle common g
-{
-vars:
-	"testfile" string => "/tmp/TEST.cfengine";
 }
 
 #######################################################
@@ -25,20 +19,20 @@ vars:
 bundle agent init
 {
 vars:
-	"states" slist => { "actual", "expected" };
+        "states" slist => { "actual", "expected" };
 
-	"actual" string =>
-"	big potatoes
+        "actual" string =>
+"        big potatoes
 BEGIN
     One potato
     Two potato
     Two potatos
     Four
 END
-	small potatoes";
- 
-	"expected" string =>
-"	big potatoes
+        small potatoes";
+
+        "expected" string =>
+"        big potatoes
 BEGIN
     One potato
     Three potatoe
@@ -46,24 +40,24 @@ BEGIN
     Two potatos
     Four
 END
-	small potatoes";
- 
+        small potatoes";
+
 files:
-	"$(g.testfile).$(states)"
-	    create => "true",
-	    edit_line => init_insert("$(init.$(states))"),
-	    edit_defaults => init_empty;
+        "$(G.testfile).$(states)"
+            create => "true",
+            edit_line => init_insert("$(init.$(states))"),
+            edit_defaults => init_empty;
 }
 
 bundle edit_line init_insert(str)
 {
 insert_lines:
-	"$(str)";
+        "$(str)";
 }
 
 body edit_defaults init_empty
 {
-	empty_file_before_editing => "true";
+        empty_file_before_editing => "true";
 }
 
 #######################################################
@@ -76,20 +70,20 @@ vars:
     Two potato
     Three potatoe
     Four";
- 
+
 files:
-	"$(g.testfile).actual"
-	    create => "true",
-	    edit_line => test_insert("$(test.tstr)");
+        "$(G.testfile).actual"
+            create => "true",
+            edit_line => test_insert("$(test.tstr)");
 
 }
 
 bundle edit_line test_insert(str)
 {
 insert_lines:
-	"$(str)"
-	    select_region => test_region,
-	    location => test_after_first(".*potato.*");
+        "$(str)"
+            select_region => test_region,
+            location => test_after_first(".*potato.*");
 }
 
 body select_region test_region
@@ -110,15 +104,8 @@ select_line_matching => "$(line)";
 bundle agent check
 {
 methods:
-	"any" usebundle => default_check_diff("$(g.testfile).actual",
-					      "$(g.testfile).expected",
-					      "$(this.promise_filename)");
+        "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                              "$(G.testfile).expected",
+                                              "$(this.promise_filename)");
 }
 
-#######################################################
-
-bundle agent fini
-{
-methods:
-	"any" usebundle => default_fini("$(g.testfile)");
-}

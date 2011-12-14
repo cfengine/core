@@ -7,7 +7,7 @@
 body common control
 {
   inputs => { "../../default.cf.sub" };
-  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
   host_licenses_paid => "5";
@@ -16,14 +16,14 @@ nova_edition::
 bundle common g
 {
 vars:
-	# This extracts the octal mode, and decimal nlink, uid, gid, size
-	"command" string => 'printf "%#o" . " %d" x 4, (stat("$(g.testfile)"))[2]&07777, (stat(_))[3..5,7]';
+        # This extracts the octal mode, and decimal nlink, uid, gid, size
+        "command" string => 'printf "%#o" . " %d" x 4, (stat("$(G.testfile)"))[2]&07777, (stat(_))[3..5,7]';
 
-	"source" string => "/etc/group";
-	"source_command" string => 'printf "%d", (stat("$(g.source)"))[7]';
-	"source_size" string => execresult(
-	    "/usr/bin/perl -le '$(g.source_command)'",
-	    "noshell");
+        "source" string => "/etc/group";
+        "source_command" string => 'printf "%d", (stat("$(g.source)"))[7]';
+        "source_size" string => execresult(
+            "/usr/bin/perl -le '$(g.source_command)'",
+            "noshell");
 }
 
 #######################################################
@@ -34,16 +34,16 @@ vars:
     "files" slist => { "1", "2", "3" };
 
 files:
-	"$(G.testdir)/."
-	    create => "true";
+        "$(G.testdir)/."
+            create => "true";
 
-	"$(G.testdir)/$(files)"
-	    copy_from => init_copy("/etc/group");
+        "$(G.testdir)/$(files)"
+            copy_from => init_copy("/etc/group");
 }
 
 body copy_from init_copy(file)
 {
-	source => "$(file)";
+        source => "$(file)";
 }
 
 body classes init_set_class(class)
@@ -57,24 +57,24 @@ promise_repaired => { "$(class)" };
 bundle agent test
 {
 vars:
-	"counter" string => "$(G.testdir)/counter";
+        "counter" string => "$(G.testdir)/counter";
 
 files:
-	"$(G.testdir)"
-	    transformer => "/bin/sh -c 'echo $(this.promiser) >> $(counter)'",
-	    file_select => test_plain,
-	    depth_search => test_recurse;
+        "$(G.testdir)"
+            transformer => "/bin/sh -c 'echo $(this.promiser) >> $(counter)'",
+            file_select => test_plain,
+            depth_search => test_recurse;
 }
 
 body file_select test_plain
 {
-	file_types => { "plain" };
-	file_result => "file_types";
+        file_types => { "plain" };
+        file_result => "file_types";
 }
 
 body depth_search test_recurse
 {
-	depth => "inf";
+        depth => "inf";
 }
 
 #######################################################
@@ -82,24 +82,16 @@ body depth_search test_recurse
 bundle agent check
 {
 vars:
-	"count" string => execresult("/usr/bin/wc $(test.counter)", "noshell");
+        "count" string => execresult("/usr/bin/wc $(test.counter)", "noshell");
 
 classes:
-	"ok" expression => regcmp("\s*3\s.*", "$(count)");
+        "ok" expression => regcmp("\s*3\s.*", "$(count)");
 
 reports:
     DEBUG::
-	"3 transformations expected, saw '$(count)'";
+        "3 transformations expected, saw '$(count)'";
     ok::
-	"$(this.promise_filename) Pass";
+        "$(this.promise_filename) Pass";
     !ok::
-	"$(this.promise_filename) FAIL";
-}
-
-#######################################################
-
-bundle agent fini
-{
-methods:
-	"any" usebundle => default_fini("$(G.testdir)");
+        "$(this.promise_filename) FAIL";
 }

@@ -7,16 +7,10 @@
 body common control
 {
   inputs => { "../../../default.cf.sub" };
-  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
   host_licenses_paid => "5";
-}
-
-bundle common g
-{
-vars:
-	"dummy" string => "dummy";
 }
 
 #######################################################
@@ -24,7 +18,7 @@ vars:
 bundle agent init
 {
 vars:
-	"dummy" string => "dummy";
+        "dummy" string => "dummy";
 }
 
 #######################################################
@@ -48,33 +42,26 @@ vars:
     "a_6" string => "2001:503:ba3e::2:30";
 
 classes:
-	"ok_a" or => {
-		    strcmp("$(test.a)", "$(a)"),
-		    strcmp("$(test.a)", "$(a_6)"),
-		    };
+        "ok_a" or => {
+                    strcmp("$(test.a)", "$(a)"),
+                    strcmp("$(test.a)", "$(a_6)"),
+                    };
         "ok_localhost" or => {
                     strcmp("$(test.localhost)", "$(localhost)"),
                     strcmp("$(test.localhost)", "$(localhost_6)"),
                     };
-	"ok" and => {
-		    "ok_a",
+        "ok" and => {
+                    "ok_a",
                     "ok_localhost",
-		    };
+                    };
 
 reports:
     DEBUG::
-	"Expected $(test.localhost) == $(localhost)";
-	"Expected $(test.a) == ( $(a) or $(a_6) )";
+        "Expected $(test.localhost) == $(localhost)";
+        "Expected $(test.a) == ( $(a) or $(a_6) )";
     ok::
-	"$(this.promise_filename) Pass";
+        "$(this.promise_filename) Pass";
     !ok::
-	"$(this.promise_filename) FAIL";
+        "$(this.promise_filename) FAIL";
 }
 
-#######################################################
-
-bundle agent fini
-{
-vars:
-	"dummy" string => "dummy";
-}

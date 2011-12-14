@@ -68,14 +68,13 @@ or directories to 'testall':
 Creating/editing test cases
 ------------------------------------------------------------------------------
 
-Each test should be 100% standalone, and must contain at least 4 main bundles:
+Each test should be 100% standalone, and must contain at least 3 main bundles:
 	init		setup, create initial and hoped-for final states
 	test		the actual test code
 	check		the comparison of expected and actual results
-	fini		cleanup, restore to pre-test state
 
-Look in default.cf for some standard check and fini bundles (for example, to
-compare files when testing file edits, or for cleaning up temporary files).
+Look in default.cf for some standard check bundles (for example, to compare
+files when testing file edits, or for cleaning up temporary files).
 
 Tests should be named with only digits (e.g., "001.cf") unless they are expected
 to crash (that is, if they contan syntax errors or other faults), in which case

@@ -7,20 +7,29 @@ classes:
   "bin_touch" expression => fileexists("/bin/touch");
   "usr_bin_touch" expression => fileexists("/usr/bin/touch");
 
+  "temp_declared" not => strcmp(getenv("TEMP", "65536"), "");
+
 vars:
   "cwd" string => execresult("/bin/pwd", "noshell");
 
-  "testdir" string => "/tmp/TEST.cfengine";
-  "testfile" string => "/tmp/TEST.cfengine";
+  temp_declared::
+    "testroot" string => getenv("TEMP", "65535");
+    "testdir" string => concat(getenv("TEMP", "65535"), "/TEST.cfengine");
+    "testfile" string => concat(getenv("TEMP", "65535"), "/TEST.cfengine");
+
+  !temp_declared::
+    "testroot" string => "/tmp";
+    "testdir" string => "/tmp/TEST.cfengine";
+    "testfile" string => "/tmp/TEST.cfengine";
 
   bin_sort::
     "sort" string => "/bin/sort";
-  usr_bin_sort::
+  !bin_sort.usr_bin_sort::
     "sort" string => "/usr/bin/sort";
 
   bin_touch::
     "touch" string => "/bin/touch";
-  usr_bin_touch::
+  !bin_touch.usr_bin_touch::
     "touch" string => "/usr/bin/touch";
 }
 
@@ -57,8 +66,8 @@ methods:
 
 reports:
     !AUTO::
-	"# You must either specify '-D AUTO' or run the following commands:";
-	"cf-agent -f ./$(filename) -b $(tests)";
+    "# You must either specify '-D AUTO' or run the following commands:";
+    "cf-agent -f ./$(filename) -b $(tests)";
 }
 
 #######################################################
@@ -67,7 +76,7 @@ bundle agent default_sort(infile, outfile)
 {
 commands:
     "$(G.sort) $(infile) > $(outfile)"
-	contain => default_shell_command;
+    contain => default_shell_command;
 }
 
 bundle agent default_check_diff(file1, file2, test)
@@ -95,21 +104,21 @@ vars:
         "diffu"  string => execresult("/usr/bin/diff -u $(file2) $(file1)", "noshell");
 
 classes:
-	"no_difference" expression => returnszero(
-	    "/usr/bin/diff -q $(file1) $(file2)",
-	    "useshell");
+    "no_difference" expression => returnszero(
+        "/usr/bin/diff -q $(file1) $(file2)",
+        "useshell");
 
         "expected_difference" expression => strcmp("$(expected_difference)", "yes");
 
 reports:
     no_difference.!expected_difference::
-	"$(test) Pass";
+    "$(test) Pass";
     !no_difference.expected_difference::
-	"$(test) Pass";
+    "$(test) Pass";
     !no_difference.!expected_difference::
-	"$(test) FAIL";
+    "$(test) FAIL";
     no_difference.expected_difference::
-	"$(test) FAIL";
+    "$(test) FAIL";
 
     DEBUG.!no_difference.!expected_difference::
         "$(file1) and $(file2) differ:";

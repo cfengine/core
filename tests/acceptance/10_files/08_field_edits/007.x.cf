@@ -7,16 +7,10 @@
 body common control
 {
   inputs => { "../../default.cf.sub" };
-  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
   host_licenses_paid => "5";
-}
-
-bundle common g
-{
-vars:
-	"testfile" string => "/tmp/TEST.cfengine";
 }
 
 #######################################################
@@ -24,38 +18,38 @@ vars:
 bundle agent init
 {
 vars:
-	"states" slist => { "actual", "expected" };
+        "states" slist => { "actual", "expected" };
 
-	"actual" string =>
+        "actual" string =>
 "able:baker,booker,banker:charlie:delta:echo
 apple:banana:carrot:dogfood
 aardvark:baboon:colugo:dingo::fox
 ampallang:: :dydoe:,:::::
 :blowfish:conger:dogfish:eel:flounder";
- 
-	"expected" string =>
+
+        "expected" string =>
 "able:XXX:charlie:delta:echo
 apple:XXX:carrot:dogfood
 aardvark:XXX:colugo:dingo::fox
 ampallang:XXX: :dydoe:,:::::
 :blowfish:conger:dogfish:eel:flounder";
- 
+
 files:
-	"$(g.testfile).$(states)"
-	    create => "true",
-	    edit_line => init_insert("$(init.$(states))"),
-	    edit_defaults => init_empty;
+        "$(G.testfile).$(states)"
+            create => "true",
+            edit_line => init_insert("$(init.$(states))"),
+            edit_defaults => init_empty;
 }
 
 bundle edit_line init_insert(str)
 {
 insert_lines:
-	"$(str)";
+        "$(str)";
 }
 
 body edit_defaults init_empty
 {
-	empty_file_before_editing => "true";
+        empty_file_before_editing => "true";
 }
 
 #######################################################
@@ -63,8 +57,8 @@ body edit_defaults init_empty
 bundle agent test
 {
 files:
-	"$(g.testfile).actual"
-	    edit_line => test_edit;
+        "$(G.testfile).actual"
+            edit_line => test_edit;
 
 }
 
@@ -72,7 +66,7 @@ bundle edit_line test_edit
 {
 field_edits:
     "a.*"
-	edit_field => test_col;
+        edit_field => test_col;
 }
 
 body edit_field test_col
@@ -82,7 +76,7 @@ extend_fields => "true";
 field_operation => "set";
 field_separator => ":";
 field_value => "XXX";
-select_field => "xyz";	# Must be numeric
+select_field => "xyz";        # Must be numeric
 start_fields_from_zero => "false";
 value_separator => ",";
 }
@@ -92,15 +86,8 @@ value_separator => ",";
 bundle agent check
 {
 methods:
-	"any" usebundle => default_check_diff("$(g.testfile).actual",
-					      "$(g.testfile).expected",
-					      "$(this.promise_filename)");
+        "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                              "$(G.testfile).expected",
+                                              "$(this.promise_filename)");
 }
 
-#######################################################
-
-bundle agent fini
-{
-methods:
-	"any" usebundle => default_fini("$(g.testfile)");
-}

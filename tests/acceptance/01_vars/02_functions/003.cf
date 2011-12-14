@@ -7,16 +7,10 @@
 body common control
 {
   inputs => { "../../default.cf.sub" };
-  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
   host_licenses_paid => "5";
-}
-
-bundle common g
-{
-vars:
-	"dummy" string => "dummy";
 }
 
 #######################################################
@@ -24,7 +18,7 @@ vars:
 bundle agent init
 {
 vars:
-	"dummy" string => "dummy";
+        "dummy" string => "dummy";
 }
 
 #######################################################
@@ -46,27 +40,20 @@ vars:
 bundle agent check
 {
 classes:
-	"ok" and => {
-		    strcmp("$(test.zero)", "0"),
-		    strcmp("$(test.one)", "1"),
-		    isgreaterthan("$(test.positive)", "1"),
-		    };
+        "ok" and => {
+                    strcmp("$(test.zero)", "0"),
+                    strcmp("$(test.one)", "1"),
+                    isgreaterthan("$(test.positive)", "1"),
+                    };
 
 reports:
     DEBUG::
-	"Expected 0 matches to '$(test.zero_regex)', found $(test.zero)";
-	"Expected 1 matches to '$(test.one_regex)', found $(test.one)";
-	"Expected >1 matches to '$(test.positive_regex)', found $(test.positive)";
+        "Expected 0 matches to '$(test.zero_regex)', found $(test.zero)";
+        "Expected 1 matches to '$(test.one_regex)', found $(test.one)";
+        "Expected >1 matches to '$(test.positive_regex)', found $(test.positive)";
     ok::
-	"$(this.promise_filename) Pass";
+        "$(this.promise_filename) Pass";
     !ok::
-	"$(this.promise_filename) FAIL";
+        "$(this.promise_filename) FAIL";
 }
 
-#######################################################
-
-bundle agent fini
-{
-vars:
-	"dummy" string => "dummy";
-}

@@ -8,16 +8,10 @@
 body common control
 {
   inputs => { "../../default.cf.sub" };
-  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
   host_licenses_paid => "5";
-}
-
-bundle common g
-{
-vars:
-	"dummy" string => "dummy";
 }
 
 #######################################################
@@ -25,7 +19,7 @@ vars:
 bundle agent init
 {
 vars:
-	"dummy" string => "dummy";
+        "dummy" string => "dummy";
 }
 
 #######################################################
@@ -33,7 +27,7 @@ vars:
 bundle agent test
 {
 vars:
-    "twice" 
+    "twice"
       string => "plus ca change..",
       int => 42;
 }
@@ -44,15 +38,8 @@ bundle agent check
 {
 reports:
     DEBUG::
-	"Assignment should fail";
+        "Assignment should fail";
     cfengine_3:
-	"$(this.promise_filename) Pass";
+        "$(this.promise_filename) Pass";
 }
 
-#######################################################
-
-bundle agent fini
-{
-vars:
-	"dummy" string => "dummy";
-}

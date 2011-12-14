@@ -6,16 +6,10 @@
 body common control
 {
   inputs => { "../../default.cf.sub" };
-  bundlesequence  => { g, default("$(this.promise_filename)") };   
+  bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
   host_licenses_paid => "5";
-}
-
-bundle common g
-{
-vars:
-	"testfile" string => "/tmp/TEST.cfengine";
 }
 
 #######################################################
@@ -23,14 +17,14 @@ vars:
 bundle agent init
 {
 files:
-	"$(g.testfile)"
-	    delete => init_delete;
+        "$(G.testfile)"
+            delete => init_delete;
 }
 
 body delete init_delete
 {
-	dirlinks => "delete";
-	rmdirs   => "true";
+        dirlinks => "delete";
+        rmdirs   => "true";
 }
 
 #######################################################
@@ -38,9 +32,9 @@ body delete init_delete
 bundle agent test
 {
 files:
-	"$(g.testfile)"
-	    create => "true",
-	    action => test_action;
+        "$(G.testfile)"
+            create => "true",
+            action => test_action;
 }
 
 body action test_action
@@ -53,20 +47,13 @@ log_level => "verbose";
 bundle agent check
 {
 classes:
-    "ok" expression => fileexists("$(g.testfile)");
+    "ok" expression => fileexists("$(G.testfile)");
 
 reports:
     DEBUG::
-	"This test should pass as a precursor to a bunch of related failures";
+        "This test should pass as a precursor to a bunch of related failures";
     ok::
-	"$(this.promise_filename) Pass";
+        "$(this.promise_filename) Pass";
     !ok::
-	"$(this.promise_filename) FAIL";
-}
-#######################################################
-
-bundle agent fini
-{
-methods:
-        "any" usebundle => default_fini("$(g.testfile)");
+        "$(this.promise_filename) FAIL";
 }

@@ -7,7 +7,7 @@
 body common control
 {
   inputs => { "../default.cf.sub" };
-  bundlesequence  => { "G", "g", default("$(this.promise_filename)") };   
+  bundlesequence  => { "G", "g", default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
   host_licenses_paid => "5";
@@ -87,9 +87,9 @@ reports:
     "has_pkg";
 
     ok::
-	"$(this.promise_filename) Pass";
+        "$(this.promise_filename) Pass";
     !ok::
-	"$(this.promise_filename) FAIL";
+        "$(this.promise_filename) FAIL";
 }
 
 body classes succesfully_executed(class)
@@ -98,10 +98,3 @@ kept_returncodes => { "0" };
 promise_kept => { "$(class)" };
 }
 
-#######################################################
-
-bundle agent fini
-{
-vars:
-	"dummy" string => "dummy";
-}

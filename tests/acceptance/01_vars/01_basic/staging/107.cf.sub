@@ -10,13 +10,6 @@ body common control
   host_licenses_paid => "5";
 }
 
-bundle common g
-{
-vars:
-  "dummy" string => "dummy";
-}
-
-#######################################################
 
 bundle agent init
 {
@@ -39,12 +32,6 @@ packages:
 
 
 bundle agent check
-{
-vars:
-  "dummy" string => "dummy";
-}
-
-bundle agent fini
 {
 vars:
   "dummy" string => "dummy";

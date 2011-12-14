@@ -7,16 +7,10 @@
 body common control
 {
   inputs => { "../../default.cf.sub" };
-  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
   host_licenses_paid => "5";
-}
-
-bundle common g
-{
-vars:
-	"dummy" string => "dummy";
 }
 
 #######################################################
@@ -24,7 +18,7 @@ vars:
 bundle agent init
 {
 vars:
-	"dummy" string => "dummy";
+        "dummy" string => "dummy";
 }
 
 #######################################################
@@ -46,27 +40,20 @@ vars:
 bundle agent check
 {
 classes:
-	"ok" and => {
-		    strcmp("$(test.zero)", "0"),
-		    isgreaterthan("$(test.p)", "0"),
-		    isgreaterthan("$(test.positive)", "0"),
-		    };
+        "ok" and => {
+                    strcmp("$(test.zero)", "0"),
+                    isgreaterthan("$(test.p)", "0"),
+                    isgreaterthan("$(test.positive)", "0"),
+                    };
 
 reports:
     DEBUG::
-	"Expected 0 size on $(test.zero_disk), found $(test.zero)";
-	"Expected >1 size on $(test.p_disk), found $(test.p)";
-	"Expected >1 size on $(test.positive_disk), found $(test.positive)";
+        "Expected 0 size on $(test.zero_disk), found $(test.zero)";
+        "Expected >1 size on $(test.p_disk), found $(test.p)";
+        "Expected >1 size on $(test.positive_disk), found $(test.positive)";
     ok::
-	"$(this.promise_filename) Pass";
+        "$(this.promise_filename) Pass";
     !ok::
-	"$(this.promise_filename) FAIL";
+        "$(this.promise_filename) FAIL";
 }
 
-#######################################################
-
-bundle agent fini
-{
-vars:
-	"dummy" string => "dummy";
-}

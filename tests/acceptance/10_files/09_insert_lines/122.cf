@@ -8,16 +8,10 @@
 body common control
 {
   inputs => { "../../default.cf.sub" };
-  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
   host_licenses_paid => "5";
-}
-
-bundle common g
-{
-vars:
-	"testfile" string => "/tmp/TEST.cfengine";
 }
 
 #######################################################
@@ -25,9 +19,9 @@ vars:
 bundle agent init
 {
 vars:
-	"states" slist => { "actual", "expected" };
+        "states" slist => { "actual", "expected" };
 
-	"actual" string =>
+        "actual" string =>
 "BEGIN
     One potato
     Two potato
@@ -35,7 +29,7 @@ vars:
     Leading   embedded   and trailing spaces   
     Four
 END";
- 
+
       "insert" string =>
 "    One potato
     Two potato
@@ -43,7 +37,7 @@ END";
   Leading embedded and trailing spaces   
     Four";
 
-	"expected" string =>
+        "expected" string =>
 "BEGIN
     One potato
     Two potato
@@ -53,23 +47,23 @@ END";
 END
     Three potatoe
   Leading embedded and trailing spaces   ";
- 
+
 files:
-	"$(g.testfile).$(states)"
-	    create => "true",
-	    edit_line => init_insert("$(init.$(states))"),
-	    edit_defaults => init_empty;
+        "$(G.testfile).$(states)"
+            create => "true",
+            edit_line => init_insert("$(init.$(states))"),
+            edit_defaults => init_empty;
 }
 
 bundle edit_line init_insert(str)
 {
 insert_lines:
-	"$(str)";
+        "$(str)";
 }
 
 body edit_defaults init_empty
 {
-	empty_file_before_editing => "true";
+        empty_file_before_editing => "true";
 }
 
 #######################################################
@@ -77,15 +71,15 @@ body edit_defaults init_empty
 bundle agent test
 {
 files:
-	"$(g.testfile).actual"
-	    edit_line => test_insert("$(init.insert)");
+        "$(G.testfile).actual"
+            edit_line => test_insert("$(init.insert)");
 }
 
 bundle edit_line test_insert(lines)
 {
 insert_lines:
-	"$(lines)"
-	    whitespace_policy => { "ignore_leading" };
+        "$(lines)"
+            whitespace_policy => { "ignore_leading" };
 }
 
 #######################################################
@@ -93,15 +87,8 @@ insert_lines:
 bundle agent check
 {
 methods:
-	"any" usebundle => default_check_diff("$(g.testfile).actual",
-					      "$(g.testfile).expected",
-					      "$(this.promise_filename)");
+        "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                              "$(G.testfile).expected",
+                                              "$(this.promise_filename)");
 }
 
-#######################################################
-
-bundle agent fini
-{
-methods:
-	"any" usebundle => default_fini("$(g.testfile)");
-}

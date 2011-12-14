@@ -7,16 +7,10 @@
 body common control
 {
   inputs => { "../../default.cf.sub" };
-  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
   host_licenses_paid => "5";
-}
-
-bundle common g
-{
-vars:
-	"testfile" string => "/tmp/TEST.cfengine";
 }
 
 #######################################################
@@ -24,9 +18,9 @@ vars:
 bundle agent init
 {
 vars:
-	"states" slist => { "template", "expected" };
+        "states" slist => { "template", "expected" };
 
-	"template" string =>
+        "template" string =>
 "##
 # Sendmail Alias File 
 # @(#)B11.23_LRaliases $Revision: 1.1.212.1 $ $Date: 99/09/13 15:13:16 $
@@ -65,7 +59,7 @@ oracle : dcpds.dba@dcpds.cpms.osd.mil
 exinfac : dcpds.exits@dcpds.cpms.osd.mil
 applmgr : dcpds.dba@dcpds.cpms.osd.mil";
 
-	"expected" string =>
+        "expected" string =>
 "##
 # Sendmail Alias File 
 # @(#)B11.23_LRaliases $Revision: 1.1.212.1 $ $Date: 99/09/13 15:13:16 $
@@ -104,23 +98,23 @@ oracle : dcpds.dba@dcpds.cpms.osd.mil
 exinfac : dcpds.exits@dcpds.cpms.osd.mil
 applmgr : dcpds.dba@dcpds.cpms.osd.mil
 stgmgmt : :include:/etc/mail/aliases.stgmgmt";
- 
+
 files:
-	"$(g.testfile).$(states)"
-	    create => "true",
-	    edit_line => init_insert("$(init.$(states))"),
-	    edit_defaults => init_empty;
+        "$(G.testfile).$(states)"
+            create => "true",
+            edit_line => init_insert("$(init.$(states))"),
+            edit_defaults => init_empty;
 }
 
 bundle edit_line init_insert(str)
 {
 insert_lines:
-	"$(str)";
+        "$(str)";
 }
 
 body edit_defaults init_empty
 {
-	empty_file_before_editing => "true";
+        empty_file_before_editing => "true";
 }
 
 #######################################################
@@ -131,8 +125,8 @@ vars:
         "MailAliases" slist => { "stgmgmt : :include:/etc/mail/aliases.stgmgmt" };
 
 files:
-        "$(g.testfile).actual"
-                edit_line => copy_and_append_lines("$(g.testfile).template",
+        "$(G.testfile).actual"
+                edit_line => copy_and_append_lines("$(G.testfile).template",
                                    "@(this.MailAliases)"),
                 edit_defaults => empty,
                 create => "true";
@@ -163,15 +157,8 @@ max_file_size => "300000";
 bundle agent check
 {
 methods:
-	"any" usebundle => default_check_diff("$(g.testfile).actual",
-					      "$(g.testfile).expected",
-					      "$(this.promise_filename)");
+        "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                              "$(G.testfile).expected",
+                                              "$(this.promise_filename)");
 }
 
-#######################################################
-
-bundle agent fini
-{
-methods:
-	"any" usebundle => default_fini("$(g.testfile)");
-}

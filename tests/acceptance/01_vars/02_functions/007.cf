@@ -7,16 +7,10 @@
 body common control
 {
   inputs => { "../../default.cf.sub" };
-  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
   host_licenses_paid => "5";
-}
-
-bundle common g
-{
-vars:
-	"dummy" string => "dummy";
 }
 
 #######################################################
@@ -24,7 +18,7 @@ vars:
 bundle agent init
 {
 vars:
-	"dummy" string => "dummy";
+        "dummy" string => "dummy";
 }
 
 #######################################################
@@ -70,37 +64,30 @@ vars:
 bundle agent check
 {
 classes:
-	"ok" and => {
-		    strcmp("$(test.expect1)", "$(test.out1)"),
-		    strcmp("$(test.expect2)", "$(test.out2)"),
-		    strcmp("$(test.expect3)", "$(test.out3)"),
-		    strcmp("$(test.expect4)", "$(test.out4)"),
-		    strcmp("$(test.expect5)", "$(test.out5)"),
-		    strcmp("$(test.expect6)", "$(test.out6)"),
-		    strcmp("$(test.expect7)", "$(test.out7)"),
-		    strcmp("$(test.expect8)", "$(test.out8)"),
-		    };
+        "ok" and => {
+                    strcmp("$(test.expect1)", "$(test.out1)"),
+                    strcmp("$(test.expect2)", "$(test.out2)"),
+                    strcmp("$(test.expect3)", "$(test.out3)"),
+                    strcmp("$(test.expect4)", "$(test.out4)"),
+                    strcmp("$(test.expect5)", "$(test.out5)"),
+                    strcmp("$(test.expect6)", "$(test.out6)"),
+                    strcmp("$(test.expect7)", "$(test.out7)"),
+                    strcmp("$(test.expect8)", "$(test.out8)"),
+                    };
 
 reports:
     DEBUG::
-	"Expected canonify('$(test.in1)') => $(test.out1) == $(test.expect1)";
-	"Expected canonify('$(test.in2)') => $(test.out2) == $(test.expect2)";
-	"Expected canonify('$(test.in3)') => $(test.out3) == $(test.expect3)";
-	"Expected canonify('$(test.in4)') => $(test.out4) == $(test.expect4)";
-	"Expected canonify('$(test.in5)') => $(test.out5) == $(test.expect5)";
-	"Expected canonify('$(test.in6)') => $(test.out6) == $(test.expect6)";
-	"Expected canonify('$(test.in7)') => $(test.out7) == $(test.expect7)";
-	"Expected canonify('$(test.in8)') => $(test.out8) == $(test.expect8)";
+        "Expected canonify('$(test.in1)') => $(test.out1) == $(test.expect1)";
+        "Expected canonify('$(test.in2)') => $(test.out2) == $(test.expect2)";
+        "Expected canonify('$(test.in3)') => $(test.out3) == $(test.expect3)";
+        "Expected canonify('$(test.in4)') => $(test.out4) == $(test.expect4)";
+        "Expected canonify('$(test.in5)') => $(test.out5) == $(test.expect5)";
+        "Expected canonify('$(test.in6)') => $(test.out6) == $(test.expect6)";
+        "Expected canonify('$(test.in7)') => $(test.out7) == $(test.expect7)";
+        "Expected canonify('$(test.in8)') => $(test.out8) == $(test.expect8)";
     ok::
-	"$(this.promise_filename) Pass";
+        "$(this.promise_filename) Pass";
     !ok::
-	"$(this.promise_filename) FAIL";
+        "$(this.promise_filename) FAIL";
 }
 
-#######################################################
-
-bundle agent fini
-{
-vars:
-	"dummy" string => "dummy";
-}

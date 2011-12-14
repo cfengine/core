@@ -7,24 +7,17 @@
 body common control
 {
   inputs => { "../../default.cf.sub" };
-  bundlesequence  => { "g", default("$(this.promise_filename)") };   
+  bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
   host_licenses_paid => "5";
 }
 
-bundle common g
-{
-vars:
-  "dummy" string => "dummy";
-}
-
-#######################################################
 
 bundle agent init
 {
 vars:
-  "script_name" string => "$(this.promise_filename).script"; 
+  "script_name" string => "$(this.promise_filename).script";
 }
 
 #######################################################
@@ -58,15 +51,8 @@ reports:
     DEBUG::
         "${${canonical_script_basename}.answer[${generated_indices}]}";
     ok::
-	"$(this.promise_filename) Pass";
+        "$(this.promise_filename) Pass";
     !ok::
-	"$(this.promise_filename) FAIL";
+        "$(this.promise_filename) FAIL";
 }
 
-#######################################################
-
-bundle agent fini
-{
-vars:
-	"dummy" string => "dummy";
-}

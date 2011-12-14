@@ -111,65 +111,63 @@ static struct Rlist *GetHostsFromLastseenDB(struct Item *addresses,
  double entrytime;
  char address[CF_MAXVARSIZE];
 
- for(ip = addresses; ip != NULL; ip = ip->next)
-    {
-    if(sscanf(ip->classes,"%lf",&entrytime) != 1)
-       {
-       CfOut(cf_error, "", "!! Could not get host entry age");
-       continue;
-       }
+for (ip = addresses; ip != NULL; ip = ip->next)
+   {
+   if (sscanf(ip->classes,"%lf",&entrytime) != 1)
+      {
+      CfOut(cf_error, "", "!! Could not get host entry age");
+      continue;
+      }
    
-    if (return_address)
-       {
-       snprintf(address, sizeof(address), "%s", ip->name);
-       }
-    else
-       {
-       snprintf(address, sizeof(address), "%s", IPString2Hostname(ip->name));
-       }
-
-    if (entrytime < now - horizon)
-       {
-       CfDebug("Old entry.\n");
-
-       if (KeyInRlist(recent, address))
-          {
-          CfDebug("There is recent entry for this address. Do nothing.\n");
-          }
-       else
-          {
-          CfDebug("Adding to list of aged hosts.\n");
-          IdempPrependRScalar(&aged, address, CF_SCALAR);
-          }
-       }
-    else
-       {
-       struct Rlist *r;
-       CfDebug("Recent entry.\n");
-
-       if ((r = KeyInRlist(aged, address)))
-          {
-          CfDebug("Purging from list of aged hosts.\n");
-          DeleteRlistEntry(&aged, r);
-          }
-
-       CfDebug("Adding to list of recent hosts.\n");
-       IdempPrependRScalar(&recent, address, CF_SCALAR);
-       }
-
+   if (return_address)
+      {
+      snprintf(address, sizeof(address), "%s", ip->name);
+      }
+   else
+      {
+      snprintf(address, sizeof(address), "%s", IPString2Hostname(ip->name));
+      }
    
-    }
+   if (entrytime < now - horizon)
+      {
+      CfDebug("Old entry.\n");
+      
+      if (KeyInRlist(recent, address))
+         {
+         CfDebug("There is recent entry for this address. Do nothing.\n");
+         }
+      else
+         {
+         CfDebug("Adding to list of aged hosts.\n");
+         IdempPrependRScalar(&aged, address, CF_SCALAR);
+         }
+      }
+   else
+      {
+      struct Rlist *r;
+      CfDebug("Recent entry.\n");
+      
+      if ((r = KeyInRlist(aged, address)))
+         {
+         CfDebug("Purging from list of aged hosts.\n");
+         DeleteRlistEntry(&aged, r);
+         }
+      
+      CfDebug("Adding to list of recent hosts.\n");
+      IdempPrependRScalar(&recent, address, CF_SCALAR);
+      }
+   }
 
- if (return_recent)
-    {
-    DeleteRlist(aged);
-    return recent;
-    }
- else
-    {
-    DeleteRlist(recent);
-    return aged;
-    }
+if (return_recent)
+   {
+   DeleteRlist(aged);
+   return recent;
+   }
+else
+   {
+   DeleteRlist(recent);
+   return aged;
+   }
 }
 
 /*********************************************************************/

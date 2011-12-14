@@ -161,11 +161,11 @@ the following progressions:
 
 @sp 1
 @itemize
-@item Data @math{\rightarrow} Information @math{\rightarrow} Knowledge @math{\rightarrow} Wisdom    (DIKW)
+@item Data --> Information --> Knowledge --> Wisdom    (DIKW)
 
-@item Objectives @math{\rightarrow} Results
+@item Objectives --> Results
 
-@item Intentions @math{\rightarrow} Promises @math{\rightarrow} Assessments
+@item Intentions --> Promises --> Assessments
 @end itemize
 @sp 1
 
@@ -921,6 +921,50 @@ of knowledge sources.
 @item Technical syntax makes annotation easy for IT workers, and CFEngine can construct
 the surrounding story using intelligent algorithms.
 @end itemize
+
+
+
+
+
+@node Knowledge Management Objectives
+@unnumberedsec Knowledge Management Objectives
+
+As a manifesto for us as developers at CFEngine, as well as for you as
+users of the software, and as infrastructure engineers, it is helpful
+to make a list of questions that we would like to be able to answer
+using enterprise software.  The following list is not to be regarded
+as a set of features in CFEngine, but rather as a set of challenges
+to be addressed in different ways.
+
+@itemize
+
+@item Tell me about the promise(s).
+@item Tell me what happened to Y.
+@item Tell me about security.
+@item Tell me about performance.
+@item Tell me about compliance.
+@item Where are the resource problems?
+@item Where is the greatest/least activity?
+@item How much spare capacity do I have?
+@item Where are things changing fastest?
+
+@item When do I need to think about X?
+@item What do I need to know about X?
+@item What are the most important things that happened?
+
+@item Why is this here?
+@item What can I do about X?
+@item Who changed X last?
+@item When can I expect X?
+@item Where can I find X?
+@item What things affect X?
+@item What promises have been made about X?
+@item What stories lead to conclusion X?
+
+@end itemize
+
+
+
 
 
 

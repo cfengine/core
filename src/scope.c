@@ -149,7 +149,7 @@ for (rpl = lvals, rpr=rvals; rpl != NULL; rpl = rpl->next,rpr = rpr->next)
          case cf_slist:
          case cf_ilist:
          case cf_rlist:
-             NewList(scope,lval,CopyRvalItem(retval.item,CF_LIST),cf_slist);
+            NewList(scope,lval,CopyRvalItem((struct Rval) { retval.item, CF_LIST }).item,cf_slist);
              break;
          default:
              CfOut(cf_error,""," !! List parameter \"%s\" not found while constructing scope \"%s\" - use @(scope.variable) in calling reference",naked,scope);

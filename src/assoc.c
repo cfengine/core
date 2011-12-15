@@ -46,9 +46,9 @@ ap = xmalloc(sizeof(struct CfAssoc));
 /* Make a private copy because promises are ephemeral in expansion phase */
 
 ap->lval = xstrdup(lval);
-ap->rval = CopyRvalItem(rval,rtype);
-ap->dtype = dt;
+ap->rval = CopyRvalItem((struct Rval) { rval, rtype }).item;
 ap->rtype = rtype;
+ap->dtype = dt;
 
 if (lval == NULL)
    {

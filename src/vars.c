@@ -892,7 +892,7 @@ if (assoc)
             }
          }
       DeleteRvalItem((struct Rval) { assoc->rval, assoc->rtype });
-      assoc->rval = CopyRvalItem(rval, rtype);
+      assoc->rval = CopyRvalItem((struct Rval) { rval, rtype }).item;
       assoc->rtype = rtype;
       assoc->dtype = dtype;
       CfDebug("Stored \"%s\" in context %s\n",lval,scope);

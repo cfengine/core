@@ -209,58 +209,56 @@ return false;
 
 /*******************************************************************/
 
-void *CopyRvalItem(const void *item, char type)
+struct Rval CopyRvalItem(struct Rval rval)
 
 { struct Rlist *rp,*srp,*start = NULL;
   struct FnCall *fp;
-  void *rval;
   char rtype = CF_SCALAR;
-  char naked[CF_BUFSIZE];
   
-CfDebug("CopyRvalItem(%c)\n",type);
+CfDebug("CopyRvalItem(%c)\n",rval.rtype);
 
-if (item == NULL)
+if (rval.item == NULL)
    {
-   switch (type)
+   switch (rval.rtype)
       {
       case CF_SCALAR:
-          return xstrdup("");
+         return (struct Rval) { xstrdup(""), CF_SCALAR };
 
       case CF_LIST:
-          return NULL;
+         return (struct Rval) { NULL, CF_LIST };
       }
    }
 
-naked[0] = '\0';
-
-switch(type)
+switch(rval.rtype)
    {
    case CF_SCALAR:
       /* the rval is just a string */
-      return xstrdup((char *)item);
+      return (struct Rval) { xstrdup((char *)rval.item), CF_SCALAR };
 
    case CF_ASSOC:
-      return CopyAssoc((struct CfAssoc *)item);
+      return (struct Rval) { CopyAssoc((struct CfAssoc *)rval.item), CF_ASSOC };
 
    case CF_FNCALL:
        /* the rval is a fncall */
-       fp = (struct FnCall *)item;
-       return CopyFnCall(fp);
+       fp = (struct FnCall *)rval.item;
+       return (struct Rval) { CopyFnCall(fp), CF_FNCALL };
 
    case CF_LIST:
        /* The rval is an embedded rlist (2d) */
-       for (rp = (struct Rlist *)item; rp != NULL; rp=rp->next)
+       for (rp = (struct Rlist *)rval.item; rp != NULL; rp=rp->next)
           {
+          char naked[CF_BUFSIZE] = "";
           if (IsNakedVar(rp->item,'@'))
              {
              GetNaked(naked,rp->item);
 
-             if (GetVariable(CONTEXTID,naked,&rval,&rtype) != cf_notype)
+             void *rv;
+             if (GetVariable(CONTEXTID,naked,&rv,&rtype) != cf_notype)
                 {
                 switch (rtype)
                    {
                    case CF_LIST:
-                       for (srp = (struct Rlist *)rval; srp != NULL; srp=srp->next)
+                       for (srp = (struct Rlist *)rv; srp != NULL; srp=srp->next)
                           {
                           AppendRlist(&start,srp->item,srp->type);
                           }
@@ -282,13 +280,13 @@ switch(type)
              }
           }
        
-       return start;
+       return (struct Rval) { start, CF_LIST };
    }
 
-//snprintf(output,CF_BUFSIZE,"Unknown type %c in CopyRvalItem - should not happen",type);
-//FatalError(output);
-return NULL;
+CfOut(cf_verbose, "", "Unknown type %c in CopyRvalItem - should not happen", rval.rtype);
+return (struct Rval) { NULL, rval.rtype };
 }
+
 
 /*******************************************************************/
 
@@ -579,7 +577,7 @@ else
    lp->next = rp;
    }
 
-rp->item = CopyRvalItem(item,type);
+rp->item = CopyRvalItem((struct Rval) { item, type }).item;
 rp->type = type;  /* scalar, builtin function */
 
 ThreadLock(cft_lock);
@@ -646,7 +644,7 @@ rp = xmalloc(sizeof(struct Rlist));
 ThreadUnlock(cft_system);
 
 rp->next = *start;
-rp->item = CopyRvalItem(item,type);
+rp->item = CopyRvalItem((struct Rval) { item, type }).item;
 rp->type = type;  /* scalar, builtin function */
 
 if (type == CF_LIST)

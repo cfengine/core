@@ -35,7 +35,7 @@ void PopStack(struct Rlist **liststart, void **item,size_t size);
 void PushStack(struct Rlist **liststart,void *item);
 int IsInListOfRegex(struct Rlist *list,char *str);
 
-void *CopyRvalItem(const void *item, char type);
+struct Rval CopyRvalItem(struct Rval rval);
 void DeleteRvalItem(struct Rval rval);
 struct Rlist *CopyRlist(struct Rlist *list);
 int CompareRval(void *rval1, char rtype1, void *rval2, char rtype2);

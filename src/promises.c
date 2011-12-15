@@ -106,7 +106,7 @@ if (pp->promiser)
 
 if (pp->promisee)
    {
-   pcopy->promisee = CopyRvalItem(pp->promisee,pp->petype);
+   pcopy->promisee = CopyRvalItem((struct Rval) { pp->promisee, pp->petype }).item;
    pcopy->petype = pp->petype;
    }
 
@@ -225,8 +225,8 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
             for (scp = bp->conlist; scp != NULL; scp = scp->next)
                {
                CfDebug("Doing sublval = %s (promises.c)\n",scp->lval);
-               rnew = CopyRvalItem(scp->rval,scp->type);
-               AppendConstraint(&(pcopy->conlist),scp->lval,rnew,scp->type,scp->classes,false);
+               struct Rval newrv = CopyRvalItem((struct Rval) { scp->rval,scp->type });
+               AppendConstraint(&(pcopy->conlist),scp->lval,newrv.item,newrv.rtype,scp->classes,false);
                }
             }
          }
@@ -238,8 +238,8 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
          CfOut(cf_error,"","Apparent body \"%s()\" was undeclared, but used in a promise near line %d of %s (possible unquoted literal value)",bodyname,pp->offset.line,(pp->audit)->filename);
          }
       
-      rnew = CopyRvalItem(cp->rval,cp->type);
-      scp = AppendConstraint(&(pcopy->conlist),cp->lval,rnew,cp->type,cp->classes,false);
+      struct Rval newrv = CopyRvalItem((struct Rval) { cp->rval, cp->type });
+      scp = AppendConstraint(&(pcopy->conlist),cp->lval,newrv.item,newrv.rtype,cp->classes,false);
       }
    }
 

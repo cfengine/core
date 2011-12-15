@@ -150,14 +150,12 @@ switch (rval.rtype)
           }
        else
           {
-          final.item = CopyRvalItem(rval.item,rval.rtype);
-          final.rtype = rval.rtype;
+          final = CopyRvalItem(rval);
           }
        break;
 
    default:
-       final.item = CopyRvalItem(rval.item,rval.rtype);
-       final.rtype = rval.rtype;
+       final = CopyRvalItem(rval);
        break;
    }
 
@@ -725,8 +723,7 @@ else
       {
       if (IsBuiltinFnCall(rval,rtype))
          {
-         returnval.item = CopyRvalItem(rval,rtype);
-         returnval.rtype = rtype;
+         returnval = CopyRvalItem((struct Rval) { rval, rtype });
          }
       else
          {
@@ -1093,16 +1090,16 @@ if (rval != NULL)
       if (strcmp(cp->lval,"int") == 0)
          {
          snprintf(conv,CF_MAXVARSIZE,"%ld",Str2Int(cp->rval));
-         rval = CopyRvalItem(conv,cp->type);
+         rval = CopyRvalItem((struct Rval) { conv, cp->type }).item;
          }
       else if (strcmp(cp->lval,"real") == 0)
          {
          snprintf(conv,CF_MAXVARSIZE,"%lf",Str2Double(cp->rval));
-         rval = CopyRvalItem(conv,cp->type);
+         rval = CopyRvalItem((struct Rval) { conv, cp->type }).item;
          }
       else
          {
-         rval = CopyRvalItem(cp->rval,cp->type);
+         rval = CopyRvalItem((struct Rval) { cp->rval, cp->type }).item;
          }
       type = cp->type;
       }

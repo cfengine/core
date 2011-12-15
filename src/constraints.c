@@ -118,7 +118,7 @@ for (cp = conlist; cp != NULL; cp = cp->next)
       {
       if (cp->rval)
          {
-         DeleteRvalItem(cp->rval,cp->type);
+         DeleteRvalItem((struct Rval) { cp->rval, cp->type });
          }      
 
       cp->rval = xstrdup(rval);
@@ -144,7 +144,7 @@ for (cp = conlist; cp != NULL; cp = next)
 
    if (cp->rval)
       {
-      DeleteRvalItem(cp->rval,cp->type);
+      DeleteRvalItem((struct Rval) { cp->rval, cp->type });
       }
 
    if (cp->lval)

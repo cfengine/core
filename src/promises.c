@@ -319,7 +319,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       {
       returnval = EvaluateFinalRval(scopeid,cp->rval,cp->type,false,pp);   
       final = ExpandDanglers(scopeid,returnval,pp);
-      DeleteRvalItem(returnval.item,returnval.rtype);
+      DeleteRvalItem(returnval);
       }
 
    AppendConstraint(&(pcopy->conlist),cp->lval,final.item,final.rtype,cp->classes,false);
@@ -621,7 +621,7 @@ if (pp->promiser != NULL)
 
 if (pp->promisee != NULL)
    {
-   DeleteRvalItem(pp->promisee,pp->petype);
+   DeleteRvalItem((struct Rval) { pp->promisee, pp->petype });
    }
 
 free(pp->bundle);
@@ -648,7 +648,7 @@ free(pp->promiser);
 
 if (pp->promisee)
    {
-   DeleteRvalItem(pp->promisee,pp->petype);
+   DeleteRvalItem((struct Rval) { pp->promisee, pp->petype });
    }
 
 if (pp->classes)
@@ -661,7 +661,7 @@ free(pp->bundle);
 for (cp = pp->conlist; cp != NULL; cp=cp->next)
    {
    free(cp->lval);
-   DeleteRvalItem(cp->rval,cp->type);
+   DeleteRvalItem((struct Rval) { cp->rval, cp->type });
    }
 
 free(pp);

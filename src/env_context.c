@@ -97,7 +97,7 @@ switch (cp->type)
        for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
           {
           newret = EvaluateFinalRval("this",rp->item,rp->type,true,pp);
-          DeleteRvalItem(rp->item,rp->type);
+          DeleteRvalItem((struct Rval) { rp->item, rp->type });
           rp->item = newret.item;
           rp->type = newret.rtype;
           }
@@ -106,7 +106,7 @@ switch (cp->type)
    default:
 
        newret = ExpandPrivateRval("this",cp->rval,cp->type);
-       DeleteRvalItem(cp->rval,cp->type);
+       DeleteRvalItem((struct Rval) {cp->rval, cp->type });
        cp->rval = newret.item;
        cp->type = newret.rtype;
        break;

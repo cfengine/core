@@ -641,7 +641,7 @@ if (VINPUTLIST != NULL)
                 break;
             }
 
-         DeleteRvalItem(returnval.item,returnval.rtype);
+         DeleteRvalItem(returnval);
          }
 
       HashVariables(NULL);
@@ -790,7 +790,7 @@ if (VINPUTLIST != NULL)
                 break;
             }
 
-         DeleteRvalItem(returnval.item,returnval.rtype);
+         DeleteRvalItem(returnval);
 
          if (result)
             {
@@ -1677,7 +1677,7 @@ for (cp = controllist; cp != NULL; cp=cp->next)
       }
 
    
-   DeleteRvalItem(returnval.item,returnval.rtype);
+   DeleteRvalItem(returnval);
    }
 }
 

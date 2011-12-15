@@ -333,7 +333,7 @@ for (rp = (struct Rlist *)list; rp != NULL; rp=rp->next)
       }
 
    AppendRlist(&start,returnval.item,returnval.rtype);
-   DeleteRvalItem(returnval.item,returnval.rtype);
+   DeleteRvalItem(returnval);
    }
 
 return start;
@@ -1008,7 +1008,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
              res = EvaluateFunctionCall(cp->rval,NULL);
              excluded = IsExcluded(res.item);
 
-             DeleteRvalItem(res.item,res.rtype);
+             DeleteRvalItem(res);
 
              if(excluded)
                 {
@@ -1082,7 +1082,7 @@ if (rval != NULL)
       if (FNCALL_STATUS.status == FNCALL_FAILURE)
          {
          /* We do not assign variables to failed fn calls */
-         DeleteRvalItem(rval,type);
+         DeleteRvalItem((struct Rval) { rval, type });
          return;
          }
       }
@@ -1117,7 +1117,7 @@ if (rval != NULL)
       /* See if the variable needs recursively expanding again */
       
       returnval = EvaluateFinalRval(scope,rval,type,true,pp);
-      DeleteRvalItem(rval,type);
+      DeleteRvalItem((struct Rval) { rval, type });
 
       // freed before function exit
       rval = returnval.item;
@@ -1155,7 +1155,7 @@ if (rval != NULL)
    if (IsCf3VarString(pp->promiser))
       {
       // Unexpanded variables, we don't do anything with
-      DeleteRvalItem(rval,type);
+      DeleteRvalItem((struct Rval) { rval, type });
       return;
       }
    
@@ -1163,7 +1163,7 @@ if (rval != NULL)
       {
       CfOut(cf_error,""," !! Variable identifier contains illegal characters");
       PromiseRef(cf_error,pp);
-      DeleteRvalItem(rval,type);
+      DeleteRvalItem((struct Rval) { rval, type });
       return;
       }
 
@@ -1198,7 +1198,7 @@ else
    cfPS(cf_noreport,CF_FAIL,"",pp,a," !! Couldn't add variable %s",pp->promiser);
    }     
 
- DeleteRvalItem(rval,type);
+DeleteRvalItem((struct Rval) { rval, type });
 }
 
 /*********************************************************************/

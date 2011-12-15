@@ -414,7 +414,7 @@ if (list != NULL)
       
       if (rl->item != NULL)
          {
-         DeleteRvalItem(rl->item,rl->type);
+         DeleteRvalItem((struct Rval) { rl->item, rl->type });
          }
       
       free(rl);
@@ -973,51 +973,51 @@ switch (rval.rtype)
 
 /*******************************************************************/
 
-void DeleteRvalItem(void *rval, char type)
+void DeleteRvalItem(struct Rval rval)
 
 { struct Rlist *clist, *next = NULL;
 
-CfDebug("DeleteRvalItem(%c)",type);
+CfDebug("DeleteRvalItem(%c)",rval.rtype);
 
 if (DEBUG)
    {
-   ShowRval(stdout, (struct Rval) { rval, type });
+   ShowRval(stdout, rval);
    }
 
 CfDebug("\n");
 
-if (rval == NULL)
+if (rval.item == NULL)
    {
    CfDebug("DeleteRval NULL\n");
    return;
    }
 
-switch(type)
+switch(rval.rtype)
    {
    case CF_SCALAR:
 
        ThreadLock(cft_lock);
-       free((char *)rval);
+       free((char *)rval.item);
        ThreadUnlock(cft_lock);
        break;
 
-   case CF_ASSOC:
+   case CF_ASSOC: /* What? */
 
-      DeleteAssoc((struct CfAssoc *)rval);
+      DeleteAssoc((struct CfAssoc *)rval.item);
       break;
 
    case CF_LIST:
      
        /* rval is now a list whose first item is clist->item */
 
-     for(clist = (struct Rlist *)rval; clist != NULL; clist = next)
+     for(clist = (struct Rlist *)rval.item; clist != NULL; clist = next)
        {
 
        next = clist->next;
 
        if (clist->item)
           {
-          DeleteRvalItem(clist->item,clist->type);
+          DeleteRvalItem((struct Rval) { clist->item,clist->type });
           }
 
        free(clist);
@@ -1027,11 +1027,8 @@ switch(type)
        
    case CF_FNCALL:
 
-       if (rval)
-          {
-          DeleteFnCall((struct FnCall *)rval);
-          }
-       break;
+      DeleteFnCall((struct FnCall *)rval.item);
+      break;
 
    default:
        CfDebug("Nothing to do\n");

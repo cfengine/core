@@ -806,15 +806,6 @@ struct Constraint
 
 /*************************************************************************/
 
-struct Rval
-   {
-   void *item;        /* (char *), (struct Rlist *), or (struct FnCall)  */
-   char rtype;        /* Points to CF_SCALAR, CF_LIST, CF_FNCALL usually */
-   };
-
-
-/*************************************************************************/
-
 struct FnCall
    {
    char *name;

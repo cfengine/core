@@ -891,7 +891,7 @@ if (assoc)
             CfOut(cf_inform,""," !! in bundle parameterization\n",fname,lineno);
             }
          }
-      DeleteRvalItem(assoc->rval, assoc->rtype);
+      DeleteRvalItem((struct Rval) { assoc->rval, assoc->rtype });
       assoc->rval = CopyRvalItem(rval, rtype);
       assoc->rtype = rtype;
       assoc->dtype = dtype;
@@ -959,7 +959,7 @@ while ((assoc = HashIteratorNext(&i)))
             CfDebug("Rewriting expanded type for %s from %s to %s\n",assoc->lval,CF_DATATYPES[assoc->dtype], (char*)rp->state_ptr->item);
 
             // must first free existing rval in scope, then allocate new (should always be string)
-            DeleteRvalItem(assoc->rval,assoc->rtype);
+            DeleteRvalItem((struct Rval) { assoc->rval, assoc->rtype });
 
             // avoids double free - borrowing value from lol (freed in DeleteScope())
             assoc->rval = xstrdup(rp->state_ptr->item);

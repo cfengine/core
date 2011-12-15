@@ -225,7 +225,7 @@ selection:            id                         /* BODY ONLY */
                            }
                         else
                            {
-                           DeleteRvalItem(P.rval,P.rtype);
+                           DeleteRvalItem((struct Rval) { P.rval, P.rtype });
                            }
 
                         if (strcmp(P.blockid,"control") == 0 && strcmp(P.blocktype,"common") == 0)
@@ -403,7 +403,7 @@ constraint:           id                        /* BUNDLE ONLY */
                            }
                         else
                            {
-                           DeleteRvalItem(P.rval,P.rtype);
+                           DeleteRvalItem((struct Rval) { P.rval, P.rtype });
                            }
                         };
 
@@ -600,7 +600,7 @@ gaitem:               ID
                           {
                           /* Careful about recursion */
                           AppendRlist(&P.giveargs[P.arg_nesting],(void *)P.currentfncall[P.arg_nesting+1],CF_FNCALL);
-                          DeleteRvalItem(P.currentfncall[P.arg_nesting+1],CF_FNCALL);
+                          DeleteRvalItem((struct Rval) { P.currentfncall[P.arg_nesting+1], CF_FNCALL });
                           };
 
 %%

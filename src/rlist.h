@@ -4,6 +4,12 @@
 #include "cf.defs.h"
 #include "conf.h"
 
+struct Rval
+   {
+   void *item;        /* (char *), (struct Rlist *), or (struct FnCall)  */
+   char rtype;        /* Points to CF_SCALAR, CF_LIST, CF_FNCALL usually */
+   };
+
 struct Rlist
    {
    void *item;
@@ -30,7 +36,7 @@ void PushStack(struct Rlist **liststart,void *item);
 int IsInListOfRegex(struct Rlist *list,char *str);
 
 void *CopyRvalItem(const void *item, char type);
-void DeleteRvalItem(void *rval, char type);
+void DeleteRvalItem(struct Rval rval);
 struct Rlist *CopyRlist(struct Rlist *list);
 int CompareRval(void *rval1, char rtype1, void *rval2, char rtype2);
 void DeleteRlist(struct Rlist *list);

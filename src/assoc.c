@@ -77,7 +77,7 @@ if (ap->lval)
 
 if (ap->rval)
    { 
-   DeleteRvalItem(ap->rval,ap->rtype);
+   DeleteRvalItem((struct Rval) { ap->rval, ap->rtype });
    }
 
 

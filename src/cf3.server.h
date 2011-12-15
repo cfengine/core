@@ -31,12 +31,7 @@
 #ifndef CFENGINE_CF3_SERVER_H
 #define CFENGINE_CF3_SERVER_H
 
-#define queuesize 50
 #define connection 1
-#define RFC931_PORT 113
-#define CF_BUFEXT 128
-
-/**********************************************************************/
 
 struct cfd_connection
    {
@@ -60,24 +55,12 @@ struct cfd_connection
    char output[CF_BUFSIZE*2];   /* Threadsafe output channel */
    };
 
-struct cfd_get_arg
-   {
-   struct cfd_connection *connect;
-   int encrypt;
-   int buf_size;
-   char *replybuff;
-   char *replyfile;
-   };
-
-/*******************************************************************/
-/* PARSER                                                          */
-/*******************************************************************/
+/**********************************************************************/
 
 extern char CFRUNCOMMAND[];
-extern time_t CFDSTARTTIME;
 
-#ifdef RE_DUP_MAX
-# undef RE_DUP_MAX
+#ifdef HAVE_NOVA
+int Nova_ReturnQueryData(struct cfd_connection *conn,char *menu);
 #endif
 
 #endif

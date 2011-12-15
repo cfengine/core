@@ -32,6 +32,18 @@
 #include "generic_agent.h"
 #include "cf3.server.h"
 
+#define QUEUESIZE 50
+#define CF_BUFEXT 128
+
+struct cfd_get_arg
+   {
+   struct cfd_connection *connect;
+   int encrypt;
+   int buf_size;
+   char *replybuff;
+   char *replyfile;
+   };
+
 int main (int argc,char *argv[]);
 int OpenReceiverChannel (void);
 void PurgeOldConnections (struct Item **list,time_t now);
@@ -77,7 +89,7 @@ in_addr_t GetInetAddr (char *host);
 static void StartServer (int argc, char **argv, struct GenericAgentConfig config);
 
 char CFRUNCOMMAND[CF_BUFSIZE];
-time_t CFDSTARTTIME;
+static time_t CFDSTARTTIME;
 
 static const char *PROTOCOL[] =
    {
@@ -344,7 +356,7 @@ signal(SIGCHLD,SIG_IGN);
 signal(SIGUSR1,HandleSignals);
 signal(SIGUSR2,HandleSignals);
  
-if (listen(sd,queuesize) == -1)
+if (listen(sd,QUEUESIZE) == -1)
    {
    CfOut(cf_error,"listen","listen failed");
    exit(1);

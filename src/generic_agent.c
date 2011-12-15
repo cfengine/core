@@ -51,7 +51,6 @@ static char *InputLocation(char *filename);
 #if !defined(__MINGW32__)
 static void OpenLog(int facility);
 #endif
-static void Cf3OpenLog(int facility);
 static bool VerifyBundleSequence(enum cfagenttype agent, struct Rlist *bundlesequence);
 
 /*****************************************************************************/

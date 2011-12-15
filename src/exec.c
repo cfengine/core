@@ -69,7 +69,8 @@ static int CompareResult(char *filename,char *prev_file);
 static void MailResult(char *file,char *to);
 static int Dialogue(int sd,char *s);
 static void Apoptosis(void);
-static void StartServer(int argc,char **argv);
+
+void StartServer(int argc,char **argv);
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -378,7 +379,7 @@ for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
 
 /*****************************************************************************/
 
-static void StartServer(int argc,char **argv)
+void StartServer(int argc,char **argv)
 
 { int time_to_run = false;
   time_t now = time(NULL);

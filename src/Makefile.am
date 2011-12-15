@@ -125,7 +125,9 @@ libpromises_la_DEPENDENCIES = ../pub/libcfpub.la $(NOVA_LDADD) $(CONSTELLATION_L
 sbin_PROGRAMS = cf-know cf-promises cf-agent cf-monitord cf-serverd cf-execd cf-runagent cf-key cf-report
 
 if HAVE_NOVA
+if MONGO
   sbin_PROGRAMS += cf-hub
+endif
 endif
 
 cf_promises_SOURCES =                                                   \
@@ -176,10 +178,12 @@ cf_execd_SOURCES =                                                      \
         exec.c
 
 if HAVE_NOVA
+if MONGO
 cf_hub_SOURCES =
 
 cf_hub_LDADD =                                                          \
         ../nova/src/libcfhub.la libpromises.la
+endif
 endif
 
 cf_runagent_SOURCES =                                                   \

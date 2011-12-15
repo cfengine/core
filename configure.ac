@@ -155,6 +155,9 @@ fi
 
 dnl Enterprise extensions
 
+dnl Mongo is disabled unless overriden in subproject
+AM_CONDITIONAL(MONGO, false)
+
 m4_indir(incstart[]incend, [nova/options.m4])
 AM_CONDITIONAL([HAVE_NOVA], [test "x$with_nova" != xno && test -d ${srcdir}/nova])
 m4_indir(incstart[]incend, [constellation/options.m4])

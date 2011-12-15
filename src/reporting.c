@@ -302,7 +302,7 @@ fprintf(FREPORT_HTML,"<a href=\"#class_context\">context</a> is %s%s%s <br><hr>\
 if (pp->promisee)
    {
    fprintf(FREPORT_HTML,"Resource object %s\'%s\'%s promises %s (about %s) to",CFH[cfx_object][cfb],pp->promiser,CFH[cfx_object][cfe],CFH[cfx_object][cfb],pp->agentsubtype);
-   ShowRval(FREPORT_HTML,pp->promisee,pp->petype);
+   ShowRval(FREPORT_HTML, (struct Rval) { pp->promisee, pp->petype });
    fprintf(FREPORT_HTML,"%s\n\n",CFH[cfx_object][cfe]);
    }
 else
@@ -314,7 +314,7 @@ Indent(indent);
 if (pp->promisee != NULL)
    {
    fprintf(FREPORT_TXT,"%s promise by \'%s\' -> ",pp->agentsubtype,pp->promiser);
-   ShowRval(FREPORT_TXT,pp->promisee,pp->petype);
+   ShowRval(FREPORT_TXT, (struct Rval) { pp->promisee, pp->petype });
    fprintf(FREPORT_TXT," if context is %s\n\n",pp->classes);
    }
 else
@@ -338,10 +338,10 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
           else
              {
              fprintf(FREPORT_HTML,"%s",CFH[cfx_rval][cfb]);
-             ShowRval(FREPORT_HTML,cp->rval,cp->type); /* literal */
+             ShowRval(FREPORT_HTML, (struct Rval) { cp->rval, cp->type }); /* literal */
              fprintf(FREPORT_HTML,"%s",CFH[cfx_rval][cfe]);
 
-             ShowRval(FREPORT_TXT,cp->rval,cp->type); /* literal */
+             ShowRval(FREPORT_TXT, (struct Rval) { cp->rval, cp->type }); /* literal */
              }
           break;
 
@@ -363,8 +363,8 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
              }
           else
              {
-             ShowRval(FREPORT_HTML,cp->rval,cp->type); /* literal */
-             ShowRval(FREPORT_TXT,cp->rval,cp->type); /* literal */
+             ShowRval(FREPORT_HTML, (struct Rval) { cp->rval,cp->type }); /* literal */
+             ShowRval(FREPORT_TXT, (struct Rval) { cp->rval,cp->type }); /* literal */
              }
           break;
       }
@@ -410,7 +410,7 @@ while ((assoc = HashIteratorNext(&i)))
    {
    fprintf(fp, "%8s %c %s = ", CF_DATATYPES[assoc->dtype],
            assoc->rtype, assoc->lval);
-   ShowRval(fp, assoc->rval, assoc->rtype);
+   ShowRval(fp, (struct Rval) { assoc->rval, assoc->rtype });
    fprintf(fp, "\n");
    }
 }
@@ -428,7 +428,7 @@ fprintf (fp,"<tr><th>dtype</th><th>rtype</th><th>identifier</th><th>Rvalue</th><
 while ((assoc = HashIteratorNext(&i)))
    {
    fprintf(fp,"<tr><th>%8s</th><td> %c</td><td> %s</td><td> ",CF_DATATYPES[assoc->dtype],assoc->rtype,assoc->lval);
-   ShowRval(fp,assoc->rval,assoc->rtype);
+   ShowRval(fp, (struct Rval) { assoc->rval, assoc->rtype });
    fprintf(fp,"</td></tr>\n");
    }
 
@@ -596,8 +596,8 @@ for (cp = body->conlist; cp != NULL; cp=cp->next)
 
    fprintf(FREPORT_HTML,"\'%s",CFH[cfx_rval][cfb]);
 
-   ShowRval(FREPORT_HTML,cp->rval,cp->type); /* literal */
-   ShowRval(FREPORT_TXT,cp->rval,cp->type); /* literal */
+   ShowRval(FREPORT_HTML, (struct Rval) { cp->rval, cp->type }); /* literal */
+   ShowRval(FREPORT_TXT, (struct Rval) { cp->rval, cp->type }); /* literal */
 
    fprintf(FREPORT_HTML,"\'%s",CFH[cfx_rval][cfe]);
 

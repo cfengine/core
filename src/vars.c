@@ -219,7 +219,7 @@ CfDebug("return final variable type=%s, value={\n",CF_DATATYPES[assoc->dtype]);
 
 if (DEBUG)
    {
-   ShowRval(stdout,assoc->rval,assoc->rtype);
+   ShowRval(stdout, (struct Rval) { assoc->rval, assoc->rtype });
    }
 CfDebug("}\n");
 

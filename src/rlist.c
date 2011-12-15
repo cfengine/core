@@ -34,7 +34,6 @@
 
 static int IsRegexIn(struct Rlist *list,char *s);
 static int CompareRlist(struct Rlist *list1, struct Rlist *list2);
-static void ShowRlistState(FILE *fp,struct Rlist *list);
 
 /*******************************************************************/
 
@@ -766,7 +765,7 @@ fprintf(fp," {");
 for (rp = list; rp != NULL; rp=rp->next)
    {
    fprintf(fp,"\'");
-   ShowRval(fp,rp->item,rp->type);
+   ShowRval(fp, (struct Rval) { rp->item, rp->type });
    fprintf(fp,"\'");
    
    if (rp->next != NULL)
@@ -941,37 +940,29 @@ return false;
 
 /*******************************************************************/
 
-static void ShowRlistState(FILE *fp,struct Rlist *list)
-
-{
-ShowRval(fp,list->state_ptr->item,list->type);
-}
-
-/*******************************************************************/
-
-void ShowRval(FILE *fp,void *rval,char type)
+void ShowRval(FILE *fp, struct Rval rval)
 
 {
 char buf[CF_BUFSIZE];
 
-if (rval == NULL)
+if (rval.item == NULL)
    {
    return;
    }
 
-switch (type)
+switch (rval.rtype)
    {
    case CF_SCALAR:
-       EscapeQuotes((char *)rval,buf,sizeof(buf));
+      EscapeQuotes((const char *)rval.item,buf,sizeof(buf));
        fprintf(fp,"%s",buf);
        break;
        
    case CF_LIST:
-       ShowRlist(fp,(struct Rlist *)rval);
+       ShowRlist(fp,(struct Rlist *)rval.item);
        break;
        
    case CF_FNCALL:
-       ShowFnCall(fp,(struct FnCall *)rval);
+       ShowFnCall(fp,(struct FnCall *)rval.item);
        break;
 
    case CF_NOPROMISEE:
@@ -990,7 +981,7 @@ CfDebug("DeleteRvalItem(%c)",type);
 
 if (DEBUG)
    {
-   ShowRval(stdout,rval,type);
+   ShowRval(stdout, (struct Rval) { rval, type });
    }
 
 CfDebug("\n");

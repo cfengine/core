@@ -105,7 +105,7 @@ static void ShowAssoc (struct CfAssoc *cp)
 {
 printf("ShowAssoc: lval = %s\n",cp->lval);
 printf("ShowAssoc: rval = ");
-ShowRval(stdout,cp->rval,cp->rtype);
+ShowRval(stdout, (struct Rval) { cp->rval,cp->rtype });
  
 printf("\nShowAssoc: dtype = %s\n",CF_DATATYPES[cp->dtype]);
 }

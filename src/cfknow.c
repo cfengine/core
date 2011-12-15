@@ -534,7 +534,7 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
           name = NULL;
           params = NULL;
           CfOut(cf_error,""," !! Illegal item found in bundlesequence: ");
-          ShowRval(stdout,rp->item,rp->type);
+          ShowRval(stdout, (struct Rval) { rp->item, rp->type });
           printf(" = %c\n",rp->type);
           ok = false;
           break;

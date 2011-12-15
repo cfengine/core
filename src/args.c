@@ -233,7 +233,7 @@ if (argnum != RlistLen(realargs) && !fn->varargs)
       printf("  arg[%d] range %s\t",i,argtemplate[i].pattern);
       if (rp != NULL)
          {
-         ShowRval(stdout,rp->item,rp->type);
+         ShowRval(stdout, (struct Rval) { rp->item, rp->type });
          rp=rp->next;
          }
       else

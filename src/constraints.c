@@ -707,7 +707,7 @@ CfDebug("  Post Check Constraint %s: %s =>",type,lval);
 
 if (DEBUG)
    {
-   ShowRval(stdout,rval,rvaltype);
+   ShowRval(stdout, (struct Rval) { rval, rvaltype });
    printf("\n");
    }
 

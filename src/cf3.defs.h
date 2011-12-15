@@ -741,7 +741,7 @@ struct Promise
    char *ref;                   /* comment */
    char ref_alloc;
    char *promiser;
-   void *promisee;              /* Can be a general rval */
+   void *promisee;              /* TODO: use struct Rval */
    char  petype;                /* rtype of promisee - list or scalar recipient? */
    char *bundle;
    struct Audit *audit;
@@ -842,7 +842,7 @@ struct Scope                         /* $(bundlevar) $(scope.name) */
 typedef struct CfAssoc        /* variable reference linkage , with metatype*/
    {
    char *lval;
-   void *rval;
+   void *rval; /* TODO: use struct Rval */
    char rtype;
    enum cfdatatype dtype;
    } CfAssoc;

@@ -207,7 +207,7 @@ CfDebug("CheckConstraint(%s,%s,",type,lval);
 
 if (DEBUG)
    {
-   ShowRval(stdout,rval,rvaltype);
+   ShowRval(stdout, (struct Rval) { rval, rvaltype });
    }
 
 CfDebug(")\n");
@@ -355,7 +355,7 @@ CfDebug("CheckSelection(%s,%s,",type,lval);
 
 if (DEBUG)
    {
-   ShowRval(stdout,rval,rvaltype);
+   ShowRval(stdout, (struct Rval) { rval, rvaltype });
    }
 
 CfDebug(")\n");
@@ -1680,7 +1680,7 @@ for (i = 0; i < PRETTY_PRINT_SPACES_PER_INDENT * indent_level; i++)
 static void RvalPrettyPrint(FILE *out, void *rval, char rval_type)
 {
 /* FIX: prettify */
-ShowRval(out, rval, rval_type);
+ShowRval(out, (struct Rval) { rval, rval_type });
 }
 
 static void AttributePrettyPrint(FILE *out, struct Constraint *attribute, int indent_level)

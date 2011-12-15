@@ -88,7 +88,7 @@ if (pp->promisee)
    CfDebug("CopyPromise(%s->",pp->promiser);
    if (DEBUG)
       {
-      ShowRval(stdout,pp->promisee,pp->petype);
+      ShowRval(stdout, (struct Rval) { pp->promisee, pp->petype });
       }
    CfDebug("\n");
    }
@@ -447,7 +447,7 @@ GetVariable("control_common","version",&retval,&rettype);
 if (pp->promisee != NULL)
    {
    fprintf(stdout,"%s promise by \'%s\' -> ",pp->agentsubtype,pp->promiser);
-   ShowRval(stdout,pp->promisee,pp->petype);
+   ShowRval(stdout, (struct Rval) { pp->promisee, pp->petype });
    fprintf(stdout," if context is %s\n",pp->classes);
    }
 else
@@ -470,7 +470,7 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
              }
           else
              {
-             ShowRval(stdout,cp->rval,cp->type); /* literal */
+             ShowRval(stdout, (struct Rval) { cp->rval, cp->type }); /* literal */
              }
           break;
 
@@ -489,7 +489,7 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
              }
           else
              {
-             ShowRval(stdout,cp->rval,cp->type); /* literal */
+             ShowRval(stdout, (struct Rval) { cp->rval, cp->type }); /* literal */
              }
           break;
 

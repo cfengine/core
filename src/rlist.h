@@ -54,6 +54,6 @@ struct Rlist *AlphaSortRListNames(struct Rlist *list);
 struct Rlist *RlistAppendReference(struct Rlist **start,void *item, char type);
 
 void ShowRlist(FILE *fp,struct Rlist *list);
-void ShowRval(FILE *fp,void *rval,char type);
+void ShowRval(FILE *fp, struct Rval rval);
 
 #endif

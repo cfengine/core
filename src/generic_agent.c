@@ -1194,7 +1194,7 @@ if (pp->promisee)
    if (VERBOSE)
       {
       printf(" -> ");
-      ShowRval(stdout,pp->promisee,pp->petype);
+      ShowRval(stdout, (struct Rval) { pp->promisee,pp->petype });
       }
    }
 
@@ -1991,7 +1991,7 @@ for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
       default:
          name = NULL;
          CfOut(cf_error,"","Illegal item found in bundlesequence: ");
-         ShowRval(stdout,rp->item,rp->type);
+         ShowRval(stdout, (struct Rval) { rp->item, rp->type });
          printf(" = %c\n",rp->type);
          ok = false;
          break;

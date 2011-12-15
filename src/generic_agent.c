@@ -1617,7 +1617,7 @@ for (cp = controllist; cp != NULL; cp=cp->next)
 
    DeleteVariable(scope,cp->lval);
 
-   if (!AddVariableHash(scope,cp->lval,returnval.item,returnval.rtype,
+   if (!AddVariableHash(scope,cp->lval,returnval,
                         GetControlDatatype(cp->lval,bp),cp->audit->filename,cp->offset.line))
       {
       CfOut(cf_error,""," !! Rule from %s at/before line %d\n",cp->audit->filename,cp->offset.line);

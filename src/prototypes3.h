@@ -1160,7 +1160,7 @@ int UnresolvedVariables(struct CfAssoc *ap,char rtype);
 int UnresolvedArgs(struct Rlist *args);
 int IsQualifiedVariable(char *var);
 int IsCfList(char *type);
-int AddVariableHash(const char *scope, const char *lval, const void *rval, char rtype, enum cfdatatype dtype, const char *fname, int no);
+int AddVariableHash(const char *scope, const char *lval, struct Rval rval, enum cfdatatype dtype, const char *fname, int no);
 void DeRefListsInHashtable(char *scope,struct Rlist *list,struct Rlist *reflist);
 
 /* verify_databases.c */

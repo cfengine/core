@@ -98,7 +98,7 @@ if (GetVariable(scope,lval,&rvald.item,&rvald.rtype) != cf_notype)
    DeleteScalar(scope,lval);
    }
 
-AddVariableHash(scope,lval,rval,CF_SCALAR,dt,NULL,0);
+AddVariableHash(scope,lval,(struct Rval) { rval, CF_SCALAR },dt,NULL,0);
 }
 
 /*******************************************************************/
@@ -132,7 +132,7 @@ if (GetVariable(scope,lval,&rvald.item,&rvald.rtype) != cf_notype)
    }
  
 sp1 = xstrdup(lval);
-AddVariableHash(scope,sp1,rval,CF_LIST,dt,NULL,0);
+AddVariableHash(scope,sp1, (struct Rval) { rval, CF_LIST },dt,NULL,0);
 }
 
 /*******************************************************************/
@@ -777,29 +777,29 @@ int IsCfList(char *type)
 
 /*******************************************************************/
 
-int AddVariableHash(const char *scope, const char *lval, const void *rval, char rtype, enum cfdatatype dtype, const char *fname, int lineno)
+int AddVariableHash(const char *scope, const char *lval, struct Rval rval, enum cfdatatype dtype, const char *fname, int lineno)
 
 { struct Scope *ptr;
   const struct Rlist *rp;
   struct CfAssoc *assoc;
 
-if (rtype == CF_SCALAR)
+if (rval.rtype == CF_SCALAR)
    {
-   CfDebug("AddVariableHash(%s.%s=%s (%s) rtype=%c)\n",scope,lval,(const char*)rval,CF_DATATYPES[dtype],rtype);
+   CfDebug("AddVariableHash(%s.%s=%s (%s) rtype=%c)\n",scope,lval,(const char*)rval.item,CF_DATATYPES[dtype],rval.rtype);
    }
 else
    {
-   CfDebug("AddVariableHash(%s.%s=(list) (%s) rtype=%c)\n",scope,lval,CF_DATATYPES[dtype],rtype);
+   CfDebug("AddVariableHash(%s.%s=(list) (%s) rtype=%c)\n",scope,lval,CF_DATATYPES[dtype],rval.rtype);
    }
 
 if (lval == NULL || scope == NULL)
    {
-   CfOut(cf_error,"","scope.value = %s.%s = %s",scope,lval,rval);
+   CfOut(cf_error,"","scope.value = %s.%s = %s",scope,lval,rval.item); /* ?? */
    ReportError("Bad variable or scope in a variable assignment");
    FatalError("Should not happen - forgotten to register a function call in fncall.c?");
    }
 
-if (rval == NULL)
+if (rval.item == NULL)
    {
    CfDebug("No value to assignment - probably a parameter in an unused bundle/body\n");
    return false;
@@ -815,20 +815,20 @@ if (strlen(lval) > CF_MAXVARSIZE)
 
 if (strcmp(scope,"body") != 0)
    {
-   switch (rtype)
+   switch (rval.rtype)
       {
       case CF_SCALAR:
 
-          if (StringContainsVar((char *)rval,lval))
+          if (StringContainsVar((char *)rval.item,lval))
              {
-             CfOut(cf_error,"","Scalar variable %s.%s contains itself (non-convergent): %s",scope,lval,(char *)rval);
+             CfOut(cf_error,"","Scalar variable %s.%s contains itself (non-convergent): %s",scope,lval,(char *)rval.item);
              return false;
              }
           break;
 
       case CF_LIST:
 
-          for (rp = rval; rp != NULL; rp=rp->next)
+          for (rp = rval.item; rp != NULL; rp=rp->next)
              {
              if (StringContainsVar((char *)rp->item,lval))
                 {
@@ -856,7 +856,7 @@ if (THIS_AGENT_TYPE == cf_common)
 
    if (strcmp(CONTEXTID,"this") != 0)
       {
-      ScanRval(CONTEXTID,&scalarvars,&listvars,rval,rtype,NULL);
+      ScanRval(CONTEXTID,&scalarvars,&listvars,rval.item,rval.rtype,NULL);
 
       if (listvars != NULL)
          {
@@ -872,14 +872,14 @@ assoc = HashLookupElement(ptr->hashtable, lval);
 
 if (assoc)
    {
-   if (CompareVariableValue(rval, rtype, assoc) == 0)
+   if (CompareVariableValue(rval.item, rval.rtype, assoc) == 0)
       {
       /* Identical value, keep as is */
       }
    else
       {
       /* Different value, bark and replace */
-      if (!UnresolvedVariables(assoc, rtype))
+      if (!UnresolvedVariables(assoc, rval.rtype))
          {
          CfOut(cf_inform,""," !! Duplicate selection of value for variable \"%s\" in scope %s",lval,ptr->scope);
          if (fname)
@@ -892,15 +892,15 @@ if (assoc)
             }
          }
       DeleteRvalItem((struct Rval) { assoc->rval, assoc->rtype });
-      assoc->rval = CopyRvalItem((struct Rval) { rval, rtype }).item;
-      assoc->rtype = rtype;
+      assoc->rval = CopyRvalItem(rval).item;
+      assoc->rtype = rval.rtype;
       assoc->dtype = dtype;
       CfDebug("Stored \"%s\" in context %s\n",lval,scope);
       }
    }
 else
    {
-   if (!HashInsertElement(ptr->hashtable, lval, rval, rtype, dtype))
+   if (!HashInsertElement(ptr->hashtable, lval, rval.item, rval.rtype, dtype))
       {
       FatalError("Hash table is full");
       }

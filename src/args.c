@@ -94,14 +94,14 @@ for (rpg = give, rpt = take; rpg != NULL && rpt != NULL; rpg=rpg->next,rpt=rpt->
           lval = (char *)rpt->item;
           rval = rpg->item;
           CfDebug("MapBodyArgs(SCALAR,%s,%s)\n", lval, (char*)rval);
-          AddVariableHash(scopeid,lval,rval,CF_SCALAR,dtg,NULL,0);
+          AddVariableHash(scopeid,lval, (struct Rval) { rval, CF_SCALAR }, dtg,NULL,0);
           break;
 
       case CF_LIST:
 
           lval = (char *)rpt->item;
           rval = rpg->item;
-          AddVariableHash(scopeid,lval,rval,CF_LIST,dtg,NULL,0);
+          AddVariableHash(scopeid,lval, (struct Rval) { rval, CF_LIST }, dtg,NULL,0);
           break;
           
       case CF_FNCALL:
@@ -130,7 +130,7 @@ for (rpg = give, rpt = take; rpg != NULL && rpt != NULL; rpg=rpg->next,rpt=rpt->
              lval = (char *)rpt->item;
              rval = rpg->item;
 
-             AddVariableHash(scopeid,lval,rval,CF_SCALAR,dtg,NULL,0);
+             AddVariableHash(scopeid,lval, (struct Rval) { rval, CF_SCALAR }, dtg,NULL,0);
              }
 
           break;

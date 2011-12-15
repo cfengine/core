@@ -1179,7 +1179,7 @@ if (rval != NULL)
          }
       }
 
-   if (!AddVariableHash(scope,pp->promiser,rval,type,Typename2Datatype(cp->lval),
+   if (!AddVariableHash(scope,pp->promiser, (struct Rval) { rval, type }, Typename2Datatype(cp->lval),
                         cp->audit->filename, cp->offset.line))
       {
       CfOut(cf_verbose,"","Unable to converge %s.%s value (possibly empty or infinite regression)\n",scope,pp->promiser);

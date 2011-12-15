@@ -124,10 +124,12 @@ else
 
 /***************************************************************************/
 
-char *EscapeQuotes(char *s, char *out, int outSz)
+char *EscapeQuotes(const char *s, char *out, int outSz)
 
-{ char *spt,*spf;
-  int i = 0;
+{
+char *spt;
+const char *spf;
+int i = 0;
 
 memset(out,0,outSz);
  

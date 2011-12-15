@@ -246,7 +246,7 @@ void DeleteAllPromiseIds(void);
 
 char *EscapeJson(char *s, char *out, int outSz);
 char *EscapeRegex(char *s, char *out, int outSz);
-char *EscapeQuotes(char *s, char *out, int outSz);
+char *EscapeQuotes(const char *s, char *out, int outSz);
 char *MapAddress (char *addr);
 void IPString2KeyDigest(char *ipv4,char *result);
 enum cfhypervisors Str2Hypervisors(char *s);

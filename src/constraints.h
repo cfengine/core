@@ -16,7 +16,9 @@ struct Constraint
    struct SourceOffset offset;
    };
 
+
 struct Constraint *AppendConstraint(struct Constraint **conlist,char *lval, void *rval, char type,char *classes,int body);
+struct Constraint *GetConstraint(struct Promise *promise, const char *lval);
 void DeleteConstraintList(struct Constraint *conlist);
 void EditScalarConstraint(struct Constraint *conlist,char *lval,char *rval);
 void *GetConstraintValue(char *lval, struct Promise *promise, char type);

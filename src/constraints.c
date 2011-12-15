@@ -35,7 +35,7 @@
 
 static struct PromiseIdent *PromiseIdExists(char *handle);
 static void DeleteAllPromiseIdsRecurse(struct PromiseIdent *key);
-static int VerifyConstraintName(char *lval);
+static int VerifyConstraintName(const char *lval);
 static void PostCheckConstraint(char *type,char *bundle,char *lval,void *rval,char rvaltype);
 
 /*******************************************************************/
@@ -544,44 +544,53 @@ return retval;
 
 /*****************************************************************************/
 
-void *GetConstraintValue(char *lval,struct Promise *pp,char rtype)
+struct Constraint *GetConstraint(struct Promise *promise, const char *lval)
+{
+struct Constraint *cp = NULL, *retval = NULL;
 
-{ struct Constraint *cp;
-  void *retval = NULL;
-
-if (pp == NULL)
+if (promise == NULL)
    {
    return NULL;
    }
-  
+
 if (!VerifyConstraintName(lval))
    {
    CfOut(cf_error,""," !! Self-diagnostic: Constraint type \"%s\" is not a registered type\n",lval);
    }
 
-for (cp = pp->conlist; cp != NULL; cp=cp->next)
+for (cp = promise->conlist; cp != NULL; cp = cp->next)
    {
-   if (strcmp(cp->lval,lval) == 0)
+   if (strcmp(cp->lval, lval) == 0)
       {
       if (IsDefinedClass(cp->classes))
-         {
+	 {
          if (retval != NULL)
             {
-            CfOut(cf_error,""," !! Inconsistent \"%s\" constraints break this promise\n",lval);
-            PromiseRef(cf_error,pp);
+            CfOut(cf_error,""," !! Inconsistent \"%s\" constraints break this promise\n", lval);
+            PromiseRef(cf_error, promise);
             }
 
-         retval = cp->rval;
-
-         if (cp->type != rtype)
-            {
-            return NULL;
-            }
-         }
+	 retval = cp;
+	 }
       }
    }
 
 return retval;
+}
+
+/*****************************************************************************/
+
+void *GetConstraintValue(char *lval, struct Promise *promise, char rtype)
+{
+struct Constraint *constraint = GetConstraint(promise, lval);
+if (constraint && constraint->type == rtype)
+   {
+   return constraint->rval;
+   }
+else
+   {
+   return NULL;
+   }
 }
 
 /*****************************************************************************/
@@ -787,7 +796,7 @@ for (i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
 
 /*****************************************************************************/
 
-static int VerifyConstraintName(char *lval)
+static int VerifyConstraintName(const char *lval)
 
 { struct SubTypeSyntax ss;
   int i,j,l,m;

@@ -1429,11 +1429,18 @@ return false;
 int VarClassExcluded(struct Promise *pp,char **classes)
 
 {
+struct Constraint *cp = GetConstraint(pp, "ifvarclass");
+
+if (cp == NULL)
+   {
+   return false;
+   }
+
 *classes = (char *)GetConstraintValue("ifvarclass",pp,CF_SCALAR);
 
 if (*classes == NULL)
    {
-   return false;
+   return true;
    }
 
 if (strchr(*classes,'$') || strchr(*classes,'@'))

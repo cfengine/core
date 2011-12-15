@@ -1,0 +1,28 @@
+# Ensures correct DNS settings for Windows DNS clients
+# Tested on: Windows Server 2003 32-bit, Windows Server 2008 R2 64-bit
+
+
+body common control
+{
+bundlesequence => { "windows_dns" };
+host_licenses_paid => "1";
+}
+
+bundle agent windows_dns
+{
+vars:
+  "dns_servers" string => "192.168.1.3 192.168.1.4";
+  
+  "keys" string => execresult("$(sys.winsysdir)\reg.exe query HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces", "noshell");
+  "key_list" slist => splitstring("$(keys)", "\r\n", 50);
+  
+  
+databases:
+  "$(key_list)"
+    comment            => "Ensure DNS client configuration is correct",
+    handle             => canonify("windows_dns_$(dns_servers)"),
+    database_operation => "create",
+    database_rows      => { "NameServer,REG_SZ,$(dns_servers)" },
+    database_type      => "ms_registry",
+    ifvarclass         => not( strcmp("$(key_list)", "" ));
+}

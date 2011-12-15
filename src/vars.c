@@ -900,7 +900,7 @@ if (assoc)
    }
 else
    {
-   if (!HashInsertElement(ptr->hashtable, lval, rval.item, rval.rtype, dtype))
+   if (!HashInsertElement(ptr->hashtable, lval, rval, dtype))
       {
       FatalError("Hash table is full");
       }

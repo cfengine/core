@@ -731,7 +731,7 @@ AssocHashTable *HashInit(void);
 /* Insert element if it does not exist in hash table. Returns false if element
    already exists in table or if table is full. */
 bool HashInsertElement(AssocHashTable *hashtable, const char *element,
-                       const void *rval, char rtype, enum cfdatatype dtype);
+                       struct Rval rval, enum cfdatatype dtype);
 
 /* Deletes element from hashtable, returning whether element was found */
 bool HashDeleteElement(AssocHashTable *hashtable, const char *element);

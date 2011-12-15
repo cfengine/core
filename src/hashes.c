@@ -78,7 +78,7 @@ CfAssoc *assoc;
 
 while ((assoc = HashIteratorNext(&i)))
    {
-   HashInsertElement(newhash, assoc->lval, assoc->rval, assoc->rtype, assoc->dtype);
+   HashInsertElement(newhash, assoc->lval, (struct Rval) { assoc->rval, assoc->rtype }, assoc->dtype);
    }
 }
 
@@ -121,7 +121,7 @@ hashtable->buckets = buckets;
 /*******************************************************************/
 
 static bool HugeHashInsertElement(AssocHashTable *hashtable, const char *element,
-                                  const void *rval, char rtype, enum cfdatatype dtype)
+                                  struct Rval rval, enum cfdatatype dtype)
 {
 int bucket = GetHash(element);
 int i = bucket;
@@ -131,7 +131,7 @@ do
    /* Free bucket is found */
    if (hashtable->buckets[i] == NULL || hashtable->buckets[i] == HASH_ENTRY_DELETED)
       {
-      hashtable->buckets[i] = NewAssoc(element, rval, rtype, dtype);
+      hashtable->buckets[i] = NewAssoc(element, rval.item, rval.rtype, dtype);
       return true;
       }
 
@@ -152,14 +152,14 @@ return false;
 /*******************************************************************/
 
 static bool TinyHashInsertElement(AssocHashTable *hashtable, const char *element,
-                                  const void *rval, char rtype, enum cfdatatype dtype)
+                                  struct Rval rval, enum cfdatatype dtype)
 {
 int i;
 
 if (hashtable->array.size == TINY_LIMIT)
    {
    HashConvertToHuge(hashtable);
-   return HugeHashInsertElement(hashtable, element, rval, rtype, dtype);
+   return HugeHashInsertElement(hashtable, element, rval, dtype);
    }
 
 for (i = 0; i < hashtable->array.size; ++i)
@@ -170,22 +170,22 @@ for (i = 0; i < hashtable->array.size; ++i)
       }
    }
 
-hashtable->array.values[hashtable->array.size++] = NewAssoc(element, rval, rtype, dtype);
+hashtable->array.values[hashtable->array.size++] = NewAssoc(element, rval.item, rval.rtype, dtype);
 return true;
 }
 
 /*******************************************************************/
 
 bool HashInsertElement(AssocHashTable *hashtable, const char *element,
-                       const void *rval, char rtype, enum cfdatatype dtype)
+                       struct Rval rval, enum cfdatatype dtype)
 {
 if (hashtable->huge)
    {
-   return HugeHashInsertElement(hashtable, element, rval, rtype, dtype);
+   return HugeHashInsertElement(hashtable, element, rval, dtype);
    }
 else
    {
-   return TinyHashInsertElement(hashtable, element, rval, rtype, dtype);
+   return TinyHashInsertElement(hashtable, element, rval, dtype);
    }
 }
 

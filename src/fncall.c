@@ -39,17 +39,17 @@ static void ClearFnCallStatus(void);
 
 /*******************************************************************/
 
-int IsBuiltinFnCall(void *rval,char rtype)
+int IsBuiltinFnCall(struct Rval rval)
 
 {
 struct FnCall *fp;
 
-if (rtype != CF_FNCALL)
+if (rval.rtype != CF_FNCALL)
    {
    return false;
    }
 
-fp = (struct FnCall *)rval;
+fp = (struct FnCall *)rval.item;
 
 if (FindFunction(fp->name))
    {

@@ -724,7 +724,7 @@ else
       }
    else
       {
-      if (IsBuiltinFnCall(rval,rtype))
+      if (IsBuiltinFnCall((struct Rval) { rval, rtype }))
          {
          returnval = CopyRvalItem((struct Rval) { rval, rtype });
          }

@@ -690,7 +690,7 @@ int GetOwnerName(char *path, struct stat *lstatptr, char *owner, int ownerSz);
 
 /* fncall.c */
 
-int IsBuiltinFnCall(void *rval,char rtype);
+int IsBuiltinFnCall(struct Rval rval);
 struct FnCall *NewFnCall(char *name, struct Rlist *args);
 struct FnCall *CopyFnCall(struct FnCall *f);
 int PrintFnCall(char *buffer, int bufsize,struct FnCall *fp);

@@ -524,7 +524,7 @@ struct Rval ExpandBundleReference(char *scopeid,void *rval,char type);
 struct FnCall *ExpandFnCall(char *contextid,struct FnCall *f,int expandnaked);
 struct Rval ExpandPrivateRval(char *contextid, struct Rval rval);
 struct Rlist *ExpandList(char *scopeid,struct Rlist *list,int expandnaked);
-struct Rval EvaluateFinalRval(char *scopeid,void *rval,char rtype,int forcelist,struct Promise *pp);
+struct Rval EvaluateFinalRval(char *scopeid, struct Rval rval,int forcelist,struct Promise *pp);
 int IsNakedVar(char *str,char vtype);
 void GetNaked(char *s1, char *s2);
 void ConvergeVarHashPromise(char *scope,struct Promise *pp,int checkdup);

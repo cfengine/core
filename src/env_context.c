@@ -96,7 +96,7 @@ switch (cp->type)
    case CF_LIST:
        for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
           {
-          newret = EvaluateFinalRval("this",rp->item,rp->type,true,pp);
+          newret = EvaluateFinalRval("this", (struct Rval) { rp->item, rp->type }, true,pp);
           DeleteRvalItem((struct Rval) { rp->item, rp->type });
           rp->item = newret.item;
           rp->type = newret.rtype;

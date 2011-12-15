@@ -149,7 +149,7 @@ switch (rval.rtype)
        
        if (IsCf3VarString(rval.item))
           {
-          final = EvaluateFinalRval(scopeid,rval.item,rval.rtype,false,pp);
+          final = EvaluateFinalRval(scopeid, rval, false,pp);
           }
        else
           {
@@ -693,22 +693,22 @@ DeleteIterationContext(lol);
 
 /*********************************************************************/
 
-struct Rval EvaluateFinalRval(char *scopeid,void *rval,char rtype,int forcelist,struct Promise *pp)
+struct Rval EvaluateFinalRval(char *scopeid, struct Rval rval,int forcelist,struct Promise *pp)
 
 { struct Rlist *rp;
   struct Rval returnval,newret;
   char naked[CF_MAXVARSIZE];
   struct FnCall *fp;
 
-CfDebug("EvaluateFinalRval -- type %c\n",rtype);
+CfDebug("EvaluateFinalRval -- type %c\n", rval.rtype);
 
-if ((rtype == CF_SCALAR) && IsNakedVar(rval,'@')) /* Treat lists specially here */
+if ((rval.rtype == CF_SCALAR) && IsNakedVar(rval.item,'@')) /* Treat lists specially here */
    {
-   GetNaked(naked,rval);
+   GetNaked(naked,rval.item);
    
    if (GetVariable(scopeid,naked,&(returnval.item),&(returnval.rtype)) == cf_notype || returnval.rtype != CF_LIST)
       {
-      returnval = ExpandPrivateRval("this", (struct Rval) { rval, rtype });
+      returnval = ExpandPrivateRval("this", rval);
       }
    else
       {
@@ -720,17 +720,17 @@ else
    {
    if (forcelist) /* We are replacing scalar @(name) with list */
       {
-      returnval = ExpandPrivateRval(scopeid, (struct Rval) { rval, rtype });
+      returnval = ExpandPrivateRval(scopeid, rval);
       }
    else
       {
-      if (IsBuiltinFnCall((struct Rval) { rval, rtype }))
+      if (IsBuiltinFnCall(rval))
          {
-         returnval = CopyRvalItem((struct Rval) { rval, rtype });
+         returnval = CopyRvalItem(rval);
          }
       else
          {
-         returnval = ExpandPrivateRval("this", (struct Rval ) { rval, rtype });
+         returnval = ExpandPrivateRval("this", rval);
          }
       }
    }
@@ -1116,7 +1116,7 @@ if (rval != NULL)
       {
       /* See if the variable needs recursively expanding again */
       
-      returnval = EvaluateFinalRval(scope,rval,type,true,pp);
+      returnval = EvaluateFinalRval(scope, (struct Rval) { rval, type }, true,pp);
       DeleteRvalItem((struct Rval) { rval, type });
 
       // freed before function exit

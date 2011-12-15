@@ -264,7 +264,7 @@ pcopy->promiser = (char *)returnval.item;
 
 if (pp->promisee)
    {
-   returnval = EvaluateFinalRval(scopeid,pp->promisee,pp->petype,true,pp);
+   returnval = EvaluateFinalRval(scopeid, (struct Rval) { pp->promisee, pp->petype }, true,pp);
    pcopy->promisee = (struct Rlist *)returnval.item;
    pcopy->petype = returnval.rtype;
    }
@@ -317,7 +317,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       }
    else
       {
-      returnval = EvaluateFinalRval(scopeid,cp->rval,cp->type,false,pp);   
+      returnval = EvaluateFinalRval(scopeid, (struct Rval) { cp->rval, cp->type }, false,pp);
       final = ExpandDanglers(scopeid,returnval,pp);
       DeleteRvalItem(returnval);
       }
@@ -363,7 +363,7 @@ pcopy->promiser = xstrdup(pp->promiser);
 
 if (pp->promisee)
    {
-   returnval = EvaluateFinalRval(scopeid,pp->promisee,pp->petype,true,pp);
+   returnval = EvaluateFinalRval(scopeid, (struct Rval) { pp->promisee, pp->petype }, true,pp);
    pcopy->promisee = (struct Rlist *)returnval.item;
    pcopy->petype = returnval.rtype;
    }
@@ -409,7 +409,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       }
    else
       {
-      returnval = EvaluateFinalRval(scopeid,cp->rval,cp->type,false,pp);   
+      returnval = EvaluateFinalRval(scopeid, (struct Rval) { cp->rval, cp->type }, false,pp);
       }
 
    final = ExpandDanglers(scopeid,returnval,pp);

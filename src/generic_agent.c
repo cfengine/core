@@ -625,7 +625,7 @@ if (VINPUTLIST != NULL)
             continue;
             }
 
-         returnval = EvaluateFinalRval("sys",rp->item,rp->type,true,NULL);
+         returnval = EvaluateFinalRval("sys", (struct Rval) { rp->item, rp->type }, true,NULL);
 
          switch (returnval.rtype)
             {
@@ -749,7 +749,7 @@ if (VINPUTLIST != NULL)
          }
       else
          {
-         struct Rval returnval = EvaluateFinalRval("sys",rp->item,rp->type,true,NULL);
+         struct Rval returnval = EvaluateFinalRval("sys", (struct Rval) { rp->item, rp->type }, true,NULL);
 
          switch (returnval.rtype)
             {
@@ -1612,7 +1612,7 @@ for (cp = controllist; cp != NULL; cp=cp->next)
       }
    else
       {
-      returnval = EvaluateFinalRval(CONTEXTID,cp->rval,cp->type,true,NULL);
+      returnval = EvaluateFinalRval(CONTEXTID, (struct Rval) { cp->rval, cp->type }, true,NULL);
       }
 
    DeleteVariable(scope,cp->lval);

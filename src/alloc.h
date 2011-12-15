@@ -35,7 +35,7 @@ char *xstrdup(const char *str);
 char *xstrndup(const char *str, size_t n);
 void *xmemdup(const void *mem, size_t size);
 int xasprintf(char **strp, const char *fmt, ...);
-int xvasprinf(char **strp, const char *fmt, va_list ap);
+int xvasprintf(char **strp, const char *fmt, va_list ap);
 
 /*
  * Prevent any code from using un-wrapped allocators.

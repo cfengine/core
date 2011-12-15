@@ -36,6 +36,9 @@ static void ConvergePromiseValues(struct Promise *pp);
 static void ScanScalar(const char *scope, struct Rlist **los, struct Rlist **lol, const char *string, int level, struct Promise *pp);
 static int Epimenides(char *var,char *rval,char rtype,int level);
 
+static int CompareRlist(struct Rlist *list1, struct Rlist *list2);
+static int CompareRval(void *rval1, char rtype1, void *rval2, char rtype2);
+
 /*
 
 Expanding variables is easy -- expanding lists automagically requires
@@ -1345,3 +1348,91 @@ switch (rtype)
 
 return false;
 }
+
+/*******************************************************************/
+
+static int CompareRval(void *rval1, char rtype1, void *rval2, char rtype2)
+
+{
+if (rtype1 != rtype2)
+   {
+   return -1;
+   }
+
+switch (rtype1)
+   {
+   case CF_SCALAR:
+
+       if (IsCf3VarString((char *)rval1) || IsCf3VarString((char *)rval2))
+          {
+          return -1; // inconclusive
+          }
+
+       if (strcmp(rval1,rval2) != 0)
+          {
+          return false;
+          }
+       
+       break;
+       
+   case CF_LIST:
+       return CompareRlist(rval1,rval2);
+       
+   case CF_FNCALL:
+       return -1;       
+   }
+
+return true;
+}
+
+/*******************************************************************/
+
+static int CompareRlist(struct Rlist *list1, struct Rlist *list2)
+
+{ struct Rlist *rp1,*rp2;
+
+for (rp1 = list1, rp2 = list2; rp1 != NULL && rp2!= NULL; rp1=rp1->next,rp2=rp2->next)
+   {
+   if (rp1->item && rp2->item)
+      {
+      struct Rlist *rc1,*rc2;
+      
+      if (rp1->type == CF_FNCALL || rp2->type == CF_FNCALL)
+         {
+         return -1; // inconclusive
+         }
+
+      rc1 = rp1;
+      rc2 = rp2;
+
+      // Check for list nesting with { fncall(), "x" ... }
+      
+      if (rp1->type == CF_LIST)
+         {   
+         rc1 = rp1->item;
+         }
+      
+      if (rp2->type == CF_LIST)
+         {
+         rc2 = rp2->item;
+         }
+
+      if (IsCf3VarString(rc1->item) || IsCf3VarString(rp2->item))
+         {
+         return -1; // inconclusive
+         }
+
+      if (strcmp(rc1->item,rc2->item) != 0)
+         {
+         return false;
+         }
+      }
+   else
+      {
+      return false;
+      }
+   }
+
+return true;
+}
+

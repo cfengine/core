@@ -38,7 +38,6 @@ int IsInListOfRegex(struct Rlist *list,char *str);
 struct Rval CopyRvalItem(struct Rval rval);
 void DeleteRvalItem(struct Rval rval);
 struct Rlist *CopyRlist(struct Rlist *list);
-int CompareRval(void *rval1, char rtype1, void *rval2, char rtype2);
 void DeleteRlist(struct Rlist *list);
 void DeleteRlistEntry(struct Rlist **liststart,struct Rlist *entry);
 struct Rlist *AppendRlistAlien(struct Rlist **start,void *item);

@@ -105,7 +105,7 @@ switch (cp->type)
        
    default:
 
-       newret = ExpandPrivateRval("this",cp->rval,cp->type);
+       newret = ExpandPrivateRval("this", (struct Rval) { cp->rval, cp->type });
        DeleteRvalItem((struct Rval) {cp->rval, cp->type });
        cp->rval = newret.item;
        cp->type = newret.rtype;

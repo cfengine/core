@@ -171,7 +171,7 @@ i = HashIteratorInit(ptr->hashtable);
 
 while ((assoc = HashIteratorNext(&i)))
    {
-   retval = ExpandPrivateRval(scope,(char *)(assoc->rval),assoc->rtype);
+   retval = ExpandPrivateRval(scope, (struct Rval) { assoc->rval, assoc->rtype });
    // Retain the assoc, just replace rval
    DeleteRvalItem((struct Rval) { assoc->rval, assoc->rtype });
    assoc->rval = retval.item;

@@ -1080,7 +1080,7 @@ DeleteSlash(a.path_root);
 sp = file + strlen(a.path_root) + 1;
 
 FullTextMatch(pp->promiser,sp);
-retval = ExpandPrivateRval("this",a.represents,CF_LIST);
+retval = ExpandPrivateRval("this", (struct Rval) { a.represents, CF_LIST });
 DeleteScope("match");
 
 if (strlen(a.web_root) > 0)

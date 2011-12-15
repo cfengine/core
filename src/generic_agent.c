@@ -1608,7 +1608,7 @@ for (cp = controllist; cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFG_CONTROLBODY[cfg_bundlesequence].lval) == 0)
       {
-      returnval = ExpandPrivateRval(CONTEXTID,cp->rval,cp->type);
+      returnval = ExpandPrivateRval(CONTEXTID, (struct Rval) { cp->rval, cp->type });
       }
    else
       {

@@ -206,7 +206,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
          for (scp = bp->conlist; scp != NULL; scp = scp->next)
             {
             CfDebug("Doing arg-mapped sublval = %s (promises.c)\n",scp->lval);
-            returnval = ExpandPrivateRval("body",scp->rval,scp->type);
+            returnval = ExpandPrivateRval("body", (struct Rval) { scp->rval, scp->type });
             AppendConstraint(&(pcopy->conlist),scp->lval,returnval.item,returnval.rtype,scp->classes,false);
             }
 
@@ -259,7 +259,7 @@ CfDebug("ExpandDerefPromise()\n");
 
 pcopy = xcalloc(1, sizeof(struct Promise));
 
-returnval = ExpandPrivateRval("this",pp->promiser,CF_SCALAR);
+returnval = ExpandPrivateRval("this", (struct Rval) { pp->promiser, CF_SCALAR });
 pcopy->promiser = (char *)returnval.item;
 
 if (pp->promisee)
@@ -405,7 +405,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
    if (ExpectedDataType(cp->lval) == cf_bundle)
       {
        /* sub-bundles do not expand here */
-      returnval = ExpandPrivateRval(scopeid,cp->rval,cp->type);
+      returnval = ExpandPrivateRval(scopeid, (struct Rval) { cp->rval, cp->type });
       }
    else
       {

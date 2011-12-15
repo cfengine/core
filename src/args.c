@@ -177,7 +177,7 @@ for (rp = fp->args; rp != NULL; rp = rp->next)
           rval = EvaluateFunctionCall(subfp,pp);
           break;
       default:
-          rval = ExpandPrivateRval(CONTEXTID,rp->item,rp->type);
+          rval = ExpandPrivateRval(CONTEXTID, (struct Rval) { rp->item, rp->type });
           break;
       }
 

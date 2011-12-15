@@ -321,16 +321,16 @@ for (rp = (struct Rlist *)list; rp != NULL; rp=rp->next)
 
       if (GetVariable(scopeid,naked,&(returnval.item),&(returnval.rtype)) != cf_notype)
          {
-         returnval = ExpandPrivateRval(scopeid,returnval.item,returnval.rtype);
+         returnval = ExpandPrivateRval(scopeid,returnval);
          }
       else
          {
-         returnval = ExpandPrivateRval(scopeid,rp->item,rp->type);
+         returnval = ExpandPrivateRval(scopeid, (struct Rval) { rp->item, rp->type });
          }
       }
    else
       {
-      returnval = ExpandPrivateRval(scopeid,rp->item,rp->type);
+      returnval = ExpandPrivateRval(scopeid, (struct Rval) { rp->item, rp->type });
       }
 
    AppendRlist(&start,returnval.item,returnval.rtype);
@@ -342,38 +342,38 @@ return start;
 
 /*********************************************************************/
 
-struct Rval ExpandPrivateRval(char *scopeid,void *rval,char type)
+struct Rval ExpandPrivateRval(char *scopeid, struct Rval rval)
 
 { char buffer[CF_EXPANDSIZE];
  struct FnCall *fp,*fpe;
  struct Rval returnval;
      
-CfDebug("ExpandPrivateRval(scope=%s,type=%c)\n",scopeid,type);
+CfDebug("ExpandPrivateRval(scope=%s,type=%c)\n",scopeid,rval.rtype);
 
 /* Allocates new memory for the copy */
 
 returnval.item = NULL;
 returnval.rtype = CF_NOPROMISEE;
 
-switch (type)
+switch (rval.rtype)
    {
    case CF_SCALAR:
 
-       ExpandPrivateScalar(scopeid,(char *)rval,buffer);
+       ExpandPrivateScalar(scopeid,(char *)rval.item,buffer);
        returnval.item = xstrdup(buffer);
        returnval.rtype = CF_SCALAR;
        break;
        
    case CF_LIST:
 
-       returnval.item = ExpandList(scopeid,rval,true);
+       returnval.item = ExpandList(scopeid,rval.item,true);
        returnval.rtype = CF_LIST;
        break;
        
    case CF_FNCALL:
        
        /* Note expand function does not mean evaluate function, must preserve type */
-       fp = (struct FnCall *)rval;
+       fp = (struct FnCall *)rval.item;
        fpe = ExpandFnCall(scopeid,fp,true);
        returnval.item = fpe;
        returnval.rtype = CF_FNCALL;
@@ -708,7 +708,7 @@ if ((rtype == CF_SCALAR) && IsNakedVar(rval,'@')) /* Treat lists specially here 
    
    if (GetVariable(scopeid,naked,&(returnval.item),&(returnval.rtype)) == cf_notype || returnval.rtype != CF_LIST)
       {
-      returnval = ExpandPrivateRval("this",rval,rtype);
+      returnval = ExpandPrivateRval("this", (struct Rval) { rval, rtype });
       }
    else
       {
@@ -720,7 +720,7 @@ else
    {
    if (forcelist) /* We are replacing scalar @(name) with list */
       {
-      returnval = ExpandPrivateRval(scopeid,rval,rtype);
+      returnval = ExpandPrivateRval(scopeid, (struct Rval) { rval, rtype });
       }
    else
       {
@@ -730,7 +730,7 @@ else
          }
       else
          {
-         returnval = ExpandPrivateRval("this",rval,rtype);
+         returnval = ExpandPrivateRval("this", (struct Rval ) { rval, rtype });
          }
       }
    }
@@ -760,7 +760,7 @@ switch (returnval.rtype)
                 {
                 if (IsCf3VarString(rp->item))
                    {
-                   newret = ExpandPrivateRval("this",rp->item,rp->type);
+                   newret = ExpandPrivateRval("this", (struct Rval) { rp->item, rp->type });
                    free(rp->item);
                    rp->item = newret.item;
                    }

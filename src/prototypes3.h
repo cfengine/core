@@ -522,7 +522,7 @@ int IsExpandable(const char *str);
 int ExpandScalar(const char *string, char buffer[CF_EXPANDSIZE]);
 struct Rval ExpandBundleReference(char *scopeid,void *rval,char type);
 struct FnCall *ExpandFnCall(char *contextid,struct FnCall *f,int expandnaked);
-struct Rval ExpandPrivateRval(char *contextid,void *rval,char type);
+struct Rval ExpandPrivateRval(char *contextid, struct Rval rval);
 struct Rlist *ExpandList(char *scopeid,struct Rlist *list,int expandnaked);
 struct Rval EvaluateFinalRval(char *scopeid,void *rval,char rtype,int forcelist,struct Promise *pp);
 int IsNakedVar(char *str,char vtype);

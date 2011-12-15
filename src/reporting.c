@@ -170,8 +170,7 @@ ShowPromisesInReport(bundles,bodies);
 
 void ShowPromisesInReport(struct Bundle *bundles, struct Body *bodies)
 {
-char rettype;
-void *retval;
+struct Rval retval;
 char *v;
 char vbuff[CF_BUFSIZE];
 struct Bundle *bp;
@@ -180,9 +179,9 @@ struct SubType *sp;
 struct Promise *pp;
 struct Body *bdp;
 
-if (GetVariable("control_common","version",&retval,&rettype) != cf_notype)
+if (GetVariable("control_common","version",&retval) != cf_notype)
    {
-   v = (char *)retval;
+   v = (char *)retval.item;
    }
 else
    {
@@ -266,12 +265,12 @@ CfHtmlFooter(FREPORT_HTML,FOOTER);
 void ShowPromise(struct Promise *pp, int indent)
 
 {
-char *v,rettype;
-void *retval;
+char *v;
+struct Rval retval;
 
-if (GetVariable("control_common","version",&retval,&rettype) != cf_notype)
+if (GetVariable("control_common","version", &retval) != cf_notype)
    {
-   v = (char *)retval;
+   v = (char *)retval.item;
    }
 else
    {

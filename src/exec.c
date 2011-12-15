@@ -300,7 +300,7 @@ void KeepPromises(struct GenericAgentConfig config)
 
 { struct Constraint *cp;
   char rettype,splay[CF_BUFSIZE];
-  void *retval;
+  struct Rval retval;
 
 for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
    {
@@ -309,7 +309,7 @@ for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
       continue;
       }
    
-   if (GetVariable("control_executor",cp->lval,&retval,&rettype) == cf_notype)
+   if (GetVariable("control_executor", cp->lval, &retval) == cf_notype)
       {
       CfOut(cf_error,"","Unknown lval %s in exec control body",cp->lval);
       continue;
@@ -317,43 +317,43 @@ for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
    
    if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_mailfrom].lval) == 0)
       {
-      strcpy(MAILFROM,retval);
+      strcpy(MAILFROM, retval.item);
       CfDebug("mailfrom = %s\n",MAILFROM);
       }
    
    if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_mailto].lval) == 0)
       {
-      strcpy(MAILTO,retval);
+      strcpy(MAILTO, retval.item);
       CfDebug("mailto = %s\n",MAILTO);
       }
    
    if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_smtpserver].lval) == 0)
       {
-      strcpy(VMAILSERVER,retval);
+      strcpy(VMAILSERVER, retval.item);
       CfDebug("smtpserver = %s\n",VMAILSERVER);
       }
 
    if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_execcommand].lval) == 0)
       {
-      strcpy(EXECCOMMAND,retval);
+      strcpy(EXECCOMMAND, retval.item);
       CfDebug("exec_command = %s\n",EXECCOMMAND);
       }
    
    if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_executorfacility].lval) == 0)
       {
-      SetFacility(retval);
+      SetFacility(retval.item);
       continue;
       }
 
    if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_mailmaxlines].lval) == 0)
       {
-      MAXLINES = Str2Int(retval);
+      MAXLINES = Str2Int(retval.item);
       CfDebug("maxlines = %d\n",MAXLINES);
       }
 
    if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_splaytime].lval) == 0)
       {
-      int hash,time = Str2Int(retval);
+      int hash,time = Str2Int(retval.item);
       snprintf(splay,CF_BUFSIZE,"%s+%s+%d",VFQNAME,VIPADDRESS,getuid());
       hash = GetHash(splay);
       SPLAYTIME = (int)(time*60*hash/CF_HASHTABLESIZE);
@@ -366,7 +366,7 @@ for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
       DeleteItemList(SCHEDULE);
       SCHEDULE = NULL;
       
-      for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
+      for (rp= (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
          {
          if (!IsItemIn(SCHEDULE,rp->item))
             {

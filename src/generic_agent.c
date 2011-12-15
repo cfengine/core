@@ -335,8 +335,7 @@ else
 void ReadPromises(enum cfagenttype ag,char *agents, struct GenericAgentConfig config)
 
 {
-char rettype;
-void *retval;
+struct Rval retval;
 char vbuff[CF_BUFSIZE];
 bool check_not_writable_by_others = true;
 
@@ -371,7 +370,7 @@ OpenReports(agents);
 
 SetAuditVersion();
 
-GetVariable("control_common","version",&retval,&rettype);
+GetVariable("control_common","version",&retval);
 
 snprintf(vbuff,CF_BUFSIZE-1,"Expanded promises for %s",agents);
 CfHtmlHeader(FREPORT_HTML,vbuff,STYLESHEET,WEBDRIVER,BANNER);
@@ -1685,19 +1684,19 @@ for (cp = controllist; cp != NULL; cp=cp->next)
 
 static void SetAuditVersion()
 
-{ void *rval;
-  char rtype = 'x';
+{
+struct Rval rval = { NULL, 'x' }; /* FIXME: why it is initialized? */
 
   /* In addition, each bundle can have its own version */
 
-switch (GetVariable("control_common","cfinputs_version",&rval,&rtype))
+switch (GetVariable("control_common","cfinputs_version",&rval))
    {
    case cf_str:
-       if (rtype != CF_SCALAR)
+       if (rval.rtype != CF_SCALAR)
           {
           yyerror("non-scalar version string");
           }
-       AUDITPTR->version = xstrdup((char *)rval);
+       AUDITPTR->version = xstrdup((char *)rval.item);
        break;
 
    default:
@@ -1942,8 +1941,8 @@ for (bdp = BODIES; bdp != NULL; bdp = bdp->next) /* get schedule */
 static bool VerifyBundleSequence(enum cfagenttype agent, struct Rlist *bundlesequence)
 
 { struct Rlist *rp;
-  char rettype,*name;
-  void *retval = NULL;
+  char *name;
+  struct Rval retval;
   int ok = true;
   struct FnCall *fp;
 
@@ -1959,13 +1958,13 @@ if (bundlesequence)
    return true;
    }
 
-if (GetVariable("control_common","bundlesequence",&retval,&rettype) == cf_notype)
+if (GetVariable("control_common","bundlesequence",&retval) == cf_notype)
    {
    CfOut(cf_error,""," !!! No bundlesequence in the common control body");
    return false;
    }
 
-if (rettype != CF_LIST)
+if (retval.rtype != CF_LIST)
    {
    FatalError("Promised bundlesequence was not a list");
    }
@@ -1975,7 +1974,7 @@ if ((agent != cf_agent) && (agent != cf_common))
    return true;
    }
 
-for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
+for (rp = (struct Rlist *)retval.item; rp != NULL; rp=rp->next)
    {
    switch (rp->type)
       {
@@ -2018,13 +2017,13 @@ void CheckBundleParameters(char *scope,struct Rlist *args)
 
 { struct Rlist *rp;
   struct Rval retval;
-  char *lval,rettype;
+  char *lval;
 
 for (rp = args; rp != NULL; rp = rp->next)
    {
    lval = (char *)rp->item;
    
-   if (GetVariable(scope,lval,(void *)&retval,&rettype) != cf_notype)
+   if (GetVariable(scope,lval, &retval) != cf_notype)
       {
       CfOut(cf_error,"","Variable and bundle parameter \"%s\" collide in scope \"%s\"",lval,scope);
       FatalError("Aborting");

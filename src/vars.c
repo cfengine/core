@@ -58,14 +58,15 @@ Nova_EnterpriseDiscovery();
 
 void ForceScalar(char *lval,char *rval)
 
-{ char rtype,*retval;
+{
+struct Rval retval;
 
 if (THIS_AGENT_TYPE != cf_agent && THIS_AGENT_TYPE != cf_know)
    {
    return;
    }
 
-if (GetVariable("match",lval,(void *)&retval,&rtype) != cf_notype)
+if (GetVariable("match",lval,&retval) != cf_notype)
    {
    DeleteVariable("match",lval);
    }
@@ -93,12 +94,12 @@ if (ptr == NULL)
 
 // Newscalar allocates memory through NewAssoc
 
-if (GetVariable(scope,lval,&rvald.item,&rvald.rtype) != cf_notype)
+if (GetVariable(scope,lval, &rvald) != cf_notype)
    {
    DeleteScalar(scope,lval);
    }
 
-AddVariableHash(scope,lval,(struct Rval) { rval, CF_SCALAR },dt,NULL,0);
+AddVariableHash(scope,lval,(struct Rval) { rval, CF_SCALAR }, dt,NULL,0);
 }
 
 /*******************************************************************/
@@ -126,7 +127,7 @@ void NewList(char *scope,char *lval,void *rval,enum cfdatatype dt)
 { char *sp1;
   struct Rval rvald;
 
-if (GetVariable(scope,lval,&rvald.item,&rvald.rtype) != cf_notype)
+if (GetVariable(scope, lval, &rvald) != cf_notype)
    {
    DeleteVariable(scope,lval);
    }
@@ -137,7 +138,7 @@ AddVariableHash(scope,sp1, (struct Rval) { rval, CF_LIST },dt,NULL,0);
 
 /*******************************************************************/
 
-enum cfdatatype GetVariable(const char *scope, const char *lval, void **returnv, char *rtype)
+enum cfdatatype GetVariable(const char *scope, const char *lval, struct Rval *returnv)
 
 {
   struct Scope *ptr = NULL;
@@ -149,8 +150,7 @@ CfDebug("\nGetVariable(%s,%s) type=(to be determined)\n",scope,lval);
 
 if (lval == NULL)
    {
-   *returnv = (void*)lval;
-   *rtype   = CF_SCALAR;
+   *returnv = (struct Rval) { NULL, CF_SCALAR };
    return cf_notype;
    }
 
@@ -166,8 +166,7 @@ else
       }
    else
       {
-      *returnv = (void*)lval;
-      *rtype   = CF_SCALAR;
+      *returnv = (struct Rval) { xstrdup(lval), CF_SCALAR };
       CfDebug("Couldn't expand array-like variable (%s) due to undefined dependencies\n",lval);
       return cf_notype;
       }
@@ -198,8 +197,7 @@ if (ptr == NULL)
 if (ptr == NULL)
    {
    CfDebug("Scope for variable \"%s.%s\" does not seem to exist\n",scope,lval);
-   *returnv = (void*)lval;
-   *rtype   = CF_SCALAR;
+   *returnv = (struct Rval) { xstrdup(lval), CF_SCALAR };
    return cf_notype;
    }
 
@@ -210,8 +208,7 @@ assoc = HashLookupElement(ptr->hashtable, vlval);
 if (assoc == NULL)
    {
    CfDebug("No such variable found %s.%s\n\n",scopeid,lval);
-   *returnv = (void*)lval;
-   *rtype   = CF_SCALAR;
+   *returnv = (struct Rval) { xstrdup(lval), CF_SCALAR };
    return cf_notype;
    }
 
@@ -223,9 +220,7 @@ if (DEBUG)
    }
 CfDebug("}\n");
 
-*returnv = assoc->rval;
-*rtype   = assoc->rtype;
-
+*returnv = (struct Rval) { assoc->rval, assoc->rtype };
 return assoc->dtype;
 }
 
@@ -562,7 +557,7 @@ if (name == NULL)
    return false;
    }
  
-if (GetVariable("this",name,&rval.item,&rval.rtype) == cf_notype)
+if (GetVariable("this", name, &rval) == cf_notype)
    {
    return false;
    }
@@ -574,16 +569,17 @@ return true;
 
 int BooleanControl(const char *scope, const char *name)
 
-{ char varbuf[CF_BUFSIZE], rtype;
+{
+struct Rval retval;
 
 if (name == NULL)
    {
    return false;
    }
  
-if (GetVariable(scope,name,(void *)varbuf,&rtype) != cf_notype)
+if (GetVariable(scope, name, &retval) != cf_notype)
    {
-   return GetBoolean(varbuf);
+   return GetBoolean(retval.item);
    }
 
 return false;

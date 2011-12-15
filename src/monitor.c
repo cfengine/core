@@ -182,8 +182,7 @@ return config;
 void KeepPromises(struct GenericAgentConfig config)
 {
 struct Constraint *cp;
-char rettype;
-void *retval;
+struct Rval retval;
 
 for (cp = ControlBodyConstraints(cf_monitor); cp != NULL; cp=cp->next)
    {
@@ -192,7 +191,7 @@ for (cp = ControlBodyConstraints(cf_monitor); cp != NULL; cp=cp->next)
       continue;
       }
 
-   if (GetVariable("control_monitor",cp->lval,&retval,&rettype) == cf_notype)
+   if (GetVariable("control_monitor", cp->lval, &retval) == cf_notype)
       {
       CfOut(cf_error,"","Unknown lval %s in monitor control body",cp->lval);
       continue;
@@ -205,12 +204,12 @@ for (cp = ControlBodyConstraints(cf_monitor); cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFM_CONTROLBODY[cfm_tcpdump].lval) == 0)
       {
-      MonNetworkSnifferEnable(GetBoolean(retval));
+      MonNetworkSnifferEnable(GetBoolean(retval.item));
       }
 
    if (strcmp(cp->lval,CFM_CONTROLBODY[cfm_forgetrate].lval) == 0)
       {
-      sscanf(retval,"%lf",&FORGETRATE);
+      sscanf(retval.item,"%lf",&FORGETRATE);
       CfDebug("forget rate = %f\n",FORGETRATE);
       }
    }

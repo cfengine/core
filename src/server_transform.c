@@ -172,8 +172,7 @@ for (ip = DHCPLIST; ip != NULL; ip=ip->next)
 void KeepControlPromises()
     
 { struct Constraint *cp;
-  char rettype;
-  void *retval;
+  struct Rval retval;
 
 CFD_MAXPROCESSES = 30;
 MAXTRIES = 5;
@@ -197,7 +196,7 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
       continue;
       }
 
-   if (GetVariable("control_server",cp->lval,&retval,&rettype) == cf_notype)
+   if (GetVariable("control_server", cp->lval, &retval) == cf_notype)
       {
       CfOut(cf_error,"","Unknown lval %s in server control body",cp->lval);
       continue;
@@ -205,34 +204,34 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
    
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_serverfacility].lval) == 0)
       {
-      SetFacility(retval);
+      SetFacility(retval.item);
       continue;
       }
    
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_denybadclocks].lval) == 0)
       {
-      DENYBADCLOCKS = GetBoolean(retval);
+      DENYBADCLOCKS = GetBoolean(retval.item);
       CfOut(cf_verbose,"","SET denybadclocks = %d\n",DENYBADCLOCKS);
       continue;
       }
    
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_logencryptedtransfers].lval) == 0)
       {
-      LOGENCRYPT = GetBoolean(retval);
+      LOGENCRYPT = GetBoolean(retval.item);
       CfOut(cf_verbose,"","SET LOGENCRYPT = %d\n",LOGENCRYPT);
       continue;
       }
    
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_logallconnections].lval) == 0)
       {
-      LOGCONNS = GetBoolean(retval);
+      LOGCONNS = GetBoolean(retval.item);
       CfOut(cf_verbose,"","SET LOGCONNS = %d\n",LOGCONNS);
       continue;
       }
    
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_maxconnections].lval) == 0)
       {
-      CFD_MAXPROCESSES = (int)Str2Int(retval);
+      CFD_MAXPROCESSES = (int)Str2Int(retval.item);
       MAXTRIES = CFD_MAXPROCESSES / 3;
       CfOut(cf_verbose,"","SET maxconnections = %d\n",CFD_MAXPROCESSES);
       continue;
@@ -240,7 +239,7 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
    
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_cfruncommand].lval) == 0)
       {
-      strncpy(CFRUNCOMMAND,retval,CF_BUFSIZE-1);
+      strncpy(CFRUNCOMMAND, retval.item, CF_BUFSIZE-1);
       CfOut(cf_verbose,"","SET cfruncommand = %s\n",CFRUNCOMMAND);
       continue;
       }
@@ -250,7 +249,7 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
       struct Rlist *rp;
       CfOut(cf_verbose,"","SET Allowing connections from ...\n");
       
-      for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
+      for (rp  = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
          {
          if (!IsItemIn(NONATTACKERLIST,rp->item))
             {
@@ -266,7 +265,7 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
       struct Rlist *rp;
       CfOut(cf_verbose,"","SET Denying connections from ...\n");
       
-      for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
+      for (rp  = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
          {
          if (!IsItemIn(ATTACKERLIST,rp->item))
             {
@@ -282,7 +281,7 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
       struct Rlist *rp;
       CfOut(cf_verbose,"","SET Skip verify connections from ...\n");
       
-      for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
+      for (rp  = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
          {
          if (!IsItemIn(SKIPVERIFY,rp->item))
             {
@@ -298,7 +297,7 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
       struct Rlist *rp;
       CfOut(cf_verbose,"","SET Dynamic addresses from ...\n");
       
-      for (rp  = (struct Rlist *)retval; rp != NULL; rp = rp->next)
+      for (rp  = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
          {
          if (!IsItemIn(DHCPLIST,rp->item))
             {
@@ -314,7 +313,7 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
       struct Rlist *rp;
       CfOut(cf_verbose,"","SET Allowing multiple connections from ...\n");
       
-      for (rp  = (struct Rlist *)retval; rp != NULL; rp = rp->next)
+      for (rp  = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
          {
          if (!IsItemIn(MULTICONNLIST,rp->item))
             {
@@ -330,7 +329,7 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
       struct Rlist *rp;
       CfOut(cf_verbose,"","SET Allowing users ...\n");
       
-      for (rp  = (struct Rlist *)retval; rp != NULL; rp = rp->next)
+      for (rp  = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
          {
          if (!IsItemIn(ALLOWUSERLIST,rp->item))
             {
@@ -346,7 +345,7 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
       struct Rlist *rp;
       CfOut(cf_verbose,"","SET Trust keys from ...\n");
       
-      for (rp  = (struct Rlist *)retval; rp != NULL; rp = rp->next)
+      for (rp  = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
          {
          if (!IsItemIn(TRUSTKEYLIST,rp->item))
             {
@@ -359,41 +358,41 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_portnumber].lval) == 0)
       {
-      SHORT_CFENGINEPORT = (short)Str2Int(retval);
-      strncpy(STR_CFENGINEPORT,retval,15);
-      CfOut(cf_verbose,"","SET default portnumber = %u = %s = %s\n",(int)SHORT_CFENGINEPORT,STR_CFENGINEPORT,retval);
-      SHORT_CFENGINEPORT = htons((short)Str2Int(retval));
+      SHORT_CFENGINEPORT = (short)Str2Int(retval.item);
+      strncpy(STR_CFENGINEPORT, retval.item, 15);
+      CfOut(cf_verbose,"","SET default portnumber = %u = %s = %s\n",(int)SHORT_CFENGINEPORT,STR_CFENGINEPORT,retval.item);
+      SHORT_CFENGINEPORT = htons((short)Str2Int(retval.item));
       continue;
       }
 
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_keyttl].lval) == 0)
       {
-      KEYTTL = (short)Str2Int(retval);
+      KEYTTL = (short)Str2Int(retval.item);
       CfOut(cf_verbose,"","SET key TTL = %d\n",KEYTTL);
       continue;
       }
 
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_bindtointerface].lval) == 0)
       {
-      strncpy(BINDINTERFACE,retval,CF_BUFSIZE-1);
+      strncpy(BINDINTERFACE, retval.item, CF_BUFSIZE-1);
       CfOut(cf_verbose,"","SET bindtointerface = %s\n",BINDINTERFACE);
       continue;
       }
    }
 
-if (GetVariable("control_common",CFG_CONTROLBODY[cfg_syslog_host].lval,&retval,&rettype) != cf_notype)
+if (GetVariable("control_common", CFG_CONTROLBODY[cfg_syslog_host].lval, &retval) != cf_notype)
    {
-   SetSyslogHost(Hostname2IPString(retval));
+   SetSyslogHost(Hostname2IPString(retval.item));
    }
 
-if (GetVariable("control_common",CFG_CONTROLBODY[cfg_syslog_port].lval,&retval,&rettype) != cf_notype)
+if (GetVariable("control_common", CFG_CONTROLBODY[cfg_syslog_port].lval, &retval) != cf_notype)
    {
-   SetSyslogPort(Str2Int(retval));
+   SetSyslogPort(Str2Int(retval.item));
    }
 
-if (GetVariable("control_common",CFG_CONTROLBODY[cfg_fips_mode].lval,&retval,&rettype) != cf_notype)
+if (GetVariable("control_common", CFG_CONTROLBODY[cfg_fips_mode].lval, &retval) != cf_notype)
    {
-   FIPS_MODE = GetBoolean(retval);
+   FIPS_MODE = GetBoolean(retval.item);
    CfOut(cf_verbose,"","SET FIPS_MODE = %d\n",FIPS_MODE);
    }
 }

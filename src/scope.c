@@ -142,7 +142,7 @@ for (rpl = lvals, rpr=rvals; rpl != NULL; rpl = rpl->next,rpr = rpr->next)
       enum cfdatatype vtype;
       GetNaked(naked,rpr->item);
 
-      vtype = GetVariable(scope,naked,&(retval.item),&(retval.rtype));
+      vtype = GetVariable(scope,naked,&retval);
 
       switch(vtype)
          {

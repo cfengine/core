@@ -439,10 +439,9 @@ static void DebugPromise(struct Promise *pp)
   struct Body *bp;
   struct FnCall *fp;
   struct Rlist *rp;
-  char rettype;
-  void *retval;
+  struct Rval retval;
 
-GetVariable("control_common","version",&retval,&rettype);
+GetVariable("control_common","version",&retval);
 
 if (pp->promisee != NULL)
    {
@@ -671,17 +670,17 @@ free(pp);
 
 void PromiseRef(enum cfreport level,struct Promise *pp)
 
-{ char *v,rettype;
-  void *retval;
+{ char *v;
+  struct Rval retval;
 
 if (pp == NULL)
    {
    return;
    }
 
-if (GetVariable("control_common","version",&retval,&rettype) != cf_notype)
+if (GetVariable("control_common","version",&retval) != cf_notype)
    {
-   v = (char *)retval;
+   v = (char *)retval.item;
    }
 else
    {

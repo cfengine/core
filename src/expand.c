@@ -212,8 +212,7 @@ static void ScanScalar(const char *scopeid, struct Rlist **scal, struct Rlist **
 
 {
 const char *sp;
-char rtype;
-void *rval;
+struct Rval rval;
 char v[CF_BUFSIZE],var[CF_EXPANDSIZE],exp[CF_EXPANDSIZE],temp[CF_BUFSIZE];
   
 CfDebug("ScanScalar(\"%s\")\n",string);
@@ -250,9 +249,9 @@ for (sp = string; (*sp != '\0') ; sp++)
          
          RegisterBundleDependence(absscope,pp);
 
-         if (GetVariable(absscope,var,&rval,&rtype) != cf_notype)
+         if (GetVariable(absscope,var,&rval) != cf_notype)
             {
-            if (rtype == CF_LIST)
+            if (rval.rtype == CF_LIST)
                {
                ExpandScalar(var,exp); 
 
@@ -269,7 +268,7 @@ for (sp = string; (*sp != '\0') ; sp++)
                   IdempAppendRScalar(its,exp,CF_SCALAR);
                   }
                }
-            else if (rtype == CF_SCALAR)
+            else if (rval.rtype == CF_SCALAR)
                {
                CfDebug("Scalar variable $(%s) found\n",var);
                IdempAppendRScalar(scal,var,CF_SCALAR);
@@ -319,7 +318,7 @@ for (rp = (struct Rlist *)list; rp != NULL; rp=rp->next)
       {
       GetNaked(naked,rp->item);
 
-      if (GetVariable(scopeid,naked,&(returnval.item),&(returnval.rtype)) != cf_notype)
+      if (GetVariable(scopeid,naked,&returnval) != cf_notype)
          {
          returnval = ExpandPrivateRval(scopeid,returnval);
          }
@@ -440,9 +439,8 @@ return false;
 
 int ExpandPrivateScalar(const char *scopeid, const char *string,char buffer[CF_EXPANDSIZE])
 
-{ char rtype;
-  const char *sp;
-  void *rval;
+{ const char *sp;
+  struct Rval rval;
   int varstring = false;
   char currentitem[CF_EXPANDSIZE],temp[CF_BUFSIZE],name[CF_MAXVARSIZE];
   int increment, returnval = true;
@@ -535,18 +533,18 @@ for (sp = string; /* No exit */ ; sp++)       /* check for varitems */
 
    increment = strlen(var) - 1;
 
-   switch (GetVariable(scopeid,currentitem,&rval,&rtype))
+   switch (GetVariable(scopeid,currentitem,&rval))
       {
       case cf_str:
       case cf_int:
       case cf_real:
           
-          if (ExpandOverflow(buffer,(char*)rval))
+          if (ExpandOverflow(buffer,(char*)rval.item))
              {
              FatalError("Can't expand varstring");
              }
           
-          strlcat(buffer,(char *)rval, CF_EXPANDSIZE);
+          strlcat(buffer,(char *)rval.item, CF_EXPANDSIZE);
           break;
 
       case cf_slist:
@@ -706,7 +704,7 @@ if ((rval.rtype == CF_SCALAR) && IsNakedVar(rval.item,'@')) /* Treat lists speci
    {
    GetNaked(naked,rval.item);
    
-   if (GetVariable(scopeid,naked,&(returnval.item),&(returnval.rtype)) == cf_notype || returnval.rtype != CF_LIST)
+   if (GetVariable(scopeid,naked,&returnval) == cf_notype || returnval.rtype != CF_LIST)
       {
       returnval = ExpandPrivateRval("this", rval);
       }
@@ -957,12 +955,11 @@ void ConvergeVarHashPromise(char *scope,struct Promise *pp,int allow_redefine)
 
 { struct Constraint *cp,*cp_save = NULL;
   struct Attributes a = {{0}};
-  char rtype,type = 'x';
-  void *rval = NULL,*retval;
   int i = 0,ok_redefine = false,drop_undefined = false;
-  struct Rval returnval; /* Must expand naked functions here for consistency */
   struct Rlist *rp;
-  
+  struct Rval retval;
+  struct Rval rval = { NULL, 'x' }; /* FIXME: why this needs to be initialized? */
+
 if (pp->done)
    {
    return;
@@ -1044,7 +1041,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
    else if (IsDataType(cp->lval))
       {
       i++;
-      rval = cp->rval;
+      rval.item = cp->rval;
       cp_save = cp;
       }
    }
@@ -1069,20 +1066,18 @@ if (i > 2)
 //a.transaction = GetTransactionConstraints(pp);
 a.classes = GetClassDefinitionConstraints(pp);
 
-if (rval != NULL)
+if (rval.item != NULL)
    {
-   struct FnCall *fp = (struct FnCall *)rval;
+   struct FnCall *fp = (struct FnCall *)rval.item;
 
    if (cp->type == CF_FNCALL)
       {
-      returnval = EvaluateFunctionCall(fp,pp);
-      rval = returnval.item;
-      type = returnval.rtype;
-      
+      rval = EvaluateFunctionCall(fp,pp);
+
       if (FNCALL_STATUS.status == FNCALL_FAILURE)
          {
          /* We do not assign variables to failed fn calls */
-         DeleteRvalItem((struct Rval) { rval, type });
+         DeleteRvalItem(rval);
          return;
          }
       }
@@ -1093,21 +1088,20 @@ if (rval != NULL)
       if (strcmp(cp->lval,"int") == 0)
          {
          snprintf(conv,CF_MAXVARSIZE,"%ld",Str2Int(cp->rval));
-         rval = CopyRvalItem((struct Rval) { conv, cp->type }).item;
+         rval = CopyRvalItem((struct Rval) { conv, cp->type });
          }
       else if (strcmp(cp->lval,"real") == 0)
          {
          snprintf(conv,CF_MAXVARSIZE,"%lf",Str2Double(cp->rval));
-         rval = CopyRvalItem((struct Rval) { conv, cp->type }).item;
+         rval = CopyRvalItem((struct Rval) { conv, cp->type });
          }
       else
          {
-         rval = CopyRvalItem((struct Rval) { cp->rval, cp->type }).item;
+         rval = CopyRvalItem((struct Rval) { cp->rval, cp->type });
          }
-      type = cp->type;
       }
 
-   if (Epimenides(pp->promiser,rval,type,0))
+   if (Epimenides(pp->promiser, rval.item, rval.rtype, 0))
       {
       CfOut(cf_error,"","Variable \"%s\" contains itself indirectly - an unkeepable promise",pp->promiser);
       exit(1);
@@ -1115,36 +1109,35 @@ if (rval != NULL)
    else
       {
       /* See if the variable needs recursively expanding again */
-      
-      returnval = EvaluateFinalRval(scope, (struct Rval) { rval, type }, true,pp);
-      DeleteRvalItem((struct Rval) { rval, type });
+
+      struct Rval returnval = EvaluateFinalRval(scope, rval, true, pp);
+      DeleteRvalItem(rval);
 
       // freed before function exit
-      rval = returnval.item;
-      type = returnval.rtype;
+      rval = returnval;
       }
 
-   if (GetVariable(scope,pp->promiser,(void *)&retval,&rtype) != cf_notype)
+   if (GetVariable(scope,pp->promiser,&retval) != cf_notype)
       {
       if (ok_redefine) /* only on second iteration, else we ignore broken promises */
          {
          DeleteVariable(scope,pp->promiser);
          }
-      else if ((THIS_AGENT_TYPE == cf_common) && (CompareRval(retval,rtype,rval,type) == false))
+      else if ((THIS_AGENT_TYPE == cf_common) && (CompareRval(retval.item,retval.rtype,rval.item,rval.rtype) == false))
          {
-         switch (type)
+         switch (rval.rtype)
             {
             char valbuf[CF_BUFSIZE];
 
             case CF_SCALAR:
-                CfOut(cf_verbose,""," !! Redefinition of a constant scalar \"%s\" (was %s now %s)",pp->promiser,retval,rval);
+                CfOut(cf_verbose,""," !! Redefinition of a constant scalar \"%s\" (was %s now %s)",pp->promiser,retval.item,rval.item);
                 PromiseRef(cf_verbose,pp);
                 break;
             case CF_LIST:
                 CfOut(cf_verbose,""," !! Redefinition of a constant list \"%s\".",pp->promiser);
-                PrintRlist(valbuf, CF_BUFSIZE, retval);
+                PrintRlist(valbuf, CF_BUFSIZE, retval.item);
                 CfOut(cf_verbose,"","Old value: %s", valbuf);
-                PrintRlist(valbuf, CF_BUFSIZE, rval);
+                PrintRlist(valbuf, CF_BUFSIZE, rval.item);
                 CfOut(cf_verbose,""," New value: %s", valbuf);
                 PromiseRef(cf_verbose,pp);
 		break;
@@ -1155,7 +1148,7 @@ if (rval != NULL)
    if (IsCf3VarString(pp->promiser))
       {
       // Unexpanded variables, we don't do anything with
-      DeleteRvalItem((struct Rval) { rval, type });
+      DeleteRvalItem(rval);
       return;
       }
    
@@ -1163,13 +1156,13 @@ if (rval != NULL)
       {
       CfOut(cf_error,""," !! Variable identifier contains illegal characters");
       PromiseRef(cf_error,pp);
-      DeleteRvalItem((struct Rval) { rval, type });
+      DeleteRvalItem(rval);
       return;
       }
 
-   if (drop_undefined && type == CF_LIST)
+   if (drop_undefined && rval.rtype == CF_LIST)
       {
-      for (rp = rval; rp != NULL; rp=rp->next)
+      for (rp = rval.item; rp != NULL; rp=rp->next)
          {
          if (IsNakedVar(rp->item,'@'))
             {
@@ -1179,7 +1172,7 @@ if (rval != NULL)
          }
       }
 
-   if (!AddVariableHash(scope,pp->promiser, (struct Rval) { rval, type }, Typename2Datatype(cp->lval),
+   if (!AddVariableHash(scope,pp->promiser, rval, Typename2Datatype(cp->lval),
                         cp->audit->filename, cp->offset.line))
       {
       CfOut(cf_verbose,"","Unable to converge %s.%s value (possibly empty or infinite regression)\n",scope,pp->promiser);
@@ -1198,7 +1191,7 @@ else
    cfPS(cf_noreport,CF_FAIL,"",pp,a," !! Couldn't add variable %s",pp->promiser);
    }     
 
-DeleteRvalItem((struct Rval) { rval, type });
+DeleteRvalItem(rval);
 }
 
 /*********************************************************************/

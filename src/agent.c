@@ -381,8 +381,7 @@ CfOut(cf_verbose,""," -> Checked %d objects with %d promises, efficiency %.2lf",
 void KeepControlPromises()
     
 { struct Constraint *cp;
-  char rettype;
-  void *retval;
+  struct Rval retval;
   struct Rlist *rp;
 
 for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
@@ -392,13 +391,13 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       continue;
       }
 
-   if (GetVariable("control_common",cp->lval,&retval,&rettype) != cf_notype)
+   if (GetVariable("control_common", cp->lval, &retval) != cf_notype)
       {
       /* Already handled in generic_agent */
       continue;
       }
 
-   if (GetVariable("control_agent",cp->lval,&retval,&rettype) == cf_notype)
+   if (GetVariable("control_agent", cp->lval, &retval) == cf_notype)
       {
       CfOut(cf_error,"","Unknown lval %s in agent control body",cp->lval);
       continue;
@@ -406,27 +405,27 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
             
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_maxconnections].lval) == 0)
       {
-      CFA_MAXTHREADS = (int)Str2Int(retval);
+      CFA_MAXTHREADS = (int)Str2Int(retval.item);
       CfOut(cf_verbose,"","SET maxconnections = %d\n",CFA_MAXTHREADS);
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_checksum_alert_time].lval) == 0)
       {
-      CF_PERSISTENCE = (int)Str2Int(retval);
+      CF_PERSISTENCE = (int)Str2Int(retval.item);
       CfOut(cf_verbose,"","SET checksum_alert_time = %d\n",CF_PERSISTENCE);
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_agentfacility].lval) == 0)
       {
-      SetFacility(retval);
+      SetFacility(retval.item);
       continue;
       }
    
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_agentaccess].lval) == 0)
       {
-      ACCESSLIST = (struct Rlist *) retval;
+      ACCESSLIST = (struct Rlist *)retval.item;
       CheckAgentAccess(ACCESSLIST);
       continue;
       }
@@ -439,7 +438,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
          {
          printf("%s> SET refresh_processes when starting: ",VPREFIX);
 
-         for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
+         for (rp  = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
             {
             printf(" %s",(char *)rp->item);
             PrependItem(&PROCESSREFRESH,rp->item,NULL);
@@ -456,7 +455,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       struct Rlist *rp;
       CfOut(cf_verbose,"","SET Abort classes from ...\n");
       
-      for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
+      for (rp  = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
          {
          char name[CF_MAXVARSIZE] = "";
          strncpy(name, rp->item, CF_MAXVARSIZE - 1);
@@ -476,7 +475,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       struct Rlist *rp;
       CfOut(cf_verbose,"","SET Abort bundle classes from ...\n");
       
-      for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
+      for (rp  = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
          {
          char name[CF_MAXVARSIZE] = "";
          strncpy(name, rp->item, CF_MAXVARSIZE - 1);
@@ -496,7 +495,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       struct Rlist *rp;
       CfOut(cf_verbose,"","-> Add classes ...\n");
       
-      for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
+      for (rp  = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
          {
          CfOut(cf_verbose,""," -> ... %s\n",rp->item);
          NewClass(rp->item);
@@ -507,55 +506,55 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
    
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_auditing].lval) == 0)
       {
-      AUDIT = GetBoolean(retval);
+      AUDIT = GetBoolean(retval.item);
       CfOut(cf_verbose,"","SET auditing = %d\n",AUDIT);
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_alwaysvalidate].lval) == 0)
       {
-      ALWAYS_VALIDATE = GetBoolean(retval);
+      ALWAYS_VALIDATE = GetBoolean(retval.item);
       CfOut(cf_verbose,"","SET alwaysvalidate = %d\n",ALWAYS_VALIDATE);
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_allclassesreport].lval) == 0)
       {
-      ALLCLASSESREPORT = GetBoolean(retval);
+      ALLCLASSESREPORT = GetBoolean(retval.item);
       CfOut(cf_verbose,"","SET allclassesreport = %d\n", ALLCLASSESREPORT);
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_secureinput].lval) == 0)
       {
-      CFPARANOID = GetBoolean(retval);
+      CFPARANOID = GetBoolean(retval.item);
       CfOut(cf_verbose,"","SET secure input = %d\n",CFPARANOID);
       continue;
       }
    
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_binarypaddingchar].lval) == 0)
       {
-      PADCHAR = *(char *)retval;
+      PADCHAR = *(char *)retval.item;
       CfOut(cf_verbose,"","SET binarypaddingchar = %c\n",PADCHAR);
       continue;
       }
    
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_bindtointerface].lval) == 0)
       {
-      strncpy(BINDINTERFACE,retval,CF_BUFSIZE-1);
+      strncpy(BINDINTERFACE, retval.item, CF_BUFSIZE-1);
       CfOut(cf_verbose,"","SET bindtointerface = %s\n",BINDINTERFACE);
       continue;
       }
    
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_hashupdates].lval) == 0)
       {
-      CHECKSUMUPDATES = GetBoolean(retval);
+      CHECKSUMUPDATES = GetBoolean(retval.item);
       CfOut(cf_verbose,"","SET ChecksumUpdates %d\n",CHECKSUMUPDATES);
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_exclamation].lval) == 0)
       {
-      EXCLAIM = GetBoolean(retval);
+      EXCLAIM = GetBoolean(retval.item);
       CfOut(cf_verbose,"","SET exclamation %d\n",EXCLAIM);
       continue;
       }
@@ -563,7 +562,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_childlibpath].lval) == 0)
       {
       char output[CF_BUFSIZE];
-      snprintf(output,CF_BUFSIZE,"LD_LIBRARY_PATH=%s",(char *)retval);
+      snprintf(output,CF_BUFSIZE,"LD_LIBRARY_PATH=%s",(char *)retval.item);
       if (putenv(xstrdup(output)) == 0)
          {
          CfOut(cf_verbose,"","Setting %s\n",output);
@@ -573,56 +572,56 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_defaultcopytype].lval) == 0)
       {
-      DEFAULT_COPYTYPE = (char *)retval;
+      DEFAULT_COPYTYPE = (char *)retval.item;
       CfOut(cf_verbose,"","SET defaultcopytype = %c\n",DEFAULT_COPYTYPE);
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_fsinglecopy].lval) == 0)
       {
-      SINGLE_COPY_LIST = (struct Rlist *)retval;
+      SINGLE_COPY_LIST = (struct Rlist *)retval.item;
       CfOut(cf_verbose,"","SET file single copy list\n");
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_fautodefine].lval) == 0)
       {
-      AUTO_DEFINE_LIST = (struct Rlist *)retval;
+      AUTO_DEFINE_LIST = (struct Rlist *)retval.item;
       CfOut(cf_verbose,"","SET file auto define list\n");
       continue;
       }
    
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_dryrun].lval) == 0)
       {
-      DONTDO = GetBoolean(retval);
+      DONTDO = GetBoolean(retval.item);
       CfOut(cf_verbose,"","SET dryrun = %c\n",DONTDO);
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_inform].lval) == 0)
       {
-      INFORM = GetBoolean(retval);
+      INFORM = GetBoolean(retval.item);
       CfOut(cf_verbose,"","SET inform = %c\n",INFORM);
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_verbose].lval) == 0)
       {
-      VERBOSE = GetBoolean(retval);
+      VERBOSE = GetBoolean(retval.item);
       CfOut(cf_verbose,"","SET inform = %c\n",VERBOSE);
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_repository].lval) == 0)
       {
-      VREPOSITORY = xstrdup(retval);
+      VREPOSITORY = xstrdup(retval.item);
       CfOut(cf_verbose,"","SET repository = %s\n",VREPOSITORY);
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_skipidentify].lval) == 0)
       {
-      SKIPIDENTIFY = GetBoolean(retval);
+      SKIPIDENTIFY = GetBoolean(retval.item);
       CfOut(cf_verbose,"","SET skipidentify = %d\n",SKIPIDENTIFY);
       continue;
       }
@@ -630,7 +629,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_suspiciousnames].lval) == 0)
       {
 
-      for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
+      for (rp = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
 	{
 	PrependItem(&SUSPICIOUSLIST,rp->item,NULL);
 	CfOut(cf_verbose,"", "-> Concidering %s as suspicious file", rp->item);
@@ -641,49 +640,49 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_repchar].lval) == 0)
       {
-      REPOSCHAR = *(char *)retval;
+      REPOSCHAR = *(char *)retval.item;
       CfOut(cf_verbose,"","SET repchar = %c\n",REPOSCHAR);
       continue;
       }
    
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_mountfilesystems].lval) == 0)
       {
-      CF_MOUNTALL = GetBoolean(retval);
+      CF_MOUNTALL = GetBoolean(retval.item);
       CfOut(cf_verbose,"","SET mountfilesystems = %d\n",CF_MOUNTALL);
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_editfilesize].lval) == 0)
       {
-      EDITFILESIZE = Str2Int(retval);
+      EDITFILESIZE = Str2Int(retval.item);
       CfOut(cf_verbose,"","SET EDITFILESIZE = %d\n",EDITFILESIZE);
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_ifelapsed].lval) == 0)
       {
-      VIFELAPSED = Str2Int(retval);
+      VIFELAPSED = Str2Int(retval.item);
       CfOut(cf_verbose,"","SET ifelapsed = %d\n",VIFELAPSED);
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_expireafter].lval) == 0)
       {
-      VEXPIREAFTER = Str2Int(retval);
+      VEXPIREAFTER = Str2Int(retval.item);
       CfOut(cf_verbose,"","SET ifelapsed = %d\n",VEXPIREAFTER);
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_timeout].lval) == 0)
       {
-      CONNTIMEOUT = Str2Int(retval);
+      CONNTIMEOUT = Str2Int(retval.item);
       CfOut(cf_verbose,"","SET timeout = %d\n",CONNTIMEOUT);
       continue;
       }
    
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_max_children].lval) == 0)
       {
-      CFA_BACKGROUND_LIMIT = Str2Int(retval);
+      CFA_BACKGROUND_LIMIT = Str2Int(retval.item);
       CfOut(cf_verbose,"","SET MAX_CHILDREN = %d\n",CFA_BACKGROUND_LIMIT);
       if (CFA_BACKGROUND_LIMIT > 10)
          {
@@ -695,7 +694,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
    
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_syslog].lval) == 0)
       {
-      LOGGING = GetBoolean(retval);
+      LOGGING = GetBoolean(retval.item);
       CfOut(cf_verbose,"","SET syslog = %d\n",LOGGING);
       continue;
       }
@@ -705,7 +704,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       struct Rlist *rp;
       CfOut(cf_verbose,"","SET environment variables from ...\n");
       
-      for (rp  = (struct Rlist *) retval; rp != NULL; rp = rp->next)
+      for (rp = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
          {
          if (putenv(rp->item) != 0)
             {
@@ -717,27 +716,27 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       }
    }
 
-if (GetVariable("control_common",CFG_CONTROLBODY[cfg_lastseenexpireafter].lval,&retval,&rettype) != cf_notype)
+if (GetVariable("control_common", CFG_CONTROLBODY[cfg_lastseenexpireafter].lval, &retval) != cf_notype)
    {
-   LASTSEENEXPIREAFTER = Str2Int(retval);
+   LASTSEENEXPIREAFTER = Str2Int(retval.item);
    }
 
-if (GetVariable("control_common",CFG_CONTROLBODY[cfg_fips_mode].lval,&retval,&rettype) != cf_notype)
+if (GetVariable("control_common", CFG_CONTROLBODY[cfg_fips_mode].lval, &retval) != cf_notype)
    {
-   FIPS_MODE = GetBoolean(retval);
+   FIPS_MODE = GetBoolean(retval.item);
    CfOut(cf_verbose,"","SET FIPS_MODE = %d\n",FIPS_MODE);
    }
 
-if (GetVariable("control_common",CFG_CONTROLBODY[cfg_syslog_port].lval,&retval,&rettype) != cf_notype)
+if (GetVariable("control_common", CFG_CONTROLBODY[cfg_syslog_port].lval, &retval) != cf_notype)
    {
-   SetSyslogPort(Str2Int(retval));
-   CfOut(cf_verbose,"","SET syslog_port to %s",retval);
+   SetSyslogPort(Str2Int(retval.item));
+   CfOut(cf_verbose,"","SET syslog_port to %s",retval.item);
    }
 
-if (GetVariable("control_common",CFG_CONTROLBODY[cfg_syslog_host].lval,&retval,&rettype) != cf_notype)
+if (GetVariable("control_common", CFG_CONTROLBODY[cfg_syslog_host].lval, &retval) != cf_notype)
    {   
-   SetSyslogHost(Hostname2IPString(retval));
-   CfOut(cf_verbose,"","SET syslog_host to %s",Hostname2IPString(retval));
+   SetSyslogHost(Hostname2IPString(retval.item));
+   CfOut(cf_verbose,"","SET syslog_host to %s",Hostname2IPString(retval.item));
    }
 
 #ifdef HAVE_NOVA
@@ -752,17 +751,16 @@ static void KeepPromiseBundles(struct Rlist *bundlesequence)
 { struct Bundle *bp;
   struct Rlist *rp,*params;
   struct FnCall *fp;
-  char rettype,*name;
-  void *retval;
+  char *name;
+  struct Rval retval;
   int ok = true;
 
 if (bundlesequence)
    {
    CfOut(cf_inform,""," >> Using command line specified bundlesequence");
-   retval = bundlesequence;
-   rettype = CF_LIST;
+   retval = (struct Rval) { bundlesequence, CF_LIST };
    }
-else if (GetVariable("control_common","bundlesequence",&retval,&rettype) == cf_notype)
+else if (GetVariable("control_common","bundlesequence",&retval) == cf_notype)
    {
    CfOut(cf_error,""," !! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
    CfOut(cf_error,""," !! No bundlesequence in the common control body");
@@ -770,12 +768,12 @@ else if (GetVariable("control_common","bundlesequence",&retval,&rettype) == cf_n
    exit(1);
    }
 
-if (rettype != CF_LIST)
+if (retval.rtype != CF_LIST)
    {
    FatalError("Promised bundlesequence was not a list");
    }
 
-for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
+for (rp = (struct Rlist *)retval.item; rp != NULL; rp=rp->next)
    {
    switch (rp->type)
       {
@@ -823,13 +821,13 @@ if (!ok)
 if (VERBOSE || DEBUG)
    {
    printf("%s> -> Bundlesequence => ",VPREFIX);
-   ShowRval(stdout, (struct Rval) { retval, rettype });
+   ShowRval(stdout, retval);
    printf("\n");
    }
 
 /* If all is okay, go ahead and evaluate */
 
-for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
+for (rp = (struct Rlist *)retval.item; rp != NULL; rp=rp->next)
    {
    switch (rp->type)
       {

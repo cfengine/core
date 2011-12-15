@@ -39,8 +39,7 @@ static void DeleteReferenceRlist(struct Rlist *list);
 struct Rlist *NewIterationContext(char *scopeid,struct Rlist *namelist)
 
 { struct Rlist *rp,*rps,*deref_listoflists = NULL;
-  char rtype;
-  void *returnval;
+  struct Rval retval;
   enum cfdatatype dtype;
   struct CfAssoc *new;
   struct Rval newret;
@@ -59,7 +58,7 @@ if (namelist == NULL)
 
 for (rp = namelist; rp != NULL; rp = rp->next)
    {
-   dtype = GetVariable(scopeid,rp->item,&returnval,&rtype);
+   dtype = GetVariable(scopeid,rp->item,&retval);
    
    if (dtype == cf_notype)
       {
@@ -70,9 +69,9 @@ for (rp = namelist; rp != NULL; rp = rp->next)
    
    /* Make a copy of list references in scope only, without the names */
 
-   if (rtype == CF_LIST)
+   if (retval.rtype == CF_LIST)
       {
-      for (rps = (struct Rlist *)returnval; rps != NULL; rps=rps->next)
+      for (rps = (struct Rlist *)retval.item; rps != NULL; rps=rps->next)
          {
          if (rps->type == CF_FNCALL)
             {
@@ -85,7 +84,7 @@ for (rp = namelist; rp != NULL; rp = rp->next)
          }
       }
 
-   if ((new = NewAssoc(rp->item,returnval,rtype,dtype)))
+   if ((new = NewAssoc(rp->item,retval.item,retval.rtype,dtype)))
       {
       OrthogAppendRlist(&deref_listoflists,new,CF_LIST);
       rp->state_ptr = new->rval;

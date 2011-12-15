@@ -478,8 +478,7 @@ return true;
 void KeepControlPromises()
 
 { struct Constraint *cp;
-  char rettype;
-  void *retval;
+struct Rval retval;
 
 RUNATTR.copy.trustkey = false;
 RUNATTR.copy.encrypt = true;
@@ -495,7 +494,7 @@ for (cp = ControlBodyConstraints(cf_runagent); cp != NULL; cp=cp->next)
       continue;
       }
    
-   if (GetVariable("control_runagent",cp->lval,&retval,&rettype) == cf_notype)
+   if (GetVariable("control_runagent",cp->lval,&retval) == cf_notype)
       {
       CfOut(cf_error,"","Unknown lval %s in runagent control body",cp->lval);
       continue;
@@ -503,28 +502,28 @@ for (cp = ControlBodyConstraints(cf_runagent); cp != NULL; cp=cp->next)
    
    if (strcmp(cp->lval,CFR_CONTROLBODY[cfr_force_ipv4].lval) == 0)
       {
-      RUNATTR.copy.force_ipv4 = GetBoolean(retval);
+      RUNATTR.copy.force_ipv4 = GetBoolean(retval.item);
       CfOut(cf_verbose,"","SET force_ipv4 = %d\n",RUNATTR.copy.force_ipv4);
       continue;
       }
    
    if (strcmp(cp->lval,CFR_CONTROLBODY[cfr_trustkey].lval) == 0)
       {
-      RUNATTR.copy.trustkey = GetBoolean(retval);
+      RUNATTR.copy.trustkey = GetBoolean(retval.item);
       CfOut(cf_verbose,"","SET trustkey = %d\n",RUNATTR.copy.trustkey);
       continue;
       }
    
    if (strcmp(cp->lval,CFR_CONTROLBODY[cfr_encrypt].lval) == 0)
       {
-      RUNATTR.copy.encrypt = GetBoolean(retval);
+      RUNATTR.copy.encrypt = GetBoolean(retval.item);
       CfOut(cf_verbose,"","SET encrypt = %d\n",RUNATTR.copy.encrypt);
       continue;
       }
 
    if (strcmp(cp->lval,CFR_CONTROLBODY[cfr_portnumber].lval) == 0)
       {
-      RUNATTR.copy.portnumber = (short)Str2Int(retval);
+      RUNATTR.copy.portnumber = (short)Str2Int(retval.item);
       CfOut(cf_verbose,"","SET default portnumber = %u\n",(int)RUNATTR.copy.portnumber);
       continue;
       }
@@ -541,28 +540,28 @@ for (cp = ControlBodyConstraints(cf_runagent); cp != NULL; cp=cp->next)
          }
       else
          {
-         BACKGROUND = GetBoolean(retval);
+         BACKGROUND = GetBoolean(retval.item);
          }
       continue;
       }
    
    if (strcmp(cp->lval,CFR_CONTROLBODY[cfr_maxchild].lval) == 0)
       {
-      MAXCHILD = (short)Str2Int(retval);
+      MAXCHILD = (short)Str2Int(retval.item);
       continue;
       }
    
    if (strcmp(cp->lval,CFR_CONTROLBODY[cfr_output_to_file].lval) == 0)
       {
-      OUTPUT_TO_FILE = GetBoolean(retval);
+      OUTPUT_TO_FILE = GetBoolean(retval.item);
       continue;
       }
 
    if (strcmp(cp->lval,CFR_CONTROLBODY[cfr_output_directory].lval) == 0)
       {
-      if ( IsAbsPath(retval) )
+      if ( IsAbsPath(retval.item) )
         {
-	strncpy(OUTPUT_DIRECTORY,retval,CF_BUFSIZE-1);
+	strncpy(OUTPUT_DIRECTORY,retval.item,CF_BUFSIZE-1);
         CfOut(cf_verbose,"","SET output direcory to = %s\n", OUTPUT_DIRECTORY);
 	}
       continue;
@@ -570,7 +569,7 @@ for (cp = ControlBodyConstraints(cf_runagent); cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFR_CONTROLBODY[cfr_timeout].lval) == 0)
       {
-      RUNATTR.copy.timeout = (short)Str2Int(retval);
+      RUNATTR.copy.timeout = (short)Str2Int(retval.item);
       continue;
       }
 
@@ -578,7 +577,7 @@ for (cp = ControlBodyConstraints(cf_runagent); cp != NULL; cp=cp->next)
       {
       if (HOSTLIST == NULL) // Don't override if command line setting
          {
-         HOSTLIST = retval;
+         HOSTLIST = retval.item;
          }
       
       continue;

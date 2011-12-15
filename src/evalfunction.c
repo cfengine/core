@@ -1315,9 +1315,9 @@ static struct Rval FnCallRegList(struct FnCall *fp,struct Rlist *finalargs)
 
 { struct Rlist *rp,*list;
   struct Rval rval;
-  char buffer[CF_BUFSIZE],naked[CF_MAXVARSIZE],rettype;
+  char buffer[CF_BUFSIZE],naked[CF_MAXVARSIZE];
   char *regex,*listvar;
-  void *retval;
+  struct Rval retval;
 
 buffer[0] = '\0';  
 
@@ -1339,7 +1339,7 @@ else
    return rval;            
    }
 
-if (GetVariable(CONTEXTID,naked,&retval,&rettype) == cf_notype)
+if (GetVariable(CONTEXTID,naked,&retval) == cf_notype)
    {
    CfOut(cf_error,"","Function REGLIST was promised a list called \"%s\" but this was not found\n",listvar);
    SetFnCallReturnStatus("reglist",FNCALL_FAILURE,"List was not a list found in scope",NULL);
@@ -1348,7 +1348,7 @@ if (GetVariable(CONTEXTID,naked,&retval,&rettype) == cf_notype)
    return rval;         
    }
 
-if (rettype != CF_LIST)
+if (retval.rtype != CF_LIST)
    {
    CfOut(cf_error,"","Function reglist was promised a list called \"%s\" but this variable is not a list\n",listvar);
    SetFnCallReturnStatus("reglist",FNCALL_FAILURE,"Valid list was not found in scope",NULL);
@@ -1357,7 +1357,7 @@ if (rettype != CF_LIST)
    return rval;         
    }
 
-list = (struct Rlist *)retval;
+list = (struct Rlist *)retval.item;
 
 for (rp = list; rp != NULL; rp = rp->next)
    {
@@ -1642,7 +1642,7 @@ if ((ptr = GetScope(scopeid)) == NULL)
    return rval;            
    }
 
-if (GetVariable(scopeid,lval,&rval2.item,&rval2.rtype) == cf_notype)
+if (GetVariable(scopeid,lval,&rval2) == cf_notype)
    {
    CfOut(cf_error,"","Function \"grep\" was promised a list called \"%s\" but this was not found\n",name);
    SetFnCallReturnStatus("getindices",FNCALL_FAILURE,"Array not found in scope",NULL);
@@ -1716,7 +1716,7 @@ if ((ptr = GetScope(scopeid)) == NULL)
    return rval;            
    }
 
-if (GetVariable(scopeid,lval,&rval2.item,&rval2.rtype) == cf_notype)
+if (GetVariable(scopeid,lval,&rval2) == cf_notype)
    {
    CfOut(cf_error,"","Function \"sum\" was promised a list called \"%s\" but this was not found\n",name);
    SetFnCallReturnStatus("sum",FNCALL_FAILURE,"List not found in scope",NULL);
@@ -1799,7 +1799,7 @@ if ((ptr = GetScope(scopeid)) == NULL)
    return rval;            
    }
 
-if (GetVariable(scopeid,lval,&rval2.item,&rval2.rtype) == cf_notype)
+if (GetVariable(scopeid,lval,&rval2) == cf_notype)
    {
    CfOut(cf_error,"","Function \"product\" was promised a list called \"%s\" but this was not found\n",name);
    SetFnCallReturnStatus("product",FNCALL_FAILURE,"List not found in scope",NULL);
@@ -1883,7 +1883,7 @@ if ((ptr = GetScope(scopeid)) == NULL)
    return rval;            
    }
 
-if (GetVariable(scopeid,lval,&rval2.item,&rval2.rtype) == cf_notype)
+if (GetVariable(scopeid,lval,&rval2) == cf_notype)
    {
    CfOut(cf_verbose,"","Function \"join\" was promised a list called \"%s.%s\" but this was not (yet) found\n",scopeid,name);
    SetFnCallReturnStatus("join",FNCALL_FAILURE,"Array not found in scope",NULL);
@@ -2143,12 +2143,12 @@ static struct Rval FnCallSelectServers(struct FnCall *fp,struct Rlist *finalargs
 { struct cfagent_connection *conn = NULL;
   struct Rlist *rp,*hostnameip;
   struct Rval rval;
-  char buffer[CF_BUFSIZE],naked[CF_MAXVARSIZE],rettype;
+  char buffer[CF_BUFSIZE],naked[CF_MAXVARSIZE];
   char *maxbytes,*port,*sendstring,*regex,*array_lval,*listvar;
   int val = 0, n_read = 0,count = 0;
   short portnum;
   struct Attributes attr = {{0}};
-  void *retval;
+  struct Rval retval;
   struct Promise *pp;
 
 buffer[0] = '\0';  
@@ -2176,7 +2176,7 @@ else
    return rval;            
    }
 
-if (GetVariable(CONTEXTID,naked,&retval,&rettype) == cf_notype)
+if (GetVariable(CONTEXTID,naked,&retval) == cf_notype)
    {
    CfOut(cf_error,"","Function selectservers was promised a list called \"%s\" but this was not found from context %s.%s\n",listvar,CONTEXTID,naked);
    SetFnCallReturnStatus("selectservers",FNCALL_FAILURE,"Host list was not a list found in scope",NULL);
@@ -2186,7 +2186,7 @@ if (GetVariable(CONTEXTID,naked,&retval,&rettype) == cf_notype)
    return rval;         
    }
 
-if (rettype != CF_LIST)
+if (retval.rtype != CF_LIST)
    {
    CfOut(cf_error,"","Function selectservers was promised a list called \"%s\" but this variable is not a list\n",listvar);
    SetFnCallReturnStatus("selectservers",FNCALL_FAILURE,"Valid list was not found in scope",NULL);
@@ -2196,7 +2196,7 @@ if (rettype != CF_LIST)
    return rval;         
    }
 
-hostnameip = (struct Rlist *)retval;
+hostnameip = (struct Rlist *)retval.item;
 val = Str2Int(maxbytes);
 portnum = (short) Str2Int(port);
 
@@ -4262,8 +4262,8 @@ static struct Rval FnCallFileSexist(struct FnCall *fp,struct Rlist *finalargs)
 { char *listvar;
   struct Rlist *rp,*files;
   struct Rval rval;
-  char buffer[CF_BUFSIZE],naked[CF_MAXVARSIZE],rettype;
-  void *retval;
+  char buffer[CF_BUFSIZE],naked[CF_MAXVARSIZE];
+  struct Rval retval;
   struct stat sb;
 
 buffer[0] = '\0';  
@@ -4285,7 +4285,7 @@ else
    return rval;            
    }
 
-if (GetVariable(CONTEXTID,naked,&retval,&rettype) == cf_notype)
+if (GetVariable(CONTEXTID,naked,&retval) == cf_notype)
    {
    CfOut(cf_error,"","Function filesexist was promised a list called \"%s\" but this was not found\n",listvar);
    SetFnCallReturnStatus("filesexist",FNCALL_FAILURE,"File list was not a list found in scope",NULL);
@@ -4294,7 +4294,7 @@ if (GetVariable(CONTEXTID,naked,&retval,&rettype) == cf_notype)
    return rval;            
    }
 
-if (rettype != CF_LIST)
+if (retval.rtype != CF_LIST)
    {
    CfOut(cf_error,"","Function filesexist was promised a list called \"%s\" but this variable is not a list\n",listvar);
    SetFnCallReturnStatus("filesexist",FNCALL_FAILURE,"File list was not a list found in scope",NULL);
@@ -4303,7 +4303,7 @@ if (rettype != CF_LIST)
    return rval;            
    }
 
-files = (struct Rlist *)retval;
+files = (struct Rlist *)retval.item;
 
 strcpy(buffer,"any");
 

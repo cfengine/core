@@ -60,8 +60,8 @@ ClassAuditLog(&dummyp,dummyattr,"Cfagent starting",CF_NOP,"");
 void EndAudit()
 
 { double total;
-  char *sp,rettype,string[CF_BUFSIZE];
-  void *retval;
+  char *sp,string[CF_BUFSIZE];
+  struct Rval retval;
   struct Promise dummyp = {0};
   struct Attributes dummyattr = {{0}};
 
@@ -98,9 +98,9 @@ if (BooleanControl("control_agent",CFA_CONTROLBODY[cfa_track_value].lval))
 
 total = (double)(PR_KEPT+PR_NOTKEPT+PR_REPAIRED)/100.0;
 
-if (GetVariable("control_common","version",&retval,&rettype) != cf_notype)
+if (GetVariable("control_common","version",&retval) != cf_notype)
    {
-   sp = (char *)retval;
+   sp = (char *)retval.item;
    }
 else
    {

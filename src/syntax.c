@@ -605,8 +605,7 @@ enum cfdatatype StringDataType(char *scopeid,char *string)
 
 {
   enum cfdatatype dtype;
-  char rtype;
-  void *rval;
+  struct Rval rval;
   int islist = false;
   char var[CF_BUFSIZE];
   
@@ -630,9 +629,9 @@ if (*string == '$')
    {
    if (ExtractInnerCf3VarString(string,var))
       {
-      if ((dtype = GetVariable(scopeid,var,&rval,&rtype)) != cf_notype)
+      if ((dtype = GetVariable(scopeid,var,&rval)) != cf_notype)
          {
-         if (rtype == CF_LIST)
+         if (rval.rtype == CF_LIST)
             {
             if (!islist)
                {

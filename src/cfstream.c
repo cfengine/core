@@ -190,11 +190,11 @@ DeleteItemList(mess);
 void cfPS(enum cfreport level,char status,char *errstr,struct Promise *pp,struct Attributes attr,char *fmt, ...)
 
 { va_list ap;
-  char rettype,*sp,buffer[CF_BUFSIZE],output[CF_BUFSIZE],*v,handle[CF_MAXVARSIZE];
+  char *sp,buffer[CF_BUFSIZE],output[CF_BUFSIZE],*v,handle[CF_MAXVARSIZE];
   struct Item *ip,*mess = NULL;
   int verbose;
   struct Rlist *rp;
-  void *retval;
+  struct Rval retval;
   
 if ((fmt == NULL) || (strlen(fmt) == 0))
    {
@@ -215,9 +215,9 @@ if ((errstr == NULL) || (strlen(errstr) > 0))
 
 if (level == cf_error)
    {
-   if (GetVariable("control_common","version",&retval,&rettype) != cf_notype)
+   if (GetVariable("control_common", "version", &retval) != cf_notype)
       {
-      v = (char *)retval;
+      v = (char *)retval.item;
       }
    else
       {

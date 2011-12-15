@@ -569,8 +569,7 @@ void KeepReportsControlPromises()
 
 { struct Constraint *cp;
   struct Rlist *rp;
-  char rettype;
-  void *retval;
+  struct Rval retval;
 
 for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
    {
@@ -579,7 +578,7 @@ for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
       continue;
       }
 
-   if (GetVariable("control_reporter",cp->lval,&retval,&rettype) == cf_notype)
+   if (GetVariable("control_reporter", cp->lval, &retval) == cf_notype)
       {
       CfOut(cf_error,"","Unknown lval %s in report agent control body",cp->lval);
       continue;
@@ -587,7 +586,7 @@ for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFRE_CONTROLBODY[cfre_builddir].lval) == 0)
       {
-      strncpy(OUTPUTDIR,retval,CF_BUFSIZE);
+      strncpy(OUTPUTDIR, retval.item, CF_BUFSIZE);
       CfOut(cf_verbose,"","SET outputdir = %s\n",OUTPUTDIR);
 
       if (cf_mkdir(OUTPUTDIR,0755) == -1)
@@ -606,14 +605,14 @@ for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFRE_CONTROLBODY[cfre_autoscale].lval) == 0)
       {
-      NOSCALING = !GetBoolean(retval);
+      NOSCALING = !GetBoolean(retval.item);
       CfOut(cf_verbose,"","SET autoscale = %d\n",NOSCALING);
       continue;
       }
 
    if (strcmp(cp->lval,CFRE_CONTROLBODY[cfre_html_embed].lval) == 0)
       {
-      EMBEDDED = GetBoolean(retval);
+      EMBEDDED = GetBoolean(retval.item);
       CfOut(cf_verbose,"","SET html_embedding = %d\n",EMBEDDED);
       continue;
       }
@@ -621,21 +620,21 @@ for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFRE_CONTROLBODY[cfre_timestamps].lval) == 0)
       {
-      TIMESTAMPS = GetBoolean(retval);
+      TIMESTAMPS = GetBoolean(retval.item);
       CfOut(cf_verbose,"","SET timestamps = %d\n",TIMESTAMPS);
       continue;
       }
 
    if (strcmp(cp->lval,CFRE_CONTROLBODY[cfre_errorbars].lval) == 0)
       {
-      ERRORBARS = GetBoolean(retval);
+      ERRORBARS = GetBoolean(retval.item);
       CfOut(cf_verbose,"","SET errorbars = %d\n",ERRORBARS);
       continue;
       }
 
    if (strcmp(cp->lval,CFRE_CONTROLBODY[cfre_query_engine].lval) == 0)
       {
-      strncpy(WEBDRIVER,retval,CF_MAXVARSIZE);
+      strncpy(WEBDRIVER, retval.item, CF_MAXVARSIZE);
       continue;
       }
 
@@ -647,27 +646,27 @@ for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFRE_CONTROLBODY[cfre_htmlbanner].lval) == 0)
       {
-      strncpy(BANNER,retval,CF_BUFSIZE-1);
+      strncpy(BANNER, retval.item, CF_BUFSIZE-1);
       continue;
       }
 
    if (strcmp(cp->lval,CFRE_CONTROLBODY[cfre_htmlfooter].lval) == 0)
       {
-      strncpy(FOOTER,retval,CF_BUFSIZE-1);
+      strncpy(FOOTER, retval.item, CF_BUFSIZE-1);
       continue;
       }
 
    if (strcmp(cp->lval,CFRE_CONTROLBODY[cfre_report_output].lval) == 0)
       {
-      if (strcmp("html",retval) == 0)
+      if (strcmp("html", retval.item) == 0)
          {
          HTML = true;
          }
-      else if (strcmp("xml",retval) == 0)
+      else if (strcmp("xml", retval.item) == 0)
          {
          XML = true;
          }
-      else if (strcmp("csv",retval) == 0)
+      else if (strcmp("csv", retval.item) == 0)
          {
          CSV = true;
          }
@@ -676,13 +675,13 @@ for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFRE_CONTROLBODY[cfre_stylesheet].lval) == 0)
       {
-      strncpy(STYLESHEET,retval,CF_MAXVARSIZE);
+      strncpy(STYLESHEET, retval.item, CF_MAXVARSIZE);
       continue;
       }
 
    if (strcmp(cp->lval,CFRE_CONTROLBODY[cfre_reports].lval) == 0)
       {
-      for (rp  = (struct Rlist *)retval; rp != NULL; rp = rp->next)
+      for (rp  = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
          {
          IdempPrependRScalar(&REPORTS,rp->item,CF_SCALAR);
          CfOut(cf_inform,"","Adding %s to the reports...\n",rp->item);
@@ -692,7 +691,7 @@ for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFRE_CONTROLBODY[cfre_csv].lval) == 0)
       {
-      for (rp  = (struct Rlist *)retval; rp != NULL; rp = rp->next)
+      for (rp  = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
          {
          IdempPrependRScalar(&CSVLIST,rp->item,CF_SCALAR);
          CfOut(cf_inform,"","Adding %s to the csv2xml list...\n",rp->item);
@@ -701,9 +700,9 @@ for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
       }
    }
 
-if (GetVariable("control_common",CFG_CONTROLBODY[cfg_lastseenexpireafter].lval,&retval,&rettype) != cf_notype)
+if (GetVariable("control_common", CFG_CONTROLBODY[cfg_lastseenexpireafter].lval, &retval) != cf_notype)
    {
-   LASTSEENEXPIREAFTER = Str2Int(retval);
+   LASTSEENEXPIREAFTER = Str2Int(retval.item);
    }
 }
 

@@ -212,8 +212,7 @@ struct Rval CopyRvalItem(struct Rval rval)
 
 { struct Rlist *rp,*srp,*start = NULL;
   struct FnCall *fp;
-  char rtype = CF_SCALAR;
-  
+
 CfDebug("CopyRvalItem(%c)\n",rval.rtype);
 
 if (rval.item == NULL)
@@ -251,13 +250,13 @@ switch(rval.rtype)
              {
              GetNaked(naked,rp->item);
 
-             void *rv;
-             if (GetVariable(CONTEXTID,naked,&rv,&rtype) != cf_notype)
+             struct Rval rv = { NULL, CF_SCALAR }; /* FIXME: why it needs to be initialized? */
+             if (GetVariable(CONTEXTID,naked,&rv) != cf_notype)
                 {
-                switch (rtype)
+                switch (rv.rtype)
                    {
                    case CF_LIST:
-                       for (srp = (struct Rlist *)rv; srp != NULL; srp=srp->next)
+                       for (srp = (struct Rlist *)rv.item; srp != NULL; srp=srp->next)
                           {
                           AppendRlist(&start,srp->item,srp->type);
                           }

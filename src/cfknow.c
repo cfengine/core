@@ -363,8 +363,7 @@ if (InsertTopic("any","any"))
 void KeepKnowControlPromises()
 
 { struct Constraint *cp;
-  char rettype;
-  void *retval;
+  struct Rval retval;
 
 for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
    {
@@ -373,7 +372,7 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
       continue;
       }
    
-   if (GetVariable("control_knowledge",cp->lval,&retval,&rettype) == cf_notype)
+   if (GetVariable("control_knowledge", cp->lval, &retval) == cf_notype)
       {
       CfOut(cf_error,""," !! Unknown lval %s in knowledge control body",cp->lval);
       continue;
@@ -387,11 +386,11 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
    
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_builddir].lval) == 0)
       {
-      strncpy(BUILD_DIR,retval,CF_BUFSIZE);
+      strncpy(BUILD_DIR, retval.item, CF_BUFSIZE);
 
       if (strlen(MANDIR) < 2) /* MANDIR defaults to BUILDDIR */
          {
-         strncpy(MANDIR,retval,CF_BUFSIZE);
+         strncpy(MANDIR, retval.item, CF_BUFSIZE);
          }
       continue;
       }
@@ -476,14 +475,14 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
    
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_genman].lval) == 0)
       {
-      GENERATE_MANUAL = GetBoolean(retval);
+      GENERATE_MANUAL = GetBoolean(retval.item);
       CfOut(cf_verbose,"","SET generate_manual = %d\n",GENERATE_MANUAL);
       continue;
       }
 
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_mandir].lval) == 0)
       {
-      strncpy(MANDIR,retval,CF_MAXVARSIZE);
+      strncpy(MANDIR, retval.item, CF_MAXVARSIZE);
       CfOut(cf_verbose,"","SET manual_source_directory = %s\n",MANDIR);
       continue;
       }
@@ -505,18 +504,18 @@ static void KeepPromiseBundles()
   struct Promise *pp;
   struct Rlist *rp,*params;
   struct FnCall *fp;
-  char rettype,*name;
-  void *retval;
+  char *name;
+  struct Rval retval;
   int ok = true;
   enum typesequence type;
 
-if (GetVariable("control_common","bundlesequence",&retval,&rettype) == cf_notype)
+if (GetVariable("control_common", "bundlesequence", &retval) == cf_notype)
    {
    CfOut(cf_error,""," !! No bundlesequence in the common control body");
    exit(1);
    }
 
-for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
+for (rp = (struct Rlist *)retval.item; rp != NULL; rp=rp->next)
    {
    switch (rp->type)
       {
@@ -556,7 +555,7 @@ if (!ok)
 
 for (type = 0; TYPESEQUENCE[type] != NULL; type++)
    {
-   for (rp = (struct Rlist *)retval; rp != NULL; rp=rp->next)
+   for (rp = (struct Rlist *)retval.item; rp != NULL; rp=rp->next)
       {
       switch (rp->type)
          {

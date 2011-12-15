@@ -1131,7 +1131,7 @@ void ForceScalar(char *lval,char *rval);
 void NewScalar(const char *scope, const char *lval, const char *rval, enum cfdatatype dt);
 void DeleteScalar(const char *scope, const char *lval);
 void NewList(char *scope,char *lval,void *rval,enum cfdatatype dt);
-enum cfdatatype GetVariable(const char *scope, const char *lval,void **returnv,char *rtype);
+enum cfdatatype GetVariable(const char *scope, const char *lval, struct Rval *returnv);
 void DeleteVariable(char *scope,char *id);
 bool StringContainsVar(const char *s, const char *v);
 int DefinedVariable(char *name);

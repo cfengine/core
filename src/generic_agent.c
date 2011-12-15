@@ -1171,7 +1171,7 @@ void PromiseBanner(struct Promise *pp)
 
 { char *sp,handle[CF_MAXVARSIZE];
 
-if ((sp = GetConstraint("handle",pp,CF_SCALAR)) || (sp = PromiseID(pp)))
+if ((sp = GetConstraintValue("handle",pp,CF_SCALAR)) || (sp = PromiseID(pp)))
    {
    strncpy(handle,sp,CF_MAXVARSIZE-1);
    }

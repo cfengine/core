@@ -599,7 +599,7 @@ void ExpandPromiseAndDo(enum cfagenttype agent,char *scopeid,struct Promise *pp,
 { struct Rlist *lol = NULL; 
   struct Promise *pexp;
   const int cf_null_cutoff = 5;
-  char *handle = GetConstraint("handle",pp,CF_SCALAR),v[CF_MAXVARSIZE];
+  char *handle = GetConstraintValue("handle",pp,CF_SCALAR),v[CF_MAXVARSIZE];
   int cutoff = 0;
 
 lol = NewIterationContext(scopeid,listvars);

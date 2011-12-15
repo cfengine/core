@@ -224,7 +224,7 @@ if (level == cf_error)
       v = "not specified";
       }
    
-   if ((sp = GetConstraint("handle",pp,CF_SCALAR)) || (sp = PromiseID(pp)))
+   if ((sp = GetConstraintValue("handle",pp,CF_SCALAR)) || (sp = PromiseID(pp)))
       {
       strncpy(handle,sp,CF_MAXVARSIZE-1);
       }

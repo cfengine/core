@@ -232,7 +232,7 @@ else
       mode_t saveumask = umask(0);
       mode_t filemode = 0600;  /* Decide the mode for filecreation */
 
-      if (GetConstraint("mode",pp,CF_SCALAR) == NULL)
+      if (GetConstraintValue("mode",pp,CF_SCALAR) == NULL)
          {
          /* Relying on umask is risky */
          filemode = 0600;
@@ -463,13 +463,13 @@ if (pp->edcontext == NULL)
 
 if (a.haveeditline)
    {
-   if ((vp = GetConstraint("edit_line",pp,CF_FNCALL)))
+   if ((vp = GetConstraintValue("edit_line",pp,CF_FNCALL)))
       {
       fp = (struct FnCall *)vp;
       edit_bundle_name = fp->name;
       params = fp->args;
       }
-   else if ((vp = GetConstraint("edit_line",pp,CF_SCALAR)))
+   else if ((vp = GetConstraintValue("edit_line",pp,CF_SCALAR)))
       {
       edit_bundle_name = (char *)vp;
       params = NULL;

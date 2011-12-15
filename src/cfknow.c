@@ -772,7 +772,7 @@ void VerifyThingsPromise(struct Promise *pp)
   struct Attributes a = {{0}};
   struct Topic *tp = NULL, *otp;
   struct Rlist *rp,*rps,*contexts;
-  char *handle = (char *)GetConstraint("handle",pp,CF_SCALAR);
+  char *handle = (char *)GetConstraintValue("handle",pp,CF_SCALAR);
 
 a = GetThingsAttributes(pp);
 
@@ -870,7 +870,7 @@ void VerifyTopicPromise(struct Promise *pp)
   struct Attributes a = {{0}};
   struct Topic *tp = NULL, *otp;
   struct Rlist *rp,*rps,*contexts;
-  char *handle = (char *)GetConstraint("handle",pp,CF_SCALAR);
+  char *handle = (char *)GetConstraintValue("handle",pp,CF_SCALAR);
 
 a = GetTopicsAttributes(pp);
 

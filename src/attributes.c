@@ -58,12 +58,12 @@ attr.haveedit = attr.haveeditline || attr.haveeditxml;
 
 /* Files, specialist */
 
-attr.repository = (char *)GetConstraint("repository",pp,CF_SCALAR);
+attr.repository = (char *)GetConstraintValue("repository",pp,CF_SCALAR);
 attr.create = GetBooleanConstraint("create",pp);
 attr.touch = GetBooleanConstraint("touch",pp);
-attr.transformer = (char *)GetConstraint("transformer",pp,CF_SCALAR);
+attr.transformer = (char *)GetConstraintValue("transformer",pp,CF_SCALAR);
 attr.move_obstructions = GetBooleanConstraint("move_obstructions",pp);
-attr.pathtype = (char *)GetConstraint("pathtype",pp,CF_SCALAR);
+attr.pathtype = (char *)GetConstraintValue("pathtype",pp,CF_SCALAR);
 
 attr.acl = GetAclConstraints(pp);
 attr.perms = GetPermissionConstraints(pp);
@@ -135,8 +135,8 @@ struct Attributes GetOutputsAttributes(struct Promise *pp)
 attr.transaction = GetTransactionConstraints(pp);
 attr.classes = GetClassDefinitionConstraints(pp);
 
-attr.output.promiser_type = GetConstraint("promiser_type",pp,CF_SCALAR);
-attr.output.level = GetConstraint("output_level",pp,CF_SCALAR);
+attr.output.promiser_type = GetConstraintValue("promiser_type",pp,CF_SCALAR);
+attr.output.level = GetConstraintValue("output_level",pp,CF_SCALAR);
 return attr;
 }
 
@@ -225,7 +225,7 @@ struct Attributes GetExecAttributes(struct Promise *pp)
 attr.contain = GetExecContainConstraints(pp);
 attr.havecontain = GetBooleanConstraint("contain",pp);
 
-attr.args = GetConstraint("args",pp,CF_SCALAR);
+attr.args = GetConstraintValue("args",pp,CF_SCALAR);
 attr.module = GetBooleanConstraint("module",pp);
 
 /* Common ("included") */
@@ -246,10 +246,10 @@ struct Attributes GetProcessAttributes(struct Promise *pp)
 { static struct Attributes attr = {{0}};
 
 attr.signals = GetListConstraint("signals",pp);
-attr.process_stop = (char *)GetConstraint("process_stop",pp,CF_SCALAR);
+attr.process_stop = (char *)GetConstraintValue("process_stop",pp,CF_SCALAR);
 attr.haveprocess_count = GetBooleanConstraint("process_count",pp);
 attr.haveselect = GetBooleanConstraint("process_select",pp);
-attr.restart_class = (char *)GetConstraint("restart_class",pp,CF_SCALAR);
+attr.restart_class = (char *)GetConstraintValue("restart_class",pp,CF_SCALAR);
 
 attr.process_count = GetMatchesConstraints(pp);
 attr.process_select = GetProcessFilterConstraints(pp);
@@ -337,8 +337,8 @@ struct Attributes GetTopicsAttributes(struct Promise *pp)
 
 { struct Attributes attr = {{0}};
 
-attr.fwd_name = GetConstraint("forward_relationship",pp,CF_SCALAR);
-attr.bwd_name = GetConstraint("backward_relationship",pp,CF_SCALAR);
+attr.fwd_name = GetConstraintValue("forward_relationship",pp,CF_SCALAR);
+attr.bwd_name = GetConstraintValue("backward_relationship",pp,CF_SCALAR);
 attr.associates = GetListConstraint("associates",pp);
 attr.synonyms = GetListConstraint("synonyms",pp);
 attr.general = GetListConstraint("generalizations",pp);
@@ -351,7 +351,7 @@ struct Attributes GetThingsAttributes(struct Promise *pp)
 
 { struct Attributes attr = {{0}};
   struct Rlist *rp;
-  char *cert = GetConstraint("certainty",pp,CF_SCALAR);
+  char *cert = GetConstraintValue("certainty",pp,CF_SCALAR);
   enum knowledgecertainty certainty;
 
 attr.synonyms = GetListConstraint("synonyms",pp);
@@ -594,9 +594,9 @@ struct Attributes GetOccurrenceAttributes(struct Promise *pp)
 { struct Attributes attr = {{0}};
 
 attr.represents = GetListConstraint("represents",pp);
-attr.rep_type = GetConstraint("representation",pp,CF_SCALAR);
-attr.web_root = GetConstraint("web_root",pp,CF_SCALAR);
-attr.path_root = GetConstraint("path_root",pp,CF_SCALAR);
+attr.rep_type = GetConstraintValue("representation",pp,CF_SCALAR);
+attr.web_root = GetConstraintValue("web_root",pp,CF_SCALAR);
+attr.path_root = GetConstraintValue("path_root",pp,CF_SCALAR);
 
 return attr;
 }
@@ -628,12 +628,12 @@ struct CfServices GetServicesConstraints(struct Promise *pp)
 
 { struct CfServices s;
  
-s.service_type = GetConstraint("service_type",pp,CF_SCALAR);
-s.service_policy = Str2ServicePolicy(GetConstraint("service_policy",pp,CF_SCALAR));
-s.service_autostart_policy = GetConstraint("service_autostart_policy",pp,CF_SCALAR);
-s.service_args = GetConstraint("service_args",pp,CF_SCALAR);
+s.service_type = GetConstraintValue("service_type",pp,CF_SCALAR);
+s.service_policy = Str2ServicePolicy(GetConstraintValue("service_policy",pp,CF_SCALAR));
+s.service_autostart_policy = GetConstraintValue("service_autostart_policy",pp,CF_SCALAR);
+s.service_args = GetConstraintValue("service_args",pp,CF_SCALAR);
 s.service_depend = GetListConstraint("service_dependencies",pp);
-s.service_depend_chain = GetConstraint("service_dependence_chain",pp,CF_SCALAR);
+s.service_depend_chain = GetConstraintValue("service_dependence_chain",pp,CF_SCALAR);
 
 return s;
 }
@@ -647,14 +647,14 @@ struct CfEnvironments GetEnvironmentsConstraints(struct Promise *pp)
 e.cpus = GetIntConstraint("env_cpus",pp);
 e.memory = GetIntConstraint("env_memory",pp);
 e.disk = GetIntConstraint("env_disk",pp);
-e.baseline = GetConstraint("env_baseline",pp,CF_SCALAR);
-e.specfile = GetConstraint("env_spec_file",pp,CF_SCALAR);
-e.host = GetConstraint("environment_host",pp,CF_SCALAR);
+e.baseline = GetConstraintValue("env_baseline",pp,CF_SCALAR);
+e.specfile = GetConstraintValue("env_spec_file",pp,CF_SCALAR);
+e.host = GetConstraintValue("environment_host",pp,CF_SCALAR);
 
 e.addresses = GetListConstraint("env_addresses",pp);
-e.name = GetConstraint("env_name",pp,CF_SCALAR);
-e.type = GetConstraint("environment_type",pp,CF_SCALAR);
-e.state = Str2EnvState(GetConstraint("environment_state",pp,CF_SCALAR));
+e.name = GetConstraintValue("env_name",pp,CF_SCALAR);
+e.type = GetConstraintValue("environment_type",pp,CF_SCALAR);
+e.state = Str2EnvState(GetConstraintValue("environment_state",pp,CF_SCALAR));
 
 return e;
 }
@@ -672,8 +672,8 @@ e.group = GetGidConstraint("exec_group",pp);
 e.preview = GetBooleanConstraint("preview",pp);
 e.nooutput = GetBooleanConstraint("no_output",pp);
 e.timeout = GetIntConstraint("exec_timeout",pp);
-e.chroot = GetConstraint("chroot",pp,CF_SCALAR);
-e.chdir = GetConstraint("chdir",pp,CF_SCALAR);
+e.chroot = GetConstraintValue("chroot",pp,CF_SCALAR);
+e.chdir = GetConstraintValue("chdir",pp,CF_SCALAR);
 
 return e;
 }
@@ -706,9 +706,9 @@ struct CfACL GetAclConstraints(struct Promise *pp)
 
 { struct CfACL ac;
 
-ac.acl_method = Str2AclMethod(GetConstraint("acl_method",pp,CF_SCALAR));
-ac.acl_type = Str2AclType(GetConstraint("acl_type",pp,CF_SCALAR));
-ac.acl_directory_inherit = Str2AclInherit(GetConstraint("acl_directory_inherit",pp,CF_SCALAR));
+ac.acl_method = Str2AclMethod(GetConstraintValue("acl_method",pp,CF_SCALAR));
+ac.acl_type = Str2AclType(GetConstraintValue("acl_type",pp,CF_SCALAR));
+ac.acl_directory_inherit = Str2AclInherit(GetConstraintValue("acl_directory_inherit",pp,CF_SCALAR));
 ac.acl_entries = GetListConstraint("aces",pp);
 ac.acl_inherit_entries = GetListConstraint("specify_inherit_aces",pp);
 return ac;
@@ -722,7 +722,7 @@ struct FilePerms GetPermissionConstraints(struct Promise *pp)
   char *value;
   struct Rlist *list;
                 
-value = (char *)GetConstraint("mode",pp,CF_SCALAR);
+value = (char *)GetConstraintValue("mode",pp,CF_SCALAR);
 
 p.plus = CF_SAMEMODE;
 p.minus = CF_SAMEMODE;
@@ -745,18 +745,18 @@ if (list && !ParseFlagString(list,&p.plus_flags,&p.minus_flags))
    }
 
 #ifdef MINGW
-p.owners = NovaWin_Rlist2SidList((struct Rlist *)GetConstraint("owners",pp,CF_LIST),pp);
+p.owners = NovaWin_Rlist2SidList((struct Rlist *)GetConstraintValue("owners",pp,CF_LIST),pp);
 #else  /* NOT MINGW */
-p.owners = Rlist2UidList((struct Rlist *)GetConstraint("owners",pp,CF_LIST),pp);
-p.groups = Rlist2GidList((struct Rlist *)GetConstraint("groups",pp,CF_LIST),pp);
+p.owners = Rlist2UidList((struct Rlist *)GetConstraintValue("owners",pp,CF_LIST),pp);
+p.groups = Rlist2GidList((struct Rlist *)GetConstraintValue("groups",pp,CF_LIST),pp);
 #endif  /* NOT MINGW */
 
-p.findertype = (char *)GetConstraint("findertype",pp,CF_SCALAR);
+p.findertype = (char *)GetConstraintValue("findertype",pp,CF_SCALAR);
 p.rxdirs = GetBooleanConstraint("rxdirs",pp);
 
 // The default should be true
 
-if (!GetConstraint("rxdirs",pp,CF_SCALAR))
+if (!GetConstraintValue("rxdirs",pp,CF_SCALAR))
    {
    p.rxdirs = true;
    }
@@ -775,10 +775,10 @@ struct FileSelect GetSelectConstraints(struct Promise *pp)
   u_long fplus,fminus;
   int entries = false;
   
-s.name = (struct Rlist *)GetConstraint("leaf_name",pp,CF_LIST);
-s.path = (struct Rlist *)GetConstraint("path_name",pp,CF_LIST);
-s.filetypes = (struct Rlist *)GetConstraint("file_types",pp,CF_LIST);
-s.issymlinkto = (struct Rlist *)GetConstraint("issymlinkto",pp,CF_LIST);
+s.name = (struct Rlist *)GetConstraintValue("leaf_name",pp,CF_LIST);
+s.path = (struct Rlist *)GetConstraintValue("path_name",pp,CF_LIST);
+s.filetypes = (struct Rlist *)GetConstraintValue("file_types",pp,CF_LIST);
+s.issymlinkto = (struct Rlist *)GetConstraintValue("issymlinkto",pp,CF_LIST);
 
 s.perms = GetListConstraint("search_mode",pp);
 
@@ -811,10 +811,10 @@ if (s.name||s.path||s.filetypes||s.issymlinkto||s.perms||s.bsdflags)
    entries = true;
    }
 
-s.owners = (struct Rlist *)GetConstraint("search_owners",pp,CF_LIST);
-s.groups = (struct Rlist *)GetConstraint("search_groups",pp,CF_LIST);
+s.owners = (struct Rlist *)GetConstraintValue("search_owners",pp,CF_LIST);
+s.groups = (struct Rlist *)GetConstraintValue("search_groups",pp,CF_LIST);
 
-value = (char *)GetConstraint("search_size",pp,CF_SCALAR);
+value = (char *)GetConstraintValue("search_size",pp,CF_SCALAR);
 if (value)
    {
    entries++;
@@ -822,20 +822,20 @@ if (value)
 
 IntRange2Int(value,(long *)&s.min_size,(long *)&s.max_size,pp);
 
-value = (char *)GetConstraint("ctime",pp,CF_SCALAR);
+value = (char *)GetConstraintValue("ctime",pp,CF_SCALAR);
 if (value)
    {
    entries++;
    }
 
 IntRange2Int(value,(long *)&s.min_ctime,(long *)&s.max_ctime,pp);
-value = (char *)GetConstraint("atime",pp,CF_SCALAR);
+value = (char *)GetConstraintValue("atime",pp,CF_SCALAR);
 if (value)
    {
    entries++;
    }
 IntRange2Int(value,(long *)&s.min_atime,(long *)&s.max_atime,pp);
-value = (char *)GetConstraint("mtime",pp,CF_SCALAR);
+value = (char *)GetConstraintValue("mtime",pp,CF_SCALAR);
 if (value)
    {
    entries++;
@@ -843,15 +843,15 @@ if (value)
 
 IntRange2Int(value,(long *)&s.min_mtime,(long *)&s.max_mtime,pp);
 
-s.exec_regex = (char *)GetConstraint("exec_regex",pp,CF_SCALAR);
-s.exec_program = (char *)GetConstraint("exec_program",pp,CF_SCALAR);
+s.exec_regex = (char *)GetConstraintValue("exec_regex",pp,CF_SCALAR);
+s.exec_program = (char *)GetConstraintValue("exec_program",pp,CF_SCALAR);
 
 if (s.owners||s.min_size||s.exec_regex||s.exec_program)
    {
    entries = true;
    }
 
-if ((s.result = (char *)GetConstraint("file_result",pp,CF_SCALAR)) == NULL)
+if ((s.result = (char *)GetConstraintValue("file_result",pp,CF_SCALAR)) == NULL)
    {
    if (!entries)
       {
@@ -869,7 +869,7 @@ struct TransactionContext GetTransactionConstraints(struct Promise *pp)
 { struct TransactionContext t;
  char *value;
 
-value = GetConstraint("action_policy",pp,CF_SCALAR);
+value = GetConstraintValue("action_policy",pp,CF_SCALAR);
 
 if (value && ((strcmp(value,"warn") == 0)||(strcmp(value,"nop") == 0)))
    {
@@ -896,12 +896,12 @@ if (t.expireafter == CF_NOINT)
    }
 
 t.audit = GetBooleanConstraint("audit",pp);
-t.log_string = GetConstraint("log_string",pp,CF_SCALAR);
-t.log_priority = SyslogPriority2Int(GetConstraint("log_priority",pp,CF_SCALAR));
+t.log_string = GetConstraintValue("log_string",pp,CF_SCALAR);
+t.log_priority = SyslogPriority2Int(GetConstraintValue("log_priority",pp,CF_SCALAR));
 
-t.log_kept = GetConstraint("log_kept",pp,CF_SCALAR);
-t.log_repaired = GetConstraint("log_repaired",pp,CF_SCALAR);
-t.log_failed = GetConstraint("log_failed",pp,CF_SCALAR);
+t.log_kept = GetConstraintValue("log_kept",pp,CF_SCALAR);
+t.log_repaired = GetConstraintValue("log_repaired",pp,CF_SCALAR);
+t.log_failed = GetConstraintValue("log_failed",pp,CF_SCALAR);
 
 if ((t.value_kept = GetRealConstraint("value_kept",pp)) == CF_NODOUBLE)
    {
@@ -918,13 +918,13 @@ if ((t.value_notkept = GetRealConstraint("value_notkept",pp)) == CF_NODOUBLE)
    t.value_notkept = -1.0;
    }
 
-value = GetConstraint("log_level",pp,CF_SCALAR);
+value = GetConstraintValue("log_level",pp,CF_SCALAR);
 t.log_level = String2ReportLevel(value);
 
-value = GetConstraint("report_level",pp,CF_SCALAR);
+value = GetConstraintValue("report_level",pp,CF_SCALAR);
 t.report_level = String2ReportLevel(value);
 
-t.measure_id = GetConstraint("measurement_class",pp,CF_SCALAR);
+t.measure_id = GetConstraintValue("measurement_class",pp,CF_SCALAR);
 
 return t;
 }
@@ -958,7 +958,7 @@ if (c.persist == CF_NOINT)
    c.persist = 0;
    }
 
-pt = GetConstraint("timer_policy",pp,CF_SCALAR);
+pt = GetConstraintValue("timer_policy",pp,CF_SCALAR);
 
 if (pt && strncmp(pt,"abs",3) == 0)
    {
@@ -979,7 +979,7 @@ struct FileDelete GetDeleteConstraints(struct Promise *pp)
 { struct FileDelete f;
   char *value;
 
-value = (char *)GetConstraint("dirlinks",pp,CF_SCALAR);
+value = (char *)GetConstraintValue("dirlinks",pp,CF_SCALAR);
 
 if (value && strcmp(value,"keep") == 0)
    {
@@ -1001,7 +1001,7 @@ struct FileRename GetRenameConstraints(struct Promise *pp)
 { struct FileRename r;
   char *value;
 
-value = (char *)GetConstraint("disable_mode",pp,CF_SCALAR);
+value = (char *)GetConstraintValue("disable_mode",pp,CF_SCALAR);
 
 if (!ParseModeString(value,&r.plus,&r.minus))
    {
@@ -1010,8 +1010,8 @@ if (!ParseModeString(value,&r.plus,&r.minus))
    }
 
 r.disable = GetBooleanConstraint("disable",pp);
-r.disable_suffix = (char *)GetConstraint("disable_suffix",pp,CF_SCALAR);
-r.newname = (char *)GetConstraint("newname",pp,CF_SCALAR);
+r.disable_suffix = (char *)GetConstraintValue("disable_suffix",pp,CF_SCALAR);
+r.newname = (char *)GetConstraintValue("newname",pp,CF_SCALAR);
 r.rotate = GetIntConstraint("rotate",pp);
 
 return r;
@@ -1024,7 +1024,7 @@ struct FileChange GetChangeMgtConstraints(struct Promise *pp)
 { struct FileChange c;
   char *value;
 
-value = (char *)GetConstraint("hash",pp,CF_SCALAR);
+value = (char *)GetConstraintValue("hash",pp,CF_SCALAR);
 
 if (value && strcmp(value,"best") == 0)
    {
@@ -1065,7 +1065,7 @@ if (FIPS_MODE && c.hash == cf_md5)
    PromiseRef(cf_error,pp);
    }
 
-value = (char *)GetConstraint("report_changes",pp,CF_SCALAR);
+value = (char *)GetConstraintValue("report_changes",pp,CF_SCALAR);
 
 if (value && strcmp(value,"content") == 0)
    {
@@ -1084,7 +1084,7 @@ else
    c.report_changes = cfa_noreport;
    }
 
-if (GetConstraint("update_hashes",pp,CF_SCALAR))
+if (GetConstraintValue("update_hashes",pp,CF_SCALAR))
    {
    c.update = GetBooleanConstraint("update_hashes",pp);
    }
@@ -1105,9 +1105,9 @@ struct FileCopy GetCopyConstraints(struct Promise *pp)
   char *value;
   long min,max;
 
-f.source = (char *)GetConstraint("source",pp,CF_SCALAR);
+f.source = (char *)GetConstraintValue("source",pp,CF_SCALAR);
 
-value = (char *)GetConstraint("compare",pp,CF_SCALAR);
+value = (char *)GetConstraintValue("compare",pp,CF_SCALAR);
 
 if (value == NULL)
    {
@@ -1116,7 +1116,7 @@ if (value == NULL)
 
 f.compare = String2Comparison(value);
 
-value = (char *)GetConstraint("link_type",pp,CF_SCALAR);
+value = (char *)GetConstraintValue("link_type",pp,CF_SCALAR);
 
 f.link_type = String2LinkType(value);
 f.servers = GetListConstraint("servers",pp);
@@ -1125,7 +1125,7 @@ f.timeout = (short)GetIntConstraint("timeout",pp);
 f.link_instead = GetListConstraint("linkcopy_patterns",pp);
 f.copy_links = GetListConstraint("copylink_patterns",pp);
 
-value = (char *)GetConstraint("copy_backup",pp,CF_SCALAR);
+value = (char *)GetConstraintValue("copy_backup",pp,CF_SCALAR);
 
 if (value && strcmp(value,"false") == 0)
    {
@@ -1148,7 +1148,7 @@ f.force_update = GetBooleanConstraint("force_update",pp);
 f.force_ipv4 = GetBooleanConstraint("force_ipv4",pp);
 f.check_root = GetBooleanConstraint("check_root",pp);
 
-value = (char *)GetConstraint("copy_size",pp,CF_SCALAR);
+value = (char *)GetConstraintValue("copy_size",pp,CF_SCALAR);
 IntRange2Int(value,&min,&max,pp);
 
 f.min_size = (size_t) min;
@@ -1170,12 +1170,12 @@ struct FileLink GetLinkConstraints(struct Promise *pp)
 { struct FileLink f;
   char *value;
   
-f.source = (char *)GetConstraint("source",pp,CF_SCALAR);
-value = (char *)GetConstraint("link_type",pp,CF_SCALAR);
+f.source = (char *)GetConstraintValue("source",pp,CF_SCALAR);
+value = (char *)GetConstraintValue("link_type",pp,CF_SCALAR);
 f.link_type = String2LinkType(value);
 f.copy_patterns = GetListConstraint("copy_patterns",pp);
 
-value = (char *)GetConstraint("when_no_source",pp,CF_SCALAR);
+value = (char *)GetConstraintValue("when_no_source",pp,CF_SCALAR);
 
 if (value && strcmp(value,"force") == 0)
    {
@@ -1190,7 +1190,7 @@ else
    f.when_no_file = cfa_skip;
    }
 
-value = (char *)GetConstraint("when_linking_children",pp,CF_SCALAR);
+value = (char *)GetConstraintValue("when_linking_children",pp,CF_SCALAR);
 
 if (value && strcmp(value,"override_file") == 0)
    {
@@ -1220,7 +1220,7 @@ if (e.maxfilesize == CF_NOINT || e.maxfilesize == 0)
    e.maxfilesize = EDITFILESIZE;
    }
 
-value = (char *)GetConstraint("edit_backup",pp,CF_SCALAR);
+value = (char *)GetConstraintValue("edit_backup",pp,CF_SCALAR);
 
 if (value && strcmp(value,"false") == 0)
    {
@@ -1283,52 +1283,52 @@ struct Packages GetPackageConstraints(struct Promise *pp)
   enum action_policy change_policy;
 
 p.have_package_methods = GetBooleanConstraint("havepackage_method",pp);
-p.package_version = (char *)GetConstraint("package_version",pp,CF_SCALAR);
+p.package_version = (char *)GetConstraintValue("package_version",pp,CF_SCALAR);
 p.package_architectures = GetListConstraint("package_architectures",pp);
 
-action = Str2PackageAction((char *)GetConstraint("package_policy",pp,CF_SCALAR));
+action = Str2PackageAction((char *)GetConstraintValue("package_policy",pp,CF_SCALAR));
 p.package_policy = action;
   
-operator = Str2PackageSelect((char *)GetConstraint("package_select",pp,CF_SCALAR));
+operator = Str2PackageSelect((char *)GetConstraintValue("package_select",pp,CF_SCALAR));
 p.package_select = operator;
-change_policy = Str2ActionPolicy((char *)GetConstraint("package_changes",pp,CF_SCALAR));
+change_policy = Str2ActionPolicy((char *)GetConstraintValue("package_changes",pp,CF_SCALAR));
 p.package_changes = change_policy;
 
 p.package_file_repositories = GetListConstraint("package_file_repositories",pp);
 
 
-p.package_patch_list_command = (char *)GetConstraint("package_patch_list_command",pp,CF_SCALAR);
-p.package_patch_name_regex = (char *)GetConstraint("package_patch_name_regex",pp,CF_SCALAR);
-p.package_patch_arch_regex = (char *)GetConstraint("package_patch_arch_regex",pp,CF_SCALAR);
-p.package_patch_version_regex = (char *)GetConstraint("package_patch_version_regex",pp,CF_SCALAR);
-p.package_patch_installed_regex = (char *)GetConstraint("package_patch_installed_regex",pp,CF_SCALAR);
+p.package_patch_list_command = (char *)GetConstraintValue("package_patch_list_command",pp,CF_SCALAR);
+p.package_patch_name_regex = (char *)GetConstraintValue("package_patch_name_regex",pp,CF_SCALAR);
+p.package_patch_arch_regex = (char *)GetConstraintValue("package_patch_arch_regex",pp,CF_SCALAR);
+p.package_patch_version_regex = (char *)GetConstraintValue("package_patch_version_regex",pp,CF_SCALAR);
+p.package_patch_installed_regex = (char *)GetConstraintValue("package_patch_installed_regex",pp,CF_SCALAR);
 
-p.package_list_update_command = (char *)GetConstraint("package_list_update_command",pp,CF_SCALAR);
+p.package_list_update_command = (char *)GetConstraintValue("package_list_update_command",pp,CF_SCALAR);
 p.package_list_update_ifelapsed = GetIntConstraint("package_list_update_ifelapsed",pp);
-p.package_list_command = (char *)GetConstraint("package_list_command",pp,CF_SCALAR);
-p.package_list_version_regex = (char *)GetConstraint("package_list_version_regex",pp,CF_SCALAR);
-p.package_list_name_regex = (char *)GetConstraint("package_list_name_regex",pp,CF_SCALAR);
-p.package_list_arch_regex = (char *)GetConstraint("package_list_arch_regex",pp,CF_SCALAR);
+p.package_list_command = (char *)GetConstraintValue("package_list_command",pp,CF_SCALAR);
+p.package_list_version_regex = (char *)GetConstraintValue("package_list_version_regex",pp,CF_SCALAR);
+p.package_list_name_regex = (char *)GetConstraintValue("package_list_name_regex",pp,CF_SCALAR);
+p.package_list_arch_regex = (char *)GetConstraintValue("package_list_arch_regex",pp,CF_SCALAR);
 
-p.package_installed_regex = (char *)GetConstraint("package_installed_regex",pp,CF_SCALAR);
+p.package_installed_regex = (char *)GetConstraintValue("package_installed_regex",pp,CF_SCALAR);
 
-p.package_version_regex = (char *)GetConstraint("package_version_regex",pp,CF_SCALAR);
-p.package_name_regex = (char *)GetConstraint("package_name_regex",pp,CF_SCALAR);
-p.package_arch_regex = (char *)GetConstraint("package_arch_regex",pp,CF_SCALAR);
+p.package_version_regex = (char *)GetConstraintValue("package_version_regex",pp,CF_SCALAR);
+p.package_name_regex = (char *)GetConstraintValue("package_name_regex",pp,CF_SCALAR);
+p.package_arch_regex = (char *)GetConstraintValue("package_arch_regex",pp,CF_SCALAR);
 
 
-p.package_add_command = (char *)GetConstraint("package_add_command",pp,CF_SCALAR);
-p.package_delete_command = (char *)GetConstraint("package_delete_command",pp,CF_SCALAR);
-p.package_update_command = (char *)GetConstraint("package_update_command",pp,CF_SCALAR);
-p.package_patch_command = (char *)GetConstraint("package_patch_command",pp,CF_SCALAR);
-p.package_verify_command = (char *)GetConstraint("package_verify_command",pp,CF_SCALAR);
-p.package_noverify_regex = (char *)GetConstraint("package_noverify_regex",pp,CF_SCALAR);
+p.package_add_command = (char *)GetConstraintValue("package_add_command",pp,CF_SCALAR);
+p.package_delete_command = (char *)GetConstraintValue("package_delete_command",pp,CF_SCALAR);
+p.package_update_command = (char *)GetConstraintValue("package_update_command",pp,CF_SCALAR);
+p.package_patch_command = (char *)GetConstraintValue("package_patch_command",pp,CF_SCALAR);
+p.package_verify_command = (char *)GetConstraintValue("package_verify_command",pp,CF_SCALAR);
+p.package_noverify_regex = (char *)GetConstraintValue("package_noverify_regex",pp,CF_SCALAR);
 p.package_noverify_returncode = GetIntConstraint("package_noverify_returncode",pp);
 
-p.package_name_convention = (char *)GetConstraint("package_name_convention",pp,CF_SCALAR);
-p.package_delete_convention = (char *)GetConstraint("package_delete_convention",pp,CF_SCALAR);
+p.package_name_convention = (char *)GetConstraintValue("package_name_convention",pp,CF_SCALAR);
+p.package_delete_convention = (char *)GetConstraintValue("package_delete_convention",pp,CF_SCALAR);
 
-p.package_multiline_start = (char *)GetConstraint("package_multiline_start",pp,CF_SCALAR);
+p.package_multiline_start = (char *)GetConstraintValue("package_multiline_start",pp,CF_SCALAR);
 return p;
 }
 
@@ -1342,7 +1342,7 @@ struct ProcessSelect GetProcessFilterConstraints(struct Promise *pp)
    
 p.owner = GetListConstraint("process_owner",pp);
 
-value = (char *)GetConstraint("pid",pp,CF_SCALAR);
+value = (char *)GetConstraintValue("pid",pp,CF_SCALAR);
 
 if (value)
    {
@@ -1350,7 +1350,7 @@ if (value)
    }
 
 IntRange2Int(value,&p.min_pid,&p.max_pid,pp);
-value = (char *)GetConstraint("ppid",pp,CF_SCALAR);
+value = (char *)GetConstraintValue("ppid",pp,CF_SCALAR);
 
 if (value)
    {
@@ -1358,7 +1358,7 @@ if (value)
    }
 
 IntRange2Int(value,&p.min_ppid,&p.max_ppid,pp);
-value = (char *)GetConstraint("pgid",pp,CF_SCALAR);
+value = (char *)GetConstraintValue("pgid",pp,CF_SCALAR);
 
 if (value)
    {
@@ -1366,7 +1366,7 @@ if (value)
    }
 
 IntRange2Int(value,&p.min_pgid,&p.max_pgid,pp);
-value = (char *)GetConstraint("rsize",pp,CF_SCALAR);
+value = (char *)GetConstraintValue("rsize",pp,CF_SCALAR);
 
 if (value)
    {
@@ -1374,21 +1374,21 @@ if (value)
    }
 
 IntRange2Int(value,&p.min_rsize,&p.max_rsize,pp);
-value = (char *)GetConstraint("vsize",pp,CF_SCALAR);
+value = (char *)GetConstraintValue("vsize",pp,CF_SCALAR);
 if (value)
    {
    entries++;
    }
 
 IntRange2Int(value,&p.min_vsize,&p.max_vsize,pp);
-value = (char *)GetConstraint("ttime_range",pp,CF_SCALAR);
+value = (char *)GetConstraintValue("ttime_range",pp,CF_SCALAR);
 if (value)
    {
    entries++;
    }
 
 IntRange2Int(value,(long *)&p.min_ttime,(long *)&p.max_ttime,pp);
-value = (char *)GetConstraint("stime_range",pp,CF_SCALAR);
+value = (char *)GetConstraintValue("stime_range",pp,CF_SCALAR);
 if (value)
    {
    entries++;
@@ -1396,18 +1396,18 @@ if (value)
 
 IntRange2Int(value,(long *)&p.min_stime,(long *)&p.max_stime,pp);
 
-p.status = (char *)GetConstraint("status",pp,CF_SCALAR);
-p.command = (char *)GetConstraint("command",pp,CF_SCALAR);
-p.tty = (char *)GetConstraint("tty",pp,CF_SCALAR);
+p.status = (char *)GetConstraintValue("status",pp,CF_SCALAR);
+p.command = (char *)GetConstraintValue("command",pp,CF_SCALAR);
+p.tty = (char *)GetConstraintValue("tty",pp,CF_SCALAR);
 
-value = (char *)GetConstraint("priority",pp,CF_SCALAR);
+value = (char *)GetConstraintValue("priority",pp,CF_SCALAR);
 if (value)
    {
    entries++;
    }
 
 IntRange2Int(value,&p.min_pri,&p.max_pri,pp);
-value = (char *)GetConstraint("threads",pp,CF_SCALAR);
+value = (char *)GetConstraintValue("threads",pp,CF_SCALAR);
 if (value)
    {
    entries++;
@@ -1420,7 +1420,7 @@ if (p.owner||p.status||p.command||p.tty)
    entries = true;
    }
 
-if ((p.process_result = (char *)GetConstraint("process_result",pp,CF_SCALAR)) == NULL)
+if ((p.process_result = (char *)GetConstraintValue("process_result",pp,CF_SCALAR)) == NULL)
    {
    if (entries)
       {
@@ -1439,7 +1439,7 @@ struct ProcessCount GetMatchesConstraints(struct Promise *pp)
 { struct ProcessCount p;
   char *value;
 
-value = (char *)GetConstraint("match_range",pp,CF_SCALAR);
+value = (char *)GetConstraintValue("match_range",pp,CF_SCALAR);
 IntRange2Int(value,&p.min_range,&p.max_range,pp);
 p.in_range_define = GetListConstraint("in_range_define",pp);
 p.out_of_range_define = GetListConstraint("out_of_range_define",pp);
@@ -1498,7 +1498,7 @@ struct Attributes GetInsertionAttributes(struct Promise *pp)
 attr.havelocation = GetBooleanConstraint("location",pp);
 attr.location = GetLocationAttributes(pp);
 
-attr.sourcetype = GetConstraint("insert_type",pp,CF_SCALAR);
+attr.sourcetype = GetConstraintValue("insert_type",pp,CF_SCALAR);
 attr.expandvars = GetBooleanConstraint("expand_scalars",pp);
 
 attr.haveinsertselect = GetBooleanConstraint("insert_select",pp);
@@ -1527,9 +1527,9 @@ struct EditLocation GetLocationAttributes(struct Promise *pp)
 { struct EditLocation e;
   char *value;
 
-e.line_matching = GetConstraint("select_line_matching",pp,CF_SCALAR);
+e.line_matching = GetConstraintValue("select_line_matching",pp,CF_SCALAR);
 
-value = GetConstraint("before_after",pp,CF_SCALAR);
+value = GetConstraintValue("before_after",pp,CF_SCALAR);
 
 if (value && strcmp(value,"before") == 0)
    {
@@ -1540,7 +1540,7 @@ else
    e.before_after = cfe_after;
    }
 
-e.first_last = GetConstraint("first_last",pp,CF_SCALAR);
+e.first_last = GetConstraintValue("first_last",pp,CF_SCALAR);
 return e;
 }
 
@@ -1624,8 +1624,8 @@ struct EditRegion GetRegionConstraints(struct Promise *pp)
 
 { struct EditRegion e;
 
-e.select_start = GetConstraint("select_start",pp,CF_SCALAR);
-e.select_end = GetConstraint("select_end",pp,CF_SCALAR);
+e.select_start = GetConstraintValue("select_start",pp,CF_SCALAR);
+e.select_end = GetConstraintValue("select_end",pp,CF_SCALAR);
 e.include_start = GetBooleanConstraint("include_start_delimiter",pp);
 e.include_end = GetBooleanConstraint("include_end_delimiter",pp); 
 return e;
@@ -1637,8 +1637,8 @@ struct EditReplace GetReplaceConstraints(struct Promise *pp)
 
 { struct EditReplace r;
 
-r.replace_value = GetConstraint("replace_value",pp,CF_SCALAR);
-r.occurrences = GetConstraint("occurrences",pp,CF_SCALAR);
+r.replace_value = GetConstraintValue("replace_value",pp,CF_SCALAR);
+r.occurrences = GetConstraintValue("occurrences",pp,CF_SCALAR);
  
 return r;
 }
@@ -1650,7 +1650,7 @@ struct EditColumn GetColumnConstraints(struct Promise *pp)
 { struct EditColumn c;
  char *value;
 
-c.column_separator = GetConstraint("field_separator",pp,CF_SCALAR);
+c.column_separator = GetConstraintValue("field_separator",pp,CF_SCALAR);
 c.select_column = GetIntConstraint("select_field",pp);
 
 if (c.select_column != CF_NOINT && GetBooleanConstraint("start_fields_from_zero",pp))
@@ -1658,7 +1658,7 @@ if (c.select_column != CF_NOINT && GetBooleanConstraint("start_fields_from_zero"
    c.select_column++;
    }
 
-value = GetConstraint("value_separator",pp,CF_SCALAR);
+value = GetConstraintValue("value_separator",pp,CF_SCALAR);
 
 if (value)
    {
@@ -1669,8 +1669,8 @@ else
    c.value_separator = '\0';
    }
 
-c.column_value = GetConstraint("field_value",pp,CF_SCALAR);
-c.column_operation = GetConstraint("field_operation",pp,CF_SCALAR);
+c.column_value = GetConstraintValue("field_value",pp,CF_SCALAR);
+c.column_operation = GetConstraintValue("field_operation",pp,CF_SCALAR);
 c.extend_columns = GetBooleanConstraint("extend_fields",pp);
 c.blanks_ok = GetBooleanConstraint("allow_blank_fields",pp);
 return c;
@@ -1684,9 +1684,9 @@ struct StorageMount GetMountConstraints(struct Promise *pp)
 
 { struct StorageMount m;
 
-m.mount_type = GetConstraint("mount_type",pp,CF_SCALAR);
-m.mount_source = GetConstraint("mount_source",pp,CF_SCALAR);
-m.mount_server = GetConstraint("mount_server",pp,CF_SCALAR);
+m.mount_type = GetConstraintValue("mount_type",pp,CF_SCALAR);
+m.mount_source = GetConstraintValue("mount_source",pp,CF_SCALAR);
+m.mount_server = GetConstraintValue("mount_server",pp,CF_SCALAR);
 m.mount_options = GetListConstraint("mount_options",pp);
 m.editfstab = GetBooleanConstraint("edit_fstab",pp);
 m.unmount = GetBooleanConstraint("unmount",pp);
@@ -1702,12 +1702,12 @@ struct StorageVolume GetVolumeConstraints(struct Promise *pp)
   char *value;
 
 v.check_foreign = GetBooleanConstraint("check_foreign",pp);
-value = GetConstraint("freespace",pp,CF_SCALAR);
+value = GetConstraintValue("freespace",pp,CF_SCALAR);
 
 v.freespace = (long) Str2Int(value);
-value = GetConstraint("sensible_size",pp,CF_SCALAR);
+value = GetConstraintValue("sensible_size",pp,CF_SCALAR);
 v.sensible_size = (int) Str2Int(value);
-value = GetConstraint("sensible_count",pp,CF_SCALAR);
+value = GetConstraintValue("sensible_count",pp,CF_SCALAR);
 v.sensible_count = (int) Str2Int(value);
 v.scan_arrivals = GetBooleanConstraint("scan_arrivals",pp);
 
@@ -1732,8 +1732,8 @@ struct CfTcpIp GetTCPIPAttributes(struct Promise *pp)
 
 { struct CfTcpIp t;
 
-t.ipv4_address = GetConstraint("ipv4_address",pp,CF_SCALAR);
-t.ipv4_netmask = GetConstraint("ipv4_netmask",pp,CF_SCALAR);
+t.ipv4_address = GetConstraintValue("ipv4_address",pp,CF_SCALAR);
+t.ipv4_netmask = GetConstraintValue("ipv4_netmask",pp,CF_SCALAR);
 
 return t;
 }
@@ -1744,7 +1744,7 @@ struct Report GetReportConstraints(struct Promise *pp)
 
 { struct Report r;
 
-if (GetConstraint("lastseen",pp,CF_SCALAR))
+if (GetConstraintValue("lastseen",pp,CF_SCALAR))
    {
    r.havelastseen = true;
    r.lastseen = GetIntConstraint("lastseen",pp);
@@ -1768,7 +1768,7 @@ if (r.intermittency == CF_NODOUBLE)
    }
 
 r.haveprintfile = GetBooleanConstraint("printfile",pp);
-r.filename = (char *)GetConstraint("file_to_print",pp,CF_SCALAR);
+r.filename = (char *)GetConstraintValue("file_to_print",pp,CF_SCALAR);
 r.numlines = GetIntConstraint("number_of_lines",pp);
 
 if (r.numlines == CF_NOINT)
@@ -1778,9 +1778,9 @@ if (r.numlines == CF_NOINT)
 
 r.showstate = GetListConstraint("showstate",pp);
 
-r.friend_pattern = GetConstraint("friend_pattern",pp,CF_SCALAR);
+r.friend_pattern = GetConstraintValue("friend_pattern",pp,CF_SCALAR);
 
-r.to_file = GetConstraint("report_to_file",pp,CF_SCALAR);
+r.to_file = GetConstraintValue("report_to_file",pp,CF_SCALAR);
 
 return r;
 }
@@ -1824,9 +1824,9 @@ struct Measurement GetMeasurementConstraint(struct Promise *pp)
 { struct Measurement m;
   char *value;
  
-m.stream_type = GetConstraint("stream_type",pp,CF_SCALAR);
+m.stream_type = GetConstraintValue("stream_type",pp,CF_SCALAR);
 
-value = GetConstraint("data_type",pp,CF_SCALAR);
+value = GetConstraintValue("data_type",pp,CF_SCALAR);
 m.data_type = Typename2Datatype(value);
 
 if (m.data_type == cf_notype)
@@ -1834,12 +1834,12 @@ if (m.data_type == cf_notype)
    m.data_type = cf_str;
    }
 
-m.history_type = GetConstraint("history_type",pp,CF_SCALAR);
-m.select_line_matching = GetConstraint("select_line_matching",pp,CF_SCALAR);
+m.history_type = GetConstraintValue("history_type",pp,CF_SCALAR);
+m.select_line_matching = GetConstraintValue("select_line_matching",pp,CF_SCALAR);
 m.select_line_number = GetIntConstraint("select_line_number",pp);
     
-m.extraction_regex = GetConstraint("extraction_regex",pp,CF_SCALAR);
-m.units = GetConstraint("units",pp,CF_SCALAR);
+m.extraction_regex = GetConstraintValue("extraction_regex",pp,CF_SCALAR);
+m.units = GetConstraintValue("units",pp,CF_SCALAR);
 m.growing = GetBooleanConstraint("track_growing_file",pp);
 return m;
 }
@@ -1851,18 +1851,18 @@ struct CfDatabase GetDatabaseConstraints(struct Promise *pp)
 { struct CfDatabase d;
   char *value;
 
-d.db_server_owner = GetConstraint("db_server_owner",pp,CF_SCALAR);
-d.db_server_password = GetConstraint("db_server_password",pp,CF_SCALAR);
-d.db_server_host = GetConstraint("db_server_host",pp,CF_SCALAR);
-d.db_connect_db = GetConstraint("db_server_connection_db",pp,CF_SCALAR);
-d.type = GetConstraint("database_type",pp,CF_SCALAR);
-d.server = GetConstraint("database_server",pp,CF_SCALAR);
+d.db_server_owner = GetConstraintValue("db_server_owner",pp,CF_SCALAR);
+d.db_server_password = GetConstraintValue("db_server_password",pp,CF_SCALAR);
+d.db_server_host = GetConstraintValue("db_server_host",pp,CF_SCALAR);
+d.db_connect_db = GetConstraintValue("db_server_connection_db",pp,CF_SCALAR);
+d.type = GetConstraintValue("database_type",pp,CF_SCALAR);
+d.server = GetConstraintValue("database_server",pp,CF_SCALAR);
 d.columns = GetListConstraint("database_columns",pp);
 d.rows = GetListConstraint("database_rows",pp);
-d.operation = GetConstraint("database_operation",pp,CF_SCALAR);
+d.operation = GetConstraintValue("database_operation",pp,CF_SCALAR);
 d.exclude = GetListConstraint("registry_exclude",pp);
 
-value = GetConstraint("db_server_type",pp,CF_SCALAR);
+value = GetConstraintValue("db_server_type",pp,CF_SCALAR);
 d.db_server_type = Str2dbType(value);
 
 if (value && d.db_server_type == cfd_notype)

@@ -223,24 +223,7 @@ void DeleteCompressedArray (struct CompressedArray *start);
 int CompressedArrayElementExists (struct CompressedArray *start, int key);
 char *CompressedArrayValue (struct CompressedArray *start, int key);
 
-/* constraints.c */
-
-struct Constraint *AppendConstraint(struct Constraint **conlist,char *lval, void *rval, char type,char *classes,int body);
-void DeleteConstraintList(struct Constraint *conlist);
-void EditScalarConstraint(struct Constraint *conlist,char *lval,char *rval);
-void *GetConstraint(char *lval,struct Promise *list,char type);
-int GetBooleanConstraint(char *lval,struct Promise *list);
-int GetRawBooleanConstraint(char *lval,struct Constraint *list);
-int GetIntConstraint(char *lval,struct Promise *list);
-double GetRealConstraint(char *lval,struct Promise *list);
-mode_t GetOctalConstraint(char *lval,struct Promise *list);
-uid_t GetUidConstraint(char *lval,struct Promise *pp);
-gid_t GetGidConstraint(char *lval,struct Promise *pp);
-struct Rlist *GetListConstraint(char *lval,struct Promise *list);
-void ReCheckAllConstraints(struct Promise *pp);
-int GetBundleConstraint(char *lval,struct Promise *list);
-struct PromiseIdent *NewPromiseId(char *handle,struct Promise *pp);
-void DeleteAllPromiseIds(void);
+#include "constraints.h"
 
 /* conversion.c */
 

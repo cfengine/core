@@ -85,7 +85,7 @@ libpromises_la_SOURCES =                                                \
         granules.c                                                      \
         timeout.c                                                       \
         promises.c                                                      \
-        constraints.c                                                   \
+        constraints.c constraints.h                                     \
         iteration.c                                                     \
         rlist.c rlist.h                                                 \
         syntax.c syntax.h                                               \

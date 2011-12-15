@@ -31,8 +31,7 @@
 /*                                                                           */
 /*****************************************************************************/
 
-#include "cf3.defs.h"
-#include "cf3.extern.h"
+#include "constraints.h"
 
 static struct PromiseIdent *PromiseIdExists(char *handle);
 static void DeleteAllPromiseIdsRecurse(struct PromiseIdent *key);
@@ -545,7 +544,7 @@ return retval;
 
 /*****************************************************************************/
 
-void *GetConstraint(char *lval,struct Promise *pp,char rtype)
+void *GetConstraintValue(char *lval,struct Promise *pp,char rtype)
 
 { struct Constraint *cp;
   void *retval = NULL;
@@ -590,14 +589,14 @@ return retval;
 void ReCheckAllConstraints(struct Promise *pp)
 
 { struct Constraint *cp;
- char *sp,*handle = GetConstraint("handle",pp,CF_SCALAR);
+ char *sp,*handle = GetConstraintValue("handle",pp,CF_SCALAR);
   struct PromiseIdent *prid;
   struct Item *ptr;
   int in_class_any = false;
 
 if (strcmp(pp->agentsubtype,"reports") == 0 && strcmp(pp->classes,"any") == 0)
    {
-   char *cl = GetConstraint("ifvarclass",pp,CF_SCALAR);
+   char *cl = GetConstraintValue("ifvarclass",pp,CF_SCALAR);
    
    if (cl == NULL || strcmp(cl,"any") == 0)
       {
@@ -674,7 +673,7 @@ if (strcmp(pp->agentsubtype,"insert_lines") == 0)
    {
    /* Multiple additions with same criterion will not be convergent -- but ignore for empty file baseline */
    
-   if ((sp = GetConstraint("select_line_matching",pp,CF_SCALAR)))
+   if ((sp = GetConstraintValue("select_line_matching",pp,CF_SCALAR)))
       {
       if ((ptr = ReturnItemIn(EDIT_ANCHORS,sp)))
          {

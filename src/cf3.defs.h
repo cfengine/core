@@ -777,21 +777,6 @@ struct PromiseIdent
    };
 
 /*************************************************************************/
-
-struct Constraint
-   {
-   char *lval;
-   void *rval;    /* should point to either string, Rlist or FnCall */
-   char type;     /* scalar, list, or function */
-   char *classes; /* only used within bodies */
-   int isbody;
-   struct Audit *audit;
-   struct Constraint *next;
-
-   struct SourceOffset offset;
-   };
-
-/*************************************************************************/
 /* Rvalues and lists - basic workhorse structure                         */
 /*************************************************************************/
 

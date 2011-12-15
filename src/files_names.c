@@ -42,7 +42,7 @@ void LocateFilePromiserGroup(char *wildpath,struct Promise *pp,void (*fnptr)(cha
   int count = 0,lastnode = false, expandregex = false;
   uid_t agentuid = getuid();
   int create = GetBooleanConstraint("create",pp);
-  char *pathtype = GetConstraint("pathtype",pp,CF_SCALAR);
+  char *pathtype = GetConstraintValue("pathtype",pp,CF_SCALAR);
 
 CfDebug("LocateFilePromiserGroup(%s)\n",wildpath);
 

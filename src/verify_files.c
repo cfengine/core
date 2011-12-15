@@ -56,7 +56,7 @@ return (void *)NULL;
 
 static void FindFilePromiserObjects(struct Promise *pp)
 
-{ char *val = GetConstraint("pathtype",pp,CF_SCALAR);
+{ char *val = GetConstraintValue("pathtype",pp,CF_SCALAR);
   int literal = GetBooleanConstraint("copy_from",pp) ||
                 ((val != NULL) && (strcmp(val,"literal") == 0));
 

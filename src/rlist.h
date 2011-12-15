@@ -22,7 +22,7 @@ char *ScalarValue(struct Rlist *rlist);
 struct FnCall *FnCallValue(struct Rlist *rlist);
 struct Rlist *ListValue(struct Rlist *rlist);
 
-int PrintRval(char *buffer,int bufsize,void *item,char type);
+int PrintRval(char *buffer,int bufsize, struct Rval rval);
 int PrintRlist(char *buffer,int bufsize,struct Rlist *list);
 int GetStringListElement(char *strList, int index, char *outBuf, int outBufSz);
 int StripListSep(char *strList, char *outBuf, int outBufSz);

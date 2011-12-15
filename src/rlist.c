@@ -792,7 +792,7 @@ for (rp = list; rp != NULL; rp=rp->next)
       return false;
       }
    
-   if(!PrintRval(buffer,bufsize,rp->item,rp->type))
+   if(!PrintRval(buffer,bufsize, (struct Rval) { rp->item, rp->type }))
       {
       EndJoin(buffer,"...TRUNCATED'}",bufsize);
       return false;
@@ -907,35 +907,25 @@ int StripListSep(char *strList, char *outBuf, int outBufSz)
 
 /*******************************************************************/
 
-int PrintRval(char *buffer,int bufsize,void *rval,char type)
+int PrintRval(char *buffer,int bufsize, struct Rval rval)
 
 {
-if (rval == NULL)
+if (rval.item == NULL)
    {
    return 0;
    }
 
-switch (type)
+switch (rval.rtype)
    {
    case CF_SCALAR:
-       return JoinSilent(buffer,(char *)rval,bufsize);
-       break;
-       
+       return JoinSilent(buffer, (const char *)rval.item, bufsize);
    case CF_LIST:
-       return PrintRlist(buffer,bufsize,(struct Rlist *)rval);
-       break;
-       
+       return PrintRlist(buffer, bufsize, (struct Rlist *)rval.item);
    case CF_FNCALL:
-       PrintFnCall(buffer,bufsize,(struct FnCall *)rval);
-       return true;
-       break;
-
-   case CF_NOPROMISEE:
-       // fprintf(fp,"(no-one)");
-       break;
+       return PrintFnCall(buffer, bufsize, (struct FnCall *)rval.item);
+   default:
+      return 0;
    }
-
-return false;
 }
 
 /*******************************************************************/

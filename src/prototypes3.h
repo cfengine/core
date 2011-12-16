@@ -250,7 +250,7 @@ enum cfdatatype GetControlDatatype(const char *varname, const struct BodySyntax 
 enum cfagenttype Agent2Type(char *name);
 enum cfsbundle Type2Cfs(char *name);
 enum representations String2Representation(char *s);
-int GetBoolean(char *val);
+int GetBoolean(const char *val);
 long Str2Int(const char *s);
 long TimeCounter2Int(const char *s);
 long TimeAbs2Int(char *s);

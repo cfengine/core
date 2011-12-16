@@ -653,7 +653,7 @@ return cf_notype;
 
 /****************************************************************************/
 
-int GetBoolean(char *s)
+int GetBoolean(const char *s)
 
 { struct Item *list = SplitString(CF_BOOL,','), *ip;
   int count = 0;

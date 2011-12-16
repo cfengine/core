@@ -49,7 +49,7 @@ libpromises_la_SOURCES =                                                \
         nfs.c                                                           \
         ontology.c ontology.h                                           \
         item_lib.c                                                      \
-	string_lib.c                                                    \
+	string_lib.c string_lib.h                                       \
 	files_lib.c                                                     \
 	addr_lib.c                                                      \
         package_lib.c                                                   \

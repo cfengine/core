@@ -1039,12 +1039,7 @@ void SelfTerminatePrelude(void);
 
 /* string_lib.c */
 
-char ToLower (char ch);
-char ToUpper (char ch);
-char *ToUpperStr(const char *str);
-void ToUpperStrInplace(char *str);
-char *ToLowerStr(const char *str);
-void ToLowerStrInplace(char *str);
+#include "string_lib.h"
 
 /* sockaddr.c */
 

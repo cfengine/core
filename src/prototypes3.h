@@ -517,7 +517,7 @@ void ScanRval(const char *scope,struct Rlist **los,struct Rlist **lol,const void
 
 int IsExpandable(const char *str);
 int ExpandScalar(const char *string, char buffer[CF_EXPANDSIZE]);
-struct Rval ExpandBundleReference(char *scopeid,void *rval,char type);
+struct Rval ExpandBundleReference(char *scopeid, struct Rval rval);
 struct FnCall *ExpandFnCall(char *contextid,struct FnCall *f,int expandnaked);
 struct Rval ExpandPrivateRval(char *contextid, struct Rval rval);
 struct Rlist *ExpandList(char *scopeid,struct Rlist *list,int expandnaked);

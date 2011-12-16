@@ -313,7 +313,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
    if (ExpectedDataType(cp->lval) == cf_bundle)
       {
-      final = ExpandBundleReference(scopeid,cp->rval,cp->type);
+      final = ExpandBundleReference(scopeid, (struct Rval) { cp->rval, cp->type });
       }
    else
       {

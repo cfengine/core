@@ -384,40 +384,32 @@ return returnval;
 
 /*********************************************************************/
 
-struct Rval ExpandBundleReference(char *scopeid,void *rval,char type)
+struct Rval ExpandBundleReference(char *scopeid, struct Rval rval)
 
-{ char buffer[CF_EXPANDSIZE];
- struct FnCall *fp,*fpe;
- struct Rval returnval;
-     
-CfDebug("ExpandBundleReference(scope=%s,type=%c)\n",scopeid,type);
+{
+CfDebug("ExpandBundleReference(scope=%s,type=%c)\n", scopeid, rval.rtype);
 
 /* Allocates new memory for the copy */
 
-returnval.item = NULL;
-returnval.rtype = CF_NOPROMISEE;
-
-switch (type)
+switch (rval.rtype)
    {
    case CF_SCALAR:
+      {
+      char buffer[CF_EXPANDSIZE];
+      ExpandPrivateScalar(scopeid, (char *)rval.item, buffer);
+      return (struct Rval) { xstrdup(buffer), CF_SCALAR };
+      }
 
-       ExpandPrivateScalar(scopeid,(char *)rval,buffer);
-       returnval.item = xstrdup(buffer);
-       returnval.rtype = CF_SCALAR;       
-       break;
-       
    case CF_FNCALL:
-       
-       /* Note expand function does not mean evaluate function, must preserve type */
-       fp = (struct FnCall *)rval;
-       fpe = ExpandFnCall(scopeid,fp,false);
+      {
+      /* Note expand function does not mean evaluate function, must preserve type */
+      struct FnCall *fp = (struct FnCall *)rval.item;
+      return (struct Rval) { ExpandFnCall(scopeid, fp, false), CF_FNCALL };
+      }
 
-       returnval.item = fpe;
-       returnval.rtype = CF_FNCALL;
-       break;       
+   default:
+      return (struct Rval) { NULL, CF_NOPROMISEE };
    }
-
-return returnval;
 }
 
 /*********************************************************************/

@@ -22,8 +22,8 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_RLIST_H
-#define CFENGINE_RLIST_H
+#ifndef CFENGINE_STRING_LIB_H
+#define CFENGINE_STRING_LIB_H
 
 char ToLower (char ch);
 char ToUpper (char ch);

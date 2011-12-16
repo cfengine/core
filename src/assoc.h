@@ -22,8 +22,8 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE3_ASSOC_H
-#define CFENGINE3_ASSOC_H
+#ifndef CFENGINE_ASSOC_H
+#define CFENGINE_ASSOC_H
 
 #include "cf3.defs.h"
 

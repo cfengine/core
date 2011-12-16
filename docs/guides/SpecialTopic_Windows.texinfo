@@ -146,7 +146,11 @@ Note that you need a policy hub to bootstrap to in order for
 the license to get downloaded and verified. This is required even if
 you just want to run some tests on the local machine manually. The
 policy hub needs to run a flavour of Linux, as noted in the Nova
-getting started document.
+getting started document. Find the hostname or IP address of the hub, here we assume the address is '123.456.789.123' (do not bootstrap with a localhost address):
+
+@verbatim
+   C:\Program Files\Cfengine\bin\cf-agent.exe --bootstrap --policy-server 123.456.789.123
+@end verbatim
 
 
 @node  Testing policies locally, Windows registry management, Installation, Top

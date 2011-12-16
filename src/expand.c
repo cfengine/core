@@ -37,7 +37,7 @@ static void ScanScalar(const char *scope, struct Rlist **los, struct Rlist **lol
 static int Epimenides(char *var, struct Rval rval, int level);
 
 static int CompareRlist(struct Rlist *list1, struct Rlist *list2);
-static int CompareRval(void *rval1, char rtype1, void *rval2, char rtype2);
+static int CompareRval(struct Rval rval1, struct Rval rval2);
 
 /*
 
@@ -1123,7 +1123,7 @@ if (rval.item != NULL)
          {
          DeleteVariable(scope,pp->promiser);
          }
-      else if ((THIS_AGENT_TYPE == cf_common) && (CompareRval(retval.item,retval.rtype,rval.item,rval.rtype) == false))
+      else if ((THIS_AGENT_TYPE == cf_common) && (CompareRval(retval,rval) == false))
          {
          switch (rval.rtype)
             {
@@ -1308,7 +1308,7 @@ switch (rval.rtype)
        if (IsCf3VarString(rval.item))
           {
           ExpandPrivateScalar(CONTEXTID, rval.item, exp);
-          CfDebug("bling %d-%s: (look for %s) in \"%s\" => %s \n", level, CONTEXTID, var, rval.item, exp);
+          CfDebug("bling %d-%s: (look for %s) in \"%s\" => %s \n", level, CONTEXTID, var, (const char*)rval.item, exp);
 
           if (level > 3)
              {
@@ -1344,24 +1344,24 @@ return false;
 
 /*******************************************************************/
 
-static int CompareRval(void *rval1, char rtype1, void *rval2, char rtype2)
+static int CompareRval(struct Rval rval1, struct Rval rval2)
 
 {
-if (rtype1 != rtype2)
+if (rval1.rtype != rval2.rtype)
    {
    return -1;
    }
 
-switch (rtype1)
+switch (rval1.rtype)
    {
    case CF_SCALAR:
 
-       if (IsCf3VarString((char *)rval1) || IsCf3VarString((char *)rval2))
+       if (IsCf3VarString((char *)rval1.item) || IsCf3VarString((char *)rval2.item))
           {
           return -1; // inconclusive
           }
 
-       if (strcmp(rval1,rval2) != 0)
+       if (strcmp(rval1.item,rval2.item) != 0)
           {
           return false;
           }
@@ -1369,7 +1369,7 @@ switch (rtype1)
        break;
        
    case CF_LIST:
-       return CompareRlist(rval1,rval2);
+       return CompareRlist(rval1.item,rval2.item);
        
    case CF_FNCALL:
        return -1;       

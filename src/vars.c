@@ -216,11 +216,11 @@ CfDebug("return final variable type=%s, value={\n",CF_DATATYPES[assoc->dtype]);
 
 if (DEBUG)
    {
-   ShowRval(stdout, (struct Rval) { assoc->rval, assoc->rtype });
+   ShowRval(stdout, assoc->rval);
    }
 CfDebug("}\n");
 
-*returnv = (struct Rval) { assoc->rval, assoc->rtype };
+*returnv = assoc->rval;
 return assoc->dtype;
 }
 
@@ -257,7 +257,7 @@ if (ap == NULL || rval == NULL)
 switch (rtype)
    {
    case CF_SCALAR:
-       return strcmp(ap->rval,rval);
+       return strcmp(ap->rval.item, rval);
 
    case CF_LIST:
        list = (const struct Rlist *)rval;
@@ -276,7 +276,7 @@ switch (rtype)
        return 0;
    }
     
-return strcmp(ap->rval,rval);
+return strcmp(ap->rval.item,rval);
 }
 
 /*******************************************************************/
@@ -294,10 +294,10 @@ if (ap == NULL)
 switch (rtype)
    {
    case CF_SCALAR:
-       return IsCf3VarString(ap->rval);
+       return IsCf3VarString(ap->rval.item);
        
    case CF_LIST:
-       list = (struct Rlist *)ap->rval;
+       list = (struct Rlist *)ap->rval.item;
        
        for (rp = list; rp != NULL; rp=rp->next)
           {
@@ -887,9 +887,8 @@ if (assoc)
             CfOut(cf_inform,""," !! in bundle parameterization\n",fname,lineno);
             }
          }
-      DeleteRvalItem((struct Rval) { assoc->rval, assoc->rtype });
-      assoc->rval = CopyRvalItem(rval).item;
-      assoc->rtype = rval.rtype;
+      DeleteRvalItem(assoc->rval);
+      assoc->rval = CopyRvalItem(rval);
       assoc->dtype = dtype;
       CfDebug("Stored \"%s\" in context %s\n",lval,scope);
       }
@@ -955,25 +954,25 @@ while ((assoc = HashIteratorNext(&i)))
             CfDebug("Rewriting expanded type for %s from %s to %s\n",assoc->lval,CF_DATATYPES[assoc->dtype], (char*)rp->state_ptr->item);
 
             // must first free existing rval in scope, then allocate new (should always be string)
-            DeleteRvalItem((struct Rval) { assoc->rval, assoc->rtype });
+            DeleteRvalItem(assoc->rval);
 
             // avoids double free - borrowing value from lol (freed in DeleteScope())
-            assoc->rval = xstrdup(rp->state_ptr->item);
+            assoc->rval.item = xstrdup(rp->state_ptr->item);
             }
 
          switch(assoc->dtype)
             {
             case cf_slist:
                assoc->dtype = cf_str;
-               assoc->rtype = CF_SCALAR;
+               assoc->rval.rtype = CF_SCALAR;
                break;
             case cf_ilist:
                assoc->dtype = cf_int;
-               assoc->rtype = CF_SCALAR;
+               assoc->rval.rtype = CF_SCALAR;
                break;
             case cf_rlist:
                assoc->dtype = cf_real;
-               assoc->rtype = CF_SCALAR;
+               assoc->rval.rtype = CF_SCALAR;
                break;
             default:
                /* Only lists need to be converted */

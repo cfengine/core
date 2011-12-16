@@ -408,8 +408,8 @@ CfAssoc *assoc;
 while ((assoc = HashIteratorNext(&i)))
    {
    fprintf(fp, "%8s %c %s = ", CF_DATATYPES[assoc->dtype],
-           assoc->rtype, assoc->lval);
-   ShowRval(fp, (struct Rval) { assoc->rval, assoc->rtype });
+           assoc->rval.rtype, assoc->lval);
+   ShowRval(fp, assoc->rval);
    fprintf(fp, "\n");
    }
 }
@@ -426,8 +426,8 @@ fprintf (fp,"<tr><th>dtype</th><th>rtype</th><th>identifier</th><th>Rvalue</th><
 
 while ((assoc = HashIteratorNext(&i)))
    {
-   fprintf(fp,"<tr><th>%8s</th><td> %c</td><td> %s</td><td> ",CF_DATATYPES[assoc->dtype],assoc->rtype,assoc->lval);
-   ShowRval(fp, (struct Rval) { assoc->rval, assoc->rtype });
+   fprintf(fp,"<tr><th>%8s</th><td> %c</td><td> %s</td><td> ",CF_DATATYPES[assoc->dtype],assoc->rval.rtype,assoc->lval);
+   ShowRval(fp, assoc->rval);
    fprintf(fp,"</td></tr>\n");
    }
 

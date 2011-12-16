@@ -84,10 +84,10 @@ for (rp = namelist; rp != NULL; rp = rp->next)
          }
       }
 
-   if ((new = NewAssoc(rp->item,retval.item,retval.rtype,dtype)))
+   if ((new = NewAssoc(rp->item, retval, dtype)))
       {
       OrthogAppendRlist(&deref_listoflists,new,CF_LIST);
-      rp->state_ptr = new->rval;
+      rp->state_ptr = new->rval.item;
       
       while (rp->state_ptr && strcmp(rp->state_ptr->item,CF_NULL_VALUE) == 0)
          {
@@ -155,7 +155,7 @@ if (state->next == NULL)
       if (IncrementIterationContext(iterator->next,level+1))
          {
          /* Not at end yet, so reset this wheel */
-         iterator->state_ptr = cp->rval;
+         iterator->state_ptr = cp->rval.item;
          iterator->state_ptr = iterator->state_ptr->next;         
          return true;
          }
@@ -183,7 +183,7 @@ else
       if (IncrementIterationContext(iterator->next,level+1))
          {
          /* Not at end yet, so reset this wheel (next because we always start with cf_null now) */
-         iterator->state_ptr = cp->rval;
+         iterator->state_ptr = cp->rval.item;
          iterator->state_ptr = iterator->state_ptr->next;         
          return true;
          }

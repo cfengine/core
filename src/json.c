@@ -16,15 +16,15 @@ for (rp = element; rp != NULL; rp = next)
       case CF_ASSOC:
 	 {
 	 struct CfAssoc *assoc = rp->item;
-	 switch (assoc->rtype)
+	 switch (assoc->rval.rtype)
 	    {
 	    case JSON_OBJECT_TYPE:
 	    case JSON_ARRAY_TYPE:
-	       JsonElementDelete(assoc->rval);
+	       JsonElementDelete(assoc->rval.item);
 	       break;
 
 	    default:
-	       free(assoc->rval);
+	       free(assoc->rval.item);
 	       break;
 	    }
 	 free(assoc->lval);
@@ -59,7 +59,7 @@ if (value == NULL)
    return;
    }
 
-ap = AssocNewReference(key, value, JSON_OBJECT_TYPE, cf_notype);
+ap = AssocNewReference(key, (struct Rval) { value, JSON_OBJECT_TYPE }, cf_notype);
 RlistAppendReference(parent, ap, CF_ASSOC);
 }
 
@@ -72,7 +72,7 @@ if (value == NULL)
    return;
    }
 
-ap = AssocNewReference(key, value, JSON_ARRAY_TYPE, cf_notype);
+ap = AssocNewReference(key, (struct Rval) { value, JSON_ARRAY_TYPE }, cf_notype);
 RlistAppendReference(parent, ap, CF_ASSOC);
 }
 
@@ -85,7 +85,7 @@ if (value == NULL)
    return;
    }
 
-ap = AssocNewReference(key, xstrdup(value), CF_SCALAR, cf_str);
+ap = AssocNewReference(key, (struct Rval) { xstrdup(value), CF_SCALAR }, cf_str);
 RlistAppendReference(parent, ap, CF_ASSOC);
 }
 
@@ -187,13 +187,13 @@ for (rp = value; rp != NULL; rp = rp->next)
    entry = (struct CfAssoc *)rp->item;
 
    fprintf(out, "\"%s\": ", entry->lval);
-   switch (entry->rtype)
+   switch (entry->rval.rtype)
       {
       case CF_SCALAR:
 	 switch (entry->dtype)
 	    {
 	    case cf_str:
-	       JsonStringPrint(out, (const char*)entry->rval, 0);
+	       JsonStringPrint(out, (const char*)entry->rval.item, 0);
 	       break;
 
 	    default:
@@ -204,11 +204,11 @@ for (rp = value; rp != NULL; rp = rp->next)
 	 break;
 
       case JSON_OBJECT_TYPE:
-	 JsonObjectPrint(out, entry->rval, indent_level + 1);
+	 JsonObjectPrint(out, entry->rval.item, indent_level + 1);
 	 break;
 
       case JSON_ARRAY_TYPE:
-	 JsonArrayPrint(out, entry->rval, indent_level + 1);
+	 JsonArrayPrint(out, entry->rval.item, indent_level + 1);
 	 break;
 
       default:

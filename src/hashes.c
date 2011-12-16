@@ -78,7 +78,7 @@ CfAssoc *assoc;
 
 while ((assoc = HashIteratorNext(&i)))
    {
-   HashInsertElement(newhash, assoc->lval, (struct Rval) { assoc->rval, assoc->rtype }, assoc->dtype);
+   HashInsertElement(newhash, assoc->lval, assoc->rval, assoc->dtype);
    }
 }
 
@@ -131,7 +131,7 @@ do
    /* Free bucket is found */
    if (hashtable->buckets[i] == NULL || hashtable->buckets[i] == HASH_ENTRY_DELETED)
       {
-      hashtable->buckets[i] = NewAssoc(element, rval.item, rval.rtype, dtype);
+      hashtable->buckets[i] = NewAssoc(element, rval, dtype);
       return true;
       }
 
@@ -170,7 +170,7 @@ for (i = 0; i < hashtable->array.size; ++i)
       }
    }
 
-hashtable->array.values[hashtable->array.size++] = NewAssoc(element, rval.item, rval.rtype, dtype);
+hashtable->array.values[hashtable->array.size++] = NewAssoc(element, rval, dtype);
 return true;
 }
 

@@ -37,7 +37,7 @@ static void ShowAssoc (struct CfAssoc *cp);
 
 /*******************************************************************/
 
-struct CfAssoc *NewAssoc(const char *lval, const void *rval, char rtype, enum cfdatatype dt)
+struct CfAssoc *NewAssoc(const char *lval, struct Rval rval, enum cfdatatype dt)
 
 { struct CfAssoc *ap;
 
@@ -46,8 +46,7 @@ ap = xmalloc(sizeof(struct CfAssoc));
 /* Make a private copy because promises are ephemeral in expansion phase */
 
 ap->lval = xstrdup(lval);
-ap->rval = CopyRvalItem((struct Rval) { rval, rtype }).item;
-ap->rtype = rtype;
+ap->rval = CopyRvalItem(rval);
 ap->dtype = dt;
 
 if (lval == NULL)
@@ -71,11 +70,7 @@ if (ap == NULL)
 CfDebug(" ----> Delete variable association %s\n",ap->lval);
 
 free(ap->lval);
-
-if (ap->rval)
-   { 
-   DeleteRvalItem((struct Rval) { ap->rval, ap->rtype });
-   }
+DeleteRvalItem(ap->rval);
 
 free(ap);
 
@@ -91,7 +86,7 @@ if (old == NULL)
    return NULL;
    }
 
-return NewAssoc(old->lval,old->rval,old->rtype,old->dtype);
+return NewAssoc(old->lval, old->rval, old->dtype);
 }
 
 /*******************************************************************/
@@ -101,15 +96,15 @@ static void ShowAssoc (struct CfAssoc *cp)
 {
 printf("ShowAssoc: lval = %s\n",cp->lval);
 printf("ShowAssoc: rval = ");
-ShowRval(stdout, (struct Rval) { cp->rval,cp->rtype });
+ShowRval(stdout, cp->rval);
  
 printf("\nShowAssoc: dtype = %s\n",CF_DATATYPES[cp->dtype]);
 }
 
 /*******************************************************************/
 
-struct CfAssoc *AssocNewReference(const char *lval, void *rval,
-                                  char rtype, enum cfdatatype dtype)
+struct CfAssoc *AssocNewReference(const char *lval, struct Rval rval,
+                                  enum cfdatatype dtype)
 {
 struct CfAssoc *ap = NULL;
 
@@ -118,7 +113,6 @@ ap = xmalloc(sizeof(struct CfAssoc));
 ap->lval = xstrdup(lval);
 ap->rval = rval;
 ap->dtype = dtype;
-ap->rtype = rtype;
 
 if (lval == NULL)
    {

@@ -1239,7 +1239,7 @@ while ((assoc = HashIteratorNext(&i)))
    snprintf(match,CF_MAXVARSIZE,"%s[",lval);
    if (strncmp(match,assoc->lval,strlen(match)) == 0)
       {
-      if (FullTextMatch(regex,assoc->rval))
+      if (FullTextMatch(regex,assoc->rval.item))
          {
          strcpy(buffer,"any");
          break;
@@ -1368,16 +1368,16 @@ while ((assoc = HashIteratorNext(&i)))
 
    if (strncmp(match,assoc->lval,strlen(match)) == 0)
       {
-      switch(assoc->rtype)
+      switch(assoc->rval.rtype)
          {
          case CF_SCALAR:
-            IdempAppendRScalar(&returnlist,assoc->rval,CF_SCALAR);
+            IdempAppendRScalar(&returnlist,assoc->rval.item,CF_SCALAR);
             break;
 
          case CF_LIST:
-            for (rp = assoc->rval; rp != NULL; rp = rp->next)
+            for (rp = assoc->rval.item; rp != NULL; rp = rp->next)
                {
-               IdempAppendRScalar(&returnlist,assoc->rval,CF_SCALAR);
+               IdempAppendRScalar(&returnlist,assoc->rval.item,CF_SCALAR);
                }
             break;
          }
@@ -2875,7 +2875,7 @@ if (ptr && ptr->hashtable)
       {
       char var[CF_MAXVARSIZE];
 
-      if (assoc->rtype != CF_SCALAR)
+      if (assoc->rval.rtype != CF_SCALAR)
          {
          CfOut(cf_error,""," !! Software error: pattern match was non-scalar in regextract (shouldn't happen)");
          strcpy(buffer,"!any");
@@ -2885,7 +2885,7 @@ if (ptr && ptr->hashtable)
       else
          {
          snprintf(var,CF_MAXVARSIZE-1,"%s[%s]",arrayname,assoc->lval);
-         NewScalar(THIS_BUNDLE,var,assoc->rval,cf_str);
+         NewScalar(THIS_BUNDLE,var,assoc->rval.item,cf_str);
          }
       }
    }

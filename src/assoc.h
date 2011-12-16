@@ -30,14 +30,13 @@
 typedef struct CfAssoc        /* variable reference linkage , with metatype*/
    {
    char *lval;
-   void *rval; /* TODO: use struct Rval */
-   char rtype;
+   struct Rval rval;
    enum cfdatatype dtype;
    } CfAssoc;
 
-struct CfAssoc *NewAssoc(const char *lval, const void *rval, char rtype, enum cfdatatype dt);
+struct CfAssoc *NewAssoc(const char *lval, struct Rval rval, enum cfdatatype dt);
 void DeleteAssoc(struct CfAssoc *ap);
 struct CfAssoc *CopyAssoc(struct CfAssoc *old);
-struct CfAssoc *AssocNewReference(const char *lval, void *rval, char rtype, enum cfdatatype dtype);
+struct CfAssoc *AssocNewReference(const char *lval, struct Rval rval, enum cfdatatype dtype);
 
 #endif

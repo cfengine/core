@@ -407,7 +407,7 @@ CfAssoc *assoc;
 
 while ((assoc = HashIteratorNext(&i)))
    {
-   CfOut(cf_verbose,"","Appending variable documentation for %s (%c)\n",assoc->lval,assoc->rtype);
+   CfOut(cf_verbose,"","Appending variable documentation for %s (%c)\n",assoc->lval,assoc->rval.rtype);
    PrependRScalar(list,assoc->lval,CF_SCALAR);
    }
 }

@@ -80,6 +80,7 @@ Copyright @copyright{} 2009 CFEngine AS
 * Example company_knowledge.cf::  
 * Knowledge transfer::          
 * How does CFEngine Nova help?::  
+* Knowledge Management Objectives::
 @end menu
 
 
@@ -909,7 +910,7 @@ You need to foster a culture of using information, in order for it
 to become assimilated as knowledge. Unused information will perish.
 
 
-@node How does CFEngine Nova help?,  , Knowledge transfer, Top
+@node How does CFEngine Nova help?, Knowledge Management Objectives, Knowledge transfer, Top
 @unnumberedsec How does CFEngine Nova help?
 
 @itemize
@@ -926,7 +927,7 @@ the surrounding story using intelligent algorithms.
 
 
 
-@node Knowledge Management Objectives
+@node Knowledge Management Objectives, , How does CFEngine Nova help?, Top
 @unnumberedsec Knowledge Management Objectives
 
 As a manifesto for us as developers at CFEngine, as well as for you as

@@ -70,18 +70,14 @@ if (ap == NULL)
 
 CfDebug(" ----> Delete variable association %s\n",ap->lval);
 
-if (ap->lval)
-   {
-   free(ap->lval);
-   }
+free(ap->lval);
 
 if (ap->rval)
    { 
    DeleteRvalItem((struct Rval) { ap->rval, ap->rtype });
    }
 
-
-free((char *)ap);
+free(ap);
 
 }
 

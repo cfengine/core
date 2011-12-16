@@ -34,7 +34,7 @@
 
 static void ConvergePromiseValues(struct Promise *pp);
 static void ScanScalar(const char *scope, struct Rlist **los, struct Rlist **lol, const char *string, int level, struct Promise *pp);
-static int Epimenides(char *var,char *rval,char rtype,int level);
+static int Epimenides(char *var, struct Rval rval, int level);
 
 static int CompareRlist(struct Rlist *list1, struct Rlist *list2);
 static int CompareRval(void *rval1, char rtype1, void *rval2, char rtype2);
@@ -1101,7 +1101,7 @@ if (rval.item != NULL)
          }
       }
 
-   if (Epimenides(pp->promiser, rval.item, rval.rtype, 0))
+   if (Epimenides(pp->promiser, rval, 0))
       {
       CfOut(cf_error,"","Variable \"%s\" contains itself indirectly - an unkeepable promise",pp->promiser);
       exit(1);
@@ -1290,32 +1290,32 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 /* Levels                                                            */
 /*********************************************************************/
 
-static int Epimenides(char *var,char *rval,char rtype,int level)
+static int Epimenides(char *var, struct Rval rval, int level)
 
 { struct Rlist *rp,*list;
   char exp[CF_EXPANDSIZE];
 
-switch (rtype)
+switch (rval.rtype)
    {
    case CF_SCALAR:
        
-       if (StringContainsVar(rval,var))
+       if (StringContainsVar(rval.item, var))
           {
-          CfOut(cf_error,"","Scalar variable \"%s\" contains itself (non-convergent): %s",var,(char *)rval);
+          CfOut(cf_error, "", "Scalar variable \"%s\" contains itself (non-convergent): %s", var, (char *)rval.item);
           return true;
           }
 
-       if (IsCf3VarString(rval))
+       if (IsCf3VarString(rval.item))
           {
-          ExpandPrivateScalar(CONTEXTID,rval,exp);
-          CfDebug("bling %d-%s: (look for %s) in \"%s\" => %s \n",level,CONTEXTID,var,rval,exp);
+          ExpandPrivateScalar(CONTEXTID, rval.item, exp);
+          CfDebug("bling %d-%s: (look for %s) in \"%s\" => %s \n", level, CONTEXTID, var, rval.item, exp);
 
           if (level > 3)
              {
              return false;
              }
           
-          if (Epimenides(var,exp,CF_SCALAR,level+1))
+          if (Epimenides(var, (struct Rval) { exp, CF_SCALAR }, level+1))
              {
              return true;
              }           
@@ -1324,11 +1324,11 @@ switch (rtype)
        break;
        
    case CF_LIST:
-       list = (struct Rlist *)rval;
+       list = (struct Rlist *)rval.item;
        
        for (rp = list; rp != NULL; rp=rp->next)
           {
-          if (Epimenides(var,rp->item,rp->type,level))
+          if (Epimenides(var, (struct Rval) { rp->item, rp->type }, level))
              {
              return true;
              }

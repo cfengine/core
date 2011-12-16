@@ -33,7 +33,7 @@
 #include "cf3.extern.h"
 
 static int IsCf3Scalar(char *str);
-static int CompareVariableValue(const void *rval,char rtype,struct CfAssoc *ap);
+static int CompareVariableValue(struct Rval rval, struct CfAssoc *ap);
 
 /*******************************************************************/
 
@@ -244,27 +244,27 @@ if (HashDeleteElement(ptr->hashtable, id) == false)
 
 /*******************************************************************/
 
-static int CompareVariableValue(const void *rval,char rtype,struct CfAssoc *ap)
+static int CompareVariableValue(struct Rval rval, struct CfAssoc *ap)
 
 {
   const struct Rlist *list, *rp;
 
-if (ap == NULL || rval == NULL)
+if (ap == NULL || rval.item == NULL)
    {
    return 1;
    }
 
-switch (rtype)
+switch (rval.rtype)
    {
    case CF_SCALAR:
-       return strcmp(ap->rval.item, rval);
+       return strcmp(ap->rval.item, rval.item);
 
    case CF_LIST:
-       list = (const struct Rlist *)rval;
+       list = (const struct Rlist *)rval.item;
        
        for (rp = list; rp != NULL; rp=rp->next)
           {
-          if (!CompareVariableValue(rp->item,rp->type,ap))
+          if (!CompareVariableValue((struct Rval) { rp->item, rp->type }, ap))
              {
              return -1;
              }
@@ -276,7 +276,7 @@ switch (rtype)
        return 0;
    }
     
-return strcmp(ap->rval.item,rval);
+return strcmp(ap->rval.item,rval.item);
 }
 
 /*******************************************************************/
@@ -868,7 +868,7 @@ assoc = HashLookupElement(ptr->hashtable, lval);
 
 if (assoc)
    {
-   if (CompareVariableValue(rval.item, rval.rtype, assoc) == 0)
+   if (CompareVariableValue(rval, assoc) == 0)
       {
       /* Identical value, keep as is */
       }

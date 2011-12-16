@@ -725,7 +725,7 @@ for (i = 0; CF_CLASSBODY[i].lval != NULL; i++)
    {
    if (strcmp(lval,CF_CLASSBODY[i].lval) == 0)
       {
-      CheckConstraintTypeMatch(lval,rval,rvaltype,CF_CLASSBODY[i].dtype,CF_CLASSBODY[i].range,0);
+      CheckConstraintTypeMatch(lval, (struct Rval) { rval, rvaltype }, CF_CLASSBODY[i].dtype, CF_CLASSBODY[i].range, 0);
       }
    }
 
@@ -759,7 +759,7 @@ for  (i = 0; i < CF3_MODULES; i++)
                      {
                      if (strcmp(lval,bs2[m].lval) == 0)
                         {
-                        CheckConstraintTypeMatch(lval,rval,rvaltype,bs2[m].dtype,(char *)(bs2[m].range),0);
+                        CheckConstraintTypeMatch(lval, (struct Rval) { rval, rvaltype }, bs2[m].dtype, (char *)(bs2[m].range), 0);
                         return;
                         }
                      }                  
@@ -767,7 +767,7 @@ for  (i = 0; i < CF3_MODULES; i++)
 
                if (strcmp(lval,bs[l].lval) == 0)
                   {
-                  CheckConstraintTypeMatch(lval,rval,rvaltype,bs[l].dtype,(char *)(bs[l].range),0);
+                  CheckConstraintTypeMatch(lval, (struct Rval) { rval, rvaltype }, bs[l].dtype, (char *)(bs[l].range), 0);
                   return;
                   }
                }                        
@@ -788,7 +788,7 @@ for (i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
    if (strcmp(lval,CF_COMMON_BODIES[i].lval) == 0)
       {
       CfDebug("Found a match for lval %s in the common constraint attributes\n",lval);
-      CheckConstraintTypeMatch(lval,rval,rvaltype,CF_COMMON_BODIES[i].dtype,(char *)(CF_COMMON_BODIES[i].range),0);
+      CheckConstraintTypeMatch(lval, (struct Rval) { rval, rvaltype }, CF_COMMON_BODIES[i].dtype, (char *)(CF_COMMON_BODIES[i].range), 0);
       return;
       }
    }

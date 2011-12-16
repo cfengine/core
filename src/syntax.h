@@ -35,7 +35,7 @@ void CheckBody(char *name,char *type);
 struct SubTypeSyntax CheckSubType(char *btype,char *type);
 void CheckConstraint(char *type,char *name,char *lval, struct Rval rval,struct SubTypeSyntax ss);
 void CheckSelection(char *type,char *name,char *lval, struct Rval rval);
-void CheckConstraintTypeMatch(char *lval,void *rval,char rvaltype,enum cfdatatype dt, const char *range,int level);
+void CheckConstraintTypeMatch(char *lval, struct Rval rval, enum cfdatatype dt, const char *range, int level);
 void CheckPromise(struct Promise *pp);
 int CheckParseClass(char *lv,char *s,const char *range);
 enum cfdatatype StringDataType(char *scopeid,char *string);

@@ -247,7 +247,7 @@ if (ss.subtype != NULL) /* In a bundle */
                }
             else
                {
-               CheckConstraintTypeMatch(lval,rval.item,rval.rtype,bs[l].dtype,(char *)(bs[l].range),0);
+               CheckConstraintTypeMatch(lval, rval, bs[l].dtype, (char *)(bs[l].range), 0);
                return;
                }
             }
@@ -388,7 +388,7 @@ for (i = 0; CF_ALL_BODIES[i].subtype != NULL; i++)
                }
             else
                {
-               CheckConstraintTypeMatch(lval,rval.item,rval.rtype,bs[l].dtype,(char *)(bs[l].range),0);
+               CheckConstraintTypeMatch(lval, rval, bs[l].dtype, (char *)(bs[l].range), 0);
                return;
                }
             }
@@ -443,7 +443,7 @@ for  (i = 0; i < CF3_MODULES; i++)
                if (strcmp(lval,bs2[k].lval) == 0)
                   {
                   CfDebug("Matched\n");
-                  CheckConstraintTypeMatch(lval,rval.item,rval.rtype,bs2[k].dtype,(char *)(bs2[k].range),0);
+                  CheckConstraintTypeMatch(lval, rval, bs2[k].dtype, (char *)(bs2[k].range), 0);
                   return;
                   }
                }
@@ -463,13 +463,13 @@ if (!lmatch)
 /* Level 1                                                                  */
 /****************************************************************************/
 
-void CheckConstraintTypeMatch(char *lval,void *rval,char rvaltype,enum cfdatatype dt, const char *range,int level)
+void CheckConstraintTypeMatch(char *lval, struct Rval rval, enum cfdatatype dt, const char *range, int level)
 
 { struct Rlist *rp;
   struct Item *checklist;
   char output[CF_BUFSIZE];
 
-if (rval == NULL)
+if (rval.item == NULL)
    {
    return;
    }
@@ -482,13 +482,13 @@ if (dt == cf_bundle || dt == cf_body)
    }
 else
    {
-   CfDebug(" - Checking inline constraint/arg %s[%s] => mappedval (%c) %s\n",lval,CF_DATATYPES[dt],rvaltype,range);
+   CfDebug(" - Checking inline constraint/arg %s[%s] => mappedval (%c) %s\n",lval,CF_DATATYPES[dt],rval.rtype,range);
    }
 CfDebug(" ------------------------------------------------\n");
 
 /* Get type of lval */
 
-switch(rvaltype)
+switch(rval.rtype)
    {
    case CF_SCALAR:
        switch(dt)
@@ -526,9 +526,9 @@ switch(rvaltype)
               break;
           }
        
-       for (rp = (struct Rlist *)rval; rp != NULL; rp = rp->next)
+       for (rp = (struct Rlist *)rval.item; rp != NULL; rp = rp->next)
           {
-          CheckConstraintTypeMatch(lval,rp->item,rp->type,dt,range,1);
+          CheckConstraintTypeMatch(lval, (struct Rval) { rp->item, rp->type }, dt, range, 1);
           }
 
        return;
@@ -541,7 +541,7 @@ switch(rvaltype)
        
        if (!IsItemIn(checklist,lval))
           {
-          CheckFnCallType(lval,((struct FnCall *)rval)->name,dt,range);
+          CheckFnCallType(lval,((struct FnCall *)rval.item)->name,dt,range);
           }
 
        DeleteItemList(checklist);
@@ -554,17 +554,17 @@ switch (dt)
    {
    case cf_str:
    case cf_slist:
-       CheckParseString(lval,(char *)rval,range);
+       CheckParseString(lval,(char *)rval.item,range);
        break;
 
    case cf_int:
    case cf_ilist:
-       CheckParseInt(lval,(char *)rval,range);
+       CheckParseInt(lval,(char *)rval.item,range);
        break;
        
    case cf_real:
    case cf_rlist:
-       CheckParseReal(lval,(char *)rval,range);
+       CheckParseReal(lval,(char *)rval.item,range);
        break;
 
    case cf_body:
@@ -574,20 +574,20 @@ switch (dt)
        
    case cf_opts:
    case cf_olist:
-       CheckParseOpts(lval,(char *)rval,range);
+       CheckParseOpts(lval,(char *)rval.item,range);
        break;
 
    case cf_class:
    case cf_clist:
-       CheckParseClass(lval,(char *)rval,range);
+       CheckParseClass(lval,(char *)rval.item,range);
        break;
 
    case cf_irange:
-       CheckParseIntRange(lval,(char *)rval,range);
+       CheckParseIntRange(lval,(char *)rval.item,range);
        break;
        
    case cf_rrange:
-       CheckParseRealRange(lval,(char *)rval,range);
+       CheckParseRealRange(lval,(char *)rval.item,range);
        break;
        
    default:

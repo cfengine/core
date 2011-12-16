@@ -181,7 +181,7 @@ snprintf(id, CF_BUFSIZE, "built-in FnCall and-arg");
 /* We need to check all the arguments, ArgTemplate does not check varadic functions */
 for(arg = finalargs; arg; arg = arg->next)
    {
-   CheckConstraintTypeMatch(id, arg->item, arg->type, cf_str, "", 1);
+   CheckConstraintTypeMatch(id, (struct Rval) { arg->item, arg->type }, cf_str, "", 1);
    }
 
 for(arg = finalargs; arg; arg = arg->next)
@@ -603,7 +603,7 @@ snprintf(id, CF_BUFSIZE, "built-in FnCall concat-arg");
 /* We need to check all the arguments, ArgTemplate does not check varadic functions */
 for(arg = finalargs; arg; arg = arg->next)
    {
-   CheckConstraintTypeMatch(id, arg->item, arg->type, cf_str, "", 1);
+   CheckConstraintTypeMatch(id, (struct Rval) { arg->item, arg->type }, cf_str, "", 1);
    }
 
 for(arg = finalargs; arg; arg = arg->next)
@@ -3159,7 +3159,7 @@ snprintf(id, CF_BUFSIZE, "built-in FnCall or-arg");
 /* We need to check all the arguments, ArgTemplate does not check varadic functions */
 for(arg = finalargs; arg; arg = arg->next)
    {
-   CheckConstraintTypeMatch(id, arg->item, arg->type, cf_str, "", 1);
+   CheckConstraintTypeMatch(id, (struct Rval) { arg->item, arg->type }, cf_str, "", 1);
    }
 
 for(arg = finalargs; arg; arg = arg->next)

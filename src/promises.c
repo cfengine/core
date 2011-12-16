@@ -182,7 +182,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       
       /* Keep the referent body type as a boolean for convenience when checking later */
       
-      AppendConstraint(&(pcopy->conlist),cp->lval,xstrdup("true"),CF_SCALAR,cp->classes,false);
+      AppendConstraint(&(pcopy->conlist), cp->lval, (struct Rval) { xstrdup("true"), CF_SCALAR } ,cp->classes, false);
 
       CfDebug("Handling body-lval \"%s\"\n",cp->lval);
       
@@ -207,7 +207,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
             {
             CfDebug("Doing arg-mapped sublval = %s (promises.c)\n",scp->lval);
             returnval = ExpandPrivateRval("body", (struct Rval) { scp->rval, scp->type });
-            AppendConstraint(&(pcopy->conlist),scp->lval,returnval.item,returnval.rtype,scp->classes,false);
+            AppendConstraint(&(pcopy->conlist), scp->lval, returnval, scp->classes, false);
             }
 
          DeleteScope("body");
@@ -226,7 +226,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
                {
                CfDebug("Doing sublval = %s (promises.c)\n",scp->lval);
                struct Rval newrv = CopyRvalItem((struct Rval) { scp->rval,scp->type });
-               AppendConstraint(&(pcopy->conlist),scp->lval,newrv.item,newrv.rtype,scp->classes,false);
+               AppendConstraint(&(pcopy->conlist), scp->lval, newrv, scp->classes, false);
                }
             }
          }
@@ -239,7 +239,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
          }
       
       struct Rval newrv = CopyRvalItem((struct Rval) { cp->rval, cp->type });
-      scp = AppendConstraint(&(pcopy->conlist),cp->lval,newrv.item,newrv.rtype,cp->classes,false);
+      scp = AppendConstraint(&(pcopy->conlist), cp->lval, newrv, cp->classes, false);
       }
    }
 
@@ -322,7 +322,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       DeleteRvalItem(returnval);
       }
 
-   AppendConstraint(&(pcopy->conlist),cp->lval,final.item,final.rtype,cp->classes,false);
+   AppendConstraint(&(pcopy->conlist), cp->lval, final, cp->classes, false);
 
    if (strcmp(cp->lval,"comment") == 0)
       {
@@ -413,7 +413,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       }
 
    final = ExpandDanglers(scopeid,returnval,pp);
-   AppendConstraint(&(pcopy->conlist),cp->lval,final.item,final.rtype,cp->classes,false);
+   AppendConstraint(&(pcopy->conlist), cp->lval, final, cp->classes, false);
 
    if (strcmp(cp->lval,"comment") == 0)
       {
@@ -594,7 +594,7 @@ pp->donep = &(pp->done);
 pp->agentsubtype = typename;   /* cache this, do not copy string */
 pp->ref_alloc = 'n';
 
-AppendConstraint(&(pp->conlist), "handle", xstrdup("internal_promise"),CF_SCALAR,NULL,false);
+AppendConstraint(&(pp->conlist), "handle", (struct Rval) { xstrdup("internal_promise"), CF_SCALAR }, NULL, false);
 
 return pp;
 }

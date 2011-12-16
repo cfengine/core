@@ -212,11 +212,11 @@ selection:            id                         /* BODY ONLY */
 
                            if (P.currentclasses == NULL)
                               {
-                              cp = AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval.item,P.rval.rtype,"any",P.isbody);
+                              cp = AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval,"any",P.isbody);
                               }
                            else
                               {
-                              cp = AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval.item,P.rval.rtype,P.currentclasses,P.isbody);
+                              cp = AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval,P.currentclasses,P.isbody);
                               }
                            cp->offset.line = P.line_no;
                            cp->offset.start = P.offsets.last_id;
@@ -389,8 +389,8 @@ constraint:           id                        /* BUNDLE ONLY */
                            {
                            struct Constraint *cp = NULL;
                            struct SubTypeSyntax ss = CheckSubType(P.blocktype,P.currenttype);                           
-                           CheckConstraint(P.currenttype,P.blockid,P.lval,P.rval.item,P.rval.rtype,ss);
-                           cp = AppendConstraint(&(P.currentpromise->conlist),P.lval,P.rval.item,P.rval.rtype,"any",P.isbody);
+                           CheckConstraint(P.currenttype, P.blockid, P.lval, P.rval, ss);
+                           cp = AppendConstraint(&(P.currentpromise->conlist),P.lval,P.rval,"any",P.isbody);
                            cp->offset.line = P.line_no;
                            cp->offset.start = P.offsets.last_id;
                            cp->offset.end = P.offsets.current;

@@ -575,13 +575,13 @@ GetCurrentUserName(mypid,31);
 PrependRlist(&signals,"term",CF_SCALAR);
 PrependRlist(&owners,mypid,CF_SCALAR);
 
-AppendConstraint(&(pp.conlist),"signals",signals,CF_LIST,"any",false);
-AppendConstraint(&(pp.conlist),"process_select",xstrdup("true"),CF_SCALAR,"any",false);
-AppendConstraint(&(pp.conlist),"process_owner",owners,CF_LIST,"any",false);
-AppendConstraint(&(pp.conlist),"ifelapsed",xstrdup("0"),CF_SCALAR,"any",false);
-AppendConstraint(&(pp.conlist),"process_count",xstrdup("true"),CF_SCALAR,"any",false);
-AppendConstraint(&(pp.conlist),"match_range",xstrdup("0,2"),CF_SCALAR,"any",false);
-AppendConstraint(&(pp.conlist),"process_result",xstrdup("process_owner.process_count"),CF_SCALAR,"any",false);
+AppendConstraint(&(pp.conlist), "signals", (struct Rval) { signals, CF_LIST }, "any", false);
+AppendConstraint(&(pp.conlist), "process_select", (struct Rval) { xstrdup("true"), CF_SCALAR }, "any", false);
+AppendConstraint(&(pp.conlist), "process_owner", (struct Rval) { owners, CF_LIST }, "any", false);
+AppendConstraint(&(pp.conlist), "ifelapsed", (struct Rval) { xstrdup("0"), CF_SCALAR }, "any", false);
+AppendConstraint(&(pp.conlist), "process_count", (struct Rval) { xstrdup("true"), CF_SCALAR }, "any", false);
+AppendConstraint(&(pp.conlist), "match_range", (struct Rval) { xstrdup("0,2"), CF_SCALAR }, "any", false);
+AppendConstraint(&(pp.conlist), "process_result", (struct Rval) { xstrdup("process_owner.process_count"), CF_SCALAR }, "any", false);
 
 CfOut(cf_verbose,""," -> Looking for cf-execd processes owned by %s",mypid);
 

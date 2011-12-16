@@ -1688,16 +1688,16 @@ promise.conlist = NULL;
 
 snprintf(s,CF_MAXVARSIZE,"0,%ld",(long)now);
 
-AppendConstraint(&(promise.conlist),"action","true",CF_SCALAR,"any",false);
-AppendConstraint(&(promise.conlist),"ifelapsed","0",CF_SCALAR,"any",false);
-AppendConstraint(&(promise.conlist),"delete","true",CF_SCALAR,"any",false);
-AppendConstraint(&(promise.conlist),"dirlinks","delete",CF_SCALAR,"any",false);
-AppendConstraint(&(promise.conlist),"rmdirs","true",CF_SCALAR,"any",false);
-AppendConstraint(&(promise.conlist),"depth_search","true",CF_SCALAR,"any",false);
-AppendConstraint(&(promise.conlist),"depth","inf",CF_SCALAR,"any",false);
-AppendConstraint(&(promise.conlist),"file_select","true",CF_SCALAR,"any",false);
-AppendConstraint(&(promise.conlist),"mtime",s,CF_SCALAR,"any",false);
-AppendConstraint(&(promise.conlist),"file_result","mtime",CF_SCALAR,"any",false);
+AppendConstraint(&(promise.conlist), "action", (struct Rval) { "true", CF_SCALAR }, "any", false);
+AppendConstraint(&(promise.conlist), "ifelapsed", (struct Rval) { "0", CF_SCALAR }, "any", false);
+AppendConstraint(&(promise.conlist), "delete", (struct Rval) { "true", CF_SCALAR }, "any", false);
+AppendConstraint(&(promise.conlist), "dirlinks", (struct Rval) { "delete", CF_SCALAR }, "any", false);
+AppendConstraint(&(promise.conlist), "rmdirs", (struct Rval) { "true", CF_SCALAR }, "any", false);
+AppendConstraint(&(promise.conlist), "depth_search", (struct Rval) { "true", CF_SCALAR }, "any", false);
+AppendConstraint(&(promise.conlist), "depth", (struct Rval) { "inf", CF_SCALAR }, "any", false);
+AppendConstraint(&(promise.conlist), "file_select", (struct Rval) { "true", CF_SCALAR }, "any", false);
+AppendConstraint(&(promise.conlist), "mtime", (struct Rval) { s, CF_SCALAR }, "any", false);
+AppendConstraint(&(promise.conlist), "file_result", (struct Rval) { "mtime", CF_SCALAR } , "any", false);
 VerifyFilePromise(promise.promiser,&promise);
 rmdir(path);
 }

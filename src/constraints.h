@@ -41,7 +41,7 @@ struct Constraint
    };
 
 
-struct Constraint *AppendConstraint(struct Constraint **conlist,char *lval, void *rval, char type,char *classes,int body);
+struct Constraint *AppendConstraint(struct Constraint **conlist, char *lval, struct Rval rval, char *classes, int body);
 struct Constraint *GetConstraint(struct Promise *promise, const char *lval);
 void DeleteConstraintList(struct Constraint *conlist);
 void EditScalarConstraint(struct Constraint *conlist,char *lval,char *rval);

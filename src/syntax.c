@@ -196,7 +196,7 @@ return cf_notype;
 
 /*********************************************************/
 
-void CheckConstraint(char *type,char *name,char *lval,void *rval,char rvaltype,struct SubTypeSyntax ss)
+void CheckConstraint(char *type,char *name,char *lval, struct Rval rval,struct SubTypeSyntax ss)
 
 { int lmatch = false;
   int i,l, allowed = false;
@@ -207,7 +207,7 @@ CfDebug("CheckConstraint(%s,%s,",type,lval);
 
 if (DEBUG)
    {
-   ShowRval(stdout, (struct Rval) { rval, rvaltype });
+   ShowRval(stdout, rval);
    }
 
 CfDebug(")\n");
@@ -235,19 +235,19 @@ if (ss.subtype != NULL) /* In a bundle */
             
             if (bs[l].dtype == cf_body)
                {
-               CfDebug("Constraint syntax ok, but definition of body is elsewhere %s=%c\n",lval,rvaltype);
-               PrependRlist(&BODYPARTS,rval,rvaltype);
+               CfDebug("Constraint syntax ok, but definition of body is elsewhere %s=%c\n",lval,rval.rtype);
+               PrependRlist(&BODYPARTS,rval.item,rval.rtype);
                return;
                }
             else if (bs[l].dtype == cf_bundle)
                {
-               CfDebug("Constraint syntax ok, but definition of relevant bundle is elsewhere %s=%c\n",lval,rvaltype);
-               PrependRlist(&SUBBUNDLES,rval,rvaltype);
+               CfDebug("Constraint syntax ok, but definition of relevant bundle is elsewhere %s=%c\n",lval,rval.rtype);
+               PrependRlist(&SUBBUNDLES,rval.item,rval.rtype);
                return;
                }
             else
                {
-               CheckConstraintTypeMatch(lval,rval,rvaltype,bs[l].dtype,(char *)(bs[l].range),0);
+               CheckConstraintTypeMatch(lval,rval.item,rval.rtype,bs[l].dtype,(char *)(bs[l].range),0);
                return;
                }
             }

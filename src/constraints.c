@@ -40,7 +40,7 @@ static void PostCheckConstraint(char *type,char *bundle,char *lval,void *rval,ch
 
 /*******************************************************************/
 
-struct Constraint *AppendConstraint(struct Constraint **conlist,char *lval, void *rval, char type,char *classes,int body)
+struct Constraint *AppendConstraint(struct Constraint **conlist, char *lval, struct Rval rval, char *classes, int body)
 
 /* Note rval must be pre-allocated for this function, e.g. use
    CopyRvalItem in call.  This is to make the parser and var expansion
@@ -49,14 +49,14 @@ struct Constraint *AppendConstraint(struct Constraint **conlist,char *lval, void
 { struct Constraint *cp,*lp;
   char *sp = NULL;
 
-switch(type)
+switch(rval.rtype)
    {
    case CF_SCALAR:
-       CfDebug("   Appending Constraint: %s => %s\n",lval, (char*)rval);
+      CfDebug("   Appending Constraint: %s => %s\n",lval, (const char *)rval.item);
        
        if (PARSING && strcmp(lval,"ifvarclass") == 0)
           {
-          ValidateClassSyntax(rval);
+          ValidateClassSyntax(rval.item);
           }
 
        break;
@@ -71,7 +71,7 @@ switch(type)
 
 if (THIS_AGENT_TYPE == cf_common)
    {
-   PostCheckConstraint("none","none",lval,rval,type);
+   PostCheckConstraint("none","none",lval,rval.item,rval.rtype);
    }
 
 cp = xcalloc(1, sizeof(struct Constraint));
@@ -98,8 +98,8 @@ if (classes != NULL)
 
 cp->audit = AUDITPTR;
 cp->lval = sp;
-cp->rval = rval;
-cp->type = type;  /* literal, bodyname, builtin function */
+cp->rval = rval.item;
+cp->type = rval.rtype;  /* literal, bodyname, builtin function */
 cp->isbody = body;
 
 return cp;

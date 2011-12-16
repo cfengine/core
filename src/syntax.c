@@ -1387,16 +1387,16 @@ JsonObjectAppendString(parent, name, buffer);
 }
 
 
-static JsonObject *ExportAttributeValueAsJson(const char *rval, const char type)
+static JsonObject *ExportAttributeValueAsJson(struct Rval rval)
 {
 JsonObject *json_attribute = NULL;
 
-switch (type)
+switch (rval.rtype)
    {
    case CF_SCALAR:
       {
       char buffer[CF_BUFSIZE];
-      EscapeQuotes((char *)rval, buffer, sizeof(buffer));
+      EscapeQuotes((const char *)rval.item, buffer, sizeof(buffer));
 
       JsonObjectAppendString(&json_attribute, "type", "string");
       JsonObjectAppendString(&json_attribute, "value", buffer);
@@ -1409,9 +1409,9 @@ switch (type)
       JsonArray *list = NULL;
       JsonObjectAppendString(&json_attribute, "type", "list");
 
-      for (rp = (struct Rlist *)rval; rp != NULL; rp = rp->next)
+      for (rp = (struct Rlist *)rval.item; rp != NULL; rp = rp->next)
 	 {
-	 JsonArrayAppendObject(&list, ExportAttributeValueAsJson(rp->item, rp->type));
+	 JsonArrayAppendObject(&list, ExportAttributeValueAsJson((struct Rval) { rp->item, rp->type }));
 	 }
 
       JsonObjectAppendArray(&json_attribute, "value", list);
@@ -1421,7 +1421,7 @@ switch (type)
    case CF_FNCALL:
       {
       struct Rlist *argp = NULL;
-      struct FnCall *call = (struct FnCall *)rval;
+      struct FnCall *call = (struct FnCall *)rval.item;
 
       JsonObjectAppendString(&json_attribute, "type", "function-call");
       JsonObjectAppendString(&json_attribute, "name", call->name);
@@ -1431,7 +1431,7 @@ switch (type)
 
 	 for (argp = call->args; argp != NULL; argp = argp->next)
 	    {
-	    JsonArrayAppendObject(&arguments, ExportAttributeValueAsJson(argp->item, argp->type));
+	    JsonArrayAppendObject(&arguments, ExportAttributeValueAsJson((struct Rval) { argp->item, argp->type }));
 	    }
 
 	 JsonObjectAppendArray(&json_attribute, "arguments", arguments);
@@ -1441,7 +1441,7 @@ switch (type)
       }
 
    default:
-      FatalError("Attempted to export attribute of type: %s", type);
+      FatalError("Attempted to export attribute of type: %s", rval.rtype);
       return NULL;
    }
 }
@@ -1480,7 +1480,7 @@ for (cp = constraints; cp != NULL; cp = cp->next)
    context_offset_end = cp->offset.end;
 
    JsonObjectAppendString(&json_attribute, "lval", cp->lval);
-   JsonObjectAppendObject(&json_attribute, "rval", ExportAttributeValueAsJson(cp->rval, cp->type));
+   JsonObjectAppendObject(&json_attribute, "rval", ExportAttributeValueAsJson((struct Rval) { cp->rval, cp->type }));
    JsonArrayAppendObject(&json_attributes, json_attribute);
 
    if (cp->next == NULL || strcmp(current_context, cp->next->classes) != 0)
@@ -1529,7 +1529,7 @@ for (pp = promises; pp != NULL; pp = pp->next)
 	 context_offset_end = cp->offset.end;
 
 	 JsonObjectAppendString(&json_attribute, "lval", cp->lval);
-	 JsonObjectAppendObject(&json_attribute, "rval", ExportAttributeValueAsJson(cp->rval, cp->type));
+	 JsonObjectAppendObject(&json_attribute, "rval", ExportAttributeValueAsJson((struct Rval) { cp->rval, cp->type }));
 	 JsonArrayAppendObject(&json_promise_attributes, json_attribute);
 	 }
 

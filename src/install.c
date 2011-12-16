@@ -183,7 +183,7 @@ return tp;
 
 /*******************************************************************/
 
-struct Promise *AppendPromise(struct SubType *type,char *promiser, void *promisee,char petype,char *classes,char *bundle,char *bundletype)
+struct Promise *AppendPromise(struct SubType *type,char *promiser, struct Rval promisee, char *classes,char *bundle,char *bundletype)
 
 { struct Promise *pp,*lp;
   char *sp = NULL,*spe = NULL;
@@ -245,8 +245,8 @@ else
 pp->audit = AUDITPTR;
 pp->bundle =  xstrdup(bundle);
 pp->promiser = sp;
-pp->promisee = promisee;  /* this is a list allocated separately */
-pp->petype = petype;      /* rtype of promisee - list or scalar recipient? */
+pp->promisee = promisee.item;  /* this is a list allocated separately */
+pp->petype = promisee.rtype;
 pp->classes = spe;
 pp->donep = &(pp->done);
 

@@ -305,7 +305,7 @@ promise:              promiser                    /* BUNDLE ONLY */
                         if (!INSTALL_SKIP)
                            {
                            P.currentpromise = AppendPromise(P.currentstype, P.promiser,
-                              P.rval, P.rtype,
+                              (struct Rval) { P.rval, P.rtype },
                               P.currentclasses ? P.currentclasses : "any",
                               P.blockid, P.blocktype);
                            P.currentpromise->offset.line = P.line_no;
@@ -340,8 +340,9 @@ promise:              promiser                    /* BUNDLE ONLY */
                         {
                         if (!INSTALL_SKIP)
                            {
-                           P.currentpromise = AppendPromise(P.currentstype, P.promiser, NULL,
-                              CF_NOPROMISEE, P.currentclasses ? P.currentclasses : "any",
+                           P.currentpromise = AppendPromise(P.currentstype, P.promiser,
+                              (struct Rval) { NULL, CF_NOPROMISEE },
+                              P.currentclasses ? P.currentclasses : "any",
                               P.blockid, P.blocktype);
                            P.currentpromise->offset.line = P.line_no;
                            P.currentpromise->offset.start = P.offsets.last_string;

@@ -852,7 +852,7 @@ int RelevantBundle(char *agent,char *blocktype);
 struct Bundle *AppendBundle(struct Bundle **start,char *name, char *type, struct Rlist *args);
 struct Body *AppendBody(struct Body **start,char *name, char *type, struct Rlist *args);
 struct SubType *AppendSubType(struct Bundle *bundle,char *typename);
-struct Promise *AppendPromise(struct SubType *type,char *promiser, void *promisee,char petype,char *classes,char *bundle,char *bundletype);
+struct Promise *AppendPromise(struct SubType *type,char *promiser, struct Rval promisee, char *classes,char *bundle,char *bundletype);
 void DeleteBundles(struct Bundle *bp);
 void DeleteBodies(struct Body *bp);
 

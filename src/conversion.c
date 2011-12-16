@@ -1410,9 +1410,9 @@ return true;
 
 /********************************************************************/
 
-enum cfd_menu String2Menu(char *s)
+enum cfd_menu String2Menu(const char *s)
 
-{ static char *menus[] = { "delta", "full", "relay", NULL };
+{ static const char *menus[] = { "delta", "full", "relay", NULL };
   int i;
  
 for (i = 0; menus[i] != NULL; i++)

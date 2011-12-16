@@ -276,7 +276,7 @@ char *Dtype2Str(enum cfdatatype dtype);
 char *Item2String(struct Item *ip);
 int IsNumber(char *s);
 int IsRealNumber(char *s);
-enum cfd_menu String2Menu(char *s);
+enum cfd_menu String2Menu(const char *s);
 
 #ifndef MINGW
 struct UidList *Rlist2UidList(struct Rlist *uidnames, struct Promise *pp);

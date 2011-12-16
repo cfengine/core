@@ -204,7 +204,7 @@ selection:            id                         /* BODY ONLY */
                       rval
                         {
  
-                        CheckSelection(P.blocktype,P.blockid,P.lval,P.rval.item,P.rval.rtype);
+                        CheckSelection(P.blocktype,P.blockid,P.lval,P.rval);
 
                         if (!INSTALL_SKIP)
                            {

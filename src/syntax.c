@@ -343,7 +343,7 @@ return false;
 
 /******************************************************************************************/
 
-void CheckSelection(char *type,char *name,char *lval,void *rval,char rvaltype)
+void CheckSelection(char *type,char *name,char *lval, struct Rval rval)
 
 { int lmatch = false;
   int i,j,k,l;
@@ -355,7 +355,7 @@ CfDebug("CheckSelection(%s,%s,",type,lval);
 
 if (DEBUG)
    {
-   ShowRval(stdout, (struct Rval) { rval, rvaltype });
+   ShowRval(stdout, rval);
    }
 
 CfDebug(")\n");
@@ -388,7 +388,7 @@ for (i = 0; CF_ALL_BODIES[i].subtype != NULL; i++)
                }
             else
                {
-               CheckConstraintTypeMatch(lval,rval,rvaltype,bs[l].dtype,(char *)(bs[l].range),0);
+               CheckConstraintTypeMatch(lval,rval.item,rval.rtype,bs[l].dtype,(char *)(bs[l].range),0);
                return;
                }
             }
@@ -443,7 +443,7 @@ for  (i = 0; i < CF3_MODULES; i++)
                if (strcmp(lval,bs2[k].lval) == 0)
                   {
                   CfDebug("Matched\n");
-                  CheckConstraintTypeMatch(lval,rval,rvaltype,bs2[k].dtype,(char *)(bs2[k].range),0);
+                  CheckConstraintTypeMatch(lval,rval.item,rval.rtype,bs2[k].dtype,(char *)(bs2[k].range),0);
                   return;
                   }
                }

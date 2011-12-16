@@ -125,7 +125,7 @@ struct GenericAgentConfig CheckOpts(int argc,char **argv)
   int c;
   struct GenericAgentConfig config = GenericAgentDefaultConfig(cf_common);
   
-while ((c=getopt_long(argc,argv,"ad:vnIf:D:N:VSrxMbpg:",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"ad:vnIf:D:N:VSrxMb:pg:",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {

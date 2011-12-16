@@ -183,7 +183,7 @@ for (rp = fp->args; rp != NULL; rp = rp->next)
 
    CfDebug("EXPARG: %s.%s\n",CONTEXTID, (char*)rval.item);
    AppendRlist(&newargs,rval.item,rval.rtype);
-   DeleteRvalItem((struct Rval) { rval.item, rval.rtype });
+   DeleteRvalItem(rval);
    }
 
 return newargs;

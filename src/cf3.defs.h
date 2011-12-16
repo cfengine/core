@@ -33,6 +33,7 @@
 
 #include "cf.defs.h"
 #include "cf3.extern.h"
+#include "rlist.h"
 
 #undef VERSION
 
@@ -109,8 +110,7 @@ struct PromiseParser
    int list_nesting;
       
    char lval[CF_MAXVARSIZE];
-   void *rval;
-   char rtype;
+   struct Rval rval;
    int isbody;
 
    char *promiser;

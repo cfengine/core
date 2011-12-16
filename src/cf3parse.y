@@ -45,7 +45,7 @@ bundle:                BUNDLE
                           {
                           DebugBanner("Bundle");
                           P.block = "bundle";
-                          P.rval = NULL;
+                          P.rval = (struct Rval) { NULL, '\0' };
                           P.currentRlist = NULL;
                           P.currentstring = NULL;
                           strcpy(P.blockid,"");
@@ -204,7 +204,7 @@ selection:            id                         /* BODY ONLY */
                       rval
                         {
  
-                        CheckSelection(P.blocktype,P.blockid,P.lval,P.rval,P.rtype);
+                        CheckSelection(P.blocktype,P.blockid,P.lval,P.rval.item,P.rval.rtype);
 
                         if (!INSTALL_SKIP)
                            {
@@ -212,11 +212,11 @@ selection:            id                         /* BODY ONLY */
 
                            if (P.currentclasses == NULL)
                               {
-                              cp = AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval,P.rtype,"any",P.isbody);
+                              cp = AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval.item,P.rval.rtype,"any",P.isbody);
                               }
                            else
                               {
-                              cp = AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval,P.rtype,P.currentclasses,P.isbody);
+                              cp = AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval.item,P.rval.rtype,P.currentclasses,P.isbody);
                               }
                            cp->offset.line = P.line_no;
                            cp->offset.start = P.offsets.last_id;
@@ -225,7 +225,7 @@ selection:            id                         /* BODY ONLY */
                            }
                         else
                            {
-                           DeleteRvalItem((struct Rval) { P.rval, P.rtype });
+                           DeleteRvalItem(P.rval);
                            }
 
                         if (strcmp(P.blockid,"control") == 0 && strcmp(P.blocktype,"common") == 0)
@@ -236,9 +236,9 @@ selection:            id                         /* BODY ONLY */
                                  {
                                  if (VINPUTLIST == NULL)
                                     {
-                                    if (P.rtype == CF_LIST)
+                                    if (P.rval.rtype == CF_LIST)
                                        {
-                                       VINPUTLIST = P.rval;
+                                       VINPUTLIST = P.rval.item;
                                        }
                                     else
                                        {
@@ -253,7 +253,7 @@ selection:            id                         /* BODY ONLY */
                               }
                            }
 
-                        P.rval = NULL;
+                        P.rval = (struct Rval) { NULL, '\0' };
                         }
                        ';' ;
 
@@ -305,7 +305,7 @@ promise:              promiser                    /* BUNDLE ONLY */
                         if (!INSTALL_SKIP)
                            {
                            P.currentpromise = AppendPromise(P.currentstype, P.promiser,
-                              (struct Rval) { P.rval, P.rtype },
+                              P.rval,
                               P.currentclasses ? P.currentclasses : "any",
                               P.blockid, P.blocktype);
                            P.currentpromise->offset.line = P.line_no;
@@ -389,8 +389,8 @@ constraint:           id                        /* BUNDLE ONLY */
                            {
                            struct Constraint *cp = NULL;
                            struct SubTypeSyntax ss = CheckSubType(P.blocktype,P.currenttype);                           
-                           CheckConstraint(P.currenttype,P.blockid,P.lval,P.rval,P.rtype,ss);                           
-                           cp = AppendConstraint(&(P.currentpromise->conlist),P.lval,P.rval,P.rtype,"any",P.isbody);
+                           CheckConstraint(P.currenttype,P.blockid,P.lval,P.rval.item,P.rval.rtype,ss);
+                           cp = AppendConstraint(&(P.currentpromise->conlist),P.lval,P.rval.item,P.rval.rtype,"any",P.isbody);
                            cp->offset.line = P.line_no;
                            cp->offset.start = P.offsets.last_id;
                            cp->offset.end = P.offsets.current;
@@ -398,13 +398,13 @@ constraint:           id                        /* BUNDLE ONLY */
                            P.currentstype->offset.end = P.offsets.current;
                            CheckPromise(P.currentpromise);
 
-                           P.rval = NULL;
+                           P.rval = (struct Rval) { NULL, '\0' };
                            strcpy(P.lval,"no lval");
                            P.currentRlist = NULL;
                            }
                         else
                            {
-                           DeleteRvalItem((struct Rval) { P.rval, P.rtype });
+                           DeleteRvalItem(P.rval);
                            }
                         };
 
@@ -429,18 +429,17 @@ id:                    ID
 
 rval:                  ID
                          {
-                         P.rval = xstrdup(P.currentid);
-                         P.rtype = CF_SCALAR;
+                         P.rval = (struct Rval) { xstrdup(P.currentid), CF_SCALAR };
                          P.isbody = true;
-                         CfDebug("Recorded IDRVAL %s\n", (char*)P.rval);
+                         CfDebug("Recorded IDRVAL %s\n", P.currentid);
                          }
                      | QSTRING
                          {
-                         P.rval = P.currentstring;
+                         P.rval = (struct Rval) { P.currentstring, CF_SCALAR };
+                         CfDebug("Recorded scalarRVAL %s\n", P.currentstring);
+
                          P.currentstring = NULL;
-                         P.rtype = CF_SCALAR;
                          P.isbody = false;
-                         CfDebug("Recorded scalarRVAL %s\n", (char*)P.rval);
 
                          if (P.currentpromise)
                             {
@@ -452,24 +451,22 @@ rval:                  ID
                          }
                      | NAKEDVAR
                          {
-                         P.rval = P.currentstring;
+                         P.rval = (struct Rval) { P.currentstring, CF_SCALAR };
+                         CfDebug("Recorded saclarvariableRVAL %s\n", P.currentstring);
+
                          P.currentstring = NULL;
-                         P.rtype = CF_SCALAR;
                          P.isbody = false;
-                         CfDebug("Recorded saclarvariableRVAL %s\n", (char*)P.rval);
                          }
                      | list
                          {
-                         P.rval = P.currentRlist;
+                         P.rval = (struct Rval) { P.currentRlist, CF_LIST };
                          P.currentRlist = NULL;
                          P.isbody = false;
-                         P.rtype = CF_LIST;
                          }
                      | usefunction
                          {
                          P.isbody = false;
-                         P.rval = P.currentfncall[P.arg_nesting+1];
-                         P.rtype = CF_FNCALL;
+                         P.rval = (struct Rval) { P.currentfncall[P.arg_nesting+1], CF_FNCALL };
                          };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

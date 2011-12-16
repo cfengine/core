@@ -63,4 +63,9 @@ extern char CFRUNCOMMAND[];
 int Nova_ReturnQueryData(struct cfd_connection *conn,char *menu);
 #endif
 
+#ifdef HAVE_CONSTELLATION
+int Constellation_ReturnRelayQueryData(struct cfd_connection *conn,char *query,char *sendbuffer);
+void Constellation_RunQueries(struct Item *queries, struct Item **results_p);
+#endif
+
 #endif

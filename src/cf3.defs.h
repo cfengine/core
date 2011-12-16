@@ -815,16 +815,6 @@ struct Scope                         /* $(bundlevar) $(scope.name) */
 
 /*******************************************************************/
 
-typedef struct CfAssoc        /* variable reference linkage , with metatype*/
-   {
-   char *lval;
-   void *rval; /* TODO: use struct Rval */
-   char rtype;
-   enum cfdatatype dtype;
-   } CfAssoc;
-
-/*******************************************************************/
-
 /*
  * Disposable iterator over hash table. Does not require deinitialization.
  */

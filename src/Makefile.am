@@ -69,7 +69,7 @@ libpromises_la_SOURCES =                                                \
         sysinfo.c                                                       \
         conversion.c                                                    \
         scope.c                                                         \
-        assoc.c                                                         \
+        assoc.c assoc.h                                                 \
         comparray.c                                                     \
         vars.c                                                          \
         args.c                                                          \

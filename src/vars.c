@@ -99,7 +99,11 @@ if (GetVariable(scope,lval, &rvald) != cf_notype)
    DeleteScalar(scope,lval);
    }
 
-AddVariableHash(scope,lval,(struct Rval) { rval, CF_SCALAR }, dt,NULL,0);
+/*
+ * We know AddVariableHash does not change passed Rval structure or its
+ * contents, but we have no easy way to express it in C type system, hence cast.
+ */
+AddVariableHash(scope, lval, (struct Rval) { (char *)rval, CF_SCALAR }, dt, NULL, 0);
 }
 
 /*******************************************************************/

@@ -114,16 +114,16 @@ THIS_BUNDLE = scopeid;
 
 pcopy = DeRefCopyPromise(scopeid,pp);
 
-ScanRval(scopeid,&scalarvars,&listvars,pcopy->promiser,CF_SCALAR,pp);
+ScanRval(scopeid, &scalarvars, &listvars, (struct Rval) { pcopy->promiser, CF_SCALAR }, pp);
 
 if (pcopy->promisee != NULL)
    {
-   ScanRval(scopeid,&scalarvars,&listvars,pp->promisee,pp->petype,pp);
+   ScanRval(scopeid, &scalarvars, &listvars, (struct Rval) { pp->promisee, pp->petype }, pp);
    }
 
 for (cp = pcopy->conlist; cp != NULL; cp=cp->next)
    {
-   ScanRval(scopeid,&scalarvars,&listvars,cp->rval,cp->type,pp);
+   ScanRval(scopeid, &scalarvars, &listvars, (struct Rval) { cp->rval, cp->type }, pp);
    }
 
 PushThisScope();
@@ -167,36 +167,36 @@ return final;
 
 /*********************************************************************/
 
-void ScanRval(const char *scopeid, struct Rlist **scalarvars, struct Rlist **listvars, const void *rval, char type, struct Promise *pp)
+void ScanRval(const char *scopeid, struct Rlist **scalarvars, struct Rlist **listvars, struct Rval rval, struct Promise *pp)
 
 { struct Rlist *rp;
   struct FnCall *fp;
 
-if (rval == NULL)
+if (rval.item == NULL)
    {
    return;
    }
 
-switch(type)
+switch(rval.rtype)
    {
    case CF_SCALAR:
-       ScanScalar(scopeid,scalarvars,listvars,(char *)rval,0,pp);
+       ScanScalar(scopeid,scalarvars,listvars,(char *)rval.item,0,pp);
        break;
        
    case CF_LIST:
-       for (rp = (struct Rlist *)rval; rp != NULL; rp=rp->next)
+       for (rp = (struct Rlist *)rval.item; rp != NULL; rp=rp->next)
           {
-          ScanRval(scopeid,scalarvars,listvars,rp->item,rp->type,pp);
+          ScanRval(scopeid, scalarvars, listvars, (struct Rval) { rp->item, rp->type }, pp);
           }
        break;
        
    case CF_FNCALL:
-       fp = (struct FnCall *)rval;
+       fp = (struct FnCall *)rval.item;
        
        for (rp = (struct Rlist *)fp->args; rp != NULL; rp=rp->next)
           {
           CfDebug("Looking at arg for function-like object %s()\n",fp->name);
-          ScanRval(scopeid,scalarvars,listvars,(char *)rp->item,rp->type,pp);
+          ScanRval(scopeid, scalarvars, listvars, (struct Rval) { rp->item, rp->type }, pp);
           }
        break;
 

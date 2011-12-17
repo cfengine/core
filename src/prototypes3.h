@@ -513,7 +513,7 @@ void ModuleProtocol(char *command,char *line,int print);
 void ExpandPromise(enum cfagenttype ag,char *scopeid,struct Promise *pp,void *fnptr);
 void ExpandPromiseAndDo(enum cfagenttype ag,char *scope,struct Promise *p,struct Rlist *scalarvars,struct Rlist *listvars,void (*fnptr)());
 struct Rval ExpandDanglers(char *scope,struct Rval rval,struct Promise *pp);
-void ScanRval(const char *scope,struct Rlist **los,struct Rlist **lol,const void *string,char type,struct Promise *pp);
+void ScanRval(const char *scope, struct Rlist **los, struct Rlist **lol, struct Rval rval, struct Promise *pp);
 
 int IsExpandable(const char *str);
 int ExpandScalar(const char *string, char buffer[CF_EXPANDSIZE]);

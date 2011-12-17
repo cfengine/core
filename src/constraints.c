@@ -36,7 +36,7 @@
 static struct PromiseIdent *PromiseIdExists(char *handle);
 static void DeleteAllPromiseIdsRecurse(struct PromiseIdent *key);
 static int VerifyConstraintName(const char *lval);
-static void PostCheckConstraint(char *type,char *bundle,char *lval,void *rval,char rvaltype);
+static void PostCheckConstraint(char *type,char *bundle,char *lval, struct Rval rval);
 
 /*******************************************************************/
 
@@ -71,7 +71,7 @@ switch(rval.rtype)
 
 if (THIS_AGENT_TYPE == cf_common)
    {
-   PostCheckConstraint("none","none",lval,rval.item,rval.rtype);
+   PostCheckConstraint("none", "none", lval, rval);
    }
 
 cp = xcalloc(1, sizeof(struct Constraint));
@@ -657,7 +657,7 @@ if (REQUIRE_COMMENTS == true)
 
 for (cp = pp->conlist; cp != NULL; cp = cp->next)
    {
-   PostCheckConstraint(pp->agentsubtype,pp->bundle,cp->lval,cp->rval.item,cp->rval.rtype);
+   PostCheckConstraint(pp->agentsubtype, pp->bundle, cp->lval, cp->rval);
    }     
 
 if (strcmp(pp->agentsubtype,"insert_lines") == 0)
@@ -686,7 +686,7 @@ PreSanitizePromise(pp);
 
 /*****************************************************************************/
 
-static void PostCheckConstraint(char *type,char *bundle,char *lval,void *rval,char rvaltype)
+static void PostCheckConstraint(char *type, char *bundle, char *lval, struct Rval rval)
 
 { struct SubTypeSyntax ss;
   int i,j,l,m;
@@ -697,7 +697,7 @@ CfDebug("  Post Check Constraint %s: %s =>",type,lval);
 
 if (DEBUG)
    {
-   ShowRval(stdout, (struct Rval) { rval, rvaltype });
+   ShowRval(stdout, rval);
    printf("\n");
    }
 
@@ -707,7 +707,7 @@ for (i = 0; CF_CLASSBODY[i].lval != NULL; i++)
    {
    if (strcmp(lval,CF_CLASSBODY[i].lval) == 0)
       {
-      CheckConstraintTypeMatch(lval, (struct Rval) { rval, rvaltype }, CF_CLASSBODY[i].dtype, CF_CLASSBODY[i].range, 0);
+      CheckConstraintTypeMatch(lval, rval, CF_CLASSBODY[i].dtype, CF_CLASSBODY[i].range, 0);
       }
    }
 
@@ -741,7 +741,7 @@ for  (i = 0; i < CF3_MODULES; i++)
                      {
                      if (strcmp(lval,bs2[m].lval) == 0)
                         {
-                        CheckConstraintTypeMatch(lval, (struct Rval) { rval, rvaltype }, bs2[m].dtype, (char *)(bs2[m].range), 0);
+                        CheckConstraintTypeMatch(lval, rval, bs2[m].dtype, (char *)(bs2[m].range), 0);
                         return;
                         }
                      }                  
@@ -749,7 +749,7 @@ for  (i = 0; i < CF3_MODULES; i++)
 
                if (strcmp(lval,bs[l].lval) == 0)
                   {
-                  CheckConstraintTypeMatch(lval, (struct Rval) { rval, rvaltype }, bs[l].dtype, (char *)(bs[l].range), 0);
+                  CheckConstraintTypeMatch(lval, rval, bs[l].dtype, (char *)(bs[l].range), 0);
                   return;
                   }
                }                        
@@ -770,7 +770,7 @@ for (i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
    if (strcmp(lval,CF_COMMON_BODIES[i].lval) == 0)
       {
       CfDebug("Found a match for lval %s in the common constraint attributes\n",lval);
-      CheckConstraintTypeMatch(lval, (struct Rval) { rval, rvaltype }, CF_COMMON_BODIES[i].dtype, (char *)(CF_COMMON_BODIES[i].range), 0);
+      CheckConstraintTypeMatch(lval, rval, CF_COMMON_BODIES[i].dtype, (char *)(CF_COMMON_BODIES[i].range), 0);
       return;
       }
    }

@@ -948,7 +948,7 @@ if test x"$GCC" = "xyes" && test x"$HP_UX_AC" != "xyes"; then
    CFLAGS="$CFLAGS $GCC_CFLAG"
 
    AC_MSG_CHECKING(for -Wno-pointer-sign)
-   AC_COMPILE_IFELSE([int main() {}], [AC_MSG_RESULT(yes)], [
+   AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main() {}])], [AC_MSG_RESULT(yes)], [
    AC_MSG_RESULT(no)
    GCC_CFLAG=`echo $GCC_CFLAG | sed -e 's/-Wno-pointer-sign//'`])
 

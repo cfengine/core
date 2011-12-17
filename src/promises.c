@@ -142,7 +142,6 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
    {
    struct Body *bp = NULL;
    struct FnCall *fp = NULL;
-   struct Rlist *rnew;
    char *bodyname = NULL;
 
    /* A body template reference could look like a scalar or fn to the parser w/w () */
@@ -349,7 +348,7 @@ struct Promise *CopyPromise(char *scopeid,struct Promise *pp)
 
 { struct Promise *pcopy;
   struct Constraint *cp;
-  struct Rval returnval,final;
+  struct Rval final;
 
 CfDebug("CopyPromise()\n");
 

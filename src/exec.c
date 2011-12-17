@@ -299,7 +299,7 @@ if (SCHEDULE == NULL)
 void KeepPromises(struct GenericAgentConfig config)
 
 { struct Constraint *cp;
-  char rettype,splay[CF_BUFSIZE];
+  char splay[CF_BUFSIZE];
   struct Rval retval;
 
 for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)

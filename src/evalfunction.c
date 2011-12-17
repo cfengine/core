@@ -1800,7 +1800,7 @@ return (struct Rval) { xstrdup(retval), CF_SCALAR };
 
 static struct Rval FnCallLsDir(struct FnCall *fp,struct Rlist *finalargs)
 
-{ struct Rval rval;
+{
   char *dirname,*regex;
   char line[CF_BUFSIZE],retval[CF_SMALLBUF];
   int includepath;
@@ -3603,7 +3603,6 @@ static struct Rval ParseArray(struct FnCall *fp,struct Rlist *finalargs,enum cfd
 /* lval,filename,separator,comment,Max number of bytes  */
 
 {
-  struct Rval rval;
   char *array_lval,*instring,*comment,*split,fnname[CF_MAXVARSIZE];
   int maxent,maxsize,entries = 0;
 

@@ -1462,7 +1462,6 @@ return json;
 static JsonArray *ExportBodyClassesAsJson(struct Constraint *constraints)
 {
 JsonArray *json_contexts = NULL;
-JsonObject *json_context = NULL;
 JsonArray *json_attributes = NULL;
 char *current_context = "any";
 size_t context_offset_start = -1;
@@ -1502,7 +1501,6 @@ return json_contexts;
 static JsonArray *ExportBundleClassesAsJson(struct Promise *promises)
 {
 JsonArray *json_contexts = NULL;
-JsonObject *json_context = NULL;
 JsonArray *json_promises = NULL;
 char *current_context = "any";
 size_t context_offset_start = -1;

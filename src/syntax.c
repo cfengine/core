@@ -1536,7 +1536,11 @@ for (pp = promises; pp != NULL; pp = pp->next)
       JsonObjectAppendSize(&json_promise, "offset-end", context_offset_end);
 
       JsonObjectAppendString(&json_promise, "promiser", pp->promiser);
-      JsonObjectAppendString(&json_promise, "promisee", pp->promisee);
+      /* FIXME: does not work for lists */
+      if (pp->promisee.rtype == CF_SCALAR || pp->promisee.rtype == CF_NOPROMISEE)
+         {
+         JsonObjectAppendString(&json_promise, "promisee", pp->promisee.item);
+         }
 
       JsonObjectAppendArray(&json_promise, "attributes", json_promise_attributes);
       }

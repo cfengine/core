@@ -83,12 +83,12 @@ struct Promise *DeRefCopyPromise(char *scopeid,struct Promise *pp)
   struct Constraint *cp,*scp;
   struct Rval returnval;
 
-if (pp->promisee)
+if (pp->promisee.item)
    {
    CfDebug("CopyPromise(%s->",pp->promiser);
    if (DEBUG)
       {
-      ShowRval(stdout, (struct Rval) { pp->promisee, pp->petype });
+      ShowRval(stdout, pp->promisee);
       }
    CfDebug("\n");
    }
@@ -104,10 +104,9 @@ if (pp->promiser)
    pcopy->promiser = xstrdup(pp->promiser);
    }
 
-if (pp->promisee)
+if (pp->promisee.item)
    {
-   pcopy->promisee = CopyRvalItem((struct Rval) { pp->promisee, pp->petype }).item;
-   pcopy->petype = pp->petype;
+   pcopy->promisee = CopyRvalItem(pp->promisee);
    }
 
 if (pp->classes)
@@ -115,7 +114,8 @@ if (pp->classes)
    pcopy->classes  = xstrdup(pp->classes);
    }
 
-if ((pp->promisee != NULL && pcopy->promisee == NULL))
+/* FIXME: may it happen? */
+if ((pp->promisee.item != NULL && pcopy->promisee.item == NULL))
    {
    FatalError("Unable to copy promise");
    }
@@ -123,7 +123,6 @@ if ((pp->promisee != NULL && pcopy->promisee == NULL))
 pcopy->bundletype = xstrdup(pp->bundletype);
 pcopy->audit = pp->audit;
 pcopy->offset.line = pp->offset.line;
-pcopy->petype = pp->petype;      /* rtype of promisee - list or scalar recipient? */
 pcopy->bundle = xstrdup(pp->bundle);
 pcopy->ref = pp->ref;
 pcopy->ref_alloc = pp->ref_alloc;
@@ -262,16 +261,13 @@ pcopy = xcalloc(1, sizeof(struct Promise));
 returnval = ExpandPrivateRval("this", (struct Rval) { pp->promiser, CF_SCALAR });
 pcopy->promiser = (char *)returnval.item;
 
-if (pp->promisee)
+if (pp->promisee.item)
    {
-   returnval = EvaluateFinalRval(scopeid, (struct Rval) { pp->promisee, pp->petype }, true,pp);
-   pcopy->promisee = (struct Rlist *)returnval.item;
-   pcopy->petype = returnval.rtype;
+   pcopy->promisee = EvaluateFinalRval(scopeid, pp->promisee, true, pp);
    }
 else
    {
-   pcopy->petype = CF_NOPROMISEE;
-   pcopy->promisee = NULL;
+   pcopy->promisee = (struct Rval) { NULL, CF_NOPROMISEE };
    }
 
 if (pp->classes)
@@ -361,15 +357,13 @@ pcopy = xcalloc(1, sizeof(struct Promise));
 
 pcopy->promiser = xstrdup(pp->promiser);
 
-if (pp->promisee)
+if (pp->promisee.item)
    {
-   returnval = EvaluateFinalRval(scopeid, (struct Rval) { pp->promisee, pp->petype }, true,pp);
-   pcopy->promisee = (struct Rlist *)returnval.item;
-   pcopy->petype = returnval.rtype;
+   pcopy->promisee = EvaluateFinalRval(scopeid, pp->promisee, true, pp);
    }
 else
    {
-   pcopy->petype = CF_NOPROMISEE;
+   pcopy->promisee = (struct Rval) { NULL, CF_NOPROMISEE };
    }
 
 if (pp->classes)
@@ -443,10 +437,10 @@ static void DebugPromise(struct Promise *pp)
 
 GetVariable("control_common","version",&retval);
 
-if (pp->promisee != NULL)
+if (pp->promisee.item != NULL)
    {
    fprintf(stdout,"%s promise by \'%s\' -> ",pp->agentsubtype,pp->promiser);
-   ShowRval(stdout, (struct Rval) { pp->promisee, pp->petype });
+   ShowRval(stdout, pp->promisee);
    fprintf(stdout," if context is %s\n",pp->classes);
    }
 else
@@ -588,7 +582,7 @@ pp->promiser = xstrdup(promiser);
 
 ThreadUnlock(cft_policy);
 
-pp->petype = CF_NOPROMISEE;
+pp->promisee = (struct Rval) { NULL, CF_NOPROMISEE };
 pp->donep = &(pp->done);
 
 pp->agentsubtype = typename;   /* cache this, do not copy string */
@@ -609,7 +603,7 @@ if (pp == NULL)
    return;
    }
 
-CfDebug("DeletePromise(%s->[%c])\n",pp->promiser,pp->petype);
+CfDebug("DeletePromise(%s->[%c])\n",pp->promiser,pp->promisee.rtype);
 
 ThreadLock(cft_policy);
 
@@ -618,9 +612,9 @@ if (pp->promiser != NULL)
    free(pp->promiser);
    }
 
-if (pp->promisee != NULL)
+if (pp->promisee.item != NULL)
    {
-   DeleteRvalItem((struct Rval) { pp->promisee, pp->petype });
+   DeleteRvalItem(pp->promisee);
    }
 
 free(pp->bundle);
@@ -645,9 +639,9 @@ CfDebug("DeleteDeRefPromise()\n");
 
 free(pp->promiser);
 
-if (pp->promisee)
+if (pp->promisee.item)
    {
-   DeleteRvalItem((struct Rval) { pp->promisee, pp->petype });
+   DeleteRvalItem(pp->promisee);
    }
 
 if (pp->classes)

@@ -162,9 +162,8 @@ void TestExpandPromise()
 
 printf("%d. Testing promise duplication and expansion\n",++NR);
 pp.promiser = "the originator";
-pp.promisee = "the recipient";
+pp.promisee = (struct Rval) { "the recipient", CF_SCALAR };
 pp.classes = "upper classes";
-pp.petype = CF_SCALAR;
 pp.offset.line = 12;
 pp.audit = NULL;
 pp.conlist = NULL;
@@ -217,9 +216,8 @@ NewScope("control_common");
   
 printf("%d. Testing variable expansion\n",++NR);
 pp.promiser = "the originator";
-pp.promisee = "the recipient with $(two)";
+pp.promisee = (struct Rval) { "the recipient with $(two)", CF_SCALAR };
 pp.classes = "proletariat";
-pp.petype = CF_SCALAR;
 pp.offset.line = 12;
 pp.audit = NULL;
 pp.conlist = NULL;
@@ -250,9 +248,9 @@ pcopy = DeRefCopyPromise("diagnostic",&pp);
 
 ScanRval("diagnostic", &scalarvars, &listvars, (struct Rval) { pcopy->promiser, CF_SCALAR }, NULL);
 
-if (pcopy->promisee != NULL)
+if (pcopy->promisee.item != NULL)
    {
-   ScanRval("diagnostic", &scalarvars, &listvars, (struct Rval) { pp.promisee, pp.petype },NULL);
+   ScanRval("diagnostic", &scalarvars, &listvars, pp.promisee, NULL);
    }
 
 for (cp = pcopy->conlist; cp != NULL; cp=cp->next)

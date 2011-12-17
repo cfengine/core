@@ -253,11 +253,11 @@ if (level == cf_error)
 
    if (pp != NULL)
       {
-      switch (pp->petype)
+      switch (pp->promisee.rtype)
          {
          case CF_SCALAR:
              
-             snprintf(output,CF_BUFSIZE-1,"I: The promise was made to: \'%s\'\n", (char*)pp->promisee);
+             snprintf(output,CF_BUFSIZE-1,"I: The promise was made to: \'%s\'\n", (char*)pp->promisee.item);
              AppendItem(&mess,output,NULL);
              break;
              
@@ -265,7 +265,7 @@ if (level == cf_error)
              
              CfOut(level,"","I: The promise was made to: \n");
              
-             for (rp = (struct Rlist *)pp->promisee; rp != NULL; rp=rp->next)
+             for (rp = (struct Rlist *)pp->promisee.item; rp != NULL; rp=rp->next)
                 {
                 snprintf(output,CF_BUFSIZE-1,"I:     \'%s\'\n", (char*)rp->item);
                 AppendItem(&mess,output,NULL);
@@ -358,7 +358,7 @@ switch(level)
 
 if (pp != NULL)
    {
-   LogPromiseResult(pp->promiser, pp->petype, pp->promisee, status, attr.transaction.log_level, mess);
+   LogPromiseResult(pp->promiser, pp->promisee.rtype, pp->promisee.item, status, attr.transaction.log_level, mess);
    }
 
 /* Now complete the exits status classes and auditing */

@@ -298,10 +298,10 @@ fprintf(FREPORT_HTML,"%s\n",CFH[cfx_promise][cfb]);
 fprintf(FREPORT_HTML,"Promise type is %s%s%s, ",CFH[cfx_subtype][cfb],pp->agentsubtype,CFH[cfx_subtype][cfe]);
 fprintf(FREPORT_HTML,"<a href=\"#class_context\">context</a> is %s%s%s <br><hr>\n\n",CFH[cfx_class][cfb],pp->classes,CFH[cfx_class][cfe]);
 
-if (pp->promisee)
+if (pp->promisee.item)
    {
    fprintf(FREPORT_HTML,"Resource object %s\'%s\'%s promises %s (about %s) to",CFH[cfx_object][cfb],pp->promiser,CFH[cfx_object][cfe],CFH[cfx_object][cfb],pp->agentsubtype);
-   ShowRval(FREPORT_HTML, (struct Rval) { pp->promisee, pp->petype });
+   ShowRval(FREPORT_HTML, pp->promisee);
    fprintf(FREPORT_HTML,"%s\n\n",CFH[cfx_object][cfe]);
    }
 else
@@ -310,10 +310,10 @@ else
    }
 
 Indent(indent);
-if (pp->promisee != NULL)
+if (pp->promisee.item != NULL)
    {
    fprintf(FREPORT_TXT,"%s promise by \'%s\' -> ",pp->agentsubtype,pp->promiser);
-   ShowRval(FREPORT_TXT, (struct Rval) { pp->promisee, pp->petype });
+   ShowRval(FREPORT_TXT, pp->promisee);
    fprintf(FREPORT_TXT," if context is %s\n\n",pp->classes);
    }
 else

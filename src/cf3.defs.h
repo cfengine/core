@@ -741,8 +741,7 @@ struct Promise
    char *ref;                   /* comment */
    char ref_alloc;
    char *promiser;
-   void *promisee;              /* TODO: use struct Rval */
-   char  petype;                /* rtype of promisee - list or scalar recipient? */
+   struct Rval promisee;
    char *bundle;
    struct Audit *audit;
    struct Constraint *conlist;

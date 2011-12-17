@@ -597,7 +597,7 @@ pp = xcalloc(1, sizeof(struct Promise));
 
 pp->bundle =  xstrdup("implicit internal bundle for runagent");
 pp->promiser = xstrdup("runagent");
-pp->petype = CF_NOPROMISEE;
+pp->promisee = (struct Rval) { NULL, CF_NOPROMISEE };
 pp->donep = &(pp->done);
 
 return pp;

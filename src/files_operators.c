@@ -1658,8 +1658,7 @@ static void DeleteDirectoryTree(char *path,struct Promise *pp)
 // Check that tree is a directory
 
 promise.promiser = path;
-promise.promisee = NULL;
-promise.petype = CF_NOPROMISEE;
+promise.promisee = (struct Rval) {  NULL, CF_NOPROMISEE };
 promise.classes = "any";
 
 if (pp != NULL)

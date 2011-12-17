@@ -116,9 +116,9 @@ pcopy = DeRefCopyPromise(scopeid,pp);
 
 ScanRval(scopeid, &scalarvars, &listvars, (struct Rval) { pcopy->promiser, CF_SCALAR }, pp);
 
-if (pcopy->promisee != NULL)
+if (pcopy->promisee.item != NULL)
    {
-   ScanRval(scopeid, &scalarvars, &listvars, (struct Rval) { pp->promisee, pp->petype }, pp);
+   ScanRval(scopeid, &scalarvars, &listvars, pp->promisee, pp);
    }
 
 for (cp = pcopy->conlist; cp != NULL; cp=cp->next)
@@ -1195,24 +1195,24 @@ static void ConvergePromiseValues(struct Promise *pp)
   char expandbuf[CF_EXPANDSIZE];
   struct FnCall *fp;
 
-switch (pp->petype)
+switch (pp->promisee.rtype)
    {
    case CF_SCALAR:
        
-       if (IsCf3VarString((char *)pp->promisee))
+       if (IsCf3VarString((char *)pp->promisee.item))
           {             
-          ExpandScalar(pp->promisee,expandbuf);
-          if (strcmp(pp->promisee,expandbuf) != 0)
+          ExpandScalar(pp->promisee.item,expandbuf);
+          if (strcmp(pp->promisee.item,expandbuf) != 0)
              {
-             free(pp->promisee);
-             pp->promisee = xstrdup(expandbuf);
+             free(pp->promisee.item);
+             pp->promisee.item = xstrdup(expandbuf);
              }
           }
        break;
        
    case CF_LIST:
        
-       for (rp = (struct Rlist *)pp->promisee; rp != NULL; rp=rp->next)
+       for (rp = (struct Rlist *)pp->promisee.item; rp != NULL; rp=rp->next)
           {
           if (IsCf3VarString((char *)rp->item))
              {             

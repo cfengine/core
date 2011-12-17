@@ -245,8 +245,7 @@ else
 pp->audit = AUDITPTR;
 pp->bundle =  xstrdup(bundle);
 pp->promiser = sp;
-pp->promisee = promisee.item;  /* this is a list allocated separately */
-pp->petype = promisee.rtype;
+pp->promisee = promisee;
 pp->classes = spe;
 pp->donep = &(pp->done);
 

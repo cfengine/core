@@ -551,9 +551,8 @@ snprintf(promiserBuf, sizeof(promiserBuf), "%s/bin/cf-execd", CFWORKDIR);
 #endif
 
 pp.promiser = promiserBuf;
-pp.promisee = "cfengine";
+pp.promisee = (struct Rval) { "cfengine", CF_SCALAR };
 pp.classes = "any";
-pp.petype = CF_SCALAR;
 pp.offset.line = 0;
 pp.audit = NULL;
 pp.conlist = NULL;

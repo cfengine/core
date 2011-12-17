@@ -1187,12 +1187,12 @@ if (VERBOSE||DEBUG)
    printf ("%s>     Promise made by: %s",VPREFIX,pp->promiser);
    }
 
-if (pp->promisee)
+if (pp->promisee.item)
    {
    if (VERBOSE)
       {
       printf(" -> ");
-      ShowRval(stdout, (struct Rval) { pp->promisee,pp->petype });
+      ShowRval(stdout, pp->promisee);
       }
    }
 

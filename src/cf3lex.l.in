@@ -33,6 +33,8 @@
 #include "cf3.extern.h"
 #include "cf3parse.h"
 
+/* yyinput/input are generated and unused */
+#pragma GCC diagnostic ignored "-Wunused-function"
 
 void *yyalloc(yy_size_t bytes)
 {

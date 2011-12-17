@@ -32,7 +32,7 @@ else
   rm -f ${srcdir}/constellation
 fi
 
-autoreconf --force -v --install -I m4 || exit 1
+autoreconf --force --install -I m4 || exit 1
 cd $ORIGDIR || exit $?
 
 if [ -z "$NO_CONFIGURE" ]; then

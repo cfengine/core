@@ -580,7 +580,7 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
       continue;
       }
 
-   switch (cp->type)
+   switch (cp->rval.rtype)
       {
       case CF_SCALAR:
 
@@ -593,7 +593,7 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
 
       case CF_LIST:
           
-          for (rp = (struct Rlist *)cp->rval; rp != NULL; rp=rp->next)
+          for (rp = (struct Rlist *)cp->rval.item; rp != NULL; rp=rp->next)
              {
              if (strcmp(cp->lval,CF_REMACCESS_BODIES[cfs_admit].lval) == 0)
                 {
@@ -669,7 +669,7 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
       continue;
       }
 
-   switch (cp->type)
+   switch (cp->rval.rtype)
       {
       case CF_SCALAR:
 
@@ -682,7 +682,7 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
 
       case CF_LIST:
           
-          for (rp = (struct Rlist *)cp->rval; rp != NULL; rp=rp->next)
+          for (rp = (struct Rlist *)cp->rval.item; rp != NULL; rp=rp->next)
              {
              if (strcmp(cp->lval,CF_REMACCESS_BODIES[cfs_admit].lval) == 0)
                 {
@@ -746,7 +746,7 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
       continue;
       }
 
-   switch (cp->type)
+   switch (cp->rval.rtype)
       {
       case CF_SCALAR:
 
@@ -759,7 +759,7 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
 
       case CF_LIST:
           
-          for (rp = (struct Rlist *)cp->rval; rp != NULL; rp=rp->next)
+          for (rp = (struct Rlist *)cp->rval.item; rp != NULL; rp=rp->next)
              {
              if (strcmp(cp->lval,CF_REMACCESS_BODIES[cfs_admit].lval) == 0)
                 {
@@ -810,11 +810,11 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
       continue;
       }
 
-   switch (cp->type)
+   switch (cp->rval.rtype)
       {
       case CF_LIST:
           
-          for (rp = (struct Rlist *)cp->rval; rp != NULL; rp=rp->next)
+          for (rp = (struct Rlist *)cp->rval.item; rp != NULL; rp=rp->next)
              {
              if (strcmp(cp->lval,CF_REMROLE_BODIES[cfs_authorize].lval) == 0)
                 {

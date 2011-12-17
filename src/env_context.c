@@ -82,19 +82,18 @@ if (IsDefinedClass(pp->promiser))
    return false;
    }
 
-switch (cp->type) 
+switch (cp->rval.rtype) 
    {
    case CF_FNCALL:
        
-       fp = (struct FnCall *)cp->rval;        /* Special expansion of functions for control, best effort only */
+       fp = (struct FnCall *)cp->rval.item;        /* Special expansion of functions for control, best effort only */
        newret = EvaluateFunctionCall(fp,pp);
        DeleteFnCall(fp);
-       cp->rval = newret.item;
-       cp->type = newret.rtype;
+       cp->rval = newret;
        break;
 
    case CF_LIST:
-       for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
+       for (rp = (struct Rlist *)cp->rval.item; rp != NULL; rp = rp->next)
           {
           newret = EvaluateFinalRval("this", (struct Rval) { rp->item, rp->type }, true,pp);
           DeleteRvalItem((struct Rval) { rp->item, rp->type });
@@ -105,21 +104,20 @@ switch (cp->type)
        
    default:
 
-       newret = ExpandPrivateRval("this", (struct Rval) { cp->rval, cp->type });
-       DeleteRvalItem((struct Rval) {cp->rval, cp->type });
-       cp->rval = newret.item;
-       cp->type = newret.rtype;
+       newret = ExpandPrivateRval("this", cp->rval);
+       DeleteRvalItem(cp->rval);
+       cp->rval = newret;
        break;
    }
 
 if (strcmp(cp->lval,"expression") == 0)
    {
-   if (cp->type != CF_SCALAR)
+   if (cp->rval.rtype != CF_SCALAR)
       {
       return false;
       }
 
-   if (IsDefinedClass((char *)cp->rval))
+   if (IsDefinedClass((char *)cp->rval.item))
       {
       return true;
       }
@@ -131,12 +129,12 @@ if (strcmp(cp->lval,"expression") == 0)
 
 if (strcmp(cp->lval,"not") == 0)
    {
-   if (cp->type != CF_SCALAR)
+   if (cp->rval.rtype != CF_SCALAR)
       {
       return false;
       }
 
-   if (IsDefinedClass((char *)cp->rval))
+   if (IsDefinedClass((char *)cp->rval.item))
       {
       return false;
       }
@@ -156,7 +154,7 @@ if (strcmp(cp->lval,"select_class") == 0)
    
    total = 0;
 
-   for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
+   for (rp = (struct Rlist *)cp->rval.item; rp != NULL; rp = rp->next)
       {
       total++;
       }
@@ -172,7 +170,7 @@ if (strcmp(cp->lval,"select_class") == 0)
    hash = (double)GetHash(splay);
    n = (int)(total*hash/(double)CF_HASHTABLESIZE);
 
-   for (rp = (struct Rlist *)cp->rval,i = 0; rp != NULL; rp = rp->next,i++)
+   for (rp = (struct Rlist *)cp->rval.item,i = 0; rp != NULL; rp = rp->next,i++)
       {
       if (i == n)
          {
@@ -186,7 +184,7 @@ if (strcmp(cp->lval,"select_class") == 0)
 
 if (strcmp(cp->lval,"dist") == 0)
    {
-   for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
+   for (rp = (struct Rlist *)cp->rval.item; rp != NULL; rp = rp->next)
       {
       result = Str2Int(rp->item);
       
@@ -213,14 +211,14 @@ cum = 0.0;
 
 /* If we get here, anything remaining on the RHS must be a clist */
 
-if (cp->type != CF_LIST)
+if (cp->rval.rtype != CF_LIST)
    {
    CfOut(cf_error,""," !! RHS of promise body attribute \"%s\" is not a list\n",cp->lval);
    PromiseRef(cf_error,pp);
    return true;
    }
 
-for (rp = (struct Rlist *)cp->rval; rp != NULL; rp = rp->next)
+for (rp = (struct Rlist *)cp->rval.item; rp != NULL; rp = rp->next)
    {
    if (rp->type != CF_SCALAR)
       {

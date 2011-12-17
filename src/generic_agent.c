@@ -1606,11 +1606,11 @@ for (cp = controllist; cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFG_CONTROLBODY[cfg_bundlesequence].lval) == 0)
       {
-      returnval = ExpandPrivateRval(CONTEXTID, (struct Rval) { cp->rval, cp->type });
+      returnval = ExpandPrivateRval(CONTEXTID, cp->rval);
       }
    else
       {
-      returnval = EvaluateFinalRval(CONTEXTID, (struct Rval) { cp->rval, cp->type }, true,NULL);
+      returnval = EvaluateFinalRval(CONTEXTID, cp->rval, true, NULL);
       }
 
    DeleteVariable(scope,cp->lval);
@@ -1628,7 +1628,7 @@ for (cp = controllist; cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFG_CONTROLBODY[cfg_domain].lval) == 0)
       {
-      strcpy(VDOMAIN,cp->rval);
+      strcpy(VDOMAIN,cp->rval.item);
       CfOut(cf_verbose,"","SET domain = %s\n",VDOMAIN);
       DeleteScalar("sys","domain");
       DeleteScalar("sys","fqhost");
@@ -1641,14 +1641,14 @@ for (cp = controllist; cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFG_CONTROLBODY[cfg_ignore_missing_inputs].lval) == 0)
       {
-      CfOut(cf_verbose,"","SET ignore_missing_inputs %s\n",cp->rval);
-      IGNORE_MISSING_INPUTS = GetBoolean(cp->rval);
+      CfOut(cf_verbose,"","SET ignore_missing_inputs %s\n",cp->rval.item);
+      IGNORE_MISSING_INPUTS = GetBoolean(cp->rval.item);
       }
 
    if (strcmp(cp->lval,CFG_CONTROLBODY[cfg_ignore_missing_bundles].lval) == 0)
       {
-      CfOut(cf_verbose,"","SET ignore_missing_bundles %s\n",cp->rval);
-      IGNORE_MISSING_BUNDLES = GetBoolean(cp->rval);
+      CfOut(cf_verbose,"","SET ignore_missing_bundles %s\n",cp->rval.item);
+      IGNORE_MISSING_BUNDLES = GetBoolean(cp->rval.item);
       }
 
    if (strcmp(cp->lval,CFG_CONTROLBODY[cfg_goalpatterns].lval) == 0)

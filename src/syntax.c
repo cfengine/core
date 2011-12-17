@@ -1480,7 +1480,7 @@ for (cp = constraints; cp != NULL; cp = cp->next)
    context_offset_end = cp->offset.end;
 
    JsonObjectAppendString(&json_attribute, "lval", cp->lval);
-   JsonObjectAppendObject(&json_attribute, "rval", ExportAttributeValueAsJson((struct Rval) { cp->rval, cp->type }));
+   JsonObjectAppendObject(&json_attribute, "rval", ExportAttributeValueAsJson(cp->rval));
    JsonArrayAppendObject(&json_attributes, json_attribute);
 
    if (cp->next == NULL || strcmp(current_context, cp->next->classes) != 0)
@@ -1529,7 +1529,7 @@ for (pp = promises; pp != NULL; pp = pp->next)
 	 context_offset_end = cp->offset.end;
 
 	 JsonObjectAppendString(&json_attribute, "lval", cp->lval);
-	 JsonObjectAppendObject(&json_attribute, "rval", ExportAttributeValueAsJson((struct Rval) { cp->rval, cp->type }));
+	 JsonObjectAppendObject(&json_attribute, "rval", ExportAttributeValueAsJson(cp->rval));
 	 JsonArrayAppendObject(&json_promise_attributes, json_attribute);
 	 }
 
@@ -1676,16 +1676,16 @@ for (i = 0; i < PRETTY_PRINT_SPACES_PER_INDENT * indent_level; i++)
    }
 }
 
-static void RvalPrettyPrint(FILE *out, void *rval, char rval_type)
+static void RvalPrettyPrint(FILE *out, struct Rval rval)
 {
 /* FIX: prettify */
-ShowRval(out, (struct Rval) { rval, rval_type });
+ShowRval(out, rval);
 }
 
 static void AttributePrettyPrint(FILE *out, struct Constraint *attribute, int indent_level)
 {
 fprintf(out, "%s => ", attribute->lval);
-RvalPrettyPrint(out, attribute->rval, attribute->type);
+RvalPrettyPrint(out, attribute->rval);
 }
 
 static void ArgumentsPrettyPrint(FILE *out, struct Rlist *args)

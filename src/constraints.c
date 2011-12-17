@@ -98,8 +98,7 @@ if (classes != NULL)
 
 cp->audit = AUDITPTR;
 cp->lval = sp;
-cp->rval = rval.item;
-cp->type = rval.rtype;  /* literal, bodyname, builtin function */
+cp->rval = rval;
 cp->isbody = body;
 
 return cp;
@@ -115,13 +114,8 @@ for (cp = conlist; cp != NULL; cp = cp->next)
    {
    if (strcmp(lval,cp->lval) == 0)
       {
-      if (cp->rval)
-         {
-         DeleteRvalItem((struct Rval) { cp->rval, cp->type });
-         }      
-
-      cp->rval = xstrdup(rval);
-      cp->type = CF_SCALAR;
+      DeleteRvalItem(cp->rval);
+      cp->rval = (struct Rval) { xstrdup(rval), CF_SCALAR };
       return;
       }
    }
@@ -137,26 +131,14 @@ CfDebug("DeleteConstraintList()\n");
  
 for (cp = conlist; cp != NULL; cp = next)
    {
-   CfDebug("Delete lval = %s,%c\n",cp->lval,cp->type);
+   CfDebug("Delete lval = %s,%c\n",cp->lval,cp->rval.rtype);
    
    next = cp->next;
 
-   if (cp->rval)
-      {
-      DeleteRvalItem((struct Rval) { cp->rval, cp->type });
-      }
-
-   if (cp->lval)
-      {
-      free((char *)cp->lval);
-      }
-   
-   if (cp->classes)
-      {
-      free(cp->classes);
-      }
-
-   free((char *)cp);
+   DeleteRvalItem(cp->rval);
+   free(cp->lval);
+   free(cp->classes);
+   free(cp);
    }
 }
 
@@ -184,20 +166,20 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
          continue;
          }
 
-      if (cp->type != CF_SCALAR)
+      if (cp->rval.rtype != CF_SCALAR)
          {
-         CfOut(cf_error,""," !! Type mismatch on rhs - expected type (%c) for boolean constraint \"%s\"\n",cp->type,lval);
+         CfOut(cf_error,""," !! Type mismatch on rhs - expected type (%c) for boolean constraint \"%s\"\n",cp->rval.rtype,lval);
          PromiseRef(cf_error,pp);
          FatalError("Aborted");
          }
 
-      if (strcmp(cp->rval,"true") == 0||strcmp(cp->rval,"yes") == 0)
+      if (strcmp(cp->rval.item,"true") == 0||strcmp(cp->rval.item,"yes") == 0)
          {
          retval = true;
          continue;
          }
 
-      if (strcmp(cp->rval,"false") == 0||strcmp(cp->rval,"no") == 0)
+      if (strcmp(cp->rval.item,"false") == 0||strcmp(cp->rval.item,"no") == 0)
          {
          retval = false;
          }
@@ -235,19 +217,19 @@ for (cp = list; cp != NULL; cp=cp->next)
          continue;
          }
 
-      if (cp->type != CF_SCALAR)
+      if (cp->rval.rtype != CF_SCALAR)
          {
-         CfOut(cf_error,""," !! Type mismatch - expected type (%c) for boolean constraint \"%s\"\n",cp->type,lval);
+         CfOut(cf_error,""," !! Type mismatch - expected type (%c) for boolean constraint \"%s\"\n",cp->rval.rtype,lval);
          FatalError("Aborted");
          }
 
-      if (strcmp(cp->rval,"true") == 0||strcmp(cp->rval,"yes") == 0)
+      if (strcmp(cp->rval.item,"true") == 0||strcmp(cp->rval.item,"yes") == 0)
          {
          retval = true;
          continue;
          }
 
-      if (strcmp(cp->rval,"false") == 0||strcmp(cp->rval,"no") == 0)
+      if (strcmp(cp->rval.item,"false") == 0||strcmp(cp->rval.item,"no") == 0)
          {
          retval = false;
          }
@@ -286,9 +268,9 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
          continue;
          }
 
-      if (!(cp->type == CF_FNCALL || cp->type == CF_SCALAR))
+      if (!(cp->rval.rtype == CF_FNCALL || cp->rval.rtype == CF_SCALAR))
          {
-         CfOut(cf_error,"","Anomalous type mismatch - type (%c) for bundle constraint %s did not match internals\n",cp->type,lval);
+         CfOut(cf_error,"","Anomalous type mismatch - type (%c) for bundle constraint %s did not match internals\n",cp->rval.rtype,lval);
          PromiseRef(cf_error,pp);
          FatalError("Aborted");
          }
@@ -324,14 +306,14 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
          continue;
          }
 
-      if (cp->type != CF_SCALAR)
+      if (cp->rval.rtype != CF_SCALAR)
          {
          CfOut(cf_error,"","Anomalous type mismatch - expected type for int constraint %s did not match internals\n",lval);
          PromiseRef(cf_error,pp);
          FatalError("Aborted");
          }
 
-      retval = (int)Str2Int((char *)cp->rval);
+      retval = (int)Str2Int((char *)cp->rval.item);
       }
    }
 
@@ -361,13 +343,13 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
          continue;
          }
 
-      if (cp->type != CF_SCALAR)
+      if (cp->rval.rtype != CF_SCALAR)
          {
          CfOut(cf_error,"","Anomalous type mismatch - expected type for int constraint %s did not match internals\n",lval);
          FatalError("Aborted");
          }
 
-      retval = Str2Double((char *)cp->rval);
+      retval = Str2Double((char *)cp->rval.item);
       }
    }
 
@@ -400,14 +382,14 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
          continue;
          }
 
-      if (cp->type != CF_SCALAR)
+      if (cp->rval.rtype != CF_SCALAR)
          {
          CfOut(cf_error,"","Anomalous type mismatch - expected type for int constraint %s did not match internals\n",lval);
          PromiseRef(cf_error,pp);
          FatalError("Aborted");
          }
 
-      retval = Str2Mode((char *)cp->rval);
+      retval = Str2Mode((char *)cp->rval.item);
       }
    }
 
@@ -444,14 +426,14 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
          continue;
          }
 
-      if (cp->type != CF_SCALAR)
+      if (cp->rval.rtype != CF_SCALAR)
          {
          CfOut(cf_error,"","Anomalous type mismatch - expected type for owner constraint %s did not match internals\n",lval);
          PromiseRef(cf_error,pp);
          FatalError("Aborted");
          }
 
-      retval = Str2Uid((char *)cp->rval,buffer,pp);
+      retval = Str2Uid((char *)cp->rval.item,buffer,pp);
       }
    }
 
@@ -489,14 +471,14 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
          continue;
          }
 
-      if (cp->type != CF_SCALAR)
+      if (cp->rval.rtype != CF_SCALAR)
          {
          CfOut(cf_error,"","Anomalous type mismatch - expected type for group constraint %s did not match internals\n",lval);
          PromiseRef(cf_error,pp);
          FatalError("Aborted");
          }
 
-      retval = Str2Gid((char *)cp->rval,buffer,pp);
+      retval = Str2Gid((char *)cp->rval.item,buffer,pp);
       }
    }
 
@@ -528,14 +510,14 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
          continue;
          }
 
-      if (cp->type != CF_LIST)
+      if (cp->rval.rtype != CF_LIST)
          {
          CfOut(cf_error,""," !! Type mismatch on rhs - expected type for list constraint \"%s\" \n",lval);
          PromiseRef(cf_error,pp);
          FatalError("Aborted");
          }
 
-      retval = (struct Rlist *)cp->rval;
+      retval = (struct Rlist *)cp->rval.item;
       }
    }
 
@@ -583,9 +565,9 @@ return retval;
 void *GetConstraintValue(char *lval, struct Promise *promise, char rtype)
 {
 struct Constraint *constraint = GetConstraint(promise, lval);
-if (constraint && constraint->type == rtype)
+if (constraint && constraint->rval.rtype == rtype)
    {
-   return constraint->rval;
+   return constraint->rval.item;
    }
 else
    {
@@ -675,7 +657,7 @@ if (REQUIRE_COMMENTS == true)
 
 for (cp = pp->conlist; cp != NULL; cp = cp->next)
    {
-   PostCheckConstraint(pp->agentsubtype,pp->bundle,cp->lval,cp->rval,cp->type);
+   PostCheckConstraint(pp->agentsubtype,pp->bundle,cp->lval,cp->rval.item,cp->rval.rtype);
    }     
 
 if (strcmp(pp->agentsubtype,"insert_lines") == 0)

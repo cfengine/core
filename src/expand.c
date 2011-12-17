@@ -123,7 +123,7 @@ if (pcopy->promisee != NULL)
 
 for (cp = pcopy->conlist; cp != NULL; cp=cp->next)
    {
-   ScanRval(scopeid, &scalarvars, &listvars, (struct Rval) { cp->rval, cp->type }, pp);
+   ScanRval(scopeid, &scalarvars, &listvars, cp->rval, pp);
    }
 
 PushThisScope();
@@ -969,7 +969,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       continue;
       }
 
-   if (cp->rval == NULL)
+   if (cp->rval.item == NULL)
       {
       continue;
       }
@@ -978,11 +978,11 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       {
       struct Rval res;
       
-      switch(cp->type)
+      switch(cp->rval.rtype)
          {
          case CF_SCALAR:
              
-             if (IsExcluded(cp->rval))
+             if (IsExcluded(cp->rval.item))
                 {
                 return;
                 }
@@ -994,7 +994,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
              bool excluded = false;
              /* eval it: e.g. ifvarclass => not("a_class") */
 
-             res = EvaluateFunctionCall(cp->rval,NULL);
+             res = EvaluateFunctionCall(cp->rval.item, NULL);
              excluded = IsExcluded(res.item);
 
              DeleteRvalItem(res);
@@ -1007,7 +1007,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
              break;
              
          default:
-             CfOut(cf_error, "", "!! Invalid ifvarclass type '%c': should be string or function", cp->type);
+             CfOut(cf_error, "", "!! Invalid ifvarclass type '%c': should be string or function", cp->rval.rtype);
              continue;
          }
       
@@ -1016,12 +1016,12 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,"policy") == 0)
       {
-      if (strcmp(cp->rval,"ifdefined") == 0)
+      if (strcmp(cp->rval.item,"ifdefined") == 0)
          {
          drop_undefined = true;
          ok_redefine = false;
          }
-      else if (strcmp(cp->rval,"constant") == 0)
+      else if (strcmp(cp->rval.item,"constant") == 0)
          {
          ok_redefine = false;
          }
@@ -1033,7 +1033,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
    else if (IsDataType(cp->lval))
       {
       i++;
-      rval.item = cp->rval;
+      rval.item = cp->rval.item;
       cp_save = cp;
       }
    }
@@ -1062,7 +1062,7 @@ if (rval.item != NULL)
    {
    struct FnCall *fp = (struct FnCall *)rval.item;
 
-   if (cp->type == CF_FNCALL)
+   if (cp->rval.rtype == CF_FNCALL)
       {
       rval = EvaluateFunctionCall(fp,pp);
 
@@ -1079,17 +1079,17 @@ if (rval.item != NULL)
 
       if (strcmp(cp->lval,"int") == 0)
          {
-         snprintf(conv,CF_MAXVARSIZE,"%ld",Str2Int(cp->rval));
-         rval = CopyRvalItem((struct Rval) { conv, cp->type });
+         snprintf(conv,CF_MAXVARSIZE,"%ld",Str2Int(cp->rval.item));
+         rval = CopyRvalItem((struct Rval) { conv, cp->rval.rtype });
          }
       else if (strcmp(cp->lval,"real") == 0)
          {
-         snprintf(conv,CF_MAXVARSIZE,"%lf",Str2Double(cp->rval));
-         rval = CopyRvalItem((struct Rval) { conv, cp->type });
+         snprintf(conv,CF_MAXVARSIZE,"%lf",Str2Double(cp->rval.item));
+         rval = CopyRvalItem((struct Rval) { conv, cp->rval.rtype });
          }
       else
          {
-         rval = CopyRvalItem((struct Rval) { cp->rval, cp->type });
+         rval = CopyRvalItem(cp->rval);
          }
       }
 
@@ -1229,24 +1229,24 @@ switch (pp->petype)
  
 for (cp = pp->conlist; cp != NULL; cp=cp->next)
    {
-   switch (cp->type)
+   switch (cp->rval.rtype)
       {
       case CF_SCALAR:
 
-          if (IsCf3VarString((char *)cp->rval))
+          if (IsCf3VarString((char *)cp->rval.item))
              {             
-             ExpandScalar(cp->rval,expandbuf);
-             if (strcmp(cp->rval,expandbuf) != 0)
+             ExpandScalar(cp->rval.item, expandbuf);
+             if (strcmp(cp->rval.item, expandbuf) != 0)
                 {
-                free(cp->rval);
-                cp->rval = xstrdup(expandbuf);
+                free(cp->rval.item);
+                cp->rval.item = xstrdup(expandbuf);
                 }
              }
           break;
 
       case CF_LIST:
 
-          for (rp = (struct Rlist *)cp->rval; rp != NULL; rp=rp->next)
+          for (rp = (struct Rlist *)cp->rval.item; rp != NULL; rp=rp->next)
              {
              if (IsCf3VarString((char *)rp->item))
                 {             
@@ -1262,7 +1262,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
       case CF_FNCALL:
 
-       fp = (struct FnCall *)cp->rval;
+       fp = (struct FnCall *)cp->rval.item;
        for (rp = fp->args; rp != NULL; rp=rp->next)
           {
           if (rp->type == CF_SCALAR && IsCf3VarString(rp->item))

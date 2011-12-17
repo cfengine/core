@@ -257,7 +257,7 @@ if (pcopy->promisee != NULL)
 
 for (cp = pcopy->conlist; cp != NULL; cp=cp->next)
    {
-   ScanRval("diagnostic", &scalarvars, &listvars, (struct Rval) { cp->rval, cp->type }, NULL);
+   ScanRval("diagnostic", &scalarvars, &listvars, cp->rval, NULL);
    }
 
 ExpandPromiseAndDo(cf_common,"diagnostic",pcopy,scalarvars,listvars,NULL);

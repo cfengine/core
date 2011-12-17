@@ -148,10 +148,10 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
    /* A body template reference could look like a scalar or fn to the parser w/w () */
    
-   switch (cp->type)
+   switch (cp->rval.rtype)
       {
       case CF_SCALAR:
-          bodyname = (char *)cp->rval;
+          bodyname = (char *)cp->rval.item;
           if (cp->isbody)
              {
              bp = IsBody(BODIES,bodyname);
@@ -159,7 +159,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
           fp = NULL;
           break;
       case CF_FNCALL:
-          fp = (struct FnCall *)cp->rval;
+          fp = (struct FnCall *)cp->rval.item;
           bodyname = fp->name;
           bp = IsBody(BODIES,bodyname);
           break;
@@ -206,7 +206,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
          for (scp = bp->conlist; scp != NULL; scp = scp->next)
             {
             CfDebug("Doing arg-mapped sublval = %s (promises.c)\n",scp->lval);
-            returnval = ExpandPrivateRval("body", (struct Rval) { scp->rval, scp->type });
+            returnval = ExpandPrivateRval("body", scp->rval);
             AppendConstraint(&(pcopy->conlist), scp->lval, returnval, scp->classes, false);
             }
 
@@ -225,7 +225,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
             for (scp = bp->conlist; scp != NULL; scp = scp->next)
                {
                CfDebug("Doing sublval = %s (promises.c)\n",scp->lval);
-               struct Rval newrv = CopyRvalItem((struct Rval) { scp->rval,scp->type });
+               struct Rval newrv = CopyRvalItem(scp->rval);
                AppendConstraint(&(pcopy->conlist), scp->lval, newrv, scp->classes, false);
                }
             }
@@ -238,7 +238,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
          CfOut(cf_error,"","Apparent body \"%s()\" was undeclared, but used in a promise near line %d of %s (possible unquoted literal value)",bodyname,pp->offset.line,(pp->audit)->filename);
          }
       
-      struct Rval newrv = CopyRvalItem((struct Rval) { cp->rval, cp->type });
+      struct Rval newrv = CopyRvalItem(cp->rval);
       scp = AppendConstraint(&(pcopy->conlist), cp->lval, newrv, cp->classes, false);
       }
    }
@@ -313,11 +313,11 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
    if (ExpectedDataType(cp->lval) == cf_bundle)
       {
-      final = ExpandBundleReference(scopeid, (struct Rval) { cp->rval, cp->type });
+      final = ExpandBundleReference(scopeid, cp->rval);
       }
    else
       {
-      returnval = EvaluateFinalRval(scopeid, (struct Rval) { cp->rval, cp->type }, false,pp);
+      returnval = EvaluateFinalRval(scopeid, cp->rval, false, pp);
       final = ExpandDanglers(scopeid,returnval,pp);
       DeleteRvalItem(returnval);
       }
@@ -405,11 +405,11 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
    if (ExpectedDataType(cp->lval) == cf_bundle)
       {
        /* sub-bundles do not expand here */
-      returnval = ExpandPrivateRval(scopeid, (struct Rval) { cp->rval, cp->type });
+      returnval = ExpandPrivateRval(scopeid, cp->rval);
       }
    else
       {
-      returnval = EvaluateFinalRval(scopeid, (struct Rval) { cp->rval, cp->type }, false,pp);
+      returnval = EvaluateFinalRval(scopeid, cp->rval, false, pp);
       }
 
    final = ExpandDanglers(scopeid,returnval,pp);
@@ -460,27 +460,27 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
    {
    fprintf(stdout,"%10s => ",cp->lval);
 
-   switch (cp->type)
+   switch (cp->rval.rtype)
       {
       case CF_SCALAR:
-          if ((bp = IsBody(BODIES,(char *)cp->rval)))
+          if ((bp = IsBody(BODIES,(char *)cp->rval.item)))
              {
              ShowBody(bp,15);
              }
           else
              {
-             ShowRval(stdout, (struct Rval) { cp->rval, cp->type }); /* literal */
+             ShowRval(stdout, cp->rval); /* literal */
              }
           break;
 
       case CF_LIST:
           
-          rp = (struct Rlist *)cp->rval;
+          rp = (struct Rlist *)cp->rval.item;
           ShowRlist(stdout,rp);
           break;
 
       case CF_FNCALL:
-          fp = (struct FnCall *)cp->rval;
+          fp = (struct FnCall *)cp->rval.item;
 
           if ((bp = IsBody(BODIES,fp->name)))
              {
@@ -488,15 +488,15 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
              }
           else
              {
-             ShowRval(stdout, (struct Rval) { cp->rval, cp->type }); /* literal */
+             ShowRval(stdout, cp->rval); /* literal */
              }
           break;
 
       default:
-          printf("Unknown RHS type %c\n",cp->type);
+          printf("Unknown RHS type %c\n",cp->rval.rtype);
       }
    
-   if (cp->type != CF_FNCALL)
+   if (cp->rval.rtype != CF_FNCALL)
       {
       fprintf(stdout," if body context %s\n",cp->classes);
       }
@@ -660,7 +660,7 @@ free(pp->bundle);
 for (cp = pp->conlist; cp != NULL; cp=cp->next)
    {
    free(cp->lval);
-   DeleteRvalItem((struct Rval) { cp->rval, cp->type });
+   DeleteRvalItem(cp->rval);
    }
 
 free(pp);
@@ -763,14 +763,14 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       continue;
       }
    
-   switch(cp->type)
+   switch(cp->rval.rtype)
       {
       case CF_SCALAR:
-          EVP_DigestUpdate(&context,cp->rval,strlen(cp->rval));
+          EVP_DigestUpdate(&context, cp->rval.item, strlen(cp->rval.item));
           break;
 
       case CF_LIST:
-          for (rp = cp->rval; rp != NULL; rp=rp->next)
+          for (rp = cp->rval.item; rp != NULL; rp=rp->next)
              {
              EVP_DigestUpdate(&context,rp->item,strlen(rp->item));
              }
@@ -780,7 +780,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
           /* Body or bundle */
 
-          fp = (struct FnCall *)cp->rval;
+          fp = (struct FnCall *)cp->rval.item;
 
           EVP_DigestUpdate(&context,fp->name,strlen(fp->name));
           

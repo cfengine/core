@@ -327,26 +327,26 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
    Indent(indent+3);
    fprintf(FREPORT_TXT,"%10s => ",cp->lval);
 
-   switch (cp->type)
+   switch (cp->rval.rtype)
       {
       case CF_SCALAR:
-         if ((bp = IsBody(BODIES,(char *)cp->rval)))
+         if ((bp = IsBody(BODIES,(char *)cp->rval.item)))
              {
              ShowBody(bp,15);
              }
           else
              {
              fprintf(FREPORT_HTML,"%s",CFH[cfx_rval][cfb]);
-             ShowRval(FREPORT_HTML, (struct Rval) { cp->rval, cp->type }); /* literal */
+             ShowRval(FREPORT_HTML, cp->rval); /* literal */
              fprintf(FREPORT_HTML,"%s",CFH[cfx_rval][cfe]);
 
-             ShowRval(FREPORT_TXT, (struct Rval) { cp->rval, cp->type }); /* literal */
+             ShowRval(FREPORT_TXT, cp->rval); /* literal */
              }
           break;
 
       case CF_LIST:
           
-          rp = (struct Rlist *)cp->rval;
+          rp = (struct Rlist *)cp->rval.item;
           fprintf(FREPORT_HTML,"%s",CFH[cfx_rval][cfb]);
           ShowRlist(FREPORT_HTML,rp);
           fprintf(FREPORT_HTML,"%s",CFH[cfx_rval][cfe]);
@@ -354,7 +354,7 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
           break;
 
       case CF_FNCALL:
-          fp = (struct FnCall *)cp->rval;
+          fp = (struct FnCall *)cp->rval.item;
 
           if ((bp = IsBody(BODIES,fp->name)))
              {
@@ -362,13 +362,13 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
              }
           else
              {
-             ShowRval(FREPORT_HTML, (struct Rval) { cp->rval,cp->type }); /* literal */
-             ShowRval(FREPORT_TXT, (struct Rval) { cp->rval,cp->type }); /* literal */
+             ShowRval(FREPORT_HTML, cp->rval); /* literal */
+             ShowRval(FREPORT_TXT, cp->rval); /* literal */
              }
           break;
       }
    
-   if (cp->type != CF_FNCALL)
+   if (cp->rval.rtype != CF_FNCALL)
       {
       Indent(indent);
       fprintf(FREPORT_HTML," , if body <a href=\"#class_context\">context</a> <span class=\"context\">%s</span>\n",cp->classes);
@@ -595,8 +595,8 @@ for (cp = body->conlist; cp != NULL; cp=cp->next)
 
    fprintf(FREPORT_HTML,"\'%s",CFH[cfx_rval][cfb]);
 
-   ShowRval(FREPORT_HTML, (struct Rval) { cp->rval, cp->type }); /* literal */
-   ShowRval(FREPORT_TXT, (struct Rval) { cp->rval, cp->type }); /* literal */
+   ShowRval(FREPORT_HTML, cp->rval); /* literal */
+   ShowRval(FREPORT_TXT, cp->rval); /* literal */
 
    fprintf(FREPORT_HTML,"\'%s",CFH[cfx_rval][cfe]);
 

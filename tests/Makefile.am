@@ -1,1 +1,1 @@
-SUBDIRS = acceptance unit load
+SUBDIRS = unit load acceptance

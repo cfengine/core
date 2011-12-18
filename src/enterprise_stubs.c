@@ -56,8 +56,8 @@ void *Nova_LDAPList(char *uri,char *dn,char *filter,char *name,char *scope,char 
 void *Nova_LDAPArray(char *array,char *uri,char *dn,char *filter,char *scope,char *sec);
 void *Nova_RegLDAP(char *uri,char *dn,char *filter,char *name,char *scope,char *regex,char *sec);
 
-struct Averages SHIFT_VALUE;
-char CURRENT_SHIFT[CF_MAXVARSIZE];
+static struct Averages SHIFT_VALUE;
+static char CURRENT_SHIFT[CF_MAXVARSIZE];
 
 /*****************************************************************************/
 

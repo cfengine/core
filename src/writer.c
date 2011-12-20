@@ -65,6 +65,7 @@ Writer *writer = xcalloc(1, sizeof(struct Writer));
 writer->type = WT_STRING;
 writer->string.data = xstrdup("");
 writer->string.allocated = 1;
+return writer;
 }
 
 /*********************************************************************/

@@ -1,5 +1,7 @@
 #include "json.h"
 
+#include "writer.h"
+
 #define JSON_OBJECT_TYPE 'o'
 #define JSON_ARRAY_TYPE 'a'
 
@@ -97,6 +99,16 @@ if (value == NULL)
    }
 
 RlistAppendReference(parent, value, JSON_OBJECT_TYPE);
+}
+
+void JsonArrayAppendArray(JsonArray **parent, JsonArray *value)
+{
+if (value == NULL)
+   {
+   return;
+   }
+
+RlistAppendReference(parent, value, JSON_ARRAY_TYPE);
 }
 
 void JsonArrayAppendString(JsonArray **parent, const char *value)
@@ -224,4 +236,223 @@ for (rp = value; rp != NULL; rp = rp->next)
 
 ShowIndent(out, indent_level);
 fprintf(out, "}");
+}
+
+const char *JsonObjectGetAsString(JsonObject *object, const char *key)
+{
+for (struct Rlist *rp = (struct Rlist *)object; rp != NULL; rp = rp->next)
+   {
+   struct CfAssoc *entry = rp->item;
+   if (strcmp(entry->lval, key) == 0)
+      {
+      return entry->rval.item;
+      }
+   }
+
+return NULL;
+}
+
+JsonObject *JsonObjectGetAsObject(JsonObject *object, const char *key)
+{
+for (struct Rlist *rp = (struct Rlist *)object; rp != NULL; rp = rp->next)
+   {
+   struct CfAssoc *entry = rp->item;
+   if (strcmp(entry->lval, key) == 0)
+      {
+      return entry->rval.item;
+      }
+   }
+
+return NULL;
+}
+
+const char *JsonArrayGetAsString(JsonArray *array, size_t index)
+{
+struct Rlist *rp = RlistAt(array, index);
+if (rp != NULL)
+   {
+   return rp->item;
+   }
+
+return NULL;
+}
+
+JsonObject *JsonArrayGetAsObject(JsonArray *array, size_t index)
+{
+struct Rlist *rp = RlistAt(array, index);
+if (rp != NULL)
+   {
+   return rp->item;
+   }
+
+return NULL;
+}
+
+bool JsonIsWhitespace(char ch)
+{
+return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r';
+}
+
+const char *JsonParseAsString(const char **data)
+{
+if (**data != '"')
+   {
+   CfDebug("Unable to parse json data as string, did not start with doublequote: %s", *data);
+   return NULL;
+   }
+
+Writer *writer = StringWriter();
+
+for (*data = *data + 1; **data != '\0'; *data = *data + 1)
+   {
+   if (**data == '"')
+      {
+      return StringWriterClose(writer);
+      }
+
+   WriterWriteChar(writer, **data);
+   }
+
+
+CfDebug("Unable to parse json data as string, did not end with doublequote: %s", *data);
+return NULL;
+}
+
+JsonArray *JsonParseAsArray(const char **data)
+{
+if (**data != '[')
+   {
+   CfDebug("Unable to parse json data as array, did not start with '[': %s", *data);
+   return NULL;
+   }
+
+JsonArray *array = NULL;
+
+for (*data = *data + 1; **data != '\0'; *data = *data + 1)
+   {
+   if (JsonIsWhitespace(**data))
+      {
+      continue;
+      }
+
+   switch (**data)
+      {
+      case '"':
+         JsonArrayAppendString(&array, JsonParseAsString(data));
+         break;
+
+      case '[':
+         JsonArrayAppendArray(&array, JsonParseAsArray(data));
+         break;
+
+      case '{':
+         JsonArrayAppendObject(&array, JsonParseAsObject(data));
+         break;
+
+      case ',':
+         break;
+
+      case ']':
+         return array;
+
+      default:
+         CfDebug("Unable to parse json data as object, unrecognized token beginning entry: %s", *data);
+         return NULL;
+      }
+   }
+
+CfDebug("Unable to parse json data as array, did not end with ']': %s", *data);
+return NULL;
+}
+
+JsonObject *JsonParseAsObject(const char **data)
+{
+if (**data != '{')
+   {
+   CfDebug("Unable to parse json data as object, did not start with '{': %s", *data);
+   return NULL;
+   }
+
+JsonObject *object = NULL;
+const char *lval = NULL;
+
+for (*data = *data + 1; **data != '\0'; *data = *data + 1)
+   {
+   if (JsonIsWhitespace(**data))
+      {
+      continue;
+      }
+
+   switch (**data)
+      {
+      case '"':
+         if (lval != NULL)
+            {
+            JsonObjectAppendString(&object, lval, JsonParseAsString(data));
+            lval = NULL;
+            }
+         else
+            {
+            lval = JsonParseAsString(data);
+            }
+         break;
+
+      case ':':
+         if (lval == NULL)
+            {
+            CfDebug("Unable to parse json data as object, ':' seen without having specified an l-value: %s", *data);
+            return NULL;
+            }
+         break;
+
+      case ',':
+         if (lval != NULL)
+            {
+            CfDebug("Unable to parse json data as object, ',' seen without having specified an r-value: %s", *data);
+            return NULL;
+            }
+         break;
+
+      case '[':
+         if (lval != NULL)
+            {
+            JsonObjectAppendArray(&object, lval, JsonParseAsArray(data));
+            lval = NULL;
+            }
+         else
+            {
+            CfDebug("Unable to parse json data as object, array not allowed as l-value: %s", *data);
+            return NULL;
+            }
+         break;
+
+      case '{':
+         if (lval != NULL)
+            {
+            JsonObjectAppendObject(&object, lval, JsonParseAsObject(data));
+            lval = NULL;
+            }
+         else
+            {
+            CfDebug("Unable to parse json data as object, object not allowed as l-value: %s", *data);
+            return NULL;
+            }
+         break;
+
+      case '}':
+         if (lval != NULL)
+            {
+            CfDebug("Unable to parse json data as object, tried to close object having opened an l-value: %s", *data);
+            return NULL;
+            }
+         return object;
+
+      default:
+         CfDebug("Unable to parse json data as object, unrecognized token beginning entry: %s", *data);
+         return NULL;
+      }
+   }
+
+CfDebug("Unable to parse json data as string, did not end with '}': %s", *data);
+return NULL;
 }

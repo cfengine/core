@@ -37,14 +37,26 @@ void JsonObjectAppendString(JsonObject **parent, const char *key, const char *va
 void JsonObjectAppendArray(JsonObject **parent, const char *key, JsonArray *value);
 void JsonObjectAppendObject(JsonObject **parent, const char *key, JsonObject *value);
 
-void JsonArrayAppendObject(JsonArray **parent, JsonObject *value);
 void JsonArrayAppendString(JsonArray **parent, const char *value);
+void JsonArrayAppendArray(JsonArray **parent, JsonArray *value);
+void JsonArrayAppendObject(JsonArray **parent, JsonObject *value);
 
 size_t JsonArrayLength(JsonArray *array);
+
+const char *JsonObjectGetAsString(JsonObject *object, const char *key);
+JsonObject *JsonObjectGetAsObject(JsonObject *object, const char *key);
+
+const char *JsonArrayGetAsString(JsonArray *array, size_t index);
+JsonObject *JsonArrayGetAsObject(JsonArray *array, size_t index);
 
 void JsonStringPrint(FILE *out, const char *value, int indent_level);
 void JsonArrayPrint(FILE* out, JsonArray *value, int indent_level);
 void JsonObjectPrint(FILE* out, JsonObject *value, int indent_level);
+const char* JsonObjectToString(JsonObject *value);
 
+const char *JsonParseAsString(const char **data);
+JsonArray *JsonParseAsArray(const char **data);
+JsonObject *JsonParseAsObject(const char **data);
+bool JsonIsWhitespace(char ch);
 
 #endif

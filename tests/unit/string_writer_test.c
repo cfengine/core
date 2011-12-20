@@ -54,6 +54,18 @@ assert_string_equal(StringWriterData(w), "123456");
 WriterClose(w);
 }
 
+void test_release_string(void *pp)
+{
+Writer *w = StringWriter();
+
+WriterWrite(w, "123");
+WriterWrite(w, "456");
+
+char *ret = StringWriterClose(w);
+assert_string_equal(ret, "123456");
+free(ret);
+}
+
 int main()
 {
 const UnitTest tests[] =
@@ -62,6 +74,7 @@ const UnitTest tests[] =
    unit_test(test_write_empty_string_buffer),
    unit_test(test_write_string_buffer),
    unit_test(test_multiwrite_string_buffer),
+   unit_test(test_release_string),
    };
 
 return run_tests(tests);

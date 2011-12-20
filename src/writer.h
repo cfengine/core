@@ -47,5 +47,7 @@ size_t StringWriterLength(Writer *writer);
 const char *StringWriterData(Writer *writer);
 
 void WriterClose(Writer *writer);
+/* Returns modifiable string and destroys itself */
+char *StringWriterClose(Writer *writer);
 
 #endif

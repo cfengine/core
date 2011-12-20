@@ -146,3 +146,16 @@ else
    }
 free(writer);
 }
+
+/*********************************************************************/
+
+char *StringWriterClose(Writer *writer)
+{
+if (writer->type != WT_STRING)
+   {
+   FatalError("Wrong writer type");
+   }
+char *data = writer->string.data;
+free(writer);
+return data;
+}

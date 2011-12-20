@@ -583,6 +583,12 @@ for (cp = ControlBodyConstraints(cf_runagent); cp != NULL; cp=cp->next)
       continue;
       }   
    }
+
+if (GetVariable("control_common", CFG_CONTROLBODY[cfg_lastseenexpireafter].lval, &retval) != cf_notype)
+   {
+   LASTSEENEXPIREAFTER = Str2Int(retval.item) * 60;
+   }
+
 }
 
 /********************************************************************/

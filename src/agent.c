@@ -718,7 +718,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
 
 if (GetVariable("control_common", CFG_CONTROLBODY[cfg_lastseenexpireafter].lval, &retval) != cf_notype)
    {
-   LASTSEENEXPIREAFTER = Str2Int(retval.item);
+   LASTSEENEXPIREAFTER = Str2Int(retval.item) * 60;
    }
 
 if (GetVariable("control_common", CFG_CONTROLBODY[cfg_fips_mode].lval, &retval) != cf_notype)

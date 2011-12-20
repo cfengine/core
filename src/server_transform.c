@@ -395,6 +395,11 @@ if (GetVariable("control_common", CFG_CONTROLBODY[cfg_fips_mode].lval, &retval) 
    FIPS_MODE = GetBoolean(retval.item);
    CfOut(cf_verbose,"","SET FIPS_MODE = %d\n",FIPS_MODE);
    }
+
+if (GetVariable("control_common", CFG_CONTROLBODY[cfg_lastseenexpireafter].lval, &retval) != cf_notype)
+   {
+   LASTSEENEXPIREAFTER = Str2Int(retval.item) * 60;
+   }
 }
 
 /*********************************************************************/

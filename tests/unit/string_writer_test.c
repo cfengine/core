@@ -54,7 +54,20 @@ assert_string_equal(StringWriterData(w), "123456");
 WriterClose(w);
 }
 
-void test_release_string(void *pp)
+void test_write_char_string_buffer(void **p)
+{
+Writer *w = StringWriter();
+
+WriterWriteChar(w, '1');
+WriterWriteChar(w, '2');
+WriterWriteChar(w, '3');
+
+assert_string_equal(StringWriterData(w), "123");
+
+WriterClose(w);
+}
+
+void test_release_string(void **p)
 {
 Writer *w = StringWriter();
 
@@ -74,6 +87,7 @@ const UnitTest tests[] =
    unit_test(test_write_empty_string_buffer),
    unit_test(test_write_string_buffer),
    unit_test(test_multiwrite_string_buffer),
+   unit_test(test_write_char_string_buffer),
    unit_test(test_release_string),
    };
 

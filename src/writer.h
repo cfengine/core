@@ -42,6 +42,7 @@ Writer *FileWriter(FILE *);
 Writer *StringWriter(void);
 
 size_t WriterWrite(Writer *writer, const char *str);
+size_t WriterWriteChar(Writer *writer, char c);
 
 size_t StringWriterLength(Writer *writer);
 const char *StringWriterData(Writer *writer);

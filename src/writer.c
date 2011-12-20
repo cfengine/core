@@ -111,6 +111,14 @@ else
 
 /*********************************************************************/
 
+size_t WriterWriteChar(Writer *writer, char c)
+{
+char s[2] = { c, '\0' };
+return WriterWrite(writer, s);
+}
+
+/*********************************************************************/
+
 size_t StringWriterLength(Writer *writer)
 {
 if (writer->type != WT_STRING)

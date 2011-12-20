@@ -51,98 +51,98 @@ struct Writer
 
 Writer *FileWriter(FILE *file)
 {
-Writer *stream = xcalloc(1, sizeof(struct Writer));
-stream->type = WT_FILE;
-stream->file = file;
-return stream;
+Writer *writer = xcalloc(1, sizeof(struct Writer));
+writer->type = WT_FILE;
+writer->file = file;
+return writer;
 }
 
 /*********************************************************************/
 
 Writer *StringWriter(void)
 {
-Writer *stream = xcalloc(1, sizeof(struct Writer));
-stream->type = WT_STRING;
-stream->string.data = xstrdup("");
-stream->string.allocated = 1;
+Writer *writer = xcalloc(1, sizeof(struct Writer));
+writer->type = WT_STRING;
+writer->string.data = xstrdup("");
+writer->string.allocated = 1;
 }
 
 /*********************************************************************/
 
-static size_t StringWriterWrite(Writer *stream, const char *str)
+static size_t StringWriterWrite(Writer *writer, const char *str)
 {
 size_t len = strlen(str);
 
-if (stream->string.len + len + 1 > stream->string.allocated)
+if (writer->string.len + len + 1 > writer->string.allocated)
    {
-   stream->string.allocated = MAX(stream->string.allocated * 2,
-                                  stream->string.len + len + 1);
-   stream->string.data = xrealloc(stream->string.data,
-                                  stream->string.allocated);
+   writer->string.allocated = MAX(writer->string.allocated * 2,
+                                  writer->string.len + len + 1);
+   writer->string.data = xrealloc(writer->string.data,
+                                  writer->string.allocated);
    }
 
-strlcpy(stream->string.data + stream->string.len, str, len + 1);
-stream->string.len += len;
+strlcpy(writer->string.data + writer->string.len, str, len + 1);
+writer->string.len += len;
 
 return len;
 }
 
 /*********************************************************************/
 
-static size_t FileWriterWrite(Writer *stream, const char *str)
+static size_t FileWriterWrite(Writer *writer, const char *str)
 {
-return fwrite(str, 1, strlen(str), stream->file);
+return fwrite(str, 1, strlen(str), writer->file);
 }
 
 /*********************************************************************/
 
-size_t WriterWrite(Writer *stream, const char *str)
+size_t WriterWrite(Writer *writer, const char *str)
 {
-if (stream->type == WT_STRING)
+if (writer->type == WT_STRING)
    {
-   return StringWriterWrite(stream, str);
+   return StringWriterWrite(writer, str);
    }
 else
    {
-   return FileWriterWrite(stream, str);
+   return FileWriterWrite(writer, str);
    }
 }
 
 /*********************************************************************/
 
-size_t StringWriterLength(Writer *stream)
+size_t StringWriterLength(Writer *writer)
 {
-if (stream->type != WT_STRING)
+if (writer->type != WT_STRING)
    {
    FatalError("Wrong writer type");
    }
 
-return stream->string.len;
+return writer->string.len;
 }
 
 /*********************************************************************/
 
-const char *StringWriterData(Writer *stream)
+const char *StringWriterData(Writer *writer)
 {
-if (stream->type != WT_STRING)
+if (writer->type != WT_STRING)
    {
    FatalError("Wrong writer type");
    }
 
-return stream->string.data;
+return writer->string.data;
 }
 
 /*********************************************************************/
 
-void WriterClose(Writer *stream)
+void WriterClose(Writer *writer)
 {
-if (stream->type == WT_STRING)
+if (writer->type == WT_STRING)
    {
-   free(stream->string.data);
+   free(writer->string.data);
    }
 else
    {
-   fclose(stream->file);
+   fclose(writer->file);
    }
-free(stream);
+free(writer);
 }

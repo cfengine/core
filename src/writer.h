@@ -41,11 +41,11 @@ typedef struct Writer Writer;
 Writer *FileWriter(FILE *);
 Writer *StringWriter(void);
 
-size_t WriterWrite(Writer *stream, const char *str);
+size_t WriterWrite(Writer *writer, const char *str);
 
-size_t StringWriterLength(Writer *stream);
-const char *StringWriterData(Writer *stream);
+size_t StringWriterLength(Writer *writer);
+const char *StringWriterData(Writer *writer);
 
-void WriterClose(Writer *stream);
+void WriterClose(Writer *writer);
 
 #endif

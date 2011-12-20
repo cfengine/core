@@ -1,4 +1,4 @@
-AM_CFLAGS = $(NOVA_CFLAGS) $(CONSTELLATION_CFLAGS)
+AM_CFLAGS = $(NOVA_CFLAGS) $(CONSTELLATION_CFLAGS) $(GCC_CFLAG)
 
 LDADD = ../../src/libpromises.la libtest.la
 

@@ -1112,3 +1112,18 @@ rp->next = NULL;
 ThreadUnlock(cft_lock);
 return rp;
 }
+
+/*******************************************************************/
+
+struct Rlist *RlistAt(struct Rlist *start, size_t index)
+{
+for (struct Rlist *rp = start; rp != NULL; rp = rp->next)
+   {
+   if (index-- == 0)
+      {
+      return rp;
+      }
+   }
+
+return NULL;
+}

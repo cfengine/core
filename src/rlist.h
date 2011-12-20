@@ -83,4 +83,6 @@ struct Rlist *RlistAppendReference(struct Rlist **start,void *item, char type);
 void ShowRlist(FILE *fp,struct Rlist *list);
 void ShowRval(FILE *fp, struct Rval rval);
 
+struct Rlist *RlistAt(struct Rlist *start, size_t index);
+
 #endif

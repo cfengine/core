@@ -4856,7 +4856,7 @@ struct FnCallArg READSTRINGARRAYIDX_ARGS[] =
 struct FnCallArg PARSESTRINGARRAYIDX_ARGS[] =
     {
     {CF_IDRANGE,cf_str,"Array identifier to populate"},
-    {CF_ABSPATHRANGE,cf_str,"File name to read"},
+    {CF_ABSPATHRANGE,cf_str,"A string to parse for input data"},
     {CF_ANYSTRING,cf_str,"Regex matching comments"},
     {CF_ANYSTRING,cf_str,"Regex to split data"},
     {CF_VALRANGE,cf_int,"Maximum number of entries to read"},

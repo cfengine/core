@@ -62,9 +62,6 @@ const UnitTest tests[] =
    unit_test(test_write_empty_string_buffer),
    unit_test(test_write_string_buffer),
    unit_test(test_multiwrite_string_buffer),
-/*   unit_test(test_empty_file_buffer),
-   unit_test(test_write_file_buffer),
-   unit_test(test_multiwrite_file_buffer), */
    };
 
 return run_tests(tests);

@@ -116,6 +116,7 @@ libpromises_la_SOURCES =                                                \
         mod_process.c   			                        \
 	mod_environ.c							\
 	mod_outputs.c							\
+	writer.c writer.h                                               \
         unix.c								\
 	json.c json.h
 

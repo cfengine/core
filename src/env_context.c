@@ -1252,7 +1252,7 @@ for (sp = local; *sp != '\0'; sp++)
 
 /*********************************************************************/
 
-void NegateClassesFromString(char *classlist,struct Item **heap)
+void NegateClassesFromString(char *classlist)
 
 { char *sp, currentitem[CF_MAXVARSIZE],local[CF_MAXVARSIZE];
 
@@ -1278,7 +1278,7 @@ for (sp = local; *sp != '\0'; sp++)
       FatalError(err);
       }
 
-   AppendItem(heap,currentitem,NULL);
+   AppendItem(&VNEGHEAP,currentitem,NULL);
    }
 }
 

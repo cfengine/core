@@ -203,7 +203,7 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:D:N:VxL:hFV1gMW",OPTIONS,&optindex)) !=
           break;
           
       case 'N':
-          NegateClassesFromString(optarg,&VNEGHEAP);
+          NegateClassesFromString(optarg);
           break;
           
       case 'I': INFORM = true;

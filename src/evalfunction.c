@@ -4345,7 +4345,7 @@ switch (*line)
        CfOut(cf_verbose,"","Deactivated classes: %s\n",line+1);
        if (CheckID(line+1))
           {
-          NegateClassesFromString(line+1,&VNEGHEAP);
+          NegateClassesFromString(line+1);
           }
        break;
    case '=':

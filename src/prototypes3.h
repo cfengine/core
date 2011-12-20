@@ -491,7 +491,7 @@ struct Rlist *SplitContextExpression(char *context,struct Promise *pp);
 void DeleteClass(char *class);
 int VarClassExcluded(struct Promise *pp,char **classes);
 void NewClassesFromString(char *classlist);
-void NegateClassesFromString(char *class,struct Item **heap);
+void NegateClassesFromString(char *class);
 void AddPrefixedClasses(char *name,char *classlist);
 int IsHardClass (char *sp);
 void SaveClassEnvironment(void);

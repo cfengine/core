@@ -1014,7 +1014,7 @@ if test "x$use_coverage" = "xyes"; then
   changequote([,])
 
   dnl Add the special gcc flags
-  CFLAGS="$CFLAGS -O0 -fprofile-arcs -ftest-coverage"
+  GCC_CFLAG="$GCC_CFLAG -O0 -fprofile-arcs -ftest-coverage"
   LDFLAGS="$LDFLAGS -lgcov"
 fi
 

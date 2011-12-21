@@ -1156,21 +1156,21 @@ if (*listvar == '@')
    }
 else
    {
-   CfOut(cf_error,"","Function reglist was promised a list called \"%s\" but this was not found\n",listvar);
+   CfOut(cf_verbose,"","Function reglist was promised a list called \"%s\" but this was not found\n",listvar);
    SetFnCallReturnStatus("reglist",FNCALL_FAILURE,"List was not a list found in scope",NULL);
    return (struct Rval) { xstrdup("!any"), CF_SCALAR };
    }
 
 if (GetVariable(CONTEXTID,naked,&retval) == cf_notype)
    {
-   CfOut(cf_error,"","Function REGLIST was promised a list called \"%s\" but this was not found\n",listvar);
+   CfOut(cf_verbose,"","Function REGLIST was promised a list called \"%s\" but this was not found\n",listvar);
    SetFnCallReturnStatus("reglist",FNCALL_FAILURE,"List was not a list found in scope",NULL);
    return (struct Rval) { xstrdup("!any"), CF_SCALAR };
    }
 
 if (retval.rtype != CF_LIST)
    {
-   CfOut(cf_error,"","Function reglist was promised a list called \"%s\" but this variable is not a list\n",listvar);
+   CfOut(cf_verbose,"","Function reglist was promised a list called \"%s\" but this variable is not a list\n",listvar);
    SetFnCallReturnStatus("reglist",FNCALL_FAILURE,"Valid list was not found in scope",NULL);
    return (struct Rval) { xstrdup("!any"), CF_SCALAR };
    }
@@ -1225,7 +1225,7 @@ else
 
 if ((ptr = GetScope(scopeid)) == NULL)
    {
-   CfOut(cf_error,"","Function regarray was promised an array called \"%s\" but this was not found\n",arrayname);
+   CfOut(cf_verbose,"","Function regarray was promised an array called \"%s\" but this was not found\n",arrayname);
    SetFnCallReturnStatus("regarray",FNCALL_FAILURE,"Array not found in scope",NULL);
    return (struct Rval) { xstrdup("!any"), CF_SCALAR };
    }
@@ -1423,21 +1423,21 @@ else
 
 if ((ptr = GetScope(scopeid)) == NULL)
    {
-   CfOut(cf_error,"","Function \"grep\" was promised an array in scope \"%s\" but this was not found\n",scopeid);
+   CfOut(cf_verbose,"","Function \"grep\" was promised an array in scope \"%s\" but this was not found\n",scopeid);
    SetFnCallReturnStatus("getindices",FNCALL_FAILURE,"Array not found in scope",NULL);
    return (struct Rval) { NULL, CF_LIST };
    }
 
 if (GetVariable(scopeid,lval,&rval2) == cf_notype)
    {
-   CfOut(cf_error,"","Function \"grep\" was promised a list called \"%s\" but this was not found\n",name);
+   CfOut(cf_verbose,"","Function \"grep\" was promised a list called \"%s\" but this was not found\n",name);
    SetFnCallReturnStatus("getindices",FNCALL_FAILURE,"Array not found in scope",NULL);
    return (struct Rval) { NULL, CF_LIST };
    }
 
 if (rval2.rtype != CF_LIST)
    {
-   CfOut(cf_error,"","Function grep was promised a list called \"%s\" but this was not found\n",name);
+   CfOut(cf_verbose,"","Function grep was promised a list called \"%s\" but this was not found\n",name);
    SetFnCallReturnStatus("getindices",FNCALL_FAILURE,"Array not found in scope",NULL);
    return (struct Rval) { NULL, CF_LIST };
    }
@@ -1486,21 +1486,21 @@ else
 
 if ((ptr = GetScope(scopeid)) == NULL)
    {
-   CfOut(cf_error,"","Function \"sum\" was promised a list in scope \"%s\" but this was not found\n",scopeid);
+   CfOut(cf_verbose,"","Function \"sum\" was promised a list in scope \"%s\" but this was not found\n",scopeid);
    SetFnCallReturnStatus("sum",FNCALL_FAILURE,"List not found in scope",NULL);
    return (struct Rval) { NULL, CF_SCALAR };
    }
 
 if (GetVariable(scopeid,lval,&rval2) == cf_notype)
    {
-   CfOut(cf_error,"","Function \"sum\" was promised a list called \"%s\" but this was not found\n",name);
+   CfOut(cf_verbose,"","Function \"sum\" was promised a list called \"%s\" but this was not found\n",name);
    SetFnCallReturnStatus("sum",FNCALL_FAILURE,"List not found in scope",NULL);
    return (struct Rval) { NULL, CF_SCALAR };
    }
 
 if (rval2.rtype != CF_LIST)
    {
-   CfOut(cf_error,"","Function \"sum\" was promised a list called \"%s\" but this was not found\n",name);
+   CfOut(cf_verbose,"","Function \"sum\" was promised a list called \"%s\" but this was not found\n",name);
    SetFnCallReturnStatus("sum",FNCALL_FAILURE,"Array not found in scope",NULL);
    return (struct Rval) { NULL, CF_SCALAR };
    }
@@ -1556,21 +1556,21 @@ else
 
 if ((ptr = GetScope(scopeid)) == NULL)
    {
-   CfOut(cf_error,"","Function \"product\" was promised a list in scope \"%s\" but this was not found\n",scopeid);
+   CfOut(cf_verbose,"","Function \"product\" was promised a list in scope \"%s\" but this was not found\n",scopeid);
    SetFnCallReturnStatus("product",FNCALL_FAILURE,"List not found in scope",NULL);
    return (struct Rval) { NULL, CF_SCALAR };
    }
 
 if (GetVariable(scopeid,lval,&rval2) == cf_notype)
    {
-   CfOut(cf_error,"","Function \"product\" was promised a list called \"%s\" but this was not found\n",name);
+   CfOut(cf_verbose,"","Function \"product\" was promised a list called \"%s\" but this was not found\n",name);
    SetFnCallReturnStatus("product",FNCALL_FAILURE,"List not found in scope",NULL);
    return (struct Rval) { NULL, CF_SCALAR };
    }
 
 if (rval2.rtype != CF_LIST)
    {
-   CfOut(cf_error,"","Function \"product\" was promised a list called \"%s\" but this was not found\n",name);
+   CfOut(cf_verbose,"","Function \"product\" was promised a list called \"%s\" but this was not found\n",name);
    SetFnCallReturnStatus("product",FNCALL_FAILURE,"Array not found in scope",NULL);
    return (struct Rval) { NULL, CF_SCALAR };
    }
@@ -1627,7 +1627,7 @@ else
 
 if ((ptr = GetScope(scopeid)) == NULL)
    {
-   CfOut(cf_error,"","Function \"join\" was promised an array in scope \"%s\" but this was not found\n",scopeid);
+   CfOut(cf_verbose,"","Function \"join\" was promised an array in scope \"%s\" but this was not found\n",scopeid);
    SetFnCallReturnStatus("join",FNCALL_FAILURE,"Array not found in scope",NULL);
    return (struct Rval) { NULL, CF_SCALAR };
    }
@@ -1884,7 +1884,7 @@ if (*listvar == '@')
    }
 else
    {
-   CfOut(cf_error,"","Function selectservers was promised a list called \"%s\" but this was not found\n",listvar);
+   CfOut(cf_verbose,"","Function selectservers was promised a list called \"%s\" but this was not found\n",listvar);
    SetFnCallReturnStatus("selectservers",FNCALL_FAILURE,"Host list was not a list found in scope",NULL);
    snprintf(buffer,CF_MAXVARSIZE-1,"%d",count);
    return (struct Rval) { xstrdup(buffer), CF_SCALAR };
@@ -1892,7 +1892,7 @@ else
 
 if (GetVariable(CONTEXTID,naked,&retval) == cf_notype)
    {
-   CfOut(cf_error,"","Function selectservers was promised a list called \"%s\" but this was not found from context %s.%s\n",listvar,CONTEXTID,naked);
+   CfOut(cf_verbose,"","Function selectservers was promised a list called \"%s\" but this was not found from context %s.%s\n",listvar,CONTEXTID,naked);
    SetFnCallReturnStatus("selectservers",FNCALL_FAILURE,"Host list was not a list found in scope",NULL);
    snprintf(buffer,CF_MAXVARSIZE-1,"%d",count);
    return (struct Rval) { xstrdup(buffer), CF_SCALAR };
@@ -1900,7 +1900,7 @@ if (GetVariable(CONTEXTID,naked,&retval) == cf_notype)
 
 if (retval.rtype != CF_LIST)
    {
-   CfOut(cf_error,"","Function selectservers was promised a list called \"%s\" but this variable is not a list\n",listvar);
+   CfOut(cf_verbose,"","Function selectservers was promised a list called \"%s\" but this variable is not a list\n",listvar);
    SetFnCallReturnStatus("selectservers",FNCALL_FAILURE,"Valid list was not found in scope",NULL);
    snprintf(buffer,CF_MAXVARSIZE-1,"%d",count);
    return (struct Rval) { xstrdup(buffer), CF_SCALAR };
@@ -3746,21 +3746,21 @@ if (*listvar == '@')
    }
 else
    {
-   CfOut(cf_error,"","Function filesexist was promised a list called \"%s\" but this was not found\n",listvar);
+   CfOut(cf_verbose,"","Function filesexist was promised a list called \"%s\" but this was not found\n",listvar);
    SetFnCallReturnStatus("filesexist",FNCALL_FAILURE,"File list was not a list found in scope",NULL);
    return (struct Rval) { xstrdup("!any"), CF_SCALAR };
    }
 
 if (GetVariable(CONTEXTID,naked,&retval) == cf_notype)
    {
-   CfOut(cf_error,"","Function filesexist was promised a list called \"%s\" but this was not found\n",listvar);
+   CfOut(cf_verbose,"","Function filesexist was promised a list called \"%s\" but this was not found\n",listvar);
    SetFnCallReturnStatus("filesexist",FNCALL_FAILURE,"File list was not a list found in scope",NULL);
    return (struct Rval) { xstrdup("!any"), CF_SCALAR };
    }
 
 if (retval.rtype != CF_LIST)
    {
-   CfOut(cf_error,"","Function filesexist was promised a list called \"%s\" but this variable is not a list\n",listvar);
+   CfOut(cf_verbose,"","Function filesexist was promised a list called \"%s\" but this variable is not a list\n",listvar);
    SetFnCallReturnStatus("filesexist",FNCALL_FAILURE,"File list was not a list found in scope",NULL);
    return (struct Rval) { xstrdup("!any"), CF_SCALAR };
    }

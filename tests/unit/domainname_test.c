@@ -8,6 +8,9 @@ char fqname[CF_BUFSIZE];
 char uqname[CF_BUFSIZE];
 char domain[CF_BUFSIZE];
 
+void CalculateDomainName(const char *nodename, const char *dnsname,
+                         char *fqname, char *uqname, char *domain);
+
 static void test_fqname(void **state)
 {
 const char nodename[] = "mylaptop.example.com";

@@ -33,21 +33,21 @@ assert_int_equal(InAlphaList(l, "hello"), 1);
 DeleteAlphaList(&l);
 }
 
-static void test_shallow_copy(void **state)
-{
-struct AlphaList a, b;
-InitAlphaList(&a);
-InitAlphaList(&b);
+/* static void test_shallow_copy(void **state) */
+/* { */
+/* struct AlphaList a, b; */
+/* InitAlphaList(&a); */
+/* InitAlphaList(&b); */
 
-PrependAlphaList(&a, "hello");
+/* PrependAlphaList(&a, "hello"); */
 
-assert_int_equal(InAlphaList(b, "hello"), 0);
-CopyAlphaListPointers(&b, &a);
-assert_int_equal(InAlphaList(b, "hello"), 1);
+/* assert_int_equal(InAlphaList(b, "hello"), 0); */
+/* CopyAlphaListPointers(&b, &a); */
+/* assert_int_equal(InAlphaList(b, "hello"), 1); */
 
-DeleteAlphaList(&a);
-DeleteAlphaList(&b);
-}
+/* DeleteAlphaList(&a); */
+/* DeleteAlphaList(&b); */
+/* } */
 
 int main()
 {

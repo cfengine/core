@@ -10,6 +10,7 @@
 static Writer *global_w;
 static bool global_w_closed;
 
+
 size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
 for (int i = 0; i < nmemb; ++i)

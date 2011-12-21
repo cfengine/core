@@ -21,6 +21,7 @@ static struct hostent h =
 int gethostname(char *name, size_t len)
 {
 strcpy(name, "laptop.intra");
+return 0;
 }
 
 struct hostent *gethostbyname(const char *name)
@@ -272,13 +273,13 @@ char CFWORKDIR[CF_BUFSIZE];
 char PUBKEY_DIGEST[CF_MAXVARSIZE];
 enum cfhashes CF_DEFAULT_DIGEST;
 char *CLASSATTRIBUTES[CF_CLASSATTR][CF_ATTRDIM];
-char *VFSTAB[];
-char *VRESOLVCONF[];
-char *VMAILDIR[];
-char *VEXPORTS[];
+char *VFSTAB[1];
+char *VRESOLVCONF[1];
+char *VMAILDIR[1];
+char *VEXPORTS[1];
 char EXPIRY[CF_SMALLBUF];
 RSA *PUBKEY;
-char *CLASSTEXT[] = {};
+char *CLASSTEXT[1] = {};
 char VIPADDRESS[18];
 
 /* LCOV_EXCL_STOP */

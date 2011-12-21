@@ -233,25 +233,10 @@ while ((c=getopt_long(argc,argv,"d:vIKf:D:N:VSxLFM",OPTIONS,&optindex)) != EOF)
           MINUSF = true;
           break;
 
-      case 'd': 
-          switch ((optarg==NULL) ? '3' : *optarg)
-             {
-             case '1':
-                 D1 = true;
-                 DEBUG = true;
-                 break;
-             case '2':
-                 D2 = true;
-                 DEBUG = true;
-                 break;
-             default:
-                 DEBUG = true;
-                 break;
-             }
+      case 'd':
+         DEBUG = true;
+         NO_FORK = true;
 
-          NO_FORK = true;
-          break;
-          
       case 'K': IGNORELOCK = true;
           break;
                     
@@ -2709,7 +2694,7 @@ if ((newkey->e = BN_mpi2bn(recvbuffer,len_e,NULL)) == NULL)
    return false;
    }
 
-if (DEBUG||D2)
+if (DEBUG)
    {
    RSA_print_fp(stdout,newkey,0);
    }

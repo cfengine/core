@@ -221,7 +221,7 @@ void DeleteScope(char *name)
 { struct Scope *ptr, *prev = NULL;
   int found = false;
  
-CfDebug1("Deleting scope %s\n", name);
+CfDebug("Deleting scope %s\n", name);
 
 if (!ThreadLock(cft_vscope))
    {

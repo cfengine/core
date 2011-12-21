@@ -118,21 +118,7 @@ while ((c=getopt_long(argc,argv,"d:vnIf:VSxHTKMF",OPTIONS,&optindex)) != EOF)
 
       case 'd':
          NewClass("opt_debug");
-         switch ((optarg==NULL) ? '3' : *optarg)
-            {
-            case '1':
-               D1 = true;
-               DEBUG = true;
-               break;
-            case '2':
-               D2 = true;
-               DEBUG = true;
-               break;
-            default:
-               DEBUG = true;
-               break;
-            }
-
+         DEBUG = true;
          NO_FORK = true;
          break;
 

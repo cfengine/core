@@ -257,7 +257,7 @@ BN_free(bn);
 BN_free(nonce_challenge);
 free(out);
 
-if (DEBUG||D2)
+if (DEBUG)
    {
    RSA_print_fp(stdout,PUBKEY,0);
    }

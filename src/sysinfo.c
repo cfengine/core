@@ -247,7 +247,7 @@ for (i = 0; CLASSATTRIBUTES[i][0] != '\0'; i++)
          }
       else
          {
-         CfDebug2("Cfengine: I recognize %s but not %s\n",VSYSNAME.sysname,VSYSNAME.machine);
+         CfDebug("Cfengine: I recognize %s but not %s\n",VSYSNAME.sysname,VSYSNAME.machine);
          continue;
          }
       }

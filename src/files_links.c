@@ -208,7 +208,7 @@ if (attr.link.when_no_file == cfa_force)
       }
    else
       {
-      CfDebug2("ExpandLinks returned %s\n",expand);
+      CfDebug("ExpandLinks returned %s\n",expand);
       }
    }
 else
@@ -337,7 +337,7 @@ if (!S_ISREG(ssb.st_mode))
    return CF_WARN;
    }
 
-CfDebug2("Trying to (hard) link %s -> %s\n",destination,to);
+CfDebug("Trying to (hard) link %s -> %s\n",destination,to);
 
 if (cfstat(destination,&dsb) == -1)
    {
@@ -594,7 +594,7 @@ while (*sp != '\0')
             
             if (strcmp(dest,from) == 0)
                {
-               CfDebug2("No links to be expanded\n");
+               CfDebug("No links to be expanded\n");
                return true;
                }
      
@@ -612,7 +612,7 @@ while (*sp != '\0')
             
             if (strcmp(dest,from) == 0)
                {
-               CfDebug2("No links to be expanded\n");
+               CfDebug("No links to be expanded\n");
                return true;
                }
             

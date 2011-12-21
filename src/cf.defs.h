@@ -759,9 +759,7 @@ typedef enum
 
 /* Output control defines */
 
-#define CfDebug2  if (DEBUG || D2) printf
-#define CfDebug1  if (DEBUG || D1) printf
-#define CfDebug   if (DEBUG || D1 || D2) printf
+#define CfDebug   if (DEBUG) printf
 
 /* GNU REGEX */
 

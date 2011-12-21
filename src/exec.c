@@ -178,24 +178,11 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:D:N:VxL:hFV1gMW",OPTIONS,&optindex)) !=
           MINUSF = true;
           break;
 
-      case 'd': 
-          NewClass("opt_debug");
-          switch ((optarg==NULL) ? '3' : *optarg)
-             {
-             case '1':
-                 D1 = true;
-                 DEBUG = true;
-                 break;
-             case '2':
-                 D2 = true;
-                 DEBUG = true;
-                 break;
-             default:
-                 DEBUG = true;
-                 break;
-             }
-          break;
-          
+      case 'd':
+         NewClass("opt_debug");
+         DEBUG = true;
+         break;
+
       case 'K': IGNORELOCK = true;
           break;
                     
@@ -871,7 +858,7 @@ static int FileChecksum(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],c
   unsigned char buffer[1024];
   const EVP_MD *md = NULL;
 
-CfDebug2("FileChecksum(%c,%s)\n",type,filename);
+CfDebug("FileChecksum(%c,%s)\n",type,filename);
 
 if ((file = fopen(filename,"rb")) == NULL)
    {

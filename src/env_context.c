@@ -877,7 +877,7 @@ void ValidateClassSyntax(const char *str)
 {
 ParseResult res = ParseExpression(str, 0, strlen(str));
 
-if (DEBUG || D1 || D2)
+if (DEBUG)
    {
    EmitExpression(res.result, 0);
    putc('\n', stderr);

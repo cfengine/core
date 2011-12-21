@@ -117,23 +117,10 @@ while ((c=getopt_long(argc,argv,"d:vf:VMsr:",OPTIONS,&optindex)) != EOF)
           snprintf(CFPUBKEYFILE,CF_BUFSIZE,"%s.pub",optarg);
           break;
 
-      case 'd': 
-          switch ((optarg==NULL) ? '3' : *optarg)
-             {
-             case '1':
-                 D1 = true;
-                 DEBUG = true;
-                 break;
-             case '2':
-                 D2 = true;
-                 DEBUG = true;
-                 break;
-             default:
-                 DEBUG = true;
-                 break;
-             }
-          break;
-                    
+      case 'd':
+         DEBUG = true;
+         break;
+
       case 'V': PrintVersionBanner("cf-key");
           exit(0);
 

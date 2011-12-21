@@ -59,6 +59,4 @@ void FatalError(char *fmt, ...)
 exit(42);
 }
 
-int D1;
-int D2;
 int DEBUG;

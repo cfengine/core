@@ -722,7 +722,7 @@ struct stat dsb;
 int found;
 mode_t srcmode = ssb.st_mode;
 
-CfDebug2("CopyFile(%s,%s)\n",sourcefile,destfile);
+CfDebug("CopyFile(%s,%s)\n",sourcefile,destfile);
 
 #ifdef MINGW
 if(attr.copy.copy_links != NULL)

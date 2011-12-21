@@ -1428,7 +1428,7 @@ for (sp = parentandchild+rootlen, spc = currentpath+rootlen; *sp != '\0'; sp++)
          }
       else if (cfstat(currentpath,&statbuf) == -1)
          {
-         CfDebug2("cfengine: Making directory %s, mode %o\n",currentpath,DEFAULTMODE);
+         CfDebug("cfengine: Making directory %s, mode %o\n",currentpath,DEFAULTMODE);
 
          if (! DONTDO)
             {
@@ -1625,7 +1625,7 @@ dummyp.this_server = "localdisk";
 
 if (CopyRegularFileDisk(name,to,attr,&dummyp) == -1)
    {
-   CfDebug2("cfengine: copy failed in RotateFiles %s -> %s\n",name,to);
+   CfDebug("cfengine: copy failed in RotateFiles %s -> %s\n",name,to);
    return;
    }
 

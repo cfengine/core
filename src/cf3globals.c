@@ -261,8 +261,6 @@ double FORGETRATE = 0.7;
 int IGNORELOCK = false;
 int DONTDO = false;
 int DEBUG = false;
-int D1 = false;
-int D2 = false;
 int AUDIT = false;
 int LOGGING = false;
 

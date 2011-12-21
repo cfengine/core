@@ -394,7 +394,7 @@ int IsCf3VarString(char *str)
   int dollar = false;
   int bracks = 0, vars = 0;
 
-CfDebug1("IsCf3VarString(%s) - syntax verify\n",str);
+CfDebug("IsCf3VarString(%s) - syntax verify\n",str);
 
 if (str == NULL)
    {
@@ -477,7 +477,7 @@ static int IsCf3Scalar(char *str)
   int dollar = false;
   int bracks = 0, vars = 0;
 
-CfDebug1("IsCf3Scalar(%s) - syntax verify\n",str);
+CfDebug("IsCf3Scalar(%s) - syntax verify\n",str);
 
 if (str == NULL)
    {

@@ -280,7 +280,7 @@ void HashFile(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhash
   unsigned char buffer[1024];
   const EVP_MD *md = NULL;
 
-CfDebug2("HashFile(%d,%s)\n",type,filename);
+CfDebug("HashFile(%d,%s)\n",type,filename);
 
 if ((file = fopen(filename, "rb")) == NULL)
    {
@@ -312,7 +312,7 @@ void HashString(char *buffer,int len,unsigned char digest[EVP_MAX_MD_SIZE+1],enu
   const EVP_MD *md = NULL;
   int md_len;
 
-CfDebug2("HashString(%c)\n",type);
+CfDebug("HashString(%c)\n",type);
 
 switch (type)
    {

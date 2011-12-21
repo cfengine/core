@@ -194,7 +194,7 @@ for (sp = modestring; true ; sp++)
              CfOut(cf_inform,"","Symbolic and numeric form for modes mixed");
              }
 
-          CfDebug1("[PLUS=%o][MINUS=%o]\n",*plusmask,*minusmask);
+          CfDebug("[PLUS=%o][MINUS=%o]\n",*plusmask,*minusmask);
           return true;
           
       default:
@@ -236,7 +236,7 @@ return true;
 static int SetModeMask(char action,int value,int affected,mode_t *p,mode_t *m)
 
 {
-CfDebug1("SetMask(%c%o,%o)\n",action,value,affected);
+CfDebug("SetMask(%c%o,%o)\n",action,value,affected);
 
 switch(action)
    {

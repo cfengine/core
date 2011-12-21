@@ -68,13 +68,11 @@ if (signum != SIGCHLD)
       }
    else if (signum == SIGUSR1)
       {
-      DEBUG= true;
-      D2= true;
+      DEBUG = true;
       }
    else if (signum == SIGUSR2)
       {
-      DEBUG= false;
-      D2= false;
+      DEBUG = false;
       }
    else /* zombie cleanup - how hard does it have to be? */
       {

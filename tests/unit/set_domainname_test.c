@@ -263,7 +263,7 @@ fail();
 
 /* Stub out variables */
 
-int DEBUG, D1, D2;
+int DEBUG;
 enum cfagenttype THIS_AGENT_TYPE;
 struct Item *IPADDRESSES;
 struct utsname VSYSNAME;

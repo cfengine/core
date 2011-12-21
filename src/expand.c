@@ -789,7 +789,7 @@ int IsExpandable(const char *str)
   int dollar = false;
   int bracks = 0, vars = 0;
 
-CfDebug1("IsExpandable(%s) - syntax verify\n",str);
+CfDebug("IsExpandable(%s) - syntax verify\n",str);
 
 for (sp = str; *sp != '\0' ; sp++)       /* check for varitems */
    {

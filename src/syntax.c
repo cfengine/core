@@ -223,7 +223,7 @@ if (ss.subtype != NULL) /* In a bundle */
       
       for (l = 0; bs[l].lval != NULL; l++)
          {
-         CfDebug1("CMP-bundle # (%s,%s)\n",lval,bs[l].lval);
+         CfDebug("CMP-bundle # (%s,%s)\n",lval,bs[l].lval);
          
          if (strcmp(lval,bs[l].lval) == 0)
             {
@@ -262,7 +262,7 @@ if (ss.subtype != NULL) /* In a bundle */
 
 for (i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
    {
-   CfDebug1("CMP-common # %s,%s\n",lval,CF_COMMON_BODIES[i].lval);
+   CfDebug("CMP-common # %s,%s\n",lval,CF_COMMON_BODIES[i].lval);
    
    if (strcmp(lval,CF_COMMON_BODIES[i].lval) == 0)
       {
@@ -274,7 +274,7 @@ for (i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
 
 for (i = 0; CF_COMMON_EDITBODIES[i].lval != NULL; i++)
    {
-   CfDebug1("CMP-common # %s,%s\n",lval,CF_COMMON_EDITBODIES[i].lval);
+   CfDebug("CMP-common # %s,%s\n",lval,CF_COMMON_EDITBODIES[i].lval);
    
    if (strcmp(lval,CF_COMMON_EDITBODIES[i].lval) == 0)
       {

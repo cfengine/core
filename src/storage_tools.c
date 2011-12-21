@@ -143,7 +143,7 @@ avail = buf.f_bfree * (float)buf.f_bsize;
 
 capacity = (double) (avail) / (double) (avail + used) * 100;
 
-CfDebug2("GetDiskUsage(%s) = %jd/%jd\n",file,(intmax_t)avail,(intmax_t)capacity);
+CfDebug("GetDiskUsage(%s) = %jd/%jd\n",file,(intmax_t)avail,(intmax_t)capacity);
 
 /* Free kilobytes */
 

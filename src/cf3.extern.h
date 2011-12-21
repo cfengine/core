@@ -136,10 +136,6 @@ extern struct Auth *VARDENY;
 extern struct Auth *VARDENYTOP;
 
 extern int DEBUG;
-extern int D1;
-extern int D2;
-extern int D3;
-extern int D4;
 
 extern int PARSING;
 

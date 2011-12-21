@@ -757,6 +757,7 @@ if ((fp = fopen(filename,"w")) == NULL)
    return;
    }
 
+#if !defined(__MINGW32__)
 /*
  * Don't inherit this file descriptor on fork/exec
  */
@@ -765,6 +766,7 @@ if (fileno(fp) != -1)
    {
    fcntl(fileno(fp), F_SETFD, FD_CLOEXEC);
    }
+#endif
 
 CfOut(cf_verbose,""," -> Command => %s\n",cmd);
 

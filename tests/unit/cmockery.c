@@ -274,15 +274,25 @@ static const ExceptionCodeInfo exception_codes[] = {
 #endif // !_WIN32
 
 
+static void exit_test(void) FUNC_ATTR_NORETURN;
+
 // Exit the currently executing test.
-static void exit_test(const int quit_application) {
+static void exit_test(void) {
     if (global_running_test) {
         longjmp(global_run_test_env, 1);
-    } else if (quit_application) {
+    } else {
         exit(-1);
     }
 }
 
+#ifdef _WIN32
+// Exit the currently executing test.
+static void exit_test_no_app(void) {
+    if (global_running_test) {
+        longjmp(global_run_test_env, 1);
+    }
+}
+#endif
 
 // Initialize a SourceLocation structure.
 static void initialize_source_location(SourceLocation * const location) {
@@ -334,7 +344,7 @@ static void fail_if_leftover_values(const char *test_name) {
         error_occurred = 1;
     }
     if (error_occurred) {
-        exit_test(1);
+        exit_test();
     }
 }
 
@@ -700,7 +710,7 @@ LargestIntegralType _mock(const char * const function, const char* const file,
             print_error("There were no previously returned mock values for "
                         "this test.\n");
         }
-        exit_test(1);
+        exit_test();
     }
     return 0;
 }
@@ -1225,7 +1235,7 @@ void _check_expected(
             print_error("There were no previously declared parameter values "
                         "for this test.\n");
         }
-        exit_test(1);
+        exit_test();
     }
 }
 
@@ -1498,21 +1508,21 @@ static void fail_if_blocks_allocated(const ListNode * const check_point,
         free_allocated_blocks(check_point);
         print_error("ERROR: %s leaked %d block(s)\n", test_name,
                     allocated_blocks);
-        exit_test(1);
+        exit_test();
     }
 }
 
 
 void _fail(const char * const file, const int line) {
     print_error("ERROR: " SOURCE_LOCATION_FORMAT " Failure!\n", file, line);
-    exit_test(1);
+    exit_test();
 }
 
 
 #ifndef _WIN32
 static void exception_handler(int sig) {
     print_error("%s\n", strsignal(sig));
-    exit_test(1);
+    exit_test();
 }
 
 #else // _WIN32
@@ -1544,7 +1554,7 @@ static LONG WINAPI exception_filter(EXCEPTION_POINTERS *exception_pointers) {
                     "\n");
                 shown_debug_message = 1;
             }
-            exit_test(0);
+            exit_test_no_app();
             return EXCEPTION_EXECUTE_HANDLER;
         }
     }
@@ -1726,7 +1736,7 @@ int _run_tests(const UnitTest * const tests, const size_t number_of_tests) {
         default:
             print_error("Invalid unit test function type %d\n",
                         test->function_type);
-            exit_test(1);
+            exit_test();
             break;
         }
 

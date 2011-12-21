@@ -27,6 +27,12 @@
  * library functions and types.
  */
 
+#if defined(__GNUC__) && (__GNUC__ * 100 >= 3)
+# define FUNC_ATTR_NORETURN  __attribute__((noreturn))
+#else /* not gcc >= 3.0 */
+# define FUNC_ATTR_NORETURN
+#endif
+
 // For those who are used to __func__ from gcc.
 #ifndef __func__
 #define __func__ __FUNCTION__
@@ -471,7 +477,7 @@ void* _test_calloc(const size_t number_of_elements, const size_t size,
                    const char* file, const int line);
 void _test_free(void* const ptr, const char* file, const int line);
 
-void _fail(const char * const file, const int line);
+void _fail(const char * const file, const int line) FUNC_ATTR_NORETURN;
 int _run_test(
     const char * const function_name, const UnitTestFunction Function,
     void ** const state, const UnitTestFunctionType function_type,

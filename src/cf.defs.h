@@ -1421,6 +1421,11 @@ struct Checksum_Value
 #define S_IXOTH 00001
 #endif
 
+/* Too bad we don't have FD_CLOEXEC -- but we can fake it */
+#ifndef FD_CLOEXEC
+# define FD_CLOEXEC 0
+#endif
+
 /********************************************************************/
 /* *BSD chflags stuff -                                             */
 /********************************************************************/

@@ -1931,7 +1931,7 @@ there are no numerical loops in CFEngine. Special functions exist to
 extract lists of keys from array variables for iteration purposes.
 
 Thus one could have written the example above in the form of the
-following example:
+following example. Note, too, that the use of @code{getindices} avoids the earlier poor practice of repeating the enumeration of key names, and instead uses the better strategy of automatically deriving them.
 
 @verbatim
 

@@ -333,7 +333,14 @@ for (rp = args; rp != NULL; rp = rp->next)
    
    if (IsCf3Scalar(rp->item))
       {
-      return true;
+      if (strstr(rp->item,"$(this)")||strstr(rp->item,"${this}"))
+         {
+         // We should allow this in function args for substitution in maplist() etc
+         }
+      else
+         {
+         return true;
+         }
       }
    }
 
@@ -759,20 +766,19 @@ return false;
 /*********************************************************************/
 
 int IsCfList(char *type)
-{
-  char *listTypes[] = { "sl", "il", "rl", "ml", NULL };
-  int i;
-  
 
-  for(i = 0; listTypes[i] != NULL; i++)
-    {
-      if(strcmp(type, listTypes[i]) == 0)
-	{
-	  return true;
-	}
-    }
+{ char *listTypes[] = { "sl", "il", "rl", "ml", NULL };
+  int i;  
 
-  return false;
+for(i = 0; listTypes[i] != NULL; i++)
+   {
+   if(strcmp(type, listTypes[i]) == 0)
+      {
+      return true;
+      }
+   }
+
+return false;
 }
 
 /*******************************************************************/

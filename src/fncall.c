@@ -263,7 +263,6 @@ else
    return rval;
    }
 
-
 /* If the container classes seem not to be defined at this stage, then don't try to expand the function */
 
 if ((pp != NULL) && !IsDefinedClass(pp->classes))
@@ -318,6 +317,7 @@ for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
       return CF_FNCALL_TYPES + i;
       }
    }
+
 return NULL;
 }
 

@@ -1083,7 +1083,7 @@ if (!err)
 
 int CheckParseVariableName(char *name)
 
-{ const char *reserved[] = { "promiser", "handle", "promise_filename", "promise_linenumber", NULL };
+{ const char *reserved[] = { "promiser", "handle", "promise_filename", "promise_linenumber", "this", NULL };
   char *sp,scopeid[CF_MAXVARSIZE],vlval[CF_MAXVARSIZE];
   int count = 0, level = 0;
   

@@ -1413,7 +1413,7 @@ name = finalargs->next->item;
 if (strstr(name,"."))
    {
    scopeid[0] = '\0';
-   sscanf(name,"%[^127.].%127s",scopeid,lval);
+   sscanf(name,"%127[^.].%127s",scopeid,lval);
    }
 else
    {
@@ -1476,7 +1476,7 @@ name = finalargs->item;
 if (strstr(name,"."))
    {
    scopeid[0] = '\0';
-   sscanf(name,"%[^127.].%127s",scopeid,lval);
+   sscanf(name,"%127[^.].%127s",scopeid,lval);
    }
 else
    {
@@ -1546,7 +1546,7 @@ name = finalargs->item;
 if (strstr(name,"."))
    {
    scopeid[0] = '\0';
-   sscanf(name,"%[^127.].%127s",scopeid,lval);
+   sscanf(name,"%127[^.].%127s",scopeid,lval);
    }
 else
    {
@@ -1848,6 +1848,89 @@ if (newlist == NULL)
    }
 
 SetFnCallReturnStatus("lsdir",FNCALL_SUCCESS,NULL,NULL);
+return (struct Rval) { newlist, CF_LIST };
+}
+
+/*********************************************************************/
+
+static struct Rval FnCallMapList(struct FnCall *fp,struct Rlist *finalargs)
+
+{
+  char *map,*listvar;
+  char expbuf[CF_EXPANDSIZE],lval[CF_MAXVARSIZE],scopeid[CF_MAXVARSIZE];
+  struct Rlist *rp,*newlist = NULL;
+  struct Rval rval;
+  struct Scope *ptr;
+  enum cfdatatype retype;
+  
+/* begin fn specific content */
+
+map = finalargs->item;
+listvar = finalargs->next->item;
+
+/* Locate the array */
+
+if (*listvar == '@') // Handle use of @(list) as well as raw name
+   {
+   listvar += 2;
+   }
+
+if (strstr(listvar,"."))
+   {
+   scopeid[0] = '\0';
+   sscanf(listvar,"%127[^.].%127[^)}]",scopeid,lval);
+   }
+else
+   {
+   strcpy(lval,listvar);
+
+   if (*(lval+strlen(lval)-1) == ')' || *(lval+strlen(lval)-1) == '}')
+      {
+      *(lval+strlen(lval)-1) = '\0';
+      }
+   
+   strcpy(scopeid,CONTEXTID);
+   }
+
+if ((ptr = GetScope(scopeid)) == NULL)
+   {
+   CfOut(cf_verbose,"","Function \"maplist\" was promised an list in scope \"%s\" but this was not found\n",scopeid);
+   SetFnCallReturnStatus("maplist",FNCALL_FAILURE,"List not found in scope",NULL);
+   return (struct Rval) { NULL, CF_LIST };
+   }
+
+retype = GetVariable(scopeid,lval,&rval);
+
+switch (retype)
+   {
+   case cf_slist:
+   case cf_ilist:
+   case cf_rlist:
+       SetFnCallReturnStatus("maplist",FNCALL_SUCCESS,NULL,NULL);
+       break;
+   default:
+       SetFnCallReturnStatus("maplist",FNCALL_FAILURE,NULL,NULL);
+       return (struct Rval) { NULL, CF_LIST };
+       break;
+   }
+
+for (rp = (struct Rlist *)rval.item; rp != NULL; rp=rp->next)
+   {
+   NewScalar("this","this",(char *)rp->item,cf_str);
+
+   ExpandScalar(map,expbuf);
+   
+   if (strstr(expbuf,"$(this)"))
+      {
+      DeleteRlist(newlist);
+      SetFnCallReturnStatus("maplist",FNCALL_FAILURE,NULL,NULL);
+      return (struct Rval) { NULL, CF_LIST };
+      }
+   
+   AppendRlist(&newlist,expbuf,CF_SCALAR);
+   DeleteScalar("this","this");
+   }
+
 return (struct Rval) { newlist, CF_LIST };
 }
 
@@ -4742,6 +4825,13 @@ struct FnCallArg LSDIRLIST_ARGS[] =
     {NULL,cf_notype,NULL}
     };
 
+struct FnCallArg MAPLIST_ARGS[] =
+    {
+    {CF_ANYSTRING,cf_str,"Pattern based on $(this) as original text"},
+    {CF_IDRANGE,cf_str,"The name of the list variable to map"},
+    {NULL,cf_notype,NULL}
+    };
+
 struct FnCallArg NOT_ARGS[] =
    {
    {CF_ANYSTRING,cf_str,"Class value"},
@@ -5087,6 +5177,7 @@ const FnCallType CF_FNCALL_TYPES[] =
    {"ldaplist",cf_slist,LDAPLIST_ARGS,&FnCallLDAPList,"Extract all named values from multiple ldap records"},
    {"ldapvalue",cf_str,LDAPVALUE_ARGS,&FnCallLDAPValue,"Extract the first matching named value from ldap"},
    {"lsdir",cf_slist,LSDIRLIST_ARGS,&FnCallLsDir,"Return a list of files in a directory matching a regular expression"},
+   {"maplist",cf_slist,MAPLIST_ARGS,&FnCallMapList,"Return a list with each element modified by a pattern based $(this)"},
    {"not",cf_str,NOT_ARGS,&FnCallNot,"Calculate whether argument is false"},
    {"now",cf_int,NOW_ARGS,&FnCallNow,"Convert the current time into system representation"},
    {"on",cf_int,DATE_ARGS,&FnCallOn,"Convert an exact date/time to an integer system representation"},

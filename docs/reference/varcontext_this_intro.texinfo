@@ -25,20 +25,24 @@ attempt to declare a variable name with one of the following special
 reserved names, CFEngine will issue a warning (and you can reference your
 variable by qualifying it with the bundle name in which it is declared).
 
+@node Variable this.handle
 @subsection Variable this.handle
 
 This variable points to the promise handle of the currently handled promise;
  it is useful for referring to the intention in log messages.
 
+@node Variable this.promise_filename
 @subsection Variable this.promise_filename
 
 This variable reveals the name of the file in which the current promise is defined.
 
+@node Variable this.promise_linenumber
 @subsection Variable this.promise_linenumber
 
 This variable reveals the line number in the file at which it is used.  It is
 useful to differentiate otherwise identical reports promises.
 
+@node Variable this.promiser
 @subsection Variable this.promiser
 
 The special variable @code{$(this.promiser)} is used to refer to the current
@@ -71,3 +75,10 @@ body file_select world_writeable
   file_result => "mode";
 }
 @end verbatim
+
+@node Variable this.this
+@subsection Variable this.this
+
+From version core 3.3.0 this variables is reserved. It is used by
+functions like @code{maplist()} to represent the current object in 
+a transformation map.

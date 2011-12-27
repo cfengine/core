@@ -57,13 +57,6 @@ static int ProcessSanityChecks(struct Attributes a,struct Promise *pp)
 
 { int promised_zero, ret = true;
 
-if (a.signals != NULL && a.process_stop != NULL)
-   {
-   CfOut(cf_error,"","Promise constraint conflicts - %s processes cannot be signalled if they are stopped",pp->promiser);
-   PromiseRef(cf_error,pp);
-   ret = false;
-   }
-
 promised_zero = (a.process_count.min_range == 0 && a.process_count.max_range == 0);
 
 if (a.restart_class)
@@ -221,10 +214,8 @@ if (do_signals && matches > 0)
             }
          }
       }
-   else
-      {
-      killed = DoAllSignals(killlist,a,pp);
-      }
+
+   killed = DoAllSignals(killlist,a,pp);
    }
 
 /* delegated promise to restart killed or non-existent entries */

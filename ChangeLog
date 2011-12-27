@@ -6,6 +6,13 @@
 	New system list variables describing multiple interfaces: $(sys.hardware) $(sys.ip_addresses) $(sys.interfaces)
 	
 
+	Change semantics of processes to allow process_stop and signals afterwards
+
+	Added a maplist() function. Reserved special variable  for use in this function and elsewhere. 
+	Fixed some scanf() bugs.
+        Services promises for generic/Unix added
+	
+	
 3.2.0
 	New bootstrap method with single-command bootstrapping:
 	- cf-agent --bootstrap --policy-server 123.456.789.123

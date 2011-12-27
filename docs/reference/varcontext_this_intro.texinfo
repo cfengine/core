@@ -76,6 +76,19 @@ body file_select world_writeable
 }
 @end verbatim
 
+@node Variable service_policy
+@subsection Variable service_policy
+
+This variable is set to the values of the promise attribute @code{service_policy}, e.g.
+
+@verbatim
+services:
+
+  "www"  service_policy => "start";
+@end verbatim
+@noindent and is typically used in the adaptations for custom services bundles
+in the service methods, @xref{service_method in services}.
+
 @node Variable this.this
 @subsection Variable this.this
 

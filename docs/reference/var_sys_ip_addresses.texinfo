@@ -1,0 +1,9 @@
+
+@i{History}: Was introduced in 3.3.0a1.r3641, Nova 2.2.0.a1.r3258, Constellation 1.0.0a1.r307 (2011)
+
+
+@verbatim
+
+Fill me in (./var_sys_ip_addresses.texinfo)
+""
+@end verbatim

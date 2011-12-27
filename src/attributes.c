@@ -175,6 +175,7 @@ struct Attributes GetServicesAttributes(struct Promise *pp)
 attr.transaction = GetTransactionConstraints(pp);
 attr.classes = GetClassDefinitionConstraints(pp);
 attr.service = GetServicesConstraints(pp);
+attr.havebundle = GetBundleConstraint("service_bundle",pp);
 
 return attr;
 }

@@ -1698,6 +1698,7 @@ struct CfServices
    enum cf_srv_policy service_policy;
    char *service_autostart_policy;
    char *service_depend_chain;
+   struct FnCall *service_method;
    };
 
 /*************************************************************************/

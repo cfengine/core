@@ -688,8 +688,15 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
 
       // Set the hardware/mac address array
 
-      snprintf(name,CF_MAXVARSIZE,"hardware_mac[%s]",ifp->ifr_name);
-
+      if (ag != cf_know)
+         {                  
+         snprintf(name,CF_MAXVARSIZE,"hardware_mac[%s]",ifp->ifr_name);
+         }
+      else
+         {
+         snprintf(name,CF_MAXVARSIZE,"hardware_mac[interface_name]");
+         }
+      
 #ifdef SIOCGIFHWADDR
        ioctl(fd, SIOCGIFHWADDR, &ifr);
        snprintf(hw_mac,CF_MAXVARSIZE-1,"%.2x:%.2x:%.2x:%.2x:%.2x:%.2x",

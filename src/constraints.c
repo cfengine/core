@@ -553,6 +553,7 @@ for (cp = promise->conlist; cp != NULL; cp = cp->next)
             }
 
 	 retval = cp;
+         break;
 	 }
       }
    }
@@ -565,6 +566,7 @@ return retval;
 void *GetConstraintValue(char *lval, struct Promise *promise, char rtype)
 {
 struct Constraint *constraint = GetConstraint(promise, lval);
+
 if (constraint && constraint->rval.rtype == rtype)
    {
    return constraint->rval.item;

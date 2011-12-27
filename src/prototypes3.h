@@ -974,6 +974,7 @@ void DeletePromises(struct Promise *pp);
 void PromiseRef(enum cfreport level,struct Promise *pp);
 struct Promise *NewPromise(char *typename,char *promiser);
 void HashPromise(char *salt,struct Promise *pp,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type);
+void DebugPromise(struct Promise *pp);
 
 /* recursion.c */
 
@@ -1171,7 +1172,7 @@ void VerifyMeasurementPromise(double *this,struct Promise *pp);
 /* verify_methods.c */
 
 void VerifyMethodsPromise(struct Promise *pp);
-int VerifyMethod(struct Attributes a,struct Promise *pp);
+int VerifyMethod(char *attrname,struct Attributes a,struct Promise *pp);
 
 /* verify_packages.c */
 

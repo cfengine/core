@@ -40,13 +40,13 @@ void VerifyMethodsPromise(struct Promise *pp)
 
 a = GetMethodAttributes(pp);
 
-VerifyMethod(a,pp);
+VerifyMethod("usebundle",a,pp);
 DeleteScalar("this","promiser");
 }
 
 /*****************************************************************************/
 
-int VerifyMethod(struct Attributes a,struct Promise *pp)
+int VerifyMethod(char *attrname,struct Attributes a,struct Promise *pp)
 
 { struct Bundle *bp;
   void *vp;
@@ -59,13 +59,13 @@ int VerifyMethod(struct Attributes a,struct Promise *pp)
 
 if (a.havebundle)
    {
-   if ((vp = GetConstraintValue("usebundle",pp,CF_FNCALL)))
+   if ((vp = GetConstraintValue(attrname,pp,CF_FNCALL)))
       {
       fp = (struct FnCall *)vp;
       ExpandScalar(fp->name,method_name);
       params = fp->args;
       }
-   else if ((vp = GetConstraintValue("usebundle",pp,CF_SCALAR)))
+   else if ((vp = GetConstraintValue(attrname,pp,CF_SCALAR)))
       {
       ExpandScalar((char *)vp,method_name);
       params = NULL;

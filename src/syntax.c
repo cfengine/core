@@ -163,8 +163,8 @@ if (strcmp(pp->agentsubtype,"vars") == 0)
 
 enum cfdatatype ExpectedDataType(char *lvalname)
 
-{ int i,j,k;
-  const struct BodySyntax *bs;
+{ int i,j,k,l;
+ const struct BodySyntax *bs,*bs2;
   struct SubTypeSyntax *ss;
 
 for (i = 0; i < CF3_MODULES; i++)
@@ -188,6 +188,28 @@ for (i = 0; i < CF3_MODULES; i++)
             return bs[k].dtype;
             }
          }
+
+      for (k = 0; bs[k].range != NULL; k++)
+         {
+         if (bs[k].dtype == cf_body)
+            {
+            bs2 = (const struct BodySyntax *)(bs[k].range);
+
+            if (bs2 == NULL || bs2 == (void *)CF_BUNDLE)
+               {
+               continue;
+               }
+
+            for (l = 0; bs2[l].dtype != cf_notype; l++)
+               {
+               if (strcmp(lvalname,bs2[l].lval) == 0)
+                  {
+                  return bs2[l].dtype;
+                  }
+               }
+            }
+         }
+
       }
    }
 
@@ -537,7 +559,7 @@ switch(rval.rtype)
 
        /* Fn-like objects are assumed to be parameterized bundles in these... */
 
-       checklist = SplitString("bundlesequence,edit_line,edit_xml,usebundle",',');
+       checklist = SplitString("bundlesequence,edit_line,edit_xml,usebundle,service_bundle",',');
        
        if (!IsItemIn(checklist,lval))
           {

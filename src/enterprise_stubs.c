@@ -765,17 +765,6 @@ void SummarizeUpdates(int xml,int html,int csv,int embed,char *stylesheet,char *
 }
 
 /*****************************************************************************/
-
-void VerifyServices(struct Attributes a,struct Promise *pp)
-{
-#ifdef HAVE_NOVA
- Nova_VerifyServices(a,pp);
-#else
- CfOut(cf_verbose,"","# Services promises are only available in Cfengine Nova and above");
-#endif
-}
-
-/*****************************************************************************/
 /* Montoring                                                                 */
 /*****************************************************************************/
 

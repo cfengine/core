@@ -34,6 +34,8 @@
 
 static int ServicesSanityChecks(struct Attributes a,struct Promise *pp);
 static void SetServiceDefaults(struct Attributes *a);
+static void DoVerifyServices(struct Attributes a,struct Promise *pp);
+
 /*****************************************************************************/
 
 void VerifyServicesPromise(struct Promise *pp)
@@ -56,89 +58,203 @@ static int ServicesSanityChecks(struct Attributes a,struct Promise *pp)
     
 { struct Rlist *dep;
 
- switch(a.service.service_policy)
-    {
-    case cfsrv_start:
-        break;
-        
-    case cfsrv_stop:
-    case cfsrv_disable:
-        if(strcmp(a.service.service_autostart_policy, "none") != 0)
-           {
-           CfOut(cf_error,"","!! Autostart policy of service promiser \"%s\" needs to be \"none\" when service policy is not \"start\", but is \"%s\"",
-                 pp->promiser, a.service.service_autostart_policy);
-           PromiseRef(cf_error,pp);
-           return false;
-           }
-        break;
-        
-    default:
-        CfOut(cf_error,"","!! Invalid service policy for service \"%s\"", pp->promiser);
-        PromiseRef(cf_error,pp);
-        return false;
-    }
-
- for(dep = a.service.service_depend; dep != NULL; dep = dep->next)
-    {
-    if(strcmp(pp->promiser, dep->item) == 0)
-       {
-       CfOut(cf_error,"","!! Service promiser \"%s\" has itself as dependency", pp->promiser);
+switch(a.service.service_policy)
+   {
+   case cfsrv_start:
+       break;
+       
+   case cfsrv_stop:
+   case cfsrv_disable:
+       if(strcmp(a.service.service_autostart_policy, "none") != 0)
+          {
+          CfOut(cf_error,"","!! Autostart policy of service promiser \"%s\" needs to be \"none\" when service policy is not \"start\", but is \"%s\"",
+                pp->promiser, a.service.service_autostart_policy);
+          PromiseRef(cf_error,pp);
+          return false;
+          }
+       break;
+       
+   default:
+       CfOut(cf_error,"","!! Invalid service policy for service \"%s\"", pp->promiser);
        PromiseRef(cf_error,pp);
        return false;
-       }
-    }
+   }
 
- if(a.service.service_type ==  NULL)
-    {
-    CfOut(cf_error,"","!! Service type for service \"%s\" is not known", pp->promiser);
-    PromiseRef(cf_error,pp);
-    return false;
-    }
+for (dep = a.service.service_depend; dep != NULL; dep = dep->next)
+   {
+   if(strcmp(pp->promiser, dep->item) == 0)
+      {
+      CfOut(cf_error,"","!! Service promiser \"%s\" has itself as dependency", pp->promiser);
+      PromiseRef(cf_error,pp);
+      return false;
+      }
+   }
+
+if (a.service.service_type ==  NULL)
+   {
+   CfOut(cf_error,"","!! Service type for service \"%s\" is not known", pp->promiser);
+   PromiseRef(cf_error,pp);
+   return false;
+   }
 
 #ifdef MINGW
 
- if(strcmp(a.service.service_type, "windows") != 0)
-    {
-    CfOut(cf_error,"","!! Service type for promiser \"%s\" must be \"windows\" on this system, but is \"%s\"", pp->promiser, a.service.service_type);
-    PromiseRef(cf_error,pp);
-    return false;
-    }
- 
+if (strcmp(a.service.service_type, "windows") != 0)
+   {
+   CfOut(cf_error,"","!! Service type for promiser \"%s\" must be \"windows\" on this system, but is \"%s\"", pp->promiser, a.service.service_type);
+   PromiseRef(cf_error,pp);
+   return false;
+   }
+
 #endif  /* MINGW */
 
- return true;
+return true;
 }
 
 /*****************************************************************************/
 
 static void SetServiceDefaults(struct Attributes *a)
+
 {
- 
- if(a->service.service_autostart_policy == NULL)
-    {
-    a->service.service_autostart_policy = "none";
-    }
+if (a->service.service_autostart_policy == NULL)
+   {
+   a->service.service_autostart_policy = "none";
+   }
 
- if(a->service.service_depend_chain == NULL)
-    {
-    a->service.service_depend_chain = "ignore";
-    }
+if (a->service.service_depend_chain == NULL)
+   {
+   a->service.service_depend_chain = "ignore";
+   }
 
- 
- // default service type to "windows" on windows platforms
+// default service type to "windows" on windows platforms
 #ifdef MINGW
- 
- if(a->service.service_type == NULL)
-    {
-    a->service.service_type = "windows";
-    }
- 
+if (a->service.service_type == NULL)
+   {
+   a->service.service_type = "windows";
+   }
+#else
+if (a->service.service_type == NULL)
+   {
+   a->service.service_type = "bundle";
+   }
 #endif  /* MINGW */
-     
 }
 
+/*****************************************************************************/
+/* Level                                                                     */
+/*****************************************************************************/
 
+void VerifyServices(struct Attributes a,struct Promise *pp)
 
+{ struct CfLock thislock;
+
+ // allow to start Cfengine windows executor without license
+#ifdef MINGW
+
+if ((LICENSES == 0) && (strcmp(WINSERVICE_NAME, pp->promiser) != 0))
+   {
+   return;
+   }
+
+#endif
+
+thislock = AcquireLock(pp->promiser,VUQNAME,CFSTARTTIME,a,pp,false);
+
+if (thislock.lock == NULL)
+   {
+   return;
+   }
+
+NewScalar("this","promiser",pp->promiser,cf_str);
+PromiseBanner(pp);
+
+if (strcmp(a.service.service_type, "windows") == 0)
+   {
+#ifdef MINGW
+
+   switch(VSYSTEMHARDCLASS)
+      {
+      case mingw:
+          NovaWin_VerifyServices(a,pp);
+          break;
+          
+      default:
+          CfOut(cf_inform,"","!! Windows services are not supported on this system");
+          break;
+      }
+#else
+   CfOut(cf_inform,"","!! Service management is only support in CFEngine Nova and above.");
+#endif
+   }
+else
+   {
+   DoVerifyServices(a,pp);
+   }
+
+DeleteScalar("this","promiser");
+YieldCurrentLock(thislock);
+}
+
+/*****************************************************************************/
+/* Level                                                                     */
+/*****************************************************************************/
+
+static void DoVerifyServices(struct Attributes a,struct Promise *pp)
+
+{ struct FnCall *default_bundle;
+  struct Rlist *args = NULL;
+
+// Need to set up the default service pack to eliminate syntax
+
+if (GetConstraintValue("service_bundle",pp,CF_SCALAR) == NULL)
+   {
+   switch(a.service.service_policy)
+      {
+      case cfsrv_start:
+          AppendRlist(&args,pp->promiser,CF_SCALAR);
+          AppendRlist(&args,"start",CF_SCALAR);
+          break;
+          
+      case cfsrv_stop:
+      case cfsrv_disable:
+      default:
+          AppendRlist(&args,pp->promiser,CF_SCALAR);          
+          AppendRlist(&args,"stop",CF_SCALAR);
+          break;
+          
+      }
+
+   default_bundle = NewFnCall("standard_services",args);
+
+   AppendConstraint(&(pp->conlist), "service_bundle", (struct Rval) { default_bundle, CF_FNCALL },"any", false);
+   a.havebundle = true;
+   }
+
+// Set $(this.service_policy) for flexible bundle adaptation
+
+switch(a.service.service_policy)
+   {
+   case cfsrv_start:
+       NewScalar("this","service_policy","start",cf_str);
+       break;
+       
+   case cfsrv_stop:
+   case cfsrv_disable:
+   default:
+          NewScalar("this","service_policy","stop",cf_str);
+          break;          
+   }
+
+if (GetBundle(default_bundle->name,"agent") == NULL)
+   {
+   cfPS(cf_inform,CF_FAIL,"",pp,a," !! Service %s could not be invoked successfully\n",pp->promiser);
+   }
+
+if (!DONTDO)
+   {
+   VerifyMethod("service_bundle",a,pp);  // Send list of classes to set privately?
+   }
+}
 
 
 

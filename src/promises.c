@@ -33,7 +33,6 @@
 #include "cf3.extern.h"
 
 static void DeleteDeRefPromise(char *scopeid,struct Promise *pp);
-static void DebugPromise(struct Promise *pp);
 static void DereferenceComment(struct Promise *pp);
 
 /*****************************************************************************/
@@ -426,7 +425,7 @@ return pcopy;
 
 /*******************************************************************/
 
-static void DebugPromise(struct Promise *pp)
+void DebugPromise(struct Promise *pp)
 
 { struct Constraint *cp;
   struct Body *bp;
@@ -464,12 +463,14 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
              {
              ShowRval(stdout, cp->rval); /* literal */
              }
+          printf("\n");
           break;
 
       case CF_LIST:
           
           rp = (struct Rlist *)cp->rval.item;
           ShowRlist(stdout,rp);
+          printf("\n");
           break;
 
       case CF_FNCALL:

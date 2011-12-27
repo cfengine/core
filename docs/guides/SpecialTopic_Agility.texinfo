@@ -32,9 +32,11 @@
 
 @cartouche
 @quotation
-Agility is a widely used term in today's fast moving IT industry. This document
-explains the management factors that affect speed, agility and scale in common
-scenarios.
+Agility is a widely used term in today's fast moving IT industry. It
+reflects a need and a desire to respond quickly to changes in the
+environment.  This document explains the management factors that
+affect speed, agility and scale in common scenarios, and what CFEngine can
+do to help you be agile.
 @end quotation
 @end cartouche
 
@@ -42,7 +44,7 @@ scenarios.
 Last updated December 2011
 
 @vskip 0pt plus 1filll
-Copyright @copyright{} 2010,2011 CFEngine AS
+Copyright @copyright{} 2011 CFEngine AS
 
 @end titlepage
 
@@ -62,7 +64,7 @@ Copyright @copyright{} 2010,2011 CFEngine AS
 @end ifinfo
 
 @ifnottex
-@node Top, Principles of scalability, (dir), (dir)
+@node Top, Defining Agilty, (dir), (dir)
 @top Agility
 
 
@@ -81,14 +83,112 @@ Copyright @copyright{} 2010,2011 CFEngine AS
 
 
 
-@node Defining Agilty
+@menu
+* Defining Agilty::             
+@end menu
+
+@node Defining Agilty,  , Top, Top
 @chapter Defining Agilty
 @sp 1
 
+We intuitively recognize agility as the capability to respond fast
+enough to a pressing event. The event might represent danger, or
+merely a self-imposed deadline.  In any case, there is generally a
+penalty associated with not responding quickly.
 
-@node What is scalability?, How does CFEngine address scale?, Principles of scalability, Principles of scalability
+To understand agility, we have to understand time. Agility is a
+relative concept: it's about being fast enough, in the right context.
+Let's try to gain an engineering perspective on agility to see what
+enables it and what throttles it.
+
+We can define a measure of agility as the ratio of available speed to
+required speed.
+
+@verbatim
+Agilty ~ Available speed with control
+         ----------------------------
+                Required speed
+@end verbatim
+
+@noindent This definition behaves reasonably. If we our speed matches what we need, then
+we can claim 100% agility. If it is less than required, thenwe get a smaller number, and if
+we have excess speed we can claim a superefficiency.
+
+What is required speed?  It is is the rate of change you have to be
+able to enact in order to achieve and maintain a state (keep a
+promise) that is aligned with a an organization's well-being. If we
+think in terms of services, it is the Service Level you have to
+achieve to comply with a Service Level Agreement.  If we think of a
+support ticket, it is the speed we have to work at in order 
+to keep the impact of an unpredicted change within acceptable
+levels. What is acceptable is clearly a subjective judgement, a matter
+for policy to decide. So there are many uncertainties and relativisms.
+
+The weakest link in a chain of dependencies limits the speed of any chain.
+The weakest link might be a human who doesn't understand what to do, or a
+broken wire or a misconfigured switch. An organization is an information
+rich @i{society} with complex interplays between Man and Machine.
+
+The available speed is called the Capacity of the component. 
+
+Let's create some scaling laws.
+
+@verbatim
+Average available speed ~ Expected capacity * reliability
+                          ----------------------------
+                                  Consumers
+@end verbatim
+
+
+@verbatim
+Efficiency ~  Number of objects affected
+             ----------------------------
+                Number of rules + 1
+@end verbatim
+
+@verbatim
+Comprehensibilty ~  Predictability or reliability
+                    ----------------------------
+                         Machines * rules
+@end verbatim
+
+
+Mean Time to Repair.
+
+Nimble, lightweight, strong, balanced..
+
+From the perspective of agility, regular scheduling and speed of change are the 
+values we covet.
+
+
+@image{agility,12cm}
+
+@menu
+* What is scalability?::        
+@end menu
+
+@node What is scalability?,  , Defining Agilty, Defining Agilty
 @section What is scalability?
 @sp 1
+
+By scalability we mean the intrinsic capacity of a system to
+handle growth. Growth in a system can occur in three ways: by the volume of input
+the system must handle, in the total size of its infrastructure,
+and by the complexity of the processes within it.
+
+For a system to be called scalable, growth should proceed unhindered,
+i.e. the size and volume of processing may expand without
+significantly affecting the average service level per node.  
+
+Although most of us have an intuitive notion of what scalability
+means, a full understanding of it is a very complex issue, mainly
+because there are so many factors to take into account. One factor
+that is often forgotten in considering scalability, is the human
+ability to @i{comprehend} the system as it grows. Limitations of
+comprehension often lead to over-simplification and
+lowest-common-denominator standardization.
+
+Scalability is addressed in a separate document: @i{Scale and Scalability}.
 
 
 

@@ -113,8 +113,9 @@ Copyright @copyright{} 2010,2011 CFEngine AS
 @sp 1
 
 By scalability we mean the intrinsic capacity of a system to
-handle growth. Growth in a system can occur in two ways: by the volume of input
-the system must handle, or in the total size of its infrastructure.
+handle growth. Growth in a system can occur in three ways: by the volume of input
+the system must handle, or in the total size of its infrastructure,
+and by the complexity of the processes within it.
 
 For a system to be called scalable, growth should proceed unhindered,
 i.e. the size and volume of processing may expand without
@@ -126,7 +127,8 @@ because there are so many factors to take into account. One factor
 that is often forgotten in considering scalability, is the human
 ability to @i{comprehend} the system as it grows. Limitations of
 comprehension often lead to over-simplification and
-lowest-common-denominator standardization.
+lowest-common-denominator standardization. This ultimately causes systems
+to fail due to an information deficit.
 
 @sp 1
 

@@ -51,25 +51,8 @@ should be free, please let us know and we will consider this carefully.
 # include <zone.h>
 #endif
 
-void *Nova_LDAPValue(char *uri,char *basedn,char *filter,char *name,char *scope,char *sec);
-void *Nova_LDAPList(char *uri,char *dn,char *filter,char *name,char *scope,char *sec);
-void *Nova_LDAPArray(char *array,char *uri,char *dn,char *filter,char *scope,char *sec);
-void *Nova_RegLDAP(char *uri,char *dn,char *filter,char *name,char *scope,char *regex,char *sec);
-
 static struct Averages SHIFT_VALUE;
 static char CURRENT_SHIFT[CF_MAXVARSIZE];
-
-/*****************************************************************************/
-
-int IsEnterprise()
-
-{
-#if defined HAVE_NOVA || defined HAVE_CONSTELLATION || defined HAVE_LIBCFGALAXY
-return true;
-#else
-return false;
-#endif
-}
 
 /*****************************************************************************/
 
@@ -82,63 +65,6 @@ Nova_EnterpriseModuleTrick();
 
 #if defined HAVE_CONSTELLATION
 Constellation_EnterpriseModuleTrick();
-#endif
-}
-
-/*****************************************************************************/
-
-void EnterpriseContext()
-
-{
-#ifdef HAVE_NOVA
- Nova_EnterpriseContext();
-#endif
-}
-
-/*****************************************************************************/
-
-int CfSessionKeySize(char c)
-{
-#ifdef HAVE_NOVA
-return Nova_CfSessionKeySize(c);
-#else
-return CF_BLOWFISHSIZE; 
-#endif 
-}
-
-/*****************************************************************************/
-
-char CfEnterpriseOptions()
-{
-#ifdef HAVE_NOVA
-return Nova_CfEnterpriseOptions();
-#else
-return 'c';
-#endif 
-}
-
-/*****************************************************************************/
-
-const EVP_CIPHER *Nova_CfengineCipher(char type);
-const EVP_CIPHER *CfengineCipher(char type)
-{
-#ifdef HAVE_NOVA
-return Nova_CfengineCipher(type);
-#else
-return EVP_bf_cbc();
-#endif 
-}
-
-/*****************************************************************************/
-
-
-int EnterpriseExpiry(void)
-
-{
-#ifdef HAVE_NOVA
-return Nova_EnterpriseExpiry();
-#else
-return false;
 #endif
 }
 
@@ -210,212 +136,12 @@ return buffer;
 
 /*****************************************************************************/
 
-void LogFileChange(char *file,int change,struct Attributes a,struct Promise *pp)
-{
-#ifdef HAVE_NOVA
-Nova_LogFileChange(file,change,a,pp);
-#else
-CfOut(cf_verbose,"","Logging file differences requires version Nova or above");
-#endif 
-}
-
-/*****************************************************************************/
-
-#ifndef HAVE_NOVA
-void RemoteSysLog(int log_priority, const char *log_string)
-{
-CfOut(cf_verbose,"","Remote logging requires version Nova or above");
-}
-#endif
-
-/*****************************************************************************/
-
-#if !defined(HAVE_NOVA)
-void WebCache(char *s,char *t)
-{
-}
-#endif
-
-/*****************************************************************************/
-/* Knowledge                                                                 */
-/*****************************************************************************/
-
-char *Nova_PromiseID(struct Promise *pp);
-char *PromiseID(struct Promise *pp)
-
-{
-#ifdef HAVE_NOVA
-return Nova_PromiseID(pp);
-#else
-return "";
-#endif
-}
-
-/*****************************************************************************/
-
-void NotePromiseCompliance(struct Promise *pp,double val,enum cf_status status,char *reason)
-
-{
-#ifdef HAVE_NOVA
- Nova_NotePromiseCompliance(pp,val,status,reason);
-#else
-#endif
-}
-
-/*****************************************************************************/
-
-void PreSanitizePromise(struct Promise *pp)
-
-{
-#ifdef HAVE_NOVA
-Nova_PreSanitizePromise(pp);
-#else
-#endif
-}
-
-/*****************************************************************************/
-
-void TrackValue(char *date,double kept,double repaired, double notkept)
-
-{
-#ifdef HAVE_NOVA
-Nova_TrackValue(date,kept,repaired,notkept);
-#else
-#endif 
-}
-
-/*****************************************************************************/
-
-time_t GetPromiseCompliance(struct Promise *pp,double *value,double *average,double *var,time_t *lastseen)
-    
-{
-#ifdef HAVE_NOVA
-return Nova_GetPromiseCompliance(pp,value,average,var,lastseen);
-#else
-return time(NULL);
-#endif
-}
-
-/*****************************************************************************/
-
-void ShowTopicRepresentation(FILE *fp)
-
-{
-#ifdef HAVE_NOVA
-Nova_ShowTopicRepresentation(fp);
-#else
- CfOut(cf_verbose,"","# Knowledge map reporting feature is only available in version Nova and above\n");
-#endif
-
-}
-
-/*****************************************************************************/
-
-void NewPromiser(struct Promise *pp)
-{
-#ifdef HAVE_NOVA
-Nova_NewPromiser(pp);
-#else
-#endif 
-}
-
-/*****************************************************************************/
-
-void AnalyzePromiseConflicts()
-{
-#ifdef HAVE_NOVA
-Nova_AnalyzePromiseConflicts();
-#else
-#endif
-}
-
-
-/*****************************************************************************/
-
-void RegisterBundleDependence(char *name,struct Promise *pp)
-
-{
-#ifdef HAVE_NOVA
- Nova_RegisterBundleDepedence(name,pp);
-#else
-#endif
-}
-
-/*****************************************************************************/
-
-void SyntaxCompletion(char *s)
-{
-#ifdef HAVE_NOVA
- Nova_SyntaxCompletion(s);
-#else
- printf("Syntax completion is available in cfengine Nova,Constellation or Galaxy\n\n");
-#endif
-}
-
-/*****************************************************************************/
-
 void SyntaxExport()
 {
 #ifdef HAVE_NOVA
 Nova_SyntaxTree2JavaScript();
 #else
 SyntaxPrintAsJson(stdout);
-#endif
-}
-
-/*****************************************************************************/
-
-void VerifyOutputsPromise(struct Promise *pp)
-{
-#ifdef HAVE_NOVA
- Nova_VerifyOutputsPromise(pp);
-#else
- printf(" !! Outputs promises are not available in the community edition of Cfengine\n");
-#endif
-}
-
-/*****************************************************************************/
-
-void SetPromiseOutputs(struct Promise *pp)
-{
-#ifdef HAVE_NOVA
-Nova_SetPromiseOutputs(pp);
-#endif
-}
-
-/*****************************************************************************/
-
-void LastSawBundle(char *name)
-{
-#ifdef HAVE_NOVA
-Nova_LastSawBundle(name);
-#endif
-}
-
-/*****************************************************************************/
-
-void SetBundleOutputs(char *name)
-{
-#ifdef HAVE_NOVA
-Nova_SetBundleOutputs(name);
-#endif
-}
-
-/*****************************************************************************/
-
-void ResetBundleOutputs(char *name)
-{
-#ifdef HAVE_NOVA
-Nova_ResetBundleOutputs(name);
-#endif
-}
-
-/*****************************************************************************/
-
-void SpecialQuote(char *topic,char *type)
-{
-#ifdef HAVE_NOVA
-Nova_SpecialQuote(topic,type);
 #endif
 }
 
@@ -489,420 +215,6 @@ if (strcmp(CURRENT_SHIFT,VSHIFT) != 0)
 Nova_DumpSlowlyVaryingObservations();
 
 #else
-#endif
-}
-
-/*****************************************************************************/
-
-void CfGetClassName(int i,char *name)
-{
-#ifdef HAVE_NOVA
- char desc[CF_BUFSIZE];
- Nova_GetClassName(i,name,desc);
-#else
-strcpy(name,OBS[i][0]);
-#endif
-}
-
-/*****************************************************************************/
-
-void LookUpClassName(int i,char *name)
-{
-#ifdef HAVE_NOVA
- char desc[CF_BUFSIZE];
-
-Nova_LookupClassName(i,name,desc);
-#else
-strcpy(name,OBS[i][0]);
-#endif
-}
-
-/*****************************************************************************/
-
-void LoadSlowlyVaryingObservations()
-
-{
-#ifdef HAVE_NOVA
-Nova_LoadSlowlyVaryingObservations();
-#else
-CfOut(cf_verbose,"","# Extended system discovery is only available in version Nova and above\n");
-#endif
-}
-
-/*****************************************************************************/
-/* Server                                                                    */
-/*****************************************************************************/
-
-void RegisterLiteralServerData(char *handle,struct Promise *pp)
-
-{
-#ifdef HAVE_NOVA
-Nova_RegisterLiteralServerData(handle,pp);
-#else
-CfOut(cf_verbose,"","# Access to server literals is only available in version Nova and above\n");
-#endif
-}
-
-/*****************************************************************************/
-
-int ReturnLiteralData(char *handle,char *ret)
-
-{
-#ifdef HAVE_NOVA
-return Nova_ReturnLiteralData(handle,ret);
-#else
-CfOut(cf_verbose,"","# Access to server literals is only available in version Nova and above\n");
-return 0;
-#endif 
-}
-
-/*****************************************************************************/
-
-char *Nova_GetRemoteScalar(char *proto,char *handle,char *server,int encrypted,char *rcv);
-char *GetRemoteScalar(char *proto,char *handle,char *server,int encrypted,char *rcv)
-
-{
-#ifdef HAVE_NOVA
-return Nova_GetRemoteScalar(proto,handle,server,encrypted,rcv);
-#else
-CfOut(cf_verbose,"","# Access to server literals is only available in version Nova and above\n");
-return "";
-#endif 
-}
-
-/*****************************************************************************/
-
-void CacheUnreliableValue(char *caller,char *handle,char *buffer)
-
-{
-#ifdef HAVE_NOVA
-Nova_CacheUnreliableValue(caller,handle,buffer);
-#else
-CfOut(cf_verbose,"","# Value fault-tolerance in version Nova and above\n");
-return;
-#endif 
-}
-
-/*****************************************************************************/
-
-int RetrieveUnreliableValue(char *caller,char *handle,char *buffer)
-
-{
-#ifdef HAVE_NOVA
-return Nova_RetrieveUnreliableValue(caller,handle,buffer);
-#else
-CfOut(cf_verbose,"","# Value fault-tolerance in version Nova and above\n");
-return false;
-#endif 
-}
-
-/*****************************************************************************/
-
-void TranslatePath(char *new, const char *old)
-{
-#ifdef HAVE_NOVA
-Nova_TranslatePath(new,old);
-#else
-strncpy(new,old,CF_BUFSIZE-1);
-#endif 
-}
-
-/*****************************************************************************/
-/* Reporting                                                                 */
-/*****************************************************************************/
-
-void SummarizeCompliance(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web)
-
-{
-#ifdef HAVE_NOVA
- Nova_SummarizeCompliance(xml,html,csv,embed,stylesheet,head,foot,web);
-#else
- CfOut(cf_verbose,"","# Compliance reporting feature is only available in version Nova and above\n");
-#endif
-}
-
-/*****************************************************************************/
-
-void SummarizeValue(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web)
-
-{
-#ifdef HAVE_NOVA
-Nova_SummarizeValue(xml,html,csv,embed,stylesheet,head,foot,web);
-#else
-CfOut(cf_verbose,"","# Value reporting feature is only available in version Nova and above - use the state/cf_value.log\n");
-#endif
-}
-
-/*****************************************************************************/
-
-void SummarizePromiseRepaired(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web)
-
-{
-#ifdef HAVE_NOVA
-Nova_SummarizePromiseRepaired(xml,html,csv,embed,stylesheet,head,foot,web);
-#else
-CfOut(cf_verbose,"","# Compliance reporting feature is only available in version Nova and above\n");
-#endif
-}
-
-/*****************************************************************************/
-
-void SummarizePromiseNotKept(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web)
-
-{
-#ifdef HAVE_NOVA
-Nova_SummarizePromiseNotKept(xml,html,csv,embed,stylesheet,head,foot,web);
-#else
-CfOut(cf_verbose,"","# Compliance reporting feature is only available in version Nova and above\n");
-#endif
-}
-
-/*****************************************************************************/
-
-void GrandSummary()
-
-{
-#ifdef HAVE_NOVA
- Nova_GrandSummary();
-#else
- CfOut(cf_verbose,"","# Reporting feature is only available in version Nova and above\n");
-#endif
-}
-
-/*****************************************************************************/
-
-void CSV2XML(struct Rlist *list)
-
-{
-#ifdef HAVE_NOVA
- Nova_CSV2XML(list);
-#else
- CfOut(cf_verbose,"","# Format conversion feature is only available in version Nova and above\n");
-#endif
-}
-
-/*****************************************************************************/
-
-void SummarizeVariables(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web)
-
-{
-#ifdef HAVE_NOVA
- Nova_SummarizeVariables(xml,html,csv,embed,stylesheet,head,foot,web);
-#else
- CfOut(cf_verbose,"","# Variable reporting feature is only available in version Nova and above\n");
-#endif
-}
-
-/*****************************************************************************/
-
-void SummarizePerPromiseCompliance(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web)
-
-{
-#ifdef HAVE_NOVA
- Nova_SummarizePerPromiseCompliance(xml,html,csv,embed,stylesheet,head,foot,web);
-#else
- CfOut(cf_verbose,"","# Compliance reporting feature is only available in version Nova and above\n");
-#endif
-}
-
-/*****************************************************************************/
-
-void SummarizeFileChanges(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web)
-
-{
-#ifdef HAVE_NOVA
- Nova_SummarizeFileChanges(xml,html,csv,embed,stylesheet,head,foot,web);
-#else
- CfOut(cf_verbose,"","# File change reporting feature is only available in version Nova and above\n");
-#endif
-}
-
-/*****************************************************************************/
-
-void SummarizeSetuid(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web)
-
-{
-#ifdef HAVE_NOVA
- Nova_SummarizeSetuid(xml,html,csv,embed,stylesheet,head,foot,web);
-#else
- CfOut(cf_verbose,"","# Setuid reporting feature is only available in version Nova and above\n");
-#endif
-}
-
-/*****************************************************************************/
-
-void ReportPatches(struct CfPackageManager *list)
-{
-#ifdef HAVE_NOVA
- Nova_ReportPatches(list);
-#else
- CfOut(cf_verbose,"","# Patch reporting feature is only available in version Nova and above\n");
-#endif
-}
-
-/*****************************************************************************/
-
-void SummarizeSoftware(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web)
-
-{
-#ifdef HAVE_NOVA
- Nova_SummarizeSoftware(xml,html,csv,embed,stylesheet,head,foot,web);
-#else
- CfOut(cf_verbose,"","# Software summary reporting feature is only available in version Nova and above\n");
-#endif
-}
-    
-/*****************************************************************************/
-
-void SummarizeUpdates(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web)
-
-{
-#ifdef HAVE_NOVA
- Nova_SummarizeUpdates(xml,html,csv,embed,stylesheet,head,foot,web);
-#else
- CfOut(cf_verbose,"","# Software summary reporting feature is only available in version Nova and above\n");
-#endif
-}
-
-/*****************************************************************************/
-/* Montoring                                                                 */
-/*****************************************************************************/
-
-void VerifyMeasurement(double *this,struct Attributes a,struct Promise *pp)
-
-{
-#ifdef HAVE_NOVA
- Nova_VerifyMeasurement(this,a,pp);
-#else
- CfOut(cf_verbose,"","# Custom monitoring feature is only available in version Nova and above\n");
-#endif
-}
-
-/*****************************************************************************/
-
-void LongHaul()
-
-{
-#ifdef HAVE_NOVA
-Nova_LongHaul(CFSTARTTIME);
-#endif
-}
-
-/*****************************************************************************/
-
-void SetMeasurementPromises(struct Item **classlist)
-
-{
-#ifdef HAVE_NOVA
- Nova_SetMeasurementPromises(classlist);
-#else
-#endif
-}
-
-/*****************************************************************************/
-/* ACLs                                                                      */
-/*****************************************************************************/
-
-void VerifyACL(char *file,struct Attributes a, struct Promise *pp)
-
-{
-#ifdef HAVE_NOVA
-Nova_VerifyACL(file,a,pp);
-#else
-CfOut(cf_verbose, "", "Verifying ACL promises is only available with Cfengine Nova or above");
-#endif
-}
-
-/*****************************************************************************/
-
-int CheckACLSyntax(char *file,struct CfACL acl,struct Promise *pp)
-
-{
-#ifdef HAVE_NOVA
-return Nova_CheckACLSyntax(file,acl,pp);
-#else
-return true;
-#endif
-}
-
-/*****************************************************************************/
-/* Registry                                                                  */
-/*****************************************************************************/
-
-void VerifyRegistryPromise(struct Attributes a,struct Promise *pp)
-
-{
-#ifdef HAVE_NOVA
-# ifdef NT
-Nova_VerifyRegistryPromise(a,pp);
-# endif
-#else
-#endif
-}
-
-/*****************************************************************************/
-
-int GetRegistryValue(char *key,char *name,char *buf, int bufSz)
-
-{
-#ifdef HAVE_NOVA
-# ifdef NT
-return Nova_GetRegistryValueAsString(key, name, buf, bufSz);
-# endif
-return 0;
-#else
-return 0;
-#endif
-}
-
-/*****************************************************************************/
-/* LDAP                                                                      */
-/*****************************************************************************/
-
-#if !defined(HAVE_NOVA)
-
-void *CfLDAPValue(char *uri,char *dn,char *filter,char *name,char *scope,char *sec)
-{
-CfOut(cf_error, "", "LDAP support is available in Nova and above");
-return NULL;
-}
-
-/*****************************************************************************/
-
-void *CfLDAPList(char *uri,char *dn,char *filter,char *name,char *scope,char *sec)
-{
-CfOut(cf_error,"","LDAP support available in Nova and above");
-return NULL;
-}
-
-/*****************************************************************************/
-
-void *CfLDAPArray(char *array,char *uri,char *dn,char *filter,char *scope,char *sec)
-{
-CfOut(cf_error,"","LDAP support available in Nova and above");
-return NULL;
-}
-
-/*****************************************************************************/
-
-void *CfRegLDAP(char *uri,char *dn,char *filter,char *name,char *scope,char *regex,char *sec)
-{
-CfOut(cf_error,"","LDAP support available in Nova and above");
-return NULL;
-}
-
-#endif
-
-/*****************************************************************************/
-/* SQL                                                                       */
-/*****************************************************************************/
-
-int CheckDatabaseSanity(struct Attributes a, struct Promise *pp)
-{
-#ifdef HAVE_NOVA
-return Nova_CheckDatabaseSanity(a,pp);
-#else
-return false;
 #endif
 }
 
@@ -996,21 +308,6 @@ return false;
 
 /*****************************************************************************/
 
-int CfVerifyTablePromise(CfdbConn *cfdb,char *name,struct Rlist *columns,struct Attributes a,struct Promise *pp)
-
-{
-#ifdef HAVE_NOVA
-return Nova_VerifyTablePromise(cfdb,name,columns,a,pp);
-#else
-CfOut(cf_verbose,"","Verifying SQL table promises is only available with Cfengine Nova or above");
-return false;
-#endif
-}
-
-/*****************************************************************************/
-/* Misc                                                                      */
-/*****************************************************************************/
-
 void NoteEfficiency(double e)
 
 {
@@ -1097,48 +394,314 @@ return false;
 
 /*****************************************************************************/
 
-int GetInstalledPkgsRpath(struct CfPackageItem **pkgList, struct Attributes a, struct Promise *pp)
+#if !defined(HAVE_NOVA)
+
+int IsEnterprise(void)
 {
-#ifdef HAVE_NOVA
-
-return Nova_GetInstalledPkgsRpath(pkgList, a, pp);
-
-#else
-
-CfOut(cf_error, "", "!! rPath internal package listing only available in Nova or above");
 return false;
-
-#endif
 }
 
-/*****************************************************************************/
+void EnterpriseContext(void)
+{
+}
+
+int CfSessionKeySize(char type)
+{
+return CF_BLOWFISHSIZE;
+}
+
+char CfEnterpriseOptions(void)
+{
+return 'c';
+}
+
+const EVP_CIPHER *CfengineCipher(char type)
+{
+return EVP_bf_cbc();
+}
+
+int EnterpriseExpiry(void)
+{
+return false;
+}
+
+void LogFileChange(char *file, int change, struct Attributes a, struct Promise *pp)
+{
+CfOut(cf_verbose, "", "Logging file differences requires version Nova or above");
+}
+
+void RemoteSysLog(int log_priority, const char *log_string)
+{
+CfOut(cf_verbose,"","Remote logging requires version Nova or above");
+}
+
+void WebCache(char *s,char *t)
+{
+}
+
+const char *PromiseID(struct Promise *pp)
+{
+return "";
+}
+
+void NotePromiseCompliance(struct Promise *pp,double val,enum cf_status status,char *reason)
+{
+}
+
+void PreSanitizePromise(struct Promise *pp)
+{
+}
+
+void TrackValue(char *date,double kept,double repaired, double notkept)
+{
+}
+
+time_t GetPromiseCompliance(struct Promise *pp,double *value,double *average,double *var,time_t *lastseen)
+{
+return time(NULL);
+}
+
+void ShowTopicRepresentation(FILE *fp)
+{
+CfOut(cf_verbose,"","# Knowledge map reporting feature is only available in version Nova and above\n");
+}
+
+void NewPromiser(struct Promise *pp)
+{
+}
+
+void AnalyzePromiseConflicts(void)
+{
+}
+
+void RegisterBundleDependence(char *name,struct Promise *pp)
+{
+}
+
+void SyntaxCompletion(char *s)
+{
+printf("Syntax completion is available in cfengine Nova,Constellation or Galaxy\n\n");
+}
+
+void VerifyOutputsPromise(struct Promise *pp)
+{
+printf(" !! Outputs promises are not available in the community edition of Cfengine\n");
+}
+
+void SetPromiseOutputs(struct Promise *pp)
+{
+}
+
+void LastSawBundle(char *name)
+{
+}
+
+void SetBundleOutputs(char *name)
+{
+}
+
+void ResetBundleOutputs(char *name)
+{
+}
+
+void SpecialQuote(char *topic,char *type)
+{
+}
+
+void GetClassName(int i,char *name, char *desc)
+{
+strcpy(name,OBS[i][0]);
+}
+
+void LookupClassName(int i, char *name, char *desc)
+{
+strcpy(name, OBS[i][0]);
+}
+
+void LoadSlowlyVaryingObservations()
+{
+CfOut(cf_verbose,"","# Extended system discovery is only available in version Nova and above\n");
+}
+
+void RegisterLiteralServerData(char *handle,struct Promise *pp)
+{
+CfOut(cf_verbose,"","# Access to server literals is only available in version Nova and above\n");
+}
+
+int ReturnLiteralData(char *handle,char *ret)
+{
+CfOut(cf_verbose,"","# Access to server literals is only available in version Nova and above\n");
+return 0;
+}
+
+char *GetRemoteScalar(char *proto,char *handle,char *server,int encrypted,char *rcv)
+{
+CfOut(cf_verbose,"","# Access to server literals is only available in version Nova and above\n");
+return "";
+}
+
+void CacheUnreliableValue(char *caller,char *handle,char *buffer)
+{
+CfOut(cf_verbose,"","# Value fault-tolerance in version Nova and above\n");
+}
+
+int RetrieveUnreliableValue(char *caller,char *handle,char *buffer)
+{
+CfOut(cf_verbose,"","# Value fault-tolerance in version Nova and above\n");
+return false;
+}
+
+void TranslatePath(char *new, const char *old)
+{
+strncpy(new,old,CF_BUFSIZE-1);
+}
+
+void SummarizeCompliance(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web)
+{
+CfOut(cf_verbose,"","# Compliance reporting feature is only available in version Nova and above\n");
+}
+
+void SummarizeValue(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web)
+{
+CfOut(cf_verbose,"","# Value reporting feature is only available in version Nova and above - use the state/cf_value.log\n");
+}
+
+void SummarizePromiseRepaired(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web)
+{
+CfOut(cf_verbose,"","# Compliance reporting feature is only available in version Nova and above\n");
+}
+
+void SummarizePromiseNotKept(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web)
+{
+CfOut(cf_verbose,"","# Compliance reporting feature is only available in version Nova and above\n");
+}
+
+void GrandSummary()
+{
+CfOut(cf_verbose,"","# Reporting feature is only available in version Nova and above\n");
+}
+
+void CSV2XML(struct Rlist *list)
+{
+CfOut(cf_verbose,"","# Format conversion feature is only available in version Nova and above\n");
+}
+
+void SummarizeVariables(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web)
+{
+CfOut(cf_verbose,"","# Variable reporting feature is only available in version Nova and above\n");
+}
+
+void SummarizePerPromiseCompliance(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web)
+{
+CfOut(cf_verbose,"","# Compliance reporting feature is only available in version Nova and above\n");
+}
+
+void SummarizeFileChanges(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web)
+{
+CfOut(cf_verbose,"","# File change reporting feature is only available in version Nova and above\n");
+}
+
+void SummarizeSetuid(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web)
+{
+CfOut(cf_verbose,"","# Setuid reporting feature is only available in version Nova and above\n");
+}
+
+void ReportPatches(struct CfPackageManager *list)
+{
+CfOut(cf_verbose,"","# Patch reporting feature is only available in version Nova and above\n");
+}
+
+void SummarizeSoftware(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web)
+{
+CfOut(cf_verbose,"","# Software summary reporting feature is only available in version Nova and above\n");
+}
+
+void SummarizeUpdates(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web)
+{
+CfOut(cf_verbose,"","# Software summary reporting feature is only available in version Nova and above\n");
+}
+void VerifyMeasurement(double *this,struct Attributes a,struct Promise *pp)
+{
+CfOut(cf_verbose,"","# Custom monitoring feature is only available in version Nova and above\n");
+}
+
+void LongHaul(time_t current)
+{
+}
+
+void SetMeasurementPromises(struct Item **classlist)
+{
+}
+
+void VerifyACL(char *file,struct Attributes a, struct Promise *pp)
+{
+CfOut(cf_verbose, "", "Verifying ACL promises is only available with Cfengine Nova or above");
+}
+
+int CheckACLSyntax(char *file,struct CfACL acl,struct Promise *pp)
+{
+return true;
+}
+
+void VerifyRegistryPromise(struct Attributes a,struct Promise *pp)
+{
+}
+
+int GetRegistryValue(char *key,char *name,char *buf, int bufSz)
+{
+return 0;
+}
+
+void *CfLDAPValue(char *uri,char *dn,char *filter,char *name,char *scope,char *sec)
+{
+CfOut(cf_error, "", "LDAP support is available in Nova and above");
+return NULL;
+}
+
+void *CfLDAPList(char *uri,char *dn,char *filter,char *name,char *scope,char *sec)
+{
+CfOut(cf_error,"","LDAP support available in Nova and above");
+return NULL;
+}
+
+void *CfLDAPArray(char *array,char *uri,char *dn,char *filter,char *scope,char *sec)
+{
+CfOut(cf_error,"","LDAP support available in Nova and above");
+return NULL;
+}
+
+void *CfRegLDAP(char *uri,char *dn,char *filter,char *name,char *scope,char *regex,char *sec)
+{
+CfOut(cf_error,"","LDAP support available in Nova and above");
+return NULL;
+}
+
+int CheckDatabaseSanity(struct Attributes a, struct Promise *pp)
+{
+return false;
+}
+
+int VerifyTablePromise(CfdbConn *cfdb,char *name,struct Rlist *columns,struct Attributes a,struct Promise *pp)
+{
+CfOut(cf_verbose,"","Verifying SQL table promises is only available with Cfengine Nova or above");
+return false;
+}
+
+int GetInstalledPkgsRpath(struct CfPackageItem **pkgList, struct Attributes a, struct Promise *pp)
+{
+CfOut(cf_error, "", "!! rPath internal package listing only available in Nova or above");
+return false;
+}
 
 int ExecPackageCommandRpath(char *command,int verify,int setCmdClasses,struct Attributes a,struct Promise *pp)
 {
-#ifdef HAVE_NOVA
-
-return Nova_ExecPackageCommandRpath(command,verify,setCmdClasses,a,pp);
-
-#else
-
 CfOut(cf_error, "", "!! rPath internal package commands only available in Nova or above");
 return false;
-
-#endif
 }
-/*****************************************************************************/
 
 void AddGoalsToDB(char *goal_patterns, char *goal_categories)
-
 {
-#ifdef HAVE_NOVA
-  Nova_AddGoalsToDB(goal_patterns,goal_categories); 
-#endif
 }
-
-/*****************************************************************************/
-
-#ifndef HAVE_NOVA
 
 void SetSyslogHost(const char *host)
 {

@@ -330,9 +330,10 @@ if ((currentvals = GetCurrentAverages(t)) == NULL)
 for (i = 0; i < CF_OBSERVABLES; i++)
    {
    double delta2;
+   char desc[CF_BUFSIZE];
 
    name[0] = '\0';
-   CfGetClassName(i,name);
+   GetClassName(i, name, desc);
 
    /* Overflow protection */
 
@@ -483,7 +484,9 @@ CfDebug("Arm classes for %s\n",timekey);
 
 for (i = 0; i < CF_OBSERVABLES; i++)
    {
-   CfGetClassName(i,name);
+   char desc[CF_BUFSIZE];
+
+   GetClassName(i, name, desc);
    sigma = SetClasses(name,CF_THIS[i],av.Q[i].expect,av.Q[i].var,LOCALAV.Q[i].expect,LOCALAV.Q[i].var,&classlist,timekey);
    SetVariable(name,CF_THIS[i],av.Q[i].expect,sigma,&classlist);
 

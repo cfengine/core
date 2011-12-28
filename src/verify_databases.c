@@ -187,7 +187,7 @@ else
    {
    snprintf(query,CF_MAXVARSIZE-1,"%s.%s",database,table);
    
-   if (CfVerifyTablePromise(&cfdb,query,a.database.columns,a,pp))
+   if (VerifyTablePromise(&cfdb,query,a.database.columns,a,pp))
       {
       cfPS(cf_inform,CF_NOP,"",pp,a," -> Table \"%s\" is as promised",query);
       }

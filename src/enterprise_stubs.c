@@ -185,12 +185,12 @@ void SpecialQuote(char *topic,char *type)
 {
 }
 
-void GetClassName(int i,char *name, char *desc)
+void GetObservable(int i,char *name, char *desc)
 {
 strcpy(name,OBS[i][0]);
 }
 
-void LookupClassName(int i, char *name, char *desc)
+void LookupObservable(int i, char *name, char *desc)
 {
 strcpy(name, OBS[i][0]);
 }

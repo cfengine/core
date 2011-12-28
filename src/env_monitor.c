@@ -333,7 +333,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    char desc[CF_BUFSIZE];
 
    name[0] = '\0';
-   GetClassName(i, name, desc);
+   GetObservable(i, name, desc);
 
    /* Overflow protection */
 
@@ -486,7 +486,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
    {
    char desc[CF_BUFSIZE];
 
-   GetClassName(i, name, desc);
+   GetObservable(i, name, desc);
    sigma = SetClasses(name,CF_THIS[i],av.Q[i].expect,av.Q[i].var,LOCALAV.Q[i].expect,LOCALAV.Q[i].var,&classlist,timekey);
    SetVariable(name,CF_THIS[i],av.Q[i].expect,sigma,&classlist);
 

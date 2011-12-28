@@ -2145,7 +2145,7 @@ for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+SECONDS_PER_WEEK; now += C
       for (i = 0; i < CF_OBSERVABLES; i++)
          {
          char desc[CF_BUFSIZE];
-         LookupClassName(i, name, desc);
+         LookupObservable(i, name, desc);
 
          if (IsItemIn(list,name))
             {
@@ -2213,7 +2213,7 @@ CfOut(cf_inform,"","Writing report to %s\n",name);
 for (i = 0; i < CF_OBSERVABLES; i++)
    {
    char desc[CF_BUFSIZE];
-   LookupClassName(i, name, desc);
+   LookupObservable(i, name, desc);
 
    if (XML)
       {
@@ -2298,7 +2298,7 @@ if (TITLES)
    for (i = 0; i < CF_OBSERVABLES; i+=2)
       {
       char desc[CF_BUFSIZE];
-      LookupClassName(i, name, desc);
+      LookupObservable(i, name, desc);
 
       fprintf(FPAV,"# Column %d: %s\n",i,name);
       fprintf(FPVAR,"# Column %d: %s\n",i,name);
@@ -2558,7 +2558,7 @@ else
 for (i = 0; i < CF_OBSERVABLES; i++)
    {
    char desc[CF_BUFSIZE];
-   LookupClassName(i, name, desc);
+   LookupObservable(i, name, desc);
    sprintf(filename,"%s.distr",name);
 
    if ((FPQ[i] = fopen(filename,"w")) == NULL)
@@ -2878,7 +2878,7 @@ if ((FPNOW = fopen(filename,"w")) == NULL)
 for (i = 0; i < CF_OBSERVABLES; i++)
    {
    char desc[CF_BUFSIZE];
-   LookupClassName(i, name, desc);
+   LookupObservable(i, name, desc);
 
    CfOut(cf_inform,""," -> Reporting on \"%s\"\n",name);
 
@@ -2927,7 +2927,7 @@ void OpenMagnifyFiles()
 for (i = 0; i < CF_OBSERVABLES; i++)
    {
    char desc[CF_BUFSIZE];
-   LookupClassName(i, name, desc);
+   LookupObservable(i, name, desc);
    sprintf(filename,"%s.mag",name);
 
    CfOut(cf_inform,""," -> Magnifying \"%s\"\n",name);

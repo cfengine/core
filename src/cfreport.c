@@ -292,6 +292,17 @@ return 0;
 /* Level 1                                                                   */
 /*****************************************************************************/
 
+static void SyntaxExport()
+{
+#ifdef HAVE_NOVA
+SyntaxTree2JavaScript();
+#else
+SyntaxPrintAsJson(stdout);
+#endif
+}
+
+/*****************************************************************************/
+
 struct GenericAgentConfig CheckOpts(int argc,char **argv)
 
 { extern char *optarg;

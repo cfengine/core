@@ -47,354 +47,23 @@ should be free, please let us know and we will consider this carefully.
 # include <cf.nova.h>
 #endif
 
-#ifdef HAVE_ZONE_H
-# include <zone.h>
-#endif
-
-static struct Averages SHIFT_VALUE;
-static char CURRENT_SHIFT[CF_MAXVARSIZE];
-
-/*****************************************************************************/
-
-void EnterpriseModuleTrick()
-
-{
-#if defined HAVE_NOVA
-Nova_EnterpriseModuleTrick();
-#endif
-
-#if defined HAVE_CONSTELLATION
-Constellation_EnterpriseModuleTrick();
-#endif
-}
-
-/*****************************************************************************/
-
-#ifdef HAVE_NOVA
-
-void CheckLicenses()
-
-{
-Nova_CheckLicensePromise();
-}
-
-#else
-
-void CheckLicenses()
-
-{
-struct stat sb;
-char name[CF_BUFSIZE];
-
-snprintf(name,sizeof(name),"%s/state/am_policy_hub",CFWORKDIR);
-MapName(name);
-
-if (stat(name,&sb) != -1)
-   {
-   NewClass("am_policy_hub");
-   CfOut(cf_verbose,""," -> Additional class defined: am_policy_hub");
-   }
-
-return;
-}
-
-#endif
-
-/*****************************************************************************/
-
-char *GetConsolePrefix()
-    
-{
-#ifdef HAVE_CONSTELLATION
-return "constellation";
-#elif defined HAVE_NOVA
-return "nova";
-#else
-return "cf3";
-#endif
-}
-
-/*****************************************************************************/
-
-char *MailSubject()
-
-{ static char buffer[CF_BUFSIZE];
-#ifdef HAVE_NOVA
-if (LICENSES)
-   {
-   strcpy(buffer,"Nova");
-   }
-else
-   {
-   strcpy(buffer,"NO LICENSE");
-   }
-#else
-strcpy(buffer,"community");
-#endif
-return buffer;
-}
-
-/*****************************************************************************/
-
-void SyntaxExport()
-{
-#ifdef HAVE_NOVA
-Nova_SyntaxTree2JavaScript();
-#else
-SyntaxPrintAsJson(stdout);
-#endif
-}
-
-/*****************************************************************************/
-/* Monitord                                                                  */
-/*****************************************************************************/
-
-void HistoryUpdate(struct Averages newvals)
-
-{
-#ifdef HAVE_NOVA  
-  struct Promise *pp = NewPromise("history_db","the long term memory");
-  struct Attributes dummyattr = {{0}};
-  struct CfLock thislock;
-  time_t now = time(NULL);
-
-/* We do this only once per hour - this should not be changed */
-
-Banner("Update long-term history");
-
-if (strlen(CURRENT_SHIFT) == 0)
-   {
-   // initialize
-   Nova_ResetShiftAverage(&SHIFT_VALUE);
-   }
-
-memset(&dummyattr,0,sizeof(dummyattr));
-dummyattr.transaction.ifelapsed = 59;
-
-thislock = AcquireLock(pp->promiser,VUQNAME,now,dummyattr,pp,false);
-
-if (thislock.lock == NULL)
-   {
-   Nova_UpdateShiftAverage(&SHIFT_VALUE,&newvals);
-   DeletePromise(pp);
-   return;
-   }
-
-/* Refresh the class context of the agent */
-DeletePrivateClassContext();
-DeleteEntireHeap();
-DeleteAllScope();
-
-NewScope("sys");
-NewScope("const");
-NewScope("match");
-NewScope("mon");
-NewScope("control_monitor");
-NewScope("control_common");
-GetNameInfo3();
-CfGetInterfaceInfo(cf_monitor);
-Get3Environment();
-BuiltinClasses();
-OSClasses();
-SetReferenceTime(true);
-
-LoadPersistentContext();
-LoadSystemConstants();
-
-YieldCurrentLock(thislock);
-DeletePromise(pp);
-
-Nova_HistoryUpdate(CFSTARTTIME, &newvals);
-
-if (strcmp(CURRENT_SHIFT,VSHIFT) != 0)
-   {
-   strcpy(CURRENT_SHIFT,VSHIFT);
-   Nova_ResetShiftAverage(&SHIFT_VALUE);
-   }
-
-Nova_DumpSlowlyVaryingObservations();
-
-#else
-#endif
-}
-
-/*****************************************************************************/
-
-int VerifyDatabasePromise(CfdbConn *cfdb,char *database,struct Attributes a,struct Promise *pp)
-
-{
-#ifdef HAVE_NOVA
-  char query[CF_BUFSIZE],name[CF_MAXVARSIZE];
-  int found = false;
- 
-CfOut(cf_verbose,""," -> Verifying promised database");
-
-if (!cfdb->connected)
-   {
-   CfOut(cf_inform,"","Database %s is not connected\n",database);
-   return false;
-   }
-
-Nova_CreateDBQuery(cfdb->type,query);
-
-CfNewQueryDB(cfdb,query);
-
-if (cfdb->maxcolumns < 1)
-   {
-   CfOut(cf_error,""," !! The schema did not promise the expected number of fields - got %d expected >= %d\n",cfdb->maxcolumns,1);
-   return false;
-   }
-
-while(CfFetchRow(cfdb))
-   {
-   strncpy(name,CfFetchColumn(cfdb,0),CF_MAXVARSIZE-1);
-
-   CfOut(cf_verbose,"","      ? ... discovered a database called \"%s\"",name);
-   
-   if (strcmp(name,database) == 0)
-      {
-      found = true;
-      }
-   }
-
-if (found)
-   {
-   CfOut(cf_verbose,""," -> Database \"%s\" exists on this connection",database);
-   return true;
-   }
-else
-   {
-   CfOut(cf_verbose,""," !! Database \"%s\" does not seem to exist on this connection",database);
-   }
-
-if (a.database.operation && strcmp(a.database.operation,"drop") == 0)
-   {
-   if (a.transaction.action != cfa_warn && !DONTDO)
-      {
-      CfOut(cf_verbose,""," -> Attempting to delete the database %s",database);
-      snprintf(query,CF_MAXVARSIZE-1,"drop database %s",database); 
-      CfVoidQueryDB(cfdb,query);
-      return cfdb->result;
-      }
-   else
-      {
-      CfOut(cf_error,""," !! Need to delete the database %s but only a warning was promised\n",database);
-      return false;
-      }   
-   }
-
-if (a.database.operation && strcmp(a.database.operation,"create") == 0)
-   {
-   if (a.transaction.action != cfa_warn && !DONTDO)
-      {
-      CfOut(cf_verbose,""," -> Attempting to create the database %s",database);
-      snprintf(query,CF_MAXVARSIZE-1,"create database %s",database); 
-      CfVoidQueryDB(cfdb,query);
-      return cfdb->result;
-      }
-   else
-      {
-      CfOut(cf_error,""," !! Need to create the database %s but only a warning was promised\n",database);
-      return false;
-      }
-   }
-
-return false;
-#else
-CfOut(cf_verbose,"","Verifying SQL database promises is only available with Cfengine Nova or above");
-return false;
-#endif
-}
-
-/*****************************************************************************/
-
-void NoteEfficiency(double e)
-
-{
-#ifdef HAVE_NOVA
- struct Attributes a = {{0}};
- struct Promise p = {0};
- 
-NovaNamedEvent("Configuration model efficiency",e,a,&p);
-CfOut(cf_verbose,""," -> Configuration model efficiency for %s = %.2lf%%",VUQNAME,e);
-#endif 
-}
-
-/*****************************************************************************/
-
-char *GetProcessOptions()
-{
-#ifdef HAVE_GETZONEID
- zoneid_t zid;
- char zone[ZONENAME_MAX];
- static char psopts[CF_BUFSIZE];
- 
-zid = getzoneid();
-getzonenamebyid(zid,zone,ZONENAME_MAX);
-
-if (cf_strcmp(zone,"global") == 0)
-   {
-   snprintf(psopts,CF_BUFSIZE,"%s,zone",VPSOPTS[VSYSTEMHARDCLASS]);
-   return psopts;
-   }
-#endif
-
-#ifdef LINUX
-if (strncmp(VSYSNAME.release,"2.4",3) == 0)
-   {
-   // No threads on 2.4 kernels
-   return "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,pri,rss,stime,time,args";
-   }
-
-#endif
-
-return VPSOPTS[VSYSTEMHARDCLASS];
-}
-
-/*****************************************************************************/
-
-int ForeignZone(char *s)
-{
-// We want to keep the banner
-
-if (strstr(s,"%CPU"))
-   {
-   return false;
-   }
-
-#ifdef HAVE_GETZONEID
- zoneid_t zid;
- char *sp,zone[ZONENAME_MAX];
- static psopts[CF_BUFSIZE];
- 
-zid = getzoneid();
-getzonenamebyid(zid,zone,ZONENAME_MAX);
-
-if (cf_strcmp(zone,"global") == 0)
-   {
-   if (cf_strcmp(s+strlen(s)-6,"global") == 0)
-      {
-      *(s+strlen(s)-6) = '\0';
-
-      for (sp = s+strlen(s)-1; isspace(*sp); sp--)
-         {
-         *sp = '\0';
-         }
-
-      return false;
-      }
-   else
-      {
-      return true;
-      }
-   }
-#endif
-return false;
-}
-
 /*****************************************************************************/
 
 #if !defined(HAVE_NOVA)
+
+void EnterpriseModuleTrick()
+{
+}
+
+const char *GetConsolePrefix(void)
+{
+return "cf3";
+}
+
+const char *MailSubject(void)
+{
+return "community";
+}
 
 int IsEnterprise(void)
 {
@@ -425,6 +94,10 @@ int EnterpriseExpiry(void)
 return false;
 }
 
+void HistoryUpdate(struct Averages newvals)
+{
+}
+
 void LogFileChange(char *file, int change, struct Attributes a, struct Promise *pp)
 {
 CfOut(cf_verbose, "", "Logging file differences requires version Nova or above");
@@ -445,6 +118,10 @@ return "";
 }
 
 void NotePromiseCompliance(struct Promise *pp,double val,enum cf_status status,char *reason)
+{
+}
+
+void NoteEfficiency(double e)
 {
 }
 
@@ -631,6 +308,12 @@ void LongHaul(time_t current)
 
 void SetMeasurementPromises(struct Item **classlist)
 {
+}
+
+int VerifyDatabasePromise(CfdbConn *cfdb,char *database,struct Attributes a,struct Promise *pp)
+{
+CfOut(cf_verbose,"","Verifying SQL database promises is only available with Cfengine Nova or above");
+return false;
 }
 
 void VerifyACL(char *file,struct Attributes a, struct Promise *pp)

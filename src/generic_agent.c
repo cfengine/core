@@ -69,6 +69,27 @@ unsetenv("LC_MESSAGES");
 
 /*****************************************************************************/
 
+#if !defined(HAVE_NOVA)
+
+void CheckLicenses(void)
+{
+struct stat sb;
+char name[CF_BUFSIZE];
+
+snprintf(name,sizeof(name),"%s/state/am_policy_hub",CFWORKDIR);
+MapName(name);
+
+if (stat(name,&sb) != -1)
+   {
+   NewClass("am_policy_hub");
+   CfOut(cf_verbose,""," -> Additional class defined: am_policy_hub");
+   }
+}
+
+#endif
+
+/*****************************************************************************/
+
 void GenericInitialize(int argc,char **argv,char *agents, struct GenericAgentConfig config)
 
 { enum cfagenttype ag = Agent2Type(agents);

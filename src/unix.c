@@ -32,6 +32,10 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#ifdef HAVE_ZONE_H
+# include <zone.h>
+#endif
+
 #ifdef HAVE_SYS_UIO_H
 # include <sys/uio.h>
 #endif
@@ -316,6 +320,78 @@ return killed;
 }
 
 /*******************************************************************/
+
+static int ForeignZone(char *s)
+{
+// We want to keep the banner
+
+if (strstr(s,"%CPU"))
+   {
+   return false;
+   }
+
+#ifdef HAVE_GETZONEID
+ zoneid_t zid;
+ char *sp,zone[ZONENAME_MAX];
+ static psopts[CF_BUFSIZE];
+ 
+zid = getzoneid();
+getzonenamebyid(zid,zone,ZONENAME_MAX);
+
+if (cf_strcmp(zone,"global") == 0)
+   {
+   if (cf_strcmp(s+strlen(s)-6,"global") == 0)
+      {
+      *(s+strlen(s)-6) = '\0';
+
+      for (sp = s+strlen(s)-1; isspace(*sp); sp--)
+         {
+         *sp = '\0';
+         }
+
+      return false;
+      }
+   else
+      {
+      return true;
+      }
+   }
+#endif
+return false;
+}
+
+/*****************************************************************************/
+
+static char *GetProcessOptions()
+{
+#ifdef HAVE_GETZONEID
+ zoneid_t zid;
+ char zone[ZONENAME_MAX];
+ static char psopts[CF_BUFSIZE];
+ 
+zid = getzoneid();
+getzonenamebyid(zid,zone,ZONENAME_MAX);
+
+if (cf_strcmp(zone,"global") == 0)
+   {
+   snprintf(psopts,CF_BUFSIZE,"%s,zone",VPSOPTS[VSYSTEMHARDCLASS]);
+   return psopts;
+   }
+#endif
+
+#ifdef LINUX
+if (strncmp(VSYSNAME.release,"2.4",3) == 0)
+   {
+   // No threads on 2.4 kernels
+   return "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,pri,rss,stime,time,args";
+   }
+
+#endif
+
+return VPSOPTS[VSYSTEMHARDCLASS];
+}
+
+/*****************************************************************************/
 
 /* from verify_processes.c */
 

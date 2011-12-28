@@ -1398,7 +1398,6 @@ JsonObjectPrint(out, syntax_tree, 0);
 JsonObjectDelete(syntax_tree);
 }
 
-
 /****************************************************************************/
 
 static void JsonObjectAppendSize(JsonObject **parent, const char *name, size_t value)

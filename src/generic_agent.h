@@ -62,6 +62,6 @@ void BannerSubBundle(struct Bundle *bp,struct Rlist *args);
 void WritePID(char *filename);
 void OpenCompilationReportFiles(const char *fname);
 struct GenericAgentConfig GenericAgentDefaultConfig(enum cfagenttype agent_type);
-
+void CheckLicenses(void);
 
 #endif

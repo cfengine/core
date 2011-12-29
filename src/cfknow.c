@@ -250,7 +250,13 @@ while ((c=getopt_long(argc,argv,"Ihbd:vVf:mMz:St:ruT",OPTIONS,&optindex)) != EOF
           else              
              {
              strcpy(TOPIC_CMD,optarg);
+
+             printf("Cause-effect:\n\n");
              CfGenerateStories(TOPIC_CMD,cfi_cause);
+             printf("Connection:\n\n");
+             CfGenerateStories(TOPIC_CMD,cfi_connect);
+             printf("Structure:\n\n");
+             CfGenerateStories(TOPIC_CMD,cfi_part);
              }
 #endif
           exit(0);

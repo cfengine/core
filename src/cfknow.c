@@ -51,22 +51,15 @@ void CfUpdateTestData(void);
 void ShowSingletons(void);
 void ShowWords(void);
 
-static char *GetTopicContext(char *topic_name);
-static int ClassifiedTopicMatch(char *ttopic1,char *ttopic2);
-static void DeClassifyCanonicalTopic(char *typed_topic,char *topic,char *type);
-static char *ClassifiedTopic(char *topic,char *type);
-static char *URLHint(char *s);
 static char *NormalizeTopic(char *s);
 
 static void AddInference(struct Inference **list,char *result,char *pre,char *qual);
 static struct Topic *IdempInsertTopic(char *classified_name);
 static struct Topic *InsertTopic(char *name,char *context);
-static struct Topic *FindTopic(char *name);
 static struct Topic *AddTopic(struct Topic **list,char *name,char *type);
 static void AddTopicAssociation(struct Topic *tp,struct TopicAssociation **list,char *fwd_name,char *bwd_name,struct Rlist *li,int ok,char *from_context,char *from_topic);
 static void AddOccurrence(struct Occurrence **list,char *reference,struct Rlist *represents,enum representations rtype,char *context);
 static struct Topic *TopicExists(char *topic_name,char *topic_type);
-static struct Topic *GetCanonizedTopic(struct Topic *list,char *topic_name);
 static struct TopicAssociation *AssociationExists(struct TopicAssociation *list,char *fwd,char *bwd);
 static struct Occurrence *OccurrenceExists(struct Occurrence *list,char *locator,enum representations repy_type,char *s);
 
@@ -237,11 +230,7 @@ while ((c=getopt_long(argc,argv,"Ihbd:vVf:mMz:St:ruT",OPTIONS,&optindex)) != EOF
       case 'z':
 
 #ifdef HAVE_CONSTELLATION
-          if (strcmp(optarg,"any") == 0)
-             {
-             Constellation_ListPossibleStoriesCmdLine();
-             }
-          else if (strncmp(optarg,"SHA=",4) == 0)
+          if (strncmp(optarg,"SHA=",4) == 0)
              {
              char buffer[CF_BUFSIZE];
              Constellation_HostStory(optarg,buffer,CF_BUFSIZE);
@@ -257,6 +246,12 @@ while ((c=getopt_long(argc,argv,"Ihbd:vVf:mMz:St:ruT",OPTIONS,&optindex)) != EOF
              CfGenerateStories(TOPIC_CMD,cfi_connect);
              printf("Structure:\n\n");
              CfGenerateStories(TOPIC_CMD,cfi_part);
+             //printf("Improvise:\n\n");
+             //CfGenerateStories(TOPIC_CMD,cfi_none);
+
+             //char buffer[CF_BUFSIZE];
+             //Constellation_GenerateStories_by_name_JSON("class_contexts::update_report",cfi_cause,buffer,CF_BUFSIZE);
+             //printf("\nTEST JSON - %s\n",buffer);
              }
 #endif
           exit(0);
@@ -1116,15 +1111,6 @@ return AddTopic(&(TOPICHASH[slot]),name,context);
 
 /*****************************************************************************/
 
-struct Topic *FindTopic(char *name)
-
-{ int slot = GetHash(ToLowerStr(name));
-
-return GetTopic(TOPICHASH[slot],name);
-}
-
-/*****************************************************************************/
-
 struct Topic *AddTopic(struct Topic **list,char *name,char *context)
 
 { struct Topic *tp;
@@ -1335,109 +1321,6 @@ ip->next = *list;
 *list = ip;
 }
 
-/*********************************************************************/
-
-static char *ClassifiedTopic(char *topic,char *context)
-
-{ static char name[CF_MAXVARSIZE];
-
-CfDebug("CONTEXT(%s)/TOPIC(%s)",context,topic);
-
-if (context && strlen(context) > 0)
-   {
-   snprintf(name,CF_MAXVARSIZE,"%s::%s",context,topic);
-   }
-else
-   {
-   snprintf(name,CF_MAXVARSIZE,"%s",topic);
-   }
-
-return name;
-}
-
-/*********************************************************************/
-
-static void DeClassifyCanonicalTopic(char *classified_topic,char *topic,char *context)
-
-{
-context[0] = '\0';
-topic[0] = '\0';
-
-if (*classified_topic == '.')
-   {
-   sscanf(classified_topic,".%255[^\n]",topic);
-   }
-else if (strstr(classified_topic,"."))
-   {
-   sscanf(classified_topic,"%255[^.].%255[^\n]",context,topic);
-   
-   if (strlen(topic) == 0)
-      {
-      sscanf(classified_topic,".%255[^\n]",topic);
-      }
-   }
-else
-   {
-   strncpy(topic,classified_topic,CF_MAXVARSIZE-1);
-   }
-
-if (strlen(context) == 0)
-   {
-   strcpy(context,"any");
-   }
-}
-
-/*********************************************************************/
-
-static int ClassifiedTopicMatch(char *ttopic1,char *ttopic2)
-
-{ char context1[CF_MAXVARSIZE],topic1[CF_MAXVARSIZE];
-  char context2[CF_MAXVARSIZE],topic2[CF_MAXVARSIZE];
-
-if (strcmp(ttopic1,ttopic2) == 0)
-   {
-   return true;
-   }
-   
-context1[0] = '\0';
-topic1[0] = '\0';
-context2[0] = '\0';
-topic2[0] = '\0';
-
-DeClassifyTopic(ttopic1,topic1,context1);
-DeClassifyTopic(ttopic2,topic2,context2);
-
-if (strlen(context1) > 0 && strlen(context2) > 0)
-   {
-   if (strcmp(topic1,topic2) == 0 && strcmp(context1,context2) == 0)
-      {
-      return true;
-      }
-   }
-else
-   {
-   if (strcmp(topic1,topic2) == 0)
-      {
-      return true;
-      }
-   }
-
-return false;
-}
-
-/*****************************************************************************/
-
-static char *URLHint(char *url)
-
-{ char *sp;
-
-for (sp = url+strlen(url); *sp != '/'; sp--)
-   {
-   }
-
-return sp;
-}
-
 /*****************************************************************************/
 /* Level                                                                     */
 /*****************************************************************************/
@@ -1565,63 +1448,6 @@ for (op = list; op != NULL; op=op->next)
 return NULL;
 }
 
-
-/*****************************************************************************/
-
-struct Topic *GetCanonizedTopic(struct Topic *list,char *topic_name)
-
-{ struct Topic *tp;
-  char context[CF_MAXVARSIZE],name[CF_MAXVARSIZE];
-
-DeClassifyCanonicalTopic(topic_name,name,context);
-
-for (tp = list; tp != NULL; tp=tp->next)
-   {
-   if (strlen(context) == 0)
-      {
-      if (strcmp(name,CanonifyName(tp->topic_name)) == 0)
-         {
-         return tp;          
-         }
-      }
-   else
-      {
-      if ((strcmp(name,CanonifyName(tp->topic_name))) == 0 && (strcmp(context,CanonifyName(tp->topic_context)) == 0))
-         {
-         return tp;          
-         }
-      }
-   }
-
-return NULL;
-}
-
-/*****************************************************************************/
-
-static char *GetTopicContext(char *topic_name)
-
-{ struct Topic *tp;
-  static char context1[CF_MAXVARSIZE],topic1[CF_MAXVARSIZE];
-  int slot = GetHash(topic_name);
- 
-context1[0] = '\0';
-DeClassifyTopic(topic_name,topic1,context1);
-
-if (strlen(context1) > 0)
-   {
-   return context1;
-   }
-
-for (tp = TOPICHASH[slot]; tp != NULL; tp=tp->next)
-   {
-   if (strcmp(topic1,tp->topic_name) == 0)
-      {
-      return tp->topic_context;
-      }
-   }
-
-return NULL;
-}
 
 /*****************************************************************************/
 

@@ -64,7 +64,7 @@ Copyright @copyright{} 2011 CFEngine AS
 @end ifinfo
 
 @ifnottex
-@node Top, Defining Agilty, (dir), (dir)
+@node Top, Defining Agility, (dir), (dir)
 @top Agility
 
 
@@ -84,92 +84,465 @@ Copyright @copyright{} 2011 CFEngine AS
 
 
 @menu
-* Defining Agilty::             
+* Defining Agility::             
 @end menu
 
-@node Defining Agilty,  , Top, Top
-@chapter Defining Agilty
+@node Defining Agility,  , Top, Top
+@chapter Defining Agility
 @sp 1
 
-We intuitively recognize agility as the capability to respond fast
-enough to a pressing event. The event might represent danger, or
-merely a self-imposed deadline.  In any case, there is generally a
-penalty associated with not responding quickly.
+We intuitively recognize agility as the capability to respond rapidly
+enough and flexibly enough to a difficult challenge. If we imagine an
+animal surviving in the wild, a climber on a rock-face or a wrestler engaged in
+combat, we identify the skills of @i{anticipation}, @i{speed} of response and
+the ability to @i{adapt} or bend without breaking to meet the challenges.
 
-To understand agility, we have to understand time. Agility is a
-relative concept: it's about being fast enough, in the right context.
+@itemize
+@item Anticipate.
+@item Act.
+@item Adapt.
+@end itemize
+
+In infrastructure management, agility represents the need to handle
+changing demand for service, to repair an absence of service, and to
+improve and deploy new services in response to changes from users and
+market requirements. It is tied to economic, business or work-related
+imperatives by the need to maintain a competitive lead.
+
+The compelling event that our system must respond to might represent
+danger, or merely a self-imposed deadline.  In either case, there is
+generally a penalty associated with a lack of agility: a blow, a fall or
+a loss.
+
+
+@node What comprises agility?
+@unnumberedsec What comprises agility?
+@sp 1
+
+To understand agility, we have to understand time and the capacity for change. Agility is a
+relative concept: it's about adapting fast enough, in the right context.
 Let's try to gain an engineering perspective on agility to see what
 enables it and what throttles it.
 
-We can define a measure of agility as the ratio of available speed to
-required speed.
+@cartouche
+@noindent In a challenge there are four stages that need attention:
 
+@itemize
+@item To comprehend the challenge.
+@item To solve the challenge.
+@item To respond to the challenge.
+@item To confirm or verify the response.
+@end itemize
+@end cartouche
+
+@sp 1
+Each of these phases takes time and requires a certain flexibility.
+Our goal is to keep these phases simple and therefore cheap for the long-term.
+Affording the time and flexibility needed is the key to being agile.
+Technology can help with this, if we adopt sound practices. 
+
+We can go
+one step further and define an engineering scale of agility as the
+ratio of available speed to required speed and ratio of number ways a
+system can be changed to the number of ways imperatives require us to
+change.
+
+@sp 1
+
+@cartouche
 @verbatim
-Agilty ~ Available speed with control
-         ----------------------------
-                Required speed
+  Agility ~ Available speed under control        Changes available
+           -----------------------------  *  -----------------------
+                  Required speed                 Changes Required
 @end verbatim
+@end cartouche
 
-@noindent This definition behaves reasonably. If we our speed matches what we need, then
-we can claim 100% agility. If it is less than required, thenwe get a smaller number, and if
-we have excess speed we can claim a superefficiency.
+@noindent Although such a scale might be hard to track in practice, 
+the definition makes simple engineering sense@footnote{If available
+speed matches need, and we have the capability to make all required
+changes, then we can claim exactly 100% agility. If we have less than
+required, then we get a smaller number, and if we have excess speed or
+changeability then we can even claim a super-efficiency.}, and brings
+some insight into what we need to think about.
 
-What is required speed?  It is is the rate of change you have to be
+What is required speed?  It is is the rate of change we have to be
 able to enact in order to achieve and maintain a state (keep a
-promise) that is aligned with a an organization's well-being. If we
-think in terms of services, it is the Service Level you have to
-achieve to comply with a Service Level Agreement.  If we think of a
-support ticket, it is the speed we have to work at in order 
-to keep the impact of an unpredicted change within acceptable
-levels. What is acceptable is clearly a subjective judgement, a matter
-for policy to decide. So there are many uncertainties and relativisms.
-
-The weakest link in a chain of dependencies limits the speed of any chain.
+promise) that is aligned with our intent.  This requires a dependence
+on technology and human processes.
+The weakest link in any chain of dependencies limits the speed.
 The weakest link might be a human who doesn't understand what to do, or a
-broken wire or a misconfigured switch. An organization is an information
-rich @i{society} with complex interplays between Man and Machine.
+broken wire or a misconfigured switch, so there are many
+possible failure modes for agility. An organization is an information
+rich @i{society} with complex interplays between Man and Machine; agility
+challenges us to think about these weakest links and try to bolster
+them with CFEngine's technology.
 
-The available speed is called the Capacity of the component. 
+For example:
 
-Let's create some scaling laws.
+@itemize
+@item If we think in terms of
+services, it is the Service Level you have to achieve in order to
+comply with a Service Level Agreement.  
 
+@item If we think of a support
+ticket, it is the speed we have to work at in order to keep the impact
+of an unpredicted change within acceptable levels. 
+@end itemize
+
+What we call acceptable
+is clearly a subjective judgement, i.e. a matter for policy to decide. So
+there are many uncertainties and relativisms in such definitions. It would
+be inconceivable to claim any kind of industry standard for these.
+
+@sp 1
+@center{@image{agility,12cm}}
+@center{How agility depends on technology measures.}
+@sp 1
+
+
+The available maximum speed of any system is usually called its `capacity'.
+We can write some scaling laws for the dependencies of agility to see where
+the failure modes might arise.
+@sp 1
+@cartouche
 @verbatim
-Average available speed ~ Expected capacity * reliability
-                          ----------------------------
-                                  Consumers
+      Average available speed ~ Expected capacity * reliability
+                                ----------------------------
+                                           Consumers
 @end verbatim
+@end cartouche
+@sp 1
+This expression says that the rate at which we get work done on average depends
+no only on how we share maximum capacity amongst a number of different consumers,
+clients, processes, etc, but also on how much of the time this capacity is fully
+available, perhaps because systems are down or unavailable.
 
+The appearance of reliability in this expression therefore tells us that maintenance
+of the system, and anticipation of failure will play a key role in agility.
+Remarkably this is usually unexpected for most practitioners, and most of system planning
+goes into first time deployment, rather than maintaining operational state.
 
+The next challenge is concerns a human limitation. One of the greatest challenges in any
+organization lies in comprehending the system.
+@sp 1
+@cartouche
 @verbatim
-Efficiency ~  Number of objects affected
-             ----------------------------
-                Number of rules + 1
+       Comprehensibility ~  Predictability (Reliability)
+                           ----------------------------
+                                 Machines * rules
 @end verbatim
+@end cartouche
+@sp 1
+@noindent Our ability to comprehend behaviour depends on how predictable it is, i.e.
+how well it meets our expectations. For technology, we expect behaviour
+to be as close as possible on our intentions. CFEngine's maintenance of promises
+ensures that this is done with best possible effort and a rapid cycle of checking.
 
+To keep the number of rules to a minimum, CFEngine avoids mixing up
+@i{what} policy is being expressed with @i{how} the promises are
+kept. It uses a declarative language to separate the what from the
+how. This allows ordinary users to see what was intended without
+having to know the meaning of how, as was the case when scripting was
+used to configure systems.
+
+Finally, if we think about the efficiency of a configuration, which is
+another way of estimating its simplicity, we are interested in how
+much work it takes to represent our intentions.
+@sp 1
+@cartouche
 @verbatim
-Comprehensibilty ~  Predictability or reliability
-                    ----------------------------
-                         Machines * rules
+             Efficiency ~  Number of objects affected
+                           ----------------------------
+                                Number of rules
 @end verbatim
+@end cartouche
+@sp 1
+Patterns play a role too in simplifying. This affects not just the
+technology cost, but also the cognitive cost (comprehensibility).
+Efficiency lies in the
+power of the model to encapsulate needs with few rules. In the
+underlying technology, this represents an ability to encapsulate and
+represent patterns without losing flexibility. Making black boxes is
+easy, but using flexible or programmable boxes is simple.
+
+From the perspective of agility, regular scheduling of a verifiable and comprehensible
+configuration model, combined with speed of verification and repair
+are the values we covet for agility.
 
 
-Mean Time to Repair.
+@node Aspects of CFEngine that bring agility
+@unnumberedsec Aspects of CFEngine that bring agility
+@sp 1
 
-Nimble, lightweight, strong, balanced..
+We can now summarize some qualities of CFEngine that favour agility:
+@sp 1
+@itemize
+@item Ability to express clear intentions about desired outcome (comprehension).
+@item Availability of insight into system performance and state (comprehension).
+@item Ability to customize policy down to a low level without programming (adaptability).
 
-From the perspective of agility, regular scheduling and speed of change are the 
-values we covet.
+@item The default, parallelized execution framework verifies promises every 5 minutes
+for rapid fault detection and change deployment.
+@item System monitoring/sampling rate is every 2.5 minutes (Nyquist frequency),
+for automated hands-free response to errors.
+@item The lightweight resource footprint of CFEngine does not consume system resources
+required for actual business (low overhead, maximum capacity).
+
+@item Ability to increase number of clients without significant penalty (scalability and ease of increasing capacity).
+
+@end itemize
+@sp 1
+As indicated above, time-scales are the key to enabling agility. Different environments
+have rather different needs:
+
+@itemize
+@item Web shops:
+Resource consumption is an issue on
+busy web servers, however web services are typically quite slow already and it is
+easy to load balance a web service, so resource efficiency is not
+usually considered a priority until the possible savings become
+significant with thousands of hosts. 
+
+Credit card information is subject PCI-DSS regulation and requires more
+intensive verification, but these systems are often separated from the main
+web service. 
+
+Run-frequency of CFEngine is not critical here, but speed of execution
+is a factor during updates.  During software updates speed and
+orchestration are issues, as time lost during upgrades is often
+revenue lost.
+
+The level of customization in a web shop could be quite high, as there
+is a stack of interdependent services including databases and name
+services that have to work seamlessly, and the rate of deployment of
+new versions of the software might be relatively high.
+
+@item Cloud providers
+For Infrastructure-as-a-Service providers and consumers, set up
+and tear-down rates are quite high so efficient and speedy configuration
+is imperative. For Software and Platform as a service providers, stability,
+high performance and regulation are key issues, and scaling up and down
+for demand is probably the fastest rate of change.
+
+@item High Performance Computing:
+
+High performance clusters are typically found in Oil and Gas,
+Financial, weather and aviation industries, and other places where raw
+computation is used to number crunch. The lightweight footprint of
+CFEngine is a major benefit here, as every CPU cycle and megabyte of
+memory is precious.
+
+In clusters the rate of customization is low, so the need for agility
+is generally low, and raw speed is the issue.
+
+@item Government and finance sectors:
+
+Security and version control of approved software are major challenges
+in government regulated institutions. Agility has been a low priority
+in the past, but this will have to change as the rest of the world's
+IT services accelerate.
+
+High availability in CFEngine is used for continuous auditing and
+security. Passing regulatory frameworks like SOX, SAS-70, ISO 20k, etc
+can depend on this non-intrusive availability. Liability is a major
+concern and significant levels of approval are generally required to
+make changes, with tracking of individual responsibility. Out-of-hours
+change windows are common for making upgrades and making intended
+changes. Scalability of reporting is a key here, but change happens
+slowly.
+
+@end itemize
 
 
-@image{agility,12cm}
+@node How does complexity affect agility?
+@unnumberedsec How does complexity affect agility?
+@sp 1
+
+In the past@footnote{Perhaps not just in the past. We are emerging
+from an industrial era of management where mass producing everything
+the same was the cheapest approach to scaling up services. However,
+today personal freedom demands variety and will not tolerate such
+oversimplification.}, it was common to manage change by making
+everything the same. Today, the individual custom experience is what today's information
+society craves.  Being forced into a single mold is a hindrance to
+adaptability and therefore to agility. In the world of commerce, 
+consumers rule the roost, and agility is competitive edge in a market of 
+many more players than before.
+
+Today, we live in a culture of `ease', and we focus on what can be
+done easily rather than worrying about long term simplicity (Total Cost
+of Ownership). At CFEngine, we believe that `easy' answers often suffer from
+oversimplification issues. Anyone can make something appear superficially
+easy by working hard on behalf of a user, or by papering  over a mess.
+Moreover, making a risky process `too easy' can encourage haste and
+carelessness.
+
+@sp 1
+@cartouche
+Infrastructure engineering is a potentially high risk occupation, as many
+users rely on the infrastructure for their livelihoods. Simplicity is
+a key strategy to minimizing Total Cost of Ownership.
+@end cartouche
+@sp 1
+
+Making something truly simple is a very hard problem, but it is an
+investment in future change. What is easy today might be expensive to make easy tomorrow.
+But if something is truly simple, then the work is all up front in learning
+the basics, and does not come
+as an unexpected surprise down the line.
+
+At CFEngine, we believe in agility through simplicity, and so we
+invest continuous research into making our technology genuinely simple for trained
+users. We know that a novice user will not necessarily find CFEngine easy, but
+after a small amount of training, CFEngine will be a tool for life, not just a hurried
+deployment.
+
+Simplicity in CFEngine is addressed in the following ways:
+
+@sp 1
+@itemize
+@item The software has few dependencies that complicate installation and upgrade.
+@item Changes made are atomic and minimize dependencies.
+@item Each host works as an independent entity, reducing communication fragility.
+@item The configuration model is based on Promise Theory -- a very consistent and simple
+approach to modelling autonomous cooperative systems.
+@item All hosts run a basically identical agent on all operating
+platforms (from mobile phones to mainframes), and understand a common language of intent which they
+can translate into any operating system's naive system calls.
+@item Comprehensive facilities are allowed for making use of patterns and other total-information-reducing
+tactics.
+@end itemize
+
+@sp 1
+A certain level of complexity is necessary and desirable.
+Some organizations still try to remain agile by avoiding complexity. However, the ability
+to respond to complex scenarios often requires us to delve into complexity. Avoiding
+it merely creates a lack of agility as we are constrained by the requirement of
+oversimplification.
+
+
+@node Packaging limits agility
+@unnumberedsec Packaging limits agility
+@sp 1
+
+
+Atomicity, or avoidance of dependency, is a key approach to simplicity. 
+Today this is often used to argue to packaging of software.
+
+Handling software and system configuration as packages of data makes
+certain processes appear superficially easy, because you get a single object
+to deal with, that has a name and a version number.
+However, to maintain flexibility we should
+not bundle too many features into a package.  
+
+For example, a tin of
+soup or a microwave meal might be a superficially easy way to make
+dinner, for many scenarios, but the day you get a visitor with special
+dietary requirements (vegetarian or allergic etc) then the
+prepackaging is a major obstacle to adapting: the recipe cannot be
+changed and repackaged without going back to the factory that made
+it. Thus oversimplification generally tends to end up sending up back
+to work around the technology.
+
+
+CFEngine's modelling language gives you control over the smallest
+ingredients, but also allows you to package your own containers
+or work with other suppliers' packages. This ensures that
+adaptability is not sacrificed for superficial ease.
+
+
+@node An effective understanding helps agility
+@unnumberedsec An effective understanding helps agility
+@sp 1
+
+All configuration issues, including fitness for purpose, boil down to
+three things: why, what and how. Knowing why we do something is the
+most important way of avoiding error and risk of failure. Simplicity
+then comes from keeping the `what' and the `how' separate, and
+reducing the how to a predictable, repairable transaction. This is
+what CFEngine's @i{convergent promise} technology does.
+
+Knowledge is an antidote to uncertainty. Insight into patterns, brings
+simplicity to the information management, and insight into behaviour
+allows us to estimate impact of change, thus avoiding the risk associated
+with agility.
+
+@cartouche
+In configuration `what' represents transitory knowledge, while `how'
+is often more lasting and can be absorbed into the infrastructure. The
+consistency and repairability of `how' makes it simpler to change what
+without risk.
+@end cartouche
+
+
+
+
+@node Increasing capacity
+@unnumberedsec Increasing capacity
+
+Capacity in IT infrastructure is increased by increasing machine
+power. Today, at the limit of hardware capacity, this typically means
+increasing the number of machines serving a task. Cloud services have
+increased the speed agility with which resources can be deployed --
+whether public or private cloud --
+but they do not usually provide any customization tools.  This is
+where CFEngine brings significant value.
+
+The rapid deployment of new services is assisted by:
+
+@itemize
+@item Virtualization hypervisor control or private cloud management (libvirt integration).
+@item Rapid, massively-parallelized custom configuration.
+@item Avoidance of network dependencies.
+@end itemize
+
+
+
+@node Maximizing business imperatives
+@unnumberedsec Maximizing business imperatives
+
+Agility allows companies and public services to compete and address
+the needs of continuous service improvement. This requires insight
+into IT operations from business and vice versa. Recently, the
+`DevOps' movement in web arenas has emphasized the need for a more
+streamlined approach to integrating business-driven change and IT
+operations. Whatever we choose to call this, and in whatever arena,
+`connecting the dots between business and IT' is a major enabler for
+agility to business imperatives.
+
+Some business issues are inherently complex, e.g. software
+customization and security, because they introduce multifaceted
+conflicts of interest that need to resolved with clear documentation
+about @i{why}. 
+
+The ability to model our intentions about these matters in a clearly
+understandable way enables insight and understanding; this, in turn,
+allows us to anticipate and comprehend challenges. CFEngine's
+knowledge management features help to make the configuration itself a
+documentation of the system. Instead of relying on command line tools
+to interact, the user documents intentions (as `promises to be kept').
+These promises, and how well they have been kept, can be examined either
+from the original specification or in the Mission Portal.
+
+In the industrial age, the strategy was to supply sufficient force to
+a small problem in order to `control' it by brute force. In systems
+today the scale and complexity are such that no such brute force
+approach can seriously be expected to work. Thus one is reduced to a more even
+state of affairs: learning to work with the environment `as is',
+with clear expectations of what is possible and controlling only certain
+parts on which crucial things depend.
+
 
 @menu
 * What is scalability?::        
 @end menu
 
-@node What is scalability?,  , Defining Agilty, Defining Agilty
-@section What is scalability?
+@node Scalability and agility
+@unnumberedsec Scalability and agility
 @sp 1
+
+Related to capacity is the issue of scaling services for massive available
+capacity.
 
 By scalability we mean the intrinsic capacity of a system to
 handle growth. Growth in a system can occur in three ways: by the volume of input
@@ -188,11 +561,32 @@ ability to @i{comprehend} the system as it grows. Limitations of
 comprehension often lead to over-simplification and
 lowest-common-denominator standardization.
 
-Scalability is addressed in a separate document: @i{Scale and Scalability}.
+Scalability is addressed in a separate document: @i{Scale and Scalability},
+so we shall not discuss it further here.
 
 
 
+@node Who is responsible for agility?
+@unnumberedsec Who is responsible for agility?
+@sp 1
 
+Agility is going to be an increasingly important and prevalent feature
+of the modern world, as we enter the information-based
+society. Competitiveness edge in both private sector and research
+makes agility the actual product of a not-too-distant tomorrow.
+
+Who or what makes agility a reality? The simple answer to this
+question is everyone and everything. Change is a chain of dependent
+activities and the weakest link in the chain is the limiting
+factor. Often, that is human knowledge, since it is the part of the
+chain that we take most for granted.
+
+CFEngine has been carefully designed to support agile operations for
+the long term, by investing in knowledge management, speed and efficiency.
+We recommend all infrastructure engineers to reexamine the role of time in
+their systems.
+
+Tempus fugit!
 
 @ifhtml
 @html

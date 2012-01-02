@@ -32,6 +32,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#include "writer.h"
+
 int main (int argc,char *argv[]);
 void ThisAgentInit(void);
 void KeepReportsControlPromises(void);
@@ -297,7 +299,9 @@ static void SyntaxExport()
 #ifdef HAVE_NOVA
 SyntaxTree2JavaScript();
 #else
-SyntaxPrintAsJson(stdout);
+Writer *writer = FileWriter(stdout);
+SyntaxPrintAsJson(writer);
+WriterClose(writer);
 #endif
 }
 

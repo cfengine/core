@@ -160,6 +160,19 @@ void SyntaxCompletion(char *s)
 printf("Syntax completion is available in cfengine Nova,Constellation or Galaxy\n\n");
 }
 
+/*****************************************************************************/
+
+void SyntaxExport()
+{
+#ifdef HAVE_NOVA
+Nova_SyntaxTree2JavaScript();
+#else
+Writer *writer = FileWriter(stdout);
+SyntaxPrintAsJson(writer);
+WriterClose(writer);
+#endif
+}
+
 void VerifyOutputsPromise(struct Promise *pp)
 {
 printf(" !! Outputs promises are not available in the community edition of Cfengine\n");

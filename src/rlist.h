@@ -28,6 +28,8 @@
 #include "cf.defs.h"
 #include "conf.h"
 
+#include "writer.h"
+
 struct Rval
    {
    void *item;        /* (char *), (struct Rlist *), or (struct FnCall)  */
@@ -82,6 +84,8 @@ struct Rlist *RlistAppendReference(struct Rlist **start,void *item, char type);
 
 void ShowRlist(FILE *fp,struct Rlist *list);
 void ShowRval(FILE *fp, struct Rval rval);
+
+void RvalPrint(Writer *writer, struct Rval rval);
 
 struct Rlist *RlistAt(struct Rlist *start, size_t index);
 

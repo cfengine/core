@@ -25,8 +25,6 @@
 #ifndef CFENGINE_WRITER_H
 #define CFENGINE_WRITER_H
 
-#include "cf3.defs.h"
-
 /*
  * Abstract "writer".
  *
@@ -37,6 +35,8 @@
 
 struct Writer;
 typedef struct Writer Writer;
+
+#include "cf3.defs.h"
 
 Writer *FileWriter(FILE *);
 Writer *StringWriter(void);

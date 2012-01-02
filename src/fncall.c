@@ -349,3 +349,26 @@ if (fncall_classes && strlen(fncall_classes))
    AddPrefixedClasses(name,fncall_classes);
    }
 }
+
+/*****************************************************************************/
+
+void FnCallPrint(Writer *writer, struct FnCall *call)
+{
+for (struct Rlist *rp = call->args; rp != NULL; rp = rp->next)
+   {
+   switch (rp->type)
+      {
+      case CF_SCALAR:
+         WriterWriteF(writer, "%s,", (const char *)rp->item);
+         break;
+
+      case CF_FNCALL:
+         FnCallPrint(writer, (struct FnCall *)rp->item);
+         break;
+
+      default:
+         WriterWrite(writer, "(** Unknown argument **)\n");
+         break;
+      }
+   }
+}

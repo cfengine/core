@@ -228,7 +228,9 @@ if (ag != cf_keygen)
 
    if (SHOW_PARSE_TREE)
       {
-      PolicyPrintAsJson(stdout, VINPUTFILE, BUNDLES, BODIES);
+      Writer *writer = FileWriter(stdout);
+      PolicyPrintAsJson(writer, VINPUTFILE, BUNDLES, BODIES);
+      WriterClose(writer);
       }
 
    CheckLicenses();

@@ -26,6 +26,7 @@
 #define CFENGINE_JSON_H
 
 #include "cf3.defs.h"
+#include "writer.h"
 
 typedef struct Rlist JsonObject;
 typedef struct Rlist JsonArray;
@@ -49,10 +50,9 @@ JsonObject *JsonObjectGetAsObject(JsonObject *object, const char *key);
 const char *JsonArrayGetAsString(JsonArray *array, size_t index);
 JsonObject *JsonArrayGetAsObject(JsonArray *array, size_t index);
 
-void JsonStringPrint(FILE *out, const char *value, int indent_level);
-void JsonArrayPrint(FILE* out, JsonArray *value, int indent_level);
-void JsonObjectPrint(FILE* out, JsonObject *value, int indent_level);
-const char* JsonObjectToString(JsonObject *value);
+void JsonStringPrint(Writer *writer, const char *value, int indent_level);
+void JsonArrayPrint(Writer *writer, JsonArray *value, int indent_level);
+void JsonObjectPrint(Writer *writer, JsonObject *value, int indent_level);
 
 const char *JsonParseAsString(const char **data);
 JsonArray *JsonParseAsArray(const char **data);

@@ -1372,7 +1372,7 @@ for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
 return control_bodies;
 }
 
-void SyntaxPrintAsJson(FILE *out)
+void SyntaxPrintAsJson(Writer *writer)
 {
 JsonObject *syntax_tree = NULL;
 
@@ -1394,7 +1394,7 @@ JsonObject *syntax_tree = NULL;
    JsonObjectAppendObject(&syntax_tree, "bundle-types", bundle_types);
    }
 
-JsonObjectPrint(out, syntax_tree, 0);
+JsonObjectPrint(writer, syntax_tree, 0);
 JsonObjectDelete(syntax_tree);
 }
 
@@ -1653,7 +1653,7 @@ JsonObjectAppendArray(&json_body, "classes", ExportBodyClassesAsJson(body->conli
 return json_body;
 }
 
-void PolicyPrintAsJson(FILE *out, const char *filename,
+void PolicyPrintAsJson(Writer *writer, const char *filename,
                        struct Bundle *bundles, struct Body *bodies)
 {
 JsonObject *json_policy = NULL;
@@ -1684,57 +1684,58 @@ JsonObjectAppendString(&json_policy, "name", filename);
    }
 
 
-JsonObjectPrint(out, json_policy, 0);
+JsonObjectPrint(writer, json_policy, 0);
 JsonObjectDelete(json_policy);
 }
 
 /****************************************************************************/
 
-static void IndentPrint(FILE *out, int indent_level)
+static void IndentPrint(Writer *writer, int indent_level)
 {
 int i = 0;
 for (i = 0; i < PRETTY_PRINT_SPACES_PER_INDENT * indent_level; i++)
    {
-   fprintf(out, " ");
+   WriterWriteChar(writer, ' ');
    }
 }
 
-static void RvalPrettyPrint(FILE *out, struct Rval rval)
+static void RvalPrettyPrint(Writer *writer, struct Rval rval)
 {
 /* FIX: prettify */
-ShowRval(out, rval);
+RvalPrint(writer, rval);
 }
 
-static void AttributePrettyPrint(FILE *out, struct Constraint *attribute, int indent_level)
+static void AttributePrettyPrint(Writer *writer, struct Constraint *attribute, int indent_level)
 {
-fprintf(out, "%s => ", attribute->lval);
-RvalPrettyPrint(out, attribute->rval);
+WriterWriteF(writer, "%s => ", attribute->lval);
+RvalPrettyPrint(writer, attribute->rval);
 }
 
-static void ArgumentsPrettyPrint(FILE *out, struct Rlist *args)
+static void ArgumentsPrettyPrint(Writer *writer, struct Rlist *args)
 {
 struct Rlist *argp = NULL;
 
-fprintf(out, "(");
+WriterWriteChar(writer, '(');
 for (argp = args; argp != NULL; argp = argp->next)
    {
-   fprintf(out, "%s", (char *)argp->item);
+   WriterWriteF(writer, "%s", (char *)argp->item);
 
    if (argp->next != NULL)
       {
-      fprintf(out, ", ");
+      WriterWrite(writer, ", ");
       }
    }
-fprintf(out, ")");
+WriterWriteChar(writer, ')');
 }
 
-void BodyPrettyPrint(FILE *out, struct Body *body)
+void BodyPrettyPrint(Writer *writer, struct Body *body)
 {
 struct Constraint *cp = NULL;
 char *current_class = NULL;
 
-fprintf(out, "body %s %s", body->type, body->name); ArgumentsPrettyPrint(out, body->args);
-fprintf(out, "\n{");
+WriterWriteF(writer, "body %s %s", body->type, body->name);
+ArgumentsPrettyPrint(writer, body->args);
+WriterWrite(writer, "\n{");
 
 for (cp = body->conlist; cp != NULL; cp = cp->next)
    {
@@ -1744,33 +1745,34 @@ for (cp = body->conlist; cp != NULL; cp = cp->next)
 
       if (strcmp(current_class, "any") == 0)
 	 {
-	 fprintf(out, "\n");
+         WriterWrite(writer, "\n");
 	 }
       else
 	 {
-	 fprintf(out, "\n\n%s::", current_class);
+         WriterWriteF(writer, "\n\n%s::", current_class);
 	 }
       }
 
-   fprintf(out, "\n");
-   IndentPrint(out, 1);
-   AttributePrettyPrint(out, cp, 2);
+   WriterWriteChar(writer, '\n');
+   IndentPrint(writer, 1);
+   AttributePrettyPrint(writer, cp, 2);
    }
 
-fprintf(out, "\n}");
+WriterWrite(writer, "\n}");
 }
 
-void BundlePrettyPrint(FILE *out, struct Bundle *bundle)
+void BundlePrettyPrint(Writer *writer, struct Bundle *bundle)
 {
 struct SubType *promise_type = NULL;
 
-fprintf(out, "bundle %s %s", bundle->type, bundle->name); ArgumentsPrettyPrint(out, bundle->args);
-fprintf(out, "\n{");
+WriterWriteF(writer, "bundle %s %s", bundle->type, bundle->name);
+ArgumentsPrettyPrint(writer, bundle->args);
+WriterWrite(writer, "\n{");
 
 for (promise_type = bundle->subtypes; promise_type != NULL; promise_type = promise_type->next)
    {
    struct Promise* pp = NULL;
-   fprintf(out, "\n%s:\n", promise_type->name);
+   WriterWriteF(writer, "\n%s:\n", promise_type->name);
 
    for (pp = promise_type->promiselist; pp != NULL; pp = pp->next)
       {
@@ -1782,14 +1784,14 @@ for (promise_type = bundle->subtypes; promise_type != NULL; promise_type = promi
          current_class = cp->classes;
 
          if (strcmp(current_class, "any") != 0)
-	    {
-            IndentPrint(out, 1);
-	    fprintf(out, "%s::", current_class);
-	    }
+            {
+            IndentPrint(writer, 1);
+            WriterWriteF(writer, "%s::", current_class);
+            }
          }
 
-      IndentPrint(out, 2);
-      fprintf(out, "%s", pp->promiser);
+      IndentPrint(writer, 2);
+      WriterWrite(writer, pp->promiser);
 
       /* FIX: add support
        *
@@ -1801,15 +1803,17 @@ for (promise_type = bundle->subtypes; promise_type != NULL; promise_type = promi
 
       for (cp = pp->conlist; cp != NULL; cp = cp->next)
          {
-         fprintf(out, "\n");
-         IndentPrint(out, 1);
-         AttributePrettyPrint(out, cp, 3);
+         WriterWriteChar(writer, '\n');
+         IndentPrint(writer, 1);
+         AttributePrettyPrint(writer, cp, 3);
          }
       }
 
    if (promise_type->next != NULL)
-      fprintf(out, "\n");
+      {
+      WriterWriteChar(writer, '\n');
+      }
    }
 
-fprintf(out, "\n}");
+WriterWrite(writer, "\n}");
 }

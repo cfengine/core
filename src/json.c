@@ -126,116 +126,116 @@ size_t JsonArrayLength(JsonArray *array)
 return RlistLen(array);
 }
 
-static void ShowIndent(FILE *out, int num)
+static void ShowIndent(Writer *writer, int num)
 {
 int i = 0;
 for (i = 0; i < num * SPACES_PER_INDENT; i++)
    {
-   fputc(' ', out);
+   WriterWriteChar(writer, ' ');
    }
 }
 
-void JsonStringPrint(FILE *out, const char *value, int indent_level)
+void JsonStringPrint(Writer *writer, const char *value, int indent_level)
 {
-ShowIndent(out, indent_level);
-fprintf(out, "\"%s\"", value);
+ShowIndent(writer, indent_level);
+WriterWriteF(writer, "\"%s\"", value);
 }
 
-void JsonArrayPrint(FILE *out, JsonArray *value, int indent_level)
+void JsonArrayPrint(Writer *writer, JsonArray *value, int indent_level)
 {
 struct Rlist *rp = NULL;
 
 if (JsonArrayLength(value) == 0)
    {
-   fprintf(out, "[]");
+   WriterWrite(writer, "[]");
    return;
    }
 
-fprintf(out, "[\n");
+WriterWrite(writer, "[\n");
 for (rp = value; rp != NULL; rp = rp->next)
    {
    switch (rp->type)
       {
       case CF_SCALAR:
-	 JsonStringPrint(out, (const char*)rp->item, indent_level + 1);
-	 break;
+         JsonStringPrint(writer, (const char*)rp->item, indent_level + 1);
+         break;
 
       case JSON_OBJECT_TYPE:
-	 ShowIndent(out, indent_level + 1);
-	 JsonObjectPrint(out, (JsonObject*)rp->item, indent_level + 1);
-	 break;
+         ShowIndent(writer, indent_level + 1);
+         JsonObjectPrint(writer, (JsonObject*)rp->item, indent_level + 1);
+         break;
 
       default:
 	 /* TODO: not implemented, how to deal? */
-	 JsonStringPrint(out, "", indent_level + 1);
-	 break;
+         JsonStringPrint(writer, "", indent_level + 1);
+         break;
       }
 
       if (rp->next != NULL)
 	 {
-	 fprintf(out, ",\n");
+         WriterWrite(writer, ",\n");
 	 }
       else
 	 {
-	 fprintf(out, "\n");
+         WriterWrite(writer, "\n");
 	 }
    }
 
-ShowIndent(out, indent_level);
-fprintf(out, "]");
+ShowIndent(writer, indent_level);
+WriterWriteChar(writer, ']');
 }
 
-void JsonObjectPrint(FILE *out, JsonObject *value, int indent_level)
+void JsonObjectPrint(Writer *writer, JsonObject *value, int indent_level)
 {
 struct Rlist *rp = NULL;
 
-fprintf(out, "{\n");
+WriterWrite(writer, "{\n");
 
 for (rp = value; rp != NULL; rp = rp->next)
    {
    struct CfAssoc *entry = NULL;
 
-   ShowIndent(out, indent_level + 1);
+   ShowIndent(writer, indent_level + 1);
    entry = (struct CfAssoc *)rp->item;
 
-   fprintf(out, "\"%s\": ", entry->lval);
+   WriterWriteF(writer, "\"%s\": ", entry->lval);
    switch (entry->rval.rtype)
       {
       case CF_SCALAR:
-	 switch (entry->dtype)
-	    {
-	    case cf_str:
-	       JsonStringPrint(out, (const char*)entry->rval.item, 0);
-	       break;
+         switch (entry->dtype)
+            {
+            case cf_str:
+               JsonStringPrint(writer, (const char*)entry->rval.item, 0);
+               break;
 
-	    default:
-	       /* TODO: not implemented, how to deal? */
-	       JsonStringPrint(out, "", indent_level + 1);
-	       break;
-	    }
-	 break;
+            default:
+               /* TODO: not implemented, how to deal? */
+               JsonStringPrint(writer, "", indent_level + 1);
+               break;
+            }
+            break;
 
       case JSON_OBJECT_TYPE:
-	 JsonObjectPrint(out, entry->rval.item, indent_level + 1);
-	 break;
+         JsonObjectPrint(writer, entry->rval.item, indent_level + 1);
+         break;
 
       case JSON_ARRAY_TYPE:
-	 JsonArrayPrint(out, entry->rval.item, indent_level + 1);
-	 break;
+         JsonArrayPrint(writer, entry->rval.item, indent_level + 1);
+         break;
 
       default:
 	 /* TODO: internal error, how to deal? */
 	 break;
       }
       if (rp->next != NULL)
-	 {
-	 fprintf(out, ",");
-	 }
-      fprintf(out, "\n");
+         {
+         WriterWriteChar(writer, ',');
+         }
+      WriterWrite(writer, "\n");
    }
 
-ShowIndent(out, indent_level);
-fprintf(out, "}");
+ShowIndent(writer, indent_level);
+WriterWriteChar(writer, '}');
 }
 
 const char *JsonObjectGetAsString(JsonObject *object, const char *key)

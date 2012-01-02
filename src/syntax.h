@@ -26,6 +26,7 @@
 #define CFENGINE_SYNTAX_H
 
 #include "cf3.defs.h"
+#include "writer.h"
 #include <stdio.h>
 
 int LvalWantsBody(char *stype,char *lval);
@@ -43,13 +44,13 @@ enum cfdatatype ExpectedDataType(char *lvalname);
 bool IsDataType(const char *s);
 
 /* print a specification of the CFEngine language */
-void SyntaxPrintAsJson(FILE *out);
+void SyntaxPrintAsJson(Writer *writer);
 
 /* print a parse tree of the given policy (bundles, bodies) */
-void PolicyPrintAsJson(FILE *out, const char *filename, struct Bundle *bundles, struct Body *bodies);
+void PolicyPrintAsJson(Writer *writer, const char *filename, struct Bundle *bundles, struct Body *bodies);
 
 /* print language elements using official formatting */
-void BodyPrettyPrint(FILE *out, struct Body *body);
-void BundlePrettyPrint(FILE *out, struct Bundle *bundle);
+void BodyPrettyPrint(Writer *writer, struct Body *body);
+void BundlePrettyPrint(Writer *writer, struct Bundle *bundle);
 
 #endif

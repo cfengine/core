@@ -1127,3 +1127,57 @@ for (struct Rlist *rp = start; rp != NULL; rp = rp->next)
 
 return NULL;
 }
+
+/*******************************************************************/
+
+static void RlistPrint(Writer *writer, struct Rlist *list)
+{
+WriterWrite(writer, " {");
+
+for (struct Rlist *rp = list; rp != NULL; rp = rp->next)
+   {
+   WriterWriteChar(writer, '\'');
+   RvalPrint(writer, (struct Rval) { rp->item, rp->type });
+   WriterWriteChar(writer, '\'');
+
+   if (rp->next != NULL)
+      {
+      WriterWriteChar(writer, ',');
+      }
+   }
+
+WriterWriteChar(writer, '}');
+}
+
+void RvalPrint(Writer *writer, struct Rval rval)
+{
+if (rval.item == NULL)
+   {
+   return;
+   }
+
+switch (rval.rtype)
+   {
+   case CF_SCALAR:
+      {
+      size_t buffer_size = strlen((const char *)rval.item) * 2;
+      char *buffer = xcalloc(buffer_size, sizeof(char));
+      EscapeQuotes((const char *)rval.item, buffer, buffer_size);
+      WriterWrite(writer, buffer);
+      free(buffer);
+      }
+      break;
+
+   case CF_LIST:
+      RlistPrint(writer, (struct Rlist *)rval.item);
+      break;
+
+   case CF_FNCALL:
+      FnCallPrint(writer, (struct FnCall *)rval.item);
+      break;
+
+   case CF_NOPROMISEE:
+      WriterWrite(writer, "(no-one)");
+      break;
+   }
+}

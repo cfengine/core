@@ -44,19 +44,14 @@ JsonObjectDelete(json);
 static void test_show_object_simple(void **state)
 {
 JsonObject *json = NULL;
-FILE *expected = tmpfile();
-FILE *actual = tmpfile();
-
-fprintf(expected, "%s", OBJECT_SIMPLE);
 
 JsonObjectAppendString(&json, "first", "one");
 JsonObjectAppendString(&json, "second", "two");
 
-JsonObjectPrint(actual, json, 0);
+Writer *writer = StringWriter();
+JsonObjectPrint(writer, json, 0);
 
-assert_file_equal(expected, actual);
-fclose(expected);
-fclose(actual);
+assert_string_equal(OBJECT_SIMPLE, StringWriterData(writer));
 
 JsonObjectDelete(json);
 }
@@ -64,10 +59,6 @@ JsonObjectDelete(json);
 static void test_show_object_compound(void **state)
 {
 JsonObject *json = NULL;
-FILE *expected = tmpfile();
-FILE *actual = tmpfile();
-
-fprintf(expected, "%s", OBJECT_COMPOUND);
 
 JsonObjectAppendString(&json, "first", "one");
    {
@@ -83,11 +74,10 @@ JsonObjectAppendString(&json, "first", "one");
    JsonObjectAppendObject(&json, "fourth", inner);
    }
 
-JsonObjectPrint(actual, json, 0);
+Writer *writer = StringWriter();
+JsonObjectPrint(writer, json, 0);
 
-assert_file_equal(expected, actual);
-fclose(expected);
-fclose(actual);
+assert_string_equal(OBJECT_COMPOUND, StringWriterData(writer));
 
 JsonObjectDelete(json);
 }
@@ -95,55 +85,37 @@ JsonObjectDelete(json);
 static void test_show_object_array(void **state)
 {
 JsonObject *json = NULL;
-FILE *expected = tmpfile();
-FILE *actual = tmpfile();
 
-fprintf(expected, "%s", OBJECT_ARRAY);
+JsonArray *array = NULL;
+JsonArrayAppendString(&array, "one");
+JsonArrayAppendString(&array, "two");
 
-   {
-   JsonArray *array = NULL;
-   JsonArrayAppendString(&array, "one");
-   JsonArrayAppendString(&array, "two");
+JsonObjectAppendArray(&json, "first", array);
 
-   JsonObjectAppendArray(&json, "first", array);
-   }
+Writer *writer = StringWriter();
+JsonObjectPrint(writer, json, 0);
 
-JsonObjectPrint(actual, json, 0);
-
-assert_file_equal(expected, actual);
-fclose(expected);
-fclose(actual);
+assert_string_equal(OBJECT_ARRAY, StringWriterData(writer));
 
 JsonObjectDelete(json);
 }
 
 static void test_show_array(void **state)
 {
-FILE *expected = tmpfile();
-FILE *actual = tmpfile();
-
-fprintf(expected, "%s", ARRAY_SIMPLE);
-
 JsonArray *array = NULL;
 JsonArrayAppendString(&array, "one");
 JsonArrayAppendString(&array, "two");
 
-JsonArrayPrint(actual, array, 0);
+Writer *writer = StringWriter();
+JsonArrayPrint(writer, array, 0);
 
-assert_file_equal(expected, actual);
-fclose(expected);
-fclose(actual);
+assert_string_equal(ARRAY_SIMPLE, StringWriterData(writer));
 
 JsonArrayDelete(array);
 }
 
 static void test_show_array_object(void **state)
 {
-FILE *expected = tmpfile();
-FILE *actual = tmpfile();
-
-fprintf(expected, "%s", ARRAY_OBJECT);
-
 JsonArray *array = NULL;
 JsonObject *object = NULL;
 
@@ -151,29 +123,22 @@ JsonObjectAppendString(&object, "first", "one");
 
 JsonArrayAppendObject(&array, object);
 
-JsonArrayPrint(actual, array, 0);
+Writer *writer = StringWriter();
+JsonArrayPrint(writer, array, 0);
 
-assert_file_equal(expected, actual);
-fclose(expected);
-fclose(actual);
+assert_string_equal(ARRAY_OBJECT, StringWriterData(writer));
 
 JsonArrayDelete(array);
 }
 
 static void test_show_array_empty(void **state)
 {
-FILE *expected = tmpfile();
-FILE *actual = tmpfile();
-
-fprintf(expected, "[]");
-
 JsonArray *array = NULL;
 
-JsonArrayPrint(actual, array, 0);
+Writer *writer = StringWriter();
+JsonArrayPrint(writer, array, 0);
 
-assert_file_equal(expected, actual);
-fclose(expected);
-fclose(actual);
+assert_string_equal("[]", StringWriterData(writer));
 
 JsonArrayDelete(array);
 }

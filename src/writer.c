@@ -90,9 +90,39 @@ return len;
 
 /*********************************************************************/
 
+static size_t FileWriterWriteF(Writer *writer, const char *fmt, va_list ap)
+{
+return vfprintf(writer->file, fmt, ap);
+}
+
+/*********************************************************************/
+
 static size_t FileWriterWrite(Writer *writer, const char *str)
 {
 return fwrite(str, 1, strlen(str), writer->file);
+}
+
+/*********************************************************************/
+
+size_t WriterWriteF(Writer *writer, const char *fmt, ...)
+{
+va_list ap;
+va_start(ap, fmt);
+size_t size = -1;
+
+if (writer->type == WT_STRING)
+   {
+   char *str = NULL;
+   xvasprintf(&str, fmt, ap);
+   size = StringWriterWrite(writer, str);
+   }
+else
+   {
+   size = FileWriterWriteF(writer, fmt, ap);
+   }
+
+va_end(ap);
+return size;
 }
 
 /*********************************************************************/

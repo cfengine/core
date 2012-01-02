@@ -41,6 +41,7 @@ typedef struct Writer Writer;
 Writer *FileWriter(FILE *);
 Writer *StringWriter(void);
 
+size_t WriterWriteF(Writer *Writer, const char *fmt, ...);
 size_t WriterWrite(Writer *writer, const char *str);
 size_t WriterWriteChar(Writer *writer, char c);
 

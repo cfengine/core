@@ -25,11 +25,6 @@
 #ifndef CFENGINE_RLIST_H
 #define CFENGINE_RLIST_H
 
-#include "cf.defs.h"
-#include "conf.h"
-
-#include "writer.h"
-
 struct Rval
    {
    void *item;        /* (char *), (struct Rlist *), or (struct FnCall)  */
@@ -43,6 +38,10 @@ struct Rlist
    struct Rlist *state_ptr; /* Points to "current" state/element of sub-list */
    struct Rlist *next;
    };
+
+#include "cf.defs.h"
+#include "conf.h"
+#include "writer.h"
 
 char *ScalarValue(struct Rlist *rlist);
 struct FnCall *FnCallValue(struct Rlist *rlist);

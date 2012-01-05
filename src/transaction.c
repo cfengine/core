@@ -846,7 +846,7 @@ RemoveLock("CF_CRITICAL_SECTION");
 int ShiftChange(void)
 
 {
- if (IsDefinedClass("(Hr00|Hr06|Hr12|Hr16|Hr18).Min00_05"))
+ if (IsDefinedClass("(Hr00|Hr06|Hr12|Hr18).Min00_05"))
    {
    return true;
    }

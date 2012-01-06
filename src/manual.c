@@ -128,7 +128,7 @@ for (i = 0; i < CF3_MODULES; i++)
       IncludeManualFile(fout,filename);
       }
    
-   TexinfoPromiseTypesFor(fout,st);      
+   TexinfoPromiseTypesFor(fout,st);
    }
 
 /* Special functions */

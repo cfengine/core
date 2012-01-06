@@ -49,9 +49,9 @@ libpromises_la_SOURCES =                                                \
         nfs.c                                                           \
         ontology.c ontology.h                                           \
         item_lib.c                                                      \
-	string_lib.c string_lib.h                                       \
-	files_lib.c                                                     \
-	addr_lib.c                                                      \
+        string_lib.c string_lib.h                                       \
+        files_lib.c                                                     \
+        addr_lib.c                                                      \
         package_lib.c                                                   \
         alphalist.c                                                     \
         cf_sql.c                                                        \
@@ -76,7 +76,7 @@ libpromises_la_SOURCES =                                                \
         hashes.c                                                        \
         crypto.c                                                        \
         sort.c                                                          \
-	keyring.c							\
+        keyring.c                                                       \
         full_write.c                                                    \
         expand.c                                                        \
         matching.c                                                      \
@@ -99,7 +99,7 @@ libpromises_la_SOURCES =                                                \
         verify_reports.c                                                \
         verify_processes.c                                              \
         enterprise_stubs.c                                              \
-	bootstrap.c							\
+        bootstrap.c	                                                   \
         mod_common.c                                                    \
         mod_access.c                                                    \
         mod_exec.c                                                      \
@@ -113,12 +113,12 @@ libpromises_la_SOURCES =                                                \
         mod_measurement.c                                               \
         mod_databases.c                                                 \
         mod_services.c                                                  \
-        mod_process.c   			                        \
-	mod_environ.c							\
-	mod_outputs.c							\
-	writer.c writer.h                                               \
-        unix.c								\
-	json.c json.h
+        mod_process.c                                                   \
+        mod_environ.c                                                   \
+        mod_outputs.c                                                   \
+        writer.c writer.h                                               \
+        unix.c                                                          \
+        json.c json.h
 
 # Automake need to be guided due to symlinking
 libpromises_la_DEPENDENCIES = ../pub/libcfpub.la $(NOVA_LDADD) $(CONSTELLATION_LDADD)

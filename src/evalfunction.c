@@ -849,36 +849,8 @@ else
    snprintf(hrs,CF_MAXVARSIZE-1,"Hr%02d",hours);
    }
 
-switch ((minblocks))
-   {
-   case 0: snprintf(class,CF_MAXVARSIZE,"Min00_05.%s",hrs);
-           break;
-   case 1: snprintf(class,CF_MAXVARSIZE,"Min05_10.%s",hrs);
-           break;
-   case 2: snprintf(class,CF_MAXVARSIZE,"Min10_15.%s",hrs);
-           break;
-   case 3: snprintf(class,CF_MAXVARSIZE,"Min15_20.%s",hrs);
-           break;
-   case 4: snprintf(class,CF_MAXVARSIZE,"Min20_25.%s",hrs);
-           break;
-   case 5: snprintf(class,CF_MAXVARSIZE,"Min25_30.%s",hrs);
-           break;
-   case 6: snprintf(class,CF_MAXVARSIZE,"Min30_35.%s",hrs);
-           break;
-   case 7: snprintf(class,CF_MAXVARSIZE,"Min35_40.%s",hrs);
-           break;
-   case 8: snprintf(class,CF_MAXVARSIZE,"Min40_45.%s",hrs);
-           break;
-   case 9: snprintf(class,CF_MAXVARSIZE,"Min45_50.%s",hrs);
-           break;
-   case 10: snprintf(class,CF_MAXVARSIZE,"Min50_55.%s",hrs);
-            break;
-   case 11: snprintf(class,CF_MAXVARSIZE,"Min55_00.%s",hrs);
-            break;
-   default:
-       strcpy(class,"never");
-       break;
-   }
+snprintf(class, CF_MAXVARSIZE, "Min%02d_%02d.%s",
+         (box * 5) % 60, (box + 1) * 5 % 60, hrs);
 
 if (IsDefinedClass(class))
    {

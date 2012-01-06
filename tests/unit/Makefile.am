@@ -20,7 +20,8 @@ check_PROGRAMS = \
 	regex_test \
 	alloc_test \
 	string_writer_test \
-	file_writer_test
+	file_writer_test \
+	xml_writer_test
 
 TESTS = $(check_PROGRAMS)
 
@@ -30,6 +31,9 @@ set_domainname_test_LDADD = libtest.la
 
 str_test_SOURCES = str_test.c ../../src/string_lib.c ../../src/writer.c
 str_test_LDADD = libtest.la
+
+xml_writer_test_SOURCES = xml_writer_test.c ../../src/xml_writer.c ../../src/writer.c
+xml_writer_test_LDADD = libtest.la
 
 #
 # file_writer_test overrides fclose(3) which causes gcov to fail as gcov

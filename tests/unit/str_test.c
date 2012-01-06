@@ -108,6 +108,56 @@ assert_string_equal(abc, "ABC");
 assert_string_equal(def, "DEF");
 }
 
+static void test_long_search(void **state)
+{
+char *ns = SearchAndReplace("abc", "abcabc", "test");
+assert_string_equal(ns, "abc");
+free(ns);
+}
+
+static void test_replace_empty_pattern(void **state)
+{
+char *ns = SearchAndReplace("foobarbaz", "", "abc");
+assert_string_equal(ns, "foobarbaz");
+free(ns);
+}
+
+static void test_replace_empty_replacement(void **state)
+{
+char *ns = SearchAndReplace("foobarbaz", "a", "");
+assert_string_equal(ns, "foobrbz");
+free(ns);
+}
+
+static void test_replace_eq_size(void **state)
+{
+char *new_string = SearchAndReplace("sasza szedl sucha szosa", "sz", "xx");
+assert_string_equal(new_string, "saxxa xxedl sucha xxosa");
+free(new_string);
+}
+
+static void test_replace_more_size(void **state)
+{
+char *new_string = SearchAndReplace("sasza szedl sucha szosa", "sz", "xxx");
+assert_string_equal(new_string, "saxxxa xxxedl sucha xxxosa");
+free(new_string);
+}
+
+static void test_replace_less_size(void **state)
+{
+char *new_string = SearchAndReplace("sasza szedl sucha szosa", "sz", "x");
+assert_string_equal(new_string, "saxa xedl sucha xosa");
+free(new_string);
+}
+
+static void test_no_replace(void **state)
+{
+char *new_string = SearchAndReplace("sasza szedl sucha szosa",
+                                    "no_such_pattern", "x");
+assert_string_equal(new_string, "sasza szedl sucha szosa");
+free(new_string);
+}
+
 int main()
 {
 const UnitTest tests[] =
@@ -127,6 +177,14 @@ const UnitTest tests[] =
    unit_test(test_hi_alphabet_toupper),
    unit_test(test_aliasing_toupper),
    unit_test(test_inplace_toupper),
+
+   unit_test(test_replace_empty_pattern),
+   unit_test(test_replace_empty_replacement),
+   unit_test(test_long_search),
+   unit_test(test_replace_eq_size),
+   unit_test(test_replace_more_size),
+   unit_test(test_replace_less_size),
+   unit_test(test_no_replace),
    };
 
 return run_tests(tests);

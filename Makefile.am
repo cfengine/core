@@ -6,7 +6,7 @@ LCOV_FLAGS = $(if $(filter-out 0,$(V)),,-q)
 
 SUBDIRS = pub $(NOVA_SUBDIR) $(CONSTELLATION_SUBDIR) src docs examples masterfiles tests $(CFMOD_SUBDIR)
 
-DIST_SUBDIRS = pub src docs examples masterfiles
+DIST_SUBDIRS = pub src docs examples masterfiles tests
 
 # Set explicitly to avoid picking up {nova,constellation,galaxy}/*.m4
 

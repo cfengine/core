@@ -1,4 +1,4 @@
-AM_CFLAGS = $(NOVA_CFLAGS) $(CONSTELLATION_CFLAGS) -I$(srcdir)/../unit
+AM_CFLAGS = $(NOVA_CFLAGS) $(CONSTELLATION_CFLAGS) -I$(srcdir)/../unit -I$(srcdir)/../../src
 
 check_PROGRAMS = \
 	tcdb_load

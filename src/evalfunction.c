@@ -33,10 +33,6 @@
 
 #include <libgen.h>
 
-#ifndef MINGW
-static FnCallResult Unix_FnCallUserExists(struct FnCall *fp,struct Rlist *finalargs);
-static FnCallResult Unix_FnCallGroupExists(struct FnCall *fp,struct Rlist *finalargs);
-#endif  /* NOT MINGW */
 static char *StripPatterns(char *file_buffer,char *pattern,char *filename);
 static void CloseStringHole(char *s,int start,int end);
 static int BuildLineArray(char *array_lval,char *file_buffer,char *split,int maxent,enum cfdatatype type,int intIndex);
@@ -69,32 +65,6 @@ for (int i = 0; ; i++)
      returnval = FnCallXXXResult(fp)
 
   */
-
-/*******************************************************************/
-/* FnCall API - OS function mapping                                */
-/*******************************************************************/
-
-static FnCallResult FnCallUserExists(struct FnCall *fp,struct Rlist *finalargs)
-
-{
-#ifdef MINGW
-return NovaWin_FnCallUserExists(fp, finalargs);
-#else
-return Unix_FnCallUserExists(fp, finalargs);
-#endif
-}
-
-/*********************************************************************/
-
-static FnCallResult FnCallGroupExists(struct FnCall *fp,struct Rlist *finalargs)
-
-{
-#ifdef MINGW
-return NovaWin_FnCallGroupExists(fp, finalargs);
-#else
-return Unix_FnCallGroupExists(fp, finalargs);
-#endif
-}
 
 /*******************************************************************/
 /* End FnCall API                                                  */
@@ -3711,13 +3681,8 @@ snprintf(buffer,CF_BUFSIZE-1,"%jd", (intmax_t)df);
 return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
 }
 
-#ifndef MINGW
-
-/*******************************************************************/
-/* Unix implementations                                            */
-/*******************************************************************/
-
-static FnCallResult Unix_FnCallUserExists(struct FnCall *fp,struct Rlist *finalargs)
+#if !defined(__MINGW32__)
+static FnCallResult FnCallUserExists(struct FnCall *fp,struct Rlist *finalargs)
 
 { char buffer[CF_BUFSIZE];
   struct passwd *pw;
@@ -3754,7 +3719,7 @@ return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
 
 /*********************************************************************/
 
-static FnCallResult Unix_FnCallGroupExists(struct FnCall *fp,struct Rlist *finalargs)
+static FnCallResult FnCallGroupExists(struct FnCall *fp,struct Rlist *finalargs)
 
 { char buffer[CF_BUFSIZE];
   struct group *gr;
@@ -3788,8 +3753,8 @@ else if ((gr = getgrnam(arg)) == NULL)
 
 return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
 }
-#endif  /* NOT MINGW */
 
+#endif  /* !defined(__MINGW32__) */
 
 /*********************************************************************/
 /* Level                                                             */

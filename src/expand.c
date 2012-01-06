@@ -649,9 +649,13 @@ do
 
    /* Must expand $(this.promiser) here for arg dereferencing in things
       like edit_line and methods, but we might have to
-      adjust again later if the value changes */
-   
-   NewScalar("this","promiser",pp->promiser,cf_str);
+      adjust again later if the value changes  -- need to qualify this
+      so we don't expand too early for some other promsies */
+
+   if (pp->has_subbundles)
+      {
+      NewScalar("this","promiser",pp->promiser,cf_str);
+      }
 
    /* End special variables */
 

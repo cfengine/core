@@ -398,6 +398,14 @@ constraint:           id                        /* BUNDLE ONLY */
                            P.currentstype->offset.end = P.offsets.current;
                            CheckPromise(P.currentpromise);
 
+                           // Cache whether there are subbundles for later $(this.promiser) logic
+
+                           if (strcmp(P.lval,"usebundle") == 0 || strcmp(P.lval,"edit_line") == 0
+                               || strcmp(P.lval,"edit_xml") == 0)
+                              {
+                              P.currentpromise->has_subbundles = true;
+                              }
+
                            P.rval = (struct Rval) { NULL, '\0' };
                            strcpy(P.lval,"no lval");
                            P.currentRlist = NULL;

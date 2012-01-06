@@ -132,6 +132,7 @@ pcopy->this_server = pp->this_server;
 pcopy->donep = pp->donep;
 pcopy->conn = pp->conn;
 pcopy->edcontext = pp->edcontext;
+pcopy->has_subbundles = pp->has_subbundles;
 
 CfDebug("Copying promise constraints\n\n");
 
@@ -387,6 +388,7 @@ pcopy->inode_cache = pp->inode_cache;
 pcopy->this_server = pp->this_server;
 pcopy->conn = pp->conn;
 pcopy->edcontext = pp->edcontext;
+pcopy->has_subbundles = pp->has_subbundles;
 
 /* No further type checking should be necessary here, already done by CheckConstraintTypeMatch */
 
@@ -587,6 +589,7 @@ pp->donep = &(pp->done);
 
 pp->agentsubtype = typename;   /* cache this, do not copy string */
 pp->ref_alloc = 'n';
+pp->has_subbundles = false;
 
 AppendConstraint(&(pp->conlist), "handle", (struct Rval) { xstrdup("internal_promise"), CF_SCALAR }, NULL, false);
 

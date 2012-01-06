@@ -248,6 +248,7 @@ pp->promiser = sp;
 pp->promisee = promisee;
 pp->classes = spe;
 pp->donep = &(pp->done);
+pp->has_subbundles = false;
 
 pp->bundletype = xstrdup(bundletype); /* cache agent,common,server etc*/
 pp->agentsubtype = type->name;       /* Cache the typename */

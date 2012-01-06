@@ -756,6 +756,7 @@ struct Promise
    int   *donep;                /* used by locks to mark as done */
    int    makeholes;
    char  *this_server;
+   int   has_subbundles;
    struct cfstat *cache;      
    struct cfagent_connection *conn;
    struct CompressedArray *inode_cache;

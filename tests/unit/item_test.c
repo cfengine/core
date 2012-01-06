@@ -38,6 +38,7 @@ result = SelectLastItemMatching("abc", list, NULL, &match, &prev);
 assert_true(result);
 assert_int_equal(match, list);
 assert_int_equal(prev, CF_UNDEFINED_ITEM);
+DeleteItemList(list);
 }
 
 static void test_list_select_last_matching_finds_last(void **state)
@@ -54,6 +55,7 @@ result = SelectLastItemMatching("abc", list, NULL, &match, &prev);
 assert_true(result);
 assert_int_equal(match, list->next->next->next);
 assert_int_equal(prev, list->next->next);
+DeleteItemList(list);
 }
 
 static void test_list_select_last_matching_not_found(void **state)
@@ -70,6 +72,7 @@ result = SelectLastItemMatching("xyz", list, NULL, &match, &prev);
 assert_false(result);
 assert_int_equal(match, CF_UNDEFINED_ITEM);
 assert_int_equal(prev, CF_UNDEFINED_ITEM);
+DeleteItemList(list);
 }
 
 int main()

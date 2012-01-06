@@ -741,6 +741,9 @@ void HashClear(AssocHashTable *hashtable);
 /* Destroy hash table */
 void HashFree(AssocHashTable *hashtable);
 
+/* HashToList */
+void HashToList(struct Scope *sp, struct Rlist **list);
+
 /* - hashtable iterator - */
 
 /*

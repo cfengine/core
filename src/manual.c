@@ -400,20 +400,6 @@ for (i = 0; bs[i].lval != NULL; i++)
 
 /*******************************************************************/
 
-static void AppendVariables(struct Scope *sp, struct Rlist **list)
-{
-HashIterator i = HashIteratorInit(sp->hashtable);
-CfAssoc *assoc;
-
-while ((assoc = HashIteratorNext(&i)))
-   {
-   CfOut(cf_verbose,"","Appending variable documentation for %s (%c)\n",assoc->lval,assoc->rval.rtype);
-   PrependRScalar(list,assoc->lval,CF_SCALAR);
-   }
-}
-
-/*******************************************************************/
-
 static void TexinfoVariables(FILE *fout,char *scope)
 
 {
@@ -425,9 +411,9 @@ fprintf(fout,"\n\n@node Variable context %s\n@section Variable context @code{%s}
 snprintf(filename,CF_BUFSIZE-1,"varcontext_%s_intro.texinfo",scope);
 IncludeManualFile(fout,filename);
 
-AppendVariables(GetScope(scope), &list);
-
-for (rp = AlphaSortRListNames(list); rp != NULL; rp = rp->next)
+HashToList(GetScope(scope), &list);
+list = AlphaSortRListNames(list);
+for (rp = list; rp != NULL; rp = rp->next)
    {
    fprintf(fout,"@node Variable %s.%s\n@subsection Variable %s.%s \n\n", scope, (char*)rp->item, scope, (char*)rp->item);
    snprintf(filename,CF_BUFSIZE-1,"var_%s_%s.texinfo", scope, (char*)rp->item);

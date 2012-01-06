@@ -432,3 +432,24 @@ else
    return TinyHashIteratorNext(i);
    }
 }
+
+/*******************************************************************/
+
+void HashToList(struct Scope *sp, struct Rlist **list)
+
+{
+if (sp == NULL)
+   {
+   return;
+   }
+
+HashIterator i = HashIteratorInit(sp->hashtable);
+CfAssoc *assoc;
+
+while ((assoc = HashIteratorNext(&i)))
+   {
+   PrependRScalar(list,assoc->lval,CF_SCALAR);
+   }
+}
+
+/*******************************************************************/

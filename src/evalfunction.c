@@ -1,19 +1,18 @@
-/* 
-
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -68,7 +67,7 @@ for (int i = 0; ; i++)
      ErrorFlags
 
      returnval = FnCallXXXResult(fp)
-     
+
   */
 
 /*******************************************************************/
@@ -118,7 +117,7 @@ for (ip = addresses; ip != NULL; ip = ip->next)
       CfOut(cf_error, "", "!! Could not get host entry age");
       continue;
       }
-   
+
    if (return_address)
       {
       snprintf(address, sizeof(address), "%s", ip->name);
@@ -127,11 +126,11 @@ for (ip = addresses; ip != NULL; ip = ip->next)
       {
       snprintf(address, sizeof(address), "%s", IPString2Hostname(ip->name));
       }
-   
+
    if (entrytime < now - horizon)
       {
       CfDebug("Old entry.\n");
-      
+
       if (KeyInRlist(recent, address))
          {
          CfDebug("There is recent entry for this address. Do nothing.\n");
@@ -146,13 +145,13 @@ for (ip = addresses; ip != NULL; ip = ip->next)
       {
       struct Rlist *r;
       CfDebug("Recent entry.\n");
-      
+
       if ((r = KeyInRlist(aged, address)))
          {
          CfDebug("Purging from list of aged hosts.\n");
          DeleteRlistEntry(&aged, r);
          }
-      
+
       CfDebug("Adding to list of recent hosts.\n");
       IdempPrependRScalar(&recent, address, CF_SCALAR);
       }
@@ -246,12 +245,12 @@ static FnCallResult FnCallHostsSeen(struct FnCall *fp,struct Rlist *finalargs)
     if (value != NULL)
        {
        struct CfKeyHostSeen entry;
-      
+
        if (HostKeyAddressUnknown(value))
           {
           continue;
           }
-      
+
        memcpy(&entry,value,sizeof(entry));
        snprintf(entrytimeChr, sizeof(entrytimeChr), "%.4lf", entry.Q.q);
        PrependItem(&addresses, entry.address, entrytimeChr);
@@ -260,7 +259,7 @@ static FnCallResult FnCallHostsSeen(struct FnCall *fp,struct Rlist *finalargs)
 
  DeleteDBCursor(dbp,dbcp);
  CloseDB(dbp);
-   
+
  returnlist = GetHostsFromLastseenDB(addresses, horizon,
                                      strcmp(format, "address") == 0,
                                      strcmp(policy, "lastseen") == 0);
@@ -293,8 +292,8 @@ static FnCallResult FnCallRandomInt(struct FnCall *fp,struct Rlist *finalargs)
 
 { char buffer[CF_BUFSIZE];
   int tmp,range,result,from=-1,to=-1;
-  
-buffer[0] = '\0';  
+
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -395,8 +394,8 @@ static FnCallResult FnCallEscape(struct FnCall *fp,struct Rlist *finalargs)
 
 { char buffer[CF_BUFSIZE];
   char *name;
-  
-buffer[0] = '\0';  
+
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -490,12 +489,12 @@ return (FnCallResult) { FNCALL_FAILURE };
 static FnCallResult FnCallHash(struct FnCall *fp,struct Rlist *finalargs)
 
 /* Hash(string,md5|sha1|crypt) */
-    
+
 { char buffer[CF_BUFSIZE],*string,*typestring;
   unsigned char digest[EVP_MAX_MD_SIZE+1];
   enum cfhashes type;
-  
-buffer[0] = '\0';  
+
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -522,12 +521,12 @@ return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer+4), CF_SCALAR } };
 static FnCallResult FnCallHashMatch(struct FnCall *fp,struct Rlist *finalargs)
 
 /* HashMatch(string,md5|sha1|crypt,"abdxy98edj") */
-    
+
 { char buffer[CF_BUFSIZE],ret[CF_BUFSIZE],*string,*typestring,*compare;
   unsigned char digest[EVP_MAX_MD_SIZE+1];
   enum cfhashes type;
-  
-buffer[0] = '\0';  
+
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -605,14 +604,14 @@ static FnCallResult FnCallCountClassesMatching(struct FnCall *fp,struct Rlist *f
   struct Item *ip;
   int count = 0;
   int i = (int)*string;
-  
+
 /* begin fn specific content */
 
 if (isalnum(i) || *string == '_')
    {
    for (ip = VHEAP.list[i]; ip != NULL; ip=ip->next)
       {
-      if (FullTextMatch(string,ip->name))          
+      if (FullTextMatch(string,ip->name))
          {
          count++;
          }
@@ -620,7 +619,7 @@ if (isalnum(i) || *string == '_')
 
    for (ip = VHEAP.list[i]; ip != NULL; ip=ip->next)
       {
-      if (FullTextMatch(string,ip->name))          
+      if (FullTextMatch(string,ip->name))
          {
          count++;
          }
@@ -637,7 +636,7 @@ else
             count++;
             }
          }
-      
+
       for (ip = VADDCLASSES.list[i]; ip != NULL; ip=ip->next)
          {
          if (FullTextMatch((char *)finalargs->item,ip->name))
@@ -668,7 +667,7 @@ static FnCallResult FnCallLastNode(struct FnCall *fp,struct Rlist *finalargs)
 
 { struct Rlist *rp,*newlist;
   char *name, *split;
-  
+
 /* begin fn specific content */
 
 name = finalargs->item;
@@ -794,7 +793,7 @@ else
 static FnCallResult FnCallUseModule(struct FnCall *fp,struct Rlist *finalargs)
 
   /* usemodule("/programpath",varargs) */
-    
+
 { char modulecmd[CF_BUFSIZE];
   char *command,*args;
   struct stat statbuf;
@@ -804,7 +803,7 @@ static FnCallResult FnCallUseModule(struct FnCall *fp,struct Rlist *finalargs)
 command = finalargs->item;
 args = finalargs->next->item;
 snprintf(modulecmd,CF_BUFSIZE,"%s%cmodules%c%s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,command);
- 
+
 if (cfstat(GetArg0(modulecmd),&statbuf) == -1)
    {
    CfOut(cf_error,"","(Plug-in module %s not found)",modulecmd);
@@ -846,7 +845,7 @@ static FnCallResult FnCallSplayClass(struct FnCall *fp,struct Rlist *finalargs)
   int hash,box,hours,minblocks;
   double period;
 
-buffer[0] = '\0';  
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -928,7 +927,7 @@ return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
 static FnCallResult FnCallReadTcp(struct FnCall *fp,struct Rlist *finalargs)
 
  /* ReadTCP(localhost,80,'GET index.html',1000) */
-    
+
 { struct cfagent_connection *conn = NULL;
   char buffer[CF_BUFSIZE];
   char *hostnameip,*maxbytes,*port,*sendstring;
@@ -960,12 +959,12 @@ if (val > CF_BUFSIZE-1)
    }
 
 CfDebug("Want to read %d bytes from port %d at %s\n",val,portnum,hostnameip);
-    
+
 conn = NewAgentConn();
 
 attr.copy.force_ipv4 = false;
 attr.copy.portnumber = portnum;
-    
+
 if (!ServerConnect(conn,hostnameip,attr,NULL))
    {
    CfOut(cf_inform,"socket","Couldn't open a tcp socket");
@@ -1009,7 +1008,7 @@ static FnCallResult FnCallRegList(struct FnCall *fp,struct Rlist *finalargs)
   char *regex,*listvar;
   struct Rval retval;
 
-buffer[0] = '\0';  
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -1356,7 +1355,7 @@ if (rval2.rtype != CF_LIST)
 for (rp = (struct Rlist *)rval2.item; rp != NULL; rp=rp->next)
    {
    double x;
-   
+
    if ((x = Str2Double(rp->item)) == CF_NODOUBLE)
       {
       return (FnCallResult) { FNCALL_FAILURE };
@@ -1420,7 +1419,7 @@ if (rval2.rtype != CF_LIST)
 for (rp = (struct Rlist *)rval2.item; rp != NULL; rp=rp->next)
    {
    double x;
-   
+
    if ((x = Str2Double(rp->item)) == CF_NODOUBLE)
       {
       return (FnCallResult) { FNCALL_FAILURE };
@@ -1504,7 +1503,7 @@ for (rp = (struct Rlist *)rval2.item; rp != NULL; rp=rp->next)
       {
       continue;
       }
-   
+
    strcpy(joined+size,rp->item);
 
    if (rp->next != NULL)
@@ -1526,7 +1525,7 @@ static FnCallResult FnCallGetFields(struct FnCall *fp,struct Rlist *finalargs)
   char name[CF_MAXVARSIZE],line[CF_BUFSIZE],retval[CF_SMALLBUF];
   int lcount = 0,vcount = 0,nopurge = true;
   FILE *fin;
-  
+
 /* begin fn specific content */
 
 regex = finalargs->item;
@@ -1545,7 +1544,7 @@ while (!feof(fin))
    line[0] = '\0';
    fgets(line,CF_BUFSIZE-1,fin);
    Chop(line);
-   
+
    if (feof(fin))
       {
       break;
@@ -1559,9 +1558,9 @@ while (!feof(fin))
    if (lcount == 0)
       {
       newlist = SplitRegexAsRList(line,split,31,nopurge);
-      
+
       vcount = 1;
-      
+
       for (rp = newlist; rp != NULL; rp=rp->next)
          {
          snprintf(name,CF_MAXVARSIZE-1,"%s[%d]",array_lval,vcount);
@@ -1570,7 +1569,7 @@ while (!feof(fin))
          vcount++;
          }
       }
-   
+
    lcount++;
    }
 
@@ -1589,7 +1588,7 @@ static FnCallResult FnCallCountLinesMatching(struct FnCall *fp,struct Rlist *fin
   char line[CF_BUFSIZE],retval[CF_SMALLBUF];
   int lcount = 0;
   FILE *fin;
-  
+
 /* begin fn specific content */
 
 regex = finalargs->item;
@@ -1639,7 +1638,7 @@ static FnCallResult FnCallLsDir(struct FnCall *fp,struct Rlist *finalargs)
   CFDIR *dirh = NULL;
   const struct dirent *dirp;
   struct Rlist *newlist = NULL;
-  
+
 /* begin fn specific content */
 
 dirname = finalargs->item;
@@ -1692,7 +1691,7 @@ static FnCallResult FnCallMapList(struct FnCall *fp,struct Rlist *finalargs)
   struct Rval rval;
   struct Scope *ptr;
   enum cfdatatype retype;
-  
+
 /* begin fn specific content */
 
 map = finalargs->item;
@@ -1718,7 +1717,7 @@ else
       {
       *(lval+strlen(lval)-1) = '\0';
       }
-   
+
    strcpy(scopeid,CONTEXTID);
    }
 
@@ -1740,13 +1739,13 @@ for (rp = (struct Rlist *)rval.item; rp != NULL; rp=rp->next)
    NewScalar("this","this",(char *)rp->item,cf_str);
 
    ExpandScalar(map,expbuf);
-   
+
    if (strstr(expbuf,"$(this)"))
       {
       DeleteRlist(newlist);
       return (FnCallResult) { FNCALL_FAILURE };
       }
-   
+
    AppendRlist(&newlist,expbuf,CF_SCALAR);
    DeleteScalar("this","this");
    }
@@ -1759,7 +1758,7 @@ return (FnCallResult) { FNCALL_SUCCESS, { newlist, CF_LIST } };
 static FnCallResult FnCallSelectServers(struct FnCall *fp,struct Rlist *finalargs)
 
  /* ReadTCP(localhost,80,'GET index.html',1000) */
-    
+
 { struct cfagent_connection *conn = NULL;
   struct Rlist *rp,*hostnameip;
   char buffer[CF_BUFSIZE],naked[CF_MAXVARSIZE];
@@ -1770,7 +1769,7 @@ static FnCallResult FnCallSelectServers(struct FnCall *fp,struct Rlist *finalarg
   struct Rval retval;
   struct Promise *pp;
 
-buffer[0] = '\0';  
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -1824,24 +1823,24 @@ if (THIS_AGENT_TYPE != cf_agent)
    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
    }
 
-pp = NewPromise("select_server","function"); 
+pp = NewPromise("select_server","function");
 
 for (rp = hostnameip; rp != NULL; rp=rp->next)
    {
    CfDebug("Want to read %d bytes from port %d at %s\n",val,portnum, (char *)rp->item);
-   
+
    conn = NewAgentConn();
-   
+
    attr.copy.force_ipv4 = false;
    attr.copy.portnumber = portnum;
-   
+
    if (!ServerConnect(conn,rp->item,attr,pp))
       {
       CfOut(cf_inform,"socket","Couldn't open a tcp socket");
       DeleteAgentConn(conn);
       continue;
       }
-   
+
    if (strlen(sendstring) > 0)
       {
       if (SendSocketStream(conn->sd,sendstring,strlen(sendstring),0) == -1)
@@ -1850,11 +1849,11 @@ for (rp = hostnameip; rp != NULL; rp=rp->next)
          DeleteAgentConn(conn);
          continue;
          }
-      
+
       if ((n_read = recv(conn->sd,buffer,val,0)) == -1)
          {
          }
-            
+
       if (n_read == -1)
          {
          cf_closesocket(conn->sd);
@@ -1881,10 +1880,10 @@ for (rp = hostnameip; rp != NULL; rp=rp->next)
          CfOut(cf_verbose,"","This host is in the list and has promised to join the class %s - joined\n",array_lval);
          NewClass(array_lval);
          }
-      
+
       count++;
       }
-   
+
    cf_closesocket(conn->sd);
    DeleteAgentConn(conn);
    }
@@ -1906,8 +1905,8 @@ static FnCallResult FnCallIsNewerThan(struct FnCall *fp,struct Rlist *finalargs)
 
 { char buffer[CF_BUFSIZE];
   struct stat frombuf,tobuf;
-  
-buffer[0] = '\0';  
+
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -1938,7 +1937,7 @@ static FnCallResult FnCallIsAccessedBefore(struct FnCall *fp,struct Rlist *final
 { char buffer[CF_BUFSIZE];
   struct stat frombuf,tobuf;
 
-buffer[0] = '\0';  
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -1968,8 +1967,8 @@ static FnCallResult FnCallIsChangedBefore(struct FnCall *fp,struct Rlist *finala
 
 { char buffer[CF_BUFSIZE];
   struct stat frombuf,tobuf;
-  
-buffer[0] = '\0';  
+
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -1998,8 +1997,8 @@ static FnCallResult FnCallFileStat(struct FnCall *fp,struct Rlist *finalargs)
 
 { char buffer[CF_BUFSIZE];
   struct stat statbuf;
-  
-buffer[0] = '\0';  
+
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -2063,8 +2062,8 @@ static FnCallResult FnCallIPRange(struct FnCall *fp,struct Rlist *finalargs)
 
 { char buffer[CF_BUFSIZE];
   struct Item *ip;
-  
-buffer[0] = '\0';  
+
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -2107,8 +2106,8 @@ return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
 static FnCallResult FnCallHostRange(struct FnCall *fp,struct Rlist *finalargs)
 
 { char buffer[CF_BUFSIZE];
-  
-buffer[0] = '\0';  
+
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -2136,8 +2135,8 @@ FnCallResult FnCallHostInNetgroup(struct FnCall *fp, struct Rlist *finalargs)
 {
 char buffer[CF_BUFSIZE];
 char *host, *user, *domain;
-   
-buffer[0] = '\0';  
+
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -2153,7 +2152,7 @@ while (getnetgrent(&host,&user,&domain))
       strcpy(buffer, "any");
       break;
       }
-   
+
    if (host == NULL || strcmp(host,VFQNAME) == 0)
       {
       CfOut(cf_verbose, "", "Matched %s in netgroup %s\n", host, finalargs->item);
@@ -2204,8 +2203,8 @@ static FnCallResult FnCallTranslatePath(struct FnCall *fp,struct Rlist *finalarg
 
 {
 char buffer[MAX_FILENAME];
-  
-buffer[0] = '\0';  
+
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -2221,8 +2220,8 @@ static FnCallResult FnCallRegistryValue(struct FnCall *fp,struct Rlist *finalarg
 
 {
 char buffer[CF_BUFSIZE];
-  
-buffer[0] = '\0';  
+
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -2244,8 +2243,8 @@ static FnCallResult FnCallRemoteScalar(struct FnCall *fp,struct Rlist *finalargs
 { char buffer[CF_BUFSIZE];
   char *handle,*server;
   int encrypted;
-  
-buffer[0] = '\0';  
+
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -2266,7 +2265,7 @@ if (THIS_AGENT_TYPE == cf_common)
 else
    {
    GetRemoteScalar("VAR",handle,server,encrypted,buffer);
-   
+
    if (strncmp(buffer,"BAD:",4) == 0)
       {
       if (!RetrieveUnreliableValue("remotescalar",handle,buffer))
@@ -2290,8 +2289,8 @@ static FnCallResult FnCallHubKnowledge(struct FnCall *fp,struct Rlist *finalargs
 
 { char buffer[CF_BUFSIZE];
   char *handle;
-  
-buffer[0] = '\0';  
+
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -2307,12 +2306,12 @@ else
    GetRemoteScalar("VAR",handle,POLICY_SERVER,true,buffer);
 
    // This should always be successful - and this one doesn't cache
-   
+
    if (strncmp(buffer,"BAD:",4) == 0)
       {
       snprintf(buffer,CF_MAXVARSIZE,"0");
       }
-   
+
    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
    }
 }
@@ -2325,8 +2324,8 @@ static FnCallResult FnCallRemoteClassesMatching(struct FnCall *fp,struct Rlist *
   char buffer[CF_BUFSIZE],class[CF_MAXVARSIZE];
   char *server,*regex,*prefix;
   int encrypted;
-  
-buffer[0] = '\0';  
+
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -2334,7 +2333,7 @@ regex = finalargs->item;
 server = finalargs->next->item;
 encrypted = GetBoolean(finalargs->next->next->item);
 prefix = finalargs->next->next->next->item;
-    
+
 if (strcmp(server,"localhost") == 0)
    {
    /* The only reason for this is testing...*/
@@ -2348,7 +2347,7 @@ if (THIS_AGENT_TYPE == cf_common)
 else
    {
    GetRemoteScalar("CONTEXT",regex,server,encrypted,buffer);
-   
+
    if (strncmp(buffer,"BAD:",4) == 0)
       {
       return (FnCallResult) { FNCALL_FAILURE };
@@ -2410,7 +2409,7 @@ pruned = NULL;
 for (rp = newlist; rp != NULL; rp = rp->next)
    {
    char s[CF_MAXVARSIZE];
-   
+
    if (EmptyString(rp->item))
       {
       continue;
@@ -2463,8 +2462,8 @@ static FnCallResult FnCallPeerLeader(struct FnCall *fp,struct Rlist *finalargs)
   char *split = "\n";
   char *filename,*comment,*file_buffer = NULL,buffer[CF_MAXVARSIZE];
   int i,found,groupsize,maxent = 100000,maxsize = 100000;
-  
-buffer[0] = '\0';  
+
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -2501,7 +2500,7 @@ buffer[0] = '\0';
 for (rp = newlist; rp != NULL; rp = rp->next)
    {
    char s[CF_MAXVARSIZE];
-   
+
    if (EmptyString(rp->item))
       {
       continue;
@@ -2509,7 +2508,7 @@ for (rp = newlist; rp != NULL; rp = rp->next)
 
    s[0] = '\0';
    sscanf(rp->item,"%s",s);
-   
+
    if (strcmp(s,VFQNAME) == 0 || strcmp(s,VUQNAME) == 0)
       {
       found = true;
@@ -2587,15 +2586,15 @@ pruned = NULL;
 for (rp = newlist; rp != NULL; rp = rp->next)
    {
    char s[CF_MAXVARSIZE];
-   
+
    if (EmptyString(rp->item))
       {
       continue;
       }
-   
+
    s[0] = '\0';
    sscanf(rp->item,"%s",s);
-   
+
    if (i % groupsize == 0)
       {
       if (strcmp(s,VFQNAME) == 0 || strcmp(s,VUQNAME) == 0)
@@ -2633,7 +2632,7 @@ static FnCallResult FnCallRegCmp(struct FnCall *fp,struct Rlist *finalargs)
 { char buffer[CF_BUFSIZE];
   char *argv0,*argv1;
 
-buffer[0] = '\0';  
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -2643,7 +2642,7 @@ argv1 = finalargs->next->item;
 
 if (FullTextMatch(argv0,argv1))
    {
-   strcpy(buffer,"any");   
+   strcpy(buffer,"any");
    }
 else
    {
@@ -2661,7 +2660,7 @@ static FnCallResult FnCallRegExtract(struct FnCall *fp,struct Rlist *finalargs)
   char *regex,*data,*arrayname;
   struct Scope *ptr;
 
-buffer[0] = '\0';  
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -2672,7 +2671,7 @@ arrayname = finalargs->next->next->item;
 
 if (FullTextMatch(regex,data))
    {
-   strcpy(buffer,"any");   
+   strcpy(buffer,"any");
    }
 else
    {
@@ -2719,7 +2718,7 @@ static FnCallResult FnCallRegLine(struct FnCall *fp,struct Rlist *finalargs)
   char *argv0,*argv1;
   FILE *fin;
 
-buffer[0] = '\0';  
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -2760,15 +2759,15 @@ static FnCallResult FnCallIsLessGreaterThan(struct FnCall *fp,struct Rlist *fina
 { char buffer[CF_BUFSIZE];
   char *argv0,*argv1;
   double a = CF_NOVAL,b = CF_NOVAL;
- 
-buffer[0] = '\0';  
+
+buffer[0] = '\0';
 
 argv0 = finalargs->item;
 argv1 = finalargs->next->item;
 
 if (IsRealNumber(argv0) && IsRealNumber(argv1))
    {
-   a = Str2Double(argv0); 
+   a = Str2Double(argv0);
    b = Str2Double(argv1);
 
    if (a == CF_NODOUBLE || b == CF_NODOUBLE)
@@ -2777,11 +2776,11 @@ if (IsRealNumber(argv0) && IsRealNumber(argv1))
       }
 
 /* begin fn specific content */
-   
-   if ((a != CF_NOVAL) && (b != CF_NOVAL)) 
+
+   if ((a != CF_NOVAL) && (b != CF_NOVAL))
       {
       CfDebug("%s and %s are numerical\n",argv0,argv1);
-      
+
       if (!strcmp(fp->name, "isgreaterthan"))
          {
          if (a > b)
@@ -2795,7 +2794,7 @@ if (IsRealNumber(argv0) && IsRealNumber(argv1))
          }
       else
          {
-         if (a < b)  
+         if (a < b)
             {
             strcpy(buffer,"any");
             }
@@ -2809,7 +2808,7 @@ if (IsRealNumber(argv0) && IsRealNumber(argv1))
 else if (strcmp(argv0,argv1) > 0)
    {
    CfDebug("%s and %s are NOT numerical\n",argv0,argv1);
-   
+
    if (!strcmp(fp->name, "isgreaterthan"))
       {
       strcpy(buffer,"any");
@@ -2829,7 +2828,7 @@ else
       {
       strcpy(buffer,"any");
       }
-   } 
+   }
 
 return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
 }
@@ -2840,8 +2839,8 @@ static FnCallResult FnCallIRange(struct FnCall *fp,struct Rlist *finalargs)
 
 { char buffer[CF_BUFSIZE];
   long tmp,from=CF_NOINT,to=CF_NOINT;
-  
-buffer[0] = '\0';  
+
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -2878,8 +2877,8 @@ static FnCallResult FnCallRRange(struct FnCall *fp,struct Rlist *finalargs)
 { char buffer[CF_BUFSIZE];
   int tmp;
   double from=CF_NODOUBLE,to=CF_NODOUBLE;
-  
-buffer[0] = '\0';  
+
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -2914,8 +2913,8 @@ static FnCallResult FnCallOn(struct FnCall *fp,struct Rlist *finalargs)
   time_t cftime;
   struct tm tmv;
   enum cfdatetemplate i;
-  
-buffer[0] = '\0';  
+
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -2987,8 +2986,8 @@ static FnCallResult FnCallLaterThan(struct FnCall *fp,struct Rlist *finalargs)
   time_t cftime,now = time(NULL);
   struct tm tmv;
   enum cfdatetemplate i;
-  
-buffer[0] = '\0';  
+
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -3041,8 +3040,8 @@ static FnCallResult FnCallAgoDate(struct FnCall *fp,struct Rlist *finalargs)
   time_t cftime;
   long d[6];
   enum cfdatetemplate i;
-  
-buffer[0] = '\0';  
+
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -3089,8 +3088,8 @@ static FnCallResult FnCallAccumulatedDate(struct FnCall *fp,struct Rlist *finala
   char buffer[CF_BUFSIZE];
   long d[6], cftime;
   enum cfdatetemplate i;
-  
-buffer[0] = '\0';  
+
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -3134,8 +3133,8 @@ static FnCallResult FnCallNow(struct FnCall *fp,struct Rlist *finalargs)
 
 { char buffer[CF_BUFSIZE];
   time_t cftime;
-  
-buffer[0] = '\0';  
+
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -3153,7 +3152,7 @@ return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
 /*********************************************************************/
 
 static FnCallResult FnCallReadFile(struct FnCall *fp,struct Rlist *finalargs)
-    
+
 { char *filename;
   int maxsize;
   char *contents;
@@ -3182,7 +3181,7 @@ else
 /*********************************************************************/
 
 static FnCallResult ReadList(struct FnCall *fp,struct Rlist *finalargs,enum cfdatatype type)
-    
+
 { struct Rlist *rp,*newlist = NULL;
   char *filename,*comment,*split,fnname[CF_MAXVARSIZE];
   int maxent,maxsize,noerrors = true,blanks = false;
@@ -3251,7 +3250,7 @@ switch(type)
        break;
 
    default:
-       FatalError("Software error readstringlist - abused type");       
+       FatalError("Software error readstringlist - abused type");
    }
 
 free(file_buffer);
@@ -3348,7 +3347,7 @@ switch(type)
        break;
 
    default:
-       FatalError("Software error readstringarray - abused type");       
+       FatalError("Software error readstringarray - abused type");
    }
 
 free(file_buffer);
@@ -3450,7 +3449,7 @@ switch(type)
        break;
 
    default:
-       FatalError("Software error parsestringarray - abused type");       
+       FatalError("Software error parsestringarray - abused type");
    }
 
 free(instring);
@@ -3492,11 +3491,11 @@ return ParseArray(fp, args, cf_real, false);
 /*********************************************************************/
 
 static FnCallResult FnCallSplitString(struct FnCall *fp,struct Rlist *finalargs)
-    
+
 { struct Rlist *newlist = NULL;
   char *string,*split;
   int max = 0;
-  
+
 /* begin fn specific content */
 
  /* 2args: string,split_regex,max  */
@@ -3504,7 +3503,7 @@ static FnCallResult FnCallSplitString(struct FnCall *fp,struct Rlist *finalargs)
 string = (char *)(finalargs->item);
 split = (char *)(finalargs->next->item);
 max = Str2Int((char *)(finalargs->next->next->item));
-    
+
 // Read once to validate structure of file in itemlist
 
 newlist = SplitRegexAsRList(string,split,max,true);
@@ -3522,7 +3521,7 @@ static FnCallResult FnCallFileSexist(struct FnCall *fp,struct Rlist *finalargs)
   struct Rval retval;
   struct stat sb;
 
-buffer[0] = '\0';  
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -3571,13 +3570,13 @@ return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
 /*********************************************************************/
 
 static FnCallResult FnCallLDAPValue(struct FnCall *fp,struct Rlist *finalargs)
-    
+
 { char *uri,*dn,*filter,*name,*scope,*sec;
   char buffer[CF_BUFSIZE],handle[CF_BUFSIZE];
   void *newval = NULL;
-  
+
 /* begin fn specific content */
- 
+
    uri = (char *)(finalargs->item);
     dn = (char *)(finalargs->next->item);
 filter = (char *)(finalargs->next->next->item);
@@ -3586,7 +3585,7 @@ filter = (char *)(finalargs->next->next->item);
    sec = (char *)(finalargs->next->next->next->next->next->item);
 
 snprintf(handle,CF_BUFSIZE,"%s_%s_%s_%s",dn,filter,name,scope);
-   
+
 if ((newval = CfLDAPValue(uri,dn,filter,name,scope,sec)))
    {
    CacheUnreliableValue("ldapvalue",handle,newval);
@@ -3612,10 +3611,10 @@ else
 /*********************************************************************/
 
 static FnCallResult FnCallLDAPArray(struct FnCall *fp,struct Rlist *finalargs)
-    
+
 { char *array,*uri,*dn,*filter,*scope,*sec;
   void *newval;
-  
+
 /* begin fn specific content */
 
  array = (char *)(finalargs->item);
@@ -3624,7 +3623,7 @@ static FnCallResult FnCallLDAPArray(struct FnCall *fp,struct Rlist *finalargs)
 filter = (char *)(finalargs->next->next->next->item);
  scope = (char *)(finalargs->next->next->next->next->item);
    sec = (char *)(finalargs->next->next->next->next->next->item);
-   
+
 if ((newval = CfLDAPArray(array,uri,dn,filter,scope,sec)))
    {
    return (FnCallResult) { FNCALL_SUCCESS, { newval, CF_SCALAR } };
@@ -3639,10 +3638,10 @@ else
 /*********************************************************************/
 
 static FnCallResult FnCallLDAPList(struct FnCall *fp,struct Rlist *finalargs)
-    
+
 { char *uri,*dn,*filter,*name,*scope,*sec;
   void *newval;
-  
+
 /* begin fn specific content */
 
    uri = (char *)(finalargs->item);
@@ -3666,10 +3665,10 @@ else
 /*********************************************************************/
 
 static FnCallResult FnCallRegLDAP(struct FnCall *fp,struct Rlist *finalargs)
-    
+
 { char *uri,*dn,*filter,*name,*scope,*regex,*sec;
   void *newval;
-  
+
 /* begin fn specific content */
 
    uri = (char *)(finalargs->item);
@@ -3697,8 +3696,8 @@ static FnCallResult FnCallDiskFree(struct FnCall *fp,struct Rlist *finalargs)
 
 { char buffer[CF_BUFSIZE];
   off_t df;
-  
-buffer[0] = '\0';  
+
+buffer[0] = '\0';
 
 df = GetDiskUsage((char *)finalargs->item, cfabs);
 
@@ -3724,8 +3723,8 @@ static FnCallResult Unix_FnCallUserExists(struct FnCall *fp,struct Rlist *finala
   struct passwd *pw;
   uid_t uid = CF_SAME_OWNER;
   char *arg = finalargs->item;
- 
-buffer[0] = '\0';  
+
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -3734,7 +3733,7 @@ strcpy(buffer,CF_ANYCLASS);
 if (IsNumber(arg))
    {
    uid = Str2Uid(arg,NULL,NULL);
-   
+
    if (uid == CF_SAME_OWNER || uid == CF_UNKNOWN_OWNER)
       {
       return (FnCallResult) { FNCALL_FAILURE };
@@ -3761,8 +3760,8 @@ static FnCallResult Unix_FnCallGroupExists(struct FnCall *fp,struct Rlist *final
   struct group *gr;
   gid_t gid = CF_SAME_GROUP;
   char *arg = finalargs->item;
- 
-buffer[0] = '\0';  
+
+buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -3771,7 +3770,7 @@ strcpy(buffer,CF_ANYCLASS);
 if (isdigit((int)*arg))
    {
    gid = Str2Gid(arg,NULL,NULL);
-   
+
    if (gid == CF_SAME_GROUP || gid == CF_UNKNOWN_GROUP)
       {
       return (FnCallResult) { FNCALL_FAILURE };
@@ -3888,7 +3887,7 @@ if(!EMPTY(pattern))
   while(BlockTextMatch(pattern,file_buffer,&start,&end))
      {
      CloseStringHole(file_buffer,start,end);
-     
+
      if (count++ > strlen(file_buffer))
         {
         CfOut(cf_error,""," !! Comment regex \"%s\" was irreconcilable reading input \"%s\" probably because it legally matches nothing",pattern,filename);
@@ -3911,7 +3910,7 @@ if (off <= 0)
    {
    return;
    }
- 
+
 for (sp = s + start; *(sp+off) != '\0'; sp++)
    {
    *sp = *(sp+off);
@@ -3960,10 +3959,10 @@ for (sp = file_buffer; hcount < maxent && *sp != '\0'; sp++)
       }
 
    newlist = SplitRegexAsRList(linebuf,split,maxent,allowblanks);
-   
+
    vcount = 0;
    first_one[0] = '\0';
-   
+
    for (rp = newlist; rp != NULL; rp=rp->next)
       {
       char this_rval[CF_MAXVARSIZE];
@@ -3975,27 +3974,27 @@ for (sp = file_buffer; hcount < maxent && *sp != '\0'; sp++)
          case cf_str:
              strncpy(this_rval,rp->item,CF_MAXVARSIZE-1);
              break;
-             
+
          case cf_int:
              ival = Str2Int(rp->item);
              snprintf(this_rval,CF_MAXVARSIZE,"%d",(int)ival);
              break;
-             
+
          case cf_real:
              rval = Str2Int(rp->item);
              sscanf(rp->item,"%255s",this_rval);
              break;
-             
+
          default:
-             
-             FatalError("Software error readstringarray - abused type");       
+
+             FatalError("Software error readstringarray - abused type");
          }
 
       if (strlen(first_one) == 0)
          {
          strncpy(first_one,this_rval,CF_MAXVARSIZE-1);
          }
-          
+
       if (intIndex)
          {
          snprintf(name,CF_MAXVARSIZE,"%s[%d][%d]",array_lval,hcount,vcount);
@@ -4036,7 +4035,7 @@ if ((pp = cf_popen(command,"r")) == NULL)
    CfOut(cf_error,"cf_popen","Couldn't open pipe from %s\n",command);
    return false;
    }
-   
+
 while (!feof(pp))
    {
    if (ferror(pp))  /* abortable */
@@ -4044,23 +4043,23 @@ while (!feof(pp))
       CfOut(cf_error,"","Shell command pipe %s\n",command);
       break;
       }
-   
+
    CfReadLine(line,CF_BUFSIZE,pp);
-   
+
    if (strlen(line) > CF_BUFSIZE - 80)
       {
       CfOut(cf_error,"","Line from module %s is too long to be sensible\n",command);
       break;
       }
-   
+
    if (ferror(pp))  /* abortable */
       {
       CfOut(cf_error,"","Shell command pipe %s\n",command);
       break;
-      }  
-   
+      }
+
    print = false;
-   
+
    for (sp = line; *sp != '\0'; sp++)
       {
       if (! isspace((int)*sp))
@@ -4121,18 +4120,18 @@ switch (*line)
    case '=':
        content[0] = '\0';
        sscanf(line+1,"%[^=]=%[^\n]",name,content);
-       
+
        if (CheckID(name))
           {
           CfOut(cf_verbose,"","Defined variable: %s in context %s with value: %s\n",name,context,content);
           NewScalar(context,name,content,cf_str);
           }
        break;
-       
+
    case '@':
        content[0] = '\0';
        sscanf(line+1,"%[^=]=%[^\n]",name,content);
-       
+
        if (CheckID(name))
           {
           struct Rlist *list = NULL;
@@ -4144,7 +4143,7 @@ switch (*line)
 
    case '\0':
 	   break;
-       
+
    default:
        if (print)
           {
@@ -4196,11 +4195,11 @@ struct FnCallArg ACCESSEDBEFORE_ARGS[] =
 struct FnCallArg ACCUM_ARGS[] =
    {
    {"0,1000",cf_int,"Years"},
-   {"0,1000",cf_int,"Months"},    
-   {"0,1000",cf_int,"Days"},      
-   {"0,1000",cf_int,"Hours"},     
-   {"0,1000",cf_int,"Minutes"},   
-   {"0,40000",cf_int,"Seconds"},   
+   {"0,1000",cf_int,"Months"},
+   {"0,1000",cf_int,"Days"},
+   {"0,1000",cf_int,"Hours"},
+   {"0,1000",cf_int,"Minutes"},
+   {"0,40000",cf_int,"Seconds"},
    {NULL,cf_notype,NULL}
    };
 
@@ -4212,22 +4211,22 @@ struct FnCallArg AND_ARGS[] =
 struct FnCallArg AGO_ARGS[] =
     {
     {"0,1000",cf_int,"Years"},
-    {"0,1000",cf_int,"Months"},    
-    {"0,1000",cf_int,"Days"},      
-    {"0,1000",cf_int,"Hours"},     
-    {"0,1000",cf_int,"Minutes"},   
-    {"0,40000",cf_int,"Seconds"},   
+    {"0,1000",cf_int,"Months"},
+    {"0,1000",cf_int,"Days"},
+    {"0,1000",cf_int,"Hours"},
+    {"0,1000",cf_int,"Minutes"},
+    {"0,40000",cf_int,"Seconds"},
     {NULL,cf_notype,NULL}
     };
 
 struct FnCallArg LATERTHAN_ARGS[] =
     {
     {"0,1000",cf_int,"Years"},
-    {"0,1000",cf_int,"Months"},    
-    {"0,1000",cf_int,"Days"},      
-    {"0,1000",cf_int,"Hours"},     
-    {"0,1000",cf_int,"Minutes"},   
-    {"0,40000",cf_int,"Seconds"},   
+    {"0,1000",cf_int,"Months"},
+    {"0,1000",cf_int,"Days"},
+    {"0,1000",cf_int,"Hours"},
+    {"0,1000",cf_int,"Minutes"},
+    {"0,40000",cf_int,"Seconds"},
     {NULL,cf_notype,NULL}
     };
 
@@ -4415,7 +4414,7 @@ struct FnCallArg HOSTSSEEN_ARGS[] =
     {"name,address",cf_opts,"Type of return value desired"},
     {NULL,cf_notype,NULL}
     };
-    
+
 struct FnCallArg IPRANGE_ARGS[] =
     {
     {CF_ANYSTRING,cf_str,"IP address range syntax"},
@@ -4550,11 +4549,11 @@ struct FnCallArg PRODUCT_ARGS[] =
 struct FnCallArg DATE_ARGS[] =
     {
     {"1970,3000",cf_int,"Year"},
-    {"1,12",cf_int,"Month"},    
-    {"1,31",cf_int,"Day"},      
-    {"0,23",cf_int,"Hour"},     
-    {"0,59",cf_int,"Minute"},   
-    {"0,59",cf_int,"Second"},   
+    {"1,12",cf_int,"Month"},
+    {"1,31",cf_int,"Day"},
+    {"0,23",cf_int,"Hour"},
+    {"0,59",cf_int,"Minute"},
+    {"0,59",cf_int,"Second"},
     {NULL,cf_notype,NULL}
     };
 
@@ -4588,7 +4587,7 @@ struct FnCallArg RANDOMINT_ARGS[] =
     {CF_INTRANGE,cf_int,"Upper inclusive bound"},
     {NULL,cf_notype,NULL}
     };
- 
+
 struct FnCallArg READFILE_ARGS[] =
     {
     {CF_ABSPATHRANGE,cf_str,"File name"},
@@ -4671,7 +4670,7 @@ struct FnCallArg REGCMP_ARGS[] =
     {
     {CF_ANYSTRING,cf_str,"Regular expression"},
     {CF_ANYSTRING,cf_str,"Match string"},
-    {NULL,cf_notype,NULL}        
+    {NULL,cf_notype,NULL}
     };
 
 struct FnCallArg REGEXTRACT_ARGS[] =
@@ -4757,7 +4756,7 @@ struct FnCallArg SELECTSERVERS_ARGS[] =
     {CF_NAKEDLRANGE,cf_str,"The identifier of a cfengine list of hosts or addresses to contact"},
     {CF_VALRANGE,cf_int,"The port number"},
     {CF_ANYSTRING,cf_str,"A query string"},
-    {CF_ANYSTRING,cf_str,"A regular expression to match success"},     
+    {CF_ANYSTRING,cf_str,"A regular expression to match success"},
     {CF_VALRANGE,cf_int,"Maximum number of bytes to read from server"},
     {CF_IDRANGE,cf_str,"Name for array of results"},
     {NULL,cf_notype,NULL}
@@ -4773,7 +4772,7 @@ struct FnCallArg SPLAYCLASS_ARGS[] =
 struct FnCallArg SPLITSTRING_ARGS[] =
     {
     {CF_ANYSTRING,cf_str,"A data string"},
-    {CF_ANYSTRING,cf_str,"Regex to split on"},     
+    {CF_ANYSTRING,cf_str,"Regex to split on"},
     {CF_VALRANGE,cf_int,"Maximum number of pieces"},
     {NULL,cf_notype,NULL}
     };

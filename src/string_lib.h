@@ -35,4 +35,7 @@ void ToLowerStrInplace(char *str);
 int GetStringListElement(char *strList, int index, char *outBuf, int outBufSz);
 int StripListSep(char *strList, char *outBuf, int outBufSz);
 
+/* Allocates the result */
+char *SearchAndReplace(const char *source, const char *search, const char *replace);
+
 #endif

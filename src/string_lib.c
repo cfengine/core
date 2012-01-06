@@ -1,5 +1,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
+#include "writer.h"
 
 char ToLower (char ch)
 
@@ -174,4 +175,38 @@ for(sp = strList; *sp != '\0'; sp++)
    }
 
 return true;
+}
+
+/*********************************************************************/
+
+char* SearchAndReplace(const char *source, const char *search, const char *replace)
+
+{
+Writer *w = StringWriter();
+const char *source_ptr = source;
+
+if (source == NULL || search == NULL || replace == NULL)
+   {
+   FatalError("Programming error: NULL argument is passed to SearchAndReplace");
+   }
+
+if (strcmp(search, "") == 0)
+   {
+   return xstrdup(source);
+   }
+
+for (;;)
+   {
+   const char *found_ptr = strstr(source_ptr, search);
+   if (found_ptr == NULL)
+      {
+      WriterWrite(w, source_ptr);
+      return StringWriterClose(w);
+      }
+
+   WriterWriteLen(w, source_ptr, found_ptr - source_ptr);
+   WriterWrite(w, replace);
+
+   source_ptr += found_ptr - source_ptr + strlen(search);
+   }
 }

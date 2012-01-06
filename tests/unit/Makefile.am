@@ -25,10 +25,10 @@ check_PROGRAMS = \
 TESTS = $(check_PROGRAMS)
 
 set_domainname_test_SOURCES = set_domainname_test.c \
-	../../src/sysinfo.c ../../src/string_lib.c
+	../../src/sysinfo.c ../../src/string_lib.c ../../src/writer.c
 set_domainname_test_LDADD = libtest.la
 
-str_test_SOURCES = str_test.c ../../src/string_lib.c
+str_test_SOURCES = str_test.c ../../src/string_lib.c ../../src/writer.c
 str_test_LDADD = libtest.la
 
 #

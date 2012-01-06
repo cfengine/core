@@ -70,9 +70,9 @@ return writer;
 
 /*********************************************************************/
 
-static size_t StringWriterWrite(Writer *writer, const char *str)
+static size_t StringWriterWriteLen(Writer *writer, const char *str, size_t len_)
 {
-size_t len = strlen(str);
+size_t len = MIN(strlen(str), len_);
 
 if (writer->string.len + len + 1 > writer->string.allocated)
    {
@@ -97,9 +97,11 @@ return vfprintf(writer->file, fmt, ap);
 
 /*********************************************************************/
 
-static size_t FileWriterWrite(Writer *writer, const char *str)
+static size_t FileWriterWriteLen(Writer *writer, const char *str, size_t len_)
 {
-return fwrite(str, 1, strlen(str), writer->file);
+size_t len = MIN(strlen(str), len_);
+
+return fwrite(str, 1, len, writer->file);
 }
 
 /*********************************************************************/
@@ -114,7 +116,7 @@ if (writer->type == WT_STRING)
    {
    char *str = NULL;
    xvasprintf(&str, fmt, ap);
-   size = StringWriterWrite(writer, str);
+   size = StringWriterWriteLen(writer, str, INT_MAX);
    }
 else
    {
@@ -127,16 +129,23 @@ return size;
 
 /*********************************************************************/
 
-size_t WriterWrite(Writer *writer, const char *str)
+size_t WriterWriteLen(Writer *writer, const char *str, size_t len)
 {
 if (writer->type == WT_STRING)
    {
-   return StringWriterWrite(writer, str);
+   return StringWriterWriteLen(writer, str, len);
    }
 else
    {
-   return FileWriterWrite(writer, str);
+   return FileWriterWriteLen(writer, str, len);
    }
+}
+
+/*********************************************************************/
+
+size_t WriterWrite(Writer *writer, const char *str)
+{
+return WriterWriteLen(writer, str, INT_MAX);
 }
 
 /*********************************************************************/

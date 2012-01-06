@@ -82,7 +82,6 @@ void DeleteConn (struct cfd_connection *conn);
 int cfscanf (char *in, int len1, int len2, char *out1, char *out2, char *out3);
 int AuthenticationDialogue (struct cfd_connection *conn,char *buffer, int buffersize);
 int SafeOpen (char *filename);
-void SafeClose (int fd);
 int OptionFound(char *args, char *pos, char *word);
 in_addr_t GetInetAddr (char *host);
 
@@ -3887,16 +3886,6 @@ ThreadUnlock(cft_system);
 return fd;
 }
 
-    
-/***************************************************************/
-    
-void SafeClose(int fd)
-
-{
-ThreadLock(cft_system); 
-close(fd);
-ThreadUnlock(cft_system);
-}
 
 /***************************************************************/
 

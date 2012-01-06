@@ -1,22 +1,22 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-#define DB "db.db"
+#define DB_FILE "db.db"
 #define ATTEMPTS 1000
 
 void *contend(void *param)
 {
-CF_TCDB* db;
+CF_DB* db;
 int i;
 for (i = 0; i < ATTEMPTS; ++i)
    {
-   if (!TCDB_OpenDB(DB, &db))
+   if (!OpenDB(DB_FILE, &db))
       {
       exit(42);
       }
    else
       {
-      TCDB_CloseDB(db);
+      CloseDB(db);
       }
    }
 return NULL;
@@ -60,3 +60,17 @@ exit(42);
 }
 
 int DEBUG;
+
+#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+int ThreadLock(pthread_mutex_t *t)
+{
+return 1;
+}
+
+int ThreadUnlock(pthread_mutex_t *t)
+{
+return 1;
+}
+
+pthread_mutex_t *cft_dbhandle;
+#endif

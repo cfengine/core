@@ -279,7 +279,8 @@ if (cfstat(buffer,&statbuf) == 0)
          }
       }
 
-   saddresses = SortItemListCounters(addresses);
+   addresses = SortItemListCounters(addresses);
+   saddresses = addresses;
 
    for (ip = saddresses; ip != NULL; ip=ip->next)
       {

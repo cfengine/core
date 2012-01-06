@@ -84,7 +84,7 @@ Copyright @copyright{} 2011 CFEngine AS
 
 
 @menu
-* Defining Agility::             
+* Defining Agility::            
 @end menu
 
 @node Defining Agility,  , Top, Top
@@ -115,7 +115,19 @@ generally a penalty associated with a lack of agility: a blow, a fall or
 a loss.
 
 
-@node What comprises agility?
+@menu
+* What comprises agility?::     
+* Aspects of CFEngine that bring agility::  
+* How does complexity affect agility?::  
+* Packaging limits agility::    
+* An effective understanding helps agility::  
+* Increasing capacity::         
+* Maximizing business imperatives::  
+* Scalability and agility::     
+* Who is responsible for agility?::  
+@end menu
+
+@node What comprises agility?, Aspects of CFEngine that bring agility, Defining Agility, Defining Agility
 @unnumberedsec What comprises agility?
 @sp 1
 
@@ -195,8 +207,8 @@ there are many uncertainties and relativisms in such definitions. It would
 be inconceivable to claim any kind of industry standard for these.
 
 @sp 1
-@center{@image{agility,12cm}}
-@center{How agility depends on technology measures.}
+@center @image{agility,12cm}
+@center How agility depends on technology measures.
 @sp 1
 
 
@@ -270,7 +282,7 @@ configuration model, combined with speed of verification and repair
 are the values we covet for agility.
 
 
-@node Aspects of CFEngine that bring agility
+@node Aspects of CFEngine that bring agility, How does complexity affect agility?, What comprises agility?, Defining Agility
 @unnumberedsec Aspects of CFEngine that bring agility
 @sp 1
 
@@ -354,7 +366,7 @@ slowly.
 @end itemize
 
 
-@node How does complexity affect agility?
+@node How does complexity affect agility?, Packaging limits agility, Aspects of CFEngine that bring agility, Defining Agility
 @unnumberedsec How does complexity affect agility?
 @sp 1
 
@@ -421,7 +433,7 @@ it merely creates a lack of agility as we are constrained by the requirement of
 oversimplification.
 
 
-@node Packaging limits agility
+@node Packaging limits agility, An effective understanding helps agility, How does complexity affect agility?, Defining Agility
 @unnumberedsec Packaging limits agility
 @sp 1
 
@@ -451,7 +463,7 @@ or work with other suppliers' packages. This ensures that
 adaptability is not sacrificed for superficial ease.
 
 
-@node An effective understanding helps agility
+@node An effective understanding helps agility, Increasing capacity, Packaging limits agility, Defining Agility
 @unnumberedsec An effective understanding helps agility
 @sp 1
 
@@ -477,7 +489,7 @@ without risk.
 
 
 
-@node Increasing capacity
+@node Increasing capacity, Maximizing business imperatives, An effective understanding helps agility, Defining Agility
 @unnumberedsec Increasing capacity
 
 Capacity in IT infrastructure is increased by increasing machine
@@ -498,7 +510,7 @@ The rapid deployment of new services is assisted by:
 
 
 
-@node Maximizing business imperatives
+@node Maximizing business imperatives, Scalability and agility, Increasing capacity, Defining Agility
 @unnumberedsec Maximizing business imperatives
 
 Agility allows companies and public services to compete and address
@@ -533,11 +545,8 @@ with clear expectations of what is possible and controlling only certain
 parts on which crucial things depend.
 
 
-@menu
-* What is scalability?::        
-@end menu
 
-@node Scalability and agility
+@node Scalability and agility, Who is responsible for agility?, Maximizing business imperatives, Defining Agility
 @unnumberedsec Scalability and agility
 @sp 1
 
@@ -566,7 +575,7 @@ so we shall not discuss it further here.
 
 
 
-@node Who is responsible for agility?
+@node Who is responsible for agility?,  , Scalability and agility, Defining Agility
 @unnumberedsec Who is responsible for agility?
 @sp 1
 

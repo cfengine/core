@@ -692,7 +692,7 @@ void ShowFnCall(FILE *fout,struct FnCall *fp);
 struct Rval EvaluateFunctionCall(struct FnCall *fp,struct Promise *pp);
 enum cfdatatype FunctionReturnType(const char *name);
 const FnCallType *FindFunction(const char *name);
-void SetFnCallReturnStatus(char *fname,int status,char *message,char *fncall_classes);
+void SetFnCallReturnStatus(char *fname,int status,char *message);
 void FnCallPrint(Writer *writer, struct FnCall *fp);
 
 /* full_write.c */

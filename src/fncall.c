@@ -333,7 +333,7 @@ FNCALL_STATUS.fncall_classes[0] = '\0';
 
 /*****************************************************************************/
 
-void SetFnCallReturnStatus(char *name,int status,char *message,char *fncall_classes)
+void SetFnCallReturnStatus(char *name,int status,char *message)
 
 {
 FNCALL_STATUS.status = status;
@@ -341,12 +341,6 @@ FNCALL_STATUS.status = status;
 if (message && strlen(message) > 0)
    {
    strncpy(FNCALL_STATUS.message,message,CF_BUFSIZE-1);
-   }
-
-if (fncall_classes && strlen(fncall_classes))
-   {
-   strncpy(FNCALL_STATUS.fncall_classes,fncall_classes,CF_BUFSIZE-1);
-   AddPrefixedClasses(name,fncall_classes);
    }
 }
 

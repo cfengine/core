@@ -3,7 +3,7 @@ AM_CFLAGS = $(NOVA_CFLAGS) $(CONSTELLATION_CFLAGS) $(GCC_CFLAG) -I$(srcdir)/../.
 LDADD = ../../src/libpromises.la libtest.la
 
 check_LTLIBRARIES = libtest.la
-libtest_la_SOURCES = cmockery.c test.c ../../src/alloc.c
+libtest_la_SOURCES = cmockery.c cmockery.h test.c test.h ../../src/alloc.c
 libtest_la_LIBADD = ../../pub/libcfpub.la
 
 check_PROGRAMS = \

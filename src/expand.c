@@ -647,6 +647,12 @@ do
    snprintf(v,CF_MAXVARSIZE,"%d",(int)getgid());
    NewScalar("this","promiser_gid",v,cf_int);
 
+   /* Must expand $(this.promiser) here for arg dereferencing in things
+      like edit_line and methods, but we might have to
+      adjust again later if the value changes */
+   
+   NewScalar("this","promiser",pp->promiser,cf_str);
+
    /* End special variables */
 
    pexp = ExpandDeRefPromise("this",pp);

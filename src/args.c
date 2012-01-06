@@ -62,7 +62,6 @@ int MapBodyArgs(char *scopeid,struct Rlist *give,struct Rlist *take)
   enum cfdatatype dtg = cf_notype,dtt = cf_notype;
   char *lval;
   void *rval;
-  struct Rval returnval;
   int len1,len2;
   
 CfDebug("MapBodyArgs(begin)\n");
@@ -108,9 +107,9 @@ for (rpg = give, rpt = take; rpg != NULL && rpt != NULL; rpg=rpg->next,rpt=rpt->
           fp = (struct FnCall *)rpg->item;
           dtg = FunctionReturnType(fp->name);
 
-          returnval = EvaluateFunctionCall(fp,NULL);
+          FnCallResult res = EvaluateFunctionCall(fp,NULL);
           
-          if (FNCALL_STATUS.status == FNCALL_FAILURE && THIS_AGENT_TYPE != cf_common)
+          if (res.status == FNCALL_FAILURE && THIS_AGENT_TYPE != cf_common)
              {
              // Unresolved variables
              if (VERBOSE)
@@ -124,8 +123,8 @@ for (rpg = give, rpt = take; rpg != NULL && rpt != NULL; rpg=rpg->next,rpt=rpt->
              {
              DeleteFnCall(fp);
              
-             rpg->item = returnval.item;
-             rpg->type = returnval.rtype;
+             rpg->item = res.rval.item;
+             rpg->type = res.rval.rtype;
              
              lval = (char *)rpt->item;
              rval = rpg->item;
@@ -174,7 +173,7 @@ for (rp = fp->args; rp != NULL; rp = rp->next)
       {
       case CF_FNCALL:          
           subfp = (struct FnCall *)rp->item;
-          rval = EvaluateFunctionCall(subfp,pp);
+          rval = EvaluateFunctionCall(subfp,pp).rval;
           break;
       default:
           rval = ExpandPrivateRval(CONTEXTID, (struct Rval) { rp->item, rp->type });

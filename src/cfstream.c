@@ -190,7 +190,8 @@ DeleteItemList(mess);
 void cfPS(enum cfreport level,char status,char *errstr,struct Promise *pp,struct Attributes attr,char *fmt, ...)
 
 { va_list ap;
-  char *sp,buffer[CF_BUFSIZE],output[CF_BUFSIZE],*v,handle[CF_MAXVARSIZE];
+  char buffer[CF_BUFSIZE],output[CF_BUFSIZE],*v,handle[CF_MAXVARSIZE];
+  const char *sp;
   struct Item *ip,*mess = NULL;
   int verbose;
   struct Rlist *rp;

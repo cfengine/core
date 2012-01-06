@@ -742,10 +742,10 @@ switch (returnval.rtype)
           if (rp->type == CF_FNCALL)
              {
              fp = (struct FnCall *)rp->item;
-             newret = EvaluateFunctionCall(fp,pp);
+             FnCallResult res = EvaluateFunctionCall(fp,pp);
              DeleteFnCall(fp);
-             rp->item = newret.item;
-             rp->type = newret.rtype;
+             rp->item = res.rval.item;
+             rp->type = res.rval.rtype;
              CfDebug("Replacing function call with new type (%c)\n",rp->type);
              }
           else
@@ -771,7 +771,7 @@ switch (returnval.rtype)
 
        // Also have to eval function now
        fp = (struct FnCall *)returnval.item;
-       returnval = EvaluateFunctionCall(fp,pp);
+       returnval = EvaluateFunctionCall(fp,pp).rval;
        DeleteFnCall(fp);
        break;
 
@@ -1000,7 +1000,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
              bool excluded = false;
              /* eval it: e.g. ifvarclass => not("a_class") */
 
-             res = EvaluateFunctionCall(cp->rval.item, NULL);
+             res = EvaluateFunctionCall(cp->rval.item, NULL).rval;
              excluded = IsExcluded(res.item);
 
              DeleteRvalItem(res);
@@ -1070,13 +1070,17 @@ if (rval.item != NULL)
 
    if (cp->rval.rtype == CF_FNCALL)
       {
-      rval = EvaluateFunctionCall(fp,pp);
+      FnCallResult res = EvaluateFunctionCall(fp,pp);
 
-      if (FNCALL_STATUS.status == FNCALL_FAILURE)
+      if (res.status == FNCALL_FAILURE)
          {
          /* We do not assign variables to failed fn calls */
-         DeleteRvalItem(rval);
+         DeleteRvalItem(res.rval);
          return;
+         }
+      else
+         {
+         rval = res.rval;
          }
       }
    else

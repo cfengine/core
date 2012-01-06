@@ -1190,7 +1190,8 @@ LastSawBundle(bp->name);
 
 void PromiseBanner(struct Promise *pp)
 
-{ char *sp,handle[CF_MAXVARSIZE];
+{ char handle[CF_MAXVARSIZE];
+const char *sp;
 
 if ((sp = GetConstraintValue("handle",pp,CF_SCALAR)) || (sp = PromiseID(pp)))
    {

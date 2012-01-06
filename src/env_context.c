@@ -59,8 +59,8 @@ static int EvalClassExpression(struct Constraint *cp,struct Promise *pp)
   char buffer[CF_MAXVARSIZE];
   struct Rlist *rp;
   double prob,cum = 0,fluct;
-  struct Rval newret;
   struct FnCall *fp;
+  struct Rval rval;
 
 if (cp == NULL)
    {
@@ -87,26 +87,26 @@ switch (cp->rval.rtype)
    case CF_FNCALL:
        
        fp = (struct FnCall *)cp->rval.item;        /* Special expansion of functions for control, best effort only */
-       newret = EvaluateFunctionCall(fp,pp);
+       FnCallResult res = EvaluateFunctionCall(fp,pp);
        DeleteFnCall(fp);
-       cp->rval = newret;
+       cp->rval = res.rval;
        break;
 
    case CF_LIST:
        for (rp = (struct Rlist *)cp->rval.item; rp != NULL; rp = rp->next)
           {
-          newret = EvaluateFinalRval("this", (struct Rval) { rp->item, rp->type }, true,pp);
+          rval = EvaluateFinalRval("this", (struct Rval) { rp->item, rp->type }, true,pp);
           DeleteRvalItem((struct Rval) { rp->item, rp->type });
-          rp->item = newret.item;
-          rp->type = newret.rtype;
+          rp->item = rval.item;
+          rp->type = rval.rtype;
           }
        break;
        
    default:
 
-       newret = ExpandPrivateRval("this", cp->rval);
+       rval = ExpandPrivateRval("this", cp->rval);
        DeleteRvalItem(cp->rval);
-       cp->rval = newret;
+       cp->rval = rval;
        break;
    }
 

@@ -35,7 +35,6 @@
 #include "cf3.extern.h"
 
 static void PrintFunctions(void);
-static void ClearFnCallStatus(void);
 
 /*******************************************************************/
 
@@ -230,14 +229,10 @@ return fn ? fn->dtype : cf_notype;
 
 /*******************************************************************/
 
-struct Rval EvaluateFunctionCall(struct FnCall *fp,struct Promise *pp)
+FnCallResult EvaluateFunctionCall(struct FnCall *fp,struct Promise *pp)
 
 { struct Rlist *expargs;
-  struct Rval rval;
   const FnCallType *this = FindFunction(fp->name);
-
-rval.item = NULL;
-rval.rtype = CF_NOPROMISEE;
 
 if (this)
    {
@@ -259,51 +254,38 @@ else
       {
       CfOut(cf_error,"","No such FnCall \"%s()\" - context info unavailable\n",fp->name);
       }
-   
-   return rval;
+
+   return (FnCallResult) { FNCALL_FAILURE, { NULL, CF_NOPROMISEE } };
    }
 
 /* If the container classes seem not to be defined at this stage, then don't try to expand the function */
 
 if ((pp != NULL) && !IsDefinedClass(pp->classes))
    {
-   return rval;
+   return (FnCallResult) { FNCALL_FAILURE, { NULL, CF_NOPROMISEE } };
    }
-
-ClearFnCallStatus();
 
 expargs = NewExpArgs(fp,pp);
 
 if (UnresolvedArgs(expargs))
    {
-   FNCALL_STATUS.status = FNCALL_FAILURE;
-   rval.item = CopyFnCall(fp);
-   rval.rtype = CF_FNCALL;
    DeleteExpArgs(expargs);
-   return rval;
+   return (FnCallResult) { FNCALL_FAILURE, { CopyFnCall(fp), CF_FNCALL } };
    }
 
-if (this)
-   {
-   rval = CallFunction(this, fp, expargs);
-   }
-else
-   {
-   CfOut(cf_error,"","Un-registered function call");
-   PromiseRef(cf_error,pp);
-   }
+FnCallResult result = CallFunction(this, fp, expargs);
 
-if (FNCALL_STATUS.status == FNCALL_FAILURE)
+if (result.status == FNCALL_FAILURE)
    {
    /* We do not assign variables to failed function calls */
-   rval.item = CopyFnCall(fp);
-   rval.rtype = CF_FNCALL;
+   DeleteExpArgs(expargs);
+   return (FnCallResult) { FNCALL_FAILURE, { CopyFnCall(fp), CF_FNCALL } };
    }
 
 DeleteExpArgs(expargs);
-return rval;
+return result;
 }
-                
+
 /*******************************************************************/
 
 const FnCallType *FindFunction(const char *name)
@@ -320,30 +302,6 @@ for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
 
 return NULL;
 }
-
-/*****************************************************************************/
-
-static void ClearFnCallStatus(void)
-
-{
-FNCALL_STATUS.status = CF_NOP;
-FNCALL_STATUS.message[0] = '\0';
-FNCALL_STATUS.fncall_classes[0] = '\0';
-}
-
-/*****************************************************************************/
-
-void SetFnCallReturnStatus(char *name,int status,char *message)
-
-{
-FNCALL_STATUS.status = status;
-
-if (message && strlen(message) > 0)
-   {
-   strncpy(FNCALL_STATUS.message,message,CF_BUFSIZE-1);
-   }
-}
-
 /*****************************************************************************/
 
 void FnCallPrint(Writer *writer, struct FnCall *call)

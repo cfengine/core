@@ -33,22 +33,22 @@ int getnetgrent (char **hostp, char **userp, char **domainp)
 
 static void test_hostinnetgroup_found(void **state)
 {
-struct Rval retval;
+FnCallResult res;
 struct Rlist *args = NULL;
 AppendRlist(&args, "valid_netgroup", 's');
 
-retval = FnCallHostInNetgroup(NULL, args);
-assert_string_equal("any", (char *)retval.item);
+res = FnCallHostInNetgroup(NULL, args);
+assert_string_equal("any", (char *)res.rval.item);
 }
 
 static void test_hostinnetgroup_not_found(void **state)
 {
-struct Rval retval;
+FnCallResult res;
 struct Rlist *args = NULL;
 AppendRlist(&args, "invalid_netgroup", 's');
 
-retval = FnCallHostInNetgroup(NULL, args);
-assert_string_equal("!any", (char *)retval.item);
+res = FnCallHostInNetgroup(NULL, args);
+assert_string_equal("!any", (char *)res.rval.item);
 }
 
 int main()

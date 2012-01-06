@@ -655,13 +655,14 @@ struct SubTypeSyntax
 /*************************************************************************/
 
 struct FnCall;
+struct FnCallResult;
 
 typedef struct FnCallType
    {
    const char *name;
    enum cfdatatype dtype;
    const struct FnCallArg *args;
-   struct Rval (*impl)(struct FnCall *, struct Rlist *);
+   struct FnCallResult (*impl)(struct FnCall *, struct Rlist *);
    const char *description;
    bool varargs;
    } FnCallType;
@@ -827,15 +828,17 @@ typedef struct HashIterator
 /* Return value signalling                                         */
 /*******************************************************************/
 
-#define FNCALL_SUCCESS 0
-#define FNCALL_FAILURE 1
-
-struct FnCallStatus  /* from builtin functions */
+typedef enum FnCallStatus
    {
-   int status;
-   char message[CF_BUFSIZE];
-   char fncall_classes[CF_BUFSIZE]; /* set by functions in the form fncall_CLASS */
-   };
+   FNCALL_SUCCESS,
+   FNCALL_FAILURE,
+   } FnCallStatus;
+
+typedef struct FnCallResult  /* from builtin functions */
+   {
+   FnCallStatus status;
+   struct Rval rval;
+   } FnCallResult;
 
 /*******************************************************************/
 /* Return value signalling                                         */

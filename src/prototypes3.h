@@ -497,7 +497,7 @@ void AddAllClasses(struct Rlist *list,int persist,enum statepolicy policy);
 
 /* evalfunction.c */
 
-struct Rval CallFunction(const FnCallType *function, struct FnCall *fp, struct Rlist *finalargs);
+struct FnCallResult CallFunction(const FnCallType *function, struct FnCall *fp, struct Rlist *finalargs);
 int FnNumArgs(const FnCallType *call_type);
 
 void *CfReadFile(char *filename,int maxsize);
@@ -688,7 +688,7 @@ struct FnCall *CopyFnCall(struct FnCall *f);
 int PrintFnCall(char *buffer, int bufsize,struct FnCall *fp);
 void DeleteFnCall(struct FnCall *fp);
 void ShowFnCall(FILE *fout,struct FnCall *fp);
-struct Rval EvaluateFunctionCall(struct FnCall *fp,struct Promise *pp);
+FnCallResult EvaluateFunctionCall(struct FnCall *fp,struct Promise *pp);
 enum cfdatatype FunctionReturnType(const char *name);
 const FnCallType *FindFunction(const char *name);
 void SetFnCallReturnStatus(char *fname,int status,char *message);

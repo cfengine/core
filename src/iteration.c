@@ -76,7 +76,7 @@ for (rp = namelist; rp != NULL; rp = rp->next)
          if (rps->type == CF_FNCALL)
             {
             struct FnCall *fp = (struct FnCall *)rps->item;
-            newret = EvaluateFunctionCall(fp,NULL);
+            newret = EvaluateFunctionCall(fp,NULL).rval;
             DeleteFnCall(fp);
             rps->item = newret.item;
             rps->type = newret.rtype;

@@ -23,5 +23,9 @@ dnswrapper_so_LDFLAGS = -shared
 endif
 
 
+EXTRA_DIST = default.cf.sub testall
 
 TESTS = testall
+
+dist-hook:
+	tar -c -f - [0-9]* | tar -x -C $(distdir) -f -

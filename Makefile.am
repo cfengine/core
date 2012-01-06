@@ -52,10 +52,6 @@ MAINTAINERCLEANFILES = Makefile.in aclocal.m4 config.guess config.sub \
 #
 ACLOCAL_AMFLAGS = -I m4
 
-dist-hook:
-	mkdir $(distdir)/tests
-	(cd $(srcdir)/tests && find . -name README -o -name testall -o -name '*.cf*' -a \! -path '*succeeded*' | tar -c -f - -T-) | tar -x -C $(distdir)/tests -v -f -
-
 #
 # Code coverage
 #

@@ -45,8 +45,8 @@ size_t WriterWriteF(Writer *Writer, const char *fmt, ...);
 size_t WriterWrite(Writer *writer, const char *str);
 size_t WriterWriteChar(Writer *writer, char c);
 
-size_t StringWriterLength(Writer *writer);
-const char *StringWriterData(Writer *writer);
+size_t StringWriterLength(const Writer *writer);
+const char *StringWriterData(const Writer *writer);
 
 void WriterClose(Writer *writer);
 /* Returns modifiable string and destroys itself */

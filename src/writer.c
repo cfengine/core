@@ -149,7 +149,7 @@ return WriterWrite(writer, s);
 
 /*********************************************************************/
 
-size_t StringWriterLength(Writer *writer)
+size_t StringWriterLength(const Writer *writer)
 {
 if (writer->type != WT_STRING)
    {
@@ -161,7 +161,7 @@ return writer->string.len;
 
 /*********************************************************************/
 
-const char *StringWriterData(Writer *writer)
+const char *StringWriterData(const Writer *writer)
 {
 if (writer->type != WT_STRING)
    {

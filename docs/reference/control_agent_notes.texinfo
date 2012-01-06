@@ -1,4 +1,4 @@
 
 
 Settings describing the details of the fixed behavioural promises made by
-@code{cf-agent}. For example:
+@code{cf-agent}.

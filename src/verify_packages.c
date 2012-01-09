@@ -73,7 +73,7 @@ void VerifyPackagesPromise(struct Promise *pp)
 { struct Attributes a = {{0}};
   struct CfLock thislock;
   char lockname[CF_BUFSIZE];
-
+  
 a = GetPackageAttributes(pp);
 
 #ifdef MINGW
@@ -132,20 +132,20 @@ static int PackageSanityCheck(struct Attributes a,struct Promise *pp)
 #ifndef MINGW
 if (a.packages.package_list_version_regex == NULL)
    {
-   cfPS(cf_error,CF_FAIL,"",pp,a," !! You must supply a method for determining the version of existing packages");
+   cfPS(cf_error,CF_FAIL,"",pp,a," !! You must supply a method for determining the version of existing packages e.g. use the standard library generic package_method");
    return false;
    }
 
 if (a.packages.package_list_name_regex == NULL)
    {
-   cfPS(cf_error,CF_FAIL,"",pp,a," !! You must supply a method for determining the name of existing packages");
+   cfPS(cf_error,CF_FAIL,"",pp,a," !! You must supply a method for determining the name of existing packages e.g. use the standard library generic package_method");
    return false;
    }
 #endif  /* NOT MINGW */
 
 if (a.packages.package_list_command == NULL && a.packages.package_file_repositories == NULL)
    {
-   cfPS(cf_error,CF_FAIL,"",pp,a," !! You must supply a method for determining the list of existing packages (a command or repository list)");
+   cfPS(cf_error,CF_FAIL,"",pp,a," !! You must supply a method for determining the list of existing packages (a command or repository list) e.g. use the standard library generic package_method");
    return false;
    }
 

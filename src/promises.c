@@ -145,7 +145,8 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
    char *bodyname = NULL;
 
    /* A body template reference could look like a scalar or fn to the parser w/w () */
-   
+
+
    switch (cp->rval.rtype)
       {
       case CF_SCALAR:
@@ -169,7 +170,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       }
 
    /* First case is: we have a body template to expand lval = body(args), .. */
-   
+
    if (bp != NULL) 
       {
       if (strcmp(bp->type,cp->lval) != 0)

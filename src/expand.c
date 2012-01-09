@@ -38,6 +38,7 @@ static int Epimenides(char *var, struct Rval rval, int level);
 
 static int CompareRlist(struct Rlist *list1, struct Rlist *list2);
 static int CompareRval(struct Rval rval1, struct Rval rval2);
+static void SetAnyMissingDefaults(struct Promise *pp);
 
 /*
 
@@ -103,10 +104,15 @@ void ExpandPromise(enum cfagenttype agent,char *scopeid,struct Promise *pp,void 
   struct Constraint *cp;
   struct Promise *pcopy;
 
-
 CfDebug("****************************************************\n");
 CfDebug("* ExpandPromises (scope = %s )\n",scopeid);
 CfDebug("****************************************************\n\n");
+
+// Set a default for packages here...general defaults that need to come before
+
+//fix me wth a general function SetMissingDefaults
+
+SetAnyMissingDefaults(pp);
 
 DeleteScope("match"); /* in case we expand something expired accidentially */
 
@@ -947,6 +953,23 @@ if (strlen(s1) < 4)
 
 memset(s2,0,CF_MAXVARSIZE);
 strncpy(s2,s1+2,strlen(s1)-3);
+}
+
+/*********************************************************************/
+
+static void SetAnyMissingDefaults(struct Promise *pp)
+
+/* Some defaults have to be set here, if they involve body-name
+   constraints as names need to be expanded before CopyDeRefPromise */
+    
+{
+if (strcmp(pp->agentsubtype,"packages") == 0)
+   {
+   if (GetConstraint(pp,"package_method") == NULL)
+      {
+      AppendConstraint(&(pp->conlist), "package_method", (struct Rval) { "generic", CF_SCALAR },"any",true);
+      }
+   }
 }
 
 /*********************************************************************/

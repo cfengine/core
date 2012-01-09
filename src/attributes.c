@@ -1289,7 +1289,12 @@ p.package_architectures = GetListConstraint("package_architectures",pp);
 
 action = Str2PackageAction((char *)GetConstraintValue("package_policy",pp,CF_SCALAR));
 p.package_policy = action;
-  
+
+if (p.package_policy == cfa_pa_none) // Default action => package add
+   {
+   p.package_policy = cfa_addpack;
+   }
+
 operator = Str2PackageSelect((char *)GetConstraintValue("package_select",pp,CF_SCALAR));
 p.package_select = operator;
 change_policy = Str2ActionPolicy((char *)GetConstraintValue("package_changes",pp,CF_SCALAR));

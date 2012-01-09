@@ -400,15 +400,16 @@ required for actual business (low overhead, maximum capacity).
 
 
 
+@c .....................................................................
 @menu
 * What agility means in different environments::  
+* Separating What from How::    
 * Packaging limits agility::    
 * How abstraction improves agility::  
 * Increasing capacity - increasing scale::  
 @end menu
 
-@c .....................................................................
-@node What agility means in different environments, Packaging limits agility, Aspects of CFEngine that bring agility, Aspects of CFEngine that bring agility
+@node What agility means in different environments, Separating What from How, Aspects of CFEngine that bring agility, Aspects of CFEngine that bring agility
 @section What agility means in different environments
 
 As indicated above, agility is relative to an environment.
@@ -416,11 +417,13 @@ In the following sections, we note a few example environments
 and how their expectations for agility might differ, noting some aspects
 of CFEngine that are helpful in these cases.
 
+
+
 @menu
 * Web shops::                   
 * Cloud providers::             
-* High Performance Computing:::  
-* Government and finance sectors:::  
+* High Performance Computing::  
+* Government and finance sectors::  
 @end menu
 
 @node Web shops, Cloud providers, What agility means in different environments, What agility means in different environments
@@ -469,7 +472,7 @@ competitiveness. Maintaining precise
 @end table
 
 
-@node Cloud providers, High Performance Computing:, Web shops, What agility means in different environments
+@node Cloud providers, High Performance Computing, Web shops, What agility means in different environments
 @subsection Cloud providers
 
 @table @i
@@ -489,8 +492,8 @@ for demand is probably the fastest rate of change.
 @end table
 
 
-@node High Performance Computing:, Government and finance sectors:, Cloud providers, What agility means in different environments
-@subsection High Performance Computing:
+@node High Performance Computing, Government and finance sectors, Cloud providers, What agility means in different environments
+@subsection High Performance Computing
 
 @table @i
 @item Speed:
@@ -501,14 +504,14 @@ applications where raw computation is used to crunch numbers. The
 lightweight footprint of CFEngine is a major benefit here, as every
 CPU cycle and megabyte of memory is precious.
 
-@item: Precision:
+@item Precision:
 In clusters the rate of customization is low, so the need for agility
 is generally low, and raw speed is the issue.
 @end table
 
 
-@node Government and finance sectors:,  , High Performance Computing:, What agility means in different environments
-@subsection Government and finance sectors:
+@node Government and finance sectors,  , High Performance Computing, What agility means in different environments
+@subsection Government and finance sectors
 
 @table @i
 @item Speed:
@@ -539,7 +542,7 @@ IT services accelerate.
 
 
 @c .....................................................................
-@node Separating What from How
+@node Separating What from How, Packaging limits agility, What agility means in different environments, Aspects of CFEngine that bring agility
 @section Separating What from How
 @sp 1
 
@@ -614,7 +617,7 @@ as much information as possible about `why'.
 
 
 @c .....................................................................
-@node Packaging limits agility, How abstraction improves agility, What agility means in different environments, Aspects of CFEngine that bring agility
+@node Packaging limits agility, How abstraction improves agility, Separating What from How, Aspects of CFEngine that bring agility
 @section Packaging limits agility
 @sp 1
 

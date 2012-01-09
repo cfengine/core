@@ -1,18 +1,38 @@
 3.3.0 (in development)
-	New function dirname() to complement lastnode()
-	New function lsdir() to list files in a directory
-	Detection of MAC address in classes/variables for supported kernels (Linux) $(sys.hardware_mac) and mac_00_ab_...
-	$(sys.cpus) variable and classes: 1_cpu:: 2_cpus:: etc on supported systems
-	New system list variables describing multiple interfaces: $(sys.hardware) $(sys.ip_addresses) $(sys.interfaces)
-	
 
-	Change semantics of processes to allow process_stop and signals afterwards
+	New built-in functions:
+	- dirname() to complement lastnode()
+	- lsdir()
+	- maplist() to apply functions over lists
 
-	Added a maplist() function. Reserved special variable  for use in this function and elsewhere. 
-	Fixed some scanf() bugs.
-        Services promises for generic/Unix added
-	
-	
+	New features:
+	- Allow defining arrays from modules.
+	- Allow both `process_stop' and `signals' constraints in
+	  `processes' promises at the same time.
+	- cf-promises --gcc-brief-format option to output warnings and
+	  errors in gcc-compatible syntax which to ease use "go to next
+	  error" feature of text editors.
+	- cf-promises --parse-tree option to parse policy file and dump it
+	  in JSON format
+	- Services promises for generic/Unix added.
+
+	New built-in variables and classes (Linux):
+	- Number of CPUs: $(sys.cpus), 1_cpu, 2_cpus etc
+
+	New built-in variables and classes (Unices):
+	- $(sys.hardware_addresses) - list of MAC adresses
+	- $(sys.ip_addresses) - list of IP addresses
+	- $(sys.interfaces) - list of network interfaces
+	- $(sys.hardware_mac[$iface]) - MAC address for network interface
+	- mac_<mac_address>:: - discovered MAC addresses
+
+	Cleanups and improvements:
+	- Memory and CPU usage improvements.
+	- Testsuite now uses 'make check' convention and does not need root
+	  privileges anymore.
+	- See the full list of bugfixes at
+	  https://cfengine.com/bugtracker/changelog_page.php
+
 3.2.0
 	New bootstrap method with single-command bootstrapping:
 	- cf-agent --bootstrap --policy-server 123.456.789.123

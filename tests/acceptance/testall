@@ -50,7 +50,7 @@ curdir() {
 }
 
 DEFAGENT=$(dirname $(dirname $(curdir)))/src/cf-agent
-AGENT=${DEFAGENT}
+AGENT=${AGENT:-${DEFAGENT}}
 
 usage() {
   echo "testall [-q] [--gainroot=<command>] [--agent=<agent>] [--no-nova] [--staging] [--no-network] [<test> <test>...]"

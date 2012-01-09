@@ -45,3 +45,10 @@ dollar.  This is because some commands require a list of packages,
 while others require an empty list. The default behaviour is to try to
 append the name of one or more packages to the command, depending on 
 whether the policy is for individual or bulk installation.
+
+@noindent @b{Default pachage method}
+
+As of core 3.3.0, if no @code{package_method} is defined, CFEngine will
+look for a method called @samp{generic}. Such a method is defined in
+the standard library for supported operating systems.
+

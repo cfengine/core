@@ -3,7 +3,7 @@ This decides what fate is intended for the named package.
 
 @table @bullet
 @item add
-Ensure that a package is present.
+Ensure that a package is present (this is the default setting from 3.3.0).
 @item delete
 Ensure that a package is not present.
 @item reinstall

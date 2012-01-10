@@ -1194,10 +1194,8 @@ switch(type)
 
        if (!DONTDO && CF_MOUNTALL)
           {
-          CfOut(cf_verbose,"", "");
           CfOut(cf_verbose,"", " -> Mounting all filesystems\n");
           MountAll();
-          CfOut(cf_verbose,"", "");
           }
 #endif  /* NOT MINGW */
        break;

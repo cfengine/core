@@ -101,8 +101,6 @@ void ShowContext(void)
   
  /* Text output */
 
-CfOut(cf_verbose,"","");
-
 for (i = 0; i < CF_ALPHABETSIZE; i++)
    {
    ptr = SortItemListNames(VHEAP.list[i]);
@@ -120,8 +118,6 @@ if (VERBOSE||DEBUG)
    
    printf("}\n");
 
-   CfOut(cf_verbose,"","");
-   
    printf("%s>  -> Negated Classes = { ",VPREFIX);
    
    for (ptr = VNEGHEAP; ptr != NULL; ptr=ptr->next)
@@ -131,8 +127,6 @@ if (VERBOSE||DEBUG)
    
    printf ("}\n");
    }
-
-CfOut(cf_verbose,"","");
 }
 
 /*******************************************************************/

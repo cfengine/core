@@ -3753,7 +3753,7 @@ snprintf(buffer,CF_BUFSIZE,"Hello %s (%s), nothing relevant to do here...\n\n",c
 
 if (SendTransaction(conn->sd_reply,buffer,0,CF_DONE) == -1)
    {
-   CfOut(cf_error,"send","");
+   CfOut(cf_error, "send", "Unable to send transaction");
    }
 }
 

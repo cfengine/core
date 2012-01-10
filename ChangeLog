@@ -33,6 +33,41 @@
 	- See the full list of bugfixes at
 	  https://cfengine.com/bugtracker/changelog_page.php
 
+3.2.4   (Bugfix and Stability release)
+
+        Fixed failure in network transfer in case of misbehaving peer
+
+        A few tiny memory leaks on error paths fixed
+
+3.2.3   (Bugfix and Stability release)
+
+        A few tiny memory leaks fixed
+
+        Improved performance of cf-serverd under heavy load with
+        TokyoCabinet database
+
+        Full list of issues fixed is available on
+        https://cfengine.com/bugtracker/changelog_page.php
+
+3.2.2   (Bugfix and Stability release)
+
+        Enabled compilation in "large files" mode under AIX
+
+        Alleviated problem with broken file transfers over unstable
+        Internet links.
+
+        Full list of issues fixed is available on
+        https://cfengine.com/bugtracker/changelog_page.php
+
+3.2.1   (Bugfix and Stability release)
+
+        Fixed compilation under HP-UX and Solaris
+
+        Enabled compilation using HP ANSI C compiler
+
+        Full list of issues fixed is available on
+        https://cfengine.com/bugtracker/changelog_page.php
+
 3.2.0
 	New bootstrap method with single-command bootstrapping:
 	- cf-agent --bootstrap --policy-server 123.456.789.123

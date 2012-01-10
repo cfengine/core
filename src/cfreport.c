@@ -686,14 +686,14 @@ for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
       for (rp  = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
          {
          IdempPrependRScalar(&REPORTS,rp->item,CF_SCALAR);
-         CfOut(cf_inform,"","Adding %s to the reports...\n",rp->item);
+         CfOut(cf_inform,"","Adding %s to the reports...\n", ScalarValue(rp));
          }
       continue;
       }
 
    if (strcmp(cp->lval, CFRE_CONTROLBODY[cfre_csv].lval) == 0)
       {
-      for (rp  = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
+      for (rp = ListValue(retval.item); rp != NULL; rp = rp->next)
          {
          IdempPrependRScalar(&CSVLIST,rp->item,CF_SCALAR);
          CfOut(cf_inform,"","Adding %s to the csv2xml list...\n",rp->item);

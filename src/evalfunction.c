@@ -1755,7 +1755,7 @@ if (val < 0 || portnum < 0)
 
 if (val > CF_BUFSIZE-1)
    {
-   CfOut(cf_error,"","Too many bytes specificed in selectservers",port);
+   CfOut(cf_error,"","Too many bytes specificed in selectservers");
    val = CF_BUFSIZE - CF_BUFFERMARGIN;
    }
 

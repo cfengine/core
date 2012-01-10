@@ -288,7 +288,7 @@ if (ReceiveTransaction(conn->sd,in,NULL) == -1)
 
 if (BadProtoReply(in))
    {
-   CfOut(cf_error,"",in);
+   CfOut(cf_error, "", "%s", in);
    FreeRSAKey(server_pubkey);
    return false;
    }

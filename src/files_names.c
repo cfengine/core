@@ -434,7 +434,7 @@ if(nextFree)
    {
    if ((*nextFree - path) + len > (bufsize - margin) )
       {
-      CfOut(cf_error,"","Internal limit: Buffer ran out of space constructing string (using nextFree), len = %d > %d.\n",(strlen(path)+len),(bufsize - CF_BUFFERMARGIN));
+      CfOut(cf_error,"","Internal limit: Buffer ran out of space constructing string (using nextFree), len = %zd > %d.\n",(strlen(path)+len),(bufsize - CF_BUFFERMARGIN));
       return false;
       }
    
@@ -445,7 +445,7 @@ else
    {
    if ((strlen(path)+len) > (bufsize - margin))
       {
-      CfOut(cf_error,"","Internal limit: Buffer ran out of space constructing string (%d > %d).\n",(strlen(path)+len),(bufsize - CF_BUFFERMARGIN));
+      CfOut(cf_error,"","Internal limit: Buffer ran out of space constructing string (%zd > %d).\n",(strlen(path)+len),(bufsize - CF_BUFFERMARGIN));
       return false;
       }
    

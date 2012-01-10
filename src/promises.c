@@ -175,7 +175,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       {
       if (strcmp(bp->type,cp->lval) != 0)
          {
-         CfOut(cf_error,"","Body type mismatch for body reference \"%s\" in promise at line %d of %s (%s != %s)\n",bodyname,pp->offset.line,(pp->audit)->filename,bp->type,cp->lval);
+         CfOut(cf_error,"","Body type mismatch for body reference \"%s\" in promise at line %zu of %s (%s != %s)\n",bodyname,pp->offset.line,(pp->audit)->filename,bp->type,cp->lval);
          ERRORCOUNT++;
          }
       
@@ -191,7 +191,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
          
          if (fp == NULL || fp->args == NULL)
             {
-            CfOut(cf_error,"","Argument mismatch for body reference \"%s\" in promise at line %d of %s\n",bodyname,pp->offset.line,(pp->audit)->filename);
+            CfOut(cf_error,"","Argument mismatch for body reference \"%s\" in promise at line %zu of %s\n",bodyname,pp->offset.line,(pp->audit)->filename);
             }
          
          NewScope("body");
@@ -199,7 +199,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
          if (fp && bp && fp->args && bp->args && !MapBodyArgs("body",fp->args,bp->args))
             {
             ERRORCOUNT++;            
-            CfOut(cf_error,"","Number of arguments does not match for body reference \"%s\" in promise at line %d of %s\n",bodyname,pp->offset.line,(pp->audit)->filename);
+            CfOut(cf_error,"","Number of arguments does not match for body reference \"%s\" in promise at line %zu of %s\n",bodyname,pp->offset.line,(pp->audit)->filename);
             }
     
          for (scp = bp->conlist; scp != NULL; scp = scp->next)
@@ -217,7 +217,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
          if (fp != NULL)
             {
-            CfOut(cf_error,"","An apparent body \"%s()\" was undeclared or could have incorrect args, but used in a promise near line %d of %s (possible unquoted literal value)",bodyname,pp->offset.line,(pp->audit)->filename);
+            CfOut(cf_error,"","An apparent body \"%s()\" was undeclared or could have incorrect args, but used in a promise near line %zu of %s (possible unquoted literal value)",bodyname,pp->offset.line,(pp->audit)->filename);
             }
          else
             {
@@ -234,7 +234,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       {
       if (cp->isbody && !IsBundle(BUNDLES,bodyname))
          {
-         CfOut(cf_error,"","Apparent body \"%s()\" was undeclared, but used in a promise near line %d of %s (possible unquoted literal value)",bodyname,pp->offset.line,(pp->audit)->filename);
+         CfOut(cf_error,"","Apparent body \"%s()\" was undeclared, but used in a promise near line %zu of %s (possible unquoted literal value)",bodyname,pp->offset.line,(pp->audit)->filename);
          }
       
       struct Rval newrv = CopyRvalItem(cp->rval);
@@ -687,11 +687,11 @@ else
 
 if (pp->audit)
    {
-   CfOut(level,"","Promise (version %s) belongs to bundle \'%s\' in file \'%s\' near line %d\n",v,pp->bundle,pp->audit->filename,pp->offset.line);
+   CfOut(level,"","Promise (version %s) belongs to bundle \'%s\' in file \'%s\' near line %zu\n",v,pp->bundle,pp->audit->filename,pp->offset.line);
    }
 else
    {
-   CfOut(level,"","Promise (version %s) belongs to bundle \'%s\' near line %d\n",v,pp->bundle,pp->offset.line);
+   CfOut(level,"","Promise (version %s) belongs to bundle \'%s\' near line %zu\n",v,pp->bundle,pp->offset.line);
    }
 
 if (pp->ref)

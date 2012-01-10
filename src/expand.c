@@ -1216,7 +1216,7 @@ if (rval.item != NULL)
 else
    {
    CfOut(cf_error,""," !! Variable %s has no promised value\n",pp->promiser);
-   CfOut(cf_error,""," !! Rule from %s at/before line %d\n",cp->audit->filename, cp->offset.line);
+   CfOut(cf_error,""," !! Rule from %s at/before line %zu\n",cp->audit->filename, cp->offset.line);
    cfPS(cf_noreport,CF_FAIL,"",pp,a," !! Couldn't add variable %s",pp->promiser);
    }     
 

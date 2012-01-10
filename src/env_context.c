@@ -1105,7 +1105,7 @@ if (ReadDB(dbp,name,&state,sizeof(state)))
       {
       if (now < state.expires)
          {
-         CfOut(cf_verbose,""," -> Persisent state %s is already in a preserved state --  %d minutes to go\n",name,(state.expires-now)/60);
+         CfOut(cf_verbose,""," -> Persisent state %s is already in a preserved state --  %ld minutes to go\n",name,(state.expires-now)/60);
          CloseDB(dbp);
          return;
          }
@@ -1192,7 +1192,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
       }
    else
       {
-      CfOut(cf_verbose,""," Persistent class %s for %d more minutes\n",key,(q.expires-now)/60);
+      CfOut(cf_verbose,""," Persistent class %s for %ld more minutes\n",key,(q.expires-now)/60);
       CfOut(cf_verbose,""," Adding persistent class %s to heap\n",key);
       NewClass(key);
       }
@@ -1273,9 +1273,8 @@ for (sp = local; *sp != '\0'; sp++)
    sp += strlen(currentitem);
 
    if (IsHardClass(currentitem))
-      { char err[CF_BUFSIZE];
-      sprintf (err,"Cannot negate the reserved class [%s]\n",currentitem);
-      FatalError(err);
+      {
+      FatalError("Cannot negate the reserved class [%s]\n",currentitem);
       }
 
    AppendItem(&VNEGHEAP,currentitem,NULL);

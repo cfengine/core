@@ -69,7 +69,7 @@ if (a.restart_class)
 
    if (a.haveprocess_count)
       {
-      CfOut(cf_error,""," !! process_count and restart_class should not be used in the same promise as this makes no sense",pp->promiser);
+      CfOut(cf_error,""," !! process_count and restart_class should not be used in the same promise as this makes no sense");
       PromiseRef(cf_inform,pp);
       ret = false;
       }

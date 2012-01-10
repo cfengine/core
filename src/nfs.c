@@ -481,7 +481,7 @@ if (MatchFSInFstab(mountpt))
                 {
                 if (FullTextMatch(regex,ip->name))
                    {
-                   cfPS(cf_inform,CF_CHG,"",pp,a,"Deleting file system mounted on %s.\n",host,rmountpt,VFSTAB[VSYSTEMHARDCLASS]);
+                   cfPS(cf_inform,CF_CHG,"",pp,a,"Deleting file system mounted on %s.\n",host);
                    // Check host name matches too?
                    DeleteThisItem(&FSTABLIST,ip);
                    FSTAB_EDITS++;

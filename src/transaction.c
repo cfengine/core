@@ -190,14 +190,14 @@ elapsedtime = (time_t)(now-lastcompleted) / 60;
 
 if (elapsedtime < 0)
    {
-   CfOut(cf_verbose,""," XX Another cf-agent seems to have done this since I started (elapsed=%d)\n",elapsedtime);
+   CfOut(cf_verbose,""," XX Another cf-agent seems to have done this since I started (elapsed=%jd)\n", (intmax_t)elapsedtime);
    ReleaseCriticalSection();
    return this;
    }
 
 if (elapsedtime < attr.transaction.ifelapsed)
    {
-   CfOut(cf_verbose,""," XX Nothing promised here [%.40s] (%u/%u minutes elapsed)\n",cflast,elapsedtime,attr.transaction.ifelapsed);
+   CfOut(cf_verbose,""," XX Nothing promised here [%.40s] (%jd/%u minutes elapsed)\n",cflast,(intmax_t)elapsedtime,attr.transaction.ifelapsed);
    ReleaseCriticalSection();
    return this;
    }
@@ -213,7 +213,7 @@ if (!ignoreProcesses)
       {
       if (elapsedtime >= attr.transaction.expireafter)
          {
-         CfOut(cf_inform,"","Lock %s expired (after %u/%u minutes)\n",cflock,elapsedtime,attr.transaction.expireafter);
+         CfOut(cf_inform,"","Lock %s expired (after %jd/%u minutes)\n",cflock,(intmax_t)elapsedtime,attr.transaction.expireafter);
          
          pid = FindLockPid(cflock);
          
@@ -243,9 +243,7 @@ if (!ignoreProcesses)
             else
                {
                ReleaseCriticalSection();
-               CfOut(cf_error,"kill","Unable to kill expired cfagent process %d from lock %s, exiting this time..\n",pid,cflock);
-               
-               FatalError("");
+               FatalError("Unable to kill expired cfagent process %d from lock %s, exiting this time..\n",pid,cflock);
                }
             }
          }
@@ -706,7 +704,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,(void *)&entry,&vsize))
 
    if (now - entry.time > (time_t)CF_LOCKHORIZON)
       {
-      CfOut(cf_verbose,""," --> Purging lock (%d) %s",now-entry.time,key);
+      CfOut(cf_verbose,""," --> Purging lock (%ld) %s",now-entry.time,key);
       DeleteDB(dbp,key);
       }
    }

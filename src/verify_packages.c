@@ -666,7 +666,7 @@ else
    }
 
 CfOut(cf_verbose,""," -> %d patch(es) matching the name \"%s\" already installed\n",installed,name);
-CfOut(cf_verbose,""," -> %d patch(es) match the promise body's criteria fully\n",matches,name);
+CfOut(cf_verbose,""," -> %d patch(es) match the promise body's criteria fully\n",matches);
 
 SchedulePackageOp(name,version,arch,installed,matches,no_version,a,pp);
 }

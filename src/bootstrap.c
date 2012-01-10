@@ -143,7 +143,7 @@ else
       }
    else if (repaired)
       {
-      CfOut(cf_cmdout,""," -> No policy distribution host was defined - use --policy-server to set one\n",POLICY_SERVER);
+      CfOut(cf_cmdout,""," -> No policy distribution host was defined - use --policy-server to set one\n");
       }
    }
 

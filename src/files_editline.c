@@ -851,7 +851,7 @@ for (ip = initiator; ip != terminator && ip != NULL; ip = np)
 
    if (matches)
       {
-      CfOut(cf_verbose,""," -> Delete chunk of %d lines\n",matches,ip->name);
+      CfOut(cf_verbose, "", " -> Delete chunk of %d lines\n", matches);
       
       if (a.transaction.action == cfa_warn)
          {

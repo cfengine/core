@@ -983,7 +983,7 @@ else
    tv.tv_sec = attr.copy.timeout;
    }
 
-CfOut(cf_verbose,"","Set connection timeout to %d\n",tv.tv_sec);
+CfOut(cf_verbose,"","Set connection timeout to %jd\n", (intmax_t)tv.tv_sec);
 
 tv.tv_usec = 0;
 

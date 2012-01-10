@@ -120,7 +120,6 @@ else
 struct GenericAgentConfig CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
-  char arg[CF_BUFSIZE];
   int optindex = 0;
   int c;
   struct GenericAgentConfig config = GenericAgentDefaultConfig(cf_common);
@@ -133,8 +132,7 @@ while ((c=getopt_long(argc,argv,"ad:vnIf:D:N:VSrxMb:pg:",OPTIONS,&optindex)) != 
 
           if (optarg && strlen(optarg) < 5)
              {
-             snprintf(arg,CF_MAXVARSIZE," -f used but argument \"%s\" incorrect",optarg);
-             FatalError(arg);
+             FatalError(" -f used but argument \"%s\" incorrect", optarg);
              }
 
           strncpy(VINPUTFILE,optarg,CF_BUFSIZE-1);

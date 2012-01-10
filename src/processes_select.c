@@ -221,7 +221,7 @@ if ((i = GetProcColumnIndex(name1,name2,names)) != -1)
    
    if (value == CF_NOINT)
       {
-      CfOut(cf_inform,"","Failed to extract a valid integer from %s => \"%s\" in process list\n",name1[i],line[i]);
+      CfOut(cf_inform,"","Failed to extract a valid integer from %c => \"%s\" in process list\n",name1[i],line[i]);
       return false;
       }
 
@@ -258,7 +258,7 @@ if ((i = GetProcColumnIndex(name1,name2,names)) != -1)
    
    if (value == CF_NOINT)
       {
-      CfOut(cf_inform,"","Failed to extract a valid integer from %s => \"%s\" in process list\n",name1[i],line[i]);
+      CfOut(cf_inform,"","Failed to extract a valid integer from %c => \"%s\" in process list\n",name1[i],line[i]);
       return false;
       }
    

@@ -155,7 +155,6 @@ return 0;
 struct GenericAgentConfig CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
-  char arg[CF_BUFSIZE];
   int optindex = 0;
   int c;
   char ld_library_path[CF_BUFSIZE];
@@ -169,8 +168,7 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:D:N:VxL:hFV1gMW",OPTIONS,&optindex)) !=
 
           if (optarg && strlen(optarg) < 5)
              {
-             snprintf(arg,CF_MAXVARSIZE," -f used but argument \"%s\" incorrect",optarg);
-             FatalError(arg);
+             FatalError(" -f used but argument \"%s\" incorrect",optarg);
              }
 
           strncpy(VINPUTFILE,optarg,CF_BUFSIZE-1);
@@ -817,7 +815,7 @@ while (!feof(pp) && CfReadLine(line,CF_BUFSIZE,pp))
 	    lineEscaped[sizeof(lineEscaped)-2] = '\n';
             }
          
-         CfOut(cf_inform,"",lineEscaped);
+         CfOut(cf_inform,"", "%s", lineEscaped);
          }
       
       line[0] = '\0';
@@ -834,16 +832,16 @@ if (ONCE)
    CloseLog();
    }
 
-CfOut(cf_verbose,""," -> Command is complete\n",cmd);
+CfOut(cf_verbose,""," -> Command is complete\n");
 
 if (count)
    {
-   CfOut(cf_verbose,""," -> Mailing result\n",cmd);
+   CfOut(cf_verbose,""," -> Mailing result\n");
    MailResult(filename,MAILTO);
    }
 else
    {
-   CfOut(cf_verbose,""," -> No output\n",cmd);
+   CfOut(cf_verbose,""," -> No output\n");
    unlink(filename);
    }
 }

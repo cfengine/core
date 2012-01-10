@@ -745,7 +745,7 @@ else
       case '%':
           if (a < 0 || a > 100)
              {
-             CfOut(cf_error,"","Percentage out of range (%d)",a);
+             CfOut(cf_error, "", "Percentage out of range (%ld)", a);
              return CF_NOINT;
              }
           else
@@ -1047,7 +1047,7 @@ else
       case '%':
           if (a < 0 || a > 100)
              {
-             CfOut(cf_error,"","Percentage out of range (%d)",a);
+             CfOut(cf_error,"","Percentage out of range (%.2lf)", a);
              return CF_NOINT;
              }
           else
@@ -1074,8 +1074,7 @@ void IntRange2Int(char *intrange,long *min,long *max,struct Promise *pp)
 
 { struct Item *split;
   long lmax = CF_LOWINIT, lmin = CF_HIGHINIT;
-  char output[CF_BUFSIZE];
-  
+
 /* Numeric types are registered by range separated by comma str "min,max" */
 
 if (intrange == NULL)
@@ -1103,8 +1102,7 @@ DeleteItemList(split);
 if (lmin == CF_HIGHINIT || lmax == CF_LOWINIT)
    {
    PromiseRef(cf_error,pp);
-   snprintf(output,CF_BUFSIZE,"Could not make sense of integer range [%s]",intrange);
-   FatalError(output);
+   FatalError("Could not make sense of integer range [%s]",intrange);
    }
 
 *min = lmin;

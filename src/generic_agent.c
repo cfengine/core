@@ -871,16 +871,12 @@ else
    snprintf(name,CF_BUFSIZE,NULLFILE);
    if ((FREPORT_TXT = fopen(name,"w")) == NULL)
       {
-      char vbuff[CF_BUFSIZE];
-      snprintf(vbuff,CF_BUFSIZE,"Cannot open output file %s",name);
-      FatalError(vbuff);
+      FatalError("Cannot open output file %s", name);
       }
 
    if ((FREPORT_HTML = fopen(name,"w")) == NULL)
       {
-      char vbuff[CF_BUFSIZE];
-      snprintf(vbuff,CF_BUFSIZE,"Cannot open output file %s",name);
-      FatalError(vbuff);
+      FatalError("Cannot open output file %s",name);
       }
    }
 
@@ -908,7 +904,7 @@ if (SHOWREPORTS)
    {
    CfOut(cf_verbose,"","Wrote compilation report %s%creports%cpromise_output_%s.txt",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,agents);
    CfOut(cf_verbose,"","Wrote compilation report %s%creports%cpromise_output_%s.html",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,agents);
-   CfOut(cf_verbose,"","Wrote knowledge map %s%cpromise_knowledge.cf",CFWORKDIR,FILE_SEPARATOR,agents);
+   CfOut(cf_verbose,"","Wrote knowledge map %s%cpromise_knowledge.cf",CFWORKDIR,FILE_SEPARATOR);
    }
 #endif
 
@@ -1244,7 +1240,6 @@ static void CheckWorkingDirectories()
 
 { struct stat statbuf;
   char vbuff[CF_BUFSIZE];
-  char output[CF_BUFSIZE];
 
 CfDebug("CheckWorkingDirectories()\n");
 
@@ -1351,8 +1346,7 @@ else
 #ifndef MINGW
    if (statbuf.st_mode & 077)
       {
-      snprintf(output,CF_BUFSIZE-1,"UNTRUSTED: Private key directory %s%cppkeys (mode %o) was not private!\n",CFWORKDIR,FILE_SEPARATOR,statbuf.st_mode & 0777);
-      FatalError(output);
+      FatalError("UNTRUSTED: Private key directory %s%cppkeys (mode %o) was not private!\n",CFWORKDIR,FILE_SEPARATOR,statbuf.st_mode & 0777);
       }
 #endif  /* NOT MINGW */
    }
@@ -1642,7 +1636,7 @@ for (cp = controllist; cp != NULL; cp=cp->next)
    if (!AddVariableHash(scope,cp->lval,returnval,
                         GetControlDatatype(cp->lval,bp),cp->audit->filename,cp->offset.line))
       {
-      CfOut(cf_error,""," !! Rule from %s at/before line %d\n",cp->audit->filename,cp->offset.line);
+      CfOut(cf_error,""," !! Rule from %s at/before line %zu\n",cp->audit->filename,cp->offset.line);
       }
 
    if (strcmp(cp->lval,CFG_CONTROLBODY[cfg_output_prefix].lval) == 0)

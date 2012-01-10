@@ -737,7 +737,7 @@ if (OUTPUT_TO_FILE)
 
    if ((fp = fopen(filename,"w")) == NULL)
       {
-      CfOut(cf_error,"Unable to open file %s\n",filename);
+      CfOut(cf_error, "", "Unable to open file %s\n",filename);
       fp = stdout;
       }
    }

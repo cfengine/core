@@ -174,13 +174,15 @@ if (ReadHash(dbp,type,filename,dbdigest))
    }
 else
    {
-   char s[CF_BUFSIZE];
-   snprintf(s,CF_BUFSIZE," !! File %s was not in %s database - new file found",filename,FileHashName(type));
    /* Key was not found, so install it */
-   cfPS(warnlevel,CF_CHG,"",pp,attr,s);   
+   cfPS(warnlevel,CF_CHG,"",pp,attr, " !! File %s was not in %s database - new file found", filename, FileHashName(type));
    CfDebug("Storing checksum for %s in database %s\n",filename,HashPrint(type,digest));
    WriteHash(dbp,type,filename,digest);
+
+   char s[CF_BUFSIZE];
+   snprintf(s,CF_BUFSIZE," !! File %s was not in %s database - new file found",filename,FileHashName(type));
    LogHashChange(s);
+
    CloseDB(dbp);
    return false;
    }
@@ -504,22 +506,20 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
 
    if (cfstat(obj,&statbuf) == -1)
       {
-      char s[CF_BUFSIZE];
-
-      snprintf(s,CF_BUFSIZE,"ALERT: %s file no longer exists!",obj);
-      
       if (attr.change.update)
-         {         
+         {
          if (DeleteComplexKeyDB(dbp,key,ksize))
             {
-            cfPS(cf_error,CF_CHG,"",pp,attr,s);
+            cfPS(cf_error, CF_CHG, "", pp, attr, "ALERT: FILE %s no longer exists!", obj);
             }
          }
       else
          {
-         cfPS(cf_error,CF_WARN,"",pp,attr,s);
+         cfPS(cf_error,CF_WARN,"",pp,attr,"ALERT: File %s no longer exists!", obj);
          }
 
+      char s[CF_BUFSIZE];
+      snprintf(s,CF_BUFSIZE,"ALERT: %s file no longer exists!",obj);
       LogHashChange(s);
       }
 

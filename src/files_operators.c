@@ -751,7 +751,7 @@ if (attr.rename.newname)
          }
       else
          {
-         cfPS(cf_error,CF_WARN,"",pp,attr," !! Rename to same destination twice? Would overwrite saved copy - aborting",path);
+         cfPS(cf_error,CF_WARN,"",pp,attr," !! Rename to same destination twice? Would overwrite saved copy - aborting");
          }
       }
 
@@ -870,7 +870,7 @@ if (attr.rename.disable)
          }
       else
          {
-         cfPS(cf_error,CF_WARN,"",pp,attr," !! Disable required twice? Would overwrite saved copy - changing permissions only",path);
+         cfPS(cf_error,CF_WARN,"",pp,attr," !! Disable required twice? Would overwrite saved copy - changing permissions only");
          }
       }
 
@@ -1171,7 +1171,7 @@ if (cmpsb.st_gid != sb->st_gid)
 
 if (cmpsb.st_dev != sb->st_dev)
    {
-   CfOut(cf_error,"","ALERT: device for %s changed %d -> %d",file,cmpsb.st_dev,sb->st_dev);
+   CfOut(cf_error, "", "ALERT: device for %s changed %jd -> %jd", file, (intmax_t)cmpsb.st_dev, (intmax_t)sb->st_dev);
    }
 
 if (cmpsb.st_ino != sb->st_ino)
@@ -1261,11 +1261,11 @@ if (!DONTDO)
 
       if (print)
          {
-         CfOut(cf_reporting,"",line);
+         CfOut(cf_reporting, "", "%s", line);
          }
       else
          {
-         CfOut(cf_inform,"",line);
+         CfOut(cf_inform, "", "%s", line);
          }
       }
    

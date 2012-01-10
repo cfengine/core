@@ -894,7 +894,7 @@ if (assoc)
             }
          else
             {
-            CfOut(cf_inform,""," !! in bundle parameterization\n",fname,lineno);
+            CfOut(cf_inform,""," !! in bundle parameterization\n");
             }
          }
       DeleteRvalItem(assoc->rval);

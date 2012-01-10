@@ -370,7 +370,7 @@ while ((c=getopt_long(argc,argv,"Cghd:vVf:st:ar:PXHLMIRSKE:x:i:1:p:k:c:qF:o:",OP
           break;
 
       case 'o': strcpy(OUTPUTDIR,optarg);
-          CfOut(cf_inform,"","Setting output directory to s\n",OUTPUTDIR);
+          CfOut(cf_inform,"","Setting output directory to %s\n",OUTPUTDIR);
           break;
 
       case 'T': TIMESTAMPS = true;

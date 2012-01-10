@@ -247,7 +247,7 @@ else
    {
    if (pp)
       {
-      CfOut(cf_error,"","No such FnCall \"%s()\" in promise @ %s near line %d\n",
+      CfOut(cf_error,"","No such FnCall \"%s()\" in promise @ %s near line %zd\n",
             fp->name, pp->audit->filename, pp->offset.line);
       }
    else

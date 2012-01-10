@@ -166,7 +166,7 @@ if (sb->st_dev == pp->rootdevice)
    }
 else
    {
-   CfOut(cf_verbose,"","Device change from %d to %d\n",pp->rootdevice,sb->st_dev);
+   CfOut(cf_verbose,"","Device change from %jd to %jd\n", (intmax_t)pp->rootdevice, (intmax_t)sb->st_dev);
    return true;
    }
 }

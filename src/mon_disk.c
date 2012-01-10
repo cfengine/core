@@ -84,7 +84,7 @@ if (cfstat(filename,&statbuf) == -1)
 
 q = statbuf.st_size;
 
-CfOut(cf_verbose,"","GetFileGrowth(%s) = %d\n",filename,q);
+CfOut(cf_verbose,"","GetFileGrowth(%s) = %zu\n",filename,q);
 
 dq = (double)q - LASTQ[index];
 

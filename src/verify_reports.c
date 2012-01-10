@@ -473,11 +473,11 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
 
    if (criterion)
       {
-      CfOut(cf_error,"",output);
+      CfOut(cf_error, "", "%s", output);
       }
    else
       {
-      CfOut(cf_verbose,"",output);
+      CfOut(cf_verbose, "", "%s", output);
       }
 
    snprintf(output,CF_BUFSIZE,"i.e. (%.2f) hrs ago, Av %.2f +/- %.2f hrs\n",
@@ -487,11 +487,11 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    
    if (criterion)
       {
-      CfOut(cf_error,"",output);
+      CfOut(cf_error, "", "%s", output);
       }
    else
       {
-      CfOut(cf_verbose,"",output);
+      CfOut(cf_verbose, "", "%s", output);
       }
 
    if (now - then > lsea)

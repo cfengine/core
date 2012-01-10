@@ -136,7 +136,7 @@ if (cfstat(file,&statbuf) == -1)
 
 if (a.edits.maxfilesize != 0 && statbuf.st_size > a.edits.maxfilesize)
    {
-   CfOut(cf_inform,""," !! File %s is bigger than the limit edit.max_file_size = %d > %d bytes\n",file,statbuf.st_size,a.edits.maxfilesize);
+   CfOut(cf_inform,""," !! File %s is bigger than the limit edit.max_file_size = %jd > %d bytes\n", file, (intmax_t)statbuf.st_size, a.edits.maxfilesize);
    return(false);
    }
 
@@ -253,7 +253,7 @@ for (ip = liststart; ip != NULL; ip=ip->next)
 
 if (fclose(fp) == -1)
    {
-   cfPS(cf_error,CF_FAIL,"fclose",pp,a,"Unable to close file while writing","fclose");
+   cfPS(cf_error,CF_FAIL,"fclose",pp,a,"Unable to close file while writing");
    return false;
    }
  
@@ -363,7 +363,7 @@ int AppendIfNoSuchLine(char *filename, char *line)
 	}
       else
 	{
-	CfOut(cf_error, "fwrite", "!! Could not write %d characters to \"%s\" (wrote %d)", strlen(lineCp), filename, written);
+	CfOut(cf_error, "fwrite", "!! Could not write %zd characters to \"%s\" (wrote %zd)", strlen(lineCp), filename, written);
 	result = false;
 	}
       

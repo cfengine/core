@@ -68,7 +68,7 @@ while (!feof(fp))
 
    if (strcmp(cpuname,"cpu") == 0)
       {
-      CfOut(cf_verbose,"","Found aggregate CPU\n",cpuidx);
+      CfOut(cf_verbose,"","Found aggregate CPU\n");
       slot = ob_cpuall;
       cpuidx = MON_CPU_MAX;
       }

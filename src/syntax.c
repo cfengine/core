@@ -613,9 +613,8 @@ switch (dt)
        break;
        
    default:
-       snprintf(output,CF_BUFSIZE,"Unknown (unhandled) datatype for lval = %s (CheckConstraintTypeMatch)\n",lval);
-       FatalError(output);
-       break;
+      FatalError("Unknown (unhandled) datatype for lval = %s (CheckConstraintTypeMatch)\n",lval);
+      break;
    }
 
 CfDebug("end CheckConstraintTypeMatch---------\n");
@@ -790,8 +789,7 @@ split = SplitString(range,',');
 
 if ((n = ListLen(split)) != 2)
    {
-   snprintf(output,CF_BUFSIZE,"INTERN: format specifier for int rvalues is not ok for lval %s - got %d items",lval,n);
-   FatalError(output);
+   FatalError("INTERN: format specifier for int rvalues is not ok for lval %s - got %d items",lval,n);
    }
 
 sscanf(split->name,"%ld",&min);
@@ -809,8 +807,7 @@ DeleteItemList(split);
 
 if (min == CF_HIGHINIT || max == CF_LOWINIT)
    {
-   snprintf(output,CF_BUFSIZE,"INTERN: could not parse format specifier for int rvalues for lval %s",lval);
-   FatalError(output);
+   FatalError("INTERN: could not parse format specifier for int rvalues for lval %s",lval);
    }
 
 if (IsCf3VarString(s))
@@ -865,8 +862,7 @@ split = SplitString(range,',');
 
 if ((n = ListLen(split)) != 2)
    {
-   snprintf(output,CF_BUFSIZE,"INTERN:format specifier %s for irange rvalues is not ok for lval %s - got %d items",range,lval,n);
-   FatalError(output);
+   FatalError("INTERN:format specifier %s for irange rvalues is not ok for lval %s - got %d items",range,lval,n);
    }
 
 sscanf(split->name,"%ld",&min);
@@ -884,8 +880,7 @@ DeleteItemList(split);
 
 if (min == CF_HIGHINIT || max == CF_LOWINIT)
    {
-   snprintf(output,CF_BUFSIZE,"INTERN: could not parse irange format specifier for int rvalues for lval %s",lval);
-   FatalError(output);
+   FatalError("INTERN: could not parse irange format specifier for int rvalues for lval %s",lval);
    }
 
 if (IsCf3VarString(s))
@@ -956,8 +951,7 @@ split = SplitString(range,',');
 
 if ((n = ListLen(split)) != 2)
    {
-   snprintf(output,CF_BUFSIZE,"INTERN:format specifier for real rvalues is not ok for lval %s - %d items",lval,n);
-   FatalError(output);
+   FatalError("INTERN:format specifier for real rvalues is not ok for lval %s - %d items",lval,n);
    }
 
 sscanf(split->name,"%lf",&min);
@@ -966,8 +960,7 @@ DeleteItemList(split);
 
 if (min == CF_HIGHINIT || max == CF_LOWINIT)
    {
-   snprintf(output,CF_BUFSIZE,"INTERN:could not parse format specifier for int rvalues for lval %s",lval);
-   FatalError(output);
+   FatalError("INTERN:could not parse format specifier for int rvalues for lval %s",lval);
    }
    
 val = Str2Double(s);
@@ -1021,8 +1014,7 @@ split = SplitString(range,',');
 
 if ((n = ListLen(split)) != 2)
    {
-   snprintf(output,CF_BUFSIZE,"INTERN:format specifier for real rvalues is not ok for lval %s - %d items",lval,n);
-   FatalError(output);
+   FatalError("INTERN:format specifier for real rvalues is not ok for lval %s - %d items",lval,n);
    }
 
 sscanf(split->name,"%lf",&min);
@@ -1031,8 +1023,7 @@ DeleteItemList(split);
 
 if (min == CF_HIGHINIT || max == CF_LOWINIT)
    {
-   snprintf(output,CF_BUFSIZE,"INTERN:could not parse format specifier for int rvalues for lval %s",lval);
-   FatalError(output);
+   FatalError("INTERN:could not parse format specifier for int rvalues for lval %s",lval);
    }
 
 rangep = SplitString(s,',');
@@ -1462,7 +1453,7 @@ switch (rval.rtype)
       }
 
    default:
-      FatalError("Attempted to export attribute of type: %s", rval.rtype);
+      FatalError("Attempted to export attribute of type: %c", rval.rtype);
       return NULL;
    }
 }

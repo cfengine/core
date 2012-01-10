@@ -166,7 +166,7 @@ return ret;
 struct GenericAgentConfig CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
- char arg[CF_BUFSIZE],*sp;
+  char *sp;
   int optindex = 0;
   int c,alpha = false,v6 = false;
   struct GenericAgentConfig config = GenericAgentDefaultConfig(cf_agent);
@@ -183,8 +183,7 @@ while ((c=getopt_long(argc,argv,"rd:vnKIf:D:N:Vs:x:MBb:",OPTIONS,&optindex)) != 
       case 'f':
 	 if (optarg && strlen(optarg) < 5)
 	    {
-	    snprintf(arg,CF_MAXVARSIZE," -f used but argument \"%s\" incorrect",optarg);
-	    FatalError(arg);
+	    FatalError(" -f used but argument \"%s\" incorrect",optarg);
 	    }
 
 	 strncpy(VINPUTFILE,optarg,CF_BUFSIZE-1);
@@ -560,7 +559,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_defaultcopytype].lval) == 0)
       {
       DEFAULT_COPYTYPE = (char *)retval.item;
-      CfOut(cf_verbose,"","SET defaultcopytype = %c\n",DEFAULT_COPYTYPE);
+      CfOut(cf_verbose,"","SET defaultcopytype = %s\n",DEFAULT_COPYTYPE);
       continue;
       }
 
@@ -663,7 +662,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_timeout].lval) == 0)
       {
       CONNTIMEOUT = Str2Int(retval.item);
-      CfOut(cf_verbose,"","SET timeout = %d\n",CONNTIMEOUT);
+      CfOut(cf_verbose,"","SET timeout = %jd\n", (intmax_t)CONNTIMEOUT);
       continue;
       }
    
@@ -1126,7 +1125,7 @@ switch(type)
      
        if (!LoadProcessTable(&PROCESSTABLE))
           {
-          CfOut(cf_error,"","Unable to read the process table - cannot keep process promises\n","");
+          CfOut(cf_error,"","Unable to read the process table - cannot keep process promises\n");
           return false;
           }
        break;
@@ -1195,10 +1194,10 @@ switch(type)
 
        if (!DONTDO && CF_MOUNTALL)
           {
-          CfOut(cf_verbose,"","");
-          CfOut(cf_verbose,""," -> Mounting all filesystems\n");
+          CfOut(cf_verbose,"", "");
+          CfOut(cf_verbose,"", " -> Mounting all filesystems\n");
           MountAll();
-          CfOut(cf_verbose,"","");
+          CfOut(cf_verbose,"", "");
           }
 #endif  /* NOT MINGW */
        break;

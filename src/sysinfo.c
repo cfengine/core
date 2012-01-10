@@ -277,7 +277,7 @@ if ((tloc = time((time_t *)NULL)) == -1)
 
 snprintf(workbuf,CF_BUFSIZE,"%s",CLASSTEXT[i]);
 
-CfOut(cf_verbose,"",NameVersion());
+CfOut(cf_verbose, "", "%s", NameVersion());
 
 CfOut(cf_verbose,"","------------------------------------------------------------------------\n\n");
 CfOut(cf_verbose,"","Host name is: %s\n",VSYSNAME.nodename);
@@ -895,7 +895,7 @@ NewScalar("sys","flavor","windows",cf_str);
 #ifndef NT
 if ((pw = getpwuid(getuid())) == NULL)
    {
-   CfOut(cf_error,"getpwuid"," !! Unable to get username for uid %d",getuid);
+   CfOut(cf_error, "getpwuid", " !! Unable to get username for uid %d", getuid());
    }
 else
    {

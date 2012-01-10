@@ -195,7 +195,6 @@ return 0;
 struct GenericAgentConfig CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
-  char arg[CF_BUFSIZE];
   int optindex = 0;
   int c;
   struct GenericAgentConfig config = GenericAgentDefaultConfig(cf_know);
@@ -210,8 +209,7 @@ while ((c=getopt_long(argc,argv,"Ihbd:vVf:mMz:St:ruT",OPTIONS,&optindex)) != EOF
 
           if (optarg && strlen(optarg) < 5)
              {
-             snprintf(arg,CF_MAXVARSIZE," -f used but argument \"%s\" incorrect",optarg);
-             FatalError(arg);
+             FatalError(" -f used but argument \"%s\" incorrect",optarg);
              }
 
           strncpy(VINPUTFILE,optarg,CF_BUFSIZE-1);
@@ -1177,7 +1175,7 @@ strncpy(fwd_context,CanonifyName(fwd_name),CF_MAXVARSIZE-1);
 
 if (passociates == NULL || passociates->item == NULL)
    {
-   CfOut(cf_error," !! A topic must have at least one associate in association %s",fwd_name);
+   CfOut(cf_error, "", " !! A topic must have at least one associate in association %s",fwd_name);
    return;
    }
 

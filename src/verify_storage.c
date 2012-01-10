@@ -220,13 +220,13 @@ if (S_ISDIR(statbuf.st_mode))
 
    if (sizeinbytes < a.volume.sensible_size)
       {
-      cfPS(cf_error,CF_INTERPT,"",pp,a," !! File system %s is suspiciously small! (%d bytes)\n",name,sizeinbytes);
+      cfPS(cf_error,CF_INTERPT,"",pp,a," !! File system %s is suspiciously small! (%jd bytes)\n",name, (intmax_t)sizeinbytes);
       return(false);
       }
 
    if (filecount < a.volume.sensible_count)
       {
-      cfPS(cf_error,CF_INTERPT,"",pp,a," !! Filesystem %s has only %d files/directories.\n",name,filecount);
+      cfPS(cf_error,CF_INTERPT,"",pp,a," !! Filesystem %s has only %ld files/directories.\n",name,filecount);
       return(false);
       }
    }
@@ -424,7 +424,7 @@ snprintf(dir,CF_BUFSIZE,"%s/.",name);
 
 if (!IsPrivileged())
    {
-   cfPS(cf_error,CF_INTERPT,"",pp,a,"Only root can mount filesystems.\n","");
+   cfPS(cf_error,CF_INTERPT,"",pp,a,"Only root can mount filesystems.\n");
    return false;
    }
 

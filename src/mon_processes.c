@@ -56,7 +56,7 @@ RawSaveItemList(userList,vbuff);
 
 DeleteItemList(userList);
 
-CfOut(cf_verbose,"","(Users,root,other) = (%d,%d,%d)\n",cf_this[ob_users],cf_this[ob_rootprocs],cf_this[ob_otherprocs]);
+CfOut(cf_verbose,"","(Users,root,other) = (%d,%d,%d)\n",(int)cf_this[ob_users],(int)cf_this[ob_rootprocs],(int)cf_this[ob_otherprocs]);
 }
 
 static int GatherProcessUsers(struct Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs)

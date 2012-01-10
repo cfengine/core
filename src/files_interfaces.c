@@ -99,7 +99,7 @@ if (attr.transaction.action != cfa_warn)
 
       if (!attr.move_obstructions)
          {
-         CfOut(cf_inform, "", "Path %s is a symlink. Unable to move it aside without move_obstructions is set");
+         CfOut(cf_inform, "", "Path %s is a symlink. Unable to move it aside without move_obstructions is set", to);
          return;
          }
 
@@ -956,7 +956,7 @@ else
 
    if (attr.copy.compare == cfa_exists)
       {
-      CfOut(cf_verbose,""," -> Existence only is promised, no copying required\n",destfile);
+      CfOut(cf_verbose,""," -> Existence only is promised, no copying required\n");
       return;
       }
 
@@ -1227,9 +1227,10 @@ if (a.havelink && !a.link.source)
 
 if (a.havecopy && a.copy.source && !FullTextMatch(CF_ABSPATHRANGE, a.copy.source))
    {
+   /* FIXME: somehow redo a PromiseRef to be able to embed it into a string */
    CfOut(cf_error,""," !! Non-absolute path in source attribute (have no invariant meaning): %s", a.copy.source);
    PromiseRef(cf_error,pp);
-   FatalError("");
+   FatalError("Bailing out");
    }
 
 
@@ -1242,7 +1243,7 @@ if (a.haveeditline && a.haveeditxml)
 
 if (a.havedepthsearch && a.haveedit)
    {
-   CfOut(cf_error,""," !! Recursive depth_searches are not compatible with general file editing",path);
+   CfOut(cf_error,""," !! Recursive depth_searches are not compatible with general file editing");
    PromiseRef(cf_error,pp);
    return false;
    }
@@ -1290,7 +1291,7 @@ if (a.havecopy && a.havedepthsearch && a.havedelete)
 
 if (a.transaction.background && a.transaction.audit)
    {
-   CfOut(cf_error,""," !! Auditing cannot be performed on backgrounded promises (this might change).",pp->promiser);
+   CfOut(cf_error,""," !! Auditing cannot be performed on backgrounded promises (this might change).");
    PromiseRef(cf_error,pp);
    return false;
    }
@@ -1304,14 +1305,14 @@ if ((a.havecopy || a.havelink) && a.transformer)
 
 if (a.haveselect && a.select.result == NULL)
    {
-   CfOut(cf_error,""," !! Missing file_result attribute in file_select body",pp->promiser);
+   CfOut(cf_error,""," !! Missing file_result attribute in file_select body");
    PromiseRef(cf_error,pp);
    return false;
    }
 
 if (a.havedepthsearch && a.change.report_diffs)
    {
-   CfOut(cf_error,""," !! Difference reporting is not allowed during a depth_search",pp->promiser);
+   CfOut(cf_error,""," !! Difference reporting is not allowed during a depth_search");
    PromiseRef(cf_error,pp);
    return false;   
    }

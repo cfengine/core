@@ -210,7 +210,6 @@ struct GenericAgentConfig CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
   char ld_library_path[CF_BUFSIZE];
-  char arg[CF_BUFSIZE];
   int optindex = 0;
   int c;
   struct GenericAgentConfig config = GenericAgentDefaultConfig(cf_server);
@@ -223,8 +222,7 @@ while ((c=getopt_long(argc,argv,"d:vIKf:D:N:VSxLFM",OPTIONS,&optindex)) != EOF)
 
           if (optarg && strlen(optarg) < 5)
              {
-             snprintf(arg,CF_MAXVARSIZE," -f used but argument \"%s\" incorrect",optarg);
-             FatalError(arg);
+             FatalError(" -f used but argument \"%s\" incorrect",optarg);
              }
 
           strncpy(VINPUTFILE,optarg,CF_BUFSIZE-1);
@@ -504,7 +502,6 @@ in_addr_t GetInetAddr(char *host)
 
 { struct in_addr addr;
   struct hostent *hp;
-  char output[CF_BUFSIZE];
   
 addr.s_addr = inet_addr(host);
 
@@ -512,20 +509,17 @@ if ((addr.s_addr == INADDR_NONE) || (addr.s_addr == 0))
    {
    if ((hp = gethostbyname(host)) == 0)
       {
-      snprintf(output,CF_BUFSIZE,"\nhost not found: %s\n",host);
-      FatalError(output);
+      FatalError("host not found: %s",host);
       }
    
    if (hp->h_addrtype != AF_INET)
       {
-      snprintf(output,CF_BUFSIZE,"unexpected address family: %d\n",hp->h_addrtype);
-      FatalError(output);
+      FatalError("unexpected address family: %d\n",hp->h_addrtype);
       }
    
    if (hp->h_length != sizeof(addr))
       {
-      snprintf(output,CF_BUFSIZE,"unexpected address length %d\n",hp->h_length);
-      FatalError(output);
+      FatalError("unexpected address length %d\n",hp->h_length);
       }
 
    memcpy((char *) &addr, hp->h_addr, hp->h_length);
@@ -1338,7 +1332,7 @@ switch (GetCommand(recvbuffer))
        if ((tloc = time((time_t *)NULL)) == -1)
           {
           sprintf(conn->output,"Couldn't read system clock\n");
-          CfOut(cf_inform,"time",conn->output);
+          CfOut(cf_inform, "time", "%s", conn->output);
           SendTransaction(conn->sd_reply,"BAD: clocks out of synch",0,CF_DONE);
           return true;
           }
@@ -2888,15 +2882,15 @@ memset(&cfst,0,sizeof(struct cfstat));
 if (strlen(ReadLastNode(filename)) > CF_MAXLINKSIZE)
    {
    snprintf(sendbuffer,CF_BUFSIZE*2,"BAD: Filename suspiciously long [%s]\n",filename);
-   CfOut(cf_error,"",sendbuffer);
+   CfOut(cf_error, "", "%s", sendbuffer);
    SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
    return -1;
    }
 
 if (lstat(filename,&statbuf) == -1)
    {
-   snprintf(sendbuffer,CF_BUFSIZE,"BAD: unable to stat file %s",filename);
-   CfOut(cf_verbose,"lstat",sendbuffer);
+   snprintf(sendbuffer, CF_BUFSIZE, "BAD: unable to stat file %s", filename);
+   CfOut(cf_verbose, "lstat", "%s", sendbuffer);
    SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
    return -1;
    }
@@ -2918,7 +2912,7 @@ if (S_ISLNK(statbuf.st_mode))
    if (readlink(filename,linkbuf,CF_BUFSIZE-1) == -1)
       {
       sprintf(sendbuffer,"BAD: unable to read link\n");
-      CfOut(cf_error,"readlink",sendbuffer);
+      CfOut(cf_error, "readlink", "%s", sendbuffer);
       SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
       return -1;
       }

@@ -24,8 +24,8 @@ static const char *OBJECT_SIMPLE = "{\n"
       "}";
 
 static const char *OBJECT_NUMERIC = "{\n"
-      "  \"first\": \"one\",\n"
-      "  \"number\": -1234567890\n"
+      "  \"real\": 1234.5678,\n"
+      "  \"int\": -1234567890\n"
       "}";
 
 static const char *ARRAY_SIMPLE = "[\n"
@@ -65,8 +65,8 @@ static void test_show_object_numeric(void **state)
 {
 JsonObject *json = NULL;
 
-JsonObjectAppendString(&json, "first", "one");
-JsonObjectAppendInteger(&json, "number", -1234567890);
+JsonObjectAppendReal(&json, "real", 1234.5678);
+JsonObjectAppendInteger(&json, "int", -1234567890);
 
 Writer *writer = StringWriter();
 JsonObjectPrint(writer, json, 0);

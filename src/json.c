@@ -100,6 +100,15 @@ struct CfAssoc *ap = AssocNewReference(key, (struct Rval) { buffer, CF_SCALAR },
 RlistAppendReference(parent, ap, CF_ASSOC);
 }
 
+void JsonObjectAppendReal(JsonObject **parent, const char *key, double value)
+{
+char *buffer = xcalloc(32, sizeof(char));
+snprintf(buffer, 32, "%.4f", value);
+
+struct CfAssoc *ap = AssocNewReference(key, (struct Rval) { buffer, CF_SCALAR }, cf_real);
+RlistAppendReference(parent, ap, CF_ASSOC);
+}
+
 void JsonArrayAppendObject(JsonArray **parent, JsonObject *value)
 {
 if (value == NULL)
@@ -150,7 +159,7 @@ ShowIndent(writer, indent_level);
 WriterWriteF(writer, "\"%s\"", value);
 }
 
-void JsonIntegerPrint(Writer *writer, const char *value, int indent_level)
+void JsonNumberPrint(Writer *writer, const char *value, int indent_level)
 {
 ShowIndent(writer, indent_level);
 WriterWrite(writer, value);
@@ -224,7 +233,8 @@ for (rp = value; rp != NULL; rp = rp->next)
                break;
 
             case cf_int:
-               JsonIntegerPrint(writer, (const char*)entry->rval.item, 0);
+	    case cf_real:
+               JsonNumberPrint(writer, (const char*)entry->rval.item, 0);
                break;
 
             default:

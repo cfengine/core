@@ -47,6 +47,10 @@ char *ScalarValue(struct Rlist *rlist);
 struct FnCall *FnCallValue(struct Rlist *rlist);
 struct Rlist *ListValue(struct Rlist *rlist);
 
+char *ScalarRvalValue(struct Rval rval);
+struct FnCall *FnCallRvalValue(struct Rval rval);
+struct Rlist *ListRvalValue(struct Rval rval);
+
 int PrintRval(char *buffer,int bufsize, struct Rval rval);
 int PrintRlist(char *buffer,int bufsize,struct Rlist *list);
 struct Rlist *ParseShownRlist(char *string);

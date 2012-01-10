@@ -75,6 +75,45 @@ return (struct Rlist *)rlist->item;
 
 /*******************************************************************/
 
+char *ScalarRvalValue(struct Rval rval)
+{
+if (rval.rtype != CF_SCALAR)
+   {
+   FatalError("Internal error: Rval contains type %c instead of expected scalar",
+              rval.rtype);
+   }
+
+return rval.item;
+}
+
+/*******************************************************************/
+
+struct FnCall *FnCallRvalValue(struct Rval rval)
+{
+if (rval.rtype != CF_FNCALL)
+   {
+   FatalError("Internal error: Rval contains type %c instead of expected FnCall",
+              rval.rtype);
+   }
+
+return rval.item;
+}
+
+/*******************************************************************/
+
+struct Rlist *ListRvalValue(struct Rval rval)
+{
+if (rval.rtype != CF_LIST)
+   {
+   FatalError("Internal error: Rval contain type %c instead of expected List",
+              rval.rtype);
+   }
+
+return rval.item;
+}
+
+/*******************************************************************/
+
 struct Rlist *KeyInRlist(struct Rlist *list,char *key)
 
 { struct Rlist *rp;

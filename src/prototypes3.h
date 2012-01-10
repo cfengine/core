@@ -150,10 +150,18 @@ void SetDocRoot(char *name);
 
 /* cfstream.c */
 
-void CfFOut(char *filename,enum cfreport level,char *errstr,char *fmt, ...);
-void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...);
-void cfPS(enum cfreport level,char status,char *errstr,struct Promise *pp,struct Attributes attr,char *fmt, ...);
-void CfFile(FILE *fp,char *fmt, ...);
+void CfFOut(char *filename,enum cfreport level,char *errstr,char *fmt, ...)
+    FUNC_ATTR_FORMAT(printf, 4, 5);
+
+void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
+    FUNC_ATTR_FORMAT(printf, 3, 4);
+
+void cfPS(enum cfreport level,char status,char *errstr,struct Promise *pp,struct Attributes attr,char *fmt, ...)
+    FUNC_ATTR_FORMAT(printf, 6, 7);
+
+void CfFile(FILE *fp,char *fmt, ...)
+    FUNC_ATTR_FORMAT(printf, 2, 3);
+
 char *GetErrorStr(void);
 
 /* cf_sql.c */
@@ -868,7 +876,9 @@ void BeginAudit(void);
 void EndAudit(void);
 void ClassAuditLog(struct Promise *pp,struct Attributes attr,char *str,char status,char *error);
 void PromiseLog(char *s);
-void FatalError(char *s, ...) FUNC_ATTR_NORETURN;
+void FatalError(char *s, ...) FUNC_ATTR_NORETURN
+    FUNC_ATTR_FORMAT(printf, 1, 2);
+
 void AuditStatusMessage(FILE*fp,char status);
 
 /* manual.c */

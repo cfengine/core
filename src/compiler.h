@@ -33,4 +33,11 @@
 # define FUNC_ATTR_NORETURN
 #endif
 
+#if defined(__GNUC__)
+# define FUNC_ATTR_FORMAT(archetype, string_index, first_to_check) \
+    __attribute__((format(archetype, string_index, first_to_check)))
+#else
+# define FUNC_ATTR_FORMAT(archetype, string_index, first_to_check)
+#endif
+
 #endif

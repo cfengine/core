@@ -27,6 +27,7 @@
 
 #include <sys/types.h>
 #include <stdarg.h>
+#include "compiler.h"
 
 void *xcalloc(size_t nmemb, size_t size);
 void *xmalloc(size_t size);
@@ -34,8 +35,10 @@ void *xrealloc(void *ptr, size_t size);
 char *xstrdup(const char *str);
 char *xstrndup(const char *str, size_t n);
 void *xmemdup(const void *mem, size_t size);
-int xasprintf(char **strp, const char *fmt, ...);
-int xvasprintf(char **strp, const char *fmt, va_list ap);
+int xasprintf(char **strp, const char *fmt, ...)
+    FUNC_ATTR_FORMAT(printf, 2, 3);
+int xvasprintf(char **strp, const char *fmt, va_list ap)
+    FUNC_ATTR_FORMAT(printf, 2, 0);
 
 /*
  * Prevent any code from using un-wrapped allocators.

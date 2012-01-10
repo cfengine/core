@@ -691,7 +691,7 @@ for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
       continue;
       }
 
-   if (strcmp(cp->lval,CFRE_CONTROLBODY[cfre_csv].lval) == 0)
+   if (strcmp(cp->lval, CFRE_CONTROLBODY[cfre_csv].lval) == 0)
       {
       for (rp  = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
          {

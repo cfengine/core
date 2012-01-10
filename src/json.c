@@ -16,14 +16,14 @@ for (rp = element; rp != NULL; rp = next)
    switch (rp->type)
       {
       case CF_ASSOC:
-	 {
-	 struct CfAssoc *assoc = rp->item;
-	 switch (assoc->rval.rtype)
-	    {
-	    case JSON_OBJECT_TYPE:
-	    case JSON_ARRAY_TYPE:
-	       JsonElementDelete(assoc->rval.item);
-	       break;
+         {
+         struct CfAssoc *assoc = rp->item;
+         switch (assoc->rval.rtype)
+            {
+            case JSON_OBJECT_TYPE:
+            case JSON_ARRAY_TYPE:
+            JsonElementDelete(assoc->rval.item);
+            break;
 
 	    default:
 	       free(assoc->rval.item);
@@ -91,6 +91,15 @@ ap = AssocNewReference(key, (struct Rval) { xstrdup(value), CF_SCALAR }, cf_str)
 RlistAppendReference(parent, ap, CF_ASSOC);
 }
 
+void JsonObjectAppendInteger(JsonObject **parent, const char *key, int value)
+{
+char *buffer = xcalloc(32, sizeof(char));
+snprintf(buffer, 32, "%d", value);
+
+struct CfAssoc *ap = AssocNewReference(key, (struct Rval) { buffer, CF_SCALAR }, cf_int);
+RlistAppendReference(parent, ap, CF_ASSOC);
+}
+
 void JsonArrayAppendObject(JsonArray **parent, JsonObject *value)
 {
 if (value == NULL)
@@ -139,6 +148,12 @@ void JsonStringPrint(Writer *writer, const char *value, int indent_level)
 {
 ShowIndent(writer, indent_level);
 WriterWriteF(writer, "\"%s\"", value);
+}
+
+void JsonIntegerPrint(Writer *writer, const char *value, int indent_level)
+{
+ShowIndent(writer, indent_level);
+WriterWrite(writer, value);
 }
 
 void JsonArrayPrint(Writer *writer, JsonArray *value, int indent_level)
@@ -206,6 +221,10 @@ for (rp = value; rp != NULL; rp = rp->next)
             {
             case cf_str:
                JsonStringPrint(writer, (const char*)entry->rval.item, 0);
+               break;
+
+            case cf_int:
+               JsonIntegerPrint(writer, (const char*)entry->rval.item, 0);
                break;
 
             default:

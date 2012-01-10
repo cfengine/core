@@ -23,6 +23,11 @@ static const char *OBJECT_SIMPLE = "{\n"
       "  \"second\": \"two\"\n"
       "}";
 
+static const char *OBJECT_NUMERIC = "{\n"
+      "  \"first\": \"one\",\n"
+      "  \"number\": -1234567890\n"
+      "}";
+
 static const char *ARRAY_SIMPLE = "[\n"
       "  \"one\",\n"
       "  \"two\"\n"
@@ -52,6 +57,21 @@ Writer *writer = StringWriter();
 JsonObjectPrint(writer, json, 0);
 
 assert_string_equal(OBJECT_SIMPLE, StringWriterData(writer));
+
+JsonObjectDelete(json);
+}
+
+static void test_show_object_numeric(void **state)
+{
+JsonObject *json = NULL;
+
+JsonObjectAppendString(&json, "first", "one");
+JsonObjectAppendInteger(&json, "number", -1234567890);
+
+Writer *writer = StringWriter();
+JsonObjectPrint(writer, json, 0);
+
+assert_string_equal(OBJECT_NUMERIC, StringWriterData(writer));
 
 JsonObjectDelete(json);
 }
@@ -219,6 +239,7 @@ const UnitTest tests[] =
    {
    unit_test(test_new_delete),
    unit_test(test_show_object_simple),
+   unit_test(test_show_object_numeric),
    unit_test(test_show_object_compound),
    unit_test(test_show_object_array),
    unit_test(test_show_array),

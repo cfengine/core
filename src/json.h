@@ -35,6 +35,7 @@ void JsonObjectDelete(JsonObject *object);
 void JsonArrayDelete(JsonArray *array);
 
 void JsonObjectAppendString(JsonObject **parent, const char *key, const char *value);
+void JsonObjectAppendInteger(JsonObject **parent, const char *key, int value);
 void JsonObjectAppendArray(JsonObject **parent, const char *key, JsonArray *value);
 void JsonObjectAppendObject(JsonObject **parent, const char *key, JsonObject *value);
 

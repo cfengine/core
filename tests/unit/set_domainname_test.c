@@ -162,12 +162,12 @@ fail();
 exit(42);
 }
 
-void DeleteItemList (struct Item *item)
+void DeleteItemList (Item *item)
 {
 fail();
 }
 
-struct Item *SplitString(const char *string, char sep)
+Item *SplitString(const char *string, char sep)
 {
 fail();
 }
@@ -266,7 +266,7 @@ fail();
 
 int DEBUG;
 enum cfagenttype THIS_AGENT_TYPE;
-struct Item *IPADDRESSES;
+Item *IPADDRESSES;
 struct utsname VSYSNAME;
 enum classes VSYSTEMHARDCLASS;
 char CFWORKDIR[CF_BUFSIZE];

@@ -74,18 +74,18 @@ char *TYPESEQUENCE[] =
    };
 
 int main (int argc,char *argv[]);
-void CheckAgentAccess(struct Rlist *list);
-void KeepAgentPromise(struct Promise *pp);
+void CheckAgentAccess(Rlist *list);
+void KeepAgentPromise(Promise *pp);
 int NewTypeContext(enum typesequence type);
 void DeleteTypeContext(enum typesequence type);
 void ClassBanner(enum typesequence type);
-void ParallelFindAndVerifyFilesPromises(struct Promise *pp);
+void ParallelFindAndVerifyFilesPromises(Promise *pp);
 static bool VerifyBootstrap(void);
 
-static void KeepPromiseBundles(struct Rlist *bundlesequence);
+static void KeepPromiseBundles(Rlist *bundlesequence);
 
 
-extern const struct BodySyntax CFA_CONTROLBODY[];
+extern const BodySyntax CFA_CONTROLBODY[];
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -139,7 +139,7 @@ int main(int argc,char *argv[])
 {
 int ret = 0;
 
-struct GenericAgentConfig config = CheckOpts(argc,argv);
+GenericAgentConfig config = CheckOpts(argc,argv);
 GenericInitialize(argc,argv,"agent", config);
 ThisAgentInit();
 KeepPromises(config);
@@ -163,13 +163,13 @@ return ret;
 /* Level 1                                                         */
 /*******************************************************************/
 
-struct GenericAgentConfig CheckOpts(int argc,char **argv)
+GenericAgentConfig CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
   char *sp;
   int optindex = 0;
   int c,alpha = false,v6 = false;
-  struct GenericAgentConfig config = GenericAgentDefaultConfig(cf_agent);
+  GenericAgentConfig config = GenericAgentDefaultConfig(cf_agent);
 
 /* Because of the MacOS linker we have to call this from each agent
    individually before Generic Initialize */
@@ -341,7 +341,7 @@ if ((fp = fopen(filename,"a")) != NULL)
 
 /*******************************************************************/
 
-void KeepPromises(struct GenericAgentConfig config)
+void KeepPromises(GenericAgentConfig config)
 
 { double efficiency;
  
@@ -366,9 +366,9 @@ CfOut(cf_verbose,""," -> Checked %d objects with %d promises, efficiency %.2lf",
 
 void KeepControlPromises()
     
-{ struct Constraint *cp;
-  struct Rval retval;
-  struct Rlist *rp;
+{ Constraint *cp;
+  Rval retval;
+  Rlist *rp;
 
 for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
    {
@@ -411,20 +411,20 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
    
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_agentaccess].lval) == 0)
       {
-      ACCESSLIST = (struct Rlist *)retval.item;
+      ACCESSLIST = (Rlist *)retval.item;
       CheckAgentAccess(ACCESSLIST);
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_refresh_processes].lval) == 0)
       {
-      struct Rlist *rp;
+      Rlist *rp;
 
       if (VERBOSE)
          {
          printf("%s> SET refresh_processes when starting: ",VPREFIX);
 
-         for (rp  = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
+         for (rp  = (Rlist *)retval.item; rp != NULL; rp = rp->next)
             {
             printf(" %s",(char *)rp->item);
             PrependItem(&PROCESSREFRESH,rp->item,NULL);
@@ -438,10 +438,10 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_abortclasses].lval) == 0)
       {
-      struct Rlist *rp;
+      Rlist *rp;
       CfOut(cf_verbose,"","SET Abort classes from ...\n");
       
-      for (rp  = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
+      for (rp  = (Rlist *)retval.item; rp != NULL; rp = rp->next)
          {
          char name[CF_MAXVARSIZE] = "";
          strncpy(name, rp->item, CF_MAXVARSIZE - 1);
@@ -458,10 +458,10 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_abortbundleclasses].lval) == 0)
       {
-      struct Rlist *rp;
+      Rlist *rp;
       CfOut(cf_verbose,"","SET Abort bundle classes from ...\n");
       
-      for (rp  = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
+      for (rp  = (Rlist *)retval.item; rp != NULL; rp = rp->next)
          {
          char name[CF_MAXVARSIZE] = "";
          strncpy(name, rp->item, CF_MAXVARSIZE - 1);
@@ -478,10 +478,10 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
    
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_addclasses].lval) == 0)
       {
-      struct Rlist *rp;
+      Rlist *rp;
       CfOut(cf_verbose,"","-> Add classes ...\n");
       
-      for (rp  = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
+      for (rp  = (Rlist *)retval.item; rp != NULL; rp = rp->next)
          {
          CfOut(cf_verbose,""," -> ... %s\n",rp->item);
          NewClass(rp->item);
@@ -565,14 +565,14 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_fsinglecopy].lval) == 0)
       {
-      SINGLE_COPY_LIST = (struct Rlist *)retval.item;
+      SINGLE_COPY_LIST = (Rlist *)retval.item;
       CfOut(cf_verbose,"","SET file single copy list\n");
       continue;
       }
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_fautodefine].lval) == 0)
       {
-      AUTO_DEFINE_LIST = (struct Rlist *)retval.item;
+      AUTO_DEFINE_LIST = (Rlist *)retval.item;
       CfOut(cf_verbose,"","SET file auto define list\n");
       continue;
       }
@@ -615,7 +615,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_suspiciousnames].lval) == 0)
       {
 
-      for (rp = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
+      for (rp = (Rlist *)retval.item; rp != NULL; rp = rp->next)
 	{
 	PrependItem(&SUSPICIOUSLIST,rp->item,NULL);
 	CfOut(cf_verbose,"", "-> Concidering %s as suspicious file", rp->item);
@@ -687,10 +687,10 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_environment].lval) == 0)
       {
-      struct Rlist *rp;
+      Rlist *rp;
       CfOut(cf_verbose,"","SET environment variables from ...\n");
       
-      for (rp = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
+      for (rp = (Rlist *)retval.item; rp != NULL; rp = rp->next)
          {
          if (putenv(rp->item) != 0)
             {
@@ -732,19 +732,19 @@ Nova_Initialize();
 
 /*********************************************************************/
 
-static void KeepPromiseBundles(struct Rlist *bundlesequence)
+static void KeepPromiseBundles(Rlist *bundlesequence)
     
-{ struct Bundle *bp;
-  struct Rlist *rp,*params;
-  struct FnCall *fp;
+{ Bundle *bp;
+  Rlist *rp,*params;
+  FnCall *fp;
   char *name;
-  struct Rval retval;
+  Rval retval;
   int ok = true;
 
 if (bundlesequence)
    {
    CfOut(cf_inform,""," >> Using command line specified bundlesequence");
-   retval = (struct Rval) { bundlesequence, CF_LIST };
+   retval = (Rval) { bundlesequence, CF_LIST };
    }
 else if (GetVariable("control_common","bundlesequence",&retval) == cf_notype)
    {
@@ -759,7 +759,7 @@ if (retval.rtype != CF_LIST)
    FatalError("Promised bundlesequence was not a list");
    }
 
-for (rp = (struct Rlist *)retval.item; rp != NULL; rp=rp->next)
+for (rp = (Rlist *)retval.item; rp != NULL; rp=rp->next)
    {
    switch (rp->type)
       {
@@ -774,16 +774,16 @@ for (rp = (struct Rlist *)retval.item; rp != NULL; rp=rp->next)
           
           break;
       case CF_FNCALL:
-          fp = (struct FnCall *)rp->item;
+          fp = (FnCall *)rp->item;
           name = (char *)fp->name;
-          params = (struct Rlist *)fp->args;
+          params = (Rlist *)fp->args;
           break;
           
       default:
           name = NULL;
           params = NULL;
           CfOut(cf_error,"","Illegal item found in bundlesequence: ");
-          ShowRval(stdout, (struct Rval) { rp->item, rp->type });
+          ShowRval(stdout, (Rval) { rp->item, rp->type });
           printf(" = %c\n",rp->type);
           ok = false;
           break;
@@ -813,14 +813,14 @@ if (VERBOSE || DEBUG)
 
 /* If all is okay, go ahead and evaluate */
 
-for (rp = (struct Rlist *)retval.item; rp != NULL; rp=rp->next)
+for (rp = (Rlist *)retval.item; rp != NULL; rp=rp->next)
    {
    switch (rp->type)
       {
       case CF_FNCALL:
-          fp = (struct FnCall *)rp->item;
+          fp = (FnCall *)rp->item;
           name = (char *)fp->name;
-          params = (struct Rlist *)fp->args;
+          params = (Rlist *)fp->args;
           break;
       default:
           name = (char *)rp->item;
@@ -845,10 +845,10 @@ for (rp = (struct Rlist *)retval.item; rp != NULL; rp=rp->next)
 /* Level 3                                                           */
 /*********************************************************************/
 
-int ScheduleAgentOperations(struct Bundle *bp)
+int ScheduleAgentOperations(Bundle *bp)
 
-{ struct SubType *sp;
-  struct Promise *pp;
+{ SubType *sp;
+  Promise *pp;
   enum typesequence type;
   int pass;
 
@@ -902,14 +902,14 @@ return true;
 
 /*********************************************************************/
 
-void CheckAgentAccess(struct Rlist *list)
+void CheckAgentAccess(Rlist *list)
 
 #ifdef MINGW
 {
 }
 #else  /* NOT MINGW */
 {
-  struct Rlist *rp,*rp2;
+  Rlist *rp,*rp2;
   struct stat sb;
   uid_t uid;
   int access = false;
@@ -964,7 +964,7 @@ FatalError("You are denied access to run this policy");
 
 /*********************************************************************/
 
-void KeepAgentPromise(struct Promise *pp)
+void KeepAgentPromise(Promise *pp)
 
 { char *sp = NULL;
   struct timespec start = BeginMeasure();
@@ -1155,7 +1155,7 @@ return true;
 void DeleteTypeContext(enum typesequence type)
 
 {
-struct Attributes a = {{0}};
+Attributes a = {{0}};
 
 switch(type)
    {
@@ -1221,7 +1221,7 @@ switch(type)
 
 void ClassBanner(enum typesequence type)
 
-{ struct Item *ip;
+{ Item *ip;
   int i;
  
 if (type != kp_interfaces)   /* Just parsed all local classes */
@@ -1268,7 +1268,7 @@ CfOut(cf_verbose,"","\n");
 /* Thread context                                             */
 /**************************************************************/
 
-void ParallelFindAndVerifyFilesPromises(struct Promise *pp)
+void ParallelFindAndVerifyFilesPromises(Promise *pp)
     
 { pid_t child = 1;
   int background = GetBooleanConstraint("background",pp);

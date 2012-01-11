@@ -32,19 +32,19 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static void FindStoragePromiserObjects(struct Promise *pp);
-static int VerifyFileSystem(char *name,struct Attributes a,struct Promise *pp);
-static int VerifyFreeSpace(char *file,struct Attributes a,struct Promise *pp);
-static void VolumeScanArrivals(char *file,struct Attributes a,struct Promise *pp);
-static int FileSystemMountedCorrectly(struct Rlist *list,char *name,char *options,struct Attributes a,struct Promise *pp);
+static void FindStoragePromiserObjects(Promise *pp);
+static int VerifyFileSystem(char *name,Attributes a,Promise *pp);
+static int VerifyFreeSpace(char *file,Attributes a,Promise *pp);
+static void VolumeScanArrivals(char *file,Attributes a,Promise *pp);
+static int FileSystemMountedCorrectly(Rlist *list,char *name,char *options,Attributes a,Promise *pp);
 static int IsForeignFileSystem (struct stat *childstat,char *dir);
 #ifndef MINGW
-static int VerifyMountPromise(char *file,struct Attributes a,struct Promise *pp);
+static int VerifyMountPromise(char *file,Attributes a,Promise *pp);
 #endif  /* NOT MINGW */
 
 /*****************************************************************************/
 
-void *FindAndVerifyStoragePromises(struct Promise *pp)
+void *FindAndVerifyStoragePromises(Promise *pp)
 
 {
 PromiseBanner(pp);
@@ -55,7 +55,7 @@ return (void *)NULL;
 
 /*****************************************************************************/
 
-static void FindStoragePromiserObjects(struct Promise *pp)
+static void FindStoragePromiserObjects(Promise *pp)
 
 {
 /* Check if we are searching over a regular expression */
@@ -65,9 +65,9 @@ LocateFilePromiserGroup(pp->promiser,pp,VerifyStoragePromise);
 
 /*****************************************************************************/
 
-void VerifyStoragePromise(char *path,struct Promise *pp)
+void VerifyStoragePromise(char *path,Promise *pp)
 
-{ struct Attributes a = {{0}};
+{ Attributes a = {{0}};
   struct CfLock thislock;
 
 a = GetStorageAttributes(pp);
@@ -147,10 +147,10 @@ YieldCurrentLock(thislock);
 /** Level                                                          */
 /*******************************************************************/
 
-static int VerifyFileSystem(char *name,struct Attributes a,struct Promise *pp)
+static int VerifyFileSystem(char *name,Attributes a,Promise *pp)
 
 { struct stat statbuf, localstat;
-  CFDIR *dirh;
+  Dir *dirh;
   const struct dirent *dirp;
   off_t sizeinbytes = 0;
   long filecount = 0;
@@ -237,7 +237,7 @@ return(true);
 
 /*******************************************************************/
 
-static int VerifyFreeSpace(char *file,struct Attributes a,struct Promise *pp)
+static int VerifyFreeSpace(char *file,Attributes a,Promise *pp)
 
 { struct stat statbuf;
   long kilobytes;
@@ -296,7 +296,7 @@ return true;
 
 /*******************************************************************/
 
-static void VolumeScanArrivals(char *file,struct Attributes a,struct Promise *pp)
+static void VolumeScanArrivals(char *file,Attributes a,Promise *pp)
 
 {
  CfOut(cf_verbose,"","Scan arrival sequence . not yet implemented\n");
@@ -304,9 +304,9 @@ static void VolumeScanArrivals(char *file,struct Attributes a,struct Promise *pp
 
 /*******************************************************************/
 
-static int FileSystemMountedCorrectly(struct Rlist *list,char *name,char *options,struct Attributes a,struct Promise *pp)
+static int FileSystemMountedCorrectly(Rlist *list,char *name,char *options,Attributes a,Promise *pp)
 
-{ struct Rlist *rp;
+{ Rlist *rp;
   struct CfMount *mp;
   int found = false;
 
@@ -383,7 +383,7 @@ if (cfstat(vbuff,&parentstat) == -1)
 
 if (childstat->st_dev != parentstat.st_dev)
    {
-   struct Rlist *rp;
+   Rlist *rp;
    struct CfMount *entry;
 
    CfDebug("[%s is on a different file system, not descending]\n",dir);
@@ -412,7 +412,7 @@ return(false);
 
 #ifndef MINGW
 
-static int VerifyMountPromise(char *name,struct Attributes a,struct Promise *pp)
+static int VerifyMountPromise(char *name,Attributes a,Promise *pp)
 
 { char *options;
   char dir[CF_BUFSIZE];

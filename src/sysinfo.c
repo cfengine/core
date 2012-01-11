@@ -621,7 +621,7 @@ int IsInterfaceAddress(char *adr)
 
  /* Does this address belong to a local interface */
 
-{ struct Item *ip;
+{ Item *ip;
 
 for (ip = IPADDRESSES; ip != NULL; ip=ip->next)
    {
@@ -1424,7 +1424,7 @@ if (!strncmp(relstring, SUSE_SLES8_ID, strlen(SUSE_SLES8_ID)))
    }
 else if (strncmp(relstring,"sles",4) == 0)
    {
-   struct Item *list, *ip;
+   Item *list, *ip;
    sscanf(relstring,"%[-_a-zA-Z0-9]",vbuf);
    NewClass(vbuf);
 

@@ -33,20 +33,20 @@
 
 #include "constraints.h"
 
-static struct PromiseIdent *PromiseIdExists(char *handle);
-static void DeleteAllPromiseIdsRecurse(struct PromiseIdent *key);
+static PromiseIdent *PromiseIdExists(char *handle);
+static void DeleteAllPromiseIdsRecurse(PromiseIdent *key);
 static int VerifyConstraintName(const char *lval);
-static void PostCheckConstraint(char *type,char *bundle,char *lval, struct Rval rval);
+static void PostCheckConstraint(char *type,char *bundle,char *lval, Rval rval);
 
 /*******************************************************************/
 
-struct Constraint *AppendConstraint(struct Constraint **conlist, char *lval, struct Rval rval, char *classes, int body)
+Constraint *AppendConstraint(Constraint **conlist, char *lval, Rval rval, char *classes, int body)
 
 /* Note rval must be pre-allocated for this function, e.g. use
    CopyRvalItem in call.  This is to make the parser and var expansion
    non-leaky */
     
-{ struct Constraint *cp,*lp;
+{ Constraint *cp,*lp;
   char *sp = NULL;
 
 switch(rval.rtype)
@@ -74,7 +74,7 @@ if (THIS_AGENT_TYPE == cf_common)
    PostCheckConstraint("none", "none", lval, rval);
    }
 
-cp = xcalloc(1, sizeof(struct Constraint));
+cp = xcalloc(1, sizeof(Constraint));
 
 sp = xstrdup(lval);
 
@@ -106,16 +106,16 @@ return cp;
 
 /*****************************************************************************/
 
-void EditScalarConstraint(struct Constraint *conlist,char *lval,char *rval)
+void EditScalarConstraint(Constraint *conlist,char *lval,char *rval)
 
-{ struct Constraint *cp;
+{ Constraint *cp;
  
 for (cp = conlist; cp != NULL; cp = cp->next)
    {
    if (strcmp(lval,cp->lval) == 0)
       {
       DeleteRvalItem(cp->rval);
-      cp->rval = (struct Rval) { xstrdup(rval), CF_SCALAR };
+      cp->rval = (Rval) { xstrdup(rval), CF_SCALAR };
       return;
       }
    }
@@ -123,9 +123,9 @@ for (cp = conlist; cp != NULL; cp = cp->next)
 
 /*****************************************************************************/
 
-void DeleteConstraintList(struct Constraint *conlist)
+void DeleteConstraintList(Constraint *conlist)
 
-{ struct Constraint *cp, *next;
+{ Constraint *cp, *next;
 
 CfDebug("DeleteConstraintList()\n");
  
@@ -144,9 +144,9 @@ for (cp = conlist; cp != NULL; cp = next)
 
 /*****************************************************************************/
 
-int GetBooleanConstraint(char *lval,struct Promise *pp)
+int GetBooleanConstraint(char *lval,Promise *pp)
 
-{ struct Constraint *cp;
+{ Constraint *cp;
   int retval = CF_UNDEFINED;
 
 for (cp = pp->conlist; cp != NULL; cp=cp->next)
@@ -196,9 +196,9 @@ return retval;
 
 /*****************************************************************************/
 
-int GetRawBooleanConstraint(char *lval,struct Constraint *list)
+int GetRawBooleanConstraint(char *lval,Constraint *list)
 
-{ struct Constraint *cp;
+{ Constraint *cp;
   int retval = CF_UNDEFINED;
 
 for (cp = list; cp != NULL; cp=cp->next)
@@ -246,9 +246,9 @@ return retval;
 
 /*****************************************************************************/
 
-int GetBundleConstraint(char *lval,struct Promise *pp)
+int GetBundleConstraint(char *lval,Promise *pp)
 
-{ struct Constraint *cp;
+{ Constraint *cp;
   int retval = CF_UNDEFINED;
 
 for (cp = pp->conlist; cp != NULL; cp=cp->next)
@@ -284,9 +284,9 @@ return false;
 
 /*****************************************************************************/
 
-int GetIntConstraint(char *lval,struct Promise *pp)
+int GetIntConstraint(char *lval,Promise *pp)
 
-{ struct Constraint *cp;
+{ Constraint *cp;
   int retval = CF_NOINT;
 
 for (cp = pp->conlist; cp != NULL; cp=cp->next)
@@ -322,9 +322,9 @@ return retval;
 
 /*****************************************************************************/
 
-double GetRealConstraint(char *lval,struct Promise *pp)
+double GetRealConstraint(char *lval,Promise *pp)
 
-{ struct Constraint *cp;
+{ Constraint *cp;
   double retval = CF_NODOUBLE;
 
 for (cp = pp->conlist; cp != NULL; cp=cp->next)
@@ -358,9 +358,9 @@ return retval;
 
 /*****************************************************************************/
 
-mode_t GetOctalConstraint(char *lval,struct Promise *pp)
+mode_t GetOctalConstraint(char *lval,Promise *pp)
 
-{ struct Constraint *cp;
+{ Constraint *cp;
   mode_t retval = 077;
 
 // We could handle units here, like kb,b,mb
@@ -398,14 +398,14 @@ return retval;
 
 /*****************************************************************************/
 
-uid_t GetUidConstraint(char *lval,struct Promise *pp)
+uid_t GetUidConstraint(char *lval,Promise *pp)
 
 #ifdef MINGW
 {  // we use sids on windows instead
   return CF_SAME_OWNER;
 }
 #else  /* NOT MINGW */
-{ struct Constraint *cp;
+{ Constraint *cp;
   int retval = CF_SAME_OWNER;
   char buffer[CF_MAXVARSIZE];
 
@@ -443,14 +443,14 @@ return retval;
 
 /*****************************************************************************/
 
-gid_t GetGidConstraint(char *lval,struct Promise *pp)
+gid_t GetGidConstraint(char *lval,Promise *pp)
 
 #ifdef MINGW
 {  // not applicable on windows: processes have no group
   return CF_SAME_GROUP;
 }
 #else
-{ struct Constraint *cp;
+{ Constraint *cp;
   int retval = CF_SAME_OWNER;
   char buffer[CF_MAXVARSIZE];
     
@@ -488,10 +488,10 @@ return retval;
 
 /*****************************************************************************/
 
-struct Rlist *GetListConstraint(char *lval,struct Promise *pp)
+Rlist *GetListConstraint(char *lval,Promise *pp)
 
-{ struct Constraint *cp;
-  struct Rlist *retval = NULL;
+{ Constraint *cp;
+  Rlist *retval = NULL;
 
 for (cp = pp->conlist; cp != NULL; cp=cp->next)
    {
@@ -517,7 +517,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
          FatalError("Aborted");
          }
 
-      retval = (struct Rlist *)cp->rval.item;
+      retval = (Rlist *)cp->rval.item;
       }
    }
 
@@ -526,9 +526,9 @@ return retval;
 
 /*****************************************************************************/
 
-struct Constraint *GetConstraint(struct Promise *promise, const char *lval)
+Constraint *GetConstraint(Promise *promise, const char *lval)
 {
-struct Constraint *cp = NULL, *retval = NULL;
+Constraint *cp = NULL, *retval = NULL;
 
 if (promise == NULL)
    {
@@ -563,9 +563,9 @@ return retval;
 
 /*****************************************************************************/
 
-void *GetConstraintValue(char *lval, struct Promise *promise, char rtype)
+void *GetConstraintValue(char *lval, Promise *promise, char rtype)
 {
-struct Constraint *constraint = GetConstraint(promise, lval);
+Constraint *constraint = GetConstraint(promise, lval);
 
 if (constraint && constraint->rval.rtype == rtype)
    {
@@ -579,12 +579,12 @@ else
 
 /*****************************************************************************/
 
-void ReCheckAllConstraints(struct Promise *pp)
+void ReCheckAllConstraints(Promise *pp)
 
-{ struct Constraint *cp;
+{ Constraint *cp;
  char *sp,*handle = GetConstraintValue("handle",pp,CF_SCALAR);
-  struct PromiseIdent *prid;
-  struct Item *ptr;
+  PromiseIdent *prid;
+  Item *ptr;
   int in_class_any = false;
 
 if (strcmp(pp->agentsubtype,"reports") == 0 && strcmp(pp->classes,"any") == 0)
@@ -688,12 +688,12 @@ PreSanitizePromise(pp);
 
 /*****************************************************************************/
 
-static void PostCheckConstraint(char *type, char *bundle, char *lval, struct Rval rval)
+static void PostCheckConstraint(char *type, char *bundle, char *lval, Rval rval)
 
-{ struct SubTypeSyntax ss;
+{ SubTypeSyntax ss;
   int i,j,l,m;
-  const struct BodySyntax *bs,*bs2;
-  struct SubTypeSyntax *ssp;
+  const BodySyntax *bs,*bs2;
+  SubTypeSyntax *ssp;
 
 CfDebug("  Post Check Constraint %s: %s =>",type,lval);
 
@@ -737,7 +737,7 @@ for  (i = 0; i < CF3_MODULES; i++)
                   }
                else if (bs[l].dtype == cf_body)
                   {
-                  bs2 = (struct BodySyntax *)bs[l].range;
+                  bs2 = (BodySyntax *)bs[l].range;
                   
                   for (m = 0; bs2[m].lval != NULL; m++)
                      {
@@ -782,10 +782,10 @@ for (i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
 
 static int VerifyConstraintName(const char *lval)
 
-{ struct SubTypeSyntax ss;
+{ SubTypeSyntax ss;
   int i,j,l,m;
-  const struct BodySyntax *bs,*bs2;
-  struct SubTypeSyntax *ssp;
+  const BodySyntax *bs,*bs2;
+  SubTypeSyntax *ssp;
 
 CfDebug("  Verify Constrant name %s\n",lval);
 
@@ -811,7 +811,7 @@ for  (i = 0; i < CF3_MODULES; i++)
                }
             else if (bs[l].dtype == cf_body)
                {
-               bs2 = (struct BodySyntax *)bs[l].range;
+               bs2 = (BodySyntax *)bs[l].range;
                
                for (m = 0; bs2[m].lval != NULL; m++)
                   {
@@ -850,11 +850,11 @@ return false;
 
 // NOTE: PROMISE_ID_LIST must be thread-safe here (locked by caller)
 
-struct PromiseIdent *NewPromiseId(char *handle,struct Promise *pp)
+PromiseIdent *NewPromiseId(char *handle,Promise *pp)
 
-{ struct PromiseIdent *ptr;
+{ PromiseIdent *ptr;
 
-ptr = xmalloc(sizeof(struct PromiseIdent));
+ptr = xmalloc(sizeof(PromiseIdent));
 
 ptr->filename = xstrdup(pp->audit->filename);
 ptr->line_number = pp->offset.line;
@@ -866,7 +866,7 @@ return ptr;
 
 /*****************************************************************************/
 
-static void DeleteAllPromiseIdsRecurse(struct PromiseIdent *key)
+static void DeleteAllPromiseIdsRecurse(PromiseIdent *key)
 
 {
 if (key->next != NULL)
@@ -901,9 +901,9 @@ ThreadUnlock(cft_policy);
 
 /*****************************************************************************/
 
-static struct PromiseIdent *PromiseIdExists(char *handle)
+static PromiseIdent *PromiseIdExists(char *handle)
 
-{ struct PromiseIdent *key;
+{ PromiseIdent *key;
 
 for (key = PROMISE_ID_LIST; key != NULL; key=key->next)
    {

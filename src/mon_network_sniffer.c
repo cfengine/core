@@ -36,8 +36,8 @@ static bool TCPDUMP;
 static bool TCPPAUSE;
 static FILE *TCPPIPE;
 
-static struct Item *NETIN_DIST[CF_NETATTR];
-static struct Item *NETOUT_DIST[CF_NETATTR];
+static Item *NETIN_DIST[CF_NETATTR];
+static Item *NETOUT_DIST[CF_NETATTR];
 
 /* Prototypes */
 
@@ -148,7 +148,7 @@ fflush(TCPPIPE);
 
 /******************************************************************************/
 
-static void IncrementCounter(struct Item **list,char *name)
+static void IncrementCounter(Item **list,char *name)
 {
 if (!IsItemIn(*list,name))
    {
@@ -351,9 +351,9 @@ else
 
 /******************************************************************************/
 
-static void SaveTCPEntropyData(struct Item *list,int i,char *inout)
+static void SaveTCPEntropyData(Item *list,int i,char *inout)
 {
-struct Item *ip;
+Item *ip;
 FILE *fp;
 char filename[CF_BUFSIZE];
 

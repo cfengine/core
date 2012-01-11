@@ -38,18 +38,18 @@
 /* seconds */
 #define RECVTIMEOUT 30
 
-struct Rlist *SERVERLIST = NULL;
+Rlist *SERVERLIST = NULL;
 
-static void NewClientCache(struct cfstat *data,struct Promise *pp);
-static void CacheServerConnection(struct cfagent_connection *conn, const char *server);
+static void NewClientCache(Stat *data,Promise *pp);
+static void CacheServerConnection(AgentConnection *conn, const char *server);
 static void MarkServerOffline(const char *server);
-static struct cfagent_connection *ServerConnectionReady(const char *server);
+static AgentConnection *ServerConnectionReady(const char *server);
 static bool ServerOffline(const char *server);
 static void FlushFileStream(int sd,int toget);
-static int CacheStat(const char *file,struct stat *statbuf,const char *stattype,struct Attributes attr,struct Promise *pp);
+static int CacheStat(const char *file,struct stat *statbuf,const char *stattype,Attributes attr,Promise *pp);
 
 #if !defined(__MINGW32__)
-static int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz);
+static int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz);
 #endif
 
 
@@ -76,10 +76,10 @@ CfOut(cf_verbose,"","Setting cfengine default port to %u = %s\n",ntohs(SHORT_CFE
 
 /*********************************************************************/
 
-struct cfagent_connection *NewServerConnection(struct Attributes attr,struct Promise *pp)
+AgentConnection *NewServerConnection(Attributes attr,Promise *pp)
 
-{ struct cfagent_connection *conn;
-  struct Rlist *rp;
+{ AgentConnection *conn;
+  Rlist *rp;
  
 // First one in goal has to open the connection, or mark it failed or private (thread)
 
@@ -133,9 +133,9 @@ return NULL;
 
 /*****************************************************************************/
 
-struct cfagent_connection *ServerConnection(char *server,struct Attributes attr,struct Promise *pp)
+AgentConnection *ServerConnection(char *server,Attributes attr,Promise *pp)
 
-{ struct cfagent_connection *conn;
+{ AgentConnection *conn;
  
 #ifndef MINGW
 static sigset_t   signal_mask;
@@ -218,7 +218,7 @@ return conn;
 
 /*********************************************************************/
 
-void ServerDisconnection(struct cfagent_connection *conn)
+void ServerDisconnection(AgentConnection *conn)
 
 {
 CfDebug("Closing current server connection\n");
@@ -236,7 +236,7 @@ if (conn)
 
 /*********************************************************************/
 
-int cf_remote_stat(char *file,struct stat *buf,char *stattype,struct Attributes attr,struct Promise *pp)
+int cf_remote_stat(char *file,struct stat *buf,char *stattype,Attributes attr,Promise *pp)
 
 /* If a link, this reads readlink and sends it back in the same
    package. It then caches the value for each copy command */
@@ -244,8 +244,8 @@ int cf_remote_stat(char *file,struct stat *buf,char *stattype,struct Attributes 
 { char sendbuffer[CF_BUFSIZE];
   char recvbuffer[CF_BUFSIZE];
   char in[CF_BUFSIZE],out[CF_BUFSIZE];
-  struct cfagent_connection *conn = pp->conn;
-  struct cfstat cfst;
+  AgentConnection *conn = pp->conn;
+  Stat cfst;
   int ret,tosend,cipherlen;
   time_t tloc;
 
@@ -431,16 +431,16 @@ return -1;
 
 /*********************************************************************/
 
-CFDIR *OpenDirRemote(const char *dirname,struct Attributes attr,struct Promise *pp)
-{ struct cfagent_connection *conn = pp->conn;
+Dir *OpenDirRemote(const char *dirname,Attributes attr,Promise *pp)
+{ AgentConnection *conn = pp->conn;
   char sendbuffer[CF_BUFSIZE];
   char recvbuffer[CF_BUFSIZE];
   char in[CF_BUFSIZE];
   char out[CF_BUFSIZE];
   int n, cipherlen = 0,tosend;
-  CFDIR *cfdirh;
+  Dir *cfdirh;
   char *sp;
-  struct Item *files = NULL;
+  Item *files = NULL;
 
 CfDebug("CfOpenDir(%s:%s)\n",pp->this_server,dirname);
 
@@ -450,7 +450,7 @@ if (strlen(dirname) > CF_BUFSIZE - 20)
    return NULL;
    }
 
-cfdirh = xcalloc(1, sizeof(CFDIR));
+cfdirh = xcalloc(1, sizeof(Dir));
 
 if (attr.copy.encrypt)
    {
@@ -515,7 +515,7 @@ while (true)
 
    for (sp = recvbuffer; *sp != '\0'; sp++)
       {
-      struct Item *ip;
+      Item *ip;
 
       if (strncmp(sp,CFD_TERMINATOR,strlen(CFD_TERMINATOR)) == 0)    /* End transmission */
          {
@@ -523,7 +523,7 @@ while (true)
          return cfdirh;
          }
 
-      ip = xcalloc(1, sizeof(struct Item));
+      ip = xcalloc(1, sizeof(Item));
       ip->name = (char*)AllocateDirentForFilename(sp);
 
       if (files == NULL) /* First element */
@@ -550,15 +550,15 @@ return cfdirh;
 
 /*********************************************************************/
 
-static void NewClientCache(struct cfstat *data,struct Promise *pp)
+static void NewClientCache(Stat *data,Promise *pp)
 
-{ struct cfstat *sp;
+{ Stat *sp;
 
 CfDebug("NewClientCache\n");
 
-sp = xmalloc(sizeof(struct cfstat));
+sp = xmalloc(sizeof(Stat));
 
-memcpy(sp,data,sizeof(struct cfstat));
+memcpy(sp,data,sizeof(Stat));
 
 sp->next = pp->cache;
 pp->cache = sp;
@@ -566,9 +566,9 @@ pp->cache = sp;
 
 /*********************************************************************/
 
-void DeleteClientCache(struct Attributes attr,struct Promise *pp)
+void DeleteClientCache(Attributes attr,Promise *pp)
 
-{ struct cfstat *sp,*sps;
+{ Stat *sp,*sps;
 
 CfDebug("DeleteClientCache\n");
   
@@ -586,12 +586,12 @@ pp->cache = NULL;
 
 /*********************************************************************/
 
-int CompareHashNet(char *file1,char *file2,struct Attributes attr,struct Promise *pp)
+int CompareHashNet(char *file1,char *file2,Attributes attr,Promise *pp)
 
 { static unsigned char d[EVP_MAX_MD_SIZE+1];
   char *sp,sendbuffer[CF_BUFSIZE],recvbuffer[CF_BUFSIZE],in[CF_BUFSIZE],out[CF_BUFSIZE];
   int i,tosend,cipherlen;
-  struct cfagent_connection *conn = pp->conn;
+  AgentConnection *conn = pp->conn;
 
 HashFile(file2,d,CF_DEFAULT_DIGEST);
 CfDebug("Send digest of %s to server, %s\n",file2,HashPrint(CF_DEFAULT_DIGEST,d));
@@ -657,7 +657,7 @@ else
 
 /*********************************************************************/
 
-int CopyRegularFileNet(char *source,char *new,off_t size,struct Attributes attr,struct Promise *pp)
+int CopyRegularFileNet(char *source,char *new,off_t size,Attributes attr,Promise *pp)
 
 { int dd, buf_size,n_read = 0,toget,towrite;
   int last_write_made_hole = 0, done = false,tosend,value;
@@ -665,7 +665,7 @@ int CopyRegularFileNet(char *source,char *new,off_t size,struct Attributes attr,
 
   long n_read_total = 0;  
   EVP_CIPHER_CTX ctx;
-  struct cfagent_connection *conn = pp->conn;
+  AgentConnection *conn = pp->conn;
 
 snprintf(cfchangedstr,255,"%s%s",CF_CHANGEDSTR1,CF_CHANGEDSTR2);
   
@@ -807,7 +807,7 @@ return true;
 
 /*********************************************************************/
 
-int EncryptCopyRegularFileNet(char *source,char *new,off_t size,struct Attributes attr,struct Promise *pp)
+int EncryptCopyRegularFileNet(char *source,char *new,off_t size,Attributes attr,Promise *pp)
 
 { int dd, blocksize = 2048,n_read = 0,towrite,plainlen,more = true, finlen,cnt = 0;
   int last_write_made_hole = 0, tosend,cipherlen=0;
@@ -815,7 +815,7 @@ int EncryptCopyRegularFileNet(char *source,char *new,off_t size,struct Attribute
   unsigned char iv[32] = {1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8};
   long n_read_total = 0;  
   EVP_CIPHER_CTX ctx;
-  struct cfagent_connection *conn = pp->conn;
+  AgentConnection *conn = pp->conn;
 
 snprintf(cfchangedstr,255,"%s%s",CF_CHANGEDSTR1,CF_CHANGEDSTR2);
   
@@ -953,7 +953,7 @@ return true;
 /* Level 2                                                           */
 /*********************************************************************/
 
-int ServerConnect(struct cfagent_connection *conn,char *host,struct Attributes attr, struct Promise *pp) 
+int ServerConnect(AgentConnection *conn,char *host,Attributes attr, Promise *pp) 
 
 {
   short shortport;
@@ -1125,7 +1125,7 @@ if (!attr.copy.force_ipv4)
 
 static bool ServerOffline(const char *server)
     
-{ struct Rlist *rp;
+{ Rlist *rp;
   struct ServerItem *svp;
   char ipname[CF_MAXVARSIZE];
 
@@ -1156,9 +1156,9 @@ return false;
 /*
  * We need to destroy connection as it has got an fatal (or non-fatal) error
  */
-void DestroyServerConnection(struct cfagent_connection *conn)
+void DestroyServerConnection(AgentConnection *conn)
 {
-struct Rlist *entry = KeyInRlist(SERVERLIST, conn->remoteip);
+Rlist *entry = KeyInRlist(SERVERLIST, conn->remoteip);
 
 ServerDisconnection(conn);
 
@@ -1171,9 +1171,9 @@ if (entry != NULL)
 
 /*********************************************************************/
 
-static struct cfagent_connection *ServerConnectionReady(const char *server)
+static AgentConnection *ServerConnectionReady(const char *server)
 
-{ struct Rlist *rp;
+{ Rlist *rp;
   struct ServerItem *svp;
   char ipname[CF_MAXVARSIZE];
 
@@ -1210,9 +1210,9 @@ return NULL;
 
 /*********************************************************************/
 
-void ServerNotBusy(struct cfagent_connection *conn)
+void ServerNotBusy(AgentConnection *conn)
 
-{ struct Rlist *rp;
+{ Rlist *rp;
   struct ServerItem *svp;
  
 for (rp = SERVERLIST; rp != NULL; rp=rp->next)
@@ -1236,8 +1236,8 @@ static void MarkServerOffline(const char *server)
 /* Unable to contact the server so don't waste time trying for
    other connections, mark it offline */
     
-{ struct Rlist *rp;
-  struct cfagent_connection *conn = NULL;
+{ Rlist *rp;
+  AgentConnection *conn = NULL;
   struct ServerItem *svp;
   char ipname[CF_MAXVARSIZE];
 
@@ -1285,11 +1285,11 @@ ThreadUnlock(cft_getaddr);
 
 /*********************************************************************/
 
-static void CacheServerConnection(struct cfagent_connection *conn, const char *server)
+static void CacheServerConnection(AgentConnection *conn, const char *server)
 
 /* First time we open a connection, so store it */
     
-{ struct Rlist *rp;
+{ Rlist *rp;
   struct ServerItem *svp;
   char ipname[CF_MAXVARSIZE];
 
@@ -1313,9 +1313,9 @@ ThreadUnlock(cft_getaddr);
 
 /*********************************************************************/
 
-static int CacheStat(const char *file,struct stat *statbuf, const char *stattype,struct Attributes attr,struct Promise *pp)
+static int CacheStat(const char *file,struct stat *statbuf, const char *stattype,Attributes attr,Promise *pp)
 
-{ struct cfstat *sp;
+{ Stat *sp;
 
 CfDebug("CacheStat(%s)\n",file);
 
@@ -1384,7 +1384,7 @@ SERVERLIST = NULL;
 
 void ConnectionsCleanup(void)
 {
-struct Rlist *rp;
+Rlist *rp;
 struct ServerItem *svp;
 
 for (rp = SERVERLIST; rp != NULL; rp = rp->next)
@@ -1413,7 +1413,7 @@ SERVERLIST = NULL;
 /*********************************************************************/
 
 #if !defined(__MINGW32__)
-static int TryConnect(struct cfagent_connection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz)
+static int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz)
 
 /** 
  * Tries a nonblocking connect and then restores blocking if

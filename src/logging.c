@@ -41,8 +41,8 @@ static const char *NO_LOG_TYPES[] = { "vars", "classes", "insert_lines", "delete
 
 void BeginAudit()
 
-{ struct Promise dummyp = {0};
-  struct Attributes dummyattr = {{0}};
+{ Promise dummyp = {0};
+  Attributes dummyattr = {{0}};
 
 if (THIS_AGENT_TYPE != cf_agent)
    {
@@ -61,9 +61,9 @@ void EndAudit()
 
 { double total;
   char *sp,string[CF_BUFSIZE];
-  struct Rval retval;
-  struct Promise dummyp = {0};
-  struct Attributes dummyattr = {{0}};
+  Rval retval;
+  Promise dummyp = {0};
+  Attributes dummyattr = {{0}};
 
 if (THIS_AGENT_TYPE != cf_agent)
    {
@@ -143,7 +143,7 @@ ClassAuditLog(&dummyp,dummyattr,"Cfagent closing",CF_NOP,"");
  * may change every iteration and introduce lot of churn in reports without
  * giving any value.
  */
-static bool IsPromiseValuableForStatus(const struct Promise *pp)
+static bool IsPromiseValuableForStatus(const Promise *pp)
 {
 return pp
    && pp->agentsubtype != NULL
@@ -157,7 +157,7 @@ return pp
  * logged, as they exist to support other promises.
  */
 
-static bool IsPromiseValuableForLogging(const struct Promise *pp)
+static bool IsPromiseValuableForLogging(const Promise *pp)
 {
 return pp
    && pp->agentsubtype != NULL
@@ -166,12 +166,12 @@ return pp
 
 /*****************************************************************************/
 
-void ClassAuditLog(struct Promise *pp,struct Attributes attr,char *str,char status,char *reason)
+void ClassAuditLog(Promise *pp,Attributes attr,char *str,char status,char *reason)
 
 { time_t now = time(NULL);
   char date[CF_BUFSIZE],lock[CF_BUFSIZE],key[CF_BUFSIZE],operator[CF_BUFSIZE];
-  struct AuditLog newaudit;
-  struct Audit *ap = pp->audit;
+  AuditLog newaudit;
+  Audit *ap = pp->audit;
   struct timespec t;
   double keyval;
   int lineno = pp->offset.line;

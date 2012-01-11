@@ -32,29 +32,29 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static int SelectTypeMatch(struct stat *lstatptr,struct Rlist *crit);
-static int SelectOwnerMatch(char *path,struct stat *lstatptr,struct Rlist *crit);
-static int SelectModeMatch(struct stat *lstatptr,struct Rlist *ls);
+static int SelectTypeMatch(struct stat *lstatptr,Rlist *crit);
+static int SelectOwnerMatch(char *path,struct stat *lstatptr,Rlist *crit);
+static int SelectModeMatch(struct stat *lstatptr,Rlist *ls);
 static int SelectTimeMatch(time_t stattime,time_t fromtime,time_t totime);
 static int SelectNameRegexMatch(const char *filename,char *crit);
 static int SelectPathRegexMatch(char *filename,char *crit);
 static int SelectExecRegexMatch(char *filename,char *crit,char *prog);
-static int SelectIsSymLinkTo(char *filename,struct Rlist *crit);
+static int SelectIsSymLinkTo(char *filename,Rlist *crit);
 static int SelectExecProgram(char *filename,char *command);
 static int SelectSizeMatch(size_t size,size_t min,size_t max);
 #if defined HAVE_CHFLAGS
-static int SelectBSDMatch(struct stat *lstatptr,struct Rlist *bsdflags,struct Promise *pp);
+static int SelectBSDMatch(struct stat *lstatptr,Rlist *bsdflags,Promise *pp);
 #endif
 #ifndef MINGW
 static int Unix_GetOwnerName(struct stat *lstatptr, char *owner, int ownerSz);
-static int SelectGroupMatch(struct stat *lstatptr,struct Rlist *crit);
+static int SelectGroupMatch(struct stat *lstatptr,Rlist *crit);
 #endif
 
-int SelectLeaf(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp)
+int SelectLeaf(char *path,struct stat *sb,Attributes attr,Promise *pp)
 
-{ struct AlphaList leaf_attr;
+{ AlphaList leaf_attr;
   int result = true;
-  struct Rlist *rp;
+  Rlist *rp;
 
 InitAlphaList(&leaf_attr);  
 
@@ -214,10 +214,10 @@ return false;
 
 /*******************************************************************/
 
-static int SelectTypeMatch(struct stat *lstatptr,struct Rlist *crit)
+static int SelectTypeMatch(struct stat *lstatptr,Rlist *crit)
 
-{ struct AlphaList leafattrib;
-  struct Rlist *rp;
+{ AlphaList leafattrib;
+  Rlist *rp;
 
 InitAlphaList(&leafattrib);
   
@@ -296,10 +296,10 @@ return Unix_GetOwnerName(lstatptr, owner, ownerSz);
 
 /*******************************************************************/
 
-static int SelectOwnerMatch(char *path,struct stat *lstatptr,struct Rlist *crit)
+static int SelectOwnerMatch(char *path,struct stat *lstatptr,Rlist *crit)
 
-{ struct AlphaList leafattrib;
-  struct Rlist *rp;
+{ AlphaList leafattrib;
+  Rlist *rp;
   char ownerName[CF_BUFSIZE];
   int gotOwner;
   char buffer[CF_SMALLBUF];
@@ -354,10 +354,10 @@ return false;
 
 /*******************************************************************/
 
-static int SelectModeMatch(struct stat *lstatptr,struct Rlist *list)
+static int SelectModeMatch(struct stat *lstatptr,Rlist *list)
 
 { mode_t newperm,plus,minus;
-  struct Rlist *rp;
+  Rlist *rp;
 
 for  (rp = list; rp != NULL; rp=rp->next)
    {
@@ -386,12 +386,12 @@ return false;
 /*******************************************************************/
 
 #if defined HAVE_CHFLAGS
-static int SelectBSDMatch(struct stat *lstatptr,struct Rlist *bsdflags,struct Promise *pp)
+static int SelectBSDMatch(struct stat *lstatptr,Rlist *bsdflags,Promise *pp)
 
 {
 #if defined HAVE_CHFLAGS
   u_long newflags,plus,minus;
-  struct Rlist *rp;
+  Rlist *rp;
 
 if (!ParseFlagString(bsdflags,&plus,&minus))
    {
@@ -483,12 +483,12 @@ return false;
 
 /*******************************************************************/
 
-static int SelectIsSymLinkTo(char *filename,struct Rlist *crit)
+static int SelectIsSymLinkTo(char *filename,Rlist *crit)
 
 {
 #ifndef MINGW
   char buffer[CF_BUFSIZE];
-  struct Rlist *rp;
+  Rlist *rp;
 
 for (rp = crit; rp != NULL; rp = rp->next)
    {
@@ -562,12 +562,12 @@ return true;
 
 /*******************************************************************/
 
-static int SelectGroupMatch(struct stat *lstatptr,struct Rlist *crit)
+static int SelectGroupMatch(struct stat *lstatptr,Rlist *crit)
 
-{ struct AlphaList leafattrib;
+{ AlphaList leafattrib;
   char buffer[CF_SMALLBUF];
   struct group *gr;
-  struct Rlist *rp;
+  Rlist *rp;
 
 InitAlphaList(&leafattrib);
   

@@ -8,14 +8,14 @@
 
 static void test_create_destroy(void **state)
 {
-struct AlphaList l;
+AlphaList l;
 InitAlphaList(&l);
 DeleteAlphaList(&l);
 }
 
 static void test_prepend(void **state)
 {
-struct AlphaList l;
+AlphaList l;
 InitAlphaList(&l);
 assert_int_equal(InAlphaList(l, "mystring"), 0);
 PrependAlphaList(&l, "mystring");
@@ -25,7 +25,7 @@ DeleteAlphaList(&l);
 
 static void test_prepend_empty(void **state)
 {
-struct AlphaList l;
+AlphaList l;
 InitAlphaList(&l);
 assert_int_equal(InAlphaList(l, "hello"), 0);
 PrependAlphaList(&l, "hello");
@@ -35,7 +35,7 @@ DeleteAlphaList(&l);
 
 /* static void test_shallow_copy(void **state) */
 /* { */
-/* struct AlphaList a, b; */
+/* AlphaList a, b; */
 /* InitAlphaList(&a); */
 /* InitAlphaList(&b); */
 

@@ -28,8 +28,8 @@
 
 /* Globals */
 
-static struct Item *ALL_INCOMING;
-static struct Item *ALL_OUTGOING;
+static Item *ALL_INCOMING;
+static Item *ALL_OUTGOING;
 
 /* Implementation */
 
@@ -52,10 +52,10 @@ for (int i = 0; i < ATTR; i++)
 /******************************************************************************/
 
 static void SetNetworkEntropyClasses(const char *service, const char *direction,
-                                     const struct Item *list)
+                                     const Item *list)
 {
-const struct Item *ip;
-struct Item *addresses = NULL;
+const Item *ip;
+Item *addresses = NULL;
 double entropy;
 
 for (ip = list; ip != NULL; ip=ip->next)
@@ -104,7 +104,7 @@ void MonNetworkGatherData(double *cf_this)
 {
 FILE *pp;
 char local[CF_BUFSIZE],remote[CF_BUFSIZE],comm[CF_BUFSIZE];
-struct Item *in[ATTR],*out[ATTR];
+Item *in[ATTR],*out[ATTR];
 char *sp;
 int i;
 char vbuff[CF_BUFSIZE];

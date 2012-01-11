@@ -59,7 +59,7 @@
  /*                                                         */
  /***********************************************************/
 
-struct BodySyntax CF_RESOURCE_BODY[] =
+BodySyntax CF_RESOURCE_BODY[] =
    {
    {"env_cpus",cf_int,CF_VALRANGE,"Number of virtual CPUs in the environment"},
    {"env_memory",cf_int,CF_VALRANGE,"Amount of primary storage (RAM) in the virtual environment (KB)"},
@@ -71,7 +71,7 @@ struct BodySyntax CF_RESOURCE_BODY[] =
 
 /***************************************************************/
 
-struct BodySyntax CF_DESIGNATION_BODY[] =
+BodySyntax CF_DESIGNATION_BODY[] =
    {
    {"env_addresses",cf_slist,"","The IP addresses of the environment's network interfaces"},
    {"env_name",cf_str,"","The hostname of the virtual environment"},
@@ -81,7 +81,7 @@ struct BodySyntax CF_DESIGNATION_BODY[] =
 
 /***************************************************************/
 
-struct BodySyntax CF_ENVIRON_BODIES[] =
+BodySyntax CF_ENVIRON_BODIES[] =
    {
    {"environment_host",cf_str,CF_IPRANGE,"A host for the virtual environment uniquely indicating which physical node will execute this machine"},
    {"environment_interface",cf_body,CF_DESIGNATION_BODY,"Virtual environment outward identity and location"},
@@ -95,7 +95,7 @@ struct BodySyntax CF_ENVIRON_BODIES[] =
 /* This is the point of entry from mod_common.c                */
 /***************************************************************/
 
-struct SubTypeSyntax CF_ENVIRONMENT_SUBTYPES[] =
+SubTypeSyntax CF_ENVIRONMENT_SUBTYPES[] =
   {
   {"agent","environments",CF_ENVIRON_BODIES},
   {NULL,NULL,NULL},

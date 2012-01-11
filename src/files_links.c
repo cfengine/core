@@ -32,12 +32,12 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static int MakeLink(char *from,char *to,struct Attributes attr,struct Promise *pp);
+static int MakeLink(char *from,char *to,Attributes attr,Promise *pp);
 static char *AbsLinkPath(char *from,char *relto);
 
 /*****************************************************************************/
 
-char VerifyLink(char *destination,char *source,struct Attributes attr,struct Promise *pp)
+char VerifyLink(char *destination,char *source,Attributes attr,Promise *pp)
 
 #ifdef MINGW
 {
@@ -174,7 +174,7 @@ else
 
 /*****************************************************************************/
 
-char VerifyAbsoluteLink(char *destination,char *source,struct Attributes attr,struct Promise *pp)
+char VerifyAbsoluteLink(char *destination,char *source,Attributes attr,Promise *pp)
 
 { char absto[CF_BUFSIZE];
   char expand[CF_BUFSIZE];
@@ -223,7 +223,7 @@ return VerifyLink(destination,linkto,attr,pp);
 
 /*****************************************************************************/
 
-char VerifyRelativeLink(char *destination,char *source,struct Attributes attr,struct Promise *pp)
+char VerifyRelativeLink(char *destination,char *source,Attributes attr,Promise *pp)
 
 { char *sp, *commonto, *commonfrom;
  char buff[CF_BUFSIZE],linkto[CF_BUFSIZE],add[CF_BUFSIZE];
@@ -298,7 +298,7 @@ return VerifyLink(destination,buff,attr,pp);
 
 /*****************************************************************************/
 
-char VerifyHardLink(char *destination,char *source,struct Attributes attr,struct Promise *pp)
+char VerifyHardLink(char *destination,char *source,Attributes attr,Promise *pp)
 
 { char to[CF_BUFSIZE],absto[CF_BUFSIZE];
  struct stat ssb,dsb;
@@ -380,7 +380,7 @@ return MakeHardLink(destination,to,attr,pp)?CF_CHG:CF_FAIL;
 /* Level                                                                     */
 /*****************************************************************************/
 
-int KillGhostLink(char *name,struct Attributes attr,struct Promise *pp)
+int KillGhostLink(char *name,Attributes attr,Promise *pp)
 
 #ifdef MINGW
 {
@@ -438,7 +438,7 @@ return false;
 
 /*****************************************************************************/
 
-static int MakeLink (char *from,char *to,struct Attributes attr,struct Promise *pp)
+static int MakeLink (char *from,char *to,Attributes attr,Promise *pp)
 #ifdef MINGW  // TODO: Remove? Should never get called.
 {
 CfOut(cf_verbose, "", "Windows does not support symbolic links");
@@ -470,7 +470,7 @@ else
 
 /*****************************************************************************/
 
-int MakeHardLink (char *from,char *to,struct Attributes attr,struct Promise *pp)
+int MakeHardLink (char *from,char *to,Attributes attr,Promise *pp)
 #ifdef MINGW
 {  // TODO: Implement ?
 CfOut(cf_verbose, "", "Hard links are not yet supported on Windows");

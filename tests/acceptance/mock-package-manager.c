@@ -175,10 +175,10 @@ return NewPackagePattern(name, version, arch);
 
 /******************************************************************************/
 
-static struct Rlist *ReadPackageEntries(const char *database_filename)
+static Rlist *ReadPackageEntries(const char *database_filename)
 {
 FILE *packages_file = fopen(database_filename, "r");
-struct Rlist *packages = NULL;
+Rlist *packages = NULL;
 
 if (packages_file != NULL)
    {
@@ -198,9 +198,9 @@ return packages;
 
 /******************************************************************************/
 
-static void SavePackages(const char *database_filename, struct Rlist *package_entries)
+static void SavePackages(const char *database_filename, Rlist *package_entries)
 {
-struct Rlist *rp = NULL;
+Rlist *rp = NULL;
 FILE *packages_file = fopen(database_filename, "w");
 
 for (rp = package_entries; rp != NULL; rp = rp->next)
@@ -236,12 +236,12 @@ return (a->name == NULL || strcmp(a->name, b->name) == 0) &&
 
 /******************************************************************************/
 
-static struct Rlist *FindPackages(const char *database_filename, struct PackagePattern *pattern)
+static Rlist *FindPackages(const char *database_filename, struct PackagePattern *pattern)
 {
-struct Rlist *db = ReadPackageEntries(database_filename);
-struct Rlist *matching = NULL;
+Rlist *db = ReadPackageEntries(database_filename);
+Rlist *matching = NULL;
 
-struct Rlist *rp = NULL;
+Rlist *rp = NULL;
 for (rp = db; rp != NULL; rp = rp->next)
    {
    Package *package = (Package *)rp->item;
@@ -257,9 +257,9 @@ return matching;
 
 /******************************************************************************/
 
-static void ShowPackages(FILE* out, struct Rlist *package_entries)
+static void ShowPackages(FILE* out, Rlist *package_entries)
 {
-struct Rlist *rp = NULL;
+Rlist *rp = NULL;
 for (rp = package_entries; rp != NULL; rp = rp->next)
    {
    fprintf(out, "%s\n", SerializePackage((Package *)rp->item));
@@ -299,7 +299,7 @@ static void AddPackage(struct PackagePattern *pattern)
 {
 fprintf(stderr, "Trying to install all packages matching pattern %s\n", SerializePackagePattern(pattern));
 
-struct Rlist *matching_available
+Rlist *matching_available
    = FindPackages(AVAILABLE_PACKAGES_FILE_NAME, pattern);
 
 if (matching_available == NULL)
@@ -308,7 +308,7 @@ if (matching_available == NULL)
    exit(1);
    }
 
-struct Rlist *rp;
+Rlist *rp;
 for (rp = matching_available; rp; rp = rp->next)
    {
    Package *p = (Package *)rp->item;
@@ -321,7 +321,7 @@ for (rp = matching_available; rp; rp = rp->next)
       }
    }
 
-struct Rlist *installed_packages = ReadPackageEntries(INSTALLED_PACKAGES_FILE_NAME);
+Rlist *installed_packages = ReadPackageEntries(INSTALLED_PACKAGES_FILE_NAME);
 
 for (rp = matching_available; rp; rp = rp->next)
    {
@@ -349,7 +349,7 @@ if (FindPackages(AVAILABLE_PACKAGES_FILE_NAME, pattern) != NULL)
    return;
    }
 
-struct Rlist *available_packages = ReadPackageEntries(AVAILABLE_PACKAGES_FILE_NAME);
+Rlist *available_packages = ReadPackageEntries(AVAILABLE_PACKAGES_FILE_NAME);
 AppendRlistAlien(&available_packages, p);
 SavePackages(AVAILABLE_PACKAGES_FILE_NAME, available_packages);
 }
@@ -387,14 +387,14 @@ while ((c = getopt_long(argc, argv, "", OPTIONS, &option_index)) != EOF)
 
       case 'l':
 	 {
-	 struct Rlist *installed_packages = ReadPackageEntries(INSTALLED_PACKAGES_FILE_NAME);
+	 Rlist *installed_packages = ReadPackageEntries(INSTALLED_PACKAGES_FILE_NAME);
 	 ShowPackages(stdout, installed_packages);
 	 }
 	 break;
 
       case 'L':
 	 {
-	 struct Rlist *available_packages = ReadPackageEntries(AVAILABLE_PACKAGES_FILE_NAME);
+	 Rlist *available_packages = ReadPackageEntries(AVAILABLE_PACKAGES_FILE_NAME);
 	 ShowPackages(stdout, available_packages);
 	 }
 	 break;

@@ -34,13 +34,13 @@
 #include "cf3.server.h"
 
 static void KeepContextBundles(void);
-static void KeepServerPromise(struct Promise *pp);
-static void InstallServerAuthPath(char *path,struct Auth **list,struct Auth **listtop);
-static void KeepServerRolePromise(struct Promise *pp);
+static void KeepServerPromise(Promise *pp);
+static void InstallServerAuthPath(char *path,Auth **list,Auth **listtop);
+static void KeepServerRolePromise(Promise *pp);
 static void KeepPromiseBundles(void);
 
-extern struct BodySyntax CFS_CONTROLBODY[];
-extern struct BodySyntax CF_REMROLE_BODIES[];
+extern BodySyntax CFS_CONTROLBODY[];
+extern BodySyntax CF_REMROLE_BODIES[];
 
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
@@ -54,20 +54,20 @@ extern int DENYBADCLOCKS;
 extern int MAXTRIES;
 extern int LOGCONNS;
 extern int LOGENCRYPT;
-extern struct Item *CONNECTIONLIST;
-extern struct Auth *ROLES;
-extern struct Auth *ROLESTOP;
+extern Item *CONNECTIONLIST;
+extern Auth *ROLES;
+extern Auth *ROLESTOP;
 
 /*******************************************************************/
 
-void KeepFileAccessPromise(struct Promise *pp);
-void KeepLiteralAccessPromise(struct Promise *pp, char *type);
-void KeepQueryAccessPromise(struct Promise *pp,char *type);
+void KeepFileAccessPromise(Promise *pp);
+void KeepLiteralAccessPromise(Promise *pp, char *type);
+void KeepQueryAccessPromise(Promise *pp,char *type);
 /*******************************************************************/
 /* Level                                                           */
 /*******************************************************************/
 
-void KeepPromises(struct GenericAgentConfig config)
+void KeepPromises(GenericAgentConfig config)
 {
 KeepContextBundles();
 KeepControlPromises();
@@ -78,8 +78,8 @@ KeepPromiseBundles();
 
 void Summarize()
 
-{ struct Auth *ptr;
-  struct Item *ip,*ipr;
+{ Auth *ptr;
+  Item *ip,*ipr;
 
 CfOut(cf_verbose,"","Summarize control promises\n");
   
@@ -171,8 +171,8 @@ for (ip = DHCPLIST; ip != NULL; ip=ip->next)
 
 void KeepControlPromises()
     
-{ struct Constraint *cp;
-  struct Rval retval;
+{ Constraint *cp;
+  Rval retval;
 
 CFD_MAXPROCESSES = 30;
 MAXTRIES = 5;
@@ -246,10 +246,10 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
    
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_allowconnects].lval) == 0)
       {
-      struct Rlist *rp;
+      Rlist *rp;
       CfOut(cf_verbose,"","SET Allowing connections from ...\n");
       
-      for (rp  = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
+      for (rp  = (Rlist *)retval.item; rp != NULL; rp = rp->next)
          {
          if (!IsItemIn(NONATTACKERLIST,rp->item))
             {
@@ -262,10 +262,10 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
    
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_denyconnects].lval) == 0)
       {
-      struct Rlist *rp;
+      Rlist *rp;
       CfOut(cf_verbose,"","SET Denying connections from ...\n");
       
-      for (rp  = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
+      for (rp  = (Rlist *)retval.item; rp != NULL; rp = rp->next)
          {
          if (!IsItemIn(ATTACKERLIST,rp->item))
             {
@@ -278,10 +278,10 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
    
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_skipverify].lval) == 0)
       {
-      struct Rlist *rp;
+      Rlist *rp;
       CfOut(cf_verbose,"","SET Skip verify connections from ...\n");
       
-      for (rp  = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
+      for (rp  = (Rlist *)retval.item; rp != NULL; rp = rp->next)
          {
          if (!IsItemIn(SKIPVERIFY,rp->item))
             {
@@ -294,10 +294,10 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
    
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_dynamicaddresses].lval) == 0)
       {
-      struct Rlist *rp;
+      Rlist *rp;
       CfOut(cf_verbose,"","SET Dynamic addresses from ...\n");
       
-      for (rp  = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
+      for (rp  = (Rlist *)retval.item; rp != NULL; rp = rp->next)
          {
          if (!IsItemIn(DHCPLIST,rp->item))
             {
@@ -310,10 +310,10 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
    
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_allowallconnects].lval) == 0)
       {
-      struct Rlist *rp;
+      Rlist *rp;
       CfOut(cf_verbose,"","SET Allowing multiple connections from ...\n");
       
-      for (rp  = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
+      for (rp  = (Rlist *)retval.item; rp != NULL; rp = rp->next)
          {
          if (!IsItemIn(MULTICONNLIST,rp->item))
             {
@@ -326,10 +326,10 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
    
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_allowusers].lval) == 0)
       {
-      struct Rlist *rp;
+      Rlist *rp;
       CfOut(cf_verbose,"","SET Allowing users ...\n");
       
-      for (rp  = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
+      for (rp  = (Rlist *)retval.item; rp != NULL; rp = rp->next)
          {
          if (!IsItemIn(ALLOWUSERLIST,rp->item))
             {
@@ -342,10 +342,10 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
    
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_trustkeysfrom].lval) == 0)
       {
-      struct Rlist *rp;
+      Rlist *rp;
       CfOut(cf_verbose,"","SET Trust keys from ...\n");
       
-      for (rp  = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
+      for (rp  = (Rlist *)retval.item; rp != NULL; rp = rp->next)
          {
          if (!IsItemIn(TRUSTKEYLIST,rp->item))
             {
@@ -406,9 +406,9 @@ if (GetVariable("control_common", CFG_CONTROLBODY[cfg_lastseenexpireafter].lval,
 
 static void KeepContextBundles()
     
-{ struct Bundle *bp;
-  struct SubType *sp;
-  struct Promise *pp;
+{ Bundle *bp;
+  SubType *sp;
+  Promise *pp;
   char *scope;
 
 /* Dial up the generic promise expansion with a callback */
@@ -449,9 +449,9 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
 
 static void KeepPromiseBundles()
     
-{ struct Bundle *bp;
-  struct SubType *sp;
-  struct Promise *pp;
+{ Bundle *bp;
+  SubType *sp;
+  Promise *pp;
   char *scope;
 
 /* Dial up the generic promise expansion with a callback */
@@ -492,7 +492,7 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
 /* Level                                                             */
 /*********************************************************************/
 
-static void KeepServerPromise(struct Promise *pp)
+static void KeepServerPromise(Promise *pp)
 
 { char *sp = NULL;
  
@@ -554,11 +554,11 @@ if (strcmp(pp->agentsubtype,"roles") == 0)
 
 /*********************************************************************/
 
-void KeepFileAccessPromise(struct Promise *pp)
+void KeepFileAccessPromise(Promise *pp)
 
-{ struct Constraint *cp;
-  struct Rlist *rp;
-  struct Auth *ap,*dp;
+{ Constraint *cp;
+  Rlist *rp;
+  Auth *ap,*dp;
 
 if (strlen(pp->promiser) != 1)
    {
@@ -598,7 +598,7 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
 
       case CF_LIST:
           
-          for (rp = (struct Rlist *)cp->rval.item; rp != NULL; rp=rp->next)
+          for (rp = (Rlist *)cp->rval.item; rp != NULL; rp=rp->next)
              {
              if (strcmp(cp->lval,CF_REMACCESS_BODIES[cfs_admit].lval) == 0)
                 {
@@ -629,11 +629,11 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
 
 /*********************************************************************/
 
-void KeepLiteralAccessPromise(struct Promise *pp,char *type)
+void KeepLiteralAccessPromise(Promise *pp,char *type)
 
-{ struct Constraint *cp;
-  struct Rlist *rp;
-  struct Auth *ap,*dp;
+{ Constraint *cp;
+  Rlist *rp;
+  Auth *ap,*dp;
   char *handle = GetConstraintValue("handle",pp,CF_SCALAR);
 
 if (handle == NULL)
@@ -687,7 +687,7 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
 
       case CF_LIST:
           
-          for (rp = (struct Rlist *)cp->rval.item; rp != NULL; rp=rp->next)
+          for (rp = (Rlist *)cp->rval.item; rp != NULL; rp=rp->next)
              {
              if (strcmp(cp->lval,CF_REMACCESS_BODIES[cfs_admit].lval) == 0)
                 {
@@ -718,11 +718,11 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
 
 /*********************************************************************/
 
-void KeepQueryAccessPromise(struct Promise *pp,char *type)
+void KeepQueryAccessPromise(Promise *pp,char *type)
 
-{ struct Constraint *cp;
-  struct Rlist *rp;
-  struct Auth *ap,*dp;
+{ Constraint *cp;
+  Rlist *rp;
+  Auth *ap,*dp;
 
 if (!GetAuthPath(pp->promiser,VARADMIT))
    {
@@ -764,7 +764,7 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
 
       case CF_LIST:
           
-          for (rp = (struct Rlist *)cp->rval.item; rp != NULL; rp=rp->next)
+          for (rp = (Rlist *)cp->rval.item; rp != NULL; rp=rp->next)
              {
              if (strcmp(cp->lval,CF_REMACCESS_BODIES[cfs_admit].lval) == 0)
                 {
@@ -795,11 +795,11 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
 
 /*********************************************************************/
 
-static void KeepServerRolePromise(struct Promise *pp)
+static void KeepServerRolePromise(Promise *pp)
 
-{ struct Constraint *cp;
-  struct Rlist *rp;
-  struct Auth *ap;
+{ Constraint *cp;
+  Rlist *rp;
+  Auth *ap;
 
 if (!GetAuthPath(pp->promiser,ROLES))
    {
@@ -819,7 +819,7 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
       {
       case CF_LIST:
           
-          for (rp = (struct Rlist *)cp->rval.item; rp != NULL; rp=rp->next)
+          for (rp = (Rlist *)cp->rval.item; rp != NULL; rp=rp->next)
              {
              if (strcmp(cp->lval,CF_REMROLE_BODIES[cfs_authorize].lval) == 0)
                 {
@@ -851,9 +851,9 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
 /* Level                                                               */
 /***********************************************************************/
 
-static void InstallServerAuthPath(char *path,struct Auth **list,struct Auth **listtop)
+static void InstallServerAuthPath(char *path,Auth **list,Auth **listtop)
 
-{ struct Auth *ptr;
+{ Auth *ptr;
 
 #ifdef MINGW
 int i;
@@ -863,7 +863,7 @@ for(i = 0; path[i] != '\0'; i++)
   }
 #endif  /* MINGW */
 
-ptr = xcalloc(1, sizeof(struct Auth));
+ptr = xcalloc(1, sizeof(Auth));
 
 if (*listtop == NULL)                 /* First element in the list */
    {
@@ -882,9 +882,9 @@ ptr->path = xstrdup(path);
 /* Level                                                               */
 /***********************************************************************/
 
-struct Auth *GetAuthPath(char *path,struct Auth *list)
+Auth *GetAuthPath(char *path,Auth *list)
 
-{ struct Auth *ap;
+{ Auth *ap;
 
 #ifdef MINGW
 int i;

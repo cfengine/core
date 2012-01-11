@@ -61,7 +61,7 @@
 
 /* This is the primary set of constraints for a server object */
 
-struct BodySyntax CF_REMACCESS_BODIES[] =
+BodySyntax CF_REMACCESS_BODIES[] =
    {
    {"admit",cf_slist,"","List of host names or IP addresses to grant access to file objects"},
    {"deny",cf_slist,"","List of host names or IP addresses to deny access to file objects"},
@@ -73,7 +73,7 @@ struct BodySyntax CF_REMACCESS_BODIES[] =
 
 /***************************************************************/
 
-struct BodySyntax CF_REMROLE_BODIES[] =
+BodySyntax CF_REMROLE_BODIES[] =
    {
    {"authorize",cf_slist,"","List of public-key user names that are allowed to activate the promised class during remote agent activation"},
    {NULL,cf_notype,NULL,NULL}
@@ -83,7 +83,7 @@ struct BodySyntax CF_REMROLE_BODIES[] =
 /* This is the point of entry from mod_common.c                */
 /***************************************************************/
 
-struct SubTypeSyntax CF_REMACCESS_SUBTYPES[] =
+SubTypeSyntax CF_REMACCESS_SUBTYPES[] =
   {
   {"server","access",CF_REMACCESS_BODIES},
   {"server","roles",CF_REMROLE_BODIES},

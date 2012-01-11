@@ -394,11 +394,11 @@ return result;
 
 /*********************************************************************/
 
-int IsRegexItemIn(struct Item *list,char *regex)
+int IsRegexItemIn(Item *list,char *regex)
 
    /* Checks whether item matches a list of wildcards */
 
-{ struct Item *ptr;
+{ Item *ptr;
 
 for (ptr = list; ptr != NULL; ptr=ptr->next)
    {
@@ -428,13 +428,13 @@ return(false);
 
 /*********************************************************************/
 
-int MatchPolicy(char *camel,char *haystack,struct Attributes a,struct Promise *pp)
+int MatchPolicy(char *camel,char *haystack,Attributes a,Promise *pp)
 
-{ struct Rlist *rp;
+{ Rlist *rp;
   char *sp,*spto,*firstchar,*lastchar;
   enum insert_match opt;
   char work[CF_BUFSIZE],final[CF_BUFSIZE];
-  struct Item *list = SplitString(camel,'\n'),*ip;
+  Item *list = SplitString(camel,'\n'),*ip;
   int direct_cmp = false, ok = false;
   
 //Split into separate lines first
@@ -550,11 +550,11 @@ return ok;
 
 /*********************************************************************/
 
-int MatchRlistItem(struct Rlist *listofregex, const char *teststring)
+int MatchRlistItem(Rlist *listofregex, const char *teststring)
 
    /* Checks whether item matches a list of wildcards */
 
-{ struct Rlist *rp;
+{ Rlist *rp;
  
 for (rp = listofregex; rp != NULL; rp=rp->next)
    {

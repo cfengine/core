@@ -34,11 +34,11 @@
 
 /*********************************************************************/
 
-struct cfagent_connection *NewAgentConn()
+AgentConnection *NewAgentConn()
 
-{ struct cfagent_connection *ap;
+{ AgentConnection *ap;
 
-ap = xcalloc(1, sizeof(struct cfagent_connection));
+ap = xcalloc(1, sizeof(AgentConnection));
 
 CfDebug("New server connection...\n");
 ap->sd = SOCKET_INVALID;
@@ -50,7 +50,7 @@ return ap;
 
 /*********************************************************************/
 
-void DeleteAgentConn(struct cfagent_connection *ap)
+void DeleteAgentConn(AgentConnection *ap)
 
 {
 if (ap->session_key != NULL)
@@ -262,7 +262,7 @@ for (ap = response; ap != NULL; ap = ap->ai_next)
    }
 #else
  struct hostent *hp;
- struct sockaddr_in cin;
+ Sockaddr_in cin;
 
 memset(&cin,0,sizeof(cin));
 
@@ -326,14 +326,14 @@ strlcpy(hostbuffer, ipaddress, MAXHOSTNAMELEN);
 #else
 
 struct hostent *hp;
-struct sockaddr_in myaddr;
+Sockaddr_in myaddr;
 struct in_addr iaddr;
   
 memset(hostbuffer,0,MAXHOSTNAMELEN);
 
 if ((iaddr.s_addr = inet_addr(ipaddress)) != -1)
    {
-   hp = gethostbyaddr((void *)&iaddr,sizeof(struct sockaddr_in),AF_INET);
+   hp = gethostbyaddr((void *)&iaddr,sizeof(Sockaddr_in),AF_INET);
   
    if ((hp == NULL) || (hp->h_name == NULL))
       {

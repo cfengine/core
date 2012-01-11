@@ -59,7 +59,7 @@
  /*                                                         */
  /***********************************************************/
 
-struct BodySyntax CF_CHECKVOL_BODY[] =
+BodySyntax CF_CHECKVOL_BODY[] =
    {
    {"check_foreign",cf_opts,CF_BOOL,"true/false verify storage that is mounted from a foreign system on this host", "false"},
    {"freespace",cf_str,"[0-9]+[MBkKgGmb%]","Absolute or percentage minimum disk space that should be available before warning"},
@@ -71,7 +71,7 @@ struct BodySyntax CF_CHECKVOL_BODY[] =
 
 /**************************************************************/
 
-struct BodySyntax CF_MOUNT_BODY[] =
+BodySyntax CF_MOUNT_BODY[] =
    {
    {"edit_fstab",cf_opts,CF_BOOL,"true/false add or remove entries to the file system table (\"fstab\")", "false"},
    {"mount_type",cf_opts,"nfs,nfs2,nfs3,nfs4","Protocol type of remote file system"},
@@ -84,7 +84,7 @@ struct BodySyntax CF_MOUNT_BODY[] =
 
 /***************************************************************/
 
-struct BodySyntax CF_STORAGE_BODIES[] =
+BodySyntax CF_STORAGE_BODIES[] =
    {
    {"mount",cf_body,CF_MOUNT_BODY,"Criteria for mounting foreign file systems"},
    {"volume",cf_body,CF_CHECKVOL_BODY,"Criteria for monitoring/probing mounted volumes"},
@@ -95,7 +95,7 @@ struct BodySyntax CF_STORAGE_BODIES[] =
 /* This is the point of entry from mod_common.c                */
 /***************************************************************/
 
-struct SubTypeSyntax CF_STORAGE_SUBTYPES[] =
+SubTypeSyntax CF_STORAGE_SUBTYPES[] =
   {
   {"agent","storage",CF_STORAGE_BODIES},
   {NULL,NULL,NULL},

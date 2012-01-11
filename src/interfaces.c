@@ -38,7 +38,7 @@
 /*  the necessary info from the device. Sanity checking is done... */
 /*                                                                 */
 /* Sockets are very poorly documented. The basic socket adress     */
-/* struct sockaddr is a generic type. Specific socket addresses    */
+/* Sockaddr is a generic type. Specific socket addresses    */
 /* must be specified depending on the family or protocol being     */
 /* used. e.g. if you're using the internet inet protocol, then     */
 /* the fmaily is AF_INT and the socket address type is sockadr_in  */
@@ -59,12 +59,12 @@
 /* ifreq struct!! These calls have no right to work, but somehow   */
 /* they do!                                                        */
 /*                                                                 */
-/* struct sockaddr_in sin;                                         */
+/* Sockaddr_in sin;                                         */
 /* sin.sin_addr.s_addr = inet_addr("129.240.22.34");               */
 /*                                                                 */
-/* IFR.ifr_addr = *((struct sockaddr *) &sin);                     */
+/* IFR.ifr_addr = *((Sockaddr *) &sin);                     */
 /*                                                                 */
-/* sin = *(struct sockaddr_in *) &IFR.ifr_addr;                    */
+/* sin = *(Sockaddr_in *) &IFR.ifr_addr;                    */
 /*                                                                 */
 /* printf("IP address: %s\n",inet_ntoa(sin.sin_addr));             */
 /*                                                                 */
@@ -168,8 +168,8 @@ cf_closesocket(sk);
 
 static int GetPromisedIfStatus(int sk,char *vifdev,char *vaddress,char *vnetmask,char *vbroadcast)
 
-{ struct sockaddr_in *sin;
-  struct sockaddr_in netmask;
+{ Sockaddr_in *sin;
+  Sockaddr_in netmask;
   int insane = false;
   struct hostent *hp;
   struct in_addr inaddr;
@@ -195,7 +195,7 @@ if (ioctl(sk,SIOCGIFADDR, (caddr_t) &IFR) == -1)   /* Get the device status flag
    return false;
    }
 
-sin = (struct sockaddr_in *) &IFR.ifr_addr;
+sin = (Sockaddr_in *) &IFR.ifr_addr;
 
 if (strlen(vaddress) > 0)
    {
@@ -217,7 +217,7 @@ if (ioctl(sk,SIOCGIFNETMASK, (caddr_t) &IFR) == -1)
    return false;
    }
 
-netmask.sin_addr = ((struct sockaddr_in *) &IFR.ifr_addr)->sin_addr;
+netmask.sin_addr = ((Sockaddr_in *) &IFR.ifr_addr)->sin_addr;
 
 CfOut(cf_verbose,""," -> Found netmask: %s\n",inet_ntoa(netmask.sin_addr));
 
@@ -234,7 +234,7 @@ if (ioctl(sk,SIOCGIFBRDADDR, (caddr_t) &IFR) == -1)
    return false;
    }
 
-sin = (struct sockaddr_in *) &IFR.ifr_addr;
+sin = (Sockaddr_in *) &IFR.ifr_addr;
 strcpy(vbuff,inet_ntoa(sin->sin_addr));
 
 CfOut(cf_verbose,""," -> Found broadcast address: %s\n",inet_ntoa(sin->sin_addr));
@@ -250,7 +250,7 @@ if (strcmp(vbuff,VNUMBROADCAST) != 0)
 
 /* LINUX - hardware mac address
      memcpy((char *) &ifr.ifr_hwaddr, (char *) &sa,
-		   sizeof(struct sockaddr));
+		   sizeof(Sockaddr));
 	    if (ioctl(skfd, SIOCSIFHWADDR, &ifr) < 0) {
 		fprintf(stderr, "SIOCSIFHWADDR: %s\n",
 			strerror(errno));
@@ -289,8 +289,8 @@ return(insane);
 
 static void SetPromisedIfStatus(int sk,char *vifdev,char *vaddress,char *vnetmask,char *vbroadcast)
 
-{ struct sockaddr_in *sin;
-  struct sockaddr_in netmask, broadcast;
+{ Sockaddr_in *sin;
+  Sockaddr_in netmask, broadcast;
 
    /*********************************
 
@@ -315,9 +315,9 @@ memset(&IFR, 0, sizeof(IFR));
 strncpy(IFR.ifr_name,vifdev,sizeof(IFR.ifr_name)); 
 //netmask.sin_addr.s_addr = inet_network(vnetmask);
 netmask.sin_family = AF_INET;
-IFR.ifr_addr = *((struct sockaddr *) &netmask);
+IFR.ifr_addr = *((Sockaddr *) &netmask);
 
-sin = (struct sockaddr_in *) &IFR.ifr_addr;
+sin = (Sockaddr_in *) &IFR.ifr_addr;
 
 if (ioctl(sk,SIOCSIFNETMASK, (caddr_t) &IFR) < 0) 
    {
@@ -332,8 +332,8 @@ else
 
 strcpy(IFR.ifr_name,vifdev);
 broadcast.sin_addr.s_addr = inet_addr(VNUMBROADCAST);
-IFR.ifr_addr = *((struct sockaddr *) &broadcast);
-sin = (struct sockaddr_in *) &IFR.ifr_addr;
+IFR.ifr_addr = *((Sockaddr *) &broadcast);
+sin = (Sockaddr_in *) &IFR.ifr_addr;
 
 CfOut(cf_verbose,"","Trying to set broad to %s = %s\n",VNUMBROADCAST,inet_ntoa(sin->sin_addr));
  
@@ -406,7 +406,7 @@ sprintf(VNUMBROADCAST,"%u.%u.%u.%u",ba,bb,bc,bd);
 static void SetPromisedDefaultRoute()
 
 { int sk, defaultokay = 1;
-  struct sockaddr_in sindst,singw;
+  Sockaddr_in sindst,singw;
   char oldroute[INET_ADDRSTRLEN];
   char routefmt[CF_MAXVARSIZE];
   char vbuff[CF_BUFSIZE];
@@ -556,8 +556,8 @@ else
       sindst.sin_addr.s_addr = INADDR_ANY;
       singw.sin_addr.s_addr = inet_addr(VDEFAULTROUTE->name);
 
-      route.rt_dst = *(struct sockaddr *)&sindst;      /* This disgusting method is necessary */
-      route.rt_gateway = *(struct sockaddr *)&singw;
+      route.rt_dst = *(Sockaddr *)&sindst;      /* This disgusting method is necessary */
+      route.rt_gateway = *(Sockaddr *)&singw;
       route.rt_flags = RTF_GATEWAY;
 
       if (! DONTDO)

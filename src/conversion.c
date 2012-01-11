@@ -43,7 +43,7 @@ void IPString2KeyDigest(char *ipv4,char *result)
   char *key;
   char name[CF_BUFSIZE];
   void *value;
-  struct CfKeyHostSeen entry;
+  KeyHostSeen entry;
   int ksize,vsize;
   unsigned char digest[EVP_MAX_MD_SIZE+1];
 
@@ -410,10 +410,10 @@ return cfa_no_ppolicy;
 
 /***************************************************************************/
 
-char *Rlist2String(struct Rlist *list,char *sep)
+char *Rlist2String(Rlist *list,char *sep)
 
 { char line[CF_BUFSIZE];
-  struct Rlist *rp;
+  Rlist *rp;
 
 line[0] = '\0';
   
@@ -435,7 +435,7 @@ return xstrdup(line);
 int Signal2Int(char *s)
 
 { int i = 0;
-  struct Item *ip, *names = SplitString(CF_SIGNALRANGE,',');
+  Item *ip, *names = SplitString(CF_SIGNALRANGE,',');
 
 for (ip = names; ip != NULL; ip=ip->next)
    {
@@ -636,7 +636,7 @@ return (enum cfagenttype)i;
 
 /****************************************************************************/
 
-enum cfdatatype GetControlDatatype(const char *varname, const struct BodySyntax *bp)
+enum cfdatatype GetControlDatatype(const char *varname, const BodySyntax *bp)
 
 { int i = 0;
 
@@ -655,7 +655,7 @@ return cf_notype;
 
 int GetBoolean(const char *s)
 
-{ struct Item *list = SplitString(CF_BOOL,','), *ip;
+{ Item *list = SplitString(CF_BOOL,','), *ip;
   int count = 0;
 
 for (ip = list; ip != NULL; ip=ip->next)
@@ -1070,9 +1070,9 @@ return a;
 
 /****************************************************************************/
 
-void IntRange2Int(char *intrange,long *min,long *max,struct Promise *pp)
+void IntRange2Int(char *intrange,long *min,long *max,Promise *pp)
 
-{ struct Item *split;
+{ Item *split;
   long lmax = CF_LOWINIT, lmin = CF_HIGHINIT;
 
 /* Numeric types are registered by range separated by comma str "min,max" */
@@ -1325,9 +1325,9 @@ return false;
 
 /*************************************************************/
 
-char *Item2String(struct Item *ip)
+char *Item2String(Item *ip)
 {
-  struct Item *currItem;
+  Item *currItem;
   int stringSz = 0;
   char *buf;
   
@@ -1434,10 +1434,10 @@ return cfd_menu_error;
 /* Rlist to Uid/Gid lists                                                   */
 /****************************************************************************/
 
-struct UidList *Rlist2UidList(struct Rlist *uidnames,struct Promise *pp)
+UidList *Rlist2UidList(Rlist *uidnames,Promise *pp)
 
-{ struct UidList *uidlist = NULL;
-  struct Rlist *rp;
+{ UidList *uidlist = NULL;
+  Rlist *rp;
   char username[CF_MAXVARSIZE];
   uid_t uid;
 
@@ -1458,10 +1458,10 @@ return (uidlist);
 
 /*********************************************************************/
 
-struct GidList *Rlist2GidList(struct Rlist *gidnames,struct Promise *pp)
+GidList *Rlist2GidList(Rlist *gidnames,Promise *pp)
 
-{ struct GidList *gidlist = NULL;
-  struct Rlist *rp;
+{ GidList *gidlist = NULL;
+  Rlist *rp;
   char groupname[CF_MAXVARSIZE];
   gid_t gid;
  
@@ -1482,9 +1482,9 @@ return(gidlist);
 
 /*********************************************************************/
 
-uid_t Str2Uid(char *uidbuff,char *usercopy,struct Promise *pp)
+uid_t Str2Uid(char *uidbuff,char *usercopy,Promise *pp)
 
-{ struct Item *ip, *tmplist;
+{ Item *ip, *tmplist;
   struct passwd *pw;
   int offset,uid = -2,tmp = -2;
   char *machine,*user,*domain;
@@ -1570,7 +1570,7 @@ return uid;
 
 /*********************************************************************/
 
-gid_t Str2Gid(char *gidbuff,char *groupcopy,struct Promise *pp)
+gid_t Str2Gid(char *gidbuff,char *groupcopy,Promise *pp)
 
 { struct group *gr;
   int gid = -2, tmp = -2;

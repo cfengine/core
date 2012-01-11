@@ -63,7 +63,7 @@
 /* editing                                                    */
 /**************************************************************/
 
-struct BodySyntax CF_LOCATION_BODY[] =
+BodySyntax CF_LOCATION_BODY[] =
    {
    {"before_after",cf_opts,"before,after","Menu option, point cursor before of after matched line", "after"},
    {"first_last",cf_opts,"first,last","Menu option, choose first or last occurrence of match in file", "last"},
@@ -73,7 +73,7 @@ struct BodySyntax CF_LOCATION_BODY[] =
 
 /**************************************************************/
 
-struct BodySyntax CF_EDITCOL_BODY[] =
+BodySyntax CF_EDITCOL_BODY[] =
    {
    {"allow_blank_fields",cf_opts,CF_BOOL,"true/false allow blank fields in a line (do not purge)", "false"},
    {"extend_fields",cf_opts,CF_BOOL,"true/false add new fields at end of line if necessary to complete edit", "false"},
@@ -88,7 +88,7 @@ struct BodySyntax CF_EDITCOL_BODY[] =
 
 /**************************************************************/
 
-struct BodySyntax CF_REPLACEWITH_BODY[] =
+BodySyntax CF_REPLACEWITH_BODY[] =
    {
    {"occurrences",cf_opts,"all,first","Menu option to replace all occurrences or just first (NB the latter is non-convergent)", "all"},
    {"replace_value",cf_str,CF_ANYSTRING,"Value used to replace regular expression matches in search"},
@@ -97,7 +97,7 @@ struct BodySyntax CF_REPLACEWITH_BODY[] =
 
 /**************************************************************/
 
-struct BodySyntax CF_EDSCOPE_BODY[] =
+BodySyntax CF_EDSCOPE_BODY[] =
    {
    {"include_start_delimiter",cf_opts,CF_BOOL,"Whether to include the section delimiter", "false"},
    {"include_end_delimiter",cf_opts,CF_BOOL,"Whether to include the section delimiter", "false"},
@@ -108,7 +108,7 @@ struct BodySyntax CF_EDSCOPE_BODY[] =
 
 /**************************************************************/
 
-struct BodySyntax CF_DELETESELECT_BODY[] =
+BodySyntax CF_DELETESELECT_BODY[] =
    {
    {"delete_if_startwith_from_list",cf_slist,CF_ANYSTRING,"Delete line if it starts with a string in the list"},
    {"delete_if_not_startwith_from_list",cf_slist,CF_ANYSTRING,"Delete line if it DOES NOT start with a string in the list"},
@@ -121,7 +121,7 @@ struct BodySyntax CF_DELETESELECT_BODY[] =
 
 /**************************************************************/
 
-struct BodySyntax CF_INSERTSELECT_BODY[] =
+BodySyntax CF_INSERTSELECT_BODY[] =
    {
    {"insert_if_startwith_from_list",cf_slist,CF_ANYSTRING,"Insert line if it starts with a string in the list"},
    {"insert_if_not_startwith_from_list",cf_slist,CF_ANYSTRING,"Insert line if it DOES NOT start with a string in the list"},
@@ -134,7 +134,7 @@ struct BodySyntax CF_INSERTSELECT_BODY[] =
 
 /**************************************************************/
 
-struct BodySyntax CF_INSERTLINES_BODIES[] =
+BodySyntax CF_INSERTLINES_BODIES[] =
    {
    {"expand_scalars",cf_opts,CF_BOOL,"Expand any unexpanded variables", "false"},
    {"insert_type",cf_opts,"literal,string,file,preserve_block","Type of object the promiser string refers to", "literal"},
@@ -146,7 +146,7 @@ struct BodySyntax CF_INSERTLINES_BODIES[] =
 
 /**************************************************************/
 
-struct BodySyntax CF_DELETELINES_BODIES[] =
+BodySyntax CF_DELETELINES_BODIES[] =
    {
    {"delete_select",cf_body,CF_DELETESELECT_BODY,"Delete only if lines pass filter criteria"},
    {"not_matching",cf_opts,CF_BOOL,"true/false negate match criterion", "false"},
@@ -155,7 +155,7 @@ struct BodySyntax CF_DELETELINES_BODIES[] =
 
 /**************************************************************/
 
-struct BodySyntax CF_COLUMN_BODIES[] =
+BodySyntax CF_COLUMN_BODIES[] =
    {
    {"edit_field",cf_body,CF_EDITCOL_BODY,"Edit line-based file as matrix of fields"},
    {NULL,cf_notype,NULL,NULL}
@@ -163,7 +163,7 @@ struct BodySyntax CF_COLUMN_BODIES[] =
 
 /**************************************************************/
 
-struct BodySyntax CF_REPLACE_BODIES[] =
+BodySyntax CF_REPLACE_BODIES[] =
    {
    {"replace_with",cf_body,CF_REPLACEWITH_BODY,"Search-replace pattern"},
    {NULL,cf_notype,NULL,NULL}
@@ -173,7 +173,7 @@ struct BodySyntax CF_REPLACE_BODIES[] =
 /* Common to all edit_line promises                           */
 /**************************************************************/
 
-struct BodySyntax CF_COMMON_EDITBODIES[] =
+BodySyntax CF_COMMON_EDITBODIES[] =
    {
    {"select_region",cf_body,CF_EDSCOPE_BODY,"Limit edits to a demarked region of the file"},
    {NULL,cf_notype,NULL,NULL}
@@ -183,7 +183,7 @@ struct BodySyntax CF_COMMON_EDITBODIES[] =
 /* Main files                                                 */
 /**************************************************************/
 
-struct BodySyntax CF_ACL_BODY[] =
+BodySyntax CF_ACL_BODY[] =
    {
    {"aces",cf_slist,"((user|group):[^:]+:[-=+,rwx()dtTabBpcoD]*(:(allow|deny))?)|((all|mask):[-=+,rwx()]*(:(allow|deny))?)","Native settings for access control entry"},
    {"acl_directory_inherit",cf_opts,"nochange,parent,specify,clear","Access control list type for the affected file system"},
@@ -195,7 +195,7 @@ struct BodySyntax CF_ACL_BODY[] =
 
 /**************************************************************/
 
-struct BodySyntax CF_CHANGEMGT_BODY[] =
+BodySyntax CF_CHANGEMGT_BODY[] =
    {
    {"hash",cf_opts,"md5,sha1,sha224,sha256,sha384,sha512,best","Hash files for change detection"},
    {"report_changes",cf_opts,"all,stats,content,none","Specify criteria for change warnings"},
@@ -206,7 +206,7 @@ struct BodySyntax CF_CHANGEMGT_BODY[] =
 
 /**************************************************************/
 
-struct BodySyntax CF_RECURSION_BODY[] =
+BodySyntax CF_RECURSION_BODY[] =
    {
    {"depth",cf_int,CF_VALRANGE,"Maximum depth level for search"},
    {"exclude_dirs",cf_slist,".*","List of regexes of directory names NOT to include in depth search"},
@@ -220,7 +220,7 @@ struct BodySyntax CF_RECURSION_BODY[] =
 
 /**************************************************************/
 
-struct BodySyntax CF_EDITS_BODY[] =
+BodySyntax CF_EDITS_BODY[] =
    {
    {"edit_backup",cf_opts,"true,false,timestamp,rotate","Menu option for backup policy on edit changes", "true"},
    {"empty_file_before_editing",cf_opts,CF_BOOL,"Baseline memory model of file to zero/empty before commencing promised edits", "false"},
@@ -232,7 +232,7 @@ struct BodySyntax CF_EDITS_BODY[] =
 
 /**************************************************************/
 
-struct BodySyntax CF_TIDY_BODY[] =
+BodySyntax CF_TIDY_BODY[] =
    {
    {"dirlinks",cf_opts,"delete,tidy,keep","Menu option policy for dealing with symbolic links to directories during deletion"},
    {"rmdirs",cf_opts,CF_BOOL,"true/false whether to delete empty directories during recursive deletion"},
@@ -241,7 +241,7 @@ struct BodySyntax CF_TIDY_BODY[] =
 
 /**************************************************************/
 
-struct BodySyntax CF_RENAME_BODY[] =
+BodySyntax CF_RENAME_BODY[] =
    {
    {"disable",cf_opts,CF_BOOL,"true/false automatically rename and remove permissions", "false"},
    {"disable_mode",cf_str,CF_MODERANGE,"The permissions to set when a file is disabled"},
@@ -254,7 +254,7 @@ struct BodySyntax CF_RENAME_BODY[] =
 
 /**************************************************************/
 
-struct BodySyntax CF_ACCESS_BODIES[] =
+BodySyntax CF_ACCESS_BODIES[] =
    {
    {"bsdflags",cf_slist,CF_BSDFLAGRANGE,"List of menu options for bsd file system flags to set"},
    {"groups",cf_slist,CF_USERRANGE,"List of acceptable groups of group ids, first is change target"},
@@ -266,7 +266,7 @@ struct BodySyntax CF_ACCESS_BODIES[] =
 
 /**************************************************************/
 
-struct BodySyntax CF_FILEFILTER_BODY[] =
+BodySyntax CF_FILEFILTER_BODY[] =
    {
    {"leaf_name",cf_slist,"","List of regexes that match an acceptable name"},
    {"path_name",cf_slist,CF_ABSPATHRANGE,"List of pathnames to match acceptable target"},
@@ -293,7 +293,7 @@ struct BodySyntax CF_FILEFILTER_BODY[] =
    okay that some names overlap (like source) as there is
    no ambiguity in XOR */
 
-struct BodySyntax CF_LINKTO_BODY[] =
+BodySyntax CF_LINKTO_BODY[] =
    {
    {"copy_patterns",cf_slist,"","A set of patterns that should be copied ansd synchronized instead of linked"},
    {"link_children",cf_opts,CF_BOOL,"true/false whether to link all directory's children to source originals", "false"},
@@ -306,7 +306,7 @@ struct BodySyntax CF_LINKTO_BODY[] =
 
 /**************************************************************/
 
-struct BodySyntax CF_COPYFROM_BODY[] =
+BodySyntax CF_COPYFROM_BODY[] =
    {
    /* We use CF_PATHRANGE due to collision with LINKTO_BODY and a bug lurking in
     * a verification stage -- this attribute gets picked instead of another
@@ -341,7 +341,7 @@ struct BodySyntax CF_COPYFROM_BODY[] =
 
 /* This is the primary set of constraints for a file object */
 
-struct BodySyntax CF_FILES_BODIES[] =
+BodySyntax CF_FILES_BODIES[] =
    {
    {"acl",cf_body,CF_ACL_BODY,"Criteria for access control lists on file"},
    {"changes",cf_body,CF_CHANGEMGT_BODY,"Criteria for change management"},
@@ -368,7 +368,7 @@ struct BodySyntax CF_FILES_BODIES[] =
 /* This is the point of entry from mod_common.c                */
 /***************************************************************/
 
-struct SubTypeSyntax CF_FILES_SUBTYPES[] =
+SubTypeSyntax CF_FILES_SUBTYPES[] =
   {
   /* Body lists belonging to "files:" type in Agent */
       

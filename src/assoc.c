@@ -33,15 +33,15 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static void ShowAssoc (struct CfAssoc *cp);
+static void ShowAssoc (CfAssoc *cp);
 
 /*******************************************************************/
 
-struct CfAssoc *NewAssoc(const char *lval, struct Rval rval, enum cfdatatype dt)
+CfAssoc *NewAssoc(const char *lval, Rval rval, enum cfdatatype dt)
 
-{ struct CfAssoc *ap;
+{ CfAssoc *ap;
 
-ap = xmalloc(sizeof(struct CfAssoc));
+ap = xmalloc(sizeof(CfAssoc));
 
 /* Make a private copy because promises are ephemeral in expansion phase */
 
@@ -59,7 +59,7 @@ return ap;
 
 /*******************************************************************/
 
-void DeleteAssoc(struct CfAssoc *ap)
+void DeleteAssoc(CfAssoc *ap)
 
 {
 if (ap == NULL)
@@ -78,7 +78,7 @@ free(ap);
 
 /*******************************************************************/
 
-struct CfAssoc *CopyAssoc(struct CfAssoc *old)
+CfAssoc *CopyAssoc(CfAssoc *old)
 
 {
 if (old == NULL)
@@ -91,7 +91,7 @@ return NewAssoc(old->lval, old->rval, old->dtype);
 
 /*******************************************************************/
 
-static void ShowAssoc (struct CfAssoc *cp)
+static void ShowAssoc (CfAssoc *cp)
 
 {
 printf("ShowAssoc: lval = %s\n",cp->lval);
@@ -103,12 +103,12 @@ printf("\nShowAssoc: dtype = %s\n",CF_DATATYPES[cp->dtype]);
 
 /*******************************************************************/
 
-struct CfAssoc *AssocNewReference(const char *lval, struct Rval rval,
+CfAssoc *AssocNewReference(const char *lval, Rval rval,
                                   enum cfdatatype dtype)
 {
-struct CfAssoc *ap = NULL;
+CfAssoc *ap = NULL;
 
-ap = xmalloc(sizeof(struct CfAssoc));
+ap = xmalloc(sizeof(CfAssoc));
 
 ap->lval = xstrdup(lval);
 ap->rval = rval;

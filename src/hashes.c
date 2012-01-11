@@ -52,12 +52,12 @@ typedef struct AssocArray
    short size;
    } AssocArray;
 
-struct AssocHashTable
+struct AssocHashTable_
    {
    union
       {
       struct AssocArray array;
-      struct CfAssoc **buckets;
+      CfAssoc **buckets;
       };
    bool huge;
    };
@@ -71,7 +71,7 @@ return xcalloc(1, sizeof(AssocHashTable));
 
 /******************************************************************/
 
-void HashCopy(struct AssocHashTable *newhash, struct AssocHashTable *oldhash)
+void HashCopy(AssocHashTable *newhash, AssocHashTable *oldhash)
 {
 HashIterator i = HashIteratorInit(oldhash);
 CfAssoc *assoc;
@@ -121,7 +121,7 @@ hashtable->buckets = buckets;
 /*******************************************************************/
 
 static bool HugeHashInsertElement(AssocHashTable *hashtable, const char *element,
-                                  struct Rval rval, enum cfdatatype dtype)
+                                  Rval rval, enum cfdatatype dtype)
 {
 int bucket = GetHash(element);
 int i = bucket;
@@ -152,7 +152,7 @@ return false;
 /*******************************************************************/
 
 static bool TinyHashInsertElement(AssocHashTable *hashtable, const char *element,
-                                  struct Rval rval, enum cfdatatype dtype)
+                                  Rval rval, enum cfdatatype dtype)
 {
 int i;
 
@@ -177,7 +177,7 @@ return true;
 /*******************************************************************/
 
 bool HashInsertElement(AssocHashTable *hashtable, const char *element,
-                       struct Rval rval, enum cfdatatype dtype)
+                       Rval rval, enum cfdatatype dtype)
 {
 if (hashtable->huge)
    {
@@ -435,7 +435,7 @@ else
 
 /*******************************************************************/
 
-void HashToList(struct Scope *sp, struct Rlist **list)
+void HashToList(Scope *sp, Rlist **list)
 
 {
 if (sp == NULL)

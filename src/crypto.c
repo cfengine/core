@@ -401,7 +401,7 @@ fclose(fp);
  */
 static int RemovePublicKey(const char *id)
 
-{ CFDIR *dirh = NULL;
+{ Dir *dirh = NULL;
   int removed = 0;
   char keysdir[CF_BUFSIZE];
   const struct dirent *dirp;

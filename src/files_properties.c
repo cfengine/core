@@ -39,7 +39,7 @@
 
 /*********************************************************************/
 
-int ConsiderFile(const char *nodename,char *path,struct Attributes attr,struct Promise *pp)
+int ConsiderFile(const char *nodename,char *path,Attributes attr,Promise *pp)
 
 { int i;
   struct stat statbuf; 
@@ -147,7 +147,7 @@ return true;
 
 /********************************************************************/
 
-void SetSearchDevice(struct stat *sb,struct Promise *pp)
+void SetSearchDevice(struct stat *sb,Promise *pp)
 
 {
 CfDebug("Registering root device as %jd\n",(intmax_t)sb->st_dev);
@@ -157,7 +157,7 @@ pp->rootdevice = sb->st_dev;
 
 /********************************************************************/
 
-int DeviceBoundary(struct stat *sb,struct Promise *pp)
+int DeviceBoundary(struct stat *sb,Promise *pp)
 
 {
 if (sb->st_dev == pp->rootdevice)

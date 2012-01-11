@@ -38,7 +38,7 @@
 
 /* This is the primary set of constraints for a methods object */
 
-struct BodySyntax CF_METHOD_BODIES[] =
+BodySyntax CF_METHOD_BODIES[] =
    {
    {"usebundle",cf_bundle,CF_BUNDLE,"Specify the name of a bundle to run as a parameterized method"},
    {NULL,cf_notype,NULL}
@@ -48,7 +48,7 @@ struct BodySyntax CF_METHOD_BODIES[] =
 /* This is the point of entry from mod_common.c                */
 /***************************************************************/
 
-struct SubTypeSyntax CF_METHOD_SUBTYPES[] =
+SubTypeSyntax CF_METHOD_SUBTYPES[] =
   {
   {"agent","methods",CF_METHOD_BODIES},
   {NULL,NULL,NULL},

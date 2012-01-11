@@ -265,10 +265,10 @@ return false;
 
 /* from verify_processes.c */
 
-int Unix_DoAllSignals(struct Item *siglist,struct Attributes a,struct Promise *pp)
+int Unix_DoAllSignals(Item *siglist,Attributes a,Promise *pp)
 
-{ struct Item *ip;
-  struct Rlist *rp;
+{ Item *ip;
+  Rlist *rp;
   pid_t pid;
   int killed = false;
 
@@ -395,12 +395,12 @@ return VPSOPTS[VSYSTEMHARDCLASS];
 
 /* from verify_processes.c */
 
-int Unix_LoadProcessTable(struct Item **procdata)
+int Unix_LoadProcessTable(Item **procdata)
 
 { FILE *prp;
   char pscomm[CF_MAXLINKSIZE], vbuff[CF_BUFSIZE], *sp;
-  struct Item *rootprocs = NULL;
-  struct Item *otherprocs = NULL;
+  Item *rootprocs = NULL;
+  Item *otherprocs = NULL;
   const char *psopts = GetProcessOptions();
 
 snprintf(pscomm,CF_MAXLINKSIZE,"%s %s",VPSCOMM[VSYSTEMHARDCLASS],psopts);
@@ -536,7 +536,7 @@ void Unix_GetInterfaceInfo(enum cfagenttype ag)
   char ip[CF_MAXVARSIZE],hw_mac[CF_MAXVARSIZE];
   char name[CF_MAXVARSIZE];
   char last_name[CF_BUFSIZE];
-  struct Rlist *interfaces = NULL, *hardware = NULL, *ips = NULL;
+  Rlist *interfaces = NULL, *hardware = NULL, *ips = NULL;
 
 CfDebug("Unix_GetInterfaceInfo()\n");
 
@@ -880,7 +880,7 @@ while (!feof(pp))
 
    if (StrStr(buffer,"inet6"))
       {
-      struct Item *ip,*list = NULL;
+      Item *ip,*list = NULL;
       char *sp;
 
       list = SplitStringAsItemList(buffer,' ');

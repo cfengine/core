@@ -30,9 +30,9 @@
 void MonEntropyClassesInit(void);
 void MonEntropyClassesReset(void);
 void MonEntropyClassesSet(const char *service, const char *direction, double entropy);
-void MonEntropyClassesPublish(struct Item *classlist);
+void MonEntropyClassesPublish(Item *classlist);
 void MonEntropyPurgeUnused(char *name);
-double MonEntropyCalculate(const struct Item *items);
+double MonEntropyCalculate(const Item *items);
 
 /* mon_cpu.c */
 

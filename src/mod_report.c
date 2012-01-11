@@ -34,7 +34,7 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-struct BodySyntax CF_PRINTFILE_BODY[] =
+BodySyntax CF_PRINTFILE_BODY[] =
    {
    {"file_to_print",cf_str,CF_ABSPATHRANGE,"Path name to the file that is to be sent to standard output"},
    {"number_of_lines",cf_int,CF_VALRANGE,"Integer maximum number of lines to print from selected file"},
@@ -45,7 +45,7 @@ struct BodySyntax CF_PRINTFILE_BODY[] =
 
 /* This is the primary set of constraints for a file object */
 
-struct BodySyntax CF_REPORT_BODIES[] =
+BodySyntax CF_REPORT_BODIES[] =
    {
    {"friend_pattern",cf_str,"","Regular expression to keep selected hosts from the friends report list"},
    {"intermittency",cf_real,"0,1","Real number threshold [0,1] of intermittency about current peers, report above", "false"},
@@ -60,7 +60,7 @@ struct BodySyntax CF_REPORT_BODIES[] =
 /* This is the point of entry from mod_common.c                */
 /***************************************************************/
 
-struct SubTypeSyntax CF_REPORT_SUBTYPES[] =
+SubTypeSyntax CF_REPORT_SUBTYPES[] =
   {
   /* Body lists belonging to "reports:" type in Agent */
       

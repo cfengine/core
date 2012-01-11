@@ -45,22 +45,22 @@
    Subsequent <term>s are concatenated during evaluation.
 */
 
-typedef enum StringOp
+typedef enum
    {
    CONCAT,
    LITERAL,
    VARREF
    } StringOp;
 
-typedef struct StringExpression
+typedef struct StringExpression_
    {
    StringOp op;
    union StringExpressionValue
       {
       struct ConcatExpression
          {
-         struct StringExpression *lhs;
-         struct StringExpression *rhs;
+         struct StringExpression_ *lhs;
+         struct StringExpression_ *rhs;
          } concat;
 
       struct LiteralExpression
@@ -70,7 +70,7 @@ typedef struct StringExpression
 
       struct VarRefExpression
          {
-         struct StringExpression *name;
+         struct StringExpression_ *name;
          } varref;
       } val;
    } StringExpression;
@@ -86,7 +86,7 @@ typedef struct StringExpression
  * if not succeded, then result is NULL and position is last character consumed
  * before the error.
  */
-typedef struct StringParseResult
+typedef struct
    {
    StringExpression *result;
    int position;

@@ -36,12 +36,12 @@
 
 /*****************************************************************************/
 
-static void MakeReport(struct Item *mess,int prefix);
-static void FileReport(struct Item *mess,int prefix,char *filename);
+static void MakeReport(Item *mess,int prefix);
+static void FileReport(Item *mess,int prefix,char *filename);
 
 #if !defined(__MINGW32__)
-static void MakeLog(struct Item *mess,enum cfreport level);
-static void LogPromiseResult(char *promiser, char peeType, void *promisee, char status, enum cfreport log_level, struct Item *mess);
+static void MakeLog(Item *mess,enum cfreport level);
+static void LogPromiseResult(char *promiser, char peeType, void *promisee, char status, enum cfreport log_level, Item *mess);
 #endif
 
 /*****************************************************************************/
@@ -50,7 +50,7 @@ void CfFOut(char *filename,enum cfreport level,char *errstr,char *fmt, ...)
 
 { va_list ap;
   char buffer[CF_BUFSIZE],output[CF_BUFSIZE];
-  struct Item *mess = NULL;
+  Item *mess = NULL;
 
 if ((fmt == NULL) || (strlen(fmt) == 0))
    {
@@ -120,7 +120,7 @@ void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
 
 { va_list ap;
   char buffer[CF_BUFSIZE],output[CF_BUFSIZE];
-  struct Item *mess = NULL;
+  Item *mess = NULL;
 
 if ((fmt == NULL) || (strlen(fmt) == 0))
    {
@@ -187,15 +187,15 @@ DeleteItemList(mess);
 
 /*****************************************************************************/
 
-void cfPS(enum cfreport level,char status,char *errstr,struct Promise *pp,struct Attributes attr,char *fmt, ...)
+void cfPS(enum cfreport level,char status,char *errstr,Promise *pp,Attributes attr,char *fmt, ...)
 
 { va_list ap;
   char buffer[CF_BUFSIZE],output[CF_BUFSIZE],*v,handle[CF_MAXVARSIZE];
   const char *sp;
-  struct Item *ip,*mess = NULL;
+  Item *ip,*mess = NULL;
   int verbose;
-  struct Rlist *rp;
-  struct Rval retval;
+  Rlist *rp;
+  Rval retval;
   
 if ((fmt == NULL) || (strlen(fmt) == 0))
    {
@@ -266,7 +266,7 @@ if (level == cf_error)
              
              CfOut(level,"","I: The promise was made to: \n");
              
-             for (rp = (struct Rlist *)pp->promisee.item; rp != NULL; rp=rp->next)
+             for (rp = (Rlist *)pp->promisee.item; rp != NULL; rp=rp->next)
                 {
                 snprintf(output,CF_BUFSIZE-1,"I:     \'%s\'\n", (char*)rp->item);
                 AppendItem(&mess,output,NULL);
@@ -405,9 +405,9 @@ ThreadUnlock(cft_output);
 /* Level                                                                         */
 /*********************************************************************************/
 
-static void MakeReport(struct Item *mess,int prefix)
+static void MakeReport(Item *mess,int prefix)
 
-{ struct Item *ip;
+{ Item *ip;
 
 for (ip = mess; ip != NULL; ip = ip->next)
    {
@@ -428,9 +428,9 @@ for (ip = mess; ip != NULL; ip = ip->next)
 
 /*********************************************************************************/
 
-static void FileReport(struct Item *mess,int prefix,char *filename)
+static void FileReport(Item *mess,int prefix,char *filename)
 
-{ struct Item *ip;
+{ Item *ip;
   FILE *fp;
 
 if ((fp = fopen(filename,"a")) == NULL)
@@ -476,9 +476,9 @@ return Unix_GetErrorStr();
 
 #if !defined(__MINGW32__)
 
-static void MakeLog(struct Item *mess,enum cfreport level)
+static void MakeLog(Item *mess,enum cfreport level)
 
-{ struct Item *ip;
+{ Item *ip;
 
 if (!IsPrivileged() || DONTDO)
    {
@@ -518,7 +518,7 @@ for (ip = mess; ip != NULL; ip = ip->next)
 ThreadUnlock(cft_output);
 }
 
-static void LogPromiseResult(char *promiser, char peeType, void *promisee, char status, enum cfreport log_level, struct Item *mess)
+static void LogPromiseResult(char *promiser, char peeType, void *promisee, char status, enum cfreport log_level, Item *mess)
 {
 }
 

@@ -92,15 +92,15 @@ int CF_TOPICS = 0; // objects
 int CF_OCCUR = 0; // objects
 int CF_EDGES = 0; // links or promises between them
 
-struct Rlist *MOUNTEDFSLIST = NULL;
-struct PromiseIdent *PROMISE_ID_LIST = NULL;
-struct Item *PROCESSTABLE = NULL;
-struct Item *PROCESSREFRESH = NULL;
-struct Item *ROTATED = NULL;
-struct Item *FSTABLIST = NULL;
-struct Item *ABORTBUNDLEHEAP = NULL;
-struct Item *DONELIST = NULL;
-struct Rlist *SERVER_KEYSEEN = NULL;
+Rlist *MOUNTEDFSLIST = NULL;
+PromiseIdent *PROMISE_ID_LIST = NULL;
+Item *PROCESSTABLE = NULL;
+Item *PROCESSREFRESH = NULL;
+Item *ROTATED = NULL;
+Item *FSTABLIST = NULL;
+Item *ABORTBUNDLEHEAP = NULL;
+Item *DONELIST = NULL;
+Rlist *SERVER_KEYSEEN = NULL;
 
 char *CBUNDLESEQUENCE_STR;
 
@@ -126,21 +126,21 @@ double Q_SIGMA;
 /* Internal data structures                                                  */
 /*****************************************************************************/
 
-struct PromiseParser P = {0};
-struct Bundle *BUNDLES = NULL;
-struct Body *BODIES = NULL;
-struct Scope *VSCOPE = NULL;
-struct Rlist *VINPUTLIST = NULL;
-struct Rlist *BODYPARTS = NULL;
-struct Rlist *SUBBUNDLES = NULL;
-struct Rlist *ACCESSLIST = NULL;
+PromiseParser P = {0};
+Bundle *BUNDLES = NULL;
+Body *BODIES = NULL;
+Scope *VSCOPE = NULL;
+Rlist *VINPUTLIST = NULL;
+Rlist *BODYPARTS = NULL;
+Rlist *SUBBUNDLES = NULL;
+Rlist *ACCESSLIST = NULL;
 
-struct Rlist *SINGLE_COPY_LIST = NULL;
-struct Rlist *AUTO_DEFINE_LIST = NULL;
-struct Rlist *SINGLE_COPY_CACHE = NULL;
-struct Rlist *CF_STCK = NULL;
+Rlist *SINGLE_COPY_LIST = NULL;
+Rlist *AUTO_DEFINE_LIST = NULL;
+Rlist *SINGLE_COPY_CACHE = NULL;
+Rlist *CF_STCK = NULL;
 
-struct Item *EDIT_ANCHORS = NULL;
+Item *EDIT_ANCHORS = NULL;
 
 int CF_STCKFRAME = 0;
 int LASTSEENEXPIREAFTER = SECONDS_PER_WEEK;
@@ -167,7 +167,7 @@ unsigned int WINVER_BUILD = 0;
 /* Constants                                                                 */
 /*****************************************************************************/
 
-struct SubTypeSyntax CF_NOSTYPE = {NULL,NULL,NULL};
+SubTypeSyntax CF_NOSTYPE = {NULL,NULL,NULL};
 
 /*********************************************************************/
 /* Object variables                                                  */
@@ -328,7 +328,7 @@ pthread_mutex_t *cft_server_children = &MUTEXES[10];
 char VIPADDRESS[18] = {0};
 int  CFSIGNATURE = 0;
 
-struct Item *IPADDRESSES = NULL;
+Item *IPADDRESSES = NULL;
 
 int PR_KEPT = 0;
 int PR_REPAIRED = 0;
@@ -342,12 +342,12 @@ double VAL_NOTKEPT = 0;
 /* Context Management                                              */
 /*******************************************************************/
 
-struct AlphaList VHEAP;
-struct AlphaList VADDCLASSES;
-struct Item *VNEGHEAP = NULL;
+AlphaList VHEAP;
+AlphaList VADDCLASSES;
+Item *VNEGHEAP = NULL;
 
-struct Rlist *GOALS = NULL;
-struct Rlist *GOALCATEGORIES = NULL;
+Rlist *GOALS = NULL;
+Rlist *GOALCATEGORIES = NULL;
 
 /*******************************************************************/
 /*                                                                 */
@@ -391,8 +391,8 @@ int CF_DEFAULT_DIGEST_LEN;
 
 /***********************************************************/
 
-struct Audit *AUDITPTR;
-struct Audit *VAUDIT = NULL; 
+Audit *AUDITPTR;
+Audit *VAUDIT = NULL; 
 CF_DB  *AUDITDBP = NULL;
 
 char CFLOCK[CF_BUFSIZE] = {0};
@@ -420,26 +420,26 @@ mode_t DEFAULTMODE = (mode_t) 0755;
 char *VREPOSITORY = NULL;
 char REPOSCHAR = '_';
 
-struct Item *VDEFAULTROUTE=NULL;
-struct Item *VSETUIDLIST = NULL;
-struct Item *SUSPICIOUSLIST = NULL;
+Item *VDEFAULTROUTE=NULL;
+Item *VSETUIDLIST = NULL;
+Item *SUSPICIOUSLIST = NULL;
 enum classes VSYSTEMHARDCLASS = unused1;
-struct Item *NONATTACKERLIST = NULL;
-struct Item *MULTICONNLIST = NULL;
-struct Item *TRUSTKEYLIST = NULL;
-struct Item *DHCPLIST = NULL;
-struct Item *ALLOWUSERLIST = NULL;
-struct Item *SKIPVERIFY = NULL;
-struct Item *ATTACKERLIST = NULL;
-struct Item *ABORTHEAP = NULL;
+Item *NONATTACKERLIST = NULL;
+Item *MULTICONNLIST = NULL;
+Item *TRUSTKEYLIST = NULL;
+Item *DHCPLIST = NULL;
+Item *ALLOWUSERLIST = NULL;
+Item *SKIPVERIFY = NULL;
+Item *ATTACKERLIST = NULL;
+Item *ABORTHEAP = NULL;
 
-struct Item *VREPOSLIST=NULL;
+Item *VREPOSLIST=NULL;
 
  /*******************************************************************/
  /* Anomaly                                                         */
  /*******************************************************************/
 
-struct sock ECGSOCKS[ATTR] = /* extended to map old to new using enum*/
+Sock ECGSOCKS[ATTR] = /* extended to map old to new using enum*/
    {
    {"137","netbiosns",ob_netbiosns_in,ob_netbiosns_out},
    {"138","netbiosdgm",ob_netbiosdgm_in,ob_netbiosdgm_out},

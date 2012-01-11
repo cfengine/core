@@ -41,11 +41,11 @@ extern pid_t ALARM_PID;
 extern RSA *PRIVKEY, *PUBKEY;
 extern char PUBKEY_DIGEST[CF_MAXVARSIZE];
 extern char BINDINTERFACE[CF_BUFSIZE];
-extern struct sock ECGSOCKS[ATTR];
+extern Sock ECGSOCKS[ATTR];
 extern char *TCPNAMES[CF_NETATTR];
 
-extern struct Audit *AUDITPTR;
-extern struct Audit *VAUDIT; 
+extern Audit *AUDITPTR;
+extern Audit *VAUDIT; 
 
 extern int PR_KEPT;
 extern int PR_REPAIRED;
@@ -53,7 +53,7 @@ extern int PR_NOTKEPT;
 
 extern char CONTEXTID[32];
 extern char PADCHAR;
-extern struct Item *IPADDRESSES;
+extern Item *IPADDRESSES;
 
 extern char PIDFILE[CF_BUFSIZE];
 extern char  STR_CFENGINEPORT[16];
@@ -100,40 +100,40 @@ extern char  DEFAULTCOPYTYPE;
 
 extern char VDOMAIN[CF_MAXVARSIZE];
 extern char VMAILSERVER[CF_BUFSIZE];
-extern struct Item *VDEFAULTROUTE;
+extern Item *VDEFAULTROUTE;
 extern char *VREPOSITORY;
 extern enum classes VSYSTEMHARDCLASS;
 extern char VFQNAME[];
 extern char VUQNAME[];
 extern char LOGFILE[];
 
-extern struct Item *VNEGHEAP;
-extern struct Item *ABORTHEAP;
+extern Item *VNEGHEAP;
+extern Item *ABORTHEAP;
 
 extern struct Mounted *MOUNTED;             /* Files systems already mounted */
-extern struct Item *VSETUIDLIST;
-extern struct Item *SUSPICIOUSLIST;
-extern struct Item *SCHEDULE;
-extern struct Item *NONATTACKERLIST;
-extern struct Item *MULTICONNLIST;
-extern struct Item *TRUSTKEYLIST;
-extern struct Item *DHCPLIST;
-extern struct Item *ALLOWUSERLIST;
-extern struct Item *SKIPVERIFY;
-extern struct Item *ATTACKERLIST;
-extern struct AlphaList VHEAP; 
-extern struct AlphaList VADDCLASSES;
+extern Item *VSETUIDLIST;
+extern Item *SUSPICIOUSLIST;
+extern Item *SCHEDULE;
+extern Item *NONATTACKERLIST;
+extern Item *MULTICONNLIST;
+extern Item *TRUSTKEYLIST;
+extern Item *DHCPLIST;
+extern Item *ALLOWUSERLIST;
+extern Item *SKIPVERIFY;
+extern Item *ATTACKERLIST;
+extern AlphaList VHEAP; 
+extern AlphaList VADDCLASSES;
 
-extern struct Item *VREPOSLIST;
+extern Item *VREPOSLIST;
 
-extern struct Auth *VADMIT;
-extern struct Auth *VDENY;
-extern struct Auth *VADMITTOP;
-extern struct Auth *VDENYTOP;
-extern struct Auth *VARADMIT;
-extern struct Auth *VARADMITTOP;
-extern struct Auth *VARDENY;
-extern struct Auth *VARDENYTOP;
+extern Auth *VADMIT;
+extern Auth *VDENY;
+extern Auth *VADMITTOP;
+extern Auth *VDENYTOP;
+extern Auth *VARADMIT;
+extern Auth *VARADMITTOP;
+extern Auth *VARDENY;
+extern Auth *VARDENYTOP;
 
 extern int DEBUG;
 
@@ -184,7 +184,7 @@ extern unsigned int WINVER_MINOR;
 extern unsigned int WINVER_BUILD;
 
 extern struct Topic *TOPICHASH[CF_HASHTABLESIZE];
-extern struct PromiseParser P;
+extern PromiseParser P;
 extern int REQUIRE_COMMENTS;
 extern int FIPS_MODE;
 extern char POLICY_SERVER[CF_BUFSIZE];
@@ -206,32 +206,32 @@ extern int CF_TOPICS;
 extern int CF_OCCUR;
 extern int CF_EDGES;
 extern int KEYTTL;
-extern struct Rlist *SERVER_KEYSEEN;
+extern Rlist *SERVER_KEYSEEN;
 extern enum cfhashes CF_DEFAULT_DIGEST;
 extern int CF_DEFAULT_DIGEST_LEN;
-extern struct Item *EDIT_ANCHORS;
+extern Item *EDIT_ANCHORS;
 
-extern struct Bundle *BUNDLES;
-extern struct Body *BODIES;
-extern struct Scope *VSCOPE;
-extern struct Audit *AUDITPTR;
-extern struct Audit *VAUDIT; 
-extern struct Rlist *VINPUTLIST;
-extern struct Rlist *BODYPARTS;
-extern struct Rlist *SUBBUNDLES;
-extern struct Rlist *SINGLE_COPY_LIST;
-extern struct Rlist *AUTO_DEFINE_LIST;
-extern struct Rlist *SINGLE_COPY_CACHE;
-extern struct Rlist *ACCESSLIST;
-extern struct PromiseIdent *PROMISE_ID_LIST;
-extern struct Item *DONELIST;
+extern Bundle *BUNDLES;
+extern Body *BODIES;
+extern Scope *VSCOPE;
+extern Audit *AUDITPTR;
+extern Audit *VAUDIT; 
+extern Rlist *VINPUTLIST;
+extern Rlist *BODYPARTS;
+extern Rlist *SUBBUNDLES;
+extern Rlist *SINGLE_COPY_LIST;
+extern Rlist *AUTO_DEFINE_LIST;
+extern Rlist *SINGLE_COPY_CACHE;
+extern Rlist *ACCESSLIST;
+extern PromiseIdent *PROMISE_ID_LIST;
+extern Item *DONELIST;
 extern char *CBUNDLESEQUENCE_STR;
-extern struct Item *ROTATED;
+extern Item *ROTATED;
 extern double FORGETRATE;
-extern struct Rlist *GOALS;
-extern struct Rlist *GOALCATEGORIES;
+extern Rlist *GOALS;
+extern Rlist *GOALCATEGORIES;
 
-extern struct Rlist *CF_STCK;
+extern Rlist *CF_STCK;
 extern int EDIT_MODEL;
 extern int CF_STCKFRAME;
 extern int CFA_BACKGROUND;
@@ -246,7 +246,7 @@ extern FILE *FREPORT_TXT;
 extern FILE *FKNOW;
 extern int CSV;
 
-extern struct SubTypeSyntax CF_NOSTYPE;
+extern SubTypeSyntax CF_NOSTYPE;
 extern const char *CF_DATATYPES[];
 extern const char *CF_AGENTTYPES[];
 extern char HASHDB[CF_BUFSIZE];
@@ -262,13 +262,13 @@ extern int USE_GCC_BRIEF_FORMAT;
 extern time_t PROMISETIME;
 extern time_t CF_LOCKHORIZON;
 extern int ABORTBUNDLE;
-extern struct Item *ABORTBUNDLEHEAP;
+extern Item *ABORTBUNDLEHEAP;
 extern int LASTSEENEXPIREAFTER;
 extern char *DEFAULT_COPYTYPE;
-extern struct Item *PROCESSTABLE;
-extern struct Item *PROCESSREFRESH;
-extern struct Item *FSTABLIST;
-extern struct Rlist *MOUNTEDFSLIST;
+extern Item *PROCESSTABLE;
+extern Item *PROCESSREFRESH;
+extern Item *FSTABLIST;
+extern Rlist *MOUNTEDFSLIST;
 
 extern int CF_MOUNTALL;
 extern int CF_SAVEFSTAB;

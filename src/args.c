@@ -55,10 +55,10 @@ leads to Hash Association (lval,rval) => (user,"$(person)")
 
 /******************************************************************/
 
-int MapBodyArgs(char *scopeid,struct Rlist *give,struct Rlist *take)
+int MapBodyArgs(char *scopeid,Rlist *give,Rlist *take)
       
-{ struct Rlist *rpg,*rpt;
-  struct FnCall *fp;
+{ Rlist *rpg,*rpt;
+  FnCall *fp;
   enum cfdatatype dtg = cf_notype,dtt = cf_notype;
   char *lval;
   void *rval;
@@ -93,18 +93,18 @@ for (rpg = give, rpt = take; rpg != NULL && rpt != NULL; rpg=rpg->next,rpt=rpt->
           lval = (char *)rpt->item;
           rval = rpg->item;
           CfDebug("MapBodyArgs(SCALAR,%s,%s)\n", lval, (char*)rval);
-          AddVariableHash(scopeid,lval, (struct Rval) { rval, CF_SCALAR }, dtg,NULL,0);
+          AddVariableHash(scopeid,lval, (Rval) { rval, CF_SCALAR }, dtg,NULL,0);
           break;
 
       case CF_LIST:
 
           lval = (char *)rpt->item;
           rval = rpg->item;
-          AddVariableHash(scopeid,lval, (struct Rval) { rval, CF_LIST }, dtg,NULL,0);
+          AddVariableHash(scopeid,lval, (Rval) { rval, CF_LIST }, dtg,NULL,0);
           break;
           
       case CF_FNCALL:
-          fp = (struct FnCall *)rpg->item;
+          fp = (FnCall *)rpg->item;
           dtg = FunctionReturnType(fp->name);
 
           FnCallResult res = EvaluateFunctionCall(fp,NULL);
@@ -129,7 +129,7 @@ for (rpg = give, rpt = take; rpg != NULL && rpt != NULL; rpg=rpg->next,rpt=rpt->
              lval = (char *)rpt->item;
              rval = rpg->item;
 
-             AddVariableHash(scopeid,lval, (struct Rval) { rval, CF_SCALAR }, dtg,NULL,0);
+             AddVariableHash(scopeid,lval, (Rval) { rval, CF_SCALAR }, dtg,NULL,0);
              }
 
           break;
@@ -146,12 +146,12 @@ return true;
 
 /******************************************************************/
 
-struct Rlist *NewExpArgs(struct FnCall *fp, struct Promise *pp)
+Rlist *NewExpArgs(FnCall *fp, Promise *pp)
 
 { int len;
-  struct Rval rval;
-  struct Rlist *rp,*newargs = NULL;
-  struct FnCall *subfp;
+  Rval rval;
+  Rlist *rp,*newargs = NULL;
+  FnCall *subfp;
   const FnCallType *fn = FindFunction(fp->name);
 
 len = RlistLen(fp->args);
@@ -172,11 +172,11 @@ for (rp = fp->args; rp != NULL; rp = rp->next)
    switch (rp->type)
       {
       case CF_FNCALL:          
-          subfp = (struct FnCall *)rp->item;
+          subfp = (FnCall *)rp->item;
           rval = EvaluateFunctionCall(subfp,pp).rval;
           break;
       default:
-          rval = ExpandPrivateRval(CONTEXTID, (struct Rval) { rp->item, rp->type });
+          rval = ExpandPrivateRval(CONTEXTID, (Rval) { rp->item, rp->type });
           break;
       }
 
@@ -190,7 +190,7 @@ return newargs;
 
 /******************************************************************/
 
-void DeleteExpArgs(struct Rlist *args)
+void DeleteExpArgs(Rlist *args)
 
 {
 
@@ -200,10 +200,10 @@ DeleteRlist(args);
 
 /******************************************************************/
 
-void ArgTemplate(struct FnCall *fp, const FnCallArg *argtemplate,struct Rlist *realargs)
+void ArgTemplate(FnCall *fp, const FnCallArg *argtemplate,Rlist *realargs)
 
 { int argnum,i;
-  struct Rlist *rp = fp->args;
+  Rlist *rp = fp->args;
   char id[CF_BUFSIZE],output[CF_BUFSIZE];
   const FnCallType *fn = FindFunction(fp->name);
 
@@ -214,7 +214,7 @@ for (argnum = 0; rp != NULL && argtemplate[argnum].pattern != NULL; argnum++)
     if (rp->type != CF_FNCALL)
        {
        /* Nested functions will not match to lval so don't bother checking */
-       CheckConstraintTypeMatch(id, (struct Rval) { rp->item, rp->type }, argtemplate[argnum].dtype, argtemplate[argnum].pattern, 1);
+       CheckConstraintTypeMatch(id, (Rval) { rp->item, rp->type }, argtemplate[argnum].dtype, argtemplate[argnum].pattern, 1);
        }
 
     rp = rp->next;
@@ -232,7 +232,7 @@ if (argnum != RlistLen(realargs) && !fn->varargs)
       printf("  arg[%d] range %s\t",i,argtemplate[i].pattern);
       if (rp != NULL)
          {
-         ShowRval(stdout, (struct Rval) { rp->item, rp->type });
+         ShowRval(stdout, (Rval) { rp->item, rp->type });
          rp=rp->next;
          }
       else

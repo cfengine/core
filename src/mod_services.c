@@ -37,7 +37,7 @@
 #define CF3_MOD_SERVICES
 
 
-struct BodySyntax CF_SERVMETHOD_BODY[] =
+BodySyntax CF_SERVMETHOD_BODY[] =
    {
    {"service_args",cf_str,"","Parameters for starting the service as command"},
    {"service_autostart_policy",cf_opts,"none,boot_time,on_demand","Should the service be started automatically by the OS"},
@@ -49,7 +49,7 @@ struct BodySyntax CF_SERVMETHOD_BODY[] =
 
 /***************************************************************/
 
-struct BodySyntax CF_SERVICES_BODIES[] =
+BodySyntax CF_SERVICES_BODIES[] =
    {
    {"service_policy",cf_opts,"start,stop,disable","Policy for cfengine service status"},
    {"service_dependencies",cf_slist,CF_IDRANGE,"A list of services on which the named service abstraction depends"},
@@ -62,7 +62,7 @@ struct BodySyntax CF_SERVICES_BODIES[] =
 /* This is the point of entry from mod_common.c                */
 /***************************************************************/
 
-struct SubTypeSyntax CF_SERVICES_SUBTYPES[] =
+SubTypeSyntax CF_SERVICES_SUBTYPES[] =
   {
   {"agent","services",CF_SERVICES_BODIES},
   {NULL,NULL,NULL},

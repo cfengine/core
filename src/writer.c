@@ -24,25 +24,25 @@
 
 #include "writer.h"
 
-typedef enum WriterType
+typedef enum
    {
    WT_STRING,
    WT_FILE,
    } WriterType;
 
-struct StringWriterImpl
+typedef struct
    {
    char *data;
    size_t len; /* Does not include trailing zero */
    size_t allocated; /* Includes trailing zero */
-   };
+   } StringWriterImpl;
 
-struct Writer
+struct Writer_
    {
    WriterType type;
    union
       {
-      struct StringWriterImpl string;
+      StringWriterImpl string;
       FILE *file;
       };
    };
@@ -51,7 +51,7 @@ struct Writer
 
 Writer *FileWriter(FILE *file)
 {
-Writer *writer = xcalloc(1, sizeof(struct Writer));
+Writer *writer = xcalloc(1, sizeof(Writer));
 writer->type = WT_FILE;
 writer->file = file;
 return writer;
@@ -61,7 +61,7 @@ return writer;
 
 Writer *StringWriter(void)
 {
-Writer *writer = xcalloc(1, sizeof(struct Writer));
+Writer *writer = xcalloc(1, sizeof(Writer));
 writer->type = WT_STRING;
 writer->string.data = xstrdup("");
 writer->string.allocated = 1;

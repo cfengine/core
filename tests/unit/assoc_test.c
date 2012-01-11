@@ -6,14 +6,14 @@
 
 static void test_create_destroy(void **state)
 {
-struct CfAssoc *ap = NewAssoc("hello", (struct Rval) { "world", CF_SCALAR }, cf_str);
+CfAssoc *ap = NewAssoc("hello", (Rval) { "world", CF_SCALAR }, cf_str);
 DeleteAssoc(ap);
 }
 
 static void test_copy(void **state)
 {
-struct CfAssoc *ap = NewAssoc("hello", (struct Rval) { "world", CF_SCALAR }, cf_str);
-struct CfAssoc *ap2 = CopyAssoc(ap);
+CfAssoc *ap = NewAssoc("hello", (Rval) { "world", CF_SCALAR }, cf_str);
+CfAssoc *ap2 = CopyAssoc(ap);
 
 assert_string_equal(ap->lval, ap2->lval);
 assert_string_equal(ap->rval.item, ap2->rval.item);

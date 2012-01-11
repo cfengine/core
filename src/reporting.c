@@ -85,7 +85,7 @@ static void Indent(int i);
 static void ShowDataTypes(void);
 static void ShowBundleTypes(void);
 static void ShowPromiseTypesFor(char *s);
-static void ShowBodyParts(const struct BodySyntax *bs);
+static void ShowBodyParts(const BodySyntax *bs);
 static void ShowRange(char *s,enum cfdatatype type);
 static void ShowBuiltinFunctions(void);
 
@@ -95,7 +95,7 @@ static void ShowBuiltinFunctions(void);
 
 void ShowContext(void)
 
-{ struct Item *ptr;
+{ Item *ptr;
   char vbuff[CF_BUFSIZE];
   int i;
   
@@ -150,7 +150,7 @@ for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
 
 /*******************************************************************/
 
-void ShowPromises(struct Bundle *bundles,struct Body *bodies)
+void ShowPromises(Bundle *bundles,Body *bodies)
 
 {
 #if defined(HAVE_NOVA)
@@ -162,16 +162,16 @@ ShowPromisesInReport(bundles,bodies);
 
 /*******************************************************************/
 
-void ShowPromisesInReport(struct Bundle *bundles, struct Body *bodies)
+void ShowPromisesInReport(Bundle *bundles, Body *bodies)
 {
-struct Rval retval;
+Rval retval;
 char *v;
 char vbuff[CF_BUFSIZE];
-struct Bundle *bp;
-struct Rlist *rp;
-struct SubType *sp;
-struct Promise *pp;
-struct Body *bdp;
+Bundle *bp;
+Rlist *rp;
+SubType *sp;
+Promise *pp;
+Body *bdp;
 
 if (GetVariable("control_common","version",&retval) != cf_notype)
    {
@@ -256,11 +256,11 @@ CfHtmlFooter(FREPORT_HTML,FOOTER);
 
 /*******************************************************************/
 
-void ShowPromise(struct Promise *pp, int indent)
+void ShowPromise(Promise *pp, int indent)
 
 {
 char *v;
-struct Rval retval;
+Rval retval;
 
 if (GetVariable("control_common","version", &retval) != cf_notype)
    {
@@ -280,12 +280,12 @@ ShowPromiseInReport(v, pp, indent);
 
 /*******************************************************************/
 
-void ShowPromiseInReport(const char *version, struct Promise* pp, int indent)
+void ShowPromiseInReport(const char *version, Promise* pp, int indent)
 {
-struct Constraint *cp;
-struct Body *bp;
-struct Rlist *rp;
-struct FnCall *fp;
+Constraint *cp;
+Body *bp;
+Rlist *rp;
+FnCall *fp;
 
 fprintf(FREPORT_HTML,"%s\n",CFH[cfx_line][cfb]);
 fprintf(FREPORT_HTML,"%s\n",CFH[cfx_promise][cfb]);
@@ -340,7 +340,7 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
 
       case CF_LIST:
           
-          rp = (struct Rlist *)cp->rval.item;
+          rp = (Rlist *)cp->rval.item;
           fprintf(FREPORT_HTML,"%s",CFH[cfx_rval][cfb]);
           ShowRlist(FREPORT_HTML,rp);
           fprintf(FREPORT_HTML,"%s",CFH[cfx_rval][cfe]);
@@ -348,7 +348,7 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
           break;
 
       case CF_FNCALL:
-          fp = (struct FnCall *)cp->rval.item;
+          fp = (FnCall *)cp->rval.item;
 
           if ((bp = IsBody(BODIES,fp->name)))
              {
@@ -394,7 +394,7 @@ else
 
 /*******************************************************************/
 
-static void PrintVariablesInScope(FILE *fp, struct Scope *scope)
+static void PrintVariablesInScope(FILE *fp, Scope *scope)
 {
 HashIterator i = HashIteratorInit(scope->hashtable);
 CfAssoc *assoc;
@@ -410,7 +410,7 @@ while ((assoc = HashIteratorNext(&i)))
 
 /*******************************************************************/
 
-static void PrintVariablesInScopeHtml(FILE *fp, struct Scope *scope)
+static void PrintVariablesInScopeHtml(FILE *fp, Scope *scope)
 {
 HashIterator i = HashIteratorInit(scope->hashtable);
 CfAssoc *assoc;
@@ -434,7 +434,7 @@ void ShowScopedVariables()
 
 /* WARNING: Not thread safe (access to VSCOPE) */
 
-{ struct Scope *ptr;
+{ Scope *ptr;
 
 fprintf(FREPORT_HTML,"<div id=\"showvars\">");
 
@@ -495,7 +495,7 @@ void BannerSubSubType(char *bundlename,char *type)
  
 if (strcmp(type,"processes") == 0)
    {
-   struct Item *ip;
+   Item *ip;
    /* Just parsed all local classes */
 
    CfOut(cf_verbose,"","     ??? Local class context: \n");
@@ -542,10 +542,10 @@ for (j = 0; j < i; j++)
 
 /*******************************************************************/
 
-void ShowBody(struct Body *body,int indent)
+void ShowBody(Body *body,int indent)
 
-{ struct Rlist *rp;
-  struct Constraint *cp;
+{ Rlist *rp;
+  Constraint *cp;
 
 fprintf(FREPORT_TXT,"%s body for type %s",body->name,body->type);
 fprintf(FREPORT_HTML," %s%s%s ",CFH[cfx_blocktype][cfb],body->type,CFH[cfx_blocktype][cfe]);
@@ -648,7 +648,7 @@ printf("</ol></td></tr></table>\n\n");
 static void ShowBundleTypes()
 
 { int i;
-  struct SubTypeSyntax *st;
+  SubTypeSyntax *st;
 
 printf("<h1>Bundle types (software components)</h1>\n");
 
@@ -682,7 +682,7 @@ printf("</div>\n\n");
 static void ShowPromiseTypesFor(char *s)
 
 { int i,j;
-  struct SubTypeSyntax *st;
+  SubTypeSyntax *st;
 
 printf("<div id=\"promisetype\">");
 printf("<h4>Promise types for %s bundles</h4>\n",s);
@@ -708,7 +708,7 @@ printf("</div>\n\n");
 
 /*******************************************************************/
 
-static void ShowBodyParts(const struct BodySyntax *bs)
+static void ShowBodyParts(const BodySyntax *bs)
 
 { int i;
 
@@ -728,7 +728,7 @@ for (i = 0; bs[i].lval != NULL; i++)
    else if (bs[i].dtype == cf_body)
       {
       printf("<tr><td>%s</td><td>%s</td><td>",bs[i].lval,CF_DATATYPES[bs[i].dtype]);
-      ShowBodyParts((const struct BodySyntax *)bs[i].range);
+      ShowBodyParts((const BodySyntax *)bs[i].range);
       printf("</td></tr>\n");
       }
    else
@@ -813,9 +813,9 @@ printf("</table></center>\n");
 void ShowAllReservedWords()
 
 { int i,j,k,l;
- struct Item *ip,*list = NULL;
-  struct SubTypeSyntax *ss;
-  const struct BodySyntax *bs,*bs2;
+ Item *ip,*list = NULL;
+  SubTypeSyntax *ss;
+  const BodySyntax *bs,*bs2;
 
 for (i = 0; CF_ALL_BODIES[i].subtype != NULL; i++)
    {
@@ -852,7 +852,7 @@ for  (i = 0; i < CF3_MODULES; i++)
          {
          if (bs[l].dtype == cf_body)
             {
-            bs2 = (struct BodySyntax *)(bs[l].range);
+            bs2 = (BodySyntax *)(bs[l].range);
 
             if (bs2 == NULL || bs2 == (void *)CF_BUNDLE)
                {

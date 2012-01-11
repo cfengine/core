@@ -33,8 +33,7 @@
  *   memory buffer
  */
 
-struct Writer;
-typedef struct Writer Writer;
+typedef struct Writer_ Writer;
 
 #include "cf3.defs.h"
 #include "compiler.h"

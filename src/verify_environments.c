@@ -36,7 +36,7 @@
 
 /*****************************************************************************/
 
-void VerifyEnvironmentsPromise(struct Promise *pp)
+void VerifyEnvironmentsPromise(Promise *pp)
 
 {
 #ifdef HAVE_NOVA

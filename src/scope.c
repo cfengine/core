@@ -34,11 +34,11 @@
 
 /*******************************************************************/
 
-struct Scope *GetScope(const char *scope)
+Scope *GetScope(const char *scope)
 /* 
  * Not thread safe - returns pointer to global memory
  */
-{ struct Scope *cp = NULL;
+{ Scope *cp = NULL;
 
 CfDebug("Searching for scope context %s\n",scope);
 
@@ -77,7 +77,7 @@ void NewScope(char *name)
 /*
  * Thread safe
  */
-{ struct Scope *ptr;
+{ Scope *ptr;
   
 CfDebug("Adding scope data %s\n", name);
 
@@ -97,7 +97,7 @@ for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
       }
    }
 
-ptr = xcalloc(1, sizeof(struct Scope));
+ptr = xcalloc(1, sizeof(Scope));
 
 ptr->next = VSCOPE;
 ptr->scope = xstrdup(name);
@@ -108,14 +108,14 @@ ThreadUnlock(cft_vscope);
 
 /*******************************************************************/
 
-void AugmentScope(char *scope,struct Rlist *lvals,struct Rlist *rvals)
+void AugmentScope(char *scope,Rlist *lvals,Rlist *rvals)
 
-{ struct Scope *ptr;
-  struct Rlist *rpl,*rpr;
-  struct Rval retval;
+{ Scope *ptr;
+  Rlist *rpl,*rpr;
+  Rval retval;
   char *lval,naked[CF_BUFSIZE];
   HashIterator i;
-  struct CfAssoc *assoc;
+  CfAssoc *assoc;
 
 if (RlistLen(lvals) != RlistLen(rvals))
    {
@@ -149,7 +149,7 @@ for (rpl = lvals, rpr=rvals; rpl != NULL; rpl = rpl->next,rpr = rpr->next)
          case cf_slist:
          case cf_ilist:
          case cf_rlist:
-            NewList(scope,lval,CopyRvalItem((struct Rval) { retval.item, CF_LIST }).item,cf_slist);
+            NewList(scope,lval,CopyRvalItem((Rval) { retval.item, CF_LIST }).item,cf_slist);
              break;
          default:
              CfOut(cf_error,""," !! List parameter \"%s\" not found while constructing scope \"%s\" - use @(scope.variable) in calling reference",naked,scope);
@@ -184,7 +184,7 @@ return;
 
 void DeleteAllScope()
 
-{ struct Scope *ptr, *this;
+{ Scope *ptr, *this;
   
 CfDebug("Deleting all scoped variables\n");
 
@@ -218,7 +218,7 @@ void DeleteScope(char *name)
  * Thread safe
  */
 
-{ struct Scope *ptr, *prev = NULL;
+{ Scope *ptr, *prev = NULL;
   int found = false;
  
 CfDebug("Deleting scope %s\n", name);
@@ -270,9 +270,9 @@ ThreadUnlock(cft_vscope);
 
 /*******************************************************************/
 
-void DeleteFromScope(char *scope,struct Rlist *args)
+void DeleteFromScope(char *scope,Rlist *args)
 
-{ struct Rlist *rp;
+{ Rlist *rp;
  char *lval;
 
 for (rp = args; rp != NULL; rp=rp->next)
@@ -288,7 +288,7 @@ void CopyScope(char *new, char *old)
 /*
  * Thread safe
  */
-{ struct Scope *op, *np;
+{ Scope *op, *np;
  
 CfDebug("\n*\nCopying scope data %s to %s\n*\n",old,new);
 
@@ -315,7 +315,7 @@ ThreadUnlock(cft_vscope);
 
 void PushThisScope()
 
-{ struct Scope *op;
+{ Scope *op;
  char name[CF_MAXVARSIZE];
 
 op = GetScope("this");
@@ -336,7 +336,7 @@ op->scope = xstrdup(name);
 
 void PopThisScope()
 
-{ struct Scope *op = NULL;
+{ Scope *op = NULL;
 
 if (CF_STCKFRAME > 0)
    {

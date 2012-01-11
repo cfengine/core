@@ -32,7 +32,6 @@
 #define CFENGINE_CF3_DEFS_H
 
 #include "cf.defs.h"
-#include "cf3.extern.h"
 #include "rlist.h"
 
 #undef VERSION
@@ -96,7 +95,13 @@ extern const int CF3_MODULES;
 
 /*************************************************************************/
 
-struct PromiseParser
+typedef struct Bundle_ Bundle;
+typedef struct Body_ Body;
+typedef struct Promise_ Promise;
+typedef struct SubType_ SubType;
+typedef struct FnCall_ FnCall;
+
+typedef struct PromiseParser_
    {
    char *block;                     /* body/bundle  */
    char blocktype[CF_MAXVARSIZE];
@@ -110,7 +115,7 @@ struct PromiseParser
    int list_nesting;
       
    char lval[CF_MAXVARSIZE];
-   struct Rval rval;
+   Rval rval;
    int isbody;
 
    char *promiser;
@@ -121,17 +126,17 @@ struct PromiseParser
    char *currentstring;
    char *currentclasses;
 
-   struct Bundle *currentbundle;
-   struct Body *currentbody;
-   struct Promise *currentpromise;
-   struct SubType *currentstype;
-   struct Rlist *useargs;
+   Bundle *currentbundle;
+   Body *currentbody;
+   Promise *currentpromise;
+   SubType *currentstype;
+   Rlist *useargs;
       
-   struct RList *currentRlist;
+   Rlist *currentRlist;
 
    char *currentfnid[CF_MAX_NESTING];
-   struct Rlist *giveargs[CF_MAX_NESTING];
-   struct FnCall *currentfncall[CF_MAX_NESTING];
+   Rlist *giveargs[CF_MAX_NESTING];
+   FnCall *currentfncall[CF_MAX_NESTING];
 
    struct OffsetState
       {
@@ -142,7 +147,7 @@ struct PromiseParser
       size_t last_subtype_id;
       size_t last_class_id;
       } offsets;
-   };
+   } PromiseParser;
 
 /*************************************************************************/
 /* Abstract datatypes                                                    */
@@ -634,45 +639,44 @@ enum knowledgecertainty
 
 /*************************************************************************/
 
-struct BodySyntax
+typedef struct
    {
    const char *lval;
    enum cfdatatype dtype;
-   const void *range;               /* either char or struct BodySyntax **/
+   const void *range;               /* either char or BodySyntax **/
    const char *description;
    const char *default_value;
-   };
+   } BodySyntax;
 
 /*************************************************************************/
 
-struct SubTypeSyntax
+typedef struct
    {
    char *btype;
    char *subtype;
-   const struct BodySyntax *bs;
-   };
+   const BodySyntax *bs;
+   } SubTypeSyntax;
 
 /*************************************************************************/
 
-struct FnCall;
-struct FnCallResult;
+typedef struct FnCallResult_ FnCallResult;
 
-typedef struct FnCallType
-   {
-   const char *name;
-   enum cfdatatype dtype;
-   const struct FnCallArg *args;
-   struct FnCallResult (*impl)(struct FnCall *, struct Rlist *);
-   const char *description;
-   bool varargs;
-   } FnCallType;
-
-typedef struct FnCallArg
+typedef struct
    {
    const char *pattern;
    enum cfdatatype dtype;
    const char *description;
    } FnCallArg;
+
+typedef struct
+   {
+   const char *name;
+   enum cfdatatype dtype;
+   const FnCallArg *args;
+   FnCallResult (*impl)(FnCall *, Rlist *);
+   const char *description;
+   bool varargs;
+   } FnCallType;
 
 /*************************************************************************/
 
@@ -680,73 +684,75 @@ typedef struct FnCallArg
 
 /*************************************************************************/
 
-struct SourceOffset
+typedef struct
    {
    size_t start;
    size_t end;
    size_t line;
    size_t context;
-   };
+   } SourceOffset;
 
-struct Bundle
+struct Bundle_
    {
    char *type;
    char *name;
-   struct Rlist *args;
-   struct SubType *subtypes;
-   struct Bundle *next;
+   Rlist *args;
+   SubType *subtypes;
+   struct Bundle_ *next;
 
-   struct SourceOffset offset;
+   SourceOffset offset;
    };
 
 /*************************************************************************/
 
-struct Body
+typedef struct Constraint_ Constraint;
+
+struct Body_
    {
    char *type;
    char *name;
-   struct Rlist *args;
-   struct Constraint *conlist;
-   struct Body *next;
+   Rlist *args;
+   Constraint *conlist;
+   Body *next;
 
-   struct SourceOffset offset;
+   SourceOffset offset;
    };
 
 /*************************************************************************/
 
-struct SubType
+struct SubType_
    {
    char *name;
-   struct Promise *promiselist;
-   struct SubType *next;
+   Promise *promiselist;
+   SubType *next;
 
-   struct SourceOffset offset;
+   SourceOffset offset;
    };
 
 /*************************************************************************/
 
-struct edit_context
+typedef struct
    {
    char *filename;
-   struct Item *file_start;
-   struct Item *file_classes;
+   Item *file_start;
+   Item *file_classes;
    int num_edits;
    int empty_first;
-   };
+   } EditContext;
 
 /*************************************************************************/
 
-struct Promise
+struct Promise_
    {
    char *classes;
    char *ref;                   /* comment */
    char ref_alloc;
    char *promiser;
-   struct Rval promisee;
+   Rval promisee;
    char *bundle;
-   struct Audit *audit;
-   struct Constraint *conlist;
-   struct Promise *next;
+   Audit *audit;
+   Constraint *conlist;
+   Promise *next;
       
     /* Runtime bus for private flags and work space */
 
@@ -757,25 +763,25 @@ struct Promise
    int    makeholes;
    char  *this_server;
    int   has_subbundles;
-   struct cfstat *cache;      
-   struct cfagent_connection *conn;
-   struct CompressedArray *inode_cache;
-   struct edit_context *edcontext;
+   Stat *cache;      
+   AgentConnection *conn;
+   CompressedArray *inode_cache;
+   EditContext *edcontext;
    dev_t rootdevice;                          /* for caching during work*/
 
-   struct SourceOffset offset;
+   SourceOffset offset;
    };
 
 /*************************************************************************/
 
-struct PromiseIdent
+typedef struct PromiseIdent_
    {
    char *handle;
    char *filename;
    char *classes;
    int line_number;
-   struct PromiseIdent *next;
-   };
+   struct PromiseIdent_ *next;
+   } PromiseIdent;
 
 /*************************************************************************/
 /* Rvalues and lists - basic workhorse structure                         */
@@ -792,10 +798,10 @@ struct PromiseIdent
 
 /*************************************************************************/
 
-struct FnCall
+struct FnCall_
    {
    char *name;
-   struct Rlist *args;
+   Rlist *args;
    int argc;
    };
 
@@ -803,23 +809,21 @@ struct FnCall
 /* Variable processing                                             */
 /*******************************************************************/
 
-struct AssocHashTable;
+typedef struct AssocHashTable_ AssocHashTable;
 
-typedef struct AssocHashTable AssocHashTable;
-
-struct Scope                         /* $(bundlevar) $(scope.name) */
+typedef struct Scope_                         /* $(bundlevar) $(scope.name) */
    {
    char *scope;                                 /* Name of scope */
    AssocHashTable *hashtable;
-   struct Scope *next;
-   };
+   struct Scope_ *next;
+   } Scope;
 
 /*******************************************************************/
 
 /*
  * Disposable iterator over hash table. Does not require deinitialization.
  */
-typedef struct HashIterator
+typedef struct HashIterator_
    {
    AssocHashTable *hashtable;
    int pos;
@@ -835,11 +839,11 @@ typedef enum FnCallStatus
    FNCALL_FAILURE,
    } FnCallStatus;
 
-typedef struct FnCallResult  /* from builtin functions */
+struct FnCallResult_  /* from builtin functions */
    {
    FnCallStatus status;
-   struct Rval rval;
-   } FnCallResult;
+   Rval rval;
+   };
 
 /*******************************************************************/
 /* Return value signalling                                         */
@@ -1057,14 +1061,14 @@ enum cf_acl_inherit
    cfacl_noinherit,
    };
 
-struct CfACL
+typedef struct
    {
    enum cf_acl_method acl_method;
    enum cf_acl_type acl_type;
    enum cf_acl_inherit acl_directory_inherit;
-   struct Rlist *acl_entries;
-   struct Rlist *acl_inherit_entries;
-   };
+   Rlist *acl_entries;
+   Rlist *acl_inherit_entries;
+   } Acl;
 
 typedef enum
   {
@@ -1122,21 +1126,21 @@ enum cfd_menu
 
 /*******************************************************************/
 
-struct CfKeyBinding
+typedef struct
    {
    char *name;
    RSA *key;
    char *address;
    time_t timestamp;
-   };
+   } KeyBinding;
 
 /*************************************************************************/
 
-struct CfKeyHostSeen
+typedef struct
    {
    char address[CF_ADDRSIZE];
-   struct QPoint Q;   
-   };
+   QPoint Q;   
+   } KeyHostSeen;
 
 /*************************************************************************/
 
@@ -1167,8 +1171,8 @@ struct Recursion
    int depth;
    int xdev;
    int include_basedir;
-   struct Rlist *include_dirs;
-   struct Rlist *exclude_dirs;
+   Rlist *include_dirs;
+   Rlist *exclude_dirs;
    };
 
 /*************************************************************************/
@@ -1197,20 +1201,20 @@ struct TransactionContext
 
 struct DefineClasses
    {
-   struct Rlist *change;
-   struct Rlist *failure;
-   struct Rlist *denied;
-   struct Rlist *timeout;
-   struct Rlist *kept;
-   struct Rlist *interrupt;
+   Rlist *change;
+   Rlist *failure;
+   Rlist *denied;
+   Rlist *timeout;
+   Rlist *kept;
+   Rlist *interrupt;
    int persist;
    enum statepolicy timer;
-   struct Rlist *del_change;
-   struct Rlist *del_kept;
-   struct Rlist *del_notkept;
-   struct Rlist *retcode_kept;
-   struct Rlist *retcode_repaired;
-   struct Rlist *retcode_failed;
+   Rlist *del_change;
+   Rlist *del_kept;
+   Rlist *del_notkept;
+   Rlist *retcode_kept;
+   Rlist *retcode_repaired;
+   Rlist *retcode_failed;
    };
 
 
@@ -1233,7 +1237,7 @@ struct TopicAssociation
    char *fwd_context;
    char *fwd_name;
    char *bwd_name;
-   struct Item *associates;
+   Item *associates;
    char *bwd_context;
    struct TopicAssociation *next;
    };
@@ -1243,7 +1247,7 @@ struct Occurrence
    char *occurrence_context;
    char *locator; /* Promiser */
    enum representations rep_type;
-   struct Rlist *represents; /* subtype represented by promiser */
+   Rlist *represents; /* subtype represented by promiser */
    struct Occurrence *next;
    };
 
@@ -1285,13 +1289,13 @@ CfdbConn;
 /* Threading container                                                   */
 /*************************************************************************/
 
-struct PromiseThread
+typedef struct
    {
    enum cfagenttype agent;
    char *scopeid;
-   struct Promise *pp;
+   Promise *pp;
    void *fnptr;
-   };
+   } PromiseThread;
 
 /*************************************************************************/
 /* Package promises                                                      */
@@ -1315,7 +1319,7 @@ struct CfPackageItem
    char *name;
    char *version;
    char *arch;
-   struct Promise *pp;
+   Promise *pp;
    struct CfPackageItem *next;
    };
 
@@ -1329,9 +1333,9 @@ struct FileCopy
    char *destination;
    enum cfcomparison compare;
    enum cflinktype link_type;
-   struct Rlist *servers;
-   struct Rlist *link_instead;
-   struct Rlist *copy_links;
+   Rlist *servers;
+   Rlist *link_instead;
+   Rlist *copy_links;
    enum cfbackupoptions backup;
    int stealth;
    int preserve;
@@ -1353,7 +1357,7 @@ struct FileCopy
 struct ServerItem
    {
    char *server;
-   struct cfagent_connection *conn;
+   AgentConnection *conn;
    int busy;
    };
 
@@ -1371,8 +1375,8 @@ struct FilePerms
    {
    mode_t plus;
    mode_t minus;
-   struct UidList *owners;
-   struct GidList *groups;
+   UidList *owners;
+   GidList *groups;
    char  *findertype;
    u_long plus_flags;     /* for *BSD chflags */
    u_long minus_flags;    /* for *BSD chflags */
@@ -1383,12 +1387,12 @@ struct FilePerms
 
 struct FileSelect
    {
-   struct Rlist *name;
-   struct Rlist *path;
-   struct Rlist *perms;
-   struct Rlist *bsdflags;      
-   struct Rlist *owners;
-   struct Rlist *groups;
+   Rlist *name;
+   Rlist *path;
+   Rlist *perms;
+   Rlist *bsdflags;      
+   Rlist *owners;
+   Rlist *groups;
    long max_size;
    long min_size;
    time_t max_ctime;
@@ -1399,8 +1403,8 @@ struct FileSelect
    time_t min_atime;
    char *exec_regex;
    char *exec_program;
-   struct Rlist *filetypes;
-   struct Rlist *issymlinkto;
+   Rlist *filetypes;
+   Rlist *issymlinkto;
    char *result;
    };
 
@@ -1441,7 +1445,7 @@ struct FileLink
    {
    char *source;
    enum cflinktype link_type;
-   struct Rlist *copy_patterns;
+   Rlist *copy_patterns;
    enum cfnofile when_no_file;
    enum cflinkchildren when_linking_children;
    int link_children;   
@@ -1468,15 +1472,15 @@ struct ProcessCount
    {
    long min_range;
    long max_range;
-   struct Rlist *in_range_define;
-   struct Rlist *out_of_range_define;
+   Rlist *in_range_define;
+   Rlist *out_of_range_define;
    };
 
 /*************************************************************************/
 
 struct ProcessSelect
    {
-   struct Rlist *owner;
+   Rlist *owner;
    long min_pid;
    long max_pid;
    long min_ppid;
@@ -1505,7 +1509,7 @@ struct ProcessSelect
 
 struct Context
    {
-   struct Constraint *expression;
+   Constraint *expression;
    int nconstraints;
    };
 
@@ -1524,12 +1528,12 @@ struct EditDefaults
 
 struct LineSelect
    {
-   struct Rlist *startwith_from_list;
-   struct Rlist *not_startwith_from_list;
-   struct Rlist *match_from_list;
-   struct Rlist *not_match_from_list;
-   struct Rlist *contains_from_list;
-   struct Rlist *not_contains_from_list;
+   Rlist *startwith_from_list;
+   Rlist *not_startwith_from_list;
+   Rlist *match_from_list;
+   Rlist *not_match_from_list;
+   Rlist *contains_from_list;
+   Rlist *not_contains_from_list;
    };
 
 struct EditLocation
@@ -1571,7 +1575,7 @@ struct StorageMount
    char *mount_type;
    char *mount_source;
    char *mount_server;
-   struct Rlist *mount_options;
+   Rlist *mount_options;
    int editfstab;
    int unmount;
    };
@@ -1597,7 +1601,7 @@ struct Report
    char *filename;
    char *to_file;
    int numlines;
-   struct Rlist *showstate;
+   Rlist *showstate;
    };
 
 /*************************************************************************/
@@ -1607,10 +1611,10 @@ struct Packages
    enum package_actions package_policy;
    int have_package_methods;
    char *package_version;
-   struct Rlist *package_architectures;
+   Rlist *package_architectures;
    enum version_cmp package_select;
    enum action_policy package_changes;
-   struct Rlist *package_file_repositories;
+   Rlist *package_file_repositories;
 
    char *package_list_command;
    char *package_list_version_regex;
@@ -1679,9 +1683,9 @@ struct CfDatabase
    char *server;
    char *type;
    char *operation;
-   struct Rlist *columns;
-   struct Rlist *rows;
-   struct Rlist *exclude;
+   Rlist *columns;
+   Rlist *rows;
+   Rlist *exclude;
    };
     
 /*************************************************************************/
@@ -1696,13 +1700,13 @@ enum cf_srv_policy
 
 struct CfServices
    {
-   struct Rlist *service_depend;
+   Rlist *service_depend;
    char *service_type;
    char *service_args;
    enum cf_srv_policy service_policy;
    char *service_autostart_policy;
    char *service_depend_chain;
-   struct FnCall *service_method;
+   FnCall *service_method;
    };
 
 /*************************************************************************/
@@ -1748,7 +1752,7 @@ struct CfEnvironments
    int disk;
    char *baseline;
    char *specfile;
-   struct Rlist *addresses;
+   Rlist *addresses;
    char *name;
    char *host;
    char *type;
@@ -1760,7 +1764,7 @@ struct CfEnvironments
  /* This is huge, but the simplification of logic is huge too
     so we leave it to the compiler to optimize */
 
-struct Attributes
+typedef struct
    {
    struct Outputs output;
    struct FileSelect select;
@@ -1774,7 +1778,7 @@ struct Attributes
    struct Packages packages;
    struct Context context;
    struct Measurement measure;
-   struct CfACL acl;
+   Acl acl;
    struct CfDatabase database;
    struct CfServices service;
    struct CfEnvironments env;
@@ -1793,7 +1797,7 @@ struct Attributes
    char *args;
    int module;
 
-   struct Rlist *signals;
+   Rlist *signals;
    char *process_stop;
    char *restart_class;
    struct ProcessCount process_count;
@@ -1841,22 +1845,22 @@ struct Attributes
    char *sourcetype;
    int expandvars;
    int not_matching;
-   struct Rlist *insert_match;
+   Rlist *insert_match;
 
       /* knowledge */
 
    char *fwd_name;
    char *bwd_name;
-   struct Rlist *precedents;
-   struct Rlist *qualifiers;
-   struct Rlist *associates;
-   struct Rlist *represents;
-   struct Rlist *synonyms;
-   struct Rlist *general;
+   Rlist *precedents;
+   Rlist *qualifiers;
+   Rlist *associates;
+   Rlist *represents;
+   Rlist *synonyms;
+   Rlist *general;
    char *rep_type;
    char *path_root;
    char *web_root;
-   };
+   } Attributes;
 
 enum cf_meter
 {
@@ -1927,24 +1931,24 @@ extern double Q_SIGMA;
 /***********************************************************/
 
 #ifndef CF3_MOD_COMMON
-extern struct SubTypeSyntax CF_COMMON_SUBTYPES[];
-extern struct SubTypeSyntax *CF_ALL_SUBTYPES[];
-extern const struct BodySyntax CF_COMMON_BODIES[];
+extern SubTypeSyntax CF_COMMON_SUBTYPES[];
+extern SubTypeSyntax *CF_ALL_SUBTYPES[];
+extern const BodySyntax CF_COMMON_BODIES[];
 
-extern const struct BodySyntax CF_VARBODY[];
-extern const struct BodySyntax CF_CLASSBODY[];
-extern const struct BodySyntax CFG_CONTROLBODY[];
-extern const struct BodySyntax CFH_CONTROLBODY[];
-extern const struct BodySyntax CFA_CONTROLBODY[];
-extern const struct SubTypeSyntax CF_ALL_BODIES[];
+extern const BodySyntax CF_VARBODY[];
+extern const BodySyntax CF_CLASSBODY[];
+extern const BodySyntax CFG_CONTROLBODY[];
+extern const BodySyntax CFH_CONTROLBODY[];
+extern const BodySyntax CFA_CONTROLBODY[];
+extern const SubTypeSyntax CF_ALL_BODIES[];
 #endif
 
 #ifndef CF3_MOD_ENVIRON
-extern struct SubTypeSyntax CF_ENVIRONMENT_SUBTYPES[];
+extern SubTypeSyntax CF_ENVIRONMENT_SUBTYPES[];
 #endif
 
 #ifndef CF3_MOD_OUTPUTS
-extern struct SubTypeSyntax CF_OUTPUTS_SUBTYPES[];
+extern SubTypeSyntax CF_OUTPUTS_SUBTYPES[];
 #endif
 
 #ifndef CF3_MOD_FUNCTIONS
@@ -1952,64 +1956,65 @@ extern const FnCallType CF_FNCALL_TYPES[];
 #endif
 
 #ifndef CF3_MOD_ACCESS
-extern struct SubTypeSyntax CF_REMACCESS_SUBTYPES[];
+extern SubTypeSyntax CF_REMACCESS_SUBTYPES[];
 
-extern const struct BodySyntax CF_REMACCESS_BODIES[];
+extern const BodySyntax CF_REMACCESS_BODIES[];
 #endif
 
 #ifndef CF_MOD_INTERFACES
-extern struct SubTypeSyntax CF_INTERFACES_SUBTYPES[];
+extern SubTypeSyntax CF_INTERFACES_SUBTYPES[];
 #endif
 
 #ifndef CF3_MOD_STORAGE
-extern struct SubTypeSyntax CF_STORAGE_SUBTYPES[];
+extern SubTypeSyntax CF_STORAGE_SUBTYPES[];
 #endif
 
 #ifndef CF3_MOD_DATABASES
-extern struct SubTypeSyntax CF_DATABASES_SUBTYPES[];
+extern SubTypeSyntax CF_DATABASES_SUBTYPES[];
 #endif
 
 #ifndef CF3_MOD_KNOWLEGDE
-extern struct SubTypeSyntax CF_KNOWLEDGE_SUBTYPES[];
+extern SubTypeSyntax CF_KNOWLEDGE_SUBTYPES[];
 #endif
 
 #ifndef CF3_MOD_PACKAGES
-extern struct SubTypeSyntax CF_PACKAGES_SUBTYPES[];
+extern SubTypeSyntax CF_PACKAGES_SUBTYPES[];
 #endif
 
 #ifndef CF3_MOD_REPORT
-extern struct SubTypeSyntax CF_REPORT_SUBTYPES[];
+extern SubTypeSyntax CF_REPORT_SUBTYPES[];
 
-extern const struct BodySyntax CF_REPORT_BODIES[];
+extern const BodySyntax CF_REPORT_BODIES[];
 #endif
 
 
 #ifndef CF3_MOD_FILES
-extern struct SubTypeSyntax CF_FILES_SUBTYPES[];
+extern SubTypeSyntax CF_FILES_SUBTYPES[];
 
-extern const struct BodySyntax CF_COMMON_EDITBODIES[];
+extern const BodySyntax CF_COMMON_EDITBODIES[];
 #endif
 
 #ifndef CF3_MOD_EXEC
-extern struct SubTypeSyntax CF_EXEC_SUBTYPES[];
+extern SubTypeSyntax CF_EXEC_SUBTYPES[];
 #endif
 
 #ifndef CF3_MOD_METHODS
-extern struct SubTypeSyntax CF_METHOD_SUBTYPES[];
+extern SubTypeSyntax CF_METHOD_SUBTYPES[];
 #endif
 
 #ifndef CF3_MOD_PROCESS
-extern struct SubTypeSyntax CF_PROCESS_SUBTYPES[];
+extern SubTypeSyntax CF_PROCESS_SUBTYPES[];
 #endif
 
 #ifndef CF3_MOD_PROCESS
-extern struct SubTypeSyntax CF_MEASUREMENT_SUBTYPES[];
+extern SubTypeSyntax CF_MEASUREMENT_SUBTYPES[];
 #endif
 
 #ifndef CF3_MOD_SERVICES
-extern struct SubTypeSyntax CF_SERVICES_SUBTYPES[];
+extern SubTypeSyntax CF_SERVICES_SUBTYPES[];
 #endif
 
+#include "cf3.extern.h"
 #include "prototypes3.h"
 
 #ifdef HAVE_NOVA

@@ -28,8 +28,8 @@
 
 /* Globals */
 
-static struct Item *PREVIOUS_STATE = NULL;
-static struct Item *ENTROPIES = NULL;
+static Item *PREVIOUS_STATE = NULL;
+static Item *ENTROPIES = NULL;
 
 static char ENVFILE_NEW[CF_BUFSIZE];
 static char ENVFILE[CF_BUFSIZE];
@@ -74,12 +74,12 @@ ENTROPIES = NULL; /*?*/
  *   by ln(N).
  */
 
-double MonEntropyCalculate(const struct Item *items)
+double MonEntropyCalculate(const Item *items)
 {
 double S = 0.0;
 double sum = 0.0;
 int numclasses = 0;
-const struct Item *i;
+const Item *i;
 
 for (i = items; i; i = i->next)
    {
@@ -134,10 +134,10 @@ DeleteItemMatching(&ENTROPIES,name);
 
 /****************************************************************************/
 
-void MonEntropyClassesPublish(struct Item *classlist)
+void MonEntropyClassesPublish(Item *classlist)
 {
 FILE *fp;
-struct Item *ip;
+Item *ip;
 
 unlink(ENVFILE_NEW);
 

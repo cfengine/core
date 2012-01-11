@@ -51,7 +51,7 @@
    StringExpression and suitable string->bool evaluator.
 */
 
-typedef enum LogicalOp
+typedef enum
    {
    OR,
    AND,
@@ -59,20 +59,20 @@ typedef enum LogicalOp
    EVAL,
    } LogicalOp;
 
-typedef struct Expression
+typedef struct Expression_
    {
    LogicalOp op;
    union
       {
       struct AndOrExpression
          {
-         struct Expression *lhs;
-         struct Expression *rhs;
+         struct Expression_ *lhs;
+         struct Expression_ *rhs;
          } andor;
 
       struct NotExpression
          {
-         struct Expression *arg;
+         struct Expression_ *arg;
          } not;
 
       struct EvalExpression
@@ -93,7 +93,7 @@ typedef struct Expression
  * if not succeded, then result is NULL and position is last character consumed
  * before the error.
  */
-typedef struct ParseResult
+typedef struct
    {
    Expression *result;
    int position;

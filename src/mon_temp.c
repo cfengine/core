@@ -91,13 +91,13 @@ if (cfstat("/usr/bin/sensors",&statbuf) != -1)
 
 static bool GetAcpi(double *cf_this)
 {
-CFDIR *dirh;
+Dir *dirh;
 FILE *fp;
 const struct dirent *dirp;
 int count = 0;
 char path[CF_BUFSIZE],buf[CF_BUFSIZE],index[4];
 double temp = 0;
-struct Attributes attr;
+Attributes attr;
 
 memset(&attr,0,sizeof(attr));
 attr.transaction.audit = false;
@@ -163,7 +163,7 @@ return true;
 static bool GetLMSensors(double *cf_this)
 {
 FILE *pp;
-struct Item *ip,*list = NULL;
+Item *ip,*list = NULL;
 double temp = 0;
 char name[CF_BUFSIZE];
 int count;

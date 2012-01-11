@@ -28,40 +28,40 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-struct GenericAgentConfig
+typedef struct
    {
-   struct Rlist *bundlesequence;
+   Rlist *bundlesequence;
    bool verify_promises;
-   };
+   } GenericAgentConfig;
 
 void ThisAgentInit(void);
-void KeepPromises(struct GenericAgentConfig config);
+void KeepPromises(GenericAgentConfig config);
 
-void GenericInitialize(int argc,char **argv,char *agents, struct GenericAgentConfig config);
+void GenericInitialize(int argc,char **argv,char *agents, GenericAgentConfig config);
 void GenericDeInitialize(void);
 void InitializeGA(int argc,char **argv);
-struct GenericAgentConfig CheckOpts(int argc,char **argv);
+GenericAgentConfig CheckOpts(int argc,char **argv);
 void Syntax(const char *comp, const struct option options[], const char *hints[], const char *id);
 void ManPage(const char *component, const struct option options[], const char *hints[], const char *id);
 void PrintVersionBanner(const char *component);
 int CheckPromises(enum cfagenttype ag);
-void ReadPromises(enum cfagenttype ag,char *agents, struct GenericAgentConfig config);
+void ReadPromises(enum cfagenttype ag,char *agents, GenericAgentConfig config);
 int NewPromiseProposals(void);
 void CompilationReport(char *filename);
 void HashVariables(char *name);
 void HashControls(void);
 void CloseLog(void);
-struct Constraint *ControlBodyConstraints(enum cfagenttype agent);
+Constraint *ControlBodyConstraints(enum cfagenttype agent);
 void SetFacility(const char *retval);
-struct Bundle *GetBundle(char *name,char *agent);
-struct SubType *GetSubTypeForBundle(char *type,struct Bundle *bp);
-void CheckBundleParameters(char *scope,struct Rlist *args);
-void PromiseBanner(struct Promise *pp);
-void BannerBundle(struct Bundle *bp,struct Rlist *args);
-void BannerSubBundle(struct Bundle *bp,struct Rlist *args);
+Bundle *GetBundle(char *name,char *agent);
+SubType *GetSubTypeForBundle(char *type,Bundle *bp);
+void CheckBundleParameters(char *scope,Rlist *args);
+void PromiseBanner(Promise *pp);
+void BannerBundle(Bundle *bp,Rlist *args);
+void BannerSubBundle(Bundle *bp,Rlist *args);
 void WritePID(char *filename);
 void OpenCompilationReportFiles(const char *fname);
-struct GenericAgentConfig GenericAgentDefaultConfig(enum cfagenttype agent_type);
+GenericAgentConfig GenericAgentDefaultConfig(enum cfagenttype agent_type);
 void CheckLicenses(void);
 
 #endif

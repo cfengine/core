@@ -32,17 +32,17 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static void DeleteReferenceRlist(struct Rlist *list);
+static void DeleteReferenceRlist(Rlist *list);
 
 /*****************************************************************************/
 
-struct Rlist *NewIterationContext(char *scopeid,struct Rlist *namelist)
+Rlist *NewIterationContext(char *scopeid,Rlist *namelist)
 
-{ struct Rlist *rp,*rps,*deref_listoflists = NULL;
-  struct Rval retval;
+{ Rlist *rp,*rps,*deref_listoflists = NULL;
+  Rval retval;
   enum cfdatatype dtype;
-  struct CfAssoc *new;
-  struct Rval newret;
+  CfAssoc *new;
+  Rval newret;
 
 CfDebug("\n*\nNewIterationContext(from %s)\n*\n",scopeid);
 
@@ -71,11 +71,11 @@ for (rp = namelist; rp != NULL; rp = rp->next)
 
    if (retval.rtype == CF_LIST)
       {
-      for (rps = (struct Rlist *)retval.item; rps != NULL; rps=rps->next)
+      for (rps = (Rlist *)retval.item; rps != NULL; rps=rps->next)
          {
          if (rps->type == CF_FNCALL)
             {
-            struct FnCall *fp = (struct FnCall *)rps->item;
+            FnCall *fp = (FnCall *)rps->item;
             newret = EvaluateFunctionCall(fp,NULL).rval;
             DeleteFnCall(fp);
             rps->item = newret.item;
@@ -106,7 +106,7 @@ return deref_listoflists;
 
 /*****************************************************************************/
 
-void DeleteIterationContext(struct Rlist *deref)
+void DeleteIterationContext(Rlist *deref)
 
 {
 DeleteScope("this");
@@ -119,10 +119,10 @@ if (deref != NULL)
 
 /*****************************************************************************/
 
-int IncrementIterationContext(struct Rlist *iterator,int level)
+int IncrementIterationContext(Rlist *iterator,int level)
 
-{ struct Rlist *state;
-  struct CfAssoc *cp;
+{ Rlist *state;
+  CfAssoc *cp;
   
 if (iterator == NULL)
    {
@@ -132,7 +132,7 @@ if (iterator == NULL)
 // iterator->next points to the next list
 // iterator->state_ptr points to the current item in the current list
 
-cp = (struct CfAssoc *)iterator->item;
+cp = (CfAssoc *)iterator->item;
 state = iterator->state_ptr;
 
 if (state == NULL)
@@ -205,9 +205,9 @@ else
 
 /*****************************************************************************/
 
-int EndOfIteration(struct Rlist *iterator)
+int EndOfIteration(Rlist *iterator)
 
-{ struct Rlist *rp,*state;
+{ Rlist *rp,*state;
 
 if (iterator == NULL)
    {
@@ -236,9 +236,9 @@ return true;
 
 /*****************************************************************************/
 
-int NullIterators(struct Rlist *iterator)
+int NullIterators(Rlist *iterator)
 
-{ struct Rlist *rp,*state;
+{ Rlist *rp,*state;
 
 if (iterator == NULL)
    {
@@ -262,7 +262,7 @@ return false;
 
 /*******************************************************************/
 
-static void DeleteReferenceRlist(struct Rlist *list)
+static void DeleteReferenceRlist(Rlist *list)
 
 /* Delete all contents, hash table in scope has own copy */
 {
@@ -271,7 +271,7 @@ if (list == NULL)
    return;
    }
 
-DeleteAssoc((struct CfAssoc *)list->item);
+DeleteAssoc((CfAssoc *)list->item);
 
 DeleteReferenceRlist(list->next);
 free((char *)list);

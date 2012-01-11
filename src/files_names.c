@@ -34,9 +34,9 @@
 
 /*****************************************************************************/
 
-void LocateFilePromiserGroup(char *wildpath,struct Promise *pp,void (*fnptr)(char *path, struct Promise *ptr))
+void LocateFilePromiserGroup(char *wildpath,Promise *pp,void (*fnptr)(char *path, Promise *ptr))
 
-{ struct Item *path,*ip,*remainder = NULL;
+{ Item *path,*ip,*remainder = NULL;
   char pbuffer[CF_BUFSIZE];
   struct stat statbuf;
   int count = 0,lastnode = false, expandregex = false;
@@ -107,8 +107,8 @@ if (expandregex) /* Expand one regex link and hand down */
    {
    char nextbuffer[CF_BUFSIZE],nextbufferOrig[CF_BUFSIZE],regex[CF_BUFSIZE];
    const struct dirent *dirp;
-   CFDIR *dirh;
-   struct Attributes dummyattr = {{0}};
+   Dir *dirh;
+   Attributes dummyattr = {{0}};
 
    memset(&dummyattr,0,sizeof(dummyattr));
    memset(regex,0,CF_BUFSIZE);
@@ -169,7 +169,7 @@ if (expandregex) /* Expand one regex link and hand down */
             }
          else
             {
-            struct Promise *pcopy;
+            Promise *pcopy;
             CfOut(cf_verbose,""," -> Using expanded file base path %s\n",nextbuffer);
 
             /* Now need to recompute any back references to get the complete path */
@@ -218,8 +218,8 @@ int IsNewerFileTree(char *dir,time_t reftime)
 
 { const struct dirent *dirp;
   char path[CF_BUFSIZE] = {0};
-  struct Attributes dummyattr = {{0}};
-  CFDIR *dirh;
+  Attributes dummyattr = {{0}};
+  Dir *dirh;
   struct stat sb;
 
 // Assumes that race conditions on the file path are unlikely and unimportant

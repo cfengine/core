@@ -59,7 +59,7 @@
  /*                                                         */
  /***********************************************************/
 
-struct BodySyntax CF_MATCHCLASS_BODY[] =
+BodySyntax CF_MATCHCLASS_BODY[] =
    {
    {"in_range_define",cf_slist,"","List of classes to define if the matches are in range"},
    {"match_range",cf_irange,CF_VALRANGE,"Integer range for acceptable number of matches for this process"},
@@ -69,7 +69,7 @@ struct BodySyntax CF_MATCHCLASS_BODY[] =
 
 /***************************************************************/
 
-struct BodySyntax CF_PROCFILTER_BODY[] =
+BodySyntax CF_PROCFILTER_BODY[] =
    {
    {"command",cf_str,"","Regular expression matching the command/cmd field of a process"},
    {"pid",cf_irange,CF_VALRANGE,"Range of integers matching the process id of a process"},
@@ -92,7 +92,7 @@ struct BodySyntax CF_PROCFILTER_BODY[] =
 
 /* This is the primary set of constraints for an exec object */
 
-struct BodySyntax CF_PROCESS_BODIES[] =
+BodySyntax CF_PROCESS_BODIES[] =
    {
    {"process_count",cf_body,CF_MATCHCLASS_BODY,"Criteria for constraining the number of processes matching other criteria"},
    {"process_select",cf_body,CF_PROCFILTER_BODY,"Criteria for matching processes in the system process table"},
@@ -106,7 +106,7 @@ struct BodySyntax CF_PROCESS_BODIES[] =
 /* This is the point of entry from mod_common.c                */
 /***************************************************************/
 
-struct SubTypeSyntax CF_PROCESS_SUBTYPES[] =
+SubTypeSyntax CF_PROCESS_SUBTYPES[] =
   {
   {"agent","processes",CF_PROCESS_BODIES},
   {NULL,NULL,NULL},

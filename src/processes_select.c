@@ -41,12 +41,12 @@ static int GetProcColumnIndex(char *name1,char *name2,char **names);
 
 /***************************************************************************/
 
-int SelectProcess(char *procentry,char **names,int *start,int *end,struct Attributes a,struct Promise *pp)
+int SelectProcess(char *procentry,char **names,int *start,int *end,Attributes a,Promise *pp)
 
-{ struct AlphaList proc_attr;
+{ AlphaList proc_attr;
  int result = true,i;
   char *column[CF_PROCCOLS];
-  struct Rlist *rp;
+  Rlist *rp;
 
 CfDebug("SelectProcess(%s)\n",procentry);
 
@@ -440,7 +440,7 @@ return -1;
 bool IsProcessNameRunning(char *procNameRegex)
 {
  char *colHeaders[CF_PROCCOLS];
- struct Item *ip;
+ Item *ip;
  int start[CF_PROCCOLS] = {0};
  int end[CF_PROCCOLS] = {0};
  bool matched = false;

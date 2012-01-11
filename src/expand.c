@@ -32,13 +32,13 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static void ConvergePromiseValues(struct Promise *pp);
-static void ScanScalar(const char *scope, struct Rlist **los, struct Rlist **lol, const char *string, int level, struct Promise *pp);
-static int Epimenides(char *var, struct Rval rval, int level);
+static void ConvergePromiseValues(Promise *pp);
+static void ScanScalar(const char *scope, Rlist **los, Rlist **lol, const char *string, int level, Promise *pp);
+static int Epimenides(char *var, Rval rval, int level);
 
-static int CompareRlist(struct Rlist *list1, struct Rlist *list2);
-static int CompareRval(struct Rval rval1, struct Rval rval2);
-static void SetAnyMissingDefaults(struct Promise *pp);
+static int CompareRlist(Rlist *list1, Rlist *list2);
+static int CompareRval(Rval rval1, Rval rval2);
+static void SetAnyMissingDefaults(Promise *pp);
 
 /*
 
@@ -98,11 +98,11 @@ since these cannot be mapped into "this" without some magic.
    
 **********************************************************************/
 
-void ExpandPromise(enum cfagenttype agent,char *scopeid,struct Promise *pp,void *fnptr)
+void ExpandPromise(enum cfagenttype agent,char *scopeid,Promise *pp,void *fnptr)
 
-{ struct Rlist *listvars = NULL, *scalarvars = NULL;
-  struct Constraint *cp;
-  struct Promise *pcopy;
+{ Rlist *listvars = NULL, *scalarvars = NULL;
+  Constraint *cp;
+  Promise *pcopy;
 
 CfDebug("****************************************************\n");
 CfDebug("* ExpandPromises (scope = %s )\n",scopeid);
@@ -120,7 +120,7 @@ THIS_BUNDLE = scopeid;
 
 pcopy = DeRefCopyPromise(scopeid,pp);
 
-ScanRval(scopeid, &scalarvars, &listvars, (struct Rval) { pcopy->promiser, CF_SCALAR }, pp);
+ScanRval(scopeid, &scalarvars, &listvars, (Rval) { pcopy->promiser, CF_SCALAR }, pp);
 
 if (pcopy->promisee.item != NULL)
    {
@@ -143,9 +143,9 @@ DeleteRlist(listvars);
 
 /*********************************************************************/
 
-struct Rval ExpandDanglers(char *scopeid,struct Rval rval,struct Promise *pp)
+Rval ExpandDanglers(char *scopeid,Rval rval,Promise *pp)
 
-{ struct Rval final;
+{ Rval final;
 
  /* If there is still work left to do, expand and replace alloc */
  
@@ -173,10 +173,10 @@ return final;
 
 /*********************************************************************/
 
-void ScanRval(const char *scopeid, struct Rlist **scalarvars, struct Rlist **listvars, struct Rval rval, struct Promise *pp)
+void ScanRval(const char *scopeid, Rlist **scalarvars, Rlist **listvars, Rval rval, Promise *pp)
 
-{ struct Rlist *rp;
-  struct FnCall *fp;
+{ Rlist *rp;
+  FnCall *fp;
 
 if (rval.item == NULL)
    {
@@ -190,19 +190,19 @@ switch(rval.rtype)
        break;
        
    case CF_LIST:
-       for (rp = (struct Rlist *)rval.item; rp != NULL; rp=rp->next)
+       for (rp = (Rlist *)rval.item; rp != NULL; rp=rp->next)
           {
-          ScanRval(scopeid, scalarvars, listvars, (struct Rval) { rp->item, rp->type }, pp);
+          ScanRval(scopeid, scalarvars, listvars, (Rval) { rp->item, rp->type }, pp);
           }
        break;
        
    case CF_FNCALL:
-       fp = (struct FnCall *)rval.item;
+       fp = (FnCall *)rval.item;
        
-       for (rp = (struct Rlist *)fp->args; rp != NULL; rp=rp->next)
+       for (rp = (Rlist *)fp->args; rp != NULL; rp=rp->next)
           {
           CfDebug("Looking at arg for function-like object %s()\n",fp->name);
-          ScanRval(scopeid, scalarvars, listvars, (struct Rval) { rp->item, rp->type }, pp);
+          ScanRval(scopeid, scalarvars, listvars, (Rval) { rp->item, rp->type }, pp);
           }
        break;
 
@@ -214,11 +214,11 @@ switch(rval.rtype)
 
 /*********************************************************************/
 
-static void ScanScalar(const char *scopeid, struct Rlist **scal, struct Rlist **its, const char *string, int level, struct Promise *pp)
+static void ScanScalar(const char *scopeid, Rlist **scal, Rlist **its, const char *string, int level, Promise *pp)
 
 {
 const char *sp;
-struct Rval rval;
+Rval rval;
 char v[CF_BUFSIZE],var[CF_EXPANDSIZE],exp[CF_EXPANDSIZE],temp[CF_BUFSIZE];
   
 CfDebug("ScanScalar(\"%s\")\n",string);
@@ -307,13 +307,13 @@ return ExpandPrivateScalar(CONTEXTID,string,buffer);
 
 /*********************************************************************/
 
-struct Rlist *ExpandList(char *scopeid,struct Rlist *list,int expandnaked)
+Rlist *ExpandList(char *scopeid,Rlist *list,int expandnaked)
 
-{ struct Rlist *rp, *start = NULL;
-  struct Rval returnval;
+{ Rlist *rp, *start = NULL;
+  Rval returnval;
   char naked[CF_MAXVARSIZE];
 
-for (rp = (struct Rlist *)list; rp != NULL; rp=rp->next)
+for (rp = (Rlist *)list; rp != NULL; rp=rp->next)
    {
    if (!expandnaked && (rp->type == CF_SCALAR) && IsNakedVar(rp->item,'@'))
       {
@@ -330,12 +330,12 @@ for (rp = (struct Rlist *)list; rp != NULL; rp=rp->next)
          }
       else
          {
-         returnval = ExpandPrivateRval(scopeid, (struct Rval) { rp->item, rp->type });
+         returnval = ExpandPrivateRval(scopeid, (Rval) { rp->item, rp->type });
          }
       }
    else
       {
-      returnval = ExpandPrivateRval(scopeid, (struct Rval) { rp->item, rp->type });
+      returnval = ExpandPrivateRval(scopeid, (Rval) { rp->item, rp->type });
       }
 
    AppendRlist(&start,returnval.item,returnval.rtype);
@@ -347,11 +347,11 @@ return start;
 
 /*********************************************************************/
 
-struct Rval ExpandPrivateRval(char *scopeid, struct Rval rval)
+Rval ExpandPrivateRval(char *scopeid, Rval rval)
 
 { char buffer[CF_EXPANDSIZE];
- struct FnCall *fp,*fpe;
- struct Rval returnval;
+ FnCall *fp,*fpe;
+ Rval returnval;
      
 CfDebug("ExpandPrivateRval(scope=%s,type=%c)\n",scopeid,rval.rtype);
 
@@ -378,7 +378,7 @@ switch (rval.rtype)
    case CF_FNCALL:
        
        /* Note expand function does not mean evaluate function, must preserve type */
-       fp = (struct FnCall *)rval.item;
+       fp = (FnCall *)rval.item;
        fpe = ExpandFnCall(scopeid,fp,true);
        returnval.item = fpe;
        returnval.rtype = CF_FNCALL;
@@ -390,7 +390,7 @@ return returnval;
 
 /*********************************************************************/
 
-struct Rval ExpandBundleReference(char *scopeid, struct Rval rval)
+Rval ExpandBundleReference(char *scopeid, Rval rval)
 
 {
 CfDebug("ExpandBundleReference(scope=%s,type=%c)\n", scopeid, rval.rtype);
@@ -403,18 +403,18 @@ switch (rval.rtype)
       {
       char buffer[CF_EXPANDSIZE];
       ExpandPrivateScalar(scopeid, (char *)rval.item, buffer);
-      return (struct Rval) { xstrdup(buffer), CF_SCALAR };
+      return (Rval) { xstrdup(buffer), CF_SCALAR };
       }
 
    case CF_FNCALL:
       {
       /* Note expand function does not mean evaluate function, must preserve type */
-      struct FnCall *fp = (struct FnCall *)rval.item;
-      return (struct Rval) { ExpandFnCall(scopeid, fp, false), CF_FNCALL };
+      FnCall *fp = (FnCall *)rval.item;
+      return (Rval) { ExpandFnCall(scopeid, fp, false), CF_FNCALL };
       }
 
    default:
-      return (struct Rval) { NULL, CF_NOPROMISEE };
+      return (Rval) { NULL, CF_NOPROMISEE };
    }
 }
 
@@ -438,7 +438,7 @@ return false;
 int ExpandPrivateScalar(const char *scopeid, const char *string,char buffer[CF_EXPANDSIZE])
 
 { const char *sp;
-  struct Rval rval;
+  Rval rval;
   int varstring = false;
   char currentitem[CF_EXPANDSIZE],temp[CF_BUFSIZE],name[CF_MAXVARSIZE];
   int increment, returnval = true;
@@ -590,10 +590,10 @@ return returnval;
 
 /*********************************************************************/
 
-void ExpandPromiseAndDo(enum cfagenttype agent,char *scopeid,struct Promise *pp,struct Rlist *scalarvars,struct Rlist *listvars,void (*fnptr)())
+void ExpandPromiseAndDo(enum cfagenttype agent,char *scopeid,Promise *pp,Rlist *scalarvars,Rlist *listvars,void (*fnptr)())
 
-{ struct Rlist *lol = NULL; 
-  struct Promise *pexp;
+{ Rlist *lol = NULL; 
+  Promise *pexp;
   const int cf_null_cutoff = 5;
   char *handle = GetConstraintValue("handle",pp,CF_SCALAR),v[CF_MAXVARSIZE];
   int cutoff = 0;
@@ -699,12 +699,12 @@ DeleteIterationContext(lol);
 
 /*********************************************************************/
 
-struct Rval EvaluateFinalRval(char *scopeid, struct Rval rval,int forcelist,struct Promise *pp)
+Rval EvaluateFinalRval(char *scopeid, Rval rval,int forcelist,Promise *pp)
 
-{ struct Rlist *rp;
-  struct Rval returnval,newret;
+{ Rlist *rp;
+  Rval returnval,newret;
   char naked[CF_MAXVARSIZE];
-  struct FnCall *fp;
+  FnCall *fp;
 
 CfDebug("EvaluateFinalRval -- type %c\n", rval.rtype);
 
@@ -747,11 +747,11 @@ switch (returnval.rtype)
        break;
        
    case CF_LIST:
-       for (rp = (struct Rlist *)returnval.item; rp != NULL; rp=rp->next)
+       for (rp = (Rlist *)returnval.item; rp != NULL; rp=rp->next)
           {
           if (rp->type == CF_FNCALL)
              {
-             fp = (struct FnCall *)rp->item;
+             fp = (FnCall *)rp->item;
              FnCallResult res = EvaluateFunctionCall(fp,pp);
              DeleteFnCall(fp);
              rp->item = res.rval.item;
@@ -760,13 +760,13 @@ switch (returnval.rtype)
              }
           else
              {
-             struct Scope *ptr = GetScope("this");
+             Scope *ptr = GetScope("this");
 
              if (ptr != NULL)
                 {
                 if (IsCf3VarString(rp->item))
                    {
-                   newret = ExpandPrivateRval("this", (struct Rval) { rp->item, rp->type });
+                   newret = ExpandPrivateRval("this", (Rval) { rp->item, rp->type });
                    free(rp->item);
                    rp->item = newret.item;
                    }
@@ -780,7 +780,7 @@ switch (returnval.rtype)
    case CF_FNCALL:
 
        // Also have to eval function now
-       fp = (struct FnCall *)returnval.item;
+       fp = (FnCall *)returnval.item;
        returnval = EvaluateFunctionCall(fp,pp).rval;
        DeleteFnCall(fp);
        break;
@@ -957,7 +957,7 @@ strncpy(s2,s1+2,strlen(s1)-3);
 
 /*********************************************************************/
 
-static void SetAnyMissingDefaults(struct Promise *pp)
+static void SetAnyMissingDefaults(Promise *pp)
 
 /* Some defaults have to be set here, if they involve body-name
    constraints as names need to be expanded before CopyDeRefPromise */
@@ -967,7 +967,7 @@ if (strcmp(pp->agentsubtype,"packages") == 0)
    {
    if (GetConstraint(pp,"package_method") == NULL)
       {
-      AppendConstraint(&(pp->conlist), "package_method", (struct Rval) { "generic", CF_SCALAR },"any",true);
+      AppendConstraint(&(pp->conlist), "package_method", (Rval) { "generic", CF_SCALAR },"any",true);
       }
    }
 }
@@ -976,14 +976,14 @@ if (strcmp(pp->agentsubtype,"packages") == 0)
 /* General                                                           */
 /*********************************************************************/
 
-void ConvergeVarHashPromise(char *scope,struct Promise *pp,int allow_redefine)
+void ConvergeVarHashPromise(char *scope,Promise *pp,int allow_redefine)
 
-{ struct Constraint *cp,*cp_save = NULL;
-  struct Attributes a = {{0}};
+{ Constraint *cp,*cp_save = NULL;
+  Attributes a = {{0}};
   int i = 0,ok_redefine = false,drop_undefined = false;
-  struct Rlist *rp;
-  struct Rval retval;
-  struct Rval rval = { NULL, 'x' }; /* FIXME: why this needs to be initialized? */
+  Rlist *rp;
+  Rval retval;
+  Rval rval = { NULL, 'x' }; /* FIXME: why this needs to be initialized? */
 
 if (pp->done)
    {
@@ -1009,7 +1009,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,"ifvarclass") == 0)
       {
-      struct Rval res;
+      Rval res;
       
       switch(cp->rval.rtype)
          {
@@ -1093,7 +1093,7 @@ a.classes = GetClassDefinitionConstraints(pp);
 
 if (rval.item != NULL)
    {
-   struct FnCall *fp = (struct FnCall *)rval.item;
+   FnCall *fp = (FnCall *)rval.item;
 
    if (cp->rval.rtype == CF_FNCALL)
       {
@@ -1117,12 +1117,12 @@ if (rval.item != NULL)
       if (strcmp(cp->lval,"int") == 0)
          {
          snprintf(conv,CF_MAXVARSIZE,"%ld",Str2Int(cp->rval.item));
-         rval = CopyRvalItem((struct Rval) { conv, cp->rval.rtype });
+         rval = CopyRvalItem((Rval) { conv, cp->rval.rtype });
          }
       else if (strcmp(cp->lval,"real") == 0)
          {
          snprintf(conv,CF_MAXVARSIZE,"%lf",Str2Double(cp->rval.item));
-         rval = CopyRvalItem((struct Rval) { conv, cp->rval.rtype });
+         rval = CopyRvalItem((Rval) { conv, cp->rval.rtype });
          }
       else
          {
@@ -1139,7 +1139,7 @@ if (rval.item != NULL)
       {
       /* See if the variable needs recursively expanding again */
 
-      struct Rval returnval = EvaluateFinalRval(scope, rval, true, pp);
+      Rval returnval = EvaluateFinalRval(scope, rval, true, pp);
       DeleteRvalItem(rval);
 
       // freed before function exit
@@ -1225,12 +1225,12 @@ DeleteRvalItem(rval);
 
 /*********************************************************************/
 
-static void ConvergePromiseValues(struct Promise *pp)
+static void ConvergePromiseValues(Promise *pp)
 
-{ struct Constraint *cp;
-  struct Rlist *rp;
+{ Constraint *cp;
+  Rlist *rp;
   char expandbuf[CF_EXPANDSIZE];
-  struct FnCall *fp;
+  FnCall *fp;
 
 switch (pp->promisee.rtype)
    {
@@ -1249,7 +1249,7 @@ switch (pp->promisee.rtype)
        
    case CF_LIST:
        
-       for (rp = (struct Rlist *)pp->promisee.item; rp != NULL; rp=rp->next)
+       for (rp = (Rlist *)pp->promisee.item; rp != NULL; rp=rp->next)
           {
           if (IsCf3VarString((char *)rp->item))
              {             
@@ -1283,7 +1283,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
       case CF_LIST:
 
-          for (rp = (struct Rlist *)cp->rval.item; rp != NULL; rp=rp->next)
+          for (rp = (Rlist *)cp->rval.item; rp != NULL; rp=rp->next)
              {
              if (IsCf3VarString((char *)rp->item))
                 {             
@@ -1299,7 +1299,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
       case CF_FNCALL:
 
-       fp = (struct FnCall *)cp->rval.item;
+       fp = (FnCall *)cp->rval.item;
        for (rp = fp->args; rp != NULL; rp=rp->next)
           {
           if (rp->type == CF_SCALAR && IsCf3VarString(rp->item))
@@ -1319,9 +1319,9 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 /* Levels                                                            */
 /*********************************************************************/
 
-static int Epimenides(char *var, struct Rval rval, int level)
+static int Epimenides(char *var, Rval rval, int level)
 
-{ struct Rlist *rp,*list;
+{ Rlist *rp,*list;
   char exp[CF_EXPANDSIZE];
 
 switch (rval.rtype)
@@ -1344,7 +1344,7 @@ switch (rval.rtype)
              return false;
              }
           
-          if (Epimenides(var, (struct Rval) { exp, CF_SCALAR }, level+1))
+          if (Epimenides(var, (Rval) { exp, CF_SCALAR }, level+1))
              {
              return true;
              }           
@@ -1353,11 +1353,11 @@ switch (rval.rtype)
        break;
        
    case CF_LIST:
-       list = (struct Rlist *)rval.item;
+       list = (Rlist *)rval.item;
        
        for (rp = list; rp != NULL; rp=rp->next)
           {
-          if (Epimenides(var, (struct Rval) { rp->item, rp->type }, level))
+          if (Epimenides(var, (Rval) { rp->item, rp->type }, level))
              {
              return true;
              }
@@ -1373,7 +1373,7 @@ return false;
 
 /*******************************************************************/
 
-static int CompareRval(struct Rval rval1, struct Rval rval2)
+static int CompareRval(Rval rval1, Rval rval2)
 
 {
 if (rval1.rtype != rval2.rtype)
@@ -1409,15 +1409,15 @@ return true;
 
 /*******************************************************************/
 
-static int CompareRlist(struct Rlist *list1, struct Rlist *list2)
+static int CompareRlist(Rlist *list1, Rlist *list2)
 
-{ struct Rlist *rp1,*rp2;
+{ Rlist *rp1,*rp2;
 
 for (rp1 = list1, rp2 = list2; rp1 != NULL && rp2!= NULL; rp1=rp1->next,rp2=rp2->next)
    {
    if (rp1->item && rp2->item)
       {
-      struct Rlist *rc1,*rc2;
+      Rlist *rc1,*rc2;
       
       if (rp1->type == CF_FNCALL || rp2->type == CF_FNCALL)
          {

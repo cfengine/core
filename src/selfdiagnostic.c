@@ -113,7 +113,7 @@ void TestVariableScan()
 { int i;
   char *list_text1 = "$(administrator),a,b,c,d,e,f";
   char *list_text2 = "1,2,3,4,@(one)";
-  struct Rlist *varlist1,*varlist2,*listoflists = NULL,*scalars = NULL;
+  Rlist *varlist1,*varlist2,*listoflists = NULL,*scalars = NULL;
   static char *varstrings[] =
     {
     "alpha $(one) beta $(two) gamma",
@@ -142,7 +142,7 @@ for (i = 0; varstrings[i] != NULL; i++)
       {
       printf("-----------------------------------------------------------\n");
       printf("Scanning: [%s]\n",varstrings[i]);
-      ScanRval("diagnostic", &scalars, &listoflists, (struct Rval) { varstrings[i], CF_SCALAR }, NULL);
+      ScanRval("diagnostic", &scalars, &listoflists, (Rval) { varstrings[i], CF_SCALAR }, NULL);
       printf("Cumulative scan produced:\n");
       printf("   Scalar variables: ");
       ShowRlist(stdout,scalars);
@@ -158,11 +158,11 @@ for (i = 0; varstrings[i] != NULL; i++)
 
 void TestExpandPromise()
 
-{ struct Promise pp = {0},*pcopy;
+{ Promise pp = {0},*pcopy;
 
 printf("%d. Testing promise duplication and expansion\n",++NR);
 pp.promiser = "the originator";
-pp.promisee = (struct Rval) { "the recipient", CF_SCALAR };
+pp.promisee = (Rval) { "the recipient", CF_SCALAR };
 pp.classes = "upper classes";
 pp.offset.line = 12;
 pp.audit = NULL;
@@ -181,8 +181,8 @@ pp.donep = &(pp.done);
 pp.conn = NULL;
 
 
-AppendConstraint(&(pp.conlist), "lval1", (struct Rval) { xstrdup("rval1"), CF_SCALAR },"lower classes1", false);
-AppendConstraint(&(pp.conlist), "lval2", (struct Rval) { xstrdup("rval2"), CF_SCALAR }, "lower classes2", false);
+AppendConstraint(&(pp.conlist), "lval1", (Rval) { xstrdup("rval1"), CF_SCALAR },"lower classes1", false);
+AppendConstraint(&(pp.conlist), "lval2", (Rval) { xstrdup("rval2"), CF_SCALAR }, "lower classes2", false);
 
 //getuid AppendConstraint(&(pp.conlist),"lval2",,CF_SCALAR,"lower classes2");
 
@@ -203,10 +203,10 @@ DeletePromise(pcopy);
 
 void TestExpandVariables()
 
-{ struct Promise pp = {0},*pcopy;
-  struct Rlist *args, *listvars = NULL, *scalarvars = NULL;
-  struct Constraint *cp;
-  struct FnCall *fp;
+{ Promise pp = {0},*pcopy;
+  Rlist *args, *listvars = NULL, *scalarvars = NULL;
+  Constraint *cp;
+  FnCall *fp;
 
   strcpy(CFWORKDIR,GetWorkDir());
   MapName(CFWORKDIR);
@@ -216,7 +216,7 @@ NewScope("control_common");
   
 printf("%d. Testing variable expansion\n",++NR);
 pp.promiser = "the originator";
-pp.promisee = (struct Rval) { "the recipient with $(two)", CF_SCALAR };
+pp.promisee = (Rval) { "the recipient with $(two)", CF_SCALAR };
 pp.classes = "proletariat";
 pp.offset.line = 12;
 pp.audit = NULL;
@@ -238,15 +238,15 @@ pp.conn = NULL;
 args = SplitStringAsRList("$(administrator)",',');
 fp = NewFnCall("getuid",args);
     
-AppendConstraint(&(pp.conlist), "lval1", (struct Rval) { xstrdup("@(one)"), CF_SCALAR }, "lower classes1", false);
-AppendConstraint(&(pp.conlist), "lval2", (struct Rval) { xstrdup("$(four)"), CF_SCALAR }, "upper classes1", false);
-AppendConstraint(&(pp.conlist), "lval3", (struct Rval) { fp, CF_FNCALL }, "upper classes2", false);
+AppendConstraint(&(pp.conlist), "lval1", (Rval) { xstrdup("@(one)"), CF_SCALAR }, "lower classes1", false);
+AppendConstraint(&(pp.conlist), "lval2", (Rval) { xstrdup("$(four)"), CF_SCALAR }, "upper classes1", false);
+AppendConstraint(&(pp.conlist), "lval3", (Rval) { fp, CF_FNCALL }, "upper classes2", false);
 
 /* Now copy promise and delete */
 
 pcopy = DeRefCopyPromise("diagnostic",&pp);
 
-ScanRval("diagnostic", &scalarvars, &listvars, (struct Rval) { pcopy->promiser, CF_SCALAR }, NULL);
+ScanRval("diagnostic", &scalarvars, &listvars, (Rval) { pcopy->promiser, CF_SCALAR }, NULL);
 
 if (pcopy->promisee.item != NULL)
    {
@@ -273,7 +273,7 @@ static void TestRegularExpressions()
 static void TestAgentPromises()
 
 {
-struct Promise pp = {0};
+Promise pp = {0};
 
 pp.conlist = NULL;
 pp.audit = NULL;

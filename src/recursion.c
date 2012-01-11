@@ -40,9 +40,9 @@ static void CheckLinkSecurity(struct stat *sb,char *name);
 /* Depth searches                                                    */
 /*********************************************************************/
 
-int DepthSearch(char *name,struct stat *sb,int rlevel,struct Attributes attr,struct Promise *pp)
+int DepthSearch(char *name,struct stat *sb,int rlevel,Attributes attr,Promise *pp)
     
-{ CFDIR *dirh;
+{ Dir *dirh;
   int goback; 
   const struct dirent *dirp;
   char path[CF_BUFSIZE];

@@ -37,12 +37,12 @@ extern char MANDIR[CF_BUFSIZE];
 
 static void TexinfoHeader(FILE *fout);
 static void TexinfoFooter(FILE *fout);
-static void TexinfoBodyParts(FILE *fout,const struct BodySyntax *bs,char *context);
-static void TexinfoSubBodyParts(FILE *fout,struct BodySyntax *bs);
+static void TexinfoBodyParts(FILE *fout,const BodySyntax *bs,char *context);
+static void TexinfoSubBodyParts(FILE *fout,BodySyntax *bs);
 static void TexinfoShowRange(FILE *fout,char *s,enum cfdatatype type);
 static void IncludeManualFile(FILE *fout,char *filename);
-static void TexinfoPromiseTypesFor(FILE *fout,struct SubTypeSyntax *st);
-static void TexinfoSpecialFunction(FILE *fout,struct FnCallType fn);
+static void TexinfoPromiseTypesFor(FILE *fout,SubTypeSyntax *st);
+static void TexinfoSpecialFunction(FILE *fout,FnCallType fn);
 static void TexinfoVariables(FILE *fout,char *scope);
 static char *TexInfoEscape(char *s);
 static void PrintPattern(FILE *fout, const char *pattern);
@@ -52,8 +52,8 @@ static void PrintPattern(FILE *fout, const char *pattern);
 void TexinfoManual(char *mandir)
 
 { char filename[CF_BUFSIZE];
-  struct SubTypeSyntax *st;
-  struct Item *done = NULL;
+  SubTypeSyntax *st;
+  Item *done = NULL;
   FILE *fout;
   int i;
 
@@ -316,7 +316,7 @@ static void TexinfoFooter(FILE *fout)
 
 /*****************************************************************************/
 
-static void TexinfoPromiseTypesFor(FILE *fout,struct SubTypeSyntax *st)
+static void TexinfoPromiseTypesFor(FILE *fout,SubTypeSyntax *st)
 
 { int j;
   char filename[CF_BUFSIZE];
@@ -352,7 +352,7 @@ for (j = 0; st[j].btype != NULL; j++)
 /* Level                                                                     */
 /*****************************************************************************/
 
-static void TexinfoBodyParts(FILE *fout,const struct BodySyntax *bs,char *context)
+static void TexinfoBodyParts(FILE *fout,const BodySyntax *bs,char *context)
 
 { int i;
  char filename[CF_BUFSIZE];
@@ -373,7 +373,7 @@ for (i = 0; bs[i].lval != NULL; i++)
    else if (bs[i].dtype == cf_body)
       {
       fprintf(fout,"\n\n@node %s in %s\n@subsection @code{%s} (body template)\n@noindent @b{Type}: %s\n\n",bs[i].lval,context,bs[i].lval,CF_DATATYPES[bs[i].dtype]);
-      TexinfoSubBodyParts(fout,(struct BodySyntax *)bs[i].range);
+      TexinfoSubBodyParts(fout,(BodySyntax *)bs[i].range);
       }
    else
       {
@@ -404,7 +404,7 @@ static void TexinfoVariables(FILE *fout,char *scope)
 
 {
   char filename[CF_BUFSIZE],varname[CF_BUFSIZE];
-  struct Rlist *rp,*list = NULL;
+  Rlist *rp,*list = NULL;
   int i;
 
 fprintf(fout,"\n\n@node Variable context %s\n@section Variable context @code{%s}\n\n",scope,scope);
@@ -454,7 +454,7 @@ if (strcmp(scope,"mon") == 0)
 static void TexinfoShowRange(FILE *fout,char *s,enum cfdatatype type)
 
 {
-struct Rlist *list = NULL,*rp;
+Rlist *list = NULL,*rp;
 
 if (strlen(s) == 0)
    {
@@ -484,7 +484,7 @@ else
 
 /*****************************************************************************/
 
-static void TexinfoSubBodyParts(FILE *fout,struct BodySyntax *bs)
+static void TexinfoSubBodyParts(FILE *fout,BodySyntax *bs)
 
 { int i;
  char filename[CF_BUFSIZE];
@@ -505,7 +505,7 @@ for (i = 0; bs[i].lval != NULL; i++)
    else if (bs[i].dtype == cf_body)
       {
       fprintf(fout,"@item @code{%s}\n@b{Type}: %s\n\n",bs[i].lval,CF_DATATYPES[bs[i].dtype]);
-      TexinfoSubBodyParts(fout,(struct BodySyntax *)bs[i].range);
+      TexinfoSubBodyParts(fout,(BodySyntax *)bs[i].range);
       }
    else
       {
@@ -586,7 +586,7 @@ fprintf(fout,"\n");
 
 /*****************************************************************************/
 
-static void TexinfoSpecialFunction(FILE *fout,struct FnCallType fn)
+static void TexinfoSpecialFunction(FILE *fout,FnCallType fn)
 
 { char filename[CF_BUFSIZE];
   const FnCallArg *args = fn.args;

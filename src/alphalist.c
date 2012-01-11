@@ -36,15 +36,15 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static void ShowAlphaList(struct AlphaList al);
+static void ShowAlphaList(AlphaList al);
 
 /*****************************************************************************/
 /* This library creates a simple indexed array of lists for optimization of
    high entropy class searches.
 
  
- struct AlphaList al;
- struct Item *ip;
+ AlphaList al;
+ Item *ip;
  int i;
 
  InitAlphaList(&al);
@@ -58,7 +58,7 @@ static void ShowAlphaList(struct AlphaList al);
 
 /*****************************************************************************/
 
-void InitAlphaList(struct AlphaList *al)
+void InitAlphaList(AlphaList *al)
 
 { int i;
 
@@ -70,7 +70,7 @@ for (i = 0; i < CF_ALPHABETSIZE; i++)
 
 /*****************************************************************************/
 
-void DeleteAlphaList(struct AlphaList *al)
+void DeleteAlphaList(AlphaList *al)
 
 { int i;
 
@@ -83,7 +83,7 @@ for (i = 0; i < CF_ALPHABETSIZE; i++)
 
 /*****************************************************************************/
 
-struct AlphaList *CopyAlphaListPointers(struct AlphaList *ap,struct AlphaList *al)
+AlphaList *CopyAlphaListPointers(AlphaList *ap,AlphaList *al)
 
 { int i;
 
@@ -100,7 +100,7 @@ return ap;
 
 /*****************************************************************************/
 
-int InAlphaList(struct AlphaList al,const char *string)
+int InAlphaList(AlphaList al,const char *string)
 
 { int i = (int)*string;
   
@@ -109,9 +109,9 @@ return IsItemIn(al.list[i],string);
 
 /*****************************************************************************/
 
-int MatchInAlphaList(struct AlphaList al,char *string)
+int MatchInAlphaList(AlphaList al,char *string)
 
-{ struct Item *ip;
+{ Item *ip;
   int i = (int)*string;
 
 if (isalnum(i) || *string == '_')
@@ -145,7 +145,7 @@ return false;
 
 /*****************************************************************************/
 
-void PrependAlphaList(struct AlphaList *al, const char *string)
+void PrependAlphaList(AlphaList *al, const char *string)
 
 { int i = (int)*string;
 
@@ -154,7 +154,7 @@ al->list[i] = PrependItem(&(al->list[i]),string,NULL);
 
 /*****************************************************************************/
 
-void IdempPrependAlphaList(struct AlphaList *al, const char *string)
+void IdempPrependAlphaList(AlphaList *al, const char *string)
 {
 if (!InAlphaList(*al, string))
    {
@@ -164,10 +164,10 @@ if (!InAlphaList(*al, string))
 
 /*****************************************************************************/
 
-static void ShowAlphaList(struct AlphaList al)
+static void ShowAlphaList(AlphaList al)
 
 { int i;
-  struct Item *ip;
+  Item *ip;
 
 if (!(VERBOSE||DEBUG))
    {
@@ -195,10 +195,10 @@ for (i = 0; i < CF_ALPHABETSIZE; i++)
 
 /*****************************************************************************/
 
-void ListAlphaList(FILE *fout,struct AlphaList al,char sep)
+void ListAlphaList(FILE *fout,AlphaList al,char sep)
 
 { int i;
-  struct Item *ip;
+  Item *ip;
 
 for (i = 0; i < CF_ALPHABETSIZE; i++)
    {

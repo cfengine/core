@@ -38,17 +38,17 @@ static void PrintFunctions(void);
 
 /*******************************************************************/
 
-int IsBuiltinFnCall(struct Rval rval)
+int IsBuiltinFnCall(Rval rval)
 
 {
-struct FnCall *fp;
+FnCall *fp;
 
 if (rval.rtype != CF_FNCALL)
    {
    return false;
    }
 
-fp = (struct FnCall *)rval.item;
+fp = (FnCall *)rval.item;
 
 if (FindFunction(fp->name))
    {
@@ -63,13 +63,13 @@ else
 
 /*******************************************************************/
 
-struct FnCall *NewFnCall(char *name, struct Rlist *args)
+FnCall *NewFnCall(char *name, Rlist *args)
 
-{ struct FnCall *fp;
+{ FnCall *fp;
 
 CfDebug("Installing Function Call %s\n",name);
 
-fp = xmalloc(sizeof(struct FnCall));
+fp = xmalloc(sizeof(FnCall));
 
 fp->name = xstrdup(name);
 fp->args = args;
@@ -86,7 +86,7 @@ return fp;
 
 /*******************************************************************/
 
-struct FnCall *CopyFnCall(struct FnCall *f)
+FnCall *CopyFnCall(FnCall *f)
 
 {
 CfDebug("CopyFnCall()\n");
@@ -95,7 +95,7 @@ return NewFnCall(f->name,CopyRlist(f->args));
 
 /*******************************************************************/
 
-void DeleteFnCall(struct FnCall *fp)
+void DeleteFnCall(FnCall *fp)
 
 {
 if (fp->name)
@@ -113,7 +113,7 @@ free(fp);
 
 /*********************************************************************/
 
-struct FnCall *ExpandFnCall(char *contextid,struct FnCall *f,int expandnaked)
+FnCall *ExpandFnCall(char *contextid,FnCall *f,int expandnaked)
 
 {
  CfDebug("ExpandFnCall()\n");
@@ -141,9 +141,9 @@ for (i = 0; i < 3; i++)
 
 /*******************************************************************/
 
-int PrintFnCall(char *buffer, int bufsize,struct FnCall *fp)
+int PrintFnCall(char *buffer, int bufsize,FnCall *fp)
     
-{ struct Rlist *rp;
+{ Rlist *rp;
   char work[CF_MAXVARSIZE];
 
 snprintf(buffer,bufsize,"%s(",fp->name);
@@ -157,7 +157,7 @@ for (rp = fp->args; rp != NULL; rp=rp->next)
           break;
 
       case CF_FNCALL:
-          PrintFnCall(work,CF_MAXVARSIZE,(struct FnCall *)rp->item);
+          PrintFnCall(work,CF_MAXVARSIZE,(FnCall *)rp->item);
           Join(buffer,work,bufsize);
           break;
 
@@ -178,9 +178,9 @@ return strlen(buffer);
 
 /*******************************************************************/
 
-void ShowFnCall(FILE *fout,struct FnCall *fp)
+void ShowFnCall(FILE *fout,FnCall *fp)
 
-{ struct Rlist *rp;
+{ Rlist *rp;
 
 if (XML)
    {
@@ -200,7 +200,7 @@ for (rp = fp->args; rp != NULL; rp=rp->next)
           break;
 
       case CF_FNCALL:
-          ShowFnCall(fout,(struct FnCall *)rp->item);
+          ShowFnCall(fout,(FnCall *)rp->item);
           break;
 
       default:
@@ -229,9 +229,9 @@ return fn ? fn->dtype : cf_notype;
 
 /*******************************************************************/
 
-FnCallResult EvaluateFunctionCall(struct FnCall *fp,struct Promise *pp)
+FnCallResult EvaluateFunctionCall(FnCall *fp,Promise *pp)
 
-{ struct Rlist *expargs;
+{ Rlist *expargs;
   const FnCallType *this = FindFunction(fp->name);
 
 if (this)
@@ -304,9 +304,9 @@ return NULL;
 }
 /*****************************************************************************/
 
-void FnCallPrint(Writer *writer, struct FnCall *call)
+void FnCallPrint(Writer *writer, FnCall *call)
 {
-for (struct Rlist *rp = call->args; rp != NULL; rp = rp->next)
+for (Rlist *rp = call->args; rp != NULL; rp = rp->next)
    {
    switch (rp->type)
       {
@@ -315,7 +315,7 @@ for (struct Rlist *rp = call->args; rp != NULL; rp = rp->next)
          break;
 
       case CF_FNCALL:
-         FnCallPrint(writer, (struct FnCall *)rp->item);
+         FnCallPrint(writer, (FnCall *)rp->item);
          break;
 
       default:

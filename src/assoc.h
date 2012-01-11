@@ -27,16 +27,16 @@
 
 #include "cf3.defs.h"
 
-typedef struct CfAssoc        /* variable reference linkage , with metatype*/
+typedef struct        /* variable reference linkage , with metatype*/
    {
    char *lval;
-   struct Rval rval;
+   Rval rval;
    enum cfdatatype dtype;
    } CfAssoc;
 
-struct CfAssoc *NewAssoc(const char *lval, struct Rval rval, enum cfdatatype dt);
-void DeleteAssoc(struct CfAssoc *ap);
-struct CfAssoc *CopyAssoc(struct CfAssoc *old);
-struct CfAssoc *AssocNewReference(const char *lval, struct Rval rval, enum cfdatatype dtype);
+CfAssoc *NewAssoc(const char *lval, Rval rval, enum cfdatatype dt);
+void DeleteAssoc(CfAssoc *ap);
+CfAssoc *CopyAssoc(CfAssoc *old);
+CfAssoc *AssocNewReference(const char *lval, Rval rval, enum cfdatatype dtype);
 
 #endif

@@ -95,7 +95,7 @@ const char *HINTS[] =
 int main(int argc,char *argv[])
 
 {
-struct GenericAgentConfig config = CheckOpts(argc,argv);
+GenericAgentConfig config = CheckOpts(argc,argv);
 GenericInitialize(argc,argv,"common", config);
 ThisAgentInit();
 AnalyzePromiseConflicts();
@@ -117,12 +117,12 @@ else
 /* Level 1                                                         */
 /*******************************************************************/
 
-struct GenericAgentConfig CheckOpts(int argc,char **argv)
+GenericAgentConfig CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
   int optindex = 0;
   int c;
-  struct GenericAgentConfig config = GenericAgentDefaultConfig(cf_common);
+  GenericAgentConfig config = GenericAgentDefaultConfig(cf_common);
   
 while ((c=getopt_long(argc,argv,"ad:vnIf:D:N:VSrxMb:pg:",OPTIONS,&optindex)) != EOF)
   {

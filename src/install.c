@@ -32,13 +32,13 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static void DeleteSubTypes(struct SubType *tp);
+static void DeleteSubTypes(SubType *tp);
 
 /*******************************************************************/
 
 int RelevantBundle(char *agent,char *blocktype)
 
-{ struct Item *ip;
+{ Item *ip;
  
 if (strcmp(agent,CF_AGENTTYPES[cf_common]) == 0 || strcmp(CF_COMMONC,P.blocktype) == 0)
    {
@@ -64,9 +64,9 @@ return false;
 
 /*******************************************************************/
 
-struct Bundle *AppendBundle(struct Bundle **start,char *name, char *type, struct Rlist *args)
+Bundle *AppendBundle(Bundle **start,char *name, char *type, Rlist *args)
 
-{ struct Bundle *bp,*lp;
+{ Bundle *bp,*lp;
   
 CfDebug("Appending new bundle %s %s (",type,name);
 
@@ -78,7 +78,7 @@ CfDebug(")\n");
 
 CheckBundle(name,type);
 
-bp = xcalloc(1, sizeof(struct Bundle));
+bp = xcalloc(1, sizeof(Bundle));
 
 if (*start == NULL)
    {
@@ -102,10 +102,10 @@ return bp;
 
 /*******************************************************************/
 
-struct Body *AppendBody(struct Body **start,char *name, char *type, struct Rlist *args)
+Body *AppendBody(Body **start,char *name, char *type, Rlist *args)
 
-{ struct Body *bp,*lp;
-  struct Rlist *rp;
+{ Body *bp,*lp;
+  Rlist *rp;
 
 CfDebug("Appending new promise body %s %s(",type,name);
 
@@ -117,7 +117,7 @@ for (rp = args; rp!= NULL; rp=rp->next)
    }
 CfDebug(")\n");
 
-bp = xcalloc(1, sizeof(struct Body));
+bp = xcalloc(1, sizeof(Body));
 
 if (*start == NULL)
    {
@@ -141,9 +141,9 @@ return bp;
 
 /*******************************************************************/
 
-struct SubType *AppendSubType(struct Bundle *bundle,char *typename)
+SubType *AppendSubType(Bundle *bundle,char *typename)
 
-{ struct SubType *tp,*lp;
+{ SubType *tp,*lp;
 
 CfDebug("Appending new type section %s\n",typename);
 
@@ -161,7 +161,7 @@ for (lp = bundle->subtypes; lp != NULL; lp=lp->next)
       }
    }
 
-tp = xcalloc(1, sizeof(struct SubType));
+tp = xcalloc(1, sizeof(SubType));
 
 if (bundle->subtypes == NULL)
    {
@@ -183,9 +183,9 @@ return tp;
 
 /*******************************************************************/
 
-struct Promise *AppendPromise(struct SubType *type,char *promiser, struct Rval promisee, char *classes,char *bundle,char *bundletype)
+Promise *AppendPromise(SubType *type,char *promiser, Rval promisee, char *classes,char *bundle,char *bundletype)
 
-{ struct Promise *pp,*lp;
+{ Promise *pp,*lp;
   char *sp = NULL,*spe = NULL;
   char output[CF_BUFSIZE];
 
@@ -199,7 +199,7 @@ if (type == NULL)
 
 CfDebug("Appending Promise from bundle %s %s if context %s\n",bundle,promiser,classes);
 
-pp = xcalloc(1, sizeof(struct Promise));
+pp = xcalloc(1, sizeof(Promise));
 
 sp = xstrdup(promiser);
 
@@ -261,7 +261,7 @@ return pp;
 /* Cleanup                                                         */
 /*******************************************************************/
 
-void DeleteBundles(struct Bundle *bp)
+void DeleteBundles(Bundle *bp)
 
 {
 if (bp == NULL)
@@ -291,7 +291,7 @@ free(bp);
 
 /*******************************************************************/
 
-static void DeleteSubTypes(struct SubType *tp)
+static void DeleteSubTypes(SubType *tp)
 
 {
 if (tp == NULL)
@@ -316,7 +316,7 @@ free(tp);
 
 /*******************************************************************/
 
-void DeleteBodies(struct Body *bp)
+void DeleteBodies(Body *bp)
 
 {
 if (bp == NULL)

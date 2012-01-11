@@ -34,9 +34,9 @@
 
 /*******************************************************************/
 
-int FixCompressedArrayValue(int i,char *value,struct CompressedArray **start)
+int FixCompressedArrayValue(int i,char *value,CompressedArray **start)
 
-{ struct CompressedArray *ap;
+{ CompressedArray *ap;
 
 for (ap = *start; ap != NULL; ap = ap->next)
    {
@@ -49,7 +49,7 @@ for (ap = *start; ap != NULL; ap = ap->next)
 
 CfDebug("FixCompressedArrayValue(%d,%s)\n",i,value);
 
-ap = xmalloc(sizeof(struct CompressedArray));
+ap = xmalloc(sizeof(CompressedArray));
 
 ap->key = i;
 ap->value = xstrdup(value);
@@ -61,7 +61,7 @@ return true;
 
 /*******************************************************************/
 
-void DeleteCompressedArray(struct CompressedArray *start)
+void DeleteCompressedArray(CompressedArray *start)
 
 {
 if (start != NULL)
@@ -80,9 +80,9 @@ if (start != NULL)
 
 /*******************************************************************/
 
-int CompressedArrayElementExists(struct CompressedArray *start,int key)
+int CompressedArrayElementExists(CompressedArray *start,int key)
 
-{ struct CompressedArray *ap;
+{ CompressedArray *ap;
 
 CfDebug("CompressedArrayElementExists(%d)\n",key);
 
@@ -99,9 +99,9 @@ return false;
 
 /*******************************************************************/
 
-char *CompressedArrayValue(struct CompressedArray *start,int key)
+char *CompressedArrayValue(CompressedArray *start,int key)
 
-{ struct CompressedArray *ap;
+{ CompressedArray *ap;
 
 for (ap = start; ap != NULL; ap = ap->next)
    {

@@ -49,7 +49,7 @@ static double CF_THIS[CF_OBSERVABLES]; /* New from 2.1.21 replacing above - curr
 static long ITER;           /* Iteration since start */
 static double AGE,WAGE;             /* Age and weekly age of database */
 
-static struct Averages LOCALAV;
+static Averages LOCALAV;
 
 /* Leap Detection vars */
 
@@ -71,20 +71,20 @@ int NO_FORK = false;
 static void GetDatabaseAge(void);
 static void LoadHistogram(void);
 static void GetQ(void);
-static struct Averages EvalAvQ(char *timekey);
-static void ArmClasses(struct Averages newvals,char *timekey);
+static Averages EvalAvQ(char *timekey);
+static void ArmClasses(Averages newvals,char *timekey);
 static void GatherPromisedMeasures(void);
 
 static void LeapDetection(void);
-static struct Averages *GetCurrentAverages(char *timekey);
-static void UpdateAverages(char *timekey, struct Averages newvals);
-static void UpdateDistributions(char *timekey, struct Averages *av);
+static Averages *GetCurrentAverages(char *timekey);
+static void UpdateAverages(char *timekey, Averages newvals);
+static void UpdateDistributions(char *timekey, Averages *av);
 static double WAverage(double newvals,double oldvals, double age);
-static double SetClasses(char *name,double variable,double av_expect,double av_var,double localav_expect,double localav_var,struct Item **classlist,char *timekey);
-static void SetVariable(char *name,double now, double average, double stddev, struct Item **list);
+static double SetClasses(char *name,double variable,double av_expect,double av_var,double localav_expect,double localav_var,Item **classlist,char *timekey);
+static void SetVariable(char *name,double now, double average, double stddev, Item **list);
 static double RejectAnomaly(double new,double av,double var,double av2,double var2);
 static void ZeroArrivals (void);
-static void KeepMonitorPromise(struct Promise *pp);
+static void KeepMonitorPromise(Promise *pp);
 
 /****************************************************************/
 
@@ -227,9 +227,9 @@ fclose(fp);
 void MonitorStartServer(int argc,char **argv)
 {
 char timekey[CF_SMALLBUF];
-struct Averages averages;
-struct Promise *pp = NewPromise("monitor_cfengine","the monitor daemon");
-struct Attributes dummyattr;
+Averages averages;
+Promise *pp = NewPromise("monitor_cfengine","the monitor daemon");
+Attributes dummyattr;
 struct CfLock thislock;
 
 #ifdef MINGW
@@ -310,9 +310,9 @@ GatherPromisedMeasures();
 
 /*********************************************************************/
 
-static struct Averages EvalAvQ(char *t)
+static Averages EvalAvQ(char *t)
 {
-struct Averages *currentvals,newvals;
+Averages *currentvals,newvals;
 double This[CF_OBSERVABLES];
 char name[CF_MAXVARSIZE];
 int i;
@@ -471,11 +471,11 @@ for (i = 0; i < CF_OBSERVABLES; i++)
 
 /*********************************************************************/
 
-static void ArmClasses(struct Averages av,char *timekey)
+static void ArmClasses(Averages av,char *timekey)
 
 {
 double sigma;
-struct Item *classlist = NULL;
+Item *classlist = NULL;
 int i,j,k;
 char buff[CF_BUFSIZE],ldt_buff[CF_BUFSIZE],name[CF_MAXVARSIZE];
 static int anomaly[CF_OBSERVABLES][LDT_BUFSIZE];
@@ -571,10 +571,10 @@ MonEntropyClassesPublish(classlist);
 
 /*****************************************************************************/
 
-static struct Averages *GetCurrentAverages(char *timekey)
+static Averages *GetCurrentAverages(char *timekey)
 {
 CF_DB *dbp;
-static struct Averages entry;
+static Averages entry;
 
 if (!OpenDB(AVDB,&dbp))
    {
@@ -586,7 +586,7 @@ memset(&entry,0,sizeof(entry));
 AGE++;
 WAGE = AGE / SECONDS_PER_WEEK * CF_MEASURE_INTERVAL;
 
-if (ReadDB(dbp,timekey,&entry,sizeof(struct Averages)))
+if (ReadDB(dbp,timekey,&entry,sizeof(Averages)))
    {
    int i;
    for (i = 0; i < CF_OBSERVABLES; i++)
@@ -605,7 +605,7 @@ return &entry;
 
 /*****************************************************************************/
 
-static void UpdateAverages(char *timekey,struct Averages newvals)
+static void UpdateAverages(char *timekey,Averages newvals)
 {
 CF_DB *dbp;
 
@@ -616,7 +616,7 @@ if (!OpenDB(AVDB,&dbp))
 
 CfOut(cf_inform,"","Updated averages at %s\n",timekey);
 
-WriteDB(dbp,timekey,&newvals,sizeof(struct Averages));
+WriteDB(dbp,timekey,&newvals,sizeof(Averages));
 WriteDB(dbp,"DATABASE_AGE",&AGE,sizeof(double));
 
 CloseDB(dbp);
@@ -625,7 +625,7 @@ HistoryUpdate(newvals);
 
 /*****************************************************************************/
 
-static void UpdateDistributions(char *timekey,struct Averages *av)
+static void UpdateDistributions(char *timekey,Averages *av)
 {
 int position,day,i;
 char filename[CF_BUFSIZE];
@@ -748,7 +748,7 @@ return av;
 
 /*****************************************************************************/
 
-static double SetClasses(char *name,double variable,double av_expect,double av_var,double localav_expect,double localav_var,struct Item **classlist,char *timekey)
+static double SetClasses(char *name,double variable,double av_expect,double av_var,double localav_expect,double localav_var,Item **classlist,char *timekey)
 {
 char buffer[CF_BUFSIZE],buffer2[CF_BUFSIZE];
 double dev,delta,sigma,ldelta,lsigma,sig;
@@ -868,7 +868,7 @@ else
 
 /*****************************************************************************/
 
-static void SetVariable(char *name,double value,double average,double stddev,struct Item **classlist)
+static void SetVariable(char *name,double value,double average,double stddev,Item **classlist)
 {
 char var[CF_BUFSIZE];
 
@@ -964,9 +964,9 @@ else
 
 static void GatherPromisedMeasures(void)
 {
-struct Bundle *bp;
-struct SubType *sp;
-struct Promise *pp;
+Bundle *bp;
+SubType *sp;
+Promise *pp;
 char *scope;
 
 for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
@@ -993,7 +993,7 @@ DeleteAllScope();
 /* Level                                                             */
 /*********************************************************************/
 
-static void KeepMonitorPromise(struct Promise *pp)
+static void KeepMonitorPromise(Promise *pp)
 {
 char *sp = NULL;
 

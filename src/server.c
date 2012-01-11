@@ -37,7 +37,7 @@
 
 struct cfd_get_arg
    {
-   struct cfd_connection *connect;
+   ServerConnectionState *connect;
    int encrypt;
    int buf_size;
    char *replybuff;
@@ -46,46 +46,46 @@ struct cfd_get_arg
 
 int main (int argc,char *argv[]);
 int OpenReceiverChannel (void);
-void PurgeOldConnections (struct Item **list,time_t now);
+void PurgeOldConnections (Item **list,time_t now);
 void SpawnConnection (int sd_reply, char *ipaddr);
-static void CheckFileChanges (int argc, char **argv, struct GenericAgentConfig config);
-void *HandleConnection (struct cfd_connection *conn);
-int BusyWithConnection (struct cfd_connection *conn);
-int MatchClasses (struct cfd_connection *conn);
-void DoExec (struct cfd_connection *conn, char *sendbuffer, char *args);
+static void CheckFileChanges (int argc, char **argv, GenericAgentConfig config);
+void *HandleConnection (ServerConnectionState *conn);
+int BusyWithConnection (ServerConnectionState *conn);
+int MatchClasses (ServerConnectionState *conn);
+void DoExec (ServerConnectionState *conn, char *sendbuffer, char *args);
 int GetCommand (char *str);
-int VerifyConnection (struct cfd_connection *conn, char *buf);
-void RefuseAccess (struct cfd_connection *conn, char *sendbuffer, int size, char *errormsg);
-int AccessControl(const char *oldFilename,struct cfd_connection *conn,int encrypt,struct Auth *admit, struct Auth *deny);
-int LiteralAccessControl(char *filename,struct cfd_connection *conn,int encrypt,struct Auth *admit, struct Auth *deny);
-struct Item *ContextAccessControl(char *in,struct cfd_connection *conn,int encrypt,struct Auth *vadmit, struct Auth *vdeny);
-void ReplyServerContext(struct cfd_connection *conn,char *sendbuffer,char *recvbuffer,int encrypted,struct Item *classes);
-int CheckStoreKey  (struct cfd_connection *conn, RSA *key);
-int StatFile (struct cfd_connection *conn, char *sendbuffer, char *filename);
+int VerifyConnection (ServerConnectionState *conn, char *buf);
+void RefuseAccess (ServerConnectionState *conn, char *sendbuffer, int size, char *errormsg);
+int AccessControl(const char *oldFilename,ServerConnectionState *conn,int encrypt,Auth *admit, Auth *deny);
+int LiteralAccessControl(char *filename,ServerConnectionState *conn,int encrypt,Auth *admit, Auth *deny);
+Item *ContextAccessControl(char *in,ServerConnectionState *conn,int encrypt,Auth *vadmit, Auth *vdeny);
+void ReplyServerContext(ServerConnectionState *conn,char *sendbuffer,char *recvbuffer,int encrypted,Item *classes);
+int CheckStoreKey  (ServerConnectionState *conn, RSA *key);
+int StatFile (ServerConnectionState *conn, char *sendbuffer, char *filename);
 void CfGetFile (struct cfd_get_arg *args);
 void CfEncryptGetFile(struct cfd_get_arg *args);
-void CompareLocalHash(struct cfd_connection *conn, char *sendbuffer, char *recvbuffer);
-void GetServerLiteral(struct cfd_connection *conn,char *sendbuffer,char *recvbuffer,int encrypted);
-int GetServerQuery(struct cfd_connection *conn,char *sendbuffer,char *recvbuffer);
-int CfOpenDirectory (struct cfd_connection *conn, char *sendbuffer, char *oldDirname);
-int CfSecOpenDirectory (struct cfd_connection *conn, char *sendbuffer, char *dirname);
+void CompareLocalHash(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer);
+void GetServerLiteral(ServerConnectionState *conn,char *sendbuffer,char *recvbuffer,int encrypted);
+int GetServerQuery(ServerConnectionState *conn,char *sendbuffer,char *recvbuffer);
+int CfOpenDirectory (ServerConnectionState *conn, char *sendbuffer, char *oldDirname);
+int CfSecOpenDirectory (ServerConnectionState *conn, char *sendbuffer, char *dirname);
 void Terminate (int sd);
-void DeleteAuthList (struct Auth *ap);
+void DeleteAuthList (Auth *ap);
 int AllowedUser (char *user);
-int AuthorizeRoles(struct cfd_connection *conn,char *args);
+int AuthorizeRoles(ServerConnectionState *conn,char *args);
 int TransferRights(char *filename,int sd,struct cfd_get_arg *args,char *sendbuffer, struct stat *sb);
 void AbortTransfer(int sd,char *sendbuffer,char *filename);
 void FailedTransfer(int sd,char *sendbuffer,char *filename);
-void ReplyNothing (struct cfd_connection *conn);
-struct cfd_connection *NewConn (int sd);
-void DeleteConn (struct cfd_connection *conn);
+void ReplyNothing (ServerConnectionState *conn);
+ServerConnectionState *NewConn (int sd);
+void DeleteConn (ServerConnectionState *conn);
 int cfscanf (char *in, int len1, int len2, char *out1, char *out2, char *out3);
-int AuthenticationDialogue (struct cfd_connection *conn,char *buffer, int buffersize);
+int AuthenticationDialogue (ServerConnectionState *conn,char *buffer, int buffersize);
 int SafeOpen (char *filename);
 int OptionFound(char *args, char *pos, char *word);
 in_addr_t GetInetAddr (char *host);
 
-static void StartServer (int argc, char **argv, struct GenericAgentConfig config);
+static void StartServer (int argc, char **argv, GenericAgentConfig config);
 
 char CFRUNCOMMAND[CF_BUFSIZE];
 static time_t CFDSTARTTIME;
@@ -174,27 +174,27 @@ int MAXTRIES = 5;
 int LOGCONNS = false;
 int LOGENCRYPT = false;
 
-struct Item *CONNECTIONLIST = NULL;
+Item *CONNECTIONLIST = NULL;
 
-struct Auth *ROLES = NULL;
-struct Auth *ROLESTOP = NULL;
+Auth *ROLES = NULL;
+Auth *ROLESTOP = NULL;
 
-struct Auth *VADMIT = NULL;
-struct Auth *VADMITTOP = NULL;
-struct Auth *VDENY = NULL;
-struct Auth *VDENYTOP = NULL;
+Auth *VADMIT = NULL;
+Auth *VADMITTOP = NULL;
+Auth *VDENY = NULL;
+Auth *VDENYTOP = NULL;
 
-struct Auth *VARADMIT = NULL;
-struct Auth *VARADMITTOP = NULL;
-struct Auth *VARDENY = NULL;
-struct Auth *VARDENYTOP = NULL;
+Auth *VARADMIT = NULL;
+Auth *VARADMITTOP = NULL;
+Auth *VARDENY = NULL;
+Auth *VARDENYTOP = NULL;
 
 /*****************************************************************************/
 
 int main(int argc,char *argv[])
 
 {
-struct GenericAgentConfig config = CheckOpts(argc,argv);
+GenericAgentConfig config = CheckOpts(argc,argv);
 GenericInitialize(argc,argv,"server", config);
 ThisAgentInit();
 KeepPromises(config);
@@ -206,13 +206,13 @@ return 0;
 
 /*******************************************************************/
 
-struct GenericAgentConfig CheckOpts(int argc,char **argv)
+GenericAgentConfig CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
   char ld_library_path[CF_BUFSIZE];
   int optindex = 0;
   int c;
-  struct GenericAgentConfig config = GenericAgentDefaultConfig(cf_server);
+  GenericAgentConfig config = GenericAgentDefaultConfig(cf_server);
   
 while ((c=getopt_long(argc,argv,"d:vIKf:D:N:VSxLFM",OPTIONS,&optindex)) != EOF)
   {
@@ -302,7 +302,7 @@ KEYTTL = 24;
 
 /*******************************************************************/
 
-static void StartServer(int argc,char **argv, struct GenericAgentConfig config)
+static void StartServer(int argc,char **argv, GenericAgentConfig config)
 
 { char ipaddr[CF_MAXVARSIZE],intime[64];
   int sd,sd_reply;
@@ -310,8 +310,8 @@ static void StartServer(int argc,char **argv, struct GenericAgentConfig config)
   time_t now;
   struct timeval timeout;
   int ret_val;
-  struct Promise *pp = NewPromise("server_cfengine","the server daemon");
-  struct Attributes dummyattr = {{0}};
+  Promise *pp = NewPromise("server_cfengine","the server daemon");
+  Attributes dummyattr = {{0}};
   struct CfLock thislock;
 
 #if defined(HAVE_GETADDRINFO)
@@ -675,12 +675,12 @@ return sd;
 /* Level 3                                                           */
 /*********************************************************************/
 
-void PurgeOldConnections(struct Item **list,time_t now)
+void PurgeOldConnections(Item **list,time_t now)
 
    /* Some connections might not terminate properly. These should be cleaned
       every couple of hours. That should be enough to prevent spamming. */
 
-{ struct Item *ip;
+{ Item *ip;
   int then = 0;
 
 if (list == NULL)
@@ -719,7 +719,7 @@ CfDebug("Done purging\n");
 
 void SpawnConnection(int sd_reply,char *ipaddr)
 
-{ struct cfd_connection *conn;
+{ ServerConnectionState *conn;
 
 #ifdef HAVE_PTHREAD_H
  pthread_t tid;
@@ -763,7 +763,7 @@ HandleConnection(conn);
 
 /**************************************************************/
 
-void CheckFileChanges(int argc, char **argv, struct GenericAgentConfig config)
+void CheckFileChanges(int argc, char **argv, GenericAgentConfig config)
 
 { struct stat newstat;
   char filename[CF_BUFSIZE];
@@ -898,7 +898,7 @@ if (setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY,
 /* Level 4                                                           */
 /*********************************************************************/
 
-void *HandleConnection(struct cfd_connection *conn)
+void *HandleConnection(ServerConnectionState *conn)
 
 { char output[CF_BUFSIZE];
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
@@ -977,7 +977,7 @@ return NULL;
 
 /*********************************************************************/
 
-int BusyWithConnection(struct cfd_connection *conn)
+int BusyWithConnection(ServerConnectionState *conn)
 
   /* This is the protocol section. Here we must   */
   /* check that the incoming data are sensible    */
@@ -990,7 +990,7 @@ int BusyWithConnection(struct cfd_connection *conn)
   unsigned int len=0;
   int drift, plainlen, received, encrypted = 0;
   struct cfd_get_arg get_args;
-  struct Item *classes;
+  Item *classes;
 
 memset(recvbuffer,0,CF_BUFSIZE+CF_BUFEXT);
 memset(&get_args,0,sizeof(get_args));
@@ -1532,10 +1532,10 @@ return false;
 /* Level 4                                                    */
 /**************************************************************/
 
-int MatchClasses(struct cfd_connection *conn)
+int MatchClasses(ServerConnectionState *conn)
 
 { char recvbuffer[CF_BUFSIZE];
-  struct Item *classlist = NULL, *ip;
+  Item *classlist = NULL, *ip;
   int count = 0;
 
 CfDebug("Match classes\n");
@@ -1601,7 +1601,7 @@ while (true && (count < 10))  /* arbitrary check to avoid infinite loop, DoS att
 
 /******************************************************************/
 
-void DoExec(struct cfd_connection *conn,char *sendbuffer,char *args)
+void DoExec(ServerConnectionState *conn,char *sendbuffer,char *args)
 
 { char ebuff[CF_EXPANDSIZE], line[CF_BUFSIZE], *sp;
   int print = false,i;
@@ -1755,7 +1755,7 @@ return -1;
 
 /*********************************************************************/
 
-int VerifyConnection(struct cfd_connection *conn,char buf[CF_BUFSIZE])
+int VerifyConnection(ServerConnectionState *conn,char buf[CF_BUFSIZE])
 
  /* Try reverse DNS lookup
     and RFC931 username lookup to check the authenticity. */
@@ -1771,7 +1771,7 @@ int VerifyConnection(struct cfd_connection *conn,char buf[CF_BUFSIZE])
   struct sockaddr_in raddr;
   int i,j,len = sizeof(struct sockaddr_in);
   struct hostent *hp = NULL;
-  struct Item *ip_aliases = NULL, *ip_addresses = NULL;
+  Item *ip_aliases = NULL, *ip_addresses = NULL;
 #endif
 
 CfDebug("Connecting host identifies itself as %s\n",buf);
@@ -2057,9 +2057,9 @@ return true;
 
 /**************************************************************/
 
-int AccessControl(const char *req_path,struct cfd_connection *conn,int encrypt,struct Auth *vadmit, struct Auth *vdeny)
+int AccessControl(const char *req_path,ServerConnectionState *conn,int encrypt,Auth *vadmit, Auth *vdeny)
 
-{ struct Auth *ap;
+{ Auth *ap;
   int access = false;
   char transrequest[CF_BUFSIZE];
   struct stat statbuf;
@@ -2198,9 +2198,9 @@ return access;
 
 /**************************************************************/
 
-int LiteralAccessControl(char *in,struct cfd_connection *conn,int encrypt,struct Auth *vadmit, struct Auth *vdeny)
+int LiteralAccessControl(char *in,ServerConnectionState *conn,int encrypt,Auth *vadmit, Auth *vdeny)
 
-{ struct Auth *ap;
+{ Auth *ap;
   int access = false;
   char name[CF_BUFSIZE];
 
@@ -2309,9 +2309,9 @@ return access;
 
 /**************************************************************/
 
-struct Item *ContextAccessControl(char *in,struct cfd_connection *conn,int encrypt,struct Auth *vadmit, struct Auth *vdeny)
+Item *ContextAccessControl(char *in,ServerConnectionState *conn,int encrypt,Auth *vadmit, Auth *vdeny)
 
-{ struct Auth *ap;
+{ Auth *ap;
   int access = false;
   char client_regex[CF_BUFSIZE];
   CF_DB *dbp;
@@ -2321,7 +2321,7 @@ struct Item *ContextAccessControl(char *in,struct cfd_connection *conn,int encry
   void *value;
   time_t now = time(NULL);
   struct CfState q;
-  struct Item *ip,*matches = NULL, *candidates = NULL;
+  Item *ip,*matches = NULL, *candidates = NULL;
   char filename[CF_BUFSIZE];
 
 sscanf(in,"CONTEXT %255[^\n]",client_regex);
@@ -2450,12 +2450,12 @@ return matches;
 
 /**************************************************************/
 
-int AuthorizeRoles(struct cfd_connection *conn,char *args)
+int AuthorizeRoles(ServerConnectionState *conn,char *args)
 
 { char *sp;
-  struct Auth *ap;
+  Auth *ap;
   char userid1[CF_MAXVARSIZE],userid2[CF_MAXVARSIZE];
-  struct Rlist *rp,*defines = NULL;
+  Rlist *rp,*defines = NULL;
   int permitted = false;
   
 snprintf(userid1,CF_MAXVARSIZE,"%s@%s",conn->username,conn->hostname);
@@ -2526,7 +2526,7 @@ return permitted;
 
 /**************************************************************/
 
-int AuthenticationDialogue(struct cfd_connection *conn,char *recvbuffer, int recvlen)
+int AuthenticationDialogue(ServerConnectionState *conn,char *recvbuffer, int recvlen)
 
 { char in[CF_BUFSIZE],*out, *decrypted_nonce;
   BIGNUM *counter_challenge = NULL;
@@ -2862,13 +2862,13 @@ return true;
 
 /**************************************************************/
 
-int StatFile(struct cfd_connection *conn,char *sendbuffer,char *ofilename)
+int StatFile(ServerConnectionState *conn,char *sendbuffer,char *ofilename)
 
 /* Because we do not know the size or structure of remote datatypes,*/
 /* the simplest way to transfer the data is to convert them into */
 /* plain text and interpret them on the other side. */
 
-{ struct cfstat cfst;
+{ Stat cfst;
   struct stat statbuf,statlinkbuf;
   char linkbuf[CF_BUFSIZE],filename[CF_BUFSIZE];
   int islink = false;
@@ -2877,7 +2877,7 @@ CfDebug("\nStatFile(%s)\n",filename);
 
 TranslatePath(filename,ofilename);
 
-memset(&cfst,0,sizeof(struct cfstat));
+memset(&cfst,0,sizeof(Stat));
   
 if (strlen(ReadLastNode(filename)) > CF_MAXLINKSIZE)
    {
@@ -3262,7 +3262,7 @@ close(fd);
 
 /**************************************************************/
 
-void CompareLocalHash(struct cfd_connection *conn,char *sendbuffer,char *recvbuffer)
+void CompareLocalHash(ServerConnectionState *conn,char *sendbuffer,char *recvbuffer)
 
 { unsigned char digest1[EVP_MAX_MD_SIZE+1],digest2[EVP_MAX_MD_SIZE+1];
   char filename[CF_BUFSIZE],rfilename[CF_BUFSIZE];
@@ -3302,7 +3302,7 @@ else
 
 /**************************************************************/
 
-void GetServerLiteral(struct cfd_connection *conn,char *sendbuffer,char *recvbuffer,int encrypted)
+void GetServerLiteral(ServerConnectionState *conn,char *sendbuffer,char *recvbuffer,int encrypted)
 
 { char handle[CF_BUFSIZE],out[CF_BUFSIZE];
   int cipherlen;
@@ -3333,7 +3333,7 @@ else
 
 /********************************************************************/
 
-int GetServerQuery(struct cfd_connection *conn,char *sendbuffer,char *recvbuffer)
+int GetServerQuery(ServerConnectionState *conn,char *sendbuffer,char *recvbuffer)
 
 { char query[CF_BUFSIZE];
 
@@ -3361,11 +3361,11 @@ return false;
 
 /**************************************************************/
 
-void ReplyServerContext(struct cfd_connection *conn,char *sendbuffer,char *recvbuffer,int encrypted,struct Item *classes)
+void ReplyServerContext(ServerConnectionState *conn,char *sendbuffer,char *recvbuffer,int encrypted,Item *classes)
 
 { char out[CF_BUFSIZE];
   int cipherlen;
-  struct Item *ip;
+  Item *ip;
 
 memset(sendbuffer,0,CF_BUFSIZE);
 
@@ -3398,9 +3398,9 @@ else
 
 /**************************************************************/
 
-int CfOpenDirectory(struct cfd_connection *conn,char *sendbuffer,char *oldDirname)
+int CfOpenDirectory(ServerConnectionState *conn,char *sendbuffer,char *oldDirname)
 
-{ CFDIR *dirh;
+{ Dir *dirh;
   const struct dirent *dirp;
   int offset;
   char dirname[CF_BUFSIZE];
@@ -3452,9 +3452,9 @@ return 0;
 
 /**************************************************************/
 
-int CfSecOpenDirectory(struct cfd_connection *conn,char *sendbuffer,char *dirname)
+int CfSecOpenDirectory(ServerConnectionState *conn,char *sendbuffer,char *dirname)
 
-{ CFDIR *dirh;
+{ Dir *dirh;
   const struct dirent *dirp;
   int offset,cipherlen;
   char out[CF_BUFSIZE];
@@ -3528,7 +3528,7 @@ if (SendTransaction(sd,buffer,strlen(buffer)+1,CF_DONE) == -1)
 
 /***************************************************************/
 
-void DeleteAuthList(struct Auth *ap)
+void DeleteAuthList(Auth *ap)
 
 {
 if (ap != NULL)
@@ -3593,7 +3593,7 @@ else
 
 /**************************************************************/
 
-void RefuseAccess(struct cfd_connection *conn,char *sendbuffer,int size,char *errmesg)
+void RefuseAccess(ServerConnectionState *conn,char *sendbuffer,int size,char *errmesg)
 
 { char *hostname, *username, *ipaddr;
   static char *def = "?"; 
@@ -3745,7 +3745,7 @@ if (SendTransaction(sd,sendbuffer,0,CF_DONE) == -1)
 
 /***************************************************************/
 
-void ReplyNothing(struct cfd_connection *conn)
+void ReplyNothing(ServerConnectionState *conn)
 
 { char buffer[CF_BUFSIZE];
 
@@ -3759,7 +3759,7 @@ if (SendTransaction(conn->sd_reply,buffer,0,CF_DONE) == -1)
 
 /***************************************************************/
 
-int CheckStoreKey(struct cfd_connection *conn,RSA *key)
+int CheckStoreKey(ServerConnectionState *conn,RSA *key)
 
 { RSA *savedkey;
   char udigest[CF_MAXVARSIZE];
@@ -3807,13 +3807,13 @@ else
 /* Toolkit/Class: conn                                         */
 /***************************************************************/
 
-struct cfd_connection *NewConn(int sd)  /* construct */
+ServerConnectionState *NewConn(int sd)  /* construct */
 
-{ struct cfd_connection *conn;
+{ ServerConnectionState *conn;
 
 ThreadLock(cft_system);
  
-conn = xmalloc(sizeof(struct cfd_connection));
+conn = xmalloc(sizeof(ServerConnectionState));
 
 ThreadUnlock(cft_system);
  
@@ -3834,7 +3834,7 @@ return conn;
 
 /***************************************************************/
 
-void DeleteConn(struct cfd_connection *conn) /* destruct */
+void DeleteConn(ServerConnectionState *conn) /* destruct */
 
 {
 CfDebug("***Closing socket %d from %s\n",conn->sd_reply,conn->ipaddr);

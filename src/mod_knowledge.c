@@ -48,7 +48,7 @@
  /*                                                         */
  /***********************************************************/
 
-struct BodySyntax CF_RELATE_BODY[] =
+BodySyntax CF_RELATE_BODY[] =
    {
    {"forward_relationship",cf_str,"","Name of forward association between promiser topic and associates"},
    {"backward_relationship",cf_str,"","Name of backward/inverse association from associates to promiser topic"},
@@ -58,7 +58,7 @@ struct BodySyntax CF_RELATE_BODY[] =
 
 /***************************************************************/
 
-struct BodySyntax CF_OCCUR_BODIES[] =
+BodySyntax CF_OCCUR_BODIES[] =
    {
    {"represents",cf_slist,"","List of subtopics that explains the type(s) of information represented by the occurrence"},
    {"representation",cf_opts,"literal,url,db,file,web,image,portal","How to interpret the promiser string e.g. actual data or reference to data"},
@@ -69,7 +69,7 @@ struct BodySyntax CF_OCCUR_BODIES[] =
 
 /***************************************************************/
 
-struct BodySyntax CF_TOPICS_BODIES[] =
+BodySyntax CF_TOPICS_BODIES[] =
    {
    {"association",cf_body,CF_RELATE_BODY,"Declare associated topics"},
    {"synonyms",cf_slist,"","A list of words to be treated as equivalents in the defined context"},
@@ -79,7 +79,7 @@ struct BodySyntax CF_TOPICS_BODIES[] =
 
 /***************************************************************/
 
-struct BodySyntax CF_THING_BODIES[] =
+BodySyntax CF_THING_BODIES[] =
    {
    {"synonyms",cf_slist,"","A list of words to be treated as equivalents in the defined context"},
    {"affects",cf_slist,"","Special fixed relation for describing topics that are things"},
@@ -100,7 +100,7 @@ struct BodySyntax CF_THING_BODIES[] =
 
 /***************************************************************/
 
-struct BodySyntax CF_INFER_BODIES[] =
+BodySyntax CF_INFER_BODIES[] =
    {
    {"precedents",cf_slist,"","The foundational vector for a trinary inference"},
    {"qualifiers",cf_slist,"","The second vector in a trinary inference"},
@@ -111,7 +111,7 @@ struct BodySyntax CF_INFER_BODIES[] =
 /* This is the point of entry from mod_common.c                */
 /***************************************************************/
 
-struct SubTypeSyntax CF_KNOWLEDGE_SUBTYPES[] =
+SubTypeSyntax CF_KNOWLEDGE_SUBTYPES[] =
   {
   {"knowledge","inferences",CF_INFER_BODIES},
   {"knowledge","things",CF_THING_BODIES},

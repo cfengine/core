@@ -32,11 +32,11 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static int IsRegexIn(struct Rlist *list,char *s);
+static int IsRegexIn(Rlist *list,char *s);
 
 /*******************************************************************/
 
-char *ScalarValue(struct Rlist *rlist)
+char *ScalarValue(Rlist *rlist)
 {
 if (rlist->type != CF_SCALAR)
    {
@@ -49,7 +49,7 @@ return (char *)rlist->item;
 
 /*******************************************************************/
 
-struct FnCall *FnCallValue(struct Rlist *rlist)
+FnCall *FnCallValue(Rlist *rlist)
 {
 if (rlist->type != CF_FNCALL)
    {
@@ -57,12 +57,12 @@ if (rlist->type != CF_FNCALL)
               rlist->type);
    }
 
-return (struct FnCall *)rlist->item;
+return (FnCall *)rlist->item;
 }
 
 /*******************************************************************/
 
-struct Rlist *ListValue(struct Rlist *rlist)
+Rlist *ListValue(Rlist *rlist)
 {
 if (rlist->type != CF_LIST)
    {
@@ -70,12 +70,12 @@ if (rlist->type != CF_LIST)
               rlist->type);
    }
 
-return (struct Rlist *)rlist->item;
+return (Rlist *)rlist->item;
 }
 
 /*******************************************************************/
 
-char *ScalarRvalValue(struct Rval rval)
+char *ScalarRvalValue(Rval rval)
 {
 if (rval.rtype != CF_SCALAR)
    {
@@ -88,7 +88,7 @@ return rval.item;
 
 /*******************************************************************/
 
-struct FnCall *FnCallRvalValue(struct Rval rval)
+FnCall *FnCallRvalValue(Rval rval)
 {
 if (rval.rtype != CF_FNCALL)
    {
@@ -101,7 +101,7 @@ return rval.item;
 
 /*******************************************************************/
 
-struct Rlist *ListRvalValue(struct Rval rval)
+Rlist *ListRvalValue(Rval rval)
 {
 if (rval.rtype != CF_LIST)
    {
@@ -114,9 +114,9 @@ return rval.item;
 
 /*******************************************************************/
 
-struct Rlist *KeyInRlist(struct Rlist *list,char *key)
+Rlist *KeyInRlist(Rlist *list,char *key)
 
-{ struct Rlist *rp;
+{ Rlist *rp;
 
 for (rp = list; rp != NULL; rp = rp->next)
    {
@@ -136,9 +136,9 @@ return NULL;
 
 /*******************************************************************/
 
-int IsStringIn(struct Rlist *list,char *s)
+int IsStringIn(Rlist *list,char *s)
 
-{ struct Rlist *rp;
+{ Rlist *rp;
 
 if (s == NULL || list == NULL)
    {
@@ -163,9 +163,9 @@ return false;
 
 /*******************************************************************/
 
-int IsIntIn(struct Rlist *list,int i)
+int IsIntIn(Rlist *list,int i)
 
-{ struct Rlist *rp;
+{ Rlist *rp;
   char s[CF_SMALLBUF];
 
 snprintf(s,CF_SMALLBUF-1,"%d",i);
@@ -193,9 +193,9 @@ return false;
 
 /*******************************************************************/
 
-static int IsRegexIn(struct Rlist *list,char *regex)
+static int IsRegexIn(Rlist *list,char *regex)
 
-{ struct Rlist *rp;
+{ Rlist *rp;
 
 if (regex == NULL || list == NULL)
    {
@@ -220,9 +220,9 @@ return false;
 
 /*******************************************************************/
 
-int IsInListOfRegex(struct Rlist *list,char *str)
+int IsInListOfRegex(Rlist *list,char *str)
 
-{ struct Rlist *rp;
+{ Rlist *rp;
 
 if (str == NULL || list == NULL)
    {
@@ -247,10 +247,10 @@ return false;
 
 /*******************************************************************/
 
-struct Rval CopyRvalItem(struct Rval rval)
+Rval CopyRvalItem(Rval rval)
 
-{ struct Rlist *rp,*srp,*start = NULL;
-  struct FnCall *fp;
+{ Rlist *rp,*srp,*start = NULL;
+  FnCall *fp;
 
 CfDebug("CopyRvalItem(%c)\n",rval.rtype);
 
@@ -259,10 +259,10 @@ if (rval.item == NULL)
    switch (rval.rtype)
       {
       case CF_SCALAR:
-         return (struct Rval) { xstrdup(""), CF_SCALAR };
+         return (Rval) { xstrdup(""), CF_SCALAR };
 
       case CF_LIST:
-         return (struct Rval) { NULL, CF_LIST };
+         return (Rval) { NULL, CF_LIST };
       }
    }
 
@@ -270,32 +270,32 @@ switch(rval.rtype)
    {
    case CF_SCALAR:
       /* the rval is just a string */
-      return (struct Rval) { xstrdup((char *)rval.item), CF_SCALAR };
+      return (Rval) { xstrdup((char *)rval.item), CF_SCALAR };
 
    case CF_ASSOC:
-      return (struct Rval) { CopyAssoc((struct CfAssoc *)rval.item), CF_ASSOC };
+      return (Rval) { CopyAssoc((CfAssoc *)rval.item), CF_ASSOC };
 
    case CF_FNCALL:
        /* the rval is a fncall */
-       fp = (struct FnCall *)rval.item;
-       return (struct Rval) { CopyFnCall(fp), CF_FNCALL };
+       fp = (FnCall *)rval.item;
+       return (Rval) { CopyFnCall(fp), CF_FNCALL };
 
    case CF_LIST:
        /* The rval is an embedded rlist (2d) */
-       for (rp = (struct Rlist *)rval.item; rp != NULL; rp=rp->next)
+       for (rp = (Rlist *)rval.item; rp != NULL; rp=rp->next)
           {
           char naked[CF_BUFSIZE] = "";
           if (IsNakedVar(rp->item,'@'))
              {
              GetNaked(naked,rp->item);
 
-             struct Rval rv = { NULL, CF_SCALAR }; /* FIXME: why it needs to be initialized? */
+             Rval rv = { NULL, CF_SCALAR }; /* FIXME: why it needs to be initialized? */
              if (GetVariable(CONTEXTID,naked,&rv) != cf_notype)
                 {
                 switch (rv.rtype)
                    {
                    case CF_LIST:
-                       for (srp = (struct Rlist *)rv.item; srp != NULL; srp=srp->next)
+                       for (srp = (Rlist *)rv.item; srp != NULL; srp=srp->next)
                           {
                           AppendRlist(&start,srp->item,srp->type);
                           }
@@ -317,19 +317,19 @@ switch(rval.rtype)
              }
           }
        
-       return (struct Rval) { start, CF_LIST };
+       return (Rval) { start, CF_LIST };
    }
 
 CfOut(cf_verbose, "", "Unknown type %c in CopyRvalItem - should not happen", rval.rtype);
-return (struct Rval) { NULL, rval.rtype };
+return (Rval) { NULL, rval.rtype };
 }
 
 
 /*******************************************************************/
 
-struct Rlist *CopyRlist(struct Rlist *list)
+Rlist *CopyRlist(Rlist *list)
 
-{ struct Rlist *rp,*start = NULL;
+{ Rlist *rp,*start = NULL;
 
 CfDebug("CopyRlist()\n");
   
@@ -348,11 +348,11 @@ return start;
 
 /*******************************************************************/
 
-void DeleteRlist(struct Rlist *list)
+void DeleteRlist(Rlist *list)
 
 /* Delete an rlist and all its references */
 
-{ struct Rlist *rl, *next;
+{ Rlist *rl, *next;
 
 if (list != NULL)
    {
@@ -362,7 +362,7 @@ if (list != NULL)
       
       if (rl->item != NULL)
          {
-         DeleteRvalItem((struct Rval) { rl->item, rl->type });
+         DeleteRvalItem((Rval) { rl->item, rl->type });
          }
       
       free(rl);
@@ -372,7 +372,7 @@ if (list != NULL)
 
 /*******************************************************************/
 
-struct Rlist *IdempAppendRScalar(struct Rlist **start,void *item, char type)
+Rlist *IdempAppendRScalar(Rlist **start,void *item, char type)
 
 { char *scalar = item;
 
@@ -393,7 +393,7 @@ else
 
 /*******************************************************************/
 
-struct Rlist *IdempPrependRScalar(struct Rlist **start,void *item, char type)
+Rlist *IdempPrependRScalar(Rlist **start,void *item, char type)
 
 { char *scalar = item;
 
@@ -414,14 +414,14 @@ else
 
 /*******************************************************************/
 
-struct Rlist *IdempAppendRlist(struct Rlist **start,void *item, char type)
+Rlist *IdempAppendRlist(Rlist **start,void *item, char type)
 
 { char *scalar;
- struct Rlist *rp,*ins = NULL;
+ Rlist *rp,*ins = NULL;
  
 if (type == CF_LIST)
    {
-   for (rp = (struct Rlist *)item; rp != NULL; rp=rp->next)
+   for (rp = (Rlist *)item; rp != NULL; rp=rp->next)
       {
       ins = IdempAppendRlist(start,rp->item,rp->type);
       }
@@ -442,7 +442,7 @@ else
 
 /*******************************************************************/
 
-struct Rlist *AppendRScalar(struct Rlist **start,void *item, char type)
+Rlist *AppendRScalar(Rlist **start,void *item, char type)
 
 { char *scalar = item;
 
@@ -456,7 +456,7 @@ return AppendRlist(start,scalar,type);
 
 /*******************************************************************/
 
-struct Rlist *PrependRScalar(struct Rlist **start,void *item, char type)
+Rlist *PrependRScalar(Rlist **start,void *item, char type)
 
 { char *scalar = item;
 
@@ -470,12 +470,12 @@ return PrependRlist(start,scalar,type);
 
 /*******************************************************************/
 
-struct Rlist *AppendRlist(struct Rlist **start,void *item, char type)
+Rlist *AppendRlist(Rlist **start,void *item, char type)
 
    /* Allocates new memory for objects - careful, could leak!  */
     
-{ struct Rlist *rp,*lp = *start;
-  struct FnCall *fp;
+{ Rlist *rp,*lp = *start;
+  FnCall *fp;
 
 switch(type)
    {
@@ -489,7 +489,7 @@ switch(type)
 
    case CF_FNCALL:
        CfDebug("Appending function to rval-list function call: ");
-       fp = (struct FnCall *)item;
+       fp = (FnCall *)item;
        if (DEBUG)
           {
           ShowFnCall(stdout,fp);
@@ -500,7 +500,7 @@ switch(type)
    case CF_LIST:
        CfDebug("Expanding and appending list object\n");
        
-       for (rp = (struct Rlist *)item; rp != NULL; rp=rp->next)
+       for (rp = (Rlist *)item; rp != NULL; rp=rp->next)
           {
           lp = AppendRlist(start,rp->item,rp->type);
           }
@@ -512,7 +512,7 @@ switch(type)
        return NULL;
    }
 
-rp = xmalloc(sizeof(struct Rlist));
+rp = xmalloc(sizeof(Rlist));
 
 if (*start == NULL)
    {
@@ -527,7 +527,7 @@ else
    lp->next = rp;
    }
 
-rp->item = CopyRvalItem((struct Rval) { item, type }).item;
+rp->item = CopyRvalItem((Rval) { item, type }).item;
 rp->type = type;  /* scalar, builtin function */
 
 ThreadLock(cft_lock);
@@ -550,12 +550,12 @@ return rp;
 
 /*******************************************************************/
 
-struct Rlist *PrependRlist(struct Rlist **start,void *item, char type)
+Rlist *PrependRlist(Rlist **start,void *item, char type)
 
    /* heap memory for item must have already been allocated */
     
-{ struct Rlist *rp,*lp = *start;
-  struct FnCall *fp;
+{ Rlist *rp,*lp = *start;
+  FnCall *fp;
 
 switch(type)
    {
@@ -567,7 +567,7 @@ switch(type)
        
        CfDebug("Expanding and prepending list (ends up in reverse)\n");
 
-       for (rp = (struct Rlist *)item; rp != NULL; rp=rp->next)
+       for (rp = (Rlist *)item; rp != NULL; rp=rp->next)
           {
           lp = PrependRlist(start,rp->item,rp->type);
           }
@@ -575,7 +575,7 @@ switch(type)
 
    case CF_FNCALL:
        CfDebug("Prepending function to rval-list function call: ");
-       fp = (struct FnCall *)item;
+       fp = (FnCall *)item;
        if (DEBUG)
           {
           ShowFnCall(stdout,fp);
@@ -589,12 +589,12 @@ switch(type)
 
 ThreadLock(cft_system);
 
-rp = xmalloc(sizeof(struct Rlist));
+rp = xmalloc(sizeof(Rlist));
 
 ThreadUnlock(cft_system);
 
 rp->next = *start;
-rp->item = CopyRvalItem((struct Rval) { item, type }).item;
+rp->item = CopyRvalItem((Rval) { item, type }).item;
 rp->type = type;  /* scalar, builtin function */
 
 if (type == CF_LIST)
@@ -614,12 +614,12 @@ return rp;
 
 /*******************************************************************/
 
-struct Rlist *OrthogAppendRlist(struct Rlist **start,void *item, char type)
+Rlist *OrthogAppendRlist(Rlist **start,void *item, char type)
 
    /* Allocates new memory for objects - careful, could leak!  */
     
-{ struct Rlist *rp,*lp;
-  struct CfAssoc *cp;
+{ Rlist *rp,*lp;
+  CfAssoc *cp;
   
 CfDebug("OrthogAppendRlist\n");
  
@@ -633,7 +633,7 @@ switch(type)
        return NULL;
    }
 
-rp = xmalloc(sizeof(struct Rlist));
+rp = xmalloc(sizeof(Rlist));
 
 if (*start == NULL)
    {
@@ -649,16 +649,16 @@ else
    }
 
 
-// This is item is in fact a struct CfAssoc pointing to a list
+// This is item is in fact a CfAssoc pointing to a list
 
-cp = (struct CfAssoc *)item;
+cp = (CfAssoc *)item;
 
 // Note, we pad all iterators will a blank so the ptr arithmetic works
 // else EndOfIteration will not see lists with only one element
 
-lp = PrependRlist((struct Rlist **)&(cp->rval),CF_NULL_VALUE,CF_SCALAR);
+lp = PrependRlist((Rlist **)&(cp->rval),CF_NULL_VALUE,CF_SCALAR);
 rp->state_ptr = lp->next; // Always skip the null value
-AppendRlist((struct Rlist **)&(cp->rval),CF_NULL_VALUE,CF_SCALAR);
+AppendRlist((Rlist **)&(cp->rval),CF_NULL_VALUE,CF_SCALAR);
 
 rp->item = item;
 rp->type = CF_LIST;
@@ -668,10 +668,10 @@ return rp;
 
 /*******************************************************************/
 
-int RlistLen(struct Rlist *start)
+int RlistLen(Rlist *start)
 
 { int count = 0;
-  struct Rlist *rp;
+  Rlist *rp;
   
 for (rp = start; rp != NULL; rp=rp->next)
    {
@@ -683,9 +683,9 @@ return count;
 
 /*******************************************************************/
 
-struct Rlist *ParseShownRlist(char *string)
+Rlist *ParseShownRlist(char *string)
 
-{ struct Rlist *newlist = NULL,*splitlist,*rp;
+{ Rlist *newlist = NULL,*splitlist,*rp;
   char value[CF_MAXVARSIZE];
 
 /* Parse a string representation generated by ShowList and turn back into Rlist */
@@ -704,16 +704,16 @@ return newlist;
 
 /*******************************************************************/
 
-void ShowRlist(FILE *fp,struct Rlist *list)
+void ShowRlist(FILE *fp,Rlist *list)
 
-{ struct Rlist *rp;
+{ Rlist *rp;
 
 fprintf(fp," {");
  
 for (rp = list; rp != NULL; rp=rp->next)
    {
    fprintf(fp,"\'");
-   ShowRval(fp, (struct Rval) { rp->item, rp->type });
+   ShowRval(fp, (Rval) { rp->item, rp->type });
    fprintf(fp,"\'");
    
    if (rp->next != NULL)
@@ -726,9 +726,9 @@ fprintf(fp,"}");
 
 /*******************************************************************/
 
-int PrintRlist(char *buffer,int bufsize,struct Rlist *list)
+int PrintRlist(char *buffer,int bufsize,Rlist *list)
 
-{ struct Rlist *rp;
+{ Rlist *rp;
 
 StartJoin(buffer,"{",bufsize);
 
@@ -740,7 +740,7 @@ for (rp = list; rp != NULL; rp=rp->next)
       return false;
       }
    
-   if(!PrintRval(buffer,bufsize, (struct Rval) { rp->item, rp->type }))
+   if(!PrintRval(buffer,bufsize, (Rval) { rp->item, rp->type }))
       {
       EndJoin(buffer,"...TRUNCATED'}",bufsize);
       return false;
@@ -769,7 +769,7 @@ return true;
 
 /*******************************************************************/
 
-int PrintRval(char *buffer,int bufsize, struct Rval rval)
+int PrintRval(char *buffer,int bufsize, Rval rval)
 
 {
 if (rval.item == NULL)
@@ -782,9 +782,9 @@ switch (rval.rtype)
    case CF_SCALAR:
        return JoinSilent(buffer, (const char *)rval.item, bufsize);
    case CF_LIST:
-       return PrintRlist(buffer, bufsize, (struct Rlist *)rval.item);
+       return PrintRlist(buffer, bufsize, (Rlist *)rval.item);
    case CF_FNCALL:
-       return PrintFnCall(buffer, bufsize, (struct FnCall *)rval.item);
+       return PrintFnCall(buffer, bufsize, (FnCall *)rval.item);
    default:
       return 0;
    }
@@ -792,7 +792,7 @@ switch (rval.rtype)
 
 /*******************************************************************/
 
-void ShowRval(FILE *fp, struct Rval rval)
+void ShowRval(FILE *fp, Rval rval)
 
 {
 char buf[CF_BUFSIZE];
@@ -810,11 +810,11 @@ switch (rval.rtype)
        break;
        
    case CF_LIST:
-       ShowRlist(fp,(struct Rlist *)rval.item);
+       ShowRlist(fp,(Rlist *)rval.item);
        break;
        
    case CF_FNCALL:
-       ShowFnCall(fp,(struct FnCall *)rval.item);
+       ShowFnCall(fp,(FnCall *)rval.item);
        break;
 
    case CF_NOPROMISEE:
@@ -825,9 +825,9 @@ switch (rval.rtype)
 
 /*******************************************************************/
 
-void DeleteRvalItem(struct Rval rval)
+void DeleteRvalItem(Rval rval)
 
-{ struct Rlist *clist, *next = NULL;
+{ Rlist *clist, *next = NULL;
 
 CfDebug("DeleteRvalItem(%c)",rval.rtype);
 
@@ -855,21 +855,21 @@ switch(rval.rtype)
 
    case CF_ASSOC: /* What? */
 
-      DeleteAssoc((struct CfAssoc *)rval.item);
+      DeleteAssoc((CfAssoc *)rval.item);
       break;
 
    case CF_LIST:
      
        /* rval is now a list whose first item is clist->item */
 
-     for(clist = (struct Rlist *)rval.item; clist != NULL; clist = next)
+     for(clist = (Rlist *)rval.item; clist != NULL; clist = next)
        {
 
        next = clist->next;
 
        if (clist->item)
           {
-          DeleteRvalItem((struct Rval) { clist->item,clist->type });
+          DeleteRvalItem((Rval) { clist->item,clist->type });
           }
 
        free(clist);
@@ -879,7 +879,7 @@ switch(rval.rtype)
        
    case CF_FNCALL:
 
-      DeleteFnCall((struct FnCall *)rval.item);
+      DeleteFnCall((FnCall *)rval.item);
       break;
 
    default:
@@ -890,9 +890,9 @@ switch(rval.rtype)
 
 /*********************************************************************/
 
-void DeleteRlistEntry(struct Rlist **liststart,struct Rlist *entry)
+void DeleteRlistEntry(Rlist **liststart,Rlist *entry)
  
-{ struct Rlist *rp, *sp;
+{ Rlist *rp, *sp;
 
 if (entry != NULL)
    {
@@ -923,13 +923,13 @@ if (entry != NULL)
 
 /*******************************************************************/
 
-struct Rlist *AppendRlistAlien(struct Rlist **start,void *item)
+Rlist *AppendRlistAlien(Rlist **start,void *item)
 
    /* Allocates new memory for objects - careful, could leak!  */
     
-{ struct Rlist *rp,*lp = *start;
+{ Rlist *rp,*lp = *start;
 
-rp = xmalloc(sizeof(struct Rlist));
+rp = xmalloc(sizeof(Rlist));
 
 if (*start == NULL)
    {
@@ -957,15 +957,15 @@ return rp;
 
 /*******************************************************************/
 
-struct Rlist *PrependRlistAlien(struct Rlist **start,void *item)
+Rlist *PrependRlistAlien(Rlist **start,void *item)
 
    /* Allocates new memory for objects - careful, could leak!  */
     
-{ struct Rlist *rp;
+{ Rlist *rp;
 
 ThreadLock(cft_lock); 
 
-rp = xmalloc(sizeof(struct Rlist));
+rp = xmalloc(sizeof(Rlist));
 
 rp->next = *start;
 *start = rp;
@@ -989,13 +989,13 @@ PushStack(&stack,(void *)sp1);
 PopStack(&stack,(void *)&sp,sizeof(sp));
 */
 
-void PushStack(struct Rlist **liststart,void *item)
+void PushStack(Rlist **liststart,void *item)
 
-{ struct Rlist *rp;
+{ Rlist *rp;
 
 /* Have to keep track of types personally */
 
-rp = xmalloc(sizeof(struct Rlist));
+rp = xmalloc(sizeof(Rlist));
 
 rp->next = *liststart;
 rp->item = item;
@@ -1005,9 +1005,9 @@ rp->type = CF_STACK;
 
 /*******************************************************************/
 
-void PopStack(struct Rlist **liststart, void **item,size_t size)
+void PopStack(Rlist **liststart, void **item,size_t size)
 
-{ struct Rlist *rp = *liststart;
+{ Rlist *rp = *liststart;
 
 if (*liststart == NULL)
    {
@@ -1030,13 +1030,13 @@ free((char *)rp);
 
 /*******************************************************************/
 
-struct Rlist *SplitStringAsRList(char *string,char sep)
+Rlist *SplitStringAsRList(char *string,char sep)
 
  /* Splits a string containing a separator like "," 
     into a linked list of separate items, supports
     escaping separators, e.g. \, */
 
-{ struct Rlist *liststart = NULL;
+{ Rlist *liststart = NULL;
   char *sp;
   char node[CF_MAXVARSIZE];
   int maxlen = strlen(string);
@@ -1067,12 +1067,12 @@ return liststart;
 
 /*******************************************************************/
 
-struct Rlist *SplitRegexAsRList(char *string,char *regex,int max,int blanks)
+Rlist *SplitRegexAsRList(char *string,char *regex,int max,int blanks)
 
  /* Splits a string containing a separator like "," 
     into a linked list of separate items, */
 
-{ struct Rlist *liststart = NULL;
+{ Rlist *liststart = NULL;
   char *sp;
   char node[CF_MAXVARSIZE];
   int start,end;
@@ -1122,11 +1122,11 @@ return liststart;
 
 /*******************************************************************/
 
-struct Rlist *RlistAppendReference(struct Rlist **start,void *item, char type)
+Rlist *RlistAppendReference(Rlist **start,void *item, char type)
 {
-struct Rlist *rp = NULL,*lp = *start;
+Rlist *rp = NULL,*lp = *start;
 
-rp = xmalloc(sizeof(struct Rlist));
+rp = xmalloc(sizeof(Rlist));
 
 if (*start == NULL)
    {
@@ -1154,9 +1154,9 @@ return rp;
 
 /*******************************************************************/
 
-struct Rlist *RlistAt(struct Rlist *start, size_t index)
+Rlist *RlistAt(Rlist *start, size_t index)
 {
-for (struct Rlist *rp = start; rp != NULL; rp = rp->next)
+for (Rlist *rp = start; rp != NULL; rp = rp->next)
    {
    if (index-- == 0)
       {
@@ -1169,14 +1169,14 @@ return NULL;
 
 /*******************************************************************/
 
-static void RlistPrint(Writer *writer, struct Rlist *list)
+static void RlistPrint(Writer *writer, Rlist *list)
 {
 WriterWrite(writer, " {");
 
-for (struct Rlist *rp = list; rp != NULL; rp = rp->next)
+for (Rlist *rp = list; rp != NULL; rp = rp->next)
    {
    WriterWriteChar(writer, '\'');
-   RvalPrint(writer, (struct Rval) { rp->item, rp->type });
+   RvalPrint(writer, (Rval) { rp->item, rp->type });
    WriterWriteChar(writer, '\'');
 
    if (rp->next != NULL)
@@ -1188,7 +1188,7 @@ for (struct Rlist *rp = list; rp != NULL; rp = rp->next)
 WriterWriteChar(writer, '}');
 }
 
-void RvalPrint(Writer *writer, struct Rval rval)
+void RvalPrint(Writer *writer, Rval rval)
 {
 if (rval.item == NULL)
    {
@@ -1208,11 +1208,11 @@ switch (rval.rtype)
       break;
 
    case CF_LIST:
-      RlistPrint(writer, (struct Rlist *)rval.item);
+      RlistPrint(writer, (Rlist *)rval.item);
       break;
 
    case CF_FNCALL:
-      FnCallPrint(writer, (struct FnCall *)rval.item);
+      FnCallPrint(writer, (FnCall *)rval.item);
       break;
 
    case CF_NOPROMISEE:

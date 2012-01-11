@@ -796,31 +796,31 @@ typedef enum
 
 #define CF_OBSERVABLES 91
 
-struct QPoint
+typedef struct
    {
    double q;
    double expect;
    double var;
-   };
+   } QPoint;
 
-struct Event
+typedef struct
    {
    time_t t;
-   struct QPoint Q;
-   };
+   QPoint Q;
+   } Event;
 
-struct Averages
+typedef struct
    {
-   struct QPoint Q[CF_OBSERVABLES];
-   };
+   QPoint Q[CF_OBSERVABLES];
+   } Averages;
 
 /******************************************************************/
 
-struct LockData
+typedef struct
    {
    pid_t pid;
    time_t time;
-   };
+   } LockData;
 
 /*****************************************************************************/
 
@@ -828,7 +828,7 @@ struct LockData
 #define CF_AUDIT_VERSION 64
 #define CF_AUDIT_DATE    32
 
-struct AuditLog        /* key includes operation and date */
+typedef struct        /* key includes operation and date */
    {
    char  operator[CF_AUDIT_COMMENT];
    char  comment[CF_AUDIT_COMMENT];
@@ -838,7 +838,7 @@ struct AuditLog        /* key includes operation and date */
    char  date[CF_AUDIT_DATE];
    short line_number;
    char  status;
-   };
+   } AuditLog;
 
 /*******************************************************************/
 /* Copy file defines                                               */
@@ -946,7 +946,7 @@ enum roles
 
 /*******************************************************************/
 
-struct cfstat
+typedef struct Stat_
    {
    char             *cf_filename;   /* What file are we statting? */
    char             *cf_server;     /* Which server did this come from? */
@@ -965,23 +965,23 @@ struct cfstat
    int               cf_nlink;      /* Number of hard links */
    int               cf_ino;        /* inode number on server */
    dev_t             cf_dev;        /* device number */
-   struct cfstat    *next;
-   };
+   struct Stat_    *next;
+   } Stat;
 
 /*******************************************************************/
 
-struct cfdir
+typedef struct Item_ Item;
+
+typedef struct
    {
    /* Local directories */
    void *dirh; /* DIR* or HANDLE */
    struct dirent *entrybuf;
 
    /* Remote directories */
-   struct Item *list;
-   struct Item *listpos;  /* current pos */
-   };
-
-typedef struct cfdir CFDIR;
+   Item *list;
+   Item *listpos;  /* current pos */
+   } Dir;
 
 /*******************************************************************/
 
@@ -1201,18 +1201,18 @@ enum observables
     };
 
 
-struct sock
+typedef struct
    {
    char *portnr;
    char *name;
    enum observables in;
    enum observables out;
-   };
+   } Sock;
 
 
 /*******************************************************************/
 
-struct cfagent_connection
+typedef struct
    {
    int sd;
    int trust;               /* true if key being accepted on trust */
@@ -1226,69 +1226,69 @@ struct cfagent_connection
    unsigned char *session_key;
    char encryption_type;
    short error;
-   };
+   } AgentConnection;
 
 /*******************************************************************/
 
-struct CompressedArray
+typedef struct CompressedArray_
    {
    int key;
    char *value;
-   struct CompressedArray *next;
-   };
+   struct CompressedArray_ *next;
+   } CompressedArray;
 
 /*******************************************************************/
 
-struct Audit
+typedef struct Audit_
    {
    char *version;
    char *filename;
    char *date;
    unsigned char digest[EVP_MAX_MD_SIZE+1];
-   struct Audit *next;
-   };
+   struct Audit_ *next;
+   } Audit;
 
 /*******************************************************************/
 /* Action /promise types                                           */
 /*******************************************************************/
 
-struct Item
+struct Item_
    {
    char   done;
    char  *name;
    char  *classes;
    int    counter;
    time_t time;
-   struct Item *next;
+   struct Item_ *next;
    };
 
 /*******************************************************************/
 
-struct AlphaList  // Indexed itemlist
+typedef struct  // Indexed itemlist
    {
-   struct Item *list[256];
-   };
+   Item *list[256];
+   } AlphaList;
 
 /*******************************************************************/
 
-struct UidList
+typedef struct UidList_
    {
 #ifdef MINGW  // TODO: remove uid for NT ?
      char sid[CF_MAXSIDSIZE];  /* Invalid sid indicates unset */
 #endif  /* MINGW */
    uid_t uid;
    char *uidname;                               /* when uid is -2 */
-   struct UidList *next;
-   };
+   struct UidList_ *next;
+   } UidList;
 
 /*******************************************************************/
 
-struct GidList
+typedef struct GidList_
    {
    gid_t gid;
    char *gidname;                               /* when gid is -2 */
-   struct GidList *next;
-   };
+   struct GidList_ *next;
+   } GidList;
 
 /*******************************************************************/
 
@@ -1319,38 +1319,38 @@ enum matchtypes
 
 /*******************************************************************/
 
-struct Auth
+typedef struct Auth_
    {
    char *path;
-   struct Item *accesslist;
-   struct Item *maproot;     /* which hosts should have root read access */
+   Item *accesslist;
+   Item *maproot;     /* which hosts should have root read access */
    int encrypt;              /* which files HAVE to be transmitted securely */
    int literal;
    int classpattern;
-   struct Auth *next;
-   };
+   struct Auth_ *next;
+   } Auth;
 
 /*******************************************************************/
 
-struct Strategy
+typedef struct Strategy_
    {
    char    done;
    char   *name;
    char   *classes;
    char   type;                 /* default r=random */
-   struct Item *strategies;
-   struct Strategy *next;
-   };
+   Item *strategies;
+   struct Strategy_ *next;
+   } Strategy;
 
 /*******************************************************************/
 /* Checksum database structures                                    */
 /*******************************************************************/
 
-struct Checksum_Value
+typedef struct
    {
    unsigned char mess_digest[EVP_MAX_MD_SIZE+1];  /* Content digest */
    unsigned char attr_digest[EVP_MAX_MD_SIZE+1];  /* Attribute digest */
-   };
+   } ChecksumValue;
 
 /*******************************************************************/
 /* Ultrix/BSD don't have all these from sys/stat.h                 */

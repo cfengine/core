@@ -18,7 +18,7 @@ mock_assert(0, "0", __FILE__, __LINE__);
 
 static void test_prepend_scalar(void **state)
 {
-struct Rlist *list = NULL;
+Rlist *list = NULL;
 
 PrependRScalar(&list, "stuff", CF_SCALAR);
 PrependRScalar(&list, "more-stuff", CF_SCALAR);
@@ -30,7 +30,7 @@ DeleteRlist(list);
 
 static void test_length(void **state)
 {
-struct Rlist *list = NULL;
+Rlist *list = NULL;
 
 assert_int_equal(RlistLen(list), 0);
 
@@ -45,7 +45,7 @@ DeleteRlist(list);
 
 static void test_prepend_scalar_idempotent(void **state)
 {
-struct Rlist *list = NULL;
+Rlist *list = NULL;
 
 IdempPrependRScalar(&list, "stuff", CF_SCALAR);
 IdempPrependRScalar(&list, "stuff", CF_SCALAR);
@@ -58,7 +58,7 @@ DeleteRlist(list);
 
 static void test_copy(void **state)
 {
-struct Rlist *list = NULL, *copy = NULL;
+Rlist *list = NULL, *copy = NULL;
 
 PrependRScalar(&list, "stuff", CF_SCALAR);
 PrependRScalar(&list, "more-stuff", CF_SCALAR);
@@ -74,37 +74,37 @@ DeleteRlist(copy);
 
 static void test_rval_to_scalar(void **state)
 {
-struct Rval rval = { "abc", CF_SCALAR };
+Rval rval = { "abc", CF_SCALAR };
 assert_string_equal("abc", ScalarRvalValue(rval));
 }
 
 static void test_rval_to_scalar2(void **state)
 {
-struct Rval rval = { NULL, CF_FNCALL };
+Rval rval = { NULL, CF_FNCALL };
 expect_assert_failure(ScalarRvalValue(rval));
 }
 
 static void test_rval_to_list(void **state)
 {
-struct Rval rval = { NULL, CF_SCALAR };
+Rval rval = { NULL, CF_SCALAR };
 expect_assert_failure(ListRvalValue(rval));
 }
 
 static void test_rval_to_list2(void **state)
 {
-struct Rval rval = { NULL, CF_LIST };
+Rval rval = { NULL, CF_LIST };
 assert_false(ListRvalValue(rval));
 }
 
 static void test_rval_to_fncall(void **state)
 {
-struct Rval rval = { NULL, CF_SCALAR };
+Rval rval = { NULL, CF_SCALAR };
 expect_assert_failure(FnCallRvalValue(rval));
 }
 
 static void test_rval_to_fncall2(void **state)
 {
-struct Rval rval = { NULL, CF_FNCALL };
+Rval rval = { NULL, CF_FNCALL };
 assert_false(FnCallRvalValue(rval));
 }
 
@@ -150,7 +150,7 @@ int ThreadUnlock(pthread_mutex_t *name)
 }
 #endif
 
-void ShowFnCall(FILE *fout,struct FnCall *fp)
+void ShowFnCall(FILE *fout,FnCall *fp)
 {
 fail();
 }
@@ -170,7 +170,7 @@ int JoinSilent(char *path, const char *leaf, int bufsize)
 fail();
 }
 
-void FnCallPrint(Writer *writer, struct FnCall *fp)
+void FnCallPrint(Writer *writer, FnCall *fp)
 {
 fail();
 }
@@ -180,22 +180,22 @@ void GetNaked(char *s1, char *s2)
 fail();
 }
 
-enum cfdatatype GetVariable(const char *scope, const char *lval, struct Rval *returnv)
+enum cfdatatype GetVariable(const char *scope, const char *lval, Rval *returnv)
 {
 fail();
 }
 
-void DeleteAssoc(struct CfAssoc *ap)
+void DeleteAssoc(CfAssoc *ap)
 {
 fail();
 }
 
-struct CfAssoc *CopyAssoc(struct CfAssoc *old)
+CfAssoc *CopyAssoc(CfAssoc *old)
 {
 fail();
 }
 
-struct FnCall *CopyFnCall(struct FnCall *f)
+FnCall *CopyFnCall(FnCall *f)
 {
 fail();
 }
@@ -210,12 +210,12 @@ char *EscapeQuotes(const char *s, char *out, int outSz)
 fail();
 }
 
-void DeleteFnCall(struct FnCall *fp)
+void DeleteFnCall(FnCall *fp)
 {
 fail();
 }
 
-int PrintFnCall(char *buffer, int bufsize,struct FnCall *fp)
+int PrintFnCall(char *buffer, int bufsize,FnCall *fp)
 {
 fail();
 }

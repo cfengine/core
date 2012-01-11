@@ -59,7 +59,7 @@
  /*                                                         */
  /***********************************************************/
 
-struct BodySyntax CF_OUTPUTS_BODIES[] =
+BodySyntax CF_OUTPUTS_BODIES[] =
    {
    {"output_level",cf_opts,"verbose,debug,inform","Output level to observe for the named promise or bundle (meta-promise)", "verbose"},
    {"promiser_type",cf_opts,"promise,bundle","Output level to observe for the named promise or bundle (meta-promise)", "promise"},
@@ -70,7 +70,7 @@ struct BodySyntax CF_OUTPUTS_BODIES[] =
 /* This is the point of entry from mod_common.c                */
 /***************************************************************/
 
-struct SubTypeSyntax CF_OUTPUTS_SUBTYPES[] =
+SubTypeSyntax CF_OUTPUTS_SUBTYPES[] =
   {
   {"agent","outputs",CF_OUTPUTS_BODIES},
   {NULL,NULL,NULL},

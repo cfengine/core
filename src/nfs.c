@@ -36,16 +36,16 @@
 #define RPCTIMEOUT 60
 
 #ifndef MINGW
-static void AugmentMountInfo(struct Rlist **list,char *host,char *source,char *mounton,char *options);
+static void AugmentMountInfo(Rlist **list,char *host,char *source,char *mounton,char *options);
 static int MatchFSInFstab(char *match);
-static void DeleteThisItem(struct Item **liststart,struct Item *entry);
+static void DeleteThisItem(Item **liststart,Item *entry);
 #endif
 
 /*******************************************************************/
 
 #ifndef MINGW  // use samba on windows ?
 
-int LoadMountInfo(struct Rlist **list)
+int LoadMountInfo(Rlist **list)
 
 /* This is, in fact, the most portable way to read the mount info! */
 /* Depressing, isn't it? */
@@ -234,7 +234,7 @@ return true;
 
 /*******************************************************************/
 
-static void AugmentMountInfo(struct Rlist **list,char *host,char *source,char *mounton,char *options)
+static void AugmentMountInfo(Rlist **list,char *host,char *source,char *mounton,char *options)
 
 {
 struct CfMount *entry = xcalloc(1, sizeof(struct CfMount));
@@ -264,9 +264,9 @@ AppendRlistAlien(list,(void *)entry);
 
 /*******************************************************************/
 
-void DeleteMountInfo(struct Rlist *list)
+void DeleteMountInfo(Rlist *list)
 
-{ struct Rlist *rp, *sp;
+{ Rlist *rp, *sp;
   struct CfMount *entry;
 
 for (rp = list; rp != NULL; rp = sp)
@@ -300,7 +300,7 @@ for (rp = list; rp != NULL; rp = sp)
 
 /*******************************************************************/
 
-int VerifyInFstab(char *name,struct Attributes a,struct Promise *pp)
+int VerifyInFstab(char *name,Attributes a,Promise *pp)
 
 /* Ensure filesystem IS in fstab, and return no of changes */
     
@@ -401,14 +401,14 @@ return 0;
 
 /*******************************************************************/
 
-int VerifyNotInFstab(char *name,struct Attributes a,struct Promise *pp)
+int VerifyNotInFstab(char *name,Attributes a,Promise *pp)
 
 /* Ensure filesystem is NOT in fstab, and return no of changes */
     
 { char regex[CF_BUFSIZE],aixcomm[CF_BUFSIZE],line[CF_BUFSIZE];
   char *host,*rmountpt,*mountpt,*opts;
   FILE *pfp;
-  struct Item *ip;
+  Item *ip;
 
 if (!FSTABLIST)
    {
@@ -502,7 +502,7 @@ return 0;
 
 /*******************************************************************/
 
-int VerifyMount(char *name,struct Attributes a,struct Promise *pp)
+int VerifyMount(char *name,Attributes a,Promise *pp)
 
 { char comm[CF_BUFSIZE],line[CF_BUFSIZE];
   FILE *pfp;
@@ -540,7 +540,7 @@ return 0;
 
 /*******************************************************************/
 
-int VerifyUnmount(char *name,struct Attributes a,struct Promise *pp)
+int VerifyUnmount(char *name,Attributes a,Promise *pp)
 
 { char comm[CF_BUFSIZE],line[CF_BUFSIZE];
   FILE *pfp;
@@ -578,7 +578,7 @@ return 0;
 
 static int MatchFSInFstab(char *match)
 
-{ struct Item *ip;
+{ Item *ip;
  
 for (ip = FSTABLIST; ip != NULL; ip=ip->next)
    {
@@ -688,9 +688,9 @@ cf_pclose(pp);
 /* Addendum                                                        */
 /*******************************************************************/
 
-static void DeleteThisItem(struct Item **liststart,struct Item *entry)
+static void DeleteThisItem(Item **liststart,Item *entry)
  
-{ struct Item *ip, *sp;
+{ Item *ip, *sp;
 
 if (entry != NULL)
    {

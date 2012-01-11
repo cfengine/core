@@ -7,9 +7,9 @@
 
 static const int SPACES_PER_INDENT = 2;
 
-static void JsonElementDelete(struct Rlist *element)
+static void JsonElementDelete(Rlist *element)
 {
-struct Rlist *rp = NULL, *next = NULL;
+Rlist *rp = NULL, *next = NULL;
 for (rp = element; rp != NULL; rp = next)
    {
    next = rp->next;
@@ -17,7 +17,7 @@ for (rp = element; rp != NULL; rp = next)
       {
       case CF_ASSOC:
          {
-         struct CfAssoc *assoc = rp->item;
+         CfAssoc *assoc = rp->item;
          switch (assoc->rval.rtype)
             {
             case JSON_OBJECT_TYPE:
@@ -54,40 +54,40 @@ JsonElementDelete(array);
 
 void JsonObjectAppendObject(JsonObject **parent, const char *key, JsonObject *value)
 {
-struct CfAssoc *ap = NULL;
+CfAssoc *ap = NULL;
 
 if (value == NULL)
    {
    return;
    }
 
-ap = AssocNewReference(key, (struct Rval) { value, JSON_OBJECT_TYPE }, cf_notype);
+ap = AssocNewReference(key, (Rval) { value, JSON_OBJECT_TYPE }, cf_notype);
 RlistAppendReference(parent, ap, CF_ASSOC);
 }
 
 void JsonObjectAppendArray(JsonObject **parent, const char *key, JsonArray *value)
 {
-struct CfAssoc *ap = NULL;
+CfAssoc *ap = NULL;
 
 if (value == NULL)
    {
    return;
    }
 
-ap = AssocNewReference(key, (struct Rval) { value, JSON_ARRAY_TYPE }, cf_notype);
+ap = AssocNewReference(key, (Rval) { value, JSON_ARRAY_TYPE }, cf_notype);
 RlistAppendReference(parent, ap, CF_ASSOC);
 }
 
 void JsonObjectAppendString(JsonObject **parent, const char *key, const char *value)
 {
-struct CfAssoc *ap = NULL;
+CfAssoc *ap = NULL;
 
 if (value == NULL)
    {
    return;
    }
 
-ap = AssocNewReference(key, (struct Rval) { xstrdup(value), CF_SCALAR }, cf_str);
+ap = AssocNewReference(key, (Rval) { xstrdup(value), CF_SCALAR }, cf_str);
 RlistAppendReference(parent, ap, CF_ASSOC);
 }
 
@@ -96,7 +96,7 @@ void JsonObjectAppendInteger(JsonObject **parent, const char *key, int value)
 char *buffer = xcalloc(32, sizeof(char));
 snprintf(buffer, 32, "%d", value);
 
-struct CfAssoc *ap = AssocNewReference(key, (struct Rval) { buffer, CF_SCALAR }, cf_int);
+CfAssoc *ap = AssocNewReference(key, (Rval) { buffer, CF_SCALAR }, cf_int);
 RlistAppendReference(parent, ap, CF_ASSOC);
 }
 
@@ -105,7 +105,7 @@ void JsonObjectAppendReal(JsonObject **parent, const char *key, double value)
 char *buffer = xcalloc(32, sizeof(char));
 snprintf(buffer, 32, "%.4f", value);
 
-struct CfAssoc *ap = AssocNewReference(key, (struct Rval) { buffer, CF_SCALAR }, cf_real);
+CfAssoc *ap = AssocNewReference(key, (Rval) { buffer, CF_SCALAR }, cf_real);
 RlistAppendReference(parent, ap, CF_ASSOC);
 }
 
@@ -167,7 +167,7 @@ WriterWrite(writer, value);
 
 void JsonArrayPrint(Writer *writer, JsonArray *value, int indent_level)
 {
-struct Rlist *rp = NULL;
+Rlist *rp = NULL;
 
 if (JsonArrayLength(value) == 0)
    {
@@ -211,16 +211,16 @@ WriterWriteChar(writer, ']');
 
 void JsonObjectPrint(Writer *writer, JsonObject *value, int indent_level)
 {
-struct Rlist *rp = NULL;
+Rlist *rp = NULL;
 
 WriterWrite(writer, "{\n");
 
 for (rp = value; rp != NULL; rp = rp->next)
    {
-   struct CfAssoc *entry = NULL;
+   CfAssoc *entry = NULL;
 
    ShowIndent(writer, indent_level + 1);
-   entry = (struct CfAssoc *)rp->item;
+   entry = (CfAssoc *)rp->item;
 
    WriterWriteF(writer, "\"%s\": ", entry->lval);
    switch (entry->rval.rtype)
@@ -269,9 +269,9 @@ WriterWriteChar(writer, '}');
 
 const char *JsonObjectGetAsString(JsonObject *object, const char *key)
 {
-for (struct Rlist *rp = (struct Rlist *)object; rp != NULL; rp = rp->next)
+for (Rlist *rp = (Rlist *)object; rp != NULL; rp = rp->next)
    {
-   struct CfAssoc *entry = rp->item;
+   CfAssoc *entry = rp->item;
    if (strcmp(entry->lval, key) == 0)
       {
       return entry->rval.item;
@@ -283,9 +283,9 @@ return NULL;
 
 JsonObject *JsonObjectGetAsObject(JsonObject *object, const char *key)
 {
-for (struct Rlist *rp = (struct Rlist *)object; rp != NULL; rp = rp->next)
+for (Rlist *rp = (Rlist *)object; rp != NULL; rp = rp->next)
    {
-   struct CfAssoc *entry = rp->item;
+   CfAssoc *entry = rp->item;
    if (strcmp(entry->lval, key) == 0)
       {
       return entry->rval.item;
@@ -297,7 +297,7 @@ return NULL;
 
 const char *JsonArrayGetAsString(JsonArray *array, size_t index)
 {
-struct Rlist *rp = RlistAt(array, index);
+Rlist *rp = RlistAt(array, index);
 if (rp != NULL)
    {
    return rp->item;
@@ -308,7 +308,7 @@ return NULL;
 
 JsonObject *JsonArrayGetAsObject(JsonArray *array, size_t index)
 {
-struct Rlist *rp = RlistAt(array, index);
+Rlist *rp = RlistAt(array, index);
 if (rp != NULL)
    {
    return rp->item;

@@ -45,7 +45,7 @@ bundle:                BUNDLE
                           {
                           DebugBanner("Bundle");
                           P.block = "bundle";
-                          P.rval = (struct Rval) { NULL, '\0' };
+                          P.rval = (Rval) { NULL, '\0' };
                           P.currentRlist = NULL;
                           P.currentstring = NULL;
                           strcpy(P.blockid,"");
@@ -208,7 +208,7 @@ selection:            id                         /* BODY ONLY */
 
                         if (!INSTALL_SKIP)
                            {
-                           struct Constraint *cp = NULL;
+                           Constraint *cp = NULL;
 
                            if (P.currentclasses == NULL)
                               {
@@ -253,7 +253,7 @@ selection:            id                         /* BODY ONLY */
                               }
                            }
 
-                        P.rval = (struct Rval) { NULL, '\0' };
+                        P.rval = (Rval) { NULL, '\0' };
                         }
                        ';' ;
 
@@ -341,7 +341,7 @@ promise:              promiser                    /* BUNDLE ONLY */
                         if (!INSTALL_SKIP)
                            {
                            P.currentpromise = AppendPromise(P.currentstype, P.promiser,
-                              (struct Rval) { NULL, CF_NOPROMISEE },
+                              (Rval) { NULL, CF_NOPROMISEE },
                               P.currentclasses ? P.currentclasses : "any",
                               P.blockid, P.blocktype);
                            P.currentpromise->offset.line = P.line_no;
@@ -387,8 +387,8 @@ constraint:           id                        /* BUNDLE ONLY */
                         {
                         if (!INSTALL_SKIP)
                            {
-                           struct Constraint *cp = NULL;
-                           struct SubTypeSyntax ss = CheckSubType(P.blocktype,P.currenttype);                           
+                           Constraint *cp = NULL;
+                           SubTypeSyntax ss = CheckSubType(P.blocktype,P.currenttype);                           
                            CheckConstraint(P.currenttype, P.blockid, P.lval, P.rval, ss);
                            cp = AppendConstraint(&(P.currentpromise->conlist),P.lval,P.rval,"any",P.isbody);
                            cp->offset.line = P.line_no;
@@ -406,7 +406,7 @@ constraint:           id                        /* BUNDLE ONLY */
                               P.currentpromise->has_subbundles = true;
                               }
 
-                           P.rval = (struct Rval) { NULL, '\0' };
+                           P.rval = (Rval) { NULL, '\0' };
                            strcpy(P.lval,"no lval");
                            P.currentRlist = NULL;
                            }
@@ -437,13 +437,13 @@ id:                    ID
 
 rval:                  ID
                          {
-                         P.rval = (struct Rval) { xstrdup(P.currentid), CF_SCALAR };
+                         P.rval = (Rval) { xstrdup(P.currentid), CF_SCALAR };
                          P.isbody = true;
                          CfDebug("Recorded IDRVAL %s\n", P.currentid);
                          }
                      | QSTRING
                          {
-                         P.rval = (struct Rval) { P.currentstring, CF_SCALAR };
+                         P.rval = (Rval) { P.currentstring, CF_SCALAR };
                          CfDebug("Recorded scalarRVAL %s\n", P.currentstring);
 
                          P.currentstring = NULL;
@@ -459,7 +459,7 @@ rval:                  ID
                          }
                      | NAKEDVAR
                          {
-                         P.rval = (struct Rval) { P.currentstring, CF_SCALAR };
+                         P.rval = (Rval) { P.currentstring, CF_SCALAR };
                          CfDebug("Recorded saclarvariableRVAL %s\n", P.currentstring);
 
                          P.currentstring = NULL;
@@ -467,14 +467,14 @@ rval:                  ID
                          }
                      | list
                          {
-                         P.rval = (struct Rval) { P.currentRlist, CF_LIST };
+                         P.rval = (Rval) { P.currentRlist, CF_LIST };
                          P.currentRlist = NULL;
                          P.isbody = false;
                          }
                      | usefunction
                          {
                          P.isbody = false;
-                         P.rval = (struct Rval) { P.currentfncall[P.arg_nesting+1], CF_FNCALL };
+                         P.rval = (Rval) { P.currentfncall[P.arg_nesting+1], CF_FNCALL };
                          };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -493,19 +493,19 @@ litems:                litem
 
 litem:                 ID
                           {
-                          AppendRlist((struct Rlist **)&P.currentRlist,P.currentid,CF_SCALAR);
+                          AppendRlist((Rlist **)&P.currentRlist,P.currentid,CF_SCALAR);
                           }
 
                      | QSTRING
                           {
-                          AppendRlist((struct Rlist **)&P.currentRlist,(void *)P.currentstring,CF_SCALAR);
+                          AppendRlist((Rlist **)&P.currentRlist,(void *)P.currentstring,CF_SCALAR);
                           free(P.currentstring);
                           P.currentstring = NULL;
                           }
 
                      | NAKEDVAR
                           {
-                          AppendRlist((struct Rlist **)&P.currentRlist,(void *)P.currentstring,CF_SCALAR);
+                          AppendRlist((Rlist **)&P.currentRlist,(void *)P.currentstring,CF_SCALAR);
                           free(P.currentstring);
                           P.currentstring = NULL;
                           }
@@ -513,7 +513,7 @@ litem:                 ID
                      | usefunction
                           {
                           CfDebug("Install function call as list item from level %d\n",P.arg_nesting+1);
-                          AppendRlist((struct Rlist **)&P.currentRlist,(void *)P.currentfncall[P.arg_nesting+1],CF_FNCALL);
+                          AppendRlist((Rlist **)&P.currentRlist,(void *)P.currentfncall[P.arg_nesting+1],CF_FNCALL);
                           DeleteFnCall(P.currentfncall[P.arg_nesting+1]);
                           };
 
@@ -606,7 +606,7 @@ gaitem:               ID
                           {
                           /* Careful about recursion */
                           AppendRlist(&P.giveargs[P.arg_nesting],(void *)P.currentfncall[P.arg_nesting+1],CF_FNCALL);
-                          DeleteRvalItem((struct Rval) { P.currentfncall[P.arg_nesting+1], CF_FNCALL });
+                          DeleteRvalItem((Rval) { P.currentfncall[P.arg_nesting+1], CF_FNCALL });
                           };
 
 %%

@@ -56,7 +56,7 @@ return start;
 
 /***************************************************************/
 
-void EndMeasurePromise(struct timespec start,struct Promise *pp)
+void EndMeasurePromise(struct timespec start,Promise *pp)
 
 { char id[CF_BUFSIZE], *mid = NULL;
 
@@ -98,7 +98,7 @@ static void NotePerformance(char *eventname,time_t t,double value)
 
 { CF_DB *dbp;
   char name[CF_BUFSIZE];
-  struct Event e,newe;
+  Event e,newe;
   double lastseen,delta2;
   int lsea = SECONDS_PER_WEEK;
   time_t now = time(NULL);
@@ -153,17 +153,17 @@ CloseDB(dbp);
 
 /***************************************************************/
 
-void NoteClassUsage(struct AlphaList baselist)
+void NoteClassUsage(AlphaList baselist)
 
 { CF_DB *dbp;
   CF_DBC *dbcp;
   void *stored;
   char *key,name[CF_BUFSIZE];
   int i,ksize,vsize;
-  struct Event e,entry,newe;
+  Event e,entry,newe;
   double lsea = SECONDS_PER_WEEK * 52; /* expire after (about) a year */
   time_t now = time(NULL);
-  struct Item *ip,*list = NULL;
+  Item *ip,*list = NULL;
   double lastseen,delta2;
   double vtrue = 1.0;      /* end with a rough probability */
 
@@ -330,7 +330,7 @@ UpdateLastSawHost(databuf,mapip);
 static void UpdateLastSawHost(char *rkey,char *ipaddress)
 
 { CF_DB *dbpent = NULL,*dbp = NULL;
-  struct CfKeyHostSeen q,newq; 
+  KeyHostSeen q,newq; 
   double lastseen,delta2;
   char name[CF_BUFSIZE];
   time_t now = time(NULL);
@@ -392,7 +392,7 @@ else
 
 if (strcmp(rkey+1,PUBKEY_DIGEST) == 0)
    {
-   struct Item *ip;
+   Item *ip;
    int match = false;
 
    for (ip = IPADDRESSES; ip != NULL; ip=ip->next)
@@ -484,7 +484,7 @@ return true;
 static void PurgeMultipleIPReferences(CF_DB *dbp,char *rkey,char *ipaddress)
 
 { CF_DBC *dbcp;
-  struct CfKeyHostSeen q; 
+  KeyHostSeen q; 
   double lastseen,lsea = LASTSEENEXPIREAFTER;
   void *stored;
   char *key;

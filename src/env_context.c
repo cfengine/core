@@ -38,29 +38,29 @@
 
 static bool ValidClassName(const char *str);
 static int GetORAtom(char *start,char *buffer);
-static int HasBrackets(char *s,struct Promise *pp);
+static int HasBrackets(char *s,Promise *pp);
 static int IsBracketed(char *s);
 
 /*****************************************************************************/
 
-static struct Item *VDELCLASSES = NULL;
-static struct Rlist *PRIVCLASSHEAP = NULL;
+static Item *VDELCLASSES = NULL;
+static Rlist *PRIVCLASSHEAP = NULL;
 
 /*****************************************************************************/
 /* Level                                                                     */
 /*****************************************************************************/
 
-static int EvalClassExpression(struct Constraint *cp,struct Promise *pp)
+static int EvalClassExpression(Constraint *cp,Promise *pp)
 
 { int result_and = true;
   int result_or = false;
   int result_xor = 0;
   int result = 0,total = 0;
   char buffer[CF_MAXVARSIZE];
-  struct Rlist *rp;
+  Rlist *rp;
   double prob,cum = 0,fluct;
-  struct FnCall *fp;
-  struct Rval rval;
+  FnCall *fp;
+  Rval rval;
 
 if (cp == NULL)
    {
@@ -86,17 +86,17 @@ switch (cp->rval.rtype)
    {
    case CF_FNCALL:
        
-       fp = (struct FnCall *)cp->rval.item;        /* Special expansion of functions for control, best effort only */
+       fp = (FnCall *)cp->rval.item;        /* Special expansion of functions for control, best effort only */
        FnCallResult res = EvaluateFunctionCall(fp,pp);
        DeleteFnCall(fp);
        cp->rval = res.rval;
        break;
 
    case CF_LIST:
-       for (rp = (struct Rlist *)cp->rval.item; rp != NULL; rp = rp->next)
+       for (rp = (Rlist *)cp->rval.item; rp != NULL; rp = rp->next)
           {
-          rval = EvaluateFinalRval("this", (struct Rval) { rp->item, rp->type }, true,pp);
-          DeleteRvalItem((struct Rval) { rp->item, rp->type });
+          rval = EvaluateFinalRval("this", (Rval) { rp->item, rp->type }, true,pp);
+          DeleteRvalItem((Rval) { rp->item, rp->type });
           rp->item = rval.item;
           rp->type = rval.rtype;
           }
@@ -154,7 +154,7 @@ if (strcmp(cp->lval,"select_class") == 0)
    
    total = 0;
 
-   for (rp = (struct Rlist *)cp->rval.item; rp != NULL; rp = rp->next)
+   for (rp = (Rlist *)cp->rval.item; rp != NULL; rp = rp->next)
       {
       total++;
       }
@@ -170,7 +170,7 @@ if (strcmp(cp->lval,"select_class") == 0)
    hash = (double)GetHash(splay);
    n = (int)(total*hash/(double)CF_HASHTABLESIZE);
 
-   for (rp = (struct Rlist *)cp->rval.item,i = 0; rp != NULL; rp = rp->next,i++)
+   for (rp = (Rlist *)cp->rval.item,i = 0; rp != NULL; rp = rp->next,i++)
       {
       if (i == n)
          {
@@ -184,7 +184,7 @@ if (strcmp(cp->lval,"select_class") == 0)
 
 if (strcmp(cp->lval,"dist") == 0)
    {
-   for (rp = (struct Rlist *)cp->rval.item; rp != NULL; rp = rp->next)
+   for (rp = (Rlist *)cp->rval.item; rp != NULL; rp = rp->next)
       {
       result = Str2Int(rp->item);
       
@@ -218,7 +218,7 @@ if (cp->rval.rtype != CF_LIST)
    return true;
    }
 
-for (rp = (struct Rlist *)cp->rval.item; rp != NULL; rp = rp->next)
+for (rp = (Rlist *)cp->rval.item; rp != NULL; rp = rp->next)
    {
    if (rp->type != CF_SCALAR)
       {
@@ -278,9 +278,9 @@ return false;
 
 /*******************************************************************/
 
-void KeepClassContextPromise(struct Promise *pp)
+void KeepClassContextPromise(Promise *pp)
 
-{ struct Attributes a;
+{ Attributes a;
 
 a = GetClassContextAttributes(pp);
 
@@ -352,7 +352,7 @@ if (strcmp(pp->bundletype,THIS_AGENT) == 0 || FullTextMatch("edit_.*",pp->bundle
 void NewClass(const char *oclass)
 
 {
-struct Item *ip;
+Item *ip;
 char class[CF_MAXVARSIZE];
 
 strncpy(class, oclass, CF_MAXVARSIZE);
@@ -423,7 +423,7 @@ DeleteItemLiteral(&(VADDCLASSES.list[i]),class);
 void NewBundleClass(char *class,char *bundle)
 
 { char copy[CF_BUFSIZE];
-  struct Item *ip;
+  Item *ip;
 
 memset(copy,0,CF_BUFSIZE);
 strncpy(copy,class,CF_MAXVARSIZE);
@@ -485,9 +485,9 @@ if (!ABORTBUNDLE)
 
 /*********************************************************************/
 
-struct Rlist *SplitContextExpression(char *context,struct Promise *pp)
+Rlist *SplitContextExpression(char *context,Promise *pp)
 
-{ struct Rlist *list = NULL;
+{ Rlist *list = NULL;
   char *sp,cbuff[CF_MAXVARSIZE];
   
 if (context == NULL)
@@ -522,8 +522,8 @@ else
          {
          if (HasBrackets(cbuff,pp))             
             {
-            struct Rlist *andlist = SplitRegexAsRList(cbuff,"[.&]+",99,false);
-            struct Rlist *rp,*orlist = NULL;
+            Rlist *andlist = SplitRegexAsRList(cbuff,"[.&]+",99,false);
+            Rlist *rp,*orlist = NULL;
             char buff[CF_MAXVARSIZE];
             char orstring[CF_MAXVARSIZE] = {0};
             char andstring[CF_MAXVARSIZE] = {0};
@@ -692,7 +692,7 @@ return len;
 
 /*********************************************************************/
 
-static int HasBrackets(char *s,struct Promise *pp)
+static int HasBrackets(char *s,Promise *pp)
 
  /* return true if contains brackets */
 
@@ -988,12 +988,12 @@ return !IsDefinedClass(exception);
 
 static ExpressionValue EvalTokenFromList(const char *token, void *param)
 {
-return InAlphaList(*(struct AlphaList *)param, token);
+return InAlphaList(*(AlphaList *)param, token);
 }
 
 /**********************************************************************/
 
-static bool EvalWithTokenFromList(const char *expr, struct AlphaList *token_list)
+static bool EvalWithTokenFromList(const char *expr, AlphaList *token_list)
 {
 ParseResult res = ParseExpression(expr, 0, strlen(expr));
 
@@ -1022,7 +1022,7 @@ else
 
 /* Process result expression */
 
-bool EvalProcessResult(const char *process_result, struct AlphaList *proc_attr)
+bool EvalProcessResult(const char *process_result, AlphaList *proc_attr)
 {
 return EvalWithTokenFromList(process_result, proc_attr);
 }
@@ -1031,7 +1031,7 @@ return EvalWithTokenFromList(process_result, proc_attr);
 
 /* File result expressions */
 
-bool EvalFileResult(const char *file_result, struct AlphaList *leaf_attr)
+bool EvalFileResult(const char *file_result, AlphaList *leaf_attr)
 {
 return EvalWithTokenFromList(file_result, leaf_attr);
 }
@@ -1060,7 +1060,7 @@ VDELCLASSES = NULL;
 
 void PushPrivateClassContext()
 
-{ struct AlphaList *ap = xmalloc(sizeof(struct AlphaList));
+{ AlphaList *ap = xmalloc(sizeof(AlphaList));
 
 // copy to heap
 PushStack(&PRIVCLASSHEAP,CopyAlphaListPointers(ap,&VADDCLASSES));
@@ -1072,7 +1072,7 @@ InitAlphaList(&VADDCLASSES);
 void PopPrivateClassContext()
 
 {
-  struct AlphaList *ap;
+  AlphaList *ap;
  
 DeleteAlphaList(&VADDCLASSES);
 PopStack(&PRIVCLASSHEAP,(void *)&ap,sizeof(VADDCLASSES));
@@ -1206,9 +1206,9 @@ Banner("Loaded persistent memory");
 
 /*****************************************************************************/
 
-void AddEphemeralClasses(struct Rlist *classlist)
+void AddEphemeralClasses(Rlist *classlist)
 
-{ struct Rlist *rp;
+{ Rlist *rp;
 
 for (rp = classlist; rp != NULL; rp = rp->next)
    {
@@ -1389,10 +1389,10 @@ return false;
 
 /*****************************************************************************/
 
-int VarClassExcluded(struct Promise *pp,char **classes)
+int VarClassExcluded(Promise *pp,char **classes)
 
 {
-struct Constraint *cp = GetConstraint(pp, "ifvarclass");
+Constraint *cp = GetConstraint(pp, "ifvarclass");
 
 if (cp == NULL)
    {
@@ -1449,9 +1449,9 @@ if (ALLCLASSESREPORT)
 
 /**********************************************************************/
 
-void DeleteAllClasses(struct Rlist *list)
+void DeleteAllClasses(Rlist *list)
 
-{ struct Rlist *rp;
+{ Rlist *rp;
   char *string;
   int slot;
 
@@ -1485,9 +1485,9 @@ for (rp = list; rp != NULL; rp=rp->next)
 
 /*****************************************************************************/
 
-void AddAllClasses(struct Rlist *list,int persist,enum statepolicy policy)
+void AddAllClasses(Rlist *list,int persist,enum statepolicy policy)
 
-{ struct Rlist *rp;
+{ Rlist *rp;
 
 if (list == NULL)
    {

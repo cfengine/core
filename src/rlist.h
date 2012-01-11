@@ -25,71 +25,73 @@
 #ifndef CFENGINE_RLIST_H
 #define CFENGINE_RLIST_H
 
-struct Rval
+typedef struct
    {
-   void *item;        /* (char *), (struct Rlist *), or (struct FnCall)  */
+   void *item;        /* (char *), (Rlist *), or (FnCall)  */
    char rtype;        /* Points to CF_SCALAR, CF_LIST, CF_FNCALL usually */
-   };
+   } Rval;
 
-struct Rlist
+typedef struct Rlist_
    {
    void *item;
    char type;
-   struct Rlist *state_ptr; /* Points to "current" state/element of sub-list */
-   struct Rlist *next;
-   };
+   struct Rlist_ *state_ptr; /* Points to "current" state/element of sub-list */
+   struct Rlist_ *next;
+   } Rlist;
 
 #include "cf.defs.h"
 #include "conf.h"
 #include "writer.h"
 
-char *ScalarValue(struct Rlist *rlist);
-struct FnCall *FnCallValue(struct Rlist *rlist);
-struct Rlist *ListValue(struct Rlist *rlist);
+struct FnCall_;
 
-char *ScalarRvalValue(struct Rval rval);
-struct FnCall *FnCallRvalValue(struct Rval rval);
-struct Rlist *ListRvalValue(struct Rval rval);
+char *ScalarValue(Rlist *rlist);
+struct FnCall_ *FnCallValue(Rlist *rlist);
+Rlist *ListValue(Rlist *rlist);
 
-int PrintRval(char *buffer,int bufsize, struct Rval rval);
-int PrintRlist(char *buffer,int bufsize,struct Rlist *list);
-struct Rlist *ParseShownRlist(char *string);
-int IsStringIn(struct Rlist *list,char *s);
-int IsIntIn(struct Rlist *list,int i);
-struct Rlist *KeyInRlist(struct Rlist *list,char *key);
-int RlistLen(struct Rlist *start);
-void PopStack(struct Rlist **liststart, void **item,size_t size);
-void PushStack(struct Rlist **liststart,void *item);
-int IsInListOfRegex(struct Rlist *list,char *str);
+char *ScalarRvalValue(Rval rval);
+struct FnCall_ *FnCallRvalValue(Rval rval);
+Rlist *ListRvalValue(Rval rval);
 
-struct Rval CopyRvalItem(struct Rval rval);
-void DeleteRvalItem(struct Rval rval);
-struct Rlist *CopyRlist(struct Rlist *list);
-void DeleteRlist(struct Rlist *list);
-void DeleteRlistEntry(struct Rlist **liststart,struct Rlist *entry);
-struct Rlist *AppendRlistAlien(struct Rlist **start,void *item);
-struct Rlist *PrependRlistAlien(struct Rlist **start,void *item);
-struct Rlist *OrthogAppendRlist(struct Rlist **start,void *item, char type);
-struct Rlist *IdempAppendRScalar(struct Rlist **start,void *item, char type);
-struct Rlist *AppendRScalar(struct Rlist **start,void *item, char type);
-struct Rlist *IdempAppendRlist(struct Rlist **start,void *item, char type);
-struct Rlist *IdempPrependRScalar(struct Rlist **start,void *item, char type);
-struct Rlist *PrependRScalar(struct Rlist **start,void *item, char type);
-struct Rlist *PrependRlist(struct Rlist **start,void *item, char type);
-struct Rlist *AppendRlist(struct Rlist **start,void *item, char type);
-struct Rlist *PrependRlist(struct Rlist **start,void *item, char type);
-struct Rlist *SplitStringAsRList(char *string,char sep);
-struct Rlist *SplitRegexAsRList(char *string,char *regex,int max,int purge);
-struct Rlist *SortRlist(struct Rlist *list, int (*CompareItems)());
-struct Rlist *AlphaSortRListNames(struct Rlist *list);
+int PrintRval(char *buffer,int bufsize, Rval rval);
+int PrintRlist(char *buffer,int bufsize,Rlist *list);
+Rlist *ParseShownRlist(char *string);
+int IsStringIn(Rlist *list,char *s);
+int IsIntIn(Rlist *list,int i);
+Rlist *KeyInRlist(Rlist *list,char *key);
+int RlistLen(Rlist *start);
+void PopStack(Rlist **liststart, void **item,size_t size);
+void PushStack(Rlist **liststart,void *item);
+int IsInListOfRegex(Rlist *list,char *str);
 
-struct Rlist *RlistAppendReference(struct Rlist **start,void *item, char type);
+Rval CopyRvalItem(Rval rval);
+void DeleteRvalItem(Rval rval);
+Rlist *CopyRlist(Rlist *list);
+void DeleteRlist(Rlist *list);
+void DeleteRlistEntry(Rlist **liststart,Rlist *entry);
+Rlist *AppendRlistAlien(Rlist **start,void *item);
+Rlist *PrependRlistAlien(Rlist **start,void *item);
+Rlist *OrthogAppendRlist(Rlist **start,void *item, char type);
+Rlist *IdempAppendRScalar(Rlist **start,void *item, char type);
+Rlist *AppendRScalar(Rlist **start,void *item, char type);
+Rlist *IdempAppendRlist(Rlist **start,void *item, char type);
+Rlist *IdempPrependRScalar(Rlist **start,void *item, char type);
+Rlist *PrependRScalar(Rlist **start,void *item, char type);
+Rlist *PrependRlist(Rlist **start,void *item, char type);
+Rlist *AppendRlist(Rlist **start,void *item, char type);
+Rlist *PrependRlist(Rlist **start,void *item, char type);
+Rlist *SplitStringAsRList(char *string,char sep);
+Rlist *SplitRegexAsRList(char *string,char *regex,int max,int purge);
+Rlist *SortRlist(Rlist *list, int (*CompareItems)());
+Rlist *AlphaSortRListNames(Rlist *list);
 
-void ShowRlist(FILE *fp,struct Rlist *list);
-void ShowRval(FILE *fp, struct Rval rval);
+Rlist *RlistAppendReference(Rlist **start,void *item, char type);
 
-void RvalPrint(Writer *writer, struct Rval rval);
+void ShowRlist(FILE *fp,Rlist *list);
+void ShowRval(FILE *fp, Rval rval);
 
-struct Rlist *RlistAt(struct Rlist *start, size_t index);
+void RvalPrint(Writer *writer, Rval rval);
+
+Rlist *RlistAt(Rlist *start, size_t index);
 
 #endif

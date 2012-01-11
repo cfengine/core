@@ -32,16 +32,16 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static int ProcessSanityChecks(struct Attributes a,struct Promise *pp);
-static void VerifyProcessOp(struct Item *procdata,struct Attributes a,struct Promise *pp);
-static int FindPidMatches(struct Item *procdata,struct Item **killlist,struct Attributes a,struct Promise *pp);
+static int ProcessSanityChecks(Attributes a,Promise *pp);
+static void VerifyProcessOp(Item *procdata,Attributes a,Promise *pp);
+static int FindPidMatches(Item *procdata,Item **killlist,Attributes a,Promise *pp);
 static int ExtractPid(char *psentry,char **names,int *start,int *end);
 
 /*****************************************************************************/
 
-void VerifyProcessesPromise(struct Promise *pp)
+void VerifyProcessesPromise(Promise *pp)
 
-{ struct Attributes a = {{0}};
+{ Attributes a = {{0}};
 
 a = GetProcessAttributes(pp);
 ProcessSanityChecks(a,pp);
@@ -53,7 +53,7 @@ VerifyProcesses(a,pp);
 /* Level                                                                     */
 /*****************************************************************************/
 
-static int ProcessSanityChecks(struct Attributes a,struct Promise *pp)
+static int ProcessSanityChecks(Attributes a,Promise *pp)
 
 { int promised_zero, ret = true;
 
@@ -94,7 +94,7 @@ return ret;
 
 /*****************************************************************************/
 
-void VerifyProcesses(struct Attributes a, struct Promise *pp)
+void VerifyProcesses(Attributes a, Promise *pp)
 
 { struct CfLock thislock;
  char lockname[CF_BUFSIZE];
@@ -126,7 +126,7 @@ YieldCurrentLock(thislock);
 
 /*******************************************************************/
 
-int LoadProcessTable(struct Item **procdata)
+int LoadProcessTable(Item **procdata)
 {
 if (PROCESSTABLE)
    {
@@ -143,11 +143,11 @@ return Unix_LoadProcessTable(procdata);
 
 /*******************************************************************/
 
-static void VerifyProcessOp(struct Item *procdata,struct Attributes a,struct Promise *pp)
+static void VerifyProcessOp(Item *procdata,Attributes a,Promise *pp)
 
 {
   int matches = 0,do_signals = true,out_of_range,killed = 0,need_to_restart = true;
-  struct Item *killlist = NULL;
+  Item *killlist = NULL;
 
 CfDebug("VerifyProcessOp\n");
 
@@ -245,9 +245,9 @@ else
 
 /**********************************************************************************/
 
-static int FindPidMatches(struct Item *procdata,struct Item **killlist,struct Attributes a,struct Promise *pp)
+static int FindPidMatches(Item *procdata,Item **killlist,Attributes a,Promise *pp)
 
-{ struct Item *ip;
+{ Item *ip;
   int pid=-1,matches=0,i,s,e,promised_zero;
   pid_t cfengine_pid = getpid();
   char *names[CF_PROCCOLS];      /* ps headers */
@@ -342,7 +342,7 @@ return matches;
 
 /**********************************************************************************/
 
-int DoAllSignals(struct Item *siglist,struct Attributes a,struct Promise *pp)
+int DoAllSignals(Item *siglist,Attributes a,Promise *pp)
 
 {
 #ifdef MINGW

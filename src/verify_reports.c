@@ -32,21 +32,21 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static void FriendStatus(struct Attributes a,struct Promise *pp);
-static void VerifyFriendReliability(struct Attributes a,struct Promise *pp);
-static void VerifyFriendConnections(int hours,struct Attributes a,struct Promise *pp);
-static void ShowState(char *type,struct Attributes a,struct Promise *pp);
-static void PrintFile(struct Attributes a,struct Promise *pp);
+static void FriendStatus(Attributes a,Promise *pp);
+static void VerifyFriendReliability(Attributes a,Promise *pp);
+static void VerifyFriendConnections(int hours,Attributes a,Promise *pp);
+static void ShowState(char *type,Attributes a,Promise *pp);
+static void PrintFile(Attributes a,Promise *pp);
 
 /*******************************************************************/
 /* Agent reporting                                                 */
 /*******************************************************************/
 
-void VerifyReportPromise(struct Promise *pp)
+void VerifyReportPromise(Promise *pp)
 
-{ struct Attributes a = {{0}};
+{ Attributes a = {{0}};
   struct CfLock thislock;
-  struct Rlist *rp;
+  Rlist *rp;
   char unique_name[CF_EXPANDSIZE];
 
 a = GetReportsAttributes(pp);
@@ -103,7 +103,7 @@ YieldCurrentLock(thislock);
 /* Level                                                           */
 /*******************************************************************/
 
-static void PrintFile(struct Attributes a,struct Promise *pp)
+static void PrintFile(Attributes a,Promise *pp)
 
 { FILE *fp;
   char buffer[CF_BUFSIZE];
@@ -135,11 +135,11 @@ fclose(fp);
 
 /*********************************************************************/
 
-static void ShowState(char *type,struct Attributes a,struct Promise *pp)
+static void ShowState(char *type,Attributes a,Promise *pp)
 
 { struct stat statbuf;
   char buffer[CF_BUFSIZE],vbuff[CF_BUFSIZE],assemble[CF_BUFSIZE];
-  struct Item *addresses = NULL,*saddresses = NULL,*ip;
+  Item *addresses = NULL,*saddresses = NULL,*ip;
   int i = 0, tot=0, min_signal_diversity = 1,conns=1;
   int maxlen = 0,count;
   double *dist = NULL, S = 0.0;
@@ -343,7 +343,7 @@ if (dist)
 
 /*********************************************************************/
 
-static void FriendStatus(struct Attributes a,struct Promise *pp)
+static void FriendStatus(Attributes a,Promise *pp)
 
 {
 VerifyFriendConnections(a.report.lastseen,a,pp);
@@ -354,7 +354,7 @@ VerifyFriendReliability(a,pp);
 /* Level                                                             */
 /*********************************************************************/
 
-static void VerifyFriendConnections(int hours,struct Attributes a,struct Promise *pp)
+static void VerifyFriendConnections(int hours,Attributes a,Promise *pp)
 
 /* Go through the database of recent connections and check for
    Long Time No See ...*/
@@ -368,7 +368,7 @@ static void VerifyFriendConnections(int hours,struct Attributes a,struct Promise
   time_t now = time(NULL),lsea = (time_t)SECONDS_PER_WEEK, tthen, then;
   char name[CF_BUFSIZE],hostname[CF_BUFSIZE],datebuf[CF_MAXVARSIZE];
   char addr[CF_BUFSIZE],type[CF_BUFSIZE],output[CF_BUFSIZE];
-  struct QPoint entry;
+  QPoint entry;
   double average = 0.0, var = 0.0, ticksperminute = 60.0;
   double ticksperhour = (double)SECONDS_PER_HOUR;
 
@@ -510,7 +510,7 @@ CloseDB(dbp);
 
 /***************************************************************/
 
-static void VerifyFriendReliability(struct Attributes a,struct Promise *pp)
+static void VerifyFriendReliability(Attributes a,Promise *pp)
 
 { CF_DB *dbp;
   CF_DBC *dbcp;
@@ -520,8 +520,8 @@ static void VerifyFriendReliability(struct Attributes a,struct Promise *pp)
   double n[CF_RELIABLE_CLASSES],n_av[CF_RELIABLE_CLASSES],total;
   double p[CF_RELIABLE_CLASSES],p_av[CF_RELIABLE_CLASSES];
   char name[CF_BUFSIZE],hostname[CF_BUFSIZE],timekey[CF_MAXVARSIZE];
-  struct QPoint entry;
-  struct Item *ip, *hostlist = NULL;
+  QPoint entry;
+  Item *ip, *hostlist = NULL;
   double average,sum,sum_av,expect,actual;
   time_t now = time(NULL), then, lastseen = SECONDS_PER_WEEK;
 

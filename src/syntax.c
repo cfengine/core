@@ -50,7 +50,7 @@ static void CheckFnCallType(char *lval,const char *s,enum cfdatatype dtype, cons
 
 void CheckBundle(char *name,char *type)
 
-{ struct Bundle *bp;
+{ Bundle *bp;
   char output[CF_BUFSIZE];
   const char *reserved[] = { "sys", "const", "mon", "edit", "match", "mon", "this", NULL };
 
@@ -77,7 +77,7 @@ for (bp = BUNDLES; bp != NULL; bp=bp->next)
 
 void CheckBody(char *name,char *type)
 
-{ struct Body *bp;
+{ Body *bp;
   char output[CF_BUFSIZE];
 
 for (bp = BODIES; bp != NULL; bp=bp->next)
@@ -93,10 +93,10 @@ for (bp = BODIES; bp != NULL; bp=bp->next)
 
 /*********************************************************/
 
-struct SubTypeSyntax CheckSubType(char *bundletype,char *subtype)
+SubTypeSyntax CheckSubType(char *bundletype,char *subtype)
 
 { int i,j;
-  struct SubTypeSyntax *ss;
+  SubTypeSyntax *ss;
   char output[CF_BUFSIZE];
   
 if (subtype == NULL)
@@ -134,14 +134,14 @@ ReportError(output);
 return CF_NOSTYPE;
 }
 
-void CheckPromise(struct Promise *pp)
+void CheckPromise(Promise *pp)
 
 { char output[CF_BUFSIZE];
 
 if (strcmp(pp->agentsubtype,"vars") == 0)
    {
    char *data_type = NULL;
-   struct Constraint *cp;
+   Constraint *cp;
 
    for (cp = pp->conlist; cp != NULL; cp=cp->next)
       {
@@ -164,8 +164,8 @@ if (strcmp(pp->agentsubtype,"vars") == 0)
 enum cfdatatype ExpectedDataType(char *lvalname)
 
 { int i,j,k,l;
- const struct BodySyntax *bs,*bs2;
-  struct SubTypeSyntax *ss;
+ const BodySyntax *bs,*bs2;
+  SubTypeSyntax *ss;
 
 for (i = 0; i < CF3_MODULES; i++)
    {
@@ -193,7 +193,7 @@ for (i = 0; i < CF3_MODULES; i++)
          {
          if (bs[k].dtype == cf_body)
             {
-            bs2 = (const struct BodySyntax *)(bs[k].range);
+            bs2 = (const BodySyntax *)(bs[k].range);
 
             if (bs2 == NULL || bs2 == (void *)CF_BUNDLE)
                {
@@ -218,11 +218,11 @@ return cf_notype;
 
 /*********************************************************/
 
-void CheckConstraint(char *type,char *name,char *lval, struct Rval rval,struct SubTypeSyntax ss)
+void CheckConstraint(char *type,char *name,char *lval, Rval rval,SubTypeSyntax ss)
 
 { int lmatch = false;
   int i,l, allowed = false;
-  const struct BodySyntax *bs;
+  const BodySyntax *bs;
   char output[CF_BUFSIZE];
 
 CfDebug("CheckConstraint(%s,%s,",type,lval);
@@ -321,8 +321,8 @@ int LvalWantsBody(char *stype,char *lval)
 
 {
   int i,j,l;
-  struct SubTypeSyntax *ss;
-  const struct BodySyntax *bs;
+  SubTypeSyntax *ss;
+  const BodySyntax *bs;
 
 for  (i = 0; i < CF3_MODULES; i++)
    {
@@ -365,12 +365,12 @@ return false;
 
 /******************************************************************************************/
 
-void CheckSelection(char *type,char *name,char *lval, struct Rval rval)
+void CheckSelection(char *type,char *name,char *lval, Rval rval)
 
 { int lmatch = false;
   int i,j,k,l;
-  struct SubTypeSyntax *ss;
-  const struct BodySyntax *bs,*bs2;
+  SubTypeSyntax *ss;
+  const BodySyntax *bs,*bs2;
   char output[CF_BUFSIZE];
   
 CfDebug("CheckSelection(%s,%s,",type,lval);
@@ -444,7 +444,7 @@ for  (i = 0; i < CF3_MODULES; i++)
          {
          if (bs[l].dtype == cf_body)
             {
-            bs2 = (const struct BodySyntax *)(bs[l].range);
+            bs2 = (const BodySyntax *)(bs[l].range);
 
             if (bs2 == NULL || bs2 == (void *)CF_BUNDLE)
                {
@@ -485,10 +485,10 @@ if (!lmatch)
 /* Level 1                                                                  */
 /****************************************************************************/
 
-void CheckConstraintTypeMatch(char *lval, struct Rval rval, enum cfdatatype dt, const char *range, int level)
+void CheckConstraintTypeMatch(char *lval, Rval rval, enum cfdatatype dt, const char *range, int level)
 
-{ struct Rlist *rp;
-  struct Item *checklist;
+{ Rlist *rp;
+  Item *checklist;
   char output[CF_BUFSIZE];
 
 if (rval.item == NULL)
@@ -548,9 +548,9 @@ switch(rval.rtype)
               break;
           }
        
-       for (rp = (struct Rlist *)rval.item; rp != NULL; rp = rp->next)
+       for (rp = (Rlist *)rval.item; rp != NULL; rp = rp->next)
           {
-          CheckConstraintTypeMatch(lval, (struct Rval) { rp->item, rp->type }, dt, range, 1);
+          CheckConstraintTypeMatch(lval, (Rval) { rp->item, rp->type }, dt, range, 1);
           }
 
        return;
@@ -563,7 +563,7 @@ switch(rval.rtype)
        
        if (!IsItemIn(checklist,lval))
           {
-          CheckFnCallType(lval,((struct FnCall *)rval.item)->name,dt,range);
+          CheckFnCallType(lval,((FnCall *)rval.item)->name,dt,range);
           }
 
        DeleteItemList(checklist);
@@ -626,7 +626,7 @@ enum cfdatatype StringDataType(char *scopeid,char *string)
 
 {
   enum cfdatatype dtype;
-  struct Rval rval;
+  Rval rval;
   int islist = false;
   char var[CF_BUFSIZE];
   
@@ -772,7 +772,7 @@ return false;
 
 static void CheckParseInt(char *lval,char *s, const char *range)
     
-{ struct Item *split;
+{ Item *split;
   int n;
   long max = CF_LOWINIT, min = CF_HIGHINIT, val;
   char output[CF_BUFSIZE];
@@ -839,7 +839,7 @@ CfDebug("CheckParseInt - syntax verified\n\n");
 
 static void CheckParseIntRange(char *lval,char *s, const char *range)
     
-{ struct Item *split,*ip,*rangep;
+{ Item *split,*ip,*rangep;
   int n;
   long max = CF_LOWINIT, min = CF_HIGHINIT, val;
   char output[CF_BUFSIZE];
@@ -921,7 +921,7 @@ CfDebug("CheckParseIntRange - syntax verified\n\n");
 
 static void CheckParseReal(char *lval,char *s, const char *range)
     
-{ struct Item *split;
+{ Item *split;
   double max = (double)CF_LOWINIT, min = (double)CF_HIGHINIT, val;
   int n;
   char output[CF_BUFSIZE];
@@ -978,7 +978,7 @@ CfDebug("CheckParseReal - syntax verified\n\n");
 
 static void CheckParseRealRange(char *lval,char *s, const char *range)
     
-{ struct Item *split,*rangep,*ip;
+{ Item *split,*rangep,*ip;
   double max = (double)CF_LOWINIT, min = (double)CF_HIGHINIT, val;
   int n;
   char output[CF_BUFSIZE];
@@ -1056,7 +1056,7 @@ CfDebug("CheckParseRealRange - syntax verified\n\n");
 
 static void CheckParseOpts(char *lval,char *s, const char *range)
 
-{ struct Item *split;
+{ Item *split;
   int err = false;
   char output[CF_BUFSIZE];
  
@@ -1265,7 +1265,7 @@ for (dst = json; *src != '\0'; src++)
 return json;
 }
 
-static JsonObject *ExportAttributesSyntaxAsJson(const struct BodySyntax attributes[])
+static JsonObject *ExportAttributesSyntaxAsJson(const BodySyntax attributes[])
 {
 JsonObject *json = NULL;
 int i = 0;
@@ -1284,7 +1284,7 @@ for (i = 0; attributes[i].lval != NULL; i++)
       }
    else if (attributes[i].dtype == cf_body)
       {
-      JsonObject *json_attributes = ExportAttributesSyntaxAsJson((const struct BodySyntax *)attributes[i].range);
+      JsonObject *json_attributes = ExportAttributesSyntaxAsJson((const BodySyntax *)attributes[i].range);
       JsonObjectAppendObject(&json, attributes[i].lval, json_attributes);
       }
    else
@@ -1329,7 +1329,7 @@ return json;
 static JsonObject *ExportBundleTypeSyntaxAsJson(char *bundle_type)
 {
 JsonObject *json = NULL;
-struct SubTypeSyntax *st;
+SubTypeSyntax *st;
 int i = 0, j = 0;
 
 for (i = 0; i < CF3_MODULES; i++)
@@ -1399,7 +1399,7 @@ JsonObjectAppendString(parent, name, buffer);
 }
 
 
-static JsonObject *ExportAttributeValueAsJson(struct Rval rval)
+static JsonObject *ExportAttributeValueAsJson(Rval rval)
 {
 JsonObject *json_attribute = NULL;
 
@@ -1417,13 +1417,13 @@ switch (rval.rtype)
 
    case CF_LIST:
       {
-      struct Rlist *rp = NULL;
+      Rlist *rp = NULL;
       JsonArray *list = NULL;
       JsonObjectAppendString(&json_attribute, "type", "list");
 
-      for (rp = (struct Rlist *)rval.item; rp != NULL; rp = rp->next)
+      for (rp = (Rlist *)rval.item; rp != NULL; rp = rp->next)
 	 {
-	 JsonArrayAppendObject(&list, ExportAttributeValueAsJson((struct Rval) { rp->item, rp->type }));
+	 JsonArrayAppendObject(&list, ExportAttributeValueAsJson((Rval) { rp->item, rp->type }));
 	 }
 
       JsonObjectAppendArray(&json_attribute, "value", list);
@@ -1432,8 +1432,8 @@ switch (rval.rtype)
 
    case CF_FNCALL:
       {
-      struct Rlist *argp = NULL;
-      struct FnCall *call = (struct FnCall *)rval.item;
+      Rlist *argp = NULL;
+      FnCall *call = (FnCall *)rval.item;
 
       JsonObjectAppendString(&json_attribute, "type", "function-call");
       JsonObjectAppendString(&json_attribute, "name", call->name);
@@ -1443,7 +1443,7 @@ switch (rval.rtype)
 
 	 for (argp = call->args; argp != NULL; argp = argp->next)
 	    {
-	    JsonArrayAppendObject(&arguments, ExportAttributeValueAsJson((struct Rval) { argp->item, argp->type }));
+	    JsonArrayAppendObject(&arguments, ExportAttributeValueAsJson((Rval) { argp->item, argp->type }));
 	    }
 
 	 JsonObjectAppendArray(&json_attribute, "arguments", arguments);
@@ -1471,14 +1471,14 @@ JsonObjectAppendArray(&json, children_name, children);
 return json;
 }
 
-static JsonArray *ExportBodyClassesAsJson(struct Constraint *constraints)
+static JsonArray *ExportBodyClassesAsJson(Constraint *constraints)
 {
 JsonArray *json_contexts = NULL;
 JsonArray *json_attributes = NULL;
 char *current_context = "any";
 size_t context_offset_start = -1;
 size_t context_offset_end = -1;
-struct Constraint *cp = NULL;
+Constraint *cp = NULL;
 
 for (cp = constraints; cp != NULL; cp = cp->next)
    {
@@ -1510,14 +1510,14 @@ for (cp = constraints; cp != NULL; cp = cp->next)
 return json_contexts;
 }
 
-static JsonArray *ExportBundleClassesAsJson(struct Promise *promises)
+static JsonArray *ExportBundleClassesAsJson(Promise *promises)
 {
 JsonArray *json_contexts = NULL;
 JsonArray *json_promises = NULL;
 char *current_context = "any";
 size_t context_offset_start = -1;
 size_t context_offset_end = -1;
-struct Promise *pp = NULL;
+Promise *pp = NULL;
 
 for (pp = promises; pp != NULL; pp = pp->next)
    {
@@ -1527,7 +1527,7 @@ for (pp = promises; pp != NULL; pp = pp->next)
 
       {
       JsonArray *json_promise_attributes = NULL;
-      struct Constraint *cp = NULL;
+      Constraint *cp = NULL;
 
       for (cp = pp->conlist; cp != NULL; cp = cp->next)
 	 {
@@ -1572,7 +1572,7 @@ for (pp = promises; pp != NULL; pp = pp->next)
 return json_contexts;
 }
 
-static JsonObject *ExportBundleAsJson(struct Bundle *bundle)
+static JsonObject *ExportBundleAsJson(Bundle *bundle)
 {
 JsonObject *json_bundle = NULL;
 
@@ -1584,7 +1584,7 @@ JsonObjectAppendString(&json_bundle, "bundle-type", bundle->type);
 
    {
    JsonArray *json_args = NULL;
-   struct Rlist *argp = NULL;
+   Rlist *argp = NULL;
 
    for (argp = bundle->args; argp != NULL; argp = argp->next)
       {
@@ -1596,7 +1596,7 @@ JsonObjectAppendString(&json_bundle, "bundle-type", bundle->type);
 
    {
    JsonArray *json_promise_types = NULL;
-   struct SubType *sp = NULL;
+   SubType *sp = NULL;
 
    for (sp = bundle->subtypes; sp != NULL; sp = sp->next)
       {
@@ -1617,7 +1617,7 @@ return json_bundle;
 }
 
 
-static JsonObject *ExportBodyAsJson(struct Body *body)
+static JsonObject *ExportBodyAsJson(Body *body)
 {
 JsonObject *json_body = NULL;
 
@@ -1629,7 +1629,7 @@ JsonObjectAppendString(&json_body, "body-type", body->type);
 
    {
    JsonArray *json_args = NULL;
-   struct Rlist *argp = NULL;
+   Rlist *argp = NULL;
 
    for (argp = body->args; argp != NULL; argp = argp->next)
       {
@@ -1645,14 +1645,14 @@ return json_body;
 }
 
 void PolicyPrintAsJson(Writer *writer, const char *filename,
-                       struct Bundle *bundles, struct Body *bodies)
+                       Bundle *bundles, Body *bodies)
 {
 JsonObject *json_policy = NULL;
 JsonObjectAppendString(&json_policy, "name", filename);
 
    {
    JsonArray *json_bundles = NULL;
-   struct Bundle *bp = NULL;
+   Bundle *bp = NULL;
 
    for (bp = bundles; bp != NULL; bp = bp->next)
       {
@@ -1664,7 +1664,7 @@ JsonObjectAppendString(&json_policy, "name", filename);
 
    {
    JsonArray *json_bodies = NULL;
-   struct Body *bdp = NULL;
+   Body *bdp = NULL;
 
    for (bdp = bodies; bdp != NULL; bdp = bdp->next)
       {
@@ -1690,21 +1690,21 @@ for (i = 0; i < PRETTY_PRINT_SPACES_PER_INDENT * indent_level; i++)
    }
 }
 
-static void RvalPrettyPrint(Writer *writer, struct Rval rval)
+static void RvalPrettyPrint(Writer *writer, Rval rval)
 {
 /* FIX: prettify */
 RvalPrint(writer, rval);
 }
 
-static void AttributePrettyPrint(Writer *writer, struct Constraint *attribute, int indent_level)
+static void AttributePrettyPrint(Writer *writer, Constraint *attribute, int indent_level)
 {
 WriterWriteF(writer, "%s => ", attribute->lval);
 RvalPrettyPrint(writer, attribute->rval);
 }
 
-static void ArgumentsPrettyPrint(Writer *writer, struct Rlist *args)
+static void ArgumentsPrettyPrint(Writer *writer, Rlist *args)
 {
-struct Rlist *argp = NULL;
+Rlist *argp = NULL;
 
 WriterWriteChar(writer, '(');
 for (argp = args; argp != NULL; argp = argp->next)
@@ -1719,9 +1719,9 @@ for (argp = args; argp != NULL; argp = argp->next)
 WriterWriteChar(writer, ')');
 }
 
-void BodyPrettyPrint(Writer *writer, struct Body *body)
+void BodyPrettyPrint(Writer *writer, Body *body)
 {
-struct Constraint *cp = NULL;
+Constraint *cp = NULL;
 char *current_class = NULL;
 
 WriterWriteF(writer, "body %s %s", body->type, body->name);
@@ -1752,9 +1752,9 @@ for (cp = body->conlist; cp != NULL; cp = cp->next)
 WriterWrite(writer, "\n}");
 }
 
-void BundlePrettyPrint(Writer *writer, struct Bundle *bundle)
+void BundlePrettyPrint(Writer *writer, Bundle *bundle)
 {
-struct SubType *promise_type = NULL;
+SubType *promise_type = NULL;
 
 WriterWriteF(writer, "bundle %s %s", bundle->type, bundle->name);
 ArgumentsPrettyPrint(writer, bundle->args);
@@ -1762,12 +1762,12 @@ WriterWrite(writer, "\n{");
 
 for (promise_type = bundle->subtypes; promise_type != NULL; promise_type = promise_type->next)
    {
-   struct Promise* pp = NULL;
+   Promise* pp = NULL;
    WriterWriteF(writer, "\n%s:\n", promise_type->name);
 
    for (pp = promise_type->promiselist; pp != NULL; pp = pp->next)
       {
-      struct Constraint *cp = NULL;
+      Constraint *cp = NULL;
       char *current_class = NULL;
 
       if (current_class == NULL || strcmp(cp->classes, current_class) != 0)

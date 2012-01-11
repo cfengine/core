@@ -35,15 +35,15 @@
 extern FILE *yyin;
 extern char *CFH[][2];
 
-static void VerifyPromises(struct Rlist *bundlesequence);
+static void VerifyPromises(Rlist *bundlesequence);
 static void SetAuditVersion(void);
 static void CheckWorkingDirectories(void);
 static void Cf3ParseFile(char *filename, bool check_not_writable_by_others);
 static void Cf3ParseFiles(bool check_not_writable_by_others);
 static int MissingInputFile(void);
-static void CheckControlPromises(char *scope,char *agent,struct Constraint *controllist);
-static void CheckVariablePromises(char *scope,struct Promise *varlist);
-static void CheckCommonClassPromises(struct Promise *classlist);
+static void CheckControlPromises(char *scope,char *agent,Constraint *controllist);
+static void CheckVariablePromises(char *scope,Promise *varlist);
+static void CheckCommonClassPromises(Promise *classlist);
 static void PrependAuditFile(char *file);
 static void OpenReports(char *agents);
 static void CloseReports(char *agents);
@@ -51,7 +51,7 @@ static char *InputLocation(char *filename);
 #if !defined(__MINGW32__)
 static void OpenLog(int facility);
 #endif
-static bool VerifyBundleSequence(enum cfagenttype agent, struct Rlist *bundlesequence);
+static bool VerifyBundleSequence(enum cfagenttype agent, Rlist *bundlesequence);
 
 /*****************************************************************************/
 
@@ -90,7 +90,7 @@ if (stat(name,&sb) != -1)
 
 /*****************************************************************************/
 
-void GenericInitialize(int argc,char **argv,char *agents, struct GenericAgentConfig config)
+void GenericInitialize(int argc,char **argv,char *agents, GenericAgentConfig config)
 
 { enum cfagenttype ag = Agent2Type(agents);
   char vbuff[CF_BUFSIZE];
@@ -354,10 +354,10 @@ else
 
 /*****************************************************************************/
 
-void ReadPromises(enum cfagenttype ag,char *agents, struct GenericAgentConfig config)
+void ReadPromises(enum cfagenttype ag,char *agents, GenericAgentConfig config)
 
 {
-struct Rval retval;
+Rval retval;
 char vbuff[CF_BUFSIZE];
 bool check_not_writable_by_others = true;
 
@@ -616,7 +616,7 @@ if (BOOTSTRAP)
 
 static void Cf3ParseFiles(bool check_not_writable_by_others)
 
-{ struct Rlist *rp,*sl;
+{ Rlist *rp,*sl;
 
 PARSING = true;
 
@@ -639,14 +639,14 @@ if (VINPUTLIST != NULL)
          }
       else
          {
-         struct Rval returnval;
+         Rval returnval;
 
          if (strcmp(rp->item,CF_NULL_VALUE) == 0)
             {
             continue;
             }
 
-         returnval = EvaluateFinalRval("sys", (struct Rval) { rp->item, rp->type }, true,NULL);
+         returnval = EvaluateFinalRval("sys", (Rval) { rp->item, rp->type }, true,NULL);
 
          switch (returnval.rtype)
             {
@@ -655,7 +655,7 @@ if (VINPUTLIST != NULL)
                 break;
 
             case CF_LIST:
-                for (sl = (struct Rlist *)returnval.item; sl != NULL; sl=sl->next)
+                for (sl = (Rlist *)returnval.item; sl != NULL; sl=sl->next)
                    {
                    Cf3ParseFile((char *)sl->item, check_not_writable_by_others);
                    }
@@ -694,7 +694,7 @@ return false;
 
 int NewPromiseProposals()
 
-{ struct Rlist *rp,*sl;
+{ Rlist *rp,*sl;
   struct stat sb;
   int result = false;
   char filename[CF_MAXVARSIZE];
@@ -770,7 +770,7 @@ if (VINPUTLIST != NULL)
          }
       else
          {
-         struct Rval returnval = EvaluateFinalRval("sys", (struct Rval) { rp->item, rp->type }, true,NULL);
+         Rval returnval = EvaluateFinalRval("sys", (Rval) { rp->item, rp->type }, true,NULL);
 
          switch (returnval.rtype)
             {
@@ -792,7 +792,7 @@ if (VINPUTLIST != NULL)
 
             case CF_LIST:
 
-                for (sl = (struct Rlist *)returnval.item; sl != NULL; sl=sl->next)
+                for (sl = (Rlist *)returnval.item; sl != NULL; sl=sl->next)
                    {
                    if (cfstat(InputLocation((char *)sl->item),&sb) == -1)
                       {
@@ -998,9 +998,9 @@ fclose (yyin);
 
 /*******************************************************************/
 
-struct Constraint *ControlBodyConstraints(enum cfagenttype agent)
+Constraint *ControlBodyConstraints(enum cfagenttype agent)
 
-{ struct Body *body;
+{ Body *body;
 
 for (body = BODIES; body != NULL; body = body->next)
    {
@@ -1074,9 +1074,9 @@ OpenLog(ParseFacility(retval));
 
 /**************************************************************/
 
-struct Bundle *GetBundle(char *name,char *agent)
+Bundle *GetBundle(char *name,char *agent)
 
-{ struct Bundle *bp;
+{ Bundle *bp;
 
 for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
    {
@@ -1105,9 +1105,9 @@ return NULL;
 
 /**************************************************************/
 
-struct SubType *GetSubTypeForBundle(char *type,struct Bundle *bp)
+SubType *GetSubTypeForBundle(char *type,Bundle *bp)
 
-{ struct SubType *sp;
+{ SubType *sp;
 
 if (bp == NULL)
    {
@@ -1127,7 +1127,7 @@ return NULL;
 
 /**************************************************************/
 
-void BannerBundle(struct Bundle *bp,struct Rlist *params)
+void BannerBundle(Bundle *bp,Rlist *params)
 
 {
 CfOut(cf_verbose,"","\n");
@@ -1156,7 +1156,7 @@ LastSawBundle(bp->name);
 
 /**************************************************************/
 
-void BannerSubBundle(struct Bundle *bp,struct Rlist *params)
+void BannerSubBundle(Bundle *bp,Rlist *params)
 
 {
 CfOut(cf_verbose,"","\n");
@@ -1184,7 +1184,7 @@ LastSawBundle(bp->name);
 
 /**************************************************************/
 
-void PromiseBanner(struct Promise *pp)
+void PromiseBanner(Promise *pp)
 
 { char handle[CF_MAXVARSIZE];
 const char *sp;
@@ -1430,14 +1430,14 @@ if ((FREPORT_HTML = fopen(filename,"w")) == NULL)
 
 /*******************************************************************/
 
-static void VerifyPromises(struct Rlist *bundlesequence)
+static void VerifyPromises(Rlist *bundlesequence)
 
-{ struct Bundle *bp;
-  struct SubType *sp;
-  struct Promise *pp;
-  struct Body *bdp;
-  struct Rlist *rp;
-  struct FnCall *fp;
+{ Bundle *bp;
+  SubType *sp;
+  Promise *pp;
+  Body *bdp;
+  Rlist *rp;
+  FnCall *fp;
   char *scope;
 
 
@@ -1466,7 +1466,7 @@ for (rp = BODYPARTS; rp != NULL; rp=rp->next)
           break;
 
       case CF_FNCALL:
-          fp = (struct FnCall *)rp->item;
+          fp = (FnCall *)rp->item;
 
           if (!IsBody(BODIES,fp->name))
              {
@@ -1494,7 +1494,7 @@ for (rp = SUBBUNDLES; rp != NULL; rp=rp->next)
 
       case CF_FNCALL:
 
-          fp = (struct FnCall *)rp->item;
+          fp = (FnCall *)rp->item;
 
           if (!IGNORE_MISSING_BUNDLES && !IsCf3VarString(fp->name) && !IsBundle(BUNDLES,fp->name))
              {
@@ -1538,7 +1538,7 @@ static void PrependAuditFile(char *file)
 
 { struct stat statbuf;
 
-AUDITPTR = xmalloc(sizeof(struct Audit));
+AUDITPTR = xmalloc(sizeof(Audit));
 
 if (cfstat(file,&statbuf) == -1)
    {
@@ -1561,9 +1561,9 @@ VAUDIT = AUDITPTR;
 /* Level 3                                                         */
 /*******************************************************************/
 
-static void CheckVariablePromises(char *scope,struct Promise *varlist)
+static void CheckVariablePromises(char *scope,Promise *varlist)
 
-{ struct Promise *pp;
+{ Promise *pp;
   int allow_redefine = false;
 
 CfDebug("CheckVariablePromises()\n");
@@ -1576,9 +1576,9 @@ for (pp = varlist; pp != NULL; pp=pp->next)
 
 /*******************************************************************/
 
-static void CheckCommonClassPromises(struct Promise *classlist)
+static void CheckCommonClassPromises(Promise *classlist)
 
-{ struct Promise *pp;
+{ Promise *pp;
 
 CfOut(cf_verbose,""," -> Checking common class promises...\n");
 
@@ -1590,13 +1590,13 @@ for (pp = classlist; pp != NULL; pp=pp->next)
 
 /*******************************************************************/
 
-static void CheckControlPromises(char *scope,char *agent,struct Constraint *controllist)
+static void CheckControlPromises(char *scope,char *agent,Constraint *controllist)
 
-{ struct Constraint *cp;
-  const struct BodySyntax *bp = NULL;
-  struct Rlist *rp;
+{ Constraint *cp;
+  const BodySyntax *bp = NULL;
+  Rlist *rp;
   int i = 0;
-  struct Rval returnval;
+  Rval returnval;
 
 CfDebug("CheckControlPromises(%s)\n",agent);
 
@@ -1672,7 +1672,7 @@ for (cp = controllist; cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFG_CONTROLBODY[cfg_goalpatterns].lval) == 0)
       {
       GOALS = NULL;
-      for (rp = (struct Rlist *)returnval.item; rp != NULL; rp=rp->next)
+      for (rp = (Rlist *)returnval.item; rp != NULL; rp=rp->next)
          {
          PrependRScalar(&GOALS,rp->item,CF_SCALAR);
          }
@@ -1683,7 +1683,7 @@ for (cp = controllist; cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFG_CONTROLBODY[cfg_goalcategories].lval) == 0)
       {
       GOALCATEGORIES = NULL;
-      for (rp = (struct Rlist *)returnval.item; rp != NULL; rp=rp->next)
+      for (rp = (Rlist *)returnval.item; rp != NULL; rp=rp->next)
          {
          PrependRScalar(&GOALCATEGORIES,rp->item,CF_SCALAR);
          }
@@ -1702,7 +1702,7 @@ for (cp = controllist; cp != NULL; cp=cp->next)
 static void SetAuditVersion()
 
 {
-struct Rval rval = { NULL, 'x' }; /* FIXME: why it is initialized? */
+Rval rval = { NULL, 'x' }; /* FIXME: why it is initialized? */
 
   /* In addition, each bundle can have its own version */
 
@@ -1894,8 +1894,8 @@ fclose(fp);
 
 void HashVariables(char *name)
 
-{ struct Bundle *bp;
-  struct SubType *sp;
+{ Bundle *bp;
+  SubType *sp;
 
 CfOut(cf_verbose,"","Initiate variable convergence...\n");
     
@@ -1935,7 +1935,7 @@ for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
 
 void HashControls()
 
-{ struct Body *bdp;
+{ Body *bdp;
   char buf[CF_BUFSIZE];
 
 /* Only control bodies need to be hashed like variables */
@@ -1955,13 +1955,13 @@ for (bdp = BODIES; bdp != NULL; bdp = bdp->next) /* get schedule */
 
 /********************************************************************/
 
-static bool VerifyBundleSequence(enum cfagenttype agent, struct Rlist *bundlesequence)
+static bool VerifyBundleSequence(enum cfagenttype agent, Rlist *bundlesequence)
 
-{ struct Rlist *rp;
+{ Rlist *rp;
   char *name;
-  struct Rval retval;
+  Rval retval;
   int ok = true;
-  struct FnCall *fp;
+  FnCall *fp;
 
 if ((THIS_AGENT_TYPE != cf_agent) && 
     (THIS_AGENT_TYPE != cf_know) && 
@@ -1991,7 +1991,7 @@ if ((agent != cf_agent) && (agent != cf_common))
    return true;
    }
 
-for (rp = (struct Rlist *)retval.item; rp != NULL; rp=rp->next)
+for (rp = (Rlist *)retval.item; rp != NULL; rp=rp->next)
    {
    switch (rp->type)
       {
@@ -2000,14 +2000,14 @@ for (rp = (struct Rlist *)retval.item; rp != NULL; rp=rp->next)
          break;
 
       case CF_FNCALL:
-         fp = (struct FnCall *)rp->item;
+         fp = (FnCall *)rp->item;
          name = (char *)fp->name;
          break;
 
       default:
          name = NULL;
          CfOut(cf_error,"","Illegal item found in bundlesequence: ");
-         ShowRval(stdout, (struct Rval) { rp->item, rp->type });
+         ShowRval(stdout, (Rval) { rp->item, rp->type });
          printf(" = %c\n",rp->type);
          ok = false;
          break;
@@ -2030,10 +2030,10 @@ return ok;
 
 /*******************************************************************/
 
-void CheckBundleParameters(char *scope,struct Rlist *args)
+void CheckBundleParameters(char *scope,Rlist *args)
 
-{ struct Rlist *rp;
-  struct Rval retval;
+{ Rlist *rp;
+  Rval retval;
   char *lval;
 
 for (rp = args; rp != NULL; rp = rp->next)
@@ -2050,9 +2050,9 @@ for (rp = args; rp != NULL; rp = rp->next)
 
 /*******************************************************************/
 
-struct GenericAgentConfig GenericAgentDefaultConfig(enum cfagenttype agent_type)
+GenericAgentConfig GenericAgentDefaultConfig(enum cfagenttype agent_type)
 {
-struct GenericAgentConfig config = { 0 };
+GenericAgentConfig config = { 0 };
 
 config.bundlesequence = NULL;
 config.verify_promises = true;

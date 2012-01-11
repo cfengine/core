@@ -36,9 +36,9 @@
  */
 
 
-struct Item *SortItemListNames(struct Item *list) /* Alphabetical */
+Item *SortItemListNames(Item *list) /* Alphabetical */
 
-{ struct Item *p, *q, *e, *tail;
+{ Item *p, *q, *e, *tail;
   int insize, nmerges, psize, qsize, i;
 
 if (list == NULL)
@@ -145,9 +145,9 @@ while (true)
 
 /*******************************************************************/
 
-struct Item *SortItemListClasses(struct Item *list) /* Alphabetical */
+Item *SortItemListClasses(Item *list) /* Alphabetical */
 
-{ struct Item *p, *q, *e, *tail;
+{ Item *p, *q, *e, *tail;
   int insize, nmerges, psize, qsize, i;
 
 if (list == NULL)
@@ -254,9 +254,9 @@ while (true)
 
 /*******************************************************************/
 
-struct Item *SortItemListCounters(struct Item *list) /* Biggest first */
+Item *SortItemListCounters(Item *list) /* Biggest first */
 
-{ struct Item *p, *q, *e, *tail;
+{ Item *p, *q, *e, *tail;
   int insize, nmerges, psize, qsize, i;
 
 if (list == NULL)
@@ -364,9 +364,9 @@ while (true)
 
 /*******************************************************************/
 
-struct Item *SortItemListTimes(struct Item *list) /* Biggest first */
+Item *SortItemListTimes(Item *list) /* Biggest first */
 
-{ struct Item *p, *q, *e, *tail;
+{ Item *p, *q, *e, *tail;
   int insize, nmerges, psize, qsize, i;
 
 if (list == NULL)
@@ -474,14 +474,14 @@ while (true)
 
 /*******************************************************************/
 
-struct Rlist *SortRlist(struct Rlist *list, int (*CompareItems)())
+Rlist *SortRlist(Rlist *list, int (*CompareItems)())
 /**
  * Sorts an Rlist on list->item. A function CompareItems(i1,i2)
  * must be written for this particular item, which returns
  * true if i1 <= i2, false otherwise.
  **/
 
-{ struct Rlist *p = NULL, *q = NULL, *e = NULL, *tail = NULL;
+{ Rlist *p = NULL, *q = NULL, *e = NULL, *tail = NULL;
   int insize = 0, nmerges = 0, psize = 0, qsize = 0, i = 0;
 
 if (list == NULL)
@@ -589,11 +589,11 @@ while (true)
 
 /*******************************************************************/
 
-struct Rlist *AlphaSortRListNames(struct Rlist *list)
+Rlist *AlphaSortRListNames(Rlist *list)
 
 /* Borrowed this algorithm from merge-sort implementation */
 
-{ struct Rlist *p, *q, *e, *tail;
+{ Rlist *p, *q, *e, *tail;
   int insize, nmerges, psize, qsize, i;
 
 if (list == NULL)

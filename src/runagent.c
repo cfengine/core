@@ -33,12 +33,12 @@
 #include "cf3.extern.h"
 
 int main (int argc,char *argv[]);
-int HailServer(char *host,struct Attributes a,struct Promise *pp);
+int HailServer(char *host,Attributes a,Promise *pp);
 void ThisAgentInit(void);
 int ParseHostname(char *hostname,char *new_hostname);
-void SendClassData(struct cfagent_connection *conn);
-struct Promise *MakeDefaultRunAgentPromise(void);
-void HailExec(struct cfagent_connection *conn,char *peer,char *recvbuffer,char *sendbuffer);
+void SendClassData(AgentConnection *conn);
+Promise *MakeDefaultRunAgentPromise(void);
+void HailExec(AgentConnection *conn,char *peer,char *recvbuffer,char *sendbuffer);
 FILE *NewStream(char *name);
 void DeleteStream(FILE *fp);
 
@@ -99,7 +99,7 @@ const char *HINTS[17] =
       NULL
       };
 
-extern struct BodySyntax CFR_CONTROLBODY[];
+extern BodySyntax CFR_CONTROLBODY[];
 
 int INTERACTIVE = false;
 int OUTPUT_TO_FILE = false;
@@ -107,8 +107,8 @@ char OUTPUT_DIRECTORY[CF_BUFSIZE];
 int BACKGROUND = false;
 int MAXCHILD = 50;
 char REMOTE_AGENT_OPTIONS[CF_MAXVARSIZE];
-struct Attributes RUNATTR = {{0}};
-struct Rlist *HOSTLIST = NULL;
+Attributes RUNATTR = {{0}};
+Rlist *HOSTLIST = NULL;
 char SENDCLASSES[CF_MAXVARSIZE];
 char DEFINECLASSES[CF_MAXVARSIZE];
 char MENU[CF_MAXVARSIZE];
@@ -117,13 +117,13 @@ char MENU[CF_MAXVARSIZE];
 
 int main(int argc,char *argv[])
 
-{ struct Rlist *rp;
-  struct Promise *pp;
+{ Rlist *rp;
+  Promise *pp;
   int count = 0;
   int status;
   int pid;
 
-struct GenericAgentConfig config = CheckOpts(argc,argv);
+GenericAgentConfig config = CheckOpts(argc,argv);
 GenericInitialize(argc,argv,"runagent", config);
 ThisAgentInit();
 KeepControlPromises(); // Set RUNATTR using copy
@@ -202,12 +202,12 @@ return 0;
 
 /*******************************************************************/
 
-struct GenericAgentConfig CheckOpts(int argc,char **argv)
+GenericAgentConfig CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
   int optindex = 0;
   int c;
-  struct GenericAgentConfig config = GenericAgentDefaultConfig(cf_runagent);
+  GenericAgentConfig config = GenericAgentDefaultConfig(cf_runagent);
 
 DEFINECLASSES[0] = '\0';
 SENDCLASSES[0] = '\0';  
@@ -332,9 +332,9 @@ if (strstr(REMOTE_AGENT_OPTIONS,"--file")||strstr(REMOTE_AGENT_OPTIONS,"-f"))
 
 /********************************************************************/
 
-int HailServer(char *host,struct Attributes a,struct Promise *pp)
+int HailServer(char *host,Attributes a,Promise *pp)
 
-{ struct cfagent_connection *conn;
+{ AgentConnection *conn;
  char sendbuffer[CF_BUFSIZE],recvbuffer[CF_BUFSIZE],peer[CF_MAXVARSIZE],ipv4[CF_MAXVARSIZE],digest[CF_MAXVARSIZE],user[CF_SMALLBUF];
   long gotkey;
   char reply[8];
@@ -464,8 +464,8 @@ return true;
 
 void KeepControlPromises()
 
-{ struct Constraint *cp;
-struct Rval retval;
+{ Constraint *cp;
+Rval retval;
 
 RUNATTR.copy.trustkey = false;
 RUNATTR.copy.encrypt = true;
@@ -580,17 +580,17 @@ if (GetVariable("control_common", CFG_CONTROLBODY[cfg_lastseenexpireafter].lval,
 
 /********************************************************************/
 
-struct Promise *MakeDefaultRunAgentPromise()
+Promise *MakeDefaultRunAgentPromise()
 
-{ struct Promise *pp;
+{ Promise *pp;
   
 /* The default promise here is to hail associates */
 
-pp = xcalloc(1, sizeof(struct Promise));
+pp = xcalloc(1, sizeof(Promise));
 
 pp->bundle =  xstrdup("implicit internal bundle for runagent");
 pp->promiser = xstrdup("runagent");
-pp->promisee = (struct Rval) { NULL, CF_NOPROMISEE };
+pp->promisee = (Rval) { NULL, CF_NOPROMISEE };
 pp->donep = &(pp->done);
 
 return pp;
@@ -616,9 +616,9 @@ return(port);
 
 /********************************************************************/
 
-void SendClassData(struct cfagent_connection *conn)
+void SendClassData(AgentConnection *conn)
 
-{ struct Rlist *classes,*rp;
+{ Rlist *classes,*rp;
   char sendbuffer[CF_BUFSIZE];
 
 classes = SplitRegexAsRList(SENDCLASSES,"[,: ]",99,false);
@@ -643,7 +643,7 @@ if (SendTransaction(conn->sd,sendbuffer,0,CF_DONE) == -1)
 
 /********************************************************************/
 
-void HailExec(struct cfagent_connection *conn,char *peer,char *recvbuffer,char *sendbuffer)
+void HailExec(AgentConnection *conn,char *peer,char *recvbuffer,char *sendbuffer)
 
 { FILE *fp = stdout;
   char *sp;

@@ -32,15 +32,15 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static int ExecSanityChecks(struct Attributes a,struct Promise *pp);
+static int ExecSanityChecks(Attributes a,Promise *pp);
 static void PreviewProtocolLine(char *line, char *comm);
-static void VerifyExec(struct Attributes a, struct Promise *pp);
+static void VerifyExec(Attributes a, Promise *pp);
 
 /*****************************************************************************/
 
-void VerifyExecPromise(struct Promise *pp)
+void VerifyExecPromise(Promise *pp)
 
-{ struct Attributes a = {{0}};
+{ Attributes a = {{0}};
 
 a = GetExecAttributes(pp);
 ExecSanityChecks(a,pp);
@@ -52,7 +52,7 @@ DeleteScalar("this","promiser");
 /* Level                                                                     */
 /*****************************************************************************/
 
-static int ExecSanityChecks(struct Attributes a,struct Promise *pp)
+static int ExecSanityChecks(Attributes a,Promise *pp)
 
 {
 if (a.contain.nooutput && a.contain.preview)
@@ -95,7 +95,7 @@ return true;
 
 /*****************************************************************************/
 
-static void VerifyExec(struct Attributes a, struct Promise *pp)
+static void VerifyExec(Attributes a, Promise *pp)
     
 { struct CfLock thislock;
   char unsafeLine[CF_BUFSIZE], line[sizeof(unsafeLine)*2],eventname[CF_BUFSIZE];

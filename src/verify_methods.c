@@ -34,9 +34,9 @@
 
 /*****************************************************************************/
 
-void VerifyMethodsPromise(struct Promise *pp)
+void VerifyMethodsPromise(Promise *pp)
 
-{ struct Attributes a = {{0}};
+{ Attributes a = {{0}};
 
 a = GetMethodAttributes(pp);
 
@@ -46,13 +46,13 @@ DeleteScalar("this","promiser");
 
 /*****************************************************************************/
 
-int VerifyMethod(char *attrname,struct Attributes a,struct Promise *pp)
+int VerifyMethod(char *attrname,Attributes a,Promise *pp)
 
-{ struct Bundle *bp;
+{ Bundle *bp;
   void *vp;
-  struct FnCall *fp;
+  FnCall *fp;
   char method_name[CF_EXPANDSIZE];
-  struct Rlist *params = NULL;
+  Rlist *params = NULL;
   int retval = false;
   struct CfLock thislock;
   char lockname[CF_BUFSIZE];
@@ -61,7 +61,7 @@ if (a.havebundle)
    {
    if ((vp = GetConstraintValue(attrname,pp,CF_FNCALL)))
       {
-      fp = (struct FnCall *)vp;
+      fp = (FnCall *)vp;
       ExpandScalar(fp->name,method_name);
       params = fp->args;
       }

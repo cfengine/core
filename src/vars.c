@@ -33,7 +33,7 @@
 #include "cf3.extern.h"
 
 static int IsCf3Scalar(char *str);
-static int CompareVariableValue(struct Rval rval, struct CfAssoc *ap);
+static int CompareVariableValue(Rval rval, CfAssoc *ap);
 
 /*******************************************************************/
 
@@ -59,7 +59,7 @@ Nova_EnterpriseDiscovery();
 void ForceScalar(char *lval,char *rval)
 
 {
-struct Rval retval;
+Rval retval;
 
 if (THIS_AGENT_TYPE != cf_agent && THIS_AGENT_TYPE != cf_know)
    {
@@ -79,8 +79,8 @@ CfDebug("Setting local variable \"match.%s\" context; $(%s) = %s\n",lval,lval,rv
 
 void NewScalar(const char *scope, const char *lval, const char *rval, enum cfdatatype dt)
 
-{ struct Rval rvald;
-  struct Scope *ptr;
+{ Rval rvald;
+  Scope *ptr;
 
 CfDebug("NewScalar(%s,%s,%s)\n",scope,lval,rval);
 
@@ -103,7 +103,7 @@ if (GetVariable(scope,lval, &rvald) != cf_notype)
  * We know AddVariableHash does not change passed Rval structure or its
  * contents, but we have no easy way to express it in C type system, hence cast.
  */
-AddVariableHash(scope, lval, (struct Rval) { (char *)rval, CF_SCALAR }, dt, NULL, 0);
+AddVariableHash(scope, lval, (Rval) { (char *)rval, CF_SCALAR }, dt, NULL, 0);
 }
 
 /*******************************************************************/
@@ -111,7 +111,7 @@ AddVariableHash(scope, lval, (struct Rval) { (char *)rval, CF_SCALAR }, dt, NULL
 void DeleteScalar(const char *scope_name, const char *lval)
 
 {
-struct Scope *scope = GetScope(scope_name);
+Scope *scope = GetScope(scope_name);
 
 if (scope == NULL)
    {
@@ -129,7 +129,7 @@ if (HashDeleteElement(scope->hashtable, lval) == false)
 void NewList(char *scope,char *lval,void *rval,enum cfdatatype dt)
 
 { char *sp1;
-  struct Rval rvald;
+  Rval rvald;
 
 if (GetVariable(scope, lval, &rvald) != cf_notype)
    {
@@ -137,15 +137,15 @@ if (GetVariable(scope, lval, &rvald) != cf_notype)
    }
  
 sp1 = xstrdup(lval);
-AddVariableHash(scope,sp1, (struct Rval) { rval, CF_LIST },dt,NULL,0);
+AddVariableHash(scope,sp1, (Rval) { rval, CF_LIST },dt,NULL,0);
 }
 
 /*******************************************************************/
 
-enum cfdatatype GetVariable(const char *scope, const char *lval, struct Rval *returnv)
+enum cfdatatype GetVariable(const char *scope, const char *lval, Rval *returnv)
 
 {
-  struct Scope *ptr = NULL;
+  Scope *ptr = NULL;
   char scopeid[CF_MAXVARSIZE],vlval[CF_MAXVARSIZE],sval[CF_MAXVARSIZE];
   char expbuf[CF_EXPANDSIZE];
   CfAssoc *assoc;
@@ -154,7 +154,7 @@ CfDebug("\nGetVariable(%s,%s) type=(to be determined)\n",scope,lval);
 
 if (lval == NULL)
    {
-   *returnv = (struct Rval) { NULL, CF_SCALAR };
+   *returnv = (Rval) { NULL, CF_SCALAR };
    return cf_notype;
    }
 
@@ -170,7 +170,7 @@ else
       }
    else
       {
-      *returnv = (struct Rval) { xstrdup(lval), CF_SCALAR };
+      *returnv = (Rval) { xstrdup(lval), CF_SCALAR };
       CfDebug("Couldn't expand array-like variable (%s) due to undefined dependencies\n",lval);
       return cf_notype;
       }
@@ -201,7 +201,7 @@ if (ptr == NULL)
 if (ptr == NULL)
    {
    CfDebug("Scope for variable \"%s.%s\" does not seem to exist\n",scope,lval);
-   *returnv = (struct Rval) { xstrdup(lval), CF_SCALAR };
+   *returnv = (Rval) { xstrdup(lval), CF_SCALAR };
    return cf_notype;
    }
 
@@ -212,7 +212,7 @@ assoc = HashLookupElement(ptr->hashtable, vlval);
 if (assoc == NULL)
    {
    CfDebug("No such variable found %s.%s\n\n",scopeid,lval);
-   *returnv = (struct Rval) { xstrdup(lval), CF_SCALAR };
+   *returnv = (Rval) { xstrdup(lval), CF_SCALAR };
    return cf_notype;
    }
 
@@ -233,7 +233,7 @@ return assoc->dtype;
 void DeleteVariable(char *scope,char *id)
 
 {
-struct Scope *ptr = GetScope(scope);
+Scope *ptr = GetScope(scope);
 
 if (ptr == NULL)
    {
@@ -248,10 +248,10 @@ if (HashDeleteElement(ptr->hashtable, id) == false)
 
 /*******************************************************************/
 
-static int CompareVariableValue(struct Rval rval, struct CfAssoc *ap)
+static int CompareVariableValue(Rval rval, CfAssoc *ap)
 
 {
-  const struct Rlist *list, *rp;
+  const Rlist *list, *rp;
 
 if (ap == NULL || rval.item == NULL)
    {
@@ -264,11 +264,11 @@ switch (rval.rtype)
        return strcmp(ap->rval.item, rval.item);
 
    case CF_LIST:
-       list = (const struct Rlist *)rval.item;
+       list = (const Rlist *)rval.item;
        
        for (rp = list; rp != NULL; rp=rp->next)
           {
-          if (!CompareVariableValue((struct Rval) { rp->item, rp->type }, ap))
+          if (!CompareVariableValue((Rval) { rp->item, rp->type }, ap))
              {
              return -1;
              }
@@ -285,10 +285,10 @@ return strcmp(ap->rval.item,rval.item);
 
 /*******************************************************************/
 
-int UnresolvedVariables(struct CfAssoc *ap,char rtype)
+int UnresolvedVariables(CfAssoc *ap,char rtype)
 
 {
-  struct Rlist *list, *rp;
+  Rlist *list, *rp;
 
 if (ap == NULL)
    {
@@ -301,7 +301,7 @@ switch (rtype)
        return IsCf3VarString(ap->rval.item);
        
    case CF_LIST:
-       list = (struct Rlist *)ap->rval.item;
+       list = (Rlist *)ap->rval.item;
        
        for (rp = list; rp != NULL; rp=rp->next)
           {
@@ -320,9 +320,9 @@ switch (rtype)
 
 /*******************************************************************/
 
-int UnresolvedArgs(struct Rlist *args)
+int UnresolvedArgs(Rlist *args)
     
-{ struct Rlist *rp;
+{ Rlist *rp;
 
 for (rp = args; rp != NULL; rp = rp->next)
    {
@@ -561,7 +561,7 @@ return vars;
 
 int DefinedVariable(char *name)
 
-{ struct Rval rval;
+{ Rval rval;
 
 if (name == NULL)
    {
@@ -581,7 +581,7 @@ return true;
 int BooleanControl(const char *scope, const char *name)
 
 {
-struct Rval retval;
+Rval retval;
 
 if (name == NULL)
    {
@@ -783,11 +783,11 @@ return false;
 
 /*******************************************************************/
 
-int AddVariableHash(const char *scope, const char *lval, struct Rval rval, enum cfdatatype dtype, const char *fname, int lineno)
+int AddVariableHash(const char *scope, const char *lval, Rval rval, enum cfdatatype dtype, const char *fname, int lineno)
 
-{ struct Scope *ptr;
-  const struct Rlist *rp;
-  struct CfAssoc *assoc;
+{ Scope *ptr;
+  const Rlist *rp;
+  CfAssoc *assoc;
 
 if (rval.rtype == CF_SCALAR)
    {
@@ -858,7 +858,7 @@ if (ptr == NULL)
 
 if (THIS_AGENT_TYPE == cf_common)
    {
-   struct Rlist *listvars = NULL, *scalarvars = NULL;
+   Rlist *listvars = NULL, *scalarvars = NULL;
 
    if (strcmp(CONTEXTID,"this") != 0)
       {
@@ -917,15 +917,15 @@ return true;
 
 /*******************************************************************/
 
-void DeRefListsInHashtable(char *scope,struct Rlist *namelist,struct Rlist *dereflist)
+void DeRefListsInHashtable(char *scope,Rlist *namelist,Rlist *dereflist)
 
 // Go through scope and for each variable in name-list, replace with a
 // value from the deref "lol" (list of lists) clock
 
 { int len;
-  struct Scope *ptr;
-  struct Rlist *rp;
-  struct CfAssoc *cplist;
+  Scope *ptr;
+  Rlist *rp;
+  CfAssoc *cplist;
   HashIterator i;
   CfAssoc *assoc;
 
@@ -947,7 +947,7 @@ while ((assoc = HashIteratorNext(&i)))
    {
    for (rp = dereflist; rp != NULL; rp = rp->next)
       {
-      cplist = (struct CfAssoc *)rp->item;
+      cplist = (CfAssoc *)rp->item;
 
       if (strcmp(cplist->lval,assoc->lval) == 0)
          {

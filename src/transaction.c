@@ -43,7 +43,7 @@ static void RemoveDates(char *s);
 
 /*****************************************************************************/
 
-void SummarizeTransaction(struct Attributes attr,struct Promise *pp,char *logname)
+void SummarizeTransaction(Attributes attr,Promise *pp,char *logname)
 
 {
 if (logname && attr.transaction.log_string)
@@ -87,7 +87,7 @@ else if (attr.transaction.log_failed)
 
 /*****************************************************************************/
 
-struct CfLock AcquireLock(char *operand,char *host,time_t now,struct Attributes attr,struct Promise *pp, int ignoreProcesses)
+struct CfLock AcquireLock(char *operand,char *host,time_t now,Attributes attr,Promise *pp, int ignoreProcesses)
 
 { unsigned int pid;
   int i, err, sum=0;
@@ -316,9 +316,9 @@ free(this.log);
 
 /************************************************************************/
 
-void GetLockName(char *lockname,char *locktype,char *base,struct Rlist *params)
+void GetLockName(char *lockname,char *locktype,char *base,Rlist *params)
 
-{ struct Rlist *rp;
+{ Rlist *rp;
  int max_sample, count = 0;
 
 for (rp = params; rp != NULL; rp=rp->next)
@@ -432,7 +432,7 @@ else
 int WriteLock(char *name)
 
 { CF_DB *dbp;
-  struct LockData entry;
+  LockData entry;
 
 CfDebug("WriteLock(%s)\n",name);
 
@@ -523,7 +523,7 @@ return 0;
 static time_t FindLockTime(char *name)
 
 { CF_DB *dbp;
-  struct LockData entry;
+  LockData entry;
 
 CfDebug("FindLockTime(%s)\n",name);
 
@@ -549,7 +549,7 @@ else
 static pid_t FindLockPid(char *name)
 
 { CF_DB *dbp;
-  struct LockData entry;
+  LockData entry;
 
 if ((dbp = OpenLock()) == NULL)
    {
@@ -671,7 +671,7 @@ void PurgeLocks()
   CF_DBC *dbcp;
   char *key;
   int ksize,vsize;
-  struct LockData entry;
+  LockData entry;
   time_t now = time(NULL);
 
 memset(&entry, 0, sizeof(entry)); 

@@ -32,16 +32,16 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static void DeleteDeRefPromise(char *scopeid,struct Promise *pp);
-static void DereferenceComment(struct Promise *pp);
+static void DeleteDeRefPromise(char *scopeid,Promise *pp);
+static void DereferenceComment(Promise *pp);
 
 /*****************************************************************************/
 
-char *BodyName(struct Promise *pp)
+char *BodyName(Promise *pp)
 
 { char *name,*sp;
   int i,size = 0;
-  struct Constraint *cp;
+  Constraint *cp;
 
 /* Return a type template for the promise body for lock-type identification */
  
@@ -76,11 +76,11 @@ return name;
 
 /*****************************************************************************/
 
-struct Promise *DeRefCopyPromise(char *scopeid,struct Promise *pp)
+Promise *DeRefCopyPromise(char *scopeid,Promise *pp)
 
-{ struct Promise *pcopy;
-  struct Constraint *cp,*scp;
-  struct Rval returnval;
+{ Promise *pcopy;
+  Constraint *cp,*scp;
+  Rval returnval;
 
 if (pp->promisee.item)
    {
@@ -96,7 +96,7 @@ else
    CfDebug("CopyPromise(%s->)\n",pp->promiser);
    }
 
-pcopy = xcalloc(1, sizeof(struct Promise));
+pcopy = xcalloc(1, sizeof(Promise));
 
 if (pp->promiser)
    {
@@ -140,8 +140,8 @@ CfDebug("Copying promise constraints\n\n");
 
 for (cp = pp->conlist; cp != NULL; cp=cp->next)
    {
-   struct Body *bp = NULL;
-   struct FnCall *fp = NULL;
+   Body *bp = NULL;
+   FnCall *fp = NULL;
    char *bodyname = NULL;
 
    /* A body template reference could look like a scalar or fn to the parser w/w () */
@@ -158,7 +158,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
           fp = NULL;
           break;
       case CF_FNCALL:
-          fp = (struct FnCall *)cp->rval.item;
+          fp = (FnCall *)cp->rval.item;
           bodyname = fp->name;
           bp = IsBody(BODIES,bodyname);
           break;
@@ -181,7 +181,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
       
       /* Keep the referent body type as a boolean for convenience when checking later */
       
-      AppendConstraint(&(pcopy->conlist), cp->lval, (struct Rval) { xstrdup("true"), CF_SCALAR } ,cp->classes, false);
+      AppendConstraint(&(pcopy->conlist), cp->lval, (Rval) { xstrdup("true"), CF_SCALAR } ,cp->classes, false);
 
       CfDebug("Handling body-lval \"%s\"\n",cp->lval);
       
@@ -224,7 +224,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
             for (scp = bp->conlist; scp != NULL; scp = scp->next)
                {
                CfDebug("Doing sublval = %s (promises.c)\n",scp->lval);
-               struct Rval newrv = CopyRvalItem(scp->rval);
+               Rval newrv = CopyRvalItem(scp->rval);
                AppendConstraint(&(pcopy->conlist), scp->lval, newrv, scp->classes, false);
                }
             }
@@ -237,7 +237,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
          CfOut(cf_error,"","Apparent body \"%s()\" was undeclared, but used in a promise near line %zu of %s (possible unquoted literal value)",bodyname,pp->offset.line,(pp->audit)->filename);
          }
       
-      struct Rval newrv = CopyRvalItem(cp->rval);
+      Rval newrv = CopyRvalItem(cp->rval);
       scp = AppendConstraint(&(pcopy->conlist), cp->lval, newrv, cp->classes, false);
       }
    }
@@ -248,17 +248,17 @@ return pcopy;
 
 /*****************************************************************************/
 
-struct Promise *ExpandDeRefPromise(char *scopeid,struct Promise *pp)
+Promise *ExpandDeRefPromise(char *scopeid,Promise *pp)
 
-{ struct Promise *pcopy;
-  struct Constraint *cp;
-  struct Rval returnval,final;
+{ Promise *pcopy;
+  Constraint *cp;
+  Rval returnval,final;
 
 CfDebug("ExpandDerefPromise()\n");
 
-pcopy = xcalloc(1, sizeof(struct Promise));
+pcopy = xcalloc(1, sizeof(Promise));
 
-returnval = ExpandPrivateRval("this", (struct Rval) { pp->promiser, CF_SCALAR });
+returnval = ExpandPrivateRval("this", (Rval) { pp->promiser, CF_SCALAR });
 pcopy->promiser = (char *)returnval.item;
 
 if (pp->promisee.item)
@@ -267,7 +267,7 @@ if (pp->promisee.item)
    }
 else
    {
-   pcopy->promisee = (struct Rval) { NULL, CF_NOPROMISEE };
+   pcopy->promisee = (Rval) { NULL, CF_NOPROMISEE };
    }
 
 if (pp->classes)
@@ -305,7 +305,7 @@ pcopy->edcontext = pp->edcontext;
 
 for (cp = pp->conlist; cp != NULL; cp=cp->next)
    {
-   struct Rval returnval;
+   Rval returnval;
 
    if (ExpectedDataType(cp->lval) == cf_bundle)
       {
@@ -345,15 +345,15 @@ return pcopy;
 
 /*****************************************************************************/
 
-struct Promise *CopyPromise(char *scopeid,struct Promise *pp)
+Promise *CopyPromise(char *scopeid,Promise *pp)
 
-{ struct Promise *pcopy;
-  struct Constraint *cp;
-  struct Rval final;
+{ Promise *pcopy;
+  Constraint *cp;
+  Rval final;
 
 CfDebug("CopyPromise()\n");
 
-pcopy = xcalloc(1, sizeof(struct Promise));
+pcopy = xcalloc(1, sizeof(Promise));
 
 pcopy->promiser = xstrdup(pp->promiser);
 
@@ -363,7 +363,7 @@ if (pp->promisee.item)
    }
 else
    {
-   pcopy->promisee = (struct Rval) { NULL, CF_NOPROMISEE };
+   pcopy->promisee = (Rval) { NULL, CF_NOPROMISEE };
    }
 
 if (pp->classes)
@@ -395,7 +395,7 @@ pcopy->has_subbundles = pp->has_subbundles;
 
 for (cp = pp->conlist; cp != NULL; cp=cp->next)
    {
-   struct Rval returnval;
+   Rval returnval;
 
    if (ExpectedDataType(cp->lval) == cf_bundle)
       {
@@ -428,13 +428,13 @@ return pcopy;
 
 /*******************************************************************/
 
-void DebugPromise(struct Promise *pp)
+void DebugPromise(Promise *pp)
 
-{ struct Constraint *cp;
-  struct Body *bp;
-  struct FnCall *fp;
-  struct Rlist *rp;
-  struct Rval retval;
+{ Constraint *cp;
+  Body *bp;
+  FnCall *fp;
+  Rlist *rp;
+  Rval retval;
 
 GetVariable("control_common","version",&retval);
 
@@ -471,13 +471,13 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
 
       case CF_LIST:
           
-          rp = (struct Rlist *)cp->rval.item;
+          rp = (Rlist *)cp->rval.item;
           ShowRlist(stdout,rp);
           printf("\n");
           break;
 
       case CF_FNCALL:
-          fp = (struct FnCall *)cp->rval.item;
+          fp = (FnCall *)cp->rval.item;
 
           if ((bp = IsBody(BODIES,fp->name)))
              {
@@ -503,9 +503,9 @@ for (cp = pp->conlist; cp != NULL; cp = cp->next)
 
 /*******************************************************************/
 
-struct Body *IsBody(struct Body *list,char *key)
+Body *IsBody(Body *list,char *key)
 
-{ struct Body *bp;
+{ Body *bp;
 
 for (bp = list; bp != NULL; bp = bp->next)
    {
@@ -520,9 +520,9 @@ return NULL;
 
 /*******************************************************************/
 
-struct Bundle *IsBundle(struct Bundle *list,char *key)
+Bundle *IsBundle(Bundle *list,char *key)
 
-{ struct Bundle *bp;
+{ Bundle *bp;
 
 for (bp = list; bp != NULL; bp = bp->next)
    {
@@ -539,7 +539,7 @@ return NULL;
 /* Cleanup                                                                   */
 /*****************************************************************************/
 
-void DeletePromises(struct Promise *pp)
+void DeletePromises(Promise *pp)
 
 {
 if (pp == NULL)
@@ -571,13 +571,13 @@ DeletePromise(pp);
 
 /*****************************************************************************/
 
-struct Promise *NewPromise(char *typename,char *promiser)
+Promise *NewPromise(char *typename,char *promiser)
 
-{ struct Promise *pp;
+{ Promise *pp;
 
 ThreadLock(cft_policy); 
 
-pp = xcalloc(1, sizeof(struct Promise));
+pp = xcalloc(1, sizeof(Promise));
 
 pp->audit = AUDITPTR;
 pp->bundle =  xstrdup("internal_bundle");
@@ -585,21 +585,21 @@ pp->promiser = xstrdup(promiser);
 
 ThreadUnlock(cft_policy);
 
-pp->promisee = (struct Rval) { NULL, CF_NOPROMISEE };
+pp->promisee = (Rval) { NULL, CF_NOPROMISEE };
 pp->donep = &(pp->done);
 
 pp->agentsubtype = typename;   /* cache this, do not copy string */
 pp->ref_alloc = 'n';
 pp->has_subbundles = false;
 
-AppendConstraint(&(pp->conlist), "handle", (struct Rval) { xstrdup("internal_promise"), CF_SCALAR }, NULL, false);
+AppendConstraint(&(pp->conlist), "handle", (Rval) { xstrdup("internal_promise"), CF_SCALAR }, NULL, false);
 
 return pp;
 }
 
 /*****************************************************************************/
 
-void DeletePromise(struct Promise *pp)
+void DeletePromise(Promise *pp)
 
 {
 if (pp == NULL)
@@ -635,9 +635,9 @@ ThreadUnlock(cft_policy);
 
 /*****************************************************************************/
 
-static void DeleteDeRefPromise(char *scopeid,struct Promise *pp)
+static void DeleteDeRefPromise(char *scopeid,Promise *pp)
 
-{ struct Constraint *cp;
+{ Constraint *cp;
 
 CfDebug("DeleteDeRefPromise()\n");
 
@@ -666,10 +666,10 @@ free(pp);
 
 /*****************************************************************************/
 
-void PromiseRef(enum cfreport level,struct Promise *pp)
+void PromiseRef(enum cfreport level,Promise *pp)
 
 { char *v;
-  struct Rval retval;
+  Rval retval;
 
 if (pp == NULL)
    {
@@ -702,14 +702,14 @@ if (pp->ref)
 
 /*******************************************************************/
 
-void HashPromise(char *salt,struct Promise *pp,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type)
+void HashPromise(char *salt,Promise *pp,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type)
 
 { EVP_MD_CTX context;
   int md_len;
   const EVP_MD *md = NULL;
-  struct Constraint *cp;
-  struct Rlist *rp;
-  struct FnCall *fp;
+  Constraint *cp;
+  Rlist *rp;
+  FnCall *fp;
 
   char *noRvalHash[] = { "mtime", "atime", "ctime", NULL };
   int doHash;
@@ -778,7 +778,7 @@ for (cp = pp->conlist; cp != NULL; cp=cp->next)
 
           /* Body or bundle */
 
-          fp = (struct FnCall *)cp->rval.item;
+          fp = (FnCall *)cp->rval.item;
 
           EVP_DigestUpdate(&context,fp->name,strlen(fp->name));
           
@@ -797,7 +797,7 @@ EVP_DigestFinal(&context,digest,&md_len);
 
 /*******************************************************************/
 
-static void DereferenceComment(struct Promise *pp)
+static void DereferenceComment(Promise *pp)
 
 { char pre_buffer[CF_BUFSIZE],post_buffer[CF_BUFSIZE],buffer[CF_BUFSIZE],*sp;
   int offset = 0;

@@ -33,7 +33,7 @@
 
 #define connection 1
 
-struct cfd_connection
+typedef struct
    {
    int  id_verified;
    int  rsa_auth;
@@ -53,19 +53,19 @@ struct cfd_connection
    char encryption_type;
    char ipaddr[CF_MAX_IP_LEN];
    char output[CF_BUFSIZE*2];   /* Threadsafe output channel */
-   };
+   } ServerConnectionState;
 
 /**********************************************************************/
 
 extern char CFRUNCOMMAND[];
 
 #ifdef HAVE_NOVA
-int Nova_ReturnQueryData(struct cfd_connection *conn,char *menu);
+int Nova_ReturnQueryData(ServerConnectionState *conn,char *menu);
 #endif
 
 #ifdef HAVE_CONSTELLATION
-int Constellation_ReturnRelayQueryData(struct cfd_connection *conn,char *query,char *sendbuffer);
-void Constellation_RunQueries(struct Item *queries, struct Item **results_p);
+int Constellation_ReturnRelayQueryData(ServerConnectionState *conn,char *query,char *sendbuffer);
+void Constellation_RunQueries(Item *queries, Item **results_p);
 #endif
 
 #endif

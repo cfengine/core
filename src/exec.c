@@ -47,7 +47,7 @@ char MAILTO[CF_BUFSIZE];
 char MAILFROM[CF_BUFSIZE];
 char EXECCOMMAND[CF_BUFSIZE];
 char VMAILSERVER[CF_BUFSIZE];
-struct Item *SCHEDULE = NULL;
+Item *SCHEDULE = NULL;
 
 pid_t MYTWIN = 0;
 int MAXLINES = 30;
@@ -57,7 +57,7 @@ int NOSPLAY = false;
 int NOWINSERVICE = false;
 int THREADS = 0;
 
-extern struct BodySyntax CFEX_CONTROLBODY[];
+extern BodySyntax CFEX_CONTROLBODY[];
 
 /*******************************************************************/
 
@@ -125,7 +125,7 @@ const char *HINTS[15] =
 int main(int argc,char *argv[])
 
 {
-struct GenericAgentConfig config = CheckOpts(argc,argv);
+GenericAgentConfig config = CheckOpts(argc,argv);
 GenericInitialize(argc,argv,"executor", config);
 ThisAgentInit();
 KeepPromises(config);
@@ -152,13 +152,13 @@ return 0;
 /* Level 1                                                                   */
 /*****************************************************************************/
 
-struct GenericAgentConfig CheckOpts(int argc,char **argv)
+GenericAgentConfig CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
   int optindex = 0;
   int c;
   char ld_library_path[CF_BUFSIZE];
-  struct GenericAgentConfig config = GenericAgentDefaultConfig(cf_executor);
+  GenericAgentConfig config = GenericAgentDefaultConfig(cf_executor);
 
 while ((c=getopt_long(argc,argv,"d:vnKIf:D:N:VxL:hFV1gMW",OPTIONS,&optindex)) != EOF)
   {
@@ -281,11 +281,11 @@ if (SCHEDULE == NULL)
 
 /*****************************************************************************/
 
-void KeepPromises(struct GenericAgentConfig config)
+void KeepPromises(GenericAgentConfig config)
 
-{ struct Constraint *cp;
+{ Constraint *cp;
   char splay[CF_BUFSIZE];
-  struct Rval retval;
+  Rval retval;
 
 for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
    {
@@ -346,12 +346,12 @@ for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_schedule].lval) == 0)
       {
-      struct Rlist *rp;
+      Rlist *rp;
       CfDebug("schedule ...\n");
       DeleteItemList(SCHEDULE);
       SCHEDULE = NULL;
       
-      for (rp= (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
+      for (rp= (Rlist *)retval.item; rp != NULL; rp = rp->next)
          {
          if (!IsItemIn(SCHEDULE,rp->item))
             {
@@ -368,8 +368,8 @@ void StartServer(int argc,char **argv)
 
 { int time_to_run = false;
   time_t now = time(NULL);
-  struct Promise *pp = NewPromise("exec_cfengine","the executor agent"); 
-  struct Attributes dummyattr;
+  Promise *pp = NewPromise("exec_cfengine","the executor agent"); 
+  Attributes dummyattr;
   struct CfLock thislock;
 
 Banner("Starting executor");
@@ -516,8 +516,8 @@ if (!ONCE)
 
 static void Apoptosis()
 
-{ struct Promise pp = {0};
-  struct Rlist *signals = NULL, *owners = NULL;
+{ Promise pp = {0};
+  Rlist *signals = NULL, *owners = NULL;
   char mypid[32];
   static char promiserBuf[CF_SMALLBUF];
 
@@ -536,7 +536,7 @@ snprintf(promiserBuf, sizeof(promiserBuf), "%s/bin/cf-execd", CFWORKDIR);
 #endif
 
 pp.promiser = promiserBuf;
-pp.promisee = (struct Rval) { "cfengine", CF_SCALAR };
+pp.promisee = (Rval) { "cfengine", CF_SCALAR };
 pp.classes = "any";
 pp.offset.line = 0;
 pp.audit = NULL;
@@ -559,13 +559,13 @@ GetCurrentUserName(mypid,31);
 PrependRlist(&signals,"term",CF_SCALAR);
 PrependRlist(&owners,mypid,CF_SCALAR);
 
-AppendConstraint(&(pp.conlist), "signals", (struct Rval) { signals, CF_LIST }, "any", false);
-AppendConstraint(&(pp.conlist), "process_select", (struct Rval) { xstrdup("true"), CF_SCALAR }, "any", false);
-AppendConstraint(&(pp.conlist), "process_owner", (struct Rval) { owners, CF_LIST }, "any", false);
-AppendConstraint(&(pp.conlist), "ifelapsed", (struct Rval) { xstrdup("0"), CF_SCALAR }, "any", false);
-AppendConstraint(&(pp.conlist), "process_count", (struct Rval) { xstrdup("true"), CF_SCALAR }, "any", false);
-AppendConstraint(&(pp.conlist), "match_range", (struct Rval) { xstrdup("0,2"), CF_SCALAR }, "any", false);
-AppendConstraint(&(pp.conlist), "process_result", (struct Rval) { xstrdup("process_owner.process_count"), CF_SCALAR }, "any", false);
+AppendConstraint(&(pp.conlist), "signals", (Rval) { signals, CF_LIST }, "any", false);
+AppendConstraint(&(pp.conlist), "process_select", (Rval) { xstrdup("true"), CF_SCALAR }, "any", false);
+AppendConstraint(&(pp.conlist), "process_owner", (Rval) { owners, CF_LIST }, "any", false);
+AppendConstraint(&(pp.conlist), "ifelapsed", (Rval) { xstrdup("0"), CF_SCALAR }, "any", false);
+AppendConstraint(&(pp.conlist), "process_count", (Rval) { xstrdup("true"), CF_SCALAR }, "any", false);
+AppendConstraint(&(pp.conlist), "match_range", (Rval) { xstrdup("0,2"), CF_SCALAR }, "any", false);
+AppendConstraint(&(pp.conlist), "process_result", (Rval) { xstrdup("process_owner.process_count"), CF_SCALAR }, "any", false);
 
 CfOut(cf_verbose,""," -> Looking for cf-execd processes owned by %s",mypid);
 
@@ -589,7 +589,7 @@ CfOut(cf_verbose,""," !! Pruning complete");
 int ScheduleRun()
 
 {
-struct Item *ip;
+Item *ip;
 
 CfOut(cf_verbose,"","Sleeping...\n");
 sleep(CFPULSETIME);                /* 1 Minute resolution is enough */ 

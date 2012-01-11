@@ -32,13 +32,13 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static void VerifySQLPromise(struct Attributes a,struct Promise *pp);
+static void VerifySQLPromise(Attributes a,Promise *pp);
 
 /*****************************************************************************/
 
-void VerifyDatabasePromises(struct Promise *pp)
+void VerifyDatabasePromises(Promise *pp)
 
-{ struct Attributes a = {{0}};
+{ Attributes a = {{0}};
 
 if (pp->done)
    {
@@ -71,7 +71,7 @@ if (strcmp(a.database.type,"ms_registry") == 0)
 /* Level                                                                     */
 /*****************************************************************************/
 
-static void VerifySQLPromise(struct Attributes a,struct Promise *pp)
+static void VerifySQLPromise(Attributes a,Promise *pp)
 
 { char database[CF_MAXVARSIZE],table[CF_MAXVARSIZE],query[CF_BUFSIZE];
   char *sp;

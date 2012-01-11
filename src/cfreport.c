@@ -62,13 +62,13 @@ void CloseMagnifyFiles(void);
 void EraseAverages(void);
 void RemoveHostSeen(char *hosts);
 
-extern struct BodySyntax CFRE_CONTROLBODY[];
+extern BodySyntax CFRE_CONTROLBODY[];
 
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
 /*******************************************************************/
 
-extern struct BodySyntax CFRP_CONTROLBODY[];
+extern BodySyntax CFRP_CONTROLBODY[];
 
 int HTML = false;
 int GRAPH = false;
@@ -85,7 +85,7 @@ int    SMOOTHHISTOGRAM[CF_OBSERVABLES][7][CF_GRAINS];
 char   ERASE[CF_BUFSIZE];
 double AGE;
 
-static struct Averages MAX,MIN;
+static Averages MAX,MIN;
 
 char OUTPUTDIR[CF_BUFSIZE],*sp;
 char REMOVEHOSTS[CF_BUFSIZE] = {0};
@@ -105,8 +105,8 @@ FILE *FPAV=NULL,*FPVAR=NULL, *FPNOW=NULL;
 FILE *FPE[CF_OBSERVABLES],*FPQ[CF_OBSERVABLES];
 FILE *FPM[CF_OBSERVABLES];
 
-struct Rlist *REPORTS = NULL;
-struct Rlist *CSVLIST = NULL;
+Rlist *REPORTS = NULL;
+Rlist *CSVLIST = NULL;
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -278,7 +278,7 @@ char *CFRH[][2] =
 int main(int argc,char *argv[])
 
 { 
-struct GenericAgentConfig config = CheckOpts(argc,argv);
+GenericAgentConfig config = CheckOpts(argc,argv);
 if (!HUBQUERY)
    {
    GenericInitialize(argc,argv,"reporter", config);
@@ -307,12 +307,12 @@ WriterClose(writer);
 
 /*****************************************************************************/
 
-struct GenericAgentConfig CheckOpts(int argc,char **argv)
+GenericAgentConfig CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
   int optindex = 0;
   int c;
-  struct GenericAgentConfig config = GenericAgentDefaultConfig(cf_report);
+  GenericAgentConfig config = GenericAgentDefaultConfig(cf_report);
 
 while ((c=getopt_long(argc,argv,"Cghd:vVf:st:ar:PXHLMIRSKE:x:i:1:p:k:c:qF:o:",OPTIONS,&optindex)) != EOF)
    {
@@ -569,9 +569,9 @@ if (!EMPTY(NOVA_IMPORT_FILE))
 
 void KeepReportsControlPromises()
 
-{ struct Constraint *cp;
-  struct Rlist *rp;
-  struct Rval retval;
+{ Constraint *cp;
+  Rlist *rp;
+  Rval retval;
 
 for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
    {
@@ -683,7 +683,7 @@ for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFRE_CONTROLBODY[cfre_reports].lval) == 0)
       {
-      for (rp  = (struct Rlist *)retval.item; rp != NULL; rp = rp->next)
+      for (rp  = (Rlist *)retval.item; rp != NULL; rp = rp->next)
          {
          IdempPrependRScalar(&REPORTS,rp->item,CF_SCALAR);
          CfOut(cf_inform,"","Adding %s to the reports...\n", ScalarValue(rp));
@@ -712,7 +712,7 @@ if (GetVariable("control_common", CFG_CONTROLBODY[cfg_lastseenexpireafter].lval,
 
 void KeepReportsPromises()
 
-{ struct Rlist *rp;
+{ Rlist *rp;
   int all = false;
 
 if (REPORTS == NULL)
@@ -888,7 +888,7 @@ void RemoveHostSeen(char *hosts)
 
 { CF_DB *dbp;
   char name[CF_MAXVARSIZE];
-  struct Item *ip,*list = SplitStringAsItemList(hosts,',');
+  Item *ip,*list = SplitStringAsItemList(hosts,',');
 
 snprintf(name,sizeof(name),"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
 MapName(name);
@@ -933,7 +933,7 @@ void ShowLastSeen()
   double now = (double)tid,average = 0, var = 0;
   double ticksperhr = (double)SECONDS_PER_HOUR;
   char name[CF_BUFSIZE],hostname[CF_BUFSIZE],address[CF_MAXVARSIZE];
-  struct CfKeyHostSeen entry;
+  KeyHostSeen entry;
   int ksize,vsize;
 
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_LASTDB_FILE);
@@ -1119,7 +1119,7 @@ void ShowPerformance()
   double now = (double)time(NULL),average = 0, var = 0;
   double ticksperminute = 60.0;
   char name[CF_BUFSIZE],eventname[CF_BUFSIZE];
-  struct Event entry;
+  Event entry;
   int ksize,vsize;
 
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_PERFORMANCE);
@@ -1283,10 +1283,10 @@ void ShowClasses()
   char *key;
   void *value;
   FILE *fout,*fnotes;
-  struct Item *already = NULL,*ip;
+  Item *already = NULL,*ip;
   double now = (double)time(NULL),average = 0, var = 0;
   char name[CF_BUFSIZE],eventname[CF_BUFSIZE];
-  struct Event entry;
+  Event entry;
   struct CEnt array[1024];
   int i,ksize,vsize;
 
@@ -1587,7 +1587,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    enum cfhashes type;
    char strtype[CF_MAXVARSIZE];
    char name[CF_BUFSIZE];
-   struct Checksum_Value chk_val;
+   ChecksumValue chk_val;
    unsigned char digest[EVP_MAX_MD_SIZE+1];
 
    memcpy(&chk_val,value,sizeof(chk_val));
@@ -1655,7 +1655,7 @@ void ShowLocks (int active)
   FILE *fout;
   int ksize,vsize;
   char lockdb[CF_BUFSIZE],name[CF_BUFSIZE];
-  struct LockData entry;
+  LockData entry;
 
 snprintf(lockdb,CF_BUFSIZE,"%s/state/%s",CFWORKDIR, CF_LOCKDB_FILE);
 MapName(lockdb);
@@ -1811,7 +1811,7 @@ fclose(fout);
 void ShowCurrentAudit()
 
 { char operation[CF_BUFSIZE],name[CF_BUFSIZE];
-  struct AuditLog entry;
+  AuditLog entry;
   FILE *fout;
   char *key;
   void *value;
@@ -2057,7 +2057,7 @@ return (da->q < db->q) - (da->q > db->q);
 
 void ReadAverages()
 
-{ struct Averages entry;
+{ Averages entry;
   char timekey[CF_MAXVARSIZE];
   time_t now;
   CF_DB *dbp;
@@ -2084,7 +2084,7 @@ for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+SECONDS_PER_WEEK; now += C
    {
    strcpy(timekey,GenTimeKey(now));
 
-   if (ReadDB(dbp,timekey,&entry,sizeof(struct Averages)))
+   if (ReadDB(dbp,timekey,&entry,sizeof(Averages)))
       {
       for (i = 0; i < CF_OBSERVABLES; i++)
          {
@@ -2120,8 +2120,8 @@ void EraseAverages()
 
 { int i;
  char timekey[CF_MAXVARSIZE],name[CF_MAXVARSIZE];
-  struct Item *list = NULL;
-  struct Averages entry;
+  Item *list = NULL;
+  Averages entry;
   time_t now;
   CF_DB *dbp;
 
@@ -2144,7 +2144,7 @@ for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+SECONDS_PER_WEEK; now += C
    {
    strcpy(timekey,GenTimeKey(now));
 
-   if (ReadDB(dbp,timekey,&entry,sizeof(struct Averages)))
+   if (ReadDB(dbp,timekey,&entry,sizeof(Averages)))
       {
       for (i = 0; i < CF_OBSERVABLES; i++)
          {
@@ -2160,7 +2160,7 @@ for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+SECONDS_PER_WEEK; now += C
             }
          }
 
-      WriteDB(dbp,timekey,&entry,sizeof(struct Averages));
+      WriteDB(dbp,timekey,&entry,sizeof(Averages));
       }
    }
 
@@ -2280,7 +2280,7 @@ void WriteGraphFiles()
 
 { int its,i,j,count = 0;
   double kept = 0, not_kept = 0, repaired = 0;
-  struct Averages entry,det;
+  Averages entry,det;
   char timekey[CF_MAXVARSIZE];
   time_t now;
   CF_DB *dbp;
@@ -2333,7 +2333,7 @@ while (now < CF_MONDAY_MORNING + SECONDS_PER_WEEK)
       {
       strcpy(timekey,GenTimeKey(now));
 
-      if (ReadDB(dbp,timekey,&det,sizeof(struct Averages)))
+      if (ReadDB(dbp,timekey,&det,sizeof(Averages)))
          {
          for (i = 0; i < CF_OBSERVABLES; i++)
             {
@@ -2419,7 +2419,7 @@ CloseFiles();
 void MagnifyNow()
 
 { int its,i,j,count = 0;
-  struct Averages entry,det;
+  Averages entry,det;
   time_t now,here_and_now;
   char timekey[CF_MAXVARSIZE];
   CF_DB *dbp;
@@ -2445,7 +2445,7 @@ while (here_and_now < now)
       {
       strcpy(timekey,GenTimeKey(here_and_now));
 
-      if (ReadDB(dbp,timekey,&det,sizeof(struct Averages)))
+      if (ReadDB(dbp,timekey,&det,sizeof(Averages)))
          {
          for (i = 0; i < CF_OBSERVABLES; i++)
             {
@@ -2601,7 +2601,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
 
 void DiskArrivals(void)
 
-{ CFDIR *dirh;
+{ Dir *dirh;
   FILE *fp;
   int count = 0, index = 0, i;
   char filename[CF_BUFSIZE],database[CF_BUFSIZE],timekey[CF_MAXVARSIZE];
@@ -2643,7 +2643,7 @@ for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
          {
          strcpy(timekey,GenTimeKey(now));
 
-         if (ReadDB(dbp,timekey,&value,sizeof(struct Averages)))
+         if (ReadDB(dbp,timekey,&value,sizeof(Averages)))
             {
             grain += (double)*(double *)(value);
             }
@@ -2732,8 +2732,8 @@ void PeerIntermittency()
   FILE *fp1,*fp2;
   char name[CF_BUFSIZE],hostname[CF_BUFSIZE],timekey[CF_MAXVARSIZE];
   char out1[CF_BUFSIZE],out2[CF_BUFSIZE];
-  struct QPoint entry;
-  struct Item *ip, *hostlist = NULL;
+  QPoint entry;
+  Item *ip, *hostlist = NULL;
   double average,var;
   time_t now = time(NULL), then, lastseen = SECONDS_PER_WEEK;
 

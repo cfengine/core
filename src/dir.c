@@ -3,14 +3,14 @@
 
 static size_t GetNameMax(DIR *dirp);
 static size_t GetDirentBufferSize(size_t path_len);
-static void CloseDirRemote(CFDIR *dir);
+static void CloseDirRemote(Dir *dir);
 
-void CloseDirLocal(CFDIR *dir);
-const struct dirent *ReadDirLocal(CFDIR *dir);
+void CloseDirLocal(Dir *dir);
+const struct dirent *ReadDirLocal(Dir *dir);
 
 /*********************************************************************/
 
-CFDIR *OpenDirForPromise(const char *dirname, struct Attributes attr, struct Promise *pp)
+Dir *OpenDirForPromise(const char *dirname, Attributes attr, Promise *pp)
 {
 if (attr.copy.servers == NULL || strcmp(attr.copy.servers->item,"localhost") == 0)
    {
@@ -26,9 +26,9 @@ else
 /*********************************************************************/
 
 #ifndef MINGW
-CFDIR *OpenDirLocal(const char *dirname)
+Dir *OpenDirLocal(const char *dirname)
 
-{ CFDIR *ret = xcalloc(1, sizeof(CFDIR));
+{ Dir *ret = xcalloc(1, sizeof(Dir));
   DIR *dirh = NULL;
   size_t dirent_buf_size = -1;
 
@@ -53,7 +53,7 @@ return ret;
 
 /*********************************************************************/
 
-static const struct dirent *ReadDirRemote(CFDIR *dir)
+static const struct dirent *ReadDirRemote(Dir *dir)
 {
 const char *ret = NULL;
 
@@ -74,7 +74,7 @@ return (struct dirent*)ret;
  *
  * Sets errno to 0 for EOF and non-0 for error.
  */
-const struct dirent *ReadDirLocal(CFDIR *dir)
+const struct dirent *ReadDirLocal(Dir *dir)
 {
 int err;
 struct dirent *ret;
@@ -99,7 +99,7 @@ return ret;
 
 /*********************************************************************/
 
-const struct dirent *ReadDir(CFDIR *dir)
+const struct dirent *ReadDir(Dir *dir)
 {
 if (dir->list)
    {
@@ -111,13 +111,13 @@ else if (dir->dirh)
    }
 else
    {
-   FatalError("CFDIR passed has no list nor directory handle open");
+   FatalError("Dir passed has no list nor directory handle open");
    }
 }
 
 /*********************************************************************/
 
-void CloseDir(CFDIR *dir)
+void CloseDir(Dir *dir)
 {
 if (dir->dirh)
    {
@@ -131,7 +131,7 @@ else
 
 /*********************************************************************/
 
-static void CloseDirRemote(CFDIR *dir)
+static void CloseDirRemote(Dir *dir)
 {
 if (dir->list)
    {
@@ -143,7 +143,7 @@ free(dir);
 /*********************************************************************/
 
 #ifndef MINGW
-void CloseDirLocal(CFDIR *dir)
+void CloseDirLocal(Dir *dir)
 {
 closedir((DIR *)dir->dirh);
 free(dir->entrybuf);

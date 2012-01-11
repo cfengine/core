@@ -32,26 +32,26 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static void PurgeLocalFiles(struct Item *filelist,char *directory,struct Attributes attr,struct Promise *pp);
-static void CfCopyFile(char *sourcefile,char *destfile,struct stat sourcestatbuf,struct Attributes attr, struct Promise *pp);
-static int CompareForFileCopy(char *sourcefile,char *destfile,struct stat *ssb, struct stat *dsb,struct Attributes attr,struct Promise *pp);
-static void RegisterAHardLink(int i,char *value,struct Attributes attr, struct Promise *pp);
+static void PurgeLocalFiles(Item *filelist,char *directory,Attributes attr,Promise *pp);
+static void CfCopyFile(char *sourcefile,char *destfile,struct stat sourcestatbuf,Attributes attr, Promise *pp);
+static int CompareForFileCopy(char *sourcefile,char *destfile,struct stat *ssb, struct stat *dsb,Attributes attr,Promise *pp);
+static void RegisterAHardLink(int i,char *value,Attributes attr, Promise *pp);
 static void FileAutoDefine(char *destfile);
-static void LoadSetuid(struct Attributes a,struct Promise *pp);
-static void SaveSetuid(struct Attributes a,struct Promise *pp);
+static void LoadSetuid(Attributes a,Promise *pp);
+static void SaveSetuid(Attributes a,Promise *pp);
 
 /*****************************************************************************/
 
 /* File copying is a special case, particularly complex - cannot be integrated */
 
-void SourceSearchAndCopy(char *from,char *to,int maxrecurse,struct Attributes attr,struct Promise *pp)
+void SourceSearchAndCopy(char *from,char *to,int maxrecurse,Attributes attr,Promise *pp)
 
 { struct stat sb, dsb;
   char newfrom[CF_BUFSIZE];
   char newto[CF_BUFSIZE];
-  struct Item *namecache = NULL;
+  Item *namecache = NULL;
   const struct dirent *dirp;
-  CFDIR *dirh;
+  Dir *dirh;
 
 if (maxrecurse == 0)  /* reached depth limit */
    {
@@ -258,10 +258,10 @@ CloseDir(dirh);
 /* Level                                                           */
 /*******************************************************************/
 
-void VerifyFilePromise(char *path,struct Promise *pp)
+void VerifyFilePromise(char *path,Promise *pp)
 
 { struct stat osb,oslb,dsb;
-  struct Attributes a = {{0}};
+  Attributes a = {{0}};
   struct CfLock thislock;
   int exists,rlevel = 0;
 
@@ -478,9 +478,9 @@ YieldCurrentLock(thislock);
 
 /*********************************************************************/
 
-void VerifyCopy(char *source,char *destination,struct Attributes attr,struct Promise *pp)
+void VerifyCopy(char *source,char *destination,Attributes attr,Promise *pp)
 
-{ CFDIR *dirh;
+{ Dir *dirh;
   char sourcefile[CF_BUFSIZE];
   char sourcedir[CF_BUFSIZE];
   char destdir[CF_BUFSIZE];
@@ -595,9 +595,9 @@ DeleteClientCache(attr,pp);
 
 /*********************************************************************/
 
-static void PurgeLocalFiles(struct Item *filelist,char *localdir,struct Attributes attr,struct Promise *pp)
+static void PurgeLocalFiles(Item *filelist,char *localdir,Attributes attr,Promise *pp)
 
-{ CFDIR *dirh;
+{ Dir *dirh;
   struct stat sb; 
   const struct dirent *dirp;
   char filename[CF_BUFSIZE] = {0};
@@ -668,7 +668,7 @@ for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
             }
          else if (S_ISDIR(sb.st_mode))
             {
-            struct Attributes purgeattr = {{0}};
+            Attributes purgeattr = {{0}};
             memset(&purgeattr,0,sizeof(purgeattr));
 
             /* Deletion is based on a files promise */
@@ -713,7 +713,7 @@ CloseDir(dirh);
 
 /*********************************************************************/
 
-static void CfCopyFile(char *sourcefile,char *destfile,struct stat ssb,struct Attributes attr, struct Promise *pp)
+static void CfCopyFile(char *sourcefile,char *destfile,struct stat ssb,Attributes attr, Promise *pp)
 
 {
 char *server;
@@ -1078,7 +1078,7 @@ return stat(path, buf);
 
 /*********************************************************************/
 
-int cf_stat(char *file,struct stat *buf,struct Attributes attr,struct Promise *pp)
+int cf_stat(char *file,struct stat *buf,Attributes attr,Promise *pp)
 
 { int res;
 
@@ -1096,7 +1096,7 @@ else
 
 /*********************************************************************/
 
-int cf_lstat(char *file,struct stat *buf,struct Attributes attr,struct Promise *pp)
+int cf_lstat(char *file,struct stat *buf,Attributes attr,Promise *pp)
 
 { int res;
 
@@ -1116,11 +1116,11 @@ else
 
 #ifndef MINGW
 
-int cf_readlink(char *sourcefile,char *linkbuf,int buffsize,struct Attributes attr,struct Promise *pp)
+int cf_readlink(char *sourcefile,char *linkbuf,int buffsize,Attributes attr,Promise *pp)
 
  /* wrapper for network access */
 
-{ struct cfstat *sp;
+{ Stat *sp;
 
 memset(linkbuf,0,buffsize);
  
@@ -1204,7 +1204,7 @@ return true;
 
 /*******************************************************************/
 
-int FileSanityChecks(char *path,struct Attributes a,struct Promise *pp)
+int FileSanityChecks(char *path,Attributes a,Promise *pp)
 
 {
 if (a.havelink && a.havecopy)
@@ -1322,9 +1322,9 @@ return true;
 
 /*********************************************************************/
 
-static void LoadSetuid(struct Attributes a,struct Promise *pp)
+static void LoadSetuid(Attributes a,Promise *pp)
 
-{ struct Attributes b = {{0}};
+{ Attributes b = {{0}};
   char filename[CF_BUFSIZE];
 
 b = a;
@@ -1342,9 +1342,9 @@ if (!LoadFileAsItemList(&VSETUIDLIST,filename,b,pp))
 
 /*********************************************************************/
 
-static void SaveSetuid(struct Attributes a,struct Promise *pp)
+static void SaveSetuid(Attributes a,Promise *pp)
 
-{ struct Attributes b = {{0}};
+{ Attributes b = {{0}};
   char filename[CF_BUFSIZE];
 
 b = a;
@@ -1369,7 +1369,7 @@ VSETUIDLIST = NULL;
 /* Level 4                                                           */
 /*********************************************************************/
 
-static int CompareForFileCopy(char *sourcefile,char *destfile,struct stat *ssb, struct stat *dsb,struct Attributes attr,struct Promise *pp)
+static int CompareForFileCopy(char *sourcefile,char *destfile,struct stat *ssb, struct stat *dsb,Attributes attr,Promise *pp)
 
 { int ok_to_copy;
  
@@ -1454,7 +1454,7 @@ return false;
 
 /*************************************************************************************/
       
-void LinkCopy(char *sourcefile,char *destfile,struct stat *sb,struct Attributes attr, struct Promise *pp)
+void LinkCopy(char *sourcefile,char *destfile,struct stat *sb,Attributes attr, Promise *pp)
 
 /* Link the file to the source, instead of copying */
 
@@ -1568,11 +1568,11 @@ if (status == CF_CHG || status == CF_NOP)
 
 /*************************************************************************************/
 
-int CopyRegularFile(char *source,char *dest,struct stat sstat,struct stat dstat,struct Attributes attr,struct Promise *pp)
+int CopyRegularFile(char *source,char *dest,struct stat sstat,struct stat dstat,Attributes attr,Promise *pp)
 
 { char backup[CF_BUFSIZE];
   char new[CF_BUFSIZE], *linkable;
-  struct cfagent_connection *conn = pp->conn;
+  AgentConnection *conn = pp->conn;
   int remote = false, backupisdir=false, backupok=false,discardbackup;
   struct stat s;
 #ifdef HAVE_UTIME_H
@@ -1971,7 +1971,7 @@ CfOut(cf_inform,"","Auto defining class %s\n",class);
 /* Level 3                                                           */
 /*********************************************************************/
 
-static void RegisterAHardLink(int i,char *value,struct Attributes attr,struct Promise *pp)
+static void RegisterAHardLink(int i,char *value,Attributes attr,Promise *pp)
 
 {
 if (!FixCompressedArrayValue(i,value,&(pp->inode_cache)))

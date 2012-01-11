@@ -61,7 +61,7 @@
 
 /***************************************************************/
 
-struct BodySyntax CF_EXECCONTAIN_BODY[] =
+BodySyntax CF_EXECCONTAIN_BODY[] =
   {
   {"useshell",cf_opts,CF_BOOL,"true/false embed the command in a shell environment", "false"},
   {"umask",cf_opts,"0,77,22,27,72,077,022,027,072","The umask value for the child process"},
@@ -79,7 +79,7 @@ struct BodySyntax CF_EXECCONTAIN_BODY[] =
 
 /* This is the primary set of constraints for an exec object */
 
-struct BodySyntax CF_EXEC_BODIES[] =
+BodySyntax CF_EXEC_BODIES[] =
    {
    {"args",cf_str,"","Alternative string of arguments for the command (concatenated with promiser string)"},
    {"contain",cf_body,CF_EXECCONTAIN_BODY,"Containment options for the execution process"},
@@ -91,7 +91,7 @@ struct BodySyntax CF_EXEC_BODIES[] =
 /* This is the point of entry from mod_common.c                */
 /***************************************************************/
 
-struct SubTypeSyntax CF_EXEC_SUBTYPES[] =
+SubTypeSyntax CF_EXEC_SUBTYPES[] =
   {
   {"agent","commands",CF_EXEC_BODIES},
   {NULL,NULL,NULL},

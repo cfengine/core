@@ -59,7 +59,7 @@
  /*                                                         */
  /***********************************************************/
 
-struct BodySyntax CF_MATCHVALUE_BODY[] =
+BodySyntax CF_MATCHVALUE_BODY[] =
    {
    /* Row models */
    {"select_line_matching",cf_str,CF_ANYSTRING,"Regular expression for matching line location"},
@@ -71,7 +71,7 @@ struct BodySyntax CF_MATCHVALUE_BODY[] =
 
 /***************************************************************/
 
-struct BodySyntax CF_MEASURE_BODIES[] =
+BodySyntax CF_MEASURE_BODIES[] =
    {
    {"stream_type",cf_opts,"pipe,file","The datatype being collected."},
    {"data_type",cf_opts,"counter,int,real,string,slist","The datatype being collected."},
@@ -85,7 +85,7 @@ struct BodySyntax CF_MEASURE_BODIES[] =
 /* This is the point of entry from mod_common.c                */
 /***************************************************************/
 
-struct SubTypeSyntax CF_MEASUREMENT_SUBTYPES[] =
+SubTypeSyntax CF_MEASUREMENT_SUBTYPES[] =
   {
   {"monitor","measurements",CF_MEASURE_BODIES},
   {NULL,NULL,NULL},

@@ -29,10 +29,10 @@
 
 /*********************************************************************/
 
-int ItemListSize(struct Item *list)
+int ItemListSize(Item *list)
 
 { int size = 0;
-  struct Item *ip;
+  Item *ip;
  
 for (ip = list; ip != NULL; ip=ip->next)
    {
@@ -48,9 +48,9 @@ return size;
 
 /*********************************************************************/
 
-struct Item *ReturnItemIn(struct Item *list, const char *item)
+Item *ReturnItemIn(Item *list, const char *item)
 
-{ struct Item *ptr; 
+{ Item *ptr; 
 
 if ((item == NULL) || (strlen(item) == 0))
    {
@@ -70,9 +70,9 @@ return NULL;
 
 /*********************************************************************/
 
-struct Item *ReturnItemInClass(struct Item *list,char *item,char *classes)
+Item *ReturnItemInClass(Item *list,char *item,char *classes)
 
-{ struct Item *ptr; 
+{ Item *ptr; 
 
 if ((item == NULL) || (strlen(item) == 0))
    {
@@ -92,9 +92,9 @@ return NULL;
 
 /*********************************************************************/
 
-struct Item *ReturnItemAtIndex(struct Item *list,int index)
+Item *ReturnItemAtIndex(Item *list,int index)
 
-{ struct Item *ptr;
+{ Item *ptr;
  int i = 0;
 
 for (ptr = list; ptr != NULL; ptr=ptr->next)
@@ -113,11 +113,11 @@ return NULL;
 
 /*********************************************************************/
 
-int GetItemIndex(struct Item *list,char *item)
+int GetItemIndex(Item *list,char *item)
 /*
  * Returns index of first occurence of item.
  */
-{ struct Item *ptr; 
+{ Item *ptr; 
   int i = 0;
 
 if ((item == NULL) || (strlen(item) == 0))
@@ -140,9 +140,9 @@ return -1;
 
 /*********************************************************************/
 
-int IsItemIn(struct Item *list,const char *item)
+int IsItemIn(Item *list,const char *item)
 
-{ struct Item *ptr; 
+{ Item *ptr; 
 
 if ((item == NULL) || (strlen(item) == 0))
    {
@@ -162,9 +162,9 @@ return(false);
 
 /*********************************************************************/
 
-struct Item *EndOfList(struct Item *start)
+Item *EndOfList(Item *start)
 
-{ struct Item *ip, *prev = CF_UNDEFINED_ITEM;
+{ Item *ip, *prev = CF_UNDEFINED_ITEM;
 
 for (ip = start; ip !=  NULL; ip=ip->next)
    {
@@ -176,9 +176,9 @@ return prev;
 
 /*********************************************************************/
 
-int IsItemInRegion(char *item,struct Item *begin_ptr,struct Item *end_ptr,struct Attributes a,struct Promise *pp)
+int IsItemInRegion(char *item,Item *begin_ptr,Item *end_ptr,Attributes a,Promise *pp)
 
-{ struct Item *ip;
+{ Item *ip;
  
 for (ip = begin_ptr; (ip != end_ptr && ip != NULL); ip = ip->next)
    {
@@ -193,9 +193,9 @@ return false;
 
 /*********************************************************************/
 
-struct Item *IdempPrependItem(struct Item **liststart, const char *itemstring, const char *classes)
+Item *IdempPrependItem(Item **liststart, const char *itemstring, const char *classes)
 
-{ struct Item *ip;
+{ Item *ip;
 
 ip = ReturnItemIn(*liststart,itemstring);
 
@@ -210,9 +210,9 @@ return *liststart;
 
 /*********************************************************************/
 
-struct Item *IdempPrependItemClass(struct Item **liststart,char *itemstring,char *classes)
+Item *IdempPrependItemClass(Item **liststart,char *itemstring,char *classes)
 
-{ struct Item *ip;
+{ Item *ip;
 
 ip = ReturnItemInClass(*liststart,itemstring,classes);
 
@@ -228,9 +228,9 @@ return *liststart;
 
 /*********************************************************************/
 
-void IdempItemCount(struct Item **liststart, const char *itemstring, const char *classes)
+void IdempItemCount(Item **liststart, const char *itemstring, const char *classes)
 
-{ struct Item *ip;
+{ Item *ip;
  
 if ((ip = ReturnItemIn(*liststart,itemstring)))
    {
@@ -246,11 +246,11 @@ else
 
 /*********************************************************************/
 
-struct Item *PrependItem(struct Item **liststart,const char *itemstring,const char *classes)
+Item *PrependItem(Item **liststart,const char *itemstring,const char *classes)
 
-{ struct Item *ip;
+{ Item *ip;
 
-ip = xcalloc(1, sizeof(struct Item));
+ip = xcalloc(1, sizeof(Item));
 
 ip->name = xstrdup(itemstring);
 ip->next = *liststart;
@@ -266,11 +266,11 @@ return *liststart;
 
 /*********************************************************************/
 
-void PrependFullItem(struct Item **liststart,char *itemstring,char *classes,int counter,time_t t)
+void PrependFullItem(Item **liststart,char *itemstring,char *classes,int counter,time_t t)
 
-{ struct Item *ip;
+{ Item *ip;
 
-ip = xcalloc(1, sizeof(struct Item));
+ip = xcalloc(1, sizeof(Item));
 
 ip->name = xstrdup(itemstring);
 ip->next = *liststart;
@@ -287,11 +287,11 @@ if (classes != NULL)
 
 /*********************************************************************/
 
-void AppendItem(struct Item **liststart, const char *itemstring,char *classes)
+void AppendItem(Item **liststart, const char *itemstring,char *classes)
 
 {
-struct Item *lp;
-struct Item *ip = xcalloc(1, sizeof (struct Item));
+Item *lp;
+Item *ip = xcalloc(1, sizeof (Item));
 ip->name = xstrdup(itemstring);
 
 if (*liststart == NULL)
@@ -315,10 +315,10 @@ if (classes)
 
 /*********************************************************************/
 
-void PrependItemList(struct Item **liststart,char *itemstring)
+void PrependItemList(Item **liststart,char *itemstring)
 
 {
-struct Item *ip = xcalloc(1, sizeof(struct Item));
+Item *ip = xcalloc(1, sizeof(Item));
 ip->name = xstrdup(itemstring);
 ip->next = *liststart;
 *liststart = ip;
@@ -326,10 +326,10 @@ ip->next = *liststart;
 
 /*********************************************************************/
 
-int ListLen(struct Item *list)
+int ListLen(Item *list)
 
 { int count = 0;
-  struct Item *ip;
+  Item *ip;
 
 CfDebug("Check ListLen\n");
   
@@ -344,11 +344,11 @@ return count;
 
 /***************************************************************************/
 
-void CopyList (struct Item **dest, struct Item *source)
+void CopyList (Item **dest, Item *source)
 
 /* Copy or concat lists */
     
-{ struct Item *ip;
+{ Item *ip;
 
 if (*dest != NULL)
    {
@@ -368,12 +368,12 @@ for (ip = source; ip != NULL; ip = ip ->next)
 
 /*********************************************************************/
 
-struct Item *ConcatLists (struct Item *list1,struct Item *list2)
+Item *ConcatLists (Item *list1,Item *list2)
 
 /* Notes: * Refrain from freeing list2 after using ConcatLists
           * list1 must have at least one element in it */
 
-{ struct Item *endOfList1;
+{ Item *endOfList1;
 
 if (list1 == NULL)
    {
@@ -392,9 +392,9 @@ return list1;
 /* Search                                                                  */
 /***************************************************************************/
 
-int SelectItemMatching(struct Item *start,char *regex,struct Item *begin_ptr,struct Item *end_ptr,struct Item **match,struct Item **prev,char *fl)
+int SelectItemMatching(Item *start,char *regex,Item *begin_ptr,Item *end_ptr,Item **match,Item **prev,char *fl)
 
-{ struct Item *ip;
+{ Item *ip;
  int ret = false;
 
 *match = CF_UNDEFINED_ITEM;
@@ -433,9 +433,9 @@ return ret;
 
 /*********************************************************************/ 
 
-int SelectNextItemMatching(char *regexp,struct Item *begin,struct Item *end,struct Item **match,struct Item **prev) 
+int SelectNextItemMatching(char *regexp,Item *begin,Item *end,Item **match,Item **prev) 
 
-{ struct Item *ip,*ip_prev = CF_UNDEFINED_ITEM;
+{ Item *ip,*ip_prev = CF_UNDEFINED_ITEM;
 
 *match = CF_UNDEFINED_ITEM;
 *prev = CF_UNDEFINED_ITEM;
@@ -462,9 +462,9 @@ return false;
 
 /*********************************************************************/ 
 
-int SelectLastItemMatching(char *regexp,struct Item *begin,struct Item *end,struct Item **match,struct Item **prev) 
+int SelectLastItemMatching(char *regexp,Item *begin,Item *end,Item **match,Item **prev) 
 
-{ struct Item *ip,*ip_last = NULL,*ip_prev = CF_UNDEFINED_ITEM;
+{ Item *ip,*ip_last = NULL,*ip_prev = CF_UNDEFINED_ITEM;
  
 *match = CF_UNDEFINED_ITEM;
 *prev = CF_UNDEFINED_ITEM;
@@ -496,7 +496,7 @@ return false;
 
 /*********************************************************************/ 
 
-int MatchRegion(char *chunk,struct Item *start,struct Item *begin,struct Item *end)
+int MatchRegion(char *chunk,Item *start,Item *begin,Item *end)
 
 /*
   Match a region in between the selection delimiters. It is
@@ -504,7 +504,7 @@ int MatchRegion(char *chunk,struct Item *start,struct Item *begin,struct Item *e
   here so we have to check for it.
 */
     
-{ struct Item *ip = begin;
+{ Item *ip = begin;
   char *sp,buf[CF_BUFSIZE];
   int lines = 0;
 
@@ -557,9 +557,9 @@ return lines;
 /* Level                                                             */
 /*********************************************************************/
 
-void InsertAfter(struct Item **filestart,struct Item *ptr,char *string)
+void InsertAfter(Item **filestart,Item *ptr,char *string)
 
-{ struct Item *ip;
+{ Item *ip;
 
 if (*filestart == NULL || ptr == CF_UNDEFINED_ITEM)
    {
@@ -573,7 +573,7 @@ if (ptr == NULL)
    return;
    }
 
-ip = xcalloc(1, sizeof(struct Item));
+ip = xcalloc(1, sizeof(Item));
 
 ip->next = ptr->next;
 ptr->next = ip;
@@ -583,9 +583,9 @@ ip->classes = NULL;
 
 /*********************************************************************/
 
-int NeighbourItemMatches(struct Item *file_start,struct Item *location,char *string,enum cfeditorder pos,struct Attributes a,struct Promise *pp)
+int NeighbourItemMatches(Item *file_start,Item *location,char *string,enum cfeditorder pos,Attributes a,Promise *pp)
 
-{ struct Item *ip;
+{ Item *ip;
 
 /* Look for a line matching proposed insert before or after location */
  
@@ -627,12 +627,12 @@ return false;
 
 /*********************************************************************/
 
-struct Item *SplitString(const char *string, char sep)
+Item *SplitString(const char *string, char sep)
 
  /* Splits a string containing a separator like : 
     into a linked list of separate items, */
 
-{ struct Item *liststart = NULL;
+{ Item *liststart = NULL;
   const char *sp;
   char before[CF_BUFSIZE];
   int i = 0;
@@ -675,12 +675,12 @@ return liststart;
 
 /*********************************************************************/
 
-struct Item *SplitStringAsItemList(char *string,char sep)
+Item *SplitStringAsItemList(char *string,char sep)
 
  /* Splits a string containing a separator like : 
     into a linked list of separate items, */
 
-{ struct Item *liststart = NULL;
+{ Item *liststart = NULL;
   char format[9], *sp;
   char node[CF_MAXVARSIZE];
   
@@ -713,9 +713,9 @@ return liststart;
 
 /*********************************************************************/
 
-char *ItemList2CSV(struct Item *list)
+char *ItemList2CSV(Item *list)
 
-{ struct Item *ip;
+{ Item *ip;
   int len = 0;
   char *s;
   
@@ -744,9 +744,9 @@ return s;
 /* Basic operations                                                  */
 /*********************************************************************/
 
-void IncrementItemListCounter(struct Item *list,char *item)
+void IncrementItemListCounter(Item *list,char *item)
 
-{ struct Item *ptr; 
+{ Item *ptr; 
 
 if ((item == NULL) || (strlen(item) == 0))
    {
@@ -765,9 +765,9 @@ for (ptr = list; ptr != NULL; ptr=ptr->next)
 
 /*********************************************************************/
 
-void SetItemListCounter(struct Item *list,char *item,int value)
+void SetItemListCounter(Item *list,char *item,int value)
 
-{ struct Item *ptr; 
+{ Item *ptr; 
 
 if ((item == NULL) || (strlen(item) == 0))
    {
@@ -786,11 +786,11 @@ for (ptr = list; ptr != NULL; ptr=ptr->next)
 
 /*********************************************************************/
 
-int IsMatchItemIn(struct Item *list,char *item)
+int IsMatchItemIn(Item *list,char *item)
 
 /* Solve for possible regex/fuzzy models unified */
     
-{ struct Item *ptr; 
+{ Item *ptr; 
  
 if ((item == NULL) || (strlen(item) == 0))
    {
@@ -818,9 +818,9 @@ return(false);
 
 /*********************************************************************/
 
-void DeleteItemList(struct Item *item)  /* delete starting from item */
+void DeleteItemList(Item *item)  /* delete starting from item */
  
-{ struct Item *ip, *next;
+{ Item *ip, *next;
 
 for(ip = item; ip != NULL; ip = next)
    {
@@ -842,9 +842,9 @@ for(ip = item; ip != NULL; ip = next)
 
 /*********************************************************************/
 
-void DeleteItem(struct Item **liststart,struct Item *item)
+void DeleteItem(Item **liststart,Item *item)
  
-{ struct Item *ip, *sp;
+{ Item *ip, *sp;
 
 if (item != NULL)
    {
@@ -882,9 +882,9 @@ if (item != NULL)
 
 /*********************************************************************/
 
-void DebugListItemList(struct Item *liststart)
+void DebugListItemList(Item *liststart)
 
-{ struct Item *ptr;
+{ Item *ptr;
 
 for (ptr = liststart; ptr != NULL; ptr=ptr->next)
    {
@@ -916,10 +916,10 @@ for (ptr = liststart; ptr != NULL; ptr=ptr->next)
 
 /*********************************************************************/
 
-int DeleteItemGeneral(struct Item **list,char *string,enum matchtypes type)
+int DeleteItemGeneral(Item **list,char *string,enum matchtypes type)
 
 {
-struct Item *ip,*last = NULL;
+Item *ip,*last = NULL;
 int match = 0;
 
 if (list == NULL)
@@ -1009,7 +1009,7 @@ if (list == NULL)
 
 /*********************************************************************/
 
-int DeleteItemStarting(struct Item **list,char *string)  /* delete 1st item starting with string */
+int DeleteItemStarting(Item **list,char *string)  /* delete 1st item starting with string */
 
 {
 return DeleteItemGeneral(list,string,literalStart);
@@ -1017,7 +1017,7 @@ return DeleteItemGeneral(list,string,literalStart);
 
 /*********************************************************************/
 
-int DeleteItemNotStarting(struct Item **list,char *string)  /* delete 1st item starting with string */
+int DeleteItemNotStarting(Item **list,char *string)  /* delete 1st item starting with string */
 
 {
 return DeleteItemGeneral(list,string,NOTliteralStart);
@@ -1025,7 +1025,7 @@ return DeleteItemGeneral(list,string,NOTliteralStart);
 
 /*********************************************************************/
 
-int DeleteItemLiteral(struct Item **list,char *string)  /* delete 1st item which is string */
+int DeleteItemLiteral(Item **list,char *string)  /* delete 1st item which is string */
 
 {
 return DeleteItemGeneral(list,string,literalComplete);
@@ -1033,7 +1033,7 @@ return DeleteItemGeneral(list,string,literalComplete);
 
 /*********************************************************************/
 
-int DeleteItemMatching(struct Item **list,char *string)  /* delete 1st item fully matching regex */
+int DeleteItemMatching(Item **list,char *string)  /* delete 1st item fully matching regex */
 
 {
 return DeleteItemGeneral(list,string,regexComplete);
@@ -1041,7 +1041,7 @@ return DeleteItemGeneral(list,string,regexComplete);
 
 /*********************************************************************/
 
-int DeleteItemNotMatching(struct Item **list,char *string)  /* delete 1st item fully matching regex */
+int DeleteItemNotMatching(Item **list,char *string)  /* delete 1st item fully matching regex */
 
 {
 return DeleteItemGeneral(list,string,NOTregexComplete);
@@ -1049,7 +1049,7 @@ return DeleteItemGeneral(list,string,NOTregexComplete);
 
 /*********************************************************************/
 
-int DeleteItemContaining(struct Item **list,char *string) /* delete first item containing string */
+int DeleteItemContaining(Item **list,char *string) /* delete first item containing string */
 
 {
 return DeleteItemGeneral(list,string,literalSomewhere);
@@ -1057,7 +1057,7 @@ return DeleteItemGeneral(list,string,literalSomewhere);
 
 /*********************************************************************/
 
-int DeleteItemNotContaining(struct Item **list,char *string) /* delete first item containing string */
+int DeleteItemNotContaining(Item **list,char *string) /* delete first item containing string */
 
 {
 return DeleteItemGeneral(list,string,NOTliteralSomewhere);
@@ -1065,10 +1065,10 @@ return DeleteItemGeneral(list,string,NOTliteralSomewhere);
 
 /*********************************************************************/
 
-int ByteSizeList(const struct Item *list)
+int ByteSizeList(const Item *list)
 {
 int count = 0;
-const struct Item *ip;
+const Item *ip;
 
 for (ip = list; ip; ip = ip->next)
    {

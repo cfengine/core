@@ -34,9 +34,9 @@
 
 /*****************************************************************************/
 
-void VerifyInterfacesPromise(struct Promise *pp)
+void VerifyInterfacesPromise(Promise *pp)
 
-{ struct Attributes a = {{0}};
+{ Attributes a = {{0}};
 
 a = GetInterfacesAttributes(pp);
 VerifyInterface(a,pp);
@@ -45,7 +45,7 @@ DeleteScalar("this","promiser");
 
 /*****************************************************************************/
 
-void VerifyInterface(struct Attributes a,struct Promise *pp)
+void VerifyInterface(Attributes a,Promise *pp)
 
 {
 /* How shall we deal with this now ? */

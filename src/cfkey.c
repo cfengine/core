@@ -75,7 +75,7 @@ const char *HINTS[17] =
 int main(int argc,char *argv[])
 
 {
-struct GenericAgentConfig config = CheckOpts(argc,argv);
+GenericAgentConfig config = CheckOpts(argc,argv);
 
 THIS_AGENT_TYPE = cf_keygen;
 
@@ -100,12 +100,12 @@ return 0;
 /* Level                                                                     */
 /*****************************************************************************/
 
-struct GenericAgentConfig CheckOpts(int argc,char **argv)
+GenericAgentConfig CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
   int optindex = 0;
   int c;
-  struct GenericAgentConfig config = GenericAgentDefaultConfig(cf_keygen);
+  GenericAgentConfig config = GenericAgentDefaultConfig(cf_keygen);
 
 while ((c=getopt_long(argc,argv,"d:vf:VMsr:",OPTIONS,&optindex)) != EOF)
   {
@@ -159,7 +159,7 @@ void ShowLastSeenHosts()
   char *key;
   void *value;
   char name[CF_BUFSIZE],hostname[CF_BUFSIZE],address[CF_MAXVARSIZE];
-  struct CfKeyHostSeen entry;
+  KeyHostSeen entry;
   int ksize,vsize;
   int count = 0;
 

@@ -36,15 +36,15 @@
 int main (int argc,char *argv[]);
 void ThisAgentInit(void);
 void KeepKnowControlPromises(void);
-void KeepKnowledgePromise(struct Promise *pp);
-void VerifyTopicPromise(struct Promise *pp);
-void VerifyThingsPromise(struct Promise *pp);
-void VerifyOccurrencePromises(struct Promise *pp);
-void VerifyInferencePromise(struct Promise *pp);
+void KeepKnowledgePromise(Promise *pp);
+void VerifyTopicPromise(Promise *pp);
+void VerifyThingsPromise(Promise *pp);
+void VerifyOccurrencePromises(Promise *pp);
+void VerifyInferencePromise(Promise *pp);
 void WriteKMDB(void);
 void GenerateManual(void);
 void CfGenerateStories(char *query,enum storytype type);
-void VerifyOccurrenceGroup(char *file,struct Promise *pp);
+void VerifyOccurrenceGroup(char *file,Promise *pp);
 void CfGenerateTestData(int count);
 void CfRemoveTestData(void);
 void CfUpdateTestData(void);
@@ -57,8 +57,8 @@ static void AddInference(struct Inference **list,char *result,char *pre,char *qu
 static struct Topic *IdempInsertTopic(char *classified_name);
 static struct Topic *InsertTopic(char *name,char *context);
 static struct Topic *AddTopic(struct Topic **list,char *name,char *type);
-static void AddTopicAssociation(struct Topic *tp,struct TopicAssociation **list,char *fwd_name,char *bwd_name,struct Rlist *li,int ok,char *from_context,char *from_topic);
-static void AddOccurrence(struct Occurrence **list,char *reference,struct Rlist *represents,enum representations rtype,char *context);
+static void AddTopicAssociation(struct Topic *tp,struct TopicAssociation **list,char *fwd_name,char *bwd_name,Rlist *li,int ok,char *from_context,char *from_topic);
+static void AddOccurrence(struct Occurrence **list,char *reference,Rlist *represents,enum representations rtype,char *context);
 static struct Topic *TopicExists(char *topic_name,char *topic_type);
 static struct TopicAssociation *AssociationExists(struct TopicAssociation *list,char *fwd,char *bwd);
 static struct Occurrence *OccurrenceExists(struct Occurrence *list,char *locator,enum representations repy_type,char *s);
@@ -71,7 +71,7 @@ static void KeepPromiseBundles();
 
 int GLOBAL_ID = 1; // Used as a primary key for convenience, 0 reserved
 
-extern struct BodySyntax CFK_CONTROLBODY[];
+extern BodySyntax CFK_CONTROLBODY[];
 
 enum typesequence
    {
@@ -163,7 +163,7 @@ const char *HINTS[16] =
 int main(int argc,char *argv[])
 
 {
-struct GenericAgentConfig config = CheckOpts(argc,argv);
+GenericAgentConfig config = CheckOpts(argc,argv);
 GenericInitialize(argc,argv,"knowledge", config);
 ThisAgentInit();
 KeepKnowControlPromises();
@@ -192,12 +192,12 @@ return 0;
 /* Level 1                                                                   */
 /*****************************************************************************/
 
-struct GenericAgentConfig CheckOpts(int argc,char **argv)
+GenericAgentConfig CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
   int optindex = 0;
   int c;
-  struct GenericAgentConfig config = GenericAgentDefaultConfig(cf_know);
+  GenericAgentConfig config = GenericAgentDefaultConfig(cf_know);
 
 LOOKUP = false;
 
@@ -336,7 +336,7 @@ SHOWREPORTS = false;
 
 if (InsertTopic("any","any"))
    {
-   struct Rlist *list = NULL;
+   Rlist *list = NULL;
    PrependRScalar(&list,"Description",CF_SCALAR);
    AddOccurrence(&OCCURRENCES,"The generic knowledge context - any time, any place, anywhere",list,cfk_literal,"any");
    DeleteRlist(list);
@@ -347,8 +347,8 @@ if (InsertTopic("any","any"))
 
 void KeepKnowControlPromises()
 
-{ struct Constraint *cp;
-  struct Rval retval;
+{ Constraint *cp;
+  Rval retval;
 
 for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
    {
@@ -484,13 +484,13 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
 
 static void KeepPromiseBundles()
     
-{ struct Bundle *bp;
-  struct SubType *sp;
-  struct Promise *pp;
-  struct Rlist *rp,*params;
-  struct FnCall *fp;
+{ Bundle *bp;
+  SubType *sp;
+  Promise *pp;
+  Rlist *rp,*params;
+  FnCall *fp;
   char *name;
-  struct Rval retval;
+  Rval retval;
   int ok = true;
   enum typesequence type;
 
@@ -500,7 +500,7 @@ if (GetVariable("control_common", "bundlesequence", &retval) == cf_notype)
    exit(1);
    }
 
-for (rp = (struct Rlist *)retval.item; rp != NULL; rp=rp->next)
+for (rp = (Rlist *)retval.item; rp != NULL; rp=rp->next)
    {
    switch (rp->type)
       {
@@ -509,16 +509,16 @@ for (rp = (struct Rlist *)retval.item; rp != NULL; rp=rp->next)
           params = NULL;
           break;
       case CF_FNCALL:
-          fp = (struct FnCall *)rp->item;
+          fp = (FnCall *)rp->item;
           name = (char *)fp->name;
-          params = (struct Rlist *)fp->args;
+          params = (Rlist *)fp->args;
           break;
           
       default:
           name = NULL;
           params = NULL;
           CfOut(cf_error,""," !! Illegal item found in bundlesequence: ");
-          ShowRval(stdout, (struct Rval) { rp->item, rp->type });
+          ShowRval(stdout, (Rval) { rp->item, rp->type });
           printf(" = %c\n",rp->type);
           ok = false;
           break;
@@ -540,14 +540,14 @@ if (!ok)
 
 for (type = 0; TYPESEQUENCE[type] != NULL; type++)
    {
-   for (rp = (struct Rlist *)retval.item; rp != NULL; rp=rp->next)
+   for (rp = (Rlist *)retval.item; rp != NULL; rp=rp->next)
       {
       switch (rp->type)
          {
          case CF_FNCALL:
-             fp = (struct FnCall *)rp->item;
+             fp = (FnCall *)rp->item;
              name = (char *)fp->name;
-             params = (struct Rlist *)fp->args;
+             params = (Rlist *)fp->args;
              break;
          default:
              name = (char *)rp->item;
@@ -581,7 +581,7 @@ for (type = 0; TYPESEQUENCE[type] != NULL; type++)
 /* Level                                                             */
 /*********************************************************************/
 
-void KeepKnowledgePromise(struct Promise *pp)
+void KeepKnowledgePromise(Promise *pp)
 
 {
 if (pp->done)
@@ -667,7 +667,7 @@ void CfRemoveTestData(void)
 void ShowWords()
 
 {  struct Topic *tp;
-   struct Item *ip,*list = NULL;
+   Item *ip,*list = NULL;
    int slot;
 
 if (!WORDS)
@@ -696,7 +696,7 @@ for (ip = list; ip != NULL; ip=ip->next)
 void ShowSingletons()
 
 {  struct Topic *tp;
-   struct Item *ip,*list = NULL;
+   Item *ip,*list = NULL;
    int slot;
 
 if (VERBOSE || DEBUG)
@@ -725,10 +725,10 @@ if (VERBOSE || DEBUG)
 /* Level                                                             */
 /*********************************************************************/
 
-void VerifyInferencePromise(struct Promise *pp)
+void VerifyInferencePromise(Promise *pp)
 
-{ struct Attributes a = {{0}};
- struct Rlist *rpp,*rpq;
+{ Attributes a = {{0}};
+ Rlist *rpp,*rpq;
 
 if (!IsDefinedClass(pp->classes))
    {
@@ -750,12 +750,12 @@ for (rpp = a.precedents; rpp != NULL; rpp=rpp->next)
 
 /*********************************************************************/
 
-void VerifyThingsPromise(struct Promise *pp)
+void VerifyThingsPromise(Promise *pp)
 
 { char id[CF_BUFSIZE];
-  struct Attributes a = {{0}};
+  Attributes a = {{0}};
   struct Topic *tp = NULL, *otp;
-  struct Rlist *rp,*rps,*contexts;
+  Rlist *rp,*rps,*contexts;
   char *handle = (char *)GetConstraintValue("handle",pp,CF_SCALAR);
 
 a = GetThingsAttributes(pp);
@@ -822,7 +822,7 @@ for (rp = contexts; rp != NULL; rp = rp->next)
 
    if (pp->ref)
       {
-      struct Rlist *list = NULL;
+      Rlist *list = NULL;
       snprintf(id,CF_MAXVARSIZE,"%s.%s",pp->classes,CanonifyName(pp->promiser));
       PrependRScalar(&list,"description",CF_SCALAR);
       AddOccurrence(&OCCURRENCES,pp->ref,list,cfk_literal,id);
@@ -831,7 +831,7 @@ for (rp = contexts; rp != NULL; rp = rp->next)
    
    if (handle)
       {
-      struct Rlist *list = NULL;
+      Rlist *list = NULL;
       PrependRScalar(&list,handle,CF_SCALAR);
       AddTopicAssociation(tp,&(tp->associations),"is the promise of","stands for",list,true,rp->item,pp->promiser);
       DeleteRlist(list);
@@ -848,12 +848,12 @@ DeleteRlist(contexts);
 
 /*********************************************************************/
 
-void VerifyTopicPromise(struct Promise *pp)
+void VerifyTopicPromise(Promise *pp)
 
 { char id[CF_BUFSIZE];
-  struct Attributes a = {{0}};
+  Attributes a = {{0}};
   struct Topic *tp = NULL, *otp;
-  struct Rlist *rp,*rps,*contexts;
+  Rlist *rp,*rps,*contexts;
   char *handle = (char *)GetConstraintValue("handle",pp,CF_SCALAR);
 
 a = GetTopicsAttributes(pp);
@@ -916,7 +916,7 @@ for (rp = contexts; rp != NULL; rp = rp->next)
 
    if (pp->ref)
       {
-      struct Rlist *list = NULL;
+      Rlist *list = NULL;
       snprintf(id,CF_MAXVARSIZE,"%s.%s",pp->classes,CanonifyName(pp->promiser));
       PrependRScalar(&list,"description",CF_SCALAR);
       AddOccurrence(&OCCURRENCES,pp->ref,list,cfk_literal,id);
@@ -925,7 +925,7 @@ for (rp = contexts; rp != NULL; rp = rp->next)
    
    if (handle)
       {
-      struct Rlist *list = NULL;
+      Rlist *list = NULL;
       PrependRScalar(&list,handle,CF_SCALAR);
       AddTopicAssociation(tp,&(tp->associations),"is the promise of","stands for",list,true,rp->item,pp->promiser);
       DeleteRlist(list);
@@ -942,12 +942,12 @@ DeleteRlist(contexts);
 
 /*********************************************************************/
 
-void VerifyOccurrencePromises(struct Promise *pp)
+void VerifyOccurrencePromises(Promise *pp)
 
-{ struct Attributes a = {{0}};
+{ Attributes a = {{0}};
   char name[CF_BUFSIZE];
   enum representations rep_type;
-  struct Rlist *contexts,*rp;
+  Rlist *contexts,*rp;
 
 a = GetOccurrenceAttributes(pp);
 
@@ -1038,12 +1038,12 @@ if (GENERATE_MANUAL)
 
 /*********************************************************************/
 
-void VerifyOccurrenceGroup(char *file,struct Promise *pp)
+void VerifyOccurrenceGroup(char *file,Promise *pp)
     
-{ struct Attributes a = {{0}};
+{ Attributes a = {{0}};
   struct stat sb;
   char *sp,url[CF_BUFSIZE];
-  struct Rval retval;
+  Rval retval;
 
 a = GetOccurrenceAttributes(pp);
 
@@ -1065,7 +1065,7 @@ DeleteSlash(a.path_root);
 sp = file + strlen(a.path_root) + 1;
 
 FullTextMatch(pp->promiser,sp);
-retval = ExpandPrivateRval("this", (struct Rval) { a.represents, CF_LIST });
+retval = ExpandPrivateRval("this", (Rval) { a.represents, CF_LIST });
 DeleteScope("match");
 
 if (strlen(a.web_root) > 0)
@@ -1080,7 +1080,7 @@ else
 AddOccurrence(&OCCURRENCES,url,retval.item,cfk_url,pp->classes);
 CfOut(cf_verbose,""," -> File %s matched and being logged at %s",file,url);
 
-DeleteRlist((struct Rlist *)retval.item);
+DeleteRlist((Rlist *)retval.item);
 }
 
 
@@ -1146,7 +1146,7 @@ else
       // Every topic in a special context is generalized by itself in context "any"
       
       char gen[CF_BUFSIZE];
-      struct Rlist *rlist = 0;
+      Rlist *rlist = 0;
       snprintf(gen,CF_BUFSIZE-1,"any::%s",tp->topic_name);
       PrependRScalar(&rlist,gen,CF_SCALAR);
       AddTopicAssociation(tp,&(tp->associations),KM_GENERALIZES_B,KM_GENERALIZES_F,rlist,true,tp->topic_context,tp->topic_name);
@@ -1160,11 +1160,11 @@ return tp;
 
 /*****************************************************************************/
 
-void AddTopicAssociation(struct Topic *this_tp,struct TopicAssociation **list,char *fwd_name,char *bwd_name,struct Rlist *passociates,int ok_to_add_inverse,char *from_context,char *from_topic)
+void AddTopicAssociation(struct Topic *this_tp,struct TopicAssociation **list,char *fwd_name,char *bwd_name,Rlist *passociates,int ok_to_add_inverse,char *from_context,char *from_topic)
 
 { struct TopicAssociation *ta = NULL,*texist;
   char fwd_context[CF_MAXVARSIZE];
-  struct Rlist *rp;
+  Rlist *rp;
   struct Topic *new_tp;
   char contexttopic[CF_BUFSIZE],ntopic[CF_BUFSIZE],ncontext[CF_BUFSIZE];
 
@@ -1243,7 +1243,7 @@ for (rp = passociates; rp != NULL; rp=rp->next)
          {
          // inverse is from normalform to ncontext::ntopic
          char rev[CF_BUFSIZE],ndt[CF_BUFSIZE],ndc[CF_BUFSIZE];
-         struct Rlist *rlist = 0;
+         Rlist *rlist = 0;
          snprintf(rev,CF_BUFSIZE-1,"%s::%s",ncontext,ntopic);
          PrependRScalar(&rlist,rev,CF_SCALAR);
 
@@ -1273,10 +1273,10 @@ else
 
 /*****************************************************************************/
 
-void AddOccurrence(struct Occurrence **list,char *reference,struct Rlist *represents,enum representations rtype,char *context)
+void AddOccurrence(struct Occurrence **list,char *reference,Rlist *represents,enum representations rtype,char *context)
 
 { struct Occurrence *op = NULL;
-  struct Rlist *rp;
+  Rlist *rp;
 
 if ((op = OccurrenceExists(*list,reference,rtype,context)) == NULL)
    {

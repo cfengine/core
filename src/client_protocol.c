@@ -37,7 +37,7 @@ static void FreeRSAKey(RSA *key);
 
 /*********************************************************************/
 
-static void SetSessionKey(struct cfagent_connection *conn);
+static void SetSessionKey(AgentConnection *conn);
 
 /*********************************************************************/
 
@@ -178,7 +178,7 @@ return true;
 
 /*********************************************************************/
 
-int AuthenticateAgent(struct cfagent_connection *conn,struct Attributes attr,struct Promise *pp)
+int AuthenticateAgent(AgentConnection *conn,Attributes attr,Promise *pp)
 
 { char sendbuffer[CF_EXPANDSIZE],in[CF_BUFSIZE],*out,*decrypted_cchall;
   BIGNUM *nonce_challenge, *bn = NULL;
@@ -486,7 +486,7 @@ static void FreeRSAKey(RSA *key)
 /* Level                                                             */
 /*********************************************************************/
 
-static void SetSessionKey(struct cfagent_connection *conn)
+static void SetSessionKey(AgentConnection *conn)
 
 { BIGNUM *bp;
   int session_size = CfSessionKeySize(conn->encryption_type);

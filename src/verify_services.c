@@ -32,15 +32,15 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static int ServicesSanityChecks(struct Attributes a,struct Promise *pp);
-static void SetServiceDefaults(struct Attributes *a);
-static void DoVerifyServices(struct Attributes a,struct Promise *pp);
+static int ServicesSanityChecks(Attributes a,Promise *pp);
+static void SetServiceDefaults(Attributes *a);
+static void DoVerifyServices(Attributes a,Promise *pp);
 
 /*****************************************************************************/
 
-void VerifyServicesPromise(struct Promise *pp)
+void VerifyServicesPromise(Promise *pp)
 
-{ struct Attributes a = {{0}};
+{ Attributes a = {{0}};
 
 a = GetServicesAttributes(pp);
 
@@ -54,9 +54,9 @@ if (ServicesSanityChecks(a,pp))
 
 /*****************************************************************************/
 
-static int ServicesSanityChecks(struct Attributes a,struct Promise *pp)
+static int ServicesSanityChecks(Attributes a,Promise *pp)
     
-{ struct Rlist *dep;
+{ Rlist *dep;
 
 switch(a.service.service_policy)
    {
@@ -113,7 +113,7 @@ return true;
 
 /*****************************************************************************/
 
-static void SetServiceDefaults(struct Attributes *a)
+static void SetServiceDefaults(Attributes *a)
 
 {
 if (a->service.service_autostart_policy == NULL)
@@ -144,7 +144,7 @@ if (a->service.service_type == NULL)
 /* Level                                                                     */
 /*****************************************************************************/
 
-void VerifyServices(struct Attributes a,struct Promise *pp)
+void VerifyServices(Attributes a,Promise *pp)
 
 { struct CfLock thislock;
 
@@ -199,10 +199,10 @@ YieldCurrentLock(thislock);
 /* Level                                                                     */
 /*****************************************************************************/
 
-static void DoVerifyServices(struct Attributes a,struct Promise *pp)
+static void DoVerifyServices(Attributes a,Promise *pp)
 
-{ struct FnCall *default_bundle;
-  struct Rlist *args = NULL;
+{ FnCall *default_bundle;
+  Rlist *args = NULL;
 
 // Need to set up the default service pack to eliminate syntax
 
@@ -226,7 +226,7 @@ if (GetConstraintValue("service_bundle",pp,CF_SCALAR) == NULL)
 
    default_bundle = NewFnCall("standard_services",args);
 
-   AppendConstraint(&(pp->conlist), "service_bundle", (struct Rval) { default_bundle, CF_FNCALL },"any", false);
+   AppendConstraint(&(pp->conlist), "service_bundle", (Rval) { default_bundle, CF_FNCALL },"any", false);
    a.havebundle = true;
    }
 

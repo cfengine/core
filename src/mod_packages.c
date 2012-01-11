@@ -36,7 +36,7 @@
 
 #define CF3_MOD_PACKAGES
 
-struct BodySyntax CF_PKGMETHOD_BODY[] =
+BodySyntax CF_PKGMETHOD_BODY[] =
    {
    {"package_add_command",cf_str,CF_ABSPATHRANGE,"Command to install a package to the system"},
    {"package_arch_regex",cf_str,"","Regular expression with one backreference to extract package architecture string" },
@@ -72,7 +72,7 @@ struct BodySyntax CF_PKGMETHOD_BODY[] =
 
 /* This is the primary set of constraints for an interfaces object */
 
-struct BodySyntax CF_PACKAGES_BODIES[] =
+BodySyntax CF_PACKAGES_BODIES[] =
    {
    {"package_architectures",cf_slist,"","Select the architecture for package selection"},
    {"package_method",cf_body,CF_PKGMETHOD_BODY,"Criteria for installation and verification"},
@@ -86,7 +86,7 @@ struct BodySyntax CF_PACKAGES_BODIES[] =
 /* This is the point of entry from mod_common.c                */
 /***************************************************************/
 
-struct SubTypeSyntax CF_PACKAGES_SUBTYPES[] =
+SubTypeSyntax CF_PACKAGES_SUBTYPES[] =
   {
   {"agent","packages",CF_PACKAGES_BODIES},
   {NULL,NULL,NULL},

@@ -67,10 +67,10 @@ static u_long ConvertBSDBits(char *s);
 
 /***************************************************************/
 
-int ParseFlagString(struct Rlist *bitlist,u_long *plusmask,u_long *minusmask)
+int ParseFlagString(Rlist *bitlist,u_long *plusmask,u_long *minusmask)
 
 { char *flag;
-  struct Rlist *rp;
+  Rlist *rp;
   char operator;
 
 if (bitlist == NULL)

@@ -36,7 +36,7 @@
 
 #define CF3_MOD_INTEFACES
 
-struct BodySyntax CF_TCPIP_BODY[] =
+BodySyntax CF_TCPIP_BODY[] =
    {
    {"ipv4_address",cf_str,"[0-9.]+/[0-4]+","IPv4 address for the interface"},
    {"ipv4_netmask",cf_str,"[0-9.]+/[0-4]+","Netmask for the interface"},
@@ -48,7 +48,7 @@ struct BodySyntax CF_TCPIP_BODY[] =
 
 /* This is the primary set of constraints for an interfaces object */
 
-struct BodySyntax CF_INTERFACES_BODIES[] =
+BodySyntax CF_INTERFACES_BODIES[] =
    {
    {"tcp_ip",cf_body,CF_TCPIP_BODY,"Interface tcp/ip properties"},
    {NULL,cf_notype,NULL,NULL}
@@ -58,7 +58,7 @@ struct BodySyntax CF_INTERFACES_BODIES[] =
 /* This is the point of entry from mod_common.c                */
 /***************************************************************/
 
-struct SubTypeSyntax CF_INTERFACES_SUBTYPES[] =
+SubTypeSyntax CF_INTERFACES_SUBTYPES[] =
   {
   {"agent","interfaces",CF_INTERFACES_BODIES},
   {NULL,NULL,NULL},

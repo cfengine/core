@@ -29,7 +29,7 @@
 #include "cf3.defs.h"
 #include "prototypes3.h"
 
-int PrependPackageItem(struct CfPackageItem **list, const char *name, const char *version, const char *arch,struct Attributes a,struct Promise *pp)
+int PrependPackageItem(struct CfPackageItem **list, const char *name, const char *version, const char *arch,Attributes a,Promise *pp)
 
 { struct CfPackageItem *pi;
 
@@ -64,7 +64,7 @@ return true;
 
 /*****************************************************************************/
 
-int PrependListPackageItem(struct CfPackageItem **list,char *item,struct Attributes a,struct Promise *pp)
+int PrependListPackageItem(struct CfPackageItem **list,char *item,Attributes a,Promise *pp)
 
 { char name[CF_MAXVARSIZE];
   char arch[CF_MAXVARSIZE];

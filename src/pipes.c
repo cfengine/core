@@ -38,7 +38,7 @@ static FILE *Unix_cf_popensetuid(char *command,char *type,uid_t uid,gid_t gid,ch
 static FILE *Unix_cf_popen_sh(char *command,char *type);
 static FILE *Unix_cf_popen_shsetuid(char *command,char *type,uid_t uid,gid_t gid,char *chdirv,char *chrootv);
 static int Unix_cf_pclose(FILE *pp);
-static int Unix_cf_pclose_def(FILE *pfp,struct Attributes a,struct Promise *pp);
+static int Unix_cf_pclose_def(FILE *pfp,Attributes a,Promise *pp);
 static int CfSetuid(uid_t uid,gid_t gid);
 #endif
 
@@ -106,7 +106,7 @@ return Unix_cf_pclose(pp);
 
 /*****************************************************************************/
 
-int cf_pclose_def(FILE *pfp,struct Attributes a,struct Promise *pp)
+int cf_pclose_def(FILE *pfp,Attributes a,Promise *pp)
 
 { 
 #ifdef MINGW
@@ -120,7 +120,7 @@ return Unix_cf_pclose_def(pfp, a, pp);
 /* End pipe API                                                    */
 /*******************************************************************/
 
-int VerifyCommandRetcode(int retcode, int fallback, struct Attributes a, struct Promise *pp)
+int VerifyCommandRetcode(int retcode, int fallback, Attributes a, Promise *pp)
 {
   char retcodeStr[128] = {0};
   int result = true;
@@ -859,7 +859,7 @@ return cf_pwait(pid);
 
 /*******************************************************************/
 
-static int Unix_cf_pclose_def(FILE *pfp,struct Attributes a,struct Promise *pp)
+static int Unix_cf_pclose_def(FILE *pfp,Attributes a,Promise *pp)
 /**
  * Defines command failure/success with cfPS based on exit code.
  */

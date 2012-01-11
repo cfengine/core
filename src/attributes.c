@@ -32,13 +32,13 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static void ShowAttributes(struct Attributes a);
+static void ShowAttributes(Attributes a);
 
 /*******************************************************************/
 
-struct Attributes GetFilesAttributes(struct Promise *pp)
+Attributes GetFilesAttributes(Promise *pp)
 
-{ struct Attributes attr = {{0}};
+{ Attributes attr = {{0}};
  
 memset(&attr,0,sizeof(attr));
 
@@ -128,9 +128,9 @@ return attr;
 
 /*******************************************************************/
 
-struct Attributes GetOutputsAttributes(struct Promise *pp)
+Attributes GetOutputsAttributes(Promise *pp)
 
-{ struct Attributes attr = {{0}};
+{ Attributes attr = {{0}};
 
 attr.transaction = GetTransactionConstraints(pp);
 attr.classes = GetClassDefinitionConstraints(pp);
@@ -142,9 +142,9 @@ return attr;
 
 /*******************************************************************/
 
-struct Attributes GetReportsAttributes(struct Promise *pp)
+Attributes GetReportsAttributes(Promise *pp)
 
-{ struct Attributes attr = {{0}};
+{ Attributes attr = {{0}};
 
 attr.transaction = GetTransactionConstraints(pp);
 attr.classes = GetClassDefinitionConstraints(pp);
@@ -155,9 +155,9 @@ return attr;
 
 /*******************************************************************/
 
-struct Attributes GetEnvironmentsAttributes(struct Promise *pp)
+Attributes GetEnvironmentsAttributes(Promise *pp)
 
-{ struct Attributes attr = {{0}};
+{ Attributes attr = {{0}};
 
 attr.transaction = GetTransactionConstraints(pp);
 attr.classes = GetClassDefinitionConstraints(pp);
@@ -168,9 +168,9 @@ return attr;
 
 /*******************************************************************/
 
-struct Attributes GetServicesAttributes(struct Promise *pp)
+Attributes GetServicesAttributes(Promise *pp)
 
-{ struct Attributes attr = {{0}};
+{ Attributes attr = {{0}};
 
 attr.transaction = GetTransactionConstraints(pp);
 attr.classes = GetClassDefinitionConstraints(pp);
@@ -182,9 +182,9 @@ return attr;
 
 /*******************************************************************/
 
-struct Attributes GetPackageAttributes(struct Promise *pp)
+Attributes GetPackageAttributes(Promise *pp)
 
-{ struct Attributes attr = {{0}};
+{ Attributes attr = {{0}};
  
 attr.transaction = GetTransactionConstraints(pp);
 attr.classes = GetClassDefinitionConstraints(pp);
@@ -194,9 +194,9 @@ return attr;
 
 /*******************************************************************/
 
-struct Attributes GetDatabaseAttributes(struct Promise *pp)
+Attributes GetDatabaseAttributes(Promise *pp)
 
-{ struct Attributes attr = {{0}};
+{ Attributes attr = {{0}};
 
 attr.transaction = GetTransactionConstraints(pp);
 attr.classes = GetClassDefinitionConstraints(pp);
@@ -206,9 +206,9 @@ return attr;
 
 /*******************************************************************/
 
-struct Attributes GetClassContextAttributes(struct Promise *pp)
+Attributes GetClassContextAttributes(Promise *pp)
 
-{ struct Attributes a;
+{ Attributes a;
 
 a.transaction = GetTransactionConstraints(pp);
 a.classes = GetClassDefinitionConstraints(pp);
@@ -219,9 +219,9 @@ return a;
 
 /*******************************************************************/
 
-struct Attributes GetExecAttributes(struct Promise *pp)
+Attributes GetExecAttributes(Promise *pp)
 
-{ struct Attributes attr = {{0}};
+{ Attributes attr = {{0}};
 
 attr.contain = GetExecContainConstraints(pp);
 attr.havecontain = GetBooleanConstraint("contain",pp);
@@ -242,9 +242,9 @@ return attr;
 
 /*******************************************************************/
 
-struct Attributes GetProcessAttributes(struct Promise *pp)
+Attributes GetProcessAttributes(Promise *pp)
 
-{ static struct Attributes attr = {{0}};
+{ static Attributes attr = {{0}};
 
 attr.signals = GetListConstraint("signals",pp);
 attr.process_stop = (char *)GetConstraintValue("process_stop",pp,CF_SCALAR);
@@ -268,9 +268,9 @@ return attr;
 
 /*******************************************************************/
 
-struct Attributes GetStorageAttributes(struct Promise *pp)
+Attributes GetStorageAttributes(Promise *pp)
 
-{ struct Attributes attr = {{0}};
+{ Attributes attr = {{0}};
 
 attr.mount = GetMountConstraints(pp);
 attr.volume = GetVolumeConstraints(pp);
@@ -295,9 +295,9 @@ return attr;
 
 /*******************************************************************/
 
-struct Attributes GetMethodAttributes(struct Promise *pp)
+Attributes GetMethodAttributes(Promise *pp)
 
-{ struct Attributes attr = {{0}};
+{ Attributes attr = {{0}};
 
 attr.havebundle = GetBundleConstraint("usebundle",pp);
 
@@ -314,9 +314,9 @@ return attr;
 
 /*******************************************************************/
 
-struct Attributes GetInterfacesAttributes(struct Promise *pp)
+Attributes GetInterfacesAttributes(Promise *pp)
 
-{ struct Attributes attr = {{0}};
+{ Attributes attr = {{0}};
 
 attr.havetcpip = GetBundleConstraint("usebundle",pp);
 attr.tcpip = GetTCPIPAttributes(pp);
@@ -334,9 +334,9 @@ return attr;
 
 /*******************************************************************/
 
-struct Attributes GetTopicsAttributes(struct Promise *pp)
+Attributes GetTopicsAttributes(Promise *pp)
 
-{ struct Attributes attr = {{0}};
+{ Attributes attr = {{0}};
 
 attr.fwd_name = GetConstraintValue("forward_relationship",pp,CF_SCALAR);
 attr.bwd_name = GetConstraintValue("backward_relationship",pp,CF_SCALAR);
@@ -348,10 +348,10 @@ return attr;
 
 /*******************************************************************/
 
-struct Attributes GetThingsAttributes(struct Promise *pp)
+Attributes GetThingsAttributes(Promise *pp)
 
-{ struct Attributes attr = {{0}};
-  struct Rlist *rp;
+{ Attributes attr = {{0}};
+  Rlist *rp;
   char *cert = GetConstraintValue("certainty",pp,CF_SCALAR);
   enum knowledgecertainty certainty;
 
@@ -579,9 +579,9 @@ return attr;
 
 /*******************************************************************/
 
-struct Attributes GetInferencesAttributes(struct Promise *pp)
+Attributes GetInferencesAttributes(Promise *pp)
 
-{ struct Attributes attr = {{0}};
+{ Attributes attr = {{0}};
 
 attr.precedents = GetListConstraint("precedents",pp);
 attr.qualifiers = GetListConstraint("qualifers",pp);
@@ -590,9 +590,9 @@ return attr;
 
 /*******************************************************************/
 
-struct Attributes GetOccurrenceAttributes(struct Promise *pp)
+Attributes GetOccurrenceAttributes(Promise *pp)
 
-{ struct Attributes attr = {{0}};
+{ Attributes attr = {{0}};
 
 attr.represents = GetListConstraint("represents",pp);
 attr.rep_type = GetConstraintValue("representation",pp,CF_SCALAR);
@@ -604,9 +604,9 @@ return attr;
 
 /*******************************************************************/
 
-struct Attributes GetMeasurementAttributes(struct Promise *pp)
+Attributes GetMeasurementAttributes(Promise *pp)
 
-{ struct Attributes attr = {{0}};
+{ Attributes attr = {{0}};
 
 attr.measure = GetMeasurementConstraint(pp);
     
@@ -625,7 +625,7 @@ return attr;
 /* Level                                                           */
 /*******************************************************************/
 
-struct CfServices GetServicesConstraints(struct Promise *pp)
+struct CfServices GetServicesConstraints(Promise *pp)
 
 { struct CfServices s;
  
@@ -641,7 +641,7 @@ return s;
 
 /*******************************************************************/
 
-struct CfEnvironments GetEnvironmentsConstraints(struct Promise *pp)
+struct CfEnvironments GetEnvironmentsConstraints(Promise *pp)
 
 { struct CfEnvironments e;
 
@@ -662,7 +662,7 @@ return e;
 
 /*******************************************************************/
 
-struct ExecContain GetExecContainConstraints(struct Promise *pp)
+struct ExecContain GetExecContainConstraints(Promise *pp)
 
 { struct ExecContain e;
  
@@ -681,7 +681,7 @@ return e;
 
 /*******************************************************************/
 
-struct Recursion GetRecursionConstraints(struct Promise *pp)
+struct Recursion GetRecursionConstraints(Promise *pp)
 
 { struct Recursion r;
  
@@ -703,9 +703,9 @@ return r;
 
 /*******************************************************************/
 
-struct CfACL GetAclConstraints(struct Promise *pp)
+Acl GetAclConstraints(Promise *pp)
 
-{ struct CfACL ac;
+{ Acl ac;
 
 ac.acl_method = Str2AclMethod(GetConstraintValue("acl_method",pp,CF_SCALAR));
 ac.acl_type = Str2AclType(GetConstraintValue("acl_type",pp,CF_SCALAR));
@@ -717,11 +717,11 @@ return ac;
 
 /*******************************************************************/
 
-struct FilePerms GetPermissionConstraints(struct Promise *pp)
+struct FilePerms GetPermissionConstraints(Promise *pp)
 
 { struct FilePerms p;
   char *value;
-  struct Rlist *list;
+  Rlist *list;
                 
 value = (char *)GetConstraintValue("mode",pp,CF_SCALAR);
 
@@ -746,10 +746,10 @@ if (list && !ParseFlagString(list,&p.plus_flags,&p.minus_flags))
    }
 
 #ifdef MINGW
-p.owners = NovaWin_Rlist2SidList((struct Rlist *)GetConstraintValue("owners",pp,CF_LIST),pp);
+p.owners = NovaWin_Rlist2SidList((Rlist *)GetConstraintValue("owners",pp,CF_LIST),pp);
 #else  /* NOT MINGW */
-p.owners = Rlist2UidList((struct Rlist *)GetConstraintValue("owners",pp,CF_LIST),pp);
-p.groups = Rlist2GidList((struct Rlist *)GetConstraintValue("groups",pp,CF_LIST),pp);
+p.owners = Rlist2UidList((Rlist *)GetConstraintValue("owners",pp,CF_LIST),pp);
+p.groups = Rlist2GidList((Rlist *)GetConstraintValue("groups",pp,CF_LIST),pp);
 #endif  /* NOT MINGW */
 
 p.findertype = (char *)GetConstraintValue("findertype",pp,CF_SCALAR);
@@ -767,19 +767,19 @@ return p;
 
 /*******************************************************************/
 
-struct FileSelect GetSelectConstraints(struct Promise *pp)
+struct FileSelect GetSelectConstraints(Promise *pp)
 
 { struct FileSelect s;
   char *value;
-  struct Rlist *rp;
+  Rlist *rp;
   mode_t plus,minus;
   u_long fplus,fminus;
   int entries = false;
   
-s.name = (struct Rlist *)GetConstraintValue("leaf_name",pp,CF_LIST);
-s.path = (struct Rlist *)GetConstraintValue("path_name",pp,CF_LIST);
-s.filetypes = (struct Rlist *)GetConstraintValue("file_types",pp,CF_LIST);
-s.issymlinkto = (struct Rlist *)GetConstraintValue("issymlinkto",pp,CF_LIST);
+s.name = (Rlist *)GetConstraintValue("leaf_name",pp,CF_LIST);
+s.path = (Rlist *)GetConstraintValue("path_name",pp,CF_LIST);
+s.filetypes = (Rlist *)GetConstraintValue("file_types",pp,CF_LIST);
+s.issymlinkto = (Rlist *)GetConstraintValue("issymlinkto",pp,CF_LIST);
 
 s.perms = GetListConstraint("search_mode",pp);
 
@@ -812,8 +812,8 @@ if (s.name||s.path||s.filetypes||s.issymlinkto||s.perms||s.bsdflags)
    entries = true;
    }
 
-s.owners = (struct Rlist *)GetConstraintValue("search_owners",pp,CF_LIST);
-s.groups = (struct Rlist *)GetConstraintValue("search_groups",pp,CF_LIST);
+s.owners = (Rlist *)GetConstraintValue("search_owners",pp,CF_LIST);
+s.groups = (Rlist *)GetConstraintValue("search_groups",pp,CF_LIST);
 
 value = (char *)GetConstraintValue("search_size",pp,CF_SCALAR);
 if (value)
@@ -865,7 +865,7 @@ return s;
 
 /*******************************************************************/
 
-struct TransactionContext GetTransactionConstraints(struct Promise *pp)
+struct TransactionContext GetTransactionConstraints(Promise *pp)
 
 { struct TransactionContext t;
  char *value;
@@ -932,25 +932,25 @@ return t;
 
 /*******************************************************************/
 
-struct DefineClasses GetClassDefinitionConstraints(struct Promise *pp)
+struct DefineClasses GetClassDefinitionConstraints(Promise *pp)
 
 { struct DefineClasses c;
  char *pt = NULL;
 
-c.change = (struct Rlist *)GetListConstraint("promise_repaired",pp);
-c.failure = (struct Rlist *)GetListConstraint("repair_failed",pp);
-c.denied = (struct Rlist *)GetListConstraint("repair_denied",pp);
-c.timeout = (struct Rlist *)GetListConstraint("repair_timeout",pp);
-c.kept = (struct Rlist *)GetListConstraint("promise_kept",pp);
-c.interrupt = (struct Rlist *)GetListConstraint("on_interrupt",pp);
+c.change = (Rlist *)GetListConstraint("promise_repaired",pp);
+c.failure = (Rlist *)GetListConstraint("repair_failed",pp);
+c.denied = (Rlist *)GetListConstraint("repair_denied",pp);
+c.timeout = (Rlist *)GetListConstraint("repair_timeout",pp);
+c.kept = (Rlist *)GetListConstraint("promise_kept",pp);
+c.interrupt = (Rlist *)GetListConstraint("on_interrupt",pp);
 
-c.del_change = (struct Rlist *)GetListConstraint("cancel_repaired",pp);
-c.del_kept = (struct Rlist *)GetListConstraint("cancel_kept",pp);
-c.del_notkept = (struct Rlist *)GetListConstraint("cancel_notkept",pp);
+c.del_change = (Rlist *)GetListConstraint("cancel_repaired",pp);
+c.del_kept = (Rlist *)GetListConstraint("cancel_kept",pp);
+c.del_notkept = (Rlist *)GetListConstraint("cancel_notkept",pp);
 
-c.retcode_kept = (struct Rlist *)GetListConstraint("kept_returncodes",pp);
-c.retcode_repaired = (struct Rlist *)GetListConstraint("repaired_returncodes",pp);
-c.retcode_failed = (struct Rlist *)GetListConstraint("failed_returncodes",pp);
+c.retcode_kept = (Rlist *)GetListConstraint("kept_returncodes",pp);
+c.retcode_repaired = (Rlist *)GetListConstraint("repaired_returncodes",pp);
+c.retcode_failed = (Rlist *)GetListConstraint("failed_returncodes",pp);
 
 c.persist = GetIntConstraint("persist_time",pp);
 
@@ -975,7 +975,7 @@ return c;
 
 /*******************************************************************/
 
-struct FileDelete GetDeleteConstraints(struct Promise *pp)
+struct FileDelete GetDeleteConstraints(Promise *pp)
 
 { struct FileDelete f;
   char *value;
@@ -997,7 +997,7 @@ return f;
 
 /*******************************************************************/
 
-struct FileRename GetRenameConstraints(struct Promise *pp)
+struct FileRename GetRenameConstraints(Promise *pp)
 
 { struct FileRename r;
   char *value;
@@ -1020,7 +1020,7 @@ return r;
 
 /*******************************************************************/
 
-struct FileChange GetChangeMgtConstraints(struct Promise *pp)
+struct FileChange GetChangeMgtConstraints(Promise *pp)
 
 { struct FileChange c;
   char *value;
@@ -1100,7 +1100,7 @@ return c;
 
 /*******************************************************************/
 
-struct FileCopy GetCopyConstraints(struct Promise *pp)
+struct FileCopy GetCopyConstraints(Promise *pp)
 
 { struct FileCopy f;
   char *value;
@@ -1166,7 +1166,7 @@ return f;
 
 /*******************************************************************/
 
-struct FileLink GetLinkConstraints(struct Promise *pp)
+struct FileLink GetLinkConstraints(Promise *pp)
 
 { struct FileLink f;
   char *value;
@@ -1209,7 +1209,7 @@ return f;
 
 /*******************************************************************/
 
-struct EditDefaults GetEditDefaults(struct Promise *pp)
+struct EditDefaults GetEditDefaults(Promise *pp)
 
 { struct EditDefaults e = { 0 };
   char *value;
@@ -1250,10 +1250,10 @@ return e;
 
 /*******************************************************************/
 
-struct Context GetContextConstraints(struct Promise *pp)
+struct Context GetContextConstraints(Promise *pp)
 
 { struct Context a;
-  struct Constraint *cp;
+  Constraint *cp;
   int i;
 
 a.nconstraints = 0;
@@ -1276,7 +1276,7 @@ return a;
 
 /*******************************************************************/
 
-struct Packages GetPackageConstraints(struct Promise *pp)
+struct Packages GetPackageConstraints(Promise *pp)
 
 { struct Packages p;
   enum package_actions action;
@@ -1340,7 +1340,7 @@ return p;
 
 /*******************************************************************/
 
-struct ProcessSelect GetProcessFilterConstraints(struct Promise *pp)
+struct ProcessSelect GetProcessFilterConstraints(Promise *pp)
 
 { struct ProcessSelect p;
   char *value;
@@ -1440,7 +1440,7 @@ return p;
 
 /*******************************************************************/
 
-struct ProcessCount GetMatchesConstraints(struct Promise *pp)
+struct ProcessCount GetMatchesConstraints(Promise *pp)
 
 { struct ProcessCount p;
   char *value;
@@ -1455,7 +1455,7 @@ return p;
 
 /*******************************************************************/
 
-static void ShowAttributes(struct Attributes a)
+static void ShowAttributes(Attributes a)
 
 {
 printf(".....................................................\n");
@@ -1497,9 +1497,9 @@ printf(".....................................................\n\n");
 /* Edit sub-bundles have their own attributes                      */
 /*******************************************************************/
 
-struct Attributes GetInsertionAttributes(struct Promise *pp)
+Attributes GetInsertionAttributes(Promise *pp)
 
-{ struct Attributes attr = {{0}};
+{ Attributes attr = {{0}};
 
 attr.havelocation = GetBooleanConstraint("location",pp);
 attr.location = GetLocationAttributes(pp);
@@ -1528,7 +1528,7 @@ return attr;
 
 /*******************************************************************/
 
-struct EditLocation GetLocationAttributes(struct Promise *pp)
+struct EditLocation GetLocationAttributes(Promise *pp)
 
 { struct EditLocation e;
   char *value;
@@ -1552,9 +1552,9 @@ return e;
 
 /*******************************************************************/
 
-struct Attributes GetDeletionAttributes(struct Promise *pp)
+Attributes GetDeletionAttributes(Promise *pp)
 
-{ struct Attributes attr = {{0}};
+{ Attributes attr = {{0}};
 
 attr.not_matching = GetBooleanConstraint("not_matching",pp);
 
@@ -1577,9 +1577,9 @@ return attr;
 
 /*******************************************************************/
 
-struct Attributes GetColumnAttributes(struct Promise *pp)
+Attributes GetColumnAttributes(Promise *pp)
 
-{ struct Attributes attr = {{0}};
+{ Attributes attr = {{0}};
 
 attr.havecolumn = GetBooleanConstraint("edit_field",pp);
 attr.column = GetColumnConstraints(pp);
@@ -1600,9 +1600,9 @@ return attr;
 
 /*******************************************************************/
 
-struct Attributes GetReplaceAttributes(struct Promise *pp)
+Attributes GetReplaceAttributes(Promise *pp)
 
-{ struct Attributes attr = {{0}};
+{ Attributes attr = {{0}};
 
 attr.havereplace = GetBooleanConstraint("replace_patterns",pp);
 attr.replace = GetReplaceConstraints(pp);
@@ -1626,7 +1626,7 @@ return attr;
 
 /*******************************************************************/
 
-struct EditRegion GetRegionConstraints(struct Promise *pp)
+struct EditRegion GetRegionConstraints(Promise *pp)
 
 { struct EditRegion e;
 
@@ -1639,7 +1639,7 @@ return e;
 
 /*******************************************************************/
 
-struct EditReplace GetReplaceConstraints(struct Promise *pp)
+struct EditReplace GetReplaceConstraints(Promise *pp)
 
 { struct EditReplace r;
 
@@ -1651,7 +1651,7 @@ return r;
 
 /*******************************************************************/
 
-struct EditColumn GetColumnConstraints(struct Promise *pp)
+struct EditColumn GetColumnConstraints(Promise *pp)
 
 { struct EditColumn c;
  char *value;
@@ -1686,7 +1686,7 @@ return c;
 /* Storage                                                         */
 /*******************************************************************/
 
-struct StorageMount GetMountConstraints(struct Promise *pp)
+struct StorageMount GetMountConstraints(Promise *pp)
 
 { struct StorageMount m;
 
@@ -1702,7 +1702,7 @@ return m;
 
 /*******************************************************************/
 
-struct StorageVolume GetVolumeConstraints(struct Promise *pp)
+struct StorageVolume GetVolumeConstraints(Promise *pp)
 
 { struct StorageVolume v;
   char *value;
@@ -1734,7 +1734,7 @@ return v;
 
 /*******************************************************************/
 
-struct CfTcpIp GetTCPIPAttributes(struct Promise *pp)
+struct CfTcpIp GetTCPIPAttributes(Promise *pp)
 
 { struct CfTcpIp t;
 
@@ -1746,7 +1746,7 @@ return t;
 
 /*******************************************************************/
 
-struct Report GetReportConstraints(struct Promise *pp)
+struct Report GetReportConstraints(Promise *pp)
 
 { struct Report r;
 
@@ -1793,7 +1793,7 @@ return r;
 
 /*******************************************************************/
 
-struct LineSelect GetInsertSelectConstraints(struct Promise *pp)
+struct LineSelect GetInsertSelectConstraints(Promise *pp)
 
 { struct LineSelect s;
 
@@ -1809,7 +1809,7 @@ return s;
 
 /*******************************************************************/
 
-struct LineSelect GetDeleteSelectConstraints(struct Promise *pp)
+struct LineSelect GetDeleteSelectConstraints(Promise *pp)
 
 { struct LineSelect s;
 
@@ -1825,7 +1825,7 @@ return s;
 
 /*******************************************************************/
 
-struct Measurement GetMeasurementConstraint(struct Promise *pp)
+struct Measurement GetMeasurementConstraint(Promise *pp)
 
 { struct Measurement m;
   char *value;
@@ -1852,7 +1852,7 @@ return m;
 
 /*******************************************************************/
 
-struct CfDatabase GetDatabaseConstraints(struct Promise *pp)
+struct CfDatabase GetDatabaseConstraints(Promise *pp)
 
 { struct CfDatabase d;
   char *value;

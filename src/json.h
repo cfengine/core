@@ -25,11 +25,12 @@
 #ifndef CFENGINE_JSON_H
 #define CFENGINE_JSON_H
 
-typedef struct Rlist JsonObject;
-typedef struct Rlist JsonArray;
-
 #include "cf3.defs.h"
+#include "rlist.h"
 #include "writer.h"
+
+typedef Rlist JsonObject;
+typedef Rlist JsonArray;
 
 void JsonObjectDelete(JsonObject *object);
 void JsonArrayDelete(JsonArray *array);

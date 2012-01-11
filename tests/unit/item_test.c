@@ -6,7 +6,7 @@
 
 static void test_prepend_item(void **state)
 {
-struct Item *ip = NULL, *list = NULL;
+Item *ip = NULL, *list = NULL;
 ip = PrependItem(&list, "hello", "classes");
 assert_int_not_equal(ip, NULL);
 assert_int_not_equal(list, NULL);
@@ -16,7 +16,7 @@ assert_int_equal(list, NULL);
 
 static void test_list_len(void **state)
 {
-struct Item *list = NULL;
+Item *list = NULL;
 PrependItem(&list, "one", "classes");
 PrependItem(&list, "two", NULL);
 PrependItem(&list, "three", NULL);
@@ -26,7 +26,7 @@ DeleteItemList(list);
 
 static void test_list_select_last_matching_finds_first(void **state)
 {
-struct Item *list = NULL, *match = NULL, *prev = NULL;
+Item *list = NULL, *match = NULL, *prev = NULL;
 bool result = false;
 
 AppendItem(&list, "abc", NULL);
@@ -43,7 +43,7 @@ DeleteItemList(list);
 
 static void test_list_select_last_matching_finds_last(void **state)
 {
-struct Item *list = NULL, *match = NULL, *prev = NULL;
+Item *list = NULL, *match = NULL, *prev = NULL;
 bool result;
 
 AppendItem(&list, "abc", NULL);
@@ -60,7 +60,7 @@ DeleteItemList(list);
 
 static void test_list_select_last_matching_not_found(void **state)
 {
-struct Item *list = NULL, *match = NULL, *prev = NULL;
+Item *list = NULL, *match = NULL, *prev = NULL;
 bool result;
 
 AppendItem(&list, "abc", NULL);

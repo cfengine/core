@@ -32,21 +32,21 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-extern struct cfagent_connection *COMS;
+extern AgentConnection *COMS;
 
 static void TruncateFile(char *name);
 #ifdef DARWIN
-static int VerifyFinderType(char *file,struct stat *statbuf,struct Attributes a,struct Promise *pp);
+static int VerifyFinderType(char *file,struct stat *statbuf,Attributes a,Promise *pp);
 #endif
-static int TransformFile(char *file,struct Attributes attr,struct Promise *pp);
-static void VerifyName(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp);
-static void VerifyDelete(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp);
-static void DeleteDirectoryTree(char *path,struct Promise *pp);
+static int TransformFile(char *file,Attributes attr,Promise *pp);
+static void VerifyName(char *path,struct stat *sb,Attributes attr,Promise *pp);
+static void VerifyDelete(char *path,struct stat *sb,Attributes attr,Promise *pp);
+static void DeleteDirectoryTree(char *path,Promise *pp);
 #ifndef MINGW
-static void VerifySetUidGid(char *file,struct stat *dstat,mode_t newperm,struct Promise *pp,struct Attributes attr);
-static int Unix_VerifyOwner(char *file,struct Promise *pp,struct Attributes attr,struct stat *sb);
-static void Unix_VerifyCopiedFileAttributes(char *file,struct stat *dstat,struct stat *sstat,struct Attributes attr,struct Promise *pp);
-static void Unix_VerifyFileAttributes(char *file,struct stat *dstat,struct Attributes attr,struct Promise *pp);
+static void VerifySetUidGid(char *file,struct stat *dstat,mode_t newperm,Promise *pp,Attributes attr);
+static int Unix_VerifyOwner(char *file,Promise *pp,Attributes attr,struct stat *sb);
+static void Unix_VerifyCopiedFileAttributes(char *file,struct stat *dstat,struct stat *sstat,Attributes attr,Promise *pp);
+static void Unix_VerifyFileAttributes(char *file,struct stat *dstat,Attributes attr,Promise *pp);
 #endif
 
 /*******************************************************************/
@@ -65,7 +65,7 @@ Unix_CreateEmptyFile(name);
 
 /*****************************************************************************/
 
-int VerifyOwner(char *file,struct Promise *pp,struct Attributes attr,struct stat *sb)
+int VerifyOwner(char *file,Promise *pp,Attributes attr,struct stat *sb)
 
 {
 #ifdef MINGW
@@ -77,7 +77,7 @@ return Unix_VerifyOwner(file,pp,attr,sb);
 
 /*****************************************************************************/
 
-void VerifyFileAttributes(char *file,struct stat *dstat,struct Attributes attr,struct Promise *pp)
+void VerifyFileAttributes(char *file,struct stat *dstat,Attributes attr,Promise *pp)
 
 {
 #ifdef MINGW
@@ -89,7 +89,7 @@ Unix_VerifyFileAttributes(file,dstat,attr,pp);
 
 /*****************************************************************************/
 
-void VerifyCopiedFileAttributes(char *file,struct stat *dstat,struct stat *sstat,struct Attributes attr,struct Promise *pp)
+void VerifyCopiedFileAttributes(char *file,struct stat *dstat,struct stat *sstat,Attributes attr,Promise *pp)
 
 {
 #ifdef MINGW
@@ -103,7 +103,7 @@ Unix_VerifyCopiedFileAttributes(file,dstat,sstat,attr,pp);
 /* End file API                                                    */
 /*******************************************************************/
 
-int VerifyFileLeaf(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp)
+int VerifyFileLeaf(char *path,struct stat *sb,Attributes attr,Promise *pp)
 
 {
 /* Here we can assume that we are in the parent directory of the leaf */
@@ -191,7 +191,7 @@ return fp;
 
 /*****************************************************************************/
 
-int CfCreateFile(char *file,struct Promise *pp,struct Attributes attr)
+int CfCreateFile(char *file,Promise *pp,Attributes attr)
 
 { int fd;
 
@@ -270,9 +270,9 @@ return true;
 
 /*****************************************************************************/
 
-int ScheduleCopyOperation(char *destination,struct Attributes attr,struct Promise *pp)
+int ScheduleCopyOperation(char *destination,Attributes attr,Promise *pp)
 
-{ struct cfagent_connection *conn = NULL;
+{ AgentConnection *conn = NULL;
 
 CfOut(cf_verbose,""," -> Copy file %s from %s check\n",destination,attr.copy.source);
 
@@ -302,9 +302,9 @@ return true;
 
 /*****************************************************************************/
 
-int ScheduleLinkChildrenOperation(char *destination,char *source,int recurse,struct Attributes attr,struct Promise *pp)
+int ScheduleLinkChildrenOperation(char *destination,char *source,int recurse,Attributes attr,Promise *pp)
 
-{ CFDIR *dirh;
+{ Dir *dirh;
   const struct dirent *dirp;
   char promiserpath[CF_BUFSIZE],sourcepath[CF_BUFSIZE];
   struct stat lsb;
@@ -395,7 +395,7 @@ return true;
 
 /*****************************************************************************/
 
-int ScheduleLinkOperation(char *destination,char *source,struct Attributes attr,struct Promise *pp)
+int ScheduleLinkOperation(char *destination,char *source,Attributes attr,Promise *pp)
 
 {
 const char *lastnode;
@@ -433,13 +433,13 @@ return true;
 
 /*****************************************************************************/
 
-int ScheduleEditOperation(char *filename,struct Attributes a,struct Promise *pp)
+int ScheduleEditOperation(char *filename,Attributes a,Promise *pp)
 
-{ struct Bundle *bp;
+{ Bundle *bp;
   void *vp;
-  struct FnCall *fp;
+  FnCall *fp;
   char *edit_bundle_name = NULL,lockname[CF_BUFSIZE];
-  struct Rlist *params;
+  Rlist *params;
   int retval = false;
   struct CfLock thislock;
 
@@ -465,7 +465,7 @@ if (a.haveeditline)
    {
    if ((vp = GetConstraintValue("edit_line",pp,CF_FNCALL)))
       {
-      fp = (struct FnCall *)vp;
+      fp = (FnCall *)vp;
       edit_bundle_name = fp->name;
       params = fp->args;
       }
@@ -515,7 +515,7 @@ return retval;
 /* Level                                                                     */
 /*****************************************************************************/
 
-int MoveObstruction(char *from,struct Attributes attr,struct Promise *pp)
+int MoveObstruction(char *from,Attributes attr,Promise *pp)
 
 { struct stat sb;
   char stamp[CF_BUFSIZE],saved[CF_BUFSIZE];
@@ -602,7 +602,7 @@ return true;
 
 #ifdef DARWIN
 
-static int VerifyFinderType(char *file,struct stat *statbuf,struct Attributes a,struct Promise *pp)
+static int VerifyFinderType(char *file,struct stat *statbuf,Attributes a,Promise *pp)
 
 { /* Code modeled after hfstar's extract.c */
  typedef struct t_fndrinfo
@@ -710,7 +710,7 @@ else
 /* Level                                                             */
 /*********************************************************************/
 
-static void VerifyName(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp)
+static void VerifyName(char *path,struct stat *sb,Attributes attr,Promise *pp)
 
 { mode_t newperm;
   struct stat dsb;
@@ -917,7 +917,7 @@ if (attr.rename.rotate > 0)
 
 /*********************************************************************/
 
-static void VerifyDelete(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp)
+static void VerifyDelete(char *path,struct stat *sb,Attributes attr,Promise *pp)
 
 { const char *lastnode = ReadLastNode(path);
   char buf[CF_MAXVARSIZE];
@@ -998,7 +998,7 @@ else
 
 /*********************************************************************/
 
-void TouchFile(char *path,struct stat *sb,struct Attributes attr,struct Promise *pp)
+void TouchFile(char *path,struct stat *sb,Attributes attr,Promise *pp)
 {
 if (! DONTDO)
    {
@@ -1019,7 +1019,7 @@ else
 
 /*********************************************************************/
 
-void VerifyFileIntegrity(char *file,struct Attributes attr,struct Promise *pp)
+void VerifyFileIntegrity(char *file,Attributes attr,Promise *pp)
 
 { unsigned char digest1[EVP_MAX_MD_SIZE+1];
   unsigned char digest2[EVP_MAX_MD_SIZE+1];
@@ -1076,7 +1076,7 @@ if (attr.change.report_diffs)
 
 /*********************************************************************/
 
-void VerifyFileChanges(char *file,struct stat *sb,struct Attributes attr,struct Promise *pp)
+void VerifyFileChanges(char *file,struct stat *sb,Attributes attr,Promise *pp)
 
 { struct stat cmpsb;
   CF_DB *dbp;
@@ -1213,7 +1213,7 @@ CloseDB(dbp);
 /* Level                                                             */
 /*********************************************************************/
 
-static int TransformFile(char *file,struct Attributes attr,struct Promise *pp)
+static int TransformFile(char *file,Attributes attr,Promise *pp)
 
 { char comm[CF_EXPANDSIZE],line[CF_BUFSIZE];
   FILE *pop = NULL;
@@ -1559,8 +1559,8 @@ void RotateFiles(char *name,int number)
 { int i, fd;
   struct stat statbuf;
   char from[CF_BUFSIZE],to[CF_BUFSIZE];
-  struct Attributes attr = {{0}};
-  struct Promise dummyp = {0};
+  Attributes attr = {{0}};
+  Promise dummyp = {0};
 
 if (IsItemIn(ROTATED,name))
    {
@@ -1649,16 +1649,16 @@ else
 /* Level                                                           */
 /*******************************************************************/
 
-static void DeleteDirectoryTree(char *path,struct Promise *pp)
+static void DeleteDirectoryTree(char *path,Promise *pp)
 
-{ struct Promise promise = {0};
+{ Promise promise = {0};
   char s[CF_MAXVARSIZE];
   time_t now = time(NULL);
 
 // Check that tree is a directory
 
 promise.promiser = path;
-promise.promisee = (struct Rval) {  NULL, CF_NOPROMISEE };
+promise.promisee = (Rval) {  NULL, CF_NOPROMISEE };
 promise.classes = "any";
 
 if (pp != NULL)
@@ -1687,16 +1687,16 @@ promise.conlist = NULL;
 
 snprintf(s,CF_MAXVARSIZE,"0,%ld",(long)now);
 
-AppendConstraint(&(promise.conlist), "action", (struct Rval) { "true", CF_SCALAR }, "any", false);
-AppendConstraint(&(promise.conlist), "ifelapsed", (struct Rval) { "0", CF_SCALAR }, "any", false);
-AppendConstraint(&(promise.conlist), "delete", (struct Rval) { "true", CF_SCALAR }, "any", false);
-AppendConstraint(&(promise.conlist), "dirlinks", (struct Rval) { "delete", CF_SCALAR }, "any", false);
-AppendConstraint(&(promise.conlist), "rmdirs", (struct Rval) { "true", CF_SCALAR }, "any", false);
-AppendConstraint(&(promise.conlist), "depth_search", (struct Rval) { "true", CF_SCALAR }, "any", false);
-AppendConstraint(&(promise.conlist), "depth", (struct Rval) { "inf", CF_SCALAR }, "any", false);
-AppendConstraint(&(promise.conlist), "file_select", (struct Rval) { "true", CF_SCALAR }, "any", false);
-AppendConstraint(&(promise.conlist), "mtime", (struct Rval) { s, CF_SCALAR }, "any", false);
-AppendConstraint(&(promise.conlist), "file_result", (struct Rval) { "mtime", CF_SCALAR } , "any", false);
+AppendConstraint(&(promise.conlist), "action", (Rval) { "true", CF_SCALAR }, "any", false);
+AppendConstraint(&(promise.conlist), "ifelapsed", (Rval) { "0", CF_SCALAR }, "any", false);
+AppendConstraint(&(promise.conlist), "delete", (Rval) { "true", CF_SCALAR }, "any", false);
+AppendConstraint(&(promise.conlist), "dirlinks", (Rval) { "delete", CF_SCALAR }, "any", false);
+AppendConstraint(&(promise.conlist), "rmdirs", (Rval) { "true", CF_SCALAR }, "any", false);
+AppendConstraint(&(promise.conlist), "depth_search", (Rval) { "true", CF_SCALAR }, "any", false);
+AppendConstraint(&(promise.conlist), "depth", (Rval) { "inf", CF_SCALAR }, "any", false);
+AppendConstraint(&(promise.conlist), "file_select", (Rval) { "true", CF_SCALAR }, "any", false);
+AppendConstraint(&(promise.conlist), "mtime", (Rval) { s, CF_SCALAR }, "any", false);
+AppendConstraint(&(promise.conlist), "file_result", (Rval) { "mtime", CF_SCALAR } , "any", false);
 VerifyFilePromise(promise.promiser,&promise);
 rmdir(path);
 }
@@ -1707,7 +1707,7 @@ rmdir(path);
 /* Unix-specific implementations of file functions                 */
 /*******************************************************************/
 
-static void VerifySetUidGid(char *file,struct stat *dstat,mode_t newperm,struct Promise *pp,struct Attributes attr)
+static void VerifySetUidGid(char *file,struct stat *dstat,mode_t newperm,Promise *pp,Attributes attr)
 
 { int amroot = true;
 
@@ -1794,12 +1794,12 @@ if (dstat->st_uid == 0 && (dstat->st_mode & S_ISGID))
 
 /*****************************************************************************/
 
-static int Unix_VerifyOwner(char *file,struct Promise *pp,struct Attributes attr,struct stat *sb)
+static int Unix_VerifyOwner(char *file,Promise *pp,Attributes attr,struct stat *sb)
 
 { struct passwd *pw;
   struct group *gp;
-  struct UidList *ulp;
-  struct GidList *glp;
+  UidList *ulp;
+  GidList *glp;
   short uidmatch = false, gidmatch = false;
   uid_t uid = CF_SAME_OWNER;
   gid_t gid = CF_SAME_GROUP;
@@ -1952,10 +1952,10 @@ return false;
 
 /*********************************************************************/
 
-struct UidList *MakeUidList(char *uidnames)
+UidList *MakeUidList(char *uidnames)
 
-{ struct UidList *uidlist;
-  struct Item *ip, *tmplist;
+{ UidList *uidlist;
+  Item *ip, *tmplist;
   char uidbuff[CF_BUFSIZE];
   char *sp;
   int offset;
@@ -2053,9 +2053,9 @@ return (uidlist);
 
 /*********************************************************************/
 
-struct GidList *MakeGidList(char *gidnames)
+GidList *MakeGidList(char *gidnames)
 
-{ struct GidList *gidlist;
+{ GidList *gidlist;
   char gidbuff[CF_BUFSIZE];
   char *sp, *groupcopy=NULL;
   struct group *gr;
@@ -2110,7 +2110,7 @@ return(gidlist);
 
 /*****************************************************************************/
 
-static void Unix_VerifyFileAttributes(char *file,struct stat *dstat,struct Attributes attr,struct Promise *pp)
+static void Unix_VerifyFileAttributes(char *file,struct stat *dstat,Attributes attr,Promise *pp)
 
 { mode_t newperm = dstat->st_mode, maskvalue;
 
@@ -2294,7 +2294,7 @@ CfDebug("Unix_VerifyFileAttributes(Done)\n");
 
 /*****************************************************************************/
 
-static void Unix_VerifyCopiedFileAttributes(char *file,struct stat *dstat,struct stat *sstat,struct Attributes attr,struct Promise *pp)
+static void Unix_VerifyCopiedFileAttributes(char *file,struct stat *dstat,struct stat *sstat,Attributes attr,Promise *pp)
 
 { mode_t newplus,newminus;
   uid_t save_uid;
@@ -2357,10 +2357,10 @@ else
 
 /*******************************************************************/
 
-void AddSimpleUidItem(struct UidList **uidlist,uid_t uid,char *uidname)
+void AddSimpleUidItem(UidList **uidlist,uid_t uid,char *uidname)
 
 {
-struct UidList *ulp = xcalloc(1, sizeof(struct UidList));
+UidList *ulp = xcalloc(1, sizeof(UidList));
 
 ulp->uid = uid;
 
@@ -2375,7 +2375,7 @@ if (*uidlist == NULL)
    }
 else
    {
-   struct UidList *u;
+   UidList *u;
 
    for (u = *uidlist; u->next != NULL; u = u->next)
       {
@@ -2386,10 +2386,10 @@ else
 
 /*******************************************************************/
 
-void AddSimpleGidItem(struct GidList **gidlist,gid_t gid,char *gidname)
+void AddSimpleGidItem(GidList **gidlist,gid_t gid,char *gidname)
 
 {
-struct GidList *glp = xcalloc(1, sizeof(struct GidList));
+GidList *glp = xcalloc(1, sizeof(GidList));
 
 glp->gid = gid;
 
@@ -2404,7 +2404,7 @@ if (*gidlist == NULL)
    }
 else
    {
-   struct GidList *g;
+   GidList *g;
 
    for (g = *gidlist; g->next != NULL; g = g->next)
       {

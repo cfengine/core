@@ -37,7 +37,7 @@ static int ReadHash(CF_DB *dbp,enum cfhashes type,char *name,unsigned char diges
 static int WriteHash(CF_DB *dbp,enum cfhashes type,char *name,unsigned char digest[EVP_MAX_MD_SIZE+1]);
 static char *NewIndexKey(char type,char *name, int *size);
 static void DeleteIndexKey(char *key);
-static void DeleteHashValue(struct Checksum_Value *value);
+static void DeleteHashValue(ChecksumValue *value);
 static int FileHashSize(enum cfhashes id);
 
 /*******************************************************************/
@@ -105,7 +105,7 @@ return (h & (hashtablesize-1));
 
 /*****************************************************************************/
 
-int FileHashChanged(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],int warnlevel,enum cfhashes type,struct Attributes attr,struct Promise *pp)
+int FileHashChanged(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],int warnlevel,enum cfhashes type,Attributes attr,Promise *pp)
 
 /* Returns false if filename never seen before, and adds a checksum
    to the database. Returns true if hashes do not match and also potentially
@@ -190,7 +190,7 @@ else
 
 /*******************************************************************/
 
-int CompareFileHashes(char *file1,char *file2,struct stat *sstat,struct stat *dstat,struct Attributes attr,struct Promise *pp)
+int CompareFileHashes(char *file1,char *file2,struct stat *sstat,struct stat *dstat,Attributes attr,Promise *pp)
 
 { static unsigned char digest1[EVP_MAX_MD_SIZE+1], digest2[EVP_MAX_MD_SIZE+1];
   int i;
@@ -227,7 +227,7 @@ else
 
 /*******************************************************************/
 
-int CompareBinaryFiles(char *file1,char *file2,struct stat *sstat,struct stat *dstat,struct Attributes attr,struct Promise *pp)
+int CompareBinaryFiles(char *file1,char *file2,struct stat *sstat,struct stat *dstat,Attributes attr,Promise *pp)
 
 { int fd1, fd2,bytes1,bytes2;
   char buff1[BUFSIZ],buff2[BUFSIZ];
@@ -463,7 +463,7 @@ return buffer;
 
 /***************************************************************/
 
-void PurgeHashes(char *path,struct Attributes attr,struct Promise *pp)
+void PurgeHashes(char *path,Attributes attr,Promise *pp)
 
 /* Go through the database and purge records about non-existent files */
 
@@ -537,11 +537,11 @@ static int ReadHash(CF_DB *dbp,enum cfhashes type,char *name,unsigned char diges
 
 { char *key;
   int size;
-  struct Checksum_Value chk_val;
+  ChecksumValue chk_val;
 
 key = NewIndexKey(type,name,&size);
 
-if (ReadComplexKeyDB(dbp,key,size,(void *)&chk_val,sizeof(struct Checksum_Value)))
+if (ReadComplexKeyDB(dbp,key,size,(void *)&chk_val,sizeof(ChecksumValue)))
    {
    memset(digest,0,EVP_MAX_MD_SIZE+1);
    memcpy(digest,chk_val.mess_digest,EVP_MAX_MD_SIZE+1);
@@ -560,12 +560,12 @@ else
 static int WriteHash(CF_DB *dbp,enum cfhashes type,char *name,unsigned char digest[EVP_MAX_MD_SIZE+1])
 
 { char *key;
-  struct Checksum_Value *value;
+  ChecksumValue *value;
   int ret, keysize;
 
 key = NewIndexKey(type,name,&keysize);
 value = NewHashValue(digest);
-ret = WriteComplexKeyDB(dbp,key,keysize,value,sizeof(struct Checksum_Value));
+ret = WriteComplexKeyDB(dbp,key,keysize,value,sizeof(ChecksumValue));
 DeleteIndexKey(key);
 DeleteHashValue(value);
 return ret;
@@ -614,11 +614,11 @@ free(key);
 
 /*****************************************************************************/
 
-struct Checksum_Value *NewHashValue(unsigned char digest[EVP_MAX_MD_SIZE+1])
+ChecksumValue *NewHashValue(unsigned char digest[EVP_MAX_MD_SIZE+1])
     
-{ struct Checksum_Value *chk_val;
+{ ChecksumValue *chk_val;
 
-chk_val = xcalloc(1, sizeof(struct Checksum_Value));
+chk_val = xcalloc(1, sizeof(ChecksumValue));
 
 memcpy(chk_val->mess_digest,digest,EVP_MAX_MD_SIZE+1);
 
@@ -629,7 +629,7 @@ return chk_val;
 
 /*****************************************************************************/
 
-static void DeleteHashValue(struct Checksum_Value *chk_val)
+static void DeleteHashValue(ChecksumValue *chk_val)
 
 {
 free((char *)chk_val);

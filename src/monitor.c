@@ -37,7 +37,7 @@
 
 extern int NO_FORK;
 
-extern struct BodySyntax CFM_CONTROLBODY[];
+extern BodySyntax CFM_CONTROLBODY[];
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -88,7 +88,7 @@ const char *HINTS[14] =
 
 int main(int argc,char *argv[])
 {
-struct GenericAgentConfig config = CheckOpts(argc,argv);
+GenericAgentConfig config = CheckOpts(argc,argv);
 GenericInitialize(argc,argv,"monitor", config);
 ThisAgentInit();
 KeepPromises(config);
@@ -99,12 +99,12 @@ return 0;
 
 /*******************************************************************/
 
-struct GenericAgentConfig CheckOpts(int argc,char **argv)
+GenericAgentConfig CheckOpts(int argc,char **argv)
 {
 extern char *optarg;
 int optindex = 0;
 int c;
-struct GenericAgentConfig config = GenericAgentDefaultConfig(cf_monitor);
+GenericAgentConfig config = GenericAgentDefaultConfig(cf_monitor);
 
 while ((c=getopt_long(argc,argv,"d:vnIf:VSxHTKMF",OPTIONS,&optindex)) != EOF)
    {
@@ -165,10 +165,10 @@ return config;
 
 /*****************************************************************************/
 
-void KeepPromises(struct GenericAgentConfig config)
+void KeepPromises(GenericAgentConfig config)
 {
-struct Constraint *cp;
-struct Rval retval;
+Constraint *cp;
+Rval retval;
 
 for (cp = ControlBodyConstraints(cf_monitor); cp != NULL; cp=cp->next)
    {

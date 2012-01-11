@@ -34,7 +34,7 @@
 
 /*****************************************************************************/
 
-void *CopyFileSources(char *destination,struct Attributes attr,struct Promise *pp)
+void *CopyFileSources(char *destination,Attributes attr,Promise *pp)
 
 { char *source = attr.copy.source;
   char *server = pp->this_server;
@@ -116,7 +116,7 @@ return NULL;
 /* Local low level                                                           */
 /*****************************************************************************/
 
-void CheckForFileHoles(struct stat *sstat,struct Promise *pp)
+void CheckForFileHoles(struct stat *sstat,Promise *pp)
 
 /* Need a transparent way of getting this into CopyReg() */
 /* Use a public member in struct Image                   */
@@ -145,7 +145,7 @@ pp->makeholes = 0;
 
 /*********************************************************************/
 
-int CopyRegularFileDisk(char *source,char *new,struct Attributes attr,struct Promise *pp)
+int CopyRegularFileDisk(char *source,char *new,Attributes attr,Promise *pp)
 
 { int sd, dd, buf_size;
   char *buf, *cp;
@@ -284,7 +284,7 @@ return true;
 
 /*********************************************************************/
 
-int FSWrite(char *new,int dd,char *buf,int towrite,int *last_write_made_hole,int n_read,struct Attributes attr,struct Promise *pp)
+int FSWrite(char *new,int dd,char *buf,int towrite,int *last_write_made_hole,int n_read,Attributes attr,Promise *pp)
 
 { int *intp;
   char *cp;

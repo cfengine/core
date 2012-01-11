@@ -34,9 +34,9 @@
 
 /*****************************************************************************/
 
-struct edit_context *NewEditContext(char *filename,struct Attributes a,struct Promise *pp)
+EditContext *NewEditContext(char *filename,Attributes a,Promise *pp)
 
-{ struct edit_context *ec;
+{ EditContext *ec;
 
 if (!IsAbsoluteFileName(filename))
    {
@@ -44,7 +44,7 @@ if (!IsAbsoluteFileName(filename))
    return NULL;
    }
 
-ec = xcalloc(1, sizeof(struct edit_context));
+ec = xcalloc(1, sizeof(EditContext));
 
 ec->filename = filename;
 ec->empty_first = a.edits.empty_before_use;
@@ -68,10 +68,10 @@ return ec;
 
 /*****************************************************************************/
 
-void FinishEditContext(struct edit_context *ec,struct Attributes a,struct Promise *pp)
+void FinishEditContext(EditContext *ec,Attributes a,Promise *pp)
 
 {
-  struct Item *ip;
+  Item *ip;
 
 EDIT_MODEL = false;
   
@@ -121,7 +121,7 @@ if (ec != NULL)
 /* Level                                                             */
 /*********************************************************************/
 
-int LoadFileAsItemList(struct Item **liststart,char *file,struct Attributes a,struct Promise *pp)
+int LoadFileAsItemList(Item **liststart,char *file,Attributes a,Promise *pp)
 
 { FILE *fp;
   struct stat statbuf;
@@ -195,9 +195,9 @@ return (true);
 
 /*********************************************************************/
 
-int SaveItemListAsFile(struct Item *liststart,char *file,struct Attributes a,struct Promise *pp)
+int SaveItemListAsFile(Item *liststart,char *file,Attributes a,Promise *pp)
 
-{ struct Item *ip;
+{ Item *ip;
   struct stat statbuf;
   char new[CF_BUFSIZE],backup[CF_BUFSIZE];
   FILE *fp;

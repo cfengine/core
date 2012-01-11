@@ -1,14 +1,14 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static struct Item *NextItem(struct Item *ip);
-static int ItemListsEqual(struct Item *list1, struct Item *list2,int report,struct Attributes a,struct Promise *pp);
+static Item *NextItem(Item *ip);
+static int ItemListsEqual(Item *list1, Item *list2,int report,Attributes a,Promise *pp);
 
 /*********************************************************************/
 
-void PurgeItemList(struct Item **list,char *name)
+void PurgeItemList(Item **list,char *name)
 
-{ struct Item *ip,*copy = NULL;
+{ Item *ip,*copy = NULL;
   struct stat sb;
 
 CopyList(&copy,*list);
@@ -27,9 +27,9 @@ DeleteItemList(copy);
 
 /*********************************************************************/
 
-int RawSaveItemList(struct Item *liststart,char *file)
+int RawSaveItemList(Item *liststart,char *file)
 
-{ struct Item *ip;
+{ Item *ip;
   char new[CF_BUFSIZE],backup[CF_BUFSIZE];
   FILE *fp;
 
@@ -69,13 +69,13 @@ return true;
 
 /*********************************************************************/
 
-int CompareToFile(struct Item *liststart,char *file,struct Attributes a,struct Promise *pp)
+int CompareToFile(Item *liststart,char *file,Attributes a,Promise *pp)
 
 /* returns true if file on disk is identical to file in memory */
 
 {
   struct stat statbuf;
-  struct Item *cmplist = NULL;
+  Item *cmplist = NULL;
 
 CfDebug("CompareToFile(%s)\n",file);
 
@@ -111,11 +111,11 @@ return (true);
 
 /*********************************************************************/
 
-static int ItemListsEqual(struct Item *list1,struct Item *list2,int warnings,struct Attributes a,struct Promise *pp)
+static int ItemListsEqual(Item *list1,Item *list2,int warnings,Attributes a,Promise *pp)
 
 // Some complex logic here to enable warnings of diffs to be given
     
-{ struct Item *ip1, *ip2;
+{ Item *ip1, *ip2;
   int retval = true;
  
 ip1 = list1;
@@ -192,7 +192,7 @@ return retval;
 /* helpers                                                           */
 /*********************************************************************/
 
-struct Item *NextItem(struct Item *ip)
+Item *NextItem(Item *ip)
 
 {
 if (ip)

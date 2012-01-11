@@ -28,14 +28,14 @@
 
 /* Prototypes */
 
-static int GatherProcessUsers(struct Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs);
-static int Unix_GatherProcessUsers(struct Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs);
+static int GatherProcessUsers(Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs);
+static int Unix_GatherProcessUsers(Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs);
 
 /* Implementation */
 
 void MonProcessesGatherData(double *cf_this)
 {
-struct Item *userList = NULL;
+Item *userList = NULL;
 char vbuff[CF_BUFSIZE];
 int numProcUsers = 0;
 int numRootProcs = 0;
@@ -59,7 +59,7 @@ DeleteItemList(userList);
 CfOut(cf_verbose,"","(Users,root,other) = (%d,%d,%d)\n",(int)cf_this[ob_users],(int)cf_this[ob_rootprocs],(int)cf_this[ob_otherprocs]);
 }
 
-static int GatherProcessUsers(struct Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs)
+static int GatherProcessUsers(Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs)
 {
 #ifdef MINGW
  return NovaWin_GatherProcessUsers(userList, userListSz, numRootProcs, numOtherProcs);
@@ -70,7 +70,7 @@ static int GatherProcessUsers(struct Item **userList, int *userListSz, int *numR
 
 #ifndef MINGW
 
-static int Unix_GatherProcessUsers(struct Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs)
+static int Unix_GatherProcessUsers(Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs)
 {
 FILE *pp;
 char pscomm[CF_BUFSIZE];

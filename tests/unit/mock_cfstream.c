@@ -13,7 +13,7 @@ fprintf(stderr, "\n");
 exit(1);
 }
 
-void cfPS(enum cfreport level, char status, char *errstr, struct Promise *pp, struct Attributes attr, char *fmt, ...)
+void cfPS(enum cfreport level, char status, char *errstr, Promise *pp, Attributes attr, char *fmt, ...)
 {
 va_list ap;
 fprintf(stderr, "cfPS[%d,%c,%s,%p] ", level, status, errstr, pp);

@@ -94,11 +94,11 @@ int EnterpriseExpiry(void)
 return false;
 }
 
-void HistoryUpdate(struct Averages newvals)
+void HistoryUpdate(Averages newvals)
 {
 }
 
-void LogFileChange(char *file, int change, struct Attributes a, struct Promise *pp)
+void LogFileChange(char *file, int change, Attributes a, Promise *pp)
 {
 CfOut(cf_verbose, "", "Logging file differences requires version Nova or above");
 }
@@ -112,12 +112,12 @@ void WebCache(char *s,char *t)
 {
 }
 
-const char *PromiseID(struct Promise *pp)
+const char *PromiseID(Promise *pp)
 {
 return "";
 }
 
-void NotePromiseCompliance(struct Promise *pp,double val,enum cf_status status,char *reason)
+void NotePromiseCompliance(Promise *pp,double val,enum cf_status status,char *reason)
 {
 }
 
@@ -125,7 +125,7 @@ void NoteEfficiency(double e)
 {
 }
 
-void PreSanitizePromise(struct Promise *pp)
+void PreSanitizePromise(Promise *pp)
 {
 }
 
@@ -133,7 +133,7 @@ void TrackValue(char *date,double kept,double repaired, double notkept)
 {
 }
 
-time_t GetPromiseCompliance(struct Promise *pp,double *value,double *average,double *var,time_t *lastseen)
+time_t GetPromiseCompliance(Promise *pp,double *value,double *average,double *var,time_t *lastseen)
 {
 return time(NULL);
 }
@@ -143,7 +143,7 @@ void ShowTopicRepresentation(FILE *fp)
 CfOut(cf_verbose,"","# Knowledge map reporting feature is only available in version Nova and above\n");
 }
 
-void NewPromiser(struct Promise *pp)
+void NewPromiser(Promise *pp)
 {
 }
 
@@ -151,7 +151,7 @@ void AnalyzePromiseConflicts(void)
 {
 }
 
-void RegisterBundleDependence(char *name,struct Promise *pp)
+void RegisterBundleDependence(char *name,Promise *pp)
 {
 }
 
@@ -173,12 +173,12 @@ WriterClose(writer);
 #endif
 }
 
-void VerifyOutputsPromise(struct Promise *pp)
+void VerifyOutputsPromise(Promise *pp)
 {
 printf(" !! Outputs promises are not available in the community edition of Cfengine\n");
 }
 
-void SetPromiseOutputs(struct Promise *pp)
+void SetPromiseOutputs(Promise *pp)
 {
 }
 
@@ -213,7 +213,7 @@ void LoadSlowlyVaryingObservations()
 CfOut(cf_verbose,"","# Extended system discovery is only available in version Nova and above\n");
 }
 
-void RegisterLiteralServerData(char *handle,struct Promise *pp)
+void RegisterLiteralServerData(char *handle,Promise *pp)
 {
 CfOut(cf_verbose,"","# Access to server literals is only available in version Nova and above\n");
 }
@@ -271,7 +271,7 @@ void GrandSummary()
 CfOut(cf_verbose,"","# Reporting feature is only available in version Nova and above\n");
 }
 
-void CSV2XML(struct Rlist *list)
+void CSV2XML(Rlist *list)
 {
 CfOut(cf_verbose,"","# Format conversion feature is only available in version Nova and above\n");
 }
@@ -310,7 +310,7 @@ void SummarizeUpdates(int xml,int html,int csv,int embed,char *stylesheet,char *
 {
 CfOut(cf_verbose,"","# Software summary reporting feature is only available in version Nova and above\n");
 }
-void VerifyMeasurement(double *this,struct Attributes a,struct Promise *pp)
+void VerifyMeasurement(double *this,Attributes a,Promise *pp)
 {
 CfOut(cf_verbose,"","# Custom monitoring feature is only available in version Nova and above\n");
 }
@@ -319,27 +319,27 @@ void LongHaul(time_t current)
 {
 }
 
-void SetMeasurementPromises(struct Item **classlist)
+void SetMeasurementPromises(Item **classlist)
 {
 }
 
-int VerifyDatabasePromise(CfdbConn *cfdb,char *database,struct Attributes a,struct Promise *pp)
+int VerifyDatabasePromise(CfdbConn *cfdb,char *database,Attributes a,Promise *pp)
 {
 CfOut(cf_verbose,"","Verifying SQL database promises is only available with Cfengine Nova or above");
 return false;
 }
 
-void VerifyACL(char *file,struct Attributes a, struct Promise *pp)
+void VerifyACL(char *file,Attributes a, Promise *pp)
 {
 CfOut(cf_verbose, "", "Verifying ACL promises is only available with Cfengine Nova or above");
 }
 
-int CheckACLSyntax(char *file,struct CfACL acl,struct Promise *pp)
+int CheckACLSyntax(char *file,Acl acl,Promise *pp)
 {
 return true;
 }
 
-void VerifyRegistryPromise(struct Attributes a,struct Promise *pp)
+void VerifyRegistryPromise(Attributes a,Promise *pp)
 {
 }
 
@@ -372,24 +372,24 @@ CfOut(cf_error,"","LDAP support available in Nova and above");
 return NULL;
 }
 
-int CheckDatabaseSanity(struct Attributes a, struct Promise *pp)
+int CheckDatabaseSanity(Attributes a, Promise *pp)
 {
 return false;
 }
 
-int VerifyTablePromise(CfdbConn *cfdb,char *name,struct Rlist *columns,struct Attributes a,struct Promise *pp)
+int VerifyTablePromise(CfdbConn *cfdb,char *name,Rlist *columns,Attributes a,Promise *pp)
 {
 CfOut(cf_verbose,"","Verifying SQL table promises is only available with Cfengine Nova or above");
 return false;
 }
 
-int GetInstalledPkgsRpath(struct CfPackageItem **pkgList, struct Attributes a, struct Promise *pp)
+int GetInstalledPkgsRpath(struct CfPackageItem **pkgList, Attributes a, Promise *pp)
 {
 CfOut(cf_error, "", "!! rPath internal package listing only available in Nova or above");
 return false;
 }
 
-int ExecPackageCommandRpath(char *command,int verify,int setCmdClasses,struct Attributes a,struct Promise *pp)
+int ExecPackageCommandRpath(char *command,int verify,int setCmdClasses,Attributes a,Promise *pp)
 {
 CfOut(cf_error, "", "!! rPath internal package commands only available in Nova or above");
 return false;

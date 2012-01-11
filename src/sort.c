@@ -38,6 +38,10 @@
 
 Item *SortItemListNames(Item *list) /* Alphabetical */
 
+/*
+ * after using this function passed parameter pointer will be lost
+ * use returned pointer to access container
+ */
 { Item *p, *q, *e, *tail;
   int insize, nmerges, psize, qsize, i;
 
@@ -147,6 +151,10 @@ while (true)
 
 Item *SortItemListClasses(Item *list) /* Alphabetical */
 
+/*
+ * after using this function passed parameter pointer will be lost
+ * use returned pointer to access container
+ */
 { Item *p, *q, *e, *tail;
   int insize, nmerges, psize, qsize, i;
 
@@ -256,6 +264,10 @@ while (true)
 
 Item *SortItemListCounters(Item *list) /* Biggest first */
 
+/*
+ * after using this function passed parameter pointer will be lost
+ * use returned pointer to access container
+ */
 { Item *p, *q, *e, *tail;
   int insize, nmerges, psize, qsize, i;
 
@@ -366,6 +378,10 @@ while (true)
 
 Item *SortItemListTimes(Item *list) /* Biggest first */
 
+/*
+ * after using this function passed parameter pointer will be lost
+ * use returned pointer to access container
+ */
 { Item *p, *q, *e, *tail;
   int insize, nmerges, psize, qsize, i;
 
@@ -475,12 +491,14 @@ while (true)
 /*******************************************************************/
 
 Rlist *SortRlist(Rlist *list, int (*CompareItems)())
-/**
+/*
  * Sorts an Rlist on list->item. A function CompareItems(i1,i2)
  * must be written for this particular item, which returns
  * true if i1 <= i2, false otherwise.
- **/
-
+ *
+ * after using this function passed parameter pointer will be lost
+ * use returned pointer to access container
+ */
 { Rlist *p = NULL, *q = NULL, *e = NULL, *tail = NULL;
   int insize = 0, nmerges = 0, psize = 0, qsize = 0, i = 0;
 
@@ -590,9 +608,11 @@ while (true)
 /*******************************************************************/
 
 Rlist *AlphaSortRListNames(Rlist *list)
-
-/* Borrowed this algorithm from merge-sort implementation */
-
+/* Borrowed this algorithm from merge-sort implementation
+ *
+ * after using this function passed parameter pointer will be lost
+ * use returned pointer to access container
+ */
 { Rlist *p, *q, *e, *tail;
   int insize, nmerges, psize, qsize, i;
 

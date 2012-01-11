@@ -440,7 +440,7 @@ attempts to `roll-back', causing further problems.
 * Cloud providers::             
 * High Performance Computing::  
 * Government and finance sectors::  
-* Manufacturing::                
+* Manufacturing::               
 @end menu
 
 @node Desktop management, Web shops, What agility means in different environments, What agility means in different environments
@@ -892,6 +892,7 @@ so we shall not discuss it further here.
 * How does complexity affect agility?::  
 * An effective understanding helps agility::  
 * Maximizing business imperatives::  
+* What does agility cost?::     
 * Who is responsible for agility?::  
 @end menu
 
@@ -1031,7 +1032,7 @@ without risk.
 
 
 @c .....................................................................
-@node Maximizing business imperatives, Who is responsible for agility?, An effective understanding helps agility, Agility in your work
+@node Maximizing business imperatives, What does agility cost?, An effective understanding helps agility, Agility in your work
 @section Maximizing business imperatives
 
 Agility allows companies and public services to compete and address
@@ -1079,7 +1080,7 @@ parts on which crucial things depend.
 
 
 @c .....................................................................
-@node What does agility cost?
+@node What does agility cost?, Who is responsible for agility?, Maximizing business imperatives, Agility in your work
 @section What does agility cost?
 @sp 1
 
@@ -1102,7 +1103,7 @@ can be cheap. By design, CFEngine aims to make scale and agility
 inexpensive in the long run.
 
 @c .....................................................................
-@node Who is responsible for agility?,  , Maximizing business imperatives, Agility in your work
+@node Who is responsible for agility?,  , What does agility cost?, Agility in your work
 @section Who is responsible for agility?
 @sp 1
 

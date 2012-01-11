@@ -392,7 +392,6 @@ enum cfkcontrol
    cfk_sql_connect_db,
    cfk_stylesheet,
    cfk_views,
-   cfk_view_projection,
    cfk_notype
    };
 

@@ -613,32 +613,30 @@ Rlist *AlphaSortRListNames(Rlist *list)
  * after using this function passed parameter pointer will be lost
  * use returned pointer to access container
  */
-{ Rlist *p, *q, *e, *tail;
-  int insize, nmerges, psize, qsize, i;
+{
+int insize = 1;
 
 if (list == NULL)
    { 
    return NULL;
    }
- 
- insize = 1;
- 
+
  while (true)
     {
-    p = list;
+    Rlist *p = list;
+    Rlist *tail = NULL;
     list = NULL;
-    tail = NULL;
     
-    nmerges = 0;  /* count number of merges we do in this pass */
+    int nmerges = 0;  /* count number of merges we do in this pass */
     
     while (p)
        {
        nmerges++;  /* there exists a merge to be done */
        /* step `insize' places along from p */
-       q = p;
-       psize = 0;
+       Rlist *q = p;
+       int psize = 0;
        
-       for (i = 0; i < insize; i++)
+       for (int i = 0; i < insize; i++)
           {
           psize++;
           q = q->next;
@@ -650,11 +648,12 @@ if (list == NULL)
           }
        
        /* if q hasn't fallen off end, we have two lists to merge */
-       qsize = insize;
+       int qsize = insize;
        
        /* now we have two lists; merge them */
        while (psize > 0 || (qsize > 0 && q))
-          {          
+          {
+          Rlist *e;
           /* decide whether next element of merge comes from p or q */
           if (psize == 0)
              {

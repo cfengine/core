@@ -30,7 +30,7 @@ assert_string_equal(name, "laptop.intra");
 return &h;
 }
 
-typedef struct ExpectedClasses
+typedef struct
    {
    const char *name;
    bool found;
@@ -59,7 +59,7 @@ for (i = 0; i < sizeof(expected_classes)/sizeof(expected_classes[0]); ++i) /* LC
 fail(); /* LCOV_EXCL_LINE */
 }
 
-typedef struct ExpectedVars
+typedef struct
    {
    const char *name;
    const char *value;

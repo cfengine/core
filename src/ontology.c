@@ -34,7 +34,7 @@
 
 int GetTopicPid(char *classified_topic)
 
-{ struct Topic *tp;
+{ Topic *tp;
   int slot;
   char context[CF_MAXVARSIZE],name[CF_MAXVARSIZE];
 
@@ -90,9 +90,9 @@ if (strlen(context) == 0)
 
 /*****************************************************************************/
 
-struct Topic *GetTopic(struct Topic *list,char *topic_name)
+Topic *GetTopic(Topic *list,char *topic_name)
 
-{ struct Topic *tp;
+{ Topic *tp;
   char context[CF_MAXVARSIZE],name[CF_MAXVARSIZE];
 
 strncpy(context,topic_name,CF_MAXVARSIZE-1);

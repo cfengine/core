@@ -27,6 +27,6 @@
 
 int GetTopicPid(char *typed_topic);
 void DeClassifyTopic(char *typdetopic,char *topic,char *type);
-struct Topic *GetTopic(struct Topic *list,char *topic_name);
+Topic *GetTopic(Topic *list,char *topic_name);
 
 #endif

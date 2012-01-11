@@ -138,7 +138,7 @@ typedef struct PromiseParser_
    Rlist *giveargs[CF_MAX_NESTING];
    FnCall *currentfncall[CF_MAX_NESTING];
 
-   struct OffsetState
+   struct
       {
       size_t current;
       size_t last_id;
@@ -810,7 +810,8 @@ struct FnCall_
 
 typedef struct AssocHashTable_ AssocHashTable;
 
-typedef struct Scope_                         /* $(bundlevar) $(scope.name) */
+/* $(bundlevar) $(scope.name) */
+typedef struct Scope_
    {
    char *scope;                                 /* Name of scope */
    AssocHashTable *hashtable;
@@ -838,7 +839,8 @@ typedef enum FnCallStatus
    FNCALL_FAILURE,
    } FnCallStatus;
 
-struct FnCallResult_  /* from builtin functions */
+/* from builtin functions */
+struct FnCallResult_
    {
    FnCallStatus status;
    Rval rval;
@@ -1152,18 +1154,18 @@ typedef struct
 
 /*************************************************************************/
 
-struct CfMount
+typedef struct
    {
    char *host;
    char *source;
    char *mounton;
    char *options;
    int unmount;
-   };
+   } Mount;
 
 /*************************************************************************/
 
-struct Recursion
+typedef struct
    {
    int travlinks;
    int rmdeadlinks;
@@ -1172,11 +1174,11 @@ struct Recursion
    int include_basedir;
    Rlist *include_dirs;
    Rlist *exclude_dirs;
-   };
+   } Recursion;
 
 /*************************************************************************/
 
-struct TransactionContext
+typedef struct
    {
    enum cfopaction action;
    int ifelapsed;
@@ -1194,11 +1196,11 @@ struct TransactionContext
    int  audit;
    enum cfreport report_level;
    enum cfreport log_level;
-   };
+   } TransactionContext;
 
 /*************************************************************************/
 
-struct DefineClasses
+typedef struct
    {
    Rlist *change;
    Rlist *failure;
@@ -1214,48 +1216,55 @@ struct DefineClasses
    Rlist *retcode_kept;
    Rlist *retcode_repaired;
    Rlist *retcode_failed;
-   };
+   } DefineClasses;
 
 
 /*************************************************************************/
 /* Ontology                                                              */
 /*************************************************************************/
 
-struct Topic
+typedef struct Topic_ Topic;
+typedef struct TopicAssociation_ TopicAssociation;
+
+struct Topic_
    {
    int id;
    char *topic_context;
    char *topic_name;
    double evc;
-   struct TopicAssociation *associations;
-   struct Topic *next;
+   TopicAssociation *associations;
+   Topic *next;
    };
 
-struct TopicAssociation
+struct TopicAssociation_
    {
    char *fwd_context;
    char *fwd_name;
    char *bwd_name;
    Item *associates;
    char *bwd_context;
-   struct TopicAssociation *next;
+   TopicAssociation *next;
    };
 
-struct Occurrence
+typedef struct Occurrence_ Occurrence;
+
+struct Occurrence_
    {
    char *occurrence_context;
    char *locator; /* Promiser */
    enum representations rep_type;
    Rlist *represents; /* subtype represented by promiser */
-   struct Occurrence *next;
+   Occurrence *next;
    };
 
-struct Inference
+typedef struct Inference_ Inference;
+
+struct Inference_
    {
    char *inference; // Promiser
    char *precedent;
    char *qualifier;
-   struct Inference *next;
+   Inference *next;
    };
 
 /*************************************************************************/
@@ -1269,7 +1278,7 @@ enum cfdbtype
    cfd_notype
    };
 
-typedef struct 
+typedef struct
    {
    int connected;
    int result;
@@ -1281,8 +1290,7 @@ typedef struct
    char *blank;
    enum cfdbtype type;
    void *data; /* Generic pointer to RDBMS-specific data */
-   }
-CfdbConn;
+   } CfdbConn;
 
 /*************************************************************************/
 /* Threading container                                                   */
@@ -1329,7 +1337,7 @@ struct PackageItem_
 /* Files                                                                 */
 /*************************************************************************/
 
-struct FileCopy
+typedef struct
    {
    char *source;
    char *destination;
@@ -1354,7 +1362,7 @@ struct FileCopy
    int purge;
    short portnumber;
    short timeout;
-   };
+   } FileCopy;
 
 typedef struct
    {
@@ -1373,7 +1381,7 @@ typedef struct
 
 /*************************************************************************/
 
-struct FilePerms
+typedef struct
    {
    mode_t plus;
    mode_t minus;
@@ -1383,11 +1391,11 @@ struct FilePerms
    u_long plus_flags;     /* for *BSD chflags */
    u_long minus_flags;    /* for *BSD chflags */
    int    rxdirs;
-   };
+   } FilePerms;
 
 /*************************************************************************/
 
-struct FileSelect
+typedef struct
    {
    Rlist *name;
    Rlist *path;
@@ -1408,20 +1416,19 @@ struct FileSelect
    Rlist *filetypes;
    Rlist *issymlinkto;
    char *result;
-   };
+   } FileSelect;
 
 /*************************************************************************/
 
-struct FileDelete
-
+typedef struct
    {
    enum cftidylinks dirlinks;
    int rmdirs;
-   };
+   } FileDelete;
 
 /*************************************************************************/
 
-struct FileRename
+typedef struct
    {
    char *newname;
    char *disable_suffix;
@@ -1429,21 +1436,21 @@ struct FileRename
    int rotate;
    mode_t plus;
    mode_t minus;
-   };
+   } FileRename;
 
 /*************************************************************************/
 
-struct FileChange
+typedef struct
    {
    enum cfhashes hash;
    enum cfchanges report_changes;
    int report_diffs;
    int update;
-   };
+   } FileChange;
 
 /*************************************************************************/
 
-struct FileLink
+typedef struct
    {
    char *source;
    enum cflinktype link_type;
@@ -1451,11 +1458,11 @@ struct FileLink
    enum cfnofile when_no_file;
    enum cflinkchildren when_linking_children;
    int link_children;   
-   };
+   } FileLink;
 
 /*************************************************************************/
 
-struct ExecContain
+typedef struct
    {
    int useshell;
    mode_t umask;
@@ -1466,21 +1473,21 @@ struct ExecContain
    int preview;
    int nooutput;
    int timeout;
-   };
+   } ExecContain;
 
 /*************************************************************************/
 
-struct ProcessCount
+typedef struct
    {
    long min_range;
    long max_range;
    Rlist *in_range_define;
    Rlist *out_of_range_define;
-   };
+   } ProcessCount;
 
 /*************************************************************************/
 
-struct ProcessSelect
+typedef struct
    {
    Rlist *owner;
    long min_pid;
@@ -1505,30 +1512,30 @@ struct ProcessSelect
    char *command;
    char *tty;
    char *process_result;
-   };
+   } ProcessSelect;
 
 /*************************************************************************/
 
-struct Context
+typedef struct
    {
    Constraint *expression;
    int nconstraints;
-   };
+   } Context;
 
 /*************************************************************************/
 
-struct EditDefaults
+typedef struct
    {
    enum cfbackupoptions backup;
    int empty_before_use;
    int maxfilesize;
    int joinlines;
    int rotate;
-   };
+   } EditDefaults;
 
 /*************************************************************************/
 
-struct LineSelect
+typedef struct
    {
    Rlist *startwith_from_list;
    Rlist *not_startwith_from_list;
@@ -1536,24 +1543,24 @@ struct LineSelect
    Rlist *not_match_from_list;
    Rlist *contains_from_list;
    Rlist *not_contains_from_list;
-   };
+   } LineSelect;
 
-struct EditLocation
+typedef struct
    {
    char *line_matching;
    enum cfeditorder before_after;
    char *first_last;
-   };
+   } EditLocation;
 
-struct EditRegion
+typedef struct
    {
    char *select_start;
    char *select_end;
    int include_start;
    int include_end;
-   };
+   } EditRegion;
 
-struct EditColumn
+typedef struct
    {
    char *column_separator;
    int select_column;
@@ -1562,17 +1569,17 @@ struct EditColumn
    char *column_operation;
    int extend_columns;
    int blanks_ok;
-   };
+   } EditColumn;
 
-struct EditReplace
+typedef struct
    {
    char *replace_value;
    char *occurrences;
-   };
+   } EditReplace;
 
 /*************************************************************************/
 
-struct StorageMount
+typedef struct
    {
    char *mount_type;
    char *mount_source;
@@ -1580,20 +1587,20 @@ struct StorageMount
    Rlist *mount_options;
    int editfstab;
    int unmount;
-   };
+   } StorageMount;
 
-struct StorageVolume
+typedef struct
    {
    int check_foreign;
    long freespace;
    int sensible_size;
    int sensible_count;
    int scan_arrivals;
-   };
+   } StorageVolume;
 
 /*************************************************************************/
 
-struct Report
+typedef struct
    {
    int haveprintfile;
    int havelastseen;
@@ -1604,11 +1611,11 @@ struct Report
    char *to_file;
    int numlines;
    Rlist *showstate;
-   };
+   } Report;
 
 /*************************************************************************/
 
-struct Packages
+typedef struct
    {
    enum package_actions package_policy;
    int have_package_methods;
@@ -1649,11 +1656,11 @@ struct Packages
    char *package_multiline_start;
       
    int package_noverify_returncode;
-   };
+   } Packages;
 
 /*************************************************************************/
 
-struct Measurement
+typedef struct
    {
    char *stream_type;
    enum cfdatatype data_type;
@@ -1663,19 +1670,19 @@ struct Measurement
    char *extraction_regex;
    char *units;
    int growing;
-   };
+   } Measurement;
 
 /*************************************************************************/
 
-struct CfTcpIp
+typedef struct
    {
    char *ipv4_address;
    char *ipv4_netmask;
-   };
+   } TcpIp;
 
 /*************************************************************************/
 
-struct CfDatabase
+typedef struct
    {
    char *db_server_owner;
    char *db_server_password;
@@ -1688,7 +1695,7 @@ struct CfDatabase
    Rlist *columns;
    Rlist *rows;
    Rlist *exclude;
-   };
+   } Database;
     
 /*************************************************************************/
 
@@ -1700,7 +1707,7 @@ enum cf_srv_policy
    cfsrv_nostatus
    };
 
-struct CfServices
+typedef struct
    {
    Rlist *service_depend;
    char *service_type;
@@ -1709,15 +1716,15 @@ struct CfServices
    char *service_autostart_policy;
    char *service_depend_chain;
    FnCall *service_method;
-   };
+   } Services;
 
 /*************************************************************************/
 
-struct Outputs
+typedef struct
    {
    char *level;
    char *promiser_type;
-   };
+   } Outputs;
 
 /*************************************************************************/
 
@@ -1747,7 +1754,7 @@ enum cfenvironment_state
    cfvs_none
    };
 
-struct CfEnvironments
+typedef struct
    {
    int cpus;
    int memory;
@@ -1759,7 +1766,7 @@ struct CfEnvironments
    char *host;
    char *type;
    enum cfenvironment_state state;
-   };
+   } Environments;
 
 /*************************************************************************/
 
@@ -1768,22 +1775,22 @@ struct CfEnvironments
 
 typedef struct
    {
-   struct Outputs output;
-   struct FileSelect select;
-   struct FilePerms perms;
-   struct FileCopy copy;
-   struct FileDelete delete;
-   struct FileRename rename;
-   struct FileChange change;
-   struct FileLink link;
-   struct EditDefaults edits;
-   struct Packages packages;
-   struct Context context;
-   struct Measurement measure;
+   Outputs output;
+   FileSelect select;
+   FilePerms perms;
+   FileCopy copy;
+   FileDelete delete;
+   FileRename rename;
+   FileChange change;
+   FileLink link;
+   EditDefaults edits;
+   Packages packages;
+   Context context;
+   Measurement measure;
    Acl acl;
-   struct CfDatabase database;
-   struct CfServices service;
-   struct CfEnvironments env;
+   Database database;
+   Services service;
+   Environments env;
    char *transformer;
    char *pathtype;
    char *repository;
@@ -1791,25 +1798,25 @@ typedef struct
    int create;
    int move_obstructions;
       
-   struct Recursion recursion;
-   struct TransactionContext transaction;
-   struct DefineClasses classes;
+   Recursion recursion;
+   TransactionContext transaction;
+   DefineClasses classes;
 
-   struct ExecContain contain;
+   ExecContain contain;
    char *args;
    int module;
 
    Rlist *signals;
    char *process_stop;
    char *restart_class;
-   struct ProcessCount process_count;
-   struct ProcessSelect process_select;
+   ProcessCount process_count;
+   ProcessSelect process_select;
 
-   struct Report report;
-   struct StorageMount mount;
-   struct StorageVolume volume;
+   Report report;
+   StorageMount mount;
+   StorageVolume volume;
       
-   struct CfTcpIp tcpip;
+   TcpIp tcpip;
    int havedepthsearch;
    int haveselect;
    int haverename;
@@ -1833,17 +1840,17 @@ typedef struct
 
       /* editline */
 
-   struct EditRegion region;
-   struct EditLocation location;
-   struct EditColumn column;
-   struct EditReplace replace;
+   EditRegion region;
+   EditLocation location;
+   EditColumn column;
+   EditReplace replace;
    int haveregion;
    int havelocation;
    int havecolumn;
    int havereplace;
    int haveinsertselect;
    int havedeleteselect;
-   struct LineSelect line_select;
+   LineSelect line_select;
    char *sourcetype;
    int expandvars;
    int not_matching;

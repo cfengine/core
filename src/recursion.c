@@ -33,7 +33,7 @@
 #include "cf3.extern.h"
 
 static int PushDirState(char *name,struct stat *sb);
-static void PopDirState(int goback,char * name,struct stat *sb,struct Recursion r);
+static void PopDirState(int goback,char * name,struct stat *sb,Recursion r);
 static void CheckLinkSecurity(struct stat *sb,char *name);
 
 /*********************************************************************/
@@ -197,7 +197,7 @@ return true;
 
 /**********************************************************************/
 
-static void PopDirState(int goback,char *name,struct stat *sb,struct Recursion r)
+static void PopDirState(int goback,char *name,struct stat *sb,Recursion r)
 
 {
 if (goback && r.travlinks)
@@ -222,7 +222,7 @@ else if (goback)
 
 /**********************************************************************/
 
-int SkipDirLinks(char *path,const char *lastnode,struct Recursion r)
+int SkipDirLinks(char *path,const char *lastnode,Recursion r)
 
 {
 CfDebug("SkipDirLinks(%s,%s)\n",path,lastnode);

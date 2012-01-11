@@ -53,15 +53,15 @@ void ShowWords(void);
 
 static char *NormalizeTopic(char *s);
 
-static void AddInference(struct Inference **list,char *result,char *pre,char *qual);
-static struct Topic *IdempInsertTopic(char *classified_name);
-static struct Topic *InsertTopic(char *name,char *context);
-static struct Topic *AddTopic(struct Topic **list,char *name,char *type);
-static void AddTopicAssociation(struct Topic *tp,struct TopicAssociation **list,char *fwd_name,char *bwd_name,Rlist *li,int ok,char *from_context,char *from_topic);
-static void AddOccurrence(struct Occurrence **list,char *reference,Rlist *represents,enum representations rtype,char *context);
-static struct Topic *TopicExists(char *topic_name,char *topic_type);
-static struct TopicAssociation *AssociationExists(struct TopicAssociation *list,char *fwd,char *bwd);
-static struct Occurrence *OccurrenceExists(struct Occurrence *list,char *locator,enum representations repy_type,char *s);
+static void AddInference(Inference **list,char *result,char *pre,char *qual);
+static Topic *IdempInsertTopic(char *classified_name);
+static Topic *InsertTopic(char *name,char *context);
+static Topic *AddTopic(Topic **list,char *name,char *type);
+static void AddTopicAssociation(Topic *tp,TopicAssociation **list,char *fwd_name,char *bwd_name,Rlist *li,int ok,char *from_context,char *from_topic);
+static void AddOccurrence(Occurrence **list,char *reference,Rlist *represents,enum representations rtype,char *context);
+static Topic *TopicExists(char *topic_name,char *topic_type);
+static TopicAssociation *AssociationExists(TopicAssociation *list,char *fwd,char *bwd);
+static Occurrence *OccurrenceExists(Occurrence *list,char *locator,enum representations repy_type,char *s);
 
 static void KeepPromiseBundles();
 
@@ -102,8 +102,8 @@ int WRITE_KMDB = false;
 int GENERATE_MANUAL = false;
 char MANDIR[CF_BUFSIZE];
 
-struct Occurrence *OCCURRENCES = NULL;
-struct Inference *INFERENCES = NULL;
+Occurrence *OCCURRENCES = NULL;
+Inference *INFERENCES = NULL;
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -666,7 +666,7 @@ void CfRemoveTestData(void)
 
 void ShowWords()
 
-{  struct Topic *tp;
+{  Topic *tp;
    Item *ip,*list = NULL;
    int slot;
 
@@ -695,7 +695,7 @@ for (ip = list; ip != NULL; ip=ip->next)
 
 void ShowSingletons()
 
-{  struct Topic *tp;
+{  Topic *tp;
    Item *ip,*list = NULL;
    int slot;
 
@@ -754,7 +754,7 @@ void VerifyThingsPromise(Promise *pp)
 
 { char id[CF_BUFSIZE];
   Attributes a = {{0}};
-  struct Topic *tp = NULL, *otp;
+  Topic *tp = NULL, *otp;
   Rlist *rp,*rps,*contexts;
   char *handle = (char *)GetConstraintValue("handle",pp,CF_SCALAR);
 
@@ -852,7 +852,7 @@ void VerifyTopicPromise(Promise *pp)
 
 { char id[CF_BUFSIZE];
   Attributes a = {{0}};
-  struct Topic *tp = NULL, *otp;
+  Topic *tp = NULL, *otp;
   Rlist *rp,*rps,*contexts;
   char *handle = (char *)GetConstraintValue("handle",pp,CF_SCALAR);
 
@@ -1087,7 +1087,7 @@ DeleteRlist((Rlist *)retval.item);
 
 /*****************************************************************************/
 
-struct Topic *IdempInsertTopic(char *classified_name)
+Topic *IdempInsertTopic(char *classified_name)
 
 { char context[CF_MAXVARSIZE],topic[CF_MAXVARSIZE];
    
@@ -1101,7 +1101,7 @@ return InsertTopic(topic,context);
 
 /*****************************************************************************/
 
-struct Topic *InsertTopic(char *name,char *context)
+Topic *InsertTopic(char *name,char *context)
 
 { int slot = GetHash(ToLowerStr(name));
 
@@ -1110,9 +1110,9 @@ return AddTopic(&(TOPICHASH[slot]),name,context);
 
 /*****************************************************************************/
 
-struct Topic *AddTopic(struct Topic **list,char *name,char *context)
+Topic *AddTopic(Topic **list,char *name,char *context)
 
-{ struct Topic *tp;
+{ Topic *tp;
 
 if ((tp = TopicExists(name,context)))
    {
@@ -1120,7 +1120,7 @@ if ((tp = TopicExists(name,context)))
    }
 else
    {
-   tp = xmalloc(sizeof(struct Topic));
+   tp = xmalloc(sizeof(Topic));
 
    tp->topic_name = xstrdup(NormalizeTopic(name));
    
@@ -1160,12 +1160,12 @@ return tp;
 
 /*****************************************************************************/
 
-void AddTopicAssociation(struct Topic *this_tp,struct TopicAssociation **list,char *fwd_name,char *bwd_name,Rlist *passociates,int ok_to_add_inverse,char *from_context,char *from_topic)
+void AddTopicAssociation(Topic *this_tp,TopicAssociation **list,char *fwd_name,char *bwd_name,Rlist *passociates,int ok_to_add_inverse,char *from_context,char *from_topic)
 
-{ struct TopicAssociation *ta = NULL,*texist;
+{ TopicAssociation *ta = NULL,*texist;
   char fwd_context[CF_MAXVARSIZE];
   Rlist *rp;
-  struct Topic *new_tp;
+  Topic *new_tp;
   char contexttopic[CF_BUFSIZE],ntopic[CF_BUFSIZE],ncontext[CF_BUFSIZE];
 
 strncpy(ntopic,NormalizeTopic(from_topic),CF_BUFSIZE-1);
@@ -1181,7 +1181,7 @@ if (passociates == NULL || passociates->item == NULL)
 
 if ((texist = AssociationExists(*list,fwd_name,bwd_name)) == NULL)
    {
-   ta = xcalloc(1, sizeof(struct TopicAssociation));
+   ta = xcalloc(1, sizeof(TopicAssociation));
 
    ta->fwd_name = xstrdup(fwd_name);
 
@@ -1273,14 +1273,14 @@ else
 
 /*****************************************************************************/
 
-void AddOccurrence(struct Occurrence **list,char *reference,Rlist *represents,enum representations rtype,char *context)
+void AddOccurrence(Occurrence **list,char *reference,Rlist *represents,enum representations rtype,char *context)
 
-{ struct Occurrence *op = NULL;
+{ Occurrence *op = NULL;
   Rlist *rp;
 
 if ((op = OccurrenceExists(*list,reference,rtype,context)) == NULL)
    {
-   op = xcalloc(1, sizeof(struct Occurrence));
+   op = xcalloc(1, sizeof(Occurrence));
 
    op->occurrence_context = xstrdup(ToLowerStr(context));
    op->locator = xstrdup(reference);
@@ -1307,11 +1307,11 @@ for (rp = represents; rp != NULL; rp=rp->next)
 
 /*********************************************************************/
 
-void AddInference(struct Inference **list,char *result,char *pre,char *qual)
+void AddInference(Inference **list,char *result,char *pre,char *qual)
 
-{ struct Inference *ip;
+{ Inference *ip;
 
-ip = xmalloc(sizeof(struct Occurrence));
+ip = xmalloc(sizeof(Occurrence));
 
 ip->inference = xstrdup(result);
 ip->precedent = xstrdup(pre);
@@ -1324,9 +1324,9 @@ ip->next = *list;
 /* Level                                                                     */
 /*****************************************************************************/
 
-struct Topic *TopicExists(char *topic_name,char *topic_context)
+Topic *TopicExists(char *topic_name,char *topic_context)
 
-{ struct Topic *tp;
+{ Topic *tp;
   int slot;
 
 slot = GetHash(ToLowerStr(topic_name));
@@ -1355,9 +1355,9 @@ return NULL;
 
 /*****************************************************************************/
 
-struct TopicAssociation *AssociationExists(struct TopicAssociation *list,char *fwd,char *bwd)
+TopicAssociation *AssociationExists(TopicAssociation *list,char *fwd,char *bwd)
 
-{ struct TopicAssociation *ta;
+{ TopicAssociation *ta;
   int yfwd = false,ybwd = false;
   char l[CF_BUFSIZE],r[CF_BUFSIZE];
 
@@ -1432,9 +1432,9 @@ return NULL;
 
 /*****************************************************************************/
 
-struct Occurrence *OccurrenceExists(struct Occurrence *list,char *locator,enum representations rep_type,char *context)
+Occurrence *OccurrenceExists(Occurrence *list,char *locator,enum representations rep_type,char *context)
 
-{ struct Occurrence *op;
+{ Occurrence *op;
   
 for (op = list; op != NULL; op=op->next)
    {

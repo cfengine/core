@@ -605,7 +605,7 @@ return true;
 static int VerifyFinderType(char *file,struct stat *statbuf,Attributes a,Promise *pp)
 
 { /* Code modeled after hfstar's extract.c */
- typedef struct t_fndrinfo
+ typedef struct
     {
     long fdType;
     long fdCreator;

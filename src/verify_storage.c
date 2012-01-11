@@ -307,12 +307,12 @@ static void VolumeScanArrivals(char *file,Attributes a,Promise *pp)
 static int FileSystemMountedCorrectly(Rlist *list,char *name,char *options,Attributes a,Promise *pp)
 
 { Rlist *rp;
-  struct CfMount *mp;
+  Mount *mp;
   int found = false;
 
 for (rp = list; rp != NULL; rp=rp->next)
    {
-   mp = (struct CfMount *)rp->item;
+   mp = (Mount *)rp->item;
 
    if (mp == NULL)
       {
@@ -384,13 +384,13 @@ if (cfstat(vbuff,&parentstat) == -1)
 if (childstat->st_dev != parentstat.st_dev)
    {
    Rlist *rp;
-   struct CfMount *entry;
+   Mount *entry;
 
    CfDebug("[%s is on a different file system, not descending]\n",dir);
 
    for (rp = MOUNTEDFSLIST; rp != NULL; rp=rp->next)
       {
-      entry = (struct CfMount *)rp->item;
+      entry = (Mount *)rp->item;
 
       if (!strcmp(entry->mounton, dir))
          {

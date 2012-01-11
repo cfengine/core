@@ -32,13 +32,13 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-struct CfBSDFlag
+typedef struct
    {
    char *name;
    u_long bits;
-   };
+   } BSDFlag;
 
-struct CfBSDFlag CF_BSDFLAGS[] =
+static const BSDFlag CF_BSDFLAGS[] =
    {
    { "arch",(u_long)SF_ARCHIVED },
    { "archived",(u_long)SF_ARCHIVED },

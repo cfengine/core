@@ -46,7 +46,7 @@
 
 #define TINY_LIMIT 14
 
-typedef struct AssocArray
+typedef struct
    {
    CfAssoc *values[TINY_LIMIT];
    short size;
@@ -56,7 +56,7 @@ struct AssocHashTable_
    {
    union
       {
-      struct AssocArray array;
+      AssocArray array;
       CfAssoc **buckets;
       };
    bool huge;

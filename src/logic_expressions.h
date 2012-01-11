@@ -64,18 +64,18 @@ typedef struct Expression_
    LogicalOp op;
    union
       {
-      struct AndOrExpression
+      struct
          {
          struct Expression_ *lhs;
          struct Expression_ *rhs;
          } andor;
 
-      struct NotExpression
+      struct
          {
          struct Expression_ *arg;
          } not;
 
-      struct EvalExpression
+      struct
          {
          StringExpression *name;
          } eval;

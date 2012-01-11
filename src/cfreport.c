@@ -198,13 +198,14 @@ const char *HINTS[32] =
 
 /*******************************************************************/
 
-struct CEnt /* For sorting */
+ /* For sorting */
+typedef struct
    {
    char name[256];
    char date[32];
    double q;
    double d;
-   };
+   } CEnt;
 
 /*******************************************************************/
 
@@ -1287,7 +1288,7 @@ void ShowClasses()
   double now = (double)time(NULL),average = 0, var = 0;
   char name[CF_BUFSIZE],eventname[CF_BUFSIZE];
   Event entry;
-  struct CEnt array[1024];
+  CEnt array[1024];
   int i,ksize,vsize;
 
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_CLASSUSAGE);
@@ -1404,7 +1405,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    }
 
 #ifdef HAVE_QSORT
-qsort(array,1024,sizeof(struct CEnt),CompareClasses);
+qsort(array,1024,sizeof(CEnt),CompareClasses);
 #endif
 
 if ((fnotes = fopen("class_notes","w")) == NULL)
@@ -2047,8 +2048,8 @@ return buffer;
 int CompareClasses(const void *a, const void *b)
 
 {
-struct CEnt *da = (struct CEnt *) a;
-struct CEnt *db = (struct CEnt *) b;
+CEnt *da = (CEnt *) a;
+CEnt *db = (CEnt *) b;
 
 return (da->q < db->q) - (da->q > db->q);
 }

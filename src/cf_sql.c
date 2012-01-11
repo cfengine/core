@@ -77,24 +77,24 @@ CfCloseDB(&cfdb);
 
 #ifdef HAVE_LIBMYSQLCLIENT
 
-struct CfDbMysqlConn
-{
-    MYSQL conn;
-    MYSQL_RES *res;
-};
+typedef struct
+   {
+   MYSQL conn;
+   MYSQL_RES *res;
+   } DbMysqlConn;
 
 /*****************************************************************************/
 
-static struct CfDbMysqlConn *CfConnectMysqlDB(const char *host,
+static DbMysqlConn *CfConnectMysqlDB(const char *host,
                                               const char *user,
                                               const char *password,
                                               const char *database)
 {
-struct CfDbMysqlConn *c;
+DbMysqlConn *c;
 
 CfOut(cf_verbose,""," -> This is a MySQL database\n");
 
-c = xcalloc(1, sizeof(struct CfDbMysqlConn));
+c = xcalloc(1, sizeof(DbMysqlConn));
 
 mysql_init(&c->conn);
 
@@ -111,7 +111,7 @@ return c;
 
 /*****************************************************************************/
 
-static void CfCloseMysqlDB(struct CfDbMysqlConn *c)
+static void CfCloseMysqlDB(DbMysqlConn *c)
 {
 mysql_close(&c->conn);
 free(c);
@@ -121,7 +121,7 @@ free(c);
 
 static void CfNewQueryMysqlDb(CfdbConn *c, const char *query)
 {
-struct CfDbMysqlConn *mc = c->data;
+DbMysqlConn *mc = c->data;
 
 if (mysql_query(&mc->conn, query) != 0)
    {
@@ -146,7 +146,7 @@ static void CfFetchMysqlRow(CfdbConn *c)
 {
 int i;
 MYSQL_ROW thisrow;
-struct CfDbMysqlConn *mc = c->data;
+DbMysqlConn *mc = c->data;
 
 if (c->maxrows > 0)
    {
@@ -172,7 +172,7 @@ if (c->maxrows > 0)
 
 static void CfDeleteMysqlQuery(CfdbConn *c)
 {
-struct CfDbMysqlConn *mc = c->data;
+DbMysqlConn *mc = c->data;
 
 if (mc->res)
    {
@@ -213,25 +213,25 @@ static void CfDeleteMysqlQuery(CfdbConn *c)
 
 #ifdef HAVE_LIBPQ
 
-struct CfDbPostgresqlConn
-{
-PGconn *conn;
-PGresult *res;
-};
+typedef struct
+   {
+   PGconn *conn;
+   PGresult *res;
+   } DbPostgresqlConn;
 
 /*****************************************************************************/
 
-static struct CfDbPostgresqlConn *CfConnectPostgresqlDB(const char *host,
+static DbPostgresqlConn *CfConnectPostgresqlDB(const char *host,
                                                         const char *user,
                                                         const char *password,
                                                         const char *database)
 {
-struct CfDbPostgresqlConn *c;
+DbPostgresqlConn *c;
 char format[CF_BUFSIZE];
 
 CfOut(cf_verbose,""," -> This is a PotsgreSQL database\n");
 
-c = xcalloc(1, sizeof(struct CfDbPostgresqlConn));
+c = xcalloc(1, sizeof(DbPostgresqlConn));
 
 if (strcmp(host,"localhost") == 0)
    {
@@ -271,7 +271,7 @@ return c;
 
 /*****************************************************************************/
 
-static void CfClosePostgresqlDb(struct CfDbPostgresqlConn *c)
+static void CfClosePostgresqlDb(DbPostgresqlConn *c)
 {
 PQfinish(c->conn);
 free(c);
@@ -281,7 +281,7 @@ free(c);
 
 static void CfNewQueryPostgresqlDb(CfdbConn *c, const char *query)
 {
-struct CfDbPostgresqlConn *pc = c->data;
+DbPostgresqlConn *pc = c->data;
 
 pc->res = PQexec(pc->conn, query);
 
@@ -302,7 +302,7 @@ else
 static void CfFetchPostgresqlRow(CfdbConn *c)
 {
 int i;
-struct CfDbPostgresqlConn *pc = c->data;
+DbPostgresqlConn *pc = c->data;
 
 if (c->row >= c->maxrows)
    {
@@ -325,7 +325,7 @@ for (i = 0; i < c->maxcolumns; i++)
 
 static void CfDeletePostgresqlQuery(CfdbConn *c)
 {
-struct CfDbPostgresqlConn *pc = c->data;
+DbPostgresqlConn *pc = c->data;
 PQclear(pc->res);
 }
 

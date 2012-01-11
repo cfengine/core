@@ -71,7 +71,7 @@ static int InsertCompoundLineAtLocation(char *newline,Item **start,Item *locatio
 static int ReplacePatterns(Item *start,Item *end,Attributes a,Promise *pp);
 static int EditColumns(Item *file_start,Item *file_end,Attributes a,Promise *pp);
 static int EditLineByColumn(Rlist **columns,Attributes a,Promise *pp);
-static int EditColumn(Rlist **columns,Attributes a,Promise *pp);
+static int DoEditColumn(Rlist **columns,Attributes a,Promise *pp);
 static int SanityCheckInsertions(Attributes a);
 static int SanityCheckDeletions(Attributes a,Promise *pp);
 static int SelectLine(char *line,Attributes a,Promise *pp);
@@ -1387,7 +1387,7 @@ if (a.column.value_separator != '\0')
    else
       {
       this_column = SplitStringAsRList(rp->item,a.column.value_separator);
-      retval = EditColumn(&this_column,a,pp);
+      retval = DoEditColumn(&this_column,a,pp);
       }
    
    if (retval)
@@ -1563,7 +1563,7 @@ return true;
 /* Level                                                                   */
 /***************************************************************************/
 
-static int EditColumn(Rlist **columns,Attributes a,Promise *pp)
+static int DoEditColumn(Rlist **columns,Attributes a,Promise *pp)
 
 { Rlist *rp, *found;
  int retval = false;

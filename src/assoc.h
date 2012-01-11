@@ -27,7 +27,8 @@
 
 #include "cf3.defs.h"
 
-typedef struct        /* variable reference linkage , with metatype*/
+/* variable reference linkage , with metatype*/
+typedef struct
    {
    char *lval;
    Rval rval;

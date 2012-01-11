@@ -86,10 +86,10 @@ void DeleteExpArgs(Rlist *args);
 /* attributes.c */
 
 Attributes GetEnvironmentsAttributes(Promise *pp);
-struct CfEnvironments GetEnvironmentsConstraints(Promise *pp);
+Environments GetEnvironmentsConstraints(Promise *pp);
 Attributes GetOutputsAttributes(Promise *pp);
 Attributes GetServicesAttributes(Promise *pp);
-struct CfServices GetServicesConstraints(Promise *pp);
+Services GetServicesConstraints(Promise *pp);
 Attributes GetFilesAttributes(Promise *pp);
 Attributes GetReportsAttributes(Promise *pp);
 Attributes GetExecAttributes(Promise *pp);
@@ -104,42 +104,42 @@ Attributes GetPackageAttributes(Promise *pp);
 Attributes GetMeasurementAttributes(Promise *pp);
 Attributes GetDatabaseAttributes(Promise *pp);
 
-struct Packages GetPackageConstraints(Promise *pp);
-struct ExecContain GetExecContainConstraints(Promise *pp);
-struct Recursion GetRecursionConstraints(Promise *pp);
-struct FileSelect GetSelectConstraints(Promise *pp);
-struct FilePerms GetPermissionConstraints(Promise *pp);
-struct TransactionContext GetTransactionConstraints(Promise *pp);
-struct DefineClasses GetClassDefinitionConstraints(Promise *pp);
-struct FileRename GetRenameConstraints(Promise *pp);
-struct FileDelete GetDeleteConstraints(Promise *pp);
-struct FileChange GetChangeMgtConstraints(Promise *pp);
-struct FileCopy GetCopyConstraints(Promise *pp);
-struct FileLink GetLinkConstraints(Promise *pp);
-struct Context GetContextConstraints(Promise *pp);
-struct ProcessSelect GetProcessFilterConstraints(Promise *pp);
-struct ProcessCount GetMatchesConstraints(Promise *pp);
-struct EditDefaults GetEditDefaults(Promise *pp);
+Packages GetPackageConstraints(Promise *pp);
+ExecContain GetExecContainConstraints(Promise *pp);
+Recursion GetRecursionConstraints(Promise *pp);
+FileSelect GetSelectConstraints(Promise *pp);
+FilePerms GetPermissionConstraints(Promise *pp);
+TransactionContext GetTransactionConstraints(Promise *pp);
+DefineClasses GetClassDefinitionConstraints(Promise *pp);
+FileRename GetRenameConstraints(Promise *pp);
+FileDelete GetDeleteConstraints(Promise *pp);
+FileChange GetChangeMgtConstraints(Promise *pp);
+FileCopy GetCopyConstraints(Promise *pp);
+FileLink GetLinkConstraints(Promise *pp);
+Context GetContextConstraints(Promise *pp);
+ProcessSelect GetProcessFilterConstraints(Promise *pp);
+ProcessCount GetMatchesConstraints(Promise *pp);
+EditDefaults GetEditDefaults(Promise *pp);
 Attributes GetMethodAttributes(Promise *pp);
 Attributes GetInterfacesAttributes(Promise *pp);
 Attributes GetInsertionAttributes(Promise *pp);
-struct EditLocation GetLocationAttributes(Promise *pp);
+EditLocation GetLocationAttributes(Promise *pp);
 Attributes GetDeletionAttributes(Promise *pp);
 Attributes GetColumnAttributes(Promise *pp);
 Attributes GetReplaceAttributes(Promise *pp);
-struct EditRegion GetRegionConstraints(Promise *pp);
-struct EditReplace GetReplaceConstraints(Promise *pp);
-struct EditColumn GetColumnConstraints(Promise *pp);
-struct TopicAssociation GetAssociationConstraints(Promise *pp);
-struct StorageMount GetMountConstraints(Promise *pp);
-struct StorageVolume GetVolumeConstraints(Promise *pp);
-struct CfTcpIp GetTCPIPAttributes(Promise *pp);
-struct Report GetReportConstraints(Promise *pp);
-struct LineSelect GetInsertSelectConstraints(Promise *pp);
-struct LineSelect GetDeleteSelectConstraints(Promise *pp);
-struct Measurement GetMeasurementConstraint(Promise *pp);
+EditRegion GetRegionConstraints(Promise *pp);
+EditReplace GetReplaceConstraints(Promise *pp);
+EditColumn GetColumnConstraints(Promise *pp);
+TopicAssociation GetAssociationConstraints(Promise *pp);
+StorageMount GetMountConstraints(Promise *pp);
+StorageVolume GetVolumeConstraints(Promise *pp);
+TcpIp GetTCPIPAttributes(Promise *pp);
+Report GetReportConstraints(Promise *pp);
+LineSelect GetInsertSelectConstraints(Promise *pp);
+LineSelect GetDeleteSelectConstraints(Promise *pp);
+Measurement GetMeasurementConstraint(Promise *pp);
 Acl GetAclConstraints(Promise *pp);
-struct CfDatabase GetDatabaseConstraints(Promise *pp);
+Database GetDatabaseConstraints(Promise *pp);
 
 /* bootstrap.c */
 
@@ -655,7 +655,7 @@ int ScheduleCopyOperation(char *destination,Attributes attr,Promise *pp);
 int ScheduleLinkChildrenOperation(char *destination,char *source,int rec,Attributes attr,Promise *pp);
 int ScheduleLinkOperation(char *destination,char *source,Attributes attr,Promise *pp);
 int ScheduleEditOperation(char *filename,Attributes attr,Promise *pp);
-struct FileCopy *NewFileCopy(Promise *pp);
+FileCopy *NewFileCopy(Promise *pp);
 void VerifyFileAttributes(char *file,struct stat *dstat,Attributes attr,Promise *pp);
 void VerifyFileIntegrity(char *file,Attributes attr,Promise *pp);
 int VerifyOwner(char *file,Promise *pp,Attributes attr,struct stat *statbuf);
@@ -989,7 +989,7 @@ void DebugPromise(Promise *pp);
 /* recursion.c */
 
 int DepthSearch(char *name,struct stat *sb,int rlevel,Attributes attr,Promise *pp);
-int SkipDirLinks(char *path,const char *lastnode,struct Recursion r);
+int SkipDirLinks(char *path,const char *lastnode,Recursion r);
 
 /* reporting.c */
 

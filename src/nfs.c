@@ -237,7 +237,7 @@ return true;
 static void AugmentMountInfo(Rlist **list,char *host,char *source,char *mounton,char *options)
 
 {
-struct CfMount *entry = xcalloc(1, sizeof(struct CfMount));
+Mount *entry = xcalloc(1, sizeof(Mount));
 
 if (host)
    {
@@ -267,12 +267,12 @@ AppendRlistAlien(list,(void *)entry);
 void DeleteMountInfo(Rlist *list)
 
 { Rlist *rp, *sp;
-  struct CfMount *entry;
+  Mount *entry;
 
 for (rp = list; rp != NULL; rp = sp)
    {
    sp = rp->next;
-   entry = (struct CfMount *)rp->item;
+   entry = (Mount *)rp->item;
    
    if (entry->host)
       {

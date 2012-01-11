@@ -152,7 +152,7 @@ char DOCROOT[CF_MAXVARSIZE] = {0};
 char BANNER[2*CF_BUFSIZE] = {0};
 char FOOTER[CF_BUFSIZE] = {0};
 char STYLESHEET[CF_BUFSIZE] = {0};
-struct Topic *TOPICHASH[CF_HASHTABLESIZE];
+Topic *TOPICHASH[CF_HASHTABLESIZE];
 
 /*****************************************************************************/
 /* Windows version constants                                                 */

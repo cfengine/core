@@ -44,14 +44,14 @@ const char *HINTS[] =
       NULL
       };
 
-typedef struct Package
+typedef struct
    {
    char *name;
    char *version;
    char *arch;
    } Package;
 
-typedef struct PackagePattern
+typedef struct
    {
    char *name;
    char *version;
@@ -186,7 +186,7 @@ if (packages_file != NULL)
 
    while (fscanf(packages_file, "%s\n", serialized_package) != EOF)
       {
-      struct Package *package = DeserializePackage(serialized_package);
+      Package *package = DeserializePackage(serialized_package);
       AppendRlistAlien(&packages, package);
       }
 
@@ -227,7 +227,7 @@ return NewPackagePattern(p->name, p->version, p->arch);
 
 /******************************************************************************/
 
-static bool MatchPackage(struct PackagePattern *a, struct Package *b)
+static bool MatchPackage(PackagePattern *a, Package *b)
 {
 return (a->name == NULL || strcmp(a->name, b->name) == 0) &&
    (a->version == NULL || strcmp(a->version, b->version) == 0) &&
@@ -236,7 +236,7 @@ return (a->name == NULL || strcmp(a->name, b->name) == 0) &&
 
 /******************************************************************************/
 
-static Rlist *FindPackages(const char *database_filename, struct PackagePattern *pattern)
+static Rlist *FindPackages(const char *database_filename, PackagePattern *pattern)
 {
 Rlist *db = ReadPackageEntries(database_filename);
 Rlist *matching = NULL;
@@ -295,7 +295,7 @@ ClearPackageList(AVAILABLE_PACKAGES_FILE_NAME);
 
 /******************************************************************************/
 
-static void AddPackage(struct PackagePattern *pattern)
+static void AddPackage(PackagePattern *pattern)
 {
 fprintf(stderr, "Trying to install all packages matching pattern %s\n", SerializePackagePattern(pattern));
 
@@ -373,7 +373,7 @@ snprintf(INSTALLED_PACKAGES_FILE_NAME, 256,
 
 while ((c = getopt_long(argc, argv, "", OPTIONS, &option_index)) != EOF)
    {
-   struct PackagePattern *pattern = NULL;
+   PackagePattern *pattern = NULL;
 
    switch (c)
       {

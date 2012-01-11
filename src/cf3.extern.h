@@ -110,7 +110,6 @@ extern char LOGFILE[];
 extern Item *VNEGHEAP;
 extern Item *ABORTHEAP;
 
-extern struct Mounted *MOUNTED;             /* Files systems already mounted */
 extern Item *VSETUIDLIST;
 extern Item *SUSPICIOUSLIST;
 extern Item *SCHEDULE;
@@ -183,7 +182,7 @@ extern unsigned int WINVER_MAJOR;
 extern unsigned int WINVER_MINOR;
 extern unsigned int WINVER_BUILD;
 
-extern struct Topic *TOPICHASH[CF_HASHTABLESIZE];
+extern Topic *TOPICHASH[CF_HASHTABLESIZE];
 extern PromiseParser P;
 extern int REQUIRE_COMMENTS;
 extern int FIPS_MODE;

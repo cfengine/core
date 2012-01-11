@@ -57,18 +57,18 @@ typedef struct StringExpression_
    StringOp op;
    union StringExpressionValue
       {
-      struct ConcatExpression
+      struct
          {
          struct StringExpression_ *lhs;
          struct StringExpression_ *rhs;
          } concat;
 
-      struct LiteralExpression
+      struct
          {
          char *literal;
          } literal;
 
-      struct VarRefExpression
+      struct
          {
          struct StringExpression_ *name;
          } varref;

@@ -31,13 +31,15 @@ typedef struct
    char rtype;        /* Points to CF_SCALAR, CF_LIST, CF_FNCALL usually */
    } Rval;
 
-typedef struct Rlist_
+typedef struct Rlist_ Rlist;
+
+struct Rlist_
    {
    void *item;
    char type;
-   struct Rlist_ *state_ptr; /* Points to "current" state/element of sub-list */
-   struct Rlist_ *next;
-   } Rlist;
+   Rlist *state_ptr; /* Points to "current" state/element of sub-list */
+   Rlist *next;
+   };
 
 #include "cf.defs.h"
 #include "conf.h"

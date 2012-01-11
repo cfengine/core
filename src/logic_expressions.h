@@ -59,20 +59,22 @@ typedef enum
    EVAL,
    } LogicalOp;
 
-typedef struct Expression_
+typedef struct Expression_ Expression;
+
+struct Expression_
    {
    LogicalOp op;
    union
       {
       struct
          {
-         struct Expression_ *lhs;
-         struct Expression_ *rhs;
+         Expression *lhs;
+         Expression *rhs;
          } andor;
 
       struct
          {
-         struct Expression_ *arg;
+         Expression *arg;
          } not;
 
       struct
@@ -80,7 +82,7 @@ typedef struct Expression_
          StringExpression *name;
          } eval;
       } val;
-   } Expression;
+   };
 
 /* Parsing and evaluation */
 

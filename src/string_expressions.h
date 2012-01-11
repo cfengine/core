@@ -52,15 +52,17 @@ typedef enum
    VARREF
    } StringOp;
 
-typedef struct StringExpression_
+typedef struct StringExpression_ StringExpression;
+
+struct StringExpression_
    {
    StringOp op;
    union StringExpressionValue
       {
       struct
          {
-         struct StringExpression_ *lhs;
-         struct StringExpression_ *rhs;
+         StringExpression *lhs;
+         StringExpression *rhs;
          } concat;
 
       struct
@@ -70,10 +72,10 @@ typedef struct StringExpression_
 
       struct
          {
-         struct StringExpression_ *name;
+         StringExpression *name;
          } varref;
       } val;
-   } StringExpression;
+   };
 
 /* Parsing and evaluation */
 

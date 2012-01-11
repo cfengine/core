@@ -427,7 +427,7 @@ void LogFileChange(char *file,int change,Attributes a,Promise *pp);
 void RemoteSysLog(int log_priority, const char *log_string);
 int VerifyDatabasePromise(CfdbConn *cfdb,char *database,Attributes a,Promise *pp);
 int VerifyTablePromise(CfdbConn *cfdb,char *table,Rlist *columns,Attributes a,Promise *pp);
-void ReportPatches(struct CfPackageManager *list);
+void ReportPatches(PackageManager *list);
 void SummarizeSoftware(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
 void SummarizeUpdates(int xml,int html,int csv,int embed,char *stylesheet,char *head,char *foot,char *web);
 void VerifyServices(Attributes a,Promise *pp);
@@ -461,7 +461,7 @@ void SetPromiseOutputs(Promise *pp);
 void VerifyOutputsPromise(Promise *pp);
 void SpecialQuote(char *topic,char *type);
 void LastSawBundle(char *name);
-int GetInstalledPkgsRpath(struct CfPackageItem **pkgList, Attributes a, Promise *pp);
+int GetInstalledPkgsRpath(PackageItem **pkgList, Attributes a, Promise *pp);
 int ExecPackageCommandRpath(char *command,int verify,int setCmdClasses,Attributes a,Promise *pp);
 void NewPromiser(Promise *pp);
 void AnalyzePromiseConflicts(void);
@@ -1013,8 +1013,8 @@ void ShowPromiseInReport(const char *version, Promise* pp, int indent);
 /*
  * TODO: Need to find a nice general solution to these sorts of situations.
  */
-int PrependListPackageItem(struct CfPackageItem **list,char *item,Attributes a,Promise *pp);
-int PrependPackageItem(struct CfPackageItem **list, const char *name, const char *version, const char* arch, Attributes a, Promise *pp);
+int PrependListPackageItem(PackageItem **list,char *item,Attributes a,Promise *pp);
+int PrependPackageItem(PackageItem **list, const char *name, const char *version, const char* arch, Attributes a, Promise *pp);
 
 /* scope.c */
 
@@ -1090,8 +1090,8 @@ void DetectDomainName(const char *orig_nodename);
 /* transaction.c */
 
 void SummarizeTransaction(Attributes attr,Promise *pp,char *logname);
-struct CfLock AcquireLock(char *operand,char *host,time_t now,Attributes attr,Promise *pp, int ignoreProcesses);
-void YieldCurrentLock(struct CfLock this);
+CfLock AcquireLock(char *operand,char *host,time_t now,Attributes attr,Promise *pp, int ignoreProcesses);
+void YieldCurrentLock(CfLock this);
 void GetLockName(char *lockname,char *locktype,char *base,Rlist *params);
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
 int ThreadLock(pthread_mutex_t *name);

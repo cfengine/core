@@ -87,7 +87,7 @@ if (signum != SIGCHLD)
 
 void SelfTerminatePrelude()
 {
-struct CfLock best_guess;
+CfLock best_guess;
 
 CfOut(cf_verbose,"","Trying to remove lock - try %s",CFLOCK);
 best_guess.lock = xstrdup(CFLOCK);

@@ -54,7 +54,7 @@ int VerifyMethod(char *attrname,Attributes a,Promise *pp)
   char method_name[CF_EXPANDSIZE];
   Rlist *params = NULL;
   int retval = false;
-  struct CfLock thislock;
+  CfLock thislock;
   char lockname[CF_BUFSIZE];
 
 if (a.havebundle)

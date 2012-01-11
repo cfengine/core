@@ -230,7 +230,7 @@ char timekey[CF_SMALLBUF];
 Averages averages;
 Promise *pp = NewPromise("monitor_cfengine","the monitor daemon");
 Attributes dummyattr;
-struct CfLock thislock;
+CfLock thislock;
 
 #ifdef MINGW
 

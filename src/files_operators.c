@@ -441,7 +441,7 @@ int ScheduleEditOperation(char *filename,Attributes a,Promise *pp)
   char *edit_bundle_name = NULL,lockname[CF_BUFSIZE];
   Rlist *params;
   int retval = false;
-  struct CfLock thislock;
+  CfLock thislock;
 
 snprintf(lockname,CF_BUFSIZE-1,"fileedit-%s",pp->promiser);
 thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp,false);
@@ -1241,7 +1241,7 @@ if (strncmp(comm,"/bin/echo",strlen("/bin/echo")) == 0)
 
 if (!DONTDO)
    {
-   struct CfLock thislock = AcquireLock(comm,VUQNAME,CFSTARTTIME,attr,pp,false);
+   CfLock thislock = AcquireLock(comm,VUQNAME,CFSTARTTIME,attr,pp,false);
    
    if (thislock.lock == NULL)
       {

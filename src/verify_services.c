@@ -146,7 +146,7 @@ if (a->service.service_type == NULL)
 
 void VerifyServices(Attributes a,Promise *pp)
 
-{ struct CfLock thislock;
+{ CfLock thislock;
 
  // allow to start Cfengine windows executor without license
 #ifdef MINGW

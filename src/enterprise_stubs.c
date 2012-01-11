@@ -296,7 +296,7 @@ void SummarizeSetuid(int xml,int html,int csv,int embed,char *stylesheet,char *h
 CfOut(cf_verbose,"","# Setuid reporting feature is only available in version Nova and above\n");
 }
 
-void ReportPatches(struct CfPackageManager *list)
+void ReportPatches(PackageManager *list)
 {
 CfOut(cf_verbose,"","# Patch reporting feature is only available in version Nova and above\n");
 }
@@ -383,7 +383,7 @@ CfOut(cf_verbose,"","Verifying SQL table promises is only available with Cfengin
 return false;
 }
 
-int GetInstalledPkgsRpath(struct CfPackageItem **pkgList, Attributes a, Promise *pp)
+int GetInstalledPkgsRpath(PackageItem **pkgList, Attributes a, Promise *pp)
 {
 CfOut(cf_error, "", "!! rPath internal package listing only available in Nova or above");
 return false;

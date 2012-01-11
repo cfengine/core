@@ -90,7 +90,7 @@ int ScheduleEditLineOperations(char *filename,Bundle *bp,Attributes a,Promise *p
   Promise *pp;
   char lockname[CF_BUFSIZE];
   char *bp_stack = THIS_BUNDLE;
-  struct CfLock thislock;
+  CfLock thislock;
   int pass;
 
 snprintf(lockname,CF_BUFSIZE-1,"masterfilelock-%s",filename);
@@ -264,7 +264,7 @@ static void VerifyLineDeletions(Promise *pp)
 { Item **start = &(pp->edcontext->file_start);
   Attributes a = {{0}};
   Item *begin_ptr,*end_ptr;
-  struct CfLock thislock;
+  CfLock thislock;
   char lockname[CF_BUFSIZE];
 
 /* *(pp->donep) = true;	*/
@@ -321,7 +321,7 @@ static void VerifyColumnEdits(Promise *pp)
 { Item **start = &(pp->edcontext->file_start);
   Attributes a = {{0}};
   Item *begin_ptr,*end_ptr;
-  struct CfLock thislock;
+  CfLock thislock;
   char lockname[CF_BUFSIZE];
   
 /* *(pp->donep) = true; */
@@ -388,7 +388,7 @@ static void VerifyPatterns(Promise *pp)
 { Item **start = &(pp->edcontext->file_start);
   Attributes a = {{0}};
   Item *begin_ptr,*end_ptr;
-  struct CfLock thislock;
+  CfLock thislock;
   char lockname[CF_BUFSIZE];
   
 /* *(pp->donep) = true; */
@@ -444,7 +444,7 @@ static void VerifyLineInsertions(Promise *pp)
 { Item **start = &(pp->edcontext->file_start), *match, *prev;
   Item *begin_ptr,*end_ptr;
   Attributes a = {{0}};
-  struct CfLock thislock;
+  CfLock thislock;
   char lockname[CF_BUFSIZE];
   
 /* *(pp->donep) = true; */

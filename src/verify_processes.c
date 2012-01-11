@@ -96,7 +96,7 @@ return ret;
 
 void VerifyProcesses(Attributes a, Promise *pp)
 
-{ struct CfLock thislock;
+{ CfLock thislock;
  char lockname[CF_BUFSIZE];
 
 if (a.restart_class)

@@ -479,7 +479,7 @@ fclose(fout);
 
 void FatalError(char *s, ...)
     
-{ struct CfLock best_guess;
+{ CfLock best_guess;
 
 if (s)
    {

@@ -45,7 +45,7 @@ static void PrintFile(Attributes a,Promise *pp);
 void VerifyReportPromise(Promise *pp)
 
 { Attributes a = {{0}};
-  struct CfLock thislock;
+  CfLock thislock;
   Rlist *rp;
   char unique_name[CF_EXPANDSIZE];
 

@@ -1126,7 +1126,7 @@ if (!attr.copy.force_ipv4)
 static bool ServerOffline(const char *server)
     
 { Rlist *rp;
-  struct ServerItem *svp;
+  ServerItem *svp;
   char ipname[CF_MAXVARSIZE];
 
 ThreadLock(cft_getaddr);
@@ -1135,7 +1135,7 @@ ThreadUnlock(cft_getaddr);
 
 for (rp = SERVERLIST; rp != NULL; rp=rp->next)
    {
-   svp = (struct ServerItem *)rp->item;
+   svp = (ServerItem *)rp->item;
 
    if (svp == NULL)
       {
@@ -1174,7 +1174,7 @@ if (entry != NULL)
 static AgentConnection *ServerConnectionReady(const char *server)
 
 { Rlist *rp;
-  struct ServerItem *svp;
+  ServerItem *svp;
   char ipname[CF_MAXVARSIZE];
 
 ThreadLock(cft_getaddr);
@@ -1183,7 +1183,7 @@ ThreadUnlock(cft_getaddr);
   
 for (rp = SERVERLIST; rp != NULL; rp=rp->next)
    {
-   svp = (struct ServerItem *)rp->item;
+   svp = (ServerItem *)rp->item;
 
    if (svp == NULL)
       {
@@ -1213,11 +1213,11 @@ return NULL;
 void ServerNotBusy(AgentConnection *conn)
 
 { Rlist *rp;
-  struct ServerItem *svp;
+  ServerItem *svp;
  
 for (rp = SERVERLIST; rp != NULL; rp=rp->next)
    {
-   svp = (struct ServerItem *)rp->item;
+   svp = (ServerItem *)rp->item;
 
    if (svp->conn == conn)
       {
@@ -1238,7 +1238,7 @@ static void MarkServerOffline(const char *server)
     
 { Rlist *rp;
   AgentConnection *conn = NULL;
-  struct ServerItem *svp;
+  ServerItem *svp;
   char ipname[CF_MAXVARSIZE];
 
 ThreadLock(cft_getaddr);
@@ -1247,7 +1247,7 @@ ThreadUnlock(cft_getaddr);
   
 for (rp = SERVERLIST; rp != NULL; rp=rp->next)
    {
-   svp = (struct ServerItem *)rp->item;
+   svp = (ServerItem *)rp->item;
 
    if (svp == NULL)
       {
@@ -1269,7 +1269,7 @@ ThreadLock(cft_getaddr);
 
 rp = PrependRlist(&SERVERLIST,"nothing",CF_SCALAR);
 
-svp = xmalloc(sizeof(struct ServerItem));
+svp = xmalloc(sizeof(ServerItem));
 
 svp->server = xstrdup(ipname);
 
@@ -1290,7 +1290,7 @@ static void CacheServerConnection(AgentConnection *conn, const char *server)
 /* First time we open a connection, so store it */
     
 { Rlist *rp;
-  struct ServerItem *svp;
+  ServerItem *svp;
   char ipname[CF_MAXVARSIZE];
 
 if (!ThreadLock(cft_getaddr))
@@ -1302,7 +1302,7 @@ strlcpy(ipname,Hostname2IPString(server),CF_MAXVARSIZE);
 
 rp = PrependRlist(&SERVERLIST,"nothing",CF_SCALAR);
 free(rp->item);
-svp = xmalloc(sizeof(struct ServerItem));
+svp = xmalloc(sizeof(ServerItem));
 rp->item = svp;
 svp->server = xstrdup(ipname);
 svp->conn = conn;
@@ -1385,11 +1385,11 @@ SERVERLIST = NULL;
 void ConnectionsCleanup(void)
 {
 Rlist *rp;
-struct ServerItem *svp;
+ServerItem *svp;
 
 for (rp = SERVERLIST; rp != NULL; rp = rp->next)
    {
-   svp = (struct ServerItem *)rp->item;
+   svp = (ServerItem *)rp->item;
 
    if (svp == NULL)
       {

@@ -1143,12 +1143,12 @@ typedef struct
 
 /*************************************************************************/
 
-struct CfLock
+typedef struct
    {
    char *last;
    char *lock;
    char *log;
-   };
+   } CfLock;
 
 /*************************************************************************/
 
@@ -1300,26 +1300,29 @@ typedef struct
 /* Package promises                                                      */
 /*************************************************************************/
 
-struct CfPackageManager
+typedef struct PackageItem_ PackageItem;
+typedef struct PackageManager_ PackageManager;
+
+struct PackageManager_
    {
    char *manager;
    enum package_actions action;
    enum action_policy policy;
-   struct CfPackageItem *pack_list;
-   struct CfPackageItem *patch_list;
-   struct CfPackageItem *patch_avail;
-   struct CfPackageManager *next;
+   PackageItem *pack_list;
+   PackageItem *patch_list;
+   PackageItem *patch_avail;
+   PackageManager *next;
    };
 
 /*************************************************************************/
 
-struct CfPackageItem 
+struct PackageItem_
    {
    char *name;
    char *version;
    char *arch;
    Promise *pp;
-   struct CfPackageItem *next;
+   PackageItem *next;
    };
 
 /*************************************************************************/
@@ -1353,20 +1356,20 @@ struct FileCopy
    short timeout;
    };
 
-struct ServerItem
+typedef struct
    {
    char *server;
    AgentConnection *conn;
    int busy;
-   };
+   } ServerItem;
 
 /*************************************************************************/
 
-struct CfState
+typedef struct
    {
    unsigned int expires;
    enum statepolicy policy;
-   };
+   } CfState;
 
 /*************************************************************************/
 

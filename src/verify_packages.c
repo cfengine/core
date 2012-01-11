@@ -33,45 +33,45 @@
 #include "cf3.extern.h"
 
 static void VerifyPromisedPatch(Attributes a,Promise *pp);
-static int ExecuteSchedule(struct CfPackageManager *schedule,enum package_actions action);
-static int ExecutePatch(struct CfPackageManager *schedule,enum package_actions action);
+static int ExecuteSchedule(PackageManager *schedule,enum package_actions action);
+static int ExecutePatch(PackageManager *schedule,enum package_actions action);
 static int PackageSanityCheck(Attributes a,Promise *pp);
-static int VerifyInstalledPackages(struct CfPackageManager **alllists,Attributes a,Promise *pp);
+static int VerifyInstalledPackages(PackageManager **alllists,Attributes a,Promise *pp);
 static void VerifyPromisedPackage(Attributes a,Promise *pp);
-static void DeletePackageItems(struct CfPackageItem *pi);
+static void DeletePackageItems(PackageItem *pi);
 static int PackageMatch(const char *n, const char *v, const char *a,Attributes attr,Promise *pp);
 static int PatchMatch(const char *n, const char *v, const char *a,Attributes attr,Promise *pp);
-static int ComparePackages(const char *n, const char *v, const char *a,struct CfPackageItem *pi,enum version_cmp cmp);
+static int ComparePackages(const char *n, const char *v, const char *a,PackageItem *pi,enum version_cmp cmp);
 static void ParsePackageVersion(char *version,Rlist **num,Rlist **sep);
 static void SchedulePackageOp(const char *name,const char *version,const char *arch,int installed,int matched,int novers,Attributes a,Promise *pp);
 static char *PrefixLocalRepository(Rlist *repositories,char *package);
 static int FindLargestVersionAvail(char *matchName, char *matchVers, const char *refAnyVer, const char *ver, enum version_cmp package_select, Rlist *repositories);
 static int VersionCmp(const char *vs1, const char *vs2);
 static int IsNewerThanInstalled(const char *n, const char *v, const char *a, char *instV, char *instA, Attributes attr);
-static int PackageInItemList(struct CfPackageItem *list,char *name,char *version,char *arch);
+static int PackageInItemList(PackageItem *list,char *name,char *version,char *arch);
 static int ExecPackageCommandGeneric(char *command,int verify,int setCmdClasses,Attributes a,Promise *pp);
-static int PrependPatchItem(struct CfPackageItem **list,char *item,struct CfPackageItem *chklist,Attributes a,Promise *pp);
-static int PrependMultiLinePackageItem(struct CfPackageItem **list,char *item,int reset,Attributes a,Promise *pp);
+static int PrependPatchItem(PackageItem **list,char *item,PackageItem *chklist,Attributes a,Promise *pp);
+static int PrependMultiLinePackageItem(PackageItem **list,char *item,int reset,Attributes a,Promise *pp);
 static int ExecPackageCommand(char *command,int verify,int setCmdClasses,Attributes a,Promise *pp);
-static void ReportSoftware(struct CfPackageManager *list);
+static void ReportSoftware(PackageManager *list);
 
 static void InvalidateSoftwareCache(void);
-static void ExecutePackageSchedule(struct CfPackageManager *schedule);
-static void DeletePackageManagers(struct CfPackageManager *newlist);
-static struct CfPackageManager *NewPackageManager(struct CfPackageManager **lists,char *mgr,enum package_actions pa,enum action_policy x);
-static struct CfPackageItem *GetCachedPackageList(struct CfPackageManager *manager,Attributes a,Promise *pp);
+static void ExecutePackageSchedule(PackageManager *schedule);
+static void DeletePackageManagers(PackageManager *newlist);
+static PackageManager *NewPackageManager(PackageManager **lists,char *mgr,enum package_actions pa,enum action_policy x);
+static PackageItem *GetCachedPackageList(PackageManager *manager,Attributes a,Promise *pp);
 
 /*****************************************************************************/
 
-struct CfPackageManager *PACKAGE_SCHEDULE = NULL;
-struct CfPackageManager *INSTALLED_PACKAGE_LISTS = NULL;
+PackageManager *PACKAGE_SCHEDULE = NULL;
+PackageManager *INSTALLED_PACKAGE_LISTS = NULL;
 
 /*****************************************************************************/
 
 void VerifyPackagesPromise(Promise *pp)
 
 { Attributes a = {{0}};
-  struct CfLock thislock;
+  CfLock thislock;
   char lockname[CF_BUFSIZE];
   
 a = GetPackageAttributes(pp);
@@ -238,7 +238,7 @@ INSTALLED_PACKAGE_LISTS = NULL;
 
 /*****************************************************************************/
 
-static void ExecutePackageSchedule(struct CfPackageManager *schedule)
+static void ExecutePackageSchedule(PackageManager *schedule)
 
 {
 CfOut(cf_verbose,""," >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
@@ -288,9 +288,9 @@ if (!ExecuteSchedule(schedule,cfa_verifypack))
 /* Level                                                                     */
 /*****************************************************************************/
 
-static int VerifyInstalledPackages(struct CfPackageManager **all_mgrs,Attributes a,Promise *pp)
+static int VerifyInstalledPackages(PackageManager **all_mgrs,Attributes a,Promise *pp)
 
-{ struct CfPackageManager *manager = NewPackageManager(all_mgrs,a.packages.package_list_command,cfa_pa_none,cfa_no_ppolicy);
+{ PackageManager *manager = NewPackageManager(all_mgrs,a.packages.package_list_command,cfa_pa_none,cfa_no_ppolicy);
   const int reset = true, update = false;
   char vbuff[CF_BUFSIZE];
   FILE *prp;
@@ -673,10 +673,10 @@ SchedulePackageOp(name,version,arch,installed,matches,no_version,a,pp);
 
 /*****************************************************************************/
 
-static int ExecuteSchedule(struct CfPackageManager *schedule,enum package_actions action)
+static int ExecuteSchedule(PackageManager *schedule,enum package_actions action)
 
-{ struct CfPackageItem *pi;
-  struct CfPackageManager *pm;
+{ PackageItem *pi;
+  PackageManager *pm;
   int size,estimated_size,retval = true,verify = false;
   char *command_string = NULL;
   Attributes a = {{0}};
@@ -907,10 +907,10 @@ return retval;
 
 /*****************************************************************************/
 
-static int ExecutePatch(struct CfPackageManager *schedule,enum package_actions action)
+static int ExecutePatch(PackageManager *schedule,enum package_actions action)
 
-{ struct CfPackageItem *pi;
-  struct CfPackageManager *pm;
+{ PackageItem *pi;
+  PackageManager *pm;
   int size,estimated_size,retval = true,verify = false;
   char *command_string = NULL;
   Attributes a = {{0}};
@@ -1074,9 +1074,9 @@ return retval;
 /* Level                                                                     */
 /*****************************************************************************/
 
-static struct CfPackageManager *NewPackageManager(struct CfPackageManager **lists,char *mgr,enum package_actions pa,enum action_policy policy)
+static PackageManager *NewPackageManager(PackageManager **lists,char *mgr,enum package_actions pa,enum action_policy policy)
 
-{ struct CfPackageManager *np;
+{ PackageManager *np;
 
 if (mgr == NULL || strlen(mgr) == 0)
    {
@@ -1092,7 +1092,7 @@ for (np = *lists; np != NULL; np=np->next)
       }
    }
 
-np = xcalloc(1, sizeof(struct CfPackageManager));
+np = xcalloc(1, sizeof(PackageManager));
 
 np->manager = xstrdup(mgr);
 np->action = pa;
@@ -1104,9 +1104,9 @@ return np;
 
 /*****************************************************************************/
 
-static void DeletePackageManagers(struct CfPackageManager *newlist)
+static void DeletePackageManagers(PackageManager *newlist)
 
-{ struct CfPackageManager *np,*next;
+{ PackageManager *np,*next;
 
 for (np = newlist; np != NULL; np = next)
    {
@@ -1118,9 +1118,9 @@ for (np = newlist; np != NULL; np = next)
 
 /*****************************************************************************/
 
-static struct CfPackageItem *GetCachedPackageList(struct CfPackageManager *manager,Attributes a,Promise *pp)
+static PackageItem *GetCachedPackageList(PackageManager *manager,Attributes a,Promise *pp)
 
-{ struct CfPackageItem *list = NULL;
+{ PackageItem *list = NULL;
   char name[CF_MAXVARSIZE],version[CF_MAXVARSIZE],arch[CF_MAXVARSIZE],mgr[CF_MAXVARSIZE],line[CF_BUFSIZE];
   char thismanager[CF_MAXVARSIZE];
   FILE *fin;
@@ -1179,7 +1179,7 @@ return list;
 
 /*****************************************************************************/
 
-static int PrependMultiLinePackageItem(struct CfPackageItem **list,char *item,int reset,Attributes a,Promise *pp)
+static int PrependMultiLinePackageItem(PackageItem **list,char *item,int reset,Attributes a,Promise *pp)
 
 { static char name[CF_MAXVARSIZE];
   static char arch[CF_MAXVARSIZE];
@@ -1233,7 +1233,7 @@ return false;
 
 /*****************************************************************************/
 
-static int PrependPatchItem(struct CfPackageItem **list,char *item,struct CfPackageItem *chklist,Attributes a,Promise *pp)
+static int PrependPatchItem(PackageItem **list,char *item,PackageItem *chklist,Attributes a,Promise *pp)
 
 { char name[CF_MAXVARSIZE];
   char arch[CF_MAXVARSIZE];
@@ -1276,7 +1276,7 @@ return PrependPackageItem(list,name,version,arch,a,pp);
 
 /*****************************************************************************/
 
-static void DeletePackageItems(struct CfPackageItem *pi)
+static void DeletePackageItems(PackageItem *pi)
 
 {
 if (pi)
@@ -1295,8 +1295,8 @@ static int PackageMatch(const char *n, const char *v, const char *a,Attributes a
 /*
  * Returns true if any installed packages match (n,v,a), false otherwise.
  */
-{ struct CfPackageManager *mp = NULL;
-  struct CfPackageItem  *pi;
+{ PackageManager *mp = NULL;
+  PackageItem  *pi;
   
 for (mp = INSTALLED_PACKAGE_LISTS; mp != NULL; mp = mp->next)
    {
@@ -1324,8 +1324,8 @@ return false;
 
 static int PatchMatch(const char *n, const char *v, const char *a,Attributes attr,Promise *pp)
 
-{ struct CfPackageManager *mp = NULL;
-  struct CfPackageItem  *pi;
+{ PackageManager *mp = NULL;
+  PackageItem  *pi;
   
 for (mp = INSTALLED_PACKAGE_LISTS; mp != NULL; mp = mp->next)
    {
@@ -1358,7 +1358,7 @@ return false;
 static void SchedulePackageOp(const char *name, const char *version, const char *arch,int installed,int matched,int no_version_specified,Attributes a,Promise *pp)
 
 {
-struct CfPackageManager *manager;
+PackageManager *manager;
 char reference[CF_EXPANDSIZE],reference2[CF_EXPANDSIZE];
 char refAnyVer[CF_EXPANDSIZE];
 char refAnyVerEsc[CF_EXPANDSIZE];
@@ -1833,8 +1833,8 @@ static int IsNewerThanInstalled(const char *n, const char *v, const char *a, cha
 /* Returns true if a package (n, a) is installed and v is larger than
  * the installed version. instV and instA are the version and arch installed. */
 
-{ struct CfPackageManager *mp = NULL;
-  struct CfPackageItem  *pi;
+{ PackageManager *mp = NULL;
+  PackageItem  *pi;
   
 for (mp = INSTALLED_PACKAGE_LISTS; mp != NULL; mp = mp->next)
    {
@@ -1988,7 +1988,7 @@ int ExecPackageCommandGeneric(char *command,int verify,int setCmdClasses,Attribu
 /* Level                                                                     */
 /*****************************************************************************/
 
-static int ComparePackages(const char *n, const char *v, const char *a,struct CfPackageItem *pi,enum version_cmp cmp)
+static int ComparePackages(const char *n, const char *v, const char *a,PackageItem *pi,enum version_cmp cmp)
 
 { Rlist *numbers_pr = NULL,*separators_pr = NULL;
   Rlist *numbers_in = NULL,*separators_in = NULL;
@@ -2155,9 +2155,9 @@ return result;
 
 /*****************************************************************************/
 
-static int PackageInItemList(struct CfPackageItem *list,char *name,char *version,char *arch)
+static int PackageInItemList(PackageItem *list,char *name,char *version,char *arch)
 
-{ struct CfPackageItem *pi;
+{ PackageItem *pi;
  
 if (strlen(name) == 0 || strlen(version) == 0 || strlen(arch) == 0)
    {
@@ -2233,11 +2233,11 @@ if (utime(name, &epoch) != 0)
 
 /*****************************************************************************/
 
-static void ReportSoftware(struct CfPackageManager *list)
+static void ReportSoftware(PackageManager *list)
 
 { FILE *fout;
-  struct CfPackageManager *mp = NULL;
-  struct CfPackageItem *pi;
+  PackageManager *mp = NULL;
+  PackageItem *pi;
   char name[CF_BUFSIZE];
 
 GetSoftwareCacheFilename(name);

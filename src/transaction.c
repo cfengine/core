@@ -87,7 +87,7 @@ else if (attr.transaction.log_failed)
 
 /*****************************************************************************/
 
-struct CfLock AcquireLock(char *operand,char *host,time_t now,Attributes attr,Promise *pp, int ignoreProcesses)
+CfLock AcquireLock(char *operand,char *host,time_t now,Attributes attr,Promise *pp, int ignoreProcesses)
 
 { unsigned int pid;
   int i, err, sum=0;
@@ -95,7 +95,7 @@ struct CfLock AcquireLock(char *operand,char *host,time_t now,Attributes attr,Pr
   char *promise,cc_operator[CF_BUFSIZE],cc_operand[CF_BUFSIZE];
   char cflock[CF_BUFSIZE],cflast[CF_BUFSIZE],cflog[CF_BUFSIZE];
   char str_digest[CF_BUFSIZE];
-  struct CfLock this;
+  CfLock this;
   unsigned char digest[EVP_MAX_MD_SIZE+1];
 
 this.last = (char *) CF_UNDEFINED;
@@ -274,7 +274,7 @@ return this;
 
 /************************************************************************/
 
-void YieldCurrentLock(struct CfLock this)
+void YieldCurrentLock(CfLock this)
 
 {
 if (IGNORELOCK)

@@ -77,7 +77,7 @@ static void VerifySQLPromise(Attributes a,Promise *pp)
   char *sp;
   int count = 0;
   CfdbConn cfdb;
-  struct CfLock thislock;
+  CfLock thislock;
   char lockname[CF_BUFSIZE];
 
 snprintf(lockname,CF_BUFSIZE-1,"db-%s",pp->promiser);

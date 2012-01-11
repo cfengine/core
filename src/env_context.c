@@ -1085,7 +1085,7 @@ free(ap);
 void NewPersistentContext(char *name,unsigned int ttl_minutes,enum statepolicy policy)
 
 { CF_DB *dbp;
-  struct CfState state;
+  CfState state;
   time_t now = time(NULL);
   char filename[CF_BUFSIZE];
 
@@ -1153,7 +1153,7 @@ void LoadPersistentContext()
   char *key;
   void *value;
   time_t now = time(NULL);
-  struct CfState q;
+  CfState q;
   char filename[CF_BUFSIZE];
 
 if (LOOKUP)
@@ -1181,7 +1181,7 @@ if (!NewDBCursor(dbp,&dbcp))
 
 while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    {
-   memcpy((void *)&q,value,sizeof(struct CfState));
+   memcpy((void *)&q,value,sizeof(CfState));
 
    CfDebug(" - Found key %s...\n",key);
 

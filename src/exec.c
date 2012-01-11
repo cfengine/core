@@ -370,7 +370,7 @@ void StartServer(int argc,char **argv)
   time_t now = time(NULL);
   Promise *pp = NewPromise("exec_cfengine","the executor agent"); 
   Attributes dummyattr;
-  struct CfLock thislock;
+  CfLock thislock;
 
 Banner("Starting executor");
 memset(&dummyattr,0,sizeof(dummyattr));

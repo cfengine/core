@@ -29,9 +29,9 @@
 #include "cf3.defs.h"
 #include "prototypes3.h"
 
-int PrependPackageItem(struct CfPackageItem **list, const char *name, const char *version, const char *arch,Attributes a,Promise *pp)
+int PrependPackageItem(PackageItem **list, const char *name, const char *version, const char *arch,Attributes a,Promise *pp)
 
-{ struct CfPackageItem *pi;
+{ PackageItem *pi;
 
 if (strlen(name) == 0 || strlen(version) == 0 || strlen(arch) == 0)
    {
@@ -40,7 +40,7 @@ if (strlen(name) == 0 || strlen(version) == 0 || strlen(arch) == 0)
 
 CfOut(cf_verbose,""," -> Package (%s,%s,%s) found",name,version,arch);
 
-pi = xmalloc(sizeof(struct CfPackageItem));
+pi = xmalloc(sizeof(PackageItem));
 
 if (list)
    {
@@ -64,7 +64,7 @@ return true;
 
 /*****************************************************************************/
 
-int PrependListPackageItem(struct CfPackageItem **list,char *item,Attributes a,Promise *pp)
+int PrependListPackageItem(PackageItem **list,char *item,Attributes a,Promise *pp)
 
 { char name[CF_MAXVARSIZE];
   char arch[CF_MAXVARSIZE];

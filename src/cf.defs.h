@@ -584,8 +584,11 @@ typedef sqlite3_stmt CF_DBC;
 # define NULLFILE "nul"
 # define EXEC_SUFFIX ".exe"
 
-typedef u_long in_addr_t;  // as seen in in_addr struct in winsock.h
-#ifndef VER_SUITE_WH_SERVER  // shold be in winnt.h, but is not in current mingw-version
+// as seen in in_addr struct in winsock.h
+typedef u_long in_addr_t;
+
+// shold be in winnt.h, but is not in current MinGW version
+#ifndef VER_SUITE_WH_SERVER
 # define VER_SUITE_WH_SERVER 0x00008000
 #endif
 
@@ -828,7 +831,8 @@ typedef struct
 #define CF_AUDIT_VERSION 64
 #define CF_AUDIT_DATE    32
 
-typedef struct        /* key includes operation and date */
+/* key includes operation and date */
+typedef struct
    {
    char  operator[CF_AUDIT_COMMENT];
    char  comment[CF_AUDIT_COMMENT];
@@ -946,7 +950,9 @@ enum roles
 
 /*******************************************************************/
 
-typedef struct Stat_
+typedef struct Stat_ Stat;
+
+struct Stat_
    {
    char             *cf_filename;   /* What file are we statting? */
    char             *cf_server;     /* Which server did this come from? */
@@ -965,8 +971,8 @@ typedef struct Stat_
    int               cf_nlink;      /* Number of hard links */
    int               cf_ino;        /* inode number on server */
    dev_t             cf_dev;        /* device number */
-   struct Stat_    *next;
-   } Stat;
+   Stat *next;
+   };
 
 /*******************************************************************/
 
@@ -1230,23 +1236,27 @@ typedef struct
 
 /*******************************************************************/
 
-typedef struct CompressedArray_
+typedef struct CompressedArray_ CompressedArray;
+
+struct CompressedArray_
    {
    int key;
    char *value;
-   struct CompressedArray_ *next;
-   } CompressedArray;
+   CompressedArray *next;
+   };
 
 /*******************************************************************/
 
-typedef struct Audit_
+typedef struct Audit_ Audit;
+
+struct Audit_
    {
    char *version;
    char *filename;
    char *date;
    unsigned char digest[EVP_MAX_MD_SIZE+1];
-   struct Audit_ *next;
-   } Audit;
+   Audit *next;
+   };
 
 /*******************************************************************/
 /* Action /promise types                                           */
@@ -1259,36 +1269,41 @@ struct Item_
    char  *classes;
    int    counter;
    time_t time;
-   struct Item_ *next;
+   Item *next;
    };
 
 /*******************************************************************/
 
-typedef struct  // Indexed itemlist
+// Indexed itemlist
+typedef struct
    {
    Item *list[256];
    } AlphaList;
 
 /*******************************************************************/
 
-typedef struct UidList_
+typedef struct UidList_ UidList;
+
+struct UidList_
    {
 #ifdef MINGW  // TODO: remove uid for NT ?
      char sid[CF_MAXSIDSIZE];  /* Invalid sid indicates unset */
 #endif  /* MINGW */
    uid_t uid;
    char *uidname;                               /* when uid is -2 */
-   struct UidList_ *next;
-   } UidList;
+   UidList *next;
+   };
 
 /*******************************************************************/
 
-typedef struct GidList_
+typedef struct GidList_ GidList;
+
+struct GidList_
    {
    gid_t gid;
    char *gidname;                               /* when gid is -2 */
-   struct GidList_ *next;
-   } GidList;
+   GidList *next;
+   };
 
 /*******************************************************************/
 
@@ -1319,7 +1334,9 @@ enum matchtypes
 
 /*******************************************************************/
 
-typedef struct Auth_
+typedef struct Auth_ Auth;
+
+struct Auth_
    {
    char *path;
    Item *accesslist;
@@ -1327,20 +1344,22 @@ typedef struct Auth_
    int encrypt;              /* which files HAVE to be transmitted securely */
    int literal;
    int classpattern;
-   struct Auth_ *next;
-   } Auth;
+   Auth *next;
+   };
 
 /*******************************************************************/
 
-typedef struct Strategy_
+typedef struct Strategy_ Strategy;
+
+struct Strategy_
    {
    char    done;
    char   *name;
    char   *classes;
    char   type;                 /* default r=random */
    Item *strategies;
-   struct Strategy_ *next;
-   } Strategy;
+   Strategy *next;
+   };
 
 /*******************************************************************/
 /* Checksum database structures                                    */

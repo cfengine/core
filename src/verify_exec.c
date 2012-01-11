@@ -97,7 +97,7 @@ return true;
 
 static void VerifyExec(Attributes a, Promise *pp)
     
-{ struct CfLock thislock;
+{ CfLock thislock;
   char unsafeLine[CF_BUFSIZE], line[sizeof(unsafeLine)*2],eventname[CF_BUFSIZE];
   char comm[20];
   char execstr[CF_EXPANDSIZE];

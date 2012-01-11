@@ -35,14 +35,14 @@
 #define QUEUESIZE 50
 #define CF_BUFEXT 128
 
-struct cfd_get_arg
+typedef struct
    {
    ServerConnectionState *connect;
    int encrypt;
    int buf_size;
    char *replybuff;
    char *replyfile;
-   };
+   } ServerFileGetState;
 
 int main (int argc,char *argv[]);
 int OpenReceiverChannel (void);
@@ -62,8 +62,8 @@ Item *ContextAccessControl(char *in,ServerConnectionState *conn,int encrypt,Auth
 void ReplyServerContext(ServerConnectionState *conn,char *sendbuffer,char *recvbuffer,int encrypted,Item *classes);
 int CheckStoreKey  (ServerConnectionState *conn, RSA *key);
 int StatFile (ServerConnectionState *conn, char *sendbuffer, char *filename);
-void CfGetFile (struct cfd_get_arg *args);
-void CfEncryptGetFile(struct cfd_get_arg *args);
+void CfGetFile (ServerFileGetState *args);
+void CfEncryptGetFile(ServerFileGetState *args);
 void CompareLocalHash(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer);
 void GetServerLiteral(ServerConnectionState *conn,char *sendbuffer,char *recvbuffer,int encrypted);
 int GetServerQuery(ServerConnectionState *conn,char *sendbuffer,char *recvbuffer);
@@ -73,7 +73,7 @@ void Terminate (int sd);
 void DeleteAuthList (Auth *ap);
 int AllowedUser (char *user);
 int AuthorizeRoles(ServerConnectionState *conn,char *args);
-int TransferRights(char *filename,int sd,struct cfd_get_arg *args,char *sendbuffer, struct stat *sb);
+int TransferRights(char *filename,int sd,ServerFileGetState *args,char *sendbuffer, struct stat *sb);
 void AbortTransfer(int sd,char *sendbuffer,char *filename);
 void FailedTransfer(int sd,char *sendbuffer,char *filename);
 void ReplyNothing (ServerConnectionState *conn);
@@ -312,7 +312,7 @@ static void StartServer(int argc,char **argv, GenericAgentConfig config)
   int ret_val;
   Promise *pp = NewPromise("server_cfengine","the server daemon");
   Attributes dummyattr = {{0}};
-  struct CfLock thislock;
+  CfLock thislock;
 
 #if defined(HAVE_GETADDRINFO)
   int addrlen=sizeof(struct sockaddr_in6);
@@ -989,7 +989,7 @@ int BusyWithConnection(ServerConnectionState *conn)
   long time_no_see = 0;
   unsigned int len=0;
   int drift, plainlen, received, encrypted = 0;
-  struct cfd_get_arg get_args;
+  ServerFileGetState get_args;
   Item *classes;
 
 memset(recvbuffer,0,CF_BUFSIZE+CF_BUFEXT);
@@ -2320,7 +2320,7 @@ Item *ContextAccessControl(char *in,ServerConnectionState *conn,int encrypt,Auth
   char *key;
   void *value;
   time_t now = time(NULL);
-  struct CfState q;
+  CfState q;
   Item *ip,*matches = NULL, *candidates = NULL;
   char filename[CF_BUFSIZE];
 
@@ -2343,7 +2343,7 @@ if (!NewDBCursor(dbp,&dbcp))
 
 while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
    {
-   memcpy((void *)&q,value,sizeof(struct CfState));
+   memcpy((void *)&q,value,sizeof(CfState));
 
    if (now > q.expires)
       {
@@ -3039,7 +3039,7 @@ return 0;
 
 /***************************************************************/
 
-void CfGetFile(struct cfd_get_arg *args)
+void CfGetFile(ServerFileGetState *args)
 
 { int sd,fd,n_read,total=0,sendlen=0,count = 0;
   char sendbuffer[CF_BUFSIZE+256],filename[CF_BUFSIZE];
@@ -3140,7 +3140,7 @@ CfDebug("Done with GetFile()\n");
 
 /***************************************************************/
 
-void CfEncryptGetFile(struct cfd_get_arg *args)
+void CfEncryptGetFile(ServerFileGetState *args)
 
 /* Because the stream doesn't end for each file, we need to know the
    exact number of bytes transmitted, which might change during
@@ -3645,7 +3645,7 @@ if (strlen(errmesg) > 0)
 
 /***************************************************************/
 
-int TransferRights(char *filename,int sd,struct cfd_get_arg *args,char *sendbuffer, struct stat *sb)
+int TransferRights(char *filename,int sd,ServerFileGetState *args,char *sendbuffer, struct stat *sb)
 {
 #ifdef MINGW
 SECURITY_DESCRIPTOR *secDesc;
@@ -3807,7 +3807,7 @@ else
 /* Toolkit/Class: conn                                         */
 /***************************************************************/
 
-ServerConnectionState *NewConn(int sd)  /* construct */
+ServerConnectionState *NewConn(int sd)
 
 { ServerConnectionState *conn;
 
@@ -3834,7 +3834,7 @@ return conn;
 
 /***************************************************************/
 
-void DeleteConn(ServerConnectionState *conn) /* destruct */
+void DeleteConn(ServerConnectionState *conn)
 
 {
 CfDebug("***Closing socket %d from %s\n",conn->sd_reply,conn->ipaddr);

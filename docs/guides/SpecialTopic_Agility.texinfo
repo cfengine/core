@@ -30,6 +30,7 @@
 
 @page
 
+
 @cartouche
 @quotation
 Agility is a widely used term in today's fast moving IT industry. It
@@ -162,6 +163,7 @@ change.
 
 @cartouche
 @verbatim
+
   Agility ~ Available speed under control        Changes available
            -----------------------------  *  -----------------------
                   Required speed                 Changes Required
@@ -265,7 +267,7 @@ work. Precision is maximized when:
 @sp 1
 @itemize
 @item Policy is able to model or describe the desired state accurately.
-@item If any assumptions are hidden, they are described by your model, not by the software@footnote{In some other configuration software, assumptions are hardcoded into the tools themselves, making the outcome
+@item If any assumptions are hidden, they are described by your model, not by the software@footnote{In some other configuration software, assumptions are hard-coded into the tools themselves, making the outcome
 undocumented.}.
 
 @item The agent executes the details of the model quickly and verifiably,
@@ -350,7 +352,7 @@ or rule-making is needed to manage the relevant issues.
 @sp 1
 Patterns play a role too in simplifying. If we make good use of
 patterns, we can make few rules that cover many cases. If there are no
-discernable patterns, every special case is a costly exception.  This
+discernible patterns, every special case is a costly exception.  This
 affects not just the technology cost, but also the cognitive cost
 (comprehensibility).
 
@@ -412,21 +414,77 @@ required for actual business (low overhead, maximum capacity).
 @node What agility means in different environments, Separating What from How, Aspects of CFEngine that bring agility, Aspects of CFEngine that bring agility
 @section What agility means in different environments
 
-As indicated above, agility is relative to an environment.
-In the following sections, we note a few example environments
-and how their expectations for agility might differ, noting some aspects
-of CFEngine that are helpful in these cases.
+Agility is relative to an environment.  In the following sections, we
+cite the remarks of CFEngine users (in quotes), and about a few example
+environments and how their expectations for agility might differ,
+noting some aspects of CFEngine that are helpful in these cases.
 
+Two concepts that are frequently referred to are the classic
+reliability measures: Mean Time Before Failure (MTBF) and Mean Time To
+Repair (MTTR). Although this is a simplistic model of failure, it is
+easily recognizable:
 
+@itemize
+@item If we are proactive or quick at recovering from
+minor problems, larger outages can be avoided. Thus agility plays a
+role in avoiding cascade failure. 
+
+@item If the time to repair is long, or the repair is inaccurate, this could
+result if more widespread problems. Inaccurate change or repair often leads to
+attempts to `roll-back', causing further problems.
+@end itemize
 
 @menu
+* Desktop management::          
 * Web shops::                   
 * Cloud providers::             
 * High Performance Computing::  
 * Government and finance sectors::  
+* Manufacturing::                
 @end menu
 
-@node Web shops, Cloud providers, What agility means in different environments, What agility means in different environments
+@node Desktop management, Web shops, What agility means in different environments, What agility means in different environments
+@subsection Desktop management
+
+@table @i
+@item Speed:
+
+The desktop space can be a very volatile environment. Speed is
+essential when there is a need to respond to a security threat that
+affects all of the desktop systems; e.g. when dealing with malware
+that requires the distribution of updated @file{virus.dat} files,
+etc. CFEngine can be very helpful by automating the process of
+distributing and restarting the application responsible for virus
+detection and mitigation. Systems that have been breached, need to be
+returned to known and secure state quickly to avoid loss. CFEngine can
+quickly detect and correct host based intrusions using file-scanning
+techniques and can secure hosts for examination, or just repair them
+quickly.
+
+Another case for agility lies in user request processing. For example,
+when a new user joins a workplace and needs resources such as desktop,
+laptop, phone, Internet connection, VPN connection, VM instances,
+etc. Speed is of the essence to minimize employee downtime.
+
+@item Precision:
+
+Precision is important to ensure that the resources made available are
+indeed the correct ones. Inaccuracy can be a potential security issue,
+or merely a productivity question.
+
+Precision also comes into play when an enterprise rolls out new
+patches or productivity upgrades. These upgrades need to be uniformly
+and precisely distributed to all of the desktop systems during a given
+change window. By design, desktop clients running CFEngine
+automatically check for changes in system state and can precisely
+propagate desired state. In the case of system restoration due to
+corruption or hardware failure, CFEngine can greatly reduce the time
+needed to return to the most current enterprise build.
+
+@end table
+
+
+@node Web shops, Cloud providers, Desktop management, What agility means in different environments
 @subsection Web shops
 
 Modern web-based companies often base their entire financial
@@ -438,10 +496,10 @@ mission critical.
 
 The frequency of maintenance is not usually critical in web shops,
 since configuration changes can be planned to occur over hours rather
-than minutes, but speed of execution is a factor during updates.
-During software updates speed and orchestration are issues, as time
-lost during upgrades is often revenue lost, and a lack of coordination
-of multiple parts could cause effective downtime.
+than minutes.  During software updates and system repairs, however,
+speed and orchestration are issues, as time lost during upgrades is
+often revenue lost, and a lack of coordination of multiple parts could
+cause effective downtime.
 
 It is therefore easy to scale the management of a web service, as change
 is rarely considered to be time-critical.
@@ -477,7 +535,7 @@ competitiveness. Maintaining precise
 
 @table @i
 @item Speed:
-The cloud was designed for shorter time-scales, and realtively quick turnover of
+The cloud was designed for shorter time-scales, and relatively quick turnover of
 needs. That suggests that configuration will change quite often.
 For Infrastructure-as-a-Service providers and consumers, set up
 and tear-down rates are quite high so efficient and speedy configuration
@@ -495,22 +553,43 @@ for demand is probably the fastest rate of change.
 @node High Performance Computing, Government and finance sectors, Cloud providers, What agility means in different environments
 @subsection High Performance Computing
 
+High Performance clusters are typically found in the oil and gas
+industry, in movie, financial, weather and aviation industries, and
+any other modelling applications where raw computation is used to
+crunch numbers. 
+
 @table @i
 @item Speed:
 
-High Performance clusters are typically found in the oil and gas
-industry, in movie, financial, weather and aviation industries, and any other modelling
-applications where raw computation is used to crunch numbers. The
-lightweight footprint of CFEngine is a major benefit here, as every
-CPU cycle and megabyte of memory is precious.
+The lightweight footprint of CFEngine is a major benefit here, as
+every CPU cycle and megabyte of memory is precious, so workflow is not
+disrupted.
+
+`A single node in the compute grid being out of sync with the others
+can cause the entire grid to cause failed jobs or otherwise introduce
+unpredictability into the environment, as it may produce results that
+differ from its peers.  Thus it is imperative that repairs to an
+incorrect state happen as soon as possible, to minimize the impact of
+these issues.'
 
 @item Precision:
-In clusters the rate of customization is low, so the need for agility
-is generally low, and raw speed is the issue.
+`Precision is exquisitely important in an HPC grid.  When making a
+configuration change, due to the homogeneity of the environment, small
+changes can have enormous impacts due to the quantity of affected
+systems.  I liken this to the "monoculture" problem in replanted
+forests -- everything is the same, so what would ordinarily be a
+small, easily-contained problem like a fungus outbreak, quickly
+spreads into an uncontrollable disaster.  Thus, with HPC systems it is
+imperative that any changes deployed are precise, to ensure that no
+unintended consequences will occur.  This is clearly directly related
+to comprehensibility of the environment -- it is difficult or
+impossible to make a precise change when you don't fully comprehend
+the environment.'
+
 @end table
 
 
-@node Government and finance sectors,  , High Performance Computing, What agility means in different environments
+@node Government and finance sectors, Manufacturing, High Performance Computing, What agility means in different environments
 @subsection Government and finance sectors
 
 @table @i
@@ -535,6 +614,44 @@ Security and hence tight control of approved software are major challenges
 in government regulated institutions. Agility has been a low priority
 in the past, but this will have to change as the rest of the world's
 IT services accelerate.
+
+@end table
+
+
+@node Manufacturing,  , Government and finance sectors, What agility means in different environments
+@subsection Manufacturing
+
+@table @i
+@item Speed:
+
+Manufacturing is a curious mix of all the mention areas and more. In
+addition to the above, there is an tool component. The
+tools can design, build, test, track, and ship a physical
+unit. Downtime of any component is measured in missed revenue.
+
+
+@item Precision:
+
+
+Not only do we need to ensure agility, but also the accuracy of
+reporting. We need to know what is going on at any microsecond of the
+day. One faulty tool can throw a wrench in the whole works. The
+digital equivalent of the steam whistle to stop the line.
+
+From there, all the tool information is fed upstream to servers, from
+there to databases, then reports, that statistical analysis, and so
+on. Each piece needs to move with the product and incorporate it. It
+is a steady chain of events where are all information is liquid and
+relevant.
+
+Not only do you have the security requirements, from virus updates to
+top secret classification, but these tools need to never stop,
+ever. Also, these tools need constant reconfiguration depending on the
+product they are working on: e.g. you can't use the same set of
+procedures on XBox chip as a cellphone memory module. And all the
+tools are different too: one may be a probe to detect microscopic
+fractures in the layers, one tool may just track it's position in
+line. Supply and demand, cost and revenue.
 
 
 
@@ -681,7 +798,7 @@ packages:
 @sp 1
 
 Abstraction allows us to turn special cases into general patterns. This leads to a compression
-of information, as we can make defaults for the general patternt, which do not have to be
+of information, as we can make defaults for the general patterns, which do not have to be
 repeated each time.
 
 Service promises are good example of this@footnote{Service promises,
@@ -707,7 +824,7 @@ operations to take place with the utterance of just a single
 word@footnote{All good magic stories begin like this.}. But any
 software can pull that smoke and mirrors trick. To be agile, it must
 be possible to understand and change the details of what happens when
-this services is promised. Some tools hardcode processes for this kind
+this services is promised. Some tools hard-code processes for this kind
 of statement, requiring an understanding of programming in a
 development language to alter the result. In CFEngine, the definitions
 underlying this are written in the high-level declarative CFEngine
@@ -770,12 +887,6 @@ so we shall not discuss it further here.
 @node Agility in your work,  , Aspects of CFEngine that bring agility, Top
 @chapter Agility in your work
 
-@cartouche
-Just as we separate goals from actions, and strategy from tactics,
-so we can separate what is easy from what is simple. Easy brings
-short-term gratification, but simple makes the future cost less.
-@end cartouche
-
 @menu
 * Easy versus simple::          
 * How does complexity affect agility?::  
@@ -789,25 +900,34 @@ short-term gratification, but simple makes the future cost less.
 @node Easy versus simple, How does complexity affect agility?, Agility in your work, Agility in your work
 @section Easy versus simple
 
-Easy is about barriers to adoption. If there is a cost associated with
-moving ahead
+@cartouche
+Just as we separate goals from actions, and strategy from tactics,
+so we can separate what is easy from what is simple. Easy brings
+short-term gratification, but simple makes the future cost less.
+@end cartouche
+@sp 1
 
- - A psychological cost
- - A cognitive cost
- - It takes too long
- - It costs too much money
+@i{Easy} is about barriers to adoption. If there is a cost associated with
+moving ahead that makes it hard:
 
-that makes it hard.
+@itemize
+@item A psychological cost
+@item A cognitive cost
+@item It takes too long
+@item It costs too much money
+@end itemize
 
-Simple is about what happens next. Once you have started, what happens if you
+@i{Simple} is about what happens next. Once you have started, what happens if you
 want to change something?
 
-In some languages you have to start programming. In CFEngine, you just make the sames
-kinds of declarations, with exactly the same model. You don't need to learn new principles
-and ideas, just more of the same, just details that can be looked up. So you have the
-understanding (the high cost investment is done), you just need to pick up a few facts
-that can easily be searched for.
+Total cost of ownership is reduced if a design is simple, as there are
+only a few things to learn in total. Even if those things are hard to
+learn, it is a one-off investment and everything that follows will be easy.
 
+Unlike some tools, with CFEngine, you do not need to program `how' to
+do things, only what you want to happen. This is always done by using the
+same kinds of declarations, based on the same model. You don't
+need to learn new principles and ideas, just more of the same.
 
 
 
@@ -935,7 +1055,7 @@ over the next 5 years.
 
 Many businesses have used the argument: everything is getting cheaper
 so it doesn't matter if my software is inefficient -- I can brute force
-it in a eyar's time with more memory and a faster CPU. The error of this
+it in a year's time with more memory and a faster CPU. The error of this
 argument is that complexity and scale are also increasing, and you will
 need those savings down the line even more than you do now.
 @end cartouche
@@ -958,6 +1078,28 @@ with clear expectations of what is possible and controlling only certain
 parts on which crucial things depend.
 
 
+@c .....................................................................
+@node What does agility cost?
+@section What does agility cost?
+@sp 1
+
+The architecture of CFEngine is designed to be lightweight and have a low
+Total Cost of Ownership.
+
+While speed and scalability might not seem important for certain
+environments, and brute force methods will indeed work with sufficient
+force, such methods are costly.
+
+@cartouche
+At a recent site, CFEngine replaced an incumbent software solution
+where 200 machines were required to make the management infrastructure
+scale to the task. CFEngine replaced this with 3 machines, and a
+reduced workforce.
+@end cartouche
+
+Clearly the total cost of providing for agility can be costly or it
+can be cheap. By design, CFEngine aims to make scale and agility
+inexpensive in the long run.
 
 @c .....................................................................
 @node Who is responsible for agility?,  , Maximizing business imperatives, Agility in your work

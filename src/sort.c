@@ -1,18 +1,12 @@
-/*****************************************************************************/
-/*                                                                           */
-/* File: sort.c                                                              */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
 /*******************************************************************/
 
 /* The following sort functions are trivial rewrites of merge-sort
- * implementation by Simon Tatham 
+ * implementation by Simon Tatham
  * copyright 2001 Simon Tatham.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
  * files (the "Software"), to deal in the Software without
@@ -21,10 +15,10 @@
  * sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following
  * conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be
  * included in all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -46,10 +40,10 @@ Item *SortItemListNames(Item *list) /* Alphabetical */
   int insize, nmerges, psize, qsize, i;
 
 if (list == NULL)
-   { 
+   {
    return NULL;
    }
- 
+
 insize = 1;
 
 while (true)
@@ -57,16 +51,16 @@ while (true)
    p = list;
    list = NULL;
    tail = NULL;
-   
+
    nmerges = 0;  /* count number of merges we do in this pass */
-   
+
    while (p)
       {
       nmerges++;  /* there exists a merge to be done */
       /* step `insize' places along from p */
       q = p;
       psize = 0;
-      
+
       for (i = 0; i < insize; i++)
          {
          psize++;
@@ -78,13 +72,13 @@ while (true)
             break;
             }
          }
-      
+
       /* if q hasn't fallen off end, we have two lists to merge */
       qsize = insize;
-      
+
       /* now we have two lists; merge them */
       while (psize > 0 || (qsize > 0 && q))
-         {          
+         {
           /* decide whether next element of merge comes from p or q */
          if (psize == 0)
             {
@@ -115,7 +109,7 @@ while (true)
             q = q->next;
             qsize--;
             }
-         
+
          /* add the next element to the merged list */
          if (tail)
             {
@@ -125,23 +119,23 @@ while (true)
             {
             list = e;
             }
-         
+
          tail = e;
          }
-      
+
       /* now p has stepped `insize' places along, and q has too */
       p = q;
       }
 
    tail->next = NULL;
-   
+
    /* If we have done only one merge, we're finished. */
-   
+
    if (nmerges <= 1)   /* allow for nmerges==0, the empty list case */
       {
       return list;
       }
-   
+
    /* Otherwise repeat, merging lists twice the size */
    insize *= 2;
    }
@@ -159,10 +153,10 @@ Item *SortItemListClasses(Item *list) /* Alphabetical */
   int insize, nmerges, psize, qsize, i;
 
 if (list == NULL)
-   { 
+   {
    return NULL;
    }
- 
+
 insize = 1;
 
 while (true)
@@ -170,16 +164,16 @@ while (true)
    p = list;
    list = NULL;
    tail = NULL;
-   
+
    nmerges = 0;  /* count number of merges we do in this pass */
-   
+
    while (p)
       {
       nmerges++;  /* there exists a merge to be done */
       /* step `insize' places along from p */
       q = p;
       psize = 0;
-      
+
       for (i = 0; i < insize; i++)
          {
          psize++;
@@ -191,13 +185,13 @@ while (true)
             break;
             }
          }
-      
+
       /* if q hasn't fallen off end, we have two lists to merge */
       qsize = insize;
-      
+
       /* now we have two lists; merge them */
       while (psize > 0 || (qsize > 0 && q))
-         {          
+         {
           /* decide whether next element of merge comes from p or q */
          if (psize == 0)
             {
@@ -228,7 +222,7 @@ while (true)
             q = q->next;
             qsize--;
             }
-         
+
          /* add the next element to the merged list */
          if (tail)
             {
@@ -238,23 +232,23 @@ while (true)
             {
             list = e;
             }
-         
+
          tail = e;
          }
-      
+
       /* now p has stepped `insize' places along, and q has too */
       p = q;
       }
 
    tail->next = NULL;
-   
+
    /* If we have done only one merge, we're finished. */
-   
+
    if (nmerges <= 1)   /* allow for nmerges==0, the empty list case */
       {
       return list;
       }
-   
+
    /* Otherwise repeat, merging lists twice the size */
    insize *= 2;
    }
@@ -272,10 +266,10 @@ Item *SortItemListCounters(Item *list) /* Biggest first */
   int insize, nmerges, psize, qsize, i;
 
 if (list == NULL)
-   { 
+   {
    return NULL;
    }
- 
+
 insize = 1;
 
 while (true)
@@ -283,34 +277,34 @@ while (true)
    p = list;
    list = NULL;
    tail = NULL;
-   
+
    nmerges = 0;  /* count number of merges we do in this pass */
-   
+
    while (p)
       {
       nmerges++;  /* there exists a merge to be done */
       /* step `insize' places along from p */
       q = p;
       psize = 0;
-      
+
       for (i = 0; i < insize; i++)
          {
          psize++;
          q = q->next;
-         
+
          if (!q)
             {
             break;
             }
          }
-      
+
       /* if q hasn't fallen off end, we have two lists to merge */
       qsize = insize;
-      
+
       /* now we have two lists; merge them */
 
       while (psize > 0 || (qsize > 0 && q))
-         {          
+         {
          /* decide whether next element of merge comes from p or q */
          if (psize == 0)
             {
@@ -341,7 +335,7 @@ while (true)
             q = q->next;
             qsize--;
             }
-         
+
          /* add the next element to the merged list */
 
          if (tail)
@@ -352,23 +346,23 @@ while (true)
             {
             list = e;
             }
-         
+
          tail = e;
          }
-      
+
       /* now p has stepped `insize' places along, and q has too */
       p = q;
       }
 
    tail->next = NULL;
-   
+
    /* If we have done only one merge, we're finished. */
-   
+
    if (nmerges <= 1)   /* allow for nmerges==0, the empty list case */
       {
       return list;
       }
-   
+
    /* Otherwise repeat, merging lists twice the size */
    insize *= 2;
    }
@@ -386,10 +380,10 @@ Item *SortItemListTimes(Item *list) /* Biggest first */
   int insize, nmerges, psize, qsize, i;
 
 if (list == NULL)
-   { 
+   {
    return NULL;
    }
- 
+
 insize = 1;
 
 while (true)
@@ -397,34 +391,34 @@ while (true)
    p = list;
    list = NULL;
    tail = NULL;
-   
+
    nmerges = 0;  /* count number of merges we do in this pass */
-   
+
    while (p)
       {
       nmerges++;  /* there exists a merge to be done */
       /* step `insize' places along from p */
       q = p;
       psize = 0;
-      
+
       for (i = 0; i < insize; i++)
          {
          psize++;
          q = q->next;
-         
+
          if (!q)
             {
             break;
             }
          }
-      
+
       /* if q hasn't fallen off end, we have two lists to merge */
       qsize = insize;
-      
+
       /* now we have two lists; merge them */
 
       while (psize > 0 || (qsize > 0 && q))
-         {          
+         {
          /* decide whether next element of merge comes from p or q */
          if (psize == 0)
             {
@@ -455,7 +449,7 @@ while (true)
             q = q->next;
             qsize--;
             }
-         
+
          /* add the next element to the merged list */
 
          if (tail)
@@ -466,23 +460,23 @@ while (true)
             {
             list = e;
             }
-         
+
          tail = e;
          }
-      
+
       /* now p has stepped `insize' places along, and q has too */
       p = q;
       }
 
    tail->next = NULL;
-   
+
    /* If we have done only one merge, we're finished. */
-   
+
    if (nmerges <= 1)   /* allow for nmerges==0, the empty list case */
       {
       return list;
       }
-   
+
    /* Otherwise repeat, merging lists twice the size */
    insize *= 2;
    }
@@ -503,10 +497,10 @@ Rlist *SortRlist(Rlist *list, int (*CompareItems)())
   int insize = 0, nmerges = 0, psize = 0, qsize = 0, i = 0;
 
 if (list == NULL)
-   { 
+   {
    return NULL;
    }
- 
+
 insize = 1;
 
 while (true)
@@ -514,16 +508,16 @@ while (true)
    p = list;
    list = NULL;
    tail = NULL;
-   
+
    nmerges = 0;  /* count number of merges we do in this pass */
-   
+
    while (p)
       {
       nmerges++;  /* there exists a merge to be done */
       /* step `insize' places along from p */
       q = p;
       psize = 0;
-      
+
       for (i = 0; i < insize; i++)
          {
          psize++;
@@ -535,13 +529,13 @@ while (true)
             break;
             }
          }
-      
+
       /* if q hasn't fallen off end, we have two lists to merge */
       qsize = insize;
-      
+
       /* now we have two lists; merge them */
       while (psize > 0 || (qsize > 0 && q))
-         {          
+         {
           /* decide whether next element of merge comes from p or q */
          if (psize == 0)
             {
@@ -572,7 +566,7 @@ while (true)
             q = q->next;
             qsize--;
             }
-         
+
          /* add the next element to the merged list */
          if (tail)
             {
@@ -582,23 +576,23 @@ while (true)
             {
             list = e;
             }
-         
+
          tail = e;
          }
-      
+
       /* now p has stepped `insize' places along, and q has too */
       p = q;
       }
 
    tail->next = NULL;
-   
+
    /* If we have done only one merge, we're finished. */
-   
+
    if (nmerges <= 1)   /* allow for nmerges==0, the empty list case */
      {
      return list;
      }
-   
+
    /* Otherwise repeat, merging lists twice the size */
    insize *= 2;
    }
@@ -617,7 +611,7 @@ Rlist *AlphaSortRListNames(Rlist *list)
 int insize = 1;
 
 if (list == NULL)
-   { 
+   {
    return NULL;
    }
 
@@ -626,16 +620,16 @@ if (list == NULL)
     Rlist *p = list;
     Rlist *tail = NULL;
     list = NULL;
-    
+
     int nmerges = 0;  /* count number of merges we do in this pass */
-    
+
     while (p)
        {
        nmerges++;  /* there exists a merge to be done */
        /* step `insize' places along from p */
        Rlist *q = p;
        int psize = 0;
-       
+
        for (int i = 0; i < insize; i++)
           {
           psize++;
@@ -646,10 +640,10 @@ if (list == NULL)
               break;
               }
           }
-       
+
        /* if q hasn't fallen off end, we have two lists to merge */
        int qsize = insize;
-       
+
        /* now we have two lists; merge them */
        while (psize > 0 || (qsize > 0 && q))
           {
@@ -676,7 +670,7 @@ if (list == NULL)
              /* First element of q is lower; e must come from q. */
              e = q; q = q->next; qsize--;
              }
-          
+
           /* add the next element to the merged list */
           if (tail)
              {
@@ -688,12 +682,12 @@ if (list == NULL)
              }
           tail = e;
           }
-       
+
        /* now p has stepped `insize' places along, and q has too */
        p = q;
        }
     tail->next = NULL;
-    
+
     /* If we have done only one merge, we're finished. */
 
     if (nmerges <= 1)   /* allow for nmerges==0, the empty list case */

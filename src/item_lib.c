@@ -140,7 +140,7 @@ return -1;
 
 /*********************************************************************/
 
-int IsItemIn(Item *list,const char *item)
+bool IsItemIn(Item *list,const char *item)
 
 { Item *ptr; 
 
@@ -153,11 +153,11 @@ for (ptr = list; ptr != NULL; ptr=ptr->next)
    {
    if (strcmp(ptr->name,item) == 0)
       {
-      return(true);
+      return true;
       }
    }
  
-return(false);
+return false;
 }
 
 /*********************************************************************/

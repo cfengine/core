@@ -92,6 +92,18 @@ ToLowerStrInplace(buffer);
 return buffer;
 }
 
+/*********************************************************************/
+
+char *SafeDuplicateString(char *str)
+{
+ if(str == NULL)
+    {
+    return NULL;
+    }
+ 
+ return xstrdup(str);
+}
+
 /*******************************************************************/
 
 int StripListSep(char *strList, char *outBuf, int outBufSz)

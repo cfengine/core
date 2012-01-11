@@ -32,6 +32,8 @@ void ToUpperStrInplace(char *str);
 char *ToLowerStr(const char *str);
 void ToLowerStrInplace(char *str);
 
+char *SafeDuplicateString(char *str);
+
 int GetStringListElement(char *strList, int index, char *outBuf, int outBufSz);
 int StripListSep(char *strList, char *outBuf, int outBufSz);
 

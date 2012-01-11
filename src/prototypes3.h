@@ -805,7 +805,7 @@ int CompareToFile(Item *liststart,char *file,Attributes a,Promise *pp);
 Item *String2List(char *string);
 int ListLen (Item *list);
 int ByteSizeList(const Item *list);
-int IsItemIn (Item *list, const char *item);
+bool IsItemIn (Item *list, const char *item);
 int IsMatchItemIn(Item *list,char *item);
 Item *ConcatLists (Item *list1, Item *list2);
 void CopyList(Item **dest,Item *source);

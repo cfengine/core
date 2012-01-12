@@ -37,8 +37,8 @@
 
 typedef struct
    {
-   char *name;
-   char *value;
+   const char *name;
+   const char *value;
    } XmlAttribute;
 
 void XmlComment(Writer *writer, const char *comment);

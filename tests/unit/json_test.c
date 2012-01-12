@@ -28,6 +28,10 @@ static const char *OBJECT_NUMERIC = "{\n"
       "  \"int\": -1234567890\n"
       "}";
 
+static const char *OBJECT_ESCAPED = "{\n"
+      "  \"escaped\": \"quote\\\"stuff\"\n"
+      "}";
+
 static const char *ARRAY_SIMPLE = "[\n"
       "  \"one\",\n"
       "  \"two\"\n"
@@ -57,6 +61,20 @@ Writer *writer = StringWriter();
 JsonObjectPrint(writer, json, 0);
 
 assert_string_equal(OBJECT_SIMPLE, StringWriterData(writer));
+
+JsonObjectDelete(json);
+}
+
+static void test_show_object_escaped(void **state)
+{
+JsonObject *json = NULL;
+
+JsonObjectAppendString(&json, "escaped", "quote\"stuff");
+
+Writer *writer = StringWriter();
+JsonObjectPrint(writer, json, 0);
+
+assert_string_equal(OBJECT_ESCAPED, StringWriterData(writer));
 
 JsonObjectDelete(json);
 }
@@ -239,6 +257,7 @@ const UnitTest tests[] =
    {
    unit_test(test_new_delete),
    unit_test(test_show_object_simple),
+   unit_test(test_show_object_escaped),
    unit_test(test_show_object_numeric),
    unit_test(test_show_object_compound),
    unit_test(test_show_object_array),

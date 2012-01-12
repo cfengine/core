@@ -80,14 +80,31 @@ RlistAppendReference(parent, ap, CF_ASSOC);
 
 void JsonObjectAppendString(JsonObject **parent, const char *key, const char *value)
 {
-CfAssoc *ap = NULL;
-
 if (value == NULL)
    {
    return;
    }
 
-ap = AssocNewReference(key, (Rval) { xstrdup(value), CF_SCALAR }, cf_str);
+Writer *writer = StringWriter();
+
+for (const char *c= value; *c != '\0'; c++)
+   {
+   if (*c == '\"' ||
+       *c == '\\' ||
+       *c == '\b' ||
+       *c == '\f' ||
+       *c == '\n' ||
+       *c == '\r' ||
+       *c == '\b' ||
+       *c == '\t')
+      {
+      WriterWriteChar(writer, '\\');
+      }
+
+   WriterWriteChar(writer, *c);
+   }
+
+CfAssoc *ap = AssocNewReference(key, (Rval) { StringWriterClose(writer), CF_SCALAR }, cf_str);
 RlistAppendReference(parent, ap, CF_ASSOC);
 }
 

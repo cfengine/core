@@ -292,23 +292,24 @@ system for change behaves in a predictable way.
 @node Comprehension, Efficiency, Precision, Understanding Agility
 @section Comprehension
 
-The next challenge is concerns a human limitation. One of the greatest challenges in any
-organization lies in comprehending the system.
+The next challenge is concerns a human limitation. One of the greatest
+challenges in any organization lies in comprehending the system.
 @sp 1
 @cartouche
 @verbatim
        Comprehensibility ~  Predictability (Reliability)
                            ----------------------------
-                                 Machines * rules
+                                 Machines * contexts
 @end verbatim
 @end cartouche
 @sp 1
 @noindent Our ability to comprehend behaviour depends on how predictable it is, i.e.
-how well it meets our expectations. For technology, we expect behaviour
-to be as close as possible on our intentions. CFEngine's maintenance of promises
-ensures that this is done with best possible effort and a rapid cycle of checking.
+how well it meets our expectations. For technology, we expect
+behaviour to be as close as possible on our intentions. CFEngine's
+maintenance of promises ensures that this is done with best possible
+effort and a rapid cycle of checking.
 
-To keep the number of rules to a minimum, CFEngine avoids mixing up
+To keep the number of contexts to a minimum, CFEngine avoids mixing up
 @i{what} policy is being expressed with @i{how} the promises are
 kept. It uses a declarative language to separate the what from the
 how. This allows ordinary users to see what was intended without

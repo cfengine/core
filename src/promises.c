@@ -133,6 +133,7 @@ pcopy->donep = pp->donep;
 pcopy->conn = pp->conn;
 pcopy->edcontext = pp->edcontext;
 pcopy->has_subbundles = pp->has_subbundles;
+pcopy->org_pp = pp;
 
 CfDebug("Copying promise constraints\n\n");
 
@@ -298,7 +299,7 @@ pcopy->inode_cache = pp->inode_cache;
 pcopy->this_server = pp->this_server;
 pcopy->conn = pp->conn;
 pcopy->edcontext = pp->edcontext;
-
+pcopy->org_pp = pp;
 
 /* No further type checking should be necessary here, already done by CheckConstraintTypeMatch */
 
@@ -390,6 +391,7 @@ pcopy->this_server = pp->this_server;
 pcopy->conn = pp->conn;
 pcopy->edcontext = pp->edcontext;
 pcopy->has_subbundles = pp->has_subbundles;
+pcopy->org_pp = pp;
 
 /* No further type checking should be necessary here, already done by CheckConstraintTypeMatch */
 

@@ -110,21 +110,25 @@ size_t WriterWriteF(Writer *writer, const char *fmt, ...)
 {
 va_list ap;
 va_start(ap, fmt);
-size_t size = -1;
+size_t size = WriterWriteVF(writer, fmt, ap);
+va_end(ap);
+return size;
+}
 
+/*********************************************************************/
+
+size_t WriterWriteVF(Writer *writer, const char *fmt, va_list ap)
+{
 if (writer->type == WT_STRING)
    {
    char *str = NULL;
    xvasprintf(&str, fmt, ap);
-   size = StringWriterWriteLen(writer, str, INT_MAX);
+   return StringWriterWriteLen(writer, str, INT_MAX);
    }
 else
    {
-   size = FileWriterWriteF(writer, fmt, ap);
+   return FileWriterWriteF(writer, fmt, ap);
    }
-
-va_end(ap);
-return size;
 }
 
 /*********************************************************************/

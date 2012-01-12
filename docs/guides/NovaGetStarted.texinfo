@@ -89,6 +89,8 @@ process has three phases:
 @item Adapting policy.
 @end itemize
 
+For Windows related issues, see our special topic guide @url{http://cfengine.com/manuals/st-windows.html}.
+
 You should start from a blank system. If you have been using CFEngine Community Edition and you have
 already developed a policy, set aside this policy during the installation process. You will be able
 to integrate it back later.

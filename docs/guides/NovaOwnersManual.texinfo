@@ -822,7 +822,7 @@ List of policy goals as defined in policy files; these examples are from @file{c
 
 @noindent Action buttons:
 @itemize -
-@item Repository: Edit policy files in the integrated policy editor (requires Subversion)
+@item Edit policies: Edit policy files in the integrated policy editor (requires Subversion)
 @item Track records: Overview of promises repaired or not kept
 @item Approve policies: To be developed
 @item Service catalogue: See which bundles contribute to policy goals

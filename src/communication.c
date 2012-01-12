@@ -262,7 +262,7 @@ for (ap = response; ap != NULL; ap = ap->ai_next)
    }
 #else
  struct hostent *hp;
- Sockaddr_in cin;
+ struct sockaddr_in cin;
 
 memset(&cin,0,sizeof(cin));
 
@@ -326,14 +326,14 @@ strlcpy(hostbuffer, ipaddress, MAXHOSTNAMELEN);
 #else
 
 struct hostent *hp;
-Sockaddr_in myaddr;
+struct sockaddr_in myaddr;
 struct in_addr iaddr;
   
 memset(hostbuffer,0,MAXHOSTNAMELEN);
 
 if ((iaddr.s_addr = inet_addr(ipaddress)) != -1)
    {
-   hp = gethostbyaddr((void *)&iaddr,sizeof(Sockaddr_in),AF_INET);
+   hp = gethostbyaddr((void *)&iaddr,sizeof(struct sockaddr_in),AF_INET);
   
    if ((hp == NULL) || (hp->h_name == NULL))
       {

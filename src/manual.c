@@ -31,6 +31,8 @@
 
 #include "cf3.defs.h"
 #include "cf3.extern.h"
+#include "manual.h"
+#include "writer.h"
 
 extern char BUILD_DIR[CF_BUFSIZE];
 extern char MANDIR[CF_BUFSIZE];
@@ -534,54 +536,98 @@ fprintf(fout,"@end table\n");
 
 /*****************************************************************************/
 
-static void IncludeManualFile(FILE *fout,char *file)
-
-{ struct stat sb;
- char buffer[CF_BUFSIZE],filename[CF_BUFSIZE];
-  FILE *fp;
-
-AddSlash(MANDIR);
-snprintf(filename,CF_BUFSIZE-1,"%s%s",MANDIR,file);
-
-fprintf(fout,"@*\n");
-
-if (cfstat(filename,&sb) == -1)
+static bool GenerateStub(const char *filename)
+{
+FILE *fp;
+if ((fp = fopen(filename, "w")) == NULL)
    {
-   if ((fp = fopen(filename,"w")) == NULL)
-      {
-      CfOut(cf_inform,"fopen","Could not write to manual source %s",filename);
-      return;
-      }
+   CfOut(cf_inform, "fopen","Could not write to manual source %s\n", filename);
+   return false;
+   }
 
 #ifdef HAVE_CONSTELLATION
-   fprintf(fp,"\n@i{History}: Was introduced in %s, Nova %s, Constellation %s (%d)\n\n",Version(),Nova_Version(),Constellation_Version(), BUILD_YEAR);
+fprintf(fp, "\n@i{History}: Was introduced in %s, Nova %s, Constellation %s (%d)\n\n",
+        Version(), Nova_Version(), Constellation_Version(), BUILD_YEAR);
 #elif HAVE_NOVA
-   fprintf(fp,"\n@i{History}: Was introduced in %s, Nova %s (%d)\n\n",Version(),Nova_Version(), BUILD_YEAR);
+fprintf(fp, "\n@i{History}: Was introduced in %s, Nova %s (%d)\n\n",
+        Version(), Nova_Version(), BUILD_YEAR);
 #else
-   fprintf(fp,"\n@i{History}: Was introduced in %s (%d)\n\n", Version(), BUILD_YEAR);
+fprintf(fp, "\n@i{History}: Was introduced in %s (%d)\n\n", Version(), BUILD_YEAR);
 #endif
-   fprintf(fp,"\n@verbatim\n\nFill me in (%s)\n\"\"\n@end verbatim\n",filename);
-   fclose(fp);
-   CfOut(cf_verbose,"","Created %s template\n",filename);  
+fprintf(fp, "\n@verbatim\n\nFill me in (%s)\n\"\"\n@end verbatim\n", filename);
+fclose(fp);
+CfOut(cf_verbose, "", "Created %s template\n", filename);
+return true;
+}
+
+/*****************************************************************************/
+
+char *ReadTexinfoFileF(const char *fmt, ...)
+{
+Writer *filenamew = StringWriter();
+
+struct stat sb;
+char *buffer = NULL;
+FILE *fp = NULL;
+off_t file_size;
+
+va_list ap;
+va_start(ap, fmt);
+WriterWriteF(filenamew, "%s/", MANDIR);
+WriterWriteVF(filenamew, fmt, ap);
+va_end(ap);
+
+char *filename = StringWriterClose(filenamew);
+
+if (cfstat(filename, &sb) == -1)
+   {
+   if (!GenerateStub(filename))
+      {
+      CfOut(cf_inform, "", "Unable to write down stub for missing texinfo file");
+      free(filename);
+      return NULL;
+      }
    }
 
-if ((fp = fopen(filename,"r")) == NULL)
+if ((fp = fopen(filename, "r")) == NULL)
    {
-   CfOut(cf_inform,"fopen","Could not read manual source %s\n",filename);
-   fclose(fp);
-   return;
+   CfOut(cf_inform, "fopen", "Could not read manual source %s\n", filename);
+   free(filename);
+   return NULL;
    }
 
-while(!feof(fp))
+fseek(fp, 0, SEEK_END);
+file_size = ftello(fp);
+fseek(fp, 0, SEEK_SET);
+
+buffer = (char*) xcalloc(file_size+1, sizeof(char));
+buffer[file_size] = '\0';
+int cnt = fread(buffer, sizeof(char), file_size, fp);
+
+if (ferror(fp) || cnt != file_size)
    {
-   buffer[0] = '\0';
-   fgets(buffer,CF_BUFSIZE,fp);
-   fprintf(fout,"%s",buffer);
+   CfOut(cf_inform, "fread","Could not read manual source %s\n", filename);
+   free(buffer);
+   fclose(fp);
+   free(filename);
+   return NULL;
    }
 
 fclose(fp);
+free(filename);
 
-fprintf(fout,"\n");
+return buffer;
+}
+
+/*****************************************************************************/
+
+static void IncludeManualFile(FILE *fout, char *file)
+{
+char *contents = ReadTexinfoFileF("%s", file);
+if (contents)
+   {
+   fprintf(fout, "@*\n%s\n", contents);
+   }
 }
 
 /*****************************************************************************/

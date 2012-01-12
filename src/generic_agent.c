@@ -172,7 +172,7 @@ else
 
 SetPolicyServer(POLICY_SERVER);
 
-if (ag != cf_keygen)
+if (ag != cf_keygen && ag != cf_know)
    {
    if (!MissingInputFile())
       {

@@ -32,6 +32,7 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 #include "ontology.h"
+#include "export_xml.h"
 
 int main (int argc,char *argv[]);
 void ThisAgentInit(void);
@@ -50,6 +51,7 @@ void CfRemoveTestData(void);
 void CfUpdateTestData(void);
 void ShowSingletons(void);
 void ShowWords(void);
+static void GenerateXml(void);
 
 static char *NormalizeTopic(char *s);
 
@@ -100,6 +102,8 @@ int WORDS = false;
 int HTML = false;
 int WRITE_KMDB = false;
 int GENERATE_MANUAL = false;
+int GENERATE_XML = false;
+static char *OUTPUT_FILE;
 char MANDIR[CF_BUFSIZE];
 
 Occurrence *OCCURRENCES = NULL;
@@ -118,7 +122,7 @@ const char *ID = "The knowledge management agent is capable of building\n"
                  "and cf-know can assemble and converge the reference manual\n"
                  "for the current version of the Cfengine software.";
  
-const  struct option OPTIONS[16] =
+const  struct option OPTIONS[] =
       {
       { "help",no_argument,0,'h' },
       { "build",no_argument,0,'b'},
@@ -135,10 +139,12 @@ const  struct option OPTIONS[16] =
       { "test",required_argument,0,'t'},
       { "removetest",no_argument,0,'r'},
       { "updatetest",no_argument,0,'u'},
+      { "xml",no_argument,0,'x'},
+      { "output-file", required_argument, 0, 'o' },
       { NULL,0,0,'\0' }
       };
 
-const char *HINTS[16] =
+const char *HINTS[] =
       {
       "Print the help message",
       "Build and store topic map in the CFDB",
@@ -155,6 +161,8 @@ const char *HINTS[16] =
       "Generate test data",
       "Remove test data",
       "Update test data",
+      "Generate documentation in XML format",
+      "Output file for XML documentation",
       NULL
       };
 
@@ -168,7 +176,11 @@ GenericInitialize(argc,argv,"knowledge", config);
 ThisAgentInit();
 KeepKnowControlPromises();
 
-if (strlen(TOPIC_CMD) == 0)
+if (GENERATE_XML)
+   {
+   GenerateXml();
+   }
+else if (strlen(TOPIC_CMD) == 0)
    {
    int complete;
    double percent;
@@ -201,7 +213,7 @@ GenericAgentConfig CheckOpts(int argc,char **argv)
 
 LOOKUP = false;
 
-while ((c=getopt_long(argc,argv,"Ihbd:vVf:mMz:St:ruT",OPTIONS,&optindex)) != EOF)
+while ((c=getopt_long(argc,argv,"Ihbd:vVf:mxMz:St:ruT",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
       {
@@ -291,6 +303,14 @@ while ((c=getopt_long(argc,argv,"Ihbd:vVf:mMz:St:ruT",OPTIONS,&optindex)) != EOF
           GENERATE_MANUAL = true;
           break;
 
+      case 'x':
+          GENERATE_XML = true;
+          break;
+
+      case 'o':
+          OUTPUT_FILE = optarg;
+          break;
+
       case 't':
           if (atoi(optarg))
              {
@@ -368,7 +388,7 @@ for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp=cp->next)
       CfOut(cf_error,"","The topic map prefix has been deprecated");
       continue;
       }
-   
+
    if (strcmp(cp->lval,CFK_CONTROLBODY[cfk_builddir].lval) == 0)
       {
       strncpy(BUILD_DIR, retval.item, CF_BUFSIZE);
@@ -1033,6 +1053,26 @@ void GenerateManual()
 if (GENERATE_MANUAL)
    {
    TexinfoManual(MANDIR);
+   }
+}
+
+/*********************************************************************/
+
+static void GenerateXml(void)
+{
+if (OUTPUT_FILE == NULL)
+   {
+   /* Reconsider this once agents do not output any error messages to stdout */
+   FatalError("Please specify output file");
+   }
+else
+   {
+   FILE *out = fopen(OUTPUT_FILE, "w");
+   if (out == NULL)
+      {
+      FatalError("Unable to open %s for writing\n", OUTPUT_FILE);
+      }
+   XmlManual(MANDIR, out);
    }
 }
 

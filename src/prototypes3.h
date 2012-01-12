@@ -580,7 +580,7 @@ ChecksumValue *NewHashValue(unsigned char digest[EVP_MAX_MD_SIZE+1]);
 int CompareFileHashes(char *file1,char *file2,struct stat *sstat,struct stat *dstat,Attributes attr,Promise *pp);
 int CompareBinaryFiles(char *file1,char *file2,struct stat *sstat,struct stat *dstat,Attributes attr,Promise *pp);
 void HashFile(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type);
-void HashString(char *buffer,int len,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type);
+void HashString(const char *buffer,int len,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type);
 int HashesMatch(unsigned char digest1[EVP_MAX_MD_SIZE+1],unsigned char digest2[EVP_MAX_MD_SIZE+1],enum cfhashes type);
 char *HashPrint(enum cfhashes type,unsigned char digest[EVP_MAX_MD_SIZE+1]);
 char *HashPrintSafe(enum cfhashes type,unsigned char digest[EVP_MAX_MD_SIZE+1], char buffer[EVP_MAX_MD_SIZE*4]);

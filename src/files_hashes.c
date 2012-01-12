@@ -308,7 +308,7 @@ else
 
 /*******************************************************************/
 
-void HashString(char *buffer,int len,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type)
+void HashString(const char *buffer,int len,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type)
 
 { EVP_MD_CTX context;
   const EVP_MD *md = NULL;

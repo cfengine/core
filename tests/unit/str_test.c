@@ -158,6 +158,47 @@ assert_string_equal(new_string, "sasza szedl sucha szosa");
 free(new_string);
 }
 
+static void test_concatenate(void **state)
+{
+char *new_string = StringConcatenate("snookie", 7, "sitch", 5);
+assert_string_equal(new_string, "snookiesitch");
+free(new_string);
+}
+
+static void test_substring_overshoot(void **state)
+{
+char *new_string = StringSubstring("abcdef", 6, 0, 10);
+assert_string_equal(new_string, "abcdef");
+free(new_string);
+}
+
+static void test_substring_positive(void **state)
+{
+char *new_string = StringSubstring("abcdef", 6, 2, 3);
+assert_string_equal(new_string, "cde");
+free(new_string);
+}
+
+static void test_substring_negative_length(void **state)
+{
+char *new_string = StringSubstring("abcdef", 6, 2, -1);
+assert_string_equal(new_string, "cde");
+free(new_string);
+}
+
+static void test_substring_negative(void **state)
+{
+char *new_string = StringSubstring("abcdef", 6, -3, -1);
+assert_string_equal(new_string, "de");
+free(new_string);
+}
+
+static void test_substring_evil(void **state)
+{
+char *new_string = StringSubstring("abcdef", 6, 4, -4);
+assert_int_equal(new_string, NULL);
+}
+
 int main()
 {
 const UnitTest tests[] =
@@ -185,6 +226,14 @@ const UnitTest tests[] =
    unit_test(test_replace_more_size),
    unit_test(test_replace_less_size),
    unit_test(test_no_replace),
+
+   unit_test(test_concatenate),
+
+   unit_test(test_substring_overshoot),
+   unit_test(test_substring_positive),
+   unit_test(test_substring_negative_length),
+   unit_test(test_substring_negative),
+   unit_test(test_substring_evil),
    };
 
 return run_tests(tests);

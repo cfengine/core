@@ -222,3 +222,50 @@ for (;;)
    source_ptr += found_ptr - source_ptr + strlen(search);
    }
 }
+
+/*********************************************************************/
+
+char *StringConcatenate(const char *a, size_t a_len, const char *b, size_t b_len)
+{
+char *result = xcalloc(a_len + b_len, sizeof(char));
+strncat(result, a, a_len);
+strncat(result, b, b_len);
+return result;
+}
+
+/*********************************************************************/
+
+char *StringSubstring(const char *source, size_t source_len, int start, int len)
+{
+size_t end = -1;
+
+if (len == 0)
+   {
+   return SafeDuplicateString("");
+   }
+else if (len < 0)
+   {
+   end = source_len + len - 1;
+   }
+else
+   {
+   end = start + len - 1;
+   }
+
+end = MIN(end, source_len - 1);
+
+if (start < 0)
+   {
+   start = source_len + start;
+   }
+
+if (start >= end)
+   {
+   return NULL;
+   }
+
+char *result = xcalloc(end - start + 2, sizeof(char));
+strncpy(result, source + start, end - start + 1);
+return result;
+}
+

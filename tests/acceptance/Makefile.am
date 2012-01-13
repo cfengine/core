@@ -29,4 +29,4 @@ TESTS = testall
 TESTS_ENVIRONMENT = env AGENT=$(abs_top_builddir)/src/cf-agent
 
 dist-hook:
-	tar -c -f - [0-9]* | tar -x -C $(distdir) -f -
+	tar -c -f - [0-9]* --exclude '*svn*' | tar -x -C $(distdir) -f -

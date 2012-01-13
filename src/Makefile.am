@@ -194,7 +194,7 @@ cf_runagent_SOURCES =                                                   \
 cf_know_SOURCES =                                                       \
         cfknow.c                                                        \
         manual.c manual.h 						\
-        export_xml.c
+        export_xml.c export_xml.h
 
 EXTRA_DIST = cf3lex.c cf3parse.c
 

@@ -1,4 +1,5 @@
 #include <stdarg.h>
+#include <stdlib.h>
 #include <stddef.h>
 #include <setjmp.h>
 #include <cmockery.h>
@@ -12,6 +13,7 @@
 void FatalError(char *s, ...)
 {
 mock_assert(0, "0", __FILE__, __LINE__);
+abort();
 }
 
 /* Test cases */
@@ -143,10 +145,12 @@ pthread_mutex_t *cft_lock;
 pthread_mutex_t *cft_system;
 int ThreadLock(pthread_mutex_t *name)
 {
+return true;
 }
 
 int ThreadUnlock(pthread_mutex_t *name)
 {
+return true;
 }
 #endif
 

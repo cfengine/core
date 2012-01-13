@@ -32,7 +32,8 @@ void ToUpperStrInplace(char *str);
 char *ToLowerStr(const char *str);
 void ToLowerStrInplace(char *str);
 
-char *SafeDuplicateString(char *str);
+char *SafeStringDuplicate(const char *str);
+int SafeStringLength(const char *str);
 
 char *StringConcatenate(const char *a, size_t a_len, const char *b, size_t b_len);
 char *StringSubstring(const char *source, size_t source_len, int start, int len);

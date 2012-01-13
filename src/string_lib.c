@@ -94,7 +94,7 @@ return buffer;
 
 /*********************************************************************/
 
-char *SafeDuplicateString(char *str)
+char *SafeStringDuplicate(const char *str)
 {
  if(str == NULL)
     {
@@ -102,6 +102,18 @@ char *SafeDuplicateString(char *str)
     }
  
  return xstrdup(str);
+}
+
+/*********************************************************************/
+
+int SafeStringLength(const char *str)
+{
+ if(str == NULL)
+    {
+    return NULL;
+    }
+ 
+ return strlen(str);
 }
 
 /*******************************************************************/

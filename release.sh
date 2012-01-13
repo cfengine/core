@@ -121,8 +121,8 @@ remove_svnversion()
 
 do_svn_tag()
 {
-  echo svn copy $SVN_URL/branches/$BRANCH $SVN_URL/tags/$CURR_VERSION -m "Tagging $CURR_VERSION"
-  echo git svn fetch
+  svn copy $SVN_URL/branches/$BRANCH $SVN_URL/tags/$CURR_VERSION -m "Tagging $CURR_VERSION"
+  git svn fetch
 }
 
 bump_version()
@@ -137,9 +137,9 @@ bump_version()
 }
 
 commit_version() {
-  echo git add configure.ac
-  echo git commit -m "$1"
-  echo git svn dcommit
+  git add configure.ac
+  git commit -m "$1"
+  git svn dcommit
 }
 
 tag()

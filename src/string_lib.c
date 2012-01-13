@@ -110,7 +110,7 @@ int SafeStringLength(const char *str)
 {
  if(str == NULL)
     {
-    return NULL;
+    return 0;
     }
  
  return strlen(str);
@@ -253,7 +253,7 @@ size_t end = -1;
 
 if (len == 0)
    {
-   return SafeDuplicateString("");
+   return SafeStringDuplicate("");
    }
 else if (len < 0)
    {

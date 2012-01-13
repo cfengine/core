@@ -1224,7 +1224,7 @@ void ReplaceTrailingChar(char *str, char from, char to)
 {
  int strLen;
 
- strLen = strlen(str);
+ strLen = SafeStringLength(str);
 
  if(strLen == 0)
     {

@@ -206,7 +206,6 @@ return true;
 char* SearchAndReplace(const char *source, const char *search, const char *replace)
 
 {
-Writer *w = StringWriter();
 const char *source_ptr = source;
 
 if (source == NULL || search == NULL || replace == NULL)
@@ -218,6 +217,8 @@ if (strcmp(search, "") == 0)
    {
    return xstrdup(source);
    }
+
+Writer *w = StringWriter();
 
 for (;;)
    {

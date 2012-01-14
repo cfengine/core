@@ -119,7 +119,8 @@ libpromises_la_SOURCES =                                                \
         writer.c writer.h                                               \
         unix.c                                                          \
         json.c json.h                                                   \
-        xml_writer.c xml_writer.h
+        xml_writer.c xml_writer.h                                       \
+        show.h
 
 # Automake need to be guided due to symlinking
 libpromises_la_DEPENDENCIES = ../pub/libcfpub.la $(NOVA_LDADD) $(CONSTELLATION_LDADD)

@@ -1,20 +1,18 @@
-
-
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -22,16 +20,7 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
-
-/*****************************************************************************/
-/*                                                                           */
-/* File: alphalist.c                                                         */
-/*                                                                           */
-/* Created: Fri Dec  3 10:26:22 2010                                         */
-/*                                                                           */
-/*****************************************************************************/
 
 #include "cf3.defs.h"
 #include "cf3.extern.h"
@@ -42,7 +31,7 @@ static void ShowAlphaList(AlphaList al);
 /* This library creates a simple indexed array of lists for optimization of
    high entropy class searches.
 
- 
+
  AlphaList al;
  Item *ip;
  int i;
@@ -52,7 +41,7 @@ static void ShowAlphaList(AlphaList al);
  PrependAlphaList(&al,"two");
  PrependAlphaList(&al,"three");
  PrependAlphaList(&al,"onetwo");
- VERBOSE = 1;   
+ VERBOSE = 1;
  ShowAlphaList(al);
  exit(0); */
 
@@ -83,7 +72,7 @@ for (i = 0; i < CF_ALPHABETSIZE; i++)
 
 /*****************************************************************************/
 
-AlphaList *CopyAlphaListPointers(AlphaList *ap,AlphaList *al)
+AlphaList *CopyAlphaListPointers(AlphaList *ap, AlphaList *al)
 
 { int i;
 
@@ -103,7 +92,7 @@ return ap;
 int InAlphaList(AlphaList al,const char *string)
 
 { int i = (int)*string;
-  
+
 return IsItemIn(al.list[i],string);
 }
 
@@ -118,7 +107,7 @@ if (isalnum(i) || *string == '_')
    {
    for (ip = al.list[i]; ip != NULL; ip=ip->next)
       {
-      if (FullTextMatch(string,ip->name))          
+      if (FullTextMatch(string,ip->name))
          {
          return true;
          }
@@ -132,7 +121,7 @@ else
       {
       for (ip = al.list[i]; ip != NULL; ip=ip->next)
          {
-         if (FullTextMatch(string,ip->name))          
+         if (FullTextMatch(string,ip->name))
             {
             return true;
             }
@@ -149,7 +138,7 @@ void PrependAlphaList(AlphaList *al, const char *string)
 
 { int i = (int)*string;
 
-al->list[i] = PrependItem(&(al->list[i]),string,NULL); 
+al->list[i] = PrependItem(&(al->list[i]),string,NULL);
 }
 
 /*****************************************************************************/
@@ -173,13 +162,13 @@ if (!(VERBOSE||DEBUG))
    {
    return;
    }
-  
+
 for (i = 0; i < CF_ALPHABETSIZE; i++)
    {
    if (al.list[i] == NULL)
       {
       }
-   else       
+   else
       {
       printf("%c :",(char)i);
 
@@ -205,7 +194,7 @@ for (i = 0; i < CF_ALPHABETSIZE; i++)
    if (al.list[i] == NULL)
       {
       }
-   else       
+   else
       {
       for (ip = al.list[i]; ip != NULL; ip=ip->next)
          {

@@ -33,8 +33,6 @@
 #include "cf3.extern.h"
 #include <math.h>
 
-static char *PrintTimeSlot(int slot);
-
 /*****************************************************************************/
 
 char *ConvTimeKey(char *str)
@@ -127,23 +125,6 @@ for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING+SECONDS_PER_WEEK; now += C
    }
 
 return -1;
-}
-
-/*****************************************************************************/
-
-static char *PrintTimeSlot(int slot)
-
-{ time_t now,i;
-  
-for (now = CF_MONDAY_MORNING, i = 0; now < CF_MONDAY_MORNING+SECONDS_PER_WEEK; now += CF_MEASURE_INTERVAL,i++)
-   {
-   if (i == slot)
-      {
-      return GenTimeKey(now);
-      }
-   }
-
-return "UNKNOWN";
 }
 
 /*****************************************************************************/

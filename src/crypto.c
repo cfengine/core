@@ -33,7 +33,6 @@
 #include "cf3.extern.h"
 
 static void MD5Random (unsigned char digest[EVP_MAX_MD_SIZE+1]);
-static char *KeyPrint(RSA *key);
 
 /**********************************************************************/
 
@@ -628,18 +627,3 @@ CfOut(cf_verbose, "", "BinaryBuffer(%d bytes => %s) -> [%s]",len,comment,buf);
 }
 
 
-/*********************************************************************/
-
-static char *KeyPrint(RSA *pubkey)
-
-{ unsigned char digest[EVP_MAX_MD_SIZE+1];
- int i;
-
-for (i = 0; i < EVP_MAX_MD_SIZE+1; i++)
-   {
-   digest[i] = 0;
-   }
- 
-HashString((char *)pubkey,sizeof(BIGNUM)-4,digest,CF_DEFAULT_DIGEST);
-return HashPrint(CF_DEFAULT_DIGEST,digest);
-}

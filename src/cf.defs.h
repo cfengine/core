@@ -365,6 +365,15 @@ int uname  (struct utsname *name);
 #if !HAVE_DECL_STRSTR
 char *strstr(const char *haystack, const char *needle);
 #endif
+#if !HAVE_DECL_STRCASESTR
+char *strcasestr(const char *haystack, const char *needle);
+#endif
+#if !HAVE_DECL_STRCASECMP
+int strcasecmp(const char *s1, const char *s2);
+#endif
+#if !HAVE_DECL_STRNCASECMP
+int strncasecmp(const char *s1, const char *s2, size_t n);
+#endif
 #if !HAVE_DECL_STRDUP
 char *strdup (const char *str);
 #endif

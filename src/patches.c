@@ -139,17 +139,6 @@ return s;
 
 /*********************************************************/
 
-char *StrStr(char *a,char *b) /* Case insensitive match */
-
-{ char buf1[CF_BUFSIZE],buf2[CF_BUFSIZE];
-
-strncpy(buf1,ToLowerStr(a),CF_BUFSIZE-1);
-strncpy(buf2,ToLowerStr(b),CF_BUFSIZE-1);
-return strstr(buf1,buf2); 
-}
-
-/*********************************************************/
-
 int StrnCmp(char *a,char *b,size_t n) /* Case insensitive match */
 
 { char buf1[CF_BUFSIZE],buf2[CF_BUFSIZE];

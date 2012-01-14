@@ -878,7 +878,7 @@ while (!feof(pp))
       break;
       }
 
-   if (StrStr(buffer,"inet6"))
+   if (strcasestr(buffer,"inet6"))
       {
       Item *ip,*list = NULL;
       char *sp;

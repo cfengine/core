@@ -543,6 +543,15 @@ AC_REPLACE_FUNCS(strerror)
 AC_CHECK_FUNCS(strstr)
 AC_REPLACE_FUNCS(strstr)
 
+AC_CHECK_FUNCS(strcasestr)
+AC_REPLACE_FUNCS(strcasestr)
+
+AC_CHECK_FUNCS(strcasecmp)
+AC_REPLACE_FUNCS(strcasecmp)
+
+AC_CHECK_FUNCS(strncasecmp)
+AC_REPLACE_FUNCS(strncasecmp)
+
 AC_CHECK_FUNCS(getpwent setpwent endpwent)
 
 AC_CHECK_FUNCS(getcwd getnetgrent waitpid seteuid setegid setreuid setregid)

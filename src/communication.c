@@ -180,7 +180,7 @@ if (strstr(name,":") == NULL)
    return false;
    }
 
-if (StrStr(name,"scope"))
+if (strcasestr(name,"scope"))
    {
    return false;    
    }

@@ -2024,8 +2024,8 @@ extern SubTypeSyntax CF_MEASUREMENT_SUBTYPES[];
 extern SubTypeSyntax CF_SERVICES_SUBTYPES[];
 #endif
 
-#include "cf3.extern.h"
 #include "prototypes3.h"
+#include "cf3.extern.h"
 
 #ifdef HAVE_NOVA
 #include <cf.nova.h>

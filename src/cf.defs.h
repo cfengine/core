@@ -1279,14 +1279,6 @@ struct Item_
 
 /*******************************************************************/
 
-// Indexed itemlist
-typedef struct
-   {
-   Item *list[256];
-   } AlphaList;
-
-/*******************************************************************/
-
 typedef struct UidList_ UidList;
 
 struct UidList_

@@ -53,7 +53,7 @@ libpromises_la_SOURCES =                                                \
         files_lib.c                                                     \
         addr_lib.c                                                      \
         package_lib.c                                                   \
-        alphalist.c                                                     \
+        alphalist.c alphalist.h                                         \
         cf_sql.c                                                        \
         client_protocol.c                                               \
         client_code.c                                                   \

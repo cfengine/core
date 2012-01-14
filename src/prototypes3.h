@@ -929,7 +929,6 @@ void MountAll(void);
 /* patches.c */
 
 int IsPrivileged (void);
-int StrnCmp (char *s1,char *s2,size_t n);
 int cf_strcmp(const char *s1, const char *s2);
 int cf_strncmp(const char *s1,const char *s2, size_t n);
 char *cf_strcpy(char *s1, const char *s2);

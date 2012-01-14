@@ -625,7 +625,7 @@ int IsInterfaceAddress(char *adr)
 
 for (ip = IPADDRESSES; ip != NULL; ip=ip->next)
    {
-   if (StrnCmp(adr,ip->name,strlen(adr)) == 0)
+   if (strncasecmp(adr,ip->name,strlen(adr)) == 0)
       {
       CfDebug("Identifying (%s) as one of my interfaces\n",adr);
       return true;

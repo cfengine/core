@@ -137,17 +137,6 @@ while ((s = strchr(s, '\\')))
 return s;
 }
 
-/*********************************************************/
-
-int StrnCmp(char *a,char *b,size_t n) /* Case insensitive match */
-
-{ char buf1[CF_BUFSIZE],buf2[CF_BUFSIZE];
-
-strncpy(buf1,ToLowerStr(a),CF_BUFSIZE-1);
-strncpy(buf2,ToLowerStr(b),CF_BUFSIZE-1);
-return strncmp(buf1,buf2,n); 
-}
-
 /*********************************************************************/
 
 int cf_strcmp(const char *s1, const char *s2)

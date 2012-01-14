@@ -495,19 +495,19 @@ void BannerSubSubType(char *bundlename,char *type)
  
 if (strcmp(type,"processes") == 0)
    {
-   Item *ip;
+
    /* Just parsed all local classes */
 
    CfOut(cf_verbose,"","     ??? Local class context: \n");
 
-   for (i = 0; i < CF_ALPHABETSIZE; i++)
+   AlphaListIterator it = AlphaListIteratorInit(&VADDCLASSES);
+   for (const Item *ip = AlphaListIteratorNext(&it);
+        ip != NULL;
+        ip = AlphaListIteratorNext(&it))
       {
-      for (ip = VADDCLASSES.list[i]; ip != NULL; ip=ip->next)
-         {
-         printf("       %sǹ",ip->name);
-         }
+      printf("       %s\n", ip->name);
       }
-   
+
    CfOut(cf_verbose,"","\n");
    }
 

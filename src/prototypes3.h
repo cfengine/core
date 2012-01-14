@@ -787,8 +787,8 @@ int NeighbourItemMatches(Item *start,Item *location,char *string,enum cfeditorde
 int RawSaveItemList(Item *liststart, char *file);
 Item *SplitStringAsItemList(char *string,char sep);
 Item *SplitString(const char *string, char sep);
-int DeleteItemGeneral (Item **filestart, char *string, enum matchtypes type);
-int DeleteItemLiteral (Item **filestart, char *string);
+int DeleteItemGeneral (Item **filestart, const char *string, enum matchtypes type);
+int DeleteItemLiteral (Item **filestart, const char *string);
 int DeleteItemStarting (Item **list,char *string);
 int DeleteItemNotStarting (Item **list,char *string);
 int DeleteItemMatching (Item **list,char *string);

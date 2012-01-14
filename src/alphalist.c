@@ -140,3 +140,39 @@ if (!InAlphaList(*al, string))
    PrependAlphaList(al, string);
    }
 }
+
+/*****************************************************************************/
+
+void DeleteFromAlphaList(AlphaList *al, const char *string)
+{
+DeleteItemLiteral(&al->list[(int)*string], string);
+}
+
+/*****************************************************************************/
+
+AlphaListIterator AlphaListIteratorInit(AlphaList *al)
+{
+return (AlphaListIterator) { al, -1, NULL };
+}
+
+/*****************************************************************************/
+
+const Item *AlphaListIteratorNext(AlphaListIterator *iterator)
+{
+while (iterator->curitem == NULL)
+   {
+   if (++iterator->pos == CF_ALPHABETSIZE)
+      {
+      return NULL;
+      }
+
+   if (iterator->al->list[iterator->pos] != NULL)
+      {
+      iterator->curitem = iterator->al->list[iterator->pos];
+      }
+   }
+
+const Item *ret = iterator->curitem;
+iterator->curitem = ret->next;
+return ret;
+}

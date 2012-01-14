@@ -159,11 +159,12 @@ void NoteClassUsage(AlphaList baselist)
   CF_DBC *dbcp;
   void *stored;
   char *key,name[CF_BUFSIZE];
-  int i,ksize,vsize;
+  int ksize,vsize;
   Event e,entry,newe;
   double lsea = SECONDS_PER_WEEK * 52; /* expire after (about) a year */
   time_t now = time(NULL);
-  Item *ip,*list = NULL;
+  Item *list = NULL;
+  const Item *ip;
   double lastseen,delta2;
   double vtrue = 1.0;      /* end with a rough probability */
 
@@ -176,18 +177,18 @@ if (MINUSF)
 
 CfDebug("RecordClassUsage\n");
 
-for (i = 0; i < CF_ALPHABETSIZE; i++)
+AlphaListIterator it = AlphaListIteratorInit(&baselist);
+for (ip = AlphaListIteratorNext(&it);
+     ip != NULL;
+     ip = AlphaListIteratorNext(&it))
    {
-   for (ip = baselist.list[i]; ip != NULL; ip=ip->next)
+   if (IGNORECLASS(ip->name))
       {
-      if (IGNORECLASS(ip->name))
-         {
-         CfDebug("Ignoring class %s (not packing)", ip->name);
-         continue;
-         }
-   
-      IdempPrependItem(&list,ip->name,NULL);
+      CfDebug("Ignoring class %s (not packing)", ip->name);
+      continue;
       }
+
+   IdempPrependItem(&list,ip->name,NULL);
    }
 
 snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_CLASSUSAGE);

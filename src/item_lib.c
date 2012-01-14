@@ -916,7 +916,7 @@ for (ptr = liststart; ptr != NULL; ptr=ptr->next)
 
 /*********************************************************************/
 
-int DeleteItemGeneral(Item **list,char *string,enum matchtypes type)
+int DeleteItemGeneral(Item **list, const char *string, enum matchtypes type)
 
 {
 Item *ip,*last = NULL;
@@ -1025,7 +1025,7 @@ return DeleteItemGeneral(list,string,NOTliteralStart);
 
 /*********************************************************************/
 
-int DeleteItemLiteral(Item **list,char *string)  /* delete 1st item which is string */
+int DeleteItemLiteral(Item **list, const char *string)  /* delete 1st item which is string */
 
 {
 return DeleteItemGeneral(list,string,literalComplete);

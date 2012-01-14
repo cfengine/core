@@ -1221,9 +1221,8 @@ switch(type)
 
 void ClassBanner(enum typesequence type)
 
-{ Item *ip;
-  int i;
- 
+{ const Item *ip;
+
 if (type != kp_interfaces)   /* Just parsed all local classes */
    {
    return;
@@ -1232,12 +1231,12 @@ if (type != kp_interfaces)   /* Just parsed all local classes */
 CfOut(cf_verbose,"","\n");
 CfOut(cf_verbose,"","     +  Private classes augmented:\n");
 
-for (i = 0; i < CF_ALPHABETSIZE; i++)
+AlphaListIterator it = AlphaListIteratorInit(&VADDCLASSES);
+for (ip = AlphaListIteratorNext(&it);
+     ip != NULL;
+     ip = AlphaListIteratorNext(&it))
    {
-   for (ip = VADDCLASSES.list[i]; ip != NULL; ip=ip->next)
-      {
-      CfOut(cf_verbose,"","     +       %s\n",ip->name);
-      }
+   CfOut(cf_verbose,"","     +       %s\n",ip->name);
    }
 
 CfOut(cf_verbose,"","\n");
@@ -1253,12 +1252,12 @@ CfOut(cf_verbose,"","\n");
 
 CfDebug("     ?  Public class context:\n");
 
-for (i = 0; i < CF_ALPHABETSIZE; i++)
+it = AlphaListIteratorInit(&VHEAP);
+for (ip = AlphaListIteratorNext(&it);
+     ip != NULL;
+     ip = AlphaListIteratorNext(&it))
    {
-   for (ip = VHEAP.list[i]; ip != NULL; ip=ip->next)
-      {
-      CfDebug("     ?       %s\n",ip->name);
-      }
+   CfDebug("     ?       %s\n",ip->name);
    }
 
 CfOut(cf_verbose,"","\n");

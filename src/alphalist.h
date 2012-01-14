@@ -38,5 +38,16 @@ void PrependAlphaList(AlphaList *al, const char *string);
 void IdempPrependAlphaList(AlphaList *al, const char *string);
 void DeleteAlphaList(AlphaList *al);
 AlphaList *CopyAlphaListPointers(AlphaList *al, AlphaList *ap);
+void DeleteFromAlphaList(AlphaList *al, const char *string);
+
+typedef struct
+   {
+   AlphaList *al;
+   int pos;
+   Item *curitem;
+   } AlphaListIterator;
+
+AlphaListIterator AlphaListIteratorInit(AlphaList *al);
+const Item *AlphaListIteratorNext(AlphaListIterator *iterator);
 
 #endif

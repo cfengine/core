@@ -411,11 +411,9 @@ if (!ABORTBUNDLE)
 /*********************************************************************/
 
 void DeleteClass(char *class)
-
-{ int i = (int)*class;
-
-DeleteItemLiteral(&(VHEAP.list[i]),class);
-DeleteItemLiteral(&(VADDCLASSES.list[i]),class);
+{
+DeleteFromAlphaList(&VHEAP, class);
+DeleteFromAlphaList(&VADDCLASSES, class);
 }
 
 /*******************************************************************/
@@ -1453,7 +1451,6 @@ void DeleteAllClasses(Rlist *list)
 
 { Rlist *rp;
   char *string;
-  int slot;
 
 if (list == NULL)
    {
@@ -1473,12 +1470,11 @@ for (rp = list; rp != NULL; rp=rp->next)
       }
 
    string = (char *)(rp->item);
-   slot = (int)*string;
 
    CfOut(cf_verbose,""," -> Cancelling class %s\n",string);
    DeletePersistentContext(string);
-   DeleteItemLiteral(&(VHEAP.list[slot]),CanonifyName(string));
-   DeleteItemLiteral(&(VADDCLASSES.list[slot]),CanonifyName(string));
+   DeleteFromAlphaList(&VHEAP, CanonifyName(string));
+   DeleteFromAlphaList(&VADDCLASSES, CanonifyName(string));
    AppendItem(&VDELCLASSES,CanonifyName(string),NULL);
    }
 }
@@ -1519,25 +1515,17 @@ for (rp = list; rp != NULL; rp=rp->next)
 
 /*****************************************************************************/
 
-void ListAlphaList(FILE *fout,AlphaList al,char sep)
+void ListAlphaList(FILE *fout, AlphaList al, char sep)
+{
+AlphaListIterator i = AlphaListIteratorInit(&al);
 
-{ int i;
-  Item *ip;
-
-for (i = 0; i < CF_ALPHABETSIZE; i++)
+for (const Item *ip = AlphaListIteratorNext(&i);
+     ip != NULL;
+     ip = AlphaListIteratorNext(&i))
    {
-   if (al.list[i] == NULL)
+   if (!IsItemIn(VNEGHEAP, ip->name))
       {
-      }
-   else
-      {
-      for (ip = al.list[i]; ip != NULL; ip=ip->next)
-         {
-         if (!IsItemIn(VNEGHEAP,ip->name))
-            {
-            fprintf(fout,"%s%c",ip->name,sep);
-            }
-         }
+      fprintf(fout, "%s%c", ip->name, sep);
       }
    }
 }

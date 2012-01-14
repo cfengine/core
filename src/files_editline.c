@@ -166,9 +166,7 @@ return true;
 
 static void EditClassBanner(enum editlinetypesequence type)
 
-{ Item *ip;
-  int i;
- 
+{
 if (type != elp_delete)   /* Just parsed all local classes */
    {
    return;
@@ -176,12 +174,13 @@ if (type != elp_delete)   /* Just parsed all local classes */
 
 CfOut(cf_verbose,"","     ??  Private class context\n");
 
-for (i = 0; i < CF_ALPHABETSIZE; i++)
+AlphaListIterator i = AlphaListIteratorInit(&VADDCLASSES);
+
+for (const Item *ip = AlphaListIteratorNext(&i);
+     ip != NULL;
+     ip = AlphaListIteratorNext(&i))
    {
-   for (ip = VADDCLASSES.list[i]; ip != NULL; ip=ip->next)
-      {
       CfOut(cf_verbose,"","     ??       %s\n",ip->name);
-      }
    }
 
 CfOut(cf_verbose,"","\n");

@@ -33,8 +33,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static void ShowAssoc (CfAssoc *cp);
-
 /*******************************************************************/
 
 CfAssoc *NewAssoc(const char *lval, Rval rval, enum cfdatatype dt)
@@ -90,16 +88,6 @@ return NewAssoc(old->lval, old->rval, old->dtype);
 }
 
 /*******************************************************************/
-
-static void ShowAssoc (CfAssoc *cp)
-
-{
-printf("ShowAssoc: lval = %s\n",cp->lval);
-printf("ShowAssoc: rval = ");
-ShowRval(stdout, cp->rval);
- 
-printf("\nShowAssoc: dtype = %s\n",CF_DATATYPES[cp->dtype]);
-}
 
 /*******************************************************************/
 

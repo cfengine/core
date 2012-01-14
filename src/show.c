@@ -48,4 +48,31 @@ for (int i = 0; i < CF_ALPHABETSIZE; i++)
    }
 }
 
+/*****************************************************************************/
+
+void PrintFunctions(void)
+{
+for (int i = 0; i < 3; i++)
+   {
+   if (P.currentfncall[i] != NULL)
+      {
+      printf("(%d) =========================\n|",i);
+      ShowFnCall(stdout,P.currentfncall[i]);
+      printf("|\n==============================\n");
+      }
+   }
+}
+
+/*****************************************************************************/
+
+void ShowAssoc(CfAssoc *cp)
+{
+printf("ShowAssoc: lval = %s\n",cp->lval);
+printf("ShowAssoc: rval = ");
+ShowRval(stdout, cp->rval);
+printf("\nShowAssoc: dtype = %s\n",CF_DATATYPES[cp->dtype]);
+}
+
+/*********************************************************************/
+
 #pragma GCC diagnostic pop

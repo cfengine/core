@@ -34,8 +34,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static void PrintFunctions(void);
-
 /*******************************************************************/
 
 int IsBuiltinFnCall(Rval rval)
@@ -119,24 +117,6 @@ FnCall *ExpandFnCall(char *contextid,FnCall *f,int expandnaked)
  CfDebug("ExpandFnCall()\n");
 //return NewFnCall(f->name,ExpandList(contextid,f->args,expandnaked));
 return NewFnCall(f->name,ExpandList(contextid,f->args,false));
-}
-
-/*******************************************************************/
-
-static void PrintFunctions(void)
-
-{
-int i;
-
-for (i = 0; i < 3; i++)
-   {
-   if (P.currentfncall[i] != NULL)
-      {
-      printf("(%d) =========================\n|",i);
-      ShowFnCall(stdout,P.currentfncall[i]);
-      printf("|\n==============================\n");
-      }
-   } 
 }
 
 /*******************************************************************/

@@ -362,8 +362,8 @@ void endnetgrent (void);
 #ifndef HAVE_UNAME
 int uname  (struct utsname *name);
 #endif
-#ifndef HAVE_STRSTR
-char *strstr (char *s1,char *s2);
+#if !HAVE_DECL_STRSTR
+char *strstr(const char *haystack, const char *needle);
 #endif
 #if !HAVE_DECL_STRDUP
 char *strdup (const char *str);

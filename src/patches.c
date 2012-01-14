@@ -325,47 +325,6 @@ return (0);
 #endif  /* NOT HAVE_UNAME */
 
 /***********************************************************/
-/* strstr() missing on old BSD systems                     */
-/***********************************************************/
-
-#ifndef HAVE_STRSTR
-
-#if !defined __STDC__ || !__STDC__
-/* This is a separate conditional since some stdc systems
-   reject `defined (const)'.  */
-
-# ifndef const
-#  define const
-# endif
-#endif
-
-
-char *strstr(char *s1,char *s2)
-
-{ char *sp;
-
-for (sp = s1; *sp != '\0'; sp++)
-   {
-   if (*sp != *s2)
-      {
-      continue;
-      }
-
-   if (strncmp(sp,s2,strlen(s2))== 0)
-      {
-      return sp;
-      }
-   }
-
-return NULL;
-}
-
-#endif
-
-
-
-
-/***********************************************************/
 /* strrchr() missing on old BSD systems                     */
 /***********************************************************/
 

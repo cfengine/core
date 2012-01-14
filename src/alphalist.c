@@ -173,28 +173,3 @@ for (i = 0; i < CF_ALPHABETSIZE; i++)
       }
    }
 }
-
-/*****************************************************************************/
-
-void ListAlphaList(FILE *fout,AlphaList al,char sep)
-
-{ int i;
-  Item *ip;
-
-for (i = 0; i < CF_ALPHABETSIZE; i++)
-   {
-   if (al.list[i] == NULL)
-      {
-      }
-   else
-      {
-      for (ip = al.list[i]; ip != NULL; ip=ip->next)
-         {
-         if (!IsItemIn(VNEGHEAP,ip->name))
-            {
-            fprintf(fout,"%s%c",ip->name,sep);
-            }
-         }
-      }
-   }
-}

@@ -495,6 +495,7 @@ int IsHardClass (char *sp);
 void SaveClassEnvironment(void);
 void DeleteAllClasses(Rlist *list);
 void AddAllClasses(Rlist *list,int persist,enum statepolicy policy);
+void ListAlphaList(FILE *fp,AlphaList al, char sep);
 
 #include "env_monitor.h"
 

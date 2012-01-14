@@ -239,7 +239,7 @@ for (;;)
 
 char *StringConcatenate(const char *a, size_t a_len, const char *b, size_t b_len)
 {
-char *result = xcalloc(a_len + b_len, sizeof(char));
+char *result = xcalloc(a_len + b_len + 1, sizeof(char));
 strncat(result, a, a_len);
 strncat(result, b, b_len);
 return result;

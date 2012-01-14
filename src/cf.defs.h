@@ -375,7 +375,7 @@ int strcasecmp(const char *s1, const char *s2);
 int strncasecmp(const char *s1, const char *s2, size_t n);
 #endif
 #if !HAVE_DECL_STRDUP
-char *strdup (const char *str);
+char *strdup(const char *str);
 #endif
 #if !HAVE_DECL_MEMDUP
 void *memdup(const void *mem, size_t size);

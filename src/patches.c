@@ -330,23 +330,12 @@ return (0);
 
 #ifndef HAVE_PUTENV
 
-#if !defined __STDC__ || !__STDC__
-/* This is a separate conditional since some stdc systems
-   reject `defined (const)'.  */
-
-# ifndef const
-#  define const
-# endif
-#endif
-
-
 int putenv(char *s)
 
 {
 CfOut(cf_verbose,"","(This system does not have putenv: cannot update CFALLCLASSES\n");
 return 0;
 }
-
 
 #endif
 
@@ -383,16 +372,6 @@ return -1;
 /***********************************************************/
 
 #ifndef HAVE_SETEGID
-
-#if !defined __STDC__ || !__STDC__
-/* This is a separate conditional since some stdc systems
-   reject `defined (const)'.  */
-
-# ifndef const
-#  define const
-# endif
-#endif
-
 
 int setegid (gid_t gid)
 

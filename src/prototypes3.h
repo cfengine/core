@@ -929,12 +929,6 @@ void MountAll(void);
 /* patches.c */
 
 int IsPrivileged (void);
-int cf_strcmp(const char *s1, const char *s2);
-int cf_strncmp(const char *s1,const char *s2, size_t n);
-char *cf_strcpy(char *s1, const char *s2);
-char *cf_strncpy(char *s1, const char *s2, size_t n);
-int cf_strlen(const char *s);
-char *cf_strchr(const char *s, int c);
 char *MapName(char *s);
 char *MapNameForward(char *s);
 char *cf_ctime(const time_t *timep);

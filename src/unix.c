@@ -338,9 +338,9 @@ if (strstr(s,"%CPU"))
 zid = getzoneid();
 getzonenamebyid(zid,zone,ZONENAME_MAX);
 
-if (cf_strcmp(zone,"global") == 0)
+if (strcmp(zone,"global") == 0)
    {
-   if (cf_strcmp(s+strlen(s)-6,"global") == 0)
+   if (strcmp(s+strlen(s)-6,"global") == 0)
       {
       *(s+strlen(s)-6) = '\0';
 
@@ -372,7 +372,7 @@ static char *GetProcessOptions()
 zid = getzoneid();
 getzonenamebyid(zid,zone,ZONENAME_MAX);
 
-if (cf_strcmp(zone,"global") == 0)
+if (strcmp(zone,"global") == 0)
    {
    snprintf(psopts,CF_BUFSIZE,"%s,zone",VPSOPTS[VSYSTEMHARDCLASS]);
    return psopts;

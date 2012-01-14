@@ -338,8 +338,10 @@ typedef int clockid_t;
 #ifndef HAVE_SETEGID
 int setegid (gid_t gid);
 #endif
-#ifndef HAVE_DRAND48
+#if !HAVE_DECL_DRAND48
 double drand48(void);
+#endif
+#if !HAVE_DECL_SRAND48
 void srand48(long seed);
 #endif
 #if !HAVE_DECL_CLOCK_GETTIME

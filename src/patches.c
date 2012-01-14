@@ -509,29 +509,6 @@ return -1;
 
 /*******************************************************************/
 
-#ifndef HAVE_DRAND48
-
-double drand48(void)
-
-{
-return (double)random();
-}
-
-#endif
-
-#ifndef HAVE_DRAND48  
-
-void srand48(long seed)
-
-{
-srandom((unsigned int)seed);
-}
-
-#endif
-
-
-/*******************************************************************/
-
 int IsPrivileged()
 
 {

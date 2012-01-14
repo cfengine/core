@@ -49,39 +49,31 @@ static void ShowAlphaList(AlphaList al);
 
 void InitAlphaList(AlphaList *al)
 
-{ int i;
-
-for (i = 0; i < CF_ALPHABETSIZE; i++)
-   {
-   al->list[i] = NULL;
-   }
+{
+memset(al, 0, sizeof(AlphaList));
 }
 
 /*****************************************************************************/
 
 void DeleteAlphaList(AlphaList *al)
 
-{ int i;
-
-for (i = 0; i < CF_ALPHABETSIZE; i++)
+{
+for (int i = 0; i < CF_ALPHABETSIZE; i++)
    {
    DeleteItemList(al->list[i]);
-   al->list[i] = NULL;
    }
+
+InitAlphaList(al);
 }
 
 /*****************************************************************************/
 
 AlphaList *CopyAlphaListPointers(AlphaList *ap, AlphaList *al)
 
-{ int i;
-
+{
 if (ap != NULL)
    {
-   for (i = 0; i < CF_ALPHABETSIZE; i++)
-      {
-      ap->list[i] = al->list[i];
-      }
+   memcpy(ap, al, sizeof(AlphaList));
    }
 
 return ap;

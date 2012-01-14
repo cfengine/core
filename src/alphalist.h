@@ -28,7 +28,7 @@
 // Indexed itemlist
 typedef struct
    {
-   Item *list[256];
+   Item *list[CF_ALPHABETSIZE];
    } AlphaList;
 
 void InitAlphaList(AlphaList *al);

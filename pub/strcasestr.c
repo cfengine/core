@@ -38,7 +38,7 @@ char *strcasestr(const char *haystack, const char *needle)
 {
 size_t needlelen = strlen(needle);
 
-for (const char *sp = haystack, *sp; sp++)
+for (const char *sp = haystack; *sp; sp++)
    {
    if (strncasecmp(sp, needle, needlelen) == 0)
       {

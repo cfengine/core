@@ -373,9 +373,6 @@ void *memdup(const void *mem, size_t size);
 #endif
 #if !HAVE_DECL_STRERROR
 char *strerror(int err);
-#ifndef HAVE_STRRCHR
-char *strrchr (char *str,char ch);
-#endif
 #endif
 #ifndef HAVE_PUTENV
 int putenv  (char *s);

@@ -325,39 +325,6 @@ return (0);
 #endif  /* NOT HAVE_UNAME */
 
 /***********************************************************/
-/* strrchr() missing on old BSD systems                     */
-/***********************************************************/
-
-#ifndef HAVE_STRRCHR
-
-char *strrchr(char *str,char ch)
-
-{ char *sp;
- 
-if (str == NULL)
-   {
-   return NULL;
-   }
-
-if (strlen(str) == 0)
-   {
-   return NULL;
-   }
-
-for (sp = str+strlen(str)-1; sp > str; sp--)
-   {
-   if (*sp == ch)
-      {
-      return *sp;
-      }
-   }
-
-return NULL; 
-}
-
-#endif
-
-/***********************************************************/
 /* putenv() missing on old BSD systems                     */
 /***********************************************************/
 

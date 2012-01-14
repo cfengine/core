@@ -549,7 +549,7 @@ AC_CHECK_FUNCS(getcwd getnetgrent waitpid seteuid setegid setreuid setregid)
 AC_CHECK_FUNCS(uname gethostname chflags)
 AC_CHECK_FUNCS(putenv getaddrinfo)
 AC_CHECK_FUNCS(mkfifo statfs statvfs door)
-AC_CHECK_FUNCS(sysinfo setsid strrchr sysconf)
+AC_CHECK_FUNCS(sysinfo setsid sysconf)
 AC_CHECK_FUNCS(getzoneid getzonenamebyid)
 AC_CHECK_FUNCS(fpathconf)
 

@@ -537,13 +537,16 @@ AC_REPLACE_FUNCS(srand48)
 AC_CHECK_DECLS(drand48)
 AC_REPLACE_FUNCS(drand48)
 
+AC_CHECK_DECLS(strerror)
+AC_REPLACE_FUNCS(strerror)
+
 AC_CHECK_FUNCS(getpwent setpwent endpwent)
 
 AC_CHECK_FUNCS(getcwd getnetgrent waitpid seteuid setegid setreuid setregid)
 AC_CHECK_FUNCS(uname gethostname chflags)
 AC_CHECK_FUNCS(strstr putenv getaddrinfo)
 AC_CHECK_FUNCS(mkfifo statfs statvfs door)
-AC_CHECK_FUNCS(sysinfo setsid strrchr strerror sysconf)
+AC_CHECK_FUNCS(sysinfo setsid strrchr sysconf)
 AC_CHECK_FUNCS(getzoneid getzonenamebyid)
 AC_CHECK_FUNCS(fpathconf)
 

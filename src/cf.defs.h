@@ -371,11 +371,11 @@ char *strdup (const char *str);
 #if !HAVE_DECL_MEMDUP
 void *memdup(const void *mem, size_t size);
 #endif
+#if !HAVE_DECL_STRERROR
+char *strerror(int err);
 #ifndef HAVE_STRRCHR
 char *strrchr (char *str,char ch);
 #endif
-#ifndef HAVE_STRERROR
-char *strerror (int err);
 #endif
 #ifndef HAVE_PUTENV
 int putenv  (char *s);

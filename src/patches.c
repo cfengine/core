@@ -398,23 +398,6 @@ return NULL;
 
 #endif
 
-
-/***********************************************************/
-/* strerror() missing on systems                           */
-/***********************************************************/
-
-#ifndef HAVE_STRERROR
-
-char *strerror(int err)
-
-{ static char buffer[20];
-
-sprintf(buffer,"Error number %d\n",err);
-return buffer; 
-}
-
-#endif
-
 /***********************************************************/
 /* putenv() missing on old BSD systems                     */
 /***********************************************************/

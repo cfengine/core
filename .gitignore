@@ -51,7 +51,6 @@ src/cf-serverd
 # autogen
 
 src/cf3lex.c
-src/cf3lex.l
 src/cf3parse.c
 src/cf3parse.h
 src/cf3parse.output

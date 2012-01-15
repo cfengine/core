@@ -1,8 +1,25 @@
-#include "cf3.defs.h"
+#include "files_lib.h"
+
 #include "cf3.extern.h"
 
 static Item *NextItem(Item *ip);
 static int ItemListsEqual(Item *list1, Item *list2,int report,Attributes a,Promise *pp);
+
+/*********************************************************************/
+
+bool FileCanOpen(const char *path, const char *modes)
+{
+FILE *test = NULL;
+if ((test = fopen(path, modes)) != NULL)
+   {
+   fclose(test);
+   return true;
+   }
+else
+   {
+   return false;
+   }
+}
 
 /*********************************************************************/
 
@@ -192,8 +209,7 @@ return retval;
 /* helpers                                                           */
 /*********************************************************************/
 
-Item *NextItem(Item *ip)
-
+static Item *NextItem(Item *ip)
 {
 if (ip)
    {

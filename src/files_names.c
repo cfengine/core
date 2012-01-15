@@ -32,6 +32,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#include "parser.h" // FIX: nothing in here should need parser state
+
 /*****************************************************************************/
 
 void LocateFilePromiserGroup(char *wildpath,Promise *pp,void (*fnptr)(char *path, Promise *ptr))

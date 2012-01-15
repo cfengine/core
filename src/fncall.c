@@ -37,7 +37,6 @@
 /*******************************************************************/
 
 int IsBuiltinFnCall(Rval rval)
-
 {
 FnCall *fp;
 
@@ -122,7 +121,6 @@ return NewFnCall(f->name,ExpandList(contextid,f->args,false));
 /*******************************************************************/
 
 int PrintFnCall(char *buffer, int bufsize,FnCall *fp)
-    
 { Rlist *rp;
   char work[CF_MAXVARSIZE];
 

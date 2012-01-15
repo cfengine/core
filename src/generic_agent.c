@@ -32,7 +32,9 @@
 
 #include "generic_agent.h"
 
-extern FILE *yyin;
+#include "files_lib.h"
+#include "parser.h"
+
 extern char *CFH[][2];
 
 static void VerifyPromises(Rlist *bundlesequence);
@@ -960,40 +962,13 @@ CfDebug("+++++++++++++++++++++++++++++++++++++++++++++++\n");
 
 PrependAuditFile(wfilename);
 
-if ((yyin = fopen(wfilename,"r")) == NULL)      /* Open root file */
+if (!FileCanOpen(wfilename, "r"))
    {
    printf("Can't open file %s for parsing\n",wfilename);
    exit (1);
    }
 
-P.line_no = 1;
-P.line_pos = 1;
-P.list_nesting = 0;
-P.arg_nesting = 0;
-strncpy(P.filename,wfilename,CF_MAXVARSIZE);
-
-P.currentid[0] = '\0';
-P.currentstring = NULL;
-P.currenttype[0] = '\0';
-P.currentclasses = NULL;
-P.currentRlist = NULL;
-P.currentpromise = NULL;
-P.promiser = NULL;
-P.blockid[0] = '\0';
-P.blocktype[0] = '\0';
-
-while (!feof(yyin))
-   {
-   yyparse();
-
-   if (ferror(yyin))  /* abortable */
-      {
-      perror("cfengine");
-      exit(1);
-      }
-   }
-
-fclose (yyin);
+ParserParseFile(wfilename);
 }
 
 /*******************************************************************/

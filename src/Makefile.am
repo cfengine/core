@@ -50,7 +50,7 @@ libpromises_la_SOURCES =                                                \
         ontology.c ontology.h                                           \
         item_lib.c                                                      \
         string_lib.c string_lib.h                                       \
-        files_lib.c                                                     \
+        files_lib.c files_lib.h                                         \
         addr_lib.c                                                      \
         package_lib.c                                                   \
         alphalist.c alphalist.h                                         \
@@ -120,7 +120,8 @@ libpromises_la_SOURCES =                                                \
         unix.c                                                          \
         json.c json.h                                                   \
         xml_writer.c xml_writer.h                                       \
-        show.h
+        show.h                                                          \
+        parser.c parser.h
 
 # Automake need to be guided due to symlinking
 libpromises_la_DEPENDENCIES = ../pub/libcfpub.la $(NOVA_LDADD) $(CONSTELLATION_LDADD)

@@ -126,7 +126,6 @@ double Q_SIGMA;
 /* Internal data structures                                                  */
 /*****************************************************************************/
 
-PromiseParser P = {0};
 Bundle *BUNDLES = NULL;
 Body *BODIES = NULL;
 Scope *VSCOPE = NULL;

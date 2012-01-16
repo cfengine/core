@@ -1748,7 +1748,7 @@ if (retval.rtype != CF_LIST)
    return (FnCallResult) { FNCALL_FAILURE };
    }
 
-hostnameip = (Rlist *)retval.item;
+hostnameip = ListRvalValue(retval);
 val = Str2Int(maxbytes);
 portnum = (short) Str2Int(port);
 

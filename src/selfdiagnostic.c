@@ -34,7 +34,6 @@
 
 static void TestRegularExpressions(void);
 static void TestAgentPromises(void);
-static void TestFunctionIntegrity(void);
 static void TestHashEntropy(char *s,char *s1);
 
 int NR = 0;

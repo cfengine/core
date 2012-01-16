@@ -491,8 +491,7 @@ CfOut(cf_verbose,"","\n");
 
 void BannerSubSubType(char *bundlename,char *type)
 
-{ int i;
- 
+{
 if (strcmp(type,"processes") == 0)
    {
 

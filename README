@@ -1,11 +1,21 @@
+CFEngine 3
+==========
 
-PLEASE READ THIS CAREFULLY
+CFEngine 3 is a popular open source configuration management system. Its primary
+function is to provide automated configuration and maintenance of large-scale
+computer systems.
 
-This is version of cfengine 3. Please read the documentation carefully
-before installing it. This software is NOT a drop-in upgrade for
-cfengine 2 installations. It is a significantly more powerful version
-of cfengine which offers a path to upgrading gradually while
-supporting an existing cfengine 2 base.
+Relationship to cfengine 2
+==========================
 
-Please see the INSTALL file for build instructions.
+CFEngine 3 is NOT a drop-in upgrade for cfengine 2 installations.  It is a
+significantly more powerful version, but it is incompatible with CFEngine 2
+policy language.
 
+Server part of CFEngine 3 supports network protocol of cfengine 2, so you may
+upgrade your installation gradually.
+
+Installation
+============
+
+Please see the INSTALL file for prerequisites and build instructions.

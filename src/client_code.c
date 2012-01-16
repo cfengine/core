@@ -43,7 +43,7 @@ Rlist *SERVERLIST = NULL;
 static void NewClientCache(Stat *data,Promise *pp);
 static void CacheServerConnection(AgentConnection *conn, const char *server);
 static void MarkServerOffline(const char *server);
-static AgentConnection *ServerConnectionReady(const char *server);
+static AgentConnection *GetIdleConnectionToServer(const char *server);
 static bool ServerOffline(const char *server);
 static void FlushFileStream(int sd,int toget);
 static int CacheStat(const char *file,struct stat *statbuf,const char *stattype,Attributes attr,Promise *pp);
@@ -105,7 +105,7 @@ for (rp = attr.copy.servers; rp != NULL; rp = rp->next)
       }
    else
       {   
-      if ((conn = ServerConnectionReady(rp->item)))
+      if ((conn = GetIdleConnectionToServer(rp->item)))
          {
          return conn;
          }
@@ -1171,7 +1171,7 @@ if (entry != NULL)
 
 /*********************************************************************/
 
-static AgentConnection *ServerConnectionReady(const char *server)
+static AgentConnection *GetIdleConnectionToServer(const char *server)
 
 { Rlist *rp;
   ServerItem *svp;

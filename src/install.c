@@ -41,7 +41,7 @@ int RelevantBundle(char *agent,char *blocktype)
 
 { Item *ip;
  
-if (strcmp(agent,CF_AGENTTYPES[cf_common]) == 0 || strcmp(CF_COMMONC,P.blocktype) == 0)
+if (strcmp(agent,CF_AGENTTYPES[cf_common]) == 0 || strcmp(CF_COMMONC,blocktype) == 0)
    {
    return true;
    }

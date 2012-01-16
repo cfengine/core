@@ -17,7 +17,7 @@
 @c
 @c ***********************************************************************
 @c %** start of header
-@setfilename st-agile.info
+@setfilename st-agility.info
 @settitle Agility in Infrastructure Engineering
 @setchapternewpage odd
 @c %** end of header

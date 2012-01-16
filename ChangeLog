@@ -12,8 +12,6 @@
 	- cf-promises --gcc-brief-format option to output warnings and
 	  errors in gcc-compatible syntax which to ease use "go to next
 	  error" feature of text editors.
-	- cf-promises --parse-tree option to parse policy file and dump it
-	  in JSON format
 	- Services promises for generic/Unix added.
 
 	New built-in variables and classes (Linux):

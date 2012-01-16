@@ -3943,6 +3943,8 @@ for (sp = file_buffer; hcount < maxent && *sp != '\0'; sp++)
       vcount++;
       }
 
+   DeleteRlist(newlist);
+
    hcount++;
    sp += lineLen;
 

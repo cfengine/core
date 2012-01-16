@@ -279,6 +279,7 @@ void YieldCurrentLock(CfLock this)
 {
 if (IGNORELOCK)
    {
+   free(this.lock); /* allocated in AquireLock as a special case */
    return;
    }
 

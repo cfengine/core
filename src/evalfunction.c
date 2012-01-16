@@ -3120,11 +3120,11 @@ else
 
 /*********************************************************************/
 
-static FnCallResult ReadList(FnCall *fp,Rlist *finalargs,enum cfdatatype type)
+static FnCallResult ReadList(FnCall *fp, Rlist *finalargs, enum cfdatatype type)
 
-{ Rlist *rp,*newlist = NULL;
-  char *filename,*comment,*split,fnname[CF_MAXVARSIZE];
-  int maxent,maxsize,noerrors = true,blanks = false;
+{ Rlist *rp, *newlist = NULL;
+  char *filename, *comment, *split, fnname[CF_MAXVARSIZE];
+  int maxent, maxsize, noerrors = true, blanks = false;
   char *file_buffer = NULL;
 
 /* begin fn specific content */
@@ -3139,10 +3139,10 @@ maxsize = Str2Int(finalargs->next->next->next->next->item);
 
 // Read once to validate structure of file in itemlist
 
-CfDebug("Read string data from file %s\n",filename);
-snprintf(fnname,CF_MAXVARSIZE-1,"read%slist",CF_DATATYPES[type]);
+CfDebug("Read string data from file %s\n", filename);
+snprintf(fnname, CF_MAXVARSIZE-1, "read%slist", CF_DATATYPES[type]);
 
-file_buffer = (char *)CfReadFile(filename,maxsize);
+file_buffer = (char *)CfReadFile(filename, maxsize);
 
 if (file_buffer == NULL)
    {
@@ -3150,7 +3150,7 @@ if (file_buffer == NULL)
    }
 else
    {
-   file_buffer = StripPatterns(file_buffer,comment,filename);
+   file_buffer = StripPatterns(file_buffer, comment, filename);
 
    if (file_buffer == NULL)
       {
@@ -3158,7 +3158,7 @@ else
       }
    else
       {
-      newlist = SplitRegexAsRList(file_buffer,split,maxent,blanks);
+      newlist = SplitRegexAsRList(file_buffer, split, maxent, blanks);
       }
    }
 

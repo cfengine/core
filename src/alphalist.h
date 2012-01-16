@@ -40,6 +40,16 @@ void DeleteAlphaList(AlphaList *al);
 AlphaList *CopyAlphaListPointers(AlphaList *al, AlphaList *ap);
 void DeleteFromAlphaList(AlphaList *al, const char *string);
 
+/*
+AlphaListIterator i = AlphaListIteratorInit(&al);
+Item *item;
+while ((item = HashIteratorNext(&i)))
+   {
+   // do something with item;
+   }
+// No cleanup is required
+*/
+
 typedef struct
    {
    AlphaList *al;

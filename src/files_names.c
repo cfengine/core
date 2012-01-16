@@ -719,17 +719,11 @@ if (len == 0)
        return 0;
        }
 
-    if (*sp == '\n')
-       {
-       P.line_no++;
-       }
-
     if (*sp == '\\')
        {
        switch (*(sp+1))
           {
           case '\n':
-              P.line_no++;
               sp+=2;
               break;
 

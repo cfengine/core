@@ -204,6 +204,14 @@ category   [a-zA-Z_]+:
                       P.offsets.last_string = P.offsets.current - token_length;
                       P.line_pos += token_length;
 
+                      for (char *c = yytext; *c; ++c)
+                         {
+                         if (*c == '\n')
+                            {
+                            P.line_no++;
+                            }
+                         }
+
                       tmp = xmalloc(token_length + 1);
 
                       if ((less = DeEscapeQuotedString(yytext,tmp)) > 0)

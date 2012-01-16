@@ -43,7 +43,7 @@ void DeleteFromAlphaList(AlphaList *al, const char *string);
 /*
 AlphaListIterator i = AlphaListIteratorInit(&al);
 Item *item;
-while ((item = HashIteratorNext(&i)))
+while ((item = AlphaListIteratorNext(&i)))
    {
    // do something with item;
    }

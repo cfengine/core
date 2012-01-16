@@ -25,8 +25,8 @@ In order to build CFEngine you need the following tools and libraries installed:
 * PostgreSQL client library (optional)
 * SELinux library (optional)
 
-In order to build CFEngine checked out from Subversion, you need the following
-additional tools to regenerate build scripts and generate source code files:
+In order to build CFEngine checked out from Subversion, you will need the
+following additional tools:
 
 * GNU Automake >= 1.10
 * GNU Autoconf >= 2.59

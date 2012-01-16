@@ -32,7 +32,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static void DeleteDeRefPromise(char *scopeid,Promise *pp);
 static void DereferenceComment(Promise *pp);
 
 /*****************************************************************************/
@@ -633,37 +632,6 @@ DeleteConstraintList(pp->conlist);
 
 free((char *)pp);
 ThreadUnlock(cft_policy);
-}
-
-/*****************************************************************************/
-
-static void DeleteDeRefPromise(char *scopeid,Promise *pp)
-
-{ Constraint *cp;
-
-CfDebug("DeleteDeRefPromise()\n");
-
-free(pp->promiser);
-
-if (pp->promisee.item)
-   {
-   DeleteRvalItem(pp->promisee);
-   }
-
-if (pp->classes)
-   {
-   free(pp->classes);
-   }
-
-free(pp->bundle);
-
-for (cp = pp->conlist; cp != NULL; cp=cp->next)
-   {
-   free(cp->lval);
-   DeleteRvalItem(cp->rval);
-   }
-
-free(pp);
 }
 
 /*****************************************************************************/

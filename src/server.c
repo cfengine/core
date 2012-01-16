@@ -1576,7 +1576,7 @@ while (true && (count < 10))  /* arbitrary check to avoid infinite loop, DoS att
          return true;
          }
 
-      if (MatchInAlphaList(VHEAP,ip->name))
+      if (MatchInAlphaList(&VHEAP,ip->name))
          {
          CfDebug("Class matched regular expression %s, accepting...\n",ip->name);
          DeleteItemList(classlist);

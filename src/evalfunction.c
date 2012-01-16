@@ -555,8 +555,8 @@ return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(result), CF_SCALAR } };
 static FnCallResult FnCallClassMatch(FnCall *fp,Rlist *finalargs)
 
 {
-if (MatchInAlphaList(VHEAP,(char *)finalargs->item)
-    || MatchInAlphaList(VADDCLASSES,(char *)finalargs->item))
+if (MatchInAlphaList(&VHEAP,(char *)finalargs->item)
+    || MatchInAlphaList(&VADDCLASSES,(char *)finalargs->item))
    {
    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), CF_SCALAR } };
    }

@@ -378,7 +378,7 @@ if (IsRegexItemIn(ABORTHEAP,class))
    exit(1);
    }
 
-if (InAlphaList(VHEAP,class))
+if (InAlphaList(&VHEAP,class))
    {
    return;
    }
@@ -446,12 +446,12 @@ if (IsRegexItemIn(ABORTHEAP,copy))
    exit(1);
    }
 
-if (InAlphaList(VHEAP,copy))
+if (InAlphaList(&VHEAP,copy))
    {
    CfOut(cf_error,"","WARNING - private class \"%s\" in bundle \"%s\" shadows a global class - you should choose a different name to avoid conflicts",copy,bundle);
    }
 
-if (InAlphaList(VADDCLASSES,copy))
+if (InAlphaList(&VADDCLASSES,copy))
    {
    return;
    }
@@ -918,11 +918,11 @@ if (IsItemIn(VDELCLASSES, classname))
    {
    return false;
    }
-if (InAlphaList(VHEAP, classname))
+if (InAlphaList(&VHEAP, classname))
    {
    return true;
    }
-if (InAlphaList(VADDCLASSES, classname))
+if (InAlphaList(&VADDCLASSES, classname))
    {
    return true;
    }
@@ -986,7 +986,7 @@ return !IsDefinedClass(exception);
 
 static ExpressionValue EvalTokenFromList(const char *token, void *param)
 {
-return InAlphaList(*(AlphaList *)param, token);
+return InAlphaList((AlphaList *)param, token);
 }
 
 /**********************************************************************/
@@ -1210,7 +1210,7 @@ void AddEphemeralClasses(Rlist *classlist)
 
 for (rp = classlist; rp != NULL; rp = rp->next)
    {
-   if (!InAlphaList(VHEAP,rp->item))
+   if (!InAlphaList(&VHEAP,rp->item))
       {
       NewClass(rp->item);
       }

@@ -17,9 +17,9 @@ static void test_prepend(void **state)
 {
 AlphaList l;
 InitAlphaList(&l);
-assert_int_equal(InAlphaList(l, "mystring"), 0);
+assert_int_equal(InAlphaList(&l, "mystring"), 0);
 PrependAlphaList(&l, "mystring");
-assert_int_equal(InAlphaList(l, "mystring"), 1);
+assert_int_equal(InAlphaList(&l, "mystring"), 1);
 DeleteAlphaList(&l);
 }
 
@@ -27,9 +27,9 @@ static void test_prepend_empty(void **state)
 {
 AlphaList l;
 InitAlphaList(&l);
-assert_int_equal(InAlphaList(l, "hello"), 0);
+assert_int_equal(InAlphaList(&l, "hello"), 0);
 PrependAlphaList(&l, "hello");
-assert_int_equal(InAlphaList(l, "hello"), 1);
+assert_int_equal(InAlphaList(&l, "hello"), 1);
 DeleteAlphaList(&l);
 }
 

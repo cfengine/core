@@ -32,8 +32,8 @@ typedef struct
    } AlphaList;
 
 void InitAlphaList(AlphaList *al);
-int InAlphaList(AlphaList al, const char *string);
-int MatchInAlphaList(AlphaList al, char *string);
+int InAlphaList(AlphaList *al, const char *string);
+int MatchInAlphaList(AlphaList *al, char *string);
 void PrependAlphaList(AlphaList *al, const char *string);
 void IdempPrependAlphaList(AlphaList *al, const char *string);
 void DeleteAlphaList(AlphaList *al);

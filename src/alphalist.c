@@ -79,23 +79,23 @@ return ap;
 
 /*****************************************************************************/
 
-int InAlphaList(AlphaList al,const char *string)
+int InAlphaList(AlphaList *al,const char *string)
 
 { int i = (int)*string;
 
-return IsItemIn(al.list[i],string);
+return IsItemIn(al->list[i],string);
 }
 
 /*****************************************************************************/
 
-int MatchInAlphaList(AlphaList al,char *string)
+int MatchInAlphaList(AlphaList *al,char *string)
 
 { Item *ip;
   int i = (int)*string;
 
 if (isalnum(i) || *string == '_')
    {
-   for (ip = al.list[i]; ip != NULL; ip=ip->next)
+   for (ip = al->list[i]; ip != NULL; ip=ip->next)
       {
       if (FullTextMatch(string,ip->name))
          {
@@ -109,7 +109,7 @@ else
 
    for (i = 0; i < CF_ALPHABETSIZE; i++)
       {
-      for (ip = al.list[i]; ip != NULL; ip=ip->next)
+      for (ip = al->list[i]; ip != NULL; ip=ip->next)
          {
          if (FullTextMatch(string,ip->name))
             {
@@ -135,7 +135,7 @@ al->list[i] = PrependItem(&(al->list[i]),string,NULL);
 
 void IdempPrependAlphaList(AlphaList *al, const char *string)
 {
-if (!InAlphaList(*al, string))
+if (!InAlphaList(al, string))
    {
    PrependAlphaList(al, string);
    }

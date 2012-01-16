@@ -1,4 +1,5 @@
 #include "parser.h"
+#include "parser_state.h"
 
 struct ParserState P = {0};
 extern FILE *yyin;

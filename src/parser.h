@@ -25,61 +25,7 @@
 #ifndef CFENGINE_PARSER_H
 #define CFENGINE_PARSER_H
 
-#include "cf3.defs.h"
-#include "rlist.h"
-
-extern struct ParserState P;
-
-struct ParserState
-   {
-   char *block; // body/bundle
-   char blocktype[CF_MAXVARSIZE];
-   char blockid[CF_MAXVARSIZE];
-
-   char filename[CF_MAXVARSIZE];
-   int line_pos;
-   int line_no;
-
-   int arg_nesting;
-   int list_nesting;
-
-   char lval[CF_MAXVARSIZE];
-   Rval rval;
-   int isbody;
-
-   char *promiser;
-   void *promisee;
-
-   char currentid[CF_MAXVARSIZE];
-   char currenttype[CF_MAXVARSIZE];
-   char *currentstring;
-   char *currentclasses;
-
-   Bundle *currentbundle;
-   Body *currentbody;
-   Promise *currentpromise;
-   SubType *currentstype;
-   Rlist *useargs;
-
-   Rlist *currentRlist;
-
-   char *currentfnid[CF_MAX_NESTING];
-   Rlist *giveargs[CF_MAX_NESTING];
-   FnCall *currentfncall[CF_MAX_NESTING];
-
-   struct OffsetState
-      {
-      size_t current;
-      size_t last_id;
-      size_t last_string;
-      size_t last_block_id;
-      size_t last_subtype_id;
-      size_t last_class_id;
-      } offsets;
-   };
-
 void ParserParseFile(const char *path);
-
 
 #endif
 

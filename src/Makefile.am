@@ -122,6 +122,7 @@ libpromises_la_SOURCES =                                                \
         xml_writer.c xml_writer.h                                       \
         show.h                                                          \
         parser.c parser.h                                               \
+        parser_state.h                                                  \
         constants.c
 
 # Automake need to be guided due to symlinking

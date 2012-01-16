@@ -816,7 +816,7 @@ static FnCallResult FnCallSplayClass(FnCall *fp,Rlist *finalargs)
 { char buffer[CF_BUFSIZE],class[CF_MAXVARSIZE],hrs[CF_MAXVARSIZE];
   enum cfinterval policy;
   char *splay;
-  int hash,box,hours,minblocks;
+  int hash,box,hours;
   double period;
 
 buffer[0] = '\0';
@@ -841,7 +841,6 @@ switch(policy)
 hash = (double)GetHash(splay);
 box = (int)(0.5 + period*hash/(double)CF_HASHTABLESIZE);
 
-minblocks = box % 12;
 hours = box / 12;
 
 if (hours == 0)
@@ -1850,10 +1849,8 @@ return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
 
 static FnCallResult FnCallIsNewerThan(FnCall *fp,Rlist *finalargs)
 
-{ char buffer[CF_BUFSIZE];
-  struct stat frombuf,tobuf;
-
-buffer[0] = '\0';
+{
+struct stat frombuf,tobuf;
 
 /* begin fn specific content */
 
@@ -1881,10 +1878,8 @@ else
 
 static FnCallResult FnCallIsAccessedBefore(FnCall *fp,Rlist *finalargs)
 
-{ char buffer[CF_BUFSIZE];
-  struct stat frombuf,tobuf;
-
-buffer[0] = '\0';
+{
+struct stat frombuf,tobuf;
 
 /* begin fn specific content */
 
@@ -1912,10 +1907,8 @@ else
 
 static FnCallResult FnCallIsChangedBefore(FnCall *fp,Rlist *finalargs)
 
-{ char buffer[CF_BUFSIZE];
-  struct stat frombuf,tobuf;
-
-buffer[0] = '\0';
+{
+struct stat frombuf,tobuf;
 
 /* begin fn specific content */
 

@@ -791,18 +791,34 @@ Mission engineering illustrates the state of the system in relation to the desir
 @center Figure: Mission Engineering
 @sp 1
 
-@noindent Host Status:
+@noindent @b{Host Status:}
+@itemize
+@item The hosts are classified into red, yellow, green and blue according to the status of their compliance. A host is red if less than 80% of its promises are kept (> 20% not compliant), yellow if 20% or more of its promises were repaired and host is now compliant (> 20% repaired, now compliant), green if more than 80% of its promises are kept (> 80% compliant), and blue if there is no contact between the hub and the client (host unreachable). Clicking a link produces a list of the hosts in that category:
+
+@page
+@sp 1
+@center @image{img-complianthosts,14cm,,Compliant hosts}
+@center Figure: Compliant hosts
+@sp 1
+
+The list presents the name of hosts and three action icons:
 @itemize -
-@item The hosts are classified into red, yellow, green and blue according to the status of their compliance. A host is red if less than 80% of its promises are kept (> 20% not compliant), yellow if 20% or more of its promises were repaired and host is now compliant (> 20% repaired, now compliant), green if more than 80% of its promises are kept (> 80% compliant), and blue if there is no contact between the hub and the client (host unreachable). Clicking a link produces a list of the hosts in that category. 
+@item Yellow warning triangle: View the promises not kept on this host
+@item Pulse line: View vitals signs (statistics) on this host
+@item Red X: Delete this host (host will be deleted from database, but may re-appear if CFEngine is still running on it; see footnote below).@footnote{You have to stop CFEngine on the concerned host before deleting it in the Mission Portal, else the host will contact the hub and re-appear in the database.}
+@end itemize
+
 @item Worst available host rank: Display the weakest hosts (that have been in contact with the hub) over the last hour.
 @item Hub replication status: Display status of redundant monitoring hubs (if activated).
 @end itemize
 
-Promise compliance summary for reachable hosts:
+@sp 1
+@noindent @b{Promise compliance summary for reachable hosts:} @*
 The row of bar meters shows the compliance (average percentage of promises kept, repaired or not kept) of all registered hosts over the past week, the past day and the past hour. It summarizes performance
 and anomalous behavior in a simple red (promises not kept), yellow (promises repaired), and green (promises kept) scale. The "Chng" bar relates to the amount of changes made to files monitored by a CFEngine policy in the last hour (change watch). It is green if no changes have been made. The level of yellow increases as changes occur (but it will never be red).  For the "Seen" bar, CFEngine monitors the average time between connections to the clients; a last seen promise is considered not kept if the hub has not been in touch with a host for said average time plus two standard deviations, repaired for said average time plus the interval between one and two standard deviations, and kept for said average time plus the interval between zero and one standard deviation. The "Anom" bar relates to anomalies and is generated from monitoring data (vitals) for the last week in the following fashion: all observations (over the whole week) that are more than two std deviations away from the average is counted as not kept. They are counted as repaired if the distance is between one and two standard deviations from the average. Otherwise, they are kept & green. 
 
-Finders:
+@sp 1
+@noindent @b{Finders:} @*
 The Mission Engineering room comes with six finder functions (modules that make it simple and intuitive to browse and search for objects of a particular type, see section on Finders): host, class, promises, reports, summary reports, and CDP (Content Driven Policies) reports.
 
 
@@ -1009,7 +1025,7 @@ Shows information about hosts, including name, status, operating system, vital s
 @center Figure: Host viewer
 @sp 1
 
-@noindent Action buttons:
+@noindent @b{Action buttons:}
 @itemize -
 @item Reports: Tabular summary of the host's internal information, tailored to a particular topics
 @item Notes: View and make comments about this host
@@ -1017,11 +1033,11 @@ Shows information about hosts, including name, status, operating system, vital s
 @item Problems: Overview of promises not kept by this host
 @end itemize
 
-@noindent Monitored jobs:
+@noindent @b{Monitored jobs:}
 To be developed.
 
-@noindent Analysis: The bar meter shows the host-summary status of a number of key
-performance indicators.
+@noindent @b{Analysis:}
+The bar meter shows the host-summary status of a number of key performance indicators:
 
 @itemize -
 @item Week: The average level of promise-compliance over the whole past week.
@@ -1033,6 +1049,8 @@ performance indicators.
 @item Anom: Level of anomalous site-wide activity on the system.
 @end itemize
 
+@noindent @b{Host details (discovered):}
+Lists properties that CFEninge has discovered about the host (alias (name), operating system, release version of operating system, etc.). You can also delete this host by pressing the button on the right (host will be deleted from database, but may re-appear if CFEngine is still running on it; see footnote below).@footnote{You have to stop CFEngine on the concerned host before deleting it in the Mission Portal, else the host will contact the hub and re-appear in the database.}
 
 @node Bundle viewer, Promise viewer, Host viewer, Viewers
 @subsection Bundle viewer

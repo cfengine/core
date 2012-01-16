@@ -170,7 +170,7 @@ else
       }
    else
       {
-      *returnv = (Rval) { xstrdup(lval), CF_SCALAR };
+      *returnv = (Rval) { lval, CF_SCALAR };
       CfDebug("Couldn't expand array-like variable (%s) due to undefined dependencies\n",lval);
       return cf_notype;
       }
@@ -201,7 +201,7 @@ if (ptr == NULL)
 if (ptr == NULL)
    {
    CfDebug("Scope for variable \"%s.%s\" does not seem to exist\n",scope,lval);
-   *returnv = (Rval) { xstrdup(lval), CF_SCALAR };
+   *returnv = (Rval) { lval, CF_SCALAR };
    return cf_notype;
    }
 
@@ -212,7 +212,7 @@ assoc = HashLookupElement(ptr->hashtable, vlval);
 if (assoc == NULL)
    {
    CfDebug("No such variable found %s.%s\n\n",scopeid,lval);
-   *returnv = (Rval) { xstrdup(lval), CF_SCALAR };
+   *returnv = (Rval) { lval, CF_SCALAR };
    return cf_notype;
    }
 

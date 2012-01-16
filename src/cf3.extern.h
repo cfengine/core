@@ -41,8 +41,8 @@ extern pid_t ALARM_PID;
 extern RSA *PRIVKEY, *PUBKEY;
 extern char PUBKEY_DIGEST[CF_MAXVARSIZE];
 extern char BINDINTERFACE[CF_BUFSIZE];
-extern Sock ECGSOCKS[ATTR];
-extern char *TCPNAMES[CF_NETATTR];
+extern const Sock ECGSOCKS[ATTR];
+extern const char *TCPNAMES[CF_NETATTR];
 
 extern Audit *AUDITPTR;
 extern Audit *VAUDIT; 
@@ -171,7 +171,7 @@ extern int EDITFILESIZE;
 extern int VIFELAPSED;
 extern int VEXPIREAFTER;
 
-extern char *OBS[CF_OBSERVABLES][2];
+extern const char *OBS[CF_OBSERVABLES][2];
 
 extern const char *CF_DIGEST_TYPES[10][2];
 extern const int CF_DIGEST_SIZES[10];
@@ -244,7 +244,6 @@ extern FILE *FREPORT_TXT;
 extern FILE *FKNOW;
 extern int CSV;
 
-extern SubTypeSyntax CF_NOSTYPE;
 extern const char *CF_DATATYPES[];
 extern const char *CF_AGENTTYPES[];
 extern char HASHDB[CF_BUFSIZE];

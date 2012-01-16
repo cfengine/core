@@ -694,24 +694,26 @@ return (FnCallResult) { FNCALL_SUCCESS,
 static FnCallResult FnCallReturnsZero(FnCall *fp,Rlist *finalargs)
 
 {
-if (!IsAbsoluteFileName(finalargs->item))
+if (!IsAbsoluteFileName(ScalarValue(finalargs)))
    {
-   CfOut(cf_error,"","execresult \"%s\" does not have an absolute path\n",finalargs->item);
+   CfOut(cf_error, "", "execresult \"%s\" does not have an absolute path\n",
+         ScalarValue(finalargs));
    return (FnCallResult) { FNCALL_FAILURE };
    }
 
-if (!IsExecutable(GetArg0(finalargs->item)))
+if (!IsExecutable(GetArg0(ScalarValue(finalargs))))
    {
-   CfOut(cf_error,"","execresult \"%s\" is assumed to be executable but isn't\n",finalargs->item);
+   CfOut(cf_error, "", "execresult \"%s\" is assumed to be executable but isn't\n",
+         ScalarValue(finalargs));
    return (FnCallResult) { FNCALL_FAILURE };
    }
 
 struct stat statbuf;
 char comm[CF_BUFSIZE];
-int useshell = strcmp(finalargs->next->item,"useshell") == 0;
-snprintf(comm,CF_BUFSIZE,"%s", (char *)finalargs->item);
+int useshell = strcmp(ScalarValue(finalargs->next), "useshell") == 0;
+snprintf(comm, CF_BUFSIZE, "%s", ScalarValue(finalargs));
 
-if (cfstat(GetArg0(finalargs->item), &statbuf) == -1)
+if (cfstat(GetArg0(ScalarValue(finalargs)), &statbuf) == -1)
    {
    return (FnCallResult) { FNCALL_FAILURE };
    }
@@ -733,22 +735,24 @@ static FnCallResult FnCallExecResult(FnCall *fp,Rlist *finalargs)
   /* execresult("/programpath",useshell|noshell) */
 
 {
-if (!IsAbsoluteFileName(finalargs->item))
+if (!IsAbsoluteFileName(ScalarValue(finalargs)))
    {
-   CfOut(cf_error,"","execresult \"%s\" does not have an absolute path\n",finalargs->item);
+   CfOut(cf_error, "", "execresult \"%s\" does not have an absolute path\n",
+         ScalarValue(finalargs));
    return (FnCallResult) { FNCALL_FAILURE };
    }
 
-if (!IsExecutable(GetArg0(finalargs->item)))
+if (!IsExecutable(GetArg0(ScalarValue(finalargs))))
    {
-   CfOut(cf_error,"","execresult \"%s\" is assumed to be executable but isn't\n",finalargs->item);
+   CfOut(cf_error, "", "execresult \"%s\" is assumed to be executable but isn't\n",
+         ScalarValue(finalargs));
    return (FnCallResult) { FNCALL_FAILURE };
    }
 
-bool useshell = strcmp(finalargs->next->item, "useshell") == 0;
+bool useshell = strcmp(ScalarValue(finalargs->next), "useshell") == 0;
 char buffer[CF_EXPANDSIZE];
 
-if (GetExecOutput(finalargs->item, buffer, useshell))
+if (GetExecOutput(ScalarValue(finalargs), buffer, useshell))
    {
    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
    }
@@ -1506,8 +1510,9 @@ while (!feof(fin))
       for (rp = newlist; rp != NULL; rp=rp->next)
          {
          snprintf(name,CF_MAXVARSIZE-1,"%s[%d]",array_lval,vcount);
-         NewScalar(THIS_BUNDLE,name,rp->item,cf_str);
-         CfOut(cf_verbose,""," -> getfields: defining %s = %s\n",name,rp->item);
+         NewScalar(THIS_BUNDLE, name, ScalarValue(rp), cf_str);
+         CfOut(cf_verbose, "", " -> getfields: defining %s = %s\n",
+               name, ScalarValue(rp));
          vcount++;
          }
       }
@@ -2084,20 +2089,20 @@ buffer[0] = '\0';
 
 strcpy(buffer, "!any");
 
-setnetgrent(finalargs->item);
+setnetgrent(ScalarValue(finalargs));
 
 while (getnetgrent(&host,&user,&domain))
    {
    if (host == NULL || strcmp(host,VUQNAME) == 0)
       {
-      CfOut(cf_verbose, "", "Matched %s in netgroup %s\n", host, finalargs->item);
+      CfOut(cf_verbose, "", "Matched %s in netgroup %s\n", host, ScalarValue(finalargs));
       strcpy(buffer, "any");
       break;
       }
 
    if (host == NULL || strcmp(host,VFQNAME) == 0)
       {
-      CfOut(cf_verbose, "", "Matched %s in netgroup %s\n", host, finalargs->item);
+      CfOut(cf_verbose, "", "Matched %s in netgroup %s\n", host, ScalarValue(finalargs));
       strcpy(buffer, "any");
       break;
       }
@@ -3172,9 +3177,9 @@ switch(type)
    case cf_int:
        for (rp = newlist; rp != NULL; rp=rp->next)
           {
-          if (Str2Int(rp->item) == CF_NOINT)
+          if (Str2Int(ScalarValue(rp)) == CF_NOINT)
              {
-             CfOut(cf_error,"","Presumed int value \"%s\" read from file %s has no recognizable value",rp->item,filename);
+             CfOut(cf_error, "", "Presumed int value \"%s\" read from file %s has no recognizable value", ScalarValue(rp), filename);
              noerrors = false;
              }
           }
@@ -3183,9 +3188,9 @@ switch(type)
    case cf_real:
        for (rp = newlist; rp != NULL; rp=rp->next)
           {
-          if (Str2Double(rp->item) == CF_NODOUBLE)
+          if (Str2Double(ScalarValue(rp)) == CF_NODOUBLE)
              {
-             CfOut(cf_error,"","Presumed real value \"%s\" read from file %s has no recognizable value",rp->item,filename);
+             CfOut(cf_error, "", "Presumed real value \"%s\" read from file %s has no recognizable value", ScalarValue(rp), filename);
              noerrors = false;
              }
           }

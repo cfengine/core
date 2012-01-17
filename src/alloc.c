@@ -94,9 +94,8 @@ return res;
 
 int xvasprintf(char **strp, const char *fmt, va_list ap)
 {
-*strp = NULL;
 int res = vasprintf(strp, fmt, ap);
-CheckResult(*strp, "xvasprintf", true);
+CheckResult(res == -1 ? NULL : *strp, "xvasprintf", true);
 return res;
 }
 

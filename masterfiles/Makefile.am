@@ -1,4 +1,4 @@
-masterfilesdir = $(pkgdatadir)/masterfiles
+masterfilesdir = $(projdatadir)/masterfiles
 dist_masterfiles_DATA = $(srcdir)/failsafe.cf $(srcdir)/cfengine_stdlib.cf $(srcdir)/promises.cf
 
 #

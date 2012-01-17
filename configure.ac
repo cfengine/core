@@ -91,6 +91,35 @@ if test "x$cross_compiling" = "xno"; then
 fi
 
 dnl ######################################################################
+dnl Configure files layout
+dnl ######################################################################
+
+AC_ARG_ENABLE([fhs],
+        [AS_HELP_STRING([--enable-fhs], [Enable FHS compliance. Defaults to custom CFEngine files layout])])
+
+#
+# pkglibdir/pkgdatadir are not overridable, so use our own invention instead.
+#
+
+AS_IF([test x"$enable_fhs" = xyes], [
+  projlibdir='${libexecdir}/cfengine'
+  projdatadir='${exec_prefix}/share/cfengine'
+], [
+  if [ x"$prefix" = xNONE ]; then
+    prefix=/var/cfengine
+  fi
+  sbindir='${exec_prefix}/bin' # /var/cfengine/bin despite being sbin_?
+  projlibdir='${exec_prefix}/lib'
+  projdatadir='${exec_prefix}/share'
+  docdir='${exec_prefix}/share/doc'
+  mandir='${exec_prefix}/share/man'
+])
+
+AC_SUBST(projlibdir)
+AC_SUBST(projdatadir)
+
+
+dnl ######################################################################
 dnl Checks for libraries.
 dnl ######################################################################
 

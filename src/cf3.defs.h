@@ -1054,7 +1054,7 @@ enum software_rep
    sw_rep_patch_installed
    };
 
-typedef enum PromiseLogState_
+typedef enum
    {
    CF_PROMISE_LOG_STATE_REPAIRED,
    CF_PROMISE_LOG_STATE_NOTKEPT

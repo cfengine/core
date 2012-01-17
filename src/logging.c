@@ -197,7 +197,7 @@ switch(status)
        
        if (IsPromiseValuableForLogging(pp))
           {
-          NotePromiseCompliance(pp,0.5,cfn_repaired,reason);
+          NotePromiseCompliance(pp, 0.5, CF_PROMISE_STATE_REPAIRED, reason);
           SummarizeTransaction(attr,pp,attr.transaction.log_repaired);
           }
        break;
@@ -212,7 +212,7 @@ switch(status)
        
        if (IsPromiseValuableForLogging(pp))
           {
-          NotePromiseCompliance(pp,1.0,cfn_notkept,reason);
+          NotePromiseCompliance(pp, 1.0, CF_PROMISE_STATE_NOTKEPT, reason);
           }
        break;
        
@@ -229,7 +229,7 @@ switch(status)
 
        if (IsPromiseValuableForLogging(pp))
           {
-          NotePromiseCompliance(pp,0.0,cfn_notkept,reason);
+          NotePromiseCompliance(pp, 0.0, CF_PROMISE_STATE_NOTKEPT, reason);
           SummarizeTransaction(attr,pp,attr.transaction.log_failed);
           }
        break;
@@ -247,7 +247,7 @@ switch(status)
 
        if (IsPromiseValuableForLogging(pp))
           {
-          NotePromiseCompliance(pp,0.0,cfn_notkept,reason);
+          NotePromiseCompliance(pp, 0.0, CF_PROMISE_STATE_NOTKEPT, reason);
           SummarizeTransaction(attr,pp,attr.transaction.log_failed);
           }
        break;
@@ -265,7 +265,7 @@ switch(status)
 
        if (IsPromiseValuableForLogging(pp))
           {
-          NotePromiseCompliance(pp,0.0,cfn_notkept,reason);
+          NotePromiseCompliance(pp, 0.0, CF_PROMISE_STATE_NOTKEPT, reason);
           SummarizeTransaction(attr,pp,attr.transaction.log_failed);
           }
        break;
@@ -283,7 +283,7 @@ switch(status)
 
        if (IsPromiseValuableForLogging(pp))
           {       
-          NotePromiseCompliance(pp,0.0,cfn_notkept,reason);
+          NotePromiseCompliance(pp, 0.0, CF_PROMISE_STATE_NOTKEPT, reason);
           SummarizeTransaction(attr,pp,attr.transaction.log_failed);
           }
        break;
@@ -296,7 +296,7 @@ switch(status)
 
        if (IsPromiseValuableForLogging(pp))
           {
-          NotePromiseCompliance(pp,1.0,cfn_nop,reason);
+          NotePromiseCompliance(pp, 1.0, CF_PROMISE_STATE_ANY, reason);
           SummarizeTransaction(attr,pp,attr.transaction.log_kept);
           }
        

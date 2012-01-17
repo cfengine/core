@@ -825,7 +825,7 @@ return str;
 
 /*********************************************************************/
 
-void AnchorRegex(char *regex, char *out, int outSz)
+void AnchorRegex(const char *regex, char *out, int outSz)
 
 {
 if (EMPTY(regex))

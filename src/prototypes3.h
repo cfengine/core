@@ -504,7 +504,6 @@ void ListAlphaList(FILE *fp,AlphaList al, char sep);
 FnCallResult CallFunction(const FnCallType *function, FnCall *fp, Rlist *finalargs);
 int FnNumArgs(const FnCallType *call_type);
 
-void *CfReadFile(char *filename,int maxsize);
 void ModuleProtocol(char *command,char *line,int print);
 
 /* expand.c */

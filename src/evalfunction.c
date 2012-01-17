@@ -39,6 +39,8 @@ static int BuildLineArray(char *array_lval,char *file_buffer,char *split,int max
 static int ExecModule(char *command);
 static int CheckID(char *id);
 
+static void *CfReadFile(char *filename,int maxsize);
+
 /*******************************************************************/
 
 int FnNumArgs(const FnCallType *call_type)
@@ -3730,7 +3732,7 @@ return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
 /* Level                                                             */
 /*********************************************************************/
 
-void *CfReadFile(char *filename,int maxsize)
+static void *CfReadFile(char *filename,int maxsize)
 
 { struct stat sb;
   char *result = NULL;

@@ -921,6 +921,7 @@ AC_ARG_WITH(workdir,
         esac
 
 		AC_DEFINE_UNQUOTED(WORKDIR, "${WORKDIR}")
+                AC_SUBST(workdir, "${WORKDIR}")
 	]
 )
 

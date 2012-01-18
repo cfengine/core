@@ -52,6 +52,13 @@ MAINTAINERCLEANFILES = Makefile.in aclocal.m4 config.guess config.sub \
 #
 ACLOCAL_AMFLAGS = -I m4
 
+install-data-local:
+	$(MKDIR_P) -m700 $(DESTDIR)$(workdir)/inputs
+	$(MKDIR_P) $(DESTDIR)$(workdir)/masterfiles
+	$(MKDIR_P) -m700 $(DESTDIR)$(workdir)/modules
+	$(MKDIR_P) -m700 $(DESTDIR)$(workdir)/outputs
+	$(MKDIR_P) -m700 $(DESTDIR)$(workdir)/ppkeys
+
 #
 # Code coverage
 #

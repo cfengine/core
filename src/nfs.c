@@ -406,7 +406,7 @@ int VerifyNotInFstab(char *name,Attributes a,Promise *pp)
 /* Ensure filesystem is NOT in fstab, and return no of changes */
     
 { char regex[CF_BUFSIZE],aixcomm[CF_BUFSIZE],line[CF_BUFSIZE];
-  char *host,*rmountpt,*mountpt,*opts;
+  char *host,*mountpt,*opts;
   FILE *pfp;
   Item *ip;
 
@@ -433,7 +433,6 @@ else
    }
 
 host = a.mount.mount_server;
-rmountpt = a.mount.mount_source;
 mountpt = name;
 
 if (MatchFSInFstab(mountpt))

@@ -105,7 +105,7 @@ AS_IF([test x"$enable_fhs" = xyes], [
   projlibdir='${libexecdir}/cfengine'
   projdatadir='${exec_prefix}/share/cfengine'
 ], [
-  if [ x"$prefix" = xNONE ]; then
+  if test x"$prefix" = xNONE; then
     prefix=/var/cfengine
   fi
   sbindir='${exec_prefix}/bin' # /var/cfengine/bin despite being sbin_?

@@ -981,6 +981,8 @@ extern pthread_mutex_t *cft_server_keyseen;
 extern pthread_mutex_t *cft_server_children;
 #endif
 
+/************************************************************************************/
+
 typedef enum
   {
   PROMISE_STATE_REPAIRED = 'r',
@@ -988,6 +990,14 @@ typedef enum
   PROMISE_STATE_KEPT = 'c',
   PROMISE_STATE_ANY = 'x'
   } PromiseState;
+
+/************************************************************************************/
+
+typedef enum
+   {
+   LAST_SEEN_DIRECTION_INCOMING = '-',
+   LAST_SEEN_DIRECTION_OUTGOING = '+'
+   } LastSeenDirection;
 
 /************************************************************************************/
 

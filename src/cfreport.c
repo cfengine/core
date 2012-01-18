@@ -1049,14 +1049,17 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
       {
       fprintf(fout,"%s",CFRH[cfx_entry][cfb]);
 
-      if (*hostname == '+')
-         {
+      switch (*hostname)
+      {
+      case LAST_SEEN_DIRECTION_OUTGOING:
          fprintf(fout,"%s out (%c)%s",CFRH[cfx_pm][cfb],*hostname,CFRH[cfx_pm][cfe]);
-         }
-      else
-         {
+         break;
+
+      case LAST_SEEN_DIRECTION_INCOMING:
          fprintf(fout,"%s in (%c)%s",CFRH[cfx_pm][cfb],*hostname,CFRH[cfx_pm][cfe]);
-         }
+         break;
+      }
+
       fprintf(fout,"%s%s%s",CFRH[cfx_host][cfb],hostname+1,CFRH[cfx_host][cfe]);
       fprintf(fout,"%s%s%s",CFRH[cfx_ip][cfb],address,CFRH[cfx_ip][cfe]);
       fprintf(fout,"%s%s%s",CFRH[cfx_alias][cfb],IPString2Hostname(address),CFRH[cfx_ip][cfe]);

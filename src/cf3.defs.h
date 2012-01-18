@@ -1054,12 +1054,6 @@ enum software_rep
    sw_rep_patch_installed
    };
 
-typedef enum
-   {
-   PROMISE_LOG_STATE_REPAIRED,
-   PROMISE_LOG_STATE_NOTKEPT
-   } PromiseLogState;
-
 /*************************************************************************/
 
 enum cfd_menu

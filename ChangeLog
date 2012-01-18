@@ -28,6 +28,8 @@
 	- Memory and CPU usage improvements.
 	- Testsuite now uses 'make check' convention and does not need root
 	  privileges anymore.
+	- New configuration option --enable-fhs to enable FHS-compliant
+	  file layout for 'make install'.
 	- See the full list of bugfixes at
 	  https://cfengine.com/bugtracker/changelog_page.php
 

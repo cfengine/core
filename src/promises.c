@@ -118,6 +118,7 @@ if ((pp->promisee.item != NULL && pcopy->promisee.item == NULL))
    FatalError("Unable to copy promise");
    }
 
+pcopy->parent_subtype = pp->parent_subtype;
 pcopy->bundletype = xstrdup(pp->bundletype);
 pcopy->audit = pp->audit;
 pcopy->offset.line = pp->offset.line;

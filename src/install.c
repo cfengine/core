@@ -176,6 +176,7 @@ else
    lp->next = tp;
    }
 
+tp->parent_bundle = bundle;
 tp->name = xstrdup(typename);
 
 return tp;
@@ -242,6 +243,7 @@ else
    lp->next = pp;
    }
 
+pp->parent_subtype = type;
 pp->audit = AUDITPTR;
 pp->bundle =  xstrdup(bundle);
 pp->promiser = sp;

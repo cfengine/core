@@ -673,6 +673,8 @@ struct Body_
 
 struct SubType_
    {
+   Bundle *parent_bundle;
+
    char *name;
    Promise *promiselist;
    SubType *next;
@@ -695,6 +697,8 @@ typedef struct
 
 struct Promise_
    {
+   SubType *parent_subtype;
+
    char *classes;
    char *ref;                   /* comment */
    char ref_alloc;

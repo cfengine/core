@@ -1220,28 +1220,3 @@ switch (rval.rtype)
       break;
    }
 }
-
-/*******************************************************************/
-
-char *GetRlistScalar(Rlist *rp)
-{
- if(rp->type != CF_SCALAR)
-    {
-    FatalError("Rlist item is not scalar but %c", rp->type);
-    }
-
- return (char *)rp->item;
-}
-
-/*******************************************************************/
-
-
-char *GetRvalScalar(Rval *rv)
-{
- if(rv->rtype != CF_SCALAR)
-    {
-    FatalError("Rval item is not scalar but %c", rv->rtype);
-    }
-
- return (char *)rv->item;
-}

@@ -483,7 +483,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       
       for (rp  = (Rlist *)retval.item; rp != NULL; rp = rp->next)
          {
-         CfOut(cf_verbose,""," -> ... %s\n", GetRlistScalar(rp));
+         CfOut(cf_verbose,""," -> ... %s\n", ScalarValue(rp));
          NewClass(rp->item);
          }
       
@@ -618,7 +618,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
       for (rp = (Rlist *)retval.item; rp != NULL; rp = rp->next)
 	{
 	PrependItem(&SUSPICIOUSLIST,rp->item,NULL);
-	CfOut(cf_verbose,"", "-> Concidering %s as suspicious file", GetRlistScalar(rp));
+	CfOut(cf_verbose,"", "-> Concidering %s as suspicious file", ScalarValue(rp));
 	}
 
       continue;
@@ -694,7 +694,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
          {
          if (putenv(rp->item) != 0)
             {
-            CfOut(cf_error, "putenv", "Failed to set environment variable %s", GetRlistScalar(rp));
+            CfOut(cf_error, "putenv", "Failed to set environment variable %s", ScalarValue(rp));
             }
          }
       
@@ -716,7 +716,7 @@ if (GetVariable("control_common", CFG_CONTROLBODY[cfg_fips_mode].lval, &retval) 
 if (GetVariable("control_common", CFG_CONTROLBODY[cfg_syslog_port].lval, &retval) != cf_notype)
    {
    SetSyslogPort(Str2Int(retval.item));
-   CfOut(cf_verbose,"","SET syslog_port to %s", GetRvalScalar(&retval));
+   CfOut(cf_verbose,"","SET syslog_port to %s", ScalarRvalValue(retval));
    }
 
 if (GetVariable("control_common", CFG_CONTROLBODY[cfg_syslog_host].lval, &retval) != cf_notype)
@@ -943,7 +943,7 @@ if (VINPUTLIST != NULL)
          
          if (!access)
             {
-            CfOut(cf_error,"","File %s is not owned by an authorized user (security exception)", GetRlistScalar(rp));
+            CfOut(cf_error,"","File %s is not owned by an authorized user (security exception)", ScalarValue(rp));
             exit(1);
             }
          }
@@ -951,7 +951,7 @@ if (VINPUTLIST != NULL)
          {
          if (sb.st_uid != getuid())
             {
-            CfOut(cf_error,"","File %s is not owned by uid %d (security exception)", GetRlistScalar(rp), getuid());
+            CfOut(cf_error,"","File %s is not owned by uid %d (security exception)", ScalarValue(rp), getuid());
             exit(1);
             }
          }

@@ -1160,7 +1160,7 @@ if (rval.item != NULL)
 
             case CF_SCALAR:
                 CfOut(cf_verbose,""," !! Redefinition of a constant scalar \"%s\" (was %s now %s)",
-                      pp->promiser, GetRvalScalar(&retval), GetRvalScalar(&rval));
+                      pp->promiser, ScalarRvalValue(retval), ScalarRvalValue(rval));
                 PromiseRef(cf_verbose,pp);
                 break;
             case CF_LIST:

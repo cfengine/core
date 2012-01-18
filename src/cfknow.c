@@ -762,7 +762,7 @@ for (rpp = a.precedents; rpp != NULL; rpp=rpp->next)
    {
    for (rpq = a.qualifiers; rpq != NULL; rpq=rpq->next)
       {
-      CfOut(cf_verbose,""," -> Add inference: (%s,%s,%s)\n", GetRlistScalar(rpp), GetRlistScalar(rpq), pp->promiser);
+      CfOut(cf_verbose,""," -> Add inference: (%s,%s,%s)\n", ScalarValue(rpp), ScalarValue(rpq), pp->promiser);
       AddInference(&INFERENCES,pp->promiser,rpp->item,rpq->item);
       }
    }
@@ -793,7 +793,7 @@ for (rp = contexts; rp != NULL; rp = rp->next)
       return;
       }
 
-   CfOut(cf_verbose,""," -> New thing \"%s\" about context \"%s\"", pp->promiser, GetRlistScalar(rp));
+   CfOut(cf_verbose,""," -> New thing \"%s\" about context \"%s\"", pp->promiser, ScalarValue(rp));
 
    if (a.fwd_name && a.bwd_name)
       {
@@ -819,7 +819,7 @@ for (rp = contexts; rp != NULL; rp = rp->next)
       for (rps = a.synonyms; rps != NULL; rps=rps->next)
          {
          otp = IdempInsertTopic(rps->item);
-         CfOut(cf_verbose,""," ---> %s is a synonym for %s", GetRlistScalar(rps), tp->topic_name);
+         CfOut(cf_verbose,""," ---> %s is a synonym for %s", ScalarValue(rps), tp->topic_name);
          }
 
       AddTopicAssociation(tp,&(tp->associations),KM_SYNONYM,KM_SYNONYM,a.synonyms,true,rp->item,pp->promiser);
@@ -832,7 +832,7 @@ for (rp = contexts; rp != NULL; rp = rp->next)
       for (rps = a.general; rps != NULL; rps=rps->next)
          {
          otp = IdempInsertTopic(rps->item);
-         CfOut(cf_verbose,""," ---> %s is a generalization for %s", GetRlistScalar(rps), tp->topic_name);
+         CfOut(cf_verbose,""," ---> %s is a generalization for %s", ScalarValue(rps), tp->topic_name);
          }
       
       AddTopicAssociation(tp,&(tp->associations),KM_GENERALIZES_B,KM_GENERALIZES_F,a.general,true,rp->item,pp->promiser);
@@ -891,7 +891,7 @@ for (rp = contexts; rp != NULL; rp = rp->next)
       return;
       }
 
-   CfOut(cf_verbose,""," -> New topic promise for \"%s\" about context \"%s\"", pp->promiser, GetRlistScalar(rp));
+   CfOut(cf_verbose,""," -> New topic promise for \"%s\" about context \"%s\"", pp->promiser, ScalarValue(rp));
 
    if (a.fwd_name && a.bwd_name)
       {
@@ -905,7 +905,7 @@ for (rp = contexts; rp != NULL; rp = rp->next)
       for (rps = a.synonyms; rps != NULL; rps=rps->next)
          {
          otp = IdempInsertTopic(rps->item);
-         CfOut(cf_verbose,""," ---> %s is a synonym for %s", GetRlistScalar(rps), tp->topic_name);
+         CfOut(cf_verbose,""," ---> %s is a synonym for %s", ScalarValue(rps), tp->topic_name);
          }
       
       AddTopicAssociation(tp,&(tp->associations),KM_SYNONYM,KM_SYNONYM,a.synonyms,true,rp->item,pp->promiser);
@@ -918,7 +918,7 @@ for (rp = contexts; rp != NULL; rp = rp->next)
       for (rps = a.general; rps != NULL; rps=rps->next)
          {
          otp = IdempInsertTopic(rps->item);
-         CfOut(cf_verbose,""," ---> %s is a generalization for %s", GetRlistScalar(rps), tp->topic_name);
+         CfOut(cf_verbose,""," ---> %s is a generalization for %s", ScalarValue(rps), tp->topic_name);
          }
       
       AddTopicAssociation(tp,&(tp->associations),KM_GENERALIZES_B,KM_GENERALIZES_F,a.general,true,rp->item,pp->promiser);
@@ -997,7 +997,7 @@ contexts = SplitContextExpression(pp->classes,pp);
 
 for (rp = contexts; rp != NULL; rp = rp->next)
    {
-   CfOut(cf_verbose,""," -> New occurrence promise for \"%s\" about context \"%s\"",pp->promiser, GetRlistScalar(rp));
+   CfOut(cf_verbose,""," -> New occurrence promise for \"%s\" about context \"%s\"",pp->promiser, ScalarValue(rp));
    
    switch (rep_type)
       {
@@ -1262,7 +1262,7 @@ for (rp = passociates; rp != NULL; rp=rp->next)
 
    if (strcmp(contexttopic,normalform) == 0)
       {
-      CfOut(cf_verbose,""," ! Excluding self-reference to %s", GetRlistScalar(rp));
+      CfOut(cf_verbose,""," ! Excluding self-reference to %s", ScalarValue(rp));
       continue;
       }
 

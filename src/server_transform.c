@@ -360,7 +360,7 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
       {
       SHORT_CFENGINEPORT = (short)Str2Int(retval.item);
       strncpy(STR_CFENGINEPORT, retval.item, 15);
-      CfOut(cf_verbose,"","SET default portnumber = %u = %s = %s\n",(int)SHORT_CFENGINEPORT,STR_CFENGINEPORT, GetRvalScalar(&retval));
+      CfOut(cf_verbose,"","SET default portnumber = %u = %s = %s\n",(int)SHORT_CFENGINEPORT,STR_CFENGINEPORT, ScalarRvalValue(retval));
       SHORT_CFENGINEPORT = htons((short)Str2Int(retval.item));
       continue;
       }

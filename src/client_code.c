@@ -116,7 +116,7 @@ for (rp = attr.copy.servers; rp != NULL; rp = rp->next)
 
       if (conn == NULL)
          {
-         cfPS(cf_inform,CF_FAIL,"",pp,attr,"Unable to establish connection with %s\n", GetRlistScalar(rp));
+         cfPS(cf_inform,CF_FAIL,"",pp,attr,"Unable to establish connection with %s\n", ScalarValue(rp));
          MarkServerOffline(rp->item);
          }
       else

@@ -157,7 +157,7 @@ if (a.packages.package_file_repositories)
       {
       if (strlen(rp->item) > CF_MAXVARSIZE-1)
          {
-         cfPS(cf_error,CF_FAIL,"",pp,a," !! The repository path \"%s\" is too long", GetRlistScalar(rp));
+         cfPS(cf_error,CF_FAIL,"",pp,a," !! The repository path \"%s\" is too long", ScalarValue(rp));
          return false;         
          }
       }
@@ -526,7 +526,7 @@ if (a.packages.package_version)
       {
       for (rp = a.packages.package_architectures; rp != NULL; rp=rp->next)
          {
-         CfOut(cf_verbose,""," ... trying listed arch %s\n", GetRlistScalar(rp));
+         CfOut(cf_verbose,""," ... trying listed arch %s\n", ScalarValue(rp));
          strncpy(name,pp->promiser,CF_MAXVARSIZE-1);
          strncpy(version,a.packages.package_version,CF_MAXVARSIZE-1);
          strncpy(arch,rp->item,CF_MAXVARSIZE-1);
@@ -587,7 +587,7 @@ else
      {
      for (rp = a.packages.package_architectures; rp != NULL; rp=rp->next)
        {
-       CfOut(cf_verbose,""," ... trying listed arch %s\n", GetRlistScalar(rp));
+       CfOut(cf_verbose,""," ... trying listed arch %s\n", ScalarValue(rp));
        strncpy(name,pp->promiser,CF_MAXVARSIZE-1);
        strncpy(version,"*",CF_MAXVARSIZE-1);
        strncpy(arch,rp->item,CF_MAXVARSIZE-1);
@@ -1743,9 +1743,9 @@ int FindLargestVersionAvail(char *matchName, char *matchVers, const char *refAny
   for (rp = repositories; rp != NULL; rp=rp->next)
     {
 
-      if ((dirh = OpenDirLocal(GetRlistScalar(rp))) == NULL)
+      if ((dirh = OpenDirLocal(ScalarValue(rp))) == NULL)
 	{
-	  CfOut(cf_error,"opendir","!! Can't open local directory \"%s\"\n", GetRlistScalar(rp));
+	  CfOut(cf_error,"opendir","!! Can't open local directory \"%s\"\n", ScalarValue(rp));
 	  continue;
 	}
       

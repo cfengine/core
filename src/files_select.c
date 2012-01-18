@@ -366,7 +366,7 @@ for  (rp = list; rp != NULL; rp=rp->next)
 
    if (!ParseModeString(rp->item,&plus,&minus))
       {
-      CfOut(cf_error,""," !! Problem validating a mode string \"%s\" in search filter", GetRlistScalar(rp));
+      CfOut(cf_error,""," !! Problem validating a mode string \"%s\" in search filter", ScalarValue(rp));
       continue;
       }
 

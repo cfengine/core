@@ -170,7 +170,9 @@ else
       }
    else
       {
-      *returnv = (Rval) { lval, CF_SCALAR };
+      /* C type system does not allow us to express the fact that returned
+         value may contain immutable string. */
+      *returnv = (Rval) { (char*)lval, CF_SCALAR };
       CfDebug("Couldn't expand array-like variable (%s) due to undefined dependencies\n",lval);
       return cf_notype;
       }
@@ -201,7 +203,9 @@ if (ptr == NULL)
 if (ptr == NULL)
    {
    CfDebug("Scope for variable \"%s.%s\" does not seem to exist\n",scope,lval);
-   *returnv = (Rval) { lval, CF_SCALAR };
+   /* C type system does not allow us to express the fact that returned
+      value may contain immutable string. */
+   *returnv = (Rval) { (char*)lval, CF_SCALAR };
    return cf_notype;
    }
 
@@ -212,7 +216,9 @@ assoc = HashLookupElement(ptr->hashtable, vlval);
 if (assoc == NULL)
    {
    CfDebug("No such variable found %s.%s\n\n",scopeid,lval);
-   *returnv = (Rval) { lval, CF_SCALAR };
+   /* C type system does not allow us to express the fact that returned
+      value may contain immutable string. */
+   *returnv = (Rval) { (char*)lval, CF_SCALAR };
    return cf_notype;
    }
 

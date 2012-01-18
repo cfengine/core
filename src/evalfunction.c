@@ -157,7 +157,7 @@ for(arg = finalargs; arg; arg = arg->next)
 
 for(arg = finalargs; arg; arg = arg->next)
    {
-   if (!IsDefinedClass(arg->item))
+   if (!IsDefinedClass(ScalarValue(arg)))
       {
       return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), CF_SCALAR } };
       }
@@ -171,11 +171,9 @@ return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), CF_SCALAR } };
 static FnCallResult FnCallHostsSeen(FnCall *fp,Rlist *finalargs)
 
 { Rlist *returnlist = NULL, *rp;
- char *policy,*format;
  CF_DB *dbp;
  CF_DBC *dbcp;
  char name[CF_BUFSIZE];
- int horizon;
  Item *addresses = NULL;
  char entrytimeChr[CF_SMALLBUF];
  int ksize, vsize;
@@ -184,9 +182,9 @@ static FnCallResult FnCallHostsSeen(FnCall *fp,Rlist *finalargs)
 
 /* begin fn specific content */
 
- horizon = Str2Int((char *)(finalargs->item)) * 3600;
- policy = (char *)(finalargs->next->item);
- format = (char *)(finalargs->next->next->item);
+ int horizon = Str2Int(ScalarValue(finalargs)) * 3600;
+ char *policy = ScalarValue(finalargs->next);
+ char *format = ScalarValue(finalargs->next->next);
 
  CfDebug("Calling hostsseen(%d,%s,%s)\n", horizon, policy, format);
 
@@ -263,14 +261,14 @@ static FnCallResult FnCallHostsSeen(FnCall *fp,Rlist *finalargs)
 static FnCallResult FnCallRandomInt(FnCall *fp,Rlist *finalargs)
 
 { char buffer[CF_BUFSIZE];
-  int tmp,range,result,from=-1,to=-1;
+  int tmp,range,result;
 
 buffer[0] = '\0';
 
 /* begin fn specific content */
 
-from = Str2Int((char *)(finalargs->item));
-to = Str2Int((char *)(finalargs->next->item));
+int from = Str2Int(ScalarValue(finalargs));
+int to = Str2Int(ScalarValue(finalargs->next));
 
 if (from == CF_NOINT || to == CF_NOINT)
    {
@@ -299,13 +297,11 @@ return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
 static FnCallResult FnCallGetEnv(FnCall *fp,Rlist *finalargs)
 
 { char buffer[CF_BUFSIZE] = "",ctrlstr[CF_SMALLBUF];
-  char *name;
-  int limit;
 
 /* begin fn specific content */
 
-name = finalargs->item;
-limit = Str2Int(finalargs->next->item);
+char *name = ScalarValue(finalargs);
+int limit = Str2Int(ScalarValue(finalargs->next));
 
 snprintf(ctrlstr,CF_SMALLBUF,"%%.%ds",limit); // -> %45s
 
@@ -325,12 +321,11 @@ static FnCallResult FnCallGetUsers(FnCall *fp,Rlist *finalargs)
 
 { Rlist *newlist = NULL,*except_names,*except_uids;
   struct passwd *pw;
-  char *except_name,*except_uid;
 
 /* begin fn specific content */
 
-except_name = finalargs->item;
-except_uid = finalargs->next->item;
+char *except_name = ScalarValue(finalargs);
+char *except_uid = ScalarValue(finalargs->next);
 
 except_names = SplitStringAsRList(except_name,',');
 except_uids = SplitStringAsRList(except_uid,',');
@@ -365,13 +360,12 @@ return (FnCallResult) { FNCALL_FAILURE };
 static FnCallResult FnCallEscape(FnCall *fp,Rlist *finalargs)
 
 { char buffer[CF_BUFSIZE];
-  char *name;
 
 buffer[0] = '\0';
 
 /* begin fn specific content */
 
-name = finalargs->item;
+char *name = ScalarValue(finalargs);
 
 EscapeSpecialChars(name,buffer,CF_BUFSIZE-1,"");
 
@@ -382,9 +376,8 @@ return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
 
 static FnCallResult FnCallHost2IP(FnCall *fp,Rlist *finalargs)
 
-{ char *name;
-
-name = finalargs->item;
+{
+char *name = ScalarValue(finalargs);
 
 return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(Hostname2IPString(name)), CF_SCALAR } };
 }
@@ -393,11 +386,9 @@ return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(Hostname2IPString(name)), CF_S
 
 static FnCallResult FnCallIP2Host(FnCall *fp,Rlist *finalargs)
 
-{ char *ip;
-
+{
 /* begin fn specific content */
-
-ip = finalargs->item;
+char *ip = ScalarValue(finalargs);
 
 return (FnCallResult) { FNCALL_SUCCESS,  { xstrdup(IPString2Hostname(ip)), CF_SCALAR } };
 }
@@ -412,7 +403,7 @@ static FnCallResult FnCallGetUid(FnCall *fp,Rlist *finalargs)
 
 /* begin fn specific content */
 
-if ((pw = getpwnam((char *)finalargs->item)) == NULL)
+if ((pw = getpwnam(ScalarValue(finalargs))) == NULL)
    {
    return (FnCallResult) { FNCALL_FAILURE };
    }
@@ -439,7 +430,7 @@ static FnCallResult FnCallGetGid(FnCall *fp,Rlist *finalargs)
 
 /* begin fn specific content */
 
-if ((gr = getgrnam((char *)finalargs->item)) == NULL)
+if ((gr = getgrnam(ScalarValue(finalargs))) == NULL)
    {
    return (FnCallResult) { FNCALL_FAILURE };
    }
@@ -462,7 +453,7 @@ static FnCallResult FnCallHash(FnCall *fp,Rlist *finalargs)
 
 /* Hash(string,md5|sha1|crypt) */
 
-{ char buffer[CF_BUFSIZE],*string,*typestring;
+{ char buffer[CF_BUFSIZE];
   unsigned char digest[EVP_MAX_MD_SIZE+1];
   enum cfhashes type;
 
@@ -470,8 +461,8 @@ buffer[0] = '\0';
 
 /* begin fn specific content */
 
-string = finalargs->item;
-typestring = finalargs->next->item;
+char *string = ScalarValue(finalargs);
+char *typestring = ScalarValue(finalargs->next);
 
 type = String2HashType(typestring);
 
@@ -494,7 +485,7 @@ static FnCallResult FnCallHashMatch(FnCall *fp,Rlist *finalargs)
 
 /* HashMatch(string,md5|sha1|crypt,"abdxy98edj") */
 
-{ char buffer[CF_BUFSIZE],ret[CF_BUFSIZE],*string,*typestring,*compare;
+{ char buffer[CF_BUFSIZE],ret[CF_BUFSIZE];
   unsigned char digest[EVP_MAX_MD_SIZE+1];
   enum cfhashes type;
 
@@ -502,9 +493,9 @@ buffer[0] = '\0';
 
 /* begin fn specific content */
 
-string = finalargs->item;
-typestring = finalargs->next->item;
-compare = finalargs->next->next->item;
+char *string = ScalarValue(finalargs);
+char *typestring = ScalarValue(finalargs->next);
+char *compare = ScalarValue(finalargs->next->next);
 
 type = String2HashType(typestring);
 HashFile(string,digest,type);
@@ -541,7 +532,7 @@ for(arg = finalargs; arg; arg = arg->next)
 
 for(arg = finalargs; arg; arg = arg->next)
    {
-   if (strlcat(result, arg->item, CF_BUFSIZE) >= CF_BUFSIZE)
+   if (strlcat(result, ScalarValue(arg), CF_BUFSIZE) >= CF_BUFSIZE)
       {
       /* Complain */
       CfOut(cf_error, "", "!! Unable to evaluate concat() function, arguments are too long");
@@ -557,8 +548,8 @@ return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(result), CF_SCALAR } };
 static FnCallResult FnCallClassMatch(FnCall *fp,Rlist *finalargs)
 
 {
-if (MatchInAlphaList(&VHEAP,(char *)finalargs->item)
-    || MatchInAlphaList(&VADDCLASSES,(char *)finalargs->item))
+if (MatchInAlphaList(&VHEAP,ScalarValue(finalargs))
+    || MatchInAlphaList(&VADDCLASSES,ScalarValue(finalargs)))
    {
    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), CF_SCALAR } };
    }
@@ -572,7 +563,7 @@ else
 
 static FnCallResult FnCallCountClassesMatching(FnCall *fp,Rlist *finalargs)
 
-{ char buffer[CF_BUFSIZE], *string = ((char *)finalargs->item);
+{ char buffer[CF_BUFSIZE], *string = ScalarValue(finalargs);
   Item *ip;
   int count = 0;
   int i = (int)*string;
@@ -603,7 +594,7 @@ else
       {
       for (ip = VHEAP.list[i]; ip != NULL; ip=ip->next)
          {
-         if (FullTextMatch((char *)finalargs->item,ip->name))
+         if (FullTextMatch(string,ip->name))
             {
             count++;
             }
@@ -611,7 +602,7 @@ else
 
       for (ip = VADDCLASSES.list[i]; ip != NULL; ip=ip->next)
          {
-         if (FullTextMatch((char *)finalargs->item,ip->name))
+         if (FullTextMatch(string,ip->name))
             {
             count++;
             }
@@ -630,7 +621,7 @@ static FnCallResult FnCallCanonify(FnCall *fp,Rlist *finalargs)
 
 {
 return (FnCallResult) { FNCALL_SUCCESS,
-   { xstrdup(CanonifyName((char *)finalargs->item)), CF_SCALAR } };
+   { xstrdup(CanonifyName(ScalarValue(finalargs))), CF_SCALAR } };
 }
 
 /*********************************************************************/
@@ -638,12 +629,11 @@ return (FnCallResult) { FNCALL_SUCCESS,
 static FnCallResult FnCallLastNode(FnCall *fp,Rlist *finalargs)
 
 { Rlist *rp,*newlist;
-  char *name, *split;
 
 /* begin fn specific content */
 
-name = finalargs->item;
-split = finalargs->next->item;
+char *name = ScalarValue(finalargs);
+char *split = ScalarValue(finalargs->next);
 
 newlist = SplitRegexAsRList(name,split,100,true);
 
@@ -670,7 +660,7 @@ else
 
 static FnCallResult FnCallDirname(FnCall *fp, Rlist *finalargs)
 {
-char *dir = xstrdup(finalargs->item);
+char *dir = xstrdup(ScalarValue(finalargs));
 DeleteSlash(dir);
 ChopLastNode(dir);
 
@@ -683,7 +673,7 @@ return (FnCallResult) { FNCALL_SUCCESS, { dir, CF_SCALAR } };
 static FnCallResult FnCallClassify(FnCall *fp,Rlist *finalargs)
 
 {
-bool is_defined = IsDefinedClass(CanonifyName(finalargs->item));
+bool is_defined = IsDefinedClass(CanonifyName(ScalarValue(finalargs)));
 
 return (FnCallResult) { FNCALL_SUCCESS,
    { xstrdup(is_defined ? "any" : "!any"), CF_SCALAR } };
@@ -771,13 +761,12 @@ static FnCallResult FnCallUseModule(FnCall *fp,Rlist *finalargs)
   /* usemodule("/programpath",varargs) */
 
 { char modulecmd[CF_BUFSIZE];
-  char *command,*args;
   struct stat statbuf;
 
 /* begin fn specific content */
 
-command = finalargs->item;
-args = finalargs->next->item;
+char *command = ScalarValue(finalargs);
+char *args = ScalarValue(finalargs->next);
 snprintf(modulecmd,CF_BUFSIZE,"%s%cmodules%c%s",CFWORKDIR,FILE_SEPARATOR,FILE_SEPARATOR,command);
 
 if (cfstat(GetArg0(modulecmd),&statbuf) == -1)
@@ -816,8 +805,6 @@ return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), CF_SCALAR } };
 static FnCallResult FnCallSplayClass(FnCall *fp,Rlist *finalargs)
 
 { char buffer[CF_BUFSIZE],class[CF_MAXVARSIZE],hrs[CF_MAXVARSIZE];
-  enum cfinterval policy;
-  char *splay;
   int hash,box,hours;
   double period;
 
@@ -825,8 +812,8 @@ buffer[0] = '\0';
 
 /* begin fn specific content */
 
-splay = finalargs->item;
-policy = Str2Interval(finalargs->next->item);
+char *splay = ScalarValue(finalargs);
+enum cfinterval policy = Str2Interval(ScalarValue(finalargs->next));
 
 switch(policy)
    {
@@ -877,7 +864,6 @@ static FnCallResult FnCallReadTcp(FnCall *fp,Rlist *finalargs)
 
 { AgentConnection *conn = NULL;
   char buffer[CF_BUFSIZE];
-  char *hostnameip,*maxbytes,*port,*sendstring;
   int val = 0, n_read = 0;
   short portnum;
   Attributes attr = {{0}};
@@ -886,10 +872,10 @@ memset(buffer, 0, sizeof(buffer));
 
 /* begin fn specific content */
 
-hostnameip = finalargs->item;
-port = finalargs->next->item;
-sendstring = finalargs->next->next->item;
-maxbytes = finalargs->next->next->next->item;
+char *hostnameip = ScalarValue(finalargs);
+char *port = ScalarValue(finalargs->next);
+char *sendstring = ScalarValue(finalargs->next->next);
+char *maxbytes = ScalarValue(finalargs->next->next->next);
 
 val = Str2Int(maxbytes);
 portnum = (short) Str2Int(port);
@@ -952,15 +938,14 @@ static FnCallResult FnCallRegList(FnCall *fp,Rlist *finalargs)
 
 { Rlist *rp,*list;
   char buffer[CF_BUFSIZE],naked[CF_MAXVARSIZE];
-  char *regex,*listvar;
   Rval retval;
 
 buffer[0] = '\0';
 
 /* begin fn specific content */
 
-listvar = finalargs->item;
-regex = finalargs->next->item;
+char *listvar = ScalarValue(finalargs);
+char *regex = ScalarValue(finalargs->next);
 
 if (*listvar == '@')
    {
@@ -1007,15 +992,15 @@ return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
 static FnCallResult FnCallRegArray(FnCall *fp,Rlist *finalargs)
 
 { char lval[CF_MAXVARSIZE],scopeid[CF_MAXVARSIZE];
-  char *regex,*arrayname,match[CF_MAXVARSIZE],buffer[CF_BUFSIZE];
+  char match[CF_MAXVARSIZE],buffer[CF_BUFSIZE];
   Scope *ptr;
   HashIterator i;
   CfAssoc *assoc;
 
 /* begin fn specific content */
 
-arrayname = finalargs->item;
-regex = finalargs->next->item;
+char *arrayname = ScalarValue(finalargs);
+char *regex = ScalarValue(finalargs->next);
 
 /* Locate the array */
 
@@ -1062,7 +1047,7 @@ return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
 static FnCallResult FnCallGetIndices(FnCall *fp,Rlist *finalargs)
 
 { char lval[CF_MAXVARSIZE],scopeid[CF_MAXVARSIZE];
-  char *arrayname,index[CF_MAXVARSIZE],match[CF_MAXVARSIZE];
+  char index[CF_MAXVARSIZE],match[CF_MAXVARSIZE];
   Scope *ptr;
   Rlist *returnlist = NULL;
   HashIterator i;
@@ -1070,7 +1055,7 @@ static FnCallResult FnCallGetIndices(FnCall *fp,Rlist *finalargs)
 
 /* begin fn specific content */
 
-arrayname = finalargs->item;
+char *arrayname = ScalarValue(finalargs);
 
 /* Locate the array */
 
@@ -1132,7 +1117,7 @@ return (FnCallResult) { FNCALL_SUCCESS, { returnlist, CF_LIST } };
 static FnCallResult FnCallGetValues(FnCall *fp,Rlist *finalargs)
 
 { char lval[CF_MAXVARSIZE],scopeid[CF_MAXVARSIZE];
-  char *arrayname,match[CF_MAXVARSIZE];
+  char match[CF_MAXVARSIZE];
   Scope *ptr;
   Rlist *rp,*returnlist = NULL;
   HashIterator i;
@@ -1140,7 +1125,7 @@ static FnCallResult FnCallGetValues(FnCall *fp,Rlist *finalargs)
 
 /* begin fn specific content */
 
-arrayname = finalargs->item;
+char *arrayname = ScalarValue(finalargs);
 
 /* Locate the array */
 
@@ -1199,15 +1184,15 @@ return (FnCallResult) { FNCALL_SUCCESS, { returnlist, CF_LIST } };
 static FnCallResult FnCallGrep(FnCall *fp,Rlist *finalargs)
 
 { char lval[CF_MAXVARSIZE];
-  char *name,*regex,scopeid[CF_MAXVARSIZE];
+  char scopeid[CF_MAXVARSIZE];
   Rval rval2;
   Rlist *rp,*returnlist = NULL;
   Scope *ptr;
 
 /* begin fn specific content */
 
-regex = finalargs->item;
-name = finalargs->next->item;
+char *regex = ScalarValue(finalargs);
+char *name = ScalarValue(finalargs->next);
 
 /* Locate the array */
 
@@ -1258,7 +1243,7 @@ return (FnCallResult) { FNCALL_SUCCESS, { returnlist, CF_LIST } };
 static FnCallResult FnCallSum(FnCall *fp,Rlist *finalargs)
 
 { char lval[CF_MAXVARSIZE],buffer[CF_MAXVARSIZE];
-  char *name,scopeid[CF_MAXVARSIZE];
+  char scopeid[CF_MAXVARSIZE];
   Rval rval2;
   Rlist *rp;
   Scope *ptr;
@@ -1266,7 +1251,7 @@ static FnCallResult FnCallSum(FnCall *fp,Rlist *finalargs)
 
 /* begin fn specific content */
 
-name = finalargs->item;
+char *name = ScalarValue(finalargs);
 
 /* Locate the array */
 
@@ -1322,7 +1307,7 @@ return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
 static FnCallResult FnCallProduct(FnCall *fp,Rlist *finalargs)
 
 { char lval[CF_MAXVARSIZE],buffer[CF_MAXVARSIZE];
-  char *name,scopeid[CF_MAXVARSIZE];
+  char scopeid[CF_MAXVARSIZE];
   Rval rval2;
   Rlist *rp;
   Scope *ptr;
@@ -1330,7 +1315,7 @@ static FnCallResult FnCallProduct(FnCall *fp,Rlist *finalargs)
 
 /* begin fn specific content */
 
-name = finalargs->item;
+char *name = ScalarValue(finalargs);
 
 /* Locate the array */
 
@@ -1387,7 +1372,7 @@ return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
 static FnCallResult FnCallJoin(FnCall *fp,Rlist *finalargs)
 
 { char lval[CF_MAXVARSIZE],*joined;
-  char *name,*join,scopeid[CF_MAXVARSIZE];
+  char scopeid[CF_MAXVARSIZE];
   Rval rval2;
   Rlist *rp;
   Scope *ptr;
@@ -1395,8 +1380,8 @@ static FnCallResult FnCallJoin(FnCall *fp,Rlist *finalargs)
 
 /* begin fn specific content */
 
-join = finalargs->item;
-name = finalargs->next->item;
+char *join = ScalarValue(finalargs);
+char *name = ScalarValue(finalargs->next);
 
 /* Locate the array */
 
@@ -1468,17 +1453,16 @@ return (FnCallResult) { FNCALL_SUCCESS, { joined, CF_SCALAR } };
 static FnCallResult FnCallGetFields(FnCall *fp,Rlist *finalargs)
 
 { Rlist *rp,*newlist;
-  char *filename,*regex,*array_lval,*split;
   char name[CF_MAXVARSIZE],line[CF_BUFSIZE],retval[CF_SMALLBUF];
   int lcount = 0,vcount = 0,nopurge = true;
   FILE *fin;
 
 /* begin fn specific content */
 
-regex = finalargs->item;
-filename = finalargs->next->item;
-split = finalargs->next->next->item;
-array_lval = finalargs->next->next->next->item;
+char *regex = ScalarValue(finalargs);
+char *filename = ScalarValue(finalargs->next);
+char *split = ScalarValue(finalargs->next->next);
+char *array_lval = ScalarValue(finalargs->next->next->next);
 
 if ((fin = fopen(filename,"r")) == NULL)
    {
@@ -1532,15 +1516,14 @@ return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(retval), CF_SCALAR } };
 
 static FnCallResult FnCallCountLinesMatching(FnCall *fp,Rlist *finalargs)
 
-{ char *filename,*regex;
-  char line[CF_BUFSIZE],retval[CF_SMALLBUF];
+{ char line[CF_BUFSIZE],retval[CF_SMALLBUF];
   int lcount = 0;
   FILE *fin;
 
 /* begin fn specific content */
 
-regex = finalargs->item;
-filename = finalargs->next->item;
+char *regex = ScalarValue(finalargs);
+char *filename = ScalarValue(finalargs->next);
 
 if ((fin = fopen(filename,"r")) == NULL)
    {
@@ -1579,19 +1562,16 @@ return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(retval), CF_SCALAR } };
 
 static FnCallResult FnCallLsDir(FnCall *fp,Rlist *finalargs)
 
-{
-  char *dirname,*regex;
-  char line[CF_BUFSIZE],retval[CF_SMALLBUF];
-  int includepath;
+{ char line[CF_BUFSIZE],retval[CF_SMALLBUF];
   Dir *dirh = NULL;
   const struct dirent *dirp;
   Rlist *newlist = NULL;
 
 /* begin fn specific content */
 
-dirname = finalargs->item;
-regex = finalargs->next->item;
-includepath = GetBoolean(finalargs->next->next->item);
+char *dirname = ScalarValue(finalargs);
+char *regex = ScalarValue(finalargs->next);
+int includepath = GetBoolean(ScalarValue(finalargs->next->next));
 
 dirh = OpenDirLocal(dirname);
 
@@ -1632,9 +1612,7 @@ return (FnCallResult) { FNCALL_SUCCESS, { newlist, CF_LIST } };
 
 static FnCallResult FnCallMapList(FnCall *fp,Rlist *finalargs)
 
-{
-  char *map,*listvar;
-  char expbuf[CF_EXPANDSIZE],lval[CF_MAXVARSIZE],scopeid[CF_MAXVARSIZE];
+{ char expbuf[CF_EXPANDSIZE],lval[CF_MAXVARSIZE],scopeid[CF_MAXVARSIZE];
   Rlist *rp,*newlist = NULL;
   Rval rval;
   Scope *ptr;
@@ -1642,8 +1620,8 @@ static FnCallResult FnCallMapList(FnCall *fp,Rlist *finalargs)
 
 /* begin fn specific content */
 
-map = finalargs->item;
-listvar = finalargs->next->item;
+char *map = ScalarValue(finalargs);
+char *listvar = ScalarValue(finalargs->next);
 
 /* Locate the array */
 
@@ -1710,7 +1688,6 @@ static FnCallResult FnCallSelectServers(FnCall *fp,Rlist *finalargs)
 { AgentConnection *conn = NULL;
   Rlist *rp,*hostnameip;
   char buffer[CF_BUFSIZE],naked[CF_MAXVARSIZE];
-  char *maxbytes,*port,*sendstring,*regex,*array_lval,*listvar;
   int val = 0, n_read = 0,count = 0;
   short portnum;
   Attributes attr = {{0}};
@@ -1721,12 +1698,12 @@ buffer[0] = '\0';
 
 /* begin fn specific content */
 
-listvar = finalargs->item;
-port = finalargs->next->item;
-sendstring = finalargs->next->next->item;
-regex = finalargs->next->next->next->item;
-maxbytes = finalargs->next->next->next->next->item;
-array_lval = finalargs->next->next->next->next->next->item;
+char *listvar = ScalarValue(finalargs);
+char *port = ScalarValue(finalargs->next);
+char *sendstring = ScalarValue(finalargs->next->next);
+char *regex = ScalarValue(finalargs->next->next->next);
+char *maxbytes = ScalarValue(finalargs->next->next->next->next);
+char *array_lval = ScalarValue(finalargs->next->next->next->next->next);
 
 if (*listvar == '@')
    {
@@ -1856,12 +1833,12 @@ struct stat frombuf,tobuf;
 
 /* begin fn specific content */
 
-if (cfstat(finalargs->item,&frombuf) == -1)
+if (cfstat(ScalarValue(finalargs),&frombuf) == -1)
    {
    return (FnCallResult) { FNCALL_FAILURE };
    }
 
-if (cfstat(finalargs->next->item,&tobuf) == -1)
+if (cfstat(ScalarValue(finalargs->next),&tobuf) == -1)
    {
    return (FnCallResult) { FNCALL_FAILURE };
    }
@@ -1885,12 +1862,12 @@ struct stat frombuf,tobuf;
 
 /* begin fn specific content */
 
-if (cfstat(finalargs->item,&frombuf) == -1)
+if (cfstat(ScalarValue(finalargs),&frombuf) == -1)
    {
    return (FnCallResult) { FNCALL_FAILURE };
    }
 
-if (cfstat(finalargs->next->item,&tobuf) == -1)
+if (cfstat(ScalarValue(finalargs->next),&tobuf) == -1)
    {
    return (FnCallResult) { FNCALL_FAILURE };
    }
@@ -1914,11 +1891,11 @@ struct stat frombuf,tobuf;
 
 /* begin fn specific content */
 
-if (cfstat(finalargs->item,&frombuf) == -1)
+if (cfstat(ScalarValue(finalargs),&frombuf) == -1)
    {
    return (FnCallResult) { FNCALL_FAILURE };
    }
-else if (cfstat(finalargs->next->item,&tobuf) == -1)
+else if (cfstat(ScalarValue(finalargs->next),&tobuf) == -1)
    {
    return (FnCallResult) { FNCALL_FAILURE };
    }
@@ -1937,14 +1914,14 @@ else
 
 static FnCallResult FnCallFileStat(FnCall *fp,Rlist *finalargs)
 
-{ char buffer[CF_BUFSIZE];
+{ char buffer[CF_BUFSIZE], *path = ScalarValue(finalargs);
   struct stat statbuf;
 
 buffer[0] = '\0';
 
 /* begin fn specific content */
 
-if (lstat(finalargs->item,&statbuf) == -1)
+if (lstat(path,&statbuf) == -1)
    {
    if (!strcmp(fp->name, "filesize"))
       {
@@ -1959,7 +1936,7 @@ else
 
    if (!strcmp(fp->name, "isexecutable"))
       {
-      if (IsExecutable(finalargs->item))
+      if (IsExecutable(path))
          {
          strcpy(buffer,"any");
          }
@@ -2002,7 +1979,7 @@ return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
 
 static FnCallResult FnCallIPRange(FnCall *fp,Rlist *finalargs)
 
-{ char buffer[CF_BUFSIZE];
+{ char buffer[CF_BUFSIZE], *range = ScalarValue(finalargs);
   Item *ip;
 
 buffer[0] = '\0';
@@ -2011,7 +1988,7 @@ buffer[0] = '\0';
 
 strcpy(buffer,"!any");
 
-if (!FuzzyMatchParse(finalargs->item))
+if (!FuzzyMatchParse(range))
    {
    return (FnCallResult) { FNCALL_FAILURE };
    }
@@ -2020,7 +1997,7 @@ for (ip = IPADDRESSES; ip != NULL; ip = ip->next)
    {
    CfDebug("Checking IP Range against RDNS %s\n",VIPADDRESS);
 
-   if (FuzzySetMatch(finalargs->item,VIPADDRESS) == 0)
+   if (FuzzySetMatch(range, VIPADDRESS) == 0)
       {
       CfDebug("IPRange Matched\n");
       strcpy(buffer,"any");
@@ -2030,7 +2007,7 @@ for (ip = IPADDRESSES; ip != NULL; ip = ip->next)
       {
       CfDebug("Checking IP Range against iface %s\n",ip->name);
 
-      if (FuzzySetMatch(finalargs->item,ip->name) == 0)
+      if (FuzzySetMatch(range, ip->name) == 0)
          {
          CfDebug("IPRange Matched\n");
          strcpy(buffer,"any");
@@ -2053,14 +2030,17 @@ buffer[0] = '\0';
 
 /* begin fn specific content */
 
+char *prefix = ScalarValue(finalargs);
+char *range = ScalarValue(finalargs->next);
+
 strcpy(buffer,"!any");
 
-if (!FuzzyHostParse(finalargs->item,finalargs->next->item))
+if (!FuzzyHostParse(prefix,range))
    {
    return (FnCallResult) { FNCALL_FAILURE };
    }
 
-if (FuzzyHostMatch(finalargs->item,finalargs->next->item,VUQNAME) == 0)
+if (FuzzyHostMatch(prefix,range,VUQNAME) == 0)
    {
    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), CF_SCALAR } };
    }
@@ -2113,7 +2093,7 @@ return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
 static FnCallResult FnCallIsVariable(FnCall *fp,Rlist *finalargs)
 
 {
-if (DefinedVariable(finalargs->item))
+if (DefinedVariable(ScalarValue(finalargs)))
    {
    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), CF_SCALAR } };
    }
@@ -2128,7 +2108,7 @@ else
 static FnCallResult FnCallStrCmp(FnCall *fp,Rlist *finalargs)
 
 {
-if (strcmp(finalargs->item,finalargs->next->item) == 0)
+if (strcmp(ScalarValue(finalargs),ScalarValue(finalargs->next)) == 0)
    {
    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), CF_SCALAR } };
    }
@@ -2150,7 +2130,7 @@ buffer[0] = '\0';
 
 /* begin fn specific content */
 
-snprintf(buffer, sizeof(buffer), "%s", (char *)finalargs->item);
+snprintf(buffer, sizeof(buffer), "%s", ScalarValue(finalargs));
 MapName(buffer);
 
 return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
@@ -2167,7 +2147,7 @@ buffer[0] = '\0';
 
 /* begin fn specific content */
 
-if (GetRegistryValue(finalargs->item,finalargs->next->item,buffer,sizeof(buffer)))
+if (GetRegistryValue(ScalarValue(finalargs), ScalarValue(finalargs->next), buffer, sizeof(buffer)))
    {
    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
    }
@@ -2183,16 +2163,14 @@ else
 static FnCallResult FnCallRemoteScalar(FnCall *fp,Rlist *finalargs)
 
 { char buffer[CF_BUFSIZE];
-  char *handle,*server;
-  int encrypted;
 
 buffer[0] = '\0';
 
 /* begin fn specific content */
 
-handle = finalargs->item;
-server = finalargs->next->item;
-encrypted = GetBoolean(finalargs->next->next->item);
+char *handle = ScalarValue(finalargs);
+char *server = ScalarValue(finalargs->next);
+int encrypted = GetBoolean(ScalarValue(finalargs->next->next));
 
 if (strcmp(server,"localhost") == 0)
    {
@@ -2230,13 +2208,12 @@ else
 static FnCallResult FnCallHubKnowledge(FnCall *fp,Rlist *finalargs)
 
 { char buffer[CF_BUFSIZE];
-  char *handle;
 
 buffer[0] = '\0';
 
 /* begin fn specific content */
 
-handle = finalargs->item;
+char *handle = ScalarValue(finalargs);
 
 if (THIS_AGENT_TYPE != cf_agent)
    {
@@ -2264,17 +2241,15 @@ static FnCallResult FnCallRemoteClassesMatching(FnCall *fp,Rlist *finalargs)
 
 { Rlist *rp,*classlist;
   char buffer[CF_BUFSIZE],class[CF_MAXVARSIZE];
-  char *server,*regex,*prefix;
-  int encrypted;
 
 buffer[0] = '\0';
 
 /* begin fn specific content */
 
-regex = finalargs->item;
-server = finalargs->next->item;
-encrypted = GetBoolean(finalargs->next->next->item);
-prefix = finalargs->next->next->next->item;
+char *regex = ScalarValue(finalargs);
+char *server = ScalarValue(finalargs->next);
+int encrypted = GetBoolean(ScalarValue(finalargs->next->next));
+char *prefix = ScalarValue(finalargs->next->next->next);
 
 if (strcmp(server,"localhost") == 0)
    {
@@ -2315,14 +2290,14 @@ static FnCallResult FnCallPeers(FnCall *fp,Rlist *finalargs)
 
 { Rlist *rp,*newlist,*pruned;
   char *split = "\n";
-  char *filename,*comment,*file_buffer = NULL;
-  int i,found,groupsize,maxent = 100000,maxsize = 100000;
+  char *file_buffer = NULL;
+  int i,found,maxent = 100000,maxsize = 100000;
 
 /* begin fn specific content */
 
-filename = finalargs->item;
-comment = (char *)finalargs->next->item;
-groupsize = Str2Int(finalargs->next->next->item);
+char *filename = ScalarValue(finalargs);
+char *comment = ScalarValue(finalargs->next);
+int groupsize = Str2Int(ScalarValue(finalargs->next->next));
 
 file_buffer = (char *)CfReadFile(filename,maxsize);
 
@@ -2402,16 +2377,16 @@ static FnCallResult FnCallPeerLeader(FnCall *fp,Rlist *finalargs)
 
 { Rlist *rp,*newlist;
   char *split = "\n";
-  char *filename,*comment,*file_buffer = NULL,buffer[CF_MAXVARSIZE];
-  int i,found,groupsize,maxent = 100000,maxsize = 100000;
+  char *file_buffer = NULL,buffer[CF_MAXVARSIZE];
+  int i,found,maxent = 100000,maxsize = 100000;
 
 buffer[0] = '\0';
 
 /* begin fn specific content */
 
-filename = finalargs->item;
-comment = (char *)finalargs->next->item;
-groupsize = Str2Int(finalargs->next->next->item);
+char *filename = ScalarValue(finalargs);
+char *comment = ScalarValue(finalargs->next);
+int groupsize = Str2Int(ScalarValue(finalargs->next->next));
 
 file_buffer = (char *)CfReadFile(filename,maxsize);
 
@@ -2495,14 +2470,14 @@ static FnCallResult FnCallPeerLeaders(FnCall *fp,Rlist *finalargs)
 
 { Rlist *rp,*newlist,*pruned;
   char *split = "\n";
-  char *filename,*comment,*file_buffer = NULL;
-  int i,groupsize,maxent = 100000,maxsize = 100000;
+  char *file_buffer = NULL;
+  int i,maxent = 100000,maxsize = 100000;
 
 /* begin fn specific content */
 
-filename = finalargs->item;
-comment = (char *)finalargs->next->item;
-groupsize = Str2Int(finalargs->next->next->item);
+char *filename = ScalarValue(finalargs);
+char *comment = ScalarValue(finalargs->next);
+int groupsize = Str2Int(ScalarValue(finalargs->next->next));
 
 file_buffer = (char *)CfReadFile(filename,maxsize);
 
@@ -2572,15 +2547,14 @@ else
 static FnCallResult FnCallRegCmp(FnCall *fp,Rlist *finalargs)
 
 { char buffer[CF_BUFSIZE];
-  char *argv0,*argv1;
 
 buffer[0] = '\0';
 
 /* begin fn specific content */
 
 strcpy(buffer,CF_ANYCLASS);
-argv0 = finalargs->item;
-argv1 = finalargs->next->item;
+char *argv0 = ScalarValue(finalargs);
+char *argv1 = ScalarValue(finalargs->next);
 
 if (FullTextMatch(argv0,argv1))
    {
@@ -2599,7 +2573,6 @@ return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
 static FnCallResult FnCallRegExtract(FnCall *fp,Rlist *finalargs)
 
 { char buffer[CF_BUFSIZE];
-  char *regex,*data,*arrayname;
   Scope *ptr;
 
 buffer[0] = '\0';
@@ -2607,9 +2580,9 @@ buffer[0] = '\0';
 /* begin fn specific content */
 
 strcpy(buffer,CF_ANYCLASS);
-regex = finalargs->item;
-data = finalargs->next->item;
-arrayname = finalargs->next->next->item;
+char *regex = ScalarValue(finalargs);
+char *data = ScalarValue(finalargs->next);
+char *arrayname = ScalarValue(finalargs->next->next);
 
 if (FullTextMatch(regex,data))
    {
@@ -2657,15 +2630,14 @@ return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
 static FnCallResult FnCallRegLine(FnCall *fp,Rlist *finalargs)
 
 { char buffer[CF_BUFSIZE],line[CF_BUFSIZE];
-  char *argv0,*argv1;
   FILE *fin;
 
 buffer[0] = '\0';
 
 /* begin fn specific content */
 
-argv0 = finalargs->item;
-argv1 = finalargs->next->item;
+char *argv0 = ScalarValue(finalargs);
+char *argv1 = ScalarValue(finalargs->next);
 
 strcpy(buffer,"!any");
 
@@ -2699,13 +2671,12 @@ return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
 static FnCallResult FnCallIsLessGreaterThan(FnCall *fp,Rlist *finalargs)
 
 { char buffer[CF_BUFSIZE];
-  char *argv0,*argv1;
   double a = CF_NOVAL,b = CF_NOVAL;
 
 buffer[0] = '\0';
 
-argv0 = finalargs->item;
-argv1 = finalargs->next->item;
+char *argv0 = ScalarValue(finalargs);
+char *argv1 = ScalarValue(finalargs->next);
 
 if (IsRealNumber(argv0) && IsRealNumber(argv1))
    {
@@ -2780,14 +2751,14 @@ return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
 static FnCallResult FnCallIRange(FnCall *fp,Rlist *finalargs)
 
 { char buffer[CF_BUFSIZE];
-  long tmp,from=CF_NOINT,to=CF_NOINT;
+  long tmp;
 
 buffer[0] = '\0';
 
 /* begin fn specific content */
 
-from = Str2Int(finalargs->item);
-to = Str2Int(finalargs->next->item);
+long from = Str2Int(ScalarValue(finalargs));
+long to = Str2Int(ScalarValue(finalargs->next));
 
 if (from == CF_NOINT || to == CF_NOINT)
    {
@@ -2818,14 +2789,13 @@ static FnCallResult FnCallRRange(FnCall *fp,Rlist *finalargs)
 
 { char buffer[CF_BUFSIZE];
   int tmp;
-  double from=CF_NODOUBLE,to=CF_NODOUBLE;
 
 buffer[0] = '\0';
 
 /* begin fn specific content */
 
-from = Str2Double((char *)(finalargs->item));
-to = Str2Double((char *)(finalargs->next->item));
+double from = Str2Double(ScalarValue(finalargs));
+double to = Str2Double(ScalarValue(finalargs->next));
 
 if (from == CF_NODOUBLE || to == CF_NODOUBLE)
    {
@@ -2866,7 +2836,7 @@ for (i = 0; i < 6; i++)
    {
    if (rp != NULL)
       {
-      d[i] = Str2Int(rp->item);
+      d[i] = Str2Int(ScalarValue(rp));
       rp = rp->next;
       }
    }
@@ -2909,7 +2879,7 @@ for(arg = finalargs; arg; arg = arg->next)
 
 for(arg = finalargs; arg; arg = arg->next)
    {
-   if (IsDefinedClass(arg->item))
+   if (IsDefinedClass(ScalarValue(arg)))
       {
       return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), CF_SCALAR } };
       }
@@ -2939,7 +2909,7 @@ for (i = 0; i < 6; i++)
    {
    if (rp != NULL)
       {
-      d[i] = Str2Int(rp->item);
+      d[i] = Str2Int(ScalarValue(rp));
       rp = rp->next;
       }
    }
@@ -2993,7 +2963,7 @@ for (i = 0; i < 6; i++)
    {
    if (rp != NULL)
       {
-      d[i] = Str2Int(rp->item);
+      d[i] = Str2Int(ScalarValue(rp));
       rp = rp->next;
       }
    }
@@ -3042,7 +3012,7 @@ for (i = 0; i < 6; i++)
    {
    if (rp != NULL)
       {
-      d[i] = Str2Int(rp->item);
+      d[i] = Str2Int(ScalarValue(rp));
       rp = rp->next;
       }
    }
@@ -3066,7 +3036,7 @@ return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
 
 static FnCallResult FnCallNot(FnCall *fp, Rlist *finalargs)
 {
-return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(IsDefinedClass(finalargs->item) ? "!any" : "any"), CF_SCALAR } };
+return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(IsDefinedClass(ScalarValue(finalargs)) ? "!any" : "any"), CF_SCALAR } };
 }
 
 /*********************************************************************/
@@ -3095,14 +3065,12 @@ return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
 
 static FnCallResult FnCallReadFile(FnCall *fp,Rlist *finalargs)
 
-{ char *filename;
-  int maxsize;
-  char *contents;
+{ char *contents;
 
 /* begin fn specific content */
 
-filename = (char *)(finalargs->item);
-maxsize = Str2Int(finalargs->next->item);
+char *filename = ScalarValue(finalargs);
+int maxsize = Str2Int(ScalarValue(finalargs->next));
 
 // Read once to validate structure of file in itemlist
 
@@ -3125,19 +3093,18 @@ else
 static FnCallResult ReadList(FnCall *fp, Rlist *finalargs, enum cfdatatype type)
 
 { Rlist *rp, *newlist = NULL;
-  char *filename, *comment, *split, fnname[CF_MAXVARSIZE];
-  int maxent, maxsize, noerrors = true, blanks = false;
-  char *file_buffer = NULL;
+  char fnname[CF_MAXVARSIZE], *file_buffer = NULL;
+  int noerrors = true, blanks = false;
 
 /* begin fn specific content */
 
  /* 5args: filename,comment_regex,split_regex,max number of entries,maxfilesize  */
 
-filename = (char *)(finalargs->item);
-comment = (char *)(finalargs->next->item);
-split = (char *)(finalargs->next->next->item);
-maxent = Str2Int(finalargs->next->next->next->item);
-maxsize = Str2Int(finalargs->next->next->next->next->item);
+char *filename = ScalarValue(finalargs);
+char *comment = ScalarValue(finalargs->next);
+char *split = ScalarValue(finalargs->next->next);
+int maxent = Str2Int(ScalarValue(finalargs->next->next->next));
+int maxsize = Str2Int(ScalarValue(finalargs->next->next->next->next));
 
 // Read once to validate structure of file in itemlist
 
@@ -3229,9 +3196,8 @@ static FnCallResult ReadArray(FnCall *fp,Rlist *finalargs,enum cfdatatype type,i
 
 /* lval,filename,separator,comment,Max number of bytes  */
 
-{ char *array_lval,*filename,*comment,*split,fnname[CF_MAXVARSIZE];
-  int maxent,maxsize,entries = 0;
-  char *file_buffer = NULL;
+{ char fnname[CF_MAXVARSIZE], *file_buffer = NULL;
+  int entries = 0;
 
  /* Arg validation */
 
@@ -3248,12 +3214,12 @@ else
 
  /* 6 args: array_lval,filename,comment_regex,split_regex,max number of entries,maxfilesize  */
 
-array_lval = (char *)(finalargs->item);
-filename = (char *)(finalargs->next->item);
-comment = (char *)(finalargs->next->next->item);
-split = (char *)(finalargs->next->next->next->item);
-maxent = Str2Int(finalargs->next->next->next->next->item);
-maxsize = Str2Int(finalargs->next->next->next->next->next->item);
+char *array_lval = ScalarValue(finalargs);
+char *filename = ScalarValue(finalargs->next);
+char *comment = ScalarValue(finalargs->next->next);
+char *split = ScalarValue(finalargs->next->next->next);
+int maxent = Str2Int(ScalarValue(finalargs->next->next->next->next));
+int maxsize = Str2Int(ScalarValue(finalargs->next->next->next->next->next));
 
 // Read once to validate structure of file in itemlist
 
@@ -3336,8 +3302,8 @@ static FnCallResult ParseArray(FnCall *fp,Rlist *finalargs,enum cfdatatype type,
 /* lval,filename,separator,comment,Max number of bytes  */
 
 {
-  char *array_lval,*instring,*comment,*split,fnname[CF_MAXVARSIZE];
-  int maxent,maxsize,entries = 0;
+  char fnname[CF_MAXVARSIZE];
+  int entries = 0;
 
  /* Arg validation */
 
@@ -3354,12 +3320,12 @@ else
 
  /* 6 args: array_lval,instring,comment_regex,split_regex,max number of entries,maxfilesize  */
 
-array_lval = (char *)(finalargs->item);
-instring = xstrdup((char *)(finalargs->next->item));
-comment = (char *)(finalargs->next->next->item);
-split = (char *)(finalargs->next->next->next->item);
-maxent = Str2Int(finalargs->next->next->next->next->item);
-maxsize = Str2Int(finalargs->next->next->next->next->next->item);
+char *array_lval = ScalarValue(finalargs);
+char *instring = xstrdup(ScalarValue(finalargs->next));
+char *comment = ScalarValue(finalargs->next->next);
+char *split = ScalarValue(finalargs->next->next->next);
+int maxent = Str2Int(ScalarValue(finalargs->next->next->next->next));
+int maxsize = Str2Int(ScalarValue(finalargs->next->next->next->next->next));
 
 // Read once to validate structure of file in itemlist
 
@@ -3435,16 +3401,14 @@ return ParseArray(fp, args, cf_real, false);
 static FnCallResult FnCallSplitString(FnCall *fp,Rlist *finalargs)
 
 { Rlist *newlist = NULL;
-  char *string,*split;
-  int max = 0;
 
 /* begin fn specific content */
 
  /* 2args: string,split_regex,max  */
 
-string = (char *)(finalargs->item);
-split = (char *)(finalargs->next->item);
-max = Str2Int((char *)(finalargs->next->next->item));
+char *string = ScalarValue(finalargs);
+char *split = ScalarValue(finalargs->next);
+int max = Str2Int(ScalarValue(finalargs->next->next));
 
 // Read once to validate structure of file in itemlist
 
@@ -3457,8 +3421,7 @@ return (FnCallResult) { FNCALL_SUCCESS, { newlist, CF_LIST } };
 
 static FnCallResult FnCallFileSexist(FnCall *fp,Rlist *finalargs)
 
-{ char *listvar;
-  Rlist *rp,*files;
+{ Rlist *rp,*files;
   char buffer[CF_BUFSIZE],naked[CF_MAXVARSIZE];
   Rval retval;
   struct stat sb;
@@ -3467,7 +3430,7 @@ buffer[0] = '\0';
 
 /* begin fn specific content */
 
-listvar = finalargs->item;
+char *listvar = ScalarValue(finalargs);
 
 if (*listvar == '@')
    {
@@ -3513,18 +3476,17 @@ return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
 
 static FnCallResult FnCallLDAPValue(FnCall *fp,Rlist *finalargs)
 
-{ char *uri,*dn,*filter,*name,*scope,*sec;
-  char buffer[CF_BUFSIZE],handle[CF_BUFSIZE];
+{ char buffer[CF_BUFSIZE],handle[CF_BUFSIZE];
   void *newval = NULL;
 
 /* begin fn specific content */
 
-   uri = (char *)(finalargs->item);
-    dn = (char *)(finalargs->next->item);
-filter = (char *)(finalargs->next->next->item);
-  name = (char *)(finalargs->next->next->next->item);
- scope = (char *)(finalargs->next->next->next->next->item);
-   sec = (char *)(finalargs->next->next->next->next->next->item);
+char *uri = ScalarValue(finalargs);
+char *dn = ScalarValue(finalargs->next);
+char *filter = ScalarValue(finalargs->next->next);
+char *name = ScalarValue(finalargs->next->next->next);
+char *scope = ScalarValue(finalargs->next->next->next->next);
+char *sec = ScalarValue(finalargs->next->next->next->next->next);
 
 snprintf(handle,CF_BUFSIZE,"%s_%s_%s_%s",dn,filter,name,scope);
 
@@ -3554,17 +3516,16 @@ else
 
 static FnCallResult FnCallLDAPArray(FnCall *fp,Rlist *finalargs)
 
-{ char *array,*uri,*dn,*filter,*scope,*sec;
-  void *newval;
+{ void *newval;
 
 /* begin fn specific content */
 
- array = (char *)(finalargs->item);
-   uri = (char *)(finalargs->next->item);
-    dn = (char *)(finalargs->next->next->item);
-filter = (char *)(finalargs->next->next->next->item);
- scope = (char *)(finalargs->next->next->next->next->item);
-   sec = (char *)(finalargs->next->next->next->next->next->item);
+char *array = ScalarValue(finalargs);
+char *uri = ScalarValue(finalargs->next);
+char *dn = ScalarValue(finalargs->next->next);
+char *filter = ScalarValue(finalargs->next->next->next);
+char *scope = ScalarValue(finalargs->next->next->next->next);
+char *sec = ScalarValue(finalargs->next->next->next->next->next);
 
 if ((newval = CfLDAPArray(array,uri,dn,filter,scope,sec)))
    {
@@ -3581,17 +3542,16 @@ else
 
 static FnCallResult FnCallLDAPList(FnCall *fp,Rlist *finalargs)
 
-{ char *uri,*dn,*filter,*name,*scope,*sec;
-  void *newval;
+{ void *newval;
 
 /* begin fn specific content */
 
-   uri = (char *)(finalargs->item);
-    dn = (char *)(finalargs->next->item);
-filter = (char *)(finalargs->next->next->item);
-  name = (char *)(finalargs->next->next->next->item);
- scope = (char *)(finalargs->next->next->next->next->item);
-   sec = (char *)(finalargs->next->next->next->next->next->item);
+char *uri = ScalarValue(finalargs);
+char *dn = ScalarValue(finalargs->next);
+char *filter = ScalarValue(finalargs->next->next);
+char *name = ScalarValue(finalargs->next->next->next);
+char *scope = ScalarValue(finalargs->next->next->next->next);
+char *sec = ScalarValue(finalargs->next->next->next->next->next);
 
 if ((newval = CfLDAPList(uri,dn,filter,name,scope,sec)))
    {
@@ -3608,18 +3568,17 @@ else
 
 static FnCallResult FnCallRegLDAP(FnCall *fp,Rlist *finalargs)
 
-{ char *uri,*dn,*filter,*name,*scope,*regex,*sec;
-  void *newval;
+{ void *newval;
 
 /* begin fn specific content */
 
-   uri = (char *)(finalargs->item);
-    dn = (char *)(finalargs->next->item);
-filter = (char *)(finalargs->next->next->item);
-  name = (char *)(finalargs->next->next->next->item);
- scope = (char *)(finalargs->next->next->next->next->item);
- regex = (char *)(finalargs->next->next->next->next->next->item);
-   sec = (char *)(finalargs->next->next->next->next->next->next->item);
+char *uri = ScalarValue(finalargs);
+char *dn = ScalarValue(finalargs->next);
+char *filter = ScalarValue(finalargs->next->next);
+char *name = ScalarValue(finalargs->next->next->next);
+char *scope = ScalarValue(finalargs->next->next->next->next);
+char *regex = ScalarValue(finalargs->next->next->next->next->next);
+char *sec = ScalarValue(finalargs->next->next->next->next->next->next);
 
 if ((newval = CfRegLDAP(uri,dn,filter,name,scope,regex,sec)))
    {
@@ -3641,7 +3600,7 @@ static FnCallResult FnCallDiskFree(FnCall *fp,Rlist *finalargs)
 
 buffer[0] = '\0';
 
-df = GetDiskUsage((char *)finalargs->item, cfabs);
+df = GetDiskUsage(ScalarValue(finalargs), cfabs);
 
 if (df == CF_INFINITY)
    {
@@ -3659,7 +3618,7 @@ static FnCallResult FnCallUserExists(FnCall *fp,Rlist *finalargs)
 { char buffer[CF_BUFSIZE];
   struct passwd *pw;
   uid_t uid = CF_SAME_OWNER;
-  char *arg = finalargs->item;
+  char *arg = ScalarValue(finalargs);
 
 buffer[0] = '\0';
 
@@ -3696,7 +3655,7 @@ static FnCallResult FnCallGroupExists(FnCall *fp,Rlist *finalargs)
 { char buffer[CF_BUFSIZE];
   struct group *gr;
   gid_t gid = CF_SAME_GROUP;
-  char *arg = finalargs->item;
+  char *arg = ScalarValue(finalargs);
 
 buffer[0] = '\0';
 

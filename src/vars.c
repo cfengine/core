@@ -800,7 +800,7 @@ else
 
 if (lval == NULL || scope == NULL)
    {
-   CfOut(cf_error,"","scope.value = %s.%s = %s", scope, lval, GetRlistScalar(&rp)); /* ?? */
+   CfOut(cf_error,"","scope.value = %s.%s = %s", scope, lval, GetRvalScalar(&rp)); /* ?? */
    ReportError("Bad variable or scope in a variable assignment");
    FatalError("Should not happen - forgotten to register a function call in fncall.c?");
    }

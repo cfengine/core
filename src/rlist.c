@@ -470,7 +470,7 @@ return PrependRlist(start,scalar,type);
 
 /*******************************************************************/
 
-Rlist *AppendRlist(Rlist **start,void *item, char type)
+Rlist *AppendRlist(Rlist **start, void *item, char type)
 
    /* Allocates new memory for objects - careful, could leak!  */
     
@@ -1231,4 +1231,17 @@ char *GetRlistScalar(Rlist *rp)
     }
 
  return (char *)rp->item;
+}
+
+/*******************************************************************/
+
+
+char *GetRvalScalar(Rval *rv)
+{
+ if(rv->rtype != CF_SCALAR)
+    {
+    FatalError("Rval item is not scalar but %c", rv->rtype);
+    }
+
+ return (char *)rv->item;
 }

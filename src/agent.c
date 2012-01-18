@@ -716,7 +716,7 @@ if (GetVariable("control_common", CFG_CONTROLBODY[cfg_fips_mode].lval, &retval) 
 if (GetVariable("control_common", CFG_CONTROLBODY[cfg_syslog_port].lval, &retval) != cf_notype)
    {
    SetSyslogPort(Str2Int(retval.item));
-   CfOut(cf_verbose,"","SET syslog_port to %s", GetRlistScalar(&retval));
+   CfOut(cf_verbose,"","SET syslog_port to %s", GetRvalScalar(&retval));
    }
 
 if (GetVariable("control_common", CFG_CONTROLBODY[cfg_syslog_host].lval, &retval) != cf_notype)

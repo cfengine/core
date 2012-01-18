@@ -97,5 +97,6 @@ void RvalPrint(Writer *writer, Rval rval);
 Rlist *RlistAt(Rlist *start, size_t index);
 
 char *GetRlistScalar(Rlist *rp);
+char *GetRvalScalar(Rval *rv);
 
 #endif

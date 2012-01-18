@@ -1811,7 +1811,7 @@ for (rp = hostnameip; rp != NULL; rp=rp->next)
 
       if (strlen(regex) == 0 || FullTextMatch(regex,buffer))
          {
-         CfOut(cf_verbose,"","Host %s is alive and responding correctly\n",rp->item);
+         CfOut(cf_verbose,"","Host %s is alive and responding correctly\n", GetRlistScalar(rp));
          snprintf(buffer,CF_MAXVARSIZE-1,"%s[%d]",array_lval,count);
          NewScalar(CONTEXTID,buffer,rp->item,cf_str);
          count++;
@@ -1819,7 +1819,7 @@ for (rp = hostnameip; rp != NULL; rp=rp->next)
       }
    else
       {
-      CfOut(cf_verbose,"","Host %s is alive\n",rp->item);
+      CfOut(cf_verbose,"","Host %s is alive\n", GetRlistScalar(rp));
       snprintf(buffer,CF_MAXVARSIZE-1,"%s[%d]",array_lval,count);
       NewScalar(CONTEXTID,buffer,rp->item,cf_str);
 

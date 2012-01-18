@@ -697,7 +697,7 @@ for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp=cp->next)
       for (rp = ListValue(retval.item); rp != NULL; rp = rp->next)
          {
          IdempPrependRScalar(&CSVLIST,rp->item,CF_SCALAR);
-         CfOut(cf_inform,"","Adding %s to the csv2xml list...\n",rp->item);
+         CfOut(cf_inform,"","Adding %s to the csv2xml list...\n", GetRlistScalar(rp));
          }
       continue;
       }

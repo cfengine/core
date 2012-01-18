@@ -1466,7 +1466,7 @@ for (rp = list; rp != NULL; rp=rp->next)
 
    if (IsHardClass((char *)rp->item))
       {
-      CfOut(cf_error,""," !! You cannot cancel a reserved hard class \"%s\" in post-condition classes", rp->item);
+      CfOut(cf_error,""," !! You cannot cancel a reserved hard class \"%s\" in post-condition classes", GetRlistScalar(rp));
       }
 
    string = (char *)(rp->item);

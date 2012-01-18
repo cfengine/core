@@ -1159,7 +1159,8 @@ if (rval.item != NULL)
             char valbuf[CF_BUFSIZE];
 
             case CF_SCALAR:
-                CfOut(cf_verbose,""," !! Redefinition of a constant scalar \"%s\" (was %s now %s)",pp->promiser,retval.item,rval.item);
+                CfOut(cf_verbose,""," !! Redefinition of a constant scalar \"%s\" (was %s now %s)",
+                      pp->promiser, GetRlistScalar(&retval), GetRlistScalar(&rval));
                 PromiseRef(cf_verbose,pp);
                 break;
             case CF_LIST:

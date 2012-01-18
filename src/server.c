@@ -2483,7 +2483,7 @@ defines = SplitRegexAsRList(sp,"[,:;]",99,false);
 
 for (rp = defines; rp != NULL; rp = rp->next)
    {
-   CfOut(cf_verbose,""," -> Verifying %s\n",rp->item);
+   CfOut(cf_verbose,""," -> Verifying %s\n", GetRlistScalar(rp));
    
    for (ap = ROLES; ap != NULL; ap=ap->next)
       {
@@ -2497,12 +2497,12 @@ for (rp = defines; rp != NULL; rp = rp->next)
              IsRegexItemIn(ap->accesslist,conn->username)
              )
             {
-            CfOut(cf_verbose,"","Attempt to define role/class %s is permitted\n",rp->item);
+            CfOut(cf_verbose,"","Attempt to define role/class %s is permitted", GetRlistScalar(rp));
             permitted = true;
             }
          else
             {
-            CfOut(cf_verbose,"","Attempt to define role/class %s is denied\n",rp->item);
+            CfOut(cf_verbose,"","Attempt to define role/class %s is denied", GetRlistScalar(rp));
             DeleteRlist(defines);
             return false;
             }

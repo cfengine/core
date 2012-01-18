@@ -62,7 +62,7 @@ for (rp = namelist; rp != NULL; rp = rp->next)
    
    if (dtype == cf_notype)
       {
-      CfOut(cf_error,""," !! Couldn't locate variable %s apparently in %s\n",rp->item,scopeid);
+      CfOut(cf_error,""," !! Couldn't locate variable %s apparently in %s\n", GetRlistScalar(rp), scopeid);
       CfOut(cf_error,""," !! Could be incorrect use of a global iterator -- see reference manual on list substitution");
       continue;
       }

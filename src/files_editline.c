@@ -1422,12 +1422,13 @@ else
       {
       if (a.transaction.action == cfa_warn)
          {
-         cfPS(cf_error,CF_WARN,"",pp,a," -> Need to delete field field value %s in %s but only a warning was promised",rp->item,pp->this_server);
+         cfPS(cf_error,CF_WARN,"",pp,a," -> Need to delete field field value %s in %s but only a warning was promised",
+              GetRlistScalar(rp), pp->this_server);
          return false;
          }
       else
          {
-         cfPS(cf_inform,CF_CHG,"",pp,a," -> Deleting column field value %s in %s",rp->item,pp->this_server);
+         cfPS(cf_inform,CF_CHG,"",pp,a," -> Deleting column field value %s in %s", GetRlistScalar(rp), pp->this_server);
          (pp->edcontext->num_edits)++;
          free(rp->item);
          rp->item = xstrdup("");
@@ -1438,12 +1439,14 @@ else
       {
       if (a.transaction.action == cfa_warn)
          {
-         cfPS(cf_error,CF_WARN,"",pp,a," -> Need to set column field value %s to %s in %s but only a warning was promised",rp->item,a.column.column_value,pp->this_server);
+         cfPS(cf_error,CF_WARN,"",pp,a," -> Need to set column field value %s to %s in %s but only a warning was promised",
+              GetRlistScalar(rp), a.column.column_value, pp->this_server);
          return false;
          }
       else
          {
-         cfPS(cf_inform,CF_CHG,"",pp,a," -> Setting whole column field value %s to %s in %s",rp->item,a.column.column_value,pp->this_server);
+         cfPS(cf_inform,CF_CHG,"",pp,a," -> Setting whole column field value %s to %s in %s",
+              GetRlistScalar(rp), a.column.column_value, pp->this_server);
          free(rp->item);
          rp->item = xstrdup(a.column.column_value);
          (pp->edcontext->num_edits)++;

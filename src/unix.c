@@ -302,16 +302,19 @@ for (ip = siglist; ip != NULL; ip=ip->next)
          
          if (kill((pid_t)pid,signal) < 0)
             {
-            cfPS(cf_verbose,CF_FAIL,"kill",pp,a," !! Couldn't send promised signal \'%s\' (%d) to pid %d (might be dead)\n",rp->item,signal,pid);
+            cfPS(cf_verbose,CF_FAIL,"kill",pp,a," !! Couldn't send promised signal \'%s\' (%d) to pid %d (might be dead)\n",
+                 GetRlistScalar(rp), signal, pid);
             }
          else
             {
-            cfPS(cf_inform,CF_CHG,"",pp,a," -> Signalled '%s' (%d) to process %d (%s)\n", rp->item, signal, pid, ip->name);
+            cfPS(cf_inform,CF_CHG,"",pp,a," -> Signalled '%s' (%d) to process %d (%s)\n",
+                 GetRlistScalar(rp), signal, pid, ip->name);
             }
          }
       else
          {
-         CfOut(cf_error,""," -> Need to keep signal promise \'%s\' in process entry %s",rp->item,ip->name);
+         CfOut(cf_error,""," -> Need to keep signal promise \'%s\' in process entry %s",
+               GetRlistScalar(rp), ip->name);
          }
       }
    }

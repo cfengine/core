@@ -4,7 +4,9 @@ LEXLIB = @LEXLIB@
 LDADD = libpromises.la
 BUILT_SOURCES = cf3parse.h cf3lex.l
 
-lib_LTLIBRARIES = libpromises.la
+# libpromises
+
+projlib_LTLIBRARIES = libpromises.la
 
 libpromises_la_LDFLAGS = -version-info 1:0:0 -no-undefined
 libpromises_la_LIBADD = ../pub/libcfpub.la $(NOVA_LDADD) $(CONSTELLATION_LDADD)

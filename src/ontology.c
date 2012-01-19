@@ -32,25 +32,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-int GetTopicPid(char *classified_topic)
-
-{ Topic *tp;
-  int slot;
-  char context[CF_MAXVARSIZE],name[CF_MAXVARSIZE];
-
-name[0] = '\0';
-
-DeClassifyTopic(classified_topic,name,context);
-slot = GetHash(ToLowerStr(name));
-
-if ((tp = GetTopic(TOPICHASH[slot],classified_topic)))
-   {
-   return tp->id;
-   }
-
-return 0;
-}
-
 /*********************************************************************/
 
 void DeClassifyTopic(char *classified_topic,char *topic,char *context)

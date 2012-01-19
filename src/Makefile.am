@@ -198,6 +198,11 @@ cf_know_SOURCES =                                                       \
         manual.c manual.h 						\
         export_xml.c export_xml.h
 
+if HAVE_NOVA
+cf_know_LDADD = \
+	../nova/src/libcfknow.la libpromises.la
+endif
+
 EXTRA_DIST = cf3lex.c cf3parse.c
 
 #

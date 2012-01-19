@@ -1029,13 +1029,13 @@ extern pthread_mutex_t *cft_server_keyseen;
 extern pthread_mutex_t *cft_server_children;
 #endif
 
-enum cf_status
+typedef enum
   {
-  cfn_repaired,
-  cfn_notkept,
-  cfn_kept,
-  cfn_nop
-  };
+  CF_PROMISE_STATE_REPAIRED,
+  CF_PROMISE_STATE_NOTKEPT,
+  CF_PROMISE_STATE_KEPT,
+  CF_PROMISE_STATE_ANY
+  } PromiseState;
 
 /************************************************************************************/
 

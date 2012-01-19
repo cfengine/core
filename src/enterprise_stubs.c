@@ -117,7 +117,7 @@ const char *PromiseID(Promise *pp)
 return "";
 }
 
-void NotePromiseCompliance(Promise *pp,double val,enum cf_status status,char *reason)
+void NotePromiseCompliance(Promise *pp,double val, PromiseState state,char *reason)
 {
 }
 

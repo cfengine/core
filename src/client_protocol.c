@@ -31,6 +31,14 @@ static void SetSessionKey(AgentConnection *conn);
 /*********************************************************************/
 
 int CFSIGNATURE;
+static int SKIPIDENTIFY;
+
+/*********************************************************************/
+
+void SetSkipIdentify(bool enabled)
+{
+SKIPIDENTIFY = enabled;
+}
 
 /*********************************************************************/
 

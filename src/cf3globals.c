@@ -276,7 +276,6 @@ char  STR_CFENGINEPORT[16] = {0};
 unsigned short SHORT_CFENGINEPORT;
 time_t CONNTIMEOUT = 10;	   /* seconds */
 pid_t ALARM_PID = -1;
-int SKIPIDENTIFY = false;
 int EDITFILESIZE = 10000;
 int VIFELAPSED = 1;
 int VEXPIREAFTER = 120;

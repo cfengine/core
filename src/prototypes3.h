@@ -140,6 +140,7 @@ void ConnectionsCleanup(void);
 
 /* client_protocol.c */
 
+void SetSkipIdentify(bool enabled);
 
 /* chflags.c */
 

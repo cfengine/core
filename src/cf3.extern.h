@@ -84,8 +84,6 @@ extern mode_t DEFAULTMODE;
 extern char VIPADDRESS[];
 extern char VPREFIX[];
 
-extern int SKIPIDENTIFY;
-
 extern char VDOMAIN[CF_MAXVARSIZE];
 extern char *VREPOSITORY;
 extern enum classes VSYSTEMHARDCLASS;

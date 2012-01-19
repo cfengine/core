@@ -605,8 +605,9 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_skipidentify].lval) == 0)
       {
-      SKIPIDENTIFY = GetBoolean(retval.item);
-      CfOut(cf_verbose,"","SET skipidentify = %d\n",SKIPIDENTIFY);
+      bool enabled = GetBoolean(retval.item);
+      SetSkipIdentify(enabled);
+      CfOut(cf_verbose, "", "SET skipidentify = %d\n", (int)enabled);
       continue;
       }
 

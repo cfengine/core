@@ -91,7 +91,6 @@ extern char VPREFIX[];
 extern int SKIPIDENTIFY;
 
 extern char VDOMAIN[CF_MAXVARSIZE];
-extern char VMAILSERVER[CF_BUFSIZE];
 extern Item *VDEFAULTROUTE;
 extern char *VREPOSITORY;
 extern enum classes VSYSTEMHARDCLASS;

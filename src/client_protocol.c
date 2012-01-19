@@ -34,10 +34,11 @@
 #include "cf3.extern.h"
 
 static void FreeRSAKey(RSA *key);
+static void SetSessionKey(AgentConnection *conn);
 
 /*********************************************************************/
 
-static void SetSessionKey(AgentConnection *conn);
+int CFSIGNATURE;
 
 /*********************************************************************/
 

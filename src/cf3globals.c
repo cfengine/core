@@ -236,7 +236,6 @@ pthread_mutex_t *cft_server_children = &MUTEXES[10];
 #endif
 
 char VIPADDRESS[18] = {0};
-int  CFSIGNATURE = 0;
 
 Item *IPADDRESSES = NULL;
 

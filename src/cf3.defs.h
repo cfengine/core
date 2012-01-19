@@ -1033,7 +1033,7 @@ typedef enum
   {
   PROMISE_STATE_REPAIRED = 'r',
   PROMISE_STATE_NOTKEPT = 'n',
-  PROMISE_STATE_KEPT = 'k',
+  PROMISE_STATE_KEPT = 'c',
   PROMISE_STATE_ANY = 'x'
   } PromiseState;
 

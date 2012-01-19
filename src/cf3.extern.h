@@ -74,7 +74,6 @@ extern char VINPUTFILE[];
 extern CF_DB *AUDITDBP;
 extern int AUDIT;
 extern char PURGE;
-extern int  CHECKSUMUPDATES;
 
 extern int ERRORCOUNT;
 extern time_t CFSTARTTIME;

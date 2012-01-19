@@ -280,7 +280,6 @@ int SKIPIDENTIFY = false;
 int EDITFILESIZE = 10000;
 int VIFELAPSED = 1;
 int VEXPIREAFTER = 120;
-int CHECKSUMUPDATES = false;
 char BINDINTERFACE[CF_BUFSIZE] = {0};
 int MINUSF = false;
 int EXCLAIM = true;

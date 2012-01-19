@@ -134,6 +134,8 @@ Measurement GetMeasurementConstraint(Promise *pp);
 Acl GetAclConstraints(Promise *pp);
 Database GetDatabaseConstraints(Promise *pp);
 
+void SetChecksumUpdates(bool enabled);
+
 /* bootstrap.c */
 
 void CheckAutoBootstrap(void);

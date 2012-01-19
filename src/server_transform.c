@@ -177,9 +177,9 @@ void KeepControlPromises()
 CFD_MAXPROCESSES = 30;
 MAXTRIES = 5;
 CFD_INTERVAL = 0;
-CHECKSUMUPDATES = true;
 DENYBADCLOCKS = true;
 CFRUNCOMMAND[0] = '\0';
+SetChecksumUpdates(true);
 
 /* Keep promised agent behaviour - control bodies */
 

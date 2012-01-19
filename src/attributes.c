@@ -36,6 +36,16 @@ static void ShowAttributes(Attributes a);
 
 /*******************************************************************/
 
+static int CHECKSUMUPDATES;
+
+/*******************************************************************/
+
+void SetChecksumUpdates(bool enabled)
+{
+CHECKSUMUPDATES = enabled;
+}
+
+
 Attributes GetFilesAttributes(Promise *pp)
 
 { Attributes attr = {{0}};

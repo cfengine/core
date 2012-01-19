@@ -530,8 +530,9 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
    
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_hashupdates].lval) == 0)
       {
-      CHECKSUMUPDATES = GetBoolean(retval.item);
-      CfOut(cf_verbose,"","SET ChecksumUpdates %d\n",CHECKSUMUPDATES);
+      bool enabled = GetBoolean(retval.item);
+      SetChecksumUpdates(enabled);
+      CfOut(cf_verbose, "", "SET ChecksumUpdates %d\n", enabled);
       continue;
       }
 

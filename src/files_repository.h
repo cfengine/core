@@ -25,6 +25,8 @@
 #ifndef CFENGINE_FILES_REPOSITORY_H
 #define CFENGINE_FILES_REPOSITORY_H
 
+void SetRepositoryChar(char c);
+
 int ArchiveToRepository(char *file,Attributes attr,Promise *pp);
 bool FileInRepository(const char *filename);
 

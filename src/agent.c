@@ -623,8 +623,9 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_repchar].lval) == 0)
       {
-      REPOSCHAR = *(char *)retval.item;
-      CfOut(cf_verbose,"","SET repchar = %c\n",REPOSCHAR);
+      char c = *(char*)retval.item;
+      SetRepositoryChar(c);
+      CfOut(cf_verbose,"","SET repchar = %c\n", c);
       continue;
       }
    

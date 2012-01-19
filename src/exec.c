@@ -1,19 +1,18 @@
-/* 
-
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -23,22 +22,12 @@
   included file COSL.txt.
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: exec.c                                                              */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "generic_agent.h"
-
-int main (int argc,char *argv[]);
 
 #ifdef NT
 #include <process.h>
 #endif
 
-/*******************************************************************/
-/* GLOBAL VARIABLES                                                */
 /*******************************************************************/
 
 static int NO_FORK;
@@ -79,7 +68,7 @@ const char *ID = "The executor daemon is a scheduler and wrapper for\n"
                  "agent and can email it to a specified address. It can\n"
                  "splay the start time of executions across the network\n"
                  "and work as a class-based clock for scheduling.";
- 
+
 const struct option OPTIONS[15] =
       {
       { "help",no_argument,0,'h' },
@@ -181,32 +170,32 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:D:N:VxL:hFV1gMW",OPTIONS,&optindex)) !=
 
       case 'K': IGNORELOCK = true;
           break;
-                    
+
       case 'D': NewClassesFromString(optarg);
           break;
-          
+
       case 'N':
           NegateClassesFromString(optarg);
           break;
-          
+
       case 'I': INFORM = true;
           break;
-          
+
       case 'v':
           VERBOSE = true;
           NO_FORK = true;
           break;
-	  
-          
+
+
       case 'n': DONTDO = true;
           IGNORELOCK = true;
           NewClass("opt_dry_run");
           break;
-          
+
       case 'q': NOSPLAY = true;
           break;
-          
-      case 'L': 
+
+      case 'L':
           snprintf(ld_library_path,CF_BUFSIZE-1,"LD_LIBRARY_PATH=%s",optarg);
           if (putenv(xstrdup(ld_library_path)) != 0)
              {
@@ -216,7 +205,7 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:D:N:VxL:hFV1gMW",OPTIONS,&optindex)) !=
       case 'W':
     	  NOWINSERVICE = true;
           break;
-		  
+
       case 'F':
           ONCE = true;
           NO_FORK = true;
@@ -224,7 +213,7 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:D:N:VxL:hFV1gMW",OPTIONS,&optindex)) !=
 
       case 'V': PrintVersionBanner("cf-execd");
           exit(0);
-          
+
       case 'h': Syntax("cf-execd - cfengine's execution agent",OPTIONS,HINTS,ID);
           exit(0);
 
@@ -233,10 +222,10 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:D:N:VxL:hFV1gMW",OPTIONS,&optindex)) !=
 
       case 'x': SelfDiagnostic();
           exit(0);
-          
+
       default: Syntax("cf-execd - cfengine's execution agent",OPTIONS,HINTS,ID);
           exit(1);
-          
+
       }
    }
 
@@ -267,7 +256,7 @@ if (SCHEDULE == NULL)
    AppendItem(&SCHEDULE,"Min10",NULL);
    AppendItem(&SCHEDULE,"Min15",NULL);
    AppendItem(&SCHEDULE,"Min20",NULL);
-   AppendItem(&SCHEDULE,"Min25",NULL);   
+   AppendItem(&SCHEDULE,"Min25",NULL);
    AppendItem(&SCHEDULE,"Min30",NULL);
    AppendItem(&SCHEDULE,"Min35",NULL);
    AppendItem(&SCHEDULE,"Min40",NULL);
@@ -291,25 +280,25 @@ for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
       {
       continue;
       }
-   
+
    if (GetVariable("control_executor", cp->lval, &retval) == cf_notype)
       {
       CfOut(cf_error,"","Unknown lval %s in exec control body",cp->lval);
       continue;
       }
-   
+
    if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_mailfrom].lval) == 0)
       {
       strcpy(MAILFROM, retval.item);
       CfDebug("mailfrom = %s\n",MAILFROM);
       }
-   
+
    if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_mailto].lval) == 0)
       {
       strcpy(MAILTO, retval.item);
       CfDebug("mailto = %s\n",MAILTO);
       }
-   
+
    if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_smtpserver].lval) == 0)
       {
       strcpy(VMAILSERVER, retval.item);
@@ -321,7 +310,7 @@ for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
       strcpy(EXECCOMMAND, retval.item);
       CfDebug("exec_command = %s\n",EXECCOMMAND);
       }
-   
+
    if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_executorfacility].lval) == 0)
       {
       SetFacility(retval.item);
@@ -348,7 +337,7 @@ for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
       CfDebug("schedule ...\n");
       DeleteItemList(SCHEDULE);
       SCHEDULE = NULL;
-      
+
       for (rp= (Rlist *)retval.item; rp != NULL; rp = rp->next)
          {
          if (!IsItemIn(SCHEDULE,rp->item))
@@ -366,7 +355,7 @@ void StartServer(int argc,char **argv)
 
 { int time_to_run = false;
   time_t now = time(NULL);
-  Promise *pp = NewPromise("exec_cfengine","the executor agent"); 
+  Promise *pp = NewPromise("exec_cfengine","the executor agent");
   Attributes dummyattr;
   CfLock thislock;
 
@@ -409,7 +398,7 @@ if (!NO_FORK)
    {
    ActAsDaemon(0);
    }
-   
+
 #endif  /* NOT MINGW */
 
 WritePID("cf-execd.pid");
@@ -419,7 +408,7 @@ signal(SIGHUP,SIG_IGN);
 signal(SIGPIPE,SIG_IGN);
 signal(SIGUSR1,HandleSignals);
 signal(SIGUSR2,HandleSignals);
- 
+
 umask(077);
 
 if (ONCE)
@@ -442,16 +431,16 @@ else
     */
 
    nargv = xmalloc(sizeof(char *) * (argc+2));
-     
+
    for (i = 0; i < argc; i++)
       {
       nargv[i] = argv[i];
       }
-   
+
    nargv[i++] = xstrdup("-FK");
    nargv[i++] = NULL;
 #endif
-   
+
    while (true)
       {
       time_to_run = ScheduleRun();
@@ -461,12 +450,12 @@ else
          CfOut(cf_verbose,"","Sleeping for splaytime %d seconds\n\n",SPLAYTIME);
          sleep(SPLAYTIME);
 
-#if defined NT && !(defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD) 
+#if defined NT && !(defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
          /*
           * Spawn a separate process - spawn will work if the cfexecd binary
           * has changed (where cygwin's fork() would fail).
           */
-         
+
          CfDebug("Spawning %s\n", nargv[0]);
 
          pid = _spawnvp((int)_P_NOWAIT,(char *)(nargv[0]),(char **)nargv);
@@ -476,12 +465,12 @@ else
             CfOut(cf_error,"_spawnvp","Can't spawn run");
             }
 #endif
-         
+
 #if (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-         
+
          pthread_attr_init(&PTHREADDEFAULTS);
          pthread_attr_setdetachstate(&PTHREADDEFAULTS,PTHREAD_CREATE_DETACHED);
-         
+
 #ifdef HAVE_PTHREAD_ATTR_SETSTACKSIZE
          pthread_attr_setstacksize(&PTHREADDEFAULTS,(size_t)2048*1024);
 #endif
@@ -524,7 +513,7 @@ if (ONCE || VSYSTEMHARDCLASS == cfnt)
    /* Otherwise we'll just kill off long jobs */
    return;
    }
-  
+
 CfOut(cf_verbose,""," !! Programmed pruning of the scheduler cluster");
 
 #ifdef MINGW
@@ -569,7 +558,7 @@ CfOut(cf_verbose,""," -> Looking for cf-execd processes owned by %s",mypid);
 
 if (LoadProcessTable(&PROCESSTABLE))
    {
-   VerifyProcessesPromise(&pp);   
+   VerifyProcessesPromise(&pp);
    }
 
 DeleteItemList(PROCESSTABLE);
@@ -590,7 +579,7 @@ int ScheduleRun()
 Item *ip;
 
 CfOut(cf_verbose,"","Sleeping...\n");
-sleep(CFPULSETIME);                /* 1 Minute resolution is enough */ 
+sleep(CFPULSETIME);                /* 1 Minute resolution is enough */
 
 // recheck license (in case of license updates or expiry)
 
@@ -642,7 +631,7 @@ return false;
 
 static void LocalExec(bool scheduled_run)
 
-{ FILE *pp; 
+{ FILE *pp;
   char line[CF_BUFSIZE],lineEscaped[sizeof(line)*2],filename[CF_BUFSIZE],*sp;
   char cmd[CF_BUFSIZE],esc_command[CF_BUFSIZE];
   int print,count = 0;
@@ -653,7 +642,7 @@ static void LocalExec(bool scheduled_run)
   sigset_t sigmask;
 
 sigemptyset(&sigmask);
-pthread_sigmask(SIG_BLOCK,&sigmask,NULL); 
+pthread_sigmask(SIG_BLOCK,&sigmask,NULL);
 #endif
 
 #ifdef HAVE_PTHREAD
@@ -661,10 +650,10 @@ threadName = ThreadUniqueName(pthread_self());
 #else
 threadName = NULL;
 #endif
- 
+
 CfOut(cf_verbose,"","------------------------------------------------------------------\n\n");
 CfOut(cf_verbose,"","  LocalExec(%sscheduled) at %s\n", scheduled_run ? "" : "not ", cf_ctime(&starttime));
-CfOut(cf_verbose,"","------------------------------------------------------------------\n"); 
+CfOut(cf_verbose,"","------------------------------------------------------------------\n");
 
 /* Need to make sure we have LD_LIBRARY_PATH here or children will die  */
 
@@ -681,7 +670,7 @@ else
    {
    struct stat sb;
    int twin_exists = false;
-      
+
    // twin is bin-twin\cf-agent.exe on windows, bin/cf-twin on Unix
 
    if (VSYSTEMHARDCLASS == mingw || VSYSTEMHARDCLASS == cfnt)
@@ -693,14 +682,14 @@ else
          {
          twin_exists = true;
          }
-      
+
       if (twin_exists && IsExecutable(cmd))
 	 {
          snprintf(cmd,CF_BUFSIZE-1,"\"%s/bin-twin/cf-agent.exe\" -f failsafe.cf && \"%s/bin/cf-agent.exe%s\" -Dfrom_cfexecd%s",
                   CFWORKDIR,
                   CFWORKDIR,
                   NOSPLAY ? " -q" : "",
-                  scheduled_run ? ":scheduled_run" : "");      
+                  scheduled_run ? ":scheduled_run" : "");
 	 }
       else
 	 {
@@ -708,7 +697,7 @@ else
                   CFWORKDIR,
                   CFWORKDIR,
                   NOSPLAY ? " -q" : "",
-                  scheduled_run ? ":scheduled_run" : "");      
+                  scheduled_run ? ":scheduled_run" : "");
 	 }
       }
    else
@@ -719,14 +708,14 @@ else
          {
          twin_exists = true;
          }
-      
+
       if (twin_exists && IsExecutable(cmd))
 	 {
          snprintf(cmd,CF_BUFSIZE-1,"\"%s/bin/cf-twin\" -f failsafe.cf && \"%s/bin/cf-agent%s\" -Dfrom_cfexecd%s",
                   CFWORKDIR,
                   CFWORKDIR,
                   NOSPLAY ? " -q" : "",
-                  scheduled_run ? ":scheduled_run" : "");      
+                  scheduled_run ? ":scheduled_run" : "");
 	 }
       else
 	 {
@@ -734,13 +723,13 @@ else
                   CFWORKDIR,
                   CFWORKDIR,
                   NOSPLAY ? " -q" : "",
-                  scheduled_run ? ":scheduled_run" : "");      
+                  scheduled_run ? ":scheduled_run" : "");
 	 }
-      }   
+      }
    }
 
 strncpy(esc_command,MapName(cmd),CF_BUFSIZE-1);
-   
+
 snprintf(line,CF_BUFSIZE-1,"_%jd_%s",(intmax_t)starttime,CanonifyName(cf_ctime(&starttime)));
 snprintf(filename,CF_BUFSIZE-1,"%s/outputs/cf_%s_%s_%p",CFWORKDIR,CanonifyName(VFQNAME),line,threadName);
 MapName(filename);
@@ -781,10 +770,10 @@ while (!feof(pp) && CfReadLine(line,CF_BUFSIZE,pp))
       {
       fflush(pp);
       break;
-      }  
-   
+      }
+
    print = false;
-      
+
    for (sp = line; *sp != '\0'; sp++)
       {
       if (!isspace((int)*sp))
@@ -793,7 +782,7 @@ while (!feof(pp) && CfReadLine(line,CF_BUFSIZE,pp))
          break;
          }
       }
-   
+
    if (print)
       {
       // we must escape print format chars (%) from output
@@ -802,9 +791,9 @@ while (!feof(pp) && CfReadLine(line,CF_BUFSIZE,pp))
 
       fprintf(fp,"%s\n",lineEscaped);
       count++;
-      
+
       /* If we can't send mail, log to syslog */
-      
+
       if (strlen(MAILTO) == 0)
          {
 	 strncat(lineEscaped,"\n",sizeof(lineEscaped)-1-strlen(lineEscaped));
@@ -812,15 +801,15 @@ while (!feof(pp) && CfReadLine(line,CF_BUFSIZE,pp))
             {
 	    lineEscaped[sizeof(lineEscaped)-2] = '\n';
             }
-         
+
          CfOut(cf_inform,"", "%s", lineEscaped);
          }
-      
+
       line[0] = '\0';
       lineEscaped[0] = '\0';
       }
    }
- 
+
 cf_pclose(pp);
 CfDebug("Closing fp\n");
 fclose(fp);
@@ -886,7 +875,7 @@ else
       {
       return 0;
       }
-   
+
    EVP_DigestInit(&context,md);
 
    while ((len = fread(buffer,1,1024,file)))
@@ -899,7 +888,7 @@ else
    return(md_len);
    }
 
-return 0; 
+return 0;
 }
 
 /*******************************************************************/
@@ -950,7 +939,7 @@ if (!ThreadLock(cft_count))
    return 1;
    }
 
-/* replace old file with new*/   
+/* replace old file with new*/
 
 unlink(prev_file);
 
@@ -994,7 +983,7 @@ if (statbuf.st_size == 0)
    return;
    }
 
-if (CompareResult(file,prev_file) == 0) 
+if (CompareResult(file,prev_file) == 0)
    {
    CfOut(cf_verbose,"","Previous output is the same as current so do not mail it\n");
    return;
@@ -1012,12 +1001,12 @@ if (MAXLINES == 0)
    CfDebug("Not mailing: EmailMaxLines was zero\n");
    return;
    }
- 
+
 CfDebug("Mailing results of (%s) to (%s)\n",file,to);
- 
+
 
 /* Check first for anomalies - for subject header */
- 
+
 if ((fp = fopen(file,"r")) == NULL)
    {
    CfOut(cf_inform,"fopen","!! Couldn't open file %s",file);
@@ -1040,13 +1029,13 @@ while (!feof(fp))
    }
 
 fclose(fp);
- 
+
 if ((fp = fopen(file,"r")) == NULL)
    {
    CfOut(cf_inform,"fopen","Couldn't open file %s",file);
    return;
    }
- 
+
 CfDebug("Looking up hostname %s\n\n",VMAILSERVER);
 
 if ((hp = gethostbyname(VMAILSERVER)) == NULL)
@@ -1068,7 +1057,7 @@ memset(&raddr,0,sizeof(raddr));
 
 raddr.sin_port = (unsigned int) server->s_port;
 raddr.sin_addr.s_addr = ((struct in_addr *)(hp->h_addr))->s_addr;
-raddr.sin_family = AF_INET;  
+raddr.sin_family = AF_INET;
 
 CfDebug("Connecting...\n");
 
@@ -1078,7 +1067,7 @@ if ((sd = socket(AF_INET,SOCK_STREAM,0)) == -1)
    fclose(fp);
    return;
    }
-   
+
 if (connect(sd,(void *) &raddr,sizeof(raddr)) == -1)
    {
    CfOut(cf_inform,"connect","Couldn't connect to host %s\n",VMAILSERVER);
@@ -1088,13 +1077,13 @@ if (connect(sd,(void *) &raddr,sizeof(raddr)) == -1)
    }
 
 /* read greeting */
- 
+
 if (!Dialogue(sd,NULL))
    {
    goto mail_err;
    }
- 
-sprintf(vbuff,"HELO %s\r\n",VFQNAME); 
+
+sprintf(vbuff,"HELO %s\r\n",VFQNAME);
 CfDebug("%s",vbuff);
 
 if (!Dialogue(sd,vbuff))
@@ -1110,14 +1099,14 @@ if (!Dialogue(sd,vbuff))
  else
     {
     sprintf(vbuff,"MAIL FROM: <%s>\r\n",MAILFROM);
-    CfDebug("%s",vbuff);    
+    CfDebug("%s",vbuff);
     }
 
 if (!Dialogue(sd,vbuff))
    {
    goto mail_err;
    }
- 
+
 sprintf(vbuff,"RCPT TO: <%s>\r\n",to);
 CfDebug("%s",vbuff);
 
@@ -1141,7 +1130,7 @@ else
    sprintf(vbuff,"Subject: %s [%s/%s]\r\n",MailSubject(),VFQNAME,VIPADDRESS);
    CfDebug("%s",vbuff);
    }
- 
+
 send(sd,vbuff,strlen(vbuff),0);
 
 #if defined LINUX || defined NETBSD || defined FREEBSD || defined OPENBSD
@@ -1157,12 +1146,12 @@ send(sd,vbuff,strlen(vbuff),0);
  else
     {
     sprintf(vbuff,"From: %s\r\n",MAILFROM);
-    CfDebug("%s",vbuff);    
+    CfDebug("%s",vbuff);
     }
- 
+
 send(sd,vbuff,strlen(vbuff),0);
 
-sprintf(vbuff,"To: %s\r\n\r\n",to); 
+sprintf(vbuff,"To: %s\r\n\r\n",to);
 CfDebug("%s",vbuff);
 send(sd,vbuff,strlen(vbuff),0);
 
@@ -1175,7 +1164,7 @@ while(!feof(fp))
       }
 
    CfDebug("%s",vbuff);
-   
+
    if (strlen(vbuff) > 0)
       {
       vbuff[strlen(vbuff)-1] = '\r';
@@ -1183,31 +1172,31 @@ while(!feof(fp))
       count++;
       send(sd,vbuff,strlen(vbuff),0);
       }
-   
+
    if ((MAXLINES != INF_LINES) && (count > MAXLINES))
       {
       sprintf(vbuff,"\r\n[Mail truncated by cfengine. File is at %s on %s]\r\n",file,VFQNAME);
       send(sd,vbuff,strlen(vbuff),0);
       break;
       }
-   } 
+   }
 
 if (!Dialogue(sd,".\r\n"))
    {
    CfDebug("mail_err\n");
    goto mail_err;
    }
- 
+
 Dialogue(sd,"QUIT\r\n");
 CfDebug("Done sending mail\n");
 fclose(fp);
 cf_closesocket(sd);
 return;
- 
-mail_err: 
+
+mail_err:
 
 fclose(fp);
-cf_closesocket(sd); 
+cf_closesocket(sd);
 CfOut(cf_log,"","Cannot mail to %s.", to);
 }
 
@@ -1232,11 +1221,11 @@ else
    }
 
 charpos = 0;
- 
+
 while (recv(sd,&ch,1,0))
    {
    charpos++;
-   
+
    if (f == '\0')
       {
       f = ch;
@@ -1246,13 +1235,13 @@ while (recv(sd,&ch,1,0))
       {
       rfclinetype = ch;
       }
-   
+
    CfDebug("%c",ch);
-   
+
    if (ch == '\n' || ch == '\0')
       {
       charpos = 0;
-      
+
       if (rfclinetype == ' ')
          {
          break;

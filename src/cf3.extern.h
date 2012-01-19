@@ -182,7 +182,6 @@ extern unsigned int WINVER_MAJOR;
 extern unsigned int WINVER_MINOR;
 extern unsigned int WINVER_BUILD;
 
-extern Topic *TOPICHASH[CF_HASHTABLESIZE];
 extern int REQUIRE_COMMENTS;
 extern int FIPS_MODE;
 extern char POLICY_SERVER[CF_BUFSIZE];

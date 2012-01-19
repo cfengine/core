@@ -71,6 +71,8 @@ static void KeepPromiseBundles();
 /* GLOBAL VARIABLES                                                */
 /*******************************************************************/
 
+static Topic *TOPICHASH[CF_HASHTABLESIZE];
+
 int GLOBAL_ID = 1; // Used as a primary key for convenience, 0 reserved
 
 extern BodySyntax CFK_CONTROLBODY[];
@@ -1391,6 +1393,27 @@ for (tp = TOPICHASH[slot]; tp != NULL; tp=tp->next)
    }
 
 return NULL;
+}
+
+/*****************************************************************************/
+
+int GetTopicPid(char *classified_topic)
+
+{ Topic *tp;
+  int slot;
+  char context[CF_MAXVARSIZE],name[CF_MAXVARSIZE];
+
+name[0] = '\0';
+
+DeClassifyTopic(classified_topic,name,context);
+slot = GetHash(ToLowerStr(name));
+
+if ((tp = GetTopic(TOPICHASH[slot],classified_topic)))
+   {
+   return tp->id;
+   }
+
+return 0;
 }
 
 /*****************************************************************************/

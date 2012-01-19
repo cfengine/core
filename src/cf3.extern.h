@@ -166,7 +166,6 @@ extern int CF_TOPICS;
 extern int CF_OCCUR;
 extern int CF_EDGES;
 extern int KEYTTL;
-extern Rlist *SERVER_KEYSEEN;
 extern enum cfhashes CF_DEFAULT_DIGEST;
 extern int CF_DEFAULT_DIGEST_LEN;
 extern Item *EDIT_ANCHORS;

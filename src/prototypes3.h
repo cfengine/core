@@ -78,63 +78,7 @@ void DeleteExpArgs(Rlist *args);
 
 /* attributes.c */
 
-Attributes GetEnvironmentsAttributes(Promise *pp);
-Environments GetEnvironmentsConstraints(Promise *pp);
-Attributes GetOutputsAttributes(Promise *pp);
-Attributes GetServicesAttributes(Promise *pp);
-Services GetServicesConstraints(Promise *pp);
-Attributes GetFilesAttributes(Promise *pp);
-Attributes GetReportsAttributes(Promise *pp);
-Attributes GetExecAttributes(Promise *pp);
-Attributes GetProcessAttributes(Promise *pp);
-Attributes GetStorageAttributes(Promise *pp);
-Attributes GetClassContextAttributes(Promise *pp);
-Attributes GetTopicsAttributes(Promise *pp);
-Attributes GetThingsAttributes(Promise *pp);
-Attributes GetInferencesAttributes(Promise *pp);
-Attributes GetOccurrenceAttributes(Promise *pp);
-Attributes GetPackageAttributes(Promise *pp);
-Attributes GetMeasurementAttributes(Promise *pp);
-Attributes GetDatabaseAttributes(Promise *pp);
-
-Packages GetPackageConstraints(Promise *pp);
-ExecContain GetExecContainConstraints(Promise *pp);
-Recursion GetRecursionConstraints(Promise *pp);
-FileSelect GetSelectConstraints(Promise *pp);
-FilePerms GetPermissionConstraints(Promise *pp);
-TransactionContext GetTransactionConstraints(Promise *pp);
-DefineClasses GetClassDefinitionConstraints(Promise *pp);
-FileRename GetRenameConstraints(Promise *pp);
-FileDelete GetDeleteConstraints(Promise *pp);
-FileChange GetChangeMgtConstraints(Promise *pp);
-FileCopy GetCopyConstraints(Promise *pp);
-FileLink GetLinkConstraints(Promise *pp);
-Context GetContextConstraints(Promise *pp);
-ProcessSelect GetProcessFilterConstraints(Promise *pp);
-ProcessCount GetMatchesConstraints(Promise *pp);
-EditDefaults GetEditDefaults(Promise *pp);
-Attributes GetMethodAttributes(Promise *pp);
-Attributes GetInterfacesAttributes(Promise *pp);
-Attributes GetInsertionAttributes(Promise *pp);
-EditLocation GetLocationAttributes(Promise *pp);
-Attributes GetDeletionAttributes(Promise *pp);
-Attributes GetColumnAttributes(Promise *pp);
-Attributes GetReplaceAttributes(Promise *pp);
-EditRegion GetRegionConstraints(Promise *pp);
-EditReplace GetReplaceConstraints(Promise *pp);
-EditColumn GetColumnConstraints(Promise *pp);
-TopicAssociation GetAssociationConstraints(Promise *pp);
-StorageMount GetMountConstraints(Promise *pp);
-StorageVolume GetVolumeConstraints(Promise *pp);
-TcpIp GetTCPIPAttributes(Promise *pp);
-Report GetReportConstraints(Promise *pp);
-LineSelect GetInsertSelectConstraints(Promise *pp);
-LineSelect GetDeleteSelectConstraints(Promise *pp);
-Measurement GetMeasurementConstraint(Promise *pp);
-Acl GetAclConstraints(Promise *pp);
-Database GetDatabaseConstraints(Promise *pp);
-
-void SetChecksumUpdates(bool enabled);
+#include "attributes.h"
 
 /* bootstrap.c */
 

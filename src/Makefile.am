@@ -20,7 +20,7 @@ libpromises_la_SOURCES =                                                \
         cf3lex.l                                                        \
         alloc.c alloc.h                                                 \
         patches.c                                                       \
-        attributes.c                                                    \
+        attributes.c attributes.h                                       \
         install.c                                                       \
         generic_agent.c generic_agent.h                                 \
         dbm_api.c                                                       \

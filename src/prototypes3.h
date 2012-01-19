@@ -138,13 +138,7 @@ void ServerNotBusy(AgentConnection *conn);
 void ConnectionsInit(void);
 void ConnectionsCleanup(void);
 
-/* client_protocols.c */
-
-int IdentifyAgent(int sd,char *localip,int family);
-int AuthenticateAgent(AgentConnection *conn,Attributes attr,Promise *pp);
-int BadProtoReply(char *buf);
-int OKProtoReply(char *buf);
-int FailedProtoReply(char *buf);
+/* client_protocol.c */
 
 
 /* chflags.c */

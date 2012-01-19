@@ -87,10 +87,8 @@ extern struct utsname VSYSNAME;
 extern mode_t DEFAULTMODE;
 extern char VIPADDRESS[];
 extern char VPREFIX[];
-extern int VRECURSE;
 
 extern int SKIPIDENTIFY;
-extern char  DEFAULTCOPYTYPE;
 
 extern char VDOMAIN[CF_MAXVARSIZE];
 extern char VMAILSERVER[CF_BUFSIZE];

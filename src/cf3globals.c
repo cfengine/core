@@ -290,7 +290,6 @@ mode_t DEFAULTMODE = (mode_t) 0755;
 char *VREPOSITORY = NULL;
 char REPOSCHAR = '_';
 
-Item *VDEFAULTROUTE=NULL;
 Item *VSETUIDLIST = NULL;
 Item *SUSPICIOUSLIST = NULL;
 enum classes VSYSTEMHARDCLASS = unused1;

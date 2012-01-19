@@ -93,6 +93,8 @@ struct ifreq IFR;
 
 char VNUMBROADCAST[256];
 
+static Item *VDEFAULTROUTE;
+
 # define cfproto 0
 
 # ifndef IPPROTO_IP     /* Old boxes, hpux 7 etc */

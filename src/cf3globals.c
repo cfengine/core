@@ -240,14 +240,6 @@ int  CFSIGNATURE = 0;
 
 Item *IPADDRESSES = NULL;
 
-int PR_KEPT = 0;
-int PR_REPAIRED = 0;
-int PR_NOTKEPT = 0;
-
-double VAL_KEPT = 0;
-double VAL_REPAIRED = 0;
-double VAL_NOTKEPT = 0;
-
 /*******************************************************************/
 /* Context Management                                              */
 /*******************************************************************/

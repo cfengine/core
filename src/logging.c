@@ -39,6 +39,16 @@ static const char *NO_LOG_TYPES[] = { "vars", "classes", "insert_lines", "delete
 
 /*****************************************************************************/
 
+static double VAL_KEPT;
+static double VAL_REPAIRED;
+static double VAL_NOTKEPT;
+
+static int PR_KEPT;
+static int PR_REPAIRED;
+static int PR_NOTKEPT;
+
+/*****************************************************************************/
+
 void BeginAudit()
 
 { Promise dummyp = {0};

@@ -47,10 +47,6 @@ extern const char *TCPNAMES[CF_NETATTR];
 extern Audit *AUDITPTR;
 extern Audit *VAUDIT; 
 
-extern int PR_KEPT;
-extern int PR_REPAIRED;
-extern int PR_NOTKEPT;
-
 extern char CONTEXTID[32];
 extern char PADCHAR;
 extern Item *IPADDRESSES;
@@ -277,9 +273,5 @@ extern const char *SHIFT_TEXT[];
 #  define FILE_SEPARATOR '/'
 #  define FILE_SEPARATOR_STR "/"
 #endif
-
-extern double VAL_KEPT;
-extern double VAL_REPAIRED;
-extern double VAL_NOTKEPT;
 
 #endif

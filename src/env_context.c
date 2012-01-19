@@ -43,6 +43,7 @@ static int IsBracketed(char *s);
 
 /*****************************************************************************/
 
+static Item *ABORTHEAP = NULL;
 static Item *VDELCLASSES = NULL;
 static Rlist *PRIVCLASSHEAP = NULL;
 
@@ -1527,5 +1528,15 @@ for (const Item *ip = AlphaListIteratorNext(&i);
       {
       fprintf(fout, "%s%c", ip->name, sep);
       }
+   }
+}
+
+/*****************************************************************************/
+
+void AddAbortClass(const char *name, const char *classes)
+{
+if (!IsItemIn(ABORTHEAP, name))
+   {
+   AppendItem(&ABORTHEAP, name, classes);
    }
 }

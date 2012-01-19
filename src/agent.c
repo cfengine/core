@@ -447,12 +447,9 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
          strncpy(name, rp->item, CF_MAXVARSIZE - 1);
          CanonifyNameInPlace(name);
 
-         if (!IsItemIn(ABORTHEAP,name))
-            {
-            AppendItem(&ABORTHEAP,name,cp->classes);
-            }
+         AddAbortClass(name, cp->classes);
          }
-      
+
       continue;
       }
 

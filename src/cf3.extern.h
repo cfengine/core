@@ -108,7 +108,6 @@ extern char VUQNAME[];
 extern char LOGFILE[];
 
 extern Item *VNEGHEAP;
-extern Item *ABORTHEAP;
 
 extern Item *VSETUIDLIST;
 extern Item *SUSPICIOUSLIST;

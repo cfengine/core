@@ -475,6 +475,7 @@ bool EvalFileResult(const char *file_result, AlphaList *leaf_attr);
 
 /* - Rest - */
 int Abort(void);
+void AddAbortClass(const char *name, const char *classes);
 void KeepClassContextPromise(Promise *pp);
 void PushPrivateClassContext(void);
 void PopPrivateClassContext(void);

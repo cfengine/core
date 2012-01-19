@@ -1039,6 +1039,14 @@ enum cf_status
 
 /************************************************************************************/
 
+typedef enum
+   {
+   LAST_SEEN_DIRECTION_INCOMING = '-',
+   LAST_SEEN_DIRECTION_OUTGOING = '+'
+   } LastSeenDirection;
+
+/************************************************************************************/
+
 enum cf_acl_method
    {
    cfacl_append,

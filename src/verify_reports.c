@@ -456,10 +456,10 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
 
    switch(*hostname)
       {
-      case '+':
+      case LAST_SEEN_DIRECTION_OUTGOING:
           snprintf(type,CF_BUFSIZE,"last responded to hails");
           break;
-      case'-':
+      case LAST_SEEN_DIRECTION_INCOMING:
           snprintf(type,CF_BUFSIZE,"last hailed us");
           break;
       }

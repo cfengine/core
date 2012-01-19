@@ -41,21 +41,19 @@ int main (int argc,char *argv[]);
 /* GLOBAL VARIABLES                                                */
 /*******************************************************************/
 
-int  NO_FORK = false;
-int  ONCE = false;
-char MAILTO[CF_BUFSIZE];
-char MAILFROM[CF_BUFSIZE];
-char EXECCOMMAND[CF_BUFSIZE];
+static int NO_FORK;
+static int ONCE;
+static char MAILTO[CF_BUFSIZE];
+static char MAILFROM[CF_BUFSIZE];
+static char EXECCOMMAND[CF_BUFSIZE];
 static char VMAILSERVER[CF_BUFSIZE];
-Item *SCHEDULE = NULL;
+static Item *SCHEDULE;
 
-pid_t MYTWIN = 0;
-int MAXLINES = 30;
-int SPLAYTIME = 0;
-const int INF_LINES = -2;
-int NOSPLAY = false;
-int NOWINSERVICE = false;
-int THREADS = 0;
+static int MAXLINES = 30;
+static int SPLAYTIME = 0;
+static const int INF_LINES = -2;
+static int NOSPLAY;
+static int NOWINSERVICE;
 
 extern BodySyntax CFEX_CONTROLBODY[];
 

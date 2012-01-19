@@ -1031,10 +1031,10 @@ extern pthread_mutex_t *cft_server_children;
 
 typedef enum
   {
-  CF_PROMISE_STATE_REPAIRED,
-  CF_PROMISE_STATE_NOTKEPT,
-  CF_PROMISE_STATE_KEPT,
-  CF_PROMISE_STATE_ANY
+  CF_PROMISE_STATE_REPAIRED = 'r',
+  CF_PROMISE_STATE_NOTKEPT = 'n',
+  CF_PROMISE_STATE_KEPT = 'k',
+  CF_PROMISE_STATE_ANY = 'x'
   } PromiseState;
 
 /************************************************************************************/

@@ -1,20 +1,18 @@
-
-/* 
-
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -23,12 +21,6 @@
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
-
-/*****************************************************************************/
-/*                                                                           */
-/* File: client_protocol.c                                                   */
-/*                                                                           */
-/*****************************************************************************/
 
 #include "cf3.defs.h"
 #include "cf3.extern.h"
@@ -53,7 +45,7 @@ int IdentifyAgent(int sd,char *localip,int family)
   struct in_addr *iaddr;
   struct hostent *hp;
 #endif
-  
+
 memset(sendbuff,0,CF_BUFSIZE);
 memset(dnsname,0,CF_BUFSIZE);
 
@@ -69,8 +61,8 @@ if (!SKIPIDENTIFY)
    we are sending from. This is not necessarily the same as VFQNAME if
    the machine has a different uname from its IP name (!) This can
    happen on poorly set up machines or on hosts with multiple
-   interfaces, with different names on each interface ... */ 
-   
+   interfaces, with different names on each interface ... */
+
    switch (family)
       {
       case AF_INET: len = sizeof(struct sockaddr_in);
@@ -82,50 +74,50 @@ if (!SKIPIDENTIFY)
       default:
           CfOut(cf_error,"","Software error in IdentifyForVerification");
       }
-   
+
    if (getsockname(sd,(struct sockaddr *)&myaddr,&len) == -1)
       {
       CfOut(cf_error,"getsockname","Couldn't get socket address\n");
       return false;
       }
-   
-   snprintf(localip,CF_MAX_IP_LEN-1,"%s",sockaddr_ntop((struct sockaddr *)&myaddr)); 
-   
+
+   snprintf(localip,CF_MAX_IP_LEN-1,"%s",sockaddr_ntop((struct sockaddr *)&myaddr));
+
    CfDebug("Identifying this agent as %s i.e. %s, with signature %d\n",localip,VFQNAME,CFSIGNATURE);
-   
+
 #if defined(HAVE_GETADDRINFO)
-   
+
    if ((err=getnameinfo((struct sockaddr *)&myaddr,len,dnsname,CF_MAXVARSIZE,NULL,0,0)) != 0)
       {
       CfOut(cf_error,"","Couldn't look up address v6 for %s: %s\n",dnsname,gai_strerror(err));
       return false;
       }
-   
-#else 
-   
-   iaddr = &(myaddr.sin_addr); 
+
+#else
+
+   iaddr = &(myaddr.sin_addr);
 
    hp = gethostbyaddr((void *)iaddr,sizeof(myaddr.sin_addr),family);
-   
+
    if ((hp == NULL) || (hp->h_name == NULL))
       {
       CfOut(cf_error,"gethostbyaddr","Couldn't lookup IP address\n");
       return false;
       }
-   
+
    strncpy(dnsname,hp->h_name,CF_MAXVARSIZE);
-   
+
    if ((strstr(hp->h_name,".") == 0) && (strlen(VDOMAIN) > 0))
       {
       strcat(dnsname,".");
       strcat(dnsname,VDOMAIN);
-      } 
-#endif 
+      }
+#endif
    }
 else
    {
    strcpy(localip,VIPADDRESS);
-   
+
    if (strlen(VFQNAME) > 0)
       {
       CfOut(cf_verbose,"","skipidentify was promised, so we are trusting and simply announcing the identity as (%s) for this host\n",VFQNAME);
@@ -151,7 +143,7 @@ if ((strlen(VDOMAIN) > 0) && !IsIPV6Address(dnsname) && !strchr(dnsname,'.'))
    CfDebug("Appending domain %s to %s\n",VDOMAIN,dnsname);
    strcat(dnsname,".");
    strncat(dnsname,VDOMAIN,CF_MAXVARSIZE/2);
-   }  
+   }
 
 if (strncmp(dnsname,localip,strlen(localip)) == 0)
    {
@@ -189,7 +181,7 @@ int AuthenticateAgent(AgentConnection *conn,Attributes attr,Promise *pp)
   char dont_implicitly_trust_server,enterprise_field = 'c';
   RSA *server_pubkey = NULL;
 
-if (PUBKEY == NULL || PRIVKEY == NULL) 
+if (PUBKEY == NULL || PRIVKEY == NULL)
    {
    CfOut(cf_error,"","No public/private key pair found\n");
    return false;
@@ -199,7 +191,7 @@ enterprise_field = CfEnterpriseOptions();
 session_size = CfSessionKeySize(enterprise_field);
 
 /* Generate a random challenge to authenticate the server */
- 
+
 nonce_challenge = BN_new();
 BN_rand(nonce_challenge,CF_NONCELEN,0,0);
 nonce_len = BN_bn2mpi(nonce_challenge,in);
@@ -220,7 +212,7 @@ if ((server_pubkey = HavePublicKeyByIP(conn->username,conn->remoteip)))
    dont_implicitly_trust_server = 'y';
    encrypted_len = RSA_size(server_pubkey);
    }
-else 
+else
    {
    dont_implicitly_trust_server = 'n';        /* have to trust server, since we can't verify id */
    encrypted_len = nonce_len;
@@ -229,7 +221,7 @@ else
 // Server pubkey is what we want to has as a unique ID
 
 snprintf(sendbuffer,sizeof(sendbuffer),"SAUTH %c %d %d %c",dont_implicitly_trust_server,encrypted_len,nonce_len,enterprise_field);
- 
+
 out = xmalloc(encrypted_len);
 
 if (server_pubkey != NULL)
@@ -242,16 +234,16 @@ if (server_pubkey != NULL)
       FreeRSAKey(server_pubkey);
       return false;
       }
-   
-   memcpy(sendbuffer+CF_RSA_PROTO_OFFSET,out,encrypted_len); 
+
+   memcpy(sendbuffer+CF_RSA_PROTO_OFFSET,out,encrypted_len);
    }
 else
    {
-   memcpy(sendbuffer+CF_RSA_PROTO_OFFSET,in,nonce_len); 
+   memcpy(sendbuffer+CF_RSA_PROTO_OFFSET,in,nonce_len);
    }
 
 /* proposition C1 - Send challenge / nonce */
- 
+
 SendTransaction(conn->sd,sendbuffer,CF_RSA_PROTO_OFFSET+encrypted_len,CF_DONE);
 
 BN_free(bn);
@@ -263,22 +255,22 @@ if (DEBUG)
    RSA_print_fp(stdout,PUBKEY,0);
    }
 
-/*Send the public key - we don't know if server has it */ 
+/*Send the public key - we don't know if server has it */
 /* proposition C2 */
 
-memset(sendbuffer,0,CF_EXPANDSIZE); 
-len = BN_bn2mpi(PUBKEY->n,sendbuffer); 
+memset(sendbuffer,0,CF_EXPANDSIZE);
+len = BN_bn2mpi(PUBKEY->n,sendbuffer);
 SendTransaction(conn->sd,sendbuffer,len,CF_DONE); /* No need to encrypt the public key ... */
 
-/* proposition C3 */ 
-memset(sendbuffer,0,CF_EXPANDSIZE);   
-len = BN_bn2mpi(PUBKEY->e,sendbuffer); 
+/* proposition C3 */
+memset(sendbuffer,0,CF_EXPANDSIZE);
+len = BN_bn2mpi(PUBKEY->e,sendbuffer);
 SendTransaction(conn->sd,sendbuffer,len,CF_DONE);
 
 /* check reply about public key - server can break connection here */
 
-/* proposition S1 */  
-memset(in,0,CF_BUFSIZE);  
+/* proposition S1 */
+memset(in,0,CF_BUFSIZE);
 
 if (ReceiveTransaction(conn->sd,in,NULL) == -1)
    {
@@ -296,19 +288,19 @@ if (BadProtoReply(in))
 
 /* Get challenge response - should be CF_DEFAULT_DIGEST of challenge */
 
-/* proposition S2 */   
-memset(in,0,CF_BUFSIZE);  
+/* proposition S2 */
+memset(in,0,CF_BUFSIZE);
 
 if (ReceiveTransaction(conn->sd,in,NULL) == -1)
    {
    cfPS(cf_error,CF_INTERPT,"recv",pp,attr,"Protocol transaction broken off (2)");
    FreeRSAKey(server_pubkey);
-   return false;   
+   return false;
    }
 
 if (HashesMatch(digest,in,CF_DEFAULT_DIGEST) || HashesMatch(digest,in,cf_md5)) // Legacy
    {
-   if (dont_implicitly_trust_server == 'y')  /* challenge reply was correct */ 
+   if (dont_implicitly_trust_server == 'y')  /* challenge reply was correct */
       {
       CfOut(cf_verbose,"",".....................[.h.a.i.l.].................................\n");
       CfOut(cf_verbose,"","Strong authentication of server=%s connection confirmed\n",pp->this_server);
@@ -336,23 +328,23 @@ else
    }
 
 
-/* Receive counter challenge from server */ 
+/* Receive counter challenge from server */
 
 CfDebug("Receive counter challenge from server\n");
 
-/* proposition S3 */   
-memset(in,0,CF_BUFSIZE);  
+/* proposition S3 */
+memset(in,0,CF_BUFSIZE);
 encrypted_len = ReceiveTransaction(conn->sd,in,NULL);
 
 if (encrypted_len <= 0)
    {
    CfOut(cf_error,"","Protocol transaction sent illegal cipher length");
    FreeRSAKey(server_pubkey);
-   return false;      
+   return false;
    }
 
 decrypted_cchall = xmalloc(encrypted_len);
- 
+
 if (RSA_private_decrypt(encrypted_len,in,decrypted_cchall,PRIVKEY,RSA_PKCS1_PADDING) <= 0)
    {
    err = ERR_get_error();
@@ -371,7 +363,7 @@ else
    HashString(decrypted_cchall,nonce_len,digest,cf_md5);
    }
 
-CfDebug("Replying to counter challenge with hash\n"); 
+CfDebug("Replying to counter challenge with hash\n");
 
 if (FIPS_MODE)
    {
@@ -382,7 +374,7 @@ else
    SendTransaction(conn->sd,digest,CF_MD5_LEN,CF_DONE);
    }
 
-free(decrypted_cchall); 
+free(decrypted_cchall);
 
 /* If we don't have the server's public key, it will be sent */
 
@@ -390,15 +382,15 @@ if (server_pubkey == NULL)
    {
    RSA *newkey = RSA_new();
 
-   CfOut(cf_verbose,""," -> Collecting public key from server!\n"); 
+   CfOut(cf_verbose,""," -> Collecting public key from server!\n");
 
-   /* proposition S4 - conditional */  
+   /* proposition S4 - conditional */
    if ((len = ReceiveTransaction(conn->sd,in,NULL)) <= 0)
       {
       CfOut(cf_error,"","Protocol error in RSA authentation from IP %s\n",pp->this_server);
       return false;
       }
-   
+
    if ((newkey->n = BN_mpi2bn(in,len,NULL)) == NULL)
       {
       err = ERR_get_error();
@@ -415,7 +407,7 @@ if (server_pubkey == NULL)
       FreeRSAKey(newkey);
       return false;
       }
-   
+
    if ((newkey->e = BN_mpi2bn(in,len,NULL)) == NULL)
       {
       err = ERR_get_error();
@@ -427,7 +419,7 @@ if (server_pubkey == NULL)
    server_pubkey = RSAPublicKey_dup(newkey);
    FreeRSAKey(newkey);
    }
- 
+
 /* proposition C5 */
 
 SetSessionKey(conn);
@@ -466,7 +458,7 @@ if (server_pubkey != NULL)
 
 free(out);
 FreeRSAKey(server_pubkey);
-return true; 
+return true;
 }
 
 /*********************************************************************/
@@ -479,7 +471,7 @@ static void FreeRSAKey(RSA *key)
     {
     return;
     }
- 
+
  RSA_free(key);
 }
 

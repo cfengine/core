@@ -312,6 +312,20 @@ for (Rlist *rp = (Rlist *)object; rp != NULL; rp = rp->next)
 return NULL;
 }
 
+JsonArray *JsonObjectGetAsArray(JsonObject *object, const char *key)
+{
+for (Rlist *rp = (Rlist *)object; rp != NULL; rp = rp->next)
+   {
+   CfAssoc *entry = rp->item;
+   if (strcmp(entry->lval, key) == 0)
+      {
+      return entry->rval.item;
+      }
+   }
+
+return NULL;
+}
+
 const char *JsonArrayGetAsString(JsonArray *array, size_t index)
 {
 Rlist *rp = RlistAt(array, index);

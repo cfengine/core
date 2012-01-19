@@ -49,6 +49,7 @@ size_t JsonArrayLength(JsonArray *array);
 
 const char *JsonObjectGetAsString(JsonObject *object, const char *key);
 JsonObject *JsonObjectGetAsObject(JsonObject *object, const char *key);
+JsonArray *JsonObjectGetAsArray(JsonObject *object, const char *key);
 
 const char *JsonArrayGetAsString(JsonArray *array, size_t index);
 JsonObject *JsonArrayGetAsObject(JsonArray *array, size_t index);

@@ -192,6 +192,19 @@ assert_string_equal(JsonObjectGetAsString(obj, "first"), "one");
 assert_int_equal(JsonObjectGetAsString(obj, "third"), NULL);
 }
 
+static void test_object_get_array(void **state)
+{
+JsonArray *arr = NULL;
+JsonArrayAppendString(&arr, "one");
+JsonArrayAppendString(&arr, "two");
+
+JsonObject *obj = NULL;
+JsonObjectAppendArray(&obj, "array", arr);
+
+JsonArray *arr2 = JsonObjectGetAsArray(obj, "array");
+assert_string_equal(JsonArrayGetAsString(arr2, 1), "two");
+}
+
 static void test_array_get_string(void **state)
 {
 JsonArray *arr = NULL;
@@ -265,6 +278,7 @@ const UnitTest tests[] =
    unit_test(test_show_array_object),
    unit_test(test_show_array_empty),
    unit_test(test_object_get_string),
+   unit_test(test_object_get_array),
    unit_test(test_array_get_string),
    unit_test(test_parse_string),
    unit_test(test_parse_object_simple),

@@ -57,6 +57,25 @@ typedef struct
 
 /**********************************************************************/
 
+extern Item *NONATTACKERLIST;
+extern Item *ATTACKERLIST;
+extern Item *MULTICONNLIST;
+extern Item *TRUSTKEYLIST;
+extern Item *DHCPLIST;
+extern Item *ALLOWUSERLIST;
+extern Item *SKIPVERIFY;
+
+extern Auth *VADMIT;
+extern Auth *VADMITTOP;
+extern Auth *VDENY;
+extern Auth *VDENYTOP;
+extern Auth *VARADMIT;
+extern Auth *VARADMITTOP;
+extern Auth *VARDENY;
+extern Auth *VARDENYTOP;
+
+/**********************************************************************/
+
 extern char CFRUNCOMMAND[];
 
 #ifdef HAVE_NOVA

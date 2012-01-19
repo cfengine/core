@@ -107,25 +107,9 @@ extern Item *VNEGHEAP;
 
 extern Item *VSETUIDLIST;
 extern Item *SUSPICIOUSLIST;
-extern Item *SCHEDULE;
-extern Item *NONATTACKERLIST;
-extern Item *MULTICONNLIST;
-extern Item *TRUSTKEYLIST;
-extern Item *DHCPLIST;
-extern Item *ALLOWUSERLIST;
-extern Item *SKIPVERIFY;
-extern Item *ATTACKERLIST;
 extern AlphaList VHEAP; 
 extern AlphaList VADDCLASSES;
 
-extern Auth *VADMIT;
-extern Auth *VDENY;
-extern Auth *VADMITTOP;
-extern Auth *VDENYTOP;
-extern Auth *VARADMIT;
-extern Auth *VARADMITTOP;
-extern Auth *VARDENY;
-extern Auth *VARDENYTOP;
 
 extern int DEBUG;
 

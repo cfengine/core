@@ -38,7 +38,7 @@ libpromises_la_SOURCES =                                                \
         files_properties.c                                              \
         files_select.c                                                  \
         files_operators.c                                               \
-        files_repository.c                                              \
+        files_repository.c files_repository.h                           \
         files_copy.c                                                    \
         files_editline.c                                                \
         files_edit.c                                                    \

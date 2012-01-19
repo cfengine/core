@@ -34,6 +34,10 @@
 
 /*********************************************************************/
 
+static Item *VREPOSLIST;
+
+/*********************************************************************/
+
 int ArchiveToRepository(char *file,Attributes attr,Promise *pp)
 
  /* Returns true if the file was backup up and false if not */
@@ -127,3 +131,7 @@ else
    }
 }
 
+bool FileInRepository(const char *filename)
+{
+return IsItemIn(VREPOSLIST, filename);
+}

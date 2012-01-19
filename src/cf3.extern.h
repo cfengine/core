@@ -123,8 +123,6 @@ extern Item *ATTACKERLIST;
 extern AlphaList VHEAP; 
 extern AlphaList VADDCLASSES;
 
-extern Item *VREPOSLIST;
-
 extern Auth *VADMIT;
 extern Auth *VDENY;
 extern Auth *VADMITTOP;

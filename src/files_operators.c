@@ -737,7 +737,7 @@ if (attr.rename.newname)
       }
    else
       {
-      if (!IsItemIn(VREPOSLIST,attr.rename.newname))
+      if (!FileInRepository(attr.rename.newname))
          {
          if (cf_rename(path,attr.rename.newname) == -1)
             {
@@ -851,7 +851,7 @@ if (attr.rename.disable)
       {
       cf_chmod(path,newperm);      
 
-      if (!IsItemIn(VREPOSLIST,newname))
+      if (!FileInRepository(newname))
          {
          if (cf_rename(path,newname) == -1)
             {

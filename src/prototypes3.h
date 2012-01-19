@@ -675,7 +675,7 @@ int DeviceBoundary(struct stat *sb,Promise *pp);
 
 /* files_repository.c */
 
-int ArchiveToRepository(char *file,Attributes attr,Promise *pp);
+#include "files_repository.h"
 
 /* files_select.c */
 

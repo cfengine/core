@@ -287,7 +287,7 @@ if (classes != NULL)
 
 /*********************************************************************/
 
-void AppendItem(Item **liststart, const char *itemstring,char *classes)
+void AppendItem(Item **liststart, const char *itemstring, const char *classes)
 
 {
 Item *lp;

@@ -811,7 +811,7 @@ void IdempItemCount(Item **liststart, const char *itemstring, const char *classe
 Item *IdempPrependItem(Item **liststart, const char *itemstring, const char *classes);
 Item *IdempPrependItemClass(Item **liststart,char *itemstring,char *classes);
 Item *PrependItem(Item **liststart, const char *itemstring, const char *classes);
-void AppendItem(Item **liststart, const char *itemstring, char *classes);
+void AppendItem(Item **liststart, const char *itemstring, const char *classes);
 void DeleteItemList (Item *item);
 void DeleteItem (Item **liststart, Item *item);
 void DebugListItemList (Item *liststart);

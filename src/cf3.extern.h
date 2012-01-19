@@ -119,8 +119,6 @@ extern int DONTDO;
 extern int IGNORELOCK;
 extern int MINUSF;
 
-extern int NOSPLAY;
-
 extern char *VPSCOMM[];
 extern char *VPSOPTS[];
 extern char *VMOUNTCOMM[];

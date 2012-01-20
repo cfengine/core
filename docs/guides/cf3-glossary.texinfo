@@ -105,9 +105,6 @@ of groups (i.e. constellations of objects) in a network.
 @item CFEngine Enterprise Editions	
 Refers to commercial (paid) editions of the CFEngine software, published under the COSL license.
 
-@item CFEngine Galaxy
-The ultimate edition of CFEngine, planned for the future. All we know about this is that it is `far, far away'.
-
 @item CFEngine Nova	
 The lowest level enterprise edition of CFEngine, that automatically creates a simple `star network'
 mangement model for hosts in an environment.

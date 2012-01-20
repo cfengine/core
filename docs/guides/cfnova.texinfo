@@ -1281,11 +1281,6 @@ and provides reverse look up of system attributes based on searchable expression
 At this level, CFEngine exceeds other industry CMDB solutions in both reporting
 and configuration.
 
-@item @b{Galaxy:} In addition to Constellation features, Galaxy adds a number
-of state of the art active probes that integrate network monitoring
-with system node monitoring, offering a total and integrated overview
-of networked system behavior.
-
 @end itemize
 
 @node Standard reports in CFEngine Nova, Knowledge Map, Reporting in CFEngine, Mission Portal

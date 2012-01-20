@@ -194,9 +194,9 @@ CFEngine's asynchronous promise model makes the impact of resource sharing less 
 As our product names suggest, CFEngine's scaling behaviour follows an
 `astronomical' hierarchy of scales. Our product range 
 @itemize
-@item Nova,
-@item Constellation, and 
-@item Galaxy. 
+@item Nova
+@item Constellation
+@c @item Galaxy. 
 @end itemize
 @noindent have been chosen to model different issues of
 scale that occur in systems as they grow from tens to tens of

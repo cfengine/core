@@ -1403,7 +1403,7 @@ This log shows the specific times that change events were detected. The resoluti
 this log depends on the frequency of scanning, which is the purview of a @code{files} promise.
 
 
-@center @image{file_change,8cm,,A file content/hash change report,png}
+@c @center @image{file_change,8cm,,A file content/hash change report,png}
 
 If you enable the @code{report_diffs} feature in Nova, on
 individually named files, a second `change tracking' report will be

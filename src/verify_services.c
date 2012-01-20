@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -20,14 +20,7 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-  
 */
-
-/*****************************************************************************/
-/*                                                                           */
-/* File: verify_services.c                                                   */
-/*                                                                           */
-/*****************************************************************************/
 
 #include "cf3.defs.h"
 #include "cf3.extern.h"
@@ -55,14 +48,14 @@ if (ServicesSanityChecks(a,pp))
 /*****************************************************************************/
 
 static int ServicesSanityChecks(Attributes a,Promise *pp)
-    
+
 { Rlist *dep;
 
 switch(a.service.service_policy)
    {
    case cfsrv_start:
        break;
-       
+
    case cfsrv_stop:
    case cfsrv_disable:
        if(strcmp(a.service.service_autostart_policy, "none") != 0)
@@ -73,7 +66,7 @@ switch(a.service.service_policy)
           return false;
           }
        break;
-       
+
    default:
        CfOut(cf_error,"","!! Invalid service policy for service \"%s\"", pp->promiser);
        PromiseRef(cf_error,pp);
@@ -177,7 +170,7 @@ if (strcmp(a.service.service_type, "windows") == 0)
       case mingw:
           NovaWin_VerifyServices(a,pp);
           break;
-          
+
       default:
           CfOut(cf_inform,"","!! Windows services are not supported on this system");
           break;
@@ -214,14 +207,14 @@ if (GetConstraintValue("service_bundle",pp,CF_SCALAR) == NULL)
           AppendRlist(&args,pp->promiser,CF_SCALAR);
           AppendRlist(&args,"start",CF_SCALAR);
           break;
-          
+
       case cfsrv_stop:
       case cfsrv_disable:
       default:
-          AppendRlist(&args,pp->promiser,CF_SCALAR);          
+          AppendRlist(&args,pp->promiser,CF_SCALAR);
           AppendRlist(&args,"stop",CF_SCALAR);
           break;
-          
+
       }
 
    default_bundle = NewFnCall("standard_services",args);
@@ -237,12 +230,12 @@ switch(a.service.service_policy)
    case cfsrv_start:
        NewScalar("this","service_policy","start",cf_str);
        break;
-       
+
    case cfsrv_stop:
    case cfsrv_disable:
    default:
           NewScalar("this","service_policy","stop",cf_str);
-          break;          
+          break;
    }
 
 if (GetBundle(default_bundle->name,"agent") == NULL)

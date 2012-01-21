@@ -29,32 +29,28 @@
 /*                                                                           */
 /*****************************************************************************/
 
-#include "cf3.defs.h"
+#include "generic_agent.h"
 #include "cf3.extern.h"
 #include "ontology.h"
 #include "export_xml.h"
 
-int main (int argc,char *argv[]);
-void ThisAgentInit(void);
-void KeepKnowControlPromises(void);
-void KeepKnowledgePromise(Promise *pp);
-void VerifyTopicPromise(Promise *pp);
-void VerifyThingsPromise(Promise *pp);
-void VerifyOccurrencePromises(Promise *pp);
-void VerifyInferencePromise(Promise *pp);
-void WriteKMDB(void);
-void GenerateManual(void);
-void CfGenerateStories(char *query,enum storytype type);
-void VerifyOccurrenceGroup(char *file,Promise *pp);
-void CfGenerateTestData(int count);
-void CfRemoveTestData(void);
-void CfUpdateTestData(void);
-void ShowSingletons(void);
-void ShowWords(void);
+static void KeepKnowControlPromises(void);
+static void KeepKnowledgePromise(Promise *pp);
+static void VerifyTopicPromise(Promise *pp);
+static void VerifyThingsPromise(Promise *pp);
+static void VerifyOccurrencePromises(Promise *pp);
+static void VerifyInferencePromise(Promise *pp);
+static void WriteKMDB(void);
+static void GenerateManual(void);
+static void CfGenerateStories(char *query,enum storytype type);
+static void VerifyOccurrenceGroup(char *file,Promise *pp);
+static void CfGenerateTestData(int count);
+static void CfRemoveTestData(void);
+static void CfUpdateTestData(void);
+static void ShowSingletons(void);
+static void ShowWords(void);
 static void GenerateXml(void);
-
 static char *NormalizeTopic(char *s);
-
 static void AddInference(Inference **list,char *result,char *pre,char *qual);
 static Topic *IdempInsertTopic(char *classified_name);
 static Topic *InsertTopic(char *name,char *context);
@@ -64,8 +60,8 @@ static void AddOccurrence(Occurrence **list,char *reference,Rlist *represents,en
 static Topic *TopicExists(char *topic_name,char *topic_type);
 static TopicAssociation *AssociationExists(TopicAssociation *list,char *fwd,char *bwd);
 static Occurrence *OccurrenceExists(Occurrence *list,char *locator,enum representations repy_type,char *s);
-
-static void KeepPromiseBundles();
+static void KeepPromiseBundles(void);
+int GetTopicPid(char *classified_topic);
 
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
@@ -367,7 +363,7 @@ if (InsertTopic("any","any"))
 
 /*****************************************************************************/
 
-void KeepKnowControlPromises()
+static void KeepKnowControlPromises()
 
 { Constraint *cp;
   Rval retval;
@@ -603,7 +599,7 @@ for (type = 0; TYPESEQUENCE[type] != NULL; type++)
 /* Level                                                             */
 /*********************************************************************/
 
-void KeepKnowledgePromise(Promise *pp)
+static void KeepKnowledgePromise(Promise *pp)
 
 {
 if (pp->done)
@@ -747,7 +743,7 @@ if (VERBOSE || DEBUG)
 /* Level                                                             */
 /*********************************************************************/
 
-void VerifyInferencePromise(Promise *pp)
+static void VerifyInferencePromise(Promise *pp)
 
 { Attributes a = {{0}};
  Rlist *rpp,*rpq;
@@ -772,7 +768,7 @@ for (rpp = a.precedents; rpp != NULL; rpp=rpp->next)
 
 /*********************************************************************/
 
-void VerifyThingsPromise(Promise *pp)
+static void VerifyThingsPromise(Promise *pp)
 
 { char id[CF_BUFSIZE];
   Attributes a = {{0}};
@@ -870,7 +866,7 @@ DeleteRlist(contexts);
 
 /*********************************************************************/
 
-void VerifyTopicPromise(Promise *pp)
+static void VerifyTopicPromise(Promise *pp)
 
 { char id[CF_BUFSIZE];
   Attributes a = {{0}};
@@ -964,7 +960,7 @@ DeleteRlist(contexts);
 
 /*********************************************************************/
 
-void VerifyOccurrencePromises(Promise *pp)
+static void VerifyOccurrencePromises(Promise *pp)
 
 { Attributes a = {{0}};
   char name[CF_BUFSIZE];
@@ -1036,7 +1032,7 @@ DeleteRlist(contexts);
 
 /*********************************************************************/
 
-void WriteKMDB()
+static void WriteKMDB()
 
 {
 #ifdef HAVE_NOVA 
@@ -1049,7 +1045,7 @@ if (WRITE_KMDB)
 
 /*********************************************************************/
 
-void GenerateManual()
+static void GenerateManual()
 
 {
 if (GENERATE_MANUAL)
@@ -1080,7 +1076,7 @@ else
 
 /*********************************************************************/
 
-void VerifyOccurrenceGroup(char *file,Promise *pp)
+static void VerifyOccurrenceGroup(char *file,Promise *pp)
     
 { Attributes a = {{0}};
   struct stat sb;
@@ -1129,7 +1125,7 @@ DeleteRlist((Rlist *)retval.item);
 
 /*****************************************************************************/
 
-Topic *IdempInsertTopic(char *classified_name)
+static Topic *IdempInsertTopic(char *classified_name)
 
 { char context[CF_MAXVARSIZE],topic[CF_MAXVARSIZE];
    
@@ -1143,7 +1139,7 @@ return InsertTopic(topic,context);
 
 /*****************************************************************************/
 
-Topic *InsertTopic(char *name,char *context)
+static Topic *InsertTopic(char *name,char *context)
 
 { int slot = GetHash(ToLowerStr(name));
 
@@ -1152,7 +1148,7 @@ return AddTopic(&(TOPICHASH[slot]),name,context);
 
 /*****************************************************************************/
 
-Topic *AddTopic(Topic **list,char *name,char *context)
+static Topic *AddTopic(Topic **list,char *name,char *context)
 
 { Topic *tp;
 
@@ -1202,7 +1198,7 @@ return tp;
 
 /*****************************************************************************/
 
-void AddTopicAssociation(Topic *this_tp,TopicAssociation **list,char *fwd_name,char *bwd_name,Rlist *passociates,int ok_to_add_inverse,char *from_context,char *from_topic)
+static void AddTopicAssociation(Topic *this_tp,TopicAssociation **list,char *fwd_name,char *bwd_name,Rlist *passociates,int ok_to_add_inverse,char *from_context,char *from_topic)
 
 { TopicAssociation *ta = NULL,*texist;
   char fwd_context[CF_MAXVARSIZE];
@@ -1315,7 +1311,7 @@ else
 
 /*****************************************************************************/
 
-void AddOccurrence(Occurrence **list,char *reference,Rlist *represents,enum representations rtype,char *context)
+static void AddOccurrence(Occurrence **list,char *reference,Rlist *represents,enum representations rtype,char *context)
 
 { Occurrence *op = NULL;
   Rlist *rp;
@@ -1366,7 +1362,7 @@ ip->next = *list;
 /* Level                                                                     */
 /*****************************************************************************/
 
-Topic *TopicExists(char *topic_name,char *topic_context)
+static Topic *TopicExists(char *topic_name,char *topic_context)
 
 { Topic *tp;
   int slot;
@@ -1418,7 +1414,7 @@ return 0;
 
 /*****************************************************************************/
 
-TopicAssociation *AssociationExists(TopicAssociation *list,char *fwd,char *bwd)
+static TopicAssociation *AssociationExists(TopicAssociation *list,char *fwd,char *bwd)
 
 { TopicAssociation *ta;
   int yfwd = false,ybwd = false;
@@ -1495,7 +1491,7 @@ return NULL;
 
 /*****************************************************************************/
 
-Occurrence *OccurrenceExists(Occurrence *list,char *locator,enum representations rep_type,char *context)
+static Occurrence *OccurrenceExists(Occurrence *list,char *locator,enum representations rep_type,char *context)
 
 { Occurrence *op;
   

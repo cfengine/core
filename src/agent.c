@@ -73,15 +73,13 @@ char *TYPESEQUENCE[] =
    NULL
    };
 
-int main (int argc,char *argv[]);
-void CheckAgentAccess(Rlist *list);
-void KeepAgentPromise(Promise *pp);
-int NewTypeContext(enum typesequence type);
-void DeleteTypeContext(enum typesequence type);
-void ClassBanner(enum typesequence type);
-void ParallelFindAndVerifyFilesPromises(Promise *pp);
+static void CheckAgentAccess(Rlist *list);
+static void KeepAgentPromise(Promise *pp);
+static int NewTypeContext(enum typesequence type);
+static void DeleteTypeContext(enum typesequence type);
+static void ClassBanner(enum typesequence type);
+static void ParallelFindAndVerifyFilesPromises(Promise *pp);
 static bool VerifyBootstrap(void);
-
 static void KeepPromiseBundles(Rlist *bundlesequence);
 
 
@@ -902,7 +900,7 @@ return true;
 
 /*********************************************************************/
 
-void CheckAgentAccess(Rlist *list)
+static void CheckAgentAccess(Rlist *list)
 
 #ifdef MINGW
 {
@@ -964,7 +962,7 @@ FatalError("You are denied access to run this policy");
 
 /*********************************************************************/
 
-void KeepAgentPromise(Promise *pp)
+static void KeepAgentPromise(Promise *pp)
 
 { char *sp = NULL;
   struct timespec start = BeginMeasure();
@@ -1103,7 +1101,7 @@ if (strcmp("reports",pp->agentsubtype) == 0)
 /* Type context                                                      */
 /*********************************************************************/
 
-int NewTypeContext(enum typesequence type)
+static int NewTypeContext(enum typesequence type)
 
 {
 // get maxconnections
@@ -1152,7 +1150,7 @@ return true;
 
 /*********************************************************************/
 
-void DeleteTypeContext(enum typesequence type)
+static void DeleteTypeContext(enum typesequence type)
 
 {
 Attributes a = {{0}};
@@ -1219,7 +1217,7 @@ switch(type)
 
 /**************************************************************/
 
-void ClassBanner(enum typesequence type)
+static void ClassBanner(enum typesequence type)
 
 { const Item *ip;
 
@@ -1267,7 +1265,7 @@ CfOut(cf_verbose,"","\n");
 /* Thread context                                             */
 /**************************************************************/
 
-void ParallelFindAndVerifyFilesPromises(Promise *pp)
+static void ParallelFindAndVerifyFilesPromises(Promise *pp)
     
 { pid_t child = 1;
   int background = GetBooleanConstraint("background",pp);

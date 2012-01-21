@@ -36,9 +36,8 @@ int SHOWHOSTS = false;
 bool REMOVEKEYS = false;
 const char *remove_keys_host;
 
-void ShowLastSeenHosts(void);
+static void ShowLastSeenHosts(void);
 static int RemoveKeys(const char *host);
-int main (int argc,char *argv[]);
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -152,7 +151,7 @@ return config;
 }
 /*****************************************************************************/
 
-void ShowLastSeenHosts()
+static void ShowLastSeenHosts()
 
 { CF_DB *dbp;
   CF_DBC *dbcp;

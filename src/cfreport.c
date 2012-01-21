@@ -34,33 +34,30 @@
 
 #include "writer.h"
 
-int main (int argc,char *argv[]);
-void ThisAgentInit(void);
-void KeepReportsControlPromises(void);
-void KeepReportsPromises(void);
-void ShowLastSeen(void);
-void ShowPerformance(void);
-void ShowLastSeen(void);
-void ShowClasses(void);
-void ShowChecksums(void);
-void ShowLocks (int active);
-void ShowCurrentAudit(void);
-char *Format(char *s,int width);
-int CompareClasses(const void *a, const void *b);
-void ReadAverages(void);
-void SummarizeAverages(void);
-void WriteGraphFiles(void);
-void WriteHistograms(void);
-void DiskArrivals(void);
-void PeerIntermittency(void);
-void GetFQHN(void);
-void OpenFiles(void);
-void CloseFiles(void);
-void MagnifyNow(void);
-void OpenMagnifyFiles(void);
-void CloseMagnifyFiles(void);
-void EraseAverages(void);
-void RemoveHostSeen(char *hosts);
+static void KeepReportsControlPromises(void);
+static void KeepReportsPromises(void);
+static void ShowLastSeen(void);
+static void ShowPerformance(void);
+static void ShowLastSeen(void);
+static void ShowClasses(void);
+static void ShowChecksums(void);
+static void ShowLocks (int active);
+static void ShowCurrentAudit(void);
+static char *Format(char *s,int width);
+static int CompareClasses(const void *a, const void *b);
+static void ReadAverages(void);
+static void SummarizeAverages(void);
+static void WriteGraphFiles(void);
+static void WriteHistograms(void);
+static void DiskArrivals(void);
+static void PeerIntermittency(void);
+static void OpenFiles(void);
+static void CloseFiles(void);
+static void MagnifyNow(void);
+static void OpenMagnifyFiles(void);
+static void CloseMagnifyFiles(void);
+static void EraseAverages(void);
+static void RemoveHostSeen(char *hosts);
 
 extern BodySyntax CFRE_CONTROLBODY[];
 
@@ -568,7 +565,7 @@ if (!EMPTY(NOVA_IMPORT_FILE))
 
 /*****************************************************************************/
 
-void KeepReportsControlPromises()
+static void KeepReportsControlPromises()
 
 { Constraint *cp;
   Rlist *rp;
@@ -711,7 +708,7 @@ if (GetVariable("control_common", CFG_CONTROLBODY[cfg_lastseenexpireafter].lval,
 
 /*****************************************************************************/
 
-void KeepReportsPromises()
+static void KeepReportsPromises()
 
 { Rlist *rp;
   int all = false;
@@ -885,7 +882,7 @@ GrandSummary();
 /* Level 2                                                           */
 /*********************************************************************/
 
-void RemoveHostSeen(char *hosts)
+static void RemoveHostSeen(char *hosts)
 
 { CF_DB *dbp;
   char name[CF_MAXVARSIZE];
@@ -923,7 +920,7 @@ DeleteItemList(list);
 
 /*********************************************************************/
 
-void ShowLastSeen()
+static void ShowLastSeen()
 
 { CF_DB *dbp;
   CF_DBC *dbcp;
@@ -1113,7 +1110,7 @@ fclose(fout);
 
 /*******************************************************************/
 
-void ShowPerformance()
+static void ShowPerformance()
 
 { CF_DB *dbp;
   CF_DBC *dbcp;
@@ -1280,7 +1277,7 @@ fclose(fout);
 
 /*******************************************************************/
 
-void ShowClasses()
+static void ShowClasses()
 
 { CF_DB *dbp;
   CF_DBC *dbcp;
@@ -1526,7 +1523,7 @@ DeleteItemList(already);
 
 /*******************************************************************/
 
-void ShowChecksums()
+static void ShowChecksums()
 
 { CF_DB *dbp;
   CF_DBC *dbcp;
@@ -1651,7 +1648,7 @@ fclose(fout);
 
 /*********************************************************************/
 
-void ShowLocks (int active)
+static void ShowLocks (int active)
 
 { CF_DB *dbp;
   CF_DBC *dbcp;
@@ -1813,7 +1810,7 @@ fclose(fout);
 
 /*******************************************************************/
 
-void ShowCurrentAudit()
+static void ShowCurrentAudit()
 
 { char operation[CF_BUFSIZE],name[CF_BUFSIZE];
   AuditLog entry;
@@ -2024,7 +2021,7 @@ fclose(fout);
 /* Level 3                                                           */
 /*********************************************************************/
 
-char *Format(char *s,int width)
+static char *Format(char *s,int width)
 
 { static char buffer[CF_BUFSIZE];
   char *sp;
@@ -2049,7 +2046,7 @@ return buffer;
 
 /*************************************************************/
 
-int CompareClasses(const void *a, const void *b)
+static int CompareClasses(const void *a, const void *b)
 
 {
 CEnt *da = (CEnt *) a;
@@ -2060,7 +2057,7 @@ return (da->q < db->q) - (da->q > db->q);
 
 /****************************************************************************/
 
-void ReadAverages()
+static void ReadAverages()
 
 { Averages entry;
   char timekey[CF_MAXVARSIZE];
@@ -2121,7 +2118,7 @@ CloseDB(dbp);
 
 /****************************************************************************/
 
-void EraseAverages()
+static void EraseAverages()
 
 { int i;
  char timekey[CF_MAXVARSIZE],name[CF_MAXVARSIZE];
@@ -2174,7 +2171,7 @@ CloseDB(dbp);
 
 /*****************************************************************************/
 
-void SummarizeAverages()
+static void SummarizeAverages()
 
 { int i;
   FILE *fout;
@@ -2281,7 +2278,7 @@ fclose(fout);
 
 /*****************************************************************************/
 
-void WriteGraphFiles()
+static void WriteGraphFiles()
 
 { int its,i,j,count = 0;
   double kept = 0, not_kept = 0, repaired = 0;
@@ -2421,7 +2418,7 @@ CloseFiles();
 
 /*****************************************************************************/
 
-void MagnifyNow()
+static void MagnifyNow()
 
 { int its,i,j,count = 0;
   Averages entry,det;
@@ -2491,7 +2488,7 @@ CloseMagnifyFiles();
 
 /*****************************************************************************/
 
-void WriteHistograms()
+static void WriteHistograms()
 
 { int i,j,k;
   int position,day;
@@ -2604,7 +2601,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
 
 /*****************************************************************************/
 
-void DiskArrivals(void)
+static void DiskArrivals(void)
 
 { Dir *dirh;
   FILE *fp;
@@ -2727,7 +2724,7 @@ free(array);
 
 /***************************************************************/
 
-void PeerIntermittency()
+static void PeerIntermittency()
 
 { CF_DB *dbp;
   CF_DBC *dbcp;
@@ -2855,7 +2852,7 @@ DeleteItemList(hostlist);
 
 /*********************************************************************/
 
-void OpenFiles()
+static void OpenFiles()
 
 { int i;
  char filename[CF_BUFSIZE],name[CF_MAXVARSIZE];
@@ -2911,7 +2908,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
 
 /*********************************************************************/
 
-void CloseFiles()
+static void CloseFiles()
 
 { int i;
 
@@ -2928,7 +2925,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
 
 /*********************************************************************/
 
-void OpenMagnifyFiles()
+static void OpenMagnifyFiles()
 
 { int i;
   char filename[CF_BUFSIZE],name[CF_MAXVARSIZE];
@@ -2951,7 +2948,7 @@ for (i = 0; i < CF_OBSERVABLES; i++)
 
 /*********************************************************************/
 
-void CloseMagnifyFiles()
+static void CloseMagnifyFiles()
 
 { int i;
 

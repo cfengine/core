@@ -9,7 +9,7 @@ dnl ##########################################################################
 AC_PREREQ(2.59)
 
 AC_INIT
-AC_CONFIG_SRCDIR([src/cfpromises.c])
+AC_CONFIG_SRCDIR([src/cf-promises.c])
 AC_CANONICAL_TARGET
 
 define([svnversion], [r]esyscmd([sh -c "svnversion --no-newline || echo exported | tr -d '\n'" 2>/dev/null]))dnl

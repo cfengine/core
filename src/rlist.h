@@ -80,7 +80,7 @@ Rlist *IdempAppendRlist(Rlist **start,void *item, char type);
 Rlist *IdempPrependRScalar(Rlist **start,void *item, char type);
 Rlist *PrependRScalar(Rlist **start,void *item, char type);
 Rlist *PrependRlist(Rlist **start,void *item, char type);
-Rlist *AppendRlist(Rlist **start, void *item, char type);
+Rlist *AppendRlist(Rlist **start, const void *item, char type);
 Rlist *PrependRlist(Rlist **start,void *item, char type);
 Rlist *SplitStringAsRList(char *string,char sep);
 Rlist *SplitRegexAsRList(char *string,char *regex,int max,int purge);

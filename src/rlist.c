@@ -470,7 +470,7 @@ return PrependRlist(start,scalar,type);
 
 /*******************************************************************/
 
-Rlist *AppendRlist(Rlist **start, void *item, char type)
+Rlist *AppendRlist(Rlist **start, const void *item, char type)
 
    /* Allocates new memory for objects - careful, could leak!  */
     
@@ -527,7 +527,7 @@ else
    lp->next = rp;
    }
 
-rp->item = CopyRvalItem((Rval) { item, type }).item;
+rp->item = CopyRvalItem((Rval) { (void *)item, type }).item;
 rp->type = type;  /* scalar, builtin function */
 
 ThreadLock(cft_lock);

@@ -139,16 +139,16 @@ endif
 endif
 
 cf_promises_SOURCES =                                                   \
-        cfpromises.c
+        cf-promises.c
 
 cf_key_SOURCES =                                                        \
-        cfkey.c
+        cf-key.c
 
 cf_report_SOURCES =                                                     \
-        cfreport.c
+        cf-report.c
 
 cf_agent_SOURCES =                                                      \
-        agent.c                                                         \
+        cf-agent.c                                                      \
         verify_files.c                                                  \
         verify_storage.c                                                \
         verify_exec.c                                                   \
@@ -161,7 +161,7 @@ cf_agent_SOURCES =                                                      \
         agentdiagnostic.c
 
 cf_serverd_SOURCES =                                                    \
-        server.c                                                        \
+        cf-serverd.c                                                    \
         server_transform.c
 
 cf_monitord_SOURCES =                                                   \
@@ -175,7 +175,7 @@ cf_monitord_SOURCES =                                                   \
         mon_network.c                                                   \
         mon_processes.c                                                 \
         mon_temp.c                                                      \
-        monitor.c
+        cf-monitord.c
 
 cf_monitord_LDADD = libpromises.la
 if HAVE_NOVA
@@ -183,7 +183,7 @@ cf_monitord_LDADD += ../nova/src/libcfmonitord.la
 endif
 
 cf_execd_SOURCES =                                                      \
-        exec.c
+        cf-execd.c
 
 if HAVE_NOVA
 if MONGO
@@ -195,10 +195,10 @@ endif
 endif
 
 cf_runagent_SOURCES =                                                   \
-        runagent.c
+        cf-runagent.c
 
 cf_know_SOURCES =                                                       \
-        cfknow.c                                                        \
+        cf-know.c                                                       \
         manual.c manual.h 						\
         export_xml.c export_xml.h
 

@@ -119,7 +119,7 @@ AC_SUBST(projlibdir)
 AC_SUBST(projdatadir)
 
 dnl ######################################################################
-dnl Configure files layout
+dnl Enable debugging
 dnl ######################################################################
 
 AC_ARG_ENABLE(debug,

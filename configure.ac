@@ -118,6 +118,20 @@ AS_IF([test x"$enable_fhs" = xyes], [
 AC_SUBST(projlibdir)
 AC_SUBST(projdatadir)
 
+dnl ######################################################################
+dnl Configure files layout
+dnl ######################################################################
+
+AC_ARG_ENABLE(debug,
+              AS_HELP_STRING([--enable-debug], [Enable debugging]),
+              [debug=$enableval],
+              [debug=no])
+
+if test x"$debug" = x"yes"; then
+   CFLAGS="$CFLAGS -g3 -O0"
+else
+   CFLAGS="$CFLAGS -O2 -DNDEBUG"
+fi
 
 dnl ######################################################################
 dnl Checks for libraries.
@@ -1046,6 +1060,10 @@ AC_ARG_ENABLE(coverage, AS_HELP_STRING([--enable-coverage], [Enable code coverag
 if test "x$use_coverage" = "xyes"; then
   if test "$GCC" != "yes"; then
     AC_MSG_ERROR([GCC is required for --enable-coverage])
+  fi
+
+  if test "$debug" != "yes"; then
+    AC_MSG_ERROR([--enable-debug is required for --enable-coverage])
   fi
 
   AC_CHECK_PROG(LCOV, lcov, lcov)

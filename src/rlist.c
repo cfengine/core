@@ -32,8 +32,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static int IsRegexIn(Rlist *list,char *s);
-
 /*******************************************************************/
 
 char *ScalarValue(Rlist *rlist)
@@ -183,33 +181,6 @@ for (rp = list; rp != NULL; rp=rp->next)
       }
 
    if (strcmp(s,rp->item) == 0)
-      {
-      return true;
-      }
-   }
-
-return false;
-}
-
-/*******************************************************************/
-
-static int IsRegexIn(Rlist *list,char *regex)
-
-{ Rlist *rp;
-
-if (regex == NULL || list == NULL)
-   {
-   return false;
-   }
-
-for (rp = list; rp != NULL; rp=rp->next)
-   {
-   if (rp->type != CF_SCALAR)
-      {
-      continue;
-      }
-
-   if (FullTextMatch(regex,rp->item))
       {
       return true;
       }

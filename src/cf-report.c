@@ -44,7 +44,9 @@ static void ShowChecksums(void);
 static void ShowLocks (int active);
 static void ShowCurrentAudit(void);
 static char *Format(char *s,int width);
+#ifdef HAVE_QSORT
 static int CompareClasses(const void *a, const void *b);
+#endif
 static void ReadAverages(void);
 static void SummarizeAverages(void);
 static void WriteGraphFiles(void);
@@ -2046,6 +2048,7 @@ return buffer;
 
 /*************************************************************/
 
+#ifdef HAVE_QSORT
 static int CompareClasses(const void *a, const void *b)
 
 {
@@ -2054,6 +2057,7 @@ CEnt *db = (CEnt *) b;
 
 return (da->q < db->q) - (da->q > db->q);
 }
+#endif
 
 /****************************************************************************/
 

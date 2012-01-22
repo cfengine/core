@@ -32,7 +32,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static void ConvergePromiseValues(Promise *pp);
 static void ScanScalar(const char *scope, Rlist **los, Rlist **lol, const char *string, int level, Promise *pp);
 static int Epimenides(char *var, Rval rval, int level);
 
@@ -1224,98 +1223,6 @@ else
 DeleteRvalItem(rval);
 }
 
-/*********************************************************************/
-
-static void ConvergePromiseValues(Promise *pp)
-
-{ Constraint *cp;
-  Rlist *rp;
-  char expandbuf[CF_EXPANDSIZE];
-  FnCall *fp;
-
-switch (pp->promisee.rtype)
-   {
-   case CF_SCALAR:
-       
-       if (IsCf3VarString((char *)pp->promisee.item))
-          {             
-          ExpandScalar(pp->promisee.item,expandbuf);
-          if (strcmp(pp->promisee.item,expandbuf) != 0)
-             {
-             free(pp->promisee.item);
-             pp->promisee.item = xstrdup(expandbuf);
-             }
-          }
-       break;
-       
-   case CF_LIST:
-       
-       for (rp = (Rlist *)pp->promisee.item; rp != NULL; rp=rp->next)
-          {
-          if (IsCf3VarString((char *)rp->item))
-             {             
-             ExpandScalar(rp->item,expandbuf);
-             if (strcmp(rp->item,expandbuf) != 0)
-                {
-                free(rp->item);
-                rp->item = xstrdup(expandbuf);
-                }
-             }          
-          }
-       break;   
-   }
- 
-for (cp = pp->conlist; cp != NULL; cp=cp->next)
-   {
-   switch (cp->rval.rtype)
-      {
-      case CF_SCALAR:
-
-          if (IsCf3VarString((char *)cp->rval.item))
-             {             
-             ExpandScalar(cp->rval.item, expandbuf);
-             if (strcmp(cp->rval.item, expandbuf) != 0)
-                {
-                free(cp->rval.item);
-                cp->rval.item = xstrdup(expandbuf);
-                }
-             }
-          break;
-
-      case CF_LIST:
-
-          for (rp = (Rlist *)cp->rval.item; rp != NULL; rp=rp->next)
-             {
-             if (IsCf3VarString((char *)rp->item))
-                {             
-                ExpandScalar(rp->item,expandbuf);
-                if (strcmp(rp->item,expandbuf) != 0)
-                   {
-                   free(rp->item);
-                   rp->item = xstrdup(expandbuf);
-                   }
-                }          
-             }
-          break;
-
-      case CF_FNCALL:
-
-       fp = (FnCall *)cp->rval.item;
-       for (rp = fp->args; rp != NULL; rp=rp->next)
-          {
-          if (rp->type == CF_SCALAR && IsCf3VarString(rp->item))
-             {
-             ExpandPrivateScalar(CONTEXTID,(char *)rp->item,expandbuf);
-             free(rp->item);
-             rp->item = xstrdup(expandbuf);
-             }
-          }
-
-          break;
-      }
-   }
-}
-      
 /*********************************************************************/
 /* Levels                                                            */
 /*********************************************************************/

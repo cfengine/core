@@ -3863,7 +3863,6 @@ for (sp = file_buffer; hcount < maxent && *sp != '\0'; sp++)
       {
       char this_rval[CF_MAXVARSIZE];
       long ival;
-      double rval;
 
       switch (type)
          {
@@ -3877,7 +3876,7 @@ for (sp = file_buffer; hcount < maxent && *sp != '\0'; sp++)
              break;
 
          case cf_real:
-             rval = Str2Int(rp->item);
+             Str2Double(rp->item); /* Verify syntax */
              sscanf(rp->item,"%255s",this_rval);
              break;
 

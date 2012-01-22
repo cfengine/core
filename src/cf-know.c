@@ -126,7 +126,7 @@ const  struct option OPTIONS[] =
       {
       { "help",no_argument,0,'h' },
       { "build",no_argument,0,'b'},
-      { "debug",optional_argument,0,'d' },
+      { "debug",no_argument,0,'d' },
       { "verbose",no_argument,0,'v' },
       { "version",no_argument,0,'V' },
       { "file",required_argument,0,'f' },
@@ -148,7 +148,7 @@ const char *HINTS[] =
       {
       "Print the help message",
       "Build and store topic map in the CFDB",
-      "Set debugging level 0,1,2,3",
+      "Enable debugging output",
       "Output verbose information about the behaviour of the agent",
       "Output the version of the software",
       "Specify an alternative input file than the default",

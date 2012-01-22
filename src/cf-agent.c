@@ -97,7 +97,7 @@ const struct option OPTIONS[15] =
       {
       { "bootstrap",no_argument,0,'B' },
       { "bundlesequence",required_argument,0,'b' },
-      { "debug",optional_argument,0,'d' },
+      { "debug",no_argument,0,'d' },
       { "define",required_argument,0,'D' },
       { "diagnostic",optional_argument,0,'x'},
       { "dry-run",no_argument,0,'n'},
@@ -116,7 +116,7 @@ const char *HINTS[15] =
       {
       "Bootstrap/repair a cfengine configuration from failsafe file in the WORKDIR else in current directory",
       "Set or override bundlesequence from command line",
-      "Set debugging level 0,1,2",
+      "Enable debugging output",
       "Define a list of comma separated classes to be defined at the start of execution",
       "Do internal diagnostic (developers only) level in optional argument",
       "All talk and no action mode - make no changes, only inform of promises not kept",

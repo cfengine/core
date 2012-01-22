@@ -129,7 +129,7 @@ const char *ID = "The server daemon provides two services: it acts as a\n"
 const struct option OPTIONS[15] =
       {
       { "help",no_argument,0,'h' },
-      { "debug",optional_argument,0,'d' },
+      { "debug",no_argument,0,'d' },
       { "verbose",no_argument,0,'v' },
       { "version",no_argument,0,'V' },
       { "file",required_argument,0,'f'},
@@ -146,7 +146,7 @@ const struct option OPTIONS[15] =
 const char *HINTS[15] =
       {
       "Print the help message",
-      "Set debugging level 0,1,2,3",
+      "Enable debugging output",
       "Output verbose information about the behaviour of the agent",
       "Output the version of the software",
       "Specify an alternative input file than the default",

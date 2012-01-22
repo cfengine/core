@@ -47,7 +47,7 @@ const struct option OPTIONS[] =
       {
       { "help",no_argument,0,'h' },
       { "bundlesequence",required_argument,0,'b' },
-      { "debug",optional_argument,0,'d' },
+      { "debug",no_argument,0,'d' },
       { "verbose",no_argument,0,'v' },
       { "dry-run",no_argument,0,'n'},
       { "version",no_argument,0,'V' },
@@ -68,7 +68,7 @@ const char *HINTS[] =
       {
       "Print the help message",
       "Use the specified bundlesequence for verification",
-      "Set debugging level 0,1,2,3",
+      "Enable debugging output",
       "Output verbose information about the behaviour of the agent",
       "All talk and no action mode - make no changes, only inform of promises not kept",
       "Output the version of the software",

@@ -48,7 +48,7 @@ const char *ID = "The cfengine's generator makes key pairs for remote authentica
 const struct option OPTIONS[17] =
       {
       { "help",no_argument,0,'h' },
-      { "debug",optional_argument,0,'d' },
+      { "debug",no_argument,0,'d' },
       { "verbose",no_argument,0,'v' },
       { "version",no_argument,0,'V' },
       { "output-file",required_argument,0,'f'},
@@ -60,7 +60,7 @@ const struct option OPTIONS[17] =
 const char *HINTS[17] =
       {
       "Print the help message",
-      "Set debugging level 0,1,2,3",
+      "Enable debugging output",
       "Output verbose information about the behaviour of the agent",
       "Output the version of the software",
       "Specify an alternative output file than the default (localhost)",

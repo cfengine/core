@@ -194,7 +194,7 @@ YieldCurrentLock(thislock);
 
 static void DoVerifyServices(Attributes a,Promise *pp)
 
-{ FnCall *default_bundle;
+{ FnCall *default_bundle = NULL;
   Rlist *args = NULL;
 
 // Need to set up the default service pack to eliminate syntax
@@ -238,7 +238,7 @@ switch(a.service.service_policy)
           break;
    }
 
-if (GetBundle(default_bundle->name,"agent") == NULL)
+if (default_bundle && GetBundle(default_bundle->name,"agent") == NULL)
    {
    cfPS(cf_inform,CF_FAIL,"",pp,a," !! Service %s could not be invoked successfully\n",pp->promiser);
    }

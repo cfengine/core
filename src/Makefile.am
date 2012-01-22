@@ -121,6 +121,7 @@ libpromises_la_SOURCES =                                                \
         writer.c writer.h                                               \
         unix.c                                                          \
         json.c json.h                                                   \
+        csv_writer.c csv_writer.h                                       \
         xml_writer.c xml_writer.h                                       \
         show.h                                                          \
         parser.c parser.h                                               \

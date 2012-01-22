@@ -10,6 +10,7 @@ check_PROGRAMS = \
 	alphalist_test \
 	arg_split_test \
 	assoc_test \
+	csv_writer_test \
 	item_test \
 	rlist_test \
 	domainname_test \
@@ -24,6 +25,9 @@ check_PROGRAMS = \
 	xml_writer_test
 
 TESTS = $(check_PROGRAMS)
+
+csv_writer_test_SOURCES = csv_writer_test.c ../../src/csv_writer.c ../../src/writer.c
+csv_writer_test_LDADD = libtest.la
 
 rlist_test_SOURCES = rlist_test.c \
 	../../src/rlist.c ../../src/writer.c

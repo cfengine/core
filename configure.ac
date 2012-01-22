@@ -1,6 +1,6 @@
 dnl ##########################################################################
 dnl #
-dnl # BUILD CFENGINE
+dnl # Build CFEngine
 dnl #
 dnl # Run ./autogen.sh to build configure script
 dnl #
@@ -262,7 +262,7 @@ if test $WITH_QDBM = 0 -a $WITH_TOKYO = 0 -a $WITH_SQLITE3 = 0; then
 
   if test "x$BERKELEYDB_DIR" = "xno" ; then
     AC_MSG_RESULT( )
-    AC_MSG_ERROR(This release of cfengine requires a version of BerkeleyDB 4.4 or later)
+    AC_MSG_ERROR(This release of CFEngine requires a version of BerkeleyDB 4.4 or later)
   else
     if test "x$BERKELEYDB_DIR" = "xdefault" ; then
         for v in BerkeleyDB.4.2 BerkeleyDB.4.3 BerkeleyDB.4.4 BerkeleyDB.4.5 BerkeleyDB.4.6 BerkeleyDB.4.7 BerkeleyDB.4.8; do
@@ -1026,8 +1026,8 @@ dnl #####################################################################
 
 AC_PATH_PROG(HOSTNAME, hostname, "", $PATH)
 
-AC_DEFINE_UNQUOTED(AUTOCONF_HOSTNAME, "`$HOSTNAME`", [Special Cfengine symbol])
-AC_DEFINE_UNQUOTED(AUTOCONF_SYSNAME, "$target_os", [Speial Cfengine symbol])
+AC_DEFINE_UNQUOTED(AUTOCONF_HOSTNAME, "`$HOSTNAME`", [Special CFEngine symbol])
+AC_DEFINE_UNQUOTED(AUTOCONF_SYSNAME, "$target_os", [Speial CFEngine symbol])
 
 
 dnl #####################################################################
@@ -1150,5 +1150,5 @@ m4_indir(incstart[]incend, [galaxy/output.m4])
 
 AC_OUTPUT
 
-AC_MSG_RESULT(DONE: Configuration done. Run make/gmake to build cfengine.)
+AC_MSG_RESULT(DONE: Configuration done. Run make/gmake to build CFEngine.)
 

@@ -42,7 +42,9 @@ static void VerifyOccurrencePromises(Promise *pp);
 static void VerifyInferencePromise(Promise *pp);
 static void WriteKMDB(void);
 static void GenerateManual(void);
+#ifdef HAVE_CONSTELLATION
 static void CfGenerateStories(char *query,enum storytype type);
+#endif
 static void VerifyOccurrenceGroup(char *file,Promise *pp);
 static void CfGenerateTestData(int count);
 static void CfRemoveTestData(void);
@@ -646,12 +648,12 @@ if (strcmp("reports",pp->agentsubtype) == 0)
 
 /*********************************************************************/
 
+#ifdef HAVE_CONSTELLATION
 void CfGenerateStories(char *query,enum storytype type)
 {
-#ifdef HAVE_CONSTELLATION
 Constellation_GenerateStoriesCmdLine(query,type);
-#endif
 }
+#endif
 
 /*********************************************************************/
 

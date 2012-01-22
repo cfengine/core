@@ -29,18 +29,16 @@
 /*                                                                           */
 /*****************************************************************************/
 
-#include "cf3.defs.h"
+#include "generic_agent.h"
 #include "cf3.extern.h"
 
-int main (int argc,char *argv[]);
-int HailServer(char *host,Attributes a,Promise *pp);
-void ThisAgentInit(void);
-int ParseHostname(char *hostname,char *new_hostname);
-void SendClassData(AgentConnection *conn);
-Promise *MakeDefaultRunAgentPromise(void);
-void HailExec(AgentConnection *conn,char *peer,char *recvbuffer,char *sendbuffer);
-FILE *NewStream(char *name);
-void DeleteStream(FILE *fp);
+static int HailServer(char *host,Attributes a,Promise *pp);
+static int ParseHostname(char *hostname,char *new_hostname);
+static void SendClassData(AgentConnection *conn);
+static Promise *MakeDefaultRunAgentPromise(void);
+static void HailExec(AgentConnection *conn,char *peer,char *recvbuffer,char *sendbuffer);
+static FILE *NewStream(char *name);
+static void DeleteStream(FILE *fp);
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -332,7 +330,7 @@ if (strstr(REMOTE_AGENT_OPTIONS,"--file")||strstr(REMOTE_AGENT_OPTIONS,"-f"))
 
 /********************************************************************/
 
-int HailServer(char *host,Attributes a,Promise *pp)
+static int HailServer(char *host,Attributes a,Promise *pp)
 
 { AgentConnection *conn;
  char sendbuffer[CF_BUFSIZE],recvbuffer[CF_BUFSIZE],peer[CF_MAXVARSIZE],ipv4[CF_MAXVARSIZE],digest[CF_MAXVARSIZE],user[CF_SMALLBUF];
@@ -580,7 +578,7 @@ if (GetVariable("control_common", CFG_CONTROLBODY[cfg_lastseenexpireafter].lval,
 
 /********************************************************************/
 
-Promise *MakeDefaultRunAgentPromise()
+static Promise *MakeDefaultRunAgentPromise()
 
 { Promise *pp;
   
@@ -598,7 +596,7 @@ return pp;
 
 /********************************************************************/
 
-int ParseHostname(char *name,char *hostname)
+static int ParseHostname(char *name,char *hostname)
 
 { int port = ntohs(SHORT_CFENGINEPORT);
 
@@ -616,7 +614,7 @@ return(port);
 
 /********************************************************************/
 
-void SendClassData(AgentConnection *conn)
+static void SendClassData(AgentConnection *conn)
 
 { Rlist *classes,*rp;
   char sendbuffer[CF_BUFSIZE];
@@ -643,7 +641,7 @@ if (SendTransaction(conn->sd,sendbuffer,0,CF_DONE) == -1)
 
 /********************************************************************/
 
-void HailExec(AgentConnection *conn,char *peer,char *recvbuffer,char *sendbuffer)
+static void HailExec(AgentConnection *conn,char *peer,char *recvbuffer,char *sendbuffer)
 
 { FILE *fp = stdout;
   char *sp;
@@ -716,7 +714,7 @@ DeleteStream(fp);
 /* Level                                                            */
 /********************************************************************/
 
-FILE *NewStream(char *name)
+static FILE *NewStream(char *name)
 
 { FILE *fp;
   char filename[CF_BUFSIZE];
@@ -751,7 +749,7 @@ return fp;
 
 /********************************************************************/
 
-void DeleteStream(FILE *fp)
+static void DeleteStream(FILE *fp)
 
 {
 if (fp != stdout)

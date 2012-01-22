@@ -83,6 +83,10 @@ static int AuthenticationDialogue (ServerConnectionState *conn,char *buffer, int
 static int SafeOpen (char *filename);
 static int OptionFound(char *args, char *pos, char *word);
 
+#if !defined(HAVE_GETADDRINFO)
+static in_addr_t GetInetAddr(char *host);
+#endif
+
 static void StartServer (int argc, char **argv, GenericAgentConfig config);
 
 char CFRUNCOMMAND[CF_BUFSIZE];
@@ -3875,7 +3879,40 @@ memcpy(out3,sp,len3);
 out3[len3]='\0';
    
 return (len1 + len2 + len3 + 2);
-}  
-   
-/* EOF */
+}
+
+
+/***************************************************************/
+
+#if !defined(HAVE_GETADDRINFO)
+static in_addr_t GetInetAddr(char *host)
+{
+struct in_addr addr;
+struct hostent *hp;
+
+addr.s_addr = inet_addr(host);
+
+if ((addr.s_addr == INADDR_NONE) || (addr.s_addr == 0))
+   {
+   if ((hp = gethostbyname(host)) == 0)
+      {
+      FatalError("host not found: %s",host);
+      }
+
+   if (hp->h_addrtype != AF_INET)
+      {
+      FatalError("unexpected address family: %d\n",hp->h_addrtype);
+      }
+
+   if (hp->h_length != sizeof(addr))
+      {
+      FatalError("unexpected address length %d\n",hp->h_length);
+      }
+
+   memcpy((char *) &addr, hp->h_addr, hp->h_length);
+   }
+
+return (addr.s_addr);
+}
+#endif
 

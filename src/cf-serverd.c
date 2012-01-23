@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -20,14 +20,7 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
-
-/*****************************************************************************/
-/*                                                                           */
-/* File: server.c                                                            */
-/*                                                                           */
-/*****************************************************************************/
 
 #include "generic_agent.h"
 #include "cf3.server.h"
@@ -125,7 +118,7 @@ const char *ID = "The server daemon provides two services: it acts as a\n"
                  "authorized cf-runagent to start start a cf-agent process\n"
                  "and set certain additional classes with role-based access\n"
                  "control.\n";
- 
+
 const struct option OPTIONS[15] =
       {
       { "help",no_argument,0,'h' },
@@ -223,7 +216,7 @@ GenericAgentConfig CheckOpts(int argc,char **argv)
   int optindex = 0;
   int c;
   GenericAgentConfig config = GenericAgentDefaultConfig(cf_server);
-  
+
 while ((c=getopt_long(argc,argv,"d:vIKf:D:N:VSxLFM",OPTIONS,&optindex)) != EOF)
   {
   switch ((char) c)
@@ -246,22 +239,22 @@ while ((c=getopt_long(argc,argv,"d:vIKf:D:N:VSxLFM",OPTIONS,&optindex)) != EOF)
 
       case 'K': IGNORELOCK = true;
           break;
-                    
+
       case 'D': NewClassesFromString(optarg);
           break;
-          
+
       case 'N': NegateClassesFromString(optarg);
           break;
-          
+
       case 'I':
           INFORM = true;
           break;
-          
+
       case 'v':
           VERBOSE = true;
           NO_FORK = true;
           break;
-          
+
       case 'F': NO_FORK = true;
          break;
 
@@ -272,7 +265,7 @@ while ((c=getopt_long(argc,argv,"d:vIKf:D:N:VSxLFM",OPTIONS,&optindex)) != EOF)
 
       case 'V': PrintVersionBanner("cf-serverd");
           exit(0);
-          
+
       case 'h': Syntax("cf-serverd - cfengine's server agent",OPTIONS,HINTS,ID);
           exit(0);
 
@@ -281,10 +274,10 @@ while ((c=getopt_long(argc,argv,"d:vIKf:D:N:VSxLFM",OPTIONS,&optindex)) != EOF)
 
       case 'x': SelfDiagnostic();
           exit(0);
-          
+
       default:  Syntax("cf-serverd - cfengine's server agent",OPTIONS,HINTS,ID);
           exit(1);
-          
+
       }
   }
 
@@ -347,7 +340,7 @@ signal(SIGPIPE,SIG_IGN);
 signal(SIGCHLD,SIG_IGN);
 signal(SIGUSR1,HandleSignals);
 signal(SIGUSR2,HandleSignals);
- 
+
 if (listen(sd,QUEUESIZE) == -1)
    {
    CfOut(cf_error,"listen","listen failed");
@@ -386,16 +379,16 @@ if (!NO_FORK)
    {
    ActAsDaemon(sd);
    }
-   
+
 #endif  /* NOT MINGW */
 
 WritePID("cf-serverd.pid");
 
-/* Andrew Stribblehill <ads@debian.org> -- close sd on exec */ 
+/* Andrew Stribblehill <ads@debian.org> -- close sd on exec */
 #ifndef MINGW
 fcntl(sd, F_SETFD, FD_CLOEXEC);
 #endif
- 
+
 while (true)
    {
    if (ThreadLock(cft_server_children))
@@ -406,15 +399,15 @@ while (true)
          }
       ThreadUnlock(cft_server_children);
       }
-   
+
    FD_ZERO(&rset);
    FD_SET(sd,&rset);
-   
+
    timeout.tv_sec = 10;  /* Set a 10 second timeout for select */
    timeout.tv_usec = 0;
 
    CfDebug(" -> Waiting at incoming select...\n");
-   
+
    ret_val = select((sd+1),&rset,NULL,NULL,&timeout);
 
    if (ret_val == -1)   /* Error received from call to select */
@@ -435,37 +428,37 @@ while (true)
       }
 
    CfOut(cf_verbose,""," -> Accepting a connection\n");
-   
+
    if ((sd_reply = accept(sd,(struct sockaddr *)&cin,&addrlen)) != -1)
       {
       memset(ipaddr,0,CF_MAXVARSIZE);
       ThreadLock(cft_getaddr);
       snprintf(ipaddr,CF_MAXVARSIZE-1,"%s",sockaddr_ntop((struct sockaddr *)&cin));
       ThreadUnlock(cft_getaddr);
-      
+
       CfDebug("Obtained IP address of %s on socket %d from accept\n",ipaddr,sd_reply);
-      
+
       if (NONATTACKERLIST && !IsMatchItemIn(NONATTACKERLIST,MapAddress(ipaddr)))
          {
          CfOut(cf_error,"","Not allowing connection from non-authorized IP %s\n",ipaddr);
          cf_closesocket(sd_reply);
          continue;
          }
-      
+
       if (IsMatchItemIn(ATTACKERLIST,MapAddress(ipaddr)))
          {
          CfOut(cf_error,"","Denying connection from non-authorized IP %s\n",ipaddr);
          cf_closesocket(sd_reply);
          continue;
-         }      
-      
+         }
+
       if ((now = time((time_t *)NULL)) == -1)
          {
          now = 0;
          }
-      
+
       PurgeOldConnections(&CONNECTIONLIST,now);
-      
+
       if (!IsMatchItemIn(MULTICONNLIST,MapAddress(ipaddr)))
          {
          if (IsItemIn(CONNECTIONLIST,MapAddress(ipaddr)))
@@ -475,7 +468,7 @@ while (true)
             continue;
             }
          }
-      
+
       if (LOGCONNS)
          {
          CfOut(cf_log,"","Accepting connection from \"%s\"\n",ipaddr);
@@ -484,7 +477,7 @@ while (true)
          {
          CfOut(cf_inform,"","Accepting connection from \"%s\"\n",ipaddr);
          }
-      
+
       snprintf(intime,63,"%d",(int)now);
 
       if (!ThreadLock(cft_count))
@@ -493,12 +486,12 @@ while (true)
          }
 
       PrependItem(&CONNECTIONLIST,MapAddress(ipaddr),intime);
-      
+
       if (!ThreadUnlock(cft_count))
          {
          return;
          }
-      
+
       SpawnConnection(sd_reply,ipaddr);
       }
    }
@@ -522,12 +515,12 @@ static int OpenReceiverChannel()
 #else
     struct sockaddr_in sin;
 #endif
-    
+
 cflinger.l_onoff = 1;
 cflinger.l_linger = 60;
 
 #if defined(HAVE_GETADDRINFO)
-  
+
 memset(&query,0,sizeof(struct addrinfo));
 
 query.ai_flags = AI_PASSIVE;
@@ -545,11 +538,11 @@ if (BINDINTERFACE[0] != '\0' )
 if (getaddrinfo(ptr,STR_CFENGINEPORT,&query,&response) != 0)
    {
    CfOut(cf_error,"getaddrinfo","DNS/service lookup failure");
-   return -1;   
+   return -1;
    }
 
 sd = -1;
- 
+
 for (ap = response ; ap != NULL; ap=ap->ai_next)
    {
    if ((sd = socket(ap->ai_family,ap->ai_socktype,ap->ai_protocol)) == -1)
@@ -562,7 +555,7 @@ for (ap = response ; ap != NULL; ap=ap->ai_next)
       CfOut(cf_error,"setsockopt","Socket options were not accepted");
       exit(1);
       }
-   
+
    if (setsockopt(sd, SOL_SOCKET, SO_LINGER,(char *)&cflinger,sizeof (struct linger)) == -1)
       {
       CfOut(cf_error,"setsockopt","Socket options were not accepted");
@@ -577,7 +570,7 @@ for (ap = response ; ap != NULL; ap=ap->ai_next)
          printf("Bound to address %s on %s=%d\n",sockaddr_ntop(ap->ai_addr),CLASSTEXT[VSYSTEMHARDCLASS],VSYSTEMHARDCLASS);
          ThreadUnlock(cft_getaddr);
          }
-      
+
       if (VSYSTEMHARDCLASS == mingw || VSYSTEMHARDCLASS == openbsd || VSYSTEMHARDCLASS == freebsd || VSYSTEMHARDCLASS == netbsd || VSYSTEMHARDCLASS == dragonfly)
          {
          continue;  /* *bsd doesn't map ipv6 addresses */
@@ -587,7 +580,7 @@ for (ap = response ; ap != NULL; ap=ap->ai_next)
          break;
          }
       }
-   
+
    CfOut(cf_error,"bind","Could not bind server address");
    cf_closesocket(sd);
    sd = -1;
@@ -603,8 +596,8 @@ if (response != NULL)
    {
    freeaddrinfo(response);
    }
-#else 
- 
+#else
+
 memset(&sin,0,sizeof(sin));
 
 if (BINDINTERFACE[0] != '\0' )
@@ -617,7 +610,7 @@ if (BINDINTERFACE[0] != '\0' )
    }
 
 sin.sin_port = (unsigned short)SHORT_CFENGINEPORT;
-sin.sin_family = AF_INET; 
+sin.sin_family = AF_INET;
 
 if ((sd = socket(AF_INET,SOCK_STREAM,0)) == -1)
    {
@@ -637,14 +630,14 @@ if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (char *) &yes, sizeof (int)) == -1)
    exit (1);
    }
 
-if (bind(sd,(struct sockaddr *)&sin,sizeof(sin)) == -1) 
+if (bind(sd,(struct sockaddr *)&sin,sizeof(sin)) == -1)
    {
    CfOut(cf_error,"bind","Couldn't bind to socket");
    exit(1);
    }
 
 #endif
- 
+
 return sd;
 }
 
@@ -707,7 +700,7 @@ conn = NewConn(sd_reply);
 strncpy(conn->ipaddr,ipaddr,CF_MAX_IP_LEN-1);
 
 CfOut(cf_verbose,"","New connection...(from %s:sd %d)\n",conn->ipaddr,sd_reply);
- 
+
 #if defined HAVE_LIBPTHREAD || defined BUILTIN_GCC_THREAD
 
 CfOut(cf_verbose,"","Spawning new thread...\n");
@@ -718,7 +711,7 @@ pthread_attr_setdetachstate(&PTHREADDEFAULTS,PTHREAD_CREATE_DETACHED);
 #ifdef HAVE_PTHREAD_ATTR_SETSTACKSIZE
 pthread_attr_setstacksize(&PTHREADDEFAULTS,(size_t)1024*1024);
 #endif
- 
+
 if (pthread_create(&tid,&PTHREADDEFAULTS,(void *)HandleConnection,(void *)conn) != 0)
    {
    CfOut(cf_error,"create","pthread_create failed");
@@ -734,7 +727,7 @@ pthread_attr_destroy(&PTHREADDEFAULTS);
 CfOut(cf_verbose,"","Single threaded...\n");
 
 HandleConnection(conn);
- 
+
 #endif
 }
 
@@ -768,15 +761,15 @@ CfDebug("Checking file updates on %s (%jd/%jd)\n",filename, (intmax_t)newstat.st
 if (NewPromiseProposals())
    {
    CfOut(cf_verbose,""," -> New promises detected...\n");
-  
+
    ok = CheckPromises(cf_server);
 
    if (ok)
       {
       CfOut(cf_inform,"","Rereading config files %s..\n",filename);
-      
+
       /* Free & reload -- lock this to avoid access errors during reload */
-      
+
       DeleteAlphaList(&VHEAP);
       InitAlphaList(&VHEAP);
       DeleteAlphaList(&VADDCLASSES);
@@ -792,14 +785,14 @@ if (NewPromiseProposals())
       DeleteAuthList(VADMIT);
       DeleteAuthList(VDENY);
       //DeleteRlist(VINPUTLIST); This is just a pointer, cannot free it
-      
+
       VSYSTEMHARDCLASS = unused1;
-      
+
       DeleteAllScope();
-      
+
       strcpy(VDOMAIN,"undefined.domain");
       POLICY_SERVER[0] = '\0';
-      
+
       VADMIT = VADMITTOP = NULL;
       VDENY  = VDENYTOP  = NULL;
       VNEGHEAP = NULL;
@@ -810,14 +803,14 @@ if (NewPromiseProposals())
       NONATTACKERLIST = NULL;
       MULTICONNLIST = NULL;
       VINPUTLIST = NULL;
-      
+
       DeleteBundles(BUNDLES);
       DeleteBodies(BODIES);
-      
+
       BUNDLES = NULL;
       BODIES  = NULL;
       ERRORCOUNT = 0;
-      
+
       NewScope("sys");
 
       SetPolicyServer(POLICY_SERVER);
@@ -846,7 +839,7 @@ if (NewPromiseProposals())
       ReadPromises(cf_server, CF_SERVERC, config);
       KeepPromises(config);
       Summarize();
-      
+
       }
    else
       {
@@ -883,7 +876,7 @@ static void *HandleConnection(ServerConnectionState *conn)
  sigset_t sigmask;
 
 sigemptyset(&sigmask);
-pthread_sigmask(SIG_BLOCK,&sigmask,NULL); 
+pthread_sigmask(SIG_BLOCK,&sigmask,NULL);
 #endif
 #endif
 
@@ -904,7 +897,7 @@ ACTIVE_THREADS++;
 if (ACTIVE_THREADS >= CFD_MAXPROCESSES)
    {
    ACTIVE_THREADS--;
-   
+
    if (TRIES++ > MAXTRIES)  /* When to say we're hung / apoptosis threshold */
       {
       CfOut(cf_error,"","Server seems to be paralyzed. DOS attack? Committing apoptosis...");
@@ -929,7 +922,7 @@ else
 TRIES = 0;   /* As long as there is activity, we're not stuck */
 
 DisableSendDelays(conn->sd_reply);
- 
+
 while (BusyWithConnection(conn))
    {
    }
@@ -949,7 +942,7 @@ if (!ThreadUnlock(cft_server_children))
    }
 
 DeleteConn(conn);
-return NULL; 
+return NULL;
 }
 
 /*********************************************************************/
@@ -961,7 +954,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
   /* and extract the information from the message */
 
 { time_t tloc, trem = 0;
-  char recvbuffer[CF_BUFSIZE+CF_BUFEXT], sendbuffer[CF_BUFSIZE],check[CF_BUFSIZE];  
+  char recvbuffer[CF_BUFSIZE+CF_BUFEXT], sendbuffer[CF_BUFSIZE],check[CF_BUFSIZE];
   char filename[CF_BUFSIZE],buffer[CF_BUFSIZE],args[CF_BUFSIZE],out[CF_BUFSIZE];
   long time_no_see = 0;
   unsigned int len=0;
@@ -982,7 +975,7 @@ if (strlen(recvbuffer) == 0)
    CfDebug("cf-serverd terminating NULL transmission!\n");
    return false;
    }
-  
+
 CfDebug("Received: [%s] on socket %d\n",recvbuffer,conn->sd_reply);
 
 switch (GetCommand(recvbuffer))
@@ -990,42 +983,42 @@ switch (GetCommand(recvbuffer))
    case cfd_exec:
        memset(args,0,CF_BUFSIZE);
        sscanf(recvbuffer,"EXEC %255[^\n]",args);
-       
+
        if (!conn->id_verified)
           {
           CfOut(cf_inform,"","Server refusal due to incorrect identity\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return false;
           }
-       
+
        if (!AllowedUser(conn->username))
           {
           CfOut(cf_inform,"","Server refusal due to non-allowed user\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return false;
           }
-       
+
        if (!conn->rsa_auth)
           {
           CfOut(cf_inform,"","Server refusal due to no RSA authentication\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return false;
           }
-       
+
        if (!AccessControl(GetArg0(CFRUNCOMMAND),conn,false,VADMIT,VDENY))
           {
           CfOut(cf_inform,"","Server refusal due to denied access to requested object\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
-          return false;   
+          return false;
           }
-       
+
        if (!MatchClasses(conn))
           {
           CfOut(cf_inform,"","Server refusal due to failed class/context match\n");
           Terminate(conn->sd_reply);
           return false;
           }
-       
+
        DoExec(conn,sendbuffer,args);
        Terminate(conn->sd_reply);
        return false;
@@ -1041,80 +1034,80 @@ switch (GetCommand(recvbuffer))
        snprintf(conn->output,CF_BUFSIZE,"OK: %s",Version());
        SendTransaction(conn->sd_reply,conn->output,0,CF_DONE);
        return conn->id_verified;
-       
+
    case cfd_cauth:
 
        conn->id_verified = VerifyConnection(conn,(char *)(recvbuffer+strlen("CAUTH ")));
-       
+
        if (! conn->id_verified)
           {
           CfOut(cf_inform,"","ID not verified\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           }
-       
+
        return conn->id_verified; /* are we finished yet ? */
-       
-       
+
+
    case cfd_sauth:   /* This is where key agreement takes place */
-       
+
        if (! conn->id_verified)
           {
           CfOut(cf_inform,"","ID not verified\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return false;
           }
-       
+
        if (!AuthenticationDialogue(conn,recvbuffer,received))
           {
           CfOut(cf_inform,"","Auth dialogue error\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return false;
           }
-       
+
        return true;
-       
+
    case cfd_get:
 
        memset(filename,0,CF_BUFSIZE);
        sscanf(recvbuffer,"GET %d %[^\n]",&(get_args.buf_size),filename);
-       
+
        if (get_args.buf_size < 0 || get_args.buf_size > CF_BUFSIZE)
           {
           CfOut(cf_inform,"","GET buffer out of bounds\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return false;
           }
-       
+
        if (! conn->id_verified)
           {
           CfOut(cf_inform,"","ID not verified\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return false;
           }
-       
+
        if (!AccessControl(filename,conn,false,VADMIT,VDENY))
           {
           CfOut(cf_inform,"","Access denied to get object\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
-          return true;   
+          return true;
           }
-       
+
        memset(sendbuffer,0,CF_BUFSIZE);
-       
+
        if (get_args.buf_size >= CF_BUFSIZE)
           {
           get_args.buf_size = 2048;
           }
-       
+
        get_args.connect = conn;
        get_args.encrypt = false;
        get_args.replybuff = sendbuffer;
        get_args.replyfile = filename;
-       
+
        CfGetFile(&get_args);
-       
+
        return true;
-       
+
    case cfd_sget:
 
        memset(buffer,0,CF_BUFSIZE);
@@ -1130,50 +1123,50 @@ switch (GetCommand(recvbuffer))
        plainlen = DecryptString(conn->encryption_type,recvbuffer+CF_PROTO_OFFSET,buffer,conn->session_key,len);
 
        cfscanf(buffer,strlen("GET"),strlen("dummykey"),check,sendbuffer,filename);
-       
+
        if (strcmp(check,"GET") != 0)
           {
           CfOut(cf_inform,"","SGET/GET problem\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return true;
           }
-       
+
        if (get_args.buf_size < 0 || get_args.buf_size > 8192)
           {
           CfOut(cf_inform,"","SGET bounding error\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return false;
           }
-       
+
        if (get_args.buf_size >= CF_BUFSIZE)
           {
           get_args.buf_size = 2048;
           }
-       
+
        CfDebug("Confirm decryption, and thus validity of caller\n");
        CfDebug("SGET %s with blocksize %d\n",filename,get_args.buf_size);
-       
+
        if (! conn->id_verified)
           {
           CfOut(cf_inform,"","ID not verified\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return false;
           }
-       
+
        if (!AccessControl(filename,conn,true,VADMIT,VDENY))
           {
           CfOut(cf_inform,"","Access control error\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
-          return false;   
+          return false;
           }
 
        memset(sendbuffer,0,CF_BUFSIZE);
-       
+
        get_args.connect = conn;
        get_args.encrypt = true;
        get_args.replybuff = sendbuffer;
        get_args.replyfile = filename;
-       
+
        CfEncryptGetFile(&get_args);
        return true;
 
@@ -1197,7 +1190,7 @@ switch (GetCommand(recvbuffer))
           }
 
        memcpy(out,recvbuffer+CF_PROTO_OFFSET,len);
-       
+
        plainlen = DecryptString(conn->encryption_type,out,recvbuffer,conn->session_key,len);
 
        if (strncmp(recvbuffer,"OPENDIR",7) !=0)
@@ -1209,46 +1202,46 @@ switch (GetCommand(recvbuffer))
 
        memset(filename,0,CF_BUFSIZE);
        sscanf(recvbuffer,"OPENDIR %[^\n]",filename);
-       
+
        if (! conn->id_verified)
           {
           CfOut(cf_inform,"","ID not verified\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return false;
           }
-       
+
        if (!AccessControl(filename,conn,true,VADMIT,VDENY)) /* opendir don't care about privacy */
           {
           CfOut(cf_inform,"","Access error\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
-          return false;   
-          }       
-       
+          return false;
+          }
+
        CfSecOpenDirectory(conn,sendbuffer,filename);
        return true;
-       
+
    case cfd_opendir:
 
        memset(filename,0,CF_BUFSIZE);
        sscanf(recvbuffer,"OPENDIR %[^\n]",filename);
-       
+
        if (! conn->id_verified)
           {
           CfOut(cf_inform,"","ID not verified\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return false;
           }
-       
+
        if (!AccessControl(filename,conn,true,VADMIT,VDENY)) /* opendir don't care about privacy */
           {
           CfOut(cf_inform,"","DIR access error\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
-          return false;   
-          }       
-       
+          return false;
+          }
+
        CfOpenDirectory(conn,sendbuffer,filename);
        return true;
-       
+
    case cfd_ssynch:
 
        memset(buffer,0,CF_BUFSIZE);
@@ -1288,24 +1281,24 @@ switch (GetCommand(recvbuffer))
        /* roll through, no break */
 
    case cfd_synch:
-       
+
        if (! conn->id_verified)
           {
           CfOut(cf_inform,"","ID not verified\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return false;
           }
-       
+
        memset(filename,0,CF_BUFSIZE);
        sscanf(recvbuffer,"SYNCH %ld STAT %[^\n]",&time_no_see,filename);
 
        trem = (time_t) time_no_see;
-       
+
        if (time_no_see == 0 || filename[0] == '\0')
           {
           break;
           }
-       
+
        if ((tloc = time((time_t *)NULL)) == -1)
           {
           sprintf(conn->output,"Couldn't read system clock\n");
@@ -1313,16 +1306,16 @@ switch (GetCommand(recvbuffer))
           SendTransaction(conn->sd_reply,"BAD: clocks out of synch",0,CF_DONE);
           return true;
           }
-       
+
        drift = (int)(tloc-trem);
-       
+
        if (!AccessControl(filename,conn,true,VADMIT,VDENY))
           {
           CfOut(cf_inform,"","Access control in sync\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
-          return true;   
+          return true;
           }
-       
+
        if (DENYBADCLOCKS && (drift*drift > CLOCK_DRIFT*CLOCK_DRIFT))
           {
           snprintf(conn->output,CF_BUFSIZE-1,"BAD: Clocks are too far unsynchronized %ld/%ld\n",(long)tloc,(long)trem);
@@ -1334,23 +1327,23 @@ switch (GetCommand(recvbuffer))
           CfDebug("Clocks were off by %ld\n",(long)tloc-(long)trem);
           StatFile(conn,sendbuffer,filename);
           }
-       
+
        return true;
 
    case cfd_smd5:
 
        sscanf(recvbuffer,"SMD5 %u",&len);
-       
+
        if (len >= sizeof(out) || received != len+CF_PROTO_OFFSET)
           {
           CfOut(cf_inform,"","Decryption error\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return true;
           }
-       
+
        memcpy(out,recvbuffer+CF_PROTO_OFFSET,len);
        plainlen = DecryptString(conn->encryption_type,out,recvbuffer,conn->session_key,len);
-       
+
        if (strncmp(recvbuffer,"MD5",3) !=0)
           {
           CfOut(cf_inform,"","MD5 protocol error\n");
@@ -1359,7 +1352,7 @@ switch (GetCommand(recvbuffer))
           }
 
        /* roll through, no break */
-       
+
    case cfd_md5:
 
        if (! conn->id_verified)
@@ -1368,7 +1361,7 @@ switch (GetCommand(recvbuffer))
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return true;
           }
-       
+
        CompareLocalHash(conn,sendbuffer,recvbuffer);
        return true;
 
@@ -1386,7 +1379,7 @@ switch (GetCommand(recvbuffer))
        memcpy(out,recvbuffer+CF_PROTO_OFFSET,len);
        plainlen = DecryptString(conn->encryption_type,out,recvbuffer,conn->session_key,len);
        encrypted = true;
-       
+
        if (strncmp(recvbuffer,"VAR",3) !=0)
           {
           CfOut(cf_inform,"","VAR protocol defect\n");
@@ -1395,7 +1388,7 @@ switch (GetCommand(recvbuffer))
           }
 
        /* roll through, no break */
-       
+
    case cfd_var:
 
        if (! conn->id_verified)
@@ -1404,19 +1397,19 @@ switch (GetCommand(recvbuffer))
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return true;
           }
-       
+
        if (!LiteralAccessControl(recvbuffer,conn,encrypted,VARADMIT,VARDENY))
           {
           CfOut(cf_inform,"","Literal access failure\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
-          return false;   
-          }       
+          return false;
+          }
 
        GetServerLiteral(conn,sendbuffer,recvbuffer,encrypted);
        return true;
 
    case cfd_scontext:
-              
+
        sscanf(recvbuffer,"SCONTEXT %u",&len);
 
        if (len >= sizeof(out) || received != len+CF_PROTO_OFFSET)
@@ -1429,7 +1422,7 @@ switch (GetCommand(recvbuffer))
        memcpy(out,recvbuffer+CF_PROTO_OFFSET,len);
        plainlen = DecryptString(conn->encryption_type,out,recvbuffer,conn->session_key,len);
        encrypted = true;
-       
+
        if (strncmp(recvbuffer,"CONTEXT",7) !=0)
           {
           CfOut(cf_inform,"","CONTEXT protocol defect...\n");
@@ -1438,7 +1431,7 @@ switch (GetCommand(recvbuffer))
           }
 
        /* roll through, no break */
-       
+
    case cfd_context:
 
        if (! conn->id_verified)
@@ -1447,13 +1440,13 @@ switch (GetCommand(recvbuffer))
           RefuseAccess(conn,sendbuffer,0,"Context probe");
           return true;
           }
-       
+
        if ((classes = ContextAccessControl(recvbuffer,conn,encrypted,VARADMIT,VARDENY)) == NULL)
           {
           CfOut(cf_inform,"","Context access failure on %s\n",recvbuffer);
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
-          return false;   
-          }       
+          return false;
+          }
 
        ReplyServerContext(conn,sendbuffer,recvbuffer,encrypted,classes);
        return true;
@@ -1471,7 +1464,7 @@ switch (GetCommand(recvbuffer))
 
        memcpy(out,recvbuffer+CF_PROTO_OFFSET,len);
        plainlen = DecryptString(conn->encryption_type,out,recvbuffer,conn->session_key,len);
-       
+
        if (strncmp(recvbuffer,"QUERY",5) !=0)
           {
           CfOut(cf_inform,"","QUERY protocol defect\n");
@@ -1485,23 +1478,23 @@ switch (GetCommand(recvbuffer))
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
           return true;
           }
-       
+
        if (!LiteralAccessControl(recvbuffer,conn,true,VARADMIT,VARDENY))
           {
           CfOut(cf_inform,"","Query access failure\n");
           RefuseAccess(conn,sendbuffer,0,recvbuffer);
-          return false;   
-          }       
+          return false;
+          }
 
        if (GetServerQuery(conn,sendbuffer,recvbuffer))
           {
           return true;
           }
    }
- 
+
 sprintf (sendbuffer,"BAD: Request denied\n");
 SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
-CfOut(cf_inform,"","Closing connection, due to request: \"%s\"\n",recvbuffer); 
+CfOut(cf_inform,"","Closing connection, due to request: \"%s\"\n",recvbuffer);
 return false;
 }
 
@@ -1536,16 +1529,16 @@ while (true && (count < 10))  /* arbitrary check to avoid infinite loop, DoS att
          CfDebug("No classes were sent, assuming no restrictions...\n");
          return true;
          }
-      
+
       break;
       }
-   
+
    classlist = SplitStringAsItemList(recvbuffer,' ');
-   
+
    for (ip = classlist; ip != NULL; ip=ip->next)
       {
       CfOut(cf_verbose,"","Checking whether class %s can be identified as me...\n",ip->name);
-      
+
       if (IsDefinedClass(ip->name))
          {
          CfDebug("Class %s matched, accepting...\n",ip->name);
@@ -1559,7 +1552,7 @@ while (true && (count < 10))  /* arbitrary check to avoid infinite loop, DoS att
          DeleteItemList(classlist);
          return true;
          }
-      
+
       if (strncmp(ip->name,CFD_TERMINATOR,strlen(CFD_TERMINATOR)) == 0)
          {
          CfOut(cf_verbose,"","No classes matched, rejecting....\n");
@@ -1569,7 +1562,7 @@ while (true && (count < 10))  /* arbitrary check to avoid infinite loop, DoS att
          }
       }
    }
- 
+
  ReplyNothing(conn);
  CfOut(cf_verbose,"","No classes matched, rejecting....\n");
  DeleteItemList(classlist);
@@ -1607,7 +1600,7 @@ for (sp = args; *sp != '\0'; sp++) /* Blank out -K -f */
       SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
       return;
       }
-   
+
    if (OptionFound(args,sp,"-K")||OptionFound(args,sp,"-f"))
       {
       *sp = ' ';
@@ -1630,14 +1623,14 @@ for (sp = args; *sp != '\0'; sp++) /* Blank out -K -f */
    else if (OptionFound(args,sp,"--define")||OptionFound(args,sp,"-D"))
       {
       CfOut(cf_verbose,"","Attempt to activate a predefined role..\n");
-      
+
       if (!AuthorizeRoles(conn,sp))
          {
          sprintf(sendbuffer,"You are not authorized to activate these classes/roles on host %s\n",VFQNAME);
          SendTransaction(conn->sd_reply,sendbuffer,0,CF_DONE);
          return;
          }
-      }   
+      }
    }
 
 snprintf(ebuff,CF_BUFSIZE,"%s --inform",CFRUNCOMMAND);
@@ -1660,7 +1653,7 @@ else
    }
 
 CfOut(cf_inform,"","Executing command %s\n",ebuff);
- 
+
 if ((pp = cf_popen_sh(ebuff,"r")) == NULL)
    {
    CfOut(cf_error,"pipe","Couldn't open pipe to command %s\n",ebuff);
@@ -1678,15 +1671,15 @@ while (!feof(pp))
       }
 
    CfReadLine(line,CF_BUFSIZE,pp);
-   
+
    if (ferror(pp))
       {
       fflush(pp);
       break;
-      }  
+      }
 
    print = false;
-  
+
    for (sp = line; *sp != '\0'; sp++)
       {
       if (! isspace((int)*sp))
@@ -1695,7 +1688,7 @@ while (!feof(pp))
          break;
          }
       }
-   
+
    if (print)
       {
       snprintf(sendbuffer,CF_BUFSIZE,"%s\n",line);
@@ -1706,7 +1699,7 @@ while (!feof(pp))
          }
       }
   }
-      
+
 cf_pclose(pp);
 }
 
@@ -1755,7 +1748,7 @@ CfDebug("Connecting host identifies itself as %s\n",buf);
 
 memset(ipstring,0,CF_MAXVARSIZE);
 memset(fqname,0,CF_MAXVARSIZE);
-memset(username,0,CF_MAXVARSIZE); 
+memset(username,0,CF_MAXVARSIZE);
 
 sscanf(buf,"%255s %255s %255s",ipstring,fqname,username);
 
@@ -1771,13 +1764,13 @@ ThreadUnlock(cft_system);
 /* It only makes sense to check DNS by reverse lookup if the key had to be accepted
    on trust. Once we have a positive key ID, the IP address is irrelevant fr authentication...
    We can save a lot of time by not looking this up ... */
- 
+
 if ((conn->trust == false) || IsMatchItemIn(SKIPVERIFY,MapAddress(conn->ipaddr)))
    {
    CfOut(cf_verbose,"","Allowing %s to connect without (re)checking ID\n",ip_assert);
    CfOut(cf_verbose,"","Non-verified Host ID is %s (Using skipverify)\n",dns_assert);
-   strncpy(conn->hostname,dns_assert,CF_MAXVARSIZE); 
-   CfOut(cf_verbose,"","Non-verified User ID seems to be %s (Using skipverify)\n",username); 
+   strncpy(conn->hostname,dns_assert,CF_MAXVARSIZE);
+   CfOut(cf_verbose,"","Non-verified User ID seems to be %s (Using skipverify)\n",username);
    strncpy(conn->username,username,CF_MAXVARSIZE);
 
 #ifdef MINGW  /* NT uses security identifier instead of uid */
@@ -1786,11 +1779,11 @@ if ((conn->trust == false) || IsMatchItemIn(SKIPVERIFY,MapAddress(conn->ipaddr))
       {
       memset(conn->sid, 0, CF_MAXSIDSIZE);  /* is invalid sid - discarded */
       }
-   
+
 #else  /* NOT MINGW */
 
    if ((pw=getpwnam(username)) == NULL) /* Keep this inside mutex */
-      {      
+      {
       conn->uid = -2;
       }
    else
@@ -1817,37 +1810,37 @@ if (strlen(dns_assert) == 0)
 if (strcmp(dns_assert,"skipident") == 0)
    {
    CfOut(cf_verbose,"","DNS asserted name was withheld before key exchange - untrustworthy connection\n");
-   return false;   
+   return false;
    }
 
 
 CfOut(cf_verbose,"","Socket caller address appears honest (%s matches %s)\n",ip_assert,MapAddress(conn->ipaddr));
- 
+
 CfOut(cf_verbose,"","Socket originates from %s=%s\n",ip_assert,dns_assert);
 
 CfDebug("Attempting to verify honesty by looking up hostname (%s)\n",dns_assert);
 
 /* Do a reverse DNS lookup, like tcp wrappers to see if hostname matches IP */
- 
+
 #if defined(HAVE_GETADDRINFO)
 
- CfDebug("Using v6 compatible lookup...\n"); 
+ CfDebug("Using v6 compatible lookup...\n");
 
 memset(&query,0,sizeof(struct addrinfo));
- 
+
 query.ai_family = AF_UNSPEC;
 query.ai_socktype = SOCK_STREAM;
 query.ai_flags = AI_PASSIVE;
- 
+
 if ((err=getaddrinfo(dns_assert,NULL,&query,&response)) != 0)
    {
    CfOut(cf_error,"","Unable to lookup %s (%s)",dns_assert,gai_strerror(err));
    }
- 
+
 for (ap = response; ap != NULL; ap = ap->ai_next)
    {
    ThreadLock(cft_getaddr);
-   
+
    if (strcmp(MapAddress(conn->ipaddr),sockaddr_ntop(ap->ai_addr)) == 0)
       {
       CfDebug("Found match\n");
@@ -1862,12 +1855,12 @@ if (response != NULL)
    freeaddrinfo(response);
    }
 
-#else 
+#else
 
 CfDebug("IPV4 hostnname lookup on %s\n",dns_assert);
 
 ThreadLock(cft_getaddr);
- 
+
 if ((hp = gethostbyname(dns_assert)) == NULL)
    {
    CfOut(cf_verbose,"","cf-serverd Couldn't look up name %s\n",fqname);
@@ -1879,15 +1872,15 @@ else
    matched = true;
 
    CfDebug("Looking for the peername of our socket...\n");
-   
+
    if (getpeername(conn->sd_reply,(struct sockaddr *)&raddr,&len) == -1)
       {
       CfOut(cf_error,"getpeername","Couldn't get socket address\n");
       matched = false;
       }
-   
+
    CfOut(cf_verbose,"","Looking through hostnames on socket with IPv4 %s\n",sockaddr_ntop((struct sockaddr *)&raddr));
-   
+
    for (i = 0; hp->h_addr_list[i]; i++)
       {
       CfOut(cf_verbose,"","Reverse lookup address found: %d\n",i);
@@ -1897,7 +1890,7 @@ else
          break;
          }
       }
-   
+
    if (hp->h_addr_list[0] != NULL)
       {
       CfOut(cf_verbose,"","Checking address number %d for non-canonical names (aliases)\n",i);
@@ -1912,7 +1905,7 @@ else
             break;
             }
          }
-      
+
       if ((hp->h_addr_list[i] != NULL) && (hp->h_aliases[j] != NULL))
          {
          CfOut(cf_log,"","Reverse hostname lookup failed, host claiming to be %s was %s\n",buf,sockaddr_ntop((struct sockaddr *)&raddr));
@@ -1927,20 +1920,20 @@ else
       {
       CfOut(cf_log,"","No name was registered in DNS for %s - reverse lookup failed\n",dns_assert);
       matched = false;
-      }   
+      }
    }
- 
-ThreadUnlock(cft_getaddr); 
-  
+
+ThreadUnlock(cft_getaddr);
+
 #ifdef MINGW  /* NT uses security identifier instead of uid */
 if (!NovaWin_UserNameToSid(username, (SID *)conn->sid, CF_MAXSIDSIZE, false))
    {
    memset(conn->sid, 0, CF_MAXSIDSIZE);  /* is invalid sid - discarded */
    }
-	 
+
 #else  /* NOT MINGW */
 if ((pw=getpwnam(username)) == NULL) /* Keep this inside mutex */
-   {      
+   {
    conn->uid = -2;
    }
 else
@@ -1957,14 +1950,14 @@ if (!matched)
    CfOut(cf_log,"","Client sent: %s",buf);
    return false;
    }
- 
+
 CfOut(cf_verbose,"","Host ID is %s\n",dns_assert);
 strncpy(conn->hostname,dns_assert,CF_MAXVARSIZE-1);
- 
-CfOut(cf_verbose,"","User ID seems to be %s\n",username); 
+
+CfOut(cf_verbose,"","User ID seems to be %s\n",username);
 strncpy(conn->username,username,CF_MAXVARSIZE-1);
- 
-return true;   
+
+return true;
 }
 
 
@@ -1979,7 +1972,7 @@ if (IsItemIn(ALLOWUSERLIST,user))
    return true;
    }
 
-CfOut(cf_verbose,"","User %s is not allowed on this server\n",user); 
+CfOut(cf_verbose,"","User %s is not allowed on this server\n",user);
 return false;
 }
 
@@ -2072,9 +2065,9 @@ if (vadmit == NULL)
    CfOut(cf_verbose,"","cf-serverd access list is empty, no files are visible\n");
    return false;
    }
- 
+
 conn->maproot = false;
- 
+
 for (ap = vadmit; ap != NULL; ap=ap->next)
    {
    int res = false;
@@ -2089,7 +2082,7 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
       }
 
    /* Exact match means single file to admit */
-   
+
    if (strcmp(transpath,transrequest) == 0)
       {
       res = true;
@@ -2109,7 +2102,7 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
          CfOut(cf_log,"","Warning cannot stat file object %s in admit/grant, or access list refers to dangling link\n",transpath);
          continue;
          }
-      
+
       if (!encrypt && (ap->encrypt == true))
          {
          CfOut(cf_error,"","File %s requires encrypt connection...will not serve\n",transpath);
@@ -2118,13 +2111,13 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
       else
          {
          CfDebug("Checking whether to map root privileges..\n");
-         
-         if (IsMatchItemIn(ap->maproot,MapAddress(conn->ipaddr)) || IsRegexItemIn(ap->maproot,conn->hostname))             
+
+         if (IsMatchItemIn(ap->maproot,MapAddress(conn->ipaddr)) || IsRegexItemIn(ap->maproot,conn->hostname))
             {
             conn->maproot = true;
             CfOut(cf_verbose,"","Mapping root privileges to access non-root files\n");
             }
-         
+
          if (IsMatchItemIn(ap->accesslist,MapAddress(conn->ipaddr)) || IsRegexItemIn(ap->accesslist,conn->hostname))
             {
             access = true;
@@ -2151,7 +2144,7 @@ if (strncmp(transpath,transrequest,strlen(transpath)) == 0)
 if (access)
    {
    CfOut(cf_verbose,"","Host %s granted access to %s\n",conn->hostname,req_path);
-   
+
    if (encrypt && LOGENCRYPT)
       {
       /* Log files that were marked as requiring encryption */
@@ -2195,17 +2188,17 @@ else
 CfDebug("\n\nLiteralAccessControl(%s)\n",name);
 
 conn->maproot = false;
- 
+
 for (ap = vadmit; ap != NULL; ap=ap->next)
    {
    int res = false;
    CfOut(cf_verbose,"","Examining rule in access list (%s,%s)?\n",name,ap->path);
-      
+
    if (strcmp(ap->path,name) == 0)
       {
       res = true;    /* Exact match means single file to admit */
       }
-   
+
    if (res)
       {
       CfOut(cf_verbose,"","Found a matching rule in access list (%s in %s)\n",name,ap->path);
@@ -2220,14 +2213,14 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
       if (!encrypt && (ap->encrypt == true))
          {
          CfOut(cf_error,"","Variable %s requires encrypt connection...will not serve\n",name);
-         access = false;      
+         access = false;
          break;
          }
       else
          {
          CfDebug("Checking whether to map root privileges..\n");
-         
-         if (IsMatchItemIn(ap->maproot,MapAddress(conn->ipaddr)) || IsRegexItemIn(ap->maproot,conn->hostname))             
+
+         if (IsMatchItemIn(ap->maproot,MapAddress(conn->ipaddr)) || IsRegexItemIn(ap->maproot,conn->hostname))
             {
             conn->maproot = true;
             CfOut(cf_verbose,"","Mapping root privileges\n");
@@ -2236,7 +2229,7 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
             {
             CfOut(cf_verbose,"","No root privileges granted\n");
             }
-         
+
          if (IsMatchItemIn(ap->accesslist,MapAddress(conn->ipaddr)) || IsRegexItemIn(ap->accesslist,conn->hostname))
             {
             access = true;
@@ -2245,7 +2238,7 @@ for (ap = vadmit; ap != NULL; ap=ap->next)
          }
       }
    }
- 
+
 for (ap = vdeny; ap != NULL; ap=ap->next)
    {
    if (strcmp(ap->path,name) == 0)
@@ -2262,7 +2255,7 @@ for (ap = vdeny; ap != NULL; ap=ap->next)
 if (access)
    {
    CfOut(cf_verbose,"","Host %s granted access to literal \"%s\"\n",conn->hostname,name);
-   
+
    if (encrypt && LOGENCRYPT)
       {
       /* Log files that were marked as requiring encryption */
@@ -2345,34 +2338,34 @@ for (ip = candidates; ip != NULL; ip=ip->next)
    for (ap = vadmit; ap != NULL; ap=ap->next)
       {
       int res = false;
-      
+
       if (FullTextMatch(ap->path,ip->name) == 0)
          {
-         res = true; 
+         res = true;
          }
-      
+
       if (res)
          {
          CfOut(cf_verbose,"","Found a matching rule in access list (%s in %s)\n",ip->name,ap->path);
-         
+
          if (ap->classpattern == false)
             {
             CfOut(cf_error,"","Context %s requires a literal server item...cannot set variable directly by path\n",ap->path);
             access = false;
             continue;
             }
-         
+
          if (!encrypt && (ap->encrypt == true))
             {
             CfOut(cf_error,"","Context %s requires encrypt connection...will not serve\n",ip->name);
-            access = false;      
+            access = false;
             break;
             }
          else
             {
             CfDebug("Checking whether to map root privileges..\n");
-            
-            if (IsMatchItemIn(ap->maproot,MapAddress(conn->ipaddr)) || IsRegexItemIn(ap->maproot,conn->hostname))             
+
+            if (IsMatchItemIn(ap->maproot,MapAddress(conn->ipaddr)) || IsRegexItemIn(ap->maproot,conn->hostname))
                {
                conn->maproot = true;
                CfOut(cf_verbose,"","Mapping root privileges\n");
@@ -2381,7 +2374,7 @@ for (ip = candidates; ip != NULL; ip=ip->next)
                {
                CfOut(cf_verbose,"","No root privileges granted\n");
                }
-            
+
             if (IsMatchItemIn(ap->accesslist,MapAddress(conn->ipaddr)) || IsRegexItemIn(ap->accesslist,conn->hostname))
                {
                access = true;
@@ -2390,7 +2383,7 @@ for (ip = candidates; ip != NULL; ip=ip->next)
             }
          }
       }
-   
+
    for (ap = vdeny; ap != NULL; ap=ap->next)
       {
       if (strcmp(ap->path,ip->name) == 0)
@@ -2403,12 +2396,12 @@ for (ip = candidates; ip != NULL; ip=ip->next)
             }
          }
       }
-   
+
    if (access)
       {
       CfOut(cf_verbose,"","Host %s granted access to context \"%s\"\n",conn->hostname,ip->name);
       AppendItem(&matches,ip->name,NULL);
-      
+
       if (encrypt && LOGENCRYPT)
          {
          /* Log files that were marked as requiring encryption */
@@ -2434,7 +2427,7 @@ static int AuthorizeRoles(ServerConnectionState *conn,char *args)
   char userid1[CF_MAXVARSIZE],userid2[CF_MAXVARSIZE];
   Rlist *rp,*defines = NULL;
   int permitted = false;
-  
+
 snprintf(userid1,CF_MAXVARSIZE,"%s@%s",conn->username,conn->hostname);
 snprintf(userid2,CF_MAXVARSIZE,"%s@%s",conn->username,conn->ipaddr);
 
@@ -2461,7 +2454,7 @@ defines = SplitRegexAsRList(sp,"[,:;]",99,false);
 for (rp = defines; rp != NULL; rp = rp->next)
    {
    CfOut(cf_verbose,""," -> Verifying %s\n", ScalarValue(rp));
-   
+
    for (ap = ROLES; ap != NULL; ap=ap->next)
       {
       if (FullTextMatch(ap->path,rp->item))
@@ -2485,7 +2478,7 @@ for (rp = defines; rp != NULL; rp = rp->next)
             }
          }
       }
-   
+
    }
 
 if (permitted)
@@ -2532,7 +2525,7 @@ if (PRIVKEY == NULL || PUBKEY == NULL)
    digestType = cf_md5;
    digestLen = CF_MD5_LEN;
    }
- 
+
 /* proposition C1 */
 /* Opening string is a challenge from the client (some agent) */
 
@@ -2549,13 +2542,13 @@ if (crypt_len == 0 || nonce_len == 0 || strlen(sauth) == 0)
 if (nonce_len > CF_NONCELEN*2)
    {
    CfOut(cf_inform,"","Protocol deviant authentication nonce from %s\n",conn->hostname);
-   return false;   
+   return false;
    }
 
 if (crypt_len > 2*CF_NONCELEN)
    {
    CfOut(cf_inform,"","Protocol abuse in unlikely cipher from %s\n",conn->hostname);
-   return false;      
+   return false;
    }
 
 /* Check there is no attempt to read past the end of the received input */
@@ -2563,7 +2556,7 @@ if (crypt_len > 2*CF_NONCELEN)
 if (recvbuffer+CF_RSA_PROTO_OFFSET+nonce_len > recvbuffer+recvlen)
    {
    CfOut(cf_inform,"","Protocol consistency error in authentication from %s\n",conn->hostname);
-   return false;   
+   return false;
    }
 
 if ((strcmp(sauth,"SAUTH") != 0) || (nonce_len == 0) || (crypt_len == 0))
@@ -2575,11 +2568,11 @@ if ((strcmp(sauth,"SAUTH") != 0) || (nonce_len == 0) || (crypt_len == 0))
 CfDebug("Challenge encryption = %c, nonce = %d, buf = %d\n",iscrypt,nonce_len,crypt_len);
 
 ThreadLock(cft_system);
- 
+
 decrypted_nonce = xmalloc(crypt_len);
- 
+
 if (iscrypt == 'y')
-   { 
+   {
    if (RSA_private_decrypt(crypt_len,recvbuffer+CF_RSA_PROTO_OFFSET,decrypted_nonce,PRIVKEY,RSA_PKCS1_PADDING) <= 0)
       {
       err = ERR_get_error();
@@ -2597,10 +2590,10 @@ else
       ThreadUnlock(cft_system);
       CfOut(cf_error,"","Illegal challenge\n");
       free(decrypted_nonce);
-      return false;       
+      return false;
       }
-   
-   memcpy(decrypted_nonce,recvbuffer+CF_RSA_PROTO_OFFSET,nonce_len);  
+
+   memcpy(decrypted_nonce,recvbuffer+CF_RSA_PROTO_OFFSET,nonce_len);
    }
 
 ThreadUnlock(cft_system);
@@ -2617,7 +2610,7 @@ ThreadLock(cft_system);
 newkey = RSA_new();
 ThreadUnlock(cft_system);
 
-/* proposition C2 */ 
+/* proposition C2 */
 if ((len_n = ReceiveTransaction(conn->sd_reply,recvbuffer,NULL)) == -1)
    {
    CfOut(cf_inform,"","Protocol error 1 in RSA authentation from IP %s\n",conn->hostname);
@@ -2640,7 +2633,7 @@ if ((newkey->n = BN_mpi2bn(recvbuffer,len_n,NULL)) == NULL)
    return false;
    }
 
-/* proposition C3 */ 
+/* proposition C3 */
 
 if ((len_e = ReceiveTransaction(conn->sd_reply,recvbuffer,NULL)) == -1)
    {
@@ -2679,12 +2672,12 @@ if (VERBOSE)
    }
 
 LastSaw(conn->username,conn->ipaddr,conn->digest,cf_accept);
-   
+
 if (!CheckStoreKey(conn,newkey))    /* conceals proposition S1 */
    {
    if (!conn->trust)
       {
-      RSA_free(newkey);       
+      RSA_free(newkey);
       return false;
       }
    }
@@ -2708,7 +2701,7 @@ nonce_len = BN_bn2mpi(counter_challenge,in);
 
 HashString(in,nonce_len,digest,digestType);
 
-encrypted_len = RSA_size(newkey);         /* encryption buffer is always the same size as n */ 
+encrypted_len = RSA_size(newkey);         /* encryption buffer is always the same size as n */
 
 out = xmalloc(encrypted_len+1);
 
@@ -2723,37 +2716,37 @@ if (RSA_public_encrypt(nonce_len,in,out,newkey,RSA_PKCS1_PADDING) <= 0)
 
 ThreadUnlock(cft_system);
 
-/* proposition S3 */ 
+/* proposition S3 */
 SendTransaction(conn->sd_reply,out,encrypted_len,CF_DONE);
 
 /* if the client doesn't have our public key, send it */
- 
+
 if (iscrypt != 'y')
    {
    /* proposition S4  - conditional */
-   memset(in,0,CF_BUFSIZE); 
+   memset(in,0,CF_BUFSIZE);
    len_n = BN_bn2mpi(PUBKEY->n,in);
    SendTransaction(conn->sd_reply,in,len_n,CF_DONE);
 
    /* proposition S5  - conditional */
-   memset(in,0,CF_BUFSIZE);  
-   len_e = BN_bn2mpi(PUBKEY->e,in); 
-   SendTransaction(conn->sd_reply,in,len_e,CF_DONE); 
+   memset(in,0,CF_BUFSIZE);
+   len_e = BN_bn2mpi(PUBKEY->e,in);
+   SendTransaction(conn->sd_reply,in,len_e,CF_DONE);
    }
 
 /* Receive reply to counter_challenge */
 
-/* proposition C4 */ 
+/* proposition C4 */
 memset(in,0,CF_BUFSIZE);
 
 if (ReceiveTransaction(conn->sd_reply,in,NULL) == -1)
    {
    BN_free(counter_challenge);
    free(out);
-   RSA_free(newkey);   
+   RSA_free(newkey);
    return false;
    }
- 
+
 if (HashesMatch(digest,in,digestType))  /* replay / piggy in the middle attack ? */
    {
    if (!conn->trust)
@@ -2771,10 +2764,10 @@ else
    free(out);
    RSA_free(newkey);
    CfOut(cf_inform,"","Challenge response from client %s was incorrect - ID false?",conn->ipaddr);
-   return false; 
+   return false;
    }
 
-/* Receive random session key,... */ 
+/* Receive random session key,... */
 
 /* proposition C5 */
 
@@ -2784,7 +2777,7 @@ if ((keylen = ReceiveTransaction(conn->sd_reply,in,NULL)) == -1)
    {
    BN_free(counter_challenge);
    free(out);
-   RSA_free(newkey); 
+   RSA_free(newkey);
    return false;
    }
 
@@ -2792,7 +2785,7 @@ if (keylen > CF_BUFSIZE/2)
    {
    BN_free(counter_challenge);
    free(out);
-   RSA_free(newkey); 
+   RSA_free(newkey);
    CfOut(cf_inform,"","Session key length received from %s is too long",conn->ipaddr);
    return false;
    }
@@ -2800,7 +2793,7 @@ if (keylen > CF_BUFSIZE/2)
 ThreadLock(cft_system);
 
 session_size = CfSessionKeySize(enterprise_field);
-conn->session_key = xmalloc(session_size); 
+conn->session_key = xmalloc(session_size);
 conn->encryption_type = enterprise_field;
 
 CfOut(cf_verbose,""," -> Receiving session key from client (size=%d)...", keylen);
@@ -2814,15 +2807,15 @@ if (keylen == CF_BLOWFISHSIZE) /* Support the old non-ecnrypted for upgrade */
 else
    {
    /* New protocol encrypted */
-   
+
    if (RSA_private_decrypt(keylen,in,out,PRIVKEY,RSA_PKCS1_PADDING) <= 0)
       {
-      ThreadUnlock(cft_system);      
+      ThreadUnlock(cft_system);
       err = ERR_get_error();
       CfOut(cf_error,"","Private decrypt failed = %s\n",ERR_reason_error_string(err));
       return false;
       }
-   
+
    memcpy(conn->session_key,out,session_size);
    }
 
@@ -2832,9 +2825,9 @@ ThreadUnlock(cft_system);
 
 BN_free(counter_challenge);
 free(out);
-RSA_free(newkey); 
+RSA_free(newkey);
 conn->rsa_auth = true;
-return true; 
+return true;
 }
 
 /**************************************************************/
@@ -2855,7 +2848,7 @@ CfDebug("\nStatFile(%s)\n",filename);
 TranslatePath(filename,ofilename);
 
 memset(&cfst,0,sizeof(Stat));
-  
+
 if (strlen(ReadLastNode(filename)) > CF_MAXLINKSIZE)
    {
    snprintf(sendbuffer,CF_BUFSIZE*2,"BAD: Filename suspiciously long [%s]\n",filename);
@@ -2885,7 +2878,7 @@ if (S_ISLNK(statbuf.st_mode))
    cfst.cf_type = cf_link;                   /* pointless - overwritten */
    cfst.cf_lmode = statbuf.st_mode & 07777;
    cfst.cf_nlink = statbuf.st_nlink;
-       
+
    if (readlink(filename,linkbuf,CF_BUFSIZE-1) == -1)
       {
       sprintf(sendbuffer,"BAD: unable to read link\n");
@@ -3041,7 +3034,7 @@ if (!TransferRights(filename,sd,args,sendbuffer,&sb))
    }
 
 /* File transfer */
- 
+
 if ((fd = SafeOpen(filename)) == -1)
    {
    CfOut(cf_error,"open","Open error of file [%s]\n",filename);
@@ -3053,24 +3046,24 @@ else
    while(true)
       {
       memset(sendbuffer,0,CF_BUFSIZE);
-      
+
       CfDebug("Now reading from disk...\n");
-      
+
       if ((n_read = read(fd,sendbuffer,blocksize)) == -1)
          {
          CfOut(cf_error,"read","read failed in GetFile");
          break;
          }
-      
+
       if (n_read == 0)
          {
          break;
          }
       else
          { int savedlen = sb.st_size;
-         
+
          /* check the file is not changing at source */
-         
+
          if (count++ % 3 == 0) /* Don't do this too often */
             {
             stat(filename,&sb);
@@ -3084,11 +3077,11 @@ else
                {
                CfOut(cf_verbose,"send","Send failed in GetFile");
                }
-            
+
             CfDebug("Aborting transfer after %d: file is changing rapidly at source.\n",total);
             break;
             }
-         
+
          if ((savedlen - total)/blocksize > 0)
             {
             sendlen = blocksize;
@@ -3098,9 +3091,9 @@ else
             sendlen = (savedlen - total);
             }
          }
-      
+
       total += n_read;
-      
+
       if (SendSocketStream(sd,sendbuffer,sendlen,0) == -1)
          {
          CfOut(cf_verbose,"send","Send failed in GetFile");
@@ -3108,7 +3101,7 @@ else
          }
       }
 
-   close(fd);    
+   close(fd);
    }
 
 CfDebug("Done with GetFile()\n");
@@ -3122,7 +3115,7 @@ static void CfEncryptGetFile(ServerFileGetState *args)
 /* Because the stream doesn't end for each file, we need to know the
    exact number of bytes transmitted, which might change during
    encryption, hence we need to handle this with transactions */
-    
+
 { int sd,fd,n_read,total=0,cipherlen,count = 0,finlen,cnt = 0;
   char sendbuffer[CF_BUFSIZE+256],out[CF_BUFSIZE],filename[CF_BUFSIZE];
   unsigned char iv[32] = {1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8};
@@ -3162,7 +3155,7 @@ else
    while(true)
       {
       memset(sendbuffer,0,CF_BUFSIZE);
-      
+
       if ((n_read = read(fd,sendbuffer,blocksize)) == -1)
          {
          CfOut(cf_error,"read","read failed in EncryptGetFile");
@@ -3170,13 +3163,13 @@ else
          }
 
       savedlen = sb.st_size;
-      
+
       if (count++ % 3 == 0) /* Don't do this too often */
          {
          CfDebug("Restatting %s - size %d\n",filename,n_read);
          stat(filename,&sb);
          }
-      
+
       if (sb.st_size != savedlen)
          {
          AbortTransfer(sd,sendbuffer,filename);
@@ -3188,7 +3181,7 @@ else
       if (n_read > 0)
          {
          EVP_EncryptInit_ex(&ctx,CfengineCipher(enctype),NULL,key,iv);
-         
+
          if (!EVP_EncryptUpdate(&ctx,out,&cipherlen,sendbuffer,n_read))
             {
             FailedTransfer(sd,sendbuffer,filename);
@@ -3196,7 +3189,7 @@ else
             close(fd);
             return;
             }
-         
+
          if (!EVP_EncryptFinal_ex(&ctx,out+cipherlen,&finlen))
             {
             FailedTransfer(sd,sendbuffer,filename);
@@ -3207,7 +3200,7 @@ else
          }
 
       cnt++;
-      
+
       //if (n_read < blocksize) // Last transaction
       if (total >= savedlen)
          {
@@ -3234,7 +3227,7 @@ else
    }
 
 EVP_CIPHER_CTX_cleanup(&ctx);
-close(fd);    
+close(fd);
 }
 
 /**************************************************************/
@@ -3247,16 +3240,16 @@ static void CompareLocalHash(ServerConnectionState *conn,char *sendbuffer,char *
   int i;
 
 /* TODO - when safe change this proto string to sha2 */
-  
+
 sscanf(recvbuffer,"MD5 %255[^\n]",rfilename);
 
 sp = recvbuffer + strlen(recvbuffer) + CF_SMALL_OFFSET;
- 
+
 for (i = 0; i < CF_DEFAULT_DIGEST_LEN; i++)
    {
    digest1[i] = *sp++;
    }
- 
+
 memset(sendbuffer,0,CF_BUFSIZE);
 
 TranslatePath(filename,rfilename);
@@ -3285,7 +3278,7 @@ static void GetServerLiteral(ServerConnectionState *conn,char *sendbuffer,char *
   int cipherlen;
 
 sscanf(recvbuffer,"VAR %255[^\n]",handle);
- 
+
 if (ReturnLiteralData(handle,out))
    {
    memset(sendbuffer,0,CF_BUFSIZE);
@@ -3385,7 +3378,7 @@ static int CfOpenDirectory(ServerConnectionState *conn,char *sendbuffer,char *ol
 TranslatePath(dirname, oldDirname);
 
 CfDebug("CfOpenDirectory(%s)\n",dirname);
-  
+
 if (!IsAbsoluteFileName(dirname))
    {
    sprintf(sendbuffer,"BAD: request to access a non-absolute filename\n");
@@ -3419,7 +3412,7 @@ for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
    strncpy(sendbuffer+offset,dirp->d_name,CF_MAXLINKSIZE);
    offset += strlen(dirp->d_name) + 1;     /* + zero byte separator */
    }
- 
+
 strcpy(sendbuffer+offset,CFD_TERMINATOR);
 SendTransaction(conn->sd_reply,sendbuffer,offset+2+strlen(CFD_TERMINATOR),CF_DONE);
 CfDebug("END CfOpenDirectory(%s)\n",dirname);
@@ -3437,7 +3430,7 @@ static int CfSecOpenDirectory(ServerConnectionState *conn,char *sendbuffer,char 
   char out[CF_BUFSIZE];
 
 CfDebug("CfSecOpenDirectory(%s)\n",dirname);
-  
+
 if (!IsAbsoluteFileName(dirname))
    {
    sprintf(sendbuffer,"BAD: request to access a non-absolute filename\n");
@@ -3474,7 +3467,7 @@ for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
 
    strncpy(sendbuffer+offset,dirp->d_name,CF_MAXLINKSIZE);
    /* + zero byte separator */
-   offset += strlen(dirp->d_name) + 1; 
+   offset += strlen(dirp->d_name) + 1;
    }
 
 strcpy(sendbuffer+offset,CFD_TERMINATOR);
@@ -3525,7 +3518,7 @@ if (ap != NULL)
 /***************************************************************/
 
 static int OptionFound(char *args, char *pos, char *word)
-    
+
 /*
  * Returns true if the current position 'pos' in buffer
  * 'args' corresponds to the word 'word'.  Words are
@@ -3573,7 +3566,7 @@ else
 static void RefuseAccess(ServerConnectionState *conn,char *sendbuffer,int size,char *errmesg)
 
 { char *hostname, *username, *ipaddr;
-  static char *def = "?"; 
+  static char *def = "?";
 
 if (strlen(conn->hostname) == 0)
    {
@@ -3601,7 +3594,7 @@ else
    {
    ipaddr = conn->ipaddr;
    }
- 
+
 snprintf(sendbuffer,CF_BUFSIZE,"%s",CF_FAILEDSTR);
 SendTransaction(conn->sd_reply,sendbuffer,size,CF_DONE);
 
@@ -3648,11 +3641,11 @@ if (GetNamedSecurityInfo(filename, SE_FILE_OBJECT, OWNER_SECURITY_INFORMATION,(P
          }
       else
          {
-         CfOut(cf_verbose, "", "!! Remote user denied right to file \"%s\" (consider maproot?)", filename);	 
+         CfOut(cf_verbose, "", "!! Remote user denied right to file \"%s\" (consider maproot?)", filename);
          return false;
          }
       }
-   
+
    LocalFree(secDesc);
    }
 else
@@ -3741,17 +3734,17 @@ static int CheckStoreKey(ServerConnectionState *conn,RSA *key)
 { RSA *savedkey;
   char udigest[CF_MAXVARSIZE];
 
-ThreadLock(cft_output);  
+ThreadLock(cft_output);
 snprintf(udigest,CF_MAXVARSIZE-1,"%s",HashPrint(CF_DEFAULT_DIGEST,conn->digest));
 ThreadUnlock(cft_output);
 
 if ((savedkey = HavePublicKey(conn->username,MapAddress(conn->ipaddr),udigest)))
    {
    CfOut(cf_verbose,"","A public key was already known from %s/%s - no trust required\n",conn->hostname,conn->ipaddr);
-   
+
    CfOut(cf_verbose,"","Adding IP %s to SkipVerify - no need to check this if we have a key\n",conn->ipaddr);
    IdempPrependItem(&SKIPVERIFY,MapAddress(conn->ipaddr),NULL);
-   
+
    if ((BN_cmp(savedkey->e,key->e) == 0) && (BN_cmp(savedkey->n,key->n) == 0))
       {
       CfOut(cf_verbose,"","The public key identity was confirmed as %s@%s\n",conn->username,conn->hostname);
@@ -3776,7 +3769,7 @@ else
    {
    CfOut(cf_verbose,"","No previous key found, and unable to accept this one on trust\n");
    SendTransaction(conn->sd_reply,"BAD: key could not be accepted on trust",0,CF_DONE);
-   return false; 
+   return false;
    }
 }
 
@@ -3789,23 +3782,23 @@ static ServerConnectionState *NewConn(int sd)
 { ServerConnectionState *conn;
 
 ThreadLock(cft_system);
- 
+
 conn = xmalloc(sizeof(ServerConnectionState));
 
 ThreadUnlock(cft_system);
- 
+
 conn->sd_reply = sd;
 conn->id_verified = false;
 conn->rsa_auth = false;
-conn->trust = false; 
+conn->trust = false;
 conn->hostname[0] = '\0';
 conn->ipaddr[0] = '\0';
-conn->username[0] = '\0'; 
+conn->username[0] = '\0';
 conn->session_key = NULL;
 conn->encryption_type = 'c';
- 
+
 CfDebug("*** New socket [%d]\n",sd);
- 
+
 return conn;
 }
 
@@ -3822,7 +3815,7 @@ if (conn->session_key != NULL)
    {
    free(conn->session_key);
    }
- 
+
 if (conn->ipaddr != NULL)
    {
    if (!ThreadLock(cft_count))
@@ -3837,7 +3830,7 @@ if (conn->ipaddr != NULL)
       return;
       }
    }
- 
+
 free((char *)conn);
 }
 
@@ -3861,23 +3854,23 @@ return fd;
 /***************************************************************/
 
 static int cfscanf(char *in,int len1,int len2,char *out1,char *out2,char *out3)
-   
-{  
+
+{
 int len3=0;
 char *sp;
-   
+
 sp = in;
 memcpy(out1,sp,len1);
 out1[len1]='\0';
-   
+
 sp += len1 + 1;
 memcpy(out2,sp,len2);
-   
+
 sp += len2 + 1;
 len3=strlen(sp);
 memcpy(out3,sp,len3);
 out3[len3]='\0';
-   
+
 return (len1 + len2 + len3 + 2);
 }
 

@@ -83,7 +83,6 @@ static in_addr_t GetInetAddr(char *host);
 static void StartServer (int argc, char **argv, GenericAgentConfig config);
 
 char CFRUNCOMMAND[CF_BUFSIZE];
-static time_t CFDSTARTTIME;
 
 static const char *PROTOCOL[] =
    {
@@ -315,6 +314,7 @@ static void StartServer(int argc,char **argv, GenericAgentConfig config)
   Promise *pp = NewPromise("server_cfengine","the server daemon");
   Attributes dummyattr = {{0}};
   CfLock thislock;
+  time_t starttime;
 
 #if defined(HAVE_GETADDRINFO)
   int addrlen=sizeof(struct sockaddr_in6);
@@ -356,6 +356,7 @@ if (thislock.lock == NULL)
    return;
    }
 
+CfOut(cf_inform,"","cf-serverd starting %.24s\n",cf_ctime(&starttime));
 CfOut(cf_verbose,"","Listening for connections ...\n");
 
 #ifdef MINGW
@@ -369,7 +370,6 @@ if(!NO_FORK)
 
 if ((!NO_FORK) && (fork() != 0))
    {
-   CfOut(cf_inform,"","cf-serverd starting %.24s\n",cf_ctime(&CFDSTARTTIME));
    GenericDeInitialize();
    exit(0);
    }
@@ -740,7 +740,7 @@ if (EnterpriseExpiry())
    CfOut(cf_error,"","!! This enterprise license is invalid.");
    }
 
-CfDebug("Checking file updates on %s (%jd)\n", VINPUTFILE, (intmax_t)CFDSTARTTIME);
+CfDebug("Checking file updates on %s\n", VINPUTFILE);
 
 if (NewPromiseProposals())
    {

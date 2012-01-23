@@ -735,36 +735,21 @@ HandleConnection(conn);
 
 static void CheckFileChanges(int argc, char **argv, GenericAgentConfig config)
 
-{ char filename[CF_BUFSIZE];
-  int ok;
-
+{
 if (EnterpriseExpiry())
    {
    CfOut(cf_error,"","!! This enterprise license is invalid.");
    }
 
-memset(filename,0,CF_BUFSIZE);
-
-if (!IsFileOutsideDefaultRepository(VINPUTFILE)) /* Don't prepend to absolute names */
-   {
-   snprintf(filename,CF_BUFSIZE,"%s/inputs/",CFWORKDIR);
-   }
-
-strncat(filename,VINPUTFILE,CF_BUFSIZE-1-strlen(filename));
-
-MapName(filename);
-
-CfDebug("Checking file updates on %s (%jd)\n",filename, (intmax_t)CFDSTARTTIME);
+CfDebug("Checking file updates on %s (%jd)\n", VINPUTFILE, (intmax_t)CFDSTARTTIME);
 
 if (NewPromiseProposals())
    {
    CfOut(cf_verbose,""," -> New promises detected...\n");
 
-   ok = CheckPromises(cf_server);
-
-   if (ok)
+   if (CheckPromises(cf_server))
       {
-      CfOut(cf_inform,"","Rereading config files %s..\n",filename);
+      CfOut(cf_inform,"","Rereading config files %s..\n", VINPUTFILE);
 
       /* Free & reload -- lock this to avoid access errors during reload */
 

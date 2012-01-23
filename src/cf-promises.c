@@ -131,8 +131,7 @@ while ((c=getopt_long(argc,argv,"ad:vnIf:D:N:VSrxMb:pg:",OPTIONS,&optindex)) != 
              FatalError(" -f used but argument \"%s\" incorrect", optarg);
              }
 
-          strncpy(VINPUTFILE,optarg,CF_BUFSIZE-1);
-          VINPUTFILE[CF_BUFSIZE-1] = '\0';
+          SetInputFile(optarg);
           MINUSF = true;
           break;
 

@@ -319,7 +319,7 @@ while ((c=getopt_long(argc,argv,"Cghd:vVf:st:ar:PXHLMIRSKE:x:i:1:p:k:c:qF:o:",OP
    switch ((char) c)
       {
       case 'f':
-          strncpy(VINPUTFILE,optarg,CF_BUFSIZE-1);
+          SetInputFile(optarg);
           MINUSF = true;
           break;
 

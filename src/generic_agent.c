@@ -219,7 +219,7 @@ if (ag != cf_keygen && ag != cf_know)
    else
       {
       CfOut(cf_error,"","cf-agent was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
-      snprintf(VINPUTFILE,CF_BUFSIZE-1,"failsafe.cf");
+      SetInputFile("failsafe.cf");
       ReadPromises(ag, agents, config);
       }
    
@@ -587,7 +587,7 @@ LoadSecretKeys();
 
 if (!MINUSF)
    {
-   snprintf(VINPUTFILE,CF_BUFSIZE-1,"promises.cf");
+   SetInputFile("promises.cf");
    }
 
 AUDITDBP = NULL;
@@ -605,11 +605,11 @@ if (BOOTSTRAP)
 
    if (!IsEnterprise() && cfstat(vbuff,&statbuf) == -1)
       {
-      snprintf(VINPUTFILE,CF_BUFSIZE-1,"failsafe.cf");
+      SetInputFile("failsafe.cf");
       }
    else
       {
-      strncpy(VINPUTFILE,vbuff,CF_BUFSIZE-1);
+      SetInputFile(vbuff);
       }
    }
 }
@@ -1352,6 +1352,13 @@ else
    }
 
 return MapName(wfilename);
+}
+
+/*******************************************************************/
+
+void SetInputFile(const char *name)
+{
+strlcpy(VINPUTFILE, name, CF_BUFSIZE);
 }
 
 /*******************************************************************/

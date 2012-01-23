@@ -64,4 +64,6 @@ void OpenCompilationReportFiles(const char *fname);
 GenericAgentConfig GenericAgentDefaultConfig(enum cfagenttype agent_type);
 void CheckLicenses(void);
 
+void SetInputFile(const char *filename);
+
 #endif

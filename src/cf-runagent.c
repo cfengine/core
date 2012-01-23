@@ -215,8 +215,7 @@ while ((c=getopt_long(argc,argv,"t:q:d:b:vnKhIif:D:VSxo:s:MH:",OPTIONS,&optindex
   switch ((char) c)
       {
       case 'f':
-          strncpy(VINPUTFILE,optarg,CF_BUFSIZE-1);
-          VINPUTFILE[CF_BUFSIZE-1] = '\0';
+          SetInputFile(optarg);
           MINUSF = true;
           break;
 

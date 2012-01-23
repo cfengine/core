@@ -107,6 +107,8 @@ FILE *FPM[CF_OBSERVABLES];
 Rlist *REPORTS = NULL;
 Rlist *CSVLIST = NULL;
 
+char AVDB_FILE[CF_BUFSIZE];
+
 /*******************************************************************/
 /* Command line options                                            */
 /*******************************************************************/
@@ -533,8 +535,8 @@ strcpy(STYLESHEET,"");
 strcpy(WEBDRIVER,"#");
 strcpy(BANNER,"");
 strcpy(FOOTER,"");
-snprintf(VINPUTFILE,CF_MAXVARSIZE,"%s/state/%s",CFWORKDIR,CF_AVDB_FILE);
-MapName(VINPUTFILE);
+snprintf(AVDB_FILE,CF_MAXVARSIZE,"%s/state/%s",CFWORKDIR,CF_AVDB_FILE); /* WAT? */
+MapName(AVDB_FILE);
 
 if (!EMPTY(REMOVEHOSTS))
    {
@@ -2069,13 +2071,13 @@ static void ReadAverages()
   CF_DB *dbp;
   int i;
 
-CfOut(cf_verbose,"","\nLooking for database %s\n",VINPUTFILE);
+CfOut(cf_verbose,"","\nLooking for database %s\n",AVDB_FILE);
 CfOut(cf_verbose,"","\nFinding MAXimum values...\n\n");
 CfOut(cf_verbose,"","N.B. socket values are numbers in CLOSE_WAIT. See documentation.\n");
 
-if (!OpenDB(VINPUTFILE,&dbp))
+if (!OpenDB(AVDB_FILE,&dbp))
    {
-   CfOut(cf_verbose,"","Couldn't open average database %s\n",VINPUTFILE);
+   CfOut(cf_verbose,"","Couldn't open average database %s\n",AVDB_FILE);
    return;
    }
 
@@ -2131,13 +2133,13 @@ static void EraseAverages()
   time_t now;
   CF_DB *dbp;
 
-CfOut(cf_verbose,"","\nLooking through current database %s\n",VINPUTFILE);
+CfOut(cf_verbose,"","\nLooking through current database %s\n",AVDB_FILE);
 
 list = SplitStringAsItemList(ERASE,',');
 
-if (!OpenDB(VINPUTFILE,&dbp))
+if (!OpenDB(AVDB_FILE,&dbp))
    {
-   CfOut(cf_verbose,"","Couldn't open average database %s\n",VINPUTFILE);
+   CfOut(cf_verbose,"","Couldn't open average database %s\n",AVDB_FILE);
    return;
    }
 
@@ -2253,9 +2255,9 @@ for (i = 0; i < CF_OBSERVABLES; i++)
       }
    }
 
-if (!OpenDB(VINPUTFILE,&dbp))
+if (!OpenDB(AVDB_FILE,&dbp))
    {
-   CfOut(cf_error,"","Could not open %s",VINPUTFILE);
+   CfOut(cf_error,"","Could not open %s",AVDB_FILE);
    return;
    }
 
@@ -2291,11 +2293,11 @@ static void WriteGraphFiles()
   time_t now;
   CF_DB *dbp;
 
-CfOut(cf_verbose,""," -> Retrieving data from %s",VINPUTFILE);
+CfOut(cf_verbose,""," -> Retrieving data from %s",AVDB_FILE);
 
-if (!OpenDB(VINPUTFILE,&dbp))
+if (!OpenDB(AVDB_FILE,&dbp))
    {
-   CfOut(cf_verbose,"","Couldn't open average database %s\n",VINPUTFILE);
+   CfOut(cf_verbose,"","Couldn't open average database %s\n",AVDB_FILE);
    return;
    }
 
@@ -2430,9 +2432,9 @@ static void MagnifyNow()
   char timekey[CF_MAXVARSIZE];
   CF_DB *dbp;
 
-if (!OpenDB(VINPUTFILE,&dbp))
+if (!OpenDB(AVDB_FILE,&dbp))
    {
-   CfOut(cf_verbose,"","Couldn't open average database %s\n",VINPUTFILE);
+   CfOut(cf_verbose,"","Couldn't open average database %s\n",AVDB_FILE);
    return;
    }
 

@@ -735,8 +735,7 @@ HandleConnection(conn);
 
 static void CheckFileChanges(int argc, char **argv, GenericAgentConfig config)
 
-{ struct stat newstat;
-  char filename[CF_BUFSIZE];
+{ char filename[CF_BUFSIZE];
   int ok;
 
 if (EnterpriseExpiry())
@@ -744,7 +743,6 @@ if (EnterpriseExpiry())
    CfOut(cf_error,"","!! This enterprise license is invalid.");
    }
 
-memset(&newstat,0,sizeof(struct stat));
 memset(filename,0,CF_BUFSIZE);
 
 if (!IsFileOutsideDefaultRepository(VINPUTFILE)) /* Don't prepend to absolute names */
@@ -756,7 +754,7 @@ strncat(filename,VINPUTFILE,CF_BUFSIZE-1-strlen(filename));
 
 MapName(filename);
 
-CfDebug("Checking file updates on %s (%jd/%jd)\n",filename, (intmax_t)newstat.st_mtime, (intmax_t)CFDSTARTTIME);
+CfDebug("Checking file updates on %s (%jd)\n",filename, (intmax_t)CFDSTARTTIME);
 
 if (NewPromiseProposals())
    {

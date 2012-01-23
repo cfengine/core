@@ -367,8 +367,7 @@ for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFS_CONTROLBODY[cfs_keyttl].lval) == 0)
       {
-      KEYTTL = (short)Str2Int(retval.item);
-      CfOut(cf_verbose,"","SET key TTL = %d\n",KEYTTL);
+      CfOut(cf_verbose, "", "Ignoring deprecated option keycacheTTL");
       continue;
       }
 

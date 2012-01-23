@@ -297,7 +297,6 @@ void ThisAgentInit()
 {
 NewScope("remote_access");
 umask(077);
-CFDSTARTTIME = time(NULL);
 }
 
 /*******************************************************************/

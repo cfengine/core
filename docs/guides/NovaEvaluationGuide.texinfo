@@ -16,20 +16,20 @@
 @c
 @c *********************************************************************** 
 @c %** start of header
-@setfilename novapilothandbook.info
-@settitle CFEngine 3 Nova Pilot Handbook
+@setfilename novaevaluationguide.info
+@settitle CFEngine 3 Nova Evaluation Guide
 @c @setchapternewpage odd
 @c %** end of header
 @titlepage
-@title CFEngine 3 Nova Pilot Handbook
+@title CFEngine 3 Nova Evaluation Guide
 @subtitle CFEngine Enterprise Documentation
-@subtitle Updated 19. January 2011
+@subtitle Updated 23. January 2012
 @author CFEngine
 @c @smallbook
 @fonttextsize 10
 @c @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 2011 CFEngine AS.
+Copyright @copyright{} 2012 CFEngine AS.
 The features described herein are in provided for user convenience and imply no warranty whatsoever
 to the extent of applicable law.
 @end titlepage
@@ -45,13 +45,13 @@ to the extent of applicable law.
 @end direntry
 @end ifinfo
 @ifnottex
-@node Top
-@top CFEngine 3 Nova Pilot Handbook
+@node Top, , (dir), (dir)
+@top CFEngine 3 Nova Evaluation Guide
 @end ifnottex
 @ifhtml
 @html
-<a href="#Contents"><h1>COMPLETE TABLE OF CONTENTS</h1></a>
-<h2>Summary of contents</h2>
+<a name="Contents">
+@contents
 @end html
 @end ifhtml
 
@@ -61,25 +61,31 @@ to the extent of applicable law.
 
 
 @menu
-* Introduction::
+* Introduction::                
+* Get started::                 
+* Standard reports in CFEngine 3 Nova::  
+* Content Driven Policy (CDP) reports::  
+* Introduction to CFEngine policies::  
+* Next steps::                  
+* Policy Editing::              
 @end menu
 
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node 
+@node  Introduction, Get started, Top, Top
 @chapter Introduction
 
 CFEngine comes in two software editions: CFEngine Community and CFEngine 3 Nova. CFEngine 3 Nova is a commercial subscription offering, with simple productivity enhancements and reporting extensions. Features include compliance management, reporting and business integration, and tools for handling necessary complexity. CFEngine 3 Nova has features to support Cloud Computing for public and private clouds, as well as greater integration facilities with database resources.
 
-You do not need experience with CFEngine 3 for this pilot program, this document provides a step-by-step guide to help you find and use the product's major features.  Of course, the deeper knowledge of system administration and CFEngine 3 language that you possess, the more you will get out of this evaluation.
+The evaluation program aims to familiarize the user with CFEngine 3 Nova through examples and practical use of the Nova Mission Portal, a web based graphical user interface. You do not need experience with CFEngine 3, the current document provides a step-by-step guide to help you find and use the product's major features.  Of course, the deeper knowledge of system administration and CFEngine 3 language that you possess, the more you will get out of this evaluation.
 
-The pilot program aims to familiarize the user with CFEngine 3 Nova through examples and practical use of the Nova Mission Portal, a web based graphical user interface. The Mission Portal is the centerpiece of user interaction with CFEngine 3 Nova, designed to suit the needs of the next generation of system administrators and IT managers alike. We will look at some common concepts in the following sections and allow the user to quickly:
+The Mission Portal is the centerpiece of user interaction with CFEngine 3 Nova, designed to suit the needs of the next generation of system administrators and IT managers alike. The evaluation program will allow the user to quickly:
 
 @c @itemize -
 @c @item View standard reports
 @c @item Create (query) reports
-@c @item Modify a Content Dependent Policy (CDP) datalist, and verify the result
+@c @item Modify a Content Dependent Policy (CDP) data list, and verify the result
 @c @item Edit a generic policy and verify the result
 @c @item Create a generic policy and verify the result
 @c @end itemize
@@ -98,7 +104,7 @@ The pilot program aims to familiarize the user with CFEngine 3 Nova through exam
 @c @item Drill-down and configure individual servers, files, services, etc.
 @end itemize
 
-For the purpose of this pilot program, CFEngine 3 Nova has been set up in a network comprising several nodes. One node serves as a central hub to distribute CFEngine configuration policies and collect reports from the other nodes (clients). They run on different operating systems, comprising several linux flavours and windows servers.
+For the purpose of this evaluation program, CFEngine 3 Nova has been set up in a network comprising several nodes. One node serves as a central hub to distribute CFEngine configuration policies and collect reports from the other nodes (clients). They run on different operating systems, comprising several linux flavors and windows servers.
 
 
 @c -----------------------------------------------------
@@ -113,18 +119,18 @@ For the purpose of this pilot program, CFEngine 3 Nova has been set up in a netw
 @c @node 
 @c @section Pilot scope
 
-@c To CFEngine, IT operations is @i{The Mission}. The Nova Mission Portal was designed to give users an understanding of the current and past state of their system and act as a control and collarboration center. We will look at these concepts in the following sections and allow the user to quickly:
-@c To CFEngine, IT operations is @i{The Mission}. The Nova Mission Portal was designed to give users an understanding of the current and past state of their system, act as a control and collarboration center, and serve as a knowledge base. We will look at these concepts in the following sections and allow the user to quickly:
+@c To CFEngine, IT operations is @i{The Mission}. The Nova Mission Portal was designed to give users an understanding of the current and past state of their system and act as a control and collaboration center. We will look at these concepts in the following sections and allow the user to quickly:
+@c To CFEngine, IT operations is @i{The Mission}. The Nova Mission Portal was designed to give users an understanding of the current and past state of their system, act as a control and collaboration center, and serve as a knowledge base. We will look at these concepts in the following sections and allow the user to quickly:
 
 @c @enumerate
 @c @item View standard reports
 @c @item Create (query) reports
-@c @item Modify a Content Dependent Policy (CDP) datalist, and verify the result
+@c @item Modify a Content Dependent Policy (CDP) data list, and verify the result
 @c @item Edit a generic policy and verify the result
 @c @item Create a generic policy and verify the result
 @c @end enumerate
 
-@c For the purpose of this pilot program, CFEngine 3 Nova has been set up in a network comprising several nodes. One node serves as a central hub to distribute CFEngine configuration policies and collect reports from the other nodes (clients). They run on different operating systems, comprising several linux flavours and windows servers.
+@c For the purpose of this pilot program, CFEngine 3 Nova has been set up in a network comprising several nodes. One node serves as a central hub to distribute CFEngine configuration policies and collect reports from the other nodes (clients). They run on different operating systems, comprising several linux flavors and windows servers.
 
 @c In the following we will demonstrate the capabilities of standard reports and query these reports to customize the output to your need. We will look at how to create and modify a policy. Through the use of best practices the user will learn how to document policies and the intent behind these. 
 
@@ -132,12 +138,22 @@ For the purpose of this pilot program, CFEngine 3 Nova has been set up in a netw
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node
+@node Get started, Standard reports in CFEngine 3 Nova, Introduction, Top
 @chapter Get started
 
-@node
+@menu
+* Accessing CFEngine 3 Nova::   
+* CFEngine terms used in this document::  
+* Status room::                 
+* Engineering room::            
+* Planning room::               
+* Library room::                
+@end menu
+
+@c -----------------------------------------------------
+@node Accessing CFEngine 3 Nova, CFEngine terms used in this document, Get started, Get started
 @section Accessing CFEngine 3 Nova
-You should have received an email with account information after making a pilot agreement with CFEngine. In it, you will find information on how to access your dedicated CFEngine 3 Nova instance, the CFEngine support ticketing system, and other online resources. Go to the url indicated in this email to access the Nova Mission Portal, use your credentials to log in.
+You should have received an email with account information after making an evaluation agreement with CFEngine. In it, you will find information on how to access your dedicated CFEngine 3 Nova instance, the CFEngine support ticketing system, and other online resources. Go to the url indicated in this email to access the Nova Mission Portal, use your credentials to log in.
 
 @sp 1
 @center @image{img-login,5cm,,Nova Mission Portal login screen}
@@ -162,14 +178,22 @@ The Nova Mission Portal is divided into four main sections called @i{rooms}. Eac
 
 You can always use the breadcrumb in the top left corner to navigate and see where you are in the Mission Portal.
 
-@node
+
+@c -----------------------------------------------------
+@node CFEngine terms used in this document, Status room, Accessing CFEngine 3 Nova, Get started
 @section CFEngine terms used in this document
 CFEngine uses a declarative language that describes the desired state of a system. Individual statements are called @i{promises}. Promises can be @i{kept} (CFEngine was able to keep the promise about the desired state), @i{not kept} (CFEngine was not able to keep the promise about the desired state) or @i{repaired} (promise was initially not kept, CFEngine fixed this). The desired state of your system is thus described in collections of promises, assembled in CFEngine policy files with the extension @file{.cf}.
 
 
 @c -----------------------------------------------------
-@node
+@node Status room, Engineering room, CFEngine terms used in this document, Get started
 @section Status room
+
+@menu
+* Business Value and Host Status::  
+* Compliance Summary::          
+* Services/Goals::              
+@end menu
 
 @c The @samp{Status} room provides a high level summary of how well the entire system is behaving in a manner that is understandable for non-technical people. 
 
@@ -188,7 +212,9 @@ CFEngine uses a declarative language that describes the desired state of a syste
 @center @image{img-pilotstatus,11.5cm,,Status room}
 @center Figure: Status room
 
-@node Business Value and Host Status
+
+@c -----------------------------------------------------
+@node Business Value and Host Status, Compliance Summary, Status room, Status room
 @subsection Business Value and Host Status
 The two pie charts show the business value of the promises kept/not kept and well as host status, respectively. Business value is associated with the value of promises as defined in policy files. In the Host Status chart, each node in the network represents a slice of the pie and is classified into red, yellow, green and blue according to the level of their compliance:
 
@@ -199,24 +225,32 @@ The two pie charts show the business value of the promises kept/not kept and wel
 @item Blue: there is no contact between the hub and the client host (host unreachable)
 @end itemize
 
-@node
+@c -----------------------------------------------------
+@node Compliance Summary, Services/Goals, Business Value and Host Status, Status room
 @subsection Compliance Summary
 The row of bar meters shows the compliance (average percentage of promises kept, repaired or not kept) of all registered hosts in blocks of 6 hours for the past week. It summarizes performance and anomalous behavior in a simple red (promises not kept), yellow (promises repaired) and green (promises kept) scale. Click on a bar to see which promises were kept/not kept.
 
-@node
+@c -----------------------------------------------------
+@node Services/Goals, , Compliance Summary, Status room
 @subsection Services/Goals
-A summary of Mission goals as defined in user policy files (these examples are from @file{company_knowledge.cf}). We will look at editing policy files in later sections. @c Edit the file in the policy editor (Planning room -> repository), or edit the file in your own text editor, to change these goals.
+A summary of Mission goals as defined in user policy files (these examples are from @file{company_knowledge.cf}). You can look at editing policy files in @ref{Policy Editing}. @c Edit the file in the policy editor (Planning room -> repository), or edit the file in your own text editor, to change these goals.
 
 @c We will now have a look in the @samp{Engineering} room: 
 
 
 @c -----------------------------------------------------
-@node Engineering room
+@node Engineering room, Planning room, Status room, Get started
 @section Engineering room
+
+@menu
+* Host Status (last hour)::     
+* Promise compliance summary for reachable hosts::  
+* Finders::                     
+@end menu
 
 @sp 1
 @cartouche
-@noindent @b{Action item:} Click @b{NOVA MISSION PORTAL} on the top left (or @b{MISSION PORTAL} in the breadcrumb) to go back to the main Misson Portal page. Click the @b{Engineering} icon in the main page of the Mission Portal to enter the @samp{Engineering} room.
+@noindent @b{Action item:} Click @b{NOVA MISSION PORTAL} on the top left (or @b{MISSION PORTAL} in the breadcrumb) to go back to the main Mission Portal page. Click the @b{Engineering} icon in the main page of the Mission Portal to enter the @samp{Engineering} room.
 
 @sp 1
 @center @image{img-gotoengineering,6.5cm,,Go to Status room}
@@ -230,31 +264,35 @@ Mission engineering illustrates the state of the system in relation to the desir
 @center @image{img-pilotengineering,12cm,,Engineering room}
 @center Figure: Engineering room
 
-@node
+
+@c -----------------------------------------------------
+@node Host Status (last hour), Promise compliance summary for reachable hosts, Engineering room, Engineering room
 @subsection Host Status (last hour)
 @itemize -
 @item The hosts are classified into red, yellow, green and blue according to the status of their compliance (as defined in @ref{Business Value and Host Status}). Clicking a link produces a list of the hosts in that category. 
 @item Hosts known: Shows the total number of hosts (red, green, yellow or blue) that are in the network
 @item Worst available host rank: Display the hosts (that have been in contact with the hub) with the most promises not kept over the last hour.
-@item Hub replication status: Display status of redundant monitoring hubs (not activated in pilot environment).
+@item Hub replication status: Display status of redundant monitoring hubs (not activated in evaluation environment).
 @end itemize
 
-@node
+@c -----------------------------------------------------
+@node Promise compliance summary for reachable hosts, Finders, Host Status (last hour), Engineering room
 @subsection Promise compliance summary for reachable hosts
 The row of bar meters shows the compliance (average percentage of promises kept, repaired or not kept) of registered hosts. It summarizes performance and anomalous behavior in a simple red (promises not kept), yellow (promises repaired), and green (promises kept) scale. The "Chng" bar relates to the amount of changes made to files monitored by a CFEngine policy in the last hour (change watch). It is green if no changes have been made. The level of yellow increases as changes occur (but it will never be red).  For the "Seen" bar, CFEngine monitors the average time between connections to the clients and reports deviations as green, yellow or red according to the size of the deviation. The "Anom" bar relates to anomalies and is generated from monitoring data (vital signs) for the last week. CFEngine uses the average value of each vital sign to report deviations as green, yellow or red according to the size of the deviation.
 
-@node 
+@c -----------------------------------------------------
+@node  Finders,  , Promise compliance summary for reachable hosts, Engineering room
 @subsection Finders
-The Mission @samp{Engineering} room comes with finder functions (modules that make it simple and intuitive to browse and search for objects of a particular type): Host, Class, Promises, Reports, Summary reports, and CDP (Content Driven Policies) reports. We will take a closer look at Reports and CDP reports in this pilot document, but feel free to explore the different finder functions on your own.
+The Mission @samp{Engineering} room comes with finder functions (modules that make it simple and intuitive to browse and search for objects of a particular type): Host, Class, Promises, Reports, Summary reports, and CDP (Content Driven Policies) reports. We will take a closer look at Reports and CDP reports in this document, but feel free to explore the different finder functions on your own.
 
 
 @c -----------------------------------------------------
-@node Planning room
+@node Planning room, Library room, Engineering room, Get started
 @section Planning room
 
 @sp 1
 @cartouche
-@noindent @b{Action item:} Click @b{NOVA MISSION PORTAL} on the top left (or @b{MISSION PORTAL} in the breadcrumb) to go back to the main Misson Portal page. Click the @b{Planning} icon in the main page of the Mission Portal to enter the @samp{Planning} room.
+@noindent @b{Action item:} Click @b{NOVA MISSION PORTAL} on the top left (or @b{MISSION PORTAL} in the breadcrumb) to go back to the main Mission Portal page. Click the @b{Planning} icon in the main page of the Mission Portal to enter the @samp{Planning} room.
 
 @sp 1
 @center @image{img-gotoplanning,6.5cm,,Go to Planning room}
@@ -297,11 +335,11 @@ Shows the latest activity entries. Type in a new activity to keep colleagues pos
 
 
 @c -----------------------------------------------------
-@node Library room
+@node Library room,  , Planning room, Get started
 @section Library room
 
 @cartouche
-@noindent @b{Action item:} Click @b{NOVA MISSION PORTAL} on the top left (or @b{MISSION PORTAL} in the breadcrumb) to go back to the main Misson Portal page. Click the @b{Library} icon in the main page of the Mission Portal to enter the @samp{Library} room.
+@noindent @b{Action item:} Click @b{NOVA MISSION PORTAL} on the top left (or @b{MISSION PORTAL} in the breadcrumb) to go back to the main Mission Portal page. Click the @b{Library} icon in the main page of the Mission Portal to enter the @samp{Library} room.
 
 @sp 1
 @center @image{img-gotolibrary,8.5cm,,Go to Library room}
@@ -326,12 +364,19 @@ The Library room contains finders for documents, topics, a notes archive, and a 
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node 
+@node  Standard reports in CFEngine 3 Nova, Content Driven Policy (CDP) reports, Get started, Top
 @chapter Standard reports in CFEngine 3 Nova
 
 A significant capability of CFEngine 3 Nova is automated system reporting: it collects history, state and change data about computers and ties them together. A report is a tabular summary of CFEngine's internal information, tailored to a particular purpose, searchable, and describes attributes and qualities of managed hosts. 
 
-@node Reports finder
+@menu
+* Reports finder::              
+* Example - Software report::    
+@end menu
+
+
+@c -----------------------------------------------------
+@node Reports finder, Example - Software report, Standard reports in CFEngine 3 Nova, Standard reports in CFEngine 3 Nova
 @section Reports finder
 
 @noindent Standard reports in CFEngine 3 Nova can be accessed through the @samp{Reports finder}: 
@@ -371,7 +416,7 @@ A significant capability of CFEngine 3 Nova is automated system reporting: it co
 @c     @item Compliance summary: Total summary of host compliance
 @c     @item File change log: Log of all detected changes to files from changes promises
 @c     @item File change diffs: Delta/difference comparison showing file changes
-@c     @item Last saw hosts: Log of when neighbouring hosts were last observed online
+@c     @item Last saw hosts: Log of when neighboring hosts were last observed online
 @c     @item Patches available: A list of patches currently claimed to be available by the local package manager
 @c     @item Patch status: A list of (un)applied patches according to the local package manager
 @c     @item Performance: Execution time used to verify selected promises
@@ -391,8 +436,10 @@ A significant capability of CFEngine 3 Nova is automated system reporting: it co
 
 The finder lists all the standard report categories, each category contains information about different aspects of the Mission. When you click one of them, the @samp{Report finder} will present a query form that is adapted to the chosen report category.
 
-@node Example: Software report
-@section Example: Software report
+
+@c -----------------------------------------------------
+@node Example - Software report,  , Reports finder, Standard reports in CFEngine 3 Nova
+@section Example - Software report
 
 @cartouche
 @noindent @b{Action item:} Scroll down and click @b{Software installed} towards the bottom of the @samp{Report finder} to open a query window.
@@ -426,7 +473,7 @@ There are two ways of narrowing down the listing in these reports: one is to ent
 
 Once you have clicked @samp{Generate report}, CFEngine 3 Nova will list an overview of all machines running some version of apache. 
 
-The combination of the extensive reports and detailed filtering is a flexible and powerful tool, made to give as general or granular an overview as the user needs it to be. A summary and explanation to all the standard reports can be found in the @url{http://cfengine.com/<address TBD>, Nova Pilot Handbook Supplement}.
+The combination of the extensive reports and detailed filtering is a flexible and powerful tool, made to give as general or granular an overview as the user needs it to be. A summary and explanation to all the standard reports can be found in the @url{http://cfengine.com/<address TBD>, Nova Evaluation Guide Supplement}.
 
 @c Before moving on to Content Driven Policies (CDPs) and CDP reports, we would like to give you the opportunity to enjoy some hands-on experience with CFEngine. We will first have a look at how you can work with CFEngine policies in the policy editor, and the move on to edit polices relevant to the above examples.
 
@@ -434,8 +481,12 @@ The combination of the extensive reports and detailed filtering is a flexible an
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node 
+@node  Content Driven Policy (CDP) reports, Introduction to CFEngine policies, Standard reports in CFEngine 3 Nova, Top
 @chapter Content Driven Policy (CDP) reports
+
+@menu
+* Example - ACLs (file access controls)::  
+@end menu
 
 Content-Driven Policies (CDPs) were introduced to make policy management easier. In contrast to policies written in the CFEngine language, they are composed of semi-colon separated fields in a text file that the user fills with content, like a spreadsheet or tabular file. Each line in the file is parsed and translated to be part of a regular CFEngine policy. We will take a closer look at CDP input files in a later section.
 
@@ -473,8 +524,8 @@ CDP reports are similar to standard reports, except that they reflect the effect
 
 
 @c ------------------------------------------------------
-@node
-@section Example: ACLs (file access controls)
+@node Example - ACLs (file access controls),  , Content Driven Policy (CDP) reports, Content Driven Policy (CDP) reports
+@section Example - ACLs (file access controls)
 
 CFEngine 3 Nova comes with several default CDPs, we will use the @samp{ACLs report} as an example. An access control list (ACL) is a list which specifies which users or system processes are granted access to objects, as well as what operations are allowed on given objects. Each entry in a typical ACL specifies a subject and an operation. For instance, if a file has an ACL that contains (Alice, delete), this would give Alice permission to delete the file.
 
@@ -485,7 +536,7 @@ CFEngine 3 Nova comes with several default CDPs, we will use the @samp{ACLs repo
 @page
 @sp 1
 @center @image{img-aclsreport,15cm,, ACLs report}
-@center Figure: ACLs report (bug in pilot env)
+@center Figure: ACLs report
 @sp 1
 
 The report lists an overview of host name (@samp{Host}), path of the affected object (@samp{Path}), the permission setting (@samp{Permission (ACL)}), owner of the affected object (@samp{Owner}), action that CFEngine should execute on the object (@samp{Action}), the context in which the promise was made (@samp{Class expression}), state of compliance (@samp{State}), and the time the promise was last checked (@samp{Last checked}).
@@ -495,8 +546,13 @@ The report lists an overview of host name (@samp{Host}), path of the affected ob
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node 
+@node  Introduction to CFEngine policies, Next steps, Content Driven Policy (CDP) reports, Top
 @chapter Introduction to CFEngine policies
+
+@menu
+* Content Driven Policy::       
+* CFEngine syntax::             
+@end menu
 
 There are two types of CFEngine policies:
 @itemize -
@@ -504,11 +560,11 @@ There are two types of CFEngine policies:
 @item Standard CFEngine policy file: Uses CFEngine syntax (@file{.cf} file extension)
 @end itemize
 
-You may choose to edit policy files in either a beta version of the integrated Policy Editor or in an editor of you choice. The pilot environment is limited to the Policy Editor for the moment, but we will soon implement web based access via ssh so you can edit policy files there (this is normally what you would do in a production environment). In the following, we will see a short introduction to both CDP and standard policies. See @ref{The Policy Editor (beta)} for how to access the Policy Editor and edit these files.
+You may choose to edit policy files in either a beta version of the integrated Policy Editor or in an editor of your choice. The evaluation environment is limited to the Policy Editor for the moment, but we will soon implement web based access via ssh so you can edit policy files there (this is normally what you would do in a production environment). In the following, we will see a short introduction to both CDP and standard policies. See @ref{The Policy Editor (beta)} for how to access the Policy Editor and edit these files.
 
 
 @c ------------------------------------------------------
-@node
+@node Content Driven Policy, CFEngine syntax, Introduction to CFEngine policies, Introduction to CFEngine policies
 @section Content Driven Policy
 
 As explained previously, content driven policies consist of semi-colon separated fields in a text file. The files also contain a header that explains the format and meaning of the fields and typically looks like this (lines have been split and indented for presentability):
@@ -539,7 +595,7 @@ As explained previously, content driven policies consist of semi-colon separated
 
 Anything with a @samp{;} before or after it is a field entry. We need to look at the header of the file to understand the structure and meaning of the fields (under the @code{FORMAT} and @code{EXAMPLE} sections). In this case we have (line has been split and indented for presentability):
 
-@c As explained previously, content driven policies consist of semi-colon separated fields in a text file. The files also contain a header that explains the format and meaning of the fields. We will look at an Acces Control List (ACL) input file as an example. The default CFEngine 3 Nova ACLs policies allow you to set permissions to directories and files using two different input files (@file{acl_directory_list.txt} and @file{acl_file_list.txt}, respectively). We will limit ourselves to look at one of these as they are conceptually identical.
+@c As explained previously, content driven policies consist of semi-colon separated fields in a text file. The files also contain a header that explains the format and meaning of the fields. We will look at an Access Control List (ACL) input file as an example. The default CFEngine 3 Nova ACLs policies allow you to set permissions to directories and files using two different input files (@file{acl_directory_list.txt} and @file{acl_file_list.txt}, respectively). We will limit ourselves to look at one of these as they are conceptually identical.
 
 @c We saw earlier that the input consisted of lines containing semi colon separated fields, so anything with a @samp{;} before or after it is a field entry. We need to look at the header of the file to understand its structure, the input fields are explained in the @code{FORMAT} section. In this case we have (line has been split and indented for presentability):
 @page
@@ -577,7 +633,7 @@ The advantage of CDPs is that it requires no knowledge of CFEngine syntax to qui
 
 
 @c ------------------------------------------------------
-@node
+@node CFEngine syntax,  , Content Driven Policy, Introduction to CFEngine policies
 @section CFEngine syntax
 
 Standard CFEngine policies consist of a declarative language that describes the desired state of a system. Individual statements are called @i{promises}, they can be grouped in bundles and have parametrized body templates (@samp{bundle} and @samp{body} are keywords in CFEngine that correspond to these). Below is an example of a simple CFEngine policy:
@@ -595,7 +651,7 @@ Standard CFEngine policies consist of a declarative language that describes the 
 
 body common control
 {
-  bundlesequence => "test";
+  bundlesequence => { "test" };
 }
 
 # Comments are defined by the hash tag (#), they will not be parsed by CFEngine.
@@ -613,21 +669,21 @@ files:		     # This is the promise type, i.e. we make a promise about files
 
 @c The right hand panel shows basic file and Subversion commands. The @code{Save} button will store a local/version of the opened files without committing to the repository. 
 
-This policy will create the file @file{/tmp/testfile}. It contains the bare minimum of a CFEngine policy, consisting of the compulsary @samp{body common control}, containing (at least) a bundlesequence. Then follows a compulsary @samp{bundle}, of type @samp{agent} and with the arbitrary name @samp{test} (the bundle type reflects the affected CFEngine component and can take several values, here we use @samp{agent}). The bundle contains a promise type (here @samp{files}), a promiser (i.e. the affected object, here @samp{/tmp/testfile}) and a promise about desired state (here @samp{create => "true"}).
+This policy will create the file @file{/tmp/testfile}. It contains the bare minimum of a CFEngine policy, consisting of the compulsory @samp{body common control}, containing (at least) a bundlesequence. Then follows a compulsory @samp{bundle}, of type @samp{agent} and with the arbitrary name @samp{test} (the bundle type reflects the affected CFEngine component and can take several values, here we use @samp{agent}). The bundle contains a promise type (here @samp{files}), a promiser (i.e. the affected object, here @samp{/tmp/testfile}) and a promise about desired state (here @samp{create => "true"}).
 
-@c Then follows a compulsary @samp{bundle}and followed by bundle type (which reflects the affected CFEngine component, here @samp{agent}) and an arbitrary bundle name (here @samp{test}).
+@c Then follows a compulsory @samp{bundle}and followed by bundle type (which reflects the affected CFEngine component, here @samp{agent}) and an arbitrary bundle name (here @samp{test}).
 
 
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node Next steps
+@node Next steps, Policy Editing, Introduction to CFEngine policies, Top
 @chapter Next steps
 
 We recommend that users familiarize themselves with the @url{http://cfengine.com/tech, CFEngine 3 documentation} and continue to learn about the CFEngine language and CFEngine 3 Nova. Documents of interest include: @*
 
 @itemize -
-@item @url{http://cfengine.com/manuals/<address TBD>, Nova Pilot Handbook Supplement}@*
+@item @url{http://cfengine.com/manuals/<address TBD>, Nova Evaluation Guide Supplement}@*
 @item @url{http://cfengine.com/manuals/NovaOwnersManual.html, CFEngine 3 Nova Owner's Manual}@*
 @item @url{http://cfengine.com/manuals/cf3-conceptguide.html, CFEngine 3 Concept guide}@*
 @item @url{http://cfengine.com/manuals/cf3-reference.html, CFEngine 3 Reference Manual}@*
@@ -641,12 +697,18 @@ Use our @url{http://info.cfengine.com/ContactUs.html, contact form}, or send an 
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node Policy Editing
+@node Policy Editing,  , Next steps, Top
 @appendix Policy Editing
 
 
 @c -----------------------------------------------------
-@node The Policy Editor (beta)
+@menu
+* The Policy Editor (beta)::    
+* Edit a CDP input file::       
+* Create a standard policy::    
+@end menu
+
+@node The Policy Editor (beta), Edit a CDP input file, Policy Editing, Policy Editing
 @section The Policy Editor (beta)
 
 CFEngine 3 Nova has a beta version of an integrated editor, made for working on CFEngine policies. It provides syntax high-lighting and look-up to make policy writing easier. 
@@ -693,7 +755,7 @@ The Policy Editor appears after a successful checkout. It consists of three main
 
 @page
 @c ---------------------------------------------------
-@node
+@node Edit a CDP input file, Create a standard policy, The Policy Editor (beta), Policy Editing
 @section Edit a CDP input file
 
 If you have not already opened the Policy Editor, follow the instruction in @ref{The Policy Editor (beta)} to do so. The file @file{acl_file_list.txt} can be found under the @file{cdp_inputs} catalog in the policy editor.
@@ -717,19 +779,19 @@ If you have not already opened the Policy Editor, follow the instruction in @ref
 We will now modify a field in this policy and check the result in the Mission Portal. The first two lines below @code{# Windows 2003} concern the file @file{c:\WINDOWS\system32\drivers\etc\hosts}, lets change the action taken by CFEngine if the promise is not compliant.
 
 @cartouche
-@noindent @b{Action item:} Change the next to last field from @samp{fix} to @samp{warn}. Click the @b{Save} icon on the right, then @b{Commit} (add a comment in the pop up, for example 'Changed to warn'), click @b{Run now} and wait for the execution to have finished (can take up to a minute). To check the result, go back to the main page, enter the @samp{Engineering} room, click the @b{CDP reports} icon and finally click @b{ACLs File access controls} in the @samp{CDP reports} finder.
+@noindent @b{Action item:} Change the next to last field from @samp{fix} to @samp{warn}. Click the @b{Save} icon on the right, then @b{Commit} (add a comment in the pop up, for example 'Changed to warn'), click @b{Run now} and wait for the execution to have finished (can take up to a minute). To check the result, go back to the main page, enter the @samp{Engineering} room (@ref{Engineering room}), click the @b{CDP reports} icon and finally click @b{ACLs File access controls} in the @samp{CDP reports} finder.
 @end cartouche
 
 The result should look like the following figure (note that the value in the @samp{Action} column says @samp{warn} instead of @samp{fix}). 
 
 @sp 1
 @center @image{img-aclsreportwarn,15cm,, ACLs report}
-@center Figure: ACLs report (bug in presentation)
+@center Figure: ACLs report
 @sp 1
 
 
 @c ------------------------------------------------------
-@node
+@node Create a standard policy,  , Edit a CDP input file, Policy Editing
 @section Create a standard policy
 
 If you have not already opened the Policy Editor, follow the instruction in @ref{The Policy Editor (beta)} to do so. We will create a custom report as an example of writing a standard CFEngine policy. Custom reports are useful when your reporting needs differ from the CFEngine 3 Nova standard reports. Data processing and extraction from CFEngine's embedded databases must be scripted by the user if the procedure is not covered in any of the reports found in the Mission Portal. Output to files or logs may be customized on a per-promise basis and users can design their own log and report formats. 
@@ -748,13 +810,15 @@ bundle agent pilot_simple_custom_report_policy {
 
    # promise type: promise about classes (context), see details below
    classes:
-      "file_should_exist" expression => fileexists("$(file_to_check)");		
+      "file_exists" expression => fileexists("$(file_to_check)");		
 @end verbatim
+@sp 1
+@noindent (@i{The policy continues on the next page.})
 @page
 @verbatim
    # promise type: make a promise about reports, see details below
    reports:
-      !file_should_exist::		# context in which the promise should be executed
+      !file_exists::		# context in which the promise should be executed
 				# in this case if the file does not exist 
          "WARNING: File $(file_to_check) does not exist on host $(sys.uqhost)"
             handle  => "pilot_simple_report_policy",
@@ -763,11 +827,11 @@ bundle agent pilot_simple_custom_report_policy {
 
 @end verbatim
 
-The astute reader will remark that there is no @samp{body common control} statement in the above policy. The reason is that we will use this bundle in the global policy @file{promises.cf}, which already contains the compulsary @code{body common control}. We can therefore omit that statement here. This policy consists of a bundle with three main parts:
+The astute reader will remark that there is no @samp{body common control} statement in the above policy. The reason is that we will use this bundle in the global policy @file{promises.cf}, which already contains the compulsory @code{body common control}. We can therefore omit that statement here. This policy consists of a bundle with three main parts:
 
 @enumerate
 @item Variable definition: Define a variable called @code{file_to_check}, of type @code{string}, containing a value that represents a file name (@file{/tmp/somefile.txt}). 
-@item Class definition: check whether the file exists through the CFEngine function @code{fileexists} and set a class (boolean) called @code{file_should_exist} based on the result. 
+@item Class definition: check whether the file exists through the CFEngine function @code{fileexists} and set a class (boolean) called @code{file_exists} based on the result. 
 @item Report definition: Generate a report if the file does not exist (consists of a warning; it uses the @code{file_to_check} and @code{sys.uqhost} variables to display the appropriate file- and host names, respectively.
 @end enumerate
 
@@ -782,7 +846,7 @@ We now need to add the policy to @file{promises.cf} to verify the results in the
 @enumerate
 @c @item Save the edited policy
 @item Open @file{promises.cf} by clicking it in the policy listing on the left
-@item Uncomment the corresponding line by removing the hash tag (@code{#}) in front of them
+@item Uncomment the corresponding line by removing the hash tag (@code{#}) in front of it (only if you have created and saved the file as instructed above)
 @verbatim
     "bundlesequence" slist => {
                    "pilot_simple_edit_policy"
@@ -795,11 +859,15 @@ We now need to add the policy to @file{promises.cf} to verify the results in the
 @end verbatim
 @item Save @file{promises.cf}
 @item Run syntax check by clicking @b{Check syntax} on the right
-@item If everything is fine, commit the changes by clicking @b{Commit} on the right (you will be promted for a comment, enter for example 'Added custom report')
+@item If everything is fine, commit the changes by clicking @b{Commit} on the right (you will be prompted for a comment, enter for example 'Added custom report')
 @end enumerate
 @end cartouche
 
-The policy will have been adopted and executed at the next CFEngine run (every five minutes by default). Again, you may execute the policy immediatly by clicking the @b{Run now} button in the right column (this might take a while, please be patient and wait until the execution is finished before checking the reports for updates). You can check that the policy has been run by searching for its handle in a report: open the @samp{Report finder} as shown previously, scroll to and click @b{Compliance by promise}, enter the handle (@samp{pilot_simple_custom_report_policy}) in the @samp{By handle} query field and click @b{Generate}.
+The policy will have been adopted and executed at the next CFEngine run (every five minutes by default). Again, you may execute the policy immediately by clicking the @b{Run now} button in the right column (this might take a while, please be patient and wait until the execution is finished before checking the reports for updates). You can check that the policy has been run by searching for its handle in a report.
+
+@cartouche
+@noindent @b{Action item:} Open the @samp{Report finder} as shown previously, scroll to and click @b{Compliance by promise}, enter the handle (@samp{pilot_simple_custom_report_policy}) in the @samp{By handle} query field and click @b{Generate}.
+@end cartouche
 
 
 @c =========================================================================
@@ -807,12 +875,6 @@ The policy will have been adopted and executed at the next CFEngine run (every f
 @c @unnumbered Concept Index
 @c @printindex cp
 @c =========================================================================
-@ifhtml
-@html
-<a name="Contents">
-@contents
-@end html
-@end ifhtml
 
 @c  The file is structured like a programming language. Each chapter
 @c  starts with a chapter comment.

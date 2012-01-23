@@ -16,23 +16,23 @@
 @c
 @c ***********************************************************************@c 
 @c %** start of header
-@setfilename pilotsupplement.info
-@settitle CFEngine 3 Nova Pilot Handbook Supplement
+@setfilename novaevaluationguidesupplement.info
+@settitle Supplement to CFEngine 3 Nova Evaluation Guide
 @c @setchapternewpage odd
 @c %** end of header
 @titlepage
-@title CFEngine 3 Nova Pilot Handbook Supplement
+@title Supplement to CFEngine 3 Nova Evaluation Guide
 @subtitle CFEngine Enterprise Documentation
-@subtitle Updated 6. January 2011
+@subtitle Updated 23. January 2012
 @author CFEngine
 @c @smallbook
 @fonttextsize 10
 @c @page
 @vskip 0pt plus 1filll
 @cartouche
-This document supplements the @samp{CFEngine 3 Nova Pilot Handbook} with examples for all report types available in the CFEngine 3 Nova Mission Portal.
+This document supplements the @samp{CFEngine 3 Nova Evaluation Guide} with examples for all report types available in the CFEngine 3 Nova Mission Portal.
 @end cartouche
-Copyright @copyright{} 2011 CFEngine AS.
+Copyright @copyright{} 2012 CFEngine AS.
 The features described herein are in provided for user convenience and imply no warranty whatsoever
 to the extent of applicable law.
 @end titlepage
@@ -48,13 +48,14 @@ to the extent of applicable law.
 @end direntry
 @end ifinfo
 @ifnottex
-@node Top
-@top CFEngine 3 Nova Pilot Handbook Supplement
+@node Top, Standard reports in CFEngine 3 Nova, (dir), (dir)
+@top Supplement to CFEngine 3 Nova Evaluation Guide
 @end ifnottex
+
 @ifhtml
 @html
-<a href="#Contents"><h1>COMPLETE TABLE OF CONTENTS</h1></a>
-<h2>Summary of contents</h2>
+<a name="Contents">
+@contents
 @end html
 @end ifhtml
 
@@ -64,7 +65,8 @@ to the extent of applicable law.
 
 
 @menu
-* Standard reports in CFEngine 3 Nova::
+* Standard reports in CFEngine 3 Nova::  
+* CDP reports::                 
 @end menu
 
 @c *****************************************************
@@ -77,7 +79,7 @@ to the extent of applicable law.
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node 
+@node  Standard reports in CFEngine 3 Nova, CDP reports, Top, Top
 @chapter Standard reports in CFEngine 3 Nova
 
 Standard reports in CFEngine 3 Nova can be accessed through the @samp{Reports finder} in the @samp{Engineering} room. The finder lists all standard report categories and each category contains information about different aspects of the Mission. When you click one of them, the @samp{Report finder} will present a query form that is adapted to the chosen report category. CFEngine uses regular expressions in these queries, for maximum flexibility and to minimize system impact. The details of these queries and the content of the resulting reports are outlined in the following sections.
@@ -112,7 +114,7 @@ Standard reports in CFEngine 3 Nova can be accessed through the @samp{Reports fi
 @c     @item Compliance summary: Total summary of host compliance
 @c     @item File change log: Log of all detected changes to files from changes promises
 @c     @item File change diffs: Delta/difference comparison showing file changes
-@c     @item Last saw hosts: Log of when neighbouring hosts were last observed online
+@c     @item Last saw hosts: Log of when neighboring hosts were last observed online
 @c     @item Patches available: A list of patches currently claimed to be available by the local package manager
 @c     @item Patch status: A list of (un)applied patches according to the local package manager
 @c     @item Performance: Execution time used to verify selected promises
@@ -127,7 +129,28 @@ Standard reports in CFEngine 3 Nova can be accessed through the @samp{Reports fi
 
 
 @c -----------------------------------------------------
-@node
+@menu
+* Bundle profile report::       
+* Business value report::       
+* Class profile report::        
+* Compliance by promise report::  
+* Compliance summary report::   
+* File change log report::      
+* File change diffs report::    
+* Last saw hosts report::       
+* Patches available report::    
+* Patch status report::         
+* Performance report::          
+* Promises repaired log report::  
+* Promises repaired summary report::  
+* Promises not kept log report::  
+* Promises not kept summary report::  
+* Setuid/gid root programs report::  
+* Software installed report::   
+* Variables report::            
+@end menu
+
+@node Bundle profile report, Business value report, Standard reports in CFEngine 3 Nova, Standard reports in CFEngine 3 Nova
 @section Bundle profile report
 
 Promises are the fundamental statements in CFEngine, they make up the definition of the desired state of a system. A @i{bundle} is a collection of promises in a `sub-routine-like' container. The purpose of bundles is to allow greater flexibility to break down the contents of policies and give them names. Bundles also allow to re-use promise code by parameterizing it. 
@@ -146,21 +169,21 @@ The Bundle profile query can filter by bundle pattern (pattern in bundle name) a
 @center Figure: Bundle profile query
 @sp 1
 
-Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview of bundles that suit the query criteria entered above. It displays the host names on which these bundles can be found (@samp{Host}), the name of the bundles (@samp{Bundle}), the time stamp at the momement of verification (@samp{Last verified}), the time passed since last verification (@samp{Hours ago}), the average time between each verification (@samp{Avg interval}), and the uncertainty of that average (@samp{Uncertainty}, measured in one standard deviation of @samp{Avg interval}). You can add your personal note in the right column, documenting any thoughts or issues that you might have about the query result. The @samp{Last verified} value is yellow if more than six hours have passed since last verification.
+Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview of bundles that suit the query criteria entered above. It displays the host names on which these bundles can be found (@samp{Host}), the name of the bundles (@samp{Bundle}), the time stamp at the moment of verification (@samp{Last verified}), the time passed since last verification (@samp{Hours ago}), the average time between each verification (@samp{Avg interval}), and the uncertainty of that average (@samp{Uncertainty}, measured in one standard deviation of @samp{Avg interval}). You can add your personal note in the right column, documenting any thoughts or issues that you might have about the query result. The @samp{Last verified} value is yellow if more than six hours have passed since last verification.
 
 @sp 1
 @center @image{img-bundleprofilereport,15cm,,Bundle profile report}
 @center Figure: Bundle profile report
 @sp 1
 
-@c Click a bundle name to acces details of that specific bundle through the bundle viewer. 
+@c Click a bundle name to access details of that specific bundle through the bundle viewer. 
 @c @cartouche
 @c *** Explain further steps ***
 @c @end cartouche
 
 
 @c -----------------------------------------------------
-@node
+@node Business value report, Class profile report, Bundle profile report, Standard reports in CFEngine 3 Nova
 @section Business value report
 
 One of the capabilities of CFEngine 3 Nova is to add business or organizational value to the configuration
@@ -188,7 +211,7 @@ We will look at an example of how to attach business value of specific promises 
 
 
 @c -----------------------------------------------------
-@node
+@node Class profile report, Compliance by promise report, Business value report, Standard reports in CFEngine 3 Nova
 @section Class profile report
 
 CFEngine classes are certain true/false (Boolean) propositions that determine in what context, or setting, a promise is made. Each time CFEngine runs (by default every five minutes), it discovers and classifies properties of the environment in which it runs. These discovered properties are called 'hard classes' and cannot be changed by users. CFEngine also operates with soft classes, i.e. user-defined types.
@@ -204,7 +227,7 @@ The Class profile report is useful for looking at hosts in specific contexts, fo
 
 The class profile query can filter by (pattern in) class name and host class (i.e. the context of a host). Leaving the fields blank will result in a report listing all hosts and classes.
 
-Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview of hosts that suit the query criteria entered above. The result presents the host names (@samp{Host}), @samp{Class context}, probability of occurence (@samp{Occurs with probability}), @samp{Uncertainty} (standard deviation of @samp{Occurs with probabilty}), and the last time the class was observed (@samp{Last seen}).
+Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview of hosts that suit the query criteria entered above. The result presents the host names (@samp{Host}), @samp{Class context}, probability of occurrence (@samp{Occurs with probability}), @samp{Uncertainty} (standard deviation of @samp{Occurs with probability}), and the last time the class was observed (@samp{Last seen}).
 
 @sp 1
 @center @image{img-classprofilereport,15cm,,Class profile report}
@@ -213,7 +236,7 @@ Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview
 
 
 @c -----------------------------------------------------
-@node
+@node Compliance by promise report, Compliance summary report, Class profile report, Standard reports in CFEngine 3 Nova
 @section Compliance by promise report
 
 Promises are the fundamental statements in CFEngine, the policy atoms. Promises can be made about all kinds of different subjects, from file attributes, to the execution of commands, access control decisions and knowledge relationships. If there is no promise, nothing happens. It is considered compliant if CFEngine is able to keep the promise, and conversely, not compliant, or not kept, in the opposite case. 
@@ -227,7 +250,7 @@ The @samp{Compliance by promise} report is useful for checking the current statu
 
 The compliance by promise query can filter by (patterns in) promise handle, any/compliant/repaired/non-compliant promises (drop-down menu), and host class (i.e. the context of a host). Leaving the fields blank will result in a report listing all hosts and and promises.
 
-Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview of hosts that suit the query criteria entered above. The result presents the host names (@samp{Host}), the promise identifier @samp{Promise handle}, @samp{Last known state} (compliant or not compliant), likelyhood of a promise being compliant (@samp{Probability kept}), uncertainty of the likelyhood (@samp{Uncertainty}, measured in one standard deviation of @samp{Probability kept}), and the time stamp of the last time the promise was run.
+Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview of hosts that suit the query criteria entered above. The result presents the host names (@samp{Host}), the promise identifier @samp{Promise handle}, @samp{Last known state} (compliant or not compliant), likelihood of a promise being compliant (@samp{Probability kept}), uncertainty of the likelihood (@samp{Uncertainty}, measured in one standard deviation of @samp{Probability kept}), and the time stamp of the last time the promise was run.
 
 @sp 1
 @center @image{img-compliancebypromisereport,15cm,,Compliance by promise report}
@@ -241,7 +264,7 @@ Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview
 
 
 @c -----------------------------------------------------
-@node
+@node Compliance summary report, File change log report, Compliance by promise report, Standard reports in CFEngine 3 Nova
 @section Compliance summary report
 
 CFEngine policies are collections of promises contained in a text file, they are the CFEngine scripts that define what state you want your system to be in. The compliance summary report gives an overview of policy status. It shows the current status of your system in a coarse manner, allowing you to quickly identify which areas need follow-up. Click on @b{Compliance summary} in the @samp{Reports finder} to open a query window:
@@ -262,7 +285,7 @@ Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview
 
 
 @c -----------------------------------------------------
-@node
+@node File change log report, File change diffs report, Compliance summary report, Standard reports in CFEngine 3 Nova
 @section File change log report
 
 File change monitoring is about detecting when file information on a computer system changes. Awareness of changes is often considered a major part of management, especially if they are unexpected or inadvertent (expected changes are usually not a problem). With CFEngine you can either set a general tripwire to detect all changes, or, in the case of the @samp{File change log}, monitor specific files with changes promises. The report gives you relative detail of change as it presents the name of files that have been changed, when they were changed and on what host they were changed.
@@ -283,7 +306,7 @@ Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview
 
 
 @c -----------------------------------------------------
-@node
+@node File change diffs report, Last saw hosts report, File change log report, Standard reports in CFEngine 3 Nova
 @section File change diffs report
 
 A diff is a file comparison utility that outputs the differences between two files. It is typically used to show the changes between one version of a file and a former version of the same file. Diff displays the changes made per line for text files. Once a file change has been identified, for instance as seen in the file change log, you can browse the details of that change in a file change diff report. 
@@ -304,12 +327,12 @@ Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview
 
 
 @c -----------------------------------------------------
-@node
+@node Last saw hosts report, Patches available report, File change diffs report, Standard reports in CFEngine 3 Nova
 @section Last saw hosts report
 
-Sometimes it is not possible to connect to a machine under CFEngine's managment, either due to network errors or temporary lack of network entirely (for instance on ships at sea or submarines). CFEngine 3 Nova's Mission Portal monitors all connections, incoming and outgoing, between all managed hosts, and creates a log of when neighbouring hosts were last observed online. This information is used to set the host availabilty status and, through analysis of the connection history, give an idea of the regularity of connections between hosts.
+Sometimes it is not possible to connect to a machine under CFEngine's management, either due to network errors or temporary lack of network entirely (for instance on ships at sea or submarines). CFEngine 3 Nova's Mission Portal monitors all connections, incoming and outgoing, between all managed hosts, and creates a log of when neighboring hosts were last observed online. This information is used to set the host availability status and, through analysis of the connection history, give an idea of the regularity of connections between hosts.
 
-The Last saw hosts report is useful for checking the communication pattern between managed hosts and when they last were in touch with each other. Click on @b{Last saw hosts} in the Report finder to open a query window as decribed previously.
+The Last saw hosts report is useful for checking the communication pattern between managed hosts and when they last were in touch with each other. Click on @b{Last saw hosts} in the Report finder to open a query window as described previously.
 
 @sp 1
 @center @image{img-lastsawhostsquery,10cm,,Last saw hosts query}
@@ -318,7 +341,7 @@ The Last saw hosts report is useful for checking the communication pattern betwe
 
 The Last saw hosts query can filter by (patterns in) remote host name, remote host IP address, remote host key, minimum hours ago (since the last connection was made), and host class (i.e. the class/context of a host). Leaving the fields blank will result in a report listing all connections made to and from the managed machines (including the hub).
 
-Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview of all communication that suits the query criteria entered above. Every connection is logged on the concerned nodes as incoming (Initiated by them) or outgoing (Initiated by us), the same connection will therefore appear twice in the report (once for each node). The results are presented in the following column format: @samp{Host} (host name), @samp{Initiated} (identifies whether the connection is incoming (@code{by them (-)}) or outgoing (@code{by us (+)}), @samp{Remote host name}, @samp{Remote host IP address}, @samp{Last seen} (timestamp of the connection), @samp{Hours ago} (interval between current time and Last seen), @samp{Avg interval} (average time between each connection), @samp{Uncertainty} (standard deviation of Average interval), and @samp{Remote host key} (identifying key of the remote host).
+Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview of all communication that suits the query criteria entered above. Every connection is logged on the concerned nodes as incoming (Initiated by them) or outgoing (Initiated by us), the same connection will therefore appear twice in the report (once for each node). The results are presented in the following column format: @samp{Host} (host name), @samp{Initiated} (identifies whether the connection is incoming (@code{by them (-)}) or outgoing (@code{by us (+)}), @samp{Remote host name}, @samp{Remote host IP address}, @samp{Last seen} (time stamp of the connection), @samp{Hours ago} (interval between current time and Last seen), @samp{Avg interval} (average time between each connection), @samp{Uncertainty} (standard deviation of Average interval), and @samp{Remote host key} (identifying key of the remote host).
 
 @sp 1
 @center @image{img-lastsawhostsreport,15cm,,Last saw hosts report}
@@ -339,7 +362,7 @@ Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview
 
 
 @c -----------------------------------------------------
-@node
+@node Patches available report, Patch status report, Last saw hosts report, Standard reports in CFEngine 3 Nova
 @section Patches available report
 
 Software packaging is a core paradigm in operating system release management today, and CFEngine supports a generic approach to integration with native operating support for packaging. Package promises allow CFEngine to make promises the state of software packages conditionally, given the assumption that a native package manager will perform the actual manipulations. Since no agent can make unconditional promises about another, this is the best that can be achieved. 
@@ -364,10 +387,10 @@ Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview
 
 
 @c -----------------------------------------------------
-@node
+@node Patch status report, Performance report, Patches available report, Standard reports in CFEngine 3 Nova
 @section Patch status report
 
-Patch management can be a delicate business: sometimes a patch can cause new problems, or perhaps even more problems than it fixes. IT managers therefore often like to be in control of what patches are applied to a system. The Patch status report gives system administrators a complete overview of applied patches according to the local package manager, and, in conjunction with the patches available report, allows them to conciously decide which patches to apply or not. 
+Patch management can be a delicate business: sometimes a patch can cause new problems, or perhaps even more problems than it fixes. IT managers therefore often like to be in control of what patches are applied to a system. The Patch status report gives system administrators a complete overview of applied patches according to the local package manager, and, in conjunction with the patches available report, allows them to consciously decide which patches to apply or not. 
 
 Click on @b{Patch status} in the @samp{Reports finder} to open a query window:
 
@@ -398,10 +421,10 @@ Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview
 
 
 @c -----------------------------------------------------
-@node
+@node Performance report, Promises repaired log report, Patch status report, Standard reports in CFEngine 3 Nova
 @section Performance report
 
-CFEngine 3 Nova uses serveral monitoring probes to reflect on general system performance@footnote{See also section on Vital signs in the CFEngine 3 Nova Owner's Manual.}. One probe looks at the time it takes to execute selected promises; results are summarized in the @samp{Performance report}. The user can thus evaluate which parts of a policy put charge on the system in terms of time spent completing a task. Longer tasks, such as command execution and file copying, are measured by default, but other tasks have to be measured explicitly by stating so in a policy. Note however that most promises made in CFEngine are executed so fast we are not able to measure the time it takes to complete them.
+CFEngine 3 Nova uses several monitoring probes to reflect on general system performance@footnote{See also section on Vital signs in the CFEngine 3 Nova Owner's Manual.}. One probe looks at the time it takes to execute selected promises; results are summarized in the @samp{Performance report}. The user can thus evaluate which parts of a policy put charge on the system in terms of time spent completing a task. Longer tasks, such as command execution and file copying, are measured by default, but other tasks have to be measured explicitly by stating so in a policy. Note however that most promises made in CFEngine are executed so fast we are not able to measure the time it takes to complete them.
 
 Click on @b{Performance} in the @samp{Reports finder} to open a query window:
 
@@ -413,7 +436,7 @@ Click on @b{Performance} in the @samp{Reports finder} to open a query window:
 The Performance query can filter by (patterns in) job name and host class. Leaving the fields blank will result in a report listing the performance of all monitored jobs.
 @c @footnote{Job names are given in the definition of the promise, we will get back to this in the policy editing example.}
 
-Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview of events that suit the query criteria entered above. @samp{Host} (host name), @samp{Event} (job name), @samp{Last time} (most recent performance value, i.e. the time it took to complete the job), @samp{Avg time} (average of all Last time), @samp{Uncertainty} (expressed as one standard deviation of @samp{Avg time}), and @samp{Last performed} (timestamp of last execution). You can add your personal note in the right column, documenting any thoughts or issues that you might have about the query result.
+Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview of events that suit the query criteria entered above. @samp{Host} (host name), @samp{Event} (job name), @samp{Last time} (most recent performance value, i.e. the time it took to complete the job), @samp{Avg time} (average of all Last time), @samp{Uncertainty} (expressed as one standard deviation of @samp{Avg time}), and @samp{Last performed} (time stamp of last execution). You can add your personal note in the right column, documenting any thoughts or issues that you might have about the query result.
 
 @sp 1
 @center @image{img-performancereport,15cm,,Performance report}
@@ -423,7 +446,7 @@ Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview
 
 
 @c -----------------------------------------------------
-@node
+@node Promises repaired log report, Promises repaired summary report, Performance report, Standard reports in CFEngine 3 Nova
 @section Promises repaired log report
 
 The Status room in the Nova Mission Portal gives an overview of the general status of your system, including six hour summaries of promises kept, repaired, and not kept from the last week. The Promises repaired log is useful to get a complete overview of the history of promises repaired, including execution order and events that are more than a week old. Click on @b{Promises repaired log} in the @samp{Reports finder} to open a query window:
@@ -433,18 +456,18 @@ The Status room in the Nova Mission Portal gives an overview of the general stat
 @center Figure:  Promises repaired log query
 @sp 1
 
-The Promise repaired log query can filter by (patterns in) promise handles, host class (i.e. the class/context of a host), and a desired time interval. Leaving the fields blank will result in a report listing all promises that were repaired and the time of occurence.
+The Promise repaired log query can filter by (patterns in) promise handles, host class (i.e. the class/context of a host), and a desired time interval. Leaving the fields blank will result in a report listing all promises that were repaired and the time of occurrence.
 
-Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview of promises that suit the query criteria entered above. The results are presented as @samp{Host} (host name), @samp{Promise handle} (identifier of the promise), @samp{Report} (what was repaired), and @samp{Time} (timestamp of the repair action). You can add your personal note in the right column, documenting any thoughts or issues that you might have about the query result.
+Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview of promises that suit the query criteria entered above. The results are presented as @samp{Host} (host name), @samp{Promise handle} (identifier of the promise), @samp{Report} (what was repaired), and @samp{Time} (time stamp of the repair action). You can add your personal note in the right column, documenting any thoughts or issues that you might have about the query result.
 
 @sp 1
 @center @image{img-promisesrepairedlogreport,15cm,, Promises repaired log report}
-@center Figure: Promises reparied log report
+@center Figure: Promises repaired log report
 @sp 1
 
 
 @c -----------------------------------------------------
-@node
+@node Promises repaired summary report, Promises not kept log report, Promises repaired log report, Standard reports in CFEngine 3 Nova
 @section Promises repaired summary report
 
 If the Promises repaired log is too detailed for your needs, the Promises repaired summary report eliminates the time stamp of the promises repaired and presents a cumulative summary of promises repaired, i.e. the total number times a promise has been repaired. Click on @b{Promises repaired summary} in the @samp{Reports finder} to open a query window:
@@ -454,7 +477,7 @@ If the Promises repaired log is too detailed for your needs, the Promises repair
 @center Figure:  Promises repaired summary query
 @sp 1
 
-The Promise repaired summary query can filter by (patterns in) promise handles, host class (i.e. the class/context of a host), and a desired time interval. Leaving the fields blank will result in a report listing all promises that were repaired and their cumulative number of occurences.
+The Promise repaired summary query can filter by (patterns in) promise handles, host class (i.e. the class/context of a host), and a desired time interval. Leaving the fields blank will result in a report listing all promises that were repaired and their cumulative number of occurrences.
 
 Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview of promises that suit the query criteria entered above. The results are presented as @samp{Promise handle} (identifier of the promise), @samp{Report} (what was repaired), and @samp{Occurrences} (number of occurrences of repair).
 
@@ -465,7 +488,7 @@ Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview
 
 
 @c -----------------------------------------------------
-@node
+@node Promises not kept log report, Promises not kept summary report, Promises repaired summary report, Standard reports in CFEngine 3 Nova
 @section Promises not kept log report
 
 The Status room in the Nova Mission Portal gives an overview of the general status of your system, including six hour summaries of promises kept, repaired, and not kept from the last week. The Promises not kept log is useful to get a complete overview of the history of promises not kept, including execution order and events that are more than a week old. Click on @b{Promises not kept log} in the @samp{Reports finder} to open a query window:
@@ -475,7 +498,7 @@ The Status room in the Nova Mission Portal gives an overview of the general stat
 @center Figure:  Promises not kept log query
 @sp 1
 
-The Promises not kep log query can filter by (patterns in) promise handles, host class (i.e. the class/context of a host), and a desired time interval. Leaving the fields blank will result in a report listing all promises that were not kept and the time of occurence.
+The Promises not kept log query can filter by (patterns in) promise handles, host class (i.e. the class/context of a host), and a desired time interval. Leaving the fields blank will result in a report listing all promises that were not kept and the time of occurrence.
 
 Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview of promises that suit the query criteria entered above. The results are presented as @samp{Host} (host name), @samp{Promise handle} (identifier of the promise), @samp{Report} (what was not kept), and @samp{Time} (time stamp of the event). You can add your personal note in the right column, documenting any thoughts or issues that you might have about the query result.
 
@@ -486,7 +509,7 @@ Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview
 
 
 @c -----------------------------------------------------
-@node
+@node Promises not kept summary report, Setuid/gid root programs report, Promises not kept log report, Standard reports in CFEngine 3 Nova
 @section Promises not kept summary report
 
 If the Promises not kept log is too detailed for your needs, the Promises not kept summary report eliminates the time stamp of the promises repaired and presents a cumulative summary of promises repaired, i.e. the total number times a promise was not kept. Click on @b{Promises not kept summary} in the @samp{Reports finder} to open a query window:
@@ -496,9 +519,9 @@ If the Promises not kept log is too detailed for your needs, the Promises not ke
 @center Figure: Promises not kept summary query
 @sp 1
 
-The Promise not kept summary query can filter by (patterns in) promise handles, host class (i.e. the class/context of a host), and a desired time interval. Leaving the fields blank will result in a report listing all promises that were not kept and their cumulative number of occurences.
+The Promise not kept summary query can filter by (patterns in) promise handles, host class (i.e. the class/context of a host), and a desired time interval. Leaving the fields blank will result in a report listing all promises that were not kept and their cumulative number of occurrences.
 
-Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview of promises that suit the query criteria entered above. The results are presented as @samp{Promise handle}, @samp{Report} (what was not kept), and @samp{Occurences} (the number of times the promise was not kept).
+Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview of promises that suit the query criteria entered above. The results are presented as @samp{Promise handle}, @samp{Report} (what was not kept), and @samp{Occurrences} (the number of times the promise was not kept).
 
 @sp 1
 @center @image{img-promisesnotkeptsummaryreport,15cm,, Promises not kept summary report}
@@ -507,7 +530,7 @@ Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview
 
 
 @c -----------------------------------------------------
-@node
+@node Setuid/gid root programs report, Software installed report, Promises not kept summary report, Standard reports in CFEngine 3 Nova
 @section Setuid/gid root programs report
 
 @c from wikipedia
@@ -539,7 +562,7 @@ Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview
 
 
 @c -----------------------------------------------------
-@node
+@node Software installed report, Variables report, Setuid/gid root programs report, Standard reports in CFEngine 3 Nova
 @section Software installed report
 
 The @samp{Software installed report} will list the software packages claimed to be installed according to the local package manager. Click on @b{Software installed} in the @samp{Reports finder} to open a query window:
@@ -560,7 +583,7 @@ Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview
 
 
 @c -----------------------------------------------------
-@node
+@node Variables report,  , Software installed report, Standard reports in CFEngine 3 Nova
 @section Variables report
 
 @c Scalar variables are written @samp{$(name)} in CFEngine, and they represent a single value at a time. When they are written without a context, e.g. @samp{$(myvar)}, they are local to the current bundle (i.e. their scope is the current bundle). They are globally available everywhere provided one uses the context to verify them; e.g. @samp{$(context.myvar)} may be used to access the variable `myvar' in bundle `context'.
@@ -613,8 +636,17 @@ Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node 
+@node  CDP reports,  , Standard reports in CFEngine 3 Nova, Top
 @chapter CDP reports
+
+@menu
+* ACLs report - File access controls::  
+* Commands report - Scheduled commands to execute::  
+* File changes report - File changes observed on the system ::  
+* File diffs report - Delta/difference comparison showing file changes::  
+* Registry report - Promised Windows registry setting status::  
+* Services report - System service status::  
+@end menu
 
 Content-Driven Policies (CDP) were introduced to make policy management easier. In contrast to policies written in the CFEngine language, they are composed of semi-colon separated fields in a text file that the user fills with content, like a spreadsheet or tabular file. Each line in the file is parsed and results in a specific type of promise being made. Reports based on data from CDP policies can be found in @samp{Engineering room}: click the @b{Engineering} icon in the Mission Portal, then the @b{CDP reports} finder in the Engineering room:
 
@@ -647,8 +679,8 @@ Content-Driven Policies (CDP) were introduced to make policy management easier. 
 
 
 @c ------------------------------------------------------
-@node
-@section ACLs report: File access controls
+@node ACLs report - File access controls, Commands report - Scheduled commands to execute, CDP reports, CDP reports
+@section ACLs report - File access controls
 
 An access control list (ACL) is a list of permissions attached to an object. An ACL specifies which users or system processes are granted access to objects, as well as what operations are allowed on given objects. Each entry in a typical ACL specifies a subject and an operation. For instance, if a file has an ACL that contains (Alice, delete), this would give Alice permission to delete the file.
 
@@ -657,7 +689,7 @@ Click on @b{ACLs} in the @samp{CDP Reports finder} to access the ACLs CDP report
 
 @sp 1
 @center @image{img-aclsreport,15cm,, ACLs report}
-@center Figure: ACLs report (bug in presentation)
+@center Figure: ACLs report
 @sp 1
 
 The report lists an overview of host name (@samp{Host}), path of the affected object (@samp{Path}), the permission setting (@samp{Permission (ACL)}), owner of the affected object (@samp{Owner}), action to execute on the object (@samp{Action}), the context in which the promise was made (@samp{Class expression}), state of compliance (@samp{State}), and the time the promise was last checked (@samp{Last checked}).
@@ -731,8 +763,8 @@ Context in which the permissions are set, i.e. a class expression (boolean) that
 
 
 @c ------------------------------------------------------
-@node
-@section Commands report: Scheduled commands to execute
+@node Commands report - Scheduled commands to execute, File changes report - File changes observed on the system , ACLs report - File access controls, CDP reports
+@section Commands report - Scheduled commands to execute
 
 You may use the Commands CDP to schedule script execution on specific hosts. The Commands CDP uses a combination of class expressions to set the context (i.e. time and place) of execution. 
 
@@ -798,8 +830,8 @@ Context in which the command is to be executed, i.e. a class expression (boolean
 @end table
 
 @c ------------------------------------------------------
-@node
-@section File changes report: File changes observed on the system 
+@node File changes report - File changes observed on the system , File diffs report - Delta/difference comparison showing file changes, Commands report - Scheduled commands to execute, CDP reports
+@section File changes report - File changes observed on the system 
 
 We saw that awareness of changes often is considered a major part of infrastructure management in the walk-through of the CFEngine 3 Nova standard reports. The file changes CDP policy differs slightly from the Files changes log report in that it will restore the original file upon detecting a change and report whether the file remains compliant or not.
 
@@ -849,8 +881,8 @@ Context in which the change detection/repair is to be executed, i.e. a class exp
 @end table
 
 @c ------------------------------------------------------
-@node
-@section File diffs report: Delta/difference comparison showing file changes
+@node File diffs report - Delta/difference comparison showing file changes, Registry report - Promised Windows registry setting status, File changes report - File changes observed on the system , CDP reports
+@section File diffs report - Delta/difference comparison showing file changes
 
 The file diff CDP policy does the same as the File change CDP policy, except that it does not repair the file to original state if a change is detected. Click on @b{File diffs} in the @samp{CDP Reports finder} to access the File diffs report:
 
@@ -900,8 +932,8 @@ Context in which the change detection/warning is to be executed, i.e. a class ex
 
 
 @c ------------------------------------------------------
-@node
-@section Registry report: Promised Windows registry setting status
+@node Registry report - Promised Windows registry setting status, Services report - System service status, File diffs report - Delta/difference comparison showing file changes, CDP reports
+@section Registry report - Promised Windows registry setting status
 
 The Windows Registry is a hierarchical database that stores configuration settings and options on Microsoft Windows operating systems. It contains settings for low-level operating system components as well as the applications running on the platform. Registry keys are similar to folders: in addition to values, each key can contain subkeys, which may contain further subkeys, and so on. Keys are referenced with a syntax similar to Windows' path names, using backslashes to indicate levels of hierarchy. Each subkey has a mandatory name, which is a non-empty string that cannot contain any backslash, and whose letter case is insignificant.
 
@@ -964,8 +996,8 @@ Context in which the promise is to be executed, i.e. a class expression (boolean
 
 
 @c ------------------------------------------------------
-@node
-@section Services report: System service status
+@node Services report - System service status,  , Registry report - Promised Windows registry setting status, CDP reports
+@section Services report - System service status
 
 Services are programs that once started run continuously in the background. They perform specific functions which are designed not to require user intervention and are ready for input or monitor changes in your system and respond to them. For example, the Apache server has a daemon called httpd that listens on port 80 on your machine. When it receives a request for a page it sends the appropriate data back to the client machine.
 
@@ -977,7 +1009,7 @@ Click on @b{Services} in the @samp{CDP Reports finder} to access the Services re
 @center Figure: Services report
 @sp 1
 
-The report lists an overview of host name (@samp{Host}), @samp{Service Name}, the runstatus of the serviece (@samp{Runstatus}), action to take if there is a difference from policy (@samp{Action}; see explanation of the CDP input file below for possible values), the context in which the promise was made (@samp{Class expression}), the state of compliance (@samp{State}), and the time the promise was last checked (@samp{Last checked}).
+The report lists an overview of host name (@samp{Host}), @samp{Service Name}, the runstatus of the service (@samp{Runstatus}), action to take if there is a difference from policy (@samp{Action}; see explanation of the CDP input file below for possible values), the context in which the promise was made (@samp{Class expression}), the state of compliance (@samp{State}), and the time the promise was last checked (@samp{Last checked}).
 
 The Registry CDP input file, @file{service_list.txt}, can be found in the left menu in the @file{cdp_inputs} catalog. The content looks like this (lines have been split and indented for presentability):
 
@@ -993,7 +1025,7 @@ The Registry CDP input file, @file{service_list.txt}, can be found in the left m
    #  NOTE:     Service name is not the "Display name" 
    #            -- see the properties of the service. 
    #            run_status can be start/stop/disable. If start then 
-   #            the serivce is started, if disable then service is 
+   #            the service is started, if disable then service is 
    #            stopped and "Startup type" is set to disable,
    #   	        if stop, then service is stopped "Startup type" is left 
    #            unchanged.
@@ -1035,12 +1067,7 @@ Context in which the promise is to be executed, i.e. a class expression (boolean
 @c @unnumbered Concept Index
 @c @printindex cp
 @c =========================================================================
-@ifhtml
-@html
-<a name="Contents">
-@contents
-@end html
-@end ifhtml
+
 
 @c  The file is structured like a programming language. Each chapter
 @c  starts with a chapter comment.

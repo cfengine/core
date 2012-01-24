@@ -23,7 +23,7 @@
 @titlepage
 @title CFEngine 3 Nova Evaluation Guide
 @subtitle CFEngine Enterprise Documentation
-@subtitle Updated 23. January 2012
+@subtitle Updated 24. January 2012
 @author CFEngine
 @c @smallbook
 @fonttextsize 10
@@ -153,6 +153,11 @@ For the purpose of this evaluation program, CFEngine 3 Nova has been set up in a
 @c -----------------------------------------------------
 @node Accessing CFEngine 3 Nova, CFEngine terms used in this document, Get started, Get started
 @section Accessing CFEngine 3 Nova
+
+@cartouche
+@noindent @i{If you have not already done so, you may request access to the CFEngine Nova Evaluation Program by entering your information on} @url{http://cfengine.com/evaluation}.
+@end cartouche
+
 You should have received an email with account information after making an evaluation agreement with CFEngine. In it, you will find information on how to access your dedicated CFEngine 3 Nova instance, the CFEngine support ticketing system, and other online resources. Go to the url indicated in this email to access the Nova Mission Portal, use your credentials to log in.
 
 @sp 1
@@ -319,7 +324,7 @@ List of policy goals as defined in policy files; these examples are from @file{c
 @itemize -
 @item Edit policies: Edit policy files in the integrated policy editor
 @item Track records: Overview of promises repaired or not kept
-@item Approve policies: To be developed
+@item Approve policies: Add your approval to adopt a policy revision (attaches your comments to a revision number)
 @item Service catalogue: See which bundles contribute to policy goals
 @end itemize
 

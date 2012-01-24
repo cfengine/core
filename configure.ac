@@ -673,10 +673,10 @@ if test "x$acx_pthread_ok" = "xyes"; then
 fi
 
 dnl ######################################################################
-dnl Check for sa_len in Sockaddr
+dnl Check for sa_len in struct sockaddr
 dnl ######################################################################
 
-AC_CHECK_MEMBERS([Sockaddr.sa_len], , , [
+AC_CHECK_MEMBERS([struct sockaddr.sa_len], , , [
 #include <sys/types.h>
 #include <sys/socket.h>])
    

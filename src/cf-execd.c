@@ -422,23 +422,6 @@ else
    pthread_t tid;
 #endif
 
-#if defined NT && !(defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-   int i;
-   char **nargv;
-   /*
-    * Append --once option to our arguments for spawned monitor process.
-    */
-
-   nargv = xmalloc(sizeof(char *) * (argc+2));
-
-   for (i = 0; i < argc; i++)
-      {
-      nargv[i] = argv[i];
-      }
-
-   nargv[i++] = xstrdup("-FK");
-   nargv[i++] = NULL;
-#endif
 
    while (true)
       {
@@ -448,22 +431,6 @@ else
          {
          CfOut(cf_verbose,"","Sleeping for splaytime %d seconds\n\n",SPLAYTIME);
          sleep(SPLAYTIME);
-
-#if defined NT && !(defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-         /*
-          * Spawn a separate process - spawn will work if the cfexecd binary
-          * has changed (where cygwin's fork() would fail).
-          */
-
-         CfDebug("Spawning %s\n", nargv[0]);
-
-         pid = _spawnvp((int)_P_NOWAIT,(char *)(nargv[0]),(char **)nargv);
-
-         if (pid < 1)
-            {
-            CfOut(cf_error,"_spawnvp","Can't spawn run");
-            }
-#endif
 
 #if (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
 

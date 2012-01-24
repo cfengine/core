@@ -51,7 +51,7 @@ extern BodySyntax CFEX_CONTROLBODY[];
 int ScheduleRun(void);
 static void *LocalExecThread(void *scheduled_run);
 static void LocalExec(bool scheduled_run);
-static int FileChecksum(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],char type);
+static int FileChecksum(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1]);
 static int CompareResult(char *filename,char *prev_file);
 static void MailResult(char *file,char *to);
 static int Dialogue(int sd,char *s);
@@ -811,7 +811,7 @@ return NULL;
 /* Level 4                                                                    */
 /******************************************************************************/
 
-static int FileChecksum(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],char type)
+static int FileChecksum(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1])
 
 { FILE *file;
   EVP_MD_CTX context;
@@ -820,7 +820,7 @@ static int FileChecksum(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1],c
   unsigned char buffer[1024];
   const EVP_MD *md = NULL;
 
-CfDebug("FileChecksum(%c,%s)\n",type,filename);
+CfDebug("FileChecksum(%s)\n",filename);
 
 if ((file = fopen(filename,"rb")) == NULL)
    {
@@ -828,14 +828,7 @@ if ((file = fopen(filename,"rb")) == NULL)
    }
 else
    {
-   switch (type)
-      {
-      case 's': md = EVP_get_digestbyname("sha");
-           break;
-      case 'm': md = EVP_get_digestbyname("md5");
-         break;
-      default: FatalError("Software failure in ChecksumFile");
-      }
+   md = EVP_get_digestbyname("md5");
 
    if (!md)
       {
@@ -874,8 +867,8 @@ if ((fp=fopen(prev_file,"r")) != NULL)
    {
    fclose(fp);
 
-   md_len1 = FileChecksum(prev_file, digest1, 'm');
-   md_len2 = FileChecksum(filename,  digest2, 'm');
+   md_len1 = FileChecksum(prev_file, digest1);
+   md_len2 = FileChecksum(filename,  digest2);
 
    if (md_len1 != md_len2)
       {

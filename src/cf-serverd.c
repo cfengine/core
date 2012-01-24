@@ -40,7 +40,7 @@ typedef struct
 static int OpenReceiverChannel (void);
 static void PurgeOldConnections (Item **list,time_t now);
 static void SpawnConnection (int sd_reply, char *ipaddr);
-static void CheckFileChanges (int argc, char **argv, GenericAgentConfig config);
+static void CheckFileChanges (GenericAgentConfig config);
 static void *HandleConnection (ServerConnectionState *conn);
 static int BusyWithConnection (ServerConnectionState *conn);
 static int MatchClasses (ServerConnectionState *conn);
@@ -80,7 +80,7 @@ static int OptionFound(char *args, char *pos, char *word);
 static in_addr_t GetInetAddr(char *host);
 #endif
 
-static void StartServer (int argc, char **argv, GenericAgentConfig config);
+static void StartServer (GenericAgentConfig config);
 
 char CFRUNCOMMAND[CF_BUFSIZE];
 
@@ -202,7 +202,7 @@ ThisAgentInit();
 KeepPromises(config);
 Summarize();
 
-StartServer(argc, argv, config);
+StartServer(config);
 return 0;
 }
 
@@ -301,7 +301,7 @@ umask(077);
 
 /*******************************************************************/
 
-static void StartServer(int argc,char **argv, GenericAgentConfig config)
+static void StartServer(GenericAgentConfig config)
 
 { char ipaddr[CF_MAXVARSIZE],intime[64];
   int sd,sd_reply;
@@ -392,7 +392,7 @@ while (true)
       {
       if (ACTIVE_THREADS == 0)
          {
-         CheckFileChanges(argc, argv, config);
+         CheckFileChanges(config);
          }
       ThreadUnlock(cft_server_children);
       }
@@ -730,7 +730,7 @@ HandleConnection(conn);
 
 /**************************************************************/
 
-static void CheckFileChanges(int argc, char **argv, GenericAgentConfig config)
+static void CheckFileChanges(GenericAgentConfig config)
 
 {
 if (EnterpriseExpiry())

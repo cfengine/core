@@ -96,7 +96,7 @@ environmental health and status.
 
 CFEngine is a distributed solution that is completely independent of
 host operating systems, network topology or system processes. You
-describe the ideal state of a given system by creating -Y´promises¡
+describe the ideal state of a given system by creating promises
 and the CFEngine agent ensures that the necessary steps are taken to
 achieve this state.  Automation in CFEngine is executed through a
 series of components that run locally on client, server or hub (Nova
@@ -328,8 +328,8 @@ this repository.
 
 
 If you have ever taken a course in programming, then you are probably
-familiar with the ´Hello World¡ program. For CFEngine3, the `Hello
-World' policy would look like this:
+familiar with the Hello World program. For CFEngine3, the Hello
+World policy would look like this:
 
 @verbatim
 body common control  
@@ -404,7 +404,7 @@ running version 3.
 
 So, to summarize; the promise that you just wrote and executed checked
 that the version of CFEngine you are running is at version 3; and if
-it is at version 3, it sent the `Hello World' string to the command
+it is at version 3, it sent the Hello World string to the command
 line.
 
 Now that you have a better understanding of how the syntax works, we
@@ -412,11 +412,9 @@ will go over the method we used to execute the policy. The policy that
 you wrote, test.cf was manually executed by the cf-agent binary. Prior
 to running the @file{cf-agent} command, you checked the promise syntax by
 running the @file{cf-promises} binary:
-
 @smallexample
 root@@cfhub #  cf-promises -f /var/cfengine/inputs/test.cf     
 @end smallexample
-
 Normally, cf-promises is automatically executed by cf-agent as part of
 its run time operations, where, by default, it verifies the
 configuration syntax in the @file{promises.cf} file. By adding the -f flag
@@ -424,11 +422,9 @@ and specifying a file name and path, you directed cf-promises to check
 and verify the specified file only: test.cf.  In addition, we chose to
 run the policy manually, which is why we invoked cf-agent from the
 command line:
-
 @smallexample
 root@@cfhub # cf-agent -f /var/cfengine/inputs/test.cf 
 @end smallexample
-
 As a rule, CFEngine is fully automated and the cf-agent binary is
 started by the cf-execd daemon at a user specified interval (defaults
 to 5 minutes). Again, in this instance, the agent was manually started
@@ -437,7 +433,7 @@ using the -f flag to execute the specified file.
 If you would like to experiment with promise construction and manual
 execution, the following link will take you to a web based site
 designed for that purpose: Quickstart Promise Editor
-
+ @url{http://cfengine.com/policy_wizard/}
 
 @node CFEngine Client,  , Create and Manually Execute a Policy, CFEngine by Example
 @unnumberedsubsec CFEngine Client, Server Operations

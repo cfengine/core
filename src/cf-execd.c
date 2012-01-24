@@ -57,7 +57,7 @@ static void MailResult(char *file,char *to);
 static int Dialogue(int sd,char *s);
 static void Apoptosis(void);
 
-void StartServer(int argc,char **argv);
+void StartServer(void);
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -120,7 +120,7 @@ KeepPromises(config);
 #ifdef MINGW
 if(NOWINSERVICE)
   {
-  StartServer(argc,argv);
+  StartServer();
   }
 else
   {
@@ -128,7 +128,7 @@ else
   }
 #else  /* NOT MINGW */
 
-StartServer(argc, argv);
+StartServer();
 
 #endif  /* NOT MINGW */
 
@@ -350,7 +350,7 @@ for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
 
 /*****************************************************************************/
 
-void StartServer(int argc,char **argv)
+void StartServer(void)
 
 { int time_to_run = false;
   time_t now = time(NULL);

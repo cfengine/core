@@ -1375,23 +1375,6 @@ return true;
 
 /*******************************************************************/
 
-int IsNumber(char *s)
-
-{ char *sp;
-
-for (sp = s; *sp != '\0'; sp++)
-    {
-    if (!isdigit(*sp))
-       {
-       return false;
-       }    
-    }
-
-return true;
-}
-
-/*******************************************************************/
-
 int IsRealNumber(char *s)
 
 { double a = CF_NODOUBLE;

@@ -32,6 +32,8 @@ void ToUpperStrInplace(char *str);
 char *ToLowerStr(const char *str);
 void ToLowerStrInplace(char *str);
 
+bool IsNumber(const char *name);
+
 char *SafeStringDuplicate(const char *str);
 int SafeStringLength(const char *str);
 

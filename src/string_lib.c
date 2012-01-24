@@ -282,3 +282,17 @@ strncpy(result, source + start, end - start + 1);
 return result;
 }
 
+/*********************************************************************/
+
+bool IsNumber(const char *s)
+{
+for (; *s; s++)
+   {
+   if (!isdigit(*s))
+      {
+      return false;
+      }
+   }
+
+return true;
+}

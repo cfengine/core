@@ -528,15 +528,52 @@ return false;
 
 /******************************************************************/
 
-void Unix_GetInterfaceInfo(enum cfagenttype ag)
+static void Unix_GetMacAddress(enum cfagenttype ag, int fd, struct ifreq *ifr, struct ifreq *ifp, Rlist *interfaces, Rlist *hardware)
+{ char name[CF_MAXVARSIZE];
 
+if (ag != cf_know)
+   {
+   snprintf(name,CF_MAXVARSIZE,"hardware_mac[%s]",ifp->ifr_name);
+   }
+else
+   {
+   snprintf(name,CF_MAXVARSIZE,"hardware_mac[interface_name]");
+   }
+
+#ifdef SIOCGIFHWADDR
+char hw_mac[CF_MAXVARSIZE];
+
+ioctl(fd, SIOCGIFHWADDR, ifr);
+snprintf(hw_mac,CF_MAXVARSIZE-1,"%.2x:%.2x:%.2x:%.2x:%.2x:%.2x",
+     (unsigned char)ifr->ifr_hwaddr.sa_data[0],
+     (unsigned char)ifr->ifr_hwaddr.sa_data[1],
+     (unsigned char)ifr->ifr_hwaddr.sa_data[2],
+     (unsigned char)ifr->ifr_hwaddr.sa_data[3],
+     (unsigned char)ifr->ifr_hwaddr.sa_data[4],
+     (unsigned char)ifr->ifr_hwaddr.sa_data[5]);
+
+NewScalar("sys",name,hw_mac,cf_str);
+AppendRlist(&hardware,hw_mac,CF_SCALAR);
+AppendRlist(&interfaces,ifp->ifr_name,CF_SCALAR);
+
+snprintf(name,CF_MAXVARSIZE,"mac_%s",CanonifyName(hw_mac));
+NewClass(name);
+#else
+NewScalar("sys",name,"mac_unknown",cf_str);
+NewClass("mac_unknown");
+#endif
+}
+
+/******************************************************************/
+
+void Unix_GetInterfaceInfo(enum cfagenttype ag)
 { int fd,len,i,j,first_address = false,ipdefault = false;
   struct ifreq ifbuf[CF_IFREQ],ifr, *ifp;
   struct ifconf list;
   struct sockaddr_in *sin;
   struct hostent *hp;
   char *sp, workbuf[CF_BUFSIZE];
-  char ip[CF_MAXVARSIZE],hw_mac[CF_MAXVARSIZE];
+  char ip[CF_MAXVARSIZE];
   char name[CF_MAXVARSIZE];
   char last_name[CF_BUFSIZE];
   Rlist *interfaces = NULL, *hardware = NULL, *ips = NULL;
@@ -766,36 +803,7 @@ for (j = 0,len = 0,ifp = list.ifc_req; len < list.ifc_len; len+=SIZEOF_IFREQ(*if
          }
 
       // Set the hardware/mac address array
-
-      if (ag != cf_know)
-         {                  
-         snprintf(name,CF_MAXVARSIZE,"hardware_mac[%s]",ifp->ifr_name);
-         }
-      else
-         {
-         snprintf(name,CF_MAXVARSIZE,"hardware_mac[interface_name]");
-         }
-      
-#ifdef SIOCGIFHWADDR
-       ioctl(fd, SIOCGIFHWADDR, &ifr);
-       snprintf(hw_mac,CF_MAXVARSIZE-1,"%.2x:%.2x:%.2x:%.2x:%.2x:%.2x",
-              (unsigned char)ifr.ifr_hwaddr.sa_data[0],
-              (unsigned char)ifr.ifr_hwaddr.sa_data[1],
-              (unsigned char)ifr.ifr_hwaddr.sa_data[2],
-              (unsigned char)ifr.ifr_hwaddr.sa_data[3],
-              (unsigned char)ifr.ifr_hwaddr.sa_data[4],
-              (unsigned char)ifr.ifr_hwaddr.sa_data[5]);
-
-       NewScalar("sys",name,hw_mac,cf_str);
-       AppendRlist(&hardware,hw_mac,CF_SCALAR);
-       AppendRlist(&interfaces,ifp->ifr_name,CF_SCALAR);
-       
-       snprintf(name,CF_MAXVARSIZE,"mac_%s",CanonifyName(hw_mac));
-       NewClass(name);        
-#else
-       NewScalar("sys",name,"mac_unknown",cf_str);       
-       NewClass("mac_unknown");
-#endif
+      Unix_GetMacAddress(ag, fd, &ifr, ifp, interfaces, hardware);
       }
    }
 

@@ -37,16 +37,6 @@
 /* yyinput/input are generated and unused */
 #pragma GCC diagnostic ignored "-Wunused-function"
 
-void *yyalloc(yy_size_t bytes)
-{
-return xmalloc(bytes);
-}
-
-void *yyrealloc(void *ptr, yy_size_t bytes)
-{
-return xrealloc(ptr, bytes);
-}
-
 #undef malloc
 #undef realloc
 #define malloc xmalloc
@@ -63,8 +53,6 @@ P.offsets.current += yyleng;
 
 %}
 
-@YYALLOC@
-@YYREALLOC@
 @NOWRAP@
 
 space      [ \t]+

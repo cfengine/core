@@ -54,33 +54,27 @@ static const char *SIGNALS[] =
 void HandleSignals(int signum)
  
 {
-if (signum != SIGCHLD)
+CfOut(cf_error,"","Received signal %d (%s) while doing [%s]",signum,SIGNALS[signum] ? SIGNALS[signum] : "NOSIG",CFLOCK);
+CfOut(cf_error,"","Logical start time %s ",cf_ctime(&CFSTARTTIME));
+CfOut(cf_error,"","This sub-task started really at %s\n",cf_ctime(&CFINITSTARTTIME));
+fflush(stdout);
+
+if (signum == SIGTERM || signum == SIGINT || signum == SIGHUP || signum == SIGSEGV || signum == SIGKILL|| signum == SIGPIPE)
    {
-   CfOut(cf_error,"","Received signal %d (%s) while doing [%s]",signum,SIGNALS[signum] ? SIGNALS[signum] : "NOSIG",CFLOCK);
-   CfOut(cf_error,"","Logical start time %s ",cf_ctime(&CFSTARTTIME));
-   CfOut(cf_error,"","This sub-task started really at %s\n",cf_ctime(&CFINITSTARTTIME));
-   fflush(stdout);
-   
-   if (signum == SIGTERM || signum == SIGINT || signum == SIGHUP || signum == SIGSEGV || signum == SIGKILL|| signum == SIGPIPE)
-      {
-      SelfTerminatePrelude();
-      exit(0);
-      }
-   else if (signum == SIGUSR1)
-      {
-      DEBUG = true;
-      }
-   else if (signum == SIGUSR2)
-      {
-      DEBUG = false;
-      }
-   else /* zombie cleanup - how hard does it have to be? */
-      {
-      }
-   
-   /* Reset the signal handler */
-   signal(signum,HandleSignals);
+   SelfTerminatePrelude();
+   exit(0);
    }
+else if (signum == SIGUSR1)
+   {
+   DEBUG = true;
+   }
+else if (signum == SIGUSR2)
+   {
+   DEBUG = false;
+   }
+
+/* Reset the signal handler */
+signal(signum,HandleSignals);
 }
 
 /*****************************************************************************/

@@ -89,7 +89,7 @@ const char *HINTS[14] =
 int main(int argc,char *argv[])
 {
 GenericAgentConfig config = CheckOpts(argc,argv);
-GenericInitialize(argc,argv,"monitor", config);
+GenericInitialize("monitor", config);
 ThisAgentInit();
 KeepPromises(config);
 

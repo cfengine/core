@@ -92,7 +92,7 @@ if (stat(name,&sb) != -1)
 
 /*****************************************************************************/
 
-void GenericInitialize(int argc,char **argv,char *agents, GenericAgentConfig config)
+void GenericInitialize(char *agents, GenericAgentConfig config)
 
 { enum cfagenttype ag = Agent2Type(agents);
   char vbuff[CF_BUFSIZE];
@@ -106,7 +106,7 @@ CF_DEFAULT_DIGEST = cf_md5;
 CF_DEFAULT_DIGEST_LEN = CF_MD5_LEN;
 #endif
  
-InitializeGA(argc,argv);
+InitializeGA();
 
 SetReferenceTime(true);
 SetStartTime();
@@ -442,7 +442,7 @@ closelog();
 /* Level 1                                                         */
 /*******************************************************************/
 
-void InitializeGA(int argc,char *argv[])
+void InitializeGA(void)
 
 {
   int seed,force = false;
@@ -582,8 +582,6 @@ seed = ElfHash(s);
 srand48((long)seed);
 
 LoadSecretKeys();
-
-/* CheckOpts(argc,argv); - MacOS can't handle this back reference */
 
 if (!MINUSF)
    {

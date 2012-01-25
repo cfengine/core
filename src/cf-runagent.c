@@ -122,7 +122,7 @@ int main(int argc,char *argv[])
   int pid;
 
 GenericAgentConfig config = CheckOpts(argc,argv);
-GenericInitialize(argc,argv,"runagent", config);
+GenericInitialize("runagent", config);
 ThisAgentInit();
 KeepControlPromises(); // Set RUNATTR using copy
 

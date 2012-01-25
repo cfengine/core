@@ -197,7 +197,7 @@ int main(int argc,char *argv[])
 
 {
 GenericAgentConfig config = CheckOpts(argc,argv);
-GenericInitialize(argc,argv,"server", config);
+GenericInitialize("server", config);
 ThisAgentInit();
 KeepPromises(config);
 Summarize();

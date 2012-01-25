@@ -138,7 +138,7 @@ int main(int argc,char *argv[])
 int ret = 0;
 
 GenericAgentConfig config = CheckOpts(argc,argv);
-GenericInitialize(argc,argv,"agent", config);
+GenericInitialize("agent", config);
 ThisAgentInit();
 KeepPromises(config);
 NoteClassUsage(VHEAP);

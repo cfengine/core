@@ -116,7 +116,7 @@ int main(int argc,char *argv[])
 
 {
 GenericAgentConfig config = CheckOpts(argc,argv);
-GenericInitialize(argc,argv,"executor", config);
+GenericInitialize("executor", config);
 ThisAgentInit();
 KeepPromises(config);
 

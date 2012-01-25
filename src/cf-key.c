@@ -78,7 +78,7 @@ GenericAgentConfig config = CheckOpts(argc,argv);
 
 THIS_AGENT_TYPE = cf_keygen;
 
-GenericInitialize(argc,argv,"keygenerator", config);
+GenericInitialize("keygenerator", config);
 
 if (SHOWHOSTS)
    {

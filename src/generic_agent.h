@@ -37,9 +37,9 @@ typedef struct
 void ThisAgentInit(void);
 void KeepPromises(GenericAgentConfig config);
 
-void GenericInitialize(int argc,char **argv,char *agents, GenericAgentConfig config);
+void GenericInitialize(char *agents, GenericAgentConfig config);
 void GenericDeInitialize(void);
-void InitializeGA(int argc,char **argv);
+void InitializeGA(void);
 GenericAgentConfig CheckOpts(int argc,char **argv);
 void Syntax(const char *comp, const struct option options[], const char *hints[], const char *id);
 void ManPage(const char *component, const struct option options[], const char *hints[], const char *id);

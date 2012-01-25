@@ -283,7 +283,7 @@ int main(int argc,char *argv[])
 GenericAgentConfig config = CheckOpts(argc,argv);
 if (!HUBQUERY)
    {
-   GenericInitialize(argc,argv,"reporter", config);
+   GenericInitialize("reporter", config);
    }
 ThisAgentInit();
 KeepReportsControlPromises();

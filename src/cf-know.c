@@ -172,7 +172,7 @@ int main(int argc,char *argv[])
 
 {
 GenericAgentConfig config = CheckOpts(argc,argv);
-GenericInitialize(argc,argv,"knowledge", config);
+GenericInitialize("knowledge", config);
 ThisAgentInit();
 KeepKnowControlPromises();
 

@@ -92,7 +92,7 @@ int main(int argc,char *argv[])
 
 {
 GenericAgentConfig config = CheckOpts(argc,argv);
-GenericInitialize(argc,argv,"common", config);
+GenericInitialize("common", config);
 ThisAgentInit();
 AnalyzePromiseConflicts();
 GenericDeInitialize();

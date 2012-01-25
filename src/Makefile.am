@@ -1,7 +1,5 @@
 AM_CFLAGS = $(GCC_CFLAG) $(NOVA_CFLAGS) $(CONSTELLATION_CFLAGS) @CFLAGS@
 AM_YFLAGS = -d
-AM_LFLAGS = @LFLAGS@
-LEXLIB = @LEXLIB@
 LDADD = libpromises.la
 
 # libpromises

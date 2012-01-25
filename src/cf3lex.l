@@ -42,6 +42,11 @@
 #define malloc xmalloc
 #define realloc xrealloc
 
+int yywrap(void)
+{
+return 1;
+}
+
 static void yyuseraction()
 {
 P.offsets.current += yyleng;

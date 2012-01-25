@@ -1,8 +1,8 @@
 AM_CFLAGS = $(GCC_CFLAG) $(NOVA_CFLAGS) $(CONSTELLATION_CFLAGS) @CFLAGS@
 AM_YFLAGS = -d
+AM_LFLAGS = @LFLAGS@
 LEXLIB = @LEXLIB@
 LDADD = libpromises.la
-BUILT_SOURCES = cf3parse.h cf3lex.l
 
 # libpromises
 
@@ -209,8 +209,6 @@ cf_know_LDADD = libpromises.la
 if HAVE_NOVA
 cf_know_LDADD += ../nova/src/libcfknow.la
 endif
-
-EXTRA_DIST = cf3lex.c cf3parse.c
 
 #
 # Pickup header files here so Automake knows about them

@@ -79,7 +79,7 @@ signal(signum,HandleSignals);
 
 /*****************************************************************************/
 
-void SelfTerminatePrelude()
+void SelfTerminatePrelude(void)
 {
 CfLock best_guess;
 

@@ -212,7 +212,7 @@ sprintf(VPREFIX, "cf-monitord");
 LOGGING = true;                    /* Do output to syslog */
 
 SetReferenceTime(false);
-SetStartTime(false);
+SetStartTime();
 
 signal(SIGINT,HandleSignals);
 signal(SIGTERM,HandleSignals);

@@ -90,7 +90,7 @@ if (setclasses)
 
 /*******************************************************************/
 
-void SetStartTime(int setclasses)
+void SetStartTime(void)
 
 { time_t tloc;
  

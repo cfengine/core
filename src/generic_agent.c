@@ -109,7 +109,7 @@ CF_DEFAULT_DIGEST_LEN = CF_MD5_LEN;
 InitializeGA(argc,argv);
 
 SetReferenceTime(true);
-SetStartTime(false);
+SetStartTime();
 SanitizeEnvironment();
 
 strcpy(THIS_AGENT,CF_AGENTTYPES[ag]);

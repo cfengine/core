@@ -1043,7 +1043,7 @@ void CloseLock(CF_DB *dbp);
 void SetTimeOut(int timeout);
 void TimeOut(void);
 void SetReferenceTime(int setclasses);
-void SetStartTime(int setclasses);
+void SetStartTime(void);
 
 /* unix.c */
 

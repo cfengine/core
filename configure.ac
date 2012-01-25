@@ -914,22 +914,6 @@ if test "x$with_shell" = "xno"; then
 fi
 AC_DEFINE_UNQUOTED(SHELL_PATH, "$with_shell", [Path to the POSIX-compatible shell])
 
-dnl #####################################################################
-dnl Fix for lex/flex
-dnl #####################################################################
-
-AC_MSG_CHECKING(for 8-bit support in Flex)
-
-if echo "%%" | "$LEX" --noyywrap -o /dev/null; then
-   EIGHTBIT="\200-\377"
-   AC_SUBST(EIGHTBIT)
-   AC_MSG_RESULT(8-bit support added)
-   LFLAGS="--noyywrap"
-else
-   AC_MSG_RESULT(no 8-bit support)
-fi
-AC_SUBST(LFLAGS)
-
 dnl ####################################################################
 dnl Set GCC CFLAGS only if using GCC.
 dnl ####################################################################

@@ -26,21 +26,28 @@
 
 /*******************************************************************/
 
-static int NO_FORK;
-static int ONCE;
-static char MAILTO[CF_BUFSIZE];
-static char MAILFROM[CF_BUFSIZE];
-static char EXECCOMMAND[CF_BUFSIZE];
-static char VMAILSERVER[CF_BUFSIZE];
-static Item *SCHEDULE;
-
-static int MAXLINES = 30;
-static int SPLAYTIME = 0;
 static const int INF_LINES = -2;
-static int NOSPLAY;
-static int NOWINSERVICE;
+
+/*******************************************************************/
 
 extern BodySyntax CFEX_CONTROLBODY[];
+
+/*******************************************************************/
+
+static int NO_FORK;
+static int ONCE;
+static int NOWINSERVICE;
+
+static Item *SCHEDULE;
+static int SPLAYTIME = 0;
+static int NOSPLAY;
+
+static char EXECCOMMAND[CF_BUFSIZE];
+
+static char VMAILSERVER[CF_BUFSIZE];
+static char MAILFROM[CF_BUFSIZE];
+static char MAILTO[CF_BUFSIZE];
+static int MAXLINES = 30;
 
 /*******************************************************************/
 

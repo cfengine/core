@@ -10,26 +10,19 @@ if [ -z "$NO_SUBPROJECTS" ]; then
   #
   # Include nova/constellation
   #
-
-  if [ -d ${srcdir}/../nova ]; then
-    if [ -h ${srcdir}/nova ]; then
-      rm -f ${srcdir}/nova
+  for s in nova constellation; do
+    if [ -d ${srcdir}/../${s} ]; then
+      if [ -h ${srcdir}/${s} ]; then
+        rm -f ${srcdir}/${s}
+      fi
+      ln -sf ${srcdir}/../${s} ${srcdir}/${s}
     fi
-    ln -sf ${srcdir}/../nova ${srcdir}/nova
-  fi
-
-  if [ -d ${srcdir}/../constellation ]; then
-    if [ -h ${srcdir}/constellation ]; then
-      rm -f ${srcdir}/constellation
-    fi
-    ln -sf ${srcdir}/../constellation ${srcdir}/constellation
-  fi
+  done
 else
   #
   # Clean up just in case
   #
-  rm -f ${srcdir}/nova
-  rm -f ${srcdir}/constellation
+  rm -f ${srcdir}/nova ${srcdir}/constellation
 fi
 
 autoreconf --force --install -I m4 || exit 1

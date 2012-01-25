@@ -126,14 +126,10 @@ if(WINSERVICE)
   NovaWin_StartExecService();
   }
 else
+#endif /* MINGW */
   {
   StartServer();
   }
-#else  /* NOT MINGW */
-
-StartServer();
-
-#endif  /* NOT MINGW */
 
 return 0;
 }

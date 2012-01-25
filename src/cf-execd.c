@@ -24,10 +24,6 @@
 
 #include "generic_agent.h"
 
-#ifdef NT
-#include <process.h>
-#endif
-
 /*******************************************************************/
 
 static int NO_FORK;

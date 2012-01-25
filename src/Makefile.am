@@ -237,12 +237,6 @@ MOSTLYCLEANFILES = *~ *.orig *.rej
 
 #
 # Get everything removed down to where rebuilding requires:
-# "make; make install"
-#
-CLEANFILES = cf3lex.c cf3parse.c cf3parse.h
-
-#
-# Get everything removed down to where rebuilding requires:
 # "configure; make; make install"
 #
 DISTCLEANFILES = cflex.c cfparse.c cfparse.h

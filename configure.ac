@@ -920,17 +920,15 @@ dnl #####################################################################
 
 AC_MSG_CHECKING(for 8-bit support in Flex)
 
-if test "$LEX" = "flex"; then
+if echo "%%" | "$LEX" --noyywrap -o /dev/null; then
    EIGHTBIT="\200-\377"
    AC_SUBST(EIGHTBIT)
    AC_MSG_RESULT(8-bit support added)
-   NOWRAP="%option noyywrap"
+   LFLAGS="--noyywrap"
 else
    AC_MSG_RESULT(no 8-bit support)
-   NOWRAP=""
 fi
-
-AC_SUBST(NOWRAP)
+AC_SUBST(LFLAGS)
 
 dnl ####################################################################
 dnl Set GCC CFLAGS only if using GCC.
@@ -1079,7 +1077,6 @@ dnl ######################################################################
 AC_CONFIG_FILES([Makefile
 	pub/Makefile
 	src/Makefile
-	src/cf3lex.l
 	docs/Makefile
 	examples/Makefile
 	examples/example_config/Makefile

@@ -52,8 +52,6 @@ P.offsets.current += yyleng;
 
 %}
 
-@NOWRAP@
-
 space      [ \t]+
 
 newline    ([\n]|[\xd][\xa])

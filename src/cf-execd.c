@@ -36,7 +36,7 @@ extern BodySyntax CFEX_CONTROLBODY[];
 
 static int NO_FORK;
 static int ONCE;
-static int NOWINSERVICE;
+static int WINSERVICE = true;
 
 static Item *SCHEDULE;
 static int SPLAYTIME = 0;
@@ -121,13 +121,13 @@ ThisAgentInit();
 KeepPromises(config);
 
 #ifdef MINGW
-if(NOWINSERVICE)
+if(WINSERVICE)
   {
-  StartServer();
+  NovaWin_StartExecService();
   }
 else
   {
-  NovaWin_StartExecService();
+  StartServer();
   }
 #else  /* NOT MINGW */
 
@@ -205,7 +205,7 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:D:N:VxL:hFV1gMW",OPTIONS,&optindex)) !=
           break;
 
       case 'W':
-    	  NOWINSERVICE = true;
+    	  WINSERVICE = false;
           break;
 
       case 'F':

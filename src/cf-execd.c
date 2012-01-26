@@ -56,7 +56,7 @@ static void *LocalExecThread(void *scheduled_run);
 static void LocalExec(bool scheduled_run);
 static int FileChecksum(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1]);
 static int CompareResult(char *filename,char *prev_file);
-static void MailResult(char *file,char *to);
+static void MailResult(char *file);
 static int Dialogue(int sd,char *s);
 static void Apoptosis(void);
 
@@ -785,7 +785,7 @@ CfOut(cf_verbose,""," -> Command is complete\n");
 if (count)
    {
    CfOut(cf_verbose,""," -> Mailing result\n");
-   MailResult(filename,MAILTO);
+   MailResult(filename);
    }
 else
    {
@@ -909,7 +909,7 @@ return(rtn);
 
 /***********************************************************************/
 
-static void MailResult(char *file,char *to)
+static void MailResult(char *file)
 
 { int sd, count = 0, anomaly = false;
   char prev_file[CF_BUFSIZE],vbuff[CF_BUFSIZE];
@@ -943,7 +943,7 @@ if (CompareResult(file,prev_file) == 0)
    return;
    }
 
-if ((strlen(VMAILSERVER) == 0) || (strlen(to) == 0))
+if ((strlen(VMAILSERVER) == 0) || (strlen(MAILTO) == 0))
    {
    /* Syslog should have done this */
    CfOut(cf_verbose, "", "Empty mail server or address - skipping");
@@ -956,7 +956,7 @@ if (MAXLINES == 0)
    return;
    }
 
-CfDebug("Mailing results of (%s) to (%s)\n",file,to);
+CfDebug("Mailing results of (%s) to (%s)\n", file, MAILTO);
 
 
 /* Check first for anomalies - for subject header */
@@ -1061,7 +1061,7 @@ if (!Dialogue(sd,vbuff))
    goto mail_err;
    }
 
-sprintf(vbuff,"RCPT TO: <%s>\r\n",to);
+sprintf(vbuff, "RCPT TO: <%s>\r\n", MAILTO);
 CfDebug("%s",vbuff);
 
 if (!Dialogue(sd,vbuff))
@@ -1105,7 +1105,7 @@ send(sd,vbuff,strlen(vbuff),0);
 
 send(sd,vbuff,strlen(vbuff),0);
 
-sprintf(vbuff,"To: %s\r\n\r\n",to);
+sprintf(vbuff, "To: %s\r\n\r\n", MAILTO);
 CfDebug("%s",vbuff);
 send(sd,vbuff,strlen(vbuff),0);
 
@@ -1151,7 +1151,7 @@ mail_err:
 
 fclose(fp);
 cf_closesocket(sd);
-CfOut(cf_log,"","Cannot mail to %s.", to);
+CfOut(cf_log,"","Cannot mail to %s.", MAILTO);
 }
 
 /******************************************************************/

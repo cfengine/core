@@ -351,8 +351,7 @@ for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
 
 void StartServer(void)
 
-{ int time_to_run = false;
-  time_t now = time(NULL);
+{ time_t now = time(NULL);
   Promise *pp = NewPromise("exec_cfengine","the executor agent");
   Attributes dummyattr;
   CfLock thislock;
@@ -424,9 +423,7 @@ else
 
    while (true)
       {
-      time_to_run = ScheduleRun();
-
-      if (time_to_run)
+      if (ScheduleRun())
          {
          CfOut(cf_verbose,"","Sleeping for splaytime %d seconds\n\n",SPLAYTIME);
          sleep(SPLAYTIME);

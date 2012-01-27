@@ -83,6 +83,9 @@ tests/unit/*_test
 
 tests/load/tcdb_load
 
+# examples
+examples/cfengine_stdlib.cf
+
 # gcov/lcov
 
 *.gcno

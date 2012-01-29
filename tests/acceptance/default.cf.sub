@@ -1,16 +1,19 @@
 bundle common G
 {
 classes:
-  "bin_sort" expression => fileexists("/bin/sort");
-  "usr_bin_sort" expression => fileexists("/usr/bin/sort");
-
-  "bin_touch" expression => fileexists("/bin/touch");
-  "usr_bin_touch" expression => fileexists("/usr/bin/touch");
+  "bin_$(cmds)" expression => fileexists("/bin/$(cmds)");
+  "usr_bin_$(cmds)" expression => fileexists("/usr/bin/$(cmds)");
 
   "temp_declared" not => strcmp(getenv("TEMP", "65536"), "");
 
 vars:
   "cwd" string => execresult("/bin/pwd", "noshell");
+  "cmds" slist => { "sort", "touch", "grep" };
+
+  "$(cmds)"  string => "/bin/$(cmds)",
+      ifvarclass => "bin_$(cmds)";
+  "$(cmds)"  string => "/usr/bin/$(cmds)",
+      ifvarclass => "!bin_$(cmds).usr_bin_$(cmds)";
 
   temp_declared::
     "testroot" string => getenv("TEMP", "65535");
@@ -22,15 +25,6 @@ vars:
     "testdir" string => "/tmp/TEST.cfengine";
     "testfile" string => "/tmp/TEST.cfengine";
 
-  bin_sort::
-    "sort" string => "/bin/sort";
-  !bin_sort.usr_bin_sort::
-    "sort" string => "/usr/bin/sort";
-
-  bin_touch::
-    "touch" string => "/bin/touch";
-  !bin_touch.usr_bin_touch::
-    "touch" string => "/usr/bin/touch";
 }
 
 bundle common paths_init(filename)

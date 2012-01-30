@@ -7,7 +7,7 @@ reports:
 
    "Friend status report"
 
-          lastseen => "0"
+          lastseen => "0",
      friend_pattern => "host1|host2|.*\.domain\.tld";
 
 @end verbatim

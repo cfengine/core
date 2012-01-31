@@ -207,7 +207,7 @@ Once you have clicked @b{Generate report}, CFEngine 3 Nova will list an overview
 @center Figure: Business value report
 @sp 1
 
-We will look at an example of how to attach business value of specific promises at a later stage, when it is time to edit a file in the integrated policy editor.
+@c We will look at an example of how to attach business value of specific promises at a later stage, when it is time to edit a file in the integrated policy editor.
 
 
 @c -----------------------------------------------------

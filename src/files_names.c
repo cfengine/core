@@ -382,8 +382,8 @@ return path;
 int StartJoin(char *path,char *leaf,int bufsize)
 
 {
-*path = '\0';
-return JoinMargin(path,leaf,NULL,bufsize,CF_BUFFERMARGIN);
+ memset(path, 0, bufsize);
+ return JoinMargin(path,leaf,NULL,bufsize,CF_BUFFERMARGIN);
 }
 
 /*********************************************************************/

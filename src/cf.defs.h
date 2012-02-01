@@ -1071,22 +1071,6 @@ enum fileactions
 
 /*******************************************************************/
 
-enum modestate
-   {
-   wild,
-   who,
-   which
-   };
-
-enum modesort
-   {
-   unknown,
-   numeric,
-   symbolic
-   };
-
-/*******************************************************************/
-
 enum cmpsense   /* For package version comparison */
    {
    cmpsense_eq,

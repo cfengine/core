@@ -34,6 +34,22 @@
 
 /***************************************************************/
 
+enum modestate
+   {
+   wild,
+   who,
+   which
+   };
+
+enum modesort
+   {
+   unknown,
+   numeric,
+   symbolic
+   };
+
+/*******************************************************************/
+
 static int CheckModeState (enum modestate stateA, enum modestate stateB,enum modesort modeA, enum modesort modeB, char ch);
 static int SetModeMask (char action, int value, int affected, mode_t *p, mode_t *m);
 

@@ -595,6 +595,56 @@ return false;
 
 /*************************************************************************/
 
+static const char *TwinFilename(void)
+{
+#if defined(__CYGWIN__) || defined(__MINGW32__)
+return "bin-twin/cf-agent.exe";
+#else
+return "bin/cf-twin";
+#endif
+}
+
+/*************************************************************************/
+
+static const char *AgentFilename(void)
+{
+#if defined(__CYGWIN__) || defined(__MINGW32__)
+return "bin/cf-agent.exe";
+#else
+return "bin/cf-agent";
+#endif
+}
+
+/*************************************************************************/
+
+static bool TwinExists(void)
+{
+char twinfilename[CF_BUFSIZE];
+struct stat sb;
+snprintf(twinfilename, CF_BUFSIZE, "%s/%s", CFWORKDIR, TwinFilename());
+MapName(twinfilename);
+
+return stat(twinfilename, &sb) == 0 && IsExecutable(twinfilename);
+}
+
+/*************************************************************************/
+
+/* Buffer has to be at least CF_BUFSIZE bytes long */
+static void ConstructFailsafeCommand(bool scheduled_run, char *buffer)
+{
+bool twin_exists = TwinExists();
+
+snprintf(buffer, CF_BUFSIZE,
+         "\"%s/%s\" -f failsafe.cf "
+         "&& \"%s/%s\"%s -Dfrom_cfexecd%s",
+         CFWORKDIR, twin_exists ? TwinFilename(): AgentFilename(),
+         CFWORKDIR, AgentFilename(),
+         NOSPLAY ? " -q": "",
+         scheduled_run ? ":scheduled_run" : "");
+}
+
+/*************************************************************************/
+
 static void LocalExec(bool scheduled_run)
 
 { FILE *pp;
@@ -634,64 +684,7 @@ if (strlen(EXECCOMMAND) > 0)
    }
 else
    {
-   struct stat sb;
-   int twin_exists = false;
-
-   // twin is bin-twin\cf-agent.exe on windows, bin/cf-twin on Unix
-
-   if (VSYSTEMHARDCLASS == mingw || VSYSTEMHARDCLASS == cfnt)
-      {
-      snprintf(cmd,CF_BUFSIZE-1,"%s/bin-twin/cf-agent.exe",CFWORKDIR);
-      MapName(cmd);
-
-      if (stat(cmd,&sb) == 0)
-         {
-         twin_exists = true;
-         }
-
-      if (twin_exists && IsExecutable(cmd))
-	 {
-         snprintf(cmd,CF_BUFSIZE-1,"\"%s/bin-twin/cf-agent.exe\" -f failsafe.cf && \"%s/bin/cf-agent.exe%s\" -Dfrom_cfexecd%s",
-                  CFWORKDIR,
-                  CFWORKDIR,
-                  NOSPLAY ? " -q" : "",
-                  scheduled_run ? ":scheduled_run" : "");
-	 }
-      else
-	 {
-         snprintf(cmd,CF_BUFSIZE-1,"\"%s/bin/cf-agent.exe\" -f failsafe.cf && \"%s/bin/cf-agent.exe%s\" -Dfrom_cfexecd%s",
-                  CFWORKDIR,
-                  CFWORKDIR,
-                  NOSPLAY ? " -q" : "",
-                  scheduled_run ? ":scheduled_run" : "");
-	 }
-      }
-   else
-      {
-      snprintf(cmd,CF_BUFSIZE-1,"%s/bin/cf-twin",CFWORKDIR);
-
-      if (stat(cmd,&sb) == 0)
-         {
-         twin_exists = true;
-         }
-
-      if (twin_exists && IsExecutable(cmd))
-	 {
-         snprintf(cmd,CF_BUFSIZE-1,"\"%s/bin/cf-twin\" -f failsafe.cf && \"%s/bin/cf-agent%s\" -Dfrom_cfexecd%s",
-                  CFWORKDIR,
-                  CFWORKDIR,
-                  NOSPLAY ? " -q" : "",
-                  scheduled_run ? ":scheduled_run" : "");
-	 }
-      else
-	 {
-         snprintf(cmd,CF_BUFSIZE-1,"\"%s/bin/cf-agent\" -f failsafe.cf && \"%s/bin/cf-agent%s\" -Dfrom_cfexecd%s",
-                  CFWORKDIR,
-                  CFWORKDIR,
-                  NOSPLAY ? " -q" : "",
-                  scheduled_run ? ":scheduled_run" : "");
-	 }
-      }
+   ConstructFailsafeCommand(scheduled_run, cmd);
    }
 
 strncpy(esc_command,MapName(cmd),CF_BUFSIZE-1);

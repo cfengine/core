@@ -670,36 +670,6 @@ typedef u_long in_addr_t;
 
 /* end database file names */
 
-/* database enums */
-typedef enum
-{
-    cfdb_classes,
-    cfdb_variables,
-    cfdb_performance,
-    cfdb_cheksums_content,
-    cfdb_cheksums_stats,
-    cfdb_observations,
-    cfdb_observations_year,
-    cfdb_measurements,
-    cfdb_state,
-    cfdb_hostsseen,
-    cfdb_audit,
-    cfdb_locks,
-    cfdb_static,
-    cfdb_pscalar,
-    cfdb_compliance,
-    cfdb_winregistry,
-    cfdb_cache,
-    cfdb_license,
-    cfdb_value,
-    cfdb_network,
-    cfdb_counters,
-    cfdb_bundles
-}cfdb_t;
-
-/* end database enums */
-
-
 #define CF_VALUE_LOG      "cf_value.log"
 #define CF_FILECHANGE     "file_change.log"
 #define CF_PROMISE_LOG    "promise_summary.log"
@@ -1054,77 +1024,6 @@ enum classes
 
 /*******************************************************************/
 
-enum fileactions
-   {
-   warnall,
-   warnplain,
-   warndirs,
-   fixall,
-   fixplain,
-   fixdirs,
-   touch,
-   linkchildren,
-   create,
-   compress,
-   alert
-   };
-
-/*******************************************************************/
-
-enum cmpsense   /* For package version comparison */
-   {
-   cmpsense_eq,
-   cmpsense_gt,
-   cmpsense_lt,
-   cmpsense_ge,
-   cmpsense_le,
-   cmpsense_ne,
-   cmpsense_none
-   };
-
-/*******************************************************************/
-
-enum pkgmgrs    /* Available package managers to query in packages: */
-   {
-   pkgmgr_rpm,
-   pkgmgr_dpkg,
-   pkgmgr_sun,
-   pkgmgr_aix,
-   pkgmgr_portage,
-   pkgmgr_freebsd,
-   pkgmgr_none
-   };
-
-/*******************************************************************/
-
-enum pkgactions /* What to do with a package if it is found/not found */
-    {
-    pkgaction_install,
-    pkgaction_remove,
-    pkgaction_upgrade,
-    pkgaction_fix,
-    pkgaction_none
-    };
-
-/*******************************************************************/
-
-typedef char flag;
-
-enum socks
-   {
-   netbiosns,
-   netbiosdgm,
-   netbiosssn,
-   irc,
-   cfengine,
-   nfsd,
-   smtp,
-   www,
-   ftp,
-   ssh,
-   wwws
-   };
-
 enum iptypes
    {
    icmp,
@@ -1288,19 +1187,6 @@ struct GidList_
 
 /*******************************************************************/
 
-enum cffstype
-   {
-   posixfs,
-   solarisfs,
-   dfsfs,
-   afsfs,
-   hpuxfs,
-   ntfs,
-   badfs
-   };
-
-/*******************************************************************/
-
 enum matchtypes
     {
     literalStart,
@@ -1326,20 +1212,6 @@ struct Auth_
    int literal;
    int classpattern;
    Auth *next;
-   };
-
-/*******************************************************************/
-
-typedef struct Strategy_ Strategy;
-
-struct Strategy_
-   {
-   char    done;
-   char   *name;
-   char   *classes;
-   char   type;                 /* default r=random */
-   Item *strategies;
-   Strategy *next;
    };
 
 /*******************************************************************/

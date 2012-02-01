@@ -110,7 +110,7 @@ used = buf.fd_btot - buf.fd_bfree;
 avail = buf.fd_bfreen;
 #endif
 
-#if defined SOLARIS
+#if defined SOLARIS || defined OSF
 used = (buf.f_blocks - buf.f_bfree) * buf.f_frsize;
 avail = buf.f_bavail * buf.f_frsize;
 #endif
@@ -118,11 +118,6 @@ avail = buf.f_bavail * buf.f_frsize;
 #if defined NETBSD || defined FREEBSD || defined OPENBSD || defined SUNOS || defined HPuUX || defined DARWIN
 used = (buf.f_blocks - buf.f_bfree)  * buf.f_bsize;
 avail = buf.f_bavail * buf.f_bsize;
-#endif
-
-#if defined OSF
-used = (buf.f_blocks - buf.f_bfree) * buf.f_frsize;
-avail = buf.f_bavail * buf.f_frsize;
 #endif
 
 #if defined AIX || defined SCO || defined CFCRAY

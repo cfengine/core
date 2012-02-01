@@ -168,7 +168,6 @@ int IGNORELOCK = false;
 int DONTDO = false;
 int DEBUG = false;
 int AUDIT = false;
-int LOGGING = false;
 
 char  VFQNAME[CF_MAXVARSIZE] = {0};
 char  VUQNAME[CF_MAXVARSIZE] = {0};

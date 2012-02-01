@@ -107,7 +107,6 @@ extern int VERBOSE;
 extern int EXCLAIM;
 extern int INFORM;
 
-extern int LOGGING;
 extern int CFPARANOID;
 
 extern int DONTDO;

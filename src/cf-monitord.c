@@ -209,8 +209,6 @@ void ThisAgentInit(void)
 umask(077);
 sprintf(VPREFIX, "cf-monitord");
 
-LOGGING = true;                    /* Do output to syslog */
-
 SetReferenceTime(false);
 SetStartTime();
 

@@ -241,7 +241,6 @@ void ThisAgentInit()
 
 {
 umask(077);
-LOGGING = true;
 MAILTO[0] = '\0';
 MAILFROM[0] = '\0';
 VMAILSERVER[0] = '\0';

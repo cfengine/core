@@ -678,8 +678,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
    
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_syslog].lval) == 0)
       {
-      LOGGING = GetBoolean(retval.item);
-      CfOut(cf_verbose,"","SET syslog = %d\n",LOGGING);
+      CfOut(cf_verbose,"","SET syslog = %d\n", GetBoolean(retval.item));
       continue;
       }
 

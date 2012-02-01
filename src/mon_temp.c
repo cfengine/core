@@ -48,21 +48,17 @@ void MonTempGatherData(double *cf_this)
 {
 CfDebug("GatherSensorData()\n");
 
-switch(VSYSTEMHARDCLASS)
+#if defined(__linux__)
+if (ACPI && GetAcpi(cf_this))
    {
-   case linuxx:
-      if (ACPI && GetAcpi(cf_this))
-         {
-         return;
-         }
-      if (LMSENSORS && GetLMSensors(cf_this))
-         {
-         return;
-         }
-      break;
-   default:
-      break;
+   return;
    }
+
+if (LMSENSORS && GetLMSensors(cf_this))
+   {
+   return;
+   }
+#endif
 }
 
 /******************************************************************************/

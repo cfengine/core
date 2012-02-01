@@ -60,7 +60,7 @@ int ParseModeString(char *modestring,mode_t *plusmask,mode_t *minusmask)
 { char *sp;
  int affected = 0, value = 0, gotaction, no_error = true;
   char action = '=';
-  enum modestate state = unknown;
+  enum modestate state = wild;
   enum modesort found_sort = unknown; /* Already found "sort" of mode */
   enum modesort sort = unknown; /* Sort of started but not yet finished mode */
 

@@ -470,7 +470,12 @@ static void Apoptosis()
   char mypid[32];
   static char promiserBuf[CF_SMALLBUF];
 
-if (ONCE || VSYSTEMHARDCLASS == cfnt)
+#if defined(__CYGWIN__) || defined(__MINGW32__)
+  /* Otherwise we'll just kill off long jobs */
+  return;
+#endif
+
+if (ONCE)
    {
    /* Otherwise we'll just kill off long jobs */
    return;

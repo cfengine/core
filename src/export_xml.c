@@ -396,7 +396,6 @@ XmlEndTag(writer, XMLTAG_CONSTRAINT);
 void XmlExportType(Writer *writer, enum cfdatatype dtype, const void *range)
 
 {
-int i;
 Rlist *list = NULL;
 Rlist *rp = NULL;
 
@@ -423,7 +422,7 @@ switch (dtype)
          XmlStartTag(writer, XMLTAG_RANGE, 0);
 
          /* XML ELEMENT -- MIN/MAX */
-         i = 0;
+         int i = 0;
          list = SplitStringAsRList((char*)range, ',');
          for ( rp = list; rp != NULL; rp=rp->next, i++)
             {
@@ -453,7 +452,7 @@ switch (dtype)
 
          /* XML ELEMENT -- VALUE */
          list = SplitStringAsRList((char*)range, ',');
-         for ( rp = list; rp != NULL; rp=rp->next, i++)
+         for ( rp = list; rp != NULL; rp=rp->next)
             {
             XmlTag(writer, XMLTAG_VALUE, ScalarValue(rp), 0);
             }

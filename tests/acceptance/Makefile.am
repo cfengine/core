@@ -16,7 +16,7 @@ if LINUX
 #
 noinst_PROGRAMS += dnswrapper.so
 dnswrapper_so_LINK = $(CCLD) $(dnswrapper_so_CFLAGS) $(CFLAGS) $(dnswrapper_so_LDFLAGS) $(LDFLAGS) -o $@
-dnswrapper_so_CFLAGS = -fPIC -fpic
+dnswrapper_so_CPPFLAGS = -fPIC
 dnswrapper_so_LDFLAGS = -shared
 
 #TESTS_ENVIRONMENT = env LD_PRELOAD="$(abs_builddir)/dnswrapper.so"

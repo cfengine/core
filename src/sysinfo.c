@@ -203,15 +203,8 @@ strncpy(VSYSNAME.release, real_version, _SYS_NMLN);
  syssgi (SGI_RELEASE_NAME, 256, real_version);
 #endif
 
-for (sp = VSYSNAME.sysname; *sp != '\0'; sp++)
-   {
-   *sp = ToLower(*sp);
-   }
-
-for (sp = VSYSNAME.machine; *sp != '\0'; sp++)
-   {
-   *sp = ToLower(*sp);
-   }
+ToLowerStrInplace(VSYSNAME.sysname);
+ToLowerStrInplace(VSYSNAME.machine);
 
 #ifdef _AIX
 switch (_system_configuration.architecture)

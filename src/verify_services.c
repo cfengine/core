@@ -163,21 +163,7 @@ PromiseBanner(pp);
 
 if (strcmp(a.service.service_type, "windows") == 0)
    {
-#ifdef MINGW
-
-   switch(VSYSTEMHARDCLASS)
-      {
-      case mingw:
-          NovaWin_VerifyServices(a,pp);
-          break;
-
-      default:
-          CfOut(cf_inform,"","!! Windows services are not supported on this system");
-          break;
-      }
-#else
-   CfOut(cf_inform,"","!! Service management is only support in CFEngine Nova and above.");
-#endif
+   VerifyWindowsService(a, pp);
    }
 else
    {
@@ -248,8 +234,3 @@ if (!DONTDO)
    VerifyMethod("service_bundle",a,pp);  // Send list of classes to set privately?
    }
 }
-
-
-
-
-

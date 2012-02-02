@@ -409,4 +409,9 @@ void SetSyslogPort(uint16_t port)
 CfOut(cf_error, "", "!! Remote syslog functionality is only available in Nova");
 }
 
+void VerifyWindowsService(Attributes a, Promise *pp)
+{
+CfOut(cf_error, "", "!! Windows service management is only supported in CFEngine Nova");
+}
+
 #endif

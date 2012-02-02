@@ -399,6 +399,7 @@ int ExecPackageCommandRpath(char *command,int verify,int setCmdClasses,Attribute
 void NewPromiser(Promise *pp);
 void AnalyzePromiseConflicts(void);
 void AddGoalsToDB(char *goal_patterns, char *goal_categories);
+void VerifyWindowsService(Attributes a, Promise *pp);
 
 void SetSyslogHost(const char *host);
 void SetSyslogPort(uint16_t port);

@@ -87,6 +87,6 @@ int Constellation_ReturnRelayQueryData(ServerConnectionState *conn,char *query,c
 void Constellation_RunQueries(Item *queries, Item **results_p);
 #endif
 
-void KeepPromises(GenericAgentConfig config);
+void KeepPromises(void);
 
 #endif

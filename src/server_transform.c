@@ -67,7 +67,7 @@ void KeepQueryAccessPromise(Promise *pp,char *type);
 /* Level                                                           */
 /*******************************************************************/
 
-void KeepPromises(GenericAgentConfig config)
+void KeepPromises(void)
 {
 KeepContextBundles();
 KeepControlPromises();

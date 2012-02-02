@@ -61,7 +61,7 @@ static int Dialogue(int sd,char *s);
 static void Apoptosis(void);
 
 void StartServer(void);
-static void KeepPromises(GenericAgentConfig);
+static void KeepPromises(void);
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -119,7 +119,7 @@ int main(int argc,char *argv[])
 GenericAgentConfig config = CheckOpts(argc,argv);
 GenericInitialize("executor", config);
 ThisAgentInit();
-KeepPromises(config);
+KeepPromises();
 
 #ifdef MINGW
 if(WINSERVICE)
@@ -266,7 +266,7 @@ if (SCHEDULE == NULL)
 
 /*****************************************************************************/
 
-static void KeepPromises(GenericAgentConfig config)
+static void KeepPromises(void)
 
 { Constraint *cp;
   char splay[CF_BUFSIZE];

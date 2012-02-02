@@ -199,7 +199,7 @@ int main(int argc,char *argv[])
 GenericAgentConfig config = CheckOpts(argc,argv);
 GenericInitialize("server", config);
 ThisAgentInit();
-KeepPromises(config);
+KeepPromises();
 Summarize();
 
 StartServer(config);
@@ -817,7 +817,7 @@ if (NewPromiseProposals())
 
       SetReferenceTime(true);
       ReadPromises(cf_server, CF_SERVERC, config);
-      KeepPromises(config);
+      KeepPromises();
       Summarize();
 
       }

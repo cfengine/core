@@ -33,7 +33,7 @@
 
 /*****************************************************************************/
 
-static void KeepPromises(GenericAgentConfig config);
+static void KeepPromises(void);
 
 /*****************************************************************************/
 /* Globals                                                                   */
@@ -95,7 +95,7 @@ int main(int argc,char *argv[])
 GenericAgentConfig config = CheckOpts(argc,argv);
 GenericInitialize("monitor", config);
 ThisAgentInit();
-KeepPromises(config);
+KeepPromises();
 
 MonitorStartServer(argc, argv);
 return 0;
@@ -168,7 +168,7 @@ return config;
 
 /*****************************************************************************/
 
-static void KeepPromises(GenericAgentConfig config)
+static void KeepPromises(void)
 {
 Constraint *cp;
 Rval retval;

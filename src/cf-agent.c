@@ -81,7 +81,7 @@ static void ClassBanner(enum typesequence type);
 static void ParallelFindAndVerifyFilesPromises(Promise *pp);
 static bool VerifyBootstrap(void);
 static void KeepPromiseBundles(Rlist *bundlesequence);
-
+static void KeepPromises(GenericAgentConfig config);
 
 extern const BodySyntax CFA_CONTROLBODY[];
 
@@ -339,7 +339,7 @@ if ((fp = fopen(filename,"a")) != NULL)
 
 /*******************************************************************/
 
-void KeepPromises(GenericAgentConfig config)
+static void KeepPromises(GenericAgentConfig config)
 
 { double efficiency;
  

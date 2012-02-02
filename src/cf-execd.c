@@ -61,6 +61,7 @@ static int Dialogue(int sd,char *s);
 static void Apoptosis(void);
 
 void StartServer(void);
+static void KeepPromises(GenericAgentConfig);
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -265,7 +266,7 @@ if (SCHEDULE == NULL)
 
 /*****************************************************************************/
 
-void KeepPromises(GenericAgentConfig config)
+static void KeepPromises(GenericAgentConfig config)
 
 { Constraint *cp;
   char splay[CF_BUFSIZE];

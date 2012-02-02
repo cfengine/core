@@ -32,6 +32,10 @@
 #include "monitoring.h"
 
 /*****************************************************************************/
+
+static void KeepPromises(GenericAgentConfig config);
+
+/*****************************************************************************/
 /* Globals                                                                   */
 /*****************************************************************************/
 
@@ -164,7 +168,7 @@ return config;
 
 /*****************************************************************************/
 
-void KeepPromises(GenericAgentConfig config)
+static void KeepPromises(GenericAgentConfig config)
 {
 Constraint *cp;
 Rval retval;

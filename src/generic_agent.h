@@ -35,7 +35,6 @@ typedef struct
    } GenericAgentConfig;
 
 void ThisAgentInit(void);
-void KeepPromises(GenericAgentConfig config);
 
 void GenericInitialize(char *agents, GenericAgentConfig config);
 void GenericDeInitialize(void);

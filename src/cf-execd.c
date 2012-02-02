@@ -51,7 +51,7 @@ static int MAXLINES = 30;
 
 /*******************************************************************/
 
-bool ScheduleRun(void);
+static bool ScheduleRun(void);
 static void *LocalExecThread(void *scheduled_run);
 static void LocalExec(bool scheduled_run);
 static int FileChecksum(char *filename,unsigned char digest[EVP_MAX_MD_SIZE+1]);
@@ -540,7 +540,7 @@ CfOut(cf_verbose,""," !! Pruning complete");
 
 /*****************************************************************************/
 
-bool ScheduleRun(void)
+static bool ScheduleRun(void)
 {
 Item *ip;
 

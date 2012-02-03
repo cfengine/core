@@ -54,28 +54,52 @@ REPOSCHAR = c;
 
 /*********************************************************************/
 
-int ArchiveToRepository(char *file,Attributes attr,Promise *pp)
-
- /* Returns true if the file was backup up and false if not */
-
-{ char destination[CF_BUFSIZE];
-  char localrepository[CF_BUFSIZE]; 
-  char node[CF_BUFSIZE];
-  struct stat sb, dsb;
-  char *sp;
-
+bool GetRepositoryPath(const char *file, Attributes attr, char *destination)
+{
 if (attr.repository == NULL && VREPOSITORY == NULL)
    {
    return false;
    }
 
+size_t repopathlen;
 if (attr.repository != NULL)
    {
-   strncpy(localrepository,attr.repository,CF_BUFSIZE);
+   repopathlen = strlcpy(destination, attr.repository, CF_BUFSIZE);
    }
-else if (VREPOSITORY != NULL)
+else
    {
-   strncpy(localrepository,VREPOSITORY,CF_BUFSIZE);
+   repopathlen = strlcpy(destination, VREPOSITORY, CF_BUFSIZE);
+   }
+
+if (!JoinPath(destination, file))
+   {
+   CfOut(cf_error,"","Internal limit: Buffer ran out of space for long filename\n");
+   return false;
+   }
+
+for (char *s = destination + repopathlen; *s; s++)
+   {
+   if (*s == FILE_SEPARATOR)
+      {
+      *s = REPOSCHAR;
+      }
+   }
+
+return true;
+}
+
+/*********************************************************************/
+
+int ArchiveToRepository(char *file,Attributes attr,Promise *pp)
+
+ /* Returns true if the file was backup up and false if not */
+
+{ char destination[CF_BUFSIZE];
+  struct stat sb, dsb;
+
+if (!GetRepositoryPath(file, attr, destination))
+   {
+   return false;
    }
 
 if (attr.copy.backup == cfa_nobackup)
@@ -94,26 +118,6 @@ PrependItemList(&VREPOSLIST,file);
 ThreadUnlock(cft_getaddr);
 
 CfDebug("Repository(%s)\n",file);
-
-strcpy (node,file);
-
-destination[0] = '\0';
-
-for (sp = node; *sp != '\0'; sp++)
-   {
-   if (*sp == FILE_SEPARATOR)
-      {
-      *sp = REPOSCHAR;
-      }
-   }
-
-strncpy(destination,localrepository,CF_BUFSIZE-2);
-
-if (!JoinPath(destination,node))
-   {
-   CfOut(cf_error,"","Internal limit: Buffer ran out of space for long filename\n");
-   return false;
-   }
 
 if (!MakeParentDirectory(destination,attr.move_obstructions))
    {

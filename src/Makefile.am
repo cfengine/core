@@ -125,7 +125,8 @@ libpromises_la_SOURCES =                                                \
         show.h                                                          \
         parser.c parser.h                                               \
         parser_state.h                                                  \
-        constants.c
+        constants.c                                                     \
+        sequence.c sequence.h
 
 # Automake need to be guided due to symlinking
 libpromises_la_DEPENDENCIES = ../pub/libcfpub.la $(NOVA_LDADD) $(CONSTELLATION_LDADD)

@@ -22,7 +22,8 @@ check_PROGRAMS = \
 	alloc_test \
 	string_writer_test \
 	file_writer_test \
-	xml_writer_test
+	xml_writer_test \
+	sequence_test
 
 TESTS = $(check_PROGRAMS)
 

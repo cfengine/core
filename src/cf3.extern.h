@@ -71,7 +71,6 @@ extern char VSHIFT[];
 extern char *CLASSTEXT[];
 extern char *CLASSATTRIBUTES[CF_CLASSATTR][CF_ATTRDIM];
 extern char VINPUTFILE[];
-extern CF_DB *AUDITDBP;
 extern int AUDIT;
 extern char PURGE;
 

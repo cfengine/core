@@ -47,6 +47,8 @@ static int PR_KEPT;
 static int PR_REPAIRED;
 static int PR_NOTKEPT;
 
+static CF_DB  *AUDITDBP;
+
 /*****************************************************************************/
 
 void BeginAudit()

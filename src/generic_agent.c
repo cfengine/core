@@ -588,8 +588,6 @@ if (!MINUSF)
    SetInputFile("promises.cf");
    }
 
-AUDITDBP = NULL;
-
 DetermineCfenginePort();
 
 VIFELAPSED = 1;

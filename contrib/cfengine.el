@@ -384,10 +384,10 @@ Intended as the value of `indent-line-function'."
        ((looking-at (concat cfengine3-defuns-regex "\\>"))
         (indent-line-to 0))
        ;; Categories are indented one step.
-       ((looking-at (concat cfengine3-category-regex "[ \t]*$"))
+       ((looking-at (concat cfengine3-category-regex "[ \t]*\\(#.*\\)*$"))
         (indent-line-to cfengine-indent))
        ;; Class selectors are indented two steps.
-       ((looking-at (concat cfengine3-class-selector-regex "[ \t]*$"))
+       ((looking-at (concat cfengine3-class-selector-regex "[ \t]*\\(#.*\\)*$"))
         (indent-line-to (* 2 cfengine-indent)))
        ;; Outdent leading close brackets one step.
        ((or (eq ?\} (char-after))

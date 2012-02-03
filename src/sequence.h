@@ -39,5 +39,7 @@ void SequenceDestroy(Sequence **seq, void (ItemDestroy)(void *item));
 
 void SequenceAppend(Sequence *seq, void *item);
 
+void SequenceSort(Sequence *seq, __compar_fn_t Compare);
+
 
 #endif

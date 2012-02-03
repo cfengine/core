@@ -2,6 +2,7 @@
 
 #include "alloc.h"
 
+#include <stdlib.h>
 #include <assert.h>
 
 
@@ -60,4 +61,9 @@ ExpandIfNeccessary(seq);
 
 seq->data[seq->length] = item;
 ++(seq->length);
+}
+
+void SequenceSort(Sequence *seq, __compar_fn_t Compare)
+{
+qsort(seq->data, seq->length, sizeof(void *), Compare);
 }

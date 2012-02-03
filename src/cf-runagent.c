@@ -32,6 +32,7 @@
 #include "generic_agent.h"
 #include "cf3.extern.h"
 
+static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc,char **argv);
 
 static int HailServer(char *host,Attributes a,Promise *pp);
@@ -317,7 +318,7 @@ return config;
 
 /*******************************************************************/
 
-void ThisAgentInit()
+static void ThisAgentInit(void)
 
 {
 umask(077);

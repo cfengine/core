@@ -33,6 +33,7 @@
 
 /*****************************************************************************/
 
+static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc,char **argv);
 static void KeepPromises(void);
 
@@ -209,7 +210,7 @@ for (cp = ControlBodyConstraints(cf_monitor); cp != NULL; cp=cp->next)
 /* Level 1                                                                   */
 /*****************************************************************************/
 
-void ThisAgentInit(void)
+static void ThisAgentInit(void)
 {
 umask(077);
 sprintf(VPREFIX, "cf-monitord");

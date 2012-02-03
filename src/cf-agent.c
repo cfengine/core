@@ -73,6 +73,7 @@ char *TYPESEQUENCE[] =
    NULL
    };
 
+static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc,char **argv);
 static void CheckAgentAccess(Rlist *list);
 static void KeepAgentPromise(Promise *pp);
@@ -303,7 +304,7 @@ return config;
 
 /*******************************************************************/
 
-void ThisAgentInit()
+static void ThisAgentInit(void)
 
 { FILE *fp;
   char filename[CF_BUFSIZE];

@@ -34,7 +34,9 @@
 #include "ontology.h"
 #include "export_xml.h"
 
+static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc,char **argv);
+
 static void KeepKnowControlPromises(void);
 static void KeepKnowledgePromise(Promise *pp);
 static void VerifyTopicPromise(Promise *pp);
@@ -346,7 +348,7 @@ return config;
 
 /*****************************************************************************/
 
-void ThisAgentInit()
+static void ThisAgentInit(void)
 
 { 
 strcpy(WEBDRIVER,"");

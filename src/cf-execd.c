@@ -52,6 +52,7 @@ static int MAXLINES = 30;
 /*******************************************************************/
 
 static GenericAgentConfig CheckOpts(int argc,char **argv);
+static void ThisAgentInit(void);
 static bool ScheduleRun(void);
 static void *LocalExecThread(void *scheduled_run);
 static void LocalExec(bool scheduled_run);
@@ -239,7 +240,7 @@ return config;
 
 /*****************************************************************************/
 
-void ThisAgentInit()
+static void ThisAgentInit(void)
 
 {
 umask(077);

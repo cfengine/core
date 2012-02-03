@@ -37,6 +37,7 @@ typedef struct
    char *replyfile;
    } ServerFileGetState;
 
+static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc,char **argv);
 static int OpenReceiverChannel (void);
 static void PurgeOldConnections (Item **list,time_t now);
@@ -293,7 +294,7 @@ return config;
 
 /*******************************************************************/
 
-void ThisAgentInit()
+static void ThisAgentInit(void)
 
 {
 NewScope("remote_access");

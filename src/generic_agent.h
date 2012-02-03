@@ -34,8 +34,6 @@ typedef struct
    bool verify_promises;
    } GenericAgentConfig;
 
-void ThisAgentInit(void);
-
 void GenericInitialize(char *agents, GenericAgentConfig config);
 void GenericDeInitialize(void);
 void InitializeGA(void);

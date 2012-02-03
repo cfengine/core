@@ -34,6 +34,7 @@
 
 #include "writer.h"
 
+static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc,char **argv);
 
 static void KeepReportsControlPromises(void);
@@ -473,7 +474,7 @@ return config;
 
 /*****************************************************************************/
 
-void ThisAgentInit()
+static void ThisAgentInit(void)
 
 {
 time_t now;

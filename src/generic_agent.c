@@ -1221,10 +1221,6 @@ if (uname(&VSYSNAME) == -1)
    CfOut(cf_error, "uname", "!!! Couldn't get kernel name info!");
    memset(&VSYSNAME, 0, sizeof(VSYSNAME));
    }
-else
-   {
-   snprintf(LOGFILE,CF_BUFSIZE,"%s%ccfagent.%s.log",CFWORKDIR,FILE_SEPARATOR,VSYSNAME.nodename);
-   }
 
 
 snprintf(vbuff,CF_BUFSIZE,"%s%c.",CFWORKDIR,FILE_SEPARATOR);

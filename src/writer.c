@@ -123,7 +123,9 @@ if (writer->type == WT_STRING)
    {
    char *str = NULL;
    xvasprintf(&str, fmt, ap);
-   return StringWriterWriteLen(writer, str, INT_MAX);
+   size_t size = StringWriterWriteLen(writer, str, INT_MAX);
+   free(str);
+   return size;
    }
 else
    {
@@ -202,6 +204,7 @@ free(writer);
 /*********************************************************************/
 
 char *StringWriterClose(Writer *writer)
+//NOTE: transfer of ownership for allocated return value
 {
 if (writer->type != WT_STRING)
    {

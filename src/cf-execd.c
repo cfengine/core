@@ -351,6 +351,7 @@ for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
 
 /*****************************************************************************/
 
+/* Might be called back from NovaWin_StartExecService */
 void StartServer(void)
 
 { time_t now = time(NULL);

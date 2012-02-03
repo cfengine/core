@@ -69,13 +69,13 @@ static void KeepPromises(void);
 /* Command line options                                            */
 /*******************************************************************/
 
-const char *ID = "The executor daemon is a scheduler and wrapper for\n"
+static const char *ID = "The executor daemon is a scheduler and wrapper for\n"
                  "execution of cf-agent. It collects the output of the\n"
                  "agent and can email it to a specified address. It can\n"
                  "splay the start time of executions across the network\n"
                  "and work as a class-based clock for scheduling.";
 
-const struct option OPTIONS[15] =
+static const struct option OPTIONS[15] =
       {
       { "help",no_argument,0,'h' },
       { "debug",no_argument,0,'d' },
@@ -94,7 +94,7 @@ const struct option OPTIONS[15] =
       { NULL,0,0,'\0' }
       };
 
-const char *HINTS[15] =
+static const char *HINTS[15] =
       {
       "Print the help message",
       "Enable debugging output",

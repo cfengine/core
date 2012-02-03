@@ -116,12 +116,12 @@ char AVDB_FILE[CF_BUFSIZE];
 /* Command line options                                            */
 /*******************************************************************/
 
-const char *ID = "The reporting agent is a merger between the older\n"
+static const char *ID = "The reporting agent is a merger between the older\n"
                  "cfengine programs cfshow and cfenvgraph. It outputs\n"
                  "data stored in cfengine's embedded databases in human\n"
                  "readable form.";
 
-const struct option OPTIONS[32] =
+static const struct option OPTIONS[32] =
       {
       { "help",no_argument,0,'h' },
       { "class-regex",required_argument,0,'c'},
@@ -159,7 +159,7 @@ const struct option OPTIONS[32] =
       { NULL,0,0,'\0' }
       };
 
-const char *HINTS[32] =
+static const char *HINTS[32] =
       {
       "Print the help message",
       "Specify a class regular expression to search for",

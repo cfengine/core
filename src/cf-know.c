@@ -116,7 +116,7 @@ Inference *INFERENCES = NULL;
 /* Command line options                                            */
 /*******************************************************************/
 
-const char *ID = "The knowledge management agent is capable of building\n"
+static const char *ID = "The knowledge management agent is capable of building\n"
                  "and analysing a semantic knowledge network. It can\n"
                  "configure a relational database to contain an ISO\n"
                  "standard topic map and permit regular-expression based\n"
@@ -125,7 +125,7 @@ const char *ID = "The knowledge management agent is capable of building\n"
                  "and cf-know can assemble and converge the reference manual\n"
                  "for the current version of the Cfengine software.";
  
-const  struct option OPTIONS[] =
+static const  struct option OPTIONS[] =
       {
       { "help",no_argument,0,'h' },
       { "build",no_argument,0,'b'},
@@ -147,7 +147,7 @@ const  struct option OPTIONS[] =
       { NULL,0,0,'\0' }
       };
 
-const char *HINTS[] =
+static const char *HINTS[] =
       {
       "Print the help message",
       "Build and store topic map in the CFDB",

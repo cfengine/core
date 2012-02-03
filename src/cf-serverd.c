@@ -114,13 +114,13 @@ static const char *PROTOCOL[] =
 /* Command line options                                            */
 /*******************************************************************/
 
-const char *ID = "The server daemon provides two services: it acts as a\n"
+static const char *ID = "The server daemon provides two services: it acts as a\n"
                  "file server for remote file copying and it allows an\n"
                  "authorized cf-runagent to start start a cf-agent process\n"
                  "and set certain additional classes with role-based access\n"
                  "control.\n";
 
-const struct option OPTIONS[15] =
+static const struct option OPTIONS[15] =
       {
       { "help",no_argument,0,'h' },
       { "debug",no_argument,0,'d' },
@@ -137,7 +137,7 @@ const struct option OPTIONS[15] =
       { NULL,0,0,'\0' }
       };
 
-const char *HINTS[15] =
+static const char *HINTS[15] =
       {
       "Print the help message",
       "Enable debugging output",

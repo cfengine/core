@@ -91,11 +91,11 @@ extern const BodySyntax CFA_CONTROLBODY[];
 /* Command line options                                            */
 /*******************************************************************/
 
-const char *ID = "The main Cfengine agent is the instigator of change\n"
+static const char *ID = "The main Cfengine agent is the instigator of change\n"
                  "in the system. In that sense it is the most important\n"
                  "part of the Cfengine suite.\n";
 
-const struct option OPTIONS[15] =
+static const struct option OPTIONS[15] =
       {
       { "bootstrap",no_argument,0,'B' },
       { "bundlesequence",required_argument,0,'b' },
@@ -114,7 +114,7 @@ const struct option OPTIONS[15] =
       { NULL,0,0,'\0' }
       };
 
-const char *HINTS[15] =
+static const char *HINTS[15] =
       {
       "Bootstrap/repair a cfengine configuration from failsafe file in the WORKDIR else in current directory",
       "Set or override bundlesequence from command line",

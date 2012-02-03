@@ -43,12 +43,12 @@ static GenericAgentConfig CheckOpts(int argc,char **argv);
 /* Command line options                                            */
 /*******************************************************************/
 
-const char *ID = "The promise agent is a validator and analysis tool for\n"
+static const char *ID = "The promise agent is a validator and analysis tool for\n"
                  "configuration files belonging to any of the components\n"
                  "of Cfengine. Configurations that make changes must be\n"
                  "approved by this validator before being executed.";
  
-const struct option OPTIONS[] =
+static const struct option OPTIONS[] =
       {
       { "help",no_argument,0,'h' },
       { "bundlesequence",required_argument,0,'b' },
@@ -69,7 +69,7 @@ const struct option OPTIONS[] =
       };
 
 
-const char *HINTS[] =
+static const char *HINTS[] =
       {
       "Print the help message",
       "Use the specified bundlesequence for verification",

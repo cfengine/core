@@ -45,9 +45,9 @@ static int RemoveKeys(const char *host);
 /* Command line options                                            */
 /*******************************************************************/
 
-const char *ID = "The cfengine's generator makes key pairs for remote authentication.\n";
+static const char *ID = "The cfengine's generator makes key pairs for remote authentication.\n";
  
-const struct option OPTIONS[17] =
+static const struct option OPTIONS[17] =
       {
       { "help",no_argument,0,'h' },
       { "debug",no_argument,0,'d' },
@@ -59,7 +59,7 @@ const struct option OPTIONS[17] =
       { NULL,0,0,'\0' }
       };
 
-const char *HINTS[17] =
+static const char *HINTS[17] =
       {
       "Print the help message",
       "Enable debugging output",

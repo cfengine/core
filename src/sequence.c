@@ -9,7 +9,7 @@
 static const size_t EXPAND_FACTOR = 2;
 
 
-Sequence *SequenceCreate(size_t initialCapacity)
+Sequence *SequenceCreate(size_t initialCapacity, void (ItemDestroy)(void *item))
 {
 Sequence *seq = xmalloc(sizeof(Sequence));
 
@@ -21,22 +21,28 @@ if (initialCapacity <= 0)
 seq->capacity = initialCapacity;
 seq->length = 0;
 seq->data = xcalloc(sizeof(void *), initialCapacity);
+seq->ItemDestroy = ItemDestroy;
 
 return seq;
 }
 
-void SequenceDestroy(Sequence **seq, void (ItemDestroy)(void *item))
+static void DestroyRange(Sequence *seq, size_t start, size_t end)
+{
+if (seq->ItemDestroy)
+   {
+   for (size_t i = start; i <= end; i++)
+      {
+      seq->ItemDestroy(seq->data[i]);
+      }
+   }
+}
+
+void SequenceDestroy(Sequence **seq)
 {
 Sequence *seqp = *seq;
 assert(seqp && "Attempted to destroy a null sequence");
 
-if (ItemDestroy)
-   {
-   for (size_t i = 0; i < seqp->length; i++)
-      {
-      ItemDestroy(seqp->data[i]);
-      }
-   }
+DestroyRange(seqp, 0, seqp->length - 1);
 
 free(seqp->data);
 free(seqp);
@@ -61,6 +67,25 @@ ExpandIfNeccessary(seq);
 
 seq->data[seq->length] = item;
 ++(seq->length);
+}
+
+void SequenceRemoveRange(Sequence *seq, size_t start, size_t end)
+{
+assert(seq);
+assert(start >= 0);
+assert(end < seq->length);
+assert(start <= end);
+
+DestroyRange(seq, start, end);
+
+size_t rest_len = seq->length - end - 1;
+
+if (rest_len > 0)
+   {
+   memmove(seq->data + start, seq->data + end + 1, sizeof(void *) * rest_len);
+   }
+
+seq->length -= end - start + 1;
 }
 
 void SequenceSort(Sequence *seq, __compar_fn_t Compare)

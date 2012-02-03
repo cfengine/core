@@ -32,13 +32,14 @@ typedef struct
    void **data;
    size_t length;
    size_t capacity;
+   void (*ItemDestroy)(void *item);
    } Sequence;
 
-Sequence *SequenceCreate(size_t initialCapacity);
-void SequenceDestroy(Sequence **seq, void (ItemDestroy)(void *item));
+Sequence *SequenceCreate(size_t initialCapacity, void (*ItemDestroy)(void *item));
+void SequenceDestroy(Sequence **seq);
 
 void SequenceAppend(Sequence *seq, void *item);
-
+void SequenceRemoveRange(Sequence *seq, size_t start, size_t end);
 void SequenceSort(Sequence *seq, __compar_fn_t Compare);
 
 

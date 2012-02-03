@@ -34,6 +34,7 @@
 #include "ontology.h"
 #include "export_xml.h"
 
+static GenericAgentConfig CheckOpts(int argc,char **argv);
 static void KeepKnowControlPromises(void);
 static void KeepKnowledgePromise(Promise *pp);
 static void VerifyTopicPromise(Promise *pp);
@@ -204,7 +205,7 @@ return 0;
 /* Level 1                                                                   */
 /*****************************************************************************/
 
-GenericAgentConfig CheckOpts(int argc,char **argv)
+static GenericAgentConfig CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
   int optindex = 0;

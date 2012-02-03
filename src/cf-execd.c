@@ -51,6 +51,7 @@ static int MAXLINES = 30;
 
 /*******************************************************************/
 
+static GenericAgentConfig CheckOpts(int argc,char **argv);
 static bool ScheduleRun(void);
 static void *LocalExecThread(void *scheduled_run);
 static void LocalExec(bool scheduled_run);
@@ -139,7 +140,7 @@ return 0;
 /* Level 1                                                                   */
 /*****************************************************************************/
 
-GenericAgentConfig CheckOpts(int argc,char **argv)
+static GenericAgentConfig CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
   int optindex = 0;

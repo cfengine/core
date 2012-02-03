@@ -34,6 +34,8 @@
 
 #include "writer.h"
 
+static GenericAgentConfig CheckOpts(int argc,char **argv);
+
 static void KeepReportsControlPromises(void);
 static void KeepReportsPromises(void);
 static void ShowLastSeen(void);
@@ -309,7 +311,7 @@ WriterClose(writer);
 
 /*****************************************************************************/
 
-GenericAgentConfig CheckOpts(int argc,char **argv)
+static GenericAgentConfig CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
   int optindex = 0;

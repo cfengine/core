@@ -73,6 +73,7 @@ char *TYPESEQUENCE[] =
    NULL
    };
 
+static GenericAgentConfig CheckOpts(int argc,char **argv);
 static void CheckAgentAccess(Rlist *list);
 static void KeepAgentPromise(Promise *pp);
 static int NewTypeContext(enum typesequence type);
@@ -161,7 +162,7 @@ return ret;
 /* Level 1                                                         */
 /*******************************************************************/
 
-GenericAgentConfig CheckOpts(int argc,char **argv)
+static GenericAgentConfig CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
   char *sp;

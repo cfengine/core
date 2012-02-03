@@ -39,7 +39,6 @@ void ThisAgentInit(void);
 void GenericInitialize(char *agents, GenericAgentConfig config);
 void GenericDeInitialize(void);
 void InitializeGA(void);
-GenericAgentConfig CheckOpts(int argc,char **argv);
 void Syntax(const char *comp, const struct option options[], const char *hints[], const char *id);
 void ManPage(const char *component, const struct option options[], const char *hints[], const char *id);
 void PrintVersionBanner(const char *component);

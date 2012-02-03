@@ -36,6 +36,8 @@ int SHOWHOSTS = false;
 bool REMOVEKEYS = false;
 const char *remove_keys_host;
 
+static GenericAgentConfig CheckOpts(int argc,char **argv);
+
 static void ShowLastSeenHosts(void);
 static int RemoveKeys(const char *host);
 
@@ -99,7 +101,7 @@ return 0;
 /* Level                                                                     */
 /*****************************************************************************/
 
-GenericAgentConfig CheckOpts(int argc,char **argv)
+static GenericAgentConfig CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
   int optindex = 0;

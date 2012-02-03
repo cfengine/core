@@ -33,6 +33,7 @@
 
 /*****************************************************************************/
 
+static GenericAgentConfig CheckOpts(int argc,char **argv);
 static void KeepPromises(void);
 
 /*****************************************************************************/
@@ -103,7 +104,7 @@ return 0;
 
 /*******************************************************************/
 
-GenericAgentConfig CheckOpts(int argc,char **argv)
+static GenericAgentConfig CheckOpts(int argc,char **argv)
 {
 extern char *optarg;
 int optindex = 0;

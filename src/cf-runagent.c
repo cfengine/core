@@ -32,6 +32,8 @@
 #include "generic_agent.h"
 #include "cf3.extern.h"
 
+static GenericAgentConfig CheckOpts(int argc,char **argv);
+
 static int HailServer(char *host,Attributes a,Promise *pp);
 static int ParseHostname(char *hostname,char *new_hostname);
 static void SendClassData(AgentConnection *conn);
@@ -200,7 +202,7 @@ return 0;
 
 /*******************************************************************/
 
-GenericAgentConfig CheckOpts(int argc,char **argv)
+static GenericAgentConfig CheckOpts(int argc,char **argv)
 
 { extern char *optarg;
   int optindex = 0;

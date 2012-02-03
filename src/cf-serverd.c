@@ -37,6 +37,7 @@ typedef struct
    char *replyfile;
    } ServerFileGetState;
 
+static GenericAgentConfig CheckOpts(int argc,char **argv);
 static int OpenReceiverChannel (void);
 static void PurgeOldConnections (Item **list,time_t now);
 static void SpawnConnection (int sd_reply, char *ipaddr);

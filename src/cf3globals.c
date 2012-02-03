@@ -282,8 +282,6 @@ int EXCLAIM = true;
 
 mode_t DEFAULTMODE = (mode_t) 0755;
 
-char *VREPOSITORY = NULL;
-
 Item *VSETUIDLIST = NULL;
 Item *SUSPICIOUSLIST = NULL;
 enum classes VSYSTEMHARDCLASS = unused1;

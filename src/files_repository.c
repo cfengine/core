@@ -36,6 +36,14 @@
 
 static Item *VREPOSLIST;
 static char REPOSCHAR;
+static char *VREPOSITORY = NULL;
+
+/*********************************************************************/
+
+void SetRepositoryLocation(const char *path)
+{
+VREPOSITORY = xstrdup(path);
+}
 
 /*********************************************************************/
 

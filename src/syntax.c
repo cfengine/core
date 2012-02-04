@@ -1265,9 +1265,9 @@ for (dst = json; *src != '\0'; src++)
 return json;
 }
 
-static JsonObject *ExportAttributesSyntaxAsJson(const BodySyntax attributes[])
+static JsonElement *ExportAttributesSyntaxAsJson(const BodySyntax attributes[])
 {
-JsonObject *json = NULL;
+JsonElement *json = JsonObjectCreate(10);
 int i = 0;
 
 if (attributes == NULL)
@@ -1284,23 +1284,23 @@ for (i = 0; attributes[i].lval != NULL; i++)
       }
    else if (attributes[i].dtype == cf_body)
       {
-      JsonObject *json_attributes = ExportAttributesSyntaxAsJson((const BodySyntax *)attributes[i].range);
-      JsonObjectAppendObject(&json, attributes[i].lval, json_attributes);
+      JsonElement *json_attributes = ExportAttributesSyntaxAsJson((const BodySyntax *)attributes[i].range);
+      JsonObjectAppendObject(json, attributes[i].lval, json_attributes);
       }
    else
       {
-      JsonObject *attribute = NULL;
+      JsonElement *attribute = NULL;
 
-      JsonObjectAppendString(&attribute, "datatype", CF_DATATYPES[attributes[i].dtype]);
+      JsonObjectAppendString(attribute, "datatype", CF_DATATYPES[attributes[i].dtype]);
 
       if (strlen(attributes[i].range) == 0)
 	 {
-	 JsonObjectAppendString(&attribute, "pcre-range", ".*");
+         JsonObjectAppendString(attribute, "pcre-range", ".*");
 	 }
       else if (attributes[i].dtype == cf_opts ||
 	       attributes[i].dtype == cf_olist)
 	 {
-	 JsonArray *options = NULL;
+         JsonElement *options = NULL;
 	 char options_buffer[CF_BUFSIZE];
 	 char *option = NULL;
 
@@ -1308,27 +1308,27 @@ for (i = 0; attributes[i].lval != NULL; i++)
 	 for (option = strtok(options_buffer, ","); option != NULL;
 	      option = strtok(NULL, ","))
 	    {
-	    JsonArrayAppendString(&options, option);
+            JsonArrayAppendString(options, option);
 	    }
 
-	 JsonObjectAppendArray(&attribute, "pcre-range", options);
+         JsonObjectAppendArray(attribute, "pcre-range", options);
 	 }
       else
 	 {
 	 char *pcre_range = PCREStringToJsonString(attributes[i].range);
-	 JsonObjectAppendString(&attribute, "pcre-range", pcre_range);
+         JsonObjectAppendString(attribute, "pcre-range", pcre_range);
 	 }
 
-      JsonObjectAppendObject(&json, attributes[i].lval, attribute);
+      JsonObjectAppendObject(json, attributes[i].lval, attribute);
       }
    }
 
 return json;
 }
 
-static JsonObject *ExportBundleTypeSyntaxAsJson(char *bundle_type)
+static JsonElement *ExportBundleTypeSyntaxAsJson(char *bundle_type)
 {
-JsonObject *json = NULL;
+JsonElement *json = NULL;
 SubTypeSyntax *st;
 int i = 0, j = 0;
 
@@ -1340,8 +1340,8 @@ for (i = 0; i < CF3_MODULES; i++)
       {
       if (strcmp(bundle_type, st[j].btype) == 0 || strcmp("*", st[j].btype) == 0)
 	 {
-	 JsonObject *attributes = ExportAttributesSyntaxAsJson(st[j].bs);
-	 JsonObjectAppendObject(&json, st[j].subtype, attributes);
+         JsonElement *attributes = ExportAttributesSyntaxAsJson(st[j].bs);
+         JsonObjectAppendObject(json, st[j].subtype, attributes);
 	 }
       }
    }
@@ -1349,15 +1349,15 @@ for (i = 0; i < CF3_MODULES; i++)
 return json;
 }
 
-static JsonObject *ExportControlBodiesSyntaxAsJson()
+static JsonElement *ExportControlBodiesSyntaxAsJson()
 {
-JsonObject *control_bodies = NULL;
+JsonElement *control_bodies = JsonObjectCreate(10);
 int i = 0;
 
 for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
    {
-   JsonObject *attributes = ExportAttributesSyntaxAsJson(CF_ALL_BODIES[i].bs);
-   JsonObjectAppendObject(&control_bodies, CF_ALL_BODIES[i].btype, attributes);
+   JsonElement *attributes = ExportAttributesSyntaxAsJson(CF_ALL_BODIES[i].bs);
+   JsonObjectAppendObject(control_bodies, CF_ALL_BODIES[i].btype, attributes);
    }
 
 return control_bodies;
@@ -1365,33 +1365,33 @@ return control_bodies;
 
 void SyntaxPrintAsJson(Writer *writer)
 {
-JsonObject *syntax_tree = NULL;
+JsonElement *syntax_tree = NULL;
 
    {
-   JsonObject * control_bodies = ExportControlBodiesSyntaxAsJson();
-   JsonObjectAppendObject(&syntax_tree, "control-bodies", control_bodies);
+   JsonElement * control_bodies = ExportControlBodiesSyntaxAsJson();
+   JsonObjectAppendObject(syntax_tree, "control-bodies", control_bodies);
    }
 
    {
-   JsonObject *bundle_types = NULL;
+   JsonElement *bundle_types = NULL;
    int i = 0;
 
    for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
       {
-      JsonObject *bundle_type = ExportBundleTypeSyntaxAsJson(CF_ALL_BODIES[i].btype);
-      JsonObjectAppendObject(&bundle_types, CF_ALL_BODIES[i].btype, bundle_type);
+      JsonElement *bundle_type = ExportBundleTypeSyntaxAsJson(CF_ALL_BODIES[i].btype);
+      JsonObjectAppendObject(bundle_types, CF_ALL_BODIES[i].btype, bundle_type);
       }
 
-   JsonObjectAppendObject(&syntax_tree, "bundle-types", bundle_types);
+   JsonObjectAppendObject(syntax_tree, "bundle-types", bundle_types);
    }
 
-JsonObjectPrint(writer, syntax_tree, 0);
-JsonObjectDelete(syntax_tree);
+JsonElementPrint(writer, syntax_tree, 0);
+JsonElementDestroy(syntax_tree);
 }
 
 /****************************************************************************/
 
-static void JsonObjectAppendSize(JsonObject **parent, const char *name, size_t value)
+static void JsonObjectAppendSize(JsonElement *parent, const char *name, size_t value)
 {
 char buffer[10];
 snprintf(buffer, 10, "%ld", value);
@@ -1399,9 +1399,9 @@ JsonObjectAppendString(parent, name, buffer);
 }
 
 
-static JsonObject *ExportAttributeValueAsJson(Rval rval)
+static JsonElement *ExportAttributeValueAsJson(Rval rval)
 {
-JsonObject *json_attribute = NULL;
+JsonElement *json_attribute = JsonObjectCreate(10);
 
 switch (rval.rtype)
    {
@@ -1410,23 +1410,23 @@ switch (rval.rtype)
       char buffer[CF_BUFSIZE];
       EscapeQuotes((const char *)rval.item, buffer, sizeof(buffer));
 
-      JsonObjectAppendString(&json_attribute, "type", "string");
-      JsonObjectAppendString(&json_attribute, "value", buffer);
+      JsonObjectAppendString(json_attribute, "type", "string");
+      JsonObjectAppendString(json_attribute, "value", buffer);
       }
       return json_attribute;
 
    case CF_LIST:
       {
       Rlist *rp = NULL;
-      JsonArray *list = NULL;
-      JsonObjectAppendString(&json_attribute, "type", "list");
+      JsonElement *list = JsonArrayCreate(10);
+      JsonObjectAppendString(json_attribute, "type", "list");
 
       for (rp = (Rlist *)rval.item; rp != NULL; rp = rp->next)
-	 {
-	 JsonArrayAppendObject(&list, ExportAttributeValueAsJson((Rval) { rp->item, rp->type }));
-	 }
+         {
+         JsonArrayAppendObject(list, ExportAttributeValueAsJson((Rval) { rp->item, rp->type }));
+         }
 
-      JsonObjectAppendArray(&json_attribute, "value", list);
+      JsonObjectAppendArray(json_attribute, "value", list);
       return json_attribute;
       }
 
@@ -1435,18 +1435,18 @@ switch (rval.rtype)
       Rlist *argp = NULL;
       FnCall *call = (FnCall *)rval.item;
 
-      JsonObjectAppendString(&json_attribute, "type", "function-call");
-      JsonObjectAppendString(&json_attribute, "name", call->name);
+      JsonObjectAppendString(json_attribute, "type", "function-call");
+      JsonObjectAppendString(json_attribute, "name", call->name);
 
 	 {
-	 JsonArray *arguments = NULL;
+         JsonElement *arguments = JsonArrayCreate(10);
 
 	 for (argp = call->args; argp != NULL; argp = argp->next)
 	    {
-	    JsonArrayAppendObject(&arguments, ExportAttributeValueAsJson((Rval) { argp->item, argp->type }));
+            JsonArrayAppendObject(arguments, ExportAttributeValueAsJson((Rval) { argp->item, argp->type }));
 	    }
 
-	 JsonObjectAppendArray(&json_attribute, "arguments", arguments);
+         JsonObjectAppendArray(json_attribute, "arguments", arguments);
 	 }
 
       return json_attribute;
@@ -1458,23 +1458,23 @@ switch (rval.rtype)
    }
 }
 
-static JsonObject *CreateContextAsJson(const char *name, size_t offset,
-      size_t offset_end, const char *children_name, JsonArray *children)
+static JsonElement *CreateContextAsJson(const char *name, size_t offset,
+      size_t offset_end, const char *children_name, JsonElement *children)
 {
-JsonObject *json = NULL;
+JsonElement *json = JsonObjectCreate(10);
 
-JsonObjectAppendString(&json, "name", name);
-JsonObjectAppendSize(&json, "offset", offset);
-JsonObjectAppendSize(&json, "offset-end", offset_end);
-JsonObjectAppendArray(&json, children_name, children);
+JsonObjectAppendString(json, "name", name);
+JsonObjectAppendSize(json, "offset", offset);
+JsonObjectAppendSize(json, "offset-end", offset_end);
+JsonObjectAppendArray(json, children_name, children);
 
 return json;
 }
 
-static JsonArray *ExportBodyClassesAsJson(Constraint *constraints)
+static JsonElement *ExportBodyClassesAsJson(Constraint *constraints)
 {
-JsonArray *json_contexts = NULL;
-JsonArray *json_attributes = NULL;
+JsonElement *json_contexts = JsonArrayCreate(10);
+JsonElement *json_attributes = JsonArrayCreate(10);
 char *current_context = "any";
 size_t context_offset_start = -1;
 size_t context_offset_end = -1;
@@ -1482,21 +1482,21 @@ Constraint *cp = NULL;
 
 for (cp = constraints; cp != NULL; cp = cp->next)
    {
-   JsonObject *json_attribute = NULL;
+   JsonElement *json_attribute = JsonObjectCreate(10);
 
-   JsonObjectAppendSize(&json_attribute, "offset", cp->offset.start);
-   JsonObjectAppendSize(&json_attribute, "offset-end", cp->offset.end);
+   JsonObjectAppendSize(json_attribute, "offset", cp->offset.start);
+   JsonObjectAppendSize(json_attribute, "offset-end", cp->offset.end);
 
    context_offset_start = cp->offset.context;
    context_offset_end = cp->offset.end;
 
-   JsonObjectAppendString(&json_attribute, "lval", cp->lval);
-   JsonObjectAppendObject(&json_attribute, "rval", ExportAttributeValueAsJson(cp->rval));
-   JsonArrayAppendObject(&json_attributes, json_attribute);
+   JsonObjectAppendString(json_attribute, "lval", cp->lval);
+   JsonObjectAppendObject(json_attribute, "rval", ExportAttributeValueAsJson(cp->rval));
+   JsonArrayAppendObject(json_attributes, json_attribute);
 
    if (cp->next == NULL || strcmp(current_context, cp->next->classes) != 0)
       {
-      JsonArrayAppendObject(&json_contexts,
+      JsonArrayAppendObject(json_contexts,
       	    CreateContextAsJson(current_context,
       		                context_offset_start,
       			        context_offset_end,
@@ -1510,10 +1510,10 @@ for (cp = constraints; cp != NULL; cp = cp->next)
 return json_contexts;
 }
 
-static JsonArray *ExportBundleClassesAsJson(Promise *promises)
+static JsonElement *ExportBundleClassesAsJson(Promise *promises)
 {
-JsonArray *json_contexts = NULL;
-JsonArray *json_promises = NULL;
+JsonElement *json_contexts = JsonArrayCreate(10);
+JsonElement *json_promises = JsonArrayCreate(10);
 char *current_context = "any";
 size_t context_offset_start = -1;
 size_t context_offset_end = -1;
@@ -1521,44 +1521,44 @@ Promise *pp = NULL;
 
 for (pp = promises; pp != NULL; pp = pp->next)
    {
-   JsonObject *json_promise = NULL;
+   JsonElement *json_promise = JsonObjectCreate(10);
 
-   JsonObjectAppendSize(&json_promise, "offset", pp->offset.start);
+   JsonObjectAppendSize(json_promise, "offset", pp->offset.start);
 
       {
-      JsonArray *json_promise_attributes = NULL;
+      JsonElement *json_promise_attributes = JsonArrayCreate(10);
       Constraint *cp = NULL;
 
       for (cp = pp->conlist; cp != NULL; cp = cp->next)
 	 {
-	 JsonObject *json_attribute = NULL;
+         JsonElement *json_attribute = JsonObjectCreate(10);
 
-	 JsonObjectAppendSize(&json_attribute, "offset", cp->offset.start);
-	 JsonObjectAppendSize(&json_attribute, "offset-end", cp->offset.end);
+         JsonObjectAppendSize(json_attribute, "offset", cp->offset.start);
+         JsonObjectAppendSize(json_attribute, "offset-end", cp->offset.end);
 
 	 context_offset_end = cp->offset.end;
 
-	 JsonObjectAppendString(&json_attribute, "lval", cp->lval);
-	 JsonObjectAppendObject(&json_attribute, "rval", ExportAttributeValueAsJson(cp->rval));
-	 JsonArrayAppendObject(&json_promise_attributes, json_attribute);
+         JsonObjectAppendString(json_attribute, "lval", cp->lval);
+         JsonObjectAppendObject(json_attribute, "rval", ExportAttributeValueAsJson(cp->rval));
+         JsonArrayAppendObject(json_promise_attributes, json_attribute);
 	 }
 
-      JsonObjectAppendSize(&json_promise, "offset-end", context_offset_end);
+      JsonObjectAppendSize(json_promise, "offset-end", context_offset_end);
 
-      JsonObjectAppendString(&json_promise, "promiser", pp->promiser);
+      JsonObjectAppendString(json_promise, "promiser", pp->promiser);
       /* FIXME: does not work for lists */
       if (pp->promisee.rtype == CF_SCALAR || pp->promisee.rtype == CF_NOPROMISEE)
          {
-         JsonObjectAppendString(&json_promise, "promisee", pp->promisee.item);
+         JsonObjectAppendString(json_promise, "promisee", pp->promisee.item);
          }
 
-      JsonObjectAppendArray(&json_promise, "attributes", json_promise_attributes);
+      JsonObjectAppendArray(json_promise, "attributes", json_promise_attributes);
       }
-   JsonArrayAppendObject(&json_promises, json_promise);
+   JsonArrayAppendObject(json_promises, json_promise);
 
    if (pp->next == NULL || strcmp(current_context, pp->next->classes) != 0)
       {
-      JsonArrayAppendObject(&json_contexts,
+      JsonArrayAppendObject(json_contexts,
       	    CreateContextAsJson(current_context,
       		                context_offset_start,
       			        context_offset_end,
@@ -1572,74 +1572,74 @@ for (pp = promises; pp != NULL; pp = pp->next)
 return json_contexts;
 }
 
-static JsonObject *ExportBundleAsJson(Bundle *bundle)
+static JsonElement *ExportBundleAsJson(Bundle *bundle)
 {
-JsonObject *json_bundle = NULL;
+JsonElement *json_bundle = JsonObjectCreate(10);
 
-JsonObjectAppendSize(&json_bundle, "offset", bundle->offset.start);
-JsonObjectAppendSize(&json_bundle, "offset-end", bundle->offset.end);
+JsonObjectAppendSize(json_bundle, "offset", bundle->offset.start);
+JsonObjectAppendSize(json_bundle, "offset-end", bundle->offset.end);
 
-JsonObjectAppendString(&json_bundle, "name", bundle->name);
-JsonObjectAppendString(&json_bundle, "bundle-type", bundle->type);
+JsonObjectAppendString(json_bundle, "name", bundle->name);
+JsonObjectAppendString(json_bundle, "bundle-type", bundle->type);
 
    {
-   JsonArray *json_args = NULL;
+   JsonElement *json_args = JsonArrayCreate(10);
    Rlist *argp = NULL;
 
    for (argp = bundle->args; argp != NULL; argp = argp->next)
       {
-      JsonArrayAppendString(&json_args, argp->item);
+      JsonArrayAppendString(json_args, argp->item);
       }
 
-   JsonObjectAppendArray(&json_bundle, "arguments", json_args);
+   JsonObjectAppendArray(json_bundle, "arguments", json_args);
    }
 
    {
-   JsonArray *json_promise_types = NULL;
+   JsonElement *json_promise_types = JsonArrayCreate(10);
    SubType *sp = NULL;
 
    for (sp = bundle->subtypes; sp != NULL; sp = sp->next)
       {
-      JsonObject *json_promise_type = NULL;
+      JsonElement *json_promise_type = JsonObjectCreate(10);
 
-      JsonObjectAppendSize(&json_promise_type, "offset", sp->offset.start);
-      JsonObjectAppendSize(&json_promise_type, "offset-end", sp->offset.end);
-      JsonObjectAppendString(&json_promise_type, "name", sp->name);
-      JsonObjectAppendArray(&json_promise_type, "classes", ExportBundleClassesAsJson(sp->promiselist));
+      JsonObjectAppendSize(json_promise_type, "offset", sp->offset.start);
+      JsonObjectAppendSize(json_promise_type, "offset-end", sp->offset.end);
+      JsonObjectAppendString(json_promise_type, "name", sp->name);
+      JsonObjectAppendArray(json_promise_type, "classes", ExportBundleClassesAsJson(sp->promiselist));
 
-      JsonArrayAppendObject(&json_promise_types, json_promise_type);
+      JsonArrayAppendObject(json_promise_types, json_promise_type);
       }
 
-   JsonObjectAppendArray(&json_bundle, "promise-types", json_promise_types);
+   JsonObjectAppendArray(json_bundle, "promise-types", json_promise_types);
    }
 
 return json_bundle;
 }
 
 
-static JsonObject *ExportBodyAsJson(Body *body)
+static JsonElement *ExportBodyAsJson(Body *body)
 {
-JsonObject *json_body = NULL;
+JsonElement *json_body = JsonObjectCreate(10);
 
-JsonObjectAppendSize(&json_body, "offset", body->offset.start);
-JsonObjectAppendSize(&json_body, "offset-end", body->offset.end);
+JsonObjectAppendSize(json_body, "offset", body->offset.start);
+JsonObjectAppendSize(json_body, "offset-end", body->offset.end);
 
-JsonObjectAppendString(&json_body, "name", body->name);
-JsonObjectAppendString(&json_body, "body-type", body->type);
+JsonObjectAppendString(json_body, "name", body->name);
+JsonObjectAppendString(json_body, "body-type", body->type);
 
    {
-   JsonArray *json_args = NULL;
+   JsonElement *json_args = JsonArrayCreate(10);
    Rlist *argp = NULL;
 
    for (argp = body->args; argp != NULL; argp = argp->next)
       {
-      JsonArrayAppendString(&json_args, argp->item);
+      JsonArrayAppendString(json_args, argp->item);
       }
 
-   JsonObjectAppendArray(&json_body, "arguments", json_args);
+   JsonObjectAppendArray(json_body, "arguments", json_args);
    }
 
-JsonObjectAppendArray(&json_body, "classes", ExportBodyClassesAsJson(body->conlist));
+JsonObjectAppendArray(json_body, "classes", ExportBodyClassesAsJson(body->conlist));
 
 return json_body;
 }
@@ -1647,36 +1647,36 @@ return json_body;
 void PolicyPrintAsJson(Writer *writer, const char *filename,
                        Bundle *bundles, Body *bodies)
 {
-JsonObject *json_policy = NULL;
-JsonObjectAppendString(&json_policy, "name", filename);
+JsonElement *json_policy = JsonObjectCreate(10);
+JsonObjectAppendString(json_policy, "name", filename);
 
    {
-   JsonArray *json_bundles = NULL;
+   JsonElement *json_bundles = JsonArrayCreate(10);
    Bundle *bp = NULL;
 
    for (bp = bundles; bp != NULL; bp = bp->next)
       {
-      JsonArrayAppendObject(&json_bundles, ExportBundleAsJson(bp));
+      JsonArrayAppendObject(json_bundles, ExportBundleAsJson(bp));
       }
 
-   JsonObjectAppendArray(&json_policy, "bundles", json_bundles);
+   JsonObjectAppendArray(json_policy, "bundles", json_bundles);
    }
 
    {
-   JsonArray *json_bodies = NULL;
+   JsonElement *json_bodies = JsonArrayCreate(10);
    Body *bdp = NULL;
 
    for (bdp = bodies; bdp != NULL; bdp = bdp->next)
       {
-      JsonArrayAppendObject(&json_bodies, ExportBodyAsJson(bdp));
+      JsonArrayAppendObject(json_bodies, ExportBodyAsJson(bdp));
       }
 
-   JsonObjectAppendArray(&json_policy, "bodies", json_bodies);
+   JsonObjectAppendArray(json_policy, "bodies", json_bodies);
    }
 
 
-JsonObjectPrint(writer, json_policy, 0);
-JsonObjectDelete(json_policy);
+JsonElementPrint(writer, json_policy, 0);
+JsonElementDestroy(json_policy);
 }
 
 /****************************************************************************/

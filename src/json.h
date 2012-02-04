@@ -26,41 +26,40 @@
 #define CFENGINE_JSON_H
 
 #include "cf3.defs.h"
-#include "rlist.h"
 #include "writer.h"
 
-typedef Rlist JsonObject;
-typedef Rlist JsonArray;
 
-void JsonObjectDelete(JsonObject *object);
-void JsonArrayDelete(JsonArray *array);
+typedef struct JsonElement_ JsonElement;
 
-void JsonObjectAppendString(JsonObject **parent, const char *key, const char *value);
-void JsonObjectAppendInteger(JsonObject **parent, const char *key, int value);
-void JsonObjectAppendReal(JsonObject **parent, const char *key, double value);
-void JsonObjectAppendArray(JsonObject **parent, const char *key, JsonArray *value);
-void JsonObjectAppendObject(JsonObject **parent, const char *key, JsonObject *value);
 
-void JsonArrayAppendString(JsonArray **parent, const char *value);
-void JsonArrayAppendArray(JsonArray **parent, JsonArray *value);
-void JsonArrayAppendObject(JsonArray **parent, JsonObject *value);
+JsonElement *JsonObjectCreate(size_t initialCapacity);
+JsonElement *JsonArrayCreate(size_t initialCapacity);
+void JsonElementDestroy(JsonElement *element);
 
-size_t JsonArrayLength(JsonArray *array);
 
-const char *JsonObjectGetAsString(JsonObject *object, const char *key);
-JsonObject *JsonObjectGetAsObject(JsonObject *object, const char *key);
-JsonArray *JsonObjectGetAsArray(JsonObject *object, const char *key);
+size_t JsonElementLength(JsonElement *element);
+void JsonElementPrint(Writer *writer, JsonElement *element, size_t indent_level);
 
-const char *JsonArrayGetAsString(JsonArray *array, size_t index);
-JsonObject *JsonArrayGetAsObject(JsonArray *array, size_t index);
 
-void JsonStringPrint(Writer *writer, const char *value, int indent_level);
-void JsonArrayPrint(Writer *writer, JsonArray *value, int indent_level);
-void JsonObjectPrint(Writer *writer, JsonObject *value, int indent_level);
+void JsonObjectAppendString(JsonElement *object, const char *key, const char *value);
+void JsonObjectAppendInteger(JsonElement *object, const char *key, int value);
+void JsonObjectAppendReal(JsonElement *object, const char *key, double value);
+void JsonObjectAppendArray(JsonElement *object, const char *key, JsonElement *array);
+void JsonObjectAppendObject(JsonElement *object, const char *key, JsonElement *childObject);
+const char *JsonObjectGetAsString(JsonElement *object, const char *key);
+JsonElement *JsonObjectGetAsObject(JsonElement *object, const char *key);
+JsonElement *JsonObjectGetAsArray(JsonElement *object, const char *key);
 
-const char *JsonParseAsString(const char **data);
-JsonArray *JsonParseAsArray(const char **data);
-JsonObject *JsonParseAsObject(const char **data);
-bool JsonIsWhitespace(char ch);
+
+void JsonArrayAppendString(JsonElement *array, const char *value);
+void JsonArrayAppendArray(JsonElement *array, JsonElement *childArray);
+void JsonArrayAppendObject(JsonElement *array, JsonElement *object);
+const char *JsonArrayGetAsString(JsonElement *array, size_t index);
+JsonElement *JsonArrayGetAsObject(JsonElement *array, size_t index);
+
+
+// do not use parsing in production code.
+JsonElement *JsonParse(const char **data);
+
 
 #endif

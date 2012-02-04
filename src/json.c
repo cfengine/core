@@ -1,93 +1,167 @@
 #include "json.h"
 
-#include "writer.h"
+#include "sequence.h"
 
-#define JSON_OBJECT_TYPE 'o'
-#define JSON_ARRAY_TYPE 'A'
+#include <assert.h>
 
 static const int SPACES_PER_INDENT = 2;
+static const int DEFAULT_CONTAINER_CAPACITY = 64;
 
-static void JsonElementDelete(Rlist *element)
-{
-Rlist *rp = NULL, *next = NULL;
-for (rp = element; rp != NULL; rp = next)
+
+typedef enum
    {
-   next = rp->next;
-   switch (rp->type)
+   JSON_ELEMENT_TYPE_CONTAINER,
+   JSON_ELEMENT_TYPE_PRIMITIVE
+   } JsonElementType;
+
+
+typedef enum
+   {
+   JSON_CONTAINER_TYPE_OBJECT,
+   JSON_CONTAINER_TYPE_ARRAY
+   } JsonContainerType;
+
+
+typedef enum
+   {
+   JSON_PRIMITIVE_TYPE_STRING,
+   JSON_PRIMITIVE_TYPE_INTEGER,
+   JSON_PRIMITIVE_TYPE_REAL
+   } JsonPrimitiveType;
+
+
+struct JsonElement_
+   {
+   JsonElementType type;
+   char *propertyName; // to avoid having a struct JsonProperty
+   union
       {
-      case CF_ASSOC:
+      struct JsonContainer
          {
-         CfAssoc *assoc = rp->item;
-         switch (assoc->rval.rtype)
-            {
-            case JSON_OBJECT_TYPE:
-            case JSON_ARRAY_TYPE:
-            JsonElementDelete(assoc->rval.item);
-            break;
+         JsonContainerType type;
+         Sequence *children;
+         } container;
+      struct JsonPrimitive
+         {
+         JsonPrimitiveType type;
+         const char *value;
+         } primitive;
+      };
+   };
 
-	    default:
-	       free(assoc->rval.item);
-	       break;
-	    }
-	 free(assoc->lval);
-	 free(assoc);
-	 }
-	 break;
 
-      default:
-	 free(rp->item);
-	 break;
-      }
-   free(rp);
-   }
-}
 
-void JsonObjectDelete(JsonObject *object)
+// *******************************************************************************************
+// JsonElement Functions
+// *******************************************************************************************
+
+static void JsonElementSetPropertyName(JsonElement *element, const char *propertyName)
 {
-JsonElementDelete(object);
-}
+assert(element);
 
-void JsonArrayDelete(JsonArray *array)
-{
-JsonElementDelete(array);
-}
-
-void JsonObjectAppendObject(JsonObject **parent, const char *key, JsonObject *value)
-{
-CfAssoc *ap = NULL;
-
-if (value == NULL)
+if (element->propertyName)
    {
-   return;
+   free(element->propertyName);
+   element->propertyName = NULL;
    }
 
-ap = AssocNewReference(key, (Rval) { value, JSON_OBJECT_TYPE }, cf_notype);
-RlistAppendReference(parent, ap, CF_ASSOC);
+if (propertyName)
+   {
+   element->propertyName = xstrdup(propertyName);
+   }
 }
 
-void JsonObjectAppendArray(JsonObject **parent, const char *key, JsonArray *value)
+static JsonElement *JsonElementCreateContainer(JsonContainerType containerType, const char *propertyName, size_t initialCapacity)
 {
-CfAssoc *ap = NULL;
+JsonElement *element = xcalloc(1, sizeof(JsonElement));
 
-if (value == NULL)
-   {
-   return;
-   }
+element->type = JSON_ELEMENT_TYPE_CONTAINER;
 
-ap = AssocNewReference(key, (Rval) { value, JSON_ARRAY_TYPE }, cf_notype);
-RlistAppendReference(parent, ap, CF_ASSOC);
+JsonElementSetPropertyName(element, propertyName);
+
+element->container.type = containerType;
+element->container.children = SequenceCreate(initialCapacity, JsonElementDestroy);
+
+return element;
 }
 
-void JsonObjectAppendString(JsonObject **parent, const char *key, const char *value)
+
+static JsonElement *JsonElementCreatePrimitive(JsonPrimitiveType primitiveType, const char *propertyName, const char *value)
 {
-if (value == NULL)
+JsonElement *element = xcalloc(1, sizeof(JsonElement));
+
+element->type = JSON_ELEMENT_TYPE_PRIMITIVE;
+
+JsonElementSetPropertyName(element, propertyName);
+
+element->primitive.type = primitiveType;
+element->primitive.value = value;
+
+return element;
+}
+
+
+void JsonElementDestroy(JsonElement *element)
+{
+assert(element);
+
+switch (element->type)
    {
-   return;
+   case JSON_ELEMENT_TYPE_CONTAINER:
+      assert(element->container.children);
+      SequenceDestroy(element->container.children);
+      element->container.children = NULL;
+      break;
+
+   case JSON_ELEMENT_TYPE_PRIMITIVE:
+      assert(element->primitive.value);
+      free((void *)element->primitive.value);
+      element->primitive.value = NULL;
+      break;
    }
 
+if (element->propertyName)
+   {
+   free(element->propertyName);
+   }
+
+free(element);
+}
+
+
+size_t JsonElementLength(JsonElement *element)
+{
+assert(element);
+
+switch (element->type)
+   {
+   case JSON_ELEMENT_TYPE_CONTAINER:
+      return element->container.children->length;
+
+   case JSON_ELEMENT_TYPE_PRIMITIVE:
+      return strlen(element->primitive.value);
+   }
+
+return -1; // appease gcc
+}
+
+
+// *******************************************************************************************
+// JsonObject Functions
+// *******************************************************************************************
+
+
+JsonElement *JsonObjectCreate(size_t initialCapacity)
+{
+return JsonElementCreateContainer(JSON_CONTAINER_TYPE_OBJECT, NULL, initialCapacity);
+}
+
+
+static const char *EscapeJsonString(const char *unescapedString)
+{
 Writer *writer = StringWriter();
 
-for (const char *c= value; *c != '\0'; c++)
+for (const char *c = unescapedString; *c != '\0'; c++)
    {
    if (*c == '\"' ||
        *c == '\\' ||
@@ -102,66 +176,239 @@ for (const char *c= value; *c != '\0'; c++)
       }
 
    WriterWriteChar(writer, *c);
-   }
+   };
 
-CfAssoc *ap = AssocNewReference(key, (Rval) { StringWriterClose(writer), CF_SCALAR }, cf_str);
-RlistAppendReference(parent, ap, CF_ASSOC);
+return StringWriterClose(writer);
 }
 
-void JsonObjectAppendInteger(JsonObject **parent, const char *key, int value)
+void JsonObjectAppendString(JsonElement *object, const char *key, const char *value)
 {
+assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
+assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
+assert(key);
+assert(value);
+
+JsonElement *child = JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_STRING, key, EscapeJsonString(value));
+SequenceAppend(object->container.children, child);
+}
+
+
+void JsonObjectAppendInteger(JsonElement *object, const char *key, int value)
+{
+assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
+assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
+assert(key);
+
 char *buffer = xcalloc(32, sizeof(char));
 snprintf(buffer, 32, "%d", value);
 
-CfAssoc *ap = AssocNewReference(key, (Rval) { buffer, CF_SCALAR }, cf_int);
-RlistAppendReference(parent, ap, CF_ASSOC);
+JsonElement *child = JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_INTEGER, key, buffer);
+SequenceAppend(object->container.children, child);
 }
 
-void JsonObjectAppendReal(JsonObject **parent, const char *key, double value)
+
+void JsonObjectAppendReal(JsonElement *object, const char *key, double value)
 {
+assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
+assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
+assert(key);
+
 char *buffer = xcalloc(32, sizeof(char));
 snprintf(buffer, 32, "%.4f", value);
 
-CfAssoc *ap = AssocNewReference(key, (Rval) { buffer, CF_SCALAR }, cf_real);
-RlistAppendReference(parent, ap, CF_ASSOC);
+JsonElement *child = JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_REAL, key, buffer);
+SequenceAppend(object->container.children, child);
 }
 
-void JsonArrayAppendObject(JsonArray **parent, JsonObject *value)
+
+void JsonObjectAppendArray(JsonElement *object, const char *key, JsonElement *array)
 {
-if (value == NULL)
+assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
+assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
+assert(key);
+assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
+assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
+
+JsonElementSetPropertyName(array, key);
+SequenceAppend(object->container.children, array);
+}
+
+
+void JsonObjectAppendObject(JsonElement *object, const char *key, JsonElement *childObject)
+{
+assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
+assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
+assert(key);
+assert(childObject->type == JSON_ELEMENT_TYPE_CONTAINER);
+assert(childObject->container.type == JSON_CONTAINER_TYPE_OBJECT);
+
+JsonElementSetPropertyName(childObject, key);
+SequenceAppend(object->container.children, childObject);
+}
+
+
+static int JsonElementHasProperty(const void *propertyName, const void *jsonElement)
+{
+assert(propertyName);
+
+const JsonElement *element = jsonElement;
+assert(element->propertyName);
+
+if (strcmp(propertyName, element->propertyName) == 0)
    {
-   return;
+   return 0;
+   }
+return -1;
+}
+
+
+const char *JsonObjectGetAsString(JsonElement *object, const char *key)
+{
+assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
+assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
+assert(key);
+
+JsonElement *childPrimitive = SequenceLookup(object->container.children, key, JsonElementHasProperty);
+if (childPrimitive)
+   {
+   assert(childPrimitive->type == JSON_ELEMENT_TYPE_PRIMITIVE);
+   assert(childPrimitive->primitive.type == JSON_PRIMITIVE_TYPE_STRING);
+   return childPrimitive->primitive.value;
    }
 
-RlistAppendReference(parent, value, JSON_OBJECT_TYPE);
+return NULL;
 }
 
-void JsonArrayAppendArray(JsonArray **parent, JsonArray *value)
+
+JsonElement *JsonObjectGetAsObject(JsonElement *object, const char *key)
 {
-if (value == NULL)
+assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
+assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
+assert(key);
+
+JsonElement *childPrimitive = SequenceLookup(object->container.children, key, JsonElementHasProperty);
+if (childPrimitive)
    {
-   return;
+   assert(childPrimitive->type == JSON_ELEMENT_TYPE_CONTAINER);
+   assert(childPrimitive->container.type == JSON_CONTAINER_TYPE_OBJECT);
+   return childPrimitive;
    }
 
-RlistAppendReference(parent, value, JSON_ARRAY_TYPE);
+return NULL;
 }
 
-void JsonArrayAppendString(JsonArray **parent, const char *value)
+
+JsonElement *JsonObjectGetAsArray(JsonElement *object, const char *key)
 {
-if (value == NULL)
+assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
+assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
+assert(key);
+
+JsonElement *childPrimitive = SequenceLookup(object->container.children, key, JsonElementHasProperty);
+if (childPrimitive)
    {
-   return;
+   assert(childPrimitive->type == JSON_ELEMENT_TYPE_CONTAINER);
+   assert(childPrimitive->container.type == JSON_CONTAINER_TYPE_ARRAY);
+   return childPrimitive;
    }
 
-RlistAppendReference(parent, xstrdup(value), CF_SCALAR);
+return NULL;
 }
 
-size_t JsonArrayLength(JsonArray *array)
+
+// *******************************************************************************************
+// JsonArray Functions
+// *******************************************************************************************
+
+
+JsonElement *JsonArrayCreate(size_t initialCapacity)
 {
-return RlistLen(array);
+return JsonElementCreateContainer(JSON_CONTAINER_TYPE_ARRAY, NULL, initialCapacity);
 }
 
-static void ShowIndent(Writer *writer, int num)
+
+void JsonArrayAppendString(JsonElement *array, const char *value)
+{
+assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
+assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
+assert(value);
+
+JsonElement *child = JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_STRING, NULL, EscapeJsonString(value));
+SequenceAppend(array->container.children, child);
+}
+
+
+void JsonArrayAppendArray(JsonElement *array, JsonElement *childArray)
+{
+assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
+assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
+assert(childArray->type == JSON_ELEMENT_TYPE_CONTAINER);
+assert(childArray->container.type == JSON_CONTAINER_TYPE_ARRAY);
+
+SequenceAppend(array->container.children, childArray);
+}
+
+
+void JsonArrayAppendObject(JsonElement *array, JsonElement *object)
+{
+assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
+assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
+assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
+assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
+
+SequenceAppend(array->container.children, object);
+}
+
+
+const char *JsonArrayGetAsString(JsonElement *array, size_t index)
+{
+assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
+assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
+assert(index < array->container.children->length);
+
+JsonElement *childPrimitive = array->container.children->data[index];
+if (childPrimitive)
+   {
+   assert(childPrimitive->type == JSON_ELEMENT_TYPE_PRIMITIVE);
+   assert(childPrimitive->primitive.type == JSON_PRIMITIVE_TYPE_STRING);
+   return childPrimitive->primitive.value;
+   }
+
+return NULL;
+}
+
+
+JsonElement *JsonArrayGetAsObject(JsonElement *array, size_t index)
+{
+assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
+assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
+assert(index < array->container.children->length);
+
+JsonElement *child = array->container.children->data[index];
+if (child)
+   {
+   assert(child->type == JSON_ELEMENT_TYPE_CONTAINER);
+   assert(child->container.type == JSON_CONTAINER_TYPE_OBJECT);
+   return child;
+   }
+
+return NULL;
+}
+
+
+// *******************************************************************************************
+// Printing
+// *******************************************************************************************
+
+static void JsonContainerPrint(Writer *writer, JsonElement *containerElement, size_t indent_level);
+
+static bool IsWhitespace(char ch)
+{
+return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r';
+}
+
+
+static void PrintIndent(Writer *writer, int num)
 {
 int i = 0;
 for (i = 0; i < num * SPACES_PER_INDENT; i++)
@@ -170,190 +417,151 @@ for (i = 0; i < num * SPACES_PER_INDENT; i++)
    }
 }
 
-void JsonStringPrint(Writer *writer, const char *value, int indent_level)
+
+static void JsonPrimitivePrint(Writer *writer, JsonElement *primitiveElement, size_t indent_level)
 {
-ShowIndent(writer, indent_level);
-WriterWriteF(writer, "\"%s\"", value);
+assert(primitiveElement->type == JSON_ELEMENT_TYPE_PRIMITIVE);
+
+switch (primitiveElement->primitive.type)
+   {
+   case JSON_PRIMITIVE_TYPE_STRING:
+      PrintIndent(writer, indent_level);
+      WriterWriteF(writer, "\"%s\"", primitiveElement->primitive.value);
+      break;
+
+   case JSON_PRIMITIVE_TYPE_INTEGER:
+   case JSON_PRIMITIVE_TYPE_REAL:
+      PrintIndent(writer, indent_level);
+      WriterWrite(writer, primitiveElement->primitive.value);
+      break;
+   }
 }
 
-void JsonNumberPrint(Writer *writer, const char *value, int indent_level)
-{
-ShowIndent(writer, indent_level);
-WriterWrite(writer, value);
-}
 
-void JsonArrayPrint(Writer *writer, JsonArray *value, int indent_level)
+static void JsonArrayPrint(Writer *writer, JsonElement *array, size_t indent_level)
 {
-Rlist *rp = NULL;
+assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
+assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
 
-if (JsonArrayLength(value) == 0)
+if (JsonElementLength(array) == 0)
    {
    WriterWrite(writer, "[]");
    return;
    }
 
 WriterWrite(writer, "[\n");
-for (rp = value; rp != NULL; rp = rp->next)
+for (size_t i = 0; i < array->container.children->length; i++)
    {
-   switch (rp->type)
+   JsonElement *child = array->container.children->data[i];
+
+   switch (child->type)
       {
-      case CF_SCALAR:
-         JsonStringPrint(writer, (const char*)rp->item, indent_level + 1);
+      case JSON_ELEMENT_TYPE_PRIMITIVE:
+         JsonPrimitivePrint(writer, child, indent_level + 1);
          break;
 
-      case JSON_OBJECT_TYPE:
-         ShowIndent(writer, indent_level + 1);
-         JsonObjectPrint(writer, (JsonObject*)rp->item, indent_level + 1);
-         break;
-
-      default:
-	 /* TODO: not implemented, how to deal? */
-         JsonStringPrint(writer, "", indent_level + 1);
+      case JSON_ELEMENT_TYPE_CONTAINER:
+         PrintIndent(writer, indent_level + 1);
+         JsonContainerPrint(writer, child, indent_level + 1);
          break;
       }
 
-      if (rp->next != NULL)
-	 {
+      if (i < array->container.children->length - 1)
+         {
          WriterWrite(writer, ",\n");
-	 }
+         }
       else
-	 {
+         {
          WriterWrite(writer, "\n");
-	 }
+         }
    }
 
-ShowIndent(writer, indent_level);
+PrintIndent(writer, indent_level);
 WriterWriteChar(writer, ']');
 }
 
-void JsonObjectPrint(Writer *writer, JsonObject *value, int indent_level)
+
+void JsonObjectPrint(Writer *writer, JsonElement *object, size_t indent_level)
 {
-Rlist *rp = NULL;
+assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
+assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
 
 WriterWrite(writer, "{\n");
 
-for (rp = value; rp != NULL; rp = rp->next)
+for (size_t i = 0; i < object->container.children->length; i++)
    {
-   CfAssoc *entry = NULL;
+   JsonElement *child = object->container.children->data[i];
 
-   ShowIndent(writer, indent_level + 1);
-   entry = (CfAssoc *)rp->item;
+   PrintIndent(writer, indent_level + 1);
 
-   WriterWriteF(writer, "\"%s\": ", entry->lval);
-   switch (entry->rval.rtype)
+   assert(child->propertyName);
+   WriterWriteF(writer, "\"%s\": ", child->propertyName);
+
+   switch (child->type)
       {
-      case CF_SCALAR:
-         switch (entry->dtype)
-            {
-            case cf_str:
-               JsonStringPrint(writer, (const char*)entry->rval.item, 0);
-               break;
-
-            case cf_int:
-	    case cf_real:
-               JsonNumberPrint(writer, (const char*)entry->rval.item, 0);
-               break;
-
-            default:
-               /* TODO: not implemented, how to deal? */
-               JsonStringPrint(writer, "", indent_level + 1);
-               break;
-            }
-            break;
-
-      case JSON_OBJECT_TYPE:
-         JsonObjectPrint(writer, entry->rval.item, indent_level + 1);
+      case JSON_ELEMENT_TYPE_PRIMITIVE:
+         JsonPrimitivePrint(writer, child, 0);
          break;
 
-      case JSON_ARRAY_TYPE:
-         JsonArrayPrint(writer, entry->rval.item, indent_level + 1);
+      case JSON_ELEMENT_TYPE_CONTAINER:
+         JsonContainerPrint(writer, child, indent_level + 1);
          break;
-
-      default:
-	 /* TODO: internal error, how to deal? */
-	 break;
       }
-      if (rp->next != NULL)
+
+      if (i < object->container.children->length - 1)
          {
          WriterWriteChar(writer, ',');
          }
       WriterWrite(writer, "\n");
    }
 
-ShowIndent(writer, indent_level);
+PrintIndent(writer, indent_level);
 WriterWriteChar(writer, '}');
 }
 
-const char *JsonObjectGetAsString(JsonObject *object, const char *key)
+
+static void JsonContainerPrint(Writer *writer, JsonElement *container, size_t indent_level)
 {
-for (Rlist *rp = (Rlist *)object; rp != NULL; rp = rp->next)
+assert(container->type == JSON_ELEMENT_TYPE_CONTAINER);
+
+switch (container->container.type)
    {
-   CfAssoc *entry = rp->item;
-   if (strcmp(entry->lval, key) == 0)
-      {
-      return entry->rval.item;
-      }
-   }
+   case JSON_CONTAINER_TYPE_OBJECT:
+      JsonObjectPrint(writer, container, indent_level);
+      break;
 
-return NULL;
+   case JSON_CONTAINER_TYPE_ARRAY:
+      JsonArrayPrint(writer, container, indent_level);
+   }
 }
 
-JsonObject *JsonObjectGetAsObject(JsonObject *object, const char *key)
+
+void JsonElementPrint(Writer *writer, JsonElement *element, size_t indent_level)
 {
-for (Rlist *rp = (Rlist *)object; rp != NULL; rp = rp->next)
+assert(writer);
+assert(element);
+
+switch (element->type)
    {
-   CfAssoc *entry = rp->item;
-   if (strcmp(entry->lval, key) == 0)
-      {
-      return entry->rval.item;
-      }
+   case JSON_ELEMENT_TYPE_CONTAINER:
+      JsonContainerPrint(writer, element, indent_level);
+      break;
+
+   case JSON_ELEMENT_TYPE_PRIMITIVE:
+      JsonPrimitivePrint(writer, element, indent_level);
+      break;
    }
-
-return NULL;
 }
 
-JsonArray *JsonObjectGetAsArray(JsonObject *object, const char *key)
-{
-for (Rlist *rp = (Rlist *)object; rp != NULL; rp = rp->next)
-   {
-   CfAssoc *entry = rp->item;
-   if (strcmp(entry->lval, key) == 0)
-      {
-      return entry->rval.item;
-      }
-   }
+// *******************************************************************************************
+// Parsing
+// *******************************************************************************************
 
-return NULL;
-}
 
-const char *JsonArrayGetAsString(JsonArray *array, size_t index)
-{
-Rlist *rp = RlistAt(array, index);
-if (rp != NULL)
-   {
-   return rp->item;
-   }
+static JsonElement *JsonParseAsObject(const char **data);
 
-return NULL;
-}
 
-JsonObject *JsonArrayGetAsObject(JsonArray *array, size_t index)
-{
-Rlist *rp = RlistAt(array, index);
-if (rp != NULL)
-   {
-   return rp->item;
-   }
-
-return NULL;
-}
-
-bool JsonIsWhitespace(char ch)
-{
-return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r';
-}
-
-const char *JsonParseAsString(const char **data)
+static const char *JsonParseAsString(const char **data)
 {
 if (**data != '"')
    {
@@ -378,7 +586,8 @@ CfDebug("Unable to parse json data as string, did not end with doublequote: %s",
 return NULL;
 }
 
-JsonArray *JsonParseAsArray(const char **data)
+
+static JsonElement *JsonParseAsArray(const char **data)
 {
 if (**data != '[')
    {
@@ -386,11 +595,11 @@ if (**data != '[')
    return NULL;
    }
 
-JsonArray *array = NULL;
+JsonElement *array = JsonArrayCreate(DEFAULT_CONTAINER_CAPACITY);
 
 for (*data = *data + 1; **data != '\0'; *data = *data + 1)
    {
-   if (JsonIsWhitespace(**data))
+   if (IsWhitespace(**data))
       {
       continue;
       }
@@ -398,15 +607,15 @@ for (*data = *data + 1; **data != '\0'; *data = *data + 1)
    switch (**data)
       {
       case '"':
-         JsonArrayAppendString(&array, JsonParseAsString(data));
+         JsonArrayAppendString(array, JsonParseAsString(data));
          break;
 
       case '[':
-         JsonArrayAppendArray(&array, JsonParseAsArray(data));
+         JsonArrayAppendArray(array, JsonParseAsArray(data));
          break;
 
       case '{':
-         JsonArrayAppendObject(&array, JsonParseAsObject(data));
+         JsonArrayAppendObject(array, JsonParseAsObject(data));
          break;
 
       case ',':
@@ -425,7 +634,7 @@ CfDebug("Unable to parse json data as array, did not end with ']': %s", *data);
 return NULL;
 }
 
-JsonObject *JsonParseAsObject(const char **data)
+static JsonElement *JsonParseAsObject(const char **data)
 {
 if (**data != '{')
    {
@@ -433,12 +642,12 @@ if (**data != '{')
    return NULL;
    }
 
-JsonObject *object = NULL;
-const char *lval = NULL;
+JsonElement *object = JsonObjectCreate(DEFAULT_CONTAINER_CAPACITY);
+const char *propertyName = NULL;
 
 for (*data = *data + 1; **data != '\0'; *data = *data + 1)
    {
-   if (JsonIsWhitespace(**data))
+   if (IsWhitespace(**data))
       {
       continue;
       }
@@ -446,19 +655,19 @@ for (*data = *data + 1; **data != '\0'; *data = *data + 1)
    switch (**data)
       {
       case '"':
-         if (lval != NULL)
+         if (propertyName != NULL)
             {
-            JsonObjectAppendString(&object, lval, JsonParseAsString(data));
-            lval = NULL;
+            JsonObjectAppendString(object, propertyName, JsonParseAsString(data));
+            propertyName = NULL;
             }
          else
             {
-            lval = JsonParseAsString(data);
+            propertyName = JsonParseAsString(data);
             }
          break;
 
       case ':':
-         if (lval == NULL)
+         if (propertyName == NULL)
             {
             CfDebug("Unable to parse json data as object, ':' seen without having specified an l-value: %s", *data);
             return NULL;
@@ -466,7 +675,7 @@ for (*data = *data + 1; **data != '\0'; *data = *data + 1)
          break;
 
       case ',':
-         if (lval != NULL)
+         if (propertyName != NULL)
             {
             CfDebug("Unable to parse json data as object, ',' seen without having specified an r-value: %s", *data);
             return NULL;
@@ -474,10 +683,10 @@ for (*data = *data + 1; **data != '\0'; *data = *data + 1)
          break;
 
       case '[':
-         if (lval != NULL)
+         if (propertyName != NULL)
             {
-            JsonObjectAppendArray(&object, lval, JsonParseAsArray(data));
-            lval = NULL;
+            JsonObjectAppendArray(object, propertyName, JsonParseAsArray(data));
+            propertyName = NULL;
             }
          else
             {
@@ -487,10 +696,10 @@ for (*data = *data + 1; **data != '\0'; *data = *data + 1)
          break;
 
       case '{':
-         if (lval != NULL)
+         if (propertyName != NULL)
             {
-            JsonObjectAppendObject(&object, lval, JsonParseAsObject(data));
-            lval = NULL;
+            JsonObjectAppendObject(object, propertyName, JsonParseAsObject(data));
+            propertyName = NULL;
             }
          else
             {
@@ -500,7 +709,7 @@ for (*data = *data + 1; **data != '\0'; *data = *data + 1)
          break;
 
       case '}':
-         if (lval != NULL)
+         if (propertyName != NULL)
             {
             CfDebug("Unable to parse json data as object, tried to close object having opened an l-value: %s", *data);
             return NULL;
@@ -515,4 +724,28 @@ for (*data = *data + 1; **data != '\0'; *data = *data + 1)
 
 CfDebug("Unable to parse json data as string, did not end with '}': %s", *data);
 return NULL;
+}
+
+
+JsonElement *JsonParse(const char **data)
+{
+assert(**data && "Cannot parse NULL data");
+
+if (**data == '{')
+   {
+   return JsonParseAsObject(data);
+   }
+else if (**data == '[')
+   {
+   return JsonParseAsArray(data);
+   }
+else if (**data == '"')
+   {
+   return JsonParseAsObject(data);
+   }
+else
+   {
+   CfDebug("Don't know how to parse JSON input: %s", *data);
+   return NULL;
+   }
 }

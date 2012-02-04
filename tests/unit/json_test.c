@@ -45,223 +45,228 @@ static const char *ARRAY_OBJECT = "[\n"
 
 static void test_new_delete(void **state)
 {
-JsonObject *json = NULL;
-JsonObjectAppendString(&json, "first", "one");
-JsonObjectDelete(json);
+JsonElement *json = JsonObjectCreate(10);
+JsonObjectAppendString(json, "first", "one");
+JsonElementDestroy(json);
 }
 
 static void test_show_object_simple(void **state)
 {
-JsonObject *json = NULL;
+JsonElement *json = JsonObjectCreate(10);
 
-JsonObjectAppendString(&json, "first", "one");
-JsonObjectAppendString(&json, "second", "two");
+JsonObjectAppendString(json, "first", "one");
+JsonObjectAppendString(json, "second", "two");
 
 Writer *writer = StringWriter();
-JsonObjectPrint(writer, json, 0);
+JsonElementPrint(writer, json, 0);
 
 assert_string_equal(OBJECT_SIMPLE, StringWriterData(writer));
 
-JsonObjectDelete(json);
+JsonElementDestroy(json);
 }
 
 static void test_show_object_escaped(void **state)
 {
-JsonObject *json = NULL;
+JsonElement *json = JsonObjectCreate(10);
 
-JsonObjectAppendString(&json, "escaped", "quote\"stuff");
+JsonObjectAppendString(json, "escaped", "quote\"stuff");
 
 Writer *writer = StringWriter();
-JsonObjectPrint(writer, json, 0);
+JsonElementPrint(writer, json, 0);
 
 assert_string_equal(OBJECT_ESCAPED, StringWriterData(writer));
 
-JsonObjectDelete(json);
+JsonElementDestroy(json);
 }
 
 static void test_show_object_numeric(void **state)
 {
-JsonObject *json = NULL;
+JsonElement *json = JsonObjectCreate(10);
 
-JsonObjectAppendReal(&json, "real", 1234.5678);
-JsonObjectAppendInteger(&json, "int", -1234567890);
+JsonObjectAppendReal(json, "real", 1234.5678);
+JsonObjectAppendInteger(json, "int", -1234567890);
 
 Writer *writer = StringWriter();
-JsonObjectPrint(writer, json, 0);
+JsonElementPrint(writer, json, 0);
 
 assert_string_equal(OBJECT_NUMERIC, StringWriterData(writer));
 
-JsonObjectDelete(json);
+JsonElementDestroy(json);
 }
 
 static void test_show_object_compound(void **state)
 {
-JsonObject *json = NULL;
+JsonElement *json = JsonObjectCreate(10);
 
-JsonObjectAppendString(&json, "first", "one");
+JsonObjectAppendString(json, "first", "one");
    {
-   JsonObject *inner = NULL;
-   JsonObjectAppendString(&inner, "third", "three");
+   JsonElement *inner = JsonObjectCreate(10);
+   JsonObjectAppendString(inner, "third", "three");
 
-   JsonObjectAppendObject(&json, "second", inner);
+   JsonObjectAppendObject(json, "second", inner);
    }
    {
-   JsonObject *inner = NULL;
-   JsonObjectAppendString(&inner, "fifth", "five");
+   JsonElement *inner = JsonObjectCreate(10);
+   JsonObjectAppendString(inner, "fifth", "five");
 
-   JsonObjectAppendObject(&json, "fourth", inner);
+   JsonObjectAppendObject(json, "fourth", inner);
    }
 
 Writer *writer = StringWriter();
-JsonObjectPrint(writer, json, 0);
+JsonElementPrint(writer, json, 0);
 
 assert_string_equal(OBJECT_COMPOUND, StringWriterData(writer));
 
-JsonObjectDelete(json);
+JsonElementDestroy(json);
 }
 
 static void test_show_object_array(void **state)
 {
-JsonObject *json = NULL;
+JsonElement *json = JsonObjectCreate(10);
 
-JsonArray *array = NULL;
-JsonArrayAppendString(&array, "one");
-JsonArrayAppendString(&array, "two");
+JsonElement *array = JsonArrayCreate(10);
+JsonArrayAppendString(array, "one");
+JsonArrayAppendString(array, "two");
 
-JsonObjectAppendArray(&json, "first", array);
+JsonObjectAppendArray(json, "first", array);
 
 Writer *writer = StringWriter();
-JsonObjectPrint(writer, json, 0);
+JsonElementPrint(writer, json, 0);
 
 assert_string_equal(OBJECT_ARRAY, StringWriterData(writer));
 
-JsonObjectDelete(json);
+JsonElementDestroy(json);
 }
 
 static void test_show_array(void **state)
 {
-JsonArray *array = NULL;
-JsonArrayAppendString(&array, "one");
-JsonArrayAppendString(&array, "two");
+JsonElement *array = JsonArrayCreate(10);
+JsonArrayAppendString(array, "one");
+JsonArrayAppendString(array, "two");
 
 Writer *writer = StringWriter();
-JsonArrayPrint(writer, array, 0);
+JsonElementPrint(writer, array, 0);
 
 assert_string_equal(ARRAY_SIMPLE, StringWriterData(writer));
 
-JsonArrayDelete(array);
+JsonElementDestroy(array);
 }
 
 static void test_show_array_object(void **state)
 {
-JsonArray *array = NULL;
-JsonObject *object = NULL;
+JsonElement *array = JsonArrayCreate(10);
+JsonElement *object = JsonObjectCreate(10);
 
-JsonObjectAppendString(&object, "first", "one");
+JsonObjectAppendString(object, "first", "one");
 
-JsonArrayAppendObject(&array, object);
+JsonArrayAppendObject(array, object);
 
 Writer *writer = StringWriter();
-JsonArrayPrint(writer, array, 0);
+JsonElementPrint(writer, array, 0);
 
 assert_string_equal(ARRAY_OBJECT, StringWriterData(writer));
 
-JsonArrayDelete(array);
+JsonElementDestroy(array);
 }
 
 static void test_show_array_empty(void **state)
 {
-JsonArray *array = NULL;
+JsonElement *array = JsonArrayCreate(10);
 
 Writer *writer = StringWriter();
-JsonArrayPrint(writer, array, 0);
+JsonElementPrint(writer, array, 0);
 
 assert_string_equal("[]", StringWriterData(writer));
 
-JsonArrayDelete(array);
+JsonElementDestroy(array);
 }
 
 static void test_object_get_string(void **state)
 {
-JsonObject *obj = NULL;
-JsonObjectAppendString(&obj, "first", "one");
-JsonObjectAppendString(&obj, "second", "two");
+JsonElement *obj = JsonObjectCreate(10);
+JsonObjectAppendString(obj, "first", "one");
+JsonObjectAppendString(obj, "second", "two");
 
 assert_string_equal(JsonObjectGetAsString(obj, "second"), "two");
 assert_string_equal(JsonObjectGetAsString(obj, "first"), "one");
-assert_int_equal(JsonObjectGetAsString(obj, "third"), NULL);
+
+JsonElementDestroy(obj);
 }
 
 static void test_object_get_array(void **state)
 {
-JsonArray *arr = NULL;
-JsonArrayAppendString(&arr, "one");
-JsonArrayAppendString(&arr, "two");
+JsonElement *arr = JsonArrayCreate(10);
+JsonArrayAppendString(arr, "one");
+JsonArrayAppendString(arr, "two");
 
-JsonObject *obj = NULL;
-JsonObjectAppendArray(&obj, "array", arr);
+JsonElement *obj = JsonObjectCreate(10);
+JsonObjectAppendArray(obj, "array", arr);
 
-JsonArray *arr2 = JsonObjectGetAsArray(obj, "array");
+JsonElement *arr2 = JsonObjectGetAsArray(obj, "array");
 assert_string_equal(JsonArrayGetAsString(arr2, 1), "two");
+
+JsonElementDestroy(arr);
 }
 
 static void test_array_get_string(void **state)
 {
-JsonArray *arr = NULL;
-JsonArrayAppendString(&arr, "first");
-JsonArrayAppendString(&arr, "second");
+JsonElement *arr = JsonArrayCreate(10);
+JsonArrayAppendString(arr, "first");
+JsonArrayAppendString(arr, "second");
 
 assert_string_equal(JsonArrayGetAsString(arr, 1), "second");
 assert_string_equal(JsonArrayGetAsString(arr, 0), "first");
-assert_int_equal(JsonArrayGetAsString(arr, 2), NULL);
-}
 
-static void test_parse_string(void **state)
-{
-const char *data = "\"snookie\"";
-assert_string_equal("snookie", JsonParseAsString(&data));
+JsonElementDestroy(arr);
 }
 
 static void test_parse_object_simple(void **state)
 {
 const char *data = OBJECT_SIMPLE;
-JsonObject *obj = JsonParseAsObject(&data);
+JsonElement *obj = JsonParse(&data);
 assert_string_equal(JsonObjectGetAsString(obj, "second"), "two");
 assert_string_equal(JsonObjectGetAsString(obj, "first"), "one");
 assert_int_equal(JsonObjectGetAsString(obj, "third"), NULL);
+
+JsonElementDestroy(obj);
 }
 
 static void test_parse_array_simple(void **state)
 {
 const char *data = ARRAY_SIMPLE;
-JsonArray *arr = JsonParseAsArray(&data);
+JsonElement *arr = JsonParse(&data);
 
 assert_string_equal(JsonArrayGetAsString(arr, 1), "two");
 assert_string_equal(JsonArrayGetAsString(arr, 0), "one");
-assert_int_equal(JsonArrayGetAsString(arr, 2), NULL);
+
+JsonElementDestroy(arr);
 }
 
 static void test_parse_object_compound(void **state)
 {
 const char *data = OBJECT_COMPOUND;
-JsonObject *obj = JsonParseAsObject(&data);
+JsonElement *obj = JsonParse(&data);
 
 assert_string_equal(JsonObjectGetAsString(obj, "first"), "one");
 
-JsonObject *second = JsonObjectGetAsObject(obj, "second");
+JsonElement *second = JsonObjectGetAsObject(obj, "second");
 assert_string_equal(JsonObjectGetAsString(second, "third"), "three");
 
-JsonObject *fourth = JsonObjectGetAsObject(obj, "fourth");
+JsonElement *fourth = JsonObjectGetAsObject(obj, "fourth");
 assert_string_equal(JsonObjectGetAsString(fourth, "fifth"), "five");
+
+JsonElementDestroy(obj);
 }
 
 static void test_parse_array_object(void **state)
 {
 const char *data = ARRAY_OBJECT;
-JsonArray *arr = JsonParseAsArray(&data);
+JsonElement *arr = JsonParse(&data);
 
-JsonObject *first = JsonArrayGetAsObject(arr, 0);
+JsonElement *first = JsonArrayGetAsObject(arr, 0);
 assert_string_equal(JsonObjectGetAsString(first, "first"), "one");
+
+JsonElementDestroy(arr);
 }
 
 int main()
@@ -280,7 +285,6 @@ const UnitTest tests[] =
    unit_test(test_object_get_string),
    unit_test(test_object_get_array),
    unit_test(test_array_get_string),
-   unit_test(test_parse_string),
    unit_test(test_parse_object_simple),
    unit_test(test_parse_array_simple),
    unit_test(test_parse_object_compound),

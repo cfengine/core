@@ -26,6 +26,7 @@ seq->ItemDestroy = ItemDestroy;
 return seq;
 }
 
+
 static void DestroyRange(Sequence *seq, size_t start, size_t end)
 {
 if (seq->ItemDestroy)
@@ -37,18 +38,20 @@ if (seq->ItemDestroy)
    }
 }
 
-void SequenceDestroy(Sequence **seq)
+
+void SequenceDestroy(Sequence *seq)
 {
-Sequence *seqp = *seq;
-assert(seqp && "Attempted to destroy a null sequence");
+assert(seq && "Attempted to destroy a null sequence");
 
-DestroyRange(seqp, 0, seqp->length - 1);
+if (seq->length > 0)
+   {
+   DestroyRange(seq, 0, seq->length - 1);
+   }
 
-free(seqp->data);
-free(seqp);
-
-*seq = NULL;
+free(seq->data);
+free(seq);
 }
+
 
 static void ExpandIfNeccessary(Sequence *seq)
 {
@@ -61,6 +64,7 @@ if (seq->length == seq->capacity)
    }
 }
 
+
 void SequenceAppend(Sequence *seq, void *item)
 {
 ExpandIfNeccessary(seq);
@@ -68,6 +72,7 @@ ExpandIfNeccessary(seq);
 seq->data[seq->length] = item;
 ++(seq->length);
 }
+
 
 void SequenceRemoveRange(Sequence *seq, size_t start, size_t end)
 {
@@ -88,7 +93,65 @@ if (rest_len > 0)
 seq->length -= end - start + 1;
 }
 
+
+void *SequenceLookup(Sequence *seq, const void *key, __compar_fn_t Compare)
+{
+for (size_t i = 0; i < seq->length; i++)
+   {
+   if (Compare(key, seq->data[i]) == 0)
+      {
+      return seq->data[i];
+      }
+   }
+
+return NULL;
+}
+
+static void Swap(void **l, void **r)
+{
+void *t = *l;
+*l = *r;
+*r = t;
+}
+
+// adopted from http://rosettacode.org/wiki/Sorting_algorithms/Quicksort#C
+static void QuickSortRecursive(void **data, int n, __compar_fn_t Compare, size_t maxterm)
+{
+assert(maxterm < 1000);
+
+if (n < 2)
+   {
+   return;
+   }
+
+void *pivot = data[n / 2];
+void **l = data;
+void **r = data + n - 1;
+
+while (l <= r)
+   {
+   while (Compare(*l, pivot) < 0)
+      {
+      ++l;
+      }
+   while (Compare(*r, pivot) > 0)
+      {
+      --r;
+      }
+   if (l <= r)
+      {
+      Swap(l, r);
+      ++l;
+      --r;
+      }
+   }
+
+QuickSortRecursive(data, r - data + 1, Compare, maxterm + 1);
+QuickSortRecursive(l, data + n - l, Compare, maxterm + 1);
+}
+
+
 void SequenceSort(Sequence *seq, __compar_fn_t Compare)
 {
-qsort(seq->data, seq->length, sizeof(void *), Compare);
+QuickSortRecursive(seq->data, seq->length, Compare, 0);
 }

@@ -20,8 +20,7 @@ return seq;
 static void test_create_destroy(void **state)
 {
 Sequence *seq = SequenceCreate(5, NULL);
-SequenceDestroy(&seq);
-assert_int_equal(seq, NULL);
+SequenceDestroy(seq);
 }
 
 static void test_append(void **state)
@@ -40,12 +39,30 @@ for (size_t i = 0; i < 1000; i++)
    assert_string_equal(seq->data[i], "snookie");
    }
 
-SequenceDestroy(&seq);
+SequenceDestroy(seq);
 }
 
 static int CompareNumbers(const void *a, const void *b)
 {
-   return **(size_t **)a - **(size_t **)b;
+return *(size_t *)a - *(size_t *)b;
+}
+
+static void test_lookup(void **state)
+{
+Sequence *seq = SequenceCreateRange(10, 0, 9);
+
+size_t *key = xmalloc(sizeof(size_t));
+*key = 5;
+
+size_t *result = SequenceLookup(seq, key, CompareNumbers);
+assert_int_equal(*result, *key);
+
+*key = 17;
+result = SequenceLookup(seq, key, CompareNumbers);
+assert_int_equal(result, NULL);
+
+SequenceDestroy(seq);
+free(key);
 }
 
 static void test_sort(void **state)
@@ -72,7 +89,7 @@ assert_int_equal(seq->data[2], &three);
 assert_int_equal(seq->data[3], &four);
 assert_int_equal(seq->data[4], &five);
 
-SequenceDestroy(&seq);
+SequenceDestroy(seq);
 }
 
 static void test_remove_range(void **state)
@@ -86,14 +103,14 @@ assert_int_equal(*(size_t *)seq->data[0], 0);
 assert_int_equal(*(size_t *)seq->data[1], 1);
 assert_int_equal(*(size_t *)seq->data[2], 2);
 
-SequenceDestroy(&seq);
+SequenceDestroy(seq);
 seq = SequenceCreateRange(10, 0, 9);
 
 SequenceRemoveRange(seq, 0, 2);
 assert_int_equal(seq->length, 7);
 assert_int_equal(*(size_t *)seq->data[0], 3);
 
-SequenceDestroy(&seq);
+SequenceDestroy(seq);
 
 seq = SequenceCreateRange(10, 0, 9);
 
@@ -101,7 +118,7 @@ SequenceRemoveRange(seq, 5, 5);
 assert_int_equal(seq->length, 9);
 assert_int_equal(*(size_t *)seq->data[5], 6);
 
-SequenceDestroy(&seq);
+SequenceDestroy(seq);
 }
 
 int main()
@@ -110,6 +127,7 @@ const UnitTest tests[] =
    {
    unit_test(test_create_destroy),
    unit_test(test_append),
+   unit_test(test_lookup),
    unit_test(test_sort),
    unit_test(test_remove_range)
    };

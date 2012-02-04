@@ -3,7 +3,7 @@
 #include "writer.h"
 
 #define JSON_OBJECT_TYPE 'o'
-#define JSON_ARRAY_TYPE 'a'
+#define JSON_ARRAY_TYPE 'A'
 
 static const int SPACES_PER_INDENT = 2;
 

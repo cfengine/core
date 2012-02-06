@@ -23,7 +23,7 @@
 @titlepage
 @title CFEngine 3 Nova Evaluation Guide
 @subtitle CFEngine Enterprise Documentation
-@subtitle Updated 24. January 2012
+@subtitle Updated 6. February 2012
 @author CFEngine
 @c @smallbook
 @fonttextsize 10
@@ -67,7 +67,8 @@ to the extent of applicable law.
 * Content Driven Policy (CDP) reports::  
 * Introduction to CFEngine policies::  
 * Next steps::                  
-* Policy Editing::              
+* Policy editing::              
+* Shell access::
 @end menu
 
 @c *****************************************************
@@ -105,6 +106,10 @@ The Mission Portal is the centerpiece of user interaction with CFEngine 3 Nova, 
 @end itemize
 
 For the purpose of this evaluation program, CFEngine 3 Nova has been set up in a network comprising several nodes. One node serves as a central hub to distribute CFEngine configuration policies and collect reports from the other nodes (clients). They run on different operating systems, comprising several linux flavors and windows servers.
+
+@cartouche
+@noindent @i{If you have not already done so, you may request access to the CFEngine Nova Evaluation Program by entering your information at} @url{http://cfengine.com/evaluation}.
+@end cartouche
 
 
 @c -----------------------------------------------------
@@ -148,15 +153,12 @@ For the purpose of this evaluation program, CFEngine 3 Nova has been set up in a
 * Engineering room::            
 * Planning room::               
 * Library room::                
+* Shell access (evaluation feature only)::
 @end menu
 
 @c -----------------------------------------------------
 @node Accessing CFEngine 3 Nova, CFEngine terms used in this document, Get started, Get started
 @section Accessing CFEngine 3 Nova
-
-@cartouche
-@noindent @i{If you have not already done so, you may request access to the CFEngine Nova Evaluation Program by entering your information on} @url{http://cfengine.com/evaluation}.
-@end cartouche
 
 You should have received an email with account information after making an evaluation agreement with CFEngine. In it, you will find information on how to access your dedicated CFEngine 3 Nova instance, the CFEngine support ticketing system, and other online resources. Go to the url indicated in this email to access the Nova Mission Portal, use your credentials to log in.
 
@@ -164,7 +166,7 @@ You should have received an email with account information after making an evalu
 @center @image{img-login,5cm,,Nova Mission Portal login screen}
 @center Figure: Nova Mission Portal login screen
 
-The Nova Mission Portal is divided into four main sections called @i{rooms}. Each of these offer insight into different aspects of operations and is a beginning from which you can refine your overview and search through information.
+The normal Nova Mission Portal is divided into four main sections called @i{rooms}. Here we have added a fifth room which is specific to the evaluation environment (i.e. is not shipped with the actual product): shell access to machines. Each @i{room} offers insight into different aspects of operations and is a beginning from which you can refine your overview and search through information.
 
 @sp 1
 @center @image{img-pilotmissionportal,12cm,,Nova Mission Portal}
@@ -175,6 +177,7 @@ The Nova Mission Portal is divided into four main sections called @i{rooms}. Eac
 @item Engineering: a place to see the current state of system repair
 @item Planning: a place to plan and make policy changes
 @item Library: a knowledge and document bank that connects information together
+@item Shell: web based ssh access to the machines in the network (only available in evaluation environment).
 @end itemize
 
 @c The rooms contain various information presented in text format and performance graphs. They also contain finders, represented by square icons, that allow the user to explore the environment further. We will mostly look into the Engineering and Planning rooms in this pilot setting, but we encourage exploration of both the Status and Library room as well. Refer to the CFEngine 3 Nova Owner's Manual for more information.
@@ -207,7 +210,7 @@ CFEngine uses a declarative language that describes the desired state of a syste
 
 @sp 1
 @center @image{img-gotostatus,6.5cm,,Go to Status room}
-@center Figure: Got to Status room
+@center Figure: Go to Status room
 @end cartouche
 
 @sp 1
@@ -218,6 +221,7 @@ CFEngine uses a declarative language that describes the desired state of a syste
 @center Figure: Status room
 
 
+@page
 @c -----------------------------------------------------
 @node Business Value and Host Status, Compliance Summary, Status room, Status room
 @subsection Business Value and Host Status
@@ -238,7 +242,7 @@ The row of bar meters shows the compliance (average percentage of promises kept,
 @c -----------------------------------------------------
 @node Services/Goals, , Compliance Summary, Status room
 @subsection Services/Goals
-A summary of Mission goals as defined in user policy files (these examples are from @file{company_knowledge.cf}). You can look at editing policy files in @ref{Policy Editing}. @c Edit the file in the policy editor (Planning room -> repository), or edit the file in your own text editor, to change these goals.
+A summary of Mission goals as defined in user policy files (these examples are from @file{company_knowledge.cf}). You can look at editing policy files in @ref{Policy editing}. @c Edit the file in the policy editor (Planning room -> repository), or edit the file in your own text editor, to change these goals.
 
 @c We will now have a look in the @samp{Engineering} room: 
 
@@ -259,7 +263,7 @@ A summary of Mission goals as defined in user policy files (these examples are f
 
 @sp 1
 @center @image{img-gotoengineering,6.5cm,,Go to Status room}
-@center Figure: Got to Engineering room
+@center Figure: Go to Engineering room
 @end cartouche
 
 Mission engineering illustrates the state of the system in relation to the desired state at all scales. Zoom in to specific areas and examine the impact of promises, query data, and extract reports. Each section in the room is described below.
@@ -301,7 +305,7 @@ The Mission @samp{Engineering} room comes with finder functions (modules that ma
 
 @sp 1
 @center @image{img-gotoplanning,6.5cm,,Go to Planning room}
-@center Figure: Got to Planning room
+@center Figure: Go to Planning room
 @end cartouche
 
 @sp 1
@@ -340,7 +344,7 @@ Shows the latest activity entries. Type in a new activity to keep colleagues pos
 
 
 @c -----------------------------------------------------
-@node Library room,  , Planning room, Get started
+@node Library room, Shell access (evaluation feature only), Planning room, Get started
 @section Library room
 
 @cartouche
@@ -348,7 +352,7 @@ Shows the latest activity entries. Type in a new activity to keep colleagues pos
 
 @sp 1
 @center @image{img-gotolibrary,8.5cm,,Go to Library room}
-@center Figure: Got to Library room
+@center Figure: Go to Library room
 @end cartouche
 @sp 1
 
@@ -361,9 +365,61 @@ The Library room contains finders for documents, topics, a notes archive, and a 
 @itemize -
 @item Docs: Overview of documentation that was packaged with CFEngine 3 Nova.
 @item Find Topic: Opens a finder where you can search for topics either by scrolling through the alphabetical list or by typing in a search box (same as the search box on top right of page).
-@item Notes Archive: Get overview of all notes made by Mission Portal users in regard to hosts or reports.
+@item Notes Archive: Get an overview of all notes made by Mission Portal users.
 @item Community: External link to the CFEngine community
 @end itemize
+
+
+@c -----------------------------------------------------
+@node Shell access (evaluation feature only), , Library room, Get started
+@section Shell access (evaluation feature only)
+
+Although the Mission Portal is the centerpiece of user interaction with CFEngine 3 Nova, system administrators often also wish to have shell access to their machines. We have therefore added a web based application specific to the Mission Portal in the evaluation environment (i.e. not found in the actual product) to provide a shell interface.  You may explore the environment and verify the behavior of the Mission Portal by using this application.
+
+@c @node
+@c @subsection Access the shell (command line interface)
+
+@cartouche
+@noindent @b{Action item:} Click @b{NOVA MISSION PORTAL} on the top left (or @b{MISSION PORTAL} in the breadcrumb) to go back to the main Mission Portal page. Click the @b{Shell} icon to enter the web based shell application.
+
+@sp 1
+@center @image{img-gotoshell,8.5cm,,Go to shell application}
+@center Figure: Go to shell application
+@end cartouche
+@sp 1
+
+@noindent The following screen will appear once the application is loaded:
+
+@sp 1
+@center @image{img-pilotshell-menu,15cm,, Shell menu}
+@center Figure: Shell menu
+@sp 1
+
+The shell application has restricted access on the hub (policy host) for security reasons. Root access has been granted on the clients, so you should be able to perform most tasks from this interface (although some restrictions have been put in place to contain access to the evaluation environment only).
+
+@sp 1
+@cartouche
+@noindent @b{Action item:} Type the number of the node you wish to log on to and press @b{Enter}.
+@end cartouche
+@sp 1
+
+@noindent The following screen will appear after a successful login:
+
+@sp 1
+@center @image{img-pilotshell-login,15cm,, CFEngine Pilot Login Menu}
+@center Figure: CFEngine Pilot Login Menu
+@sp 1
+
+@cartouche
+@noindent @b{Action item:} Explore the environment through the command line interface. Type @b{exit} to finish the session on the current node. The following screenshot will appear:
+
+@sp 1
+@center @image{img-pilotshell-connect,15cm,, Shell logout/connect}
+@center Figure: Shell logout/connect
+
+@noindent Click @b{Connect} to access the @samp{CFEngine Pilot Login Menu} again and choose another node to log on to. Alternatively you can navigate away from the shell access by clicking @b{NOVA MISSION PORTAL} on the top left (or @b{MISSION PORTAL} in the breadcrumb).
+@end cartouche
+
 
 
 @c *****************************************************
@@ -478,7 +534,7 @@ There are two ways of narrowing down the listing in these reports: one is to ent
 
 Once you have clicked @samp{Generate report}, CFEngine 3 Nova will list an overview of all machines running some version of apache. 
 
-The combination of the extensive reports and detailed filtering is a flexible and powerful tool, made to give as general or granular an overview as the user needs it to be. A summary and explanation to all the standard reports can be found in the @url{http://cfengine.com/<address TBD>, Nova Evaluation Guide Supplement}.
+The combination of the extensive reports and detailed filtering is a flexible and powerful tool, made to give as general or granular an overview as the user needs it to be. A summary and explanation to all the standard reports can be found in the @url{http://cfengine.com/manuals/novaevaluationguidesupplement.html, Nova Evaluation Guide Supplement}.
 
 @c Before moving on to Content Driven Policies (CDPs) and CDP reports, we would like to give you the opportunity to enjoy some hands-on experience with CFEngine. We will first have a look at how you can work with CFEngine policies in the policy editor, and the move on to edit polices relevant to the above examples.
 
@@ -565,7 +621,9 @@ There are two types of CFEngine policies:
 @item Standard CFEngine policy file: Uses CFEngine syntax (@file{.cf} file extension)
 @end itemize
 
-You may choose to edit policy files in either a beta version of the integrated Policy Editor or in an editor of your choice. The evaluation environment is limited to the Policy Editor for the moment, but we will soon implement web based access via ssh so you can edit policy files there (this is normally what you would do in a production environment). In the following, we will see a short introduction to both CDP and standard policies. See @ref{The Policy Editor (beta)} for how to access the Policy Editor and edit these files.
+In the following, you will find a short introduction to both CDP and standard policies. See @ref{The Policy Editor (beta)} for how to access the Policy Editor and edit these files. @footnote{In a standard CFEngine 3 Nova environment you would be able to choose between the integrated Policy Editor (beta) or an editor of your choice to view and edit policy files. The evaluation environment is limited to the Policy Editor (beta) for security reasons.}
+
+@c You may choose to view and edit policy files in a beta version of the integrated Policy Editor or in an editor of your choice. The evaluation environment provides ssh access through a web interface so you may explore the environment or access policy files there @footnote{This feature is only available in the evaluation environment and does not ship with the actual product} (@url{https://cfengine.com/pilots/<YOUR INSTANCE ADDRESS>/shell}, see also @ref{Shell access}). In the following, we will see a short introduction to both CDP and standard policies. See @ref{The Policy Editor (beta)} for how to access the Policy Editor and edit these files.
 
 
 @c ------------------------------------------------------
@@ -682,13 +740,13 @@ This policy will create the file @file{/tmp/testfile}. It contains the bare mini
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node Next steps, Policy Editing, Introduction to CFEngine policies, Top
+@node Next steps, Policy editing, Introduction to CFEngine policies, Top
 @chapter Next steps
 
 We recommend that users familiarize themselves with the @url{http://cfengine.com/tech, CFEngine 3 documentation} and continue to learn about the CFEngine language and CFEngine 3 Nova. Documents of interest include: @*
 
 @itemize -
-@item @url{http://cfengine.com/manuals/<address TBD>, Nova Evaluation Guide Supplement}@*
+@item @url{http://cfengine.com/manuals/http://cfengine.com/manuals/novaevaluationguidesupplement.html, Nova Evaluation Guide Supplement}@*
 @item @url{http://cfengine.com/manuals/NovaOwnersManual.html, CFEngine 3 Nova Owner's Manual}@*
 @item @url{http://cfengine.com/manuals/cf3-conceptguide.html, CFEngine 3 Concept guide}@*
 @item @url{http://cfengine.com/manuals/cf3-reference.html, CFEngine 3 Reference Manual}@*
@@ -702,8 +760,8 @@ Use our @url{http://info.cfengine.com/ContactUs.html, contact form}, or send an 
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node Policy Editing,  , Next steps, Top
-@appendix Policy Editing
+@node Policy editing,  , Next steps, Top
+@appendix Policy editing
 
 
 @c -----------------------------------------------------
@@ -713,7 +771,7 @@ Use our @url{http://info.cfengine.com/ContactUs.html, contact form}, or send an 
 * Create a standard policy::    
 @end menu
 
-@node The Policy Editor (beta), Edit a CDP input file, Policy Editing, Policy Editing
+@node The Policy Editor (beta), Edit a CDP input file, Policy editing, Policy editing
 @section The Policy Editor (beta)
 
 CFEngine 3 Nova has a beta version of an integrated editor, made for working on CFEngine policies. It provides syntax high-lighting and look-up to make policy writing easier. 
@@ -760,7 +818,7 @@ The Policy Editor appears after a successful checkout. It consists of three main
 
 @page
 @c ---------------------------------------------------
-@node Edit a CDP input file, Create a standard policy, The Policy Editor (beta), Policy Editing
+@node Edit a CDP input file, Create a standard policy, The Policy Editor (beta), Policy editing
 @section Edit a CDP input file
 
 If you have not already opened the Policy Editor, follow the instruction in @ref{The Policy Editor (beta)} to do so. The file @file{acl_file_list.txt} can be found under the @file{cdp_inputs} catalog in the policy editor.
@@ -796,7 +854,7 @@ The result should look like the following figure (note that the value in the @sa
 
 
 @c ------------------------------------------------------
-@node Create a standard policy,  , Edit a CDP input file, Policy Editing
+@node Create a standard policy,  , Edit a CDP input file, Policy editing
 @section Create a standard policy
 
 If you have not already opened the Policy Editor, follow the instruction in @ref{The Policy Editor (beta)} to do so. We will create a custom report as an example of writing a standard CFEngine policy. Custom reports are useful when your reporting needs differ from the CFEngine 3 Nova standard reports. Data processing and extraction from CFEngine's embedded databases must be scripted by the user if the procedure is not covered in any of the reports found in the Mission Portal. Output to files or logs may be customized on a per-promise basis and users can design their own log and report formats. 

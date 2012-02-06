@@ -48,6 +48,10 @@ static char MAILFROM[CF_BUFSIZE];
 static char MAILTO[CF_BUFSIZE];
 static int MAXLINES = 30;
 
+#if defined(HAVE_PTHREAD)
+static pthread_attr_t threads_attrs;
+#endif
+
 /*******************************************************************/
 
 static GenericAgentConfig CheckOpts(int argc, char **argv);
@@ -375,6 +379,15 @@ void StartServer(void)
     Attributes dummyattr;
     CfLock thislock;
 
+#if defined(HAVE_PTHREAD)
+    pthread_attr_init(&threads_attrs);
+    pthread_attr_setdetachstate(&threads_attrs, PTHREAD_CREATE_DETACHED);
+
+# ifdef HAVE_PTHREAD_ATTR_SETSTACKSIZE
+    pthread_attr_setstacksize(&threads_attrs, (size_t)2048*1024);
+# endif
+#endif
+
     Banner("Starting executor");
     memset(&dummyattr, 0, sizeof(dummyattr));
 
@@ -469,25 +482,16 @@ void StartServer(void)
 bool LocalExecInThread(void)
 {
     pthread_t tid;
-    pthread_attr_t threadattrs;
 
-    pthread_attr_init(&threadattrs);
-    pthread_attr_setdetachstate(&threadattrs, PTHREAD_CREATE_DETACHED);
-
-# ifdef HAVE_PTHREAD_ATTR_SETSTACKSIZE
-    pthread_attr_setstacksize(&threadattrs, (size_t) 2048 * 1024);
-# endif
-
-    if (pthread_create(&tid, &threadattrs, LocalExecThread, (void *) true) != 0)
+    if (pthread_create(&tid, &threads_attrs, LocalExecThread, (void *) true) == 0)
+    {
+        return true;
+    }
+    else
     {
         CfOut(cf_inform, "pthread_create", "Can't create thread!");
-        pthread_attr_destroy(&threadattrs);
         return false;
     }
-
-    pthread_attr_destroy(&threadattrs);
-
-    return true;
 }
 #endif
 

@@ -2,6 +2,8 @@
 #include "cf3.extern.h"
 #include "writer.h"
 
+#include <assert.h>
+
 char ToLower (char ch)
 
 {
@@ -295,4 +297,17 @@ for (; *s; s++)
    }
 
 return true;
+}
+
+/*********************************************************************/
+
+long StringToLong(const char *str)
+{
+assert(str);
+
+char *end;
+long result = strtol(str, &end, 10);
+assert(!*end && "Failed to convert string to long");
+
+return result;
 }

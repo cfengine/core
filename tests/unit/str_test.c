@@ -199,6 +199,11 @@ char *new_string = StringSubstring("abcdef", 6, 4, -4);
 assert_int_equal(new_string, NULL);
 }
 
+static void test_string_to_long(void **state)
+{
+assert_int_equal(1234567, StringToLong("1234567"));
+}
+
 int main()
 {
 const UnitTest tests[] =
@@ -234,6 +239,8 @@ const UnitTest tests[] =
    unit_test(test_substring_negative_length),
    unit_test(test_substring_negative),
    unit_test(test_substring_evil),
+
+   unit_test(test_string_to_long)
    };
 
 return run_tests(tests);

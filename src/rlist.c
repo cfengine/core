@@ -387,8 +387,8 @@ else
 
 Rlist *IdempAppendRlist(Rlist **start,void *item, char type)
 
-{ char *scalar;
- Rlist *rp,*ins = NULL;
+{
+Rlist *rp,*ins = NULL;
  
 if (type == CF_LIST)
    {
@@ -399,11 +399,9 @@ if (type == CF_LIST)
    return ins;
    }
 
-scalar = xstrdup((char *)item);
-
 if (!KeyInRlist(*start,(char *)item))
    {
-   return AppendRlist(start,scalar,type);
+   return AppendRlist(start,(char *)item,type);
    }
 else
    {

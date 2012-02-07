@@ -126,7 +126,7 @@ AC_ARG_ENABLE(debug,
               AS_HELP_STRING([--enable-debug], [Enable debugging]),
               [debug=$enableval],
               [debug=no])
-AM_CONDITIONAL([NDEBUG], [test x"$debug" = x"yes"])
+AM_CONDITIONAL([NDEBUG], [test x"$debug" = x"no"])
 
 if test x"$debug" = x"yes"; then
    CFLAGS="$CFLAGS -g3 -O0"

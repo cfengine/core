@@ -1394,7 +1394,7 @@ JsonElementDestroy(syntax_tree);
 static void JsonObjectAppendSize(JsonElement *parent, const char *name, size_t value)
 {
 char buffer[10];
-snprintf(buffer, 10, "%ld", value);
+snprintf(buffer, 10, "%u", value);
 JsonObjectAppendString(parent, name, buffer);
 }
 

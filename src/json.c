@@ -161,22 +161,25 @@ static const char *EscapeJsonString(const char *unescapedString)
 {
 Writer *writer = StringWriter();
 
-for (const char *c = unescapedString; *c != '\0'; c++)
-   {
-   if (*c == '\"' ||
-       *c == '\\' ||
-       *c == '\b' ||
-       *c == '\f' ||
-       *c == '\n' ||
-       *c == '\r' ||
-       *c == '\b' ||
-       *c == '\t')
+if(!EMPTY(unescapedString))
+  {
+  for (const char *c = unescapedString; *c != '\0'; c++)
       {
-      WriterWriteChar(writer, '\\');
-      }
+      if (*c == '\"' ||
+	  *c == '\\' ||
+	  *c == '\b' ||
+	  *c == '\f' ||
+	  *c == '\n' ||
+	  *c == '\r' ||
+	  *c == '\b' ||
+	  *c == '\t')
+	{
+	WriterWriteChar(writer, '\\');
+	}
 
-   WriterWriteChar(writer, *c);
-   };
+      WriterWriteChar(writer, *c);
+      }
+  }
 
 return StringWriterClose(writer);
 }

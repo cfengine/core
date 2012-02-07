@@ -1040,6 +1040,8 @@ Rlist *SplitRegexAsRList(char *string,char *regex,int max,int blanks)
 
  /* Splits a string containing a separator like "," 
     into a linked list of separate items, */
+// NOTE: this has a bad side-effect of creating scope match and variables,
+//       see RegExMatchSubString in matching.c - could leak memory
 
 { Rlist *liststart = NULL;
   char *sp;

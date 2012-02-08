@@ -127,9 +127,6 @@ int EncryptCopyRegularFileNet(char *source,char *new,off_t size,Attributes attr,
 int ServerConnect(AgentConnection *conn,char *host,Attributes attr, Promise *pp);
 void DestroyServerConnection(AgentConnection *conn);
 
-/* Only for OpenDirForPromise implementation */
-Dir *OpenDirRemote(const char *dirname,Attributes attr,Promise *pp);
-
 /* Mark connection as free */
 void ServerNotBusy(AgentConnection *conn);
 
@@ -301,16 +298,6 @@ int TCDB_NewDBCursor(CF_TCDB *hdbp,CF_TCDBC **hdbcp);
 int TCDB_NextDB(CF_TCDB *hdbp,CF_TCDBC *hdbcp,char **key,int *ksize,void **value,int *vsize);
 int TCDB_DeleteDBCursor(CF_TCDB *hdbp,CF_TCDBC *hdbcp);
 #endif
-
-/* dir.c */
-
-Dir *OpenDirForPromise(const char *dirname, Attributes attr, Promise *pp);
-Dir *OpenDirLocal(const char *dirname);
-const struct dirent *ReadDir(Dir *dir);
-void CloseDir(Dir *dir);
-
-/* Only for OpenDirRemote implementation */
-struct dirent *AllocateDirentForFilename(const char *filename);
 
 /* dtypes.c */
 

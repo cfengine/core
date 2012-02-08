@@ -26,7 +26,7 @@ libpromises_la_SOURCES =                                                \
         dbm_quick.c                                                     \
         dbm_tokyocab.c                                                  \
         dbm_sqlite3.c                                                   \
-        dir.c                                                           \
+        dir.c dir.h dir_priv.h                                          \
         dtypes.c                                                        \
         classes.c                                                       \
         env_context.c                                                   \
@@ -127,6 +127,11 @@ libpromises_la_SOURCES =                                                \
         parser_state.h                                                  \
         constants.c                                                     \
         sequence.c sequence.h
+
+if !NT
+libpromises_la_SOURCES +=                                               \
+	unix_dir.c
+endif
 
 # Automake need to be guided due to symlinking
 libpromises_la_DEPENDENCIES = ../pub/libcfpub.la $(NOVA_LDADD) $(CONSTELLATION_LDADD)

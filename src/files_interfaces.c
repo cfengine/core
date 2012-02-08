@@ -32,6 +32,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#include "dir.h"
+
 static void PurgeLocalFiles(Item *filelist,char *directory,Attributes attr,Promise *pp);
 static void CfCopyFile(char *sourcefile,char *destfile,struct stat sourcestatbuf,Attributes attr, Promise *pp);
 static int CompareForFileCopy(char *sourcefile,char *destfile,struct stat *ssb, struct stat *dsb,Attributes attr,Promise *pp);

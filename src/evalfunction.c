@@ -30,6 +30,7 @@
 
 #include "evalfunction.h"
 #include "cf3.extern.h"
+#include "dir.h"
 
 #include <libgen.h>
 

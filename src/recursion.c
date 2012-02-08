@@ -32,6 +32,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#include "dir.h"
+
 static int PushDirState(char *name,struct stat *sb);
 static void PopDirState(int goback,char * name,struct stat *sb,Recursion r);
 static void CheckLinkSecurity(struct stat *sb,char *name);

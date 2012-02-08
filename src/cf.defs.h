@@ -947,17 +947,6 @@ struct Stat_
 
 typedef struct Item_ Item;
 
-typedef struct
-   {
-   /* Local directories */
-   void *dirh; /* DIR* or HANDLE */
-   struct dirent *entrybuf;
-
-   /* Remote directories */
-   Item *list;
-   Item *listpos;  /* current pos */
-   } Dir;
-
 /*******************************************************************/
 
 enum cfsizes

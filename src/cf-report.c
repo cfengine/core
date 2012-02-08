@@ -32,6 +32,7 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#include "dir.h"
 #include "writer.h"
 
 static void ThisAgentInit(void);

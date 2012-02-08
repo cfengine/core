@@ -68,7 +68,7 @@ to the extent of applicable law.
 * Introduction to CFEngine policies::  
 * Next steps::                  
 * Policy editing::              
-* Shell access::
+* Shell access (evaluation feature only)::
 @end menu
 
 @c *****************************************************

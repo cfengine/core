@@ -2,8 +2,7 @@
 \input texinfo-logo
 \input texinfo
 @selectaltfont{cmbright}
-@setlogo{NewLogo} 
-
+@setlogo{CFEngineFrontPage}
 @c *********************************************************************
 @c
 @c  This is a TEXINFO file. It generates both TEX documentation and
@@ -19,7 +18,7 @@
 @c %** start of header
 @setfilename cf-QuickRef3.info
 @settitle Quick Reference Guide for CFEngine 3
-@setchapternewpage odd
+@c @setchapternewpage odd
 @c %** end of header
 
 @smallbook
@@ -30,7 +29,7 @@
      
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 2008 CFEngine AS
+Copyright @copyright{} 2012 CFEngine AS
 
 @end titlepage
 
@@ -63,6 +62,10 @@ Copyright @copyright{} 2008 CFEngine AS
 @end html
 @end ifhtml
 
+@iftex
+@contents
+@end iftex
+
 @c **********************************************************************
 @c CHAPTER
 @c **********************************************************************
@@ -84,7 +87,7 @@ Copyright @copyright{} 2008 CFEngine AS
 * cf-runagent - Run agent::     
 * cf-report - CFEngine's reporting agent::  
 * cf-know - CFEngine's knowledge agent::  
-* cfkey::                       
+* cf-key::                       
 @end menu
 
 @c **********************************************************************
@@ -96,7 +99,7 @@ Copyright @copyright{} 2008 CFEngine AS
 
 
 The promise agent is a validator and analysis tool for
-confguration files belonging to any of the components
+configuration files belonging to any of the components
 of CFEngine. Configurations that make changes must be
 approved by this validator before being executed.
 
@@ -104,6 +107,8 @@ approved by this validator before being executed.
 
 @item --help       
 (-h)       - Print the help message
+@item --bundlesequence
+(-b @var{value}) - Use the specified bundlesequence for verification
 @item --debug       
 (-d @var{value}) - Set debugging level 0,1,2,3
 @item --verbose     
@@ -148,53 +153,36 @@ part of the CFEngine suite.
 @table @samp
 @item --bootstrap
 (-B)       - Bootstrap/repair a CFEngine configuration from failsafe file in the current directory
-
 @item --bundlsequence      
 (-b)       - Set or override bundlesequence from command line
-
 @item --debug      
 (-d @var{value}) - Set debugging level 0,1,2,3
-
 @item --define     
 (-D @var{value}) - Define a list of comma separated classes to be defined at the start of execution
-
 @item --diagnostic 
 (-x)       - Activate internal diagnostics (developers only)
-
 @item --dry-run    
 (-n)       - All talk and no action mode - make no changes, only inform of promises not kept
-
 @item --file       
 (-f @var{value}) - Specify an alternative input file than the default
-
 @item --help       
 (-h)       - Print the help message
-
 @item --inform     
 (-I)       - Print basic information about changes made to the system, i.e. promises repaired
-
 @item --negate     
 (-N @var{value}) - Define a list of comma separated classes to be undefined at the start of execution
-
-
 @item --no-lock    
 (-K)       - Ignore locking constraints during execution (ifelapsed/expireafter) if "too soon" to run
-
 @item --policy-server
-(-B)       - Define the server name or IP address of the a policy server (for use with bootstrap). Works in Enterprise versions only.
-
-
+(-B)       - Define the server name or IP address of the a policy server (for use with bootstrap).
 @item --verbose    
 (-v)       - Output verbose information about the behaviour of the agent
-
 @item --version    
 (-V)       - Output the version of the software
-
 
 @end table
 
 Debug levels: 1=parsing, 2=running, 3=summary, 4=expression eval
-
 
 @c **********************************************************************
 @c SECTION
@@ -218,8 +206,6 @@ control.
 (-d @var{value}) - Set debugging level 0,1,2,3
 @item --verbose    
 (-v)       - Output verbose information about the behaviour of the agent
-@item --dry-run    
-(-n)       - All talk and no action mode - make no changes, only inform of promises not kept
 @item --version    
 (-V)       - Output the version of the software
 @item --file       
@@ -242,6 +228,7 @@ control.
 
 Debug levels: 1=parsing, 2=running, 3=summary, 4=expression eval
 
+@page
 @c **********************************************************************
 @c SECTION
 @c **********************************************************************
@@ -281,10 +268,8 @@ and work as a class-based clock for scheduling.
 (-x)       - Activate internal diagnostics (developers only)
 @item --no-fork    
 (-F)       - Run as a foreground processes (do not fork)
-
 @item --no-winsrv
 (-W)       - Do not run as a service on windows - use this when running from a command shell (commercial editions only)
-
 @item --ld-library-path 
 (-L @var{value}) - Set the internal value of LD_LIBRARY_PATH for child processes
 
@@ -336,6 +321,7 @@ of responses to anomalous states.
 
 Debug levels: 1=parsing, 2=running, 3=summary, 
 
+@page
 @c **********************************************************************
 @c SECTION
 @c **********************************************************************
@@ -381,7 +367,6 @@ access control.
 (-o @var{value}) - Pass options to a remote server process
 @item --diagnostic 
 (-x)       - Activate internal diagnostics (developers only)
-
 @item --hail
 -H value - Hail the following comma-separated lists of hosts, overriding default list
 @item --interactive
@@ -413,14 +398,24 @@ readable form.
 
 @item --help       
 (-h)       - Print the help message
+@item --class-regex
+(-c @var{value}) - Specify a class regular expression to search for
+@item --csv
+(-C)       - Enable CSV output mode in hub queries
 @item --debug      
 (-d @var{value}) - Set debugging level 0,1,2,3
 @item --verbose    
 (-v)       - Output verbose information about the behaviour of the agent
+@item --inform
+(-I)       - Output information about actions performed by the agent
 @item --version    
 (-V)       - Output the version of the software
+@item --no-lock
+(-K)       - Ignore ifelapsed locks
 @item --file       
 (-f @var{value}) - Specify an alternative input file than the default
+@item --hostkey
+(-k @var{value}) - Specify a hostkey to lookup
 @item --html       
 (-H)       - Print output in HTML
 @item --xml        
@@ -431,30 +426,43 @@ readable form.
 (-P)       - Purge data about peers not seen beyond the threshold horizon for assumed-dead
 @item --erasehistory 
 (-E @var{value}) - Erase historical data from the cf-monitord monitoring database
+@item --nova-export
+(-x @var{value}) - Export Nova reports to file - delta or full report (commercial editions only)
+@item --nova-import
+(-i @var{value}) - Import Nova reports from file - specify the path (only on Nova policy hub)
 @item --outputdir  
 (-o @var{value}) - Set output directory for printing graph data
+@item --promise-handle
+(-p @var{value}) - Specify a promise-handle to look up
+@item --query-hub
+(-q @var{value}) - Query hub database interactively with optional regex search string
 @item --titles     
 (-t)       - Add title data to generated graph files
 @item --timestamps 
 (-T)       - Add a time stamp to directory name for graph file data
 @item --resolution 
 (-R)       - Print graph data in high resolution
+@item --show
+(-1 @var{value}) - Show data matching named criteria (software,variables,classes)
+@item --syntax
+(-S)       - Print a syntax summary for this CFEngine version
+@item --syntax-export
+(-s)       - Export a syntax tree in Javascript format
 @item --no-error-bars
 (-e)       - Do not add error bars to the printed graphs
 @item --no-scaling 
 (-n)       - Do not automatically scale the axes
-@item --verbose    
-(-v)       - Generate verbose output
 @item --remove-hosts, 
 (-r @var{value}) - Remove comma separated list of IP address entries from the hosts-seen database
 @end table
 
 
+@page
 @c **********************************************************************
 @c SECTION
 @c **********************************************************************
 
-@node cf-know - CFEngine's knowledge agent, cfkey, cf-report - CFEngine's reporting agent, Command reference
+@node cf-know - CFEngine's knowledge agent, cf-key, cf-report - CFEngine's reporting agent, Command reference
 @section cf-know - CFEngine's knowledge agent
 
 The knowledge management agent is capable of building
@@ -471,28 +479,32 @@ for the current version of the CFEngine software.
 
 @item --help       
 (-h)       - Print the help message
+@item --build
+(-b)       - Build and store topic map in the CFDB
 @item --debug      
 (-d @var{value}) - Set debugging level 0,1,2,3
 @item --verbose    
 (-v)       - Output verbose information about the behaviour of the agent
-@item --dry-run    
-(-n)       - All talk and no action mode - make no changes, only inform of promises not kept
 @item --version    
 (-V)       - Output the version of the software
 @item --file       
 (-f @var{value}) - Specify an alternative input file than the default
-@item --graphs     
-(-g)       - Generate graphs from topic map data
-@item --html       
-(-H)       - Output queries in HTML
 @item --manual     
 (-m)       - Generate reference manual from internal data
-@item --regex      
-(-r @var{value}) - Specify a regular expression for searching the topic map
-@item --sql        
-(-s)       - Store topic map in defined SQL database
-@item --topic      
-(-t @var{value}) - Specify a literal string topic to look up in the topic map
+@item --manpage
+(-M)       - Generate reference manpage from internal data
+@item --stories
+(-z @var{value}) - Look up stories for a given topic on the command line
+@item --syntax
+(-S @var{value}) - Print a syntax summary of the optional keyword or this CFEngine version
+@item --topics
+(-T)       - Show all topic names in CFEngine
+@item --test
+(-t @var{value}) - Generate test data
+@item --removetest
+(-r)       - Remove test data
+@item --updatetest
+(-u)       - Update test data
 
 @end table
 Debug levels: 1=parsing, 2=running, 3=summary, 4
@@ -502,23 +514,25 @@ Debug levels: 1=parsing, 2=running, 3=summary, 4
 @c SECTION
 @c **********************************************************************
 
-@node cfkey,  , cf-know - CFEngine's knowledge agent, Command reference
-@section cfkey
+@node cf-key,  , cf-know - CFEngine's knowledge agent, Command reference
+@section cf-key
 
 @table @samp
 
 @item --help       
 (-h)       - Print the help message
 @item --debug      
-@item --output-file       
-(-f @var{value}) - Specify an alternative output file than the default (localhost.*)
-
 (-d @var{value}) - Set debugging level 0,1,2,3
 @item --verbose    
 (-v)       - Output verbose information about the behaviour of the agent
 @item --version    
 (-V)       - Output the version of the software
-
+@item --output-file       
+(-f @var{value}) - Specify an alternative output file than the default (localhost.*)
+@item --show-hosts
+(-s)       - Show lastseen hostnames and IP addresses
+@item --remove-keys
+(-r @var{value}) - Remove keys for specified hostname/IP from lastseen database 
 @end table
 
 
@@ -535,8 +549,6 @@ Debug levels: 1=parsing, 2=running, 3=summary, 4
 <a name="Contents">
 @end html
 @end ifhtml
-
-@contents
 
 @ifhtml
 @html

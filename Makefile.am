@@ -11,10 +11,10 @@ DIST_SUBDIRS = pub src docs examples masterfiles tests
 # Set explicitly to avoid picking up {nova,constellation,galaxy}/*.m4
 
 DIST_COMMON = README Makefile.am Makefile.in configure AUTHORS aclocal.m4 \
-	ChangeLog INSTALL config.guess config.sub depcomp install-sh \
-	ltmain.sh missing ylwrap m4/acinclude.m4 m4/libtool.m4 m4/ltoptions.m4 \
-	m4/ltsugar.m4 m4/ltversion.m4 m4/lt~obsolete.m4 m4/cf3_with_library.m4 \
-	m4/snprintf.m4 configure.ac autogen.sh compile
+        ChangeLog INSTALL config.guess config.sub depcomp install-sh \
+        ltmain.sh missing ylwrap m4/acinclude.m4 m4/libtool.m4 m4/ltoptions.m4 \
+        m4/ltsugar.m4 m4/ltversion.m4 m4/lt~obsolete.m4 m4/cf3_with_library.m4 \
+        m4/snprintf.m4 configure.ac autogen.sh compile
 
 EXTRA_DIST = ChangeLog INSTALL README LICENSE
 
@@ -44,8 +44,8 @@ DISTCLEANFILES =
 # "configure; make; make install"
 #
 MAINTAINERCLEANFILES = Makefile.in aclocal.m4 config.guess config.sub \
-	configure install-sh missing mkinstalldirs depcomp ylwrap \
-	ltmain.sh mdate-sh
+        configure install-sh missing mkinstalldirs depcomp ylwrap \
+        ltmain.sh mdate-sh
 
 #
 # Pass proper flags to aclocal to pick up Libtool macros

@@ -5,13 +5,13 @@ AM_CPPFLAGS = $(NOVA_CFLAGS) $(CONSTELLATION_CFLAGS)
 
 noinst_LTLIBRARIES = libcfpub.la
 
-libcfpub_la_SOURCES =							\
-	getopt.c							\
+libcfpub_la_SOURCES = \
+	getopt.c \
 	getopt1.c
 
 libcfpub_la_LIBADD = $(LTLIBOBJS)
 
-EXTRA_DIST =								\
+EXTRA_DIST = \
 	getopt.h
 
 #

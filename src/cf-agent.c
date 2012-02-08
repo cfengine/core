@@ -1318,7 +1318,7 @@ static bool VerifyBootstrap(void)
  struct stat sb;
  char filePath[CF_MAXVARSIZE];
 
- if(EMPTY(POLICY_SERVER))
+ if(NULL_OR_EMPTY(POLICY_SERVER))
     {
     CfOut(cf_error, "", "!! Bootstrapping failed, no policy server is specified");
     return false;

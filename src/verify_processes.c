@@ -267,7 +267,7 @@ for (ip = procdata->next; ip != NULL; ip=ip->next)
 
    if (BlockTextMatch(pp->promiser,ip->name,&s,&e))
       {
-      if (EMPTY(ip->name))
+      if (NULL_OR_EMPTY(ip->name))
          {
          continue;
          }

@@ -828,7 +828,7 @@ return str;
 void AnchorRegex(const char *regex, char *out, int outSz)
 
 {
-if (EMPTY(regex))
+if (NULL_OR_EMPTY(regex))
   {
   memset(out,0,outSz);
   }

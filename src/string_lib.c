@@ -124,7 +124,7 @@ int StripListSep(char *strList, char *outBuf, int outBufSz)
 {
   memset(outBuf,0,outBufSz);
 
-  if(EMPTY(strList))
+  if(NULL_OR_EMPTY(strList))
     {
     return false;
     }
@@ -159,7 +159,7 @@ int GetStringListElement(char *strList, int index, char *outBuf, int outBufSz)
 
 memset(outBuf,0,outBufSz);
 
-if (EMPTY(strList))
+if (NULL_OR_EMPTY(strList))
    {
    return false;
    }

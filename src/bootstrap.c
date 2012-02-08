@@ -196,11 +196,11 @@ void SetPolicyServer(char *name)
 
  // update file if different and we know what to put there
 
- if(EMPTY(name) && !EMPTY(fileContents))
+ if(NULL_OR_EMPTY(name) && !NULL_OR_EMPTY(fileContents))
     {
     snprintf(name, CF_MAXVARSIZE, "%s", fileContents);
     }
- else if (!EMPTY(name) && strcmp(name,fileContents) != 0)
+ else if (!NULL_OR_EMPTY(name) && strcmp(name,fileContents) != 0)
    {
    if ((fout = fopen(file,"w")) == NULL)
       {
@@ -212,7 +212,7 @@ void SetPolicyServer(char *name)
    fclose(fout);
    }
 
-if (EMPTY(name))
+if (NULL_OR_EMPTY(name))
   {
   // avoids "Scalar item in servers => {  } in rvalue is out of bounds ..."
   // when NovaBase is checked with unprivileged (not bootstrapped) cf-promises 

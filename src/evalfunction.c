@@ -3778,7 +3778,7 @@ static char *StripPatterns(char *file_buffer,char *pattern,char *filename)
 { int start,end;
   int count = 0;
 
-if(!EMPTY(pattern))
+if(!NULL_OR_EMPTY(pattern))
   {
   while(BlockTextMatch(pattern,file_buffer,&start,&end))
      {

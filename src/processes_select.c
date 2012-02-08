@@ -457,7 +457,7 @@ bool IsProcessNameRunning(char *procNameRegex)
     {
     char *lineSplit[CF_PROCCOLS];
 
-    if(EMPTY(ip->name))
+    if(NULL_OR_EMPTY(ip->name))
        {
        continue;
        }

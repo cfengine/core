@@ -161,7 +161,7 @@ static const char *EscapeJsonString(const char *unescapedString)
 {
 Writer *writer = StringWriter();
 
-if(EMPTY(unescapedString))
+if(NULL_OR_EMPTY(unescapedString))
   {
   return StringWriterClose(writer);
   }

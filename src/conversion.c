@@ -100,7 +100,7 @@ while(NextDB(dbp,dbcp,&key,&ksize,&value,&vsize))
 DeleteDBCursor(dbp,dbcp);
 CloseDB(dbp);
 
-if(EMPTY(result))
+if(NULL_OR_EMPTY(result))
    {
    CfOut(cf_verbose, "", "!! Unable to find a key for ip %s", ipv4);
    }

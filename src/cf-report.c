@@ -541,7 +541,7 @@ strcpy(FOOTER,"");
 snprintf(AVDB_FILE,CF_MAXVARSIZE,"%s/state/%s",CFWORKDIR,CF_AVDB_FILE); /* WAT? */
 MapName(AVDB_FILE);
 
-if (!EMPTY(REMOVEHOSTS))
+if (!NULL_OR_EMPTY(REMOVEHOSTS))
    {
    RemoveHostSeen(REMOVEHOSTS);
    GenericDeInitialize();
@@ -549,7 +549,7 @@ if (!EMPTY(REMOVEHOSTS))
    }
 
 #ifdef HAVE_NOVA
-if (!EMPTY(NOVA_EXPORT_TYPE))
+if (!NULL_OR_EMPTY(NOVA_EXPORT_TYPE))
    {
    if(Nova_ExportReports(NOVA_EXPORT_TYPE))
       {
@@ -563,7 +563,7 @@ if (!EMPTY(NOVA_EXPORT_TYPE))
       }
    }
 
-if (!EMPTY(NOVA_IMPORT_FILE))
+if (!NULL_OR_EMPTY(NOVA_IMPORT_FILE))
    {
    Nova_ImportReports(NOVA_IMPORT_FILE);
    }

@@ -188,6 +188,7 @@ return StringWriterClose(writer);
 
 void JsonObjectAppendString(JsonElement *object, const char *key, const char *value)
 {
+assert(object);
 assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
 assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
 assert(key);
@@ -200,6 +201,7 @@ SequenceAppend(object->container.children, child);
 
 void JsonObjectAppendInteger(JsonElement *object, const char *key, int value)
 {
+assert(object);
 assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
 assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
 assert(key);
@@ -214,6 +216,7 @@ SequenceAppend(object->container.children, child);
 
 void JsonObjectAppendReal(JsonElement *object, const char *key, double value)
 {
+assert(object);
 assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
 assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
 assert(key);
@@ -228,9 +231,11 @@ SequenceAppend(object->container.children, child);
 
 void JsonObjectAppendArray(JsonElement *object, const char *key, JsonElement *array)
 {
+assert(object);
 assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
 assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
 assert(key);
+assert(array);
 assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
 assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
 
@@ -241,9 +246,11 @@ SequenceAppend(object->container.children, array);
 
 void JsonObjectAppendObject(JsonElement *object, const char *key, JsonElement *childObject)
 {
+assert(object);
 assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
 assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
 assert(key);
+assert(childObject);
 assert(childObject->type == JSON_ELEMENT_TYPE_CONTAINER);
 assert(childObject->container.type == JSON_CONTAINER_TYPE_OBJECT);
 
@@ -269,6 +276,7 @@ return -1;
 
 const char *JsonObjectGetAsString(JsonElement *object, const char *key)
 {
+assert(object);
 assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
 assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
 assert(key);
@@ -287,6 +295,7 @@ return NULL;
 
 JsonElement *JsonObjectGetAsObject(JsonElement *object, const char *key)
 {
+assert(object);
 assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
 assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
 assert(key);
@@ -305,6 +314,7 @@ return NULL;
 
 JsonElement *JsonObjectGetAsArray(JsonElement *object, const char *key)
 {
+assert(object);
 assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
 assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
 assert(key);
@@ -334,6 +344,7 @@ return JsonElementCreateContainer(JSON_CONTAINER_TYPE_ARRAY, NULL, initialCapaci
 
 void JsonArrayAppendString(JsonElement *array, const char *value)
 {
+assert(array);
 assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
 assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
 assert(value);
@@ -345,8 +356,10 @@ SequenceAppend(array->container.children, child);
 
 void JsonArrayAppendArray(JsonElement *array, JsonElement *childArray)
 {
+assert(array);
 assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
 assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
+assert(childArray);
 assert(childArray->type == JSON_ELEMENT_TYPE_CONTAINER);
 assert(childArray->container.type == JSON_CONTAINER_TYPE_ARRAY);
 
@@ -356,8 +369,10 @@ SequenceAppend(array->container.children, childArray);
 
 void JsonArrayAppendObject(JsonElement *array, JsonElement *object)
 {
+assert(array);
 assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
 assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
+assert(object);
 assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
 assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
 
@@ -367,6 +382,7 @@ SequenceAppend(array->container.children, object);
 
 const char *JsonArrayGetAsString(JsonElement *array, size_t index)
 {
+assert(array);
 assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
 assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
 assert(index < array->container.children->length);
@@ -385,6 +401,7 @@ return NULL;
 
 JsonElement *JsonArrayGetAsObject(JsonElement *array, size_t index)
 {
+assert(array);
 assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
 assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
 assert(index < array->container.children->length);

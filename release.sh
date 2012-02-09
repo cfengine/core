@@ -153,5 +153,7 @@ tag()
 
 opts "$@"
 branch
-(dist && check)
+CURDIR=$(pwd)
+dist && check
+cd ${CURDIR}
 tag

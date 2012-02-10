@@ -34,6 +34,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#include <assert.h>
+
 /*******************************************************************/
 
 int IsBuiltinFnCall(Rval rval)
@@ -301,4 +303,38 @@ for (Rlist *rp = call->args; rp != NULL; rp = rp->next)
          break;
       }
    }
+}
+
+/*****************************************************************************/
+
+JsonElement *FnCallToJson(FnCall *fp)
+{
+assert(fp);
+
+JsonElement *object = JsonObjectCreate(3);
+
+JsonObjectAppendString(object, "name", fp->name);
+JsonObjectAppendString(object, "type", "function-call");
+
+JsonElement *argsArray = JsonArrayCreate(fp->argc);
+for (Rlist *rp = fp->args; rp != NULL; rp = rp->next)
+   {
+   switch (rp->type)
+      {
+      case CF_SCALAR:
+         JsonArrayAppendString(argsArray, (const char *)rp->item);
+         break;
+
+      case CF_FNCALL:
+         JsonArrayAppendObject(argsArray, FnCallToJson((FnCall *)rp->item));
+         break;
+
+      default:
+         assert(false && "Unknown argument type");
+         break;
+      }
+   }
+JsonObjectAppendArray(object, "arguments", argsArray);
+
+return object;
 }

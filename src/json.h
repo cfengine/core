@@ -25,17 +25,15 @@
 #ifndef CFENGINE_JSON_H
 #define CFENGINE_JSON_H
 
+typedef struct JsonElement_ JsonElement;
+
 #include "cf3.defs.h"
 #include "writer.h"
 
-
-typedef struct JsonElement_ JsonElement;
-
-
 JsonElement *JsonObjectCreate(size_t initialCapacity);
 JsonElement *JsonArrayCreate(size_t initialCapacity);
+JsonElement *JsonStringCreate(const char *value);
 void JsonElementDestroy(JsonElement *element);
-
 
 size_t JsonElementLength(JsonElement *element);
 void JsonElementPrint(Writer *writer, JsonElement *element, size_t indent_level);

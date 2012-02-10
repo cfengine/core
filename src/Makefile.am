@@ -62,7 +62,7 @@ libpromises_la_SOURCES = \
         sockaddr.c \
         recursion.c \
         processes_select.c \
-        fncall.c \
+        fncall.c fncall.h \
         cf3globals.c \
         reporting.c \
         evalfunction.c evalfunction.h \

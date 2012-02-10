@@ -159,12 +159,9 @@ return JsonElementCreateContainer(JSON_CONTAINER_TYPE_OBJECT, NULL, initialCapac
 
 static const char *EscapeJsonString(const char *unescapedString)
 {
-Writer *writer = StringWriter();
+assert(unescapedString);
 
-if(NULL_OR_EMPTY(unescapedString))
-  {
-  return StringWriterClose(writer);
-  }
+Writer *writer = StringWriter();
 
 for (const char *c = unescapedString; *c != '\0'; c++)
   {
@@ -419,8 +416,21 @@ return NULL;
 
 
 // *******************************************************************************************
+// Primitive Functions
+// *******************************************************************************************
+
+
+JsonElement *JsonStringCreate(const char *value)
+{
+assert(value);
+return JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_STRING, NULL, value);
+}
+
+
+// *******************************************************************************************
 // Printing
 // *******************************************************************************************
+
 
 static void JsonContainerPrint(Writer *writer, JsonElement *containerElement, size_t indent_level);
 

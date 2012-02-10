@@ -611,19 +611,7 @@ int DeviceBoundary(struct stat *sb,Promise *pp);
 int SelectLeaf(char *path,struct stat *sb,Attributes attr,Promise *pp);
 int GetOwnerName(char *path, struct stat *lstatptr, char *owner, int ownerSz);
 
-/* fncall.c */
-
-int IsBuiltinFnCall(Rval rval);
-FnCall *NewFnCall(char *name, Rlist *args);
-FnCall *CopyFnCall(FnCall *f);
-int PrintFnCall(char *buffer, int bufsize,FnCall *fp);
-void DeleteFnCall(FnCall *fp);
-void ShowFnCall(FILE *fout,FnCall *fp);
-FnCallResult EvaluateFunctionCall(FnCall *fp,Promise *pp);
-enum cfdatatype FunctionReturnType(const char *name);
-const FnCallType *FindFunction(const char *name);
-void SetFnCallReturnStatus(char *fname,int status,char *message);
-void FnCallPrint(Writer *writer, FnCall *fp);
+#include "fncall.h"
 
 /* full_write.c */
 

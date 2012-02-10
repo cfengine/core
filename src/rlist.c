@@ -32,6 +32,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#include <assert.h>
+
 /*******************************************************************/
 
 char *ScalarValue(Rlist *rlist)
@@ -756,6 +758,55 @@ switch (rval.rtype)
        return PrintFnCall(buffer, bufsize, (FnCall *)rval.item);
    default:
       return 0;
+   }
+}
+
+/*******************************************************************/
+
+static JsonElement *RlistToJson(Rlist *list)
+{
+JsonElement *array = JsonArrayCreate(RlistLen(list));
+
+for (Rlist *rp = list; rp; rp = rp->next)
+   {
+   switch (rp->type)
+      {
+      case CF_SCALAR:
+         JsonArrayAppendString(array, (const char *)rp->item);
+         break;
+
+      case CF_LIST:
+         JsonArrayAppendArray(array, RlistToJson((Rlist *)rp->item));
+         break;
+
+      case CF_FNCALL:
+         JsonArrayAppendObject(array, FnCallToJson((FnCall *)rp->item));
+         break;
+
+      default:
+         assert(false && "Unsupported item type in rlist");
+         break;
+      }
+   }
+
+return array;
+}
+
+JsonElement *RvalToJson(Rval rval)
+{
+assert(rval.item);
+
+switch (rval.rtype)
+   {
+   case CF_SCALAR:
+      return JsonStringCreate((const char*)rval.item);
+   case CF_LIST:
+      return RlistToJson((Rlist *)rval.item);
+   case CF_FNCALL:
+      return FnCallToJson((FnCall *)rval.item);
+   default:
+      assert(false && "Invalid rval type");
+      return JsonStringCreate("");
    }
 }
 

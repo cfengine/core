@@ -44,6 +44,7 @@ struct Rlist_
 #include "cf.defs.h"
 #include "conf.h"
 #include "writer.h"
+#include "json.h"
 
 struct FnCall_;
 
@@ -54,6 +55,8 @@ Rlist *ListValue(Rlist *rlist);
 char *ScalarRvalValue(Rval rval);
 struct FnCall_ *FnCallRvalValue(Rval rval);
 Rlist *ListRvalValue(Rval rval);
+
+JsonElement *RvalToJson(Rval rval);
 
 int PrintRval(char *buffer,int bufsize, Rval rval);
 int PrintRlist(char *buffer,int bufsize,Rlist *list);

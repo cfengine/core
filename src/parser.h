@@ -28,4 +28,3 @@
 void ParserParseFile(const char *path);
 
 #endif
-

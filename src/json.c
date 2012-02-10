@@ -423,7 +423,7 @@ return NULL;
 JsonElement *JsonStringCreate(const char *value)
 {
 assert(value);
-return JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_STRING, NULL, value);
+return JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_STRING, NULL, EscapeJsonString(value));
 }
 
 

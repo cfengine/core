@@ -50,6 +50,17 @@ JsonObjectAppendString(json, "first", "one");
 JsonElementDestroy(json);
 }
 
+static void test_show_string(void **state)
+{
+JsonElement *str = JsonStringCreate("snookie");
+
+Writer *writer = StringWriter();
+JsonElementPrint(writer, str, 0);
+assert_string_equal("\"snookie\"", StringWriterClose(writer));
+
+JsonElementDestroy(str);
+}
+
 static void test_show_object_simple(void **state)
 {
 JsonElement *json = JsonObjectCreate(10);
@@ -274,6 +285,7 @@ int main()
 const UnitTest tests[] =
    {
    unit_test(test_new_delete),
+   unit_test(test_show_string),
    unit_test(test_show_object_simple),
    unit_test(test_show_object_escaped),
    unit_test(test_show_object_numeric),

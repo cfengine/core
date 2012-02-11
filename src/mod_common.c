@@ -95,13 +95,14 @@ BodySyntax CF_VARBODY[] =
 
 BodySyntax CF_CLASSBODY[] =
    {
-   {"or",cf_clist,CF_CLASSRANGE,"Combine class sources with inclusive OR"}, 
    {"and",cf_clist,CF_CLASSRANGE,"Combine class sources with AND"},
-   {"xor",cf_clist,CF_CLASSRANGE,"Combine class sources with XOR"},
    {"dist",cf_rlist,CF_REALRANGE,"Generate a probabilistic class distribution (from strategies in cfengine 2)"},
    {"expression",cf_class,CF_CLASSRANGE,"Evaluate string expression of classes in normal form"},
+   {"or",cf_clist,CF_CLASSRANGE,"Combine class sources with inclusive OR"}, 
+   {"persistence",cf_int,CF_VALRANGE,"Make the class persistent (cached) to avoid reevaluation"}, 
    {"not",cf_class,CF_CLASSRANGE,"Evaluate the negation of string expression in normal form"},
    {"select_class",cf_clist,CF_CLASSRANGE,"Select one of the named list of classes to define based on host identity", "random_selection"},
+   {"xor",cf_clist,CF_CLASSRANGE,"Combine class sources with XOR"},
    {NULL,cf_notype,NULL,NULL}
    };
 

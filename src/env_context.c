@@ -80,6 +80,11 @@ if (pp->done)
 
 if (IsDefinedClass(pp->promiser))
    {
+   if (GetIntConstraint("persistence",pp) == 0)
+      {
+      CfOut(cf_verbose,""," ?> Cancelling cached persistent class %s",pp->promiser);
+      DeletePersistentContext(pp->promiser);
+      }
    return false;
    }
 
@@ -293,15 +298,17 @@ if (!FullTextMatch("[a-zA-Z0-9_]+",pp->promiser))
 
 if (a.context.nconstraints == 0)
    {
-   cfPS(cf_error,CF_FAIL,"",pp,a,"No constraints for class promise %s (broken promise)",pp->promiser);
+   cfPS(cf_error,CF_FAIL,"",pp,a,"No constraints for class promise %s",pp->promiser);
    return;
    }
 
 if (a.context.nconstraints > 1)
    {
-   cfPS(cf_error,CF_FAIL,"",pp,a,"Irreconcilable constraints in classes for %s (broken promise)",pp->promiser);
+   cfPS(cf_error,CF_FAIL,"",pp,a,"Irreconcilable constraints in classes for %s",pp->promiser);
    return;
    }
+
+// If this is a common bundle ...
 
 if (strcmp(pp->bundletype,"common") == 0)
    {
@@ -315,7 +322,16 @@ if (strcmp(pp->bundletype,"common") == 0)
          }
       else
          {
-         NewClass(pp->promiser);
+         if (a.context.persistent > 0)
+            {
+            CfOut(cf_verbose,""," ?> defining explicit persistent class %s (%d mins)\n",pp->promiser,a.context.persistent);
+            NewPersistentContext(pp->promiser,a.context.persistent,cfreset);
+            }
+         else
+            {
+            CfOut(cf_verbose,""," ?> defining explicit global class %s\n",pp->promiser);
+            NewClass(pp->promiser);
+            }
          }
       }
 
@@ -325,19 +341,29 @@ if (strcmp(pp->bundletype,"common") == 0)
    return;
    }
 
+// If this is some other kind of bundle (else here??)
+
 if (strcmp(pp->bundletype,THIS_AGENT) == 0 || FullTextMatch("edit_.*",pp->bundletype))
    {
    if (EvalClassExpression(a.context.expression,pp))
       {
-      CfDebug(" ?> defining explicit class %s\n",pp->promiser);
-
       if (!ValidClassName(pp->promiser))
          {
          cfPS(cf_error,CF_FAIL,"",pp,a," !! Attempted to name a class \"%s\", which is an illegal class identifier",pp->promiser);
          }
       else
          {
-         NewBundleClass(pp->promiser,pp->bundle);
+         if (a.context.persistent > 0)
+            {
+            CfOut(cf_verbose,""," ?> defining explicit persistent class %s (%d mins)\n",pp->promiser,a.context.persistent);
+            CfOut(cf_verbose,""," ?> Warning: persistent classes are global in scope even in agent bundles\n");
+            NewPersistentContext(pp->promiser,a.context.persistent,cfreset);
+            }
+         else
+            {
+            CfOut(cf_verbose,""," ?> defining explicit local bundle class %s\n",pp->promiser);
+            NewBundleClass(pp->promiser,pp->bundle);
+            }
          }
       }
 

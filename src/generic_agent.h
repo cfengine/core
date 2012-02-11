@@ -59,7 +59,7 @@ void WritePID(char *filename);
 void OpenCompilationReportFiles(const char *fname);
 GenericAgentConfig GenericAgentDefaultConfig(enum cfagenttype agent_type);
 void CheckLicenses(void);
-
+void ReloadPromises(enum cfagenttype ag);
 void SetInputFile(const char *filename);
 
 #endif

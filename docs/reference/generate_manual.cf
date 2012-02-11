@@ -2,16 +2,17 @@
 # Autogenerate the reference documentation
 #
 
+
+body common control
+{
+bundlesequence => { "none" };
+}
+
 body knowledge control
 
 {
 build_directory => "./";
 generate_manual => "true";
-}
-
-body common control
-{
-bundlesequence => { "none" };
 }
 
 bundle knowledge none

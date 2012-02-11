@@ -177,6 +177,7 @@ int main(int argc,char *argv[])
 GenericAgentConfig config = CheckOpts(argc,argv);
 GenericInitialize("knowledge", config);
 ThisAgentInit();
+
 KeepKnowControlPromises();
 
 if (GENERATE_XML)

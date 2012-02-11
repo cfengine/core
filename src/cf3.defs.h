@@ -1481,6 +1481,7 @@ typedef struct
    {
    Constraint *expression;
    int nconstraints;
+   int persistent;
    } Context;
 
 /*************************************************************************/

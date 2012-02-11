@@ -1268,11 +1268,17 @@ Context GetContextConstraints(Promise *pp)
 
 a.nconstraints = 0;
 a.expression = NULL; 
+a.persistent = GetIntConstraint("persistence",pp);
 
 for (cp = pp->conlist; cp != NULL; cp=cp->next)
    {
    for (i = 0; CF_CLASSBODY[i].lval != NULL; i++)
       {
+      if (strcmp(cp->lval,"persistence") == 0)
+         {
+         continue;
+         }
+      
       if (strcmp(cp->lval,CF_CLASSBODY[i].lval) == 0)
          {
          a.expression = cp;

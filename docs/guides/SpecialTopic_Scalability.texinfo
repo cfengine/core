@@ -384,6 +384,7 @@ Checking that growth of complexity requires some user discipline.
 @menu
 * Strategy for scaling policy::  
 * Tactics for scaling policy::  
+* Caching classes that are expensive to compute::  
 @end menu
 
 @node  Strategy for scaling policy, Tactics for scaling policy, Policy guidelines for comprehension, Policy guidelines for comprehension
@@ -465,7 +466,7 @@ us to @i{`see the general in the particular, or the eternal in the transitory'}.
 
 
 
-@node  Tactics for scaling policy,  , Strategy for scaling policy, Policy guidelines for comprehension
+@node  Tactics for scaling policy, Caching classes that are expensive to compute, Strategy for scaling policy, Policy guidelines for comprehension
 @subsection Tactics for scaling policy
 
 In writing policy, the thing most often forgotten by technicians is explaining @i{why} decisions
@@ -542,7 +543,66 @@ context.
 
 
 
+@node Caching classes that are expensive to compute,  , Tactics for scaling policy, Policy guidelines for comprehension
+@subsection Caching classes that are expensive to compute
 
+As of version 3.4.0 of the CFEngine core, persistent classes can be 
+used to construct a simple time-saving caching of classes
+that depend on very large amounts of data.
+This feature can be used to avoid recomputing expensive classes
+calculations on each invocation. If a class discovered is essentially
+constant or only slowly varying (like a hostname or alias from a
+non-standard naming facility)
+
+For example, to create a conditional inclusion of costly class
+definitions, put them into a separate bundle in a file @file{classes.cf}.
+@verbatim
+# promises.cf
+
+body common control 
+{
+cached_classes::
+  bundlesequence => { "test" };
+
+!cached_classes::
+  bundlesequence => {  "setclasses", "test" };
+
+!cached_classes::
+  inputs => { "classes.cf" };
+}
+ 
+
+bundle agent test
+{
+reports:
+
+  !my_cached_class::
+   "no cached class";
+
+  my_cached_class::
+    "cached class defined";
+}
+ 
+@end verbatim
+@noindent Then create @file{classes.cf}
+@verbatim
+# classes.cf
+
+bundle common setclasses
+{
+classes:
+
+  "cached_classes"            # timer flag 
+         expression => "any",
+        persistence => "480";
+
+  "my_cached_class" 
+                or => { ...long list or heavy function... } ,
+       persistence => "480";
+
+}
+
+@end verbatim
 
 
 

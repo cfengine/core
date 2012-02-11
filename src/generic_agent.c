@@ -174,7 +174,7 @@ else
 
 SetPolicyServer(POLICY_SERVER);
 
-if (ag != cf_keygen && ag != cf_know)
+if (ag != cf_keygen)// && ag != cf_know)
    {
    if (!MissingInputFile())
       {
@@ -1913,7 +1913,7 @@ void HashControls()
   char buf[CF_BUFSIZE];
 
 /* Only control bodies need to be hashed like variables */
-
+  
 for (bdp = BODIES; bdp != NULL; bdp = bdp->next) /* get schedule */
    {
    if (strcmp(bdp->name,"control") == 0)

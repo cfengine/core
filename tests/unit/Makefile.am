@@ -49,6 +49,8 @@ xml_writer_test_LDADD = libtest.la
 # file_writer_test overrides fclose(3) which causes gcov to fail as gcov
 # instrumentation code uses fclose(3).
 #
-file_writer_test_SOURCES = file_writer_test.c gcov-stub.c
+file_writer_test_SOURCES = file_writer_test.c gcov-stub.c \
+        ../../src/writer.c
 file_writer_test_CFLAGS = $(AM_CFLAGS) -fno-profile-arcs -fno-test-coverage
+file_writer_test_LDADD = libtest.la
 file_writer_test_LDLFAGS =

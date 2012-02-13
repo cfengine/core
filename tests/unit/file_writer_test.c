@@ -101,3 +101,11 @@ const UnitTest tests[] =
 
 return run_tests(tests);
 }
+
+/* STUB */
+
+void FatalError(char *s, ...)
+{
+fail();
+exit(42);
+}

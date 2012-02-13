@@ -1,0 +1,50 @@
+#
+# Demonstrates the use of polymorphism to call bundles.
+#
+
+body common control
+{
+bundlesequence => { "test" };
+}
+
+###########################################
+
+bundle agent test
+{
+vars:
+    "m" slist  => { "login", "ssh_keys", "environment" };
+ "user" slist => { "diego", "mark", "neil" };
+
+methods:
+    "set of $(m)" usebundle => $(m)("$(user)");
+
+    
+}
+
+###########################################
+
+bundle agent login(x)
+{
+reports:
+cfengine_3::
+  "Setup login for $(x)";
+}
+
+###########################################
+
+bundle agent ssh_keys(x)
+{
+reports:
+cfengine_3::
+  "Setup ssh keys for $(x)";
+}
+
+###########################################
+
+bundle agent environment(x)
+{
+reports:
+cfengine_3::
+  "Setup login environment for $(x)";
+}
+

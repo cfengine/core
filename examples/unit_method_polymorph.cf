@@ -1,0 +1,40 @@
+#
+# Demonstrates the use of polymorphism to call bundles.
+#
+
+body common control
+{
+bundlesequence => { "test" };
+}
+
+###########################################
+
+bundle agent test
+{
+methods:
+
+  "Patch Group" 
+
+         comment => "Apply OS specific patches and modifications",
+       usebundle => "$(sys.class)_fix";
+   
+}
+
+###########################################
+
+bundle agent linux_fix
+{
+reports:
+cfengine_3::
+  "Fixes for linux";
+}
+
+###########################################
+
+bundle agent solaris_android
+{
+reports:
+cfengine_3::
+  "Fixes for android";
+}
+

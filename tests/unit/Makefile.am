@@ -30,13 +30,10 @@ TESTS = $(check_PROGRAMS)
 csv_writer_test_SOURCES = csv_writer_test.c ../../src/csv_writer.c ../../src/writer.c
 csv_writer_test_LDADD = libtest.la
 
-#rlist_test_SOURCES = rlist_test.c \
-#	../../src/rlist.c \
-#	../../src/writer.c \
-#	../../src/json.c \
-#	../../src/sequence.c \
-#	../../src/fncall.c
-#rlist_test_LDADD = libtest.la
+rlist_test_SOURCES = rlist_test.c \
+	../../src/rlist.c \
+	../../src/writer.c
+rlist_test_LDADD = libtest.la
 
 set_domainname_test_SOURCES = set_domainname_test.c \
 	../../src/sysinfo.c ../../src/string_lib.c ../../src/writer.c

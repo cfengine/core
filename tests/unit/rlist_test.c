@@ -238,3 +238,33 @@ int BlockTextMatch (char *regexp,char *teststring,int *s,int *e)
 {
 fail();
 }
+
+JsonElement *FnCallToJson(FnCall *fp)
+{
+fail();
+}
+
+JsonElement *JsonArrayCreate(size_t initialCapacity)
+{
+fail();
+}
+
+void JsonArrayAppendString(JsonElement *array, const char *value)
+{
+fail();
+}
+
+void JsonArrayAppendArray(JsonElement *array, JsonElement *childArray)
+{
+fail();
+}
+
+void JsonArrayAppendObject(JsonElement *array, JsonElement *object)
+{
+fail();
+}
+
+JsonElement *JsonStringCreate(const char *value)
+{
+fail();
+}

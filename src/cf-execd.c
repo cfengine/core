@@ -61,6 +61,10 @@ static void MailResult(char *file);
 static int Dialogue(int sd,char *s);
 static void Apoptosis(void);
 
+#if (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+bool LocalExecInThread(void);
+#endif
+
 void StartServer(void);
 static void KeepPromises(void);
 
@@ -425,11 +429,6 @@ if (ONCE)
    }
 else
    {
-#ifdef HAVE_PTHREAD_H
-   pthread_t tid;
-#endif
-
-
    while (true)
       {
       if (ScheduleRun())
@@ -438,25 +437,13 @@ else
          sleep(SPLAYTIME);
 
 #if (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-
-         pthread_attr_init(&PTHREADDEFAULTS);
-         pthread_attr_setdetachstate(&PTHREADDEFAULTS,PTHREAD_CREATE_DETACHED);
-
-#ifdef HAVE_PTHREAD_ATTR_SETSTACKSIZE
-         pthread_attr_setstacksize(&PTHREADDEFAULTS,(size_t)2048*1024);
-#endif
-
-         if (pthread_create(&tid,&PTHREADDEFAULTS,LocalExecThread,(void *)true) != 0)
+         if (!LocalExecInThread())
             {
-            CfOut(cf_inform,"pthread_create","Can't create thread!");
+            CfOut(cf_inform, "", "Unable to run agent in thread, falling back to blocking execution");
+#endif
             LocalExec(true);
+#if (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
             }
-
-         ThreadLock(cft_system);
-         pthread_attr_destroy(&PTHREADDEFAULTS);
-         ThreadUnlock(cft_system);
-#else
-         LocalExec(true);
 #endif
          }
       }
@@ -467,6 +454,34 @@ if (!ONCE)
    YieldCurrentLock(thislock);
    }
 }
+
+/*****************************************************************************/
+
+#if (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+bool LocalExecInThread(void)
+{
+pthread_t tid;
+
+pthread_attr_init(&PTHREADDEFAULTS);
+pthread_attr_setdetachstate(&PTHREADDEFAULTS,PTHREAD_CREATE_DETACHED);
+
+#ifdef HAVE_PTHREAD_ATTR_SETSTACKSIZE
+pthread_attr_setstacksize(&PTHREADDEFAULTS,(size_t)2048*1024);
+#endif
+
+if (pthread_create(&tid,&PTHREADDEFAULTS,LocalExecThread,(void *)true) != 0)
+   {
+   CfOut(cf_inform,"pthread_create","Can't create thread!");
+   return false;
+   }
+
+ThreadLock(cft_system);
+pthread_attr_destroy(&PTHREADDEFAULTS);
+ThreadUnlock(cft_system);
+
+return true;
+}
+#endif
 
 /*****************************************************************************/
 /* Level                                                                     */

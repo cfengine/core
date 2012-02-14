@@ -421,6 +421,7 @@ if (ONCE)
    CfOut(cf_verbose,"","Sleeping for splaytime %d seconds\n\n",SPLAYTIME);
    sleep(SPLAYTIME);
    LocalExec(false);
+   CloseLog();
    }
 else
    {
@@ -772,11 +773,6 @@ while (!feof(pp) && CfReadLine(line,CF_BUFSIZE,pp))
 cf_pclose(pp);
 CfDebug("Closing fp\n");
 fclose(fp);
-
-if (ONCE)
-   {
-   CloseLog();
-   }
 
 CfOut(cf_verbose,""," -> Command is complete\n");
 

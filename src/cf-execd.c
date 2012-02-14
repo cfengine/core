@@ -40,7 +40,6 @@ static int WINSERVICE = true;
 
 static Item *SCHEDULE;
 static int SPLAYTIME = 0;
-static int NOSPLAY;
 
 static char EXECCOMMAND[CF_BUFSIZE];
 
@@ -191,9 +190,6 @@ while ((c=getopt_long(argc,argv,"d:vnKIf:D:N:VxL:hFV1gMW",OPTIONS,&optindex)) !=
       case 'n': DONTDO = true;
           IGNORELOCK = true;
           NewClass("opt_dry_run");
-          break;
-
-      case 'q': NOSPLAY = true;
           break;
 
       case 'L':
@@ -639,10 +635,9 @@ bool twin_exists = TwinExists();
 
 snprintf(buffer, CF_BUFSIZE,
          "\"%s/%s\" -f failsafe.cf "
-         "&& \"%s/%s\"%s -Dfrom_cfexecd%s",
+         "&& \"%s/%s\" -Dfrom_cfexecd%s",
          CFWORKDIR, twin_exists ? TwinFilename(): AgentFilename(),
          CFWORKDIR, AgentFilename(),
-         NOSPLAY ? " -q": "",
          scheduled_run ? ":scheduled_run" : "");
 }
 

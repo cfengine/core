@@ -1,19 +1,18 @@
-/* 
-
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -21,14 +20,8 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-  
-*/
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: args.c                                                              */
-/*                                                                           */
-/*****************************************************************************/
+*/
 
 #include "cf3.defs.h"
 #include "cf3.extern.h"
@@ -56,14 +49,14 @@ leads to Hash Association (lval,rval) => (user,"$(person)")
 /******************************************************************/
 
 int MapBodyArgs(char *scopeid,Rlist *give,Rlist *take)
-      
+
 { Rlist *rpg,*rpt;
   FnCall *fp;
   enum cfdatatype dtg = cf_notype,dtt = cf_notype;
   char *lval;
   void *rval;
   int len1,len2;
-  
+
 CfDebug("MapBodyArgs(begin)\n");
 
 len1 = RlistLen(give);
@@ -79,7 +72,7 @@ for (rpg = give, rpt = take; rpg != NULL && rpt != NULL; rpg=rpg->next,rpt=rpt->
    {
    dtg = StringDataType(scopeid,(char *)rpg->item);
    dtt = StringDataType(scopeid,(char *)rpt->item);
-   
+
    if (dtg != dtt)
       {
       CfOut(cf_error,"","Type mismatch between logical/formal parameters %s/%s\n",(char *)rpg->item,(char *)rpt->item);
@@ -102,13 +95,13 @@ for (rpg = give, rpt = take; rpg != NULL && rpt != NULL; rpg=rpg->next,rpt=rpt->
           rval = rpg->item;
           AddVariableHash(scopeid,lval, (Rval) { rval, CF_LIST }, dtg,NULL,0);
           break;
-          
+
       case CF_FNCALL:
           fp = (FnCall *)rpg->item;
           dtg = FunctionReturnType(fp->name);
 
           FnCallResult res = EvaluateFunctionCall(fp,NULL);
-          
+
           if (res.status == FNCALL_FAILURE && THIS_AGENT_TYPE != cf_common)
              {
              // Unresolved variables
@@ -122,10 +115,10 @@ for (rpg = give, rpt = take; rpg != NULL && rpt != NULL; rpg=rpg->next,rpt=rpt->
           else
              {
              DeleteFnCall(fp);
-             
+
              rpg->item = res.rval.item;
              rpg->type = res.rval.rtype;
-             
+
              lval = (char *)rpt->item;
              rval = rpg->item;
 
@@ -133,7 +126,7 @@ for (rpg = give, rpt = take; rpg != NULL && rpt != NULL; rpg=rpg->next,rpt=rpt->
              }
 
           break;
-          
+
       default:
           /* Nothing else should happen */
           FatalError("Software error: something not a scalar/function in argument literal");
@@ -171,7 +164,7 @@ for (rp = fp->args; rp != NULL; rp = rp->next)
    {
    switch (rp->type)
       {
-      case CF_FNCALL:          
+      case CF_FNCALL:
           subfp = (FnCall *)rp->item;
           rval = EvaluateFunctionCall(subfp,pp).rval;
           break;
@@ -241,7 +234,7 @@ if (argnum != RlistLen(realargs) && !fn->varargs)
          }
       printf("\n");
       }
-   
+
    FatalError("Bad arguments");
    }
 

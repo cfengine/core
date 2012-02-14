@@ -301,7 +301,7 @@ size_t strlcat(char *destination, const char *source, size_t size);
 typedef int clockid_t;
 #endif
 
-#ifdef HAVE_PTHREAD_H
+#if defined(HAVE_PTHREAD)
 # define __USE_GNU 1
 
 # include <pthread.h>

@@ -653,25 +653,8 @@ AC_SEARCH_LIBS(socket, socket, ,
 
 AC_CHECK_FUNC(lchown, AC_DEFINE(HAVE_LCHOWN, 1, [Whether to use lchown(3) to change ownerships]))
 
-AC_CHECK_LIB(pthread,main)
-
-AC_CHECK_FUNC(pthread_attr_setstacksize, AC_DEFINE(HAVE_PTHREAD_ATTR_SETSTACKSIZE, [], [Whether the thread library has setstacksize]), AC_CHECK_LIB(pthread, pthread_create))
-AC_CHECK_FUNC(pthread_sigmask, AC_DEFINE(HAVE_PTHREAD_SIGMASK, [], [Whether the thread library has setmask]), AC_CHECK_LIB(pthread, pthread_create))
-
-if test "$ac_cv_lib_pthread_main" = "yes"; then
-	AC_CHECK_HEADERS(pthread.h)
-	AC_CHECK_HEADERS(sched.h)
-fi
-
-#
-# Temporarily force C macros to enable threading in CFEngine if pthreads were
-# found by ACX_PTHREAD, and errorneously disabled by another pthread-related
-# checks.
-#
-if test "x$acx_pthread_ok" = "xyes"; then
-   AC_DEFINE(HAVE_PTHREAD_H)
-   AC_DEFINE(HAVE_LIBPTHREAD)
-fi
+AC_CHECK_FUNC(pthread_attr_setstacksize, AC_DEFINE(HAVE_PTHREAD_ATTR_SETSTACKSIZE, [], [Whether the thread library has setstacksize]))
+AC_CHECK_FUNC(pthread_sigmask, AC_DEFINE(HAVE_PTHREAD_SIGMASK, [], [Whether the thread library has setmask]))
 
 dnl ######################################################################
 dnl Check for sa_len in struct sockaddr
@@ -780,16 +763,9 @@ case "$target_os" in
    aix*)
 	AC_DEFINE(AIX, [], [AIX build])
         CPPFLAGS="$CPPFLAGS -w"
-	AC_CHECK_LIB(pthreads, main)
-        AC_CHECK_HEADER(pthreads.h)
         ;;
    osf*)
 	AC_DEFINE(OSF, [], [OSF/1 build])
-	if test "$GCC" = yes; then
-	   AC_MSG_WARN([pthreads may not work with GCC under Tru64])
-	   AC_MSG_WARN([If you get build errors mentioning PTHREADDEFAULTS etc.,])
-	   AC_MSG_WARN([re-configure with CC=cc.])
-	fi
         ;;
    irix6*)
 	# rtentry is detected OK on a 6.5.19 system.
@@ -814,8 +790,6 @@ case "$target_os" in
         ;;
    freebsd*|dragonfly*)
 	AC_DEFINE(FREEBSD, [], [FreeBSD build])
-        CFLAGS="$CFLAGS -pthread -D_THREAD_SAFE -DBUILDTIN_GCC_THREAD"
-        AC_CHECK_HEADERS(pthread.h)
         ;;
    netbsd*)
 	AC_DEFINE(NETBSD, [], [NetBSD build])
@@ -858,10 +832,6 @@ case "$target_os" in
 
    sysv4.2MP|unix_sv*)
 	AC_DEFINE(UNIXWARE, [], [Unixware build])
-        AC_CHECK_LIB(thread,main)         dnl POSIX threads, weird setup
-        if test "$ac_cv_lib_thread_main" = "yes"; then
-	   AC_CHECK_HEADERS(thread.h)
-        fi
         ;;
 
    cygwin*)

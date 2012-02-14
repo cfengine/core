@@ -61,7 +61,7 @@ static void MailResult(char *file);
 static int Dialogue(int sd,char *s);
 static void Apoptosis(void);
 
-#if (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+#if defined(HAVE_PTHREAD)
 bool LocalExecInThread(void);
 #endif
 
@@ -436,13 +436,13 @@ else
          CfOut(cf_verbose,"","Sleeping for splaytime %d seconds\n\n",SPLAYTIME);
          sleep(SPLAYTIME);
 
-#if (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+#if defined(HAVE_PTHREAD)
          if (!LocalExecInThread())
             {
             CfOut(cf_inform, "", "Unable to run agent in thread, falling back to blocking execution");
 #endif
             LocalExec(true);
-#if (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+#if defined(HAVE_PTHREAD)
             }
 #endif
          }
@@ -457,7 +457,7 @@ if (!ONCE)
 
 /*****************************************************************************/
 
-#if (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+#if defined(HAVE_PTHREAD)
 bool LocalExecInThread(void)
 {
 pthread_t tid;

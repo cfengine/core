@@ -691,7 +691,7 @@ static void SpawnConnection(int sd_reply,char *ipaddr)
 
 { ServerConnectionState *conn;
 
-#ifdef HAVE_PTHREAD_H
+#if defined(HAVE_PTHREAD)
  pthread_t tid;
  pthread_attr_t threadattrs;
 #endif
@@ -702,7 +702,7 @@ strncpy(conn->ipaddr,ipaddr,CF_MAX_IP_LEN-1);
 
 CfOut(cf_verbose,"","New connection...(from %s:sd %d)\n",conn->ipaddr,sd_reply);
 
-#if defined HAVE_LIBPTHREAD || defined BUILTIN_GCC_THREAD
+#if defined(HAVE_PTHREAD)
 
 CfOut(cf_verbose,"","Spawning new thread...\n");
 
@@ -855,7 +855,7 @@ if (setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY,
 static void *HandleConnection(ServerConnectionState *conn)
 
 { char output[CF_BUFSIZE];
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+#if defined(HAVE_PTHREAD)
 #ifdef HAVE_PTHREAD_SIGMASK
  sigset_t sigmask;
 

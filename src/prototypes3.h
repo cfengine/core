@@ -564,9 +564,9 @@ void ReplaceTrailingStr(char *str, char *from, char to);
 int ReplaceStr(char *in, char *out, int outSz, char* from, char *to);
 const char *GetSoftwareCacheFilename(char *buffer);
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+#if defined(HAVE_PTHREAD)
 void *ThreadUniqueName(pthread_t tid);
-#endif  /* HAVE PTHREAD */
+#endif
 
 /* files_operators.c */
 
@@ -999,7 +999,7 @@ void SummarizeTransaction(Attributes attr,Promise *pp,char *logname);
 CfLock AcquireLock(char *operand,char *host,time_t now,Attributes attr,Promise *pp, int ignoreProcesses);
 void YieldCurrentLock(CfLock this);
 void GetLockName(char *lockname,char *locktype,char *base,Rlist *params);
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+#if defined(HAVE_PTHREAD)
 int ThreadLock(pthread_mutex_t *name);
 int ThreadUnlock(pthread_mutex_t *name);
 #else

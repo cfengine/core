@@ -140,7 +140,7 @@ int FullTextMatch (const char *regptr, const char *cmpptr)
 fail();
 }
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+#if defined(HAVE_PTHREAD)
 pthread_mutex_t *cft_lock;
 pthread_mutex_t *cft_system;
 int ThreadLock(pthread_mutex_t *name)

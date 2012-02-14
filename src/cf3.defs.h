@@ -969,7 +969,7 @@ Adding new mutex:
 - define in cf3globals.c.
 */
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+#if defined(HAVE_PTHREAD)
 extern pthread_mutex_t *cft_system;
 extern pthread_mutex_t *cft_count;
 extern pthread_mutex_t *cft_getaddr;

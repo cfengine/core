@@ -1319,7 +1319,7 @@ return buffer;
 
 /*********************************************************************/
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+#if defined(HAVE_PTHREAD)
 
 void *ThreadUniqueName(pthread_t tid)
 

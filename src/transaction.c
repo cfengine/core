@@ -349,7 +349,7 @@ for (rp = params; rp != NULL; rp=rp->next)
 
 /************************************************************************/
 
-#if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
+#if defined(HAVE_PTHREAD)
 
 /************************************************************************/
 

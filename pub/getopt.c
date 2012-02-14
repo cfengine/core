@@ -60,6 +60,8 @@ Cambridge, MA 02139, USA.  */
 #include <stdlib.h>
 #endif	/* GNU C library.  */
 
+char *getenv(const char *name);
+
 /* This version of `getopt' appears to the caller like standard Unix `getopt'
    but it behaves differently for the user, since it allows the user
    to intersperse the options with the other arguments.

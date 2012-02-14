@@ -35,5 +35,5 @@ double drand48(void);
 
 double drand48(void)
 {
-return (double)random();
+return (double)rand();
 }

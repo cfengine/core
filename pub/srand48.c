@@ -35,5 +35,5 @@ void srand48(long seed);
 
 void srand48(long seed)
 {
-srandom((unsigned)seed);
+srand((unsigned)seed);
 }

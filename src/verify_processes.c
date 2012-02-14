@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -20,14 +20,7 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
-
-/*****************************************************************************/
-/*                                                                           */
-/* File: verify_processes.c                                                  */
-/*                                                                           */
-/*****************************************************************************/
 
 #include "cf3.defs.h"
 #include "cf3.extern.h"
@@ -86,7 +79,7 @@ if (a.haveselect && !a.process_select.process_result)
    {
    CfOut(cf_error,""," !! Process select constraint body promised no result (check body definition)");
    PromiseRef(cf_error,pp);
-   return false;   
+   return false;
    }
 
 return ret;
@@ -107,7 +100,7 @@ else
    {
    snprintf(lockname,CF_BUFSIZE-1,"proc-%s-norestart",pp->promiser);
    }
- 
+
 thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp,false);
 
 if (thislock.lock == NULL)
@@ -133,7 +126,7 @@ if (PROCESSTABLE)
    CfOut(cf_verbose,""," -> Reusing cached process state");
    return true;
    }
- 
+
 #ifdef MINGW
 return NovaWin_LoadProcessTable(procdata);
 #else
@@ -151,7 +144,7 @@ static void VerifyProcessOp(Item *procdata,Attributes a,Promise *pp)
 
 CfDebug("VerifyProcessOp\n");
 
-matches = FindPidMatches(procdata,&killlist,a,pp); 
+matches = FindPidMatches(procdata,&killlist,a,pp);
 
 /* promise based on number of matches */
 
@@ -198,7 +191,7 @@ if (do_signals && matches > 0)
       {
       if (DONTDO)
          {
-         cfPS(cf_error,CF_WARN,"",pp,a," -- Need to keep process-stop promise for %s, but only a warning is promised",pp->promiser);         
+         cfPS(cf_error,CF_WARN,"",pp,a," -- Need to keep process-stop promise for %s, but only a warning is promised",pp->promiser);
          }
       else
          {
@@ -223,7 +216,7 @@ if (do_signals && matches > 0)
 need_to_restart = (a.restart_class != NULL) && (killed || matches == 0);
 
 DeleteItemList(killlist);
- 
+
 if (!need_to_restart)
    {
    cfPS(cf_verbose,CF_NOP,"",pp,a," -> No restart promised for %s\n",pp->promiser);
@@ -235,7 +228,7 @@ else
       {
       cfPS(cf_error,CF_WARN,"",pp,a," -- Need to keep restart promise for %s, but only a warning is promised",pp->promiser);
       }
-   else 
+   else
       {
       cfPS(cf_inform,CF_CHG,"",pp,a," -> Making a one-time restart promise for %s",pp->promiser);
       NewClass(a.restart_class);
@@ -258,8 +251,8 @@ if (procdata == NULL)
    {
    return 0;
    }
-  
-GetProcessColumnNames(procdata->name,(char **)names,start,end); 
+
+GetProcessColumnNames(procdata->name,(char **)names,start,end);
 
 for (ip = procdata->next; ip != NULL; ip=ip->next)
    {
@@ -271,24 +264,24 @@ for (ip = procdata->next; ip != NULL; ip=ip->next)
          {
          continue;
          }
-      
+
       if (!SelectProcess(ip->name,names,start,end,a,pp))
          {
          continue;
          }
-      
+
       pid = ExtractPid(ip->name,names,start,end);
-      
+
       if (pid == -1)
          {
          CfOut(cf_verbose,"","Unable to extract pid while looking for %s\n",pp->promiser);
          continue;
          }
-      
+
       CfOut(cf_verbose,""," ->  Found matching pid %d\n     (%s)",pid,ip->name);
-      
+
       matches++;
-      
+
       if (pid == 1)
          {
          if ((RlistLen(a.signals) == 1) && IsStringIn(a.signals,"hup"))
@@ -308,14 +301,14 @@ for (ip = procdata->next; ip != NULL; ip=ip->next)
          }
 
       promised_zero = a.process_count.min_range == 0 && a.process_count.max_range == 0;
-      
+
       if (a.transaction.action == cfa_warn && promised_zero)
          {
          CfOut(cf_error,"","Process alert: %s\n",procdata->name); /* legend */
          CfOut(cf_error,"","Process alert: %s\n",ip->name);
          continue;
          }
-      
+
       if (pid == cfengine_pid && a.signals)
          {
          CfOut(cf_verbose,""," !! cf-agent will not signal itself!\n");
@@ -376,7 +369,7 @@ for (col = 0; col < CF_PROCCOLS; col++)
 for (sp = psentry+offset; *sp != '\0'; sp++) /* if first field contains alpha, skip */
    {
    /* If start with alphanum then skip it till the first space */
-   
+
    if (isalnum((int)*sp))
       {
       while ((*sp != ' ') && (*sp != '\0'))
@@ -384,14 +377,14 @@ for (sp = psentry+offset; *sp != '\0'; sp++) /* if first field contains alpha, s
          sp++;
          }
       }
-   
+
    while ((*sp == ' ') && (*sp == '\t'))
       {
       sp++;
       }
 
    sscanf(sp,"%d",&pid);
-   
+
    if (pid != -1)
       {
       break;
@@ -407,15 +400,15 @@ void GetProcessColumnNames(char *proc,char **names,int *start,int *end)
 
 { char *sp,title[16];
   int col,offset = 0;
-  
+
 for (col = 0; col < CF_PROCCOLS; col++)
    {
    start[col] = end[col] = -1;
    names[col] = NULL;
    }
 
-col = 0; 
- 
+col = 0;
+
 for (sp = proc; *sp != '\0'; sp++)
    {
    offset = sp - proc;
@@ -434,7 +427,7 @@ for (sp = proc; *sp != '\0'; sp++)
          }
       continue;
       }
-   
+
    else if (start[col] == -1)
       {
       start[col] = offset;

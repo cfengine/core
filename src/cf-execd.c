@@ -371,9 +371,11 @@ if (!ONCE)
       DeletePromise(pp);
       return;
       }
+
+   /* Kill previous instances of cf-execd if those are still running */
+   Apoptosis();
    }
 
-Apoptosis();
 
 #ifdef MINGW
 
@@ -470,15 +472,8 @@ static void Apoptosis()
   static char promiserBuf[CF_SMALLBUF];
 
 #if defined(__CYGWIN__) || defined(__MINGW32__)
-  /* Otherwise we'll just kill off long jobs */
   return;
 #endif
-
-if (ONCE)
-   {
-   /* Otherwise we'll just kill off long jobs */
-   return;
-   }
 
 CfOut(cf_verbose,""," !! Programmed pruning of the scheduler cluster");
 

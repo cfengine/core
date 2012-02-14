@@ -94,7 +94,7 @@ seq->length -= end - start + 1;
 }
 
 
-void *SequenceLookup(Sequence *seq, const void *key, __compar_fn_t Compare)
+void *SequenceLookup(Sequence *seq, const void *key, SequenceItemComparator Compare)
 {
 for (size_t i = 0; i < seq->length; i++)
    {
@@ -115,7 +115,7 @@ void *t = *l;
 }
 
 // adopted from http://rosettacode.org/wiki/Sorting_algorithms/Quicksort#C
-static void QuickSortRecursive(void **data, int n, __compar_fn_t Compare, size_t maxterm)
+static void QuickSortRecursive(void **data, int n, SequenceItemComparator Compare, size_t maxterm)
 {
 assert(maxterm < 1000);
 
@@ -151,7 +151,7 @@ QuickSortRecursive(l, data + n - l, Compare, maxterm + 1);
 }
 
 
-void SequenceSort(Sequence *seq, __compar_fn_t Compare)
+void SequenceSort(Sequence *seq, SequenceItemComparator Compare)
 {
 QuickSortRecursive(seq->data, seq->length, Compare, 0);
 }

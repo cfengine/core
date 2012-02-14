@@ -966,7 +966,7 @@ HP_UX_AC=yes])
 
 AC_MSG_CHECKING(for GCC specific compile flags)
 if test x"$GCC" = "xyes" && test x"$HP_UX_AC" != x"yes"; then
-	GCC_CFLAG="-g -Wall -Werror=implicit-function-declaration"
+	GCC_CFLAG="-g -Wall"
 	CPPFLAGS="$CPPFLAGS -std=gnu99"
 	AC_MSG_RESULT(yes)
 	AC_SUBST(GCC_CFLAG)
@@ -977,6 +977,15 @@ if test x"$GCC" = "xyes" && test x"$HP_UX_AC" != x"yes"; then
         AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main() {}])],
           [AC_MSG_RESULT(yes)
            GCC_CFLAG="$GCC_CFLAG -Wno-pointer-sign"],
+          [AC_MSG_RESULT(no)])
+        CFLAGS="$save_CFLAGS"
+
+        save_CFLAGS="$CFLAGS"
+        CFLAGS="$CFLAGS $GCC_CFLAG -Werror=implicit-function-declaration"
+        AC_MSG_CHECKING(for -Werror=implicit-function-declaration)
+        AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main() {}])],
+          [AC_MSG_RESULT(yes)
+           GCC_CFLAG="$GCC_CFLAG -Werror=implicit-function-declaration"],
           [AC_MSG_RESULT(no)])
         CFLAGS="$save_CFLAGS"
 else 

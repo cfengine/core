@@ -966,26 +966,23 @@ HP_UX_AC=yes])
 
 AC_MSG_CHECKING(for GCC specific compile flags)
 if test x"$GCC" = "xyes" && test x"$HP_UX_AC" != x"yes"; then
-	GCC_CFLAG="-g -Wall -Wno-pointer-sign -Werror=implicit-function-declaration"
+	GCC_CFLAG="-g -Wall -Werror=implicit-function-declaration"
 	CPPFLAGS="$CPPFLAGS -std=gnu99"
 	AC_MSG_RESULT(yes)
 	AC_SUBST(GCC_CFLAG)
+
+        save_CFLAGS="$CFLAGS"
+        CFLAGS="$CFLAGS $GCC_CFLAG -Wno-pointer-sign"
+        AC_MSG_CHECKING(for -Wno-pointer-sign)
+        AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main() {}])],
+          [AC_MSG_RESULT(yes)
+           GCC_CFLAG="$GCC_CFLAG -Wno-pointer-sign"],
+          [AC_MSG_RESULT(no)])
+        CFLAGS="$save_CFLAGS"
 else 
 	GCC_CFLAG=""
 	AC_MSG_RESULT(no)
 	AC_SUBST(GCC_CFLAG)
-fi
-
-if test x"$GCC" = "xyes" && test x"$HP_UX_AC" != "xyes"; then
-   save_CFLAGS="$CFLAGS"
-   CFLAGS="$CFLAGS $GCC_CFLAG"
-
-   AC_MSG_CHECKING(for -Wno-pointer-sign)
-   AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main() {}])], [AC_MSG_RESULT(yes)], [
-   AC_MSG_RESULT(no)
-   GCC_CFLAG=`echo $GCC_CFLAG | sed -e 's/-Wno-pointer-sign//'`])
-
-   CFLAGS="$save_CFLAGS"
 fi
 
 dnl #####################################################################

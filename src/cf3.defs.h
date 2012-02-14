@@ -970,8 +970,6 @@ Adding new mutex:
 */
 
 #if defined HAVE_PTHREAD_H && (defined HAVE_LIBPTHREAD || defined BUILDTIN_GCC_THREAD)
-extern pthread_attr_t PTHREADDEFAULTS;
-
 extern pthread_mutex_t *cft_system;
 extern pthread_mutex_t *cft_count;
 extern pthread_mutex_t *cft_getaddr;

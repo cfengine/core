@@ -461,23 +461,23 @@ if (!ONCE)
 bool LocalExecInThread(void)
 {
 pthread_t tid;
+pthread_attr_t threadattrs;
 
-pthread_attr_init(&PTHREADDEFAULTS);
-pthread_attr_setdetachstate(&PTHREADDEFAULTS,PTHREAD_CREATE_DETACHED);
+pthread_attr_init(&threadattrs);
+pthread_attr_setdetachstate(&threadattrs, PTHREAD_CREATE_DETACHED);
 
 #ifdef HAVE_PTHREAD_ATTR_SETSTACKSIZE
-pthread_attr_setstacksize(&PTHREADDEFAULTS,(size_t)2048*1024);
+pthread_attr_setstacksize(&threadattrs, (size_t)2048*1024);
 #endif
 
-if (pthread_create(&tid,&PTHREADDEFAULTS,LocalExecThread,(void *)true) != 0)
+if (pthread_create(&tid, &threadattrs, LocalExecThread, (void *)true) != 0)
    {
    CfOut(cf_inform,"pthread_create","Can't create thread!");
+   pthread_attr_destroy(&threadattrs);
    return false;
    }
 
-ThreadLock(cft_system);
-pthread_attr_destroy(&PTHREADDEFAULTS);
-ThreadUnlock(cft_system);
+pthread_attr_destroy(&threadattrs);
 
 return true;
 }

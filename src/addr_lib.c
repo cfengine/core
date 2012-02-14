@@ -20,7 +20,7 @@ if (strcmp(s1,s2) == 0)
    {
    return 0;
    }
-  
+
 if (strstr(s1,"/") != 0)
    {
    isCIDR = true;
@@ -69,7 +69,7 @@ if (!(isv6 || isv4))
    return -1;
    }
 
-if (!(isrange||isCIDR)) 
+if (!(isrange||isCIDR))
    {
    if (strlen(s2) > strlen(s1))
       {
@@ -78,10 +78,10 @@ if (!(isrange||isCIDR))
          return -1; // Because xxx.1 should not match xxx.12 in the same octet
          }
       }
-   
+
    return strncmp(s1,s2,strlen(s1)); /* do partial string match */
    }
- 
+
 if (isv4)
    {
    if (isCIDR)
@@ -99,10 +99,10 @@ if (isv4)
 
       a1 = htonl(addr1.sin_addr.s_addr);
       a2 = htonl(addr2.sin_addr.s_addr);
-      
+
       a1 = a1 >> shift;
       a2 = a2 >> shift;
-      
+
       if (a1 == a2)
          {
          return 0;
@@ -119,12 +119,12 @@ if (isv4)
 
       sp1 = s1;
       sp2 = s2;
-      
+
       for (i = 0; i < 4; i++)
          {
          buffer1[0] = '\0';
          sscanf(sp1,"%[^.]",buffer1);
-         
+
          if (strlen(buffer1) == 0)
             {
             break;
@@ -133,7 +133,7 @@ if (isv4)
          sp1 += strlen(buffer1)+1;
          sscanf(sp2,"%[^.]",buffer2);
          sp2 += strlen(buffer2)+1;
-         
+
          if (strstr(buffer1,"-"))
             {
             sscanf(buffer1,"%ld-%ld",&from,&to);
@@ -144,7 +144,7 @@ if (isv4)
                CfDebug("Couldn't read range\n");
                return -1;
                }
-            
+
             if ((from > cmp) || (cmp > to))
                {
                CfDebug("Out of range %ld > %ld > %ld (range %s)\n",from,cmp,to,buffer2);
@@ -155,17 +155,17 @@ if (isv4)
             {
             sscanf(buffer1,"%ld",&from);
             sscanf(buffer2,"%ld",&cmp);
-            
+
             if (from != cmp)
                {
                CfDebug("Unequal\n");
                return -1;
                }
             }
-         
+
          CfDebug("Matched octet %s with %s\n",buffer1,buffer2);
          }
-      
+
       CfDebug("Matched IP range\n");
       return 0;
       }
@@ -211,24 +211,24 @@ if (isv6)
 
       sp1 = s1;
       sp2 = s2;
-      
+
       for (i = 0; i < 8; i++)
          {
          sscanf(sp1,"%[^:]",buffer1);
          sp1 += strlen(buffer1)+1;
          sscanf(sp2,"%[^:]",buffer2);
          sp2 += strlen(buffer2)+1;
-         
+
          if (strstr(buffer1,"-"))
             {
             sscanf(buffer1,"%lx-%lx",&from,&to);
             sscanf(buffer2,"%lx",&cmp);
-            
+
             if (from < 0 || to < 0)
                {
                return -1;
                }
-            
+
             if ((from >= cmp) || (cmp > to))
                {
                CfDebug("%lx < %lx < %lx\n",from,cmp,to);
@@ -239,20 +239,20 @@ if (isv6)
             {
             sscanf(buffer1,"%ld",&from);
             sscanf(buffer2,"%ld",&cmp);
-            
+
             if (from != cmp)
                {
                return -1;
                }
             }
          }
-      
+
       return 0;
       }
    }
-#endif 
+#endif
 
-return -1; 
+return -1;
 }
 
 /*********************************************************************/
@@ -269,9 +269,9 @@ if (n != 2)
    {
    CfOut(cf_error,"","HostRange syntax error: second arg should have X-Y format where X and Y are decimal numbers");
    return false;
-   } 
+   }
 
-return true; 
+return true;
 }
 
 /*********************************************************************/

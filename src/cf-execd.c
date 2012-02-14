@@ -264,10 +264,19 @@ if (SCHEDULE == NULL)
 
 /*****************************************************************************/
 
+static double GetSplay(void)
+{
+char splay[CF_BUFSIZE];
+snprintf(splay, CF_BUFSIZE, "%s+%s+%d", VFQNAME, VIPADDRESS, getuid());
+
+return ((double)GetHash(splay)) / CF_HASHTABLESIZE;
+}
+
+/*****************************************************************************/
+
 static void KeepPromises(void)
 
 { Constraint *cp;
-  char splay[CF_BUFSIZE];
   Rval retval;
 
 for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
@@ -321,10 +330,8 @@ for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp=cp->next)
 
    if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_splaytime].lval) == 0)
       {
-      int hash,time = Str2Int(retval.item);
-      snprintf(splay,CF_BUFSIZE,"%s+%s+%d",VFQNAME,VIPADDRESS,getuid());
-      hash = GetHash(splay);
-      SPLAYTIME = (int)(time*60*hash/CF_HASHTABLESIZE);
+      int time = Str2Int(ScalarRvalValue(retval));
+      SPLAYTIME = (int)(time * GetSplay());
       }
 
    if (strcmp(cp->lval,CFEX_CONTROLBODY[cfex_schedule].lval) == 0)

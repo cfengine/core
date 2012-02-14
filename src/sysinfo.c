@@ -1970,7 +1970,7 @@ if (fp == NULL)
 
 if (fgets(buf, bufsize, fp) == NULL)
    {
-   free(fp);
+   fclose(fp);
    return NULL;
    }
 

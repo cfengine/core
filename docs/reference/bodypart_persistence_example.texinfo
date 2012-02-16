@@ -1,0 +1,17 @@
+
+
+@verbatim
+bundle common setclasses
+{
+classes:
+
+  "cached_classes" 
+                or => { "any" },
+       persistence => "1";
+
+  "cached_class" 
+       expression => "any",
+       persistence => "1";
+
+}
+@end verbatim

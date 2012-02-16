@@ -715,15 +715,8 @@ case "$target_os" in
    solaris2*)
 	AC_DEFINE(SOLARIS, [], [Solaris build])
         AC_DEFINE(__BIT_TYPES_DEFINED__, [], [Solaris 2.6-related stuff]) # avoid conflict with db.h
-
-       AC_PREPROC_IFELSE([
-                         AC_LANG_PROGRAM([[
-#define _POSIX_C_SOURCE 1
-#include <unistd.h>
-                           ]], [])],
-                           [AC_DEFINE(_POSIX_C_SOURCE)],
-                           [AC_DEFINE(_POSIX_C_SOURCE, 200112loL)])
-        AC_DEFINE(__EXTENSIONS__)
+        AC_DEFINE(_POSIX_C_SOURCE, 200112L, [_POSIX_C_SOURCE])
+        AC_DEFINE(__EXTENSIONS__, 1, [__EXTENSIONS__])
         LIBS="$LIBS -lelf -lsec"
         ;;
    ultrix*)

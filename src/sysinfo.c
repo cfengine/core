@@ -251,7 +251,7 @@ for (i = 0; CLASSATTRIBUTES[i][0] != '\0'; i++)
  * define it manually now.
  */
 #ifdef SOLARIS
-if (strcmp(VSYSNAME.machine == 'i86pc') == 0)
+if (strcmp(VSYSNAME.machine, 'i86pc') == 0)
    {
    NewClass("solarisx86");
    }

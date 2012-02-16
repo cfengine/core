@@ -712,24 +712,6 @@ fi
 
 case "$target_os" in
 
-   sunos3*)
-	AC_DEFINE(SUN3, [], [SunOS 3.x build])
-        ;;
-   sunos4*)
-	AC_DEFINE(SUN4, [], [SunOS 4.x build])
-        ;;
-   solaris2.4*)
-	AC_DEFINE(SOLARIS)
-        AC_DEFINE(HAVE_SYS_ACL_H,)
-        CPPFLAGS="-w $CPPFLAGS"
-        LIBS="$LIBS -lelf"
-        ;;
-   solaris2.5*)
-	AC_DEFINE(SOLARIS)
-        AC_DEFINE(_POSIX_C_SOURCE, [], [SVR4 header stuff])
-        AC_DEFINE(__EXTENSIONS__, [], [SVR4 header stuff])
-        LIBS="$LIBS -lelf -lsec"
-        ;;
    solaris2*)
 	AC_DEFINE(SOLARIS, [], [Solaris build])
         AC_DEFINE(__BIT_TYPES_DEFINED__, [], [Solaris 2.6-related stuff]) # avoid conflict with db.h

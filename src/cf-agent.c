@@ -599,7 +599,7 @@ for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp=cp->next)
    if (strcmp(cp->lval,CFA_CONTROLBODY[cfa_repository].lval) == 0)
       {
       SetRepositoryLocation(retval.item);
-      CfOut(cf_verbose,"","SET repository = %s\n", retval.item);
+      CfOut(cf_verbose,"","SET repository = %s\n", ScalarRvalValue(retval));
       continue;
       }
 

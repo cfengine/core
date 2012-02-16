@@ -491,6 +491,9 @@ static kvm_t *kd;
    or -1 if an error occurred.  */
 
 int
+getloadavg (double[] loadavg, int nelem);
+
+int
 getloadavg (loadavg, nelem)
      double loadavg[];
      int nelem;

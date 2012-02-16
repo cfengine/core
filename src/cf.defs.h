@@ -301,6 +301,10 @@ size_t strlcat(char *destination, const char *source, size_t size);
 typedef int clockid_t;
 #endif
 
+#ifndef HAVE_SOCKLEN_T
+typedef int socklen_t;
+#endif
+
 #if defined(HAVE_PTHREAD)
 # define __USE_GNU 1
 

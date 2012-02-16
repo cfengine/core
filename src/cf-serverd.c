@@ -318,10 +318,10 @@ static void StartServer(GenericAgentConfig config)
   time_t starttime;
 
 #if defined(HAVE_GETADDRINFO)
-  int addrlen=sizeof(struct sockaddr_in6);
+  socklen_t addrlen=sizeof(struct sockaddr_in6);
   struct sockaddr_in6 cin;
 #else
-  int addrlen=sizeof(struct sockaddr_in);
+  socklen_t addrlen=sizeof(struct sockaddr_in);
   struct sockaddr_in cin;
 #endif
 
@@ -1723,7 +1723,8 @@ static int VerifyConnection(ServerConnectionState *conn,char buf[CF_BUFSIZE])
   int err;
 #else
   struct sockaddr_in raddr;
-  int i,j,len = sizeof(struct sockaddr_in);
+  int i,j;
+  socklen_t len = sizeof(struct sockaddr_in);
   struct hostent *hp = NULL;
   Item *ip_aliases = NULL, *ip_addresses = NULL;
 #endif

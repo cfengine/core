@@ -1447,7 +1447,7 @@ static int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockadd
      CfOut(cf_error,"","!! Could not set socket to non-blocking mode");
      }
 
-   res = connect(conn->sd,cinp,cinpSz);
+   res = connect(conn->sd,cinp,(socklen_t)cinpSz);
 
    if (res < 0)
       {

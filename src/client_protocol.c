@@ -46,7 +46,8 @@ SKIPIDENTIFY = enabled;
 int IdentifyAgent(int sd,char *localip,int family)
 
 { char uname[CF_BUFSIZE], sendbuff[CF_BUFSIZE],dnsname[CF_BUFSIZE];
-  int len,err;
+  int err;
+  socklen_t len;
 #if defined(HAVE_GETADDRINFO)
   char myaddr[256]; /* Compilation trick for systems that don't know ipv6 */
 #else

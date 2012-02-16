@@ -136,7 +136,7 @@ XmlAttribute scope_name_attr = {"name", scope};
 XmlStartTag(writer, XMLTAG_VARSCOPE, 1, scope_name_attr);
 
 /* XML ELEMENT -- INTRO */
-filebuffer = ReadTexinfoFileF("varcontext_%s_intro.texinfo", scope);
+filebuffer = ReadTexinfoFileF("varcontexts/%s_intro.texinfo", scope);
 XmlTag(writer,XMLTAG_INTRO,filebuffer,0);
 free(filebuffer);
 
@@ -149,7 +149,7 @@ for (rp = list; rp != NULL; rp = rp->next)
    XmlStartTag(writer, XMLTAG_VARIABLE, 1, var_name_attr);
 
    /* XML ELEMENT -- LONG-DESCRIPTION */
-   filebuffer = ReadTexinfoFileF("var_%s_%s.texinfo",
+   filebuffer = ReadTexinfoFileF("vars/%s_%s.texinfo",
                                  scope, ScalarValue(rp));
    XmlTag(writer, XMLTAG_LONGDESCRIPTION, filebuffer, 0);
    free(filebuffer);
@@ -206,12 +206,12 @@ for (i=0; fn.args[i].pattern != NULL; i++)
    }
 
 /* XML ELEMENT -- LONG-DESCRIPTION */
-filebuffer = ReadTexinfoFileF("function_%s_notes.texinfo", fn.name);
+filebuffer = ReadTexinfoFileF("functions/%s_notes.texinfo", fn.name);
 XmlTag(writer, XMLTAG_LONGDESCRIPTION, filebuffer, 0);
 free(filebuffer);
 
 /* XML ELEMENT -- EXAMPLE */
-filebuffer = ReadTexinfoFileF("function_%s_example.texinfo", fn.name);
+filebuffer = ReadTexinfoFileF("functions/%s_example.texinfo", fn.name);
 XmlTag(writer, XMLTAG_EXAMPLE, filebuffer, 0);
 free(filebuffer);
 
@@ -231,12 +231,12 @@ XmlAttribute control_name_attr = {"name", type.btype};
 XmlStartTag(writer, XMLTAG_CONTROL, 1, control_name_attr);
 
 /* XML ELEMENT -- LONG-DESCRIPTION */
-filebuffer = ReadTexinfoFileF("control_%s_notes.texinfo", type.btype);
+filebuffer = ReadTexinfoFileF("control/%s_notes.texinfo", type.btype);
 XmlTag(writer, XMLTAG_LONGDESCRIPTION, filebuffer, 0);
 free(filebuffer);
 
 /* XML ELEMENT -- EXAMPLE */
-filebuffer = ReadTexinfoFileF("control_%s_example.texinfo", type.btype);
+filebuffer = ReadTexinfoFileF("control/%s_example.texinfo", type.btype);
 XmlTag(writer, XMLTAG_EXAMPLE, filebuffer, 0);
 free(filebuffer);
 
@@ -290,7 +290,7 @@ for (i = 0; st[i].btype != NULL; i++)
       }
    else
       {
-      filebuffer = ReadTexinfoFileF("promise_%s_intro.texinfo", st[i].subtype);
+      filebuffer = ReadTexinfoFileF("promises/%s_intro.texinfo", st[i].subtype);
       }
    XmlTag(writer, XMLTAG_INTRO, filebuffer, 0);
    free(filebuffer);
@@ -298,12 +298,12 @@ for (i = 0; st[i].btype != NULL; i++)
    if (strcmp("*", st[i].btype) != 0)
       {
       /* XML ELEMENT -- LONG DESCRIPTION */
-      filebuffer = ReadTexinfoFileF("promise_%s_notes.texinfo", st[i].subtype);
+      filebuffer = ReadTexinfoFileF("promises/%s_notes.texinfo", st[i].subtype);
       XmlTag(writer, XMLTAG_LONGDESCRIPTION, filebuffer, 0);
       free(filebuffer);
 
       /* XML ELEMENT -- EXAMPLE */
-      filebuffer = ReadTexinfoFileF("promise_%s_example.texinfo", st[i].subtype);
+      filebuffer = ReadTexinfoFileF("promises/%s_example.texinfo", st[i].subtype);
       XmlTag(writer, XMLTAG_EXAMPLE, filebuffer, 0);
       free(filebuffer);
       }
@@ -377,12 +377,12 @@ switch (bs->dtype)
       XmlTag(writer, XMLTAG_DESCRIPTION, bs->description, 0);
 
       /* XML ELEMENT -- LONG-DESCRIPTION */
-      filebuffer = ReadTexinfoFileF("bodypart_%s_notes.texinfo", bs->lval);
+      filebuffer = ReadTexinfoFileF("bodyparts/%s_notes.texinfo", bs->lval);
       XmlTag(writer, XMLTAG_LONGDESCRIPTION, filebuffer, 0);
       free(filebuffer);
 
       /* XML ELEMENT -- EXAMPLE */
-      filebuffer = ReadTexinfoFileF("bodypart_%s_example.texinfo", bs->lval);
+      filebuffer = ReadTexinfoFileF("bodyparts/%s_example.texinfo", bs->lval);
       XmlTag(writer, XMLTAG_EXAMPLE, filebuffer, 0);
       free(filebuffer);
    }

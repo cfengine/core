@@ -90,9 +90,9 @@ IncludeManualFile(fout,"reference_control_intro.texinfo");
 for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
    {
    fprintf(fout,"@node control %s\n@section @code{%s} control promises\n\n",CF_ALL_BODIES[i].btype,CF_ALL_BODIES[i].btype);
-   snprintf(filename,CF_BUFSIZE-1,"control_%s_example.texinfo",CF_ALL_BODIES[i].btype);
+   snprintf(filename,CF_BUFSIZE-1,"control/%s_example.texinfo",CF_ALL_BODIES[i].btype);
    IncludeManualFile(fout,filename);
-   snprintf(filename,CF_BUFSIZE-1,"control_%s_notes.texinfo",CF_ALL_BODIES[i].btype);
+   snprintf(filename,CF_BUFSIZE-1,"control/%s_notes.texinfo",CF_ALL_BODIES[i].btype);
    IncludeManualFile(fout,filename);
    TexinfoBodyParts(fout,CF_ALL_BODIES[i].bs,CF_ALL_BODIES[i].btype);
    }
@@ -124,9 +124,9 @@ for (i = 0; i < CF3_MODULES; i++)
    if (!IsItemIn(done,st->btype)) /* Avoid multiple reading if several modules */
       {
       PrependItem(&done,st->btype,NULL);
-      snprintf(filename,CF_BUFSIZE-1,"bundletype_%s_example.texinfo",st->btype);
+      snprintf(filename,CF_BUFSIZE-1,"bundletypes/%s_example.texinfo",st->btype);
       IncludeManualFile(fout,filename);
-      snprintf(filename,CF_BUFSIZE-1,"bundletype_%s_notes.texinfo",st->btype);
+      snprintf(filename,CF_BUFSIZE-1,"bundletypes/%s_notes.texinfo",st->btype);
       IncludeManualFile(fout,filename);
       }
    
@@ -339,11 +339,11 @@ for (j = 0; st[j].btype != NULL; j++)
    else
       {
       fprintf(fout,"\n\n@node %s in %s promises\n@section @code{%s} promises in @samp{%s}\n\n",st[j].subtype,st[j].btype,st[j].subtype,st[j].btype);
-      snprintf(filename,CF_BUFSIZE-1,"promise_%s_intro.texinfo",st[j].subtype);
+      snprintf(filename,CF_BUFSIZE-1,"promises/%s_intro.texinfo",st[j].subtype);
       IncludeManualFile(fout,filename);
-      snprintf(filename,CF_BUFSIZE-1,"promise_%s_example.texinfo",st[j].subtype);
+      snprintf(filename,CF_BUFSIZE-1,"promises/%s_example.texinfo",st[j].subtype);
       IncludeManualFile(fout,filename);
-      snprintf(filename,CF_BUFSIZE-1,"promise_%s_notes.texinfo",st[j].subtype);
+      snprintf(filename,CF_BUFSIZE-1,"promises/%s_notes.texinfo",st[j].subtype);
       IncludeManualFile(fout,filename);
       TexinfoBodyParts(fout,st[j].bs,st[j].subtype);
       }
@@ -391,10 +391,10 @@ for (i = 0; bs[i].lval != NULL; i++)
 
       fprintf(fout,"\n@noindent @b{Synopsis}: %s\n\n",bs[i].description);
       fprintf(fout,"\n@noindent @b{Example}:@*\n");
-      snprintf(filename,CF_BUFSIZE-1,"bodypart_%s_example.texinfo",bs[i].lval);
+      snprintf(filename,CF_BUFSIZE-1,"bodyparts/%s_example.texinfo",bs[i].lval);
       IncludeManualFile(fout,filename);
       fprintf(fout,"\n@noindent @b{Notes}:@*\n");
-      snprintf(filename,CF_BUFSIZE-1,"bodypart_%s_notes.texinfo",bs[i].lval);
+      snprintf(filename,CF_BUFSIZE-1,"bodyparts/%s_notes.texinfo",bs[i].lval);
       IncludeManualFile(fout,filename);
       }
    }
@@ -410,7 +410,7 @@ static void TexinfoVariables(FILE *fout,char *scope)
   int i;
 
 fprintf(fout,"\n\n@node Variable context %s\n@section Variable context @code{%s}\n\n",scope,scope);
-snprintf(filename,CF_BUFSIZE-1,"varcontext_%s_intro.texinfo",scope);
+snprintf(filename,CF_BUFSIZE-1,"varcontexts/%s_intro.texinfo",scope);
 IncludeManualFile(fout,filename);
 
 HashToList(GetScope(scope), &list);
@@ -418,7 +418,7 @@ list = AlphaSortRListNames(list);
 for (rp = list; rp != NULL; rp = rp->next)
    {
    fprintf(fout,"@node Variable %s.%s\n@subsection Variable %s.%s \n\n", scope, (char*)rp->item, scope, (char*)rp->item);
-   snprintf(filename,CF_BUFSIZE-1,"var_%s_%s.texinfo", scope, (char*)rp->item);
+   snprintf(filename,CF_BUFSIZE-1,"vars/%s_%s.texinfo", scope, (char*)rp->item);
    IncludeManualFile(fout,filename);
    }
 
@@ -523,10 +523,10 @@ for (i = 0; bs[i].lval != NULL; i++)
          }
 
       fprintf(fout,"\n@b{Example}:@*\n");
-      snprintf(filename,CF_BUFSIZE-1,"bodypart_%s_example.texinfo",bs[i].lval);
+      snprintf(filename,CF_BUFSIZE-1,"bodyparts/%s_example.texinfo",bs[i].lval);
       IncludeManualFile(fout,filename);
       fprintf(fout,"\n@b{Notes}:@*\n");
-      snprintf(filename,CF_BUFSIZE-1,"bodypart_%s_notes.texinfo",bs[i].lval);
+      snprintf(filename,CF_BUFSIZE-1,"bodyparts/%s_notes.texinfo",bs[i].lval);
       IncludeManualFile(fout,filename);
       }
    }
@@ -670,11 +670,11 @@ for (i = 0; args[i].pattern != NULL; i++)
 fprintf(fout,"\n@noindent %s\n\n",fn.description);
 fprintf(fout,"\n@noindent @b{Example}:@*\n");
 
-snprintf(filename,CF_BUFSIZE-1,"function_%s_example.texinfo",fn.name);
+snprintf(filename,CF_BUFSIZE-1,"functions/%s_example.texinfo",fn.name);
 IncludeManualFile(fout,filename);
 
 fprintf(fout,"\n@noindent @b{Notes}:@*\n");
-snprintf(filename,CF_BUFSIZE-1,"function_%s_notes.texinfo",fn.name);
+snprintf(filename,CF_BUFSIZE-1,"functions/%s_notes.texinfo",fn.name);
 IncludeManualFile(fout,filename);
 }
 

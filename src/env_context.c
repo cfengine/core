@@ -326,6 +326,7 @@ if (strcmp(pp->bundletype,"common") == 0)
             {
             CfOut(cf_verbose,""," ?> defining explicit persistent class %s (%d mins)\n",pp->promiser,a.context.persistent);
             NewPersistentContext(pp->promiser,a.context.persistent,cfreset);
+            NewClass(pp->promiser);
             }
          else
             {
@@ -358,6 +359,7 @@ if (strcmp(pp->bundletype,THIS_AGENT) == 0 || FullTextMatch("edit_.*",pp->bundle
             CfOut(cf_verbose,""," ?> defining explicit persistent class %s (%d mins)\n",pp->promiser,a.context.persistent);
             CfOut(cf_verbose,""," ?> Warning: persistent classes are global in scope even in agent bundles\n");
             NewPersistentContext(pp->promiser,a.context.persistent,cfreset);
+            NewClass(pp->promiser);
             }
          else
             {

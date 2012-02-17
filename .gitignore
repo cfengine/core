@@ -60,6 +60,7 @@ src/conf.h
 src/conf.h.in
 docs/reference/cf3-Reference.texinfo
 docs/reference/cf3-Reference.log
+docs/reference/cf3-Reference.html
 
 docs/doxygen
 

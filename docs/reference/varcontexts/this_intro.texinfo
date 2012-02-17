@@ -25,6 +25,15 @@ attempt to declare a variable name with one of the following special
 reserved names, CFEngine will issue a warning (and you can reference your
 variable by qualifying it with the bundle name in which it is declared).
 
+@menu
+* Variable this.handle::
+* Variable this.promise_filename::
+* Variable this.promise_linenumber::
+* Variable this.promiser::
+* Variable service_policy::
+* Variable this.this::
+@end menu
+
 @node Variable this.handle
 @subsection Variable this.handle
 

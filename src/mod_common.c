@@ -262,7 +262,6 @@ BodySyntax CFK_CONTROLBODY[] =
    {"sql_connection_db",cf_str,"","The name of an existing database to connect to in order to create/manage other databases"},
    {"style_sheet",cf_str,"","Name of a style-sheet to be used in rendering html output (added to headers)"},
    {"view_projections",cf_opts,CF_BOOL,"Perform view-projection analytics in graph generation", "false"},
-   {"generate_xml",cf_opts,CF_BOOL,"true/false generate xml format documentation for this version", "false"},
    {NULL,cf_notype,NULL,NULL}
    };
 

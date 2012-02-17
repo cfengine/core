@@ -11,6 +11,14 @@ netwide reporting will be given elsewhere.
 The filenames referred to in this section are all relative to the
 CFEngine work directory @file{WORKDIR}.
 
+@menu
+* Embedded Databases::
+* Text logs::
+* Reports in outputs::
+* Additional reports in commercical CFEngine versions::
+* State information::
+@end menu
+
 
 @node Embedded Databases
 @section Embedded Databases

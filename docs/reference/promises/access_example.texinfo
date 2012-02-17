@@ -1,6 +1,5 @@
 
-@node Access Example
-@subsection Access Example 
+Example:
 
 @verbatim
 

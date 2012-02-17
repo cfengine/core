@@ -87,6 +87,13 @@ fprintf(fout,"@c *****************************************************\n");
 fprintf(fout,"@node Control Promises\n@chapter Control promises\n\n");
 IncludeManualFile(fout,"reference_control_intro.texinfo");
 
+fprintf(fout, "@menu\n");
+for (i = 0; CF_ALL_BODIES[i].btype != NULL; ++i)
+   {
+   fprintf(fout, "* control %s::\n", CF_ALL_BODIES[i].btype);
+   }
+fprintf(fout, "@end menu\n");
+
 for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
    {
    fprintf(fout,"@node control %s\n@section @code{%s} control promises\n\n",CF_ALL_BODIES[i].btype,CF_ALL_BODIES[i].btype);
@@ -94,6 +101,7 @@ for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
    IncludeManualFile(fout,filename);
    snprintf(filename,CF_BUFSIZE-1,"control/%s_notes.texinfo",CF_ALL_BODIES[i].btype);
    IncludeManualFile(fout,filename);
+
    TexinfoBodyParts(fout,CF_ALL_BODIES[i].bs,CF_ALL_BODIES[i].btype);
    }
 
@@ -128,7 +136,21 @@ for (i = 0; i < CF3_MODULES; i++)
       IncludeManualFile(fout,filename);
       snprintf(filename,CF_BUFSIZE-1,"bundletypes/%s_notes.texinfo",st->btype);
       IncludeManualFile(fout,filename);
+
+      fprintf(fout, "@menu\n");
+      for (int k = 0; k < CF3_MODULES; ++k)
+         {
+         for (int j = 0; CF_ALL_SUBTYPES[k][j].btype != NULL; ++j)
+            {
+            fprintf(fout, "* %s in %s promises::\n", CF_ALL_SUBTYPES[k][j].subtype,
+                    strcmp(CF_ALL_SUBTYPES[k][j].btype, "*") == 0 ? "common" : CF_ALL_SUBTYPES[k][j].btype);
+            }
+         }
+      fprintf(fout, "@end menu\n");
       }
+
+
+
    
    TexinfoPromiseTypesFor(fout,st);
    }
@@ -141,6 +163,17 @@ fprintf(fout,"@c * CHAPTER \n");
 fprintf(fout,"@c *****************************************************\n");
 
 fprintf(fout,"@node Special functions\n@chapter Special functions\n\n");
+
+fprintf(fout, "@menu\n");
+fprintf(fout, "* Introduction to functions::\n");
+
+for (i = 0; CF_FNCALL_TYPES[i].name != NULL; ++i)
+   {
+   fprintf(fout, "* Function %s::\n", CF_FNCALL_TYPES[i].name);
+   }
+
+fprintf(fout, "@end menu\n");
+
 
 fprintf(fout,"@node Introduction to functions\n@section Introduction to functions\n\n");
 
@@ -161,17 +194,34 @@ fprintf(fout,"@c *****************************************************\n");
 
 fprintf(fout,"@node Special Variables\n@chapter Special Variables\n\n");
 
+static const char *scopes[] =
+   {
+   "const",
+   "edit",
+   "match",
+   "mon",
+   "sys",
+   "this",
+   NULL,
+   };
+
+fprintf(fout, "@menu\n");
+for (const char **s = scopes; *s != NULL; ++s)
+   {
+   fprintf(fout, "* Variable context %s::\n", *s);
+   }
+fprintf(fout, "@end menu\n");
+
+
 // scopes const and sys
 
 NewScope("edit");
 NewScalar("edit","filename","x",cf_str);
 
-TexinfoVariables(fout,"const");
-TexinfoVariables(fout,"edit");
-TexinfoVariables(fout,"match");
-TexinfoVariables(fout,"mon");
-TexinfoVariables(fout,"sys");
-TexinfoVariables(fout,"this");
+for (const char **s = scopes; *s != NULL; ++s)
+   {
+   TexinfoVariables(fout, (char*)*s);
+   }
 
 // Log files
 
@@ -247,10 +297,26 @@ fprintf(fout,
         "@end ifinfo\n"
         
         "@ifnottex\n"
-        "@node Top, Modularization, (dir), (dir)\n"
+        "@node Top\n"
         "@top CFEngine-AutoReference\n"
         "@end ifnottex\n"
         
+        "@menu\n"
+        "* Getting started::\n"
+        "* A simple crash course::\n"
+        "* How to run CFEngine 3 examples::\n"
+        "* A complete configuration::\n"
+        "* Control Promises::\n"
+        "* Bundles for common::\n"
+        "* Bundles for agent::\n"
+        "* Bundles for server::\n"
+        "* Bundles for knowledge::\n"
+        "* Bundles for monitor::\n"
+        "* Special functions::\n"
+        "* Special Variables::\n"
+        "* Logs and records::\n"
+        "@end menu\n"
+
         "@ifhtml\n"
         "@html\n"
         "<a href=\"#Contents\"><h1>COMPLETE TABLE OF CONTENTS</h1></a>\n"
@@ -281,7 +347,7 @@ static void TexinfoFooter(FILE *fout)
 {
  fprintf(fout,
          "@c =========================================================================\n"
-         "@c @node Index,  , CFEngine Methods, Top\n"
+         "@c @node Index\n"
          "@c @unnumbered Concept Index\n"
          "@c @printindex cp\n"
          "@c =========================================================================\n"
@@ -363,6 +429,15 @@ if (bs == NULL)
    {
    return;
    }
+
+fprintf(fout, "@menu\n");
+
+for (i = 0; bs[i].lval != NULL; ++i)
+   {
+   fprintf(fout, "* %s in %s::\n", bs[i].lval, context);
+   }
+
+fprintf(fout, "@end menu\n");
  
 for (i = 0; bs[i].lval != NULL; i++)
    {
@@ -409,12 +484,39 @@ static void TexinfoVariables(FILE *fout,char *scope)
   Rlist *rp,*list = NULL;
   int i;
 
+  HashToList(GetScope(scope), &list);
+  list = AlphaSortRListNames(list);
+
 fprintf(fout,"\n\n@node Variable context %s\n@section Variable context @code{%s}\n\n",scope,scope);
 snprintf(filename,CF_BUFSIZE-1,"varcontexts/%s_intro.texinfo",scope);
 IncludeManualFile(fout,filename);
 
-HashToList(GetScope(scope), &list);
-list = AlphaSortRListNames(list);
+fprintf(fout, "@menu\n");
+
+if (strcmp(scope, "mon") != 0)
+   {
+   for (rp = list; rp != NULL; rp = rp->next)
+      {
+      fprintf(fout, "* Variable %s.%s::\n", scope, (char*)rp->item);
+      }
+   }
+else
+   {
+   for (i = 0; i < CF_OBSERVABLES; ++i)
+      {
+      if (strcmp(OBS[i][0], "spare") == 0)
+         {
+         break;
+         }
+
+      fprintf(fout, "* Variable mon.value_%s::\n", OBS[i][0]);
+      fprintf(fout, "* Variable mon.av_%s::\n", OBS[i][0]);
+      fprintf(fout, "* Variable mon.dev_%s::\n", OBS[i][0]);
+      }
+   }
+
+fprintf(fout, "@end menu\n");
+
 for (rp = list; rp != NULL; rp = rp->next)
    {
    fprintf(fout,"@node Variable %s.%s\n@subsection Variable %s.%s \n\n", scope, (char*)rp->item, scope, (char*)rp->item);

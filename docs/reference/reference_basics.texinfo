@@ -43,6 +43,21 @@ CFEngine differs from most management systems in being
 @item Capable of making each and every host autonomous
 @end itemize
 
+@menu
+* Software components::
+* Core concepts::
+* A renewed CFEngine::
+* Installation::
+* Syntax::
+* Work directory::
+* Decisions::
+* Filenames and paths::
+* Upgrading from CFEngine 2::
+* Testing as a non-privilieged user::
+* The bare necessities of a CFEngine 3::
+* Familiiarizing yourself::
+* Remote access troubleshooting::
+@end menu
 
 @node Software components
 @section Software components
@@ -51,6 +66,19 @@ CFEngine 3 consists of a number of components.  The names of the programs are
 intentionally different from those in CFEngine 2 to help disambiguate them (and
 some CFEngine 2 components have been merged and/or eliminated).  The
 starred components are new to CFEngine 3:
+
+@menu
+* cf-agent::
+* cf-execd::
+* cf-know::
+* cf-monitord::
+* cf-promises::
+* cf-runagent::
+* cf-serverd::
+* cf-report::
+* cf-key::
+* cf-hub::
+@end menu
 
 
 @node cf-agent
@@ -261,7 +289,7 @@ order to keep them.
 
 
 
-@node Installation, Syntax, A renewed CFEngine
+@node Installation
 @section Installation
 
 In order to install CFEngine, you should first ensure that the following
@@ -305,7 +333,7 @@ Since this is not necessarily a local file system on all hosts, users
 are encouraged to keep local copies of the binaries on each host, inside
 the CFEngine trusted work directory.
 
-@node Syntax, Work directory, Installation
+@node Syntax
 @section Syntax, identifiers and names
 
 The CFEngine 3 language has a few simple rules:
@@ -353,7 +381,7 @@ In each of these cases, the right hand side is a user choice.
 @end itemize
 
 
-@node Work directory, Hard classes, Syntax
+@node Work directory
 @section The work directory
 
 In order to achieve the desired simplifications, it was decided to
@@ -400,7 +428,7 @@ to another central location and viewed in an alternative browser.
 @c SECTION
 @c -------------------------------------------------------------------------------
 
-@node Decisions, Loops, Variables, A simple crash course in concepts
+@node Decisions
 @section Decisions
 
 CFEngine decisions are made behind the scenes and the results of
@@ -411,7 +439,13 @@ decisions are made with classes.
 Classes fall into hard (discovered) and soft (user-defined) types.  A
 single hard class can be one of several things:
 
-@node Hard classes, Global and local classes, Work directory
+@menu
+* Hard classes::
+* Class combination operators and precedence::
+* Global and local classes::
+@end menu
+
+@node Hard classes
 @subsection CFEngine hard classes
 
 CFEngine runs on every computer individually and each time it wakes up
@@ -539,7 +573,7 @@ from 2:00pm to 2:59pm on Windows XP systems:
 @c SECTION
 @c -------------------------------------------------------------------------------
 
-@node Global and local classes, Filenames and paths, Hard classes
+@node Global and local classes
 @subsection Global and local classes
 
 User defined classes are mostly defined in bundles, but they are used as a
@@ -628,7 +662,7 @@ are global.
 @c SECTION
 @c -------------------------------------------------------------------------------
 
-@node Filenames and paths, Upgrading from CFEngine 2, Global and local classes
+@node Filenames and paths
 @section Filenames and paths
 
 @c chew start Unix filenames
@@ -688,7 +722,7 @@ Note in recent versions of Cygwin you can decide to use the
 CFEngine as @code{c:\myfile}.
 
 @c ---------------------------------------------------------------------------
-@node Upgrading from CFEngine 2, Testing as a non-privilieged user, Filenames and paths
+@node Upgrading from CFEngine 2
 @section Upgrading from CFEngine 2
 
 CFEngine 3 has a completely new syntax, designed to solve the issues
@@ -761,7 +795,7 @@ and remove all rules to run @code{cfservd} and replace them with rules to run
 
 
 @c ---------------------------------------------------------------------------
-@node Testing as a non-privilieged user, The bare necessities of a CFEngine 3, Upgrading from CFEngine 2
+@node Testing as a non-privilieged user
 @section Testing as a non-privilieged user
 
 One of the practical advantages of CFEngine is that you can test it
@@ -814,7 +848,7 @@ host$ ~/.cfagent/bin/cf-agent
 
 
 @c ---------------------------------------------------------------------------
-@node The bare necessities of a CFEngine 3, Familiiarizing yourself, Testing as a non-privilieged user
+@node The bare necessities of a CFEngine 3
 @section The `bare necessities' of a CFEngine 3
 
 Here is the simplest `Hello world' program in CFEngine 3:
@@ -1037,7 +1071,7 @@ atlas$
 
 
 @c ---------------------------------------------------------------------------
-@node Remote access troubleshooting,  , Familiiarizing yourself
+@node Remote access troubleshooting
 @section Remote access troubleshooting
 
 @menu
@@ -1048,7 +1082,7 @@ atlas$
 * Encryption::                  
 @end menu
 
-@node Server connection, Key exchange, Remote access troubleshooting, Remote access troubleshooting
+@node Server connection
 @subsection Server connection
 
 When setting up @code{cf-serverd}, you might see the error message
@@ -1106,7 +1140,7 @@ an attacker. To find out the real reason for a denial, use verbose @samp{-v} or
 even debugging mode @samp{-d2}.
 
 
-@node Key exchange, Time windows, Server connection, Remote access troubleshooting
+@node Key exchange
 @subsection Key exchange
 
 The key exchange model used by CFEngine is based on that used by
@@ -1194,7 +1228,7 @@ WARNING - You do not have a public key from host ubik.iu.hio.no = 128.39.74.25
 
 @end smallexample
 
-@node Time windows, Other users than root, Key exchange, Remote access troubleshooting
+@node Time windows
 @subsection Time windows (races)
 
 Once public keys have been exchanged from client to server and from
@@ -1257,7 +1291,7 @@ This would be a silly way to transfer keys between nearby hosts that you
 control yourself, but if transferring to long distance, remote hosts
 it might be an easier way to manage trust.
 
-@node Other users than root, Encryption, Time windows, Remote access troubleshooting
+@node Other users than root
 @subsection Other users than root
 
 CFEngine normally runs as user "root" (except on Windows which does
@@ -1266,7 +1300,7 @@ are to be granted access to the system, they must also generate a key
 and go through the same process. In addition, the users must be added
 to the server configuration file.
 
-@node Encryption,  , Other users than root, Remote access troubleshooting
+@node Encryption
 @subsection Encryption
 
 CFEngine provides encryption for keeping file contents private during
@@ -1283,7 +1317,7 @@ none of the encryption settings affect the security of authentication.
 
 
 @c ---------------------------------------------------------------------------
-@node A simple crash course, How to run CFEngine 3 examples
+@node A simple crash course
 @chapter  A simple crash course in concepts
 
 @menu
@@ -1298,10 +1332,9 @@ none of the encryption settings affect the security of authentication.
 * Loops and lists in CFEngine 3::  
 * Pattern matching and referencing::  
 * Distributed discovery::       
-* Developer structures::        
 @end menu
 
-@node Rules are promises, Best practice for writing promises, A simple crash course, A simple crash course
+@node Rules are promises
 @section Rules are promises
 
 Everything in CFEngine 3 can be interpreted as a promise. Promises can
@@ -1382,7 +1415,7 @@ will find a full list of the promise types that can be made by the
 different components in the `bundles' chapters that follow.
 
 @c -----------------------------------------------------------------------
-@node Best practice for writing promises, Containers, Rules are promises, A simple crash course
+@node Best practice for writing promises
 @section Best practice for writing promises
 
 When writing promises, get into the habit of giving every promise a comment
@@ -1450,7 +1483,7 @@ Enterprise editions of CFEngine will track the dependencies between these
 promises and map out impact analyses.
 
 @c -----------------------------------------------------------------------
-@node Containers, When and where are promises made?, Best practice for writing promises, A simple crash course
+@node Containers
 @section Containers
 
 CFEngine allows you to group multiple promise statements
@@ -1544,7 +1577,7 @@ is defined.
 
 
 @c -----------------------------------------------------------------------
-@node When and where are promises made?, Types in CFEngine 3, Containers, A simple crash course
+@node When and where are promises made?
 @section When and where are promises made?
 
 When you type a promise into a CFEngine bundle, the promise will be
@@ -1650,7 +1683,7 @@ verification, causing contention and wasting CPU cycles.
 
 
 @c -----------------------------------------------------------------------
-@node Types in CFEngine 3, Datatypes in CFEngine 3, When and where are promises made?, A simple crash course
+@node Types in CFEngine 3
 @section Types in CFEngine 3
 
 A key difference in CFEngine 3 compared to earlier versions is the
@@ -1687,7 +1720,7 @@ Check these by identifying the words @samp{agent} and @samp{copy_from}
 in the examples above. Types are there to make configuration more robust.
 
 @c -----------------------------------------------------------------------
-@node Datatypes in CFEngine 3, Variable expansion in CFEngine 3, Types in CFEngine 3, A simple crash course
+@node Datatypes in CFEngine 3
 @section Datatypes in CFEngine 3
 
 CFEngine variables have two meta-types: scalars and lists. A scalar is a single value,
@@ -1722,7 +1755,7 @@ Integer constants may use suffixes to represent large numbers.
 @end itemize
 
 @c -----------------------------------------------------------------------
-@node Variable expansion in CFEngine 3, Normal ordering, Datatypes in CFEngine 3, A simple crash course
+@node Variable expansion in CFEngine 3
 @section Variable expansion in CFEngine 3
 
 CFEngine 3 has some simple rules for variable expansion. These make
@@ -1732,10 +1765,11 @@ allow automatic dependency tracking in enterprise versions of CFEngine.
 @menu
 * Scalar variable expansion::   
 * List variable substitution and expansion::  
+* Special list value cf_null::
 * Arrays in CFEngine 3::        
 @end menu
 
-@node Scalar variable expansion, List variable substitution and expansion, Variable expansion in CFEngine 3, Variable expansion in CFEngine 3
+@node Scalar variable expansion
 @subsection Scalar variable expansion
 
 Scalar variables are written @samp{$(name)} and they represent
@@ -1752,7 +1786,7 @@ may be written to access the variable `myvar' in bundle `context'.
 @end itemize
 
 @c -----------------------------------------------------------------------
-@node List variable substitution and expansion, Arrays in CFEngine 3, Scalar variable expansion, Variable expansion in CFEngine 3
+@node List variable substitution and expansion
 @subsection List variable substitution and expansion
 
 @itemize
@@ -1897,7 +1931,7 @@ vars:
 @end verbatim
 
 @c -----------------------------------------------------------------------
-@node Arrays in CFEngine 3,  , List variable substitution and expansion, Variable expansion in CFEngine 3
+@node Arrays in CFEngine 3
 @subsection Arrays in CFEngine 3
 
 Array variables are written with @samp{[} and @samp{]} brackets, e.g.
@@ -1956,7 +1990,7 @@ commands:
 @end verbatim
 
 @c -----------------------------------------------------------------------
-@node Normal ordering, Loops and lists in CFEngine 3, Variable expansion in CFEngine 3, A simple crash course
+@node Normal ordering
 @section Normal ordering
 
 
@@ -1983,7 +2017,7 @@ promise.
 * Knowledge normal ordering::   
 @end menu
 
-@node Agent normal ordering, Server normal ordering, Normal ordering, Normal ordering
+@node Agent normal ordering
 @subsection Agent normal ordering
 
 @enumerate
@@ -2052,7 +2086,7 @@ that is set by another promise.
 
 @end enumerate
 
-@node Server normal ordering, Monitor normal ordering, Agent normal ordering, Normal ordering
+@node Server normal ordering
 @subsection Server normal ordering
 
 
@@ -2074,7 +2108,7 @@ Within a server bundle, the normal ordering is:
    roles
 @end verbatim
 
-@node Monitor normal ordering, Knowledge normal ordering, Server normal ordering, Normal ordering
+@node Monitor normal ordering
 @subsection Monitor normal ordering
 
 As with the agent, common bundles are executed before any monitor bundles;
@@ -2091,7 +2125,7 @@ Within a monitor bundle, the normal ordering is:
    reports
 @end verbatim
 
-@node Knowledge normal ordering, ,Monitor normal ordering, Normal ordering
+@node Knowledge normal ordering
 @subsection Knowledge normal ordering
 
 As with the agent, common bundles are executed before any knowledge bundles;
@@ -2112,7 +2146,7 @@ Within a knowledge bundle, the normal ordering is:
 
 
 @c -----------------------------------------------------------------------
-@node Loops and lists in CFEngine 3, Pattern matching and referencing, Normal ordering, A simple crash course
+@node Loops and lists in CFEngine 3
 @section Loops and lists in CFEngine 3
 
 There are no explicit loops in CFEngine, instead there are lists.
@@ -2207,7 +2241,7 @@ Q ".../bin/echo cf-ex": cf-execd is The executor, not executioner
 
 
 @c -----------------------------------------------------------------------
-@node Pattern matching and referencing, Distributed discovery, Loops and lists in CFEngine 3, A simple crash course
+@node Pattern matching and referencing
 @section Pattern matching and referencing
 
 One of the strengths of CFEngine 3 is the ability to recognize and
@@ -2391,7 +2425,7 @@ private edit variable is second backref: test
 * Special topics on Regular Expressions::  
 @end menu
 
-@node Runaway change warning, Commenting lines, Pattern matching and referencing, Pattern matching and referencing
+@node Runaway change warning
 @subsection Runaway change warning
 
 Be careful when using patterns to search for files that are altered by CFEngine
@@ -2413,7 +2447,7 @@ Always try to be as specific as possible when specifying patterns. A lazy approa
 will often come back to haunt you.
 
 
-@node Commenting lines, Regular expressions in paths, Runaway change warning, Pattern matching and referencing
+@node Commenting lines
 @subsection Commenting lines
 
 The following example shows how you would hash-comment lines in a file
@@ -2473,7 +2507,7 @@ occurrences => "all";
 
 @end verbatim
 
-@node Regular expressions in paths, Anchored vs. unanchored regular expressions, Commenting lines, Pattern matching and referencing
+@node Regular expressions in paths
 @subsection Regular expressions in paths
 
 When applying regular expressions in paths, the path will first be
@@ -2559,7 +2593,7 @@ pathname @file{/tmp/something}, the regular expression @samp{/tmp/.*/something}
 will @i{not} match on the degenerate case of @file{/tmp//something} (or
 @file{/tmp/something}).
 
-@node Anchored vs. unanchored regular expressions, Special topics on Regular Expressions, Regular expressions in paths, Pattern matching and referencing
+@node Anchored vs. unanchored regular expressions
 @subsection Anchored vs. unanchored regular expressions
 
 CFEngine uses the full power of regular expressions, but there are two ``flavors'' of regex.  Because they
@@ -2623,7 +2657,7 @@ regular expression, then it starts getting ugly, and you'd need to
 use @code{"bob:.*|.*:bob:.*|.*:bob"}.
 
 
-@node Special topics on Regular Expressions,  , Anchored vs. unanchored regular expressions, Pattern matching and referencing
+@node Special topics on Regular Expressions
 @subsection Special topics on Regular Expressions
 
 Regular expressions are a complicated subject, and really are beyond the
@@ -2690,7 +2724,7 @@ available, but use them with great care!
 
 
 @c ----------------------------------------------------------------------------
-@node Distributed discovery,  , Pattern matching and referencing, A simple crash course
+@node Distributed discovery
 @section Distributed discovery
 
 CFEngine's philosophy and modus operandi is to make machines as self-reliant
@@ -2743,7 +2777,7 @@ reports:
 
 @c -----------------------------------------------------------------------
 
-@node How to run CFEngine 3 examples, A complete configuration, A simple crash course
+@node How to run CFEngine 3 examples
 @chapter How to run CFEngine 3 examples
 
 The CFEngine @file{tests} directory contains a multitude of examples of CFEngine 3 code.
@@ -2791,7 +2825,7 @@ system.
 
 
 @c ---------------------------------------------------------------------------
-@node A complete configuration,  , How to run CFEngine 3 examples
+@node A complete configuration
 @chapter A complete configuration
 
 To illustrate a complete configuration for agents and daemons,
@@ -2810,7 +2844,7 @@ this starting point.
 * Recovery from errors in the software::  
 @end menu
 
-@node promises.cf, site.cf, A complete configuration, A complete configuration
+@node promises.cf
 @section @file{promises.cf}
 
 This file is the first file that @code{cf-agent} with no arguments
@@ -2927,7 +2961,7 @@ allowusers   => { "root" };
 
 
 
-@node site.cf, update.cf, promises.cf, A complete configuration
+@node site.cf
 @section @file{site.cf}
 
 Use this file to add your site-specific configuration.
@@ -3262,7 +3296,7 @@ roles:
 @end verbatim
 
 
-@node update.cf, failsafe.cf, site.cf, A complete configuration
+@node update.cf
 @section @file{update.cf}
 
 This file should rarely if ever change.  Should you ever change it (or when you
@@ -3348,7 +3382,7 @@ ifelapsed => "1";
 
 
 
-@node failsafe.cf, What should a failsafe or update file contain, update.cf, A complete configuration
+@node failsafe.cf
 @section @file{failsafe.cf}
 
 This file should probably never change.  The only job of @file{failsafe.cf} is
@@ -3393,7 +3427,7 @@ depth => "$(d)";
 @end verbatim
 
 
-@node What should a failsafe or update file contain, Recovery from errors in the configuration, failsafe.cf, A complete configuration
+@node What should a failsafe or update file contain
 @section What should a failsafe and update file contain?
 
 
@@ -3437,7 +3471,7 @@ download a working policy, once you fix it on the policy host).
 
 
 
-@node Recovery from errors in the configuration, Recovery from errors in the software, What should a failsafe or update file contain, A complete configuration
+@node Recovery from errors in the configuration
 @section Recovery from errors in the configuration
 
 The @file{failsafe.cf} file should be able to download the latest
@@ -3526,7 +3560,7 @@ file repository if one is defined. The @code{trustkey} option should normally
 be commented out so that public keys are only exchanged under controlled conditions.
 
 
-@node Recovery from errors in the software,  , Recovery from errors in the configuration, A complete configuration
+@node Recovery from errors in the software
 @section Recovery from errors in the software
 
 The update should optionally include an update of software

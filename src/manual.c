@@ -399,8 +399,6 @@ for (j = 0; st[j].btype != NULL; j++)
       {
       fprintf(fout,"\n\n@node %s in common promises\n@section @code{%s} promises\n\n",st[j].subtype,st[j].subtype);
       snprintf(filename,CF_BUFSIZE-1,"promise_common_intro.texinfo");
-      IncludeManualFile(fout,filename);
-      TexinfoBodyParts(fout,st[j].bs,st[j].subtype);
       }
    else
       {
@@ -410,9 +408,9 @@ for (j = 0; st[j].btype != NULL; j++)
       snprintf(filename,CF_BUFSIZE-1,"promises/%s_example.texinfo",st[j].subtype);
       IncludeManualFile(fout,filename);
       snprintf(filename,CF_BUFSIZE-1,"promises/%s_notes.texinfo",st[j].subtype);
-      IncludeManualFile(fout,filename);
-      TexinfoBodyParts(fout,st[j].bs,st[j].subtype);
       }
+   IncludeManualFile(fout,filename);
+   TexinfoBodyParts(fout,st[j].bs,st[j].subtype);
    }
 }
 

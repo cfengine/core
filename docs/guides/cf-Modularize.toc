@@ -1,9 +1,0 @@
-@numchapentry{Modularization}{1}{Modularization}{3}
-@numsecentry{Reminder about classes}{1.1}{Reminder about classes}{3}
-@numsecentry{User experiences on organizing policy}{1.2}{User experiences on organizing policy}{3}
-@numsecentry{Object orientation}{1.3}{Object orientation}{4}
-@numsubsecentry{Inheritance}{1.3.1}{Inheritance}{5}
-@numsubsecentry{Overriding}{1.3.2}{Overriding}{6}
-@numsubsecentry{Overriding a policy file}{1.3.3}{Overriding a policy file}{7}
-@numsecentry{Organizing the files into classes}{1.4}{Organizing the files into classes}{7}
-@numsecentry{Aspect orientation}{1.5}{Aspect orientation}{8}

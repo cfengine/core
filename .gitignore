@@ -27,6 +27,7 @@ ylwrap
 *.aux
 *.cp
 *.cps
+*.dvi
 *.fn
 *.ky
 *.pg

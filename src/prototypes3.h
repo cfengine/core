@@ -756,7 +756,7 @@ int NullIterators(Rlist *iterator);
 struct timespec BeginMeasure(void);
 void EndMeasure(char *eventname,struct timespec start);
 void EndMeasurePromise(struct timespec start,Promise *pp);
-void NoteClassUsage(AlphaList list);
+void NoteClassUsage(AlphaList list, int purge);
 void LastSaw(char *username,char *ipaddress,unsigned char digest[EVP_MAX_MD_SIZE+1],enum roles role);
 double GAverage(double anew,double aold,double p);
 bool RemoveHostFromLastSeen(const char *hostname, char *hostkey);

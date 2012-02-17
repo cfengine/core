@@ -153,7 +153,7 @@ CloseDB(dbp);
 
 /***************************************************************/
 
-void NoteClassUsage(AlphaList baselist)
+void NoteClassUsage(AlphaList baselist, int purge)
 
 { CF_DB *dbp;
   CF_DBC *dbcp;
@@ -175,12 +175,9 @@ if (MINUSF)
    return;
    }
 
-CfDebug("RecordClassUsage\n");
-
 AlphaListIterator it = AlphaListIteratorInit(&baselist);
-for (ip = AlphaListIteratorNext(&it);
-     ip != NULL;
-     ip = AlphaListIteratorNext(&it))
+
+for (ip = AlphaListIteratorNext(&it); ip != NULL; ip = AlphaListIteratorNext(&it))
    {
    if (IGNORECLASS(ip->name))
       {
@@ -205,6 +202,7 @@ for (ip = list; ip != NULL; ip=ip->next)
    {
    if (ReadDB(dbp,ip->name,&e,sizeof(e)))
       {
+      CfDebug("FOUND %s with %lf\n",ip->name,e.Q.expect);
       lastseen = now - e.t;
       newe.t = now;
       newe.Q.q = vtrue;
@@ -228,65 +226,77 @@ for (ip = list; ip != NULL; ip=ip->next)
       }
    else
       {
-      CfDebug("Upgrading %s %f\n",ip->name,newe.Q.expect);
       WriteDB(dbp,ip->name,&newe,sizeof(newe));
       }
    }
 
 /* Then update with zero the ones we know about that are not active */
 
-/* Acquire a cursor for the database. */
-
-if (!NewDBCursor(dbp,&dbcp))
+if (purge)
    {
-   CfOut(cf_inform,""," !! Unable to scan class db");
-   CloseDB(dbp);
-   DeleteItemList(list);
-   return;
-   }
+/* Acquire a cursor for the database and downgrade classes that did not
+ get defined this time*/
 
-memset(&entry, 0, sizeof(entry));
-
-OpenDBTransaction(dbp);
-
-while(NextDB(dbp,dbcp,&key,&ksize,&stored,&vsize))
-   {
-   double av,var;
-   time_t then;
-   char eventname[CF_BUFSIZE];
-
-   memset(eventname,0,CF_BUFSIZE);
-   strncpy(eventname,(char *)key,ksize);
-
-   if (stored != NULL)
+   if (!NewDBCursor(dbp,&dbcp))
       {
-      memcpy(&entry,stored,sizeof(entry));
+      CfOut(cf_inform,""," !! Unable to scan class db");
+      CloseDB(dbp);
+      DeleteItemList(list);
+      return;
+      }
+   
+   memset(&entry, 0, sizeof(entry));
+   
+   OpenDBTransaction(dbp);
+   
+   while(NextDB(dbp,dbcp,&key,&ksize,&stored,&vsize))
+      {
+      double av,var;
+      time_t then;
+      char eventname[CF_BUFSIZE];
       
-      then    = entry.t;
-      av = entry.Q.expect;
-      var = entry.Q.var;
-      lastseen = now - then;
+      memset(eventname,0,CF_BUFSIZE);
+      strncpy(eventname,(char *)key,ksize);
+      
+      if (stored != NULL)
+         {
+         memcpy(&entry,stored,sizeof(entry));
+         
+         then    = entry.t;
+         av = entry.Q.expect;
+         var = entry.Q.var;
+         lastseen = now - then;
+         
+         if (lastseen > lsea)
+            {
+            CfDebug("Class usage record %s expired\n",eventname);
+            DeleteDB(dbp,eventname);   
+            }
+         else if (!IsItemIn(list,eventname))
+            {
+            newe.t = then;
+            newe.Q.q = 0;
+            newe.Q.expect = GAverage(0.0,av,0.5);
+            delta2 = av*av;
+            newe.Q.var = GAverage(delta2,var,0.5);
             
-      if (lastseen > lsea)
-         {
-         CfDebug("Class usage record %s expired\n",eventname);
-         DeleteDB(dbp,eventname);   
-         }
-      else if (!IsItemIn(list,eventname))
-         {
-         newe.t = then;
-         newe.Q.q = 0;
-         newe.Q.expect = GAverage(0.0,av,0.5);
-         delta2 = av*av;
-         newe.Q.var = GAverage(delta2,var,0.5);
-         CfDebug("Downgrading class %s from %lf to %lf\n",eventname,entry.Q.expect,newe.Q.expect);
-         WriteDB(dbp,eventname,&newe,sizeof(newe));         
+            if (newe.Q.expect <= 0.0001)
+               {
+               CfDebug("Deleting class %s as %lf is zero\n",eventname,newe.Q.expect);
+               DeleteDB(dbp,eventname);
+               }
+            else
+               {
+               CfDebug("Downgrading class %s from %lf to %lf\n",eventname,entry.Q.expect,newe.Q.expect);
+               WriteDB(dbp,eventname,&newe,sizeof(newe));
+               }
+            }
          }
       }
+   
+   CommitDBTransaction(dbp);
+   DeleteDBCursor(dbp,dbcp);
    }
-
-CommitDBTransaction(dbp);
-DeleteDBCursor(dbp,dbcp);
 
 CloseDB(dbp);
 DeleteItemList(list);

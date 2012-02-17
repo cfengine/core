@@ -143,7 +143,7 @@ GenericAgentConfig config = CheckOpts(argc,argv);
 GenericInitialize("agent", config);
 ThisAgentInit();
 KeepPromises(config);
-NoteClassUsage(VHEAP);
+NoteClassUsage(VHEAP,true);
 #ifdef HAVE_NOVA
 Nova_NoteVarUsageDB();
 #endif
@@ -884,7 +884,7 @@ for (pass = 1; pass < CF_DONEPASSES; pass++)
 
          if (Abort())
             {
-            NoteClassUsage(VADDCLASSES);
+            NoteClassUsage(VADDCLASSES,false);
             DeleteTypeContext(type);
             return false;
             }
@@ -894,7 +894,7 @@ for (pass = 1; pass < CF_DONEPASSES; pass++)
       }
    }
 
-NoteClassUsage(VADDCLASSES);
+NoteClassUsage(VADDCLASSES,false);
 
 return true;
 }

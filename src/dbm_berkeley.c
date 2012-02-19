@@ -39,7 +39,6 @@
 #ifdef BDB
 
 static DBT *BDB_NewDBKey(char *name);
-static DBT *BDB_NewDBComplexKey(char *key,int size);
 static void BDB_DeleteDBKey(DBT *key);
 static DBT *BDB_NewDBValue(const void *ptr,int size);
 static void BDB_DeleteDBValue(DBT *value);

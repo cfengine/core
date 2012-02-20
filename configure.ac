@@ -1053,6 +1053,7 @@ AC_CONFIG_FILES([Makefile
 	src/Makefile
 	docs/Makefile
 	docs/guides/Makefile
+	docs/manpages/Makefile
 	docs/tools/Makefile
 	examples/Makefile
 	examples/example_config/Makefile

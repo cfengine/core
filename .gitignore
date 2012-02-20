@@ -59,18 +59,18 @@ src/cf3parse.h
 src/cf3parse.output
 src/conf.h
 src/conf.h.in
+
+# autogen docs
+
 docs/reference/cf3-Reference.texinfo
 docs/reference/cf3-Reference.log
 docs/reference/cf3-Reference.html
 docs/guides/cf3-solutions.texinfo
+docs/manpages/*.8
 
 docs/doxygen
 
 docs/tools/build-solutions-guide
-
-# autogen docs
-
-docs/*.8
 
 # acceptance tests
 

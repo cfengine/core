@@ -119,7 +119,7 @@ libpromises_la_SOURCES = \
         rlist.c rlist.h \
         scope.c \
         selfdiagnostic.c \
-        sequence.c sequence.h
+        sequence.c sequence.h \
         show.h \
         signals.c \
         sockaddr.c \
@@ -136,7 +136,7 @@ libpromises_la_SOURCES = \
         verify_processes.c \
         verify_reports.c \
         writer.c writer.h \
-        xml_writer.c xml_writer.h \
+        xml_writer.c xml_writer.h
 
 if !NT
 libpromises_la_SOURCES += \

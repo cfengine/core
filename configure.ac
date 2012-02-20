@@ -1052,6 +1052,8 @@ AC_CONFIG_FILES([Makefile
 	pub/Makefile
 	src/Makefile
 	docs/Makefile
+	docs/guides/Makefile
+	docs/tools/Makefile
 	examples/Makefile
 	examples/example_config/Makefile
 	masterfiles/Makefile

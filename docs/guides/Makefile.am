@@ -1,5 +1,5 @@
 
-all: build_solutions_guide cf3-solutions.texinfo SpecialTopic_Adoption.pdf  SpecialTopic_ITIL.pdf\
+all: cf3-solutions.texinfo SpecialTopic_Adoption.pdf  SpecialTopic_ITIL.pdf\
      SpecialTopic_Packages.pdf SpecialTopic_DevOps.pdf SpecialTopic_MissionCritical.pdf\
      SpecialTopic_Reporting.pdf SpecialTopic_BDMA.pdf\
      SpecialTopic_Knowledge.pdf SpecialTopic_Rollback.pdf\
@@ -17,12 +17,12 @@ all: build_solutions_guide cf3-solutions.texinfo SpecialTopic_Adoption.pdf  Spec
      cf3-bestpractice.pdf SpecialTopic_Editing.pdf cf3-solutions.pdf cf3-conceptguide.pdf cf3-quickstart.pdf cf3-nova-2-1-supplement.pdf cf3-nova-mission-portal.pdf cf3-constellation-mission-obs.pdf NovaOwnersManual.pdf NovaEvaluationGuide.pdf NovaEvaluationGuideSupplement.pdf
 
 
+$(builddir)/../tools/build-solutions-guide:
+	cd $(builddir)/../tools && $(MAKE) $(AM_MAKEFLAGS) build-solutions-guide
 
-cf3-solutions.texinfo: cf3-solutions.in
-	./build_solutions_guide
+cf3-solutions.texinfo: cf3-solutions.in $(builddir)/../tools/build-solutions-guide
+	$(AM_V_GEN)$(builddir)/../tools/build-solutions-guide $(top_srcdir)/examples < $< > $@ || rm -f $@
 
 %.pdf : %.texinfo
 	texi2pdf $<
 
-build_solutions_guide: build_solutions_guide.c
-	gcc -o build_solutions_guide build_solutions_guide.c

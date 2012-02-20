@@ -66,6 +66,8 @@ docs/guides/cf3-solutions.texinfo
 
 docs/doxygen
 
+docs/tools/build-solutions-guide
+
 # autogen docs
 
 docs/*.8

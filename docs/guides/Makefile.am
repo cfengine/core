@@ -20,7 +20,7 @@ all: cf3-solutions.texinfo SpecialTopic_Adoption.pdf  SpecialTopic_ITIL.pdf\
 $(builddir)/../tools/build-solutions-guide:
 	cd $(builddir)/../tools && $(MAKE) $(AM_MAKEFLAGS) build-solutions-guide
 
-cf3-solutions.texinfo: cf3-solutions.in $(builddir)/../tools/build-solutions-guide
+cf3-solutions.texinfo: cf3-solutions.texinfo.in $(builddir)/../tools/build-solutions-guide
 	$(AM_V_GEN)$(builddir)/../tools/build-solutions-guide $(top_srcdir)/examples < $< > $@ || rm -f $@
 
 %.pdf : %.texinfo

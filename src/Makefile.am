@@ -153,7 +153,16 @@ BUILT_SOURCES = cf3parse.h
 # Automake need to be guided due to symlinking
 libpromises_la_DEPENDENCIES = $(builddir)/../pub/libcfpub.la $(NOVA_LDADD) $(CONSTELLATION_LDADD)
 
-sbin_PROGRAMS = cf-know cf-promises cf-agent cf-monitord cf-serverd cf-execd cf-runagent cf-key cf-report
+sbin_PROGRAMS = \
+        cf-agent \
+        cf-execd \
+        cf-key \
+        cf-know \
+        cf-monitord \
+        cf-promises \
+        cf-report \
+        cf-runagent \
+        cf-serverd
 
 if HAVE_NOVA
 if MONGO

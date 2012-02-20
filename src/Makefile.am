@@ -14,119 +14,129 @@ libpromises_la_CFLAGS = $(AM_CFLAGS)
 # Separate out a library
 
 libpromises_la_SOURCES = \
-        cf3parse.y \
-        cf3lex.l \
+        addr_lib.c \
         alloc.c alloc.h \
-        patches.c \
+        alphalist.c alphalist.h \
+        args.c \
+        assoc.c assoc.h \
         attributes.c attributes.h \
-        install.c \
-        generic_agent.c generic_agent.h \
+        bool.h \
+        bootstrap.c \
+        cf.defs.h \
+        cf.events.h \
+        cf3.defs.h \
+        cf3.extern.h \
+        cf3.server.h \
+        cf3globals.c \
+        cf3lex.l \
+        cf3parse.y cf3parse.h \
+        cf_sql.c \
+        cfstream.c \
+        chflags.c \
+        classes.c \
+        client_code.c \
+        client_protocol.c client_protocol.h \
+        communication.c \
+        comparray.c \
+        compiler.h \
+        config.h \
+        constants.c \
+        constraints.c constraints.h \
+        conversion.c \
+        crypto.c \
+        csv_writer.c csv_writer.h \
         dbm_api.c \
         dbm_berkeley.c \
         dbm_quick.c \
-        dbm_tokyocab.c \
         dbm_sqlite3.c \
+        dbm_tokyocab.c \
         dir.c dir.h dir_priv.h \
         dtypes.c \
-        classes.c \
-        env_context.c \
-        string_expressions.c \
-        logic_expressions.c \
-        files_interfaces.c \
-        files_properties.c \
-        files_select.c \
-        files_operators.c \
-        files_repository.c files_repository.h \
-        files_copy.c \
-        files_editline.c \
-        files_edit.c \
-        files_links.c \
-        files_hashes.c \
-        files_names.c \
-        chflags.c \
-        modes.c \
-        exec_tools.c \
-        nfs.c \
-        ontology.c ontology.h \
-        item_lib.c \
-        string_lib.c string_lib.h \
-        files_lib.c files_lib.h \
-        addr_lib.c \
-        package_lib.c \
-        alphalist.c alphalist.h \
-        cf_sql.c \
-        client_protocol.c client_protocol.h \
-        client_code.c \
-        communication.c \
-        net.c \
-        sockaddr.c \
-        recursion.c \
-        processes_select.c \
-        fncall.c fncall.h \
-        cf3globals.c \
-        reporting.c \
-        evalfunction.c evalfunction.h \
-        sysinfo.c \
-        conversion.c \
-        scope.c \
-        assoc.c assoc.h \
-        comparray.c \
-        vars.c \
-        args.c \
-        hashes.c \
-        crypto.c \
-        sort.c \
-        keyring.c \
-        full_write.c \
-        expand.c \
-        matching.c \
-        selfdiagnostic.c \
-        instrumentation.c \
-        granules.c \
-        timeout.c \
-        promises.c \
-        constraints.c constraints.h \
-        iteration.c \
-        rlist.c rlist.h \
-        syntax.c syntax.h \
-        logging.c \
-        signals.c \
-        transaction.c \
-        cfstream.c \
-        pipes.c \
-        html.c \
-        storage_tools.c \
-        verify_reports.c \
-        verify_processes.c \
         enterprise_stubs.c \
-        bootstrap.c \
-        mod_common.c \
+        env_context.c \
+        evalfunction.c evalfunction.h \
+        exec_tools.c \
+        expand.c \
+        files_copy.c \
+        files_edit.c \
+        files_editline.c \
+        files_hashes.c \
+        files_interfaces.c \
+        files_lib.c files_lib.h \
+        files_links.c \
+        files_names.c \
+        files_operators.c \
+        files_properties.c \
+        files_repository.c files_repository.h \
+        files_select.c \
+        fncall.c fncall.h \
+        full_write.c \
+        generic_agent.c generic_agent.h \
+        granules.c \
+        hashes.c \
+        html.c \
+        install.c \
+        instrumentation.c \
+        item_lib.c \
+        iteration.c \
+        json.c json.h \
+        keyring.c \
+        logging.c \
+        logic_expressions.c logic_expressions.h \
+        matching.c \
         mod_access.c \
+        mod_common.c \
+        mod_databases.c \
+        mod_environ.c \
         mod_exec.c \
-        mod_methods.c \
-        mod_interfaces.c \
-        mod_packages.c \
         mod_files.c \
-        mod_report.c \
-        mod_storage.c \
+        mod_interfaces.c \
         mod_knowledge.c \
         mod_measurement.c \
-        mod_databases.c \
-        mod_services.c \
-        mod_process.c \
-        mod_environ.c \
+        mod_methods.c \
         mod_outputs.c \
-        writer.c writer.h \
-        unix.c \
-        json.c json.h \
-        csv_writer.c csv_writer.h \
-        xml_writer.c xml_writer.h \
-        proc_keyvalue.c proc_keyvalue.h \
-        show.h \
+        mod_packages.c \
+        mod_process.c \
+        mod_report.c \
+        mod_services.c \
+        mod_storage.c \
+        modes.c \
+        monitoring.h \
+        net.c \
+        nfs.c \
+        ontology.c ontology.h \
+        package_lib.c \
         parser.c parser.h \
         parser_state.h \
-        constants.c \
+        patches.c \
+        pipes.c \
+        proc_keyvalue.c proc_keyvalue.h \
+        processes_select.c \
+        promises.c \
+        prototypes.h \
+        recursion.c \
+        reporting.c \
+        rlist.c rlist.h \
+        scope.c \
+        selfdiagnostic.c \
         sequence.c sequence.h
+        show.h \
+        signals.c \
+        sockaddr.c \
+        sort.c \
+        storage_tools.c \
+        string_expressions.c string_expressions.h \
+        string_lib.c string_lib.h \
+        syntax.c syntax.h \
+        sysinfo.c \
+        timeout.c \
+        transaction.c \
+        unix.c \
+        vars.c \
+        verify_processes.c \
+        verify_reports.c \
+        writer.c writer.h \
+        xml_writer.c xml_writer.h \
 
 if !NT
 libpromises_la_SOURCES += \
@@ -214,24 +224,6 @@ cf_know_LDADD = libpromises.la
 if HAVE_NOVA
 cf_know_LDADD += ../nova/src/libcfknow.la
 endif
-
-#
-# Pickup header files here so Automake knows about them
-#
-noinst_HEADERS = \
-        cf.defs.h \
-        config.h \
-        prototypes3.h \
-        cf3.defs.h \
-        cf3.server.h \
-        cf3parse.h \
-        cf3.extern.h \
-        cf.events.h \
-        string_expressions.h \
-        logic_expressions.h \
-        compiler.h \
-        monitoring.h \
-        bool.h
 
 #
 # Some basic clean ups

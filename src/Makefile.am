@@ -143,6 +143,8 @@ libpromises_la_SOURCES += \
         unix_dir.c
 endif
 
+BUILT_SOURCES = cf3parse.h
+
 # Automake need to be guided due to symlinking
 libpromises_la_DEPENDENCIES = ../pub/libcfpub.la $(NOVA_LDADD) $(CONSTELLATION_LDADD)
 

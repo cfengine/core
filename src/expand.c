@@ -252,7 +252,7 @@ for (sp = string; (*sp != '\0') ; sp++)
 
          ExpandPrivateScalar(absscope,v,var);
          
-         RegisterBundleDependence(absscope,pp);
+         RegisterBundleDependence(absscope,pp); // Knowledge map creation
 
          if (GetVariable(absscope,var,&rval) != cf_notype)
             {

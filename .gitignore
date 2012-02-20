@@ -67,6 +67,7 @@ docs/reference/cf3-Reference.log
 docs/reference/cf3-Reference.html
 docs/guides/cf3-solutions.texinfo
 docs/manpages/*.8
+docs/cf-*.8
 
 docs/doxygen
 

@@ -25,5 +25,5 @@ cf3-solutions.texinfo: cf3-solutions.texinfo.in $(builddir)/../tools/build-solut
 	$(AM_V_GEN)$(builddir)/../tools/build-solutions-guide $(top_srcdir)/examples < $< > $@ || rm -f $@
 
 %.pdf : %.texinfo
-	texi2pdf -I $(TEX_INCLUDEDIR) $<
+	$(srcdir)/../tools/texi2pdfclean $< texi2pdf -I $(TEX_INCLUDEDIR)
 

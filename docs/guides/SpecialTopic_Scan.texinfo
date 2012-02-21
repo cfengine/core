@@ -71,7 +71,9 @@ Copyright @copyright{} October 2011 CFEngine AS
 @top Security scanning and tripwires with CFEngine
 @end ifnottex
 
+@iftex
 @contents
+@end iftex
 
 @menu
 * File scanning::               

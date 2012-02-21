@@ -54,6 +54,8 @@
 #define CF_STACK  'k'
 #define CF_ASSOC  'a'
 
+#define CF_MAPPEDLIST '#'
+
 #define CF_NOPROMISEE 'X'
 #define CF_UNDEFINED -1
 #define CF_NODOUBLE -123.45

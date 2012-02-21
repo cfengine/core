@@ -34,11 +34,11 @@
 
 static void MapIteratorsFromScalar(const char *scope, Rlist **los, Rlist **lol, char *string, int level, Promise *pp);
 static int Epimenides(char *var, Rval rval, int level);
-
+static void RewriteInnerVarStringAsLocalCopyName(char *string);
 static int CompareRlist(Rlist *list1, Rlist *list2);
 static int CompareRval(Rval rval1, Rval rval2);
 static void SetAnyMissingDefaults(Promise *pp);
-
+static void CopyLocalizedIteratorsToThisScope(char *scope,Rlist *listvars);
 /*
 
 Expanding variables is easy -- expanding lists automagically requires
@@ -131,6 +131,8 @@ for (cp = pcopy->conlist; cp != NULL; cp=cp->next)
    MapIteratorsFromRval(scopeid, &scalarvars, &listvars, cp->rval, pp);
    }
 
+CopyLocalizedIteratorsToThisScope(scopeid,listvars);
+
 PushThisScope();
 ExpandPromiseAndDo(agent,scopeid,pcopy,scalarvars,listvars,fnptr);
 PopThisScope();
@@ -216,9 +218,9 @@ switch(rval.rtype)
 static void MapIteratorsFromScalar(const char *scopeid, Rlist **scal, Rlist **its, char *string, int level, Promise *pp)
 
 {
-const char *sp;
+char *sp;
 Rval rval;
-char v[CF_BUFSIZE],var[CF_EXPANDSIZE],exp[CF_EXPANDSIZE],temp[CF_BUFSIZE];
+char v[CF_BUFSIZE],var[CF_EXPANDSIZE],exp[CF_EXPANDSIZE],temp[CF_BUFSIZE],finalname[CF_BUFSIZE];
   
 CfDebug("MapIteratorsFromScalar(\"%s\")\n",string);
 
@@ -238,32 +240,49 @@ for (sp = string; (*sp != '\0') ; sp++)
       if (ExtractInnerCf3VarString(sp,v))
          {
          char absscope[CF_MAXVARSIZE];
+         int qualified;
 
+         // If a list is non-local, i.e. $(bundle.var), map it to local $(bundle#var)
+         
          if (IsQualifiedVariable(v))
             {
-            strncpy(temp,var,CF_BUFSIZE-1);  
+            strncpy(temp,v,CF_BUFSIZE-1);  
             absscope[0] = '\0';
             sscanf(temp,"%[^.].%s",absscope,v);
+            ExpandPrivateScalar(absscope,v,var);
+            snprintf(finalname,CF_MAXVARSIZE,"%s#%s",absscope,var);
+            qualified = true;
             }
          else
             {
-            strncpy(absscope,scopeid,CF_MAXVARSIZE-1);  
+            strncpy(absscope,scopeid,CF_MAXVARSIZE-1);
+            ExpandPrivateScalar(absscope,v,var);
+            strncpy(finalname,var,CF_BUFSIZE-1);
+            qualified = false;
             }
 
-         ExpandPrivateScalar(absscope,v,var);
+         // Interlude for knowledge map creation add dependency
          
-         RegisterBundleDependence(absscope,pp); // Knowledge map creation
+         RegisterBundleDependence(absscope,pp); 
 
+         // var is the expanded name of the variable in its native context
+         // finalname will be the mapped name in the local context "this."
+         
          if (GetVariable(absscope,var,&rval) != cf_notype)
             {
             if (rval.rtype == CF_LIST)
                {
-               ExpandScalar(var,exp); 
+               ExpandScalar(finalname,exp);
+
+               if (qualified)
+                  {
+                  RewriteInnerVarStringAsLocalCopyName(sp);
+                  }
 
                /* embedded iterators should be incremented fastest,
                   so order list -- and MUST return de-scoped name
                   else list expansion cannot map var to this.name */
-               
+
                if (level > 0)
                   {
                   IdempPrependRScalar(its,exp,CF_SCALAR);
@@ -791,6 +810,46 @@ switch (returnval.rtype)
    }
 
 return returnval;
+}
+
+/*********************************************************************/
+
+static void RewriteInnerVarStringAsLocalCopyName(char *string)
+
+{ char *sp;
+
+for (sp = string; *sp != '\0'; sp++)
+   {
+   if (*sp == '.')
+      {
+      *sp = '#';
+      return;
+      }
+   }
+}
+
+/*********************************************************************/
+
+static void CopyLocalizedIteratorsToThisScope(char *scope,Rlist *listvars)
+
+{ Rlist *rp;
+  Rval retval;
+
+for (rp = listvars; rp != NULL; rp = rp->next)
+   {
+   // Add re-mapped variables to context "this", marked with scope . -> #
+   
+   if (strchr(rp->item,'#'))
+      {
+      char orgscope[CF_MAXVARSIZE],orgname[CF_MAXVARSIZE];
+
+      sscanf(rp->item,"%[^#]#%s",orgscope,orgname);
+
+      GetVariable(orgscope,orgname,&retval);
+
+      NewList(scope,rp->item,CopyRvalItem((Rval) { retval.item, CF_LIST }).item,cf_slist);
+      }
+   }
 }
 
 /*********************************************************************/

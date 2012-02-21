@@ -4,8 +4,10 @@ LDADD = libpromises.la
 
 # libcfpub
 
+.PRECIOUS: $(top_builddir)/pub/libcfpub.la
+
 $(builddir)/../pub/libcfpub.la:
-	(cd $(top_builddir)/pub && $(MAKE) $(AM_MAKEFLAGS) libcfpub.la)
+	$(MAKE) -C $(top_builddir)/pub $(AM_MAKEFLAGS) libcfpub.la
 
 # libpromises
 

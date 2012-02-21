@@ -16,9 +16,11 @@ libpromises_la_LIBADD = $(builddir)/../pub/libcfpub.la $(NOVA_LDADD) $(CONSTELLA
 
 libpromises_la_CFLAGS = $(AM_CFLAGS)
 
-# Separate out a library
+# Separate out a library. Note that cf3parse.y should be built before cf3lex.l
 
 libpromises_la_SOURCES = \
+        cf3parse.y cf3parse.h \
+        cf3lex.l \
         addr_lib.c \
         alloc.c alloc.h \
         alphalist.c alphalist.h \
@@ -33,8 +35,6 @@ libpromises_la_SOURCES = \
         cf3.extern.h \
         cf3.server.h \
         cf3globals.c \
-        cf3lex.l \
-        cf3parse.y cf3parse.h \
         cf_sql.c \
         cfstream.c \
         chflags.c \

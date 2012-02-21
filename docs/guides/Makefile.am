@@ -1,29 +1,94 @@
 TEX_INCLUDEDIR = ../tex-include
 
-all: cf3-solutions.texinfo SpecialTopic_Adoption.pdf  SpecialTopic_ITIL.pdf\
-     SpecialTopic_Packages.pdf SpecialTopic_DevOps.pdf SpecialTopic_MissionCritical.pdf\
-     SpecialTopic_Reporting.pdf SpecialTopic_BDMA.pdf\
-     SpecialTopic_Knowledge.pdf SpecialTopic_Rollback.pdf\
-     SpecialTopic_Change.pdf SpecialTopic_Agility.pdf    SpecialTopic_Modules.pdf\
-     SpecialTopic_Schedule.pdf  SpecialTopic_Teamwork.pdf SpecialTopic_Scan.pdf\
-     SpecialTopic_Monitoring.pdf  cf3-glossary.pdf cf_Quickref3.pdf \
-     SpecialTopic_DistributedScheduling.pdf  SpecialTopic_Iteration.pdf\
-     SpecialTopic_Hierarchy.pdf SpecialTopic_Federation.pdf    cf3-upgrade.pdf \
-     SpecialTopic_ApplMgt.pdf UpgradingCfengineNova.pdf Licensing.pdf OrionCloudPack.pdf\
-     SpecialTopic_Virtualization.pdf SpecialTopic_Scalability.pdf\
-     SpecialTopic_MenuDrivenConfig.pdf SpecialTopic_FIPS.pdf cf3-tutorial.pdf\
-     SpecialTopic_Vision.pdf SpecialTopic_Security.pdf SpecialTopic_Comparison.pdf\
-     SpecialTopic_ContentDrivenPolicies.pdf SpecialTopic_Cloud.pdf SpecialTopic_OpenNebula.pdf \
-     SpecialTopic_RBAC.pdf SpecialTopic_Windows.pdf\
-     cf3-bestpractice.pdf SpecialTopic_Editing.pdf cf3-solutions.pdf cf3-conceptguide.pdf cf3-quickstart.pdf cf3-nova-2-1-supplement.pdf cf3-nova-mission-portal.pdf cf3-constellation-mission-obs.pdf NovaOwnersManual.pdf NovaEvaluationGuide.pdf NovaEvaluationGuideSupplement.pdf
+# Syntax errors:
+#    SpecialTopic_Vision
+#    SpecialTopic_Comparison
+#    OrionCloudPack
 
+# Missing .png pictures:
+#    NovaEvaluationGuide
+
+COMMON_GUIDES = \
+    Licensing \
+    NovaEvaluationGuideSupplement \
+    NovaOwnersManual \
+    SpecialTopic_Adoption \
+    SpecialTopic_Agility \
+    SpecialTopic_ApplMgt \
+    SpecialTopic_BDMA \
+    SpecialTopic_Cloud \
+    SpecialTopic_ContentDrivenPolicies \
+    SpecialTopic_DevOps \
+    SpecialTopic_DistributedScheduling \
+    SpecialTopic_Editing \
+    SpecialTopic_FIPS \
+    SpecialTopic_Hierarchy \
+    SpecialTopic_ITIL \
+    SpecialTopic_Iteration \
+    SpecialTopic_Knowledge \
+    SpecialTopic_MenuDrivenConfig \
+    SpecialTopic_MissionCritical \
+    SpecialTopic_Modules \
+    SpecialTopic_Monitoring \
+    SpecialTopic_Packages \
+    SpecialTopic_RBAC \
+    SpecialTopic_Reporting \
+    SpecialTopic_Scalability \
+    SpecialTopic_Scan \
+    SpecialTopic_Schedule \
+    SpecialTopic_Security \
+    SpecialTopic_Teamwork \
+    SpecialTopic_Virtualization \
+    SpecialTopic_Windows \
+    UpgradingCfengineNova \
+    cf3-bestpractice \
+    cf3-conceptguide \
+    cf3-constellation-mission-obs \
+    cf3-glossary \
+    cf3-quickstart \
+    cf3-solutions \
+    cf3-tutorial \
+    cf3-upgrade \
+    cf_Quickref3
+
+HTML_GUIDES = $(COMMON_GUIDES)
+
+PDF_GUIDES = $(COMMON_GUIDES) \
+    cf3-nova-mission-portal \
+    SpecialTopic_Federation \
+    cf3-nova-2-1-supplement \
+    SpecialTopic_OpenNebula \
+    SpecialTopic_Rollback \
+    SpecialTopic_Change
+
+.PRECIOUS: $(builddir)/../tools/build-solutions-guide
 
 $(builddir)/../tools/build-solutions-guide:
-	cd $(builddir)/../tools && $(MAKE) $(AM_MAKEFLAGS) build-solutions-guide
+	$(MAKE) -C $(builddir)/../tools $(AM_MAKEFLAGS) build-solutions-guide
 
 cf3-solutions.texinfo: cf3-solutions.texinfo.in $(builddir)/../tools/build-solutions-guide
-	$(AM_V_GEN)$(builddir)/../tools/build-solutions-guide $(top_srcdir)/examples < $< > $@ || rm -f $@
+	$(AM_V_GEN)$(builddir)/../tools/build-solutions-guide $(top_srcdir)/examples < $< > $@ || (rm -f $@; false)
 
-%.pdf : %.texinfo
-	$(srcdir)/../tools/texi2pdfclean $< texi2pdf -I $(TEX_INCLUDEDIR)
 
+%.html: %.texinfo
+	$(AM_V_GEN)$(MAKEINFO) \
+	    $^ -o $@ \
+	    -I $(TEX_INCLUDEDIR) \
+	    --error-limit=0 \
+	    --html \
+	    --no-split \
+	    --css-include=cfcomdoc.css
+
+TEXI2PDFFLAGS = -I $(TEX_INCLUDEDIR) --batch $(if $(filter-out 0,$(V)),,--quiet)
+
+%.pdf: %.texinfo
+	$(AM_V_GEN)$(srcdir)/../tools/texi2pdfclean $< $(TEXI2PDF) -o $@ $(TEXI2PDFFLAGS)
+
+
+html: $(patsubst %,%.html,$(HTML_GUIDES))
+
+pdf: $(patsubst %,%.pdf,$(PDF_GUIDES))
+
+all:
+
+CLEANFILES = cf3-solutions.texinfo $(patsubst %,%.pdf,$(PDF_GUIDES)) $(patsubst %,%.html,$(HTML_GUIDES))

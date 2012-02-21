@@ -72,6 +72,8 @@ AC_CONFIG_LIBOBJ_DIR(pub)
 AC_FUNC_GETLOADAVG 
 AC_PATH_PROG(GETCONF, getconf, false, $PATH:$prefix/bin:/usr/bin:/usr/local/bin:/sw/bin)
 
+AM_MISSING_PROG(TEXI2PDF, texi2pdf)
+
 AM_CONDITIONAL(CROSS_COMPILING, test "x$cross_compiling" = "xyes")
 
 #
@@ -1054,6 +1056,7 @@ AC_CONFIG_FILES([Makefile
 	docs/Makefile
 	docs/guides/Makefile
 	docs/manpages/Makefile
+	docs/reference/Makefile
 	docs/tools/Makefile
 	examples/Makefile
 	examples/example_config/Makefile

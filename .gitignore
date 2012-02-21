@@ -35,8 +35,10 @@ ylwrap
 *.tp
 *.vr
 docs/guides/*.log
+docs/guides/*.html
 docs/guides/*.pdf
 docs/reference/missfont.log
+docs/reference/cf3-Reference.pdf
 
 # binaries
 

@@ -1,8 +1,0 @@
-
-Build these like this
-
-Make sure the infotitle is set correctly
-makeinfo --html --no-split --css-include=cfcomdoc.css cf-remotecomm.texinfo
-
-This is better than texi2html
-

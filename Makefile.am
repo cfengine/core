@@ -59,6 +59,17 @@ install-data-local:
 	$(MKDIR_P) -m 700 $(DESTDIR)$(workdir)/outputs
 	$(MKDIR_P) -m 700 $(DESTDIR)$(workdir)/ppkeys
 
+
+#
+# Documentation
+#
+
+html:
+	$(MAKE) -C docs $(AM_MAKEFLAGS) html
+
+pdf:
+	$(MAKE) -C docs $(AM_MAKEFLAGS) pdf
+
 #
 # Code coverage
 #

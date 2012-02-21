@@ -57,7 +57,7 @@ v
 @end ifinfo
 
 @ifnottex
-@node Top, System automation, (dir), (dir)
+@node Top
 @top CFEngine-Tutorial
 @end ifnottex
 @iftex

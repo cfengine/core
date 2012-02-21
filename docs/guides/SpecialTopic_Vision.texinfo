@@ -59,7 +59,7 @@ Copyright @copyright{} 2010 CFEngine AS
 @end ifinfo
 
 @ifnottex
-@node Top, What is a hierarchy?, (dir), (dir)
+@node Top
 @top Federation
 
 
@@ -72,8 +72,16 @@ Copyright @copyright{} 2010 CFEngine AS
 @end html
 @end ifhtml
 
+@menu
+* What is the vision::
+* From goals to promises::
+* The Primacy of Knowledge::
+* Use of patterns::
+* Virtualization::
+* Scalability::
+@end menu
 
-@node What is the vision?
+@node What is the vision
 @unnumberedsec What is the vision?
 
 The CFEngine vision is a set of dreams, goals and principles that guide

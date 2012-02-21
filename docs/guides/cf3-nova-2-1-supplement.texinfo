@@ -555,7 +555,7 @@ through information.
 * Decentralized data collection in CFEngine::  
 @end menu
 
-@node  Mission Status, , Mission Portal, Mission Portal
+@node  Mission Status, Mission Engineering, Mission Portal, Mission Portal
 @section Mission Status
 
 Mission status is a high level summary of how well the entire system is behaving. Charts show the business value of the promises kept/not kept as well as host status. Each host is classified into red, yellow, green and blue for a quick overview of their level of compliance. 
@@ -565,7 +565,7 @@ Mission status is a high level summary of how well the entire system is behaving
 @center Figure: The status of IT operations.
 @sp 1
 
-@node Mission Engineering, , Mission Status, Mission Portal
+@node Mission Engineering, Mission Planning, Mission Status, Mission Portal
 @section Mission Engineering
 
 Mission engineering illustrates the state of the system in relation to the desired state at all scales. Zoom in to specific areas and examine the impact of promises, query data, and extract reports using the finder functions.
@@ -582,7 +582,7 @@ this delay, but CFEngine tells you precisely when data were last updated, provid
 about system latencies.
 
 @page
-@node Mission Planning, , Mission Engineering, Mission Portal
+@node Mission Planning, Mission Library, Mission Engineering, Mission Portal
 @section Mission Planning
 
 Make changes to policies, goals determined by promises and implement specific tactics to achieve the desired state. Interact with data, approve changes and anomalies. Get an overiew of users logged on to the Mission Portal, as well as their current activity.

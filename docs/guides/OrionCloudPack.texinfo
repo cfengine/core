@@ -75,7 +75,7 @@ Copyright @copyright{} 2010- Cfengine AS
 * Cultural References to Orion and Cloud::  
 @end menu
 
-@node Top, Introduction to Orion, (dir), (dir)
+@node Top
 @top CFEngine-Tutorial
 @end ifnottex
 @iftex
@@ -91,7 +91,7 @@ Copyright @copyright{} 2010- Cfengine AS
 
 
 
-@node Introduction to Orion, Some background on EC2, Top, Top
+@node Introduction to Orion
 @unnumberedsec Introduction to the CFEngine Orion Cloud Pack
 
 @sp 1
@@ -123,7 +123,7 @@ then use your experience on more permanent hardware elsewhere, if you
 wish. Or, you can simply use the CFEngine Orion Cloud Pack to bring up
 cloud services and configure them to a desired state on demand.
 
-@node Some background on EC2, Prerequisites for setting up Orion, Introduction to Orion, Top
+@node Some background on EC2
 @unnumberedsec Some background on EC2
 	
 If you are familiar with Amazon Amazon Elastic Compute Cloud (EC2),
@@ -154,7 +154,7 @@ for Cloud Computing.
 
 @page
 
-@node Prerequisites for setting up Orion, Three steps to the cloud, Some background on EC2, Top
+@node Prerequisites for setting up Orion
 @unnumberedsec Prerequisites for setting up Orion
 @sp 1
 
@@ -186,7 +186,7 @@ and setting up the CFEngine Orion Cloud Pack see Appendix A.
 @noindent You should subscribe to one or more of these. The following
 sections assume that you have already acquired such an instance.
 
-@node Three steps to the cloud, How do I know that CFEngine is maintaining the system?, Prerequisites for setting up Orion, Top
+@node Three steps to the cloud
 @unnumberedsec Three steps to the cloud
 
 To use the CFEngine Orion Cloud Pack, there are just three steps:
@@ -222,7 +222,7 @@ to start CFEngine management.
 You now have a running `instance', with services configured and
 maintained by CFEngine.
 
-@node How do I know that CFEngine is maintaining the system?, Benefits for users running CFEngine Nova, Three steps to the cloud, Top
+@node How do I know that CFEngine is maintaining the system?
 @unnumberedsec How do I know that CFEngine is maintaining the system?
 
 Execute @samp{ps aux | grep cf-} to see cf-agent, cf-serverd and
@@ -233,7 +233,7 @@ web server.
 
 
 
-@node Benefits for users running CFEngine Nova, The Cloud Pack Nursury, How do I know that CFEngine is maintaining the system?, Top
+@node Benefits for users running CFEngine Nova
 @unnumberedsec Additional benefits for users running CFEngine Nova
 
 @sp 1
@@ -273,7 +273,7 @@ inside PHP, Java and other frameworks.
 
 
 @page
-@node The Cloud Pack Nursury, Orion Support, Benefits for users running CFEngine Nova, Top
+@node The Cloud Pack Nursury
 @unnumberedsec The Cloud Pack Contents
 
 
@@ -326,7 +326,7 @@ and examples of basic machine installation and setup.
 
 
 @page
-@node Orion Support, Orion License, The Cloud Pack Nursury, Top
+@node Orion Support
 @unnumberedsec Orion Support
 
 @sp 1
@@ -347,7 +347,7 @@ does not include the development of new solutions or other consulting.
 Users are free to seek Professional Services from CFEngine for such
 matters.
 
-@node Orion License, Cultural References to Orion and Cloud, Orion Support, Top
+@node Orion License
 @unnumberedsec Orion License
 
 The CFEngine Orion Cloud Pack is not Free or Open Source Software.
@@ -408,7 +408,7 @@ supplier shall apply.
 
 
 @page
-@node  Cultural References to Orion and Cloud,  , Orion License, Top
+@node  Cultural References to Orion and Cloud
 @unnumberedsec Cultural References to Orion and Cloud
 
 Orion, the hunter from Greek mythology, was taken by renaissance
@@ -444,7 +444,7 @@ natural form of engineering
 
 
 
-@node EC2 Cloud Command line setup, EC2 Cloud CFEngine Configuration, Top, Top
+@node EC2 Cloud Command line setup
 @appendix EC2 Cloud command line setup
 
 This Appendix details the creation of an EC2 instance, i.e. the
@@ -536,7 +536,7 @@ installed.
 
 
 
-@node EC2 Cloud CFEngine Configuration, Integrating the Cloud Pack Futher, EC2 Cloud Command line setup, Top
+@node EC2 Cloud CFEngine Configuration
 @appendix EC2 Cloud CFEngine Configuration
 
 You will need @code{root} access to the Amazon instance.
@@ -572,7 +572,7 @@ To terminate an instance:
 
 
 
-@node Integrating the Cloud Pack Futher, Ubuntu quirks, EC2 Cloud CFEngine Configuration, Top
+@node Integrating the Cloud Pack Futher
 @appendix Integrating the Cloud Pack Futher
 
 The Orion Cloud Pack is delivered in a form that makes it easy to choose the
@@ -622,7 +622,7 @@ with additional transaction controls, but cannot be considered superior to the s
 list used in the Cloud Pack. Ultimately this is a question of style.
 
 
-@node Ubuntu quirks,  , Integrating the Cloud Pack Futher, Top
+@node Ubuntu quirks
 @appendix Ubuntu quirks
 
 The Ubuntu operating systems does not have a root account you can log onto directly.

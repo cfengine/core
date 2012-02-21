@@ -1311,17 +1311,23 @@ for (sp = local; *sp != '\0'; sp++)
 
 /*********************************************************************/
 
-int IsHardClass(char *sp)  /* true if string matches a hardwired class e.g. hpux */
+bool IsSoftClass(char *sp)
+{
+ return !IsHardClass(sp);
+}
+
+/*********************************************************************/
+
+bool IsHardClass(char *sp)  /* true if string matches a hardwired class e.g. hpux */
 
 { int i;
-  static char *names[] =
+  char *names[] =
      {
-     "any","agent","Morning","Afternoon","Evening","Night","Q1","Q2","Q3","Q4",
-     "SuSE","suse","fedora","Ubuntu","lsb_compliant","localhost",
+     "any","agent","SuSE","suse","fedora","Ubuntu","lsb_compliant","localhost",
      NULL
      };
 
-  static char *prefixes[] =
+  char *prefixes[] =
      {
      "cfengine_","ipv4",
      NULL
@@ -1331,22 +1337,6 @@ int IsHardClass(char *sp)  /* true if string matches a hardwired class e.g. hpux
 for (i = 2; CLASSTEXT[i] != '\0'; i++)
    {
    if (strcmp(CLASSTEXT[i],sp) == 0)
-      {
-      return true;
-      }
-   }
-
-for (i = 0; i < 7; i++)
-   {
-   if (strcmp(DAY_TEXT[i],sp)==0)
-      {
-      return true;
-      }
-   }
-
-for (i = 0; i < 12; i++)
-   {
-   if (strncmp(MONTH_TEXT[i],sp,3) == 0)
       {
       return true;
       }
@@ -1368,6 +1358,29 @@ for (i = 0; prefixes[i] != NULL; i++)
       }
    }
 
+return IsTimeClass(sp);
+}
+
+/***************************************************************************/
+
+bool IsTimeClass(char *sp)
+{
+
+ if(IsStrIn(sp, DAY_TEXT))
+    {
+    return true;
+    }
+
+ if(IsStrIn(sp, MONTH_TEXT))
+    {
+    return true;
+    }
+
+ if(IsStrIn(sp,SHIFT_TEXT))
+    {
+    return true;
+    }
+ 
 if (strncmp(sp,"Min",3) == 0 && isdigit(*(sp+3)))
    {
    return true;
@@ -1398,7 +1411,14 @@ if (strncmp(sp,"Lcycle",strlen("Lcycle")) == 0)
    return true;
    }
 
-return(false);
+const char *quarters[] = { "Q1", "Q2", "Q3", "Q4", NULL};
+
+if(IsStrIn(sp, quarters))
+   {
+   return true;
+   }
+
+return false;
 }
 
 /***************************************************************************/

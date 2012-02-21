@@ -1,3 +1,4 @@
+TEX_INCLUDEDIR = ../tex-include
 
 all: cf3-solutions.texinfo SpecialTopic_Adoption.pdf  SpecialTopic_ITIL.pdf\
      SpecialTopic_Packages.pdf SpecialTopic_DevOps.pdf SpecialTopic_MissionCritical.pdf\
@@ -24,5 +25,5 @@ cf3-solutions.texinfo: cf3-solutions.texinfo.in $(builddir)/../tools/build-solut
 	$(AM_V_GEN)$(builddir)/../tools/build-solutions-guide $(top_srcdir)/examples < $< > $@ || rm -f $@
 
 %.pdf : %.texinfo
-	texi2pdf $<
+	texi2pdf -I $(TEX_INCLUDEDIR) $<
 

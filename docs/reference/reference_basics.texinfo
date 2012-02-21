@@ -1810,18 +1810,9 @@ where a list is expected as @samp{@@(list)}., e.g.
 
 @end verbatim
 
-@item Only local lists can be expanded directly. Thus @samp{$(list)}
-can be expanded but not @samp{$(context.list)}. See below for the
-explanation.
-
 @end itemize
 
-During list expansion, only local lists can be expanded, thus global
-list references have to be mapped into a local context if you want to
-use them for iteration. Instead of doing this in some
-arbitrary way, with possibility of name collisions, CFEngine
-asks you to make this explicit. There are two possible approaches.
-
+You can pass lists to functions by parameter or by qualified reference.
 The first uses parameterization to map a global list into a local
 context.
 @verbatim

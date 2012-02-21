@@ -668,7 +668,7 @@ spent wisely.
 
 The figure below shows the three cornerstones of CFEngine and how they relate to one another.
 
-@image{CFEngine-schematic,10cm,,The key aspects of CFEngine from an ITIL perspective,png}
+@image{cfengine-schematic,10cm,,The key aspects of CFEngine from an ITIL perspective,png}
 
 @itemize
 @item @code{cf-agent} is the engine for configuration management. It takes

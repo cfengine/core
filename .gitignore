@@ -24,6 +24,9 @@ m4/lt*.m4
 missing
 stamp-h1
 ylwrap
+
+# docs
+
 *.aux
 *.cp
 *.cps
@@ -34,11 +37,17 @@ ylwrap
 *.toc
 *.tp
 *.vr
-docs/guides/*.log
+*.log
+
+docs/doxygen
 docs/guides/*.html
 docs/guides/*.pdf
-docs/reference/missfont.log
+docs/guides/cf3-solutions.texinfo
+docs/manpages/*.8
+docs/reference/cf3-Reference.html
 docs/reference/cf3-Reference.pdf
+docs/reference/cf3-Reference.texinfo
+docs/tools/build-solutions-guide
 
 # binaries
 
@@ -61,19 +70,6 @@ src/cf3parse.h
 src/cf3parse.output
 src/conf.h
 src/conf.h.in
-
-# autogen docs
-
-docs/reference/cf3-Reference.texinfo
-docs/reference/cf3-Reference.log
-docs/reference/cf3-Reference.html
-docs/guides/cf3-solutions.texinfo
-docs/manpages/*.8
-docs/cf-*.8
-
-docs/doxygen
-
-docs/tools/build-solutions-guide
 
 # acceptance tests
 

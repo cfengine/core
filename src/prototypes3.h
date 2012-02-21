@@ -440,7 +440,7 @@ void ModuleProtocol(char *command,char *line,int print);
 void ExpandPromise(enum cfagenttype ag,char *scopeid,Promise *pp,void *fnptr);
 void ExpandPromiseAndDo(enum cfagenttype ag,char *scope,Promise *p,Rlist *scalarvars,Rlist *listvars,void (*fnptr)());
 Rval ExpandDanglers(char *scope,Rval rval,Promise *pp);
-void ScanRval(const char *scope, Rlist **los, Rlist **lol, Rval rval, Promise *pp);
+void MapIteratorsFromRval(const char *scope, Rlist **los, Rlist **lol, Rval rval, Promise *pp);
 
 int IsExpandable(const char *str);
 int ExpandScalar(const char *string, char buffer[CF_EXPANDSIZE]);

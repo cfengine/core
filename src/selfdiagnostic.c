@@ -141,7 +141,7 @@ for (i = 0; varstrings[i] != NULL; i++)
       {
       printf("-----------------------------------------------------------\n");
       printf("Scanning: [%s]\n",varstrings[i]);
-      ScanRval("diagnostic", &scalars, &listoflists, (Rval) { varstrings[i], CF_SCALAR }, NULL);
+      MapIteratorsFromRval("diagnostic", &scalars, &listoflists, (Rval) { varstrings[i], CF_SCALAR }, NULL);
       printf("Cumulative scan produced:\n");
       printf("   Scalar variables: ");
       ShowRlist(stdout,scalars);
@@ -245,16 +245,16 @@ AppendConstraint(&(pp.conlist), "lval3", (Rval) { fp, CF_FNCALL }, "upper classe
 
 pcopy = DeRefCopyPromise("diagnostic",&pp);
 
-ScanRval("diagnostic", &scalarvars, &listvars, (Rval) { pcopy->promiser, CF_SCALAR }, NULL);
+MapIteratorsFromRval("diagnostic", &scalarvars, &listvars, (Rval) { pcopy->promiser, CF_SCALAR }, NULL);
 
 if (pcopy->promisee.item != NULL)
    {
-   ScanRval("diagnostic", &scalarvars, &listvars, pp.promisee, NULL);
+   MapIteratorsFromRval("diagnostic", &scalarvars, &listvars, pp.promisee, NULL);
    }
 
 for (cp = pcopy->conlist; cp != NULL; cp=cp->next)
    {
-   ScanRval("diagnostic", &scalarvars, &listvars, cp->rval, NULL);
+   MapIteratorsFromRval("diagnostic", &scalarvars, &listvars, cp->rval, NULL);
    }
 
 ExpandPromiseAndDo(cf_common,"diagnostic",pcopy,scalarvars,listvars,NULL);

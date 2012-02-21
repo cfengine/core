@@ -868,7 +868,7 @@ if (THIS_AGENT_TYPE == cf_common)
 
    if (strcmp(CONTEXTID,"this") != 0)
       {
-      ScanRval(CONTEXTID, &scalarvars, &listvars, rval, NULL);
+      MapIteratorsFromRval(CONTEXTID, &scalarvars, &listvars, rval, NULL);
 
       if (listvars != NULL)
          {

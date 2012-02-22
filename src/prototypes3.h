@@ -787,8 +787,7 @@ void BeginAudit(void);
 void EndAudit(void);
 void ClassAuditLog(Promise *pp,Attributes attr,char *str,char status,char *error);
 void PromiseLog(char *s);
-void FatalError(char *s, ...) FUNC_ATTR_NORETURN
-    FUNC_ATTR_FORMAT(printf, 1, 2);
+void FatalError(char *s, ...) FUNC_ATTR_NORETURN FUNC_ATTR_FORMAT(printf, 1, 2);
 
 void AuditStatusMessage(FILE*fp,char status);
 

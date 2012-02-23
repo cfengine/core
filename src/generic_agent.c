@@ -334,7 +334,10 @@ if (ShellCommandReturnsZero(cmd,true))
    
       if ((fd = creat(filename,0600)) != -1)
          {
-         close(fd);
+         FILE *fp = fdopen(fd,"w");
+         time_t now = time(NULL);         
+         fprintf(fp,"%s",ctime(&now));
+         fclose(fp);
          CfOut(cf_verbose,""," -> Caching the state of validation\n");
          }
       else

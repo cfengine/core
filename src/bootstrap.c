@@ -222,6 +222,20 @@ else
   {
   NewScalar("sys","policy_hub",name,cf_str);
   }
+
+// Get the timestamp on policy update
+
+snprintf(file,CF_MAXVARSIZE,"%s/masterfiles/cf_promises_validated",CFWORKDIR);
+MapName(file);
+
+if ((fin = fopen(file,"r")) == NULL)
+   {
+   return;
+   }
+
+fscanf(fin,"%255[^\n]",fileContents);
+NewScalar("sys","last_policy_update",fileContents,cf_str);
+fclose(fin);
 }
 
 /********************************************************************/

@@ -25,7 +25,7 @@ else
   rm -f ${srcdir}/nova ${srcdir}/constellation
 fi
 
-autoreconf --force --install -I m4 || exit 1
+autoreconf -Wno-portability --force --install -I m4 || exit 1
 cd $ORIGDIR || exit $?
 
 if [ -z "$NO_CONFIGURE" ]; then

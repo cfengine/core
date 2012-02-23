@@ -31,6 +31,10 @@
 
 #include "generic_agent.h"
 
+extern int PR_KEPT;
+extern int PR_REPAIRED;
+extern int PR_NOTKEPT;
+ 
 /*******************************************************************/
 /* Agent specific variables                                        */
 /*******************************************************************/
@@ -84,6 +88,7 @@ static void ParallelFindAndVerifyFilesPromises(Promise *pp);
 static bool VerifyBootstrap(void);
 static void KeepPromiseBundles(Rlist *bundlesequence);
 static void KeepPromises(GenericAgentConfig config);
+static void NoteBundleCompliance(char *name,int save_pr_kept,int save_pr_repaired,int save_pr_notkept);
 
 extern const BodySyntax CFA_CONTROLBODY[];
 
@@ -852,6 +857,9 @@ int ScheduleAgentOperations(Bundle *bp)
   Promise *pp;
   enum typesequence type;
   int pass;
+  int save_pr_kept = PR_KEPT;
+  int save_pr_repaired = PR_REPAIRED;
+  int save_pr_notkept = PR_NOTKEPT;
 
 if (PROCESSREFRESH == NULL || (PROCESSREFRESH && IsRegexItemIn(PROCESSREFRESH,bp->name)))
    {
@@ -897,6 +905,8 @@ for (pass = 1; pass < CF_DONEPASSES; pass++)
    }
 
 NoteClassUsage(VADDCLASSES,false);
+
+NoteBundleCompliance(bp->name,save_pr_kept,save_pr_repaired,save_pr_notkept);
 
 return true;
 }
@@ -1350,4 +1360,22 @@ static bool VerifyBootstrap(void)
  CfOut(cf_cmdout, "", "-> Bootstrap to %s completed successfully", POLICY_SERVER);
  
  return true;
+}
+
+/**************************************************************/
+/* Compliance comp                                            */
+/**************************************************************/
+
+static void NoteBundleCompliance(char *name,int save_pr_kept,int save_pr_repaired,int save_pr_notkept)
+
+{ double delta_pr_kept,delta_pr_repaired,delta_pr_notkept;
+  double bundle_compliance;
+ 
+delta_pr_kept = PR_KEPT - save_pr_kept;
+delta_pr_notkept = PR_NOTKEPT - save_pr_notkept;
+delta_pr_repaired = PR_REPAIRED - save_pr_repaired;
+
+bundle_compliance = (delta_pr_kept + delta_pr_repaired) / (delta_pr_kept + delta_pr_notkept + delta_pr_repaired);
+
+CfOut(cf_verbose,""," -> Aggregate compliance (promises kept/repaired) for bundle \"%s\" = %.1lf%%",name,bundle_compliance*100.0);
 }

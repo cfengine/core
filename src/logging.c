@@ -43,9 +43,9 @@ static double VAL_KEPT;
 static double VAL_REPAIRED;
 static double VAL_NOTKEPT;
 
-static int PR_KEPT;
-static int PR_REPAIRED;
-static int PR_NOTKEPT;
+int PR_KEPT;
+int PR_REPAIRED;
+int PR_NOTKEPT;
 
 static CF_DB  *AUDITDBP;
 

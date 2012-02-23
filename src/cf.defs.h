@@ -777,7 +777,7 @@ typedef struct
    double q;
    double expect;
    double var;
-//   double dq; Want to introduce this
+   double dq; 
    } QPoint;
 
 typedef struct

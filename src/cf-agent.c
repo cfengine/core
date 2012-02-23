@@ -890,6 +890,11 @@ for (pass = 1; pass < CF_DONEPASSES; pass++)
          {
          SaveClassEnvironment();
 
+         if (pass == 1) // Count the number of promises modelled for efficiency
+            {
+            CF_TOPICS++;
+            }
+
          ExpandPromise(cf_agent,bp->name,pp,KeepAgentPromise);
 
          if (Abort())
@@ -1004,8 +1009,6 @@ if (VarClassExcluded(pp,&sp))
    }
 
 // Record promises examined for efficiency calc
-
-CF_TOPICS++;
 
 if (strcmp("vars",pp->agentsubtype) == 0)
    {

@@ -846,6 +846,8 @@ for (rp = (Rlist *)retval.item; rp != NULL; rp=rp->next)
 
 int ScheduleAgentOperations(Bundle *bp)
 
+// NB - this function can be called recursively through "methods"
+    
 { SubType *sp;
   Promise *pp;
   enum typesequence type;

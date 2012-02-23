@@ -141,12 +141,9 @@ NewScope("mon");
 GetNameInfo3();
 CfGetInterfaceInfo(ag);
 
-if (ag != cf_know)
-   {
-   Get3Environment();
-   BuiltinClasses();
-   OSClasses();
-   }
+Get3Environment();
+BuiltinClasses();
+OSClasses();
 
 LoadPersistentContext();
 LoadSystemConstants();

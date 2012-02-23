@@ -477,14 +477,13 @@ for (i = 0; bs[i].lval != NULL; i++)
 
 static void TexinfoVariables(FILE *fout,char *scope)
 
-{
-  char filename[CF_BUFSIZE],varname[CF_BUFSIZE];
+{ char filename[CF_BUFSIZE],varname[CF_BUFSIZE];
   Rlist *rp,*list = NULL;
   int i;
 
-  HashToList(GetScope(scope), &list);
-  list = AlphaSortRListNames(list);
-
+HashToList(GetScope(scope), &list);
+list = AlphaSortRListNames(list);
+  
 fprintf(fout,"\n\n@node Variable context %s\n@section Variable context @code{%s}\n\n",scope,scope);
 snprintf(filename,CF_BUFSIZE-1,"varcontexts/%s_intro.texinfo",scope);
 IncludeManualFile(fout,filename);

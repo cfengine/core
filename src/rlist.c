@@ -36,7 +36,7 @@
 
 /*******************************************************************/
 
-char *ScalarValue(Rlist *rlist)
+char *ScalarValue(const Rlist *rlist)
 {
 if (rlist->type != CF_SCALAR)
    {
@@ -49,7 +49,7 @@ return (char *)rlist->item;
 
 /*******************************************************************/
 
-FnCall *FnCallValue(Rlist *rlist)
+FnCall *FnCallValue(const Rlist *rlist)
 {
 if (rlist->type != CF_FNCALL)
    {
@@ -62,7 +62,7 @@ return (FnCall *)rlist->item;
 
 /*******************************************************************/
 
-Rlist *ListValue(Rlist *rlist)
+Rlist *ListValue(const Rlist *rlist)
 {
 if (rlist->type != CF_LIST)
    {

@@ -48,9 +48,9 @@ struct Rlist_
 
 struct FnCall_;
 
-char *ScalarValue(Rlist *rlist);
-struct FnCall_ *FnCallValue(Rlist *rlist);
-Rlist *ListValue(Rlist *rlist);
+char *ScalarValue(const Rlist *rlist);
+struct FnCall_ *FnCallValue(const Rlist *rlist);
+Rlist *ListValue(const Rlist *rlist);
 
 char *ScalarRvalValue(Rval rval);
 struct FnCall_ *FnCallRvalValue(Rval rval);

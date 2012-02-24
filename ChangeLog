@@ -13,6 +13,7 @@
 	  errors in gcc-compatible syntax which to ease use "go to next
 	  error" feature of text editors.
 	- Services promises for generic/Unix added.
+	- Iteration over lists is now allowed for qualified (non-local) lists.
 
 	New built-in variables and classes (Linux):
 	- Number of CPUs: $(sys.cpus), 1_cpu, 2_cpus etc

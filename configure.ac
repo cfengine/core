@@ -12,16 +12,13 @@ AC_INIT
 AC_CONFIG_SRCDIR([src/cfpromises.c])
 AC_CANONICAL_TARGET
 
-define([svnversion], [r]esyscmd([sh -c "svnversion --no-newline || echo exported | tr -d '\n'" 2>/dev/null]))dnl
-
+define([revision], esyscmd([sh -c "git describe --always || echo unknown | tr -d '\n'" 2>/dev/null]))dnl
 
 dnl
 dnl The version in the next line is the only one to set
 dnl
-dnl 'svnversion' need to be removed before release and added back after.
-dnl
 
-AM_INIT_AUTOMAKE(cfengine, 3.3.0a2.svnversion)   dnl remember to set version
+AM_INIT_AUTOMAKE(cfengine, 3.3.0a2.revision)
 AM_MAINTAINER_MODE([enable])
 
 AC_DEFINE(BUILD_YEAR, esyscmd([date +%Y | tr -d '\n']), "Software build year")

@@ -223,7 +223,7 @@ char *sp;
 Rval rval;
 char v[CF_BUFSIZE],var[CF_EXPANDSIZE],exp[CF_EXPANDSIZE],temp[CF_BUFSIZE],finalname[CF_BUFSIZE];
   
-CfDebug("MapIteratorsFromScalar(\"%s\")\n",string);
+CfDebug("MapIteratorsFromScalar(\"%s\", %d)\n",string,level);
 
 if (string == NULL)
    {
@@ -251,7 +251,7 @@ for (sp = string; (*sp != '\0') ; sp++)
             absscope[0] = '\0';
             sscanf(temp,"%[^.].%s",absscope,v);
             ExpandPrivateScalar(absscope,v,var);
-            snprintf(finalname,CF_MAXVARSIZE,"%s#%s",absscope,var);
+            snprintf(finalname,CF_MAXVARSIZE,"%s%c%s",absscope,CF_MAPPEDLIST,var);
             qualified = true;
             }
          else
@@ -302,13 +302,20 @@ for (sp = string; (*sp != '\0') ; sp++)
          else
             {
             CfDebug("Checking for nested vars, e.g. $(array[$(index)])....\n");
-            
+
             if (IsExpandable(var))
                {
-               CfDebug("Found embedded variables\n");
                MapIteratorsFromScalar(scopeid,scal,its,var,level+1,pp);
+               
+               // Need to rewrite list references to nested variables in this level
+
+               if (strchr(var,CF_MAPPEDLIST)) 
+                  {
+                  RewriteInnerVarStringAsLocalCopyName(sp);
+                  }
                }
             }
+         
          sp += strlen(var)-1;
          }
       }
@@ -823,7 +830,7 @@ for (sp = string; *sp != '\0'; sp++)
    {
    if (*sp == '.')
       {
-      *sp = '#';
+      *sp = CF_MAPPEDLIST;
       return;
       }
    }
@@ -835,16 +842,19 @@ static void CopyLocalizedIteratorsToThisScope(char *scope,Rlist *listvars)
 
 { Rlist *rp;
   Rval retval;
+  char format[CF_SMALLBUF];
 
 for (rp = listvars; rp != NULL; rp = rp->next)
    {
    // Add re-mapped variables to context "this", marked with scope . -> #
-   
+
    if (strchr(rp->item,'#'))
       {
       char orgscope[CF_MAXVARSIZE],orgname[CF_MAXVARSIZE];
 
-      sscanf(rp->item,"%[^#]#%s",orgscope,orgname);
+      snprintf(format,CF_SMALLBUF,"%%[^%c]%c%%s",CF_MAPPEDLIST,CF_MAPPEDLIST);
+
+      sscanf(rp->item,format,orgscope,orgname);
 
       GetVariable(orgscope,orgname,&retval);
 

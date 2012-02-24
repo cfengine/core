@@ -33,7 +33,7 @@
 #include "cf3.extern.h"
 
 static void ConvergePromiseValues(Promise *pp);
-static void ScanScalar(const char *scope, Rlist **los, Rlist **lol, const char *string, int level, Promise *pp);
+static void MapIteratorsFromScalar(const char *scope, Rlist **los, Rlist **lol, char *string, int level, Promise *pp);
 static int Epimenides(char *var, Rval rval, int level);
 
 static int CompareRlist(Rlist *list1, Rlist *list2);
@@ -71,7 +71,7 @@ To expand the variables in a promise we need to
    -- first get all strings, also parameterized bodies, which
       could also be lists
                                                                      /
-        //  ScanRval("scope",&lol,"ksajd$(one)$(two)...$(three)"); \/ 
+        //  MapIteratorsFromRval("scope",&lol,"ksajd$(one)$(two)...$(three)"); \/ 
         
    -- compile an ordered list of variables involved , with types -           /
       assume all are lists - these are never inside sub-bodies by design,  \/
@@ -120,16 +120,16 @@ THIS_BUNDLE = scopeid;
 
 pcopy = DeRefCopyPromise(scopeid,pp);
 
-ScanRval(scopeid, &scalarvars, &listvars, (Rval) { pcopy->promiser, CF_SCALAR }, pp);
+MapIteratorsFromRval(scopeid, &scalarvars, &listvars, (Rval) { pcopy->promiser, CF_SCALAR }, pp);
 
 if (pcopy->promisee.item != NULL)
    {
-   ScanRval(scopeid, &scalarvars, &listvars, pp->promisee, pp);
+   MapIteratorsFromRval(scopeid, &scalarvars, &listvars, pp->promisee, pp);
    }
 
 for (cp = pcopy->conlist; cp != NULL; cp=cp->next)
    {
-   ScanRval(scopeid, &scalarvars, &listvars, cp->rval, pp);
+   MapIteratorsFromRval(scopeid, &scalarvars, &listvars, cp->rval, pp);
    }
 
 PushThisScope();
@@ -173,7 +173,7 @@ return final;
 
 /*********************************************************************/
 
-void ScanRval(const char *scopeid, Rlist **scalarvars, Rlist **listvars, Rval rval, Promise *pp)
+void MapIteratorsFromRval(const char *scopeid, Rlist **scalarvars, Rlist **listvars, Rval rval, Promise *pp)
 
 { Rlist *rp;
   FnCall *fp;
@@ -186,13 +186,13 @@ if (rval.item == NULL)
 switch(rval.rtype)
    {
    case CF_SCALAR:
-       ScanScalar(scopeid,scalarvars,listvars,(char *)rval.item,0,pp);
+       MapIteratorsFromScalar(scopeid,scalarvars,listvars,(char *)rval.item,0,pp);
        break;
        
    case CF_LIST:
        for (rp = (Rlist *)rval.item; rp != NULL; rp=rp->next)
           {
-          ScanRval(scopeid, scalarvars, listvars, (Rval) { rp->item, rp->type }, pp);
+          MapIteratorsFromRval(scopeid, scalarvars, listvars, (Rval) { rp->item, rp->type }, pp);
           }
        break;
        
@@ -202,7 +202,7 @@ switch(rval.rtype)
        for (rp = (Rlist *)fp->args; rp != NULL; rp=rp->next)
           {
           CfDebug("Looking at arg for function-like object %s()\n",fp->name);
-          ScanRval(scopeid, scalarvars, listvars, (Rval) { rp->item, rp->type }, pp);
+          MapIteratorsFromRval(scopeid, scalarvars, listvars, (Rval) { rp->item, rp->type }, pp);
           }
        break;
 
@@ -214,14 +214,14 @@ switch(rval.rtype)
 
 /*********************************************************************/
 
-static void ScanScalar(const char *scopeid, Rlist **scal, Rlist **its, const char *string, int level, Promise *pp)
+static void MapIteratorsFromScalar(const char *scopeid, Rlist **scal, Rlist **its, char *string, int level, Promise *pp)
 
 {
 const char *sp;
 Rval rval;
 char v[CF_BUFSIZE],var[CF_EXPANDSIZE],exp[CF_EXPANDSIZE],temp[CF_BUFSIZE];
   
-CfDebug("ScanScalar(\"%s\")\n",string);
+CfDebug("MapIteratorsFromScalar(\"%s\")\n",string);
 
 if (string == NULL)
    {
@@ -287,7 +287,7 @@ for (sp = string; (*sp != '\0') ; sp++)
             if (IsExpandable(var))
                {
                CfDebug("Found embedded variables\n");
-               ScanScalar(scopeid,scal,its,var,level+1,pp);
+               MapIteratorsFromScalar(scopeid,scal,its,var,level+1,pp);
                }
             }
          sp += strlen(var)-1;

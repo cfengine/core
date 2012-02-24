@@ -15,8 +15,15 @@ nova_edition::
 
 bundle common g
 {
+classes:
+  "mpm_declared" not => strcmp(getenv("MOCK_PACKAGE_MANAGER", "65535"), "");
+
 vars:
-  "pm" string => concat(dirname("$(G.cwd)/$(this.promise_filename)"), "/../mock-package-manager");
+  temp_declared::
+    "pm" string => getenv("MOCK_PACKAGE_MANAGER", "65535");
+
+  !temp_declared::
+    "pm" string => concat(dirname("$(G.cwd)/$(this.promise_filename)"), "/../mock-package-manager");
 }
 
 #######################################################

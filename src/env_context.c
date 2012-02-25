@@ -1318,12 +1318,13 @@ bool IsSoftClass(char *sp)
 
 /*********************************************************************/
 
-bool IsHardClass(char *sp)  /* true if string matches a hardwired class e.g. hpux */
-
+bool IsHardClass(char *sp)
+// FIXME: this is very ad-hoc and incorrect
 { int i;
   char *names[] =
      {
-     "any","agent","SuSE","suse","fedora","Ubuntu","lsb_compliant","localhost",
+     "any","agent","SuSE","suse","fedora", "redhat","ubuntu", "windows", "lsb_compliant","localhost",
+     "32_bit", "64_bit",
      NULL
      };
 

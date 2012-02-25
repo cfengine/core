@@ -1,12 +1,6 @@
 #!/bin/sh
 set -e
 
-#
-# This script is only useful for git-svn-maintained repository.
-#
-
-SVN_URL=https://c.cfengine.com/svn/core
-
 usage()
 {
   echo
@@ -70,9 +64,7 @@ branch()
       echo "In order to create stable branch you have to be on trunk!"
       exit 1
     fi
-    svn copy $SVN_URL/trunk/ $SVN_URL/branches/$BRANCH -m "Create $BRANCH from trunk"
-    git svn fetch
-    git checkout -b $BRANCH remotes/$BRANCH
+    git checkout -b $BRANCH
   else
     detect_current_branch
   fi
@@ -80,22 +72,13 @@ branch()
 
 dist()
 {
-  mkdir ../_dist
-  cd ../_dist
-  svn co $SVN_URL/branches/$BRANCH core
-  cd core
-  remove_svnversion
+  mkdir -p ../_dist/core
+  cd ../_dist/core
+  git init
+  git fetch $REPO tag $CURR_VERSION
+  git checkout $CURR_VERSION
 
-  CURR_VERSION=$(sed -ne 's/AM_INIT_AUTOMAKE(cfengine, \(.*\)).*/\1/p' configure.ac)
-
-  if [ -z "$CURR_VERSION" ]; then
-    echo "Unable to parse current version from configure.ac"
-    grep AM_INIT_AUTOMAKE configure.ac
-    exit 1
-  fi
-
-  NO_CONFIGURE=1 NO_SUBPROJECTS=1 ./autogen.sh
-  ./configure
+  NO_SUBPROJECTS=1 ./autogen.sh
   make dist
 }
 
@@ -108,28 +91,35 @@ check()
   make check -j8
 }
 
-remove_svnversion()
+remove_revision()
 {
-  sed -i -e 's/AM_INIT_AUTOMAKE(cfengine, \(.*\)\.svnversion)/AM_INIT_AUTOMAKE(cfengine, \1)/' configure.ac
+  sed -i -e 's/AM_INIT_AUTOMAKE(cfengine, \(.*\)\.revision)/AM_INIT_AUTOMAKE(cfengine, \1)/' configure.ac
 
-  if grep AM_INIT_AUTOMAKE configure.ac | grep -q svnversion; then
-    echo "Unable to remove 'svnversion' from version in configure.ac"
+  if grep AM_INIT_AUTOMAKE configure.ac | grep -q revision; then
+    echo "Unable to remove 'revision' from version in configure.ac"
     grep AM_INIT_AUTOMAKE configure.ac
     exit 1
   fi
 }
 
-do_svn_tag()
+do_tag()
 {
-  svn copy $SVN_URL/branches/$BRANCH $SVN_URL/tags/$CURR_VERSION -m "Tagging $CURR_VERSION"
-  git svn fetch
+  CURR_VERSION=$(sed -ne 's/AM_INIT_AUTOMAKE(cfengine, \(.*\)).*/\1/p' configure.ac)
+
+  if [ -z "$CURR_VERSION" ]; then
+    echo "Unable to parse current version from configure.ac"
+    grep AM_INIT_AUTOMAKE configure.ac
+    exit 1
+  fi
+
+  git tag -s $CURR_VERSION -m "Tagging $CURR_VERSION"
 }
 
 bump_version()
 {
-  sed -i -e 's/AM_INIT_AUTOMAKE(cfengine, \(.*\))/AM_INIT_AUTOMAKE(cfengine, '"$NEXT_VERSION"'.svnversion)/' configure.ac
+  sed -i -e 's/AM_INIT_AUTOMAKE(cfengine, \(.*\))/AM_INIT_AUTOMAKE(cfengine, '"$NEXT_VERSION"'.revision)/' configure.ac
 
-  if ! grep AM_INIT_AUTOMAKE configure.ac | grep -q svnversion; then
+  if ! grep AM_INIT_AUTOMAKE configure.ac | grep -q revision; then
     echo "Unable to bump version in configure.ac"
     grep AM_INIT_AUTOMAKE configure.ac
     exit 1
@@ -139,21 +129,21 @@ bump_version()
 commit_version() {
   git add configure.ac
   git commit -m "$1"
-  git svn dcommit
 }
 
 tag()
 {
-  remove_svnversion
+  remove_revision
   commit_version "Pre-release version bump"
-  do_svn_tag
+  do_tag
   bump_version
   commit_version "Post-release version bump"
 }
 
+REPO=$(git rev-parse --show-toplevel)
+
 opts "$@"
 branch
-CURDIR=$(pwd)
-dist && check
-cd ${CURDIR}
 tag
+dist
+check

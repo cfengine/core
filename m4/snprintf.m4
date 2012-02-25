@@ -14,8 +14,7 @@
 # Define HAVE_STDARG_H to 1 if <stdarg.h> is available.
 AC_DEFUN([HW_HEADER_STDARG_H],
 [
-  AC_PREREQ([2.60])dnl Older releases should work if AC_CHECK_HEADERS is used.
-  AC_CHECK_HEADERS_ONCE([stdarg.h])
+  AC_CHECK_HEADERS([stdarg.h])
 ])# HW_HEADER_STDARG_H
 
 # HW_HEADER_VARARGS_H
@@ -23,8 +22,7 @@ AC_DEFUN([HW_HEADER_STDARG_H],
 # Define HAVE_VARARGS_H to 1 if <varargs.h> is available.
 AC_DEFUN([HW_HEADER_VARARGS_H],
 [
-  AC_PREREQ([2.60])dnl Older releases should work if AC_CHECK_HEADERS is used.
-  AC_CHECK_HEADERS_ONCE([varargs.h])
+  AC_CHECK_HEADERS([varargs.h])
 ])# HW_HEADER_VARARGS_H
 
 # HW_FUNC_VA_COPY

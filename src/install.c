@@ -36,228 +36,228 @@ static void DeleteSubTypes(SubType *tp);
 
 /*******************************************************************/
 
-int RelevantBundle(char *agent,char *blocktype)
+int RelevantBundle(char *agent, char *blocktype)
+{
+    Item *ip;
 
-{ Item *ip;
- 
-if (strcmp(agent,CF_AGENTTYPES[cf_common]) == 0 || strcmp(CF_COMMONC,blocktype) == 0)
-   {
-   return true;
-   }
+    if (strcmp(agent, CF_AGENTTYPES[cf_common]) == 0 || strcmp(CF_COMMONC, blocktype) == 0)
+    {
+        return true;
+    }
 
 /* Here are some additional bundle types handled by cfAgent */
 
-ip = SplitString("edit_line,edit_xml",',');
+    ip = SplitString("edit_line,edit_xml", ',');
 
-if (strcmp(agent,CF_AGENTTYPES[cf_agent]) == 0)
-   {
-   if (IsItemIn(ip,blocktype))
-      {
-      DeleteItemList(ip);
-      return true;
-      }
-   }
+    if (strcmp(agent, CF_AGENTTYPES[cf_agent]) == 0)
+    {
+        if (IsItemIn(ip, blocktype))
+        {
+            DeleteItemList(ip);
+            return true;
+        }
+    }
 
-DeleteItemList(ip);
-return false;
+    DeleteItemList(ip);
+    return false;
 }
 
 /*******************************************************************/
 
-Bundle *AppendBundle(Bundle **start,char *name, char *type, Rlist *args)
+Bundle *AppendBundle(Bundle **start, char *name, char *type, Rlist *args)
+{
+    Bundle *bp, *lp;
 
-{ Bundle *bp,*lp;
-  
-CfDebug("Appending new bundle %s %s (",type,name);
+    CfDebug("Appending new bundle %s %s (", type, name);
 
-if (DEBUG)
-   {
-   ShowRlist(stdout,args);
-   }
-CfDebug(")\n");
+    if (DEBUG)
+    {
+        ShowRlist(stdout, args);
+    }
+    CfDebug(")\n");
 
-CheckBundle(name,type);
+    CheckBundle(name, type);
 
-bp = xcalloc(1, sizeof(Bundle));
+    bp = xcalloc(1, sizeof(Bundle));
 
-if (*start == NULL)
-   {
-   *start = bp;
-   }
-else
-   {
-   for (lp = *start; lp->next != NULL; lp=lp->next)
-      {
-      }
+    if (*start == NULL)
+    {
+        *start = bp;
+    }
+    else
+    {
+        for (lp = *start; lp->next != NULL; lp = lp->next)
+        {
+        }
 
-   lp->next = bp;
-   }
+        lp->next = bp;
+    }
 
-bp->name = xstrdup(name);
-bp->type = xstrdup(type);
-bp->args = args;
+    bp->name = xstrdup(name);
+    bp->type = xstrdup(type);
+    bp->args = args;
 
-return bp;
+    return bp;
 }
 
 /*******************************************************************/
 
-Body *AppendBody(Body **start,char *name, char *type, Rlist *args)
+Body *AppendBody(Body **start, char *name, char *type, Rlist *args)
+{
+    Body *bp, *lp;
+    Rlist *rp;
 
-{ Body *bp,*lp;
-  Rlist *rp;
+    CfDebug("Appending new promise body %s %s(", type, name);
 
-CfDebug("Appending new promise body %s %s(",type,name);
+    CheckBody(name, type);
 
-CheckBody(name,type);
+    for (rp = args; rp != NULL; rp = rp->next)
+    {
+        CfDebug("%s,", (char *) rp->item);
+    }
+    CfDebug(")\n");
 
-for (rp = args; rp!= NULL; rp=rp->next)
-   {
-   CfDebug("%s,",(char *)rp->item);
-   }
-CfDebug(")\n");
+    bp = xcalloc(1, sizeof(Body));
 
-bp = xcalloc(1, sizeof(Body));
+    if (*start == NULL)
+    {
+        *start = bp;
+    }
+    else
+    {
+        for (lp = *start; lp->next != NULL; lp = lp->next)
+        {
+        }
 
-if (*start == NULL)
-   {
-   *start = bp;
-   }
-else
-   {
-   for (lp = *start; lp->next != NULL; lp=lp->next)
-      {
-      }
+        lp->next = bp;
+    }
 
-   lp->next = bp;
-   }
+    bp->name = xstrdup(name);
+    bp->type = xstrdup(type);
+    bp->args = args;
 
-bp->name = xstrdup(name);
-bp->type = xstrdup(type);
-bp->args = args;
-
-return bp;
+    return bp;
 }
 
 /*******************************************************************/
 
-SubType *AppendSubType(Bundle *bundle,char *typename)
+SubType *AppendSubType(Bundle *bundle, char *typename)
+{
+    SubType *tp, *lp;
 
-{ SubType *tp,*lp;
+    CfDebug("Appending new type section %s\n", typename);
 
-CfDebug("Appending new type section %s\n",typename);
+    if (bundle == NULL)
+    {
+        yyerror("Software error. Attempt to add a type without a bundle\n");
+        FatalError("Stopped");
+    }
 
-if (bundle == NULL)
-   {
-   yyerror("Software error. Attempt to add a type without a bundle\n");
-   FatalError("Stopped");
-   }
+    for (lp = bundle->subtypes; lp != NULL; lp = lp->next)
+    {
+        if (strcmp(lp->name, typename) == 0)
+        {
+            return lp;
+        }
+    }
 
-for (lp = bundle->subtypes; lp != NULL; lp=lp->next)
-   {
-   if (strcmp(lp->name,typename) == 0)
-      {
-      return lp;
-      }
-   }
+    tp = xcalloc(1, sizeof(SubType));
 
-tp = xcalloc(1, sizeof(SubType));
+    if (bundle->subtypes == NULL)
+    {
+        bundle->subtypes = tp;
+    }
+    else
+    {
+        for (lp = bundle->subtypes; lp->next != NULL; lp = lp->next)
+        {
+        }
 
-if (bundle->subtypes == NULL)
-   {
-   bundle->subtypes = tp;
-   }
-else
-   {
-   for (lp = bundle->subtypes; lp->next != NULL; lp=lp->next)
-      {
-      }
+        lp->next = tp;
+    }
 
-   lp->next = tp;
-   }
+    tp->parent_bundle = bundle;
+    tp->name = xstrdup(typename);
 
-tp->parent_bundle = bundle;
-tp->name = xstrdup(typename);
-
-return tp;
+    return tp;
 }
 
 /*******************************************************************/
 
-Promise *AppendPromise(SubType *type,char *promiser, Rval promisee, char *classes,char *bundle,char *bundletype)
+Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *classes, char *bundle, char *bundletype)
+{
+    Promise *pp, *lp;
+    char *sp = NULL, *spe = NULL;
+    char output[CF_BUFSIZE];
 
-{ Promise *pp,*lp;
-  char *sp = NULL,*spe = NULL;
-  char output[CF_BUFSIZE];
-
-if (type == NULL)
-   {
-   yyerror("Software error. Attempt to add a promise without a type\n");
-   FatalError("Stopped");
-   }
+    if (type == NULL)
+    {
+        yyerror("Software error. Attempt to add a promise without a type\n");
+        FatalError("Stopped");
+    }
 
 /* Check here for broken promises - or later with more info? */
 
-CfDebug("Appending Promise from bundle %s %s if context %s\n",bundle,promiser,classes);
+    CfDebug("Appending Promise from bundle %s %s if context %s\n", bundle, promiser, classes);
 
-pp = xcalloc(1, sizeof(Promise));
+    pp = xcalloc(1, sizeof(Promise));
 
-sp = xstrdup(promiser);
+    sp = xstrdup(promiser);
 
-if (strlen(classes) > 0)
-   {
-   spe = xstrdup(classes);
-   }
-else
-   {
-   spe = xstrdup("any");
-   }
+    if (strlen(classes) > 0)
+    {
+        spe = xstrdup(classes);
+    }
+    else
+    {
+        spe = xstrdup("any");
+    }
 
-if (strcmp(type->name,"classes") == 0 || strcmp(type->name,"vars") == 0)
-   {
-   if (isdigit(*promiser) && Str2Int(promiser) != CF_NOINT)
-      {
-      yyerror("Variable or class identifier is purely numerical, which is not allowed");
-      }
-   }
+    if (strcmp(type->name, "classes") == 0 || strcmp(type->name, "vars") == 0)
+    {
+        if (isdigit(*promiser) && Str2Int(promiser) != CF_NOINT)
+        {
+            yyerror("Variable or class identifier is purely numerical, which is not allowed");
+        }
+    }
 
-if (strcmp(type->name,"vars") == 0)
-   {
-   if (!CheckParseVariableName(promiser))
-      {
-      snprintf(output,CF_BUFSIZE,"Use of a reserved or illegal variable name \"%s\" ",promiser);
-      ReportError(output);      
-      }
-   }
+    if (strcmp(type->name, "vars") == 0)
+    {
+        if (!CheckParseVariableName(promiser))
+        {
+            snprintf(output, CF_BUFSIZE, "Use of a reserved or illegal variable name \"%s\" ", promiser);
+            ReportError(output);
+        }
+    }
 
-if (type->promiselist == NULL)
-   {
-   type->promiselist = pp;
-   }
-else
-   {
-   for (lp = type->promiselist; lp->next != NULL; lp=lp->next)
-      {
-      }
+    if (type->promiselist == NULL)
+    {
+        type->promiselist = pp;
+    }
+    else
+    {
+        for (lp = type->promiselist; lp->next != NULL; lp = lp->next)
+        {
+        }
 
-   lp->next = pp;
-   }
+        lp->next = pp;
+    }
 
-pp->parent_subtype = type;
-pp->audit = AUDITPTR;
-pp->bundle =  xstrdup(bundle);
-pp->promiser = sp;
-pp->promisee = promisee;
-pp->classes = spe;
-pp->donep = &(pp->done);
-pp->has_subbundles = false;
-pp->org_pp = NULL;
+    pp->parent_subtype = type;
+    pp->audit = AUDITPTR;
+    pp->bundle = xstrdup(bundle);
+    pp->promiser = sp;
+    pp->promisee = promisee;
+    pp->classes = spe;
+    pp->donep = &(pp->done);
+    pp->has_subbundles = false;
+    pp->org_pp = NULL;
 
-pp->bundletype = xstrdup(bundletype); /* cache agent,common,server etc*/
-pp->agentsubtype = type->name;       /* Cache the typename */
-pp->ref_alloc = 'n';
+    pp->bundletype = xstrdup(bundletype);       /* cache agent,common,server etc */
+    pp->agentsubtype = type->name;      /* Cache the typename */
+    pp->ref_alloc = 'n';
 
-return pp;
+    return pp;
 }
 
 /*******************************************************************/
@@ -265,84 +265,81 @@ return pp;
 /*******************************************************************/
 
 void DeleteBundles(Bundle *bp)
-
 {
-if (bp == NULL)
-   {
-   return;
-   }
- 
-if (bp->next != NULL)
-   {
-   DeleteBundles(bp->next);
-   }
+    if (bp == NULL)
+    {
+        return;
+    }
 
-if (bp->name != NULL)
-   {
-   free(bp->name);
-   }
+    if (bp->next != NULL)
+    {
+        DeleteBundles(bp->next);
+    }
 
-if (bp->type != NULL)
-   {
-   free(bp->type);
-   }
+    if (bp->name != NULL)
+    {
+        free(bp->name);
+    }
 
-DeleteRlist(bp->args);
-DeleteSubTypes(bp->subtypes);
-free(bp);
+    if (bp->type != NULL)
+    {
+        free(bp->type);
+    }
+
+    DeleteRlist(bp->args);
+    DeleteSubTypes(bp->subtypes);
+    free(bp);
 }
 
 /*******************************************************************/
 
 static void DeleteSubTypes(SubType *tp)
-
 {
-if (tp == NULL)
-   {
-   return;
-   }
- 
-if (tp->next != NULL)
-   {
-   DeleteSubTypes(tp->next);
-   }
+    if (tp == NULL)
+    {
+        return;
+    }
 
-DeletePromises(tp->promiselist);
+    if (tp->next != NULL)
+    {
+        DeleteSubTypes(tp->next);
+    }
 
-if (tp->name != NULL)
-   {
-   free(tp->name);
-   }
+    DeletePromises(tp->promiselist);
 
-free(tp);
+    if (tp->name != NULL)
+    {
+        free(tp->name);
+    }
+
+    free(tp);
 }
 
 /*******************************************************************/
 
 void DeleteBodies(Body *bp)
-
 {
-if (bp == NULL)
-   {
-   return;
-   }
- 
-if (bp->next != NULL)
-   {
-   DeleteBodies(bp->next);
-   }
+    if (bp == NULL)
+    {
+        return;
+    }
 
-if (bp->name != NULL)
-   {
-   free(bp->name);
-   }
+    if (bp->next != NULL)
+    {
+        DeleteBodies(bp->next);
+    }
 
-if (bp->type != NULL)
-   {
-   free(bp->type);
-   }
+    if (bp->name != NULL)
+    {
+        free(bp->name);
+    }
 
-DeleteRlist(bp->args);
-DeleteConstraintList(bp->conlist);
-free(bp);
+    if (bp->type != NULL)
+    {
+        free(bp->type);
+    }
+
+    DeleteRlist(bp->args);
+    DeleteConstraintList(bp->conlist);
+    free(bp);
 }

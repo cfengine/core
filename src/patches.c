@@ -43,82 +43,83 @@ static char *cf_format_strtimestamp(struct tm *tm, char *buf);
  * MapName() is thread-safe, but the argument is modified. */
 
 #ifdef NT
-#  if defined(__MINGW32__)
+# if defined(__MINGW32__)
 
 char *MapName(char *s)
 {
-char *c = s;
-while ((c = strchr(c, '/')))
-   {
-   *c = '\\';
-   }
-return s;
+    char *c = s;
+
+    while ((c = strchr(c, '/')))
+    {
+        *c = '\\';
+    }
+    return s;
 }
 
-#  elif defined(__CYGWIN__)
+# elif defined(__CYGWIN__)
 
 char *MapName(char *s)
 {
-char buffer[CF_BUFSIZE];
-char *spto;
-char *spf;
+    char buffer[CF_BUFSIZE];
+    char *spto;
+    char *spf;
 
-memset(buffer,0,CF_BUFSIZE);
+    memset(buffer, 0, CF_BUFSIZE);
 
-spto = buffer;
+    spto = buffer;
 
-for (spf = s; *spf != '\0'; spf++)
-   {
-   if (IsFileSep(*spf) && IsFileSep(*(spf+1))) /* compress // or \\ */
-      {
-      continue;
-      }
+    for (spf = s; *spf != '\0'; spf++)
+    {
+        if (IsFileSep(*spf) && IsFileSep(*(spf + 1)))   /* compress // or \\ */
+        {
+            continue;
+        }
 
-   if (IsFileSep(*spf) && *(spf+1) != '\0' && *(spf+2) == ':') /* compress \c:\abc */
-      {
-      continue;
-      }
+        if (IsFileSep(*spf) && *(spf + 1) != '\0' && *(spf + 2) == ':') /* compress \c:\abc */
+        {
+            continue;
+        }
 
-   if (*(spf+1) != '\0' && (strncmp(spf+1,":\\",2) == 0 || strncmp(spf+1,":/",2) == 0 ))
-      {
-      /* For cygwin translation */
-      strcat(spto,"/cygdrive/");
-      /* Drive letter */
-      strncat(spto,spf,1);
-      strcat(spto,"/");
-      spto += strlen("/cygdrive/c/");
-      spf += strlen("c:/") - 1;
-      continue;
-      }
+        if (*(spf + 1) != '\0' && (strncmp(spf + 1, ":\\", 2) == 0 || strncmp(spf + 1, ":/", 2) == 0))
+        {
+            /* For cygwin translation */
+            strcat(spto, "/cygdrive/");
+            /* Drive letter */
+            strncat(spto, spf, 1);
+            strcat(spto, "/");
+            spto += strlen("/cygdrive/c/");
+            spf += strlen("c:/") - 1;
+            continue;
+        }
 
-   switch (*spf)
-      {
-      case '\\':
-         *spto = '/';
-         break;
+        switch (*spf)
+        {
+        case '\\':
+            *spto = '/';
+            break;
 
-      default:
-         *spto = *spf;
-         break;
-      }
+        default:
+            *spto = *spf;
+            break;
+        }
 
-   spto++;
-   }
+        spto++;
+    }
 
-memset(s,0,MAX_FILENAME);
-strncpy(s,buffer,MAX_FILENAME-1);
+    memset(s, 0, MAX_FILENAME);
+    strncpy(s, buffer, MAX_FILENAME - 1);
 
-return s;
+    return s;
 }
 
-#  else /* !__MINGW32__ && !__CYGWIN__ */
-#    error Unknown NT-based compilation environment
-#  endif /* __MINGW32__ || __CYGWIN__ */
+# else/* !__MINGW32__ && !__CYGWIN__ */
+#  error Unknown NT-based compilation environment
+# endif/* __MINGW32__ || __CYGWIN__ */
 #else /* !NT */
 
 char *MapName(char *s)
 {
-return s;
+    return s;
 }
 
 #endif /* NT */
@@ -126,57 +127,52 @@ return s;
 /*********************************************************/
 
 char *MapNameForward(char *s)
-
 /* Like MapName(), but maps all slashes to forward */
-
 {
-while ((s = strchr(s, '\\')))
-   {
-   *s = '/';
-   }
-return s;
+    while ((s = strchr(s, '\\')))
+    {
+        *s = '/';
+    }
+    return s;
 }
 
 /*********************************************************/
 
 #ifndef HAVE_GETNETGRENT
 
-#if !defined __STDC__ || !__STDC__
+# if !defined __STDC__ || !__STDC__
 /* This is a separate conditional since some stdc systems
    reject `defined (const)'.  */
 
-# ifndef const
-#  define const
+#  ifndef const
+#   define const
+#  endif
 # endif
-#endif
 
 /*********************************************************/
 
 int setnetgrent(netgroup)
-
-const char *netgroup;
+     const char *netgroup;
 
 {
-return 0;
+    return 0;
 }
 
 /**********************************************************/
 
-int getnetgrent(a,b,c)
-
-char **a, **b, **c;
+int getnetgrent(a, b, c)
+     char **a, **b, **c;
 
 {
-*a=NULL;
-*b=NULL;
-*c=NULL;
-return 0;
+    *a = NULL;
+    *b = NULL;
+    *c = NULL;
+    return 0;
 }
 
 /***********************************************************/
 
 void endnetgrent()
-
 {
 }
 
@@ -184,71 +180,67 @@ void endnetgrent()
 
 #ifndef HAVE_UNAME
 
-#if !defined __STDC__ || !__STDC__
+# if !defined __STDC__ || !__STDC__
 /* This is a separate conditional since some stdc systems
    reject `defined (const)'.  */
 
-# ifndef const
-#  define const
+#  ifndef const
+#   define const
+#  endif
 # endif
-#endif
-
 
 /***********************************************************/
 /* UNAME is missing on some weird OSes                     */
 /***********************************************************/
 
-int uname (struct utsname *sys)
-
-#ifdef MINGW
-
+int uname(struct utsname *sys)
+# ifdef MINGW
 {
-return NovaWin_uname(sys);
+    return NovaWin_uname(sys);
 }
 
-#else  /* NOT MINGW */
+# else                          /* NOT MINGW */
+{
+    char buffer[CF_BUFSIZE], *sp;
 
-{ char buffer[CF_BUFSIZE], *sp;
+    if (gethostname(buffer, CF_BUFSIZE) == -1)
+    {
+        perror("gethostname");
+        exit(1);
+    }
 
-if (gethostname(buffer,CF_BUFSIZE) == -1)
-   {
-   perror("gethostname");
-   exit(1);
-   }
+    strcpy(sys->nodename, buffer);
 
-strcpy(sys->nodename,buffer);
+    if (strcmp(buffer, AUTOCONF_HOSTNAME) != 0)
+    {
+        CfOut(cf_verbose, "", "This binary was complied on a different host (%s).\n", AUTOCONF_HOSTNAME);
+        CfOut(cf_verbose, "", "This host does not have uname, so I can't tell if it is the exact same OS\n");
+    }
 
-if (strcmp(buffer,AUTOCONF_HOSTNAME) != 0)
-   {
-   CfOut(cf_verbose,"","This binary was complied on a different host (%s).\n",AUTOCONF_HOSTNAME);
-   CfOut(cf_verbose,"","This host does not have uname, so I can't tell if it is the exact same OS\n");
-   }
+    strcpy(sys->sysname, AUTOCONF_SYSNAME);
+    strcpy(sys->release, "cfengine-had-to-guess");
+    strcpy(sys->machine, "missing-uname(2)");
+    strcpy(sys->version, "unknown");
 
-strcpy(sys->sysname,AUTOCONF_SYSNAME);
-strcpy(sys->release,"cfengine-had-to-guess");
-strcpy(sys->machine,"missing-uname(2)");
-strcpy(sys->version,"unknown");
+    /* Extract a version number if possible */
 
+    for (sp = sys->sysname; *sp != '\0'; sp++)
+    {
+        if (isdigit(*sp))
+        {
+            strcpy(sys->release, sp);
+            strcpy(sys->version, sp);
+            *sp = '\0';
+            break;
+        }
+    }
 
-  /* Extract a version number if possible */
-
-for (sp = sys->sysname; *sp != '\0'; sp++)
-   {
-   if (isdigit(*sp))
-      {
-      strcpy(sys->release,sp);
-      strcpy(sys->version,sp);
-      *sp = '\0';
-      break;
-      }
-   }
-
-return (0);
+    return (0);
 }
 
-#endif  /* NOT MINGW */
+# endif/* NOT MINGW */
 
-#endif  /* NOT HAVE_UNAME */
+#endif /* NOT HAVE_UNAME */
 
 /***********************************************************/
 /* putenv() missing on old BSD systems                     */
@@ -257,14 +249,12 @@ return (0);
 #ifndef HAVE_PUTENV
 
 int putenv(char *s)
-
 {
-CfOut(cf_verbose,"","(This system does not have putenv: cannot update CFALLCLASSES\n");
-return 0;
+    CfOut(cf_verbose, "", "(This system does not have putenv: cannot update CFALLCLASSES\n");
+    return 0;
 }
 
 #endif
-
 
 /***********************************************************/
 /* seteuid/gid() missing on some on posix systems          */
@@ -272,25 +262,23 @@ return 0;
 
 #ifndef HAVE_SETEUID
 
-#if !defined __STDC__ || !__STDC__
+# if !defined __STDC__ || !__STDC__
 /* This is a separate conditional since some stdc systems
    reject `defined (const)'.  */
 
-# ifndef const
-#  define const
+#  ifndef const
+#   define const
+#  endif
 # endif
-#endif
 
-
-int seteuid (uid_t uid)
-
+int seteuid(uid_t uid)
 {
-#ifdef HAVE_SETREUID
-return setreuid(-1,uid);
-#else
-CfOut(cf_verbose,"","(This system does not have setreuid (patches.c)\n");
-return -1; 
-#endif 
+# ifdef HAVE_SETREUID
+    return setreuid(-1, uid);
+# else
+    CfOut(cf_verbose, "", "(This system does not have setreuid (patches.c)\n");
+    return -1;
+# endif
 }
 
 #endif
@@ -299,15 +287,14 @@ return -1;
 
 #ifndef HAVE_SETEGID
 
-int setegid (gid_t gid)
-
+int setegid(gid_t gid)
 {
-#ifdef HAVE_SETREGID
-return setregid(-1,gid);
-#else
-CfOut(cf_verbose,"","(This system does not have setregid (patches.c)\n");
-return -1; 
-#endif 
+# ifdef HAVE_SETREGID
+    return setregid(-1, gid);
+# else
+    CfOut(cf_verbose, "", "(This system does not have setregid (patches.c)\n");
+    return -1;
+# endif
 }
 
 #endif
@@ -315,21 +302,21 @@ return -1;
 /*******************************************************************/
 
 int IsPrivileged()
-
 {
 #ifdef NT
-return true;
+    return true;
 #else
-return (getuid() == 0);
-#endif 
+    return (getuid() == 0);
+#endif
 }
 
 /*******************************************************************/
 
 char *cf_ctime(const time_t *timep)
 {
-static char buf[26];
-return cf_strtimestamp_local(*timep, buf);
+    static char buf[26];
+
+    return cf_strtimestamp_local(*timep, buf);
 }
 
 /*
@@ -348,121 +335,115 @@ return cf_strtimestamp_local(*timep, buf);
 
 char *cf_strtimestamp_local(const time_t time, char *buf)
 {
-struct tm tm;
+    struct tm tm;
 
-if (localtime_r(&time, &tm) == NULL)
-   {
-   CfOut(cf_verbose, "localtime_r", "Unable to parse passed timestamp");
-   return NULL;
-   }
+    if (localtime_r(&time, &tm) == NULL)
+    {
+        CfOut(cf_verbose, "localtime_r", "Unable to parse passed timestamp");
+        return NULL;
+    }
 
-return cf_format_strtimestamp(&tm, buf);
+    return cf_format_strtimestamp(&tm, buf);
 }
 
 /*******************************************************************/
 
 char *cf_strtimestamp_utc(const time_t time, char *buf)
 {
-struct tm tm;
+    struct tm tm;
 
-if (gmtime_r(&time, &tm) == NULL)
-   {
-   CfOut(cf_verbose, "gmtime_r", "Unable to parse passed timestamp");
-   return NULL;
-   }
+    if (gmtime_r(&time, &tm) == NULL)
+    {
+        CfOut(cf_verbose, "gmtime_r", "Unable to parse passed timestamp");
+        return NULL;
+    }
 
-return cf_format_strtimestamp(&tm, buf);
+    return cf_format_strtimestamp(&tm, buf);
 }
 
 /*******************************************************************/
 
 static char *cf_format_strtimestamp(struct tm *tm, char *buf)
 {
- /* Security checks */
-if (tm->tm_year < -2899 || tm->tm_year > 8099)
-   {
-   CfOut(cf_error, "", "Unable to format timestamp: passed year is out of range: %d",
-         tm->tm_year + 1900);
-   return NULL;
-   }
+    /* Security checks */
+    if (tm->tm_year < -2899 || tm->tm_year > 8099)
+    {
+        CfOut(cf_error, "", "Unable to format timestamp: passed year is out of range: %d", tm->tm_year + 1900);
+        return NULL;
+    }
 
 /* There is no easy way to replicate ctime output by using strftime */
 
-if (snprintf(buf, 26, "%3.3s %3.3s %2d %02d:%02d:%02d %04d",
-             DAY_TEXT[tm->tm_wday ? (tm->tm_wday - 1) : 6], MONTH_TEXT[tm->tm_mon],
-             tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, tm->tm_year + 1900) >= 26)
-   {
-   CfOut(cf_error, "", "Unable to format timestamp: passed values are out of range");
-   return NULL;
-   }
+    if (snprintf(buf, 26, "%3.3s %3.3s %2d %02d:%02d:%02d %04d",
+                 DAY_TEXT[tm->tm_wday ? (tm->tm_wday - 1) : 6], MONTH_TEXT[tm->tm_mon],
+                 tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, tm->tm_year + 1900) >= 26)
+    {
+        CfOut(cf_error, "", "Unable to format timestamp: passed values are out of range");
+        return NULL;
+    }
 
-return buf;
+    return buf;
 }
 
 /*******************************************************************/
 
 int cf_closesocket(int sd)
-
 {
-int res;
+    int res;
 
 #ifdef MINGW
-res = closesocket(sd);
+    res = closesocket(sd);
 #else
-res = close(sd);
+    res = close(sd);
 #endif
 
-if (res != 0)
-  {
-  CfOut(cf_error,"cf_closesocket","!! Could not close socket");
-  }
+    if (res != 0)
+    {
+        CfOut(cf_error, "cf_closesocket", "!! Could not close socket");
+    }
 
-return res;
+    return res;
 }
 
 /*******************************************************************/
 
 int cf_mkdir(const char *path, mode_t mode)
-
 {
 #ifdef MINGW
-return NovaWin_mkdir(path, mode);
+    return NovaWin_mkdir(path, mode);
 #else
-return mkdir(path,mode);
+    return mkdir(path, mode);
 #endif
 }
 
 /*******************************************************************/
 
 int cf_chmod(const char *path, mode_t mode)
-
 {
 #ifdef MINGW
-return NovaWin_chmod(path, mode);
+    return NovaWin_chmod(path, mode);
 #else
-return chmod(path,mode);
+    return chmod(path, mode);
 #endif
 }
 
 /*******************************************************************/
 
 int cf_rename(const char *oldpath, const char *newpath)
-
 {
 #ifdef MINGW
-return NovaWin_rename(oldpath, newpath);
+    return NovaWin_rename(oldpath, newpath);
 #else
-return rename(oldpath,newpath);
+    return rename(oldpath, newpath);
 #endif
 }
 
 /*******************************************************************/
 
 void OpenNetwork()
-
 {
 #ifdef MINGW
-NovaWin_OpenNetwork();
+    NovaWin_OpenNetwork();
 #else
 /* no network init on Unix */
 #endif
@@ -471,10 +452,9 @@ NovaWin_OpenNetwork();
 /*******************************************************************/
 
 void CloseNetwork()
-
 {
 #ifdef MINGW
-NovaWin_CloseNetwork();
+    NovaWin_CloseNetwork();
 #else
 /* no network close on Unix */
 #endif
@@ -483,10 +463,9 @@ NovaWin_CloseNetwork();
 /*******************************************************************/
 
 void CloseWmi()
-
 {
 #ifdef MINGW
-NovaWin_WmiDeInitialize();
+    NovaWin_WmiDeInitialize();
 #else
 /* no WMI on Unix */
 #endif
@@ -494,16 +473,14 @@ NovaWin_WmiDeInitialize();
 
 /*******************************************************************/
 
-#ifdef MINGW  // FIXME: Timeouts ignored on windows for now...
+#ifdef MINGW                    // FIXME: Timeouts ignored on windows for now...
 unsigned int alarm(unsigned int seconds)
-
 {
-return 0;
+    return 0;
 }
-#endif  /* MINGW */
+#endif /* MINGW */
 
 /*******************************************************************/
-
 
 /*******************************************************************/
 
@@ -514,36 +491,31 @@ int LinkOrCopy(const char *from, const char *to, int sym)
  **/
 {
 
-#ifdef MINGW  // only copy on Windows for now
+#ifdef MINGW                    // only copy on Windows for now
 
+    if (!CopyFile(from, to, TRUE))
+    {
+        return false;
+    }
 
-if (!CopyFile(from,to,TRUE))
-  {
-  return false;
-  }
+#else /* NOT MINGW */
 
+    if (sym)
+    {
+        if (symlink(from, to) == -1)
+        {
+            return false;
+        }
+    }
+    else                        // hardlink
+    {
+        if (link(from, to) == -1)
+        {
+            return false;
+        }
+    }
 
-#else  /* NOT MINGW */
+#endif /* NOT MINGW */
 
-
-if(sym)
-  {
-    if (symlink(from,to) == -1)
-      {
-	return false;
-      }
-  }
- else  // hardlink
-   {
-     if(link(from,to) == -1)
-       {
-	 return false;
-       }
-   }
-
-   
-#endif  /* NOT MINGW */
-
-
- return true;
+    return true;
 }

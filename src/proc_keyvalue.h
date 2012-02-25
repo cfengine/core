@@ -31,18 +31,14 @@
  * Parser for line-oriented key-value formats found in Linux /proc filesystem.
  */
 
-typedef bool (*KeyNumericValueCallback)(const char *field, off_t value,
-                                        void *param);
+typedef bool (*KeyNumericValueCallback) (const char *field, off_t value, void *param);
 
 /*
  * Returns false on syntax error
  */
-bool ParseKeyNumericValue(FILE *fd, KeyNumericValueCallback callback,
-                          void *param);
+bool ParseKeyNumericValue(FILE *fd, KeyNumericValueCallback callback, void *param);
 
-
-typedef bool (*KeyValueCallback)(const char *field, const char *value,
-                                 void *param);
+typedef bool (*KeyValueCallback) (const char *field, const char *value, void *param);
 
 /*
  * Returns false on syntax error

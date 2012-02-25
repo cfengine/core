@@ -28,22 +28,21 @@
 #include "cf.defs.h"
 
 typedef struct
-   {
-   void **data;
-   size_t length;
-   size_t capacity;
-   void (*ItemDestroy)(void *item);
-   } Sequence;
+{
+    void **data;
+    size_t length;
+    size_t capacity;
+    void (*ItemDestroy) (void *item);
+} Sequence;
 
-Sequence *SequenceCreate(size_t initialCapacity, void (*ItemDestroy)());
+Sequence *SequenceCreate(size_t initialCapacity, void (*ItemDestroy) ());
 void SequenceDestroy(Sequence *seq);
 
-typedef int (*SequenceItemComparator)(const void *, const void *);
+typedef int (*SequenceItemComparator) (const void *, const void *);
 
 void SequenceAppend(Sequence *seq, void *item);
 void *SequenceLookup(Sequence *seq, const void *key, SequenceItemComparator compare);
 void SequenceRemoveRange(Sequence *seq, size_t start, size_t end);
 void SequenceSort(Sequence *seq, SequenceItemComparator compare);
-
 
 #endif

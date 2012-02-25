@@ -24,7 +24,7 @@
 */
 
 #ifdef HAVE_CONFIG_H
-#include "../src/conf.h"
+# include "../src/conf.h"
 #endif
 
 #include <stdlib.h>
@@ -35,5 +35,5 @@ double drand48(void);
 
 double drand48(void)
 {
-return (double)rand();
+    return (double) rand();
 }

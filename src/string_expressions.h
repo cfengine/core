@@ -46,36 +46,36 @@
 */
 
 typedef enum
-   {
-   CONCAT,
-   LITERAL,
-   VARREF
-   } StringOp;
+{
+    CONCAT,
+    LITERAL,
+    VARREF
+} StringOp;
 
 typedef struct StringExpression_ StringExpression;
 
 struct StringExpression_
-   {
-   StringOp op;
-   union StringExpressionValue
-      {
-      struct
-         {
-         StringExpression *lhs;
-         StringExpression *rhs;
-         } concat;
+{
+    StringOp op;
+    union StringExpressionValue
+    {
+        struct
+        {
+            StringExpression *lhs;
+            StringExpression *rhs;
+        } concat;
 
-      struct
-         {
-         char *literal;
-         } literal;
+        struct
+        {
+            char *literal;
+        } literal;
 
-      struct
-         {
-         StringExpression *name;
-         } varref;
-      } val;
-   };
+        struct
+        {
+            StringExpression *name;
+        } varref;
+    } val;
+};
 
 /* Parsing and evaluation */
 
@@ -89,10 +89,10 @@ struct StringExpression_
  * before the error.
  */
 typedef struct
-   {
-   StringExpression *result;
-   int position;
-   } StringParseResult;
+{
+    StringExpression *result;
+    int position;
+} StringParseResult;
 
 StringParseResult ParseStringExpression(const char *expr, int start, int end);
 
@@ -101,14 +101,13 @@ StringParseResult ParseStringExpression(const char *expr, int start, int end);
  * evaluation will be aborted and NULL will be returned from
  * EvalStringExpression.
  */
-typedef char * (*VarRefEvaluator)(const char *varname, void *param);
+typedef char *(*VarRefEvaluator) (const char *varname, void *param);
 
 /*
  * Result is heap-allocated. In case evalfn() returns NULL whole
  * EvalStringExpression returns NULL as well.
  */
-char *EvalStringExpression(const StringExpression *expr, VarRefEvaluator evalfn,
-                           void *param);
+char *EvalStringExpression(const StringExpression *expr, VarRefEvaluator evalfn, void *param);
 
 /*
  * Frees StringExpression produced by ParseStringExpression. NULL-safe.

@@ -24,7 +24,7 @@
 */
 
 #ifdef HAVE_CONFIG_H
-#include "../src/conf.h"
+# include "../src/conf.h"
 #endif
 
 #include <string.h>
@@ -35,15 +35,15 @@ char *strstr(const char *haystack, const char *needle);
 
 char *strstr(const char *haystack, const char *needle)
 {
-size_t needlelen = strlen(needle);
+    size_t needlelen = strlen(needle);
 
-for (const char *sp = haystack; *sp; sp++)
-   {
-   if (strncmp(sp, needle, needlelen) == 0)
-      {
-      return (char *)sp;
-      }
-   }
+    for (const char *sp = haystack; *sp; sp++)
+    {
+        if (strncmp(sp, needle, needlelen) == 0)
+        {
+            return (char *) sp;
+        }
+    }
 
-return NULL;
+    return NULL;
 }

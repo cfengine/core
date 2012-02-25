@@ -17,14 +17,14 @@ static void Manual(const char *examples_dir);
 
 int main(int argc, char **argv)
 {
-if (argc != 2)
-   {
-   fprintf(stderr, "Usage: build_solutions_guide <examples-dir> < in > out\n");
-   return 2;
-   }
+    if (argc != 2)
+    {
+        fprintf(stderr, "Usage: build_solutions_guide <examples-dir> < in > out\n");
+        return 2;
+    }
 
-Manual(argv[1]);
-return 0;
+    Manual(argv[1]);
+    return 0;
 }
 
 /*****************************************************************************/
@@ -34,11 +34,12 @@ return 0;
  */
 static void Chomp(char *str)
 {
-char *s = strrchr(str, '\n');
-if (s)
-   {
-   *s = '\0';
-   }
+    char *s = strrchr(str, '\n');
+
+    if (s)
+    {
+        *s = '\0';
+    }
 }
 
 /*****************************************************************************/
@@ -48,80 +49,81 @@ if (s)
 
 static void IncludeExampleFile(const char *examples_dir, const char *filename)
 {
-char path[2048];
-snprintf(path, 2048, "%s/%s", examples_dir, filename);
+    char path[2048];
 
-FILE *example_fh = fopen(path, "r");
-if (example_fh == NULL)
-   {
-   fprintf(stderr, "Unable to find file %s to include.\n", path);
-   exit(1);
-   }
+    snprintf(path, 2048, "%s/%s", examples_dir, filename);
+
+    FILE *example_fh = fopen(path, "r");
+
+    if (example_fh == NULL)
+    {
+        fprintf(stderr, "Unable to find file %s to include.\n", path);
+        exit(1);
+    }
 
 /* Skip header */
-while (!feof(example_fh))
-   {
-   char line[2048];
-   fgets(line, 2048, example_fh);
-   if (strstr(line, "COSL.txt"))
-      {
-      break;
-      }
-   }
+    while (!feof(example_fh))
+    {
+        char line[2048];
 
-while (!feof(example_fh))
-   {
-   char buf[4096];
-   size_t read_ = fread(buf, 1, 4096, example_fh);
-   if (read_ < 4096 && ferror(example_fh))
-      {
-      fprintf(stderr, "Error reading example file %s. Bailing out.\n", path);
-      exit(1);
-      }
+        fgets(line, 2048, example_fh);
+        if (strstr(line, "COSL.txt"))
+        {
+            break;
+        }
+    }
 
-   if (fwrite(buf, 1, read_, stdout) < read_)
-      {
-      fprintf(stderr, "Error writing to stdout. Bailing out.\n");
-      exit(1);
-      }
-   }
+    while (!feof(example_fh))
+    {
+        char buf[4096];
+        size_t read_ = fread(buf, 1, 4096, example_fh);
 
-fclose(example_fh);
+        if (read_ < 4096 && ferror(example_fh))
+        {
+            fprintf(stderr, "Error reading example file %s. Bailing out.\n", path);
+            exit(1);
+        }
+
+        if (fwrite(buf, 1, read_, stdout) < read_)
+        {
+            fprintf(stderr, "Error writing to stdout. Bailing out.\n");
+            exit(1);
+        }
+    }
+
+    fclose(example_fh);
 }
-
 
 static void Manual(const char *examples_dir)
 {
-for (;;)
-   {
-   char line[2048];
+    for (;;)
+    {
+        char line[2048];
 
-   if (fgets(line, 2048, stdin) == NULL)
-      {
-      if (ferror(stdin))
-         {
-         fprintf(stderr, "Error during reading stdin. Bailing out.\n");
-         exit(1);
-         }
-      else
-         {
-         return;
-         }
-      }
+        if (fgets(line, 2048, stdin) == NULL)
+        {
+            if (ferror(stdin))
+            {
+                fprintf(stderr, "Error during reading stdin. Bailing out.\n");
+                exit(1);
+            }
+            else
+            {
+                return;
+            }
+        }
 
-   if (strstr(line, EXAMPLE_INCLUDE_TOKEN))
-      {
-      char *filename = strstr(line, EXAMPLE_INCLUDE_TOKEN)
-         + strlen(EXAMPLE_INCLUDE_TOKEN);
+        if (strstr(line, EXAMPLE_INCLUDE_TOKEN))
+        {
+            char *filename = strstr(line, EXAMPLE_INCLUDE_TOKEN) + strlen(EXAMPLE_INCLUDE_TOKEN);
 
-      Chomp(filename);
+            Chomp(filename);
 
-      IncludeExampleFile(examples_dir, filename);
-      }
-   else
-      {
-      fputs(line, stdout);
-      }
-   }
+            IncludeExampleFile(examples_dir, filename);
+        }
+        else
+        {
+            fputs(line, stdout);
+        }
+    }
 }
-

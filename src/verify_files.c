@@ -37,40 +37,37 @@ static void FindFilePromiserObjects(Promise *pp);
 /*****************************************************************************/
 
 void *FindAndVerifyFilesPromises(Promise *pp)
-
 {
-PromiseBanner(pp); 
-FindFilePromiserObjects(pp);
+    PromiseBanner(pp);
+    FindFilePromiserObjects(pp);
 
-if (AM_BACKGROUND_PROCESS && !pp->done)
-   {
-   CfOut(cf_verbose,"","Exiting backgrounded promise");
-   PromiseRef(cf_verbose,pp);
-   exit(0);
-   }
+    if (AM_BACKGROUND_PROCESS && !pp->done)
+    {
+        CfOut(cf_verbose, "", "Exiting backgrounded promise");
+        PromiseRef(cf_verbose, pp);
+        exit(0);
+    }
 
-return (void *)NULL;
+    return (void *) NULL;
 }
 
 /*****************************************************************************/
 
 static void FindFilePromiserObjects(Promise *pp)
-
-{ char *val = GetConstraintValue("pathtype",pp,CF_SCALAR);
-  int literal = GetBooleanConstraint("copy_from",pp) ||
-                ((val != NULL) && (strcmp(val,"literal") == 0));
+{
+    char *val = GetConstraintValue("pathtype", pp, CF_SCALAR);
+    int literal = GetBooleanConstraint("copy_from", pp) || ((val != NULL) && (strcmp(val, "literal") == 0));
 
 /* Check if we are searching over a regular expression */
 
-if (literal)
-   {
-   // Prime the promiser temporarily, may override later
-   NewScalar("this","promiser",pp->promiser,cf_str);
-   VerifyFilePromise(pp->promiser,pp);
-   }
-else // Default is to expand regex paths
-   {
-   LocateFilePromiserGroup(pp->promiser,pp,VerifyFilePromise);
-   }
+    if (literal)
+    {
+        // Prime the promiser temporarily, may override later
+        NewScalar("this", "promiser", pp->promiser, cf_str);
+        VerifyFilePromise(pp->promiser, pp);
+    }
+    else                        // Default is to expand regex paths
+    {
+        LocateFilePromiserGroup(pp->promiser, pp, VerifyFilePromise);
+    }
 }
-

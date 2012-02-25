@@ -38,7 +38,8 @@ static void RewriteInnerVarStringAsLocalCopyName(char *string);
 static int CompareRlist(Rlist *list1, Rlist *list2);
 static int CompareRval(Rval rval1, Rval rval2);
 static void SetAnyMissingDefaults(Promise *pp);
-static void CopyLocalizedIteratorsToThisScope(char *scope,Rlist *listvars);
+static void CopyLocalizedIteratorsToThisScope(char *scope, Rlist *listvars);
+
 /*
 
 Expanding variables is easy -- expanding lists automagically requires
@@ -97,769 +98,774 @@ since these cannot be mapped into "this" without some magic.
    
 **********************************************************************/
 
-void ExpandPromise(enum cfagenttype agent,char *scopeid,Promise *pp,void *fnptr)
+void ExpandPromise(enum cfagenttype agent, char *scopeid, Promise *pp, void *fnptr)
+{
+    Rlist *listvars = NULL, *scalarvars = NULL;
+    Constraint *cp;
+    Promise *pcopy;
 
-{ Rlist *listvars = NULL, *scalarvars = NULL;
-  Constraint *cp;
-  Promise *pcopy;
-
-CfDebug("****************************************************\n");
-CfDebug("* ExpandPromises (scope = %s )\n",scopeid);
-CfDebug("****************************************************\n\n");
+    CfDebug("****************************************************\n");
+    CfDebug("* ExpandPromises (scope = %s )\n", scopeid);
+    CfDebug("****************************************************\n\n");
 
 // Set a default for packages here...general defaults that need to come before
 
 //fix me wth a general function SetMissingDefaults
 
-SetAnyMissingDefaults(pp);
+    SetAnyMissingDefaults(pp);
 
-DeleteScope("match"); /* in case we expand something expired accidentially */
+    DeleteScope("match");       /* in case we expand something expired accidentially */
 
-THIS_BUNDLE = scopeid;
+    THIS_BUNDLE = scopeid;
 
-pcopy = DeRefCopyPromise(scopeid,pp);
+    pcopy = DeRefCopyPromise(scopeid, pp);
 
-MapIteratorsFromRval(scopeid, &scalarvars, &listvars, (Rval) { pcopy->promiser, CF_SCALAR }, pp);
+    MapIteratorsFromRval(scopeid, &scalarvars, &listvars, (Rval) {pcopy->promiser, CF_SCALAR}, pp);
 
-if (pcopy->promisee.item != NULL)
-   {
-   MapIteratorsFromRval(scopeid, &scalarvars, &listvars, pp->promisee, pp);
-   }
+    if (pcopy->promisee.item != NULL)
+    {
+        MapIteratorsFromRval(scopeid, &scalarvars, &listvars, pp->promisee, pp);
+    }
 
-for (cp = pcopy->conlist; cp != NULL; cp=cp->next)
-   {
-   MapIteratorsFromRval(scopeid, &scalarvars, &listvars, cp->rval, pp);
-   }
+    for (cp = pcopy->conlist; cp != NULL; cp = cp->next)
+    {
+        MapIteratorsFromRval(scopeid, &scalarvars, &listvars, cp->rval, pp);
+    }
 
-CopyLocalizedIteratorsToThisScope(scopeid,listvars);
+    CopyLocalizedIteratorsToThisScope(scopeid, listvars);
 
-PushThisScope();
-ExpandPromiseAndDo(agent,scopeid,pcopy,scalarvars,listvars,fnptr);
-PopThisScope();
+    PushThisScope();
+    ExpandPromiseAndDo(agent, scopeid, pcopy, scalarvars, listvars, fnptr);
+    PopThisScope();
 
-DeletePromise(pcopy);
-DeleteRlist(scalarvars);
-DeleteRlist(listvars);
+    DeletePromise(pcopy);
+    DeleteRlist(scalarvars);
+    DeleteRlist(listvars);
 }
 
 /*********************************************************************/
 
-Rval ExpandDanglers(char *scopeid,Rval rval,Promise *pp)
+Rval ExpandDanglers(char *scopeid, Rval rval, Promise *pp)
+{
+    Rval final;
 
-{ Rval final;
+    /* If there is still work left to do, expand and replace alloc */
 
- /* If there is still work left to do, expand and replace alloc */
- 
-switch (rval.rtype)
-   {
-   case CF_SCALAR:
-       
-       if (IsCf3VarString(rval.item))
-          {
-          final = EvaluateFinalRval(scopeid, rval, false,pp);
-          }
-       else
-          {
-          final = CopyRvalItem(rval);
-          }
-       break;
+    switch (rval.rtype)
+    {
+    case CF_SCALAR:
 
-   default:
-       final = CopyRvalItem(rval);
-       break;
-   }
+        if (IsCf3VarString(rval.item))
+        {
+            final = EvaluateFinalRval(scopeid, rval, false, pp);
+        }
+        else
+        {
+            final = CopyRvalItem(rval);
+        }
+        break;
 
-return final;
+    default:
+        final = CopyRvalItem(rval);
+        break;
+    }
+
+    return final;
 }
 
 /*********************************************************************/
 
 void MapIteratorsFromRval(const char *scopeid, Rlist **scalarvars, Rlist **listvars, Rval rval, Promise *pp)
+{
+    Rlist *rp;
+    FnCall *fp;
 
-{ Rlist *rp;
-  FnCall *fp;
+    if (rval.item == NULL)
+    {
+        return;
+    }
 
-if (rval.item == NULL)
-   {
-   return;
-   }
+    switch (rval.rtype)
+    {
+    case CF_SCALAR:
+        MapIteratorsFromScalar(scopeid, scalarvars, listvars, (char *) rval.item, 0, pp);
+        break;
 
-switch(rval.rtype)
-   {
-   case CF_SCALAR:
-       MapIteratorsFromScalar(scopeid,scalarvars,listvars,(char *)rval.item,0,pp);
-       break;
-       
-   case CF_LIST:
-       for (rp = (Rlist *)rval.item; rp != NULL; rp=rp->next)
-          {
-          MapIteratorsFromRval(scopeid, scalarvars, listvars, (Rval) { rp->item, rp->type }, pp);
-          }
-       break;
-       
-   case CF_FNCALL:
-       fp = (FnCall *)rval.item;
-       
-       for (rp = (Rlist *)fp->args; rp != NULL; rp=rp->next)
-          {
-          CfDebug("Looking at arg for function-like object %s()\n",fp->name);
-          MapIteratorsFromRval(scopeid, scalarvars, listvars, (Rval) { rp->item, rp->type }, pp);
-          }
-       break;
+    case CF_LIST:
+        for (rp = (Rlist *) rval.item; rp != NULL; rp = rp->next)
+        {
+            MapIteratorsFromRval(scopeid, scalarvars, listvars, (Rval) {rp->item, rp->type}, pp);
+        }
+        break;
 
-   default:
-       CfDebug("Unknown Rval type for scope %s",scopeid);
-       break;
-   }
+    case CF_FNCALL:
+        fp = (FnCall *) rval.item;
+
+        for (rp = (Rlist *) fp->args; rp != NULL; rp = rp->next)
+        {
+            CfDebug("Looking at arg for function-like object %s()\n", fp->name);
+            MapIteratorsFromRval(scopeid, scalarvars, listvars, (Rval) {rp->item, rp->type}, pp);
+        }
+        break;
+
+    default:
+        CfDebug("Unknown Rval type for scope %s", scopeid);
+        break;
+    }
 }
 
 /*********************************************************************/
 
 static void MapIteratorsFromScalar(const char *scopeid, Rlist **scal, Rlist **its, char *string, int level, Promise *pp)
-
 {
-char *sp;
-Rval rval;
-char v[CF_BUFSIZE],var[CF_EXPANDSIZE],exp[CF_EXPANDSIZE],temp[CF_BUFSIZE],finalname[CF_BUFSIZE];
-  
-CfDebug("MapIteratorsFromScalar(\"%s\", %d)\n",string,level);
+    char *sp;
+    Rval rval;
+    char v[CF_BUFSIZE], var[CF_EXPANDSIZE], exp[CF_EXPANDSIZE], temp[CF_BUFSIZE], finalname[CF_BUFSIZE];
 
-if (string == NULL)
-   {
-   return;
-   }
+    CfDebug("MapIteratorsFromScalar(\"%s\", %d)\n", string, level);
 
-for (sp = string; (*sp != '\0') ; sp++)
-   {
-   v[0] = '\0';
-   var[0] = '\0';
-   exp[0] = '\0';
+    if (string == NULL)
+    {
+        return;
+    }
 
-   if (*sp == '$')
-      {
-      if (ExtractInnerCf3VarString(sp,v))
-         {
-         char absscope[CF_MAXVARSIZE];
-         int qualified;
+    for (sp = string; (*sp != '\0'); sp++)
+    {
+        v[0] = '\0';
+        var[0] = '\0';
+        exp[0] = '\0';
 
-         // If a list is non-local, i.e. $(bundle.var), map it to local $(bundle#var)
-         
-         if (IsQualifiedVariable(v))
+        if (*sp == '$')
+        {
+            if (ExtractInnerCf3VarString(sp, v))
             {
-            strncpy(temp,v,CF_BUFSIZE-1);  
-            absscope[0] = '\0';
-            sscanf(temp,"%[^.].%s",absscope,v);
-            ExpandPrivateScalar(absscope,v,var);
-            snprintf(finalname,CF_MAXVARSIZE,"%s%c%s",absscope,CF_MAPPEDLIST,var);
-            qualified = true;
+                char absscope[CF_MAXVARSIZE];
+                int qualified;
+
+                // If a list is non-local, i.e. $(bundle.var), map it to local $(bundle#var)
+
+                if (IsQualifiedVariable(v))
+                {
+                    strncpy(temp, v, CF_BUFSIZE - 1);
+                    absscope[0] = '\0';
+                    sscanf(temp, "%[^.].%s", absscope, v);
+                    ExpandPrivateScalar(absscope, v, var);
+                    snprintf(finalname, CF_MAXVARSIZE, "%s%c%s", absscope, CF_MAPPEDLIST, var);
+                    qualified = true;
+                }
+                else
+                {
+                    strncpy(absscope, scopeid, CF_MAXVARSIZE - 1);
+                    ExpandPrivateScalar(absscope, v, var);
+                    strncpy(finalname, var, CF_BUFSIZE - 1);
+                    qualified = false;
+                }
+
+                // Interlude for knowledge map creation add dependency
+
+                RegisterBundleDependence(absscope, pp);
+
+                // var is the expanded name of the variable in its native context
+                // finalname will be the mapped name in the local context "this."
+
+                if (GetVariable(absscope, var, &rval) != cf_notype)
+                {
+                    if (rval.rtype == CF_LIST)
+                    {
+                        ExpandScalar(finalname, exp);
+
+                        if (qualified)
+                        {
+                            RewriteInnerVarStringAsLocalCopyName(sp);
+                        }
+
+                        /* embedded iterators should be incremented fastest,
+                           so order list -- and MUST return de-scoped name
+                           else list expansion cannot map var to this.name */
+
+                        if (level > 0)
+                        {
+                            IdempPrependRScalar(its, exp, CF_SCALAR);
+                        }
+                        else
+                        {
+                            IdempAppendRScalar(its, exp, CF_SCALAR);
+                        }
+                    }
+                    else if (rval.rtype == CF_SCALAR)
+                    {
+                        CfDebug("Scalar variable $(%s) found\n", var);
+                        IdempAppendRScalar(scal, var, CF_SCALAR);
+                    }
+                }
+                else
+                {
+                    CfDebug("Checking for nested vars, e.g. $(array[$(index)])....\n");
+
+                    if (IsExpandable(var))
+                    {
+                        MapIteratorsFromScalar(scopeid, scal, its, var, level + 1, pp);
+
+                        // Need to rewrite list references to nested variables in this level
+
+                        if (strchr(var, CF_MAPPEDLIST))
+                        {
+                            RewriteInnerVarStringAsLocalCopyName(sp);
+                        }
+                    }
+                }
+
+                sp += strlen(var) - 1;
             }
-         else
-            {
-            strncpy(absscope,scopeid,CF_MAXVARSIZE-1);
-            ExpandPrivateScalar(absscope,v,var);
-            strncpy(finalname,var,CF_BUFSIZE-1);
-            qualified = false;
-            }
-
-         // Interlude for knowledge map creation add dependency
-         
-         RegisterBundleDependence(absscope,pp); 
-
-         // var is the expanded name of the variable in its native context
-         // finalname will be the mapped name in the local context "this."
-         
-         if (GetVariable(absscope,var,&rval) != cf_notype)
-            {
-            if (rval.rtype == CF_LIST)
-               {
-               ExpandScalar(finalname,exp);
-
-               if (qualified)
-                  {
-                  RewriteInnerVarStringAsLocalCopyName(sp);
-                  }
-
-               /* embedded iterators should be incremented fastest,
-                  so order list -- and MUST return de-scoped name
-                  else list expansion cannot map var to this.name */
-
-               if (level > 0)
-                  {
-                  IdempPrependRScalar(its,exp,CF_SCALAR);
-                  }
-               else
-                  {
-                  IdempAppendRScalar(its,exp,CF_SCALAR);
-                  }
-               }
-            else if (rval.rtype == CF_SCALAR)
-               {
-               CfDebug("Scalar variable $(%s) found\n",var);
-               IdempAppendRScalar(scal,var,CF_SCALAR);
-               }
-            }
-         else
-            {
-            CfDebug("Checking for nested vars, e.g. $(array[$(index)])....\n");
-
-            if (IsExpandable(var))
-               {
-               MapIteratorsFromScalar(scopeid,scal,its,var,level+1,pp);
-               
-               // Need to rewrite list references to nested variables in this level
-
-               if (strchr(var,CF_MAPPEDLIST)) 
-                  {
-                  RewriteInnerVarStringAsLocalCopyName(sp);
-                  }
-               }
-            }
-         
-         sp += strlen(var)-1;
-         }
-      }
-   }
+        }
+    }
 }
 
 /*********************************************************************/
 
-int ExpandScalar(const char *string,char buffer[CF_EXPANDSIZE])
-
+int ExpandScalar(const char *string, char buffer[CF_EXPANDSIZE])
 {
-CfDebug("ExpandScalar(context=%s,id=%s)\n",CONTEXTID,string);
-return ExpandPrivateScalar(CONTEXTID,string,buffer); 
+    CfDebug("ExpandScalar(context=%s,id=%s)\n", CONTEXTID, string);
+    return ExpandPrivateScalar(CONTEXTID, string, buffer);
 }
 
 /*********************************************************************/
 
-Rlist *ExpandList(char *scopeid,Rlist *list,int expandnaked)
+Rlist *ExpandList(char *scopeid, Rlist *list, int expandnaked)
+{
+    Rlist *rp, *start = NULL;
+    Rval returnval;
+    char naked[CF_MAXVARSIZE];
 
-{ Rlist *rp, *start = NULL;
-  Rval returnval;
-  char naked[CF_MAXVARSIZE];
+    for (rp = (Rlist *) list; rp != NULL; rp = rp->next)
+    {
+        if (!expandnaked && (rp->type == CF_SCALAR) && IsNakedVar(rp->item, '@'))
+        {
+            returnval.item = xstrdup(rp->item);
+            returnval.rtype = CF_SCALAR;
+        }
+        else if ((rp->type == CF_SCALAR) && IsNakedVar(rp->item, '@'))
+        {
+            GetNaked(naked, rp->item);
 
-for (rp = (Rlist *)list; rp != NULL; rp=rp->next)
-   {
-   if (!expandnaked && (rp->type == CF_SCALAR) && IsNakedVar(rp->item,'@'))
-      {
-      returnval.item = xstrdup(rp->item);
-      returnval.rtype = CF_SCALAR;       
-      }
-   else if ((rp->type == CF_SCALAR) && IsNakedVar(rp->item,'@'))
-      {
-      GetNaked(naked,rp->item);
+            if (GetVariable(scopeid, naked, &returnval) != cf_notype)
+            {
+                returnval = ExpandPrivateRval(scopeid, returnval);
+            }
+            else
+            {
+                returnval = ExpandPrivateRval(scopeid, (Rval) {rp->item, rp->type});
+            }
+        }
+        else
+        {
+            returnval = ExpandPrivateRval(scopeid, (Rval) {rp->item, rp->type});
+        }
 
-      if (GetVariable(scopeid,naked,&returnval) != cf_notype)
-         {
-         returnval = ExpandPrivateRval(scopeid,returnval);
-         }
-      else
-         {
-         returnval = ExpandPrivateRval(scopeid, (Rval) { rp->item, rp->type });
-         }
-      }
-   else
-      {
-      returnval = ExpandPrivateRval(scopeid, (Rval) { rp->item, rp->type });
-      }
+        AppendRlist(&start, returnval.item, returnval.rtype);
+        DeleteRvalItem(returnval);
+    }
 
-   AppendRlist(&start,returnval.item,returnval.rtype);
-   DeleteRvalItem(returnval);
-   }
-
-return start;
+    return start;
 }
 
 /*********************************************************************/
 
 Rval ExpandPrivateRval(char *scopeid, Rval rval)
+{
+    char buffer[CF_EXPANDSIZE];
+    FnCall *fp, *fpe;
+    Rval returnval;
 
-{ char buffer[CF_EXPANDSIZE];
- FnCall *fp,*fpe;
- Rval returnval;
-     
-CfDebug("ExpandPrivateRval(scope=%s,type=%c)\n",scopeid,rval.rtype);
+    CfDebug("ExpandPrivateRval(scope=%s,type=%c)\n", scopeid, rval.rtype);
 
 /* Allocates new memory for the copy */
 
-returnval.item = NULL;
-returnval.rtype = CF_NOPROMISEE;
+    returnval.item = NULL;
+    returnval.rtype = CF_NOPROMISEE;
 
-switch (rval.rtype)
-   {
-   case CF_SCALAR:
+    switch (rval.rtype)
+    {
+    case CF_SCALAR:
 
-       ExpandPrivateScalar(scopeid,(char *)rval.item,buffer);
-       returnval.item = xstrdup(buffer);
-       returnval.rtype = CF_SCALAR;
-       break;
-       
-   case CF_LIST:
+        ExpandPrivateScalar(scopeid, (char *) rval.item, buffer);
+        returnval.item = xstrdup(buffer);
+        returnval.rtype = CF_SCALAR;
+        break;
 
-       returnval.item = ExpandList(scopeid,rval.item,true);
-       returnval.rtype = CF_LIST;
-       break;
-       
-   case CF_FNCALL:
-       
-       /* Note expand function does not mean evaluate function, must preserve type */
-       fp = (FnCall *)rval.item;
-       fpe = ExpandFnCall(scopeid,fp,true);
-       returnval.item = fpe;
-       returnval.rtype = CF_FNCALL;
-       break;       
-   }
+    case CF_LIST:
 
-return returnval;
+        returnval.item = ExpandList(scopeid, rval.item, true);
+        returnval.rtype = CF_LIST;
+        break;
+
+    case CF_FNCALL:
+
+        /* Note expand function does not mean evaluate function, must preserve type */
+        fp = (FnCall *) rval.item;
+        fpe = ExpandFnCall(scopeid, fp, true);
+        returnval.item = fpe;
+        returnval.rtype = CF_FNCALL;
+        break;
+    }
+
+    return returnval;
 }
 
 /*********************************************************************/
 
 Rval ExpandBundleReference(char *scopeid, Rval rval)
-
 {
-CfDebug("ExpandBundleReference(scope=%s,type=%c)\n", scopeid, rval.rtype);
+    CfDebug("ExpandBundleReference(scope=%s,type=%c)\n", scopeid, rval.rtype);
 
 /* Allocates new memory for the copy */
 
-switch (rval.rtype)
-   {
-   case CF_SCALAR:
-      {
-      char buffer[CF_EXPANDSIZE];
-      ExpandPrivateScalar(scopeid, (char *)rval.item, buffer);
-      return (Rval) { xstrdup(buffer), CF_SCALAR };
-      }
+    switch (rval.rtype)
+    {
+    case CF_SCALAR:
+    {
+        char buffer[CF_EXPANDSIZE];
 
-   case CF_FNCALL:
-      {
-      /* Note expand function does not mean evaluate function, must preserve type */
-      FnCall *fp = (FnCall *)rval.item;
-      return (Rval) { ExpandFnCall(scopeid, fp, false), CF_FNCALL };
-      }
+        ExpandPrivateScalar(scopeid, (char *) rval.item, buffer);
+        return (Rval) {xstrdup(buffer), CF_SCALAR};
+    }
 
-   default:
-      return (Rval) { NULL, CF_NOPROMISEE };
-   }
+    case CF_FNCALL:
+    {
+        /* Note expand function does not mean evaluate function, must preserve type */
+        FnCall *fp = (FnCall *) rval.item;
+
+        return (Rval) {ExpandFnCall(scopeid, fp, false), CF_FNCALL};
+    }
+
+    default:
+        return (Rval) {NULL, CF_NOPROMISEE};
+    }
 }
 
 /*********************************************************************/
 
-static int ExpandOverflow(char *str1,char *str2)
+static int ExpandOverflow(char *str1, char *str2)
+{
+    int len = strlen(str2);
 
-{ int len = strlen(str2);
+    if ((strlen(str1) + len) > (CF_EXPANDSIZE - CF_BUFFERMARGIN))
+    {
+        CfOut(cf_error, "",
+              "Expansion overflow constructing string. Increase CF_EXPANDSIZE macro. Tried to add %s to %s\n", str2,
+              str1);
+        return true;
+    }
 
-if ((strlen(str1)+len) > (CF_EXPANDSIZE - CF_BUFFERMARGIN))
-   {
-   CfOut(cf_error,"","Expansion overflow constructing string. Increase CF_EXPANDSIZE macro. Tried to add %s to %s\n",str2,str1);
-   return true;
-   }
-
-return false;
+    return false;
 }
 
 /*********************************************************************/
 
-int ExpandPrivateScalar(const char *scopeid, const char *string,char buffer[CF_EXPANDSIZE])
+int ExpandPrivateScalar(const char *scopeid, const char *string, char buffer[CF_EXPANDSIZE])
+{
+    const char *sp;
+    Rval rval;
+    int varstring = false;
+    char currentitem[CF_EXPANDSIZE], temp[CF_BUFSIZE], name[CF_MAXVARSIZE];
+    int increment, returnval = true;
 
-{ const char *sp;
-  Rval rval;
-  int varstring = false;
-  char currentitem[CF_EXPANDSIZE],temp[CF_BUFSIZE],name[CF_MAXVARSIZE];
-  int increment, returnval = true;
+    buffer[0] = '\0';
 
-  buffer[0] ='\0';
+    if (string == 0 || strlen(string) == 0)
+    {
+        return false;
+    }
 
-if (string == 0 || strlen(string) == 0)
-   {
-   return false;
-   }
+    CfDebug("\nExpandPrivateScalar(%s,%s)\n", scopeid, string);
 
-CfDebug("\nExpandPrivateScalar(%s,%s)\n",scopeid,string);
+    for (sp = string; /* No exit */ ; sp++)     /* check for varitems */
+    {
+        char var[CF_BUFSIZE];
 
-for (sp = string; /* No exit */ ; sp++)       /* check for varitems */
-   {
-   char var[CF_BUFSIZE];
-   var[0] = '\0';
+        var[0] = '\0';
 
-   increment = 0;
+        increment = 0;
 
-   if (*sp == '\0')
-      {
-      break;
-      }
+        if (*sp == '\0')
+        {
+            break;
+        }
 
-   currentitem[0] = '\0';
+        currentitem[0] = '\0';
 
-   sscanf(sp,"%[^$]",currentitem);
-   
-   if (ExpandOverflow(buffer,currentitem))
-      {
-      FatalError("Can't expand varstring");
-      }
-   
-   strlcat(buffer,currentitem,CF_EXPANDSIZE);
-   sp += strlen(currentitem);
+        sscanf(sp, "%[^$]", currentitem);
 
-   CfDebug("  Aggregate result |%s|, scanning at \"%s\" (current delta %s)\n",buffer,sp,currentitem);
-   
-   if (*sp == '\0')
-      {
-      break;
-      }
+        if (ExpandOverflow(buffer, currentitem))
+        {
+            FatalError("Can't expand varstring");
+        }
 
-   if (*sp == '$')
-      {
-      switch (*(sp+1))
-         {
-         case '(':
-             ExtractOuterCf3VarString(sp,var);
-             varstring = ')';
-             if (strlen(var) == 0)
+        strlcat(buffer, currentitem, CF_EXPANDSIZE);
+        sp += strlen(currentitem);
+
+        CfDebug("  Aggregate result |%s|, scanning at \"%s\" (current delta %s)\n", buffer, sp, currentitem);
+
+        if (*sp == '\0')
+        {
+            break;
+        }
+
+        if (*sp == '$')
+        {
+            switch (*(sp + 1))
+            {
+            case '(':
+                ExtractOuterCf3VarString(sp, var);
+                varstring = ')';
+                if (strlen(var) == 0)
                 {
-                strlcat(buffer,"$", CF_EXPANDSIZE);
+                    strlcat(buffer, "$", CF_EXPANDSIZE);
+                    continue;
+                }
+                break;
+
+            case '{':
+                ExtractOuterCf3VarString(sp, var);
+                varstring = '}';
+                if (strlen(var) == 0)
+                {
+                    strlcat(buffer, "$", CF_EXPANDSIZE);
+                    continue;
+                }
+                break;
+
+            default:
+                strlcat(buffer, "$", CF_EXPANDSIZE);
                 continue;
-                }
-             break;
+            }
+        }
 
-         case '{':
-             ExtractOuterCf3VarString(sp,var);
-             varstring = '}';
-             if (strlen(var) == 0)
-                {
-                strlcat(buffer,"$", CF_EXPANDSIZE);
-                continue;
-                }
-             break;
-         
-         default: 
-            strlcat(buffer,"$", CF_EXPANDSIZE);
-             continue;
-         }
-      }
+        currentitem[0] = '\0';
 
-   currentitem[0] = '\0';
+        temp[0] = '\0';
+        ExtractInnerCf3VarString(sp, temp);
 
-   temp[0] = '\0';
-   ExtractInnerCf3VarString(sp,temp);
-   
-   if (IsCf3VarString(temp))
-      {
-      CfDebug("  Nested variables - %s\n",temp);
-      ExpandPrivateScalar(scopeid,temp,currentitem);
-      }
-   else
-      {
-      CfDebug("  Delta - %s\n",temp);
-      strncpy(currentitem,temp,CF_BUFSIZE-1);
-      }
+        if (IsCf3VarString(temp))
+        {
+            CfDebug("  Nested variables - %s\n", temp);
+            ExpandPrivateScalar(scopeid, temp, currentitem);
+        }
+        else
+        {
+            CfDebug("  Delta - %s\n", temp);
+            strncpy(currentitem, temp, CF_BUFSIZE - 1);
+        }
 
-   increment = strlen(var) - 1;
+        increment = strlen(var) - 1;
 
-   switch (GetVariable(scopeid,currentitem,&rval))
-      {
-      case cf_str:
-      case cf_int:
-      case cf_real:
-          
-          if (ExpandOverflow(buffer,(char*)rval.item))
-             {
-             FatalError("Can't expand varstring");
-             }
-          
-          strlcat(buffer,(char *)rval.item, CF_EXPANDSIZE);
-          break;
+        switch (GetVariable(scopeid, currentitem, &rval))
+        {
+        case cf_str:
+        case cf_int:
+        case cf_real:
 
-      case cf_slist:
-      case cf_ilist:
-      case cf_rlist:
-      case cf_notype:
-          CfDebug("  Currently non existent or list variable $(%s)\n",currentitem);
-          
-          if (varstring == '}')
-             {
-             snprintf(name,CF_MAXVARSIZE,"${%s}",currentitem);
-             }
-          else
-             {
-             snprintf(name,CF_MAXVARSIZE,"$(%s)",currentitem);
-             }
+            if (ExpandOverflow(buffer, (char *) rval.item))
+            {
+                FatalError("Can't expand varstring");
+            }
 
-          strlcat(buffer,name,CF_EXPANDSIZE);
-          returnval = false;
-          break;
+            strlcat(buffer, (char *) rval.item, CF_EXPANDSIZE);
+            break;
 
-      default:
-          CfDebug("Returning Unknown Scalar (%s => %s)\n\n",string,buffer);
-          return false;
+        case cf_slist:
+        case cf_ilist:
+        case cf_rlist:
+        case cf_notype:
+            CfDebug("  Currently non existent or list variable $(%s)\n", currentitem);
 
-      }
+            if (varstring == '}')
+            {
+                snprintf(name, CF_MAXVARSIZE, "${%s}", currentitem);
+            }
+            else
+            {
+                snprintf(name, CF_MAXVARSIZE, "$(%s)", currentitem);
+            }
 
-   sp += increment;
-   currentitem[0] = '\0';
-   }
+            strlcat(buffer, name, CF_EXPANDSIZE);
+            returnval = false;
+            break;
 
-if (returnval)
-   {
-   CfDebug("Returning complete scalar expansion (%s => %s)\n\n",string,buffer);
+        default:
+            CfDebug("Returning Unknown Scalar (%s => %s)\n\n", string, buffer);
+            return false;
 
-   /* Can we be sure this is complete? What about recursion */
-   }
-else
-   {
-   CfDebug("Returning partial / best effort scalar expansion (%s => %s)\n\n",string,buffer);
-   }
+        }
 
-return returnval;
+        sp += increment;
+        currentitem[0] = '\0';
+    }
+
+    if (returnval)
+    {
+        CfDebug("Returning complete scalar expansion (%s => %s)\n\n", string, buffer);
+
+        /* Can we be sure this is complete? What about recursion */
+    }
+    else
+    {
+        CfDebug("Returning partial / best effort scalar expansion (%s => %s)\n\n", string, buffer);
+    }
+
+    return returnval;
 }
 
 /*********************************************************************/
 
-void ExpandPromiseAndDo(enum cfagenttype agent,char *scopeid,Promise *pp,Rlist *scalarvars,Rlist *listvars,void (*fnptr)())
+void ExpandPromiseAndDo(enum cfagenttype agent, char *scopeid, Promise *pp, Rlist *scalarvars, Rlist *listvars,
+                        void (*fnptr) ())
+{
+    Rlist *lol = NULL;
+    Promise *pexp;
+    const int cf_null_cutoff = 5;
+    char *handle = GetConstraintValue("handle", pp, CF_SCALAR), v[CF_MAXVARSIZE];
+    int cutoff = 0;
 
-{ Rlist *lol = NULL; 
-  Promise *pexp;
-  const int cf_null_cutoff = 5;
-  char *handle = GetConstraintValue("handle",pp,CF_SCALAR),v[CF_MAXVARSIZE];
-  int cutoff = 0;
+    lol = NewIterationContext(scopeid, listvars);
 
-lol = NewIterationContext(scopeid,listvars);
+    if (lol && EndOfIteration(lol))
+    {
+        DeleteIterationContext(lol);
+        return;
+    }
 
-if (lol && EndOfIteration(lol))
-   {
-   DeleteIterationContext(lol);
-   return;
-   }
+    while (NullIterators(lol))
+    {
+        IncrementIterationContext(lol, 1);
 
-while (NullIterators(lol))
-   {
-   IncrementIterationContext(lol,1);
+        // In case a list is completely blank
+        if (cutoff++ > cf_null_cutoff)
+        {
+            break;
+        }
+    }
 
-   // In case a list is completely blank
-   if (cutoff++ > cf_null_cutoff)
-      {
-      break;
-      }
-   }
+    if (lol && EndOfIteration(lol))
+    {
+        DeleteIterationContext(lol);
+        return;
+    }
 
-if (lol && EndOfIteration(lol))
-   {
-   DeleteIterationContext(lol);
-   return;
-   }
+    do
+    {
+        char number[CF_SMALLBUF];
 
-do
-   {
-   char number[CF_SMALLBUF];
-   /* Set scope "this" first to ensure list expansion ! */
-   SetScope("this");  
-   DeRefListsInHashtable("this",listvars,lol);
+        /* Set scope "this" first to ensure list expansion ! */
+        SetScope("this");
+        DeRefListsInHashtable("this", listvars, lol);
 
-   /* Allow $(this.handle) etc variables */
+        /* Allow $(this.handle) etc variables */
 
-   if (handle)
-      {
-      NewScalar("this","handle",handle,cf_str);
-      }
-   else
-      {
-      NewScalar("this","handle",PromiseID(pp),cf_str);
-      }
+        if (handle)
+        {
+            NewScalar("this", "handle", handle, cf_str);
+        }
+        else
+        {
+            NewScalar("this", "handle", PromiseID(pp), cf_str);
+        }
 
-   if (pp->audit && pp->audit->filename)
-      {
-      NewScalar("this","promise_filename",pp->audit->filename,cf_str);
-      snprintf(number,CF_SMALLBUF,"%zu", pp->offset.line);
-      NewScalar("this","promise_linenumber",number,cf_str);
-      }
+        if (pp->audit && pp->audit->filename)
+        {
+            NewScalar("this", "promise_filename", pp->audit->filename, cf_str);
+            snprintf(number, CF_SMALLBUF, "%zu", pp->offset.line);
+            NewScalar("this", "promise_linenumber", number, cf_str);
+        }
 
-   snprintf(v,CF_MAXVARSIZE,"%d",(int)getuid());
-   NewScalar("this","promiser_uid",v,cf_int);
-   snprintf(v,CF_MAXVARSIZE,"%d",(int)getgid());
-   NewScalar("this","promiser_gid",v,cf_int);
+        snprintf(v, CF_MAXVARSIZE, "%d", (int) getuid());
+        NewScalar("this", "promiser_uid", v, cf_int);
+        snprintf(v, CF_MAXVARSIZE, "%d", (int) getgid());
+        NewScalar("this", "promiser_gid", v, cf_int);
 
-   /* Must expand $(this.promiser) here for arg dereferencing in things
-      like edit_line and methods, but we might have to
-      adjust again later if the value changes  -- need to qualify this
-      so we don't expand too early for some other promsies */
+        /* Must expand $(this.promiser) here for arg dereferencing in things
+           like edit_line and methods, but we might have to
+           adjust again later if the value changes  -- need to qualify this
+           so we don't expand too early for some other promsies */
 
-   if (pp->has_subbundles)
-      {
-      NewScalar("this","promiser",pp->promiser,cf_str);
-      }
+        if (pp->has_subbundles)
+        {
+            NewScalar("this", "promiser", pp->promiser, cf_str);
+        }
 
-   /* End special variables */
+        /* End special variables */
 
-   pexp = ExpandDeRefPromise("this",pp);
+        pexp = ExpandDeRefPromise("this", pp);
 
-   switch (agent)
-      {
-      case cf_common:
-          ShowPromise(pexp,6);
-          ReCheckAllConstraints(pexp);
-          break;
+        switch (agent)
+        {
+        case cf_common:
+            ShowPromise(pexp, 6);
+            ReCheckAllConstraints(pexp);
+            break;
 
-      default:
+        default:
 
-          if (fnptr != NULL)
-             {
-             (*fnptr)(pexp);
-             }
-          break;
-      }
+            if (fnptr != NULL)
+            {
+                (*fnptr) (pexp);
+            }
+            break;
+        }
 
-   if (strcmp(pp->agentsubtype,"vars") == 0)
-      {
-      ConvergeVarHashPromise(pp->bundle,pexp,true);
-      }
-   
-   DeletePromise(pexp);
+        if (strcmp(pp->agentsubtype, "vars") == 0)
+        {
+            ConvergeVarHashPromise(pp->bundle, pexp, true);
+        }
 
-   /* End thread monitor */
-   }
-while (IncrementIterationContext(lol,1));
+        DeletePromise(pexp);
 
-DeleteIterationContext(lol);
+        /* End thread monitor */
+    }
+    while (IncrementIterationContext(lol, 1));
+
+    DeleteIterationContext(lol);
 }
 
 /*********************************************************************/
 
-Rval EvaluateFinalRval(char *scopeid, Rval rval,int forcelist,Promise *pp)
+Rval EvaluateFinalRval(char *scopeid, Rval rval, int forcelist, Promise *pp)
+{
+    Rlist *rp;
+    Rval returnval, newret;
+    char naked[CF_MAXVARSIZE];
+    FnCall *fp;
 
-{ Rlist *rp;
-  Rval returnval,newret;
-  char naked[CF_MAXVARSIZE];
-  FnCall *fp;
+    CfDebug("EvaluateFinalRval -- type %c\n", rval.rtype);
 
-CfDebug("EvaluateFinalRval -- type %c\n", rval.rtype);
+    if ((rval.rtype == CF_SCALAR) && IsNakedVar(rval.item, '@'))        /* Treat lists specially here */
+    {
+        GetNaked(naked, rval.item);
 
-if ((rval.rtype == CF_SCALAR) && IsNakedVar(rval.item,'@')) /* Treat lists specially here */
-   {
-   GetNaked(naked,rval.item);
-   
-   if (GetVariable(scopeid,naked,&returnval) == cf_notype || returnval.rtype != CF_LIST)
-      {
-      returnval = ExpandPrivateRval("this", rval);
-      }
-   else
-      {
-      returnval.item = ExpandList(scopeid,returnval.item,true);
-      returnval.rtype = CF_LIST;
-      }
-   }
-else
-   {
-   if (forcelist) /* We are replacing scalar @(name) with list */
-      {
-      returnval = ExpandPrivateRval(scopeid, rval);
-      }
-   else
-      {
-      if (IsBuiltinFnCall(rval))
-         {
-         returnval = CopyRvalItem(rval);
-         }
-      else
-         {
-         returnval = ExpandPrivateRval("this", rval);
-         }
-      }
-   }
+        if (GetVariable(scopeid, naked, &returnval) == cf_notype || returnval.rtype != CF_LIST)
+        {
+            returnval = ExpandPrivateRval("this", rval);
+        }
+        else
+        {
+            returnval.item = ExpandList(scopeid, returnval.item, true);
+            returnval.rtype = CF_LIST;
+        }
+    }
+    else
+    {
+        if (forcelist)          /* We are replacing scalar @(name) with list */
+        {
+            returnval = ExpandPrivateRval(scopeid, rval);
+        }
+        else
+        {
+            if (IsBuiltinFnCall(rval))
+            {
+                returnval = CopyRvalItem(rval);
+            }
+            else
+            {
+                returnval = ExpandPrivateRval("this", rval);
+            }
+        }
+    }
 
-switch (returnval.rtype) 
-   {
-   case CF_SCALAR:
-       break;
-       
-   case CF_LIST:
-       for (rp = (Rlist *)returnval.item; rp != NULL; rp=rp->next)
-          {
-          if (rp->type == CF_FNCALL)
-             {
-             fp = (FnCall *)rp->item;
-             FnCallResult res = EvaluateFunctionCall(fp,pp);
-             DeleteFnCall(fp);
-             rp->item = res.rval.item;
-             rp->type = res.rval.rtype;
-             CfDebug("Replacing function call with new type (%c)\n",rp->type);
-             }
-          else
-             {
-             Scope *ptr = GetScope("this");
+    switch (returnval.rtype)
+    {
+    case CF_SCALAR:
+        break;
 
-             if (ptr != NULL)
+    case CF_LIST:
+        for (rp = (Rlist *) returnval.item; rp != NULL; rp = rp->next)
+        {
+            if (rp->type == CF_FNCALL)
+            {
+                fp = (FnCall *) rp->item;
+                FnCallResult res = EvaluateFunctionCall(fp, pp);
+
+                DeleteFnCall(fp);
+                rp->item = res.rval.item;
+                rp->type = res.rval.rtype;
+                CfDebug("Replacing function call with new type (%c)\n", rp->type);
+            }
+            else
+            {
+                Scope *ptr = GetScope("this");
+
+                if (ptr != NULL)
                 {
-                if (IsCf3VarString(rp->item))
-                   {
-                   newret = ExpandPrivateRval("this", (Rval) { rp->item, rp->type });
-                   free(rp->item);
-                   rp->item = newret.item;
-                   }
+                    if (IsCf3VarString(rp->item))
+                    {
+                        newret = ExpandPrivateRval("this", (Rval) {rp->item, rp->type});
+                        free(rp->item);
+                        rp->item = newret.item;
+                    }
                 }
-             }
+            }
 
-          /* returnval unchanged */
-          }
-       break;
-       
-   case CF_FNCALL:
+            /* returnval unchanged */
+        }
+        break;
 
-       // Also have to eval function now
-       fp = (FnCall *)returnval.item;
-       returnval = EvaluateFunctionCall(fp,pp).rval;
-       DeleteFnCall(fp);
-       break;
+    case CF_FNCALL:
 
-   default:
-       returnval.item = NULL;
-       returnval.rtype = CF_NOPROMISEE;
-       break;
-   }
+        // Also have to eval function now
+        fp = (FnCall *) returnval.item;
+        returnval = EvaluateFunctionCall(fp, pp).rval;
+        DeleteFnCall(fp);
+        break;
 
-return returnval;
+    default:
+        returnval.item = NULL;
+        returnval.rtype = CF_NOPROMISEE;
+        break;
+    }
+
+    return returnval;
 }
 
 /*********************************************************************/
 
 static void RewriteInnerVarStringAsLocalCopyName(char *string)
+{
+    char *sp;
 
-{ char *sp;
-
-for (sp = string; *sp != '\0'; sp++)
-   {
-   if (*sp == '.')
-      {
-      *sp = CF_MAPPEDLIST;
-      return;
-      }
-   }
+    for (sp = string; *sp != '\0'; sp++)
+    {
+        if (*sp == '.')
+        {
+            *sp = CF_MAPPEDLIST;
+            return;
+        }
+    }
 }
 
 /*********************************************************************/
 
-static void CopyLocalizedIteratorsToThisScope(char *scope,Rlist *listvars)
+static void CopyLocalizedIteratorsToThisScope(char *scope, Rlist *listvars)
+{
+    Rlist *rp;
+    Rval retval;
+    char format[CF_SMALLBUF];
 
-{ Rlist *rp;
-  Rval retval;
-  char format[CF_SMALLBUF];
+    for (rp = listvars; rp != NULL; rp = rp->next)
+    {
+        // Add re-mapped variables to context "this", marked with scope . -> #
 
-for (rp = listvars; rp != NULL; rp = rp->next)
-   {
-   // Add re-mapped variables to context "this", marked with scope . -> #
+        if (strchr(rp->item, '#'))
+        {
+            char orgscope[CF_MAXVARSIZE], orgname[CF_MAXVARSIZE];
 
-   if (strchr(rp->item,'#'))
-      {
-      char orgscope[CF_MAXVARSIZE],orgname[CF_MAXVARSIZE];
+            snprintf(format, CF_SMALLBUF, "%%[^%c]%c%%s", CF_MAPPEDLIST, CF_MAPPEDLIST);
 
-      snprintf(format,CF_SMALLBUF,"%%[^%c]%c%%s",CF_MAPPEDLIST,CF_MAPPEDLIST);
+            sscanf(rp->item, format, orgscope, orgname);
 
-      sscanf(rp->item,format,orgscope,orgname);
+            GetVariable(orgscope, orgname, &retval);
 
-      GetVariable(orgscope,orgname,&retval);
-
-      NewList(scope,rp->item,CopyRvalItem((Rval) { retval.item, CF_LIST }).item,cf_slist);
-      }
-   }
+            NewList(scope, rp->item, CopyRvalItem((Rval) {retval.item, CF_LIST}).item, cf_slist);
+        }
+    }
 }
 
 /*********************************************************************/
@@ -867,429 +873,427 @@ for (rp = listvars; rp != NULL; rp = rp->next)
 /*********************************************************************/
 
 int IsExpandable(const char *str)
+{
+    const char *sp;
+    char left = 'x', right = 'x';
+    int dollar = false;
+    int bracks = 0, vars = 0;
 
-{ const char *sp;
-  char left = 'x', right = 'x';
-  int dollar = false;
-  int bracks = 0, vars = 0;
+    CfDebug("IsExpandable(%s) - syntax verify\n", str);
 
-CfDebug("IsExpandable(%s) - syntax verify\n",str);
+    for (sp = str; *sp != '\0'; sp++)   /* check for varitems */
+    {
+        switch (*sp)
+        {
+        case '$':
+            if (*(sp + 1) == '{' || *(sp + 1) == '(')
+            {
+                dollar = true;
+            }
+            break;
+        case '(':
+        case '{':
+            if (dollar)
+            {
+                left = *sp;
+                bracks++;
+            }
+            break;
+        case ')':
+        case '}':
+            if (dollar)
+            {
+                bracks--;
+                right = *sp;
+            }
+            break;
+        }
 
-for (sp = str; *sp != '\0' ; sp++)       /* check for varitems */
-   {
-   switch (*sp)
-      {
-      case '$':
-          if (*(sp+1) == '{' || *(sp+1) == '(')
-             {
-             dollar = true;
-             }
-          break;
-      case '(':
-      case '{': 
-          if (dollar)
-             {
-             left = *sp;    
-             bracks++;
-             }
-          break;
-      case ')':
-      case '}': 
-          if (dollar)
-             {
-             bracks--;
-             right = *sp;
-             }
-          break;
-      }
-   
-   if (left == '(' && right == ')' && dollar && (bracks == 0))
-      {
-      vars++;
-      dollar=false;
-      }
-   
-   if (left == '{' && right == '}' && dollar && (bracks == 0))
-      {
-      vars++;
-      dollar = false;
-      }
-   }
- 
- 
-if (bracks != 0)
-   {
-   CfDebug("If this is an expandable variable string then it contained syntax errors");
-   return false;
-   }
+        if (left == '(' && right == ')' && dollar && (bracks == 0))
+        {
+            vars++;
+            dollar = false;
+        }
 
-CfDebug("Found %d variables in (%s)\n",vars,str); 
-return vars;
+        if (left == '{' && right == '}' && dollar && (bracks == 0))
+        {
+            vars++;
+            dollar = false;
+        }
+    }
+
+    if (bracks != 0)
+    {
+        CfDebug("If this is an expandable variable string then it contained syntax errors");
+        return false;
+    }
+
+    CfDebug("Found %d variables in (%s)\n", vars, str);
+    return vars;
 }
 
 /*********************************************************************/
 
 int IsNakedVar(char *str, char vtype)
+{
+    char *sp, last;
+    int count = 0;
 
-{ char *sp,last;
-  int count=0;
+    if (str == NULL || strlen(str) == 0)
+    {
+        return false;
+    }
 
-if (str == NULL || strlen(str) == 0)
-   {
-   return false;
-   }
+    last = *(str + strlen(str) - 1);
 
-last = *(str+strlen(str)-1);
+    if (strlen(str) < 3)
+    {
+        return false;
+    }
 
-if (strlen(str) < 3)
-   {
-   return false;
-   }
+    if (*str != vtype)
+    {
+        return false;
+    }
 
-if (*str != vtype)
-   {
-   return false;
-   }
+    switch (*(str + 1))
+    {
+    case '(':
+        if (last != ')')
+        {
+            return false;
+        }
+        break;
 
-switch (*(str+1))
-   {
-   case '(':
-       if (last != ')')
-          {
-          return false;
-          }
-       break;
-       
-   case '{':
-       if (last != '}')
-          {
-          return false;
-          }
-       break;
+    case '{':
+        if (last != '}')
+        {
+            return false;
+        }
+        break;
 
-   default:
-       return false;
-       break;
-   }
+    default:
+        return false;
+        break;
+    }
 
-for (sp = str; *sp != '\0'; sp++)
-   {
-   switch (*sp)
-      {
-      case '(':
-      case '{':
-      case '[':
-          count++;
-          break;
-      case ')':
-      case '}':
-      case ']':
-          count--;
+    for (sp = str; *sp != '\0'; sp++)
+    {
+        switch (*sp)
+        {
+        case '(':
+        case '{':
+        case '[':
+            count++;
+            break;
+        case ')':
+        case '}':
+        case ']':
+            count--;
 
-          /* The last character must be the end of the variable */
+            /* The last character must be the end of the variable */
 
-          if (count == 0 && strlen(sp) > 1)
-             {
-             return false;
-             }
-          break;
-      }
-   }
+            if (count == 0 && strlen(sp) > 1)
+            {
+                return false;
+            }
+            break;
+        }
+    }
 
-if (count != 0)
-   {
-   return false;
-   }
+    if (count != 0)
+    {
+        return false;
+    }
 
-CfDebug("IsNakedVar(%s,%c)!!\n",str,vtype);
-return true;
+    CfDebug("IsNakedVar(%s,%c)!!\n", str, vtype);
+    return true;
 }
 
 /*********************************************************************/
 
 void GetNaked(char *s2, char *s1)
-
 /* copy @(listname) -> listname */
-    
 {
-if (strlen(s1) < 4)
-   {
-   CfOut(cf_error,"","Naked variable expected, but \"%s\" is malformed",s1);
-   strncpy(s2,s1,CF_MAXVARSIZE-1);
-   return;
-   }
+    if (strlen(s1) < 4)
+    {
+        CfOut(cf_error, "", "Naked variable expected, but \"%s\" is malformed", s1);
+        strncpy(s2, s1, CF_MAXVARSIZE - 1);
+        return;
+    }
 
-memset(s2,0,CF_MAXVARSIZE);
-strncpy(s2,s1+2,strlen(s1)-3);
+    memset(s2, 0, CF_MAXVARSIZE);
+    strncpy(s2, s1 + 2, strlen(s1) - 3);
 }
 
 /*********************************************************************/
 
 static void SetAnyMissingDefaults(Promise *pp)
-
 /* Some defaults have to be set here, if they involve body-name
    constraints as names need to be expanded before CopyDeRefPromise */
-    
 {
-if (strcmp(pp->agentsubtype,"packages") == 0)
-   {
-   if (GetConstraint(pp,"package_method") == NULL)
-      {
-      AppendConstraint(&(pp->conlist), "package_method", (Rval) { "generic", CF_SCALAR },"any",true);
-      }
-   }
+    if (strcmp(pp->agentsubtype, "packages") == 0)
+    {
+        if (GetConstraint(pp, "package_method") == NULL)
+        {
+            AppendConstraint(&(pp->conlist), "package_method", (Rval) {"generic", CF_SCALAR}, "any", true);
+        }
+    }
 }
 
 /*********************************************************************/
 /* General                                                           */
 /*********************************************************************/
 
-void ConvergeVarHashPromise(char *scope,Promise *pp,int allow_redefine)
+void ConvergeVarHashPromise(char *scope, Promise *pp, int allow_redefine)
+{
+    Constraint *cp, *cp_save = NULL;
+    Attributes a = { {0} };
+    int i = 0, ok_redefine = false, drop_undefined = false;
+    Rlist *rp;
+    Rval retval;
+    Rval rval = { NULL, 'x' };  /* FIXME: why this needs to be initialized? */
 
-{ Constraint *cp,*cp_save = NULL;
-  Attributes a = {{0}};
-  int i = 0,ok_redefine = false,drop_undefined = false;
-  Rlist *rp;
-  Rval retval;
-  Rval rval = { NULL, 'x' }; /* FIXME: why this needs to be initialized? */
+    if (pp->done)
+    {
+        return;
+    }
 
-if (pp->done)
-   {
-   return;
-   }
+    if (IsExcluded(pp->classes))
+    {
+        return;
+    }
 
-if (IsExcluded(pp->classes))
-   {
-   return;
-   }
+    for (cp = pp->conlist; cp != NULL; cp = cp->next)
+    {
+        if (strcmp(cp->lval, "comment") == 0)
+        {
+            continue;
+        }
 
-for (cp = pp->conlist; cp != NULL; cp=cp->next)
-   {
-   if (strcmp(cp->lval,"comment") == 0)
-      {
-      continue;
-      }
+        if (cp->rval.item == NULL)
+        {
+            continue;
+        }
 
-   if (cp->rval.item == NULL)
-      {
-      continue;
-      }
+        if (strcmp(cp->lval, "ifvarclass") == 0)
+        {
+            Rval res;
 
-   if (strcmp(cp->lval,"ifvarclass") == 0)
-      {
-      Rval res;
-      
-      switch(cp->rval.rtype)
-         {
-         case CF_SCALAR:
-             
-             if (IsExcluded(cp->rval.item))
+            switch (cp->rval.rtype)
+            {
+            case CF_SCALAR:
+
+                if (IsExcluded(cp->rval.item))
                 {
-                return;
+                    return;
                 }
-             
-             break;
 
-         case CF_FNCALL:
-             {
-             bool excluded = false;
-             /* eval it: e.g. ifvarclass => not("a_class") */
+                break;
 
-             res = EvaluateFunctionCall(cp->rval.item, NULL).rval;
-             excluded = IsExcluded(res.item);
+            case CF_FNCALL:
+            {
+                bool excluded = false;
 
-             DeleteRvalItem(res);
+                /* eval it: e.g. ifvarclass => not("a_class") */
 
-             if(excluded)
+                res = EvaluateFunctionCall(cp->rval.item, NULL).rval;
+                excluded = IsExcluded(res.item);
+
+                DeleteRvalItem(res);
+
+                if (excluded)
                 {
-                return;
+                    return;
                 }
-             }
-             break;
-             
-         default:
-             CfOut(cf_error, "", "!! Invalid ifvarclass type '%c': should be string or function", cp->rval.rtype);
-             continue;
-         }
-      
-      continue;
-      }
+            }
+                break;
 
-   if (strcmp(cp->lval,"policy") == 0)
-      {
-      if (strcmp(cp->rval.item,"ifdefined") == 0)
-         {
-         drop_undefined = true;
-         ok_redefine = false;
-         }
-      else if (strcmp(cp->rval.item,"constant") == 0)
-         {
-         ok_redefine = false;
-         }
-      else
-         {
-         ok_redefine = true;
-         }
-      }
-   else if (IsDataType(cp->lval))
-      {
-      i++;
-      rval.item = cp->rval.item;
-      cp_save = cp;
-      }
-   }
+            default:
+                CfOut(cf_error, "", "!! Invalid ifvarclass type '%c': should be string or function", cp->rval.rtype);
+                continue;
+            }
 
-cp = cp_save;
+            continue;
+        }
 
-if (cp == NULL)
-   {
-   CfOut(cf_inform,"","Warning: Variable body for \"%s\" seems incomplete",pp->promiser);
-   PromiseRef(cf_inform,pp);
-   return;
-   }
+        if (strcmp(cp->lval, "policy") == 0)
+        {
+            if (strcmp(cp->rval.item, "ifdefined") == 0)
+            {
+                drop_undefined = true;
+                ok_redefine = false;
+            }
+            else if (strcmp(cp->rval.item, "constant") == 0)
+            {
+                ok_redefine = false;
+            }
+            else
+            {
+                ok_redefine = true;
+            }
+        }
+        else if (IsDataType(cp->lval))
+        {
+            i++;
+            rval.item = cp->rval.item;
+            cp_save = cp;
+        }
+    }
 
-if (i > 2)
-   {
-   CfOut(cf_error,"","Variable \"%s\" breaks its own promise with multiple values (code %d)",pp->promiser,i);
-   PromiseRef(cf_error,pp);
-   return;
-   }
+    cp = cp_save;
+
+    if (cp == NULL)
+    {
+        CfOut(cf_inform, "", "Warning: Variable body for \"%s\" seems incomplete", pp->promiser);
+        PromiseRef(cf_inform, pp);
+        return;
+    }
+
+    if (i > 2)
+    {
+        CfOut(cf_error, "", "Variable \"%s\" breaks its own promise with multiple values (code %d)", pp->promiser, i);
+        PromiseRef(cf_error, pp);
+        return;
+    }
 
 //More consideration needs to be given to using these
 //a.transaction = GetTransactionConstraints(pp);
-a.classes = GetClassDefinitionConstraints(pp);
+    a.classes = GetClassDefinitionConstraints(pp);
 
-if (rval.item != NULL)
-   {
-   FnCall *fp = (FnCall *)rval.item;
+    if (rval.item != NULL)
+    {
+        FnCall *fp = (FnCall *) rval.item;
 
-   if (cp->rval.rtype == CF_FNCALL)
-      {
-      FnCallResult res = EvaluateFunctionCall(fp,pp);
+        if (cp->rval.rtype == CF_FNCALL)
+        {
+            FnCallResult res = EvaluateFunctionCall(fp, pp);
 
-      if (res.status == FNCALL_FAILURE)
-         {
-         /* We do not assign variables to failed fn calls */
-         DeleteRvalItem(res.rval);
-         return;
-         }
-      else
-         {
-         rval = res.rval;
-         }
-      }
-   else
-      {
-      char conv[CF_MAXVARSIZE];
-
-      if (strcmp(cp->lval,"int") == 0)
-         {
-         snprintf(conv,CF_MAXVARSIZE,"%ld",Str2Int(cp->rval.item));
-         rval = CopyRvalItem((Rval) { conv, cp->rval.rtype });
-         }
-      else if (strcmp(cp->lval,"real") == 0)
-         {
-         snprintf(conv,CF_MAXVARSIZE,"%lf",Str2Double(cp->rval.item));
-         rval = CopyRvalItem((Rval) { conv, cp->rval.rtype });
-         }
-      else
-         {
-         rval = CopyRvalItem(cp->rval);
-         }
-      }
-
-   if (Epimenides(pp->promiser, rval, 0))
-      {
-      CfOut(cf_error,"","Variable \"%s\" contains itself indirectly - an unkeepable promise",pp->promiser);
-      exit(1);
-      }
-   else
-      {
-      /* See if the variable needs recursively expanding again */
-
-      Rval returnval = EvaluateFinalRval(scope, rval, true, pp);
-      DeleteRvalItem(rval);
-
-      // freed before function exit
-      rval = returnval;
-      }
-
-   if (GetVariable(scope,pp->promiser,&retval) != cf_notype)
-      {
-      if (ok_redefine) /* only on second iteration, else we ignore broken promises */
-         {
-         DeleteVariable(scope,pp->promiser);
-         }
-      else if ((THIS_AGENT_TYPE == cf_common) && (CompareRval(retval,rval) == false))
-         {
-         switch (rval.rtype)
+            if (res.status == FNCALL_FAILURE)
             {
-            char valbuf[CF_BUFSIZE];
-
-            case CF_SCALAR:
-                CfOut(cf_verbose,""," !! Redefinition of a constant scalar \"%s\" (was %s now %s)",
-                      pp->promiser, ScalarRvalValue(retval), ScalarRvalValue(rval));
-                PromiseRef(cf_verbose,pp);
-                break;
-            case CF_LIST:
-                CfOut(cf_verbose,""," !! Redefinition of a constant list \"%s\".",pp->promiser);
-                PrintRlist(valbuf, CF_BUFSIZE, retval.item);
-                CfOut(cf_verbose,"","Old value: %s", valbuf);
-                PrintRlist(valbuf, CF_BUFSIZE, rval.item);
-                CfOut(cf_verbose,""," New value: %s", valbuf);
-                PromiseRef(cf_verbose,pp);
-		break;
+                /* We do not assign variables to failed fn calls */
+                DeleteRvalItem(res.rval);
+                return;
             }
-         }
-      }
-   
-   if (IsCf3VarString(pp->promiser))
-      {
-      // Unexpanded variables, we don't do anything with
-      DeleteRvalItem(rval);
-      return;
-      }
-   
-   if (!FullTextMatch("[a-zA-Z0-9_\200-\377.]+(\\[.+\\])*",pp->promiser))
-      {
-      CfOut(cf_error,""," !! Variable identifier contains illegal characters");
-      PromiseRef(cf_error,pp);
-      DeleteRvalItem(rval);
-      return;
-      }
-
-   if (drop_undefined && rval.rtype == CF_LIST)
-      {
-      for (rp = rval.item; rp != NULL; rp=rp->next)
-         {
-         if (IsNakedVar(rp->item,'@'))
+            else
             {
-            free(rp->item);
-            rp->item = xstrdup(CF_NULL_VALUE);
+                rval = res.rval;
             }
-         }
-      }
+        }
+        else
+        {
+            char conv[CF_MAXVARSIZE];
 
-   if (!AddVariableHash(scope,pp->promiser, rval, Typename2Datatype(cp->lval),
-                        cp->audit->filename, cp->offset.line))
-      {
-      CfOut(cf_verbose,"","Unable to converge %s.%s value (possibly empty or infinite regression)\n",scope,pp->promiser);
-      PromiseRef(cf_verbose,pp);
-      cfPS(cf_noreport,CF_FAIL,"",pp,a," !! Couldn't add variable %s",pp->promiser);
-      }
-   else
-      {
-      cfPS(cf_noreport,CF_CHG,"",pp,a," -> Added variable %s",pp->promiser);
-      }
-   }
-else
-   {
-   CfOut(cf_error,""," !! Variable %s has no promised value\n",pp->promiser);
-   CfOut(cf_error,""," !! Rule from %s at/before line %zu\n",cp->audit->filename, cp->offset.line);
-   cfPS(cf_noreport,CF_FAIL,"",pp,a," !! Couldn't add variable %s",pp->promiser);
-   }     
+            if (strcmp(cp->lval, "int") == 0)
+            {
+                snprintf(conv, CF_MAXVARSIZE, "%ld", Str2Int(cp->rval.item));
+                rval = CopyRvalItem((Rval) {conv, cp->rval.rtype});
+            }
+            else if (strcmp(cp->lval, "real") == 0)
+            {
+                snprintf(conv, CF_MAXVARSIZE, "%lf", Str2Double(cp->rval.item));
+                rval = CopyRvalItem((Rval) {conv, cp->rval.rtype});
+            }
+            else
+            {
+                rval = CopyRvalItem(cp->rval);
+            }
+        }
 
-DeleteRvalItem(rval);
+        if (Epimenides(pp->promiser, rval, 0))
+        {
+            CfOut(cf_error, "", "Variable \"%s\" contains itself indirectly - an unkeepable promise", pp->promiser);
+            exit(1);
+        }
+        else
+        {
+            /* See if the variable needs recursively expanding again */
+
+            Rval returnval = EvaluateFinalRval(scope, rval, true, pp);
+
+            DeleteRvalItem(rval);
+
+            // freed before function exit
+            rval = returnval;
+        }
+
+        if (GetVariable(scope, pp->promiser, &retval) != cf_notype)
+        {
+            if (ok_redefine)    /* only on second iteration, else we ignore broken promises */
+            {
+                DeleteVariable(scope, pp->promiser);
+            }
+            else if ((THIS_AGENT_TYPE == cf_common) && (CompareRval(retval, rval) == false))
+            {
+                switch (rval.rtype)
+                {
+                    char valbuf[CF_BUFSIZE];
+
+                case CF_SCALAR:
+                    CfOut(cf_verbose, "", " !! Redefinition of a constant scalar \"%s\" (was %s now %s)",
+                          pp->promiser, ScalarRvalValue(retval), ScalarRvalValue(rval));
+                    PromiseRef(cf_verbose, pp);
+                    break;
+                case CF_LIST:
+                    CfOut(cf_verbose, "", " !! Redefinition of a constant list \"%s\".", pp->promiser);
+                    PrintRlist(valbuf, CF_BUFSIZE, retval.item);
+                    CfOut(cf_verbose, "", "Old value: %s", valbuf);
+                    PrintRlist(valbuf, CF_BUFSIZE, rval.item);
+                    CfOut(cf_verbose, "", " New value: %s", valbuf);
+                    PromiseRef(cf_verbose, pp);
+                    break;
+                }
+            }
+        }
+
+        if (IsCf3VarString(pp->promiser))
+        {
+            // Unexpanded variables, we don't do anything with
+            DeleteRvalItem(rval);
+            return;
+        }
+
+        if (!FullTextMatch("[a-zA-Z0-9_\200-\377.]+(\\[.+\\])*", pp->promiser))
+        {
+            CfOut(cf_error, "", " !! Variable identifier contains illegal characters");
+            PromiseRef(cf_error, pp);
+            DeleteRvalItem(rval);
+            return;
+        }
+
+        if (drop_undefined && rval.rtype == CF_LIST)
+        {
+            for (rp = rval.item; rp != NULL; rp = rp->next)
+            {
+                if (IsNakedVar(rp->item, '@'))
+                {
+                    free(rp->item);
+                    rp->item = xstrdup(CF_NULL_VALUE);
+                }
+            }
+        }
+
+        if (!AddVariableHash(scope, pp->promiser, rval, Typename2Datatype(cp->lval),
+                             cp->audit->filename, cp->offset.line))
+        {
+            CfOut(cf_verbose, "", "Unable to converge %s.%s value (possibly empty or infinite regression)\n", scope,
+                  pp->promiser);
+            PromiseRef(cf_verbose, pp);
+            cfPS(cf_noreport, CF_FAIL, "", pp, a, " !! Couldn't add variable %s", pp->promiser);
+        }
+        else
+        {
+            cfPS(cf_noreport, CF_CHG, "", pp, a, " -> Added variable %s", pp->promiser);
+        }
+    }
+    else
+    {
+        CfOut(cf_error, "", " !! Variable %s has no promised value\n", pp->promiser);
+        CfOut(cf_error, "", " !! Rule from %s at/before line %zu\n", cp->audit->filename, cp->offset.line);
+        cfPS(cf_noreport, CF_FAIL, "", pp, a, " !! Couldn't add variable %s", pp->promiser);
+    }
+
+    DeleteRvalItem(rval);
 }
 
 /*********************************************************************/
@@ -1297,141 +1301,140 @@ DeleteRvalItem(rval);
 /*********************************************************************/
 
 static int Epimenides(char *var, Rval rval, int level)
+{
+    Rlist *rp, *list;
+    char exp[CF_EXPANDSIZE];
 
-{ Rlist *rp,*list;
-  char exp[CF_EXPANDSIZE];
+    switch (rval.rtype)
+    {
+    case CF_SCALAR:
 
-switch (rval.rtype)
-   {
-   case CF_SCALAR:
-       
-       if (StringContainsVar(rval.item, var))
-          {
-          CfOut(cf_error, "", "Scalar variable \"%s\" contains itself (non-convergent): %s", var, (char *)rval.item);
-          return true;
-          }
+        if (StringContainsVar(rval.item, var))
+        {
+            CfOut(cf_error, "", "Scalar variable \"%s\" contains itself (non-convergent): %s", var, (char *) rval.item);
+            return true;
+        }
 
-       if (IsCf3VarString(rval.item))
-          {
-          ExpandPrivateScalar(CONTEXTID, rval.item, exp);
-          CfDebug("bling %d-%s: (look for %s) in \"%s\" => %s \n", level, CONTEXTID, var, (const char*)rval.item, exp);
+        if (IsCf3VarString(rval.item))
+        {
+            ExpandPrivateScalar(CONTEXTID, rval.item, exp);
+            CfDebug("bling %d-%s: (look for %s) in \"%s\" => %s \n", level, CONTEXTID, var, (const char *) rval.item,
+                    exp);
 
-          if (level > 3)
-             {
-             return false;
-             }
-          
-          if (Epimenides(var, (Rval) { exp, CF_SCALAR }, level+1))
-             {
-             return true;
-             }           
-          }
-       
-       break;
-       
-   case CF_LIST:
-       list = (Rlist *)rval.item;
-       
-       for (rp = list; rp != NULL; rp=rp->next)
-          {
-          if (Epimenides(var, (Rval) { rp->item, rp->type }, level))
-             {
-             return true;
-             }
-          }
-       break;
-       
-   default:
-       return false;
-   }
+            if (level > 3)
+            {
+                return false;
+            }
 
-return false;
+            if (Epimenides(var, (Rval) {exp, CF_SCALAR}, level + 1))
+            {
+                return true;
+            }
+        }
+
+        break;
+
+    case CF_LIST:
+        list = (Rlist *) rval.item;
+
+        for (rp = list; rp != NULL; rp = rp->next)
+        {
+            if (Epimenides(var, (Rval) {rp->item, rp->type}, level))
+            {
+                return true;
+            }
+        }
+        break;
+
+    default:
+        return false;
+    }
+
+    return false;
 }
 
 /*******************************************************************/
 
 static int CompareRval(Rval rval1, Rval rval2)
-
 {
-if (rval1.rtype != rval2.rtype)
-   {
-   return -1;
-   }
+    if (rval1.rtype != rval2.rtype)
+    {
+        return -1;
+    }
 
-switch (rval1.rtype)
-   {
-   case CF_SCALAR:
+    switch (rval1.rtype)
+    {
+    case CF_SCALAR:
 
-       if (IsCf3VarString((char *)rval1.item) || IsCf3VarString((char *)rval2.item))
-          {
-          return -1; // inconclusive
-          }
+        if (IsCf3VarString((char *) rval1.item) || IsCf3VarString((char *) rval2.item))
+        {
+            return -1;          // inconclusive
+        }
 
-       if (strcmp(rval1.item,rval2.item) != 0)
-          {
-          return false;
-          }
-       
-       break;
-       
-   case CF_LIST:
-       return CompareRlist(rval1.item,rval2.item);
-       
-   case CF_FNCALL:
-       return -1;       
-   }
+        if (strcmp(rval1.item, rval2.item) != 0)
+        {
+            return false;
+        }
 
-return true;
+        break;
+
+    case CF_LIST:
+        return CompareRlist(rval1.item, rval2.item);
+
+    case CF_FNCALL:
+        return -1;
+    }
+
+    return true;
 }
 
 /*******************************************************************/
 
 static int CompareRlist(Rlist *list1, Rlist *list2)
+{
+    Rlist *rp1, *rp2;
 
-{ Rlist *rp1,*rp2;
+    for (rp1 = list1, rp2 = list2; rp1 != NULL && rp2 != NULL; rp1 = rp1->next, rp2 = rp2->next)
+    {
+        if (rp1->item && rp2->item)
+        {
+            Rlist *rc1, *rc2;
 
-for (rp1 = list1, rp2 = list2; rp1 != NULL && rp2!= NULL; rp1=rp1->next,rp2=rp2->next)
-   {
-   if (rp1->item && rp2->item)
-      {
-      Rlist *rc1,*rc2;
-      
-      if (rp1->type == CF_FNCALL || rp2->type == CF_FNCALL)
-         {
-         return -1; // inconclusive
-         }
+            if (rp1->type == CF_FNCALL || rp2->type == CF_FNCALL)
+            {
+                return -1;      // inconclusive
+            }
 
-      rc1 = rp1;
-      rc2 = rp2;
+            rc1 = rp1;
+            rc2 = rp2;
 
-      // Check for list nesting with { fncall(), "x" ... }
-      
-      if (rp1->type == CF_LIST)
-         {   
-         rc1 = rp1->item;
-         }
-      
-      if (rp2->type == CF_LIST)
-         {
-         rc2 = rp2->item;
-         }
+            // Check for list nesting with { fncall(), "x" ... }
 
-      if (IsCf3VarString(rc1->item) || IsCf3VarString(rp2->item))
-         {
-         return -1; // inconclusive
-         }
+            if (rp1->type == CF_LIST)
+            {
+                rc1 = rp1->item;
+            }
 
-      if (strcmp(rc1->item,rc2->item) != 0)
-         {
-         return false;
-         }
-      }
-   else
-      {
-      return false;
-      }
-   }
+            if (rp2->type == CF_LIST)
+            {
+                rc2 = rp2->item;
+            }
 
-return true;
+            if (IsCf3VarString(rc1->item) || IsCf3VarString(rp2->item))
+            {
+                return -1;      // inconclusive
+            }
+
+            if (strcmp(rc1->item, rc2->item) != 0)
+            {
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
-

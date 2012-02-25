@@ -33,27 +33,27 @@ static size_t GetDirentBufferSize(size_t path_len);
 /*********************************************************************/
 
 Dir *OpenDirLocal(const char *dirname)
+{
+    Dir *ret = xcalloc(1, sizeof(Dir));
+    DIR *dirh = NULL;
+    size_t dirent_buf_size = -1;
 
-{ Dir *ret = xcalloc(1, sizeof(Dir));
-  DIR *dirh = NULL;
-  size_t dirent_buf_size = -1;
+    ret->dirh = dirh = opendir(dirname);
+    if (dirh == NULL)
+    {
+        free(ret);
+        return NULL;
+    }
 
-ret->dirh = dirh = opendir(dirname);
-if (dirh == NULL)
-   {
-   free(ret);
-   return NULL;
-   }
+    dirent_buf_size = GetDirentBufferSize(GetNameMax(dirh));
+    if (dirent_buf_size == (size_t) -1)
+    {
+        FatalError("Unable to determine directory entry buffer size for directory %s", dirname);
+    }
 
-dirent_buf_size = GetDirentBufferSize(GetNameMax(dirh));
-if (dirent_buf_size == (size_t)-1)
-   {
-   FatalError("Unable to determine directory entry buffer size for directory %s", dirname);
-   }
+    ret->entrybuf = xcalloc(1, dirent_buf_size);
 
-ret->entrybuf = xcalloc(1, dirent_buf_size);
-
-return ret;
+    return ret;
 }
 
 /*********************************************************************/
@@ -65,33 +65,33 @@ return ret;
  */
 const struct dirent *ReadDirLocal(Dir *dir)
 {
-int err;
-struct dirent *ret;
+    int err;
+    struct dirent *ret;
 
-errno = 0;
-err = readdir_r((DIR *)dir->dirh, dir->entrybuf, &ret);
+    errno = 0;
+    err = readdir_r((DIR *) dir->dirh, dir->entrybuf, &ret);
 
-if (err != 0)
-   {
-   errno = err;
-   return NULL;
-   }
+    if (err != 0)
+    {
+        errno = err;
+        return NULL;
+    }
 
-if (ret == NULL)
-   {
-   return NULL;
-   }
+    if (ret == NULL)
+    {
+        return NULL;
+    }
 
-return ret;
+    return ret;
 }
 
 /*********************************************************************/
 
 void CloseDirLocal(Dir *dir)
 {
-closedir((DIR *)dir->dirh);
-free(dir->entrybuf);
-free(dir);
+    closedir((DIR *) dir->dirh);
+    free(dir->entrybuf);
+    free(dir);
 }
 
 /*********************************************************************/
@@ -135,17 +135,18 @@ free(dir);
 
 static size_t GetNameMax(DIR *dirp)
 {
-long name_max = fpathconf(dirfd(dirp), _PC_NAME_MAX);
-if (name_max != -1)
-   {
-   return name_max;
-   }
+    long name_max = fpathconf(dirfd(dirp), _PC_NAME_MAX);
 
-#if defined(NAME_MAX)
-return (NAME_MAX > 255) ? NAME_MAX : 255;
-#else
-return (size_t)(-1);
-#endif
+    if (name_max != -1)
+    {
+        return name_max;
+    }
+
+# if defined(NAME_MAX)
+    return (NAME_MAX > 255) ? NAME_MAX : 255;
+# else
+    return (size_t) (-1);
+# endif
 }
 
 #else /* FPATHCONF && _PC_NAME_MAX */
@@ -153,7 +154,7 @@ return (size_t)(-1);
 # if defined(NAME_MAX)
 static size_t GetNameMax(DIR *dirp)
 {
-return (NAME_MAX > 255) ? NAME_MAX : 255;
+    return (NAME_MAX > 255) ? NAME_MAX : 255;
 }
 # else
 #  error "buffer size for readdir_r cannot be determined"
@@ -168,15 +169,17 @@ return (NAME_MAX > 255) ? NAME_MAX : 255;
  */
 static size_t GetDirentBufferSize(size_t name_len)
 {
-size_t name_end = (size_t)offsetof(struct dirent, d_name) + name_len + 1;
-return (name_end > sizeof(struct dirent) ? name_end : sizeof(struct dirent));
+    size_t name_end = (size_t) offsetof(struct dirent, d_name) + name_len + 1;
+
+    return (name_end > sizeof(struct dirent) ? name_end : sizeof(struct dirent));
 }
 
 /*********************************************************************/
 
 struct dirent *AllocateDirentForFilename(const char *filename)
 {
-struct dirent *entry = xcalloc(1, GetDirentBufferSize(strlen(filename)));
-strcpy(entry->d_name, filename);
-return entry;
+    struct dirent *entry = xcalloc(1, GetDirentBufferSize(strlen(filename)));
+
+    strcpy(entry->d_name, filename);
+    return entry;
 }

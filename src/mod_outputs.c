@@ -60,19 +60,20 @@
  /***********************************************************/
 
 BodySyntax CF_OUTPUTS_BODIES[] =
-   {
-   {"output_level",cf_opts,"verbose,debug,inform","Output level to observe for the named promise or bundle (meta-promise)", "verbose"},
-   {"promiser_type",cf_opts,"promise,bundle","Output level to observe for the named promise or bundle (meta-promise)", "promise"},
-   {NULL,cf_notype,NULL,NULL}
-   };
+{
+    {"output_level", cf_opts, "verbose,debug,inform",
+     "Output level to observe for the named promise or bundle (meta-promise)", "verbose"},
+    {"promiser_type", cf_opts, "promise,bundle",
+     "Output level to observe for the named promise or bundle (meta-promise)", "promise"},
+    {NULL, cf_notype, NULL, NULL}
+};
 
 /***************************************************************/
 /* This is the point of entry from mod_common.c                */
 /***************************************************************/
 
 SubTypeSyntax CF_OUTPUTS_SUBTYPES[] =
-  {
-  {"agent","outputs",CF_OUTPUTS_BODIES},
-  {NULL,NULL,NULL},
-  };
-
+{
+    {"agent", "outputs", CF_OUTPUTS_BODIES},
+    {NULL, NULL, NULL},
+};

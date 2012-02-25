@@ -24,13 +24,13 @@
 */
 
 #ifdef HAVE_CONFIG_H
-#include "../src/conf.h"
+# include "../src/conf.h"
 #endif
 
 #include <errno.h>
 
 #ifdef HAVE_DIRENT_H
-#include <dirent.h>
+# include <dirent.h>
 #endif
 
 #if !HAVE_DECL_DIRFD
@@ -43,14 +43,14 @@ int dirfd(DIR *dirp);
 
 int dirfd(DIR *dirp)
 {
-return dirp->d_fd != -1 ? dirp->d_fd : ENOTSUP;
+    return dirp->d_fd != -1 ? dirp->d_fd : ENOTSUP;
 }
 
 #elif defined(__hpux) || defined(_AIX)
 
 int dirfd(DIR *dirp)
 {
-return dirp->dd_fd != -1 ? dirp->dd_fd : ENOTSUP;
+    return dirp->dd_fd != -1 ? dirp->dd_fd : ENOTSUP;
 }
 
 #endif

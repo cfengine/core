@@ -34,82 +34,80 @@
 
 /*******************************************************************/
 
-int FixCompressedArrayValue(int i,char *value,CompressedArray **start)
+int FixCompressedArrayValue(int i, char *value, CompressedArray **start)
+{
+    CompressedArray *ap;
 
-{ CompressedArray *ap;
+    for (ap = *start; ap != NULL; ap = ap->next)
+    {
+        if (ap->key == i)
+        {
+            /* value already fixed */
+            return false;
+        }
+    }
 
-for (ap = *start; ap != NULL; ap = ap->next)
-   {
-   if (ap->key == i) 
-      {
-      /* value already fixed */
-      return false;
-      }
-   }
+    CfDebug("FixCompressedArrayValue(%d,%s)\n", i, value);
 
-CfDebug("FixCompressedArrayValue(%d,%s)\n",i,value);
+    ap = xmalloc(sizeof(CompressedArray));
 
-ap = xmalloc(sizeof(CompressedArray));
-
-ap->key = i;
-ap->value = xstrdup(value);
-ap->next = *start;
-*start = ap;
-return true;
+    ap->key = i;
+    ap->value = xstrdup(value);
+    ap->next = *start;
+    *start = ap;
+    return true;
 }
-
 
 /*******************************************************************/
 
 void DeleteCompressedArray(CompressedArray *start)
-
 {
-if (start != NULL)
-   {
-   DeleteCompressedArray(start->next);
-   start->next = NULL;
+    if (start != NULL)
+    {
+        DeleteCompressedArray(start->next);
+        start->next = NULL;
 
-   if (start->value != NULL)
-      {
-      free(start->value);
-      }
+        if (start->value != NULL)
+        {
+            free(start->value);
+        }
 
-   free(start);
-   }
+        free(start);
+    }
 }
 
 /*******************************************************************/
 
-int CompressedArrayElementExists(CompressedArray *start,int key)
+int CompressedArrayElementExists(CompressedArray *start, int key)
+{
+    CompressedArray *ap;
 
-{ CompressedArray *ap;
+    CfDebug("CompressedArrayElementExists(%d)\n", key);
 
-CfDebug("CompressedArrayElementExists(%d)\n",key);
+    for (ap = start; ap != NULL; ap = ap->next)
+    {
+        if (ap->key == key)
+        {
+            return true;
+        }
+    }
 
-for (ap = start; ap !=NULL; ap = ap->next)
-   {
-   if (ap->key == key)
-      {
-      return true;
-      }
-   }
-
-return false;
+    return false;
 }
 
 /*******************************************************************/
 
-char *CompressedArrayValue(CompressedArray *start,int key)
+char *CompressedArrayValue(CompressedArray *start, int key)
+{
+    CompressedArray *ap;
 
-{ CompressedArray *ap;
+    for (ap = start; ap != NULL; ap = ap->next)
+    {
+        if (ap->key == key)
+        {
+            return ap->value;
+        }
+    }
 
-for (ap = start; ap != NULL; ap = ap->next)
-   {
-   if (ap->key == key)
-      {
-      return ap->value;
-      }
-   }
-
-return NULL;
+    return NULL;
 }

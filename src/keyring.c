@@ -12,19 +12,18 @@
 /***************************************************************/
 
 int HostKeyAddressUnknown(char *value)
-
 {
-if (strcmp(value,CF_UNKNOWN_IP) == 0)
-   {
-   return true;
-   }
+    if (strcmp(value, CF_UNKNOWN_IP) == 0)
+    {
+        return true;
+    }
 
 // Is there some other non-ip string left over?
 
-if (!(strchr(value,'.') || strchr(value,':')))
-   {
-   return false;
-   }
+    if (!(strchr(value, '.') || strchr(value, ':')))
+    {
+        return false;
+    }
 
-return false;
+    return false;
 }

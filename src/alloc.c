@@ -30,72 +30,74 @@
 
 static void *CheckResult(void *ptr, const char *fn, bool check_result)
 {
-if (ptr == NULL && check_result)
-   {
-   FatalError("%s: Unable to allocate memory", fn);
-   }
-return ptr;
+    if (ptr == NULL && check_result)
+    {
+        FatalError("%s: Unable to allocate memory", fn);
+    }
+    return ptr;
 }
 
 /*****************************************************************************/
 
 void *xmalloc(size_t size)
 {
-return CheckResult(malloc(size), "xmalloc", size != 0);
+    return CheckResult(malloc(size), "xmalloc", size != 0);
 }
 
 /*****************************************************************************/
 
 void *xcalloc(size_t nmemb, size_t size)
 {
-return CheckResult(calloc(nmemb, size), "xcalloc", nmemb != 0 && size != 0);
+    return CheckResult(calloc(nmemb, size), "xcalloc", nmemb != 0 && size != 0);
 }
 
 /*****************************************************************************/
 
 void *xrealloc(void *ptr, size_t size)
 {
-return CheckResult(realloc(ptr, size), "xrealloc", size != 0);
+    return CheckResult(realloc(ptr, size), "xrealloc", size != 0);
 }
 
 /*****************************************************************************/
 
 char *xstrdup(const char *str)
 {
-return CheckResult(strdup(str), "xstrdup", true);
+    return CheckResult(strdup(str), "xstrdup", true);
 }
 
 /*****************************************************************************/
 
 char *xstrndup(const char *str, size_t n)
 {
-return CheckResult(strndup(str, n), "xstrndup", true);
+    return CheckResult(strndup(str, n), "xstrndup", true);
 }
 
 /*****************************************************************************/
 
 void *xmemdup(const void *data, size_t size)
 {
-return CheckResult(memdup(data, size), "xmemdup", size != 0);
+    return CheckResult(memdup(data, size), "xmemdup", size != 0);
 }
 
 /*****************************************************************************/
 
 int xasprintf(char **strp, const char *fmt, ...)
 {
-va_list ap;
-va_start(ap, fmt);
-int res = xvasprintf(strp, fmt, ap);
-va_end(ap);
-return res;
+    va_list ap;
+
+    va_start(ap, fmt);
+    int res = xvasprintf(strp, fmt, ap);
+
+    va_end(ap);
+    return res;
 }
 
 /*****************************************************************************/
 
 int xvasprintf(char **strp, const char *fmt, va_list ap)
 {
-int res = vasprintf(strp, fmt, ap);
-CheckResult(res == -1 ? NULL : *strp, "xvasprintf", true);
-return res;
-}
+    int res = vasprintf(strp, fmt, ap);
 
+    CheckResult(res == -1 ? NULL : *strp, "xvasprintf", true);
+    return res;
+}

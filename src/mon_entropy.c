@@ -38,18 +38,18 @@ static char ENVFILE[CF_BUFSIZE];
 
 void MonEntropyClassesInit(void)
 {
-snprintf(ENVFILE_NEW,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,CF_ENVNEW_FILE);
-MapName(ENVFILE_NEW);
+    snprintf(ENVFILE_NEW, CF_BUFSIZE, "%s/state/%s", CFWORKDIR, CF_ENVNEW_FILE);
+    MapName(ENVFILE_NEW);
 
-snprintf(ENVFILE,CF_BUFSIZE,"%s/state/%s",CFWORKDIR,CF_ENV_FILE);
-MapName(ENVFILE);
+    snprintf(ENVFILE, CF_BUFSIZE, "%s/state/%s", CFWORKDIR, CF_ENV_FILE);
+    MapName(ENVFILE);
 }
 
 /****************************************************************************/
 
 void MonEntropyClassesReset(void)
 {
-ENTROPIES = NULL; /*?*/
+    ENTROPIES = NULL;           /*? */
 }
 
 /****************************************************************************/
@@ -76,93 +76,93 @@ ENTROPIES = NULL; /*?*/
 
 double MonEntropyCalculate(const Item *items)
 {
-double S = 0.0;
-double sum = 0.0;
-int numclasses = 0;
-const Item *i;
+    double S = 0.0;
+    double sum = 0.0;
+    int numclasses = 0;
+    const Item *i;
 
-for (i = items; i; i = i->next)
-   {
-   sum += i->counter;
-   numclasses++;
-   }
+    for (i = items; i; i = i->next)
+    {
+        sum += i->counter;
+        numclasses++;
+    }
 
-if (numclasses < 2)
-   {
-   return 0.0;
-   }
+    if (numclasses < 2)
+    {
+        return 0.0;
+    }
 
-for (i = items; i; i = i->next)
-   {
-   double q = ((double)i->counter) / sum;
-   S -= q * log(q);
-   }
+    for (i = items; i; i = i->next)
+    {
+        double q = ((double) i->counter) / sum;
 
-return S / log(numclasses);
+        S -= q * log(q);
+    }
+
+    return S / log(numclasses);
 }
 
 /****************************************************************************/
 
 void MonEntropyClassesSet(const char *service, const char *direction, double entropy)
 {
-char class[CF_MAXVARSIZE];
+    char class[CF_MAXVARSIZE];
 
-const char *class_type = "medium";
+    const char *class_type = "medium";
 
-if (entropy > 0.9)
-   {
-   class_type = "high";
-   }
+    if (entropy > 0.9)
+    {
+        class_type = "high";
+    }
 
-if (entropy < 0.2)
-   {
-   class_type = "low";
-   }
+    if (entropy < 0.2)
+    {
+        class_type = "low";
+    }
 
-snprintf(class, CF_MAXVARSIZE, "entropy_%s_%s_%s", service, direction, class_type);
-AppendItem(&ENTROPIES,class,"");
+    snprintf(class, CF_MAXVARSIZE, "entropy_%s_%s_%s", service, direction, class_type);
+    AppendItem(&ENTROPIES, class, "");
 }
 
 /****************************************************************************/
 
 void MonEntropyPurgeUnused(char *name)
-    
 {
 // Don't set setentropy is there is no corresponding class
-DeleteItemMatching(&ENTROPIES,name);
+    DeleteItemMatching(&ENTROPIES, name);
 }
 
 /****************************************************************************/
 
 void MonEntropyClassesPublish(Item *classlist)
 {
-FILE *fp;
-Item *ip;
+    FILE *fp;
+    Item *ip;
 
-unlink(ENVFILE_NEW);
+    unlink(ENVFILE_NEW);
 
-if ((fp = fopen(ENVFILE_NEW,"a")) == NULL)
-   {
-   DeleteItemList(PREVIOUS_STATE);
-   PREVIOUS_STATE = classlist;
-   return;
-   }
+    if ((fp = fopen(ENVFILE_NEW, "a")) == NULL)
+    {
+        DeleteItemList(PREVIOUS_STATE);
+        PREVIOUS_STATE = classlist;
+        return;
+    }
 
-for (ip = classlist; ip != NULL; ip=ip->next)
-   {
-   fprintf(fp,"%s\n",ip->name);
-   }
+    for (ip = classlist; ip != NULL; ip = ip->next)
+    {
+        fprintf(fp, "%s\n", ip->name);
+    }
 
-DeleteItemList(PREVIOUS_STATE);
-PREVIOUS_STATE = classlist;
+    DeleteItemList(PREVIOUS_STATE);
+    PREVIOUS_STATE = classlist;
 
-for (ip = ENTROPIES; ip != NULL; ip=ip->next)
-   {
-   fprintf(fp,"%s\n",ip->name);
-   }
+    for (ip = ENTROPIES; ip != NULL; ip = ip->next)
+    {
+        fprintf(fp, "%s\n", ip->name);
+    }
 
-DeleteItemList(ENTROPIES);
-fclose(fp);
+    DeleteItemList(ENTROPIES);
+    fclose(fp);
 
-cf_rename(ENVFILE_NEW,ENVFILE);
+    cf_rename(ENVFILE_NEW, ENVFILE);
 }

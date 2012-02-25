@@ -30,12 +30,13 @@
 #include "writer.h"
 
 typedef struct
-   {
-   const char *name;
-   const char *value;
-   } XmlAttribute;
+{
+    const char *name;
+    const char *value;
+} XmlAttribute;
 
 void XmlComment(Writer *writer, const char *comment);
+
 /*
    INSERT START XML ELEMENT -> <tag_name XmlAttribute.name="XmlAttribute.value" ...>
 */
@@ -43,11 +44,12 @@ void XmlComment(Writer *writer, const char *comment);
 void XmlStartTag(Writer *writer, const char *tag_name, int attr_cnt, ...);
 
 void XmlEndTag(Writer *writer, const char *tag_name);
+
 /*
    INSERT XML TAG -> <tag_name XmlAttribute.name="XmlAttribute.value" ...>value</tag_name>
 */
 /* TAKE PARAM attr_cnt, STRUCT XmlAttribute, STRUCT XmgAttribute ...  */
-void XmlTag(Writer *writer, const char *tag_name, const char* value, int attr_cnt, ...);
+void XmlTag(Writer *writer, const char *tag_name, const char *value, int attr_cnt, ...);
 
 /* String content, properly escaped */
 void XmlContent(Writer *writer, const char *value);

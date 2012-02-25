@@ -34,23 +34,23 @@
 
 void AgentDiagnostic(void)
 {
-if (VERBOSE || DEBUG)
-   {
-   FREPORT_TXT = stdout;
-   FREPORT_HTML = fopen(NULLFILE,"w");
-   }
-else
-   {
-   FREPORT_TXT= fopen(NULLFILE,"w");
-   FREPORT_HTML= fopen(NULLFILE,"w");
-   }
+    if (VERBOSE || DEBUG)
+    {
+        FREPORT_TXT = stdout;
+        FREPORT_HTML = fopen(NULLFILE, "w");
+    }
+    else
+    {
+        FREPORT_TXT = fopen(NULLFILE, "w");
+        FREPORT_HTML = fopen(NULLFILE, "w");
+    }
 
 //getcwd(cwd,CF_BUFSIZE);
 
-printf("----------------------------------------------------------\n");
-printf("Cfengine 3 - Performing level 2 self-diagnostic (dialogue)\n");
-printf("----------------------------------------------------------\n\n");
-TestVariableScan();
-TestExpandPromise();
-TestExpandVariables();
+    printf("----------------------------------------------------------\n");
+    printf("Cfengine 3 - Performing level 2 self-diagnostic (dialogue)\n");
+    printf("----------------------------------------------------------\n\n");
+    TestVariableScan();
+    TestExpandPromise();
+    TestExpandVariables();
 }

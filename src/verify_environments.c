@@ -37,25 +37,14 @@
 /*****************************************************************************/
 
 void VerifyEnvironmentsPromise(Promise *pp)
-
 {
 #ifdef HAVE_NOVA
- Nova_VerifyEnvironmentsPromise(pp);
+    Nova_VerifyEnvironmentsPromise(pp);
 #else
- CfOut(cf_inform,""," !! Environments promises are not available in the Community Edition of Cfengine"); 
+    CfOut(cf_inform, "", " !! Environments promises are not available in the Community Edition of Cfengine");
 #endif
 }
 
 /*****************************************************************************/
 /* Level                                                                     */
 /*****************************************************************************/
-
-
-
-
-
-
-
-
-
-

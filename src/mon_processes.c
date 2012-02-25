@@ -35,36 +35,37 @@ static int Unix_GatherProcessUsers(Item **userList, int *userListSz, int *numRoo
 
 void MonProcessesGatherData(double *cf_this)
 {
-Item *userList = NULL;
-char vbuff[CF_BUFSIZE];
-int numProcUsers = 0;
-int numRootProcs = 0;
-int numOtherProcs = 0;
+    Item *userList = NULL;
+    char vbuff[CF_BUFSIZE];
+    int numProcUsers = 0;
+    int numRootProcs = 0;
+    int numOtherProcs = 0;
 
-if (!GatherProcessUsers(&userList, &numProcUsers, &numRootProcs, &numOtherProcs))
-   {
-   return;
-   }
+    if (!GatherProcessUsers(&userList, &numProcUsers, &numRootProcs, &numOtherProcs))
+    {
+        return;
+    }
 
-cf_this[ob_users] += numProcUsers;
-cf_this[ob_rootprocs] += numRootProcs;
-cf_this[ob_otherprocs] += numOtherProcs;
+    cf_this[ob_users] += numProcUsers;
+    cf_this[ob_rootprocs] += numRootProcs;
+    cf_this[ob_otherprocs] += numOtherProcs;
 
-snprintf(vbuff,CF_MAXVARSIZE,"%s/state/cf_users",CFWORKDIR);
-MapName(vbuff);
-RawSaveItemList(userList,vbuff);
+    snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_users", CFWORKDIR);
+    MapName(vbuff);
+    RawSaveItemList(userList, vbuff);
 
-DeleteItemList(userList);
+    DeleteItemList(userList);
 
-CfOut(cf_verbose,"","(Users,root,other) = (%d,%d,%d)\n",(int)cf_this[ob_users],(int)cf_this[ob_rootprocs],(int)cf_this[ob_otherprocs]);
+    CfOut(cf_verbose, "", "(Users,root,other) = (%d,%d,%d)\n", (int) cf_this[ob_users], (int) cf_this[ob_rootprocs],
+          (int) cf_this[ob_otherprocs]);
 }
 
 static int GatherProcessUsers(Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs)
 {
 #ifdef MINGW
- return NovaWin_GatherProcessUsers(userList, userListSz, numRootProcs, numOtherProcs);
+    return NovaWin_GatherProcessUsers(userList, userListSz, numRootProcs, numOtherProcs);
 #else
- return Unix_GatherProcessUsers(userList, userListSz, numRootProcs, numOtherProcs);
+    return Unix_GatherProcessUsers(userList, userListSz, numRootProcs, numOtherProcs);
 #endif
 }
 
@@ -72,48 +73,48 @@ static int GatherProcessUsers(Item **userList, int *userListSz, int *numRootProc
 
 static int Unix_GatherProcessUsers(Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs)
 {
-FILE *pp;
-char pscomm[CF_BUFSIZE];
-char user[CF_MAXVARSIZE];
-char vbuff[CF_BUFSIZE];
+    FILE *pp;
+    char pscomm[CF_BUFSIZE];
+    char user[CF_MAXVARSIZE];
+    char vbuff[CF_BUFSIZE];
 
-snprintf(pscomm,CF_BUFSIZE,"%s %s",VPSCOMM[VSYSTEMHARDCLASS],VPSOPTS[VSYSTEMHARDCLASS]);
+    snprintf(pscomm, CF_BUFSIZE, "%s %s", VPSCOMM[VSYSTEMHARDCLASS], VPSOPTS[VSYSTEMHARDCLASS]);
 
-if ((pp = cf_popen(pscomm,"r")) == NULL)
-   {
-   return false;
-   }
+    if ((pp = cf_popen(pscomm, "r")) == NULL)
+    {
+        return false;
+    }
 
-CfReadLine(vbuff,CF_BUFSIZE,pp); 
+    CfReadLine(vbuff, CF_BUFSIZE, pp);
 
-while (!feof(pp))
-   {
-   CfReadLine(vbuff,CF_BUFSIZE,pp);
-   sscanf(vbuff,"%s",user);
+    while (!feof(pp))
+    {
+        CfReadLine(vbuff, CF_BUFSIZE, pp);
+        sscanf(vbuff, "%s", user);
 
-   if (strcmp(user,"USER") == 0)
-      {
-      continue;
-      }
+        if (strcmp(user, "USER") == 0)
+        {
+            continue;
+        }
 
-   if (!IsItemIn(*userList,user))
-      {
-      PrependItem(userList,user,NULL);
-      (*userListSz)++;
-      }
+        if (!IsItemIn(*userList, user))
+        {
+            PrependItem(userList, user, NULL);
+            (*userListSz)++;
+        }
 
-   if (strcmp(user,"root") == 0)
-      {
-      (*numRootProcs)++;
-      }
-   else
-      {
-      (*numOtherProcs)++;
-      }
-   }
+        if (strcmp(user, "root") == 0)
+        {
+            (*numRootProcs)++;
+        }
+        else
+        {
+            (*numOtherProcs)++;
+        }
+    }
 
-cf_pclose(pp);
-return true;
+    cf_pclose(pp);
+    return true;
 }
 
 #endif

@@ -24,7 +24,7 @@
 */
 
 #ifdef HAVE_CONFIG_H
-#include "../src/conf.h"
+# include "../src/conf.h"
 #endif
 
 #include <string.h>
@@ -43,27 +43,27 @@ int unsetenv(const char *name);
 
 int unsetenv(const char *name)
 {
-int retval;
-char *buf;
+    int retval;
+    char *buf;
 
-if (name == NULL || *name == 0 || strchr(name, '=') != 0)
-   {
-   errno = EINVAL;
-   return -1;
-   }
+    if (name == NULL || *name == 0 || strchr(name, '=') != 0)
+    {
+        errno = EINVAL;
+        return -1;
+    }
 
-buf = malloc(strlen(name) + 2);
+    buf = malloc(strlen(name) + 2);
 
-if (!buf)
-   {
-   errno = ENOMEM;
-   return -1;
-   }
+    if (!buf)
+    {
+        errno = ENOMEM;
+        return -1;
+    }
 
-sprintf(buf, "%s=", name);
-retval = putenv(buf);
-free(buf);
-return retval;
+    sprintf(buf, "%s=", name);
+    retval = putenv(buf);
+    free(buf);
+    return retval;
 }
 
 #endif
@@ -84,33 +84,33 @@ extern char **environ;
 
 int unsetenv(const char *name)
 {
-char **c;
-int len;
+    char **c;
+    int len;
 
-if (name == NULL || *name == 0 || strchr(name, '=') != 0)
-   {
-   errno = EINVAL;
-   return -1;
-   }
+    if (name == NULL || *name == 0 || strchr(name, '=') != 0)
+    {
+        errno = EINVAL;
+        return -1;
+    }
 
-len = strlen(name);
+    len = strlen(name);
 
 /* Find variable */
-for (c = environ; *c; ++c)
-   {
-   if (strncmp(name, *c, len) == 0 && ((*c)[len] == '=' || (*c)[len] == 0))
-      {
-      break;
-      }
-   }
+    for (c = environ; *c; ++c)
+    {
+        if (strncmp(name, *c, len) == 0 && ((*c)[len] == '=' || (*c)[len] == 0))
+        {
+            break;
+        }
+    }
 
 /* Shift remaining values */
-for(; *c; ++c)
-   {
-   *c = *(c+1);
-   }
+    for (; *c; ++c)
+    {
+        *c = *(c + 1);
+    }
 
-return 0;
+    return 0;
 }
 
 #endif

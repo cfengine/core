@@ -36,137 +36,134 @@
 /* Files to be ignored when parsing directories                      */
 /*********************************************************************/
 
-
 /*********************************************************************/
 
-int ConsiderFile(const char *nodename,char *path,Attributes attr,Promise *pp)
+int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp)
+{
+    int i;
+    struct stat statbuf;
+    char vbuff[CF_BUFSIZE];
+    const char *sp;
 
-{ int i;
-  struct stat statbuf; 
-  char vbuff[CF_BUFSIZE];
-  const char *sp;
-  static char *skipfiles[] =
-      {
-      ".",
-      "..",
-      "lost+found",
-      ".cfengine.rm",
-      NULL
-      };
+    static char *skipfiles[] =
+{
+        ".",
+        "..",
+        "lost+found",
+        ".cfengine.rm",
+        NULL
+    };
 
-if (strlen(nodename) < 1)
-   {
-   CfOut(cf_error,"","Empty (null) filename detected in %s\n",path);
-   return true;
-   }
+    if (strlen(nodename) < 1)
+    {
+        CfOut(cf_error, "", "Empty (null) filename detected in %s\n", path);
+        return true;
+    }
 
-if (IsItemIn(SUSPICIOUSLIST,nodename))
-   {
-   struct stat statbuf;
-   if (cfstat(nodename,&statbuf) != -1)
-      {
-      if (S_ISREG(statbuf.st_mode))
-         {
-         CfOut(cf_error,"","Suspicious file %s found in %s\n",nodename,path);
-         return false;
-         }
-      }
-   }
- 
-if (strcmp(nodename,"...") == 0)
-   {
-   CfOut(cf_verbose,"","Possible DFS/FS cell node detected in %s...\n",path);
-   return true;
-   }
-  
-for (i = 0; skipfiles[i] != NULL; i++)
-   {
-   if (strcmp(nodename,skipfiles[i]) == 0)
-      {
-      CfDebug("Filename %s/%s is classified as ignorable\n",path,nodename);
-      return false;
-      }
-   }
+    if (IsItemIn(SUSPICIOUSLIST, nodename))
+    {
+        struct stat statbuf;
 
-if ((strcmp("[",nodename) == 0) && (strcmp("/usr/bin",path) == 0))
-   {
-   if (VSYSTEMHARDCLASS == linuxx)
-      {
-      return true;
-      }
-   }
+        if (cfstat(nodename, &statbuf) != -1)
+        {
+            if (S_ISREG(statbuf.st_mode))
+            {
+                CfOut(cf_error, "", "Suspicious file %s found in %s\n", nodename, path);
+                return false;
+            }
+        }
+    }
 
-for (sp = nodename; *sp != '\0'; sp++)
-   {
-   if ((*sp > 31) && (*sp < 127))
-      {
-      break;
-      }
-   }
+    if (strcmp(nodename, "...") == 0)
+    {
+        CfOut(cf_verbose, "", "Possible DFS/FS cell node detected in %s...\n", path);
+        return true;
+    }
 
-strcpy(vbuff,path);
-AddSlash(vbuff);
-strcat(vbuff,nodename); 
+    for (i = 0; skipfiles[i] != NULL; i++)
+    {
+        if (strcmp(nodename, skipfiles[i]) == 0)
+        {
+            CfDebug("Filename %s/%s is classified as ignorable\n", path, nodename);
+            return false;
+        }
+    }
 
-for (sp = nodename; *sp != '\0'; sp++) /* Check for files like ".. ." */
-   {
-   if ((*sp != '.') && ! isspace(*sp))
-      {
-      return true;
-      }
-   }
+    if ((strcmp("[", nodename) == 0) && (strcmp("/usr/bin", path) == 0))
+    {
+        if (VSYSTEMHARDCLASS == linuxx)
+        {
+            return true;
+        }
+    }
 
+    for (sp = nodename; *sp != '\0'; sp++)
+    {
+        if ((*sp > 31) && (*sp < 127))
+        {
+            break;
+        }
+    }
 
-if (cf_lstat(vbuff,&statbuf,attr,pp) == -1)
-   {
-   CfOut(cf_verbose,"lstat","Couldn't stat %s",vbuff);
-   return true;
-   }
+    strcpy(vbuff, path);
+    AddSlash(vbuff);
+    strcat(vbuff, nodename);
 
-if (statbuf.st_size == 0 && ! (VERBOSE||INFORM)) /* No sense in warning about empty files */
-   {
-   return false;
-   }
- 
-CfOut(cf_error,"","Suspicious looking file object \"%s\" masquerading as hidden file in %s\n",nodename,path);
-CfDebug("Filename looks suspicious\n"); 
- 
-if (S_ISLNK(statbuf.st_mode))
-   {
-   CfOut(cf_inform,"","   %s is a symbolic link\n",nodename);
-   }
-else if (S_ISDIR(statbuf.st_mode))
-   {
-   CfOut(cf_inform,"","   %s is a directory\n",nodename);
-   }
+    for (sp = nodename; *sp != '\0'; sp++)      /* Check for files like ".. ." */
+    {
+        if ((*sp != '.') && !isspace(*sp))
+        {
+            return true;
+        }
+    }
 
-CfOut(cf_verbose,"","[%s] has size %ld and full mode %o\n",nodename,(unsigned long)(statbuf.st_size),(unsigned int)(statbuf.st_mode)); 
-return true;
+    if (cf_lstat(vbuff, &statbuf, attr, pp) == -1)
+    {
+        CfOut(cf_verbose, "lstat", "Couldn't stat %s", vbuff);
+        return true;
+    }
+
+    if (statbuf.st_size == 0 && !(VERBOSE || INFORM))   /* No sense in warning about empty files */
+    {
+        return false;
+    }
+
+    CfOut(cf_error, "", "Suspicious looking file object \"%s\" masquerading as hidden file in %s\n", nodename, path);
+    CfDebug("Filename looks suspicious\n");
+
+    if (S_ISLNK(statbuf.st_mode))
+    {
+        CfOut(cf_inform, "", "   %s is a symbolic link\n", nodename);
+    }
+    else if (S_ISDIR(statbuf.st_mode))
+    {
+        CfOut(cf_inform, "", "   %s is a directory\n", nodename);
+    }
+
+    CfOut(cf_verbose, "", "[%s] has size %ld and full mode %o\n", nodename, (unsigned long) (statbuf.st_size),
+          (unsigned int) (statbuf.st_mode));
+    return true;
 }
-
 
 /********************************************************************/
 
-void SetSearchDevice(struct stat *sb,Promise *pp)
-
+void SetSearchDevice(struct stat *sb, Promise *pp)
 {
-CfDebug("Registering root device as %jd\n",(intmax_t)sb->st_dev);
-pp->rootdevice = sb->st_dev;
+    CfDebug("Registering root device as %jd\n", (intmax_t) sb->st_dev);
+    pp->rootdevice = sb->st_dev;
 }
-
 
 /********************************************************************/
 
-int DeviceBoundary(struct stat *sb,Promise *pp)
-
+int DeviceBoundary(struct stat *sb, Promise *pp)
 {
-if (sb->st_dev == pp->rootdevice)
-   {
-   return false;
-   }
-else
-   {
-   CfOut(cf_verbose,"","Device change from %jd to %jd\n", (intmax_t)pp->rootdevice, (intmax_t)sb->st_dev);
-   return true;
-   }
+    if (sb->st_dev == pp->rootdevice)
+    {
+        return false;
+    }
+    else
+    {
+        CfOut(cf_verbose, "", "Device change from %jd to %jd\n", (intmax_t) pp->rootdevice, (intmax_t) sb->st_dev);
+        return true;
+    }
 }

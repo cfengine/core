@@ -25,8 +25,8 @@
 #ifndef CFENGINE_STRING_LIB_H
 #define CFENGINE_STRING_LIB_H
 
-char ToLower (char ch);
-char ToUpper (char ch);
+char ToLower(char ch);
+char ToUpper(char ch);
 char *ToUpperStr(const char *str);
 void ToUpperStrInplace(char *str);
 char *ToLowerStr(const char *str);

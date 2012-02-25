@@ -28,35 +28,33 @@
 #include "cf3.defs.h"
 
 struct Constraint_
-   {
-   char *lval;
-   Rval rval;
-   char *classes; /* only used within bodies */
-   int isbody;
-   Audit *audit;
-   Constraint *next;
+{
+    char *lval;
+    Rval rval;
+    char *classes;              /* only used within bodies */
+    int isbody;
+    Audit *audit;
+    Constraint *next;
 
-   SourceOffset offset;
-   };
-
+    SourceOffset offset;
+};
 
 Constraint *AppendConstraint(Constraint **conlist, char *lval, Rval rval, char *classes, int body);
 Constraint *GetConstraint(Promise *promise, const char *lval);
 void DeleteConstraintList(Constraint *conlist);
-void EditScalarConstraint(Constraint *conlist,char *lval,char *rval);
+void EditScalarConstraint(Constraint *conlist, char *lval, char *rval);
 void *GetConstraintValue(char *lval, Promise *promise, char type);
-int GetBooleanConstraint(char *lval,Promise *list);
-int GetRawBooleanConstraint(char *lval,Constraint *list);
-int GetIntConstraint(char *lval,Promise *list);
-double GetRealConstraint(char *lval,Promise *list);
-mode_t GetOctalConstraint(char *lval,Promise *list);
-uid_t GetUidConstraint(char *lval,Promise *pp);
-gid_t GetGidConstraint(char *lval,Promise *pp);
-Rlist *GetListConstraint(char *lval,Promise *list);
+int GetBooleanConstraint(char *lval, Promise *list);
+int GetRawBooleanConstraint(char *lval, Constraint *list);
+int GetIntConstraint(char *lval, Promise *list);
+double GetRealConstraint(char *lval, Promise *list);
+mode_t GetOctalConstraint(char *lval, Promise *list);
+uid_t GetUidConstraint(char *lval, Promise *pp);
+gid_t GetGidConstraint(char *lval, Promise *pp);
+Rlist *GetListConstraint(char *lval, Promise *list);
 void ReCheckAllConstraints(Promise *pp);
-int GetBundleConstraint(char *lval,Promise *list);
-PromiseIdent *NewPromiseId(char *handle,Promise *pp);
+int GetBundleConstraint(char *lval, Promise *list);
+PromiseIdent *NewPromiseId(char *handle, Promise *pp);
 void DeleteAllPromiseIds(void);
-
 
 #endif

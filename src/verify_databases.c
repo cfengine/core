@@ -32,180 +32,184 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static void VerifySQLPromise(Attributes a,Promise *pp);
+static void VerifySQLPromise(Attributes a, Promise *pp);
 
 /*****************************************************************************/
 
 void VerifyDatabasePromises(Promise *pp)
+{
+    Attributes a = { {0} };
 
-{ Attributes a = {{0}};
+    if (pp->done)
+    {
+        return;
+    }
 
-if (pp->done)
-   {
-   return;
-   }
- 
-PromiseBanner(pp);
- 
-a = GetDatabaseAttributes(pp);
+    PromiseBanner(pp);
 
-if (!CheckDatabaseSanity(a,pp))
-   {
-   return;
-   }
+    a = GetDatabaseAttributes(pp);
 
-if (strcmp(a.database.type,"sql") == 0)
-   {
-   VerifySQLPromise(a,pp);
-   return;
-   }
+    if (!CheckDatabaseSanity(a, pp))
+    {
+        return;
+    }
 
-if (strcmp(a.database.type,"ms_registry") == 0)
-   {
-   VerifyRegistryPromise(a,pp);
-   return;
-   }
+    if (strcmp(a.database.type, "sql") == 0)
+    {
+        VerifySQLPromise(a, pp);
+        return;
+    }
+
+    if (strcmp(a.database.type, "ms_registry") == 0)
+    {
+        VerifyRegistryPromise(a, pp);
+        return;
+    }
 }
 
 /*****************************************************************************/
 /* Level                                                                     */
 /*****************************************************************************/
 
-static void VerifySQLPromise(Attributes a,Promise *pp)
+static void VerifySQLPromise(Attributes a, Promise *pp)
+{
+    char database[CF_MAXVARSIZE], table[CF_MAXVARSIZE], query[CF_BUFSIZE];
+    char *sp;
+    int count = 0;
+    CfdbConn cfdb;
+    CfLock thislock;
+    char lockname[CF_BUFSIZE];
 
-{ char database[CF_MAXVARSIZE],table[CF_MAXVARSIZE],query[CF_BUFSIZE];
-  char *sp;
-  int count = 0;
-  CfdbConn cfdb;
-  CfLock thislock;
-  char lockname[CF_BUFSIZE];
+    snprintf(lockname, CF_BUFSIZE - 1, "db-%s", pp->promiser);
 
-snprintf(lockname,CF_BUFSIZE-1,"db-%s",pp->promiser);
- 
-thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp,false);
+    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a, pp, false);
 
-if (thislock.lock == NULL)
-   {
-   return;
-   }
+    if (thislock.lock == NULL)
+    {
+        return;
+    }
 
-database[0] = '\0';
-table[0] = '\0';
-  
-for (sp = pp->promiser; *sp != '\0'; sp++)
-   {
-   if (strchr("./\\", *sp))
-      {
-      count++;
-      strncpy(table,sp+1,CF_MAXVARSIZE-1);
-      sscanf(pp->promiser,"%[^.\\/]",database);
+    database[0] = '\0';
+    table[0] = '\0';
 
-      if (strlen(database) == 0)
-         {
-         cfPS(cf_error,CF_FAIL,"",pp,a,"SQL database promiser syntax should be of the form \"database.table\"");
-         PromiseRef(cf_error,pp);
-	 YieldCurrentLock(thislock);
-         return;
-         }
-      }     
-   }
+    for (sp = pp->promiser; *sp != '\0'; sp++)
+    {
+        if (strchr("./\\", *sp))
+        {
+            count++;
+            strncpy(table, sp + 1, CF_MAXVARSIZE - 1);
+            sscanf(pp->promiser, "%[^.\\/]", database);
 
-if (count > 1)
-   {
-   cfPS(cf_error,CF_FAIL,"",pp,a,"SQL database promiser syntax should be of the form \"database.table\"");
-   PromiseRef(cf_error,pp);
-   }
+            if (strlen(database) == 0)
+            {
+                cfPS(cf_error, CF_FAIL, "", pp, a,
+                     "SQL database promiser syntax should be of the form \"database.table\"");
+                PromiseRef(cf_error, pp);
+                YieldCurrentLock(thislock);
+                return;
+            }
+        }
+    }
 
-if (strlen(database) == 0)
-   {
-   strncpy(database,pp->promiser,CF_MAXVARSIZE-1);
-   }
+    if (count > 1)
+    {
+        cfPS(cf_error, CF_FAIL, "", pp, a, "SQL database promiser syntax should be of the form \"database.table\"");
+        PromiseRef(cf_error, pp);
+    }
 
-if (strcmp(a.database.operation,"delete") == 0)
-   {
-   /* Just deal with one */
-   strcpy(a.database.operation,"drop");
-   }
+    if (strlen(database) == 0)
+    {
+        strncpy(database, pp->promiser, CF_MAXVARSIZE - 1);
+    }
+
+    if (strcmp(a.database.operation, "delete") == 0)
+    {
+        /* Just deal with one */
+        strcpy(a.database.operation, "drop");
+    }
 
 /* Connect to the server */
 
-CfConnectDB(&cfdb,a.database.db_server_type,a.database.db_server_host,a.database.db_server_owner,a.database.db_server_password,database);
+    CfConnectDB(&cfdb, a.database.db_server_type, a.database.db_server_host, a.database.db_server_owner,
+                a.database.db_server_password, database);
 
-if (!cfdb.connected)
-   {
-   /* If we haven't said create then db should already exist */
-   
-   if (a.database.operation && strcmp(a.database.operation,"create") != 0)
-      {
-      CfOut(cf_error,"","Could not connect an existing database %s - check server configuration?\n",database);
-      PromiseRef(cf_error,pp);
-      CfCloseDB(&cfdb);
-      YieldCurrentLock(thislock);
-      return;
-      }
-   }
+    if (!cfdb.connected)
+    {
+        /* If we haven't said create then db should already exist */
+
+        if (a.database.operation && strcmp(a.database.operation, "create") != 0)
+        {
+            CfOut(cf_error, "", "Could not connect an existing database %s - check server configuration?\n", database);
+            PromiseRef(cf_error, pp);
+            CfCloseDB(&cfdb);
+            YieldCurrentLock(thislock);
+            return;
+        }
+    }
 
 /* Check change of existential constraints */
 
-if (a.database.operation && strcmp(a.database.operation,"create") == 0)
-   {
-   CfConnectDB(&cfdb,a.database.db_server_type,a.database.db_server_host,a.database.db_server_owner,a.database.db_server_password,a.database.db_connect_db);
-   
-   if (!cfdb.connected)
-      {
-      CfOut(cf_error,"","Could not connect to the sql_db server for %s\n",database);
-      return;
-      }
+    if (a.database.operation && strcmp(a.database.operation, "create") == 0)
+    {
+        CfConnectDB(&cfdb, a.database.db_server_type, a.database.db_server_host, a.database.db_server_owner,
+                    a.database.db_server_password, a.database.db_connect_db);
 
-   /* Don't drop the db if we really want to drop a table */
-   
-   if (strlen(table) == 0 || (strlen(table) > 0 && strcmp(a.database.operation,"drop") != 0))
-      {      
-      VerifyDatabasePromise(&cfdb,database,a,pp);
-      }
-   
-   /* Close the database here to commit the change - might have to reopen */
+        if (!cfdb.connected)
+        {
+            CfOut(cf_error, "", "Could not connect to the sql_db server for %s\n", database);
+            return;
+        }
 
-   CfCloseDB(&cfdb);
-   }
+        /* Don't drop the db if we really want to drop a table */
+
+        if (strlen(table) == 0 || (strlen(table) > 0 && strcmp(a.database.operation, "drop") != 0))
+        {
+            VerifyDatabasePromise(&cfdb, database, a, pp);
+        }
+
+        /* Close the database here to commit the change - might have to reopen */
+
+        CfCloseDB(&cfdb);
+    }
 
 /* Now check the structure of the named table, if any */
 
-if (strlen(table) == 0)
-   {
-   YieldCurrentLock(thislock);
-   return;
-   }
+    if (strlen(table) == 0)
+    {
+        YieldCurrentLock(thislock);
+        return;
+    }
 
-CfConnectDB(&cfdb,a.database.db_server_type,a.database.db_server_host,a.database.db_server_owner,a.database.db_server_password,database);
+    CfConnectDB(&cfdb, a.database.db_server_type, a.database.db_server_host, a.database.db_server_owner,
+                a.database.db_server_password, database);
 
-if (!cfdb.connected)
-   {
-   CfOut(cf_inform,"","Database %s is not connected\n",database);
-   }
-else
-   {
-   snprintf(query,CF_MAXVARSIZE-1,"%s.%s",database,table);
-   
-   if (VerifyTablePromise(&cfdb,query,a.database.columns,a,pp))
-      {
-      cfPS(cf_inform,CF_NOP,"",pp,a," -> Table \"%s\" is as promised",query);
-      }
-   else
-      {
-      cfPS(cf_inform,CF_FAIL,"",pp,a," -> Table \"%s\" is not as promised",query);
-      }
-   
+    if (!cfdb.connected)
+    {
+        CfOut(cf_inform, "", "Database %s is not connected\n", database);
+    }
+    else
+    {
+        snprintf(query, CF_MAXVARSIZE - 1, "%s.%s", database, table);
+
+        if (VerifyTablePromise(&cfdb, query, a.database.columns, a, pp))
+        {
+            cfPS(cf_inform, CF_NOP, "", pp, a, " -> Table \"%s\" is as promised", query);
+        }
+        else
+        {
+            cfPS(cf_inform, CF_FAIL, "", pp, a, " -> Table \"%s\" is not as promised", query);
+        }
+
 /* Finally check any row constraints on this table */
 
-   if (a.database.rows)
-      {
-      CfOut(cf_inform,""," !! Database row operations are not currently supported. Please contact cfengine with suggestions.");
-      }
-   
-   CfCloseDB(&cfdb);
-   }
+        if (a.database.rows)
+        {
+            CfOut(cf_inform, "",
+                  " !! Database row operations are not currently supported. Please contact cfengine with suggestions.");
+        }
 
-YieldCurrentLock(thislock);
+        CfCloseDB(&cfdb);
+    }
+
+    YieldCurrentLock(thislock);
 }
-

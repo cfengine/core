@@ -34,26 +34,26 @@
 #define connection 1
 
 typedef struct
-   {
-   int  id_verified;
-   int  rsa_auth;
-   int  synchronized;
-   int  maproot;
-   int  trust;
-   int  sd_reply;
-   unsigned char *session_key;
-   unsigned char digest[EVP_MAX_MD_SIZE+1];
-   char hostname[CF_MAXVARSIZE];
-   char username[CF_MAXVARSIZE];
-   #ifdef MINGW
-   char sid[CF_MAXSIDSIZE];  /* we avoid dynamically allocated buffers due to potential memory leaks */
-   #else
-   uid_t uid;
-   #endif
-   char encryption_type;
-   char ipaddr[CF_MAX_IP_LEN];
-   char output[CF_BUFSIZE*2];   /* Threadsafe output channel */
-   } ServerConnectionState;
+{
+    int id_verified;
+    int rsa_auth;
+    int synchronized;
+    int maproot;
+    int trust;
+    int sd_reply;
+    unsigned char *session_key;
+    unsigned char digest[EVP_MAX_MD_SIZE + 1];
+    char hostname[CF_MAXVARSIZE];
+    char username[CF_MAXVARSIZE];
+#ifdef MINGW
+    char sid[CF_MAXSIDSIZE];    /* we avoid dynamically allocated buffers due to potential memory leaks */
+#else
+    uid_t uid;
+#endif
+    char encryption_type;
+    char ipaddr[CF_MAX_IP_LEN];
+    char output[CF_BUFSIZE * 2];        /* Threadsafe output channel */
+} ServerConnectionState;
 
 /**********************************************************************/
 
@@ -79,11 +79,11 @@ extern Auth *VARDENYTOP;
 extern char CFRUNCOMMAND[];
 
 #ifdef HAVE_NOVA
-int Nova_ReturnQueryData(ServerConnectionState *conn,char *menu);
+int Nova_ReturnQueryData(ServerConnectionState *conn, char *menu);
 #endif
 
 #ifdef HAVE_CONSTELLATION
-int Constellation_ReturnRelayQueryData(ServerConnectionState *conn,char *query,char *sendbuffer);
+int Constellation_ReturnRelayQueryData(ServerConnectionState *conn, char *query, char *sendbuffer);
 void Constellation_RunQueries(Item *queries, Item **results_p);
 #endif
 

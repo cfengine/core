@@ -40,301 +40,302 @@
 
 int IsBuiltinFnCall(Rval rval)
 {
-FnCall *fp;
+    FnCall *fp;
 
-if (rval.rtype != CF_FNCALL)
-   {
-   return false;
-   }
+    if (rval.rtype != CF_FNCALL)
+    {
+        return false;
+    }
 
-fp = (FnCall *)rval.item;
+    fp = (FnCall *) rval.item;
 
-if (FindFunction(fp->name))
-   {
-   CfDebug("%s is a builtin function\n",fp->name);
-   return true;
-   }
-else
-   {
-   return false;
-   }
+    if (FindFunction(fp->name))
+    {
+        CfDebug("%s is a builtin function\n", fp->name);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 /*******************************************************************/
 
 FnCall *NewFnCall(char *name, Rlist *args)
+{
+    FnCall *fp;
 
-{ FnCall *fp;
+    CfDebug("Installing Function Call %s\n", name);
 
-CfDebug("Installing Function Call %s\n",name);
+    fp = xmalloc(sizeof(FnCall));
 
-fp = xmalloc(sizeof(FnCall));
+    fp->name = xstrdup(name);
+    fp->args = args;
+    fp->argc = RlistLen(args);
 
-fp->name = xstrdup(name);
-fp->args = args;
-fp->argc = RlistLen(args);
-
-CfDebug("Installed ");
-if (DEBUG)
-   {
-   ShowFnCall(stdout,fp);
-   }
-CfDebug("\n\n");
-return fp;
+    CfDebug("Installed ");
+    if (DEBUG)
+    {
+        ShowFnCall(stdout, fp);
+    }
+    CfDebug("\n\n");
+    return fp;
 }
 
 /*******************************************************************/
 
 FnCall *CopyFnCall(FnCall *f)
-
 {
-CfDebug("CopyFnCall()\n");
-return NewFnCall(f->name,CopyRlist(f->args));
+    CfDebug("CopyFnCall()\n");
+    return NewFnCall(f->name, CopyRlist(f->args));
 }
 
 /*******************************************************************/
 
 void DeleteFnCall(FnCall *fp)
-
 {
-if (fp->name)
-   {
-   free(fp->name);
-   }
+    if (fp->name)
+    {
+        free(fp->name);
+    }
 
-if (fp->args)
-   {
-   DeleteRlist(fp->args);
-   }
+    if (fp->args)
+    {
+        DeleteRlist(fp->args);
+    }
 
-free(fp);
+    free(fp);
 }
 
 /*********************************************************************/
 
-FnCall *ExpandFnCall(char *contextid,FnCall *f,int expandnaked)
-
+FnCall *ExpandFnCall(char *contextid, FnCall *f, int expandnaked)
 {
- CfDebug("ExpandFnCall()\n");
+    CfDebug("ExpandFnCall()\n");
 //return NewFnCall(f->name,ExpandList(contextid,f->args,expandnaked));
-return NewFnCall(f->name,ExpandList(contextid,f->args,false));
+    return NewFnCall(f->name, ExpandList(contextid, f->args, false));
 }
 
 /*******************************************************************/
 
-int PrintFnCall(char *buffer, int bufsize,FnCall *fp)
-{ Rlist *rp;
-  char work[CF_MAXVARSIZE];
+int PrintFnCall(char *buffer, int bufsize, FnCall *fp)
+{
+    Rlist *rp;
+    char work[CF_MAXVARSIZE];
 
-snprintf(buffer,bufsize,"%s(",fp->name);
+    snprintf(buffer, bufsize, "%s(", fp->name);
 
-for (rp = fp->args; rp != NULL; rp=rp->next)
-   {
-   switch (rp->type)
-      {
-      case CF_SCALAR:
-          Join(buffer,(char *)rp->item,bufsize);
-          break;
+    for (rp = fp->args; rp != NULL; rp = rp->next)
+    {
+        switch (rp->type)
+        {
+        case CF_SCALAR:
+            Join(buffer, (char *) rp->item, bufsize);
+            break;
 
-      case CF_FNCALL:
-          PrintFnCall(work,CF_MAXVARSIZE,(FnCall *)rp->item);
-          Join(buffer,work,bufsize);
-          break;
+        case CF_FNCALL:
+            PrintFnCall(work, CF_MAXVARSIZE, (FnCall *) rp->item);
+            Join(buffer, work, bufsize);
+            break;
 
-      default:
-          break;
-      }
-   
-   if (rp->next != NULL)
-      {
-      strcat(buffer,",");
-      }
-   }
+        default:
+            break;
+        }
 
- strcat(buffer, ")");
+        if (rp->next != NULL)
+        {
+            strcat(buffer, ",");
+        }
+    }
 
-return strlen(buffer);
+    strcat(buffer, ")");
+
+    return strlen(buffer);
 }
 
 /*******************************************************************/
 
-void ShowFnCall(FILE *fout,FnCall *fp)
+void ShowFnCall(FILE *fout, FnCall *fp)
+{
+    Rlist *rp;
 
-{ Rlist *rp;
+    if (XML)
+    {
+        fprintf(fout, "%s(", fp->name);
+    }
+    else
+    {
+        fprintf(fout, "%s(", fp->name);
+    }
 
-if (XML)
-   {
-   fprintf(fout,"%s(",fp->name);
-   }
-else
-   {
-   fprintf(fout,"%s(",fp->name);
-   }
+    for (rp = fp->args; rp != NULL; rp = rp->next)
+    {
+        switch (rp->type)
+        {
+        case CF_SCALAR:
+            fprintf(fout, "%s,", (char *) rp->item);
+            break;
 
-for (rp = fp->args; rp != NULL; rp=rp->next)
-   {
-   switch (rp->type)
-      {
-      case CF_SCALAR:
-          fprintf(fout,"%s,",(char *)rp->item);
-          break;
+        case CF_FNCALL:
+            ShowFnCall(fout, (FnCall *) rp->item);
+            break;
 
-      case CF_FNCALL:
-          ShowFnCall(fout,(FnCall *)rp->item);
-          break;
+        default:
+            fprintf(fout, "(** Unknown argument **)\n");
+            break;
+        }
+    }
 
-      default:
-          fprintf(fout,"(** Unknown argument **)\n");
-          break;
-      }
-   }
-
-if (XML)
-   {
-   fprintf(fout,")");
-   }
-else
-   {
-   fprintf(fout,")");
-   }
+    if (XML)
+    {
+        fprintf(fout, ")");
+    }
+    else
+    {
+        fprintf(fout, ")");
+    }
 }
 
 /*******************************************************************/
 
 enum cfdatatype FunctionReturnType(const char *name)
 {
-const FnCallType *fn = FindFunction(name);
-return fn ? fn->dtype : cf_notype;
+    const FnCallType *fn = FindFunction(name);
+
+    return fn ? fn->dtype : cf_notype;
 }
 
 /*******************************************************************/
 
-FnCallResult EvaluateFunctionCall(FnCall *fp,Promise *pp)
+FnCallResult EvaluateFunctionCall(FnCall *fp, Promise *pp)
+{
+    Rlist *expargs;
+    const FnCallType *this = FindFunction(fp->name);
 
-{ Rlist *expargs;
-  const FnCallType *this = FindFunction(fp->name);
+    if (this)
+    {
+        if (DEBUG)
+        {
+            printf("EVALUATE FN CALL %s\n", fp->name);
+            ShowFnCall(stdout, fp);
+            printf("\n");
+        }
+    }
+    else
+    {
+        if (pp)
+        {
+            CfOut(cf_error, "", "No such FnCall \"%s()\" in promise @ %s near line %zd\n",
+                  fp->name, pp->audit->filename, pp->offset.line);
+        }
+        else
+        {
+            CfOut(cf_error, "", "No such FnCall \"%s()\" - context info unavailable\n", fp->name);
+        }
 
-if (this)
-   {
-   if (DEBUG)
-      {
-      printf("EVALUATE FN CALL %s\n",fp->name);
-      ShowFnCall(stdout,fp);
-      printf("\n");
-      }
-   }
-else
-   {
-   if (pp)
-      {
-      CfOut(cf_error,"","No such FnCall \"%s()\" in promise @ %s near line %zd\n",
-            fp->name, pp->audit->filename, pp->offset.line);
-      }
-   else
-      {
-      CfOut(cf_error,"","No such FnCall \"%s()\" - context info unavailable\n",fp->name);
-      }
-
-   return (FnCallResult) { FNCALL_FAILURE, { NULL, CF_NOPROMISEE } };
-   }
+        return (FnCallResult) { FNCALL_FAILURE, { NULL, CF_NOPROMISEE } };
+    }
 
 /* If the container classes seem not to be defined at this stage, then don't try to expand the function */
 
-if ((pp != NULL) && !IsDefinedClass(pp->classes))
-   {
-   return (FnCallResult) { FNCALL_FAILURE, { NULL, CF_NOPROMISEE } };
-   }
+    if ((pp != NULL) && !IsDefinedClass(pp->classes))
+    {
+        return (FnCallResult) { FNCALL_FAILURE, { NULL, CF_NOPROMISEE } };
+    }
 
-expargs = NewExpArgs(fp,pp);
+    expargs = NewExpArgs(fp, pp);
 
-if (UnresolvedArgs(expargs))
-   {
-   DeleteExpArgs(expargs);
-   return (FnCallResult) { FNCALL_FAILURE, { CopyFnCall(fp), CF_FNCALL } };
-   }
+    if (UnresolvedArgs(expargs))
+    {
+        DeleteExpArgs(expargs);
+        return (FnCallResult) { FNCALL_FAILURE, { CopyFnCall(fp), CF_FNCALL } };
+    }
 
-FnCallResult result = CallFunction(this, fp, expargs);
+    FnCallResult result = CallFunction(this, fp, expargs);
 
-if (result.status == FNCALL_FAILURE)
-   {
-   /* We do not assign variables to failed function calls */
-   DeleteExpArgs(expargs);
-   return (FnCallResult) { FNCALL_FAILURE, { CopyFnCall(fp), CF_FNCALL } };
-   }
+    if (result.status == FNCALL_FAILURE)
+    {
+        /* We do not assign variables to failed function calls */
+        DeleteExpArgs(expargs);
+        return (FnCallResult) { FNCALL_FAILURE, { CopyFnCall(fp), CF_FNCALL } };
+    }
 
-DeleteExpArgs(expargs);
-return result;
+    DeleteExpArgs(expargs);
+    return result;
 }
 
 /*******************************************************************/
 
 const FnCallType *FindFunction(const char *name)
 {
-int i;
+    int i;
 
-for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
-   {
-   if (strcmp(CF_FNCALL_TYPES[i].name,name) == 0)
-      {
-      return CF_FNCALL_TYPES + i;
-      }
-   }
+    for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
+    {
+        if (strcmp(CF_FNCALL_TYPES[i].name, name) == 0)
+        {
+            return CF_FNCALL_TYPES + i;
+        }
+    }
 
-return NULL;
+    return NULL;
 }
+
 /*****************************************************************************/
 
 void FnCallPrint(Writer *writer, FnCall *call)
 {
-for (Rlist *rp = call->args; rp != NULL; rp = rp->next)
-   {
-   switch (rp->type)
-      {
-      case CF_SCALAR:
-         WriterWriteF(writer, "%s,", (const char *)rp->item);
-         break;
+    for (Rlist *rp = call->args; rp != NULL; rp = rp->next)
+    {
+        switch (rp->type)
+        {
+        case CF_SCALAR:
+            WriterWriteF(writer, "%s,", (const char *) rp->item);
+            break;
 
-      case CF_FNCALL:
-         FnCallPrint(writer, (FnCall *)rp->item);
-         break;
+        case CF_FNCALL:
+            FnCallPrint(writer, (FnCall *) rp->item);
+            break;
 
-      default:
-         WriterWrite(writer, "(** Unknown argument **)\n");
-         break;
-      }
-   }
+        default:
+            WriterWrite(writer, "(** Unknown argument **)\n");
+            break;
+        }
+    }
 }
 
 /*****************************************************************************/
 
 JsonElement *FnCallToJson(FnCall *fp)
 {
-assert(fp);
+    assert(fp);
 
-JsonElement *object = JsonObjectCreate(3);
+    JsonElement *object = JsonObjectCreate(3);
 
-JsonObjectAppendString(object, "name", fp->name);
-JsonObjectAppendString(object, "type", "function-call");
+    JsonObjectAppendString(object, "name", fp->name);
+    JsonObjectAppendString(object, "type", "function-call");
 
-JsonElement *argsArray = JsonArrayCreate(fp->argc);
-for (Rlist *rp = fp->args; rp != NULL; rp = rp->next)
-   {
-   switch (rp->type)
-      {
-      case CF_SCALAR:
-         JsonArrayAppendString(argsArray, (const char *)rp->item);
-         break;
+    JsonElement *argsArray = JsonArrayCreate(fp->argc);
 
-      case CF_FNCALL:
-         JsonArrayAppendObject(argsArray, FnCallToJson((FnCall *)rp->item));
-         break;
+    for (Rlist *rp = fp->args; rp != NULL; rp = rp->next)
+    {
+        switch (rp->type)
+        {
+        case CF_SCALAR:
+            JsonArrayAppendString(argsArray, (const char *) rp->item);
+            break;
 
-      default:
-         assert(false && "Unknown argument type");
-         break;
-      }
-   }
-JsonObjectAppendArray(object, "arguments", argsArray);
+        case CF_FNCALL:
+            JsonArrayAppendObject(argsArray, FnCallToJson((FnCall *) rp->item));
+            break;
 
-return object;
+        default:
+            assert(false && "Unknown argument type");
+            break;
+        }
+    }
+    JsonObjectAppendArray(object, "arguments", argsArray);
+
+    return object;
 }

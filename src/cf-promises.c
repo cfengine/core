@@ -37,198 +37,205 @@
 /*******************************************************************/
 
 static void ThisAgentInit(void);
-static GenericAgentConfig CheckOpts(int argc,char **argv);
+static GenericAgentConfig CheckOpts(int argc, char **argv);
 
 /*******************************************************************/
 /* Command line options                                            */
 /*******************************************************************/
 
 static const char *ID = "The promise agent is a validator and analysis tool for\n"
-                 "configuration files belonging to any of the components\n"
-                 "of Cfengine. Configurations that make changes must be\n"
-                 "approved by this validator before being executed.";
- 
-static const struct option OPTIONS[] =
-      {
-      { "help",no_argument,0,'h' },
-      { "bundlesequence",required_argument,0,'b' },
-      { "debug",no_argument,0,'d' },
-      { "verbose",no_argument,0,'v' },
-      { "dry-run",no_argument,0,'n'},
-      { "version",no_argument,0,'V' },
-      { "file",required_argument,0,'f'},
-      { "define",required_argument,0,'D' },
-      { "negate",required_argument,0,'N' },
-      { "inform",no_argument,0,'I'},
-      { "diagnostic",no_argument,0,'x'},
-      { "analysis",no_argument,0,'a'},
-      { "reports",no_argument,0,'r'},
-      { "parse-tree",no_argument,0,'p'},
-      { "gcc-brief-format",no_argument,0,'g'},
-      { NULL,0,0,'\0' }
-      };
+    "configuration files belonging to any of the components\n"
+    "of Cfengine. Configurations that make changes must be\n" "approved by this validator before being executed.";
 
+static const struct option OPTIONS[] =
+{
+    {"help", no_argument, 0, 'h'},
+    {"bundlesequence", required_argument, 0, 'b'},
+    {"debug", no_argument, 0, 'd'},
+    {"verbose", no_argument, 0, 'v'},
+    {"dry-run", no_argument, 0, 'n'},
+    {"version", no_argument, 0, 'V'},
+    {"file", required_argument, 0, 'f'},
+    {"define", required_argument, 0, 'D'},
+    {"negate", required_argument, 0, 'N'},
+    {"inform", no_argument, 0, 'I'},
+    {"diagnostic", no_argument, 0, 'x'},
+    {"analysis", no_argument, 0, 'a'},
+    {"reports", no_argument, 0, 'r'},
+    {"parse-tree", no_argument, 0, 'p'},
+    {"gcc-brief-format", no_argument, 0, 'g'},
+    {NULL, 0, 0, '\0'}
+};
 
 static const char *HINTS[] =
-      {
-      "Print the help message",
-      "Use the specified bundlesequence for verification",
-      "Enable debugging output",
-      "Output verbose information about the behaviour of the agent",
-      "All talk and no action mode - make no changes, only inform of promises not kept",
-      "Output the version of the software",
-      "Specify an alternative input file than the default",
-      "Define a list of comma separated classes to be defined at the start of execution",
-      "Define a list of comma separated classes to be undefined at the start of execution",
-      "Print basic information about changes made to the system, i.e. promises repaired",
-      "Activate internal diagnostics (developers only)",
-      "Perform additional analysis of configuration",
-      "Generate reports about configuration and insert into CFDB",
-      "Print a parse tree for the policy file in JSON format",
-      "Use the GCC brief-format for output",
-      NULL
-      };
+{
+    "Print the help message",
+    "Use the specified bundlesequence for verification",
+    "Enable debugging output",
+    "Output verbose information about the behaviour of the agent",
+    "All talk and no action mode - make no changes, only inform of promises not kept",
+    "Output the version of the software",
+    "Specify an alternative input file than the default",
+    "Define a list of comma separated classes to be defined at the start of execution",
+    "Define a list of comma separated classes to be undefined at the start of execution",
+    "Print basic information about changes made to the system, i.e. promises repaired",
+    "Activate internal diagnostics (developers only)",
+    "Perform additional analysis of configuration",
+    "Generate reports about configuration and insert into CFDB",
+    "Print a parse tree for the policy file in JSON format",
+    "Use the GCC brief-format for output",
+    NULL
+};
 
 /*******************************************************************/
 /* Level 0 : Main                                                  */
 /*******************************************************************/
 
-int main(int argc,char *argv[])
-
+int main(int argc, char *argv[])
 {
-GenericAgentConfig config = CheckOpts(argc,argv);
-GenericInitialize("common", config);
-ThisAgentInit();
-AnalyzePromiseConflicts();
-GenericDeInitialize();
+    GenericAgentConfig config = CheckOpts(argc, argv);
 
-if (ERRORCOUNT > 0)
-   {
-   CfOut(cf_verbose,""," !! Inputs are invalid\n");
-   exit(1);
-   }
-else
-   {
-   CfOut(cf_verbose,""," -> Inputs are valid\n");
-   exit(0);
-   } 
+    GenericInitialize("common", config);
+    ThisAgentInit();
+    AnalyzePromiseConflicts();
+    GenericDeInitialize();
+
+    if (ERRORCOUNT > 0)
+    {
+        CfOut(cf_verbose, "", " !! Inputs are invalid\n");
+        exit(1);
+    }
+    else
+    {
+        CfOut(cf_verbose, "", " -> Inputs are valid\n");
+        exit(0);
+    }
 }
 
 /*******************************************************************/
 /* Level 1                                                         */
 /*******************************************************************/
 
-GenericAgentConfig CheckOpts(int argc,char **argv)
+GenericAgentConfig CheckOpts(int argc, char **argv)
+{
+    extern char *optarg;
+    int optindex = 0;
+    int c;
+    GenericAgentConfig config = GenericAgentDefaultConfig(cf_common);
 
-{ extern char *optarg;
-  int optindex = 0;
-  int c;
-  GenericAgentConfig config = GenericAgentDefaultConfig(cf_common);
-  
-while ((c=getopt_long(argc,argv,"ad:vnIf:D:N:VSrxMb:pg:",OPTIONS,&optindex)) != EOF)
-  {
-  switch ((char) c)
-      {
-      case 'f':
+    while ((c = getopt_long(argc, argv, "ad:vnIf:D:N:VSrxMb:pg:", OPTIONS, &optindex)) != EOF)
+    {
+        switch ((char) c)
+        {
+        case 'f':
 
-          if (optarg && strlen(optarg) < 5)
-             {
-             FatalError(" -f used but argument \"%s\" incorrect", optarg);
-             }
-
-          SetInputFile(optarg);
-          MINUSF = true;
-          break;
-
-      case 'd':
-          NewClass("opt_debug");
-          DEBUG = true;
-          break;
-
-      case 'b':
-         if (optarg)
+            if (optarg && strlen(optarg) < 5)
             {
-            config.bundlesequence = SplitStringAsRList(optarg, ',');
-            CBUNDLESEQUENCE_STR = optarg;
+                FatalError(" -f used but argument \"%s\" incorrect", optarg);
             }
-         break;
-          
-      case 'K': IGNORELOCK = true;
-          break;
-                    
-      case 'D': NewClassesFromString(optarg);
-          break;
-          
-      case 'N': NegateClassesFromString(optarg);
-          break;
-          
-      case 'I': INFORM = true;
-          break;
-          
-      case 'v': VERBOSE = true;
-          break;
-          
-      case 'n': DONTDO = true;
-          IGNORELOCK = true;
-	  LOOKUP = true;
-          NewClass("opt_dry_run");
-          break;
-          
-      case 'V': PrintVersionBanner("cf-promises");
-          exit(0);
-          
-      case 'h': Syntax("cf-promises - cfengine's promise analyzer",OPTIONS,HINTS,ID);
-          exit(0);
 
-      case 'M': ManPage("cf-promises - cfengine's promise analyzer",OPTIONS,HINTS,ID);
-          exit(0);
+            SetInputFile(optarg);
+            MINUSF = true;
+            break;
 
-       case 'r':
-	  PrependRScalar(&GOALS,"goal.*",CF_SCALAR);
-  	  PrependRScalar(&GOALCATEGORIES,"goals",CF_SCALAR);
-          SHOWREPORTS = true;
-          break;
+        case 'd':
+            NewClass("opt_debug");
+            DEBUG = true;
+            break;
 
-      case 'x': SelfDiagnostic();
-          exit(0);
+        case 'b':
+            if (optarg)
+            {
+                config.bundlesequence = SplitStringAsRList(optarg, ',');
+                CBUNDLESEQUENCE_STR = optarg;
+            }
+            break;
 
-      case 'a':
-          printf("Self-analysis is not yet implemented.\n");
-          exit(0);
-          break;
+        case 'K':
+            IGNORELOCK = true;
+            break;
 
-      case 'p':
-	  SHOW_PARSE_TREE = true;
-	  break;
+        case 'D':
+            NewClassesFromString(optarg);
+            break;
 
-      case 'g':
-	  USE_GCC_BRIEF_FORMAT = true;
-	  break;
+        case 'N':
+            NegateClassesFromString(optarg);
+            break;
 
-      default:  Syntax("cf-promises - cfengine's promise analyzer",OPTIONS,HINTS,ID);
-          exit(1);
-          
-      }
-  }
+        case 'I':
+            INFORM = true;
+            break;
 
-if (argv[optind] != NULL)
-   {
-   CfOut(cf_error,"","Unexpected argument with no preceding option: %s\n",argv[optind]);
-   }
+        case 'v':
+            VERBOSE = true;
+            break;
 
-CfDebug("Set debugging\n");
+        case 'n':
+            DONTDO = true;
+            IGNORELOCK = true;
+            LOOKUP = true;
+            NewClass("opt_dry_run");
+            break;
 
-return config;
+        case 'V':
+            PrintVersionBanner("cf-promises");
+            exit(0);
+
+        case 'h':
+            Syntax("cf-promises - cfengine's promise analyzer", OPTIONS, HINTS, ID);
+            exit(0);
+
+        case 'M':
+            ManPage("cf-promises - cfengine's promise analyzer", OPTIONS, HINTS, ID);
+            exit(0);
+
+        case 'r':
+            PrependRScalar(&GOALS, "goal.*", CF_SCALAR);
+            PrependRScalar(&GOALCATEGORIES, "goals", CF_SCALAR);
+            SHOWREPORTS = true;
+            break;
+
+        case 'x':
+            SelfDiagnostic();
+            exit(0);
+
+        case 'a':
+            printf("Self-analysis is not yet implemented.\n");
+            exit(0);
+            break;
+
+        case 'p':
+            SHOW_PARSE_TREE = true;
+            break;
+
+        case 'g':
+            USE_GCC_BRIEF_FORMAT = true;
+            break;
+
+        default:
+            Syntax("cf-promises - cfengine's promise analyzer", OPTIONS, HINTS, ID);
+            exit(1);
+
+        }
+    }
+
+    if (argv[optind] != NULL)
+    {
+        CfOut(cf_error, "", "Unexpected argument with no preceding option: %s\n", argv[optind]);
+    }
+
+    CfDebug("Set debugging\n");
+
+    return config;
 }
 
 /*******************************************************************/
 
 static void ThisAgentInit(void)
-
 {
-AddGoalsToDB(Rlist2String(GOALS,","),Rlist2String(GOALCATEGORIES,","));
-SHOWREPORTS = false;
+    AddGoalsToDB(Rlist2String(GOALS, ","), Rlist2String(GOALCATEGORIES, ","));
+    SHOWREPORTS = false;
 }
-
 
 /* EOF */

@@ -24,7 +24,7 @@
 */
 
 #ifdef HAVE_CONFIG_H
-#include "../src/conf.h"
+# include "../src/conf.h"
 #endif
 
 #include <stdlib.h>
@@ -36,11 +36,12 @@ void *memdup(const void *data, size_t size);
 
 void *memdup(const void *data, size_t size)
 {
-void *m = malloc(size);
-if (m == NULL)
-   {
-   return NULL;
-   }
-memcpy(m, data, size);
-return m;
+    void *m = malloc(size);
+
+    if (m == NULL)
+    {
+        return NULL;
+    }
+    memcpy(m, data, size);
+    return m;
 }

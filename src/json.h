@@ -38,7 +38,6 @@ void JsonElementDestroy(JsonElement *element);
 size_t JsonElementLength(JsonElement *element);
 void JsonElementPrint(Writer *writer, JsonElement *element, size_t indent_level);
 
-
 void JsonObjectAppendString(JsonElement *object, const char *key, const char *value);
 void JsonObjectAppendInteger(JsonElement *object, const char *key, int value);
 void JsonObjectAppendReal(JsonElement *object, const char *key, double value);
@@ -48,16 +47,13 @@ const char *JsonObjectGetAsString(JsonElement *object, const char *key);
 JsonElement *JsonObjectGetAsObject(JsonElement *object, const char *key);
 JsonElement *JsonObjectGetAsArray(JsonElement *object, const char *key);
 
-
 void JsonArrayAppendString(JsonElement *array, const char *value);
 void JsonArrayAppendArray(JsonElement *array, JsonElement *childArray);
 void JsonArrayAppendObject(JsonElement *array, JsonElement *object);
 const char *JsonArrayGetAsString(JsonElement *array, size_t index);
 JsonElement *JsonArrayGetAsObject(JsonElement *array, size_t index);
 
-
 // do not use parsing in production code.
 JsonElement *JsonParse(const char **data);
-
 
 #endif

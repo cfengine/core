@@ -29,7 +29,6 @@
 /* This library creates a simple indexed array of lists for optimization of
    high entropy class searches.
 
-
  AlphaList al;
  Item *ip;
  int i;
@@ -46,133 +45,131 @@
 /*****************************************************************************/
 
 void InitAlphaList(AlphaList *al)
-
 {
-memset(al, 0, sizeof(AlphaList));
+    memset(al, 0, sizeof(AlphaList));
 }
 
 /*****************************************************************************/
 
 void DeleteAlphaList(AlphaList *al)
-
 {
-for (int i = 0; i < CF_ALPHABETSIZE; i++)
-   {
-   DeleteItemList(al->list[i]);
-   }
+    for (int i = 0; i < CF_ALPHABETSIZE; i++)
+    {
+        DeleteItemList(al->list[i]);
+    }
 
-InitAlphaList(al);
+    InitAlphaList(al);
 }
 
 /*****************************************************************************/
 
 AlphaList *CopyAlphaListPointers(AlphaList *ap, AlphaList *al)
-
 {
-if (ap != NULL)
-   {
-   memcpy(ap, al, sizeof(AlphaList));
-   }
+    if (ap != NULL)
+    {
+        memcpy(ap, al, sizeof(AlphaList));
+    }
 
-return ap;
+    return ap;
 }
 
 /*****************************************************************************/
 
-int InAlphaList(AlphaList *al,const char *string)
+int InAlphaList(AlphaList *al, const char *string)
+{
+    int i = (int) *string;
 
-{ int i = (int)*string;
-
-return IsItemIn(al->list[i],string);
+    return IsItemIn(al->list[i], string);
 }
 
 /*****************************************************************************/
 
-int MatchInAlphaList(AlphaList *al,char *string)
+int MatchInAlphaList(AlphaList *al, char *string)
+{
+    Item *ip;
+    int i = (int) *string;
 
-{ Item *ip;
-  int i = (int)*string;
-
-if (isalnum(i) || *string == '_')
-   {
-   for (ip = al->list[i]; ip != NULL; ip=ip->next)
-      {
-      if (FullTextMatch(string,ip->name))
-         {
-         return true;
-         }
-      }
-   }
-else
-   {
-   // We don't know what the correct hash is because the pattern in vague
-
-   for (i = 0; i < CF_ALPHABETSIZE; i++)
-      {
-      for (ip = al->list[i]; ip != NULL; ip=ip->next)
-         {
-         if (FullTextMatch(string,ip->name))
+    if (isalnum(i) || *string == '_')
+    {
+        for (ip = al->list[i]; ip != NULL; ip = ip->next)
+        {
+            if (FullTextMatch(string, ip->name))
             {
-            return true;
+                return true;
             }
-         }
-      }
-   }
+        }
+    }
+    else
+    {
+        // We don't know what the correct hash is because the pattern in vague
 
-return false;
+        for (i = 0; i < CF_ALPHABETSIZE; i++)
+        {
+            for (ip = al->list[i]; ip != NULL; ip = ip->next)
+            {
+                if (FullTextMatch(string, ip->name))
+                {
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
 }
 
 /*****************************************************************************/
 
 void PrependAlphaList(AlphaList *al, const char *string)
+{
+    int i = (int) *string;
 
-{ int i = (int)*string;
-
-al->list[i] = PrependItem(&(al->list[i]),string,NULL);
+    al->list[i] = PrependItem(&(al->list[i]), string, NULL);
 }
 
 /*****************************************************************************/
 
 void IdempPrependAlphaList(AlphaList *al, const char *string)
 {
-if (!InAlphaList(al, string))
-   {
-   PrependAlphaList(al, string);
-   }
+    if (!InAlphaList(al, string))
+    {
+        PrependAlphaList(al, string);
+    }
 }
 
 /*****************************************************************************/
 
 void DeleteFromAlphaList(AlphaList *al, const char *string)
 {
-DeleteItemLiteral(&al->list[(int)*string], string);
+    DeleteItemLiteral(&al->list[(int) *string], string);
 }
 
 /*****************************************************************************/
 
 AlphaListIterator AlphaListIteratorInit(AlphaList *al)
 {
-return (AlphaListIterator) { al, -1, NULL };
+    return (AlphaListIterator) {al, -1, NULL};
 }
 
 /*****************************************************************************/
 
 const Item *AlphaListIteratorNext(AlphaListIterator *iterator)
 {
-while (iterator->curitem == NULL)
-   {
-   if (++iterator->pos == CF_ALPHABETSIZE)
-      {
-      return NULL;
-      }
+    while (iterator->curitem == NULL)
+    {
+        if (++iterator->pos == CF_ALPHABETSIZE)
+        {
+            return NULL;
+        }
 
-   if (iterator->al->list[iterator->pos] != NULL)
-      {
-      iterator->curitem = iterator->al->list[iterator->pos];
-      }
-   }
+        if (iterator->al->list[iterator->pos] != NULL)
+        {
+            iterator->curitem = iterator->al->list[iterator->pos];
+        }
+    }
 
-const Item *ret = iterator->curitem;
-iterator->curitem = ret->next;
-return ret;
+    const Item *ret = iterator->curitem;
+
+    iterator->curitem = ret->next;
+    return ret;
 }

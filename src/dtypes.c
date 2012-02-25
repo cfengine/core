@@ -33,34 +33,34 @@
 #include "cf3.extern.h"
 
 int IsSocketType(char *s)
+{
+    int i;
 
-{ int i;
+    for (i = 0; i < ATTR; i++)
+    {
+        if (strstr(s, ECGSOCKS[i].name))
+        {
+            CfDebug("IsSocketType(%s=%s)\n", s, ECGSOCKS[i].name);
 
-for (i = 0; i < ATTR; i++)
-   {
-   if (strstr(s,ECGSOCKS[i].name))
-      {
-      CfDebug("IsSocketType(%s=%s)\n",s,ECGSOCKS[i].name);
-      
-      return true;
-      }
-   }
-return false;
+            return true;
+        }
+    }
+    return false;
 }
 
 /*****************************************************************/
 
 int IsTCPType(char *s)
+{
+    int i;
 
-{ int i;
-
-for (i = 0; i < CF_NETATTR; i++)
-   {
-   if (strstr(s,TCPNAMES[i]))
-      {
-      CfDebug("IsTCPType(%s)\n",s); 
-      return true;
-      }
-   }
-return false;
+    for (i = 0; i < CF_NETATTR; i++)
+    {
+        if (strstr(s, TCPNAMES[i]))
+        {
+            CfDebug("IsTCPType(%s)\n", s);
+            return true;
+        }
+    }
+    return false;
 }

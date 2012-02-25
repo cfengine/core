@@ -28,16 +28,16 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-int SQLite3_OpenDB(char *filename,sqlite3 **dbp);
+int SQLite3_OpenDB(char *filename, sqlite3 **dbp);
 int SQLite3_CloseDB(sqlite3 *dbp);
 int SQLite3_ValueSizeDB(sqlite3 *dbp, char *key);
-int SQLite3_ReadComplexKeyDB(sqlite3 *dbp,char *name,int keysize,void *ptr,int size);
-int SQLite3_RevealDB(sqlite3 *dbp,char *name,void **result,int *rsize);
-int SQLite3_WriteComplexKeyDB(sqlite3 *dbp,char *name,int keysize, const void *ptr,int size);
-int SQLite3_DeleteComplexKeyDB(sqlite3 *dbp,char *name,int size);
-int SQLite3_NewDBCursor(sqlite3 *dbp,sqlite3_stmt **dbcp);
-int SQLite3_NextDB(sqlite3 *dbp,sqlite3_stmt *dbcp,char **key,int *ksize,void **value,int *vsize);
-int SQLite3_DeleteDBCursor(sqlite3 *dbp,sqlite3_stmt *dbcp);
+int SQLite3_ReadComplexKeyDB(sqlite3 *dbp, char *name, int keysize, void *ptr, int size);
+int SQLite3_RevealDB(sqlite3 *dbp, char *name, void **result, int *rsize);
+int SQLite3_WriteComplexKeyDB(sqlite3 *dbp, char *name, int keysize, const void *ptr, int size);
+int SQLite3_DeleteComplexKeyDB(sqlite3 *dbp, char *name, int size);
+int SQLite3_NewDBCursor(sqlite3 *dbp, sqlite3_stmt **dbcp);
+int SQLite3_NextDB(sqlite3 *dbp, sqlite3_stmt *dbcp, char **key, int *ksize, void **value, int *vsize);
+int SQLite3_DeleteDBCursor(sqlite3 *dbp, sqlite3_stmt *dbcp);
 void SQLite3_OpenDBTransaction(sqlite3 *dbp);
 void SQLite3_CommitDBTransaction(sqlite3 *dbp);
 

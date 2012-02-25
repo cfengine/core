@@ -24,7 +24,7 @@
 */
 
 #ifdef HAVE_CONFIG_H
-#include "../src/conf.h"
+# include "../src/conf.h"
 #endif
 
 #if !HAVE_DECL_STRCASECMP
@@ -33,30 +33,30 @@ int strcasecmp(const char *s1, const char *s2);
 
 int strcasecmp(const char *s1, const char *s2)
 {
-for (;;)
-   {
-   if (*s1 == '\0' && *s2 == '\0')
-      {
-      break;
-      }
-   if (*s1 == '\0')
-      {
-      return -1;
-      }
-   if (*s2 == '\0')
-      {
-      return 1;
-      }
-   if (tolower(*s1) < tolower(*s2))
-      {
-      return -1;
-      }
-   if (tolower(*s1) > tolower(*s2))
-      {
-      return 1;
-      }
-   s1++;
-   s2++;
-   }
-return 0;
+    for (;;)
+    {
+        if (*s1 == '\0' && *s2 == '\0')
+        {
+            break;
+        }
+        if (*s1 == '\0')
+        {
+            return -1;
+        }
+        if (*s2 == '\0')
+        {
+            return 1;
+        }
+        if (tolower(*s1) < tolower(*s2))
+        {
+            return -1;
+        }
+        if (tolower(*s1) > tolower(*s2))
+        {
+            return 1;
+        }
+        s1++;
+        s2++;
+    }
+    return 0;
 }

@@ -32,50 +32,49 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-
 char *CFX[][2] =
-   {
-    {"<head>","</head>"},
-    {"<bundle>","</bundle>"},
-    {"<block>","</block>"},
-    {"<blockheader>","</blockheader>"},
-    {"<blockid>","</blockid>"},
-    {"<blocktype>","</blocktype>"},
-    {"<args>","</args>"},
-    {"<promise>","</promise>"},
-    {"<class>","</class>"},
-    {"<subtype>","</subtype>"},
-    {"<object>","</object>"},
-    {"<lval>","</lval>"},
-    {"<rval>","</rval>"},
-    {"<qstring>","</qstring>"},
-    {"<rlist>","</rlist>"},
-    {"<function>","</function>"},
-    {"\n","\n"},
-    {NULL,NULL}
-   };
+{
+    {"<head>", "</head>"},
+    {"<bundle>", "</bundle>"},
+    {"<block>", "</block>"},
+    {"<blockheader>", "</blockheader>"},
+    {"<blockid>", "</blockid>"},
+    {"<blocktype>", "</blocktype>"},
+    {"<args>", "</args>"},
+    {"<promise>", "</promise>"},
+    {"<class>", "</class>"},
+    {"<subtype>", "</subtype>"},
+    {"<object>", "</object>"},
+    {"<lval>", "</lval>"},
+    {"<rval>", "</rval>"},
+    {"<qstring>", "</qstring>"},
+    {"<rlist>", "</rlist>"},
+    {"<function>", "</function>"},
+    {"\n", "\n"},
+    {NULL, NULL}
+};
 
 char *CFH[][2] =
-   {
-    {"<html><head>\n<link rel=\"stylesheet\" type=\"text/css\" href=\"/cf_enterprise.css\" />\n</head>\n","</html>"},
-    {"<div id=\"bundle\"><table class=border><tr><td><h2>","</td></tr></h2></table></div>"},
-    {"<div id=\"block\"><table class=border cellpadding=5 width=800>","</table></div>"},
-    {"<tr><th>","</th></tr>"},
-    {"<span class=\"bodyname\">","</span>"},
-    {"<span class=\"bodytype\">","</span>"},
-    {"<span class=\"args\">","</span>"},
-    {"<tr><td><table class=\"border\"><tr><td>","</td></tr></table></td></tr>"},
-    {"<span class=\"class\">","</span>"},
-    {"<span class=\"subtype\">","</span>"},
-    {"<b>","</b>"},
-    {"<br><span class=\"lval\">........................","</span>"},
-    {"<span class=\"rval\">","</span>"},
-    {"<span class=\"qstring\">","</span>"},
-    {"<span class=\"rlist\">","</span>"},
-    {"",""},
-    {"<tr><td>","</td></tr>"},
-    {NULL,NULL}
-   };
+{
+    {"<html><head>\n<link rel=\"stylesheet\" type=\"text/css\" href=\"/cf_enterprise.css\" />\n</head>\n", "</html>"},
+    {"<div id=\"bundle\"><table class=border><tr><td><h2>", "</td></tr></h2></table></div>"},
+    {"<div id=\"block\"><table class=border cellpadding=5 width=800>", "</table></div>"},
+    {"<tr><th>", "</th></tr>"},
+    {"<span class=\"bodyname\">", "</span>"},
+    {"<span class=\"bodytype\">", "</span>"},
+    {"<span class=\"args\">", "</span>"},
+    {"<tr><td><table class=\"border\"><tr><td>", "</td></tr></table></td></tr>"},
+    {"<span class=\"class\">", "</span>"},
+    {"<span class=\"subtype\">", "</span>"},
+    {"<b>", "</b>"},
+    {"<br><span class=\"lval\">........................", "</span>"},
+    {"<span class=\"rval\">", "</span>"},
+    {"<span class=\"qstring\">", "</span>"},
+    {"<span class=\"rlist\">", "</span>"},
+    {"", ""},
+    {"<tr><td>", "</td></tr>"},
+    {NULL, NULL}
+};
 
 /* Prototypes */
 
@@ -86,7 +85,7 @@ static void ShowDataTypes(void);
 static void ShowBundleTypes(void);
 static void ShowPromiseTypesFor(char *s);
 static void ShowBodyParts(const BodySyntax *bs);
-static void ShowRange(char *s,enum cfdatatype type);
+static void ShowRange(char *s, enum cfdatatype type);
 static void ShowBuiltinFunctions(void);
 
 /*******************************************************************/
@@ -94,69 +93,68 @@ static void ShowBuiltinFunctions(void);
 /*******************************************************************/
 
 void ShowContext(void)
+{
+    Item *ptr;
+    char vbuff[CF_BUFSIZE];
+    int i;
 
-{ Item *ptr;
-  char vbuff[CF_BUFSIZE];
-  int i;
-  
- /* Text output */
+    /* Text output */
 
-for (i = 0; i < CF_ALPHABETSIZE; i++)
-   {
-   ptr = SortItemListNames(VHEAP.list[i]);
-   VHEAP.list[i] = ptr;
-   }
+    for (i = 0; i < CF_ALPHABETSIZE; i++)
+    {
+        ptr = SortItemListNames(VHEAP.list[i]);
+        VHEAP.list[i] = ptr;
+    }
 
-if (VERBOSE||DEBUG)
-   {
-   snprintf(vbuff,CF_BUFSIZE,"Host %s's basic classified context",VFQNAME);
-   ReportBanner(vbuff);
-   
-   printf("%s>  -> Defined classes = { ",VPREFIX);
+    if (VERBOSE || DEBUG)
+    {
+        snprintf(vbuff, CF_BUFSIZE, "Host %s's basic classified context", VFQNAME);
+        ReportBanner(vbuff);
 
-   ListAlphaList(stdout,VHEAP,' ');
-   
-   printf("}\n");
+        printf("%s>  -> Defined classes = { ", VPREFIX);
 
-   printf("%s>  -> Negated Classes = { ",VPREFIX);
-   
-   for (ptr = VNEGHEAP; ptr != NULL; ptr=ptr->next)
-      {
-      printf("%s ",ptr->name);
-      }
-   
-   printf ("}\n");
-   }
+        ListAlphaList(stdout, VHEAP, ' ');
+
+        printf("}\n");
+
+        printf("%s>  -> Negated Classes = { ", VPREFIX);
+
+        for (ptr = VNEGHEAP; ptr != NULL; ptr = ptr->next)
+        {
+            printf("%s ", ptr->name);
+        }
+
+        printf("}\n");
+    }
 }
 
 /*******************************************************************/
 
 static void ShowControlBodies()
+{
+    int i;
 
-{ int i;
+    printf("<h1>Control bodies for cfengine components</h1>\n");
 
-printf("<h1>Control bodies for cfengine components</h1>\n");
+    printf("<div id=\"bundles\">");
 
-printf("<div id=\"bundles\">");
+    for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
+    {
+        printf("<h4>COMPONENT %s</h4>\n", CF_ALL_BODIES[i].btype);
 
-for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
-   {
-   printf("<h4>COMPONENT %s</h4>\n", CF_ALL_BODIES[i].btype);
-
-   printf("<h4>PROMISE TYPE %s</h4>\n",CF_ALL_BODIES[i].subtype);
-   ShowBodyParts(CF_ALL_BODIES[i].bs);
-   }
+        printf("<h4>PROMISE TYPE %s</h4>\n", CF_ALL_BODIES[i].subtype);
+        ShowBodyParts(CF_ALL_BODIES[i].bs);
+    }
 }
 
 /*******************************************************************/
 
-void ShowPromises(Bundle *bundles,Body *bodies)
-
+void ShowPromises(Bundle *bundles, Body *bodies)
 {
 #if defined(HAVE_NOVA)
-Nova_StoreUnExpandedPromises(bundles,bodies);
+    Nova_StoreUnExpandedPromises(bundles, bodies);
 #else
-ShowPromisesInReport(bundles,bodies);
+    ShowPromisesInReport(bundles, bodies);
 #endif
 }
 
@@ -164,463 +162,466 @@ ShowPromisesInReport(bundles,bodies);
 
 void ShowPromisesInReport(Bundle *bundles, Body *bodies)
 {
-Rval retval;
-char *v;
-char vbuff[CF_BUFSIZE];
-Bundle *bp;
-Rlist *rp;
-SubType *sp;
-Promise *pp;
-Body *bdp;
+    Rval retval;
+    char *v;
+    char vbuff[CF_BUFSIZE];
+    Bundle *bp;
+    Rlist *rp;
+    SubType *sp;
+    Promise *pp;
+    Body *bdp;
 
-if (GetVariable("control_common","version",&retval) != cf_notype)
-   {
-   v = (char *)retval.item;
-   }
-else
-   {
-   v = "not specified";
-   }
+    if (GetVariable("control_common", "version", &retval) != cf_notype)
+    {
+        v = (char *) retval.item;
+    }
+    else
+    {
+        v = "not specified";
+    }
 
-ReportBanner("Promises");
+    ReportBanner("Promises");
 
-snprintf(vbuff,CF_BUFSIZE-1,"Cfengine Site Policy Summary (version %s)",v);
+    snprintf(vbuff, CF_BUFSIZE - 1, "Cfengine Site Policy Summary (version %s)", v);
 
-CfHtmlHeader(FREPORT_HTML,vbuff,STYLESHEET,WEBDRIVER,BANNER);
-    
-fprintf(FREPORT_HTML,"<p>");
-  
-for (bp = bundles; bp != NULL; bp=bp->next)
-   {
-   fprintf(FREPORT_HTML,"%s Bundle %s%s%s %s%s%s\n",
-           CFH[cfx_bundle][cfb],
-           CFH[cfx_blocktype][cfb],bp->type,CFH[cfx_blocktype][cfe],
-           CFH[cfx_blockid][cfb],bp->name,CFH[cfx_blockid][cfe]);
-   
-   fprintf(FREPORT_HTML," %s ARGS:%s\n\n",CFH[cfx_line][cfb],CFH[cfx_line][cfe]);
+    CfHtmlHeader(FREPORT_HTML, vbuff, STYLESHEET, WEBDRIVER, BANNER);
 
-   fprintf(FREPORT_TXT,"Bundle %s in the context of %s\n\n",bp->name,bp->type);
-   fprintf(FREPORT_TXT,"   ARGS:\n\n");
+    fprintf(FREPORT_HTML, "<p>");
 
-   for (rp = bp->args; rp != NULL; rp=rp->next)
-      {   
-      fprintf(FREPORT_HTML,"%s",CFH[cfx_line][cfb]);
-      fprintf(FREPORT_HTML,"   scalar arg %s%s%s\n",CFH[cfx_args][cfb],(char *)rp->item,CFH[cfx_args][cfe]);
-      fprintf(FREPORT_HTML,"%s",CFH[cfx_line][cfe]);
-      
-      fprintf(FREPORT_TXT,"   scalar arg %s\n\n",(char *)rp->item);
-      }
-  
-   fprintf(FREPORT_TXT,"   {\n");   
-   fprintf(FREPORT_HTML,"%s",CFH[cfx_promise][cfb]);
-   
-   for (sp = bp->subtypes; sp != NULL; sp = sp->next)
-      {
-      fprintf(FREPORT_HTML,"%s",CFH[cfx_line][cfb]);
-      fprintf(FREPORT_HTML,"%s",CFH[cfx_line][cfe]);
-      fprintf(FREPORT_TXT,"   TYPE: %s\n\n",sp->name);
-      
-      for (pp = sp->promiselist; pp != NULL; pp = pp->next)
-         {
-         ShowPromise(pp,6);
-         }
-      }
-   
-   fprintf(FREPORT_TXT,"   }\n");   
-   fprintf(FREPORT_TXT,"\n\n");
-   fprintf(FREPORT_HTML,"%s\n",CFH[cfx_promise][cfe]);
-   fprintf(FREPORT_HTML,"%s\n",CFH[cfx_line][cfe]);
-   fprintf(FREPORT_HTML,"%s\n",CFH[cfx_bundle][cfe]);
-   }
+    for (bp = bundles; bp != NULL; bp = bp->next)
+    {
+        fprintf(FREPORT_HTML, "%s Bundle %s%s%s %s%s%s\n",
+                CFH[cfx_bundle][cfb],
+                CFH[cfx_blocktype][cfb], bp->type, CFH[cfx_blocktype][cfe],
+                CFH[cfx_blockid][cfb], bp->name, CFH[cfx_blockid][cfe]);
+
+        fprintf(FREPORT_HTML, " %s ARGS:%s\n\n", CFH[cfx_line][cfb], CFH[cfx_line][cfe]);
+
+        fprintf(FREPORT_TXT, "Bundle %s in the context of %s\n\n", bp->name, bp->type);
+        fprintf(FREPORT_TXT, "   ARGS:\n\n");
+
+        for (rp = bp->args; rp != NULL; rp = rp->next)
+        {
+            fprintf(FREPORT_HTML, "%s", CFH[cfx_line][cfb]);
+            fprintf(FREPORT_HTML, "   scalar arg %s%s%s\n", CFH[cfx_args][cfb], (char *) rp->item, CFH[cfx_args][cfe]);
+            fprintf(FREPORT_HTML, "%s", CFH[cfx_line][cfe]);
+
+            fprintf(FREPORT_TXT, "   scalar arg %s\n\n", (char *) rp->item);
+        }
+
+        fprintf(FREPORT_TXT, "   {\n");
+        fprintf(FREPORT_HTML, "%s", CFH[cfx_promise][cfb]);
+
+        for (sp = bp->subtypes; sp != NULL; sp = sp->next)
+        {
+            fprintf(FREPORT_HTML, "%s", CFH[cfx_line][cfb]);
+            fprintf(FREPORT_HTML, "%s", CFH[cfx_line][cfe]);
+            fprintf(FREPORT_TXT, "   TYPE: %s\n\n", sp->name);
+
+            for (pp = sp->promiselist; pp != NULL; pp = pp->next)
+            {
+                ShowPromise(pp, 6);
+            }
+        }
+
+        fprintf(FREPORT_TXT, "   }\n");
+        fprintf(FREPORT_TXT, "\n\n");
+        fprintf(FREPORT_HTML, "%s\n", CFH[cfx_promise][cfe]);
+        fprintf(FREPORT_HTML, "%s\n", CFH[cfx_line][cfe]);
+        fprintf(FREPORT_HTML, "%s\n", CFH[cfx_bundle][cfe]);
+    }
 
 /* Now summarize the remaining bodies */
 
-fprintf(FREPORT_HTML,"<h1>All Bodies</h1>");
-fprintf(FREPORT_TXT,"\n\nAll Bodies\n\n");
+    fprintf(FREPORT_HTML, "<h1>All Bodies</h1>");
+    fprintf(FREPORT_TXT, "\n\nAll Bodies\n\n");
 
-for (bdp = bodies; bdp != NULL; bdp=bdp->next)
-   {
-   fprintf(FREPORT_HTML,"%s%s\n",CFH[cfx_line][cfb],CFH[cfx_block][cfb]);
-   fprintf(FREPORT_HTML,"%s\n",CFH[cfx_promise][cfb]);
+    for (bdp = bodies; bdp != NULL; bdp = bdp->next)
+    {
+        fprintf(FREPORT_HTML, "%s%s\n", CFH[cfx_line][cfb], CFH[cfx_block][cfb]);
+        fprintf(FREPORT_HTML, "%s\n", CFH[cfx_promise][cfb]);
 
-   ShowBody(bdp,3);
+        ShowBody(bdp, 3);
 
-   fprintf(FREPORT_TXT,"\n");
-   fprintf(FREPORT_HTML,"%s\n",CFH[cfx_promise][cfe]);
-   fprintf(FREPORT_HTML,"%s%s \n ",CFH[cfx_block][cfe],CFH[cfx_line][cfe]);
-   fprintf(FREPORT_HTML,"</p>");
-   }
+        fprintf(FREPORT_TXT, "\n");
+        fprintf(FREPORT_HTML, "%s\n", CFH[cfx_promise][cfe]);
+        fprintf(FREPORT_HTML, "%s%s \n ", CFH[cfx_block][cfe], CFH[cfx_line][cfe]);
+        fprintf(FREPORT_HTML, "</p>");
+    }
 
-CfHtmlFooter(FREPORT_HTML,FOOTER);
+    CfHtmlFooter(FREPORT_HTML, FOOTER);
 }
 
 /*******************************************************************/
 
 void ShowPromise(Promise *pp, int indent)
-
 {
-char *v;
-Rval retval;
+    char *v;
+    Rval retval;
 
-if (GetVariable("control_common","version", &retval) != cf_notype)
-   {
-   v = (char *)retval.item;
-   }
-else
-   {
-   v = "not specified";
-   }
+    if (GetVariable("control_common", "version", &retval) != cf_notype)
+    {
+        v = (char *) retval.item;
+    }
+    else
+    {
+        v = "not specified";
+    }
 
 #if defined(HAVE_NOVA)
-Nova_ShowPromise(v, pp, indent);
+    Nova_ShowPromise(v, pp, indent);
 #else
-ShowPromiseInReport(v, pp, indent);
+    ShowPromiseInReport(v, pp, indent);
 #endif
 }
 
 /*******************************************************************/
 
-void ShowPromiseInReport(const char *version, Promise* pp, int indent)
+void ShowPromiseInReport(const char *version, Promise *pp, int indent)
 {
-Constraint *cp;
-Body *bp;
-Rlist *rp;
-FnCall *fp;
+    Constraint *cp;
+    Body *bp;
+    Rlist *rp;
+    FnCall *fp;
 
-fprintf(FREPORT_HTML,"%s\n",CFH[cfx_line][cfb]);
-fprintf(FREPORT_HTML,"%s\n",CFH[cfx_promise][cfb]);
-fprintf(FREPORT_HTML,"Promise type is %s%s%s, ",CFH[cfx_subtype][cfb],pp->agentsubtype,CFH[cfx_subtype][cfe]);
-fprintf(FREPORT_HTML,"<a href=\"#class_context\">context</a> is %s%s%s <br><hr>\n\n",CFH[cfx_class][cfb],pp->classes,CFH[cfx_class][cfe]);
+    fprintf(FREPORT_HTML, "%s\n", CFH[cfx_line][cfb]);
+    fprintf(FREPORT_HTML, "%s\n", CFH[cfx_promise][cfb]);
+    fprintf(FREPORT_HTML, "Promise type is %s%s%s, ", CFH[cfx_subtype][cfb], pp->agentsubtype, CFH[cfx_subtype][cfe]);
+    fprintf(FREPORT_HTML, "<a href=\"#class_context\">context</a> is %s%s%s <br><hr>\n\n", CFH[cfx_class][cfb],
+            pp->classes, CFH[cfx_class][cfe]);
 
-if (pp->promisee.item)
-   {
-   fprintf(FREPORT_HTML,"Resource object %s\'%s\'%s promises %s (about %s) to",CFH[cfx_object][cfb],pp->promiser,CFH[cfx_object][cfe],CFH[cfx_object][cfb],pp->agentsubtype);
-   ShowRval(FREPORT_HTML, pp->promisee);
-   fprintf(FREPORT_HTML,"%s\n\n",CFH[cfx_object][cfe]);
-   }
-else
-   {
-   fprintf(FREPORT_HTML,"Resource object %s\'%s\'%s make the promise to default promisee 'cf-%s' (about %s)...\n\n",CFH[cfx_object][cfb],pp->promiser,CFH[cfx_object][cfe],pp->bundletype,pp->agentsubtype);
-   }
+    if (pp->promisee.item)
+    {
+        fprintf(FREPORT_HTML, "Resource object %s\'%s\'%s promises %s (about %s) to", CFH[cfx_object][cfb],
+                pp->promiser, CFH[cfx_object][cfe], CFH[cfx_object][cfb], pp->agentsubtype);
+        ShowRval(FREPORT_HTML, pp->promisee);
+        fprintf(FREPORT_HTML, "%s\n\n", CFH[cfx_object][cfe]);
+    }
+    else
+    {
+        fprintf(FREPORT_HTML,
+                "Resource object %s\'%s\'%s make the promise to default promisee 'cf-%s' (about %s)...\n\n",
+                CFH[cfx_object][cfb], pp->promiser, CFH[cfx_object][cfe], pp->bundletype, pp->agentsubtype);
+    }
 
-Indent(indent);
-if (pp->promisee.item != NULL)
-   {
-   fprintf(FREPORT_TXT,"%s promise by \'%s\' -> ",pp->agentsubtype,pp->promiser);
-   ShowRval(FREPORT_TXT, pp->promisee);
-   fprintf(FREPORT_TXT," if context is %s\n\n",pp->classes);
-   }
-else
-   {
-   fprintf(FREPORT_TXT,"%s promise by \'%s\' (implicit) if context is %s\n\n",pp->agentsubtype,pp->promiser,pp->classes);
-   }
+    Indent(indent);
+    if (pp->promisee.item != NULL)
+    {
+        fprintf(FREPORT_TXT, "%s promise by \'%s\' -> ", pp->agentsubtype, pp->promiser);
+        ShowRval(FREPORT_TXT, pp->promisee);
+        fprintf(FREPORT_TXT, " if context is %s\n\n", pp->classes);
+    }
+    else
+    {
+        fprintf(FREPORT_TXT, "%s promise by \'%s\' (implicit) if context is %s\n\n", pp->agentsubtype, pp->promiser,
+                pp->classes);
+    }
 
-for (cp = pp->conlist; cp != NULL; cp = cp->next)
-   {
-   fprintf(FREPORT_HTML,"%s%s%s => ",CFH[cfx_lval][cfb],cp->lval,CFH[cfx_lval][cfe]);
-   Indent(indent+3);
-   fprintf(FREPORT_TXT,"%10s => ",cp->lval);
+    for (cp = pp->conlist; cp != NULL; cp = cp->next)
+    {
+        fprintf(FREPORT_HTML, "%s%s%s => ", CFH[cfx_lval][cfb], cp->lval, CFH[cfx_lval][cfe]);
+        Indent(indent + 3);
+        fprintf(FREPORT_TXT, "%10s => ", cp->lval);
 
-   switch (cp->rval.rtype)
-      {
-      case CF_SCALAR:
-         if ((bp = IsBody(BODIES,(char *)cp->rval.item)))
-             {
-             ShowBody(bp,15);
-             }
-          else
-             {
-             fprintf(FREPORT_HTML,"%s",CFH[cfx_rval][cfb]);
-             ShowRval(FREPORT_HTML, cp->rval); /* literal */
-             fprintf(FREPORT_HTML,"%s",CFH[cfx_rval][cfe]);
+        switch (cp->rval.rtype)
+        {
+        case CF_SCALAR:
+            if ((bp = IsBody(BODIES, (char *) cp->rval.item)))
+            {
+                ShowBody(bp, 15);
+            }
+            else
+            {
+                fprintf(FREPORT_HTML, "%s", CFH[cfx_rval][cfb]);
+                ShowRval(FREPORT_HTML, cp->rval);       /* literal */
+                fprintf(FREPORT_HTML, "%s", CFH[cfx_rval][cfe]);
 
-             ShowRval(FREPORT_TXT, cp->rval); /* literal */
-             }
-          break;
+                ShowRval(FREPORT_TXT, cp->rval);        /* literal */
+            }
+            break;
 
-      case CF_LIST:
-          
-          rp = (Rlist *)cp->rval.item;
-          fprintf(FREPORT_HTML,"%s",CFH[cfx_rval][cfb]);
-          ShowRlist(FREPORT_HTML,rp);
-          fprintf(FREPORT_HTML,"%s",CFH[cfx_rval][cfe]);
-          ShowRlist(FREPORT_TXT,rp);
-          break;
+        case CF_LIST:
 
-      case CF_FNCALL:
-          fp = (FnCall *)cp->rval.item;
+            rp = (Rlist *) cp->rval.item;
+            fprintf(FREPORT_HTML, "%s", CFH[cfx_rval][cfb]);
+            ShowRlist(FREPORT_HTML, rp);
+            fprintf(FREPORT_HTML, "%s", CFH[cfx_rval][cfe]);
+            ShowRlist(FREPORT_TXT, rp);
+            break;
 
-          if ((bp = IsBody(BODIES,fp->name)))
-             {
-             ShowBody(bp,15);
-             }
-          else
-             {
-             ShowRval(FREPORT_HTML, cp->rval); /* literal */
-             ShowRval(FREPORT_TXT, cp->rval); /* literal */
-             }
-          break;
-      }
-   
-   if (cp->rval.rtype != CF_FNCALL)
-      {
-      Indent(indent);
-      fprintf(FREPORT_HTML," , if body <a href=\"#class_context\">context</a> <span class=\"context\">%s</span>\n",cp->classes);
-      fprintf(FREPORT_TXT," if body context %s\n",cp->classes);
-      }     
-   }
+        case CF_FNCALL:
+            fp = (FnCall *) cp->rval.item;
 
-if (pp->audit)
-   {
-   Indent(indent);
-   fprintf(FREPORT_HTML,"<p><small>Promise (version %s) belongs to bundle <b>%s</b> (type %s) in \'<i>%s</i>\' near line %zu</small></p>\n",version,pp->bundle,pp->bundletype,pp->audit->filename,pp->offset.line);
-   }
+            if ((bp = IsBody(BODIES, fp->name)))
+            {
+                ShowBody(bp, 15);
+            }
+            else
+            {
+                ShowRval(FREPORT_HTML, cp->rval);       /* literal */
+                ShowRval(FREPORT_TXT, cp->rval);        /* literal */
+            }
+            break;
+        }
 
-fprintf(FREPORT_HTML,"%s\n",CFH[cfx_promise][cfe]);
-fprintf(FREPORT_HTML,"%s\n",CFH[cfx_line][cfe]);
+        if (cp->rval.rtype != CF_FNCALL)
+        {
+            Indent(indent);
+            fprintf(FREPORT_HTML,
+                    " , if body <a href=\"#class_context\">context</a> <span class=\"context\">%s</span>\n",
+                    cp->classes);
+            fprintf(FREPORT_TXT, " if body context %s\n", cp->classes);
+        }
+    }
 
-if (pp->audit)
-   {
-   Indent(indent);
-   fprintf(FREPORT_TXT,"Promise (version %s) belongs to bundle \'%s\' (type %s) in file \'%s\' near line %zu\n",version,pp->bundle,pp->bundletype,pp->audit->filename,pp->offset.line);
-   fprintf(FREPORT_TXT,"\n\n");
-   }
-else
-   {
-   Indent(indent);
-   fprintf(FREPORT_TXT,"Promise (version %s) belongs to bundle \'%s\' (type %s) near line %zu\n\n",version,pp->bundle,pp->bundletype,pp->offset.line);
-   }
+    if (pp->audit)
+    {
+        Indent(indent);
+        fprintf(FREPORT_HTML,
+                "<p><small>Promise (version %s) belongs to bundle <b>%s</b> (type %s) in \'<i>%s</i>\' near line %zu</small></p>\n",
+                version, pp->bundle, pp->bundletype, pp->audit->filename, pp->offset.line);
+    }
+
+    fprintf(FREPORT_HTML, "%s\n", CFH[cfx_promise][cfe]);
+    fprintf(FREPORT_HTML, "%s\n", CFH[cfx_line][cfe]);
+
+    if (pp->audit)
+    {
+        Indent(indent);
+        fprintf(FREPORT_TXT, "Promise (version %s) belongs to bundle \'%s\' (type %s) in file \'%s\' near line %zu\n",
+                version, pp->bundle, pp->bundletype, pp->audit->filename, pp->offset.line);
+        fprintf(FREPORT_TXT, "\n\n");
+    }
+    else
+    {
+        Indent(indent);
+        fprintf(FREPORT_TXT, "Promise (version %s) belongs to bundle \'%s\' (type %s) near line %zu\n\n", version,
+                pp->bundle, pp->bundletype, pp->offset.line);
+    }
 }
 
 /*******************************************************************/
 
 static void PrintVariablesInScope(FILE *fp, Scope *scope)
 {
-HashIterator i = HashIteratorInit(scope->hashtable);
-CfAssoc *assoc;
+    HashIterator i = HashIteratorInit(scope->hashtable);
+    CfAssoc *assoc;
 
-while ((assoc = HashIteratorNext(&i)))
-   {
-   fprintf(fp, "%8s %c %s = ", CF_DATATYPES[assoc->dtype],
-           assoc->rval.rtype, assoc->lval);
-   ShowRval(fp, assoc->rval);
-   fprintf(fp, "\n");
-   }
+    while ((assoc = HashIteratorNext(&i)))
+    {
+        fprintf(fp, "%8s %c %s = ", CF_DATATYPES[assoc->dtype], assoc->rval.rtype, assoc->lval);
+        ShowRval(fp, assoc->rval);
+        fprintf(fp, "\n");
+    }
 }
 
 /*******************************************************************/
 
 static void PrintVariablesInScopeHtml(FILE *fp, Scope *scope)
 {
-HashIterator i = HashIteratorInit(scope->hashtable);
-CfAssoc *assoc;
+    HashIterator i = HashIteratorInit(scope->hashtable);
+    CfAssoc *assoc;
 
-fprintf(fp,"<table class=border width=600>\n");
-fprintf (fp,"<tr><th>dtype</th><th>rtype</th><th>identifier</th><th>Rvalue</th></tr>\n");
+    fprintf(fp, "<table class=border width=600>\n");
+    fprintf(fp, "<tr><th>dtype</th><th>rtype</th><th>identifier</th><th>Rvalue</th></tr>\n");
 
-while ((assoc = HashIteratorNext(&i)))
-   {
-   fprintf(fp,"<tr><th>%8s</th><td> %c</td><td> %s</td><td> ",CF_DATATYPES[assoc->dtype],assoc->rval.rtype,assoc->lval);
-   ShowRval(fp, assoc->rval);
-   fprintf(fp,"</td></tr>\n");
-   }
+    while ((assoc = HashIteratorNext(&i)))
+    {
+        fprintf(fp, "<tr><th>%8s</th><td> %c</td><td> %s</td><td> ", CF_DATATYPES[assoc->dtype], assoc->rval.rtype,
+                assoc->lval);
+        ShowRval(fp, assoc->rval);
+        fprintf(fp, "</td></tr>\n");
+    }
 
-fprintf(fp,"</table>\n");
+    fprintf(fp, "</table>\n");
 }
 
 /*******************************************************************/
 
 void ShowScopedVariables()
-
 /* WARNING: Not thread safe (access to VSCOPE) */
+{
+    Scope *ptr;
 
-{ Scope *ptr;
+    fprintf(FREPORT_HTML, "<div id=\"showvars\">");
 
-fprintf(FREPORT_HTML,"<div id=\"showvars\">");
+    for (ptr = VSCOPE; ptr != NULL; ptr = ptr->next)
+    {
+        if (strcmp(ptr->scope, "this") == 0)
+        {
+            continue;
+        }
 
-for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
-   {
-   if (strcmp(ptr->scope,"this") == 0)
-      {
-      continue;
-      }
+        fprintf(FREPORT_HTML, "<h4>\nScope %s:<h4>", ptr->scope);
+        fprintf(FREPORT_TXT, "\nScope %s:\n", ptr->scope);
 
-   fprintf(FREPORT_HTML,"<h4>\nScope %s:<h4>",ptr->scope);
-   fprintf(FREPORT_TXT,"\nScope %s:\n",ptr->scope);
+        PrintVariablesInScope(FREPORT_TXT, ptr);
+        PrintVariablesInScopeHtml(FREPORT_HTML, ptr);
+    }
 
-   PrintVariablesInScope(FREPORT_TXT, ptr);
-   PrintVariablesInScopeHtml(FREPORT_HTML, ptr);
-   }
-
-fprintf(FREPORT_HTML,"</div>");
+    fprintf(FREPORT_HTML, "</div>");
 }
 
 /*******************************************************************/
 
 void Banner(char *s)
-
 {
-CfOut(cf_verbose,"","***********************************************************\n");
-CfOut(cf_verbose,""," %s ",s);
-CfOut(cf_verbose,"","***********************************************************\n");
+    CfOut(cf_verbose, "", "***********************************************************\n");
+    CfOut(cf_verbose, "", " %s ", s);
+    CfOut(cf_verbose, "", "***********************************************************\n");
 }
-    
+
 /*******************************************************************/
 
 static void ReportBanner(char *s)
-
 {
-fprintf(FREPORT_TXT,"***********************************************************\n");
-fprintf(FREPORT_TXT," %s \n",s);
-fprintf(FREPORT_TXT,"***********************************************************\n");
-}
-    
-/**************************************************************/
-
-void BannerSubType(char *bundlename,char *type,int pass)
-
-{
-CfOut(cf_verbose,"","\n");
-CfOut(cf_verbose,"","   =========================================================\n");
-CfOut(cf_verbose,"","   %s in bundle %s (%d)\n",type,bundlename,pass);
-CfOut(cf_verbose,"","   =========================================================\n");
-CfOut(cf_verbose,"","\n");
+    fprintf(FREPORT_TXT, "***********************************************************\n");
+    fprintf(FREPORT_TXT, " %s \n", s);
+    fprintf(FREPORT_TXT, "***********************************************************\n");
 }
 
 /**************************************************************/
 
-void BannerSubSubType(char *bundlename,char *type)
-
+void BannerSubType(char *bundlename, char *type, int pass)
 {
-if (strcmp(type,"processes") == 0)
-   {
+    CfOut(cf_verbose, "", "\n");
+    CfOut(cf_verbose, "", "   =========================================================\n");
+    CfOut(cf_verbose, "", "   %s in bundle %s (%d)\n", type, bundlename, pass);
+    CfOut(cf_verbose, "", "   =========================================================\n");
+    CfOut(cf_verbose, "", "\n");
+}
 
-   /* Just parsed all local classes */
+/**************************************************************/
 
-   CfOut(cf_verbose,"","     ??? Local class context: \n");
+void BannerSubSubType(char *bundlename, char *type)
+{
+    if (strcmp(type, "processes") == 0)
+    {
 
-   AlphaListIterator it = AlphaListIteratorInit(&VADDCLASSES);
-   for (const Item *ip = AlphaListIteratorNext(&it);
-        ip != NULL;
-        ip = AlphaListIteratorNext(&it))
-      {
-      printf("       %s\n", ip->name);
-      }
+        /* Just parsed all local classes */
 
-   CfOut(cf_verbose,"","\n");
-   }
+        CfOut(cf_verbose, "", "     ??? Local class context: \n");
 
-CfOut(cf_verbose,"","\n");
-CfOut(cf_verbose,"","      = = = = = = = = = = = = = = = = = = = = = = = = = = = = \n");
-CfOut(cf_verbose,"","      %s in bundle %s\n",type,bundlename);
-CfOut(cf_verbose,"","      = = = = = = = = = = = = = = = = = = = = = = = = = = = = \n");
-CfOut(cf_verbose,"","\n");
+        AlphaListIterator it = AlphaListIteratorInit(&VADDCLASSES);
+
+        for (const Item *ip = AlphaListIteratorNext(&it); ip != NULL; ip = AlphaListIteratorNext(&it))
+        {
+            printf("       %s\n", ip->name);
+        }
+
+        CfOut(cf_verbose, "", "\n");
+    }
+
+    CfOut(cf_verbose, "", "\n");
+    CfOut(cf_verbose, "", "      = = = = = = = = = = = = = = = = = = = = = = = = = = = = \n");
+    CfOut(cf_verbose, "", "      %s in bundle %s\n", type, bundlename);
+    CfOut(cf_verbose, "", "      = = = = = = = = = = = = = = = = = = = = = = = = = = = = \n");
+    CfOut(cf_verbose, "", "\n");
 }
 
 /*******************************************************************/
 
 void DebugBanner(char *s)
-
 {
-CfDebug("----------------------------------------------------------------\n");
-CfDebug("  %s                                                            \n",s);
-CfDebug("----------------------------------------------------------------\n");
+    CfDebug("----------------------------------------------------------------\n");
+    CfDebug("  %s                                                            \n", s);
+    CfDebug("----------------------------------------------------------------\n");
 }
 
 /*******************************************************************/
 
 static void Indent(int i)
+{
+    int j;
 
-{ int j;
-
-for (j = 0; j < i; j++)
-   {
-   fputc(' ',FREPORT_TXT);
-   }
+    for (j = 0; j < i; j++)
+    {
+        fputc(' ', FREPORT_TXT);
+    }
 }
 
 /*******************************************************************/
 
-void ShowBody(Body *body,int indent)
+void ShowBody(Body *body, int indent)
+{
+    Rlist *rp;
+    Constraint *cp;
 
-{ Rlist *rp;
-  Constraint *cp;
+    fprintf(FREPORT_TXT, "%s body for type %s", body->name, body->type);
+    fprintf(FREPORT_HTML, " %s%s%s ", CFH[cfx_blocktype][cfb], body->type, CFH[cfx_blocktype][cfe]);
 
-fprintf(FREPORT_TXT,"%s body for type %s",body->name,body->type);
-fprintf(FREPORT_HTML," %s%s%s ",CFH[cfx_blocktype][cfb],body->type,CFH[cfx_blocktype][cfe]);
+    fprintf(FREPORT_HTML, "%s%s%s", CFH[cfx_blockid][cfb], body->name, CFH[cfx_blockid][cfe]);
 
-fprintf(FREPORT_HTML,"%s%s%s",CFH[cfx_blockid][cfb],body->name,CFH[cfx_blockid][cfe]);
+    if (body->args == NULL)
+    {
+        fprintf(FREPORT_HTML, "%s(no parameters)%s\n", CFH[cfx_args][cfb], CFH[cfx_args][cfe]);
+        fprintf(FREPORT_TXT, "(no parameters)\n");
+    }
+    else
+    {
+        fprintf(FREPORT_HTML, "(");
+        fprintf(FREPORT_TXT, "\n");
 
-if (body->args == NULL)
-   {
-   fprintf(FREPORT_HTML,"%s(no parameters)%s\n",CFH[cfx_args][cfb],CFH[cfx_args][cfe]);
-   fprintf(FREPORT_TXT,"(no parameters)\n");
-   }
-else
-   {
-   fprintf(FREPORT_HTML,"(");
-   fprintf(FREPORT_TXT,"\n");
-   
-   for (rp = body->args; rp != NULL; rp=rp->next)
-      {
-      if (rp->type != CF_SCALAR)
-         {
-         FatalError("ShowBody - non-scalar parameter container");
-         }
+        for (rp = body->args; rp != NULL; rp = rp->next)
+        {
+            if (rp->type != CF_SCALAR)
+            {
+                FatalError("ShowBody - non-scalar parameter container");
+            }
 
-      fprintf(FREPORT_HTML,"%s%s%s,\n",CFH[cfx_args][cfb],(char *)rp->item,CFH[cfx_args][cfe]);
-      Indent(indent);
-      fprintf(FREPORT_TXT,"arg %s\n",(char *)rp->item);
-      }
+            fprintf(FREPORT_HTML, "%s%s%s,\n", CFH[cfx_args][cfb], (char *) rp->item, CFH[cfx_args][cfe]);
+            Indent(indent);
+            fprintf(FREPORT_TXT, "arg %s\n", (char *) rp->item);
+        }
 
-   fprintf(FREPORT_HTML,")");
-   fprintf(FREPORT_TXT,"\n");
-   }
+        fprintf(FREPORT_HTML, ")");
+        fprintf(FREPORT_TXT, "\n");
+    }
 
-Indent(indent);
-fprintf(FREPORT_TXT,"{\n");
+    Indent(indent);
+    fprintf(FREPORT_TXT, "{\n");
 
-for (cp = body->conlist; cp != NULL; cp=cp->next)
-   {
-   fprintf(FREPORT_HTML,"%s.....%s%s => ",CFH[cfx_lval][cfb],cp->lval,CFH[cfx_lval][cfe]);
-   Indent(indent);
-   fprintf(FREPORT_TXT,"%s => ",cp->lval);
+    for (cp = body->conlist; cp != NULL; cp = cp->next)
+    {
+        fprintf(FREPORT_HTML, "%s.....%s%s => ", CFH[cfx_lval][cfb], cp->lval, CFH[cfx_lval][cfe]);
+        Indent(indent);
+        fprintf(FREPORT_TXT, "%s => ", cp->lval);
 
-   fprintf(FREPORT_HTML,"\'%s",CFH[cfx_rval][cfb]);
+        fprintf(FREPORT_HTML, "\'%s", CFH[cfx_rval][cfb]);
 
-   ShowRval(FREPORT_HTML, cp->rval); /* literal */
-   ShowRval(FREPORT_TXT, cp->rval); /* literal */
+        ShowRval(FREPORT_HTML, cp->rval);       /* literal */
+        ShowRval(FREPORT_TXT, cp->rval);        /* literal */
 
-   fprintf(FREPORT_HTML,"\'%s",CFH[cfx_rval][cfe]);
+        fprintf(FREPORT_HTML, "\'%s", CFH[cfx_rval][cfe]);
 
-   if (cp->classes != NULL)
-      {
-      fprintf(FREPORT_HTML," if sub-body context %s%s%s\n",CFH[cfx_class][cfb],cp->classes,CFH[cfx_class][cfe]);
-      fprintf(FREPORT_TXT," if sub-body context %s\n",cp->classes);
-      }
-   else
-      {
-      fprintf(FREPORT_TXT,"\n");
-      }
-   }
+        if (cp->classes != NULL)
+        {
+            fprintf(FREPORT_HTML, " if sub-body context %s%s%s\n", CFH[cfx_class][cfb], cp->classes,
+                    CFH[cfx_class][cfe]);
+            fprintf(FREPORT_TXT, " if sub-body context %s\n", cp->classes);
+        }
+        else
+        {
+            fprintf(FREPORT_TXT, "\n");
+        }
+    }
 
-Indent(indent);
-fprintf(FREPORT_TXT,"}\n");
+    Indent(indent);
+    fprintf(FREPORT_TXT, "}\n");
 }
 
 /*******************************************************************/
 
 void SyntaxTree(void)
-
 {
-printf("<h1>CFENGINE %s SYNTAX</h1><p>",Version());
+    printf("<h1>CFENGINE %s SYNTAX</h1><p>", Version());
 
-printf("<table class=\"frame\"><tr><td>\n");
-ShowDataTypes();
-ShowControlBodies();
-ShowBundleTypes();
-ShowBuiltinFunctions();
-printf("</td></tr></table>\n");
+    printf("<table class=\"frame\"><tr><td>\n");
+    ShowDataTypes();
+    ShowControlBodies();
+    ShowBundleTypes();
+    ShowBuiltinFunctions();
+    printf("</td></tr></table>\n");
 }
 
 /*******************************************************************/
@@ -628,267 +629,263 @@ printf("</td></tr></table>\n");
 /*******************************************************************/
 
 static void ShowDataTypes()
+{
+    int i;
 
-{ int i;
+    printf("<table class=border><tr><td><h1>Promise datatype legend</h1>\n");
+    printf("<ol>\n");
 
-printf("<table class=border><tr><td><h1>Promise datatype legend</h1>\n");
-printf("<ol>\n");
+    for (i = 0; strcmp(CF_DATATYPES[i], "<notype>") != 0; i++)
+    {
+        printf("<li>%s</li>\n", CF_DATATYPES[i]);
+    }
 
-for (i = 0; strcmp(CF_DATATYPES[i],"<notype>") != 0; i++)
-   {
-   printf("<li>%s</li>\n",CF_DATATYPES[i]);
-   }
-
-printf("</ol></td></tr></table>\n\n");
+    printf("</ol></td></tr></table>\n\n");
 }
 
 /*******************************************************************/
 
 static void ShowBundleTypes()
+{
+    int i;
+    SubTypeSyntax *st;
 
-{ int i;
-  SubTypeSyntax *st;
+    printf("<h1>Bundle types (software components)</h1>\n");
 
-printf("<h1>Bundle types (software components)</h1>\n");
+    printf("<div id=\"bundles\">");
 
-printf("<div id=\"bundles\">");
+    for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
+    {
+        printf("<h4>COMPONENT %s</h4>\n", CF_ALL_BODIES[i].btype);
+        ShowPromiseTypesFor(CF_ALL_BODIES[i].btype);
+    }
 
-for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
-   {
-   printf("<h4>COMPONENT %s</h4>\n", CF_ALL_BODIES[i].btype);
-   ShowPromiseTypesFor(CF_ALL_BODIES[i].btype);
-   }
+    printf("<h4>EMBEDDED BUNDLE edit_line<h4>\n");
 
-printf("<h4>EMBEDDED BUNDLE edit_line<h4>\n");
+    ShowPromiseTypesFor("*");
 
-ShowPromiseTypesFor("*");
+    st = CF_FILES_SUBTYPES;
 
-st = CF_FILES_SUBTYPES;
+    for (i = 0; st[i].btype != NULL; i++)
+    {
+        if (strcmp("edit_line", st[i].btype) == 0)
+        {
+            ShowBodyParts(st[i].bs);
+        }
+    }
 
-for (i = 0; st[i].btype != NULL; i++)
-   {
-   if (strcmp("edit_line",st[i].btype) == 0)
-      {
-      ShowBodyParts(st[i].bs);
-      }
-   }
-
-printf("</div>\n\n");
+    printf("</div>\n\n");
 }
 
 /*******************************************************************/
 
 static void ShowPromiseTypesFor(char *s)
+{
+    int i, j;
+    SubTypeSyntax *st;
 
-{ int i,j;
-  SubTypeSyntax *st;
+    printf("<div id=\"promisetype\">");
+    printf("<h4>Promise types for %s bundles</h4>\n", s);
+    printf("<table class=border><tr><td>\n");
 
-printf("<div id=\"promisetype\">");
-printf("<h4>Promise types for %s bundles</h4>\n",s);
-printf("<table class=border><tr><td>\n");
+    for (i = 0; i < CF3_MODULES; i++)
+    {
+        st = CF_ALL_SUBTYPES[i];
 
-for (i = 0; i < CF3_MODULES; i++)
-   {
-   st = CF_ALL_SUBTYPES[i];
+        for (j = 0; st[j].btype != NULL; j++)
+        {
+            if (strcmp(s, st[j].btype) == 0 || strcmp("*", st[j].btype) == 0)
+            {
+                printf("<h4>PROMISE TYPE %s</h4>\n", st[j].subtype);
+                ShowBodyParts(st[j].bs);
+            }
+        }
+    }
 
-   for (j = 0; st[j].btype != NULL; j++)
-      {
-      if (strcmp(s,st[j].btype) == 0 || strcmp("*",st[j].btype) == 0)
-         {
-         printf("<h4>PROMISE TYPE %s</h4>\n",st[j].subtype);
-         ShowBodyParts(st[j].bs);
-         }
-      }
-   }
-
-printf("</td></tr></table>\n");
-printf("</div>\n\n");
+    printf("</td></tr></table>\n");
+    printf("</div>\n\n");
 }
 
 /*******************************************************************/
 
 static void ShowBodyParts(const BodySyntax *bs)
+{
+    int i;
 
-{ int i;
+    if (bs == NULL)
+    {
+        return;
+    }
 
-if (bs == NULL)
-   {
-   return;
-   }
- 
-printf("<div id=\"bodies\"><table class=\"border\">\n");
+    printf("<div id=\"bodies\"><table class=\"border\">\n");
 
-for (i = 0; bs[i].lval != NULL; i++)
-   {
-   if (bs[i].range == (void *)CF_BUNDLE)
-      {
-      printf("<tr><td>%s</td><td>%s</td><td>(Separate Bundle)</td></tr>\n",bs[i].lval,CF_DATATYPES[bs[i].dtype]);
-      }
-   else if (bs[i].dtype == cf_body)
-      {
-      printf("<tr><td>%s</td><td>%s</td><td>",bs[i].lval,CF_DATATYPES[bs[i].dtype]);
-      ShowBodyParts((const BodySyntax *)bs[i].range);
-      printf("</td></tr>\n");
-      }
-   else
-      {
-      printf("<tr><td>%s</td><td>%s</td><td>",bs[i].lval,CF_DATATYPES[bs[i].dtype]);
-      ShowRange((char *)bs[i].range,bs[i].dtype);
-      printf("</td><td>");
-      printf("<div id=\"description\">%s</div>",bs[i].description);
-      printf("</td></tr>\n");
-      }
-   }
+    for (i = 0; bs[i].lval != NULL; i++)
+    {
+        if (bs[i].range == (void *) CF_BUNDLE)
+        {
+            printf("<tr><td>%s</td><td>%s</td><td>(Separate Bundle)</td></tr>\n", bs[i].lval,
+                   CF_DATATYPES[bs[i].dtype]);
+        }
+        else if (bs[i].dtype == cf_body)
+        {
+            printf("<tr><td>%s</td><td>%s</td><td>", bs[i].lval, CF_DATATYPES[bs[i].dtype]);
+            ShowBodyParts((const BodySyntax *) bs[i].range);
+            printf("</td></tr>\n");
+        }
+        else
+        {
+            printf("<tr><td>%s</td><td>%s</td><td>", bs[i].lval, CF_DATATYPES[bs[i].dtype]);
+            ShowRange((char *) bs[i].range, bs[i].dtype);
+            printf("</td><td>");
+            printf("<div id=\"description\">%s</div>", bs[i].description);
+            printf("</td></tr>\n");
+        }
+    }
 
-printf("</table></div>\n");
+    printf("</table></div>\n");
 }
 
 /*******************************************************************/
 
-static void ShowRange(char *s,enum cfdatatype type)
+static void ShowRange(char *s, enum cfdatatype type)
+{
+    char *sp;
 
-{ char *sp;
- 
-if (strlen(s) == 0)
-   {
-   printf("(arbitrary string)");
-   return;
-   }
+    if (strlen(s) == 0)
+    {
+        printf("(arbitrary string)");
+        return;
+    }
 
-switch (type)
-   {
-   case cf_opts:
-   case cf_olist:
-       
-       for (sp = s; *sp != '\0'; sp++)
-          {
-          printf("%c",*sp);
-          if (*sp == ',')
-             {
-             printf("<br>");
-             }
-          }
+    switch (type)
+    {
+    case cf_opts:
+    case cf_olist:
 
-       break;
+        for (sp = s; *sp != '\0'; sp++)
+        {
+            printf("%c", *sp);
+            if (*sp == ',')
+            {
+                printf("<br>");
+            }
+        }
 
-   default:
-       for (sp = s; *sp != '\0'; sp++)
-          {
-          printf("%c",*sp);
-          if (*sp == '|')
-             {
-             printf("<br>");
-             }
-          }
-   }
+        break;
+
+    default:
+        for (sp = s; *sp != '\0'; sp++)
+        {
+            printf("%c", *sp);
+            if (*sp == '|')
+            {
+                printf("<br>");
+            }
+        }
+    }
 }
 
 /*******************************************************************/
 
 static void ShowBuiltinFunctions()
+{
+    int i;
 
-{ int i;
+    printf("<h1>builtin functions</h1>\n");
 
-printf("<h1>builtin functions</h1>\n");
- 
-printf("<center><table id=functionshow>\n");
-printf("<tr><th>Return type</th><th>Function name</th><th>Arguments</th><th>Description</th></tr>\n");
+    printf("<center><table id=functionshow>\n");
+    printf("<tr><th>Return type</th><th>Function name</th><th>Arguments</th><th>Description</th></tr>\n");
 
-for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
-   {
-   printf("<tr><td>%s</td><td>%s()</td><td>%d args expected</td><td>%s</td></tr>\n",
-          CF_DATATYPES[CF_FNCALL_TYPES[i].dtype],
-          CF_FNCALL_TYPES[i].name,
-          FnNumArgs(&CF_FNCALL_TYPES[i]),
-          CF_FNCALL_TYPES[i].description
-          );
-   }
+    for (i = 0; CF_FNCALL_TYPES[i].name != NULL; i++)
+    {
+        printf("<tr><td>%s</td><td>%s()</td><td>%d args expected</td><td>%s</td></tr>\n",
+               CF_DATATYPES[CF_FNCALL_TYPES[i].dtype],
+               CF_FNCALL_TYPES[i].name, FnNumArgs(&CF_FNCALL_TYPES[i]), CF_FNCALL_TYPES[i].description);
+    }
 
-printf("</table></center>\n");
+    printf("</table></center>\n");
 }
 
 /*******************************************************************/
 
 void ShowAllReservedWords()
+{
+    int i, j, k, l;
+    Item *ip, *list = NULL;
+    SubTypeSyntax *ss;
+    const BodySyntax *bs, *bs2;
 
-{ int i,j,k,l;
- Item *ip,*list = NULL;
-  SubTypeSyntax *ss;
-  const BodySyntax *bs,*bs2;
+    for (i = 0; CF_ALL_BODIES[i].subtype != NULL; i++)
+    {
+        IdempPrependItem(&list, CF_ALL_BODIES[i].subtype, NULL);
 
-for (i = 0; CF_ALL_BODIES[i].subtype != NULL; i++)
-   {
-   IdempPrependItem(&list,CF_ALL_BODIES[i].subtype,NULL);
+        bs = CF_ALL_BODIES[i].bs;
 
-   bs = CF_ALL_BODIES[i].bs;
-   
-   for (l = 0; bs[l].lval != NULL; l++)
-      {
-      IdempPrependItem(&list,bs[l].lval,NULL);
-      }   
-   }
-
+        for (l = 0; bs[l].lval != NULL; l++)
+        {
+            IdempPrependItem(&list, bs[l].lval, NULL);
+        }
+    }
 
 /* Now check the functional modules - extra level of indirection */
 
-for  (i = 0; i < CF3_MODULES; i++)
-   {
-   if ((ss = CF_ALL_SUBTYPES[i]) == NULL)
-      {
-      continue;
-      }
-  
-   for (j = 0; ss[j].subtype != NULL; j++)
-      {
-      if ((bs = ss[j].bs) == NULL)
-         {
-         continue;
-         }
+    for (i = 0; i < CF3_MODULES; i++)
+    {
+        if ((ss = CF_ALL_SUBTYPES[i]) == NULL)
+        {
+            continue;
+        }
 
-      IdempPrependItem(&list,ss[j].subtype,NULL);
-
-      for (l = 0; bs[l].range != NULL; l++)
-         {
-         if (bs[l].dtype == cf_body)
+        for (j = 0; ss[j].subtype != NULL; j++)
+        {
+            if ((bs = ss[j].bs) == NULL)
             {
-            bs2 = (BodySyntax *)(bs[l].range);
-
-            if (bs2 == NULL || bs2 == (void *)CF_BUNDLE)
-               {
-               continue;
-               }
-
-            for (k = 0; bs2[k].dtype != cf_notype; k++)
-               {
-               /* Either module defined or common */
-
-               IdempPrependItem(&list,bs2[k].lval,NULL);
-               }
+                continue;
             }
-         }
-      }
-   }
 
-for (ip = list; ip != NULL; ip=ip->next)
-   {
-   printf(" \"%s\",",ip->name);
-   }
+            IdempPrependItem(&list, ss[j].subtype, NULL);
 
-DeleteItemList(list);
+            for (l = 0; bs[l].range != NULL; l++)
+            {
+                if (bs[l].dtype == cf_body)
+                {
+                    bs2 = (BodySyntax *) (bs[l].range);
+
+                    if (bs2 == NULL || bs2 == (void *) CF_BUNDLE)
+                    {
+                        continue;
+                    }
+
+                    for (k = 0; bs2[k].dtype != cf_notype; k++)
+                    {
+                        /* Either module defined or common */
+
+                        IdempPrependItem(&list, bs2[k].lval, NULL);
+                    }
+                }
+            }
+        }
+    }
+
+    for (ip = list; ip != NULL; ip = ip->next)
+    {
+        printf(" \"%s\",", ip->name);
+    }
+
+    DeleteItemList(list);
 }
 
 /*******************************************************************/
 
 void ReportError(char *s)
-
 {
-if (PARSING)
-   {
-   yyerror(s);
-   }
-else
-   {
-   Chop(s);
-   FatalError("Validation: %s\n",s);
-   }
+    if (PARSING)
+    {
+        yyerror(s);
+    }
+    else
+    {
+        Chop(s);
+        FatalError("Validation: %s\n", s);
+    }
 }

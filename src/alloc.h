@@ -35,10 +35,8 @@ void *xrealloc(void *ptr, size_t size);
 char *xstrdup(const char *str);
 char *xstrndup(const char *str, size_t n);
 void *xmemdup(const void *mem, size_t size);
-int xasprintf(char **strp, const char *fmt, ...)
-    FUNC_ATTR_FORMAT(printf, 2, 3);
-int xvasprintf(char **strp, const char *fmt, va_list ap)
-    FUNC_ATTR_FORMAT(printf, 2, 0);
+int xasprintf(char **strp, const char *fmt, ...) FUNC_ATTR_FORMAT(printf, 2, 3);
+int xvasprintf(char **strp, const char *fmt, va_list ap) FUNC_ATTR_FORMAT(printf, 2, 0);
 
 /*
  * Prevent any code from using un-wrapped allocators.
@@ -46,22 +44,22 @@ int xvasprintf(char **strp, const char *fmt, va_list ap)
  * Use x* equivalents instead.
  */
 #if !defined(ALLOC_IMPL)
-#undef malloc
-#undef calloc
-#undef realloc
-#undef strdup
-#undef strndup
-#undef memdup
-#undef asprintf
-#undef vasprintf
-#define malloc __error_unchecked_malloc
-#define calloc __error_unchecked_calloc
-#define realloc __error_unchecked_realloc
-#define strdup __error_unchecked_strdup
-#define strndup __error_unchecked_strndup
-#define memdup __error_unchecked_memdup
-#define asprintf __error_unchecked_asprintf
-#define vasprintf __error_unchecked_vasprintf
+# undef malloc
+# undef calloc
+# undef realloc
+# undef strdup
+# undef strndup
+# undef memdup
+# undef asprintf
+# undef vasprintf
+# define malloc __error_unchecked_malloc
+# define calloc __error_unchecked_calloc
+# define realloc __error_unchecked_realloc
+# define strdup __error_unchecked_strdup
+# define strndup __error_unchecked_strndup
+# define memdup __error_unchecked_memdup
+# define asprintf __error_unchecked_asprintf
+# define vasprintf __error_unchecked_vasprintf
 
 void __error_unchecked_malloc(void);
 void __error_unchecked_calloc(void);

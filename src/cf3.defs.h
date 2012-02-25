@@ -108,51 +108,51 @@ typedef struct FnCall_ FnCall;
 /*************************************************************************/
 
 enum cfdatatype
-   {
-   cf_str,
-   cf_int,
-   cf_real,
-   cf_slist,
-   cf_ilist,
-   cf_rlist,
-   cf_opts,
-   cf_olist,
-   cf_body,
-   cf_bundle,
-   cf_class,
-   cf_clist,
-   cf_irange,
-   cf_rrange,
-   cf_counter,
-   cf_notype
-   };
+{
+    cf_str,
+    cf_int,
+    cf_real,
+    cf_slist,
+    cf_ilist,
+    cf_rlist,
+    cf_opts,
+    cf_olist,
+    cf_body,
+    cf_bundle,
+    cf_class,
+    cf_clist,
+    cf_irange,
+    cf_rrange,
+    cf_counter,
+    cf_notype
+};
 
 enum cfx_formatindex
-   {
-   cfb,
-   cfe,
-   };
+{
+    cfb,
+    cfe,
+};
 
 enum cfx_format
-   {
-   cfx_head,
-   cfx_bundle,
-   cfx_block,
-   cfx_blockheader,
-   cfx_blockid,
-   cfx_blocktype,
-   cfx_args,
-   cfx_promise,
-   cfx_class,
-   cfx_subtype,
-   cfx_object,
-   cfx_lval,
-   cfx_rval,
-   cfx_qstring,
-   cfx_rlist,
-   cfx_function,
-   cfx_line,
-   };
+{
+    cfx_head,
+    cfx_bundle,
+    cfx_block,
+    cfx_blockheader,
+    cfx_blockid,
+    cfx_blocktype,
+    cfx_args,
+    cfx_promise,
+    cfx_class,
+    cfx_subtype,
+    cfx_object,
+    cfx_lval,
+    cfx_rval,
+    cfx_qstring,
+    cfx_rlist,
+    cfx_function,
+    cfx_line,
+};
 
 /*************************************************************************/
 
@@ -168,264 +168,264 @@ enum cfx_format
 #define CF_HUBC     "hub"
 
 enum cfagenttype
-   {
-   cf_common,
-   cf_agent,
-   cf_server,
-   cf_monitor,
-   cf_executor,
-   cf_runagent,
-   cf_know,
-   cf_report,
-   cf_keygen,
-   cf_hub,
-   cf_noagent
-   };
+{
+    cf_common,
+    cf_agent,
+    cf_server,
+    cf_monitor,
+    cf_executor,
+    cf_runagent,
+    cf_know,
+    cf_report,
+    cf_keygen,
+    cf_hub,
+    cf_noagent
+};
 
 /*************************************************************************/
 
 enum cfgcontrol
-   {
-   cfg_bundlesequence,
-   cfg_goalcategories,
-   cfg_goalpatterns,
-   cfg_ignore_missing_bundles,
-   cfg_ignore_missing_inputs,
-   cfg_inputs,
-   cfg_version,
-   cfg_lastseenexpireafter,
-   cfg_output_prefix,
-   cfg_domain,
-   cfg_require_comments,
-   cfg_licenses,
-   cfg_site_classes,
-   cfg_syslog_host,
-   cfg_syslog_port,
-   cfg_fips_mode,
-   cfg_noagent
-   };
-    
+{
+    cfg_bundlesequence,
+    cfg_goalcategories,
+    cfg_goalpatterns,
+    cfg_ignore_missing_bundles,
+    cfg_ignore_missing_inputs,
+    cfg_inputs,
+    cfg_version,
+    cfg_lastseenexpireafter,
+    cfg_output_prefix,
+    cfg_domain,
+    cfg_require_comments,
+    cfg_licenses,
+    cfg_site_classes,
+    cfg_syslog_host,
+    cfg_syslog_port,
+    cfg_fips_mode,
+    cfg_noagent
+};
+
 /*************************************************************************/
 
 enum cfacontrol
-   {
-   cfa_abortclasses,
-   cfa_abortbundleclasses,
-   cfa_addclasses,
-   cfa_agentaccess,
-   cfa_agentfacility,
-   cfa_allclassesreport,
-   cfa_alwaysvalidate,
-   cfa_auditing,
-   cfa_binarypaddingchar,
-   cfa_bindtointerface,
-   cfa_hashupdates,
-   cfa_childlibpath,
-   cfa_checksum_alert_time,
-   cfa_defaultcopytype,
-   cfa_dryrun,
-   cfa_editbinaryfilesize,
-   cfa_editfilesize,
-   cfa_environment,
-   cfa_exclamation,
-   cfa_expireafter,
-   cfa_fsinglecopy,
-   cfa_fautodefine,
-   cfa_hostnamekeys,
-   cfa_ifelapsed,
-   cfa_inform,
-   cfa_intermittency,
-   cfa_max_children,
-   cfa_maxconnections,
-   cfa_mountfilesystems,
-   cfa_nonalphanumfiles,
-   cfa_repchar,
-   cfa_refresh_processes,
-   cfa_repository,
-   cfa_secureinput,
-   cfa_sensiblecount,
-   cfa_sensiblesize,
-   cfa_skipidentify,
-   cfa_suspiciousnames,
-   cfa_syslog,
-   cfa_track_value,
-   cfa_timezone,
-   cfa_timeout,
-   cfa_verbose,
-   cfa_notype,
-   };
+{
+    cfa_abortclasses,
+    cfa_abortbundleclasses,
+    cfa_addclasses,
+    cfa_agentaccess,
+    cfa_agentfacility,
+    cfa_allclassesreport,
+    cfa_alwaysvalidate,
+    cfa_auditing,
+    cfa_binarypaddingchar,
+    cfa_bindtointerface,
+    cfa_hashupdates,
+    cfa_childlibpath,
+    cfa_checksum_alert_time,
+    cfa_defaultcopytype,
+    cfa_dryrun,
+    cfa_editbinaryfilesize,
+    cfa_editfilesize,
+    cfa_environment,
+    cfa_exclamation,
+    cfa_expireafter,
+    cfa_fsinglecopy,
+    cfa_fautodefine,
+    cfa_hostnamekeys,
+    cfa_ifelapsed,
+    cfa_inform,
+    cfa_intermittency,
+    cfa_max_children,
+    cfa_maxconnections,
+    cfa_mountfilesystems,
+    cfa_nonalphanumfiles,
+    cfa_repchar,
+    cfa_refresh_processes,
+    cfa_repository,
+    cfa_secureinput,
+    cfa_sensiblecount,
+    cfa_sensiblesize,
+    cfa_skipidentify,
+    cfa_suspiciousnames,
+    cfa_syslog,
+    cfa_track_value,
+    cfa_timezone,
+    cfa_timeout,
+    cfa_verbose,
+    cfa_notype,
+};
 
 /*************************************************************************/
 
 enum cfexcontrol
-   {
-   cfex_splaytime,
-   cfex_mailfrom,
-   cfex_mailto,
-   cfex_smtpserver,
-   cfex_mailmaxlines,
-   cfex_schedule,
-   cfex_executorfacility,
-   cfex_execcommand,
-   cfex_notype,
-   };
+{
+    cfex_splaytime,
+    cfex_mailfrom,
+    cfex_mailto,
+    cfex_smtpserver,
+    cfex_mailmaxlines,
+    cfex_schedule,
+    cfex_executorfacility,
+    cfex_execcommand,
+    cfex_notype,
+};
 
 /*************************************************************************/
 
 enum cfmcontrol
-   {
-   cfm_forgetrate,
-   cfm_monitorfacility,
-   cfm_histograms,
-   cfm_tcpdump,
-   cfm_notype,
-   };
+{
+    cfm_forgetrate,
+    cfm_monitorfacility,
+    cfm_histograms,
+    cfm_tcpdump,
+    cfm_notype,
+};
 
 /*************************************************************************/
 
 enum cfrcontrol
-   {
-   cfr_hosts,
-   cfr_portnumber,
-   cfr_force_ipv4,
-   cfr_trustkey,
-   cfr_encrypt,
-   cfr_background,
-   cfr_maxchild,
-   cfr_output_to_file,
-   cfr_output_directory,
-   cfr_timeout,
-   cfr_notype
-   };
+{
+    cfr_hosts,
+    cfr_portnumber,
+    cfr_force_ipv4,
+    cfr_trustkey,
+    cfr_encrypt,
+    cfr_background,
+    cfr_maxchild,
+    cfr_output_to_file,
+    cfr_output_directory,
+    cfr_timeout,
+    cfr_notype
+};
 
 /*************************************************************************/
 
 enum cfscontrol
-   {
-   cfs_allowallconnects,
-   cfs_allowconnects,
-   cfs_allowusers,
-   cfs_auditing,
-   cfs_bindtointerface,
-   cfs_cfruncommand,
-   cfs_denybadclocks,
-   cfs_denyconnects,
-   cfs_dynamicaddresses,
-   cfs_hostnamekeys,
-   cfs_keyttl,
-   cfs_logallconnections,
-   cfs_logencryptedtransfers,
-   cfs_maxconnections,
-   cfs_portnumber,
-   cfs_serverfacility,
-   cfs_skipverify,
-   cfs_trustkeysfrom,
-   cfs_notype,
-   };
+{
+    cfs_allowallconnects,
+    cfs_allowconnects,
+    cfs_allowusers,
+    cfs_auditing,
+    cfs_bindtointerface,
+    cfs_cfruncommand,
+    cfs_denybadclocks,
+    cfs_denyconnects,
+    cfs_dynamicaddresses,
+    cfs_hostnamekeys,
+    cfs_keyttl,
+    cfs_logallconnections,
+    cfs_logencryptedtransfers,
+    cfs_maxconnections,
+    cfs_portnumber,
+    cfs_serverfacility,
+    cfs_skipverify,
+    cfs_trustkeysfrom,
+    cfs_notype,
+};
 
 /*************************************************************************/
 
 enum cfkcontrol
-   {
-   cfk_builddir,
-   cfk_docroot,
-   cfk_genman,
-   cfk_graph_dir,
-   cfk_graph_output,
-   cfk_htmlbanner,
-   cfk_htmlfooter,
-   cfk_tm_prefix,
-   cfk_mandir,
-   cfk_query_engine,   
-   cfk_query_output,
-   cfk_sql_type,
-   cfk_sql_database,
-   cfk_sql_owner,
-   cfk_sql_passwd,
-   cfk_sql_server,
-   cfk_sql_connect_db,
-   cfk_stylesheet,
-   cfk_views,
-   cfk_notype
-   };
+{
+    cfk_builddir,
+    cfk_docroot,
+    cfk_genman,
+    cfk_graph_dir,
+    cfk_graph_output,
+    cfk_htmlbanner,
+    cfk_htmlfooter,
+    cfk_tm_prefix,
+    cfk_mandir,
+    cfk_query_engine,
+    cfk_query_output,
+    cfk_sql_type,
+    cfk_sql_database,
+    cfk_sql_owner,
+    cfk_sql_passwd,
+    cfk_sql_server,
+    cfk_sql_connect_db,
+    cfk_stylesheet,
+    cfk_views,
+    cfk_notype
+};
 
 /*************************************************************************/
 
 enum cfrecontrol
-   {
-   cfre_aggregation_point,
-   cfre_autoscale,
-   cfre_builddir,
-   cfre_csv,
-   cfre_errorbars,
-   cfre_htmlbanner,
-   cfre_html_embed,
-   cfre_htmlfooter,
-   cfre_query_engine,
-   cfre_reports,
-   cfre_report_output,
-   cfre_stylesheet,
-   cfre_timestamps,
-   cfre_notype
-   };
+{
+    cfre_aggregation_point,
+    cfre_autoscale,
+    cfre_builddir,
+    cfre_csv,
+    cfre_errorbars,
+    cfre_htmlbanner,
+    cfre_html_embed,
+    cfre_htmlfooter,
+    cfre_query_engine,
+    cfre_reports,
+    cfre_report_output,
+    cfre_stylesheet,
+    cfre_timestamps,
+    cfre_notype
+};
 
 /*************************************************************************/
 
 enum cfhcontrol
-   {
-   cfh_export_zenoss,
-   cfh_federation,
-   cfh_exclude_hosts,
-   cfh_schedule,
-   cfh_port,
-   cfh_notype
-   };
+{
+    cfh_export_zenoss,
+    cfh_federation,
+    cfh_exclude_hosts,
+    cfh_schedule,
+    cfh_port,
+    cfh_notype
+};
 
 /*************************************************************************/
 
 enum cfsbundle
-   {
-   cfs_access,
-   cfs_nobtype
-   };
+{
+    cfs_access,
+    cfs_nobtype
+};
 
 enum cfsrole
-   {
-   cfs_authorize,
-   cfs_nortype
-   };
+{
+    cfs_authorize,
+    cfs_nortype
+};
 
 enum cfspromises
-   {
-   cfs_admit,
-   cfs_deny,
-   cfs_maproot,
-   cfs_encrypted,
-   cfs_noptype
-   };
+{
+    cfs_admit,
+    cfs_deny,
+    cfs_maproot,
+    cfs_encrypted,
+    cfs_noptype
+};
 
 enum cfreport
-   {
-   cf_inform,
-   cf_verbose,
-   cf_error,
-   cf_log,
-   cf_reporting,
-   cf_cmdout,
-   cf_noreport
-   };
+{
+    cf_inform,
+    cf_verbose,
+    cf_error,
+    cf_log,
+    cf_reporting,
+    cf_cmdout,
+    cf_noreport
+};
 
 enum cfeditorder
-   {
-   cfe_before,
-   cfe_after
-   };
+{
+    cfe_before,
+    cfe_after
+};
 
 /*************************************************************************/
 /* Syntax module range/pattern constants for type validation             */
 /*************************************************************************/
 
-#define CF_BUNDLE  (void*)1234           /* any non-null value, not used */
+#define CF_BUNDLE  (void*)1234  /* any non-null value, not used */
 
 #define CF_HIGHINIT 99999L
 #define CF_LOWINIT -999999L
@@ -452,10 +452,10 @@ enum cfeditorder
 #define CF_ANYSTRING   ".*"
 
 #ifndef MINGW
-#define CF_ABSPATHRANGE   "\042?(/.*)"
+# define CF_ABSPATHRANGE   "\042?(/.*)"
 #else
 // can start with e.g. c:\... or "c:\...  |  unix (for Cygwin-style paths)
-#define CF_ABSPATHRANGE   "\042?(([a-zA-Z]:\\\\.*)|(/.*))"
+# define CF_ABSPATHRANGE   "\042?(([a-zA-Z]:\\\\.*)|(/.*))"
 #endif
 
 /* Any non-empty string can be an absolute path under Unix */
@@ -474,13 +474,13 @@ enum cfeditorder
 /***************************************************************************/
 
 enum storytype
-   {
-   cfi_cause,
-   cfi_connect,
-   cfi_part,
-   cfi_access,
-   cfi_none
-   };
+{
+    cfi_cause,
+    cfi_connect,
+    cfi_part,
+    cfi_access,
+    cfi_none
+};
 
 #define KM_AFFECTS_CERT_F "affects"
 #define KM_AFFECTS_CERT_B "is affected by"
@@ -584,52 +584,52 @@ enum storytype
 #define KM_SYNONYM "is a synonym for"
 
 enum knowledgecertainty
-   {
-   cfk_certain,
-   cfk_uncertain,
-   cfk_possible
-   };
+{
+    cfk_certain,
+    cfk_uncertain,
+    cfk_possible
+};
 
 /*************************************************************************/
 
 typedef struct
-   {
-   const char *lval;
-   enum cfdatatype dtype;
-   const void *range;               /* either char or BodySyntax **/
-   const char *description;
-   const char *default_value;
-   } BodySyntax;
+{
+    const char *lval;
+    enum cfdatatype dtype;
+    const void *range;          /* either char or BodySyntax * */
+    const char *description;
+    const char *default_value;
+} BodySyntax;
 
 /*************************************************************************/
 
 typedef struct
-   {
-   char *btype;
-   char *subtype;
-   const BodySyntax *bs;
-   } SubTypeSyntax;
+{
+    char *btype;
+    char *subtype;
+    const BodySyntax *bs;
+} SubTypeSyntax;
 
 /*************************************************************************/
 
 typedef struct FnCallResult_ FnCallResult;
 
 typedef struct
-   {
-   const char *pattern;
-   enum cfdatatype dtype;
-   const char *description;
-   } FnCallArg;
+{
+    const char *pattern;
+    enum cfdatatype dtype;
+    const char *description;
+} FnCallArg;
 
 typedef struct
-   {
-   const char *name;
-   enum cfdatatype dtype;
-   const FnCallArg *args;
-   FnCallResult (*impl)(FnCall *, Rlist *);
-   const char *description;
-   bool varargs;
-   } FnCallType;
+{
+    const char *name;
+    enum cfdatatype dtype;
+    const FnCallArg *args;
+              FnCallResult(*impl) (FnCall *, Rlist *);
+    const char *description;
+    bool varargs;
+} FnCallType;
 
 /*************************************************************************/
 
@@ -638,108 +638,108 @@ typedef struct
 /*************************************************************************/
 
 typedef struct
-   {
-   size_t start;
-   size_t end;
-   size_t line;
-   size_t context;
-   } SourceOffset;
+{
+    size_t start;
+    size_t end;
+    size_t line;
+    size_t context;
+} SourceOffset;
 
 struct Bundle_
-   {
-   char *type;
-   char *name;
-   Rlist *args;
-   SubType *subtypes;
-   struct Bundle_ *next;
+{
+    char *type;
+    char *name;
+    Rlist *args;
+    SubType *subtypes;
+    struct Bundle_ *next;
 
-   SourceOffset offset;
-   };
+    SourceOffset offset;
+};
 
 /*************************************************************************/
 
 typedef struct Constraint_ Constraint;
 
 struct Body_
-   {
-   char *type;
-   char *name;
-   Rlist *args;
-   Constraint *conlist;
-   Body *next;
+{
+    char *type;
+    char *name;
+    Rlist *args;
+    Constraint *conlist;
+    Body *next;
 
-   SourceOffset offset;
-   };
+    SourceOffset offset;
+};
 
 /*************************************************************************/
 
 struct SubType_
-   {
-   Bundle *parent_bundle;
+{
+    Bundle *parent_bundle;
 
-   char *name;
-   Promise *promiselist;
-   SubType *next;
+    char *name;
+    Promise *promiselist;
+    SubType *next;
 
-   SourceOffset offset;
-   };
+    SourceOffset offset;
+};
 
 /*************************************************************************/
 
 typedef struct
-   {
-   char *filename;
-   Item *file_start;
-   Item *file_classes;
-   int num_edits;
-   int empty_first;
-   } EditContext;
+{
+    char *filename;
+    Item *file_start;
+    Item *file_classes;
+    int num_edits;
+    int empty_first;
+} EditContext;
 
 /*************************************************************************/
 
 struct Promise_
-   {
-   SubType *parent_subtype;
+{
+    SubType *parent_subtype;
 
-   char *classes;
-   char *ref;                   /* comment */
-   char ref_alloc;
-   char *promiser;
-   Rval promisee;
-   char *bundle;
-   Audit *audit;
-   Constraint *conlist;
-   Promise *next;
-      
+    char *classes;
+    char *ref;                  /* comment */
+    char ref_alloc;
+    char *promiser;
+    Rval promisee;
+    char *bundle;
+    Audit *audit;
+    Constraint *conlist;
+    Promise *next;
+
     /* Runtime bus for private flags and work space */
 
-   char  *agentsubtype;         /* cache the promise subtype */
-   char  *bundletype;           /* cache the agent type */
-   int    done;                 /* this needs to be preserved across runs */
-   int   *donep;                /* used by locks to mark as done */
-   int    makeholes;
-   char  *this_server;
-   int   has_subbundles;
-   Stat *cache;      
-   AgentConnection *conn;
-   CompressedArray *inode_cache;
-   EditContext *edcontext;
-   dev_t rootdevice;                          /* for caching during work*/
-   Promise *org_pp;              /* A ptr to the unexpanded raw promise */
-      
-   SourceOffset offset;
-   };
+    char *agentsubtype;         /* cache the promise subtype */
+    char *bundletype;           /* cache the agent type */
+    int done;                   /* this needs to be preserved across runs */
+    int *donep;                 /* used by locks to mark as done */
+    int makeholes;
+    char *this_server;
+    int has_subbundles;
+    Stat *cache;
+    AgentConnection *conn;
+    CompressedArray *inode_cache;
+    EditContext *edcontext;
+    dev_t rootdevice;           /* for caching during work */
+    Promise *org_pp;            /* A ptr to the unexpanded raw promise */
+
+    SourceOffset offset;
+};
 
 /*************************************************************************/
 
 typedef struct PromiseIdent_
-   {
-   char *handle;
-   char *filename;
-   char *classes;
-   int line_number;
-   struct PromiseIdent_ *next;
-   } PromiseIdent;
+{
+    char *handle;
+    char *filename;
+    char *classes;
+    int line_number;
+    struct PromiseIdent_ *next;
+} PromiseIdent;
 
 /*************************************************************************/
 /* Rvalues and lists - basic workhorse structure                         */
@@ -757,11 +757,11 @@ typedef struct PromiseIdent_
 /*************************************************************************/
 
 struct FnCall_
-   {
-   char *name;
-   Rlist *args;
-   int argc;
-   };
+{
+    char *name;
+    Rlist *args;
+    int argc;
+};
 
 /*******************************************************************/
 /* Variable processing                                             */
@@ -771,11 +771,11 @@ typedef struct AssocHashTable_ AssocHashTable;
 
 /* $(bundlevar) $(scope.name) */
 typedef struct Scope_
-   {
-   char *scope;                                 /* Name of scope */
-   AssocHashTable *hashtable;
-   struct Scope_ *next;
-   } Scope;
+{
+    char *scope;                /* Name of scope */
+    AssocHashTable *hashtable;
+    struct Scope_ *next;
+} Scope;
 
 /*******************************************************************/
 
@@ -783,187 +783,186 @@ typedef struct Scope_
  * Disposable iterator over hash table. Does not require deinitialization.
  */
 typedef struct HashIterator_
-   {
-   AssocHashTable *hashtable;
-   int pos;
-   } HashIterator;
+{
+    AssocHashTable *hashtable;
+    int pos;
+} HashIterator;
 
 /*******************************************************************/
 /* Return value signalling                                         */
 /*******************************************************************/
 
 typedef enum FnCallStatus
-   {
-   FNCALL_SUCCESS,
-   FNCALL_FAILURE,
-   } FnCallStatus;
+{
+    FNCALL_SUCCESS,
+    FNCALL_FAILURE,
+} FnCallStatus;
 
 /* from builtin functions */
 struct FnCallResult_
-   {
-   FnCallStatus status;
-   Rval rval;
-   };
+{
+    FnCallStatus status;
+    Rval rval;
+};
 
 /*******************************************************************/
 /* Return value signalling                                         */
 /*******************************************************************/
 
 enum cfinterval
-   {
-   cfa_hourly,
-   cfa_daily,
-   cfa_nointerval
-   };
+{
+    cfa_hourly,
+    cfa_daily,
+    cfa_nointerval
+};
 
 enum cfdatetemplate
-   {
-   cfa_year,
-   cfa_month,
-   cfa_day,
-   cfa_hour,
-   cfa_min,
-   cfa_sec
-   };
+{
+    cfa_year,
+    cfa_month,
+    cfa_day,
+    cfa_hour,
+    cfa_min,
+    cfa_sec
+};
 
 enum cfcomparison
-   {
-   cfa_atime,
-   cfa_mtime,
-   cfa_ctime,
-   cfa_checksum,
-   cfa_hash,
-   cfa_binary,
-   cfa_exists,
-   cfa_nocomparison
-   };
+{
+    cfa_atime,
+    cfa_mtime,
+    cfa_ctime,
+    cfa_checksum,
+    cfa_hash,
+    cfa_binary,
+    cfa_exists,
+    cfa_nocomparison
+};
 
 enum cflinktype
-   {
-   cfa_symlink,
-   cfa_hardlink,
-   cfa_relative,
-   cfa_absolute,
-   cfa_notlinked
-   };
+{
+    cfa_symlink,
+    cfa_hardlink,
+    cfa_relative,
+    cfa_absolute,
+    cfa_notlinked
+};
 
 enum cfopaction
-   {
-   cfa_fix,
-   cfa_warn,
-   };
+{
+    cfa_fix,
+    cfa_warn,
+};
 
 enum cfbackupoptions
-   {
-   cfa_backup,
-   cfa_nobackup,
-   cfa_timestamp,
-   cfa_rotate,
-   cfa_repos_store/* for internal use only */
-   };
+{
+    cfa_backup,
+    cfa_nobackup,
+    cfa_timestamp,
+    cfa_rotate,
+    cfa_repos_store             /* for internal use only */
+};
 
 enum cftidylinks
-   {
-   cfa_linkdelete,
-   cfa_linkkeep
-   };
+{
+    cfa_linkdelete,
+    cfa_linkkeep
+};
 
 enum cfhashes
-   {
-   cf_md5,
-   cf_sha224,
-   cf_sha256,
-   cf_sha384,
-   cf_sha512,
-   cf_sha1,
-   cf_sha,
-   cf_besthash,
-   cf_crypt,
-   cf_nohash
-   };
+{
+    cf_md5,
+    cf_sha224,
+    cf_sha256,
+    cf_sha384,
+    cf_sha512,
+    cf_sha1,
+    cf_sha,
+    cf_besthash,
+    cf_crypt,
+    cf_nohash
+};
 
 enum cfnofile
-   {
-   cfa_force,
-   cfa_delete,
-   cfa_skip
-   };
+{
+    cfa_force,
+    cfa_delete,
+    cfa_skip
+};
 
 enum cflinkchildren
-   {
-   cfa_override,
-   cfa_onlynonexisting
-   };
+{
+    cfa_override,
+    cfa_onlynonexisting
+};
 
 enum cfchanges
-   {
-   cfa_noreport,
-   cfa_contentchange,
-   cfa_statschange,
-   cfa_allchanges
-   };
+{
+    cfa_noreport,
+    cfa_contentchange,
+    cfa_statschange,
+    cfa_allchanges
+};
 
 enum signalnames
-   {
-   cfa_hup,
-   cfa_int,
-   cfa_trap,
-   cfa_kill,
-   cfa_pipe,
-   cfa_cont,
-   cfa_abrt,
-   cfa_stop,
-   cfa_quit,
-   cfa_term,
-   cfa_child,
-   cfa_usr1,
-   cfa_usr2,
-   cfa_bus,
-   cfa_segv
-   };
-
+{
+    cfa_hup,
+    cfa_int,
+    cfa_trap,
+    cfa_kill,
+    cfa_pipe,
+    cfa_cont,
+    cfa_abrt,
+    cfa_stop,
+    cfa_quit,
+    cfa_term,
+    cfa_child,
+    cfa_usr1,
+    cfa_usr2,
+    cfa_bus,
+    cfa_segv
+};
 
 enum representations
-   {
-   cfk_url,
-   cfk_web,
-   cfk_file,
-   cfk_db,
-   cfk_literal,
-   cfk_image,
-   cfk_portal,
-   cfk_none
-   };
+{
+    cfk_url,
+    cfk_web,
+    cfk_file,
+    cfk_db,
+    cfk_literal,
+    cfk_image,
+    cfk_portal,
+    cfk_none
+};
 
 enum package_actions
-  {
-  cfa_addpack,
-  cfa_deletepack,
-  cfa_reinstall,
-  cfa_update,
-  cfa_addupdate,
-  cfa_patch,
-  cfa_verifypack,
-  cfa_pa_none
-  };
+{
+    cfa_addpack,
+    cfa_deletepack,
+    cfa_reinstall,
+    cfa_update,
+    cfa_addupdate,
+    cfa_patch,
+    cfa_verifypack,
+    cfa_pa_none
+};
 
 enum version_cmp
-   {
-   cfa_eq,
-   cfa_neq,
-   cfa_gt,
-   cfa_lt,
-   cfa_ge,
-   cfa_le,
-   cfa_cmp_none
-   };
+{
+    cfa_eq,
+    cfa_neq,
+    cfa_gt,
+    cfa_lt,
+    cfa_ge,
+    cfa_le,
+    cfa_cmp_none
+};
 
 enum action_policy
-  {
-  cfa_individual,
-  cfa_bulk,
-  cfa_no_ppolicy
-  };
+{
+    cfa_individual,
+    cfa_bulk,
+    cfa_no_ppolicy
+};
 
 /*
 Adding new mutex:
@@ -988,95 +987,95 @@ extern pthread_mutex_t *cft_server_children;
 /************************************************************************************/
 
 typedef enum
-  {
-  PROMISE_STATE_REPAIRED = 'r',
-  PROMISE_STATE_NOTKEPT = 'n',
-  PROMISE_STATE_KEPT = 'c',
-  PROMISE_STATE_ANY = 'x'
-  } PromiseState;
+{
+    PROMISE_STATE_REPAIRED = 'r',
+    PROMISE_STATE_NOTKEPT = 'n',
+    PROMISE_STATE_KEPT = 'c',
+    PROMISE_STATE_ANY = 'x'
+} PromiseState;
 
 /************************************************************************************/
 
 typedef enum
-   {
-   LAST_SEEN_DIRECTION_INCOMING = '-',
-   LAST_SEEN_DIRECTION_OUTGOING = '+'
-   } LastSeenDirection;
+{
+    LAST_SEEN_DIRECTION_INCOMING = '-',
+    LAST_SEEN_DIRECTION_OUTGOING = '+'
+} LastSeenDirection;
 
 /************************************************************************************/
 
 enum cf_acl_method
-   {
-   cfacl_append,
-   cfacl_overwrite,
-   cfacl_nomethod
-   };
+{
+    cfacl_append,
+    cfacl_overwrite,
+    cfacl_nomethod
+};
 
 enum cf_acl_type
-   {
-   cfacl_generic,
-   cfacl_posix,
-   cfacl_ntfs,
-   cfacl_notype
-   };
-       
+{
+    cfacl_generic,
+    cfacl_posix,
+    cfacl_ntfs,
+    cfacl_notype
+};
+
 enum cf_acl_inherit
-   {
-   cfacl_nochange,
-   cfacl_specify,
-   cfacl_parent,
-   cfacl_clear,
-   cfacl_noinherit,
-   };
+{
+    cfacl_nochange,
+    cfacl_specify,
+    cfacl_parent,
+    cfacl_clear,
+    cfacl_noinherit,
+};
 
 typedef struct
-   {
-   enum cf_acl_method acl_method;
-   enum cf_acl_type acl_type;
-   enum cf_acl_inherit acl_directory_inherit;
-   Rlist *acl_entries;
-   Rlist *acl_inherit_entries;
-   } Acl;
+{
+    enum cf_acl_method acl_method;
+    enum cf_acl_type acl_type;
+    enum cf_acl_inherit acl_directory_inherit;
+    Rlist *acl_entries;
+    Rlist *acl_inherit_entries;
+} Acl;
 
 typedef enum
-  {
-  INHERIT_ACCESS_ONLY,
-  INHERIT_DEFAULT_ONLY,
-  INHERIT_ACCESS_AND_DEFAULT
-  }
+{
+    INHERIT_ACCESS_ONLY,
+    INHERIT_DEFAULT_ONLY,
+    INHERIT_ACCESS_AND_DEFAULT
+}
 inherit_t;
 
 enum insert_match
-   {
-   cf_ignore_leading,
-   cf_ignore_trailing,
-   cf_ignore_embedded,
-   cf_exact_match
-   };
+{
+    cf_ignore_leading,
+    cf_ignore_trailing,
+    cf_ignore_embedded,
+    cf_exact_match
+};
 
 enum monitord_rep
-   {
-   mon_rep_mag,
-   mon_rep_week,
-   mon_rep_yr
-   };
+{
+    mon_rep_mag,
+    mon_rep_week,
+    mon_rep_yr
+};
 
 enum software_rep
-   {
-   sw_rep_installed,
-   sw_rep_patch_avail,
-   sw_rep_patch_installed
-   };
+{
+    sw_rep_installed,
+    sw_rep_patch_avail,
+    sw_rep_patch_installed
+};
 
 /*************************************************************************/
 
 enum cfd_menu
-   {
-   cfd_menu_delta,
-   cfd_menu_full,
-   cfd_menu_relay,
-   cfd_menu_error
-   };
+{
+    cfd_menu_delta,
+    cfd_menu_full,
+    cfd_menu_relay,
+    cfd_menu_error
+};
 
 /*************************************************************************/
 
@@ -1089,96 +1088,95 @@ enum cfd_menu
 /*******************************************************************/
 
 typedef struct
-   {
-   char *name;
-   RSA *key;
-   char *address;
-   time_t timestamp;
-   } KeyBinding;
+{
+    char *name;
+    RSA *key;
+    char *address;
+    time_t timestamp;
+} KeyBinding;
 
 /*************************************************************************/
 
 typedef struct
-   {
-   char address[CF_ADDRSIZE];
-   QPoint Q;   
-   } KeyHostSeen;
+{
+    char address[CF_ADDRSIZE];
+    QPoint Q;
+} KeyHostSeen;
 
 /*************************************************************************/
 
 typedef struct
-   {
-   char *last;
-   char *lock;
-   char *log;
-   } CfLock;
+{
+    char *last;
+    char *lock;
+    char *log;
+} CfLock;
 
 /*************************************************************************/
 
 typedef struct
-   {
-   char *host;
-   char *source;
-   char *mounton;
-   char *options;
-   int unmount;
-   } Mount;
+{
+    char *host;
+    char *source;
+    char *mounton;
+    char *options;
+    int unmount;
+} Mount;
 
 /*************************************************************************/
 
 typedef struct
-   {
-   int travlinks;
-   int rmdeadlinks;
-   int depth;
-   int xdev;
-   int include_basedir;
-   Rlist *include_dirs;
-   Rlist *exclude_dirs;
-   } Recursion;
+{
+    int travlinks;
+    int rmdeadlinks;
+    int depth;
+    int xdev;
+    int include_basedir;
+    Rlist *include_dirs;
+    Rlist *exclude_dirs;
+} Recursion;
 
 /*************************************************************************/
 
 typedef struct
-   {
-   enum cfopaction action;
-   int ifelapsed;
-   int expireafter;
-   int background;
-   char *log_string;
-   char *log_kept;
-   char *log_repaired;
-   char *log_failed;
-   int log_priority;
-   char *measure_id;
-   double value_kept;
-   double value_notkept;
-   double value_repaired;
-   int  audit;
-   enum cfreport report_level;
-   enum cfreport log_level;
-   } TransactionContext;
+{
+    enum cfopaction action;
+    int ifelapsed;
+    int expireafter;
+    int background;
+    char *log_string;
+    char *log_kept;
+    char *log_repaired;
+    char *log_failed;
+    int log_priority;
+    char *measure_id;
+    double value_kept;
+    double value_notkept;
+    double value_repaired;
+    int audit;
+    enum cfreport report_level;
+    enum cfreport log_level;
+} TransactionContext;
 
 /*************************************************************************/
 
 typedef struct
-   {
-   Rlist *change;
-   Rlist *failure;
-   Rlist *denied;
-   Rlist *timeout;
-   Rlist *kept;
-   Rlist *interrupt;
-   int persist;
-   enum statepolicy timer;
-   Rlist *del_change;
-   Rlist *del_kept;
-   Rlist *del_notkept;
-   Rlist *retcode_kept;
-   Rlist *retcode_repaired;
-   Rlist *retcode_failed;
-   } DefineClasses;
-
+{
+    Rlist *change;
+    Rlist *failure;
+    Rlist *denied;
+    Rlist *timeout;
+    Rlist *kept;
+    Rlist *interrupt;
+    int persist;
+    enum statepolicy timer;
+    Rlist *del_change;
+    Rlist *del_kept;
+    Rlist *del_notkept;
+    Rlist *retcode_kept;
+    Rlist *retcode_repaired;
+    Rlist *retcode_failed;
+} DefineClasses;
 
 /*************************************************************************/
 /* Ontology                                                              */
@@ -1188,82 +1186,82 @@ typedef struct Topic_ Topic;
 typedef struct TopicAssociation_ TopicAssociation;
 
 struct Topic_
-   {
-   int id;
-   char *topic_context;
-   char *topic_name;
-   double evc;
-   TopicAssociation *associations;
-   Topic *next;
-   };
+{
+    int id;
+    char *topic_context;
+    char *topic_name;
+    double evc;
+    TopicAssociation *associations;
+    Topic *next;
+};
 
 struct TopicAssociation_
-   {
-   char *fwd_context;
-   char *fwd_name;
-   char *bwd_name;
-   Item *associates;
-   char *bwd_context;
-   TopicAssociation *next;
-   };
+{
+    char *fwd_context;
+    char *fwd_name;
+    char *bwd_name;
+    Item *associates;
+    char *bwd_context;
+    TopicAssociation *next;
+};
 
 typedef struct Occurrence_ Occurrence;
 
 struct Occurrence_
-   {
-   char *occurrence_context;
-   char *locator; /* Promiser */
-   enum representations rep_type;
-   Rlist *represents; /* subtype represented by promiser */
-   Occurrence *next;
-   };
+{
+    char *occurrence_context;
+    char *locator;              /* Promiser */
+    enum representations rep_type;
+    Rlist *represents;          /* subtype represented by promiser */
+    Occurrence *next;
+};
 
 typedef struct Inference_ Inference;
 
 struct Inference_
-   {
-   char *inference; // Promiser
-   char *precedent;
-   char *qualifier;
-   Inference *next;
-   };
+{
+    char *inference;            // Promiser
+    char *precedent;
+    char *qualifier;
+    Inference *next;
+};
 
 /*************************************************************************/
 /* SQL Database connectors                                               */
 /*************************************************************************/
 
 enum cfdbtype
-   {
-   cfd_mysql,
-   cfd_postgres,
-   cfd_notype
-   };
+{
+    cfd_mysql,
+    cfd_postgres,
+    cfd_notype
+};
 
 typedef struct
-   {
-   int connected;
-   int result;
-   int row;
-   unsigned int maxcolumns;
-   unsigned int maxrows;
-   int column;
-   char **rowdata;
-   char *blank;
-   enum cfdbtype type;
-   void *data; /* Generic pointer to RDBMS-specific data */
-   } CfdbConn;
+{
+    int connected;
+    int result;
+    int row;
+    unsigned int maxcolumns;
+    unsigned int maxrows;
+    int column;
+    char **rowdata;
+    char *blank;
+    enum cfdbtype type;
+    void *data;                 /* Generic pointer to RDBMS-specific data */
+} CfdbConn;
 
 /*************************************************************************/
 /* Threading container                                                   */
 /*************************************************************************/
 
 typedef struct
-   {
-   enum cfagenttype agent;
-   char *scopeid;
-   Promise *pp;
-   void *fnptr;
-   } PromiseThread;
+{
+    enum cfagenttype agent;
+    char *scopeid;
+    Promise *pp;
+    void *fnptr;
+} PromiseThread;
 
 /*************************************************************************/
 /* Package promises                                                      */
@@ -1273,462 +1271,462 @@ typedef struct PackageItem_ PackageItem;
 typedef struct PackageManager_ PackageManager;
 
 struct PackageManager_
-   {
-   char *manager;
-   enum package_actions action;
-   enum action_policy policy;
-   PackageItem *pack_list;
-   PackageItem *patch_list;
-   PackageItem *patch_avail;
-   PackageManager *next;
-   };
+{
+    char *manager;
+    enum package_actions action;
+    enum action_policy policy;
+    PackageItem *pack_list;
+    PackageItem *patch_list;
+    PackageItem *patch_avail;
+    PackageManager *next;
+};
 
 /*************************************************************************/
 
 struct PackageItem_
-   {
-   char *name;
-   char *version;
-   char *arch;
-   Promise *pp;
-   PackageItem *next;
-   };
+{
+    char *name;
+    char *version;
+    char *arch;
+    Promise *pp;
+    PackageItem *next;
+};
 
 /*************************************************************************/
 /* Files                                                                 */
 /*************************************************************************/
 
 typedef struct
-   {
-   char *source;
-   char *destination;
-   enum cfcomparison compare;
-   enum cflinktype link_type;
-   Rlist *servers;
-   Rlist *link_instead;
-   Rlist *copy_links;
-   enum cfbackupoptions backup;
-   int stealth;
-   int preserve;
-   int collapse;
-   int check_root;
-   int type_check;
-   int force_update;
-   int force_ipv4;
-   size_t min_size;      /* Safety margin not search criterion */
-   size_t max_size;
-   int trustkey;
-   int encrypt;
-   int verify;
-   int purge;
-   short portnumber;
-   short timeout;
-   } FileCopy;
+{
+    char *source;
+    char *destination;
+    enum cfcomparison compare;
+    enum cflinktype link_type;
+    Rlist *servers;
+    Rlist *link_instead;
+    Rlist *copy_links;
+    enum cfbackupoptions backup;
+    int stealth;
+    int preserve;
+    int collapse;
+    int check_root;
+    int type_check;
+    int force_update;
+    int force_ipv4;
+    size_t min_size;            /* Safety margin not search criterion */
+    size_t max_size;
+    int trustkey;
+    int encrypt;
+    int verify;
+    int purge;
+    short portnumber;
+    short timeout;
+} FileCopy;
 
 typedef struct
-   {
-   char *server;
-   AgentConnection *conn;
-   int busy;
-   } ServerItem;
+{
+    char *server;
+    AgentConnection *conn;
+    int busy;
+} ServerItem;
 
 /*************************************************************************/
 
 typedef struct
-   {
-   unsigned int expires;
-   enum statepolicy policy;
-   } CfState;
+{
+    unsigned int expires;
+    enum statepolicy policy;
+} CfState;
 
 /*************************************************************************/
 
 typedef struct
-   {
-   mode_t plus;
-   mode_t minus;
-   UidList *owners;
-   GidList *groups;
-   char  *findertype;
-   u_long plus_flags;     /* for *BSD chflags */
-   u_long minus_flags;    /* for *BSD chflags */
-   int    rxdirs;
-   } FilePerms;
+{
+    mode_t plus;
+    mode_t minus;
+    UidList *owners;
+    GidList *groups;
+    char *findertype;
+    u_long plus_flags;          /* for *BSD chflags */
+    u_long minus_flags;         /* for *BSD chflags */
+    int rxdirs;
+} FilePerms;
 
 /*************************************************************************/
 
 typedef struct
-   {
-   Rlist *name;
-   Rlist *path;
-   Rlist *perms;
-   Rlist *bsdflags;      
-   Rlist *owners;
-   Rlist *groups;
-   long max_size;
-   long min_size;
-   time_t max_ctime;
-   time_t min_ctime;
-   time_t max_mtime;
-   time_t min_mtime;
-   time_t max_atime;
-   time_t min_atime;
-   char *exec_regex;
-   char *exec_program;
-   Rlist *filetypes;
-   Rlist *issymlinkto;
-   char *result;
-   } FileSelect;
+{
+    Rlist *name;
+    Rlist *path;
+    Rlist *perms;
+    Rlist *bsdflags;
+    Rlist *owners;
+    Rlist *groups;
+    long max_size;
+    long min_size;
+    time_t max_ctime;
+    time_t min_ctime;
+    time_t max_mtime;
+    time_t min_mtime;
+    time_t max_atime;
+    time_t min_atime;
+    char *exec_regex;
+    char *exec_program;
+    Rlist *filetypes;
+    Rlist *issymlinkto;
+    char *result;
+} FileSelect;
 
 /*************************************************************************/
 
 typedef struct
-   {
-   enum cftidylinks dirlinks;
-   int rmdirs;
-   } FileDelete;
+{
+    enum cftidylinks dirlinks;
+    int rmdirs;
+} FileDelete;
 
 /*************************************************************************/
 
 typedef struct
-   {
-   char *newname;
-   char *disable_suffix;
-   int disable;
-   int rotate;
-   mode_t plus;
-   mode_t minus;
-   } FileRename;
+{
+    char *newname;
+    char *disable_suffix;
+    int disable;
+    int rotate;
+    mode_t plus;
+    mode_t minus;
+} FileRename;
 
 /*************************************************************************/
 
 typedef struct
-   {
-   enum cfhashes hash;
-   enum cfchanges report_changes;
-   int report_diffs;
-   int update;
-   } FileChange;
+{
+    enum cfhashes hash;
+    enum cfchanges report_changes;
+    int report_diffs;
+    int update;
+} FileChange;
 
 /*************************************************************************/
 
 typedef struct
-   {
-   char *source;
-   enum cflinktype link_type;
-   Rlist *copy_patterns;
-   enum cfnofile when_no_file;
-   enum cflinkchildren when_linking_children;
-   int link_children;   
-   } FileLink;
+{
+    char *source;
+    enum cflinktype link_type;
+    Rlist *copy_patterns;
+    enum cfnofile when_no_file;
+    enum cflinkchildren when_linking_children;
+    int link_children;
+} FileLink;
 
 /*************************************************************************/
 
 typedef struct
-   {
-   int useshell;
-   mode_t umask;
-   uid_t owner;
-   gid_t group;
-   char *chdir;
-   char *chroot;
-   int preview;
-   int nooutput;
-   int timeout;
-   } ExecContain;
+{
+    int useshell;
+    mode_t umask;
+    uid_t owner;
+    gid_t group;
+    char *chdir;
+    char *chroot;
+    int preview;
+    int nooutput;
+    int timeout;
+} ExecContain;
 
 /*************************************************************************/
 
 typedef struct
-   {
-   long min_range;
-   long max_range;
-   Rlist *in_range_define;
-   Rlist *out_of_range_define;
-   } ProcessCount;
+{
+    long min_range;
+    long max_range;
+    Rlist *in_range_define;
+    Rlist *out_of_range_define;
+} ProcessCount;
 
 /*************************************************************************/
 
 typedef struct
-   {
-   Rlist *owner;
-   long min_pid;
-   long max_pid;
-   long min_ppid;
-   long max_ppid;
-   long min_pgid;
-   long max_pgid;
-   long min_rsize;
-   long max_rsize;
-   long min_vsize;
-   long max_vsize;
-   time_t min_ttime;
-   time_t max_ttime;
-   time_t min_stime;
-   time_t max_stime;
-   long min_pri;
-   long max_pri;
-   long min_thread;
-   long max_thread;
-   char *status;
-   char *command;
-   char *tty;
-   char *process_result;
-   } ProcessSelect;
+{
+    Rlist *owner;
+    long min_pid;
+    long max_pid;
+    long min_ppid;
+    long max_ppid;
+    long min_pgid;
+    long max_pgid;
+    long min_rsize;
+    long max_rsize;
+    long min_vsize;
+    long max_vsize;
+    time_t min_ttime;
+    time_t max_ttime;
+    time_t min_stime;
+    time_t max_stime;
+    long min_pri;
+    long max_pri;
+    long min_thread;
+    long max_thread;
+    char *status;
+    char *command;
+    char *tty;
+    char *process_result;
+} ProcessSelect;
 
 /*************************************************************************/
 
 typedef struct
-   {
-   Constraint *expression;
-   int nconstraints;
-   int persistent;
-   } Context;
+{
+    Constraint *expression;
+    int nconstraints;
+    int persistent;
+} Context;
 
 /*************************************************************************/
 
 typedef struct
-   {
-   enum cfbackupoptions backup;
-   int empty_before_use;
-   int maxfilesize;
-   int joinlines;
-   int rotate;
-   } EditDefaults;
+{
+    enum cfbackupoptions backup;
+    int empty_before_use;
+    int maxfilesize;
+    int joinlines;
+    int rotate;
+} EditDefaults;
 
 /*************************************************************************/
 
 typedef struct
-   {
-   Rlist *startwith_from_list;
-   Rlist *not_startwith_from_list;
-   Rlist *match_from_list;
-   Rlist *not_match_from_list;
-   Rlist *contains_from_list;
-   Rlist *not_contains_from_list;
-   } LineSelect;
+{
+    Rlist *startwith_from_list;
+    Rlist *not_startwith_from_list;
+    Rlist *match_from_list;
+    Rlist *not_match_from_list;
+    Rlist *contains_from_list;
+    Rlist *not_contains_from_list;
+} LineSelect;
 
 typedef struct
-   {
-   char *line_matching;
-   enum cfeditorder before_after;
-   char *first_last;
-   } EditLocation;
+{
+    char *line_matching;
+    enum cfeditorder before_after;
+    char *first_last;
+} EditLocation;
 
 typedef struct
-   {
-   char *select_start;
-   char *select_end;
-   int include_start;
-   int include_end;
-   } EditRegion;
+{
+    char *select_start;
+    char *select_end;
+    int include_start;
+    int include_end;
+} EditRegion;
 
 typedef struct
-   {
-   char *column_separator;
-   int select_column;
-   char value_separator;
-   char *column_value;
-   char *column_operation;
-   int extend_columns;
-   int blanks_ok;
-   } EditColumn;
+{
+    char *column_separator;
+    int select_column;
+    char value_separator;
+    char *column_value;
+    char *column_operation;
+    int extend_columns;
+    int blanks_ok;
+} EditColumn;
 
 typedef struct
-   {
-   char *replace_value;
-   char *occurrences;
-   } EditReplace;
+{
+    char *replace_value;
+    char *occurrences;
+} EditReplace;
 
 /*************************************************************************/
 
 typedef struct
-   {
-   char *mount_type;
-   char *mount_source;
-   char *mount_server;
-   Rlist *mount_options;
-   int editfstab;
-   int unmount;
-   } StorageMount;
+{
+    char *mount_type;
+    char *mount_source;
+    char *mount_server;
+    Rlist *mount_options;
+    int editfstab;
+    int unmount;
+} StorageMount;
 
 typedef struct
-   {
-   int check_foreign;
-   long freespace;
-   int sensible_size;
-   int sensible_count;
-   int scan_arrivals;
-   } StorageVolume;
+{
+    int check_foreign;
+    long freespace;
+    int sensible_size;
+    int sensible_count;
+    int scan_arrivals;
+} StorageVolume;
 
 /*************************************************************************/
 
 typedef struct
-   {
-   int haveprintfile;
-   int havelastseen;
-   int lastseen;
-   double intermittency;
-   char *friend_pattern;
-   char *filename;
-   char *to_file;
-   int numlines;
-   Rlist *showstate;
-   } Report;
+{
+    int haveprintfile;
+    int havelastseen;
+    int lastseen;
+    double intermittency;
+    char *friend_pattern;
+    char *filename;
+    char *to_file;
+    int numlines;
+    Rlist *showstate;
+} Report;
 
 /*************************************************************************/
 
 typedef struct
-   {
-   enum package_actions package_policy;
-   int have_package_methods;
-   char *package_version;
-   Rlist *package_architectures;
-   enum version_cmp package_select;
-   enum action_policy package_changes;
-   Rlist *package_file_repositories;
+{
+    enum package_actions package_policy;
+    int have_package_methods;
+    char *package_version;
+    Rlist *package_architectures;
+    enum version_cmp package_select;
+    enum action_policy package_changes;
+    Rlist *package_file_repositories;
 
-   char *package_list_command;
-   char *package_list_version_regex;
-   char *package_list_name_regex;
-   char *package_list_arch_regex;
-   char *package_patch_list_command;
+    char *package_list_command;
+    char *package_list_version_regex;
+    char *package_list_name_regex;
+    char *package_list_arch_regex;
+    char *package_patch_list_command;
 
-   char *package_patch_version_regex;
-   char *package_patch_name_regex;
-   char *package_patch_arch_regex;
-   char *package_patch_installed_regex;
-      
-   char *package_list_update_command;
-   int package_list_update_ifelapsed;
+    char *package_patch_version_regex;
+    char *package_patch_name_regex;
+    char *package_patch_arch_regex;
+    char *package_patch_installed_regex;
 
-   char *package_version_regex;
-   char *package_name_regex;
-   char *package_arch_regex;
-   char *package_installed_regex;
+    char *package_list_update_command;
+    int package_list_update_ifelapsed;
 
-   char *package_add_command;
-   char *package_delete_command;
-   char *package_update_command;
-   char *package_patch_command;
-   char *package_verify_command;
-   char *package_noverify_regex;
-   char *package_name_convention;
-   char *package_delete_convention;
+    char *package_version_regex;
+    char *package_name_regex;
+    char *package_arch_regex;
+    char *package_installed_regex;
 
-   char *package_multiline_start;
-      
-   int package_noverify_returncode;
-   } Packages;
+    char *package_add_command;
+    char *package_delete_command;
+    char *package_update_command;
+    char *package_patch_command;
+    char *package_verify_command;
+    char *package_noverify_regex;
+    char *package_name_convention;
+    char *package_delete_convention;
 
-/*************************************************************************/
+    char *package_multiline_start;
 
-typedef struct
-   {
-   char *stream_type;
-   enum cfdatatype data_type;
-   char *history_type;
-   char *select_line_matching;
-   int select_line_number;
-   char *extraction_regex;
-   char *units;
-   int growing;
-   } Measurement;
+    int package_noverify_returncode;
+} Packages;
 
 /*************************************************************************/
 
 typedef struct
-   {
-   char *ipv4_address;
-   char *ipv4_netmask;
-   } TcpIp;
+{
+    char *stream_type;
+    enum cfdatatype data_type;
+    char *history_type;
+    char *select_line_matching;
+    int select_line_number;
+    char *extraction_regex;
+    char *units;
+    int growing;
+} Measurement;
 
 /*************************************************************************/
 
 typedef struct
-   {
-   char *db_server_owner;
-   char *db_server_password;
-   char *db_server_host;
-   char *db_connect_db;
-   enum cfdbtype  db_server_type;
-   char *server;
-   char *type;
-   char *operation;
-   Rlist *columns;
-   Rlist *rows;
-   Rlist *exclude;
-   } Database;
-    
+{
+    char *ipv4_address;
+    char *ipv4_netmask;
+} TcpIp;
+
+/*************************************************************************/
+
+typedef struct
+{
+    char *db_server_owner;
+    char *db_server_password;
+    char *db_server_host;
+    char *db_connect_db;
+    enum cfdbtype db_server_type;
+    char *server;
+    char *type;
+    char *operation;
+    Rlist *columns;
+    Rlist *rows;
+    Rlist *exclude;
+} Database;
+
 /*************************************************************************/
 
 enum cf_srv_policy
-   {
-   cfsrv_start,
-   cfsrv_stop,
-   cfsrv_disable,
-   cfsrv_nostatus
-   };
+{
+    cfsrv_start,
+    cfsrv_stop,
+    cfsrv_disable,
+    cfsrv_nostatus
+};
 
 typedef struct
-   {
-   Rlist *service_depend;
-   char *service_type;
-   char *service_args;
-   enum cf_srv_policy service_policy;
-   char *service_autostart_policy;
-   char *service_depend_chain;
-   FnCall *service_method;
-   } Services;
+{
+    Rlist *service_depend;
+    char *service_type;
+    char *service_args;
+    enum cf_srv_policy service_policy;
+    char *service_autostart_policy;
+    char *service_depend_chain;
+    FnCall *service_method;
+} Services;
 
 /*************************************************************************/
 
 typedef struct
-   {
-   char *level;
-   char *promiser_type;
-   } Outputs;
+{
+    char *level;
+    char *promiser_type;
+} Outputs;
 
 /*************************************************************************/
 
 enum cfhypervisors
-   {
-   cfv_virt_xen,
-   cfv_virt_kvm,
-   cfv_virt_esx,
-   cfv_virt_test,
-   cfv_virt_xen_net,
-   cfv_virt_kvm_net,
-   cfv_virt_esx_net,
-   cfv_virt_test_net,
-   cfv_zone,
-   cfv_ec2,
-   cfv_eucalyptus,
-   cfv_none
-   };
+{
+    cfv_virt_xen,
+    cfv_virt_kvm,
+    cfv_virt_esx,
+    cfv_virt_test,
+    cfv_virt_xen_net,
+    cfv_virt_kvm_net,
+    cfv_virt_esx_net,
+    cfv_virt_test_net,
+    cfv_zone,
+    cfv_ec2,
+    cfv_eucalyptus,
+    cfv_none
+};
 
 enum cfenvironment_state
-   {
-   cfvs_create,
-   cfvs_delete,
-   cfvs_running,
-   cfvs_suspended,
-   cfvs_down,
-   cfvs_none
-   };
+{
+    cfvs_create,
+    cfvs_delete,
+    cfvs_running,
+    cfvs_suspended,
+    cfvs_down,
+    cfvs_none
+};
 
 typedef struct
-   {
-   int cpus;
-   int memory;
-   int disk;
-   char *baseline;
-   char *specfile;
-   Rlist *addresses;
-   char *name;
-   char *host;
-   char *type;
-   enum cfenvironment_state state;
-   } Environments;
+{
+    int cpus;
+    int memory;
+    int disk;
+    char *baseline;
+    char *specfile;
+    Rlist *addresses;
+    char *name;
+    char *host;
+    char *type;
+    enum cfenvironment_state state;
+} Environments;
 
 /*************************************************************************/
 
@@ -1736,113 +1734,113 @@ typedef struct
     so we leave it to the compiler to optimize */
 
 typedef struct
-   {
-   Outputs output;
-   FileSelect select;
-   FilePerms perms;
-   FileCopy copy;
-   FileDelete delete;
-   FileRename rename;
-   FileChange change;
-   FileLink link;
-   EditDefaults edits;
-   Packages packages;
-   Context context;
-   Measurement measure;
-   Acl acl;
-   Database database;
-   Services service;
-   Environments env;
-   char *transformer;
-   char *pathtype;
-   char *repository;
-   int touch;
-   int create;
-   int move_obstructions;
-      
-   Recursion recursion;
-   TransactionContext transaction;
-   DefineClasses classes;
+{
+    Outputs output;
+    FileSelect select;
+    FilePerms perms;
+    FileCopy copy;
+    FileDelete delete;
+    FileRename rename;
+    FileChange change;
+    FileLink link;
+    EditDefaults edits;
+    Packages packages;
+    Context context;
+    Measurement measure;
+    Acl acl;
+    Database database;
+    Services service;
+    Environments env;
+    char *transformer;
+    char *pathtype;
+    char *repository;
+    int touch;
+    int create;
+    int move_obstructions;
 
-   ExecContain contain;
-   char *args;
-   int module;
+    Recursion recursion;
+    TransactionContext transaction;
+    DefineClasses classes;
 
-   Rlist *signals;
-   char *process_stop;
-   char *restart_class;
-   ProcessCount process_count;
-   ProcessSelect process_select;
+    ExecContain contain;
+    char *args;
+    int module;
 
-   Report report;
-   StorageMount mount;
-   StorageVolume volume;
-      
-   TcpIp tcpip;
-   int havedepthsearch;
-   int haveselect;
-   int haverename;
-   int havedelete;
-   int haveperms;
-   int havechange;
-   int havecopy;
-   int havelink;
-   int haveeditline;
-   int haveeditxml;
-   int haveedit;
-   int havecontain;
-   int haveclasses;
-   int havetrans;
-   int haveprocess_count;
-   int havemount;
-   int havevolume;
-   int havebundle;
-   int havetcpip;
-   int havepackages;
+    Rlist *signals;
+    char *process_stop;
+    char *restart_class;
+    ProcessCount process_count;
+    ProcessSelect process_select;
 
-      /* editline */
+    Report report;
+    StorageMount mount;
+    StorageVolume volume;
 
-   EditRegion region;
-   EditLocation location;
-   EditColumn column;
-   EditReplace replace;
-   int haveregion;
-   int havelocation;
-   int havecolumn;
-   int havereplace;
-   int haveinsertselect;
-   int havedeleteselect;
-   LineSelect line_select;
-   char *sourcetype;
-   int expandvars;
-   int not_matching;
-   Rlist *insert_match;
+    TcpIp tcpip;
+    int havedepthsearch;
+    int haveselect;
+    int haverename;
+    int havedelete;
+    int haveperms;
+    int havechange;
+    int havecopy;
+    int havelink;
+    int haveeditline;
+    int haveeditxml;
+    int haveedit;
+    int havecontain;
+    int haveclasses;
+    int havetrans;
+    int haveprocess_count;
+    int havemount;
+    int havevolume;
+    int havebundle;
+    int havetcpip;
+    int havepackages;
 
-      /* knowledge */
+    /* editline */
 
-   char *fwd_name;
-   char *bwd_name;
-   Rlist *precedents;
-   Rlist *qualifiers;
-   Rlist *associates;
-   Rlist *represents;
-   Rlist *synonyms;
-   Rlist *general;
-   char *rep_type;
-   char *path_root;
-   char *web_root;
-   } Attributes;
+    EditRegion region;
+    EditLocation location;
+    EditColumn column;
+    EditReplace replace;
+    int haveregion;
+    int havelocation;
+    int havecolumn;
+    int havereplace;
+    int haveinsertselect;
+    int havedeleteselect;
+    LineSelect line_select;
+    char *sourcetype;
+    int expandvars;
+    int not_matching;
+    Rlist *insert_match;
+
+    /* knowledge */
+
+    char *fwd_name;
+    char *bwd_name;
+    Rlist *precedents;
+    Rlist *qualifiers;
+    Rlist *associates;
+    Rlist *represents;
+    Rlist *synonyms;
+    Rlist *general;
+    char *rep_type;
+    char *path_root;
+    char *web_root;
+} Attributes;
 
 enum cf_meter
 {
-meter_compliance_week,
-meter_compliance_day,
-meter_compliance_hour,
-meter_perf_day,
-meter_other_day,
-meter_comms_hour,
-meter_anomalies_day,
-meter_endmark
+    meter_compliance_week,
+    meter_compliance_day,
+    meter_compliance_hour,
+    meter_perf_day,
+    meter_other_day,
+    meter_comms_hour,
+    meter_anomalies_day,
+    meter_endmark
 };
 
 /*************************************************************************/
@@ -1949,7 +1947,6 @@ extern SubTypeSyntax CF_REPORT_SUBTYPES[];
 extern const BodySyntax CF_REPORT_BODIES[];
 #endif
 
-
 #ifndef CF3_MOD_FILES
 extern SubTypeSyntax CF_FILES_SUBTYPES[];
 
@@ -1980,7 +1977,7 @@ extern SubTypeSyntax CF_SERVICES_SUBTYPES[];
 #include "cf3.extern.h"
 
 #ifdef HAVE_NOVA
-#include <cf.nova.h>
+# include <cf.nova.h>
 #endif
 
 #endif

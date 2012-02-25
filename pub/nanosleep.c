@@ -30,27 +30,28 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#include "../src/conf.h"
+# include "../src/conf.h"
 #endif
 
 #ifdef __MINGW32__
 
-#include <time.h>
-#include <windows.h>
+# include <time.h>
+# include <windows.h>
 
 int nanosleep(const struct timespec *rqtp, struct timespec *rmtp);
 
 int nanosleep(const struct timespec *rqtp, struct timespec *rmtp)
 {
-if (rmtp)
-   {
-   rmtp->tv_sec = 0;
-   rmtp->tv_nsec = 0;
-   }
+    if (rmtp)
+    {
+        rmtp->tv_sec = 0;
+        rmtp->tv_nsec = 0;
+    }
 
-DWORD timeout = rqtp->tv_sec * 1000L + (rqtp->tv_nsec + 999999) / 1000000;
-Sleep(timeout);
-return 0;
+    DWORD timeout = rqtp->tv_sec * 1000L + (rqtp->tv_nsec + 999999) / 1000000;
+
+    Sleep(timeout);
+    return 0;
 }
 
 #endif

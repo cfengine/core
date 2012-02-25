@@ -36,76 +36,73 @@
 /*******************************************************************/
 
 CfAssoc *NewAssoc(const char *lval, Rval rval, enum cfdatatype dt)
+{
+    CfAssoc *ap;
 
-{ CfAssoc *ap;
-
-ap = xmalloc(sizeof(CfAssoc));
+    ap = xmalloc(sizeof(CfAssoc));
 
 /* Make a private copy because promises are ephemeral in expansion phase */
 
-ap->lval = xstrdup(lval);
-ap->rval = CopyRvalItem(rval);
-ap->dtype = dt;
+    ap->lval = xstrdup(lval);
+    ap->rval = CopyRvalItem(rval);
+    ap->dtype = dt;
 
-if (lval == NULL)
-   {
-   FatalError("Bad association in NewAssoc\n");
-   }
+    if (lval == NULL)
+    {
+        FatalError("Bad association in NewAssoc\n");
+    }
 
-return ap;
+    return ap;
 }
 
 /*******************************************************************/
 
 void DeleteAssoc(CfAssoc *ap)
-
 {
-if (ap == NULL)
-   {
-   return;
-   }
+    if (ap == NULL)
+    {
+        return;
+    }
 
-CfDebug(" ----> Delete variable association %s\n",ap->lval);
+    CfDebug(" ----> Delete variable association %s\n", ap->lval);
 
-free(ap->lval);
-DeleteRvalItem(ap->rval);
+    free(ap->lval);
+    DeleteRvalItem(ap->rval);
 
-free(ap);
+    free(ap);
 
 }
 
 /*******************************************************************/
 
 CfAssoc *CopyAssoc(CfAssoc *old)
-
 {
-if (old == NULL)
-   {
-   return NULL;
-   }
+    if (old == NULL)
+    {
+        return NULL;
+    }
 
-return NewAssoc(old->lval, old->rval, old->dtype);
+    return NewAssoc(old->lval, old->rval, old->dtype);
 }
 
 /*******************************************************************/
 
 /*******************************************************************/
 
-CfAssoc *AssocNewReference(const char *lval, Rval rval,
-                                  enum cfdatatype dtype)
+CfAssoc *AssocNewReference(const char *lval, Rval rval, enum cfdatatype dtype)
 {
-CfAssoc *ap = NULL;
+    CfAssoc *ap = NULL;
 
-ap = xmalloc(sizeof(CfAssoc));
+    ap = xmalloc(sizeof(CfAssoc));
 
-ap->lval = xstrdup(lval);
-ap->rval = rval;
-ap->dtype = dtype;
+    ap->lval = xstrdup(lval);
+    ap->rval = rval;
+    ap->dtype = dtype;
 
-if (lval == NULL)
-   {
-   FatalError("Bad association in AssocNewReference\n");
-   }
+    if (lval == NULL)
+    {
+        FatalError("Bad association in AssocNewReference\n");
+    }
 
-return ap;
+    return ap;
 }

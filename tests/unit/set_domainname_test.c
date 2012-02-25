@@ -4,7 +4,6 @@
 #include <setjmp.h>
 #include <cmockery.h>
 
-
 /* Global variables we care about */
 
 char VFQNAME[CF_MAXVARSIZE];
@@ -13,114 +12,113 @@ char VDOMAIN[CF_MAXVARSIZE];
 
 /* */
 
-static struct hostent h =
-   {
-   .h_name = "laptop.intra.cfengine.com"
-   };
+static struct hostent h = {
+    .h_name = "laptop.intra.cfengine.com"
+};
 
 int gethostname(char *name, size_t len)
 {
-strcpy(name, "laptop.intra");
-return 0;
+    strcpy(name, "laptop.intra");
+    return 0;
 }
 
 struct hostent *gethostbyname(const char *name)
 {
-assert_string_equal(name, "laptop.intra");
-return &h;
+    assert_string_equal(name, "laptop.intra");
+    return &h;
 }
 
 typedef struct
-   {
-   const char *name;
-   bool found;
-   } ExpectedClasses;
+{
+    const char *name;
+    bool found;
+} ExpectedClasses;
 
 ExpectedClasses expected_classes[] =
-   {
-   {"laptop.intra.cfengine.com"},
-   {"intra.cfengine.com"},
-   {"cfengine.com"},
-   {"com"},
-   {"laptop.intra"},
-   };
+{
+    {"laptop.intra.cfengine.com"},
+    {"intra.cfengine.com"},
+    {"cfengine.com"},
+    {"com"},
+    {"laptop.intra"},
+};
 
 void NewClass(const char *classname)
 {
-int i;
-for (i = 0; i < sizeof(expected_classes)/sizeof(expected_classes[0]); ++i) /* LCOV_EXCL_LINE */
-   {
-   if (!strcmp(classname, expected_classes[i].name))
-      {
-      expected_classes[i].found = true;
-      return;
-      }
-   }
-fail(); /* LCOV_EXCL_LINE */
+    int i;
+
+    for (i = 0; i < sizeof(expected_classes) / sizeof(expected_classes[0]); ++i)        /* LCOV_EXCL_LINE */
+    {
+        if (!strcmp(classname, expected_classes[i].name))
+        {
+            expected_classes[i].found = true;
+            return;
+        }
+    }
+    fail();                     /* LCOV_EXCL_LINE */
 }
 
 typedef struct
-   {
-   const char *name;
-   const char *value;
-   bool found;
-   } ExpectedVars;
+{
+    const char *name;
+    const char *value;
+    bool found;
+} ExpectedVars;
 
 ExpectedVars expected_vars[] =
-   {
-   {"host", "laptop.intra"},
-   {"fqhost", "laptop.intra.cfengine.com"},
-   {"uqhost", "laptop.intra"},
-   {"domain", "cfengine.com"},
-   };
+{
+    {"host", "laptop.intra"},
+    {"fqhost", "laptop.intra.cfengine.com"},
+    {"uqhost", "laptop.intra"},
+    {"domain", "cfengine.com"},
+};
 
 void NewScalar(const char *namespace, const char *varname, const char *value, enum cfdatatype type)
 {
-int i;
+    int i;
 
-assert_string_equal(namespace, "sys");
-assert_int_equal(type, cf_str);
+    assert_string_equal(namespace, "sys");
+    assert_int_equal(type, cf_str);
 
-for (i = 0; i < sizeof(expected_vars)/sizeof(expected_vars[0]); ++i) /* LCOV_EXCL_LINE */
-   {
-   if (!strcmp(varname, expected_vars[i].name))
-      {
-      assert_string_equal(value, expected_vars[i].value);
-      expected_vars[i].found = true;
-      return;
-      }
-   }
-fprintf(stderr, "${%s.%s} <- %s (%c)\n", namespace, varname, value, type); /* LCOV_EXCL_LINE */
-fail(); /* LCOV_EXCL_LINE */
+    for (i = 0; i < sizeof(expected_vars) / sizeof(expected_vars[0]); ++i)      /* LCOV_EXCL_LINE */
+    {
+        if (!strcmp(varname, expected_vars[i].name))
+        {
+            assert_string_equal(value, expected_vars[i].value);
+            expected_vars[i].found = true;
+            return;
+        }
+    }
+    fprintf(stderr, "${%s.%s} <- %s (%c)\n", namespace, varname, value, type);  /* LCOV_EXCL_LINE */
+    fail();                     /* LCOV_EXCL_LINE */
 }
 
 static void test_set_names(void **state)
 {
-int i = 0;
+    int i = 0;
 
-DetectDomainName("laptop.intra");
+    DetectDomainName("laptop.intra");
 
-for (i = 0; i < sizeof(expected_classes)/sizeof(expected_classes[0]); ++i)
-   {
-   assert_int_equal(expected_classes[i].found, true);
-   }
+    for (i = 0; i < sizeof(expected_classes) / sizeof(expected_classes[0]); ++i)
+    {
+        assert_int_equal(expected_classes[i].found, true);
+    }
 
-for(i = 0; i < sizeof(expected_vars)/sizeof(expected_vars[0]); ++i)
-   {
-   assert_int_equal(expected_vars[i].found, true);
-   }
+    for (i = 0; i < sizeof(expected_vars) / sizeof(expected_vars[0]); ++i)
+    {
+        assert_int_equal(expected_vars[i].found, true);
+    }
 }
 
 int main()
 {
-const UnitTest tests[] =
-   {
-   unit_test(test_set_names),
-   };
+    const UnitTest tests[] =
+{
+        unit_test(test_set_names),
+    };
 
-return run_tests(tests);
+    return run_tests(tests);
 }
-
 
 /* LCOV_EXCL_START */
 
@@ -128,138 +126,138 @@ return run_tests(tests);
 
 void StripTrailingNewline(char *str)
 {
-fail();
+    fail();
 }
 
 void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
 {
-fail();
+    fail();
 }
 
 const char *NameVersion(void)
 {
-fail();
+    fail();
 }
 
 int Unix_GetCurrentUserName(char *userName, int userNameLen)
 {
-fail();
+    fail();
 }
 
 void Unix_FindV6InterfaceInfo(void)
 {
-fail();
+    fail();
 }
 
 int cfstat(const char *path, struct stat *buf)
 {
-fail();
+    fail();
 }
 
 void FatalError(char *s, ...)
 {
-fail();
-exit(42);
+    fail();
+    exit(42);
 }
 
-void DeleteItemList (Item *item)
+void DeleteItemList(Item *item)
 {
-fail();
+    fail();
 }
 
 Item *SplitString(const char *string, char sep)
 {
-fail();
+    fail();
 }
 
 void Nova_SaveDocumentRoot(void)
 {
-fail();
+    fail();
 }
 
 void Chop(char *str)
 {
-fail();
+    fail();
 }
 
 char *cf_ctime(const time_t *timep)
 {
-fail();
+    fail();
 }
 
 char *CanonifyName(const char *str)
 {
-fail();
+    fail();
 }
 
-int FullTextMatch (const char *regptr, const char *cmpptr)
+int FullTextMatch(const char *regptr, const char *cmpptr)
 {
-fail();
+    fail();
 }
 
 const char *Version(void)
 {
-fail();
+    fail();
 }
 
 const char *Nova_Version(void)
 {
-fail();
+    fail();
 }
 
 char *Constellation_Version(void)
 {
-fail();
+    fail();
 }
 
 void LoadSlowlyVaryingObservations(void)
 {
-fail();
+    fail();
 }
 
-void HashPubKey(RSA *key,unsigned char digest[EVP_MAX_MD_SIZE+1],enum cfhashes type)
+void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhashes type)
 {
-fail();
+    fail();
 }
 
 char *MapName(char *s)
 {
-fail();
+    fail();
 }
 
-char *HashPrint(enum cfhashes type,unsigned char digest[EVP_MAX_MD_SIZE+1])
+char *HashPrint(enum cfhashes type, unsigned char digest[EVP_MAX_MD_SIZE + 1])
 {
-fail();
+    fail();
 }
 
 void Unix_GetInterfaceInfo(enum cfagenttype ag)
 {
-fail();
+    fail();
 }
 
 void EnterpriseContext(void)
 {
-fail();
+    fail();
 }
 
-int StrnCmp (char *s1,char *s2,size_t n)
+int StrnCmp(char *s1, char *s2, size_t n)
 {
-fail();
+    fail();
 }
 
-int CfReadLine(char *buff,int size,FILE *fp)
+int CfReadLine(char *buff, int size, FILE *fp)
 {
-fail();
+    fail();
 }
 
 bool IsDefinedClass(const char *class)
 {
-fail();
+    fail();
 }
 
-void DeleteVariable(char *scope,char *id)
+void DeleteVariable(char *scope, char *id)
 {
-fail();
+    fail();
 }
 
 /* Stub out variables */
@@ -279,7 +277,8 @@ char *VMAILDIR[1];
 char *VEXPORTS[1];
 char EXPIRY[CF_SMALLBUF];
 RSA *PUBKEY;
-char *CLASSTEXT[1] = {};
+char *CLASSTEXT[1] = { };
+
 char VIPADDRESS[18];
 
 /* LCOV_EXCL_STOP */

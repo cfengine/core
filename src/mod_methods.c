@@ -39,18 +39,17 @@
 /* This is the primary set of constraints for a methods object */
 
 BodySyntax CF_METHOD_BODIES[] =
-   {
-   {"usebundle",cf_bundle,CF_BUNDLE,"Specify the name of a bundle to run as a parameterized method"},
-   {NULL,cf_notype,NULL}
-   };
+{
+    {"usebundle", cf_bundle, CF_BUNDLE, "Specify the name of a bundle to run as a parameterized method"},
+    {NULL, cf_notype, NULL}
+};
 
 /***************************************************************/
 /* This is the point of entry from mod_common.c                */
 /***************************************************************/
 
 SubTypeSyntax CF_METHOD_SUBTYPES[] =
-  {
-  {"agent","methods",CF_METHOD_BODIES},
-  {NULL,NULL,NULL},
-  };
-
+{
+    {"agent", "methods", CF_METHOD_BODIES},
+    {NULL, NULL, NULL},
+};

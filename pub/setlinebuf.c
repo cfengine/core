@@ -24,7 +24,7 @@
 */
 
 #ifdef HAVE_CONFIG_H
-#include "../src/conf.h"
+# include "../src/conf.h"
 #endif
 
 #include <stdio.h>
@@ -35,5 +35,5 @@ void setlinebuf(FILE *stream);
 
 void setlinebuf(FILE *stream)
 {
-setvbuf(stream, (char *) NULL, _IOLBF, 0);
+    setvbuf(stream, (char *) NULL, _IOLBF, 0);
 }

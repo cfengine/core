@@ -24,7 +24,7 @@
 */
 
 #ifdef HAVE_CONFIG_H
-#include "../src/conf.h"
+# include "../src/conf.h"
 #endif
 
 #include <stdlib.h>
@@ -35,5 +35,5 @@ void srand48(long seed);
 
 void srand48(long seed)
 {
-srand((unsigned)seed);
+    srand((unsigned) seed);
 }

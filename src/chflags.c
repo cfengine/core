@@ -33,33 +33,33 @@
 #include "cf3.extern.h"
 
 typedef struct
-   {
-   char *name;
-   u_long bits;
-   } BSDFlag;
+{
+    char *name;
+    u_long bits;
+} BSDFlag;
 
 static const BSDFlag CF_BSDFLAGS[] =
-   {
-   { "arch",(u_long)SF_ARCHIVED },
-   { "archived",(u_long)SF_ARCHIVED },
-   { "nodump",(u_long)UF_NODUMP },
-   { "opaque",(u_long)UF_OPAQUE },
-   { "sappnd",(u_long)SF_APPEND },
-   { "sappend",(u_long)SF_APPEND },
-   { "schg",(u_long)SF_IMMUTABLE },
-   { "schange",(u_long)SF_IMMUTABLE },
-   { "simmutable",(u_long)SF_IMMUTABLE },
-   { "sunlnk",(u_long)SF_NOUNLINK },
-   { "sunlink",(u_long)SF_NOUNLINK },
-   { "uappnd",(u_long)UF_APPEND },
-   { "uappend",(u_long)UF_APPEND },
-   { "uchg",(u_long)UF_IMMUTABLE },
-   { "uchange",(u_long)UF_IMMUTABLE },
-   { "uimmutable",(u_long)UF_IMMUTABLE },
-   { "uunlnk",(u_long)UF_NOUNLINK },
-   { "uunlink",(u_long)UF_NOUNLINK },
-   { NULL,(u_long)NULL }
-   };
+{
+    {"arch", (u_long) SF_ARCHIVED},
+    {"archived", (u_long) SF_ARCHIVED},
+    {"nodump", (u_long) UF_NODUMP},
+    {"opaque", (u_long) UF_OPAQUE},
+    {"sappnd", (u_long) SF_APPEND},
+    {"sappend", (u_long) SF_APPEND},
+    {"schg", (u_long) SF_IMMUTABLE},
+    {"schange", (u_long) SF_IMMUTABLE},
+    {"simmutable", (u_long) SF_IMMUTABLE},
+    {"sunlnk", (u_long) SF_NOUNLINK},
+    {"sunlink", (u_long) SF_NOUNLINK},
+    {"uappnd", (u_long) UF_APPEND},
+    {"uappend", (u_long) UF_APPEND},
+    {"uchg", (u_long) UF_IMMUTABLE},
+    {"uchange", (u_long) UF_IMMUTABLE},
+    {"uimmutable", (u_long) UF_IMMUTABLE},
+    {"uunlnk", (u_long) UF_NOUNLINK},
+    {"uunlink", (u_long) UF_NOUNLINK},
+    {NULL, (u_long) NULL}
+};
 
 /***************************************************************/
 
@@ -67,63 +67,62 @@ static u_long ConvertBSDBits(char *s);
 
 /***************************************************************/
 
-int ParseFlagString(Rlist *bitlist,u_long *plusmask,u_long *minusmask)
+int ParseFlagString(Rlist *bitlist, u_long *plusmask, u_long *minusmask)
+{
+    char *flag;
+    Rlist *rp;
+    char operator;
 
-{ char *flag;
-  Rlist *rp;
-  char operator;
+    if (bitlist == NULL)
+    {
+        return true;
+    }
 
-if (bitlist == NULL)
-   {
-   return true;
-   }
+    *plusmask = 0;
+    *minusmask = 0;
 
-*plusmask = 0;
-*minusmask = 0;   
+    for (rp = bitlist; rp != NULL; rp = rp->next)
+    {
+        flag = (char *) (rp->item);
+        operator = *(char *) (rp->item);
 
-for (rp = bitlist; rp != NULL; rp=rp->next)
-   {
-   flag = (char *)(rp->item);
-   operator = *(char *)(rp->item);
+        switch (operator)
+        {
+        case '-':
+            *minusmask |= ConvertBSDBits(flag + 1);
+            break;
 
-   switch (operator)
-      {
-      case '-':
-          *minusmask |= ConvertBSDBits(flag+1);
-          break;
+        case '+':
+            *plusmask |= ConvertBSDBits(flag + 1);
+            break;
 
-      case '+':
-          *plusmask |= ConvertBSDBits(flag+1);
-          break;
-          
-      default:
-          *plusmask |= ConvertBSDBits(flag);
-          break;
-          
-      }
-   }
+        default:
+            *plusmask |= ConvertBSDBits(flag);
+            break;
 
-CfDebug("ParseFlagString:[PLUS=%lo][MINUS=%lo]\n",*plusmask,*minusmask);
-return true;
+        }
+    }
+
+    CfDebug("ParseFlagString:[PLUS=%lo][MINUS=%lo]\n", *plusmask, *minusmask);
+    return true;
 }
 
 /***************************************************************/
 
 static u_long ConvertBSDBits(char *s)
+{
+    int i;
 
-{ int i;
+    for (i = 0; CF_BSDFLAGS[i].name != NULL; i++)
+    {
+        if (strcmp(s, CF_BSDFLAGS[i].name) == 0)
+        {
+            return CF_BSDFLAGS[i].bits;
+        }
+    }
 
-for (i = 0; CF_BSDFLAGS[i].name != NULL; i++)
-   {
-   if (strcmp(s,CF_BSDFLAGS[i].name) == 0)
-      {
-      return CF_BSDFLAGS[i].bits;
-      }
-   }
-
-return 0;
+    return 0;
 }
-
 
 /*
 CHFLAGS(1)              FreeBSD General Commands Manual             CHFLAGS(1)

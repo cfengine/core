@@ -35,168 +35,165 @@
 /*************************************************************/
 
 int IsExecutable(const char *file)
-
-{ 
+{
 #ifdef MINGW
-return NovaWin_IsExecutable(file);
+    return NovaWin_IsExecutable(file);
 #else
-return Unix_IsExecutable(file);
+    return Unix_IsExecutable(file);
 #endif
 }
 
 /*******************************************************************/
 
-int ShellCommandReturnsZero(char *comm,int useshell)
-
+int ShellCommandReturnsZero(char *comm, int useshell)
 {
 #ifdef MINGW
-return NovaWin_ShellCommandReturnsZero(comm,useshell);
+    return NovaWin_ShellCommandReturnsZero(comm, useshell);
 #else
-return Unix_ShellCommandReturnsZero(comm,useshell);
+    return Unix_ShellCommandReturnsZero(comm, useshell);
 #endif
 }
 
 /********************************************************************/
 
-int GetExecOutput(char *command,char *buffer,int useshell)
-
+int GetExecOutput(char *command, char *buffer, int useshell)
 /* Buffer initially contains whole exec string */
+{
+    int offset = 0;
+    char line[CF_EXPANDSIZE], *sp;
+    FILE *pp;
+    int flatten_newlines = false;
 
-{ int offset = 0;
-  char line[CF_EXPANDSIZE], *sp; 
-  FILE *pp;
-  int flatten_newlines = false;
+    CfDebug("GetExecOutput(%s,%s) - use shell = %d\n", command, buffer, useshell);
 
-CfDebug("GetExecOutput(%s,%s) - use shell = %d\n",command,buffer,useshell);
-  
-if (useshell)
-   {
-   pp = cf_popen_sh(command,"r");
-   }
-else
-   {
-   pp = cf_popen(command,"r");
-   }
+    if (useshell)
+    {
+        pp = cf_popen_sh(command, "r");
+    }
+    else
+    {
+        pp = cf_popen(command, "r");
+    }
 
-if (pp == NULL)
-   {
-   CfOut(cf_error,"cf_popen","Couldn't open pipe to command %s\n",command);
-   return false;
-   }
+    if (pp == NULL)
+    {
+        CfOut(cf_error, "cf_popen", "Couldn't open pipe to command %s\n", command);
+        return false;
+    }
 
-memset(buffer,0,CF_EXPANDSIZE);
-  
-while (!feof(pp))
-   {
-   if (ferror(pp))  /* abortable */
-      {
-      fflush(pp);
-      break;
-      }
+    memset(buffer, 0, CF_EXPANDSIZE);
 
-   CfReadLine(line,CF_EXPANDSIZE,pp);
+    while (!feof(pp))
+    {
+        if (ferror(pp))         /* abortable */
+        {
+            fflush(pp);
+            break;
+        }
 
-   if (ferror(pp))  /* abortable */
-      {
-      fflush(pp);
-      break;
-      }  
+        CfReadLine(line, CF_EXPANDSIZE, pp);
 
-   if (flatten_newlines)
-      {
-      for (sp = line; *sp != '\0'; sp++)
-         {
-         if (*sp == '\n')
+        if (ferror(pp))         /* abortable */
+        {
+            fflush(pp);
+            break;
+        }
+
+        if (flatten_newlines)
+        {
+            for (sp = line; *sp != '\0'; sp++)
             {
-            *sp = ' ';
+                if (*sp == '\n')
+                {
+                    *sp = ' ';
+                }
             }
-         }
-      }
- 
-   if (strlen(line)+offset > CF_EXPANDSIZE-10)
-      {
-      CfOut(cf_error,"","Buffer exceeded %d bytes in exec %s\n",CF_EXPANDSIZE,command);
-      break;
-      }
+        }
 
-   if (flatten_newlines)
-      {
-      snprintf(buffer+offset,CF_EXPANDSIZE,"%s ",line);
-      }
-   else
-      {
-      snprintf(buffer+offset,CF_EXPANDSIZE,"%s\n",line);
-      }
+        if (strlen(line) + offset > CF_EXPANDSIZE - 10)
+        {
+            CfOut(cf_error, "", "Buffer exceeded %d bytes in exec %s\n", CF_EXPANDSIZE, command);
+            break;
+        }
 
-   offset += strlen(line)+1;
-   }
+        if (flatten_newlines)
+        {
+            snprintf(buffer + offset, CF_EXPANDSIZE, "%s ", line);
+        }
+        else
+        {
+            snprintf(buffer + offset, CF_EXPANDSIZE, "%s\n", line);
+        }
 
-if (offset > 0)
-   {
-   Chop(buffer); 
-   }
+        offset += strlen(line) + 1;
+    }
 
-CfDebug("GetExecOutput got: [%s]\n",buffer);
- 
-cf_pclose(pp);
-return true;
+    if (offset > 0)
+    {
+        Chop(buffer);
+    }
+
+    CfDebug("GetExecOutput got: [%s]\n", buffer);
+
+    cf_pclose(pp);
+    return true;
 }
 
 /**********************************************************************/
 
 void ActAsDaemon(int preserve)
-
-{ int fd, maxfd;
+{
+    int fd, maxfd;
 
 #ifdef HAVE_SETSID
-setsid();
+    setsid();
 #endif
 
-CloseNetwork();
-CloseLog();
+    CloseNetwork();
+    CloseLog();
 
-fflush(NULL);
-fd = open(NULLFILE, O_RDWR, 0);
+    fflush(NULL);
+    fd = open(NULLFILE, O_RDWR, 0);
 
-if (fd != -1)
-   {
-   if (dup2(fd,STDIN_FILENO) == -1)
-      {
-      CfOut(cf_error,"dup2","Could not dup");
-      }
+    if (fd != -1)
+    {
+        if (dup2(fd, STDIN_FILENO) == -1)
+        {
+            CfOut(cf_error, "dup2", "Could not dup");
+        }
 
-   if (dup2(fd,STDOUT_FILENO) == -1)
-      {
-      CfOut(cf_error,"dup2","Could not dup");
-      }
+        if (dup2(fd, STDOUT_FILENO) == -1)
+        {
+            CfOut(cf_error, "dup2", "Could not dup");
+        }
 
-   dup2(fd,STDERR_FILENO);
+        dup2(fd, STDERR_FILENO);
 
-   if (fd > STDERR_FILENO)
-      {
-      close(fd);
-      }
-   }
+        if (fd > STDERR_FILENO)
+        {
+            close(fd);
+        }
+    }
 
-chdir("/");
-   
+    chdir("/");
+
 #ifdef HAVE_SYSCONF
-maxfd = sysconf(_SC_OPEN_MAX);
+    maxfd = sysconf(_SC_OPEN_MAX);
 #else
 # ifdef _POXIX_OPEN_MAX
-maxfd = _POSIX_OPEN_MAX;
+    maxfd = _POSIX_OPEN_MAX;
 # else
-maxfd = 1024;
+    maxfd = 1024;
 # endif
 #endif
 
-for (fd = STDERR_FILENO + 1; fd < maxfd; ++fd)
-   {
-   if (fd != preserve)
-      {
-      close(fd);
-      }
-   }
+    for (fd = STDERR_FILENO + 1; fd < maxfd; ++fd)
+    {
+        if (fd != preserve)
+        {
+            close(fd);
+        }
+    }
 }
 
 /**********************************************************************/
@@ -205,82 +202,84 @@ for (fd = STDERR_FILENO + 1; fd < maxfd; ++fd)
 
 char **ArgSplitCommand(const char *comm)
 {
-const char *s = comm;
+    const char *s = comm;
 
-int argc = 0;
-int argslen = INITIAL_ARGS;
-char **args = xmalloc(argslen * sizeof(char*));
+    int argc = 0;
+    int argslen = INITIAL_ARGS;
+    char **args = xmalloc(argslen * sizeof(char *));
 
-while (*s != '\0')
-   {
-   const char *end;
-   char *arg;
+    while (*s != '\0')
+    {
+        const char *end;
+        char *arg;
 
-   if (isspace(*s)) /* Skip whitespace */
-      {
-      s++;
-      continue;
-      }
+        if (isspace(*s))        /* Skip whitespace */
+        {
+            s++;
+            continue;
+        }
 
-   switch (*s)
-      {
-      case '"': /* Look for matching quote */
-      case '\'':
-      case '`':
-         {
-         char delim = *s++; /* Skip first delimeter */
-         end = strchr(s, delim);
-         break;
-         }
-      default: /* Look for whitespace */
-         end = strpbrk(s, " \f\n\r\t\v");
-         break;
-      }
+        switch (*s)
+        {
+        case '"':              /* Look for matching quote */
+        case '\'':
+        case '`':
+        {
+            char delim = *s++;  /* Skip first delimeter */
 
-   if (end == NULL) /* Delimeter was not found, remaining string is the argument */
-      {
-      arg = xstrdup(s);
-      s += strlen(arg);
-      }
-   else
-      {
-      arg = xstrndup(s, end - s);
-      s = end;
-      if (*s == '"' || *s =='\'' || *s == '`') /* Skip second delimeter */
-          s++;
-      }
+            end = strchr(s, delim);
+            break;
+        }
+        default:               /* Look for whitespace */
+            end = strpbrk(s, " \f\n\r\t\v");
+            break;
+        }
 
-   /* Argument */
+        if (end == NULL)        /* Delimeter was not found, remaining string is the argument */
+        {
+            arg = xstrdup(s);
+            s += strlen(arg);
+        }
+        else
+        {
+            arg = xstrndup(s, end - s);
+            s = end;
+            if (*s == '"' || *s == '\'' || *s == '`')   /* Skip second delimeter */
+                s++;
+        }
 
-   if (argc == argslen)
-      {
-      argslen *= 2;
-      args = xrealloc(args, argslen * sizeof(char*));
-      }
+        /* Argument */
 
-   args[argc++] = arg;
-   }
+        if (argc == argslen)
+        {
+            argslen *= 2;
+            args = xrealloc(args, argslen * sizeof(char *));
+        }
+
+        args[argc++] = arg;
+    }
 
 /* Trailing NULL */
 
-if (argc == argslen)
-   {
-   argslen += 1;
-   args = xrealloc(args, argslen * sizeof(char*));
-   }
-args[argc++] = NULL;
+    if (argc == argslen)
+    {
+        argslen += 1;
+        args = xrealloc(args, argslen * sizeof(char *));
+    }
+    args[argc++] = NULL;
 
-return args;
+    return args;
 }
 
 /**********************************************************************/
 
 void ArgFree(char **args)
 {
-char **arg = args;
-for (; *arg; ++arg)
-   {
-   free(*arg);
-   }
-free(args);
+    char **arg = args;
+
+    for (; *arg; ++arg)
+    {
+        free(*arg);
+    }
+    free(args);
 }

@@ -26,7 +26,7 @@
 #include <time.h>
 
 #ifdef HAVE_CONFIG_H
-#include "../src/conf.h"
+# include "../src/conf.h"
 #endif
 
 #ifndef HAVE_CLOCKID_T
@@ -34,12 +34,12 @@ typedef int clockid_t;
 #endif
 
 #if !HAVE_DECL_CLOCK_GETTIME
-int clock_gettime(clockid_t clock_id,struct timespec *tp);
+int clock_gettime(clockid_t clock_id, struct timespec *tp);
 #endif
 
 int clock_gettime(clockid_t clock_id, struct timespec *tp)
 {
-tp->tv_sec = time(NULL);
-tp->tv_nsec = 0;
-return 0;
+    tp->tv_sec = time(NULL);
+    tp->tv_nsec = 0;
+    return 0;
 }

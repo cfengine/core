@@ -42,116 +42,118 @@ static char *VREPOSITORY = NULL;
 
 void SetRepositoryLocation(const char *path)
 {
-VREPOSITORY = xstrdup(path);
+    VREPOSITORY = xstrdup(path);
 }
 
 /*********************************************************************/
 
 void SetRepositoryChar(char c)
 {
-REPOSCHAR = c;
+    REPOSCHAR = c;
 }
 
 /*********************************************************************/
 
 bool GetRepositoryPath(const char *file, Attributes attr, char *destination)
 {
-if (attr.repository == NULL && VREPOSITORY == NULL)
-   {
-   return false;
-   }
+    if (attr.repository == NULL && VREPOSITORY == NULL)
+    {
+        return false;
+    }
 
-size_t repopathlen;
-if (attr.repository != NULL)
-   {
-   repopathlen = strlcpy(destination, attr.repository, CF_BUFSIZE);
-   }
-else
-   {
-   repopathlen = strlcpy(destination, VREPOSITORY, CF_BUFSIZE);
-   }
+    size_t repopathlen;
 
-if (!JoinPath(destination, file))
-   {
-   CfOut(cf_error,"","Internal limit: Buffer ran out of space for long filename\n");
-   return false;
-   }
+    if (attr.repository != NULL)
+    {
+        repopathlen = strlcpy(destination, attr.repository, CF_BUFSIZE);
+    }
+    else
+    {
+        repopathlen = strlcpy(destination, VREPOSITORY, CF_BUFSIZE);
+    }
 
-for (char *s = destination + repopathlen; *s; s++)
-   {
-   if (*s == FILE_SEPARATOR)
-      {
-      *s = REPOSCHAR;
-      }
-   }
+    if (!JoinPath(destination, file))
+    {
+        CfOut(cf_error, "", "Internal limit: Buffer ran out of space for long filename\n");
+        return false;
+    }
 
-return true;
+    for (char *s = destination + repopathlen; *s; s++)
+    {
+        if (*s == FILE_SEPARATOR)
+        {
+            *s = REPOSCHAR;
+        }
+    }
+
+    return true;
 }
 
 /*********************************************************************/
 
-int ArchiveToRepository(char *file,Attributes attr,Promise *pp)
-
+int ArchiveToRepository(char *file, Attributes attr, Promise *pp)
  /* Returns true if the file was backup up and false if not */
+{
+    char destination[CF_BUFSIZE];
+    struct stat sb, dsb;
 
-{ char destination[CF_BUFSIZE];
-  struct stat sb, dsb;
+    if (!GetRepositoryPath(file, attr, destination))
+    {
+        return false;
+    }
 
-if (!GetRepositoryPath(file, attr, destination))
-   {
-   return false;
-   }
+    if (attr.copy.backup == cfa_nobackup)
+    {
+        return true;
+    }
 
-if (attr.copy.backup == cfa_nobackup)
-   {
-   return true;
-   }
+    if (IsItemIn(VREPOSLIST, file))
+    {
+        CfOut(cf_inform, "",
+              "The file %s has already been moved to the repository once. Multiple update will cause loss of backup.",
+              file);
+        return true;
+    }
 
-if (IsItemIn(VREPOSLIST,file))
-   {
-   CfOut(cf_inform,"","The file %s has already been moved to the repository once. Multiple update will cause loss of backup.",file);
-   return true;
-   }
+    ThreadLock(cft_getaddr);
+    PrependItemList(&VREPOSLIST, file);
+    ThreadUnlock(cft_getaddr);
 
-ThreadLock(cft_getaddr);
-PrependItemList(&VREPOSLIST,file);
-ThreadUnlock(cft_getaddr);
+    CfDebug("Repository(%s)\n", file);
 
-CfDebug("Repository(%s)\n",file);
+    if (!MakeParentDirectory(destination, attr.move_obstructions))
+    {
+    }
 
-if (!MakeParentDirectory(destination,attr.move_obstructions))
-   {
-   }
+    if (cfstat(file, &sb) == -1)
+    {
+        CfDebug("File %s promised to archive to the repository but it disappeared!\n", file);
+        return true;
+    }
 
-if (cfstat(file,&sb) == -1)
-   {
-   CfDebug("File %s promised to archive to the repository but it disappeared!\n",file);
-   return true;
-   }
+    cfstat(destination, &dsb);
 
-cfstat(destination,&dsb);
+    attr.copy.servers = NULL;
+    attr.copy.backup = cfa_repos_store; // cfa_nobackup;
+    attr.copy.stealth = false;
+    attr.copy.verify = false;
+    attr.copy.preserve = false;
 
-attr.copy.servers = NULL;
-attr.copy.backup = cfa_repos_store; // cfa_nobackup;
-attr.copy.stealth = false;
-attr.copy.verify = false;
-attr.copy.preserve = false;
+    CheckForFileHoles(&sb, pp);
 
-CheckForFileHoles(&sb,pp);
-
-if (CopyRegularFileDisk(file,destination,attr,pp))
-   {
-   CfOut(cf_inform,"","Moved %s to repository location %s\n",file,destination);
-   return true;
-   }
-else
-   {
-   CfOut(cf_inform,"","Failed to move %s to repository location %s\n",file,destination);
-   return false;
-   }
+    if (CopyRegularFileDisk(file, destination, attr, pp))
+    {
+        CfOut(cf_inform, "", "Moved %s to repository location %s\n", file, destination);
+        return true;
+    }
+    else
+    {
+        CfOut(cf_inform, "", "Failed to move %s to repository location %s\n", file, destination);
+        return false;
+    }
 }
 
 bool FileInRepository(const char *filename)
 {
-return IsItemIn(VREPOSLIST, filename);
+    return IsItemIn(VREPOSLIST, filename);
 }

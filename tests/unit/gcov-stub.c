@@ -14,37 +14,37 @@ void __gcov_merge_add(void *p, unsigned n_counters)
 {
 }
 
-int
-__gcov_execv(const char *path, char *const argv[])
+int __gcov_execv(const char *path, char *const argv[])
 {
-return execv(path, argv);
+    return execv(path, argv);
 }
 
-int
-__gcov_execl(const char *path, char *arg, ...)
+int __gcov_execl(const char *path, char *arg, ...)
 {
-va_list ap, aq;
-unsigned i, length;
-char **args;
+    va_list ap, aq;
+    unsigned i, length;
+    char **args;
 
-va_start(ap, arg);
-va_copy(aq, ap);
+    va_start(ap, arg);
+    va_copy(aq, ap);
 
-length = 2;
-while (va_arg(ap, char *))
-    length++;
-va_end(ap);
+    length = 2;
+    while (va_arg(ap, char *))
+             length++;
 
-args = (char **)alloca(length * sizeof (void *));
-args[0] = arg;
-for (i = 1; i < length; i++)
-    args[i] = va_arg(aq, char *);
-va_end(aq);
+    va_end(ap);
 
-return execv(path, args);
+    args = (char **) alloca(length * sizeof(void *));
+    args[0] = arg;
+    for (i = 1; i < length; i++)
+        args[i] = va_arg(aq, char *);
+
+    va_end(aq);
+
+    return execv(path, args);
 }
 
 pid_t __gcov_fork(void)
 {
-return fork();
+    return fork();
 }

@@ -25,212 +25,213 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-static int ServicesSanityChecks(Attributes a,Promise *pp);
+static int ServicesSanityChecks(Attributes a, Promise *pp);
 static void SetServiceDefaults(Attributes *a);
-static void DoVerifyServices(Attributes a,Promise *pp);
+static void DoVerifyServices(Attributes a, Promise *pp);
 
 /*****************************************************************************/
 
 void VerifyServicesPromise(Promise *pp)
+{
+    Attributes a = { {0} };
 
-{ Attributes a = {{0}};
+    a = GetServicesAttributes(pp);
 
-a = GetServicesAttributes(pp);
+    SetServiceDefaults(&a);
 
-SetServiceDefaults(&a);
-
-if (ServicesSanityChecks(a,pp))
-   {
-   VerifyServices(a,pp);
-   }
+    if (ServicesSanityChecks(a, pp))
+    {
+        VerifyServices(a, pp);
+    }
 }
 
 /*****************************************************************************/
 
-static int ServicesSanityChecks(Attributes a,Promise *pp)
+static int ServicesSanityChecks(Attributes a, Promise *pp)
+{
+    Rlist *dep;
 
-{ Rlist *dep;
+    switch (a.service.service_policy)
+    {
+    case cfsrv_start:
+        break;
 
-switch(a.service.service_policy)
-   {
-   case cfsrv_start:
-       break;
+    case cfsrv_stop:
+    case cfsrv_disable:
+        if (strcmp(a.service.service_autostart_policy, "none") != 0)
+        {
+            CfOut(cf_error, "",
+                  "!! Autostart policy of service promiser \"%s\" needs to be \"none\" when service policy is not \"start\", but is \"%s\"",
+                  pp->promiser, a.service.service_autostart_policy);
+            PromiseRef(cf_error, pp);
+            return false;
+        }
+        break;
 
-   case cfsrv_stop:
-   case cfsrv_disable:
-       if(strcmp(a.service.service_autostart_policy, "none") != 0)
-          {
-          CfOut(cf_error,"","!! Autostart policy of service promiser \"%s\" needs to be \"none\" when service policy is not \"start\", but is \"%s\"",
-                pp->promiser, a.service.service_autostart_policy);
-          PromiseRef(cf_error,pp);
-          return false;
-          }
-       break;
+    default:
+        CfOut(cf_error, "", "!! Invalid service policy for service \"%s\"", pp->promiser);
+        PromiseRef(cf_error, pp);
+        return false;
+    }
 
-   default:
-       CfOut(cf_error,"","!! Invalid service policy for service \"%s\"", pp->promiser);
-       PromiseRef(cf_error,pp);
-       return false;
-   }
+    for (dep = a.service.service_depend; dep != NULL; dep = dep->next)
+    {
+        if (strcmp(pp->promiser, dep->item) == 0)
+        {
+            CfOut(cf_error, "", "!! Service promiser \"%s\" has itself as dependency", pp->promiser);
+            PromiseRef(cf_error, pp);
+            return false;
+        }
+    }
 
-for (dep = a.service.service_depend; dep != NULL; dep = dep->next)
-   {
-   if(strcmp(pp->promiser, dep->item) == 0)
-      {
-      CfOut(cf_error,"","!! Service promiser \"%s\" has itself as dependency", pp->promiser);
-      PromiseRef(cf_error,pp);
-      return false;
-      }
-   }
-
-if (a.service.service_type ==  NULL)
-   {
-   CfOut(cf_error,"","!! Service type for service \"%s\" is not known", pp->promiser);
-   PromiseRef(cf_error,pp);
-   return false;
-   }
+    if (a.service.service_type == NULL)
+    {
+        CfOut(cf_error, "", "!! Service type for service \"%s\" is not known", pp->promiser);
+        PromiseRef(cf_error, pp);
+        return false;
+    }
 
 #ifdef MINGW
 
-if (strcmp(a.service.service_type, "windows") != 0)
-   {
-   CfOut(cf_error,"","!! Service type for promiser \"%s\" must be \"windows\" on this system, but is \"%s\"", pp->promiser, a.service.service_type);
-   PromiseRef(cf_error,pp);
-   return false;
-   }
+    if (strcmp(a.service.service_type, "windows") != 0)
+    {
+        CfOut(cf_error, "", "!! Service type for promiser \"%s\" must be \"windows\" on this system, but is \"%s\"",
+              pp->promiser, a.service.service_type);
+        PromiseRef(cf_error, pp);
+        return false;
+    }
 
-#endif  /* MINGW */
+#endif /* MINGW */
 
-return true;
+    return true;
 }
 
 /*****************************************************************************/
 
 static void SetServiceDefaults(Attributes *a)
-
 {
-if (a->service.service_autostart_policy == NULL)
-   {
-   a->service.service_autostart_policy = "none";
-   }
+    if (a->service.service_autostart_policy == NULL)
+    {
+        a->service.service_autostart_policy = "none";
+    }
 
-if (a->service.service_depend_chain == NULL)
-   {
-   a->service.service_depend_chain = "ignore";
-   }
+    if (a->service.service_depend_chain == NULL)
+    {
+        a->service.service_depend_chain = "ignore";
+    }
 
 // default service type to "windows" on windows platforms
 #ifdef MINGW
-if (a->service.service_type == NULL)
-   {
-   a->service.service_type = "windows";
-   }
+    if (a->service.service_type == NULL)
+    {
+        a->service.service_type = "windows";
+    }
 #else
-if (a->service.service_type == NULL)
-   {
-   a->service.service_type = "bundle";
-   }
-#endif  /* MINGW */
+    if (a->service.service_type == NULL)
+    {
+        a->service.service_type = "bundle";
+    }
+#endif /* MINGW */
 }
 
 /*****************************************************************************/
 /* Level                                                                     */
 /*****************************************************************************/
 
-void VerifyServices(Attributes a,Promise *pp)
+void VerifyServices(Attributes a, Promise *pp)
+{
+    CfLock thislock;
 
-{ CfLock thislock;
-
- // allow to start Cfengine windows executor without license
+    // allow to start Cfengine windows executor without license
 #ifdef MINGW
 
-if ((LICENSES == 0) && (strcmp(WINSERVICE_NAME, pp->promiser) != 0))
-   {
-   return;
-   }
+    if ((LICENSES == 0) && (strcmp(WINSERVICE_NAME, pp->promiser) != 0))
+    {
+        return;
+    }
 
 #endif
 
-thislock = AcquireLock(pp->promiser,VUQNAME,CFSTARTTIME,a,pp,false);
+    thislock = AcquireLock(pp->promiser, VUQNAME, CFSTARTTIME, a, pp, false);
 
-if (thislock.lock == NULL)
-   {
-   return;
-   }
+    if (thislock.lock == NULL)
+    {
+        return;
+    }
 
-NewScalar("this","promiser",pp->promiser,cf_str);
-PromiseBanner(pp);
+    NewScalar("this", "promiser", pp->promiser, cf_str);
+    PromiseBanner(pp);
 
-if (strcmp(a.service.service_type, "windows") == 0)
-   {
-   VerifyWindowsService(a, pp);
-   }
-else
-   {
-   DoVerifyServices(a,pp);
-   }
+    if (strcmp(a.service.service_type, "windows") == 0)
+    {
+        VerifyWindowsService(a, pp);
+    }
+    else
+    {
+        DoVerifyServices(a, pp);
+    }
 
-DeleteScalar("this","promiser");
-YieldCurrentLock(thislock);
+    DeleteScalar("this", "promiser");
+    YieldCurrentLock(thislock);
 }
 
 /*****************************************************************************/
 /* Level                                                                     */
 /*****************************************************************************/
 
-static void DoVerifyServices(Attributes a,Promise *pp)
-
-{ FnCall *default_bundle = NULL;
-  Rlist *args = NULL;
+static void DoVerifyServices(Attributes a, Promise *pp)
+{
+    FnCall *default_bundle = NULL;
+    Rlist *args = NULL;
 
 // Need to set up the default service pack to eliminate syntax
 
-if (GetConstraintValue("service_bundle",pp,CF_SCALAR) == NULL)
-   {
-   switch(a.service.service_policy)
-      {
-      case cfsrv_start:
-          AppendRlist(&args,pp->promiser,CF_SCALAR);
-          AppendRlist(&args,"start",CF_SCALAR);
-          break;
+    if (GetConstraintValue("service_bundle", pp, CF_SCALAR) == NULL)
+    {
+        switch (a.service.service_policy)
+        {
+        case cfsrv_start:
+            AppendRlist(&args, pp->promiser, CF_SCALAR);
+            AppendRlist(&args, "start", CF_SCALAR);
+            break;
 
-      case cfsrv_stop:
-      case cfsrv_disable:
-      default:
-          AppendRlist(&args,pp->promiser,CF_SCALAR);
-          AppendRlist(&args,"stop",CF_SCALAR);
-          break;
+        case cfsrv_stop:
+        case cfsrv_disable:
+        default:
+            AppendRlist(&args, pp->promiser, CF_SCALAR);
+            AppendRlist(&args, "stop", CF_SCALAR);
+            break;
 
-      }
+        }
 
-   default_bundle = NewFnCall("standard_services",args);
+        default_bundle = NewFnCall("standard_services", args);
 
-   AppendConstraint(&(pp->conlist), "service_bundle", (Rval) { default_bundle, CF_FNCALL },"any", false);
-   a.havebundle = true;
-   }
+        AppendConstraint(&(pp->conlist), "service_bundle", (Rval) {default_bundle, CF_FNCALL}, "any", false);
+        a.havebundle = true;
+    }
 
 // Set $(this.service_policy) for flexible bundle adaptation
 
-switch(a.service.service_policy)
-   {
-   case cfsrv_start:
-       NewScalar("this","service_policy","start",cf_str);
-       break;
+    switch (a.service.service_policy)
+    {
+    case cfsrv_start:
+        NewScalar("this", "service_policy", "start", cf_str);
+        break;
 
-   case cfsrv_stop:
-   case cfsrv_disable:
-   default:
-          NewScalar("this","service_policy","stop",cf_str);
-          break;
-   }
+    case cfsrv_stop:
+    case cfsrv_disable:
+    default:
+        NewScalar("this", "service_policy", "stop", cf_str);
+        break;
+    }
 
-if (default_bundle && GetBundle(default_bundle->name,"agent") == NULL)
-   {
-   cfPS(cf_inform,CF_FAIL,"",pp,a," !! Service %s could not be invoked successfully\n",pp->promiser);
-   }
+    if (default_bundle && GetBundle(default_bundle->name, "agent") == NULL)
+    {
+        cfPS(cf_inform, CF_FAIL, "", pp, a, " !! Service %s could not be invoked successfully\n", pp->promiser);
+    }
 
-if (!DONTDO)
-   {
-   VerifyMethod("service_bundle",a,pp);  // Send list of classes to set privately?
-   }
+    if (!DONTDO)
+    {
+        VerifyMethod("service_bundle", a, pp);  // Send list of classes to set privately?
+    }
 }

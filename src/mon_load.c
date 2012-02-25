@@ -38,35 +38,34 @@
 
 void MonLoadGatherData(double *cf_this)
 {
-double load[LOADAVG_5MIN], sum = 0.0;
-int i,n;
+    double load[LOADAVG_5MIN], sum = 0.0;
+    int i, n;
 
-CfDebug("GatherLoadData\n\n");
+    CfDebug("GatherLoadData\n\n");
 
-if ((n = getloadavg(load,LOADAVG_5MIN)) == -1)
-   {
-   cf_this[ob_loadavg] = 0.0;
-   }
+    if ((n = getloadavg(load, LOADAVG_5MIN)) == -1)
+    {
+        cf_this[ob_loadavg] = 0.0;
+    }
 
-for (i = 0; i < n; ++i)
-   {
-   sum += load[i];
-   }
+    for (i = 0; i < n; ++i)
+    {
+        sum += load[i];
+    }
 
-sum /= (double) n;
+    sum /= (double) n;
 
 /* Scale load average by 100 to make it visible */
 
-cf_this[ob_loadavg] = sum;
-CfOut(cf_verbose,"","Load Average = %.2lf\n",cf_this[ob_loadavg]);
+    cf_this[ob_loadavg] = sum;
+    CfOut(cf_verbose, "", "Load Average = %.2lf\n", cf_this[ob_loadavg]);
 }
 
 #else
 
 void MonLoadGatherData(double *cf_this)
 {
-CfDebug("Average load data is not available.\n");
+    CfDebug("Average load data is not available.\n");
 }
 
 #endif
-

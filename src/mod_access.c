@@ -62,31 +62,34 @@
 /* This is the primary set of constraints for a server object */
 
 BodySyntax CF_REMACCESS_BODIES[] =
-   {
-   {"admit",cf_slist,"","List of host names or IP addresses to grant access to file objects"},
-   {"deny",cf_slist,"","List of host names or IP addresses to deny access to file objects"},
-   {"maproot",cf_slist,"","List of host names or IP addresses to grant full read-privilege on the server"},
-   {"ifencrypted",cf_opts,CF_BOOL,"true/false whether the current file access promise is conditional on the connection from the client being encrypted", "false"},
-   {"resource_type",cf_opts,"path,literal,context,query","The type of object being granted access (the default grants access to files)"},
-   {NULL,cf_notype,NULL,NULL}
-   };
+{
+    {"admit", cf_slist, "", "List of host names or IP addresses to grant access to file objects"},
+    {"deny", cf_slist, "", "List of host names or IP addresses to deny access to file objects"},
+    {"maproot", cf_slist, "", "List of host names or IP addresses to grant full read-privilege on the server"},
+    {"ifencrypted", cf_opts, CF_BOOL,
+     "true/false whether the current file access promise is conditional on the connection from the client being encrypted",
+     "false"},
+    {"resource_type", cf_opts, "path,literal,context,query",
+     "The type of object being granted access (the default grants access to files)"},
+    {NULL, cf_notype, NULL, NULL}
+};
 
 /***************************************************************/
 
 BodySyntax CF_REMROLE_BODIES[] =
-   {
-   {"authorize",cf_slist,"","List of public-key user names that are allowed to activate the promised class during remote agent activation"},
-   {NULL,cf_notype,NULL,NULL}
-   };
+{
+    {"authorize", cf_slist, "",
+     "List of public-key user names that are allowed to activate the promised class during remote agent activation"},
+    {NULL, cf_notype, NULL, NULL}
+};
 
 /***************************************************************/
 /* This is the point of entry from mod_common.c                */
 /***************************************************************/
 
 SubTypeSyntax CF_REMACCESS_SUBTYPES[] =
-  {
-  {"server","access",CF_REMACCESS_BODIES},
-  {"server","roles",CF_REMROLE_BODIES},
-  {NULL,NULL,NULL},
-  };
-
+{
+    {"server", "access", CF_REMACCESS_BODIES},
+    {"server", "roles", CF_REMROLE_BODIES},
+    {NULL, NULL, NULL},
+};

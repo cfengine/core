@@ -25,53 +25,53 @@
 #include "proc_keyvalue.h"
 
 typedef struct
-   {
-   void *orig_param;
-   KeyNumericValueCallback orig_callback;
-   } KeyNumericParserInfo;
+{
+    void *orig_param;
+    KeyNumericValueCallback orig_callback;
+} KeyNumericParserInfo;
 
 bool KeyNumericParserCallback(const char *field, const char *value, void *param)
 {
-KeyNumericParserInfo *info = param;
-long long numeric_value;
+    KeyNumericParserInfo *info = param;
+    long long numeric_value;
 
-if (sscanf(value, "%llu", &numeric_value) != 1)
-   {
-   /* Malformed file */
-   return false;
-   }
+    if (sscanf(value, "%llu", &numeric_value) != 1)
+    {
+        /* Malformed file */
+        return false;
+    }
 
-return (*info->orig_callback)(field, numeric_value, info->orig_param);
+    return (*info->orig_callback) (field, numeric_value, info->orig_param);
 }
 
 bool ParseKeyNumericValue(FILE *fd, KeyNumericValueCallback callback, void *param)
 {
-KeyNumericParserInfo info = { param, callback };
+    KeyNumericParserInfo info = { param, callback };
 
-return ParseKeyValue(fd, KeyNumericParserCallback, &info);
+    return ParseKeyValue(fd, KeyNumericParserCallback, &info);
 }
 
 bool ParseKeyValue(FILE *fd, KeyValueCallback callback, void *param)
 {
-char buf[1024];
+    char buf[1024];
 
-while (fgets(buf, 1024, fd))
-   {
-   char *s = strchr(buf, ':');
+    while (fgets(buf, 1024, fd))
+    {
+        char *s = strchr(buf, ':');
 
-   if (!s)
-      {
-      /* Malformed file */
-      return false;
-      }
+        if (!s)
+        {
+            /* Malformed file */
+            return false;
+        }
 
-   *s = 0;
+        *s = 0;
 
-   if (!(*callback)(buf, s + 1, param))
-      {
-      return false;
-      }
-   }
+        if (!(*callback) (buf, s + 1, param))
+        {
+            return false;
+        }
+    }
 
-return !ferror(fd);
+    return !ferror(fd);
 }

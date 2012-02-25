@@ -35,7 +35,8 @@
 static void ExtractOperationLock(char *op);
 
 static const char *NO_STATUS_TYPES[] = { "vars", "classes", NULL };
-static const char *NO_LOG_TYPES[] = { "vars", "classes", "insert_lines", "delete_lines", "replace_patterns", "field_edits", NULL };
+static const char *NO_LOG_TYPES[] =
+    { "vars", "classes", "insert_lines", "delete_lines", "replace_patterns", "field_edits", NULL };
 
 /*****************************************************************************/
 
@@ -47,104 +48,101 @@ int PR_KEPT;
 int PR_REPAIRED;
 int PR_NOTKEPT;
 
-static CF_DB  *AUDITDBP;
+static CF_DB *AUDITDBP;
 
 /*****************************************************************************/
 
 void BeginAudit()
+{
+    Promise dummyp = { 0 };
+    Attributes dummyattr = { {0} };
 
-{ Promise dummyp = {0};
-  Attributes dummyattr = {{0}};
+    if (THIS_AGENT_TYPE != cf_agent)
+    {
+        return;
+    }
 
-if (THIS_AGENT_TYPE != cf_agent)
-   {
-   return;
-   }
-  
-memset(&dummyp,0,sizeof(dummyp));
-memset(&dummyattr,0,sizeof(dummyattr));
+    memset(&dummyp, 0, sizeof(dummyp));
+    memset(&dummyattr, 0, sizeof(dummyattr));
 
-ClassAuditLog(&dummyp,dummyattr,"Cfagent starting",CF_NOP,"");
+    ClassAuditLog(&dummyp, dummyattr, "Cfagent starting", CF_NOP, "");
 }
 
 /*****************************************************************************/
 
 void EndAudit()
+{
+    double total;
+    char *sp, string[CF_BUFSIZE];
+    Rval retval;
+    Promise dummyp = { 0 };
+    Attributes dummyattr = { {0} };
 
-{ double total;
-  char *sp,string[CF_BUFSIZE];
-  Rval retval;
-  Promise dummyp = {0};
-  Attributes dummyattr = {{0}};
+    if (THIS_AGENT_TYPE != cf_agent)
+    {
+        return;
+    }
 
-if (THIS_AGENT_TYPE != cf_agent)
-   {
-   return;
-   }
+    memset(&dummyp, 0, sizeof(dummyp));
+    memset(&dummyattr, 0, sizeof(dummyattr));
 
-memset(&dummyp,0,sizeof(dummyp));
-memset(&dummyattr,0,sizeof(dummyattr));
+    if (BooleanControl("control_agent", CFA_CONTROLBODY[cfa_track_value].lval))
+    {
+        FILE *fout;
+        char name[CF_MAXVARSIZE], datestr[CF_MAXVARSIZE];
+        time_t now = time(NULL);
 
-if (BooleanControl("control_agent",CFA_CONTROLBODY[cfa_track_value].lval))
-   {
-   FILE *fout;
-   char name[CF_MAXVARSIZE],datestr[CF_MAXVARSIZE];
-   time_t now = time(NULL);
-   
-   CfOut(cf_inform,""," -> Recording promise valuations");
-    
-   snprintf(name,CF_MAXVARSIZE,"%s/state/%s",CFWORKDIR,CF_VALUE_LOG);
-   snprintf(datestr,CF_MAXVARSIZE,"%s",cf_ctime(&now));
-   
-   if ((fout = fopen(name,"a")) == NULL)
-      {
-      CfOut(cf_inform,""," !! Unable to write to the value log %s\n",name);
-      return;
-      }
+        CfOut(cf_inform, "", " -> Recording promise valuations");
 
-   Chop(datestr);
-   fprintf(fout,"%s,%.4lf,%.4lf,%.4lf\n",datestr,VAL_KEPT,VAL_REPAIRED,VAL_NOTKEPT);
-   TrackValue(datestr,VAL_KEPT,VAL_REPAIRED,VAL_NOTKEPT);   
-   fclose(fout);
-   }
+        snprintf(name, CF_MAXVARSIZE, "%s/state/%s", CFWORKDIR, CF_VALUE_LOG);
+        snprintf(datestr, CF_MAXVARSIZE, "%s", cf_ctime(&now));
 
-total = (double)(PR_KEPT+PR_NOTKEPT+PR_REPAIRED)/100.0;
+        if ((fout = fopen(name, "a")) == NULL)
+        {
+            CfOut(cf_inform, "", " !! Unable to write to the value log %s\n", name);
+            return;
+        }
 
-if (GetVariable("control_common","version",&retval) != cf_notype)
-   {
-   sp = (char *)retval.item;
-   }
-else
-   {
-   sp = "(not specified)";
-   }
+        Chop(datestr);
+        fprintf(fout, "%s,%.4lf,%.4lf,%.4lf\n", datestr, VAL_KEPT, VAL_REPAIRED, VAL_NOTKEPT);
+        TrackValue(datestr, VAL_KEPT, VAL_REPAIRED, VAL_NOTKEPT);
+        fclose(fout);
+    }
 
-if (total == 0)
-   {
-   *string = '\0';
-   CfOut(cf_verbose,"","Outcome of version %s: No checks were scheduled\n",sp);
-   return;
-   }
-else
-   {   
-   snprintf(string,CF_BUFSIZE,"Outcome of version %s (%s-%d): Promises observed to be kept %.0f%%, Promises repaired %.0f%%, Promises not repaired %.0f\%%",
-            sp,
-            THIS_AGENT,
-            CFA_BACKGROUND,
-            (double)PR_KEPT/total,
-            (double)PR_REPAIRED/total,
-            (double)PR_NOTKEPT/total);
+    total = (double) (PR_KEPT + PR_NOTKEPT + PR_REPAIRED) / 100.0;
 
-   CfOut(cf_verbose,"","%s",string);
-   PromiseLog(string);
-   }
+    if (GetVariable("control_common", "version", &retval) != cf_notype)
+    {
+        sp = (char *) retval.item;
+    }
+    else
+    {
+        sp = "(not specified)";
+    }
 
-if (strlen(string) > 0)
-   {
-   ClassAuditLog(&dummyp,dummyattr,string,CF_REPORT,"");
-   }
+    if (total == 0)
+    {
+        *string = '\0';
+        CfOut(cf_verbose, "", "Outcome of version %s: No checks were scheduled\n", sp);
+        return;
+    }
+    else
+    {
+        snprintf(string, CF_BUFSIZE,
+                 "Outcome of version %s (%s-%d): Promises observed to be kept %.0f%%, Promises repaired %.0f%%, Promises not repaired %.0f\%%",
+                 sp, THIS_AGENT, CFA_BACKGROUND, (double) PR_KEPT / total, (double) PR_REPAIRED / total,
+                 (double) PR_NOTKEPT / total);
 
-ClassAuditLog(&dummyp,dummyattr,"Cfagent closing",CF_NOP,"");
+        CfOut(cf_verbose, "", "%s", string);
+        PromiseLog(string);
+    }
+
+    if (strlen(string) > 0)
+    {
+        ClassAuditLog(&dummyp, dummyattr, string, CF_REPORT, "");
+    }
+
+    ClassAuditLog(&dummyp, dummyattr, "Cfagent closing", CF_NOP, "");
 }
 
 /*****************************************************************************/
@@ -157,9 +155,7 @@ ClassAuditLog(&dummyp,dummyattr,"Cfagent closing",CF_NOP,"");
  */
 static bool IsPromiseValuableForStatus(const Promise *pp)
 {
-return pp
-   && pp->agentsubtype != NULL
-   && !IsStrIn(pp->agentsubtype,NO_STATUS_TYPES);
+    return pp && pp->agentsubtype != NULL && !IsStrIn(pp->agentsubtype, NO_STATUS_TYPES);
 }
 
 /*****************************************************************************/
@@ -171,394 +167,393 @@ return pp
 
 static bool IsPromiseValuableForLogging(const Promise *pp)
 {
-return pp
-   && pp->agentsubtype != NULL
-   && !IsStrIn(pp->agentsubtype,NO_LOG_TYPES);
+    return pp && pp->agentsubtype != NULL && !IsStrIn(pp->agentsubtype, NO_LOG_TYPES);
 }
 
 /*****************************************************************************/
 
-void ClassAuditLog(Promise *pp,Attributes attr,char *str,char status,char *reason)
+void ClassAuditLog(Promise *pp, Attributes attr, char *str, char status, char *reason)
+{
+    time_t now = time(NULL);
+    char date[CF_BUFSIZE], lock[CF_BUFSIZE], key[CF_BUFSIZE], operator[CF_BUFSIZE];
+    AuditLog newaudit;
+    Audit *ap = pp->audit;
+    struct timespec t;
+    double keyval;
+    int lineno = pp->offset.line;
+    char name[CF_BUFSIZE];
 
-{ time_t now = time(NULL);
-  char date[CF_BUFSIZE],lock[CF_BUFSIZE],key[CF_BUFSIZE],operator[CF_BUFSIZE];
-  AuditLog newaudit;
-  Audit *ap = pp->audit;
-  struct timespec t;
-  double keyval;
-  int lineno = pp->offset.line;
-  char name[CF_BUFSIZE];
+    CfDebug("ClassAuditLog(%s)\n", str);
 
-  CfDebug("ClassAuditLog(%s)\n",str);
+    switch (status)
+    {
+    case CF_CHG:
 
-switch(status)
-   {
-   case CF_CHG:
-
-      if (IsPromiseValuableForStatus(pp))
-         {
-         if (!EDIT_MODEL)
+        if (IsPromiseValuableForStatus(pp))
+        {
+            if (!EDIT_MODEL)
             {
-            PR_REPAIRED++;
-            VAL_REPAIRED += attr.transaction.value_repaired;
+                PR_REPAIRED++;
+                VAL_REPAIRED += attr.transaction.value_repaired;
             }
-         }
+        }
 
-       AddAllClasses(attr.classes.change,attr.classes.persist,attr.classes.timer);
-       DeleteAllClasses(attr.classes.del_change);
-       
-       if (IsPromiseValuableForLogging(pp))
-          {
-          NotePromiseCompliance(pp, 0.5, PROMISE_STATE_REPAIRED, reason);
-          SummarizeTransaction(attr,pp,attr.transaction.log_repaired);
-          }
-       break;
-       
-   case CF_WARN:
+        AddAllClasses(attr.classes.change, attr.classes.persist, attr.classes.timer);
+        DeleteAllClasses(attr.classes.del_change);
 
-      if (IsPromiseValuableForStatus(pp))
-         {
-         PR_NOTKEPT++;
-         VAL_NOTKEPT += attr.transaction.value_notkept;
-         }
-       
-       if (IsPromiseValuableForLogging(pp))
-          {
-          NotePromiseCompliance(pp, 1.0, PROMISE_STATE_NOTKEPT, reason);
-          }
-       break;
-       
-   case CF_TIMEX:
+        if (IsPromiseValuableForLogging(pp))
+        {
+            NotePromiseCompliance(pp, 0.5, PROMISE_STATE_REPAIRED, reason);
+            SummarizeTransaction(attr, pp, attr.transaction.log_repaired);
+        }
+        break;
 
-      if (IsPromiseValuableForStatus(pp))
-         {
-         PR_NOTKEPT++;
-         VAL_NOTKEPT += attr.transaction.value_notkept;
-         }
+    case CF_WARN:
 
-       AddAllClasses(attr.classes.timeout,attr.classes.persist,attr.classes.timer);
-       DeleteAllClasses(attr.classes.del_notkept);
+        if (IsPromiseValuableForStatus(pp))
+        {
+            PR_NOTKEPT++;
+            VAL_NOTKEPT += attr.transaction.value_notkept;
+        }
 
-       if (IsPromiseValuableForLogging(pp))
-          {
-          NotePromiseCompliance(pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
-          SummarizeTransaction(attr,pp,attr.transaction.log_failed);
-          }
-       break;
+        if (IsPromiseValuableForLogging(pp))
+        {
+            NotePromiseCompliance(pp, 1.0, PROMISE_STATE_NOTKEPT, reason);
+        }
+        break;
 
-   case CF_FAIL:
+    case CF_TIMEX:
 
-      if (IsPromiseValuableForStatus(pp))
-         {
-         PR_NOTKEPT++;
-         VAL_NOTKEPT += attr.transaction.value_notkept;
-         }
+        if (IsPromiseValuableForStatus(pp))
+        {
+            PR_NOTKEPT++;
+            VAL_NOTKEPT += attr.transaction.value_notkept;
+        }
 
-       AddAllClasses(attr.classes.failure,attr.classes.persist,attr.classes.timer);
-       DeleteAllClasses(attr.classes.del_notkept);
+        AddAllClasses(attr.classes.timeout, attr.classes.persist, attr.classes.timer);
+        DeleteAllClasses(attr.classes.del_notkept);
 
-       if (IsPromiseValuableForLogging(pp))
-          {
-          NotePromiseCompliance(pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
-          SummarizeTransaction(attr,pp,attr.transaction.log_failed);
-          }
-       break;
-       
-   case CF_DENIED:
+        if (IsPromiseValuableForLogging(pp))
+        {
+            NotePromiseCompliance(pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
+            SummarizeTransaction(attr, pp, attr.transaction.log_failed);
+        }
+        break;
 
-      if (IsPromiseValuableForStatus(pp))
-         {
-         PR_NOTKEPT++;
-         VAL_NOTKEPT += attr.transaction.value_notkept;
-         }
+    case CF_FAIL:
 
-       AddAllClasses(attr.classes.denied,attr.classes.persist,attr.classes.timer);
-       DeleteAllClasses(attr.classes.del_notkept);
+        if (IsPromiseValuableForStatus(pp))
+        {
+            PR_NOTKEPT++;
+            VAL_NOTKEPT += attr.transaction.value_notkept;
+        }
 
-       if (IsPromiseValuableForLogging(pp))
-          {
-          NotePromiseCompliance(pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
-          SummarizeTransaction(attr,pp,attr.transaction.log_failed);
-          }
-       break;
-       
-   case CF_INTERPT:
+        AddAllClasses(attr.classes.failure, attr.classes.persist, attr.classes.timer);
+        DeleteAllClasses(attr.classes.del_notkept);
 
-      if (IsPromiseValuableForStatus(pp))
-         {
-         PR_NOTKEPT++;
-         VAL_NOTKEPT += attr.transaction.value_notkept;
-         }
+        if (IsPromiseValuableForLogging(pp))
+        {
+            NotePromiseCompliance(pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
+            SummarizeTransaction(attr, pp, attr.transaction.log_failed);
+        }
+        break;
 
-       AddAllClasses(attr.classes.interrupt,attr.classes.persist,attr.classes.timer);
-       DeleteAllClasses(attr.classes.del_notkept);
+    case CF_DENIED:
 
-       if (IsPromiseValuableForLogging(pp))
-          {       
-          NotePromiseCompliance(pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
-          SummarizeTransaction(attr,pp,attr.transaction.log_failed);
-          }
-       break;
+        if (IsPromiseValuableForStatus(pp))
+        {
+            PR_NOTKEPT++;
+            VAL_NOTKEPT += attr.transaction.value_notkept;
+        }
 
-   case CF_UNKNOWN:
-   case CF_NOP:
+        AddAllClasses(attr.classes.denied, attr.classes.persist, attr.classes.timer);
+        DeleteAllClasses(attr.classes.del_notkept);
 
-       AddAllClasses(attr.classes.kept,attr.classes.persist,attr.classes.timer);
-       DeleteAllClasses(attr.classes.del_kept);
+        if (IsPromiseValuableForLogging(pp))
+        {
+            NotePromiseCompliance(pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
+            SummarizeTransaction(attr, pp, attr.transaction.log_failed);
+        }
+        break;
 
-       if (IsPromiseValuableForLogging(pp))
-          {
-          NotePromiseCompliance(pp, 1.0, PROMISE_STATE_ANY, reason);
-          SummarizeTransaction(attr,pp,attr.transaction.log_kept);
-          }
-       
-      if (IsPromiseValuableForStatus(pp))
-         {
-         PR_KEPT++;
-         VAL_KEPT += attr.transaction.value_kept;
-         }
+    case CF_INTERPT:
 
-       break;
-   }
+        if (IsPromiseValuableForStatus(pp))
+        {
+            PR_NOTKEPT++;
+            VAL_NOTKEPT += attr.transaction.value_notkept;
+        }
 
-if (!(attr.transaction.audit || AUDIT))
-   {
-   return;
-   }
+        AddAllClasses(attr.classes.interrupt, attr.classes.persist, attr.classes.timer);
+        DeleteAllClasses(attr.classes.del_notkept);
 
-snprintf(name,CF_BUFSIZE-1,"%s/%s",CFWORKDIR,CF_AUDITDB_FILE);
-MapName(name);
+        if (IsPromiseValuableForLogging(pp))
+        {
+            NotePromiseCompliance(pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
+            SummarizeTransaction(attr, pp, attr.transaction.log_failed);
+        }
+        break;
 
-if (!OpenDB(name,&AUDITDBP))
-   {
-   return;
-   }
+    case CF_UNKNOWN:
+    case CF_NOP:
 
-if (AUDITDBP == NULL || THIS_AGENT_TYPE != cf_agent)
-   {
-   return;
-   }
+        AddAllClasses(attr.classes.kept, attr.classes.persist, attr.classes.timer);
+        DeleteAllClasses(attr.classes.del_kept);
 
-snprintf(date,CF_BUFSIZE,"%s",cf_ctime(&now));
-Chop(date);
+        if (IsPromiseValuableForLogging(pp))
+        {
+            NotePromiseCompliance(pp, 1.0, PROMISE_STATE_ANY, reason);
+            SummarizeTransaction(attr, pp, attr.transaction.log_kept);
+        }
 
-ExtractOperationLock(lock);
-snprintf(operator,CF_BUFSIZE-1,"[%s] op %s",date,lock);
-strncpy(newaudit.operator,operator,CF_AUDIT_COMMENT-1);
+        if (IsPromiseValuableForStatus(pp))
+        {
+            PR_KEPT++;
+            VAL_KEPT += attr.transaction.value_kept;
+        }
 
-if (clock_gettime(CLOCK_REALTIME,&t) == -1)
-   {
-   CfOut(cf_verbose,"clock_gettime","Clock gettime failure during audit transaction");
-   return;
-   }
+        break;
+    }
+
+    if (!(attr.transaction.audit || AUDIT))
+    {
+        return;
+    }
+
+    snprintf(name, CF_BUFSIZE - 1, "%s/%s", CFWORKDIR, CF_AUDITDB_FILE);
+    MapName(name);
+
+    if (!OpenDB(name, &AUDITDBP))
+    {
+        return;
+    }
+
+    if (AUDITDBP == NULL || THIS_AGENT_TYPE != cf_agent)
+    {
+        return;
+    }
+
+    snprintf(date, CF_BUFSIZE, "%s", cf_ctime(&now));
+    Chop(date);
+
+    ExtractOperationLock(lock);
+    snprintf(operator, CF_BUFSIZE - 1, "[%s] op %s", date, lock);
+    strncpy(newaudit.operator, operator, CF_AUDIT_COMMENT - 1);
+
+    if (clock_gettime(CLOCK_REALTIME, &t) == -1)
+    {
+        CfOut(cf_verbose, "clock_gettime", "Clock gettime failure during audit transaction");
+        return;
+    }
 
 // Auditing key needs microsecond precision to separate entries
 
-keyval = (double)(t.tv_sec)+(double)(t.tv_nsec)/(double)CF_BILLION;
-snprintf(key,CF_BUFSIZE-1,"%lf",keyval);
+    keyval = (double) (t.tv_sec) + (double) (t.tv_nsec) / (double) CF_BILLION;
+    snprintf(key, CF_BUFSIZE - 1, "%lf", keyval);
 
-if (DEBUG)
-   {
-   AuditStatusMessage(stdout,status);
-   }
+    if (DEBUG)
+    {
+        AuditStatusMessage(stdout, status);
+    }
 
-if (ap != NULL)
-   {
-   strncpy(newaudit.comment,str,CF_AUDIT_COMMENT-1);
-   strncpy(newaudit.filename,ap->filename,CF_AUDIT_COMMENT-1);
-   
-   if (ap->version == NULL || strlen(ap->version) == 0)
-      {
-      CfDebug("Promised in %s bundle %s (unamed version last edited at %s) at/before line %d\n",
-              ap->filename,pp->bundle,ap->date,lineno);
-      newaudit.version[0] = '\0';
-      }
-   else
-      {
-      CfDebug("Promised in %s bundle %s (version %s last edited at %s) at/before line %d\n",ap->filename,pp->bundle,ap->version,ap->date,lineno);
-      strncpy(newaudit.version,ap->version,CF_AUDIT_VERSION-1);
-      }
-   
-   strncpy(newaudit.date,ap->date,CF_AUDIT_DATE);
-   newaudit.line_number = lineno;
-   }
-else
-   {
-   strcpy(newaudit.date,date);
-   strncpy(newaudit.comment,str,CF_AUDIT_COMMENT-1);
-   strcpy(newaudit.filename,"schedule");
-   strcpy(newaudit.version,"");
-   newaudit.line_number = 0;
-   }
+    if (ap != NULL)
+    {
+        strncpy(newaudit.comment, str, CF_AUDIT_COMMENT - 1);
+        strncpy(newaudit.filename, ap->filename, CF_AUDIT_COMMENT - 1);
 
-newaudit.status = status;
+        if (ap->version == NULL || strlen(ap->version) == 0)
+        {
+            CfDebug("Promised in %s bundle %s (unamed version last edited at %s) at/before line %d\n",
+                    ap->filename, pp->bundle, ap->date, lineno);
+            newaudit.version[0] = '\0';
+        }
+        else
+        {
+            CfDebug("Promised in %s bundle %s (version %s last edited at %s) at/before line %d\n", ap->filename,
+                    pp->bundle, ap->version, ap->date, lineno);
+            strncpy(newaudit.version, ap->version, CF_AUDIT_VERSION - 1);
+        }
 
-if (AUDITDBP && (attr.transaction.audit || AUDIT))
-   {
-   WriteDB(AUDITDBP,key,&newaudit,sizeof(newaudit));
-   }
+        strncpy(newaudit.date, ap->date, CF_AUDIT_DATE);
+        newaudit.line_number = lineno;
+    }
+    else
+    {
+        strcpy(newaudit.date, date);
+        strncpy(newaudit.comment, str, CF_AUDIT_COMMENT - 1);
+        strcpy(newaudit.filename, "schedule");
+        strcpy(newaudit.version, "");
+        newaudit.line_number = 0;
+    }
 
-CloseDB(AUDITDBP);
+    newaudit.status = status;
+
+    if (AUDITDBP && (attr.transaction.audit || AUDIT))
+    {
+        WriteDB(AUDITDBP, key, &newaudit, sizeof(newaudit));
+    }
+
+    CloseDB(AUDITDBP);
 }
 
 /************************************************************************/
 
 static void ExtractOperationLock(char *op)
-
-{ char *sp, lastch = 'x'; 
-  int i = 0, dots = 0;
-  int offset = strlen("lock...")+strlen(VUQNAME);
+{
+    char *sp, lastch = 'x';
+    int i = 0, dots = 0;
+    int offset = strlen("lock...") + strlen(VUQNAME);
 
 /* Use the global copy of the lock from the main serial thread */
-  
-for (sp = CFLOCK+offset; *sp != '\0'; sp++)
-   {
-   switch (*sp)
-      {
-      case '_':
-          if (lastch == '_')
-             {
-             break;
-             }
-          else
-             {
-             op[i] = '/';
-             }
-          break;
 
-      case '.':
-          dots++;
-          op[i] = *sp;
-          break;
+    for (sp = CFLOCK + offset; *sp != '\0'; sp++)
+    {
+        switch (*sp)
+        {
+        case '_':
+            if (lastch == '_')
+            {
+                break;
+            }
+            else
+            {
+                op[i] = '/';
+            }
+            break;
 
-      case '0':
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-      case '8':
-      case '9':
-          dots = 9;
-          break;
-          
-      default:
-          op[i] = *sp;
-          break;
-      }
+        case '.':
+            dots++;
+            op[i] = *sp;
+            break;
 
-   lastch = *sp;
-   i++;
-   
-   if (dots > 1)
-      {
-      break;
-      }
-   }
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+            dots = 9;
+            break;
 
-op[i] = '\0';
+        default:
+            op[i] = *sp;
+            break;
+        }
+
+        lastch = *sp;
+        i++;
+
+        if (dots > 1)
+        {
+            break;
+        }
+    }
+
+    op[i] = '\0';
 }
 
 /************************************************************************/
 
 void PromiseLog(char *s)
+{
+    char filename[CF_BUFSIZE];
+    time_t now = time(NULL);
+    FILE *fout;
 
-{ char filename[CF_BUFSIZE];
-  time_t now = time(NULL);
-  FILE *fout;
+    if (s == NULL || strlen(s) == 0)
+    {
+        return;
+    }
 
-if (s == NULL || strlen(s) ==  0)
-   {
-   return;
-   }
-  
-snprintf(filename,CF_BUFSIZE,"%s/%s",CFWORKDIR,CF_PROMISE_LOG);
-MapName(filename);
+    snprintf(filename, CF_BUFSIZE, "%s/%s", CFWORKDIR, CF_PROMISE_LOG);
+    MapName(filename);
 
-if ((fout = fopen(filename,"a")) == NULL)
-   {
-   CfOut(cf_error,"fopen","Could not open %s",filename);
-   return;
-   }
+    if ((fout = fopen(filename, "a")) == NULL)
+    {
+        CfOut(cf_error, "fopen", "Could not open %s", filename);
+        return;
+    }
 
-fprintf(fout,"%ld,%ld: %s\n",CFSTARTTIME,now,s);
-fclose(fout);
+    fprintf(fout, "%ld,%ld: %s\n", CFSTARTTIME, now, s);
+    fclose(fout);
 }
 
 /************************************************************************/
 
 void FatalError(char *s, ...)
-    
-{ CfLock best_guess;
+{
+    CfLock best_guess;
 
-if (s)
-   {
-   va_list ap;
-   char buf[CF_BUFSIZE] = "";
-   va_start(ap, s);
-   vsnprintf(buf, CF_BUFSIZE - 1, s, ap);
-   va_end(ap);
-   CfOut(cf_error,"","Fatal CFEngine error: %s", buf);
-   }
+    if (s)
+    {
+        va_list ap;
+        char buf[CF_BUFSIZE] = "";
 
-if (strlen(CFLOCK) > 0)
-   {
-   best_guess.lock = xstrdup(CFLOCK);
-   best_guess.last = xstrdup(CFLAST);
-   best_guess.log = xstrdup(CFLOG);
-   YieldCurrentLock(best_guess);
-   }
+        va_start(ap, s);
+        vsnprintf(buf, CF_BUFSIZE - 1, s, ap);
+        va_end(ap);
+        CfOut(cf_error, "", "Fatal CFEngine error: %s", buf);
+    }
 
-unlink(PIDFILE);
-EndAudit();
-GenericDeInitialize();
-exit(1);
+    if (strlen(CFLOCK) > 0)
+    {
+        best_guess.lock = xstrdup(CFLOCK);
+        best_guess.last = xstrdup(CFLAST);
+        best_guess.log = xstrdup(CFLOG);
+        YieldCurrentLock(best_guess);
+    }
+
+    unlink(PIDFILE);
+    EndAudit();
+    GenericDeInitialize();
+    exit(1);
 }
 
 /*****************************************************************************/
 
-void AuditStatusMessage(FILE *fp,char status)
-
+void AuditStatusMessage(FILE *fp, char status)
 {
-switch (status) /* Reminder */
-   {
-   case CF_CHG:
-       fprintf(fp,"made a system correction");
-       break;
-       
-   case CF_WARN:
-       fprintf(fp,"promise not kept, no action taken");
-       break;
-       
-   case CF_TIMEX:
-       fprintf(fp,"timed out");
-       break;
+    switch (status)             /* Reminder */
+    {
+    case CF_CHG:
+        fprintf(fp, "made a system correction");
+        break;
 
-   case CF_FAIL:
-       fprintf(fp,"failed to make a correction");
-       break;
-       
-   case CF_DENIED:
-       fprintf(fp,"was denied access to an essential resource");
-       break;
-       
-   case CF_INTERPT:
-       fprintf(fp,"was interrupted\n");
-       break;
+    case CF_WARN:
+        fprintf(fp, "promise not kept, no action taken");
+        break;
 
-   case CF_NOP:
-       fprintf(fp,"was applied but performed no required actions");
-       break;
+    case CF_TIMEX:
+        fprintf(fp, "timed out");
+        break;
 
-   case CF_UNKNOWN:
-       fprintf(fp,"was applied but status unknown");
-       break;
+    case CF_FAIL:
+        fprintf(fp, "failed to make a correction");
+        break;
 
-   case CF_REPORT:
-       fprintf(fp,"report");
-       break;
-   }
+    case CF_DENIED:
+        fprintf(fp, "was denied access to an essential resource");
+        break;
+
+    case CF_INTERPT:
+        fprintf(fp, "was interrupted\n");
+        break;
+
+    case CF_NOP:
+        fprintf(fp, "was applied but performed no required actions");
+        break;
+
+    case CF_UNKNOWN:
+        fprintf(fp, "was applied but status unknown");
+        break;
+
+    case CF_REPORT:
+        fprintf(fp, "report");
+        break;
+    }
 
 }

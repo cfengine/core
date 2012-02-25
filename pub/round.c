@@ -24,7 +24,7 @@
 */
 
 #ifdef HAVE_CONFIG_H
-#include "../src/conf.h"
+# include "../src/conf.h"
 #endif
 
 #include <math.h>
@@ -35,28 +35,30 @@ double round(double x);
 
 double round(double x)
 {
-if (x >= 0.0)
-   {
-   double y = floor(x);
-   if (x - y >= 0.5)
-      {
-      return y + 1.0;
-      }
-   else
-      {
-      return y;
-      }
-   }
-else
-   {
-   double y = ceil(x);
-   if (y - x >= 0.5)
-      {
-      return y - 1.0;
-      }
-   else
-      {
-      return y;
-      }
-   }
+    if (x >= 0.0)
+    {
+        double y = floor(x);
+
+        if (x - y >= 0.5)
+        {
+            return y + 1.0;
+        }
+        else
+        {
+            return y;
+        }
+    }
+    else
+    {
+        double y = ceil(x);
+
+        if (y - x >= 0.5)
+        {
+            return y - 1.0;
+        }
+        else
+        {
+            return y;
+        }
+    }
 }

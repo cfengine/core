@@ -4,310 +4,308 @@
 
 #include <assert.h>
 
-char ToLower (char ch)
-
+char ToLower(char ch)
 {
-if (isupper((int)ch))
-   {
-   return(ch - 'A' + 'a');
-   }
-else
-   {
-   return(ch);
-   }
+    if (isupper((int) ch))
+    {
+        return (ch - 'A' + 'a');
+    }
+    else
+    {
+        return (ch);
+    }
 }
-
 
 /*********************************************************************/
 
-char ToUpper (char ch)
-
+char ToUpper(char ch)
 {
-if (isdigit((int)ch) || ispunct((int)ch))
-   {
-   return(ch);
-   }
+    if (isdigit((int) ch) || ispunct((int) ch))
+    {
+        return (ch);
+    }
 
-if (isupper((int)ch))
-   {
-   return(ch);
-   }
-else
-   {
-   return(ch - 'a' + 'A');
-   }
+    if (isupper((int) ch))
+    {
+        return (ch);
+    }
+    else
+    {
+        return (ch - 'a' + 'A');
+    }
 }
 
 /*********************************************************************/
 
 void ToUpperStrInplace(char *str)
 {
-for (; *str != '\0'; str++)
-   {
-   *str = ToUpper(*str);
-   }
+    for (; *str != '\0'; str++)
+    {
+        *str = ToUpper(*str);
+    }
 }
 
 /*********************************************************************/
 
 char *ToUpperStr(const char *str)
 {
-static char buffer[CF_BUFSIZE];
+    static char buffer[CF_BUFSIZE];
 
-if (strlen(str) >= CF_BUFSIZE)
-   {
-   FatalError("String too long in ToUpperStr: %s", str);
-   }
+    if (strlen(str) >= CF_BUFSIZE)
+    {
+        FatalError("String too long in ToUpperStr: %s", str);
+    }
 
-strlcpy(buffer, str, CF_BUFSIZE);
-ToUpperStrInplace(buffer);
+    strlcpy(buffer, str, CF_BUFSIZE);
+    ToUpperStrInplace(buffer);
 
-return buffer;
+    return buffer;
 }
 
 /*********************************************************************/
 
 void ToLowerStrInplace(char *str)
 {
-for (; *str != '\0'; str++)
-   {
-   *str = ToLower(*str);
-   }
+    for (; *str != '\0'; str++)
+    {
+        *str = ToLower(*str);
+    }
 }
 
 /*********************************************************************/
 
 char *ToLowerStr(const char *str)
-
 {
-static char buffer[CF_BUFSIZE];
+    static char buffer[CF_BUFSIZE];
 
-if (strlen(str) >= CF_BUFSIZE-1)
-   {
-   FatalError("String too long in ToLowerStr: %s", str);
-   }
+    if (strlen(str) >= CF_BUFSIZE - 1)
+    {
+        FatalError("String too long in ToLowerStr: %s", str);
+    }
 
-strlcpy(buffer, str, CF_BUFSIZE);
+    strlcpy(buffer, str, CF_BUFSIZE);
 
-ToLowerStrInplace(buffer);
+    ToLowerStrInplace(buffer);
 
-return buffer;
+    return buffer;
 }
 
 /*********************************************************************/
 
 char *SafeStringDuplicate(const char *str)
 {
- if(str == NULL)
+    if (str == NULL)
     {
-    return NULL;
+        return NULL;
     }
- 
- return xstrdup(str);
+
+    return xstrdup(str);
 }
 
 /*********************************************************************/
 
 int SafeStringLength(const char *str)
 {
- if(str == NULL)
+    if (str == NULL)
     {
-    return 0;
+        return 0;
     }
- 
- return strlen(str);
+
+    return strlen(str);
 }
 
 /*******************************************************************/
 
 int StripListSep(char *strList, char *outBuf, int outBufSz)
 {
-  memset(outBuf,0,outBufSz);
+    memset(outBuf, 0, outBufSz);
 
-  if(NULL_OR_EMPTY(strList))
+    if (NULL_OR_EMPTY(strList))
     {
-    return false;
+        return false;
     }
 
-  if(strList[0] != '{')
+    if (strList[0] != '{')
     {
-    return false;
+        return false;
     }
 
-  snprintf(outBuf,outBufSz,"%s",strList + 1);
+    snprintf(outBuf, outBufSz, "%s", strList + 1);
 
-  if(outBuf[strlen(outBuf) - 1] == '}')
+    if (outBuf[strlen(outBuf) - 1] == '}')
     {
-    outBuf[strlen(outBuf) - 1] = '\0';
+        outBuf[strlen(outBuf) - 1] = '\0';
     }
 
-  return true;
+    return true;
 }
 
 /*******************************************************************/
 
 int GetStringListElement(char *strList, int index, char *outBuf, int outBufSz)
-
 /** Takes a string-parsed list "{'el1','el2','el3',..}" and writes
  ** "el1" or "el2" etc. based on index (starting on 0) in outBuf.
  ** returns true on success, false otherwise.
  **/
+{
+    char *sp, *elStart = strList, *elEnd;
+    int elNum = 0;
+    int minBuf;
 
-{ char *sp,*elStart = strList,*elEnd;
-  int elNum = 0;
-  int minBuf;
+    memset(outBuf, 0, outBufSz);
 
-memset(outBuf,0,outBufSz);
+    if (NULL_OR_EMPTY(strList))
+    {
+        return false;
+    }
 
-if (NULL_OR_EMPTY(strList))
-   {
-   return false;
-   }
+    if (strList[0] != '{')
+    {
+        return false;
+    }
 
-if(strList[0] != '{')
-   {
-   return false;
-   }
+    for (sp = strList; *sp != '\0'; sp++)
+    {
+        if ((sp[0] == '{' || sp[0] == ',') && sp[1] == '\'')
+        {
+            elStart = sp + 2;
+        }
 
-for(sp = strList; *sp != '\0'; sp++)
-   {
-   if((sp[0] == '{' || sp[0] == ',') && sp[1] == '\'')
-      {
-      elStart = sp + 2;
-      }
+        else if ((sp[0] == '\'') && (sp[1] == ',' || sp[1] == '}'))
+        {
+            elEnd = sp;
 
-   else if((sp[0] == '\'') && (sp[1] == ',' || sp[1] == '}'))
-      {
-      elEnd = sp;
-
-      if(elNum == index)
-         {
-         if(elEnd - elStart < outBufSz)
+            if (elNum == index)
             {
-            minBuf = elEnd - elStart;
+                if (elEnd - elStart < outBufSz)
+                {
+                    minBuf = elEnd - elStart;
+                }
+                else
+                {
+                    minBuf = outBufSz - 1;
+                }
+
+                strncpy(outBuf, elStart, minBuf);
+
+                break;
             }
-         else
-            {
-            minBuf = outBufSz - 1;
-            }
 
-         strncpy(outBuf,elStart,minBuf);
+            elNum++;
+        }
+    }
 
-         break;
-         }
-
-      elNum++;
-      }
-   }
-
-return true;
+    return true;
 }
 
 /*********************************************************************/
 
-char* SearchAndReplace(const char *source, const char *search, const char *replace)
-
+char *SearchAndReplace(const char *source, const char *search, const char *replace)
 {
-const char *source_ptr = source;
+    const char *source_ptr = source;
 
-if (source == NULL || search == NULL || replace == NULL)
-   {
-   FatalError("Programming error: NULL argument is passed to SearchAndReplace");
-   }
+    if (source == NULL || search == NULL || replace == NULL)
+    {
+        FatalError("Programming error: NULL argument is passed to SearchAndReplace");
+    }
 
-if (strcmp(search, "") == 0)
-   {
-   return xstrdup(source);
-   }
+    if (strcmp(search, "") == 0)
+    {
+        return xstrdup(source);
+    }
 
-Writer *w = StringWriter();
+    Writer *w = StringWriter();
 
-for (;;)
-   {
-   const char *found_ptr = strstr(source_ptr, search);
-   if (found_ptr == NULL)
-      {
-      WriterWrite(w, source_ptr);
-      return StringWriterClose(w);
-      }
+    for (;;)
+    {
+        const char *found_ptr = strstr(source_ptr, search);
 
-   WriterWriteLen(w, source_ptr, found_ptr - source_ptr);
-   WriterWrite(w, replace);
+        if (found_ptr == NULL)
+        {
+            WriterWrite(w, source_ptr);
+            return StringWriterClose(w);
+        }
 
-   source_ptr += found_ptr - source_ptr + strlen(search);
-   }
+        WriterWriteLen(w, source_ptr, found_ptr - source_ptr);
+        WriterWrite(w, replace);
+
+        source_ptr += found_ptr - source_ptr + strlen(search);
+    }
 }
 
 /*********************************************************************/
 
 char *StringConcatenate(const char *a, size_t a_len, const char *b, size_t b_len)
 {
-char *result = xcalloc(a_len + b_len + 1, sizeof(char));
-strncat(result, a, a_len);
-strncat(result, b, b_len);
-return result;
+    char *result = xcalloc(a_len + b_len + 1, sizeof(char));
+
+    strncat(result, a, a_len);
+    strncat(result, b, b_len);
+    return result;
 }
 
 /*********************************************************************/
 
 char *StringSubstring(const char *source, size_t source_len, int start, int len)
 {
-size_t end = -1;
+    size_t end = -1;
 
-if (len == 0)
-   {
-   return SafeStringDuplicate("");
-   }
-else if (len < 0)
-   {
-   end = source_len + len - 1;
-   }
-else
-   {
-   end = start + len - 1;
-   }
+    if (len == 0)
+    {
+        return SafeStringDuplicate("");
+    }
+    else if (len < 0)
+    {
+        end = source_len + len - 1;
+    }
+    else
+    {
+        end = start + len - 1;
+    }
 
-end = MIN(end, source_len - 1);
+    end = MIN(end, source_len - 1);
 
-if (start < 0)
-   {
-   start = source_len + start;
-   }
+    if (start < 0)
+    {
+        start = source_len + start;
+    }
 
-if (start >= end)
-   {
-   return NULL;
-   }
+    if (start >= end)
+    {
+        return NULL;
+    }
 
-char *result = xcalloc(end - start + 2, sizeof(char));
-strncpy(result, source + start, end - start + 1);
-return result;
+    char *result = xcalloc(end - start + 2, sizeof(char));
+
+    strncpy(result, source + start, end - start + 1);
+    return result;
 }
 
 /*********************************************************************/
 
 bool IsNumber(const char *s)
 {
-for (; *s; s++)
-   {
-   if (!isdigit(*s))
-      {
-      return false;
-      }
-   }
+    for (; *s; s++)
+    {
+        if (!isdigit(*s))
+        {
+            return false;
+        }
+    }
 
-return true;
+    return true;
 }
 
 /*********************************************************************/
 
 long StringToLong(const char *str)
 {
-assert(str);
+    assert(str);
 
-char *end;
-long result = strtol(str, &end, 10);
-assert(!*end && "Failed to convert string to long");
+    char *end;
+    long result = strtol(str, &end, 10);
 
-return result;
+    assert(!*end && "Failed to convert string to long");
+
+    return result;
 }

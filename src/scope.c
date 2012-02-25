@@ -38,37 +38,36 @@ Scope *GetScope(const char *scope)
 /* 
  * Not thread safe - returns pointer to global memory
  */
-{ Scope *cp = NULL;
+{
+    Scope *cp = NULL;
 
-CfDebug("Searching for scope context %s\n",scope);
+    CfDebug("Searching for scope context %s\n", scope);
 
-for (cp = VSCOPE; cp != NULL; cp=cp->next)
-   {
-   if (strcmp(cp->scope,scope) == 0)
-      {
-      CfDebug("Found scope reference %s\n",scope);
-      return cp;
-      }
-   }
+    for (cp = VSCOPE; cp != NULL; cp = cp->next)
+    {
+        if (strcmp(cp->scope, scope) == 0)
+        {
+            CfDebug("Found scope reference %s\n", scope);
+            return cp;
+        }
+    }
 
-return NULL;
+    return NULL;
 }
 
 /*******************************************************************/
 
 void SetScope(char *id)
-
 {
-strncpy(CONTEXTID,id,31);
+    strncpy(CONTEXTID, id, 31);
 }
 
 /*******************************************************************/
 
 void SetNewScope(char *id)
-
 {
-NewScope(id);
-strncpy(CONTEXTID,id,31);
+    NewScope(id);
+    strncpy(CONTEXTID, id, 31);
 }
 
 /*******************************************************************/
@@ -77,138 +76,142 @@ void NewScope(char *name)
 /*
  * Thread safe
  */
-{ Scope *ptr;
-  
-CfDebug("Adding scope data %s\n", name);
+{
+    Scope *ptr;
 
-if (!ThreadLock(cft_vscope))
-   {
-   CfOut(cf_error, "", "!! Could not lock VSCOPE");
-   return;
-   }
- 
-for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
-   {
-   if (strcmp(ptr->scope,name) == 0)
-      {
-      ThreadUnlock(cft_vscope);
-      CfDebug("SCOPE Object %s already exists\n",name);
-      return;
-      }
-   }
+    CfDebug("Adding scope data %s\n", name);
 
-ptr = xcalloc(1, sizeof(Scope));
+    if (!ThreadLock(cft_vscope))
+    {
+        CfOut(cf_error, "", "!! Could not lock VSCOPE");
+        return;
+    }
 
-ptr->next = VSCOPE;
-ptr->scope = xstrdup(name);
-ptr->hashtable = HashInit();
-VSCOPE = ptr;
-ThreadUnlock(cft_vscope);
+    for (ptr = VSCOPE; ptr != NULL; ptr = ptr->next)
+    {
+        if (strcmp(ptr->scope, name) == 0)
+        {
+            ThreadUnlock(cft_vscope);
+            CfDebug("SCOPE Object %s already exists\n", name);
+            return;
+        }
+    }
+
+    ptr = xcalloc(1, sizeof(Scope));
+
+    ptr->next = VSCOPE;
+    ptr->scope = xstrdup(name);
+    ptr->hashtable = HashInit();
+    VSCOPE = ptr;
+    ThreadUnlock(cft_vscope);
 }
 
 /*******************************************************************/
 
-void AugmentScope(char *scope,Rlist *lvals,Rlist *rvals)
+void AugmentScope(char *scope, Rlist *lvals, Rlist *rvals)
+{
+    Scope *ptr;
+    Rlist *rpl, *rpr;
+    Rval retval;
+    char *lval, naked[CF_BUFSIZE];
+    HashIterator i;
+    CfAssoc *assoc;
 
-{ Scope *ptr;
-  Rlist *rpl,*rpr;
-  Rval retval;
-  char *lval,naked[CF_BUFSIZE];
-  HashIterator i;
-  CfAssoc *assoc;
+    if (RlistLen(lvals) != RlistLen(rvals))
+    {
+        CfOut(cf_error, "", "While constructing scope \"%s\"\n", scope);
+        fprintf(stderr, "Formal = ");
+        ShowRlist(stderr, lvals);
+        fprintf(stderr, ", Actual = ");
+        ShowRlist(stderr, rvals);
+        fprintf(stderr, "\n");
+        FatalError("Augment scope, formal and actual parameter mismatch is fatal");
+    }
 
-if (RlistLen(lvals) != RlistLen(rvals))
-   {
-   CfOut(cf_error,"","While constructing scope \"%s\"\n",scope);
-   fprintf(stderr,"Formal = ");
-   ShowRlist(stderr,lvals);
-   fprintf(stderr,", Actual = ");
-   ShowRlist(stderr,rvals);
-   fprintf(stderr,"\n");
-   FatalError("Augment scope, formal and actual parameter mismatch is fatal");
-   }
+    for (rpl = lvals, rpr = rvals; rpl != NULL; rpl = rpl->next, rpr = rpr->next)
+    {
+        lval = (char *) rpl->item;
 
-for (rpl = lvals, rpr=rvals; rpl != NULL; rpl = rpl->next,rpr = rpr->next)
-   {
-   lval = (char *)rpl->item;
+        CfOut(cf_verbose, "", "    ? Augment scope %s with %s (%c)\n", scope, lval, rpr->type);
 
-   CfOut(cf_verbose,"","    ? Augment scope %s with %s (%c)\n",scope,lval,rpr->type);
+        // CheckBundleParameters() already checked that there is no namespace collision
+        // By this stage all functions should have been expanded, so we only have scalars left
 
-   // CheckBundleParameters() already checked that there is no namespace collision
-   // By this stage all functions should have been expanded, so we only have scalars left
+        if (IsNakedVar(rpr->item, '@'))
+        {
+            enum cfdatatype vtype;
 
-   if (IsNakedVar(rpr->item,'@'))
-      {
-      enum cfdatatype vtype;
-      GetNaked(naked,rpr->item);
+            GetNaked(naked, rpr->item);
 
-      vtype = GetVariable(scope,naked,&retval);
+            vtype = GetVariable(scope, naked, &retval);
 
-      switch(vtype)
-         {
-         case cf_slist:
-         case cf_ilist:
-         case cf_rlist:
-            NewList(scope,lval,CopyRvalItem((Rval) { retval.item, CF_LIST }).item,cf_slist);
-             break;
-         default:
-             CfOut(cf_error,""," !! List parameter \"%s\" not found while constructing scope \"%s\" - use @(scope.variable) in calling reference",naked,scope);
-             NewScalar(scope,lval,rpr->item,cf_str);             
-             break;
-         }
-      }
-   else
-      {
-      NewScalar(scope,lval,rpr->item,cf_str);
-      }
-   }
+            switch (vtype)
+            {
+            case cf_slist:
+            case cf_ilist:
+            case cf_rlist:
+                NewList(scope, lval, CopyRvalItem((Rval) {retval.item, CF_LIST}).item, cf_slist);
+                break;
+            default:
+                CfOut(cf_error, "",
+                      " !! List parameter \"%s\" not found while constructing scope \"%s\" - use @(scope.variable) in calling reference",
+                      naked, scope);
+                NewScalar(scope, lval, rpr->item, cf_str);
+                break;
+            }
+        }
+        else
+        {
+            NewScalar(scope, lval, rpr->item, cf_str);
+        }
+    }
 
 /* Check that there are no danglers left to evaluate in the hash table itself */
 
-ptr = GetScope(scope);
+    ptr = GetScope(scope);
 
-i = HashIteratorInit(ptr->hashtable);
+    i = HashIteratorInit(ptr->hashtable);
 
-while ((assoc = HashIteratorNext(&i)))
-   {
-   retval = ExpandPrivateRval(scope, assoc->rval);
-   // Retain the assoc, just replace rval
-   DeleteRvalItem(assoc->rval);
-   assoc->rval = retval;
-   }
+    while ((assoc = HashIteratorNext(&i)))
+    {
+        retval = ExpandPrivateRval(scope, assoc->rval);
+        // Retain the assoc, just replace rval
+        DeleteRvalItem(assoc->rval);
+        assoc->rval = retval;
+    }
 
-return;
+    return;
 }
 
 /*******************************************************************/
 
 void DeleteAllScope()
+{
+    Scope *ptr, *this;
 
-{ Scope *ptr, *this;
-  
-CfDebug("Deleting all scoped variables\n");
+    CfDebug("Deleting all scoped variables\n");
 
-if (!ThreadLock(cft_vscope))
-   {
-   CfOut(cf_error, "", "!! Could not lock VSCOPE");
-   return;
-   }
- 
-ptr = VSCOPE;
+    if (!ThreadLock(cft_vscope))
+    {
+        CfOut(cf_error, "", "!! Could not lock VSCOPE");
+        return;
+    }
 
-while (ptr != NULL)
-   {
-   this = ptr;
-   CfDebug(" -> Deleting scope %s\n",ptr->scope);
-   HashClear(this->hashtable);
-   free(this->scope);   
-   ptr = this->next;
-   free((char *)this);
-   }
+    ptr = VSCOPE;
 
-VSCOPE = NULL;
+    while (ptr != NULL)
+    {
+        this = ptr;
+        CfDebug(" -> Deleting scope %s\n", ptr->scope);
+        HashClear(this->hashtable);
+        free(this->scope);
+        ptr = this->next;
+        free((char *) this);
+    }
 
-ThreadUnlock(cft_vscope);
+    VSCOPE = NULL;
+
+    ThreadUnlock(cft_vscope);
 }
 
 /*******************************************************************/
@@ -217,69 +220,68 @@ void DeleteScope(char *name)
 /*
  * Thread safe
  */
+{
+    Scope *ptr, *prev = NULL;
+    int found = false;
 
-{ Scope *ptr, *prev = NULL;
-  int found = false;
- 
-CfDebug("Deleting scope %s\n", name);
+    CfDebug("Deleting scope %s\n", name);
 
-if (!ThreadLock(cft_vscope))
-   {
-   CfOut(cf_error, "", "!! Could not lock VSCOPE");
-   return;
-   }
+    if (!ThreadLock(cft_vscope))
+    {
+        CfOut(cf_error, "", "!! Could not lock VSCOPE");
+        return;
+    }
 
+    for (ptr = VSCOPE; ptr != NULL; ptr = ptr->next)
+    {
+        if (strcmp(ptr->scope, name) == 0)
+        {
+            CfDebug("Object %s exists\n", name);
+            found = true;
+            break;
+        }
+        else
+        {
+            prev = ptr;
+        }
+    }
 
-for (ptr = VSCOPE; ptr != NULL; ptr=ptr->next)
-   {
-   if (strcmp(ptr->scope,name) == 0)
-      {
-      CfDebug("Object %s exists\n",name);
-      found = true;
-      break;
-      }
-   else
-      {
-      prev = ptr;
-      }
-   }
+    if (!found)
+    {
+        CfDebug("No such scope to delete\n");
+        ThreadUnlock(cft_vscope);
+        return;
+    }
 
-if (!found)
-   {
-   CfDebug("No such scope to delete\n");
-   ThreadUnlock(cft_vscope);
-   return;
-   }
+    if (ptr == VSCOPE)
+    {
+        VSCOPE = ptr->next;
+    }
+    else
+    {
+        prev->next = ptr->next;
+    }
 
-if (ptr == VSCOPE)
-   {
-   VSCOPE = ptr->next;
-   }
-else
-   {
-   prev->next = ptr->next;
-   }
+    HashFree(ptr->hashtable);
 
-HashFree(ptr->hashtable);
+    free(ptr->scope);
+    free((char *) ptr);
 
-free(ptr->scope);
-free((char *)ptr);
-
-ThreadUnlock(cft_vscope);
+    ThreadUnlock(cft_vscope);
 }
 
 /*******************************************************************/
 
-void DeleteFromScope(char *scope,Rlist *args)
+void DeleteFromScope(char *scope, Rlist *args)
+{
+    Rlist *rp;
+    char *lval;
 
-{ Rlist *rp;
- char *lval;
-
-for (rp = args; rp != NULL; rp=rp->next)
-   {
-   lval = (char *)rp->item;
-   DeleteScalar(scope,lval);
-   }
+    for (rp = args; rp != NULL; rp = rp->next)
+    {
+        lval = (char *) rp->item;
+        DeleteScalar(scope, lval);
+    }
 }
 
 /*******************************************************************/
@@ -288,25 +290,26 @@ void CopyScope(char *new, char *old)
 /*
  * Thread safe
  */
-{ Scope *op, *np;
- 
-CfDebug("\n*\nCopying scope data %s to %s\n*\n",old,new);
+{
+    Scope *op, *np;
 
-NewScope(new);
+    CfDebug("\n*\nCopying scope data %s to %s\n*\n", old, new);
 
-if (!ThreadLock(cft_vscope))
-   {
-   CfOut(cf_error, "", "!! Could not lock VSCOPE");
-   return;
-   }
+    NewScope(new);
 
-if ((op = GetScope(old)))
-   {
-   np = GetScope(new);
-   HashCopy(np->hashtable,op->hashtable);
-   }
+    if (!ThreadLock(cft_vscope))
+    {
+        CfOut(cf_error, "", "!! Could not lock VSCOPE");
+        return;
+    }
 
-ThreadUnlock(cft_vscope);
+    if ((op = GetScope(old)))
+    {
+        np = GetScope(new);
+        HashCopy(np->hashtable, op->hashtable);
+    }
+
+    ThreadUnlock(cft_vscope);
 }
 
 /*******************************************************************/
@@ -314,42 +317,41 @@ ThreadUnlock(cft_vscope);
 /*******************************************************************/
 
 void PushThisScope()
+{
+    Scope *op;
+    char name[CF_MAXVARSIZE];
 
-{ Scope *op;
- char name[CF_MAXVARSIZE];
+    op = GetScope("this");
 
-op = GetScope("this");
+    if (op == NULL)
+    {
+        return;
+    }
 
-if (op == NULL)
-   {
-   return;
-   }
-
-CF_STCKFRAME++;
-PushStack(&CF_STCK,(void *)op);
-snprintf(name,CF_MAXVARSIZE,"this_%d",CF_STCKFRAME);
-free(op->scope);
-op->scope = xstrdup(name);
+    CF_STCKFRAME++;
+    PushStack(&CF_STCK, (void *) op);
+    snprintf(name, CF_MAXVARSIZE, "this_%d", CF_STCKFRAME);
+    free(op->scope);
+    op->scope = xstrdup(name);
 }
 
 /*******************************************************************/
 
 void PopThisScope()
+{
+    Scope *op = NULL;
 
-{ Scope *op = NULL;
+    if (CF_STCKFRAME > 0)
+    {
+        DeleteScope("this");
+        PopStack(&CF_STCK, (void *) &op, sizeof(op));
+        if (op == NULL)
+        {
+            return;
+        }
 
-if (CF_STCKFRAME > 0)
-   {
-   DeleteScope("this");
-   PopStack(&CF_STCK,(void *)&op,sizeof(op));
-   if (op == NULL)
-      {
-      return;
-      }
-   
-   CF_STCKFRAME--;
-   free(op->scope);
-   op->scope = xstrdup("this");
-   }    
+        CF_STCKFRAME--;
+        free(op->scope);
+        op->scope = xstrdup("this");
+    }
 }
-

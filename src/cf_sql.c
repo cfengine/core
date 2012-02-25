@@ -33,21 +33,20 @@
 #include "cf3.extern.h"
 
 #ifdef HAVE_MYSQL_H
-#include <mysql.h>
+# include <mysql.h>
 #elif defined(HAVE_MYSQL_MYSQL_H)
-#include <mysql/mysql.h>
+# include <mysql/mysql.h>
 #endif
 
 #ifdef HAVE_PGSQL_LIBPQ_FE_H
- #include <pgsql/libpq-fe.h>
+# include <pgsql/libpq-fe.h>
 #elif defined(HAVE_LIBPQ_FE_H)
- #include <libpq-fe.h>
+# include <libpq-fe.h>
 #endif
 
 /* Cfengine connectors for sql databases. Note that there are significant
    differences in db admin functions in the various implementations. e.g.
    sybase/mysql "use database, create database" not in postgres.
-
 
 CfConnectDB(&cfdb,SQL_TYPE,SQL_SERVER,SQL_OWNER,SQL_PASSWD,SQL_DATABASE);
 
@@ -72,125 +71,116 @@ CfDeleteQuery(&cfdb);
 CfCloseDB(&cfdb);
 */
 
-
 /*****************************************************************************/
 
 #ifdef HAVE_LIBMYSQLCLIENT
 
 typedef struct
-   {
-   MYSQL conn;
-   MYSQL_RES *res;
-   } DbMysqlConn;
+{
+    MYSQL conn;
+    MYSQL_RES *res;
+} DbMysqlConn;
 
 /*****************************************************************************/
 
-static DbMysqlConn *CfConnectMysqlDB(const char *host,
-                                              const char *user,
-                                              const char *password,
-                                              const char *database)
+static DbMysqlConn *CfConnectMysqlDB(const char *host, const char *user, const char *password, const char *database)
 {
-DbMysqlConn *c;
+    DbMysqlConn *c;
 
-CfOut(cf_verbose,""," -> This is a MySQL database\n");
+    CfOut(cf_verbose, "", " -> This is a MySQL database\n");
 
-c = xcalloc(1, sizeof(DbMysqlConn));
+    c = xcalloc(1, sizeof(DbMysqlConn));
 
-mysql_init(&c->conn);
+    mysql_init(&c->conn);
 
-if (!mysql_real_connect(&c->conn, host, user, password,
-                        database, 0, NULL, 0))
-   {
-   CfOut(cf_error,"","Failed to connect to existing MySQL database: %s\n",mysql_error(&c->conn));
-   free(c);
-   return NULL;
-   }
+    if (!mysql_real_connect(&c->conn, host, user, password, database, 0, NULL, 0))
+    {
+        CfOut(cf_error, "", "Failed to connect to existing MySQL database: %s\n", mysql_error(&c->conn));
+        free(c);
+        return NULL;
+    }
 
-return c;
+    return c;
 }
 
 /*****************************************************************************/
 
 static void CfCloseMysqlDB(DbMysqlConn *c)
 {
-mysql_close(&c->conn);
-free(c);
+    mysql_close(&c->conn);
+    free(c);
 }
 
 /*****************************************************************************/
 
 static void CfNewQueryMysqlDb(CfdbConn *c, const char *query)
 {
-DbMysqlConn *mc = c->data;
+    DbMysqlConn *mc = c->data;
 
-if (mysql_query(&mc->conn, query) != 0)
-   {
-   CfOut(cf_inform,"","MySQL query failed: %s, (%s)\n",query,mysql_error(&mc->conn));
-   }
-else
-   {
-   mc->res = mysql_store_result(&mc->conn);
+    if (mysql_query(&mc->conn, query) != 0)
+    {
+        CfOut(cf_inform, "", "MySQL query failed: %s, (%s)\n", query, mysql_error(&mc->conn));
+    }
+    else
+    {
+        mc->res = mysql_store_result(&mc->conn);
 
-   if (mc->res)
-      {
-      c->result = true;
-      c->maxcolumns = mysql_num_fields(mc->res);
-      c->maxrows = mysql_num_rows(mc->res);
-      }
-   }
+        if (mc->res)
+        {
+            c->result = true;
+            c->maxcolumns = mysql_num_fields(mc->res);
+            c->maxrows = mysql_num_rows(mc->res);
+        }
+    }
 }
 
 /*****************************************************************************/
 
 static void CfFetchMysqlRow(CfdbConn *c)
 {
-int i;
-MYSQL_ROW thisrow;
-DbMysqlConn *mc = c->data;
+    int i;
+    MYSQL_ROW thisrow;
+    DbMysqlConn *mc = c->data;
 
-if (c->maxrows > 0)
-   {
-   thisrow = mysql_fetch_row(mc->res);
+    if (c->maxrows > 0)
+    {
+        thisrow = mysql_fetch_row(mc->res);
 
-   if (thisrow)
-      {
-      c->rowdata = xmalloc(sizeof(char *) * c->maxcolumns);
+        if (thisrow)
+        {
+            c->rowdata = xmalloc(sizeof(char *) * c->maxcolumns);
 
-      for (i = 0; i < c->maxcolumns; i++)
-         {
-         c->rowdata[i] = (char *)thisrow[i];
-         }
-      }
-   else
-      {
-      c->rowdata = NULL;
-      }
-   }
+            for (i = 0; i < c->maxcolumns; i++)
+            {
+                c->rowdata[i] = (char *) thisrow[i];
+            }
+        }
+        else
+        {
+            c->rowdata = NULL;
+        }
+    }
 }
 
 /*****************************************************************************/
 
 static void CfDeleteMysqlQuery(CfdbConn *c)
 {
-DbMysqlConn *mc = c->data;
+    DbMysqlConn *mc = c->data;
 
-if (mc->res)
-   {
-   mysql_free_result(mc->res);
-   mc->res = NULL;
-   }
+    if (mc->res)
+    {
+        mysql_free_result(mc->res);
+        mc->res = NULL;
+    }
 }
 
 #else
 
-static void *CfConnectMysqlDB(const char *host,
-                              const char *user,
-                              const char *password,
-                              const char *database)
-
+static void *CfConnectMysqlDB(const char *host, const char *user, const char *password, const char *database)
 {
-CfOut(cf_inform,"","There is no MySQL support compiled into this version");
-return NULL;
+    CfOut(cf_inform, "", "There is no MySQL support compiled into this version");
+    return NULL;
 }
 
 static void CfCloseMysqlDB(void *c)
@@ -214,132 +204,128 @@ static void CfDeleteMysqlQuery(CfdbConn *c)
 #ifdef HAVE_LIBPQ
 
 typedef struct
-   {
-   PGconn *conn;
-   PGresult *res;
-   } DbPostgresqlConn;
+{
+    PGconn *conn;
+    PGresult *res;
+} DbPostgresqlConn;
 
 /*****************************************************************************/
 
 static DbPostgresqlConn *CfConnectPostgresqlDB(const char *host,
-                                                        const char *user,
-                                                        const char *password,
-                                                        const char *database)
+                                               const char *user, const char *password, const char *database)
 {
-DbPostgresqlConn *c;
-char format[CF_BUFSIZE];
+    DbPostgresqlConn *c;
+    char format[CF_BUFSIZE];
 
-CfOut(cf_verbose,""," -> This is a PotsgreSQL database\n");
+    CfOut(cf_verbose, "", " -> This is a PotsgreSQL database\n");
 
-c = xcalloc(1, sizeof(DbPostgresqlConn));
+    c = xcalloc(1, sizeof(DbPostgresqlConn));
 
-if (strcmp(host,"localhost") == 0)
-   {
-   /* Some authentication problem - ?? */
-   if (database)
-      {
-      snprintf(format,CF_BUFSIZE-1,"dbname=%s user=%s password=%s",database,user,password);
-      }
-   else
-      {
-      snprintf(format,CF_BUFSIZE-1,"user=%s password=%s",user,password);
-      }
-   }
-else
-   {
-   if (database)
-      {
-      snprintf(format,CF_BUFSIZE-1,"dbname=%s host=%s user=%s password=%s",database,host,user,password);
-      }
-   else
-      {
-      snprintf(format,CF_BUFSIZE-1,"host=%s user=%s password=%s",host,user,password);
-      }
-   }
+    if (strcmp(host, "localhost") == 0)
+    {
+        /* Some authentication problem - ?? */
+        if (database)
+        {
+            snprintf(format, CF_BUFSIZE - 1, "dbname=%s user=%s password=%s", database, user, password);
+        }
+        else
+        {
+            snprintf(format, CF_BUFSIZE - 1, "user=%s password=%s", user, password);
+        }
+    }
+    else
+    {
+        if (database)
+        {
+            snprintf(format, CF_BUFSIZE - 1, "dbname=%s host=%s user=%s password=%s", database, host, user, password);
+        }
+        else
+        {
+            snprintf(format, CF_BUFSIZE - 1, "host=%s user=%s password=%s", host, user, password);
+        }
+    }
 
-c->conn = PQconnectdb(format);
+    c->conn = PQconnectdb(format);
 
-if (PQstatus(c->conn) == CONNECTION_BAD)
-   {
-   CfOut(cf_error,"","Failed to connect to existing PostgreSQL database: %s\n",PQerrorMessage(c->conn));
-   free(c);
-   return NULL;
-   }
+    if (PQstatus(c->conn) == CONNECTION_BAD)
+    {
+        CfOut(cf_error, "", "Failed to connect to existing PostgreSQL database: %s\n", PQerrorMessage(c->conn));
+        free(c);
+        return NULL;
+    }
 
-return c;
+    return c;
 }
 
 /*****************************************************************************/
 
 static void CfClosePostgresqlDb(DbPostgresqlConn *c)
 {
-PQfinish(c->conn);
-free(c);
+    PQfinish(c->conn);
+    free(c);
 }
 
 /*****************************************************************************/
 
 static void CfNewQueryPostgresqlDb(CfdbConn *c, const char *query)
 {
-DbPostgresqlConn *pc = c->data;
+    DbPostgresqlConn *pc = c->data;
 
-pc->res = PQexec(pc->conn, query);
+    pc->res = PQexec(pc->conn, query);
 
-if (PQresultStatus(pc->res) != PGRES_COMMAND_OK && PQresultStatus(pc->res) != PGRES_TUPLES_OK)
-   {
-   CfOut(cf_inform,"","PostgreSQL query failed: %s, %s\n",query,PQerrorMessage(pc->conn));
-   }
-else
-   {
-   c->result = true;
-   c->maxcolumns = PQnfields(pc->res);
-   c->maxrows = PQntuples(pc->res);
-   }
+    if (PQresultStatus(pc->res) != PGRES_COMMAND_OK && PQresultStatus(pc->res) != PGRES_TUPLES_OK)
+    {
+        CfOut(cf_inform, "", "PostgreSQL query failed: %s, %s\n", query, PQerrorMessage(pc->conn));
+    }
+    else
+    {
+        c->result = true;
+        c->maxcolumns = PQnfields(pc->res);
+        c->maxrows = PQntuples(pc->res);
+    }
 }
 
 /*****************************************************************************/
 
 static void CfFetchPostgresqlRow(CfdbConn *c)
 {
-int i;
-DbPostgresqlConn *pc = c->data;
+    int i;
+    DbPostgresqlConn *pc = c->data;
 
-if (c->row >= c->maxrows)
-   {
-   c->rowdata = NULL;
-   return;
-   }
+    if (c->row >= c->maxrows)
+    {
+        c->rowdata = NULL;
+        return;
+    }
 
-if (c->maxrows > 0)
-   {
-   c->rowdata = xmalloc(sizeof(char *) * c->maxcolumns);
-   }
+    if (c->maxrows > 0)
+    {
+        c->rowdata = xmalloc(sizeof(char *) * c->maxcolumns);
+    }
 
-for (i = 0; i < c->maxcolumns; i++)
-   {
-   c->rowdata[i] = PQgetvalue(pc->res,c->row,i);
-   }
+    for (i = 0; i < c->maxcolumns; i++)
+    {
+        c->rowdata[i] = PQgetvalue(pc->res, c->row, i);
+    }
 }
 
 /*****************************************************************************/
 
 static void CfDeletePostgresqlQuery(CfdbConn *c)
 {
-DbPostgresqlConn *pc = c->data;
-PQclear(pc->res);
+    DbPostgresqlConn *pc = c->data;
+
+    PQclear(pc->res);
 }
 
 /*****************************************************************************/
 
 #else
 
-static void *CfConnectPostgresqlDB(const char *host,
-                                   const char *user,
-                                   const char *password,
-                                   const char *database)
+static void *CfConnectPostgresqlDB(const char *host, const char *user, const char *password, const char *database)
 {
-CfOut(cf_inform,"","There is no PostgreSQL support compiled into this version");
-return NULL;
+    CfOut(cf_inform, "", "There is no PostgreSQL support compiled into this version");
+    return NULL;
 }
 
 static void CfClosePostgresqlDb(void *c)
@@ -362,184 +348,177 @@ static void CfDeletePostgresqlQuery(CfdbConn *c)
 
 /*****************************************************************************/
 
-int CfConnectDB(CfdbConn *cfdb,enum cfdbtype dbtype,char *remotehost,char *dbuser, char *passwd, char *db)
-
+int CfConnectDB(CfdbConn *cfdb, enum cfdbtype dbtype, char *remotehost, char *dbuser, char *passwd, char *db)
 {
 
-cfdb->connected = false;
-cfdb->type = dbtype;
+    cfdb->connected = false;
+    cfdb->type = dbtype;
 
 /* If db == NULL, no database was specified, so we assume it has not been created yet. Need to
    open a generic database and create */
 
-if (db == NULL)
-   {
-   db = "no db specified";
-   }
+    if (db == NULL)
+    {
+        db = "no db specified";
+    }
 
-CfOut(cf_verbose,"","Connect to SQL database \"%s\" user=%s, host=%s (type=%d)\n",db,dbuser,remotehost,dbtype);
+    CfOut(cf_verbose, "", "Connect to SQL database \"%s\" user=%s, host=%s (type=%d)\n", db, dbuser, remotehost,
+          dbtype);
 
-switch (dbtype)
-   {
-   case cfd_mysql:
-       cfdb->data = CfConnectMysqlDB(remotehost, dbuser, passwd, db);
-       break;
+    switch (dbtype)
+    {
+    case cfd_mysql:
+        cfdb->data = CfConnectMysqlDB(remotehost, dbuser, passwd, db);
+        break;
 
-   case cfd_postgres:
-       cfdb->data = CfConnectPostgresqlDB(remotehost, dbuser, passwd, db);
-       break;
+    case cfd_postgres:
+        cfdb->data = CfConnectPostgresqlDB(remotehost, dbuser, passwd, db);
+        break;
 
-   default:
-       CfOut(cf_verbose,"","There is no SQL database selected");
-       break;
-   }
+    default:
+        CfOut(cf_verbose, "", "There is no SQL database selected");
+        break;
+    }
 
-if (cfdb->data)
-    cfdb->connected = true;
+    if (cfdb->data)
+        cfdb->connected = true;
 
-cfdb->blank = xstrdup("");
-return true;
+    cfdb->blank = xstrdup("");
+    return true;
 }
-
 
 /*****************************************************************************/
 
 void CfCloseDB(CfdbConn *cfdb)
-
 {
-if (!cfdb->connected)
-   {
-   return;
-   }
+    if (!cfdb->connected)
+    {
+        return;
+    }
 
-switch (cfdb->type)
-   {
-   case cfd_mysql:
-       CfCloseMysqlDB(cfdb->data);
-       break;
+    switch (cfdb->type)
+    {
+    case cfd_mysql:
+        CfCloseMysqlDB(cfdb->data);
+        break;
 
-   case cfd_postgres:
-       CfClosePostgresqlDb(cfdb->data);
-       break;
+    case cfd_postgres:
+        CfClosePostgresqlDb(cfdb->data);
+        break;
 
-   default:
-       CfOut(cf_verbose,"","There is no SQL database selected");
-       break;
-   }
+    default:
+        CfOut(cf_verbose, "", "There is no SQL database selected");
+        break;
+    }
 
-cfdb->connected = false;
-free(cfdb->blank);
+    cfdb->connected = false;
+    free(cfdb->blank);
 }
 
 /*****************************************************************************/
 
-void CfVoidQueryDB(CfdbConn *cfdb,char *query)
-
+void CfVoidQueryDB(CfdbConn *cfdb, char *query)
 {
-if (!cfdb->connected)
-   {
-   return;
-   }
+    if (!cfdb->connected)
+    {
+        return;
+    }
 
 /* If we don't need to retrieve table entries...*/
-CfNewQueryDB(cfdb,query);
-CfDeleteQuery(cfdb);
+    CfNewQueryDB(cfdb, query);
+    CfDeleteQuery(cfdb);
 }
 
 /*****************************************************************************/
 
-void CfNewQueryDB(CfdbConn *cfdb,char *query)
-
+void CfNewQueryDB(CfdbConn *cfdb, char *query)
 {
-cfdb->result = false;
-cfdb->row = 0;
-cfdb->column = 0;
-cfdb->rowdata = NULL;
-cfdb->maxcolumns = 0;
-cfdb->maxrows = 0;
+    cfdb->result = false;
+    cfdb->row = 0;
+    cfdb->column = 0;
+    cfdb->rowdata = NULL;
+    cfdb->maxcolumns = 0;
+    cfdb->maxrows = 0;
 
-CfDebug("Before Query succeeded: %s - %d,%d\n",query,cfdb->maxrows,cfdb->maxcolumns);
+    CfDebug("Before Query succeeded: %s - %d,%d\n", query, cfdb->maxrows, cfdb->maxcolumns);
 
-switch (cfdb->type)
-   {
-   case cfd_mysql:
-       CfNewQueryMysqlDb(cfdb, query);
-       break;
+    switch (cfdb->type)
+    {
+    case cfd_mysql:
+        CfNewQueryMysqlDb(cfdb, query);
+        break;
 
-   case cfd_postgres:
-       CfNewQueryPostgresqlDb(cfdb, query);
-       break;
+    case cfd_postgres:
+        CfNewQueryPostgresqlDb(cfdb, query);
+        break;
 
-   default:
-       CfOut(cf_verbose,"","There is no SQL database selected");
-       break;
-   }
+    default:
+        CfOut(cf_verbose, "", "There is no SQL database selected");
+        break;
+    }
 
-CfDebug("Query succeeded: (%s) %d,%d\n",query,cfdb->maxrows,cfdb->maxcolumns);
+    CfDebug("Query succeeded: (%s) %d,%d\n", query, cfdb->maxrows, cfdb->maxcolumns);
 }
 
 /*****************************************************************************/
 
 char **CfFetchRow(CfdbConn *cfdb)
-
 {
-switch (cfdb->type)
-   {
-   case cfd_mysql:
-       CfFetchMysqlRow(cfdb);
-       break;
+    switch (cfdb->type)
+    {
+    case cfd_mysql:
+        CfFetchMysqlRow(cfdb);
+        break;
 
-   case cfd_postgres:
-       CfFetchPostgresqlRow(cfdb);
-       break;
+    case cfd_postgres:
+        CfFetchPostgresqlRow(cfdb);
+        break;
 
-   default:
-       CfOut(cf_verbose,"","There is no SQL database selected");
-       break;
-   }
+    default:
+        CfOut(cf_verbose, "", "There is no SQL database selected");
+        break;
+    }
 
-cfdb->row++;
-return cfdb->rowdata;
+    cfdb->row++;
+    return cfdb->rowdata;
 }
 
 /*****************************************************************************/
 
-char *CfFetchColumn(CfdbConn *cfdb,int col)
-
+char *CfFetchColumn(CfdbConn *cfdb, int col)
 {
-if (cfdb->rowdata && cfdb->rowdata[col])
-   {
-   return cfdb->rowdata[col];
-   }
-else
-   {
-   return NULL;
-   }
+    if (cfdb->rowdata && cfdb->rowdata[col])
+    {
+        return cfdb->rowdata[col];
+    }
+    else
+    {
+        return NULL;
+    }
 }
 
 /*****************************************************************************/
 
 void CfDeleteQuery(CfdbConn *cfdb)
-
 {
-switch (cfdb->type)
-   {
-   case cfd_mysql:
-       CfDeleteMysqlQuery(cfdb);
-       break;
+    switch (cfdb->type)
+    {
+    case cfd_mysql:
+        CfDeleteMysqlQuery(cfdb);
+        break;
 
-   case cfd_postgres:
-       CfDeletePostgresqlQuery(cfdb);
-       break;
+    case cfd_postgres:
+        CfDeletePostgresqlQuery(cfdb);
+        break;
 
-   default:
-       CfOut(cf_verbose,"","There is no SQL database selected");
-       break;
-   }
+    default:
+        CfOut(cf_verbose, "", "There is no SQL database selected");
+        break;
+    }
 
-if (cfdb->rowdata)
-   {
-   free(cfdb->rowdata);
-   cfdb->rowdata = NULL;
-   }
+    if (cfdb->rowdata)
+    {
+        free(cfdb->rowdata);
+        cfdb->rowdata = NULL;
+    }
 }

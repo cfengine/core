@@ -43,14 +43,14 @@ extern const Sock ECGSOCKS[ATTR];
 extern const char *TCPNAMES[CF_NETATTR];
 
 extern Audit *AUDITPTR;
-extern Audit *VAUDIT; 
+extern Audit *VAUDIT;
 
 extern char CONTEXTID[32];
 extern char PADCHAR;
 extern Item *IPADDRESSES;
 
 extern char PIDFILE[CF_BUFSIZE];
-extern char  STR_CFENGINEPORT[16];
+extern char STR_CFENGINEPORT[16];
 extern unsigned short SHORT_CFENGINEPORT;
 extern time_t CONNTIMEOUT;
 
@@ -92,9 +92,8 @@ extern Item *VNEGHEAP;
 
 extern Item *VSETUIDLIST;
 extern Item *SUSPICIOUSLIST;
-extern AlphaList VHEAP; 
+extern AlphaList VHEAP;
 extern AlphaList VADDCLASSES;
-
 
 extern int DEBUG;
 
@@ -155,7 +154,7 @@ extern int IGNORE_MISSING_INPUTS;
 extern int IGNORE_MISSING_BUNDLES;
 extern char WEBDRIVER[CF_MAXVARSIZE];
 extern char DOCROOT[CF_MAXVARSIZE];
-extern char BANNER[2*CF_BUFSIZE];
+extern char BANNER[2 * CF_BUFSIZE];
 extern char FOOTER[CF_BUFSIZE];
 extern char STYLESHEET[CF_BUFSIZE];
 extern int CF_TOPICS;
@@ -169,7 +168,7 @@ extern Bundle *BUNDLES;
 extern Body *BODIES;
 extern Scope *VSCOPE;
 extern Audit *AUDITPTR;
-extern Audit *VAUDIT; 
+extern Audit *VAUDIT;
 extern Rlist *VINPUTLIST;
 extern Rlist *BODYPARTS;
 extern Rlist *SUBBUNDLES;
@@ -231,11 +230,11 @@ extern const char *MONTH_TEXT[];
 extern const char *SHIFT_TEXT[];
 
 #if defined(NT) && !defined(__CYGWIN__)
-#  define FILE_SEPARATOR '\\'
-#  define FILE_SEPARATOR_STR "\\"
-# else
-#  define FILE_SEPARATOR '/'
-#  define FILE_SEPARATOR_STR "/"
+# define FILE_SEPARATOR '\\'
+# define FILE_SEPARATOR_STR "\\"
+#else
+# define FILE_SEPARATOR '/'
+# define FILE_SEPARATOR_STR "/"
 #endif
 
 #endif

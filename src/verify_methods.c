@@ -35,106 +35,107 @@
 /*****************************************************************************/
 
 void VerifyMethodsPromise(Promise *pp)
+{
+    Attributes a = { {0} };
 
-{ Attributes a = {{0}};
+    a = GetMethodAttributes(pp);
 
-a = GetMethodAttributes(pp);
-
-VerifyMethod("usebundle",a,pp);
-DeleteScalar("this","promiser");
+    VerifyMethod("usebundle", a, pp);
+    DeleteScalar("this", "promiser");
 }
 
 /*****************************************************************************/
 
-int VerifyMethod(char *attrname,Attributes a,Promise *pp)
+int VerifyMethod(char *attrname, Attributes a, Promise *pp)
+{
+    Bundle *bp;
+    void *vp;
+    FnCall *fp;
+    char method_name[CF_EXPANDSIZE];
+    Rlist *params = NULL;
+    int retval = false;
+    CfLock thislock;
+    char lockname[CF_BUFSIZE];
 
-{ Bundle *bp;
-  void *vp;
-  FnCall *fp;
-  char method_name[CF_EXPANDSIZE];
-  Rlist *params = NULL;
-  int retval = false;
-  CfLock thislock;
-  char lockname[CF_BUFSIZE];
+    if (a.havebundle)
+    {
+        if ((vp = GetConstraintValue(attrname, pp, CF_FNCALL)))
+        {
+            fp = (FnCall *) vp;
+            ExpandScalar(fp->name, method_name);
+            params = fp->args;
+        }
+        else if ((vp = GetConstraintValue(attrname, pp, CF_SCALAR)))
+        {
+            ExpandScalar((char *) vp, method_name);
+            params = NULL;
+        }
+        else
+        {
+            return false;
+        }
+    }
 
-if (a.havebundle)
-   {
-   if ((vp = GetConstraintValue(attrname,pp,CF_FNCALL)))
-      {
-      fp = (FnCall *)vp;
-      ExpandScalar(fp->name,method_name);
-      params = fp->args;
-      }
-   else if ((vp = GetConstraintValue(attrname,pp,CF_SCALAR)))
-      {
-      ExpandScalar((char *)vp,method_name);
-      params = NULL;
-      }
-   else
-      {
-      return false;
-      }   
-   }
+    GetLockName(lockname, "method", pp->promiser, params);
 
-GetLockName(lockname,"method",pp->promiser,params);
+    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a, pp, false);
 
-thislock = AcquireLock(lockname,VUQNAME,CFSTARTTIME,a,pp,false);
+    if (thislock.lock == NULL)
+    {
+        return false;
+    }
 
-if (thislock.lock == NULL)
-   {
-   return false;
-   }
+    PromiseBanner(pp);
 
-PromiseBanner(pp);
+    if ((bp = GetBundle(method_name, "agent")))
+    {
+        char *bp_stack = THIS_BUNDLE;
 
-if ((bp = GetBundle(method_name,"agent")))
-   {
-   char *bp_stack = THIS_BUNDLE;
+        BannerSubBundle(bp, params);
 
-   BannerSubBundle(bp,params);
+        DeleteScope(bp->name);
+        NewScope(bp->name);
+        HashVariables(bp->name);
 
-   DeleteScope(bp->name);
-   NewScope(bp->name);
-   HashVariables(bp->name);
-      
-   AugmentScope(bp->name,bp->args,params);
+        AugmentScope(bp->name, bp->args, params);
 
-   THIS_BUNDLE = bp->name;
-   PushPrivateClassContext();
+        THIS_BUNDLE = bp->name;
+        PushPrivateClassContext();
 
-   retval = ScheduleAgentOperations(bp);
+        retval = ScheduleAgentOperations(bp);
 
-   PopPrivateClassContext();
-   THIS_BUNDLE = bp_stack;
-   
-   if (retval)
-      {
-      cfPS(cf_verbose,CF_NOP,"",pp,a," -> Method invoked successfully\n");
-      }
-   else
-      {
-      cfPS(cf_inform,CF_FAIL,"",pp,a," !! Method could not be invoked successfully\n");
-      }
+        PopPrivateClassContext();
+        THIS_BUNDLE = bp_stack;
 
-   DeleteFromScope(bp->name,bp->args);
-   }
-else
-   {
-   if (IsCf3VarString(method_name))
-      {
-      CfOut(cf_error,""," !! A variable seems to have been used for the name of the method. In this case, the promiser also needs to contain the uique name of the method");
-      }
-   if (bp && bp->name)
-      {
-      cfPS(cf_error,CF_FAIL,"",pp,a," !! Method \"%s\" was used but was not defined!\n",bp->name);
-      }
-   else
-      {
-      cfPS(cf_error,CF_FAIL,"",pp,a," !! A method attempted to use a bundle \"%s\" that was apparently not defined!\n",method_name);
-      }
-   }
+        if (retval)
+        {
+            cfPS(cf_verbose, CF_NOP, "", pp, a, " -> Method invoked successfully\n");
+        }
+        else
+        {
+            cfPS(cf_inform, CF_FAIL, "", pp, a, " !! Method could not be invoked successfully\n");
+        }
 
-YieldCurrentLock(thislock);
-return retval;
+        DeleteFromScope(bp->name, bp->args);
+    }
+    else
+    {
+        if (IsCf3VarString(method_name))
+        {
+            CfOut(cf_error, "",
+                  " !! A variable seems to have been used for the name of the method. In this case, the promiser also needs to contain the uique name of the method");
+        }
+        if (bp && bp->name)
+        {
+            cfPS(cf_error, CF_FAIL, "", pp, a, " !! Method \"%s\" was used but was not defined!\n", bp->name);
+        }
+        else
+        {
+            cfPS(cf_error, CF_FAIL, "", pp, a,
+                 " !! A method attempted to use a bundle \"%s\" that was apparently not defined!\n", method_name);
+        }
+    }
+
+    YieldCurrentLock(thislock);
+    return retval;
 }
-

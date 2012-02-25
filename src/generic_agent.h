@@ -29,10 +29,10 @@
 #include "cf3.extern.h"
 
 typedef struct
-   {
-   Rlist *bundlesequence;
-   bool verify_promises;
-   } GenericAgentConfig;
+{
+    Rlist *bundlesequence;
+    bool verify_promises;
+} GenericAgentConfig;
 
 void GenericInitialize(char *agents, GenericAgentConfig config);
 void GenericDeInitialize(void);
@@ -41,7 +41,7 @@ void Syntax(const char *comp, const struct option options[], const char *hints[]
 void ManPage(const char *component, const struct option options[], const char *hints[], const char *id);
 void PrintVersionBanner(const char *component);
 int CheckPromises(enum cfagenttype ag);
-void ReadPromises(enum cfagenttype ag,char *agents, GenericAgentConfig config);
+void ReadPromises(enum cfagenttype ag, char *agents, GenericAgentConfig config);
 int NewPromiseProposals(void);
 void CompilationReport(char *filename);
 void HashVariables(char *name);
@@ -49,12 +49,12 @@ void HashControls(void);
 void CloseLog(void);
 Constraint *ControlBodyConstraints(enum cfagenttype agent);
 void SetFacility(const char *retval);
-Bundle *GetBundle(char *name,char *agent);
-SubType *GetSubTypeForBundle(char *type,Bundle *bp);
-void CheckBundleParameters(char *scope,Rlist *args);
+Bundle *GetBundle(char *name, char *agent);
+SubType *GetSubTypeForBundle(char *type, Bundle *bp);
+void CheckBundleParameters(char *scope, Rlist *args);
 void PromiseBanner(Promise *pp);
-void BannerBundle(Bundle *bp,Rlist *args);
-void BannerSubBundle(Bundle *bp,Rlist *args);
+void BannerBundle(Bundle *bp, Rlist *args);
+void BannerSubBundle(Bundle *bp, Rlist *args);
 void WritePID(char *filename);
 void OpenCompilationReportFiles(const char *fname);
 GenericAgentConfig GenericAgentDefaultConfig(enum cfagenttype agent_type);

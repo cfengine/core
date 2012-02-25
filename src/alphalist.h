@@ -27,9 +27,9 @@
 
 // Indexed itemlist
 typedef struct
-   {
-   Item *list[CF_ALPHABETSIZE];
-   } AlphaList;
+{
+    Item *list[CF_ALPHABETSIZE];
+} AlphaList;
 
 void InitAlphaList(AlphaList *al);
 int InAlphaList(AlphaList *al, const char *string);
@@ -51,11 +51,11 @@ while ((item = AlphaListIteratorNext(&i)))
 */
 
 typedef struct
-   {
-   AlphaList *al;
-   int pos;
-   Item *curitem;
-   } AlphaListIterator;
+{
+    AlphaList *al;
+    int pos;
+    Item *curitem;
+} AlphaListIterator;
 
 AlphaListIterator AlphaListIteratorInit(AlphaList *al);
 const Item *AlphaListIteratorNext(AlphaListIterator *iterator);

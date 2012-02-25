@@ -24,7 +24,7 @@
 */
 
 #ifdef HAVE_CONFIG_H
-#include "../src/conf.h"
+# include "../src/conf.h"
 #endif
 
 #include <stdio.h>
@@ -35,7 +35,8 @@ char *strerror(int err);
 
 char *strerror(int err)
 {
-static char buffer[20];
-snprintf(buffer, 20, "Error number %d\n", err);
-return buffer;
+    static char buffer[20];
+
+    snprintf(buffer, 20, "Error number %d\n", err);
+    return buffer;
 }

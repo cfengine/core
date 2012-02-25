@@ -29,462 +29,461 @@
  * SOFTWARE.
  */
 
-
-Item *SortItemListNames(Item *list) /* Alphabetical */
-
+Item *SortItemListNames(Item *list)     /* Alphabetical */
 /*
  * after using this function passed parameter pointer will be lost
  * use returned pointer to access container
  */
-{ Item *p, *q, *e, *tail;
-  int insize, nmerges, psize, qsize, i;
+{
+    Item *p, *q, *e, *tail;
+    int insize, nmerges, psize, qsize, i;
 
-if (list == NULL)
-   {
-   return NULL;
-   }
+    if (list == NULL)
+    {
+        return NULL;
+    }
 
-insize = 1;
+    insize = 1;
 
-while (true)
-   {
-   p = list;
-   list = NULL;
-   tail = NULL;
+    while (true)
+    {
+        p = list;
+        list = NULL;
+        tail = NULL;
 
-   nmerges = 0;  /* count number of merges we do in this pass */
+        nmerges = 0;            /* count number of merges we do in this pass */
 
-   while (p)
-      {
-      nmerges++;  /* there exists a merge to be done */
-      /* step `insize' places along from p */
-      q = p;
-      psize = 0;
+        while (p)
+        {
+            nmerges++;          /* there exists a merge to be done */
+            /* step `insize' places along from p */
+            q = p;
+            psize = 0;
 
-      for (i = 0; i < insize; i++)
-         {
-         psize++;
-
-         q = q->next;
-
-         if (!q)
+            for (i = 0; i < insize; i++)
             {
-            break;
-            }
-         }
+                psize++;
 
-      /* if q hasn't fallen off end, we have two lists to merge */
-      qsize = insize;
+                q = q->next;
 
-      /* now we have two lists; merge them */
-      while (psize > 0 || (qsize > 0 && q))
-         {
-          /* decide whether next element of merge comes from p or q */
-         if (psize == 0)
-            {
-            /* p is empty; e must come from q. */
-            e = q;
-            q = q->next;
-            qsize--;
-            }
-         else if (qsize == 0 || !q)
-            {
-            /* q is empty; e must come from p. */
-            e = p;
-            p = p->next;
-            psize--;
-            }
-         else if (strcmp(p->name, q->name) <= 0)
-            {
-            /* First element of p is lower (or same);
-             * e must come from p. */
-            e = p;
-            p = p->next;
-            psize--;
-            }
-         else
-            {
-            /* First element of q is lower; e must come from q. */
-            e = q;
-            q = q->next;
-            qsize--;
+                if (!q)
+                {
+                    break;
+                }
             }
 
-         /* add the next element to the merged list */
-         if (tail)
+            /* if q hasn't fallen off end, we have two lists to merge */
+            qsize = insize;
+
+            /* now we have two lists; merge them */
+            while (psize > 0 || (qsize > 0 && q))
             {
-            tail->next = e;
+                /* decide whether next element of merge comes from p or q */
+                if (psize == 0)
+                {
+                    /* p is empty; e must come from q. */
+                    e = q;
+                    q = q->next;
+                    qsize--;
+                }
+                else if (qsize == 0 || !q)
+                {
+                    /* q is empty; e must come from p. */
+                    e = p;
+                    p = p->next;
+                    psize--;
+                }
+                else if (strcmp(p->name, q->name) <= 0)
+                {
+                    /* First element of p is lower (or same);
+                     * e must come from p. */
+                    e = p;
+                    p = p->next;
+                    psize--;
+                }
+                else
+                {
+                    /* First element of q is lower; e must come from q. */
+                    e = q;
+                    q = q->next;
+                    qsize--;
+                }
+
+                /* add the next element to the merged list */
+                if (tail)
+                {
+                    tail->next = e;
+                }
+                else
+                {
+                    list = e;
+                }
+
+                tail = e;
             }
-         else
-            {
-            list = e;
-            }
 
-         tail = e;
-         }
+            /* now p has stepped `insize' places along, and q has too */
+            p = q;
+        }
 
-      /* now p has stepped `insize' places along, and q has too */
-      p = q;
-      }
+        tail->next = NULL;
 
-   tail->next = NULL;
+        /* If we have done only one merge, we're finished. */
 
-   /* If we have done only one merge, we're finished. */
+        if (nmerges <= 1)       /* allow for nmerges==0, the empty list case */
+        {
+            return list;
+        }
 
-   if (nmerges <= 1)   /* allow for nmerges==0, the empty list case */
-      {
-      return list;
-      }
-
-   /* Otherwise repeat, merging lists twice the size */
-   insize *= 2;
-   }
+        /* Otherwise repeat, merging lists twice the size */
+        insize *= 2;
+    }
 }
 
 /*******************************************************************/
 
-Item *SortItemListClasses(Item *list) /* Alphabetical */
-
+Item *SortItemListClasses(Item *list)   /* Alphabetical */
 /*
  * after using this function passed parameter pointer will be lost
  * use returned pointer to access container
  */
-{ Item *p, *q, *e, *tail;
-  int insize, nmerges, psize, qsize, i;
+{
+    Item *p, *q, *e, *tail;
+    int insize, nmerges, psize, qsize, i;
 
-if (list == NULL)
-   {
-   return NULL;
-   }
+    if (list == NULL)
+    {
+        return NULL;
+    }
 
-insize = 1;
+    insize = 1;
 
-while (true)
-   {
-   p = list;
-   list = NULL;
-   tail = NULL;
+    while (true)
+    {
+        p = list;
+        list = NULL;
+        tail = NULL;
 
-   nmerges = 0;  /* count number of merges we do in this pass */
+        nmerges = 0;            /* count number of merges we do in this pass */
 
-   while (p)
-      {
-      nmerges++;  /* there exists a merge to be done */
-      /* step `insize' places along from p */
-      q = p;
-      psize = 0;
+        while (p)
+        {
+            nmerges++;          /* there exists a merge to be done */
+            /* step `insize' places along from p */
+            q = p;
+            psize = 0;
 
-      for (i = 0; i < insize; i++)
-         {
-         psize++;
-
-         q = q->next;
-
-         if (!q)
+            for (i = 0; i < insize; i++)
             {
-            break;
-            }
-         }
+                psize++;
 
-      /* if q hasn't fallen off end, we have two lists to merge */
-      qsize = insize;
+                q = q->next;
 
-      /* now we have two lists; merge them */
-      while (psize > 0 || (qsize > 0 && q))
-         {
-          /* decide whether next element of merge comes from p or q */
-         if (psize == 0)
-            {
-            /* p is empty; e must come from q. */
-            e = q;
-            q = q->next;
-            qsize--;
-            }
-         else if (qsize == 0 || !q)
-            {
-            /* q is empty; e must come from p. */
-            e = p;
-            p = p->next;
-            psize--;
-            }
-         else if (strcmp(p->classes, q->classes) <= 0)
-            {
-            /* First element of p is lower (or same);
-             * e must come from p. */
-            e = p;
-            p = p->next;
-            psize--;
-            }
-         else
-            {
-            /* First element of q is lower; e must come from q. */
-            e = q;
-            q = q->next;
-            qsize--;
+                if (!q)
+                {
+                    break;
+                }
             }
 
-         /* add the next element to the merged list */
-         if (tail)
+            /* if q hasn't fallen off end, we have two lists to merge */
+            qsize = insize;
+
+            /* now we have two lists; merge them */
+            while (psize > 0 || (qsize > 0 && q))
             {
-            tail->next = e;
+                /* decide whether next element of merge comes from p or q */
+                if (psize == 0)
+                {
+                    /* p is empty; e must come from q. */
+                    e = q;
+                    q = q->next;
+                    qsize--;
+                }
+                else if (qsize == 0 || !q)
+                {
+                    /* q is empty; e must come from p. */
+                    e = p;
+                    p = p->next;
+                    psize--;
+                }
+                else if (strcmp(p->classes, q->classes) <= 0)
+                {
+                    /* First element of p is lower (or same);
+                     * e must come from p. */
+                    e = p;
+                    p = p->next;
+                    psize--;
+                }
+                else
+                {
+                    /* First element of q is lower; e must come from q. */
+                    e = q;
+                    q = q->next;
+                    qsize--;
+                }
+
+                /* add the next element to the merged list */
+                if (tail)
+                {
+                    tail->next = e;
+                }
+                else
+                {
+                    list = e;
+                }
+
+                tail = e;
             }
-         else
-            {
-            list = e;
-            }
 
-         tail = e;
-         }
+            /* now p has stepped `insize' places along, and q has too */
+            p = q;
+        }
 
-      /* now p has stepped `insize' places along, and q has too */
-      p = q;
-      }
+        tail->next = NULL;
 
-   tail->next = NULL;
+        /* If we have done only one merge, we're finished. */
 
-   /* If we have done only one merge, we're finished. */
+        if (nmerges <= 1)       /* allow for nmerges==0, the empty list case */
+        {
+            return list;
+        }
 
-   if (nmerges <= 1)   /* allow for nmerges==0, the empty list case */
-      {
-      return list;
-      }
-
-   /* Otherwise repeat, merging lists twice the size */
-   insize *= 2;
-   }
+        /* Otherwise repeat, merging lists twice the size */
+        insize *= 2;
+    }
 }
 
 /*******************************************************************/
 
-Item *SortItemListCounters(Item *list) /* Biggest first */
-
+Item *SortItemListCounters(Item *list)  /* Biggest first */
 /*
  * after using this function passed parameter pointer will be lost
  * use returned pointer to access container
  */
-{ Item *p, *q, *e, *tail;
-  int insize, nmerges, psize, qsize, i;
+{
+    Item *p, *q, *e, *tail;
+    int insize, nmerges, psize, qsize, i;
 
-if (list == NULL)
-   {
-   return NULL;
-   }
+    if (list == NULL)
+    {
+        return NULL;
+    }
 
-insize = 1;
+    insize = 1;
 
-while (true)
-   {
-   p = list;
-   list = NULL;
-   tail = NULL;
+    while (true)
+    {
+        p = list;
+        list = NULL;
+        tail = NULL;
 
-   nmerges = 0;  /* count number of merges we do in this pass */
+        nmerges = 0;            /* count number of merges we do in this pass */
 
-   while (p)
-      {
-      nmerges++;  /* there exists a merge to be done */
-      /* step `insize' places along from p */
-      q = p;
-      psize = 0;
+        while (p)
+        {
+            nmerges++;          /* there exists a merge to be done */
+            /* step `insize' places along from p */
+            q = p;
+            psize = 0;
 
-      for (i = 0; i < insize; i++)
-         {
-         psize++;
-         q = q->next;
-
-         if (!q)
+            for (i = 0; i < insize; i++)
             {
-            break;
-            }
-         }
+                psize++;
+                q = q->next;
 
-      /* if q hasn't fallen off end, we have two lists to merge */
-      qsize = insize;
-
-      /* now we have two lists; merge them */
-
-      while (psize > 0 || (qsize > 0 && q))
-         {
-         /* decide whether next element of merge comes from p or q */
-         if (psize == 0)
-            {
-            /* p is empty; e must come from q. */
-            e = q;
-            q = q->next;
-            qsize--;
-            }
-         else if (qsize == 0 || !q)
-            {
-            /* q is empty; e must come from p. */
-            e = p;
-            p = p->next;
-            psize--;
-            }
-         else if (p->counter - q->counter >= 0)
-            {
-            /* First element of p is higher (or same);
-             * e must come from p. */
-            e = p;
-            p = p->next;
-            psize--;
-            }
-         else
-            {
-            /* First element of q is lower; e must come from q. */
-            e = q;
-            q = q->next;
-            qsize--;
+                if (!q)
+                {
+                    break;
+                }
             }
 
-         /* add the next element to the merged list */
+            /* if q hasn't fallen off end, we have two lists to merge */
+            qsize = insize;
 
-         if (tail)
+            /* now we have two lists; merge them */
+
+            while (psize > 0 || (qsize > 0 && q))
             {
-            tail->next = e;
+                /* decide whether next element of merge comes from p or q */
+                if (psize == 0)
+                {
+                    /* p is empty; e must come from q. */
+                    e = q;
+                    q = q->next;
+                    qsize--;
+                }
+                else if (qsize == 0 || !q)
+                {
+                    /* q is empty; e must come from p. */
+                    e = p;
+                    p = p->next;
+                    psize--;
+                }
+                else if (p->counter - q->counter >= 0)
+                {
+                    /* First element of p is higher (or same);
+                     * e must come from p. */
+                    e = p;
+                    p = p->next;
+                    psize--;
+                }
+                else
+                {
+                    /* First element of q is lower; e must come from q. */
+                    e = q;
+                    q = q->next;
+                    qsize--;
+                }
+
+                /* add the next element to the merged list */
+
+                if (tail)
+                {
+                    tail->next = e;
+                }
+                else
+                {
+                    list = e;
+                }
+
+                tail = e;
             }
-         else
-            {
-            list = e;
-            }
 
-         tail = e;
-         }
+            /* now p has stepped `insize' places along, and q has too */
+            p = q;
+        }
 
-      /* now p has stepped `insize' places along, and q has too */
-      p = q;
-      }
+        tail->next = NULL;
 
-   tail->next = NULL;
+        /* If we have done only one merge, we're finished. */
 
-   /* If we have done only one merge, we're finished. */
+        if (nmerges <= 1)       /* allow for nmerges==0, the empty list case */
+        {
+            return list;
+        }
 
-   if (nmerges <= 1)   /* allow for nmerges==0, the empty list case */
-      {
-      return list;
-      }
-
-   /* Otherwise repeat, merging lists twice the size */
-   insize *= 2;
-   }
+        /* Otherwise repeat, merging lists twice the size */
+        insize *= 2;
+    }
 }
 
 /*******************************************************************/
 
-Item *SortItemListTimes(Item *list) /* Biggest first */
-
+Item *SortItemListTimes(Item *list)     /* Biggest first */
 /*
  * after using this function passed parameter pointer will be lost
  * use returned pointer to access container
  */
-{ Item *p, *q, *e, *tail;
-  int insize, nmerges, psize, qsize, i;
+{
+    Item *p, *q, *e, *tail;
+    int insize, nmerges, psize, qsize, i;
 
-if (list == NULL)
-   {
-   return NULL;
-   }
+    if (list == NULL)
+    {
+        return NULL;
+    }
 
-insize = 1;
+    insize = 1;
 
-while (true)
-   {
-   p = list;
-   list = NULL;
-   tail = NULL;
+    while (true)
+    {
+        p = list;
+        list = NULL;
+        tail = NULL;
 
-   nmerges = 0;  /* count number of merges we do in this pass */
+        nmerges = 0;            /* count number of merges we do in this pass */
 
-   while (p)
-      {
-      nmerges++;  /* there exists a merge to be done */
-      /* step `insize' places along from p */
-      q = p;
-      psize = 0;
+        while (p)
+        {
+            nmerges++;          /* there exists a merge to be done */
+            /* step `insize' places along from p */
+            q = p;
+            psize = 0;
 
-      for (i = 0; i < insize; i++)
-         {
-         psize++;
-         q = q->next;
-
-         if (!q)
+            for (i = 0; i < insize; i++)
             {
-            break;
-            }
-         }
+                psize++;
+                q = q->next;
 
-      /* if q hasn't fallen off end, we have two lists to merge */
-      qsize = insize;
-
-      /* now we have two lists; merge them */
-
-      while (psize > 0 || (qsize > 0 && q))
-         {
-         /* decide whether next element of merge comes from p or q */
-         if (psize == 0)
-            {
-            /* p is empty; e must come from q. */
-            e = q;
-            q = q->next;
-            qsize--;
-            }
-         else if (qsize == 0 || !q)
-            {
-            /* q is empty; e must come from p. */
-            e = p;
-            p = p->next;
-            psize--;
-            }
-         else if (p->time - q->time >= 0)
-            {
-            /* First element of p is higher (or same);
-             * e must come from p. */
-            e = p;
-            p = p->next;
-            psize--;
-            }
-         else
-            {
-            /* First element of q is lower; e must come from q. */
-            e = q;
-            q = q->next;
-            qsize--;
+                if (!q)
+                {
+                    break;
+                }
             }
 
-         /* add the next element to the merged list */
+            /* if q hasn't fallen off end, we have two lists to merge */
+            qsize = insize;
 
-         if (tail)
+            /* now we have two lists; merge them */
+
+            while (psize > 0 || (qsize > 0 && q))
             {
-            tail->next = e;
+                /* decide whether next element of merge comes from p or q */
+                if (psize == 0)
+                {
+                    /* p is empty; e must come from q. */
+                    e = q;
+                    q = q->next;
+                    qsize--;
+                }
+                else if (qsize == 0 || !q)
+                {
+                    /* q is empty; e must come from p. */
+                    e = p;
+                    p = p->next;
+                    psize--;
+                }
+                else if (p->time - q->time >= 0)
+                {
+                    /* First element of p is higher (or same);
+                     * e must come from p. */
+                    e = p;
+                    p = p->next;
+                    psize--;
+                }
+                else
+                {
+                    /* First element of q is lower; e must come from q. */
+                    e = q;
+                    q = q->next;
+                    qsize--;
+                }
+
+                /* add the next element to the merged list */
+
+                if (tail)
+                {
+                    tail->next = e;
+                }
+                else
+                {
+                    list = e;
+                }
+
+                tail = e;
             }
-         else
-            {
-            list = e;
-            }
 
-         tail = e;
-         }
+            /* now p has stepped `insize' places along, and q has too */
+            p = q;
+        }
 
-      /* now p has stepped `insize' places along, and q has too */
-      p = q;
-      }
+        tail->next = NULL;
 
-   tail->next = NULL;
+        /* If we have done only one merge, we're finished. */
 
-   /* If we have done only one merge, we're finished. */
+        if (nmerges <= 1)       /* allow for nmerges==0, the empty list case */
+        {
+            return list;
+        }
 
-   if (nmerges <= 1)   /* allow for nmerges==0, the empty list case */
-      {
-      return list;
-      }
-
-   /* Otherwise repeat, merging lists twice the size */
-   insize *= 2;
-   }
+        /* Otherwise repeat, merging lists twice the size */
+        insize *= 2;
+    }
 }
 
 /*******************************************************************/
 
-Rlist *SortRlist(Rlist *list, int (*CompareItems)())
+Rlist *SortRlist(Rlist *list, int (*CompareItems) ())
 /*
  * Sorts an Rlist on list->item. A function CompareItems(i1,i2)
  * must be written for this particular item, which returns
@@ -493,109 +492,110 @@ Rlist *SortRlist(Rlist *list, int (*CompareItems)())
  * after using this function passed parameter pointer will be lost
  * use returned pointer to access container
  */
-{ Rlist *p = NULL, *q = NULL, *e = NULL, *tail = NULL;
-  int insize = 0, nmerges = 0, psize = 0, qsize = 0, i = 0;
+{
+    Rlist *p = NULL, *q = NULL, *e = NULL, *tail = NULL;
+    int insize = 0, nmerges = 0, psize = 0, qsize = 0, i = 0;
 
-if (list == NULL)
-   {
-   return NULL;
-   }
+    if (list == NULL)
+    {
+        return NULL;
+    }
 
-insize = 1;
+    insize = 1;
 
-while (true)
-   {
-   p = list;
-   list = NULL;
-   tail = NULL;
+    while (true)
+    {
+        p = list;
+        list = NULL;
+        tail = NULL;
 
-   nmerges = 0;  /* count number of merges we do in this pass */
+        nmerges = 0;            /* count number of merges we do in this pass */
 
-   while (p)
-      {
-      nmerges++;  /* there exists a merge to be done */
-      /* step `insize' places along from p */
-      q = p;
-      psize = 0;
+        while (p)
+        {
+            nmerges++;          /* there exists a merge to be done */
+            /* step `insize' places along from p */
+            q = p;
+            psize = 0;
 
-      for (i = 0; i < insize; i++)
-         {
-         psize++;
-
-         q = q->next;
-
-         if (!q)
+            for (i = 0; i < insize; i++)
             {
-            break;
-            }
-         }
+                psize++;
 
-      /* if q hasn't fallen off end, we have two lists to merge */
-      qsize = insize;
+                q = q->next;
 
-      /* now we have two lists; merge them */
-      while (psize > 0 || (qsize > 0 && q))
-         {
-          /* decide whether next element of merge comes from p or q */
-         if (psize == 0)
-            {
-            /* p is empty; e must come from q. */
-            e = q;
-            q = q->next;
-            qsize--;
-            }
-         else if (qsize == 0 || !q)
-            {
-            /* q is empty; e must come from p. */
-            e = p;
-            p = p->next;
-            psize--;
-            }
-         else if (CompareItems(p->item,q->item))
-            {
-            /* First element of p is lower (or same);
-             * e must come from p. */
-            e = p;
-            p = p->next;
-            psize--;
-            }
-         else
-            {
-            /* First element of q is lower; e must come from q. */
-            e = q;
-            q = q->next;
-            qsize--;
+                if (!q)
+                {
+                    break;
+                }
             }
 
-         /* add the next element to the merged list */
-         if (tail)
+            /* if q hasn't fallen off end, we have two lists to merge */
+            qsize = insize;
+
+            /* now we have two lists; merge them */
+            while (psize > 0 || (qsize > 0 && q))
             {
-            tail->next = e;
+                /* decide whether next element of merge comes from p or q */
+                if (psize == 0)
+                {
+                    /* p is empty; e must come from q. */
+                    e = q;
+                    q = q->next;
+                    qsize--;
+                }
+                else if (qsize == 0 || !q)
+                {
+                    /* q is empty; e must come from p. */
+                    e = p;
+                    p = p->next;
+                    psize--;
+                }
+                else if (CompareItems(p->item, q->item))
+                {
+                    /* First element of p is lower (or same);
+                     * e must come from p. */
+                    e = p;
+                    p = p->next;
+                    psize--;
+                }
+                else
+                {
+                    /* First element of q is lower; e must come from q. */
+                    e = q;
+                    q = q->next;
+                    qsize--;
+                }
+
+                /* add the next element to the merged list */
+                if (tail)
+                {
+                    tail->next = e;
+                }
+                else
+                {
+                    list = e;
+                }
+
+                tail = e;
             }
-         else
-            {
-            list = e;
-            }
 
-         tail = e;
-         }
+            /* now p has stepped `insize' places along, and q has too */
+            p = q;
+        }
 
-      /* now p has stepped `insize' places along, and q has too */
-      p = q;
-      }
+        tail->next = NULL;
 
-   tail->next = NULL;
+        /* If we have done only one merge, we're finished. */
 
-   /* If we have done only one merge, we're finished. */
+        if (nmerges <= 1)       /* allow for nmerges==0, the empty list case */
+        {
+            return list;
+        }
 
-   if (nmerges <= 1)   /* allow for nmerges==0, the empty list case */
-     {
-     return list;
-     }
-
-   /* Otherwise repeat, merging lists twice the size */
-   insize *= 2;
-   }
+        /* Otherwise repeat, merging lists twice the size */
+        insize *= 2;
+    }
 
 }
 
@@ -608,95 +608,104 @@ Rlist *AlphaSortRListNames(Rlist *list)
  * use returned pointer to access container
  */
 {
-int insize = 1;
+    int insize = 1;
 
-if (list == NULL)
-   {
-   return NULL;
-   }
-
- while (true)
+    if (list == NULL)
     {
-    Rlist *p = list;
-    Rlist *tail = NULL;
-    list = NULL;
+        return NULL;
+    }
 
-    int nmerges = 0;  /* count number of merges we do in this pass */
+    while (true)
+    {
+        Rlist *p = list;
+        Rlist *tail = NULL;
 
-    while (p)
-       {
-       nmerges++;  /* there exists a merge to be done */
-       /* step `insize' places along from p */
-       Rlist *q = p;
-       int psize = 0;
+        list = NULL;
 
-       for (int i = 0; i < insize; i++)
-          {
-          psize++;
-          q = q->next;
+        int nmerges = 0;        /* count number of merges we do in this pass */
 
-          if (!q)
-              {
-              break;
-              }
-          }
+        while (p)
+        {
+            nmerges++;          /* there exists a merge to be done */
+            /* step `insize' places along from p */
+            Rlist *q = p;
+            int psize = 0;
 
-       /* if q hasn't fallen off end, we have two lists to merge */
-       int qsize = insize;
+            for (int i = 0; i < insize; i++)
+            {
+                psize++;
+                q = q->next;
 
-       /* now we have two lists; merge them */
-       while (psize > 0 || (qsize > 0 && q))
-          {
-          Rlist *e;
-          /* decide whether next element of merge comes from p or q */
-          if (psize == 0)
-             {
-             /* p is empty; e must come from q. */
-             e = q; q = q->next; qsize--;
-             }
-          else if (qsize == 0 || !q)
-             {
-             /* q is empty; e must come from p. */
-             e = p; p = p->next; psize--;
-             }
-          else if (strcmp(p->item, q->item) <= 0)
-             {
-             /* First element of p is lower (or same);
-              * e must come from p. */
-             e = p; p = p->next; psize--;
-             }
-          else
-             {
-             /* First element of q is lower; e must come from q. */
-             e = q; q = q->next; qsize--;
-             }
+                if (!q)
+                {
+                    break;
+                }
+            }
 
-          /* add the next element to the merged list */
-          if (tail)
-             {
-             tail->next = e;
-             }
-          else
-             {
-             list = e;
-             }
-          tail = e;
-          }
+            /* if q hasn't fallen off end, we have two lists to merge */
+            int qsize = insize;
 
-       /* now p has stepped `insize' places along, and q has too */
-       p = q;
-       }
-    tail->next = NULL;
+            /* now we have two lists; merge them */
+            while (psize > 0 || (qsize > 0 && q))
+            {
+                Rlist *e;
 
-    /* If we have done only one merge, we're finished. */
+                /* decide whether next element of merge comes from p or q */
+                if (psize == 0)
+                {
+                    /* p is empty; e must come from q. */
+                    e = q;
+                    q = q->next;
+                    qsize--;
+                }
+                else if (qsize == 0 || !q)
+                {
+                    /* q is empty; e must come from p. */
+                    e = p;
+                    p = p->next;
+                    psize--;
+                }
+                else if (strcmp(p->item, q->item) <= 0)
+                {
+                    /* First element of p is lower (or same);
+                     * e must come from p. */
+                    e = p;
+                    p = p->next;
+                    psize--;
+                }
+                else
+                {
+                    /* First element of q is lower; e must come from q. */
+                    e = q;
+                    q = q->next;
+                    qsize--;
+                }
 
-    if (nmerges <= 1)   /* allow for nmerges==0, the empty list case */
-       {
-       return list;
-       }
+                /* add the next element to the merged list */
+                if (tail)
+                {
+                    tail->next = e;
+                }
+                else
+                {
+                    list = e;
+                }
+                tail = e;
+            }
 
-    /* Otherwise repeat, merging lists twice the size */
-    insize *= 2;
+            /* now p has stepped `insize' places along, and q has too */
+            p = q;
+        }
+        tail->next = NULL;
+
+        /* If we have done only one merge, we're finished. */
+
+        if (nmerges <= 1)       /* allow for nmerges==0, the empty list case */
+        {
+            return list;
+        }
+
+        /* Otherwise repeat, merging lists twice the size */
+        insize *= 2;
     }
 }
-

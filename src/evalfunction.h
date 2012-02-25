@@ -28,6 +28,6 @@
 #include "cf3.defs.h"
 #include "rlist.h"
 
-FnCallResult FnCallHostInNetgroup(FnCall *fp,Rlist *finalargs);
+FnCallResult FnCallHostInNetgroup(FnCall *fp, Rlist *finalargs);
 
 #endif

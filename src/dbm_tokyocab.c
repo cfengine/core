@@ -39,19 +39,18 @@
 #ifdef TCDB
 
 /* Arbitrary cutoff while trying to open blocked database */
-#define MAXATTEMPTS 1000
+# define MAXATTEMPTS 1000
 
 static long GetSleepTime(void);
 
 /*****************************************************************************/
 
 int TCDB_OpenDB(char *filename, CF_TCDB **hdbp)
-
 {
-int attempts = MAXATTEMPTS;
+    int attempts = MAXATTEMPTS;
 
-*hdbp = xcalloc(1, sizeof(CF_TCDB));
-(*hdbp)->hdb = tchdbnew();
+    *hdbp = xcalloc(1, sizeof(CF_TCDB));
+    (*hdbp)->hdb = tchdbnew();
 
 /*
  * Tokyo Cabinet prevents a database to be opened by the several threads in the
@@ -61,239 +60,236 @@ int attempts = MAXATTEMPTS;
  * failure to open a database in intermittent one (unless there is stale DB
  * connection somewhere, so looping indefinitely is not a good idea).
  */
-while (attempts--)
-   {
-   /*
-    * Note: tchdbsetmutex is not called before tchdbopen, so the created
-    * connection must not be shared by a several threads.
-    */
-   if (tchdbopen((*hdbp)->hdb, filename, HDBOWRITER | HDBOCREAT))
-      {
-      return true;
-      }
+    while (attempts--)
+    {
+        /*
+         * Note: tchdbsetmutex is not called before tchdbopen, so the created
+         * connection must not be shared by a several threads.
+         */
+        if (tchdbopen((*hdbp)->hdb, filename, HDBOWRITER | HDBOCREAT))
+        {
+            return true;
+        }
 
-   int err_code = tchdbecode((*hdbp)->hdb);
+        int err_code = tchdbecode((*hdbp)->hdb);
 
-   if (err_code != TCETHREAD)
-      {
-      CfOut(cf_error, "", "!! tchdbopen: Unable to open database \"%s\": %s",
-            filename, tchdberrmsg(err_code));
-      tchdbdel((*hdbp)->hdb);
-      free(*hdbp);
-      return false;
-      }
+        if (err_code != TCETHREAD)
+        {
+            CfOut(cf_error, "", "!! tchdbopen: Unable to open database \"%s\": %s", filename, tchdberrmsg(err_code));
+            tchdbdel((*hdbp)->hdb);
+            free(*hdbp);
+            return false;
+        }
 
-   struct timespec ts =
-      {
-      .tv_nsec = GetSleepTime()
-      };
-   nanosleep(&ts, NULL);
-   }
+        struct timespec ts = {
+            .tv_nsec = GetSleepTime()
+        };
+        nanosleep(&ts, NULL);
+    }
 
-CfOut(cf_error, "", "!! TCDB_OpenDB: Unable to lock database \"%s\", lock is held by another thread", filename);
+    CfOut(cf_error, "", "!! TCDB_OpenDB: Unable to lock database \"%s\", lock is held by another thread", filename);
 
-tchdbdel((*hdbp)->hdb);
-free(*hdbp);
-return false;
+    tchdbdel((*hdbp)->hdb);
+    free(*hdbp);
+    return false;
 }
 
 /*****************************************************************************/
 
 int TCDB_CloseDB(CF_TCDB *hdbp)
+{
+    int errCode;
 
-{ int errCode;
+    CfDebug("CloseDB(%s)\n", tchdbpath(hdbp->hdb));
 
-CfDebug("CloseDB(%s)\n", tchdbpath(hdbp->hdb));
+    if (!tchdbclose(hdbp->hdb))
+    {
+        errCode = tchdbecode(hdbp->hdb);
+        CfOut(cf_error, "", "!! tchdbclose: Closing database failed: %s", tchdberrmsg(errCode));
+        return false;
+    }
 
-if (!tchdbclose(hdbp->hdb))
-   {
-   errCode = tchdbecode(hdbp->hdb);
-   CfOut(cf_error, "", "!! tchdbclose: Closing database failed: %s", tchdberrmsg(errCode));
-   return false;
-   }
+    tchdbdel(hdbp->hdb);
 
-tchdbdel(hdbp->hdb);
+    if (hdbp->valmemp != NULL)
+    {
+        free(hdbp->valmemp);
+    }
 
-if (hdbp->valmemp != NULL)
-   {
-   free(hdbp->valmemp);
-   }
+    free(hdbp);
+    hdbp = NULL;
 
-free(hdbp);
-hdbp = NULL;
-
-return true;
+    return true;
 }
 
 /*****************************************************************************/
 
 int TCDB_ValueSizeDB(CF_TCDB *hdbp, char *key)
-
 {
-return tchdbvsiz2(hdbp->hdb, key);
+    return tchdbvsiz2(hdbp->hdb, key);
 }
 
 /*****************************************************************************/
 
-int TCDB_ReadComplexKeyDB(CF_TCDB *hdbp, char *key, int keySz,void *dest, int destSz)
+int TCDB_ReadComplexKeyDB(CF_TCDB *hdbp, char *key, int keySz, void *dest, int destSz)
+{
+    int errCode;
 
-{ int errCode;
+    if (tchdbget3(hdbp->hdb, key, keySz, dest, destSz) == -1)
+    {
+        errCode = tchdbecode(hdbp->hdb);
+        CfDebug("TCDB_ReadComplexKeyDB(%s): Could not read: %s\n", key, tchdberrmsg(errCode));
+        return false;
+    }
 
-if (tchdbget3(hdbp->hdb, key, keySz, dest, destSz) == -1)
-   {
-   errCode = tchdbecode(hdbp->hdb);
-   CfDebug("TCDB_ReadComplexKeyDB(%s): Could not read: %s\n", key, tchdberrmsg(errCode));
-   return false;
-   }
-
-return true;
+    return true;
 }
 
 /*****************************************************************************/
 
 int TCDB_RevealDB(CF_TCDB *hdbp, char *key, void **result, int *rsize)
+{
+    int errCode;
 
-{ int errCode;
+    if (hdbp->valmemp != NULL)
+    {
+        free(hdbp->valmemp);
+        hdbp->valmemp = NULL;
+    }
 
-if (hdbp->valmemp != NULL)
-   {
-   free(hdbp->valmemp);
-   hdbp->valmemp = NULL;
-   }
+    *result = tchdbget(hdbp->hdb, key, strlen(key), rsize);
 
-*result = tchdbget(hdbp->hdb, key, strlen(key), rsize);
+    if (*result == NULL)
+    {
+        errCode = tchdbecode(hdbp->hdb);
+        CfDebug("TCDB_RevealDB(%s): Could not read: %s\n", key, tchdberrmsg(errCode));
+        return false;
+    }
 
-if (*result == NULL)
-   {
-   errCode = tchdbecode(hdbp->hdb);
-   CfDebug("TCDB_RevealDB(%s): Could not read: %s\n", key, tchdberrmsg(errCode));
-   return false;
-   }
+    hdbp->valmemp = *result;    // keep allocated address for later free
 
-hdbp->valmemp = *result;  // keep allocated address for later free
-
-return true;
+    return true;
 }
 
 /*****************************************************************************/
 
 int TCDB_WriteComplexKeyDB(CF_TCDB *hdbp, char *key, int keySz, const void *src, int srcSz)
+{
+    int errCode;
+    int res;
 
-{ int errCode;
-  int res;
+    res = tchdbput(hdbp->hdb, key, keySz, src, srcSz);
 
-res = tchdbput(hdbp->hdb, key, keySz, src, srcSz);
+    if (!res)
+    {
+        errCode = tchdbecode(hdbp->hdb);
+        CfOut(cf_error, "", "!! tchdbput: Could not write key to DB \"%s\": %s",
+              tchdbpath(hdbp->hdb), tchdberrmsg(errCode));
+        return false;
+    }
 
-if (!res)
-   {
-   errCode = tchdbecode(hdbp->hdb);
-   CfOut(cf_error, "", "!! tchdbput: Could not write key to DB \"%s\": %s",
-	 tchdbpath(hdbp->hdb), tchdberrmsg(errCode));
-   return false;
-   }
-
-return true;
+    return true;
 }
 
 /*****************************************************************************/
 
 int TCDB_DeleteComplexKeyDB(CF_TCDB *hdbp, char *key, int size)
+{
+    int errCode;
 
-{ int errCode;
+    if (!tchdbout(hdbp->hdb, key, size))
+    {
+        errCode = tchdbecode(hdbp->hdb);
+        CfDebug("TCDB_DeleteComplexKeyDB(%s): Could not delete key: %s\n", key, tchdberrmsg(errCode));
+        return false;
+    }
 
-if (!tchdbout(hdbp->hdb, key, size))
-   {
-   errCode = tchdbecode(hdbp->hdb);
-   CfDebug("TCDB_DeleteComplexKeyDB(%s): Could not delete key: %s\n", key, tchdberrmsg(errCode));
-   return false;
-   }
-
-return true;
+    return true;
 }
 
 /*****************************************************************************/
 
-int TCDB_NewDBCursor(CF_TCDB *hdbp,CF_TCDBC **hdbcp)
+int TCDB_NewDBCursor(CF_TCDB *hdbp, CF_TCDBC **hdbcp)
+{
+    int errCode;
 
-{ int errCode;
+    if (!tchdbiterinit(hdbp->hdb))
+    {
+        errCode = tchdbecode(hdbp->hdb);
+        CfOut(cf_error, "", "!! tchdbiterinit: Could not initialize iterator: %s", tchdberrmsg(errCode));
+        return false;
+    }
 
-if (!tchdbiterinit(hdbp->hdb))
-   {
-   errCode = tchdbecode(hdbp->hdb);
-   CfOut(cf_error, "", "!! tchdbiterinit: Could not initialize iterator: %s", tchdberrmsg(errCode));
-   return false;
-   }
+    *hdbcp = xcalloc(1, sizeof(CF_TCDBC));
 
-*hdbcp = xcalloc(1, sizeof(CF_TCDBC));
-
-return true;  
+    return true;
 }
 
 /*****************************************************************************/
 
-int TCDB_NextDB(CF_TCDB *hdbp,CF_TCDBC *hdbcp,char **key,int *ksize,void **value,int *vsize)
+int TCDB_NextDB(CF_TCDB *hdbp, CF_TCDBC *hdbcp, char **key, int *ksize, void **value, int *vsize)
+{
+    int errCode;
 
-{ int errCode;
+    if (hdbcp->curkey != NULL)
+    {
+        free(hdbcp->curkey);
+        hdbcp->curkey = NULL;
+    }
 
-if (hdbcp->curkey != NULL)
-   {
-   free(hdbcp->curkey);
-   hdbcp->curkey = NULL;
-   }
+    if (hdbcp->curval != NULL)
+    {
+        free(hdbcp->curval);
+        hdbcp->curval = NULL;
+    }
 
-if(hdbcp->curval != NULL)
-   {
-   free(hdbcp->curval);
-   hdbcp->curval = NULL;
-   }
+    *key = tchdbiternext(hdbp->hdb, ksize);
 
-*key = tchdbiternext(hdbp->hdb, ksize);
+    if (*key == NULL)
+    {
+        CfDebug("Got NULL-key in TCDB_NextDB()\n");
+        return false;
+    }
 
-if (*key == NULL)
-   {
-   CfDebug("Got NULL-key in TCDB_NextDB()\n");
-   return false;
-   }
+    *value = tchdbget(hdbp->hdb, *key, *ksize, vsize);
 
-*value = tchdbget(hdbp->hdb, *key, *ksize, vsize);
+    if (*value == NULL)
+    {
+        errCode = tchdbecode(hdbp->hdb);
+        CfOut(cf_error, "", "!! tchdbget: Could not get value corresponding to key \"%s\": %s", *key,
+              tchdberrmsg(errCode));
 
-if (*value == NULL)
-   {
-   errCode = tchdbecode(hdbp->hdb);
-   CfOut(cf_error, "", "!! tchdbget: Could not get value corresponding to key \"%s\": %s", *key, tchdberrmsg(errCode));
-
-   free(*key);
-   *key = NULL;
-   return false;
-   }
+        free(*key);
+        *key = NULL;
+        return false;
+    }
 
 // keep pointers for later free
-hdbcp->curkey = *key;
-hdbcp->curval = *value;
+    hdbcp->curkey = *key;
+    hdbcp->curval = *value;
 
-return true;
+    return true;
 }
 
 /*****************************************************************************/
 
-int TCDB_DeleteDBCursor(CF_TCDB *hdbp,CF_TCDBC *hdbcp)
-
+int TCDB_DeleteDBCursor(CF_TCDB *hdbp, CF_TCDBC *hdbcp)
 {
-if (hdbcp->curkey != NULL)
-   {
-   free(hdbcp->curkey);
-   hdbcp->curkey = NULL;
-   }
+    if (hdbcp->curkey != NULL)
+    {
+        free(hdbcp->curkey);
+        hdbcp->curkey = NULL;
+    }
 
-if (hdbcp->curval != NULL)
-   {
-   free(hdbcp->curval);
-   hdbcp->curval = NULL;
-   }
+    if (hdbcp->curval != NULL)
+    {
+        free(hdbcp->curval);
+        hdbcp->curval = NULL;
+    }
 
-free(hdbcp);
+    free(hdbcp);
 
-return true;
+    return true;
 }
 
 /*****************************************************************************/
@@ -303,7 +299,7 @@ return true;
  */
 static long GetSleepTime(void)
 {
-return lrand48() % (2*10*1000*1000);
+    return lrand48() % (2 * 10 * 1000 * 1000);
 }
 
 #endif

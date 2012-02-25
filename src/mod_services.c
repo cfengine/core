@@ -36,44 +36,35 @@
 
 #define CF3_MOD_SERVICES
 
-
 BodySyntax CF_SERVMETHOD_BODY[] =
-   {
-   {"service_args",cf_str,"","Parameters for starting the service as command"},
-   {"service_autostart_policy",cf_opts,"none,boot_time,on_demand","Should the service be started automatically by the OS"},
-   {"service_bundle",cf_bundle,CF_BUNDLE,"A bundle reference with two arguments (service_name,args) used if the service type is generic"},
-   {"service_dependence_chain",cf_opts,"ignore,start_parent_services,stop_child_services,all_related","How to handle dependencies and dependent services"},
-   {"service_type",cf_opts,"windows,generic","Service abstraction type"},
-   {NULL,cf_notype,NULL,NULL}
-   };
+{
+    {"service_args", cf_str, "", "Parameters for starting the service as command"},
+    {"service_autostart_policy", cf_opts, "none,boot_time,on_demand",
+     "Should the service be started automatically by the OS"},
+    {"service_bundle", cf_bundle, CF_BUNDLE,
+     "A bundle reference with two arguments (service_name,args) used if the service type is generic"},
+    {"service_dependence_chain", cf_opts, "ignore,start_parent_services,stop_child_services,all_related",
+     "How to handle dependencies and dependent services"},
+    {"service_type", cf_opts, "windows,generic", "Service abstraction type"},
+    {NULL, cf_notype, NULL, NULL}
+};
 
 /***************************************************************/
 
 BodySyntax CF_SERVICES_BODIES[] =
-   {
-   {"service_policy",cf_opts,"start,stop,disable","Policy for cfengine service status"},
-   {"service_dependencies",cf_slist,CF_IDRANGE,"A list of services on which the named service abstraction depends"},
-   {"service_method",cf_body,CF_SERVMETHOD_BODY,"Details of promise body for the service abtraction feature"},
-   {NULL,cf_notype,NULL,NULL}
-   };
-
+{
+    {"service_policy", cf_opts, "start,stop,disable", "Policy for cfengine service status"},
+    {"service_dependencies", cf_slist, CF_IDRANGE, "A list of services on which the named service abstraction depends"},
+    {"service_method", cf_body, CF_SERVMETHOD_BODY, "Details of promise body for the service abtraction feature"},
+    {NULL, cf_notype, NULL, NULL}
+};
 
 /***************************************************************/
 /* This is the point of entry from mod_common.c                */
 /***************************************************************/
 
 SubTypeSyntax CF_SERVICES_SUBTYPES[] =
-  {
-  {"agent","services",CF_SERVICES_BODIES},
-  {NULL,NULL,NULL},
-  };
-
-
-
-
-
-
-
-
-
-
+{
+    {"agent", "services", CF_SERVICES_BODIES},
+    {NULL, NULL, NULL},
+};

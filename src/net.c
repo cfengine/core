@@ -33,159 +33,159 @@
 
 /*************************************************************************/
 
-int SendTransaction(int sd,char *buffer,int len,char status)
+int SendTransaction(int sd, char *buffer, int len, char status)
+{
+    char work[CF_BUFSIZE];
+    int wlen;
 
-{ char work[CF_BUFSIZE];
-  int wlen;
+    memset(work, 0, sizeof(work));
 
-memset(work, 0, sizeof(work));
+    if (len == 0)
+    {
+        wlen = strlen(buffer);
+    }
+    else
+    {
+        wlen = len;
+    }
 
-if (len == 0)
-   {
-   wlen = strlen(buffer);
-   }
-else
-   {
-   wlen = len;
-   }
+    if (wlen > CF_BUFSIZE - CF_INBAND_OFFSET)
+    {
+        CfOut(cf_error, "", "SendTransaction: wlen (%d) > %d - %d", wlen, CF_BUFSIZE, CF_INBAND_OFFSET);
+        FatalError("SendTransaction software failure");
+    }
 
-if (wlen > CF_BUFSIZE-CF_INBAND_OFFSET)
-   {
-   CfOut(cf_error, "", "SendTransaction: wlen (%d) > %d - %d", wlen, CF_BUFSIZE, CF_INBAND_OFFSET);
-   FatalError("SendTransaction software failure");
-   }
+    snprintf(work, CF_INBAND_OFFSET, "%c %d", status, wlen);
 
-snprintf(work,CF_INBAND_OFFSET,"%c %d",status,wlen);
+    memcpy(work + CF_INBAND_OFFSET, buffer, wlen);
 
-memcpy(work+CF_INBAND_OFFSET,buffer,wlen);
+    CfDebug("Transaction Send[%s][Packed text]\n", work);
 
-CfDebug("Transaction Send[%s][Packed text]\n",work);
+    if (SendSocketStream(sd, work, wlen + CF_INBAND_OFFSET, 0) == -1)
+    {
+        return -1;
+    }
 
-if (SendSocketStream(sd,work,wlen+CF_INBAND_OFFSET,0) == -1)
-   {
-   return -1;
-   }
-
-return 0;
+    return 0;
 }
 
 /*************************************************************************/
 
-int ReceiveTransaction(int sd,char *buffer,int *more)
+int ReceiveTransaction(int sd, char *buffer, int *more)
+{
+    char proto[CF_INBAND_OFFSET + 1];
+    char status = 'x';
+    unsigned int len = 0;
 
-{ char proto[CF_INBAND_OFFSET+1];
-  char status = 'x';
-  unsigned int len = 0;
+    memset(proto, 0, CF_INBAND_OFFSET + 1);
 
-memset(proto,0,CF_INBAND_OFFSET+1);
+    if (RecvSocketStream(sd, proto, CF_INBAND_OFFSET, 0) == -1) /* Get control channel */
+    {
+        return -1;
+    }
 
-if (RecvSocketStream(sd,proto,CF_INBAND_OFFSET,0) == -1)   /* Get control channel */
-   {
-   return -1;
-   }
+    sscanf(proto, "%c %u", &status, &len);
 
-sscanf(proto,"%c %u",&status,&len);
+    CfDebug("Transaction Receive [%s][%s]\n", proto, proto + CF_INBAND_OFFSET);
 
-CfDebug("Transaction Receive [%s][%s]\n",proto,proto+CF_INBAND_OFFSET);
+    if (len > CF_BUFSIZE - CF_INBAND_OFFSET)
+    {
+        CfOut(cf_error, "", "Bad transaction packet -- too long (%c %d) Proto = %s ", status, len, proto);
+        return -1;
+    }
 
-if (len > CF_BUFSIZE - CF_INBAND_OFFSET)
-   {
-   CfOut(cf_error,"","Bad transaction packet -- too long (%c %d) Proto = %s ",status,len,proto);
-   return -1;
-   }
+    if (strncmp(proto, "CAUTH", 5) == 0)
+    {
+        CfDebug("Version 1 protocol connection attempted - no you don't!!\n");
+        return -1;
+    }
 
-if (strncmp(proto,"CAUTH",5) == 0)
-   {
-   CfDebug("Version 1 protocol connection attempted - no you don't!!\n");
-   return -1;
-   }
+    if (more != NULL)
+    {
+        switch (status)
+        {
+        case 'm':
+            *more = true;
+            break;
+        default:
+            *more = false;
+        }
+    }
 
-if (more != NULL)
-   {
-   switch(status)
-      {
-      case 'm': *more = true;
-          break;
-      default: *more = false;
-      }
-   }
-
-return RecvSocketStream(sd,buffer,len,0);
+    return RecvSocketStream(sd, buffer, len, 0);
 }
 
 /*************************************************************************/
 
-int RecvSocketStream(int sd,char buffer[CF_BUFSIZE],int toget,int nothing)
+int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget, int nothing)
+{
+    int already, got;
 
-{ int already, got;
+    CfDebug("RecvSocketStream(%d)\n", toget);
 
-CfDebug("RecvSocketStream(%d)\n",toget);
+    if (toget > CF_BUFSIZE - 1)
+    {
+        CfOut(cf_error, "", "Bad software request for overfull buffer");
+        return -1;
+    }
 
-if (toget > CF_BUFSIZE-1)
-   {
-   CfOut(cf_error,"","Bad software request for overfull buffer");
-   return -1;
-   }
+    for (already = 0; already != toget; already += got)
+    {
+        got = recv(sd, buffer + already, toget - already, 0);
 
-for (already = 0; already != toget; already += got)
-   {
-   got = recv(sd,buffer+already,toget-already,0);
+        if (got == -1 && errno == EINTR)
+        {
+            continue;
+        }
 
-   if (got == -1 && errno == EINTR)
-      {
-      continue;
-      }
+        if (got == -1)
+        {
+            CfOut(cf_verbose, "recv", "Couldn't recv");
+            return -1;
+        }
 
-   if (got == -1)
-      {
-      CfOut(cf_verbose,"recv","Couldn't recv");
-      return -1;
-      }
+        if (got == 0)           /* doesn't happen unless sock is closed */
+        {
+            CfDebug("Transmission empty or timed out...\n");
+            break;
+        }
 
-   if (got == 0)   /* doesn't happen unless sock is closed */
-      {
-      CfDebug("Transmission empty or timed out...\n");
-      break;
-      }
+        CfDebug("    (Concatenated %d from stream)\n", got);
+    }
 
-   CfDebug("    (Concatenated %d from stream)\n",got);
-   }
-
-buffer[already] = '\0';
-return already;
-}
-
-
-/*************************************************************************/
-
-int SendSocketStream(int sd,char buffer[CF_BUFSIZE],int tosend,int flags)
-
-{ int sent,already=0;
-
-do
-   {
-   CfDebug("Attempting to send %d bytes\n",tosend-already);
-
-   sent = send(sd,buffer+already,tosend-already,flags);
-
-   if (sent == -1 && errno == EINTR)
-      {
-      continue;
-      }
-
-   if (sent == -1)
-      {
-      CfOut(cf_verbose,"send","Couldn't send");
-      return -1;
-      }
-
-   CfDebug("SendSocketStream, sent %d\n",sent);
-   already += sent;
-   }
-while (already < tosend);
-
-return already;
+    buffer[already] = '\0';
+    return already;
 }
 
 /*************************************************************************/
 
+int SendSocketStream(int sd, char buffer[CF_BUFSIZE], int tosend, int flags)
+{
+    int sent, already = 0;
+
+    do
+    {
+        CfDebug("Attempting to send %d bytes\n", tosend - already);
+
+        sent = send(sd, buffer + already, tosend - already, flags);
+
+        if (sent == -1 && errno == EINTR)
+        {
+            continue;
+        }
+
+        if (sent == -1)
+        {
+            CfOut(cf_verbose, "send", "Couldn't send");
+            return -1;
+        }
+
+        CfDebug("SendSocketStream, sent %d\n", sent);
+        already += sent;
+    }
+    while (already < tosend);
+
+    return already;
+}
+
+/*************************************************************************/

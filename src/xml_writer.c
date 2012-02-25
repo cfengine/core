@@ -30,132 +30,128 @@ static void WriteEscaped(Writer *writer, const char *source);
 /*****************************************************************************/
 
 void XmlComment(Writer *writer, const char *comment)
-
 {
-if (writer == NULL)
-   {
-   FatalError("Programming error: NULL writer passed to XmlWriter");
-   }
+    if (writer == NULL)
+    {
+        FatalError("Programming error: NULL writer passed to XmlWriter");
+    }
 
-WriterWrite(writer, "<!-- ");
-WriteEscaped(writer, comment);
-WriterWrite(writer, " -->\n");
+    WriterWrite(writer, "<!-- ");
+    WriteEscaped(writer, comment);
+    WriterWrite(writer, " -->\n");
 }
 
 /*****************************************************************************/
 
-static void XmlEmitStartTag(Writer *writer, const char *tag_name,
-                            int attr_cnt, va_list args)
+static void XmlEmitStartTag(Writer *writer, const char *tag_name, int attr_cnt, va_list args)
 {
-WriterWriteF(writer, "<%s", tag_name);
+    WriterWriteF(writer, "<%s", tag_name);
 
-if (attr_cnt > 0)
-   {
-   WriterWrite(writer, " ");
-   }
+    if (attr_cnt > 0)
+    {
+        WriterWrite(writer, " ");
+    }
 
-for (int i = 0; i < attr_cnt; ++i)
-   {
-   XmlAttribute attr = va_arg(args, XmlAttribute);
-   WriterWriteF(writer, "%s=\"%s\" ", attr.name, attr.value);
-   }
+    for (int i = 0; i < attr_cnt; ++i)
+    {
+        XmlAttribute attr = va_arg(args, XmlAttribute);
 
-WriterWrite(writer, ">");
+        WriterWriteF(writer, "%s=\"%s\" ", attr.name, attr.value);
+    }
+
+    WriterWrite(writer, ">");
 }
 
 /*****************************************************************************/
 
 void XmlStartTag(Writer *writer, const char *tag_name, int attr_cnt, ...)
-
 {
-va_list args;
+    va_list args;
 
-if ((writer == NULL) || (tag_name == NULL) || (attr_cnt < 0))
-   {
-   FatalError("Programming error: writer, tag_name or attr_cnt in XmlStartTag are wrong");
-   }
+    if ((writer == NULL) || (tag_name == NULL) || (attr_cnt < 0))
+    {
+        FatalError("Programming error: writer, tag_name or attr_cnt in XmlStartTag are wrong");
+    }
 
-va_start(args, attr_cnt);
-XmlEmitStartTag(writer, tag_name, attr_cnt, args);
-va_end(args);
+    va_start(args, attr_cnt);
+    XmlEmitStartTag(writer, tag_name, attr_cnt, args);
+    va_end(args);
 
-WriterWrite(writer, "\n");
+    WriterWrite(writer, "\n");
 }
 
 /*****************************************************************************/
 
 void XmlEndTag(Writer *writer, const char *tag_name)
-
 {
-if ((writer == NULL) || (tag_name == NULL))
-   {
-   FatalError("Programming error: writer or tag_name are missing");
-   }
+    if ((writer == NULL) || (tag_name == NULL))
+    {
+        FatalError("Programming error: writer or tag_name are missing");
+    }
 
-WriterWriteF(writer, "</%s>\n", tag_name);
+    WriterWriteF(writer, "</%s>\n", tag_name);
 }
 
 /*****************************************************************************/
 
-void XmlTag(Writer *writer, const char *tag_name, const char* value, int attr_cnt, ...)
-
+void XmlTag(Writer *writer, const char *tag_name, const char *value, int attr_cnt, ...)
 {
-va_list args;
+    va_list args;
 
-if ((writer == NULL) || (tag_name == NULL) || (attr_cnt < 0))
-   {
-   return;
-   }
+    if ((writer == NULL) || (tag_name == NULL) || (attr_cnt < 0))
+    {
+        return;
+    }
 
-va_start(args, attr_cnt);
-XmlEmitStartTag(writer, tag_name, attr_cnt, args);
-va_end(args);
+    va_start(args, attr_cnt);
+    XmlEmitStartTag(writer, tag_name, attr_cnt, args);
+    va_end(args);
 
-if (value != NULL)
-   {
-   WriteEscaped(writer, value);
-   }
+    if (value != NULL)
+    {
+        WriteEscaped(writer, value);
+    }
 
-XmlEndTag(writer,tag_name);
+    XmlEndTag(writer, tag_name);
 }
 
 /*****************************************************************************/
 
 void XmlContent(Writer *writer, const char *value)
 {
-if (writer == NULL)
-   {
-   FatalError("Programming error: writer is NULL");
-   }
+    if (writer == NULL)
+    {
+        FatalError("Programming error: writer is NULL");
+    }
 
-WriteEscaped(writer, value);
+    WriteEscaped(writer, value);
 }
 
 /*****************************************************************************/
 
 static void WriteEscaped(Writer *w, const char *source)
 {
-for (const char *s = source; *s; s++)
-   {
-   switch (*s)
-      {
-      case '&':
-         WriterWrite(w, "&amp;");
-         break;
-      case '>':
-         WriterWrite(w, "&gt;");
-         break;
-      case '"':
-         WriterWrite(w, "&quot;");
-         break;
-      case '\'':
-         WriterWrite(w, "&apos;");
-         break;
-      case '<':
-         WriterWrite(w,"&lt;");
-         break;
-      default:
-         WriterWriteChar(w, *s);
-      }
-   }
+    for (const char *s = source; *s; s++)
+    {
+        switch (*s)
+        {
+        case '&':
+            WriterWrite(w, "&amp;");
+            break;
+        case '>':
+            WriterWrite(w, "&gt;");
+            break;
+        case '"':
+            WriterWrite(w, "&quot;");
+            break;
+        case '\'':
+            WriterWrite(w, "&apos;");
+            break;
+        case '<':
+            WriterWrite(w, "&lt;");
+            break;
+        default:
+            WriterWriteChar(w, *s);
+        }
+    }
 }

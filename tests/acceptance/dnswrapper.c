@@ -3,7 +3,6 @@
 
 struct hostent *gethostbyaddr(const void *addr, socklen_t len, int type)
 {
-h_errno = HOST_NOT_FOUND;
-return NULL;
+    h_errno = HOST_NOT_FOUND;
+    return NULL;
 }
-

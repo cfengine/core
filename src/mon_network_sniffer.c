@@ -28,7 +28,7 @@
 
 /* Constants */
 
-static const int SLEEPTIME = 2.5 * 60; /* Should be a fraction of 5 minutes */
+static const int SLEEPTIME = 2.5 * 60;  /* Should be a fraction of 5 minutes */
 
 /* Global variables */
 
@@ -48,114 +48,115 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this);
 
 void MonNetworkSnifferSniff(long iteration, double *cf_this)
 {
-if (TCPDUMP)
-   {
-   Sniff(iteration, cf_this);
-   }
-else
-   {
-   sleep(SLEEPTIME);
-   }
+    if (TCPDUMP)
+    {
+        Sniff(iteration, cf_this);
+    }
+    else
+    {
+        sleep(SLEEPTIME);
+    }
 }
 
 /******************************************************************************/
 
 void MonNetworkSnifferOpen(void)
 {
-char tcpbuffer[CF_BUFSIZE];
+    char tcpbuffer[CF_BUFSIZE];
 
-if (TCPDUMP)
-   {
-   struct stat statbuf;
-   char buffer[CF_MAXVARSIZE];
-   sscanf(CF_TCPDUMP_COMM,"%s",buffer);
+    if (TCPDUMP)
+    {
+        struct stat statbuf;
+        char buffer[CF_MAXVARSIZE];
 
-   if (cfstat(buffer,&statbuf) != -1)
-      {
-      if ((TCPPIPE = cf_popen(CF_TCPDUMP_COMM,"r")) == NULL)
-         {
-         TCPDUMP = false;
-         }
+        sscanf(CF_TCPDUMP_COMM, "%s", buffer);
 
-      /* Skip first banner */
-      fgets(tcpbuffer,CF_BUFSIZE-1,TCPPIPE);
-      }
-   else
-      {
-      TCPDUMP = false;
-      }
-   }
+        if (cfstat(buffer, &statbuf) != -1)
+        {
+            if ((TCPPIPE = cf_popen(CF_TCPDUMP_COMM, "r")) == NULL)
+            {
+                TCPDUMP = false;
+            }
+
+            /* Skip first banner */
+            fgets(tcpbuffer, CF_BUFSIZE - 1, TCPPIPE);
+        }
+        else
+        {
+            TCPDUMP = false;
+        }
+    }
 }
 
 /******************************************************************************/
 
 void MonNetworkSnifferEnable(bool enable)
 {
-TCPDUMP = enable;
-CfDebug("use tcpdump = %d\n",TCPDUMP);
+    TCPDUMP = enable;
+    CfDebug("use tcpdump = %d\n", TCPDUMP);
 }
 
 /******************************************************************************/
 
 static void CfenvTimeOut(int signum)
 {
-alarm(0);
-TCPPAUSE = true;
-CfOut(cf_verbose,"","Time out\n");
+    alarm(0);
+    TCPPAUSE = true;
+    CfOut(cf_verbose, "", "Time out\n");
 }
 
 /******************************************************************************/
 
 static void Sniff(long iteration, double *cf_this)
 {
-char tcpbuffer[CF_BUFSIZE];
+    char tcpbuffer[CF_BUFSIZE];
 
-CfOut(cf_verbose,"","Reading from tcpdump...\n");
-memset(tcpbuffer,0,CF_BUFSIZE);
-signal(SIGALRM,CfenvTimeOut);
-alarm(SLEEPTIME);
-TCPPAUSE = false;
+    CfOut(cf_verbose, "", "Reading from tcpdump...\n");
+    memset(tcpbuffer, 0, CF_BUFSIZE);
+    signal(SIGALRM, CfenvTimeOut);
+    alarm(SLEEPTIME);
+    TCPPAUSE = false;
 
-while (!feof(TCPPIPE))
-   {
-   if (TCPPAUSE)
-      {
-      break;
-      }
+    while (!feof(TCPPIPE))
+    {
+        if (TCPPAUSE)
+        {
+            break;
+        }
 
-   fgets(tcpbuffer,CF_BUFSIZE-1,TCPPIPE);
+        fgets(tcpbuffer, CF_BUFSIZE - 1, TCPPIPE);
 
-   if (TCPPAUSE)
-      {
-      break;
-      }
+        if (TCPPAUSE)
+        {
+            break;
+        }
 
-   if (strstr(tcpbuffer,"tcpdump:")) /* Error message protect sleeptime */
-      {
-      CfDebug("Error - (%s)\n",tcpbuffer);
-      alarm(0);
-      TCPDUMP = false;
-      break;
-      }
+        if (strstr(tcpbuffer, "tcpdump:"))      /* Error message protect sleeptime */
+        {
+            CfDebug("Error - (%s)\n", tcpbuffer);
+            alarm(0);
+            TCPDUMP = false;
+            break;
+        }
 
-   AnalyzeArrival(iteration, tcpbuffer, cf_this);
-   }
+        AnalyzeArrival(iteration, tcpbuffer, cf_this);
+    }
 
-signal(SIGALRM,SIG_DFL);
-TCPPAUSE = false;
-fflush(TCPPIPE);
+    signal(SIGALRM, SIG_DFL);
+    TCPPAUSE = false;
+    fflush(TCPPIPE);
 }
 
 /******************************************************************************/
 
-static void IncrementCounter(Item **list,char *name)
+static void IncrementCounter(Item **list, char *name)
 {
-if (!IsItemIn(*list,name))
-   {
-   AppendItem(list,name,"");
-   }
+    if (!IsItemIn(*list, name))
+    {
+        AppendItem(list, name, "");
+    }
 
-IncrementItemListCounter(*list,name);
+    IncrementItemListCounter(*list, name);
 }
 
 /******************************************************************************/
@@ -164,17 +165,17 @@ IncrementItemListCounter(*list,name);
 
 static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
 {
-char src[CF_BUFSIZE],dest[CF_BUFSIZE], flag = '.', *arr;
-int isme_dest, isme_src;
+    char src[CF_BUFSIZE], dest[CF_BUFSIZE], flag = '.', *arr;
+    int isme_dest, isme_src;
 
-src[0] = dest[0] = '\0';
+    src[0] = dest[0] = '\0';
 
-if (strstr(arrival,"listening"))
-   {
-   return;
-   }
+    if (strstr(arrival, "listening"))
+    {
+        return;
+    }
 
-Chop(arrival);
+    Chop(arrival);
 
 /* Most hosts have only a few dominant services, so anomalies will
    show up even in the traffic without looking too closely. This
@@ -190,266 +191,269 @@ Chop(arrival);
    IP (tos 0x0, ttl 64, id 0, offset 0, flags [DF], proto ICMP (1), length 84) 192.168.1.103 > 128.39.89.10: ICMP echo request, id 48474, seq 2, length 64
 */
 
-for (arr = strstr(arrival,"length"); arr != NULL && *arr != ')'; arr++)
-   {
-   }
+    for (arr = strstr(arrival, "length"); arr != NULL && *arr != ')'; arr++)
+    {
+    }
 
-if (arr == NULL)
-   {
-   arr = arrival;
-   }
-else
-   {
-   arr++;
-   }
+    if (arr == NULL)
+    {
+        arr = arrival;
+    }
+    else
+    {
+        arr++;
+    }
 
-if (strstr(arrival,"proto TCP") || strstr(arrival,"ack"))
-   {
-   sscanf(arr,"%s %*c %s %c ",src,dest,&flag);
-   DePort(src);
-   DePort(dest);
-   isme_dest = IsInterfaceAddress(dest);
-   isme_src = IsInterfaceAddress(src);
+    if (strstr(arrival, "proto TCP") || strstr(arrival, "ack"))
+    {
+        sscanf(arr, "%s %*c %s %c ", src, dest, &flag);
+        DePort(src);
+        DePort(dest);
+        isme_dest = IsInterfaceAddress(dest);
+        isme_src = IsInterfaceAddress(src);
 
-   switch (flag)
-      {
-      case 'S': CfDebug("%ld: TCP new connection from %s to %s - i am %s\n",iteration,src,dest,VIPADDRESS);
-         if (isme_dest)
+        switch (flag)
+        {
+        case 'S':
+            CfDebug("%ld: TCP new connection from %s to %s - i am %s\n", iteration, src, dest, VIPADDRESS);
+            if (isme_dest)
             {
-            cf_this[ob_tcpsyn_in]++;
-            IncrementCounter(&(NETIN_DIST[tcpsyn]),src);
+                cf_this[ob_tcpsyn_in]++;
+                IncrementCounter(&(NETIN_DIST[tcpsyn]), src);
             }
-         else if (isme_src)
+            else if (isme_src)
             {
-            cf_this[ob_tcpsyn_out]++;
-            IncrementCounter(&(NETOUT_DIST[tcpsyn]),dest);
+                cf_this[ob_tcpsyn_out]++;
+                IncrementCounter(&(NETOUT_DIST[tcpsyn]), dest);
             }
-         break;
+            break;
 
-      case 'F': CfDebug("%ld: TCP end connection from %s to %s\n",iteration,src,dest);
-         if (isme_dest)
+        case 'F':
+            CfDebug("%ld: TCP end connection from %s to %s\n", iteration, src, dest);
+            if (isme_dest)
             {
-            cf_this[ob_tcpfin_in]++;
-            IncrementCounter(&(NETIN_DIST[tcpfin]),src);
+                cf_this[ob_tcpfin_in]++;
+                IncrementCounter(&(NETIN_DIST[tcpfin]), src);
             }
-         else if (isme_src)
+            else if (isme_src)
             {
-            cf_this[ob_tcpfin_out]++;
-            IncrementCounter(&(NETOUT_DIST[tcpfin]),dest);
+                cf_this[ob_tcpfin_out]++;
+                IncrementCounter(&(NETOUT_DIST[tcpfin]), dest);
             }
-         break;
+            break;
 
-      default: CfDebug("%ld: TCP established from %s to %s\n",iteration,src,dest);
+        default:
+            CfDebug("%ld: TCP established from %s to %s\n", iteration, src, dest);
 
-         if (isme_dest)
+            if (isme_dest)
             {
-            cf_this[ob_tcpack_in]++;
-            IncrementCounter(&(NETIN_DIST[tcpack]),src);
+                cf_this[ob_tcpack_in]++;
+                IncrementCounter(&(NETIN_DIST[tcpack]), src);
             }
-         else if (isme_src)
+            else if (isme_src)
             {
-            cf_this[ob_tcpack_out]++;
-            IncrementCounter(&(NETOUT_DIST[tcpack]),dest);
+                cf_this[ob_tcpack_out]++;
+                IncrementCounter(&(NETOUT_DIST[tcpack]), dest);
             }
-         break;
-      }
-   }
-else if (strstr(arrival,".53"))
-   {
-   sscanf(arr,"%s %*c %s %c ",src,dest,&flag);
-   DePort(src);
-   DePort(dest);
-   isme_dest = IsInterfaceAddress(dest);
-   isme_src = IsInterfaceAddress(src);
+            break;
+        }
+    }
+    else if (strstr(arrival, ".53"))
+    {
+        sscanf(arr, "%s %*c %s %c ", src, dest, &flag);
+        DePort(src);
+        DePort(dest);
+        isme_dest = IsInterfaceAddress(dest);
+        isme_src = IsInterfaceAddress(src);
 
-   CfDebug("%ld: DNS packet from %s to %s\n",iteration,src,dest);
-   if (isme_dest)
-      {
-      cf_this[ob_dns_in]++;
-      IncrementCounter(&(NETIN_DIST[dns]),src);
-      }
-   else if (isme_src)
-      {
-      cf_this[ob_dns_out]++;
-      IncrementCounter(&(NETOUT_DIST[tcpack]),dest);
-      }
-   }
-else if (strstr(arrival,"proto UDP"))
-   {
-   sscanf(arr,"%s %*c %s %c ",src,dest,&flag);
-   DePort(src);
-   DePort(dest);
-   isme_dest = IsInterfaceAddress(dest);
-   isme_src = IsInterfaceAddress(src);
+        CfDebug("%ld: DNS packet from %s to %s\n", iteration, src, dest);
+        if (isme_dest)
+        {
+            cf_this[ob_dns_in]++;
+            IncrementCounter(&(NETIN_DIST[dns]), src);
+        }
+        else if (isme_src)
+        {
+            cf_this[ob_dns_out]++;
+            IncrementCounter(&(NETOUT_DIST[tcpack]), dest);
+        }
+    }
+    else if (strstr(arrival, "proto UDP"))
+    {
+        sscanf(arr, "%s %*c %s %c ", src, dest, &flag);
+        DePort(src);
+        DePort(dest);
+        isme_dest = IsInterfaceAddress(dest);
+        isme_src = IsInterfaceAddress(src);
 
-   CfDebug("%ld: UDP packet from %s to %s\n",iteration,src,dest);
-   if (isme_dest)
-      {
-      cf_this[ob_udp_in]++;
-      IncrementCounter(&(NETIN_DIST[udp]),src);
-      }
-   else if (isme_src)
-      {
-      cf_this[ob_udp_out]++;
-      IncrementCounter(&(NETOUT_DIST[udp]),dest);
-      }
-   }
-else if (strstr(arrival,"proto ICMP"))
-   {
-   sscanf(arr,"%s %*c %s %c ",src,dest,&flag);
-   DePort(src);
-   DePort(dest);
-   isme_dest = IsInterfaceAddress(dest);
-   isme_src = IsInterfaceAddress(src);
+        CfDebug("%ld: UDP packet from %s to %s\n", iteration, src, dest);
+        if (isme_dest)
+        {
+            cf_this[ob_udp_in]++;
+            IncrementCounter(&(NETIN_DIST[udp]), src);
+        }
+        else if (isme_src)
+        {
+            cf_this[ob_udp_out]++;
+            IncrementCounter(&(NETOUT_DIST[udp]), dest);
+        }
+    }
+    else if (strstr(arrival, "proto ICMP"))
+    {
+        sscanf(arr, "%s %*c %s %c ", src, dest, &flag);
+        DePort(src);
+        DePort(dest);
+        isme_dest = IsInterfaceAddress(dest);
+        isme_src = IsInterfaceAddress(src);
 
-   CfDebug("%ld: ICMP packet from %s to %s\n",iteration,src,dest);
+        CfDebug("%ld: ICMP packet from %s to %s\n", iteration, src, dest);
 
-   if (isme_dest)
-      {
-      cf_this[ob_icmp_in]++;
-      IncrementCounter(&(NETIN_DIST[icmp]),src);
-      }
-   else if (isme_src)
-      {
-      cf_this[ob_icmp_out]++;
-      IncrementCounter(&(NETOUT_DIST[icmp]),src);
-      }
-   }
-else
-   {
-   CfDebug("%ld: Miscellaneous undirected packet (%.100s)\n",iteration,arrival);
+        if (isme_dest)
+        {
+            cf_this[ob_icmp_in]++;
+            IncrementCounter(&(NETIN_DIST[icmp]), src);
+        }
+        else if (isme_src)
+        {
+            cf_this[ob_icmp_out]++;
+            IncrementCounter(&(NETOUT_DIST[icmp]), src);
+        }
+    }
+    else
+    {
+        CfDebug("%ld: Miscellaneous undirected packet (%.100s)\n", iteration, arrival);
 
-   cf_this[ob_tcpmisc_in]++;
+        cf_this[ob_tcpmisc_in]++;
 
-   /* Here we don't know what source will be, but .... */
+        /* Here we don't know what source will be, but .... */
 
-   sscanf(arrival,"%s",src);
+        sscanf(arrival, "%s", src);
 
-   if (!isdigit((int)*src))
-      {
-      CfDebug("Assuming continuation line...\n");
-      return;
-      }
+        if (!isdigit((int) *src))
+        {
+            CfDebug("Assuming continuation line...\n");
+            return;
+        }
 
-   DePort(src);
+        DePort(src);
 
-   if (strstr(arrival,".138"))
-      {
-      snprintf(dest,CF_BUFSIZE-1,"%s NETBIOS",src);
-      }
-   else if (strstr(arrival,".2049"))
-      {
-      snprintf(dest,CF_BUFSIZE-1,"%s NFS",src);
-      }
-   else
-      {
-      strncpy(dest,src,60);
-      }
-   IncrementCounter(&(NETIN_DIST[tcpmisc]),dest);
-   }
+        if (strstr(arrival, ".138"))
+        {
+            snprintf(dest, CF_BUFSIZE - 1, "%s NETBIOS", src);
+        }
+        else if (strstr(arrival, ".2049"))
+        {
+            snprintf(dest, CF_BUFSIZE - 1, "%s NFS", src);
+        }
+        else
+        {
+            strncpy(dest, src, 60);
+        }
+        IncrementCounter(&(NETIN_DIST[tcpmisc]), dest);
+    }
 }
 
 /******************************************************************************/
 
-static void SaveTCPEntropyData(Item *list,int i,char *inout)
+static void SaveTCPEntropyData(Item *list, int i, char *inout)
 {
-Item *ip;
-FILE *fp;
-char filename[CF_BUFSIZE];
+    Item *ip;
+    FILE *fp;
+    char filename[CF_BUFSIZE];
 
-CfOut(cf_verbose,"","TCP Save %s\n",TCPNAMES[i]);
+    CfOut(cf_verbose, "", "TCP Save %s\n", TCPNAMES[i]);
 
-if (list == NULL)
-   {
-   CfOut(cf_verbose,"","No %s-%s events\n",TCPNAMES[i],inout);
-   return;
-   }
+    if (list == NULL)
+    {
+        CfOut(cf_verbose, "", "No %s-%s events\n", TCPNAMES[i], inout);
+        return;
+    }
 
-if (strncmp(inout,"in",2) == 0)
-   {
-   snprintf(filename,CF_BUFSIZE-1,"%s/state/cf_incoming.%s",CFWORKDIR,TCPNAMES[i]); 
-   }
-else
-   {
-   snprintf(filename,CF_BUFSIZE-1,"%s/state/cf_outgoing.%s",CFWORKDIR,TCPNAMES[i]); 
-   }
+    if (strncmp(inout, "in", 2) == 0)
+    {
+        snprintf(filename, CF_BUFSIZE - 1, "%s/state/cf_incoming.%s", CFWORKDIR, TCPNAMES[i]);
+    }
+    else
+    {
+        snprintf(filename, CF_BUFSIZE - 1, "%s/state/cf_outgoing.%s", CFWORKDIR, TCPNAMES[i]);
+    }
 
-CfOut(cf_verbose,"","TCP Save %s\n",filename);
+    CfOut(cf_verbose, "", "TCP Save %s\n", filename);
 
-if ((fp = fopen(filename,"w")) == NULL)
-   {
-   CfOut(cf_verbose,"","Unable to write datafile %s\n",filename);
-   return;
-   }
+    if ((fp = fopen(filename, "w")) == NULL)
+    {
+        CfOut(cf_verbose, "", "Unable to write datafile %s\n", filename);
+        return;
+    }
 
-for (ip = list; ip != NULL; ip=ip->next)
-   {
-   fprintf(fp,"%d %s\n",ip->counter,ip->name);
-   }
+    for (ip = list; ip != NULL; ip = ip->next)
+    {
+        fprintf(fp, "%d %s\n", ip->counter, ip->name);
+    }
 
-fclose(fp);
+    fclose(fp);
 }
 
 /******************************************************************************/
 
 void MonNetworkSnifferGatherData(double *cf_this)
 {
-int i;
-char vbuff[CF_BUFSIZE];
+    int i;
+    char vbuff[CF_BUFSIZE];
 
-for (i = 0; i < CF_NETATTR; i++)
-   {
-   struct stat statbuf;
-   double entropy;
-   time_t now = time(NULL);
+    for (i = 0; i < CF_NETATTR; i++)
+    {
+        struct stat statbuf;
+        double entropy;
+        time_t now = time(NULL);
 
-   CfDebug("save incoming %s\n",TCPNAMES[i]);
-   snprintf(vbuff,CF_MAXVARSIZE,"%s/state/cf_incoming.%s",CFWORKDIR,TCPNAMES[i]);
+        CfDebug("save incoming %s\n", TCPNAMES[i]);
+        snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_incoming.%s", CFWORKDIR, TCPNAMES[i]);
 
-   if (cfstat(vbuff,&statbuf) != -1)
-      {
-      if ((ByteSizeList(NETIN_DIST[i]) < statbuf.st_size) && (now < statbuf.st_mtime+40*60))
-         {
-         CfOut(cf_verbose,"","New state %s is smaller, retaining old for 40 mins longer\n",TCPNAMES[i]);
-         DeleteItemList(NETIN_DIST[i]);
-         NETIN_DIST[i] = NULL;
-         continue;
-         }
-      }
+        if (cfstat(vbuff, &statbuf) != -1)
+        {
+            if ((ByteSizeList(NETIN_DIST[i]) < statbuf.st_size) && (now < statbuf.st_mtime + 40 * 60))
+            {
+                CfOut(cf_verbose, "", "New state %s is smaller, retaining old for 40 mins longer\n", TCPNAMES[i]);
+                DeleteItemList(NETIN_DIST[i]);
+                NETIN_DIST[i] = NULL;
+                continue;
+            }
+        }
 
-   SaveTCPEntropyData(NETIN_DIST[i],i,"in");
+        SaveTCPEntropyData(NETIN_DIST[i], i, "in");
 
-   entropy = MonEntropyCalculate(NETIN_DIST[i]);
-   MonEntropyClassesSet(TCPNAMES[i], "in", entropy);
-   DeleteItemList(NETIN_DIST[i]);
-   NETIN_DIST[i] = NULL;
-   }
+        entropy = MonEntropyCalculate(NETIN_DIST[i]);
+        MonEntropyClassesSet(TCPNAMES[i], "in", entropy);
+        DeleteItemList(NETIN_DIST[i]);
+        NETIN_DIST[i] = NULL;
+    }
 
-for (i = 0; i < CF_NETATTR; i++)
-   {
-   struct stat statbuf;
-   double entropy;
-   time_t now = time(NULL);
+    for (i = 0; i < CF_NETATTR; i++)
+    {
+        struct stat statbuf;
+        double entropy;
+        time_t now = time(NULL);
 
-   CfDebug("save outgoing %s\n",TCPNAMES[i]);
-   snprintf(vbuff,CF_MAXVARSIZE,"%s/state/cf_outgoing.%s",CFWORKDIR,TCPNAMES[i]);
+        CfDebug("save outgoing %s\n", TCPNAMES[i]);
+        snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_outgoing.%s", CFWORKDIR, TCPNAMES[i]);
 
-   if (cfstat(vbuff,&statbuf) != -1)
-      {
-      if ((ByteSizeList(NETOUT_DIST[i]) < statbuf.st_size) && (now < statbuf.st_mtime+40*60))
-         {
-         CfOut(cf_verbose,"","New state %s is smaller, retaining old for 40 mins longer\n",TCPNAMES[i]);
-         DeleteItemList(NETOUT_DIST[i]);
-         NETOUT_DIST[i] = NULL;
-         continue;
-         }
-      }
+        if (cfstat(vbuff, &statbuf) != -1)
+        {
+            if ((ByteSizeList(NETOUT_DIST[i]) < statbuf.st_size) && (now < statbuf.st_mtime + 40 * 60))
+            {
+                CfOut(cf_verbose, "", "New state %s is smaller, retaining old for 40 mins longer\n", TCPNAMES[i]);
+                DeleteItemList(NETOUT_DIST[i]);
+                NETOUT_DIST[i] = NULL;
+                continue;
+            }
+        }
 
-   SaveTCPEntropyData(NETOUT_DIST[i],i,"out");
+        SaveTCPEntropyData(NETOUT_DIST[i], i, "out");
 
-   entropy = MonEntropyCalculate(NETOUT_DIST[i]);
-   MonEntropyClassesSet(TCPNAMES[i], "out", entropy);
-   DeleteItemList(NETOUT_DIST[i]);
-   NETOUT_DIST[i] = NULL;
-   }
+        entropy = MonEntropyCalculate(NETOUT_DIST[i]);
+        MonEntropyClassesSet(TCPNAMES[i], "out", entropy);
+        DeleteItemList(NETOUT_DIST[i]);
+        NETOUT_DIST[i] = NULL;
+    }
 }

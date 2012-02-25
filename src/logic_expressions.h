@@ -25,8 +25,8 @@
 #ifndef CFENIGNE_LOGIC_EXPRESSIONS_H
 #define CFENGINE_LOGIC_EXPRESSIONS_H
 
-#include "bool.h"
-#include "string_expressions.h"
+# include "bool.h"
+# include "string_expressions.h"
 
 /*
    Logic expressions grammar:
@@ -52,37 +52,37 @@
 */
 
 typedef enum
-   {
-   OR,
-   AND,
-   NOT,
-   EVAL,
-   } LogicalOp;
+{
+    OR,
+    AND,
+    NOT,
+    EVAL,
+} LogicalOp;
 
 typedef struct Expression_ Expression;
 
 struct Expression_
-   {
-   LogicalOp op;
-   union
-      {
-      struct
-         {
-         Expression *lhs;
-         Expression *rhs;
-         } andor;
+{
+    LogicalOp op;
+    union
+    {
+        struct
+        {
+            Expression *lhs;
+            Expression *rhs;
+        } andor;
 
-      struct
-         {
-         Expression *arg;
-         } not;
+        struct
+        {
+            Expression *arg;
+        } not;
 
-      struct
-         {
-         StringExpression *name;
-         } eval;
-      } val;
-   };
+        struct
+        {
+            StringExpression *name;
+        } eval;
+    } val;
+};
 
 /* Parsing and evaluation */
 
@@ -96,35 +96,33 @@ struct Expression_
  * before the error.
  */
 typedef struct
-   {
-   Expression *result;
-   int position;
-   } ParseResult;
+{
+    Expression *result;
+    int position;
+} ParseResult;
 
 ParseResult ParseExpression(const char *expr, int start, int end);
 
 typedef enum ExpressionValue
-   {
-   EXP_ERROR = -1,
-   EXP_FALSE = false,
-   EXP_TRUE = true,
-   } ExpressionValue;
+{
+    EXP_ERROR = -1,
+    EXP_FALSE = false,
+    EXP_TRUE = true,
+} ExpressionValue;
 
 /*
  * Evaluator should return FALSE, TRUE or ERROR if unable to parse result.  In
  * later case evaluation will be aborted and ERROR will be returned from
  * EvalExpression.
  */
-typedef ExpressionValue (*NameEvaluator)(const char *name, void *param);
+typedef ExpressionValue(*NameEvaluator) (const char *name, void *param);
 
 /*
  * Result is heap-allocated. In case evalfn() returns ERROR whole
  * EvalExpression returns ERROR as well.
  */
 ExpressionValue EvalExpression(const Expression *expr,
-                               NameEvaluator nameevalfn,
-                               VarRefEvaluator varrefevalfn,
-                               void *param);
+                               NameEvaluator nameevalfn, VarRefEvaluator varrefevalfn, void *param);
 
 /*
  * Frees Expression produced by ParseExpression. NULL-safe.

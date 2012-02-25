@@ -35,20 +35,19 @@
 /*****************************************************************************/
 
 void VerifyInterfacesPromise(Promise *pp)
+{
+    Attributes a = { {0} };
 
-{ Attributes a = {{0}};
-
-a = GetInterfacesAttributes(pp);
-VerifyInterface(a,pp);
-DeleteScalar("this","promiser");
+    a = GetInterfacesAttributes(pp);
+    VerifyInterface(a, pp);
+    DeleteScalar("this", "promiser");
 }
 
 /*****************************************************************************/
 
-void VerifyInterface(Attributes a,Promise *pp)
-
+void VerifyInterface(Attributes a, Promise *pp)
 {
 /* How shall we deal with this now ? */
 
- printf("NOT YET IMPLEMENTED\n");
+    printf("NOT YET IMPLEMENTED\n");
 }

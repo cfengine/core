@@ -29,11 +29,11 @@
 
 /* variable reference linkage , with metatype*/
 typedef struct
-   {
-   char *lval;
-   Rval rval;
-   enum cfdatatype dtype;
-   } CfAssoc;
+{
+    char *lval;
+    Rval rval;
+    enum cfdatatype dtype;
+} CfAssoc;
 
 CfAssoc *NewAssoc(const char *lval, Rval rval, enum cfdatatype dt);
 void DeleteAssoc(CfAssoc *ap);

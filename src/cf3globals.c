@@ -23,7 +23,6 @@
   included file COSL.txt.
 */
 
-
 /*****************************************************************************/
 /*                                                                           */
 /* File: cf3globals.c                                                        */
@@ -72,7 +71,8 @@ int AM_BACKGROUND_PROCESS = false;
 int CF_PERSISTENCE = 10;
 
 char *THIS_BUNDLE = NULL;
-char THIS_AGENT[CF_MAXVARSIZE] = {0};
+char THIS_AGENT[CF_MAXVARSIZE] = { 0 };
+
 enum cfagenttype THIS_AGENT_TYPE;
 time_t PROMISETIME = 0;
 time_t CF_LOCKHORIZON = SECONDS_PER_WEEK * 4;
@@ -81,15 +81,15 @@ int LICENSES = 0;
 int AM_NOVA = false;
 int AM_CONSTELLATION = false;
 int AM_PHP_MODULE = false;
-char EXPIRY[CF_SMALLBUF] = {0};
-char LICENSE_COMPANY[CF_SMALLBUF] = {0};
+char EXPIRY[CF_SMALLBUF] = { 0 };
+char LICENSE_COMPANY[CF_SMALLBUF] = { 0 };
 
 // These are used to measure graph complexity in know/agent
 
-int CSV=false;
-int CF_TOPICS = 0; // objects
-int CF_OCCUR = 0; // objects
-int CF_EDGES = 0; // links or promises between them
+int CSV = false;
+int CF_TOPICS = 0;              // objects
+int CF_OCCUR = 0;               // objects
+int CF_EDGES = 0;               // links or promises between them
 
 Rlist *MOUNTEDFSLIST = NULL;
 PromiseIdent *PROMISE_ID_LIST = NULL;
@@ -108,7 +108,7 @@ int FSTAB_EDITS;
 int ABORTBUNDLE = false;
 int BOOTSTRAP = false;
 
-char HASHDB[CF_BUFSIZE] = {0};
+char HASHDB[CF_BUFSIZE] = { 0 };
 
 /*****************************************************************************/
 /* Measurements                                                              */
@@ -142,13 +142,13 @@ Item *EDIT_ANCHORS = NULL;
 int CF_STCKFRAME = 0;
 int LASTSEENEXPIREAFTER = SECONDS_PER_WEEK;
 
-char POLICY_SERVER[CF_BUFSIZE] = {0};
+char POLICY_SERVER[CF_BUFSIZE] = { 0 };
 
-char WEBDRIVER[CF_MAXVARSIZE] = {0};
-char DOCROOT[CF_MAXVARSIZE] = {0};
-char BANNER[2*CF_BUFSIZE] = {0};
-char FOOTER[CF_BUFSIZE] = {0};
-char STYLESHEET[CF_BUFSIZE] = {0};
+char WEBDRIVER[CF_MAXVARSIZE] = { 0 };
+char DOCROOT[CF_MAXVARSIZE] = { 0 };
+char BANNER[2 * CF_BUFSIZE] = { 0 };
+char FOOTER[CF_BUFSIZE] = { 0 };
+char STYLESHEET[CF_BUFSIZE] = { 0 };
 
 /*****************************************************************************/
 /* Windows version constants                                                 */
@@ -169,33 +169,33 @@ int DONTDO = false;
 int DEBUG = false;
 int AUDIT = false;
 
-char  VFQNAME[CF_MAXVARSIZE] = {0};
-char  VUQNAME[CF_MAXVARSIZE] = {0};
-char  VDOMAIN[CF_MAXVARSIZE] = {0};
+char VFQNAME[CF_MAXVARSIZE] = { 0 };
+char VUQNAME[CF_MAXVARSIZE] = { 0 };
+char VDOMAIN[CF_MAXVARSIZE] = { 0 };
 
-char  VYEAR[5] = {0};
-char  VDAY[3] = {0};
-char  VMONTH[4] = {0};
-char  VSHIFT[12] = {0};
+char VYEAR[5] = { 0 };
+char VDAY[3] = { 0 };
+char VMONTH[4] = { 0 };
+char VSHIFT[12] = { 0 };
 
 char PADCHAR = ' ';
 char PURGE = 'n';
 
 int ERRORCOUNT = 0;
-char VPREFIX[CF_MAXVARSIZE] = {0};
-char VINPUTFILE[CF_BUFSIZE] = {0};
+char VPREFIX[CF_MAXVARSIZE] = { 0 };
+char VINPUTFILE[CF_BUFSIZE] = { 0 };
 
-char CONTEXTID[32] = {0};
-char CFPUBKEYFILE[CF_BUFSIZE] = {0};
-char CFPRIVKEYFILE[CF_BUFSIZE] = {0};
-char AVDB[CF_MAXVARSIZE] = {0};
-char CFWORKDIR[CF_BUFSIZE] = {0};
-char PIDFILE[CF_BUFSIZE] = {0};
+char CONTEXTID[32] = { 0 };
+char CFPUBKEYFILE[CF_BUFSIZE] = { 0 };
+char CFPRIVKEYFILE[CF_BUFSIZE] = { 0 };
+char AVDB[CF_MAXVARSIZE] = { 0 };
+char CFWORKDIR[CF_BUFSIZE] = { 0 };
+char PIDFILE[CF_BUFSIZE] = { 0 };
 
 char *DEFAULT_COPYTYPE = NULL;
 
 RSA *PRIVKEY = NULL, *PUBKEY = NULL;
-char PUBKEY_DIGEST[CF_MAXVARSIZE] = {0};
+char PUBKEY_DIGEST[CF_MAXVARSIZE] = { 0 };
 
 #if defined(HAVE_PTHREAD)
 
@@ -204,19 +204,19 @@ char PUBKEY_DIGEST[CF_MAXVARSIZE] = {0};
 # endif
 
 pthread_mutex_t MUTEXES[] =
-   {
-   PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
-   PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
-   PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
-   PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
-   PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
-   PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
-   PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
-   PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
-   PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
-   PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
-   PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
-   };
+{
+    PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
+    PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
+    PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
+    PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
+    PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
+    PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
+    PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
+    PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
+    PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
+    PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
+    PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
+};
 
 pthread_mutex_t *cft_system = &MUTEXES[0];
 pthread_mutex_t *cft_lock = &MUTEXES[1];
@@ -231,7 +231,7 @@ pthread_mutex_t *cft_server_keyseen = &MUTEXES[9];
 pthread_mutex_t *cft_server_children = &MUTEXES[10];
 #endif
 
-char VIPADDRESS[18] = {0};
+char VIPADDRESS[18] = { 0 };
 
 Item *IPADDRESSES = NULL;
 
@@ -258,22 +258,24 @@ int CF_DEFAULT_DIGEST_LEN;
 /***********************************************************/
 
 Audit *AUDITPTR;
-Audit *VAUDIT = NULL; 
+Audit *VAUDIT = NULL;
 
-char CFLOCK[CF_BUFSIZE] = {0};
-char CFLOG[CF_BUFSIZE] = {0};
-char CFLAST[CF_BUFSIZE] = {0}; 
+char CFLOCK[CF_BUFSIZE] = { 0 };
+char CFLOG[CF_BUFSIZE] = { 0 };
+char CFLAST[CF_BUFSIZE] = { 0 };
 
 time_t CFSTARTTIME;
 time_t CFINITSTARTTIME;
-char  STR_CFENGINEPORT[16] = {0};
+char STR_CFENGINEPORT[16] = { 0 };
+
 unsigned short SHORT_CFENGINEPORT;
-time_t CONNTIMEOUT = 10;	   /* seconds */
+time_t CONNTIMEOUT = 10;        /* seconds */
 pid_t ALARM_PID = -1;
 int EDITFILESIZE = 10000;
 int VIFELAPSED = 1;
 int VEXPIREAFTER = 120;
-char BINDINTERFACE[CF_BUFSIZE] = {0};
+char BINDINTERFACE[CF_BUFSIZE] = { 0 };
+
 int MINUSF = false;
 int EXCLAIM = true;
 

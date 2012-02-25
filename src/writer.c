@@ -25,180 +25,184 @@
 #include "writer.h"
 
 typedef enum
-   {
-   WT_STRING,
-   WT_FILE,
-   } WriterType;
+{
+    WT_STRING,
+    WT_FILE,
+} WriterType;
 
 typedef struct
-   {
-   char *data;
-   size_t len; /* Does not include trailing zero */
-   size_t allocated; /* Includes trailing zero */
-   } StringWriterImpl;
+{
+    char *data;
+    size_t len;                 /* Does not include trailing zero */
+    size_t allocated;           /* Includes trailing zero */
+} StringWriterImpl;
 
 struct Writer_
-   {
-   WriterType type;
-   union
-      {
-      StringWriterImpl string;
-      FILE *file;
-      };
-   };
+{
+    WriterType type;
+    union
+    {
+        StringWriterImpl string;
+        FILE *file;
+    };
+};
 
 /*********************************************************************/
 
 Writer *FileWriter(FILE *file)
 {
-Writer *writer = xcalloc(1, sizeof(Writer));
-writer->type = WT_FILE;
-writer->file = file;
-return writer;
+    Writer *writer = xcalloc(1, sizeof(Writer));
+
+    writer->type = WT_FILE;
+    writer->file = file;
+    return writer;
 }
 
 /*********************************************************************/
 
 Writer *StringWriter(void)
 {
-Writer *writer = xcalloc(1, sizeof(Writer));
-writer->type = WT_STRING;
-writer->string.data = xstrdup("");
-writer->string.allocated = 1;
-return writer;
+    Writer *writer = xcalloc(1, sizeof(Writer));
+
+    writer->type = WT_STRING;
+    writer->string.data = xstrdup("");
+    writer->string.allocated = 1;
+    return writer;
 }
 
 /*********************************************************************/
 
 static size_t StringWriterWriteLen(Writer *writer, const char *str, size_t len_)
 {
-size_t len = MIN(strlen(str), len_);
+    size_t len = MIN(strlen(str), len_);
 
-if (writer->string.len + len + 1 > writer->string.allocated)
-   {
-   writer->string.allocated = MAX(writer->string.allocated * 2,
-                                  writer->string.len + len + 1);
-   writer->string.data = xrealloc(writer->string.data,
-                                  writer->string.allocated);
-   }
+    if (writer->string.len + len + 1 > writer->string.allocated)
+    {
+        writer->string.allocated = MAX(writer->string.allocated * 2, writer->string.len + len + 1);
+        writer->string.data = xrealloc(writer->string.data, writer->string.allocated);
+    }
 
-strlcpy(writer->string.data + writer->string.len, str, len + 1);
-writer->string.len += len;
+    strlcpy(writer->string.data + writer->string.len, str, len + 1);
+    writer->string.len += len;
 
-return len;
+    return len;
 }
 
 /*********************************************************************/
 
 static size_t FileWriterWriteF(Writer *writer, const char *fmt, va_list ap)
 {
-return vfprintf(writer->file, fmt, ap);
+    return vfprintf(writer->file, fmt, ap);
 }
 
 /*********************************************************************/
 
 static size_t FileWriterWriteLen(Writer *writer, const char *str, size_t len_)
 {
-size_t len = MIN(strlen(str), len_);
+    size_t len = MIN(strlen(str), len_);
 
-return fwrite(str, 1, len, writer->file);
+    return fwrite(str, 1, len, writer->file);
 }
 
 /*********************************************************************/
 
 size_t WriterWriteF(Writer *writer, const char *fmt, ...)
 {
-va_list ap;
-va_start(ap, fmt);
-size_t size = WriterWriteVF(writer, fmt, ap);
-va_end(ap);
-return size;
+    va_list ap;
+
+    va_start(ap, fmt);
+    size_t size = WriterWriteVF(writer, fmt, ap);
+
+    va_end(ap);
+    return size;
 }
 
 /*********************************************************************/
 
 size_t WriterWriteVF(Writer *writer, const char *fmt, va_list ap)
 {
-if (writer->type == WT_STRING)
-   {
-   char *str = NULL;
-   xvasprintf(&str, fmt, ap);
-   size_t size = StringWriterWriteLen(writer, str, INT_MAX);
-   free(str);
-   return size;
-   }
-else
-   {
-   return FileWriterWriteF(writer, fmt, ap);
-   }
+    if (writer->type == WT_STRING)
+    {
+        char *str = NULL;
+
+        xvasprintf(&str, fmt, ap);
+        size_t size = StringWriterWriteLen(writer, str, INT_MAX);
+
+        free(str);
+        return size;
+    }
+    else
+    {
+        return FileWriterWriteF(writer, fmt, ap);
+    }
 }
 
 /*********************************************************************/
 
 size_t WriterWriteLen(Writer *writer, const char *str, size_t len)
 {
-if (writer->type == WT_STRING)
-   {
-   return StringWriterWriteLen(writer, str, len);
-   }
-else
-   {
-   return FileWriterWriteLen(writer, str, len);
-   }
+    if (writer->type == WT_STRING)
+    {
+        return StringWriterWriteLen(writer, str, len);
+    }
+    else
+    {
+        return FileWriterWriteLen(writer, str, len);
+    }
 }
 
 /*********************************************************************/
 
 size_t WriterWrite(Writer *writer, const char *str)
 {
-return WriterWriteLen(writer, str, INT_MAX);
+    return WriterWriteLen(writer, str, INT_MAX);
 }
 
 /*********************************************************************/
 
 size_t WriterWriteChar(Writer *writer, char c)
 {
-char s[2] = { c, '\0' };
-return WriterWrite(writer, s);
+    char s[2] = { c, '\0' };
+    return WriterWrite(writer, s);
 }
 
 /*********************************************************************/
 
 size_t StringWriterLength(const Writer *writer)
 {
-if (writer->type != WT_STRING)
-   {
-   FatalError("Wrong writer type");
-   }
+    if (writer->type != WT_STRING)
+    {
+        FatalError("Wrong writer type");
+    }
 
-return writer->string.len;
+    return writer->string.len;
 }
 
 /*********************************************************************/
 
 const char *StringWriterData(const Writer *writer)
 {
-if (writer->type != WT_STRING)
-   {
-   FatalError("Wrong writer type");
-   }
+    if (writer->type != WT_STRING)
+    {
+        FatalError("Wrong writer type");
+    }
 
-return writer->string.data;
+    return writer->string.data;
 }
 
 /*********************************************************************/
 
 void WriterClose(Writer *writer)
 {
-if (writer->type == WT_STRING)
-   {
-   free(writer->string.data);
-   }
-else
-   {
-   fclose(writer->file);
-   }
-free(writer);
+    if (writer->type == WT_STRING)
+    {
+        free(writer->string.data);
+    }
+    else
+    {
+        fclose(writer->file);
+    }
+    free(writer);
 }
 
 /*********************************************************************/
@@ -206,11 +210,12 @@ free(writer);
 char *StringWriterClose(Writer *writer)
 //NOTE: transfer of ownership for allocated return value
 {
-if (writer->type != WT_STRING)
-   {
-   FatalError("Wrong writer type");
-   }
-char *data = writer->string.data;
-free(writer);
-return data;
+    if (writer->type != WT_STRING)
+    {
+        FatalError("Wrong writer type");
+    }
+    char *data = writer->string.data;
+
+    free(writer);
+    return data;
 }

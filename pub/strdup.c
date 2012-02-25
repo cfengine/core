@@ -24,7 +24,7 @@
 */
 
 #ifdef HAVE_CONFIG_H
-#include "../src/conf.h"
+# include "../src/conf.h"
 #endif
 
 #include <string.h>
@@ -36,11 +36,12 @@ char *strdup(const char *str);
 
 char *strdup(const char *str)
 {
-char *sp = malloc(strlen(str) + 1);
-if (sp == NULL)
-   {
-   return NULL;
-   }
-strcpy(sp, str);
-return sp;
+    char *sp = malloc(strlen(str) + 1);
+
+    if (sp == NULL)
+    {
+        return NULL;
+    }
+    strcpy(sp, str);
+    return sp;
 }

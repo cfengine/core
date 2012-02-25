@@ -33,62 +33,63 @@
 #include "cf3.extern.h"
 
 static const char *SIGNALS[] =
-   {
-   [SIGHUP] = "SIGHUP",
-   [SIGINT] = "SIGINT",
-   [SIGTRAP] = "SIGTRAP",
-   [SIGKILL] = "SIGKILL",
-   [SIGPIPE] = "SIGPIPE",
-   [SIGCONT] = "SIGCONT",
-   [SIGABRT] = "SIGABRT",
-   [SIGSTOP] = "SIGSTOP",
-   [SIGQUIT] = "SIGQUIT",
-   [SIGTERM] = "SIGTERM",
-   [SIGCHLD] = "SIGCHLD",
-   [SIGUSR1] = "SIGUSR1",
-   [SIGUSR2] = "SIGUSR2",
-   [SIGBUS] = "SIGBUS",
-   [SIGSEGV] = "SIGSEGV",
-   };
+{
+    [SIGHUP] = "SIGHUP",
+    [SIGINT] = "SIGINT",
+    [SIGTRAP] = "SIGTRAP",
+    [SIGKILL] = "SIGKILL",
+    [SIGPIPE] = "SIGPIPE",
+    [SIGCONT] = "SIGCONT",
+    [SIGABRT] = "SIGABRT",
+    [SIGSTOP] = "SIGSTOP",
+    [SIGQUIT] = "SIGQUIT",
+    [SIGTERM] = "SIGTERM",
+    [SIGCHLD] = "SIGCHLD",
+    [SIGUSR1] = "SIGUSR1",
+    [SIGUSR2] = "SIGUSR2",
+    [SIGBUS] = "SIGBUS",
+    [SIGSEGV] = "SIGSEGV",
+};
 
 void HandleSignals(int signum)
- 
 {
-CfOut(cf_error,"","Received signal %d (%s) while doing [%s]",signum,SIGNALS[signum] ? SIGNALS[signum] : "NOSIG",CFLOCK);
-CfOut(cf_error,"","Logical start time %s ",cf_ctime(&CFSTARTTIME));
-CfOut(cf_error,"","This sub-task started really at %s\n",cf_ctime(&CFINITSTARTTIME));
-fflush(stdout);
+    CfOut(cf_error, "", "Received signal %d (%s) while doing [%s]", signum, SIGNALS[signum] ? SIGNALS[signum] : "NOSIG",
+          CFLOCK);
+    CfOut(cf_error, "", "Logical start time %s ", cf_ctime(&CFSTARTTIME));
+    CfOut(cf_error, "", "This sub-task started really at %s\n", cf_ctime(&CFINITSTARTTIME));
+    fflush(stdout);
 
-if (signum == SIGTERM || signum == SIGINT || signum == SIGHUP || signum == SIGSEGV || signum == SIGKILL|| signum == SIGPIPE)
-   {
-   SelfTerminatePrelude();
-   exit(0);
-   }
-else if (signum == SIGUSR1)
-   {
-   DEBUG = true;
-   }
-else if (signum == SIGUSR2)
-   {
-   DEBUG = false;
-   }
+    if (signum == SIGTERM || signum == SIGINT || signum == SIGHUP || signum == SIGSEGV || signum == SIGKILL
+        || signum == SIGPIPE)
+    {
+        SelfTerminatePrelude();
+        exit(0);
+    }
+    else if (signum == SIGUSR1)
+    {
+        DEBUG = true;
+    }
+    else if (signum == SIGUSR2)
+    {
+        DEBUG = false;
+    }
 
 /* Reset the signal handler */
-signal(signum,HandleSignals);
+    signal(signum, HandleSignals);
 }
 
 /*****************************************************************************/
 
 void SelfTerminatePrelude(void)
 {
-CfLock best_guess;
+    CfLock best_guess;
 
-CfOut(cf_verbose,"","Trying to remove lock - try %s",CFLOCK);
-best_guess.lock = xstrdup(CFLOCK);
-best_guess.last = xstrdup(CFLAST);
-best_guess.log = xstrdup(CFLOG);
-YieldCurrentLock(best_guess);
-unlink(PIDFILE);
-EndAudit();
-GenericDeInitialize();
+    CfOut(cf_verbose, "", "Trying to remove lock - try %s", CFLOCK);
+    best_guess.lock = xstrdup(CFLOCK);
+    best_guess.last = xstrdup(CFLAST);
+    best_guess.log = xstrdup(CFLOG);
+    YieldCurrentLock(best_guess);
+    unlink(PIDFILE);
+    EndAudit();
+    GenericDeInitialize();
 }

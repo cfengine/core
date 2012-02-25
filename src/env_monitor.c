@@ -42,12 +42,12 @@ static double HISTOGRAM[CF_OBSERVABLES][7][CF_GRAINS];
 
 /* persistent observations */
 
-static double CF_THIS[CF_OBSERVABLES]; /* New from 2.1.21 replacing above - current observation */
+static double CF_THIS[CF_OBSERVABLES];  /* New from 2.1.21 replacing above - current observation */
 
 /* Work */
 
-static long ITER;           /* Iteration since start */
-static double AGE,WAGE;             /* Age and weekly age of database */
+static long ITER;               /* Iteration since start */
+static double AGE, WAGE;        /* Age and weekly age of database */
 
 static Averages LOCALAV;
 
@@ -72,74 +72,75 @@ static void GetDatabaseAge(void);
 static void LoadHistogram(void);
 static void GetQ(void);
 static Averages EvalAvQ(char *timekey);
-static void ArmClasses(Averages newvals,char *timekey);
+static void ArmClasses(Averages newvals, char *timekey);
 static void GatherPromisedMeasures(void);
 
 static void LeapDetection(void);
 static Averages *GetCurrentAverages(char *timekey);
 static void UpdateAverages(char *timekey, Averages newvals);
 static void UpdateDistributions(char *timekey, Averages *av);
-static double WAverage(double newvals,double oldvals, double age);
-static double SetClasses(char *name,double variable,double av_expect,double av_var,double localav_expect,double localav_var,Item **classlist,char *timekey);
-static void SetVariable(char *name,double now, double average, double stddev, Item **list);
-static double RejectAnomaly(double new,double av,double var,double av2,double var2);
-static void ZeroArrivals (void);
+static double WAverage(double newvals, double oldvals, double age);
+static double SetClasses(char *name, double variable, double av_expect, double av_var, double localav_expect,
+                         double localav_var, Item **classlist, char *timekey);
+static void SetVariable(char *name, double now, double average, double stddev, Item **list);
+static double RejectAnomaly(double new, double av, double var, double av2, double var2);
+static void ZeroArrivals(void);
 static void KeepMonitorPromise(Promise *pp);
 
 /****************************************************************/
 
 void MonitorInitialize(void)
 {
-int i,j,k;
-char vbuff[CF_BUFSIZE];
+    int i, j, k;
+    char vbuff[CF_BUFSIZE];
 
-sprintf(vbuff,"%s/state/cf_users",CFWORKDIR);
-MapName(vbuff);
-CreateEmptyFile(vbuff);
+    sprintf(vbuff, "%s/state/cf_users", CFWORKDIR);
+    MapName(vbuff);
+    CreateEmptyFile(vbuff);
 
-snprintf(AVDB,CF_MAXVARSIZE,"%s/state/%s",CFWORKDIR,CF_AVDB_FILE);
-MapName(AVDB);
+    snprintf(AVDB, CF_MAXVARSIZE, "%s/state/%s", CFWORKDIR, CF_AVDB_FILE);
+    MapName(AVDB);
 
-MonEntropyClassesInit();
+    MonEntropyClassesInit();
 
-GetDatabaseAge();
+    GetDatabaseAge();
 
-for (i = 0; i < CF_OBSERVABLES; i++)
-   {
-   LOCALAV.Q[i].expect = 0.0;
-   LOCALAV.Q[i].var = 0.0;
-   LOCALAV.Q[i].q = 0.0;
-   }
+    for (i = 0; i < CF_OBSERVABLES; i++)
+    {
+        LOCALAV.Q[i].expect = 0.0;
+        LOCALAV.Q[i].var = 0.0;
+        LOCALAV.Q[i].q = 0.0;
+    }
 
-for (i = 0; i < 7; i++)
-   {
-   for (j = 0; j < CF_OBSERVABLES; j++)
-      {
-      for (k = 0; k < CF_GRAINS; k++)
-         {
-         HISTOGRAM[i][j][k] = 0;
-         }
-      }
-   }
+    for (i = 0; i < 7; i++)
+    {
+        for (j = 0; j < CF_OBSERVABLES; j++)
+        {
+            for (k = 0; k < CF_GRAINS; k++)
+            {
+                HISTOGRAM[i][j][k] = 0;
+            }
+        }
+    }
 
-for (i = 0; i < CF_OBSERVABLES; i++)
-   {
-   CHI[i] = 0;
-   CHI_LIMIT[i] = 0.1;
-   LDT_AVG[i] = 0;
-   LDT_SUM[i] = 0;
-   }
+    for (i = 0; i < CF_OBSERVABLES; i++)
+    {
+        CHI[i] = 0;
+        CHI_LIMIT[i] = 0.1;
+        LDT_AVG[i] = 0;
+        LDT_SUM[i] = 0;
+    }
 
-srand((unsigned int)time(NULL));
-LoadHistogram();
+    srand((unsigned int) time(NULL));
+    LoadHistogram();
 
 /* Look for local sensors - this is unfortunately linux-centric */
 
-MonNetworkInit();
-MonTempInit();
-MonOtherInit();
+    MonNetworkInit();
+    MonTempInit();
+    MonOtherInit();
 
-CfDebug("Finished with initialization.\n");
+    CfDebug("Finished with initialization.\n");
 }
 
 /*********************************************************************/
@@ -148,533 +149,538 @@ CfDebug("Finished with initialization.\n");
 
 static void GetDatabaseAge()
 {
-CF_DB *dbp;
+    CF_DB *dbp;
 
-if (!OpenDB(AVDB,&dbp))
-   {
-   return;
-   }
+    if (!OpenDB(AVDB, &dbp))
+    {
+        return;
+    }
 
-cf_chmod(AVDB,0644);
+    cf_chmod(AVDB, 0644);
 
-if (ReadDB(dbp,"DATABASE_AGE",&AGE,sizeof(double)))
-   {
-   WAGE = AGE / SECONDS_PER_WEEK * CF_MEASURE_INTERVAL;
-   CfDebug("\n\nPrevious DATABASE_AGE %f\n\n",AGE);
-   }
-else
-   {
-   CfDebug("No previous AGE\n");
-   AGE = 0.0;
-   }
+    if (ReadDB(dbp, "DATABASE_AGE", &AGE, sizeof(double)))
+    {
+        WAGE = AGE / SECONDS_PER_WEEK * CF_MEASURE_INTERVAL;
+        CfDebug("\n\nPrevious DATABASE_AGE %f\n\n", AGE);
+    }
+    else
+    {
+        CfDebug("No previous AGE\n");
+        AGE = 0.0;
+    }
 
-CloseDB(dbp);
+    CloseDB(dbp);
 }
 
 /*********************************************************************/
 
 static void LoadHistogram(void)
 {
-FILE *fp;
-int i,day,position;
-double maxval[CF_OBSERVABLES];
+    FILE *fp;
+    int i, day, position;
+    double maxval[CF_OBSERVABLES];
 
-char filename[CF_BUFSIZE];
+    char filename[CF_BUFSIZE];
 
-snprintf(filename,CF_BUFSIZE,"%s/state/histograms",CFWORKDIR);
+    snprintf(filename, CF_BUFSIZE, "%s/state/histograms", CFWORKDIR);
 
-if ((fp = fopen(filename,"r")) == NULL)
-   {
-   CfOut(cf_verbose,"fopen","Unable to load histogram data");
-   return;
-   }
+    if ((fp = fopen(filename, "r")) == NULL)
+    {
+        CfOut(cf_verbose, "fopen", "Unable to load histogram data");
+        return;
+    }
 
-for (i = 0; i < CF_OBSERVABLES; i++)
-   {
-   maxval[i] = 1.0;
-   }
+    for (i = 0; i < CF_OBSERVABLES; i++)
+    {
+        maxval[i] = 1.0;
+    }
 
-for (position = 0; position < CF_GRAINS; position++)
-   {
-   fscanf(fp,"%d ",&position);
+    for (position = 0; position < CF_GRAINS; position++)
+    {
+        fscanf(fp, "%d ", &position);
 
-   for (i = 0; i < CF_OBSERVABLES; i++)
-      {
-      for (day = 0; day < 7; day++)
-         {
-         fscanf(fp,"%lf ",&(HISTOGRAM[i][day][position]));
-
-         if (HISTOGRAM[i][day][position] < 0)
+        for (i = 0; i < CF_OBSERVABLES; i++)
+        {
+            for (day = 0; day < 7; day++)
             {
-            HISTOGRAM[i][day][position] = 0;
+                fscanf(fp, "%lf ", &(HISTOGRAM[i][day][position]));
+
+                if (HISTOGRAM[i][day][position] < 0)
+                {
+                    HISTOGRAM[i][day][position] = 0;
+                }
+
+                if (HISTOGRAM[i][day][position] > maxval[i])
+                {
+                    maxval[i] = HISTOGRAM[i][day][position];
+                }
+
+                HISTOGRAM[i][day][position] *= 1000.0 / maxval[i];
             }
+        }
+    }
 
-         if (HISTOGRAM[i][day][position] > maxval[i])
-            {
-            maxval[i] = HISTOGRAM[i][day][position];
-            }
-
-         HISTOGRAM[i][day][position] *= 1000.0/maxval[i];
-         }
-      }
-   }
-
-fclose(fp);
+    fclose(fp);
 }
 
 /*********************************************************************/
 
-void MonitorStartServer(int argc,char **argv)
+void MonitorStartServer(int argc, char **argv)
 {
-char timekey[CF_SMALLBUF];
-Averages averages;
-Promise *pp = NewPromise("monitor_cfengine","the monitor daemon");
-Attributes dummyattr;
-CfLock thislock;
+    char timekey[CF_SMALLBUF];
+    Averages averages;
+    Promise *pp = NewPromise("monitor_cfengine", "the monitor daemon");
+    Attributes dummyattr;
+    CfLock thislock;
 
 #ifdef MINGW
 
-if(!NO_FORK)
-   {
-   CfOut(cf_verbose, "", "Windows does not support starting processes in the background - starting in foreground");
-   }
+    if (!NO_FORK)
+    {
+        CfOut(cf_verbose, "", "Windows does not support starting processes in the background - starting in foreground");
+    }
 
-#else  /* NOT MINGW */
+#else /* NOT MINGW */
 
-if ((!NO_FORK) && (fork() != 0))
-   {
-   CfOut(cf_inform,"","cf-monitord: starting\n");
-   exit(0);
-   }
+    if ((!NO_FORK) && (fork() != 0))
+    {
+        CfOut(cf_inform, "", "cf-monitord: starting\n");
+        exit(0);
+    }
 
-if (!NO_FORK)
-   {
-   ActAsDaemon(0);
-   }
+    if (!NO_FORK)
+    {
+        ActAsDaemon(0);
+    }
 
-#endif  /* NOT MINGW */
+#endif /* NOT MINGW */
 
-memset(&dummyattr,0,sizeof(dummyattr));
-dummyattr.transaction.ifelapsed = 0;
-dummyattr.transaction.expireafter = 0;
+    memset(&dummyattr, 0, sizeof(dummyattr));
+    dummyattr.transaction.ifelapsed = 0;
+    dummyattr.transaction.expireafter = 0;
 
-thislock = AcquireLock(pp->promiser,VUQNAME,CFSTARTTIME,dummyattr,pp,false);
+    thislock = AcquireLock(pp->promiser, VUQNAME, CFSTARTTIME, dummyattr, pp, false);
 
-if (thislock.lock == NULL)
-   {
-   return;
-   }
+    if (thislock.lock == NULL)
+    {
+        return;
+    }
 
-WritePID("cf-monitord.pid");
+    WritePID("cf-monitord.pid");
 
-MonNetworkSnifferOpen();
+    MonNetworkSnifferOpen();
 
-while (true)
-   {
-   GetQ();
-   snprintf(timekey, sizeof(timekey), "%s", GenTimeKey(time(NULL)));
-   averages = EvalAvQ(timekey);
-   LeapDetection();
-   ArmClasses(averages,timekey);
+    while (true)
+    {
+        GetQ();
+        snprintf(timekey, sizeof(timekey), "%s", GenTimeKey(time(NULL)));
+        averages = EvalAvQ(timekey);
+        LeapDetection();
+        ArmClasses(averages, timekey);
 
-   ZeroArrivals();
+        ZeroArrivals();
 
-   MonNetworkSnifferSniff(ITER, CF_THIS);
+        MonNetworkSnifferSniff(ITER, CF_THIS);
 
-   ITER++;
-   }
+        ITER++;
+    }
 }
 
 /*********************************************************************/
 
 static void GetQ(void)
 {
-CfDebug("========================= GET Q ==============================\n");
+    CfDebug("========================= GET Q ==============================\n");
 
-MonEntropyClassesReset();
+    MonEntropyClassesReset();
 
-ZeroArrivals();
+    ZeroArrivals();
 
-MonProcessesGatherData(CF_THIS);
+    MonProcessesGatherData(CF_THIS);
 #ifndef MINGW
-MonCPUGatherData(CF_THIS);
-MonLoadGatherData(CF_THIS);
-MonDiskGatherData(CF_THIS);
-MonNetworkGatherData(CF_THIS);
-MonNetworkSnifferGatherData(CF_THIS);
-MonTempGatherData(CF_THIS);
-#endif  /* NOT MINGW */
-MonOtherGatherData(CF_THIS);
-GatherPromisedMeasures();
+    MonCPUGatherData(CF_THIS);
+    MonLoadGatherData(CF_THIS);
+    MonDiskGatherData(CF_THIS);
+    MonNetworkGatherData(CF_THIS);
+    MonNetworkSnifferGatherData(CF_THIS);
+    MonTempGatherData(CF_THIS);
+#endif /* NOT MINGW */
+    MonOtherGatherData(CF_THIS);
+    GatherPromisedMeasures();
 }
 
 /*********************************************************************/
 
 static Averages EvalAvQ(char *t)
 {
-Averages *currentvals,newvals;
-double This[CF_OBSERVABLES];
-char name[CF_MAXVARSIZE];
-int i;
+    Averages *currentvals, newvals;
+    double This[CF_OBSERVABLES];
+    char name[CF_MAXVARSIZE];
+    int i;
 
-Banner("Evaluating and storing new weekly averages");
+    Banner("Evaluating and storing new weekly averages");
 
-if ((currentvals = GetCurrentAverages(t)) == NULL)
-   {
-   CfOut(cf_error,"","Error reading average database");
-   exit(1);
-   }
+    if ((currentvals = GetCurrentAverages(t)) == NULL)
+    {
+        CfOut(cf_error, "", "Error reading average database");
+        exit(1);
+    }
 
 /* Discard any apparently anomalous behaviour before renormalizing database */
 
-for (i = 0; i < CF_OBSERVABLES; i++)
-   {
-   double delta2;
-   char desc[CF_BUFSIZE];
+    for (i = 0; i < CF_OBSERVABLES; i++)
+    {
+        double delta2;
+        char desc[CF_BUFSIZE];
 
-   name[0] = '\0';
-   GetObservable(i, name, desc);
+        name[0] = '\0';
+        GetObservable(i, name, desc);
 
-   /* Overflow protection */
+        /* Overflow protection */
 
-   if (currentvals->Q[i].expect < 0)
-      {
-      currentvals->Q[i].expect = 0;
-      }
+        if (currentvals->Q[i].expect < 0)
+        {
+            currentvals->Q[i].expect = 0;
+        }
 
-   if (currentvals->Q[i].q < 0)
-      {
-      currentvals->Q[i].q = 0;
-      }
+        if (currentvals->Q[i].q < 0)
+        {
+            currentvals->Q[i].q = 0;
+        }
 
-   if (currentvals->Q[i].var < 0)
-      {
-      currentvals->Q[i].var = 0;
-      }
+        if (currentvals->Q[i].var < 0)
+        {
+            currentvals->Q[i].var = 0;
+        }
 
-   This[i] = RejectAnomaly(CF_THIS[i],currentvals->Q[i].expect,currentvals->Q[i].var,LOCALAV.Q[i].expect,LOCALAV.Q[i].var);
-   
-   newvals.Q[i].q = This[i];
-   LOCALAV.Q[i].q = This[i];
+        This[i] =
+            RejectAnomaly(CF_THIS[i], currentvals->Q[i].expect, currentvals->Q[i].var, LOCALAV.Q[i].expect,
+                          LOCALAV.Q[i].var);
 
-   CfDebug("Current %s.q %lf\n",name,currentvals->Q[i].q);
-   CfDebug("Current %s.var %lf\n",name,currentvals->Q[i].var);
-   CfDebug("Current %s.ex %lf\n",name,currentvals->Q[i].expect);
-   CfDebug("CF_THIS[%s] = %lf\n",name,CF_THIS[i]);
-   CfDebug("This[%s] = %lf\n",name,This[i]);
+        newvals.Q[i].q = This[i];
+        LOCALAV.Q[i].q = This[i];
 
-   newvals.Q[i].expect = WAverage(This[i],currentvals->Q[i].expect,WAGE);
-   LOCALAV.Q[i].expect = WAverage(newvals.Q[i].expect,LOCALAV.Q[i].expect,ITER);
+        CfDebug("Current %s.q %lf\n", name, currentvals->Q[i].q);
+        CfDebug("Current %s.var %lf\n", name, currentvals->Q[i].var);
+        CfDebug("Current %s.ex %lf\n", name, currentvals->Q[i].expect);
+        CfDebug("CF_THIS[%s] = %lf\n", name, CF_THIS[i]);
+        CfDebug("This[%s] = %lf\n", name, This[i]);
 
-   delta2 = (This[i] - currentvals->Q[i].expect)*(This[i] - currentvals->Q[i].expect);
+        newvals.Q[i].expect = WAverage(This[i], currentvals->Q[i].expect, WAGE);
+        LOCALAV.Q[i].expect = WAverage(newvals.Q[i].expect, LOCALAV.Q[i].expect, ITER);
 
-   if (currentvals->Q[i].var > delta2*2.0)
-      {
-      /* Clean up past anomalies */
-      newvals.Q[i].var = delta2;
-      LOCALAV.Q[i].var = WAverage(newvals.Q[i].var,LOCALAV.Q[i].var,ITER);
-      }
-   else
-      {
-      newvals.Q[i].var = WAverage(delta2,currentvals->Q[i].var,WAGE);
-      LOCALAV.Q[i].var = WAverage(newvals.Q[i].var,LOCALAV.Q[i].var,ITER);
-      }
+        delta2 = (This[i] - currentvals->Q[i].expect) * (This[i] - currentvals->Q[i].expect);
 
-   CfOut(cf_verbose, "", "[%d] %s q=%lf, var=%lf, ex=%lf", i, name,
-         newvals.Q[i].q, newvals.Q[i].var, newvals.Q[i].expect);
+        if (currentvals->Q[i].var > delta2 * 2.0)
+        {
+            /* Clean up past anomalies */
+            newvals.Q[i].var = delta2;
+            LOCALAV.Q[i].var = WAverage(newvals.Q[i].var, LOCALAV.Q[i].var, ITER);
+        }
+        else
+        {
+            newvals.Q[i].var = WAverage(delta2, currentvals->Q[i].var, WAGE);
+            LOCALAV.Q[i].var = WAverage(newvals.Q[i].var, LOCALAV.Q[i].var, ITER);
+        }
 
-   CfOut(cf_verbose,"","[%d] = %lf -> (%lf#%lf) local [%lf#%lf]\n", i, This[i],newvals.Q[i].expect,sqrt(newvals.Q[i].var),LOCALAV.Q[i].expect,sqrt(LOCALAV.Q[i].var));
+        CfOut(cf_verbose, "", "[%d] %s q=%lf, var=%lf, ex=%lf", i, name,
+              newvals.Q[i].q, newvals.Q[i].var, newvals.Q[i].expect);
 
-   if (This[i] > 0)
-      {
-      CfOut(cf_verbose,"","Storing %.2lf in %s\n",This[i],name);
-      }
-   }
+        CfOut(cf_verbose, "", "[%d] = %lf -> (%lf#%lf) local [%lf#%lf]\n", i, This[i], newvals.Q[i].expect,
+              sqrt(newvals.Q[i].var), LOCALAV.Q[i].expect, sqrt(LOCALAV.Q[i].var));
 
-UpdateAverages(t,newvals);
-UpdateDistributions(t,currentvals);  /* Distribution about mean */
+        if (This[i] > 0)
+        {
+            CfOut(cf_verbose, "", "Storing %.2lf in %s\n", This[i], name);
+        }
+    }
 
-return newvals;
+    UpdateAverages(t, newvals);
+    UpdateDistributions(t, currentvals);        /* Distribution about mean */
+
+    return newvals;
 }
 
 /*********************************************************************/
 
 static void LeapDetection(void)
 {
-int i,last_pos = LDT_POS;
-double n1,n2,d;
-double padding = 0.2;
+    int i, last_pos = LDT_POS;
+    double n1, n2, d;
+    double padding = 0.2;
 
-if (++LDT_POS >= LDT_BUFSIZE)
-   {
-   LDT_POS = 0;
+    if (++LDT_POS >= LDT_BUFSIZE)
+    {
+        LDT_POS = 0;
 
-   if (!LDT_FULL)
-      {
-      CfDebug("LDT Buffer full at %d\n",LDT_BUFSIZE);
-      LDT_FULL = true;
-      }
-   }
+        if (!LDT_FULL)
+        {
+            CfDebug("LDT Buffer full at %d\n", LDT_BUFSIZE);
+            LDT_FULL = true;
+        }
+    }
 
-for (i = 0; i < CF_OBSERVABLES; i++)
-   {
-   /* First do some anomaly rejection. Sudden jumps must be numerical errors. */
+    for (i = 0; i < CF_OBSERVABLES; i++)
+    {
+        /* First do some anomaly rejection. Sudden jumps must be numerical errors. */
 
-   if (LDT_BUF[i][last_pos] > 0 && CF_THIS[i]/LDT_BUF[i][last_pos] > 1000)
-      {
-      CF_THIS[i] = LDT_BUF[i][last_pos];
-      }
+        if (LDT_BUF[i][last_pos] > 0 && CF_THIS[i] / LDT_BUF[i][last_pos] > 1000)
+        {
+            CF_THIS[i] = LDT_BUF[i][last_pos];
+        }
 
-   /* Note AVG should contain n+1 but not SUM, hence funny increments */
+        /* Note AVG should contain n+1 but not SUM, hence funny increments */
 
-   LDT_AVG[i] = LDT_AVG[i] + CF_THIS[i]/((double)LDT_BUFSIZE + 1.0);
+        LDT_AVG[i] = LDT_AVG[i] + CF_THIS[i] / ((double) LDT_BUFSIZE + 1.0);
 
-   d = (double)(LDT_BUFSIZE * (LDT_BUFSIZE + 1)) * LDT_AVG[i];
+        d = (double) (LDT_BUFSIZE * (LDT_BUFSIZE + 1)) * LDT_AVG[i];
 
-   if (LDT_FULL && (LDT_POS == 0))
-      {
-      n2 = (LDT_SUM[i] - (double)LDT_BUFSIZE * LDT_MAX[i]);
+        if (LDT_FULL && (LDT_POS == 0))
+        {
+            n2 = (LDT_SUM[i] - (double) LDT_BUFSIZE * LDT_MAX[i]);
 
-      if (d < 0.001)
-         {
-         CHI_LIMIT[i] = 0.5;
-         }
-      else
-         {
-         CHI_LIMIT[i] = padding + sqrt(n2*n2/d);
-         }
+            if (d < 0.001)
+            {
+                CHI_LIMIT[i] = 0.5;
+            }
+            else
+            {
+                CHI_LIMIT[i] = padding + sqrt(n2 * n2 / d);
+            }
 
-      LDT_MAX[i] = 0.0;
-      }
+            LDT_MAX[i] = 0.0;
+        }
 
-   if (CF_THIS[i] > LDT_MAX[i])
-      {
-      LDT_MAX[i] = CF_THIS[i];
-      }
+        if (CF_THIS[i] > LDT_MAX[i])
+        {
+            LDT_MAX[i] = CF_THIS[i];
+        }
 
-   n1 = (LDT_SUM[i] - (double)LDT_BUFSIZE * CF_THIS[i]);
+        n1 = (LDT_SUM[i] - (double) LDT_BUFSIZE * CF_THIS[i]);
 
-   if (d < 0.001)
-      {
-      CHI[i] = 0.0;
-      }
-   else
-      {
-      CHI[i] = sqrt(n1*n1/d);
-      }
+        if (d < 0.001)
+        {
+            CHI[i] = 0.0;
+        }
+        else
+        {
+            CHI[i] = sqrt(n1 * n1 / d);
+        }
 
-   LDT_AVG[i] = LDT_AVG[i] - LDT_BUF[i][LDT_POS]/((double)LDT_BUFSIZE + 1.0);
-   LDT_BUF[i][LDT_POS] = CF_THIS[i];
-   LDT_SUM[i] = LDT_SUM[i] - LDT_BUF[i][LDT_POS] + CF_THIS[i];
-   }
+        LDT_AVG[i] = LDT_AVG[i] - LDT_BUF[i][LDT_POS] / ((double) LDT_BUFSIZE + 1.0);
+        LDT_BUF[i][LDT_POS] = CF_THIS[i];
+        LDT_SUM[i] = LDT_SUM[i] - LDT_BUF[i][LDT_POS] + CF_THIS[i];
+    }
 }
 
 /*********************************************************************/
 
-static void ArmClasses(Averages av,char *timekey)
-
+static void ArmClasses(Averages av, char *timekey)
 {
-double sigma;
-Item *classlist = NULL;
-int i,j,k;
-char buff[CF_BUFSIZE],ldt_buff[CF_BUFSIZE],name[CF_MAXVARSIZE];
-static int anomaly[CF_OBSERVABLES][LDT_BUFSIZE];
+    double sigma;
+    Item *classlist = NULL;
+    int i, j, k;
+    char buff[CF_BUFSIZE], ldt_buff[CF_BUFSIZE], name[CF_MAXVARSIZE];
+    static int anomaly[CF_OBSERVABLES][LDT_BUFSIZE];
 
-CfDebug("Arm classes for %s\n",timekey);
+    CfDebug("Arm classes for %s\n", timekey);
 
-for (i = 0; i < CF_OBSERVABLES; i++)
-   {
-   char desc[CF_BUFSIZE];
+    for (i = 0; i < CF_OBSERVABLES; i++)
+    {
+        char desc[CF_BUFSIZE];
 
-   GetObservable(i, name, desc);
-   sigma = SetClasses(name,CF_THIS[i],av.Q[i].expect,av.Q[i].var,LOCALAV.Q[i].expect,LOCALAV.Q[i].var,&classlist,timekey);
-   SetVariable(name,CF_THIS[i],av.Q[i].expect,sigma,&classlist);
+        GetObservable(i, name, desc);
+        sigma =
+            SetClasses(name, CF_THIS[i], av.Q[i].expect, av.Q[i].var, LOCALAV.Q[i].expect, LOCALAV.Q[i].var, &classlist,
+                       timekey);
+        SetVariable(name, CF_THIS[i], av.Q[i].expect, sigma, &classlist);
 
-   /* LDT */
+        /* LDT */
 
-   ldt_buff[0] = '\0';
+        ldt_buff[0] = '\0';
 
-   anomaly[i][LDT_POS] = false;
+        anomaly[i][LDT_POS] = false;
 
-   if (!LDT_FULL)
-      {
-      anomaly[i][LDT_POS] = false;
-      }
+        if (!LDT_FULL)
+        {
+            anomaly[i][LDT_POS] = false;
+        }
 
-   if (LDT_FULL && (CHI[i] > CHI_LIMIT[i]))
-      {
-      anomaly[i][LDT_POS] = true;                   /* Remember the last anomaly value */
+        if (LDT_FULL && (CHI[i] > CHI_LIMIT[i]))
+        {
+            anomaly[i][LDT_POS] = true; /* Remember the last anomaly value */
 
-      CfOut(cf_verbose,"","LDT(%d) in %s chi = %.2f thresh %.2f \n",LDT_POS,name,CHI[i],CHI_LIMIT[i]);
+            CfOut(cf_verbose, "", "LDT(%d) in %s chi = %.2f thresh %.2f \n", LDT_POS, name, CHI[i], CHI_LIMIT[i]);
 
-      /* Last printed element is now */
+            /* Last printed element is now */
 
-      for (j = LDT_POS+1, k = 0; k < LDT_BUFSIZE; j++,k++)
-         {
-         if (j == LDT_BUFSIZE) /* Wrap */
+            for (j = LDT_POS + 1, k = 0; k < LDT_BUFSIZE; j++, k++)
             {
-            j = 0;
+                if (j == LDT_BUFSIZE)   /* Wrap */
+                {
+                    j = 0;
+                }
+
+                if (anomaly[i][j])
+                {
+                    snprintf(buff, CF_BUFSIZE, " *%.2f*", LDT_BUF[i][j]);
+                }
+                else
+                {
+                    snprintf(buff, CF_BUFSIZE, " %.2f", LDT_BUF[i][j]);
+                }
+
+                strcat(ldt_buff, buff);
             }
 
-         if (anomaly[i][j])
+            if (CF_THIS[i] > av.Q[i].expect)
             {
-            snprintf(buff,CF_BUFSIZE," *%.2f*",LDT_BUF[i][j]);
+                snprintf(buff, CF_BUFSIZE, "%s_high_ldt", name);
             }
-         else
+            else
             {
-            snprintf(buff,CF_BUFSIZE," %.2f",LDT_BUF[i][j]);
-            }
-
-         strcat(ldt_buff,buff);
-         }
-
-      if (CF_THIS[i] > av.Q[i].expect)
-         {
-         snprintf(buff,CF_BUFSIZE,"%s_high_ldt",name);
-         }
-      else
-         {
-         snprintf(buff,CF_BUFSIZE,"%s_high_ldt",name);
-         }
-
-      AppendItem(&classlist,buff,"2");
-      NewPersistentContext(buff,CF_PERSISTENCE,cfpreserve);
-      }
-   else
-      {
-      for (j = LDT_POS+1, k = 0; k < LDT_BUFSIZE; j++,k++)
-         {
-         if (j == LDT_BUFSIZE) /* Wrap */
-            {
-            j = 0;
+                snprintf(buff, CF_BUFSIZE, "%s_high_ldt", name);
             }
 
-         if (anomaly[i][j])
+            AppendItem(&classlist, buff, "2");
+            NewPersistentContext(buff, CF_PERSISTENCE, cfpreserve);
+        }
+        else
+        {
+            for (j = LDT_POS + 1, k = 0; k < LDT_BUFSIZE; j++, k++)
             {
-            snprintf(buff,CF_BUFSIZE," *%.2f*",LDT_BUF[i][j]);
+                if (j == LDT_BUFSIZE)   /* Wrap */
+                {
+                    j = 0;
+                }
+
+                if (anomaly[i][j])
+                {
+                    snprintf(buff, CF_BUFSIZE, " *%.2f*", LDT_BUF[i][j]);
+                }
+                else
+                {
+                    snprintf(buff, CF_BUFSIZE, " %.2f", LDT_BUF[i][j]);
+                }
+                strcat(ldt_buff, buff);
             }
-         else
-            {
-            snprintf(buff,CF_BUFSIZE," %.2f",LDT_BUF[i][j]);
-            }
-         strcat(ldt_buff,buff);
-         }
-      }
+        }
     }
 
-SetMeasurementPromises(&classlist);
+    SetMeasurementPromises(&classlist);
 
 /* Publish class list */
 
-MonEntropyClassesPublish(classlist);
+    MonEntropyClassesPublish(classlist);
 }
 
 /*****************************************************************************/
 
 static Averages *GetCurrentAverages(char *timekey)
 {
-CF_DB *dbp;
-static Averages entry;
+    CF_DB *dbp;
+    static Averages entry;
 
-if (!OpenDB(AVDB,&dbp))
-   {
-   return NULL;
-   }
+    if (!OpenDB(AVDB, &dbp))
+    {
+        return NULL;
+    }
 
-memset(&entry,0,sizeof(entry));
+    memset(&entry, 0, sizeof(entry));
 
-AGE++;
-WAGE = AGE / SECONDS_PER_WEEK * CF_MEASURE_INTERVAL;
+    AGE++;
+    WAGE = AGE / SECONDS_PER_WEEK * CF_MEASURE_INTERVAL;
 
-if (ReadDB(dbp,timekey,&entry,sizeof(Averages)))
-   {
-   int i;
-   for (i = 0; i < CF_OBSERVABLES; i++)
-      {
-      CfDebug("Previous values (%lf,..) for time index %s\n\n",entry.Q[i].expect,timekey);
-      }
-   }
-else
-   {
-   CfDebug("No previous value for time index %s\n",timekey);
-   }
+    if (ReadDB(dbp, timekey, &entry, sizeof(Averages)))
+    {
+        int i;
 
-CloseDB(dbp);
-return &entry;
+        for (i = 0; i < CF_OBSERVABLES; i++)
+        {
+            CfDebug("Previous values (%lf,..) for time index %s\n\n", entry.Q[i].expect, timekey);
+        }
+    }
+    else
+    {
+        CfDebug("No previous value for time index %s\n", timekey);
+    }
+
+    CloseDB(dbp);
+    return &entry;
 }
 
 /*****************************************************************************/
 
-static void UpdateAverages(char *timekey,Averages newvals)
+static void UpdateAverages(char *timekey, Averages newvals)
 {
-CF_DB *dbp;
+    CF_DB *dbp;
 
-if (!OpenDB(AVDB,&dbp))
-   {
-   return;
-   }
+    if (!OpenDB(AVDB, &dbp))
+    {
+        return;
+    }
 
-CfOut(cf_inform,"","Updated averages at %s\n",timekey);
+    CfOut(cf_inform, "", "Updated averages at %s\n", timekey);
 
-WriteDB(dbp,timekey,&newvals,sizeof(Averages));
-WriteDB(dbp,"DATABASE_AGE",&AGE,sizeof(double));
+    WriteDB(dbp, timekey, &newvals, sizeof(Averages));
+    WriteDB(dbp, "DATABASE_AGE", &AGE, sizeof(double));
 
-CloseDB(dbp);
-HistoryUpdate(newvals);
+    CloseDB(dbp);
+    HistoryUpdate(newvals);
 }
 
 /*****************************************************************************/
 
-static void UpdateDistributions(char *timekey,Averages *av)
+static void UpdateDistributions(char *timekey, Averages *av)
 {
-int position,day,i;
-char filename[CF_BUFSIZE];
-FILE *fp;
+    int position, day, i;
+    char filename[CF_BUFSIZE];
+    FILE *fp;
 
 /* Take an interval of 4 standard deviations from -2 to +2, divided into CF_GRAINS
    parts. Centre each measurement on CF_GRAINS/2 and scale each measurement by the
    std-deviation for the current time.
 */
 
-if (IsDefinedClass("Min40_45"))
-   {
-   day = Day2Number(timekey);
+    if (IsDefinedClass("Min40_45"))
+    {
+        day = Day2Number(timekey);
 
-   for (i = 0; i < CF_OBSERVABLES; i++)
-      {
-      position = CF_GRAINS/2 + (int)(0.5+(CF_THIS[i] - av->Q[i].expect)*CF_GRAINS/(4*sqrt((av->Q[i].var))));
+        for (i = 0; i < CF_OBSERVABLES; i++)
+        {
+            position =
+                CF_GRAINS / 2 + (int) (0.5 + (CF_THIS[i] - av->Q[i].expect) * CF_GRAINS / (4 * sqrt((av->Q[i].var))));
 
-      if (0 <= position && position < CF_GRAINS)
-         {
-         HISTOGRAM[i][day][position]++;
-         }
-      }
-
-
-   snprintf(filename,CF_BUFSIZE,"%s/state/histograms",CFWORKDIR);
-
-   if ((fp = fopen(filename,"w")) == NULL)
-      {
-      CfOut(cf_error,"fopen","Unable to save histograms");
-      return;
-      }
-
-   for (position = 0; position < CF_GRAINS; position++)
-      {
-      fprintf(fp,"%d ",position);
-
-      for (i = 0; i < CF_OBSERVABLES; i++)
-         {
-         for (day = 0; day < 7; day++)
+            if (0 <= position && position < CF_GRAINS)
             {
-            fprintf(fp,"%.0lf ",HISTOGRAM[i][day][position]);
+                HISTOGRAM[i][day][position]++;
             }
-         }
-      fprintf(fp,"\n");
-      }
+        }
 
-   fclose(fp);
-   }
+        snprintf(filename, CF_BUFSIZE, "%s/state/histograms", CFWORKDIR);
+
+        if ((fp = fopen(filename, "w")) == NULL)
+        {
+            CfOut(cf_error, "fopen", "Unable to save histograms");
+            return;
+        }
+
+        for (position = 0; position < CF_GRAINS; position++)
+        {
+            fprintf(fp, "%d ", position);
+
+            for (i = 0; i < CF_OBSERVABLES; i++)
+            {
+                for (day = 0; day < 7; day++)
+                {
+                    fprintf(fp, "%.0lf ", HISTOGRAM[i][day][position]);
+                }
+            }
+            fprintf(fp, "\n");
+        }
+
+        fclose(fp);
+    }
 }
 
 /*****************************************************************************/
@@ -683,50 +689,50 @@ if (IsDefinedClass("Min40_45"))
    be way too large. Then downplay newer data somewhat, and rely on
    experience of a couple of months of data ... */
 
-static double WAverage(double anew,double aold,double age)
+static double WAverage(double anew, double aold, double age)
 {
-double av,cf_sane_monitor_limit = 9999999.0;
-double wnew,wold;
+    double av, cf_sane_monitor_limit = 9999999.0;
+    double wnew, wold;
 
 /* First do some database corruption self-healing */
 
-if (aold > cf_sane_monitor_limit && anew > cf_sane_monitor_limit)
-   {
-   return 0;
-   }
+    if (aold > cf_sane_monitor_limit && anew > cf_sane_monitor_limit)
+    {
+        return 0;
+    }
 
-if (aold > cf_sane_monitor_limit)
-   {
-   return anew;
-   }
+    if (aold > cf_sane_monitor_limit)
+    {
+        return anew;
+    }
 
-if (aold > cf_sane_monitor_limit)
-   {
-   return aold;
-   }
+    if (aold > cf_sane_monitor_limit)
+    {
+        return aold;
+    }
 
 /* Now look at the self-learning */
 
-if (FORGETRATE > 0.9 || FORGETRATE < 0.1)
-   {
-   FORGETRATE = 0.6;
-   }
+    if (FORGETRATE > 0.9 || FORGETRATE < 0.1)
+    {
+        FORGETRATE = 0.6;
+    }
 
-if (age < 2.0)  /* More aggressive learning for young database */
-   {
-   wnew = FORGETRATE;
-   wold = (1.0-FORGETRATE);
-   }
-else
-   {
-   wnew = (1.0-FORGETRATE);
-   wold = FORGETRATE;
-   }
+    if (age < 2.0)              /* More aggressive learning for young database */
+    {
+        wnew = FORGETRATE;
+        wold = (1.0 - FORGETRATE);
+    }
+    else
+    {
+        wnew = (1.0 - FORGETRATE);
+        wold = FORGETRATE;
+    }
 
-if (aold == 0 && anew == 0)
-   {
-   return 0;
-   }
+    if (aold == 0 && anew == 0)
+    {
+        return 0;
+    }
 
 /*
  * AV = (Wnew*Anew + Wold*Aold) / (Wnew + Wold).
@@ -735,227 +741,229 @@ if (aold == 0 && anew == 0)
  * performance.
  */
 
-av = (wnew*anew + wold*aold);
+    av = (wnew * anew + wold * aold);
 
-if (av < 0)
-   {
-   /* Accuracy lost - something wrong */
-   return 0.0;
-   }
+    if (av < 0)
+    {
+        /* Accuracy lost - something wrong */
+        return 0.0;
+    }
 
-return av;
+    return av;
 }
 
 /*****************************************************************************/
 
-static double SetClasses(char *name,double variable,double av_expect,double av_var,double localav_expect,double localav_var,Item **classlist,char *timekey)
+static double SetClasses(char *name, double variable, double av_expect, double av_var, double localav_expect,
+                         double localav_var, Item **classlist, char *timekey)
 {
-char buffer[CF_BUFSIZE],buffer2[CF_BUFSIZE];
-double dev,delta,sigma,ldelta,lsigma,sig;
+    char buffer[CF_BUFSIZE], buffer2[CF_BUFSIZE];
+    double dev, delta, sigma, ldelta, lsigma, sig;
 
-CfDebug("\n SetClasses(%s,X=%lf,avX=%lf,varX=%lf,lavX=%lf,lvarX=%lf,%s)\n",name,variable,av_expect,av_var,localav_expect,localav_var,timekey);
+    CfDebug("\n SetClasses(%s,X=%lf,avX=%lf,varX=%lf,lavX=%lf,lvarX=%lf,%s)\n", name, variable, av_expect, av_var,
+            localav_expect, localav_var, timekey);
 
-delta = variable - av_expect;
-sigma = sqrt(av_var);
-ldelta = variable - localav_expect;
-lsigma = sqrt(localav_var);
-sig = sqrt(sigma*sigma+lsigma*lsigma);
+    delta = variable - av_expect;
+    sigma = sqrt(av_var);
+    ldelta = variable - localav_expect;
+    lsigma = sqrt(localav_var);
+    sig = sqrt(sigma * sigma + lsigma * lsigma);
 
-CfDebug(" delta = %lf,sigma = %lf, lsigma = %lf, sig = %lf\n",delta,sigma,lsigma,sig);
-   
-if (sigma == 0.0 || lsigma == 0.0)
-   {
-   CfDebug(" No sigma variation .. can't measure class\n");
-      
-   snprintf(buffer,CF_MAXVARSIZE,"entropy_%s.*",name);
-   MonEntropyPurgeUnused(buffer);
+    CfDebug(" delta = %lf,sigma = %lf, lsigma = %lf, sig = %lf\n", delta, sigma, lsigma, sig);
 
-   return sig;
-   }
+    if (sigma == 0.0 || lsigma == 0.0)
+    {
+        CfDebug(" No sigma variation .. can't measure class\n");
 
-CfDebug("Setting classes for %s...\n",name);
+        snprintf(buffer, CF_MAXVARSIZE, "entropy_%s.*", name);
+        MonEntropyPurgeUnused(buffer);
 
-if (fabs(delta) < cf_noise_threshold) /* Arbitrary limits on sensitivity  */
-   {
-   CfDebug(" Sensitivity too high ..\n");
+        return sig;
+    }
 
-   buffer[0] = '\0';
-   strcpy(buffer,name);
+    CfDebug("Setting classes for %s...\n", name);
 
-   if ((delta > 0) && (ldelta > 0))
-      {
-      strcat(buffer,"_high");
-      }
-   else if ((delta < 0) && (ldelta < 0))
-      {
-      strcat(buffer,"_low");
-      }
-   else
-      {
-      strcat(buffer,"_normal");
-      }
+    if (fabs(delta) < cf_noise_threshold)       /* Arbitrary limits on sensitivity  */
+    {
+        CfDebug(" Sensitivity too high ..\n");
 
-   AppendItem(classlist,buffer,"0");
+        buffer[0] = '\0';
+        strcpy(buffer, name);
 
-   dev = sqrt(delta*delta/(1.0+sigma*sigma)+ldelta*ldelta/(1.0+lsigma*lsigma));
+        if ((delta > 0) && (ldelta > 0))
+        {
+            strcat(buffer, "_high");
+        }
+        else if ((delta < 0) && (ldelta < 0))
+        {
+            strcat(buffer, "_low");
+        }
+        else
+        {
+            strcat(buffer, "_normal");
+        }
 
-   if (dev > 2.0*sqrt(2.0))
-      {
-      strcpy(buffer2,buffer);
-      strcat(buffer2,"_microanomaly");
-      AppendItem(classlist,buffer2,"2");
-      NewPersistentContext(buffer2,CF_PERSISTENCE,cfpreserve);
-      }
+        AppendItem(classlist, buffer, "0");
 
-   return sig; /* Granularity makes this silly */
-   }
-else
-   {
-   buffer[0] = '\0';
-   strcpy(buffer,name);
+        dev = sqrt(delta * delta / (1.0 + sigma * sigma) + ldelta * ldelta / (1.0 + lsigma * lsigma));
 
-   if ((delta > 0) && (ldelta > 0))
-      {
-      strcat(buffer,"_high");
-      }
-   else if ((delta < 0) && (ldelta < 0))
-      {
-      strcat(buffer,"_low");
-      }
-   else
-      {
-      strcat(buffer,"_normal");
-      }
+        if (dev > 2.0 * sqrt(2.0))
+        {
+            strcpy(buffer2, buffer);
+            strcat(buffer2, "_microanomaly");
+            AppendItem(classlist, buffer2, "2");
+            NewPersistentContext(buffer2, CF_PERSISTENCE, cfpreserve);
+        }
 
-   dev = sqrt(delta*delta/(1.0+sigma*sigma)+ldelta*ldelta/(1.0+lsigma*lsigma));
+        return sig;             /* Granularity makes this silly */
+    }
+    else
+    {
+        buffer[0] = '\0';
+        strcpy(buffer, name);
 
-   if (dev <= sqrt(2.0))
-      {
-      strcpy(buffer2,buffer);
-      strcat(buffer2,"_normal");
-      AppendItem(classlist,buffer2,"0");
-      }
-   else
-      {
-      strcpy(buffer2,buffer);
-      strcat(buffer2,"_dev1");
-      AppendItem(classlist,buffer2,"0");
-      }
+        if ((delta > 0) && (ldelta > 0))
+        {
+            strcat(buffer, "_high");
+        }
+        else if ((delta < 0) && (ldelta < 0))
+        {
+            strcat(buffer, "_low");
+        }
+        else
+        {
+            strcat(buffer, "_normal");
+        }
 
-   /* Now use persistent classes so that serious anomalies last for about
-      2 autocorrelation lengths, so that they can be cross correlated and
-      seen by normally scheduled cfagent processes ... */
+        dev = sqrt(delta * delta / (1.0 + sigma * sigma) + ldelta * ldelta / (1.0 + lsigma * lsigma));
 
-   if (dev > 2.0*sqrt(2.0))
-      {
-      strcpy(buffer2,buffer);
-      strcat(buffer2,"_dev2");
-      AppendItem(classlist,buffer2,"2");
-      NewPersistentContext(buffer2,CF_PERSISTENCE,cfpreserve);
-      }
+        if (dev <= sqrt(2.0))
+        {
+            strcpy(buffer2, buffer);
+            strcat(buffer2, "_normal");
+            AppendItem(classlist, buffer2, "0");
+        }
+        else
+        {
+            strcpy(buffer2, buffer);
+            strcat(buffer2, "_dev1");
+            AppendItem(classlist, buffer2, "0");
+        }
 
-   if (dev > 3.0*sqrt(2.0))
-      {
-      strcpy(buffer2,buffer);
-      strcat(buffer2,"_anomaly");
-      AppendItem(classlist,buffer2,"3");
-      NewPersistentContext(buffer2,CF_PERSISTENCE,cfpreserve);
-      }
+        /* Now use persistent classes so that serious anomalies last for about
+           2 autocorrelation lengths, so that they can be cross correlated and
+           seen by normally scheduled cfagent processes ... */
 
-   return sig;
-   }
+        if (dev > 2.0 * sqrt(2.0))
+        {
+            strcpy(buffer2, buffer);
+            strcat(buffer2, "_dev2");
+            AppendItem(classlist, buffer2, "2");
+            NewPersistentContext(buffer2, CF_PERSISTENCE, cfpreserve);
+        }
+
+        if (dev > 3.0 * sqrt(2.0))
+        {
+            strcpy(buffer2, buffer);
+            strcat(buffer2, "_anomaly");
+            AppendItem(classlist, buffer2, "3");
+            NewPersistentContext(buffer2, CF_PERSISTENCE, cfpreserve);
+        }
+
+        return sig;
+    }
 }
 
 /*****************************************************************************/
 
-static void SetVariable(char *name,double value,double average,double stddev,Item **classlist)
+static void SetVariable(char *name, double value, double average, double stddev, Item **classlist)
 {
-char var[CF_BUFSIZE];
+    char var[CF_BUFSIZE];
 
-snprintf(var,CF_MAXVARSIZE,"value_%s=%.0lf",name,value);
-AppendItem(classlist,var,"");
+    snprintf(var, CF_MAXVARSIZE, "value_%s=%.0lf", name, value);
+    AppendItem(classlist, var, "");
 
-snprintf(var,CF_MAXVARSIZE,"av_%s=%.2lf",name,average);
-AppendItem(classlist,var,"");
+    snprintf(var, CF_MAXVARSIZE, "av_%s=%.2lf", name, average);
+    AppendItem(classlist, var, "");
 
-snprintf(var,CF_MAXVARSIZE,"dev_%s=%.2lf",name,stddev);
-AppendItem(classlist,var,"");
+    snprintf(var, CF_MAXVARSIZE, "dev_%s=%.2lf", name, stddev);
+    AppendItem(classlist, var, "");
 }
 
 /*****************************************************************************/
 
 static void ZeroArrivals()
 {
-memset(CF_THIS, 0, sizeof(CF_THIS));
+    memset(CF_THIS, 0, sizeof(CF_THIS));
 }
 
 /*****************************************************************************/
 
-static double RejectAnomaly(double new,double average,double variance,double localav,double localvar)
+static double RejectAnomaly(double new, double average, double variance, double localav, double localvar)
 {
-double dev = sqrt(variance+localvar);          /* Geometrical average dev */
-double delta;
-int bigger;
+    double dev = sqrt(variance + localvar);     /* Geometrical average dev */
+    double delta;
+    int bigger;
 
-if (average == 0)
-   {
-   return new;
-   }
+    if (average == 0)
+    {
+        return new;
+    }
 
-if (new > MON_THRESHOLD_HIGH*4.0)
-   {
-   return 0.0;
-   }
+    if (new > MON_THRESHOLD_HIGH * 4.0)
+    {
+        return 0.0;
+    }
 
-if (new > MON_THRESHOLD_HIGH)
-   {
-   return average;
-   }
+    if (new > MON_THRESHOLD_HIGH)
+    {
+        return average;
+    }
 
-if ((new-average)*(new-average) < cf_noise_threshold*cf_noise_threshold)
-   {
-   return new;
-   }
+    if ((new - average) * (new - average) < cf_noise_threshold * cf_noise_threshold)
+    {
+        return new;
+    }
 
-if (new - average > 0)
-   {
-   bigger = true;
-   }
-else
-   {
-   bigger = false;
-   }
+    if (new - average > 0)
+    {
+        bigger = true;
+    }
+    else
+    {
+        bigger = false;
+    }
 
 /* This routine puts some inertia into the changes, so that the system
    doesn't respond to every little change ...   IR and UV cutoff */
 
-delta = sqrt((new-average)*(new-average)+(new-localav)*(new-localav));
+    delta = sqrt((new - average) * (new - average) + (new - localav) * (new - localav));
 
-if (delta > 4.0*dev)  /* IR */
-   {
-   srand48((unsigned int)time(NULL));
+    if (delta > 4.0 * dev)      /* IR */
+    {
+        srand48((unsigned int) time(NULL));
 
-   if (drand48() < 0.7) /* 70% chance of using full value - as in learning policy */
-      {
-      return new;
-      }
-   else
-      {
-      if (bigger)
-         {
-         return average+2.0*dev;
-         }
-      else
-         {
-         return average-2.0*dev;
-         }
-      }
-   }
-else
-   {
-   CfOut(cf_verbose,"","Value accepted\n");
-   return new;
-   }
+        if (drand48() < 0.7)    /* 70% chance of using full value - as in learning policy */
+        {
+            return new;
+        }
+        else
+        {
+            if (bigger)
+            {
+                return average + 2.0 * dev;
+            }
+            else
+            {
+                return average - 2.0 * dev;
+            }
+        }
+    }
+    else
+    {
+        CfOut(cf_verbose, "", "Value accepted\n");
+        return new;
+    }
 }
 
 /***************************************************************/
@@ -964,29 +972,29 @@ else
 
 static void GatherPromisedMeasures(void)
 {
-Bundle *bp;
-SubType *sp;
-Promise *pp;
-char *scope;
+    Bundle *bp;
+    SubType *sp;
+    Promise *pp;
+    char *scope;
 
-for (bp = BUNDLES; bp != NULL; bp = bp->next) /* get schedule */
-   {
-   scope = bp->name;
-   SetNewScope(bp->name);
+    for (bp = BUNDLES; bp != NULL; bp = bp->next)       /* get schedule */
+    {
+        scope = bp->name;
+        SetNewScope(bp->name);
 
-   if ((strcmp(bp->type,CF_AGENTTYPES[cf_monitor]) == 0) || (strcmp(bp->type,CF_AGENTTYPES[cf_common]) == 0))
-      {
-      for (sp = bp->subtypes; sp != NULL; sp = sp->next) /* get schedule */
-         {
-         for (pp = sp->promiselist; pp != NULL; pp=pp->next)
+        if ((strcmp(bp->type, CF_AGENTTYPES[cf_monitor]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[cf_common]) == 0))
+        {
+            for (sp = bp->subtypes; sp != NULL; sp = sp->next)  /* get schedule */
             {
-            ExpandPromise(cf_monitor,scope,pp,KeepMonitorPromise);
+                for (pp = sp->promiselist; pp != NULL; pp = pp->next)
+                {
+                    ExpandPromise(cf_monitor, scope, pp, KeepMonitorPromise);
+                }
             }
-         }
-      }
-   }
+        }
+    }
 
-DeleteAllScope();
+    DeleteAllScope();
 }
 
 /*********************************************************************/
@@ -995,38 +1003,40 @@ DeleteAllScope();
 
 static void KeepMonitorPromise(Promise *pp)
 {
-char *sp = NULL;
+    char *sp = NULL;
 
-if (!IsDefinedClass(pp->classes))
-   {
-   CfOut(cf_verbose,"","\n");
-   CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-   CfOut(cf_verbose,"","Skipping whole next promise (%s), as context %s is not relevant\n",pp->promiser,pp->classes);
-   CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-   return;
-   }
+    if (!IsDefinedClass(pp->classes))
+    {
+        CfOut(cf_verbose, "", "\n");
+        CfOut(cf_verbose, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+        CfOut(cf_verbose, "", "Skipping whole next promise (%s), as context %s is not relevant\n", pp->promiser,
+              pp->classes);
+        CfOut(cf_verbose, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+        return;
+    }
 
-if (VarClassExcluded(pp,&sp))
-   {
-   CfOut(cf_verbose,"","\n");
-   CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-   CfOut(cf_verbose,"","Skipping whole next promise (%s), as var-context %s is not relevant\n",pp->promiser,sp);
-   CfOut(cf_verbose,"",". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-   return;
-   }
+    if (VarClassExcluded(pp, &sp))
+    {
+        CfOut(cf_verbose, "", "\n");
+        CfOut(cf_verbose, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+        CfOut(cf_verbose, "", "Skipping whole next promise (%s), as var-context %s is not relevant\n", pp->promiser,
+              sp);
+        CfOut(cf_verbose, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+        return;
+    }
 
-if (strcmp("classes",pp->agentsubtype) == 0)
-   {
-   KeepClassContextPromise(pp);
-   return;
-   }
+    if (strcmp("classes", pp->agentsubtype) == 0)
+    {
+        KeepClassContextPromise(pp);
+        return;
+    }
 
-if (strcmp("measurements",pp->agentsubtype) == 0)
-   {
-   VerifyMeasurementPromise(CF_THIS,pp);
-   *pp->donep = false;
-   return;
-   }
+    if (strcmp("measurements", pp->agentsubtype) == 0)
+    {
+        VerifyMeasurementPromise(CF_THIS, pp);
+        *pp->donep = false;
+        return;
+    }
 }
 
 /*****************************************************************************/
@@ -1034,7 +1044,7 @@ if (strcmp("measurements",pp->agentsubtype) == 0)
 void MonOtherInit(void)
 {
 #ifdef HAVE_NOVA
-Nova_MonOtherInit();
+    Nova_MonOtherInit();
 #endif
 }
 
@@ -1043,6 +1053,6 @@ Nova_MonOtherInit();
 void MonOtherGatherData(double *cf_this)
 {
 #ifdef HAVE_NOVA
-Nova_MonOtherGatherData(cf_this);
+    Nova_MonOtherGatherData(cf_this);
 #endif
 }

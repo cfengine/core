@@ -173,7 +173,11 @@ void JsonObjectAppendString(JsonElement *object, const char *key, const char *va
     assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
     assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
     assert(key);
-    assert(value);
+    
+    if(!value)
+    {
+	value = "";
+    }
 
     JsonElement *child = JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_STRING, key, EscapeJsonString(value));
 

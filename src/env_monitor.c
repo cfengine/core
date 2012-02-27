@@ -110,6 +110,7 @@ void MonitorInitialize(void)
         LOCALAV.Q[i].expect = 0.0;
         LOCALAV.Q[i].var = 0.0;
         LOCALAV.Q[i].q = 0.0;
+        LOCALAV.Q[i].dq = 0.0;
     }
 
     for (i = 0; i < 7; i++)
@@ -368,6 +369,9 @@ static Averages EvalAvQ(char *t)
 
         newvals.Q[i].expect = WAverage(This[i], currentvals->Q[i].expect, WAGE);
         LOCALAV.Q[i].expect = WAverage(newvals.Q[i].expect, LOCALAV.Q[i].expect, ITER);
+
+        newvals.Q[i].dq = newvals.Q[i].q - currentvals->Q[i].q;
+        LOCALAV.Q[i].dq = newvals.Q[i].q - currentvals->Q[i].q;
 
         delta2 = (This[i] - currentvals->Q[i].expect) * (This[i] - currentvals->Q[i].expect);
 

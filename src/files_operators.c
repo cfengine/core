@@ -504,6 +504,24 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp)
         }
     }
 
+    if (a.template)
+    {
+        if ((bp = MakeTemporaryBundleFromTemplate(a,pp)))
+        {
+            BannerSubBundle(bp,params);
+
+            DeleteScope(bp->name);
+            NewScope(bp->name);
+            HashVariables(bp->name);
+
+            PushPrivateClassContext();
+            retval = ScheduleEditLineOperations(filename,bp,a,pp);
+            PopPrivateClassContext();
+            DeleteScope(bp->name);
+        }
+        // FIXME: why it crashes? DeleteBundles(bp);
+    }
+
     FinishEditContext(pp->edcontext, a, pp);
     YieldCurrentLock(thislock);
     return retval;

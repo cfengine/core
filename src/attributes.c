@@ -45,6 +45,8 @@ void SetChecksumUpdates(bool enabled)
     CHECKSUMUPDATES = enabled;
 }
 
+/*******************************************************************/
+
 Attributes GetFilesAttributes(Promise *pp)
 {
     Attributes attr = { {0} };
@@ -61,9 +63,11 @@ Attributes GetFilesAttributes(Promise *pp)
     attr.havechange = GetBooleanConstraint("changes", pp);
     attr.havecopy = GetBooleanConstraint("copy_from", pp);
     attr.havelink = GetBooleanConstraint("link_from", pp);
+
+    attr.template = (char *)GetConstraintValue("edit_template", pp, CF_SCALAR);
     attr.haveeditline = GetBundleConstraint("edit_line", pp);
     attr.haveeditxml = GetBundleConstraint("edit_xml", pp);
-    attr.haveedit = attr.haveeditline || attr.haveeditxml;
+    attr.haveedit = attr.haveeditline || attr.haveeditxml || attr.template;
 
 /* Files, specialist */
 

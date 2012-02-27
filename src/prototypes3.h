@@ -484,6 +484,7 @@ int AppendIfNoSuchLine(char *filename, char *line);
 /* files_editline.c */
 
 int ScheduleEditLineOperations(char *filename, Bundle *bp, Attributes a, Promise *pp);
+Bundle *MakeTemporaryBundleFromTemplate(Attributes a,Promise *pp);
 
 /* files_links.c */
 

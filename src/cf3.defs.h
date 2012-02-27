@@ -1754,6 +1754,7 @@ typedef struct
     char *transformer;
     char *pathtype;
     char *repository;
+    char *template;
     int touch;
     int create;
     int move_obstructions;

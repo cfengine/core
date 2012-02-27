@@ -88,6 +88,11 @@ Attributes GetFilesAttributes(Promise *pp)
     attr.link = GetLinkConstraints(pp);
     attr.edits = GetEditDefaults(pp);
 
+    if (attr.template)
+       {
+       attr.edits.empty_before_use = true;
+       }
+
 /* Files, multiple use */
 
     attr.recursion = GetRecursionConstraints(pp);
@@ -1259,15 +1264,7 @@ EditDefaults GetEditDefaults(Promise *pp)
         e.backup = cfa_backup;
     }
 
-    if (attr.template)
-       {
-       e.empty_before_use = true;
-       }
-    else
-       {
-       e.empty_before_use = GetBooleanConstraint("empty_file_before_editing", pp);
-       }
-    
+    e.empty_before_use = GetBooleanConstraint("empty_file_before_editing", pp); 
 
     e.joinlines = GetBooleanConstraint("recognize_join", pp);
 

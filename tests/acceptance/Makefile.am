@@ -26,7 +26,7 @@ endif
 EXTRA_DIST = default.cf.sub testall
 
 TESTS = testall
-TESTS_ENVIRONMENT = env AGENT=$(abs_top_builddir)/src/cf-agent MOCK_PACKAGE_MANAGER=$(abs_top_builddir)/tests/acceptance/workdir/mock-package-manager
+TESTS_ENVIRONMENT = env AGENT=$(abs_top_builddir)/src/cf-agent MOCK_PACKAGE_MANAGER=$(abs_top_builddir)/tests/acceptance/mock-package-manager
 
 dist-hook:
 	tar -c -f - [0-9]* --exclude '*svn*' | tar -x -C $(distdir) -f -

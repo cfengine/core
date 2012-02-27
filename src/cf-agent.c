@@ -1395,6 +1395,6 @@ static void NoteBundleCompliance(char *name, int save_pr_kept, int save_pr_repai
 
     bundle_compliance = (delta_pr_kept + delta_pr_repaired) / (delta_pr_kept + delta_pr_notkept + delta_pr_repaired);
 
-    CfOut(cf_verbose, "", " -> Aggregate compliance (promises kept/repaired) for bundle \"%s\" = %.1lf%%", name,
-          bundle_compliance * 100.0);
+    CfOut(cf_verbose, "", " -> Aggregate compliance (promises kept/repaired) for bundle \"%s\" = %.1lf%%", name, bundle_compliance * 100.0);
+    LastSawBundle(name,bundle_compliance);
 }

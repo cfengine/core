@@ -1259,7 +1259,15 @@ EditDefaults GetEditDefaults(Promise *pp)
         e.backup = cfa_backup;
     }
 
-    e.empty_before_use = GetBooleanConstraint("empty_file_before_editing", pp);
+    if (attr.template)
+       {
+       e.empty_before_use = true;
+       }
+    else
+       {
+       e.empty_before_use = GetBooleanConstraint("empty_file_before_editing", pp);
+       }
+    
 
     e.joinlines = GetBooleanConstraint("recognize_join", pp);
 

@@ -114,6 +114,7 @@ cscope.*
 
 *~
 \#*#
+src/.dir-locals.el
 
 # eclipse
 

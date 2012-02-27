@@ -117,6 +117,7 @@ static void NotePerformance(char *eventname, time_t t, double value)
         lastseen = now - e.t;
         newe.t = t;
         newe.Q.q = value;
+        newe.Q.dq = value - e.Q.q;
         newe.Q.expect = GAverage(value, e.Q.expect, 0.3);
         delta2 = (value - e.Q.expect) * (value - e.Q.expect);
         newe.Q.var = GAverage(delta2, e.Q.var, 0.3);
@@ -133,6 +134,7 @@ static void NotePerformance(char *eventname, time_t t, double value)
         lastseen = 0.0;
         newe.t = t;
         newe.Q.q = value;
+        newe.Q.dq = 0;
         newe.Q.expect = value;
         newe.Q.var = 0.001;
     }
@@ -207,6 +209,7 @@ void NoteClassUsage(AlphaList baselist, int purge)
             lastseen = now - e.t;
             newe.t = now;
             newe.Q.q = vtrue;
+            newe.Q.dq = vtrue - e.Q.q;
             newe.Q.expect = GAverage(vtrue, e.Q.expect, 0.7);
             delta2 = (vtrue - e.Q.expect) * (vtrue - e.Q.expect);
             newe.Q.var = GAverage(delta2, e.Q.var, 0.7);
@@ -216,6 +219,7 @@ void NoteClassUsage(AlphaList baselist, int purge)
             lastseen = 0.0;
             newe.t = now;
             newe.Q.q = 0.5 * vtrue;
+            newe.Q.dq = 0;
             newe.Q.expect = 0.5 * vtrue;        /* With no data it's 50/50 what we can say */
             newe.Q.var = 0.000;
         }
@@ -277,6 +281,7 @@ void NoteClassUsage(AlphaList baselist, int purge)
                 {
                     newe.t = then;
                     newe.Q.q = 0;
+                    newe.Q.dq = entry.Q.dq;
                     newe.Q.expect = GAverage(0.0, av, 0.5);
                     delta2 = av * av;
                     newe.Q.var = GAverage(delta2, var, 0.5);
@@ -385,9 +390,11 @@ static void UpdateLastSawHost(char *rkey, char *ipaddress)
             lastseen = 300;
             q.Q.expect = 0;
             q.Q.var = 0;
+            q.Q.dq = 0;
         }
 
         newq.Q.q = (double) now;
+        newq.Q.dq = newq.Q.q - q.Q.q;
         newq.Q.expect = GAverage(lastseen, q.Q.expect, 0.4);
         delta2 = (lastseen - q.Q.expect) * (lastseen - q.Q.expect);
         newq.Q.var = GAverage(delta2, q.Q.var, 0.4);
@@ -397,6 +404,7 @@ static void UpdateLastSawHost(char *rkey, char *ipaddress)
     {
         lastseen = 0.0;
         newq.Q.q = (double) now;
+        newq.Q.dq = 0;
         newq.Q.expect = 0.0;
         newq.Q.var = 0.0;
         strncpy(newq.address, ipaddress, CF_ADDRSIZE - 1);

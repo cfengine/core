@@ -163,6 +163,132 @@ int ScheduleEditLineOperations(char *filename, Bundle *bp, Attributes a, Promise
     return true;
 }
 
+/*****************************************************************************/
+
+Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
+{
+    char bundlename[CF_MAXVARSIZE], buffer[CF_BUFSIZE];
+    char *sp, *promiser, context[CF_BUFSIZE] = "any";
+    Bundle *bp;
+    Promise *np;
+    SubType *tp;
+    FILE *fp;
+    int level = 0, size, lineno = 0;
+    Item *ip, *lines = NULL;
+ 
+    snprintf(bundlename, CF_MAXVARSIZE, "temp_cf_bundle_%s", CanonifyName(a.template));
+
+    bp = xcalloc(1, sizeof(Bundle));
+    bp->name = xstrdup(bundlename);
+    bp->type = xstrdup("edit_line");
+    bp->args = NULL;
+    bp->next = NULL;
+
+    tp = AppendSubType(bp, "insert_lines");
+
+// Now parse the template file
+
+    if ((fp = fopen(a.template,"r")) == NULL)
+    {
+        cfPS(cf_error, CF_INTERPT, "", pp, a, " !! Unable to open template file \"%s\" to make \"%s\"", a.template, pp->promiser);
+        return NULL;   
+    }
+
+    while(!feof(fp))
+    {
+        buffer[0] = '\0';
+        fgets(buffer, CF_BUFSIZE-1, fp);
+        lineno++;
+   
+        // Check closing syntax
+
+        // Get Action operator
+        if (strncmp(buffer, "[%CFEngine", strlen("[%CFEngine")) == 0)
+        {
+            char operator[CF_BUFSIZE], brack[CF_SMALLBUF];
+
+            sscanf(buffer+strlen("[%CFEngine"), "%1024s %s", operator, brack);
+
+            if (strcmp(brack, "%]") != 0)
+            {
+                cfPS(cf_error, CF_INTERPT, "", pp, a, " !! Template file \"%s\" syntax error, missing close \"%%]\" at line %d", a.template, lineno);
+                return NULL;
+            }
+
+            if (strcmp(operator, "BEGIN") == 0)
+            {
+                // start new buffer
+         
+                if (++level > 1)
+                {
+                    cfPS(cf_error, CF_INTERPT, "", pp, a, " !! Template file \"%s\" contains nested blocks which are not allowed, near line %d", a.template, lineno);
+                    return NULL;
+                }
+
+                continue;
+            }
+
+            if (strcmp(operator, "END") == 0)
+            {
+                // install buffer
+                level--;
+            }
+
+            if (strcmp(operator+strlen(operator)-2, "::") == 0)
+            {
+                *(operator+strlen(operator)-2) = '\0';
+                strcpy(context, operator);
+                continue;
+            }
+
+            // In all these cases, we should start a new promise
+
+            promiser = NULL;
+            size = 0;
+      
+            for (ip = lines; ip != NULL; ip = ip->next)
+            {
+                size += strlen(ip->name);
+            }
+
+            sp = promiser = xcalloc(1, size+1);
+
+            for (ip = lines; ip != NULL; ip = ip->next)
+            {
+                int len = strlen(ip->name);
+                strncpy(sp, ip->name, len);
+                sp += len;
+            }
+
+            *(sp-1) = '\0'; // StripTrailingNewline(promiser) and terminate
+
+            np = AppendPromise(tp, promiser, (Rval) { NULL, CF_NOPROMISEE }, context, bundlename, "edit_line");
+            AppendConstraint(&(np->conlist), "insert_type", (Rval) { xstrdup("preserve_block"), CF_SCALAR }, "any", false);
+
+            DeleteItemList(lines);
+            free(promiser);
+            lines = NULL;
+        }
+        else
+        {
+            if (level > 0)
+            {
+                AppendItem(&lines, buffer, NULL);
+            }
+            else
+            {
+                //install independent promise line
+                StripTrailingNewline(buffer);
+                np = AppendPromise(tp, buffer, (Rval) { NULL, CF_NOPROMISEE }, context, bundlename, "edit_line");
+                AppendConstraint(&(np->conlist), "insert_type", (Rval) { xstrdup("preserve_block"), CF_SCALAR }, "any", false);
+            }
+        }
+    }
+
+    fclose(fp);
+    return bp;
+}
+
 /***************************************************************************/
 /* Level                                                                   */
 /***************************************************************************/

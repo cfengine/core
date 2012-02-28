@@ -309,3 +309,15 @@ long StringToLong(const char *str)
 
     return result;
 }
+
+/*********************************************************************/
+
+char *NULLStringToEmpty(char *str)
+{
+    if(!str)
+    {
+	return "";
+    }
+    
+    return str;
+}

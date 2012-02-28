@@ -503,7 +503,7 @@ AC_TYPE_SIZE_T
 AC_TYPE_UID_T
 AC_TYPE_PID_T
 AC_CHECK_TYPES(clockid_t)
-AC_CHECK_TYPES(socklen_t)
+AC_CHECK_TYPES(socklen_t, [], [], [[#include <sys/socket.h>]])
 
 dnl ######################################################################
 dnl Checks for typedefs, structures, and compiler characteristics.

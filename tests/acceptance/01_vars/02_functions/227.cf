@@ -1,0 +1,71 @@
+#######################################################
+#
+# Test grep(), size 0, empty pattern should match nothing
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle agent init
+{
+vars:
+    "zero" string => "zero";
+    "one" string => "one";
+
+files:
+    "$(G.testfile).expected"
+	create => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+    "array" slist => { "One", "Two", "Three", "Four", "Five" };
+
+    "vals" slist => grep("", "array");
+
+files:
+    "$(G.testfile).actual"
+	create => "true",
+	edit_line => test_insert;
+
+reports:
+    DEBUG::
+	"Inserting line: $(vals)";
+}
+
+bundle edit_line test_insert
+{
+vars:
+    "vals" slist => { @{test.vals} };
+
+insert_lines:
+    "$(vals)";
+}
+
+#######################################################
+
+bundle agent check
+{
+methods:
+	"any" usebundle => sorted_check_diff("$(G.testfile).actual",
+					      "$(G.testfile).expected",
+					      "$(this.promise_filename)");
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(G.testfile).*");
+}

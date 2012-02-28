@@ -235,7 +235,7 @@ void SetPromiseOutputs(Promise *pp)
 
 /*****************************************************************************/
 
-void LastSawBundle(char *name)
+void LastSawBundle(char *name, double comp)
 {
 }
 

@@ -1,0 +1,84 @@
+#######################################################
+#
+# Test islink()
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"testfile" string => "/tmp/TEST.cfengine";
+}
+
+#######################################################
+
+bundle agent init
+{
+files:
+	"$(G.testfile)"
+	    create => "true";
+
+	"$(G.testfile).link"
+	    link_from => test_link("$(G.testfile)");
+}
+
+body link_from test_link(original)
+{
+	source => "$(original)";
+	link_type => "symlink";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+	"good" and => {
+		    islink("$(G.testfile).link"),
+		    };
+
+	"bad" or => {
+		    islink("/bin/cat"),
+		    islink("/bin"),
+		    islink("/bin/"),
+		    islink("/etc/passwd"),
+		    islink("/ThisFi!3BetterNotExi5t"),
+		    };
+
+	"ok" expression => "good&!bad";
+
+reports:
+    DEBUG.good::
+	"As expected, $(G.testfile).link is a symlink to $(G.testfile)";
+    DEBUG.bad::
+	"One of these is detected as a symlink: /bin/cat, /bin, /bin/, /etc/passwd, /ThisFi!3BetterNotExi5t";
+    ok::
+	"$(this.promise_filename) Pass";
+    !ok::
+	"$(this.promise_filename) FAIL";
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+    "any" usebundle => default_fini("$(G.testfile)");
+}

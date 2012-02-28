@@ -1,0 +1,91 @@
+#######################################################
+#
+# Insert lines from a file, verify that whitespace_policy other than
+# ignore_leading works when given a not-close-enough match
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle agent init
+{
+vars:
+	"states" slist => { "actual", "expected", "insert" };
+
+	"actual" string =>
+"BEGIN
+    One potato
+    Two potato
+    Two potatos
+    Leading   embedded   and trailing spaces   
+    Four
+END";
+ 
+      "insert" string =>
+"    One potato
+    Two potato
+    Three potatoe
+    Leading embedded and trailing spaces   
+    Four";
+
+	"expected" string =>
+"BEGIN
+    One potato
+    Two potato
+    Two potatos
+    Leading   embedded   and trailing spaces   
+    Four
+END
+    Leading embedded and trailing spaces   ";
+ 
+files:
+	"$(G.testfile).$(states)"
+	    create => "true",
+	    edit_line => init_insert("$(init.$(states))"),
+	    edit_defaults => init_empty;
+}
+
+bundle edit_line init_insert(str)
+{
+insert_lines:
+	"$(str)";
+}
+
+body edit_defaults init_empty
+{
+	empty_file_before_editing => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
+	"$(G.testfile).actual"
+	    edit_line => test_insert("$(G.testfile).insert");
+}
+
+bundle edit_line test_insert(filename)
+{
+insert_lines:
+	"$(filename)"
+	    insert_type => "file",
+	    whitespace_policy => { "exact_match", "ignore_embedded", "ignore_trailing" };
+}
+
+#######################################################
+
+bundle agent check
+{
+methods:
+	"any" usebundle => default_check_diff("$(G.testfile).actual",
+					      "$(G.testfile).expected",
+					      "$(this.promise_filename)");
+}

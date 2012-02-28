@@ -1,0 +1,80 @@
+#######################################################
+#
+# Test getusers() arg1 only
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle agent init
+{
+vars:
+	# All users except root, bin, and daemon
+	"users" slist => getusers("","0,1,2");
+
+files:
+	"$(G.testfile)"
+	    delete => init_delete;
+
+reports:
+    cfengine_3::
+	"$(users)"
+	    report_to_file => "$(G.testfile)";
+}
+
+body delete init_delete
+{
+	dirlinks => "delete";
+	rmdirs   => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
+	# Try to delete the lines that shouldn't be there anyway
+	"$(G.testfile)"
+	    edit_line => test_delete,
+	    classes => full_set;
+}
+
+bundle edit_line test_delete
+{
+delete_lines:
+	"root";
+	"daemon";
+	"bin";
+}
+
+body classes full_set
+{
+promise_kept     => { "pass" };
+promise_repaired => { "fail" };
+repair_failed    => { "fail" };
+repair_denied    => { "fail" };
+repair_timeout   => { "fail" };
+}
+
+
+#######################################################
+
+bundle agent check
+{
+classes:
+	"ok" expression => "pass&!fail";
+
+reports:
+    ok::
+	"$(this.promise_filename) Pass";
+
+    !ok::
+	"$(this.promise_filename) FAIL";
+}

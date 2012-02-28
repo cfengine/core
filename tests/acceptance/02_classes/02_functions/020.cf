@@ -1,0 +1,60 @@
+#######################################################
+#
+# Test fileexists()
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle agent init
+{
+vars:
+        "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+        "f1" string => "/etc/passwd";
+        "f2" string => "/etc/group";
+        "f3" string => "/etc/NoFriggin'WayThisExi5ts";
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+        "ok1" expression => fileexists("$(test.f1)");
+        "ok2" expression => fileexists("$(test.f2)");
+        "ok3" not => fileexists("$(test.f3)");
+
+	"ok" and => { "ok1", "ok2", "ok3" };
+
+reports:
+    DEBUG.ok1::
+	"File $(test.f1) exists as expected";
+    DEBUG.!ok1::
+	"File $(test.f1) DOES NOT exist (and should)";
+    DEBUG.ok2::
+	"File $(test.f2) exists as expected";
+    DEBUG.!ok2::
+	"File $(test.f2) DOES NOT exist (and should)";
+    DEBUG.ok3::
+	"File $(test.f3) does not exist as expected";
+    DEBUG.!ok3::
+	"File $(test.f3) DOES exist (and shouldn't)";
+    ok::
+	"$(this.promise_filename) Pass";
+    !ok::
+	"$(this.promise_filename) FAIL";
+}

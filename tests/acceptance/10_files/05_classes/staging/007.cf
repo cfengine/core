@@ -1,0 +1,97 @@
+#######################################################
+#
+# Delete a line that isn't there, action_policy=>"nop", ensure that a promise_kept class gets set
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common g
+{
+vars:
+	"testfile" string => "/tmp/TEST.cfengine";
+}
+
+#######################################################
+
+bundle agent init
+{
+files:
+	"$(G.testfile)"
+	    create => "true",
+	    perms => test_mode("0644");
+
+	"$(G.testfile).link"
+	    link_from => init_link("$(G.testfile)");
+}
+
+body link_from init_link(src)
+{
+source => "$(src)";
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
+	"$(G.testfile).link"
+	    perms => test_mode("0600"),
+	    classes => fail_check;
+
+	"$(G.testfile)"
+	    perms => test_mode("0644"),
+	    classes => kept_check;
+}
+
+body perms test_mode(m)
+{
+mode => "$(m)";
+}
+
+body classes fail_check
+{
+promise_kept     => { "fail1" };
+promise_repaired => { "fail1" };
+repair_failed    => { "pass1" };	# Cannot chmod a sylink!
+repair_denied    => { "fail1" };
+repair_timeout   => { "fail1" };
+}
+
+body classes kept_check
+{
+promise_kept     => { "pass2" }; # Original mode should not have changed
+promise_repaired => { "fail2" };
+repair_failed    => { "fail2" };
+repair_denied    => { "fail2" };
+repair_timeout   => { "fail2" };
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+	"ok" and => { "pass1", "pass2", "!fail1", "!fail2" };
+
+reports:
+    DEBUG.!pass1::
+	"Trying to chmod a symlink did not fail like it should";
+    DEBUG.fail1::
+	"Trying to chmod a symlink gave a return other than repair_failed";
+    DEBUG.!pass2::
+	"Something was funky with the target of a symlink";
+    DEBUG.fail2::
+	"Doing a chmod on a symlink changed the target file instead!";
+    ok::
+	"$(this.promise_filename) Pass";
+    !ok::
+	"$(this.promise_filename) FAIL";
+}

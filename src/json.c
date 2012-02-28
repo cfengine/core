@@ -271,7 +271,7 @@ const char *JsonObjectGetAsString(JsonElement *object, const char *key)
         return childPrimitive->primitive.value;
     }
 
-    return NULL;
+    return "";
 }
 
 JsonElement *JsonObjectGetAsObject(JsonElement *object, const char *key)
@@ -373,7 +373,7 @@ const char *JsonArrayGetAsString(JsonElement *array, size_t index)
         return childPrimitive->primitive.value;
     }
 
-    return NULL;
+    return "";
 }
 
 JsonElement *JsonArrayGetAsObject(JsonElement *array, size_t index)
@@ -584,7 +584,7 @@ static const char *JsonParseAsString(const char **data)
     }
 
     CfDebug("Unable to parse json data as string, did not end with doublequote: %s", *data);
-    return NULL;
+    return "";
 }
 
 static JsonElement *JsonParseAsArray(const char **data)

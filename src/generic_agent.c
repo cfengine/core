@@ -340,7 +340,9 @@ int CheckPromises(enum cfagenttype ag)
                 FILE *fp = fdopen(fd, "w");
                 time_t now = time(NULL);
 
-                fprintf(fp, "%s", ctime(&now));
+		char timebuf[26];
+
+                fprintf(fp, "%s", cf_strtimestamp_local(now, timebuf));
                 fclose(fp);
                 CfOut(cf_verbose, "", " -> Caching the state of validation\n");
             }

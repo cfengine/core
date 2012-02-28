@@ -378,7 +378,7 @@ void ResetBundleOutputs(char *name);
 void SetPromiseOutputs(Promise *pp);
 void VerifyOutputsPromise(Promise *pp);
 void SpecialQuote(char *topic, char *type);
-void LastSawBundle(char *name);
+void LastSawBundle(char *name,double compliance);
 int GetInstalledPkgsRpath(PackageItem ** pkgList, Attributes a, Promise *pp);
 int ExecPackageCommandRpath(char *command, int verify, int setCmdClasses, Attributes a, Promise *pp);
 void NewPromiser(Promise *pp);

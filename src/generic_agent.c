@@ -1128,7 +1128,7 @@ void BannerBundle(Bundle *bp, Rlist *params)
 
     CfOut(cf_verbose, "", "*****************************************************************\n");
     CfOut(cf_verbose, "", "\n");
-    LastSawBundle(bp->name);
+
 }
 
 /**************************************************************/
@@ -1156,7 +1156,7 @@ void BannerSubBundle(Bundle *bp, Rlist *params)
     }
     CfOut(cf_verbose, "", "      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
     CfOut(cf_verbose, "", "\n");
-    LastSawBundle(bp->name);
+
 }
 
 /**************************************************************/

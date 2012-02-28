@@ -316,7 +316,7 @@ char *NULLStringToEmpty(char *str)
 {
     if(!str)
     {
-	return "";
+        return "";
     }
     
     return str;

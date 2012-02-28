@@ -340,7 +340,7 @@ int CheckPromises(enum cfagenttype ag)
                 FILE *fp = fdopen(fd, "w");
                 time_t now = time(NULL);
 
-		char timebuf[26];
+                char timebuf[26];
 
                 fprintf(fp, "%s", cf_strtimestamp_local(now, timebuf));
                 fclose(fp);

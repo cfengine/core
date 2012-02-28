@@ -214,6 +214,15 @@ static void test_string_to_long(void **state)
     assert_int_equal(1234567, StringToLong("1234567"));
 }
 
+static void test_string_safe_compare(void **state)
+{
+    assert_true(StringSafeCompare(NULL, NULL) == 0);
+    assert_true(StringSafeCompare(NULL, "a") != 0);
+    assert_true(StringSafeCompare("a", NULL) != 0);
+    assert_true(StringSafeCompare("a", "a") == 0);
+    assert_true(StringSafeCompare("a", "b") != 0);
+}
+
 int main()
 {
     const UnitTest tests[] =
@@ -250,7 +259,9 @@ int main()
         unit_test(test_substring_negative),
         unit_test(test_substring_evil),
 
-        unit_test(test_string_to_long)
+        unit_test(test_string_to_long),
+
+        unit_test(test_string_safe_compare)
     };
 
     return run_tests(tests);

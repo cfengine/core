@@ -114,6 +114,22 @@ int SafeStringLength(const char *str)
     return strlen(str);
 }
 
+int StringSafeCompare(const char *a, const char *b)
+{
+    if (a == b)
+    {
+        return 0;
+    }
+
+    if (((a != NULL) && (b == NULL)) ||
+        ((a == NULL) && (b != NULL)))
+    {
+        return -1;
+    }
+
+    return strcmp(a, b);
+}
+
 /*******************************************************************/
 
 int StripListSep(char *strList, char *outBuf, int outBufSz)

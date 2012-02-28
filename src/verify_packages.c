@@ -405,6 +405,11 @@ static int VerifyInstalledPackages(PackageManager **all_mgrs, Attributes a, Prom
                 }
             }
 
+            if (a.packages.package_multiline_start)
+            {
+                PrependMultiLinePackageItem(&(manager->pack_list), vbuff, reset, a, pp);
+            }
+
             cf_pclose(prp);
         }
     }

@@ -1,0 +1,55 @@
+#######################################################
+#
+# Test initial class negation with -N
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle agent init
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
+    "$(g.testfile)"
+	create => "true",
+	classes => set_bingo;
+}
+
+body classes set_bingo
+{
+promise_kept => { "bingo" };
+promise_repaired => { "bingo" };
+}
+
+
+#######################################################
+
+bundle agent check
+{
+classes:
+    "dummy" expression => regextract("(.*)\.sub", $(this.promise_filename), "fn");
+    "ok" expression => "bingo";
+
+reports:
+    DEBUG::
+	"This should pass even if you run it with: -N ok";
+	"Look at $(fn[1]) to see which flags are passed in";
+    ok::
+	"$(fn[1]) Pass";
+    !ok::
+	"$(fn[1]) FAIL";
+}

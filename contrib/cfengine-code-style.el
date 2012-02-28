@@ -51,7 +51,7 @@
 (defun cfengine-c-mode-hook ()
   (if (eq c-file-style "CFEngine")
       (progn
-        (setq indent-tab-mode nil)
+        (setq indent-tabs-mode nil)
         (setq c-tab-always-indent t)
         (subword-mode 1))))
 

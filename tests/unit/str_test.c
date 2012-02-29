@@ -214,13 +214,22 @@ static void test_string_to_long(void **state)
     assert_int_equal(1234567, StringToLong("1234567"));
 }
 
-static void test_string_safe_compare(void **state)
+static void test_safe_compare(void **state)
 {
     assert_true(StringSafeCompare(NULL, NULL) == 0);
     assert_true(StringSafeCompare(NULL, "a") != 0);
     assert_true(StringSafeCompare("a", NULL) != 0);
     assert_true(StringSafeCompare("a", "a") == 0);
     assert_true(StringSafeCompare("a", "b") != 0);
+}
+
+static void test_safe_equal(void **state)
+{
+    assert_true(StringSafeEqual(NULL, NULL));
+    assert_false(StringSafeEqual("a", NULL));
+    assert_false(StringSafeEqual(NULL, "a"));
+    assert_false(StringSafeEqual("a", "b"));
+    assert_true(StringSafeEqual("a", "a"));
 }
 
 int main()
@@ -261,7 +270,8 @@ int main()
 
         unit_test(test_string_to_long),
 
-        unit_test(test_string_safe_compare)
+        unit_test(test_safe_compare),
+        unit_test(test_safe_equal)
     };
 
     return run_tests(tests);

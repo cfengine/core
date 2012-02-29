@@ -1,0 +1,56 @@
+#######################################################
+#
+# Test simple storage promises - free space not in range
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle agent init
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+storage:
+    "/var"
+	volume => test_volume,
+	classes => test_set_class("fail","pass");
+}
+
+body volume test_volume
+{
+freespace => "1000G";
+}
+
+body classes test_set_class(ok_class,notok_class)
+{
+promise_kept => { "$(ok_class)" };
+promise_repaired => { "$(ok_class)" };
+repair_failed => { "$(notok_class)" };
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+    "ok" expression => "pass.!fail";
+
+reports:
+    ok::
+	"$(this.promise_filename) Pass";
+    !ok::
+	"$(this.promise_filename) FAIL";
+}

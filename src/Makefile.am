@@ -243,6 +243,8 @@ if HAVE_NOVA
 cf_know_LDADD += ../nova/src/libcfknow.la
 endif
 
+CLEANFILES = *.gcno *.gcda
+
 #
 # Some basic clean ups
 #

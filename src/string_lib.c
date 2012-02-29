@@ -121,13 +121,27 @@ int StringSafeCompare(const char *a, const char *b)
         return 0;
     }
 
-    if (((a != NULL) && (b == NULL)) ||
-        ((a == NULL) && (b != NULL)))
+    if (a == NULL || b == NULL)
     {
         return -1;
     }
 
     return strcmp(a, b);
+}
+
+bool StringSafeEqual(const char *a, const char *b)
+{
+    if (a == b)
+    {
+        return true;
+    }
+
+    if (a == NULL || b == NULL)
+    {
+        return false;
+    }
+
+    return strcmp(a, b) == 0;
 }
 
 /*******************************************************************/
@@ -332,7 +346,7 @@ char *NULLStringToEmpty(char *str)
 {
     if(!str)
     {
-	return "";
+        return "";
     }
     
     return str;

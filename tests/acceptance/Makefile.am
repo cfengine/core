@@ -30,3 +30,5 @@ TESTS_ENVIRONMENT = env AGENT=$(abs_top_builddir)/src/cf-agent MOCK_PACKAGE_MANA
 
 dist-hook:
 	tar -c -f - [0-9]* --exclude '*svn*' | tar -x -C $(distdir) -f -
+
+CLEANFILES = *.gcno *.gcda

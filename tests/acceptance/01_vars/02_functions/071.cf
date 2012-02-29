@@ -1,0 +1,77 @@
+#######################################################
+#
+# Test filesize(), simple
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle agent init
+{
+files:
+	"$(G.testfile)"
+	    delete => init_delete;
+	
+	"$(G.testfile)"
+	    create => "true",
+	    edit_line => init_fill_in;
+}
+
+bundle edit_line init_fill_in
+{
+insert_lines:
+
+"0:1:2
+this:is:a:test
+1:2:3";
+
+}
+
+body delete init_delete
+{
+	dirlinks => "delete";
+	rmdirs   => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+	"known_val" int => filesize("$(G.testfile)");
+	"known_zero" int => filesize("/dev/null");
+	"unknown" int => filesize("/There/Is/nosuch/Name/as-this");
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+	"var" expression => isvariable("test.unknown");
+
+	"ok" and => {   
+		"!var",
+		strcmp("$(test.known_val)", "27"),
+		strcmp("$(test.known_zero)", "0"),
+		};
+
+reports:
+    DEBUG::
+	"expected filesize($(G.testfile)) to be XXX, saw $(test.known_val)";
+	"expected filesize('/dev/null') to be 0, saw $(test.known_zero)";
+	"expected filesize('UnknownFile') to be undefined, saw $(test.unknown)";
+
+    ok::
+	"$(this.promise_filename) Pass";
+
+    !ok::
+	"$(this.promise_filename) FAIL";
+}

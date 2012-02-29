@@ -54,3 +54,6 @@ file_writer_test_SOURCES = file_writer_test.c gcov-stub.c \
 file_writer_test_CFLAGS = $(AM_CFLAGS) -fno-profile-arcs -fno-test-coverage
 file_writer_test_LDADD = libtest.la
 file_writer_test_LDLFAGS =
+
+CLEANFILES = *.gcno *.gcda
+

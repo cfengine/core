@@ -23,7 +23,7 @@ MOSTLYCLEANFILES = *~
 # Get everything removed down to where rebuilding requires:
 # "make; make install"
 # 
-CLEANFILES =
+CLEANFILES = *.gcno *.gcda
 
 #
 # Get everything removed down to where rebuilding requires:

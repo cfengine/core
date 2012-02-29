@@ -1,0 +1,69 @@
+#######################################################
+#
+# Test exec_program on file_select (issue 294) - test negative match on existing file
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle agent init
+{
+vars:
+	"find_this" string => "bibbetygargle";
+files:
+	"$(G.testfile)"
+	    create => "true",
+	    edit_line => init_data;
+}
+
+bundle edit_line init_data
+{
+insert_lines:
+    	"Gabba gabba hey!";
+	"yibbity $(find_this) bletch";
+	"torchecol bum adder";
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
+	"/tmp"
+	    file_select => test_hunt,
+	    delete => test_delete;
+}
+
+body file_select test_hunt
+{
+exec_regex => ".*XX$(test.find_this)XX.*";
+exec_program => "/bin/cat $(this.promiser)";
+file_result => "exec_program.exec_regex";
+}
+
+body delete test_delete
+{
+	dirlinks => "delete";
+	rmdirs   => "true";
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+	"ok" not => fileexists("$(G.testfile)");
+
+reports:
+    ok::
+	"$(this.promise_filename) Pass";
+    !ok::
+	"$(this.promise_filename) FAIL";
+}

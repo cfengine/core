@@ -1,0 +1,91 @@
+#######################################################
+#
+# 
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+body agent control
+{
+  default_repository => "/var/tmp";
+}
+
+bundle common g
+{
+vars:
+	"testfile" string => "/tmp/TEST.cfengine";
+	"repofile" string => "_tmp_TEST.cfengine";
+	"repo" string => "/var/tmp";
+}
+
+#######################################################
+
+bundle agent init
+{
+files:
+	"$(g.repofile).*"
+	    delete => init_delete;
+
+	"$(G.testfile).*"
+	    delete => init_delete;
+
+	"$(G.testfile)"
+	    move_obstructions => "true",
+	    copy_from => init_copy;
+}
+
+body copy_from init_copy
+{
+	source => "/etc/group";
+	compare => "digest";
+}
+
+body delete init_delete
+{
+	dirlinks => "delete";
+	rmdirs   => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
+	"$(G.testfile)"
+	    move_obstructions => "true",
+	    copy_from => test_copy;
+}
+
+body copy_from test_copy
+{
+	source => "/etc/motd";
+	compare => "digest";
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+    "test" not => fileexists("$(G.testfile).cfsaved");
+    "repo" expression => fileexists("$(g.repo)/$(g.repofile).cfsaved");
+    "ok" and => { "test", "repo" };
+
+reports:
+    DEBUG::
+	"testfile = $(G.testfile)";
+	"repo = $(g.repo)";
+	"repofile = $(g.repofile)";
+    ok::
+	"$(this.promise_filename) Pass";
+    !ok::
+	"$(this.promise_filename) FAIL";
+}

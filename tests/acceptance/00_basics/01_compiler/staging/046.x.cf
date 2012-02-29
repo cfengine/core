@@ -1,0 +1,55 @@
+######################################################
+#
+#  Issue 375 (duplicate, to with pattern of 6)
+#
+#####################################################
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle agent init
+{
+files:
+	"$(G.testfile)"
+	    delete => init_delete;
+}
+
+body delete init_delete
+{
+	dirlinks => "delete";
+	rmdirs   => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+environments:
+    "host1"
+	environment_host => "...com._",
+	classes => whatever("ok");
+}
+
+body classes whatever(c)
+{
+promise_kept => { "$(c)" };
+promise_repaired => { "$(c)" };
+}
+
+#######################################################
+
+bundle agent check
+{
+reports:
+    DEBUG::
+	"This test should fail";
+    ok::
+	"$(this.promise_filename) Pass";
+    !ok::
+	"$(this.promise_filename) FAIL";
+}

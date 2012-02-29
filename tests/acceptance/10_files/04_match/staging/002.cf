@@ -1,0 +1,51 @@
+#######################################################
+#
+# Create a file and delete it - hoping that it matches (issue 365)
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };   
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle agent init
+{
+files:
+	"$(G.testfile)"
+	    create => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+
+files:
+	"/tmp/TEST\.cfengine"
+	    delete => test_delete;
+}
+
+body delete test_delete
+{
+	dirlinks => "delete";
+	rmdirs   => "true";
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+	"ok" not => fileexists("$(G.testfile)");
+
+reports:
+    ok::
+	"$(this.promise_filename) Pass";
+    !ok::
+	"$(this.promise_filename) FAIL";
+}

@@ -40,6 +40,7 @@ bool IsNumber(const char *name);
 char *SafeStringDuplicate(const char *str);
 int SafeStringLength(const char *str);
 int StringSafeCompare(const char *a, const char *b);
+bool StringSafeEqual(const char *a, const char *b);
 
 char *StringConcatenate(const char *a, size_t a_len, const char *b, size_t b_len);
 char *StringSubstring(const char *source, size_t source_len, int start, int len);

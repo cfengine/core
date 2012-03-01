@@ -172,11 +172,12 @@ int StripListSep(char *strList, char *outBuf, int outBufSz)
 
 /*******************************************************************/
 
-int GetStringListElement(char *strList, int index, char *outBuf, int outBufSz)
 /** Takes a string-parsed list "{'el1','el2','el3',..}" and writes
  ** "el1" or "el2" etc. based on index (starting on 0) in outBuf.
  ** returns true on success, false otherwise.
  **/
+
+int GetStringListElement(char *strList, int index, char *outBuf, int outBufSz)
 {
     char *sp, *elStart = strList, *elEnd;
     int elNum = 0;
@@ -348,6 +349,6 @@ char *NULLStringToEmpty(char *str)
     {
         return "";
     }
-    
+
     return str;
 }

@@ -24,7 +24,7 @@
 @title CFEngine 3 Nova Evaluation Guide
 @subtitle CFEngine Enterprise Documentation
 @subtitle Updated 6. February 2012
-@author CFEngine
+@author CFEngine AS
 @c @smallbook
 @fonttextsize 10
 @c @page

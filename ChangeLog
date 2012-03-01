@@ -21,6 +21,7 @@
 	- Number of CPUs: $(sys.cpus), 1_cpu, 2_cpus etc
 
 	New built-in variables and classes (Unices):
+	- $(sys.last_policy_update) - timestamp when last policy change was seen by host
 	- $(sys.hardware_addresses) - list of MAC adresses
 	- $(sys.ip_addresses) - list of IP addresses
 	- $(sys.interfaces) - list of network interfaces
@@ -31,6 +32,8 @@
 	- Memory and CPU usage improvements.
 	- Testsuite now uses 'make check' convention and does not need root
 	  privileges anymore.
+	- cf_promises_validated now filled with timestamp, allows digest-copy
+	  for policy instead of mtime copy which is safer when clocks are unsynchonised
 	- See the full list of bugfixes at
 	  https://cfengine.com/bugtracker/changelog_page.php
 

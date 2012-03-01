@@ -17,7 +17,7 @@ bundle agent init
 {
 vars:
 	# All users except root, bin, and daemon
-	"users" slist => getusers("root,bin","0,1");
+	"users" slist => getusers("root,bin,daemon","0,1,2");
 
 files:
 	"$(G.testfile)"

@@ -486,6 +486,7 @@ static void ArmClasses(Averages av, char *timekey)
     int i, j, k;
     char buff[CF_BUFSIZE], ldt_buff[CF_BUFSIZE], name[CF_MAXVARSIZE];
     static int anomaly[CF_OBSERVABLES][LDT_BUFSIZE];
+    extern Item *ALL_INCOMING;
 
     CfDebug("Arm classes for %s\n", timekey);
 
@@ -573,9 +574,19 @@ static void ArmClasses(Averages av, char *timekey)
 
     SetMeasurementPromises(&classlist);
 
-/* Publish class list */
+    // Report on the open ports
 
-    MonEntropyClassesPublish(classlist);
+    ldt_buff[0] = '\0';
+    PrintItemList(ldt_buff,CF_BUFSIZE,ALL_INCOMING);
+
+    if (strlen(ldt_buff) < 1500)
+       {
+       snprintf(buff,CF_BUFSIZE,"@listening_ports=%s",ldt_buff);
+       AppendItem(&classlist,buff,NULL);
+       }
+
+    MonPublishEnvironment(classlist);
+
 }
 
 /*****************************************************************************/
@@ -1060,3 +1071,4 @@ void MonOtherGatherData(double *cf_this)
     Nova_MonOtherGatherData(cf_this);
 #endif
 }
+

@@ -537,7 +537,7 @@ void CfGetInterfaceInfo(enum cfagenttype ag)
 
 void Get3Environment()
 {
-    char env[CF_BUFSIZE], class[CF_BUFSIZE], name[CF_MAXVARSIZE], value[CF_MAXVARSIZE];
+    char env[CF_BUFSIZE], class[CF_BUFSIZE], name[CF_MAXVARSIZE], value[CF_BUFSIZE];
     FILE *fp;
     struct stat statbuf;
     time_t now = time(NULL);
@@ -587,7 +587,18 @@ void Get3Environment()
             break;
         }
 
-        if (strstr(class, "="))
+
+        if (*class == '@')
+        {
+            Rlist *list = NULL;
+            sscanf(class + 1, "%[^=]=%[^\n]", name, value);
+           
+            CfDebug(" -> Setting new monitoring list %s => %s", name, value);
+            list = ParseShownRlist(value);
+            DeleteVariable("mon", name);
+            NewList("mon", name, list, cf_slist);
+        }
+        else if (strstr(class, "="))
         {
             sscanf(class, "%255[^=]=%255[^\n]", name, value);
 

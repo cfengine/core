@@ -28,8 +28,8 @@
 
 /* Globals */
 
-static Item *ALL_INCOMING;
-static Item *ALL_OUTGOING;
+Item *ALL_INCOMING;
+Item *ALL_OUTGOING;
 
 /* Implementation */
 
@@ -129,7 +129,7 @@ void MonNetworkGatherData(double *cf_this)
 
     sscanf(VNETSTAT[VSYSTEMHARDCLASS], "%s", comm);
 
-    strcat(comm, " -n");
+    strcat(comm, " -an");
 
     if ((pp = cf_popen(comm, "r")) == NULL)
     {
@@ -148,14 +148,14 @@ void MonNetworkGatherData(double *cf_this)
             break;
         }
 
-        if (!strstr(vbuff, "."))
+        if (!strstr(vbuff, ":"))
         {
             continue;
         }
-
+                
         /* Different formats here ... ugh.. */
 
-        if (strncmp(vbuff, "tcp", 3) == 0)
+        if (strncmp(vbuff, "tcp", 3) == 0 || strncmp(vbuff, "udp", 3) == 0)
         {
             sscanf(vbuff, "%*s %*s %*s %s %s", local, remote);  /* linux-like */
         }
@@ -168,8 +168,8 @@ void MonNetworkGatherData(double *cf_this)
         {
             continue;
         }
-
-        for (sp = local + strlen(local); (*sp != '.') && (sp > local); sp--)
+        
+        for (sp = local + strlen(local); (*sp != '.') && (*sp != ':')  && (sp > local); sp--)
         {
         }
 

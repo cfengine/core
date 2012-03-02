@@ -30,11 +30,20 @@
 
 Item *ALL_INCOMING;
 Item *ALL_OUTGOING;
+Item *MON_UDP4 = NULL, *MON_UDP6 = NULL, *MON_TCP4 = NULL, *MON_TCP6 = NULL;
 
 /* Implementation */
 
 void MonNetworkInit(void)
 {
+ 
+    DeleteItemList(MON_UDP4);
+    DeleteItemList(MON_UDP6);
+    DeleteItemList(MON_TCP4);
+    DeleteItemList(MON_TCP6);
+ 
+    MON_UDP4 = MON_UDP6 = MON_TCP4 = MON_TCP6 = NULL;
+
     for (int i = 0; i < ATTR; i++)
     {
         char vbuff[CF_BUFSIZE];
@@ -107,6 +116,8 @@ void MonNetworkGatherData(double *cf_this)
     char *sp;
     int i;
     char vbuff[CF_BUFSIZE];
+    enum cf_netstat_type { cfn_new, cfn_old } type = cfn_new;
+    enum cf_packet_type { cfn_udp4, cfn_udp6, cfn_tcp4, cfn_tcp6} packet = cfn_tcp4;
 
     CfDebug("GatherSocketData()\n");
 
@@ -115,17 +126,10 @@ void MonNetworkGatherData(double *cf_this)
         in[i] = out[i] = NULL;
     }
 
-    if (ALL_INCOMING != NULL)
-    {
-        DeleteItemList(ALL_INCOMING);
-        ALL_INCOMING = NULL;
-    }
-
-    if (ALL_OUTGOING != NULL)
-    {
-        DeleteItemList(ALL_OUTGOING);
-        ALL_OUTGOING = NULL;
-    }
+    DeleteItemList(ALL_INCOMING);
+    ALL_INCOMING = NULL;
+    DeleteItemList(ALL_OUTGOING);
+    ALL_OUTGOING = NULL;
 
     sscanf(VNETSTAT[VSYSTEMHARDCLASS], "%s", comm);
 
@@ -148,38 +152,117 @@ void MonNetworkGatherData(double *cf_this)
             break;
         }
 
-        if (!strstr(vbuff, ":"))
+        if (!(strstr(vbuff, ":") || strstr(vbuff, ".")))
         {
             continue;
         }
-                
-        /* Different formats here ... ugh.. */
 
-        if (strncmp(vbuff, "tcp", 3) == 0 || strncmp(vbuff, "udp", 3) == 0)
+        /* Different formats here ... ugh.. pick a model */
+
+        // If this is old style, we look for chapter headings, e.g. "TCP: IPv4"
+
+        if (strncmp(vbuff,"UDP:",4) == 0 && strstr(vbuff+4,"6"))
         {
-            sscanf(vbuff, "%*s %*s %*s %s %s", local, remote);  /* linux-like */
+            packet = cfn_udp6;
+            type = cfn_old;
+            continue;
         }
-        else
+        else if (strncmp(vbuff,"TCP:",4) == 0 && strstr(vbuff+4,"6"))
         {
-            sscanf(vbuff, "%s %s", local, remote);      /* solaris-like */
+            packet = cfn_tcp6;
+            type = cfn_old;
+            continue;
+        }
+        else if (strncmp(vbuff,"UDP:",4) == 0 && strstr(vbuff+4,"4"))
+        {
+            packet = cfn_udp4;
+            type = cfn_old;
+            continue;
+        }
+        else if (strncmp(vbuff,"TCP:",4) == 0 && strstr(vbuff+4,"4"))
+        {
+            packet = cfn_tcp4;
+            type = cfn_old;
+            continue;
+        }        
+
+        // Line by line state in modern/linux output
+            
+        if (strncmp(vbuff,"udp6",4) == 0)
+        {
+            packet = cfn_udp6;
+            type = cfn_new;
+        }
+        else if (strncmp(vbuff,"tcp6",4) == 0)
+        {
+            packet = cfn_tcp6;
+            type = cfn_new;
+        }
+        else if (strncmp(vbuff,"udp",3) == 0)
+        {
+            packet = cfn_udp4;
+            type = cfn_new;
+        }
+        else if (strncmp(vbuff,"tcp",3) == 0)
+        {
+            packet = cfn_tcp4;
+            type = cfn_new;
+        }
+
+        // End extract type
+        
+        switch (type)
+        {
+        case cfn_new:  sscanf(vbuff, "%*s %*s %*s %s %s", local, remote);  /* linux-like */
+            break;
+            
+        case cfn_old:
+            sscanf(vbuff, "%s %s", local, remote);
+            break;
         }
 
         if (strlen(local) == 0)
         {
             continue;
         }
+
+        // Extract the port number from the end of the string
         
         for (sp = local + strlen(local); (*sp != '.') && (*sp != ':')  && (sp > local); sp--)
         {
         }
 
+        *sp = '\0'; // Separate address from port number
         sp++;
 
-        if ((strlen(sp) < 5) && !IsItemIn(ALL_INCOMING, sp))
+        // General bucket
+        
+        IdempPrependItem(&ALL_INCOMING, sp, NULL);
+        
+        // Categories the incoming ports by packet types
+
+        switch (packet)
         {
-            PrependItem(&ALL_INCOMING, sp, NULL);
+           // IdempPrependItem(&packet_type, PORT, ADDRESS);
+           
+           case cfn_udp4:
+               IdempPrependItem(&MON_UDP4, sp, local);
+               break;
+           case cfn_udp6:
+               IdempPrependItem(&MON_UDP6, sp, local);
+               break;
+           case cfn_tcp4:
+               IdempPrependItem(&MON_TCP4, sp, local);
+               break;
+           case cfn_tcp6:
+               IdempPrependItem(&MON_TCP6, sp, local);
+               break;
+           default:
+               break;
         }
 
+        // Now look at outgoing
+        
         for (sp = remote + strlen(remote); (sp >= remote) && !isdigit((int) *sp); sp--)
         {
         }
@@ -191,6 +274,8 @@ void MonNetworkGatherData(double *cf_this)
             PrependItem(&ALL_OUTGOING, sp, NULL);
         }
 
+        // Now look for the specific vital signs to count frequencies
+        
         for (i = 0; i < ATTR; i++)
         {
             char *spend;
@@ -223,7 +308,7 @@ void MonNetworkGatherData(double *cf_this)
 
     cf_pclose(pp);
 
-/* Now save the state for ShowState() cf2 version alert function IFF
+/* Now save the state for ShowState() 
    the state is not smaller than the last or at least 40 minutes
    older. This mirrors the persistence of the maxima classes */
 

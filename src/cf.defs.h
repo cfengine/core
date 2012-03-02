@@ -647,6 +647,7 @@ struct timespec
 #define CF_LASTDB_FILE    "cf_lastseen" "." DB_FEXT
 #define CF_AUDITDB_FILE   "cf_Audit" "." DB_FEXT
 #define CF_LOCKDB_FILE    "cf_lock" "." DB_FEXT
+#define CF_IGNORE_INTERFACES "ignore_interfaces.rx"
 
 #define NOVA_HISTORYDB "history" "." DB_FEXT
 #define NOVA_MEASUREDB "nova_measures" "." DB_FEXT

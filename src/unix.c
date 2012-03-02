@@ -55,6 +55,14 @@
 #  define SIZEOF_IFREQ(x) sizeof(struct ifreq)
 # endif
 
+
+static bool IgnoreJailInterface(int ifaceidx, struct sockaddr_in *inaddr);
+static bool IgnoreInterface(char *name);
+static void InitIgnoreInterfaces(void);
+
+static Rlist *IGNORE_INTERFACES = NULL;
+
+
 /*****************************************************************************/
 /* newly created, used in timeout.c and transaction.c */
 
@@ -496,7 +504,7 @@ void Unix_CreateEmptyFile(char *name)
 
 /******************************************************************/
 
-static bool IgnoreInterface(int ifaceidx, struct sockaddr_in *inaddr)
+static bool IgnoreJailInterface(int ifaceidx, struct sockaddr_in *inaddr)
 {
 /* FreeBSD jails */
 # ifdef HAVE_JAIL_GET
@@ -585,6 +593,8 @@ void Unix_GetInterfaceInfo(enum cfagenttype ag)
 
     memset(ifbuf, 0, sizeof(ifbuf));
 
+    InitIgnoreInterfaces();
+    
     last_name[0] = '\0';
 
     if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
@@ -624,6 +634,11 @@ void Unix_GetInterfaceInfo(enum cfagenttype ag)
 
         /* Skip virtual network interfaces for Linux, which seems to be a problem */
 
+        if (IgnoreInterface(ifp->ifr_name))
+        {
+            continue;
+        }
+        
         if (strstr(ifp->ifr_name, ":"))
         {
             if (VSYSTEMHARDCLASS == linuxx)
@@ -679,7 +694,7 @@ void Unix_GetInterfaceInfo(enum cfagenttype ag)
             {
                 sin = (struct sockaddr_in *) &ifp->ifr_addr;
 
-                if (IgnoreInterface(j + 1, sin))
+                if (IgnoreJailInterface(j + 1, sin))
                 {
                     CfOut(cf_verbose, "", "Ignoring interface %d", j + 1);
                     continue;
@@ -925,5 +940,54 @@ void Unix_FindV6InterfaceInfo(void)
 
     cf_pclose(pp);
 }
+
+/*******************************************************************/
+
+static void InitIgnoreInterfaces()
+{
+    FILE *fin;
+    char filename[CF_BUFSIZE],regex[CF_MAXVARSIZE];
+
+    snprintf(filename, sizeof(filename), "%s%cinputs%c%s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, CF_IGNORE_INTERFACES);
+
+    if ((fin = fopen(filename,"r")) == NULL)
+    {
+        CfOut(cf_verbose, "", " -> No interface exception file %s",filename);
+        return;
+    }
+    
+    while (!feof(fin))
+    {
+        regex[0] = '\0';
+        fscanf(fin,"%s",regex);
+       
+        if (*regex != '\0')
+        {
+           IdempPrependRScalar(&IGNORE_INTERFACES,regex,CF_SCALAR);
+        }
+    }
+ 
+    fclose(fin);
+}
+
+/*******************************************************************/
+
+static bool IgnoreInterface(char *name)
+{
+    Rlist *rp;
+
+    for (rp = IGNORE_INTERFACES; rp != NULL; rp=rp->next)
+    {
+        if (FullTextMatch(rp->item,name))
+        {
+            CfOut(cf_verbose, "", " -> Ignoring interface \"%s\" because it matches %s",name,CF_IGNORE_INTERFACES);
+            return true;
+        }    
+    }
+
+    return false;
+}
+
+
 
 #endif /* NOT MINGW */

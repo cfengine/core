@@ -27,6 +27,49 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+/*******************************************************************/
+
+int PrintItemList(char *buffer, int bufsize, Item *list)
+{
+    Item *ip;
+
+    StartJoin(buffer, "{", bufsize);
+
+    for (ip = list; ip != NULL; ip = ip->next)
+    {
+        if (!JoinSilent(buffer, "'", bufsize))
+        {
+            EndJoin(buffer, "...TRUNCATED'}", bufsize);
+            return false;
+        }
+
+        if (!Join(buffer,ip->name,bufsize))
+        {
+            EndJoin(buffer, "...TRUNCATED'}", bufsize);
+            return false;
+        }
+
+        if (!JoinSilent(buffer, "'", bufsize))
+        {
+            EndJoin(buffer, "...TRUNCATED'}", bufsize);
+            return false;
+        }
+
+        if (ip->next != NULL)
+        {
+            if (!JoinSilent(buffer, ",", bufsize))
+            {
+                EndJoin(buffer, "...TRUNCATED}", bufsize);
+                return false;
+            }
+        }
+    }
+
+    EndJoin(buffer, "}", bufsize);
+
+    return true;
+}
+
 /*********************************************************************/
 
 int ItemListSize(Item *list)

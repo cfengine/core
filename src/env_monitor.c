@@ -482,10 +482,12 @@ static void LeapDetection(void)
 static void ArmClasses(Averages av, char *timekey)
 {
     double sigma;
-    Item *classlist = NULL;
+    Item *ip,*classlist = NULL;
     int i, j, k;
     char buff[CF_BUFSIZE], ldt_buff[CF_BUFSIZE], name[CF_MAXVARSIZE];
     static int anomaly[CF_OBSERVABLES][LDT_BUFSIZE];
+    extern Item *ALL_INCOMING;
+    extern Item *MON_UDP4, *MON_UDP6, *MON_TCP4, *MON_TCP6;
 
     CfDebug("Arm classes for %s\n", timekey);
 
@@ -573,9 +575,81 @@ static void ArmClasses(Averages av, char *timekey)
 
     SetMeasurementPromises(&classlist);
 
-/* Publish class list */
+    // Report on the open ports, in various ways
 
-    MonEntropyClassesPublish(classlist);
+    ldt_buff[0] = '\0';
+    PrintItemList(ldt_buff,CF_BUFSIZE,ALL_INCOMING);
+
+    if (strlen(ldt_buff) < 1500)
+    {
+        snprintf(buff,CF_BUFSIZE,"@listening_ports=%s",ldt_buff);
+        AppendItem(&classlist,buff,NULL);
+    }
+
+    ldt_buff[0] = '\0';
+    PrintItemList(ldt_buff,CF_BUFSIZE,MON_UDP6);
+
+    if (strlen(ldt_buff) < 1500)
+    {
+        snprintf(buff,CF_BUFSIZE,"@listening_udp6_ports=%s",ldt_buff);
+        AppendItem(&classlist,buff,NULL);
+    }
+
+    ldt_buff[0] = '\0';
+    PrintItemList(ldt_buff,CF_BUFSIZE,MON_UDP4);
+
+    if (strlen(ldt_buff) < 1500)
+    {
+        snprintf(buff,CF_BUFSIZE,"@listening_udp4_ports=%s",ldt_buff);
+        AppendItem(&classlist,buff,NULL);
+    }
+
+    ldt_buff[0] = '\0';
+    PrintItemList(ldt_buff,CF_BUFSIZE,MON_TCP6);
+
+    if (strlen(ldt_buff) < 1500)
+    {
+        snprintf(buff,CF_BUFSIZE,"@listening_tcp6_ports=%s",ldt_buff);
+        AppendItem(&classlist,buff,NULL);
+    }
+
+    ldt_buff[0] = '\0';
+    PrintItemList(ldt_buff,CF_BUFSIZE,MON_TCP4);
+
+    if (strlen(ldt_buff) < 1500)
+    {
+        snprintf(buff,CF_BUFSIZE,"@listening_tcp4_ports=%s",ldt_buff);
+        AppendItem(&classlist,buff,NULL);
+    }
+
+    // Port addresses
+
+    for (ip = MON_TCP6; ip != NULL; ip=ip->next)
+    {
+        snprintf(buff,CF_BUFSIZE,"tcp6_port_addr[%s]=%s",ip->name,ip->classes);
+        AppendItem(&classlist,buff,NULL);       
+    }
+
+    for (ip = MON_TCP4; ip != NULL; ip=ip->next)
+    {
+        snprintf(buff,CF_BUFSIZE,"tcp4_port_addr[%s]=%s",ip->name,ip->classes);
+        AppendItem(&classlist,buff,NULL);       
+    }
+
+    for (ip = MON_UDP6; ip != NULL; ip=ip->next)
+    {
+        snprintf(buff,CF_BUFSIZE,"udp6_port_addr[%s]=%s",ip->name,ip->classes);
+        AppendItem(&classlist,buff,NULL);       
+    }
+    
+    for (ip = MON_UDP4; ip != NULL; ip=ip->next)
+    {
+        snprintf(buff,CF_BUFSIZE,"udp4_port_addr[%s]=%s",ip->name,ip->classes);
+        AppendItem(&classlist,buff,NULL);       
+    }
+    
+    MonPublishEnvironment(classlist);
+
 }
 
 /*****************************************************************************/
@@ -1060,3 +1134,4 @@ void MonOtherGatherData(double *cf_this)
     Nova_MonOtherGatherData(cf_this);
 #endif
 }
+

@@ -691,6 +691,7 @@ int IsHtmlHeader(char *s);
 
 /* item_lib.c */
 
+int PrintItemList(char *buffer, int bufsize, Item *list);
 void PrependFullItem(Item **liststart, char *itemstring, char *classes, int counter, time_t t);
 void PurgeItemList(Item **list, char *name);
 Item *ReturnItemIn(Item *list, const char *item);

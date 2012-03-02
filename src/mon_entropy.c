@@ -134,7 +134,7 @@ void MonEntropyPurgeUnused(char *name)
 
 /****************************************************************************/
 
-void MonEntropyClassesPublish(Item *classlist)
+void MonPublishEnvironment(Item *classlist)
 {
     FILE *fp;
     Item *ip;

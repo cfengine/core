@@ -4,6 +4,15 @@
 
 #include <assert.h>
 
+#ifdef HAVE_PCRE_H
+# include <pcre.h>
+#endif
+
+#ifdef HAVE_PCRE_PCRE_H
+# include <pcre/pcre.h>
+#endif
+
+
 char ToLower(char ch)
 {
     if (isupper((int) ch))
@@ -351,4 +360,34 @@ char *NULLStringToEmpty(char *str)
     }
 
     return str;
+}
+
+bool StringMatch(const char *regex, const char *str)
+{
+    assert(regex);
+    assert(str);
+
+    if (strcmp(regex, str) == 0)
+    {
+        return true;
+    }
+
+    pcre *pattern = NULL;
+    {
+        const char *errorstr;
+        int erroffset;
+        pattern = pcre_compile(regex, PCRE_MULTILINE | PCRE_DOTALL, &errorstr, &erroffset, NULL);
+    }
+    assert(pattern);
+
+    if (pattern == NULL)
+    {
+        return false;
+    }
+
+    int result = pcre_exec(pattern, NULL, str, strlen(str), 0, 0, NULL, 0);
+
+    free(pattern);
+
+    return result >= 0;
 }

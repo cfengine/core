@@ -1275,6 +1275,106 @@ logs.
 * Troubleshooting - Mission Portal Logs::  
 @end menu
 
+@node
+@subsection Role-Based Access Control
+CFEngine Nova 2.2.0 introduces Role Based Access Control (RBAC) for all
+reports and promises shown in the Mission Portal. This does not cover
+access control for making policy changes, but displaying reports.
+
+RBAC can be globally switched on or off in the Mission Portal settings.
+
+User-authentication is carried out when users log in to the Mission
+Portal, see the section on user administration for more details on this.
+
+The information a user is authorized to see is determined from his
+role memberships. A user may be member of an arbitrary number of
+roles, each which may grant and deny access to certain
+information. 
+
+The effective permissions of a user is the cumulative set of
+permission granted or denied by his roles, and is used to filter the
+information displayed in the following standard way.
+
+@itemize
+@item Create a union of the granted access for the roles.
+@item Override with the rules that deny access for the roles.
+@item If left unspecified, access is denied.
+@end itemize
+
+@subsubsection Entities filtered
+
+RBAC is supported on the @emph{host} and @emph{promise bundle} level,
+each applying to different parts of the Mission Portal. Both these
+entities are atomic with respect to RBAC --- either a user can see
+everything they contain, or nothing of it.
+
+Access to a host is required to see any information about it, e.g. all
+its reports (Engineering->Reports), host page, and compliance
+category. If a user is not allowed access to a host, the Mission
+Portal would look the same as if the host was not bootstrapped to that
+hub.
+
+Information about the running policy is also available in the Mission
+Portal, either through the Promise Finder at the Engineering page, or
+by clicking a promise handle from one of the reports. The searchable
+promises in the Promise Finder and information pages about promises
+and bundles are filtered in the same manner as the hosts, but defined
+based on promise bundles instead. The Policy Editor is not covered by
+RBAC --- access to the policy source repository allows the user to see
+the whole policy. Some version control systems can be configured to
+only allow users to access sub-directories of the policy, which may
+help in this case.
+
+Note that the host and promise filtering is independent --- no attempt
+is made to try to infer which promises a role should have access to
+based on the hosts it has access to or vice versa.
+
+@subsubsection Defining roles
+
+From the above discussion, we see that a role is defined as reporting
+access to a set of hosts and promise bundles from the Mission Portal
+and REST API. This does not give any rights with respect to changing
+the content or execution of the policy. It should not be confused with
+the @code{roles} promise-type that can be used by @code{cf-runagent}
+and @code{cf-serverd}.
+
+In order to scale, both entities are
+defined as a set of @emph{regular expressions} to allow and
+deny.
+
+Access to hosts is defined by regular expressions on @emph{classes},
+not the hostname, ip, or any other name. This is done to ensure
+maximum scalability. Classes can be arbitrarily defined in the
+CFEngine policy language, so this incurs no loss of flexibility, but
+ensures distributed computation.
+
+In contrast to users, a role definition and membership can only be
+obtained from the internal Mission Portal database. This means that
+any roles must be defined through the Mission Portal web interface,
+and can not be obtained from e.g. LDAP at this time. The rationale is
+that querying complex LDAP structures for role membership is too
+inefficient and error-prone. This may change in future releases, if
+requested. Note that the @emph{possible members} of a role can be
+obtained from other sources, as described in the section on user
+administration. However, assigning possible members to roles must be
+done through the Mission Portal user-interface.
+
+
+@subsubsection Limitations
+
+@itemize
+
+@item Notes added in the Mission Portal are not filtered: they can be
+seen by all users (including notes added to any host page).
+
+@item The Knowledge Map is only available for members of the
+@samp{admin} role when RBAC is switched on.
+
+@item Running @code{cf-report} from the command-line on the hub will
+bypass all RBAC checks.
+
+@end itemize
+
 
 @node  Mission Portal Settings, Mission Portal User Admin, Mission Portal Administration, Mission Portal Administration
 @subsection Mission Portal Settings

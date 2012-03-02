@@ -51,4 +51,6 @@ int StripListSep(char *strList, char *outBuf, int outBufSz);
 /* Allocates the result */
 char *SearchAndReplace(const char *source, const char *search, const char *replace);
 
+bool StringMatch(const char *regex, const char *str);
+
 #endif

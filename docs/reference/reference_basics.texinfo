@@ -506,7 +506,8 @@ line option, or defined in a @code{classes} promise or body,
 @code{restart_class} in a @code{processes} promise, etc).
 
 @item The IP address octets of any active interface (in the form @code{@w{ipv4_192_0_0_1}},
-@code{@w{ipv4_192_0_0}}, @code{@w{ipv4_192_0}}, @code{@w{ipv4_192}}).
+@code{@w{ipv4_192_0_0}}, @code{@w{ipv4_192_0}}, @code{@w{ipv4_192}}),
+provided they are not excluded by a regular expression in the file @file{WORKDIR/inputs/ignore_interfaces.rx}.
 
 @item The names of the active interfaces (in the form @code{net_iface_xl0},
 @code{net_iface_vr0}).

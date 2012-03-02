@@ -1239,13 +1239,10 @@ repository at the top.
 
 The ''update'' command downloads the newest files from the already checked
 out subversion repository, while ''commit'' updates the repository
-with your working copy. You also have the ability to see the
-repository log of the 20 last changes. This includes changed files,
-users and log messages. For more detailed information on working with
-subversion, see @url{http://svnbook.red-bean.com}.
-
-After editing you may or may not commit changes. When closing an
-edited file, you are also given the option to commit at once.
+with your working copy. After editing you may or may not commit changes. When closing an
+edited file, you are also given the option to commit at once. You also have the ability to see the
+repository log of the 20 last changes; this includes changed files,
+users and log messages. 
 
 @c @sp 1
 @c @center @image{savefiledlg,6cm,,The front page}
@@ -1264,6 +1261,21 @@ logs.
 @c @center @image{updatedialog,6cm,,The front page}
 @c @center Figure: Updating the repository contents.
 @c @sp 1
+
+Per default there are no automatic updates from the subversion repository to masterfiles as users may want to review changes before they go live. You would either need to copy new policies manually to @file{/var/cfengine/masterfiles} on the hub, or check out your subversion repository there and run svn update. It is however possible to set up automatic updates using CFEngine, for example by adding the following to your policy:
+
+@verbatim
+commands:
+
+  am_policy_hub::
+
+  "/usr/bin/svn update --non-interactive"
+
+     comment => "Update masterfiles if new changes have been committed",
+     contain => silent_in_dir("/var/cfengine/masterfiles");
+@end verbatim
+
+For more detailed information on working with subversion, see @url{http://svnbook.red-bean.com}.
 
 
 @node  Mission Portal Administration,  , Editors, Mission Portal

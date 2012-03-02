@@ -1670,7 +1670,7 @@ static void CheckControlPromises(char *scope, char *agent, Constraint *controlli
             CfOut(cf_verbose, "", "SET goal_categories list\n");
             continue;
         }
-
+        
         DeleteRvalItem(returnval);
     }
 }

@@ -1,0 +1,13 @@
+
+@verbatim
+
+files:
+
+  "/etc/special_file"
+
+    comment => "Special file is a requirement. Talk to Fred X.",
+    create => "true",
+
+    meta => "something = [ X245 -> po(33)]";
+
+@end verbatim

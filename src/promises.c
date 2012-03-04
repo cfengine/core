@@ -698,6 +698,7 @@ void PromiseRef(enum cfreport level, Promise *pp)
 {
     char *v;
     Rval retval;
+    char buffer[CF_BUFSIZE];
 
     if (pp == NULL)
     {
@@ -727,6 +728,19 @@ void PromiseRef(enum cfreport level, Promise *pp)
     if (pp->ref)
     {
         CfOut(level, "", "Comment: %s\n", pp->ref);
+    }
+
+    switch (pp->promisee.rtype)
+    {
+       case CF_SCALAR:
+           CfOut(level, "", "This was a promise to: %s\n", (char *)(pp->promisee.item));
+           break;
+       case CF_LIST:
+           PrintRlist(buffer, CF_BUFSIZE, (Rlist *)pp->promisee.item);
+           CfOut(level, "", "This was a promise to: %s",buffer);
+           break;
+       default:
+           break;
     }
 }
 

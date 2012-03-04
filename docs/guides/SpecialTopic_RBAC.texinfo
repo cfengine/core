@@ -35,10 +35,12 @@
 Role Based Access Control (RBAC) is a well known paradigm for granting
 privileged access to remote command systems. The paradigm of RBAC does
 not apply directly to CFEngine because CFEngine is an autonomous
-system that does not grant change privileges to external users. However,
-the issues surrounding remote privilege must still be understood. This document
-is aimed at security experts who are trying to understand transference of
-privilege in a CFEngine managed system.
+system that does not grant change privileges to external
+users. Role-based read-privileges can be granted through the CFEngine
+Nova Mission portal.
+
+This document is aimed at security experts who are trying to
+understand transference of privilege in a CFEngine managed system.
 @end quotation
 @end cartouche
 
@@ -516,7 +518,138 @@ expression @samp{extraordinary} when using the @code{cf-runagent} to
 activate CFEngine. In this way one can implement a form of Role Based
 Access Control (RBAC) for unprivileged users, provided users do not
 have privileged access on the host directly. User identity is based on
-trusted CFEngine keys created by the user and exchanged with the server.
+trusted CFEngine keys created by the user and exchanged with the
+server.
+
+
+@unnumberedsec RBAC-filtered read-access in CFEngine Nova
+
+CFEngine Nova 2.2.0 introduces Role Based Access Control (RBAC) for all
+reports and promises shown in the Mission Portal. This does not cover
+access control for making policy changes, but displaying reports.
+
+RBAC can be globally switched on or off in the Mission Portal settings.
+
+@unnumberedsec Authentication
+
+User-authentication is carried out when users log in to the Mission
+Portal. This is done by requiring a user name and password, which is
+checked against the following possible sources.
+
+@itemize
+@item Internally defined in the Mission Portal
+@item LDAP
+@item Acitive Directory
+@end itemize
+
+The selection between these options are available in the Mission
+Portal settings.
+
+
+@unnumberedsec Authorization
+
+The information a user is authorized to see is determined from his
+role memberships. A user may be member of an arbitrary number of
+roles, each which may grant and deny access to certain
+information. 
+
+The effective permissions of a user is the cumulative set of
+permission granted or denied by his roles, and is used to filter the
+information displayed in the following standard way.
+
+@itemize
+@item Create a union of the granted access for the roles.
+@item Override with the rules that deny access for the roles.
+@item If left unspecified, access is denied.
+@end itemize
+
+
+@unnumberedsec Entities filtered
+
+RBAC is supported on the @emph{host} and @emph{promise bundle} level,
+each applying to different parts of the Mission Portal. Both these
+entities are atomic with respect to RBAC --- either a user can see
+everything they contain, or nothing of it.
+
+Access to a host is required to see any information about it, e.g. all
+its reports (Engineering->Reports), host page, and compliance
+category. If a user is not allowed access to a host, the Mission
+Portal would look the same as if the host was not bootstrapped to that
+hub.
+
+Information about the running policy is also available in the Mission
+Portal, either through the Promise Finder at the Engineering page, or
+by clicking a promise handle from one of the reports. The searchable
+promises in the Promise Finder and information pages about promises
+and bundles are filtered in the same manner as the hosts, but defined
+based on promise bundles instead. The Policy Editor is not covered by
+RBAC --- access to the policy source repository allows the user to see
+the whole policy. Some version control systems can be configured to
+only allow users to access sub-directories of the policy, which may
+help in this case.
+
+Note that the host and promise filtering is independent --- no attempt
+is made to try to infer which promises a role should have access to
+based on the hosts it has access to or vice versa.
+
+
+@unnumberedsec Defining roles
+
+From the above discussion, we see that a role is defined as reporting
+access to a set of hosts and promise bundles from the Mission Portal
+and REST API. This does not give any rights with respect to changing
+the content or execution of the policy. It should not be confused with
+the @code{roles} promise-type that can be used by @code{cf-runagent}
+and @code{cf-serverd}.
+
+In order to scale, both entities are
+defined as a set of @emph{regular expressions} to allow and
+deny.
+
+Access to hosts is defined by regular expressions on @emph{classes},
+not the hostname, ip, or any other name. This is done to ensure
+maximum scalability. Classes can be arbitrarily defined in the
+CFEngine policy language, so this incurs no loss of flexibility, but
+ensures distributed computation.
+
+In contrast to users, a role definition and membership can only be
+obtained from the internal Mission Portal database. This means that
+any roles must be defined through the Mission Portal web interface,
+and can not be obtained from e.g. LDAP at this time. The rationale is
+that querying complex LDAP structures for role membership is too
+inefficient and error-prone. This may change in future releases, if
+requested. Note that the @emph{possible members} of a role can be
+obtained from other sources, as described in @samp{Authentication}
+above. However, assigning possible members to roles must be done
+through the Mission Portal user-interface.
+
+A sample definition of the role @samp{lob_a} is shown below.
+
+@center @image{role-define-loba,12cm,,Defining a role,png}
+
+Only members of the @samp{admin} role has the ability to manipulate
+roles and their memberships. 
+
+After defining the role itself, the next step is to make the
+designated users members of the role, using the Mission Portal.
+
+
+
+@unnumberedsec Limitations
+
+@itemize
+
+@item Notes added in the Mission Portal are not filtered: they can be
+seen by all users (including notes added to any host page).
+
+@item The Knowledge Map is only available for members of the
+@samp{admin} role when RBAC is switched on.
+
+@item Running @code{cf-report} from the command-line on the hub will
+bypass all RBAC checks.
+
+@end itemize
+
 
 
 @ifhtml

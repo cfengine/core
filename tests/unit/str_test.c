@@ -232,6 +232,13 @@ static void test_safe_equal(void **state)
     assert_true(StringSafeEqual("a", "a"));
 }
 
+static void test_match(void **state)
+{
+    assert_true(StringMatch("^a.*$", "abc"));
+    assert_true(StringMatch("a", "a"));
+    assert_false(StringMatch("^a.*$", "bac"));
+}
+
 int main()
 {
     const UnitTest tests[] =
@@ -271,7 +278,9 @@ int main()
         unit_test(test_string_to_long),
 
         unit_test(test_safe_compare),
-        unit_test(test_safe_equal)
+        unit_test(test_safe_equal),
+
+        unit_test(test_match)
     };
 
     return run_tests(tests);

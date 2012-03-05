@@ -1180,15 +1180,15 @@ void PromiseBanner(Promise *pp)
 
     if (VERBOSE || DEBUG)
     {
-        printf("%s>     Promise handle: %s\n", VPREFIX, handle);
-        printf("%s>     Promise made by: %s", VPREFIX, pp->promiser);
+        printf("%s>     Promise's handle: %s\n", VPREFIX, handle);
+        printf("%s>     Promise made by: \"%s\"", VPREFIX, pp->promiser);
     }
 
     if (pp->promisee.item)
     {
         if (VERBOSE)
         {
-            printf(" -> ");
+            printf("\n%s>     Promise made to (stakeholders): ", VPREFIX);
             ShowRval(stdout, pp->promisee);
         }
     }

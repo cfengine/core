@@ -195,7 +195,6 @@ void cfPS(enum cfreport level, char status, char *errstr, Promise *pp, Attribute
     const char *sp;
     Item *ip, *mess = NULL;
     int verbose;
-    Rlist *rp;
     Rval retval;
 
     if ((fmt == NULL) || (strlen(fmt) == 0))
@@ -258,22 +257,19 @@ void cfPS(enum cfreport level, char status, char *errstr, Promise *pp, Attribute
             switch (pp->promisee.rtype)
             {
             case CF_SCALAR:
-
-                snprintf(output, CF_BUFSIZE - 1, "I: The promise was made to: \'%s\'\n", (char *) pp->promisee.item);
+                snprintf(output, CF_BUFSIZE - 1, "I: The promise was made to: \'%s\'", (char *) pp->promisee.item);
                 AppendItem(&mess, output, NULL);
                 break;
 
             case CF_LIST:
-
-                CfOut(level, "", "I: The promise was made to: \n");
-
-                for (rp = (Rlist *) pp->promisee.item; rp != NULL; rp = rp->next)
-                {
-                    snprintf(output, CF_BUFSIZE - 1, "I:     \'%s\'\n", (char *) rp->item);
-                    AppendItem(&mess, output, NULL);
-                }
+                
+                snprintf(output, CF_BUFSIZE - 1, "I: The promise was made to (stakeholders): ");
+                PrintRlist(output+strlen(output), CF_BUFSIZE, (Rlist *)pp->promisee.item);
+                AppendItem(&mess, output, NULL);
                 break;
             }
+            
+
 
             if (pp->ref)
             {

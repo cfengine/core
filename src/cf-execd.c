@@ -291,16 +291,14 @@ static double GetSplay(void)
 
 static void KeepPromises(void)
 {
-    Constraint *cp;
-    Rval retval;
-
-    for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp = cp->next)
+    for (Constraint *cp = ControlBodyConstraints(cf_executor); cp != NULL; cp = cp->next)
     {
         if (IsExcluded(cp->classes))
         {
             continue;
         }
 
+        Rval retval;
         if (GetVariable("control_executor", cp->lval, &retval) == cf_notype)
         {
             CfOut(cf_error, "", "Unknown lval %s in exec control body", cp->lval);

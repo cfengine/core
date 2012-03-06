@@ -31,5 +31,6 @@ bool FileCanOpen(const char *path, const char *modes);
 void PurgeItemList(Item **list, char *name);
 int RawSaveItemList(Item *liststart, char *file);
 int CompareToFile(Item *liststart, char *file, Attributes a, Promise *pp);
+int FileRead(const char *filename, char *buffer, size_t bufsize);
 
 #endif

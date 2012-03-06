@@ -455,6 +455,19 @@ CF3_WITH_LIBRARY(pcre, [
   AC_CHECK_HEADERS([pcre.h pcre/pcre.h], [break], [AC_MSG_ERROR(Cannot find PCRE)])
 ])
 
+dnl libvirt
+
+AC_ARG_WITH([libvirt],
+    [AS_HELP_STRING([--with-libvirt[[=PATH]]], [support virtual machine management])],
+    [], [with_libvirt=check])
+
+if test "x$with_libvirt" != xno; then
+   CF3_WITH_LIBRARY(libvirt, [
+      AC_CHECK_LIB(virt, virConnectOpen, [], [if test "x$with_libvirt" != xcheck; then AC_MSG_ERROR(Cannot find libvirt library); fi])
+      AC_CHECK_HEADERS(libvirt/libvirt.h, [], [if test "x$with_libvirt" != xcheck; then AC_MSG_ERROR(Cannot find libvirt library headers); fi])
+   ])
+fi
+
 dnl
 
 dnl ######################################################################
@@ -1033,6 +1046,12 @@ elif test $WITH_SQLITE3 = 1; then
   AC_MSG_RESULT([-> DB: SQLite 3 (EXPERIMENTAL, BROKEN)])
 else
   AC_MSG_RESULT([-> DB: Berkeley DB: $BERKELEYDB_DIR])
+fi
+
+if test "x$ac_cv_lib_virt_virConnectOpen" = xyes; then
+  AC_MSG_RESULT([-> libvirt: $LIBVIRT_PATH])
+else
+  AC_MSG_RESULT([-> libvirt: disabled])
 fi
 
 m4_indir(incstart[]incend, [nova/config.m4])

@@ -1069,10 +1069,6 @@ void DeRefListsInHashtable(char *scope, Rlist *list, Rlist *reflist);
 
 void VerifyDatabasePromises(Promise *pp);
 
-/* verify_environments.c */
-
-void VerifyEnvironmentsPromise(Promise *pp);
-
 /* verify_exec.c */
 
 void VerifyExecPromise(Promise *pp);

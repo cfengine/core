@@ -1,5 +1,12 @@
 3.3.0 (in development)
 
+	New promise types:
+	- Environments promises, which allow to manipulate virtual
+	  machines using libvirt.
+	- Database promises, which allow to maintain schema of MySQL and
+	  PostgreSQL databases. Database promises are in "technical preview"
+	  status: this promise type is subject to change in future.
+
 	New built-in functions:
 	- dirname() to complement lastnode()
 	- lsdir()

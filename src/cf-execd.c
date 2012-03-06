@@ -620,6 +620,31 @@ static bool ScheduleRun(void)
     return false;
 }
 
+#if defined(HAVE_PTHREAD)
+# if defined(__MINGW32__)
+
+static void *ThreadUniqueName(void)
+{
+    return pthread_self().p;
+}
+
+# else /* __MINGW32__ */
+
+static void *ThreadUniqueName(void)
+{
+    return (void *)pthread_self();
+}
+
+# endif /* __MINGW32__ */
+#else /* HAVE_PTHREAD */
+
+static void *ThreadUniqueName(void)
+{
+    return NULL;
+}
+
+#endif /* HAVE_PTHREAD */
+
 /*************************************************************************/
 
 static const char *TwinFilename(void)
@@ -689,11 +714,7 @@ static void LocalExec(bool scheduled_run)
     pthread_sigmask(SIG_BLOCK, &sigmask, NULL);
 #endif
 
-#ifdef HAVE_PTHREAD
-    threadName = ThreadUniqueName(pthread_self());
-#else
-    threadName = NULL;
-#endif
+    threadName = ThreadUniqueName();
 
     cf_strtimestamp_local(starttime, starttime_str);
 

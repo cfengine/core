@@ -679,6 +679,7 @@ static void LocalExec(bool scheduled_run)
     int print, count = 0;
     void *threadName;
     time_t starttime = time(NULL);
+    char starttime_str[64];
     FILE *fp;
 
 #ifdef HAVE_PTHREAD_SIGMASK
@@ -694,8 +695,10 @@ static void LocalExec(bool scheduled_run)
     threadName = NULL;
 #endif
 
+    cf_strtimestamp_local(starttime, starttime_str);
+
     CfOut(cf_verbose, "", "------------------------------------------------------------------\n\n");
-    CfOut(cf_verbose, "", "  LocalExec(%sscheduled) at %s\n", scheduled_run ? "" : "not ", cf_ctime(&starttime));
+    CfOut(cf_verbose, "", "  LocalExec(%sscheduled) at %s\n", scheduled_run ? "" : "not ", starttime_str);
     CfOut(cf_verbose, "", "------------------------------------------------------------------\n");
 
 /* Need to make sure we have LD_LIBRARY_PATH here or children will die  */

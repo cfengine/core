@@ -502,7 +502,7 @@ static void Apoptosis()
     Promise pp = { 0 };
     Rlist *signals = NULL, *owners = NULL;
     char mypid[32];
-    static char promiserBuf[CF_SMALLBUF];
+    static char promiser_buf[CF_SMALLBUF];
 
 #if defined(__CYGWIN__) || defined(__MINGW32__)
     return;
@@ -511,12 +511,12 @@ static void Apoptosis()
     CfOut(cf_verbose, "", " !! Programmed pruning of the scheduler cluster");
 
 #ifdef MINGW
-    snprintf(promiserBuf, sizeof(promiserBuf), "cf-execd");     // using '\' causes regexp problems
+    snprintf(promiser_buf, sizeof(promiser_buf), "cf-execd");     // using '\' causes regexp problems
 #else
-    snprintf(promiserBuf, sizeof(promiserBuf), "%s/bin/cf-execd", CFWORKDIR);
+    snprintf(promiser_buf, sizeof(promiser_buf), "%s/bin/cf-execd", CFWORKDIR);
 #endif
 
-    pp.promiser = promiserBuf;
+    pp.promiser = promiser_buf;
     pp.promisee = (Rval) {"cfengine", CF_SCALAR};
     pp.classes = "any";
     pp.offset.line = 0;
@@ -699,10 +699,10 @@ static void ConstructFailsafeCommand(bool scheduled_run, char *buffer)
 static void LocalExec(bool scheduled_run)
 {
     FILE *pp;
-    char line[CF_BUFSIZE], lineEscaped[sizeof(line) * 2], filename[CF_BUFSIZE], *sp;
+    char line[CF_BUFSIZE], line_escaped[sizeof(line) * 2], filename[CF_BUFSIZE], *sp;
     char cmd[CF_BUFSIZE], esc_command[CF_BUFSIZE];
     int print, count = 0;
-    void *threadName;
+    void *thread_name;
     time_t starttime = time(NULL);
     char starttime_str[64];
     FILE *fp;
@@ -714,7 +714,7 @@ static void LocalExec(bool scheduled_run)
     pthread_sigmask(SIG_BLOCK, &sigmask, NULL);
 #endif
 
-    threadName = ThreadUniqueName();
+    thread_name = ThreadUniqueName();
 
     cf_strtimestamp_local(starttime, starttime_str);
 
@@ -741,7 +741,7 @@ static void LocalExec(bool scheduled_run)
     strncpy(esc_command, MapName(cmd), CF_BUFSIZE - 1);
 
     snprintf(line, CF_BUFSIZE - 1, "_%jd_%s", (intmax_t) starttime, CanonifyName(cf_ctime(&starttime)));
-    snprintf(filename, CF_BUFSIZE - 1, "%s/outputs/cf_%s_%s_%p", CFWORKDIR, CanonifyName(VFQNAME), line, threadName);
+    snprintf(filename, CF_BUFSIZE - 1, "%s/outputs/cf_%s_%s_%p", CFWORKDIR, CanonifyName(VFQNAME), line, thread_name);
     MapName(filename);
 
 /* What if no more processes? Could sacrifice and exec() - but we need a sentinel */
@@ -797,26 +797,26 @@ static void LocalExec(bool scheduled_run)
         {
             // we must escape print format chars (%) from output
 
-            ReplaceStr(line, lineEscaped, sizeof(lineEscaped), "%", "%%");
+            ReplaceStr(line, line_escaped, sizeof(line_escaped), "%", "%%");
 
-            fprintf(fp, "%s\n", lineEscaped);
+            fprintf(fp, "%s\n", line_escaped);
             count++;
 
             /* If we can't send mail, log to syslog */
 
             if (strlen(MAILTO) == 0)
             {
-                strncat(lineEscaped, "\n", sizeof(lineEscaped) - 1 - strlen(lineEscaped));
-                if ((strchr(lineEscaped, '\n')) == NULL)
+                strncat(line_escaped, "\n", sizeof(line_escaped) - 1 - strlen(line_escaped));
+                if ((strchr(line_escaped, '\n')) == NULL)
                 {
-                    lineEscaped[sizeof(lineEscaped) - 2] = '\n';
+                    line_escaped[sizeof(line_escaped) - 2] = '\n';
                 }
 
-                CfOut(cf_inform, "", "%s", lineEscaped);
+                CfOut(cf_inform, "", "%s", line_escaped);
             }
 
             line[0] = '\0';
-            lineEscaped[0] = '\0';
+            line_escaped[0] = '\0';
         }
     }
 

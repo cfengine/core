@@ -569,10 +569,6 @@ void ReplaceTrailingStr(char *str, char *from, char to);
 int ReplaceStr(char *in, char *out, int outSz, char *from, char *to);
 const char *GetSoftwareCacheFilename(char *buffer);
 
-#if defined(HAVE_PTHREAD)
-void *ThreadUniqueName(pthread_t tid);
-#endif
-
 /* files_operators.c */
 
 int VerifyFileLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp);

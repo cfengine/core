@@ -48,6 +48,10 @@ static char MAILFROM[CF_BUFSIZE];
 static char MAILTO[CF_BUFSIZE];
 static int MAXLINES = 30;
 
+#if defined(HAVE_PTHREAD)
+static pthread_attr_t threads_attrs;
+#endif
+
 /*******************************************************************/
 
 static GenericAgentConfig CheckOpts(int argc, char **argv);
@@ -287,16 +291,14 @@ static double GetSplay(void)
 
 static void KeepPromises(void)
 {
-    Constraint *cp;
-    Rval retval;
-
-    for (cp = ControlBodyConstraints(cf_executor); cp != NULL; cp = cp->next)
+    for (Constraint *cp = ControlBodyConstraints(cf_executor); cp != NULL; cp = cp->next)
     {
         if (IsExcluded(cp->classes))
         {
             continue;
         }
 
+        Rval retval;
         if (GetVariable("control_executor", cp->lval, &retval) == cf_notype)
         {
             CfOut(cf_error, "", "Unknown lval %s in exec control body", cp->lval);
@@ -374,6 +376,15 @@ void StartServer(void)
     Promise *pp = NewPromise("exec_cfengine", "the executor agent");
     Attributes dummyattr;
     CfLock thislock;
+
+#if defined(HAVE_PTHREAD)
+    pthread_attr_init(&threads_attrs);
+    pthread_attr_setdetachstate(&threads_attrs, PTHREAD_CREATE_DETACHED);
+
+# ifdef HAVE_PTHREAD_ATTR_SETSTACKSIZE
+    pthread_attr_setstacksize(&threads_attrs, (size_t)2048*1024);
+# endif
+#endif
 
     Banner("Starting executor");
     memset(&dummyattr, 0, sizeof(dummyattr));
@@ -469,25 +480,16 @@ void StartServer(void)
 bool LocalExecInThread(void)
 {
     pthread_t tid;
-    pthread_attr_t threadattrs;
 
-    pthread_attr_init(&threadattrs);
-    pthread_attr_setdetachstate(&threadattrs, PTHREAD_CREATE_DETACHED);
-
-# ifdef HAVE_PTHREAD_ATTR_SETSTACKSIZE
-    pthread_attr_setstacksize(&threadattrs, (size_t) 2048 * 1024);
-# endif
-
-    if (pthread_create(&tid, &threadattrs, LocalExecThread, (void *) true) != 0)
+    if (pthread_create(&tid, &threads_attrs, LocalExecThread, (void *) true) == 0)
+    {
+        return true;
+    }
+    else
     {
         CfOut(cf_inform, "pthread_create", "Can't create thread!");
-        pthread_attr_destroy(&threadattrs);
         return false;
     }
-
-    pthread_attr_destroy(&threadattrs);
-
-    return true;
 }
 #endif
 
@@ -500,7 +502,7 @@ static void Apoptosis()
     Promise pp = { 0 };
     Rlist *signals = NULL, *owners = NULL;
     char mypid[32];
-    static char promiserBuf[CF_SMALLBUF];
+    static char promiser_buf[CF_SMALLBUF];
 
 #if defined(__CYGWIN__) || defined(__MINGW32__)
     return;
@@ -509,12 +511,12 @@ static void Apoptosis()
     CfOut(cf_verbose, "", " !! Programmed pruning of the scheduler cluster");
 
 #ifdef MINGW
-    snprintf(promiserBuf, sizeof(promiserBuf), "cf-execd");     // using '\' causes regexp problems
+    snprintf(promiser_buf, sizeof(promiser_buf), "cf-execd");     // using '\' causes regexp problems
 #else
-    snprintf(promiserBuf, sizeof(promiserBuf), "%s/bin/cf-execd", CFWORKDIR);
+    snprintf(promiser_buf, sizeof(promiser_buf), "%s/bin/cf-execd", CFWORKDIR);
 #endif
 
-    pp.promiser = promiserBuf;
+    pp.promiser = promiser_buf;
     pp.promisee = (Rval) {"cfengine", CF_SCALAR};
     pp.classes = "any";
     pp.offset.line = 0;
@@ -618,6 +620,31 @@ static bool ScheduleRun(void)
     return false;
 }
 
+#if defined(HAVE_PTHREAD)
+# if defined(__MINGW32__)
+
+static void *ThreadUniqueName(void)
+{
+    return pthread_self().p;
+}
+
+# else /* __MINGW32__ */
+
+static void *ThreadUniqueName(void)
+{
+    return (void *)pthread_self();
+}
+
+# endif /* __MINGW32__ */
+#else /* HAVE_PTHREAD */
+
+static void *ThreadUniqueName(void)
+{
+    return NULL;
+}
+
+#endif /* HAVE_PTHREAD */
+
 /*************************************************************************/
 
 static const char *TwinFilename(void)
@@ -672,11 +699,12 @@ static void ConstructFailsafeCommand(bool scheduled_run, char *buffer)
 static void LocalExec(bool scheduled_run)
 {
     FILE *pp;
-    char line[CF_BUFSIZE], lineEscaped[sizeof(line) * 2], filename[CF_BUFSIZE], *sp;
+    char line[CF_BUFSIZE], line_escaped[sizeof(line) * 2], filename[CF_BUFSIZE], *sp;
     char cmd[CF_BUFSIZE], esc_command[CF_BUFSIZE];
     int print, count = 0;
-    void *threadName;
+    void *thread_name;
     time_t starttime = time(NULL);
+    char starttime_str[64];
     FILE *fp;
 
 #ifdef HAVE_PTHREAD_SIGMASK
@@ -686,14 +714,12 @@ static void LocalExec(bool scheduled_run)
     pthread_sigmask(SIG_BLOCK, &sigmask, NULL);
 #endif
 
-#ifdef HAVE_PTHREAD
-    threadName = ThreadUniqueName(pthread_self());
-#else
-    threadName = NULL;
-#endif
+    thread_name = ThreadUniqueName();
+
+    cf_strtimestamp_local(starttime, starttime_str);
 
     CfOut(cf_verbose, "", "------------------------------------------------------------------\n\n");
-    CfOut(cf_verbose, "", "  LocalExec(%sscheduled) at %s\n", scheduled_run ? "" : "not ", cf_ctime(&starttime));
+    CfOut(cf_verbose, "", "  LocalExec(%sscheduled) at %s\n", scheduled_run ? "" : "not ", starttime_str);
     CfOut(cf_verbose, "", "------------------------------------------------------------------\n");
 
 /* Need to make sure we have LD_LIBRARY_PATH here or children will die  */
@@ -715,7 +741,7 @@ static void LocalExec(bool scheduled_run)
     strncpy(esc_command, MapName(cmd), CF_BUFSIZE - 1);
 
     snprintf(line, CF_BUFSIZE - 1, "_%jd_%s", (intmax_t) starttime, CanonifyName(cf_ctime(&starttime)));
-    snprintf(filename, CF_BUFSIZE - 1, "%s/outputs/cf_%s_%s_%p", CFWORKDIR, CanonifyName(VFQNAME), line, threadName);
+    snprintf(filename, CF_BUFSIZE - 1, "%s/outputs/cf_%s_%s_%p", CFWORKDIR, CanonifyName(VFQNAME), line, thread_name);
     MapName(filename);
 
 /* What if no more processes? Could sacrifice and exec() - but we need a sentinel */
@@ -771,26 +797,26 @@ static void LocalExec(bool scheduled_run)
         {
             // we must escape print format chars (%) from output
 
-            ReplaceStr(line, lineEscaped, sizeof(lineEscaped), "%", "%%");
+            ReplaceStr(line, line_escaped, sizeof(line_escaped), "%", "%%");
 
-            fprintf(fp, "%s\n", lineEscaped);
+            fprintf(fp, "%s\n", line_escaped);
             count++;
 
             /* If we can't send mail, log to syslog */
 
             if (strlen(MAILTO) == 0)
             {
-                strncat(lineEscaped, "\n", sizeof(lineEscaped) - 1 - strlen(lineEscaped));
-                if ((strchr(lineEscaped, '\n')) == NULL)
+                strncat(line_escaped, "\n", sizeof(line_escaped) - 1 - strlen(line_escaped));
+                if ((strchr(line_escaped, '\n')) == NULL)
                 {
-                    lineEscaped[sizeof(lineEscaped) - 2] = '\n';
+                    line_escaped[sizeof(line_escaped) - 2] = '\n';
                 }
 
-                CfOut(cf_inform, "", "%s", lineEscaped);
+                CfOut(cf_inform, "", "%s", line_escaped);
             }
 
             line[0] = '\0';
-            lineEscaped[0] = '\0';
+            line_escaped[0] = '\0';
         }
     }
 

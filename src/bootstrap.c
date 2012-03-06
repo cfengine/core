@@ -233,14 +233,17 @@ void SetPolicyServer(char *name)
     snprintf(file, CF_MAXVARSIZE, "%s/masterfiles/cf_promises_validated", CFWORKDIR);
     MapName(file);
 
-    if ((fin = fopen(file, "r")) == NULL)
+    struct stat sb;
+    
+    if ((cfstat(file, &sb)) != 0)
     {
         return;
     }
-
-    fscanf(fin, "%255[^\n]", fileContents);
-    NewScalar("sys", "last_policy_update", fileContents, cf_str);
-    fclose(fin);
+    
+    char timebuf[26];
+    cf_strtimestamp_local(sb.st_mtime, timebuf);
+    
+    NewScalar("sys", "last_policy_update", timebuf, cf_str);
 }
 
 /********************************************************************/

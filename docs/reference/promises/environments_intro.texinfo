@@ -1,5 +1,4 @@
 
-Environment promises are available in the CFEngine Nova Edition and above.  
 Environment promises describe enclosed computing environments that can
 host physical and virtual machines, solaris zones, grids, clouds or
 other enclosures, including embedded systems.  CFEngine will support

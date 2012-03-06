@@ -1,6 +1,4 @@
 
-@i{These features apply to Enterprise versions of CFEngine only}.
-
 CFEngine Nova can interact with commonly used database servers to keep
 promises about the structure and content of data within them.
 
@@ -32,7 +30,7 @@ A number of relational databases (currently supported: MySQL, Postgres)
 for reading and writing complex data.
 
 @item Registry - Microsoft Registry
-An embedded database for interfacing with system values in Microsoft Windows.
+An embedded database for interfacing with system values in Microsoft Windows (Only CFEngine Nova)
 
 @end table
 In addition, CFEngine uses a  variety of embedded databases

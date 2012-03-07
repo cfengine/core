@@ -768,6 +768,9 @@ static void CheckFileChanges(GenericAgentConfig config)
             DeleteAlphaList(&VADDCLASSES);
             InitAlphaList(&VADDCLASSES);
 
+            DeleteItemList(IPADDRESSES);
+            IPADDRESSES = NULL;
+
             DeleteItemList(VNEGHEAP);
             DeleteItemList(TRUSTKEYLIST);
             DeleteItemList(SKIPVERIFY);

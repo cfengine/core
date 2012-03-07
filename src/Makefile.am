@@ -6,7 +6,7 @@ LDADD = libpromises.la
 
 .PRECIOUS: $(top_builddir)/pub/libcfpub.la
 
-$(builddir)/../pub/libcfpub.la:
+$(top_builddir)/pub/libcfpub.la:
 	$(MAKE) -C $(top_builddir)/pub $(AM_MAKEFLAGS) libcfpub.la
 
 # libpromises
@@ -14,7 +14,7 @@ $(builddir)/../pub/libcfpub.la:
 projlib_LTLIBRARIES = libpromises.la
 
 libpromises_la_LDFLAGS = -version-info 1:0:0 -no-undefined
-libpromises_la_LIBADD = $(builddir)/../pub/libcfpub.la $(NOVA_LDADD) $(CONSTELLATION_LDADD)
+libpromises_la_LIBADD = $(top_builddir)/pub/libcfpub.la $(NOVA_LDADD) $(CONSTELLATION_LDADD)
 
 libpromises_la_CFLAGS = $(AM_CFLAGS)
 
@@ -153,7 +153,7 @@ endif
 BUILT_SOURCES = cf3parse.h
 
 # Automake need to be guided due to symlinking
-libpromises_la_DEPENDENCIES = $(builddir)/../pub/libcfpub.la $(NOVA_LDADD) $(CONSTELLATION_LDADD)
+libpromises_la_DEPENDENCIES = $(top_builddir)/pub/libcfpub.la $(NOVA_LDADD) $(CONSTELLATION_LDADD)
 
 sbin_PROGRAMS = \
         cf-agent \

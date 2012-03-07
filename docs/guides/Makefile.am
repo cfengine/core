@@ -61,13 +61,13 @@ PDF_GUIDES = $(COMMON_GUIDES) \
     SpecialTopic_Rollback \
     SpecialTopic_Change
 
-.PRECIOUS: $(builddir)/../tools/build-solutions-guide
+.PRECIOUS: ../tools/build-solutions-guide
 
-$(builddir)/../tools/build-solutions-guide:
-	$(MAKE) -C $(builddir)/../tools $(AM_MAKEFLAGS) build-solutions-guide
+../tools/build-solutions-guide:
+	$(MAKE) -C ../tools $(AM_MAKEFLAGS) build-solutions-guide
 
-cf3-solutions.texinfo: cf3-solutions.texinfo.in $(builddir)/../tools/build-solutions-guide
-	$(AM_V_GEN)$(builddir)/../tools/build-solutions-guide $(top_srcdir)/examples < $< > $@ || (rm -f $@; false)
+cf3-solutions.texinfo: cf3-solutions.texinfo.in ../tools/build-solutions-guide
+	$(AM_V_GEN)../tools/build-solutions-guide $(top_srcdir)/examples < $< > $@ || (rm -f $@; false)
 
 
 %.html: %.texinfo

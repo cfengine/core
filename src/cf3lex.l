@@ -97,6 +97,7 @@ arrow      ->
  * <any> = . | \n
  *
  */
+
 qstring    \"((\\(.|\n))|[^"\\])*\"|\'((\\(.|\n))|[^'\\])*\'|`[^`]*`
 
 class      [.|&!()a-zA-Z0-9_\200-\377]+::
@@ -105,138 +106,139 @@ category   [a-zA-Z_]+:
 
 %%
 
-{newline}             {
-                      P.line_no++;
-                      P.line_pos = 0;
+{newline}
+                      {
+                          P.line_no++;
+                          P.line_pos = 0;
                       }
 
 {promises}            {
-                      /* Note this has to come before "id" since it is a subset of id */
+                          /* Note this has to come before "id" since it is a subset of id */
 
-                      if (P.currentclasses != NULL)
-                         {
-                         free(P.currentclasses);
-                         P.currentclasses = NULL;
-                         }
-                      P.line_pos += strlen(yytext);
-                      return BUNDLE;
+                          if (P.currentclasses != NULL)
+                          {
+                              free(P.currentclasses);
+                              P.currentclasses = NULL;
+                          }
+                          P.line_pos += strlen(yytext);
+                          return BUNDLE;
                       }
 
 {body}                {
-                      /* Note this has to come before "id" since it is a subset of id */
+                          /* Note this has to come before "id" since it is a subset of id */
 
-                      if (P.currentclasses != NULL)
-                         {
-                         free(P.currentclasses);
-                         P.currentclasses = NULL;
-                         }
-                      P.line_pos += strlen(yytext);
-                      return BODY;
+                          if (P.currentclasses != NULL)
+                          {
+                              free(P.currentclasses);
+                              P.currentclasses = NULL;
+                          }
+                          P.line_pos += strlen(yytext);
+                          return BODY;
                       }
 
 {id}                  {
-                      size_t token_length = strlen(yytext);
-                      P.offsets.last_id = P.offsets.current - token_length;
-                      P.line_pos += token_length;
-                      if (strlen(yytext) > CF_MAXVARSIZE-1)
-                         {
-                         yyerror("identifier too long");
-                         }
-                      strncpy(P.currentid,yytext,CF_MAXVARSIZE);
-                      return ID;
+                          size_t token_length = strlen(yytext);
+                          P.offsets.last_id = P.offsets.current - token_length;
+                          P.line_pos += token_length;
+                          if (strlen(yytext) > CF_MAXVARSIZE-1)
+                          {
+                              yyerror("identifier too long");
+                          }
+                          strncpy(P.currentid, yytext, CF_MAXVARSIZE);
+                          return ID;
                       }
 
 
 {assign}              {
-                      P.line_pos += strlen(yytext);
-                      return ASSIGN;
+                          P.line_pos += strlen(yytext);
+                          return ASSIGN;
                       }
 
 {arrow}               {
-                      P.line_pos += strlen(yytext);
-                      return ARROW;
+                          P.line_pos += strlen(yytext);
+                          return ARROW;
                       }
 
 {class}               {
-                      P.line_pos += strlen(yytext);
+                          P.line_pos += strlen(yytext);
 
-                      if (P.currentclasses != NULL)
-                         {
-                         free(P.currentclasses);
-                         }
+                          if (P.currentclasses != NULL)
+                          {
+                              free(P.currentclasses);
+                          }
 
-                      yytext[strlen(yytext)-2] = '\0';
-                      ValidateClassSyntax(yytext);
-                      P.currentclasses = xstrdup(yytext);
-                      return CLASS;
+                          yytext[strlen(yytext)-2] = '\0';
+                          ValidateClassSyntax(yytext);
+                          P.currentclasses = xstrdup(yytext);
+                          return CLASS;
                       }
 
 {category}            {
-                      size_t token_size = strlen(yytext);
-                      P.line_pos += token_size;
-                      P.offsets.last_subtype_id = P.offsets.current - token_size;
-                      yytext[token_size - 1] = '\0';
-                      strncpy(P.currenttype,yytext,CF_MAXVARSIZE);
+                          size_t token_size = strlen(yytext);
+                          P.line_pos += token_size;
+                          P.offsets.last_subtype_id = P.offsets.current - token_size;
+                          yytext[token_size - 1] = '\0';
+                          strncpy(P.currenttype, yytext, CF_MAXVARSIZE);
 
-                      if (P.currentclasses != NULL)
-                         {
-                         free(P.currentclasses);
-                         P.currentclasses = NULL;
-                         }
+                          if (P.currentclasses != NULL)
+                          {
+                              free(P.currentclasses);
+                              P.currentclasses = NULL;
+                          }
 
-                      return CATEGORY;
+                          return CATEGORY;
                       }
 
 {qstring}             {
-                      char *tmp = NULL;
-                      int less = 0;
-                      size_t token_length = strlen(yytext);
+                          char *tmp = NULL;
+                          int less = 0;
+                          size_t token_length = strlen(yytext);
 
-                      P.offsets.last_string = P.offsets.current - token_length;
-                      P.line_pos += token_length;
+                          P.offsets.last_string = P.offsets.current - token_length;
+                          P.line_pos += token_length;
 
-                      for (char *c = yytext; *c; ++c)
-                         {
-                         if (*c == '\n')
-                            {
-                            P.line_no++;
-                            }
-                         }
+                          for (char *c = yytext; *c; ++c)
+                          {
+                              if (*c == '\n')
+                              {
+                                  P.line_no++;
+                              }
+                          }
 
-                      tmp = xmalloc(token_length + 1);
+                          tmp = xmalloc(token_length + 1);
 
-                      if ((less = DeEscapeQuotedString(yytext,tmp)) > 0)
-                         {
-                         yyless(less);
-                         P.offsets.current -= less;
-                         }
+                          if ((less = DeEscapeQuotedString(yytext,tmp)) > 0)
+                          {
+                              yyless(less);
+                              P.offsets.current -= less;
+                          }
 
-                      if (P.currentstring)
-                        {
-                        free(P.currentstring);
-                        }
+                          if (P.currentstring)
+                          {
+                              free(P.currentstring);
+                          }
 
-                      P.currentstring = xstrdup(tmp);
+                          P.currentstring = xstrdup(tmp);
 
-                      if (THIS_AGENT_TYPE == cf_common)
-                         {
-                         IsCf3VarString(tmp);
-                         }
+                          if (THIS_AGENT_TYPE == cf_common)
+                          {
+                              IsCf3VarString(tmp);
+                          }
 
-                      free(tmp);
-                      return QSTRING;
+                          free(tmp);
+                          return QSTRING;
                       }
 
 
 {nakedvar}            {
-                      P.line_pos += strlen(yytext);
-                      P.currentstring = xstrdup(yytext);
-                      return NAKEDVAR;
+                          P.line_pos += strlen(yytext);
+                          P.currentstring = xstrdup(yytext);
+                          return NAKEDVAR;
                       }
 
 
 {space}+              {
-                      P.line_pos += strlen(yytext);
+                          P.line_pos += strlen(yytext);
                       }
 
 {comment}             {
@@ -244,8 +246,8 @@ category   [a-zA-Z_]+:
 
 
 .                     {
-                      P.line_pos++;
-                      return yytext[0];
+                          P.line_pos++;
+                          return yytext[0];
                       }
 
 

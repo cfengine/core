@@ -260,6 +260,16 @@ void DeleteVariable(char *scope, char *id)
     fail();
 }
 
+Rlist *ParseShownRlist(char *string)
+{
+    fail();
+}
+
+void NewList(char *scope, char *lval, void *rval, enum cfdatatype dt)
+{
+    fail();
+}
+
 /* Stub out variables */
 
 int DEBUG;

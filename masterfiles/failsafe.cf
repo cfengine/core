@@ -109,7 +109,7 @@ bundle agent update
    "$(inputs_dir)/cf_promises_validated"
         comment => "Check whether a validation stamp is available for a new policy update to reduce the distributed load",
          handle => "check_valid_update",
-      copy_from => u_dcp("$(master_location)/cf_promises_validated","$(sys.policy_hub)"),
+      copy_from => u_rcp("$(master_location)/cf_promises_validated","$(sys.policy_hub)"),
          action => u_immediate,
         classes => u_if_repaired("validated_updates_ready");
 
@@ -191,19 +191,6 @@ body copy_from u_rcp(from,server)
 {
  source      => "$(from)";
  compare     => "digest";
- trustkey    => "true";
-
-!am_policy_hub::
-
- servers => { "$(server)" };
-}
-
-#########################################################
-
-body copy_from u_dcp(from,server)
-{
- source      => "$(from)";
- compare     => "mtime";
  trustkey    => "true";
 
 !am_policy_hub::

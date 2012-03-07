@@ -22,24 +22,11 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
-#include "cf3.extern.h"
+#ifndef CFENGINE_VERIFY_ENVIRONMENTS_H
+#define CFENGINE_VERIFY_ENVIRONMENTS_H
 
-/***************************************************************/
+void NewEnvironmentsContext(void);
+void DeleteEnvironmentsContext(void);
+void VerifyEnvironmentsPromise(Promise *pp);
 
-int HostKeyAddressUnknown(char *value)
-{
-    if (strcmp(value, CF_UNKNOWN_IP) == 0)
-    {
-        return true;
-    }
-
-// Is there some other non-ip string left over?
-
-    if (!(strchr(value, '.') || strchr(value, ':')))
-    {
-        return false;
-    }
-
-    return false;
-}
+#endif

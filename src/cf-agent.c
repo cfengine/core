@@ -30,6 +30,7 @@
 /*****************************************************************************/
 
 #include "generic_agent.h"
+#include "verify_environments.h"
 
 extern int PR_KEPT;
 extern int PR_REPAIRED;
@@ -1143,9 +1144,7 @@ static int NewTypeContext(enum typesequence type)
     switch (type)
     {
     case kp_environments:
-#ifdef HAVE_NOVA
-        Nova_NewEnvironmentsContext();
-#endif
+        NewEnvironmentsContext();
         break;
 
     case kp_files:
@@ -1195,9 +1194,7 @@ static void DeleteTypeContext(enum typesequence type)
         break;
 
     case kp_environments:
-#ifdef HAVE_NOVA
-        Nova_DeleteEnvironmentsContext();
-#endif
+        DeleteEnvironmentsContext();
         break;
 
     case kp_files:

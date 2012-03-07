@@ -503,21 +503,6 @@ void *CfRegLDAP(char *uri, char *dn, char *filter, char *name, char *scope, char
 
 /*****************************************************************************/
 
-int CheckDatabaseSanity(Attributes a, Promise *pp)
-{
-    return false;
-}
-
-/*****************************************************************************/
-
-int VerifyTablePromise(CfdbConn *cfdb, char *name, Rlist *columns, Attributes a, Promise *pp)
-{
-    CfOut(cf_verbose, "", "Verifying SQL table promises is only available with Cfengine Nova or above");
-    return false;
-}
-
-/*****************************************************************************/
-
 int GetInstalledPkgsRpath(PackageItem ** pkgList, Attributes a, Promise *pp)
 {
     CfOut(cf_error, "", "!! rPath internal package listing only available in Nova or above");

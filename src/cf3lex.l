@@ -106,8 +106,7 @@ category   [a-zA-Z_]+:
 
 %%
 
-{newline}
-                      {
+{newline}             {
                           P.line_no++;
                           P.line_pos = 0;
                       }

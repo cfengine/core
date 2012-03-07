@@ -605,8 +605,6 @@ static bool ScheduleRun(void)
         exit(1);
     }
 
-    ThreadLock(cft_system);
-
     DeleteAlphaList(&VHEAP);
     InitAlphaList(&VHEAP);
     DeleteAlphaList(&VADDCLASSES);
@@ -627,7 +625,6 @@ static bool ScheduleRun(void)
     BuiltinClasses();
     OSClasses();
     SetReferenceTime(true);
-    ThreadUnlock(cft_system);
 
     for (ip = SCHEDULE; ip != NULL; ip = ip->next)
     {

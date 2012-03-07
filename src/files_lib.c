@@ -207,7 +207,7 @@ static int ItemListsEqual(Item *list1, Item *list2, int warnings, Attributes a, 
 
 /*********************************************************************/
 
-int FileRead(const char *filename, char *buffer, size_t bufsize)
+ssize_t FileRead(const char *filename, char *buffer, size_t bufsize)
 {
     FILE *f = fopen(filename, "rb");
 
@@ -215,7 +215,7 @@ int FileRead(const char *filename, char *buffer, size_t bufsize)
     {
         return -1;
     }
-    int ret = fread(buffer, bufsize, 1, f);
+    ssize_t ret = fread(buffer, bufsize, 1, f);
 
     if (ferror(f))
     {

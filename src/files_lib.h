@@ -22,10 +22,10 @@
   included file COSL.txt.
 */
 
-#ifndef FILES_LIB_H
-# define FILES_LIB_H
+#ifndef CFENGINE_FILES_LIB_H
+#define CFENGINE_FILES_LIB_H
 
-# include "cf3.defs.h"
+#include "cf3.defs.h"
 
 bool FileCanOpen(const char *path, const char *modes);
 void PurgeItemList(Item **list, char *name);

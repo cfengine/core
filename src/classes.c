@@ -179,7 +179,7 @@ char *VPSOPTS[CF_CLASSATTR] =
     "auxw",                     /* sun4 */
     "auxw",                     /* ultrix */
     "-ef",                      /* hpux */
-    "-N -eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,stat,stime,time,args",  /* aix */
+    "-N -eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,stat,st=STIME,time,args",  /* aix */
     "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,pri,rss,nlwp,stime,time,args",        /* linux */
     "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,pri,rss,nlwp,stime,time,args",        /* solaris */
     "-ef",                      /* osf1 */

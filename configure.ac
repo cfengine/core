@@ -12,7 +12,7 @@ AC_INIT
 AC_CONFIG_SRCDIR([src/cf-promises.c])
 AC_CANONICAL_TARGET
 
-define([revision], esyscmd([sh -c "(git describe --always || echo unknown) | tr -d '\n'" 2>/dev/null]))dnl
+define([revision], esyscmd([sh -c "(git rev-list -1 --abbrev-commit HEAD || echo unknown) | tr -d '\n'" 2>/dev/null]))dnl
 
 dnl
 dnl The version in the next line is the only one to set

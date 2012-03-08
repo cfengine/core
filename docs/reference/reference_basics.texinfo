@@ -10,13 +10,12 @@ This document describes major version 3 of CFEngine, which is a
 significant departure from earlier versions, and represents the newest
 and most carefully researched technology available for configuration
 management. It is both simpler and more powerful.  CFEngine 3 will
-exist in four versions, each of which adds to the following
+exist as both free open source and commercial enterprise versions:
 
 @itemize
 @item @b{Community Edition} - a free and gratis core of the software (available now).
 @item @b{Nova} - a commercial enhanced version for basic enterprise needs (available now).
-@item @b{Constellation} - a commercial enhancement for larger enterprises (coming 2010).
-@item @b{Galaxy} - the ultimate commerical enhancement for global enterprises (coming 2011).
+@item @b{Constellation} - a commercial enhancement for larger enterprises (coming 2012).
 @end itemize
 
 This document is valid for @b{all versions} of CFEngine.  Whenever a feature is only
@@ -183,7 +182,7 @@ used in the community edition of CFEngine.
 @section Core concepts
 
 Unlike previous versions of CFEngine, which had no consistent model
-For its features, you can recognize @i{everything} in CFEngine 3
+for its features, you can recognize @i{everything} in CFEngine 3
 from just a few concepts.
 
 @table @i
@@ -1423,7 +1422,7 @@ When writing promises, get into the habit of giving every promise a comment
 that explains its intention.
 
 Also, give related promises @i{handles}, or labels that can be used to
-refer to them by.
+refer to them.
 
 @verbatim
 
@@ -1457,7 +1456,7 @@ access:
 
 @end verbatim
 
-Conversely, if a promise might depend on another in some (even indirect) way, document this too.
+@noindent Conversely, if a promise might depend on another in some (even indirect) way, document this too.
 
 @verbatim
 
@@ -1697,7 +1696,7 @@ plug-socket relationship. In the examples above, you can see two places
 where types are used to match templates:
 
 @itemize
-@item Matching bundles to components:
+@item Matching bundles to CFEngine components (such as agent, server, common, etc.):
 @smallexample
 
 bundle TYPE name  # matches TYPE to running agent
@@ -2959,7 +2958,7 @@ allowusers   => { "root" };
 Use this file to add your site-specific configuration.
 Common bundles can be used to define global variables.
 Otherwise, unqualified variables are local to the bundle in which
-they are defined -- however they can be access by
+they are defined -- however they can be accessed by
 writing @code{$(bundle_name.variable_name)}.
 
 @verbatim

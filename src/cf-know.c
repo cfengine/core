@@ -258,18 +258,12 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
             {
                 strcpy(TOPIC_CMD, optarg);
 
-                printf("Cause-effect:\n\n");
+                printf("Let's start with stories about cause-effect:\n\n");
                 CfGenerateStories(TOPIC_CMD, cfi_cause);
-                printf("Connection:\n\n");
+                printf("Now looking for stories about connections between things:\n\n");
                 CfGenerateStories(TOPIC_CMD, cfi_connect);
-                printf("Structure:\n\n");
+                printf("Anything about structure:\n\n");
                 CfGenerateStories(TOPIC_CMD, cfi_part);
-                //printf("Improvise:\n\n");
-                //CfGenerateStories(TOPIC_CMD,cfi_none);
-
-                //char buffer[CF_BUFSIZE];
-                //Constellation_GenerateStories_by_name_JSON("class_contexts::update_report",cfi_cause,buffer,CF_BUFSIZE);
-                //printf("\nTEST JSON - %s\n",buffer);
             }
 #endif
             exit(0);

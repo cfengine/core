@@ -23,10 +23,7 @@
 */
 
 #include "generic_agent.h"
-
-/*******************************************************************/
-
-static const int INF_LINES = -2;
+#include "cf-execd-runner.h"
 
 /*******************************************************************/
 
@@ -57,20 +54,17 @@ static pthread_attr_t threads_attrs;
 static GenericAgentConfig CheckOpts(int argc, char **argv);
 static void ThisAgentInit(void);
 static bool ScheduleRun(void);
-static void *LocalExecThread(void *scheduled_run);
-static void LocalExec(bool scheduled_run);
-static int FileChecksum(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1]);
-static int CompareResult(char *filename, char *prev_file);
-static void MailResult(char *file);
-static int Dialogue(int sd, char *s);
 static void Apoptosis(void);
 
 #if defined(HAVE_PTHREAD)
-bool LocalExecInThread(void);
+static bool LocalExecInThread(const ExecConfig *config);
 #endif
 
 void StartServer(void);
 static void KeepPromises(void);
+
+static ExecConfig *CopyExecConfig(const ExecConfig *config);
+static void DestroyExecConfig(ExecConfig *config);
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -439,11 +433,22 @@ void StartServer(void)
 
     umask(077);
 
+    ExecConfig config = {
+        .scheduled_run = !ONCE,
+        .exec_command = EXECCOMMAND,
+        .mail_server = VMAILSERVER,
+        .mail_from_address = MAILFROM,
+        .mail_to_address = MAILTO,
+        .mail_max_lines = MAXLINES,
+        .fq_name = VFQNAME,
+        .ip_address = VIPADDRESS,
+    };
+
     if (ONCE)
     {
         CfOut(cf_verbose, "", "Sleeping for splaytime %d seconds\n\n", SPLAYTIME);
         sleep(SPLAYTIME);
-        LocalExec(false);
+        LocalExec(&config);
         CloseLog();
     }
     else
@@ -456,11 +461,11 @@ void StartServer(void)
                 sleep(SPLAYTIME);
 
 #if defined(HAVE_PTHREAD)
-                if (!LocalExecInThread())
+                if (!LocalExecInThread(&config))
                 {
                     CfOut(cf_inform, "", "Unable to run agent in thread, falling back to blocking execution");
 #endif
-                    LocalExec(true);
+                    LocalExec(&config);
 #if defined(HAVE_PTHREAD)
                 }
 #endif
@@ -477,16 +482,34 @@ void StartServer(void)
 /*****************************************************************************/
 
 #if defined(HAVE_PTHREAD)
-bool LocalExecInThread(void)
+static void *LocalExecThread(void *param)
 {
+#ifdef HAVE_PTHREAD_SIGMASK
+    sigset_t sigmask;
+    sigemptyset(&sigmask);
+    pthread_sigmask(SIG_BLOCK, &sigmask, NULL);
+#endif
+
+    ExecConfig *config = (ExecConfig *)param;
+    LocalExec(config);
+    DestroyExecConfig(config);
+
+    return NULL;
+}
+
+static bool LocalExecInThread(const ExecConfig *config)
+{
+    ExecConfig *thread_config = CopyExecConfig(config);
+
     pthread_t tid;
 
-    if (pthread_create(&tid, &threads_attrs, LocalExecThread, (void *) true) == 0)
+    if (pthread_create(&tid, &threads_attrs, LocalExecThread, thread_config) == 0)
     {
         return true;
     }
     else
     {
+        DestroyExecConfig(thread_config);
         CfOut(cf_inform, "pthread_create", "Can't create thread!");
         return false;
     }
@@ -567,6 +590,36 @@ static void Apoptosis()
 
 /*****************************************************************************/
 
+typedef enum
+{
+    RELOAD_ENVIRONMENT,
+    RELOAD_FULL
+} Reload;
+
+static Reload CheckNewPromises(void)
+{
+    if (NewPromiseProposals())
+    {
+        CfOut(cf_verbose, "", " -> New promises detected...\n");
+
+        if (CheckPromises(cf_executor))
+        {
+            return RELOAD_FULL;
+        }
+        else
+        {
+            CfOut(cf_inform, "", " !! New promises file contains syntax errors -- ignoring");
+            PROMISETIME = time(NULL);
+        }
+    }
+    else
+    {
+        CfDebug(" -> No new promises found\n");
+    }
+
+    return RELOAD_ENVIRONMENT;
+}
+
 static bool ScheduleRun(void)
 {
     Item *ip;
@@ -582,29 +635,98 @@ static bool ScheduleRun(void)
         exit(1);
     }
 
-    ThreadLock(cft_system);
+    /*
+     * FIXME: this logic duplicates the one from cf-serverd.c. Unify ASAP.
+     */
 
-    DeleteAlphaList(&VHEAP);
-    InitAlphaList(&VHEAP);
-    DeleteAlphaList(&VADDCLASSES);
-    InitAlphaList(&VADDCLASSES);
+    if (CheckNewPromises() == RELOAD_FULL)
+    {
+        /* Full reload */
 
-    DeleteItemList(IPADDRESSES);
-    IPADDRESSES = NULL;
+        CfOut(cf_inform, "", "Re-reading promise file %s..\n", VINPUTFILE);
 
-    DeleteScope("this");
-    DeleteScope("mon");
-    DeleteScope("sys");
-    NewScope("this");
-    NewScope("mon");
-    NewScope("sys");
+        DeleteAlphaList(&VHEAP);
+        InitAlphaList(&VHEAP);
+        DeleteAlphaList(&VADDCLASSES);
+        InitAlphaList(&VADDCLASSES);
 
-    CfGetInterfaceInfo(cf_executor);
-    Get3Environment();
-    BuiltinClasses();
-    OSClasses();
-    SetReferenceTime(true);
-    ThreadUnlock(cft_system);
+        DeleteItemList(IPADDRESSES);
+        IPADDRESSES = NULL;
+
+        DeleteItemList(VNEGHEAP);
+
+        VSYSTEMHARDCLASS = unused1;
+
+        DeleteAllScope();
+
+        strcpy(VDOMAIN, "undefinded.domain");
+        POLICY_SERVER[0] = '\0';
+
+        VNEGHEAP = NULL;
+        VINPUTLIST = NULL;
+
+        DeleteBundles(BUNDLES);
+        DeleteBodies(BODIES);
+
+        BUNDLES = NULL;
+        BODIES = NULL;
+        ERRORCOUNT = 0;
+
+        NewScope("sys");
+
+        SetPolicyServer(POLICY_SERVER);
+        NewScalar("sys", "policy_hub", POLICY_SERVER, cf_str);
+
+        NewScope("const");
+        NewScope("this");
+        NewScope("mon");
+        NewScope("control_server");
+        NewScope("control_common");
+        NewScope("remote_access");
+
+        GetNameInfo3();
+        CfGetInterfaceInfo(cf_executor);
+        Get3Environment();
+        BuiltinClasses();
+        OSClasses();
+
+        NewClass(THIS_AGENT);
+
+        SetReferenceTime(true);
+
+        GenericAgentConfig config = {
+            .bundlesequence = NULL
+        };
+
+        ReadPromises(cf_executor, CF_EXECC, config);
+        KeepPromises();
+    }
+    else
+    {
+        /* Environment reload */
+
+        DeleteAlphaList(&VHEAP);
+        InitAlphaList(&VHEAP);
+        DeleteAlphaList(&VADDCLASSES);
+        InitAlphaList(&VADDCLASSES);
+
+        DeleteItemList(IPADDRESSES);
+        IPADDRESSES = NULL;
+
+
+        DeleteScope("this");
+        DeleteScope("mon");
+        DeleteScope("sys");
+        NewScope("this");
+        NewScope("mon");
+        NewScope("sys");
+
+        CfGetInterfaceInfo(cf_executor);
+        Get3Environment();
+        BuiltinClasses();
+        OSClasses();
+        SetReferenceTime(true);
+    }
 
     for (ip = SCHEDULE; ip != NULL; ip = ip->next)
     {
@@ -620,633 +742,30 @@ static bool ScheduleRun(void)
     return false;
 }
 
-#if defined(HAVE_PTHREAD)
-# if defined(__MINGW32__)
-
-static void *ThreadUniqueName(void)
-{
-    return pthread_self().p;
-}
-
-# else /* __MINGW32__ */
-
-static void *ThreadUniqueName(void)
-{
-    return (void *)pthread_self();
-}
-
-# endif /* __MINGW32__ */
-#else /* HAVE_PTHREAD */
-
-static void *ThreadUniqueName(void)
-{
-    return NULL;
-}
-
-#endif /* HAVE_PTHREAD */
-
 /*************************************************************************/
 
-static const char *TwinFilename(void)
+ExecConfig *CopyExecConfig(const ExecConfig *config)
 {
-#if defined(__CYGWIN__) || defined(__MINGW32__)
-    return "bin-twin/cf-agent.exe";
-#else
-    return "bin/cf-twin";
-#endif
+    ExecConfig *copy = xcalloc(1, sizeof(ExecConfig));
+    copy->scheduled_run = config->scheduled_run;
+    copy->exec_command = xstrdup(config->exec_command);
+    copy->mail_server = xstrdup(config->mail_server);
+    copy->mail_from_address = xstrdup(config->mail_from_address);
+    copy->mail_to_address = xstrdup(config->mail_to_address);
+    copy->fq_name = xstrdup(config->fq_name);
+    copy->ip_address = xstrdup(config->ip_address);
+    copy->mail_max_lines = config->mail_max_lines;
+
+    return copy;
 }
 
-/*************************************************************************/
-
-static const char *AgentFilename(void)
+void DestroyExecConfig(ExecConfig *config)
 {
-#if defined(__CYGWIN__) || defined(__MINGW32__)
-    return "bin/cf-agent.exe";
-#else
-    return "bin/cf-agent";
-#endif
+    free(config->exec_command);
+    free(config->mail_server);
+    free(config->mail_from_address);
+    free(config->mail_to_address);
+    free(config->fq_name);
+    free(config->ip_address);
+    free(config);
 }
-
-/*************************************************************************/
-
-static bool TwinExists(void)
-{
-    char twinfilename[CF_BUFSIZE];
-    struct stat sb;
-
-    snprintf(twinfilename, CF_BUFSIZE, "%s/%s", CFWORKDIR, TwinFilename());
-    MapName(twinfilename);
-
-    return stat(twinfilename, &sb) == 0 && IsExecutable(twinfilename);
-}
-
-/*************************************************************************/
-
-/* Buffer has to be at least CF_BUFSIZE bytes long */
-static void ConstructFailsafeCommand(bool scheduled_run, char *buffer)
-{
-    bool twin_exists = TwinExists();
-
-    snprintf(buffer, CF_BUFSIZE,
-             "\"%s/%s\" -f failsafe.cf "
-             "&& \"%s/%s\" -Dfrom_cfexecd%s",
-             CFWORKDIR, twin_exists ? TwinFilename() : AgentFilename(),
-             CFWORKDIR, AgentFilename(), scheduled_run ? ":scheduled_run" : "");
-}
-
-/*************************************************************************/
-
-static void LocalExec(bool scheduled_run)
-{
-    FILE *pp;
-    char line[CF_BUFSIZE], line_escaped[sizeof(line) * 2], filename[CF_BUFSIZE], *sp;
-    char cmd[CF_BUFSIZE], esc_command[CF_BUFSIZE];
-    int print, count = 0;
-    void *thread_name;
-    time_t starttime = time(NULL);
-    char starttime_str[64];
-    FILE *fp;
-
-#ifdef HAVE_PTHREAD_SIGMASK
-    sigset_t sigmask;
-
-    sigemptyset(&sigmask);
-    pthread_sigmask(SIG_BLOCK, &sigmask, NULL);
-#endif
-
-    thread_name = ThreadUniqueName();
-
-    cf_strtimestamp_local(starttime, starttime_str);
-
-    CfOut(cf_verbose, "", "------------------------------------------------------------------\n\n");
-    CfOut(cf_verbose, "", "  LocalExec(%sscheduled) at %s\n", scheduled_run ? "" : "not ", starttime_str);
-    CfOut(cf_verbose, "", "------------------------------------------------------------------\n");
-
-/* Need to make sure we have LD_LIBRARY_PATH here or children will die  */
-
-    if (strlen(EXECCOMMAND) > 0)
-    {
-        strncpy(cmd, EXECCOMMAND, CF_BUFSIZE - 1);
-
-        if (!strstr(EXECCOMMAND, "-Dfrom_cfexecd"))
-        {
-            strcat(EXECCOMMAND, " -Dfrom_cfexecd");
-        }
-    }
-    else
-    {
-        ConstructFailsafeCommand(scheduled_run, cmd);
-    }
-
-    strncpy(esc_command, MapName(cmd), CF_BUFSIZE - 1);
-
-    snprintf(line, CF_BUFSIZE - 1, "_%jd_%s", (intmax_t) starttime, CanonifyName(cf_ctime(&starttime)));
-    snprintf(filename, CF_BUFSIZE - 1, "%s/outputs/cf_%s_%s_%p", CFWORKDIR, CanonifyName(VFQNAME), line, thread_name);
-    MapName(filename);
-
-/* What if no more processes? Could sacrifice and exec() - but we need a sentinel */
-
-    if ((fp = fopen(filename, "w")) == NULL)
-    {
-        CfOut(cf_error, "fopen", "!! Couldn't open \"%s\" - aborting exec\n", filename);
-        return;
-    }
-
-#if !defined(__MINGW32__)
-/*
- * Don't inherit this file descriptor on fork/exec
- */
-
-    if (fileno(fp) != -1)
-    {
-        fcntl(fileno(fp), F_SETFD, FD_CLOEXEC);
-    }
-#endif
-
-    CfOut(cf_verbose, "", " -> Command => %s\n", cmd);
-
-    if ((pp = cf_popen_sh(esc_command, "r")) == NULL)
-    {
-        CfOut(cf_error, "cf_popen", "!! Couldn't open pipe to command \"%s\"\n", cmd);
-        fclose(fp);
-        return;
-    }
-
-    CfOut(cf_verbose, "", " -> Command is executing...%s\n", esc_command);
-
-    while (!feof(pp) && CfReadLine(line, CF_BUFSIZE, pp))
-    {
-        if (ferror(pp))
-        {
-            fflush(pp);
-            break;
-        }
-
-        print = false;
-
-        for (sp = line; *sp != '\0'; sp++)
-        {
-            if (!isspace((int) *sp))
-            {
-                print = true;
-                break;
-            }
-        }
-
-        if (print)
-        {
-            // we must escape print format chars (%) from output
-
-            ReplaceStr(line, line_escaped, sizeof(line_escaped), "%", "%%");
-
-            fprintf(fp, "%s\n", line_escaped);
-            count++;
-
-            /* If we can't send mail, log to syslog */
-
-            if (strlen(MAILTO) == 0)
-            {
-                strncat(line_escaped, "\n", sizeof(line_escaped) - 1 - strlen(line_escaped));
-                if ((strchr(line_escaped, '\n')) == NULL)
-                {
-                    line_escaped[sizeof(line_escaped) - 2] = '\n';
-                }
-
-                CfOut(cf_inform, "", "%s", line_escaped);
-            }
-
-            line[0] = '\0';
-            line_escaped[0] = '\0';
-        }
-    }
-
-    cf_pclose(pp);
-    CfDebug("Closing fp\n");
-    fclose(fp);
-
-    CfOut(cf_verbose, "", " -> Command is complete\n");
-
-    if (count)
-    {
-        CfOut(cf_verbose, "", " -> Mailing result\n");
-        MailResult(filename);
-    }
-    else
-    {
-        CfOut(cf_verbose, "", " -> No output\n");
-        unlink(filename);
-    }
-}
-
-/*************************************************************************/
-
-static void *LocalExecThread(void *scheduled_run)
-{
-    LocalExec((bool) scheduled_run);
-    return NULL;
-}
-
-/******************************************************************************/
-/* Level 4                                                                    */
-/******************************************************************************/
-
-static int FileChecksum(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1])
-{
-    FILE *file;
-    EVP_MD_CTX context;
-    int len;
-    unsigned int md_len;
-    unsigned char buffer[1024];
-    const EVP_MD *md = NULL;
-
-    CfDebug("FileChecksum(%s)\n", filename);
-
-    if ((file = fopen(filename, "rb")) == NULL)
-    {
-        printf("%s can't be opened\n", filename);
-    }
-    else
-    {
-        md = EVP_get_digestbyname("md5");
-
-        if (!md)
-        {
-            return 0;
-        }
-
-        EVP_DigestInit(&context, md);
-
-        while ((len = fread(buffer, 1, 1024, file)))
-        {
-            EVP_DigestUpdate(&context, buffer, len);
-        }
-
-        EVP_DigestFinal(&context, digest, &md_len);
-        fclose(file);
-        return (md_len);
-    }
-
-    return 0;
-}
-
-/*******************************************************************/
-
-static int CompareResult(char *filename, char *prev_file)
-{
-    int i;
-    unsigned char digest1[EVP_MAX_MD_SIZE + 1];
-    unsigned char digest2[EVP_MAX_MD_SIZE + 1];
-    int md_len1, md_len2;
-    FILE *fp;
-    int rtn = 0;
-
-    CfOut(cf_verbose, "", "Comparing files  %s with %s\n", prev_file, filename);
-
-    if ((fp = fopen(prev_file, "r")) != NULL)
-    {
-        fclose(fp);
-
-        md_len1 = FileChecksum(prev_file, digest1);
-        md_len2 = FileChecksum(filename, digest2);
-
-        if (md_len1 != md_len2)
-        {
-            rtn = 1;
-        }
-        else
-        {
-            for (i = 0; i < md_len1; i++)
-            {
-                if (digest1[i] != digest2[i])
-                {
-                    rtn = 1;
-                    break;
-                }
-            }
-        }
-    }
-    else
-    {
-        /* no previous file */
-        rtn = 1;
-    }
-
-    if (!ThreadLock(cft_count))
-    {
-        CfOut(cf_error, "", "!! Severe lock error when mailing in exec");
-        return 1;
-    }
-
-/* replace old file with new*/
-
-    unlink(prev_file);
-
-    if (!LinkOrCopy(filename, prev_file, true))
-    {
-        CfOut(cf_inform, "", "Could not symlink or copy %s to %s", filename, prev_file);
-        rtn = 1;
-    }
-
-    ThreadUnlock(cft_count);
-    return (rtn);
-}
-
-/***********************************************************************/
-
-static void MailResult(char *file)
-{
-    int sd, count = 0, anomaly = false;
-    char prev_file[CF_BUFSIZE], vbuff[CF_BUFSIZE];
-    struct hostent *hp;
-    struct sockaddr_in raddr;
-    struct servent *server;
-    struct stat statbuf;
-    time_t now = time(NULL);
-    FILE *fp;
-
-    CfOut(cf_verbose, "", "Mail result...\n");
-
-    if (cfstat(file, &statbuf) == -1)
-    {
-        return;
-    }
-
-    snprintf(prev_file, CF_BUFSIZE - 1, "%s/outputs/previous", CFWORKDIR);
-    MapName(prev_file);
-
-    if (statbuf.st_size == 0)
-    {
-        unlink(file);
-        CfDebug("Nothing to report in %s\n", file);
-        return;
-    }
-
-    if (CompareResult(file, prev_file) == 0)
-    {
-        CfOut(cf_verbose, "", "Previous output is the same as current so do not mail it\n");
-        return;
-    }
-
-    if ((strlen(VMAILSERVER) == 0) || (strlen(MAILTO) == 0))
-    {
-        /* Syslog should have done this */
-        CfOut(cf_verbose, "", "Empty mail server or address - skipping");
-        return;
-    }
-
-    if (MAXLINES == 0)
-    {
-        CfDebug("Not mailing: EmailMaxLines was zero\n");
-        return;
-    }
-
-    CfDebug("Mailing results of (%s) to (%s)\n", file, MAILTO);
-
-/* Check first for anomalies - for subject header */
-
-    if ((fp = fopen(file, "r")) == NULL)
-    {
-        CfOut(cf_inform, "fopen", "!! Couldn't open file %s", file);
-        return;
-    }
-
-    while (!feof(fp))
-    {
-        vbuff[0] = '\0';
-        if (fgets(vbuff, CF_BUFSIZE, fp) == NULL)
-        {
-            break;
-        }
-
-        if (strstr(vbuff, "entropy"))
-        {
-            anomaly = true;
-            break;
-        }
-    }
-
-    fclose(fp);
-
-    if ((fp = fopen(file, "r")) == NULL)
-    {
-        CfOut(cf_inform, "fopen", "Couldn't open file %s", file);
-        return;
-    }
-
-    CfDebug("Looking up hostname %s\n\n", VMAILSERVER);
-
-    if ((hp = gethostbyname(VMAILSERVER)) == NULL)
-    {
-        printf("Unknown host: %s\n", VMAILSERVER);
-        printf("Make sure that fully qualified names can be looked up at your site.\n");
-        fclose(fp);
-        return;
-    }
-
-    if ((server = getservbyname("smtp", "tcp")) == NULL)
-    {
-        CfOut(cf_inform, "getservbyname", "Unable to lookup smtp service");
-        fclose(fp);
-        return;
-    }
-
-    memset(&raddr, 0, sizeof(raddr));
-
-    raddr.sin_port = (unsigned int) server->s_port;
-    raddr.sin_addr.s_addr = ((struct in_addr *) (hp->h_addr))->s_addr;
-    raddr.sin_family = AF_INET;
-
-    CfDebug("Connecting...\n");
-
-    if ((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
-    {
-        CfOut(cf_inform, "socket", "Couldn't open a socket");
-        fclose(fp);
-        return;
-    }
-
-    if (connect(sd, (void *) &raddr, sizeof(raddr)) == -1)
-    {
-        CfOut(cf_inform, "connect", "Couldn't connect to host %s\n", VMAILSERVER);
-        fclose(fp);
-        cf_closesocket(sd);
-        return;
-    }
-
-/* read greeting */
-
-    if (!Dialogue(sd, NULL))
-    {
-        goto mail_err;
-    }
-
-    sprintf(vbuff, "HELO %s\r\n", VFQNAME);
-    CfDebug("%s", vbuff);
-
-    if (!Dialogue(sd, vbuff))
-    {
-        goto mail_err;
-    }
-
-    if (strlen(MAILFROM) == 0)
-    {
-        sprintf(vbuff, "MAIL FROM: <cfengine@%s>\r\n", VFQNAME);
-        CfDebug("%s", vbuff);
-    }
-    else
-    {
-        sprintf(vbuff, "MAIL FROM: <%s>\r\n", MAILFROM);
-        CfDebug("%s", vbuff);
-    }
-
-    if (!Dialogue(sd, vbuff))
-    {
-        goto mail_err;
-    }
-
-    sprintf(vbuff, "RCPT TO: <%s>\r\n", MAILTO);
-    CfDebug("%s", vbuff);
-
-    if (!Dialogue(sd, vbuff))
-    {
-        goto mail_err;
-    }
-
-    if (!Dialogue(sd, "DATA\r\n"))
-    {
-        goto mail_err;
-    }
-
-    if (anomaly)
-    {
-        sprintf(vbuff, "Subject: %s **!! [%s/%s]\r\n", MailSubject(), VFQNAME, VIPADDRESS);
-        CfDebug("%s", vbuff);
-    }
-    else
-    {
-        sprintf(vbuff, "Subject: %s [%s/%s]\r\n", MailSubject(), VFQNAME, VIPADDRESS);
-        CfDebug("%s", vbuff);
-    }
-
-    send(sd, vbuff, strlen(vbuff), 0);
-
-#if defined LINUX || defined NETBSD || defined FREEBSD || defined OPENBSD
-    strftime(vbuff, CF_BUFSIZE, "Date: %a, %d %b %Y %H:%M:%S %z\r\n", localtime(&now));
-    send(sd, vbuff, strlen(vbuff), 0);
-#endif
-
-    if (strlen(MAILFROM) == 0)
-    {
-        sprintf(vbuff, "From: cfengine@%s\r\n", VFQNAME);
-        CfDebug("%s", vbuff);
-    }
-    else
-    {
-        sprintf(vbuff, "From: %s\r\n", MAILFROM);
-        CfDebug("%s", vbuff);
-    }
-
-    send(sd, vbuff, strlen(vbuff), 0);
-
-    sprintf(vbuff, "To: %s\r\n\r\n", MAILTO);
-    CfDebug("%s", vbuff);
-    send(sd, vbuff, strlen(vbuff), 0);
-
-    while (!feof(fp))
-    {
-        vbuff[0] = '\0';
-        if (fgets(vbuff, CF_BUFSIZE, fp) == NULL)
-        {
-            break;
-        }
-
-        CfDebug("%s", vbuff);
-
-        if (strlen(vbuff) > 0)
-        {
-            vbuff[strlen(vbuff) - 1] = '\r';
-            strcat(vbuff, "\n");
-            count++;
-            send(sd, vbuff, strlen(vbuff), 0);
-        }
-
-        if ((MAXLINES != INF_LINES) && (count > MAXLINES))
-        {
-            sprintf(vbuff, "\r\n[Mail truncated by cfengine. File is at %s on %s]\r\n", file, VFQNAME);
-            send(sd, vbuff, strlen(vbuff), 0);
-            break;
-        }
-    }
-
-    if (!Dialogue(sd, ".\r\n"))
-    {
-        CfDebug("mail_err\n");
-        goto mail_err;
-    }
-
-    Dialogue(sd, "QUIT\r\n");
-    CfDebug("Done sending mail\n");
-    fclose(fp);
-    cf_closesocket(sd);
-    return;
-
-  mail_err:
-
-    fclose(fp);
-    cf_closesocket(sd);
-    CfOut(cf_log, "", "Cannot mail to %s.", MAILTO);
-}
-
-/******************************************************************/
-/* Level 5                                                        */
-/******************************************************************/
-
-static int Dialogue(int sd, char *s)
-{
-    int sent;
-    char ch, f = '\0';
-    int charpos, rfclinetype = ' ';
-
-    if ((s != NULL) && (*s != '\0'))
-    {
-        sent = send(sd, s, strlen(s), 0);
-        CfDebug("SENT(%d)->%s", sent, s);
-    }
-    else
-    {
-        CfDebug("Nothing to send .. waiting for opening\n");
-    }
-
-    charpos = 0;
-
-    while (recv(sd, &ch, 1, 0))
-    {
-        charpos++;
-
-        if (f == '\0')
-        {
-            f = ch;
-        }
-
-        if (charpos == 4)       /* Multiline RFC in form 222-Message with hyphen at pos 4 */
-        {
-            rfclinetype = ch;
-        }
-
-        CfDebug("%c", ch);
-
-        if (ch == '\n' || ch == '\0')
-        {
-            charpos = 0;
-
-            if (rfclinetype == ' ')
-            {
-                break;
-            }
-        }
-    }
-
-    return ((f == '2') || (f == '3'));  /* return code 200 or 300 from smtp */
-}
-
-/* EOF */

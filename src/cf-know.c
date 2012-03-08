@@ -111,6 +111,7 @@ int GENERATE_MANUAL = false;
 int GENERATE_XML = false;
 static char *OUTPUT_FILE;
 char MANDIR[CF_BUFSIZE];
+char STORY[CF_BUFSIZE];
 
 Occurrence *OCCURRENCES = NULL;
 Inference *INFERENCES = NULL;
@@ -182,6 +183,32 @@ int main(int argc, char *argv[])
 
     KeepKnowControlPromises();
 
+    if (strlen(STORY) > 0)
+    {
+#ifdef HAVE_CONSTELLATION
+       if (strncmp(STORY, "SHA=", 4) == 0)
+       {
+          char buffer[CF_BUFSIZE];
+          
+                Constellation_HostStory(STORY, buffer, CF_BUFSIZE);
+                printf("%s\n", buffer);
+       }
+       else
+       {
+          strcpy(TOPIC_CMD, STORY);
+          
+          printf("Let's start with stories about cause-effect:\n\n");
+          CfGenerateStories(TOPIC_CMD, cfi_cause);
+          printf("Now looking for stories about connections between things:\n\n");
+          CfGenerateStories(TOPIC_CMD, cfi_connect);
+          printf("Anything about structure:\n\n");
+                CfGenerateStories(TOPIC_CMD, cfi_part);
+       }
+#endif
+            exit(0);
+            
+    }
+    
     if (GENERATE_XML)
     {
         GenerateXml();
@@ -245,28 +272,10 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
             break;
 
         case 'z':
-
-#ifdef HAVE_CONSTELLATION
-            if (strncmp(optarg, "SHA=", 4) == 0)
-            {
-                char buffer[CF_BUFSIZE];
-
-                Constellation_HostStory(optarg, buffer, CF_BUFSIZE);
-                printf("%s\n", buffer);
-            }
-            else
-            {
-                strcpy(TOPIC_CMD, optarg);
-
-                printf("Let's start with stories about cause-effect:\n\n");
-                CfGenerateStories(TOPIC_CMD, cfi_cause);
-                printf("Now looking for stories about connections between things:\n\n");
-                CfGenerateStories(TOPIC_CMD, cfi_connect);
-                printf("Anything about structure:\n\n");
-                CfGenerateStories(TOPIC_CMD, cfi_part);
-            }
-#endif
-            exit(0);
+            if (optarg)
+               {
+               strncpy(STORY,optarg,CF_BUFSIZE-1);
+               }
             break;
 
         case 'b':

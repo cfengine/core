@@ -596,6 +596,26 @@ Attributes GetThingsAttributes(Promise *pp)
 
         attr.associates = rp;
     }
+    else if ((rp = GetListConstraint("is_located_in", pp)))
+    {
+        switch (certainty)
+        {
+        case cfk_certain:
+            attr.fwd_name = KM_LOCATED_CERT_F;
+            attr.bwd_name = KM_LOCATED_CERT_B;
+            break;
+        case cfk_uncertain:
+            attr.fwd_name = KM_LOCATED_UNCERT_F;
+            attr.bwd_name = KM_LOCATED_UNCERT_B;
+            break;
+        case cfk_possible:
+            attr.fwd_name = KM_LOCATED_POSS_F;
+            attr.bwd_name = KM_LOCATED_POSS_B;
+            break;
+        }
+
+        attr.associates = rp;
+    }
 
     return attr;
 }

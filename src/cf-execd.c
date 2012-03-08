@@ -590,6 +590,36 @@ static void Apoptosis()
 
 /*****************************************************************************/
 
+typedef enum
+{
+    RELOAD_ENVIRONMENT,
+    RELOAD_FULL
+} Reload;
+
+static Reload CheckNewPromises(void)
+{
+    if (NewPromiseProposals())
+    {
+        CfOut(cf_verbose, "", " -> New promises detected...\n");
+
+        if (CheckPromises(cf_executor))
+        {
+            return RELOAD_FULL;
+        }
+        else
+        {
+            CfOut(cf_inform, "", " !! New promises file contains syntax errors -- ignoring");
+            PROMISETIME = time(NULL);
+        }
+    }
+    else
+    {
+        CfDebug(" -> No new promises found\n");
+    }
+
+    return RELOAD_ENVIRONMENT;
+}
+
 static bool ScheduleRun(void)
 {
     Item *ip;
@@ -605,26 +635,98 @@ static bool ScheduleRun(void)
         exit(1);
     }
 
-    DeleteAlphaList(&VHEAP);
-    InitAlphaList(&VHEAP);
-    DeleteAlphaList(&VADDCLASSES);
-    InitAlphaList(&VADDCLASSES);
+    /*
+     * FIXME: this logic duplicates the one from cf-serverd.c. Unify ASAP.
+     */
 
-    DeleteItemList(IPADDRESSES);
-    IPADDRESSES = NULL;
+    if (CheckNewPromises() == RELOAD_FULL)
+    {
+        /* Full reload */
 
-    DeleteScope("this");
-    DeleteScope("mon");
-    DeleteScope("sys");
-    NewScope("this");
-    NewScope("mon");
-    NewScope("sys");
+        CfOut(cf_inform, "", "Re-reading promise file %s..\n", VINPUTFILE);
 
-    CfGetInterfaceInfo(cf_executor);
-    Get3Environment();
-    BuiltinClasses();
-    OSClasses();
-    SetReferenceTime(true);
+        DeleteAlphaList(&VHEAP);
+        InitAlphaList(&VHEAP);
+        DeleteAlphaList(&VADDCLASSES);
+        InitAlphaList(&VADDCLASSES);
+
+        DeleteItemList(IPADDRESSES);
+        IPADDRESSES = NULL;
+
+        DeleteItemList(VNEGHEAP);
+
+        VSYSTEMHARDCLASS = unused1;
+
+        DeleteAllScope();
+
+        strcpy(VDOMAIN, "undefinded.domain");
+        POLICY_SERVER[0] = '\0';
+
+        VNEGHEAP = NULL;
+        VINPUTLIST = NULL;
+
+        DeleteBundles(BUNDLES);
+        DeleteBodies(BODIES);
+
+        BUNDLES = NULL;
+        BODIES = NULL;
+        ERRORCOUNT = 0;
+
+        NewScope("sys");
+
+        SetPolicyServer(POLICY_SERVER);
+        NewScalar("sys", "policy_hub", POLICY_SERVER, cf_str);
+
+        NewScope("const");
+        NewScope("this");
+        NewScope("mon");
+        NewScope("control_server");
+        NewScope("control_common");
+        NewScope("remote_access");
+
+        GetNameInfo3();
+        CfGetInterfaceInfo(cf_executor);
+        Get3Environment();
+        BuiltinClasses();
+        OSClasses();
+
+        NewClass(THIS_AGENT);
+
+        SetReferenceTime(true);
+
+        GenericAgentConfig config = {
+            .bundlesequence = NULL
+        };
+
+        ReadPromises(cf_executor, CF_EXECC, config);
+        KeepPromises();
+    }
+    else
+    {
+        /* Environment reload */
+
+        DeleteAlphaList(&VHEAP);
+        InitAlphaList(&VHEAP);
+        DeleteAlphaList(&VADDCLASSES);
+        InitAlphaList(&VADDCLASSES);
+
+        DeleteItemList(IPADDRESSES);
+        IPADDRESSES = NULL;
+
+
+        DeleteScope("this");
+        DeleteScope("mon");
+        DeleteScope("sys");
+        NewScope("this");
+        NewScope("mon");
+        NewScope("sys");
+
+        CfGetInterfaceInfo(cf_executor);
+        Get3Environment();
+        BuiltinClasses();
+        OSClasses();
+        SetReferenceTime(true);
+    }
 
     for (ip = SCHEDULE; ip != NULL; ip = ip->next)
     {

@@ -537,8 +537,8 @@ static bool IgnoreJailInterface(int ifaceidx, struct sockaddr_in *inaddr)
 
 /******************************************************************/
 
-static void Unix_GetMacAddress(enum cfagenttype ag, int fd, struct ifreq *ifr, struct ifreq *ifp, Rlist *interfaces,
-                               Rlist *hardware)
+static void Unix_GetMacAddress(enum cfagenttype ag, int fd, struct ifreq *ifr, struct ifreq *ifp, Rlist **interfaces,
+                               Rlist **hardware)
 {
     char name[CF_MAXVARSIZE];
 
@@ -554,6 +554,7 @@ static void Unix_GetMacAddress(enum cfagenttype ag, int fd, struct ifreq *ifr, s
 # ifdef SIOCGIFHWADDR
     char hw_mac[CF_MAXVARSIZE];
 
+    
     ioctl(fd, SIOCGIFHWADDR, ifr);
     snprintf(hw_mac, CF_MAXVARSIZE - 1, "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x",
              (unsigned char) ifr->ifr_hwaddr.sa_data[0],
@@ -563,8 +564,8 @@ static void Unix_GetMacAddress(enum cfagenttype ag, int fd, struct ifreq *ifr, s
              (unsigned char) ifr->ifr_hwaddr.sa_data[4], (unsigned char) ifr->ifr_hwaddr.sa_data[5]);
 
     NewScalar("sys", name, hw_mac, cf_str);
-    AppendRlist(&hardware, hw_mac, CF_SCALAR);
-    AppendRlist(&interfaces, ifp->ifr_name, CF_SCALAR);
+    AppendRlist(hardware, hw_mac, CF_SCALAR);
+    AppendRlist(interfaces, ifp->ifr_name, CF_SCALAR);
 
     snprintf(name, CF_MAXVARSIZE, "mac_%s", CanonifyName(hw_mac));
     NewClass(name);
@@ -823,7 +824,7 @@ void Unix_GetInterfaceInfo(enum cfagenttype ag)
             }
 
             // Set the hardware/mac address array
-            Unix_GetMacAddress(ag, fd, &ifr, ifp, interfaces, hardware);
+            Unix_GetMacAddress(ag, fd, &ifr, ifp, &interfaces, &hardware);
         }
     }
 

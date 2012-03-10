@@ -383,7 +383,7 @@ BodySyntax CF_COMMON_BODIES[] =
     {"depends_on", cf_slist, "","A list of promise handles that this promise builds on or depends on somehow (for knowledge management)"},
     {"handle", cf_str, CF_IDRANGE, "A unique id-tag string for referring to this as a promisee elsewhere"},
     {"ifvarclass", cf_str, "", "Extended classes ANDed with context"},
-    {"meta", cf_str, "", "Non-functional field for keeping user-data associated with policy"},
+    {"meta", cf_slist, "", "User-data associated with policy, e.g. key=value strings"},
     {NULL, cf_notype, NULL, NULL}
 };
 

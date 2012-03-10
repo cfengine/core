@@ -380,8 +380,9 @@ BodySyntax CF_COMMON_BODIES[] =
     {CF_TRANSACTION, cf_body, CF_TRANSACTION_BODY, "Output behaviour"},
     {CF_DEFINECLASSES, cf_body, CF_DEFINECLASS_BODY, "Signalling behaviour"},
     {"comment", cf_str, "", "A comment about this promise's real intention that follows through the program"},
-    {"depends_on", cf_slist, "","A list of promise handles that this promise builds on or depends on somehow (for knowledge management)"},
+    {"depends_on", cf_slist, "",
     {"handle", cf_str, CF_IDRANGE, "A unique id-tag string for referring to this as a promisee elsewhere"},
+     "A list of promise handles that this promise builds on or depends on somehow (for knowledge management)"},
     {"ifvarclass", cf_str, "", "Extended classes ANDed with context"},
     {"meta", cf_str, "", "Non-functional field for keeping user-data associated with policy"},
     {NULL, cf_notype, NULL, NULL}

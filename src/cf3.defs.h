@@ -703,9 +703,7 @@ struct Promise_
 
     char *classes;
     char *ref;                  /* comment */
-    char *meta;                 /* comment */
     char ref_alloc;
-    char meta_alloc;
     char *promiser;
     Rval promisee;
     char *bundle;

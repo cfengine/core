@@ -33,7 +33,6 @@
 #include "cf3.extern.h"
 
 static void DereferenceComment(Promise *pp);
-static void DereferenceMeta(Promise *pp);
 
 /*****************************************************************************/
 
@@ -126,8 +125,6 @@ Promise *DeRefCopyPromise(char *scopeid, Promise *pp)
     pcopy->bundle = xstrdup(pp->bundle);
     pcopy->ref = pp->ref;
     pcopy->ref_alloc = pp->ref_alloc;
-    pcopy->meta = pp->meta;
-    pcopy->meta_alloc = pp->meta_alloc;
     pcopy->agentsubtype = pp->agentsubtype;
     pcopy->done = pp->done;
     pcopy->inode_cache = pp->inode_cache;
@@ -305,8 +302,6 @@ Promise *ExpandDeRefPromise(char *scopeid, Promise *pp)
     pcopy->bundle = xstrdup(pp->bundle);
     pcopy->ref = pp->ref;
     pcopy->ref_alloc = pp->ref_alloc;
-    pcopy->meta = pp->meta;
-    pcopy->meta_alloc = pp->meta_alloc;
     pcopy->agentsubtype = pp->agentsubtype;
     pcopy->cache = pp->cache;
     pcopy->inode_cache = pp->inode_cache;
@@ -351,27 +346,6 @@ Promise *ExpandDeRefPromise(char *scopeid, Promise *pp)
                 if (pcopy->ref && (strstr(pcopy->ref, "$(this.promiser)") || strstr(pcopy->ref, "${this.promiser}")))
                 {
                     DereferenceComment(pcopy);
-                }
-            }
-        }
-
-        if (strcmp(cp->lval, "meta") == 0)
-        {
-            if (final.rtype != CF_SCALAR)
-            {
-                char err[CF_BUFSIZE];
-
-                snprintf(err, CF_BUFSIZE, "Meta tags can only be scalar objects (not %c in \"%s\")", final.rtype,
-                         pp->promiser);
-                yyerror(err);
-            }
-            else
-            {
-                pcopy->meta = final.item;        /* No alloc reference to comment item */
-
-                if (pcopy->meta && (strstr(pcopy->meta, "$(this.promiser)") || strstr(pcopy->meta, "${this.promiser}")))
-                {
-                    DereferenceMeta(pcopy);
                 }
             }
         }
@@ -420,8 +394,6 @@ Promise *CopyPromise(char *scopeid, Promise *pp)
     pcopy->bundle = xstrdup(pp->bundle);
     pcopy->ref = pp->ref;
     pcopy->ref_alloc = pp->ref_alloc;
-    pcopy->meta = pp->meta;
-    pcopy->meta_alloc = pp->meta_alloc;
     pcopy->agentsubtype = pp->agentsubtype;
     pcopy->cache = pp->cache;
     pcopy->inode_cache = pp->inode_cache;
@@ -459,18 +431,6 @@ Promise *CopyPromise(char *scopeid, Promise *pp)
             else
             {
                 pcopy->ref = final.item;        /* No alloc reference to comment item */
-            }
-        }
-
-        if (strcmp(cp->lval, "meta") == 0)
-        {
-            if (final.rtype != CF_SCALAR)
-            {
-                yyerror("Comments can only be scalar objects");
-            }
-            else
-            {
-                pcopy->meta = final.item;        /* No alloc reference to comment item */
             }
         }
     }
@@ -618,13 +578,6 @@ void DeletePromises(Promise *pp)
         ThreadUnlock(cft_policy);
     }
 
-    if (pp->meta_alloc == 'y')
-    {
-        ThreadLock(cft_policy);
-        free(pp->meta);
-        ThreadUnlock(cft_policy);
-    }
-
     DeletePromise(pp);
 }
 
@@ -649,7 +602,6 @@ Promise *NewPromise(char *typename, char *promiser)
 
     pp->agentsubtype = typename;        /* cache this, do not copy string */
     pp->ref_alloc = 'n';
-    pp->meta_alloc = 'n';
     pp->has_subbundles = false;
 
     AppendConstraint(&(pp->conlist), "handle", (Rval) {xstrdup("internal_promise"), CF_SCALAR}, NULL, false);
@@ -862,31 +814,5 @@ static void DereferenceComment(Promise *pp)
 
         pp->ref = xstrdup(buffer);
         pp->ref_alloc = 'y';
-    }
-}
-
-/*******************************************************************/
-
-static void DereferenceMeta(Promise *pp)
-{
-    char pre_buffer[CF_BUFSIZE], post_buffer[CF_BUFSIZE], buffer[CF_BUFSIZE], *sp;
-    int offset = 0;
-
-    strlcpy(pre_buffer, pp->meta, CF_BUFSIZE);
-
-    if ((sp = strstr(pre_buffer, "$(this.promiser)")) || (sp = strstr(pre_buffer, "${this.promiser}")))
-    {
-        *sp = '\0';
-        offset = sp - pre_buffer + strlen("$(this.promiser)");
-        strncpy(post_buffer, pp->meta + offset, CF_BUFSIZE);
-        snprintf(buffer, CF_BUFSIZE, "%s%s%s", pre_buffer, pp->promiser, post_buffer);
-
-        if (pp->meta_alloc == 'y')
-        {
-            free(pp->meta);
-        }
-
-        pp->meta = xstrdup(buffer);
-        pp->meta_alloc = 'y';
     }
 }

@@ -256,7 +256,6 @@ Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *class
     pp->bundletype = xstrdup(bundletype);       /* cache agent,common,server etc */
     pp->agentsubtype = type->name;      /* Cache the typename */
     pp->ref_alloc = 'n';
-    pp->meta_alloc = 'n';
 
     return pp;
 }

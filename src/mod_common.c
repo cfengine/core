@@ -185,7 +185,7 @@ BodySyntax CFA_CONTROLBODY[] =
      "1"},
     {"inform", cf_opts, CF_BOOL, "true/false set inform level default", "false"},
     {"intermittency", cf_opts, CF_BOOL,
-     "true/false store detailed recordings of last observed time for all client-server connections for reliability assessment",
+     "This option is deprecated, does nothing and is kept for backward compatibility",
      "false"},
     {"max_children", cf_int, CF_VALRANGE, "Maximum number of background tasks that should be allowed concurrently",
      "1 concurrent agent promise"},

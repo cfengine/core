@@ -33,7 +33,6 @@
 #include "cf3.extern.h"
 
 static void FriendStatus(Attributes a, Promise *pp);
-static void VerifyFriendReliability(Attributes a, Promise *pp);
 static void VerifyFriendConnections(int hours, Attributes a, Promise *pp);
 static void ShowState(char *type, Attributes a, Promise *pp);
 static void PrintFile(Attributes a, Promise *pp);
@@ -347,7 +346,6 @@ static void ShowState(char *type, Attributes a, Promise *pp)
 static void FriendStatus(Attributes a, Promise *pp)
 {
     VerifyFriendConnections(a.report.lastseen, a, pp);
-    VerifyFriendReliability(a, pp);
 }
 
 /*********************************************************************/
@@ -500,171 +498,4 @@ static void VerifyFriendConnections(int hours, Attributes a, Promise *pp)
 
     DeleteDBCursor(dbp, dbcp);
     CloseDB(dbp);
-}
-
-/***************************************************************/
-
-static void VerifyFriendReliability(Attributes a, Promise *pp)
-{
-    CF_DB *dbp;
-    CF_DBC *dbcp;
-    int i, ksize, vsize;
-    char *key;
-    void *value;
-    double n[CF_RELIABLE_CLASSES], n_av[CF_RELIABLE_CLASSES], total;
-    double p[CF_RELIABLE_CLASSES], p_av[CF_RELIABLE_CLASSES];
-    char name[CF_BUFSIZE], hostname[CF_BUFSIZE], timekey[CF_MAXVARSIZE];
-    QPoint entry;
-    Item *ip, *hostlist = NULL;
-    double average, sum, sum_av, expect, actual;
-    time_t now = time(NULL), then, lastseen = SECONDS_PER_WEEK;
-
-    CfOut(cf_verbose, "", "CheckFriendReliability()\n");
-    snprintf(name, CF_BUFSIZE - 1, "%s/%s", CFWORKDIR, CF_LASTDB_FILE);
-
-    average = (double) SECONDS_PER_HOUR;        /* It will take a week for a host to be deemed reliable */
-
-    if (!OpenDB(name, &dbp))
-    {
-        return;
-    }
-
-    if (!NewDBCursor(dbp, &dbcp))
-    {
-        CfOut(cf_inform, "", " !! Unable to scan last-seen db");
-        return;
-    }
-
-    while (NextDB(dbp, dbcp, &key, &ksize, &value, &vsize))
-    {
-        strcpy(hostname, IPString2Hostname((char *) key + 1));
-
-        if (!IsItemIn(hostlist, hostname))
-        {
-            /* Check hostname not recorded twice with +/- */
-            AppendItem(&hostlist, hostname, NULL);
-            CfOut(cf_verbose, "", " Measuring reliability of %s\n", hostname);
-        }
-    }
-
-    DeleteDBCursor(dbp, dbcp);
-    CloseDB(dbp);
-
-/* Now go through each host and recompute entropy */
-
-    for (ip = hostlist; ip != NULL; ip = ip->next)
-    {
-        snprintf(name, CF_BUFSIZE - 1, "%s/%s.%s", CFWORKDIR, CF_LASTDB_FILE, ip->name);
-        MapName(name);
-
-        if (!OpenDB(name, &dbp))
-        {
-            return;
-        }
-
-        for (i = 0; i < CF_RELIABLE_CLASSES; i++)
-        {
-            n[i] = n_av[i] = 0.0;
-        }
-
-        total = 0.0;
-
-        for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING + SECONDS_PER_WEEK; now += CF_MEASURE_INTERVAL)
-        {
-            strcpy(timekey, GenTimeKey(now));
-
-            if (ReadDB(dbp, timekey, &value, sizeof(entry)))
-            {
-                memcpy(&entry, value, sizeof(entry));
-                then = (time_t) entry.q;
-                lastseen = now - then;
-                if (lastseen < 0)
-                {
-                    lastseen = 0;       /* Never seen before, so pretend */
-                }
-                average = (double) entry.expect;
-                CfDebug("%s => then = %ld, lastseen = %ld, average=%.2f\n", hostname, then, lastseen, average);
-            }
-            else
-            {
-                /* If we have no data, it means no contact for whatever reason.
-                   It could be unable to respond unwilling to respond, policy etc.
-                   Assume for argument that we expect regular responses ... */
-
-                lastseen += CF_MEASURE_INTERVAL;        /* infer based on no data */
-            }
-
-            for (i = 0; i < CF_RELIABLE_CLASSES; i++)
-            {
-                if (lastseen >= i * SECONDS_PER_HOUR && lastseen < (i + 1) * SECONDS_PER_HOUR)
-                {
-                    n[i]++;
-                }
-
-                if (average >= (double) (i * SECONDS_PER_HOUR) && average < (double) ((i + 1) * SECONDS_PER_HOUR))
-                {
-                    n_av[i]++;
-                }
-            }
-
-            total++;
-        }
-
-        sum = sum_av = 0.0;
-
-        for (i = 0; i < CF_RELIABLE_CLASSES; i++)
-        {
-            p[i] = n[i] / total;
-            p_av[i] = n_av[i] / total;
-            sum += p[i];
-            sum_av += p_av[i];
-        }
-
-        CfDebug("Reliabilities sum to %.2f av %.2f\n\n", sum, sum_av);
-
-        sum = sum_av = 0.0;
-
-        for (i = 0; i < CF_RELIABLE_CLASSES; i++)
-        {
-            if (p[i] == 0.0)
-            {
-                continue;
-            }
-            sum -= p[i] * log(p[i]);
-        }
-
-        for (i = 0; i < CF_RELIABLE_CLASSES; i++)
-        {
-            if (p_av[i] == 0.0)
-            {
-                continue;
-            }
-            sum_av -= p_av[i] * log(p_av[i]);
-        }
-
-        actual = sum / log((double) CF_RELIABLE_CLASSES) * 100.0;
-        expect = sum_av / log((double) CF_RELIABLE_CLASSES) * 100.0;
-
-        CfOut(cf_verbose, "", "Scaled entropy for %s = %.1f %%\n", ip->name, actual);
-        CfOut(cf_verbose, "", "Expected entropy for %s = %.1f %%\n\n", ip->name, expect);
-
-        if (actual > expect)
-        {
-            CfOut(cf_inform, "", " !! The reliability of %s deteriorated\n", ip->name);
-        }
-
-        if (actual > 50.0)
-        {
-            CfOut(cf_error, "", "FriendStatus reports the intermittency of %s above 50%% (SEUs)\n", ip->name);
-        }
-
-        if (expect > actual)
-        {
-            CfOut(cf_inform, "", "The reliability of %s is improved\n", ip->name);
-        }
-
-        CloseDB(dbp);
-    }
-
-    DeleteItemList(hostlist);
 }

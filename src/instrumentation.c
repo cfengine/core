@@ -346,19 +346,12 @@ void LastSaw(char *username, char *ipaddress, unsigned char digest[EVP_MAX_MD_SI
 
 static void UpdateLastSawHost(char *rkey, char *ipaddress)
 {
-    CF_DB *dbpent = NULL, *dbp = NULL;
+    CF_DB *dbp = NULL;
     KeyHostSeen q, newq;
     double lastseen, delta2;
     char name[CF_BUFSIZE];
     time_t now = time(NULL);
-    int intermittency = false;
     char timebuf[26];
-
-    if (BooleanControl("control_agent", CFA_CONTROLBODY[cfa_intermittency].lval))
-    {
-        CfOut(cf_inform, "", " -> Recording intermittency");
-        intermittency = true;
-    }
 
     snprintf(name, CF_BUFSIZE - 1, "%s/%s", CFWORKDIR, CF_LASTDB_FILE);
     MapName(name);
@@ -367,18 +360,6 @@ static void UpdateLastSawHost(char *rkey, char *ipaddress)
     {
         CfOut(cf_inform, "", " !! Unable to open last seen db");
         return;
-    }
-
-    if (intermittency)
-    {
-        /* Open special file for peer entropy record - INRIA-like intermittency */
-        snprintf(name, CF_BUFSIZE - 1, "%s/lastseen/%s.%s", CFWORKDIR, CF_LASTDB_FILE, rkey);
-        MapName(name);
-
-        if (!OpenDB(name, &dbpent))
-        {
-            intermittency = false;
-        }
     }
 
     if (ReadDB(dbp, rkey, &q, sizeof(q)))
@@ -434,11 +415,6 @@ static void UpdateLastSawHost(char *rkey, char *ipaddress)
             CfOut(cf_verbose, "", " ! Not updating last seen, as this appears to be a host with a duplicate key");
             CloseDB(dbp);
 
-            if (intermittency && dbpent)
-            {
-                CloseDB(dbpent);
-            }
-
             return;
         }
     }
@@ -448,16 +424,6 @@ static void UpdateLastSawHost(char *rkey, char *ipaddress)
     PurgeMultipleIPReferences(dbp, rkey, ipaddress);
 
     WriteDB(dbp, rkey, &newq, sizeof(newq));
-
-    if (intermittency)
-    {
-        WriteDB(dbpent, GenTimeKey(now), &newq, sizeof(newq));
-    }
-
-    if (intermittency && dbpent)
-    {
-        CloseDB(dbpent);
-    }
 
     CloseDB(dbp);
 }

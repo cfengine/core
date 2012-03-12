@@ -39,6 +39,7 @@
 	- Memory and CPU usage improvements.
 	- Testsuite now uses 'make check' convention and does not need root
 	  privileges anymore.
+	- Rarely used feature retired: peer connectivity intermittency calculation.
 	- cf_promises_validated now filled with timestamp, allows digest-copy
 	  for policy instead of mtime copy which is safer when clocks are unsynchonised
 	- See the full list of bugfixes at

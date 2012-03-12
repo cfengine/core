@@ -297,8 +297,8 @@ packages are installed.
 @table @r
 @item @b{OpenSSL}
 Open source Secure Sockets Layer for encryption.@*URL: @url{http://www.openssl.org}
-@item @b{BerkeleyDB} (version 3.2 or later)
-Light-weight flat-file database system.@*URL: @url{http://www.oracle.com/technology/products/berkeley-db/index.html}
+@item @b{Tokyo Cabinet} (version 1.4.42 or later)
+Lightweight flat-file database system.@*URL: @url{http://fallabs.com/tokyocabinet/}
 @item @b{PCRE}
 Perl Compatible Regular Expression library.@*URL: @url{http://www.pcre.org/}
 

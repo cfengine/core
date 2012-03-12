@@ -53,9 +53,7 @@ libpromises_la_SOURCES = \
         crypto.c \
         csv_writer.c csv_writer.h \
         dbm_api.c \
-        dbm_berkeley.c \
         dbm_quick.c \
-        dbm_sqlite3.c \
         dbm_tokyocab.c \
         dir.c dir.h dir_priv.h \
         dtypes.c \

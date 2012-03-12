@@ -254,11 +254,11 @@ If they are not installed, then you can easily install them using the appropriat
 
 @table @i
 @item Debian/Ubuntu:       
-@code{apt-get install libdb4.* libpcre3 libssl }
+@code{apt-get install libtokyocabinet-dev libpcre3-dev libssl-dev}
 @item CentOS/RedHat:      
-@code{yum install db4 pcre openssl}
+@code{yum install tokyocabinet-devel pcre openssl}
 @item SuSE:                         
-@code{zypper install libdb-4_* pcre libopenssl }
+@code{zypper install libtokyocabinet-devel pcre libopenssl}
 @end table
 
 Once the prerequisites are installed or verified, you may proceed to the CFEngine installation. 

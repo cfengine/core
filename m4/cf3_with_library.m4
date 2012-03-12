@@ -16,7 +16,7 @@ AC_DEFUN([CF3_WITH_LIBRARY],
   #
   # Populate ${LIBRARY}_{PATH,CFLAGS,LDFLAGS} according to arguments
   #
-  if test "x$with_[$1]" != xyes && test "x$with_[$1]" != xcheck; then
+  if test "x$with_[$1]" != xyes && test "x$with_[$1]" != xcheck && test "x$with_[$1]" != x; then
     ULN[]_PATH="$with_[$1]"
     if test "x$with_[$1]" != x/usr && test "x$with_[$1]" != x/; then
       ULN[]_CFLAGS="-I$with_[$1]/include"

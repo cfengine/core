@@ -41,7 +41,7 @@
 	  privileges anymore.
 	- Rarely used feature retired: peer connectivity intermittency calculation.
 	- cf_promises_validated now filled with timestamp, allows digest-copy
-	  for policy instead of mtime copy which is safer when clocks are unsynchonised
+	  for policy instead of mtime copy which is safer when clocks are unsynchronised
 	- See the full list of bugfixes at
 	  https://cfengine.com/bugtracker/changelog_page.php
 

@@ -415,8 +415,8 @@ int rpl_asprintf(char **, const char *, ...);
 /*******************************************************************/
 
 /* Convert integer constant to string */
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
+#define STRINGIFY__INTERNAL_MACRO(x) #x
+#define TOSTRING(x) STRINGIFY__INTERNAL_MACRO(x)
 
 /*******************************************************************/
 /* Various defines                                                 */

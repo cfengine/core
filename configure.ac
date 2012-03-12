@@ -231,7 +231,7 @@ dnl Tokyo Cabinet
 AC_ARG_WITH([tokyocabinet],
     [AS_HELP_STRING([--with-tokyocabinet[[=PATH]]], [use Tokyo Cabinet to store runtime data])])
 
-AS_IF([! test -n "$with_tokyocabinet" || test "x$with_tokyocabinet" != "xno"], [WITH_TOKYO=1], [WITH_TOKYO=0])
+AS_IF([test $WITH_QDBM -eq 0 && (! test -n "$with_tokyocabinet" || test "x$with_tokyocabinet" != "xno")], [WITH_TOKYO=1], [WITH_TOKYO=0])
 
 if test $WITH_TOKYO = 1; then
   CF3_WITH_LIBRARY(tokyocabinet, [

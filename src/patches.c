@@ -45,6 +45,19 @@ static char *cf_format_strtimestamp(struct tm *tm, char *buf);
 #ifdef NT
 # if defined(__MINGW32__)
 
+char *MapNameCopy(const char *s)
+{
+    char *str = xstrdup(s);
+
+    char *c = str;
+    while ((c = strchr(c, '/')))
+    {
+        *c = '\\';
+    }
+
+    return c;
+}
+
 char *MapName(char *s)
 {
     char *c = s;
@@ -58,56 +71,43 @@ char *MapName(char *s)
 
 # elif defined(__CYGWIN__)
 
-char *MapName(char *s)
+char *MapNameCopy(const char *s)
 {
-    char buffer[CF_BUFSIZE];
-    char *spto;
-    char *spf;
+    Writer *w = StringWriter();
 
-    memset(buffer, 0, CF_BUFSIZE);
-
-    spto = buffer;
-
-    for (spf = s; *spf != '\0'; spf++)
+    /* c:\a\b -> /cygdrive/c\a\b */
+    if (s[0] && isalpha(s[0]) && s[1] == ':')
     {
-        if (IsFileSep(*spf) && IsFileSep(*(spf + 1)))   /* compress // or \\ */
-        {
-            continue;
-        }
-
-        if (IsFileSep(*spf) && *(spf + 1) != '\0' && *(spf + 2) == ':') /* compress \c:\abc */
-        {
-            continue;
-        }
-
-        if (*(spf + 1) != '\0' && (strncmp(spf + 1, ":\\", 2) == 0 || strncmp(spf + 1, ":/", 2) == 0))
-        {
-            /* For cygwin translation */
-            strcat(spto, "/cygdrive/");
-            /* Drive letter */
-            strncat(spto, spf, 1);
-            strcat(spto, "/");
-            spto += strlen("/cygdrive/c/");
-            spf += strlen("c:/") - 1;
-            continue;
-        }
-
-        switch (*spf)
-        {
-        case '\\':
-            *spto = '/';
-            break;
-
-        default:
-            *spto = *spf;
-            break;
-        }
-
-        spto++;
+        WriterWriteF(w, "/cygdrive/%c", s[0]);
+        s += 2;
     }
 
-    memset(s, 0, MAX_FILENAME);
-    strncpy(s, buffer, MAX_FILENAME - 1);
+    for (; *s; s++)
+    {
+        /* a//b//c -> a/b/c */
+        /* a\\b\\c -> a\b\c */
+        if (IsFileSep(*s) && IsFileSep(*(s + 1)))
+        {
+            continue;
+        }
+
+        /* a\b\c -> a/b/c */
+        WriterWriteChar(w, *s == '\\' ? '/' : *s);
+    }
+
+    return StringWriterClose(w);
+}
+
+char *MapName(char *s)
+{
+    char *ret = MapNameCopy(s);
+
+    if (strlcpy(s, ret, MAX_FILENAME) >= MAX_FILENAME)
+    {
+        FatalError("Expanded path (%s) is longer than MAX_FILENAME ("
+                   TOSTRING(MAX_FILENAME) ") characters",
+                   ret);
+    }
 
     return s;
 }
@@ -120,6 +120,11 @@ char *MapName(char *s)
 char *MapName(char *s)
 {
     return s;
+}
+
+char *MapNameCopy(const char *s)
+{
+    return xstrdup(s);
 }
 
 #endif /* NT */

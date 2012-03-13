@@ -42,6 +42,15 @@ dnl ######################################################################
 dnl Use pthreads if available
 dnl ######################################################################
 
+AC_ARG_WITH([pthreads],
+    [AS_HELP_STRING([--with-pthreads[[=PATH]]],
+                    [Specify path to pthreads, if not the part of operating system])])
+
+if test "x$with_pthreads" != "xyes" && test "x$with_pthreads" != "xno"; then
+   LIBS="$LIBS -L$with_pthreads/lib"
+   CFLAGS="$CFLAGS -I$with_pthreads/include"
+fi
+
 ACX_PTHREAD
 
 CC="$PTHREAD_CC"

@@ -1308,7 +1308,7 @@ static JsonElement *ExportAttributesSyntaxAsJson(const BodySyntax attributes[])
         }
         else
         {
-            JsonElement *attribute = NULL;
+            JsonElement *attribute = JsonObjectCreate(10);
 
             JsonObjectAppendString(attribute, "datatype", CF_DATATYPES[attributes[i].dtype]);
 
@@ -1318,7 +1318,7 @@ static JsonElement *ExportAttributesSyntaxAsJson(const BodySyntax attributes[])
             }
             else if (attributes[i].dtype == cf_opts || attributes[i].dtype == cf_olist)
             {
-                JsonElement *options = NULL;
+                JsonElement *options = JsonArrayCreate(10);
                 char options_buffer[CF_BUFSIZE];
                 char *option = NULL;
 
@@ -1346,7 +1346,7 @@ static JsonElement *ExportAttributesSyntaxAsJson(const BodySyntax attributes[])
 
 static JsonElement *ExportBundleTypeSyntaxAsJson(char *bundle_type)
 {
-    JsonElement *json = NULL;
+    JsonElement *json = JsonObjectCreate(10);
     SubTypeSyntax *st;
     int i = 0, j = 0;
 
@@ -1385,7 +1385,7 @@ static JsonElement *ExportControlBodiesSyntaxAsJson()
 
 void SyntaxPrintAsJson(Writer *writer)
 {
-    JsonElement *syntax_tree = NULL;
+    JsonElement *syntax_tree = JsonObjectCreate(10);
 
     {
         JsonElement *control_bodies = ExportControlBodiesSyntaxAsJson();
@@ -1394,7 +1394,7 @@ void SyntaxPrintAsJson(Writer *writer)
     }
 
     {
-        JsonElement *bundle_types = NULL;
+        JsonElement *bundle_types = JsonObjectCreate(10);
         int i = 0;
 
         for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)

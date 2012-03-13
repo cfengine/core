@@ -63,6 +63,7 @@ dnl ######################################################################
 
 AC_PROG_CC
 AM_PROG_CC_C_O
+AC_PROG_MKDIR_P
 AC_EXEEXT
 
 # Use either new LT_INIT or old AC_DISABLE_STATIC/AC_PROG_LIBTOOL macros
@@ -112,6 +113,7 @@ AC_ARG_ENABLE([fhs],
 AS_IF([test x"$enable_fhs" = xyes], [
   projlibdir='${libexecdir}/cfengine'
   projdatadir='${exec_prefix}/share/cfengine'
+  projdocdir='${exec_prefix}/share/doc/cfengine'
 ], [
   if test x"$prefix" = xNONE; then
     prefix=/var/cfengine
@@ -119,12 +121,13 @@ AS_IF([test x"$enable_fhs" = xyes], [
   sbindir='${exec_prefix}/bin' # /var/cfengine/bin despite being sbin_?
   projlibdir='${exec_prefix}/lib'
   projdatadir='${exec_prefix}/share'
-  docdir='${exec_prefix}/share/doc'
+  projdocdir='${exec_prefix}/share/doc'
   mandir='${exec_prefix}/share/man'
 ])
 
 AC_SUBST(projlibdir)
 AC_SUBST(projdatadir)
+AC_SUBST(projdocdir)
 
 dnl ######################################################################
 dnl Enable debugging

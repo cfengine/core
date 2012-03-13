@@ -1,4 +1,4 @@
-exampleconfigdir = @docdir@/example_config
+exampleconfigdir = $(projdocdir)/example_config
 dist_exampleconfig_DATA = $(srcdir)/failsafe.cf $(top_srcdir)/masterfiles/cfengine_stdlib.cf $(srcdir)/promises.cf $(srcdir)/site.cf $(srcdir)/update.cf
 
 #

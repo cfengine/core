@@ -18,8 +18,8 @@ DIST_COMMON = README Makefile.am Makefile.in configure AUTHORS aclocal.m4 \
 
 EXTRA_DIST = ChangeLog INSTALL README LICENSE
 
-docdir = @docdir@
-doc_DATA = README ChangeLog
+docsdir = $(projdocdir)
+docs_DATA = README ChangeLog
 
 #
 # Some basic clean ups
@@ -83,5 +83,5 @@ coverage:
 	$(LCOV) $(LCOV_FLAGS) --remove cfengine-lcov.info '/usr/include/*' --output-file cfengine-lcov.info
 	LANG=C $(LCOV_GENHTML) $(LCOV_FLAGS) --prefix . --output-directory coverage-html --title "CFEngine Code Coverage" --legend --show-details cfengine-lcov.info
 	@echo
-	@echo " Code coverage information: file://$(abs_top_builddir)/coverage-html/index.html"
+	@echo " Code coverage information: file://"`pwd`"/coverage-html/index.html"
 	@echo

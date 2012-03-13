@@ -19,10 +19,10 @@ endif
 
 endif
 
-.PRECIOUS: $(top_builddir)/src/%
+.PRECIOUS: ../../src/%
 
-$(top_builddir)/src/%:
-	$(MAKE) -C $(top_builddir)/src $(AM_MAKEFLAGS) $<
+../../src/%:
+	$(MAKE) -C ../../src $(AM_MAKEFLAGS) $<
 
-%.8 : $(top_builddir)/src/%
+%.8 : ../../src/%
 	$(AM_V_GEN)$< -M > $@

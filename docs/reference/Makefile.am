@@ -1,15 +1,15 @@
 TEX_INCLUDEDIR=$(srcdir)/../tex-include
 
-.PRECIOUS: $(top_builddir)/src/cf-know
+.PRECIOUS: ../../src/cf-know
 
-$(top_builddir)/src/cf-know:
-	$(MAKE) -C $(top_builddir)/src $(AM_MAKEFLAGS) cf-know
+../../src/cf-know:
+	$(MAKE) -C ../../src $(AM_MAKEFLAGS) cf-know
 
-cf3-Reference.texinfo: $(top_builddir)/src/cf-know \
+cf3-Reference.texinfo: ../../src/cf-know \
     generate_manual.cf \
     $(filter-out cf3-Reference.texinfo,$(wildcard *.texinfo)) \
     $(wildcard */*.texinfo)
-	$(AM_V_GEN)$(top_builddir)/src/cf-know -f ./generate_manual.cf
+	$(AM_V_GEN)../../src/cf-know -f ./generate_manual.cf
 
 %.html: %.texinfo
 	$(AM_V_GEN)$(MAKEINFO) \

@@ -88,7 +88,6 @@ AC_DEFUN([HW_FUNC___VA_COPY],
 # the replacement function will be built.
 AC_DEFUN([HW_FUNC_VSNPRINTF],
 [
-  AC_PREREQ([2.60])dnl 2.59 should work if some AC_TYPE_* macros are replaced.
   AC_REQUIRE([HW_HEADER_STDARG_H])dnl Our check evaluates HAVE_STDARG_H.
   AC_CHECK_FUNC([vsnprintf],
     [hw_cv_func_vsnprintf=yes],

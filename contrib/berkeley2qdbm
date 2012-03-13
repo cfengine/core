@@ -1,0 +1,62 @@
+#!/bin/sh -e
+#
+#  Copyright (C) Cfengine AS
+#
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+#
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License  
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+#
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commerical Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+#
+
+usage() {
+  echo
+  echo "Usage: berkeley2qdbm INDB OUTDB"
+  echo
+  echo " Converts Berkeley DB database to QDBM database"
+  echo
+}
+
+if [ $# -ne 2 ]; then
+  usage >&2
+  exit 1
+fi
+
+INDB="$1"
+OUTDB="$2"
+
+DBDUMP=${DBDUMP:-db5.1_dump}
+DPTSV=${DPTSV:-dptsv}
+
+convert_db() {
+  while read line; do
+    if [ "x$line" = "xHEADER=END" ]; then
+      break
+    fi
+  done
+
+  while true; do
+    read key
+    if [ "x$key" = "xDATA=END" ]; then
+      break
+    fi
+    read value
+    printf "$key\t$value\n"
+  done
+}
+
+"$DBDUMP" "$INDB" | convert_db | "$DPTSV" import -bin "$OUTDB"

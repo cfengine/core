@@ -23,30 +23,105 @@
   included file COSL.txt.
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: dbm_quick.c                                                         */
-/*                                                                           */
-/*****************************************************************************/
-
 /*
- * Implementation of the Cfengine DBM API using Quick Database Manager.
+ * Implementation using QDBM
  */
 
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#include "dbm_api.h"
+#include "dbm_priv.h"
+
 #ifdef QDB
+# include <depot.h>
 
-int QDB_OpenDB(char *filename, CF_QDB **qdbp)
+struct DBPriv_
 {
-    ThreadLock(cft_system);
+    /*
+     * This mutex controls the access to depot, which is not thread-aware
+     */
+    pthread_mutex_t lock;
 
-    *qdbp = xmalloc(sizeof(CF_QDB));
+    /*
+     * This mutex prevents two cursors to be active on depot at same time, as
+     * cursors are internal for QDBM. 'cursor_lock' is always taken before
+     * 'lock' to avoid deadlocks.
+     */
+    pthread_mutex_t cursor_lock;
 
-    (*qdbp)->depot = dpopen(filename, DP_OWRITER | DP_OCREAT, -1);
+    DEPOT *depot;
+};
 
-    if (((*qdbp)->depot == NULL) && (dpecode == DP_EBROKEN))
+struct DBCursorPriv_
+{
+    DBPriv *db;
+    char *curkey;
+    int curkey_size;
+    char *curval;
+};
+
+/******************************************************************************/
+
+static bool Lock(DBPriv *db)
+{
+    int ret = pthread_mutex_lock(&db->lock);
+    if (ret != 0)
+    {
+        errno = ret;
+        CfOut(cf_error, "pthread_mutex_lock", "Unable to lock QDBM database");
+        return false;
+    }
+    return true;
+}
+
+static void Unlock(DBPriv *db)
+{
+    int ret = pthread_mutex_unlock(&db->lock);
+    if (ret != 0)
+    {
+        errno = ret;
+        CfOut(cf_error, "pthread_mutex_unlock", "Unable to unlock QDBM database");
+    }
+}
+
+static bool LockCursor(DBPriv *db)
+{
+    int ret = pthread_mutex_lock(&db->cursor_lock);
+    if (ret != 0)
+    {
+        errno = ret;
+        CfOut(cf_error, "pthread_mutex_lock", "Unable to obtain cursor lock for QDBM database");
+        return false;
+    }
+    return true;
+}
+
+static void UnlockCursor(DBPriv *db)
+{
+    int ret = pthread_mutex_unlock(&db->cursor_lock);
+    if (ret != 0)
+    {
+        errno = ret;
+        CfOut(cf_error, "pthread_mutex_unlock", "Unable to release cursor lock for QDBM database");
+    }
+}
+
+const char *DBPrivGetFileExtension(void)
+{
+    return "qdbm";
+}
+
+DBPriv *DBPrivOpenDB(const char *filename)
+{
+    DBPriv *db = xcalloc(1, sizeof(DBPriv));
+
+    pthread_mutex_init(&db->lock, NULL);
+    pthread_mutex_init(&db->cursor_lock, NULL);
+
+    db->depot = dpopen(filename, DP_OWRITER | DP_OCREAT, -1);
+
+    if ((db->depot == NULL) && (dpecode == DP_EBROKEN))
     {
         CfOut(cf_error, "", "!! Database \"%s\" is broken, trying to repair...", filename);
 
@@ -55,238 +130,222 @@ int QDB_OpenDB(char *filename, CF_QDB **qdbp)
             CfOut(cf_log, "", "Successfully repaired database \"%s\"", filename);
         }
 
-        (*qdbp)->depot = dpopen(filename, DP_OWRITER | DP_OCREAT, -1);
-
+        db->depot = dpopen(filename, DP_OWRITER | DP_OCREAT, -1);
     }
 
-    if ((*qdbp)->depot == NULL)
+    if (db->depot == NULL)
     {
-        CfOut(cf_error, "", "!! dpopen: Opening database \"%s\" failed: %s", filename, dperrmsg(dpecode));
-
-        free(*qdbp);
-        *qdbp = NULL;
-
-        ThreadUnlock(cft_system);
-        return false;
+        CfOut(cf_error, "", "!! dpopen: Opening database \"%s\" failed: %s",
+              filename, dperrmsg(dpecode));
+        pthread_mutex_destroy(&db->cursor_lock);
+        pthread_mutex_destroy(&db->lock);
+        free(db);
+        return NULL;
     }
 
-    (*qdbp)->valmemp = NULL;
-
-    ThreadUnlock(cft_system);
-    return true;
+    return db;
 }
 
-/*****************************************************************************/
-
-int QDB_CloseDB(CF_QDB *qdbp)
+void DBPrivCloseDB(DBPriv *db)
 {
-    int res;
-    char *dbName = NULL;
-    char buf[CF_MAXVARSIZE];
+    int ret;
 
-    dbName = dpname(qdbp->depot);
-    snprintf(buf, sizeof(buf), "CloseDB(%s)\n", dbName);
-    CfDebug(buf);
-
-    ThreadLock(cft_system);
-
-    free(dbName);
-
-    if (qdbp->valmemp != NULL)
+    if ((ret = pthread_mutex_destroy(&db->lock)) != 0)
     {
-        free(qdbp->valmemp);
-        qdbp->valmemp = NULL;
+        errno = ret;
+        CfOut(cf_error, "pthread_mutex_destroy",
+              "Lock is still active during QDBM database handle close");
     }
 
-    res = dpclose(qdbp->depot);
-
-    free(qdbp);
-    qdbp = NULL;
-
-    ThreadUnlock(cft_system);
-
-    return res;
-}
-
-/*****************************************************************************/
-
-int QDB_ValueSizeDB(CF_QDB *qdbp, char *key)
-{
-    return dpvsiz(qdbp->depot, key, -1);
-}
-
-/*****************************************************************************/
-
-int QDB_ReadComplexKeyDB(CF_QDB *qdbp, char *key, int keySz, void *dest, int destSz)
-{
-    int bytesRead;
-
-    bytesRead = dpgetwb(qdbp->depot, key, keySz, 0, destSz, dest);
-
-    if (bytesRead == -1)
+    if ((ret = pthread_mutex_destroy(&db->cursor_lock)) != 0)
     {
-        CfDebug("QDB_ReadComplexKeyDB(%s): Could not read: %s\n", key, dperrmsg(dpecode));
-        return false;
+        errno = ret;
+        CfOut(cf_error, "pthread_mutex_destroy",
+              "Cursor lock is still active during QDBM database handle close");
     }
 
-    return true;
-}
-
-/*****************************************************************************/
-
-int QDB_RevealDB(CF_QDB *qdbp, char *key, void **result, int *rsize)
-{
-    ThreadLock(cft_system);
-
-    if (qdbp->valmemp != NULL)
+    if (!dpclose(db->depot))
     {
-        free(qdbp->valmemp);
-        qdbp->valmemp = NULL;
+        CfOut(cf_error, "", "Unable to close QDBM database: %s", dperrmsg(dpecode));
     }
 
-    ThreadUnlock(cft_system);
-
-    *result = dpget(qdbp->depot, key, -1, 0, -1, rsize);
-
-    if (*result == NULL)
-    {
-        CfDebug("QDB_RevealDB(%s): Could not read: %s\n", key, dperrmsg(dpecode));
-        return false;
-    }
-
-    qdbp->valmemp = *result;    // save mem-pointer for later free
-
-    return true;
+    free(db);
 }
 
-/*****************************************************************************/
-
-int QDB_WriteComplexKeyDB(CF_QDB *qdbp, char *key, int keySz, const void *src, int srcSz)
+bool DBPrivRead(DBPriv *db, const void *key, int key_size, void *dest, int dest_size)
 {
-    char *dbName = NULL;
-
-    if (!dpput(qdbp->depot, key, keySz, src, srcSz, DP_DOVER))
-    {
-        dbName = dpname(qdbp->depot);
-
-        CfOut(cf_error, "", "!! dpput: Could not write key to DB \"%s\": %s", dbName, dperrmsg(dpecode));
-
-        free(dbName);
-
-        return false;
-    }
-
-    return true;
-}
-
-/*****************************************************************************/
-
-int QDB_DeleteComplexKeyDB(CF_QDB *qdbp, char *key, int size)
-{
-
-    if (!dpout(qdbp->depot, key, size))
+    if (!Lock(db))
     {
         return false;
     }
 
+    if (dpgetwb(db->depot, key, key_size, 0, dest_size, dest) == -1)
+    {
+        // FIXME: distinguish between "entry not found" and "failure to read"
+
+        CfDebug("QDBM_ReadComplexKeyDB(%s): Could not read: %s\n",
+                (const char *)key, dperrmsg(dpecode));
+
+        Unlock(db);
+        return false;
+    }
+
+    Unlock(db);
     return true;
 }
 
-/*****************************************************************************/
-
-int QDB_NewDBCursor(CF_QDB *qdbp, CF_QDBC **qdbcp)
+bool DBPrivWrite(DBPriv *db, const void *key, int key_size, const void *value, int value_size)
 {
-    CfDebug("Entering QDB_NewDBCursor()\n");
+    if (!Lock(db))
+    {
+        return false;
+    }
 
-    if (!dpiterinit(qdbp->depot))
+    if (!dpput(db->depot, key, key_size, value, value_size, DP_DOVER))
+    {
+        char *db_name = dpname(db->depot);
+        CfOut(cf_error, "", "!! dpput: Could not write key to DB \"%s\": %s",
+              db_name, dperrmsg(dpecode));
+        free(db_name);
+        Unlock(db);
+        return false;
+    }
+
+    Unlock(db);
+    return true;
+}
+
+bool DBPrivHasKey(DBPriv *db, const void *key, int key_size)
+{
+    if (!Lock(db))
+    {
+        return false;
+    }
+
+    int ret = dpvsiz(db->depot, key, key_size) != -1;
+
+    Unlock(db);
+    return ret;
+}
+
+int DBPrivGetValueSize(DBPriv *db, const void *key, int key_size)
+{
+    if (!Lock(db))
+    {
+        return false;
+    }
+
+    int ret = dpvsiz(db->depot, key, key_size);
+
+    Unlock(db);
+    return ret;
+}
+
+bool DBPrivDelete(DBPriv *db, const void *key, int key_size)
+{
+    if (!Lock(db))
+    {
+        return false;
+    }
+
+    /* dpout returns false both for error and if key is not found */
+    if (!dpout(db->depot, key, key_size) && dpecode != DP_ENOITEM)
+    {
+        Unlock(db);
+        return false;
+    }
+
+    Unlock(db);
+    return true;
+}
+
+DBCursorPriv *DBPrivOpenCursor(DBPriv *db)
+{
+    if (!LockCursor(db))
+    {
+        return NULL;
+    }
+
+    if (!Lock(db))
+    {
+        UnlockCursor(db);
+        return NULL;
+    }
+
+    if (!dpiterinit(db->depot))
     {
         CfOut(cf_error, "", "!! dpiterinit: Could not initialize iterator: %s", dperrmsg(dpecode));
+        Unlock(db);
+        UnlockCursor(db);
+        return NULL;
+    }
+
+    DBCursorPriv *cursor = xcalloc(1, sizeof(DBCursorPriv));
+    cursor->db = db;
+
+    Unlock(db);
+
+    /* Cursor remains locked */
+    return cursor;
+}
+
+bool DBPrivAdvanceCursor(DBCursorPriv *cursor, void **key, int *ksize, void **value, int *vsize)
+{
+    if (!Lock(cursor->db))
+    {
         return false;
     }
 
-    ThreadLock(cft_system);
+    free(cursor->curkey);
+    free(cursor->curval);
 
-    *qdbcp = xcalloc(1, sizeof(CF_QDBC));
+    cursor->curkey = NULL;
+    cursor->curval = NULL;
 
-    ThreadUnlock(cft_system);
-
-    return true;
-}
-
-/*****************************************************************************/
-
-int QDB_NextDB(CF_QDB *qdbp, CF_QDBC *qdbcp, char **key, int *ksize, void **value, int *vsize)
-{
-    CfDebug("Entering QDB_NextDB()\n");
-
-    ThreadLock(cft_system);
-
-    if (qdbcp->curkey != NULL)
-    {
-        free(qdbcp->curkey);
-        qdbcp->curkey = NULL;
-    }
-
-    if (qdbcp->curval != NULL)
-    {
-        free(qdbcp->curval);
-        qdbcp->curval = NULL;
-    }
-
-    *key = dpiternext(qdbp->depot, ksize);
+    *key = dpiternext(cursor->db->depot, ksize);
 
     if (*key == NULL)
     {
-        ThreadUnlock(cft_system);
-        CfDebug("Got NULL-key in QDB_NextDB(): %s\n", dperrmsg(dpecode));
+        /* Reached the end of database */
+        Unlock(cursor->db);
         return false;
     }
 
-    *value = dpget(qdbp->depot, *key, *ksize, 0, -1, vsize);
-
-    if (*value == NULL)
-    {
-        CfOut(cf_error, "", "!! Got NULL-value in QDB_NextDB() for key %s: %s\n", *key, dperrmsg(dpecode));
-        free(*key);
-        *key = NULL;
-        ThreadUnlock(cft_system);
-        return false;
-    }
+    *value = dpget(cursor->db->depot, *key, *ksize, 0, -1, vsize);
 
     // keep pointers for later free
-    qdbcp->curkey = *key;
-    qdbcp->curval = *value;
+    cursor->curkey = *key;
+    cursor->curkey_size = *ksize;
+    cursor->curval = *value;
 
-    ThreadUnlock(cft_system);
-
+    Unlock(cursor->db);
     return true;
 }
 
-/*****************************************************************************/
-
-int QDB_DeleteDBCursor(CF_QDB *qdbp, CF_QDBC *qdbcp)
+bool DBPrivDeleteCursorEntry(DBCursorPriv *cursor)
 {
-    CfDebug("Entering QDB_DeleteDBCursor()\n");
+    return DBPrivDelete(cursor->db, cursor->curkey, cursor->curkey_size);
+}
 
-    ThreadLock(cft_system);
+bool DBPrivWriteCursorEntry(DBCursorPriv *cursor, const void *value, int value_size)
+{
+    return DBPrivWrite(cursor->db, cursor->curkey, cursor->curkey_size, value, value_size);
+}
 
-    if (qdbcp->curkey != NULL)
-    {
-        free(qdbcp->curkey);
-        qdbcp->curkey = NULL;
-    }
+void DBPrivCloseCursor(DBCursorPriv *cursor)
+{
+    DBPriv *db = cursor->db;
 
-    if (qdbcp->curval != NULL)
-    {
-        free(qdbcp->curval);
-        qdbcp->curval = NULL;
-    }
+    /* FIXME: communicate the deadlock if happens */
+    Lock(db);
 
-    free(qdbcp);
+    free(cursor->curkey);
+    free(cursor->curval);
+    free(cursor);
 
-    ThreadUnlock(cft_system);
-
-    return true;
+    Unlock(db);
+    /* Cursor lock was obtained in DBPrivOpenCursor */
+    UnlockCursor(db);
 }
 
 #endif

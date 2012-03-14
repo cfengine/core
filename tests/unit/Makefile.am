@@ -23,7 +23,8 @@ check_PROGRAMS = \
 	string_writer_test \
 	file_writer_test \
 	xml_writer_test \
-	sequence_test
+	sequence_test \
+	db_test
 
 TESTS = $(check_PROGRAMS)
 

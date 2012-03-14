@@ -27,387 +27,263 @@
 /*                                                                           */
 /* File: dbm_api.c                                                           */
 /*                                                                           */
-/* NOTE: The functions supplied here are *NOT* neccessarily thread safe.     */
-/*       This means that threaded calls to OpenDB()/CloseDB() should be      */
-/*        wrapped by ThreadLock() and ThreadUnlock().                        */
-/*                                                                           */
-/*                                                                           */
 /*****************************************************************************/
+
+#include <assert.h>
 
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-#if defined(SQLITE3)
-# include "dbm_sqlite3.h"
-#endif
+#include "dbm_api.h"
+#include "dbm_priv.h"
 
-static int DoOpenDB(char *filename, CF_DB **dbp);
-static int DoCloseDB(CF_DB *dbp);
-static int SaveDBHandle(CF_DB *dbp);
-static int RemoveDBHandle(CF_DB *dbp);
-static int GetDBHandle(CF_DB **dbp);
+/******************************************************************************/
 
-CF_DB *OPENDB[MAX_OPENDB] = { 0 };
-
-int OpenDB(char *filename, CF_DB **dbp)
+struct DBHandle_
 {
-    int res;
+    /* Filename of database file */
+    char *filename;
 
-    CfDebug("OpenDB(%s)\n", filename);
+    /* Actual database-specific data */
+    DBPriv *priv;
 
-    res = DoOpenDB(filename, dbp);
+    int refcount;
 
-// record open DBs if successful
-    if (res)
-    {
-        if (!SaveDBHandle(*dbp))
-        {
-            FatalError("OpenDB: Could not save DB handle");
-        }
-    }
+    /* This lock protects initialization of .priv element, and .refcount manipulation */
+    pthread_mutex_t lock;
+};
 
-    return res;
-}
-
-/*****************************************************************************/
-
-static int DoOpenDB(char *filename, CF_DB **dbp)
+struct DBCursor_
 {
-#ifdef TCDB
-    return TCDB_OpenDB(filename, dbp);
-#elif defined QDB
-    return QDB_OpenDB(filename, dbp);
-#elif defined SQLITE3
-    return SQLite3_OpenDB(filename, dbp);
-#else
-    return BDB_OpenDB(filename, dbp);
-#endif
-}
+    DBCursorPriv *cursor;
+};
 
-/*****************************************************************************/
+/******************************************************************************/
 
-int CloseDB(CF_DB *dbp)
-{
-    int res;
-
-    res = DoCloseDB(dbp);
-
-    if (!res)
-    {
-        CfOut(cf_error, "", "CloseDB: Could not close DB handle.");
-        CfOut(cf_error, "", "CloseDB: Trying to remove handle from open pool anyway.");
-    }
-
-    if (!RemoveDBHandle(dbp))
-    {
-        CfOut(cf_error, "", "CloseDB: Could not find DB handle in open pool.");
-    }
-
-    return res;
-}
-
-/*****************************************************************************/
-
-static int DoCloseDB(CF_DB *dbp)
-{
-#ifdef TCDB
-    return TCDB_CloseDB(dbp);
-#elif defined QDB
-    return QDB_CloseDB(dbp);
-#elif defined SQLITE3
-    return SQLite3_CloseDB(dbp);
-#else
-    return BDB_CloseDB(dbp);
-#endif
-}
-
-/*****************************************************************************/
-
-int ValueSizeDB(CF_DB *dbp, char *key)
-/* Returns size of value corresponding to key, or -1 on not found or error */
-{
-#ifdef TCDB
-    return TCDB_ValueSizeDB(dbp, key);
-#elif defined QDB
-    return QDB_ValueSizeDB(dbp, key);
-#elif defined SQLITE3
-    return SQLite3_ValueSizeDB(dbp, key);
-#else
-    return BDB_ValueSizeDB(dbp, key);
-#endif
-}
-
-/*****************************************************************************/
-
-int ReadComplexKeyDB(CF_DB *dbp, char *key, int keySz, void *dest, int destSz)
-{
-#ifdef TCDB
-    return TCDB_ReadComplexKeyDB(dbp, key, keySz, dest, destSz);
-#elif defined QDB
-    return QDB_ReadComplexKeyDB(dbp, key, keySz, dest, destSz);
-#elif defined SQLITE3
-    return SQLite3_ReadComplexKeyDB(dbp, key, keySz, dest, destSz);
-#else
-    return BDB_ReadComplexKeyDB(dbp, key, keySz, dest, destSz);
-#endif
-}
-
-/*****************************************************************************/
-
-int RevealDB(CF_DB *dbp, char *key, void **result, int *rsize)
-/* Allocates memory for result, which is later freed automatically (on
-   next call to this function or db close) */
-{
-#ifdef TCDB
-    return TCDB_RevealDB(dbp, key, result, rsize);
-#elif defined QDB
-    return QDB_RevealDB(dbp, key, result, rsize);
-#elif defined SQLITE3
-    return SQLite3_RevealDB(dbp, key, result, rsize);
-#else
-    return BDB_RevealDB(dbp, key, result, rsize);
-#endif
-}
-
-/*****************************************************************************/
-
-int WriteComplexKeyDB(CF_DB *dbp, char *key, int keySz, const void *src, int srcSz)
-{
-#ifdef TCDB
-    return TCDB_WriteComplexKeyDB(dbp, key, keySz, src, srcSz);
-#elif defined QDB
-    return QDB_WriteComplexKeyDB(dbp, key, keySz, src, srcSz);
-#elif defined SQLITE3
-    return SQLite3_WriteComplexKeyDB(dbp, key, keySz, src, srcSz);
-#else
-    return BDB_WriteComplexKeyDB(dbp, key, keySz, src, srcSz);
-#endif
-}
-
-/*****************************************************************************/
-
-int DeleteComplexKeyDB(CF_DB *dbp, char *key, int size)
-/**
- * Delete a record (key,value pair)
+/*
+ * This lock protects on-demand initialization of db_handles[i].lock and
+ * db_handles[i].name.
  */
+static pthread_mutex_t db_handles_lock = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
+
+static DBHandle db_handles[dbid_count] = { { 0 } };
+
+/******************************************************************************/
+
+static const char *DB_PATHS[] = {
+    [dbid_classes] = "cf_classes",
+    [dbid_variables] = "state/cf_variables",
+    [dbid_performance] = "performance",
+    [dbid_checksums] = "checksum_digests",
+    [dbid_filestats] = "stats",
+    [dbid_observations] = "state/cf_observations",
+    [dbid_state] = "state/cf_state",
+    [dbid_lastseen] = "cf_lastseen",
+    [dbid_audit] = "cf_audit",
+    [dbid_locks] = "state/cf_lock",
+    [dbid_history] = "state/history",
+    [dbid_measure] = "state/nova_measures",
+    [dbid_static] = "state/nova_static",
+    [dbid_scalars] = "state/nova_pscalar",
+    [dbid_promise_compliance] = "state/promise_compliance",
+    [dbid_windows_registry] = "mswin",
+    [dbid_cache] = "nova_cache",
+    [dbid_license] = "nova_track",
+    [dbid_value] = "nova_value",
+    [dbid_agent_execution] = "nova_agent_execution",
+    [dbid_bundles] = "bundles",
+};
+
+/******************************************************************************/
+
+static char *DBIdToPath(dbid id)
 {
-#ifdef TCDB
-    return TCDB_DeleteComplexKeyDB(dbp, key, size);
-#elif defined QDB
-    return QDB_DeleteComplexKeyDB(dbp, key, size);
-#elif defined SQLITE3
-    return SQLite3_DeleteComplexKeyDB(dbp, key, size);
-#else
-    return BDB_DeleteComplexKeyDB(dbp, key, size);
-#endif
+    assert(DB_PATHS[id] != NULL);
+
+    char *filename;
+    if (xasprintf(&filename, "%s/%s.%s",
+                  CFWORKDIR, DB_PATHS[id], DBPrivGetFileExtension()) == -1)
+    {
+        FatalError("Unable to construct database filename for file %s", DB_PATHS[id]);
+    }
+
+    char *native_filename = MapNameCopy(filename);
+    free(filename);
+
+    return native_filename;
 }
 
-/*****************************************************************************/
-
-int NewDBCursor(CF_DB *dbp, CF_DBC **dbcp)
+static DBHandle *DBHandleGet(int id)
 {
-#ifdef TCDB
-    return TCDB_NewDBCursor(dbp, dbcp);
-#elif defined QDB
-    return QDB_NewDBCursor(dbp, dbcp);
-#elif defined SQLITE3
-    return SQLite3_NewDBCursor(dbp, dbcp);
-#else
-    return BDB_NewDBCursor(dbp, dbcp);
-#endif
+    assert(id >= 0 && id < dbid_count);
+
+    pthread_mutex_lock(&db_handles_lock);
+
+    if (db_handles[id].filename == NULL)
+    {
+        db_handles[id].filename = DBIdToPath(id);
+        pthread_mutex_init(&db_handles[id].lock, NULL);
+    }
+
+    pthread_mutex_unlock(&db_handles_lock);
+
+    return &db_handles[id];
 }
 
-/*****************************************************************************/
-
-int NextDB(CF_DB *dbp, CF_DBC *dbcp, char **key, int *ksize, void **value, int *vsize)
+bool OpenDB(DBHandle **dbp, dbid id)
 {
-#ifdef TCDB
-    return TCDB_NextDB(dbp, dbcp, key, ksize, value, vsize);
-#elif defined QDB
-    return QDB_NextDB(dbp, dbcp, key, ksize, value, vsize);
-#elif defined SQLITE3
-    return SQLite3_NextDB(dbp, dbcp, key, ksize, value, vsize);
-#else
-    return BDB_NextDB(dbp, dbcp, key, ksize, value, vsize);
-#endif
+    DBHandle *handle = DBHandleGet(id);
+
+    pthread_mutex_lock(&handle->lock);
+
+    if (handle->refcount == 0)
+    {
+        handle->priv = DBPrivOpenDB(handle->filename);
+    }
+
+    if (handle->priv)
+    {
+        handle->refcount++;
+        *dbp = handle;
+    }
+    else
+    {
+        *dbp = NULL;
+    }
+
+    pthread_mutex_unlock(&handle->lock);
+
+    return *dbp != NULL;
 }
 
-/*****************************************************************************/
-
-int DeleteDBCursor(CF_DB *dbp, CF_DBC *dbcp)
+void CloseDB(DBHandle *handle)
 {
-#ifdef TCDB
-    return TCDB_DeleteDBCursor(dbp, dbcp);
-#elif defined QDB
-    return QDB_DeleteDBCursor(dbp, dbcp);
-#elif defined SQLITE3
-    return SQLite3_DeleteDBCursor(dbp, dbcp);
-#else
-    return BDB_DeleteDBCursor(dbp, dbcp);
-#endif
+    pthread_mutex_lock(&handle->lock);
+
+    if (handle->refcount < 1)
+    {
+        CfOut(cf_error, "", "Trying to close database %s which is not open", handle->filename);
+    }
+    else if (--handle->refcount == 0)
+    {
+        DBPrivCloseDB(handle->priv);
+    }
+
+    pthread_mutex_unlock(&handle->lock);
 }
 
-/*****************************************************************************/
-
-void OpenDBTransaction(CF_DB *dbp)
-{
-#if defined SQLITE3
-    SQLite3_OpenDBTransaction(dbp);
-#endif
-}
-
-/*****************************************************************************/
-
-void CommitDBTransaction(CF_DB *dbp)
-{
-#if defined SQLITE3
-    SQLite3_CommitDBTransaction(dbp);
-#endif
-}
-
-/*****************************************************************************/
-
-int ReadDB(CF_DB *dbp, char *key, void *dest, int destSz)
-{
-    return ReadComplexKeyDB(dbp, key, strlen(key) + 1, dest, destSz);
-}
-
-/*****************************************************************************/
-
-int WriteDB(CF_DB *dbp, char *key, const void *src, int srcSz)
-{
-    return WriteComplexKeyDB(dbp, key, strlen(key) + 1, src, srcSz);
-}
-
-/*****************************************************************************/
-
-int DeleteDB(CF_DB *dbp, char *key)
-{
-    return DeleteComplexKeyDB(dbp, key, strlen(key) + 1);
-}
-
-/*****************************************************************************/
-
-void CloseAllDB(void)
 /* Closes all open DB handles */
+void CloseAllDB(void)
 {
-    CF_DB *dbp = NULL;
-    int i = 0;
+    pthread_mutex_lock(&db_handles_lock);
 
-    CfDebug("CloseAllDB()\n");
-
-    while (true)
+    for (int i = 0; i < dbid_count; ++i)
     {
-        if (!GetDBHandle(&dbp))
+        if (db_handles[i].refcount != 0)
         {
-            FatalError("CloseAllDB: Could not pop next DB handle");
+            DBPrivCloseDB(db_handles[i].priv);
         }
 
-        if (dbp == NULL)
-        {
-            break;
-        }
+        /*
+         * CloseAllDB is called just before exit(3), but clean up
+         * nevertheless.
+         */
+        db_handles[i].refcount = 0;
 
-        if (!CloseDB(dbp))
+        if (db_handles[i].filename)
         {
-            CfOut(cf_error, "", "!! CloseAllDB: Could not close DB with this handle");
-        }
+            free(db_handles[i].filename);
+            db_handles[i].filename = NULL;
 
-        i++;
+            int ret = pthread_mutex_destroy(&db_handles[i].lock);
+            if (ret != 0)
+            {
+                errno = ret;
+                CfOut(cf_error, "pthread_mutex_destroy",
+                      "Unable to close database %s", DB_PATHS[i]);
+            }
+        }
     }
 
-    CfDebug("Closed %d open DB handles\n", i);
+    pthread_mutex_unlock(&db_handles_lock);
 }
 
 /*****************************************************************************/
 
-static int SaveDBHandle(CF_DB *dbp)
+bool ReadComplexKeyDB(DBHandle *handle, const char *key, int key_size,
+                      void *dest, int dest_size)
 {
-    int i;
+    return DBPrivRead(handle->priv, key, key_size, dest, dest_size);
+}
 
-    if (!ThreadLock(cft_dbhandle))
+bool WriteComplexKeyDB(DBHandle *handle, const char *key, int key_size,
+                       const void *value, int value_size)
+{
+    return DBPrivWrite(handle->priv, key, key_size, value, value_size);
+}
+
+bool DeleteComplexKeyDB(DBHandle *handle, const char *key, int key_size)
+{
+    return DBPrivDelete(handle->priv, key, key_size);
+}
+
+bool ReadDB(DBHandle *handle, char *key, void *dest, int destSz)
+{
+    return DBPrivRead(handle->priv, key, strlen(key) + 1, dest, destSz);
+}
+
+bool WriteDB(DBHandle *handle, char *key, const void *src, int srcSz)
+{
+    return DBPrivWrite(handle->priv, key, strlen(key) + 1, src, srcSz);
+}
+
+bool HasKeyDB(DBHandle *handle, const char *key, int key_size)
+{
+    return DBPrivHasKey(handle->priv, key, key_size);
+}
+
+int ValueSizeDB(DBHandle *handle, const char *key, int key_size)
+{
+    return DBPrivGetValueSize(handle->priv, key, key_size);
+}
+
+bool DeleteDB(DBHandle *handle, char *key)
+{
+    return DBPrivDelete(handle->priv, key, strlen(key) + 1);
+}
+
+bool NewDBCursor(DBHandle *handle, DBCursor **cursor)
+{
+    DBCursorPriv *priv = DBPrivOpenCursor(handle->priv);
+    if (!priv)
     {
         return false;
     }
 
-// find first free slot
-    i = 0;
-    while (OPENDB[i] != NULL)
-    {
-        i++;
-        if (i == MAX_OPENDB)
-        {
-            ThreadUnlock(cft_dbhandle);
-            CfOut(cf_error, "", "!! Too many open databases");
-            return false;
-        }
-    }
-
-    OPENDB[i] = dbp;
-
-    ThreadUnlock(cft_dbhandle);
+    *cursor = xcalloc(1, sizeof(DBCursor));
+    (*cursor)->cursor = priv;
     return true;
 }
 
-/*****************************************************************************/
-
-static int RemoveDBHandle(CF_DB *dbp)
-/* Remove a specific DB handle */
+bool NextDB(DBHandle *handle, DBCursor *cursor, char **key, int *ksize,
+            void **value, int *vsize)
 {
-    int i;
-
-    if (!ThreadLock(cft_dbhandle))
-    {
-        return false;
-    }
-
-    i = 0;
-
-    while (OPENDB[i] != dbp)
-    {
-        i++;
-        if (i == MAX_OPENDB)
-        {
-            ThreadUnlock(cft_dbhandle);
-            CfOut(cf_error, "", "!! Database handle was not found");
-            return false;
-        }
-    }
-
-// free slot
-    OPENDB[i] = NULL;
-
-    ThreadUnlock(cft_dbhandle);
-    return true;
+    return DBPrivAdvanceCursor(cursor->cursor, (void **)key, ksize, value, vsize);
 }
 
-/*****************************************************************************/
-
-static int GetDBHandle(CF_DB **dbp)
-/* Return the first unused DB handle in the parameter - NULL if empty */
+bool DBCursorDeleteEntry(DBCursor *cursor)
 {
-    int i;
+    return DBPrivDeleteCursorEntry(cursor->cursor);
+}
 
-    if (!ThreadLock(cft_dbhandle))
-    {
-        return false;
-    }
+bool DBCursorWriteEntry(DBCursor *cursor, const void *value, int value_size)
+{
+    return DBPrivWriteCursorEntry(cursor->cursor, value, value_size);
+}
 
-    i = 0;
-
-    while (OPENDB[i] == NULL)
-    {
-        i++;
-        if (i == MAX_OPENDB)
-        {
-            ThreadUnlock(cft_dbhandle);
-            *dbp = NULL;
-            return true;
-        }
-    }
-
-    *dbp = OPENDB[i];
-
-    ThreadUnlock(cft_dbhandle);
+bool DeleteDBCursor(DBHandle *handle, DBCursor *cursor)
+{
+    DBPrivCloseCursor(cursor->cursor);
+    free(cursor);
     return true;
 }

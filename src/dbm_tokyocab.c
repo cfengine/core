@@ -23,283 +23,294 @@
   included file COSL.txt.
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: dbm_tokyocab.c                                                      */
-/*                                                                           */
-/*****************************************************************************/
-
 /*
- * Implementation of the Cfengine DBM API using Tokyo Cabinet hash API.
+ * Implementation using Tokyo Cabinet hash API.
  */
 
 #include "cf3.defs.h"
 #include "cf3.extern.h"
+#include "dbm_priv.h"
 
 #ifdef TCDB
 
-/* Arbitrary cutoff while trying to open blocked database */
-# define MAXATTEMPTS 1000
+# include <tcutil.h>
+# include <tchdb.h>
 
-static long GetSleepTime(void);
-
-/*****************************************************************************/
-
-int TCDB_OpenDB(char *filename, CF_TCDB **hdbp)
+struct DBPriv_
 {
-    int attempts = MAXATTEMPTS;
+    /*
+     * This mutex prevents destructive modifications of the database (removing
+     * records) while the cursor is active on it.
+     */
+    pthread_mutex_t cursor_lock;
 
-    *hdbp = xcalloc(1, sizeof(CF_TCDB));
-    (*hdbp)->hdb = tchdbnew();
+    TCHDB *hdb;
+};
 
-/*
- * Tokyo Cabinet prevents a database to be opened by the several threads in the
- * single process (apparently due to shortcoming in fcntl F_SETLK
- * semantics). CFEngine only opens a database for a short period of time, but
- * does it from several processes and several threads in single process, so
- * failure to open a database in intermittent one (unless there is stale DB
- * connection somewhere, so looping indefinitely is not a good idea).
- */
-    while (attempts--)
+struct DBCursorPriv_
+{
+    DBPriv *db;
+
+    char *current_key;
+    int current_key_size;
+    char *curval;
+
+    /*
+     * Removing a key underneath the active cursor stops the database iteration,
+     * so if key needs to be deleted while database is iterated, this fact is
+     * remembered and once iterator advances to next key, this pending delete is
+     * executed.
+     *
+     * Writes to key underneath the active cursor are safe, so only deletes are
+     * tracked.
+     */
+    bool pending_delete;
+};
+
+/******************************************************************************/
+
+static bool LockCursor(DBPriv *db)
+{
+    int ret = pthread_mutex_lock(&db->cursor_lock);
+    if (ret != 0)
     {
-        /*
-         * Note: tchdbsetmutex is not called before tchdbopen, so the created
-         * connection must not be shared by a several threads.
-         */
-        if (tchdbopen((*hdbp)->hdb, filename, HDBOWRITER | HDBOCREAT))
+        errno = ret;
+        CfOut(cf_error, "pthread_mutex_lock",
+              "Unable to obtain cursor lock for Tokyo Cabinet database");
+        return false;
+    }
+    return true;
+}
+
+static void UnlockCursor(DBPriv *db)
+{
+    int ret = pthread_mutex_unlock(&db->cursor_lock);
+    if (ret != 0)
+    {
+        errno = ret;
+        CfOut(cf_error, "pthread_mutex_unlock",
+              "Unable to release cursor lock for Tokyo Cabinet database");
+    }
+}
+
+const char *DBPrivGetFileExtension(void)
+{
+    return "tcdb";
+}
+
+static const char *ErrorMessage(TCHDB *hdb)
+{
+    return tchdberrmsg(tchdbecode(hdb));
+}
+
+DBPriv *DBPrivOpenDB(const char *dbpath)
+{
+    DBPriv *db = xcalloc(1, sizeof(DBPriv));
+    db->hdb = tchdbnew();
+
+    pthread_mutex_init(&db->cursor_lock, NULL);
+
+    if (!tchdbsetmutex(db->hdb))
+    {
+        CfOut(cf_error, "", "!! Unable to setup locking on Tokyo Cabinet database");
+        goto err;
+    }
+
+    if (!tchdbopen(db->hdb, dbpath, HDBOWRITER | HDBOCREAT))
+    {
+        CfOut(cf_error, "", "!! Could not open database %s: %s",
+              dbpath, ErrorMessage(db->hdb));
+        goto err;
+    }
+
+    return db;
+
+err:
+    pthread_mutex_destroy(&db->cursor_lock);
+    tchdbdel(db->hdb);
+    free(db);
+    return NULL;
+}
+
+void DBPrivCloseDB(DBPriv *db)
+{
+    int ret;
+
+    if ((ret = pthread_mutex_destroy(&db->cursor_lock)) != 0)
+    {
+        errno = ret;
+        CfOut(cf_error, "pthread_mutex_destroy",
+              "Unable to destroy mutex during Tokyo Cabinet database handle close");
+    }
+
+    if (!tchdbclose(db->hdb))
+    {
+	CfOut(cf_error, "", "!! tchdbclose: Closing database failed: %s",
+              ErrorMessage(db->hdb));
+    }
+
+    tchdbdel(db->hdb);
+    free(db);
+}
+
+bool DBPrivHasKey(DBPriv *db, const void *key, int key_size)
+{
+    // FIXME: distinguish between "entry not found" and "error occured"
+
+    return tchdbvsiz(db->hdb, key, key_size) != -1;
+}
+
+int DBPrivGetValueSize(DBPriv *db, const void *key, int key_size)
+{
+    return tchdbvsiz(db->hdb, key, key_size);
+}
+
+bool DBPrivRead(DBPriv *db, const void *key, int key_size, void *dest, int dest_size)
+{
+    if (tchdbget3(db->hdb, key, key_size, dest, dest_size) == -1)
+    {
+        if (tchdbecode(db->hdb) != TCENOREC)
         {
-            return true;
+            CfOut(cf_error, "", "ReadComplexKeyDB(%s): Could not read: %s\n", (const char *)key, ErrorMessage(db->hdb));
         }
-
-        int err_code = tchdbecode((*hdbp)->hdb);
-
-        if (err_code != TCETHREAD)
-        {
-            CfOut(cf_error, "", "!! tchdbopen: Unable to open database \"%s\": %s", filename, tchdberrmsg(err_code));
-            tchdbdel((*hdbp)->hdb);
-            free(*hdbp);
-            return false;
-        }
-
-        struct timespec ts = {
-            .tv_nsec = GetSleepTime()
-        };
-        nanosleep(&ts, NULL);
-    }
-
-    CfOut(cf_error, "", "!! TCDB_OpenDB: Unable to lock database \"%s\", lock is held by another thread", filename);
-
-    tchdbdel((*hdbp)->hdb);
-    free(*hdbp);
-    return false;
-}
-
-/*****************************************************************************/
-
-int TCDB_CloseDB(CF_TCDB *hdbp)
-{
-    int errCode;
-
-    CfDebug("CloseDB(%s)\n", tchdbpath(hdbp->hdb));
-
-    if (!tchdbclose(hdbp->hdb))
-    {
-        errCode = tchdbecode(hdbp->hdb);
-        CfOut(cf_error, "", "!! tchdbclose: Closing database failed: %s", tchdberrmsg(errCode));
-        return false;
-    }
-
-    tchdbdel(hdbp->hdb);
-
-    if (hdbp->valmemp != NULL)
-    {
-        free(hdbp->valmemp);
-    }
-
-    free(hdbp);
-    hdbp = NULL;
-
-    return true;
-}
-
-/*****************************************************************************/
-
-int TCDB_ValueSizeDB(CF_TCDB *hdbp, char *key)
-{
-    return tchdbvsiz2(hdbp->hdb, key);
-}
-
-/*****************************************************************************/
-
-int TCDB_ReadComplexKeyDB(CF_TCDB *hdbp, char *key, int keySz, void *dest, int destSz)
-{
-    int errCode;
-
-    if (tchdbget3(hdbp->hdb, key, keySz, dest, destSz) == -1)
-    {
-        errCode = tchdbecode(hdbp->hdb);
-        CfDebug("TCDB_ReadComplexKeyDB(%s): Could not read: %s\n", key, tchdberrmsg(errCode));
         return false;
     }
 
     return true;
 }
 
-/*****************************************************************************/
-
-int TCDB_RevealDB(CF_TCDB *hdbp, char *key, void **result, int *rsize)
+static bool Write(TCHDB *hdb, const void *key, int key_size, const void *value, int value_size)
 {
-    int errCode;
-
-    if (hdbp->valmemp != NULL)
+    if (!tchdbput(hdb, key, key_size, value, value_size))
     {
-        free(hdbp->valmemp);
-        hdbp->valmemp = NULL;
-    }
-
-    *result = tchdbget(hdbp->hdb, key, strlen(key), rsize);
-
-    if (*result == NULL)
-    {
-        errCode = tchdbecode(hdbp->hdb);
-        CfDebug("TCDB_RevealDB(%s): Could not read: %s\n", key, tchdberrmsg(errCode));
-        return false;
-    }
-
-    hdbp->valmemp = *result;    // keep allocated address for later free
-
-    return true;
-}
-
-/*****************************************************************************/
-
-int TCDB_WriteComplexKeyDB(CF_TCDB *hdbp, char *key, int keySz, const void *src, int srcSz)
-{
-    int errCode;
-    int res;
-
-    res = tchdbput(hdbp->hdb, key, keySz, src, srcSz);
-
-    if (!res)
-    {
-        errCode = tchdbecode(hdbp->hdb);
         CfOut(cf_error, "", "!! tchdbput: Could not write key to DB \"%s\": %s",
-              tchdbpath(hdbp->hdb), tchdberrmsg(errCode));
+              tchdbpath(hdb), ErrorMessage(hdb));
         return false;
     }
-
     return true;
 }
 
-/*****************************************************************************/
-
-int TCDB_DeleteComplexKeyDB(CF_TCDB *hdbp, char *key, int size)
+static bool Delete(TCHDB *hdb, const void *key, int key_size)
 {
-    int errCode;
-
-    if (!tchdbout(hdbp->hdb, key, size))
+    if (!tchdbout(hdb, key, key_size) && tchdbecode(hdb) != TCENOREC)
     {
-        errCode = tchdbecode(hdbp->hdb);
-        CfDebug("TCDB_DeleteComplexKeyDB(%s): Could not delete key: %s\n", key, tchdberrmsg(errCode));
+        CfOut(cf_error, "", "!! tchdbout: Could not delete key: %s",
+              ErrorMessage(hdb));
         return false;
     }
 
     return true;
 }
-
-/*****************************************************************************/
-
-int TCDB_NewDBCursor(CF_TCDB *hdbp, CF_TCDBC **hdbcp)
-{
-    int errCode;
-
-    if (!tchdbiterinit(hdbp->hdb))
-    {
-        errCode = tchdbecode(hdbp->hdb);
-        CfOut(cf_error, "", "!! tchdbiterinit: Could not initialize iterator: %s", tchdberrmsg(errCode));
-        return false;
-    }
-
-    *hdbcp = xcalloc(1, sizeof(CF_TCDBC));
-
-    return true;
-}
-
-/*****************************************************************************/
-
-int TCDB_NextDB(CF_TCDB *hdbp, CF_TCDBC *hdbcp, char **key, int *ksize, void **value, int *vsize)
-{
-    int errCode;
-
-    if (hdbcp->curkey != NULL)
-    {
-        free(hdbcp->curkey);
-        hdbcp->curkey = NULL;
-    }
-
-    if (hdbcp->curval != NULL)
-    {
-        free(hdbcp->curval);
-        hdbcp->curval = NULL;
-    }
-
-    *key = tchdbiternext(hdbp->hdb, ksize);
-
-    if (*key == NULL)
-    {
-        CfDebug("Got NULL-key in TCDB_NextDB()\n");
-        return false;
-    }
-
-    *value = tchdbget(hdbp->hdb, *key, *ksize, vsize);
-
-    if (*value == NULL)
-    {
-        errCode = tchdbecode(hdbp->hdb);
-        CfOut(cf_error, "", "!! tchdbget: Could not get value corresponding to key \"%s\": %s", *key,
-              tchdberrmsg(errCode));
-
-        free(*key);
-        *key = NULL;
-        return false;
-    }
-
-// keep pointers for later free
-    hdbcp->curkey = *key;
-    hdbcp->curval = *value;
-
-    return true;
-}
-
-/*****************************************************************************/
-
-int TCDB_DeleteDBCursor(CF_TCDB *hdbp, CF_TCDBC *hdbcp)
-{
-    if (hdbcp->curkey != NULL)
-    {
-        free(hdbcp->curkey);
-        hdbcp->curkey = NULL;
-    }
-
-    if (hdbcp->curval != NULL)
-    {
-        free(hdbcp->curval);
-        hdbcp->curval = NULL;
-    }
-
-    free(hdbcp);
-
-    return true;
-}
-
-/*****************************************************************************/
 
 /*
- * 10^7 nsec +- 10^7 nsec
+ * This one has to be locked against cursor, or interaction between
+ * write/pending delete might yield surprising results.
  */
-static long GetSleepTime(void)
+bool DBPrivWrite(DBPriv *db, const void *key, int key_size, const void *value, int value_size)
 {
-    return lrand48() % (2 * 10 * 1000 * 1000);
+    if (!LockCursor(db))
+    {
+        return false;
+    }
+
+    int ret = Write(db->hdb, key, key_size, value, value_size);
+
+    UnlockCursor(db);
+    return ret;
+}
+
+/*
+ * This one has to be locked against cursor -- deleting entries might interrupt
+ * iteration.
+ */
+bool DBPrivDelete(DBPriv *db, const void *key, int key_size)
+{
+    if (!LockCursor(db))
+    {
+        return false;
+    }
+
+    int ret = Delete(db->hdb, key, key_size);
+
+    UnlockCursor(db);
+    return ret;
+}
+
+DBCursorPriv *DBPrivOpenCursor(DBPriv *db)
+{
+    if (!LockCursor(db))
+    {
+        return false;
+    }
+
+    DBCursorPriv *cursor = xcalloc(1, sizeof(DBCursorPriv));
+    cursor->db = db;
+    cursor->current_key = NULL;
+    cursor->current_key_size = 0;
+    cursor->curval = NULL;
+
+    /* Cursor remains locked */
+    return cursor;
+}
+
+bool DBPrivAdvanceCursor(DBCursorPriv *cursor, void **key, int *key_size,
+                     void **value, int *value_size)
+{
+    *key = tchdbgetnext3(cursor->db->hdb,
+                         cursor->current_key, cursor->current_key_size,
+                         key_size, (const char **)value, value_size);
+
+    /*
+     * If there is pending delete on the key, apply it
+     */
+    if (cursor->pending_delete)
+    {
+        Delete(cursor->db->hdb, cursor->current_key, cursor->current_key_size);
+    }
+
+    /* This will free the value as well: tchdbgetnext3 returns single allocated
+     * chunk of memory */
+
+    free(cursor->current_key);
+
+    cursor->current_key = *key;
+    cursor->current_key_size = *key_size;
+    cursor->pending_delete = false;
+
+    return *key != NULL;
+}
+
+bool DBPrivDeleteCursorEntry(DBCursorPriv *cursor)
+{
+    cursor->pending_delete = true;
+    return true;
+}
+
+bool DBPrivWriteCursorEntry(DBCursorPriv *cursor, const void *value, int value_size)
+{
+    /*
+     * If a pending deletion of entry has been requested, cancel it
+     */
+    cursor->pending_delete = false;
+
+    return Write(cursor->db->hdb, cursor->current_key, cursor->current_key_size,
+                 value, value_size);
+}
+
+void DBPrivCloseCursor(DBCursorPriv *cursor)
+{
+    DBPriv *db = cursor->db;
+
+    if (cursor->pending_delete)
+    {
+        Delete(db->hdb, cursor->current_key, cursor->current_key_size);
+    }
+
+    free(cursor->current_key);
+    free(cursor);
+
+    /* Cursor lock was obtained in DBPrivOpenCursor */
+    UnlockCursor(db);
 }
 
 #endif

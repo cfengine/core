@@ -470,7 +470,6 @@ static int HailServer(char *host, Attributes a, Promise *pp)
         HailExec(conn, peer, recvbuffer, sendbuffer);
     }
 
-    ServerDisconnection(conn);
     DeleteRlist(a.copy.servers);
 
     return true;
@@ -694,7 +693,7 @@ static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *
         if ((n_read = ReceiveTransaction(conn->sd, recvbuffer, NULL)) == -1)
         {
             DestroyServerConnection(conn);
-            break;
+            return;
         }
 
         if (n_read == 0)
@@ -715,7 +714,7 @@ static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *
 
         if ((sp = strstr(recvbuffer, "BAD:")) != NULL)
         {
-            CfFile(fp, " !! %s", recvbuffer + 4);
+            CfFile(fp, " !! %s\n", recvbuffer + 4);
             continue;
         }
 
@@ -729,6 +728,7 @@ static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *
     }
 
     DeleteStream(fp);
+    ServerDisconnection(conn);
 }
 
 /********************************************************************/

@@ -867,6 +867,8 @@ dnl ######################################################################
 AC_MSG_RESULT( )
 AC_MSG_RESULT(    Summary of options...)
 
+AC_MSG_RESULT([-> OpenSSL: $OPENSSL_PATH])
+
 AC_MSG_RESULT([-> PCRE: $PCRE_PATH])
 
 if test "x$ac_cv_lib_mysqlclient_mysql_real_connect" = "xyes"; then

@@ -31,6 +31,7 @@
 #include "evalfunction.h"
 #include "cf3.extern.h"
 #include "dir.h"
+#include "dbm_api.h"
 
 #include <libgen.h>
 
@@ -175,7 +176,6 @@ static FnCallResult FnCallHostsSeen(FnCall *fp, Rlist *finalargs)
     Rlist *returnlist = NULL, *rp;
     CF_DB *dbp;
     CF_DBC *dbcp;
-    char name[CF_BUFSIZE];
     Item *addresses = NULL;
     char entrytimeChr[CF_SMALLBUF];
     int ksize, vsize;
@@ -190,10 +190,8 @@ static FnCallResult FnCallHostsSeen(FnCall *fp, Rlist *finalargs)
 
     CfDebug("Calling hostsseen(%d,%s,%s)\n", horizon, policy, format);
 
-    snprintf(name, CF_BUFSIZE - 1, "%s%c%s", CFWORKDIR, FILE_SEPARATOR, CF_LASTDB_FILE);
-
     // last-seen may be used by cf-serverd when (re-)reading policy
-    if (!OpenDB(name, &dbp))
+    if (!OpenDB(&dbp, dbid_lastseen))
     {
         return (FnCallResult) { FNCALL_FAILURE };
     }

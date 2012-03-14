@@ -32,6 +32,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#include "dbm_api.h"
+
 static void ExtractOperationLock(char *op);
 
 static const char *NO_STATUS_TYPES[] = { "vars", "classes", NULL };
@@ -181,7 +183,6 @@ void ClassAuditLog(Promise *pp, Attributes attr, char *str, char status, char *r
     struct timespec t;
     double keyval;
     int lineno = pp->offset.line;
-    char name[CF_BUFSIZE];
 
     CfDebug("ClassAuditLog(%s)\n", str);
 
@@ -320,10 +321,7 @@ void ClassAuditLog(Promise *pp, Attributes attr, char *str, char status, char *r
         return;
     }
 
-    snprintf(name, CF_BUFSIZE - 1, "%s/%s", CFWORKDIR, CF_AUDITDB_FILE);
-    MapName(name);
-
-    if (!OpenDB(name, &AUDITDBP))
+    if (!OpenDB(&AUDITDBP, dbid_audit))
     {
         return;
     }

@@ -32,6 +32,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#include "dbm_api.h"
+
 static void FriendStatus(Attributes a, Promise *pp);
 static void VerifyFriendConnections(int hours, Attributes a, Promise *pp);
 static void ShowState(char *type, Attributes a, Promise *pp);
@@ -363,17 +365,15 @@ static void VerifyFriendConnections(int hours, Attributes a, Promise *pp)
     int ksize, vsize;
     int secs = SECONDS_PER_HOUR * hours, criterion, overdue;
     time_t now = time(NULL), lsea = (time_t) SECONDS_PER_WEEK, tthen, then;
-    char name[CF_BUFSIZE], hostname[CF_BUFSIZE], datebuf[CF_MAXVARSIZE];
+    char hostname[CF_BUFSIZE], datebuf[CF_MAXVARSIZE];
     char addr[CF_BUFSIZE], type[CF_BUFSIZE], output[CF_BUFSIZE];
     QPoint entry;
     double average = 0.0, var = 0.0, ticksperminute = 60.0;
     double ticksperhour = (double) SECONDS_PER_HOUR;
 
     CfOut(cf_verbose, "", "CheckFriendConnections(%d)\n", hours);
-    snprintf(name, CF_BUFSIZE - 1, "%s/lastseen/%s", CFWORKDIR, CF_LASTDB_FILE);
-    MapName(name);
 
-    if (!OpenDB(name, &dbp))
+    if (!OpenDB(&dbp, dbid_lastseen))
     {
         return;
     }
@@ -489,7 +489,7 @@ static void VerifyFriendConnections(int hours, Attributes a, Promise *pp)
         {
             CfOut(cf_error, "", "Giving up on host %s -- %d hours since last seen", IPString2Hostname(hostname + 1),
                   hours);
-            DeleteDB(dbp, hostname);
+            DBCursorDeleteEntry(dbcp);
         }
 
         memset(&value, 0, sizeof(value));

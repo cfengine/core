@@ -33,6 +33,7 @@
 #include "cf3.extern.h"
 
 #include "dir.h"
+#include "dbm_api.h"
 
 extern AgentConnection *COMS;
 
@@ -1106,7 +1107,6 @@ void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp
     struct stat cmpsb;
     CF_DB *dbp;
     char message[CF_BUFSIZE];
-    char statdb[CF_BUFSIZE];
     int ok = true;
 
     if ((attr.change.report_changes != cfa_statschange) && (attr.change.report_changes != cfa_allchanges))
@@ -1114,10 +1114,7 @@ void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp
         return;
     }
 
-    snprintf(statdb, CF_BUFSIZE, "%s/%s", CFWORKDIR, CF_CHKPDB);
-    MapName(statdb);
-
-    if (!OpenDB(statdb, &dbp))
+    if (!OpenDB(&dbp, dbid_filestats))
     {
         return;
     }

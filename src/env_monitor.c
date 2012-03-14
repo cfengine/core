@@ -33,6 +33,7 @@
 #include "monitoring.h"
 
 #include <math.h>
+#include "dbm_api.h"
 
 /*****************************************************************************/
 /* Globals                                                                   */
@@ -98,9 +99,6 @@ void MonitorInitialize(void)
     MapName(vbuff);
     CreateEmptyFile(vbuff);
 
-    snprintf(AVDB, CF_MAXVARSIZE, "%s/state/%s", CFWORKDIR, CF_AVDB_FILE);
-    MapName(AVDB);
-
     MonEntropyClassesInit();
 
     GetDatabaseAge();
@@ -152,12 +150,10 @@ static void GetDatabaseAge()
 {
     CF_DB *dbp;
 
-    if (!OpenDB(AVDB, &dbp))
+    if (!OpenDB(&dbp, dbid_observations))
     {
         return;
     }
-
-    cf_chmod(AVDB, 0644);
 
     if (ReadDB(dbp, "DATABASE_AGE", &AGE, sizeof(double)))
     {
@@ -659,7 +655,7 @@ static Averages *GetCurrentAverages(char *timekey)
     CF_DB *dbp;
     static Averages entry;
 
-    if (!OpenDB(AVDB, &dbp))
+    if (!OpenDB(&dbp, dbid_observations))
     {
         return NULL;
     }
@@ -693,7 +689,7 @@ static void UpdateAverages(char *timekey, Averages newvals)
 {
     CF_DB *dbp;
 
-    if (!OpenDB(AVDB, &dbp))
+    if (!OpenDB(&dbp, dbid_observations))
     {
         return;
     }

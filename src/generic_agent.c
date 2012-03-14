@@ -34,6 +34,7 @@
 
 #include "files_lib.h"
 #include "parser.h"
+#include "dbm_api.h"
 
 extern char *CFH[][2];
 
@@ -506,8 +507,6 @@ void InitializeGA(void)
     if (!LOOKUP)                /* cf-know should not do this in lookup mode */
     {
         CfOut(cf_verbose, "", "Work directory is %s\n", CFWORKDIR);
-
-        snprintf(HASHDB, CF_BUFSIZE - 1, "%s%c%s", CFWORKDIR, FILE_SEPARATOR, CF_CHKDB);
 
         snprintf(vbuff, CF_BUFSIZE, "%s%cinputs%cupdate.conf", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
         MakeParentDirectory(vbuff, force);

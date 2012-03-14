@@ -33,6 +33,7 @@
 #include "cf3.extern.h"
 
 #include "logic_expressions.h"
+#include "dbm_api.h"
 
 /*****************************************************************************/
 
@@ -1119,17 +1120,12 @@ void NewPersistentContext(char *name, unsigned int ttl_minutes, enum statepolicy
     CF_DB *dbp;
     CfState state;
     time_t now = time(NULL);
-    char filename[CF_BUFSIZE];
 
-    snprintf(filename, CF_BUFSIZE, "%s/state/%s", CFWORKDIR, CF_STATEDB_FILE);
-    MapName(filename);
 
-    if (!OpenDB(filename, &dbp))
+    if (!OpenDB(&dbp, dbid_state))
     {
         return;
     }
-
-    cf_chmod(filename, 0644);
 
     if (ReadDB(dbp, name, &state, sizeof(state)))
     {
@@ -1161,17 +1157,12 @@ void NewPersistentContext(char *name, unsigned int ttl_minutes, enum statepolicy
 void DeletePersistentContext(char *name)
 {
     CF_DB *dbp;
-    char filename[CF_BUFSIZE];
 
-    snprintf(filename, CF_BUFSIZE, "%s/state/%s", CFWORKDIR, CF_STATEDB_FILE);
-    MapName(filename);
-
-    if (!OpenDB(filename, &dbp))
+    if (!OpenDB(&dbp, dbid_state))
     {
         return;
     }
 
-    cf_chmod(filename, 0644);
     DeleteDB(dbp, name);
     CfDebug("Deleted any persistent state %s\n", name);
     CloseDB(dbp);
@@ -1188,7 +1179,6 @@ void LoadPersistentContext()
     void *value;
     time_t now = time(NULL);
     CfState q;
-    char filename[CF_BUFSIZE];
 
     if (LOOKUP)
     {
@@ -1197,10 +1187,7 @@ void LoadPersistentContext()
 
     Banner("Loading persistent classes");
 
-    snprintf(filename, CF_BUFSIZE, "%s/state/%s", CFWORKDIR, CF_STATEDB_FILE);
-    MapName(filename);
-
-    if (!OpenDB(filename, &dbp))
+    if (!OpenDB(&dbp, dbid_state))
     {
         return;
     }
@@ -1222,7 +1209,7 @@ void LoadPersistentContext()
         if (now > q.expires)
         {
             CfOut(cf_verbose, "", " Persistent class %s expired\n", key);
-            DeleteDB(dbp, key);
+            DBCursorDeleteEntry(dbcp);
         }
         else
         {

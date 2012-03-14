@@ -497,83 +497,6 @@ int rpl_asprintf(char **, const char *, ...);
 #define PACK_UPIFELAPSED_SALT "packageuplist"
 
 /*******************************************************************/
-/*  DBM                                                            */
-/*******************************************************************/
-
-// maximum amount of simultanious open DBs
-#define MAX_OPENDB 30
-
-#ifdef TCDB
-# include <tcutil.h>
-# include <tchdb.h>
-
-typedef struct
-{
-    TCHDB *hdb;
-    char *valmemp;              // allocated on demand, freed on db close
-}
-CF_TCDB;
-
-typedef struct
-{
-    char *curkey;
-    char *curval;
-}
-CF_TCDBC;
-
-# define CF_DB CF_TCDB
-# define CF_DBC CF_TCDBC
-# define DB_FEXT "tcdb"
-
-#elif defined(QDB)
-
-# include <depot.h>
-
-typedef struct
-{
-    DEPOT *depot;
-    char *valmemp;              // allocated on demand, freed on db close
-}
-CF_QDB;
-
-typedef struct
-{
-    char *curkey;
-    char *curval;
-}
-CF_QDBC;
-
-# define CF_DB CF_QDB
-# define CF_DBC CF_QDBC
-# define DB_FEXT "qdbm"
-
-#elif defined(SQLITE3)
-
-# include <sqlite3.h>
-
-typedef sqlite3 CF_DB;
-typedef sqlite3_stmt CF_DBC;
-
-# define DB_FEXT "sqlite3"
-
-#else /* Berkeley DB */
-
-# ifdef SOLARIS
-#  ifndef u_int32_t
-#   define u_int32_t uint32_t
-#   define u_int16_t uint16_t
-#   define u_int8_t uint8_t
-#  endif
-# endif
-
-# include <db.h>
-# define CF_DB DB
-# define CF_DBC DBC
-# define DB_FEXT "db"
-# define BDB 1
-#endif
-
-/*******************************************************************/
 /*  Windows                                                        */
 /*******************************************************************/
 
@@ -634,35 +557,6 @@ struct timespec
    /* end class array limits */
 
 /*******************************************************************/
-
-/* database file names */
-
-#define CF_CLASSUSAGE     "cf_classes" "." DB_FEXT
-#define CF_VARIABLES      "cf_variables" "." DB_FEXT
-#define CF_PERFORMANCE    "performance" "." DB_FEXT
-#define CF_CHKDB          "checksum_digests" "." DB_FEXT
-#define CF_CHKPDB         "stats" "." DB_FEXT
-#define CF_AVDB_FILE      "cf_observations" "." DB_FEXT
-#define CF_STATEDB_FILE   "cf_state" "." DB_FEXT
-#define CF_LASTDB_FILE    "cf_lastseen" "." DB_FEXT
-#define CF_AUDITDB_FILE   "cf_Audit" "." DB_FEXT
-#define CF_LOCKDB_FILE    "cf_lock" "." DB_FEXT
-
-#define NOVA_HISTORYDB "history" "." DB_FEXT
-#define NOVA_MEASUREDB "nova_measures" "." DB_FEXT
-#define NOVA_STATICDB  "nova_static" "." DB_FEXT
-#define NOVA_PSCALARDB  "nova_pscalar" "." DB_FEXT
-#define NOVA_COMPLIANCE "promise_compliance" "." DB_FEXT
-#define NOVA_REGISTRY "mswin" "." DB_FEXT
-#define NOVA_CACHE "nova_cache" "." DB_FEXT
-#define NOVA_LICENSE "nova_track" "." DB_FEXT
-#define NOVA_VALUE "nova_value" "." DB_FEXT
-#define NOVA_NETWORK "nova_network" "." DB_FEXT
-#define NOVA_GLOBALCOUNTERS "nova_counters" "." DB_FEXT
-
-#define NOVA_BUNDLE_LOG "bundles" "." DB_FEXT
-
-/* end database file names */
 
 #define CF_VALUE_LOG      "cf_value.log"
 #define CF_FILECHANGE     "file_change.log"

@@ -85,7 +85,7 @@ tests/unit/*_test
 
 # load tests
 
-tests/load/tcdb_load
+tests/load/db_load
 
 # examples
 examples/cfengine_stdlib.cf

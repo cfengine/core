@@ -108,8 +108,6 @@ int FSTAB_EDITS;
 int ABORTBUNDLE = false;
 int BOOTSTRAP = false;
 
-char HASHDB[CF_BUFSIZE] = { 0 };
-
 /*****************************************************************************/
 /* Measurements                                                              */
 /*****************************************************************************/
@@ -188,7 +186,6 @@ char VINPUTFILE[CF_BUFSIZE] = { 0 };
 char CONTEXTID[32] = { 0 };
 char CFPUBKEYFILE[CF_BUFSIZE] = { 0 };
 char CFPRIVKEYFILE[CF_BUFSIZE] = { 0 };
-char AVDB[CF_MAXVARSIZE] = { 0 };
 char CFWORKDIR[CF_BUFSIZE] = { 0 };
 char PIDFILE[CF_BUFSIZE] = { 0 };
 

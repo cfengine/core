@@ -40,6 +40,8 @@
 # include <sys/uio.h>
 #endif
 
+#define CF_IGNORE_INTERFACES "ignore_interfaces.rx"
+
 #ifndef MINGW
 
 # ifdef HAVE_STRUCT_SOCKADDR_SA_LEN

@@ -32,6 +32,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#include "dbm_api.h"
+
 static void WaitForCriticalSection(void);
 static void ReleaseCriticalSection(void);
 static time_t FindLock(char *last);
@@ -582,18 +584,12 @@ static pid_t FindLockPid(char *name)
 
 CF_DB *OpenLock()
 {
-    char name[CF_BUFSIZE];
     CF_DB *dbp;
 
-    snprintf(name, CF_BUFSIZE, "%s/state/%s", CFWORKDIR, CF_LOCKDB_FILE);
-    MapName(name);
-
-    if (!OpenDB(name, &dbp))
+    if (!OpenDB(&dbp, dbid_locks))
     {
         return NULL;
     }
-
-    CfDebug("OpenLock(%s)\n", name);
 
     return dbp;
 }
@@ -720,14 +716,14 @@ void PurgeLocks()
         if (now - entry.time > (time_t) CF_LOCKHORIZON)
         {
             CfOut(cf_verbose, "", " --> Purging lock (%ld) %s", now - entry.time, key);
-            DeleteDB(dbp, key);
+            DBCursorDeleteEntry(dbcp);
         }
     }
 
     entry.time = now;
-    WriteDB(dbp, "lock_horizon", &entry, sizeof(entry));
-
     DeleteDBCursor(dbp, dbcp);
+
+    WriteDB(dbp, "lock_horizon", &entry, sizeof(entry));
     CloseLock(dbp);
 }
 

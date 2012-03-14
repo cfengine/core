@@ -34,6 +34,7 @@
 
 #include "dir.h"
 #include "writer.h"
+#include "dbm_api.h"
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);
@@ -110,8 +111,6 @@ FILE *FPM[CF_OBSERVABLES];
 
 Rlist *REPORTS = NULL;
 Rlist *CSVLIST = NULL;
-
-char AVDB_FILE[CF_BUFSIZE];
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -543,8 +542,6 @@ static void ThisAgentInit(void)
     strcpy(WEBDRIVER, "#");
     strcpy(BANNER, "");
     strcpy(FOOTER, "");
-    snprintf(AVDB_FILE, CF_MAXVARSIZE, "%s/state/%s", CFWORKDIR, CF_AVDB_FILE); /* WAT? */
-    MapName(AVDB_FILE);
 
     if (!NULL_OR_EMPTY(REMOVEHOSTS))
     {
@@ -894,13 +891,9 @@ static void KeepReportsPromises()
 static void RemoveHostSeen(char *hosts)
 {
     CF_DB *dbp;
-    char name[CF_MAXVARSIZE];
     Item *ip, *list = SplitStringAsItemList(hosts, ',');
 
-    snprintf(name, sizeof(name), "%s/%s", CFWORKDIR, CF_LASTDB_FILE);
-    MapName(name);
-
-    if (!OpenDB(name, &dbp))
+    if (!OpenDB(&dbp, dbid_lastseen))
     {
         CfOut(cf_error, "", "!! Could not open hosts-seen database for removal of hosts");
         return;
@@ -908,19 +901,15 @@ static void RemoveHostSeen(char *hosts)
 
     for (ip = list; ip != NULL; ip = ip->next)
     {
+	char name[CF_MAXVARSIZE];
+
         snprintf(name, sizeof(name), "+%s", ip->name);
         CfOut(cf_inform, "", " -> Deleting requested host-seen entry for %s\n", name);
-        if (!DeleteDB(dbp, name))
-        {
-            CfOut(cf_inform, "", " !! Entry %s not found - skipping", name);
-        }
+        DeleteDB(dbp, name);
 
         snprintf(name, sizeof(name), "-%s", ip->name);
         CfOut(cf_inform, "", " -> Deleting requested host-seen entry for %s\n", name);
-        if (!DeleteDB(dbp, name))
-        {
-            CfOut(cf_inform, "", " !! Entry %s not found - skipping", name);
-        }
+        DeleteDB(dbp, name);
     }
 
     CloseDB(dbp);
@@ -943,10 +932,7 @@ static void ShowLastSeen()
     KeyHostSeen entry;
     int ksize, vsize;
 
-    snprintf(name, CF_BUFSIZE - 1, "%s/%s", CFWORKDIR, CF_LASTDB_FILE);
-    MapName(name);
-
-    if (!OpenDB(name, &dbp))
+    if (!OpenDB(&dbp, dbid_lastseen))
     {
         return;
     }
@@ -1027,7 +1013,7 @@ static void ShowLastSeen()
 
         if (now - then > (double) LASTSEENEXPIREAFTER)
         {
-            DeleteDB(dbp, key);
+            DBCursorDeleteEntry(dbcp);
             CfOut(cf_inform, "", " -> Deleting expired entry for %s\n", hostname);
             continue;
         }
@@ -1125,9 +1111,7 @@ static void ShowPerformance()
     Event entry;
     int ksize, vsize;
 
-    snprintf(name, CF_BUFSIZE - 1, "%s/%s", CFWORKDIR, CF_PERFORMANCE);
-
-    if (!OpenDB(name, &dbp))
+    if (!OpenDB(&dbp, dbid_performance))
     {
         return;
     }
@@ -1209,14 +1193,14 @@ static void ShowPerformance()
             {
                 if (now - then > SECONDS_PER_WEEK)
                 {
-                    DeleteDB(dbp, key);
+                    DBCursorDeleteEntry(dbcp);
                 }
 
                 CfOut(cf_inform, "", "Deleting expired entry for %s\n", eventname);
 
                 if (measure < 0 || average < 0 || measure > 4 * SECONDS_PER_WEEK)
                 {
-                    DeleteDB(dbp, key);
+                    DBCursorDeleteEntry(dbcp);
                 }
 
                 CfOut(cf_inform, "",
@@ -1298,10 +1282,7 @@ static void ShowClasses()
     CEnt array[1024];
     int i, ksize, vsize;
 
-    snprintf(name, CF_BUFSIZE - 1, "%s/%s", CFWORKDIR, CF_CLASSUSAGE);
-    MapName(name);
-
-    if (!OpenDB(name, &dbp))
+    if (!OpenDB(&dbp, dbid_classes))
     {
         return;
     }
@@ -1391,7 +1372,7 @@ static void ShowClasses()
             {
                 if (now - then > SECONDS_PER_WEEK * 52)
                 {
-                    DeleteDB(dbp, key);
+                    DBCursorDeleteEntry(dbcp);
                 }
 
                 CfOut(cf_error, "", " -> Deleting expired entry for %s\n", eventname);
@@ -1539,11 +1520,9 @@ static void ShowChecksums()
     void *value;
     int ksize, vsize;
     FILE *fout;
-    char checksumdb[CF_BUFSIZE], name[CF_BUFSIZE];
+    char name[CF_BUFSIZE];
 
-    snprintf(checksumdb, CF_BUFSIZE, "%s/%s", CFWORKDIR, CF_CHKDB);
-
-    if (!OpenDB(checksumdb, &dbp))
+    if (!OpenDB(&dbp, dbid_checksums))
     {
         return;
     }
@@ -1664,41 +1643,40 @@ static void ShowLocks(int active)
     void *value;
     FILE *fout;
     int ksize, vsize;
-    char lockdb[CF_BUFSIZE], name[CF_BUFSIZE];
+    char name[CF_BUFSIZE];
     LockData entry;
 
-    snprintf(lockdb, CF_BUFSIZE, "%s/state/%s", CFWORKDIR, CF_LOCKDB_FILE);
-    MapName(lockdb);
-
-    if (!OpenDB(lockdb, &dbp))
+    if (!OpenDB(&dbp, dbid_locks))
     {
         return;
     }
 
+    char *lock_state;
+    
     if (active)
     {
-        snprintf(lockdb, CF_MAXVARSIZE, "active");
+	lock_state = "active";
     }
     else
     {
-        snprintf(lockdb, CF_MAXVARSIZE, "all");
+	lock_state = "all";
     }
 
     if (HTML)
     {
-        snprintf(name, CF_BUFSIZE, "%s_locks.html", lockdb);
+        snprintf(name, CF_BUFSIZE, "%s_locks.html", lock_state);
     }
     else if (XML)
     {
-        snprintf(name, CF_BUFSIZE, "%s_locks.xml", lockdb);
+        snprintf(name, CF_BUFSIZE, "%s_locks.xml", lock_state);
     }
     else if (CSV)
     {
-        snprintf(name, CF_BUFSIZE, "%s_locks.csv", lockdb);
+        snprintf(name, CF_BUFSIZE, "%s_locks.csv", lock_state);
     }
     else
     {
-        snprintf(name, CF_BUFSIZE, "%s_locks.txt", lockdb);
+        snprintf(name, CF_BUFSIZE, "%s_locks.txt", lock_state);
     }
 
     if ((fout = fopen(name, "w")) == NULL)
@@ -1712,7 +1690,7 @@ static void ShowLocks(int active)
     {
         time_t now = time(NULL);
 
-        snprintf(name, CF_BUFSIZE, "%s lock data observed on %s at %s", lockdb, VFQNAME, cf_ctime(&now));
+        snprintf(name, CF_BUFSIZE, "%s lock data observed on %s at %s", lock_state, VFQNAME, cf_ctime(&now));
         CfHtmlHeader(fout, name, STYLESHEET, WEBDRIVER, BANNER);
         fprintf(fout, "<div id=\"reporttext\">\n");
         fprintf(fout, "<table class=border cellpadding=5>\n");
@@ -1820,7 +1798,7 @@ static void ShowLocks(int active)
 
 static void ShowCurrentAudit()
 {
-    char operation[CF_BUFSIZE], name[CF_BUFSIZE];
+    char operation[CF_BUFSIZE];
     AuditLog entry;
     FILE *fout;
     char *key;
@@ -1829,10 +1807,7 @@ static void ShowCurrentAudit()
     CF_DBC *dbcp;
     int ksize, vsize;
 
-    snprintf(name, CF_BUFSIZE - 1, "%s/%s", CFWORKDIR, CF_AUDITDB_FILE);
-    MapName(name);
-
-    if (!OpenDB(name, &dbp))
+    if (!OpenDB(&dbp, dbid_audit))
     {
         return;
     }
@@ -1846,6 +1821,8 @@ static void ShowCurrentAudit()
     }
 
     memset(&entry, 0, sizeof(entry));
+
+    char name[CF_BUFSIZE];
 
     if (HTML)
     {
@@ -2076,13 +2053,11 @@ static void ReadAverages()
     CF_DB *dbp;
     int i;
 
-    CfOut(cf_verbose, "", "\nLooking for database %s\n", AVDB_FILE);
     CfOut(cf_verbose, "", "\nFinding MAXimum values...\n\n");
     CfOut(cf_verbose, "", "N.B. socket values are numbers in CLOSE_WAIT. See documentation.\n");
 
-    if (!OpenDB(AVDB_FILE, &dbp))
+    if (!OpenDB(&dbp, dbid_observations))
     {
-        CfOut(cf_verbose, "", "Couldn't open average database %s\n", AVDB_FILE);
         return;
     }
 
@@ -2138,13 +2113,10 @@ static void EraseAverages()
     time_t now;
     CF_DB *dbp;
 
-    CfOut(cf_verbose, "", "\nLooking through current database %s\n", AVDB_FILE);
-
     list = SplitStringAsItemList(ERASE, ',');
 
-    if (!OpenDB(AVDB_FILE, &dbp))
+    if (!OpenDB(&dbp, dbid_observations))
     {
-        CfOut(cf_verbose, "", "Couldn't open average database %s\n", AVDB_FILE);
         return;
     }
 
@@ -2264,9 +2236,8 @@ static void SummarizeAverages()
         }
     }
 
-    if (!OpenDB(AVDB_FILE, &dbp))
+    if (!OpenDB(&dbp, dbid_observations))
     {
-        CfOut(cf_error, "", "Could not open %s", AVDB_FILE);
         return;
     }
 
@@ -2302,11 +2273,8 @@ static void WriteGraphFiles()
     time_t now;
     CF_DB *dbp;
 
-    CfOut(cf_verbose, "", " -> Retrieving data from %s", AVDB_FILE);
-
-    if (!OpenDB(AVDB_FILE, &dbp))
+    if (!OpenDB(&dbp, dbid_observations))
     {
-        CfOut(cf_verbose, "", "Couldn't open average database %s\n", AVDB_FILE);
         return;
     }
 
@@ -2442,9 +2410,8 @@ static void MagnifyNow()
     char timekey[CF_MAXVARSIZE];
     CF_DB *dbp;
 
-    if (!OpenDB(AVDB_FILE, &dbp))
+    if (!OpenDB(&dbp, dbid_observations))
     {
-        CfOut(cf_verbose, "", "Couldn't open average database %s\n", AVDB_FILE);
         return;
     }
 
@@ -2615,8 +2582,6 @@ static void WriteHistograms()
         fclose(FPQ[i]);
     }
 }
-
-/***************************************************************/
 
 static void OpenFiles()
 {

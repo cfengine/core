@@ -31,6 +31,7 @@
 
 #include "cf3.defs.h"
 #include "cf3.extern.h"
+#include "dbm_api.h"
 
 static int IsSpace(char *remainder);
 
@@ -41,7 +42,6 @@ void IPString2KeyDigest(char *ipv4, char *result)
     CF_DB *dbp;
     CF_DBC *dbcp;
     char *key;
-    char name[CF_BUFSIZE];
     void *value;
     KeyHostSeen entry;
     int ksize, vsize;
@@ -59,10 +59,7 @@ void IPString2KeyDigest(char *ipv4, char *result)
         return;
     }
 
-    snprintf(name, CF_BUFSIZE - 1, "%s/%s", CFWORKDIR, CF_LASTDB_FILE);
-    MapName(name);
-
-    if (!OpenDB(name, &dbp))
+    if (!OpenDB(&dbp, dbid_lastseen))
     {
         return;
     }

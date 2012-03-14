@@ -32,6 +32,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#include "dbm_api.h"
+
 int SHOWHOSTS = false;
 bool REMOVEKEYS = false;
 const char *remove_keys_host;
@@ -163,15 +165,12 @@ static void ShowLastSeenHosts()
     CF_DBC *dbcp;
     char *key;
     void *value;
-    char name[CF_BUFSIZE], hostname[CF_BUFSIZE], address[CF_MAXVARSIZE];
+    char hostname[CF_BUFSIZE], address[CF_MAXVARSIZE];
     KeyHostSeen entry;
     int ksize, vsize;
     int count = 0;
 
-    snprintf(name, CF_BUFSIZE - 1, "%s/%s", CFWORKDIR, CF_LASTDB_FILE);
-    MapName(name);
-
-    if (!OpenDB(name, &dbp))
+    if (!OpenDB(&dbp, dbid_lastseen))
     {
         return;
     }

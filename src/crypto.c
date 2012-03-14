@@ -40,7 +40,6 @@ static void MD5Random(unsigned char digest[EVP_MAX_MD_SIZE + 1]);
 void RandomSeed()
 {
     static unsigned char digest[EVP_MAX_MD_SIZE + 1];
-    struct stat statbuf;
     char vbuff[CF_BUFSIZE];
 
 /* Use the system database as the entropy source for random numbers */
@@ -48,20 +47,11 @@ void RandomSeed()
 
     snprintf(vbuff, CF_BUFSIZE, "%s%crandseed", CFWORKDIR, FILE_SEPARATOR);
 
-    if (cfstat(vbuff, &statbuf) == -1)
-    {
-        snprintf(AVDB, CF_MAXVARSIZE - 1, "%s%cstate%c%s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, CF_AVDB_FILE);
-    }
-    else
-    {
-        strncpy(AVDB, vbuff, CF_MAXVARSIZE - 1);
-    }
+    CfOut(cf_verbose, "", "Looking for a source of entropy in %s\n", vbuff);
 
-    CfOut(cf_verbose, "", "Looking for a source of entropy in %s\n", AVDB);
-
-    if (!RAND_load_file(AVDB, -1))
+    if (!RAND_load_file(vbuff, -1))
     {
-        CfOut(cf_verbose, "", "Could not read sufficient randomness from %s\n", AVDB);
+        CfOut(cf_verbose, "", "Could not read sufficient randomness from %s\n", vbuff);
     }
 
     while (!RAND_status())

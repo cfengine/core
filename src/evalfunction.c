@@ -195,9 +195,7 @@ static FnCallResult FnCallHostsSeen(FnCall *fp, Rlist *finalargs)
     // last-seen may be used by cf-serverd when (re-)reading policy
     if (!OpenDB(name, &dbp))
     {
-        return (FnCallResult)
-        {
-        FNCALL_FAILURE};
+        return (FnCallResult) { FNCALL_FAILURE };
     }
 
     CfDebug("Database opened succesfully.\n");
@@ -209,9 +207,7 @@ static FnCallResult FnCallHostsSeen(FnCall *fp, Rlist *finalargs)
         CloseDB(dbp);
         CfDebug("Failed to obtain cursor for database\n");
         CfOut(cf_error, "", " !! Error reading from last-seen database: ");
-        return (FnCallResult)
-        {
-        FNCALL_FAILURE};
+        return (FnCallResult) { FNCALL_FAILURE };
     }
 
     /* Walk through the database and print out the key/data pairs. */

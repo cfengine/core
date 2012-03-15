@@ -62,7 +62,7 @@ static const struct option OPTIONS[] =
     {"diagnostic", no_argument, 0, 'x'},
     {"analysis", no_argument, 0, 'a'},
     {"reports", no_argument, 0, 'r'},
-    //{"parse-tree", no_argument, 0, 'p'},
+    {"parse-tree", no_argument, 0, 'p'},
     {"gcc-brief-format", no_argument, 0, 'g'},
     {NULL, 0, 0, '\0'}
 };
@@ -82,7 +82,7 @@ static const char *HINTS[] =
     "Activate internal diagnostics (developers only)",
     "Perform additional analysis of configuration",
     "Generate reports about configuration and insert into CFDB",
-    //"Print a parse tree for the policy file in JSON format",
+    "Print a parse tree for the policy file in JSON format",
     "Use the GCC brief-format for output",
     NULL
 };
@@ -205,11 +205,9 @@ GenericAgentConfig CheckOpts(int argc, char **argv)
             exit(0);
             break;
 
-        /*
         case 'p':
             SHOW_PARSE_TREE = true;
             break;
-        */
 
         case 'g':
             USE_GCC_BRIEF_FORMAT = true;

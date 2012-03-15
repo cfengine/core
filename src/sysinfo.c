@@ -1661,7 +1661,7 @@ static int Linux_Debian_Version(void)
 
     if (strcmp(os, "Debian") == 0)
     {
-        sscanf(buffer, "%*s %*s %[^/]", version);
+        sscanf(buffer, "%*s %*s %[^./]", version);
         snprintf(buffer, CF_MAXVARSIZE, "debian_%s", version);
         NewClass("debian");
         NewClass(buffer);

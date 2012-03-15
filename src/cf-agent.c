@@ -152,6 +152,7 @@ int main(int argc, char *argv[])
     NoteClassUsage(VHEAP, true);
 #ifdef HAVE_NOVA
     Nova_NoteVarUsageDB();
+    Nova_TrackExecution();
 #endif
     PurgeLocks();
 

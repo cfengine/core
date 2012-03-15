@@ -676,12 +676,18 @@ static void RemoveDates(char *s)
 
 void PurgeLocks()
 {
-    CF_DB *dbp = OpenLock();
     CF_DBC *dbcp;
     char *key;
     int ksize, vsize;
     LockData entry;
     time_t now = time(NULL);
+
+    CF_DB *dbp = OpenLock();
+    
+    if(!dbp)
+    {
+        return;
+    }
 
     memset(&entry, 0, sizeof(entry));
 

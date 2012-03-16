@@ -56,5 +56,8 @@ file_writer_test_CFLAGS = $(AM_CFLAGS) -fno-profile-arcs -fno-test-coverage
 file_writer_test_LDADD = libtest.la
 file_writer_test_LDLFAGS =
 
+db_test_SOURCES = db_test.c ../../src/dbm_api.c ../../src/dbm_quick.c ../../src/dbm_tokyocab.c
+db_test_LDADD = libtest.la
+
 CLEANFILES = *.gcno *.gcda
 

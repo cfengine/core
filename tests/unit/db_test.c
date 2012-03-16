@@ -85,3 +85,20 @@ int main()
 
     return run_tests(tests);
 }
+
+/* STUBS */
+
+void FatalError(char *s, ...)
+{
+    fail();
+    exit(42);
+}
+
+void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
+{
+}
+
+char *MapNameCopy(const char *s)
+{
+    return xstrdup(s);
+}

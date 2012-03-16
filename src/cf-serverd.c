@@ -25,6 +25,7 @@
 #include "generic_agent.h"
 #include "cf3.server.h"
 #include "dir.h"
+#include "dbm_api.h"
 
 #define QUEUESIZE 50
 #define CF_BUFEXT 128
@@ -2303,15 +2304,13 @@ static Item *ContextAccessControl(char *in, ServerConnectionState *conn, int enc
     time_t now = time(NULL);
     CfState q;
     Item *ip, *matches = NULL, *candidates = NULL;
-    char filename[CF_BUFSIZE];
 
     sscanf(in, "CONTEXT %255[^\n]", client_regex);
 
     CfDebug("\n\nContextAccessControl(%s)\n", client_regex);
 
-    snprintf(filename, CF_BUFSIZE, "%s%cstate%c%s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, CF_STATEDB_FILE);
 
-    if (!OpenDB(filename, &dbp))
+    if (!OpenDB(&dbp, dbid_state))
     {
         return NULL;
     }
@@ -2329,7 +2328,7 @@ static Item *ContextAccessControl(char *in, ServerConnectionState *conn, int enc
         if (now > q.expires)
         {
             CfOut(cf_verbose, "", " Persistent class %s expired\n", key);
-            DeleteDB(dbp, key);
+            DBCursorDeleteEntry(dbcp);
         }
         else
         {

@@ -33,6 +33,7 @@
 #include "cf3.extern.h"
 
 #include <math.h>
+#include "dbm_api.h"
 
 static void NotePerformance(char *eventname, time_t t, double value);
 static void UpdateLastSawHost(char *rkey, char *ipaddress);
@@ -97,7 +98,6 @@ void EndMeasure(char *eventname, struct timespec start)
 static void NotePerformance(char *eventname, time_t t, double value)
 {
     CF_DB *dbp;
-    char name[CF_BUFSIZE];
     Event e, newe;
     double lastseen, delta2;
     int lsea = SECONDS_PER_WEEK;
@@ -105,9 +105,7 @@ static void NotePerformance(char *eventname, time_t t, double value)
 
     CfDebug("PerformanceEvent(%s,%.1f s)\n", eventname, value);
 
-    snprintf(name, CF_BUFSIZE - 1, "%s/%s", CFWORKDIR, CF_PERFORMANCE);
-
-    if (!OpenDB(name, &dbp))
+    if (!OpenDB(&dbp, dbid_performance))
     {
         return;
     }
@@ -161,7 +159,7 @@ void NoteClassUsage(AlphaList baselist, int purge)
     CF_DB *dbp;
     CF_DBC *dbcp;
     void *stored;
-    char *key, name[CF_BUFSIZE];
+    char *key;
     int ksize, vsize;
     Event e, entry, newe;
     double lsea = SECONDS_PER_WEEK * 52;        /* expire after (about) a year */
@@ -191,10 +189,7 @@ void NoteClassUsage(AlphaList baselist, int purge)
         IdempPrependItem(&list, ip->name, NULL);
     }
 
-    snprintf(name, CF_BUFSIZE - 1, "%s/%s", CFWORKDIR, CF_CLASSUSAGE);
-    MapName(name);
-
-    if (!OpenDB(name, &dbp))
+    if (!OpenDB(&dbp, dbid_classes))
     {
         return;
     }
@@ -252,8 +247,6 @@ void NoteClassUsage(AlphaList baselist, int purge)
 
         memset(&entry, 0, sizeof(entry));
 
-        OpenDBTransaction(dbp);
-
         while (NextDB(dbp, dbcp, &key, &ksize, &stored, &vsize))
         {
             double av, var;
@@ -275,7 +268,7 @@ void NoteClassUsage(AlphaList baselist, int purge)
                 if (lastseen > lsea)
                 {
                     CfDebug("Class usage record %s expired\n", eventname);
-                    DeleteDB(dbp, eventname);
+                    DBCursorDeleteEntry(dbcp);
                 }
                 else if (!IsItemIn(list, eventname))
                 {
@@ -289,18 +282,17 @@ void NoteClassUsage(AlphaList baselist, int purge)
                     if (newe.Q.expect <= 0.0001)
                     {
                         CfDebug("Deleting class %s as %lf is zero\n", eventname, newe.Q.expect);
-                        DeleteDB(dbp, eventname);
+                        DBCursorDeleteEntry(dbcp);
                     }
                     else
                     {
                         CfDebug("Downgrading class %s from %lf to %lf\n", eventname, entry.Q.expect, newe.Q.expect);
-                        WriteDB(dbp, eventname, &newe, sizeof(newe));
+                        DBCursorWriteEntry(dbcp, &newe, sizeof(newe));
                     }
                 }
             }
         }
 
-        CommitDBTransaction(dbp);
         DeleteDBCursor(dbp, dbcp);
     }
 
@@ -349,14 +341,11 @@ static void UpdateLastSawHost(char *rkey, char *ipaddress)
     CF_DB *dbp = NULL;
     KeyHostSeen q, newq;
     double lastseen, delta2;
-    char name[CF_BUFSIZE];
     time_t now = time(NULL);
     char timebuf[26];
 
-    snprintf(name, CF_BUFSIZE - 1, "%s/%s", CFWORKDIR, CF_LASTDB_FILE);
-    MapName(name);
 
-    if (!OpenDB(name, &dbp))
+    if (!OpenDB(&dbp, dbid_lastseen))
     {
         CfOut(cf_inform, "", " !! Unable to open last seen db");
         return;
@@ -446,12 +435,9 @@ bool RemoveHostFromLastSeen(const char *hostname, char *hostkey)
     }
 
     CF_DB *dbp;
-    char name[CF_BUFSIZE], key[CF_BUFSIZE];
+    char key[CF_BUFSIZE];
 
-    snprintf(name, CF_BUFSIZE - 1, "%s/%s", CFWORKDIR, CF_LASTDB_FILE);
-    MapName(name);
-
-    if (!OpenDB(name, &dbp))
+    if (!OpenDB(&dbp, dbid_lastseen))
     {
         CfOut(cf_error, "", " !! Unable to open last seen DB");
         return false;
@@ -504,7 +490,7 @@ static void PurgeMultipleIPReferences(CF_DB *dbp, char *rkey, char *ipaddress)
         {
             CfOut(cf_verbose, "", " -> Last-seen record for %s expired after %.1lf > %.1lf hours\n", key,
                   lastseen / 3600, lsea / 3600);
-            DeleteDB(dbp, key);
+            DBCursorDeleteEntry(dbcp);
             continue;
         }
 
@@ -532,7 +518,7 @@ static void PurgeMultipleIPReferences(CF_DB *dbp, char *rkey, char *ipaddress)
 
         if (update_address)
         {
-            WriteDB(dbp, key, &q, sizeof(q));
+            DBCursorWriteEntry(dbcp, &q, sizeof(q));
         }
     }
 

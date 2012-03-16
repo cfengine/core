@@ -1974,6 +1974,7 @@ extern SubTypeSyntax CF_MEASUREMENT_SUBTYPES[];
 extern SubTypeSyntax CF_SERVICES_SUBTYPES[];
 #endif
 
+#include "dbm_api.h"
 #include "prototypes3.h"
 #include "cf3.extern.h"
 

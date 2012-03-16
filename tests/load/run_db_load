@@ -1,0 +1,6 @@
+#!/bin/sh -e
+
+for threads in 1 5 10 50 100 200 500; do
+  echo db_load $threads
+  ./db_load $threads
+done

@@ -32,6 +32,7 @@
 
 #include "cf3.defs.h"
 #include "cf3.extern.h"
+#include "dbm_api.h"
 
 static int ReadHash(CF_DB *dbp, enum cfhashes type, char *name, unsigned char digest[EVP_MAX_MD_SIZE + 1]);
 static int WriteHash(CF_DB *dbp, enum cfhashes type, char *name, unsigned char digest[EVP_MAX_MD_SIZE + 1]);
@@ -119,9 +120,9 @@ int FileHashChanged(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], i
 
     size = FileHashSize(type);
 
-    if (!OpenDB(HASHDB, &dbp))
+    if (!OpenDB(&dbp, dbid_checksums))
     {
-        cfPS(cf_error, CF_FAIL, "open", pp, attr, "Unable to open the hash database!");
+        cfPS(cf_error, CF_FAIL, "", pp, attr, "Unable to open the hash database!");
         return false;
     }
 
@@ -476,7 +477,7 @@ void PurgeHashes(char *path, Attributes attr, Promise *pp)
     char *key;
     void *value;
 
-    if (!OpenDB(HASHDB, &dbp))
+    if (!OpenDB(&dbp,dbid_checksums))
     {
         return;
     }
@@ -510,10 +511,7 @@ void PurgeHashes(char *path, Attributes attr, Promise *pp)
         {
             if (attr.change.update)
             {
-                if (DeleteComplexKeyDB(dbp, key, ksize))
-                {
-                    cfPS(cf_error, CF_CHG, "", pp, attr, "ALERT: FILE %s no longer exists!", obj);
-                }
+                DBCursorDeleteEntry(dbcp);
             }
             else
             {

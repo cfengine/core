@@ -61,7 +61,6 @@ extern char CFLAST[CF_BUFSIZE];
 extern char CFPUBKEYFILE[CF_BUFSIZE];
 extern char CFPRIVKEYFILE[CF_BUFSIZE];
 extern char CFWORKDIR[CF_BUFSIZE];
-extern char AVDB[CF_MAXVARSIZE];
 
 extern char VYEAR[];
 extern char VDAY[];
@@ -201,7 +200,6 @@ extern int CSV;
 
 extern const char *CF_DATATYPES[];
 extern const char *CF_AGENTTYPES[];
-extern char HASHDB[CF_BUFSIZE];
 extern int FSTAB_EDITS;
 
 extern int CFA_MAXTHREADS;

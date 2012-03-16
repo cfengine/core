@@ -659,6 +659,7 @@ struct timespec
 #define NOVA_VALUE "nova_value" "." DB_FEXT
 #define NOVA_NETWORK "nova_network" "." DB_FEXT
 #define NOVA_GLOBALCOUNTERS "nova_counters" "." DB_FEXT
+#define NOVA_AGENT_EXECUTION "nova_agent_execution" "." DB_FEXT
 
 #define NOVA_BUNDLE_LOG "bundles" "." DB_FEXT
 

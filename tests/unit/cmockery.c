@@ -711,6 +711,7 @@ LargestIntegralType _cast_to_largest_integral_type(size_t size, ...)
     else
     {
         assert(size <= sizeof(LargestIntegralType));
+        exit(255);
     }
 
     return ret;

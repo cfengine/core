@@ -35,11 +35,28 @@
 	- $(sys.hardware_mac[$iface]) - MAC address for network interface
 	- mac_<mac_address>:: - discovered MAC addresses
 
-	Cleanups and improvements:
+	Changes:
+
+	- Major cleanup of database handling code. Should radically decrease
+	  amount of database issues experienced under heavy load.
+
+	  *WARNING*: Berkeley DB and SQLite backends are *removed*, use
+	  Tokyo Cabinet or QDBM instead. Both Tokyo Cabinet and QDBM are
+	  faster than Berkeley DB in typical CFEngine workloads.
+
+	  Tokyo Cabinet requires C99 environment, so it should be
+	  available on every contemporary operating system.
+
+	  For the older systems QDBM, which relies only on C89, is a
+	  better replacement, and deemed to be as portable, as Berkeley DB.
+
+	- Automatic reload of policies by cf-execd.
+	- Documentation is generated during build, PDF and HTML files are
+	  retired from repository.
+	- Rarely used feature retired: peer connectivity intermittency calculation.
 	- Memory and CPU usage improvements.
 	- Testsuite now uses 'make check' convention and does not need root
 	  privileges anymore.
-	- Rarely used feature retired: peer connectivity intermittency calculation.
 	- cf_promises_validated now filled with timestamp, allows digest-copy
 	  for policy instead of mtime copy which is safer when clocks are unsynchronised
 	- See the full list of bugfixes at

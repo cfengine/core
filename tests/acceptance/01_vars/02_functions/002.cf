@@ -26,30 +26,32 @@ vars:
 bundle agent test
 {
 vars:
-  linux|freebsd::
+  linux|freebsd|solaris::
     "gid_daemon" int => getgid("daemon");
     "gid_sys" int => getgid("sys");
-  !linux.!freebsd::
+  !linux.!freebsd.!solaris::
     "gid_daemon" string => "fixme";
     "gid_sys" string => "fixme";
 
-  linux::
+  linux|solaris::
     "gid_0" int => getgid("root");
   freebsd::
     "gid_0" int => getgid("wheel");
-  !linux.!freebsd::
+  !linux.!freebsd.!solaris::
     "gid_0" string => "fixme";
 
   SuSE|redhat::
     "num_daemon" int => "2";
   (linux.!SuSE.!redhat)|freebsd::
     "num_daemon" int => "1";
-  !linux.!freebsd::
+  solaris::
+    "num_daemon" int => "12";
+  !linux.!freebsd.!solaris::
     "num_daemon" string => "fixme";
 
-  linux|freebsd::
+  linux|freebsd|solaris::
     "num_sys" int => "3";
-  !linux.!freebsd::
+  !linux.!freebsd.!solaris::
     "num_sys" string => "fixme";
 }
 

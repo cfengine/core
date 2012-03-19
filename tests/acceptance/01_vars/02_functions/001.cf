@@ -31,7 +31,7 @@ vars:
         "uid_daemon" int => getuid("daemon");
         "uid_bin" int => getuid("bin");
 
-    linux.!SuSE.!redhat::
+    (linux.!SuSE.!redhat)|solaris::
         "num_root" int => "0";
         "num_daemon" int => "1";
         "num_bin" int => "2";
@@ -44,7 +44,7 @@ vars:
         "num_daemon" int => "1";
         "num_bin" int => "3";
 
-    !freebsd.!linux::
+    !freebsd.!linux.!solaris::
         "num_root" string => "fixme";
         "num_daemon" string => "fixme";
         "num_bin" string => "fixme";

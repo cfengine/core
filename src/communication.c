@@ -227,10 +227,9 @@ int IsIPV4Address(char *name)
 const char *Hostname2IPString(const char *hostname)
 {
     static char ipbuffer[CF_SMALLBUF];
-    int err;
 
 #if defined(HAVE_GETADDRINFO)
-
+    int err;
     struct addrinfo query, *response, *ap;
 
     memset(&query, 0, sizeof(struct addrinfo));
@@ -284,10 +283,9 @@ const char *Hostname2IPString(const char *hostname)
 char *IPString2Hostname(char *ipaddress)
 {
     static char hostbuffer[MAXHOSTNAMELEN];
-    int err;
 
 #if defined(HAVE_GETADDRINFO)
-
+    int err;
     struct addrinfo query, *response, *ap;
 
     memset(&query, 0, sizeof(query));
@@ -323,7 +321,6 @@ char *IPString2Hostname(char *ipaddress)
 #else
 
     struct hostent *hp;
-    struct sockaddr_in myaddr;
     struct in_addr iaddr;
 
     memset(hostbuffer, 0, MAXHOSTNAMELEN);

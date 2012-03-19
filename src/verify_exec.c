@@ -144,8 +144,8 @@ static void VerifyExec(Attributes a, Promise *pp)
 
     PromiseBanner(pp);
 
-    CfOut(cf_inform, "", " -> Executing \'%s\' ...(timeout=%d,owner=%d,group=%d)\n", execstr, a.contain.timeout,
-          a.contain.owner, a.contain.group);
+    CfOut(cf_inform, "", " -> Executing \'%s\' ...(timeout=%d,owner=%ju,group=%ju)\n", execstr, a.contain.timeout,
+          (uintmax_t)a.contain.owner, (uintmax_t)a.contain.group);
 
     BeginMeasure();
 
@@ -184,7 +184,7 @@ static void VerifyExec(Attributes a, Promise *pp)
             }
 
 #ifndef MINGW
-            CfOut(cf_verbose, "", " -> (Setting umask to %o)\n", a.contain.umask);
+            CfOut(cf_verbose, "", " -> (Setting umask to %jo)\n", (uintmax_t)a.contain.umask);
             maskval = umask(a.contain.umask);
 
             if (a.contain.umask == 0)

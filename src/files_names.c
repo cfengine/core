@@ -100,8 +100,8 @@ void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *p
             if (S_ISDIR(statbuf.st_mode) && statbuf.st_uid != agentuid && statbuf.st_uid != 0)
             {
                 CfOut(cf_inform, "",
-                      "Directory %s in search path %s is controlled by another user (uid %d) - trusting its content is potentially risky (possible race)\n",
-                      pbuffer, wildpath, statbuf.st_uid);
+                      "Directory %s in search path %s is controlled by another user (uid %ju) - trusting its content is potentially risky (possible race)\n",
+                      pbuffer, wildpath, (uintmax_t)statbuf.st_uid);
                 PromiseRef(cf_inform, pp);
             }
         }

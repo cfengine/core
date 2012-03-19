@@ -23,6 +23,33 @@
 # included file COSL.txt.
 #
 
+#
+# Detect and replace non-POSIX shell
+#
+try_exec() {
+  type "$1" > /dev/null 2>&1 && exec "$@"
+}
+
+unset foo
+(: ${foo%%bar}) 2> /dev/null
+T1="$?"
+
+if test "$T1" != 0; then
+  try_exec /usr/xpg4/bin/sh "$0" "$@"
+  echo "No compatible shell script interpreter found."
+  echo "Please find a POSIX shell for your system."
+  exit 42
+fi
+
+#
+# Explicitly use POSIX tools if needed
+#
+if [ -f /usr/xpg4/bin/grep ]; then
+  PATH=/usr/xpg4/bin:$PATH
+  export PATH
+fi
+
+
 LOG=test.log
 SUMMARY=summary.log
 BASE_WORKDIR=$(pwd)/workdir
@@ -79,7 +106,7 @@ runtest() {
   TEST="$2"
 
   if [ -z "$QUIET" ]; then
-    echo -n "$TEST "
+    printf "$TEST "
   fi
 
   if echo "$TEST" | grep -q -F -e .x.cf ; then
@@ -115,7 +142,11 @@ runtest() {
     ln -sf $(dirname $AGENT)/cf-promises $WORKDIR/bin
 
     echo "#!/bin/sh
-CFENGINE_TEST_OVERRIDE_WORKDIR=$WORKDIR TEMP=$WORKDIR/tmp exec $AGENT -Kf \"$TEST\" -D AUTO,DEBUG 2>&1
+CFENGINE_TEST_OVERRIDE_WORKDIR=$WORKDIR
+TEMP=$WORKDIR/tmp
+export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP
+
+$AGENT -Kf \"$TEST\" -D AUTO,DEBUG 2>&1
 " > $WORKDIR/runtest
     chmod +x $WORKDIR/runtest
 
@@ -155,12 +186,12 @@ CFENGINE_TEST_OVERRIDE_WORKDIR=$WORKDIR TEMP=$WORKDIR/tmp exec $AGENT -Kf \"$TES
       fi
     else
       if [ "$RESULT" = Pass ]; then
-        echo -n '.'
+        printf '.'
       else
         if [ -n "$EXPECTED_CRASH" ]; then
-          echo -n '!'
+          printf '!'
         else
-          echo -n 'x'
+          printf 'x'
         fi
       fi
     fi

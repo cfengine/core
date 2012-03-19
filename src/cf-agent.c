@@ -985,8 +985,8 @@ static void CheckAgentAccess(Rlist *list)
             {
                 if (sb.st_uid != getuid())
                 {
-                    CfOut(cf_error, "", "File %s is not owned by uid %d (security exception)", ScalarValue(rp),
-                          getuid());
+                    CfOut(cf_error, "", "File %s is not owned by uid %ju (security exception)", ScalarValue(rp),
+                          (uintmax_t)getuid());
                     exit(1);
                 }
             }

@@ -456,7 +456,7 @@ AC_CHECK_FUNCS(getpwent setpwent endpwent)
 
 AC_CHECK_FUNCS(getcwd getnetgrent waitpid seteuid setegid setreuid setregid)
 AC_CHECK_FUNCS(uname gethostname chflags)
-AC_CHECK_FUNCS(putenv getaddrinfo)
+AC_CHECK_FUNCS(putenv)
 AC_CHECK_FUNCS(mkfifo statfs statvfs door)
 AC_CHECK_FUNCS(sysinfo setsid sysconf)
 AC_CHECK_FUNCS(getzoneid getzonenamebyid)
@@ -499,13 +499,16 @@ dnl
 dnl Various functions
 dnl
 
-AC_CHECK_FUNC(door_create,door)
-AC_CHECK_FUNC(setsockopt, , AC_CHECK_LIB(socket, setsockopt))
-AC_CHECK_FUNC(gethostent, , AC_CHECK_LIB(nsl, gethostent))
-AC_CHECK_FUNC(getaddrinfo, , AC_CHECK_LIB(socket, getaddrinfo))
+AC_SEARCH_LIBS(setsockopt, socket)
+AC_SEARCH_LIBS(gethostent, nsl)
 
-AC_SEARCH_LIBS(socket, socket, ,
-    [AC_CHECK_LIB(nsl, socket, LIBS="$LIBS -lsocket -lnsl", , -lsocket)])
+AC_CHECK_FUNCS(socket)
+AC_CHECK_FUNCS(setsockopt)
+AC_CHECK_FUNCS(getaddrinfo)
+AC_CHECK_FUNCS(gethostent)
+
+AC_SEARCH_LIBS(door_create, door)
+AC_CHECK_FUNCS(door_create)
 
 AC_CHECK_FUNC(lchown, AC_DEFINE(HAVE_LCHOWN, 1, [Whether to use lchown(3) to change ownerships]))
 
@@ -568,13 +571,17 @@ fi
 
 case "$target_os" in
 
-   solaris2*)
+   solaris2.8|solaris2.9)
 	AC_DEFINE(SOLARIS, [], [Solaris build])
-        AC_DEFINE(__BIT_TYPES_DEFINED__, [], [Solaris 2.6-related stuff]) # avoid conflict with db.h
-        AC_DEFINE(_POSIX_C_SOURCE, 200112L, [_POSIX_C_SOURCE])
-        AC_DEFINE(__EXTENSIONS__, 1, [__EXTENSIONS__])
+        AC_DEFINE(_XOPEN_SOURCE, 500, [UNIX 98])
+        AC_DEFINE(__EXTENSIONS__, 1, [Extended UNIX 98 interfaces])
         LIBS="$LIBS -lelf -lsec"
         ;;
+   solaris2.10|solaris2.11)
+        AC_DEFINE(SOLARIS, [], [Solaris build])
+        AC_DEFINE(_XOPEN_SOURCE, 600, [SUSv3])
+        AC_DEFINE(__EXTENSIONS__, 1, [Extended UNIX 98 interfaces])
+        LIBS="$LIBS -lelf -lsec";;
    ultrix*)
 	AC_DEFINE(ULTRIX, [], [Ultrix build])
         ;;

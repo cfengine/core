@@ -314,13 +314,13 @@ int Unix_DoAllSignals(Item *siglist, Attributes a, Promise *pp)
                 if (kill((pid_t) pid, signal) < 0)
                 {
                     cfPS(cf_verbose, CF_FAIL, "kill", pp, a,
-                         " !! Couldn't send promised signal \'%s\' (%d) to pid %d (might be dead)\n", ScalarValue(rp),
-                         signal, pid);
+                         " !! Couldn't send promised signal \'%s\' (%d) to pid %jd (might be dead)\n", ScalarValue(rp),
+                         signal, (intmax_t)pid);
                 }
                 else
                 {
-                    cfPS(cf_inform, CF_CHG, "", pp, a, " -> Signalled '%s' (%d) to process %d (%s)\n",
-                         ScalarValue(rp), signal, pid, ip->name);
+                    cfPS(cf_inform, CF_CHG, "", pp, a, " -> Signalled '%s' (%d) to process %jd (%s)\n",
+                         ScalarValue(rp), signal, (intmax_t)pid, ip->name);
                 }
             }
             else

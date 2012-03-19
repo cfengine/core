@@ -142,7 +142,11 @@ runtest() {
     ln -sf $(dirname $AGENT)/cf-promises $WORKDIR/bin
 
     echo "#!/bin/sh
-CFENGINE_TEST_OVERRIDE_WORKDIR=$WORKDIR TEMP=$WORKDIR/tmp exec $AGENT -Kf \"$TEST\" -D AUTO,DEBUG 2>&1
+CFENGINE_TEST_OVERRIDE_WORKDIR=$WORKDIR
+TEMP=$WORKDIR/tmp
+export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP
+
+$AGENT -Kf \"$TEST\" -D AUTO,DEBUG 2>&1
 " > $WORKDIR/runtest
     chmod +x $WORKDIR/runtest
 

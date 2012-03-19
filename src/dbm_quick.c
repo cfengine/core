@@ -61,6 +61,8 @@ struct DBCursorPriv_
     char *curval;
 };
 
+void DBPathMoveBroken(const char *filename);
+
 /******************************************************************************/
 
 static bool Lock(DBPriv *db)
@@ -131,15 +133,8 @@ DBPriv *DBPrivOpenDB(const char *filename)
         }
         else
         {
-            char filename_broken[CF_MAXVARSIZE];
-            snprintf(filename_broken, sizeof(filename_broken), "%s.broken", filename);
-            
-            CfOut(cf_error, "", "!! Failed repairing database, moving to %s", filename_broken);
-            
-            if(cf_rename(filename, filename_broken) != 0)
-            {
-                CfOut(cf_error, "", "!! Failed moving broken db out of the way");
-            }
+            CfOut(cf_error, "", "!! Failed to repair database %s, recreating...", filename);
+            DBPathMoveBroken(filename);
         }
 
         db->depot = dpopen(filename, DP_OWRITER | DP_OCREAT, -1);

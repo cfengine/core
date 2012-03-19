@@ -27,6 +27,9 @@ files:
 	"$(G.testfile)"
 	    create => "true";
 
+        "$(G.testfile).dir/."
+            create => "true";
+
 	"$(G.testfile).link"
 	    link_from => test_link("$(G.testfile)");
 }
@@ -55,11 +58,10 @@ classes:
 		    };
 
 	"bad" or => {
-		    islink("/bin/cat"),
-		    islink("/bin"),
-		    islink("/bin/"),
-		    islink("/etc/passwd"),
-		    islink("/ThisFi!3BetterNotExi5t"),
+		    islink("$(G.testfile).dir"),
+		    islink("$(G.testfile).dir/"),
+		    islink("$(G.testfile)"),
+		    islink("$(G.testfile).does-not-exist"),
 		    };
 
 	"ok" expression => "good&!bad";
@@ -68,7 +70,7 @@ reports:
     DEBUG.good::
 	"As expected, $(G.testfile).link is a symlink to $(G.testfile)";
     DEBUG.bad::
-	"One of these is detected as a symlink: /bin/cat, /bin, /bin/, /etc/passwd, /ThisFi!3BetterNotExi5t";
+	"One of these is detected as a symlink: $(G.testfile).dir, $(G.testfile), $(G.testfile).does-not-exist";
     ok::
 	"$(this.promise_filename) Pass";
     !ok::

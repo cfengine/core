@@ -351,5 +351,10 @@ char *MapNameCopy(const char *s)
     return xstrdup(s);
 }
 
+int cf_rename(const char *oldpath, const char *newpath)
+{
+    return rename(oldpath, newpath);
+}
+
 pthread_mutex_t *cft_dbhandle;
 #endif

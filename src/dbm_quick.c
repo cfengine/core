@@ -129,6 +129,18 @@ DBPriv *DBPrivOpenDB(const char *filename)
         {
             CfOut(cf_log, "", "Successfully repaired database \"%s\"", filename);
         }
+        else
+        {
+            char filename_broken[CF_MAXVARSIZE];
+            snprintf(filename_broken, sizeof(filename_broken), "%s.broken", filename);
+            
+            CfOut(cf_error, "", "!! Failed repairing database, moving to %s", filename_broken);
+            
+            if(cf_rename(filename, filename_broken) != 0)
+            {
+                CfOut(cf_error, "", "!! Failed moving broken db out of the way");
+            }
+        }
 
         db->depot = dpopen(filename, DP_OWRITER | DP_OCREAT, -1);
     }

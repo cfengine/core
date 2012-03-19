@@ -106,7 +106,7 @@ runtest() {
   TEST="$2"
 
   if [ -z "$QUIET" ]; then
-    echo -n "$TEST "
+    printf "$TEST "
   fi
 
   if echo "$TEST" | grep -q -F -e .x.cf ; then
@@ -186,12 +186,12 @@ $AGENT -Kf \"$TEST\" -D AUTO,DEBUG 2>&1
       fi
     else
       if [ "$RESULT" = Pass ]; then
-        echo -n '.'
+        printf '.'
       else
         if [ -n "$EXPECTED_CRASH" ]; then
-          echo -n '!'
+          printf '!'
         else
-          echo -n 'x'
+          printf 'x'
         fi
       fi
     fi

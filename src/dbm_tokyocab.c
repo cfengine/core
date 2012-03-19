@@ -67,6 +67,8 @@ struct DBCursorPriv_
     bool pending_delete;
 };
 
+void DBPathMoveBroken(const char *filename);
+
 /******************************************************************************/
 
 static bool LockCursor(DBPriv *db)
@@ -120,7 +122,21 @@ DBPriv *DBPrivOpenDB(const char *dbpath)
     {
         CfOut(cf_error, "", "!! Could not open database %s: %s",
               dbpath, ErrorMessage(db->hdb));
-        goto err;
+        
+        if(tchdbecode(db->hdb) != TCEREAD)
+        {
+            goto err;
+        }
+        
+        CfOut(cf_error, "", "!! Database \"%s\" is broken, recreating...", dbpath);
+        DBPathMoveBroken(dbpath);
+        
+        if(!tchdbopen(db->hdb, dbpath, HDBOWRITER | HDBOCREAT))
+        {
+            CfOut(cf_error, "", "!! Could not open database %s after recreate: %s",
+                  dbpath, ErrorMessage(db->hdb));
+            goto err;
+        }
     }
 
     return db;

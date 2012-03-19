@@ -321,7 +321,6 @@ char *IPString2Hostname(char *ipaddress)
 #else
 
     struct hostent *hp;
-    struct sockaddr_in myaddr;
     struct in_addr iaddr;
 
     memset(hostbuffer, 0, MAXHOSTNAMELEN);

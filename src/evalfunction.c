@@ -790,7 +790,7 @@ static FnCallResult FnCallUseModule(FnCall *fp, Rlist *finalargs)
 
     if ((statbuf.st_uid != 0) && (statbuf.st_uid != getuid()))
     {
-        CfOut(cf_error, "", "Module %s was not owned by uid=%d who is executing agent\n", modulecmd, getuid());
+        CfOut(cf_error, "", "Module %s was not owned by uid=%ju who is executing agent\n", modulecmd, (uintmax_t)getuid());
         return (FnCallResult)
         {
         FNCALL_FAILURE};

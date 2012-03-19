@@ -25,7 +25,9 @@
 #ifndef CFENGINE_CF_DEFS_H
 #define CFENGINE_CF_DEFS_H
 
-#include "conf.h"
+#ifdef HAVE_CONFIG_H
+# include "conf.h"
+#endif
 
 #define _GNU_SOURCE 1
 

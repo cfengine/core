@@ -42,7 +42,6 @@ struct Rlist_
 };
 
 #include "cf.defs.h"
-#include "conf.h"
 #include "writer.h"
 #include "json.h"
 

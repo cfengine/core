@@ -543,7 +543,8 @@ static int Unix_GetOwnerName(struct stat *lstatptr, char *owner, int ownerSz)
 
     if (pw == NULL)
     {
-        CfOut(cf_error, "getpwuid", "!! Could not get owner name of user with uid=%d", lstatptr->st_uid);
+        CfOut(cf_error, "getpwuid", "!! Could not get owner name of user with uid=%ju",
+              (uintmax_t)lstatptr->st_uid);
         return false;
     }
 

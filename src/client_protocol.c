@@ -46,10 +46,10 @@ void SetSkipIdentify(bool enabled)
 int IdentifyAgent(int sd, char *localip, int family)
 {
     char uname[CF_BUFSIZE], sendbuff[CF_BUFSIZE], dnsname[CF_BUFSIZE];
-    int err;
     socklen_t len;
 
 #if defined(HAVE_GETADDRINFO)
+    int err;
     char myaddr[256];           /* Compilation trick for systems that don't know ipv6 */
 #else
     struct sockaddr_in myaddr;

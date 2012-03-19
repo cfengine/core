@@ -369,7 +369,7 @@ static FnCallResult FnCallEscape(FnCall *fp, Rlist *finalargs)
 
     char *name = ScalarValue(finalargs);
 
-    EscapeSpecialChars(name, buffer, CF_BUFSIZE - 1, "");
+    EscapeSpecialChars(name, buffer, CF_BUFSIZE - 1, "", "");
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
 }

@@ -34,8 +34,6 @@
 #include "cf.defs.h"
 #include "rlist.h"
 
-#undef VERSION
-
 #ifndef NGROUPS
 # define NGROUPS 20
 #endif

@@ -239,7 +239,7 @@ int CfCreateFile(char *file, Promise *pp, Attributes attr)
             {
                 /* Relying on umask is risky */
                 filemode = 0600;
-                CfOut(cf_verbose, "", " -> No mode was set, choose plain file default %o\n", filemode);
+                CfOut(cf_verbose, "", " -> No mode was set, choose plain file default %ju\n", (uintmax_t)filemode);
             }
             else
             {
@@ -250,13 +250,13 @@ int CfCreateFile(char *file, Promise *pp, Attributes attr)
 
             if ((fd = creat(file, filemode)) == -1)
             {
-                cfPS(cf_inform, CF_FAIL, "creat", pp, attr, " !! Error creating file %s, mode = %o\n", file, filemode);
+                cfPS(cf_inform, CF_FAIL, "creat", pp, attr, " !! Error creating file %s, mode = %ju\n", file, (uintmax_t)filemode);
                 umask(saveumask);
                 return false;
             }
             else
             {
-                cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Created file %s, mode = %o\n", file, filemode);
+                cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Created file %s, mode = %ju\n", file, (uintmax_t)filemode);
                 close(fd);
                 umask(saveumask);
             }
@@ -884,8 +884,8 @@ static void VerifyName(char *path, struct stat *sb, Attributes attr, Promise *pp
                 }
                 else
                 {
-                    cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Disabling/renaming file %s to %s with mode %o\n", path,
-                         newname, newperm);
+                    cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Disabling/renaming file %s to %s with mode %jo\n", path,
+                         newname, (uintmax_t)newperm);
                 }
 
                 if (ArchiveToRepository(newname, attr, pp))
@@ -1459,7 +1459,7 @@ int MakeParentDirectory(char *parentandchild, int force)
             }
             else if (cfstat(currentpath, &statbuf) == -1)
             {
-                CfDebug("cfengine: Making directory %s, mode %o\n", currentpath, DEFAULTMODE);
+                CfDebug("cfengine: Making directory %s, mode %jo\n", currentpath, (uintmax_t)DEFAULTMODE);
 
                 if (!DONTDO)
                 {
@@ -1567,7 +1567,7 @@ void LogHashChange(char *file)
     {
         if (sb.st_mode & (S_IWGRP | S_IWOTH))
         {
-            CfOut(cf_error, "", "File %s (owner %d) is writable by others (security exception)", fname, sb.st_uid);
+            CfOut(cf_error, "", "File %s (owner %ju) is writable by others (security exception)", fname, (uintmax_t)sb.st_uid);
         }
     }
 #endif /* NOT MINGW */
@@ -1909,12 +1909,12 @@ static int Unix_VerifyOwner(char *file, Promise *pp, Attributes attr, struct sta
             {
                 if (uid != CF_SAME_OWNER)
                 {
-                    CfDebug("(Change owner to uid %d if possible)\n", uid);
+                    CfDebug("(Change owner to uid %ju if possible)\n", (uintmax_t)uid);
                 }
 
                 if (gid != CF_SAME_GROUP)
                 {
-                    CfDebug("Change group to gid %d if possible)\n", gid);
+                    CfDebug("Change group to gid %ju if possible)\n", (uintmax_t)gid);
                 }
             }
 
@@ -1936,14 +1936,14 @@ static int Unix_VerifyOwner(char *file, Promise *pp, Attributes attr, struct sta
             {
                 if (!uidmatch)
                 {
-                    cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Owner of %s was %d, setting to %d", file, sb->st_uid,
-                         uid);
+                    cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Owner of %s was %ju, setting to %ju", file, (uintmax_t)sb->st_uid,
+                         (uintmax_t)uid);
                 }
 
                 if (!gidmatch)
                 {
-                    cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Group of %s was %d, setting to %d", file, sb->st_gid,
-                         gid);
+                    cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Group of %s was %ju, setting to %ju", file, (uintmax_t)sb->st_gid,
+                         (uintmax_t)gid);
                 }
 
                 if (!S_ISLNK(sb->st_mode))
@@ -1965,7 +1965,7 @@ static int Unix_VerifyOwner(char *file, Promise *pp, Attributes attr, struct sta
             if ((pw = getpwuid(sb->st_uid)) == NULL)
             {
                 CfOut(cf_error, "", "File %s is not owned by anybody in the passwd database\n", file);
-                CfOut(cf_error, "", "(uid = %d,gid = %d)\n", sb->st_uid, sb->st_gid);
+                CfOut(cf_error, "", "(uid = %ju,gid = %ju)\n", (uintmax_t)sb->st_uid, (uintmax_t)sb->st_gid);
                 break;
             }
 
@@ -2162,7 +2162,7 @@ static void Unix_VerifyFileAttributes(char *file, struct stat *dstat, Attributes
         newperm |= attr.perms.plus;
         newperm &= ~(attr.perms.minus);
 
-        CfDebug("Unix_VerifyFileAttributes(%s -> %o)\n", file, newperm);
+        CfDebug("Unix_VerifyFileAttributes(%s -> %jo)\n", file, (uintmax_t)newperm);
 
         /* directories must have x set if r set, regardless  */
 
@@ -2234,19 +2234,19 @@ static void Unix_VerifyFileAttributes(char *file, struct stat *dstat, Attributes
 
     if ((newperm & 07777) == (dstat->st_mode & 07777))  /* file okay */
     {
-        CfDebug("File okay, newperm = %o, stat = %o\n", (newperm & 07777), (dstat->st_mode & 07777));
+        CfDebug("File okay, newperm = %jo, stat = %jo\n", (uintmax_t)(newperm & 07777), (uintmax_t)(dstat->st_mode & 07777));
         cfPS(cf_verbose, CF_NOP, "", pp, attr, " -> File permissions on %s as promised\n", file);
     }
     else
     {
-        CfDebug("Trying to fix mode...newperm = %o, stat = %o\n", (newperm & 07777), (dstat->st_mode & 07777));
+        CfDebug("Trying to fix mode...newperm = %jo, stat = %jo\n", (uintmax_t)(newperm & 07777), (uintmax_t)(dstat->st_mode & 07777));
 
         switch (attr.transaction.action)
         {
         case cfa_warn:
 
-            cfPS(cf_error, CF_WARN, "", pp, attr, " !! %s has permission %o - [should be %o]\n", file,
-                 dstat->st_mode & 07777, newperm & 07777);
+            cfPS(cf_error, CF_WARN, "", pp, attr, " !! %s has permission %jo - [should be %jo]\n", file,
+                 (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
             break;
 
         case cfa_fix:
@@ -2260,8 +2260,8 @@ static void Unix_VerifyFileAttributes(char *file, struct stat *dstat, Attributes
                 }
             }
 
-            cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Object %s had permission %o, changed it to %o\n", file,
-                 dstat->st_mode & 07777, newperm & 07777);
+            cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Object %s had permission %jo, changed it to %jo\n", file,
+                 (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
             break;
 
         default:
@@ -2345,15 +2345,15 @@ static void Unix_VerifyCopiedFileAttributes(char *file, struct stat *dstat, stru
 
 // If we get here, there is both a src and dest file
 
-    CfDebug("VerifyCopiedFile(%s,+%o,-%o)\n", file, attr.perms.plus, attr.perms.minus);
+    CfDebug("VerifyCopiedFile(%s,+%jo,-%jo)\n", file, (uintmax_t)attr.perms.plus, (uintmax_t)attr.perms.minus);
 
     save_uid = (attr.perms.owners)->uid;
     save_gid = (attr.perms.groups)->gid;
 
     if (attr.copy.preserve)
     {
-        CfOut(cf_verbose, "", " -> Attempting to preserve file permissions from the source: %o",
-              (sstat->st_mode & 07777));
+        CfOut(cf_verbose, "", " -> Attempting to preserve file permissions from the source: %jo",
+              (uintmax_t)(sstat->st_mode & 07777));
 
         if ((attr.perms.owners)->uid == CF_SAME_OWNER)  /* Preserve uid and gid  */
         {

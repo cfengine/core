@@ -901,7 +901,7 @@ void OSClasses()
 #ifndef NT
     if ((pw = getpwuid(getuid())) == NULL)
     {
-        CfOut(cf_error, "getpwuid", " !! Unable to get username for uid %d", getuid());
+        CfOut(cf_error, "getpwuid", " !! Unable to get username for uid %ju", (uintmax_t)getuid());
     }
     else
     {

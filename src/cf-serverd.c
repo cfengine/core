@@ -2993,8 +2993,8 @@ static int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilena
 
     /* send as plain text */
 
-    CfDebug("OK: type=%d\n mode=%o\n lmode=%o\n uid=%d\n gid=%d\n size=%ld\n atime=%jd\n mtime=%jd\n",
-            cfst.cf_type, cfst.cf_mode, cfst.cf_lmode, cfst.cf_uid, cfst.cf_gid, (long) cfst.cf_size,
+    CfDebug("OK: type=%d\n mode=%jo\n lmode=%jo\n uid=%ju\n gid=%ju\n size=%ld\n atime=%jd\n mtime=%jd\n",
+            cfst.cf_type, (uintmax_t)cfst.cf_mode, (uintmax_t)cfst.cf_lmode, (intmax_t)cfst.cf_uid, (intmax_t)cfst.cf_gid, (long) cfst.cf_size,
             (intmax_t) cfst.cf_atime, (intmax_t) cfst.cf_mtime);
 
     snprintf(sendbuffer, CF_BUFSIZE, "OK: %d %d %d %d %d %ld %jd %jd %jd %d %d %d %jd",

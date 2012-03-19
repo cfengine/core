@@ -310,8 +310,8 @@ static FILE *Unix_cf_popen(char *command, char *type)
         if (fileno(pp) >= MAX_FD)
         {
             CfOut(cf_error, "",
-                  "File descriptor %d of child %d higher than MAX_FD in Unix_cf_popen, check for defunct children",
-                  fileno(pp), pid);
+                  "File descriptor %d of child %jd higher than MAX_FD in Unix_cf_popen, check for defunct children",
+                  fileno(pp), (intmax_t)pid);
         }
         else
         {
@@ -335,7 +335,7 @@ static FILE *Unix_cf_popensetuid(char *command, char *type, uid_t uid, gid_t gid
     pid_t pid;
     FILE *pp = NULL;
 
-    CfDebug("Unix_cf_popensetuid(%s,%s,%d,%d)\n", command, type, uid, gid);
+    CfDebug("Unix_cf_popensetuid(%s,%s,%ju,%ju)\n", command, type, (uintmax_t)uid, (uintmax_t)gid);
 
     if ((*type != 'r' && *type != 'w') || (type[1] != '\0'))
     {
@@ -469,8 +469,8 @@ static FILE *Unix_cf_popensetuid(char *command, char *type, uid_t uid, gid_t gid
         if (fileno(pp) >= MAX_FD)
         {
             CfOut(cf_error, "",
-                  "File descriptor %d of child %d higher than MAX_FD in Unix_cf_popensetuid, check for defunct children",
-                  fileno(pp), pid);
+                  "File descriptor %d of child %jd higher than MAX_FD in Unix_cf_popensetuid, check for defunct children",
+                  fileno(pp), (intmax_t)pid);
         }
         else
         {
@@ -598,8 +598,8 @@ static FILE *Unix_cf_popen_sh(char *command, char *type)
         if (fileno(pp) >= MAX_FD)
         {
             CfOut(cf_error, "",
-                  "File descriptor %d of child %d higher than MAX_FD in Unix_cf_popen_sh, check for defunct children",
-                  fileno(pp), pid);
+                  "File descriptor %d of child %jd higher than MAX_FD in Unix_cf_popen_sh, check for defunct children",
+                  fileno(pp), (intmax_t)pid);
         }
         else
         {
@@ -622,7 +622,7 @@ static FILE *Unix_cf_popen_shsetuid(char *command, char *type, uid_t uid, gid_t 
     pid_t pid;
     FILE *pp = NULL;
 
-    CfDebug("Unix_cf_popen_shsetuid(%s,%s,%d,%d)\n", command, type, uid, gid);
+    CfDebug("Unix_cf_popen_shsetuid(%s,%s,%ju,%ju)\n", command, type, (uintmax_t)uid, (uintmax_t)gid);
 
     if ((*type != 'r' && *type != 'w') || (type[1] != '\0'))
     {
@@ -748,8 +748,8 @@ static FILE *Unix_cf_popen_shsetuid(char *command, char *type, uid_t uid, gid_t 
         if (fileno(pp) >= MAX_FD)
         {
             CfOut(cf_error, "",
-                  "File descriptor %d of child %d higher than MAX_FD in Unix_cf_popen_shsetuid, check for defunct children",
-                  fileno(pp), pid);
+                  "File descriptor %d of child %jd higher than MAX_FD in Unix_cf_popen_shsetuid, check for defunct children",
+                  fileno(pp), (intmax_t)pid);
             cf_pwait(pid);
             return NULL;
         }
@@ -773,7 +773,7 @@ int cf_pwait(pid_t pid)
 {
     int status;
 
-    CfDebug("cf_pwait - Waiting for process %d\n", pid);
+    CfDebug("cf_pwait - Waiting for process %jd\n", (intmax_t)pid);
 
 # ifdef HAVE_WAITPID
 
@@ -918,7 +918,7 @@ static int Unix_cf_pclose_def(FILE *pfp, Attributes a, Promise *pp)
         return -1;
     }
 
-    CfDebug("Unix_cf_pclose_def - Waiting for process %d\n", pid);
+    CfDebug("Unix_cf_pclose_def - Waiting for process %jd\n", (intmax_t)pid);
 
 # ifdef HAVE_WAITPID
 
@@ -977,11 +977,11 @@ static int CfSetuid(uid_t uid, gid_t gid)
 
     if (gid != (gid_t) - 1)
     {
-        CfOut(cf_verbose, "", "Changing gid to %d\n", gid);
+        CfOut(cf_verbose, "", "Changing gid to %ju\n", (uintmax_t)gid);
 
         if (setgid(gid) == -1)
         {
-            CfOut(cf_error, "setgid", "Couldn't set gid to %d\n", gid);
+            CfOut(cf_error, "setgid", "Couldn't set gid to %ju\n", (uintmax_t)gid);
             return false;
         }
 
@@ -989,25 +989,25 @@ static int CfSetuid(uid_t uid, gid_t gid)
 
         if ((pw = getpwuid(uid)) == NULL)
         {
-            CfOut(cf_error, "getpwuid", "Unable to get login groups when dropping privilege to %d", uid);
+            CfOut(cf_error, "getpwuid", "Unable to get login groups when dropping privilege to %jd", (uintmax_t)uid);
             return false;
         }
 
         if (initgroups(pw->pw_name, pw->pw_gid) == -1)
         {
-            CfOut(cf_error, "initgroups", "Unable to set login groups when dropping privilege to %s=%d", pw->pw_name,
-                  uid);
+            CfOut(cf_error, "initgroups", "Unable to set login groups when dropping privilege to %s=%ju", pw->pw_name,
+                  (uintmax_t)uid);
             return false;
         }
     }
 
     if (uid != (uid_t) - 1)
     {
-        CfOut(cf_verbose, "", "Changing uid to %d\n", uid);
+        CfOut(cf_verbose, "", "Changing uid to %ju\n", (uintmax_t)uid);
 
         if (setuid(uid) == -1)
         {
-            CfOut(cf_error, "setuid", "Couldn't set uid to %d\n", uid);
+            CfOut(cf_error, "setuid", "Couldn't set uid to %ju\n", (uintmax_t)uid);
             return false;
         }
     }

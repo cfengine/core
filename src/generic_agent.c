@@ -954,7 +954,7 @@ static void Cf3ParseFile(char *filename, bool check_not_writable_by_others)
 #ifndef NT
     if (check_not_writable_by_others && (statbuf.st_mode & (S_IWGRP | S_IWOTH)))
     {
-        CfOut(cf_error, "", "File %s (owner %d) is writable by others (security exception)", wfilename, statbuf.st_uid);
+        CfOut(cf_error, "", "File %s (owner %ju) is writable by others (security exception)", wfilename, (uintmax_t)statbuf.st_uid);
         exit(1);
     }
 #endif
@@ -1232,7 +1232,7 @@ static void CheckWorkingDirectories()
 
     if (chown(CFWORKDIR, getuid(), getgid()) == -1)
     {
-        CfOut(cf_error, "chown", "Unable to set owner on %s to %d.%d", CFWORKDIR, getuid(), getgid());
+        CfOut(cf_error, "chown", "Unable to set owner on %s to %ju.%ju", CFWORKDIR, (uintmax_t)getuid(), (uintmax_t)getgid());
     }
 
     if (cfstat(CFWORKDIR, &statbuf) != -1)
@@ -1260,7 +1260,7 @@ static void CheckWorkingDirectories()
 
         if (chown(vbuff, getuid(), getgid()) == -1)
         {
-            CfOut(cf_error, "chown", "Unable to set owner on %s to %d.%d", vbuff, getuid(), getgid());
+            CfOut(cf_error, "chown", "Unable to set owner on %s to %jd.%jd", vbuff, (uintmax_t)getuid(), (uintmax_t)getgid());
         }
 
         cf_chmod(vbuff, (mode_t) 0755);
@@ -1270,8 +1270,8 @@ static void CheckWorkingDirectories()
 #ifndef MINGW
         if (statbuf.st_mode & 022)
         {
-            CfOut(cf_error, "", "UNTRUSTED: State directory %s (mode %o) was not private!\n", CFWORKDIR,
-                  statbuf.st_mode & 0777);
+            CfOut(cf_error, "", "UNTRUSTED: State directory %s (mode %jo) was not private!\n", CFWORKDIR,
+                  (uintmax_t)(statbuf.st_mode & 0777));
         }
 #endif /* NOT MINGW */
     }
@@ -1287,7 +1287,7 @@ static void CheckWorkingDirectories()
 
         if (chown(vbuff, getuid(), getgid()) == -1)
         {
-            CfOut(cf_error, "chown", "Unable to set owner on %s to %d.%d", vbuff, getuid(), getgid());
+            CfOut(cf_error, "chown", "Unable to set owner on %s to %ju.%ju", vbuff, (uintmax_t)getuid(), (uintmax_t)getgid());
         }
 
         cf_chmod(vbuff, (mode_t) 0700);
@@ -1297,8 +1297,8 @@ static void CheckWorkingDirectories()
 #ifndef MINGW
         if (statbuf.st_mode & 022)
         {
-            CfOut(cf_error, "", "UNTRUSTED: Module directory %s (mode %o) was not private!\n", vbuff,
-                  statbuf.st_mode & 0777);
+            CfOut(cf_error, "", "UNTRUSTED: Module directory %s (mode %jo) was not private!\n", vbuff,
+                  (uintmax_t)(statbuf.st_mode & 0777));
         }
 #endif /* NOT MINGW */
     }
@@ -1319,8 +1319,8 @@ static void CheckWorkingDirectories()
 #ifndef MINGW
         if (statbuf.st_mode & 077)
         {
-            FatalError("UNTRUSTED: Private key directory %s%cppkeys (mode %o) was not private!\n", CFWORKDIR,
-                       FILE_SEPARATOR, statbuf.st_mode & 0777);
+            FatalError("UNTRUSTED: Private key directory %s%cppkeys (mode %jo) was not private!\n", CFWORKDIR,
+                       FILE_SEPARATOR, (uintmax_t)(statbuf.st_mode & 0777));
         }
 #endif /* NOT MINGW */
     }
@@ -1862,7 +1862,7 @@ void WritePID(char *filename)
         return;
     }
 
-    fprintf(fp, "%d\n", getpid());
+    fprintf(fp, "%ju\n", (uintmax_t)getpid());
 
     fclose(fp);
 }

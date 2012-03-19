@@ -22,6 +22,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if !HAVE_DECL_STRNLEN
+size_t strnlen(const char *str, size_t maxlen);
+#endif
+
 char *strndup(const char *str, size_t n);
 
 char *

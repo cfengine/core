@@ -923,7 +923,6 @@ AC_CONFIG_FILES([Makefile
 	docs/reference/Makefile
 	docs/tools/Makefile
 	examples/Makefile
-	examples/example_config/Makefile
 	masterfiles/Makefile
 	tests/Makefile
 	tests/acceptance/Makefile

@@ -738,6 +738,7 @@ int IsPathRegex(char *str);
 int IsRegex(char *str);
 int MatchRlistItem(Rlist *listofregex, const char *teststring);
 void EscapeSpecialChars(char *str, char *strEsc, int strEscSz, char *noEsc);
+void EscapeRegexChars(char *str, char *strEsc, int strEscSz);
 char *EscapeChar(char *str, int strSz, char esc);
 void AnchorRegex(const char *regex, char *out, int outSz);
 int MatchPolicy(char *needle, char *haystack, Attributes a, Promise *pp);

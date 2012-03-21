@@ -2360,7 +2360,7 @@ static FnCallResult FnCallRemoteClassesMatching(FnCall *fp, Rlist *finalargs)
 
     if (THIS_AGENT_TYPE == cf_common)
     {
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("<remote classes>"), CF_SCALAR } };
+        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("remote_classes"), CF_SCALAR } };
     }
     else
     {

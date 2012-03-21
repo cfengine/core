@@ -29,7 +29,6 @@
 /* Globals */
 
 Item *ALL_INCOMING;
-Item *ALL_OUTGOING;
 Item *MON_UDP4 = NULL, *MON_UDP6 = NULL, *MON_TCP4 = NULL, *MON_TCP6 = NULL;
 
 /* Implementation */
@@ -128,8 +127,6 @@ void MonNetworkGatherData(double *cf_this)
 
     DeleteItemList(ALL_INCOMING);
     ALL_INCOMING = NULL;
-    DeleteItemList(ALL_OUTGOING);
-    ALL_OUTGOING = NULL;
 
     sscanf(VNETSTAT[VSYSTEMHARDCLASS], "%s", comm);
 
@@ -270,11 +267,6 @@ void MonNetworkGatherData(double *cf_this)
         }
 
         sp++;
-
-        if ((strlen(sp) < 5) && !IsItemIn(ALL_OUTGOING, sp))
-        {
-            PrependItem(&ALL_OUTGOING, sp, NULL);
-        }
 
         // Now look for the specific vital signs to count frequencies
         

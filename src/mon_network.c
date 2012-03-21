@@ -235,31 +235,33 @@ void MonNetworkGatherData(double *cf_this)
         *sp = '\0'; // Separate address from port number
         sp++;
 
-        // General bucket
-        
-        IdempPrependItem(&ALL_INCOMING, sp, NULL);
-        
-        // Categories the incoming ports by packet types
-
-        switch (packet)
+        if (strstr(vbuff, "LISTEN"))
         {
-           // IdempPrependItem(&packet_type, PORT, ADDRESS);
-           
-           case cfn_udp4:
-               IdempPrependItem(&MON_UDP4, sp, local);
-               break;
-           case cfn_udp6:
-               IdempPrependItem(&MON_UDP6, sp, local);
-               break;
-           case cfn_tcp4:
-               IdempPrependItem(&MON_TCP4, sp, local);
-               break;
-           case cfn_tcp6:
-               IdempPrependItem(&MON_TCP6, sp, local);
-               break;
-           default:
-               break;
+            // General bucket
+
+            IdempPrependItem(&ALL_INCOMING, sp, NULL);
+
+            // Categories the incoming ports by packet types
+
+            switch (packet)
+            {
+            case cfn_udp4:
+                IdempPrependItem(&MON_UDP4, sp, local);
+                break;
+            case cfn_udp6:
+                IdempPrependItem(&MON_UDP6, sp, local);
+                break;
+            case cfn_tcp4:
+                IdempPrependItem(&MON_TCP4, sp, local);
+                break;
+            case cfn_tcp6:
+                IdempPrependItem(&MON_TCP6, sp, local);
+                break;
+            default:
+                break;
+            }
         }
+
 
         // Now look at outgoing
         

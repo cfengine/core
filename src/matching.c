@@ -755,34 +755,44 @@ int FuzzyMatchParse(char *s)
 
 /*********************************************************************/
 
-void EscapeSpecialChars(char *str, char *strEsc, int strEscSz, char *noEsc)
-/* Escapes non-alphanumeric chars, except sequence given in noEsc */
+void EscapeSpecialChars(char *str, char *strEsc, int strEscSz, char *noEscSeq, char *noEscList)
+
+/* Escapes non-alphanumeric chars, except sequence given in noEscSeq */
+
 {
     char *sp;
     int strEscPos = 0;
 
-    if (noEsc == NULL)
+    if (noEscSeq == NULL)
     {
-        noEsc = "";
+        noEscSeq = "";
+    }
+
+    if (noEscList == NULL)
+    {
+        noEscList = "";
     }
 
     memset(strEsc, 0, strEscSz);
 
     for (sp = str; (*sp != '\0') && (strEscPos < strEscSz - 2); sp++)
     {
-        if (strncmp(sp, noEsc, strlen(noEsc)) == 0)
+        if (strncmp(sp, noEscSeq, strlen(noEscSeq)) == 0)
         {
-            if (strEscSz <= strEscPos + strlen(noEsc))
+            if (strEscSz <= strEscPos + strlen(noEscSeq))
             {
                 break;
             }
 
-            strcat(strEsc, noEsc);
-            strEscPos += strlen(noEsc);
-            sp += strlen(noEsc);
+            strcat(strEsc, noEscSeq);
+            strEscPos += strlen(noEscSeq);
+            sp += strlen(noEscSeq);
         }
 
-        if (*sp != '\0' && !isalnum(*sp))
+        if (strchr(noEscList,*sp))
+        {
+        }        
+        else if (*sp != '\0' && !isalnum(*sp))
         {
             strEsc[strEscPos++] = '\\';
         }

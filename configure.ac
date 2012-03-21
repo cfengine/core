@@ -592,7 +592,6 @@ case "$target_os" in
 	  AC_DEFINE(REGEX_MALLOC, [], [Whether to use the local regex functions])
         fi
 
-        LIBS="$LIBS -lc"
 	AC_CHECK_LIB(PW, main)
         ;;
    aix*)

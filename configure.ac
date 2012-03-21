@@ -588,10 +588,6 @@ case "$target_os" in
    hpux*|hp-ux*) 
 
 	AC_DEFINE(HPuUX, [], [HP/UX build])
-        if test "$GCC" != "yes"; then
-	  AC_DEFINE(REGEX_MALLOC, [], [Whether to use the local regex functions])
-        fi
-
 	AC_CHECK_LIB(PW, main)
         ;;
    aix*)

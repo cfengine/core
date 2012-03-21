@@ -26,6 +26,8 @@
 #include "cf3.extern.h"
 #include "monitoring.h"
 
+#define CF_ENVNEW_FILE   "env_data.new"
+
 /* Globals */
 
 static Item *PREVIOUS_STATE = NULL;

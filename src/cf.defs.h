@@ -570,7 +570,6 @@ struct timespec
 #define CF_PROMISE_LOG    "promise_summary.log"
 
 #define CF_STATELOG_FILE "state_log"
-#define CF_ENVNEW_FILE   "env_data.new"
 #define CF_ENV_FILE      "env_data"
 
 #define CF_TCPDUMP_COMM "/usr/sbin/tcpdump -t -n -v"

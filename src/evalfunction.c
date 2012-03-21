@@ -4526,7 +4526,6 @@ FnCallArg LDAPARRAY_ARGS[] =
     {CF_ANYSTRING, cf_str, "URI"},
     {CF_ANYSTRING, cf_str, "Distinguished name"},
     {CF_ANYSTRING, cf_str, "Filter"},
-    {CF_ANYSTRING, cf_str, "Record name"},
     {"subtree,onelevel,base", cf_opts, "Search scope policy"},
     {"none,ssl,sasl", cf_opts, "Security level"},
     {NULL, cf_notype, NULL}

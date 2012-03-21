@@ -30,7 +30,6 @@
 
 /* Globals */
 
-static Item *PREVIOUS_STATE = NULL;
 static Item *ENTROPIES = NULL;
 
 static char ENVFILE_NEW[CF_BUFSIZE];
@@ -145,8 +144,6 @@ void MonPublishEnvironment(Item *classlist)
 
     if ((fp = fopen(ENVFILE_NEW, "a")) == NULL)
     {
-        DeleteItemList(PREVIOUS_STATE);
-        PREVIOUS_STATE = classlist;
         return;
     }
 
@@ -154,9 +151,6 @@ void MonPublishEnvironment(Item *classlist)
     {
         fprintf(fp, "%s\n", ip->name);
     }
-
-    DeleteItemList(PREVIOUS_STATE);
-    PREVIOUS_STATE = classlist;
 
     for (ip = ENTROPIES; ip != NULL; ip = ip->next)
     {

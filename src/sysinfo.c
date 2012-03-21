@@ -415,7 +415,7 @@ void GetNameInfo3()
     LoadSlowlyVaryingObservations();
     EnterpriseContext();
 
-    sprintf(workbuf, "%u_bit", (unsigned) sizeof(long) * 8);
+    sprintf(workbuf, "%u_bit", (unsigned) sizeof(void*) * 8);
     NewClass(workbuf);
     CfOut(cf_verbose, "", "Additional hard class defined as: %s\n", CanonifyName(workbuf));
 

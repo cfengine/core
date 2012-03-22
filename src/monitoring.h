@@ -30,7 +30,7 @@
 void MonEntropyClassesInit(void);
 void MonEntropyClassesReset(void);
 void MonEntropyClassesSet(const char *service, const char *direction, double entropy);
-void MonPublishEnvironment(Item *classlist);
+void MonEntropyClassesPublish(FILE *fp);
 void MonEntropyPurgeUnused(char *name);
 double MonEntropyCalculate(const Item *items);
 

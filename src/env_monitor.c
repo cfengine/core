@@ -39,6 +39,11 @@
 /* Globals                                                                   */
 /*****************************************************************************/
 
+#define CF_ENVNEW_FILE   "env_data.new"
+
+static char ENVFILE_NEW[CF_BUFSIZE];
+static char ENVFILE[CF_BUFSIZE];
+
 static double HISTOGRAM[CF_OBSERVABLES][7][CF_GRAINS];
 
 /* persistent observations */
@@ -98,6 +103,12 @@ void MonitorInitialize(void)
     sprintf(vbuff, "%s/state/cf_users", CFWORKDIR);
     MapName(vbuff);
     CreateEmptyFile(vbuff);
+
+    snprintf(ENVFILE_NEW, CF_BUFSIZE, "%s/state/%s", CFWORKDIR, CF_ENVNEW_FILE);
+    MapName(ENVFILE_NEW);
+
+    snprintf(ENVFILE, CF_BUFSIZE, "%s/state/%s", CFWORKDIR, CF_ENV_FILE);
+    MapName(ENVFILE);
 
     MonEntropyClassesInit();
 
@@ -475,6 +486,30 @@ static void LeapDetection(void)
 
 /*********************************************************************/
 
+static void PublishEnvironment(Item *classes)
+{
+    FILE *fp;
+    Item *ip;
+
+    unlink(ENVFILE_NEW);
+
+    if ((fp = fopen(ENVFILE_NEW, "a")) == NULL)
+    {
+        return;
+    }
+
+    for (ip = classes; ip != NULL; ip = ip->next)
+    {
+        fprintf(fp, "%s\n", ip->name);
+    }
+
+    MonEntropyClassesPublish(fp);
+
+    fclose(fp);
+
+    cf_rename(ENVFILE_NEW, ENVFILE);
+}
+
 static void ArmClasses(Averages av, char *timekey)
 {
     double sigma;
@@ -614,8 +649,7 @@ static void ArmClasses(Averages av, char *timekey)
         AppendItem(&classlist,buff,NULL);       
     }
 
-    MonPublishEnvironment(classlist);
-
+    PublishEnvironment(classlist);
 }
 
 /*****************************************************************************/

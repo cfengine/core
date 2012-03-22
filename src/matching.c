@@ -438,7 +438,7 @@ int MatchPolicy(char *camel, char *haystack, Attributes a, Promise *pp)
     enum insert_match opt;
     char work[CF_BUFSIZE], final[CF_BUFSIZE];
     Item *list = SplitString(camel, '\n'), *ip;
-    int direct_cmp = false, ok = false;
+    int direct_cmp = false, ok = false, escaped = false;
 
 //Split into separate lines first
 
@@ -475,6 +475,13 @@ int MatchPolicy(char *camel, char *haystack, Attributes a, Promise *pp)
                 break;
             }
 
+            if (!escaped)
+            {    
+            // Need to escape the original string once here in case it contains regex chars when non-exact match
+            EscapeRegexChars(ip->name, final, CF_BUFSIZE - 1);
+            escaped = true;
+            }
+            
             if (opt == cf_ignore_embedded)
             {
                 memset(work, 0, CF_BUFSIZE);
@@ -755,34 +762,44 @@ int FuzzyMatchParse(char *s)
 
 /*********************************************************************/
 
-void EscapeSpecialChars(char *str, char *strEsc, int strEscSz, char *noEsc)
-/* Escapes non-alphanumeric chars, except sequence given in noEsc */
+void EscapeSpecialChars(char *str, char *strEsc, int strEscSz, char *noEscSeq, char *noEscList)
+
+/* Escapes non-alphanumeric chars, except sequence given in noEscSeq */
+
 {
     char *sp;
     int strEscPos = 0;
 
-    if (noEsc == NULL)
+    if (noEscSeq == NULL)
     {
-        noEsc = "";
+        noEscSeq = "";
+    }
+
+    if (noEscList == NULL)
+    {
+        noEscList = "";
     }
 
     memset(strEsc, 0, strEscSz);
 
     for (sp = str; (*sp != '\0') && (strEscPos < strEscSz - 2); sp++)
     {
-        if (strncmp(sp, noEsc, strlen(noEsc)) == 0)
+        if (strncmp(sp, noEscSeq, strlen(noEscSeq)) == 0)
         {
-            if (strEscSz <= strEscPos + strlen(noEsc))
+            if (strEscSz <= strEscPos + strlen(noEscSeq))
             {
                 break;
             }
 
-            strcat(strEsc, noEsc);
-            strEscPos += strlen(noEsc);
-            sp += strlen(noEsc);
+            strcat(strEsc, noEscSeq);
+            strEscPos += strlen(noEscSeq);
+            sp += strlen(noEscSeq);
         }
 
-        if (*sp != '\0' && !isalnum(*sp))
+        if (strchr(noEscList,*sp))
+        {
+        }        
+        else if (*sp != '\0' && !isalnum(*sp))
         {
             strEsc[strEscPos++] = '\\';
         }
@@ -790,7 +807,33 @@ void EscapeSpecialChars(char *str, char *strEsc, int strEscSz, char *noEsc)
         strEsc[strEscPos++] = *sp;
     }
 }
+    
+/*********************************************************************/
 
+void EscapeRegexChars(char *str, char *strEsc, int strEscSz)
+
+{
+    char *sp;
+    int strEscPos = 0;
+
+    memset(strEsc, 0, strEscSz);
+
+    for (sp = str; (*sp != '\0') && (strEscPos < strEscSz - 2); sp++)
+    {
+        switch (*sp)
+        {
+        case '.':
+        case '*':
+            strEsc[strEscPos++] = '\\';
+            break;
+        default:
+            break;                
+        }
+
+        strEsc[strEscPos++] = *sp;
+    }
+}
+    
 /*********************************************************************/
 
 char *EscapeChar(char *str, int strSz, char esc)

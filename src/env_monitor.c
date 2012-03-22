@@ -483,7 +483,7 @@ static void ArmClasses(Averages av, char *timekey)
     char buff[CF_BUFSIZE], ldt_buff[CF_BUFSIZE], name[CF_MAXVARSIZE];
     static int anomaly[CF_OBSERVABLES][LDT_BUFSIZE];
     extern Item *ALL_INCOMING;
-    extern Item *MON_UDP4, *MON_UDP6, *MON_TCP4, *MON_TCP6;
+    extern Item *MON_TCP4, *MON_TCP6;
 
     CfDebug("Arm classes for %s\n", timekey);
 
@@ -583,24 +583,6 @@ static void ArmClasses(Averages av, char *timekey)
     }
 
     ldt_buff[0] = '\0';
-    PrintItemList(ldt_buff,CF_BUFSIZE,MON_UDP6);
-
-    if (strlen(ldt_buff) < 1500)
-    {
-        snprintf(buff,CF_BUFSIZE,"@listening_udp6_ports=%s",ldt_buff);
-        AppendItem(&classlist,buff,NULL);
-    }
-
-    ldt_buff[0] = '\0';
-    PrintItemList(ldt_buff,CF_BUFSIZE,MON_UDP4);
-
-    if (strlen(ldt_buff) < 1500)
-    {
-        snprintf(buff,CF_BUFSIZE,"@listening_udp4_ports=%s",ldt_buff);
-        AppendItem(&classlist,buff,NULL);
-    }
-
-    ldt_buff[0] = '\0';
     PrintItemList(ldt_buff,CF_BUFSIZE,MON_TCP6);
 
     if (strlen(ldt_buff) < 1500)
@@ -632,18 +614,6 @@ static void ArmClasses(Averages av, char *timekey)
         AppendItem(&classlist,buff,NULL);       
     }
 
-    for (ip = MON_UDP6; ip != NULL; ip=ip->next)
-    {
-        snprintf(buff,CF_BUFSIZE,"udp6_port_addr[%s]=%s",ip->name,ip->classes);
-        AppendItem(&classlist,buff,NULL);       
-    }
-    
-    for (ip = MON_UDP4; ip != NULL; ip=ip->next)
-    {
-        snprintf(buff,CF_BUFSIZE,"udp4_port_addr[%s]=%s",ip->name,ip->classes);
-        AppendItem(&classlist,buff,NULL);       
-    }
-    
     MonPublishEnvironment(classlist);
 
 }

@@ -369,7 +369,7 @@ static FnCallResult FnCallEscape(FnCall *fp, Rlist *finalargs)
 
     char *name = ScalarValue(finalargs);
 
-    EscapeSpecialChars(name, buffer, CF_BUFSIZE - 1, "");
+    EscapeSpecialChars(name, buffer, CF_BUFSIZE - 1, "", "");
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
 }
@@ -2360,7 +2360,7 @@ static FnCallResult FnCallRemoteClassesMatching(FnCall *fp, Rlist *finalargs)
 
     if (THIS_AGENT_TYPE == cf_common)
     {
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("<remote classes>"), CF_SCALAR } };
+        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("remote_classes"), CF_SCALAR } };
     }
     else
     {
@@ -4526,7 +4526,6 @@ FnCallArg LDAPARRAY_ARGS[] =
     {CF_ANYSTRING, cf_str, "URI"},
     {CF_ANYSTRING, cf_str, "Distinguished name"},
     {CF_ANYSTRING, cf_str, "Filter"},
-    {CF_ANYSTRING, cf_str, "Record name"},
     {"subtree,onelevel,base", cf_opts, "Search scope policy"},
     {"none,ssl,sasl", cf_opts, "Security level"},
     {NULL, cf_notype, NULL}

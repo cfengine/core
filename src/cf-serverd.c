@@ -724,9 +724,11 @@ static void SpawnConnection(int sd_reply, char *ipaddr)
     pthread_attr_setstacksize(&threadattrs, (size_t) 1024 * 1024);
 # endif
 
-    if (pthread_create(&tid, &threadattrs, (void *) HandleConnection, (void *) conn) != 0)
+    int ret = pthread_create(&tid, &threadattrs, (void *) HandleConnection, (void *) conn);
+    if (ret != 0)
     {
-        CfOut(cf_error, "create", "pthread_create failed");
+        errno = ret;
+        CfOut(cf_error, "pthread_create", "Unable to spawn worker thread");
         HandleConnection(conn);
     }
 

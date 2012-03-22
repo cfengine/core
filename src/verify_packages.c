@@ -1486,7 +1486,7 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
                 ExpandScalar(a.packages.package_name_convention, refAnyVer);
                 DeleteScope("cf_pack_context_anyver");
 
-                EscapeSpecialChars(refAnyVer, refAnyVerEsc, sizeof(refAnyVerEsc), "(.*)");
+                EscapeSpecialChars(refAnyVer, refAnyVerEsc, sizeof(refAnyVerEsc), "(.*)","");
 
                 if (FindLargestVersionAvail
                     (largestPackAvail, largestVerAvail, refAnyVerEsc, version, a.packages.package_select,
@@ -1602,7 +1602,7 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
             ExpandScalar(a.packages.package_name_convention, refAnyVer);
             DeleteScope("cf_pack_context_anyver");
 
-            EscapeSpecialChars(refAnyVer, refAnyVerEsc, sizeof(refAnyVerEsc), "(.*)");
+            EscapeSpecialChars(refAnyVer, refAnyVerEsc, sizeof(refAnyVerEsc), "(.*)","");
 
             if (FindLargestVersionAvail
                 (largestPackAvail, largestVerAvail, refAnyVerEsc, version, a.packages.package_select,

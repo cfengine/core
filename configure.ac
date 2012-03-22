@@ -588,11 +588,6 @@ case "$target_os" in
    hpux*|hp-ux*) 
 
 	AC_DEFINE(HPuUX, [], [HP/UX build])
-        if test "$GCC" != "yes"; then
-	  AC_DEFINE(REGEX_MALLOC, [], [Whether to use the local regex functions])
-        fi
-
-        LIBS="$LIBS -lc"
 	AC_CHECK_LIB(PW, main)
         ;;
    aix*)
@@ -923,7 +918,6 @@ AC_CONFIG_FILES([Makefile
 	docs/reference/Makefile
 	docs/tools/Makefile
 	examples/Makefile
-	examples/example_config/Makefile
 	masterfiles/Makefile
 	tests/Makefile
 	tests/acceptance/Makefile

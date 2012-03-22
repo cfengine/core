@@ -415,7 +415,7 @@ void GetNameInfo3()
     LoadSlowlyVaryingObservations();
     EnterpriseContext();
 
-    sprintf(workbuf, "%u_bit", (unsigned) sizeof(long) * 8);
+    sprintf(workbuf, "%u_bit", (unsigned) sizeof(void*) * 8);
     NewClass(workbuf);
     CfOut(cf_verbose, "", "Additional hard class defined as: %s\n", CanonifyName(workbuf));
 
@@ -1661,7 +1661,7 @@ static int Linux_Debian_Version(void)
 
     if (strcmp(os, "Debian") == 0)
     {
-        sscanf(buffer, "%*s %*s %[^/]", version);
+        sscanf(buffer, "%*s %*s %[^./]", version);
         snprintf(buffer, CF_MAXVARSIZE, "debian_%s", version);
         NewClass("debian");
         NewClass(buffer);

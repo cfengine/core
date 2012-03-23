@@ -32,6 +32,7 @@
 
 #include "dbm_api.h"
 #include "dbm_priv.h"
+#include "dbm_lib.h"
 
 #ifdef QDB
 # include <depot.h>
@@ -60,8 +61,6 @@ struct DBCursorPriv_
     int curkey_size;
     char *curval;
 };
-
-void DBPathMoveBroken(const char *filename);
 
 /******************************************************************************/
 
@@ -130,14 +129,23 @@ DBPriv *DBPrivOpenDB(const char *filename)
         if (dprepair(filename))
         {
             CfOut(cf_log, "", "Successfully repaired database \"%s\"", filename);
+            db->depot = dpopen(filename, DP_OWRITER | DP_OCREAT, -1);
         }
         else
         {
             CfOut(cf_error, "", "!! Failed to repair database %s, recreating...", filename);
-            DBPathMoveBroken(filename);
+            
+            if(DBPathLock(filename))
+            {
+                DBPathMoveBroken(filename);
+                db->depot = dpopen(filename, DP_OWRITER | DP_OCREAT, -1);
+                DBPathUnLock(filename);
+            }
+            else
+            {
+                CfOut(cf_error, "", "!! Could not lock db path %s before recreate - another process is recreating?", filename);
+            }
         }
-
-        db->depot = dpopen(filename, DP_OWRITER | DP_OCREAT, -1);
     }
 
     if (db->depot == NULL)

@@ -67,7 +67,7 @@ char *TYPESEQUENCE[] =
     "interfaces",
     "files",
     "packages",
-    "environments",
+    "guest_environments",
     "methods",
     "processes",
     "services",
@@ -1120,7 +1120,7 @@ static void KeepAgentPromise(Promise *pp)
         return;
     }
 
-    if (strcmp("environments", pp->agentsubtype) == 0)
+    if (strcmp("guest_environments", pp->agentsubtype) == 0)
     {
         VerifyEnvironmentsPromise(pp);
         EndMeasurePromise(start, pp);

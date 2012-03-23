@@ -22,14 +22,6 @@
   included file COSL.txt.
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: environments.c                                                      */
-/*                                                                           */
-/* Created: Mon May 17 10:15:20 2010                                         */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 #include "files_lib.h"
@@ -324,10 +316,10 @@ static void VerifyVirtDomain(char *uri, enum cfhypervisors envtype, Attributes a
     }
 
     num = virConnectListDomains(CFVC[envtype], CF_RUNNING, CF_MAX_CONCURRENT_ENVIRONMENTS);
-    CfOut(cf_verbose, "", " -> Found %d running virtual domain environments on this host (including enclosure)", num);
+    CfOut(cf_verbose, "", " -> Found %d running guest environments on this host (including enclosure)", num);
     ShowRunList(CFVC[envtype]);
     num = virConnectListDefinedDomains(CFVC[envtype], CF_SUSPENDED, CF_MAX_CONCURRENT_ENVIRONMENTS);
-    CfOut(cf_verbose, "", " -> Found %d dormant virtual domain environments on this host", num);
+    CfOut(cf_verbose, "", " -> Found %d dormant guest environments on this host", num);
     ShowDormant(CFVC[envtype]);
 
     switch (a.env.state)

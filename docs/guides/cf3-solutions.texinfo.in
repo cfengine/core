@@ -2338,12 +2338,12 @@ files:
 * Deleting lines exception::    
 * Editing files::               
 * Editing tabular files::       
-* Environment (virtual)::       
 * Environment variables::       
 * Execresult example::          
 * Inserting lines in a file::   
 * Get a list of users::         
 * Global classes::              
+* Guest environments::       
 * Hello world::                 
 * LDAP interactions::           
 * Linking files::               
@@ -3045,7 +3045,7 @@ files:
 
 @page
 @c -----------------------------------------------------------------------
-@node  Editing tabular files, Environment (virtual), Editing files, Low level
+@node  Editing tabular files, Guest environments, Editing files, Low level
 @section Editing tabular files
 
 @verbatim
@@ -3150,12 +3150,12 @@ extend_fields => "true";
 
 
 @menu
-* Environment (virtual)::       
 * Environment variables::       
 * Execresult example::          
 * Inserting lines in a file::   
 * Get a list of users::         
 * Global classes::              
+* Guest environments::       
 * Hello world::                 
 * LDAP interactions::           
 * Linking files::               
@@ -3168,17 +3168,7 @@ extend_fields => "true";
 * Mount NFS filesystem::        
 @end menu
 
-@node Environment (virtual), Environment variables, Editing tabular files, Low level
-@section Environments (virtual)
-
-@verbatim
-#CFEexample:unit_environment.cf
-
-@end verbatim
-
-
-
-@node Environment variables, Execresult example, Environment (virtual), Low level
+@node Environment variables, Execresult example, Guest environments, Low level
 @section Environment variables
 @verbatim
 #CFEexample:unit_env.cf
@@ -3240,6 +3230,15 @@ extend_fields => "true";
 #CFEexample:unit_classes_global.cf
 
 @end verbatim
+
+@node Guest environments, Environment variables, Editing tabular files, Low level
+@section Guest environments
+
+@verbatim
+#CFEexample:unit_environment.cf
+
+@end verbatim
+
 
 @page
 @c -----------------------------------------------------------------------

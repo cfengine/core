@@ -25,8 +25,8 @@
 #ifndef CFENGINE_DBM_LIB_H
 #define CFENGINE_DBM_LIB_H
 
-bool DBPathLock(const char *filename);
-bool DBPathUnLock(const char *filename);
+int DBPathLock(const char *filename);
+void DBPathUnLock(int fd);
 void DBPathMoveBroken(const char *filename);
 
 

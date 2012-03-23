@@ -135,11 +135,13 @@ DBPriv *DBPrivOpenDB(const char *filename)
         {
             CfOut(cf_error, "", "!! Failed to repair database %s, recreating...", filename);
             
-            if(DBPathLock(filename))
+            int fd = DBPathLock(filename);
+
+            if(fd != -1)
             {
                 DBPathMoveBroken(filename);
                 db->depot = dpopen(filename, DP_OWRITER | DP_OCREAT, -1);
-                DBPathUnLock(filename);
+                DBPathUnLock(fd);
             }
             else
             {

@@ -37,52 +37,37 @@
 static int GetLockFileDescriptor(const char *filename);
 
 
-bool DBPathLock(const char *filename)
+int DBPathLock(const char *filename)
 {
     int fd = GetLockFileDescriptor(filename);
     
     if(fd == -1)
     {
-        return false;
+        CfOut(cf_error, "flock", "!! Could not open db lock-file");
+        return -1;
     }
     
     if(flock(fd, LOCK_EX|LOCK_NB) == -1)
     {
         close(fd);
         CfOut(cf_error, "flock", "!! Could not lock db lock-file");
-        return false;
+        return -1;
     }
     
-    if(close(fd) != 0)
-    {
-        CfOut(cf_error, "close", "!! Could not close db lock-file");
-    }
-    
-    return true;
+    return fd;
 }
 
-bool DBPathUnLock(const char *filename)
+void DBPathUnLock(int fd)
 {
-    int fd = GetLockFileDescriptor(filename);
-    
-    if(fd == -1)
-    {
-        return false;
-    }
-    
     if(flock(fd, LOCK_UN) == -1)
     {
-        close(fd);
         CfOut(cf_error, "flock", "!! Could not unlock db lock-file");
-        return false;
     }
     
     if(close(fd) != 0)
     {
         CfOut(cf_error, "close", "!! Could not close db lock-file");
     }
-
-    return true;
 }
 
 static int GetLockFileDescriptor(const char *filename)
@@ -93,7 +78,7 @@ static int GetLockFileDescriptor(const char *filename)
         FatalError("Unable to construct lock database filename for file %s", filename);
     }
         
-    int fd = open(filename_lock, O_CREAT);
+    int fd = open(filename_lock, O_CREAT, 0666);
 
     free(filename_lock);
     

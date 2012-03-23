@@ -1,3 +1,19 @@
+The remote system's cf-serverd must accept the query for the requested variable from
+the host that is requesting it. 
+An example of this configuration follows.
+
+@verbatim
+bundle server access
+{
+access:
+  "value of my test_scalar, can expand variables here - $(sys.host)"
+    handle => "test_scalar",
+    comment => "Grant access to contents of test_scalar VAR",
+    resource_type => "literal",
+    admit => { "127.0.0.1" };
+}
+@end verbatim
+
 CFEngine caches the value of this variable, so that, if the network is
 unavailable, the last known value will be used. Hence use of this function
 is fault tolerant. Care should be taken in attempting to access remote variables

@@ -751,46 +751,52 @@ This policy will create the file @file{/tmp/testfile}. It contains the bare mini
 In this example we will use the web based shell access to modifiy the policy so that it installs a software package. 
 
 @cartouche
-@noindent @b{Action item}: Go to shell access as described in @ref{Shell access (evaluation feature only)}. Enter the number '1' and press enter to log on to the host called @code{policyhost}. You will need to check out the files in the subversion repository connected to policyhub:
+@noindent @b{Action item}: Go to shell access as described in @ref{Shell access (evaluation feature only)}. Enter the number '1' and press enter to log on to the host called @code{policyhub}. You will need to check out the files in the subversion repository connected to policyhub, type in the following to do so:
 
 @verbatim
-pilot@policyhub-1:~$ svn co http://localhost/svn/CFEnginePilot
+   pilot@policyhub-1:~$ svn co http://localhost/svn/CFEnginePilot
 @end verbatim
 
-Username and password for the subversion repository is 'pilot' and 'pilot'.
+@noindent Username and password for the subversion repository is 'pilot' and 'pilot'.
 @end cartouche
 
-You now have read and write access to the policy files in the @files{~/CFEnginePilot} directory. Enter the following to change directories and create a new policy file, @file{pilot_packages.cf} (we use the vim editor in this example):
+You now have read and write access to the policy files in the @file{~/CFEnginePilot} directory. Enter the following to change directories and create a new policy file, @file{pilot_packages.cf} (we use the vim editor in this example):
 
 @cartouche
+@noindent @b{Action item}: Type in the following in the command line:
+ 
 @verbatim
-pilot@policyhub-1:~$ cd CFEnginePilot
-pilot@policyhub-1:~/CFEnginePilot$ vim pilot_packages.cf
+   pilot@policyhub-1:~$ cd CFEnginePilot
+   pilot@policyhub-1:~/CFEnginePilot$ vim pilot_packages.cf
 @end verbatim
 @end cartouche
 
-Let us install apache on centos machines. 
+@noindent Let us install apache (httpd) on centos machines. 
 
 @cartouche
 @noindent @b{Action item}: Enter the following content in @file{pilot_packages.cf} (press @code{i} to enter edit mode in vim):
-
 @verbatim
-bundle agent pilot_packages 	# bundle of type agent, named 'pilot_packages'
+
+bundle agent pilot_packages 	# bundle type agent, named 'pilot_packages'
 {
-vars:				# promise of type vars (a promise about variables)
-   "match_package" slist => {	# variable name is 'match_package' (this is the promiser) and has type list of strings
+vars:				# promise type vars (promise about variables)
+   "match_package" slist => {	# variable name is 'match_package' (this is the
+				# promiser) and has type 'list of strings'
 	"httpd"		# list entry value is httpd (for apache on centos)
 	};
 
-packages:			# promise of type packages
-   centos::			# class, or context, in which the promise applies (here on all ubuntu machines)
-	"$(match_package)" 	# expand the variable 'match_package' (this is the promiser)
-	package_policy		=> "add",	# add all packages listed in variable 
-	package_method		=> yum;		# specify what package method to use (here yum, could be rpm, apt etc. on other systems)
+packages:			# promise type packages
+   centos::			# class, or context, in which the promise 
+				# applies (here on all ubuntu machines)
+	"$(match_package)" 	# expand the variable 'match_package' (this is
+				# the promiser)
+	package_policy		=> "add",	# add all packages in variable 
+	package_method		=> yum;		# specify what package method
+						# to use (here yum)
 }
 @end verbatim
 
-Save and quit the file by pressing @code{Esc} to exit vim edit mode, then type @code{:wq} to write to file and quit. Check the syntax of the file:
+Save and quit the file by pressing @code{Esc} to exit vim edit mode, then type @code{:wq} to write to file and quit. @c Check the syntax of the file:
 
 @ignore
 @verbatim
@@ -799,7 +805,7 @@ pilot@policyhub-1:~/CFEnginePilot$ cf-agent -Kf pilot_packages.cf
 @end ignore
 @end cartouche
 
-We then need to include this policy in @file{promises.cf}: 
+@noindent We then need to include this policy in @file{promises.cf}: 
 
 @cartouche
 @noindent @b{Action item}: Open @file{promises.cf} and add the following lines to the first bundle (@code{bundle common pilot}) as indicated:
@@ -823,7 +829,18 @@ vars:
 }
 @end verbatim
 
-Save and quit the file by pressing @code{Esc} to exit vim edit mode, then type @code{:wq} to write to file and quit. We now need to add @file{pilot_packages.cf} and commit the changes to subversion:
+Save and quit the file by pressing @code{Esc} to exit vim edit mode, then type @code{:wq} to write to file and quit. @c Check the syntax of the file:
+@ignore
+@verbatim
+pilot@policyhub-1:~/CFEnginePilot$ cf-agent -Kf pilot_packages.cf
+@end verbatim
+@end ignore
+@end cartouche
+
+@noindent We now need to add @file{pilot_packages.cf} and commit the changes to subversion:
+
+@cartouche
+@noindent @b{Action item}: Type in the following in the command line:
 
 @verbatim
 pilot@policyhub-1:~/CFEnginePilot$ svn add pilot_packages.cf
@@ -831,7 +848,7 @@ pilot@policyhub-1:~/CFEnginePilot$ svn ci -m "added package install"
 @end verbatim
 @end cartouche
 
-The policy will be executed at the next run of cf-agent (default is every five minutes, but here in the evaluation environment we have set the interval to every two minutes). You check that the policy has been implemented either through the mission portal (as shown in @ref{Example - Software installed}) or by choosing the centos machine from the web ssh menu (as shown in @ref{Shell access (evaluation feature only)}) and look for @file{pilot_packages.cf} in @file{/var/cfengine/inputs}.
+The policy will be executed at the next run of cf-agent (default is every five minutes, but here in the evaluation environment we have set the interval to every two minutes). You check that the policy has been implemented either through the mission portal (as shown in @ref{Example - Software report}) or by choosing the centos machine from the web ssh menu (as shown in @ref{Shell access (evaluation feature only)}) and look for @file{pilot_packages.cf} in @file{/var/cfengine/inputs}.
 
 
 @c *****************************************************

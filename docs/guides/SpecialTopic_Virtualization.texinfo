@@ -69,7 +69,7 @@ Copyright @copyright{} 2010 CFEngine AS
 * What are virtualization and cloud computing?::  
 * Why build virtualization support into CFEngine?::  
 * What can CFEngine do with virtual machines?::  
-* Environments promises::       
+* Guest environments promises::       
 * Virtualization types supported::  
 * Distinct states::             
 * Example deployment::          
@@ -126,7 +126,7 @@ machines in other time-zones that it is impractical to monitor by
 legacy methods.
 
 
-@node What can CFEngine do with virtual machines?, Environments promises, Why build virtualization support into CFEngine?, Top
+@node What can CFEngine do with virtual machines?, Guest environments promises, Why build virtualization support into CFEngine?, Top
 @unnumberedsec What can CFEngine do with virtual machines?
 @sp 1
 
@@ -151,12 +151,12 @@ implicit communication.  CFEngine does not currently support so-called
 @end cartouche
 @sp 1
 
-@node Environments promises, Virtualization types supported, What can CFEngine do with virtual machines?, Top
-@unnumberedsec Environments promises
+@node Guest environments promises, Virtualization types supported, What can CFEngine do with virtual machines?, Top
+@unnumberedsec Guest environments promises
 @sp 1
 
 A virtual machine is one example of what CFEngine calls an
-`environment'.  You can promise to create (and host) an environment
+`guest_environment'.  You can promise to create (and host) an guest environment
 with certain attributes, just as you can promise to host a file or a
 process. Here is a simple example:
 
@@ -170,7 +170,7 @@ bundlesequence  => { "my_vm_cloud" };
 
 bundle agent my_vm_cloud
 {
-environments:
+guest_environments:
 
    "myUbuntu" # the running instance name, defined in XML
 
@@ -194,15 +194,15 @@ env_spec_file => "/srv/xen/centos5-libvirt-create.xml";
 machine. This should be a unique identifier, as we need to be able to
 refer to machines uniquely.
 
-@item The environment host is the name of the computer that
+@item The guest environment host is the name of the computer that
 is the host for the virtual machine. 
 
 @item Normally when we want to ensure something on a machine, we use classes
-to decide where the promise will be made. For environments, however,
+to decide where the promise will be made. For guest environments, however,
 we need to make promises about the uniqueness of the machine. When you
 make a machine instance you normally want it to be running on one and
 only one host. So you want @i{every} machine to make a promise. On the
-environment's host, you want to promise that the environment is
+guest environment's host, you want to promise that the guest environment is
 running, and on every other machine you want to promise that it is
 not. In CFEngine, you simply include a unique class belonging to host
 in the promise using @code{environment_host} and CFEngine assumes that
@@ -223,7 +223,7 @@ CFEngine's classes.
 @verbatim
 bundle agent my_vm_cloud
 {
-environments:
+guest_environments:
 
    "myUbuntu" # the running instance name, defined in XML
        environment_resources => virt_xml("$(this.promiser)"),
@@ -269,14 +269,14 @@ env_spec_file =>
 You should consult the libvirt documentation for the details of the XML specification.
 
 
-@node Virtualization types supported, Distinct states, Environments promises, Top
+@node Virtualization types supported, Distinct states, Guest environments promises, Top
 @unnumberedsec Virtualization types supported
 @sp 1
 
 CFEngine currently supports virtualization only through libvirt, so it supports
 those technologies that libvirt supports. Currently this includes  most popular
 technologies. You must choose the type of monitor that is to be responsible for
-keeping the environment promise. In CFEngine, you should choose between a
+keeping the guest environment promise. In CFEngine, you should choose between a
 machine environment or network environment of the following types:
 @table @code
 @item xen
@@ -314,15 +314,15 @@ Libvirt recognizes a number of distinct states are transliterated into CFEngine
 as
 @table @code
 @item create
-Build and start an environment.
+Build and start an guest environment.
 @item delete
-Halt and remove runtime resources associated with an environment.
+Halt and remove runtime resources associated with an guest environment.
 @item running
-An existing environment is in a running state.
+An existing guest environment is in a running state.
 @item suspended
-An existing environment is in a `paused' state.
+An existing guest environment is in a `paused' state.
 @item down
-An existing environment is in a halted state.
+An existing guest environment is in a halted state.
 @end table
 The default promised state is for a machine to be running 
 wherever the  @code{environment_host} class is true, and
@@ -367,7 +367,7 @@ You need to set up a network for virtual machines to communicate with
 the outside world. This can also be done with CFEngine, using the
 network promise types to build a bridge into a virtual network.
 
-Then just run CFEngine to start, stop or manage the virtual environments on
+Then just run CFEngine to start, stop or manage the guest environments on
 each localhost. Run in verbose mode to see how CFEngine maintains the states
 convergently.
 @verbatim
@@ -394,7 +394,7 @@ host_licenses_paid => "2";
 
 bundle agent my_vm_cloud
 {
-environments:
+guest_environments:
 
  linux::
 
@@ -466,7 +466,7 @@ host_licenses_paid => "2";
 
 bundle agent my_vm_cloud
 {
-environments:
+guest_environments:
 
 linux::
 

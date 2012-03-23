@@ -29,7 +29,7 @@ body delete init_delete
 
 bundle agent test
 {
-environments:
+guest_environments:
     "host1"
 	environment_host => "test",
 	classes => whatever("ok");

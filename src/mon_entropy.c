@@ -26,24 +26,14 @@
 #include "cf3.extern.h"
 #include "monitoring.h"
 
-#define CF_ENVNEW_FILE   "env_data.new"
-
 /* Globals */
 
 static Item *ENTROPIES = NULL;
-
-static char ENVFILE_NEW[CF_BUFSIZE];
-static char ENVFILE[CF_BUFSIZE];
 
 /* Implementation */
 
 void MonEntropyClassesInit(void)
 {
-    snprintf(ENVFILE_NEW, CF_BUFSIZE, "%s/state/%s", CFWORKDIR, CF_ENVNEW_FILE);
-    MapName(ENVFILE_NEW);
-
-    snprintf(ENVFILE, CF_BUFSIZE, "%s/state/%s", CFWORKDIR, CF_ENV_FILE);
-    MapName(ENVFILE);
 }
 
 /****************************************************************************/
@@ -135,30 +125,12 @@ void MonEntropyPurgeUnused(char *name)
 
 /****************************************************************************/
 
-void MonPublishEnvironment(Item *classlist)
+void MonEntropyClassesPublish(FILE *fp)
 {
-    FILE *fp;
-    Item *ip;
-
-    unlink(ENVFILE_NEW);
-
-    if ((fp = fopen(ENVFILE_NEW, "a")) == NULL)
-    {
-        return;
-    }
-
-    for (ip = classlist; ip != NULL; ip = ip->next)
-    {
-        fprintf(fp, "%s\n", ip->name);
-    }
-
-    for (ip = ENTROPIES; ip != NULL; ip = ip->next)
+    for (Item *ip = ENTROPIES; ip != NULL; ip = ip->next)
     {
         fprintf(fp, "%s\n", ip->name);
     }
 
     DeleteItemList(ENTROPIES);
-    fclose(fp);
-
-    cf_rename(ENVFILE_NEW, ENVFILE);
 }

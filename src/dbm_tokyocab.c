@@ -30,6 +30,7 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 #include "dbm_priv.h"
+#include "dbm_lib.h"
 
 #ifdef TCDB
 
@@ -66,8 +67,6 @@ struct DBCursorPriv_
      */
     bool pending_delete;
 };
-
-void DBPathMoveBroken(const char *filename);
 
 /******************************************************************************/
 
@@ -128,15 +127,24 @@ DBPriv *DBPrivOpenDB(const char *dbpath)
             goto err;
         }
         
+        if(!DBPathLock(dbpath))
+        {
+            CfOut(cf_error, "", "!! Could not lock db path before recreate - another process is recreating?");
+            goto err;
+        }
+        
         CfOut(cf_error, "", "!! Database \"%s\" is broken, recreating...", dbpath);
         DBPathMoveBroken(dbpath);
         
         if(!tchdbopen(db->hdb, dbpath, HDBOWRITER | HDBOCREAT))
         {
+            DBPathUnLock(dbpath);
             CfOut(cf_error, "", "!! Could not open database %s after recreate: %s",
                   dbpath, ErrorMessage(db->hdb));
             goto err;
         }
+        
+        DBPathUnLock(dbpath);
     }
 
     return db;

@@ -129,7 +129,7 @@ DBPriv *DBPrivOpenDB(const char *dbpath)
         
         if(!DBPathLock(dbpath))
         {
-            CfOut(cf_error, "", "!! Could not lock db path before recreate - another process is recreating?");
+            CfOut(cf_error, "", "!! Could not lock db path %s before recreate - another process is recreating?", dbpath);
             goto err;
         }
         

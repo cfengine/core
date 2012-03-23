@@ -447,7 +447,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp)
     int retval = false;
     CfLock thislock;
 
-    snprintf(lockname, CF_BUFSIZE - 1, "fileedit-%s", pp->promiser);
+    snprintf(lockname, CF_BUFSIZE - 1, "fileedit-%s", filename);
     thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a, pp, false);
 
     if (thislock.lock == NULL)

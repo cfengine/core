@@ -113,22 +113,6 @@ static char *DBIdToPath(dbid id)
     return native_filename;
 }
 
-void DBPathMoveBroken(const char *filename)
-{
-    char *filename_broken;
-    if (xasprintf(&filename_broken, "%s.broken", filename) == -1)
-    {
-        FatalError("Unable to construct broken database filename for file %s", filename);
-    }
-    
-    if(cf_rename(filename, filename_broken) != 0)
-    {
-        CfOut(cf_error, "", "!! Failed moving broken db out of the way");
-    }
-    
-    free(filename_broken);
-}
-
 static DBHandle *DBHandleGet(int id)
 {
     assert(id >= 0 && id < dbid_count);

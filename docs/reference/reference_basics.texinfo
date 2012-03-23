@@ -2044,7 +2044,7 @@ iterations of the following, converging towards a final state:
    interfaces
    files
    packages
-   environments
+   guest_environments
    methods
    processes
    services

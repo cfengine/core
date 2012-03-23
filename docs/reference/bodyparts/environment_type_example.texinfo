@@ -2,7 +2,7 @@
 @verbatim
 bundle agent my_vm_cloud
 {
-environments:
+guest_environments:
 
  scope::
 

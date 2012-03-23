@@ -727,6 +727,7 @@ If you require assistance upgrading, contact CFEngine Support.
 * Viewers::                     
 * Editors::                     
 * Mission Portal Administration::  
+* Role Based Access Control::
 @end menu
 
 The Mission Portal is the centerpiece
@@ -1287,7 +1288,7 @@ For more detailed information on working with subversion, see @url{http://svnboo
 * Troubleshooting - Mission Portal Logs::  
 @end menu
 
-@node
+@node Role Based Access Control, Mission Portal Settings, Mission Portal, Mission Portal
 @subsection Role-Based Access Control
 CFEngine Nova 2.2.0 introduces Role Based Access Control (RBAC) for all
 reports and promises shown in the Mission Portal. This does not cover
@@ -1388,7 +1389,7 @@ bypass all RBAC checks.
 @end itemize
 
 
-@node  Mission Portal Settings, Mission Portal User Admin, Mission Portal Administration, Mission Portal Administration
+@node  Mission Portal Settings, Mission Portal User Admin, Role Based Access Control, Mission Portal Administration
 @subsection Mission Portal Settings
 
 Configure and view various settings for the Mission Portal.

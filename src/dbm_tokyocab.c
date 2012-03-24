@@ -122,7 +122,9 @@ DBPriv *DBPrivOpenDB(const char *dbpath)
         CfOut(cf_error, "", "!! Could not open database %s: %s",
               dbpath, ErrorMessage(db->hdb));
         
-        if(tchdbecode(db->hdb) != TCEREAD)
+        int errcode = tchdbecode(db->hdb);
+        
+        if(errcode != TCEMETA && errcode != TCEREAD)
         {
             goto err;
         }

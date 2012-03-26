@@ -99,7 +99,7 @@ static void NotePerformance(char *eventname, time_t t, double value)
 {
     CF_DB *dbp;
     Event e, newe;
-    double lastseen, delta2;
+    double lastseen;
     int lsea = SECONDS_PER_WEEK;
     time_t now = time(NULL);
 
@@ -114,11 +114,8 @@ static void NotePerformance(char *eventname, time_t t, double value)
     {
         lastseen = now - e.t;
         newe.t = t;
-        newe.Q.q = value;
-        newe.Q.dq = value - e.Q.q;
-        newe.Q.expect = GAverage(value, e.Q.expect, 0.3);
-        delta2 = (value - e.Q.expect) * (value - e.Q.expect);
-        newe.Q.var = GAverage(delta2, e.Q.var, 0.3);
+
+        newe.Q = QAverage(e.Q, value, 0.3);
 
         /* Have to kickstart variance computation, assume 1% to start  */
 
@@ -166,7 +163,7 @@ void NoteClassUsage(AlphaList baselist, int purge)
     time_t now = time(NULL);
     Item *list = NULL;
     const Item *ip;
-    double lastseen, delta2;
+    double lastseen;
     double vtrue = 1.0;         /* end with a rough probability */
 
 /* Only do this for the default policy, too much "downgrading" otherwise */
@@ -203,20 +200,15 @@ void NoteClassUsage(AlphaList baselist, int purge)
             CfDebug("FOUND %s with %lf\n", ip->name, e.Q.expect);
             lastseen = now - e.t;
             newe.t = now;
-            newe.Q.q = vtrue;
-            newe.Q.dq = vtrue - e.Q.q;
-            newe.Q.expect = GAverage(vtrue, e.Q.expect, 0.7);
-            delta2 = (vtrue - e.Q.expect) * (vtrue - e.Q.expect);
-            newe.Q.var = GAverage(delta2, e.Q.var, 0.7);
+
+            newe.Q = QAverage(e.Q, vtrue, 0.7);
         }
         else
         {
             lastseen = 0.0;
             newe.t = now;
-            newe.Q.q = 0.5 * vtrue;
-            newe.Q.dq = 0;
-            newe.Q.expect = 0.5 * vtrue;        /* With no data it's 50/50 what we can say */
-            newe.Q.var = 0.000;
+            /* With no data it's 50/50 what we can say */
+            newe.Q = QDefinite(0.5 * vtrue);
         }
 
         if (lastseen > lsea)
@@ -249,7 +241,6 @@ void NoteClassUsage(AlphaList baselist, int purge)
 
         while (NextDB(dbp, dbcp, &key, &ksize, &stored, &vsize))
         {
-            double av, var;
             time_t then;
             char eventname[CF_BUFSIZE];
 
@@ -261,8 +252,6 @@ void NoteClassUsage(AlphaList baselist, int purge)
                 memcpy(&entry, stored, sizeof(entry));
 
                 then = entry.t;
-                av = entry.Q.expect;
-                var = entry.Q.var;
                 lastseen = now - then;
 
                 if (lastseen > lsea)
@@ -273,11 +262,8 @@ void NoteClassUsage(AlphaList baselist, int purge)
                 else if (!IsItemIn(list, eventname))
                 {
                     newe.t = then;
-                    newe.Q.q = 0;
-                    newe.Q.dq = entry.Q.dq;
-                    newe.Q.expect = GAverage(0.0, av, 0.5);
-                    delta2 = av * av;
-                    newe.Q.var = GAverage(delta2, var, 0.5);
+
+                    newe.Q = QAverage(entry.Q, 0, 0.5);
 
                     if (newe.Q.expect <= 0.0001)
                     {
@@ -358,9 +344,7 @@ static void UpdateLastSawHost(char *rkey, char *ipaddress)
         if (q.Q.q <= 0)
         {
             lastseen = 300;
-            q.Q.expect = 0;
-            q.Q.var = 0;
-            q.Q.dq = 0;
+            q.Q = QDefinite(0.0);
         }
 
         newq.Q.q = (double) now;
@@ -533,4 +517,28 @@ double GAverage(double anew, double aold, double p)
 /* return convex mixture - p is the trust/confidence in the new value */
 {
     return (p * anew + (1.0 - p) * aold);
+}
+
+/*
+ * expected(Q) = p*Q_new + (1-p)*expected(Q)
+ * variance(Q) = p*(Q_new - expected(Q))^2 + (1-p)*variance(Q)
+ */
+QPoint QAverage(QPoint old, double new_q, double p)
+{
+    QPoint new = {
+        .q = new_q,
+    };
+
+    double devsquare = (new.q - old.expect) * (new.q - old.expect);
+
+    new.dq = fabs(new.q - old.q);
+    new.expect = GAverage(new.q, old.expect, p);
+    new.var = GAverage(devsquare, old.var, p);
+
+    return new;
+}
+
+QPoint QDefinite(double q)
+{
+    return (QPoint) { .q = q, .dq = 0.0, .expect = q, .var = 0.0 };
 }

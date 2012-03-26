@@ -105,10 +105,7 @@ void MonitorInitialize(void)
 
     for (i = 0; i < CF_OBSERVABLES; i++)
     {
-        LOCALAV.Q[i].expect = 0.0;
-        LOCALAV.Q[i].var = 0.0;
-        LOCALAV.Q[i].q = 0.0;
-        LOCALAV.Q[i].dq = 0.0;
+        LOCALAV.Q[i] = QDefinite(0.0);
     }
 
     for (i = 0; i < 7; i++)

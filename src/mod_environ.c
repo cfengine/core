@@ -101,6 +101,6 @@ BodySyntax CF_ENVIRON_BODIES[] =
 
 SubTypeSyntax CF_ENVIRONMENT_SUBTYPES[] =
 {
-    {"agent", "environments", CF_ENVIRON_BODIES},
+    {"agent", "guest_environments", CF_ENVIRON_BODIES},
     {NULL, NULL, NULL},
 };

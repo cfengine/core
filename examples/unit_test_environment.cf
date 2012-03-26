@@ -22,7 +22,7 @@
 
 #######################################################
 #
-# Virtual environments
+# Guest environments
 #
 #######################################################
 
@@ -37,7 +37,7 @@ bundlesequence  => { "my_vm_cloud" };
 bundle agent my_vm_cloud
 
 {
-environments:
+guest_environments:
 
  scope||any::  # These should probably be in class "any" to ensure uniqueness
 

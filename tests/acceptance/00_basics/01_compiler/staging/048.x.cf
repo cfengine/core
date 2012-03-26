@@ -38,7 +38,7 @@ methods:
 
 bundle agent do_test(val)
 {
-environments:
+guest_environments:
     "host1"
 	environment_host => "$(val)",
 	classes => whatever("ok");

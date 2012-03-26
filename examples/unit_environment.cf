@@ -22,7 +22,7 @@
 
 #######################################################
 #
-# Virtual environments
+# Guest environments
 #
 #######################################################
 
@@ -41,7 +41,7 @@ vars:
 
   "vms[atlas]" slist => { "guest1", "guest2", "guest3" };
 
-environments:
+guest_environments:
 
  scope||any::  # These should probably be in class "any" to ensure uniqueness
 

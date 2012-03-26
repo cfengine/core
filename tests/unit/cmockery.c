@@ -512,7 +512,7 @@ static void add_symbol_value(ListNode *const symbol_map_head,
     SymbolMapValue *target_map_value;
 
     assert_true(symbol_map_head);
-    assert_true(symbol_names);
+    assert_true((const char *const *)symbol_names);
     assert_true(number_of_symbol_names);
     symbol_name = symbol_names[0];
 
@@ -550,7 +550,7 @@ static int get_symbol_value(ListNode *const head, const char *const symbol_names
     ListNode *target_node;
 
     assert_true(head);
-    assert_true(symbol_names);
+    assert_true((const char *const *)symbol_names);
     assert_true(number_of_symbol_names);
     assert_true(output);
     symbol_name = symbol_names[0];
@@ -984,7 +984,7 @@ static void expect_set(const char *const function, const char *const parameter,
     LargestIntegralType *const set = (LargestIntegralType *) (check_integer_set + 1);
 
     declare_initialize_value_pointer_pointer(check_data, check_integer_set);
-    assert_true(values);
+    assert_true((const unsigned long long *)values);
     assert_true(number_of_values);
     memcpy(set, values, number_of_values * sizeof(values[0]));
     check_integer_set->set = set;

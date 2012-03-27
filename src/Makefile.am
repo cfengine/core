@@ -52,7 +52,7 @@ libpromises_la_SOURCES = \
         conversion.c \
         crypto.c \
         csv_writer.c csv_writer.h \
-        dbm_api.c dbm_api.h dbm_priv.h \
+        dbm_api.c dbm_api.h dbm_lib.h dbm_lib.c dbm_priv.h \
         dbm_quick.c \
         dbm_tokyocab.c \
         dir.c dir.h dir_priv.h \

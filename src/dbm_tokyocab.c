@@ -30,6 +30,7 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 #include "dbm_priv.h"
+#include "dbm_lib.h"
 
 #ifdef TCDB
 
@@ -120,7 +121,23 @@ DBPriv *DBPrivOpenDB(const char *dbpath)
     {
         CfOut(cf_error, "", "!! Could not open database %s: %s",
               dbpath, ErrorMessage(db->hdb));
-        goto err;
+        
+        int errcode = tchdbecode(db->hdb);
+        
+        if(errcode != TCEMETA && errcode != TCEREAD)
+        {
+            goto err;
+        }
+        
+        CfOut(cf_error, "", "!! Database \"%s\" is broken, recreating...", dbpath);
+        DBPathMoveBroken(dbpath);
+        
+        if(!tchdbopen(db->hdb, dbpath, HDBOWRITER | HDBOCREAT))
+        {
+            CfOut(cf_error, "", "!! Could not open database %s after recreate: %s",
+                  dbpath, ErrorMessage(db->hdb));
+            goto err;
+        }
     }
 
     return db;

@@ -32,6 +32,7 @@
 
 #include "dbm_api.h"
 #include "dbm_priv.h"
+#include "dbm_lib.h"
 
 #ifdef QDB
 # include <depot.h>
@@ -129,10 +130,15 @@ DBPriv *DBPrivOpenDB(const char *filename)
         {
             CfOut(cf_log, "", "Successfully repaired database \"%s\"", filename);
         }
-
+        else
+        {
+            CfOut(cf_error, "", "!! Failed to repair database %s, recreating...", filename);
+            DBPathMoveBroken(filename);
+        }
+        
         db->depot = dpopen(filename, DP_OWRITER | DP_OCREAT, -1);
     }
-
+    
     if (db->depot == NULL)
     {
         CfOut(cf_error, "", "!! dpopen: Opening database \"%s\" failed: %s",

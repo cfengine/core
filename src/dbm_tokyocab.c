@@ -128,27 +128,16 @@ DBPriv *DBPrivOpenDB(const char *dbpath)
         {
             goto err;
         }
-
-        int fd = DBPathLock(dbpath);
-        
-        if(fd == -1)
-        {
-            CfOut(cf_error, "", "!! Could not lock db path %s before recreate - another process is recreating?", dbpath);
-            goto err;
-        }
         
         CfOut(cf_error, "", "!! Database \"%s\" is broken, recreating...", dbpath);
         DBPathMoveBroken(dbpath);
         
         if(!tchdbopen(db->hdb, dbpath, HDBOWRITER | HDBOCREAT))
         {
-            DBPathUnLock(fd);
             CfOut(cf_error, "", "!! Could not open database %s after recreate: %s",
                   dbpath, ErrorMessage(db->hdb));
             goto err;
         }
-        
-        DBPathUnLock(fd);
     }
 
     return db;

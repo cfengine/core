@@ -36,6 +36,7 @@
 
 #include "dbm_api.h"
 #include "dbm_priv.h"
+#include "dbm_lib.h"
 
 /******************************************************************************/
 
@@ -138,7 +139,18 @@ bool OpenDB(DBHandle **dbp, dbid id)
 
     if (handle->refcount == 0)
     {
-        handle->priv = DBPrivOpenDB(handle->filename);
+        int lock_fd = DBPathLock(handle->filename);
+        
+        if(lock_fd == -1)
+        {
+            CfOut(cf_error, "", "Could not lock db file %s for exclusive access across processes", handle->filename);
+            handle->priv = NULL;
+        }
+        else
+        {
+            handle->priv = DBPrivOpenDB(handle->filename);
+            DBPathUnLock(lock_fd);
+        }
     }
 
     if (handle->priv)

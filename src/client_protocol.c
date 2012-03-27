@@ -193,7 +193,8 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
     unsigned long err;
     unsigned char digest[EVP_MAX_MD_SIZE];
     int encrypted_len, nonce_len = 0, len, session_size;
-    char dont_implicitly_trust_server, enterprise_field = 'c';
+    bool implicitly_trust_server;
+    char enterprise_field = 'c';
     RSA *server_pubkey = NULL;
 
     if (PUBKEY == NULL || PRIVKEY == NULL)
@@ -224,18 +225,18 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
 
     if ((server_pubkey = HavePublicKeyByIP(conn->username, conn->remoteip)))
     {
-        dont_implicitly_trust_server = 'y';
+        implicitly_trust_server = false;
         encrypted_len = RSA_size(server_pubkey);
     }
     else
     {
-        dont_implicitly_trust_server = 'n';     /* have to trust server, since we can't verify id */
+        implicitly_trust_server = true;
         encrypted_len = nonce_len;
     }
 
 // Server pubkey is what we want to has as a unique ID
 
-    snprintf(sendbuffer, sizeof(sendbuffer), "SAUTH %c %d %d %c", dont_implicitly_trust_server, encrypted_len,
+    snprintf(sendbuffer, sizeof(sendbuffer), "SAUTH %c %d %d %c", implicitly_trust_server ? 'n': 'y', encrypted_len,
              nonce_len, enterprise_field);
 
     out = xmalloc(encrypted_len);
@@ -316,7 +317,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
 
     if (HashesMatch(digest, in, CF_DEFAULT_DIGEST) || HashesMatch(digest, in, cf_md5))  // Legacy
     {
-        if (dont_implicitly_trust_server == 'y')        /* challenge reply was correct */
+        if (implicitly_trust_server == false)        /* challenge reply was correct */
         {
             CfOut(cf_verbose, "", ".....................[.h.a.i.l.].................................\n");
             CfOut(cf_verbose, "", "Strong authentication of server=%s connection confirmed\n", pp->this_server);

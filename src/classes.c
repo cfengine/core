@@ -92,7 +92,7 @@ char *CLASSATTRIBUTES[CF_CLASSATTR][CF_ATTRDIM] =
     {"hp-ux", ".*", ".*"},      /* hpux */
     {"aix", ".*", ".*"},        /* aix */
     {"linux", ".*", ".*"},      /* linux */
-    {"sunos", "sun4.*", "5.*"}, /* solaris */
+    {"sunos", ".*", "5.*"},     /* solaris */
     {"osf1", "alpha", ".*"},    /* osf1 */
     {"osf1", "alpha", "4.*"},   /* digital */
     {"sunos", "sun3", "4.*"},   /* sun3 */

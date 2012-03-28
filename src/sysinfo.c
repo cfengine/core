@@ -784,6 +784,12 @@ void OSClasses()
         NewClass("gentoo");
     }
 
+    if (cfstat("/etc/arch-release", &statbuf) != -1)
+    {
+        CfOut(cf_verbose, "", "This appears to be an Arch Linux system.\n");
+        NewClass("archlinux");
+    }
+
 #else
 
     strncpy(vbuff, VSYSNAME.release, CF_MAXVARSIZE);

@@ -32,7 +32,6 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 #include "dbm_lib.h"
-#include <sys/file.h>
 
 int DBPathLock(const char *filename)
 {
@@ -43,21 +42,29 @@ int DBPathLock(const char *filename)
                    filename);
     }
 
-    int fd = open(filename_lock, O_CREAT, 0666);
+    int fd = open(filename_lock, O_CREAT | O_RDWR, 0666);
 
     free(filename_lock);
 
     if(fd == -1)
     {
-        CfOut(cf_error, "flock", "!! Could not open db lock-file");
+        CfOut(cf_error, "flock", "!! Unable to open database lock file");
         return -1;
     }
 
-    if(flock(fd, LOCK_EX|LOCK_NB) == -1)
+    struct flock lock = {
+        .l_type = F_WRLCK,
+        .l_whence = SEEK_SET,
+    };
+
+    while (fcntl(fd, F_SETLKW, &lock) == -1)
     {
-        close(fd);
-        CfOut(cf_error, "flock", "!! Could not lock db lock-file");
-        return -1;
+        if (errno != EINTR)
+        {
+            CfOut(cf_error, "fcntl(F_SETLK)", "!! Unable to lock database lock file");
+            close(fd);
+            return -1;
+        }
     }
 
     return fd;
@@ -65,11 +72,6 @@ int DBPathLock(const char *filename)
 
 void DBPathUnLock(int fd)
 {
-    if(flock(fd, LOCK_UN) == -1)
-    {
-        CfOut(cf_error, "flock", "!! Could not unlock db lock-file");
-    }
-
     if(close(fd) != 0)
     {
         CfOut(cf_error, "close", "!! Could not close db lock-file");

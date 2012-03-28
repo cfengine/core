@@ -26,7 +26,6 @@
 #include "cf3.extern.h"
 #include "client_protocol.h"
 
-static void FreeRSAKey(RSA *key);
 static void SetSessionKey(AgentConnection *conn);
 
 /*********************************************************************/
@@ -248,7 +247,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
             err = ERR_get_error();
             cfPS(cf_error, CF_FAIL, "", pp, attr, "Public encryption failed = %s\n", ERR_reason_error_string(err));
             free(out);
-            FreeRSAKey(server_pubkey);
+            RSA_free(server_pubkey);
             return false;
         }
 
@@ -292,14 +291,14 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
     if (ReceiveTransaction(conn->sd, in, NULL) == -1)
     {
         cfPS(cf_error, CF_INTERPT, "recv", pp, attr, "Protocol transaction broken off (1)");
-        FreeRSAKey(server_pubkey);
+        RSA_free(server_pubkey);
         return false;
     }
 
     if (BadProtoReply(in))
     {
         CfOut(cf_error, "", "%s", in);
-        FreeRSAKey(server_pubkey);
+        RSA_free(server_pubkey);
         return false;
     }
 
@@ -311,7 +310,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
     if (ReceiveTransaction(conn->sd, in, NULL) == -1)
     {
         cfPS(cf_error, CF_INTERPT, "recv", pp, attr, "Protocol transaction broken off (2)");
-        FreeRSAKey(server_pubkey);
+        RSA_free(server_pubkey);
         return false;
     }
 
@@ -334,7 +333,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
                 CfOut(cf_error, "", " !! Not authorized to trust the server=%s's public key (trustkey=false)\n",
                       pp->this_server);
                 PromiseRef(cf_verbose, pp);
-                FreeRSAKey(server_pubkey);
+                RSA_free(server_pubkey);
                 return false;
             }
         }
@@ -343,7 +342,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, attr, "Challenge response from server %s/%s was incorrect!", pp->this_server,
              conn->remoteip);
-        FreeRSAKey(server_pubkey);
+        RSA_free(server_pubkey);
         return false;
     }
 
@@ -358,7 +357,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
     if (encrypted_len <= 0)
     {
         CfOut(cf_error, "", "Protocol transaction sent illegal cipher length");
-        FreeRSAKey(server_pubkey);
+        RSA_free(server_pubkey);
         return false;
     }
 
@@ -369,7 +368,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
         err = ERR_get_error();
         cfPS(cf_error, CF_INTERPT, "", pp, attr, "Private decrypt failed = %s, abandoning\n",
              ERR_reason_error_string(err));
-        FreeRSAKey(server_pubkey);
+        RSA_free(server_pubkey);
         return false;
     }
 
@@ -415,7 +414,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
         {
             err = ERR_get_error();
             cfPS(cf_error, CF_INTERPT, "", pp, attr, "Private key decrypt failed = %s\n", ERR_reason_error_string(err));
-            FreeRSAKey(newkey);
+            RSA_free(newkey);
             return false;
         }
 
@@ -425,7 +424,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
         {
             cfPS(cf_inform, CF_INTERPT, "", pp, attr, "Protocol error in RSA authentation from IP %s\n",
                  pp->this_server);
-            FreeRSAKey(newkey);
+            RSA_free(newkey);
             return false;
         }
 
@@ -433,12 +432,12 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
         {
             err = ERR_get_error();
             cfPS(cf_error, CF_INTERPT, "", pp, attr, "Public key decrypt failed = %s\n", ERR_reason_error_string(err));
-            FreeRSAKey(newkey);
+            RSA_free(newkey);
             return false;
         }
 
         server_pubkey = RSAPublicKey_dup(newkey);
-        FreeRSAKey(newkey);
+        RSA_free(newkey);
     }
 
 /* proposition C5 */
@@ -448,7 +447,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
     if (conn->session_key == NULL)
     {
         CfOut(cf_error, "", "A random session key could not be established");
-        FreeRSAKey(server_pubkey);
+        RSA_free(server_pubkey);
         return false;
     }
 
@@ -463,7 +462,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
         err = ERR_get_error();
         cfPS(cf_error, CF_INTERPT, "", pp, attr, "Public encryption failed = %s\n", ERR_reason_error_string(err));
         free(out);
-        FreeRSAKey(server_pubkey);
+        RSA_free(server_pubkey);
         return false;
     }
 
@@ -479,22 +478,8 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
     }
 
     free(out);
-    FreeRSAKey(server_pubkey);
+    RSA_free(server_pubkey);
     return true;
-}
-
-/*********************************************************************/
-
-static void FreeRSAKey(RSA *key)
-/* Maybe not needed - RSA_free(NULL) seems to work, but who knows
- * with older OpenSSL versions */
-{
-    if (key == NULL)
-    {
-        return;
-    }
-
-    RSA_free(key);
 }
 
 /*********************************************************************/

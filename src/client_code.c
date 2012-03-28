@@ -62,9 +62,17 @@ void DetermineCfenginePort()
 {
     struct servent *server;
 
+    errno = 0;
     if ((server = getservbyname(CFENGINE_SERVICE, "tcp")) == NULL)
     {
-        CfOut(cf_verbose, "getservbyname", "No registered cfengine service, using default");
+        if (errno == 0)
+        {
+            CfOut(cf_verbose, "", "No registered cfengine service, using default");
+        }
+        else
+        {
+            CfOut(cf_verbose, "getservbyname", "Unable to query services database, using default");
+        }
         snprintf(STR_CFENGINEPORT, 15, "5308");
         SHORT_CFENGINEPORT = htons((unsigned short) 5308);
     }

@@ -880,12 +880,6 @@ static void *HandleConnection(ServerConnectionState *conn)
 # endif
 #endif
 
-    if (conn == NULL)
-    {
-        CfDebug("Null connection\n");
-        return NULL;
-    }
-
     if (!ThreadLock(cft_server_children))
     {
         DeleteConn(conn);

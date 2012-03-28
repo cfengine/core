@@ -96,9 +96,18 @@ void FatalError(char *s, ...)
 
 void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
 {
+    fprintf(stderr, "CFOUT<%d>: ", level);
+    if (errstr)
+    {
+        fprintf(stderr, " %s: %s ", errstr, strerror(errno));
+    }
+    va_list ap;
+    va_start(ap, fmt);
+    vfprintf(stderr, fmt, ap);
+    va_end(ap);
+    fprintf(stderr, "\n");
 }
 
-char *MapNameCopy(const char *s)
-{
-    return xstrdup(s);
-}
+const char *DAY_TEXT[] = {};
+const char *MONTH_TEXT[] = {};
+

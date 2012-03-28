@@ -693,6 +693,8 @@ void EndMeasurePromise(struct timespec start, Promise *pp);
 void NoteClassUsage(AlphaList list, int purge);
 void LastSaw(char *username, char *ipaddress, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum roles role);
 double GAverage(double anew, double aold, double p);
+QPoint QAverage(QPoint old_value, double new_value, double p);
+QPoint QDefinite(double value);
 bool RemoveHostFromLastSeen(const char *hostname, char *hostkey);
 
 /* install.c */
@@ -787,6 +789,8 @@ void OpenNetwork(void);
 void CloseNetwork(void);
 void CloseWmi(void);
 int LinkOrCopy(const char *from, const char *to, int sym);
+int ExclusiveLockFile(int fd);
+int ExclusiveUnlockFile(int fd);
 
 /* pipes.c */
 

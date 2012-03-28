@@ -121,7 +121,7 @@ bundle agent update
          copy_from => u_rcp("$(master_location)","$(sys.policy_hub)"),
       depth_search => u_recurse("inf"),
       file_select  => u_input_files,
-        depends_on => { "grant_access_policy", "check_valid_update" },
+        depends_on => { "check_valid_update" },
             action => u_immediate,
            classes => u_if_repaired("update_report");
 

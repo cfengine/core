@@ -341,15 +341,8 @@ int ThreadUnlock(pthread_mutex_t *t)
     return true;
 }
 
-char *MapName(char *s)
-{
-    return s;
-}
-
-char *MapNameCopy(const char *s)
-{
-    return xstrdup(s);
-}
-
 pthread_mutex_t *cft_dbhandle;
 #endif
+
+const char *DAY_TEXT[] = {};
+const char *MONTH_TEXT[] = {};

@@ -100,15 +100,6 @@ void *CopyFileSources(char *destination, Attributes attr, Promise *pp)
     snprintf(eventname, CF_BUFSIZE - 1, "Copy(%s:%s > %s)", server, source, destination);
     EndMeasure(eventname, start);
 
-    if (attr.transaction.background)
-    {
-        ServerDisconnection(pp->conn);
-    }
-    else
-    {
-        ServerNotBusy(pp->conn);
-    }
-
     return NULL;
 }
 

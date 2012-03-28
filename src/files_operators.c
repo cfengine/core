@@ -300,6 +300,15 @@ int ScheduleCopyOperation(char *destination, Attributes attr, Promise *pp)
 
     CopyFileSources(destination, attr, pp);
 
+    if (attr.transaction.background)
+    {
+        ServerDisconnection(conn);
+    }
+    else
+    {
+        ServerNotBusy(conn);
+    }
+
     return true;
 }
 

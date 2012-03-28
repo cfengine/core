@@ -524,3 +524,30 @@ int LinkOrCopy(const char *from, const char *to, int sym)
 
     return true;
 }
+
+#if !defined(__MINGW32__)
+
+int ExclusiveLockFile(int fd)
+{
+    struct flock lock = {
+        .l_type = F_WRLCK,
+        .l_whence = SEEK_SET,
+    };
+
+    while (fcntl(fd, F_SETLKW, &lock) == -1)
+    {
+        if (errno != EINTR)
+        {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+int ExclusiveUnlockFile(int fd)
+{
+    return close(fd);
+}
+
+#endif

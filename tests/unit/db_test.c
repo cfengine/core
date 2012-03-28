@@ -108,12 +108,6 @@ void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
     fprintf(stderr, "\n");
 }
 
-char *MapNameCopy(const char *s)
-{
-    return xstrdup(s);
-}
+const char *DAY_TEXT[] = {};
+const char *MONTH_TEXT[] = {};
 
-int cf_rename(const char *oldpath, const char *newpath)
-{
-    return rename(oldpath, newpath);
-}

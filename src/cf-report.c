@@ -35,6 +35,7 @@
 #include "dir.h"
 #include "writer.h"
 #include "dbm_api.h"
+#include "lastseen.h"
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);
@@ -890,52 +891,99 @@ static void KeepReportsPromises()
 
 static void RemoveHostSeen(char *hosts)
 {
-    CF_DB *dbp;
-    Item *ip, *list = SplitStringAsItemList(hosts, ',');
+    Item *list = SplitStringAsItemList(hosts, ',');
 
-    if (!OpenDB(&dbp, dbid_lastseen))
+    for (Item *ip = list; ip != NULL; ip = ip->next)
     {
-        CfOut(cf_error, "", "!! Could not open hosts-seen database for removal of hosts");
-        return;
+        RemoveHostFromLastSeen(ip->name);
     }
 
-    for (ip = list; ip != NULL; ip = ip->next)
-    {
-	char name[CF_MAXVARSIZE];
-
-        snprintf(name, sizeof(name), "+%s", ip->name);
-        CfOut(cf_inform, "", " -> Deleting requested host-seen entry for %s\n", name);
-        DeleteDB(dbp, name);
-
-        snprintf(name, sizeof(name), "-%s", ip->name);
-        CfOut(cf_inform, "", " -> Deleting requested host-seen entry for %s\n", name);
-        DeleteDB(dbp, name);
-    }
-
-    CloseDB(dbp);
     DeleteItemList(list);
 }
 
 /*********************************************************************/
 
+static const double ticksperhr = (double) SECONDS_PER_HOUR;
+
+typedef struct
+{
+    FILE *fout;
+    time_t now;
+} ReportContext;
+
+bool ReportHost(const char *hostkey, const char *address, bool incoming,
+                const KeyHostSeen *quality, void *ctx_)
+{
+    ReportContext *ctx = ctx_;
+
+    if (ctx->now - quality->lastseen > LASTSEENEXPIREAFTER)
+    {
+        /* Old entry, skip it */
+        return true;
+    }
+
+    struct tm tm;
+    char text_date[CF_BUFSIZE];
+    strftime(text_date, CF_BUFSIZE, "%a %b %d %R", localtime_r(&quality->lastseen, &tm));
+
+    CfOut(cf_verbose, "", " -> Reporting on %s", address);
+
+    if (XML)
+    {
+        fprintf(ctx->fout, "%s", CFRX[cfx_entry][cfb]);
+        fprintf(ctx->fout, "%s%c%s", CFRX[cfx_pm][cfb], incoming ? '+' : '-', CFRX[cfx_pm][cfe]);
+        fprintf(ctx->fout, "%s%s%s", CFRX[cfx_host][cfb], hostkey, CFRX[cfx_host][cfe]);
+        fprintf(ctx->fout, "%s%s%s", CFRX[cfx_alias][cfb], IPString2Hostname(address), CFRX[cfx_ip][cfe]);
+        fprintf(ctx->fout, "%s%s%s", CFRX[cfx_ip][cfb], address, CFRX[cfx_ip][cfe]);
+        fprintf(ctx->fout, "%s%s%s", CFRX[cfx_date][cfb], text_date, CFRX[cfx_date][cfe]);
+        fprintf(ctx->fout, "%s%.2lf%s", CFRX[cfx_q][cfb], ((double) (ctx->now - quality->lastseen)) / ticksperhr, CFRX[cfx_q][cfe]);
+        fprintf(ctx->fout, "%s%.2lf%s", CFRX[cfx_av][cfb], quality->Q.expect / ticksperhr, CFRX[cfx_av][cfe]);
+        fprintf(ctx->fout, "%s%.2lf%s", CFRX[cfx_dev][cfb], sqrt(quality->Q.var) / ticksperhr, CFRX[cfx_dev][cfe]);
+        fprintf(ctx->fout, "%s", CFRX[cfx_entry][cfe]);
+    }
+    else if (HTML)
+    {
+        fprintf(ctx->fout, "%s", CFRH[cfx_entry][cfb]);
+
+        fprintf(ctx->fout, "%s %s (%c)%s", CFRH[cfx_pm][cfb], incoming ? "in" : "out", incoming ? '+' : '-', CFRH[cfx_pm][cfe]);
+        fprintf(ctx->fout, "%s%s%s", CFRH[cfx_host][cfb], hostkey, CFRH[cfx_host][cfe]);
+        fprintf(ctx->fout, "%s%s%s", CFRH[cfx_ip][cfb], address, CFRH[cfx_ip][cfe]);
+        fprintf(ctx->fout, "%s%s%s", CFRH[cfx_alias][cfb], IPString2Hostname(address), CFRH[cfx_ip][cfe]);
+        fprintf(ctx->fout, "%s Last seen at %s%s", CFRH[cfx_date][cfb], text_date, CFRH[cfx_date][cfe]);
+        fprintf(ctx->fout, "%s %.2lf hrs ago %s", CFRH[cfx_q][cfb], ((double) (ctx->now - quality->lastseen)) / ticksperhr,
+                CFRH[cfx_q][cfe]);
+        fprintf(ctx->fout, "%s Av %.2lf hrs %s", CFRH[cfx_av][cfb], quality->Q.expect / ticksperhr, CFRH[cfx_av][cfe]);
+        fprintf(ctx->fout, "%s &plusmn; %.2lf hrs %s", CFRH[cfx_dev][cfb], sqrt(quality->Q.var) / ticksperhr, CFRH[cfx_dev][cfe]);
+        fprintf(ctx->fout, "%s", CFRH[cfx_entry][cfe]);
+    }
+    else if (CSV)
+    {
+        fprintf(ctx->fout, "%c,%25.25s,%25.25s,%15.15s,%s,%.2lf,%.2lf,%.2lf hrs\n",
+                incoming ? '+' : '-',
+                hostkey,
+                IPString2Hostname(address),
+                address, text_date, ((double) (ctx->now - quality->lastseen)) / ticksperhr, quality->Q.expect / ticksperhr, sqrt(quality->Q.var) / ticksperhr);
+    }
+    else
+    {
+        fprintf(ctx->fout, "IP %c %25.25s %25.25s %15.15s  @ [%s] not seen for (%.2lf) hrs, Av %.2lf +/- %.2lf hrs\n",
+                incoming ? '+' : '-',
+                hostkey,
+                IPString2Hostname(address),
+                address, text_date, ((double) (ctx->now - quality->lastseen)) / ticksperhr, quality->Q.expect / ticksperhr, sqrt(quality->Q.var) / ticksperhr);
+    }
+
+    return true;
+}
+
+
 static void ShowLastSeen()
 {
-    CF_DB *dbp;
-    CF_DBC *dbcp;
-    char *key;
-    void *value;
-    FILE *fout;
-    time_t tid = time(NULL);
-    double now = (double) tid, average = 0, var = 0;
-    double ticksperhr = (double) SECONDS_PER_HOUR;
-    char name[CF_BUFSIZE], hostname[CF_BUFSIZE], address[CF_MAXVARSIZE];
-    KeyHostSeen entry;
-    int ksize, vsize;
+    ReportContext ctx = {
+        .now = time(NULL)
+    };
 
-    if (!OpenDB(&dbp, dbid_lastseen))
-    {
-        return;
-    }
+    char name[CF_BUFSIZE];
 
     if (HTML)
     {
@@ -954,6 +1002,8 @@ static void ShowLastSeen()
         snprintf(name, CF_BUFSIZE, "lastseen.txt");
     }
 
+    FILE *fout;
+
     if ((fout = fopen(name, "w")) == NULL)
     {
         CfOut(cf_error, "fopen", " !! Unable to write to %s/lastseen.html\n", OUTPUTDIR);
@@ -962,6 +1012,7 @@ static void ShowLastSeen()
 
     if (HTML && !EMBEDDED)
     {
+        time_t tid = time(NULL);
         snprintf(name, CF_BUFSIZE, "Peers as last seen by %s", VFQNAME);
         CfHtmlHeader(fout, name, STYLESHEET, WEBDRIVER, BANNER);
         fprintf(fout, "<div id=\"reporttext\">\n");
@@ -973,111 +1024,12 @@ static void ShowLastSeen()
         fprintf(fout, "<?xml version=\"1.0\"?>\n<output>\n");
     }
 
-/* Acquire a cursor for the database. */
+    ctx.fout = fout;
 
-    if (!NewDBCursor(dbp, &dbcp))
+    if (!ScanLastSeenQuality(ReportHost, &ctx))
     {
-        CfOut(cf_inform, "", " !! Unable to scan last-seen database");
-        CloseDB(dbp);
+        CfOut(cf_error, "", "!! Unable to scan lastseen database");
         return;
-    }
-
-    /* Initialize the key/data return pair. */
-
-    memset(&entry, 0, sizeof(entry));
-
-    /* Walk through the database and print out the key/data pairs. */
-
-    while (NextDB(dbp, dbcp, &key, &ksize, &value, &vsize))
-    {
-        double then;
-        time_t fthen;
-        char tbuf[CF_BUFSIZE], addr[CF_BUFSIZE];
-
-        memcpy(&then, value, sizeof(then));
-
-        if (value != NULL)
-        {
-            memcpy(&entry, value, sizeof(entry));
-            strncpy(hostname, (char *) key, ksize);
-            strncpy(address, (char *) entry.address, ksize);
-            then = entry.Q.q;
-            average = (double) entry.Q.expect;
-            var = (double) entry.Q.var;
-            strncpy(addr, entry.address, CF_MAXVARSIZE);
-        }
-        else
-        {
-            continue;
-        }
-
-        if (now - then > (double) LASTSEENEXPIREAFTER)
-        {
-            DBCursorDeleteEntry(dbcp);
-            CfOut(cf_inform, "", " -> Deleting expired entry for %s\n", hostname);
-            continue;
-        }
-
-        fthen = (time_t) then;  /* format date */
-        snprintf(tbuf, CF_BUFSIZE - 1, "%s", cf_ctime(&fthen));
-        tbuf[strlen(tbuf) - 9] = '\0';  /* Chop off second and year */
-
-        CfOut(cf_verbose, "", " -> Reporting on %s", hostname);
-
-        if (XML)
-        {
-            fprintf(fout, "%s", CFRX[cfx_entry][cfb]);
-            fprintf(fout, "%s%c%s", CFRX[cfx_pm][cfb], *hostname, CFRX[cfx_pm][cfe]);
-            fprintf(fout, "%s%s%s", CFRX[cfx_host][cfb], hostname + 1, CFRX[cfx_host][cfe]);
-            fprintf(fout, "%s%s%s", CFRX[cfx_alias][cfb], IPString2Hostname(address), CFRX[cfx_ip][cfe]);
-            fprintf(fout, "%s%s%s", CFRX[cfx_ip][cfb], address, CFRX[cfx_ip][cfe]);
-            fprintf(fout, "%s%s%s", CFRX[cfx_date][cfb], tbuf, CFRX[cfx_date][cfe]);
-            fprintf(fout, "%s%.2lf%s", CFRX[cfx_q][cfb], ((double) (now - then)) / ticksperhr, CFRX[cfx_q][cfe]);
-            fprintf(fout, "%s%.2lf%s", CFRX[cfx_av][cfb], average / ticksperhr, CFRX[cfx_av][cfe]);
-            fprintf(fout, "%s%.2lf%s", CFRX[cfx_dev][cfb], sqrt(var) / ticksperhr, CFRX[cfx_dev][cfe]);
-            fprintf(fout, "%s", CFRX[cfx_entry][cfe]);
-        }
-        else if (HTML)
-        {
-            fprintf(fout, "%s", CFRH[cfx_entry][cfb]);
-
-            switch (*hostname)
-            {
-            case LAST_SEEN_DIRECTION_OUTGOING:
-                fprintf(fout, "%s out (%c)%s", CFRH[cfx_pm][cfb], *hostname, CFRH[cfx_pm][cfe]);
-                break;
-
-            case LAST_SEEN_DIRECTION_INCOMING:
-                fprintf(fout, "%s in (%c)%s", CFRH[cfx_pm][cfb], *hostname, CFRH[cfx_pm][cfe]);
-                break;
-            }
-
-            fprintf(fout, "%s%s%s", CFRH[cfx_host][cfb], hostname + 1, CFRH[cfx_host][cfe]);
-            fprintf(fout, "%s%s%s", CFRH[cfx_ip][cfb], address, CFRH[cfx_ip][cfe]);
-            fprintf(fout, "%s%s%s", CFRH[cfx_alias][cfb], IPString2Hostname(address), CFRH[cfx_ip][cfe]);
-            fprintf(fout, "%s Last seen at %s%s", CFRH[cfx_date][cfb], tbuf, CFRH[cfx_date][cfe]);
-            fprintf(fout, "%s %.2lf hrs ago %s", CFRH[cfx_q][cfb], ((double) (now - then)) / ticksperhr,
-                    CFRH[cfx_q][cfe]);
-            fprintf(fout, "%s Av %.2lf hrs %s", CFRH[cfx_av][cfb], average / ticksperhr, CFRH[cfx_av][cfe]);
-            fprintf(fout, "%s &plusmn; %.2lf hrs %s", CFRH[cfx_dev][cfb], sqrt(var) / ticksperhr, CFRH[cfx_dev][cfe]);
-            fprintf(fout, "%s", CFRH[cfx_entry][cfe]);
-        }
-        else if (CSV)
-        {
-            fprintf(fout, "%c,%25.25s,%25.25s,%15.15s,%s,%.2lf,%.2lf,%.2lf hrs\n",
-                    *hostname,
-                    hostname + 1,
-                    IPString2Hostname(address),
-                    addr, tbuf, ((double) (now - then)) / ticksperhr, average / ticksperhr, sqrt(var) / ticksperhr);
-        }
-        else
-        {
-            fprintf(fout, "IP %c %25.25s %25.25s %15.15s  @ [%s] not seen for (%.2lf) hrs, Av %.2lf +/- %.2lf hrs\n",
-                    *hostname,
-                    hostname + 1,
-                    IPString2Hostname(address),
-                    addr, tbuf, ((double) (now - then)) / ticksperhr, average / ticksperhr, sqrt(var) / ticksperhr);
-        }
     }
 
     if (HTML && !EMBEDDED)
@@ -1091,8 +1043,6 @@ static void ShowLastSeen()
         fprintf(fout, "</output>\n");
     }
 
-    DeleteDBCursor(dbp, dbcp);
-    CloseDB(dbp);
     fclose(fout);
 }
 

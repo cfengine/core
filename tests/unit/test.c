@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "test.h"
 #include "alloc.h"
 
@@ -39,3 +40,15 @@ void assert_file_equal(FILE *a, FILE *b)
     free(a_buffer);
     free(b_buffer);
 }
+
+#define SMALL_DIFF 1e-14
+
+void _assert_double_close(double left, double right, const char *const file, const int line)
+{
+    if (fabs(left - right) > SMALL_DIFF)
+    {
+        print_error("%f != %f (+- 1e-14)\n", left, right);
+        _fail(file, line);
+    }
+}
+

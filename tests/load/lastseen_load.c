@@ -1,0 +1,130 @@
+#include "cf3.defs.h"
+#include "dbm_api.h"
+#include "lastseen.h"
+
+char CFWORKDIR[CF_BUFSIZE] = "/tmp";
+
+
+void UpdateLastSawHost(const char *hostkey, const char *address,
+                       bool incoming, time_t timestamp);
+
+int main()
+{
+    unlink("/tmp/cf_lastseen.tcdb");
+    unlink("/tmp/cf_lastseen.qdbm");
+
+    for (int i = 0; i < 1000000; ++i)
+    {
+        if ((i % 10000) == 0)
+        {
+            printf(".");
+            fflush(stdout);
+        }
+
+        char hostkey[50];
+        snprintf(hostkey, 50, "SHA-%040d", i);
+        char ip[50];
+        snprintf(ip, 50, "250.%03d.%03d.%03d", i / (256*256), (i / 256) % 256, i % 256);
+
+        UpdateLastSawHost(hostkey, ip, false, i);
+        UpdateLastSawHost(hostkey, ip, true, 2000000 - i);
+    }
+}
+
+/* STUBS */
+
+void FatalError(char *s, ...)
+{
+    exit(42);
+}
+
+void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
+{
+    fprintf(stderr, "CFOUT<%d>: ", level);
+    if (errstr)
+    {
+        fprintf(stderr, " %s: %s ", errstr, strerror(errno));
+    }
+    va_list ap;
+    va_start(ap, fmt);
+    vfprintf(stderr, fmt, ap);
+    va_end(ap);
+    fprintf(stderr, "\n");
+}
+
+enum cfhashes CF_DEFAULT_DIGEST;
+const char *DAY_TEXT[] = {};
+const char *MONTH_TEXT[] = {};
+const char *SHIFT_TEXT[] = {};
+pthread_mutex_t *cft_output;
+char VIPADDRESS[18];
+RSA *PUBKEY;
+
+void Chop(char *str)
+{
+    exit(42);
+}
+
+AlphaListIterator AlphaListIteratorInit(AlphaList *al)
+{
+    exit(42);
+}
+
+const Item *AlphaListIteratorNext(AlphaListIterator *iterator)
+{
+    exit(42);
+}
+
+Item *IdempPrependItem(Item **liststart, const char *itemstring, const char *classes)
+{
+    exit(42);
+}
+
+bool IsItemIn(Item *list, const char *item)
+{
+    exit(42);
+}
+
+int DEBUG;
+
+void DeleteItemList(Item *item)
+{
+    exit(42);
+}
+
+int MINUSF;
+
+bool IsStrIn(const char *str, const char **strs)
+{
+    exit(42);
+}
+
+char *MapAddress(char *addr)
+{
+    exit(42);
+}
+
+char *HashPrint(enum cfhashes type, unsigned char digest[EVP_MAX_MD_SIZE + 1])
+{
+    exit(42);
+}
+
+int ThreadLock(pthread_mutex_t *name)
+{
+    exit(42);
+}
+
+int ThreadUnlock(pthread_mutex_t *name)
+{
+    exit(42);
+}
+
+void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhashes type)
+{
+    exit(42);
+}
+
+void *GetConstraintValue(char *lval, Promise *promise, char type)
+{
+    exit(42);
+}

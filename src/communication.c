@@ -281,7 +281,7 @@ const char *Hostname2IPString(const char *hostname)
 
 /*****************************************************************************/
 
-char *IPString2Hostname(char *ipaddress)
+char *IPString2Hostname(const char *ipaddress)
 {
     static char hostbuffer[MAXHOSTNAMELEN];
     int err;

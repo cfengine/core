@@ -25,6 +25,7 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 #include "client_protocol.h"
+#include "lastseen.h"
 
 static void FreeRSAKey(RSA *key);
 static void SetSessionKey(AgentConnection *conn);
@@ -474,7 +475,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
         CfOut(cf_verbose, "", " -> Public key identity of host \"%s\" is \"%s\"", conn->remoteip,
               HashPrint(CF_DEFAULT_DIGEST, conn->digest));
         SavePublicKey(conn->username, conn->remoteip, HashPrint(CF_DEFAULT_DIGEST, conn->digest), server_pubkey);       // FIXME: username is local
-        LastSaw(conn->username, conn->remoteip, conn->digest, cf_connect);
+        LastSaw(conn->remoteip, conn->digest, cf_connect);
     }
 
     free(out);

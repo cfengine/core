@@ -667,13 +667,7 @@ struct timespec
 
 #define CF_OBSERVABLES 91
 
-typedef struct
-{
-    double q;
-    double expect;
-    double var;
-    double dq;
-} QPoint;
+#include "statistics.h"
 
 typedef struct
 {

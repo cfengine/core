@@ -33,6 +33,8 @@
 #include "cf3.extern.h"
 
 #include "dbm_api.h"
+#include "lastseen.h"
+#include "dir.h"
 
 int SHOWHOSTS = false;
 bool REMOVEKEYS = false;
@@ -159,88 +161,133 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
 
 /*****************************************************************************/
 
+static bool ShowHost(const char *hostkey, const char *address, bool incoming,
+                     const KeyHostSeen *quality, void *ctx)
+{
+    int *count = ctx;
+
+    char hostname[CF_BUFSIZE];
+    strlcpy(hostname, IPString2Hostname(address), CF_BUFSIZE);
+
+    count++;
+    printf("%-9.9s %17.17s %-25.25s %s\n", incoming ? "Incoming" : "Outgoing",
+           address, hostname, hostkey);
+
+    return true;
+}
+
 static void ShowLastSeenHosts()
 {
-    CF_DB *dbp;
-    CF_DBC *dbcp;
-    char *key;
-    void *value;
-    char hostname[CF_BUFSIZE], address[CF_MAXVARSIZE];
-    KeyHostSeen entry;
-    int ksize, vsize;
     int count = 0;
-
-    if (!OpenDB(&dbp, dbid_lastseen))
-    {
-        return;
-    }
-
-/* Acquire a cursor for the database. */
-
-    if (!NewDBCursor(dbp, &dbcp))
-    {
-        CfOut(cf_inform, "", " !! Unable to scan last-seen database");
-        CloseDB(dbp);
-        return;
-    }
-
-    /* Initialize the key/data return pair. */
 
     printf("%9.9s %17.17s %-25.25s %15.15s\n", "Direction", "IP", "Name", "Key");
 
-/* Walk through the database and print out the key/data pairs. */
-
-    while (NextDB(dbp, dbcp, &key, &ksize, &value, &vsize))
+    if (!ScanLastSeenQuality(ShowHost, &count))
     {
-        if (value != NULL)
-        {
-            memset(&entry, 0, sizeof(entry));
-            memset(hostname, 0, sizeof(hostname));
-            memset(address, 0, sizeof(address));
-            memcpy(&entry, value, sizeof(entry));
-            strncpy(hostname, (char *) key, sizeof(hostname) - 1);
-            strncpy(address, (char *) entry.address, sizeof(address) - 1);
-            ++count;
-        }
-        else
-        {
-            continue;
-        }
-
-        CfOut(cf_verbose, "", " -> Reporting on %s", hostname);
-
-        printf("%-9.9s %17.17s %-25.25s %s\n",
-               hostname[0] == LAST_SEEN_DIRECTION_OUTGOING ? "Outgoing" : "Incoming",
-               address, IPString2Hostname(address), hostname + 1);
+        CfOut(cf_error, "", "Unable to show lastseen database");
+        return;
     }
 
     printf("Total Entries: %d\n", count);
-    DeleteDBCursor(dbp, dbcp);
-    CloseDB(dbp);
 }
 
-/*****************************************************************************/
+/*
+ * Returns:
+ *  amount of keys removed
+ *  -1 if there was an error
+ */
+static int RemovePublicKey(const char *id)
+{
+    Dir *dirh = NULL;
+    int removed = 0;
+    char keysdir[CF_BUFSIZE];
+    const struct dirent *dirp;
+    char suffix[CF_BUFSIZE];
+
+    snprintf(keysdir, CF_BUFSIZE, "%s/ppkeys", CFWORKDIR);
+    MapName(keysdir);
+
+    if ((dirh = OpenDirLocal(keysdir)) == NULL)
+    {
+        if (errno == ENOENT)
+        {
+            return 0;
+        }
+        else
+        {
+            CfOut(cf_error, "opendir", "Unable to open keys directory");
+            return -1;
+        }
+    }
+
+    snprintf(suffix, CF_BUFSIZE, "-%s.pub", id);
+
+    while ((dirp = ReadDir(dirh)) != NULL)
+    {
+        char *c = strstr(dirp->d_name, suffix);
+
+        if (c && c[strlen(suffix)] == '\0')     /* dirp->d_name ends with suffix */
+        {
+            char keyfilename[CF_BUFSIZE];
+
+            snprintf(keyfilename, CF_BUFSIZE, "%s/%s", keysdir, dirp->d_name);
+            MapName(keyfilename);
+
+            if (unlink(keyfilename) < 0)
+            {
+                if (errno != ENOENT)
+                {
+                    CfOut(cf_error, "unlink", "Unable to remove key file %s", dirp->d_name);
+                    CloseDir(dirh);
+                    return -1;
+                }
+            }
+            else
+            {
+                removed++;
+            }
+        }
+    }
+
+    if (errno)
+    {
+        CfOut(cf_error, "ReadDir", "Unable to enumerate files in keys directory");
+        CloseDir(dirh);
+        return -1;
+    }
+
+    CloseDir(dirh);
+    return removed;
+}
 
 static int RemoveKeys(const char *host)
 {
-    int removed_keys;
+    char ip[CF_BUFSIZE];
+    char digest[CF_BUFSIZE];
 
-    RemoveHostFromLastSeen(host, NULL);
-    removed_keys = RemovePublicKeys(remove_keys_host);
+    strcpy(ip, Hostname2IPString(host));
+    Address2Hostkey(ip, digest);
 
-    if (removed_keys < 0)
+    RemoveHostFromLastSeen(digest);
+
+    int removed_by_ip = RemovePublicKey(ip);
+    int removed_by_digest = RemovePublicKey(digest);
+
+    if (removed_by_ip == -1 || removed_by_digest == -1)
     {
-        CfOut(cf_error, "", "Unable to remove keys for the host %s", remove_keys_host);
+        CfOut(cf_error, "", "Unable to remove keys for the host %s",
+              remove_keys_host);
         return 255;
     }
-    else if (removed_keys == 0)
+    else if (removed_by_ip + removed_by_digest == 0)
     {
         CfOut(cf_error, "", "No keys for host %s were found", remove_keys_host);
         return 1;
     }
     else
     {
-        CfOut(cf_inform, "", "Removed %d key(s) for host %s", removed_keys, remove_keys_host);
+        CfOut(cf_inform, "", "Removed %d key(s) for host %s",
+              removed_by_ip + removed_by_digest, remove_keys_host);
         return 0;
     }
 }

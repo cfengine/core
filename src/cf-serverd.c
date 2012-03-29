@@ -26,6 +26,7 @@
 #include "cf3.server.h"
 #include "dir.h"
 #include "dbm_api.h"
+#include "lastseen.h"
 
 #define QUEUESIZE 50
 #define CF_BUFEXT 128
@@ -325,7 +326,7 @@ static void StartServer(GenericAgentConfig config)
     Promise *pp = NewPromise("server_cfengine", "the server daemon");
     Attributes dummyattr = { {0} };
     CfLock thislock;
-    time_t starttime;
+    time_t starttime = time(NULL);
 
 #if defined(HAVE_GETADDRINFO)
     socklen_t addrlen = sizeof(struct sockaddr_in6);
@@ -2686,7 +2687,7 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
         ThreadUnlock(cft_output);
     }
 
-    LastSaw(conn->username, conn->ipaddr, conn->digest, cf_accept);
+    LastSaw(conn->ipaddr, conn->digest, cf_accept);
 
     if (!CheckStoreKey(conn, newkey))   /* conceals proposition S1 */
     {

@@ -1095,14 +1095,6 @@ typedef struct
 
 typedef struct
 {
-    char address[CF_ADDRSIZE];
-    QPoint Q;
-} KeyHostSeen;
-
-/*************************************************************************/
-
-typedef struct
-{
     char *last;
     char *lock;
     char *log;

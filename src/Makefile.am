@@ -86,6 +86,7 @@ libpromises_la_SOURCES = \
         iteration.c \
         json.c json.h \
         keyring.c \
+        lastseen.c lastseen.h \
         logging.c \
         logic_expressions.c logic_expressions.h \
         matching.c \
@@ -129,6 +130,7 @@ libpromises_la_SOURCES = \
         signals.c \
         sockaddr.c \
         sort.c \
+	statistics.c statistics.h \
         storage_tools.c \
         string_expressions.c string_expressions.h \
         string_lib.c string_lib.h \

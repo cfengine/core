@@ -436,7 +436,7 @@ int VerifyNotInFstab(char *name, Attributes a, Promise *pp)
     }
     else
     {
-        opts = VMOUNTOPTS[VSYSTEMHARDCLASS];
+        opts = xstrdup(VMOUNTOPTS[VSYSTEMHARDCLASS]);
     }
 
     host = a.mount.mount_server;

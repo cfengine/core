@@ -632,9 +632,7 @@ Attributes GetOccurrenceAttributes(Promise *pp)
 
     attr.represents = GetListConstraint("represents", pp);
     attr.rep_type = GetConstraintValue("representation", pp, CF_SCALAR);
-    attr.web_root = GetConstraintValue("web_root", pp, CF_SCALAR);
-    attr.path_root = GetConstraintValue("path_root", pp, CF_SCALAR);
-
+    attr.about_topics = GetListConstraint("about_topics", pp);
     return attr;
 }
 

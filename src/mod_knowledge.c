@@ -60,12 +60,12 @@ BodySyntax CF_RELATE_BODY[] =
 
 BodySyntax CF_OCCUR_BODIES[] =
 {
+    {"about_topics", cf_slist, "",
+     "List of topics that the document or resource addresses"},    
     {"represents", cf_slist, "",
-     "List of subtopics that explains the type(s) of information represented by the occurrence"},
+     "List of explanations for what relationship this document has to the topics it is about"},    
     {"representation", cf_opts, "literal,url,db,file,web,image,portal",
      "How to interpret the promiser string e.g. actual data or reference to data"},
-    {"web_root", cf_str, "", "Base URL of the occurrence when rendered as a web-URL (deprecated)"},
-    {"path_root", cf_str, "", "Base path of the occurrence when locating file (deprecated)"},
     {NULL, cf_notype, NULL, NULL}
 };
 

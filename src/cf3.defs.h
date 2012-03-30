@@ -1191,9 +1191,9 @@ struct TopicAssociation_
 {
     char *fwd_context;
     char *fwd_name;
+    char *bwd_context;
     char *bwd_name;
     Item *associates;
-    char *bwd_context;
     TopicAssociation *next;
 };
 
@@ -1202,9 +1202,10 @@ typedef struct Occurrence_ Occurrence;
 struct Occurrence_
 {
     char *occurrence_context;
-    char *locator;              /* Promiser */
+    char *locator;                 /* Promiser */
     enum representations rep_type;
-    Rlist *represents;          /* subtype represented by promiser */
+    Rlist *represents;
+    Rlist *about_topics;    
     Occurrence *next;
 };
 
@@ -1817,11 +1818,10 @@ typedef struct
     Rlist *qualifiers;
     Rlist *associates;
     Rlist *represents;
+    Rlist *about_topics;
     Rlist *synonyms;
     Rlist *general;
     char *rep_type;
-    char *path_root;
-    char *web_root;
 } Attributes;
 
 enum cf_meter

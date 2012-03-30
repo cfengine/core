@@ -152,12 +152,7 @@ static void ShowControlBodies()
 void ShowPromises(Bundle *bundles, Body *bodies)
 {
 #if defined(HAVE_NOVA)
-    
-    if(SHOWREPORTS)
-    {
-	CFDB_SaveUnExpandedPromises(bundles, bodies);
-    }
-    
+    Nova_ShowPromises(bundles, bodies);
 #else
     ShowPromisesInReport(bundles, bodies);
 #endif

@@ -784,16 +784,36 @@ A summary of Mission goals (as defined in user policy files; these examples are 
 @node Mission Engineering, Mission Planning, Mission Status, Mission Portal Rooms
 @subsection Mission Engineering
 
-Mission engineering illustrates the state of the system in relation to the desired state at all scales. Zoom in to specific areas and examine the impact of promises, query data, and extract reports.
+Mission Engineering illustrates the state of the system in relation to the desired state at all scales. Zoom in to specific areas and examine the impact of promises, query data, and extract reports.
+
+The Mission Engineering room underwent a substantial rework for the release of CFEngine 3 Nova 2.2. Most notably we introduced a host navigation tree where hosts can be grouped and organized in a hierarchy defined by classes. The other content on the page is influenced by the tree, it changes as the user navigates to activate different nodes. Another notable change is the new interface to interact with reports, now available as a tab and drop-down menus.
 
 @sp 1
 @image{img-engineering,15cm,,Mission Engineering}
 @center Figure: Mission Engineering
 @sp 1
 
-@noindent @b{Host Status:}
+@noindent @b{Navigation tree:}
+The navigation tree consists of two main parts:
 @itemize
-@item The hosts are classified into red, yellow, green and blue according to the status of their compliance. A host is red if less than 80% of its promises are kept (> 20% not compliant), yellow if 20% or more of its promises were repaired and host is now compliant (> 20% repaired, now compliant), green if more than 80% of its promises are kept (> 80% compliant), and blue if there is no contact between the hub and the client (host unreachable). Clicking a link produces a list of the hosts in that category:
+@item The Tree Selector: Allows to choose between the default tree and custom trees defined by the user. Click @code{Add} in the dropdown menu to add your own tree.
+Class, Host and Promise/Bundle finder.
+@item The tree itself, grouped by classes. The user can add up to four sublevels in the navigation tree by adding nodes. To add a node:
+@enumerate
+@item Put the mouse pointer over the node you wish to add a sublevel to, click the plus sign shown beside the node.
+@item A pop-up appears with fields to enter a label (name) to the node that you wish to create and the class expression you wish to filter by. The class expression field contains a button which opens a class finder to help you select classes.
+@end enumerate
+@end itemize
+
+@noindent @b{Status tab:}
+This tab shows the overall status of the hosts selected in the navigation tree. Going through the items in this part of the page:
+@itemize
+@item Host context is displayed above the bar graph of compliance summary.
+@item Compliance Summary: The row of bar meters shows the compliance (average percentage of promises kept, repaired or not kept) of all registered hosts @footnote{Blue hosts will not appear here} in blocks of 6 hours for the past week. It summarizes performance and anomalous behavior in a simple red (promises not kept), yellow (promises repaired) and green (promises kept) scale. NB CHECK BEFORE RELEASE: Click on a bar to see which promises were kept/not kept.
+@item Host Compliance: The hosts are classified into red, yellow and green according to the status of their compliance over the last hour. A host is red if less than 80% of its promises are kept (> 20% not compliant), yellow if 20% or more of its promises were repaired and host is now compliant (> 20% repaired, now compliant) and green if more than 80% of its promises are kept (> 80% compliant).
+@item Host Operations: The hosts are classified into blue and black according to their operational status. A host is blue if there has not been any contact between the hub and the client within the last 20 minutes (host unreachable). A host is black if CFEngine's scheduling daemon, @code{execd}, is not running (the hub will still able to contact the client to collect reports but the client will return stale data since it has not been running at regular intervals).
+@item Clicking a link in any of the above categories (red/yellow/green/blue/black) produces a list of the hosts in that category.
+@end itemize
 
 @page
 @sp 1

@@ -1,0 +1,38 @@
+# Test that reglist() does not match cf_null values
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle agent init
+{
+vars:
+  "dummy" string => "";
+}
+
+bundle agent test
+{
+vars:
+  "dummy" string => "";
+}
+
+bundle agent check
+{
+vars:
+  "emptylist" slist => { "cf_null" };
+
+classes:
+  "ok" not => reglist("@(emptylist)", ".+");
+
+reports:
+  ok::
+    "$(this.promise_filename) Pass";
+  !ok::
+    "$(this.promise_filename) FAIL";
+}
+

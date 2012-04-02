@@ -237,7 +237,6 @@ int IsTCPType(char *s);
 
 /* enterprise_stubs.c */
 
-void WebCache(char *s, char *t);
 void EnterpriseModuleTrick(void);
 void VerifyRegistryPromise(Attributes a, Promise *pp);
 int CfSessionKeySize(char c);

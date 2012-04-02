@@ -755,12 +755,6 @@ void OSClasses()
         Linux_Slackware_Version(SLACKWARE_ANCIENT_VERSION_FILENAME);
     }
 
-    if (cfstat("/etc/generic-release", &statbuf) != -1)
-    {
-        CfOut(cf_verbose, "", "This appears to be a sun cobalt system.\n");
-        NewClass("SunCobalt");
-    }
-
     if (cfstat("/etc/debian_version", &statbuf) != -1)
     {
         Linux_Debian_Version();

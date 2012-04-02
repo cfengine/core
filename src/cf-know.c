@@ -213,7 +213,9 @@ int main(int argc, char *argv[])
     else if (strlen(FINDTOPIC) > 0)
     {
 #ifdef HAVE_NOVA
+# ifdef HAVE_LIBMONGOC
          Nova_ShowTopic(FINDTOPIC);
+# endif
          exit(0);
 #endif    
     }

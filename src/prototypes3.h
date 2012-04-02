@@ -679,7 +679,7 @@ Item *DeleteRegion(Item **liststart, Item *begin, Item *end);
 
 Rlist *NewIterationContext(char *scopeid, Rlist *listvars);
 void DeleteIterationContext(Rlist *lol);
-int IncrementIterationContext(Rlist *iterators, int count);
+int IncrementIterationContext(Rlist *iterators);
 int EndOfIteration(Rlist *iterator);
 int NullIterators(Rlist *iterator);
 

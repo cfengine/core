@@ -637,7 +637,7 @@ void ExpandPromiseAndDo(enum cfagenttype agent, char *scopeid, Promise *pp, Rlis
 
     while (NullIterators(lol))
     {
-        IncrementIterationContext(lol, 1);
+        IncrementIterationContext(lol);
 
         // In case a list is completely blank
         if (cutoff++ > cf_null_cutoff)
@@ -722,7 +722,7 @@ void ExpandPromiseAndDo(enum cfagenttype agent, char *scopeid, Promise *pp, Rlis
 
         /* End thread monitor */
     }
-    while (IncrementIterationContext(lol, 1));
+    while (IncrementIterationContext(lol));
 
     DeleteIterationContext(lol);
 }

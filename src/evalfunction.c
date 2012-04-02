@@ -1022,16 +1022,19 @@ static FnCallResult FnCallRegList(FnCall *fp, Rlist *finalargs)
 
     list = (Rlist *) retval.item;
 
+    strcpy(buffer, "!any");
+
     for (rp = list; rp != NULL; rp = rp->next)
     {
+        if (strcmp(rp->item, CF_NULL_VALUE) == 0)
+        {
+            continue;
+        }
+
         if (FullTextMatch(regex, rp->item))
         {
             strcpy(buffer, "any");
             break;
-        }
-        else
-        {
-            strcpy(buffer, "!any");
         }
     }
 

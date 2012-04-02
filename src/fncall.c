@@ -234,14 +234,14 @@ FnCallResult EvaluateFunctionCall(FnCall *fp, Promise *pp)
             CfOut(cf_error, "", "No such FnCall \"%s()\" - context info unavailable\n", fp->name);
         }
 
-        return (FnCallResult) { FNCALL_FAILURE, { NULL, CF_NOPROMISEE } };
+        return (FnCallResult) { FNCALL_FAILURE, { CopyFnCall(fp), CF_FNCALL } };
     }
 
 /* If the container classes seem not to be defined at this stage, then don't try to expand the function */
 
     if ((pp != NULL) && !IsDefinedClass(pp->classes))
     {
-        return (FnCallResult) { FNCALL_FAILURE, { NULL, CF_NOPROMISEE } };
+        return (FnCallResult) { FNCALL_FAILURE, { CopyFnCall(fp), CF_FNCALL } };
     }
 
     expargs = NewExpArgs(fp, pp);

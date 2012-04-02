@@ -2900,9 +2900,7 @@ static FnCallResult FnCallIRange(FnCall *fp, Rlist *finalargs)
 
     if (from == CF_NOINT || to == CF_NOINT)
     {
-        return (FnCallResult)
-        {
-        FNCALL_FAILURE};
+        return (FnCallResult) { FNCALL_FAILURE };
     }
 
     if (from == CF_NOINT || to == CF_NOINT)
@@ -3795,9 +3793,7 @@ static FnCallResult FnCallUserExists(FnCall *fp, Rlist *finalargs)
 
         if (uid == CF_SAME_OWNER || uid == CF_UNKNOWN_OWNER)
         {
-            return (FnCallResult)
-            {
-            FNCALL_FAILURE};
+            return (FnCallResult){FNCALL_FAILURE};
         }
 
         if ((pw = getpwuid(uid)) == NULL)

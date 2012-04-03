@@ -1,0 +1,20 @@
+body common control
+{
+bundlesequence => { "test" };
+inputs => { "cfengine_stdlib.cf" };
+}
+
+
+bundle agent test
+{
+vars:
+
+am_policy_hub::
+ "host_list" slist => hostswithclass( "debian", "name" );
+
+files:
+am_policy_hub::
+  "/tmp/master_config.cfg"
+         edit_line => insert_lines("host=$(host_list)"),
+            create => "true";
+}

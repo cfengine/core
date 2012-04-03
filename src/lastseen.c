@@ -275,7 +275,7 @@ bool ScanLastSeenQuality(LastSeenQualityCallback callback, void *ctx)
 
         if (ReadDB(db, outgoing_key, &outgoing, sizeof(outgoing)))
         {
-            if (!(*callback)(hostkey, address, true, &outgoing, ctx))
+            if (!(*callback)(hostkey, address, false, &outgoing, ctx))
             {
                 break;
             }

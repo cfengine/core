@@ -316,6 +316,7 @@ void NewPromiser(Promise *pp);
 void AnalyzePromiseConflicts(void);
 void AddGoalsToDB(char *goal_patterns, char *goal_categories);
 void VerifyWindowsService(Attributes a, Promise *pp);
+bool CFDB_HostsWithClass(Rlist **return_list, char *class_name, char *return_format);
 
 void SetSyslogHost(const char *host);
 void SetSyslogPort(uint16_t port);

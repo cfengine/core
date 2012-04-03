@@ -169,7 +169,7 @@ static bool ShowHost(const char *hostkey, const char *address, bool incoming,
     char hostname[CF_BUFSIZE];
     strlcpy(hostname, IPString2Hostname(address), CF_BUFSIZE);
 
-    count++;
+    (*count)++;
     printf("%-9.9s %17.17s %-25.25s %s\n", incoming ? "Incoming" : "Outgoing",
            address, hostname, hostkey);
 

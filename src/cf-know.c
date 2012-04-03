@@ -872,7 +872,7 @@ static void VerifyThingsPromise(Promise *pp)
         Rlist *list = NULL, *topics = NULL;
 
             snprintf(id, CF_MAXVARSIZE-1, "promisers::%s", pp->promiser);
-            PrependRScalar(&list, "comment", CF_SCALAR);
+            PrependRScalar(&list, "Comment", CF_SCALAR);
             PrependRScalar(&topics, id, CF_SCALAR);
             AddOccurrence(&OCCURRENCES, pp->ref, list, cfk_literal, topics, pp->classes);
             DeleteRlist(list);
@@ -977,7 +977,7 @@ static void VerifyTopicPromise(Promise *pp)
         Rlist *list = NULL, *topics = NULL;
 
             snprintf(id, CF_MAXVARSIZE-1, "promisers::%s", pp->promiser);
-            PrependRScalar(&list, "comment", CF_SCALAR);
+            PrependRScalar(&list, "Comment", CF_SCALAR);
             PrependRScalar(&topics, id, CF_SCALAR);
             AddOccurrence(&OCCURRENCES, pp->ref, list, cfk_literal, topics, pp->classes);
             DeleteRlist(list);
@@ -1302,9 +1302,7 @@ static void AddOccurrence(Occurrence **list, char *reference, Rlist *represents,
 
     if (represents == NULL)
     {
-        CfOut(cf_error, "", " !! Topic occurrence \"%s\" claims to represent no aspect of its topic, discarding...",
-              reference);
-        return;
+        IdempPrependRScalar(&(op->represents), "Unspecified document", CF_SCALAR);
     }
 
     for (rp = represents; rp != NULL; rp = rp->next)
@@ -1314,7 +1312,7 @@ static void AddOccurrence(Occurrence **list, char *reference, Rlist *represents,
 
     for (rp = about_topics; rp != NULL; rp = rp->next)
     {
-        IdempPrependRScalar(&(op->about_topics), rp->item, rp->type);
+        IdempPrependRScalar(&(op->about_topics), ToLowerStr(rp->item), rp->type);
     }
 
 }

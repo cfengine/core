@@ -120,6 +120,8 @@ int ArchiveToRepository(char *file, Attributes attr, Promise *pp)
     ThreadUnlock(cft_getaddr);
 
     CfDebug("Repository(%s)\n", file);
+    
+    JoinPath(destination, CanonifyName(file));
 
     if (!MakeParentDirectory(destination, attr.move_obstructions))
     {

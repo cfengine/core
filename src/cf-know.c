@@ -1475,8 +1475,20 @@ static Occurrence *OccurrenceExists(Occurrence *list, char *locator, enum repres
 
     for (op = list; op != NULL; op = op->next)
     {
-        if (strcmp(locator, op->locator) == 0 && strcmp(op->occurrence_context, context) == 0)
+        if (strcmp(locator, op->locator) == 0)
         {
+        if (strstr(op->occurrence_context,context) == NULL)
+           {
+           // This context is unknown, but same reference
+           char *replace = xmalloc(strlen(op->occurrence_context)+strlen(", .")+strlen(context));
+
+           strcpy(replace,op->occurrence_context);
+           strcat(replace,", ");
+           strcat(replace,context);
+           free(op->occurrence_context);
+           op->occurrence_context = replace;
+           }
+        
             return op;
         }
     }

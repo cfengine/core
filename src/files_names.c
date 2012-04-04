@@ -350,7 +350,7 @@ char *JoinPath(char *path, const char *leaf)
 
     if ((strlen(path) + len) > (CF_BUFSIZE - CF_BUFFERMARGIN))
     {
-        CfOut(cf_error, "", "Internal limit: Buffer ran out of space constructing string. Tried to add %s to %s\n",
+        CfOut(cf_error, "", "Internal limit 1: Buffer ran out of space constructing string. Tried to add %s to %s\n",
               leaf, path);
         return NULL;
     }
@@ -370,7 +370,7 @@ char *JoinSuffix(char *path, char *leaf)
 
     if ((strlen(path) + len) > (CF_BUFSIZE - CF_BUFFERMARGIN))
     {
-        CfOut(cf_error, "", "Internal limit: Buffer ran out of space constructing string. Tried to add %s to %s\n",
+        CfOut(cf_error, "", "Internal limit 2: Buffer ran out of space constructing string. Tried to add %s to %s\n",
               leaf, path);
         return NULL;
     }
@@ -434,7 +434,7 @@ int JoinMargin(char *path, const char *leaf, char **nextFree, int bufsize, int m
         if ((*nextFree - path) + len > (bufsize - margin))
         {
             CfOut(cf_error, "",
-                  "Internal limit: Buffer ran out of space constructing string (using nextFree), len = %zd > %d.\n",
+                  "Internal limit 3: Buffer ran out of space constructing string (using nextFree), len = %zd > %d.\n",
                   (strlen(path) + len), (bufsize - CF_BUFFERMARGIN));
             return false;
         }
@@ -446,7 +446,7 @@ int JoinMargin(char *path, const char *leaf, char **nextFree, int bufsize, int m
     {
         if ((strlen(path) + len) > (bufsize - margin))
         {
-            CfOut(cf_error, "", "Internal limit: Buffer ran out of space constructing string (%zd > %d).\n",
+            CfOut(cf_error, "", "Internal limit 4: Buffer ran out of space constructing string (%zd > %d).\n",
                   (strlen(path) + len), (bufsize - CF_BUFFERMARGIN));
             return false;
         }

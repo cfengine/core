@@ -50,6 +50,7 @@ JsonElement *JsonObjectGetAsArray(JsonElement *object, const char *key);
 void JsonArrayAppendString(JsonElement *array, const char *value);
 void JsonArrayAppendArray(JsonElement *array, JsonElement *childArray);
 void JsonArrayAppendObject(JsonElement *array, JsonElement *object);
+void JsonArrayRemoveRange(JsonElement *array, size_t start, size_t end);
 const char *JsonArrayGetAsString(JsonElement *array, size_t index);
 JsonElement *JsonArrayGetAsObject(JsonElement *array, size_t index);
 

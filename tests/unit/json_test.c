@@ -278,10 +278,73 @@ static void test_parse_array_object(void **state)
     JsonElementDestroy(arr);
 }
 
+static void test_array_remove_range(void **state)
+{
+    {
+        // remove whole
+        JsonElement *arr = JsonArrayCreate(5);
+
+        JsonArrayAppendString(arr, "one");
+        JsonArrayAppendString(arr, "two");
+        JsonArrayAppendString(arr, "three");
+        JsonArrayRemoveRange(arr, 0, 2);
+
+        assert_int_equal(JsonElementLength(arr), 0);
+
+        JsonElementDestroy(arr);
+    }
+
+    {
+        // remove middle
+        JsonElement *arr = JsonArrayCreate(5);
+
+        JsonArrayAppendString(arr, "one");
+        JsonArrayAppendString(arr, "two");
+        JsonArrayAppendString(arr, "three");
+        JsonArrayRemoveRange(arr, 1, 1);
+
+        assert_int_equal(JsonElementLength(arr), 2);
+        assert_string_equal(JsonArrayGetAsString(arr, 0), "one");
+        assert_string_equal(JsonArrayGetAsString(arr, 1), "three");
+
+        JsonElementDestroy(arr);
+    }
+
+    {
+        // remove rest
+        JsonElement *arr = JsonArrayCreate(5);
+
+        JsonArrayAppendString(arr, "one");
+        JsonArrayAppendString(arr, "two");
+        JsonArrayAppendString(arr, "three");
+        JsonArrayRemoveRange(arr, 1, 2);
+
+        assert_int_equal(JsonElementLength(arr), 1);
+        assert_string_equal(JsonArrayGetAsString(arr, 0), "one");
+
+        JsonElementDestroy(arr);
+    }
+
+    {
+        // remove but last
+        JsonElement *arr = JsonArrayCreate(5);
+
+        JsonArrayAppendString(arr, "one");
+        JsonArrayAppendString(arr, "two");
+        JsonArrayAppendString(arr, "three");
+        JsonArrayRemoveRange(arr, 0, 1);
+
+        assert_int_equal(JsonElementLength(arr), 1);
+        assert_string_equal(JsonArrayGetAsString(arr, 0), "three");
+
+        JsonElementDestroy(arr);
+    }
+}
+
 int main()
 {
     const UnitTest tests[] =
-{
+    {
         unit_test(test_new_delete),
         unit_test(test_show_string),
         unit_test(test_show_object_simple),
@@ -299,6 +362,7 @@ int main()
         unit_test(test_parse_array_simple),
         unit_test(test_parse_object_compound),
         unit_test(test_parse_array_object),
+        unit_test(test_array_remove_range)
     };
 
     return run_tests(tests);

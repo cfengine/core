@@ -381,6 +381,17 @@ void JsonArrayAppendObject(JsonElement *array, JsonElement *object)
     SequenceAppend(array->container.children, object);
 }
 
+void JsonArrayRemoveRange(JsonElement *array, size_t start, size_t end)
+{
+    assert(array);
+    assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
+    assert(end < array->container.children->length);
+    assert(start <= end);
+
+    SequenceRemoveRange(array->container.children, start, end);
+}
+
 const char *JsonArrayGetAsString(JsonElement *array, size_t index)
 {
     assert(array);

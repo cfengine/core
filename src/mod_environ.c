@@ -84,8 +84,8 @@ BodySyntax CF_DESIGNATION_BODY[] =
 
 BodySyntax CF_ENVIRON_BODIES[] =
 {
-    {"environment_host", cf_str, CF_IPRANGE,
-     "A host for the virtual environment uniquely indicating which physical node will execute this machine"},
+    {"environment_host", cf_str, "[a-zA-Z0-9_]+",
+     "A class indicating which physical node will execute this guest machine"},
     {"environment_interface", cf_body, CF_DESIGNATION_BODY, "Virtual environment outward identity and location"},
     {"environment_resources", cf_body, CF_RESOURCE_BODY, "Virtual environment resource description"},
     {"environment_state", cf_opts, "create,delete,running,suspended,down",

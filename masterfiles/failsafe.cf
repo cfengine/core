@@ -191,7 +191,7 @@ body copy_from u_rcp(from,server)
 {
  source      => "$(from)";
  compare     => "digest";
- trustkey    => "true";
+ trustkey    => "false";
 
 !am_policy_hub::
 

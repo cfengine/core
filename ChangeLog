@@ -52,6 +52,12 @@
 	  For the older systems QDBM, which relies only on C89, is a
 	  better replacement, and deemed to be as portable, as Berkeley DB.
 
+	- Change of lastseen database schema. Should radically decrease
+	  I/O contention on lasteen database.
+
+	  *WARNING*: Currently there is no provision for upgrading
+	  existing lastseen databases. Old entries will be just lost.
+
 	- Automatic reload of policies by cf-execd.
 	- Documentation is generated during build, PDF and HTML files are
 	  retired from repository.

@@ -1,19 +1,18 @@
-/* 
-
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -23,15 +22,9 @@
   included file COSL.txt.
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: crypto.c                                                            */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
 #include "cf3.extern.h"
-#include "dir.h"
+#include "lastseen.h"
 
 static void MD5Random(unsigned char digest[EVP_MAX_MD_SIZE + 1]);
 
@@ -246,7 +239,7 @@ void LoadSecretKeys()
     if (stat(name, &sb) == -1 && stat(guard, &sb) != -1)
         // copy localhost.pub to root-HASH.pub on policy server
     {
-        LastSaw("root", POLICY_SERVER, digest, cf_connect);
+        LastSaw(POLICY_SERVER, digest, cf_connect);
 
         if (!LinkOrCopy(source, name, false))
         {
@@ -262,7 +255,7 @@ RSA *HavePublicKeyByIP(char *username, char *ipaddress)
 {
     char hash[CF_MAXVARSIZE];
 
-    IPString2KeyDigest(ipaddress, hash);
+    Address2Hostkey(ipaddress, hash);
 
     return HavePublicKey(username, ipaddress, hash);
 }
@@ -381,104 +374,6 @@ void SavePublicKey(char *user, char *ipaddress, char *digest, RSA *key)
 
     ThreadUnlock(cft_system);
     fclose(fp);
-}
-
-/*********************************************************************/
-
-/*
- * Returns:
- *  amount of keys removed
- *  -1 if there was an error
- */
-static int RemovePublicKey(const char *id)
-{
-    Dir *dirh = NULL;
-    int removed = 0;
-    char keysdir[CF_BUFSIZE];
-    const struct dirent *dirp;
-    char suffix[CF_BUFSIZE];
-
-    snprintf(keysdir, CF_BUFSIZE, "%s/ppkeys", CFWORKDIR);
-    MapName(keysdir);
-
-    if ((dirh = OpenDirLocal(keysdir)) == NULL)
-    {
-        if (errno == ENOENT)
-        {
-            return 0;
-        }
-        else
-        {
-            CfOut(cf_error, "opendir", "Unable to open keys directory");
-            return -1;
-        }
-    }
-
-    snprintf(suffix, CF_BUFSIZE, "-%s.pub", id);
-
-    while ((dirp = ReadDir(dirh)) != NULL)
-    {
-        char *c = strstr(dirp->d_name, suffix);
-
-        if (c && c[strlen(suffix)] == '\0')     /* dirp->d_name ends with suffix */
-        {
-            char keyfilename[CF_BUFSIZE];
-
-            snprintf(keyfilename, CF_BUFSIZE, "%s/%s", keysdir, dirp->d_name);
-            MapName(keyfilename);
-
-            if (unlink(keyfilename) < 0)
-            {
-                if (errno != ENOENT)
-                {
-                    CfOut(cf_error, "unlink", "Unable to remove key file %s", dirp->d_name);
-                    CloseDir(dirh);
-                    return -1;
-                }
-            }
-            else
-            {
-                removed++;
-            }
-        }
-    }
-
-    if (errno)
-    {
-        CfOut(cf_error, "ReadDir", "Unable to enumerate files in keys directory");
-        CloseDir(dirh);
-        return -1;
-    }
-
-    CloseDir(dirh);
-    return removed;
-}
-
-/*********************************************************************/
-
-/*
- * Returns number of keys removed, -1 in case of error
- */
-int RemovePublicKeys(const char *hostname)
-{
-    char ip[CF_BUFSIZE];
-    char digest[CF_BUFSIZE];
-    int removed_by_digest, removed_by_ip;
-
-    strcpy(ip, Hostname2IPString(hostname));
-    IPString2KeyDigest(ip, digest);
-
-    removed_by_digest = RemovePublicKey(digest);
-    removed_by_ip = RemovePublicKey(ip);
-
-    if (removed_by_digest >= 0 && removed_by_ip >= 0)
-    {
-        return removed_by_digest + removed_by_ip;
-    }
-    else
-    {
-        return -1;
-    }
 }
 
 /*********************************************************************/

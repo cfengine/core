@@ -49,7 +49,6 @@ static void GenerateManual(void);
 #ifdef HAVE_CONSTELLATION
 static void CfGenerateStories(char *query, enum storytype type);
 #endif
-static void VerifyOccurrenceGroup(char *file, Promise *pp);
 static void CfGenerateTestData(int count);
 static void CfRemoveTestData(void);
 static void CfUpdateTestData(void);
@@ -64,7 +63,7 @@ static Topic *AddTopic(Topic **list, char *name, char *type);
 static void AddTopicAssociation(Topic *tp, TopicAssociation **list, char *fwd_name, char *bwd_name, Rlist *li, int ok,
                                 char *from_context, char *from_topic);
 static void AddOccurrence(Occurrence **list, char *reference, Rlist *represents, enum representations rtype,
-                          char *context);
+                          Rlist *add_topics, char *context);
 static Topic *TopicExists(char *topic_name, char *topic_type);
 static TopicAssociation *AssociationExists(TopicAssociation *list, char *fwd, char *bwd);
 static Occurrence *OccurrenceExists(Occurrence *list, char *locator, enum representations repy_type, char *s);
@@ -112,6 +111,7 @@ int GENERATE_XML = false;
 static char *OUTPUT_FILE;
 char MANDIR[CF_BUFSIZE];
 char STORY[CF_BUFSIZE];
+char FINDTOPIC[CF_BUFSIZE];
 
 Occurrence *OCCURRENCES = NULL;
 Inference *INFERENCES = NULL;
@@ -137,6 +137,7 @@ static const struct option OPTIONS[] =
     {"version", no_argument, 0, 'V'},
     {"file", required_argument, 0, 'f'},
     {"inform", no_argument, 0, 'I'},
+    {"lookup", required_argument, 0, 'l'},
     {"manual", no_argument, 0, 'm'},
     {"manpage", no_argument, 0, 'M'},
     {"tell-me-about", required_argument, 0, 'z'},
@@ -159,6 +160,7 @@ static const char *HINTS[] =
     "Output the version of the software",
     "Specify an alternative input file than the default",
     "Print basic information about changes made to the system, i.e. promises repaired",
+    "Print JSON output about a possibly qualified context::topic",
     "Generate reference manual from internal data",
     "Generate reference manpage from internal data",
     "Look up stories for a given topic on the command line (use \"any\" to list possible)",
@@ -202,11 +204,20 @@ int main(int argc, char *argv[])
           printf("Now looking for stories about connections between things:\n\n");
           CfGenerateStories(TOPIC_CMD, cfi_connect);
           printf("Anything about structure:\n\n");
-                CfGenerateStories(TOPIC_CMD, cfi_part);
+          CfGenerateStories(TOPIC_CMD, cfi_part);
        }
 #endif
-            exit(0);
+       exit(0);
             
+    }
+    else if (strlen(FINDTOPIC) > 0)
+    {
+#ifdef HAVE_NOVA
+# ifdef HAVE_LIBMONGOC
+         Nova_ShowTopic(FINDTOPIC);
+# endif
+         exit(0);
+#endif    
     }
     
     if (GENERATE_XML)
@@ -248,7 +259,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
 
     LOOKUP = false;
 
-    while ((c = getopt_long(argc, argv, "Ihbd:vVf:mxMz:St:ruT", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "Ihbd:vVf:mxMz:St:ruTl:", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -278,6 +289,13 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
                }
             break;
 
+        case 'l':
+            if (optarg)
+               {
+               strncpy(FINDTOPIC,optarg,CF_BUFSIZE-1);
+               }
+            break;
+            
         case 'b':
             WRITE_KMDB = true;
             break;
@@ -364,16 +382,6 @@ static void ThisAgentInit(void)
     strcpy(LICENSE_COMPANY, "");
     strcpy(MANDIR, ".");
     SHOWREPORTS = false;
-
-    if (InsertTopic("any", "any"))
-    {
-        Rlist *list = NULL;
-
-        PrependRScalar(&list, "Description", CF_SCALAR);
-        AddOccurrence(&OCCURRENCES, "The generic knowledge context - any time, any place, anywhere", list, cfk_literal,
-                      "any");
-        DeleteRlist(list);
-    }
 }
 
 /*****************************************************************************/
@@ -861,27 +869,31 @@ static void VerifyThingsPromise(Promise *pp)
 
         if (pp->ref)
         {
-            Rlist *list = NULL;
+        Rlist *list = NULL, *topics = NULL;
 
-            snprintf(id, CF_MAXVARSIZE, "%s.%s", pp->classes, CanonifyName(pp->promiser));
-            PrependRScalar(&list, "description", CF_SCALAR);
-            AddOccurrence(&OCCURRENCES, pp->ref, list, cfk_literal, id);
+            snprintf(id, CF_MAXVARSIZE-1, "promisers::%s", pp->promiser);
+            PrependRScalar(&list, "Comment", CF_SCALAR);
+            PrependRScalar(&topics, id, CF_SCALAR);
+            AddOccurrence(&OCCURRENCES, pp->ref, list, cfk_literal, topics, pp->classes);
             DeleteRlist(list);
+            DeleteRlist(topics);
         }
 
         if (handle)
         {
-            Rlist *list = NULL;
+        Rlist *list = NULL, *topics = NULL;
 
             PrependRScalar(&list, handle, CF_SCALAR);
             AddTopicAssociation(tp, &(tp->associations), "is the promise of", "stands for", list, true, rp->item,
                                 pp->promiser);
             DeleteRlist(list);
             list = NULL;
-            snprintf(id, CF_MAXVARSIZE, "%s.%s", pp->classes, handle);
-            PrependRScalar(&list, "description", CF_SCALAR);
-            AddOccurrence(&OCCURRENCES, pp->ref, list, cfk_literal, id);
+            snprintf(id, CF_MAXVARSIZE, "handles::%s", handle);
+            PrependRScalar(&list, "promise handle", CF_SCALAR);
+            PrependRScalar(&topics, id, CF_SCALAR);
+            AddOccurrence(&OCCURRENCES, pp->ref, list, cfk_literal,  topics, pp->classes);
             DeleteRlist(list);
+            DeleteRlist(topics);
         }
     }
 
@@ -962,29 +974,33 @@ static void VerifyTopicPromise(Promise *pp)
 
         if (pp->ref)
         {
-            Rlist *list = NULL;
+        Rlist *list = NULL, *topics = NULL;
 
-            snprintf(id, CF_MAXVARSIZE, "%s.%s", pp->classes, CanonifyName(pp->promiser));
-            PrependRScalar(&list, "description", CF_SCALAR);
-            AddOccurrence(&OCCURRENCES, pp->ref, list, cfk_literal, id);
+            snprintf(id, CF_MAXVARSIZE-1, "promisers::%s", pp->promiser);
+            PrependRScalar(&list, "Comment", CF_SCALAR);
+            PrependRScalar(&topics, id, CF_SCALAR);
+            AddOccurrence(&OCCURRENCES, pp->ref, list, cfk_literal, topics, pp->classes);
             DeleteRlist(list);
+            DeleteRlist(topics);
         }
 
         if (handle)
         {
-            Rlist *list = NULL;
+        Rlist *list = NULL, *topics = NULL;
 
             PrependRScalar(&list, handle, CF_SCALAR);
             AddTopicAssociation(tp, &(tp->associations), "is the promise of", "stands for", list, true, rp->item,
                                 pp->promiser);
             DeleteRlist(list);
             list = NULL;
-            snprintf(id, CF_MAXVARSIZE, "%s.%s", pp->classes, handle);
-            PrependRScalar(&list, "description", CF_SCALAR);
-            AddOccurrence(&OCCURRENCES, pp->ref, list, cfk_literal, id);
+            snprintf(id, CF_MAXVARSIZE, "handles::%s", handle);
+            PrependRScalar(&list, "promise handle", CF_SCALAR);
+            PrependRScalar(&topics, id, CF_SCALAR);
+            AddOccurrence(&OCCURRENCES, pp->ref, list, cfk_literal, topics, pp->classes);
             DeleteRlist(list);
+            DeleteRlist(topics);
         }
-    }
+   }
 
     DeleteRlist(contexts);
 }
@@ -994,7 +1010,6 @@ static void VerifyTopicPromise(Promise *pp)
 static void VerifyOccurrencePromises(Promise *pp)
 {
     Attributes a = { {0} };
-    char name[CF_BUFSIZE];
     enum representations rep_type;
     Rlist *contexts, *rp;
 
@@ -1034,30 +1049,9 @@ static void VerifyOccurrencePromises(Promise *pp)
 
         switch (rep_type)
         {
-        case cfk_file:
-
-            if (a.web_root == NULL || a.path_root == NULL)
-            {
-                CfOut(cf_error, "", " !! File pattern but no complete url mapping path_root -> web_root");
-                return;
-            }
-
-            strncpy(name, a.path_root, CF_BUFSIZE - 1);
-
-            if (!JoinPath(name, pp->promiser))
-            {
-                CfOut(cf_error, "", " !! Unable to form pathname in search for local files");
-                return;
-            }
-
-            // FIXME - this should pass rp->item instead of pp->classes if we want to keep this
-
-            LocateFilePromiserGroup(name, pp, VerifyOccurrenceGroup);
-            break;
-
         default:
 
-            AddOccurrence(&OCCURRENCES, pp->promiser, a.represents, rep_type, rp->item);
+            AddOccurrence(&OCCURRENCES, pp->promiser, a.represents, rep_type, a.about_topics, rp->item);
             break;
         }
     }
@@ -1106,53 +1100,6 @@ static void GenerateXml(void)
         }
         XmlManual(MANDIR, out);
     }
-}
-
-/*********************************************************************/
-
-static void VerifyOccurrenceGroup(char *file, Promise *pp)
-{
-    Attributes a = { {0} };
-    struct stat sb;
-    char *sp, url[CF_BUFSIZE];
-    Rval retval;
-
-    a = GetOccurrenceAttributes(pp);
-
-    if (cfstat(file, &sb) == -1)
-    {
-        CfOut(cf_verbose, "", " !! File %s matched but could not be read", file);
-        return;
-    }
-
-    if (a.path_root == NULL || a.web_root == NULL)
-    {
-        CfOut(cf_error, "", " !! No pathroot/webroot defined in representation");
-        PromiseRef(cf_error, pp);
-        return;
-    }
-
-    Chop(a.path_root);
-    DeleteSlash(a.path_root);
-    sp = file + strlen(a.path_root) + 1;
-
-    FullTextMatch(pp->promiser, sp);
-    retval = ExpandPrivateRval("this", (Rval) {a.represents, CF_LIST});
-    DeleteScope("match");
-
-    if (strlen(a.web_root) > 0)
-    {
-        snprintf(url, CF_BUFSIZE - 1, "%s/%s", a.web_root, sp);
-    }
-    else
-    {
-        snprintf(url, CF_BUFSIZE - 1, "%s", sp);
-    }
-
-    AddOccurrence(&OCCURRENCES, url, retval.item, cfk_url, pp->classes);
-    CfOut(cf_verbose, "", " -> File %s matched and being logged at %s", file, url);
-
-    DeleteRlist((Rlist *) retval.item);
 }
 
 /*****************************************************************************/
@@ -1208,23 +1155,6 @@ static Topic *AddTopic(Topic **list, char *name, char *context)
         tp->next = *list;
         *list = tp;
         CF_TOPICS++;
-
-        // This section must come last, as there is possible recursion and memory ref needs to be complete first
-
-        if (strcmp(tp->topic_context, "any") != 0)
-        {
-            // Every topic in a special context is generalized by itself in context "any"
-
-            char gen[CF_BUFSIZE];
-            Rlist *rlist = 0;
-
-            snprintf(gen, CF_BUFSIZE - 1, "any::%s", tp->topic_name);
-            PrependRScalar(&rlist, gen, CF_SCALAR);
-            AddTopicAssociation(tp, &(tp->associations), KM_GENERALIZES_B, KM_GENERALIZES_F, rlist, true,
-                                tp->topic_context, tp->topic_name);
-            DeleteRlist(rlist);
-        }
-
     }
 
     return tp;
@@ -1350,7 +1280,7 @@ static void AddTopicAssociation(Topic *this_tp, TopicAssociation **list, char *f
 /*****************************************************************************/
 
 static void AddOccurrence(Occurrence **list, char *reference, Rlist *represents, enum representations rtype,
-                          char *context)
+                          Rlist *about_topics, char *context)
 {
     Occurrence *op = NULL;
     Rlist *rp;
@@ -1372,15 +1302,19 @@ static void AddOccurrence(Occurrence **list, char *reference, Rlist *represents,
 
     if (represents == NULL)
     {
-        CfOut(cf_error, "", " !! Topic occurrence \"%s\" claims to represent no aspect of its topic, discarding...",
-              reference);
-        return;
+        IdempPrependRScalar(&(op->represents), "Unspecified document", CF_SCALAR);
     }
 
     for (rp = represents; rp != NULL; rp = rp->next)
     {
         IdempPrependRScalar(&(op->represents), rp->item, rp->type);
     }
+
+    for (rp = about_topics; rp != NULL; rp = rp->next)
+    {
+        IdempPrependRScalar(&(op->about_topics), ToLowerStr(rp->item), rp->type);
+    }
+
 }
 
 /*********************************************************************/

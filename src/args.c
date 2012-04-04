@@ -84,7 +84,6 @@ int MapBodyArgs(char *scopeid, Rlist *give, Rlist *take)
         switch (rpg->type)
         {
         case CF_SCALAR:
-
             lval = (char *) rpt->item;
             rval = rpg->item;
             CfDebug("MapBodyArgs(SCALAR,%s,%s)\n", lval, (char *) rval);
@@ -92,7 +91,6 @@ int MapBodyArgs(char *scopeid, Rlist *give, Rlist *take)
             break;
 
         case CF_LIST:
-
             lval = (char *) rpt->item;
             rval = rpg->item;
             AddVariableHash(scopeid, lval, (Rval) {rval, CF_LIST}, dtg, NULL, 0);
@@ -101,7 +99,6 @@ int MapBodyArgs(char *scopeid, Rlist *give, Rlist *take)
         case CF_FNCALL:
             fp = (FnCall *) rpg->item;
             dtg = FunctionReturnType(fp->name);
-
             FnCallResult res = EvaluateFunctionCall(fp, NULL);
 
             if (res.status == FNCALL_FAILURE && THIS_AGENT_TYPE != cf_common)

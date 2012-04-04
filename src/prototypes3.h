@@ -147,7 +147,7 @@ void DePort(char *address);
 int IsIPV6Address(char *name);
 int IsIPV4Address(char *name);
 const char *Hostname2IPString(const char *hostname);
-char *IPString2Hostname(char *ipaddress);
+char *IPString2Hostname(const char *ipaddress);
 int GetMyHostInfo(char nameBuf[MAXHOSTNAMELEN], char ipBuf[MAXIP4CHARLEN]);
 
 /* comparray.c */
@@ -165,7 +165,6 @@ char *EscapeJson(char *s, char *out, int outSz);
 char *EscapeRegex(char *s, char *out, int outSz);
 char *EscapeQuotes(const char *s, char *out, int outSz);
 char *MapAddress(char *addr);
-void IPString2KeyDigest(char *ipv4, char *result);
 enum cfhypervisors Str2Hypervisors(char *s);
 enum cfenvironment_state Str2EnvState(char *s);
 enum insert_match String2InsertMatch(char *s);
@@ -238,7 +237,6 @@ int IsTCPType(char *s);
 
 /* enterprise_stubs.c */
 
-void WebCache(char *s, char *t);
 void EnterpriseModuleTrick(void);
 void VerifyRegistryPromise(Attributes a, Promise *pp);
 int CfSessionKeySize(char c);
@@ -681,7 +679,7 @@ Item *DeleteRegion(Item **liststart, Item *begin, Item *end);
 
 Rlist *NewIterationContext(char *scopeid, Rlist *listvars);
 void DeleteIterationContext(Rlist *lol);
-int IncrementIterationContext(Rlist *iterators, int count);
+int IncrementIterationContext(Rlist *iterators);
 int EndOfIteration(Rlist *iterator);
 int NullIterators(Rlist *iterator);
 
@@ -691,11 +689,6 @@ struct timespec BeginMeasure(void);
 void EndMeasure(char *eventname, struct timespec start);
 void EndMeasurePromise(struct timespec start, Promise *pp);
 void NoteClassUsage(AlphaList list, int purge);
-void LastSaw(char *username, char *ipaddress, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum roles role);
-double GAverage(double anew, double aold, double p);
-QPoint QAverage(QPoint old_value, double new_value, double p);
-QPoint QDefinite(double value);
-bool RemoveHostFromLastSeen(const char *hostname, char *hostkey);
 
 /* install.c */
 

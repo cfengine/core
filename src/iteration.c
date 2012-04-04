@@ -118,9 +118,7 @@ void DeleteIterationContext(Rlist *deref)
     }
 }
 
-/*****************************************************************************/
-
-int IncrementIterationContext(Rlist *iterator, int level)
+static int IncrementIterationContextInternal(Rlist *iterator, int level)
 {
     Rlist *state;
     CfAssoc *cp;
@@ -153,7 +151,7 @@ int IncrementIterationContext(Rlist *iterator, int level)
         {
             /* Increment next wheel */
 
-            if (IncrementIterationContext(iterator->next, level + 1))
+            if (IncrementIterationContextInternal(iterator->next, level + 1))
             {
                 /* Not at end yet, so reset this wheel */
                 iterator->state_ptr = cp->rval.item;
@@ -181,7 +179,7 @@ int IncrementIterationContext(Rlist *iterator, int level)
 
         while (iterator->state_ptr && strcmp(iterator->state_ptr->item, CF_NULL_VALUE) == 0)
         {
-            if (IncrementIterationContext(iterator->next, level + 1))
+            if (IncrementIterationContextInternal(iterator->next, level + 1))
             {
                 /* Not at end yet, so reset this wheel (next because we always start with cf_null now) */
                 iterator->state_ptr = cp->rval.item;
@@ -202,6 +200,11 @@ int IncrementIterationContext(Rlist *iterator, int level)
 
         return true;
     }
+}
+
+int IncrementIterationContext(Rlist *iterator)
+{
+    return IncrementIterationContextInternal(iterator, 1);
 }
 
 /*****************************************************************************/

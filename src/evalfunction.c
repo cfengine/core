@@ -32,6 +32,7 @@
 #include "cf3.extern.h"
 #include "dir.h"
 #include "dbm_api.h"
+#include "lastseen.h"
 
 #include <libgen.h>
 
@@ -212,6 +213,15 @@ static FnCallResult FnCallHostsSeen(FnCall *fp, Rlist *finalargs)
 
     while (NextDB(dbp, dbcp, &key, &ksize, &value, &vsize))
     {
+        /* Only look for a "connection quality" entries */
+
+        if (key[0] != 'q')
+        {
+            continue;
+        }
+
+        char *hostkey = key + 2;
+
         if (value != NULL)
         {
             KeyHostSeen entry;
@@ -223,7 +233,16 @@ static FnCallResult FnCallHostsSeen(FnCall *fp, Rlist *finalargs)
 
             memcpy(&entry, value, sizeof(entry));
             snprintf(entrytimeChr, sizeof(entrytimeChr), "%.4lf", entry.Q.q);
-            PrependItem(&addresses, entry.address, entrytimeChr);
+
+            /* Resolve hostkey into adress */
+
+            char hostkey_key[CF_BUFSIZE];
+            snprintf(hostkey_key, CF_BUFSIZE, "k%s", hostkey);
+
+            char address[CF_BUFSIZE];
+            ReadDB(dbp, hostkey_key, address, sizeof(address));
+
+            PrependItem(&addresses, address, entrytimeChr);
         }
     }
 
@@ -1003,16 +1022,19 @@ static FnCallResult FnCallRegList(FnCall *fp, Rlist *finalargs)
 
     list = (Rlist *) retval.item;
 
+    strcpy(buffer, "!any");
+
     for (rp = list; rp != NULL; rp = rp->next)
     {
+        if (strcmp(rp->item, CF_NULL_VALUE) == 0)
+        {
+            continue;
+        }
+
         if (FullTextMatch(regex, rp->item))
         {
             strcpy(buffer, "any");
             break;
-        }
-        else
-        {
-            strcpy(buffer, "!any");
         }
     }
 
@@ -2881,9 +2903,7 @@ static FnCallResult FnCallIRange(FnCall *fp, Rlist *finalargs)
 
     if (from == CF_NOINT || to == CF_NOINT)
     {
-        return (FnCallResult)
-        {
-        FNCALL_FAILURE};
+        return (FnCallResult) { FNCALL_FAILURE };
     }
 
     if (from == CF_NOINT || to == CF_NOINT)
@@ -3776,9 +3796,7 @@ static FnCallResult FnCallUserExists(FnCall *fp, Rlist *finalargs)
 
         if (uid == CF_SAME_OWNER || uid == CF_UNKNOWN_OWNER)
         {
-            return (FnCallResult)
-            {
-            FNCALL_FAILURE};
+            return (FnCallResult){FNCALL_FAILURE};
         }
 
         if ((pw = getpwuid(uid)) == NULL)

@@ -132,12 +132,6 @@ void RemoteSysLog(int log_priority, const char *log_string)
 
 /*****************************************************************************/
 
-void WebCache(char *s, char *t)
-{
-}
-
-/*****************************************************************************/
-
 const char *PromiseID(Promise *pp)
 {
     return "";

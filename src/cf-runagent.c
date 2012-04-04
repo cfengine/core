@@ -31,6 +31,7 @@
 
 #include "generic_agent.h"
 #include "cf3.extern.h"
+#include "lastseen.h"
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);
@@ -357,7 +358,7 @@ static int HailServer(char *host, Attributes a, Promise *pp)
     a.copy.portnumber = (short) ParseHostname(host, peer);
 
     snprintf(ipv4, CF_MAXVARSIZE, "%s", Hostname2IPString(peer));
-    IPString2KeyDigest(ipv4, digest);
+    Address2Hostkey(ipv4, digest);
     GetCurrentUserName(user, CF_SMALLBUF);
 
     if (INTERACTIVE)

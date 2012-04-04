@@ -34,8 +34,6 @@
 
 #include "dbm_api.h"
 
-static void FriendStatus(Attributes a, Promise *pp);
-static void VerifyFriendConnections(int hours, Attributes a, Promise *pp);
 static void ShowState(char *type, Attributes a, Promise *pp);
 static void PrintFile(Attributes a, Promise *pp);
 
@@ -94,7 +92,7 @@ void VerifyReportPromise(Promise *pp)
 
     if (a.report.havelastseen)
     {
-        FriendStatus(a, pp);
+        /* Do nothing. Deprecated. */
     }
 
     YieldCurrentLock(thislock);
@@ -341,161 +339,4 @@ static void ShowState(char *type, Attributes a, Promise *pp)
     {
         free((char *) dist);
     }
-}
-
-/*********************************************************************/
-
-static void FriendStatus(Attributes a, Promise *pp)
-{
-    VerifyFriendConnections(a.report.lastseen, a, pp);
-}
-
-/*********************************************************************/
-/* Level                                                             */
-/*********************************************************************/
-
-static void VerifyFriendConnections(int hours, Attributes a, Promise *pp)
-/* Go through the database of recent connections and check for
-   Long Time No See ...*/
-{
-    CF_DB *dbp;
-    CF_DBC *dbcp;
-    char *key;
-    void *value;
-    int ksize, vsize;
-    int secs = SECONDS_PER_HOUR * hours, criterion, overdue;
-    time_t now = time(NULL), lsea = (time_t) SECONDS_PER_WEEK, tthen, then;
-    char hostname[CF_BUFSIZE], datebuf[CF_MAXVARSIZE];
-    char addr[CF_BUFSIZE], type[CF_BUFSIZE], output[CF_BUFSIZE];
-    QPoint entry;
-    double average = 0.0, var = 0.0, ticksperminute = 60.0;
-    double ticksperhour = (double) SECONDS_PER_HOUR;
-
-    CfOut(cf_verbose, "", "CheckFriendConnections(%d)\n", hours);
-
-    if (!OpenDB(&dbp, dbid_lastseen))
-    {
-        return;
-    }
-
-/* Acquire a cursor for the database. */
-
-    if (!NewDBCursor(dbp, &dbcp))
-    {
-        CfOut(cf_inform, "", " !! Unable to scan friend db");
-        return;
-    }
-
-    /* Walk through the database and print out the key/data pairs. */
-
-    while (NextDB(dbp, dbcp, &key, &ksize, &value, &vsize))
-    {
-        memset(&entry, 0, sizeof(entry));
-
-        strncpy(hostname, (char *) key, ksize);
-
-        if (value != NULL)
-        {
-            memcpy(&entry, value, sizeof(entry));
-            then = (time_t) entry.q;
-            average = (double) entry.expect;
-            var = (double) entry.var;
-        }
-        else
-        {
-            continue;
-        }
-
-        if (then == 0)
-        {
-            continue;           // No data
-        }
-
-        /* Got data, now get expiry criterion */
-
-        if (secs == 0)
-        {
-            /* Twice the average delta is significant */
-            criterion = (now - then > (int) (average + 2.0 * sqrt(var) + 0.5));
-            overdue = now - then - (int) (average);
-        }
-        else
-        {
-            criterion = (now - then > secs);
-            overdue = (now - then - secs);
-        }
-
-        if (LASTSEENEXPIREAFTER < 0)
-        {
-            lsea = (time_t) SECONDS_PER_WEEK;
-        }
-        else
-        {
-            lsea = LASTSEENEXPIREAFTER;
-        }
-
-        if (a.report.friend_pattern)
-        {
-            if (FullTextMatch(a.report.friend_pattern, IPString2Hostname(hostname + 1)))
-            {
-                CfOut(cf_verbose, "", "Not judging friend %s\n", hostname);
-                criterion = false;
-                lsea = CF_INFINITY;
-            }
-        }
-
-        tthen = (time_t) then;
-
-        snprintf(datebuf, CF_MAXVARSIZE - 1, "%s", cf_ctime(&tthen));
-        datebuf[strlen(datebuf) - 9] = '\0';    /* Chop off second and year */
-
-        snprintf(addr, 15, "%s", hostname + 1);
-
-        switch (*hostname)
-        {
-        case LAST_SEEN_DIRECTION_OUTGOING:
-            snprintf(type, CF_BUFSIZE, "last responded to hails");
-            break;
-        case LAST_SEEN_DIRECTION_INCOMING:
-            snprintf(type, CF_BUFSIZE, "last hailed us");
-            break;
-        }
-
-        snprintf(output, CF_BUFSIZE, "Host %s i.e. %s %s @ [%s] (overdue by %d mins)",
-                 IPString2Hostname(hostname + 1), addr, type, datebuf, overdue / (int) ticksperminute);
-
-        if (criterion)
-        {
-            CfOut(cf_error, "", "%s", output);
-        }
-        else
-        {
-            CfOut(cf_verbose, "", "%s", output);
-        }
-
-        snprintf(output, CF_BUFSIZE, "i.e. (%.2f) hrs ago, Av %.2f +/- %.2f hrs\n",
-                 ((double) (now - then)) / ticksperhour, average / ticksperhour, sqrt(var) / ticksperhour);
-
-        if (criterion)
-        {
-            CfOut(cf_error, "", "%s", output);
-        }
-        else
-        {
-            CfOut(cf_verbose, "", "%s", output);
-        }
-
-        if (now - then > lsea)
-        {
-            CfOut(cf_error, "", "Giving up on host %s -- %d hours since last seen", IPString2Hostname(hostname + 1),
-                  hours);
-            DBCursorDeleteEntry(dbcp);
-        }
-
-        memset(&value, 0, sizeof(value));
-        memset(&key, 0, sizeof(key));
-    }
-
-    DeleteDBCursor(dbp, dbcp);
-    CloseDB(dbp);
 }

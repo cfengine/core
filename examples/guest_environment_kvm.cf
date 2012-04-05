@@ -1,0 +1,53 @@
+#
+# Management of KVM/QEMU virtual machines
+# Assumes you already have a disk image (with an OS installed) for the machine on creation
+#
+
+
+body common control
+{
+bundlesequence => { "kvm_run" };
+inputs => { "cfengine_stdlib.cf" };
+}
+
+
+bundle agent kvm_create 
+{
+
+guest_environments:
+ "my_host_machine"
+   environment_resources => kvm("my_host_machine", "x86_64", "1", "1048576", "/var/lib/libvirt/images/ubuntu104-64-clone.img"),
+   environment_type      => "kvm",
+   environment_state     => "create",
+   environment_host      => "ubuntu";
+}
+
+
+bundle agent kvm_suspend
+{
+guest_environments:
+ "my_host_machine"
+   environment_type      => "kvm",
+   environment_state     => "suspended",
+   environment_host      => "ubuntu";
+}
+
+
+bundle agent kvm_run
+{
+guest_environments:
+ "my_host_machine"
+   environment_type      => "kvm",
+   environment_state     => "running",
+   environment_host      => "ubuntu";
+}
+
+
+bundle agent kvm_delete
+{
+guest_environments:
+ "my_host_machine"
+   environment_type      => "kvm",
+   environment_state     => "delete",
+   environment_host      => "ubuntu";
+}

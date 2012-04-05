@@ -1,19 +1,9 @@
 
 
 @verbatim
-
-body environment_resources virt_xml
-{
-env_spec_file => "/srv/xen/centos5-libvirt-create.xml";
-}
-
-@end verbatim
-@noindent You may also quote the file as XML:
-
-@verbatim
 body environment_resources virt_xml(host)
 {
-env_spec_file => 
+env_spec => 
 
 "<domain type='xen'>
   <name>$(host)</name>

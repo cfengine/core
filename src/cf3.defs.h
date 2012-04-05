@@ -1713,7 +1713,7 @@ typedef struct
     int memory;
     int disk;
     char *baseline;
-    char *specfile;
+    char *spec;
     Rlist *addresses;
     char *name;
     char *host;

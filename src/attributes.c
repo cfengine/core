@@ -690,7 +690,7 @@ Environments GetEnvironmentsConstraints(Promise *pp)
     e.memory = GetIntConstraint("env_memory", pp);
     e.disk = GetIntConstraint("env_disk", pp);
     e.baseline = GetConstraintValue("env_baseline", pp, CF_SCALAR);
-    e.specfile = GetConstraintValue("env_spec_file", pp, CF_SCALAR);
+    e.spec = GetConstraintValue("env_spec", pp, CF_SCALAR);
     e.host = GetConstraintValue("environment_host", pp, CF_SCALAR);
 
     e.addresses = GetListConstraint("env_addresses", pp);

@@ -4426,7 +4426,7 @@ FnCallArg GETUID_ARGS[] =
 FnCallArg GREP_ARGS[] =
 {
     {CF_ANYSTRING, cf_str, "Regular expression"},
-    {CF_IDRANGE, cf_str, "Cfengine array identifier"},
+    {CF_IDRANGE, cf_str, "CFEngine list identifier"},
     {NULL, cf_notype, NULL}
 };
 
@@ -4527,7 +4527,7 @@ FnCallArg ISVARIABLE_ARGS[] =
 FnCallArg JOIN_ARGS[] =
 {
     {CF_ANYSTRING, cf_str, "Join glue-string"},
-    {CF_IDRANGE, cf_str, "Cfengine array identifier"},
+    {CF_IDRANGE, cf_str, "CFEngine list identifier"},
     {NULL, cf_notype, NULL}
 };
 

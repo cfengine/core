@@ -1,0 +1,59 @@
+body common control
+{
+bundlesequence => { "service_catalogue" };
+}
+
+
+bundle agent service_catalogue
+{
+services:
+  "syslog"  service_policy => "start";
+  "www"     service_policy => "stop";
+}
+
+
+
+bundle agent standard_services(service, state)
+{
+vars:
+
+ debian::
+
+  "startcommand[www]"     string => "/etc/init.d/apache2 start";
+  "stopcommand[www]"      string => "/etc/init.d/apache2 stop";
+  "processname[www]"      string => "apache2";
+
+  "startcommand[syslog]"  string => "/etc/init.d/rsyslog start";
+  "stopcommand[syslog]"   string => "/etc/init.d/rsyslog stop";
+  "processname[syslog]"   string => "rsyslogd";
+
+
+classes:
+
+  "start" expression => strcmp("start","$(state)");
+  "stop"  expression => strcmp("stop","$(state)");
+
+processes:
+
+  start::
+
+    ".*$(processname[$(service)]).*"
+
+             comment => "Verify that the service appears in the process table",
+       restart_class => "restart_$(service)";
+
+  stop::
+
+    ".*$(processname[$(service)]).*"
+
+            comment => "Verify that the service does not appear in the process table",
+       process_stop => "$(stopcommand[$(service)])",
+            signals => { "term", "kill"};
+
+  commands:
+
+   "$(startcommand[$(service)])"
+
+            comment => "Execute command to restart the $(service) service",
+         ifvarclass => "restart_$(service)";
+}

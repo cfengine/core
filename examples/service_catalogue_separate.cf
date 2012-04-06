@@ -1,0 +1,35 @@
+body common control
+{
+bundlesequence => { "service_catalogue_separate" };
+}
+
+
+bundle agent service_catalogue_separate
+{
+services:
+  "foo" service_policy => "start",
+        service_method => service_bundle_separate;
+
+  "bar" service_policy => "stop",
+        service_method => service_bundle_separate;
+}
+
+body service_method service_bundle_separate
+{
+service_bundle => $(this.promiser)("$(this.service_policy)");
+}
+
+
+bundle agent foo(service_policy)
+{
+reports:
+cfengine_3::
+ "we need to ensure $(service_policy) of foo";
+}
+
+bundle agent bar(service_policy)
+{
+reports:
+cfengine_3::
+ "we need to ensure $(service_policy) of bar";
+}

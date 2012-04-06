@@ -540,7 +540,7 @@ void VerifyWindowsService(Attributes a, Promise *pp)
 
 /*****************************************************************************/
 
-bool CFDB_HostsWithClass(Rlist *return_list, char *class_name, char *return_format)
+bool CFDB_HostsWithClass(Rlist **return_list, char *class_name, char *return_format)
 {
     CfOut(cf_error, "", "!! Host class counting is only available in CFEngine Nova");
     

@@ -25,6 +25,8 @@
 #include "cf3.defs.h"
 #include "statistics.h"
 
+/**********************************************************************/
+
 double GAverage(double anew, double aold, double p)
 /* return convex mixture - p is the trust/confidence in the new value */
 {
@@ -35,6 +37,9 @@ double GAverage(double anew, double aold, double p)
  * expected(Q) = p*Q_new + (1-p)*expected(Q)
  * variance(Q) = p*(Q_new - expected(Q))^2 + (1-p)*variance(Q)
  */
+
+/**********************************************************************/
+
 QPoint QAverage(QPoint old, double new_q, double p)
 {
     QPoint new = {
@@ -43,12 +48,14 @@ QPoint QAverage(QPoint old, double new_q, double p)
 
     double devsquare = (new.q - old.expect) * (new.q - old.expect);
 
-    new.dq = fabs(new.q - old.q);
+    new.dq = new.q - old.q;
     new.expect = GAverage(new.q, old.expect, p);
     new.var = GAverage(devsquare, old.var, p);
 
     return new;
 }
+
+/**********************************************************************/
 
 QPoint QDefinite(double q)
 {

@@ -38,6 +38,10 @@
 #include "dbm_priv.h"
 #include "dbm_lib.h"
 
+/* FIXME: turn into a generic "on-open" hook for databases. */
+bool LastseenMigration(DBHandle *db);
+/* ENDFIXME */
+
 /******************************************************************************/
 
 struct DBHandle_
@@ -146,6 +150,17 @@ bool OpenDB(DBHandle **dbp, dbid id)
             handle->priv = DBPrivOpenDB(handle->filename);
             DBPathUnLock(lock_fd);
         }
+
+        /* FIXME: turn into a generic "on-open" hook for databases. */
+        if (handle->priv && id == dbid_lastseen)
+        {
+            if (!LastseenMigration(handle))
+            {
+                DBPrivCloseDB(handle->priv);
+                handle->priv = NULL;
+            }
+        }
+        /* ENDFIXME */
     }
 
     if (handle->priv)

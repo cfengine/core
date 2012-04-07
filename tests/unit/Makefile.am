@@ -6,6 +6,12 @@ check_LTLIBRARIES = libtest.la
 libtest_la_SOURCES = cmockery.c cmockery.h test.c test.h ../../src/alloc.c
 libtest_la_LIBADD = ../../pub/libcfpub.la
 
+check_LTLIBRARIES += libdb.la
+libdb_la_SOURCES = ../../src/dbm_api.c ../../src/dbm_quick.c ../../src/dbm_tokyocab.c ../../src/dbm_lib.c ../../src/patches.c
+# FIXME: See the "FIXME" comment in src/dbm_api.c
+libdb_la_SOURCES += ../../src/lastseen_migration.c
+libdb_la_LIBADD = libtest.la
+
 check_PROGRAMS = \
 	alphalist_test \
 	arg_split_test \
@@ -25,7 +31,8 @@ check_PROGRAMS = \
 	xml_writer_test \
 	sequence_test \
 	db_test \
-	lastseen_test
+	lastseen_test \
+	lastseen_migration_test
 
 TESTS = $(check_PROGRAMS)
 
@@ -57,11 +64,14 @@ file_writer_test_CFLAGS = $(AM_CFLAGS) -fno-profile-arcs -fno-test-coverage
 file_writer_test_LDADD = libtest.la
 file_writer_test_LDLFAGS =
 
-db_test_SOURCES = db_test.c ../../src/dbm_api.c ../../src/dbm_quick.c ../../src/dbm_tokyocab.c ../../src/dbm_lib.c ../../src/patches.c
-db_test_LDADD = libtest.la
+db_test_SOURCES = db_test.c
+db_test_LDADD = libdb.la
 
-lastseen_test_SOURCES = lastseen_test.c ../../src/dbm_api.c ../../src/dbm_quick.c ../../src/dbm_tokyocab.c ../../src/dbm_lib.c ../../src/patches.c ../../src/lastseen.c ../../src/statistics.c
-lastseen_test_LDADD = libtest.la
+lastseen_test_SOURCES = lastseen_test.c ../../src/lastseen.c ../../src/statistics.c
+lastseen_test_LDADD = libdb.la
+
+lastseen_migration_test_SOURCES = lastseen_migration_test.c ../../src/lastseen.c ../../src/statistics.c
+lastseen_migration_test_LDADD = libdb.la
 
 CLEANFILES = *.gcno *.gcda
 

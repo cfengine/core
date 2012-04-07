@@ -356,7 +356,7 @@ static void ThisAgentInit(void)
 
 static void KeepPromises(GenericAgentConfig config)
 {
-    double efficiency;
+ double efficiency, model;
 
     BeginAudit();
     KeepControlPromises();
@@ -367,10 +367,13 @@ static void KeepPromises(GenericAgentConfig config)
 // OCCUR counts the number of objects touched while verifying config
 
     efficiency = 100.0 * CF_OCCUR / (double) (CF_OCCUR + CF_TOPICS);
-
+    model = 100.0 * (1.0 - CF_TOPICS / (double)(PR_KEPT + PR_NOTKEPT + PR_REPAIRED));
+    
     NoteEfficiency(efficiency);
 
-    CfOut(cf_verbose, "", " -> Checked %d objects with %d promises, efficiency %.2lf", CF_OCCUR, CF_TOPICS, efficiency);
+    CfOut(cf_verbose, "", " -> Checked %d objects with %d promises, i.e. model efficiency %.2lf%%", CF_OCCUR, CF_TOPICS, efficiency);
+    CfOut(cf_verbose, "", " -> The %d declared promise patterns actually expanded into %d individual promises, i.e. declaration efficiency %.2lf%%", (int) CF_TOPICS, PR_KEPT + PR_NOTKEPT + PR_REPAIRED, model);
+
 }
 
 /*******************************************************************/
@@ -919,6 +922,7 @@ int ScheduleAgentOperations(Bundle *bp)
                 {
                     NoteClassUsage(VADDCLASSES, false);
                     DeleteTypeContext(type);
+                    NoteBundleCompliance(bp->name, save_pr_kept, save_pr_repaired, save_pr_notkept);
                     return false;
                 }
             }
@@ -928,7 +932,6 @@ int ScheduleAgentOperations(Bundle *bp)
     }
 
     NoteClassUsage(VADDCLASSES, false);
-
     NoteBundleCompliance(bp->name, save_pr_kept, save_pr_repaired, save_pr_notkept);
 
     return true;
@@ -1386,13 +1389,26 @@ static void NoteBundleCompliance(char *name, int save_pr_kept, int save_pr_repai
 {
     double delta_pr_kept, delta_pr_repaired, delta_pr_notkept;
     double bundle_compliance;
+        
+    delta_pr_kept = (double) (PR_KEPT - save_pr_kept);
+    delta_pr_notkept = (double) (PR_NOTKEPT - save_pr_notkept);
+    delta_pr_repaired = (double) (PR_REPAIRED - save_pr_repaired);
 
-    delta_pr_kept = PR_KEPT - save_pr_kept;
-    delta_pr_notkept = PR_NOTKEPT - save_pr_notkept;
-    delta_pr_repaired = PR_REPAIRED - save_pr_repaired;
+    CfOut(cf_verbose,"","");
+    CfOut(cf_verbose,""," ==> == Bundle Accounting Summary for \"%s\" ==",name);
+    CfOut(cf_verbose,""," ==> Promises kept in \"%s\" = %.0lf",name,delta_pr_kept);
+    CfOut(cf_verbose,""," ==> Promises not kept in \"%s\" = %.0lf",name,delta_pr_notkept);
+    CfOut(cf_verbose,""," ==> Promises repaired in \"%s\" = %.0lf",name,delta_pr_repaired);
 
+    if (delta_pr_kept + delta_pr_notkept + delta_pr_repaired <= 0)
+       {
+       CfOut(cf_verbose, "", " ==> Defining compliance for bundle \"%s\" = %.1lf%% (from zero promises)", name, 100.0);
+       LastSawBundle(name,bundle_compliance);
+       return;
+       }
+    
     bundle_compliance = (delta_pr_kept + delta_pr_repaired) / (delta_pr_kept + delta_pr_notkept + delta_pr_repaired);
 
-    CfOut(cf_verbose, "", " -> Aggregate compliance (promises kept/repaired) for bundle \"%s\" = %.1lf%%", name, bundle_compliance * 100.0);
+    CfOut(cf_verbose, "", " ==> Aggregate compliance (promises kept/repaired) for bundle \"%s\" = %.1lf%%", name, bundle_compliance * 100.0);
     LastSawBundle(name,bundle_compliance);
 }

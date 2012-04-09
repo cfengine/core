@@ -236,7 +236,7 @@ GenericAgentConfig CheckOpts(int argc, char **argv)
 
 static void ThisAgentInit(void)
 {
-    AddGoalsToDB(Rlist2String(GOALS, ","), Rlist2String(GOALCATEGORIES, ","));
+    AddGoalsToDB(Rlist2String(GOALS, ","));
     SHOWREPORTS = false;
 }
 

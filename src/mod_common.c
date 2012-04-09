@@ -127,8 +127,6 @@ BodySyntax CF_CLASSBODY[] =
 BodySyntax CFG_CONTROLBODY[] =
 {
     {"bundlesequence", cf_slist, ".*", "List of promise bundles to verify in order"},
-    {"goal_categories", cf_slist, "",
-     "A list of context names that represent parent categories for goals (goal patterns)"},
     {"goal_patterns", cf_slist, "",
      "A list of regular expressions that match promisees/topics considered to be organizational goals"},
     {"ignore_missing_bundles", cf_opts, CF_BOOL,

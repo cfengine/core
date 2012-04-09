@@ -1659,18 +1659,6 @@ static void CheckControlPromises(char *scope, char *agent, Constraint *controlli
             CfOut(cf_verbose, "", "SET goal_patterns list\n");
             continue;
         }
-
-        if (strcmp(cp->lval, CFG_CONTROLBODY[cfg_goalcategories].lval) == 0)
-        {
-            GOALCATEGORIES = NULL;
-            for (rp = (Rlist *) returnval.item; rp != NULL; rp = rp->next)
-            {
-                PrependRScalar(&GOALCATEGORIES, rp->item, CF_SCALAR);
-            }
-
-            CfOut(cf_verbose, "", "SET goal_categories list\n");
-            continue;
-        }
         
         DeleteRvalItem(returnval);
     }

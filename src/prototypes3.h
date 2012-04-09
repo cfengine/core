@@ -313,7 +313,7 @@ int GetInstalledPkgsRpath(PackageItem ** pkgList, Attributes a, Promise *pp);
 int ExecPackageCommandRpath(char *command, int verify, int setCmdClasses, Attributes a, Promise *pp);
 void NewPromiser(Promise *pp);
 void AnalyzePromiseConflicts(void);
-void AddGoalsToDB(char *goal_patterns, char *goal_categories);
+void AddGoalsToDB(char *goal_patterns);
 void VerifyWindowsService(Attributes a, Promise *pp);
 bool CFDB_HostsWithClass(Rlist **return_list, char *class_name, char *return_format);
 

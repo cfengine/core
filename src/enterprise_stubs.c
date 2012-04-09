@@ -513,7 +513,7 @@ int ExecPackageCommandRpath(char *command, int verify, int setCmdClasses, Attrib
 
 /*****************************************************************************/
 
-void AddGoalsToDB(char *goal_patterns, char *goal_categories)
+void AddGoalsToDB(char *goal_patterns)
 {
 }
 

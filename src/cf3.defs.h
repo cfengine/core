@@ -187,7 +187,6 @@ enum cfagenttype
 enum cfgcontrol
 {
     cfg_bundlesequence,
-    cfg_goalcategories,
     cfg_goalpatterns,
     cfg_ignore_missing_bundles,
     cfg_ignore_missing_inputs,

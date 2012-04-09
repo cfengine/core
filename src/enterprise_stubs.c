@@ -496,6 +496,22 @@ void *CfRegLDAP(char *uri, char *dn, char *filter, char *name, char *scope, char
 
 /*****************************************************************************/
 
+int GetInstalledPkgsRpath(PackageItem ** pkgList, Attributes a, Promise *pp)
+{
+    CfOut(cf_error, "", "!! rPath internal package listing only available in Nova or above");
+    return false;
+}
+
+/*****************************************************************************/
+
+int ExecPackageCommandRpath(char *command, int verify, int setCmdClasses, Attributes a, Promise *pp)
+{
+    CfOut(cf_error, "", "!! rPath internal package commands only available in Nova or above");
+    return false;
+}
+
+/*****************************************************************************/
+
 void AddGoalsToDB(char *goal_patterns)
 {
 }

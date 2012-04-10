@@ -190,6 +190,7 @@ int main(int argc, char *argv[])
     if (BGOALS)
     {
 #ifdef HAVE_NOVA
+# ifdef HAVE_LIBMONGOC
     char buffer[CF_BUFSIZE], *sp, name[CF_BUFSIZE],desc[CF_BUFSIZE], *end;
     
     Nova_GetUniqueBusinessGoals(buffer, CF_BUFSIZE);
@@ -206,6 +207,7 @@ int main(int argc, char *argv[])
        printf("%s => %s\n",name,desc);
        }
     return 0;
+#endif
 #endif    
     }
     

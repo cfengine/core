@@ -2980,7 +2980,7 @@ replace_patterns:
 @end verbatim
 
 @verbatim
-#CFEexample:unit_sql.cf
+#CFEexample:sql_table_structure.cf
 
 @end verbatim
 

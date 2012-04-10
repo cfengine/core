@@ -77,6 +77,7 @@ int GetTopicPid(char *classified_topic);
 static Topic *TOPICHASH[CF_HASHTABLESIZE];
 
 int GLOBAL_ID = 1;              // Used as a primary key for convenience, 0 reserved
+static int BGOALS = false;
 
 extern BodySyntax CFK_CONTROLBODY[];
 
@@ -136,6 +137,7 @@ static const struct option OPTIONS[] =
     {"verbose", no_argument, 0, 'v'},
     {"version", no_argument, 0, 'V'},
     {"file", required_argument, 0, 'f'},
+    {"goals", no_argument, 0, 'g'},
     {"inform", no_argument, 0, 'I'},
     {"lookup", required_argument, 0, 'l'},
     {"manual", no_argument, 0, 'm'},
@@ -185,6 +187,28 @@ int main(int argc, char *argv[])
 
     KeepKnowControlPromises();
 
+    if (BGOALS)
+    {
+#ifdef HAVE_NOVA
+    char buffer[CF_BUFSIZE], *sp, name[CF_BUFSIZE],desc[CF_BUFSIZE], *end;
+    
+    Nova_GetUniqueBusinessGoals(buffer, CF_BUFSIZE);
+
+    end = buffer + strlen(buffer);
+    
+    for (sp = strstr(buffer,"desc"); sp < end && sp != NULL; sp = strstr(sp,"desc"))
+       {
+       desc[0] = '\0';
+       name[0] = '\0';
+       sscanf(sp+strlen("desc")+2,"%*[ \"]%[^\"]",desc);
+       sp = strstr(sp+strlen(desc),"name");
+       sscanf(sp+strlen("name")+2,"%*[ \"]%[^\"]",name);
+       printf("%s => %s\n",name,desc);
+       }
+    return 0;
+#endif    
+    }
+    
     if (strlen(STORY) > 0)
     {
 #ifdef HAVE_CONSTELLATION
@@ -259,7 +283,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
 
     LOOKUP = false;
 
-    while ((c = getopt_long(argc, argv, "Ihbd:vVf:mxMz:St:ruTl:", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "gIhbd:vVf:mxMz:St:ruTl:", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -287,6 +311,10 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
                {
                strncpy(STORY,optarg,CF_BUFSIZE-1);
                }
+            break;
+
+        case 'g':
+            BGOALS = true;
             break;
 
         case 'l':
@@ -1313,6 +1341,7 @@ static void AddOccurrence(Occurrence **list, char *reference, Rlist *represents,
     for (rp = about_topics; rp != NULL; rp = rp->next)
     {
         IdempPrependRScalar(&(op->about_topics), ToLowerStr(rp->item), rp->type);
+        IdempInsertTopic(ToLowerStr(rp->item));
     }
 
 }

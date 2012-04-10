@@ -416,6 +416,9 @@ int rpl_vasprintf(char **, const char *, va_list);
 int rpl_asprintf(char **, const char *, ...);
 # endif
 #endif /* HAVE_STDARG_H */
+#if !defined(isfinite)
+# define isfinite(x) finite(x)
+#endif
 
 /*******************************************************************/
 /* Preprocessor tricks                                             */

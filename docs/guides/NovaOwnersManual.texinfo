@@ -1285,9 +1285,10 @@ For more detailed information on working with subversion, see @url{http://svnboo
 * Mission Portal Settings::     
 * Mission Portal User Admin::   
 * Troubleshooting - Mission Portal Logs::  
+* Role-Based Access Control::
 @end menu
 
-@node
+@node Role-Based Access Control
 @subsection Role-Based Access Control
 CFEngine Nova 2.2.0 introduces Role Based Access Control (RBAC) for all
 reports and promises shown in the Mission Portal. This does not cover
@@ -1418,7 +1419,7 @@ On a fresh install the default user "admin" belongs to the "admin" user group an
 @sp 1
 
 
-@node Troubleshooting - Mission Portal Logs,  , Mission Portal User Admin, Mission Portal Administration
+@node Troubleshooting - Mission Portal Logs
 @subsection Troubleshooting - Mission Portal Logs
 
 The Mission Portal will log php errors, errors related to the configuration of external authentication (LDAP/Active Directory) and occurrences of the fall-back solution if external authentication fails. The log can be found in DOCROOT/application/logs (i.e. @code{/var/www/application/logs} for Ubuntu and @code{/var/www/html/application/logs} for Red Hat). The logs folder must be writable by apache, i.e. by 'www-data' user. 

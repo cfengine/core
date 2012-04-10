@@ -29,7 +29,12 @@ void UpdateLastSawHost(const char *hostkey, const char *address,
                        bool incoming, time_t timestamp);
 
 /*
- * Lastseen database schema:
+ * Lastseen database schema (version 1):
+ *
+ * Version entry
+ *
+ * key: "version\0"
+ * value: "1\0"
  *
  * "Quality of connection" entries
  *
@@ -41,10 +46,21 @@ void UpdateLastSawHost(const char *hostkey, const char *address,
  * key: k<hostkey> ("MD5-ffffefefeefef..." or "SHA-abacabaca...")
  * value: <address> (IPv4 or IPv6)
  *
- * "Address", or reverse, entries
+ * "Address", or reverse, entries (auxiliary)
  *
  * key: a<address> (IPv6 or IPv6)
  * value: <hostkey>
+ *
+ *
+ *
+ * Schema version 0 mapped direction + hostkey to address + quality of
+ * connection. This approach had a number of drawbacks:
+ *  - There were two potentially conflicting addresses for given hostkey.
+ *  - There was no way to quickly lookup hostkey by address.
+ *  - Address update required traversal of the whole database.
+ *
+ * In order to overcome these limitations, new schema normalized (in relational
+ * algebra sense) the data relations.
  */
 
 void LastSaw(char *ipaddress, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum roles role)

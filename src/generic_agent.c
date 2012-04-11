@@ -1813,7 +1813,7 @@ static void AgentBanner(const char **text)
 void PrintVersionBanner(const char *component)
 {
     const char *text[] =
-{
+        {
         "",
         component,
         "",
@@ -1825,7 +1825,7 @@ void PrintVersionBanner(const char *component)
         Constellation_NameVersion(),
 #endif
         NULL
-    };
+        };
 
     printf("\n");
     AgentBanner(text);

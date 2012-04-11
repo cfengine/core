@@ -111,7 +111,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig config = GenericAgentDefaultConfig(cf_keygen);
 
-    while ((c = getopt_long(argc, argv, "d:vf:VMsr:", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvf:VMsr:", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {

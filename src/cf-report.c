@@ -320,7 +320,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig config = GenericAgentDefaultConfig(cf_report);
 
-    while ((c = getopt_long(argc, argv, "Cghd:vVf:st:ar:PXHLMIRSKE:x:i:1:p:k:c:qF:o:", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "CghdvVf:st:ar:PXHLMIRSKE:x:i:1:p:k:c:qF:o:", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {

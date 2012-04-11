@@ -4,7 +4,7 @@
 
 body executor control
 {
-execcommand => "/usr/local/sbin/cf-agent";
+execcommand => "/var/cfengine/bin/cf-agent";
 }
 
 @end verbatim

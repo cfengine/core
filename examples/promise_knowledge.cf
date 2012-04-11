@@ -2277,30 +2277,30 @@ contexts::
   "!have_ppkeys";
 promisers::
 
-  "/usr/local/sbin/cf-key"
+  "/var/cfengine/bin/cf-key"
       association => a("occurs in bundle","bundles::update","bundle contains promiser");
-  "/usr/local/sbin/cf-key"
+  "/var/cfengine/bin/cf-key"
       association => a("makes promise of type","promise_types::commands","promises have been made by");
-  "/usr/local/sbin/cf-key"
+  "/var/cfengine/bin/cf-key"
       association => a("makes promises","promise_unit_update_cf_31","is a promise made by");
 promise_types::
   "commands" association => a("is employed in bundle","update","employs promises of type");
 promises::
 
 "promise_unit_update_cf_31"
-   comment => "(Uncommented promise of type <i>commands</i> made by: /usr/local/sbin/cf-key..)";
+   comment => "(Uncommented promise of type <i>commands</i> made by: /var/cfengine/bin/cf-key..)";
 "promise_unit_update_cf_31" association => a("is activated by class context","!have_ppkeys","activates promises");
 "promise_unit_update_cf_31" association => a("is a promise of type","commands","has current exemplars");
 
  occurrences:
 promise_unit_update_cf_31::
 "promises.cf.html#promise_unit_update_cf_31"
-   comment => "A promise of type commands made by: /usr/local/sbin/cf-key",
+   comment => "A promise of type commands made by: /var/cfengine/bin/cf-key",
    represents => { "!have_ppkeys", "commands" };
 
 _have_ppkeys::
 "promises.cf.html#promise_unit_update_cf_31"
-   represents => { "promise", "/usr/local/sbin/cf-key", "commands" };
+   represents => { "promise", "/var/cfengine/bin/cf-key", "commands" };
 
 update::
 "promises.cf.html#bundle_update"

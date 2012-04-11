@@ -1742,7 +1742,7 @@ cfengine_3::
 The output looks something like this:
 @smallexample
 
-/usr/local/sbin/cf-agent -f ./unit_loops.cf -K
+/var/cfengine/bin/cf-agent -f ./unit_loops.cf -K
 
 R: cf-monitord is The monitor
 R: cf-serverd is The server

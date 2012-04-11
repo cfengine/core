@@ -259,7 +259,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
 
     LOOKUP = false;
 
-    while ((c = getopt_long(argc, argv, "Ihbd:vVf:mxMz:St:ruTl:", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "IhbdvVf:mxMz:St:ruTl:", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {

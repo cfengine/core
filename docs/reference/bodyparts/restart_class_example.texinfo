@@ -3,14 +3,14 @@
 
 processes:
 
-   "cfservd"
+   "cf-serverd"
 
-     restart_class => "start_cfserv";
+     restart_class => "start_cfserverd";
 
 commands:
 
-  start_cfserv::
+  start_cfserverd::
 
-    "/usr/local/sbin/cfservd";
+    "/var/cfengine/bin/cf-serverd";
 
 @end verbatim

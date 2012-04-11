@@ -618,12 +618,6 @@ files:
     perms => system("600"),
     copy_from => remote_cp("$(master_location)",$(policy_server)),
     depth_search => recurse("inf");
-
-  "$(sys.workdir)/bin" 
-
-    perms => system("700"),
-    copy_from => remote_cp("/usr/local/sbin","localhost"),
-    depth_search => recurse("inf");
 }
 
 #######################################################
@@ -2874,15 +2868,6 @@ files:
     file_select => input_files,
     action => immediate;
 
-  "/var/cfengine/bin" 
-
-    perms => m("700"),
-    copy_from => u_scp("/usr/local/sbin","localhost"),
-    depth_search => recurse("inf"),
-    file_select => cf3_files,
-    action => immediate,
-    classes => on_change("reload");
-
 @end verbatim
 
 
@@ -3727,8 +3712,8 @@ yum update
 mkdir -p /root/CFEngine_init
 cd /root/CFEngine_init
 wget -nd -r http://192.168.0.1/CFEngine/inputs/
-/usr/local/sbin/cf-agent -B
-/usr/local/sbin/cf-agent
+/var/cfengine/bin/cf-agent -B
+/var/cfengine/bin/cf-agent
         ";
 
    # File contains of PXElinux boot menu

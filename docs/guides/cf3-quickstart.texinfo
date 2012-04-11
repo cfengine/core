@@ -583,7 +583,7 @@ We recommend the following reading:
 @url{http://www.verticalsysadmin.com/cfengine/Getting_Started_with_CFEngine_3.pdf}
 @item CFEngine 3 Beginning Examples:@*
 @url{http://www.verticalsysadmin.com/cfengine/beginning_examples/}@*
-This is, basically, a selection from /usr/local/share/doc/cfengine/ which has over 200 examples.
+This is, basically, a selection from /var/cfengine/share/doc/examples/ which has over 200 examples.
 @item "CFEngine 3 Tutorial" by Neil Watson:@*
 @url{http://watson-wilson.ca/2011/05/cfengine-3-cookbook-begins.html}
 @end itemize

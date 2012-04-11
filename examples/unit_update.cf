@@ -56,7 +56,7 @@ commands:
 
  !have_ppkeys::
 
-   "/usr/local/sbin/cf-key";
+   "/var/cfengine/bin/cf-key";
 
 files:
 
@@ -65,13 +65,6 @@ files:
     handle => "update_policy",
     perms => u_p("600"),
     copy_from => u_scp("$(master_location)"),
-    depth_search => u_recurse("inf"),
-    action => immediate;
-
-  "/var/cfengine/bin" 
-
-    perms => u_p("700"),
-    copy_from => u_scp("/usr/local/sbin"),
     depth_search => u_recurse("inf"),
     action => immediate;
 

@@ -177,9 +177,8 @@ Find the hostname or IP address of the hub, here we assume the address is '123.4
 
 @noindent On the hub (policy server):
 @verbatim
-   host# /usr/local/sbin/cf-key
-   host# cp /usr/local/sbin/cf-* /var/cfengine/bin/
-   host# cp /usr/local/share/cfengine/masterfiles/*.cf /var/cfengine/masterfiles/
+   host# /var/cfengine/bin/cf-key
+   host# cp /var/cfengine/share/CoreBase/*.cf /var/cfengine/masterfiles/
    host# /var/cfengine/bin/cf-agent --bootstrap --policy-server 123.456.789.123
 @end verbatim
 
@@ -192,8 +191,7 @@ Find the hostname or IP address of the hub, here we assume the address is '123.4
 
 @noindent On the clients (all other machines):
 @verbatim
-   host# /usr/local/sbin/cf-key
-   host# cp  /usr/local/sbin/cf-* /var/cfengine/bin/
+   host# /var/cfengine/bin/cf-key
    host# /var/cfengine/bin/cf-agent --bootstrap --policy-server 123.456.789.123
 @end verbatim
 
@@ -253,7 +251,7 @@ We recommend the following reading:
 @url{http://www.verticalsysadmin.com/cfengine/Getting_Started_with_CFEngine_3.pdf}
 @item CFEngine 3 Beginning Examples:@*
 @url{http://www.verticalsysadmin.com/cfengine/beginning_examples/}@*
-This is, basically, a selection from /usr/local/share/doc/cfengine/ which has over 200 examples.
+This is, basically, a selection from /var/cfengine/share/doc/examples/ which has over 200 examples.
 @item "CFEngine 3 Tutorial" by Neil Watson:@*
 @url{http://watson-wilson.ca/2011/05/cfengine-3-cookbook-begins.html}
 @end itemize

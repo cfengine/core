@@ -513,7 +513,7 @@ int ExecPackageCommandRpath(char *command, int verify, int setCmdClasses, Attrib
 
 /*****************************************************************************/
 
-void AddGoalsToDB(char *goal_patterns, char *goal_categories)
+void AddGoalsToDB(char *goal_patterns)
 {
 }
 
@@ -536,6 +536,15 @@ void SetSyslogPort(uint16_t port)
 void VerifyWindowsService(Attributes a, Promise *pp)
 {
     CfOut(cf_error, "", "!! Windows service management is only supported in CFEngine Nova");
+}
+
+/*****************************************************************************/
+
+bool CFDB_HostsWithClass(Rlist **return_list, char *class_name, char *return_format)
+{
+    CfOut(cf_error, "", "!! Host class counting is only available in CFEngine Nova");
+    
+    return false;
 }
 
 #endif

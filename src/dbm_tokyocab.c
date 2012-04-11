@@ -225,14 +225,10 @@ static bool Delete(TCHDB *hdb, const void *key, int key_size)
  */
 bool DBPrivWrite(DBPriv *db, const void *key, int key_size, const void *value, int value_size)
 {
-    if (!LockCursor(db))
-    {
-        return false;
-    }
+    /* FIXME: get a cursor and see what is the current key */
 
     int ret = Write(db->hdb, key, key_size, value, value_size);
 
-    UnlockCursor(db);
     return ret;
 }
 

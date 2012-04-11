@@ -181,7 +181,6 @@ extern char *CBUNDLESEQUENCE_STR;
 extern Item *ROTATED;
 extern double FORGETRATE;
 extern Rlist *GOALS;
-extern Rlist *GOALCATEGORIES;
 
 extern Rlist *CF_STCK;
 extern int EDIT_MODEL;

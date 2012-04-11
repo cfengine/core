@@ -183,7 +183,6 @@ enum cfagenttype
 enum cfgcontrol
 {
     cfg_bundlesequence,
-    cfg_goalcategories,
     cfg_goalpatterns,
     cfg_ignore_missing_bundles,
     cfg_ignore_missing_inputs,
@@ -1709,7 +1708,7 @@ typedef struct
     int memory;
     int disk;
     char *baseline;
-    char *specfile;
+    char *spec;
     Rlist *addresses;
     char *name;
     char *host;

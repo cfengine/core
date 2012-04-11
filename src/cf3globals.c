@@ -237,7 +237,6 @@ AlphaList VADDCLASSES;
 Item *VNEGHEAP = NULL;
 
 Rlist *GOALS = NULL;
-Rlist *GOALCATEGORIES = NULL;
 
 /*******************************************************************/
 /*                                                                 */

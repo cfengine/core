@@ -276,6 +276,26 @@ static FnCallResult FnCallHostsSeen(FnCall *fp, Rlist *finalargs)
 
 /*********************************************************************/
 
+static FnCallResult FnCallHostsWithClass(FnCall *fp, Rlist *finalargs)
+{
+    Rlist *returnlist = NULL;
+
+    char *class_name = ScalarValue(finalargs);
+    char *return_format = ScalarValue(finalargs->next);
+    
+    if(!CFDB_HostsWithClass(&returnlist, class_name, return_format))
+    {
+        return (FnCallResult){ FNCALL_FAILURE };
+    }
+    
+    return (FnCallResult)
+    {
+        FNCALL_SUCCESS, { returnlist, CF_LIST } 
+    };
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallRandomInt(FnCall *fp, Rlist *finalargs)
 {
     char buffer[CF_BUFSIZE];
@@ -4426,7 +4446,7 @@ FnCallArg GETUID_ARGS[] =
 FnCallArg GREP_ARGS[] =
 {
     {CF_ANYSTRING, cf_str, "Regular expression"},
-    {CF_IDRANGE, cf_str, "Cfengine array identifier"},
+    {CF_IDRANGE, cf_str, "CFEngine list identifier"},
     {NULL, cf_notype, NULL}
 };
 
@@ -4484,6 +4504,13 @@ FnCallArg HOSTSSEEN_ARGS[] =
     {NULL, cf_notype, NULL}
 };
 
+FnCallArg HOSTSWITHCLASS_ARGS[] =
+{
+    {"[a-zA-Z0-9_]+", cf_str, "Class name to look for"},
+    {"name,address", cf_opts, "Type of return value desired"},
+    {NULL, cf_notype, NULL}
+};
+
 FnCallArg IPRANGE_ARGS[] =
 {
     {CF_ANYSTRING, cf_str, "IP address range syntax"},
@@ -4527,7 +4554,7 @@ FnCallArg ISVARIABLE_ARGS[] =
 FnCallArg JOIN_ARGS[] =
 {
     {CF_ANYSTRING, cf_str, "Join glue-string"},
-    {CF_IDRANGE, cf_str, "Cfengine array identifier"},
+    {CF_IDRANGE, cf_str, "CFEngine list identifier"},
     {NULL, cf_notype, NULL}
 };
 
@@ -4931,6 +4958,8 @@ const FnCallType CF_FNCALL_TYPES[] =
      "True if the current host lies in the range of enumerated hostnames specified"},
     {"hostsseen", cf_slist, HOSTSSEEN_ARGS, &FnCallHostsSeen,
      "Extract the list of hosts last seen/not seen within the last arg1 hours"},
+    {"hostswithclass", cf_slist, HOSTSWITHCLASS_ARGS, &FnCallHostsWithClass,
+     "Extract the list of hosts with the given class set from the hub database (commercial extension)"},
     {"hubknowledge", cf_str, HUB_KNOWLEDGE_ARGS, &FnCallHubKnowledge,
      "Read global knowledge from the hub host by id (commercial extension)"},
     {"iprange", cf_class, IPRANGE_ARGS, &FnCallIPRange,

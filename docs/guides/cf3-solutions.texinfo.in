@@ -2980,7 +2980,7 @@ replace_patterns:
 @end verbatim
 
 @verbatim
-#CFEexample:unit_sql.cf
+#CFEexample:sql_table_structure.cf
 
 @end verbatim
 
@@ -3175,7 +3175,7 @@ extend_fields => "true";
 @end verbatim
 
 @verbatim
-#CFEexample:unit_environment_simple.cf
+#CFEexample:unit_test_environment.cf
 @end verbatim
 
 
@@ -3235,7 +3235,7 @@ extend_fields => "true";
 @section Guest environments
 
 @verbatim
-#CFEexample:unit_environment.cf
+#CFEexample:guest_environment_kvm.cf
 
 @end verbatim
 

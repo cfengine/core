@@ -139,11 +139,11 @@ void VerifyEnvironmentsPromise(Promise *pp)
 
 static int EnvironmentsSanityChecks(Attributes a, Promise *pp)
 {
-    if (a.env.specfile)
+    if (a.env.spec)
     {
         if (a.env.cpus != CF_NOINT || a.env.memory != CF_NOINT || a.env.disk != CF_NOINT)
         {
-            CfOut(cf_error, "", " !! Conflicting promise of both a spec-file and cpu/memory/disk resources");
+            CfOut(cf_error, "", " !! Conflicting promise of both a spec and cpu/memory/disk resources");
             return false;
         }
     }
@@ -446,26 +446,10 @@ static int CreateVirtDom(virConnectPtr vc, char *uri, Attributes a, Promise *pp)
         }
     }
 
-    if (a.env.specfile)
+    if(a.env.spec)
     {
-        if (IsAbsPath(a.env.specfile))
-        {
-            char buf[CF_BUFSIZE];
-
-            if (FileRead(a.env.specfile, buf, CF_BUFSIZE) < 0)
-            {
-                cfPS(cf_verbose, CF_FAIL, "", pp, a, " !! Unable to read environment specfile \"%s\"\n",
-                     a.env.specfile);
-                return false;
-            }
-            xml_file = xstrdup(buf);
-            alloc_file = true;
-        }
-        else
-        {
-            xml_file = xstrdup(a.env.specfile);
-            alloc_file = true;
-        }
+        xml_file = xstrdup(a.env.spec);
+        alloc_file = true;
     }
     else
     {
@@ -540,21 +524,11 @@ static int CreateVirtDom(virConnectPtr vc, char *uri, Attributes a, Promise *pp)
     else
     {
         virErrorPtr vp;
-        struct stat sb;
 
         vp = virGetLastError();
 
-        if (cfstat(xml_file, &sb) == -1)
-        {
-            cfPS(cf_verbose, CF_FAIL, vp->message, pp, a,
-                 " !! Failed to create a virtual domain \"%s\" - no input file \"%s\"\n", pp->promiser, a.env.specfile);
-        }
-        else
-        {
-            cfPS(cf_verbose, CF_FAIL, vp->message, pp, a,
-                 " !! Failed to create a virtual domain \"%s\" - check file \"%s\" for errors\n", pp->promiser,
-                 a.env.specfile);
-        }
+        cfPS(cf_verbose, CF_FAIL, "", pp, a,
+             " !! Failed to create a virtual domain \"%s\" - check spec for errors: %s", pp->promiser, vp->message);
 
         CfOut(cf_verbose, "", "Quoted spec file: %s", xml_file);
     }
@@ -912,30 +886,27 @@ static int CreateVirtNetwork(virConnectPtr vc, char **networks, Attributes a, Pr
         return true;
     }
 
-    if (a.env.specfile)
+    if (a.env.spec)
     {
-        char buf[CF_BUFSIZE];
-
-        if (FileRead(a.env.specfile, buf, CF_BUFSIZE) < 0)
-        {
-            cfPS(cf_verbose, CF_FAIL, "", pp, a, " !! Unable to read environment specfile \"%s\"\n", a.env.specfile);
-            return false;
-        }
+        xml_file = xstrdup(a.env.spec);
     }
     else
     {
-        xml_file = defaultxml;
+        xml_file = xstrdup(defaultxml);
     }
 
     if ((network = virNetworkCreateXML(vc, xml_file)) == NULL)
     {
         cfPS(cf_error, CF_FAIL, "", pp, a, " !! Unable to create network \"%s\"\n", pp->promiser);
+        free(xml_file);
         return false;
     }
     else
     {
         cfPS(cf_inform, CF_CHG, "", pp, a, " -> Created network \"%s\" - promise repaired\n", pp->promiser);
     }
+
+    free(xml_file);
 
     virNetworkFree(network);
     return true;

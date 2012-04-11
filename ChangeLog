@@ -1,4 +1,4 @@
-3.3.0 (in development)
+3.3.0
 
 	New promise types:
 	- Guest environments promises, which allow to manipulate virtual
@@ -23,7 +23,6 @@
 	  error" feature of text editors.
 	- cf-promises --parse-tree option to parse policy file and dump it
 	  in JSON format
-	- Services promises for generic/Unix added.
 	- Iteration over lists is now allowed for qualified (non-local) lists.
 
 	New built-in variables and classes (Linux):
@@ -55,9 +54,6 @@
 	- Change of lastseen database schema. Should radically decrease
 	  I/O contention on lasteen database.
 
-	  *WARNING*: Currently there is no provision for upgrading
-	  existing lastseen databases. Old entries will be just lost.
-
 	- Automatic reload of policies by cf-execd.
 	- Documentation is generated during build, PDF and HTML files are
 	  retired from repository.
@@ -67,6 +63,8 @@
 	  privileges anymore.
 	- cf_promises_validated now filled with timestamp, allows digest-copy
 	  for policy instead of mtime copy which is safer when clocks are unsynchronised
+	- The bundled failsafe.cf policy now has trustkey=false to avoid IP spoofing
+	  attacks in default policy
 	- See the full list of bugfixes at
 	  https://cfengine.com/bugtracker/changelog_page.php
 

@@ -86,6 +86,7 @@ tests/unit/*_test
 # load tests
 
 tests/load/db_load
+tests/load/lastseen_load
 
 # examples
 examples/cfengine_stdlib.cf

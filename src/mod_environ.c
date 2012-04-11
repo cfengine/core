@@ -65,8 +65,8 @@ BodySyntax CF_RESOURCE_BODY[] =
     {"env_memory", cf_int, CF_VALRANGE, "Amount of primary storage (RAM) in the virtual environment (KB)"},
     {"env_disk", cf_int, CF_VALRANGE, "Amount of secondary storage (DISK) in the virtual environment (MB)"},
     {"env_baseline", cf_str, CF_ABSPATHRANGE, "The path to an image with which to baseline the virtual environment"},
-    {"env_spec_file", cf_str, CF_ABSPATHRANGE,
-     "The path to a file containing a technology specific set of promises for the virtual instance"},
+    {"env_spec", cf_str, CF_ANYSTRING,
+     "A string containing a technology specific set of promises for the virtual instance"},
     {NULL, cf_notype, NULL, NULL}
 };
 
@@ -84,8 +84,8 @@ BodySyntax CF_DESIGNATION_BODY[] =
 
 BodySyntax CF_ENVIRON_BODIES[] =
 {
-    {"environment_host", cf_str, CF_IPRANGE,
-     "A host for the virtual environment uniquely indicating which physical node will execute this machine"},
+    {"environment_host", cf_str, "[a-zA-Z0-9_]+",
+     "A class indicating which physical node will execute this guest machine"},
     {"environment_interface", cf_body, CF_DESIGNATION_BODY, "Virtual environment outward identity and location"},
     {"environment_resources", cf_body, CF_RESOURCE_BODY, "Virtual environment resource description"},
     {"environment_state", cf_opts, "create,delete,running,suspended,down",

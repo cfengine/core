@@ -1,3 +1,9 @@
+3.4.0 (in development)
+
+	New features:
+	- cf-promises --parse-tree option to parse policy file and dump it
+	  in JSON format
+
 3.3.0
 
 	New promise types:
@@ -21,8 +27,6 @@
 	- cf-promises --gcc-brief-format option to output warnings and
 	  errors in gcc-compatible syntax which to ease use "go to next
 	  error" feature of text editors.
-	- cf-promises --parse-tree option to parse policy file and dump it
-	  in JSON format
 	- Iteration over lists is now allowed for qualified (non-local) lists.
 
 	New built-in variables and classes (Linux):

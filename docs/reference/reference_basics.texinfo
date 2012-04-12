@@ -1459,7 +1459,7 @@ files:
     comment => "Update the configuration from a master server",
     handle     => "update_policy",
 
-    depends_on => "serve_updates",
+    depends_on => {"serve_updates"},
 
     perms => system("600"),
     copy_from => mycopy("$(master_location)","$(policy_server)"),

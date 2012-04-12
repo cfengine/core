@@ -67,17 +67,17 @@ vars:
 
  suse|redhat::
 
-  "startcommand[www]"     string => "/etc/init.d/apache2 stop";
+  "startcommand[www]"     string => "/etc/init.d/apache2 start";
   "stopcommand[www]"      string => "/etc/init.d/apache2 stop";
 
  debian|ubuntu::
 
-  "startcommand[www]"     string => "/etc/init.d/httpd stop";
+  "startcommand[www]"     string => "/etc/init.d/httpd start";
   "stopcommand[www]"      string => "/etc/init.d/httpd stop";
 
  linux::
 
-  "startcommand[postfix]" string => "/etc/init.d/postfix stop";
+  "startcommand[postfix]" string => "/etc/init.d/postfix start";
   "stopcommand[postfix]"  string => "/etc/init.d/postfix stop";
 
 

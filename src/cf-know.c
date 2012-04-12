@@ -163,6 +163,7 @@ static const char *HINTS[] =
     "Specify an alternative input file than the default",
     "Print basic information about changes made to the system, i.e. promises repaired",
     "Print JSON output about a possibly qualified context::topic",
+    "lookup",
     "Generate reference manual from internal data",
     "Generate reference manpage from internal data",
     "Look up stories for a given topic on the command line (use \"any\" to list possible)",
@@ -285,7 +286,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
 
     LOOKUP = false;
 
-    while ((c = getopt_long(argc, argv, "gIhbd:vVf:mxMz:St:ruTl:", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "gIhbdvVf:mxMz:St:ruTl:", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {

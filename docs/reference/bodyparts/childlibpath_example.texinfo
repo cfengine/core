@@ -3,7 +3,7 @@
 
 body agent control
 {
-childlibpath => "/usr/lcoal/lib:/usr/local/gnu/lib";
+childlibpath => "/usr/local/lib:/usr/local/gnu/lib";
 }
 
 @end verbatim

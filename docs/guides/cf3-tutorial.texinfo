@@ -421,7 +421,7 @@ make install
 @end smallexample
 
 @noindent
-This results in binaries being installed in @file{/usr/local/sbin}.
+This results in binaries being installed in @file{/var/cfengine/bin}.
 
 
 @node Work directory, The players, Installation, The components of CFEngine
@@ -702,7 +702,7 @@ CFEngine will output diagnostic information upon bootstrap (written to command l
 @end verbatim
 
 As an alternative to installing binary packages, the following steps outline the procedure when you have built from source (available from @url{http://cfengine.com/source_code}). You will then need to copy the distributed policy files that were installed in
-@file{/usr/local/share/doc/CFEngine/} to a policy distribution point, like  
+@file{/var/cfengine/share/CoreBase/} to a policy distribution point, like  
 this:
 
 @enumerate
@@ -712,9 +712,8 @@ this:
 
 @item Create the policy source directory and populate the cache:
 @smallexample
-   host# /usr/local/sbin/cf-key
-   host# cp /usr/local/sbin/cf-* /var/cfengine/bin/
-   host# cp /usr/local/share/cfengine/masterfiles/*.cf /var/cfengine/masterfiles/
+   host# /var/cfengine/bin/cf-key
+   host# cp /var/cfengine/share/CoreBase/*.cf /var/cfengine/masterfiles/
    host# /var/cfengine/bin/cf-agent --bootstrap --policy-server 123.456.789.123
 @end smallexample
 @end enumerate
@@ -966,8 +965,8 @@ system. To do that you should log onto your system as a regular
 unprivileged user and set up:
 
 @smallexample
-host$ /usr/local/sbin/cf-key
-host$ cp /usr/local/sbin/cf-* ~/.cfagent/bin
+host$ /var/cfengine/bin/cf-key
+host$ cp /var/cfengine/bin/cf-* ~/.cfagent/bin
 @end smallexample
 
 @noindent CFEngine wants to see copies of its binaries in its
@@ -1018,12 +1017,12 @@ reports:             # This is a promise type
 check
 the syntax like this
 @smallexample
-/usr/local/sbin/cf-promises -f ~/test.cf
+/var/cfengine/bin/cf-promises -f ~/test.cf
 @end smallexample
 If all is well there should be no output.
 Now execute as follows:
 @smallexample
-/usr/local/sbin/cf-agent -f ~/test.cf
+/var/cfengine/bin/cf-agent -f ~/test.cf
 @end smallexample
 You should see this:
 @smallexample
@@ -1046,7 +1045,7 @@ a minute, it will work again. Run the command in verbose mode (use the
 @code{-v} or the @code{--verbose} switch) to see  why:
 
 @smallexample
-/usr/local/sbin/cf-agent --verbose -f ~/test.cf
+/var/cfengine/bin/cf-agent --verbose -f ~/test.cf
 @end smallexample
 Now you will see:
 @smallexample
@@ -1183,7 +1182,7 @@ terms of standard templates.
 
 Now execute @code{cf-agent} with this promise:
 @smallexample
-@b{host$} /usr/local/sbin/cf-agent -f /tmp/test.cf -I
+@b{host$} /var/cfengine/bin/cf-agent -f /tmp/test.cf -I
 -> Object /tmp/testfile had permission 600, changed it to 612
 
 @b{host$} ls -l /tmp/testfile
@@ -1200,7 +1199,7 @@ the permissions appropriately. Now try to change the permissions:
 @b{host$} ls -l /tmp/testfile
 -r-------- 1 mark users 33 2009-06-30 06:06 /tmp/testfile
 
-@b{host$} /usr/local/sbin/cf-agent -f /tmp/test.cf -I
+@b{host$} /var/cfengine/bin/cf-agent -f /tmp/test.cf -I
 -> Object /tmp/testfile had permission 400, changed it to 612
 
 @b{host$} ls -l /tmp/testfile
@@ -1277,13 +1276,6 @@ files:
   perms => u_m("600"),
   copy_from => u_cp("$(master_location)","localhost"),
   depth_search => u_recurse("inf");
-
-"/var/cfengine/bin"
-
-  comment => "Update the cached binaries from installation",
-  perms => u_m("700"),
-  copy_from => u_cp("/usr/local/sbin","localhost"),
-  depth_search => u_recurse("2");
 }
 
 @end verbatim
@@ -1334,7 +1326,7 @@ configured
 using control parameters described in the next chapter. Try:
 
 @verbatim
-host$ /usr/local/sbin/cf-reports
+host$ /var/cfengine/bin/cf-reports
 host$ ls ~/.cfagent/reports
 host$ mywebbrowser ~/.cfagent/reports/performance.html
 @end verbatim
@@ -1355,7 +1347,7 @@ with its default policy.
 You can try running it in the foreground:
 
 @verbatim
-host$ /usr/local/sbin/cf-execd -F
+host$ /var/cfengine/bin/cf-execd -F
 @end verbatim
 
 When you run CFEngine like this, any output that comes from CFEngine  
@@ -2014,7 +2006,7 @@ cfengine_3::
 The output looks something like this:
 @smallexample
 
-/usr/local/sbin/cf-agent -f ./unit_loops.cf -K
+/var/cfengine/bin/cf-agent -f ./unit_loops.cf -K
 
 R: cf-monitord is The monitor
 R: cf-serverd is The server
@@ -2153,7 +2145,7 @@ file onto every host on your network:
 #
 # Global Cron file
 #
-*/5 * * * * /usr/local/sbin/cf-execd -F
+*/5 * * * * /var/cfengine/bin/cf-execd -F
 
 @end smallexample
 @end cartouche

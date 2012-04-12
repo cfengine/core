@@ -327,10 +327,7 @@ make install
 @end smallexample
 
 @noindent
-This results in binaries being installed in @file{/usr/local/sbin}.
-Since this is not necessarily a local file system on all hosts, users
-are encouraged to keep local copies of the binaries on each host, inside
-the CFEngine trusted work directory.
+This results in binaries being installed in @file{/var/cfengine/bin}.
 
 @node Syntax
 @section Syntax, identifiers and names
@@ -404,12 +401,7 @@ CFEngine 3.x this is preserved.
 @end smallexample
 @c chew end Work directory
 
-The installation location
-@file{/usr/local/sbin} is not necessarily a local file system, and cannot
-therefore be trusted to a) be present, and b) be authentic on an
-arbitrary system.
-
-Similarly, a trusted cache of the input files must now be maintained
+A trusted cache of the input files must now be maintained
 in the @file{inputs} subdirectory. When CFEngine is invoked by the
 scheduler, it reads only from this directory. It is up to the user to
 keep this cache updated, on each host. This simplifies and
@@ -675,7 +667,7 @@ in. For example:
 
 @smallexample
 /etc/passwd
-/usr/local/masterfiles/distfile
+/var/cfengine/masterfiles/distfile
 @end smallexample
 @noindent
 The only place where it makes sense to refer to a file without a complete
@@ -3325,14 +3317,6 @@ files:
     depth_search => recurse("inf"),
     action => immediate;
 
-  # Update the software cache
-
-  "/var/cfengine/bin"
-
-    perms => system("700"),
-    copy_from => mycopy("/usr/local/sbin","localhost"),
-    depth_search => recurse("inf"),
-    action => immediate;
 }
 
 ############################################
@@ -3494,14 +3478,6 @@ files:
     copy_from => mycopy("/home/mark/cfengine-inputs","localhost"),
     file_select => cf3_files,
     depth_search => recurse("inf");
-
-  "/var/cfengine/bin"
-
-    perms => system,
-    copy_from => mycopy("/usr/local/sbin","localhost"),
-    file_select => cf3_files,
-    depth_search => recurse("inf");
-
 }
 
 #########################################################
@@ -3577,14 +3553,6 @@ files:
     perms => system("600"),
     copy_from => mycopy("/home/mark/cfengine-inputs","localhost"),
     depth_search => recurse("inf");
-
-  "/var/cfengine/bin"
-
-    perms => system("700"),
-    copy_from => mycopy("/usr/local/sbin","localhost"),
-    file_select => cf3_files,
-    depth_search => recurse("inf");
-
 }
 
 ############################################

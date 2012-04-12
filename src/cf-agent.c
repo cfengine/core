@@ -31,6 +31,7 @@
 
 #include "generic_agent.h"
 #include "verify_environments.h"
+#include "addr_lib.h"
 
 extern int PR_KEPT;
 extern int PR_REPAIRED;
@@ -218,6 +219,11 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
             break;
 
         case 's':
+            
+            if(IsLoopbackAddress(optarg))
+            {
+                FatalError("Use a non-loopback address when bootstrapping");
+            }
 
             // temporary assure that network functions are working
             OpenNetwork();

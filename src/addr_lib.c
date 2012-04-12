@@ -344,3 +344,20 @@ int FuzzyHostMatch(char *arg0, char *arg1, char *refhost)
 
     return 0;
 }
+
+/*********************************************************************/
+
+bool IsLoopbackAddress(char *address)
+{
+    if(strcmp(address, "localhost") == 0)
+    {
+        return true;
+    }
+    
+    if(strcmp(address, "127.0.0.1") == 0)
+    {
+        return true;
+    }
+    
+    return false;
+}

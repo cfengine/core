@@ -23,7 +23,7 @@ libpromises_la_CFLAGS = $(AM_CFLAGS)
 libpromises_la_SOURCES = \
         cf3parse.y cf3parse.h \
         cf3lex.l \
-        addr_lib.c \
+        addr_lib.c addr_lib.h \
         alloc.c alloc.h \
         alphalist.c alphalist.h \
         args.c \

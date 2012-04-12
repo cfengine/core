@@ -36,6 +36,7 @@
 #include "writer.h"
 #include "dbm_api.h"
 #include "lastseen.h"
+#include "granules.h"
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);

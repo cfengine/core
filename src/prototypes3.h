@@ -553,14 +553,6 @@ int FullWrite(int desc, const char *ptr, size_t len);
 
 #include "generic_agent.h"
 
-/* granules.c  */
-
-char *ConvTimeKey(char *str);
-char *GenTimeKey(time_t now);
-int GetTimeSlot(time_t here_and_now);
-int GetShiftSlot(time_t here_and_now);
-time_t GetShiftSlotStart(time_t t);
-
 /* hashes.c */
 
 /* - specific hashes - */

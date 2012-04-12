@@ -23,19 +23,11 @@
 
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: granules.c                                                          */
-/*                                                                           */
-/*****************************************************************************/
-
-#include "cf3.defs.h"
-#include "cf3.extern.h"
+#include "granules.h"
 #include <math.h>
+#include <assert.h>
 
-/*****************************************************************************/
-
-char *ConvTimeKey(char *str)
+static char *ConvTimeKey(char *str)
 {
     int i;
     char buf1[10], buf2[10], buf3[10], buf4[10], buf5[10], buf[10], out[10];
@@ -118,8 +110,6 @@ char *GenTimeKey(time_t now)
     return ConvTimeKey(str);
 }
 
-/*****************************************************************************/
-
 int GetTimeSlot(time_t here_and_now)
 {
     time_t now;
@@ -175,4 +165,9 @@ int GetShiftSlot(time_t here_and_now)
 time_t GetShiftSlotStart(time_t t)
 {
     return (t - (t % SECONDS_PER_SHIFT));
+}
+
+time_t MeasurementSlotStart(time_t t)
+{
+    return (t - t % (time_t)CF_MEASURE_INTERVAL);
 }

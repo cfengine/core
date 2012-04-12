@@ -77,7 +77,7 @@ libpromises_la_SOURCES = \
         fncall.c fncall.h \
         full_write.c \
         generic_agent.c generic_agent.h \
-        granules.c \
+        granules.c granules.h \
         hashes.c \
         html.c \
         install.c \

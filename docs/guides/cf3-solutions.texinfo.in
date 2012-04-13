@@ -3159,11 +3159,6 @@ extend_fields => "true";
 #CFEexample:unit_env.cf
 @end verbatim
 
-@verbatim
-#CFEexample:unit_test_environment.cf
-@end verbatim
-
-
 
 @node Execresult example, Inserting lines in a file, Environment variables, Low level
 @section Execresult example
@@ -3221,6 +3216,11 @@ extend_fields => "true";
 
 @verbatim
 #CFEexample:guest_environment_kvm.cf
+
+@end verbatim
+
+@verbatim
+#CFEexample:unit_test_environment.cf
 
 @end verbatim
 

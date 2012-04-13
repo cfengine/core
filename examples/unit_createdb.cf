@@ -20,21 +20,48 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 
+
 body common control
 {
-bundlesequence => { "dummy" };
+bundlesequence => { "databases" };
 }
 
-body knowledge control
+bundle agent databases
 
 {
-#sql_database => "postgres";
-sql_owner => "postgres";
-sql_passwd => ""; # No passwd
-sql_type => "postgres";
+databases:
+
+  "knowledge_bank/topics"
+
+    database_operation => "create",
+    database_type => "sql",
+    database_columns => { 
+                        "demo_name,varchar,256",
+                        "demo_comment,varchar,1024",
+                        "demo_id,varchar,256",
+                        "demo_type,varchar,256",
+                        "demo_extra,varchar,26" 
+                        },
+
+    database_server => myserver;
 }
 
-bundle knowledge dummy
+################################################
+
+
+body database_server myserver
 {
-topics:
+none::
+ db_server_owner => "postgres";
+ db_server_password => "";
+ db_server_host => "localhost";
+ db_server_type => "postgres";
+ db_server_connection_db => "postgres";
+any::
+ db_server_owner => "root";
+ db_server_password => "";
+ db_server_host => "localhost";
+ db_server_type => "mysql";
+ db_server_connection_db => "mysql";
 }
+

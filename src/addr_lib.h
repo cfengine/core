@@ -25,7 +25,6 @@
 #ifndef CFENGINE_ADDR_LIB_H
 #define CFENGINE_ADDR_LIB_H
 
-/* WTF? Modifiable string? */
-bool IsLoopbackAddress(char *address);
+bool IsLoopbackAddress(const char *address);
 
 #endif

@@ -347,17 +347,17 @@ int FuzzyHostMatch(char *arg0, char *arg1, char *refhost)
 
 /*********************************************************************/
 
-bool IsLoopbackAddress(char *address)
+bool IsLoopbackAddress(const char *address)
 {
     if(strcmp(address, "localhost") == 0)
     {
         return true;
     }
-    
+
     if(strcmp(address, "127.0.0.1") == 0)
     {
         return true;
     }
-    
+
     return false;
 }

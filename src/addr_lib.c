@@ -345,7 +345,10 @@ int FuzzyHostMatch(char *arg0, char *arg1, char *refhost)
     return 0;
 }
 
-/*********************************************************************/
+/* FIXME: handle 127.0.0.2, 127.255.255.254, ::1,
+ * 0000:0000:0000:0000:0000:0000:0000:0001, 0:00:000:0000:000:00:0:1, 0::1 and
+ * other variants
+ */
 
 bool IsLoopbackAddress(const char *address)
 {

@@ -606,7 +606,7 @@ static FnCallResult FnCallCountClassesMatching(FnCall *fp, Rlist *finalargs)
             }
         }
 
-        for (ip = VHEAP.list[i]; ip != NULL; ip = ip->next)
+        for (ip = VADDCLASSES.list[i]; ip != NULL; ip = ip->next)
         {
             if (FullTextMatch(string, ip->name))
             {

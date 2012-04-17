@@ -174,7 +174,7 @@ char *EscapeRegex(char *s, char *out, int outSz)
 
 enum cfhypervisors Str2Hypervisors(char *s)
 {
-    static char *names[] = { "xen", "kvm", "esx", "test",
+    static char *names[] = { "xen", "kvm", "esx", "vbox", "test",
         "xen_net", "kvm_net", "esx_net", "test_net",
         "zone", "ec2", "eucalyptus", NULL
     };

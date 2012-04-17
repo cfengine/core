@@ -91,6 +91,7 @@ libpromises_la_SOURCES = \
         logging.c \
         logic_expressions.c logic_expressions.h \
         matching.c \
+        misc_lib.c misc_lib.h \
         mod_access.c \
         mod_common.c \
         mod_databases.c \

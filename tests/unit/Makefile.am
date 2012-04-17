@@ -32,7 +32,8 @@ check_PROGRAMS = \
 	sequence_test \
 	db_test \
 	lastseen_test \
-	lastseen_migration_test
+	lastseen_migration_test \
+	misc_lib_test
 
 TESTS = $(check_PROGRAMS)
 

@@ -1,2 +1,2 @@
 all ${.TARGETS}:
-    @gmake $@
+	@gmake $@

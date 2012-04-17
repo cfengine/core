@@ -1,0 +1,2 @@
+all ${.TARGETS}:
+    @gmake $@

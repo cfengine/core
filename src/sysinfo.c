@@ -40,6 +40,7 @@
 
 void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname, char *uqname, char *domain);
 
+#ifdef LINUX
 static int Linux_Fedora_Version(void);
 static int Linux_Redhat_Version(void);
 static void Linux_Oracle_VM_Server_Version(void);
@@ -58,8 +59,10 @@ static void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx,
 static int Xen_Hv_Check(void);
 #endif
 
-static FILE *ReadFirstLine(const char *filename, char *buf, int bufsize);
 static bool ReadLine(const char *filename, char *buf, int bufsize);
+static FILE *ReadFirstLine(const char *filename, char *buf, int bufsize);
+#endif
+
 static void CreateClassesFromCanonification(char *canonified);
 static void GetCPUInfo(void);
 
@@ -687,19 +690,8 @@ static void CreateClassesFromCanonification(char *canonified)
 
 void OSClasses()
 {
-    struct stat statbuf;
-    char vbuff[CF_BUFSIZE];
-
-#ifndef LINUX
-    char *sp;
-#endif
-    struct passwd *pw;
-
-#ifndef LINUX
-    char class[CF_BUFSIZE];
-#endif
-
 #ifdef LINUX
+    struct stat statbuf;
 
 /* Mandrake/Mandriva, Fedora and Oracle VM Server supply /etc/redhat-release, so
    we test for those distributions first */
@@ -784,25 +776,6 @@ void OSClasses()
         NewClass("archlinux");
     }
 
-#else
-
-    strncpy(vbuff, VSYSNAME.release, CF_MAXVARSIZE);
-
-    for (sp = vbuff; *sp != '\0'; sp++)
-    {
-        if (*sp == '-')
-        {
-            *sp = '\0';
-            break;
-        }
-    }
-
-    snprintf(class, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, vbuff);
-    NewScalar("sys", "flavour", class, cf_str);
-    NewScalar("sys", "flavor", class, cf_str);
-
-#endif
-
     if (cfstat("/proc/vmware/version", &statbuf) != -1 || cfstat("/etc/vmware-release", &statbuf) != -1)
     {
         VM_Version();
@@ -824,6 +797,27 @@ void OSClasses()
         NewClass("xen");
         NewClass("xen_domu_hv");
     }
+#endif
+
+#else
+
+    char vbuff[CF_BUFSIZE];
+    strncpy(vbuff, VSYSNAME.release, CF_MAXVARSIZE);
+
+    for (char *sp = vbuff; *sp != '\0'; sp++)
+    {
+        if (*sp == '-')
+        {
+            *sp = '\0';
+            break;
+        }
+    }
+
+    char class[CF_BUFSIZE];
+    snprintf(class, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, vbuff);
+    NewScalar("sys", "flavour", class, cf_str);
+    NewScalar("sys", "flavor", class, cf_str);
+
 #endif
 
     GetCPUInfo();
@@ -899,12 +893,15 @@ void OSClasses()
 #endif /* MINGW */
 
 #ifndef NT
+    struct passwd *pw;
     if ((pw = getpwuid(getuid())) == NULL)
     {
         CfOut(cf_error, "getpwuid", " !! Unable to get username for uid %ju", (uintmax_t)getuid());
     }
     else
     {
+        char vbuff[CF_BUFSIZE];
+
         if (IsDefinedClass("SuSE"))
         {
             snprintf(vbuff, CF_BUFSIZE, "/var/spool/cron/tabs/%s", pw->pw_name);
@@ -913,9 +910,10 @@ void OSClasses()
         {
             snprintf(vbuff, CF_BUFSIZE, "/var/spool/cron/crontabs/%s", pw->pw_name);
         }
+
+        NewScalar("sys", "crontab", vbuff, cf_str);
     }
 
-    NewScalar("sys", "crontab", vbuff, cf_str);
 #endif
 
 #if defined(__ANDROID__)
@@ -929,6 +927,7 @@ void OSClasses()
 
 /*********************************************************************************/
 
+#ifdef LINUX
 static void Linux_Oracle_VM_Server_Version(void)
 {
     char relstring[CF_MAXVARSIZE];
@@ -1993,6 +1992,7 @@ static FILE *ReadFirstLine(const char *filename, char *buf, int bufsize)
 
     return fp;
 }
+#endif /* LINUX */
 
 /******************************************************************/
 /* User info                                                      */

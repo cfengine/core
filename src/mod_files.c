@@ -319,7 +319,7 @@ BodySyntax CF_FILEFILTER_BODY[] =
 
 BodySyntax CF_LINKTO_BODY[] =
 {
-    {"copy_patterns", cf_slist, "", "A set of patterns that should be copied ansd synchronized instead of linked"},
+    {"copy_patterns", cf_slist, "", "A set of patterns that should be copied and synchronized instead of linked"},
     {"link_children", cf_opts, CF_BOOL, "true/false whether to link all directory's children to source originals",
      "false"},
     {"link_type", cf_opts, CF_LINKRANGE, "The type of link used to alias the file", "symlink"},

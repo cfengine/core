@@ -40,6 +40,10 @@
 # include <sys/uio.h>
 #endif
 
+#ifdef HAVE_SYS_JAIL_H
+# include <sys/jail.h>
+#endif
+
 #define CF_IGNORE_INTERFACES "ignore_interfaces.rx"
 
 #ifndef MINGW

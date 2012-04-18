@@ -231,7 +231,7 @@ Attributes GetDatabaseAttributes(Promise *pp)
 
 Attributes GetClassContextAttributes(Promise *pp)
 {
-    Attributes a;
+    Attributes a = { {0} };;
 
     a.transaction = GetTransactionConstraints(pp);
     a.classes = GetClassDefinitionConstraints(pp);

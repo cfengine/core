@@ -436,7 +436,7 @@ int VerifyNotInFstab(char *name, Attributes a, Promise *pp)
     }
     else
     {
-        opts = VMOUNTOPTS[VSYSTEMHARDCLASS];
+        opts = xstrdup(VMOUNTOPTS[VSYSTEMHARDCLASS]);
     }
 
     host = a.mount.mount_server;
@@ -513,15 +513,25 @@ int VerifyMount(char *name, Attributes a, Promise *pp)
 {
     char comm[CF_BUFSIZE], line[CF_BUFSIZE];
     FILE *pfp;
-    char *host, *rmountpt, *mountpt;
+    char *host, *rmountpt, *mountpt, *opts;
 
     host = a.mount.mount_server;
     rmountpt = a.mount.mount_source;
     mountpt = name;
 
+    /* Check for options required for this mount - i.e., -o ro,rsize, etc. */
+    if (a.mount.mount_options)
+    {
+        opts = Rlist2String(a.mount.mount_options, ",");
+    }
+    else
+    {
+        opts = xstrdup(VMOUNTOPTS[VSYSTEMHARDCLASS]);
+    }
+
     if (!DONTDO)
     {
-        snprintf(comm, CF_BUFSIZE, "%s %s:%s %s", GetArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]), host, rmountpt, mountpt);
+        snprintf(comm, CF_BUFSIZE, "%s -o %s %s:%s %s", GetArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]), opts, host, rmountpt, mountpt);
 
         if ((pfp = cf_popen(comm, "r")) == NULL)
         {

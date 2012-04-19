@@ -881,6 +881,7 @@ static FnCallResult FnCallReadTcp(FnCall *fp, Rlist *finalargs)
     char buffer[CF_BUFSIZE];
     int val = 0, n_read = 0;
     short portnum;
+    Promise *pp;
     Attributes attr = { {0} };
 
     memset(buffer, 0, sizeof(buffer));
@@ -910,10 +911,22 @@ static FnCallResult FnCallReadTcp(FnCall *fp, Rlist *finalargs)
 
     conn = NewAgentConn();
 
+    pp = NewPromise("readtcp", "function");
+
     attr.copy.force_ipv4 = false;
     attr.copy.portnumber = portnum;
 
-    if (!ServerConnect(conn, hostnameip, attr, NULL))
+    /* This is the original code - why is it set to NULL instead of pp? */
+    /* if (!ServerConnect(conn, hostnameip, attr, NULL)) */ 
+    /* The key issue here is that this does NOT return FALSE (when the last
+     * argument is NULL) - the code continues to SendSocketStream, as seen 
+     * from the CfOut output and the eventual "bad file descriptor" error:
+     * cf3> Couldn't send
+     * cf3>  !!! System error for send: "Bad file descriptor"
+     * cf3> !! Could not close socket
+     * cf3>  !!! System error for cf_closesocket: "Bad file descriptor"
+     */
+    if (!ServerConnect(conn, hostnameip, attr, pp))
     {
         CfOut(cf_inform, "socket", "Couldn't open a tcp socket");
         DeleteAgentConn(conn);
@@ -931,7 +944,7 @@ static FnCallResult FnCallReadTcp(FnCall *fp, Rlist *finalargs)
     }
 
     if ((n_read = recv(conn->sd, buffer, val, 0)) == -1)
-    {
+    { 
     }
 
     if (n_read == -1)

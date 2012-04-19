@@ -163,13 +163,6 @@ void TrackValue(char *date, double kept, double repaired, double notkept)
 
 /*****************************************************************************/
 
-time_t GetPromiseCompliance(Promise *pp, double *value, double *average, double *var, time_t *lastseen)
-{
-    return time(NULL);
-}
-
-/*****************************************************************************/
-
 void ShowTopicRepresentation(FILE *fp)
 {
     CfOut(cf_verbose, "", "# Knowledge map reporting feature is only available in version Nova and above\n");

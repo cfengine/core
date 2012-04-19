@@ -162,7 +162,7 @@ concentrate on the configuration of the front-end and a single
 cluster-node. In order to increase the capacity of your private cloud
 we can simply classify a new physical machine as another cluster-node.
 
-@center @image{ONarchitecture,5in,}
+@center @image{ONarchitecture,5in,,,png}
 
 @node Installation and dependancy configuration, NFS config for shared image repository, Example Setup, Top
 @unnumberedsec Installation and dependancy configuration

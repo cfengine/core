@@ -253,45 +253,8 @@ const char *SHIFT_TEXT[] = {};
 pthread_mutex_t *cft_output;
 char VIPADDRESS[18];
 RSA *PUBKEY;
-
-void Chop(char *str)
-{
-    fail();
-}
-
-AlphaListIterator AlphaListIteratorInit(AlphaList *al)
-{
-    fail();
-}
-
-const Item *AlphaListIteratorNext(AlphaListIterator *iterator)
-{
-    fail();
-}
-
-Item *IdempPrependItem(Item **liststart, const char *itemstring, const char *classes)
-{
-    fail();
-}
-
-bool IsItemIn(Item *list, const char *item)
-{
-    fail();
-}
-
 int DEBUG;
-
-void DeleteItemList(Item *item)
-{
-    fail();
-}
-
 int MINUSF;
-
-bool IsStrIn(const char *str, const char **strs)
-{
-    fail();
-}
 
 char *MapAddress(char *addr)
 {
@@ -314,11 +277,6 @@ int ThreadUnlock(pthread_mutex_t *name)
 }
 
 void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhashes type)
-{
-    fail();
-}
-
-void *GetConstraintValue(char *lval, Promise *promise, char type)
 {
     fail();
 }

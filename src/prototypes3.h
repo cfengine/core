@@ -288,7 +288,6 @@ int ReturnLiteralData(char *handle, char *ret);
 char *GetRemoteScalar(char *proto, char *handle, char *server, int encrypted, char *rcv);
 const char *PromiseID(Promise *pp);     /* Not thread-safe */
 void NotePromiseCompliance(Promise *pp, double val, PromiseState state, char *reasoin);
-time_t GetPromiseCompliance(Promise *pp, double *value, double *average, double *var, time_t *lastseen);
 void SyntaxCompletion(char *s);
 int GetRegistryValue(char *key, char *name, char *buf, int bufSz);
 void NoteVarUsage(void);

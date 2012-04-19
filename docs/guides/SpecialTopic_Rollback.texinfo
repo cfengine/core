@@ -338,7 +338,7 @@ CFEngine's convergence principle. Convergence, works like a sink,
 drawing the system down towards the desired state, no matter where you
 start from.
 
-@center @image{convergence,12cm,,Rollback,png}
+@center @image{convergence,12cm,,Rollback,pdf}
 
 Each promise in CFEngine is engineered in this way. We promise end
 results, not changes. CFEngine calculates the

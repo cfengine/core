@@ -23,6 +23,7 @@ COMMON_GUIDES = \
     SpecialTopic_DevOps \
     SpecialTopic_DistributedScheduling \
     SpecialTopic_Editing \
+    SpecialTopic_Federation \
     SpecialTopic_FIPS \
     SpecialTopic_Federation \
     SpecialTopic_Hierarchy \

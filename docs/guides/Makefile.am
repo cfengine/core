@@ -17,6 +17,7 @@ COMMON_GUIDES = \
     SpecialTopic_ApplMgt \
     SpecialTopic_BDMA \
     SpecialTopic_Cloud \
+    SpecialTopic_Change \
     SpecialTopic_ContentDrivenPolicies \
     SpecialTopic_DevOps \
     SpecialTopic_DistributedScheduling \

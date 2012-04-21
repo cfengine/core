@@ -55,7 +55,7 @@ char *MapNameCopy(const char *s)
         *c = '\\';
     }
 
-    return c;
+    return str;
 }
 
 char *MapName(char *s)

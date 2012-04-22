@@ -158,16 +158,20 @@ void DBPrivCloseDB(DBPriv *db)
 
     if ((ret = pthread_mutex_destroy(&db->lock)) != 0)
     {
+#if !defined(__MINGW32__)  // FIXME: MINGW pthreads return 1 here..
         errno = ret;
         CfOut(cf_error, "pthread_mutex_destroy",
               "Lock is still active during QDBM database handle close");
+#endif
     }
 
     if ((ret = pthread_mutex_destroy(&db->cursor_lock)) != 0)
     {
+#if !defined(__MINGW32__)  // FIXME: MINGW pthreads return 1 here..
         errno = ret;
         CfOut(cf_error, "pthread_mutex_destroy",
               "Cursor lock is still active during QDBM database handle close");
+#endif
     }
 
     if (!dpclose(db->depot))

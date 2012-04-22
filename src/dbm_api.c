@@ -220,9 +220,11 @@ void CloseAllDB(void)
             int ret = pthread_mutex_destroy(&db_handles[i].lock);
             if (ret != 0)
             {
+#if !defined(__MINGW32__)  // FIXME: MINGW pthreads return 1 here..
                 errno = ret;
                 CfOut(cf_error, "pthread_mutex_destroy",
                       "Unable to close database %s", DB_PATHS[i]);
+#endif
             }
         }
     }

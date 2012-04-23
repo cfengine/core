@@ -6,22 +6,24 @@ TEX_INCLUDEDIR = ../tex-include
 #    OrionCloudPack
 
 # Missing .png pictures:
-#    NovaEvaluationGuide
 
 COMMON_GUIDES = \
     Licensing \
+    NovaEvaluationGuide \
     NovaEvaluationGuideSupplement \
     NovaOwnersManual \
     SpecialTopic_Adoption \
     SpecialTopic_Agility \
     SpecialTopic_ApplMgt \
     SpecialTopic_BDMA \
+    SpecialTopic_Change \
     SpecialTopic_Cloud \
     SpecialTopic_ContentDrivenPolicies \
     SpecialTopic_DevOps \
     SpecialTopic_DistributedScheduling \
     SpecialTopic_Editing \
     SpecialTopic_FIPS \
+    SpecialTopic_Federation \
     SpecialTopic_Hierarchy \
     SpecialTopic_ITIL \
     SpecialTopic_Iteration \
@@ -30,9 +32,11 @@ COMMON_GUIDES = \
     SpecialTopic_MissionCritical \
     SpecialTopic_Modules \
     SpecialTopic_Monitoring \
+    SpecialTopic_OpenNebula \
     SpecialTopic_Packages \
     SpecialTopic_RBAC \
     SpecialTopic_Reporting \
+    SpecialTopic_Rollback \
     SpecialTopic_Scalability \
     SpecialTopic_Scan \
     SpecialTopic_Schedule \
@@ -55,11 +59,7 @@ HTML_GUIDES = $(COMMON_GUIDES)
 
 PDF_GUIDES = $(COMMON_GUIDES) \
     cf3-nova-mission-portal \
-    SpecialTopic_Federation \
-    cf3-nova-2-1-supplement \
-    SpecialTopic_OpenNebula \
-    SpecialTopic_Rollback \
-    SpecialTopic_Change
+    cf3-nova-2-1-supplement
 
 .PRECIOUS: ../tools/build-solutions-guide
 

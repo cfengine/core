@@ -188,7 +188,7 @@ centralize updating of policy and report aggregation for convenience
 however. 
 
 @sp 1
-@image{hub,10cm,,The front page,pdf}
+@image{hub,10cm,,The front page}
 @center Figure: A policy server or `hub' is implemented in CFEngine Nova
 @center as a simple solution that will scale for most sites `out of the box'.
 @sp 1

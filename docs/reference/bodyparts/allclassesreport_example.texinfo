@@ -1,5 +1,5 @@
 @verbatim
-body common control
+body agent control
 {
 allclassesreport => "true";
 }

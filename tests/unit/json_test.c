@@ -12,7 +12,7 @@ static const char *OBJECT_SIMPLE = "{\n" "  \"first\": \"one\",\n" "  \"second\"
 
 static const char *OBJECT_NUMERIC = "{\n" "  \"real\": 1234.5678,\n" "  \"int\": -1234567890\n" "}";
 
-static const char *OBJECT_ESCAPED = "{\n" "  \"escaped\": \"quote\\\"stuff\"\n" "}";
+static const char *OBJECT_ESCAPED = "{\n" "  \"escaped\": \"quote\\\"stuff \\t \\n\\n\"\n" "}";
 
 static const char *ARRAY_SIMPLE = "[\n" "  \"one\",\n" "  \"two\"\n" "]";
 
@@ -58,7 +58,7 @@ static void test_show_object_escaped(void **state)
 {
     JsonElement *json = JsonObjectCreate(10);
 
-    JsonObjectAppendString(json, "escaped", "quote\"stuff");
+    JsonObjectAppendString(json, "escaped", "quote\"stuff \t \n\n");
 
     Writer *writer = StringWriter();
 

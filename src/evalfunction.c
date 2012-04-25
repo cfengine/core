@@ -135,11 +135,19 @@ static Rlist *GetHostsFromLastseenDB(Item *addresses, time_t horizon, bool retur
     if (return_recent)
     {
         DeleteRlist(aged);
+        if (recent == NULL)
+        {
+            IdempAppendRScalar(&recent, CF_NULL_VALUE, CF_SCALAR);
+        }
         return recent;
     }
     else
     {
         DeleteRlist(recent);
+        if (aged == NULL)
+        {
+            IdempAppendRScalar(&aged, CF_NULL_VALUE, CF_SCALAR);
+        }
         return aged;
     }
 }

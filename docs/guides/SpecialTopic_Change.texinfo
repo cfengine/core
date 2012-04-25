@@ -527,7 +527,7 @@ you require exact knowledge of where you start from, and you have a recipe
 that (if applied once and only once) will take you to the desired end state.
 
 @sp 1
-@center @image{convergence,12cm,,Rollback,pdf}
+@center @image{convergence,12cm,,Rollback,png}
 @sp 1
 Such a procedure cannot maintain the desired state, without
 demolishing it and rebuilding it from scratch. 

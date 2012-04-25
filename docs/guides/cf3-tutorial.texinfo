@@ -686,6 +686,14 @@ and keep two independent quality assurance processes apart.}
 
 The quickest way to get started with CFEngine is to download and install binary packages, available from @url{http://cfengine.com/inside/myspace}. Installing and bootstrapping these is a trivial operation, putting you two steps away from testing your first CFEngine policies. 
 
+@cartouche
+Note: There is a bug in Community 3.3.0 where the default policy files are not copied to @code{/var/cfengine/masterfiles} upon bootstrap. Workaround consists in manually copying these files before bootstrapping:
+@verbatim
+cp /var/cfengine/share/CoreBase/*.cf /var/cfengine/masterfiles/
+@end verbatim
+This will be corrected in a bugfix release coming soon.
+@end cartouche
+
 This procedure applies to all hosts, but you should bootstrap the hub (policy server) first. Find the hostname or IP address of the hub, here we assume the address is '123.456.789.123' (do not bootstrap with a localhost address).
 @verbatim
 

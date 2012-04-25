@@ -172,18 +172,28 @@ static FnCallResult FnCallAnd(FnCall *fp, Rlist *finalargs)
 
 /*******************************************************************/
 
+static bool CallHostsSeenCallback(const char *hostkey, const char *address,
+                                  bool incoming, const KeyHostSeen *quality,
+                                  void *ctx)
+{
+    Item **addresses = ctx;
+
+    if (HostKeyAddressUnknown(hostkey))
+    {
+        return true;
+    }
+
+    char buf[CF_BUFSIZE];
+    snprintf(buf, sizeof(buf), "%ju", (uintmax_t)quality->lastseen);
+
+    PrependItem(addresses, address, buf);
+
+    return true;
+}
+
 static FnCallResult FnCallHostsSeen(FnCall *fp, Rlist *finalargs)
 {
-    Rlist *returnlist = NULL, *rp;
-    CF_DB *dbp;
-    CF_DBC *dbcp;
     Item *addresses = NULL;
-    char entrytimeChr[CF_SMALLBUF];
-    int ksize, vsize;
-    char *key;
-    void *value;
-
-/* begin fn specific content */
 
     int horizon = Str2Int(ScalarValue(finalargs)) * 3600;
     char *policy = ScalarValue(finalargs->next);
@@ -191,80 +201,26 @@ static FnCallResult FnCallHostsSeen(FnCall *fp, Rlist *finalargs)
 
     CfDebug("Calling hostsseen(%d,%s,%s)\n", horizon, policy, format);
 
-    // last-seen may be used by cf-serverd when (re-)reading policy
-    if (!OpenDB(&dbp, dbid_lastseen))
+    if (!ScanLastSeenQuality(&CallHostsSeenCallback, &addresses))
     {
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    CfDebug("Database opened succesfully.\n");
-
-/* Acquire a cursor for the database. */
-
-    if (!NewDBCursor(dbp, &dbcp))
-    {
-        CloseDB(dbp);
-        CfDebug("Failed to obtain cursor for database\n");
-        CfOut(cf_error, "", " !! Error reading from last-seen database: ");
-        return (FnCallResult) { FNCALL_FAILURE };
-    }
-
-    /* Walk through the database and print out the key/data pairs. */
-
-    while (NextDB(dbp, dbcp, &key, &ksize, &value, &vsize))
-    {
-        /* Only look for a "connection quality" entries */
-
-        if (key[0] != 'q')
-        {
-            continue;
-        }
-
-        char *hostkey = key + 2;
-
-        if (value != NULL)
-        {
-            KeyHostSeen entry;
-
-            if (HostKeyAddressUnknown(value))
-            {
-                continue;
-            }
-
-            memcpy(&entry, value, sizeof(entry));
-            snprintf(entrytimeChr, sizeof(entrytimeChr), "%.4lf", entry.Q.q);
-
-            /* Resolve hostkey into adress */
-
-            char hostkey_key[CF_BUFSIZE];
-            snprintf(hostkey_key, CF_BUFSIZE, "k%s", hostkey);
-
-            char address[CF_BUFSIZE];
-            ReadDB(dbp, hostkey_key, address, sizeof(address));
-
-            PrependItem(&addresses, address, entrytimeChr);
-        }
-    }
-
-    DeleteDBCursor(dbp, dbcp);
-    CloseDB(dbp);
-
-    returnlist = GetHostsFromLastseenDB(addresses, horizon,
-                                        strcmp(format, "address") == 0, strcmp(policy, "lastseen") == 0);
+    Rlist *returnlist = GetHostsFromLastseenDB(addresses, horizon,
+                                               strcmp(format, "address") == 0,
+                                               strcmp(policy, "lastseen") == 0);
 
     DeleteItemList(addresses);
 
     CfDebug(" | Return value:\n");
-    for (rp = returnlist; rp; rp = rp->next)
+    for (Rlist *rp = returnlist; rp; rp = rp->next)
     {
         CfDebug(" |  %s\n", (char *) rp->item);
     }
 
-/* end fn specific content */
-
     if (returnlist == NULL)
     {
-        return (FnCallResult) { FNCALL_FAILURE};
+        return (FnCallResult) { FNCALL_FAILURE };
     }
     else
     {

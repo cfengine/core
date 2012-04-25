@@ -3780,6 +3780,8 @@ static FnCallResult FnCallRegLDAP(FnCall *fp, Rlist *finalargs)
 
 /*********************************************************************/
 
+#define KILOBYTE 1024
+
 static FnCallResult FnCallDiskFree(FnCall *fp, Rlist *finalargs)
 {
     char buffer[CF_BUFSIZE];
@@ -3794,7 +3796,8 @@ static FnCallResult FnCallDiskFree(FnCall *fp, Rlist *finalargs)
         df = 0;
     }
 
-    snprintf(buffer, CF_BUFSIZE - 1, "%jd", (intmax_t) df);
+    /* Result is in kilobytes */
+    snprintf(buffer, CF_BUFSIZE - 1, "%jd", ((intmax_t) df) / KILOBYTE);
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
 }

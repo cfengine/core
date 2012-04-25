@@ -139,8 +139,6 @@ static off_t Unix_GetDiskUsage(char *file, enum cfsizes type)
 
     CfDebug("GetDiskUsage(%s) = %jd/%jd\n", file, (intmax_t) avail, (intmax_t) capacity);
 
-/* Free kilobytes */
-
     if (type == cfabs)
     {
         return avail;

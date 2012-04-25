@@ -120,8 +120,8 @@ static const char *PROTOCOL[] =
 
 static const char *ID = "The server daemon provides two services: it acts as a\n"
     "file server for remote file copying and it allows an\n"
-    "authorized cf-runagent to start start a cf-agent process\n"
-    "and set certain additional classes with role-based access\n" "control.\n";
+    "authorized cf-runagent to start a cf-agent process and\n"
+    "set certain additional classes with role-based access control.\n";
 
 static const struct option OPTIONS[15] =
 {

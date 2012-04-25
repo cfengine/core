@@ -1098,6 +1098,14 @@ void ConvergeVarHashPromise(char *scope, Promise *pp, int allow_redefine)
                 /* eval it: e.g. ifvarclass => not("a_class") */
 
                 res = EvaluateFunctionCall(cp->rval.item, NULL).rval;
+
+                /* Don't continue unless function was evaluated properly */
+                if (res.rtype != CF_SCALAR)
+                {
+                    DeleteRvalItem(res);
+                    return;
+                }
+
                 excluded = IsExcluded(res.item);
 
                 DeleteRvalItem(res);

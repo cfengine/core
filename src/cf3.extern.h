@@ -45,7 +45,7 @@ extern const char *TCPNAMES[CF_NETATTR];
 extern Audit *AUDITPTR;
 extern Audit *VAUDIT;
 
-extern char CONTEXTID[32];
+extern char CONTEXTID[];
 extern char PADCHAR;
 extern Item *IPADDRESSES;
 

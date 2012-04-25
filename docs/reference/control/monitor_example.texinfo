@@ -6,7 +6,6 @@ body monitor control()
    @{
    #version => "1.2.3.4";
 
-   threshold => "0.3";
    forgetrate => "0.7";
    tcpdump => "false";
    tcpdumpcommand => "/usr/sbin/tcpdump -i eth1 -n -t -v";

@@ -33,7 +33,8 @@ check_PROGRAMS = \
 	db_test \
 	lastseen_test \
 	lastseen_migration_test \
-	misc_lib_test
+	misc_lib_test \
+	crypto_symmetric_test
 
 TESTS = $(check_PROGRAMS)
 

@@ -141,6 +141,15 @@ static void VerifySQLPromise(Attributes a, Promise *pp)
         strncpy(database, pp->promiser, CF_MAXVARSIZE - 1);
     }
 
+    if (a.database.operation == NULL)
+    {
+        cfPS(cf_error, CF_FAIL, "", pp, a ,
+             "Missing database_operation in database promise");
+        PromiseRef(cf_error, pp);
+        YieldCurrentLock(thislock);
+        return;
+    }
+
     if (strcmp(a.database.operation, "delete") == 0)
     {
         /* Just deal with one */

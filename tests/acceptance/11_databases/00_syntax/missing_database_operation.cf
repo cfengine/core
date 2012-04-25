@@ -1,0 +1,40 @@
+# Test that missing database_operation does not segfault (Mantis #1046)
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle agent init
+{
+vars:
+  "dummy" string => "dummy";
+}
+
+bundle agent test
+{
+databases:
+  "foobar"
+    database_type => "sql",
+    database_server => myserver;
+}
+
+body database_server myserver
+{
+ db_server_owner => "owner";
+ db_server_password => "password";
+ db_server_host => "localhost";
+ db_server_type => "postgres";
+ db_server_connection_db => "postgres";
+}
+
+bundle agent check
+{
+reports:
+  cfengine_3::
+    "$(this.promise_filename) Pass";
+}

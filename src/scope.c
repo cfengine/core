@@ -59,7 +59,7 @@ Scope *GetScope(const char *scope)
 
 void SetScope(char *id)
 {
-    strncpy(CONTEXTID, id, 31);
+    strlcpy(CONTEXTID, id, CF_MAXVARSIZE);
 }
 
 /*******************************************************************/
@@ -67,7 +67,7 @@ void SetScope(char *id)
 void SetNewScope(char *id)
 {
     NewScope(id);
-    strncpy(CONTEXTID, id, 31);
+    SetScope(id);
 }
 
 /*******************************************************************/

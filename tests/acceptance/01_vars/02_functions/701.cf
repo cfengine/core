@@ -1,0 +1,36 @@
+# Test that countclassesmatching works correctly (Mantis #975)
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle common init
+{
+classes:
+  "test_fbeae67f3e347b5e0032302200141131" expression => "any";
+  "test_fbeae67f3e347b5e0032302200141131_1" expression => "any";
+}
+
+bundle agent test
+{
+vars:
+  "num" int => countclassesmatching("test_fbeae67f3e347b5e0032302200141131.*");
+}
+
+bundle agent check
+{
+classes:
+  "ok" expression => strcmp("$(test.num)", "2");
+
+reports:
+  DEBUG::
+    "$(test.num)";
+  ok::
+    "$(this.promise_filename) Pass";
+  !ok::
+    "$(this.promise_filename) FAIL";
+}

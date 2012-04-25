@@ -1703,6 +1703,7 @@ static FnCallResult FnCallLsDir(FnCall *fp, Rlist *finalargs)
             if (includepath)
             {
                 snprintf(line, CF_BUFSIZE, "%s/%s", dirname, dirp->d_name);
+                MapName(line);
                 PrependRScalar(&newlist, line, CF_SCALAR);
             }
             else

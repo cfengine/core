@@ -24,9 +24,11 @@
 
 #include "generic_agent.h"
 #include "cf3.server.h"
+
 #include "dir.h"
 #include "dbm_api.h"
 #include "lastseen.h"
+#include "crypto.h"
 
 #define QUEUESIZE 50
 #define CF_BUFEXT 128

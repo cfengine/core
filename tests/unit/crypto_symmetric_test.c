@@ -1,6 +1,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#include "crypto.h"
+
 #include <setjmp.h>
 #include <cmockery.h>
 
@@ -66,6 +68,8 @@ static void test_symmetric_decrypt(void **state)
 
 int main()
 {
+    CryptoInitialize();
+
     const UnitTest tests[] =
       {
         unit_test(test_cipher_init),

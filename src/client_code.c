@@ -38,6 +38,7 @@
 #include "dir.h"
 #include "dir_priv.h"
 #include "client_protocol.h"
+#include "crypto.h"
 
 /* seconds */
 #define RECVTIMEOUT 30

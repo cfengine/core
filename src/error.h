@@ -32,6 +32,7 @@ typedef enum cf_errid
     CFERRID_FAILURE,
     CFERRID_DBM_OPEN,
     CFERRID_DBM_CLOSE,
+    CFERRID_DBM_WRITE,
     CFERRID_LOCK_NOT_ACQUIRED,
     CFERRID_MAX
 } cf_errid;

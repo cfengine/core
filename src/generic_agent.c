@@ -35,6 +35,7 @@
 #include "files_lib.h"
 #include "parser.h"
 #include "dbm_api.h"
+#include "crypto.h"
 
 extern char *CFH[][2];
 
@@ -450,9 +451,8 @@ void CloseLog(void)
 
 void InitializeGA(void)
 {
-    int seed, force = false;
+    int force = false;
     struct stat statbuf, sb;
-    unsigned char s[16];
     char vbuff[CF_BUFSIZE];
     char ebuff[CF_EXPANDSIZE];
 
@@ -566,23 +566,12 @@ void InitializeGA(void)
 
     OpenNetwork();
 
-/* Init crypto stuff */
-
-    OpenSSL_add_all_algorithms();
-    OpenSSL_add_all_digests();
-    ERR_load_crypto_strings();
+    CryptoInitialize();
 
     if (!LOOKUP)
     {
         CheckWorkingDirectories();
     }
-
-    RandomSeed();
-
-    RAND_bytes(s, 16);
-    s[15] = '\0';
-    seed = ElfHash(s);
-    srand48((long) seed);
 
     LoadSecretKeys();
 

@@ -31,7 +31,9 @@
 
 #include "generic_agent.h"
 #include "cf3.extern.h"
+
 #include "lastseen.h"
+#include "crypto.h"
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);

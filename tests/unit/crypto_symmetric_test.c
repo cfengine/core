@@ -27,6 +27,17 @@ static int ComputeCiphertextLen(int plaintext_len, int cipher_block_size_bytes)
     return (plaintext_len + padding);
 }
 
+static void test_cipher_init(void **state)
+{
+    unsigned char key[] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
+    unsigned char iv[] = {1,2,3,4,5,6,7,8};
+    EVP_CIPHER_CTX ctx;
+
+    EVP_CIPHER_CTX_init(&ctx);
+    EVP_EncryptInit_ex(&ctx, EVP_bf_cbc(), NULL, key, iv);
+    EVP_CIPHER_CTX_cleanup(&ctx);
+}
+
 static void test_symmetric_encrypt(void **state)
 {
     char ciphertext[CF_BUFSIZE];
@@ -57,6 +68,7 @@ int main()
 {
     const UnitTest tests[] =
       {
+        unit_test(test_cipher_init),
         unit_test(test_symmetric_encrypt),
         unit_test(test_symmetric_decrypt),
       };

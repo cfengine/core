@@ -32,6 +32,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#include "error.h"
+
 #include "dbm_api.h"
 
 static void WaitForCriticalSection(void);
@@ -42,6 +44,7 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *operator, c
 static time_t FindLockTime(char *name);
 static pid_t FindLockPid(char *name);
 static void RemoveDates(char *s);
+static cf_errid WriteLockData(CF_DB *dbp, char *lock_id);
 
 /*****************************************************************************/
 
@@ -326,6 +329,51 @@ void YieldCurrentLock(CfLock this)
 
 /************************************************************************/
 
+cf_errid AcquireLockByID(char *lock_id, int acquire_after_minutes)
+/*
+ * Much simpler than AcquireLock. Useful when you just want to check
+ * if a certain amount of time has elapsed for an action since last
+ * time you checked.  No need to clean up after calling this
+ * (e.g. like YieldCurrentLock()).  
+ *
+ * WARNING: Is prone to race-conditions, both on the thread and 
+ *          process level.  
+ */
+{
+    cf_errid errid;
+
+    CF_DB *dbp = OpenLock();
+    
+    if(dbp == NULL)
+    {
+        return CFERRID_DBM_OPEN;
+    }
+    
+    LockData lock_data;
+    
+    if (ReadDB(dbp, lock_id, &lock_data, sizeof(lock_data)))
+    {
+        if(lock_data.time + (acquire_after_minutes * SECONDS_PER_MINUTE) < time(NULL))
+        {
+            errid = WriteLockData(dbp, lock_id);
+        }
+        else
+        {
+            errid = CFERRID_LOCK_NOT_ACQUIRED;
+        }
+    }
+    else
+    {
+        errid = WriteLockData(dbp, lock_id);
+    }
+    
+    CloseLock(dbp);
+
+    return errid;
+}
+
+/************************************************************************/
+
 void GetLockName(char *lockname, char *locktype, char *base, Rlist *params)
 {
     Rlist *rp;
@@ -444,7 +492,6 @@ static time_t FindLock(char *last)
 int WriteLock(char *name)
 {
     CF_DB *dbp;
-    LockData entry;
 
     CfDebug("WriteLock(%s)\n", name);
 
@@ -455,15 +502,31 @@ int WriteLock(char *name)
         return -1;
     }
 
-    entry.pid = getpid();
-    entry.time = time((time_t *) NULL);
-
-    WriteDB(dbp, name, &entry, sizeof(entry));
+    WriteLockData(dbp, name);
 
     CloseLock(dbp);
     ThreadUnlock(cft_lock);
 
     return 0;
+}
+
+/************************************************************************/
+
+static cf_errid WriteLockData(CF_DB *dbp, char *lock_id)
+{
+    LockData lock_data;
+    
+    lock_data.pid = getpid();
+    lock_data.time = time(NULL);
+    
+    if(WriteDB(dbp, lock_id, &lock_data, sizeof(lock_data)))
+    {
+        return CFERRID_SUCCESS;
+    }
+    else
+    {
+        return CFERRID_DBM_WRITE;
+    }
 }
 
 /*****************************************************************************/

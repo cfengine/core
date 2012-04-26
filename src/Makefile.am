@@ -140,7 +140,7 @@ libpromises_la_SOURCES = \
         syntax.c syntax.h \
         sysinfo.c \
         timeout.c \
-        transaction.c \
+        transaction.c transaction.h \
         unix.c \
         vars.c \
         verify_processes.c \

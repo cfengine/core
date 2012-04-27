@@ -50,6 +50,8 @@ void CryptoInitialize()
         s[15] = '\0';
         seed = ElfHash(s);
         srand48((long) seed);
+
+        crypto_initialized = true;
     }
 }
 

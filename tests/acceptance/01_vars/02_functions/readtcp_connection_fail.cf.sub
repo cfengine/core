@@ -1,0 +1,10 @@
+body common control
+{
+  bundlesequence => { "tcpread" };
+}
+
+bundle agent tcpread
+{
+vars:
+    'trace_output' string => readtcp('127.0.0.1', '1', '', 1);
+}

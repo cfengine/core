@@ -1101,9 +1101,13 @@ int ServerConnect(AgentConnection *conn, char *host, Attributes attr, Promise *p
             freeaddrinfo(response);
         }
 
-        if (!connected && pp)
+        if (!connected)
         {
-            cfPS(cf_verbose, CF_FAIL, "connect", pp, attr, " !! Unable to connect to server %s", host);
+            if (pp)
+            {
+                cfPS(cf_verbose, CF_FAIL, "connect", pp, attr, " !! Unable to connect to server %s", host);
+            }
+
             return false;
         }
 

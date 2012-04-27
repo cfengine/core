@@ -59,6 +59,7 @@ libpromises_la_SOURCES = \
         dtypes.c \
         enterprise_stubs.c \
         env_context.c \
+        error.h \
         evalfunction.c evalfunction.h \
         exec_tools.c \
         expand.c \
@@ -139,7 +140,7 @@ libpromises_la_SOURCES = \
         syntax.c syntax.h \
         sysinfo.c \
         timeout.c \
-        transaction.c \
+        transaction.c transaction.h \
         unix.c \
         vars.c \
         verify_processes.c \

@@ -33,7 +33,7 @@
 #include "cf3.extern.h"
 
 #include "error.h"
-
+#include "transaction.h"
 #include "dbm_api.h"
 
 static void WaitForCriticalSection(void);
@@ -41,10 +41,11 @@ static void ReleaseCriticalSection(void);
 static time_t FindLock(char *last);
 static int RemoveLock(char *name);
 static void LogLockCompletion(char *cflog, int pid, char *str, char *operator, char *operand);
-static time_t FindLockTime(char *name);
 static pid_t FindLockPid(char *name);
 static void RemoveDates(char *s);
-static cf_errid WriteLockData(CF_DB *dbp, char *lock_id);
+static cf_errid WriteLockDataCurrent(CF_DB *dbp, char *lock_id);
+static cf_errid WriteLockData(CF_DB *dbp, char *lock_id, LockData *lock_data);
+
 
 /*****************************************************************************/
 
@@ -355,7 +356,7 @@ cf_errid AcquireLockByID(char *lock_id, int acquire_after_minutes)
     {
         if(lock_data.time + (acquire_after_minutes * SECONDS_PER_MINUTE) < time(NULL))
         {
-            errid = WriteLockData(dbp, lock_id);
+            errid = WriteLockDataCurrent(dbp, lock_id);
         }
         else
         {
@@ -364,7 +365,7 @@ cf_errid AcquireLockByID(char *lock_id, int acquire_after_minutes)
     }
     else
     {
-        errid = WriteLockData(dbp, lock_id);
+        errid = WriteLockDataCurrent(dbp, lock_id);
     }
     
     CloseLock(dbp);
@@ -502,7 +503,7 @@ int WriteLock(char *name)
         return -1;
     }
 
-    WriteLockData(dbp, name);
+    WriteLockDataCurrent(dbp, name);
 
     CloseLock(dbp);
     ThreadUnlock(cft_lock);
@@ -512,14 +513,21 @@ int WriteLock(char *name)
 
 /************************************************************************/
 
-static cf_errid WriteLockData(CF_DB *dbp, char *lock_id)
+static cf_errid WriteLockDataCurrent(CF_DB *dbp, char *lock_id)
 {
     LockData lock_data;
     
     lock_data.pid = getpid();
     lock_data.time = time(NULL);
     
-    if(WriteDB(dbp, lock_id, &lock_data, sizeof(lock_data)))
+    return WriteLockData(dbp, lock_id, &lock_data);
+}
+
+/*****************************************************************************/
+
+static cf_errid WriteLockData(CF_DB *dbp, char *lock_id, LockData *lock_data)
+{
+    if(WriteDB(dbp, lock_id, lock_data, sizeof(LockData)))
     {
         return CFERRID_SUCCESS;
     }
@@ -527,6 +535,36 @@ static cf_errid WriteLockData(CF_DB *dbp, char *lock_id)
     {
         return CFERRID_DBM_WRITE;
     }
+}
+
+/*****************************************************************************/
+
+cf_errid InvalidateLockTime(char *lock_id)
+{
+    time_t epoch = 0;
+    
+    CF_DB *dbp = OpenLock();
+
+    if (dbp == NULL)
+    {
+        return CFERRID_DBM_OPEN;
+    }
+    
+    LockData lock_data;
+
+    if(!ReadDB(dbp, lock_id, &lock_data, sizeof(lock_data)))
+    {
+        CloseLock(dbp);
+        return CFERRID_SUCCESS;  /* nothing to invalidate */
+    }
+    
+    lock_data.time = epoch;
+
+    cf_errid errid = WriteLockData(dbp, lock_id, &lock_data);
+
+    CloseLock(dbp);
+
+    return errid;
 }
 
 /*****************************************************************************/
@@ -576,7 +614,7 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *operator, c
 
 /*****************************************************************************/
 
-int RemoveLock(char *name)
+static int RemoveLock(char *name)
 {
     CF_DB *dbp;
 
@@ -595,7 +633,7 @@ int RemoveLock(char *name)
 
 /************************************************************************/
 
-static time_t FindLockTime(char *name)
+time_t FindLockTime(char *name)
 {
     CF_DB *dbp;
     LockData entry;

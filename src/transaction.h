@@ -26,6 +26,7 @@
 #define CFENGINE_TRANSACTION_H
 
 cf_errid AcquireLockByID(char *lock_id, int acquire_after_minutes);
-
+time_t FindLockTime(char *name);
+cf_errid InvalidateLockTime(char *lock_id);
 
 #endif  /* NOT CFENGINE_TRANSACTION_H */

@@ -509,6 +509,9 @@ enum storytype
 #define KM_LOCATED_CERT_B "situates"
 #define KM_REPAIR_CERT_F "repairs"
 #define KM_REPAIR_CERT_B "is repaired by"
+#define KM_FOLLOW_CERT_F "is followed by"
+#define KM_FOLLOW_CERT_B "is preceded by"
+
 
 #define KM_CAUSE_POSS_F "can cause"
 #define KM_CAUSE_POSS_B "can be caused by"
@@ -540,6 +543,8 @@ enum storytype
 #define KM_LOCATED_POSS_B "can situate"
 #define KM_REPAIR_POSS_F "can repair"
 #define KM_REPAIR_POSS_B "can be repaired by"
+#define KM_FOLLOW_POSS_F "can be followed by"
+#define KM_FOLLOW_POSS_B "can be preceded by"
 
 #define KM_CAUSE_UNCERT_F "might cause"
 #define KM_CAUSE_UNCERT_B "might be caused by"
@@ -573,6 +578,9 @@ enum storytype
 #define KM_LOCATED_UNCERT_B "might situate"
 #define KM_REPAIR_UNCERT_F "might repair"
 #define KM_REPAIR_UNCERT_B "might be repaired by"
+#define KM_FOLLOW_UNCERT_F "might be followed by"
+#define KM_FOLLOW_UNCERT_B "might be preceded by"
+
 
 #define KM_GENERALIZES_F "is a generalization of"
 #define KM_GENERALIZES_B "is a special case of"

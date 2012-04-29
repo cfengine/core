@@ -609,6 +609,46 @@ Attributes GetThingsAttributes(Promise *pp)
 
         attr.associates = rp;
     }
+    else if ((rp = GetListConstraint("is_preceded_by", pp)))
+    {
+        switch (certainty)
+        {
+        case cfk_certain:
+            attr.fwd_name = KM_FOLLOW_CERT_B;
+            attr.bwd_name = KM_FOLLOW_CERT_F;
+            break;
+        case cfk_uncertain:
+            attr.fwd_name = KM_FOLLOW_UNCERT_B;
+            attr.bwd_name = KM_FOLLOW_UNCERT_F;
+            break;
+        case cfk_possible:
+            attr.fwd_name = KM_FOLLOW_POSS_B;
+            attr.bwd_name = KM_FOLLOW_POSS_F;
+            break;
+        }
+
+        attr.associates = rp;
+    }
+    else if ((rp = GetListConstraint("is_followed_by", pp)))
+    {
+        switch (certainty)
+        {
+        case cfk_certain:
+            attr.fwd_name = KM_FOLLOW_CERT_F;
+            attr.bwd_name = KM_FOLLOW_CERT_B;
+            break;
+        case cfk_uncertain:
+            attr.fwd_name = KM_FOLLOW_UNCERT_F;
+            attr.bwd_name = KM_FOLLOW_UNCERT_B;
+            break;
+        case cfk_possible:
+            attr.fwd_name = KM_FOLLOW_POSS_F;
+            attr.bwd_name = KM_FOLLOW_POSS_B;
+            break;
+        }
+
+        attr.associates = rp;
+    }
 
     return attr;
 }

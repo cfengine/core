@@ -1,0 +1,9 @@
+
+@verbatim
+things:
+
+  "Installing CFEngine"
+
+    is_followed_by => { "bootstrapping", "policy editing" };
+
+@end verbatim

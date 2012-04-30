@@ -114,7 +114,7 @@ int Unix_GetCurrentUserName(char *userName, int userNameLen)
 
 /*************************************************************/
 
-char *Unix_GetErrorStr(void)
+const char *GetErrorStr(void)
 {
     return strerror(errno);
 }

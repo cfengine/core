@@ -52,7 +52,6 @@ static int FindLargestVersionAvail(char *matchName, char *matchVers, const char 
 static int VersionCmp(const char *vs1, const char *vs2);
 static int IsNewerThanInstalled(const char *n, const char *v, const char *a, char *instV, char *instA, Attributes attr);
 static int PackageInItemList(PackageItem * list, char *name, char *version, char *arch);
-static int ExecPackageCommandGeneric(char *command, int verify, int setCmdClasses, Attributes a, Promise *pp);
 static int PrependPatchItem(PackageItem ** list, char *item, PackageItem * chklist, Attributes a, Promise *pp);
 static int PrependMultiLinePackageItem(PackageItem ** list, char *item, int reset, Attributes a, Promise *pp);
 static int ExecPackageCommand(char *command, int verify, int setCmdClasses, Attributes a, Promise *pp);
@@ -339,81 +338,68 @@ static int VerifyInstalledPackages(PackageManager **all_mgrs, Attributes a, Prom
 
     if (a.packages.package_list_command != NULL)
     {
-        if (strcmp(a.packages.package_list_command, "/cf_internal_rpath_list") == 0)
+        if (a.packages.package_list_update_command != NULL)
         {
-            CfOut(cf_verbose, "", " Using internal list command for rPath");
-
-            if (!GetInstalledPkgsRpath(&(manager->pack_list), a, pp))
-            {
-                CfOut(cf_error, "", "!! Could not get list of installed packages");
-                return false;
-            }
+            ExecPackageCommand(a.packages.package_list_update_command, false, false, a, pp);
         }
-        else
+
+        CfOut(cf_verbose, "", " ???????????????????????????????????????????????????????????????\n");
+        CfOut(cf_verbose, "", "   Reading package list from %s\n", GetArg0(a.packages.package_list_command));
+        CfOut(cf_verbose, "", " ???????????????????????????????????????????????????????????????\n");
+
+        if (!IsExecutable(GetArg0(a.packages.package_list_command)))
         {
-            if (a.packages.package_list_update_command != NULL)
-            {
-                ExecPackageCommand(a.packages.package_list_update_command, false, false, a, pp);
-            }
+            CfOut(cf_error, "", "The proposed package list command \"%s\" was not executable",
+                  a.packages.package_list_command);
+            return false;
+        }
 
-            CfOut(cf_verbose, "", " ???????????????????????????????????????????????????????????????\n");
-            CfOut(cf_verbose, "", "   Reading package list from %s\n", GetArg0(a.packages.package_list_command));
-            CfOut(cf_verbose, "", " ???????????????????????????????????????????????????????????????\n");
+        if ((prp = cf_popen(a.packages.package_list_command, "r")) == NULL)
+        {
+            CfOut(cf_error, "cf_popen", "Couldn't open the package list with command %s\n",
+                  a.packages.package_list_command);
+            return false;
+        }
 
-            if (!IsExecutable(GetArg0(a.packages.package_list_command)))
-            {
-                CfOut(cf_error, "", "The proposed package list command \"%s\" was not executable",
-                      a.packages.package_list_command);
-                return false;
-            }
-
-            if ((prp = cf_popen(a.packages.package_list_command, "r")) == NULL)
-            {
-                CfOut(cf_error, "cf_popen", "Couldn't open the package list with command %s\n",
-                      a.packages.package_list_command);
-                return false;
-            }
-
-            while (!feof(prp))
-            {
-                memset(vbuff, 0, CF_BUFSIZE);
-                CfReadLine(vbuff, CF_BUFSIZE, prp);
-                CF_OCCUR++;
-
-                if (a.packages.package_multiline_start)
-                {
-                    if (FullTextMatch(a.packages.package_multiline_start, vbuff))
-                    {
-                        PrependMultiLinePackageItem(&(manager->pack_list), vbuff, reset, a, pp);
-                    }
-                    else
-                    {
-                        PrependMultiLinePackageItem(&(manager->pack_list), vbuff, update, a, pp);
-                    }
-                }
-                else
-                {
-                    if (!FullTextMatch(a.packages.package_installed_regex, vbuff))
-                    {
-                        continue;
-                    }
-
-                    if (!PrependListPackageItem(&(manager->pack_list), vbuff, a, pp))
-                    {
-                        continue;
-                    }
-                }
-            }
+        while (!feof(prp))
+        {
+            memset(vbuff, 0, CF_BUFSIZE);
+            CfReadLine(vbuff, CF_BUFSIZE, prp);
+            CF_OCCUR++;
 
             if (a.packages.package_multiline_start)
             {
-                PrependMultiLinePackageItem(&(manager->pack_list), vbuff, reset, a, pp);
+                if (FullTextMatch(a.packages.package_multiline_start, vbuff))
+                {
+                    PrependMultiLinePackageItem(&(manager->pack_list), vbuff, reset, a, pp);
+                }
+                else
+                {
+                    PrependMultiLinePackageItem(&(manager->pack_list), vbuff, update, a, pp);
+                }
             }
+            else
+            {
+                if (!FullTextMatch(a.packages.package_installed_regex, vbuff))
+                {
+                    continue;
+                }
 
-            cf_pclose(prp);
+                if (!PrependListPackageItem(&(manager->pack_list), vbuff, a, pp))
+                {
+                    continue;
+                }
+            }
         }
-    }
 
+        if (a.packages.package_multiline_start)
+        {
+            PrependMultiLinePackageItem(&(manager->pack_list), vbuff, reset, a, pp);
+        }
+
+        cf_pclose(prp);
+    }
+    
 #endif /* NOT MINGW */
 
     ReportSoftware(INSTALLED_PACKAGE_LISTS);
@@ -1929,21 +1915,7 @@ static int IsNewerThanInstalled(const char *n, const char *v, const char *a, cha
 
 /*****************************************************************************/
 
-static int ExecPackageCommand(char *command, int verify, int setCmdClasses, Attributes a, Promise *pp)
-{
-    if (strncmp(command, "/cf_internal_rpath", sizeof("/cf_internal_rpath") - 1) == 0)
-    {
-        return ExecPackageCommandRpath(command, verify, setCmdClasses, a, pp);
-    }
-    else
-    {
-        return ExecPackageCommandGeneric(command, verify, setCmdClasses, a, pp);
-    }
-}
-
-/*****************************************************************************/
-
-int ExecPackageCommandGeneric(char *command, int verify, int setCmdClasses, Attributes a, Promise *pp)
+int ExecPackageCommand(char *command, int verify, int setCmdClasses, Attributes a, Promise *pp)
 {
     int retval = true;
     char line[CF_BUFSIZE], lineSafe[CF_BUFSIZE], *cmd;

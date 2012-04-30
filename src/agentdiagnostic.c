@@ -45,8 +45,6 @@ void AgentDiagnostic(void)
         FREPORT_HTML = fopen(NULLFILE, "w");
     }
 
-//getcwd(cwd,CF_BUFSIZE);
-
     printf("----------------------------------------------------------\n");
     printf("Cfengine 3 - Performing level 2 self-diagnostic (dialogue)\n");
     printf("----------------------------------------------------------\n\n");

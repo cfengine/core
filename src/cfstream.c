@@ -404,17 +404,6 @@ static void FileReport(const Item *mess, bool has_prefix, const char *filename)
 
 /*********************************************************************************/
 
-char *GetErrorStr(void)
-{
-#ifdef MINGW
-    return NovaWin_GetErrorStr();
-#else
-    return Unix_GetErrorStr();
-#endif
-}
-
-/*********************************************************************************/
-
 #if !defined(__MINGW32__)
 
 static void MakeLog(Item *mess, enum cfreport level)

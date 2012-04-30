@@ -97,7 +97,7 @@ void cfPS(enum cfreport level, char status, char *errstr, Promise *pp, Attribute
 
 void CfFile(FILE *fp, char *fmt, ...) FUNC_ATTR_FORMAT(printf, 2, 3);
 
-char *GetErrorStr(void);
+const char *GetErrorStr(void);
 
 /* cf_sql.c */
 
@@ -944,7 +944,6 @@ int Unix_DoAllSignals(Item *siglist, Attributes a, Promise *pp);
 int Unix_LoadProcessTable(Item **procdata);
 void Unix_CreateEmptyFile(char *name);
 int Unix_IsExecutable(const char *file);
-char *Unix_GetErrorStr(void);
 #endif /* NOT MINGW */
 
 /* vars.c */

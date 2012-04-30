@@ -412,11 +412,11 @@ static void MakeReport(Item *mess, int prefix)
 
         if (prefix)
         {
-            fprintf(fh, "%s> %s\n", VPREFIX, ip->name);
+            printf("%s> %s\n", VPREFIX, ip->name);
         }
         else
         {
-            fprintf(fh, "%s\n", ip->name);
+            printf("%s\n", ip->name);
         }
 
         ThreadUnlock(cft_report);

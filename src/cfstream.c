@@ -36,8 +36,12 @@
 
 /*****************************************************************************/
 
-static void MakeReport(Item *mess, int prefix);
-static void FileReport(Item *mess, int prefix, char *filename);
+/*
+ * Log a list of strings into provided FILE
+ */
+static void LogList(FILE *fh, const Item *messages, bool has_prefix);
+
+static void FileReport(const Item *mess, bool has_prefix, const char *filename);
 
 #if !defined(__MINGW32__)
 static void MakeLog(Item *mess, enum cfreport level);
@@ -47,9 +51,11 @@ static void LogPromiseResult(char *promiser, char peeType, void *promisee, char 
 
 /*****************************************************************************/
 
-void CfFOut(char *filename, enum cfreport level, char *errstr, char *fmt, ...)
+/*
+ * Common functionality of CfFOut and CfOut.
+ */
+static void VLog(FILE *fh, enum cfreport level, const char *errstr, const char *fmt, va_list args)
 {
-    va_list ap;
     char buffer[CF_BUFSIZE], output[CF_BUFSIZE];
     Item *mess = NULL;
 
@@ -59,9 +65,7 @@ void CfFOut(char *filename, enum cfreport level, char *errstr, char *fmt, ...)
     }
 
     memset(output, 0, CF_BUFSIZE);
-    va_start(ap, fmt);
-    vsnprintf(buffer, CF_BUFSIZE - 1, fmt, ap);
-    va_end(ap);
+    vsnprintf(buffer, CF_BUFSIZE - 1, fmt, args);
     Chop(buffer);
     AppendItem(&mess, buffer, NULL);
 
@@ -77,7 +81,7 @@ void CfFOut(char *filename, enum cfreport level, char *errstr, char *fmt, ...)
 
         if (INFORM || VERBOSE || DEBUG)
         {
-            FileReport(mess, VERBOSE, filename);
+            LogList(fh, mess, VERBOSE);
         }
         break;
 
@@ -85,7 +89,7 @@ void CfFOut(char *filename, enum cfreport level, char *errstr, char *fmt, ...)
 
         if (VERBOSE || DEBUG)
         {
-            FileReport(mess, VERBOSE, filename);
+            LogList(fh, mess, VERBOSE);
         }
         break;
 
@@ -93,7 +97,7 @@ void CfFOut(char *filename, enum cfreport level, char *errstr, char *fmt, ...)
     case cf_reporting:
     case cf_cmdout:
 
-        FileReport(mess, VERBOSE, filename);
+        LogList(fh, mess, VERBOSE);
         MakeLog(mess, level);
         break;
 
@@ -101,7 +105,7 @@ void CfFOut(char *filename, enum cfreport level, char *errstr, char *fmt, ...)
 
         if (VERBOSE || DEBUG)
         {
-            FileReport(mess, VERBOSE, filename);
+            LogList(fh, mess, VERBOSE);
         }
         MakeLog(mess, cf_verbose);
         break;
@@ -115,75 +119,34 @@ void CfFOut(char *filename, enum cfreport level, char *errstr, char *fmt, ...)
     DeleteItemList(mess);
 }
 
-/*****************************************************************************/
+void CfFOut(char *filename, enum cfreport level, char *errstr, char *fmt, ...)
+{
+    FILE *fp = fopen(filename, "a");
+    if (fp == NULL)
+    {
+        CfOut(cf_error, "fopen", "Could not open log file %s\n", filename);
+        fp = stdout;
+    }
+
+    va_list ap;
+    va_start(ap, fmt);
+
+    VLog(fp, level, errstr, fmt, ap);
+
+    va_end(ap);
+
+    if (fp != stdout)
+    {
+        fclose(fp);
+    }
+}
 
 void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
 {
     va_list ap;
-    char buffer[CF_BUFSIZE], output[CF_BUFSIZE];
-    Item *mess = NULL;
-
-    if ((fmt == NULL) || (strlen(fmt) == 0))
-    {
-        return;
-    }
-
-    memset(output, 0, CF_BUFSIZE);
     va_start(ap, fmt);
-    vsnprintf(buffer, CF_BUFSIZE - 1, fmt, ap);
+    VLog(stdout, level, errstr, fmt, ap);
     va_end(ap);
-
-    Chop(buffer);
-    AppendItem(&mess, buffer, NULL);
-
-    if ((errstr == NULL) || (strlen(errstr) > 0))
-    {
-        snprintf(output, CF_BUFSIZE - 1, " !!! System error for %s: \"%s\"", errstr, GetErrorStr());
-        AppendItem(&mess, output, NULL);
-    }
-
-    switch (level)
-    {
-    case cf_inform:
-
-        if (INFORM || VERBOSE || DEBUG)
-        {
-            MakeReport(mess, VERBOSE);
-        }
-        break;
-
-    case cf_verbose:
-
-        if (VERBOSE || DEBUG)
-        {
-            MakeReport(mess, VERBOSE);
-        }
-        break;
-
-    case cf_error:
-    case cf_reporting:
-    case cf_cmdout:
-
-        MakeReport(mess, VERBOSE);
-        MakeLog(mess, level);
-        break;
-
-    case cf_log:
-
-        if (VERBOSE || DEBUG)
-        {
-            MakeReport(mess, VERBOSE);
-        }
-        MakeLog(mess, cf_verbose);
-        break;
-
-    default:
-
-        CfOut(cf_error, "", "Trying to emit an error message with unknown level %d", level);
-        break;
-    }
-
-    DeleteItemList(mess);
 }
 
 /*****************************************************************************/
@@ -287,7 +250,7 @@ void cfPS(enum cfreport level, char status, char *errstr, Promise *pp, Attribute
 
         if (INFORM || verbose || DEBUG || attr.transaction.report_level == cf_inform)
         {
-            MakeReport(mess, verbose);
+            LogList(stdout, mess, verbose);
         }
 
         if (attr.transaction.log_level == cf_inform)
@@ -305,7 +268,7 @@ void cfPS(enum cfreport level, char status, char *errstr, Promise *pp, Attribute
         }
         else
         {
-            MakeReport(mess, verbose);
+            LogList(stdout, mess, verbose);
         }
 
         if (attr.transaction.log_level == cf_inform)
@@ -318,7 +281,7 @@ void cfPS(enum cfreport level, char status, char *errstr, Promise *pp, Attribute
 
         if (verbose || DEBUG)
         {
-            MakeReport(mess, verbose);
+            LogList(stdout, mess, verbose);
         }
 
         if (attr.transaction.log_level == cf_verbose)
@@ -336,7 +299,7 @@ void cfPS(enum cfreport level, char status, char *errstr, Promise *pp, Attribute
         }
         else
         {
-            MakeReport(mess, verbose);
+            LogList(stdout, mess, verbose);
         }
 
         if (attr.transaction.log_level == cf_error)
@@ -402,15 +365,13 @@ void CfFile(FILE *fp, char *fmt, ...)
 /* Level                                                                         */
 /*********************************************************************************/
 
-static void MakeReport(Item *mess, int prefix)
+static void LogList(FILE *fh, const Item *mess, bool has_prefix)
 {
-    Item *ip;
-
-    for (ip = mess; ip != NULL; ip = ip->next)
+    for (const Item *ip = mess; ip != NULL; ip = ip->next)
     {
         ThreadLock(cft_report);
 
-        if (prefix)
+        if (has_prefix)
         {
             printf("%s> %s\n", VPREFIX, ip->name);
         }
@@ -423,11 +384,8 @@ static void MakeReport(Item *mess, int prefix)
     }
 }
 
-/*********************************************************************************/
-
-static void FileReport(Item *mess, int prefix, char *filename)
+static void FileReport(const Item *mess, bool has_prefix, const char *filename)
 {
-    Item *ip;
     FILE *fp;
 
     if ((fp = fopen(filename, "a")) == NULL)
@@ -436,21 +394,7 @@ static void FileReport(Item *mess, int prefix, char *filename)
         fp = stdout;
     }
 
-    for (ip = mess; ip != NULL; ip = ip->next)
-    {
-        ThreadLock(cft_output);
-
-        if (prefix)
-        {
-            fprintf(fp, "%s> %s\n", VPREFIX, ip->name);
-        }
-        else
-        {
-            fprintf(fp, "%s\n", ip->name);
-        }
-
-        ThreadUnlock(cft_output);
-    }
+    LogList(fp, mess, has_prefix);
 
     if (fp != stdout)
     {

@@ -1,0 +1,11 @@
+
+@verbatim
+
+things:
+
+  "disk failure"
+
+    is_preceded_by => { "write errors", "read errors" },
+         certainty => "possible";
+
+@end verbatim

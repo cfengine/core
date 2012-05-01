@@ -1,0 +1,9 @@
+
+@i{History}: Was introduced in 3.3.0, Nova 2.2.0 (2012)
+
+As of CFEngine 3.3.0, this represents a list of topics on which
+the named occurrence provides information. 
+
+History: Previously the context class had been used for this purpose,
+but this led to confusion between usage or context and the subjects
+covered by a document. 

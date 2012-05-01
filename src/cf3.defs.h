@@ -515,6 +515,8 @@ enum storytype
 #define KM_REPAIR_CERT_B "is repaired by"
 #define KM_FOLLOW_CERT_F "is followed by"
 #define KM_FOLLOW_CERT_B "is preceded by"
+#define KM_INVOLVES_CERT_F "involves"
+#define KM_INVOLVES_CERT_B "is involved in"
 
 
 #define KM_CAUSE_POSS_F "can cause"
@@ -549,6 +551,8 @@ enum storytype
 #define KM_REPAIR_POSS_B "can be repaired by"
 #define KM_FOLLOW_POSS_F "can be followed by"
 #define KM_FOLLOW_POSS_B "can be preceded by"
+#define KM_INVOLVES_POSS_F "can involve"
+#define KM_INVOLVES_POSS_B "can be involved in"
 
 #define KM_CAUSE_UNCERT_F "might cause"
 #define KM_CAUSE_UNCERT_B "might be caused by"
@@ -584,6 +588,8 @@ enum storytype
 #define KM_REPAIR_UNCERT_B "might be repaired by"
 #define KM_FOLLOW_UNCERT_F "might be followed by"
 #define KM_FOLLOW_UNCERT_B "might be preceded by"
+#define KM_INVOLVES_UNCERT_F "might involve"
+#define KM_INVOLVES_UNCERT_B "might be involved in"
 
 
 #define KM_GENERALIZES_F "is a generalization of"

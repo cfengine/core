@@ -70,6 +70,8 @@ static PackageItem *GetCachedPackageList(PackageManager *manager, Attributes a, 
 PackageManager *PACKAGE_SCHEDULE = NULL;
 PackageManager *INSTALLED_PACKAGE_LISTS = NULL;
 
+#define PACKAGE_LIST_COMMAND_WINAPI "/Windows_API"
+
 /*****************************************************************************/
 
 void VerifyPackagesPromise(Promise *pp)
@@ -82,7 +84,10 @@ void VerifyPackagesPromise(Promise *pp)
 
 #ifdef MINGW
 
-    a.packages.package_list_command = "/Windows_Installer";
+    if(!a.packages.package_list_command)
+    {
+        a.packages.package_list_command = PACKAGE_LIST_COMMAND_WINAPI;
+    }
 
 #endif
 
@@ -132,13 +137,7 @@ void VerifyPackagesPromise(Promise *pp)
 
 static int PackageSanityCheck(Attributes a, Promise *pp)
 {
-#ifndef MINGW
-    if (a.packages.package_list_version_regex == NULL)
-    {
-        cfPS(cf_error, CF_FAIL, "", pp, a,
-             " !! You must supply a method for determining the version of existing packages e.g. use the standard library generic package_method");
-        return false;
-    }
+#ifndef MINGW  // Windows may use Win32 API for listing and parsing
 
     if (a.packages.package_list_name_regex == NULL)
     {
@@ -146,12 +145,11 @@ static int PackageSanityCheck(Attributes a, Promise *pp)
              " !! You must supply a method for determining the name of existing packages e.g. use the standard library generic package_method");
         return false;
     }
-#endif /* NOT MINGW */
-
-    if (a.packages.package_list_command == NULL && a.packages.package_file_repositories == NULL)
+    
+    if (a.packages.package_list_version_regex == NULL)
     {
         cfPS(cf_error, CF_FAIL, "", pp, a,
-             " !! You must supply a method for determining the list of existing packages (a command or repository list) e.g. use the standard library generic package_method");
+             " !! You must supply a method for determining the version of existing packages e.g. use the standard library generic package_method");
         return false;
     }
 
@@ -159,6 +157,17 @@ static int PackageSanityCheck(Attributes a, Promise *pp)
     {
         CfOut(cf_error, "", "The proposed package list command \"%s\" was not executable",
               a.packages.package_list_command);
+        return false;
+    }
+
+
+#endif /* NOT MINGW */
+
+
+    if (a.packages.package_list_command == NULL && a.packages.package_file_repositories == NULL)
+    {
+        cfPS(cf_error, CF_FAIL, "", pp, a,
+             " !! You must supply a method for determining the list of existing packages (a command or repository list) e.g. use the standard library generic package_method");
         return false;
     }
 
@@ -332,17 +341,26 @@ static int VerifyInstalledPackages(PackageManager **all_mgrs, Attributes a, Prom
 
 #ifdef MINGW
 
-    CfOut(cf_verbose, "", " Using internal list command for Windows");
-
-    if (!NovaWin_GetInstalledPkgs(&(manager->pack_list), a, pp))
+    if (strcmp(a.packages.package_list_command, PACKAGE_LIST_COMMAND_WINAPI) == 0)
     {
-        CfOut(cf_error, "", "!! Could not get list of installed packages");
-        return false;
+        if (!NovaWin_PackageListInstalledFromAPI(&(manager->pack_list), a, pp))
+        {
+            CfOut(cf_error, "", "!! Could not get list of installed packages");
+            return false;
+        }
+    }
+    else
+    {
+        if(!PackageListInstalledFromCommand(&(manager->pack_list), a, pp))
+        {
+            CfOut(cf_error, "", "!! Could not get list of installed packages");
+            return false;
+        }
     }
 
 #else
 
-    if (a.packages.package_list_command != NULL)
+    if (a.packages.package_list_command)
     {
         if(!PackageListInstalledFromCommand(&(manager->pack_list), a, pp))
         {
@@ -440,7 +458,7 @@ static bool PackageListInstalledFromCommand(PackageItem **installed_list, Attrib
         memset(buf, 0, CF_BUFSIZE);
         CfReadLine(buf, CF_BUFSIZE, fin);
         CF_OCCUR++;
-        
+
         if (a.packages.package_multiline_start)
         {
             if (FullTextMatch(a.packages.package_multiline_start, buf))
@@ -461,8 +479,10 @@ static bool PackageListInstalledFromCommand(PackageItem **installed_list, Attrib
             
             if (!PrependListPackageItem(installed_list, buf, a, pp))
             {
+                CfOut(cf_verbose, "", "Package line %s did not match one of the package_list_(name|version|arch)_regex patterns", buf);
                 continue;
             }
+
         }
     }
     

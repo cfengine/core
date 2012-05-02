@@ -223,7 +223,7 @@ GenericAgentConfig CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig config = GenericAgentDefaultConfig(cf_server);
 
-    while ((c = getopt_long(argc, argv, "dvIKf:D:N:VSxLFM", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvIKf:D:N:VSxLFMh", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {

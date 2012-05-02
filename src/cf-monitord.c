@@ -112,7 +112,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig config = GenericAgentDefaultConfig(cf_monitor);
 
-    while ((c = getopt_long(argc, argv, "dvnIf:VSxHTKMF", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvnIf:VSxHTKMFh", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {

@@ -38,6 +38,7 @@ static int ExecuteSchedule(PackageManager *schedule, enum package_actions action
 static int ExecutePatch(PackageManager *schedule, enum package_actions action);
 static int PackageSanityCheck(Attributes a, Promise *pp);
 static int VerifyInstalledPackages(PackageManager **alllists, Attributes a, Promise *pp);
+static bool PackageListInstalledFromCommand(PackageItem **installed_list, Attributes a, Promise *pp);
 static void VerifyPromisedPackage(Attributes a, Promise *pp);
 static void DeletePackageItems(PackageItem * pi);
 static int PackageMatch(const char *n, const char *v, const char *a, Attributes attr, Promise *pp);
@@ -307,9 +308,7 @@ static void ExecutePackageSchedule(PackageManager *schedule)
 static int VerifyInstalledPackages(PackageManager **all_mgrs, Attributes a, Promise *pp)
 {
     PackageManager *manager = NewPackageManager(all_mgrs, a.packages.package_list_command, cfa_pa_none, cfa_no_ppolicy);
-    const int reset = true, update = false;
     char vbuff[CF_BUFSIZE];
-    FILE *prp;
 
     if (manager == NULL)
     {
@@ -345,59 +344,11 @@ static int VerifyInstalledPackages(PackageManager **all_mgrs, Attributes a, Prom
 
     if (a.packages.package_list_command != NULL)
     {
-        if (a.packages.package_list_update_command != NULL)
+        if(!PackageListInstalledFromCommand(&(manager->pack_list), a, pp))
         {
-            ExecPackageCommand(a.packages.package_list_update_command, false, false, a, pp);
-        }
-
-        CfOut(cf_verbose, "", " ???????????????????????????????????????????????????????????????\n");
-        CfOut(cf_verbose, "", "   Reading package list from %s\n", GetArg0(a.packages.package_list_command));
-        CfOut(cf_verbose, "", " ???????????????????????????????????????????????????????????????\n");
-
-        if ((prp = cf_popen(a.packages.package_list_command, "r")) == NULL)
-        {
-            CfOut(cf_error, "cf_popen", "Couldn't open the package list with command %s\n",
-                  a.packages.package_list_command);
+            CfOut(cf_error, "", "!! Could not get list of installed packages");
             return false;
         }
-
-        while (!feof(prp))
-        {
-            memset(vbuff, 0, CF_BUFSIZE);
-            CfReadLine(vbuff, CF_BUFSIZE, prp);
-            CF_OCCUR++;
-
-            if (a.packages.package_multiline_start)
-            {
-                if (FullTextMatch(a.packages.package_multiline_start, vbuff))
-                {
-                    PrependMultiLinePackageItem(&(manager->pack_list), vbuff, reset, a, pp);
-                }
-                else
-                {
-                    PrependMultiLinePackageItem(&(manager->pack_list), vbuff, update, a, pp);
-                }
-            }
-            else
-            {
-                if (!FullTextMatch(a.packages.package_installed_regex, vbuff))
-                {
-                    continue;
-                }
-
-                if (!PrependListPackageItem(&(manager->pack_list), vbuff, a, pp))
-                {
-                    continue;
-                }
-            }
-        }
-
-        if (a.packages.package_multiline_start)
-        {
-            PrependMultiLinePackageItem(&(manager->pack_list), vbuff, reset, a, pp);
-        }
-
-        cf_pclose(prp);
     }
     
 #endif /* NOT MINGW */
@@ -419,17 +370,19 @@ static int VerifyInstalledPackages(PackageManager **all_mgrs, Attributes a, Prom
             return false;
         }
 
-        if ((prp = cf_popen(a.packages.package_patch_list_command, "r")) == NULL)
+        FILE *fin;
+
+        if ((fin = cf_popen(a.packages.package_patch_list_command, "r")) == NULL)
         {
             CfOut(cf_error, "cf_popen", "Couldn't open the patch list with command %s\n",
                   a.packages.package_patch_list_command);
             return false;
         }
 
-        while (!feof(prp))
+        while (!feof(fin))
         {
             memset(vbuff, 0, CF_BUFSIZE);
-            CfReadLine(vbuff, CF_BUFSIZE, prp);
+            CfReadLine(vbuff, CF_BUFSIZE, fin);
 
             // assume patch_list_command lists available patches/updates by default
             if (a.packages.package_patch_installed_regex == NULL
@@ -445,7 +398,7 @@ static int VerifyInstalledPackages(PackageManager **all_mgrs, Attributes a, Prom
             }
         }
 
-        cf_pclose(prp);
+        cf_pclose(fin);
     }
 
     ReportPatches(INSTALLED_PACKAGE_LISTS);
@@ -458,6 +411,73 @@ static int VerifyInstalledPackages(PackageManager **all_mgrs, Attributes a, Prom
 }
 
 /*****************************************************************************/
+
+static bool PackageListInstalledFromCommand(PackageItem **installed_list, Attributes a, Promise *pp)
+{
+    if (a.packages.package_list_update_command != NULL)
+    {
+        ExecPackageCommand(a.packages.package_list_update_command, false, false, a, pp);
+    }
+
+    CfOut(cf_verbose, "", " ???????????????????????????????????????????????????????????????\n");
+    CfOut(cf_verbose, "", "   Reading package list from %s\n", GetArg0(a.packages.package_list_command));
+    CfOut(cf_verbose, "", " ???????????????????????????????????????????????????????????????\n");
+
+    FILE *fin;
+    
+    if ((fin = cf_popen(a.packages.package_list_command, "r")) == NULL)
+    {
+        CfOut(cf_error, "cf_popen", "Couldn't open the package list with command %s",
+              a.packages.package_list_command);
+        return false;
+    }
+
+    const int reset = true, update = false;
+    char buf[CF_BUFSIZE];
+    
+    while (!feof(fin))
+    {
+        memset(buf, 0, CF_BUFSIZE);
+        CfReadLine(buf, CF_BUFSIZE, fin);
+        CF_OCCUR++;
+        
+        if (a.packages.package_multiline_start)
+        {
+            if (FullTextMatch(a.packages.package_multiline_start, buf))
+            {
+                PrependMultiLinePackageItem(installed_list, buf, reset, a, pp);
+            }
+            else
+            {
+                PrependMultiLinePackageItem(installed_list, buf, update, a, pp);
+            }
+        }
+        else
+        {
+            if (!FullTextMatch(a.packages.package_installed_regex, buf))
+            {
+                continue;
+            }
+            
+            if (!PrependListPackageItem(installed_list, buf, a, pp))
+            {
+                continue;
+            }
+        }
+    }
+    
+    if (a.packages.package_multiline_start)
+    {
+        PrependMultiLinePackageItem(installed_list, buf, reset, a, pp);
+    }
+    
+    cf_pclose(fin);
+
+    return true;
+}
+
+/*****************************************************************************/
+
 static int VersionCheckSchedulePackage(Attributes a, Promise *pp, int matches, int installed)
 {
 /* The meaning of matches and installed depends on the package policy */

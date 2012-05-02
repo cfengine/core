@@ -339,7 +339,7 @@ static void KeepPromises(void)
         {
             int time = Str2Int(ScalarRvalValue(retval));
 
-            SPLAYTIME = (int) (time * GetSplay());
+            SPLAYTIME = (int) (time * SECONDS_PER_MINUTE * GetSplay());
         }
 
         if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_schedule].lval) == 0)

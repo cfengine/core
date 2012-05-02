@@ -38,6 +38,12 @@
 # include <sys/syssgi.h>
 #endif
 
+#ifdef HAVE_SYSINFO 
+# ifdef HAVE_SYS_SYSINFO_H
+#  include <sys/sysinfo.h>
+# endif
+#endif
+
 void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname, char *uqname, char *domain);
 
 #ifdef LINUX
@@ -174,9 +180,12 @@ void GetNameInfo3()
 #ifdef IRIX
     char real_version[256];     /* see <sys/syssgi.h> */
 #endif
-#if defined(HAVE_SYSINFO) && (defined(SI_ARCHITECTURE) || defined(SI_PLATFORM))
+#if defined(HAVE_SYSINFO) 
+# if (defined(SI_ARCHITECTURE) || defined(SI_PLATFORM))
     long sz;
+# endif 
 #endif
+
     char *components[] = { "cf-twin", "cf-agent", "cf-serverd", "cf-monitord", "cf-know",
         "cf-report", "cf-key", "cf-runagent", "cf-execd", "cf-hub",
         "cf-promises", NULL
@@ -445,6 +454,50 @@ void GetNameInfo3()
     CfOut(cf_verbose, "", "Additional hard class defined as: %s\n", CanonifyName(workbuf));
 
 #ifdef HAVE_SYSINFO
+# ifdef HAVE_SYS_SYSINFO_H
+#  ifdef LINUX
+
+/* HAVE_SYSINFO, defined if the sysinfo function exists, is defined on Linux differently 
+ * than on other systems - it only takes a single pointer to type 'struct sysinfo'
+ * and returns 0 on success; sets errno otherwise. See sysinfo(2). 
+ * The other version of sysinfo below, which takes three arguments, appears to be a
+ * Solaris/other UNIX definition although I have not yet verified this. - */
+
+    int ret = 0;
+    struct sysinfo info;
+    ret = sysinfo(&info);
+   
+    if ( ret != 0 ) 
+    {
+        /* If ret == -1, errno most likely contains EFAULT - pointer to struct sysinfo is invalid */ 
+        CfOut(cf_verbose, "", "cfengine internal: sysinfo returned < 0: %d with errno: %d", ret, errno); 
+    }
+    else 
+    {
+        CfOut(cf_verbose, "", "cfengine internal: uptime set to: %ld\n", info.uptime);
+        snprintf(workbuf,CF_MAXVARSIZE, "%ld", (long) info.uptime);
+        NewScalar("sys", "uptime", workbuf, cf_int);
+
+        //NewScalar("sys", "uptime", (int) info.uptime, cf_int); 
+         
+        /* Besides uptime, we could also use: ( see sysinfo(2) ) */
+//      long uptime;             /* Seconds since boot */
+//      unsigned long loads[3];  /* 1, 5, and 15 minute load averages */
+//      unsigned long totalram;  /* Total usable main memory size */
+//      unsigned long freeram;   /* Available memory size */
+//      unsigned long sharedram; /* Amount of shared memory */
+//      unsigned long bufferram; /* Memory used by buffers */
+//      unsigned long totalswap; /* Total swap space size */
+//      unsigned long freeswap;  /* swap space still available */
+//      unsigned short procs;    /* Number of current processes */
+//      unsigned long totalhigh; /* Total high memory size */
+//      unsigned long freehigh;  /* Available high memory size */
+//      unsigned int mem_unit;   /* Memory unit size in bytes */
+
+     } 
+
+#  endif
+# endif
 # ifdef SI_ARCHITECTURE
     sz = sysinfo(SI_ARCHITECTURE, workbuf, CF_BUFSIZE);
     if (sz == -1)

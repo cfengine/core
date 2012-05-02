@@ -399,6 +399,20 @@ void StartServer(void)
 
         /* Kill previous instances of cf-execd if those are still running */
         Apoptosis();
+
+        /* FIXME: kludge. This code re-sets "last" lock to the one we have
+           acquired a few lines before. If the cf-execd is terminated, this lock
+           will be removed, and subsequent restart of cf-execd won't fail.
+
+           The culprit is Apoptosis(), which creates a promise and executes it,
+           taking locks during it, so CFLOCK/CFLAST/CFLOG get reset.
+
+           Proper fix is to keep all the taken locks in the memory, and release
+           all of them during process termination.
+         */
+        strcpy(CFLOCK, thislock.lock);
+        strcpy(CFLAST, thislock.last);
+        strcpy(CFLOG, thislock.log);
     }
 
 #ifdef MINGW

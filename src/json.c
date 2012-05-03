@@ -380,6 +380,21 @@ void JsonArrayAppendString(JsonElement *array, const char *value)
     SequenceAppend(array->container.children, child);
 }
 
+void JsonArrayAppendInteger(JsonElement *object, int value)
+{
+    assert(object);
+    assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(object->container.type == JSON_CONTAINER_TYPE_ARRAY);
+
+    char *buffer = xcalloc(32, sizeof(char));
+
+    snprintf(buffer, 32, "%d", value);
+
+    JsonElement *child = JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_INTEGER, NULL, buffer);
+
+    SequenceAppend(object->container.children, child);
+}
+
 void JsonArrayAppendArray(JsonElement *array, JsonElement *childArray)
 {
     assert(array);

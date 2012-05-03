@@ -93,6 +93,7 @@ void VerifyPackagesPromise(Promise *pp)
 
     if (!PackageSanityCheck(a, pp))
     {
+        cfPS(cf_error, CF_FAIL, "", pp, a, " !! Unable to obtain a list of installed packages - aborting");
         return;
     }
 

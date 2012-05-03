@@ -48,7 +48,26 @@ JsonElement *JsonObjectGetAsObject(JsonElement *object, const char *key);
 JsonElement *JsonObjectGetAsArray(JsonElement *object, const char *key);
 
 void JsonArrayAppendString(JsonElement *array, const char *value);
-void JsonArrayAppendArray(JsonElement *array, JsonElement *childArray);
+
+/**
+  @brief Append an integer to an array.
+  @param array [in] The JSON array parent.
+  @param value [in] The integer value to append.
+  */
+void JsonArrayAppendInteger(JsonElement *array, int value);
+
+/**
+  @brief Append an array to an array.
+  @param array [in] The JSON array parent.
+  @param child_array [in] The array value to append.
+  */
+void JsonArrayAppendArray(JsonElement *array, JsonElement *child_array);
+
+/**
+  @brief Append an object to an array.
+  @param array [in] The JSON array parent.
+  @param object [in] The object value to append.
+  */
 void JsonArrayAppendObject(JsonElement *array, JsonElement *object);
 void JsonArrayRemoveRange(JsonElement *array, size_t start, size_t end);
 const char *JsonArrayGetAsString(JsonElement *array, size_t index);

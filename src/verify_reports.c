@@ -33,6 +33,7 @@
 #include "cf3.extern.h"
 
 #include "dbm_api.h"
+#include "files_names.h"
 
 static void ShowState(char *type, Attributes a, Promise *pp);
 static void PrintFile(Attributes a, Promise *pp);

@@ -33,6 +33,7 @@
 #include "generic_agent.h"
 
 #include "files_lib.h"
+#include "files_names.h"
 #include "parser.h"
 #include "dbm_api.h"
 #include "crypto.h"

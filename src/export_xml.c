@@ -24,8 +24,10 @@
 
 #include "cf3.defs.h"
 #include "cf3.extern.h"
+
 #include "xml_writer.h"
 #include "manual.h"
+#include "files_names.h"
 
 static char *MANUAL_DIRECTORY;
 

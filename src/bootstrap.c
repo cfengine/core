@@ -35,6 +35,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#include "files_names.h"
+
 /*
 
 Bootstrapping is a tricky sequence of fragile events. We need to map shakey/IP

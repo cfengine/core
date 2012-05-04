@@ -32,6 +32,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#include "files_names.h"
+
 static int MakeLink(char *from, char *to, Attributes attr, Promise *pp);
 static char *AbsLinkPath(char *from, char *relto);
 

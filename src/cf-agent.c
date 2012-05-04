@@ -32,6 +32,7 @@
 #include "generic_agent.h"
 #include "verify_environments.h"
 #include "addr_lib.h"
+#include "files_names.h"
 
 extern int PR_KEPT;
 extern int PR_REPAIRED;

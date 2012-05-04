@@ -1,3 +1,43 @@
+3.3.1   (Bugfix and Stability release)
+
+	Evaluation of policies:
+
+	- Do not cut off name of bundle in variables interpolation (Mantis #975).
+	- Do not segfault in function evaluation guarded by ifvaclass clause (Mantis #1084, #864).
+	- Do not segfault if "classes" promise does not declare any value to be evaluated (Mantis #1074).
+	- Do not segfault in database promises if there is no
+	    database_operation provided (Mantis #1046).
+
+	Built-in functions:
+
+	- Fix countclassesmatching() function which was misbehaving trying
+	    to match classes starting with alphanumeric symbol (Mantis #1073).
+	- Fix diskfree() to return kilobytes, as described in documentation (Mantis #980, #955).
+	- Fix hostsseen() function to avoid treating all hosts as not
+	    being seen since 1970 (Mantis #886).
+	- Do not output misleading error message if readtcp() is unable to connect (Mantis #1085).
+
+	Command-line interface:
+
+	- -d option previously reqired an argument, though help message disagreed (Mantis #1053).
+	- Disable --parse-tree option, not ready for the release (Mantis #1063).
+	- Acept -h as a --help option.
+	- Ensure that cf-execd might be started right after being shut down.
+
+	Misc:
+
+	- Plug file descriptor leak after failed file copy (Mantis #990).
+	- Fix unsafe admit rules in default promises.cf (Mantis #1040).
+	- Fix splaytime to match documentation: it is specified in minutes, not seconds (Mantis #1099).
+
+	Packaging:
+
+	- Fix owner/group of initscript and profile.d snippet in RPM builds (Mantis #1061, #1058).
+	- Fix location of libvirt socket CFEngine uses to connect to libvirtd (Mantis #1072).
+	- Install CoreBase to /var/cfengine/masterfiles during installation (Mantis #1075).
+	- Do not leave old cf-twin around after upgrade (Mantis #1068)
+	- Do not leave rcS.d symlinks after purging .deb package (Mantis #1092).
+
 3.3.0
 
 	New promise types:

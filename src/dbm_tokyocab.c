@@ -104,20 +104,30 @@ static const char *ErrorMessage(TCHDB *hdb)
     return tchdberrmsg(tchdbecode(hdb));
 }
 
+static bool OpenTokyoDatabase(const char *filename, TCHDB **hdb)
+{
+    *hdb = tchdbnew();
+
+    if (!tchdbsetmutex(*hdb))
+    {
+        return false;
+    }
+
+    if (!tchdbopen(*hdb, filename, HDBOWRITER | HDBOCREAT))
+    {
+        return false;
+    }
+
+    return true;
+}
+
 DBPriv *DBPrivOpenDB(const char *dbpath)
 {
     DBPriv *db = xcalloc(1, sizeof(DBPriv));
-    db->hdb = tchdbnew();
 
     pthread_mutex_init(&db->cursor_lock, NULL);
 
-    if (!tchdbsetmutex(db->hdb))
-    {
-        CfOut(cf_error, "", "!! Unable to setup locking on Tokyo Cabinet database");
-        goto err;
-    }
-
-    if (!tchdbopen(db->hdb, dbpath, HDBOWRITER | HDBOCREAT))
+    if (!OpenTokyoDatabase(dbpath, &db->hdb))
     {
         CfOut(cf_error, "", "!! Could not open database %s: %s",
               dbpath, ErrorMessage(db->hdb));
@@ -129,10 +139,13 @@ DBPriv *DBPrivOpenDB(const char *dbpath)
             goto err;
         }
 
+        tchdbdel(db->hdb);
+
         CfOut(cf_error, "", "!! Database \"%s\" is broken, recreating...", dbpath);
+
         DBPathMoveBroken(dbpath);
 
-        if(!tchdbopen(db->hdb, dbpath, HDBOWRITER | HDBOCREAT))
+        if (!OpenTokyoDatabase(dbpath, &db->hdb))
         {
             CfOut(cf_error, "", "!! Could not open database %s after recreate: %s",
                   dbpath, ErrorMessage(db->hdb));

@@ -29,6 +29,7 @@
 #include "dbm_api.h"
 #include "lastseen.h"
 #include "crypto.h"
+#include "files_names.h"
 
 #define QUEUESIZE 50
 #define CF_BUFEXT 128

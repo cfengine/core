@@ -25,6 +25,8 @@
 #include "cf3.defs.h"
 #include "cf-execd-runner.h"
 
+#include "files_names.h"
+
 /*******************************************************************/
 
 static const int INF_LINES = -2;

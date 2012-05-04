@@ -33,6 +33,8 @@
 #include "cf3.extern.h"
 #include "cf3.server.h"
 
+#include "files_names.h"
+
 static void KeepContextBundles(void);
 static void KeepServerPromise(Promise *pp);
 static void InstallServerAuthPath(char *path, Auth **list, Auth **listtop);

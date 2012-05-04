@@ -27,6 +27,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#include "files_names.h"
+
 /*******************************************************************/
 
 int PrintItemList(char *buffer, int bufsize, Item *list)

@@ -35,6 +35,7 @@
 #include "cf3.extern.h"
 
 #include "json.h"
+#include "files_names.h"
 
 static const int PRETTY_PRINT_SPACES_PER_INDENT = 2;
 

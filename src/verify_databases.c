@@ -32,6 +32,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#include "files_names.h"
+
 static int CheckDatabaseSanity(Attributes a, Promise *pp);
 static void VerifySQLPromise(Attributes a, Promise *pp);
 static int VerifyDatabasePromise(CfdbConn *cfdb, char *database, Attributes a, Promise *pp);

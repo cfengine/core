@@ -33,6 +33,7 @@
 #include "dir.h"
 #include "dbm_api.h"
 #include "lastseen.h"
+#include "files_names.h"
 
 #include <libgen.h>
 

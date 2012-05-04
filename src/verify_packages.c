@@ -31,7 +31,9 @@
 
 #include "cf3.defs.h"
 #include "cf3.extern.h"
+
 #include "dir.h"
+#include "files_names.h"
 
 static void VerifyPromisedPatch(Attributes a, Promise *pp);
 static int ExecuteSchedule(PackageManager *schedule, enum package_actions action);

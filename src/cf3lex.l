@@ -33,6 +33,7 @@
 #include "cf3.extern.h"
 #include "cf3parse.h"
 #include "parser_state.h"
+#include "files_names.h"
 
 /* yyinput/input are generated and unused */
 #pragma GCC diagnostic ignored "-Wunused-function"

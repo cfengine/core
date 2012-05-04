@@ -31,6 +31,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#include "files_names.h"
+
 static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char **names, char **line);
 static int SelectProcRegexMatch(char *name1, char *name2, char *regex, char **colNames, char **line);
 static int SplitProcLine(char *proc, char **names, int *start, int *end, char **line);

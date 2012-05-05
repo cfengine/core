@@ -436,6 +436,26 @@ Attributes GetThingsAttributes(Promise *pp)
 
         attr.associates = rp;
     }
+    else if ((rp = GetListConstraint("is_determined_by", pp)))
+    {
+        switch (certainty)
+        {
+        case cfk_certain:
+            attr.fwd_name = KM_DETERMINES_CERT_B;
+            attr.bwd_name = KM_DETERMINES_CERT_F;
+            break;
+        case cfk_uncertain:
+            attr.fwd_name = KM_DETERMINES_UNCERT_B;
+            attr.bwd_name = KM_DETERMINES_UNCERT_F;
+            break;
+        case cfk_possible:
+            attr.fwd_name = KM_DETERMINES_POSS_B;
+            attr.bwd_name = KM_DETERMINES_POSS_F;
+            break;
+        }
+
+        attr.associates = rp;
+    }
     else if ((rp = GetListConstraint("is_connected_to", pp)))
     {
         switch (certainty)

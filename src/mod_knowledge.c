@@ -96,6 +96,7 @@ BodySyntax CF_THING_BODIES[] =
      "A list of words to be treated as super-sets for the current topic, used when reasoning"},
     {"involves", cf_slist, "", "Special fixed relation for describing topics that are things"},
     {"is_connected_to", cf_slist, "", "Special fixed relation for describing topics that are things"},
+    {"is_determined_by", cf_slist, "", "Special fixed relation for describing topics that are things"},
     {"is_followed_by", cf_slist, "", "Special fixed relation for describing topics that are things"},
     {"is_located_in", cf_slist, "", "Special fixed relation for describing topics that are things"},
     {"is_part_of", cf_slist, "", "Special fixed relation for describing topics that are things"},

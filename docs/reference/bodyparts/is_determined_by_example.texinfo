@@ -1,0 +1,9 @@
+
+
+@verbatim
+
+things:
+
+  "why" is_determined_by => { "bodyparts::comment", "Semantic commentary" };
+
+@end verbatim

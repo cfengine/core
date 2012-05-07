@@ -35,7 +35,8 @@ check_PROGRAMS = \
 	lastseen_migration_test \
 	misc_lib_test \
 	crypto_symmetric_test \
-	persistent_lock_test
+	persistent_lock_test  \
+        thread_test
 
 TESTS = $(check_PROGRAMS)
 

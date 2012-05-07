@@ -85,7 +85,7 @@ void SummarizeTransaction(Attributes attr, Promise *pp, char *logname)
     }
     else if (attr.transaction.log_failed)
     {
-        if (strcmp(logname, attr.transaction.log_failed) == 0)
+        if (logname && strcmp(logname, attr.transaction.log_failed) == 0)
         {
             cfPS(cf_log, CF_NOP, "", pp, attr, "%s", attr.transaction.log_string);
         }

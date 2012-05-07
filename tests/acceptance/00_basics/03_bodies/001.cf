@@ -1,0 +1,36 @@
+# Test that log_failed without log_kept does not segfault (Mantis #1107)
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle agent init
+{
+vars:
+  "dummy" string => "dummy";
+}
+
+bundle agent test
+{
+files:
+  "$(G.testdir)/foo.txt"
+    create => "true",
+    action => log;
+}
+
+body action log
+{
+  log_failed => "stdout";
+}
+
+bundle agent check
+{
+reports:
+  cfengine_3::
+    "$(this.promise_filename) Pass";
+}

@@ -569,7 +569,7 @@ Attributes GetThingsAttributes(Promise *pp)
 
         attr.associates = rp;
     }
-    else if ((rp = GetListConstraint("caused_by", pp)))
+    else if ((rp = GetListConstraint("is_caused_by", pp)))
     {
         switch (certainty)
         {

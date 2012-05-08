@@ -32,6 +32,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#include "vars.h"
+
 static void MapIteratorsFromScalar(const char *scope, Rlist **los, Rlist **lol, char *string, int level, Promise *pp);
 static int Epimenides(char *var, Rval rval, int level);
 static void RewriteInnerVarStringAsLocalCopyName(char *string);

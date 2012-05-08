@@ -27,6 +27,7 @@
 #include "cf3.extern.h"
 
 #include "files_names.h"
+#include "vars.h"
 
 static int ExecSanityChecks(Attributes a, Promise *pp);
 static void PreviewProtocolLine(char *line, char *comm);

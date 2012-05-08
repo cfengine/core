@@ -29,9 +29,12 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include "manual.h"
+
 #include "cf3.defs.h"
 #include "cf3.extern.h"
-#include "manual.h"
+
+#include "vars.h"
 #include "writer.h"
 
 extern char BUILD_DIR[CF_BUFSIZE];

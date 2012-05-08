@@ -26,6 +26,7 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#include "vars.h"
 #include "files_names.h"
 
 #ifdef HAVE_ZONE_H

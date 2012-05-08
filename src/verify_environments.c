@@ -26,6 +26,8 @@
 #include "cf3.extern.h"
 #include "files_lib.h"
 
+#include "vars.h"
+
 #ifndef HAVE_LIBVIRT
 
 void NewEnvironmentsContext(void)

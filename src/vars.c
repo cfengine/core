@@ -29,7 +29,8 @@
 /*                                                                 */
 /*******************************************************************/
 
-#include "cf3.defs.h"
+#include "vars.h"
+
 #include "cf3.extern.h"
 
 static int IsCf3Scalar(char *str);

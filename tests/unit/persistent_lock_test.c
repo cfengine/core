@@ -52,7 +52,7 @@ static void test_lock_invalidate(void **state)
 int main()
 {
     strlcpy(CFWORKDIR, "/tmp", sizeof(CFWORKDIR));
-    mkdir("/tmp/state", 0755);
+    cf_mkdir("/tmp/state", 0755);
     unlink("/tmp/state/cf_lock.tcdb");
     unlink("/tmp/state/cf_lock.qdbm");
 

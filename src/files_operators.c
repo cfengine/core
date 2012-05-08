@@ -35,6 +35,7 @@
 #include "dir.h"
 #include "dbm_api.h"
 #include "files_names.h"
+#include "vars.h"
 
 extern AgentConnection *COMS;
 

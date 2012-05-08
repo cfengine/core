@@ -32,6 +32,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#include "vars.h"
+
 static void TestRegularExpressions(void);
 static void TestAgentPromises(void);
 static void TestHashEntropy(char *s, char *s1);

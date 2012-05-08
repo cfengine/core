@@ -36,6 +36,7 @@
 #include "cf3.extern.h"
 
 #include "files_names.h"
+#include "vars.h"
 
 /*
 

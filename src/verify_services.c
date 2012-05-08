@@ -25,6 +25,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#include "vars.h"
+
 static int ServicesSanityChecks(Attributes a, Promise *pp);
 static void SetServiceDefaults(Attributes *a);
 static void DoVerifyServices(Attributes a, Promise *pp);

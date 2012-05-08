@@ -37,6 +37,7 @@
 #include "parser.h"
 #include "dbm_api.h"
 #include "crypto.h"
+#include "vars.h"
 
 extern char *CFH[][2];
 

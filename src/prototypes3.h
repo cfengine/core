@@ -906,14 +906,6 @@ void Unix_CreateEmptyFile(char *name);
 int Unix_IsExecutable(const char *file);
 #endif /* NOT MINGW */
 
-/* vars.c */
-
-void LoadSystemConstants(void);
-void ForceScalar(char *lval, char *rval);
-void NewScalar(const char *scope, const char *lval, const char *rval, enum cfdatatype dt);
-void DeleteScalar(const char *scope, const char *lval);
-void NewList(char *scope, char *lval, void *rval, enum cfdatatype dt);
-
 /*
  * Do not modify returned Rval, its contents may be constant and statically
  * allocated.

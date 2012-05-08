@@ -25,6 +25,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#include "vars.h"
+
 static int ProcessSanityChecks(Attributes a, Promise *pp);
 static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp);
 static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, Promise *pp);

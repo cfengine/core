@@ -25,6 +25,8 @@
 #include "generic_agent.h"
 #include "cf-execd-runner.h"
 
+#include "vars.h"
+
 /*******************************************************************/
 
 extern BodySyntax CFEX_CONTROLBODY[];

@@ -303,41 +303,33 @@ insert_lines:
 
 }
 
-##
+bundle edit_line set_config_values_matching(v,pat)
 
-bundle edit_line set_variable_values2(file,v)
-#
-# Another implementation of set_variable_values.
-# The input and output should be exactly the same (except the file name), 
-# but in some Cfengine versions there are bugs, 
-# so this bundle can be used as a workaround.
-#
+ # Sets the RHS of configuration items in the file of the form
+ #   LHS RHS
+ # If the line is commented out with #, it gets uncommented first.
+ # Adds a new line if none exists.
+ # Only elements of "v" that match the regex "pat" are used
+ # The argument is the fully-qualified name of an associative array containing v[LHS]="rhs"
+
 {
 vars:
-
-  "index" slist => getindices("$(v)");
+  "allparams" slist => getindices("$(v)");
+  "index"     slist => grep("$(pat)", "allparams");
 
   # Be careful if the index string contains funny chars
-
   "cindex[$(index)]" string => canonify("$(index)");
 
-  "fieldc_$(cindex[$(index)])" int => getfields("$(index).*","$(file)","=","FIELD_$(cindex[$(index)])");
-
-classes:
-  "$(cindex[$(index)])_in_file" expression => strcmp("$(index)=$($(v)[$(index)])", "$(FIELD_$(index)[1])=$(FIELD_$(index)[2])");
-
-
-delete_lines:  # delete any lhs when no match
-  "$(index)=.*",
-    ifvarclass => "!$(cindex[$(index)])_in_file";
-
+replace_patterns:
+    # If the line is there, maybe commented out, uncomment and replace with
+    # the correct value
+    "^\s*($(index)\s+(?!$($(v)[$(index)])).*|# ?$(index)\s+.*)$"
+      replace_with => value("$(index) $($(v)[$(index)])"),
+      classes => always("replace_attempted_$(cindex[$(index)])");
 
 insert_lines:
-
-  "$(index)=$($(v)[$(index)])",
-
-         comment => "Insert a variable definition",
-      ifvarclass => "!$(cindex[$(index)])_in_file";
+  "$(index) $($(v)[$(index)])"
+    ifvarclass => "replace_attempted_$(cindex[$(index)])";
 
 }
 
@@ -388,6 +380,22 @@ insert_lines:
          comment => "Append users into a group file format",
       ifvarclass => "add_$(index)";
 
+}
+
+##
+
+bundle edit_line set_colon_field(key,field,val)
+
+ # Set the value of field number "field" of the
+ # line whose first field is "key", in a colon-separated file.
+
+{
+field_edits:
+
+  "$(key):.*"
+
+       comment => "Edit a colon-separated file, using the first field as a key",
+     edit_field => col(":","$(field)","$(val)","set");
 }
 
 ##
@@ -456,7 +464,7 @@ vars:
   "cline" string => canonify("$(line)");
 
 replace_patterns:
-  "^(?!$(line))$(pattern)$"
+  "^(?!$(line)$)$(pattern)$"
   replace_with => value("$(line)"),
   classes => always("replace_done_$(cline)");
 
@@ -606,6 +614,15 @@ select_line_matching => "$(str)";
 }
 
 ##
+
+body location before(str)
+{
+before_after => "before";
+select_line_matching => "$(str)";
+}
+
+
+##
 ## replace_with
 ##
 
@@ -637,6 +654,14 @@ body action if_elapsed(x)
 {
 ifelapsed => "$(x)";
 expireafter => "$(x)";
+}
+
+##
+
+body action if_elapsed_day
+{
+ifelapsed => "1440";    # 60 x 24
+expireafter => "1400";
 }
 
 ##
@@ -1420,6 +1445,24 @@ package_noverify_regex => ".*[^\s].*";
 
 ##
 
+body package_method windows_feature
+{
+package_changes => "individual";
+
+package_name_convention   => "$(name)";
+package_delete_convention => "$(name)";
+
+package_installed_regex => ".*";
+package_list_name_regex => "(.*)";
+package_list_version_regex => "(.*)";  # FIXME: the listing does not give version, so takes name for version too now
+
+package_add_command    => "$(sys.winsysdir)\\WindowsPowerShell\\v1.0\\powershell.exe -Command \"Import-Module ServerManager; Add-WindowsFeature -Name\"";
+package_delete_command => "$(sys.winsysdir)\\WindowsPowerShell\\v1.0\\powershell.exe -Command \"Import-Module ServerManager; Remove-WindowsFeature -confirm:$false -Name\"";
+package_list_command   => "$(sys.winsysdir)\\WindowsPowerShell\\v1.0\\powershell.exe -Command \"Import-Module ServerManager; Get-WindowsFeature | where {$_.installed -eq $True} |foreach {$_.Name}\"";
+}
+
+##
+
 body package_method msi_implicit(repo)
 # Use whole file name as promiser, e.g. "7-Zip-4.50-x86_64.msi",
 # the name, version and arch is then deduced from the promiser
@@ -1797,6 +1840,69 @@ body service_method force_deps
 windows::
   service_type => "windows";
 }
+
+##
+## database promises
+##
+
+body database_server local_mysql(username, password)
+{
+db_server_owner => "$(username)";
+db_server_password => "$(password)";
+db_server_host => "localhost";
+db_server_type => "mysql";
+db_server_connection_db => "mysql";
+}
+
+##
+
+body database_server local_postgresql(username, password)
+{
+db_server_owner => "$(username)";
+db_server_password => "$(password)";
+db_server_host => "localhost";
+db_server_type => "postgres";
+db_server_connection_db => "postgres";
+}
+
+##
+## guest_environment promises
+##
+
+body environment_resources kvm(name, arch, cpu_count, mem_kb, disk_file)
+{
+env_spec =>
+"<domain type='kvm'>
+  <name>$(name)</name>
+  <memory>$(mem_kb)</memory>
+  <currentMemory>$(mem_kb)</currentMemory>
+  <vcpu>$(cpu_count)</vcpu>
+  <os>
+    <type arch='$(arch)'>hvm</type>
+  </os>
+  <features>
+    <acpi/>
+    <apic/>
+    <pae/>
+  </features>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>restart</on_crash>
+  <devices>
+    <emulator>/usr/bin/kvm</emulator>
+    <disk type='file' device='disk'>
+      <source file='$(disk_file)'/>
+      <target dev='vda' bus='virtio'/>
+    </disk>
+    <interface type='network'>
+      <source network='default'/>
+    </interface>
+    <input type='mouse' bus='ps2'/>
+    <graphics type='vnc' port='-1' autoport='yes'/>
+  </devices>
+</domain>";
+}
+
 
 ####################################################
 ## monitor bodyparts

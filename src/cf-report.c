@@ -1067,6 +1067,7 @@ static void ShowPerformance()
     if (!NewDBCursor(dbp, &dbcp))
     {
         CfOut(cf_inform, "", " !! Unable to scan hash database");
+        CloseDB(dbp);
         return;
     }
 
@@ -1238,6 +1239,7 @@ static void ShowClasses()
     if (!NewDBCursor(dbp, &dbcp))
     {
         CfOut(cf_inform, "", " !! Unable to scan class db");
+        CloseDB(dbp);
         return;
     }
 
@@ -1763,6 +1765,7 @@ static void ShowCurrentAudit()
     if (!NewDBCursor(dbp, &dbcp))
     {
         CfOut(cf_inform, "", " !! Unable to scan last-seen db");
+        CloseDB(dbp);
         return;
     }
 
@@ -1790,6 +1793,7 @@ static void ShowCurrentAudit()
     if ((fout = fopen(name, "w")) == NULL)
     {
         CfOut(cf_error, "fopen", "Unable to write to %s/%s\n", OUTPUTDIR, name);
+        CloseDB(dbp);
         return;
     }
 

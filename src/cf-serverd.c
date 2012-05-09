@@ -2319,6 +2319,7 @@ static Item *ContextAccessControl(char *in, ServerConnectionState *conn, int enc
     if (!NewDBCursor(dbp, &dbcp))
     {
         CfOut(cf_inform, "", " !! Unable to scan persistence cache");
+        CloseDB(dbp);
         return NULL;
     }
 

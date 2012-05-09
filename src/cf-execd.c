@@ -413,8 +413,8 @@ void StartServer(void)
            all of them during process termination.
          */
         strcpy(CFLOCK, thislock.lock);
-        strcpy(CFLAST, thislock.last);
-        strcpy(CFLOG, thislock.log);
+        strcpy(CFLAST, thislock.last ? thislock.last : "");
+        strcpy(CFLOG, thislock.log ? thislock.log : "");
     }
 
 #ifdef MINGW

@@ -17,19 +17,19 @@
 @c ***********************************************************************@c 
 @c %** start of header
 @setfilename NovaOwnersManual.info
-@settitle CFEngine 3 Nova Owner's Manual
+@settitle CFEngine 3 Nova 2.2 Owner's Manual
 @setchapternewpage odd
 @c %** end of header
 @titlepage
 @title CFEngine 3 Nova Owner's Manual
 @subtitle CFEngine Enterprise Documentation
-@subtitle Updated 21. October 2011
+@subtitle Updated 2. April 2012
 @author CFEngine
 @c @smallbook
 @fonttextsize 10
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 2011 CFEngine AS.
+Copyright @copyright{} 2012 CFEngine AS.
 The features described herein are in provided for user convenience and imply no warranty whatsoever
 to the extent of applicable law.
 @end titlepage
@@ -784,30 +784,106 @@ A summary of Mission goals (as defined in user policy files; these examples are 
 @node Mission Engineering, Mission Planning, Mission Status, Mission Portal Rooms
 @subsection Mission Engineering
 
-Mission engineering illustrates the state of the system in relation to the desired state at all scales. Zoom in to specific areas and examine the impact of promises, query data, and extract reports.
+Mission Engineering illustrates the state of the system in relation to the desired state at all scales. Zoom in to specific areas and examine the impact of promises, query data, and extract reports.
+
+The Mission Engineering room underwent a substantial rework for the release of CFEngine 3 Nova 2.2. Most notably we introduced a host navigation tree where hosts can be grouped and organized in a hierarchy defined by classes. The other content on the page is influenced by the tree, it changes as the user navigates to activate different nodes. Another notable change is the new interface to interact with reports, now available as a tab and drop-down menus.
 
 @sp 1
 @image{img-engineering,15cm,,Mission Engineering}
 @center Figure: Mission Engineering
 @sp 1
 
-@noindent @b{Host Status:}
-@itemize
-@item The hosts are classified into red, yellow, green and blue according to the status of their compliance. A host is red if less than 80% of its promises are kept (> 20% not compliant), yellow if 20% or more of its promises were repaired and host is now compliant (> 20% repaired, now compliant), green if more than 80% of its promises are kept (> 80% compliant), and blue if there is no contact between the hub and the client (host unreachable). Clicking a link produces a list of the hosts in that category:
+@c @noindent @b{Navigation tree:}
+@node Navigation tree, Status tab, Mission Egnineering, Mission Engineering
+@subsubsection Navigation tree
 
-@page
+The navigation tree consists of two main parts:
+@itemize
+@item The Tree Selector: Choose between the default tree and custom trees defined by the user. Click @code{Add} in the dropdown menu to add your own tree (input the name of the new tree in the field next to the add button). Click @code{X} next to a tree name to delete it.
+Class, Host and Promise/Bundle finder.
+@item The tree itself, grouped by classes. The user can add up to four sublevels in the navigation tree by adding nodes. To add a node:
+@enumerate
+@item Put the mouse pointer over the node you wish to add a sublevel to, click the plus sign shown beside the node.
+@item A pop-up appears with fields to enter a label (name) to the node that you wish to create and the class expression you wish to filter by. The class expression field contains a button which opens a class finder to help you select classes.
+@end enumerate
+You can delete a node in the tree in a simlar way: put the mouse pointer over the node that you wish to delete, click the @code{X} shown beside the node.
+
+@noindent The trees and nodes that a user creates will not be visible to other users of the Mission Portal.
+
+Click on any host in the tree to get a quick overview in the status tab. Click the host name under the compliance graph to see more detailed information about the host (see also @ref{Host viewer}).
+@end itemize
+
+@c @noindent @b{Status tab:}
+@node Status tab, Reports tab, Navigation tree, Mission Engineering
+@subsubsection Status tab
+
+This tab shows the overall status of the hosts selected in the navigation tree. Going through the items in this part of the page:
+@itemize
+@item Host context is displayed above the bar graph of compliance summary.
+@item Compliance Summary: The row of bar meters shows the compliance (average percentage of promises kept, repaired or not kept) of all registered hosts @footnote{Blue hosts will not appear here} in blocks of 6 hours for the past week. It summarizes performance and anomalous behavior in a simple red (promises not kept), yellow (promises repaired) and green (promises kept) scale. NB CHECK BEFORE RELEASE: Click on a bar to see which promises were kept/not kept.
+@item Host Compliance: The hosts are classified into red, yellow and green according to the status of their compliance over the last hour. A host is red if less than 80% of its promises are kept (> 20% not compliant), yellow if 20% or more of its promises were repaired and host is now compliant (> 20% repaired, now compliant) and green if more than 80% of its promises are kept (> 80% compliant).
+@item Host Operations: The hosts are classified into blue and black according to their operational status. A host is blue if there has not been any contact between the hub and the client within the last 20 minutes (host unreachable). A host is black if CFEngine's scheduling daemon, @code{execd}, is not running (the hub will still able to contact the client to collect reports but the client will return stale data since it has not been running at regular intervals).
+@item Clicking a link in any of the above categories (red/yellow/green/blue/black) produces a list of the hosts in that category (in the above mentioned context).
+
+Example, Compliant hosts: Click the link next to the green box under Host Compliance, a report appears showing host names, time stamp of last data collected and three action icons:
+
 @sp 1
 @center @image{img-complianthosts,14cm,,Compliant hosts}
 @center Figure: Compliant hosts
 @sp 1
 
-The list presents the name of hosts and three action icons:
+@noindent Action icons:
 @itemize -
 @item Yellow warning triangle: View the promises not kept on this host
 @item Pulse line: View vitals signs (statistics) on this host
 @item Red X: Delete this host (host will be deleted from database, but may re-appear if CFEngine is still running on it; see footnote below).@footnote{You have to stop CFEngine on the concerned host before deleting it in the Mission Portal, else the host will contact the hub and re-appear in the database.}
 @end itemize
+@end itemize
 
+
+@c @noindent @b{Reports tab:}
+@node Reports tab, , Status tab, Mission Engineering
+@subsubsection Reports tab
+
+Reports are sorted into five main categories that contain drop down menus to select default reports. Clicking a report will bring up a search filter specific to that report. Available reports are:
+@itemize
+@item Policy
+@itemize -
+    @item Compliance by bundle: Status of promise bundles and when they were last verified
+    @item Compliance by promise: Compliance of each promise individually
+    @item Promises repaired log: Log of actual repairs made to the system
+    @item Promises repaired summary: Cumulative (histogram) summary of promises repaired
+    @item Promises not kept log: Log of promises that could not or would not be kept
+    @item Promises not kept summary: Cumulative (histogram) summary of promises not kept
+@end itemize
+@item Accounting
+@itemize -
+    @item Compliance summary: Total summary of host compliance
+    @item Business value report: Accumulated value of promises kept
+    @item Benchmarks: Execution time used to verify selected promises
+@end itemize
+@item System
+@itemize -
+    @item Context classes: User defined classes observed on the system
+    @item Last saw neighbours: Log of when neighboring hosts were last observed online
+    @item Variables: Table of variable values last observed
+@end itemize
+@item Software
+@itemize -
+    @item Patches available: A list of patches currently claimed to be available by the local package manager
+    @item Patch installed: A list of (un)applied patches according to the local package manager
+    @item Installed: List of software packages claimed to be installed according to the local package manager
+@end itemize
+@item File watch
+@itemize -
+    @item Change summary: Log of all detected changes to files from changes promises
+    @item Text changes: Delta/difference comparison showing file changes
+    @item Setuid: Current list of observed setuid/setgid root programs
+@end itemize
+@end itemize
+
+@ignore
+@itemize
 @item Worst available host rank: Display the weakest hosts (that have been in contact with the hub) over the last hour.
 @item Hub replication status: Display status of redundant monitoring hubs (if activated).
 @end itemize
@@ -820,7 +896,7 @@ and anomalous behavior in a simple red (promises not kept), yellow (promises rep
 @sp 1
 @noindent @b{Finders:} @*
 The Mission Engineering room comes with six finder functions (modules that make it simple and intuitive to browse and search for objects of a particular type, see section on Finders): host, class, promises, reports, summary reports, and CDP (Content Driven Policies) reports.
-
+@end ignore
 
 @page
 @node Mission Planning, Mission Library, Mission Engineering, Mission Portal Rooms

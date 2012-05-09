@@ -31,7 +31,12 @@ void test_trylock_impl(pthread_mutex_t *mutex)
     assert_int_equal(res_trylock_unlocked, 0);
     
     int res_trylock_locked = pthread_mutex_trylock(mutex);
-    assert_int_equal(res_trylock_locked, EBUSY);
+
+    if (res_trylock_locked != EBUSY && res_trylock_locked != EDEADLK)
+    {
+    /* Some pthread implementations return EDEADLK despite SUS saying otherwise */
+        fail();
+    }
 
     int res_unlock = pthread_mutex_unlock(mutex);
     assert_int_equal(res_unlock, 0);
@@ -63,7 +68,7 @@ void test_trylock_static(void **p)
 void test_trylock_static_errorcheck(void **p)
 {
     pthread_mutex_t mutex_static_errorcheck = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
-    
+
     test_trylock_impl(&mutex_static_errorcheck);
 }
 

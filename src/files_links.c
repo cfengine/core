@@ -116,7 +116,7 @@ if (MatchRlistItem(attr.link.copy_patterns,lastnode))
                 return CF_FAIL;
             }
 
-            return MakeLink(destination, to, attr, pp) ? CF_CHG : CF_FAIL;
+            return MakeLink(destination, source, attr, pp) ? CF_CHG : CF_FAIL;
         }
     }
     else
@@ -164,7 +164,7 @@ if (MatchRlistItem(attr.link.copy_patterns,lastnode))
         }
         else
         {
-            cfPS(cf_verbose, CF_NOP, "", pp, attr, " -> Link %s points to %s - promise kept", destination, to);
+            cfPS(cf_verbose, CF_NOP, "", pp, attr, " -> Link %s points to %s - promise kept", destination, source);
             return CF_NOP;
         }
     }

@@ -1190,25 +1190,35 @@ void TimeToDateStr(time_t t, char *outStr, int outStrSz)
 /*********************************************************************/
 
 const char *GetArg0(const char *execstr)
+/** 
+ * WARNING: Not thread-safe.
+ **/
 {
-    const char *sp;
     static char arg[CF_BUFSIZE];
-    int i = 0;
 
-    for (sp = execstr; *sp != ' ' && *sp != '\0'; sp++)
+    const char *start;
+    char end_delimiter;
+    
+    if(execstr[0] == '\"')
     {
-        i++;
-
-        if (*sp == '\"')
-        {
-            DeEscapeQuotedString(sp, arg);
-            return arg;
-        }
+        start = execstr + 1;
+        end_delimiter = '\"';
+    }
+    else
+    {
+        start = execstr;
+        end_delimiter = ' ';
     }
 
-    memset(arg, 0, CF_MAXVARSIZE);
-    strncpy(arg, execstr, i);
-    arg[i] = '\0';
+    strlcpy(arg, start, sizeof(arg));
+    
+    char *cut = strchr(arg, end_delimiter);
+    
+    if(cut)
+    {
+        *cut = '\0';
+    }
+
     return arg;
 }
 

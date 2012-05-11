@@ -36,7 +36,8 @@ check_PROGRAMS = \
 	misc_lib_test \
 	crypto_symmetric_test \
 	persistent_lock_test  \
-        thread_test
+        thread_test \
+	package_versions_compare_test
 
 TESTS = $(check_PROGRAMS)
 
@@ -79,3 +80,4 @@ lastseen_migration_test_LDADD = libdb.la
 
 CLEANFILES = *.gcno *.gcda
 
+package_versions_compare_test_SOURCES = package_versions_compare_test.c ../../src/verify_packages.c

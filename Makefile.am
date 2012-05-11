@@ -74,9 +74,14 @@ pdf:
 # Code coverage
 #
 
-coverage:
+clean-coverage:
 	find -L $(srcdir) -name '*.gcda' -delete
+
+run-coverage:
 	-$(MAKE) check -k
+
+
+collect-coverage:
 	$(LCOV) $(LCOV_FLAGS) --capture --initial --directory . --output-file cfengine-lcov-base.info
 	$(LCOV) $(LCOV_FLAGS) --capture --directory . --output-file cfengine-lcov.info --test-name CFENGINE --no-checksum --compat-libtool
 	$(LCOV) $(LCOV_FLAGS) -a cfengine-lcov-base.info -a cfengine-lcov.info --output-file cfengine-lcov.info
@@ -85,3 +90,5 @@ coverage:
 	@echo
 	@echo " Code coverage information: file://"`pwd`"/coverage-html/index.html"
 	@echo
+
+coverage: clean-coverage run-coverage collect-coverage

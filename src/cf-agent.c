@@ -1390,7 +1390,7 @@ static bool VerifyBootstrap(void)
 static void NoteBundleCompliance(char *name, int save_pr_kept, int save_pr_repaired, int save_pr_notkept)
 {
     double delta_pr_kept, delta_pr_repaired, delta_pr_notkept;
-    double bundle_compliance;
+    double bundle_compliance = 100.0;
         
     delta_pr_kept = (double) (PR_KEPT - save_pr_kept);
     delta_pr_notkept = (double) (PR_NOTKEPT - save_pr_notkept);

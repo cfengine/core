@@ -696,7 +696,6 @@ static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *
 
         if ((n_read = ReceiveTransaction(conn->sd, recvbuffer, NULL)) == -1)
         {
-            DestroyServerConnection(conn);
             return;
         }
 

@@ -51,12 +51,6 @@ should be free, please let us know and we will consider this carefully.
 
 #if !defined(HAVE_NOVA)
 
-void EnterpriseModuleTrick()
-{
-}
-
-/*****************************************************************************/
-
 const char *GetConsolePrefix(void)
 {
     return "cf3";

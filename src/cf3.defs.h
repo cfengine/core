@@ -1325,13 +1325,6 @@ typedef struct
     short timeout;
 } FileCopy;
 
-typedef struct
-{
-    char *server;
-    AgentConnection *conn;
-    int busy;
-} ServerItem;
-
 /*************************************************************************/
 
 typedef struct

@@ -40,6 +40,14 @@
 #include "client_protocol.h"
 #include "crypto.h"
 
+typedef struct
+{
+    char *server;
+    AgentConnection *conn;
+    int busy;
+} ServerItem;
+
+
 /* seconds */
 #define RECVTIMEOUT 30
 

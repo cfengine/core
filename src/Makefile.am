@@ -174,15 +174,6 @@ if MONGO
 endif
 endif
 
-cf_promises_SOURCES = \
-        cf-promises.c
-
-cf_key_SOURCES = \
-        cf-key.c
-
-cf_report_SOURCES = \
-        cf-report.c
-
 cf_agent_SOURCES = \
         cf-agent.c \
         verify_files.c \
@@ -231,9 +222,6 @@ cf_hub_LDADD = \
         ../nova/src/libcfhub.la libpromises.la
 endif
 endif
-
-cf_runagent_SOURCES = \
-        cf-runagent.c
 
 cf_know_SOURCES = \
         cf-know.c \

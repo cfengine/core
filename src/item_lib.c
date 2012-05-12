@@ -27,6 +27,7 @@
 #include "cf3.extern.h"
 
 #include "files_names.h"
+#include "addr_lib.h"
 
 /*******************************************************************/
 

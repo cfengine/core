@@ -1390,24 +1390,23 @@ static bool VerifyBootstrap(void)
 static void NoteBundleCompliance(char *name, int save_pr_kept, int save_pr_repaired, int save_pr_notkept)
 {
     double delta_pr_kept, delta_pr_repaired, delta_pr_notkept;
-    double bundle_compliance;
+    double bundle_compliance = 0.0;
         
     delta_pr_kept = (double) (PR_KEPT - save_pr_kept);
     delta_pr_notkept = (double) (PR_NOTKEPT - save_pr_notkept);
     delta_pr_repaired = (double) (PR_REPAIRED - save_pr_repaired);
 
     CfOut(cf_verbose,"","");
+    if (delta_pr_kept + delta_pr_notkept + delta_pr_repaired <= 0)
+       {
+       CfOut(cf_verbose, "", " ==> Zero promises executed for bundle \"%s\"", name);
+       return;
+       }
+
     CfOut(cf_verbose,""," ==> == Bundle Accounting Summary for \"%s\" ==",name);
     CfOut(cf_verbose,""," ==> Promises kept in \"%s\" = %.0lf",name,delta_pr_kept);
     CfOut(cf_verbose,""," ==> Promises not kept in \"%s\" = %.0lf",name,delta_pr_notkept);
     CfOut(cf_verbose,""," ==> Promises repaired in \"%s\" = %.0lf",name,delta_pr_repaired);
-
-    if (delta_pr_kept + delta_pr_notkept + delta_pr_repaired <= 0)
-       {
-       CfOut(cf_verbose, "", " ==> Defining compliance for bundle \"%s\" = %.1lf%% (from zero promises)", name, 100.0);
-       LastSawBundle(name,bundle_compliance);
-       return;
-       }
     
     bundle_compliance = (delta_pr_kept + delta_pr_repaired) / (delta_pr_kept + delta_pr_notkept + delta_pr_repaired);
 

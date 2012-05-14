@@ -185,11 +185,19 @@ struct utsname
 # undef nfstype
 #endif
 
+#if !HAVE_DECL_DIRFD
+int dirfd(DIR *dirp);
+#endif
+
 /* strndup is defined as a macro on many systems */
 #if !HAVE_DECL_STRNDUP
 # ifndef strndup
 char *strndup(const char *s, size_t n);
 # endif
+#endif
+
+#if !HAVE_DECL_STRNLEN
+size_t strnlen(const char *str, size_t maxlen);
 #endif
 
 #ifdef HAVE_UNISTD_H

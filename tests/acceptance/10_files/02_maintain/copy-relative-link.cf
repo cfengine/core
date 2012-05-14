@@ -39,10 +39,11 @@ body depth_search recurse(d)
 bundle agent check
 {
 vars:
+  "expect" string => "dest";
   "result" string => execresult("/usr/bin/perl -le 'printf(\"%s\", readlink(\"$(G.testdir)/b/link\"))'", "noshell");
 
 classes:
-  "ok" expression => strcmp("dest", "$(result)");
+  "ok" expression => strcmp("$(result)", "$(expect)");
 
 reports:
   DEBUG::

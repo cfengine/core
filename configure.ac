@@ -522,6 +522,10 @@ dnl ######################################################################
 AC_CHECK_MEMBERS([struct sockaddr.sa_len], , , [
 #include <sys/types.h>
 #include <sys/socket.h>])
+
+AC_CHECK_MEMBERS([struct ifreq.ifr_hwaddr],,, [
+#include <sys/ioctl.h>
+#include <net/if.h>])
    
 dnl #######################################################################
 dnl Newer BSD systems don't have a compatible rtentry - use ortentry

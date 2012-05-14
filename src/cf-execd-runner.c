@@ -267,6 +267,7 @@ static int FileChecksum(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1
 
         if (!md)
         {
+            fclose(file);
             return 0;
         }
 

@@ -554,7 +554,7 @@ static void Unix_GetMacAddress(enum cfagenttype ag, int fd, struct ifreq *ifr, s
         snprintf(name, CF_MAXVARSIZE, "hardware_mac[interface_name]");
     }
 
-# ifdef SIOCGIFHWADDR
+# if defined(SIOCGIFHWADDR) && defined(HAVE_STRUCT_IFREQ_IFR_HWADDR)
     char hw_mac[CF_MAXVARSIZE];
 
     

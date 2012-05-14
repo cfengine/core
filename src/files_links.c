@@ -147,7 +147,7 @@ if (MatchRlistItem(attr.link.copy_patterns,lastnode))
                         return CF_FAIL;
                     }
 
-                    return MakeLink(destination, to, attr, pp);
+                    return MakeLink(destination, source, attr, pp);
                 }
                 else
                 {

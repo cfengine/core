@@ -300,6 +300,8 @@ bool CFDB_HostsWithClass(Rlist **return_list, char *class_name, char *return_for
 void SetSyslogHost(const char *host);
 void SetSyslogPort(uint16_t port);
 
+void SyntaxCompletion(char *s);
+
 /* env_context.c */
 
 /* - Parsing/evaluating expressions - */

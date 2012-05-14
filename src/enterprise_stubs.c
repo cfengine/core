@@ -433,4 +433,10 @@ int ReturnLiteralData(char *handle, char *ret)
     return 0;
 }
 
+/* cf-know */
+
+void SyntaxCompletion(char *s)
+{
+}
+
 #endif

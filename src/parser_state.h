@@ -55,6 +55,8 @@ struct ParserState
     char *currentstring;
     char *currentclasses;
 
+    Policy *policy;
+
     Bundle *currentbundle;
     Body *currentbody;
     Promise *currentpromise;

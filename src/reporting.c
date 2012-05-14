@@ -318,10 +318,12 @@ void ShowPromiseInReport(const char *version, Promise *pp, int indent)
         Indent(indent + 3);
         fprintf(FREPORT_TXT, "%10s => ", cp->lval);
 
+        Policy *policy = PolicyFromPromise(pp);
+
         switch (cp->rval.rtype)
         {
         case CF_SCALAR:
-            if ((bp = IsBody(BODIES, (char *) cp->rval.item)))
+            if ((bp = IsBody(policy->bodies, (char *) cp->rval.item)))
             {
                 ShowBody(bp, 15);
             }
@@ -347,7 +349,7 @@ void ShowPromiseInReport(const char *version, Promise *pp, int indent)
         case CF_FNCALL:
             fp = (FnCall *) cp->rval.item;
 
-            if ((bp = IsBody(BODIES, fp->name)))
+            if ((bp = IsBody(policy->bodies, fp->name)))
             {
                 ShowBody(bp, 15);
             }

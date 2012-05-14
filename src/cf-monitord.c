@@ -35,7 +35,7 @@
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);
-static void KeepPromises(void);
+static void KeepPromises(Policy *policy);
 
 /*****************************************************************************/
 /* Globals                                                                   */
@@ -95,11 +95,11 @@ int main(int argc, char *argv[])
 {
     GenericAgentConfig config = CheckOpts(argc, argv);
 
-    GenericInitialize("monitor", config);
+    Policy *policy = GenericInitialize("monitor", config);
     ThisAgentInit();
-    KeepPromises();
+    KeepPromises(policy);
 
-    MonitorStartServer(argc, argv);
+    MonitorStartServer(policy);
     return 0;
 }
 
@@ -180,12 +180,12 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
 
 /*****************************************************************************/
 
-static void KeepPromises(void)
+static void KeepPromises(Policy *policy)
 {
     Constraint *cp;
     Rval retval;
 
-    for (cp = ControlBodyConstraints(cf_monitor); cp != NULL; cp = cp->next)
+    for (cp = ControlBodyConstraints(policy, cf_monitor); cp != NULL; cp = cp->next)
     {
         if (IsExcluded(cp->classes))
         {

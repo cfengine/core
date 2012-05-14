@@ -620,10 +620,9 @@ void EndMeasurePromise(struct timespec start, Promise *pp);
 void NoteClassUsage(AlphaList list, int purge);
 
 /* install.c */
-
 int RelevantBundle(char *agent, char *blocktype);
-Bundle *AppendBundle(Bundle **start, char *name, char *type, Rlist *args);
-Body *AppendBody(Body **start, char *name, char *type, Rlist *args);
+Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *args);
+Body *AppendBody(Policy *policy, const char *name, const char *type, Rlist *args);
 SubType *AppendSubType(Bundle *bundle, char *typename);
 Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *classes, char *bundle, char *bundletype);
 void DeleteBundles(Bundle *bp);
@@ -810,7 +809,7 @@ void TestExpandVariables(void);
 
 /* server_transform.c */
 
-void KeepControlPromises(void);
+void KeepControlPromises(Policy *policy);
 Auth *GetAuthPath(char *path, Auth *list);
 void Summarize(void);
 

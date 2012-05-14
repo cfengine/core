@@ -34,11 +34,11 @@
 
 extern char *CFH[][2];
 
-static void VerifyPromises(Rlist *bundlesequence);
+static void VerifyPromises(Policy *policy, Rlist *bundlesequence);
 static void SetAuditVersion(void);
 static void CheckWorkingDirectories(void);
-static void Cf3ParseFile(char *filename, bool check_not_writable_by_others);
-static void Cf3ParseFiles(bool check_not_writable_by_others);
+static void Cf3ParseFile(Policy *policy, char *filename, _Bool check_not_writable_by_others);
+static void Cf3ParseFiles(Policy *policy, bool check_not_writable_by_others);
 static int MissingInputFile(void);
 static void CheckControlPromises(char *scope, char *agent, Constraint *controllist);
 static void CheckVariablePromises(char *scope, Promise *varlist);
@@ -51,7 +51,7 @@ static char *InputLocation(char *filename);
 #if !defined(__MINGW32__)
 static void OpenLog(int facility);
 #endif
-static bool VerifyBundleSequence(enum cfagenttype agent, Rlist *bundlesequence);
+static bool VerifyBundleSequence(const Policy *policy, enum cfagenttype agent, Rlist *bundlesequence);
 
 /*****************************************************************************/
 
@@ -89,7 +89,7 @@ void CheckLicenses(void)
 
 /*****************************************************************************/
 
-void GenericInitialize(char *agents, GenericAgentConfig config)
+Policy *GenericInitialize(char *agents, GenericAgentConfig config)
 {
     enum cfagenttype ag = Agent2Type(agents);
     char vbuff[CF_BUFSIZE];
@@ -168,6 +168,8 @@ void GenericInitialize(char *agents, GenericAgentConfig config)
 
     SetPolicyServer(POLICY_SERVER);
 
+    Policy *policy = NULL;
+
     if (ag != cf_keygen)        // && ag != cf_know)
     {
         if (!MissingInputFile())
@@ -208,26 +210,26 @@ void GenericInitialize(char *agents, GenericAgentConfig config)
 
         if (ok)
         {
-            ReadPromises(ag, agents, config);
+            policy = ReadPromises(ag, agents, config);
         }
         else
         {
             CfOut(cf_error, "",
                   "cf-agent was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
             SetInputFile("failsafe.cf");
-            ReadPromises(ag, agents, config);
+            policy = ReadPromises(ag, agents, config);
         }
 
         if (SHOWREPORTS)
         {
-            CompilationReport(VINPUTFILE);
+            CompilationReport(policy, VINPUTFILE);
         }
 
         if (SHOW_PARSE_TREE)
         {
             Writer *writer = FileWriter(stdout);
 
-            PolicyPrintAsJson(writer, VINPUTFILE, BUNDLES, BODIES);
+            PolicyPrintAsJson(writer, VINPUTFILE, policy->bundles, policy->bodies);
             WriterClose(writer);
         }
 
@@ -235,6 +237,8 @@ void GenericInitialize(char *agents, GenericAgentConfig config)
     }
 
     XML = 0;
+
+    return policy;
 }
 
 /*****************************************************************************/
@@ -359,7 +363,7 @@ int CheckPromises(enum cfagenttype ag)
 
 /*****************************************************************************/
 
-void ReadPromises(enum cfagenttype ag, char *agents, GenericAgentConfig config)
+Policy *ReadPromises(enum cfagenttype ag, char *agents, GenericAgentConfig config)
 {
     Rval retval;
     char vbuff[CF_BUFSIZE];
@@ -372,7 +376,7 @@ void ReadPromises(enum cfagenttype ag, char *agents, GenericAgentConfig config)
         break;
 
     case cf_keygen:
-        return;
+        return NULL;
 
     default:
         check_not_writable_by_others = true;
@@ -383,7 +387,8 @@ void ReadPromises(enum cfagenttype ag, char *agents, GenericAgentConfig config)
 
 /* Parse the files*/
 
-    Cf3ParseFiles(check_not_writable_by_others);
+    Policy *policy = PolicyNew();
+    Cf3ParseFiles(policy, check_not_writable_by_others);
 
 /* Now import some web variables that are set in cf-know/control for the report options */
 
@@ -408,7 +413,7 @@ void ReadPromises(enum cfagenttype ag, char *agents, GenericAgentConfig config)
     fprintf(FREPORT_HTML, "<div id=\"reporttext\">\n");
     fprintf(FREPORT_HTML, "%s", CFH[cfx_promise][cfb]);
 
-    VerifyPromises(config.bundlesequence);
+    VerifyPromises(policy, config.bundlesequence);
 
     fprintf(FREPORT_HTML, "%s", CFH[cfx_promise][cfe]);
 
@@ -420,6 +425,8 @@ void ReadPromises(enum cfagenttype ag, char *agents, GenericAgentConfig config)
     fprintf(FREPORT_HTML, "</div>\n");
     CfHtmlFooter(FREPORT_HTML, FOOTER);
     CloseReports(agents);
+
+    return policy;
 }
 
 /*****************************************************************************/
@@ -599,7 +606,7 @@ void InitializeGA(void)
 
 /*******************************************************************/
 
-static void Cf3ParseFiles(bool check_not_writable_by_others)
+static void Cf3ParseFiles(Policy *policy, bool check_not_writable_by_others)
 {
     Rlist *rp, *sl;
 
@@ -607,12 +614,11 @@ static void Cf3ParseFiles(bool check_not_writable_by_others)
 
     PROMISETIME = time(NULL);
 
-    Cf3ParseFile(VINPUTFILE, check_not_writable_by_others);
+    Cf3ParseFile(policy, VINPUTFILE, check_not_writable_by_others);
 
-// Expand any lists in this list now
-
-    HashVariables(NULL);
-    HashControls();
+    // Expand any lists in this list now
+    HashVariables(policy, NULL);
+    HashControls(policy);
 
     if (VINPUTLIST != NULL)
     {
@@ -636,13 +642,13 @@ static void Cf3ParseFiles(bool check_not_writable_by_others)
                 switch (returnval.rtype)
                 {
                 case CF_SCALAR:
-                    Cf3ParseFile((char *) returnval.item, check_not_writable_by_others);
+                    Cf3ParseFile(policy, (char *) returnval.item, check_not_writable_by_others);
                     break;
 
                 case CF_LIST:
                     for (sl = (Rlist *) returnval.item; sl != NULL; sl = sl->next)
                     {
-                        Cf3ParseFile((char *) sl->item, check_not_writable_by_others);
+                        Cf3ParseFile(policy, (char *) sl->item, check_not_writable_by_others);
                     }
                     break;
                 }
@@ -650,12 +656,12 @@ static void Cf3ParseFiles(bool check_not_writable_by_others)
                 DeleteRvalItem(returnval);
             }
 
-            HashVariables(NULL);
-            HashControls();
+            HashVariables(policy, NULL);
+            HashControls(policy);
         }
     }
 
-    HashVariables(NULL);
+    HashVariables(policy, NULL);
 
     PARSING = false;
 }
@@ -917,7 +923,7 @@ static void CloseReports(char *agents)
 /* Level                                                           */
 /*******************************************************************/
 
-static void Cf3ParseFile(char *filename, bool check_not_writable_by_others)
+static void Cf3ParseFile(Policy *policy, char *filename, bool check_not_writable_by_others)
 {
     struct stat statbuf;
     char wfilename[CF_BUFSIZE];
@@ -955,16 +961,14 @@ static void Cf3ParseFile(char *filename, bool check_not_writable_by_others)
         exit(1);
     }
 
-    ParserParseFile(wfilename);
+    ParserParseFile(policy, wfilename);
 }
 
 /*******************************************************************/
 
-Constraint *ControlBodyConstraints(enum cfagenttype agent)
+Constraint *ControlBodyConstraints(Policy *policy, enum cfagenttype agent)
 {
-    Body *body;
-
-    for (body = BODIES; body != NULL; body = body->next)
+    for (const Body *body = policy->bodies; body != NULL; body = body->next)
     {
         if (strcmp(body->type, CF_AGENTTYPES[agent]) == 0)
         {
@@ -1036,11 +1040,9 @@ void SetFacility(const char *retval)
 
 /**************************************************************/
 
-Bundle *GetBundle(char *name, char *agent)
+Bundle *GetBundle(const Policy *policy, const char *name, const char *agent)
 {
-    Bundle *bp;
-
-    for (bp = BUNDLES; bp != NULL; bp = bp->next)       /* get schedule */
+    for (Bundle *bp = policy->bundles; bp != NULL; bp = bp->next)       /* get schedule */
     {
         if (strcmp(bp->name, name) == 0)
         {
@@ -1347,7 +1349,7 @@ void SetInputFile(const char *name)
 
 /*******************************************************************/
 
-void CompilationReport(char *fname)
+void CompilationReport(Policy *policy, char *fname)
 {
     if (THIS_AGENT_TYPE != cf_common)
     {
@@ -1360,7 +1362,7 @@ void CompilationReport(char *fname)
     OpenCompilationReportFiles(fname);
 #endif
 
-    ShowPromises(BUNDLES, BODIES);
+    ShowPromises(policy->bundles, policy->bodies);
 
     fclose(FREPORT_HTML);
     fclose(FREPORT_TXT);
@@ -1394,7 +1396,7 @@ void OpenCompilationReportFiles(const char *fname)
 
 /*******************************************************************/
 
-static void VerifyPromises(Rlist *bundlesequence)
+static void VerifyPromises(Policy *policy, Rlist *bundlesequence)
 {
     Bundle *bp;
     SubType *sp;
@@ -1406,7 +1408,7 @@ static void VerifyPromises(Rlist *bundlesequence)
 
     if (REQUIRE_COMMENTS == CF_UNDEFINED)
     {
-        for (bdp = BODIES; bdp != NULL; bdp = bdp->next)        /* get schedule */
+        for (bdp = policy->bodies; bdp != NULL; bdp = bdp->next)        /* get schedule */
         {
             if ((strcmp(bdp->name, "control") == 0) && (strcmp(bdp->type, "common") == 0))
             {
@@ -1421,7 +1423,7 @@ static void VerifyPromises(Rlist *bundlesequence)
         switch (rp->type)
         {
         case CF_SCALAR:
-            if (!IsBody(BODIES, (char *) rp->item))
+            if (!IsBody(policy->bodies, (char *) rp->item))
             {
                 CfOut(cf_error, "", "Undeclared promise body \"%s()\" was referenced in a promise\n",
                       (char *) rp->item);
@@ -1432,7 +1434,7 @@ static void VerifyPromises(Rlist *bundlesequence)
         case CF_FNCALL:
             fp = (FnCall *) rp->item;
 
-            if (!IsBody(BODIES, fp->name))
+            if (!IsBody(policy->bodies, fp->name))
             {
                 CfOut(cf_error, "", "Undeclared promise body \"%s()\" was referenced in a promise\n", fp->name);
                 ERRORCOUNT++;
@@ -1449,7 +1451,7 @@ static void VerifyPromises(Rlist *bundlesequence)
         {
         case CF_SCALAR:
 
-            if (!IGNORE_MISSING_BUNDLES && !IsCf3VarString(rp->item) && !IsBundle(BUNDLES, (char *) rp->item))
+            if (!IGNORE_MISSING_BUNDLES && !IsCf3VarString(rp->item) && !IsBundle(policy->bundles, (char *) rp->item))
             {
                 CfOut(cf_error, "", "Undeclared promise bundle \"%s()\" was referenced in a promise\n",
                       (char *) rp->item);
@@ -1461,7 +1463,7 @@ static void VerifyPromises(Rlist *bundlesequence)
 
             fp = (FnCall *) rp->item;
 
-            if (!IGNORE_MISSING_BUNDLES && !IsCf3VarString(fp->name) && !IsBundle(BUNDLES, fp->name))
+            if (!IGNORE_MISSING_BUNDLES && !IsCf3VarString(fp->name) && !IsBundle(policy->bundles, fp->name))
             {
                 CfOut(cf_error, "", "Undeclared promise bundle \"%s()\" was referenced in a promise\n", fp->name);
                 ERRORCOUNT++;
@@ -1472,7 +1474,7 @@ static void VerifyPromises(Rlist *bundlesequence)
 
 /* Now look once through ALL the bundles themselves */
 
-    for (bp = BUNDLES; bp != NULL; bp = bp->next)       /* get schedule */
+    for (bp = policy->bundles; bp != NULL; bp = bp->next)       /* get schedule */
     {
         scope = bp->name;
         THIS_BUNDLE = bp->name;
@@ -1486,12 +1488,11 @@ static void VerifyPromises(Rlist *bundlesequence)
         }
     }
 
-    HashVariables(NULL);
-    HashControls();
+    HashVariables(policy, NULL);
+    HashControls(policy);
 
-/* Now look once through the sequences bundles themselves */
-
-    if (VerifyBundleSequence(cf_common, bundlesequence) == false)
+    /* Now look once through the sequences bundles themselves */
+    if (VerifyBundleSequence(policy, cf_common, bundlesequence) == false)
     {
         FatalError("Errors in promise bundles");
     }
@@ -1841,14 +1842,14 @@ void WritePID(char *filename)
 
 /*******************************************************************/
 
-void HashVariables(char *name)
+void HashVariables(Policy *policy, char *name)
 {
     Bundle *bp;
     SubType *sp;
 
     CfOut(cf_verbose, "", "Initiate variable convergence...\n");
 
-    for (bp = BUNDLES; bp != NULL; bp = bp->next)       /* get schedule */
+    for (bp = policy->bundles; bp != NULL; bp = bp->next)       /* get schedule */
     {
         if (name && strcmp(name, bp->name) != 0)
         {
@@ -1856,6 +1857,8 @@ void HashVariables(char *name)
         }
 
         SetNewScope(bp->name);
+
+        // TODO: seems sketchy, investigate purpose.
         THIS_BUNDLE = bp->name;
 
         for (sp = bp->subtypes; sp != NULL; sp = sp->next)      /* get schedule */
@@ -1882,14 +1885,14 @@ void HashVariables(char *name)
 
 /*******************************************************************/
 
-void HashControls()
+void HashControls(const Policy *policy)
 {
     Body *bdp;
     char buf[CF_BUFSIZE];
 
 /* Only control bodies need to be hashed like variables */
 
-    for (bdp = BODIES; bdp != NULL; bdp = bdp->next)    /* get schedule */
+    for (bdp = policy->bodies; bdp != NULL; bdp = bdp->next)    /* get schedule */
     {
         if (strcmp(bdp->name, "control") == 0)
         {
@@ -1904,7 +1907,7 @@ void HashControls()
 
 /********************************************************************/
 
-static bool VerifyBundleSequence(enum cfagenttype agent, Rlist *bundlesequence)
+static bool VerifyBundleSequence(const Policy *policy, enum cfagenttype agent, Rlist *bundlesequence)
 {
     Rlist *rp;
     char *name;
@@ -1965,7 +1968,7 @@ static bool VerifyBundleSequence(enum cfagenttype agent, Rlist *bundlesequence)
             continue;
         }
 
-        if (!IGNORE_MISSING_BUNDLES && !GetBundle(name, NULL))
+        if (!IGNORE_MISSING_BUNDLES && !GetBundle(policy, name, NULL))
         {
             CfOut(cf_error, "", "Bundle \"%s\" listed in the bundlesequence is not a defined bundle\n", name);
             ok = false;

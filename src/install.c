@@ -32,6 +32,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#include "policy.h"
+
 static void DeleteSubTypes(SubType *tp);
 
 /*******************************************************************/
@@ -64,10 +66,8 @@ int RelevantBundle(char *agent, char *blocktype)
 
 /*******************************************************************/
 
-Bundle *AppendBundle(Bundle **start, char *name, char *type, Rlist *args)
+Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *args)
 {
-    Bundle *bp, *lp;
-
     CfDebug("Appending new bundle %s %s (", type, name);
 
     if (DEBUG)
@@ -76,67 +76,68 @@ Bundle *AppendBundle(Bundle **start, char *name, char *type, Rlist *args)
     }
     CfDebug(")\n");
 
-    CheckBundle(name, type);
+    CheckBundle(policy, name, type);
 
-    bp = xcalloc(1, sizeof(Bundle));
+    Bundle *bundle = xcalloc(1, sizeof(Bundle));
+    bundle->parent_policy = policy;
 
-    if (*start == NULL)
+    if (policy->bundles == NULL)
     {
-        *start = bp;
+        policy->bundles = bundle;
     }
     else
     {
-        for (lp = *start; lp->next != NULL; lp = lp->next)
+        Bundle *bp = NULL;
+        for (bp = policy->bundles; bp->next; bp = bp->next)
         {
         }
 
-        lp->next = bp;
+        bp->next = bundle;
     }
 
-    bp->name = xstrdup(name);
-    bp->type = xstrdup(type);
-    bp->args = args;
+    bundle->name = xstrdup(name);
+    bundle->type = xstrdup(type);
+    bundle->args = args;
 
-    return bp;
+    return bundle;
 }
 
 /*******************************************************************/
 
-Body *AppendBody(Body **start, char *name, char *type, Rlist *args)
+Body *AppendBody(Policy *policy, const char *name, const char *type, Rlist *args)
 {
-    Body *bp, *lp;
-    Rlist *rp;
-
     CfDebug("Appending new promise body %s %s(", type, name);
 
-    CheckBody(name, type);
+    CheckBody(policy, name, type);
 
-    for (rp = args; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = args; rp; rp = rp->next)
     {
         CfDebug("%s,", (char *) rp->item);
     }
     CfDebug(")\n");
 
-    bp = xcalloc(1, sizeof(Body));
+    Body *body = xcalloc(1, sizeof(Body));
+    body->parent_policy = policy;
 
-    if (*start == NULL)
+    if (policy->bodies == NULL)
     {
-        *start = bp;
+        policy->bodies = body;
     }
     else
     {
-        for (lp = *start; lp->next != NULL; lp = lp->next)
+        Body *bp = NULL;
+        for (bp = policy->bodies; bp->next; bp = bp->next)
         {
         }
 
-        lp->next = bp;
+        bp->next = body;
     }
 
-    bp->name = xstrdup(name);
-    bp->type = xstrdup(type);
-    bp->args = args;
+    body->name = xstrdup(name);
+    body->type = xstrdup(type);
+    body->args = args;
 
-    return bp;
+    return body;
 }
 
 /*******************************************************************/

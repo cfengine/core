@@ -152,8 +152,6 @@ extern enum cfhashes CF_DEFAULT_DIGEST;
 extern int CF_DEFAULT_DIGEST_LEN;
 extern Item *EDIT_ANCHORS;
 
-extern Bundle *BUNDLES;
-extern Body *BODIES;
 extern Scope *VSCOPE;
 extern Audit *AUDITPTR;
 extern Audit *VAUDIT;

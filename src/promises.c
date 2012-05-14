@@ -32,6 +32,8 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#include "policy.h"
+
 static void DereferenceComment(Promise *pp);
 
 /*****************************************************************************/
@@ -146,6 +148,8 @@ Promise *DeRefCopyPromise(char *scopeid, Promise *pp)
         char *bodyname = NULL;
 
         /* A body template reference could look like a scalar or fn to the parser w/w () */
+        Policy *policy = PolicyFromPromise(pp);
+        Body *bodies = policy ? policy->bodies : NULL;
 
         switch (cp->rval.rtype)
         {
@@ -153,14 +157,14 @@ Promise *DeRefCopyPromise(char *scopeid, Promise *pp)
             bodyname = (char *) cp->rval.item;
             if (cp->isbody)
             {
-                bp = IsBody(BODIES, bodyname);
+                bp = IsBody(bodies, bodyname);
             }
             fp = NULL;
             break;
         case CF_FNCALL:
             fp = (FnCall *) cp->rval.item;
             bodyname = fp->name;
-            bp = IsBody(BODIES, bodyname);
+            bp = IsBody(bodies, bodyname);
             break;
         default:
             bp = NULL;
@@ -240,7 +244,9 @@ Promise *DeRefCopyPromise(char *scopeid, Promise *pp)
         }
         else
         {
-            if (cp->isbody && !IsBundle(BUNDLES, bodyname))
+            Policy *policy = PolicyFromPromise(pp);
+
+            if (cp->isbody && !IsBundle(policy->bundles, bodyname))
             {
                 CfOut(cf_error, "",
                       "Apparent body \"%s()\" was undeclared, but used in a promise near line %zu of %s (possible unquoted literal value)",
@@ -294,6 +300,7 @@ Promise *ExpandDeRefPromise(char *scopeid, Promise *pp)
         FatalError("ExpandPromise returned NULL");
     }
 
+    pcopy->parent_subtype = pp->parent_subtype;
     pcopy->bundletype = xstrdup(pp->bundletype);
     pcopy->done = pp->done;
     pcopy->donep = pp->donep;
@@ -448,6 +455,8 @@ void DebugPromise(Promise *pp)
     Rlist *rp;
     Rval retval;
 
+    Policy *policy = PolicyFromPromise(pp);
+
     GetVariable("control_common", "version", &retval);
 
     if (pp->promisee.item != NULL)
@@ -471,7 +480,7 @@ void DebugPromise(Promise *pp)
         switch (cp->rval.rtype)
         {
         case CF_SCALAR:
-            if ((bp = IsBody(BODIES, (char *) cp->rval.item)))
+            if ((bp = IsBody(policy->bodies, (char *) cp->rval.item)))
             {
                 ShowBody(bp, 15);
             }
@@ -492,7 +501,7 @@ void DebugPromise(Promise *pp)
         case CF_FNCALL:
             fp = (FnCall *) cp->rval.item;
 
-            if ((bp = IsBody(BODIES, fp->name)))
+            if ((bp = IsBody(policy->bodies, fp->name)))
             {
                 ShowBody(bp, 15);
             }

@@ -124,9 +124,9 @@ int main(int argc, char *argv[])
 
     GenericAgentConfig config = CheckOpts(argc, argv);
 
-    GenericInitialize("runagent", config);
+    Policy *policy = GenericInitialize("runagent", config);
     ThisAgentInit();
-    KeepControlPromises();      // Set RUNATTR using copy
+    KeepControlPromises(policy);      // Set RUNATTR using copy
 
     if (BACKGROUND && INTERACTIVE)
     {
@@ -477,7 +477,7 @@ static int HailServer(char *host, Attributes a, Promise *pp)
 /* Level 2                                                          */
 /********************************************************************/
 
-void KeepControlPromises()
+void KeepControlPromises(Policy *policy)
 {
     Constraint *cp;
     Rval retval;
@@ -489,7 +489,7 @@ void KeepControlPromises()
 
 /* Keep promised agent behaviour - control bodies */
 
-    for (cp = ControlBodyConstraints(cf_runagent); cp != NULL; cp = cp->next)
+    for (cp = ControlBodyConstraints(policy, cf_runagent); cp != NULL; cp = cp->next)
     {
         if (IsExcluded(cp->classes))
         {

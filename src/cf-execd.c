@@ -55,15 +55,15 @@ static pthread_attr_t threads_attrs;
 
 static GenericAgentConfig CheckOpts(int argc, char **argv);
 static void ThisAgentInit(void);
-static bool ScheduleRun(void);
+static bool ScheduleRun(Policy *policy);
 static void Apoptosis(void);
 
 #if defined(HAVE_PTHREAD)
 static bool LocalExecInThread(const ExecConfig *config);
 #endif
 
-void StartServer(void);
-static void KeepPromises(void);
+void StartServer(Policy *policy);
+static void KeepPromises(Policy *policy);
 
 static ExecConfig *CopyExecConfig(const ExecConfig *config);
 static void DestroyExecConfig(ExecConfig *config);
@@ -121,9 +121,9 @@ int main(int argc, char *argv[])
 {
     GenericAgentConfig config = CheckOpts(argc, argv);
 
-    GenericInitialize("executor", config);
+    Policy *policy = GenericInitialize("executor", config);
     ThisAgentInit();
-    KeepPromises();
+    KeepPromises(policy);
 
 #ifdef MINGW
     if (WINSERVICE)
@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
     else
 #endif /* MINGW */
     {
-        StartServer();
+        StartServer(policy);
     }
 
     return 0;
@@ -285,9 +285,9 @@ static double GetSplay(void)
 
 /*****************************************************************************/
 
-static void KeepPromises(void)
+static void KeepPromises(Policy *policy)
 {
-    for (Constraint *cp = ControlBodyConstraints(cf_executor); cp != NULL; cp = cp->next)
+    for (Constraint *cp = ControlBodyConstraints(policy, cf_executor); cp != NULL; cp = cp->next)
     {
         if (IsExcluded(cp->classes))
         {
@@ -366,7 +366,7 @@ static void KeepPromises(void)
 /*****************************************************************************/
 
 /* Might be called back from NovaWin_StartExecService */
-void StartServer(void)
+void StartServer(Policy *policy)
 {
     time_t now = time(NULL);
     Promise *pp = NewPromise("exec_cfengine", "the executor agent");
@@ -471,7 +471,7 @@ void StartServer(void)
     {
         while (true)
         {
-            if (ScheduleRun())
+            if (ScheduleRun(policy))
             {
                 CfOut(cf_verbose, "", "Sleeping for splaytime %d seconds\n\n", SPLAYTIME);
                 sleep(SPLAYTIME);
@@ -636,7 +636,7 @@ static Reload CheckNewPromises(void)
     return RELOAD_ENVIRONMENT;
 }
 
-static bool ScheduleRun(void)
+static bool ScheduleRun(Policy *policy)
 {
     Item *ip;
 
@@ -679,11 +679,11 @@ static bool ScheduleRun(void)
         VNEGHEAP = NULL;
         VINPUTLIST = NULL;
 
-        DeleteBundles(BUNDLES);
-        DeleteBodies(BODIES);
+        DeleteBundles(policy->bundles);
+        DeleteBodies(policy->bodies);
 
-        BUNDLES = NULL;
-        BODIES = NULL;
+        policy->bundles = NULL;
+        policy->bodies = NULL;
         ERRORCOUNT = 0;
 
         NewScope("sys");
@@ -713,7 +713,7 @@ static bool ScheduleRun(void)
         };
 
         ReadPromises(cf_executor, CF_EXECC, config);
-        KeepPromises();
+        KeepPromises(policy);
     }
     else
     {

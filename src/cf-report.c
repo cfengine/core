@@ -32,11 +32,12 @@
 #include "lastseen.h"
 #include "granules.h"
 #include "files_names.h"
+#include "policy.h"
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);
 
-static void KeepReportsControlPromises(void);
+static void KeepReportsControlPromises(Policy *policy);
 static void KeepReportsPromises(void);
 static void ShowLastSeen(void);
 static void ShowPerformance(void);
@@ -280,12 +281,17 @@ int main(int argc, char *argv[])
 {
     GenericAgentConfig config = CheckOpts(argc, argv);
 
+    Policy *policy = NULL;
     if (!HUBQUERY)
     {
-        GenericInitialize("reporter", config);
+        policy = GenericInitialize("reporter", config);
+    }
+    else
+    {
+        policy = PolicyNew();
     }
     ThisAgentInit();
-    KeepReportsControlPromises();
+    KeepReportsControlPromises(policy);
     KeepReportsPromises();
     GenericDeInitialize();
     return 0;
@@ -571,13 +577,13 @@ static void ThisAgentInit(void)
 
 /*****************************************************************************/
 
-static void KeepReportsControlPromises()
+static void KeepReportsControlPromises(Policy *policy)
 {
     Constraint *cp;
     Rlist *rp;
     Rval retval;
 
-    for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp = cp->next)
+    for (cp = ControlBodyConstraints(policy, cf_report); cp != NULL; cp = cp->next)
     {
         if (IsExcluded(cp->classes))
         {

@@ -41,7 +41,7 @@ static void CheckFnCallType(char *lval, const char *s, enum cfdatatype dtype, co
 
 /*********************************************************/
 
-void CheckBundle(char *name, char *type)
+void CheckBundle(const Policy *policy, const char *name, const char *type)
 {
     Bundle *bp;
     char output[CF_BUFSIZE];
@@ -55,7 +55,7 @@ void CheckBundle(char *name, char *type)
         ReportError(output);
     }
 
-    for (bp = BUNDLES; bp != NULL; bp = bp->next)
+    for (bp = policy->bundles; bp != NULL; bp = bp->next)
     {
         if ((strcmp(name, bp->name) == 0) && (strcmp(type, bp->type) == 0))
         {
@@ -68,12 +68,11 @@ void CheckBundle(char *name, char *type)
 
 /*********************************************************/
 
-void CheckBody(char *name, char *type)
+void CheckBody(const Policy *policy, const char *name, const char *type)
 {
-    Body *bp;
     char output[CF_BUFSIZE];
 
-    for (bp = BODIES; bp != NULL; bp = bp->next)
+    for (const Body *bp = policy->bodies; bp != NULL; bp = bp->next)
     {
         if ((strcmp(name, bp->name) == 0) && (strcmp(type, bp->type) == 0))
         {

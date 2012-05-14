@@ -89,7 +89,7 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp)
 
     PromiseBanner(pp);
 
-    if ((bp = GetBundle(method_name, "agent")))
+    if ((bp = GetBundle(PolicyFromPromise(pp), method_name, "agent")))
     {
         char *bp_stack = THIS_BUNDLE;
 
@@ -97,7 +97,7 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp)
 
         DeleteScope(bp->name);
         NewScope(bp->name);
-        HashVariables(bp->name);
+        HashVariables(PolicyFromPromise(pp), bp->name);
 
         AugmentScope(bp->name, bp->args, params);
 

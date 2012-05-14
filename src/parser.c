@@ -31,6 +31,8 @@ extern FILE *yyin;
 
 static void ParserStateReset()
 {
+    P.policy = NULL;
+
     P.line_no = 1;
     P.line_pos = 1;
     P.list_nesting = 0;
@@ -47,9 +49,10 @@ static void ParserStateReset()
     P.blocktype[0] = '\0';
 }
 
-void ParserParseFile(const char *path)
+Policy *ParserParseFile(Policy *policy, const char *path)
 {
     ParserStateReset();
+    P.policy = policy;
 
     strncpy(P.filename, path, CF_MAXVARSIZE);
 
@@ -67,4 +70,6 @@ void ParserParseFile(const char *path)
     }
 
     fclose(yyin);
+
+    return P.policy;
 }

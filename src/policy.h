@@ -22,11 +22,21 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_PARSER_H
-#define CFENGINE_PARSER_H
+#ifndef CFENGINE_POLICY_H
+#define CFENGINE_POLICY_H
 
-#include "policy.h"
+#include "cf3.defs.h"
 
-Policy *ParserParseFile(Policy *policy, const char *path);
+struct Policy_
+{
+    Bundle *bundles;
+    Body *bodies;
+};
+
+Policy *PolicyNew(void);
+void PolicyDestroy(Policy *policy);
+
+Policy *PolicyFromPromise(const Promise *promise);
+
 
 #endif

@@ -122,8 +122,6 @@ double Q_SIGMA;
 /* Internal data structures                                                  */
 /*****************************************************************************/
 
-Bundle *BUNDLES = NULL;
-Body *BODIES = NULL;
 Scope *VSCOPE = NULL;
 Rlist *VINPUTLIST = NULL;
 Rlist *BODYPARTS = NULL;

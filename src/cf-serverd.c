@@ -49,7 +49,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv);
 static int OpenReceiverChannel(void);
 static void PurgeOldConnections(Item **list, time_t now);
 static void SpawnConnection(int sd_reply, char *ipaddr);
-static void CheckFileChanges(GenericAgentConfig config);
+static void CheckFileChanges(Policy *policy, GenericAgentConfig config);
 static void *HandleConnection(ServerConnectionState *conn);
 static int BusyWithConnection(ServerConnectionState *conn);
 static int MatchClasses(ServerConnectionState *conn);
@@ -90,7 +90,7 @@ static int OptionFound(char *args, char *pos, char *word);
 static in_addr_t GetInetAddr(char *host);
 #endif
 
-static void StartServer(GenericAgentConfig config);
+static void StartServer(Policy *policy, GenericAgentConfig config);
 
 char CFRUNCOMMAND[CF_BUFSIZE];
 
@@ -206,12 +206,12 @@ int main(int argc, char *argv[])
 {
     GenericAgentConfig config = CheckOpts(argc, argv);
 
-    GenericInitialize("server", config);
+    Policy *policy = GenericInitialize("server", config);
     ThisAgentInit();
-    KeepPromises();
+    KeepPromises(policy);
     Summarize();
 
-    StartServer(config);
+    StartServer(policy, config);
     return 0;
 }
 
@@ -319,7 +319,7 @@ static void ThisAgentInit(void)
 
 /*******************************************************************/
 
-static void StartServer(GenericAgentConfig config)
+static void StartServer(Policy *policy, GenericAgentConfig config)
 {
     char ipaddr[CF_MAXVARSIZE], intime[64];
     int sd, sd_reply;
@@ -410,7 +410,7 @@ static void StartServer(GenericAgentConfig config)
         {
             if (ACTIVE_THREADS == 0)
             {
-                CheckFileChanges(config);
+                CheckFileChanges(policy, config);
             }
             ThreadUnlock(cft_server_children);
         }
@@ -752,7 +752,7 @@ static void SpawnConnection(int sd_reply, char *ipaddr)
 
 /**************************************************************/
 
-static void CheckFileChanges(GenericAgentConfig config)
+static void CheckFileChanges(Policy *policy, GenericAgentConfig config)
 {
     if (EnterpriseExpiry())
     {
@@ -806,11 +806,9 @@ static void CheckFileChanges(GenericAgentConfig config)
             MULTICONNLIST = NULL;
             VINPUTLIST = NULL;
 
-            DeleteBundles(BUNDLES);
-            DeleteBodies(BODIES);
+            PolicyDestroy(policy);
+            policy = NULL;
 
-            BUNDLES = NULL;
-            BODIES = NULL;
             ERRORCOUNT = 0;
 
             NewScope("sys");
@@ -840,7 +838,7 @@ static void CheckFileChanges(GenericAgentConfig config)
 
             SetReferenceTime(true);
             ReadPromises(cf_server, CF_SERVERC, config);
-            KeepPromises();
+            KeepPromises(policy);
             Summarize();
 
         }

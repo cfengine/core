@@ -93,6 +93,7 @@ extern const int CF3_MODULES;
 
 /*************************************************************************/
 
+typedef struct Policy_ Policy;
 typedef struct Bundle_ Bundle;
 typedef struct Body_ Body;
 typedef struct Promise_ Promise;
@@ -656,6 +657,8 @@ typedef struct
 
 struct Bundle_
 {
+    Policy *parent_policy;
+
     char *type;
     char *name;
     Rlist *args;
@@ -671,6 +674,8 @@ typedef struct Constraint_ Constraint;
 
 struct Body_
 {
+    Policy *parent_policy;
+
     char *type;
     char *name;
     Rlist *args;

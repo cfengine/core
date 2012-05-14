@@ -416,6 +416,8 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp)
         return false;
     }
 
+    Policy *policy = PolicyFromPromise(pp);
+
     if (a.haveeditline)
     {
         if ((vp = GetConstraintValue("edit_line", pp, CF_FNCALL)))
@@ -439,14 +441,13 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp)
         CfOut(cf_verbose, "", " -> Handling file edits in edit_line bundle %s\n", edit_bundle_name);
 
         // add current filename to context - already there?
-
-        if ((bp = GetBundle(edit_bundle_name, "edit_line")))
+        if ((bp = GetBundle(policy, edit_bundle_name, "edit_line")))
         {
             BannerSubBundle(bp, params);
 
             DeleteScope(bp->name);
             NewScope(bp->name);
-            HashVariables(bp->name);
+            HashVariables(policy, bp->name);
 
             AugmentScope(bp->name, bp->args, params);
             PushPrivateClassContext();
@@ -464,7 +465,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp)
 
             DeleteScope(bp->name);
             NewScope(bp->name);
-            HashVariables(bp->name);
+            HashVariables(policy, bp->name);
 
             PushPrivateClassContext();
             retval = ScheduleEditLineOperations(filename,bp,a,pp);

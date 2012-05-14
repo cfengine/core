@@ -118,6 +118,7 @@ libpromises_la_SOURCES = \
         nfs.c \
         ontology.c ontology.h \
         package_lib.c \
+        policy.c policy.h \
         parser.c parser.h \
         parser_state.h \
         patches.c \

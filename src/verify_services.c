@@ -227,7 +227,7 @@ static void DoVerifyServices(Attributes a, Promise *pp)
         break;
     }
 
-    if (default_bundle && GetBundle(default_bundle->name, "agent") == NULL)
+    if (default_bundle && GetBundle(PolicyFromPromise(pp), default_bundle->name, "agent") == NULL)
     {
         cfPS(cf_inform, CF_FAIL, "", pp, a, " !! Service %s could not be invoked successfully\n", pp->promiser);
     }

@@ -29,11 +29,11 @@
 
 #include "files_names.h"
 
-static void KeepContextBundles(void);
+static void KeepContextBundles(Policy *policy);
 static void KeepServerPromise(Promise *pp);
 static void InstallServerAuthPath(char *path, Auth **list, Auth **listtop);
 static void KeepServerRolePromise(Promise *pp);
-static void KeepPromiseBundles(void);
+static void KeepPromiseBundles(Policy *policy);
 
 extern BodySyntax CFS_CONTROLBODY[];
 extern BodySyntax CF_REMROLE_BODIES[];
@@ -64,11 +64,11 @@ void KeepQueryAccessPromise(Promise *pp, char *type);
 /* Level                                                           */
 /*******************************************************************/
 
-void KeepPromises(void)
+void KeepPromises(Policy *policy)
 {
-    KeepContextBundles();
-    KeepControlPromises();
-    KeepPromiseBundles();
+    KeepContextBundles(policy);
+    KeepControlPromises(policy);
+    KeepPromiseBundles(policy);
 }
 
 /*******************************************************************/
@@ -163,7 +163,7 @@ void Summarize()
 /* Level                                                           */
 /*******************************************************************/
 
-void KeepControlPromises()
+void KeepControlPromises(Policy *policy)
 {
     Constraint *cp;
     Rval retval;
@@ -179,11 +179,11 @@ void KeepControlPromises()
 
     Banner("Server control promises..");
 
-    HashControls();
+    HashControls(policy);
 
 /* Now expand */
 
-    for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp = cp->next)
+    for (cp = ControlBodyConstraints(policy, cf_server); cp != NULL; cp = cp->next)
     {
         if (IsExcluded(cp->classes))
         {
@@ -405,16 +405,15 @@ void KeepControlPromises()
 
 /*********************************************************************/
 
-static void KeepContextBundles()
+static void KeepContextBundles(Policy *policy)
 {
-    Bundle *bp;
     SubType *sp;
     Promise *pp;
     char *scope;
 
 /* Dial up the generic promise expansion with a callback */
 
-    for (bp = BUNDLES; bp != NULL; bp = bp->next)       /* get schedule */
+    for (Bundle *bp = policy->bundles; bp != NULL; bp = bp->next)       /* get schedule */
     {
         scope = bp->name;
         SetNewScope(bp->name);
@@ -448,16 +447,15 @@ static void KeepContextBundles()
 
 /*********************************************************************/
 
-static void KeepPromiseBundles()
+static void KeepPromiseBundles(Policy *policy)
 {
-    Bundle *bp;
     SubType *sp;
     Promise *pp;
     char *scope;
 
 /* Dial up the generic promise expansion with a callback */
 
-    for (bp = BUNDLES; bp != NULL; bp = bp->next)       /* get schedule */
+    for (Bundle *bp = policy->bundles; bp != NULL; bp = bp->next)       /* get schedule */
     {
         scope = bp->name;
         SetNewScope(bp->name);

@@ -236,9 +236,18 @@ static void test_match(void **state)
 {
     assert_true(StringMatch("^a.*$", "abc"));
     assert_true(StringMatch("a", "a"));
+    assert_true(StringMatch("a", "ab"));
     assert_false(StringMatch("^a.*$", "bac"));
 }
 
+
+static void test_match_full(void **state)
+{
+    assert_true(StringMatchFull("^a.*$", "abc"));
+    assert_true(StringMatchFull("a", "a"));
+    assert_false(StringMatchFull("a", "ab"));
+    assert_false(StringMatchFull("^a.*$", "bac"));
+}
 int main()
 {
     const UnitTest tests[] =
@@ -280,7 +289,8 @@ int main()
         unit_test(test_safe_compare),
         unit_test(test_safe_equal),
 
-        unit_test(test_match)
+        unit_test(test_match),
+        unit_test(test_match_full)
     };
 
     return run_tests(tests);

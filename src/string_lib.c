@@ -386,13 +386,22 @@ char *NULLStringToEmpty(char *str)
     return str;
 }
 
-bool StringMatch(const char *regex, const char *str)
+static bool StringMatchInternal(const char *regex, const char *str, int *start, int *end)
 {
     assert(regex);
     assert(str);
 
     if (strcmp(regex, str) == 0)
     {
+        if (start)
+        {
+            *start = 0;
+        }
+        if (end)
+        {
+            *end = strlen(str);
+        }
+
         return true;
     }
 
@@ -409,9 +418,52 @@ bool StringMatch(const char *regex, const char *str)
         return false;
     }
 
-    int result = pcre_exec(pattern, NULL, str, strlen(str), 0, 0, NULL, 0);
+    int ovector[OVECCOUNT] = { 0 };
+    int result = pcre_exec(pattern, NULL, str, strlen(str), 0, 0, ovector, OVECCOUNT);
+
+    if (result)
+    {
+        if (start)
+        {
+            *start = ovector[0];
+        }
+        if (end)
+        {
+            *end = ovector[1];
+        }
+    }
+    else
+    {
+        if (start)
+        {
+            *start = 0;
+        }
+        if (end)
+        {
+            *end = 0;
+        }
+    }
 
     free(pattern);
 
     return result >= 0;
+}
+
+bool StringMatch(const char *regex, const char *str)
+{
+    return StringMatchInternal(regex, str, NULL, NULL);
+}
+
+bool StringMatchFull(const char *regex, const char *str)
+{
+    int start = 0, end = 0;
+
+    if (StringMatchInternal(regex, str, &start, &end))
+    {
+        return start == 0 && end == strlen(str);
+    }
+    else
+    {
+        return false;
+    }
 }

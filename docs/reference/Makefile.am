@@ -9,6 +9,7 @@ cf3-Reference.texinfo: ../../src/cf-know \
     generate_manual.cf \
     $(filter-out cf3-Reference.texinfo,$(wildcard *.texinfo)) \
     $(wildcard */*.texinfo)
+	chmod g-w generate_manual.cf
 	$(AM_V_GEN)../../src/cf-know -f ./generate_manual.cf
 
 %.html: %.texinfo

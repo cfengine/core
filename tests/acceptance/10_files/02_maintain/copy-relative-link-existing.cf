@@ -19,7 +19,7 @@ bundle agent init
 {
 commands:
   "/bin/mkdir -p $(G.testdir)";
-  "/usr/bin/touch $(G.testdir)/dest";
+  "/bin/touch $(G.testdir)/dest";
   "/bin/ln -s dest link",
     contain => in_dir("$(G.testdir)");
   "/bin/ln -s ./dest link-currdir",

@@ -1,3 +1,39 @@
+3.3.2   (Bugfix and Stability release)
+
+	Evaluation of policies:
+
+	- Do not segfault if file copy was interrupted due to network
+	  connectivity or server going away (Mantis #1089).
+	- Do not segfault if log_failed attribute is present in body, but
+	  log_kept is not (Mantis #1107).
+	- Do not mangle relative paths in symlinks during file copy
+	  Previously symlink a -> b was mangled to a -> ./b.
+	  (Mantis #1117)
+	- Properly compare 1.0 and 1.0.1 in packages promises. Previously
+	  only versions with equal amount of "segments" were comparable
+	  (Mantis #890, #1066).
+
+	Base policy:
+
+	- Properly set permissions on files for /var/cfengine/lib on HP-UX
+	  (Mantis #1114).
+	- Standard library (cfengine_stdlib.cf) is synced with COPBL
+	  repository.
+
+	Misc:
+
+	- Do not create huge file in case corrupted TokyoCabinet database
+	  is detected (Mantis #1106).
+	- Fix file descriptor leak on error paths, may have caused crashes
+	  of cf-execd and cf-serverd (Issue #1096).
+	- Fix intermittent segfault in cf-execd (Mantis #1116).
+	- Impose an upper limit on amount of listening sockets reported by
+	  cf-monitord. Huge amounts of listening sockets caused cf-agent to
+	  segfault on next run (Mantis #1098).
+	- Add missing function prototypes caused errors during compilation
+	  on HP-UX (Mantis #1109).
+	- Fix compilation on Solaris 11 (Mantis #1091).
+
 3.3.1   (Bugfix and Stability release)
 
 	Evaluation of policies:

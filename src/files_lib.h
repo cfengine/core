@@ -32,5 +32,7 @@ void PurgeItemList(Item **list, char *name);
 int RawSaveItemList(Item *liststart, char *file);
 int CompareToFile(Item *liststart, char *file, Attributes a, Promise *pp);
 ssize_t FileRead(const char *filename, char *buffer, size_t bufsize);
+ssize_t FileReadMax(char **output, char *filename, size_t size_max);
+bool FileWriteOver(char *filename, char *contents);
 
 #endif

@@ -37,6 +37,10 @@ check_PROGRAMS = \
 	crypto_symmetric_test \
 	persistent_lock_test \
 	package_versions_compare_test
+	persistent_lock_test  \
+        thread_test \
+	package_versions_compare_test \
+	files_lib_test
 
 TESTS = $(check_PROGRAMS)
 

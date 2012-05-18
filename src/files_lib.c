@@ -22,6 +22,8 @@
   included file COSL.txt.
 */
 
+#include "cf.defs.h"
+
 #include <assert.h>
 
 #include "files_lib.h"

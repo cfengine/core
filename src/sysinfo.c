@@ -884,6 +884,10 @@ void OSClasses()
 #if defined(HAVE_NOVA)
     Nova_SaveDocumentRoot();
 #endif
+
+#ifdef HAVE_NOVA
+    Nova_EnterpriseDiscovery();
+#endif
 }
 
 /*********************************************************************************/

@@ -47,9 +47,6 @@ void LoadSystemConstants()
     NewScalar("const", "endl", "\n", cf_str);
 /* NewScalar("const","0","\0",cf_str);  - this cannot work */
 
-#ifdef HAVE_NOVA
-    Nova_EnterpriseDiscovery();
-#endif
 }
 
 /*******************************************************************/

@@ -38,7 +38,8 @@ check_PROGRAMS = \
 	persistent_lock_test  \
         thread_test \
 	package_versions_compare_test \
-	files_lib_test
+	files_lib_test \
+	map_test
 
 TESTS = $(check_PROGRAMS)
 

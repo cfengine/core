@@ -196,7 +196,7 @@ void TexinfoManual(char *mandir)
     fprintf(fout, "@node Special Variables\n@chapter Special Variables\n\n");
 
     static const char *scopes[] =
-{
+    {
         "const",
         "edit",
         "match",

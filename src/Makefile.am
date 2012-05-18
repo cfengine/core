@@ -27,6 +27,7 @@ libpromises_la_SOURCES = \
         alloc.c alloc.h \
         alphalist.c alphalist.h \
         args.c \
+        array_map.c array_map_priv.h \
         assoc.c assoc.h \
         attributes.c attributes.h \
         bool.h \
@@ -79,6 +80,7 @@ libpromises_la_SOURCES = \
         generic_agent.c generic_agent.h \
         granules.c granules.h \
         hashes.c \
+        hash_map.c hash_map_priv.h \
         html.c \
         install.c \
         instrumentation.c \
@@ -90,6 +92,8 @@ libpromises_la_SOURCES = \
         lastseen_migration.c \
         logging.c \
         logic_expressions.c logic_expressions.h \
+        map.c map.h \
+        map_common.h \
         matching.c \
         misc_lib.c misc_lib.h \
         mod_access.c \
@@ -136,6 +140,7 @@ libpromises_la_SOURCES = \
         storage_tools.c \
         string_expressions.c string_expressions.h \
         string_lib.c string_lib.h \
+        string_map.c string_map.h \
         syntax.c syntax.h \
         sysinfo.c \
         timeout.c \

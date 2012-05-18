@@ -649,7 +649,7 @@ static void CreateClassesFromCanonification(char *canonified)
 
 /*******************************************************************/
 
-void OSClasses()
+void OSClasses(void)
 {
 #ifdef LINUX
     struct stat statbuf;

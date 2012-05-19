@@ -600,9 +600,6 @@ case "$target_os" in
 	AC_DEFINE(AIX, [], [AIX build])
         CPPFLAGS="$CPPFLAGS -w"
         ;;
-   osf*)
-	AC_DEFINE(OSF, [], [OSF/1 build])
-        ;;
    irix6*)
 	# rtentry is detected OK on a 6.5.19 system.
         AC_DEFINE(HAVE_ORTENTRY, 1, [The old route entry structure in newer BSDs]) # Have to hack this for 6.* owing to bug

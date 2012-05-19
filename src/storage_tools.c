@@ -66,7 +66,7 @@ off_t GetDiskUsage(char *file, enum cfsizes type)
 
 static off_t Unix_GetDiskUsage(char *file, enum cfsizes type)
 {
-# if defined SOLARIS || defined OSF || defined UNIXWARE || defined OPENBSD || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
+# if defined SOLARIS || defined UNIXWARE || defined OPENBSD || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
     struct statvfs buf;
 # else
     struct statfs buf;
@@ -76,7 +76,7 @@ static off_t Unix_GetDiskUsage(char *file, enum cfsizes type)
 
     memset(&buf, 0, sizeof(buf));
 
-# if defined SOLARIS || defined OSF || defined UNIXWARE || defined OPENBSD || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
+# if defined SOLARIS || defined UNIXWARE || defined OPENBSD || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
     if (statvfs(file, &buf) != 0)
     {
         CfOut(cf_error, "statvfs", "Couldn't get filesystem info for %s\n", file);
@@ -96,7 +96,7 @@ static off_t Unix_GetDiskUsage(char *file, enum cfsizes type)
     }
 # endif
 
-# if defined SOLARIS || defined OSF
+# if defined SOLARIS
     used = (buf.f_blocks - buf.f_bfree) * buf.f_frsize;
     avail = buf.f_bavail * buf.f_frsize;
 # endif

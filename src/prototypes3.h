@@ -634,7 +634,7 @@ void VerifyInterfacePromise(char *vifdev, char *vaddress, char *vnetmask, char *
 
 /* keyring.c */
 
-int HostKeyAddressUnknown(char *value);
+bool HostKeyAddressUnknown(const char *value);
 
 /* logging.c */
 

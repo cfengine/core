@@ -1123,8 +1123,8 @@ void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp
 
     if (cmpsb.st_mode != sb->st_mode)
     {
-        snprintf(message, CF_BUFSIZE - 1, "ALERT: Permissions for %s changed %o -> %o", file, cmpsb.st_mode,
-                 sb->st_mode);
+        snprintf(message, CF_BUFSIZE - 1, "ALERT: Permissions for %s changed %jo -> %jo", file,
+                 (uintmax_t)cmpsb.st_mode, (uintmax_t)sb->st_mode);
         CfOut(cf_error, "", "%s", message);
         LogHashChange(message + strlen("ALERT: "));
     }

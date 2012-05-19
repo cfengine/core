@@ -401,7 +401,7 @@ static FnCallResult FnCallGetUid(FnCall *fp, Rlist *finalargs)
     {
         char buffer[CF_BUFSIZE];
 
-        snprintf(buffer, CF_BUFSIZE - 1, "%d", pw->pw_uid);
+        snprintf(buffer, CF_BUFSIZE - 1, "%ju", (uintmax_t)pw->pw_uid);
         return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
     }
 }
@@ -428,7 +428,7 @@ static FnCallResult FnCallGetGid(FnCall *fp, Rlist *finalargs)
     {
         char buffer[CF_BUFSIZE];
 
-        snprintf(buffer, CF_BUFSIZE - 1, "%d", gr->gr_gid);
+        snprintf(buffer, CF_BUFSIZE - 1, "%ju", (uintmax_t)gr->gr_gid);
         return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
     }
 }

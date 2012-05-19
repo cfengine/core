@@ -170,7 +170,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
             return false;
         }
 
-        snprintf(splay, CF_MAXVARSIZE, "%s+%s+%d", VFQNAME, VIPADDRESS, getuid());
+        snprintf(splay, CF_MAXVARSIZE, "%s+%s+%ju", VFQNAME, VIPADDRESS, (uintmax_t)getuid());
         hash = (double) GetHash(splay);
         n = (int) (total * hash / (double) CF_HASHTABLESIZE);
 

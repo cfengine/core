@@ -600,21 +600,6 @@ case "$target_os" in
 	AC_DEFINE(AIX, [], [AIX build])
         CPPFLAGS="$CPPFLAGS -w"
         ;;
-   irix6*)
-	# rtentry is detected OK on a 6.5.19 system.
-        AC_DEFINE(HAVE_ORTENTRY, 1, [The old route entry structure in newer BSDs]) # Have to hack this for 6.* owing to bug
-	AC_DEFINE(IRIX, [], [IRIX build])
-        CFLAGS="$CFLAGS -w"
-        ;;
-   irix4*)
-	AC_DEFINE(IRIX)
-        CFLAGS="$CFLAGS -w"
-        LIBS="$LIBS -lsun"
-        ;;
-   irix*)
-	AC_DEFINE(IRIX)
-        CFLAGS="$CFLAGS -w"
-        ;;
    linux*)
 	AC_DEFINE(LINUX, [], [Linux build])
 	AC_CHECK_LIB(nss_nis, yp_get_default_domain)

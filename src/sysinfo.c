@@ -29,10 +29,6 @@
 #include "files_names.h"
 #include "vars.h"
 
-#ifdef IRIX
-# include <sys/syssgi.h>
-#endif
-
 void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname, char *uqname, char *domain);
 
 #ifdef LINUX
@@ -166,9 +162,6 @@ void GetNameInfo3()
 #ifdef AIX
     char real_version[_SYS_NMLN];
 #endif
-#ifdef IRIX
-    char real_version[256];     /* see <sys/syssgi.h> */
-#endif
 #if defined(HAVE_SYSINFO) && (defined(SI_ARCHITECTURE) || defined(SI_PLATFORM))
     long sz;
 #endif
@@ -198,10 +191,6 @@ void GetNameInfo3()
 #ifdef AIX
     snprintf(real_version, _SYS_NMLN, "%.80s.%.80s", VSYSNAME.version, VSYSNAME.release);
     strncpy(VSYSNAME.release, real_version, _SYS_NMLN);
-#elif defined IRIX
-/* This gets us something like `6.5.19m' rather than just `6.5'.  */
-    syssgi(SGI_RELEASE_NAME, 256, real_version);
-#endif
 
     ToLowerStrInplace(VSYSNAME.sysname);
     ToLowerStrInplace(VSYSNAME.machine);
@@ -419,14 +408,6 @@ void GetNameInfo3()
 
     snprintf(workbuf, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, VSYSNAME.release);
     NewClass(workbuf);
-
-#ifdef IRIX
-/* Get something like `irix64_6_5_19m' defined as well as
-   `irix64_6_5'.  Just copying the latter into VSYSNAME.release
-   wouldn't be backwards-compatible.  */
-    snprintf(workbuf, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, real_version);
-    NewClass(workbuf);
-#endif
 
     NewClass(VSYSNAME.machine);
     CfOut(cf_verbose, "", "Additional hard class defined as: %s\n", CanonifyName(workbuf));

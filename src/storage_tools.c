@@ -82,7 +82,7 @@ static off_t Unix_GetDiskUsage(char *file, enum cfsizes type)
         CfOut(cf_error, "statvfs", "Couldn't get filesystem info for %s\n", file);
         return CF_INFINITY;
     }
-# elif defined IRIX || defined SCO || defined CFCRAY || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
+# elif defined SCO || defined CFCRAY || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
     if (statfs(file, &buf, sizeof(struct statfs), 0) != 0)
     {
         CfOut(cf_error, "statfs", "Couldn't get filesystem info for %s\n", file);
@@ -114,12 +114,6 @@ static off_t Unix_GetDiskUsage(char *file, enum cfsizes type)
 # if defined LINUX
     used = (buf.f_blocks - buf.f_bfree) * (float) buf.f_bsize;
     avail = buf.f_bavail * (float) buf.f_bsize;
-# endif
-
-# if defined IRIX
-/* Float fix by arjen@sara.nl */
-    used = (buf.f_blocks - buf.f_bfree) * (float) buf.f_bsize;
-    avail = buf.f_bfree * (float) buf.f_bsize;
 # endif
 
     capacity = (double) (avail) / (double) (avail + used) * 100;

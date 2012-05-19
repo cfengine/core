@@ -2974,7 +2974,7 @@ static int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilena
         cfst.cf_nlink = statbuf.st_nlink;
     }
 
-#if !defined(IRIX) && !defined(MINGW)
+#if !defined(MINGW)
     if (statbuf.st_size > statbuf.st_blocks * DEV_BSIZE)
 #else
 # ifdef HAVE_ST_BLOCKS

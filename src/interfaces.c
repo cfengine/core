@@ -80,10 +80,7 @@ static void GetDefaultBroadcastAddr(char *ipaddr, char *vifdev, char *vnetmask, 
 # define INET_ADDRSTRLEN sizeof("255.255.255.255")
 #endif
 
-#if !defined(NT) && !defined(IRIX)
-
-/* IRIX makes the routing stuff obsolete unless we do this */
-# undef sgi
+#if !defined(NT)
 
 struct ifreq IFR;
 
@@ -580,7 +577,7 @@ static void SetPromisedDefaultRoute()
     }
 }
 
-#else /* NT or IRIX */
+#else /* NT */
 
 void VerifyInterfacePromise(vifdev, vaddress, vnetmask, vbroadcast)
      char *vifdev, *vaddress, *vnetmask, *vbroadcast;

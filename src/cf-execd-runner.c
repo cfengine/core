@@ -354,7 +354,9 @@ static void MailResult(const ExecConfig *config, char *file)
     struct sockaddr_in raddr;
     struct servent *server;
     struct stat statbuf;
+#if defined LINUX || defined NETBSD || defined FREEBSD || defined OPENBSD
     time_t now = time(NULL);
+#endif
     FILE *fp;
 
     CfOut(cf_verbose, "", "Mail result...\n");

@@ -612,9 +612,6 @@ case "$target_os" in
    netbsd*)
 	AC_DEFINE(NETBSD, [], [NetBSD build])
         ;;
-   bsd*)
-	AC_DEFINE(BSD43, [], [4.3BSD build])
-        ;;
    nextstep*)
 	AC_DEFINE(NEXTSTEP, [], [NeXTSTEP build])
         ;;

@@ -294,46 +294,34 @@ ssize_t FileReadMax(char **output, char *filename, size_t size_max)
     assert(size_max > 0);
 
     struct stat sb;
-
     if (cfstat(filename, &sb) == -1)
     {
-        *output = NULL;
+        return -1;
+    }
+
+    FILE *fin;
+
+    if ((fin = fopen(filename, "r")) == NULL)
+    {
         return -1;
     }
 
     ssize_t bytes_to_read = MIN(sb.st_size, size_max);
+    *output = xcalloc(bytes_to_read + 1, 1);
+    ssize_t bytes_read = fread(*output, 1, bytes_to_read, fin);
 
-    char *contents = xcalloc(bytes_to_read + 1, 1);
-
-    ssize_t bytes_read;
-
-    FILE *fin;
-
-    if ((fin = fopen(filename, "r")) != NULL)
+    if (ferror(fin))
     {
-        bytes_read = fread(contents, 1, bytes_to_read, fin);
-
-        if(ferror(fin))
-        {
-            CfOut(cf_error, "ferror", "FileContentsRead: Error while reading file %s", filename);
-            bytes_read = -1;
-        }
-
-        if(fclose(fin) != 0)
-        {
-            CfOut(cf_error, "fclose", "FileContentsRead: Could not close file %s", filename);
-            bytes_read = -1;
-        }
-    }
-
-    if(bytes_read > 0)
-    {
-        *output = contents;
-    }
-    else
-    {
+        CfOut(cf_error, "ferror", "FileContentsRead: Error while reading file %s", filename);
+        fclose(fin);
+        free(*output);
         *output = NULL;
-        free(contents);
+        return -1;
+    }
+
+    if (fclose(fin) != 0)
+    {
+        CfOut(cf_error, "fclose", "FileContentsRead: Could not close file %s", filename);
     }
 
     return bytes_read;

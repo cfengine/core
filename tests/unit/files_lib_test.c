@@ -75,7 +75,7 @@ void test_file_read_empty(void **p)
     char *output;
     ssize_t bytes_read = FileReadMax(&output, FILE_NAME_EMPTY, 100);
     assert_int_equal(bytes_read, 0);
-    assert_false(output);
+    assert_true(output);
 }
 
 void test_file_read_invalid(void **p)
@@ -83,7 +83,6 @@ void test_file_read_invalid(void **p)
     char *output;
     ssize_t bytes_read = FileReadMax(&output, "nonexisting file", 100);
     assert_true(bytes_read == -1);
-    assert_false(output);
 }
 
 int main()

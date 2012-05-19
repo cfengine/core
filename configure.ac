@@ -612,10 +612,6 @@ case "$target_os" in
    netbsd*)
 	AC_DEFINE(NETBSD, [], [NetBSD build])
         ;;
-   nextstep*)
-	AC_DEFINE(NEXTSTEP, [], [NeXTSTEP build])
-        ;;
-
    unicos*)
 	AC_DEFINE(CFCRAY, [], [Cray build])
         ;;

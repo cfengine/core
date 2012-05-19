@@ -591,9 +591,6 @@ case "$target_os" in
         AC_DEFINE(_XOPEN_SOURCE, 600, [SUSv3])
         AC_DEFINE(__EXTENSIONS__, 1, [Extended UNIX 98 interfaces])
         LIBS="$LIBS -lelf -lsec";;
-   ultrix*)
-	AC_DEFINE(ULTRIX, [], [Ultrix build])
-        ;;
    hpux*|hp-ux*) 
 
 	AC_DEFINE(HPuUX, [], [HP/UX build])

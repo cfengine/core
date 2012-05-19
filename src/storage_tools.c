@@ -68,8 +68,6 @@ static off_t Unix_GetDiskUsage(char *file, enum cfsizes type)
 {
 # if defined SOLARIS || defined OSF || defined UNIXWARE || defined OPENBSD || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
     struct statvfs buf;
-# elif defined ULTRIX
-    struct fs_data buf;
 # else
     struct statfs buf;
 # endif
@@ -78,13 +76,7 @@ static off_t Unix_GetDiskUsage(char *file, enum cfsizes type)
 
     memset(&buf, 0, sizeof(buf));
 
-# if defined ULTRIX
-    if (getmnt(NULL, &buf, sizeof(struct fs_data), STAT_ONE, file) == -1)
-    {
-        CfOut(cf_error, "getmnt", "Couldn't get filesystem info for %s\n", file);
-        return CF_INFINITY;
-    }
-# elif defined SOLARIS || defined OSF || defined UNIXWARE || defined OPENBSD || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
+# if defined SOLARIS || defined OSF || defined UNIXWARE || defined OPENBSD || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
     if (statvfs(file, &buf) != 0)
     {
         CfOut(cf_error, "statvfs", "Couldn't get filesystem info for %s\n", file);
@@ -102,11 +94,6 @@ static off_t Unix_GetDiskUsage(char *file, enum cfsizes type)
         CfOut(cf_error, "statfs", "Couldn't get filesystem info for %s\n", file);
         return CF_INFINITY;
     }
-# endif
-
-# if defined ULTRIX
-    used = buf.fd_btot - buf.fd_bfree;
-    avail = buf.fd_bfreen;
 # endif
 
 # if defined SOLARIS || defined OSF

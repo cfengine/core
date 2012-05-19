@@ -3890,12 +3890,6 @@ static void *CfReadFile(char *filename, int maxsize)
         size = sb.st_size;
     }
 
-    if (size == 0)
-    {
-        CfOut(cf_verbose, "", "Aborting read: file %s has zero bytes", filename);
-        return NULL;
-    }
-
     result = xmalloc(size + 1);
 
     if ((fp = fopen(filename, "r")) == NULL)
@@ -3905,27 +3899,30 @@ static void *CfReadFile(char *filename, int maxsize)
         return NULL;
     }
 
-    if (fread(result, size, 1, fp) != 1)
-    {
-        CfOut(cf_verbose, "fread", "Could not read expected amount from file %s in readfile", filename);
-        fclose(fp);
-        free(result);
-        return NULL;
-    }
-
     result[size] = '\0';
 
-    for (i = 0; i < size - 1; i++)
+    if (size > 0)
     {
-        if (result[i] == '\n' || result[i] == '\r')
+        if (fread(result, size, 1, fp) != 1)
         {
-            newlines++;
+            CfOut(cf_verbose, "fread", "Could not read expected amount from file %s in readfile", filename);
+            fclose(fp);
+            free(result);
+            return NULL;
         }
-    }
 
-    if (newlines == 0 && (result[size - 1] == '\n' || result[size - 1] == '\r'))
-    {
-        result[size - 1] = '\0';
+        for (i = 0; i < size - 1; i++)
+        {
+            if (result[i] == '\n' || result[i] == '\r')
+            {
+                newlines++;
+            }
+        }
+
+        if (newlines == 0 && (result[size - 1] == '\n' || result[size - 1] == '\r'))
+        {
+            result[size - 1] = '\0';
+        }
     }
 
     fclose(fp);

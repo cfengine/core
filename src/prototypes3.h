@@ -845,17 +845,13 @@ off_t GetDiskUsage(char *file, enum cfsizes type);
 /* sysinfo.c */
 
 void GetNameInfo3(void);
-void CfGetInterfaceInfo(enum cfagenttype ag);
+void GetInterfacesInfo(enum cfagenttype ag);
 void Get3Environment(void);
 void BuiltinClasses(void);
 void OSClasses(void);
 int IsInterfaceAddress(char *adr);
 int GetCurrentUserName(char *userName, int userNameLen);
 
-#ifndef MINGW
-void Unix_GetInterfaceInfo(enum cfagenttype ag);
-void Unix_FindV6InterfaceInfo(void);
-#endif /* NOT MINGW */
 const char *GetWorkDir(void);
 
 /* For unit tests */
@@ -891,16 +887,6 @@ void SetReferenceTime(int setclasses);
 void SetStartTime(void);
 
 /* unix.c */
-
-#ifndef MINGW
-int Unix_GracefulTerminate(pid_t pid);
-int Unix_GetCurrentUserName(char *userName, int userNameLen);
-int Unix_ShellCommandReturnsZero(char *comm, int useshell);
-int Unix_DoAllSignals(Item *siglist, Attributes a, Promise *pp);
-int Unix_LoadProcessTable(Item **procdata);
-void Unix_CreateEmptyFile(char *name);
-int Unix_IsExecutable(const char *file);
-#endif /* NOT MINGW */
 
 /*
  * Do not modify returned Rval, its contents may be constant and statically

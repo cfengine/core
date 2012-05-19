@@ -833,7 +833,7 @@ static void CheckFileChanges(GenericAgentConfig config)
             NewScope("mon");
             NewScope("remote_access");
             GetNameInfo3();
-            CfGetInterfaceInfo(cf_server);
+            GetInterfacesInfo(cf_server);
             Get3Environment();
             BuiltinClasses();
             OSClasses();

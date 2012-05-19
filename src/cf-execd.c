@@ -701,7 +701,7 @@ static bool ScheduleRun(void)
         NewScope("remote_access");
 
         GetNameInfo3();
-        CfGetInterfaceInfo(cf_executor);
+        GetInterfacesInfo(cf_executor);
         Get3Environment();
         BuiltinClasses();
         OSClasses();
@@ -737,7 +737,7 @@ static bool ScheduleRun(void)
         NewScope("mon");
         NewScope("sys");
 
-        CfGetInterfaceInfo(cf_executor);
+        GetInterfacesInfo(cf_executor);
         Get3Environment();
         BuiltinClasses();
         OSClasses();

@@ -499,22 +499,6 @@ void GetNameInfo3()
     }
 }
 
-/*********************************************************************/
-
-void CfGetInterfaceInfo(enum cfagenttype ag)
-#ifdef MINGW
-{
-    NovaWin_GetInterfaceInfo();
-}
-#else
-{
-    Unix_GetInterfaceInfo(ag);
-    Unix_FindV6InterfaceInfo();
-}
-#endif /* NOT MINGW */
-
-/*********************************************************************/
-
 void Get3Environment()
 {
     char env[CF_BUFSIZE], class[CF_BUFSIZE], name[CF_MAXVARSIZE], value[CF_BUFSIZE];
@@ -1973,17 +1957,6 @@ static FILE *ReadFirstLine(const char *filename, char *buf, int bufsize)
 
 /******************************************************************/
 /* User info                                                      */
-/******************************************************************/
-
-int GetCurrentUserName(char *userName, int userNameLen)
-{
-#ifdef MINGW
-    return NovaWin_GetCurrentUserName(userName, userNameLen);
-#else
-    return Unix_GetCurrentUserName(userName, userNameLen);
-#endif
-}
-
 /******************************************************************/
 
 #if defined(__CYGWIN__)

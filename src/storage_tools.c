@@ -84,7 +84,7 @@ static off_t Unix_GetDiskUsage(char *file, enum cfsizes type)
         CfOut(cf_error, "getmnt", "Couldn't get filesystem info for %s\n", file);
         return CF_INFINITY;
     }
-# elif defined SOLARIS || defined OSF || defined UNIXWARE || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
+# elif defined SOLARIS || defined OSF || defined UNIXWARE || defined OPENBSD || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
     if (statvfs(file, &buf) != 0)
     {
         CfOut(cf_error, "statvfs", "Couldn't get filesystem info for %s\n", file);

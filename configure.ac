@@ -544,7 +544,7 @@ if test "$rtry" = rtentry; then
 fi
 AC_EGREP_HEADER(ortentry, net/route.h, rtry=ortentry)
 if test "$rtry" = ortentry; then
- AC_DEFINE(HAVE_ORTENTRY, 1)
+ AC_DEFINE(HAVE_ORTENTRY, 1, [The old route entry structure in newer BSDs])
 fi
 AC_MSG_RESULT([$rtry])
 

@@ -191,6 +191,7 @@ void GetNameInfo3()
 #ifdef AIX
     snprintf(real_version, _SYS_NMLN, "%.80s.%.80s", VSYSNAME.version, VSYSNAME.release);
     strncpy(VSYSNAME.release, real_version, _SYS_NMLN);
+#endif
 
     ToLowerStrInplace(VSYSNAME.sysname);
     ToLowerStrInplace(VSYSNAME.machine);

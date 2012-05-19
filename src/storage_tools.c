@@ -43,28 +43,11 @@
 # include <sys/statvfs.h>
 #endif
 
-#ifndef MINGW
-static off_t Unix_GetDiskUsage(char *file, enum cfsizes type);
-#endif /* NOT MINGW */
-
 /************************************************************************/
+
+#ifndef MINGW
 
 off_t GetDiskUsage(char *file, enum cfsizes type)
-{
-#ifdef MINGW
-    return NovaWin_GetDiskUsage(file, type);
-#else
-    return Unix_GetDiskUsage(file, type);
-#endif
-}
-
-/************************************************************************/
-/*  Unix implementations                                                */
-/************************************************************************/
-
-#ifndef MINGW
-
-static off_t Unix_GetDiskUsage(char *file, enum cfsizes type)
 {
 # if defined SOLARIS || defined UNIXWARE || defined OPENBSD || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
     struct statvfs buf;

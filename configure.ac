@@ -615,9 +615,6 @@ case "$target_os" in
    bsd*)
 	AC_DEFINE(BSD43, [], [4.3BSD build])
         ;;
-   aos*)
-	AC_DEFINE(AOS, [], [AOS build])
-        ;;
    nextstep*)
 	AC_DEFINE(NEXTSTEP, [], [NeXTSTEP build])
         ;;

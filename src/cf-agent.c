@@ -1396,7 +1396,6 @@ static void NoteBundleCompliance(char *name, int save_pr_kept, int save_pr_repai
     delta_pr_notkept = (double) (PR_NOTKEPT - save_pr_notkept);
     delta_pr_repaired = (double) (PR_REPAIRED - save_pr_repaired);
 
-    CfOut(cf_verbose,"","");
     if (delta_pr_kept + delta_pr_notkept + delta_pr_repaired <= 0)
        {
        CfOut(cf_verbose, "", " ==> Zero promises executed for bundle \"%s\"", name);

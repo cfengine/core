@@ -612,9 +612,6 @@ case "$target_os" in
    netbsd*)
 	AC_DEFINE(NETBSD, [], [NetBSD build])
         ;;
-   newsos*)
-	AC_DEFINE(NEWS_OS, [], [NewsOS build])
-        ;;
    bsd/os*)
 	AC_DEFINE(BSDOS, [], [BSD/OS build])
         ;;

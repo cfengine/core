@@ -495,17 +495,17 @@ static void TexinfoVariables(FILE *fout, char *scope)
 
     fprintf(fout, "@end menu\n");
 
-    for (rp = list; rp != NULL; rp = rp->next)
+    if (strcmp(scope, "mon") != 0)
     {
-        fprintf(fout, "@node Variable %s.%s\n@subsection Variable %s.%s \n\n", scope, (char *) rp->item, scope,
-                (char *) rp->item);
-        snprintf(filename, CF_BUFSIZE - 1, "vars/%s_%s.texinfo", scope, (char *) rp->item);
-        IncludeManualFile(fout, filename);
+        for (rp = list; rp != NULL; rp = rp->next)
+        {
+            fprintf(fout, "@node Variable %s.%s\n@subsection Variable %s.%s \n\n", scope, (char *) rp->item, scope,
+                    (char *) rp->item);
+            snprintf(filename, CF_BUFSIZE - 1, "vars/%s_%s.texinfo", scope, (char *) rp->item);
+            IncludeManualFile(fout, filename);
+        }
     }
-
-    DeleteRlist(list);
-
-    if (strcmp(scope, "mon") == 0)
+    else
     {
         for (i = 0; i < CF_OBSERVABLES; i++)
         {
@@ -531,6 +531,7 @@ static void TexinfoVariables(FILE *fout, char *scope)
         }
     }
 
+    DeleteRlist(list);
 }
 
 /*******************************************************************/

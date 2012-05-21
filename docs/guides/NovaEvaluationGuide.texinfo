@@ -23,7 +23,7 @@
 @titlepage
 @title CFEngine 3 Nova Evaluation Guide
 @subtitle CFEngine Enterprise Documentation
-@subtitle Updated 25. April 2012 @c also update in ifnottex section below
+@subtitle Updated 7. May 2012 @c also update in ifnottex section below
 @author CFEngine AS
 @c @smallbook
 @fonttextsize 10
@@ -45,7 +45,7 @@ to the extent of applicable law.
 @end direntry
 @end ifinfo
 @ifnottex
-Updated 25. April 2012
+Updated 7. May 2012
 @node Top, , (dir), (dir)
 @top CFEngine 3 Nova Evaluation Guide
 @end ifnottex
@@ -101,7 +101,7 @@ The Mission Portal is the centerpiece of user interaction with CFEngine 3 Nova, 
 @item File diffs
 @item Promises not kept
 @end itemize
-@item Understand a simple CFEngine Policy file
+@item Understand and write a simple CFEngine Policy file
 @c @item Experiment with CFEngine Policy files
 @c @item Drill-down and configure individual servers, files, services, etc.
 @end itemize
@@ -953,7 +953,7 @@ The policy will be executed at the next run of cf-agent (here in the evaluation 
 @noindent @b{Action item:}
 @itemize -
 @item Mission Portal: Software reports (@ref{Example - Software report}) are only updated every six hours so this is not a convenient place to look for immediate changes. We can use the @samp{Promises repaired (log)} report instead: Open the reports finder as shown in @ref{Reports finder}, scroll down and click @b{Promises repaired (log)}. Enter the bundle name (pilot_packages) or promise handle (pilot_remote_package_install) as search criteria and click @b{Generate report}. The report should list the promise (not be empty).
-@item Web ssh: Choose the centos machine from the web ssh menu (as shown in @ref{Shell access (evaluation feature only)}) and look for @file{/var/cfengine/inputs/pilot_packages.cf}.
+@item Web ssh: Choose the centos machine from the web ssh menu (as shown in @ref{Shell access (evaluation feature only)}) and look for @file{/etc/cfengine_installed.txt}.
 @end itemize
 @end cartouche
 

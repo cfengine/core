@@ -128,24 +128,11 @@ int LoadMountInfo(Rlist **list)
         switch (VSYSTEMHARDCLASS)
         {
         case darwin:
-        case sun4:
-        case sun3:
-        case ultrx:
-        case irix:
-        case irix4:
-        case irix64:
         case linuxx:
-        case GnU:
         case unix_sv:
         case freebsd:
         case netbsd:
         case openbsd:
-        case bsd_i:
-        case nextstep:
-        case bsd4_3:
-        case newsos:
-        case aos:
-        case osf:
         case qnx:
         case crayos:
         case dragonfly:
@@ -329,24 +316,12 @@ int VerifyInFstab(char *name, Attributes a, Promise *pp)
 
     switch (VSYSTEMHARDCLASS)
     {
-    case osf:
-    case bsd4_3:
-    case irix:
-    case irix4:
-    case irix64:
-    case sun3:
-    case aos:
-    case nextstep:
-    case newsos:
     case qnx:
-    case sun4:
         snprintf(fstab, CF_BUFSIZE, "%s:%s \t %s %s\t%s 0 0", host, rmountpt, mountpt, fstype, opts);
         break;
 
     case crayos:
         snprintf(fstab, CF_BUFSIZE, "%s:%s \t %s %s\t%s", host, rmountpt, mountpt, ToUpperStr(fstype), opts);
-        break;
-    case ultrx:                //snprintf(fstab,CF_BUFSIZE,"%s@%s:%s:%s:0:0:%s:%s",rmountpt,host,mountpt,mode,fstype,opts);
         break;
     case hp:
         snprintf(fstab, CF_BUFSIZE, "%s:%s %s \t %s \t %s 0 0", host, rmountpt, mountpt, fstype, opts);
@@ -356,14 +331,12 @@ int VerifyInFstab(char *name, Attributes a, Promise *pp)
                  "%s:\n\tdev\t= %s\n\ttype\t= %s\n\tvfs\t= %s\n\tnodename\t= %s\n\tmount\t= true\n\toptions\t= %s\n\taccount\t= false\n",
                  mountpt, rmountpt, fstype, fstype, host, opts);
         break;
-    case GnU:
     case linuxx:
         snprintf(fstab, CF_BUFSIZE, "%s:%s \t %s \t %s \t %s", host, rmountpt, mountpt, fstype, opts);
         break;
 
     case netbsd:
     case openbsd:
-    case bsd_i:
     case dragonfly:
     case freebsd:
         snprintf(fstab, CF_BUFSIZE, "%s:%s \t %s \t %s \t %s 0 0", host, rmountpt, mountpt, fstype, opts);

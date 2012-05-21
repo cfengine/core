@@ -861,18 +861,6 @@ static void FindV6InterfacesInfo(void)
         /* NT cannot do this */
         return;
 
-    case irix:
-    case irix4:
-    case irix64:
-
-        if ((pp = cf_popen("/usr/etc/ifconfig -a", "r")) == NULL)
-        {
-            CfOut(cf_verbose, "", "Could not find interface info\n");
-            return;
-        }
-
-        break;
-
     case hp:
 
         if ((pp = cf_popen("/usr/sbin/ifconfig -a", "r")) == NULL)

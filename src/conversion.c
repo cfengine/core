@@ -174,6 +174,30 @@ char *EscapeRegex(char *s, char *out, int outSz)
 
 /***************************************************************************/
 
+enum cfmeasurepolicy MeasurePolicy2Value(char *s)
+{
+    static char *names[] = { "average", "sum", "first", "last",  NULL };
+    int i;
+
+    if (s == NULL)
+    {
+        return cfm_nomeasure;
+    }
+
+    for (i = 0; names[i] != NULL; i++)
+    {
+        if (s && strcmp(s, names[i]) == 0)
+        {
+            return (enum cfmeasurepolicy) i;
+        }
+    }
+
+    return cfm_average;
+
+}
+    
+/***************************************************************************/
+    
 enum cfhypervisors Str2Hypervisors(char *s)
 {
     static char *names[] = { "xen", "kvm", "esx", "test",

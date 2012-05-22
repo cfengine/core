@@ -1615,10 +1615,20 @@ typedef struct
 
 /*************************************************************************/
 
+enum cfmeasurepolicy
+{
+    cfm_average,
+    cfm_sum,
+    cfm_first,
+    cfm_last,
+    cfm_nomeasure
+};
+
 typedef struct
 {
     char *stream_type;
     enum cfdatatype data_type;
+    enum cfmeasurepolicy policy;
     char *history_type;
     char *select_line_matching;
     int select_line_number;

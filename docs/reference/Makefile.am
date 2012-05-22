@@ -18,6 +18,7 @@ cf3-Reference.texinfo: ../../src/cf-know \
 	    -I $(TEX_INCLUDEDIR) \
 	    --error-limit=0 \
 	    --html \
+        --css-include=../guides/cfcomdoc.css \
 	    --no-split
 
 TEXI2PDFFLAGS = -I $(TEX_INCLUDEDIR) --batch $(if $(filter-out 0,$(V)),,--quiet)

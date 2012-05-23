@@ -1,0 +1,93 @@
+# Assume the following file-structure:
+# dir1/file1
+# dir2/file2
+# link -> dir1
+#
+# We want to copy only what link points to, without explicitly specifying the link name.
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle agent init
+{
+commands:
+  "/bin/mkdir -p $(G.testdir)/from/dir1";
+  "/bin/mkdir -p $(G.testdir)/from/dir2";
+  "/bin/echo 'indir1' > $(G.testdir)/from/dir1/file1"
+    contain => in_shell;
+  "/bin/echo 'indir2' > $(G.testdir)/from/dir2/file2"
+    contain => in_shell;
+  "/bin/ln -s dir1 link",
+    contain => in_dir("$(G.testdir)/from");
+}
+
+
+bundle agent test 
+{
+vars:
+  "regular_dirs" slist => { ".*dir1",".*dir2" };
+
+  files:
+ 
+  "$(G.testdir)/to"
+       copy_from => dereference_all("$(G.testdir)/from"),
+    depth_search => recurse("inf"),
+     file_select => links_to( "@(regular_dirs)" );
+}
+
+
+bundle agent check
+{
+vars:
+  "file1_contents" string => readfile("$(G.testdir)/to/dir1/file1", 100);
+
+classes:
+  "file1_contents_correct" expression => strcmp("$(file1_contents)", "indir1");
+  "file2_exists" expression => fileexists("$(G.testdir)/to/dir2/file2");
+
+  "ok" expression => "file1_contents_correct.(!file2_exists)";
+
+reports:
+  ok::
+    "$(this.promise_filename) Pass";
+  !ok::
+    "$(this.promise_filename) FAIL";
+
+ 
+}
+
+
+body contain in_dir(s)
+{
+chdir => "$(s)";
+}
+
+body contain in_shell
+{
+useshell => "true";
+}
+
+body copy_from dereference_all(from)
+{
+source      => "$(from)";
+copylink_patterns => { ".*" };
+}
+ 
+body file_select links_to(list)
+{
+issymlinkto => { @(list) };
+file_result =>  "issymlinkto";
+}
+
+body depth_search recurse(d)
+{
+depth => "$(d)";
+xdev  => "true";
+}
+

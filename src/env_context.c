@@ -1325,7 +1325,7 @@ bool IsHardClass(char *sp)
         NULL
     };
 
-    for (i = 2; CLASSTEXT[i] != '\0'; i++)
+    for (i = 1; i < HARD_CLASSES_MAX; i++)
     {
         if (strcmp(CLASSTEXT[i], sp) == 0)
         {

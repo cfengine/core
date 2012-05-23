@@ -790,8 +790,6 @@ static void CheckFileChanges(GenericAgentConfig config)
             DeleteAuthList(VDENY);
             //DeleteRlist(VINPUTLIST); This is just a pointer, cannot free it
 
-            VSYSTEMHARDCLASS = unused1;
-
             DeleteAllScope();
 
             strcpy(VDOMAIN, "undefined.domain");

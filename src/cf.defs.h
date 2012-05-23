@@ -162,18 +162,6 @@ struct utsname
 # include <syslog.h>
 #endif
 
-/* Do this for ease of configuration from the Makefile */
-
-#ifdef HPuUX
-# define HPUX
-#endif
-
-#ifdef SunOS
-# define SUN4
-#endif
-
-/* end of patch */
-
 #ifdef AIX
 # ifndef ps2
 #  include <sys/statfs.h>
@@ -242,7 +230,7 @@ size_t strlcat(char *destination, const char *source, size_t size);
 # include <sys/vfs.h>
 #endif
 
-#ifdef HPUX
+#ifdef hpux
 # include <sys/dirent.h>
 #endif
 
@@ -280,9 +268,6 @@ size_t strlcat(char *destination, const char *source, size_t size);
 # include <net/if.h>
 # include <netinet/in.h>
 # include <netinet/tcp.h>
-# ifndef AOS
-#  include <arpa/inet.h>
-# endif
 # include <netdb.h>
 # if !defined LINUX && !defined NT
 #  include <sys/protosw.h>
@@ -562,17 +547,6 @@ struct timespec
 # define NULLFILE "/dev/null"
 # define EXEC_SUFFIX ""
 #endif /* NOT MINGW */
-
-/*******************************************************************/
-/* Class array limits                                              */
-/* This is the only place you ever need to edit anything           */
-/*******************************************************************/
-
-#define CF_CLASSATTR 38         /* increase this for each new class added */
-                                /* It defines the array size for class data */
-#define CF_ATTRDIM 3            /* Only used in CLASSATTRUBUTES[][] defn */
-
-   /* end class array limits */
 
 /*******************************************************************/
 
@@ -874,8 +848,7 @@ enum statepolicy
 
 enum classes
 {
-    empty,
-    soft,
+    hard_class_unknown,
     hp,
     aix,
     linuxx,
@@ -892,9 +865,7 @@ enum classes
     dragonfly,
     mingw,
     vmware,
-    unused1,
-    unused2,
-    unused3
+    HARD_CLASSES_MAX,
 };
 
 /*******************************************************************/
@@ -1222,13 +1193,6 @@ typedef struct
 # define IsFileSep(c) ((c) == '\\' || (c) == '/')
 #else
 # define IsFileSep(c) ((c) == '/')
-#endif
-
-/* Nobody already knows why it was needed in first place. Please test whether
-   removing this variable is harmless on HP/UX nowadays. */
-
-#ifdef HPuUX
-int Error;
 #endif
 
 #endif

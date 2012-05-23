@@ -74,7 +74,68 @@ static int GetPromisedIfStatus(int sk, char *vifdev, char *vaddress, char *vnetm
 static void SetPromisedIfStatus(int sk, char *vifdev, char *vaddress, char *vnetmask, char *vbroadcast);
 static void GetDefaultBroadcastAddr(char *ipaddr, char *vifdev, char *vnetmask, char *vbroadcast);
 
-/*******************************************************************/
+static const char *VROUTE[HARD_CLASSES_MAX] =
+{
+    "-",
+    "-",                        /* hpux */
+    "-",                        /* aix */
+    "/sbin/route",              /* linux */
+    "/usr/sbin/route",          /* solaris */
+    "/sbin/route",              /* freebsd */
+    "-",                        /* netbsd */
+    "-",                        /* cray */
+    "-",                        /* NT */
+    "-",                        /* Unixware */
+    "/sbin/route",              /* openbsd */
+    "-",                        /* sco */
+    "/sbin/route",              /* darwin */
+    "-",                        /* qnx */
+    "/sbin/route",              /* dragonfly */
+    "-",                        /* mingw */
+    "-",                        /* vmware */
+};
+
+static const char *VROUTEADDFMT[HARD_CLASSES_MAX] =
+{
+    "-",
+    "-",                        /* hpux */
+    "-",                        /* aix */
+    "add %s gw %s",             /* linux */
+    "add %s %s",                /* solaris */
+    "add %s %s",                /* freebsd */
+    "-",                        /* netbsd */
+    "-",                        /* cray */
+    "-",                        /* NT */
+    "-",                        /* Unixware */
+    "add %s %s",                /* openbsd */
+    "-",                        /* sco */
+    "add %s %s",                /* darwin */
+    "-",                        /* qnx */
+    "add %s %s",                /* dragonfly */
+    "-",                        /* mingw */
+    "-",                        /* vmware */
+};
+
+static const char *VROUTEDELFMT[HARD_CLASSES_MAX] =
+{
+    "-",
+    "-",                        /* hpux */
+    "-",                        /* aix */
+    "del %s",                   /* linux */
+    "delete %s",                /* solaris */
+    "delete %s",                /* freebsd */
+    "-",                        /* netbsd */
+    "-",                        /* cray */
+    "-",                        /* NT */
+    "-",                        /* Unixware */
+    "delete %s",                /* openbsd */
+    "-",                        /* sco */
+    "delete %s",                /* darwin */
+    "-",                        /* qnx */
+    "delete %s",                /* dragonfly */
+    "-",                        /* mingw */
+    "-",                        /* vmware */
+};
 
 #ifndef INET_ADDRSTRLEN
 # define INET_ADDRSTRLEN sizeof("255.255.255.255")

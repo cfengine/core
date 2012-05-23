@@ -57,6 +57,91 @@ static FILE *ReadFirstLine(const char *filename, char *buf, int bufsize);
 static void CreateClassesFromCanonification(char *canonified);
 static void GetCPUInfo(void);
 
+static const char *CLASSATTRIBUTES[HARD_CLASSES_MAX][3] =
+{
+    {"-", "-", "-"},            /* as appear here are matched. The fields are sysname and machine */
+    {"hp-ux", ".*", ".*"},      /* hpux */
+    {"aix", ".*", ".*"},        /* aix */
+    {"linux", ".*", ".*"},      /* linux */
+    {"sunos", ".*", "5.*"},     /* solaris */
+    {"freebsd", ".*", ".*"},    /* freebsd */
+    {"netbsd", ".*", ".*"},     /* NetBSD */
+    {"sn.*", "cray*", ".*"},    /* cray */
+    {"cygwin_nt.*", ".*", ".*"},        /* NT (cygwin) */
+    {"unix_sv", ".*", ".*"},    /* Unixware */
+    {"openbsd", ".*", ".*"},    /* OpenBSD */
+    {"sco_sv", ".*", ".*"},     /* SCO */
+    {"darwin", ".*", ".*"},     /* Darwin, aka MacOS X */
+    {"qnx", ".*", ".*"},        /* qnx  */
+    {"dragonfly", ".*", ".*"},  /* dragonfly */
+    {"windows_nt.*", ".*", ".*"},       /* NT (native) */
+    {"vmkernel", ".*", ".*"},   /* VMWARE / ESX */
+};
+
+static const char *VRESOLVCONF[HARD_CLASSES_MAX] =
+{
+    "-",
+    "/etc/resolv.conf",         /* hpux */
+    "/etc/resolv.conf",         /* aix */
+    "/etc/resolv.conf",         /* linux */
+    "/etc/resolv.conf",         /* solaris */
+    "/etc/resolv.conf",         /* freebsd */
+    "/etc/resolv.conf",         /* netbsd */
+    "/etc/resolv.conf",         /* cray */
+    "/etc/resolv.conf",         /* NT */
+    "/etc/resolv.conf",         /* Unixware */
+    "/etc/resolv.conf",         /* openbsd */
+    "/etc/resolv.conf",         /* sco */
+    "/etc/resolv.conf",         /* darwin */
+    "/etc/resolv.conf",         /* qnx */
+    "/etc/resolv.conf",         /* dragonfly */
+    "",                         /* mingw */
+    "/etc/resolv.conf",         /* vmware */
+};
+
+static const char *VMAILDIR[HARD_CLASSES_MAX] =
+{
+    "-",
+    "/var/mail",                /* hpux */
+    "/var/spool/mail",          /* aix */
+    "/var/spool/mail",          /* linux */
+    "/var/mail",                /* solaris */
+    "/var/mail",                /* freebsd */
+    "/var/mail",                /* netbsd */
+    "/usr/mail",                /* cray */
+    "N/A",                      /* NT */
+    "/var/mail",                /* Unixware */
+    "/var/mail",                /* openbsd */
+    "/var/spool/mail",          /* sco */
+    "/var/mail",                /* darwin */
+    "/var/spool/mail",          /* qnx */
+    "/var/mail",                /* dragonfly */
+    "",                         /* mingw */
+    "/var/spool/mail",          /* vmware */
+};
+
+static const char *VEXPORTS[HARD_CLASSES_MAX] =
+{
+    "-",
+    "/etc/exports",             /* hpux */
+    "/etc/exports",             /* aix */
+    "/etc/exports",             /* linux */
+    "/etc/dfs/dfstab",          /* solaris */
+    "/etc/exports",             /* freebsd */
+    "/etc/exports",             /* netbsd */
+    "/etc/exports",             /* cray */
+    "/etc/exports",             /* NT */
+    "/etc/dfs/dfstab",          /* Unixware */
+    "/etc/exports",             /* openbsd */
+    "/etc/dfs/dfstab",          /* sco */
+    "/etc/exports",             /* darwin */
+    "/etc/exports",             /* qnx */
+    "/etc/exports",             /* dragonfly */
+    "",                         /* mingw */
+    "none",                     /* vmware */
+};
+
+
 /*******************************************************************/
 
 void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname, char *uqname, char *domain)
@@ -175,13 +260,6 @@ void GetNameInfo3()
 
     CfDebug("GetNameInfo()\n");
 
-    if (VSYSTEMHARDCLASS != unused1)
-    {
-        CfOut(cf_verbose, "", "Already know our hard classes...\n");
-        /* Already have our name - so avoid memory leaks by recomputing */
-        return;
-    }
-
     if (uname(&VSYSNAME) == -1)
     {
         CfOut(cf_error, "uname", "!!! Couldn't get kernel name info!");
@@ -211,7 +289,7 @@ void GetNameInfo3()
     }
 #endif
 
-    for (i = 0; CLASSATTRIBUTES[i][0] != '\0'; i++)
+    for (i = 0; i < HARD_CLASSES_MAX; i++)
     {
         if (FullTextMatch(CLASSATTRIBUTES[i][0], ToLowerStr(VSYSNAME.sysname)))
         {
@@ -234,6 +312,11 @@ void GetNameInfo3()
                 continue;
             }
         }
+    }
+
+    if (!found)
+    {
+        i = 0;
     }
 
 /*

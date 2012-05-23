@@ -275,4 +275,4 @@ mode_t DEFAULTMODE = (mode_t) 0755;
 
 Item *VSETUIDLIST = NULL;
 Item *SUSPICIOUSLIST = NULL;
-enum classes VSYSTEMHARDCLASS = unused1;
+enum classes VSYSTEMHARDCLASS;

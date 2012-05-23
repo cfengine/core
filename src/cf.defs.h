@@ -162,18 +162,6 @@ struct utsname
 # include <syslog.h>
 #endif
 
-/* Do this for ease of configuration from the Makefile */
-
-#ifdef HPuUX
-# define HPUX
-#endif
-
-#ifdef SunOS
-# define SUN4
-#endif
-
-/* end of patch */
-
 #ifdef AIX
 # ifndef ps2
 #  include <sys/statfs.h>
@@ -242,7 +230,7 @@ size_t strlcat(char *destination, const char *source, size_t size);
 # include <sys/vfs.h>
 #endif
 
-#ifdef HPUX
+#ifdef hpux
 # include <sys/dirent.h>
 #endif
 
@@ -280,9 +268,6 @@ size_t strlcat(char *destination, const char *source, size_t size);
 # include <net/if.h>
 # include <netinet/in.h>
 # include <netinet/tcp.h>
-# ifndef AOS
-#  include <arpa/inet.h>
-# endif
 # include <netdb.h>
 # if !defined LINUX && !defined NT
 #  include <sys/protosw.h>
@@ -1222,13 +1207,6 @@ typedef struct
 # define IsFileSep(c) ((c) == '\\' || (c) == '/')
 #else
 # define IsFileSep(c) ((c) == '/')
-#endif
-
-/* Nobody already knows why it was needed in first place. Please test whether
-   removing this variable is harmless on HP/UX nowadays. */
-
-#ifdef HPuUX
-int Error;
 #endif
 
 #endif

@@ -679,11 +679,9 @@ static bool ScheduleRun(Policy *policy)
         VNEGHEAP = NULL;
         VINPUTLIST = NULL;
 
-        DeleteBundles(policy->bundles);
-        DeleteBodies(policy->bodies);
+        PolicyDestroy(policy);
+        policy = NULL;
 
-        policy->bundles = NULL;
-        policy->bodies = NULL;
         ERRORCOUNT = 0;
 
         NewScope("sys");

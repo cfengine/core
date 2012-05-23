@@ -111,7 +111,7 @@ int MAX_FD = 128;               /* Max number of simultaneous pipes */
 
 /*****************************************************************************/
 
-FILE *cf_popen(char *command, char *type)
+FILE *cf_popen(const char *command, char *type)
 {
     int i, pd[2];
     char **argv;
@@ -246,7 +246,7 @@ FILE *cf_popen(char *command, char *type)
 
 /*****************************************************************************/
 
-FILE *cf_popensetuid(char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background)
+FILE *cf_popensetuid(const char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background)
 {
     int i, pd[2];
     char **argv;
@@ -407,7 +407,7 @@ FILE *cf_popensetuid(char *command, char *type, uid_t uid, gid_t gid, char *chdi
 /* Shell versions of commands - not recommended for security reasons         */
 /*****************************************************************************/
 
-FILE *cf_popen_sh(char *command, char *type)
+FILE *cf_popen_sh(const char *command, char *type)
 {
     int i, pd[2];
     pid_t pid;
@@ -534,7 +534,7 @@ FILE *cf_popen_sh(char *command, char *type)
 
 /******************************************************************************/
 
-FILE *cf_popen_shsetuid(char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background)
+FILE *cf_popen_shsetuid(const char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background)
 {
     int i, pd[2];
     pid_t pid;

@@ -723,10 +723,10 @@ struct tm *localtime_r(const time_t *timep, struct tm *result);
 
 /* pipes.c */
 
-FILE *cf_popen(char *command, char *type);
-FILE *cf_popensetuid(char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background);
-FILE *cf_popen_sh(char *command, char *type);
-FILE *cf_popen_shsetuid(char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background);
+FILE *cf_popen(const char *command, char *type);
+FILE *cf_popensetuid(const char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background);
+FILE *cf_popen_sh(const char *command, char *type);
+FILE *cf_popen_shsetuid(const char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background);
 int cf_pclose(FILE *pp);
 int cf_pclose_def(FILE *pfp, Attributes a, Promise *pp);
 int VerifyCommandRetcode(int retcode, int fallback, Attributes a, Promise *pp);

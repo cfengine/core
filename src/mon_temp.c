@@ -34,8 +34,10 @@ static bool LMSENSORS;
 
 /* Prototypes */
 
+#if defined(__linux__)
 static bool GetAcpi(double *cf_this);
 static bool GetLMSensors(double *cf_this);
+#endif
 
 /* Implementation */
 
@@ -86,6 +88,7 @@ void MonTempInit(void)
 
 /******************************************************************************/
 
+#if defined(__linux__)
 static bool GetAcpi(double *cf_this)
 {
     Dir *dirh;
@@ -355,3 +358,5 @@ static bool GetLMSensors(double *cf_this)
     DeleteItemList(list);
     return true;
 }
+
+#endif

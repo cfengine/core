@@ -36,8 +36,6 @@
 static int IsCf3Scalar(char *str);
 static int CompareVariableValue(Rval rval, CfAssoc *ap);
 
-/*******************************************************************/
-
 void LoadSystemConstants()
 {
     NewScalar("const", "dollar", "$", cf_str);
@@ -47,9 +45,6 @@ void LoadSystemConstants()
     NewScalar("const", "endl", "\n", cf_str);
 /* NewScalar("const","0","\0",cf_str);  - this cannot work */
 
-#ifdef HAVE_NOVA
-    Nova_EnterpriseDiscovery();
-#endif
 }
 
 /*******************************************************************/

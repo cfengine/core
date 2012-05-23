@@ -166,6 +166,7 @@ char *EscapeRegex(char *s, char *out, int outSz);
 char *EscapeQuotes(const char *s, char *out, int outSz);
 char *MapAddress(char *addr);
 enum cfhypervisors Str2Hypervisors(char *s);
+enum cfmeasurepolicy MeasurePolicy2Value(char *s);
 enum cfenvironment_state Str2EnvState(char *s);
 enum insert_match String2InsertMatch(char *s);
 long Months2Seconds(int m);
@@ -224,7 +225,6 @@ int IsTCPType(char *s);
 
 /* enterprise_stubs.c */
 
-void EnterpriseModuleTrick(void);
 void VerifyRegistryPromise(Attributes a, Promise *pp);
 int CfSessionKeySize(char c);
 char CfEnterpriseOptions(void);
@@ -259,7 +259,6 @@ void VerifyMeasurement(double *this, Attributes a, Promise *pp);
 void SetMeasurementPromises(Item **classlist);
 void LongHaul(time_t current);
 void VerifyACL(char *file, Attributes a, Promise *pp);
-int CheckACLSyntax(char *file, Acl acl, Promise *pp);
 void LogFileChange(char *file, int change, Attributes a, Promise *pp);
 void RemoteSysLog(int log_priority, const char *log_string);
 void ReportPatches(PackageManager *list);
@@ -274,7 +273,6 @@ int ReturnLiteralData(char *handle, char *ret);
 char *GetRemoteScalar(char *proto, char *handle, char *server, int encrypted, char *rcv);
 const char *PromiseID(Promise *pp);     /* Not thread-safe */
 void NotePromiseCompliance(Promise *pp, double val, PromiseState state, char *reasoin);
-void SyntaxCompletion(char *s);
 int GetRegistryValue(char *key, char *name, char *buf, int bufSz);
 void NoteVarUsage(void);
 void NoteVarUsageDB(void);
@@ -293,7 +291,6 @@ void SetBundleOutputs(char *name);
 void ResetBundleOutputs(char *name);
 void SetPromiseOutputs(Promise *pp);
 void VerifyOutputsPromise(Promise *pp);
-void SpecialQuote(char *topic, char *type);
 void LastSawBundle(char *name,double compliance);
 void NewPromiser(Promise *pp);
 void AnalyzePromiseConflicts(void);
@@ -303,6 +300,8 @@ bool CFDB_HostsWithClass(Rlist **return_list, char *class_name, char *return_for
 
 void SetSyslogHost(const char *host);
 void SetSyslogPort(uint16_t port);
+
+void SyntaxCompletion(char *s);
 
 /* env_context.c */
 
@@ -373,7 +372,7 @@ int ExpandPrivateScalar(const char *contextid, const char *string, char buffer[C
 /* exec_tool.c */
 
 int IsExecutable(const char *file);
-int ShellCommandReturnsZero(char *comm, int useshell);
+int ShellCommandReturnsZero(const char *comm, int useshell);
 int GetExecOutput(char *command, char *buffer, int useshell);
 void ActAsDaemon(int preserve);
 char *ShEscapeCommand(char *s);
@@ -585,10 +584,6 @@ bool IsItemIn(Item *list, const char *item);
 int IsMatchItemIn(Item *list, char *item);
 Item *ConcatLists(Item *list1, Item *list2);
 void CopyList(Item **dest, Item *source);
-int FuzzySetMatch(char *s1, char *s2);
-int FuzzyMatchParse(char *item);
-int FuzzyHostMatch(char *arg0, char *arg1, char *basename);
-int FuzzyHostParse(char *arg1, char *arg2);
 void IdempItemCount(Item **liststart, const char *itemstring, const char *classes);
 Item *IdempPrependItem(Item **liststart, const char *itemstring, const char *classes);
 Item *IdempPrependItemClass(Item **liststart, char *itemstring, char *classes);
@@ -640,7 +635,7 @@ void VerifyInterfacePromise(char *vifdev, char *vaddress, char *vnetmask, char *
 
 /* keyring.c */
 
-int HostKeyAddressUnknown(char *value);
+bool HostKeyAddressUnknown(const char *value);
 
 /* logging.c */
 
@@ -728,10 +723,10 @@ struct tm *localtime_r(const time_t *timep, struct tm *result);
 
 /* pipes.c */
 
-FILE *cf_popen(char *command, char *type);
-FILE *cf_popensetuid(char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background);
-FILE *cf_popen_sh(char *command, char *type);
-FILE *cf_popen_shsetuid(char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background);
+FILE *cf_popen(const char *command, char *type);
+FILE *cf_popensetuid(const char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background);
+FILE *cf_popen_sh(const char *command, char *type);
+FILE *cf_popen_shsetuid(const char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background);
 int cf_pclose(FILE *pp);
 int cf_pclose_def(FILE *pfp, Attributes a, Promise *pp);
 int VerifyCommandRetcode(int retcode, int fallback, Attributes a, Promise *pp);
@@ -851,17 +846,13 @@ off_t GetDiskUsage(char *file, enum cfsizes type);
 /* sysinfo.c */
 
 void GetNameInfo3(void);
-void CfGetInterfaceInfo(enum cfagenttype ag);
+void GetInterfacesInfo(enum cfagenttype ag);
 void Get3Environment(void);
 void BuiltinClasses(void);
 void OSClasses(void);
 int IsInterfaceAddress(char *adr);
 int GetCurrentUserName(char *userName, int userNameLen);
 
-#ifndef MINGW
-void Unix_GetInterfaceInfo(enum cfagenttype ag);
-void Unix_FindV6InterfaceInfo(void);
-#endif /* NOT MINGW */
 const char *GetWorkDir(void);
 
 /* For unit tests */
@@ -897,16 +888,6 @@ void SetReferenceTime(int setclasses);
 void SetStartTime(void);
 
 /* unix.c */
-
-#ifndef MINGW
-int Unix_GracefulTerminate(pid_t pid);
-int Unix_GetCurrentUserName(char *userName, int userNameLen);
-int Unix_ShellCommandReturnsZero(char *comm, int useshell);
-int Unix_DoAllSignals(Item *siglist, Attributes a, Promise *pp);
-int Unix_LoadProcessTable(Item **procdata);
-void Unix_CreateEmptyFile(char *name);
-int Unix_IsExecutable(const char *file);
-#endif /* NOT MINGW */
 
 /*
  * Do not modify returned Rval, its contents may be constant and statically

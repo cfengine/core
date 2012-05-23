@@ -9,6 +9,7 @@ cf3-Reference.texinfo: ../../src/cf-know \
     generate_manual.cf \
     $(filter-out cf3-Reference.texinfo,$(wildcard *.texinfo)) \
     $(wildcard */*.texinfo)
+	chmod g-w generate_manual.cf
 	$(AM_V_GEN)../../src/cf-know -f ./generate_manual.cf
 
 %.html: %.texinfo
@@ -17,6 +18,7 @@ cf3-Reference.texinfo: ../../src/cf-know \
 	    -I $(TEX_INCLUDEDIR) \
 	    --error-limit=0 \
 	    --html \
+        --css-include=../guides/cfcomdoc.css \
 	    --no-split
 
 TEXI2PDFFLAGS = -I $(TEX_INCLUDEDIR) --batch $(if $(filter-out 0,$(V)),,--quiet)

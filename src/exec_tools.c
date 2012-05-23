@@ -28,28 +28,6 @@
 
 #include "files_names.h"
 
-/*************************************************************/
-
-int IsExecutable(const char *file)
-{
-#ifdef MINGW
-    return NovaWin_IsExecutable(file);
-#else
-    return Unix_IsExecutable(file);
-#endif
-}
-
-/*******************************************************************/
-
-int ShellCommandReturnsZero(char *comm, int useshell)
-{
-#ifdef MINGW
-    return NovaWin_ShellCommandReturnsZero(comm, useshell);
-#else
-    return Unix_ShellCommandReturnsZero(comm, useshell);
-#endif
-}
-
 /********************************************************************/
 
 int GetExecOutput(char *command, char *buffer, int useshell)

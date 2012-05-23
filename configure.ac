@@ -527,6 +527,10 @@ dnl ######################################################################
 AC_CHECK_MEMBERS([struct sockaddr.sa_len], , , [
 #include <sys/types.h>
 #include <sys/socket.h>])
+
+AC_CHECK_MEMBERS([struct ifreq.ifr_hwaddr],,, [
+#include <sys/ioctl.h>
+#include <net/if.h>])
    
 dnl #######################################################################
 dnl Newer BSD systems don't have a compatible rtentry - use ortentry
@@ -540,7 +544,7 @@ if test "$rtry" = rtentry; then
 fi
 AC_EGREP_HEADER(ortentry, net/route.h, rtry=ortentry)
 if test "$rtry" = ortentry; then
- AC_DEFINE(HAVE_ORTENTRY, 1)
+ AC_DEFINE(HAVE_ORTENTRY, 1, [The old route entry structure in newer BSDs])
 fi
 AC_MSG_RESULT([$rtry])
 
@@ -587,9 +591,6 @@ case "$target_os" in
         AC_DEFINE(_XOPEN_SOURCE, 600, [SUSv3])
         AC_DEFINE(__EXTENSIONS__, 1, [Extended UNIX 98 interfaces])
         LIBS="$LIBS -lelf -lsec";;
-   ultrix*)
-	AC_DEFINE(ULTRIX, [], [Ultrix build])
-        ;;
    hpux*|hp-ux*) 
 
 	AC_DEFINE(HPuUX, [], [HP/UX build])
@@ -598,24 +599,6 @@ case "$target_os" in
    aix*)
 	AC_DEFINE(AIX, [], [AIX build])
         CPPFLAGS="$CPPFLAGS -w"
-        ;;
-   osf*)
-	AC_DEFINE(OSF, [], [OSF/1 build])
-        ;;
-   irix6*)
-	# rtentry is detected OK on a 6.5.19 system.
-        AC_DEFINE(HAVE_ORTENTRY, 1, [The old route entry structure in newer BSDs]) # Have to hack this for 6.* owing to bug
-	AC_DEFINE(IRIX, [], [IRIX build])
-        CFLAGS="$CFLAGS -w"
-        ;;
-   irix4*)
-	AC_DEFINE(IRIX)
-        CFLAGS="$CFLAGS -w"
-        LIBS="$LIBS -lsun"
-        ;;
-   irix*)
-	AC_DEFINE(IRIX)
-        CFLAGS="$CFLAGS -w"
         ;;
    linux*)
 	AC_DEFINE(LINUX, [], [Linux build])
@@ -629,22 +612,6 @@ case "$target_os" in
    netbsd*)
 	AC_DEFINE(NETBSD, [], [NetBSD build])
         ;;
-   newsos*)
-	AC_DEFINE(NEWS_OS, [], [NewsOS build])
-        ;;
-   bsd/os*)
-	AC_DEFINE(BSDOS, [], [BSD/OS build])
-        ;;
-   bsd*)
-	AC_DEFINE(BSD43, [], [4.3BSD build])
-        ;;
-   aos*)
-	AC_DEFINE(AOS, [], [AOS build])
-        ;;
-   nextstep*)
-	AC_DEFINE(NEXTSTEP, [], [NeXTSTEP build])
-        ;;
-
    unicos*)
 	AC_DEFINE(CFCRAY, [], [Cray build])
         ;;

@@ -278,7 +278,7 @@ static double GetSplay(void)
 {
     char splay[CF_BUFSIZE];
 
-    snprintf(splay, CF_BUFSIZE, "%s+%s+%d", VFQNAME, VIPADDRESS, getuid());
+    snprintf(splay, CF_BUFSIZE, "%s+%s+%ju", VFQNAME, VIPADDRESS, (uintmax_t)getuid());
 
     return ((double) GetHash(splay)) / CF_HASHTABLESIZE;
 }
@@ -413,8 +413,8 @@ void StartServer(void)
            all of them during process termination.
          */
         strcpy(CFLOCK, thislock.lock);
-        strcpy(CFLAST, thislock.last);
-        strcpy(CFLOG, thislock.log);
+        strcpy(CFLAST, thislock.last ? thislock.last : "");
+        strcpy(CFLOG, thislock.log ? thislock.log : "");
     }
 
 #ifdef MINGW
@@ -671,8 +671,6 @@ static bool ScheduleRun(void)
 
         DeleteItemList(VNEGHEAP);
 
-        VSYSTEMHARDCLASS = unused1;
-
         DeleteAllScope();
 
         strcpy(VDOMAIN, "undefinded.domain");
@@ -701,7 +699,7 @@ static bool ScheduleRun(void)
         NewScope("remote_access");
 
         GetNameInfo3();
-        CfGetInterfaceInfo(cf_executor);
+        GetInterfacesInfo(cf_executor);
         Get3Environment();
         BuiltinClasses();
         OSClasses();
@@ -737,7 +735,7 @@ static bool ScheduleRun(void)
         NewScope("mon");
         NewScope("sys");
 
-        CfGetInterfaceInfo(cf_executor);
+        GetInterfacesInfo(cf_executor);
         Get3Environment();
         BuiltinClasses();
         OSClasses();

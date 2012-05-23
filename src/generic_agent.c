@@ -136,7 +136,7 @@ void GenericInitialize(char *agents, GenericAgentConfig config)
     NewScope("match");
     NewScope("mon");
     GetNameInfo3();
-    CfGetInterfaceInfo(ag);
+    GetInterfacesInfo(ag);
 
     Get3Environment();
     BuiltinClasses();

@@ -45,61 +45,7 @@ static void DeleteDirectoryTree(char *path, Promise *pp);
 
 #ifndef MINGW
 static void VerifySetUidGid(char *file, struct stat *dstat, mode_t newperm, Promise *pp, Attributes attr);
-static int Unix_VerifyOwner(char *file, Promise *pp, Attributes attr, struct stat *sb);
-static void Unix_VerifyCopiedFileAttributes(char *file, struct stat *dstat, struct stat *sstat, Attributes attr,
-                                            Promise *pp);
-static void Unix_VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promise *pp);
 #endif
-
-/*******************************************************************/
-/* File API - OS function mapping                                  */
-/*******************************************************************/
-
-void CreateEmptyFile(char *name)
-{
-#ifdef MINGW
-    NovaWin_CreateEmptyFile(name);
-#else
-    Unix_CreateEmptyFile(name);
-#endif
-}
-
-/*****************************************************************************/
-
-int VerifyOwner(char *file, Promise *pp, Attributes attr, struct stat *sb)
-{
-#ifdef MINGW
-    return NovaWin_VerifyOwner(file, pp, attr);
-#else
-    return Unix_VerifyOwner(file, pp, attr, sb);
-#endif
-}
-
-/*****************************************************************************/
-
-void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promise *pp)
-{
-#ifdef MINGW
-    NovaWin_VerifyFileAttributes(file, dstat, attr, pp);
-#else
-    Unix_VerifyFileAttributes(file, dstat, attr, pp);
-#endif
-}
-
-/*****************************************************************************/
-
-void VerifyCopiedFileAttributes(char *file, struct stat *dstat, struct stat *sstat, Attributes attr, Promise *pp)
-{
-#ifdef MINGW
-    NovaWin_VerifyCopiedFileAttributes(file, dstat, attr, pp);
-#else
-    Unix_VerifyCopiedFileAttributes(file, dstat, sstat, attr, pp);
-#endif
-}
-
-/*******************************************************************/
-/* End file API                                                    */
-/*******************************************************************/
 
 int VerifyFileLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp)
 {
@@ -1177,8 +1123,8 @@ void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp
 
     if (cmpsb.st_mode != sb->st_mode)
     {
-        snprintf(message, CF_BUFSIZE - 1, "ALERT: Permissions for %s changed %o -> %o", file, cmpsb.st_mode,
-                 sb->st_mode);
+        snprintf(message, CF_BUFSIZE - 1, "ALERT: Permissions for %s changed %jo -> %jo", file,
+                 (uintmax_t)cmpsb.st_mode, (uintmax_t)sb->st_mode);
         CfOut(cf_error, "", "%s", message);
         LogHashChange(message + strlen("ALERT: "));
     }
@@ -1830,7 +1776,7 @@ static void VerifySetUidGid(char *file, struct stat *dstat, mode_t newperm, Prom
 
 /*****************************************************************************/
 
-static int Unix_VerifyOwner(char *file, Promise *pp, Attributes attr, struct stat *sb)
+int VerifyOwner(char *file, Promise *pp, Attributes attr, struct stat *sb)
 {
     struct passwd *pw;
     struct group *gp;
@@ -1840,7 +1786,7 @@ static int Unix_VerifyOwner(char *file, Promise *pp, Attributes attr, struct sta
     uid_t uid = CF_SAME_OWNER;
     gid_t gid = CF_SAME_GROUP;
 
-    CfDebug("Unix_VerifyOwner: %jd\n", (uintmax_t) sb->st_uid);
+    CfDebug("VerifyOwner: %jd\n", (uintmax_t) sb->st_uid);
 
     for (ulp = attr.perms.owners; ulp != NULL; ulp = ulp->next)
     {
@@ -2150,7 +2096,7 @@ GidList *MakeGidList(char *gidnames)
 
 /*****************************************************************************/
 
-static void Unix_VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promise *pp)
+void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promise *pp)
 {
     mode_t newperm = dstat->st_mode, maskvalue;
 
@@ -2167,7 +2113,7 @@ static void Unix_VerifyFileAttributes(char *file, struct stat *dstat, Attributes
         newperm |= attr.perms.plus;
         newperm &= ~(attr.perms.minus);
 
-        CfDebug("Unix_VerifyFileAttributes(%s -> %jo)\n", file, (uintmax_t)newperm);
+        CfDebug("VerifyFileAttributes(%s -> %jo)\n", file, (uintmax_t)newperm);
 
         /* directories must have x set if r set, regardless  */
 
@@ -2270,7 +2216,7 @@ static void Unix_VerifyFileAttributes(char *file, struct stat *dstat, Attributes
             break;
 
         default:
-            FatalError("cfengine: internal error Unix_VerifyFileAttributes(): illegal file action\n");
+            FatalError("cfengine: internal error VerifyFileAttributes(): illegal file action\n");
         }
     }
 
@@ -2318,7 +2264,7 @@ static void Unix_VerifyFileAttributes(char *file, struct stat *dstat, Attributes
             break;
 
         default:
-            FatalError("cfengine: internal error Unix_VerifyFileAttributes() illegal file action\n");
+            FatalError("cfengine: internal error VerifyFileAttributes() illegal file action\n");
         }
     }
 # endif
@@ -2336,12 +2282,12 @@ static void Unix_VerifyFileAttributes(char *file, struct stat *dstat, Attributes
     }
 
     umask(maskvalue);
-    CfDebug("Unix_VerifyFileAttributes(Done)\n");
+    CfDebug("VerifyFileAttributes(Done)\n");
 }
 
 /*****************************************************************************/
 
-static void Unix_VerifyCopiedFileAttributes(char *file, struct stat *dstat, struct stat *sstat, Attributes attr,
+void VerifyCopiedFileAttributes(char *file, struct stat *dstat, struct stat *sstat, Attributes attr,
                                             Promise *pp)
 {
     mode_t newplus, newminus;

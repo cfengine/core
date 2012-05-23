@@ -1972,7 +1972,8 @@ Measurement GetMeasurementConstraint(Promise *pp)
     m.history_type = GetConstraintValue("history_type", pp, CF_SCALAR);
     m.select_line_matching = GetConstraintValue("select_line_matching", pp, CF_SCALAR);
     m.select_line_number = GetIntConstraint("select_line_number", pp);
-
+    m.policy = MeasurePolicy2Value(GetConstraintValue("select_multiline_policy", pp, CF_SCALAR));
+    
     m.extraction_regex = GetConstraintValue("extraction_regex", pp, CF_SCALAR);
     m.units = GetConstraintValue("units", pp, CF_SCALAR);
     m.growing = GetBooleanConstraint("track_growing_file", pp);

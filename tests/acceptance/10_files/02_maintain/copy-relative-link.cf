@@ -1,0 +1,57 @@
+# Test that copying relative link does not mangle it (Mantis #1117)
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle agent init
+{
+commands:
+  "/bin/mkdir -p $(G.testdir)/a";
+  "/usr/bin/touch $(G.testdir)/a/dest";
+  "/bin/ln -s dest $(G.testdir)/a/link";
+}
+
+bundle agent test
+{
+files:
+  "$(G.testdir)/b"
+    copy_from => local_cp("$(G.testdir)/a"),
+    depth_search => recurse("inf");
+}
+
+body copy_from local_cp(from)
+{
+  source => "$(from)";
+}
+
+body depth_search recurse(d)
+{
+  depth => "$(d)";
+  xdev  => "true";
+}
+
+bundle agent check
+{
+vars:
+  "expect" string => "dest";
+  "result" string => execresult("/usr/bin/perl -le 'printf(\"%s\", readlink(\"$(G.testdir)/b/link\"))'", "noshell");
+
+classes:
+  "ok" expression => strcmp("$(result)", "$(expect)");
+
+reports:
+  DEBUG::
+    "expected: '$(expect)'";
+    "got:      '$(result)'";
+  ok::
+    "$(this.promise_filename) Pass";
+  !ok::
+    "$(this.promise_filename) FAIL";
+}
+

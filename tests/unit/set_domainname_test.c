@@ -175,6 +175,11 @@ void Nova_SaveDocumentRoot(void)
     fail();
 }
 
+void Nova_EnterpriseDiscovery(void)
+{
+    fail();
+}
+
 void Chop(char *str)
 {
     fail();
@@ -280,7 +285,7 @@ enum classes VSYSTEMHARDCLASS;
 char CFWORKDIR[CF_BUFSIZE];
 char PUBKEY_DIGEST[CF_MAXVARSIZE];
 enum cfhashes CF_DEFAULT_DIGEST;
-char *CLASSATTRIBUTES[CF_CLASSATTR][CF_ATTRDIM];
+char *CLASSATTRIBUTES[HARD_CLASSES_MAX][3];
 char *VFSTAB[1];
 char *VRESOLVCONF[1];
 char *VMAILDIR[1];

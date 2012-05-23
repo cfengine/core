@@ -635,16 +635,23 @@ static void ArmClasses(Averages av, char *timekey)
 
     // Port addresses
 
-    for (ip = MON_TCP6; ip != NULL; ip=ip->next)
+    if (ListLen(MON_TCP6) + ListLen(MON_TCP4) > 512)
     {
-        snprintf(buff,CF_BUFSIZE,"tcp6_port_addr[%s]=%s",ip->name,ip->classes);
-        AppendItem(&classlist,buff,NULL);       
+        CfOut(cf_inform, "", "Disabling address information of TCP ports in LISTEN state: more than 512 listening ports are detected");
     }
-
-    for (ip = MON_TCP4; ip != NULL; ip=ip->next)
+    else
     {
-        snprintf(buff,CF_BUFSIZE,"tcp4_port_addr[%s]=%s",ip->name,ip->classes);
-        AppendItem(&classlist,buff,NULL);       
+        for (ip = MON_TCP6; ip != NULL; ip=ip->next)
+        {
+            snprintf(buff,CF_BUFSIZE,"tcp6_port_addr[%s]=%s",ip->name,ip->classes);
+            AppendItem(&classlist,buff,NULL);       
+        }
+
+        for (ip = MON_TCP4; ip != NULL; ip=ip->next)
+        {
+            snprintf(buff,CF_BUFSIZE,"tcp4_port_addr[%s]=%s",ip->name,ip->classes);
+            AppendItem(&classlist,buff,NULL);       
+        }
     }
 
     PublishEnvironment(classlist);

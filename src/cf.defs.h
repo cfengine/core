@@ -162,18 +162,6 @@ struct utsname
 # include <syslog.h>
 #endif
 
-/* Do this for ease of configuration from the Makefile */
-
-#ifdef HPuUX
-# define HPUX
-#endif
-
-#ifdef SunOS
-# define SUN4
-#endif
-
-/* end of patch */
-
 #ifdef AIX
 # ifndef ps2
 #  include <sys/statfs.h>
@@ -187,11 +175,19 @@ struct utsname
 # undef nfstype
 #endif
 
+#if !HAVE_DECL_DIRFD
+int dirfd(DIR *dirp);
+#endif
+
 /* strndup is defined as a macro on many systems */
 #if !HAVE_DECL_STRNDUP
 # ifndef strndup
 char *strndup(const char *s, size_t n);
 # endif
+#endif
+
+#if !HAVE_DECL_STRNLEN
+size_t strnlen(const char *str, size_t maxlen);
 #endif
 
 #ifdef HAVE_UNISTD_H
@@ -234,7 +230,7 @@ size_t strlcat(char *destination, const char *source, size_t size);
 # include <sys/vfs.h>
 #endif
 
-#ifdef HPUX
+#ifdef hpux
 # include <sys/dirent.h>
 #endif
 
@@ -272,9 +268,6 @@ size_t strlcat(char *destination, const char *source, size_t size);
 # include <net/if.h>
 # include <netinet/in.h>
 # include <netinet/tcp.h>
-# ifndef AOS
-#  include <arpa/inet.h>
-# endif
 # include <netdb.h>
 # if !defined LINUX && !defined NT
 #  include <sys/protosw.h>
@@ -554,17 +547,6 @@ struct timespec
 # define NULLFILE "/dev/null"
 # define EXEC_SUFFIX ""
 #endif /* NOT MINGW */
-
-/*******************************************************************/
-/* Class array limits                                              */
-/* This is the only place you ever need to edit anything           */
-/*******************************************************************/
-
-#define CF_CLASSATTR 38         /* increase this for each new class added */
-                                /* It defines the array size for class data */
-#define CF_ATTRDIM 3            /* Only used in CLASSATTRUBUTES[][] defn */
-
-   /* end class array limits */
 
 /*******************************************************************/
 
@@ -866,42 +848,24 @@ enum statepolicy
 
 enum classes
 {
-    empty,
-    soft,
-    sun4,
-    ultrx,
+    hard_class_unknown,
     hp,
     aix,
     linuxx,
     solaris,
-    osf,
-    digital,
-    sun3,
-    irix4,
-    irix,
-    irix64,
     freebsd,
-    bsd4_3,
-    newsos,
     netbsd,
-    aos,
-    bsd_i,
-    nextstep,
     crayos,
-    GnU,
     cfnt,
     unix_sv,
     openbsd,
     cfsco,
     darwin,
-    ux4800,
     qnx,
     dragonfly,
     mingw,
     vmware,
-    unused1,
-    unused2,
-    unused3
+    HARD_CLASSES_MAX,
 };
 
 /*******************************************************************/
@@ -1229,13 +1193,6 @@ typedef struct
 # define IsFileSep(c) ((c) == '\\' || (c) == '/')
 #else
 # define IsFileSep(c) ((c) == '/')
-#endif
-
-/* Nobody already knows why it was needed in first place. Please test whether
-   removing this variable is harmless on HP/UX nowadays. */
-
-#ifdef HPuUX
-int Error;
 #endif
 
 #endif

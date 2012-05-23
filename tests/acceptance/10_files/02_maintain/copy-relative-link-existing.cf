@@ -1,0 +1,68 @@
+# Assume the following file-structure:
+# dest
+# link -> dest
+# link-currdir -> ./dest
+#
+# When verifying "link-currdir" is copy of "link", it is ok
+# to correct it (to be link-currdir -> dest), but after this, the promise must be kept.
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle agent init
+{
+commands:
+  "/bin/mkdir -p $(G.testdir)";
+  "/bin/touch $(G.testdir)/dest";
+  "/bin/ln -s dest link",
+    contain => in_dir("$(G.testdir)");
+  "/bin/ln -s ./dest link-currdir",
+    contain => in_dir("$(G.testdir)");
+}
+
+bundle agent test
+{
+files:
+  "$(G.testdir)/link-currdir"
+     copy_from => local_cp("$(G.testdir)/link"),
+     move_obstructions => "true";
+
+  "$(G.testdir)/link-currdir"
+     copy_from => local_cp("$(G.testdir)/link"),
+       classes => if_kept("copy_link_kept");
+}
+
+bundle agent check
+{
+classes:
+  "ok" or => { "copy_link_kept" };
+
+reports:
+  ok::
+    "$(this.promise_filename) Pass";
+  !ok::
+    "$(this.promise_filename) FAIL";
+}
+
+
+body contain in_dir(s)
+{
+chdir => "$(s)";
+}
+
+body copy_from local_cp(from)
+{
+source      => "$(from)";
+}
+
+body classes if_kept(x)
+{
+promise_kept => { "$(x)" };
+}
+

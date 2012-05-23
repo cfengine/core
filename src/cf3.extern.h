@@ -68,7 +68,6 @@ extern char VMONTH[];
 extern char VSHIFT[];
 
 extern char *CLASSTEXT[];
-extern char *CLASSATTRIBUTES[CF_CLASSATTR][CF_ATTRDIM];
 extern char VINPUTFILE[];
 extern int AUDIT;
 extern char PURGE;
@@ -110,19 +109,9 @@ extern int MINUSF;
 
 extern char *VPSCOMM[];
 extern char *VPSOPTS[];
-extern char *VMOUNTCOMM[];
-extern char *VMOUNTOPTS[];
-extern char *VRESOLVCONF[];
 extern char *VHOSTEQUIV[];
 extern char *VFSTAB[];
-extern char *VMAILDIR[];
 extern char *VNETSTAT[];
-extern char *VEXPORTS[];
-extern char *VROUTE[];
-extern char *VROUTEADDFMT[];
-extern char *VROUTEDELFMT[];
-
-extern char *VUNMOUNTCOMM[];
 
 extern int EDITFILESIZE;
 extern int VIFELAPSED;

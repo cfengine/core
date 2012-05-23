@@ -493,7 +493,8 @@ A potential problem source when writing policies for windows is that
 paths to executables often contain spaces. This makes it impossible
 for CFEngine to know where the executable ends and the parameters to
 it starts. To solve this, we place escaped quotes around the
-executable.
+executable. Windows share paths (double backslashes) also need
+escaping.
 
 Additionally, Windows does not support that processes start themselves
 in in the background (i.e. fork off a child process in the Unix
@@ -517,6 +518,8 @@ commands:
 
 "\"C:\Program Files\Some Dir\program name.bat\" --silent --batch"
   action => in_shell_bg;
+
+"\"\\\\computer\share path\my program.exe\" /some args";
 }
 
 @end verbatim
@@ -531,7 +534,7 @@ anything on Windows. The
 @uref{http://cfengine.com/manuals/cf3-reference.html,CFEngine
 reference manual} documents exactly which promises are ignored and
 not.  Also, @code{cf-agent.exe} from CFEngine Nova prints warning messages
-on ignored attributes when run in verbose mode (@code{cf-agent.exe-Kv}).
+on ignored attributes when run in verbose mode (@code{cf-agent.exe -Kv}).
 
 
 @ifhtml

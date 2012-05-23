@@ -4,7 +4,7 @@
 #include <setjmp.h>
 #include <cmockery.h>
 
-#define NUM_THREADS 5000
+#define NUM_THREADS 100
 
 static void create_children(pthread_t tids[NUM_THREADS]);
 static void join_children(pthread_t tids[NUM_THREADS]);

@@ -36,11 +36,11 @@ static int ExecutePatch(PackageManager *schedule, enum package_actions action);
 static int PackageSanityCheck(Attributes a, Promise *pp);
 static int VerifyInstalledPackages(PackageManager **alllists, Attributes a, Promise *pp);
 static bool PackageListInstalledFromCommand(PackageItem **installed_list, Attributes a, Promise *pp);
+int ComparePackages(const char *n, const char *v, const char *a, PackageItem * pi, enum version_cmp cmp);
 static void VerifyPromisedPackage(Attributes a, Promise *pp);
 static void DeletePackageItems(PackageItem * pi);
 static int PackageMatch(const char *n, const char *v, const char *a, Attributes attr, Promise *pp);
 static int PatchMatch(const char *n, const char *v, const char *a, Attributes attr, Promise *pp);
-static int ComparePackages(const char *n, const char *v, const char *a, PackageItem * pi, enum version_cmp cmp);
 static void ParsePackageVersion(char *version, Rlist **num, Rlist **sep);
 static void SchedulePackageOp(const char *name, const char *version, const char *arch, int installed, int matched,
                               int novers, Attributes a, Promise *pp);
@@ -2055,7 +2055,7 @@ int ExecPackageCommand(char *command, int verify, int setCmdClasses, Attributes 
 /* Level                                                                     */
 /*****************************************************************************/
 
-static int ComparePackages(const char *n, const char *v, const char *a, PackageItem * pi, enum version_cmp cmp)
+int ComparePackages(const char *n, const char *v, const char *a, PackageItem * pi, enum version_cmp cmp)
 {
     Rlist *numbers_pr = NULL, *separators_pr = NULL;
     Rlist *numbers_in = NULL, *separators_in = NULL;
@@ -2110,12 +2110,6 @@ static int ComparePackages(const char *n, const char *v, const char *a, PackageI
         if (rp_pr->next == NULL && rp_in->next == NULL)
         {
             result = true;
-            break;
-        }
-
-        if ((rp_pr->next != NULL && rp_in->next == NULL) || (rp_pr->next == NULL && rp_in->next != NULL))
-        {
-            result = false;
             break;
         }
     }
@@ -2199,7 +2193,24 @@ static int ComparePackages(const char *n, const char *v, const char *a, PackageI
 
             if ((version_matched == true) || break_loop)
             {
+                rp_pr = NULL;
+                rp_in = NULL;
                 break;
+            }
+        }
+
+        if (rp_pr != NULL)
+        {
+            if (cmp == cfa_lt || cmp == cfa_le)
+            {
+                version_matched = true;
+            }
+        }
+        if (rp_in != NULL)
+        {
+            if (cmp == cfa_gt || cmp == cfa_ge)
+            {
+                version_matched = true;
             }
         }
     }
@@ -2277,7 +2288,7 @@ static void ParsePackageVersion(char *version, Rlist **num, Rlist **sep)
         }
 
         sscanf(sp, "%1[^0-9a-zA-Z]", separator);
-        PrependRScalar(sep, separator, CF_SCALAR);
+        AppendRScalar(sep, separator, CF_SCALAR);
     }
 }
 

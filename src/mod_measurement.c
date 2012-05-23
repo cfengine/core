@@ -68,6 +68,7 @@ BodySyntax CF_MATCHVALUE_BODY[] =
      "Regular expression that should contain a single backreference for extracting a value"},
     {"track_growing_file", cf_opts, CF_BOOL,
      "If true, cfengine remembers the position to which is last read when opening the file, and resets to the start if the file has since been truncated"},
+    {"select_multiline_policy", cf_opts, "average,sum,first,last", "Regular expression for matching line location"},
     {NULL, cf_notype, NULL, NULL}
 };
 

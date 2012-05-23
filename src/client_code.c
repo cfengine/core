@@ -40,6 +40,14 @@
 #include "client_protocol.h"
 #include "crypto.h"
 
+typedef struct
+{
+    char *server;
+    AgentConnection *conn;
+    int busy;
+} ServerItem;
+
+
 /* seconds */
 #define RECVTIMEOUT 30
 
@@ -310,7 +318,6 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, Attributes attr
 
     if (ReceiveTransaction(conn->sd, recvbuffer, NULL) == -1)
     {
-        DestroyServerConnection(conn);
         return -1;
     }
 
@@ -362,7 +369,6 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, Attributes attr
 
         if (ReceiveTransaction(conn->sd, recvbuffer, NULL) == -1)
         {
-            DestroyServerConnection(conn);
             return -1;
         }
 
@@ -501,7 +507,6 @@ Dir *OpenDirRemote(const char *dirname, Attributes attr, Promise *pp)
     {
         if ((n = ReceiveTransaction(conn->sd, recvbuffer, NULL)) == -1)
         {
-            DestroyServerConnection(conn);
             free((char *) cfdirh);
             return NULL;
         }
@@ -655,7 +660,6 @@ int CompareHashNet(char *file1, char *file2, Attributes attr, Promise *pp)
 
     if (ReceiveTransaction(conn->sd, recvbuffer, NULL) == -1)
     {
-        DestroyServerConnection(conn);
         cfPS(cf_error, CF_INTERPT, "recv", pp, attr, "Failed send");
         CfOut(cf_verbose, "", "No answer from host, assuming checksum ok to avoid remote copy for now...\n");
         return false;
@@ -745,7 +749,6 @@ int CopyRegularFileNet(char *source, char *new, off_t size, Attributes attr, Pro
 
         if ((n_read = RecvSocketStream(conn->sd, buf, toget, 0)) == -1)
         {
-            DestroyServerConnection(conn);
             cfPS(cf_error, CF_INTERPT, "recv", pp, attr, "Error in client-server stream");
             close(dd);
             free(buf);
@@ -894,7 +897,6 @@ int EncryptCopyRegularFileNet(char *source, char *new, off_t size, Attributes at
     {
         if ((cipherlen = ReceiveTransaction(conn->sd, buf, &more)) == -1)
         {
-            DestroyServerConnection(conn);
             free(buf);
             return false;
         }

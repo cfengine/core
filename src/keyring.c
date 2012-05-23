@@ -27,7 +27,7 @@
 
 /***************************************************************/
 
-int HostKeyAddressUnknown(char *value)
+bool HostKeyAddressUnknown(const char *value)
 {
     if (strcmp(value, CF_UNKNOWN_IP) == 0)
     {

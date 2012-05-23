@@ -257,7 +257,7 @@ static void TexinfoHeader(FILE *fout)
             "@c\n"
             "@c ***********************************************************************\n"
             "@c %%** start of header\n"
-            "@setfilename cf3-reference.info\n"
+            "@setfilename cf3-Reference.info\n"
             "@settitle CFEngine reference manual\n"
             "@setchapternewpage odd\n"
             "@c %%** end of header\n"

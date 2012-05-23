@@ -11,7 +11,7 @@ COMMON_GUIDES = \
     Licensing \
     NovaEvaluationGuide \
     NovaEvaluationGuideSupplement \
-    NovaOwnersManual \
+    Enterprise-2-2-OwnersManual \
     SpecialTopic_Adoption \
     SpecialTopic_Agility \
     SpecialTopic_ApplMgt \

@@ -746,10 +746,15 @@ This policy will create the file @file{/tmp/testfile}. It contains the bare mini
 We recommend that users familiarize themselves with the @url{http://cfengine.com/tech, CFEngine 3 documentation} and continue to learn about the CFEngine language and CFEngine 3 Nova. Documents of interest include: @*
 
 @itemize -
+<<<<<<< HEAD
 @item @url{http://cfengine.com/manuals/http://cfengine.com/manuals/novaevaluationguidesupplement.html, Nova Evaluation Guide Supplement}@*
 @item @url{http://cfengine.com/manuals/NovaOwnersManual.html, CFEngine 3 Nova Owner's Manual}@*
+=======
+@item @url{http://cfengine.com/manuals/novaevaluationguidesupplement.html, Nova Evaluation Guide Supplement}@*
+@item @url{http://cfengine.com/manuals/Enterprise-2-2-OwnersManual.html, CFEngine 3 Nova Owner's Manual}@*
+>>>>>>> c6d1576... Update file names (Redmine #723).
 @item @url{http://cfengine.com/manuals/cf3-conceptguide.html, CFEngine 3 Concept guide}@*
-@item @url{http://cfengine.com/manuals/cf3-reference.html, CFEngine 3 Reference Manual}@*
+@item @url{http://cfengine.com/manuals/cf3-Reference.html, CFEngine 3 Reference Manual}@*
 @end itemize
 
 We also recommend that you attend a @url{http://cfengine.com/training, CFEngine 3 Training Course} and/or employ @url{http://cfengine.com/consultancy, CFEngine Consulting} to help them plan your Nova implementation.

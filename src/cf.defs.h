@@ -549,17 +549,6 @@ struct timespec
 #endif /* NOT MINGW */
 
 /*******************************************************************/
-/* Class array limits                                              */
-/* This is the only place you ever need to edit anything           */
-/*******************************************************************/
-
-#define CF_CLASSATTR 38         /* increase this for each new class added */
-                                /* It defines the array size for class data */
-#define CF_ATTRDIM 3            /* Only used in CLASSATTRUBUTES[][] defn */
-
-   /* end class array limits */
-
-/*******************************************************************/
 
 #define CF_VALUE_LOG      "cf_value.log"
 #define CF_FILECHANGE     "file_change.log"
@@ -859,8 +848,7 @@ enum statepolicy
 
 enum classes
 {
-    empty,
-    soft,
+    hard_class_unknown,
     hp,
     aix,
     linuxx,
@@ -877,9 +865,7 @@ enum classes
     dragonfly,
     mingw,
     vmware,
-    unused1,
-    unused2,
-    unused3
+    HARD_CLASSES_MAX,
 };
 
 /*******************************************************************/

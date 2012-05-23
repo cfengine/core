@@ -671,8 +671,6 @@ static bool ScheduleRun(void)
 
         DeleteItemList(VNEGHEAP);
 
-        VSYSTEMHARDCLASS = unused1;
-
         DeleteAllScope();
 
         strcpy(VDOMAIN, "undefinded.domain");

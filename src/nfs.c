@@ -32,14 +32,73 @@
 #define RPCTIMEOUT 60
 
 #ifndef MINGW
+
 static void AugmentMountInfo(Rlist **list, char *host, char *source, char *mounton, char *options);
 static int MatchFSInFstab(char *match);
 static void DeleteThisItem(Item **liststart, Item *entry);
-#endif
 
-/*******************************************************************/
+static const char *VMOUNTCOMM[HARD_CLASSES_MAX] =
+{
+    "",
+    "/sbin/mount -ea",          /* hpux */
+    "/usr/sbin/mount -t nfs",   /* aix */
+    "/bin/mount -va",           /* linux */
+    "/usr/sbin/mount -a",       /* solaris */
+    "/sbin/mount -va",          /* freebsd */
+    "/sbin/mount -a",           /* netbsd */
+    "/etc/mount -va",           /* cray */
+    "/bin/sh /etc/fstab",       /* NT - possible security issue */
+    "/sbin/mountall",           /* Unixware */
+    "/sbin/mount",              /* openbsd */
+    "/etc/mountall",            /* sco */
+    "/sbin/mount -va",          /* darwin */
+    "/bin/mount -v",            /* qnx */
+    "/sbin/mount -va",          /* dragonfly */
+    "mingw-invalid",            /* mingw */
+    "/bin/mount -a",            /* vmware */
+};
 
-#ifndef MINGW                   // use samba on windows ?
+static const char *VUNMOUNTCOMM[HARD_CLASSES_MAX] =
+{
+    "",
+    "/sbin/umount",             /* hpux */
+    "/usr/sbin/umount",         /* aix */
+    "/bin/umount",              /* linux */
+    "/etc/umount",              /* solaris */
+    "/sbin/umount",             /* freebsd */
+    "/sbin/umount",             /* netbsd */
+    "/etc/umount",              /* cray */
+    "/bin/umount",              /* NT */
+    "/sbin/umount",             /* Unixware */
+    "/sbin/umount",             /* openbsd */
+    "/etc/umount",              /* sco */
+    "/sbin/umount",             /* darwin */
+    "/bin/umount",              /* qnx */
+    "/sbin/umount",             /* dragonfly */
+    "mingw-invalid",            /* mingw */
+    "/bin/umount",              /* vmware */
+};
+
+static const char *VMOUNTOPTS[HARD_CLASSES_MAX] =
+{
+    "",
+    "bg,hard,intr",             /* hpux */
+    "bg,hard,intr",             /* aix */
+    "defaults",                 /* linux */
+    "bg,hard,intr",             /* solaris */
+    "bg,intr",                  /* freebsd */
+    "-i,-b",                    /* netbsd */
+    "bg,hard,intr",             /* cray */
+    "",                         /* NT */
+    "bg,hard,intr",             /* Unixware */
+    "-i,-b",                    /* openbsd */
+    "bg,hard,intr",             /* sco */
+    "-i,-b",                    /* darwin */
+    "bg,hard,intr",             /* qnx */
+    "bg,intr",                  /* dragonfly */
+    "mingw-invalid",            /* mingw */
+    "defaults",                 /* vmstate */
+};
 
 int LoadMountInfo(Rlist **list)
 /* This is, in fact, the most portable way to read the mount info! */
@@ -182,9 +241,6 @@ int LoadMountInfo(Rlist **list)
         case cfnt:
             strcpy(mounton, buf2);
             strcpy(host, buf1);
-            break;
-        case unused2:
-        case unused3:
             break;
 
         case cfsco:
@@ -354,9 +410,6 @@ int VerifyInFstab(char *name, Attributes a, Promise *pp)
         CfOut(cf_error, "", "Don't understand filesystem format on SCO, no data - please fix me");
         break;
 
-    case unused1:
-    case unused2:
-    case unused3:
     default:
         free(opts);
         return false;
@@ -405,7 +458,7 @@ int VerifyNotInFstab(char *name, Attributes a, Promise *pp)
     }
     else
     {
-        opts = VMOUNTOPTS[VSYSTEMHARDCLASS];
+        opts = xstrdup(VMOUNTOPTS[VSYSTEMHARDCLASS]);
     }
 
     host = a.mount.mount_server;

@@ -372,7 +372,7 @@ int ExpandPrivateScalar(const char *contextid, const char *string, char buffer[C
 /* exec_tool.c */
 
 int IsExecutable(const char *file);
-int ShellCommandReturnsZero(char *comm, int useshell);
+int ShellCommandReturnsZero(const char *comm, int useshell);
 int GetExecOutput(char *command, char *buffer, int useshell);
 void ActAsDaemon(int preserve);
 char *ShEscapeCommand(char *s);

@@ -183,7 +183,7 @@ int IsExecutable(const char *file)
     return false;
 }
 
-int ShellCommandReturnsZero(char *comm, int useshell)
+int ShellCommandReturnsZero(const char *comm, int useshell)
 {
     int status;
     pid_t pid;

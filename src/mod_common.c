@@ -31,8 +31,6 @@
 /*                                                                           */
 /*****************************************************************************/
 
-#define CF3_MOD_COMMON
-
 #include "cf3.defs.h"
 
 BodySyntax CF_TRANSACTION_BODY[] =

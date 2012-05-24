@@ -33,8 +33,6 @@
 
 #include "cf3.defs.h"
 
-#define CF3_MOD_SERVICES
-
 BodySyntax CF_SERVMETHOD_BODY[] =
 {
     {"service_args", cf_str, "", "Parameters for starting the service as command"},

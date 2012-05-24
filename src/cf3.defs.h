@@ -1890,7 +1890,6 @@ extern double Q_SIGMA;
 /* SYNTAX MODULES                                          */
 /***********************************************************/
 
-#ifndef CF3_MOD_COMMON
 extern SubTypeSyntax CF_COMMON_SUBTYPES[];
 extern SubTypeSyntax *CF_ALL_SUBTYPES[];
 extern const BodySyntax CF_COMMON_BODIES[];
@@ -1901,77 +1900,26 @@ extern const BodySyntax CFG_CONTROLBODY[];
 extern const BodySyntax CFH_CONTROLBODY[];
 extern const BodySyntax CFA_CONTROLBODY[];
 extern const SubTypeSyntax CF_ALL_BODIES[];
-#endif
 
-#ifndef CF3_MOD_ENVIRON
 extern SubTypeSyntax CF_ENVIRONMENT_SUBTYPES[];
-#endif
-
-#ifndef CF3_MOD_OUTPUTS
 extern SubTypeSyntax CF_OUTPUTS_SUBTYPES[];
-#endif
-
-#ifndef CF3_MOD_FUNCTIONS
 extern const FnCallType CF_FNCALL_TYPES[];
-#endif
-
-#ifndef CF3_MOD_ACCESS
 extern SubTypeSyntax CF_REMACCESS_SUBTYPES[];
-
 extern const BodySyntax CF_REMACCESS_BODIES[];
-#endif
-
-#ifndef CF_MOD_INTERFACES
 extern SubTypeSyntax CF_INTERFACES_SUBTYPES[];
-#endif
-
-#ifndef CF3_MOD_STORAGE
 extern SubTypeSyntax CF_STORAGE_SUBTYPES[];
-#endif
-
-#ifndef CF3_MOD_DATABASES
 extern SubTypeSyntax CF_DATABASES_SUBTYPES[];
-#endif
-
-#ifndef CF3_MOD_KNOWLEGDE
 extern SubTypeSyntax CF_KNOWLEDGE_SUBTYPES[];
-#endif
-
-#ifndef CF3_MOD_PACKAGES
 extern SubTypeSyntax CF_PACKAGES_SUBTYPES[];
-#endif
-
-#ifndef CF3_MOD_REPORT
 extern SubTypeSyntax CF_REPORT_SUBTYPES[];
-
 extern const BodySyntax CF_REPORT_BODIES[];
-#endif
-
-#ifndef CF3_MOD_FILES
 extern SubTypeSyntax CF_FILES_SUBTYPES[];
-
 extern const BodySyntax CF_COMMON_EDITBODIES[];
-#endif
-
-#ifndef CF3_MOD_EXEC
 extern SubTypeSyntax CF_EXEC_SUBTYPES[];
-#endif
-
-#ifndef CF3_MOD_METHODS
 extern SubTypeSyntax CF_METHOD_SUBTYPES[];
-#endif
-
-#ifndef CF3_MOD_PROCESS
 extern SubTypeSyntax CF_PROCESS_SUBTYPES[];
-#endif
-
-#ifndef CF3_MOD_PROCESS
 extern SubTypeSyntax CF_MEASUREMENT_SUBTYPES[];
-#endif
-
-#ifndef CF3_MOD_SERVICES
 extern SubTypeSyntax CF_SERVICES_SUBTYPES[];
-#endif
 
 #include "dbm_api.h"
 #include "prototypes3.h"

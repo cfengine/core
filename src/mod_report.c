@@ -29,8 +29,6 @@
 /*                                                                           */
 /*****************************************************************************/
 
-#define CF3_MOD_REPORT
-
 #include "cf3.defs.h"
 
 BodySyntax CF_PRINTFILE_BODY[] =

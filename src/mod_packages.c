@@ -33,8 +33,6 @@
 
 /*****************************************************************************/
 
-#define CF3_MOD_PACKAGES
-
 BodySyntax CF_PKGMETHOD_BODY[] =
 {
     {"package_add_command", cf_str, CF_ABSPATHRANGE, "Command to install a package to the system"},

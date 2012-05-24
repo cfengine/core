@@ -33,8 +33,6 @@
 
 /*****************************************************************************/
 
-#define CF3_MOD_INTEFACES
-
 BodySyntax CF_TCPIP_BODY[] =
 {
     {"ipv4_address", cf_str, "[0-9.]+/[0-4]+", "IPv4 address for the interface"},

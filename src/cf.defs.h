@@ -268,6 +268,7 @@ size_t strlcat(char *destination, const char *source, size_t size);
 # include <net/if.h>
 # include <netinet/in.h>
 # include <netinet/tcp.h>
+# include <arpa/inet.h>
 # include <netdb.h>
 # if !defined LINUX && !defined NT
 #  include <sys/protosw.h>

@@ -31,7 +31,6 @@
 
 #include "cf3.defs.h"
 #include "dbm_lib.h"
-#include "prototypes3.h"
 
 int DBPathLock(const char *filename)
 {

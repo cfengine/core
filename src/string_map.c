@@ -23,7 +23,6 @@
 */
 
 #include "cf3.defs.h"
-#include "prototypes3.h"
 
 #include "string_map.h"
 

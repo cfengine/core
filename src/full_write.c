@@ -23,7 +23,6 @@
 */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
 /* Write LEN bytes at PTR to descriptor DESC, retrying if interrupted.
    Return LEN upon success, write's (negative) error code otherwise.  */

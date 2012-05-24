@@ -29,7 +29,6 @@
 /*****************************************************************************/
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
 /*
  * This associative array implementation uses array with linear search up to

@@ -43,7 +43,6 @@
 #define CF3_MOD_FILES
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
  /***********************************************************/
  /* Read this module file backwards, as dependencies have   */

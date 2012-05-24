@@ -24,7 +24,6 @@
 */
 
 #include "syntax.h"
-#include "cf3.extern.h"
 
 #include "json.h"
 #include "files_names.h"

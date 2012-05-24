@@ -26,7 +26,6 @@
 #define CFENGINE_GENERIC_AGENT_H
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
 #include "policy.h"
 

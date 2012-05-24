@@ -30,7 +30,6 @@
 /*****************************************************************************/
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
 #ifdef HAVE_MYSQL_H
 # include <mysql.h>

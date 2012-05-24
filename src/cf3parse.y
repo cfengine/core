@@ -8,7 +8,6 @@
 /*******************************************************************/
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 #include "parser_state.h"
 
 extern char *yytext;

@@ -25,7 +25,6 @@
 */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
 #if !defined(HAVE_NOVA)
 

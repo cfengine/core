@@ -30,7 +30,6 @@
 /*****************************************************************************/
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
 #include "dbm_api.h"
 #include "lastseen.h"

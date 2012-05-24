@@ -67,7 +67,6 @@
 /*******************************************************************/
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
 static void SetPromisedDefaultRoute(void);
 static int GetPromisedIfStatus(int sk, char *vifdev, char *vaddress, char *vnetmask, char *vbroadcast);

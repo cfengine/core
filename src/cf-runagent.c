@@ -24,7 +24,6 @@
 */
 
 #include "generic_agent.h"
-#include "cf3.extern.h"
 
 #include "lastseen.h"
 #include "crypto.h"

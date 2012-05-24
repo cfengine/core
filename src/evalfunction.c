@@ -23,7 +23,6 @@
 */
 
 #include "evalfunction.h"
-#include "cf3.extern.h"
 #include "dir.h"
 #include "dbm_api.h"
 #include "lastseen.h"

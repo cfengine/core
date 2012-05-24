@@ -30,7 +30,6 @@
 /*****************************************************************************/
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
 #ifndef MINGW
 static int CfSetuid(uid_t uid, gid_t gid);

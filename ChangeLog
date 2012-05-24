@@ -1,3 +1,19 @@
+3.3.3   (Bugfix and Stability release)
+
+	Evaluation of policies:
+
+	- Zero-length files are valid for readfile() and similar functions
+	  (Mantis #1136).
+	- Unchoke agent in case it encounters symlinks in form ./foo
+	  (Similar to Mantis #1117).
+
+	Misc:
+
+	- Fix generation of reference manual on machines with umask more
+	  relaxed than 022.
+	- Use statvfs(3) on OpenBSD to obtain filesystem information
+	  (Mantis #1135).
+
 3.3.2   (Bugfix and Stability release)
 
 	Evaluation of policies:

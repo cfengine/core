@@ -27,6 +27,7 @@
 #include "cf3.server.h"
 
 #include "files_names.h"
+#include "mod_access.h"
 
 static void KeepContextBundles(Policy *policy);
 static void KeepServerPromise(Promise *pp);

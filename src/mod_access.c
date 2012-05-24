@@ -32,6 +32,7 @@
 */
 
 #include "cf3.defs.h"
+#include "mod_access.h"
 
 /*
   Read this module file backwards, as dependencies have to be defined first -
@@ -45,7 +46,7 @@
   like in a body "sub-routine"
 */
 
-BodySyntax CF_REMACCESS_BODIES[] =
+const BodySyntax CF_REMACCESS_BODIES[] =
 {
     {"admit", cf_slist, "", "List of host names or IP addresses to grant access to file objects"},
     {"deny", cf_slist, "", "List of host names or IP addresses to deny access to file objects"},

@@ -1,0 +1,6 @@
+#ifndef CFENGINE_MOD_MEASUREMENT_H
+#define CFENGINE_MOD_MEASUREMENT_H
+
+extern SubTypeSyntax CF_MEASUREMENT_SUBTYPES[];
+
+#endif

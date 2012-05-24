@@ -23,6 +23,7 @@
 */
 
 #include "cf3.defs.h"
+#include "mod_process.h"
 
 BodySyntax CF_MATCHCLASS_BODY[] =
 {

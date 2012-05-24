@@ -96,22 +96,22 @@ libpromises_la_SOURCES = \
         map_common.h \
         matching.c \
         misc_lib.c misc_lib.h \
-        mod_access.c \
+        mod_access.c mod_access.h \
         mod_common.c \
-        mod_databases.c \
-        mod_environ.c \
-        mod_exec.c \
-        mod_files.c \
-        mod_interfaces.c \
-        mod_knowledge.c \
-        mod_measurement.c \
-        mod_methods.c \
-        mod_outputs.c \
-        mod_packages.c \
-        mod_process.c \
-        mod_report.c \
-        mod_services.c \
-        mod_storage.c \
+        mod_databases.c mod_databases.h \
+        mod_environ.c mod_environ.h \
+        mod_exec.c mod_exec.h \
+        mod_files.c mod_files.h \
+        mod_interfaces.c mod_interfaces.h \
+        mod_knowledge.c mod_knowledge.h \
+        mod_measurement.c mod_measurement.h \
+        mod_methods.c mod_methods.h \
+        mod_outputs.c mod_outputs.h \
+        mod_packages.c mod_packages.h \
+        mod_process.c mod_process.h \
+        mod_report.c mod_report.h \
+        mod_services.c mod_services.h \
+        mod_storage.c mod_storage.h \
         modes.c \
         monitoring.h \
         net.c \

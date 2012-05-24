@@ -1,0 +1,6 @@
+#ifndef CFENGINE_MOD_DATABASES_H
+#define CFENGINE_MOD_DATABASES_H
+
+extern SubTypeSyntax CF_DATABASES_SUBTYPES[];
+
+#endif

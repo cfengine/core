@@ -1,0 +1,6 @@
+#ifndef CFENGINE_MOD_KNOWLEDGE_H
+#define CFENGINE_MOD_KNOWLEDGE_H
+
+extern SubTypeSyntax CF_KNOWLEDGE_SUBTYPES[];
+
+#endif

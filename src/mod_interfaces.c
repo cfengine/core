@@ -23,6 +23,7 @@
 */
 
 #include "cf3.defs.h"
+#include "mod_interfaces.h"
 
 BodySyntax CF_TCPIP_BODY[] =
 {

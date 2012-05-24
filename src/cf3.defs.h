@@ -1893,25 +1893,7 @@ extern const BodySyntax CFH_CONTROLBODY[];
 extern const BodySyntax CFA_CONTROLBODY[];
 extern const SubTypeSyntax CF_ALL_BODIES[];
 
-extern SubTypeSyntax CF_ENVIRONMENT_SUBTYPES[];
-extern SubTypeSyntax CF_OUTPUTS_SUBTYPES[];
 extern const FnCallType CF_FNCALL_TYPES[];
-extern SubTypeSyntax CF_REMACCESS_SUBTYPES[];
-extern const BodySyntax CF_REMACCESS_BODIES[];
-extern SubTypeSyntax CF_INTERFACES_SUBTYPES[];
-extern SubTypeSyntax CF_STORAGE_SUBTYPES[];
-extern SubTypeSyntax CF_DATABASES_SUBTYPES[];
-extern SubTypeSyntax CF_KNOWLEDGE_SUBTYPES[];
-extern SubTypeSyntax CF_PACKAGES_SUBTYPES[];
-extern SubTypeSyntax CF_REPORT_SUBTYPES[];
-extern const BodySyntax CF_REPORT_BODIES[];
-extern SubTypeSyntax CF_FILES_SUBTYPES[];
-extern const BodySyntax CF_COMMON_EDITBODIES[];
-extern SubTypeSyntax CF_EXEC_SUBTYPES[];
-extern SubTypeSyntax CF_METHOD_SUBTYPES[];
-extern SubTypeSyntax CF_PROCESS_SUBTYPES[];
-extern SubTypeSyntax CF_MEASUREMENT_SUBTYPES[];
-extern SubTypeSyntax CF_SERVICES_SUBTYPES[];
 
 #include "dbm_api.h"
 #include "prototypes3.h"

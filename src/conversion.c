@@ -26,6 +26,7 @@
 
 #include "files_names.h"
 #include "dbm_api.h"
+#include "mod_access.h"
 
 static int IsSpace(char *remainder);
 

@@ -35,6 +35,10 @@
 
 #include "vars.h"
 #include "writer.h"
+#include "mod_knowledge.h"
+#include "mod_measurement.h"
+#include "mod_exec.h"
+#include "mod_access.h"
 
 extern char BUILD_DIR[CF_BUFSIZE];
 extern char MANDIR[CF_BUFSIZE];

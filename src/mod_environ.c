@@ -23,6 +23,7 @@
 */
 
 #include "cf3.defs.h"
+#include "mod_environ.h"
 
 BodySyntax CF_RESOURCE_BODY[] =
 {

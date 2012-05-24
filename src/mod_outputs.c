@@ -23,6 +23,7 @@
 */
 
 #include "cf3.defs.h"
+#include "mod_outputs.h"
 
 BodySyntax CF_OUTPUTS_BODIES[] =
 {

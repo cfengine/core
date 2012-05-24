@@ -1,0 +1,6 @@
+#ifndef CFENGINE_MOD_INTERFACES_H
+#define CFENGINE_MOD_INTERFACES_H
+
+extern SubTypeSyntax CF_INTERFACES_SUBTYPES[];
+
+#endif

@@ -23,6 +23,7 @@
 */
 
 #include "cf3.defs.h"
+#include "mod_files.h"
 
 BodySyntax CF_LOCATION_BODY[] =
 {
@@ -125,7 +126,7 @@ BodySyntax CF_REPLACE_BODIES[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CF_COMMON_EDITBODIES[] =
+const BodySyntax CF_COMMON_EDITBODIES[] =
 {
     {"select_region", cf_body, CF_EDSCOPE_BODY, "Limit edits to a demarked region of the file"},
     {NULL, cf_notype, NULL, NULL}

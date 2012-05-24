@@ -23,6 +23,7 @@
 */
 
 #include "cf3.defs.h"
+#include "mod_storage.h"
 
 BodySyntax CF_CHECKVOL_BODY[] =
 {

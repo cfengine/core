@@ -23,6 +23,7 @@
 */
 
 #include "cf3.defs.h"
+#include "mod_databases.h"
 
 BodySyntax CF_SQLSERVER_BODY[] =
 {

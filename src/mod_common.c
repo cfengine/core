@@ -26,6 +26,22 @@
 
 #include "cf3.defs.h"
 
+#include "mod_environ.h"
+#include "mod_outputs.h"
+#include "mod_access.h"
+#include "mod_interfaces.h"
+#include "mod_storage.h"
+#include "mod_databases.h"
+#include "mod_knowledge.h"
+#include "mod_packages.h"
+#include "mod_report.h"
+#include "mod_files.h"
+#include "mod_exec.h"
+#include "mod_methods.h"
+#include "mod_process.h"
+#include "mod_services.h"
+#include "mod_measurement.h"
+
 BodySyntax CF_TRANSACTION_BODY[] =
 {
     {"action_policy", cf_opts, "fix,warn,nop", "Whether to repair or report about non-kept promises"},
@@ -77,7 +93,7 @@ BodySyntax CF_DEFINECLASS_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CF_VARBODY[] =
+const BodySyntax CF_VARBODY[] =
 {
     {"string", cf_str, "", "A scalar string"},
     {"int", cf_int, CF_INTRANGE, "A scalar integer"},
@@ -90,7 +106,7 @@ BodySyntax CF_VARBODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CF_CLASSBODY[] =
+const BodySyntax CF_CLASSBODY[] =
 {
     {"and", cf_clist, CF_CLASSRANGE, "Combine class sources with AND"},
     {"dist", cf_rlist, CF_REALRANGE, "Generate a probabilistic class distribution (from strategies in cfengine 2)"},
@@ -104,7 +120,7 @@ BodySyntax CF_CLASSBODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CFG_CONTROLBODY[] =
+const BodySyntax CFG_CONTROLBODY[] =
 {
     {"bundlesequence", cf_slist, ".*", "List of promise bundles to verify in order"},
     {"goal_patterns", cf_slist, "",
@@ -131,7 +147,7 @@ BodySyntax CFG_CONTROLBODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CFA_CONTROLBODY[] =
+const BodySyntax CFA_CONTROLBODY[] =
 {
     {"abortclasses", cf_slist, ".*", "A list of classes which if defined lead to termination of cf-agent"},
     {"abortbundleclasses", cf_slist, ".*", "A list of classes which if defined lead to termination of current bundle"},
@@ -312,7 +328,7 @@ BodySyntax CFRE_CONTROLBODY[] = /* enum cfrecontrol */
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CFH_CONTROLBODY[] =  /* enum cfh_control */
+const BodySyntax CFH_CONTROLBODY[] =  /* enum cfh_control */
 {
     {"export_zenoss", cf_opts, CF_BOOL, "Make data available for Zenoss integration in docroot/reports/summary.z"},
     {"federation", cf_slist, "", "The list of CFEngine servers supporting constellation integration with this hub"},
@@ -324,7 +340,7 @@ BodySyntax CFH_CONTROLBODY[] =  /* enum cfh_control */
 
 /* This list is for checking free standing body lval => rval bindings */
 
-SubTypeSyntax CF_ALL_BODIES[] =
+const SubTypeSyntax CF_ALL_BODIES[] =
 {
     {CF_COMMONC, "control", CFG_CONTROLBODY},
     {CF_AGENTC, "control", CFA_CONTROLBODY},
@@ -351,7 +367,7 @@ SubTypeSyntax CF_ALL_BODIES[] =
     apply to more than one subtype, e.g. generic
     processing behavioural details */
 
-BodySyntax CF_COMMON_BODIES[] =
+const BodySyntax CF_COMMON_BODIES[] =
 {
     {CF_TRANSACTION, cf_body, CF_TRANSACTION_BODY, "Output behaviour"},
     {CF_DEFINECLASSES, cf_body, CF_DEFINECLASS_BODY, "Signalling behaviour"},

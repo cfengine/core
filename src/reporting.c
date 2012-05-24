@@ -24,6 +24,7 @@
 
 #include "cf3.defs.h"
 
+#include "mod_files.h"
 #include "files_names.h"
 
 char *CFX[][2] =

@@ -23,6 +23,7 @@
 */
 
 #include "cf3.defs.h"
+#include "mod_methods.h"
 
 BodySyntax CF_METHOD_BODIES[] =
 {

@@ -23,6 +23,7 @@
 */
 
 #include "cf3.defs.h"
+#include "mod_packages.h"
 
 BodySyntax CF_PKGMETHOD_BODY[] =
 {

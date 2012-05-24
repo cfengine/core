@@ -23,6 +23,7 @@
 */
 
 #include "cf3.defs.h"
+#include "mod_knowledge.h"
 
 BodySyntax CF_RELATE_BODY[] =
 {

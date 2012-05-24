@@ -23,6 +23,7 @@
 */
 
 #include "cf3.defs.h"
+#include "mod_report.h"
 
 BodySyntax CF_PRINTFILE_BODY[] =
 {
@@ -31,7 +32,7 @@ BodySyntax CF_PRINTFILE_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CF_REPORT_BODIES[] =
+const BodySyntax CF_REPORT_BODIES[] =
 {
     {"friend_pattern", cf_str, "", "Regular expression to keep selected hosts from the friends report list"},
     {"intermittency", cf_real, "0,1", "Real number threshold [0,1] of intermittency about current peers, report above",

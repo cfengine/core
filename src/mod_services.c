@@ -23,6 +23,7 @@
 */
 
 #include "cf3.defs.h"
+#include "mod_services.h"
 
 BodySyntax CF_SERVMETHOD_BODY[] =
 {

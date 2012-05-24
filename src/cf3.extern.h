@@ -196,7 +196,7 @@ extern int SHOWREPORTS;
 extern int SHOW_PARSE_TREE;
 extern int USE_GCC_BRIEF_FORMAT;
 extern time_t PROMISETIME;
-extern time_t CF_LOCKHORIZON;
+#define CF_LOCKHORIZON ((time_t)(SECONDS_PER_WEEK * 4))
 extern int ABORTBUNDLE;
 extern Item *ABORTBUNDLEHEAP;
 extern int LASTSEENEXPIREAFTER;

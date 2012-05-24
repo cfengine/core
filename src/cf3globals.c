@@ -75,7 +75,6 @@ char THIS_AGENT[CF_MAXVARSIZE] = { 0 };
 
 enum cfagenttype THIS_AGENT_TYPE;
 time_t PROMISETIME = 0;
-time_t CF_LOCKHORIZON = SECONDS_PER_WEEK * 4;
 
 int LICENSES = 0;
 int AM_NOVA = false;

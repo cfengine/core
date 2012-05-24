@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -20,45 +20,9 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
-*/
-
-/*****************************************************************************/
-/*                                                                           */
-/* File: mod_files.c                                                         */
-/*                                                                           */
-/*****************************************************************************/
-
-/*
-
- This file can act as a template for adding functionality to cfengine 3.
- All functionality can be added by extending the main array
-
- CF_MOD_SUBTYPES[CF3_MODULES]
-
- and its array dimension, in mod_common, in the manner shown here.
- 
 */
 
 #include "cf3.defs.h"
-
- /***********************************************************/
- /* Read this module file backwards, as dependencies have   */
- /* to be defined first - these arrays declare pairs of     */
- /* constraints                                             */
- /*                                                         */
- /* lval => rval                                            */
- /*                                                         */
- /* in the form (lval,type,range)                           */
- /*                                                         */
- /* If the type is cf_body then the range is a pointer      */
- /* to another array of pairs, like in a body "sub-routine" */
- /*                                                         */
- /***********************************************************/
-
-/**************************************************************/
-/* editing                                                    */
-/**************************************************************/
 
 BodySyntax CF_LOCATION_BODY[] =
 {
@@ -67,8 +31,6 @@ BodySyntax CF_LOCATION_BODY[] =
     {"select_line_matching", cf_str, CF_ANYSTRING, "Regular expression for matching file line location"},
     {NULL, cf_notype, NULL, NULL}
 };
-
-/**************************************************************/
 
 BodySyntax CF_EDITCOL_BODY[] =
 {
@@ -85,8 +47,6 @@ BodySyntax CF_EDITCOL_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-
 BodySyntax CF_REPLACEWITH_BODY[] =
 {
     {"occurrences", cf_opts, "all,first",
@@ -94,8 +54,6 @@ BodySyntax CF_REPLACEWITH_BODY[] =
     {"replace_value", cf_str, CF_ANYSTRING, "Value used to replace regular expression matches in search"},
     {NULL, cf_notype, NULL, NULL}
 };
-
-/**************************************************************/
 
 BodySyntax CF_EDSCOPE_BODY[] =
 {
@@ -105,8 +63,6 @@ BodySyntax CF_EDSCOPE_BODY[] =
     {"select_end", cf_str, CF_ANYSTRING, "Regular expression matches end of edit region from start"},
     {NULL, cf_notype, NULL, NULL}
 };
-
-/**************************************************************/
 
 BodySyntax CF_DELETESELECT_BODY[] =
 {
@@ -123,8 +79,6 @@ BodySyntax CF_DELETESELECT_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-
 BodySyntax CF_INSERTSELECT_BODY[] =
 {
     {"insert_if_startwith_from_list", cf_slist, CF_ANYSTRING, "Insert line if it starts with a string in the list"},
@@ -140,8 +94,6 @@ BodySyntax CF_INSERTSELECT_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-
 BodySyntax CF_INSERTLINES_BODIES[] =
 {
     {"expand_scalars", cf_opts, CF_BOOL, "Expand any unexpanded variables", "false"},
@@ -154,8 +106,6 @@ BodySyntax CF_INSERTLINES_BODIES[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-
 BodySyntax CF_DELETELINES_BODIES[] =
 {
     {"delete_select", cf_body, CF_DELETESELECT_BODY, "Delete only if lines pass filter criteria"},
@@ -163,15 +113,11 @@ BodySyntax CF_DELETELINES_BODIES[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-
 BodySyntax CF_COLUMN_BODIES[] =
 {
     {"edit_field", cf_body, CF_EDITCOL_BODY, "Edit line-based file as matrix of fields"},
     {NULL, cf_notype, NULL, NULL}
 };
-
-/**************************************************************/
 
 BodySyntax CF_REPLACE_BODIES[] =
 {
@@ -179,19 +125,11 @@ BodySyntax CF_REPLACE_BODIES[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-/* Common to all edit_line promises                           */
-/**************************************************************/
-
 BodySyntax CF_COMMON_EDITBODIES[] =
 {
     {"select_region", cf_body, CF_EDSCOPE_BODY, "Limit edits to a demarked region of the file"},
     {NULL, cf_notype, NULL, NULL}
 };
-
-/**************************************************************/
-/* Main files                                                 */
-/**************************************************************/
 
 BodySyntax CF_ACL_BODY[] =
 {
@@ -208,8 +146,6 @@ BodySyntax CF_ACL_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-
 BodySyntax CF_CHANGEMGT_BODY[] =
 {
     {"hash", cf_opts, "md5,sha1,sha224,sha256,sha384,sha512,best", "Hash files for change detection"},
@@ -219,8 +155,6 @@ BodySyntax CF_CHANGEMGT_BODY[] =
      "Generate reports summarizing the major differences between individual text files"},
     {NULL, cf_notype, NULL, NULL}
 };
-
-/**************************************************************/
 
 BodySyntax CF_RECURSION_BODY[] =
 {
@@ -234,8 +168,6 @@ BodySyntax CF_RECURSION_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-
 BodySyntax CF_EDITS_BODY[] =
 {
     {"edit_backup", cf_opts, "true,false,timestamp,rotate", "Menu option for backup policy on edit changes", "true"},
@@ -247,8 +179,6 @@ BodySyntax CF_EDITS_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-
 BodySyntax CF_TIDY_BODY[] =
 {
     {"dirlinks", cf_opts, "delete,tidy,keep",
@@ -256,8 +186,6 @@ BodySyntax CF_TIDY_BODY[] =
     {"rmdirs", cf_opts, CF_BOOL, "true/false whether to delete empty directories during recursive deletion"},
     {NULL, cf_notype, NULL, NULL}
 };
-
-/**************************************************************/
 
 BodySyntax CF_RENAME_BODY[] =
 {
@@ -269,8 +197,6 @@ BodySyntax CF_RENAME_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-
 BodySyntax CF_ACCESS_BODIES[] =
 {
     {"bsdflags", cf_slist, CF_BSDFLAGRANGE, "List of menu options for bsd file system flags to set"},
@@ -280,8 +206,6 @@ BodySyntax CF_ACCESS_BODIES[] =
     {"rxdirs", cf_opts, CF_BOOL, "true/false add execute flag for directories if read flag is set"},
     {NULL, cf_notype, NULL, NULL}
 };
-
-/**************************************************************/
 
 BodySyntax CF_FILEFILTER_BODY[] =
 {
@@ -307,8 +231,6 @@ BodySyntax CF_FILEFILTER_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-
 /* Copy and link are really the same body and should have
    non-overlapping patterns so that they are XOR but it's
    okay that some names overlap (like source) as there is
@@ -326,8 +248,6 @@ BodySyntax CF_LINKTO_BODY[] =
     {"when_no_source", cf_opts, "force,delete,nop", "Behaviour when the source file to link to does not exist", "nop"},
     {NULL, cf_notype, NULL, NULL}
 };
-
-/**************************************************************/
 
 BodySyntax CF_COPYFROM_BODY[] =
 {
@@ -364,10 +284,6 @@ BodySyntax CF_COPYFROM_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/***************************************************************/
-
-/* This is the primary set of constraints for a file object */
-
 BodySyntax CF_FILES_BODIES[] =
 {
     {"acl", cf_body, CF_ACL_BODY, "Criteria for access control lists on file"},
@@ -392,10 +308,6 @@ BodySyntax CF_FILES_BODIES[] =
      "Command (with full path) used to transform current file (no shell wrapper used)"},
     {NULL, cf_notype, NULL, NULL}
 };
-
-/***************************************************************/
-/* This is the point of entry from mod_common.c                */
-/***************************************************************/
 
 SubTypeSyntax CF_FILES_SUBTYPES[] =
 {

@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -20,16 +20,9 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: mod_common.c                                                        */
-/*                                                                           */
-/* This is a root node in the syntax tree                                    */
-/*                                                                           */
-/*****************************************************************************/
+/* This is a root node in the syntax tree */
 
 #include "cf3.defs.h"
 
@@ -62,8 +55,6 @@ BodySyntax CF_TRANSACTION_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/*********************************************************/
-
 BodySyntax CF_DEFINECLASS_BODY[] =
 {
     {"promise_repaired", cf_slist, CF_IDRANGE, "A list of classes to be defined globally"},
@@ -86,8 +77,6 @@ BodySyntax CF_DEFINECLASS_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/*********************************************************/
-
 BodySyntax CF_VARBODY[] =
 {
     {"string", cf_str, "", "A scalar string"},
@@ -100,8 +89,6 @@ BodySyntax CF_VARBODY[] =
      "The policy for (dis)allowing (re)definition of variables"},
     {NULL, cf_notype, NULL, NULL}
 };
-
-/*********************************************************/
 
 BodySyntax CF_CLASSBODY[] =
 {
@@ -116,10 +103,6 @@ BodySyntax CF_CLASSBODY[] =
     {"xor", cf_clist, CF_CLASSRANGE, "Combine class sources with XOR"},
     {NULL, cf_notype, NULL, NULL}
 };
-
-/*********************************************************/
-/* Control bodies                                        */
-/*********************************************************/
 
 BodySyntax CFG_CONTROLBODY[] =
 {
@@ -339,8 +322,6 @@ BodySyntax CFH_CONTROLBODY[] =  /* enum cfh_control */
     {NULL, cf_notype, NULL, NULL}
 };
 
-/*********************************************************/
-
 /* This list is for checking free standing body lval => rval bindings */
 
 SubTypeSyntax CF_ALL_BODIES[] =
@@ -381,8 +362,6 @@ BodySyntax CF_COMMON_BODIES[] =
     {"meta", cf_slist, "", "User-data associated with policy, e.g. key=value strings"},
     {NULL, cf_notype, NULL, NULL}
 };
-
-/*********************************************************/
 
  /* This is where we place promise subtypes that apply
     to more than one type of bundle, e.g. agent,server.. */

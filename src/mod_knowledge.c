@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -20,30 +20,9 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: mod_knowledge.c                                                     */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
-
- /***********************************************************/
- /* Read this module file backwards, as dependencies have   */
- /* to be defined first - these arrays declare pairs of     */
- /* constraints                                             */
- /*                                                         */
- /* lval => rval                                            */
- /*                                                         */
- /* in the form (lval,type,range)                           */
- /*                                                         */
- /* If the type is cf_body then the range is a pointer      */
- /* to another array of pairs, like in a body "sub-routine" */
- /*                                                         */
- /***********************************************************/
 
 BodySyntax CF_RELATE_BODY[] =
 {
@@ -52,8 +31,6 @@ BodySyntax CF_RELATE_BODY[] =
     {"associates", cf_slist, "", "List of associated topics by this forward relationship"},
     {NULL, cf_notype, NULL, NULL}
 };
-
-/***************************************************************/
 
 BodySyntax CF_OCCUR_BODIES[] =
 {
@@ -66,8 +43,6 @@ BodySyntax CF_OCCUR_BODIES[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/***************************************************************/
-
 BodySyntax CF_TOPICS_BODIES[] =
 {
     {"association", cf_body, CF_RELATE_BODY, "Declare associated topics"},
@@ -76,8 +51,6 @@ BodySyntax CF_TOPICS_BODIES[] =
      "A list of words to be treated as super-sets for the current topic, used when reasoning"},
     {NULL, cf_notype, NULL, NULL}
 };
-
-/***************************************************************/
 
 BodySyntax CF_THING_BODIES[] =
 {
@@ -104,18 +77,12 @@ BodySyntax CF_THING_BODIES[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/***************************************************************/
-
 BodySyntax CF_INFER_BODIES[] =
 {
     {"precedents", cf_slist, "", "The foundational vector for a trinary inference"},
     {"qualifiers", cf_slist, "", "The second vector in a trinary inference"},
     {NULL, cf_notype, NULL, NULL}
 };
-
-/***************************************************************/
-/* This is the point of entry from mod_common.c                */
-/***************************************************************/
 
 SubTypeSyntax CF_KNOWLEDGE_SUBTYPES[] =
 {

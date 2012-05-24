@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -20,41 +20,9 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
-*/
-
-/*****************************************************************************/
-/*                                                                           */
-/* File: mod_process.c                                                       */
-/*                                                                           */
-/*****************************************************************************/
-
-/*
-
- This file can act as a template for adding functionality to cfengine 3.
- All functionality can be added by extending the main array
-
- CF_MOD_SUBTYPES[CF3_MODULES]
-
- and its array dimension, in mod_common, in the manner shown here.
- 
 */
 
 #include "cf3.defs.h"
-
- /***********************************************************/
- /* Read this module file backwards, as dependencies have   */
- /* to be defined first - these arrays declare pairs of     */
- /* constraints                                             */
- /*                                                         */
- /* lval => rval                                            */
- /*                                                         */
- /* in the form (lval,type,range)                           */
- /*                                                         */
- /* If the type is cf_body then the range is a pointer      */
- /* to another array of pairs, like in a body "sub-routine" */
- /*                                                         */
- /***********************************************************/
 
 BodySyntax CF_MATCHCLASS_BODY[] =
 {
@@ -63,8 +31,6 @@ BodySyntax CF_MATCHCLASS_BODY[] =
     {"out_of_range_define", cf_slist, "", "List of classes to define if the matches are out of range"},
     {NULL, cf_notype, NULL, NULL}
 };
-
-/***************************************************************/
 
 BodySyntax CF_PROCFILTER_BODY[] =
 {
@@ -87,10 +53,6 @@ BodySyntax CF_PROCFILTER_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/***************************************************************/
-
-/* This is the primary set of constraints for an exec object */
-
 BodySyntax CF_PROCESS_BODIES[] =
 {
     {"process_count", cf_body, CF_MATCHCLASS_BODY,
@@ -102,10 +64,6 @@ BodySyntax CF_PROCESS_BODIES[] =
     {"signals", cf_olist, CF_SIGNALRANGE, "A list of menu options representing signals to be sent to a process"},
     {NULL, cf_notype, NULL, NULL}
 };
-
-/***************************************************************/
-/* This is the point of entry from mod_common.c                */
-/***************************************************************/
 
 SubTypeSyntax CF_PROCESS_SUBTYPES[] =
 {

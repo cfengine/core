@@ -43,7 +43,7 @@ static void KeepPromises(Policy *policy);
 
 extern int NO_FORK;
 
-extern BodySyntax CFM_CONTROLBODY[];
+extern const BodySyntax CFM_CONTROLBODY[];
 
 /*******************************************************************/
 /* Command line options                                            */

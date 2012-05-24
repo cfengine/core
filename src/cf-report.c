@@ -62,7 +62,7 @@ static void CloseMagnifyFiles(void);
 static void EraseAverages(void);
 static void RemoveHostSeen(char *hosts);
 
-extern BodySyntax CFRE_CONTROLBODY[];
+extern const BodySyntax CFRE_CONTROLBODY[];
 
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */

@@ -25,7 +25,7 @@
 #include "cf3.defs.h"
 #include "mod_interfaces.h"
 
-BodySyntax CF_TCPIP_BODY[] =
+static const BodySyntax CF_TCPIP_BODY[] =
 {
     {"ipv4_address", cf_str, "[0-9.]+/[0-4]+", "IPv4 address for the interface"},
     {"ipv4_netmask", cf_str, "[0-9.]+/[0-4]+", "Netmask for the interface"},
@@ -33,13 +33,13 @@ BodySyntax CF_TCPIP_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CF_INTERFACES_BODIES[] =
+static const BodySyntax CF_INTERFACES_BODIES[] =
 {
     {"tcp_ip", cf_body, CF_TCPIP_BODY, "Interface tcp/ip properties"},
     {NULL, cf_notype, NULL, NULL}
 };
 
-SubTypeSyntax CF_INTERFACES_SUBTYPES[] =
+const SubTypeSyntax CF_INTERFACES_SUBTYPES[] =
 {
     {"agent", "interfaces", CF_INTERFACES_BODIES},
     {NULL, NULL, NULL},

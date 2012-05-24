@@ -703,7 +703,7 @@ static void PostCheckConstraint(char *type, char *bundle, char *lval, Rval rval)
     SubTypeSyntax ss;
     int i, j, l, m;
     const BodySyntax *bs, *bs2;
-    SubTypeSyntax *ssp;
+    const SubTypeSyntax *ssp;
 
     CfDebug("  Post Check Constraint %s: %s =>", type, lval);
 
@@ -795,7 +795,7 @@ static int VerifyConstraintName(const char *lval)
     SubTypeSyntax ss;
     int i, j, l, m;
     const BodySyntax *bs, *bs2;
-    SubTypeSyntax *ssp;
+    const SubTypeSyntax *ssp;
 
     CfDebug("  Verify Constrant name %s\n", lval);
 

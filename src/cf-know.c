@@ -74,7 +74,7 @@ static Topic *TOPICHASH[CF_HASHTABLESIZE];
 int GLOBAL_ID = 1;              // Used as a primary key for convenience, 0 reserved
 static int BGOALS = false;
 
-extern BodySyntax CFK_CONTROLBODY[];
+extern const BodySyntax CFK_CONTROLBODY[];
 
 enum typesequence
 {

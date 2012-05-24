@@ -25,7 +25,7 @@
 #include "cf3.defs.h"
 #include "mod_environ.h"
 
-BodySyntax CF_RESOURCE_BODY[] =
+static const BodySyntax CF_RESOURCE_BODY[] =
 {
     {"env_cpus", cf_int, CF_VALRANGE, "Number of virtual CPUs in the environment"},
     {"env_memory", cf_int, CF_VALRANGE, "Amount of primary storage (RAM) in the virtual environment (KB)"},
@@ -36,7 +36,7 @@ BodySyntax CF_RESOURCE_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CF_DESIGNATION_BODY[] =
+static const BodySyntax CF_DESIGNATION_BODY[] =
 {
     {"env_addresses", cf_slist, "", "The IP addresses of the environment's network interfaces"},
     {"env_name", cf_str, "", "The hostname of the virtual environment"},
@@ -44,7 +44,7 @@ BodySyntax CF_DESIGNATION_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CF_ENVIRON_BODIES[] =
+static const BodySyntax CF_ENVIRON_BODIES[] =
 {
     {"environment_host", cf_str, "[a-zA-Z0-9_]+",
      "A class indicating which physical node will execute this guest machine"},
@@ -57,7 +57,7 @@ BodySyntax CF_ENVIRON_BODIES[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-SubTypeSyntax CF_ENVIRONMENT_SUBTYPES[] =
+const SubTypeSyntax CF_ENVIRONMENT_SUBTYPES[] =
 {
     {"agent", "guest_environments", CF_ENVIRON_BODIES},
     {NULL, NULL, NULL},

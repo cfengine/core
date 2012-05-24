@@ -25,7 +25,7 @@
 #include "cf3.defs.h"
 #include "mod_outputs.h"
 
-BodySyntax CF_OUTPUTS_BODIES[] =
+static const BodySyntax CF_OUTPUTS_BODIES[] =
 {
     {"output_level", cf_opts, "verbose,debug,inform",
      "Output level to observe for the named promise or bundle (meta-promise)", "verbose"},
@@ -34,7 +34,7 @@ BodySyntax CF_OUTPUTS_BODIES[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-SubTypeSyntax CF_OUTPUTS_SUBTYPES[] =
+const SubTypeSyntax CF_OUTPUTS_SUBTYPES[] =
 {
     {"agent", "outputs", CF_OUTPUTS_BODIES},
     {NULL, NULL, NULL},

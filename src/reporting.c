@@ -78,7 +78,7 @@ static void ReportBanner(char *s);
 static void Indent(int i);
 static void ShowDataTypes(void);
 static void ShowBundleTypes(void);
-static void ShowPromiseTypesFor(char *s);
+static void ShowPromiseTypesFor(const char *s);
 static void ShowBodyParts(const BodySyntax *bs);
 static void ShowRange(char *s, enum cfdatatype type);
 static void ShowBuiltinFunctions(void);
@@ -645,7 +645,7 @@ static void ShowDataTypes()
 static void ShowBundleTypes()
 {
     int i;
-    SubTypeSyntax *st;
+    const SubTypeSyntax *st;
 
     printf("<h1>Bundle types (software components)</h1>\n");
 
@@ -676,10 +676,10 @@ static void ShowBundleTypes()
 
 /*******************************************************************/
 
-static void ShowPromiseTypesFor(char *s)
+static void ShowPromiseTypesFor(const char *s)
 {
     int i, j;
-    SubTypeSyntax *st;
+    const SubTypeSyntax *st;
 
     printf("<div id=\"promisetype\">");
     printf("<h4>Promise types for %s bundles</h4>\n", s);
@@ -809,7 +809,7 @@ void ShowAllReservedWords()
 {
     int i, j, k, l;
     Item *ip, *list = NULL;
-    SubTypeSyntax *ss;
+    const SubTypeSyntax *ss;
     const BodySyntax *bs, *bs2;
 
     for (i = 0; CF_ALL_BODIES[i].subtype != NULL; i++)

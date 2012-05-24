@@ -24,7 +24,7 @@
 
 #include "cf3.defs.h"
 
-BodySyntax CF_MATCHVALUE_BODY[] =
+static const BodySyntax CF_MATCHVALUE_BODY[] =
 {
     /* Row models */
     {"select_line_matching", cf_str, CF_ANYSTRING, "Regular expression for matching line location"},
@@ -37,7 +37,7 @@ BodySyntax CF_MATCHVALUE_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CF_MEASURE_BODIES[] =
+static const BodySyntax CF_MEASURE_BODIES[] =
 {
     {"stream_type", cf_opts, "pipe,file", "The datatype being collected."},
     {"data_type", cf_opts, "counter,int,real,string,slist", "The datatype being collected."},
@@ -48,7 +48,7 @@ BodySyntax CF_MEASURE_BODIES[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-SubTypeSyntax CF_MEASUREMENT_SUBTYPES[] =
+const SubTypeSyntax CF_MEASUREMENT_SUBTYPES[] =
 {
     {"monitor", "measurements", CF_MEASURE_BODIES},
     {NULL, NULL, NULL},

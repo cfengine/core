@@ -35,8 +35,8 @@ static void InstallServerAuthPath(char *path, Auth **list, Auth **listtop);
 static void KeepServerRolePromise(Promise *pp);
 static void KeepPromiseBundles(Policy *policy);
 
-extern BodySyntax CFS_CONTROLBODY[];
-extern BodySyntax CF_REMROLE_BODIES[];
+extern const BodySyntax CFS_CONTROLBODY[];
+extern const BodySyntax CF_REMROLE_BODIES[];
 
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */

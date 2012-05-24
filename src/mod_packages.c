@@ -25,7 +25,7 @@
 #include "cf3.defs.h"
 #include "mod_packages.h"
 
-BodySyntax CF_PKGMETHOD_BODY[] =
+static const BodySyntax CF_PKGMETHOD_BODY[] =
 {
     {"package_add_command", cf_str, CF_ABSPATHRANGE, "Command to install a package to the system"},
     {"package_arch_regex", cf_str, "",
@@ -71,7 +71,7 @@ BodySyntax CF_PKGMETHOD_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CF_PACKAGES_BODIES[] =
+static const BodySyntax CF_PACKAGES_BODIES[] =
 {
     {"package_architectures", cf_slist, "", "Select the architecture for package selection"},
     {"package_method", cf_body, CF_PKGMETHOD_BODY, "Criteria for installation and verification"},
@@ -83,7 +83,7 @@ BodySyntax CF_PACKAGES_BODIES[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-SubTypeSyntax CF_PACKAGES_SUBTYPES[] =
+const SubTypeSyntax CF_PACKAGES_SUBTYPES[] =
 {
     {"agent", "packages", CF_PACKAGES_BODIES},
     {NULL, NULL, NULL},

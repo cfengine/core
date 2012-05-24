@@ -25,7 +25,7 @@
 #include "cf3.defs.h"
 #include "mod_services.h"
 
-BodySyntax CF_SERVMETHOD_BODY[] =
+static const BodySyntax CF_SERVMETHOD_BODY[] =
 {
     {"service_args", cf_str, "", "Parameters for starting the service as command"},
     {"service_autostart_policy", cf_opts, "none,boot_time,on_demand",
@@ -38,7 +38,7 @@ BodySyntax CF_SERVMETHOD_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CF_SERVICES_BODIES[] =
+static const BodySyntax CF_SERVICES_BODIES[] =
 {
     {"service_policy", cf_opts, "start,stop,disable", "Policy for cfengine service status"},
     {"service_dependencies", cf_slist, CF_IDRANGE, "A list of services on which the named service abstraction depends"},
@@ -46,7 +46,7 @@ BodySyntax CF_SERVICES_BODIES[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-SubTypeSyntax CF_SERVICES_SUBTYPES[] =
+const SubTypeSyntax CF_SERVICES_SUBTYPES[] =
 {
     {"agent", "services", CF_SERVICES_BODIES},
     {NULL, NULL, NULL},

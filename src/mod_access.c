@@ -59,14 +59,14 @@ const BodySyntax CF_REMACCESS_BODIES[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CF_REMROLE_BODIES[] =
+const BodySyntax CF_REMROLE_BODIES[] =
 {
     {"authorize", cf_slist, "",
      "List of public-key user names that are allowed to activate the promised class during remote agent activation"},
     {NULL, cf_notype, NULL, NULL}
 };
 
-SubTypeSyntax CF_REMACCESS_SUBTYPES[] =
+const SubTypeSyntax CF_REMACCESS_SUBTYPES[] =
 {
     {"server", "access", CF_REMACCESS_BODIES},
     {"server", "roles", CF_REMROLE_BODIES},

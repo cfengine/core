@@ -88,7 +88,7 @@ void CheckBody(const Policy *policy, const char *name, const char *type)
 SubTypeSyntax CheckSubType(char *bundletype, char *subtype)
 {
     int i, j;
-    SubTypeSyntax *ss;
+    const SubTypeSyntax *ss;
     char output[CF_BUFSIZE];
 
     if (subtype == NULL)
@@ -163,7 +163,7 @@ enum cfdatatype ExpectedDataType(char *lvalname)
 {
     int i, j, k, l;
     const BodySyntax *bs, *bs2;
-    SubTypeSyntax *ss;
+    const SubTypeSyntax *ss;
 
     for (i = 0; i < CF3_MODULES; i++)
     {
@@ -316,7 +316,7 @@ void CheckConstraint(char *type, char *name, char *lval, Rval rval, SubTypeSynta
 int LvalWantsBody(char *stype, char *lval)
 {
     int i, j, l;
-    SubTypeSyntax *ss;
+    const SubTypeSyntax *ss;
     const BodySyntax *bs;
 
     for (i = 0; i < CF3_MODULES; i++)
@@ -364,7 +364,7 @@ void CheckSelection(char *type, char *name, char *lval, Rval rval)
 {
     int lmatch = false;
     int i, j, k, l;
-    SubTypeSyntax *ss;
+    const SubTypeSyntax *ss;
     const BodySyntax *bs, *bs2;
     char output[CF_BUFSIZE];
 
@@ -1336,10 +1336,10 @@ static JsonElement *ExportAttributesSyntaxAsJson(const BodySyntax attributes[])
     return json;
 }
 
-static JsonElement *ExportBundleTypeSyntaxAsJson(char *bundle_type)
+static JsonElement *ExportBundleTypeSyntaxAsJson(const char *bundle_type)
 {
     JsonElement *json = JsonObjectCreate(10);
-    SubTypeSyntax *st;
+    const SubTypeSyntax *st;
     int i = 0, j = 0;
 
     for (i = 0; i < CF3_MODULES; i++)

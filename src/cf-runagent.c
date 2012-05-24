@@ -96,7 +96,7 @@ static const char *HINTS[17] =
     NULL
 };
 
-extern BodySyntax CFR_CONTROLBODY[];
+extern const BodySyntax CFR_CONTROLBODY[];
 
 int INTERACTIVE = false;
 int OUTPUT_TO_FILE = false;

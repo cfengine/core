@@ -587,7 +587,7 @@ enum knowledgecertainty
 typedef struct
 {
     const char *lval;
-    enum cfdatatype dtype;
+    const enum cfdatatype dtype;
     const void *range;          /* either char or BodySyntax * */
     const char *description;
     const char *default_value;
@@ -597,8 +597,8 @@ typedef struct
 
 typedef struct
 {
-    char *btype;
-    char *subtype;
+    const char *btype;
+    const char *subtype;
     const BodySyntax *bs;
 } SubTypeSyntax;
 
@@ -1882,8 +1882,8 @@ extern double Q_SIGMA;
 /* SYNTAX MODULES                                          */
 /***********************************************************/
 
-extern SubTypeSyntax CF_COMMON_SUBTYPES[];
-extern SubTypeSyntax *CF_ALL_SUBTYPES[];
+extern const SubTypeSyntax CF_COMMON_SUBTYPES[];
+extern const SubTypeSyntax *CF_ALL_SUBTYPES[];
 extern const BodySyntax CF_COMMON_BODIES[];
 
 extern const BodySyntax CF_VARBODY[];

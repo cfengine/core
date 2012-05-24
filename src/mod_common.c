@@ -42,7 +42,7 @@
 #include "mod_services.h"
 #include "mod_measurement.h"
 
-BodySyntax CF_TRANSACTION_BODY[] =
+static const BodySyntax CF_TRANSACTION_BODY[] =
 {
     {"action_policy", cf_opts, "fix,warn,nop", "Whether to repair or report about non-kept promises"},
     {"ifelapsed", cf_int, CF_VALRANGE, "Number of minutes before next allowed assessment of promise",
@@ -71,7 +71,7 @@ BodySyntax CF_TRANSACTION_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CF_DEFINECLASS_BODY[] =
+static const BodySyntax CF_DEFINECLASS_BODY[] =
 {
     {"promise_repaired", cf_slist, CF_IDRANGE, "A list of classes to be defined globally"},
     {"repair_failed", cf_slist, CF_IDRANGE, "A list of classes to be defined globally"},
@@ -209,7 +209,7 @@ const BodySyntax CFA_CONTROLBODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CFS_CONTROLBODY[] =
+const BodySyntax CFS_CONTROLBODY[] =
 {
     {"allowallconnects", cf_slist, "",
      "List of IPs or hostnames that may have more than one connection to the server port"},
@@ -237,7 +237,7 @@ BodySyntax CFS_CONTROLBODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CFM_CONTROLBODY[] =
+const BodySyntax CFM_CONTROLBODY[] =
 {
     {"forgetrate", cf_real, "0,1", "Decimal fraction [0,1] weighting of new values over old in 2d-average computation",
      "0.6"},
@@ -248,7 +248,7 @@ BodySyntax CFM_CONTROLBODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CFR_CONTROLBODY[] =
+const BodySyntax CFR_CONTROLBODY[] =
 {
     {"hosts", cf_slist, "", "List of host or IP addresses to attempt connection with"},
     {"port", cf_int, "1024,99999", "Default port for cfengine server", "5308"},
@@ -263,7 +263,7 @@ BodySyntax CFR_CONTROLBODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CFEX_CONTROLBODY[] = /* enum cfexcontrol */
+const BodySyntax CFEX_CONTROLBODY[] = /* enum cfexcontrol */
 {
     {"splaytime", cf_int, CF_VALRANGE, "Time in minutes to splay this host based on its name hash", "0"},
     {"mailfrom", cf_str, ".*@.*", "Email-address cfengine mail appears to come from"},
@@ -277,7 +277,7 @@ BodySyntax CFEX_CONTROLBODY[] = /* enum cfexcontrol */
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CFK_CONTROLBODY[] =
+const BodySyntax CFK_CONTROLBODY[] =
 {
     {"build_directory", cf_str, ".*", "The directory in which to generate output files", "Current working directory"},
     {"document_root", cf_str, ".*", "The directory in which the web root resides"},
@@ -304,7 +304,7 @@ BodySyntax CFK_CONTROLBODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CFRE_CONTROLBODY[] = /* enum cfrecontrol */
+const BodySyntax CFRE_CONTROLBODY[] = /* enum cfrecontrol */
 {
     {"aggregation_point", cf_str, CF_ABSPATHRANGE, "The root directory of the data cache for CMDB aggregation"},
     {"auto_scaling", cf_opts, CF_BOOL, "true/false whether to auto-scale graph output to optimize use of space",
@@ -382,7 +382,7 @@ const BodySyntax CF_COMMON_BODIES[] =
  /* This is where we place promise subtypes that apply
     to more than one type of bundle, e.g. agent,server.. */
 
-SubTypeSyntax CF_COMMON_SUBTYPES[] =
+const SubTypeSyntax CF_COMMON_SUBTYPES[] =
 {
     {"*", "vars", CF_VARBODY},
     {"*", "classes", CF_CLASSBODY},
@@ -398,7 +398,7 @@ SubTypeSyntax CF_COMMON_SUBTYPES[] =
 /* Read in all parsable Bundle definitions */
 /* REMEMBER TO REGISTER THESE IN cf3.extern.h */
 
-SubTypeSyntax *CF_ALL_SUBTYPES[] =
+const SubTypeSyntax *CF_ALL_SUBTYPES[] =
 {
     CF_COMMON_SUBTYPES,         /* Add modules after this, mod_report.c is here */
     CF_EXEC_SUBTYPES,           /* mod_exec.c */

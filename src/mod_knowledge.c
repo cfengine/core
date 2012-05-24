@@ -25,7 +25,7 @@
 #include "cf3.defs.h"
 #include "mod_knowledge.h"
 
-BodySyntax CF_RELATE_BODY[] =
+static const BodySyntax CF_RELATE_BODY[] =
 {
     {"forward_relationship", cf_str, "", "Name of forward association between promiser topic and associates"},
     {"backward_relationship", cf_str, "", "Name of backward/inverse association from associates to promiser topic"},
@@ -33,7 +33,7 @@ BodySyntax CF_RELATE_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CF_OCCUR_BODIES[] =
+static const BodySyntax CF_OCCUR_BODIES[] =
 {
     {"about_topics", cf_slist, "",
      "List of topics that the document or resource addresses"},    
@@ -44,7 +44,7 @@ BodySyntax CF_OCCUR_BODIES[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CF_TOPICS_BODIES[] =
+static const BodySyntax CF_TOPICS_BODIES[] =
 {
     {"association", cf_body, CF_RELATE_BODY, "Declare associated topics"},
     {"synonyms", cf_slist, "", "A list of words to be treated as equivalents in the defined context"},
@@ -53,7 +53,7 @@ BodySyntax CF_TOPICS_BODIES[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CF_THING_BODIES[] =
+static const BodySyntax CF_THING_BODIES[] =
 {
     {"synonyms", cf_slist, "", "A list of words to be treated as equivalents in the defined context"},
     {"affects", cf_slist, "", "Special fixed relation for describing topics that are things"},
@@ -78,14 +78,14 @@ BodySyntax CF_THING_BODIES[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CF_INFER_BODIES[] =
+static const BodySyntax CF_INFER_BODIES[] =
 {
     {"precedents", cf_slist, "", "The foundational vector for a trinary inference"},
     {"qualifiers", cf_slist, "", "The second vector in a trinary inference"},
     {NULL, cf_notype, NULL, NULL}
 };
 
-SubTypeSyntax CF_KNOWLEDGE_SUBTYPES[] =
+const SubTypeSyntax CF_KNOWLEDGE_SUBTYPES[] =
 {
     {"knowledge", "inferences", CF_INFER_BODIES},
     {"knowledge", "things", CF_THING_BODIES},

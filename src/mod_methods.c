@@ -25,13 +25,13 @@
 #include "cf3.defs.h"
 #include "mod_methods.h"
 
-BodySyntax CF_METHOD_BODIES[] =
+static const BodySyntax CF_METHOD_BODIES[] =
 {
     {"usebundle", cf_bundle, CF_BUNDLE, "Specify the name of a bundle to run as a parameterized method"},
     {NULL, cf_notype, NULL}
 };
 
-SubTypeSyntax CF_METHOD_SUBTYPES[] =
+const SubTypeSyntax CF_METHOD_SUBTYPES[] =
 {
     {"agent", "methods", CF_METHOD_BODIES},
     {NULL, NULL, NULL},

@@ -109,7 +109,6 @@ extern int MINUSF;
 
 extern const char *VPSCOMM[];
 extern const char *VPSOPTS[];
-extern char *VHOSTEQUIV[];
 extern const char *VFSTAB[];
 extern const char *VNETSTAT[];
 

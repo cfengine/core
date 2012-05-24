@@ -54,21 +54,13 @@
 #define CF_UNDEFINED -1
 #define CF_NODOUBLE -123.45
 #define CF_NOINT    -678L
-#define CF_ANYUSER  (uid_t)-1
-#define CF_ANYGROUP (gid_t)-1
 #define CF_UNDEFINED_ITEM (void *)0x1234
 #define CF_VARARGS 99
 #define CF_UNKNOWN_IP "location unknown"
 
-#define CF_INBODY   1
-#define CF_INBUNDLE 2
-
 #define CF_MAX_NESTING 10
 #define CF_MAX_REPLACE 20
 #define CF_DONEPASSES  4
-
-#define CF_TIME_SIZE 32
-#define CF_FIPS_SIZE 32
 
 #define CFPULSETIME 60
 

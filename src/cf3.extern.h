@@ -207,7 +207,6 @@ extern Item *FSTABLIST;
 extern Rlist *MOUNTEDFSLIST;
 
 extern int CF_MOUNTALL;
-extern int CF_SAVEFSTAB;
 
 extern const char *DAY_TEXT[];
 extern const char *MONTH_TEXT[];

@@ -37,7 +37,7 @@
 
 /*********************************************************************/
 
-char *CLASSTEXT[HARD_CLASSES_MAX] =
+const char *CLASSTEXT[HARD_CLASSES_MAX] =
 {
     "<unknown>",
     "hpux",
@@ -62,7 +62,7 @@ char *CLASSTEXT[HARD_CLASSES_MAX] =
 
 /*********************************************************************/
 
-char *VPSCOMM[HARD_CLASSES_MAX] =
+const char *VPSCOMM[HARD_CLASSES_MAX] =
 {
     "",
     "/bin/ps",                  /* hpux */
@@ -88,7 +88,7 @@ char *VPSCOMM[HARD_CLASSES_MAX] =
 // linux after rhel 3: ps -eo user,pid,ppid,pgid,%cpu,%mem,vsize,ni,rss,stat,nlwp,stime,time,args
 // solaris: ps -eo user,pid,ppid,pgid,pcpu,pmem,vsz,pri,rss,nlwp,stime,time,args
 
-char *VPSOPTS[HARD_CLASSES_MAX] =
+const char *VPSOPTS[HARD_CLASSES_MAX] =
 {
     "",
     "-ef",                      /* hpux */
@@ -109,7 +109,7 @@ char *VPSOPTS[HARD_CLASSES_MAX] =
     "?",                        /* vmware */
 };
 
-char *VFSTAB[HARD_CLASSES_MAX] =
+const char *VFSTAB[HARD_CLASSES_MAX] =
 {
     "-",
     "/etc/fstab",               /* hpux */
@@ -130,7 +130,7 @@ char *VFSTAB[HARD_CLASSES_MAX] =
     "/etc/fstab",               /* vmware */
 };
 
-char *VNETSTAT[HARD_CLASSES_MAX] =
+const char *VNETSTAT[HARD_CLASSES_MAX] =
 {
     "-",
     "/usr/bin/netstat -rn",     /* hpux */

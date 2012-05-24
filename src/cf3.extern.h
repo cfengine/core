@@ -67,7 +67,7 @@ extern char VDAY[];
 extern char VMONTH[];
 extern char VSHIFT[];
 
-extern char *CLASSTEXT[];
+extern const char *CLASSTEXT[];
 extern char VINPUTFILE[];
 extern int AUDIT;
 extern char PURGE;
@@ -107,11 +107,11 @@ extern int DONTDO;
 extern int IGNORELOCK;
 extern int MINUSF;
 
-extern char *VPSCOMM[];
-extern char *VPSOPTS[];
+extern const char *VPSCOMM[];
+extern const char *VPSOPTS[];
 extern char *VHOSTEQUIV[];
-extern char *VFSTAB[];
-extern char *VNETSTAT[];
+extern const char *VFSTAB[];
+extern const char *VNETSTAT[];
 
 extern int EDITFILESIZE;
 extern int VIFELAPSED;

@@ -49,7 +49,7 @@ void CompilationReport(Policy *policy, char *fname);
 void HashVariables(Policy *policy, char *name);
 void HashControls(const Policy *policy);
 void CloseLog(void);
-Constraint *ControlBodyConstraints(Policy *policy, enum cfagenttype agent);
+Constraint *ControlBodyConstraints(const Policy *policy, enum cfagenttype agent);
 void SetFacility(const char *retval);
 Bundle *GetBundle(const Policy *policy, const char *name, const char *agent);
 SubType *GetSubTypeForBundle(char *type, Bundle *bp);

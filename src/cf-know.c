@@ -216,7 +216,7 @@ int main(int argc, char *argv[])
        {
           char buffer[CF_BUFSIZE];
           
-                Constellation_HostStory(STORY, buffer, CF_BUFSIZE);
+                Constellation_HostStory(policy, STORY, buffer, CF_BUFSIZE);
                 printf("%s\n", buffer);
        }
        else

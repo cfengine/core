@@ -966,7 +966,7 @@ static void Cf3ParseFile(Policy *policy, char *filename, bool check_not_writable
 
 /*******************************************************************/
 
-Constraint *ControlBodyConstraints(Policy *policy, enum cfagenttype agent)
+Constraint *ControlBodyConstraints(const Policy *policy, enum cfagenttype agent)
 {
     for (const Body *body = policy->bodies; body != NULL; body = body->next)
     {

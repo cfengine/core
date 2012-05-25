@@ -10,6 +10,9 @@
 #include "cf3.defs.h"
 #include "parser_state.h"
 
+// FIX: remove
+#include "syntax.h"
+
 extern char *yytext;
 
 static void fatal_yyerror(const char *s);

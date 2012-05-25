@@ -32,6 +32,7 @@
 #include "promises.h"
 
 #include "policy.h"
+#include "syntax.h"
 
 static void DereferenceComment(Promise *pp);
 

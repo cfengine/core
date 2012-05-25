@@ -824,9 +824,6 @@ bool sockaddr_pton(int af, void *src, void *addr);
 
 off_t GetDiskUsage(char *file, enum cfsizes type);
 
-/* syntax.c */
-#include "syntax.h"
-
 /* sysinfo.c */
 
 void GetNameInfo3(void);

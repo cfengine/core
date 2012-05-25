@@ -30,6 +30,7 @@
 #include "files_names.h"
 #include "logic_expressions.h"
 #include "dbm_api.h"
+#include "syntax.h"
 
 /*****************************************************************************/
 

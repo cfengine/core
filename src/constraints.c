@@ -34,6 +34,7 @@
 #include "constraints.h"
 
 #include "promises.h"
+#include "syntax.h"
 
 static PromiseIdent *PromiseIdExists(char *handle);
 static void DeleteAllPromiseIdsRecurse(PromiseIdent *key);

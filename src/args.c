@@ -26,6 +26,7 @@
 #include "cf3.defs.h"
 
 #include "promises.h"
+#include "syntax.h"
 
 /******************************************************************/
 /* Argument propagation                                           */

@@ -31,6 +31,7 @@
 #include "files_names.h"
 #include "vars.h"
 #include "addr_lib.h"
+#include "syntax.h"
 
 #include <libgen.h>
 

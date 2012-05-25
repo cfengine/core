@@ -32,6 +32,7 @@
 #include "dbm_api.h"
 #include "crypto.h"
 #include "vars.h"
+#include "syntax.h"
 
 extern char *CFH[][2];
 

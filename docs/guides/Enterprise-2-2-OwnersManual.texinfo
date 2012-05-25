@@ -17,13 +17,13 @@
 @c ***********************************************************************@c 
 @c %** start of header
 @setfilename Enterprise-2-2-OwnersManual.info
-@settitle CFEngine 3 Nova Owner's Manual
+@settitle CFEngine 3 Enterprise 2.2 Owner's Manual
 @setchapternewpage odd
 @c %** end of header
 @titlepage
-@title CFEngine 3 Nova Owner's Manual
+@title CFEngine 3 Enterprise 2.2 Owner's Manual
 @subtitle CFEngine Enterprise Documentation
-@subtitle Updated 21. October 2011
+@subtitle Updated 24. May 2012 @c also update in ifnottex section below
 @author CFEngine
 @c @smallbook
 @fonttextsize 10
@@ -45,6 +45,7 @@ to the extent of applicable law.
 @end direntry
 @end ifinfo
 @ifnottex
+Updated 24. May 2012
 @node Top, Introduction, (dir), (dir)
 @top CFEngine 3 Nova Owner's Manual
 @end ifnottex
@@ -63,8 +64,8 @@ to the extent of applicable law.
 @menu
 * Introduction::                
 * Requirements::                
-* Installing CFEngine 3 Nova::  
-* Upgrading CFEngine Nova::     
+* Installing CFEngine 3 Enterprise::  
+* Upgrading to CFEngine 3 Enterprise::     
 * Mission Portal::              
 * Monitoring extensions::       
 * File Access Control Lists::   
@@ -82,7 +83,24 @@ to the extent of applicable law.
 @node  Introduction, Requirements, Top, Top
 @chapter Introduction
 
-CFEngine 3 Nova is a commercially licensed version of the core CFEngine
+@menu
+* CFEngine 3 Enterprise - the new CFEngine 3 Nova!::
+* About CFEngine 3 Enterprise::
+@end menu
+
+
+@node CFEngine 3 Enterprise - the new CFEngine 3 Nova!, About CFEngine 3 Enterprise, Introduction, Introduction
+@section CFEngine 3 Enterprise - the new CFEngine 3 Nova!
+
+CFEngine 3 Enterprise is the next generation of CFEngine 3 Nova, upgraded with productivity and performance enhancements. We have made a new Mission Portal Engineering room tailored to the needs of infrastructure engineers, making it both easier and more powerful to use. Most notably we have introduced dynamic grouping of hosts through a flexible tree control, also referred to as the Navigation Tree. It allows system adminsitrators to flexibly group hosts based on CFEngine classes, both discovered (hard classes such as operating system, architecture, IP address, etc.) and user defined (soft classes such as webserver, development, staging, etc).
+
+CFEngine 3 Nova is completely compatible with CFEngine 3 Enterprise and can easily be upgraded by following the instructions in this document.
+
+
+@c --------------------------------------------------
+@node About CFEngine 3 Enterprise, ,CFEngine 3 Enterprise - the new CFEngine 3 Nova!, Introduction
+@section About CFEngine 3 Enterprise
+CFEngine 3 Enterprise is a commercially licensed version of the core CFEngine
 software@footnote{Major version 3} with enterprise library extensions. All of
 the documentation for CFEngine 3 applies to CFEngine 3 Nova. 
 
@@ -91,8 +109,6 @@ agement that goes beyond mere technical configuration to support the needs of bu
 include compliance management, reporting and business integration, and tools for handling necessary
 complexity. CFEngine 3 Nova has features to support Cloud Computing for public and private clouds, as
 well as greater integration facilities with database resources.
-
-@c This document describes installation, features, and first steps in using CFEngine 3 Nova.
 
 
 @c *****************************************************
@@ -125,10 +141,10 @@ For machines under CFEngine’s management (clients), a full installation of CFE
 @section Operating system support
 
 CFEngine can be made to run on most operating systems. For efficiency
-CFEngine only supports a number of recent popular operating systems,
+CFEngine only supports packages for a number of recent popular operating systems,
 which should be up to date with patches. If we don't have packages for
 your particular operating systems we can usually make packages by
-special arrangement.
+special arrangement please contact your sales representative.
 
 The hub (policy server) is only available for derivatives of the
 top GNU/Linux distributions (Debian, Red Hat, SuSE, Ubuntu), as these make available
@@ -136,16 +152,23 @@ software that the hub relies on for data storage and processing.
 Operating system choices for the hub are:
 
 @example
- Debian 5,6
- Ubuntu 8,10
- RHEL/CentOS 5,6
- SLES/openSuSE   11
+ Debian 6
+ Ubuntu 8.04, 10.04, 12.04
+ RHEL/CentOS 5, 6
 @end example
 
-Nova provides a version of CFEngine running natively on Windows, with
-support for registry management, Windows services and file
-security, @xref{Windows-specific features in Nova}. Support for Solaris zones has been added through
-automated zone detection and process model adaptation.
+@noindent Operating system choices for the clients are:
+@example
+AIX 5.3, 6.1, CentOS 5, 6, Debian 5, 6, Fedora 14, 15, 16, FreeBSD 7, 8, 
+HP-UX, NetBSD 4.0, 5.0, NetBSD 5.1, openSUSE 10.2, 10.3, 11.1, 11.2, 11.3,
+11.4, RHEL 4, 5, 6, SLES 9, 10, 11, SUSE Linux 9.1, 9.2, 9.3, 10.0, 10.1, 
+Solaris 8, 9, 10, Solaris 10, Ubuntu 8.04, 8.10, 9.04, 9.10, 10.04, 10.10, 
+11.04, 11.10, 12.04, Windows XP, Vista, 7, Server 2003, Server 2008
+@end example
+
+@noindent See @file{Release Notes CFEngine 3 Enterprise.txt} for details on supported architectures.
+
+CFEngine 3 Enterprise provides a version of CFEngine running natively on Windows, with support for registry management, Windows services and file security, @xref{Windows-specific features in CFEngine 3 Enterprise}. Support for Solaris zones has been added through automated zone detection and process model adaptation.
 
 A working package manager is required on the hub/policy server to install an Apache Web Server, php module, MongoDB, subversion, etc. You should start from a blank system (i.e. with none of these components installed) to avoid potential interference with the installation process. No special software is otherwise required on machines in your network, CFEngine bundles all critical dependencies in the Nova package. 
 
@@ -153,8 +176,8 @@ A working package manager is required on the hub/policy server to install an Apa
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node Installing CFEngine 3 Nova, Upgrading CFEngine Nova, Requirements, Top
-@chapter Installing CFEngine 3 Nova
+@node Installing CFEngine 3 Enterprise, Upgrading to CFEngine 3 Enterprise, Requirements, Top
+@chapter Installing CFEngine 3 Enterprise
 
 @menu
 * Installation procedure::      
@@ -178,7 +201,7 @@ You should start from a blank system @xref{Hardware requirements}. If you have b
 already developed a policy, set aside this policy during the installation process. You will be able
 to integrate it back later.
 
-Nova is provided in two packages, @file{cfengine-nova} and @file{cfengine-nova-expansion}. The main software package 
+CFEngine 3 Enterprise is provided in two packages, @file{cfengine-nova_<VERSION NUMBER>} and @file{cfengine-nova-expansion_<VERSION NUMBER>}. The main software package 
 must be installed on every host (including the hub). The expansion package is only installed on the policy hub. You should install and set up the hub first.
 
 References to package managers assume that additional packages might need to be installed on the hub (policy server). Root privilege is required for the installation.
@@ -297,100 +320,13 @@ You should see a login page like the one shown in the figure below:
 Note that some of the displays in the Mission Portal may be blank when you log in just after installation; some reports and graphs are only updated every six hours. It may also take some time for the system to fully converge, do not get troubled if initially there are some promises repaired or not kept.
 
 
-@c -----------------------------------------------------
-@node Troubleshooting, Frequently Asked Questions, Installation procedure, Installing CFEngine 3 Nova
-@section Troubleshooting
-
-@menu
-* Apache HTTP error_log is your friend::  
-* Some report pages return HTTP error 404::  
-* First time login to Mission Portal fails::  
-* Cannot send emails from the Mission Portal::  
-* Warning messages on web pages in SLES/OpenSuSE Hub::  
-* Knowledge map remains unpopulated::
-@end menu
-
-@node Apache HTTP error_log is your friend, Some report pages return HTTP error 404, Troubleshooting, Troubleshooting
-@subsection Apache HTTP error_log is your friend
-The first place to diagnose (if all CFEngine processes and mongod are up and running) is:@*
-@i{RHEL 5,6 / CentOS 5}
-@verbatim
-   /var/log/httpd/error_log
-@end verbatim
-@noindent @i{SLES 11 / OpenSuSE 11 / Debian 5,6 / Ubuntu 8,10}
-@verbatim
-   /var/log/apache2/error_log
-@end verbatim
-
-@noindent This log file will often provide useful information on which components are not operating properly. 
-
-
-@node Some report pages return HTTP error 404, First time login to Mission Portal fails, Apache HTTP error_log is your friend, Troubleshooting
-@subsection Some report pages return HTTP error 404
-Confirm that Apache REWRITE module is ON. Restarting httpd/apache2 service is required if rewrite was disabled.
-
-
-@node First time login to Mission Portal fails, Cannot send emails from the Mission Portal, Some report pages return HTTP error 404, Troubleshooting
-@subsection First time login to Mission Portal fails
-MongoDB needs to be initialized for authentication of the default user. Run the following command:
-@i{RHEL 5,6 / CentOS 5}
-@verbatim
-   $ /var/cfengine/bin/mongorestore -d phpcfengine /var/www/html/phpcfenginenova
-@end verbatim
-@noindent @i{SLES 11 / OpenSuSE 11}
-@verbatim
-   $ /var/cfengine/bin/mongorestore -d phpcfengine /srv/www/htdocs/phpcfenginenova
-@end verbatim
-@noindent @i{Debian 5,6 / Ubuntu 8,10}
-@verbatim
-   $ /var/cfengine/bin/mongorestore -d phpcfengine /var/www/phpcfenginenova
-@end verbatim
-
-@noindent Default user name and password is 'admin' and 'admin'.
-
-@node Cannot send emails from the Mission Portal, Warning messages on web pages in SLES/OpenSuSE Hub, First time login to Mission Portal fails, Troubleshooting
-@subsection Cannot send emails from the Mission Portal
-The default email address used by the system is "admin@@cfengine.com". To change this, edit @file{application/config/ion_auth.php} at the line containing:
-@verbatim
-   $config['admin_email'] = "admin@cfengine.com";
-@end verbatim
-
-@node Warning messages on web pages in SLES/OpenSuSE Hub, Knowledge map remains unpopulated, Cannot send emails from the Mission Portal, Troubleshooting
-@subsection Warning messages on web pages in SLES/OpenSuSE Hub
-Warnings appear because the default environment is set to "Development" and in this context the Mission Portal will show all php errors to the user. Set the environment to "Production" to silence these warnings, they will still be logged in Apache Error_log. To edit the default environment, visit "index.php" in your default web root directory and change the following line to suit your needs:
-@verbatim
-   define('ENVIRONMENT', 'Development');
-@end verbatim
-
-@node Knowledge map remains unpopulated, , Warning messages on web pages in SLES/OpenSuSE Hub, Troubleshooting
-@subsection Knowledge map remains unpopulated
-   Try building the Knowledge map manually:@*
-   @i{RHEL 5 / CentOS 5}
-@verbatim
-   $ /var/cfengine/bin/cf-promises -r && /var/cfengine/bin/cf-know -f 
-       /var/www/html/docs/enterprise_build.cf -b
-@end verbatim
-   @i{SLES 11 / OpenSuSE 11}
-@verbatim
-   $ /var/cfengine/bin/cf-promises -r && /var/cfengine/bin/cf-know -f 
-       /srv/www/htdocs/docs/enterprise_build.cf -b
-@end verbatim
-   @i{Debian 5,6 / Ubuntu 8,10}
-@verbatim
-   $ /var/cfengine/bin/cf-promises -r && /var/cfengine/bin/cf-know -f 
-       /srv/www/htdocs/docs/enterprise_build.cf -b
-@end verbatim
+Please see @ref{Frequently Asked Questions} below or @ref{Troubleshooting} if you have any problems.
 
 
 @c -----------------------------------------------------
 @node Frequently Asked Questions,  , Troubleshooting, Installing CFEngine 3 Nova
 @section Frequently Asked Questions
 
-@c @menu
-@c * How do I install the prerequisites for the hub manually?::  
-@c @end menu
-
-@c @node How do I install the prerequisites for the hub manually?,  , Frequently Asked Questions, Frequently Asked Questions
 @subsection How do I install the prerequisites for the hub manually?
 
 See INSTALLATION.TXT (can be found on the CFEngine software download page: @url{https://cfengine.com/software/}) for a list of dependencies for the hub. 
@@ -440,7 +376,7 @@ Four steps need to be followed to correct this minor issue.
 
 
 @c ----------------------------------------------------
-@subsection On my hub, I get messages of connection failures to a database. For example, in @code{messages}, I can see something like @code{!! Could not open connection to report database for saving}. What should I do?, How do I upgrade from CFEngine Community 3 to CFEngine 3 Nova?, 
+@subsection On my hub, I get messages of connection failures to a database. For example, in @code{messages}, I can see something like @code{!! Could not open connection to report database for saving}. What should I do?
 
 This message comes from the @code{cf-hub} process. It is responsible
 for pulling reports from hosts that have contacted the hub to get
@@ -501,23 +437,11 @@ Note that almost all of the @code{cfreport} database is recreated with data coll
 @end enumerate
 
 
-@c ----------------------------------------------------
-@subsection How do I upgrade from CFEngine Community 3 to CFEngine 3 Nova?
-
-CFEngine 3 Nova comes with policies that are specific to Nova functionality, we therefore urge you to set aside your
-current community policy. Install CFEngine 3 Nova, set up the Nova hub by
-following this document, and then integrate your existing
-policy to the hub manually, in small testable steps.
-
-CFEngine 3 Nova is compatible with the Community Edition of CFEngine 3, but
-some process files are now managed by CFEngine 3 Nova for user convenience.
-
-
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node  Upgrading CFEngine Nova, Mission Portal, Installing CFEngine 3 Nova, Top
-@chapter Upgrading CFEngine Nova
+@node  Upgrading to CFEngine 3 Enterprise, Mission Portal, Installing CFEngine 3 Enterprise, Top
+@chapter Upgrading to CFEngine 3 Enterprise
 
 When upgrading the software from an earlier version, you should
 upgrade the hub (policy server) machine first. Any other hosts
@@ -542,10 +466,11 @@ in the standard way.
 * Upgrade procedure::           
 * How can I do phased deployment?::  
 * What if I have multiple operating system platforms?::  
-* How do Nova policies update if I already have my own policy?::  
+* How do CFEngine 3 Enterprise policies update if I already have my own policy?::  
+* How do I upgrade from CFEngine Community 3 to CFEngine 3 Enterprise?::
 @end menu
 
-@node Upgrade procedure, How can I do phased deployment?, Upgrading CFEngine Nova, Upgrading CFEngine Nova
+@node Upgrade procedure, How can I do phased deployment?, Upgrading to CFEngine 3 Enterprise, Upgrading to CFEngine 3 Enterprise
 @section Upgrade procedure
 
 The following is a general procedure to upgrade to CFEngine 3 Nova from earlier versions. It is assumed that the packages are placed in the @file{/tmp} directory. To upgrade, start with the hub (policy server):
@@ -561,30 +486,33 @@ or
 @item Upgrade cfengine-nova and cfengine-nova-expansion @*
 [RedHat/CentOS/SUSE]
 @verbatim
-   $ rpm -Uvh /tmp/cfengine-nova-2.1.0-5.x86_64.rpm /tmp/cfengine-nova-
-   expansion-2.1.0-5.x86_64.rpm
+   $ rpm -Uvh /tmp/cfengine-nova-2.2.x-y.x86_64.rpm /tmp/cfengine-nova-
+   expansion-2.2.x-y.x86_64.rpm
 @end verbatim
 [Debian/Ubuntu]
 @verbatim
-   $ dpkg --install /tmp/cfengine-nova_2.1.0-5_x86_64.deb /tmp/cfengine-nova-
-   expansion_2.1.0-5_x86_64.deb
+   $ dpkg --install /tmp/cfengine-nova_2.2.x-y_x86_64.deb /tmp/cfengine-nova-
+   expansion_2.2.x-y_x86_64.deb
 @end verbatim
 
-@item Nova's dependencies have changed so we have to correct cf-twin (libgd and libmysqlclient were removed)
+@item CFEngine 3 Enterprise's dependencies have changed so we have to correct cf-twin (libgnutls and libmongo.c were updated)
 @verbatim
    $ cp /var/cfengine/bin/cf-agent /var/cfengine/bin/cf-twin
 @end verbatim
 
-@item Remove database lock if present
+@item Remove Mongodb lock if present
 @verbatim
-   $ rm /var/cfengine/state/mongod.lock
+   $ rm -f /var/cfengine/state/mongod.lock
 @end verbatim
 
-@item Copy the new CFEngine policy files to $(sys.workdir)/masterfiles. The files with a prefix "CFE_" will be handled by CFEngine, do not make changes to these. They are mostly renamed versions of old files (cfengine.cf, knowledge.cf, etc) where some promises have been added to ensure that the Mission Portal will work properly.
+@item Copy the new CFE_ prefixed policy files to $(sys.workdir)/masterfiles (the files with a prefix "CFE_" are maintained by CFEngine, do not make changes to these, they are there to ensure that the Mission Portal works properly).
 @verbatim
-   $ cd /var/cfengine/master_software_updates/NovaBase
+   $ cd /var/cfengine/share/NovaBase
    $ cp CFE_cfengine.cf CFE_knowledge.cf CFE_hub_specific.cf 
-   company_knowledge.cf cfengine_stdlib.cf /var/cfengine/masterfiles
+   company_knowledge.cf /var/cfengine/masterfiles
+
+[optional: do this when all hosts run Nova 2.2.0]
+$ cp /var/cfengine/share/NovaBase/cfengine_stdlib.cf /var/cfengine/masterfiles
 @end verbatim
 Comments:
 @itemize *
@@ -602,9 +530,10 @@ Comments:
     - a custom Knowledge Map configuration. You may add any information you'd like to incorporate your company knowledge into the Nova Knowledge Map
 @item cfengine_stdlib.cf
     - the latest standard CFEngine bodies and bundles
+@item If you are using an @file{update.cf} file older than from the Nova 2.0.2 release: package_method has been updated, the Nova/Enterprise self-upgrade will not work properly on some systems. We strongly recommended to synchronise contents of the file before rolling out new packages to clients. (Please contact your sales representative or file a ticket in the CFEngine support system to help you out.)
 @end itemize
 
-@item Modify contents in promises.cf
+@item Upgrade from Nova 2.0.x (skip this step if you run Nova 2.1.x): Modify contents in @file{/var/cfengine/masterfiles/promises.cf}
 @itemize *
 @item Correct input files in 
 @verbatim
@@ -614,6 +543,7 @@ Comments:
 @item Change cfengine.cf to CFE_cfengine.cf
 @item Change knowledge.cf to CFE_knowledge.cf
 @item Add CFE_hub_specific.cf
+@item "inputs" should look similiar to this after changes:
 @verbatim
    inputs => {
               "CFE_cfengine.cf",
@@ -622,19 +552,19 @@ Comments:
               "update.cf",
               "cfengine_stdlib.cf",
               "environment_$(environments.active)/promises.cf",
+	      <YOUR OWN INPUT FILES>
              };
 @end verbatim
 @end itemize
 
 @item Add "commercial_customer" class to 
 @verbatim
-"bundle common def{}"
-
+   "bundle common def{}"
 
    classes:
-    "commercial_customer" or => { "nova_edition", "constellation_edition" },
-                   comment => "Define a global class for CFE Nova and Constellation",
-                    handle => "common_def_classes_commercial_customer";
+    "commercial_customer" or => { "nova_edition"},
+               comment => "Define a global class for CFEngine 3 Enterprise",
+                handle => "common_def_classes_commercial_customer";
 @end verbatim
 
 @item Delete the whole 
@@ -649,6 +579,13 @@ Comments:
     track_value => "true";
 @end verbatim
 @end itemize
+
+@item Modify a line in @file{/var/cfengine/masterfiles/update.cf} to run mongod as follows (line 242 if upgrade from 2.1.x, line 299 if upgrade from 2.0.x; the line has been split and indented for presentability below):
+@verbatim
+   "/var/cfengine/bin/mongod --fork --logpath /var/log/mongod.log --dbpath $
+      (sys.workdir)/state --bind_ip 127.0.0.1 --nohttpinterface –nojournal
+      --logappend > /dev/null < /dev/null 2>&1"
+@end verbatim
 
 @item Tidy up $(sys.doc_root) directory@*
 [Debian/Ubuntu]
@@ -678,12 +615,12 @@ or
 @noindent For client upgrades there are 2 approaches: manual or automatic upgrade.
 @enumerate
 @item Manual: Update cfengine-nova on each client by @code{rpm} or @code{dpkg} command. Update cf-twin as described in step 3 in the update procedure for the hub (i.e. overwrite the old cf-twin).
-@item Automatic: On the hub, copy the architecture specific cfengine-nova packages to their distribution directories in @file{/var/cfengine/master_software_updates} (i.e. put the files in the respective architecture subdirectories) and CFEngine 3 Nova will take care of the rest.
+@item Automatic: On the hub, copy the cfengine-nova packages to the operating system specific distribution directories in @file{/var/cfengine/master_software_updates} (i.e. put the files in the respective operating specific subdirectories) and CFEngine 3 Enterprise will take care of the rest.
 @end enumerate
 
 
 @c -----------------------------------------------------
-@node How can I do phased deployment?, What if I have multiple operating system platforms?, Upgrade procedure, Upgrading CFEngine Nova
+@node How can I do phased deployment?, What if I have multiple operating system platforms?, Upgrade procedure, Upgrading to CFEngine 3 Enterprise
 @section How can I do phased deployment?
 
 Using CFEngine classes to select a subset of machines, you can deploy of updates on a small
@@ -691,7 +628,7 @@ number of test systems first.
 
 
 @c -----------------------------------------------------
-@node  What if I have multiple operating system platforms?, How do Nova policies update if I already have my own policy?, How can I do phased deployment?, Upgrading CFEngine Nova
+@node  What if I have multiple operating system platforms?, How do CFEngine 3 Enterprise policies update if I already have my own policy?, How can I do phased deployment?, Upgrading to CFEngine 3 Enterprise
 @section What if I have multiple operating system platforms?
 
 As of version 1.1 of CFEngine Nova, CFEngine will look for updates in an operating specific
@@ -700,8 +637,8 @@ its package in the correct subdirectory and the client host will know where to l
 
 
 @c ------------------------------------------------------
-@node How do Nova policies update if I already have my own policy?,  , What if I have multiple operating system platforms?, Upgrading CFEngine Nova
-@section How do Nova policies update if I already have my own policy?
+@node How do CFEngine 3 Enterprise policies update if I already have my own policy?, How do I upgrade from CFEngine Community 3 to CFEngine 3 Enterprise?, What if I have multiple operating system platforms?, Upgrading to CFEngine 3 Enterprise
+@section How do CFEngine 3 Enterprise policies update if I already have my own policy?
 
 New CFEngine package updates will not overwrite your existing policy. That means that they
 will also not improve your current updating arrangement without your approval.
@@ -715,10 +652,25 @@ the software.
 
 If you require assistance upgrading, contact CFEngine Support.
 
+
+@c ----------------------------------------------------
+@node How do I upgrade from CFEngine Community 3 to CFEngine 3 Enterprise?, , How do CFEngine 3 Enterprise policies update if I already have my own policy?, Upgrading to CFEngine 3 Enterprise
+@section How do I upgrade from CFEngine Community 3 to CFEngine 3 Enterprise?
+
+CFEngine 3 Enterprise comes with policies that are specific to Enterprise functionality, we therefore urge you to set aside your
+current community policy. Install CFEngine 3 Enterprise, set up the Enterprise hub by
+following this document, and then integrate your existing
+policy to the hub manually, in small testable steps.
+
+CFEngine 3 Enterprise is compatible with the Community Edition of CFEngine 3, but
+some process files are now managed by CFEngine 3 Enterprise for user convenience.
+
+Please see @ref{Troubleshooting} if you have any problems.
+
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node  Mission Portal, Monitoring extensions, Upgrading CFEngine Nova, Top
+@node  Mission Portal, Monitoring extensions, Upgrading to CFEngine 3 Enterprise, Top
 @chapter Mission Portal
 
 @menu
@@ -763,7 +715,20 @@ through information.
 @node  Mission Status, Mission Engineering, Mission Portal Rooms, Mission Portal Rooms
 @subsection Mission Status
 
-Mission status is a high level summary of how well the entire system is behaving. 
+@c @page
+@c -----------------------------------------------------
+@node Mission Engineering, Mission Planning, Mission Business, Mission Portal Rooms
+@subsection Mission Engineering
+
+@menu
+* Navigation Tree::
+* Status tab::
+* Reports tab::
+@end menu
+
+Mission Engineering illustrates the state of the system in relation to the desired state at all scales. Zoom in to specific areas and examine the impact of promises, query data, and extract reports.
+
+The Mission Engineering room underwent a substantial rework for the release of CFEngine 3 Enterprise 2.2. Most notably we introduced a host Navigation Tree where hosts can be grouped and organized in a hierarchy defined by classes. The remaining content on the page is influenced by the selected tree context, i.e. the @b{Status} and @b{Reports} tabs will only show information for linux hosts if such a context/node is selected in the the tree (the active node is highlighted to show that it is selected). Another notable change is the new interface to interact with reports, now available as a tab and drop-down menus.
 
 @sp 1
 @image{img-status,15cm,,Mission Status}
@@ -776,8 +741,36 @@ The two pie charts show the business value of the promises kept/not kept and wel
 Compliance Summary:
 The row of bar meters shows the compliance (average percentage of promises kept, repaired or not kept) of all registered hosts @footnote{Blue hosts will not appear here} in blocks of 6 hours for the past week. It summarizes performance and anomalous behavior in a simple red (promises not kept), yellow (promises repaired) and green (promises kept) scale. Click on a bar to see which promises were kept/not kept.
 
-Services/Goals:
-A summary of Mission goals (as defined in user policy files; these examples are from @file{company_knowledge.cf}). Edit the file in the policy editor (Planning room -> repository), or edit the file in your own text editor, to change these goals.
+The Navigation Tree consists of two main parts:
+
+@itemize
+@item Top menu:
+@sp 1
+@center @image{img-nav-tree-top-menu-2-2,5cm,,Top Menu}
+@center Figure: Top Menu
+@sp 1
+@itemize -
+@item The Tree Selector: Dropdown menu; choose between the default tree and custom trees defined by the user. Each tree can have a different subset of nodes. Click @code{Add} in the dropdown menu to add your own tree (input the name of the new tree in the field next to the add button). Click @code{X} next to a tree name to delete it.
+@item Class finder, Host finder and Promise finder (see separate section @ref{Finders})
+@end itemize
+@item The tree itself, grouped by classes. The user can add up to four sublevels in the Navigation Tree and edit or delete existing nodes.
+@sp 1
+@center @image{img-nav-tree-edit-2-2,5cm,,Navigation Tree}
+@center Figure: Navigation Tree
+@sp 1
+@itemize -
+@item To add a node:
+@enumerate
+@item Put the mouse pointer over the node you wish to add a sublevel to, click the plus sign shown beside the node.
+@item A pop-up appears with fields to enter a label (name) to the node that you wish to create and the class expression you wish to filter by. The class expression field contains a button which opens a class finder to help you select classes.
+@end enumerate
+@item To delete a node: Put the mouse pointer over the node that you wish to delete, click the @code{X} shown beside the node.
+@item To edit a node: 
+@enumerate
+@item Put the mouse pointer over the node that you wish to edit, click the @code{Pencil icon} shown beside the node.
+@item A pop-up appears where you can edit the fields that you wish to change.
+@end enumerate
+@end itemize
 
 
 @page
@@ -793,7 +786,22 @@ Mission engineering illustrates the state of the system in relation to the desir
 
 @noindent @b{Host Status:}
 @itemize
-@item The hosts are classified into red, yellow, green and blue according to the status of their compliance. A host is red if less than 80% of its promises are kept (> 20% not compliant), yellow if 20% or more of its promises were repaired and host is now compliant (> 20% repaired, now compliant), green if more than 80% of its promises are kept (> 80% compliant), and blue if there is no contact between the hub and the client (host unreachable). Clicking a link produces a list of the hosts in that category:
+@item Selected context: Shows the context (combination of selected classes) for which the data is valid.
+@item Compliance Summary: The row of bars shows the compliance of all registered hosts in blocks of five minutes for the last six hours or for the last week (depending on which is selected at the bottom of the graph)@footnote{Blue or black hosts will not appear here}. The hosts are classified into red, yellow and green according to the status of their compliance (see below). The height of a bar corresponds to the number of registered hosts. Note that the last column may have a lower height than the others (i.e. show information for fewer hosts)@footnote{This is because hosts check in at different times and some hosts may not yet be accounted for at the time of generation of the graph.}. Click on a bar to see which promises were repaired or not kept.
+@item Host Compliance (last hour): The hosts are classified into red, yellow and green according to the status of their compliance over the last hour:
+@itemize -
+@item A host is red if more than 20% of its promises are not kept
+@item A host is yellow if 20% or more of its promises were repaired and host is now compliant (> 20% repaired, now compliant)
+@item A host is green if more than 80% of its promises are kept (> 80% compliant)
+@end itemize
+@item Host Operations: The hosts are classified into blue and black according to their operational status. 
+@itemize -
+@item A host is blue if there has not been any contact between the hub and the client within a set time interval (host unreachable; default value is set to 15 minutes, see @ref{Mission Portal Settings}). 
+@item A host is black if CFEngine's scheduling daemon, @code{execd}, is not running (the hub will still able to contact the client to collect reports but the client will return stale data since it has not been running at regular intervals).
+@end itemize
+@item Clicking a link in any of the above categories (red/yellow/green/blue/black) produces a list of the hosts in that category (in the above mentioned context).
+
+Example, Compliant hosts: Click the link next to the green box under Host Compliance, a report appears showing host names, time stamp of last data collected and three action icons:
 
 @page
 @sp 1
@@ -808,6 +816,57 @@ The list presents the name of hosts and three action icons:
 @item Red X: Delete this host (host will be deleted from database, but may re-appear if CFEngine is still running on it; see footnote below).@footnote{You have to stop CFEngine on the concerned host before deleting it in the Mission Portal, else the host will contact the hub and re-appear in the database.}
 @end itemize
 
+@c -----------------------------------------------------
+@node Reports tab, , Status tab, Mission Engineering
+@subsubsection Reports tab
+
+Reports are sorted into five main categories that contain drop down menus to select default reports. Clicking a report will bring up a search filter specific to that report. 
+
+@sp 1
+@center @image{img-reports-tab-2-2,10cm,,Reports tab}
+@center Figure: Reports tab
+@sp 1
+
+Reports are updated at different intervals, the default values are every 5 minutes or every 6 hours (this can be changed by the user). Below is a list of standard reports, updated every 5 minutes unless otherwise noted:
+
+@itemize
+@item Policy
+@itemize -
+    @item Compliance by bundle: Status of promise bundles and when they were last verified
+    @item Compliance by promise: Compliance of each promise individually
+    @item Promises repaired log: Log of actual repairs made to the system
+    @item Promises repaired summary: Cumulative (histogram) summary of promises repaired
+    @item Promises not kept log: Log of promises that could not or would not be kept
+    @item Promises not kept summary: Cumulative (histogram) summary of promises not kept
+@end itemize
+@item Accounting
+@itemize -
+    @item Compliance summary: Total summary of host compliance
+    @item Business value report: Accumulated value of promises kept (6 hrs)
+    @item Benchmarks: Execution time used to verify selected promises
+@end itemize
+@item System
+@itemize -
+    @item Context classes: User defined classes observed on the system
+    @item Last saw neighbours: Log of when neighboring hosts were last observed online
+    @item Variables: Table of variable values last observed (6 hrs)
+@end itemize
+@item Software
+@itemize -
+    @item Patches available: A list of patches currently claimed to be available by the local package manager
+    @item Patch installed: A list of (un)applied patches according to the local package manager
+    @item Installed: List of software packages claimed to be installed according to the local package manager
+@end itemize
+@item File watch
+@itemize -
+    @item Change summary: Log of all detected changes to files from changes promises
+    @item Text changes: Delta/difference comparison showing file changes
+    @item Setuid: Current list of observed setuid/setgid root programs (6 hrs)
+@end itemize
+@end itemize
+
+@ignore
+@itemize
 @item Worst available host rank: Display the weakest hosts (that have been in contact with the hub) over the last hour.
 @item Hub replication status: Display status of redundant monitoring hubs (if activated).
 @end itemize
@@ -828,8 +887,8 @@ The Mission Engineering room comes with six finder functions (modules that make 
 
 Make changes to policies, goals determined by promises and implement specific tactics to achieve the desired state. Interact with data, approve changes and anomalies. Get an overview of users logged on to the Mission Portal, as well as their current activity.
 
-@sp 1
-@image{img-planning,15cm,,Mission Planning}
+@c @sp 1
+@image{img-planning-room-2-2,15cm,,Mission Planning}
 @center Figure: Mission Planning
 @sp 1
 
@@ -988,7 +1047,7 @@ A Content-Driven Policy (CDP) is a text file with lines containing semi-colon se
 @sp 1
 
 
-@node Topic finder, , CDP report finder, Finders
+@node Topic finder, , Promise finder, Finders
 @subsection Topic finder
 
 The Topic finder is located in the Mission Library and will display a list of common topics. Browse by scrolling through the list, click a letter corresponding to the first letter of a topic name, or search for topics in the search box (top right corner). Clicking on a topic will bring you either to a document, web page or the Topic viewer (Knowledge map).
@@ -1009,7 +1068,7 @@ The Topic finder is located in the Mission Library and will display a list of co
 * Promise viewer::              
 * Vital signs viewer::          
 * Topics viewer (Knowledge map)::  
-* Weakest hosts viewer::        
+@c * Weakest hosts viewer::        
 * Report viewer::               
 @end menu
 
@@ -1027,14 +1086,14 @@ Shows information about hosts, including name, status, operating system, vital s
 
 @noindent @b{Action buttons:}
 @itemize -
-@item Reports: Tabular summary of the host's internal information, tailored to a particular topics
+@item Reports: Opens a report finder that gives access to different reports: a tabular summary of the host's internal information, tailored to a particular topics
 @item Notes: View and make comments about this host
 @item Vitals: Overview of monitoring data for this host and its current performance statistics
 @item Problems: Overview of promises not kept by this host
 @end itemize
 
 @noindent @b{Monitored jobs:}
-To be developed.
+The number of jobs that have been set to be monitored explicitly by CFEngine (this is defined in user policy).
 
 @noindent @b{Analysis:}
 The bar meter shows the host-summary status of a number of key performance indicators:
@@ -1090,7 +1149,8 @@ This is the default behavior for a Nova installation.
 @sp 1
 
 
-@node Topics viewer (Knowledge map), Weakest hosts viewer, Vital signs viewer, Viewers
+@c ----------------------------------------------------
+@node Topics viewer (Knowledge map), Report viewer, Vital signs viewer, Viewers
 @subsection Topics viewer (Knowledge map)
 
 The Topics viewer, or Knowledge map, is a @i{sematic web} of subject references and document pointers. In a semantic web, you are presented with links to
@@ -1111,7 +1171,8 @@ The Knowledge Map can be found by searching for a topic in the top right corner 
 
 The yellow sphere represents the current topic, surrounding (blue) spheres represent related topics, and the size of the spheres represents the number of associations each topic has. This map is navigable: click on a different topic to see a new view centered on that topic and its associations. The tabs will show leads, references, topics in the same context, and sub topics in the same context. Links can also lead to other viewers in the Mission Portal, documents and web pages related to the current topic.
 
-
+@ignore
+@c ----------------------------------------------------
 @node Weakest hosts viewer, Report viewer, Topics viewer (Knowledge map), Viewers
 @subsection Weakest hosts viewer
 
@@ -1121,39 +1182,41 @@ A link to the worst ranked hosts is located in the Mission Engineering room. Thi
 @center @image{img-weakesthostsviewer,15cm,,Weakest hosts}
 @center Figure: Weakest hosts
 @sp 1
+@end ignore
 
-@node Report viewer, , Weakest hosts viewer, Viewers
+@c ----------------------------------------------------
+@node Report viewer, , Topics viewer (Knowledge map), Viewers
 @subsection Report viewer
 
-A significant capability of CFEngine 3 Nova is the existence of automated system reporting. A report is a tabular summary of CFEngine's internal information, tailored to a particular purpose. Reports describe
-attributes and qualities of managed hosts and can be filtered through the text boxes on top of each column.
+A significant capability of CFEngine 3 Enterprise is the existence of automated system reporting. A report is a tabular summary of CFEngine's internal information, tailored to a particular purpose. Reports describe attributes and qualities of managed hosts.
 
 @sp 1
-@center @image{img-reportviewer,15cm,,Report viewer}
+@center @image{img-report-viewer-2-2,15cm,,Report viewer}
 @center Figure: Report viewer
 @sp 1
 
-Reports are updated at different intervals, the default values are every 5 minutes or every 6 hours (this can be changed by the user). Below is a list of standard reports, updated every 5 minutes unless otherwise noted:
-@itemize -
-     @item Bundle profile: Status of promise bundles and when they were last verified
-     @item Business value report: Accumulated value of promises kept (6 hrs)
-     @item Class profile: User defined classes observed on the system
-     @item Compliance by promise: Compliance of each promise individually
-     @item Compliance summary: Total summary of host compliance
-     @item File change log: Log of all detected changes to files from changes promises
-     @item File change diffs: Delta/difference comparison showing file changes
-     @item Last saw hosts: Log of when neighboring hosts were last observed online
-     @item Patches available: A list of patches currently claimed to be available by the local package  manager (6 hrs)
-     @item Patch status: A list of (un)applied patches according to the local package manager (6 hrs)
-     @item Performance: Execution time used to verify selected promises
-     @item Promises repaired log: Log of actual repairs made to the system
-     @item Promises repaired summary: Cumulative (histogram) summary of promises repaired
-     @item Promises not kept log: Log of promises that could not or would not be kept
-     @item Promises not kept summary: Cumulative (histogram) summary of promises not kept
-     @item Setuid/gid root programs: Current list of observed setuid/setgid root programs (6 hrs)
-     @item Software installed: List of software packages claimed to be installed according to the local package manager (6 hrs)
-     @item Variables: Table of variable values last observed (6 hrs)
-@end itemize
+The drop down menu from the Engineering room @b{Reports tab} (where the user can choose which report to view) can also be found on the top of all reports, as well as a drop down menu to fetch saved report searches. Clicking a different report or saved search from one of these menus will refresh the page content to reflect the selection.
+
+The Report viewer also comes with different tools to drill down to specific information in the current report. To assist in this, the top line shows for how many hosts the report is valid for, along with an icon for selecting host context (the host context is pre-populated with data from the selected node in the Navigation Tree) and the title of the current report.
+
+@sp 1
+@center @image{img-report-context-2-2,13cm,,Report contex}
+@center Figure: Report context
+@sp 1
+
+Clicking the icon for selecting host context will bring up a window where the user can choose classes to include and exclude in a refined search on the current report (excludes takes priority over includes):
+
+@sp 1
+@center @image{img-context-include-exclude-2-2,8cm,,Set report host contex}
+@center Figure: Set report host context
+@sp 1
+
+The report can also be refined through the specific report filter (here we can refine by searching for promise handles):
+
+@sp 1
+@center @image{img-report-filter-2-2,13cm,,Report filter}
+@center Figure: Report filter
+@sp 1
 
 
 @node Editors, Mission Portal Administration, Viewers, Mission Portal
@@ -1218,7 +1281,7 @@ The default architecture proposes to work in close dialog with a version
 repository. CFEngine recommends the use of such a repository and currently
 supports subversion.
 
-For the moment, user management in the Mission Portal only concerns access to the Mission Portal settings. It does not affect the ability to edit or approve policies in the policy editor. Access control and authorization for policies are handled by
+todo2 For the moment, user management in the Mission Portal only concerns access to the Mission Portal settings and, through role-based access control, access to hosts, repo. It does not affect the ability to edit or approve policies in the policy editor. Access control and authorization for policies are handled by
 subversion's authentication system so that edits made in the Mission
 Portal can be interleaved with edits from other sources.  The
 subversion repository thus becomes the centerpiece of the distributed
@@ -1284,8 +1347,6 @@ For more detailed information on working with subversion, see @url{http://svnboo
 @menu
 * Mission Portal Settings::     
 * Mission Portal User Admin::   
-* Troubleshooting - Mission Portal Logs::  
-* Role-Based Access Control::
 @end menu
 
 @node Role-Based Access Control
@@ -1294,12 +1355,147 @@ CFEngine Nova 2.2.0 introduces Role Based Access Control (RBAC) for all
 reports and promises shown in the Mission Portal. This does not cover
 access control for making policy changes, but displaying reports.
 
-RBAC can be globally switched on or off in the Mission Portal settings.
+@c ----------------------------------------------------
+@node  User Settings and Preferences, Mission Portal User Admin, Mission Portal Administration, Mission Portal Administration
+@subsection User Settings and Preferences
 
-User-authentication is carried out when users log in to the Mission
-Portal, see the section on user administration for more details on this.
+@menu
+* List of saved searches::
+* Mission Portal Settings::
+* My Preferences::
+* Hub Replication Status::
+@end menu
 
-The information a user is authorized to see is determined from his
+Click the tool icon on the top right (encircled in red) to configure and view various settings for the Mission Portal.
+
+@sp 1
+@image{img-user-settings-2-2,15cm,,User Settings and Preferences}
+@center Figure: User Settings and Preferences
+@sp 1
+
+@noindent Setting options allow you to view or set:
+@itemize -
+@item List of saved searches: View saved searches (e.g. searches saved from different reports)
+@item Mission Portal settings: Set or edit the administrative email, administrative role, authentication method, activation of role based access control (RBAC) and the unreachable (blue host) threshold.
+@item My preferences: Turn tool tips on/off and define default number of rows to be shown in reports
+@item Hub replication status: Display status of redundant monitoring hubs (if activated)
+@end itemize
+
+
+@c ----------------------------------------------------
+@node  List of saved searches, Mission Portal Settings, User Settings and Preferences, User Settings and Preferences
+@subsubsection List of saved searches
+
+View a list of all searches that have been saved from different reports. Saved searches are user-specific (i.e. will not be seen by other users). You can choose to run or delete specific searches.
+
+@sp 1
+@center @image{img-saved-searches-2-2,15cm,,List of saved searches}
+@center Figure: List of saved searches
+@sp 1
+
+
+@c ----------------------------------------------------
+@node  Mission Portal Settings, My Preferences, List of saved searches, User Settings and Preferences
+@subsubsection Mission Portal Settings
+
+Mission Portal settings allow the user to set or edit the administrative email, administrative role, authentication method, activation of role based access control (RBAC) and the unreachable (blue host) threshold.
+
+@sp 1
+@center @image{img-mission-portal-settings-2-2,15cm,,Mission Portal Settings}
+@center Figure: Mission Portal Settings
+@sp 1
+
+@sp 1
+@noindent @b{Administrative email:}@*
+This is the email address that the Mission Portal uses to send reports.
+
+@sp 1
+@noindent @b{Administrative role:}@*
+Select which user group will have general administrator privileges in the Mission Portal. This group will be able to access the Mission Portal settings and configuration tools.
+
+@sp 1
+@noindent @b{Authentication method}@*
+By default the Mission Portal will use the internal database to store user information. Default user name and password on the Mission Portal login page are "admin" and "admin".
+
+External authentication (LDAP or Active Directory) is available for CFEngine 3 Nova 2.1 and later versions. See @ref{Configuration of external authentication} for how to set this up.
+
+@sp 1
+@noindent @b{Fall-back role}@*
+User group that will be able to access the Mission Portal through internal database authentication if external authentication is down or misconfigured.
+
+@sp 1
+@noindent @b{Role-Based Access Control}@*
+CFEngine 3 Enterprise 2.2.0 introduces Role-Based Access Control (RBAC) for all hosts, reports and promises shown in the Mission Portal. RBAC does not cover access control for making policy changes. It can be globally switched on or off, but see also @ref{Mission Portal User Admin} for more details.
+
+@sp 1
+@noindent @b{Unreachable host threshold}
+Time after which a host is defined as unreachable (blue host; the hub is unable to reach this host due to connection problems). Default threshold is 15 minutes.
+
+
+@c ----------------------------------------------------
+@node  My Preferences, Hub Replication Status, Mission Portal Settings, User Settings and Preferences
+@subsubsection My Preferences
+
+In My Preferences you can set Mission Portal tooltips on/off and the default number of rows to display in reports. If tooltip is on, a box containing a basic explanation will appear next to graphs and functions in the Mission Portal.
+
+@sp 1
+@image{img-my-preferences-2-2,15cm,,My preferences}
+@center Figure: My preferences
+@sp 1
+
+
+@c ----------------------------------------------------
+@node  Hub Replication Status, , My Preferences, User Settings and Preferences
+@subsubsection Hub Replication Status
+
+The Mission Portal has a role to play in Mission Criticality, as it is a single source of information, collected, categorized and calibrated for system engineers. Being a single source website, it is can also be regarded as a single point of failure from the point of view of a mission critical application.
+
+The information in the mission portal is largely status information about systems. The content of the Mission Portal database is not in any way deterministic for the configured state of your IT system – it is only a report of actual state, not a template for intended state. If the Mission Portal is 'down' or unavailable, it does not in any way imply that the actual distributed system is down or that there is any fault. 
+
+If information and insight into your IT system are indeed Mission Critical for you, it is possible to create a high availability access to the mission information in the portal. CFEngine commercial editions support multiple 'hubs' for redundancy during reporting@footnote{The CFEngine star-network 'hub' is the report aggregator for the CFEngine software}. By making a cluster of three (or more) hubs, you can ensure that reports will always be available and up to date, at the time-resolution promised by CFEngine.
+
+To set up redundant hubs, you will need three physical computers, or at least three virtual machines on different physical computers. The idea is to use the underlying technology of the MongoDB database to provide a replicated data store. If a single database server goes down a secondary replica can take over the role. The commercial editions of CFEngine interface with this database through cf-hub, and this process can be made aware of the underlying replica technology in the database. The architecture is intended to be as simple as possible for the CFEngine user to employ. The basic steps include:
+
+@itemize -
+@item Install each of the three systems with the Nova/Constellation extension package for policy hubs.
+@item The MongoDB backend needs to be set up specially before standard bootstrapping of nodes in an high availability managed network. 
+@end itemize
+
+Alternatively, if you have already bootstrapped hosts, you can manually establish hub redundancy with a little database infrastructure work and some additional CFEngine configuration. 
+
+In general, we recommend a small amount of professional services to help set up such a system, as there are several details that need to be taken into account.
+
+
+@c ----------------------------------------------------
+@node  Mission Portal User Admin, User Roles, User Settings and Preferences, Mission Portal Administration
+@subsection Mission Portal User Admin
+
+CFEngine 3 Enterprise 2.2.0 introduces Role-Based Access Control (RBAC) to the Mission Portal. RBAC limits access to the Mission Portal settings page and access to hosts, reports and promises. It does not affect the ability to edit or approve policies in the policy editor (access control and authorization for policies are handled by subversion's authentication system, see @ref{Integration with subversion}). RBAC can be globally switched on or off in the Mission Portal settings (see @ref{Mission Portal Settings}).
+
+On a fresh install the default user "admin" belongs to the "admin" user group and has access to both the @b{User preferences and settings} page and the @b{User Administration} page. The "admin" user can add users to the internal database and define user roles (Admin, Faculty, Developer, etc.) for users from either the internal database or an external authentication database (LDAP or Active Directory; see @ref{Mission Portal Settings} and @ref{Configuration of external authentication}).
+
+@sp 1
+@image{img-user-admin-2-2,15cm,,Mission Portal User Admin}
+@center Figure: Mission Portal User Admin
+@sp 1
+
+@noindent Click the @b{Add User} button to add a new user to the internal database:
+
+@sp 1
+@image{img-add-user-2-2,15cm,,Add User}
+@center Figure: Add User
+@sp 1
+
+Enter the user information as requested in the fields. If user roles have been defined (see @ref{User Roles}), you can also choose to assign one or more roles to the user by selecting an available group and clicking the @b{<<} button located between the list of assigned and available roles. Finish by clicking @b{Create User}.
+
+Users can be edited in the same way as above by clicking the @b{Pencil} button next to his or her user name.
+
+
+@c ----------------------------------------------------
+@node User Roles, , Mission Portal User Admin, Mission Portal User Admin
+@subsubsection User Roles
+
+The information a user is authorized to see is determined from his or her
 role memberships. A user may be member of an arbitrary number of
 roles, each which may grant and deny access to certain
 information. 
@@ -1387,42 +1583,6 @@ seen by all users (including notes added to any host page).
 bypass all RBAC checks.
 
 @end itemize
-
-
-@node  Mission Portal Settings
-@subsection Mission Portal Settings
-
-Configure and view various settings for the Mission Portal.
-
-@sp 1
-@image{img-settings,15cm,,Mission Portal Settings}
-@center Figure: Mission Portal Settings
-@sp 1
-
-@itemize -
-@item List of saved searches: View saved searches (e.g. searches saved from reports viewer/finder)
-@item Mission Portal settings: Configure access authentication mode (internal database, LDAP, Active Directory)
-@item My preferences: Turn tool tips on/off and enter default number of rows to be shown in reports
-@end itemize
-
-
-@node  Mission Portal User Admin, Troubleshooting - Mission Portal Logs, Mission Portal Settings, Mission Portal Administration
-@subsection Mission Portal User Admin
-
-For the moment, user management in the Mission Portal only concerns access to the Mission Portal settings page. It does not affect the ability to edit or approve policies in the policy editor. Access control and authorization for policies are handled by subversion's authentication system, see section on "Integration with subversion".
-
-On a fresh install the default user "admin" belongs to the "admin" user group and has access to the settings page. Add users and define user groups (Admin, Faculty, Developer, etc.). Alternatively, configure the Mission Portal for use of external authentication (LDAP, Active Directory), see Appendix A. Note that the actual setup of external authentication (definition of users, groups, directory hierarchy, etc.) has to be done independently and is not covered in this document.
-
-@sp 1
-@image{img-useradmin,15cm,,Mission Portal User Admin}
-@center Figure: Mission Portal User Admin
-@sp 1
-
-
-@node Troubleshooting - Mission Portal Logs
-@subsection Troubleshooting - Mission Portal Logs
-
-The Mission Portal will log php errors, errors related to the configuration of external authentication (LDAP/Active Directory) and occurrences of the fall-back solution if external authentication fails. The log can be found in DOCROOT/application/logs (i.e. @code{/var/www/application/logs} for Ubuntu and @code{/var/www/html/application/logs} for Red Hat). The logs folder must be writable by apache, i.e. by 'www-data' user. 
 
 
 @c *****************************************************
@@ -3397,6 +3557,104 @@ anything on Windows. The reference manual documents exactly which
 promises are ignored and not.  Also, @code{cf-agent} from CFEngine
 Nova prints warning messages on ignored attributes when run in verbose
 mode.
+
+
+@c *****************************************************
+@c * CHAPTER
+@c *****************************************************
+@node Troubleshooting, Frequently Asked Questions, Installation procedure, Installing CFEngine 3 Enterprise
+@chapter Troubleshooting
+
+@menu
+* Mission Portal Logs::
+* Apache HTTP error_log is your friend::  
+* Some report pages return HTTP error 404::  
+* First time login to Mission Portal fails::  
+* Cannot send emails from the Mission Portal::  
+* Warning messages on web pages in SLES/OpenSuSE Hub::  
+* Knowledge map remains unpopulated::
+@end menu
+
+
+@c -----------------------------------------------------
+@node Mission Portal Logs, Apache HTTP error_log is your friend, Troubleshooting, Troubleshooting
+@section Mission Portal Logs
+
+The Mission Portal will log php errors, errors related to the configuration of external authentication (LDAP/Active Directory) and occurrences of the fall-back solution if external authentication fails. The log can be found in DOCROOT/application/logs (i.e. @code{/var/www/application/logs} for Ubuntu and @code{/var/www/html/application/logs} for Red Hat). The logs folder must be writable by apache, i.e. by 'www-data' user. 
+
+
+@c -----------------------------------------------------
+@node Apache HTTP error_log is your friend, Some report pages return HTTP error 404, Mission Portal Logs, Troubleshooting
+@section Apache HTTP error_log is your friend
+The first place to diagnose (if all CFEngine processes and mongod are up and running) is:@*
+@i{RHEL 5,6 / CentOS 5}
+@verbatim
+   /var/log/httpd/error_log
+@end verbatim
+@noindent @i{SLES 11 / OpenSuSE 11 / Debian 5,6 / Ubuntu 8,10}
+@verbatim
+   /var/log/apache2/error_log
+@end verbatim
+
+@noindent This log file will often provide useful information on which components are not operating properly. 
+
+
+@c -----------------------------------------------------
+@node Some report pages return HTTP error 404, First time login to Mission Portal fails, Apache HTTP error_log is your friend, Troubleshooting
+@section Some report pages return HTTP error 404
+Confirm that Apache REWRITE module is ON. Restarting httpd/apache2 service is required if rewrite was disabled.
+
+
+@c -----------------------------------------------------
+@node First time login to Mission Portal fails, Cannot send emails from the Mission Portal, Some report pages return HTTP error 404, Troubleshooting
+@section First time login to Mission Portal fails
+MongoDB needs to be initialized for authentication of the default user. Run the following command (line has been split and indented for presentability):
+@sp 1
+@verbatim
+   $ /var/cfengine/bin/mongo phpcfengine 
+	/var/cfengine/share/GUI/phpcfenginenova/export.js
+@end verbatim
+@sp 1
+@noindent Default user name and password is 'admin' and 'admin'.
+
+
+@c -----------------------------------------------------
+@node Cannot send emails from the Mission Portal, Warning messages on web pages in SLES/OpenSuSE Hub, First time login to Mission Portal fails, Troubleshooting
+@section Cannot send emails from the Mission Portal
+The default email address used by the system is "admin@@cfengine.com". To change this, edit @file{application/config/ion_auth.php} at the line containing:
+@verbatim
+   $config['admin_email'] = "admin@cfengine.com";
+@end verbatim
+
+
+@c -----------------------------------------------------
+@node Warning messages on web pages in SLES/OpenSuSE Hub, Knowledge map remains unpopulated, Cannot send emails from the Mission Portal, Troubleshooting
+@section Warning messages on web pages in SLES/OpenSuSE Hub
+Warnings appear because the default environment is set to "Development" and in this context the Mission Portal will show all php errors to the user. Set the environment to "Production" to silence these warnings, they will still be logged in Apache Error_log. To edit the default environment, visit "index.php" in your default web root directory and change the following line to suit your needs:
+@verbatim
+   define('ENVIRONMENT', 'Development');
+@end verbatim
+
+
+@c -----------------------------------------------------
+@node Knowledge map remains unpopulated, , Warning messages on web pages in SLES/OpenSuSE Hub, Troubleshooting
+@section Knowledge map remains unpopulated
+   Try building the Knowledge map manually:@*
+   @i{RHEL 5 / CentOS 5}
+@verbatim
+   $ /var/cfengine/bin/cf-promises -r && /var/cfengine/bin/cf-know -f 
+       /var/www/html/docs/enterprise_build.cf -b
+@end verbatim
+   @i{SLES 11 / OpenSuSE 11}
+@verbatim
+   $ /var/cfengine/bin/cf-promises -r && /var/cfengine/bin/cf-know -f 
+       /srv/www/htdocs/docs/enterprise_build.cf -b
+@end verbatim
+   @i{Debian 5,6 / Ubuntu 8,10}
+@verbatim
+   $ /var/cfengine/bin/cf-promises -r && /var/cfengine/bin/cf-know -f 
+       /srv/www/htdocs/docs/enterprise_build.cf -b
+@end verbatim
 
 
 @c *****************************************************

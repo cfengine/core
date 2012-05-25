@@ -32,7 +32,6 @@ Body *IsBody(Body *list, char *key);
 Bundle *IsBundle(Bundle *list, char *key);
 Promise *DeRefCopyPromise(char *scopeid, Promise *pp);
 Promise *ExpandDeRefPromise(char *scopeid, Promise *pp);
-Promise *CopyPromise(char *scopeid, Promise *pp);
 void DeletePromise(Promise *pp);
 void DeletePromises(Promise *pp);
 void PromiseRef(enum cfreport level, Promise *pp);

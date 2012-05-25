@@ -115,7 +115,7 @@ void FinishEditContext(EditContext *ec, Attributes a, Promise *pp)
 /* Level                                                             */
 /*********************************************************************/
 
-int LoadFileAsItemList(Item **liststart, char *file, Attributes a, Promise *pp)
+int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, Promise *pp)
 {
     FILE *fp;
     struct stat statbuf;
@@ -190,7 +190,7 @@ int LoadFileAsItemList(Item **liststart, char *file, Attributes a, Promise *pp)
 
 /*********************************************************************/
 
-int SaveItemListAsFile(Item *liststart, char *file, Attributes a, Promise *pp)
+int SaveItemListAsFile(Item *liststart, const char *file, Attributes a, Promise *pp)
 {
     Item *ip;
     struct stat statbuf;

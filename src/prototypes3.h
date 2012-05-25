@@ -391,8 +391,8 @@ int FSWrite(char *new, int dd, char *buf, int towrite, int *last_write_made_hole
 
 EditContext *NewEditContext(char *filename, Attributes a, Promise *pp);
 void FinishEditContext(EditContext *ec, Attributes a, Promise *pp);
-int LoadFileAsItemList(Item **liststart, char *file, Attributes a, Promise *pp);
-int SaveItemListAsFile(Item *liststart, char *file, Attributes a, Promise *pp);
+int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, Promise *pp);
+int SaveItemListAsFile(Item *liststart, const char *file, Attributes a, Promise *pp);
 int AppendIfNoSuchLine(char *filename, char *line);
 
 /* files_editline.c */

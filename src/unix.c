@@ -371,7 +371,7 @@ static int ForeignZone(char *s)
 
 /*****************************************************************************/
 
-static char *GetProcessOptions()
+static const char *GetProcessOptions(void)
 {
 # ifdef HAVE_GETZONEID
     zoneid_t zid;

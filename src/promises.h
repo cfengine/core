@@ -37,6 +37,5 @@ void DeletePromises(Promise *pp);
 void PromiseRef(enum cfreport level, Promise *pp);
 Promise *NewPromise(char *typename, char *promiser);
 void HashPromise(char *salt, Promise *pp, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhashes type);
-void DebugPromise(Promise *pp);
 
 #endif

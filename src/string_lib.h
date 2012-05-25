@@ -54,4 +54,20 @@ char *SearchAndReplace(const char *source, const char *search, const char *repla
 bool StringMatch(const char *regex, const char *str);
 bool StringMatchFull(const char *regex, const char *str);
 
+int ReplaceStr(char *in, char *out, int outSz, char *from, char *to);
+
+bool IsStrIn(const char *str, const char **strs);
+bool IsStrCaseIn(const char *str, const char **strs);
+
+char **String2StringArray(char *str, char separator);
+void FreeStringArray(char **strs);
+
+char *Titleize(char *str);
+
+int SubStrnCopyChr(char *to, char *from, int len, char sep);
+int CountChar(char *string, char sp);
+void ReplaceChar(char *in, char *out, int outSz, char from, char to);
+void ReplaceTrailingChar(char *str, char from, char to);
+void ReplaceTrailingStr(char *str, char *from, char to);
+
 #endif

@@ -285,13 +285,13 @@ char CFWORKDIR[CF_BUFSIZE];
 char PUBKEY_DIGEST[CF_MAXVARSIZE];
 enum cfhashes CF_DEFAULT_DIGEST;
 char *CLASSATTRIBUTES[HARD_CLASSES_MAX][3];
-char *VFSTAB[1];
+const char *VFSTAB[1];
 char *VRESOLVCONF[1];
 char *VMAILDIR[1];
 char *VEXPORTS[1];
 char EXPIRY[CF_SMALLBUF];
 RSA *PUBKEY;
-char *CLASSTEXT[1] = { };
+const char *CLASSTEXT[1] = { };
 
 char VIPADDRESS[18];
 

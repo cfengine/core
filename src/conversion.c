@@ -24,6 +24,7 @@
 
 #include "cf3.defs.h"
 
+#include "promises.h"
 #include "files_names.h"
 #include "dbm_api.h"
 #include "mod_access.h"

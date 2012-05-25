@@ -24,6 +24,8 @@
 
 #include "cf3.defs.h"
 
+#include "promises.h"
+
 static void ShowAttributes(Attributes a);
 
 /*******************************************************************/

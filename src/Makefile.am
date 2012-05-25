@@ -125,7 +125,7 @@ libpromises_la_SOURCES = \
         pipes.c \
         proc_keyvalue.c proc_keyvalue.h \
         processes_select.c \
-        promises.c \
+        promises.c promises.h \
         prototypes3.h \
         recursion.c \
         reporting.c \

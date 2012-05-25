@@ -25,6 +25,7 @@
 
 #include "generic_agent.h"
 
+#include "promises.h"
 #include "files_lib.h"
 #include "files_names.h"
 #include "parser.h"

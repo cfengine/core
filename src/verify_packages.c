@@ -25,6 +25,7 @@
 
 #include "cf3.defs.h"
 
+#include "promises.h"
 #include "dir.h"
 #include "files_names.h"
 #include "vars.h"

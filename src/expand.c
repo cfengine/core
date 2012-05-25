@@ -31,6 +31,7 @@
 
 #include "cf3.defs.h"
 
+#include "promises.h"
 #include "vars.h"
 
 static void MapIteratorsFromScalar(const char *scope, Rlist **los, Rlist **lol, char *string, int level, Promise *pp);

@@ -28,6 +28,7 @@
 #include "lastseen.h"
 #include "crypto.h"
 #include "files_names.h"
+#include "promises.h"
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);

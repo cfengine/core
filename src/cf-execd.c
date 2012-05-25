@@ -25,6 +25,7 @@
 #include "generic_agent.h"
 #include "cf-execd-runner.h"
 
+#include "promises.h"
 #include "vars.h"
 
 /*******************************************************************/

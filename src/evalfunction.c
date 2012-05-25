@@ -23,6 +23,8 @@
 */
 
 #include "evalfunction.h"
+
+#include "promises.h"
 #include "dir.h"
 #include "dbm_api.h"
 #include "lastseen.h"

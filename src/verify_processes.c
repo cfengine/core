@@ -24,6 +24,7 @@
 
 #include "cf3.defs.h"
 
+#include "promises.h"
 #include "vars.h"
 
 static int ProcessSanityChecks(Attributes a, Promise *pp);

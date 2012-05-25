@@ -31,6 +31,7 @@
 
 #include "cf3.defs.h"
 
+#include "promises.h"
 #include "policy.h"
 
 static void DeleteSubTypes(SubType *tp);

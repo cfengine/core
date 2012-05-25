@@ -33,6 +33,8 @@
 
 #include "constraints.h"
 
+#include "promises.h"
+
 static PromiseIdent *PromiseIdExists(char *handle);
 static void DeleteAllPromiseIdsRecurse(PromiseIdent *key);
 static int VerifyConstraintName(const char *lval);

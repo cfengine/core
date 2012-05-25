@@ -31,6 +31,7 @@
 
 #include "cf3.defs.h"
 
+#include "promises.h"
 #include "vars.h"
 
 static void FindFilePromiserObjects(Promise *pp);

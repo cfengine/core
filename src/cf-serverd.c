@@ -31,6 +31,7 @@
 #include "crypto.h"
 #include "files_names.h"
 #include "vars.h"
+#include "promises.h"
 
 #define QUEUESIZE 50
 #define CF_BUFEXT 128

@@ -34,6 +34,7 @@
 #include "granules.h"
 #include "dbm_api.h"
 #include "policy.h"
+#include "promises.h"
 
 #include <math.h>
 

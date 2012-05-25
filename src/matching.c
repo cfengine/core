@@ -32,6 +32,7 @@
 #include "cf3.defs.h"
 
 #include "vars.h"
+#include "promises.h"
 
 #ifdef HAVE_PCRE_H
 # include <pcre.h>

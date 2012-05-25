@@ -739,21 +739,6 @@ int cf_pwait(pid_t pid);
 int SelectProcess(char *procentry, char **names, int *start, int *end, Attributes a, Promise *pp);
 bool IsProcessNameRunning(char *procNameRegex);
 
-/* promises.c */
-
-char *BodyName(Promise *pp);
-Body *IsBody(Body *list, char *key);
-Bundle *IsBundle(Bundle *list, char *key);
-Promise *DeRefCopyPromise(char *scopeid, Promise *pp);
-Promise *ExpandDeRefPromise(char *scopeid, Promise *pp);
-Promise *CopyPromise(char *scopeid, Promise *pp);
-void DeletePromise(Promise *pp);
-void DeletePromises(Promise *pp);
-void PromiseRef(enum cfreport level, Promise *pp);
-Promise *NewPromise(char *typename, char *promiser);
-void HashPromise(char *salt, Promise *pp, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhashes type);
-void DebugPromise(Promise *pp);
-
 /* recursion.c */
 
 int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promise *pp);

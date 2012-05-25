@@ -25,6 +25,7 @@
 
 #include "cf3.defs.h"
 
+#include "promises.h"
 #include "files_names.h"
 
 static int CheckMeasureSanity(Attributes a, Promise *pp);

@@ -835,7 +835,7 @@ static void CheckFileChanges(Policy *policy, GenericAgentConfig config)
             BuiltinClasses();
             OSClasses();
 
-            NewClass(THIS_AGENT);
+            NewClass(CF_AGENTTYPES[THIS_AGENT_TYPE]);
 
             SetReferenceTime(true);
             ReadPromises(cf_server, CF_SERVERC, config);

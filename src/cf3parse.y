@@ -108,12 +108,12 @@ aitem:                 ID  /* recipient of argument is never a literal */
 
 bundlebody:            '{'
                        {
-                           if (RelevantBundle(THIS_AGENT,P.blocktype))
+                           if (RelevantBundle(CF_AGENTTYPES[THIS_AGENT_TYPE], P.blocktype))
                            {
                                CfDebug("We a compiling everything here\n");
                                INSTALL_SKIP = false;
                            }
-                           else if (strcmp(THIS_AGENT,P.blocktype) != 0)
+                           else if (strcmp(CF_AGENTTYPES[THIS_AGENT_TYPE], P.blocktype) != 0)
                            {
                                CfDebug("This is for a different agent\n");
                                INSTALL_SKIP = true;

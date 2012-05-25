@@ -111,9 +111,8 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig config)
     SetStartTime();
     SanitizeEnvironment();
 
-    strcpy(THIS_AGENT, CF_AGENTTYPES[ag]);
-    NewClass(THIS_AGENT);
     THIS_AGENT_TYPE = ag;
+    NewClass(CF_AGENTTYPES[THIS_AGENT_TYPE]);
 
 // need scope sys to set vars in expiry function
     SetNewScope("sys");
@@ -147,7 +146,7 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig config)
     LoadPersistentContext();
     LoadSystemConstants();
 
-    snprintf(vbuff, CF_BUFSIZE, "control_%s", THIS_AGENT);
+    snprintf(vbuff, CF_BUFSIZE, "control_%s", CF_AGENTTYPES[THIS_AGENT_TYPE]);
     SetNewScope(vbuff);
     NewScope("this");
     NewScope("match");

@@ -71,7 +71,6 @@ int AM_BACKGROUND_PROCESS = false;
 int CF_PERSISTENCE = 10;
 
 char *THIS_BUNDLE = NULL;
-char THIS_AGENT[CF_MAXVARSIZE] = { 0 };
 
 enum cfagenttype THIS_AGENT_TYPE;
 time_t PROMISETIME = 0;

@@ -703,7 +703,7 @@ static bool ScheduleRun(Policy *policy)
         BuiltinClasses();
         OSClasses();
 
-        NewClass(THIS_AGENT);
+        NewClass(CF_AGENTTYPES[THIS_AGENT_TYPE]);
 
         SetReferenceTime(true);
 

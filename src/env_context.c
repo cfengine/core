@@ -345,7 +345,7 @@ void KeepClassContextPromise(Promise *pp)
 
 // If this is some other kind of bundle (else here??)
 
-    if (strcmp(pp->bundletype, THIS_AGENT) == 0 || FullTextMatch("edit_.*", pp->bundletype))
+    if (strcmp(pp->bundletype, CF_AGENTTYPES[THIS_AGENT_TYPE]) == 0 || FullTextMatch("edit_.*", pp->bundletype))
     {
         if (EvalClassExpression(a.context.expression, pp))
         {

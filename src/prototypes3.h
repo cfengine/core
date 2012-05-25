@@ -620,7 +620,7 @@ void EndMeasurePromise(struct timespec start, Promise *pp);
 void NoteClassUsage(AlphaList list, int purge);
 
 /* install.c */
-int RelevantBundle(char *agent, char *blocktype);
+int RelevantBundle(const char *agent, const char *blocktype);
 Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *args);
 Body *AppendBody(Policy *policy, const char *name, const char *type, Rlist *args);
 SubType *AppendSubType(Bundle *bundle, char *typename);

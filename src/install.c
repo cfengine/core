@@ -39,7 +39,7 @@ static void DeleteSubTypes(SubType *tp);
 
 /*******************************************************************/
 
-int RelevantBundle(char *agent, char *blocktype)
+int RelevantBundle(const char *agent, const char *blocktype)
 {
     Item *ip;
 

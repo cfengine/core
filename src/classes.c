@@ -23,15 +23,6 @@
 
 */
 
-/*******************************************************************/
-/*                                                                 */
-/*  GLOBAL class default variables for cfengine                    */
-/*  These variables are what needs to be modified if you add or    */
-/*  modify class definitions... remember also to change clsattr    */
-/*  and search for the os types in cfengine.c (mount stuff)        */
-/*                                                                 */
-/*******************************************************************/
-
 #include "cf3.defs.h"
 
 /*********************************************************************/

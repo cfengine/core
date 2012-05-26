@@ -267,10 +267,6 @@ int ShellCommandReturnsZero(const char *comm, int useshell)
     return false;
 }
 
-/**********************************************************************************/
-
-/* from verify_processes.c */
-
 int DoAllSignals(Item *siglist, Attributes a, Promise *pp)
 {
     Item *ip;
@@ -399,10 +395,6 @@ static const char *GetProcessOptions(void)
 
     return VPSOPTS[VSYSTEMHARDCLASS];
 }
-
-/*****************************************************************************/
-
-/* from verify_processes.c */
 
 int LoadProcessTable(Item **procdata)
 {

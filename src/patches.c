@@ -23,14 +23,13 @@
 
 */
 
-/*********************************************************/
-/* patches.c                                             */
-/*                                                       */
-/* Contains any fixes which need to be made because of   */
-/* lack of OS support on a given platform                */
-/* These are conditionally compiled, pending extensions  */
-/* or developments in the OS concerned.                  */
-/*********************************************************/
+/*
+  Contains any fixes which need to be made because of lack of OS support on a
+  given platform These are conditionally compiled, pending extensions or
+  developments in the OS concerned.
+
+  FIXME: move to the pub/ directory or to the apropriate source file.
+*/
 
 #include "cf3.defs.h"
 

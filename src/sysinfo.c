@@ -811,12 +811,16 @@ void OSClasses(void)
     {
         CfOut(cf_verbose, "", "This appears to be a gentoo system.\n");
         NewClass("gentoo");
+        NewScalar("sys", "flavour", "gentoo", cf_str);
+        NewScalar("sys", "flavor", "gentoo", cf_str);
     }
 
     if (cfstat("/etc/arch-release", &statbuf) != -1)
     {
         CfOut(cf_verbose, "", "This appears to be an Arch Linux system.\n");
         NewClass("archlinux");
+        NewScalar("sys", "flavour", "archlinux", cf_str);
+        NewScalar("sys", "flavor", "archlinux", cf_str);
     }
 
     if (cfstat("/proc/vmware/version", &statbuf) != -1 || cfstat("/etc/vmware-release", &statbuf) != -1)

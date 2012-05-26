@@ -88,21 +88,6 @@ void CheckAutoBootstrap()
         FatalError(" !! Not enough privileges to bootstrap CFEngine");
     }
 
-    if (IsDefinedClass("redhat"))
-    {
-        SetDocRoot("/var/www/html");
-    }
-
-    if (IsDefinedClass("SuSE"))
-    {
-        SetDocRoot("/srv/www/htdocs");
-    }
-
-    if (IsDefinedClass("debian"))
-    {
-        SetDocRoot("/var/www");
-    }
-
     snprintf(name, CF_BUFSIZE - 1, "%s/inputs/failsafe.cf", CFWORKDIR);
     MapName(name);
 
@@ -379,55 +364,5 @@ void CreateFailSafe(char *name)
     if (cf_chmod(name, S_IRUSR | S_IWUSR) == -1)
     {
         CfOut(cf_error, "cf_chmod", "!! Failed setting permissions on bootstrap policy (%s)", name);
-    }
-}
-
-/********************************************************************/
-/* Level                                                            */
-/********************************************************************/
-
-void SetDocRoot(char *name)
-{
-    char file[CF_BUFSIZE];
-    FILE *fout, *fin;
-    struct stat sb;
-
-    if (LOOKUP)
-    {
-        CfOut(cf_verbose, "", "Ignoring document root in lookup mode");
-        return;
-    }
-
-    snprintf(file, CF_BUFSIZE - 1, "%s/document_root.dat", CFWORKDIR);
-    MapName(file);
-
-    if (cfstat(file, &sb) == -1 && strlen(name) > 0)
-    {
-        if ((fout = fopen(file, "w")) == NULL)
-        {
-            CfOut(cf_error, "fopen", "Unable to write document root file! (%s)", file);
-            return;
-        }
-
-        fprintf(fout, "%s", name);
-        fclose(fout);
-        CfOut(cf_verbose, "", " -> Setting document root for a knowledge base to %s", name);
-        strcpy(DOCROOT, name);
-        NewScalar("sys", "doc_root", DOCROOT, cf_str);
-    }
-    else
-    {
-        if ((fin = fopen(file, "r")) == NULL)
-        {
-        }
-        else
-        {
-            file[0] = 0;
-            fscanf(fin, "%255s", file);
-            fclose(fin);
-            CfOut(cf_verbose, "", " -> Assuming document root for a knowledge base in %s", file);
-            strcpy(DOCROOT, name);
-            NewScalar("sys", "doc_root", DOCROOT, cf_str);
-        }
     }
 }

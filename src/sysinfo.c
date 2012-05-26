@@ -729,7 +729,12 @@ static void CreateClassesFromCanonification(char *canonified)
     }
 }
 
-/*******************************************************************/
+static void SetFlavour(const char *flavour)
+{
+    NewClass(flavour);
+    NewScalar("sys", "flavour", flavour, cf_str);
+    NewScalar("sys", "flavor", flavour, cf_str);
+}
 
 void OSClasses(void)
 {
@@ -771,7 +776,7 @@ void OSClasses(void)
     if (cfstat("/etc/generic-release", &statbuf) != -1)
     {
         CfOut(cf_verbose, "", "This appears to be a sun cobalt system.\n");
-        NewClass("SunCobalt");
+        SetFlavour("SunCobalt");
     }
 
     if (cfstat("/etc/SuSE-release", &statbuf) != -1)
@@ -804,19 +809,19 @@ void OSClasses(void)
     if (cfstat("/etc/UnitedLinux-release", &statbuf) != -1)
     {
         CfOut(cf_verbose, "", "This appears to be a UnitedLinux system.\n");
-        NewClass("UnitedLinux");
+        SetFlavour("UnitedLinux");
     }
 
     if (cfstat("/etc/gentoo-release", &statbuf) != -1)
     {
         CfOut(cf_verbose, "", "This appears to be a gentoo system.\n");
-        NewClass("gentoo");
+        SetFlavour("gentoo");
     }
 
     if (cfstat("/etc/arch-release", &statbuf) != -1)
     {
         CfOut(cf_verbose, "", "This appears to be an Arch Linux system.\n");
-        NewClass("archlinux");
+        SetFlavour("archlinux");
     }
 
     if (cfstat("/proc/vmware/version", &statbuf) != -1 || cfstat("/etc/vmware-release", &statbuf) != -1)
@@ -858,8 +863,7 @@ void OSClasses(void)
 
     char class[CF_BUFSIZE];
     snprintf(class, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, vbuff);
-    NewScalar("sys", "flavour", class, cf_str);
-    NewScalar("sys", "flavor", class, cf_str);
+    SetFlavour(class);
 
 #endif
 
@@ -930,8 +934,7 @@ void OSClasses(void)
         NewClass("unknown_ostype");
     }
 
-    NewScalar("sys", "flavour", "windows", cf_str);
-    NewScalar("sys", "flavor", "windows", cf_str);
+    SetFlavour("windows");
 
 #endif /* MINGW */
 
@@ -960,7 +963,7 @@ void OSClasses(void)
 #endif
 
 #if defined(__ANDROID__)
-    NewClass("android");
+    SetFlavour("android");
 #endif
 
 #if defined(HAVE_NOVA)
@@ -1013,9 +1016,7 @@ static void Linux_Oracle_VM_Server_Version(void)
         char buf[CF_BUFSIZE];
 
         snprintf(buf, CF_BUFSIZE, "oraclevmserver_%d", major);
-        NewClass(buf);
-        NewScalar("sys", "flavour", buf, cf_str);
-        NewScalar("sys", "flavor", buf, cf_str);
+        SetFlavour(buf);
     }
 
     if (revcomps > 1)
@@ -1071,9 +1072,7 @@ static void Linux_Oracle_Version(void)
         char buf[CF_BUFSIZE];
 
         snprintf(buf, CF_BUFSIZE, "oracle_%d", major);
-        NewClass(buf);
-        NewScalar("sys", "flavour", buf, cf_str);
-        NewScalar("sys", "flavor", buf, cf_str);
+        SetFlavour(buf);
 
         snprintf(buf, CF_BUFSIZE, "oracle_%d_%d", major, minor);
         NewClass(buf);
@@ -1154,9 +1153,7 @@ static int Linux_Fedora_Version(void)
         NewClass(classbuf);
         strcat(classbuf, "_");
         strcat(classbuf, strmajor);
-        NewClass(classbuf);
-        NewScalar("sys", "flavour", classbuf, cf_str);
-        NewScalar("sys", "flavor", classbuf, cf_str);
+        SetFlavour(classbuf);
     }
 
     return 0;
@@ -1384,10 +1381,8 @@ static int Linux_Redhat_Version(void)
         strcat(classbuf, "_");
 
         strcat(classbuf, strmajor);
-        NewClass(classbuf);
 
-        NewScalar("sys", "flavour", classbuf, cf_str);
-        NewScalar("sys", "flavor", classbuf, cf_str);
+        SetFlavour(classbuf);
 
         if (minor != -2)
         {
@@ -1556,9 +1551,7 @@ static int Linux_Suse_Version(void)
                 NewClass(classbuf);
                 strcat(classbuf, "_");
                 strcat(classbuf, strmajor);
-                NewClass(classbuf);
-                NewScalar("sys", "flavour", classbuf, cf_str);
-                NewScalar("sys", "flavor", classbuf, cf_str);
+                SetFlavour(classbuf);
                 strcat(classbuf, "_");
                 strcat(classbuf, strminor);
                 NewClass(classbuf);
@@ -1583,9 +1576,7 @@ static int Linux_Suse_Version(void)
                 strcat(classbuf, strminor);
                 NewClass(classbuf);
                 snprintf(classbuf, CF_MAXVARSIZE, "SuSE_%d", major);
-                NewScalar("sys", "flavour", classbuf, cf_str);
-                NewScalar("sys", "flavor", classbuf, cf_str);
-                NewClass(classbuf);
+                SetFlavour(classbuf);
 
                 CfOut(cf_verbose, "", " -> Discovered SuSE version %s", classbuf);
                 return 0;
@@ -1673,17 +1664,13 @@ static int Linux_Debian_Version(void)
         snprintf(classname, CF_MAXVARSIZE, "debian_%u_%u", major, release);
         NewClass(classname);
         snprintf(classname, CF_MAXVARSIZE, "debian_%u", major);
-        NewClass(classname);
-        NewScalar("sys", "flavour", classname, cf_str);
-        NewScalar("sys", "flavor", classname, cf_str);
+        SetFlavour(classname);
         break;
         /* Fall-through */
     case 1:
         CfOut(cf_verbose, "", "This appears to be a Debian %u system.", major);
         snprintf(classname, CF_MAXVARSIZE, "debian_%u", major);
-        NewClass(classname);
-        NewScalar("sys", "flavour", classname, cf_str);
-        NewScalar("sys", "flavor", classname, cf_str);
+        SetFlavour(classname);
         break;
 
     default:
@@ -1710,18 +1697,14 @@ static int Linux_Debian_Version(void)
         sscanf(buffer, "%*s %*s %[^./]", version);
         snprintf(buffer, CF_MAXVARSIZE, "debian_%s", version);
         NewClass("debian");
-        NewClass(buffer);
-        NewScalar("sys", "flavour", buffer, cf_str);
-        NewScalar("sys", "flavor", buffer, cf_str);
+        SetFlavour(buffer);
     }
     else if (strcmp(os, "Ubuntu") == 0)
     {
         sscanf(buffer, "%*s %[^.].%d", version, &release);
         snprintf(buffer, CF_MAXVARSIZE, "ubuntu_%s", version);
-        NewScalar("sys", "flavour", buffer, cf_str);
-        NewScalar("sys", "flavor", buffer, cf_str);
+        SetFlavour(buffer);
         NewClass("ubuntu");
-        NewClass(buffer);
         if (release >= 0)
         {
             snprintf(buffer, CF_MAXVARSIZE, "ubuntu_%s_%d", version, release);

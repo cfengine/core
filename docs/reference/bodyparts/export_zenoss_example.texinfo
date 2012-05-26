@@ -5,7 +5,7 @@ body hub control
 {
 am_policy_hub::
 
-  export_zenoss => "true";
+  export_zenoss => "/var/www/reports/summary.z";
 }
 
 @end verbatim

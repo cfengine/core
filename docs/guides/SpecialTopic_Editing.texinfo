@@ -409,7 +409,7 @@ files:
      edit_line => fix_file("$(staging_file)"),
  edit_defaults => empty,
          perms => mo("644","root"),
-        action => ifelapsed("60");
+        action => if_elapsed("60");
 }
 
 bundle edit_line fix_file(f)
@@ -421,7 +421,7 @@ insert_lines:
 
 replace_patterns:
     "searchstring"
-          replace_with => With("replacestring");
+          replace_with => value("replacestring");
 }
 
 @end verbatim

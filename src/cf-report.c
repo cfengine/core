@@ -300,18 +300,6 @@ int main(int argc, char *argv[])
 /* Level 1                                                                   */
 /*****************************************************************************/
 
-static void SyntaxExport()
-{
-#ifdef HAVE_NOVA
-    SyntaxTree2JavaScript();
-#else
-    Writer *writer = FileWriter(stdout);
-
-    SyntaxPrintAsJson(writer);
-    WriterClose(writer);
-#endif
-}
-
 /*****************************************************************************/
 
 static GenericAgentConfig CheckOpts(int argc, char **argv)

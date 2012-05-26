@@ -327,17 +327,11 @@ void AddGoalsToDB(char *goal_patterns)
 
 /* cf-report: cf-report.c */
 
-
-void SyntaxExport()
+void SyntaxExport(void)
 {
-# ifdef HAVE_NOVA
-    Nova_SyntaxTree2JavaScript();
-# else
     Writer *writer = FileWriter(stdout);
-
     SyntaxPrintAsJson(writer);
     WriterClose(writer);
-# endif
 }
 
 void LookupObservable(int i, char *name, char *desc)

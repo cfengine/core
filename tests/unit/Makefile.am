@@ -39,7 +39,8 @@ check_PROGRAMS = \
         thread_test \
 	package_versions_compare_test \
 	files_lib_test \
-	map_test
+	map_test \
+	policy_test
 
 TESTS = $(check_PROGRAMS)
 

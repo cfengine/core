@@ -32,6 +32,7 @@
 #include "granules.h"
 #include "files_names.h"
 #include "policy.h"
+#include "syntax.h"
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);

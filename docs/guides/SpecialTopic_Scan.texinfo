@@ -612,6 +612,7 @@ to the system that are dynamical.
 * Watching processes::          
 * Watching other system variables::  
 * Threshold monitoring::        
+* Port monitoring::             
 @end menu
 
 @node Watching processes, Watching other system variables, Process and network scanning, Process and network scanning
@@ -808,7 +809,7 @@ rootprocs_high_dev1::
 
 
 
-@node Threshold monitoring,  , Watching other system variables, Process and network scanning
+@node Threshold monitoring, Port monitoring, Watching other system variables, Process and network scanning
 @section Threshold monitoring
 
 The values learned by the monitoring daemon are made available to the
@@ -835,6 +836,80 @@ reports:
 access to the detailed running state of the system at all times. It is possible to
 defined quite complex policies, and to respond to incidents based on the specific
 data discovered.
+
+
+
+@node Port monitoring,  , Threshold monitoring, Process and network scanning
+@section Port monitoring
+
+The cf-monitord sets some system variables that allow you to see what ports are in
+use on a local host. These data are stored locally in @file{/var/cfengine/state/env_data}
+and may be seen in variables reports in the Mission Portal.
+
+@noindent The following are list variables:
+@table @samp
+@item mon.listening_ports
+A list of all open ports
+@item mon.listening_tcp4_ports
+A list of open TCP ports bound to IPv4.
+@item mon.listening_tcp6_ports
+A list of open TCP ports bound to IPv6.
+@item mon.listening_udp4_ports
+A list of open UDP ports bound to IPv4.
+@item mon.listening_udp6_ports
+A list of open UDP ports bound to IPv6.
+@end table
+@noindent The following are scalar array variables:
+@table @samp
+@item mon.tcp6_port_addr[@var{port}]
+Variable contains the value of the IPv6 address bound to the port with number given by the array slot.
+@item mon.tcp4_port_addr[@var{port}]
+Variable contains the value of the IPv4 address bound to the port with number given by the array slot.
+@end table
+
+
+This excerpt shows list variables and an array of addresses for the bindings to each port,
+both for IPv4 and IPv6.
+@sp 1
+@cartouche
+@verbatim
+
+@listening_ports={'80','5308','631','22','53','1194'}
+@listening_tcp6_ports={'631','22','53','80'}
+@listening_tcp4_ports={'5308','631','22','53','1194'}
+
+tcp6_port_addr[631]=::1
+tcp6_port_addr[22]=::
+tcp6_port_addr[53]=::
+tcp6_port_addr[80]=::
+tcp4_port_addr[5308]=0.0.0.0
+tcp4_port_addr[631]=127.0.0.1
+tcp4_port_addr[22]=0.0.0.0
+tcp4_port_addr[53]=0.0.0.0
+tcp4_port_addr[1194]=127.0.0.1 
+@end verbatim
+@end cartouche
+@sp 1
+This simple policy extract will generate a list of open ports on a given host:
+@verbatim
+reports:
+  monitoring::
+  "Open tcp4 port on $(mon.listening_tcp4_ports)";
+  "Open tcp6 port on $(mon.listening_tcp6_ports)";
+@end verbatim
+@sp 1
+Sample output:
+@example
+R: Open tcp4 port on 5308
+R: Open tcp4 port on 631
+R: Open tcp4 port on 22
+R: Open tcp4 port on 53
+R: Open tcp4 port on 1194
+R: Open tcp6 port on 631
+R: Open tcp6 port on 22
+R: Open tcp6 port on 53
+R: Open tcp6 port on 80
+@end example
 
 @node Log scanning, Intrusion detection, Process and network scanning, Top
 @chapter Log scanning

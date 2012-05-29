@@ -65,7 +65,6 @@ FnCall *NewFnCall(char *name, Rlist *args)
 
     fp->name = xstrdup(name);
     fp->args = args;
-    fp->argc = RlistLen(args);
 
     CfDebug("Installed ");
     if (DEBUG)
@@ -309,7 +308,7 @@ JsonElement *FnCallToJson(FnCall *fp)
     JsonObjectAppendString(object, "name", fp->name);
     JsonObjectAppendString(object, "type", "function-call");
 
-    JsonElement *argsArray = JsonArrayCreate(fp->argc);
+    JsonElement *argsArray = JsonArrayCreate(5);
 
     for (Rlist *rp = fp->args; rp != NULL; rp = rp->next)
     {

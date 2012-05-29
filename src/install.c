@@ -61,7 +61,8 @@ int RelevantBundle(const char *agent, const char *blocktype)
 
 /*******************************************************************/
 
-Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *args)
+Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *args,
+                     const char *source_path)
 {
     CfDebug("Appending new bundle %s %s (", type, name);
 
@@ -93,13 +94,15 @@ Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *
     bundle->name = xstrdup(name);
     bundle->type = xstrdup(type);
     bundle->args = args;
+    bundle->source_path = SafeStringDuplicate(source_path);
 
     return bundle;
 }
 
 /*******************************************************************/
 
-Body *AppendBody(Policy *policy, const char *name, const char *type, Rlist *args)
+Body *AppendBody(Policy *policy, const char *name, const char *type, Rlist *args,
+                 const char *source_path)
 {
     CfDebug("Appending new promise body %s %s(", type, name);
 
@@ -131,6 +134,7 @@ Body *AppendBody(Policy *policy, const char *name, const char *type, Rlist *args
     body->name = xstrdup(name);
     body->type = xstrdup(type);
     body->args = args;
+    body->source_path = SafeStringDuplicate(source_path);
 
     return body;
 }

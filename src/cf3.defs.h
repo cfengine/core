@@ -641,6 +641,7 @@ struct Bundle_
     SubType *subtypes;
     struct Bundle_ *next;
 
+    char *source_path;
     SourceOffset offset;
 };
 
@@ -658,6 +659,7 @@ struct Body_
     Constraint *conlist;
     Body *next;
 
+    char *source_path;
     SourceOffset offset;
 };
 

@@ -25,6 +25,7 @@
 
 #include "generic_agent.h"
 
+#include "constraints.h"
 #include "files_names.h"
 #include "ontology.h"
 #include "export_xml.h"

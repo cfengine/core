@@ -31,6 +31,7 @@
 
 #include "cf3.defs.h"
 
+#include "constraints.h"
 #include "promises.h"
 #include "vars.h"
 #include "syntax.h"

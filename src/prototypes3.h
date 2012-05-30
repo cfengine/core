@@ -148,8 +148,6 @@ void DeleteCompressedArray(CompressedArray *start);
 int CompressedArrayElementExists(CompressedArray *start, int key);
 char *CompressedArrayValue(CompressedArray *start, int key);
 
-#include "constraints.h"
-
 /* conversion.c */
 
 char *EscapeJson(char *s, char *out, int outSz);

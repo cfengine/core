@@ -28,6 +28,7 @@
 
 #include "files_names.h"
 #include "mod_access.h"
+#include "constraints.h"
 
 static void KeepContextBundles(Policy *policy);
 static void KeepServerPromise(Promise *pp);

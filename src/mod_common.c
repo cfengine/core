@@ -330,7 +330,7 @@ const BodySyntax CFRE_CONTROLBODY[] = /* enum cfrecontrol */
 
 const BodySyntax CFH_CONTROLBODY[] =  /* enum cfh_control */
 {
-    {"export_zenoss", cf_opts, CF_BOOL, "Make data available for Zenoss integration in docroot/reports/summary.z"},
+    {"export_zenoss", cf_str, CF_PATHRANGE, "Generate report for Zenoss integration"},
     {"federation", cf_slist, "", "The list of CFEngine servers supporting constellation integration with this hub"},
     {"exclude_hosts", cf_slist, "", "A list of IP addresses of hosts to exclude from report collection"},
     {"hub_schedule", cf_slist, "", "The class schedule used by cf-hub for report collation"},

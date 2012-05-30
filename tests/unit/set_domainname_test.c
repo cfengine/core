@@ -169,16 +169,6 @@ Item *SplitString(const char *string, char sep)
     fail();
 }
 
-void Nova_SaveDocumentRoot(void)
-{
-    fail();
-}
-
-void Nova_EnterpriseDiscovery(void)
-{
-    fail();
-}
-
 void Chop(char *str)
 {
     fail();

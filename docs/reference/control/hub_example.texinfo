@@ -3,7 +3,7 @@
 
 body hub control
 {
-export_zenoss => "true";
+export_zenoss => "/var/www/reports/summary.z";
 }
 
 @end verbatim

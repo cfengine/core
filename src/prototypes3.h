@@ -77,7 +77,6 @@ void DeleteExpArgs(Rlist *args);
 void CheckAutoBootstrap(void);
 void SetPolicyServer(char *name);
 void CreateFailSafe(char *name);
-void SetDocRoot(char *name);
 
 /* cfstream.c */
 

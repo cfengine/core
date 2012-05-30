@@ -92,9 +92,11 @@ Updated 29. May 2012
 @node CFEngine 3 Enterprise - the new CFEngine 3 Nova!, About CFEngine 3 Enterprise, Introduction, Introduction
 @section CFEngine 3 Enterprise - the new CFEngine 3 Nova!
 
-CFEngine 3 Enterprise is the next generation of CFEngine 3 Nova, upgraded with productivity and performance enhancements. We have made a new Mission Portal Engineering room tailored to the needs of infrastructure engineers, making it both easier and more powerful to use. Most notably we have introduced dynamic grouping of hosts through a flexible tree control, also referred to as the Navigation Tree. It allows system adminsitrators to flexibly group hosts based on CFEngine classes, both discovered (hard classes such as operating system, architecture, IP address, etc.) and user defined (soft classes such as webserver, development, staging, etc).
+CFEngine 3 Enterprise 2.2 is the next generation of CFEngine 3 Nova (successor of CFEngine 3 Nova 2.1.3), upgraded with productivity and performance enhancements. We have made a new Mission Portal Engineering room tailored to the needs of infrastructure engineers, making it both easier and more powerful to use. Most notably we have introduced dynamic grouping of hosts through a flexible tree control, also referred to as the Navigation Tree. It allows system adminsitrators to flexibly group hosts based on CFEngine classes, both discovered (hard classes such as operating system, architecture, IP address, etc.) and user defined (soft classes such as webserver, development, staging, etc).
 
 CFEngine 3 Nova is compatible with CFEngine 3 Enterprise and can easily be upgraded by following the instructions in this document.
+
+The launch of CFEngine 3 Enterprise also brings a new offering: CFEngine 3 Free Enterprise, our commercial enterprise product offered for free for up to 25 managed hosts. It differs from our commercial offer in that it has different licensing terms, different support and it is limited to a maximum of 25 hosts. The product is described in full detail at @url{http://cfengine.com/25free}.
 
 
 @c --------------------------------------------------
@@ -133,7 +135,7 @@ however.
 
 The default architecture and configuration skeleton of CFEngine 3 Enterprise is expected to scale to a few thousand hosts with a
 dedicated policy hub. In such a case, your hub machine should have at least 2 GB of memory and a modern processor.
-For machines under CFEngine’s management (clients), a full installation of CFEngine 3 Enterprise requires about 20 MB of disk storage. Otherwise disk usage depends on your specific policies, especially those that concern reporting. Each software component (agent) typically uses under 10 MB of memory, but spikes in memory usage can occur if several agents run simultaneously. CFEngine recommends to have 256 MB available memory on the clients.
+For machines under CFEngine's management (clients), a full installation of CFEngine 3 Enterprise requires about 20 MB of disk storage. Otherwise disk usage depends on your specific policies, especially those that concern reporting. Each software component (agent) typically uses under 10 MB of memory, but spikes in memory usage can occur if several agents run simultaneously. CFEngine recommends to have 256 MB available memory on the clients.
 
 
 @c --------------------------------------------------
@@ -310,7 +312,7 @@ created, and should contain data.
 You should see a login page like the one shown in the figure below:
 
 @sp 1
-@center @image{img-login,5cm,,Mission Portal login}
+@center @image{img-login-2-2,5cm,,Mission Portal login}
 @center Figure: Mission Portal login screen
 @sp 1
 

@@ -41,22 +41,23 @@ Policy *PolicyFromPromise(const Promise *promise);
 
 typedef enum
 {
-    CF_POLICY_ELEMENT_BUNDLE,
-    CF_POLICY_ELEMENT_BODY,
-    CF_POLICY_ELEMENT_SUBTYPE,
-    CF_POLICY_ELEMENT_PROMISE,
-    CF_POLICY_ELEMENT_CONSTRAINT
+    POLICY_ELEMENT_TYPE_BUNDLE,
+    POLICY_ELEMENT_TYPE_BODY,
+    POLICY_ELEMENT_TYPE_SUBTYPE,
+    POLICY_ELEMENT_TYPE_PROMISE,
+    POLICY_ELEMENT_TYPE_CONSTRAINT
 } PolicyElementType;
 
 typedef struct
 {
     PolicyElementType type;
     const void *subject;
-    char *error_msg;
+    char *message;
 } PolicyError;
 
 PolicyError *PolicyErrorNew(PolicyElementType type, const void *subject, const char *error_msg, ...);
 void PolicyErrorDestroy(PolicyError *error);
+void PolicyErrorWrite(Writer *writer, const PolicyError *error);
 
 bool PolicyCheck(const Policy *policy, Sequence *errors);
 

@@ -182,7 +182,7 @@ Promise *DeRefCopyPromise(char *scopeid, Promise *pp)
 
             /* Keep the referent body type as a boolean for convenience when checking later */
 
-            AppendConstraint(&(pcopy->conlist), cp->lval, (Rval) {xstrdup("true"), CF_SCALAR}, cp->classes, false);
+            ConstraintAppendToPromise(pcopy, cp->lval, (Rval) {xstrdup("true"), CF_SCALAR}, cp->classes, false);
 
             CfDebug("Handling body-lval \"%s\"\n", cp->lval);
 
@@ -210,7 +210,7 @@ Promise *DeRefCopyPromise(char *scopeid, Promise *pp)
                 {
                     CfDebug("Doing arg-mapped sublval = %s (promises.c)\n", scp->lval);
                     returnval = ExpandPrivateRval("body", scp->rval);
-                    AppendConstraint(&(pcopy->conlist), scp->lval, returnval, scp->classes, false);
+                    ConstraintAppendToPromise(pcopy, scp->lval, returnval, scp->classes, false);
                 }
 
                 DeleteScope("body");
@@ -232,7 +232,7 @@ Promise *DeRefCopyPromise(char *scopeid, Promise *pp)
                         CfDebug("Doing sublval = %s (promises.c)\n", scp->lval);
                         Rval newrv = CopyRvalItem(scp->rval);
 
-                        AppendConstraint(&(pcopy->conlist), scp->lval, newrv, scp->classes, false);
+                        ConstraintAppendToPromise(pcopy, scp->lval, newrv, scp->classes, false);
                     }
                 }
             }
@@ -250,7 +250,7 @@ Promise *DeRefCopyPromise(char *scopeid, Promise *pp)
 
             Rval newrv = CopyRvalItem(cp->rval);
 
-            scp = AppendConstraint(&(pcopy->conlist), cp->lval, newrv, cp->classes, false);
+            scp = ConstraintAppendToPromise(pcopy, cp->lval, newrv, cp->classes, false);
         }
     }
 
@@ -329,7 +329,7 @@ Promise *ExpandDeRefPromise(char *scopeid, Promise *pp)
             DeleteRvalItem(returnval);
         }
 
-        AppendConstraint(&(pcopy->conlist), cp->lval, final, cp->classes, false);
+        ConstraintAppendToPromise(pcopy, cp->lval, final, cp->classes, false);
 
         if (strcmp(cp->lval, "comment") == 0)
         {
@@ -446,7 +446,7 @@ Promise *NewPromise(char *typename, char *promiser)
     pp->ref_alloc = 'n';
     pp->has_subbundles = false;
 
-    AppendConstraint(&(pp->conlist), "handle", (Rval) {xstrdup("internal_promise"), CF_SCALAR}, NULL, false);
+    ConstraintAppendToPromise(pp, "handle", (Rval) {xstrdup("internal_promise"), CF_SCALAR}, NULL, false);
 
     return pp;
 }

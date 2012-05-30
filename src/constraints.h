@@ -26,9 +26,16 @@
 #define CFENGINE_CONSTRAINTS_H
 
 #include "cf3.defs.h"
+#include "policy.h"
 
 struct Constraint_
 {
+    PolicyElementType type;
+    union {
+        Promise *promise;
+        Body *body;
+    } parent;
+
     char *lval;
     Rval rval;
 
@@ -40,7 +47,9 @@ struct Constraint_
     Constraint *next;
 };
 
-Constraint *AppendConstraint(Constraint **conlist, char *lval, Rval rval, char *classes, bool references_body);
+Constraint *ConstraintAppendToPromise(Promise *promise, const char *lval, Rval rval, const char *classes, bool references_body);
+Constraint *ConstraintAppendToBody(Body *body, const char *lval, Rval rval, const char *classes, bool references_body);
+
 Constraint *GetConstraint(Promise *promise, const char *lval);
 void DeleteConstraintList(Constraint *conlist);
 void EditScalarConstraint(Constraint *conlist, char *lval, char *rval);

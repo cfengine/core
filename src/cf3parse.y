@@ -217,11 +217,11 @@ selection:             id                         /* BODY ONLY */
 
                                if (P.currentclasses == NULL)
                                {
-                                   cp = AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval,"any",P.isbody);
+                                   cp = ConstraintAppendToBody(P.currentbody, P.lval, P.rval, "any", P.references_body);
                                }
                                else
                                {
-                                   cp = AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval,P.currentclasses,P.isbody);
+                                   cp = ConstraintAppendToBody(P.currentbody,P.lval,P.rval,P.currentclasses,P.references_body);
                                }
                                cp->offset.line = P.line_no;
                                cp->offset.start = P.offsets.last_id;
@@ -395,7 +395,7 @@ constraint:            id                        /* BUNDLE ONLY */
                                Constraint *cp = NULL;
                                SubTypeSyntax ss = CheckSubType(P.blocktype,P.currenttype);
                                CheckConstraint(P.currenttype, P.blockid, P.lval, P.rval, ss);
-                               cp = AppendConstraint(&(P.currentpromise->conlist),P.lval,P.rval,"any",P.isbody);
+                               cp = ConstraintAppendToPromise(P.currentpromise, P.lval, P.rval, "any", P.references_body);
                                cp->offset.line = P.line_no;
                                cp->offset.start = P.offsets.last_id;
                                cp->offset.end = P.offsets.current;
@@ -443,7 +443,7 @@ id:                    ID
 rval:                  ID
                        {
                            P.rval = (Rval) { xstrdup(P.currentid), CF_SCALAR };
-                           P.isbody = true;
+                           P.references_body = true;
                            CfDebug("Recorded IDRVAL %s\n", P.currentid);
                        }
                      | QSTRING
@@ -452,7 +452,7 @@ rval:                  ID
                            CfDebug("Recorded scalarRVAL %s\n", P.currentstring);
 
                            P.currentstring = NULL;
-                           P.isbody = false;
+                           P.references_body = false;
 
                            if (P.currentpromise)
                            {
@@ -468,18 +468,18 @@ rval:                  ID
                            CfDebug("Recorded saclarvariableRVAL %s\n", P.currentstring);
 
                            P.currentstring = NULL;
-                           P.isbody = false;
+                           P.references_body = false;
                        }
                      | list
                        {
                            P.rval = (Rval) { P.currentRlist, CF_LIST };
                            P.currentRlist = NULL;
-                           P.isbody = false;
+                           P.references_body = false;
                        }
                      | usefunction
                        {
-                           P.isbody = false;
                            P.rval = (Rval) { P.currentfncall[P.arg_nesting+1], CF_FNCALL };
+                           P.references_body = false;
                        };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

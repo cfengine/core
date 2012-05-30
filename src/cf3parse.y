@@ -401,7 +401,6 @@ constraint:            id                        /* BUNDLE ONLY */
                                cp->offset.end = P.offsets.current;
                                cp->offset.context = P.offsets.last_class_id;
                                P.currentstype->offset.end = P.offsets.current;
-                               CheckPromise(P.currentpromise);
 
                                // Cache whether there are subbundles for later $(this.promiser) logic
 

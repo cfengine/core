@@ -61,7 +61,7 @@ Policy *PolicyFromPromise(const Promise *promise)
 
 static bool PolicyCheckPromiseVars(const Promise *pp, Sequence *errors)
 {
-    bool has_errors = false;
+    bool success = true;
 
     // ensure variables are declared with only one type.
     {
@@ -75,19 +75,19 @@ static bool PolicyCheckPromiseVars(const Promise *pp, Sequence *errors)
                     SequenceAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, cp,
                                                           "Variable contains existing data type contstraint %s, tried to redefine with %s",
                                                           data_type, cp->lval));
-                    has_errors = true;
+                    success = false;
                 }
                 data_type = cp->lval;
             }
         }
     }
 
-    return has_errors;
+    return success;
 }
 
 static bool PolicyCheckPromiseMethods(const Promise *pp, Sequence *errors)
 {
-    bool has_errors = false;
+    bool success = true;
 
     for (const Constraint *cp = pp->conlist; cp; cp = cp->next)
     {
@@ -106,58 +106,58 @@ static bool PolicyCheckPromiseMethods(const Promise *pp, Sequence *errors)
                         SequenceAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, cp,
                                                               "Conflicting arity in calling bundle %s, expected %d arguments, %d given",
                                                               call->name, RlistLen(callee->args), RlistLen(call->args)));
-                        has_errors = true;
+                        success = false;
                     }
                 }
             }
         }
     }
 
-    return has_errors;
+    return success;
 }
 
 bool PolicyCheckPromise(const Promise *pp, Sequence *errors)
 {
-    bool has_errors = false;
+    bool success = true;
 
     if (StringSafeCompare(pp->agentsubtype, "vars") == 0)
     {
-        has_errors |= PolicyCheckPromiseVars(pp, errors);
+        success &= PolicyCheckPromiseVars(pp, errors);
     }
     else if (StringSafeCompare(pp->agentsubtype, "methods") == 0)
     {
-        has_errors |= PolicyCheckPromiseMethods(pp, errors);
+        success &= PolicyCheckPromiseMethods(pp, errors);
     }
 
-    return has_errors;
+    return success;
 }
 
 static bool PolicyCheckBundle(const Bundle *bp, Sequence *errors)
 {
-    bool has_errors = false;
+    bool success = true;
 
     for (const SubType *type = bp->subtypes; type; type = type->next)
     {
         for (const Promise *pp = type->promiselist; pp; pp = pp->next)
         {
-            has_errors |= PolicyCheckPromise(pp, errors);
+            success &= PolicyCheckPromise(pp, errors);
         }
     }
 
-    return has_errors;
+    return success;
 }
 
 
 bool PolicyCheck(const Policy *policy, Sequence *errors)
 {
-    bool has_errors = false;
+    bool success = true;
 
     for (const Bundle *bp = policy->bundles; bp; bp = bp->next)
     {
-        has_errors |= PolicyCheckBundle(bp, errors);
+        success &= PolicyCheckBundle(bp, errors);
     }
 
-    return has_errors;
+    return success;
 }
 
 PolicyError *PolicyErrorNew(PolicyElementType type, const void *subject, const char *error_msg, ...)
@@ -282,5 +282,5 @@ void PolicyErrorWrite(Writer *writer, const PolicyError *error)
     const char *path = PolicyElementSourceFile(error->type, error->subject);
 
     // FIX: need to track columns in SourceOffset
-    WriterWriteF(writer, "%s:%d:%d: error: %s\n", path, offset.line, 0, error->message);
+    WriterWriteF(writer, "%s:%d:%d: error: %s\n", path, (int)offset.line, 0, error->message);
 }

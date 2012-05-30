@@ -35,7 +35,7 @@ static void PostCheckConstraint(char *type, char *bundle, char *lval, Rval rval)
 
 /*******************************************************************/
 
-Constraint *AppendConstraint(Constraint **conlist, char *lval, Rval rval, char *classes, int body)
+Constraint *AppendConstraint(Constraint **conlist, char *lval, Rval rval, char *classes, bool references_body)
 /* Note rval must be pre-allocated for this function, e.g. use
    CopyRvalItem in call.  This is to make the parser and var expansion
    non-leaky */
@@ -93,7 +93,7 @@ Constraint *AppendConstraint(Constraint **conlist, char *lval, Rval rval, char *
     cp->audit = AUDITPTR;
     cp->lval = sp;
     cp->rval = rval;
-    cp->isbody = body;
+    cp->references_body = references_body;
 
     return cp;
 }

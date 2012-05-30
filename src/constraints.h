@@ -31,15 +31,16 @@ struct Constraint_
 {
     char *lval;
     Rval rval;
+
     char *classes;              /* only used within bodies */
-    int isbody;
+    bool references_body;
     Audit *audit;
-    Constraint *next;
 
     SourceOffset offset;
+    Constraint *next;
 };
 
-Constraint *AppendConstraint(Constraint **conlist, char *lval, Rval rval, char *classes, int body);
+Constraint *AppendConstraint(Constraint **conlist, char *lval, Rval rval, char *classes, bool references_body);
 Constraint *GetConstraint(Promise *promise, const char *lval);
 void DeleteConstraintList(Constraint *conlist);
 void EditScalarConstraint(Constraint *conlist, char *lval, char *rval);

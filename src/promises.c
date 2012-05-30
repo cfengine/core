@@ -149,7 +149,7 @@ Promise *DeRefCopyPromise(char *scopeid, Promise *pp)
         {
         case CF_SCALAR:
             bodyname = (char *) cp->rval.item;
-            if (cp->isbody)
+            if (cp->references_body)
             {
                 bp = IsBody(bodies, bodyname);
             }
@@ -240,7 +240,7 @@ Promise *DeRefCopyPromise(char *scopeid, Promise *pp)
         {
             Policy *policy = PolicyFromPromise(pp);
 
-            if (cp->isbody && !IsBundle(policy->bundles, bodyname))
+            if (cp->references_body && !IsBundle(policy->bundles, bodyname))
             {
                 CfOut(cf_error, "",
                       "Apparent body \"%s()\" was undeclared, but used in a promise near line %zu of %s (possible unquoted literal value)",

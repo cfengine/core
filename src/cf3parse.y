@@ -10,6 +10,7 @@
 #include "cf3.defs.h"
 #include "parser_state.h"
 
+#include "constraints.h"
 // FIX: remove
 #include "syntax.h"
 

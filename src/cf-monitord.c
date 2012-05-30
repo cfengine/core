@@ -25,6 +25,8 @@
 #include "generic_agent.h"
 #include "monitoring.h"
 
+#include "constraints.h"
+
 /*****************************************************************************/
 
 static void ThisAgentInit(void);

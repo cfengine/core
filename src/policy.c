@@ -25,6 +25,7 @@
 
 #include "policy.h"
 
+#include "constraints.h"
 #include "syntax.h"
 
 #include <assert.h>

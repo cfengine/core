@@ -380,9 +380,8 @@ bool StringContainsVar(const char *s, const char *v)
 
 /*********************************************************************/
 
-int IsCf3VarString(char *str)
+int IsCf3VarString(const char *str)
 {
-    char *sp;
     char left = 'x', right = 'x';
     int dollar = false;
     int bracks = 0, vars = 0;
@@ -394,7 +393,7 @@ int IsCf3VarString(char *str)
         return false;
     }
 
-    for (sp = str; *sp != '\0'; sp++)   /* check for varitems */
+    for (const char *sp = str; *sp != '\0'; sp++)   /* check for varitems */
     {
         switch (*sp)
         {

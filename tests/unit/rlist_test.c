@@ -162,7 +162,7 @@ void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
     fail();
 }
 
-int IsNakedVar(char *str, char vtype)
+int IsNakedVar(const char *str, char vtype)
 {
     fail();
 }

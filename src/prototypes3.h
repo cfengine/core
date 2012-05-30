@@ -354,7 +354,7 @@ FnCall *ExpandFnCall(char *contextid, FnCall *f, int expandnaked);
 Rval ExpandPrivateRval(char *contextid, Rval rval);
 Rlist *ExpandList(char *scopeid, Rlist *list, int expandnaked);
 Rval EvaluateFinalRval(char *scopeid, Rval rval, int forcelist, Promise *pp);
-int IsNakedVar(char *str, char vtype);
+int IsNakedVar(const char *str, char vtype);
 void GetNaked(char *s1, char *s2);
 void ConvergeVarHashPromise(char *scope, Promise *pp, int checkdup);
 int ExpandPrivateScalar(const char *contextid, const char *string, char buffer[CF_EXPANDSIZE]);
@@ -658,7 +658,7 @@ int MatchPolicy(char *needle, char *haystack, Attributes a, Promise *pp);
 
 /* modes.c */
 
-int ParseModeString(char *modestring, mode_t *plusmask, mode_t *minusmask);
+int ParseModeString(const char *modestring, mode_t *plusmask, mode_t *minusmask);
 
 /* net.c */
 
@@ -869,7 +869,7 @@ enum cfdatatype GetVariable(const char *scope, const char *lval, Rval *returnv);
 void DeleteVariable(char *scope, char *id);
 bool StringContainsVar(const char *s, const char *v);
 int DefinedVariable(char *name);
-int IsCf3VarString(char *str);
+int IsCf3VarString(const char *str);
 int BooleanControl(const char *scope, const char *name);
 const char *ExtractInnerCf3VarString(const char *str, char *substr);
 const char *ExtractOuterCf3VarString(const char *str, char *substr);

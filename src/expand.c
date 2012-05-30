@@ -938,9 +938,8 @@ int IsExpandable(const char *str)
 
 /*********************************************************************/
 
-int IsNakedVar(char *str, char vtype)
+int IsNakedVar(const char *str, char vtype)
 {
-    char *sp, last;
     int count = 0;
 
     if (str == NULL || strlen(str) == 0)
@@ -948,7 +947,7 @@ int IsNakedVar(char *str, char vtype)
         return false;
     }
 
-    last = *(str + strlen(str) - 1);
+    char last = *(str + strlen(str) - 1);
 
     if (strlen(str) < 3)
     {
@@ -981,7 +980,7 @@ int IsNakedVar(char *str, char vtype)
         break;
     }
 
-    for (sp = str; *sp != '\0'; sp++)
+    for (const char *sp = str; *sp != '\0'; sp++)
     {
         switch (*sp)
         {

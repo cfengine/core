@@ -31,7 +31,7 @@
 static PromiseIdent *PromiseIdExists(char *handle);
 static void DeleteAllPromiseIdsRecurse(PromiseIdent *key);
 static int VerifyConstraintName(const char *lval);
-static void PostCheckConstraint(char *type, char *bundle, char *lval, Rval rval);
+static void PostCheckConstraint(const char *type, const char *bundle, const char *lval, Rval rval);
 
 /*******************************************************************/
 
@@ -712,7 +712,7 @@ void ReCheckAllConstraints(Promise *pp)
 
 /*****************************************************************************/
 
-static void PostCheckConstraint(char *type, char *bundle, char *lval, Rval rval)
+static void PostCheckConstraint(const char *type, const char *bundle, const char *lval, Rval rval)
 {
     SubTypeSyntax ss;
     int i, j, l, m;

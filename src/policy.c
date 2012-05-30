@@ -72,7 +72,7 @@ static bool PolicyCheckPromiseVars(const Promise *pp, Sequence *errors)
             {
                 if (data_type != NULL)
                 {
-                    SequenceAppend(errors, PolicyErrorNew(CF_POLICY_ELEMENT_CONSTRAINT, cp,
+                    SequenceAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, cp,
                                                           "Variable contains existing data type contstraint %s, tried to redefine with %s",
                                                           data_type, cp->lval));
                     has_errors = true;
@@ -103,7 +103,7 @@ static bool PolicyCheckPromiseMethods(const Promise *pp, Sequence *errors)
                 {
                     if (RlistLen(call->args) != RlistLen(callee->args))
                     {
-                        SequenceAppend(errors, PolicyErrorNew(CF_POLICY_ELEMENT_CONSTRAINT, cp,
+                        SequenceAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, cp,
                                                               "Conflicting arity in calling bundle %s, expected %d arguments, %d given",
                                                               call->name, RlistLen(callee->args), RlistLen(call->args)));
                         has_errors = true;
@@ -169,7 +169,7 @@ PolicyError *PolicyErrorNew(PolicyElementType type, const void *subject, const c
 
     va_list args;
     va_start(args, error_msg);
-    xvasprintf(&error->error_msg, error_msg, args);
+    xvasprintf(&error->message, error_msg, args);
     va_end(args);
 
     return error;
@@ -177,6 +177,110 @@ PolicyError *PolicyErrorNew(PolicyElementType type, const void *subject, const c
 
 void PolicyErrorDestroy(PolicyError *error)
 {
-    free(error->error_msg);
+    free(error->message);
     free(error);
+}
+
+static SourceOffset PolicyElementSourceOffset(PolicyElementType type, const void *element)
+{
+    assert(element);
+
+    switch (type)
+    {
+        case POLICY_ELEMENT_TYPE_BUNDLE:
+        {
+            const Bundle *bundle = (const Bundle *)element;
+            return bundle->offset;
+        }
+
+        case POLICY_ELEMENT_TYPE_BODY:
+        {
+            const Body *body = (const Body *)element;
+            return body->offset;
+        }
+
+        case POLICY_ELEMENT_TYPE_SUBTYPE:
+        {
+            const SubType *type = (const SubType *)element;
+            return type->offset;
+        }
+
+        case POLICY_ELEMENT_TYPE_PROMISE:
+        {
+            const Promise *promise = (const Promise *)element;
+            return promise->offset;
+        }
+
+        case POLICY_ELEMENT_TYPE_CONSTRAINT:
+        {
+            const Constraint *constraint = (const Constraint *)element;
+            return constraint->offset;
+        }
+
+        default:
+            assert(false && "Invalid policy element");
+            return (SourceOffset) { 0 };
+    }
+}
+
+static char *PolicyElementSourceFile(PolicyElementType type, const void *element)
+{
+    assert(element);
+
+    switch (type)
+    {
+        case POLICY_ELEMENT_TYPE_BUNDLE:
+        {
+            const Bundle *bundle = (const Bundle *)element;
+            return bundle->source_path;
+        }
+
+        case POLICY_ELEMENT_TYPE_BODY:
+        {
+            const Body *body = (const Body *)element;
+            return body->source_path;
+        }
+
+        case POLICY_ELEMENT_TYPE_SUBTYPE:
+        {
+            const SubType *type = (const SubType *)element;
+            return PolicyElementSourceFile(POLICY_ELEMENT_TYPE_BUNDLE, type->parent_bundle);
+        }
+
+        case POLICY_ELEMENT_TYPE_PROMISE:
+        {
+            const Promise *promise = (const Promise *)element;
+            return PolicyElementSourceFile(POLICY_ELEMENT_TYPE_SUBTYPE, promise->parent_subtype);
+        }
+
+        case POLICY_ELEMENT_TYPE_CONSTRAINT:
+        {
+            const Constraint *constraint = (const Constraint *)element;
+            switch (constraint->type)
+            {
+                case POLICY_ELEMENT_TYPE_BODY:
+                    return PolicyElementSourceFile(POLICY_ELEMENT_TYPE_BODY, constraint->parent.body);
+
+                case POLICY_ELEMENT_TYPE_PROMISE:
+                    return PolicyElementSourceFile(POLICY_ELEMENT_TYPE_PROMISE, constraint->parent.promise);
+
+                default:
+                    assert(false && "Constraint has invalid parent element type");
+                    return NULL;
+            }
+        }
+
+        default:
+            assert(false && "Invalid policy element");
+            return NULL;
+    }
+}
+
+void PolicyErrorWrite(Writer *writer, const PolicyError *error)
+{
+    SourceOffset offset = PolicyElementSourceOffset(error->type, error->subject);
+    const char *path = PolicyElementSourceFile(error->type, error->subject);
+
+    // FIX: need to track columns in SourceOffset
+    WriterWriteF(writer, "%s:%d:%d: error: %s\n", path, offset.line, 0, error->message);
 }

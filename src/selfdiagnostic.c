@@ -179,10 +179,10 @@ void TestExpandPromise()
     pp.donep = &(pp.done);
     pp.conn = NULL;
 
-    AppendConstraint(&(pp.conlist), "lval1", (Rval) {xstrdup("rval1"), CF_SCALAR}, "lower classes1", false);
-    AppendConstraint(&(pp.conlist), "lval2", (Rval) {xstrdup("rval2"), CF_SCALAR}, "lower classes2", false);
+    ConstraintAppendToPromise(&pp, "lval1", (Rval) {xstrdup("rval1"), CF_SCALAR}, "lower classes1", false);
+    ConstraintAppendToPromise(&pp, "lval2", (Rval) {xstrdup("rval2"), CF_SCALAR}, "lower classes2", false);
 
-//getuid AppendConstraint(&(pp.conlist),"lval2",,CF_SCALAR,"lower classes2");
+//getuid ConstraintAppendToPromise(&pp,"lval2",,CF_SCALAR,"lower classes2");
 
 /* Now copy promise and delete */
 
@@ -236,9 +236,9 @@ void TestExpandVariables()
     args = SplitStringAsRList("$(administrator)", ',');
     fp = NewFnCall("getuid", args);
 
-    AppendConstraint(&(pp.conlist), "lval1", (Rval) {xstrdup("@(one)"), CF_SCALAR}, "lower classes1", false);
-    AppendConstraint(&(pp.conlist), "lval2", (Rval) {xstrdup("$(four)"), CF_SCALAR}, "upper classes1", false);
-    AppendConstraint(&(pp.conlist), "lval3", (Rval) {fp, CF_FNCALL}, "upper classes2", false);
+    ConstraintAppendToPromise(&pp, "lval1", (Rval) {xstrdup("@(one)"), CF_SCALAR}, "lower classes1", false);
+    ConstraintAppendToPromise(&pp, "lval2", (Rval) {xstrdup("$(four)"), CF_SCALAR}, "upper classes1", false);
+    ConstraintAppendToPromise(&pp, "lval3", (Rval) {fp, CF_FNCALL}, "upper classes2", false);
 
 /* Now copy promise and delete */
 

@@ -1040,7 +1040,7 @@ static void SetAnyMissingDefaults(Promise *pp)
     {
         if (GetConstraint(pp, "package_method") == NULL)
         {
-            AppendConstraint(&(pp->conlist), "package_method", (Rval) {"generic", CF_SCALAR}, "any", true);
+            ConstraintAppendToPromise(pp, "package_method", (Rval) {"generic", CF_SCALAR}, "any", true);
         }
     }
 }

@@ -25,6 +25,7 @@
 
 #include "files_names.h"
 
+#include "constraints.h"
 #include "promises.h"
 #include "cf3.defs.h"
 #include "dir.h"

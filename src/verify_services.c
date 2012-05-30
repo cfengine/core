@@ -24,6 +24,7 @@
 
 #include "cf3.defs.h"
 
+#include "constraints.h"
 #include "promises.h"
 #include "vars.h"
 
@@ -208,7 +209,7 @@ static void DoVerifyServices(Attributes a, Promise *pp)
 
         default_bundle = NewFnCall("standard_services", args);
 
-        AppendConstraint(&(pp->conlist), "service_bundle", (Rval) {default_bundle, CF_FNCALL}, "any", false);
+        ConstraintAppendToPromise(pp, "service_bundle", (Rval) {default_bundle, CF_FNCALL}, "any", false);
         a.havebundle = true;
     }
 

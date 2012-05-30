@@ -25,6 +25,7 @@
 
 #include "cf3.defs.h"
 
+#include "constraints.h"
 #include "promises.h"
 #include "files_names.h"
 #include "vars.h"
@@ -260,7 +261,7 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
             *(sp-1) = '\0'; // StripTrailingNewline(promiser) and terminate
 
             np = AppendPromise(tp, promiser, (Rval) { NULL, CF_NOPROMISEE }, context, bundlename, "edit_line");
-            AppendConstraint(&(np->conlist), "insert_type", (Rval) { xstrdup("preserve_block"), CF_SCALAR }, "any", false);
+            ConstraintAppendToPromise(np, "insert_type", (Rval) { xstrdup("preserve_block"), CF_SCALAR }, "any", false);
 
             DeleteItemList(lines);
             free(promiser);
@@ -277,7 +278,7 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
                 //install independent promise line
                 StripTrailingNewline(buffer);
                 np = AppendPromise(tp, buffer, (Rval) { NULL, CF_NOPROMISEE }, context, bundlename, "edit_line");
-                AppendConstraint(&(np->conlist), "insert_type", (Rval) { xstrdup("preserve_block"), CF_SCALAR }, "any", false);
+                ConstraintAppendToPromise(np, "insert_type", (Rval) { xstrdup("preserve_block"), CF_SCALAR }, "any", false);
             }
         }
     }

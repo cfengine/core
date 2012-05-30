@@ -10,6 +10,7 @@
 #include "cf3.defs.h"
 #include "parser_state.h"
 
+#include "constraints.h"
 // FIX: remove
 #include "syntax.h"
 
@@ -121,7 +122,7 @@ bundlebody:            '{'
 
                            if (!INSTALL_SKIP)
                            {
-                               P.currentbundle = AppendBundle(P.policy, P.blockid, P.blocktype, P.useargs);
+                               P.currentbundle = AppendBundle(P.policy, P.blockid, P.blocktype, P.useargs, P.filename);
                                P.currentbundle->offset.line = P.line_no;
                                P.currentbundle->offset.start = P.offsets.last_block_id;
                            }
@@ -162,7 +163,7 @@ statement:             category
 
 bodybody:              '{'
                        {
-                           P.currentbody = AppendBody(P.policy, P.blockid, P.blocktype, P.useargs);
+                           P.currentbody = AppendBody(P.policy, P.blockid, P.blocktype, P.useargs, P.filename);
                            if (P.currentbody)
                            {
                                P.currentbody->offset.line = P.line_no;
@@ -216,11 +217,11 @@ selection:             id                         /* BODY ONLY */
 
                                if (P.currentclasses == NULL)
                                {
-                                   cp = AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval,"any",P.isbody);
+                                   cp = ConstraintAppendToBody(P.currentbody, P.lval, P.rval, "any", P.references_body);
                                }
                                else
                                {
-                                   cp = AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval,P.currentclasses,P.isbody);
+                                   cp = ConstraintAppendToBody(P.currentbody,P.lval,P.rval,P.currentclasses,P.references_body);
                                }
                                cp->offset.line = P.line_no;
                                cp->offset.start = P.offsets.last_id;
@@ -394,13 +395,12 @@ constraint:            id                        /* BUNDLE ONLY */
                                Constraint *cp = NULL;
                                SubTypeSyntax ss = CheckSubType(P.blocktype,P.currenttype);
                                CheckConstraint(P.currenttype, P.blockid, P.lval, P.rval, ss);
-                               cp = AppendConstraint(&(P.currentpromise->conlist),P.lval,P.rval,"any",P.isbody);
+                               cp = ConstraintAppendToPromise(P.currentpromise, P.lval, P.rval, "any", P.references_body);
                                cp->offset.line = P.line_no;
                                cp->offset.start = P.offsets.last_id;
                                cp->offset.end = P.offsets.current;
                                cp->offset.context = P.offsets.last_class_id;
                                P.currentstype->offset.end = P.offsets.current;
-                               CheckPromise(P.currentpromise);
 
                                // Cache whether there are subbundles for later $(this.promiser) logic
 
@@ -442,7 +442,7 @@ id:                    ID
 rval:                  ID
                        {
                            P.rval = (Rval) { xstrdup(P.currentid), CF_SCALAR };
-                           P.isbody = true;
+                           P.references_body = true;
                            CfDebug("Recorded IDRVAL %s\n", P.currentid);
                        }
                      | QSTRING
@@ -451,7 +451,7 @@ rval:                  ID
                            CfDebug("Recorded scalarRVAL %s\n", P.currentstring);
 
                            P.currentstring = NULL;
-                           P.isbody = false;
+                           P.references_body = false;
 
                            if (P.currentpromise)
                            {
@@ -467,18 +467,18 @@ rval:                  ID
                            CfDebug("Recorded saclarvariableRVAL %s\n", P.currentstring);
 
                            P.currentstring = NULL;
-                           P.isbody = false;
+                           P.references_body = false;
                        }
                      | list
                        {
                            P.rval = (Rval) { P.currentRlist, CF_LIST };
                            P.currentRlist = NULL;
-                           P.isbody = false;
+                           P.references_body = false;
                        }
                      | usefunction
                        {
-                           P.isbody = false;
                            P.rval = (Rval) { P.currentfncall[P.arg_nesting+1], CF_FNCALL };
+                           P.references_body = false;
                        };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

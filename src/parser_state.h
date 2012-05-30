@@ -45,7 +45,7 @@ struct ParserState
 
     char lval[CF_MAXVARSIZE];
     Rval rval;
-    int isbody;
+    bool references_body;
 
     char *promiser;
     void *promisee;

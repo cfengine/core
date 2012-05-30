@@ -26,6 +26,7 @@
 #define CFENGINE_POLICY_H
 
 #include "cf3.defs.h"
+#include "sequence.h"
 
 struct Policy_
 {
@@ -37,6 +38,31 @@ Policy *PolicyNew(void);
 void PolicyDestroy(Policy *policy);
 
 Policy *PolicyFromPromise(const Promise *promise);
+
+typedef enum
+{
+    POLICY_ELEMENT_TYPE_BUNDLE,
+    POLICY_ELEMENT_TYPE_BODY,
+    POLICY_ELEMENT_TYPE_SUBTYPE,
+    POLICY_ELEMENT_TYPE_PROMISE,
+    POLICY_ELEMENT_TYPE_CONSTRAINT
+} PolicyElementType;
+
+typedef struct
+{
+    PolicyElementType type;
+    const void *subject;
+    char *message;
+} PolicyError;
+
+PolicyError *PolicyErrorNew(PolicyElementType type, const void *subject, const char *error_msg, ...);
+void PolicyErrorDestroy(PolicyError *error);
+void PolicyErrorWrite(Writer *writer, const PolicyError *error);
+
+bool PolicyCheck(const Policy *policy, Sequence *errors);
+
+
+
 
 
 #endif

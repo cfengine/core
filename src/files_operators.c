@@ -25,6 +25,7 @@
 
 #include "cf3.defs.h"
 
+#include "constraints.h"
 #include "promises.h"
 #include "dir.h"
 #include "dbm_api.h"
@@ -1670,16 +1671,16 @@ static void DeleteDirectoryTree(char *path, Promise *pp)
 
     snprintf(s, CF_MAXVARSIZE, "0,%ld", (long) now);
 
-    AppendConstraint(&(promise.conlist), "action", (Rval) {"true", CF_SCALAR}, "any", false);
-    AppendConstraint(&(promise.conlist), "ifelapsed", (Rval) {"0", CF_SCALAR}, "any", false);
-    AppendConstraint(&(promise.conlist), "delete", (Rval) {"true", CF_SCALAR}, "any", false);
-    AppendConstraint(&(promise.conlist), "dirlinks", (Rval) {"delete", CF_SCALAR}, "any", false);
-    AppendConstraint(&(promise.conlist), "rmdirs", (Rval) {"true", CF_SCALAR}, "any", false);
-    AppendConstraint(&(promise.conlist), "depth_search", (Rval) {"true", CF_SCALAR}, "any", false);
-    AppendConstraint(&(promise.conlist), "depth", (Rval) {"inf", CF_SCALAR}, "any", false);
-    AppendConstraint(&(promise.conlist), "file_select", (Rval) {"true", CF_SCALAR}, "any", false);
-    AppendConstraint(&(promise.conlist), "mtime", (Rval) {s, CF_SCALAR}, "any", false);
-    AppendConstraint(&(promise.conlist), "file_result", (Rval) {"mtime", CF_SCALAR}, "any", false);
+    ConstraintAppendToPromise(&promise, "action", (Rval) {"true", CF_SCALAR}, "any", false);
+    ConstraintAppendToPromise(&promise, "ifelapsed", (Rval) {"0", CF_SCALAR}, "any", false);
+    ConstraintAppendToPromise(&promise, "delete", (Rval) {"true", CF_SCALAR}, "any", false);
+    ConstraintAppendToPromise(&promise, "dirlinks", (Rval) {"delete", CF_SCALAR}, "any", false);
+    ConstraintAppendToPromise(&promise, "rmdirs", (Rval) {"true", CF_SCALAR}, "any", false);
+    ConstraintAppendToPromise(&promise, "depth_search", (Rval) {"true", CF_SCALAR}, "any", false);
+    ConstraintAppendToPromise(&promise, "depth", (Rval) {"inf", CF_SCALAR}, "any", false);
+    ConstraintAppendToPromise(&promise, "file_select", (Rval) {"true", CF_SCALAR}, "any", false);
+    ConstraintAppendToPromise(&promise, "mtime", (Rval) {s, CF_SCALAR}, "any", false);
+    ConstraintAppendToPromise(&promise, "file_result", (Rval) {"mtime", CF_SCALAR}, "any", false);
     VerifyFilePromise(promise.promiser, &promise);
     rmdir(path);
 }

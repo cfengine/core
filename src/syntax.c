@@ -25,6 +25,7 @@
 
 #include "syntax.h"
 
+#include "constraints.h"
 #include "json.h"
 #include "files_names.h"
 #include "mod_files.h"
@@ -128,33 +129,6 @@ SubTypeSyntax CheckSubType(char *bundletype, char *subtype)
     return (SubTypeSyntax)
     {
     NULL, NULL, NULL};
-}
-
-void CheckPromise(Promise *pp)
-{
-    char output[CF_BUFSIZE];
-
-    if (strcmp(pp->agentsubtype, "vars") == 0)
-    {
-        char *data_type = NULL;
-        Constraint *cp;
-
-        for (cp = pp->conlist; cp != NULL; cp = cp->next)
-        {
-            if (IsDataType(cp->lval))
-            {
-                if (data_type != NULL)
-                {
-                    snprintf(output, CF_BUFSIZE,
-                             "Variable contains existing data type contstraint %s, tried to redefine with %s",
-                             data_type, cp->lval);
-                    ReportError(output);
-                    ERRORCOUNT++;
-                }
-                data_type = cp->lval;
-            }
-        }
-    }
 }
 
 /*********************************************************/

@@ -35,14 +35,9 @@ static void PostCheckConstraint(char *type, char *bundle, char *lval, Rval rval)
 
 /*******************************************************************/
 
-Constraint *AppendConstraint(Constraint **conlist, char *lval, Rval rval, char *classes, int body)
-/* Note rval must be pre-allocated for this function, e.g. use
-   CopyRvalItem in call.  This is to make the parser and var expansion
-   non-leaky */
+// FIX: copied nearly verbatim from AppendConstraint, needs review
+static Constraint *ConstraintNew(const char *lval, Rval rval, const char *classes, bool references_body)
 {
-    Constraint *cp, *lp;
-    char *sp = NULL;
-
     switch (rval.rtype)
     {
     case CF_SCALAR:
@@ -61,16 +56,28 @@ Constraint *AppendConstraint(Constraint **conlist, char *lval, Rval rval, char *
         CfDebug("   Appending a list to rhs\n");
     }
 
-// Check class
-
+    // Check class
     if (THIS_AGENT_TYPE == cf_common)
     {
         PostCheckConstraint("none", "none", lval, rval);
     }
 
-    cp = xcalloc(1, sizeof(Constraint));
+    Constraint *cp = xcalloc(1, sizeof(Constraint));
 
-    sp = xstrdup(lval);
+    cp->lval = SafeStringDuplicate(lval);
+    cp->rval = rval;
+
+    cp->audit = AUDITPTR;
+    cp->classes = SafeStringDuplicate(classes);
+    cp->references_body = references_body;
+
+    return cp;
+}
+
+// FIX: every type having its own list logic
+static void ConstraintAppendToList(Constraint **conlist, Constraint *cp)
+{
+    Constraint *lp = NULL;
 
     if (*conlist == NULL)
     {
@@ -84,16 +91,28 @@ Constraint *AppendConstraint(Constraint **conlist, char *lval, Rval rval, char *
 
         lp->next = cp;
     }
+}
 
-    if (classes != NULL)
-    {
-        cp->classes = xstrdup(classes);
-    }
+Constraint *ConstraintAppendToPromise(Promise *promise, const char *lval, Rval rval, const char *classes,
+                                      bool references_body)
+{
+    Constraint *cp = ConstraintNew(lval, rval, classes, references_body);
+    cp->type = POLICY_ELEMENT_TYPE_PROMISE;
+    cp->parent.promise = promise;
 
-    cp->audit = AUDITPTR;
-    cp->lval = sp;
-    cp->rval = rval;
-    cp->isbody = body;
+    ConstraintAppendToList(&promise->conlist, cp);
+
+    return cp;
+}
+
+Constraint *ConstraintAppendToBody(Body *body, const char *lval, Rval rval, const char *classes,
+                                   bool references_body)
+{
+    Constraint *cp = ConstraintNew(lval, rval, classes, references_body);
+    cp->type = POLICY_ELEMENT_TYPE_BODY;
+    cp->parent.body = body;
+
+    ConstraintAppendToList(&body->conlist, cp);
 
     return cp;
 }

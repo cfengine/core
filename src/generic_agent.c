@@ -25,6 +25,7 @@
 
 #include "generic_agent.h"
 
+#include "constraints.h"
 #include "promises.h"
 #include "files_lib.h"
 #include "files_names.h"
@@ -390,6 +391,18 @@ Policy *ReadPromises(enum cfagenttype ag, char *agents, GenericAgentConfig confi
 
     Policy *policy = PolicyNew();
     Cf3ParseFiles(policy, check_not_writable_by_others);
+    {
+        Sequence *errors = SequenceCreate(100, PolicyErrorDestroy);
+        if (!PolicyCheck(policy, errors))
+        {
+            Writer *writer = FileWriter(stderr);
+            for (size_t i = 0; i < errors->length; i++)
+            {
+                PolicyErrorWrite(writer, errors->data[i]);
+            }
+            WriterClose(writer);
+        }
+    }
 
 /* Now import some web variables that are set in cf-know/control for the report options */
 

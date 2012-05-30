@@ -37,7 +37,6 @@ SubTypeSyntax CheckSubType(char *btype, char *type);
 void CheckConstraint(char *type, char *name, char *lval, Rval rval, SubTypeSyntax ss);
 void CheckSelection(char *type, char *name, char *lval, Rval rval);
 void CheckConstraintTypeMatch(char *lval, Rval rval, enum cfdatatype dt, const char *range, int level);
-void CheckPromise(Promise *pp);
 int CheckParseClass(char *lv, char *s, const char *range);
 enum cfdatatype StringDataType(char *scopeid, char *string);
 enum cfdatatype ExpectedDataType(char *lvalname);

@@ -454,7 +454,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp)
     void *vp;
     FnCall *fp;
     char *edit_bundle_name = NULL, lockname[CF_BUFSIZE];
-    Rlist *params;
+    Rlist *params = { 0 };
     int retval = false;
     CfLock thislock;
 

@@ -48,6 +48,11 @@ extern Item *VNEGHEAP;
   */
 extern AlphaList VADDCLASSES;
 
+/**
+  List of classes that, if defined by a bundle, will cause the bundle to abort
+  */
+extern Item *ABORTBUNDLEHEAP;
+
 /* - Parsing/evaluating expressions - */
 void ValidateClassSyntax(const char *str);
 bool IsDefinedClass(const char *class);

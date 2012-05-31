@@ -45,6 +45,7 @@ static int IsBracketed(char *s);
 AlphaList VHEAP;
 AlphaList VADDCLASSES;
 Item *VNEGHEAP = NULL;
+Item *ABORTBUNDLEHEAP = NULL;
 
 static Item *ABORTHEAP = NULL;
 static Item *VDELCLASSES = NULL;

@@ -219,9 +219,7 @@ Item *IPADDRESSES = NULL;
 /* Context Management                                              */
 /*******************************************************************/
 
-AlphaList VHEAP;
-AlphaList VADDCLASSES;
-Item *VNEGHEAP = NULL;
+// see env_context.c
 
 Rlist *GOALS = NULL;
 

@@ -78,12 +78,8 @@ extern enum classes VSYSTEMHARDCLASS;
 extern char VFQNAME[];
 extern char VUQNAME[];
 
-extern Item *VNEGHEAP;
-
 extern Item *VSETUIDLIST;
 extern Item *SUSPICIOUSLIST;
-extern AlphaList VHEAP;
-extern AlphaList VADDCLASSES;
 
 extern int DEBUG;
 

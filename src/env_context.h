@@ -29,6 +29,25 @@
 
 #include "alphalist.h"
 
+/**
+  The global heap
+  Classes are added to the global heap using NewClass().
+  */
+extern AlphaList VHEAP;
+
+/**
+  Negated classes
+  Classes may be negated by using the command line option ‘-N’ or by being cancelled during
+  exit status of a classes body: cancel ̇kept etc.
+  */
+extern Item *VNEGHEAP;
+
+/**
+  The bundle heap
+  Classes are added to a local bundle heap using NewBundleClass().
+  */
+extern AlphaList VADDCLASSES;
+
 /* - Parsing/evaluating expressions - */
 void ValidateClassSyntax(const char *str);
 bool IsDefinedClass(const char *class);

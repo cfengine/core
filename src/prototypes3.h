@@ -293,43 +293,6 @@ void SetSyslogPort(uint16_t port);
 
 void SyntaxCompletion(char *s);
 
-/* env_context.c */
-
-/* - Parsing/evaluating expressions - */
-void ValidateClassSyntax(const char *str);
-bool IsDefinedClass(const char *class);
-bool IsExcluded(const char *exception);
-
-bool EvalProcessResult(const char *process_result, AlphaList *proc_attr);
-bool EvalFileResult(const char *file_result, AlphaList *leaf_attr);
-
-/* - Rest - */
-int Abort(void);
-void AddAbortClass(const char *name, const char *classes);
-void KeepClassContextPromise(Promise *pp);
-void PushPrivateClassContext(void);
-void PopPrivateClassContext(void);
-void DeletePrivateClassContext(void);
-void DeleteEntireHeap(void);
-void NewPersistentContext(char *name, unsigned int ttl_minutes, enum statepolicy policy);
-void DeletePersistentContext(char *name);
-void LoadPersistentContext(void);
-void AddEphemeralClasses(Rlist *classlist);
-void NewClass(const char *oclass);      /* Copies oclass */
-void NewBundleClass(char *class, char *bundle);
-Rlist *SplitContextExpression(char *context, Promise *pp);
-void DeleteClass(char *class);
-int VarClassExcluded(Promise *pp, char **classes);
-void NewClassesFromString(char *classlist);
-void NegateClassesFromString(char *class);
-bool IsSoftClass(char *sp);
-bool IsHardClass(char *sp);
-bool IsTimeClass(char *sp);
-void SaveClassEnvironment(void);
-void DeleteAllClasses(Rlist *list);
-void AddAllClasses(Rlist *list, int persist, enum statepolicy policy);
-void ListAlphaList(FILE *fp, AlphaList al, char sep);
-
 #include "env_monitor.h"
 
 /* evalfunction.c */

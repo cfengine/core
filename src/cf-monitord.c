@@ -25,6 +25,7 @@
 #include "generic_agent.h"
 #include "monitoring.h"
 
+#include "env_context.h"
 #include "constraints.h"
 
 /*****************************************************************************/

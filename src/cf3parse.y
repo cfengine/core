@@ -11,6 +11,7 @@
 #include "parser_state.h"
 
 #include "constraints.h"
+#include "env_context.h"
 // FIX: remove
 #include "syntax.h"
 

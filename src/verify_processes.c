@@ -24,6 +24,7 @@
 
 #include "cf3.defs.h"
 
+#include "env_context.h"
 #include "promises.h"
 #include "vars.h"
 

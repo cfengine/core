@@ -24,6 +24,7 @@
 
 #include "evalfunction.h"
 
+#include "env_context.h"
 #include "promises.h"
 #include "dir.h"
 #include "dbm_api.h"

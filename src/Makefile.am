@@ -59,7 +59,7 @@ libpromises_la_SOURCES = \
         dir.c dir.h dir_priv.h \
         dtypes.c \
         enterprise_stubs.c \
-        env_context.c \
+        env_context.c env_context.h \
         evalfunction.c evalfunction.h \
         exec_tools.c \
         expand.c \

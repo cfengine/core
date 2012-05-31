@@ -31,6 +31,8 @@
 
 #include "cf3.defs.h"
 #include "cf3parse.h"
+
+#include "env_context.h"
 #include "parser_state.h"
 #include "files_names.h"
 

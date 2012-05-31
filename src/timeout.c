@@ -25,6 +25,8 @@
 
 #include "cf3.defs.h"
 
+#include "env_context.h"
+
 /* Prototypes */
 
 static void AddTimeClass(time_t time);

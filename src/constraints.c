@@ -25,6 +25,7 @@
 
 #include "constraints.h"
 
+#include "env_context.h"
 #include "promises.h"
 #include "syntax.h"
 

@@ -26,6 +26,7 @@
 #include "cf3.defs.h"
 #include "cf3.server.h"
 
+#include "env_context.h"
 #include "files_names.h"
 #include "mod_access.h"
 #include "constraints.h"

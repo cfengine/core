@@ -24,6 +24,7 @@
 
 #include "cf3.defs.h"
 
+#include "env_context.h"
 #include "mod_files.h"
 #include "constraints.h"
 #include "promises.h"

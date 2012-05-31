@@ -25,6 +25,7 @@
 
 #include "generic_agent.h"
 
+#include "env_context.h"
 #include "constraints.h"
 #include "verify_environments.h"
 #include "addr_lib.h"

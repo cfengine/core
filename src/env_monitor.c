@@ -24,6 +24,7 @@
 
 #include "cf3.defs.h"
 
+#include "env_context.h"
 #include "monitoring.h"
 #include "granules.h"
 #include "dbm_api.h"

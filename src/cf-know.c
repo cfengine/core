@@ -25,6 +25,7 @@
 
 #include "generic_agent.h"
 
+#include "env_context.h"
 #include "constraints.h"
 #include "files_names.h"
 #include "ontology.h"

@@ -25,6 +25,8 @@
 
 #include "cf3.defs.h"
 
+#include "env_context.h"
+
 /*******************************************************************/
 
 static void ThisAgentInit(void);

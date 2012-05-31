@@ -25,6 +25,7 @@
 
 #include "cf3.defs.h"
 
+#include "env_context.h"
 #include "dbm_api.h"
 #include "files_names.h"
 

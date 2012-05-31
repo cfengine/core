@@ -95,7 +95,6 @@ char *CBUNDLESEQUENCE_STR;
 int EDIT_MODEL = false;
 int CF_MOUNTALL = false;
 int FSTAB_EDITS;
-int ABORTBUNDLE = false;
 int BOOTSTRAP = false;
 
 /*****************************************************************************/

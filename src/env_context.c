@@ -50,6 +50,8 @@ static Item *ABORTHEAP = NULL;
 static Item *VDELCLASSES = NULL;
 static Rlist *PRIVCLASSHEAP = NULL;
 
+static bool ABORTBUNDLE = false;
+
 /*****************************************************************************/
 /* Level                                                                     */
 /*****************************************************************************/

@@ -169,7 +169,7 @@ static bool IsPromiseValuableForLogging(const Promise *pp)
 
 /*****************************************************************************/
 
-void ClassAuditLog(Promise *pp, Attributes attr, char *str, char status, char *reason)
+void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, char *reason)
 {
     time_t now = time(NULL);
     char date[CF_BUFSIZE], lock[CF_BUFSIZE], key[CF_BUFSIZE], operator[CF_BUFSIZE];

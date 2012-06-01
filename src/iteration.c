@@ -29,9 +29,9 @@ static void DeleteReferenceRlist(Rlist *list);
 
 /*****************************************************************************/
 
-Rlist *NewIterationContext(char *scopeid, Rlist *namelist)
+Rlist *NewIterationContext(const char *scopeid, Rlist *namelist)
 {
-    Rlist *rp, *rps, *deref_listoflists = NULL;
+    Rlist *rps, *deref_listoflists = NULL;
     Rval retval;
     enum cfdatatype dtype;
     CfAssoc *new;
@@ -49,7 +49,7 @@ Rlist *NewIterationContext(char *scopeid, Rlist *namelist)
         return NULL;
     }
 
-    for (rp = namelist; rp != NULL; rp = rp->next)
+    for (Rlist *rp = namelist; rp != NULL; rp = rp->next)
     {
         dtype = GetVariable(scopeid, rp->item, &retval);
 

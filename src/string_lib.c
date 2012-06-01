@@ -520,9 +520,9 @@ char *Titleize(char *str)
     return buffer;
 }
 
-int SubStrnCopyChr(char *to, char *from, int len, char sep)
+int SubStrnCopyChr(char *to, const char *from, int len, char sep)
 {
-    char *sp, *sto = to;
+    char *sto = to;
     int count = 0;
 
     memset(to, 0, len);
@@ -537,7 +537,7 @@ int SubStrnCopyChr(char *to, char *from, int len, char sep)
         return 0;
     }
 
-    for (sp = from; *sp != '\0'; sp++)
+    for (const char *sp = from; *sp != '\0'; sp++)
     {
         if (count > len - 1)
         {

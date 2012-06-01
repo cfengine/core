@@ -44,7 +44,7 @@ static bool WriteLockData(CF_DB *dbp, char *lock_id, LockData *lock_data);
 
 /*****************************************************************************/
 
-void SummarizeTransaction(Attributes attr, Promise *pp, char *logname)
+void SummarizeTransaction(Attributes attr, const Promise *pp, const char *logname)
 {
     if (logname && attr.transaction.log_string)
     {

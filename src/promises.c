@@ -33,7 +33,7 @@ static void DereferenceComment(Promise *pp);
 
 /*****************************************************************************/
 
-char *BodyName(Promise *pp)
+char *BodyName(const Promise *pp)
 {
     char *name, *sp;
     int i, size = 0;
@@ -72,7 +72,7 @@ char *BodyName(Promise *pp)
 
 /*****************************************************************************/
 
-Promise *DeRefCopyPromise(char *scopeid, Promise *pp)
+Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
 {
     Promise *pcopy;
     Constraint *cp, *scp;
@@ -259,7 +259,7 @@ Promise *DeRefCopyPromise(char *scopeid, Promise *pp)
 
 /*****************************************************************************/
 
-Promise *ExpandDeRefPromise(char *scopeid, Promise *pp)
+Promise *ExpandDeRefPromise(const char *scopeid, Promise *pp)
 {
     Promise *pcopy;
     Constraint *cp;
@@ -358,11 +358,9 @@ Promise *ExpandDeRefPromise(char *scopeid, Promise *pp)
 
 /*******************************************************************/
 
-Body *IsBody(Body *list, char *key)
+Body *IsBody(Body *list, const char *key)
 {
-    Body *bp;
-
-    for (bp = list; bp != NULL; bp = bp->next)
+    for (Body *bp = list; bp != NULL; bp = bp->next)
     {
         if (strcmp(bp->name, key) == 0)
         {
@@ -375,7 +373,7 @@ Body *IsBody(Body *list, char *key)
 
 /*******************************************************************/
 
-Bundle *IsBundle(Bundle *list, char *key)
+Bundle *IsBundle(Bundle *list, const char *key)
 {
     Bundle *bp;
 
@@ -488,7 +486,7 @@ void DeletePromise(Promise *pp)
 
 /*****************************************************************************/
 
-void PromiseRef(enum cfreport level, Promise *pp)
+void PromiseRef(enum cfreport level, const Promise *pp)
 {
     char *v;
     Rval retval;

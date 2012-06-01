@@ -62,7 +62,7 @@ int CFA_BACKGROUND_LIMIT = 1;
 int AM_BACKGROUND_PROCESS = false;
 int CF_PERSISTENCE = 10;
 
-char *THIS_BUNDLE = NULL;
+const char *THIS_BUNDLE = NULL;
 
 enum cfagenttype THIS_AGENT_TYPE;
 time_t PROMISETIME = 0;

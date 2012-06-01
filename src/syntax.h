@@ -38,7 +38,7 @@ void CheckConstraint(char *type, char *name, char *lval, Rval rval, SubTypeSynta
 void CheckSelection(char *type, char *name, char *lval, Rval rval);
 void CheckConstraintTypeMatch(const char *lval, Rval rval, enum cfdatatype dt, const char *range, int level);
 int CheckParseClass(const char *lv, const char *s, const char *range);
-enum cfdatatype StringDataType(char *scopeid, char *string);
+enum cfdatatype StringDataType(const char *scopeid, const char *string);
 enum cfdatatype ExpectedDataType(char *lvalname);
 bool IsDataType(const char *s);
 

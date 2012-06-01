@@ -36,9 +36,9 @@
 /*****************************************************************************/
 
 static bool ValidClassName(const char *str);
-static int GetORAtom(char *start, char *buffer);
-static int HasBrackets(char *s, Promise *pp);
-static int IsBracketed(char *s);
+static int GetORAtom(const char *start, char *buffer);
+static int HasBrackets(const char *s, Promise *pp);
+static int IsBracketed(const char *s);
 
 /*****************************************************************************/
 
@@ -450,7 +450,7 @@ void NewClass(const char *oclass)
 
 /*********************************************************************/
 
-void DeleteClass(char *class)
+void DeleteClass(const char *class)
 {
     DeleteFromAlphaList(&VHEAP, class);
     DeleteFromAlphaList(&VADDCLASSES, class);
@@ -458,7 +458,7 @@ void DeleteClass(char *class)
 
 /*******************************************************************/
 
-void NewBundleClass(char *class, char *bundle)
+void NewBundleClass(const char *class, const char *bundle)
 {
     char copy[CF_BUFSIZE];
     Item *ip;
@@ -525,10 +525,10 @@ void NewBundleClass(char *class, char *bundle)
 
 /*********************************************************************/
 
-Rlist *SplitContextExpression(char *context, Promise *pp)
+Rlist *SplitContextExpression(const char *context, Promise *pp)
 {
     Rlist *list = NULL;
-    char *sp, cbuff[CF_MAXVARSIZE];
+    char cbuff[CF_MAXVARSIZE];
 
     if (context == NULL)
     {
@@ -536,7 +536,7 @@ Rlist *SplitContextExpression(char *context, Promise *pp)
     }
     else
     {
-        for (sp = context; *sp != '\0'; sp++)
+        for (const char *sp = context; *sp != '\0'; sp++)
         {
             while (*sp == '|')
             {
@@ -634,7 +634,7 @@ Rlist *SplitContextExpression(char *context, Promise *pp)
 
 /*********************************************************************/
 
-static int IsBracketed(char *s)
+static int IsBracketed(const char *s)
  /* return true if the entire string is bracketed, not just if
     if contains brackets */
 {
@@ -696,9 +696,9 @@ static int IsBracketed(char *s)
 
 /*********************************************************************/
 
-static int GetORAtom(char *start, char *buffer)
+static int GetORAtom(const char *start, char *buffer)
 {
-    char *sp = start;
+    const char *sp = start;
     char *spc = buffer;
     int bracklevel = 0, len = 0;
 
@@ -729,7 +729,7 @@ static int GetORAtom(char *start, char *buffer)
 
 /*********************************************************************/
 
-static int HasBrackets(char *s, Promise *pp)
+static int HasBrackets(const char *s, Promise *pp)
  /* return true if contains brackets */
 {
     int i, level = 0, yes = 0;
@@ -1079,7 +1079,7 @@ bool EvalFileResult(const char *file_result, AlphaList *leaf_attr)
 
 /*****************************************************************************/
 
-void DeleteEntireHeap()
+void DeleteEntireHeap(void)
 {
     DeleteAlphaList(&VHEAP);
     InitAlphaList(&VHEAP);
@@ -1159,7 +1159,7 @@ void NewPersistentContext(char *name, unsigned int ttl_minutes, enum statepolicy
 
 /*****************************************************************************/
 
-void DeletePersistentContext(char *name)
+void DeletePersistentContext(const char *name)
 {
     CF_DB *dbp;
 
@@ -1232,11 +1232,9 @@ void LoadPersistentContext()
 
 /*****************************************************************************/
 
-void AddEphemeralClasses(Rlist *classlist)
+void AddEphemeralClasses(const Rlist *classlist)
 {
-    Rlist *rp;
-
-    for (rp = classlist; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = classlist; rp != NULL; rp = rp->next)
     {
         if (!InAlphaList(&VHEAP, rp->item))
         {
@@ -1247,7 +1245,7 @@ void AddEphemeralClasses(Rlist *classlist)
 
 /*********************************************************************/
 
-void NewClassesFromString(char *classlist)
+void NewClassesFromString(const char *classlist)
 {
     char *sp, currentitem[CF_MAXVARSIZE], local[CF_MAXVARSIZE];
 
@@ -1278,7 +1276,7 @@ void NewClassesFromString(char *classlist)
 
 /*********************************************************************/
 
-void NegateClassesFromString(char *classlist)
+void NegateClassesFromString(const char *classlist)
 {
     char *sp, currentitem[CF_MAXVARSIZE], local[CF_MAXVARSIZE];
 
@@ -1309,14 +1307,14 @@ void NegateClassesFromString(char *classlist)
 
 /*********************************************************************/
 
-bool IsSoftClass(char *sp)
+bool IsSoftClass(const char *sp)
 {
     return !IsHardClass(sp);
 }
 
 /*********************************************************************/
 
-bool IsHardClass(char *sp)
+bool IsHardClass(const char *sp)
 // FIXME: this is very ad-hoc and incorrect
 {
     int i;
@@ -1363,7 +1361,7 @@ bool IsHardClass(char *sp)
 
 /***************************************************************************/
 
-bool IsTimeClass(char *sp)
+bool IsTimeClass(const char *sp)
 {
 
     if (IsStrIn(sp, DAY_TEXT))
@@ -1493,9 +1491,8 @@ void SaveClassEnvironment()
 
 /**********************************************************************/
 
-void DeleteAllClasses(Rlist *list)
+void DeleteAllClasses(const Rlist *list)
 {
-    Rlist *rp;
     char *string;
 
     if (list == NULL)
@@ -1503,7 +1500,7 @@ void DeleteAllClasses(Rlist *list)
         return;
     }
 
-    for (rp = list; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
         if (!CheckParseClass("class cancellation", (char *) rp->item, CF_IDRANGE))
         {
@@ -1528,16 +1525,14 @@ void DeleteAllClasses(Rlist *list)
 
 /*****************************************************************************/
 
-void AddAllClasses(Rlist *list, int persist, enum statepolicy policy)
+void AddAllClasses(const Rlist *list, int persist, enum statepolicy policy)
 {
-    Rlist *rp;
-
     if (list == NULL)
     {
         return;
     }
 
-    for (rp = list; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
         char *classname = xstrdup(rp->item);
 

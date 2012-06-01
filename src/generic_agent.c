@@ -1857,7 +1857,7 @@ void WritePID(char *filename)
 
 /*******************************************************************/
 
-void HashVariables(Policy *policy, char *name)
+void HashVariables(Policy *policy, const char *name)
 {
     Bundle *bp;
     SubType *sp;

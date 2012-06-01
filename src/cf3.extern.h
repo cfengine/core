@@ -175,7 +175,7 @@ extern const char *CF_AGENTTYPES[];
 extern int FSTAB_EDITS;
 
 extern int CFA_MAXTHREADS;
-extern char *THIS_BUNDLE;
+extern const char *THIS_BUNDLE;
 extern enum cfagenttype THIS_AGENT_TYPE;
 extern int SHOWREPORTS;
 extern int SHOW_PARSE_TREE;

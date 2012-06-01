@@ -91,7 +91,7 @@ int ScheduleEditLineOperations(char *filename, Bundle *bp, Attributes a, Promise
     SubType *sp;
     Promise *pp;
     char lockname[CF_BUFSIZE];
-    char *bp_stack = THIS_BUNDLE;
+    const char *bp_stack = THIS_BUNDLE;
     CfLock thislock;
     int pass;
 

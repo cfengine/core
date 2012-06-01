@@ -7,6 +7,6 @@ void LoadSystemConstants(void);
 void ForceScalar(char *lval, char *rval);
 void NewScalar(const char *scope, const char *lval, const char *rval, enum cfdatatype dt);
 void DeleteScalar(const char *scope, const char *lval);
-void NewList(char *scope, char *lval, void *rval, enum cfdatatype dt);
+void NewList(const char *scope, const char *lval, void *rval, enum cfdatatype dt);
 
 #endif

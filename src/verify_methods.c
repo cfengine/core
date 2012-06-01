@@ -86,7 +86,7 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp)
 
     if ((bp = GetBundle(PolicyFromPromise(pp), method_name, "agent")))
     {
-        char *bp_stack = THIS_BUNDLE;
+        const char *bp_stack = THIS_BUNDLE;
 
         BannerSubBundle(bp, params);
 

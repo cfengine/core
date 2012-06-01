@@ -120,7 +120,7 @@ Constraint *ConstraintAppendToBody(Body *body, const char *lval, Rval rval, cons
 
 /*****************************************************************************/
 
-void EditScalarConstraint(Constraint *conlist, char *lval, char *rval)
+void EditScalarConstraint(Constraint *conlist, const char *lval, const char *rval)
 {
     Constraint *cp;
 
@@ -158,7 +158,7 @@ void DeleteConstraintList(Constraint *conlist)
 
 /*****************************************************************************/
 
-int GetBooleanConstraint(char *lval, Promise *pp)
+int GetBooleanConstraint(const char *lval, const Promise *pp)
 {
     Constraint *cp;
     int retval = CF_UNDEFINED;
@@ -211,12 +211,11 @@ int GetBooleanConstraint(char *lval, Promise *pp)
 
 /*****************************************************************************/
 
-int GetRawBooleanConstraint(char *lval, Constraint *list)
+int GetRawBooleanConstraint(const char *lval, const Constraint *list)
 {
-    Constraint *cp;
     int retval = CF_UNDEFINED;
 
-    for (cp = list; cp != NULL; cp = cp->next)
+    for (const Constraint *cp = list; cp != NULL; cp = cp->next)
     {
         if (strcmp(cp->lval, lval) == 0)
         {
@@ -262,12 +261,11 @@ int GetRawBooleanConstraint(char *lval, Constraint *list)
 
 /*****************************************************************************/
 
-int GetBundleConstraint(char *lval, Promise *pp)
+int GetBundleConstraint(const char *lval, const Promise *pp)
 {
-    Constraint *cp;
     int retval = CF_UNDEFINED;
 
-    for (cp = pp->conlist; cp != NULL; cp = cp->next)
+    for (const Constraint *cp = pp->conlist; cp != NULL; cp = cp->next)
     {
         if (strcmp(cp->lval, lval) == 0)
         {
@@ -302,7 +300,7 @@ int GetBundleConstraint(char *lval, Promise *pp)
 
 /*****************************************************************************/
 
-int GetIntConstraint(char *lval, Promise *pp)
+int GetIntConstraint(const char *lval, const Promise *pp)
 {
     Constraint *cp;
     int retval = CF_NOINT;
@@ -341,7 +339,7 @@ int GetIntConstraint(char *lval, Promise *pp)
 
 /*****************************************************************************/
 
-double GetRealConstraint(char *lval, Promise *pp)
+double GetRealConstraint(const char *lval, const Promise *pp)
 {
     Constraint *cp;
     double retval = CF_NODOUBLE;
@@ -378,7 +376,7 @@ double GetRealConstraint(char *lval, Promise *pp)
 
 /*****************************************************************************/
 
-mode_t GetOctalConstraint(char *lval, Promise *pp)
+mode_t GetOctalConstraint(const char *lval, const Promise *pp)
 {
     Constraint *cp;
     mode_t retval = 077;
@@ -419,7 +417,7 @@ mode_t GetOctalConstraint(char *lval, Promise *pp)
 
 /*****************************************************************************/
 
-uid_t GetUidConstraint(char *lval, Promise *pp)
+uid_t GetUidConstraint(const char *lval, const Promise *pp)
 #ifdef MINGW
 {                               // we use sids on windows instead
     return CF_SAME_OWNER;
@@ -466,7 +464,7 @@ uid_t GetUidConstraint(char *lval, Promise *pp)
 
 /*****************************************************************************/
 
-gid_t GetGidConstraint(char *lval, Promise *pp)
+gid_t GetGidConstraint(char *lval, const Promise *pp)
 #ifdef MINGW
 {                               // not applicable on windows: processes have no group
     return CF_SAME_GROUP;
@@ -513,7 +511,7 @@ gid_t GetGidConstraint(char *lval, Promise *pp)
 
 /*****************************************************************************/
 
-Rlist *GetListConstraint(char *lval, Promise *pp)
+Rlist *GetListConstraint(const char *lval, const Promise *pp)
 {
     Constraint *cp;
     Rlist *retval = NULL;
@@ -551,7 +549,7 @@ Rlist *GetListConstraint(char *lval, Promise *pp)
 
 /*****************************************************************************/
 
-Constraint *GetConstraint(Promise *promise, const char *lval)
+Constraint *GetConstraint(const Promise *promise, const char *lval)
 {
     Constraint *cp = NULL, *retval = NULL;
 
@@ -588,9 +586,9 @@ Constraint *GetConstraint(Promise *promise, const char *lval)
 
 /*****************************************************************************/
 
-void *GetConstraintValue(char *lval, Promise *promise, char rtype)
+void *GetConstraintValue(const char *lval, const Promise *promise, char rtype)
 {
-    Constraint *constraint = GetConstraint(promise, lval);
+    const Constraint *constraint = GetConstraint(promise, lval);
 
     if (constraint && constraint->rval.rtype == rtype)
     {

@@ -224,7 +224,7 @@ char *ExtractFirstReference(const char *regexp, const char *teststring)
 
 /*************************************************************************/
 
-int BlockTextMatch(char *regexp, char *teststring, int *start, int *end)
+int BlockTextMatch(const char *regexp, const char *teststring, int *start, int *end)
 {
     pcre *rx = CompileRegExp(regexp);
 

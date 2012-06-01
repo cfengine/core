@@ -717,7 +717,7 @@ struct Promise_
     CompressedArray *inode_cache;
     EditContext *edcontext;
     dev_t rootdevice;           /* for caching during work */
-    Promise *org_pp;            /* A ptr to the unexpanded raw promise */
+    const Promise *org_pp;            /* A ptr to the unexpanded raw promise */
 
     SourceOffset offset;
 };

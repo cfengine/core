@@ -594,7 +594,7 @@ void CheckConstraintTypeMatch(const char *lval, Rval rval, enum cfdatatype dt, c
 
 /****************************************************************************/
 
-enum cfdatatype StringDataType(char *scopeid, char *string)
+enum cfdatatype StringDataType(const char *scopeid, const char *string)
 {
     enum cfdatatype dtype;
     Rval rval;

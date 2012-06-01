@@ -111,7 +111,7 @@ void DeleteScalar(const char *scope_name, const char *lval)
 
 /*******************************************************************/
 
-void NewList(char *scope, char *lval, void *rval, enum cfdatatype dt)
+void NewList(const char *scope, const char *lval, void *rval, enum cfdatatype dt)
 {
     char *sp1;
     Rval rvald;
@@ -220,7 +220,7 @@ enum cfdatatype GetVariable(const char *scope, const char *lval, Rval *returnv)
 
 /*******************************************************************/
 
-void DeleteVariable(char *scope, char *id)
+void DeleteVariable(const char *scope, const char *id)
 {
     Scope *ptr = GetScope(scope);
 

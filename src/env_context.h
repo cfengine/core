@@ -70,22 +70,22 @@ void PopPrivateClassContext(void);
 void DeletePrivateClassContext(void);
 void DeleteEntireHeap(void);
 void NewPersistentContext(char *name, unsigned int ttl_minutes, enum statepolicy policy);
-void DeletePersistentContext(char *name);
+void DeletePersistentContext(const char *name);
 void LoadPersistentContext(void);
-void AddEphemeralClasses(Rlist *classlist);
+void AddEphemeralClasses(const Rlist *classlist);
 void NewClass(const char *oclass);      /* Copies oclass */
-void NewBundleClass(char *class, char *bundle);
-Rlist *SplitContextExpression(char *context, Promise *pp);
-void DeleteClass(char *class);
+void NewBundleClass(const char *oclass, const char *bundle);
+Rlist *SplitContextExpression(const char *context, Promise *pp);
+void DeleteClass(const char *oclass);
 int VarClassExcluded(Promise *pp, char **classes);
-void NewClassesFromString(char *classlist);
-void NegateClassesFromString(char *class);
-bool IsSoftClass(char *sp);
-bool IsHardClass(char *sp);
-bool IsTimeClass(char *sp);
+void NewClassesFromString(const char *classlist);
+void NegateClassesFromString(const char *classlist);
+bool IsSoftClass(const char *sp);
+bool IsHardClass(const char *sp);
+bool IsTimeClass(const char *sp);
 void SaveClassEnvironment(void);
-void DeleteAllClasses(Rlist *list);
-void AddAllClasses(Rlist *list, int persist, enum statepolicy policy);
+void DeleteAllClasses(const Rlist *list);
+void AddAllClasses(const Rlist *list, int persist, enum statepolicy policy);
 void ListAlphaList(FILE *fp, AlphaList al, char sep);
 
 #endif

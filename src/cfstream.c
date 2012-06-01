@@ -147,7 +147,7 @@ void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
 
 /*****************************************************************************/
 
-void cfPS(enum cfreport level, char status, char *errstr, Promise *pp, Attributes attr, char *fmt, ...)
+void cfPS(enum cfreport level, char status, char *errstr, const Promise *pp, Attributes attr, char *fmt, ...)
 {
     va_list ap;
     char buffer[CF_BUFSIZE], output[CF_BUFSIZE], *v, handle[CF_MAXVARSIZE];

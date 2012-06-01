@@ -249,7 +249,7 @@ bool IsDefinedClass(const char *class)
     fail();
 }
 
-void DeleteVariable(char *scope, char *id)
+void DeleteVariable(const char *scope, const char *id)
 {
     fail();
 }
@@ -259,7 +259,7 @@ Rlist *ParseShownRlist(char *string)
     fail();
 }
 
-void NewList(char *scope, char *lval, void *rval, enum cfdatatype dt)
+void NewList(const char *scope, const char *lval, void *rval, enum cfdatatype dt)
 {
     fail();
 }

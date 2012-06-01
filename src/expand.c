@@ -37,13 +37,13 @@
 #include "vars.h"
 #include "syntax.h"
 
-static void MapIteratorsFromScalar(const char *scope, Rlist **los, Rlist **lol, char *string, int level, Promise *pp);
-static int Epimenides(char *var, Rval rval, int level);
+static void MapIteratorsFromScalar(const char *scope, Rlist **los, Rlist **lol, char *string, int level, const Promise *pp);
+static int Epimenides(const char *var, Rval rval, int level);
 static void RewriteInnerVarStringAsLocalCopyName(char *string);
 static int CompareRlist(Rlist *list1, Rlist *list2);
 static int CompareRval(Rval rval1, Rval rval2);
 static void SetAnyMissingDefaults(Promise *pp);
-static void CopyLocalizedIteratorsToThisScope(char *scope, Rlist *listvars);
+static void CopyLocalizedIteratorsToThisScope(const char *scope, const Rlist *listvars);
 
 /*
 
@@ -103,7 +103,7 @@ since these cannot be mapped into "this" without some magic.
    
 **********************************************************************/
 
-void ExpandPromise(enum cfagenttype agent, char *scopeid, Promise *pp, void *fnptr)
+void ExpandPromise(enum cfagenttype agent, const char *scopeid, Promise *pp, void *fnptr)
 {
     Rlist *listvars = NULL, *scalarvars = NULL;
     Constraint *cp;
@@ -150,7 +150,7 @@ void ExpandPromise(enum cfagenttype agent, char *scopeid, Promise *pp, void *fnp
 
 /*********************************************************************/
 
-Rval ExpandDanglers(char *scopeid, Rval rval, Promise *pp)
+Rval ExpandDanglers(const char *scopeid, Rval rval, const Promise *pp)
 {
     Rval final;
 
@@ -180,7 +180,8 @@ Rval ExpandDanglers(char *scopeid, Rval rval, Promise *pp)
 
 /*********************************************************************/
 
-void MapIteratorsFromRval(const char *scopeid, Rlist **scalarvars, Rlist **listvars, Rval rval, Promise *pp)
+void MapIteratorsFromRval(const char *scopeid, Rlist **scalarvars, Rlist **listvars, Rval rval,
+                          const Promise *pp)
 {
     Rlist *rp;
     FnCall *fp;
@@ -221,7 +222,8 @@ void MapIteratorsFromRval(const char *scopeid, Rlist **scalarvars, Rlist **listv
 
 /*********************************************************************/
 
-static void MapIteratorsFromScalar(const char *scopeid, Rlist **scal, Rlist **its, char *string, int level, Promise *pp)
+static void MapIteratorsFromScalar(const char *scopeid, Rlist **scal, Rlist **its, char *string, int level,
+                                   const Promise *pp)
 {
     char *sp;
     Rval rval;
@@ -336,7 +338,7 @@ int ExpandScalar(const char *string, char buffer[CF_EXPANDSIZE])
 
 /*********************************************************************/
 
-Rlist *ExpandList(char *scopeid, Rlist *list, int expandnaked)
+Rlist *ExpandList(const char *scopeid, const Rlist *list, int expandnaked)
 {
     Rlist *rp, *start = NULL;
     Rval returnval;
@@ -376,7 +378,7 @@ Rlist *ExpandList(char *scopeid, Rlist *list, int expandnaked)
 
 /*********************************************************************/
 
-Rval ExpandPrivateRval(char *scopeid, Rval rval)
+Rval ExpandPrivateRval(const char *scopeid, Rval rval)
 {
     char buffer[CF_EXPANDSIZE];
     FnCall *fp, *fpe;
@@ -419,7 +421,7 @@ Rval ExpandPrivateRval(char *scopeid, Rval rval)
 
 /*********************************************************************/
 
-Rval ExpandBundleReference(char *scopeid, Rval rval)
+Rval ExpandBundleReference(const char *scopeid, Rval rval)
 {
     CfDebug("ExpandBundleReference(scope=%s,type=%c)\n", scopeid, rval.rtype);
 
@@ -450,7 +452,7 @@ Rval ExpandBundleReference(char *scopeid, Rval rval)
 
 /*********************************************************************/
 
-static int ExpandOverflow(char *str1, char *str2)
+static bool ExpandOverflow(const char *str1, const char *str2)
 {
     int len = strlen(str2);
 
@@ -623,7 +625,7 @@ int ExpandPrivateScalar(const char *scopeid, const char *string, char buffer[CF_
 
 /*********************************************************************/
 
-void ExpandPromiseAndDo(enum cfagenttype agent, char *scopeid, Promise *pp, Rlist *scalarvars, Rlist *listvars,
+void ExpandPromiseAndDo(enum cfagenttype agent, const char *scopeid, Promise *pp, Rlist *scalarvars, Rlist *listvars,
                         void (*fnptr) ())
 {
     Rlist *lol = NULL;
@@ -734,7 +736,7 @@ void ExpandPromiseAndDo(enum cfagenttype agent, char *scopeid, Promise *pp, Rlis
 
 /*********************************************************************/
 
-Rval EvaluateFinalRval(char *scopeid, Rval rval, int forcelist, Promise *pp)
+Rval EvaluateFinalRval(const char *scopeid, Rval rval, int forcelist, const Promise *pp)
 {
     Rlist *rp;
     Rval returnval, newret;
@@ -848,13 +850,12 @@ static void RewriteInnerVarStringAsLocalCopyName(char *string)
 
 /*********************************************************************/
 
-static void CopyLocalizedIteratorsToThisScope(char *scope, Rlist *listvars)
+static void CopyLocalizedIteratorsToThisScope(const char *scope, const Rlist *listvars)
 {
-    Rlist *rp;
     Rval retval;
     char format[CF_SMALLBUF];
 
-    for (rp = listvars; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = listvars; rp != NULL; rp = rp->next)
     {
         // Add re-mapped variables to context "this", marked with scope . -> #
 
@@ -1016,7 +1017,7 @@ int IsNakedVar(const char *str, char vtype)
 
 /*********************************************************************/
 
-void GetNaked(char *s2, char *s1)
+void GetNaked(char *s2, const char *s1)
 /* copy @(listname) -> listname */
 {
     if (strlen(s1) < 4)
@@ -1049,7 +1050,7 @@ static void SetAnyMissingDefaults(Promise *pp)
 /* General                                                           */
 /*********************************************************************/
 
-void ConvergeVarHashPromise(char *scope, Promise *pp, int allow_redefine)
+void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
 {
     Constraint *cp, *cp_save = NULL;
     Attributes a = { {0} };
@@ -1312,7 +1313,7 @@ void ConvergeVarHashPromise(char *scope, Promise *pp, int allow_redefine)
 /* Levels                                                            */
 /*********************************************************************/
 
-static int Epimenides(char *var, Rval rval, int level)
+static int Epimenides(const char *var, Rval rval, int level)
 {
     Rlist *rp, *list;
     char exp[CF_EXPANDSIZE];
@@ -1402,6 +1403,8 @@ static int CompareRval(Rval rval1, Rval rval2)
 
 /*******************************************************************/
 
+// FIX: this function is a mixture of Equal/Compare (boolean/diff).
+// somebody is bound to misuse this at some point
 static int CompareRlist(Rlist *list1, Rlist *list2)
 {
     Rlist *rp1, *rp2;

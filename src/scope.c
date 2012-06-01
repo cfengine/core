@@ -67,7 +67,7 @@ void SetNewScope(char *id)
 
 /*******************************************************************/
 
-void NewScope(char *name)
+void NewScope(const char *name)
 /*
  * Thread safe
  */
@@ -281,16 +281,16 @@ void DeleteFromScope(char *scope, Rlist *args)
 
 /*******************************************************************/
 
-void CopyScope(char *new, char *old)
+void CopyScope(const char *new_scopename, const char *old_scopename)
 /*
  * Thread safe
  */
 {
     Scope *op, *np;
 
-    CfDebug("\n*\nCopying scope data %s to %s\n*\n", old, new);
+    CfDebug("\n*\nCopying scope data %s to %s\n*\n", old_scopename, new_scopename);
 
-    NewScope(new);
+    NewScope(new_scopename);
 
     if (!ThreadLock(cft_vscope))
     {
@@ -298,9 +298,9 @@ void CopyScope(char *new, char *old)
         return;
     }
 
-    if ((op = GetScope(old)))
+    if ((op = GetScope(old_scopename)))
     {
-        np = GetScope(new);
+        np = GetScope(new_scopename);
         HashCopy(np->hashtable, op->hashtable);
     }
 

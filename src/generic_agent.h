@@ -45,7 +45,7 @@ int CheckPromises(enum cfagenttype ag);
 Policy *ReadPromises(enum cfagenttype ag, char *agents, GenericAgentConfig config);
 int NewPromiseProposals(void);
 void CompilationReport(Policy *policy, char *fname);
-void HashVariables(Policy *policy, char *name);
+void HashVariables(Policy *policy, const char *name);
 void HashControls(const Policy *policy);
 void CloseLog(void);
 Constraint *ControlBodyConstraints(const Policy *policy, enum cfagenttype agent);

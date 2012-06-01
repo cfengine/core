@@ -105,9 +105,7 @@ Rlist *ListRvalValue(Rval rval)
 
 Rlist *KeyInRlist(Rlist *list, char *key)
 {
-    Rlist *rp;
-
-    for (rp = list; rp != NULL; rp = rp->next)
+    for (Rlist *rp = list; rp != NULL; rp = rp->next)
     {
         if (rp->type != CF_SCALAR)
         {
@@ -125,16 +123,14 @@ Rlist *KeyInRlist(Rlist *list, char *key)
 
 /*******************************************************************/
 
-int IsStringIn(Rlist *list, char *s)
+bool IsStringIn(const Rlist *list, const char *s)
 {
-    Rlist *rp;
-
     if (s == NULL || list == NULL)
     {
         return false;
     }
 
-    for (rp = list; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
         if (rp->type != CF_SCALAR)
         {
@@ -152,9 +148,8 @@ int IsStringIn(Rlist *list, char *s)
 
 /*******************************************************************/
 
-int IsIntIn(Rlist *list, int i)
+bool IsIntIn(const Rlist *list, int i)
 {
-    Rlist *rp;
     char s[CF_SMALLBUF];
 
     snprintf(s, CF_SMALLBUF - 1, "%d", i);
@@ -164,7 +159,7 @@ int IsIntIn(Rlist *list, int i)
         return false;
     }
 
-    for (rp = list; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
         if (rp->type != CF_SCALAR)
         {
@@ -182,16 +177,14 @@ int IsIntIn(Rlist *list, int i)
 
 /*******************************************************************/
 
-int IsInListOfRegex(Rlist *list, char *str)
+bool IsInListOfRegex(const Rlist *list, const char *str)
 {
-    Rlist *rp;
-
     if (str == NULL || list == NULL)
     {
         return false;
     }
 
-    for (rp = list; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
         if (rp->type != CF_SCALAR)
         {
@@ -289,9 +282,9 @@ Rval CopyRvalItem(Rval rval)
 
 /*******************************************************************/
 
-Rlist *CopyRlist(Rlist *list)
+Rlist *CopyRlist(const Rlist *list)
 {
-    Rlist *rp, *start = NULL;
+    Rlist *start = NULL;
 
     CfDebug("CopyRlist()\n");
 
@@ -300,7 +293,7 @@ Rlist *CopyRlist(Rlist *list)
         return NULL;
     }
 
-    for (rp = list; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
         AppendRlist(&start, rp->item, rp->type);        // allocates memory for objects
     }
@@ -622,12 +615,11 @@ Rlist *OrthogAppendRlist(Rlist **start, void *item, char type)
 
 /*******************************************************************/
 
-int RlistLen(Rlist *start)
+int RlistLen(const Rlist *start)
 {
     int count = 0;
-    Rlist *rp;
 
-    for (rp = start; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = start; rp != NULL; rp = rp->next)
     {
         count++;
     }
@@ -658,13 +650,11 @@ Rlist *ParseShownRlist(char *string)
 
 /*******************************************************************/
 
-void ShowRlist(FILE *fp, Rlist *list)
+void ShowRlist(FILE *fp, const Rlist *list)
 {
-    Rlist *rp;
-
     fprintf(fp, " {");
 
-    for (rp = list; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
         fprintf(fp, "\'");
         ShowRval(fp, (Rval) {rp->item, rp->type});
@@ -1028,13 +1018,12 @@ void PopStack(Rlist **liststart, void **item, size_t size)
 
 /*******************************************************************/
 
-Rlist *SplitStringAsRList(char *string, char sep)
+Rlist *SplitStringAsRList(const char *string, char sep)
  /* Splits a string containing a separator like "," 
     into a linked list of separate items, supports
     escaping separators, e.g. \, */
 {
     Rlist *liststart = NULL;
-    char *sp;
     char node[CF_MAXVARSIZE];
     int maxlen = strlen(string);
 
@@ -1045,7 +1034,7 @@ Rlist *SplitStringAsRList(char *string, char sep)
         return NULL;
     }
 
-    for (sp = string; *sp != '\0'; sp++)
+    for (const char *sp = string; *sp != '\0'; sp++)
     {
         if (*sp == '\0' || sp > string + maxlen)
         {
@@ -1064,14 +1053,13 @@ Rlist *SplitStringAsRList(char *string, char sep)
 
 /*******************************************************************/
 
-Rlist *SplitRegexAsRList(char *string, char *regex, int max, int blanks)
+Rlist *SplitRegexAsRList(const char *string, const char *regex, int max, int blanks)
  /* Splits a string containing a separator like "," 
     into a linked list of separate items, */
 // NOTE: this has a bad side-effect of creating scope match and variables,
 //       see RegExMatchSubString in matching.c - could leak memory
 {
     Rlist *liststart = NULL;
-    char *sp;
     char node[CF_MAXVARSIZE];
     int start, end;
     int count = 0;
@@ -1083,7 +1071,7 @@ Rlist *SplitRegexAsRList(char *string, char *regex, int max, int blanks)
 
     CfDebug("\n\nSplit \"%s\" with regex \"%s\" (up to maxent %d)\n\n", string, regex, max);
 
-    sp = string;
+    const char *sp = string;
 
     while ((count < max) && BlockTextMatch(regex, sp, &start, &end))
     {
@@ -1167,11 +1155,11 @@ Rlist *RlistAt(Rlist *start, size_t index)
 
 /*******************************************************************/
 
-static void RlistPrint(Writer *writer, Rlist *list)
+static void RlistPrint(Writer *writer, const Rlist *list)
 {
     WriterWrite(writer, " {");
 
-    for (Rlist *rp = list; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
         WriterWriteChar(writer, '\'');
         RvalPrint(writer, (Rval) {rp->item, rp->type});

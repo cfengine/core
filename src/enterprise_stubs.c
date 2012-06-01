@@ -70,7 +70,7 @@ int EnterpriseExpiry(void)
 /* all agents: cfstream.c, expand.c, generic_agent.c */
 
 
-const char *PromiseID(Promise *pp)
+const char *PromiseID(const Promise *pp)
 {
     return "";
 }
@@ -79,7 +79,7 @@ const char *PromiseID(Promise *pp)
 /* all agents: expand.c */
 
 
-void RegisterBundleDependence(char *name, Promise *pp)
+void RegisterBundleDependence(char *name, const Promise *pp)
 {
 }
 

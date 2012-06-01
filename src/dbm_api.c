@@ -242,12 +242,12 @@ bool DeleteComplexKeyDB(DBHandle *handle, const char *key, int key_size)
     return DBPrivDelete(handle->priv, key, key_size);
 }
 
-bool ReadDB(DBHandle *handle, char *key, void *dest, int destSz)
+bool ReadDB(DBHandle *handle, const char *key, void *dest, int destSz)
 {
     return DBPrivRead(handle->priv, key, strlen(key) + 1, dest, destSz);
 }
 
-bool WriteDB(DBHandle *handle, char *key, const void *src, int srcSz)
+bool WriteDB(DBHandle *handle, const char *key, const void *src, int srcSz)
 {
     return DBPrivWrite(handle->priv, key, strlen(key) + 1, src, srcSz);
 }
@@ -262,7 +262,7 @@ int ValueSizeDB(DBHandle *handle, const char *key, int key_size)
     return DBPrivGetValueSize(handle->priv, key, key_size);
 }
 
-bool DeleteDB(DBHandle *handle, char *key)
+bool DeleteDB(DBHandle *handle, const char *key)
 {
     return DBPrivDelete(handle->priv, key, strlen(key) + 1);
 }

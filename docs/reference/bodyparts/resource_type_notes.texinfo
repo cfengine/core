@@ -30,6 +30,11 @@ access:
   resource_type => "literal";
 @end verbatim
 
+If the resource type is @code{context}, the promiser is treated as a
+regular expression to match persistent classes defined on the server
+host. If these are matched by the request from the client, they will
+be transmitted, @xref{Function remoteclassesmatching}.
+
 The term @code{query} may also be used in commercial versions of
 CFEngine to query the server for data from embedded databases. This is
 currently for internal use only, and is used to grant access to report

@@ -54,7 +54,7 @@ const BodySyntax CF_REMACCESS_BODIES[] =
     {"ifencrypted", cf_opts, CF_BOOL,
      "true/false whether the current file access promise is conditional on the connection from the client being encrypted",
      "false"},
-    {"resource_type", cf_opts, "path,literal,context,query",
+    {"resource_type", cf_opts, "path,literal,context,query,variable",
      "The type of object being granted access (the default grants access to files)"},
     {NULL, cf_notype, NULL, NULL}
 };

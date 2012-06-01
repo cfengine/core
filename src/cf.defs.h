@@ -1056,6 +1056,7 @@ struct Auth_
     int encrypt;                /* which files HAVE to be transmitted securely */
     int literal;
     int classpattern;
+    int variable;
     Auth *next;
 };
 

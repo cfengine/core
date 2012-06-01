@@ -110,6 +110,35 @@ void Summarize()
         }
     }
 
+    CfOut(cf_verbose, "", "Granted access to literal/variable/query data :\n");
+
+    for (ptr = VARADMIT; ptr != NULL; ptr = ptr->next)
+    {
+        CfOut(cf_verbose, "", "  Object: %s (encrypt=%d)\n", ptr->path, ptr->encrypt);
+
+        for (ip = ptr->accesslist; ip != NULL; ip = ip->next)
+        {
+            CfOut(cf_verbose, "", "   Admit: %s root=", ip->name);
+            for (ipr = ptr->maproot; ipr != NULL; ipr = ipr->next)
+            {
+                CfOut(cf_verbose, "", "%s,", ipr->name);
+            }
+        }
+    }
+
+    CfOut(cf_verbose, "", "Denied access to literal/variable/query data :\n");
+
+    for (ptr = VARDENY; ptr != NULL; ptr = ptr->next)
+    {
+        CfOut(cf_verbose, "", "  Object: %s\n", ptr->path);
+
+        for (ip = ptr->accesslist; ip != NULL; ip = ip->next)
+        {
+            CfOut(cf_verbose, "", "   Deny: %s\n", ip->name);
+        }
+    }
+
+    
     CfOut(cf_verbose, "", " -> Host IPs allowed connection access :\n");
 
     for (ip = NONATTACKERLIST; ip != NULL; ip = ip->next)
@@ -527,6 +556,12 @@ static void KeepServerPromise(Promise *pp)
         return;
     }
 
+    if (strcmp(pp->agentsubtype, "access") == 0 && sp && strcmp(sp, "variable") == 0)
+    {
+        KeepLiteralAccessPromise(pp, "variable");
+        return;
+    }
+    
     if (strcmp(pp->agentsubtype, "access") == 0 && sp && strcmp(sp, "query") == 0)
     {
         KeepQueryAccessPromise(pp, "query");
@@ -638,35 +673,44 @@ void KeepLiteralAccessPromise(Promise *pp, char *type)
     Auth *ap, *dp;
     char *handle = GetConstraintValue("handle", pp, CF_SCALAR);
 
-    if (handle == NULL)
+    if (handle == NULL && strcmp(type,"literal") == 0)
     {
         CfOut(cf_error, "", "Access to literal server data requires you to define a promise handle for reference");
         return;
     }
+
+    CfOut(cf_verbose,""," -> Looking at literal access promise \"%s\", type %s",pp->promiser, type);
 
     if (!GetAuthPath(handle, VARADMIT))
     {
         InstallServerAuthPath(handle, &VARADMIT, &VARADMITTOP);
     }
 
-    RegisterLiteralServerData(handle, pp);
-
     if (!GetAuthPath(handle, VARDENY))
     {
         InstallServerAuthPath(handle, &VARDENY, &VARDENYTOP);
     }
 
-    ap = GetAuthPath(handle, VARADMIT);
-    dp = GetAuthPath(handle, VARDENY);
-
     if (strcmp(type, "literal") == 0)
     {
+        RegisterLiteralServerData(handle, pp);
+        ap = GetAuthPath(handle, VARADMIT);
+        dp = GetAuthPath(handle, VARDENY);
         ap->literal = true;
     }
 
     if (strcmp(type, "context") == 0)
     {
+        ap = GetAuthPath(handle, VARADMIT);
+        dp = GetAuthPath(handle, VARDENY);
         ap->classpattern = true;
+    }
+
+    if (strcmp(type, "variable") == 0)
+    {
+        ap = GetAuthPath(pp->promiser, VARADMIT); // Allow the promiser (preferred) as well as handle as variable name
+        dp = GetAuthPath(pp->promiser, VARDENY);
+        ap->variable = true;
     }
 
     for (cp = pp->conlist; cp != NULL; cp = cp->next)

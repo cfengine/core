@@ -2210,7 +2210,7 @@ static int LiteralAccessControl(char *in, ServerConnectionState *conn, int encry
         {
             CfOut(cf_verbose, "", "Found a matching rule in access list (%s in %s)\n", name, ap->path);
 
-            if (ap->literal == false)
+            if (!ap->literal && !ap->variable)
             {
                 CfOut(cf_error, "",
                       "Variable/query \"%s\" requires a literal server item...cannot set variable directly by path\n",

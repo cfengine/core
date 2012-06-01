@@ -73,8 +73,10 @@ Copyright @copyright{} 2009 CFEngine AS
 
 @ifnottex
 
+
 @node Top, What is modularity?, (dir), (dir)
 @top Orchestration
+
 @menu
 * What is modularity?::         
 * What is orchestration?::      
@@ -83,13 +85,14 @@ Copyright @copyright{} 2009 CFEngine AS
 * Is CFEngine patch or package oriented?::  
 * High level services in CFEngine::  
 * Hiding details::              
-* Black::                       
+* Black grey and white box encapsulation in CFEngine::  
 * Bulk operations are handled by repeating patterns over lists::  
 * Ordering operations in CFEngine::  
 * Bundle ordering::             
 * Overriding order::            
-* Distributing Ordering between hosts with CFEngine Nova::  
+* Distributed Orchestration between hosts with CFEngine Enterprise::  
 @end menu
+
 @end ifnottex
 @iftex
 @contents
@@ -121,17 +124,18 @@ the containers.
 
 @sp 1
 Orchestration is the ability to coordinate many different processes in
-a system so that the sum of those processes yields a harmonious result.
-Orchestration is not about centralized control, though this is common
-misperception.
+time and space, around a system, so that the sum of those processes
+yields a harmonious result through cooperation.  
 
-An orchestra does not manage to play a symphony because the conductor
-pulls every player's strings or blows every trumpet in person, but
-rather because each @i{autonomous} player has a copy of the script,
-knows what to do, and can use just the little additional information
-from the conductor to access a viewpoint that is not available to an
-individual. An orchestra is a weakly coupled expert system in which
-the management (conductor) provides a service to the players.
+Orchestration is not about centralized control, though this is common
+misperception.  An orchestra does not manage to play a symphony
+because the conductor pulls every player's strings or blows every
+trumpet in person, but rather because each @i{autonomous} player has a
+copy of the script, knows what to do, and can use just the little
+additional information from the conductor to access a viewpoint that
+is not available to an individual. An orchestra is a weakly coupled
+expert system in which the management (conductor) provides a service
+to the players.
 
 CFEngine works like an orchestra -- this is why is scales so well.
 Each computer is an autonomous entity, getting its script and a few
@@ -375,25 +379,14 @@ vars:
  # Apply the following promises to this list...
  #
 
-processes:
+services:
 
-  "$(daemon[$(service)])" restart_class => canonify("start_$(service)");
-
-commands:
-
-   "$(start[$(service)])"
-       ifvarclass => canonify("start_$(service)");
+   "$(service)";
 
 }
 @end verbatim
 
-This assumes that we can define the necessary information about these
-services in array variables of the form @code{$(array[index])}.
-This is what other tools refer to as a @i{resource abstraction layer},
-though in some other tools this layer has to be partially hard-coded.
-We can see some more approaches below, but let's look at this abstraction for a moment.
-
-@node Hiding details, Black, High level services in CFEngine, Top
+@node Hiding details, Black grey and white box encapsulation in CFEngine, High level services in CFEngine, Top
 @unnumberedsec Hiding details
 
 Resource abstraction, or hiding system specific details inside a kind of
@@ -445,7 +438,7 @@ require basic recoding of the software. CFEngine does not make decisions
 for you without your permission.
 
 
-@node Black, Bulk operations are handled by repeating patterns over lists, Hiding details, Top
+@node Black grey and white box encapsulation in CFEngine, Bulk operations are handled by repeating patterns over lists, Hiding details, Top
 @unnumberedsec Black, grey and white box encapsulation in CFEngine
 
 CFEngine's ability to abstract system decisions as promises also
@@ -509,7 +502,7 @@ commands:
 
 @end verbatim
 
-@node Bulk operations are handled by repeating patterns over lists, Ordering operations in CFEngine, Black, Top
+@node Bulk operations are handled by repeating patterns over lists, Ordering operations in CFEngine, Black grey and white box encapsulation in CFEngine, Top
 @unnumberedsec Bulk operations are handled by repeating patterns over lists
 
 
@@ -677,7 +670,7 @@ methods:
 
 
 @page
-@node Overriding order, Distributing Ordering between hosts with CFEngine Nova, Bundle ordering, Top
+@node Overriding order, Distributed Orchestration between hosts with CFEngine Enterprise, Bundle ordering, Top
 @unnumberedsec Overriding order
 
 CFEngine is designed to handle non-deterministic events, such as
@@ -719,8 +712,10 @@ Q: ".../bin/echo four": four
 Q: ".../bin/echo five": five
 @end verbatim
 
-@node Distributing Ordering between hosts with CFEngine Nova,  , Overriding order, Top
-@unnumberedsec Distributing Ordering between hosts with CFEngine Nova
+
+
+@node Distributed Orchestration between hosts with CFEngine Enterprise,  , Overriding order, Top
+@unnumberedsec Distributed Orchestration between hosts with CFEngine Enterprise
 
 CFEngine Nova adds many powerful features to CFEngine, including
 a decentralized approach to coordinating activities across multiple
@@ -735,6 +730,209 @@ network in a single location, but this has two problems:
 With CFEngine Nova there are are both decentralized network approaches
 to this problem, and probabilistic methods that do not require the network
 at all.
+
+@menu
+* Basic communication methods for orchestration::  
+* Run job or reboot only if n out m systems are running::  
+* The self-healing chain - inverse Dominoes::  
+* A Chinese Dragon Domino sequence::  
+@end menu
+
+@node  Basic communication methods for orchestration, Run job or reboot only if n out m systems are running, Distributed Orchestration between hosts with CFEngine Enterprise, Distributed Orchestration between hosts with CFEngine Enterprise
+@unnumberedsubsec Basic communication methods for orchestration
+
+The two examples below illustrate the basic syntax constructions for
+communication using systems. We can pass class data and variable data between
+systems in a peer to peer fashion, or through an Enterprise hub. You can 
+run these with a server and an agent just on localhost to illustrate the
+principles.
+
+In this first example, three persistent classes, with names following
+a known pattern are defined on a remote system (by the agent). The
+server bundle then grants access to these using an access
+promise. Finally, a function call to @code{remoteclassesmatching}
+imports the classes, with a prefix to the local system.
+
+@verbatim
+
+body common control
+{
+bundlesequence => { "overture" };
+inputs => { "cfengine_stdlib.cf" };
+}
+
+body server control 
+
+{
+allowconnects         => { "127.0.0.1" , "::1",};
+allowallconnects      => { "127.0.0.1" , "::1", };
+trustkeysfrom         => { "127.0.0.1" , "::1",};
+}
+
+#######################################################
+
+bundle agent overture
+{
+classes:
+  "extended_context" 
+     expression => remoteclassesmatching(".*did.*","127.0.0.1","yes","got");
+
+files:
+
+   "/etc/passwd"
+     create => "true",
+    classes => set_outcome_classes;
+
+
+reports:
+
+ got_did_task_one::
+    "task 1 complete";
+
+ extended_context.got_did_task_two::
+    "task 2 complete";
+
+ extended_context.got_did_task_three::
+    "task 3 complete";
+
+}
+
+body classes set_outcome_classes
+{
+promise_kept => { "did_task_one","did_task_two", "did_task_three" };
+promise_repaired => { "did_task_one","did_task_two", "did_task_three" };
+#cancel_kept => { "did_task_one" };
+persist_time => "10";
+}
+
+bundle server access_rules()
+{
+access:
+
+  "did.*"
+    resource_type => "context",
+    admit => { "127.0.0.1" };
+
+}
+
+@end verbatim
+@noindent The output of this, on success is simply:
+@smallexample
+
+R: task 1 complete
+R: task 2 complete
+R: task 3 complete
+
+@end smallexample
+
+
+@noindent In this second example, we pass actual variable data between hosts.
+The generic peer function @code{remotescalar} can address any other host
+running  @code{cf-serverd}. The abbreviated interface @code{hubknowledge}
+assumes that it should get data from a hub.
+
+Both these functions ask for an identifier; it is up to the server to interpret
+what this means and to return a value of its choosing. If the identifier matches
+a persistent scalar variable (such as is used to count distributed processes in CFEngine
+Enterprise) then this will be returned preferentially. If no such variable is found,
+then the server will look for a literal string in a server bundle with a handle that
+matches the requested object.
+
+
+
+@verbatim
+
+body common control
+{
+bundlesequence => { "overture" };
+inputs => { "cfengine_stdlib.cf" };
+}
+
+body server control 
+
+{
+allowconnects         => { "127.0.0.1" , "::1",};
+allowallconnects      => { "127.0.0.1" , "::1", };
+trustkeysfrom         => { "127.0.0.1" , "::1",};
+}
+
+#######################################################
+
+bundle agent overture
+{
+vars:
+
+  "remote" string => remotescalar("test_scalar","127.0.0.1","yes");
+
+  "know" string => hubknowledge("test_scalar");
+
+  "count_getty" string => hubknowledge("count_getty");
+
+processes:
+
+  # Use the enumerated library body to count hosts running getty
+
+  "getty" 
+
+       comment => "Count this host if a job is matched",
+       classes => enumerate("count_getty");
+
+reports:
+
+ !elsewhere::
+
+    "GOT remote scalar $(remote)";
+    "GOT knowedge scalar $(know)";
+    "GOT persistent scalar $(xyz)";
+
+}
+
+#######################################################
+
+bundle server access_rules()
+{
+access:
+
+  "value of my test_scalar, can expand variables here - $(sys.host)"
+    handle => "test_scalar",
+    comment => "Grant access to contents of test_scalar VAR",
+    resource_type => "literal",
+    admit => { "127.0.0.1" };
+
+  "XYZ"
+    resource_type => "variable",
+    handle => "XYZ",
+    admit => { "127.0.0.1" };
+
+}
+@end verbatim
+
+@noindent You can run this example on a single host, running the server, the agent and the hub (if you have Enterprise CFEngine). 
+The output will be something like this:
+@smallexample
+
+host$ ./cf-agent -f ~/test.cf -K
+R: GOT remote scalar value of my test_scalar, can expand variables here - cflu-10004
+R: GOT knowedge scalar value of my test_scalar, can expand variables here - cflu-10004
+R: GOT persistent scalar 1
+
+@end smallexample
+
+
+
+@node Run job or reboot only if n out m systems are running, The self-healing chain - inverse Dominoes, Basic communication methods for orchestration, Distributed Orchestration between hosts with CFEngine Enterprise
+@unnumberedsubsec Run job or reboot only if n out m systems are running
+
+@node The self-healing chain - inverse Dominoes, A Chinese Dragon Domino sequence, Run job or reboot only if n out m systems are running, Distributed Orchestration between hosts with CFEngine Enterprise
+@unnumberedsubsec The self-healing chain - inverse Dominoes
+
+
+@node A Chinese Dragon Domino sequence,  , The self-healing chain - inverse Dominoes, Distributed Orchestration between hosts with CFEngine Enterprise
+@unnumberedsubsec A Chinese Dragon Domino sequence
+
+
+
+
 
 
 

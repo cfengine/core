@@ -678,41 +678,56 @@ void KeepLiteralAccessPromise(Promise *pp, char *type)
         CfOut(cf_error, "", "Access to literal server data requires you to define a promise handle for reference");
         return;
     }
-
-    CfOut(cf_verbose,""," -> Looking at literal access promise \"%s\", type %s",pp->promiser, type);
-
-    if (!GetAuthPath(handle, VARADMIT))
-    {
-        InstallServerAuthPath(handle, &VARADMIT, &VARADMITTOP);
-    }
-
-    if (!GetAuthPath(handle, VARDENY))
-    {
-        InstallServerAuthPath(handle, &VARDENY, &VARDENYTOP);
-    }
-
+    
     if (strcmp(type, "literal") == 0)
     {
+        CfOut(cf_verbose,""," -> Looking at literal access promise \"%s\", type %s",pp->promiser, type);
+
+        if (!GetAuthPath(handle, VARADMIT))
+        {
+            InstallServerAuthPath(handle, &VARADMIT, &VARADMITTOP);
+        }
+
+        if (!GetAuthPath(handle, VARDENY))
+        {
+            InstallServerAuthPath(handle, &VARDENY, &VARDENYTOP);
+        }
+
         RegisterLiteralServerData(handle, pp);
         ap = GetAuthPath(handle, VARADMIT);
         dp = GetAuthPath(handle, VARDENY);
         ap->literal = true;
     }
-
-    if (strcmp(type, "context") == 0)
+    else
     {
-        ap = GetAuthPath(handle, VARADMIT);
-        dp = GetAuthPath(handle, VARDENY);
-        ap->classpattern = true;
-    }
+        CfOut(cf_verbose,""," -> Looking at context/var access promise \"%s\", type %s",pp->promiser, type);
 
-    if (strcmp(type, "variable") == 0)
-    {
-        ap = GetAuthPath(pp->promiser, VARADMIT); // Allow the promiser (preferred) as well as handle as variable name
-        dp = GetAuthPath(pp->promiser, VARDENY);
-        ap->variable = true;
-    }
+        if (!GetAuthPath(handle, VARADMIT))
+        {
+            InstallServerAuthPath(pp->promiser, &VARADMIT, &VARADMITTOP);
+        }
 
+        if (!GetAuthPath(handle, VARDENY))
+        {
+            InstallServerAuthPath(pp->promiser, &VARDENY, &VARDENYTOP);
+        }
+
+
+        if (strcmp(type, "context") == 0)
+        {
+            ap = GetAuthPath(pp->promiser, VARADMIT);
+            dp = GetAuthPath(pp->promiser, VARDENY);
+            ap->classpattern = true;
+        }
+
+        if (strcmp(type, "variable") == 0)
+        {
+            ap = GetAuthPath(pp->promiser, VARADMIT); // Allow the promiser (preferred) as well as handle as variable name
+            dp = GetAuthPath(pp->promiser, VARDENY);
+            ap->variable = true;
+        }
+    }
+    
     for (cp = pp->conlist; cp != NULL; cp = cp->next)
     {
         if (!IsDefinedClass(cp->classes))
@@ -923,6 +938,8 @@ static void InstallServerAuthPath(char *path, Auth **list, Auth **listtop)
 
     ptr->path = xstrdup(path);
     *listtop = ptr;
+
+    printf("INNNNNNNN %s\n",path);
 }
 
 /***********************************************************************/

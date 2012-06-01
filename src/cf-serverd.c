@@ -2349,7 +2349,7 @@ static Item *ContextAccessControl(char *in, ServerConnectionState *conn, int enc
         {
             int res = false;
 
-            if (FullTextMatch(ap->path, ip->name) == 0)
+            if (FullTextMatch(ap->path, ip->name))
             {
                 res = true;
             }

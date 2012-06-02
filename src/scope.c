@@ -205,7 +205,7 @@ void DeleteAllScope()
     {
         this = ptr;
         CfDebug(" -> Deleting scope %s\n", ptr->scope);
-        HashClear(this->hashtable);
+        HashFree(this->hashtable);
         free(this->scope);
         ptr = this->next;
         free((char *) this);

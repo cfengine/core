@@ -938,8 +938,6 @@ static void InstallServerAuthPath(char *path, Auth **list, Auth **listtop)
 
     ptr->path = xstrdup(path);
     *listtop = ptr;
-
-    printf("INNNNNNNN %s\n",path);
 }
 
 /***********************************************************************/

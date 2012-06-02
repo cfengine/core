@@ -838,6 +838,10 @@ void Unix_GetInterfaceInfo(enum cfagenttype ag)
     NewList("sys", "interfaces", interfaces, cf_slist);
     NewList("sys", "hardware_addresses", hardware, cf_slist);
     NewList("sys", "ip_addresses", ips, cf_slist);
+
+    DeleteRlist(interfaces);
+    DeleteRlist(hardware);
+    DeleteRlist(ips);
 }
 
 /*******************************************************************/

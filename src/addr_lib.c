@@ -24,14 +24,13 @@
 
 #include "cf3.defs.h"
 
-/*********************************************************************/
-
-int FuzzySetMatch(char *s1, char *s2)
 /* Match two IP strings - with : or . in hex or decimal
    s1 is the test string, and s2 is the reference e.g.
    FuzzySetMatch("128.39.74.10/23","128.39.75.56") == 0
 
    Returns 0 on match. */
+
+int FuzzySetMatch(char *s1, char *s2)
 {
     short isCIDR = false, isrange = false, isv6 = false, isv4 = false;
     char address[CF_ADDRSIZE];
@@ -277,8 +276,6 @@ int FuzzySetMatch(char *s1, char *s2)
     return -1;
 }
 
-/*********************************************************************/
-
 int FuzzyHostParse(char *arg1, char *arg2)
 {
     long start = -1, end = -1;
@@ -295,8 +292,6 @@ int FuzzyHostParse(char *arg1, char *arg2)
 
     return true;
 }
-
-/*********************************************************************/
 
 int FuzzyHostMatch(char *arg0, char *arg1, char *refhost)
 {
@@ -513,7 +508,6 @@ int FuzzyMatchParse(char *s)
 
     return true;
 }
-
 
 /* FIXME: handle 127.0.0.2, 127.255.255.254, ::1,
  * 0000:0000:0000:0000:0000:0000:0000:0001, 0:00:000:0000:000:00:0:1, 0::1 and

@@ -33,6 +33,7 @@
 #include "files_names.h"
 #include "vars.h"
 #include "promises.h"
+#include "item_lib.h"
 
 #define QUEUESIZE 50
 #define CF_BUFEXT 128

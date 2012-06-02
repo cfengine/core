@@ -27,6 +27,7 @@
 
 #include "files_names.h"
 #include "addr_lib.h"
+#include "item_lib.h"
 
 /*******************************************************************/
 

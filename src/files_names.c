@@ -29,6 +29,7 @@
 #include "promises.h"
 #include "cf3.defs.h"
 #include "dir.h"
+#include "item_lib.h"
 
 /*****************************************************************************/
 

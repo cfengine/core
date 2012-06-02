@@ -33,6 +33,7 @@
 #include "mod_measurement.h"
 #include "mod_exec.h"
 #include "mod_access.h"
+#include "item_lib.h"
 
 extern char BUILD_DIR[CF_BUFSIZE];
 extern char MANDIR[CF_BUFSIZE];

@@ -84,7 +84,7 @@ libpromises_la_SOURCES = \
         html.c \
         install.c \
         instrumentation.c \
-        item_lib.c \
+        item_lib.c item_lib.h \
         iteration.c \
         json.c json.h \
         keyring.c \

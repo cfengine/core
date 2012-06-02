@@ -27,6 +27,7 @@
 
 #include "dbm_api.h"
 #include "files_names.h"
+#include "item_lib.h"
 
 static void ShowState(char *type, Attributes a, Promise *pp);
 static void PrintFile(Attributes a, Promise *pp);

@@ -29,6 +29,7 @@
 #include "json.h"
 #include "files_names.h"
 #include "mod_files.h"
+#include "item_lib.h"
 
 static const int PRETTY_PRINT_SPACES_PER_INDENT = 2;
 

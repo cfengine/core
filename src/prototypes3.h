@@ -501,62 +501,6 @@ void CfHtmlFooter(FILE *fp, char *footer);
 void CfHtmlTitle(FILE *fp, char *title);
 int IsHtmlHeader(char *s);
 
-/* item_lib.c */
-
-int PrintItemList(char *buffer, int bufsize, Item *list);
-void PrependFullItem(Item **liststart, char *itemstring, char *classes, int counter, time_t t);
-void PurgeItemList(Item **list, char *name);
-Item *ReturnItemIn(Item *list, const char *item);
-Item *ReturnItemInClass(Item *list, char *item, char *classes);
-Item *ReturnItemAtIndex(Item *list, int index);
-int GetItemIndex(Item *list, char *item);
-Item *EndOfList(Item *start);
-int IsItemInRegion(char *item, Item *begin, Item *end, Attributes a, Promise *pp);
-void PrependItemList(Item **liststart, char *itemstring);
-int SelectItemMatching(Item *s, char *regex, Item *begin, Item *end, Item **match, Item **prev, char *fl);
-int SelectNextItemMatching(char *regexp, Item *begin, Item *end, Item **match, Item **prev);
-int SelectLastItemMatching(char *regexp, Item *begin, Item *end, Item **match, Item **prev);
-void InsertAfter(Item **filestart, Item *ptr, char *string);
-int NeighbourItemMatches(Item *start, Item *location, char *string, enum cfeditorder pos, Attributes a, Promise *pp);
-int RawSaveItemList(Item *liststart, char *file);
-Item *SplitStringAsItemList(char *string, char sep);
-Item *SplitString(const char *string, char sep);
-int DeleteItemGeneral(Item **filestart, const char *string, enum matchtypes type);
-int DeleteItemLiteral(Item **filestart, const char *string);
-int DeleteItemStarting(Item **list, char *string);
-int DeleteItemNotStarting(Item **list, char *string);
-int DeleteItemMatching(Item **list, char *string);
-int DeleteItemNotMatching(Item **list, char *string);
-int DeleteItemContaining(Item **list, char *string);
-int DeleteItemNotContaining(Item **list, char *string);
-int CompareToFile(Item *liststart, char *file, Attributes a, Promise *pp);
-Item *String2List(char *string);
-int ListLen(Item *list);
-int ByteSizeList(const Item *list);
-bool IsItemIn(Item *list, const char *item);
-int IsMatchItemIn(Item *list, char *item);
-Item *ConcatLists(Item *list1, Item *list2);
-void CopyList(Item **dest, Item *source);
-void IdempItemCount(Item **liststart, const char *itemstring, const char *classes);
-Item *IdempPrependItem(Item **liststart, const char *itemstring, const char *classes);
-Item *IdempPrependItemClass(Item **liststart, char *itemstring, char *classes);
-Item *PrependItem(Item **liststart, const char *itemstring, const char *classes);
-void AppendItem(Item **liststart, const char *itemstring, const char *classes);
-void DeleteItemList(Item *item);
-void DeleteItem(Item **liststart, Item *item);
-void DebugListItemList(Item *liststart);
-Item *SplitStringAsItemList(char *string, char sep);
-void IncrementItemListCounter(Item *ptr, char *string);
-void SetItemListCounter(Item *ptr, char *string, int value);
-Item *SortItemListNames(Item *list);
-Item *SortItemListClasses(Item *list);
-Item *SortItemListCounters(Item *list);
-Item *SortItemListTimes(Item *list);
-char *ItemList2CSV(Item *list);
-int ItemListSize(Item *list);
-int MatchRegion(char *chunk, Item *location, Item *begin, Item *end);
-Item *DeleteRegion(Item **liststart, Item *begin, Item *end);
-
 /* iteration.c */
 
 Rlist *NewIterationContext(const char *scopeid, Rlist *listvars);

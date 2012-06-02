@@ -28,6 +28,7 @@
 #include "env_context.h"
 #include "files_names.h"
 #include "vars.h"
+#include "item_lib.h"
 
 void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname, char *uqname, char *domain);
 

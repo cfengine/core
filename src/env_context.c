@@ -32,6 +32,7 @@
 #include "logic_expressions.h"
 #include "dbm_api.h"
 #include "syntax.h"
+#include "item_lib.h"
 
 /*****************************************************************************/
 

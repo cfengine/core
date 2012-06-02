@@ -28,6 +28,7 @@
 #include "env_context.h"
 #include "promises.h"
 #include "syntax.h"
+#include "item_lib.h"
 
 static PromiseIdent *PromiseIdExists(char *handle);
 static void DeleteAllPromiseIdsRecurse(PromiseIdent *key);

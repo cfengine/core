@@ -30,6 +30,7 @@
 #include "dbm_api.h"
 #include "policy.h"
 #include "promises.h"
+#include "item_lib.h"
 
 #include <math.h>
 

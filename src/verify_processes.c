@@ -27,6 +27,7 @@
 #include "env_context.h"
 #include "promises.h"
 #include "vars.h"
+#include "item_lib.h"
 
 static int ProcessSanityChecks(Attributes a, Promise *pp);
 static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp);

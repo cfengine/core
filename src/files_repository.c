@@ -26,6 +26,7 @@
 #include "cf3.defs.h"
 
 #include "files_names.h"
+#include "item_lib.h"
 
 /*********************************************************************/
 

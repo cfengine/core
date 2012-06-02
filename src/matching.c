@@ -28,6 +28,7 @@
 #include "env_context.h"
 #include "vars.h"
 #include "promises.h"
+#include "item_lib.h"
 
 #ifdef HAVE_PCRE_H
 # include <pcre.h>

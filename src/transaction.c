@@ -30,6 +30,7 @@
 #include "transaction.h"
 #include "dbm_api.h"
 #include "files_names.h"
+#include "item_lib.h"
 
 static void WaitForCriticalSection(void);
 static void ReleaseCriticalSection(void);

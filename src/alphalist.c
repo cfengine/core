@@ -23,6 +23,7 @@
 */
 
 #include "cf3.defs.h"
+#include "item_lib.h"
 
 /*****************************************************************************/
 /* This library creates a simple indexed array of lists for optimization of

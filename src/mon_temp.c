@@ -25,6 +25,7 @@
 #include "cf3.defs.h"
 #include "monitoring.h"
 #include "dir.h"
+#include "item_lib.h"
 
 /* Globals */
 

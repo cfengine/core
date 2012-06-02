@@ -28,6 +28,7 @@
 #include "env_context.h"
 #include "vars.h"
 #include "files_names.h"
+#include "item_lib.h"
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>

@@ -27,6 +27,7 @@
 
 #include "files_names.h"
 #include "constraints.h"
+#include "item_lib.h"
 
 #include <stdarg.h>
 

@@ -30,6 +30,7 @@
 #include "verify_environments.h"
 #include "addr_lib.h"
 #include "files_names.h"
+#include "item_lib.h"
 
 extern int PR_KEPT;
 extern int PR_REPAIRED;

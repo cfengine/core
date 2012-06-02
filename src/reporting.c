@@ -29,6 +29,7 @@
 #include "constraints.h"
 #include "promises.h"
 #include "files_names.h"
+#include "item_lib.h"
 
 char *CFX[][2] =
 {

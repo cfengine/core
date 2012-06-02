@@ -26,6 +26,7 @@
 
 #include "files_names.h"
 #include "monitoring.h"
+#include "item_lib.h"
 
 /* Constants */
 

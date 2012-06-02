@@ -29,6 +29,7 @@
 #include "promises.h"
 #include "policy.h"
 #include "syntax.h"
+#include "item_lib.h"
 
 static void DeleteSubTypes(SubType *tp);
 

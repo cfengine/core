@@ -30,6 +30,7 @@
 #include "files_names.h"
 #include "ontology.h"
 #include "export_xml.h"
+#include "item_lib.h"
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);

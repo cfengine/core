@@ -35,6 +35,7 @@
 #include "constraints.h"
 #include "policy.h"
 #include "syntax.h"
+#include "item_lib.h"
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);

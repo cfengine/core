@@ -30,6 +30,7 @@
 #include "files_names.h"
 #include "mod_access.h"
 #include "constraints.h"
+#include "item_lib.h"
 
 static void KeepContextBundles(Policy *policy);
 static void KeepServerPromise(Promise *pp);

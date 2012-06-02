@@ -104,13 +104,20 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp)
         PopPrivateClassContext();
         THIS_BUNDLE = bp_stack;
 
-        if (retval)
+        switch (retval)
         {
-            cfPS(cf_verbose, CF_NOP, "", pp, a, " -> Method invoked successfully\n");
-        }
-        else
-        {
-            cfPS(cf_inform, CF_FAIL, "", pp, a, " !! Method could not be invoked successfully\n");
+        case CF_FAIL:
+            cfPS(cf_inform, CF_FAIL, "", pp, a, " !! Method failed in some repairs or aborted\n");
+            break;
+
+        case CF_CHG:
+            cfPS(cf_inform, CF_CHG, "", pp, a, " !! Method invoked repairs\n");
+            break;
+
+        default:
+            cfPS(cf_verbose, CF_NOP, "", pp, a, " -> Method verified\n");
+            break;
+
         }
 
         DeleteFromScope(bp->name, bp->args);

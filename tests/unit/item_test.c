@@ -2,6 +2,7 @@
 
 #include <setjmp.h>
 #include <cmockery.h>
+#include "item_lib.h"
 
 static void test_prepend_item(void **state)
 {

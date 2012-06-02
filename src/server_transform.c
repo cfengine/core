@@ -703,12 +703,12 @@ void KeepLiteralAccessPromise(Promise *pp, char *type)
     {
         CfOut(cf_verbose,""," -> Looking at context/var access promise \"%s\", type %s",pp->promiser, type);
 
-        if (!GetAuthPath(handle, VARADMIT))
+        if (!GetAuthPath(pp->promiser, VARADMIT))
         {
             InstallServerAuthPath(pp->promiser, &VARADMIT, &VARADMITTOP);
         }
 
-        if (!GetAuthPath(handle, VARDENY))
+        if (!GetAuthPath(pp->promiser, VARDENY))
         {
             InstallServerAuthPath(pp->promiser, &VARDENY, &VARDENYTOP);
         }

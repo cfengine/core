@@ -30,6 +30,7 @@
 #include "dir.h"
 #include "reporting.h"
 #include "scope.h"
+#include "files_copy.h"
 #include "files_interfaces.h"
 #include "files_hashes.h"
 #include "keyring.h"
@@ -47,10 +48,12 @@ bool LICENSE_INSTALL = false;
 char LICENSE_SOURCE[MAX_FILENAME];
 const char *remove_keys_host;
 static char *print_digest_arg = NULL;
+static char *trust_key_arg = NULL;
 
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
 
 static int PrintDigest(const char* pubkey);
+static int TrustKey(const char* pubkey);
 static void ShowLastSeenHosts(void);
 static int RemoveKeys(const char *host);
 static void KeepKeyPromises(void);
@@ -76,6 +79,7 @@ static const struct option OPTIONS[17] =
     {"remove-keys", required_argument, 0, 'r'},
     {"install-license", required_argument, 0, 'l'},
     {"print-digest", required_argument, 0, 'p'},
+    {"trust-key", required_argument, 0, 't'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -90,6 +94,7 @@ static const char *HINTS[17] =
     "Remove keys for specified hostname/IP",
     "Install license without boostrapping (CFEngine Enterprise only)",
     "Print digest of the specified public key",
+    "Make cf-serverd/cf-agent trust the specified public key",
     NULL
 };
 
@@ -126,6 +131,11 @@ int main(int argc, char *argv[])
         return success ? 0 : 1;
     }
 
+    if (trust_key_arg)
+    {
+        return TrustKey(trust_key_arg);
+    }
+
     KeepKeyPromises();
 
     ReportContextDestroy(report_context);
@@ -144,7 +154,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_KEYGEN);
 
-    while ((c = getopt_long(argc, argv, "dvf:VMp:sr:hl:", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvf:VMp:sr:t:hl:", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -182,6 +192,10 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'l':
             LICENSE_INSTALL = true;
             strlcpy(LICENSE_SOURCE, optarg, sizeof(LICENSE_SOURCE));
+            break;
+
+        case 't':
+            trust_key_arg = optarg;
             break;
 
         case 'h':
@@ -270,6 +284,23 @@ static int PrintDigest(const char* pubkey)
     fprintf(stdout, "%s\n", digeststr);
     free(digeststr);
     return 0; /* OK exitcode */
+}
+
+static int TrustKey(const char* pubkey)
+{
+    char *digeststr = GetPubkeyDigest(pubkey);
+    char outfilename[CF_BUFSIZE];
+    bool ok;
+
+    if (NULL == digeststr)
+        return 1; /* ERROR exitcode */
+
+    snprintf(outfilename, CF_BUFSIZE, "%s/ppkeys/root-%s.pub", CFWORKDIR, digeststr);
+    free(digeststr);
+
+    ok = CopyRegularFileDisk(pubkey, outfilename, false);
+
+    return (ok? 0 : 1);
 }
 
 static bool ShowHost(const char *hostkey, const char *address, bool incoming,

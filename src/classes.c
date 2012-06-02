@@ -120,23 +120,3 @@ const char *VFSTAB[HARD_CLASSES_MAX] =
     "/etc/fstab",               /* vmware */
 };
 
-const char *VNETSTAT[HARD_CLASSES_MAX] =
-{
-    "-",
-    "/usr/bin/netstat -rn",     /* hpux */
-    "/usr/bin/netstat -rn",     /* aix */
-    "/bin/netstat -rn",         /* linux */
-    "/usr/bin/netstat -rn",     /* solaris */
-    "/usr/bin/netstat -rn",     /* freebsd */
-    "/usr/bin/netstat -rn",     /* netbsd */
-    "/usr/ucb/netstat -rn",     /* cray */
-    "/cygdrive/c/WINNT/System32/netstat",       /* NT */
-    "/usr/bin/netstat -rn",     /* Unixware */
-    "/usr/bin/netstat -rn",     /* openbsd */
-    "/usr/bin/netstat -rn",     /* sco */
-    "/usr/sbin/netstat -rn",    /* darwin */
-    "/usr/bin/netstat -rn",     /* qnx */
-    "/usr/bin/netstat -rn",     /* dragonfly */
-    "mingw-invalid",            /* mingw */
-    "/usr/bin/netstat",         /* vmware */
-};

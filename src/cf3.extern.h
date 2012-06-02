@@ -98,7 +98,6 @@ extern int MINUSF;
 extern const char *VPSCOMM[];
 extern const char *VPSOPTS[];
 extern const char *VFSTAB[];
-extern const char *VNETSTAT[];
 
 extern int EDITFILESIZE;
 extern int VIFELAPSED;

@@ -105,7 +105,7 @@ void CfDeleteQuery(CfdbConn *cfdb);
 void DetermineCfenginePort(void);
 AgentConnection *NewServerConnection(Attributes attr, Promise *pp);
 AgentConnection *ServerConnection(char *server, Attributes attr, Promise *pp);
-void ServerDisconnection(AgentConnection *conn);
+void DisconnectServer(AgentConnection *conn);
 int cf_remote_stat(char *file, struct stat *buf, char *stattype, Attributes attr, Promise *pp);
 void DeleteClientCache(Attributes attr, Promise *pp);
 int CompareHashNet(char *file1, char *file2, Attributes attr, Promise *pp);

@@ -194,7 +194,7 @@ AgentConnection *ServerConnection(char *server, Attributes attr, Promise *pp)
 
             if (conn->sd != SOCKET_INVALID)
             {
-                ServerDisconnection(conn);
+                DisconnectServer(conn);
             }
 
             return NULL;
@@ -211,7 +211,7 @@ AgentConnection *ServerConnection(char *server, Attributes attr, Promise *pp)
         {
             CfOut(cf_error, "", " !! Id-authentication for %s failed\n", VFQNAME);
             errno = EPERM;
-            ServerDisconnection(conn);
+            DisconnectServer(conn);
             return NULL;
         }
 
@@ -219,7 +219,7 @@ AgentConnection *ServerConnection(char *server, Attributes attr, Promise *pp)
         {
             CfOut(cf_error, "", " !! Authentication dialogue with %s failed\n", server);
             errno = EPERM;
-            ServerDisconnection(conn);
+            DisconnectServer(conn);
             return NULL;
         }
 
@@ -236,7 +236,7 @@ AgentConnection *ServerConnection(char *server, Attributes attr, Promise *pp)
 
 /*********************************************************************/
 
-void ServerDisconnection(AgentConnection *conn)
+void DisconnectServer(AgentConnection *conn)
 {
     CfDebug("Closing current server connection\n");
 
@@ -1194,11 +1194,11 @@ void DestroyServerConnection(AgentConnection *conn)
 {
     Rlist *entry = KeyInRlist(SERVERLIST, conn->remoteip);
 
-    ServerDisconnection(conn);
+    DisconnectServer(conn);
 
     if (entry != NULL)
     {
-        entry->item = NULL;     /* Has been freed by ServerDisconnection */
+        entry->item = NULL;     /* Has been freed by DisconnectServer */
         DeleteRlistEntry(&SERVERLIST, entry);
     }
 }
@@ -1427,7 +1427,7 @@ void ConnectionsCleanup(void)
             continue;
         }
 
-        ServerDisconnection(svp->conn);
+        DisconnectServer(svp->conn);
 
         if (svp->server)
         {

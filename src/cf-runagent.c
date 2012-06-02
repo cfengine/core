@@ -459,7 +459,7 @@ static int HailServer(char *host, Attributes a, Promise *pp)
 #if defined(HAVE_NOVA)
         if (!Nova_ExecuteRunagent(conn, MENU))
         {
-            ServerDisconnection(conn);
+            DisconnectServer(conn);
             DeleteRlist(a.copy.servers);
             return false;
         }
@@ -679,7 +679,7 @@ static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *
     if (SendTransaction(conn->sd, sendbuffer, 0, CF_DONE) == -1)
     {
         CfOut(cf_error, "send", "Transmission rejected");
-        ServerDisconnection(conn);
+        DisconnectServer(conn);
         return;
     }
 
@@ -727,7 +727,7 @@ static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *
     }
 
     DeleteStream(fp);
-    ServerDisconnection(conn);
+    DisconnectServer(conn);
 }
 
 /********************************************************************/

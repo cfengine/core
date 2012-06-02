@@ -246,7 +246,7 @@ int ScheduleCopyOperation(char *destination, Attributes attr, Promise *pp)
 
     if (attr.transaction.background)
     {
-        ServerDisconnection(conn);
+        DisconnectServer(conn);
     }
     else
     {

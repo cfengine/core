@@ -828,6 +828,10 @@ void GetInterfacesInfo(enum cfagenttype ag)
     NewList("sys", "hardware_addresses", hardware, cf_slist);
     NewList("sys", "ip_addresses", ips, cf_slist);
 
+    DeleteRlist(interfaces);
+    DeleteRlist(hardware);
+    DeleteRlist(ips);
+
     FindV6InterfacesInfo();
 }
 

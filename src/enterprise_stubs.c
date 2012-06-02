@@ -87,7 +87,7 @@ void RegisterBundleDependence(char *name, const Promise *pp)
 /* all agents: logging.c */
 
 
-void NotePromiseCompliance(Promise *pp, double val, PromiseState state, char *reason)
+void NotePromiseCompliance(const Promise *pp, double val, PromiseState state, char *reason)
 {
 }
 

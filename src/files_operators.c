@@ -699,7 +699,7 @@ static void VerifyName(char *path, struct stat *sb, Attributes attr, Promise *pp
     }
     else
     {
-        if (attr.rename.rotate == CF_NOINT)
+        if (attr.rename.disable)
         {
             CfOut(cf_inform, "", " !! Warning - file object %s exists, contrary to promise\n", path);
         }

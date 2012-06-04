@@ -143,7 +143,7 @@ libpromises_la_SOURCES = \
         string_lib.c string_lib.h \
         string_map.c string_map.h \
         syntax.c syntax.h \
-        sysinfo.c \
+        sysinfo.c sysinfo.h \
         timeout.c \
         transaction.c transaction.h \
         unix.c \

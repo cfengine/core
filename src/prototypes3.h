@@ -721,21 +721,6 @@ bool sockaddr_pton(int af, void *src, void *addr);
 
 off_t GetDiskUsage(char *file, enum cfsizes type);
 
-/* sysinfo.c */
-
-void GetNameInfo3(void);
-void GetInterfacesInfo(enum cfagenttype ag);
-void Get3Environment(void);
-void BuiltinClasses(void);
-void OSClasses(void);
-int IsInterfaceAddress(char *adr);
-int GetCurrentUserName(char *userName, int userNameLen);
-
-const char *GetWorkDir(void);
-
-/* For unit tests */
-void DetectDomainName(const char *orig_nodename);
-
 /* transaction.c */
 
 void SummarizeTransaction(Attributes attr, const Promise *pp, const char *logname);

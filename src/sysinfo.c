@@ -24,6 +24,7 @@
 */
 
 #include "cf3.defs.h"
+#include "sysinfo.h"
 
 #include "env_context.h"
 #include "files_names.h"
@@ -669,7 +670,7 @@ void Get3Environment()
 
 /*******************************************************************/
 
-int IsInterfaceAddress(char *adr)
+_Bool IsInterfaceAddress(const char *adr)
  /* Does this address belong to a local interface */
 {
     Item *ip;

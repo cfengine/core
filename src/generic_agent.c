@@ -25,6 +25,7 @@
 
 #include "generic_agent.h"
 
+#include "sysinfo.h"
 #include "env_context.h"
 #include "constraints.h"
 #include "promises.h"

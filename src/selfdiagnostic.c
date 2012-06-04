@@ -25,6 +25,7 @@
 
 #include "cf3.defs.h"
 
+#include "sysinfo.h"
 #include "constraints.h"
 #include "promises.h"
 #include "vars.h"

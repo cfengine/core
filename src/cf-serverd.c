@@ -840,7 +840,7 @@ static void CheckFileChanges(Policy *policy, GenericAgentConfig config)
             NewClass(CF_AGENTTYPES[THIS_AGENT_TYPE]);
 
             SetReferenceTime(true);
-            ReadPromises(cf_server, CF_SERVERC, config);
+            policy = ReadPromises(cf_server, CF_SERVERC, config);
             KeepPromises(policy);
             Summarize();
 

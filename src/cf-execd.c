@@ -714,7 +714,7 @@ static bool ScheduleRun(Policy *policy)
             .bundlesequence = NULL
         };
 
-        ReadPromises(cf_executor, CF_EXECC, config);
+        policy = ReadPromises(cf_executor, CF_EXECC, config);
         KeepPromises(policy);
     }
     else

@@ -29,6 +29,8 @@
 #include "policy.h"
 #include "syntax.h"
 
+#define PACK_UPIFELAPSED_SALT "packageuplist"
+
 static void DereferenceComment(Promise *pp);
 
 /*****************************************************************************/

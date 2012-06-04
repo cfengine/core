@@ -91,8 +91,6 @@ static void KeepPromiseBundles(Policy *policy, Rlist *bundlesequence);
 static void KeepPromises(Policy *policy, GenericAgentConfig config);
 static int NoteBundleCompliance(char *name, int save_pr_kept, int save_pr_repaired, int save_pr_notkept);
 
-extern const BodySyntax CFA_CONTROLBODY[];
-
 /*******************************************************************/
 /* Command line options                                            */
 /*******************************************************************/

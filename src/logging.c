@@ -29,6 +29,8 @@
 #include "dbm_api.h"
 #include "files_names.h"
 
+#define CF_VALUE_LOG      "cf_value.log"
+
 static void ExtractOperationLock(char *op);
 
 static const char *NO_STATUS_TYPES[] = { "vars", "classes", NULL };

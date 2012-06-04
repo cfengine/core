@@ -42,6 +42,7 @@
 # include <sys/jail.h>
 #endif
 
+#define CF_IFREQ 2048           /* Reportedly the largest size that does not segfault 32/64 bit */
 #define CF_IGNORE_INTERFACES "ignore_interfaces.rx"
 
 #ifndef MINGW

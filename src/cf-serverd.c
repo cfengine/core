@@ -37,6 +37,7 @@
 
 #define QUEUESIZE 50
 #define CF_BUFEXT 128
+#define CF_NOSIZE -1
 
 typedef struct
 {

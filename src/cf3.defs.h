@@ -45,10 +45,8 @@
 /* max size of plaintext in one transaction, see
    net.c:SendTransaction(), leave space for encryption padding
    (assuming max 64*8 = 512-bit cipher block size)*/
-#define CF_MAXTRANSSIZE (CF_BUFSIZE - CF_INBAND_OFFSET - 64)
 #define CF_BILLION 1000000000L
 #define CF_EXPANDSIZE (2*CF_BUFSIZE)
-#define CF_ALLCLASSSIZE (4*CF_BUFSIZE)
 #define CF_BUFFERMARGIN 128
 #define CF_BLOWFISHSIZE 16
 #define CF_SMALLBUF 128
@@ -56,30 +54,19 @@
 #define CF_MAXSIDSIZE 2048      /* Windows only: Max size (bytes) of security identifiers */
 #define CF_NONCELEN (CF_BUFSIZE/16)
 #define CF_MAXLINKSIZE 256
-#define CF_MAXLINKLEVEL 4
-#define CF_MAXFARGS 8
 #define CF_MAX_IP_LEN 64        /* numerical ip length */
 #define CF_PROCCOLS 16
-/* #define CF_HASHTABLESIZE 7919  prime number */
 #define CF_HASHTABLESIZE 8192
 #define CF_MACROALPHABET 61     /* a-z, A-Z plus a bit */
 #define CF_ALPHABETSIZE 256
-#define CF_MAXSHELLARGS 64
-#define CF_MAX_SCLICODES 16
 #define CF_SAMEMODE 7777
 #define CF_SAME_OWNER ((uid_t)-1)
 #define CF_UNKNOWN_OWNER ((uid_t)-2)
 #define CF_SAME_GROUP ((gid_t)-1)
 #define CF_UNKNOWN_GROUP ((gid_t)-2)
-#define CF_NOSIZE    -1
-#define CF_EXTRASPC 8           /* pads items during AppendItem for eol handling in editfiles */
 #define CF_INFINITY ((int)999999999)
 #define SOCKET_INVALID -1
-#define CF_COULD_NOT_CONNECT -2
-#define CF_RECURSION_LIMIT 100
 #define CF_MONDAY_MORNING 345600
-#define CF_NOVAL -0.7259285297502359
-#define CF_UNUSED_CHAR (char)127
 
 #define SECONDS_PER_MINUTE 60
 #define SECONDS_PER_HOUR (60 * SECONDS_PER_MINUTE)
@@ -96,43 +83,15 @@
 #define CF_INDEX_FIELD_LEN 7
 #define CF_INDEX_OFFSET  CF_INDEX_FIELD_LEN+1
 
-#define CF_IFREQ 2048           /* Reportedly the largest size that does not segfault 32/64 bit */
-#define CF_ADDRSIZE 128
-
-#define CF_METHODEXEC 0
-#define CF_METHODREPLY  1
-
-/* these should be >0 to prevent contention */
-
-#define CF_EXEC_IFELAPSED 0
-#define CF_EDIT_IFELAPSED 3     /* NOTE: If doing copy template then edit working copy,
-                                   the edit ifelapsed must not be higher than
-                                   the copy ifelapsed. This will make the working
-                                   copy equal to the copied template file - not the
-                                   copied + edited file. */
-#define CF_EXEC_EXPIREAFTER 1
-
 #define MAXIP4CHARLEN 16
-#define PACK_UPIFELAPSED_SALT "packageuplist"
 
 /*******************************************************************/
 
-#define CF_VALUE_LOG      "cf_value.log"
 #define CF_FILECHANGE     "file_change.log"
 #define CF_PROMISE_LOG    "promise_summary.log"
 
-#define CF_STATELOG_FILE "state_log"
 #define CF_ENV_FILE      "env_data"
 
-#define CF_TCPDUMP_COMM "/usr/sbin/tcpdump -t -n -v"
-
-#define CF_INPUTSVAR "CFINPUTS" /* default name for file path var */
-#define CF_ALLCLASSESVAR "CFALLCLASSES" /* default name for CFALLCLASSES env */
-#define CF_INF_RECURSE -99      /* code used to signify inf in recursion */
-#define CF_TRUNCATE -1
-#define CF_EMPTYFILE -2
-#define CF_USELOGFILE true      /* synonyms for tidy.c */
-#define CF_NOLOGFILE  false
 #define CF_SAVED ".cfsaved"
 #define CF_EDITED ".cfedited"
 #define CF_NEW ".cfnew"
@@ -140,8 +99,6 @@
 #define CFD_TRUE "CFD_TRUE"
 #define CFD_FALSE "CFD_FALSE"
 #define CF_ANYCLASS "any"
-#define CF_NOCLASS "XX_CF_opposite_any_XX"
-#define CF_NOUSER -99
 #define CF_RSA_PROTO_OFFSET 24
 #define CF_PROTO_OFFSET 16
 #define CF_INBAND_OFFSET 8
@@ -184,21 +141,13 @@
 
 #define CF_START_DOMAIN "undefined.domain"
 
-#define CFGRACEPERIOD 4.0       /* training period in units of counters (weeks,iterations) */
-#define cf_noise_threshold 6    /* number that does not warrent large anomaly status */
-#define MON_THRESHOLD_HIGH 1000000      // samples should stay below this threshold
-#define LDT_BUFSIZE 10
 #define CF_GRAINS   64
 #define ATTR     11
 #define CF_NETATTR   7          /* icmp udp dns tcpsyn tcpfin tcpack */
-#define PH_LIMIT 10
-#define CF_RELIABLE_CLASSES 7*24        /* WEEK/HOUR */
 #define CF_MEASURE_INTERVAL (5.0*60.0)
-#define CF_SHIFT_INTERVAL (6*3600.0)
+#define CF_SHIFT_INTERVAL (6*3600)
 
 #define CF_OBSERVABLES 91
-
-#define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
 
 /* Output control defines */
 
@@ -256,7 +205,6 @@ typedef struct
 /* Client server defines                                           */
 /*******************************************************************/
 
-#define CFENGINE_SERVICE "cfengine"
 
 enum PROTOS
 {
@@ -2260,6 +2208,20 @@ enum cfenvironment_state
     cfvs_none
 };
 
+/*************************************************************************/
+
+enum cf_meter
+{
+    meter_compliance_week,
+    meter_compliance_day,
+    meter_compliance_hour,
+    meter_perf_day,
+    meter_other_day,
+    meter_comms_hour,
+    meter_anomalies_day,
+    meter_endmark
+};
+
 typedef struct
 {
     int cpus;
@@ -2274,9 +2236,7 @@ typedef struct
     enum cfenvironment_state state;
 } Environments;
 
-/*************************************************************************/
-
- /* This is huge, but the simplification of logic is huge too
+/* This is huge, but the simplification of logic is huge too
     so we leave it to the compiler to optimize */
 
 typedef struct
@@ -2377,43 +2337,12 @@ typedef struct
     char *rep_type;
 } Attributes;
 
-enum cf_meter
-{
-    meter_compliance_week,
-    meter_compliance_day,
-    meter_compliance_hour,
-    meter_perf_day,
-    meter_other_day,
-    meter_comms_hour,
-    meter_anomalies_day,
-    meter_endmark
-};
-
 /*************************************************************************/
 /* definitions for reporting                                            */
 /*************************************************************************/
 
 extern double METER_KEPT[meter_endmark];
 extern double METER_REPAIRED[meter_endmark];
-extern double Q_MEAN;
-extern double Q_SIGMA;
-
-/*************************************************************************/
-/* definitions for test suite                                            */
-/*************************************************************************/
-
-// Classes: 601 - 650
-#define CF_CLASS_ALL 0
-#define CF_CLASS_REPORT 2
-#define CF_CLASS_VARS 4
-#define CF_CLASS_SLIST 8
-#define CF_CLASS_STRING 16
-#define CF_CLASS_PROCESS 32
-#define CF_CLASS_FILE 64
-#define CF_CLASS_DIR 128
-#define CF_CLASS_CMD 256
-#define CF_CLASS_OTHER 512
-#define CF_CLASS_TOP10 1024
 
 /*************************************************************************/
 /* common macros                                                         */
@@ -2432,26 +2361,21 @@ extern double Q_SIGMA;
   || IsStrIn(c,MONTH_TEXT) || IsStrIn(c,DAY_TEXT)                  \
   || IsStrIn(c,SHIFT_TEXT)) || strncmp(c,"Lcycle",6) == 0
 
-/***********************************************************/
-/* SYNTAX MODULES                                          */
-/***********************************************************/
-
-extern const SubTypeSyntax CF_COMMON_SUBTYPES[];
-extern const SubTypeSyntax *CF_ALL_SUBTYPES[];
-extern const BodySyntax CF_COMMON_BODIES[];
-
-extern const BodySyntax CF_VARBODY[];
-extern const BodySyntax CF_CLASSBODY[];
-extern const BodySyntax CFG_CONTROLBODY[];
-extern const BodySyntax CFH_CONTROLBODY[];
-extern const BodySyntax CFA_CONTROLBODY[];
-extern const SubTypeSyntax CF_ALL_BODIES[];
-
-extern const FnCallType CF_FNCALL_TYPES[];
-
 #include "dbm_api.h"
 #include "prototypes3.h"
 #include "cf3.extern.h"
+
+extern const BodySyntax CF_COMMON_BODIES[];
+extern const BodySyntax CF_VARBODY[];
+extern const SubTypeSyntax *CF_ALL_SUBTYPES[];
+extern const BodySyntax CFG_CONTROLBODY[];
+extern const FnCallType CF_FNCALL_TYPES[];
+extern const SubTypeSyntax CF_ALL_BODIES[];
+extern const BodySyntax CFH_CONTROLBODY[];
+extern const SubTypeSyntax CF_COMMON_SUBTYPES[];
+extern const BodySyntax CF_CLASSBODY[];
+extern const BodySyntax CFA_CONTROLBODY[];
+extern const BodySyntax CFEX_CONTROLBODY[];
 
 #ifdef HAVE_NOVA
 # include <cf.nova.h>

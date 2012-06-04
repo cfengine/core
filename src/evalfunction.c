@@ -37,6 +37,8 @@
 
 #include <libgen.h>
 
+#define CF_NOVAL -0.7259285297502359
+
 static char *StripPatterns(char *file_buffer, char *pattern, char *filename);
 static void CloseStringHole(char *s, int start, int end);
 static int BuildLineArray(char *array_lval, char *file_buffer, char *split, int maxent, enum cfdatatype type,

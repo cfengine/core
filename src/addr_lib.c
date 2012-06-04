@@ -24,6 +24,8 @@
 
 #include "cf3.defs.h"
 
+#define CF_ADDRSIZE 128
+
 /* Match two IP strings - with : or . in hex or decimal
    s1 is the test string, and s2 is the reference e.g.
    FuzzySetMatch("128.39.74.10/23","128.39.75.56") == 0

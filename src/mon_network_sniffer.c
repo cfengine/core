@@ -30,6 +30,8 @@
 
 /* Constants */
 
+#define CF_TCPDUMP_COMM "/usr/sbin/tcpdump -t -n -v"
+
 static const int SLEEPTIME = 2.5 * 60;  /* Should be a fraction of 5 minutes */
 
 /* Global variables */

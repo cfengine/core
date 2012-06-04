@@ -103,9 +103,6 @@ int BOOTSTRAP = false;
 double METER_KEPT[meter_endmark];
 double METER_REPAIRED[meter_endmark];
 
-double Q_MEAN;
-double Q_SIGMA;
-
 /*****************************************************************************/
 /* Internal data structures                                                  */
 /*****************************************************************************/

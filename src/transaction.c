@@ -32,6 +32,8 @@
 #include "files_names.h"
 #include "item_lib.h"
 
+#define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
+
 static void WaitForCriticalSection(void);
 static void ReleaseCriticalSection(void);
 static time_t FindLock(char *last);

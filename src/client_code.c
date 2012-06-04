@@ -46,9 +46,12 @@ typedef struct
     int busy;
 } ServerItem;
 
+#define CFENGINE_SERVICE "cfengine"
 
 /* seconds */
 #define RECVTIMEOUT 30
+
+#define CF_COULD_NOT_CONNECT -2
 
 Rlist *SERVERLIST = NULL;
 

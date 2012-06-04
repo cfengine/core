@@ -31,11 +31,8 @@
 #include "vars.h"
 #include "item_lib.h"
 
-/*******************************************************************/
-
-extern const BodySyntax CFEX_CONTROLBODY[];
-
-/*******************************************************************/
+#define CF_EXEC_IFELAPSED 0
+#define CF_EXEC_EXPIREAFTER 1
 
 static int NO_FORK;
 static int ONCE;

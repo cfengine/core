@@ -25,7 +25,7 @@
 #ifndef CFENGINE_CF3_DEFS_H
 #define CFENGINE_CF3_DEFS_H
 
-#include "cf.defs.h"
+#include "platform.h"
 #include "rlist.h"
 #include "compiler.h"
 

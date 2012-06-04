@@ -1,7 +1,7 @@
 #ifndef CFENGINE_FILES_NAMES_H
 #define CFENGINE_FILES_NAMES_H
 
-#include "cf.defs.h"
+#include "platform.h"
 
 int IsNewerFileTree(char *dir, time_t reftime);
 int DeEscapeQuotedString(const char *in, char *out);

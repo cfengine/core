@@ -32,7 +32,6 @@ libpromises_la_SOURCES = \
         attributes.c attributes.h \
         bool.h \
         bootstrap.c \
-        cf.defs.h \
         cf.events.h \
         cf3.defs.h \
         cf3.extern.h \
@@ -123,6 +122,7 @@ libpromises_la_SOURCES = \
         parser_state.h \
         patches.c \
         pipes.c \
+        platform.h \
         proc_keyvalue.c proc_keyvalue.h \
         processes_select.c \
         promises.c promises.h \

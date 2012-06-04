@@ -22,8 +22,15 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_CF_DEFS_H
-#define CFENGINE_CF_DEFS_H
+#ifndef CFENGINE_PLATFORM_H
+#define CFENGINE_PLATFORM_H
+
+/*
+ * Platform-specific definitions and declarations.
+ *
+ * This header has to be included first in order to define apropriate macros for
+ * including system headers (such as _FILE_OFFSET_BITS).
+ */
 
 #ifdef HAVE_CONFIG_H
 # include "conf.h"

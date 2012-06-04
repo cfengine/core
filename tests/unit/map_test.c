@@ -1,4 +1,4 @@
-#include "cf.defs.h"
+#include "platform.h"
 
 #include "test.h"
 #include "array_map_priv.h"

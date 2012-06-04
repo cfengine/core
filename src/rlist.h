@@ -41,7 +41,7 @@ struct Rlist_
     Rlist *next;
 };
 
-#include "cf.defs.h"
+#include "platform.h"
 #include "writer.h"
 #include "json.h"
 

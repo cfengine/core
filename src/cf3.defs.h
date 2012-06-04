@@ -2016,7 +2016,7 @@ typedef struct
     Constraint *expression;
     int nconstraints;
     int persistent;
-} Context;
+} ContextConstraint;
 
 /*************************************************************************/
 
@@ -2291,7 +2291,7 @@ typedef struct
     FileLink link;
     EditDefaults edits;
     Packages packages;
-    Context context;
+    ContextConstraint context;
     Measurement measure;
     Acl acl;
     Database database;

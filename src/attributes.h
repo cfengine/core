@@ -51,7 +51,7 @@ Attributes GetThingsAttributes(const Promise *pp);
 Attributes GetTopicsAttributes(const Promise *pp);
 
 Acl GetAclConstraints(const Promise *pp);
-Context GetContextConstraints(const Promise *pp);
+ContextConstraint GetContextConstraints(const Promise *pp);
 Database GetDatabaseConstraints(const Promise *pp);
 DefineClasses GetClassDefinitionConstraints(const Promise *pp);
 EditColumn GetColumnConstraints(const Promise *pp);

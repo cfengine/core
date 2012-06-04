@@ -1366,9 +1366,9 @@ EditDefaults GetEditDefaults(const Promise *pp)
 
 /*******************************************************************/
 
-Context GetContextConstraints(const Promise *pp)
+ContextConstraint GetContextConstraints(const Promise *pp)
 {
-    Context a;
+    ContextConstraint a;
     Constraint *cp;
     int i;
 

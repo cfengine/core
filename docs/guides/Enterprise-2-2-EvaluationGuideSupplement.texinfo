@@ -1,0 +1,1119 @@
+\input texinfo-altfont
+\input texinfo-logo
+\input texinfo
+@selectaltfont{cmbright}
+@setlogo{CFEngineFrontPage}
+@c *********************************************************************
+@c
+@c  This is a TEXINFO file. It generates both TEX documentation and
+@c  the "on line" documentation "info" files.
+@c
+@c  The file is structured like a programming language. Each chapter
+@c  starts with a chapter comment.
+@c
+@c  Menus list the subsections so that an online info-reader can parse
+@c  the file hierarchically.
+@c
+@c ***********************************************************************@c 
+@c %** start of header
+@setfilename Enterprise-2-2-EvaluationGuideSupplement.info
+@settitle Supplement to CFEngine 3 Enterprise Evaluation Guide
+@c @setchapternewpage odd
+@c %** end of header
+@titlepage
+@title Supplement to CFEngine 3 Enterprise Evaluation Guide
+@subtitle CFEngine Enterprise Documentation
+@subtitle Updated 31. May 2012 @c also update in ifnottex section below
+@author CFEngine
+@c @smallbook
+@fonttextsize 10
+@c @page
+@vskip 0pt plus 1filll
+@cartouche
+This document supplements the @samp{CFEngine 3 Enterprise Evaluation Guide} with examples for all report types available in the CFEngine 3 Enterprise Mission Portal.
+@end cartouche
+Copyright @copyright{} 2012 CFEngine AS.
+The features described herein are in provided for user convenience and imply no warranty whatsoever
+to the extent of applicable law.
+@end titlepage
+@c *************************** File begins here ************************
+@ifinfo
+@dircategory CFEngine Training
+@direntry
+* CFEngine Reference:
+                        CFEngine is a language based framework
+                        designed for configuring and maintaining
+                        Unix-like operating systems attached
+                        to a TCP/IP network.
+@end direntry
+@end ifinfo
+@ifnottex
+Updated 31. May 2012
+@node Top, Standard reports in CFEngine 3 Enterprise, (dir), (dir)
+@top Supplement to CFEngine 3 Enterprise Evaluation Guide
+@end ifnottex
+
+@ifhtml
+@html
+<a name="Contents">
+@contents
+@end html
+@end ifhtml
+
+@iftex
+@contents
+@end iftex
+
+
+@menu
+* Standard reports in CFEngine 3 Enterprise::  
+@end menu
+
+
+@c *****************************************************
+@c * CHAPTER
+@c *****************************************************
+@node  Standard reports in CFEngine 3 Enterprise, Policy, Top, Top
+@chapter Standard reports in CFEngine 3 Enterprise
+
+@menu
+* Policy::
+* Accounting::
+* System::
+* Software::
+* File watch::
+@end menu
+
+A significant capability of CFEngine 3 Enterprise is automated system reporting: it collects history, state and change data about computers and ties them together. A report is a tabular summary of CFEngine's internal information, tailored to a particular purpose, searchable, and describes attributes and qualities of managed hosts. 
+
+Standard reports in CFEngine 3 Enterprise can be accessed through the @b{Reports tab} in the @b{Engineering room}. The drop down menus list all standard report categories and each category contains information about different aspects of the Mission. When you click one of them, the Mission Portal will present a query form that is adapted to the chosen report category. CFEngine uses regular expressions in these queries, for maximum flexibility and to minimize system impact. The details of these queries and the content of the resulting reports are outlined in the following sections.
+
+Reports are updated at different intervals, the default values are every 5 minutes or every 6 hours. Below is a list of standard reports, updated every 5 minutes unless otherwise noted:
+
+@itemize
+@item Policy
+@itemize -
+    @item Compliance by bundle: Status of promise bundles and when they were last verified
+    @item Compliance by promise: Compliance of each promise individually
+    @item Promises not kept log: Log of promises that could not or would not be kept
+    @item Promises not kept summary: Cumulative (histogram) summary of promises not kept
+    @item Promises repaired log: Log of actual repairs made to the system
+    @item Promises repaired summary: Cumulative (histogram) summary of promises repaired
+@end itemize
+@item Accounting
+@itemize -
+    @item Benchmarks: Execution time used to verify selected promises
+    @item Business value report: Accumulated value of promises kept (6 hrs)
+    @item Compliance summary: Total summary of host compliance
+@end itemize
+@item System
+@itemize -
+    @item Context classes: User defined classes observed on the system
+    @item Last saw neighbours: Log of when neighboring hosts were last observed online
+    @item Variables: Table of variable values last observed (6 hrs)
+    @item Weakest hosts: Ranking of hosts with poorest performing hosts on top
+@end itemize
+@item Software
+@itemize -
+    @item Installed: List of software packages claimed to be installed according to the local package manager
+    @item Patches available: A list of patches currently claimed to be available by the local package manager
+    @item Patch installed: A list of (un)applied patches according to the local package manager
+@end itemize
+@item File watch
+@itemize -
+    @item Change summary: Log of all detected changes to files from changes promises
+    @item Setuid: Current list of observed setuid/setgid root programs (6 hrs)
+    @item Text changes: Delta/difference comparison showing file changes
+@end itemize
+@end itemize
+
+
+@c -----------------------------------------------------
+@node Policy, Accounting, Standard reports in CFEngine 3 Enterprise, Standard reports in CFEngine 3 Enterprise
+@section Policy
+
+@menu
+* Compliance by bundle::       
+* Compliance by promise::
+* Promises not kept log::
+* Promises not kept summary::
+* Promises repaired log::
+* Promises repaired summary::
+@end menu
+
+@node Compliance by bundle, Compliance by promise, Policy, Policy
+@subsection Compliance by bundle
+
+Promises are the fundamental statements in CFEngine, they make up the definition of the desired state of a system. A @i{bundle} is a collection of promises in a `sub-routine-like' container. The purpose of bundles is to allow greater flexibility to break down the contents of policies and give them names. Bundles also allow to re-use promise code by parameterizing it. 
+
+The @samp{Compliance by bundle} is useful for checking the compliance of specific bundles and when they were last verified. Put your mouse over the @b{Policy} drop down menu in the @b{Reports} tab, then select @b{Compliance by bundle}. The Compliance by bundle query can filter by bundle pattern (pattern in bundle name). Leaving the fields blank will result in a report listing all bundles in your policies.
+
+@sp 1
+@center @image{img-compliance-by-bundle-query-2-2,10cm,,Compliance by bundle query}
+@center Figure: Compliance by bundle query
+@sp 1
+
+Once you have clicked @b{Generate report}, CFEngine 3 Enterprise will list an overview of bundles that suit the query criteria entered above. It displays the host names on which these bundles can be found (@samp{Host}), the name of the bundles (@samp{Bundle}), the time stamp at the moment of verification (@samp{Last verified}), the time passed since last verification (@samp{Last verified}), the current bundle compliance (@samp{% compliance}), the average bundle compliance (@samp{Avg % compliance}) and the deviation of the current compliance from the average (@samp{+/- %}).@c , measured in one standard deviation of @samp{Avg interval}). You can add your personal note in the right column, documenting any thoughts or issues that you might have about the query result. The @samp{Last verified} value is yellow if more than six hours have passed since last verification.
+
+@sp 1
+@center @image{img-compliance-by-bundle-report-2-2,15cm,,Compliance by bundle}
+@center Figure: Compliance by bundle
+@sp 1
+
+@c Click a bundle name to access details of that specific bundle through the bundle viewer. 
+@c @cartouche
+@c *** Explain further steps ***
+@c @end cartouche
+
+
+@c -----------------------------------------------------
+@node Compliance by promise, Promises not kept log, Compliance by bundle, Policy
+@subsection Compliance by promise
+
+Promises are the fundamental statements in CFEngine, the policy atoms. Promises can be made about all kinds of different subjects, from file attributes, to the execution of commands, access control decisions and knowledge relationships. If there is no promise, nothing happens. It is considered compliant if CFEngine is able to keep the promise, and conversely, not compliant, or not kept, in the opposite case. 
+
+The @samp{Compliance by promise} report is useful for checking the current status of your system in high detail. You can find out which parts of a bundle work and which do not. The report also predicts the probability of compliance based on the history of specific promises, allowing you to assess the degree to which the problem is of a more transient or permanent nature. 
+
+Put your mouse over the @b{Policy} drop down menu in the @b{Reports} tab, then select @b{Compliance by promise}. The compliance by promise query can filter by (patterns in) promise handle and the compliance status of promises (any/compliant/repaired/non-compliant, drop-down menu).
+
+@sp 1
+@center @image{img-compliance-by-promise-query-2-2,10cm,,Compliance by promise query}
+@center Figure: Compliance by promis query
+@sp 1
+
+Once you have clicked @b{Generate report}, CFEngine 3 Enterprise will list an overview of hosts that suit the query criteria entered above. The result presents the host names (@samp{Host}), the promise identifier @samp{Promise handle}, @samp{Last known state} (compliant or not compliant), likelihood of a promise being compliant (@samp{% runs kept}), uncertainty of the likelihood (@samp{+/- %}, measured in one standard deviation of @samp{% runs kept}), and the time stamp of the last time the promise was run (@samp{Last verified}).
+
+@sp 1
+@center @image{img-compliance-by-promise-report-2-2,15cm,,Compliance by promise report}
+@center Figure: Compliance by promise report
+@sp 1
+
+@c Click a promise handle to access details of that specific promise through the promise viewer. 
+@c @cartouche
+@c *** Explain further steps ***
+@c @end cartouche
+
+
+@c -----------------------------------------------------
+@node Promises not kept log, Promises not kept summary, Compliance by promise, Policy
+@subsection Promises not kept log
+
+The Business room in the Mission Portal gives an overview of the general status of your system, including six hour summaries of promises kept, repaired, and not kept from the last week. The Promises not kept log is useful to get a complete overview of the history of promises not kept, including execution order and events that are more than a week old. Put your mouse over the @b{Policy} drop down menu in the @b{Reports} tab, then select @b{Promises not kept log}.
+
+@sp 1
+@center @image{img-promises-not-kept-log-query-2-2,10cm,, Promises not kept log query}
+@center Figure:  Promises not kept log query
+@sp 1
+
+The Promises not kept log query can filter by (patterns in) promise handles, cause (i.e. what was not kept), and a desired time interval. Leaving the fields blank will result in a report listing all promises that were not kept and the time of occurrence.
+
+Once you have clicked @b{Generate report}, CFEngine 3 Enterprise will list an overview of promises that suit the query criteria entered above. The results are presented as @samp{Host} (host name), @samp{Promise handle} (identifier of the promise), @samp{Report} (what was not kept), and @samp{Time} (time stamp of the event).
+
+@sp 1
+@center @image{img-promises-not-kept-log-report-2-2,15cm,, Promises not kept log report}
+@center Figure:  Promises not kept log report
+@sp 1
+
+
+@c -----------------------------------------------------
+@node Promises not kept summary, Promises repaired log, Promises not kept log, Policy
+@subsection Promises not kept summary
+
+If the Promises not kept log is too detailed for your needs, the Promises not kept summary report eliminates the time stamp of the promises repaired and presents a cumulative summary of promises repaired, i.e. the total number times a promise was not kept. Put your mouse over the @b{Policy} drop down menu in the @b{Reports} tab, then select @b{Promises not kept summary}.
+
+@sp 1
+@center @image{img-promises-not-kept-summary-query-2-2,10cm,, Promises not kept summary query}
+@center Figure: Promises not kept summary query
+@sp 1
+
+The Promise not kept summary query can filter by (patterns in) promise handles, cause (i.e. what was not kept), and a desired time interval. Leaving the fields blank will result in a report listing all promises that were not kept and their cumulative number of occurrences.
+
+Once you have clicked @b{Generate report}, CFEngine 3 Enterprise will list an overview of promises that suit the query criteria entered above. The results are presented as @samp{Promise handle}, @samp{Report} (what was not kept), and @samp{Occurrences} (the number of times the promise was not kept).
+
+@sp 1
+@center @image{img-promises-not-kept-summary-report-2-2,15cm,, Promises not kept summary report}
+@center Figure: Promises not kept summary report
+@sp 1
+
+
+@c -----------------------------------------------------
+@node Promises repaired log, Promises repaired summary, Promises not kept summary, Policy
+@subsection Promises repaired log
+
+The Business room in the Mission Portal gives an overview of the general status of your system, including six hour summaries of promises kept, repaired, and not kept from the last week. The Promises repaired log is useful to get a complete overview of the history of promises repaired, including execution order and events that are more than a week old. Put your mouse over the @b{Policy} drop down menu in the @b{Reports} tab, then select @b{Promises repaired log}.
+
+@sp 1
+@center @image{img-promises-repaired-log-query-2-2,10cm,, Promises repaired log query}
+@center Figure:  Promises repaired log query
+@sp 1
+
+The Promise repaired log query can filter by (patterns in) promise handles, cause (i.e. what was not kept), and a desired time interval. Leaving the fields blank will result in a report listing all promises that were repaired and the time of occurrence.
+
+Once you have clicked @b{Generate report}, CFEngine 3 Enterprise will list an overview of promises that suit the query criteria entered above. The results are presented as @samp{Host} (host name), @samp{Promise handle} (identifier of the promise), @samp{Report} (what was repaired), and @samp{Time} (time stamp of the repair action).
+
+@sp 1
+@center @image{img-promises-repaired-log-report-2-2,15cm,, Promises repaired log report}
+@center Figure: Promises repaired log report
+@sp 1
+
+
+@c -----------------------------------------------------
+@node Promises repaired summary, , Promises repaired log, Policy
+@subsection Promises repaired summary
+
+If the Promises repaired log is too detailed for your needs, the Promises repaired summary report eliminates the time stamp of the promises repaired and presents a cumulative summary of promises repaired, i.e. the total number times a promise has been repaired. Put your mouse over the @b{Policy} drop down menu in the @b{Reports} tab, then select @b{Promises repaired summary}.
+
+@sp 1
+@center @image{img-promises-repaired-summary-query-2-2,10cm,, Promises repaired summary query}
+@center Figure:  Promises repaired summary query
+@sp 1
+
+The Promise repaired summary query can filter by (patterns in) promise handles, cause (i.e. what was repaired), and a desired time interval. Leaving the fields blank will result in a report listing all promises that were repaired and their cumulative number of occurrences.
+
+Once you have clicked @b{Generate report}, CFEngine 3 Enterprise will list an overview of promises that suit the query criteria entered above. The results are presented as @samp{Promise handle} (identifier of the promise), @samp{Report} (what was repaired), and @samp{Occurrences} (number of occurrences of repair).
+
+@sp 1
+@center @image{img-promises-repaired-summary-report-2-2,15cm,, Promises repaired summary report}
+@center Figure: Promises repaired summary report
+@sp 1
+
+
+@c -----------------------------------------------------
+@node Accounting, System, Policy, Standard reports in CFEngine 3 Enterprise
+@section Accounting
+
+@menu
+* Benchmarks::
+* Business value::
+* Compliance summary::
+@end menu
+
+@c -----------------------------------------------------
+@node Benchmarks, Business value, Accounting, Accounting
+@subsection Benchmarks
+
+CFEngine 3 Enterprise uses several monitoring probes to reflect on general system performance@footnote{See also section on Vital signs in the CFEngine 3 Enterprise Owner's Manual.}. One probe looks at the time it takes to execute selected promises; results are summarized in the @samp{Benchmark} report. The user can thus evaluate which parts of a policy put charge on the system in terms of time spent completing a task. Longer tasks, such as command execution and file copying, are measured by default, but other tasks have to be measured explicitly by stating so in a policy. Note however that most promises made in CFEngine are executed so fast we are not able to measure the time it takes to complete them.
+
+Put your mouse over the @b{Accounting} drop down menu in the @b{Reports} tab, then select @b{Benchmarks}.
+
+@sp 1
+@center @image{img-benchmarks-query-2-2,10cm,,Benchmarks query}
+@center Figure: Benchmarks query
+@sp 1
+
+The Benchmark query can filter by (patterns in) job name. Leaving the field blank will result in a report listing the performance of all monitored jobs.
+@c @footnote{Job names are given in the definition of the promise, we will get back to this in the policy editing example.}
+
+Once you have clicked @b{Generate report}, CFEngine 3 Enterprise will list an overview of events that suit the query criteria entered above. @samp{Host} (host name), @samp{Event} (job name), @samp{Last completion time} (most recent performance value, i.e. the time it took to complete the job), @samp{Avg completion time} (average of all Last completion time), @samp{+/- seconds} (difference expressed as one standard deviation of @samp{Avg completion time}), and @samp{Last performed} (time stamp of last execution).
+
+@sp 1
+@center @image{img-benchmarks-report-2-2,15cm,,Benchmarks report}
+@center Figure: Benchmarks report
+@sp 1
+
+
+@c -----------------------------------------------------
+@node Business value, Compliance summary, Benchmarks, Accounting
+@subsection Business value
+
+One of the capabilities of CFEngine 3 Enterprise is to add business or organizational value to the configuration
+model. The notion of business value is not necessarily a clear concept, but a simple approach is to attach a monetary value to the outcome of promises.
+
+CFEngine's default values for promises kept, promises repaired and promises not kept are 1, 0.5, and -1, respectively. The values are summed and recorded at a set time interval, and the results are summarized for every host and day. 
+
+Put your mouse over the @b{Accounting} drop down menu in the @b{Reports} tab, then select @b{Business value}.
+
+@sp 1
+@center @image{img-business-value-query-2-2,10cm,,Business value query}
+@center Figure: Business value query
+@sp 1
+
+The Business value query can filter by date. Leaving the field blank will result in a report listing the business value of all promises that have had value attached to them over selected hosts and days.
+
+Once you have clicked @b{Generate report}, CFEngine 3 Enterprise will list an overview of hosts that suit the query criteria entered above. The result presents each host name (@samp{Host}), date (@samp{Summary of Day}), and the sum of the value of the promises kept (@samp{Value of promises kept}), repaired (@samp{Value of repairs}), and not kept (@samp{Loss for promises not kept}).
+
+@sp 1
+@center @image{img-business-value-report-2-2,15cm,,Business value report}
+@center Figure: Business value report
+@sp 1
+
+
+@c -----------------------------------------------------
+@node Compliance summary, , Business value, Accounting
+@subsection Compliance summary
+
+CFEngine policies are collections of promises contained in a text file, they are the CFEngine scripts that define what state you want your system to be in. The compliance summary report gives an overview of policy status. It shows the current status of your system in a coarse manner, allowing you to quickly identify which areas need follow-up. Put your mouse over the @b{Accounting} drop down menu in the @b{Reports} tab, then select @b{Compliance summary}.
+
+@sp 1
+@center @image{img-compliance-summary-query-2-2,10cm,,Compliance summary query}
+@center Figure: Compliance summary query
+@sp 1
+
+The compliance summary query can filter by version of your policy files (version number is maintained manually in policy). Leaving the field blank will result in a report listing all hosts and and policies.
+
+Once you have clicked @b{Generate report}, CFEngine 3 Enterprise will list an overview of hosts that suit the query criteria entered above. The result presents the host names (@samp{Host}), policy version (@samp{Policy version}), percentage of promises kept within the listed policies (@samp{% kept}), percentage of promises repaired within the listed policies (@samp{% repaired}), percentage of promises not kept within the listed policies (@samp{% not kept}), and the time stamp of the last status check (@samp{Last verified}).
+
+@sp 1
+@center @image{img-compliance-summary-report-2-2,15cm,,Compliance summary report}
+@center Figure: Compliance summary report
+@sp 1
+
+
+@c -----------------------------------------------------
+@node System, Software, Accounting, Standard reports in CFEngine 3 Enterprise
+@section System
+
+@menu
+* Context classes::
+* Last saw neighbours::
+* Variables::
+* Weakest Hosts::
+@end menu
+
+
+@c -----------------------------------------------------
+@node Context classes, Last saw neighbours, System, System
+@subsection Context classes
+
+CFEngine classes are certain true/false (Boolean) propositions that determine in what context, or setting, a promise is made. Each time CFEngine runs (by default every five minutes), it discovers and classifies properties of the environment in which it runs. These discovered properties are called 'hard classes' and cannot be changed by users. CFEngine also operates with soft classes, i.e. user-defined types.
+
+The Context classes report is useful for looking at hosts in specific contexts, for instance to find out which machines run on windows. Put your mouse over the @b{System} drop down menu in the @b{Reports} tab, then select @b{Context classes}.
+
+@sp 1
+@center @image{img-context-classes-query-2-2,10cm,,Context classes query}
+@center Figure: Context classes query
+@sp 1
+
+The context classes query can filter by (pattern in) class name. Leaving the field blank will result in a report listing all hosts and classes.
+
+Once you have clicked @b{Generate report}, CFEngine 3 Enterprise will list an overview of hosts that suit the query criteria entered above. The result presents the host names (@samp{Host}), @samp{Class or context}, probability of occurrence (@samp{In % runs}), uncertainty on the probability @samp{+/- %} (standard deviation of @samp{In % runs}), and the last time the class was observed (@samp{Last occurred}).
+
+@sp 1
+@center @image{img-context-classes-report-2-2,15cm,,Context classes report}
+@center Figure: Context classes report
+@sp 1
+
+
+@c -----------------------------------------------------
+@node Last saw neighbours, Variables, Context classes, System
+@subsection Last saw neighbours
+
+Sometimes it is not possible to connect to a machine under CFEngine's management, either due to network errors or temporary lack of network entirely (for instance on ships at sea or submarines). CFEngine 3 Enterprise's Mission Portal monitors all connections, incoming and outgoing, between all managed hosts, and creates a log of when neighboring hosts were last observed online. This information is used to set the host availability status and, through analysis of the connection history, give an idea of the regularity of connections between hosts.
+
+The Last saw neighbours report is useful for checking the communication pattern between managed hosts and when they last were in touch with each other. Put your mouse over the @b{System} drop down menu in the @b{Reports} tab, then select @b{Last saw neighbours}.
+
+@sp 1
+@center @image{img-last-saw-neighbours-query-2-2,10cm,,Last saw neightbours query}
+@center Figure: Last saw neighbours query
+@sp 1
+
+The Last saw neighbours query can filter by (patterns in) remote host name, remote host IP address, remote host key, and minimum hours ago (since the last connection was made). Leaving the fields blank will result in a report listing all connections made to and from the managed machines (including the hub).
+
+Once you have clicked @b{Generate report}, CFEngine 3 Enterprise will list an overview of all communication that suits the query criteria entered above. Every connection is logged on the concerned nodes as incoming (Initiated by them) or outgoing (Initiated by us), the same connection will therefore appear twice in the report (once for each node). The results are presented in the following column format: @samp{Host} (host name), @samp{Comms initiated} (identifies whether the connection is incoming (@code{by them (-)}) or outgoing (@code{by us (+)}), @samp{Remote host name}, @samp{Remote IP address}, @samp{Was last seen at} (time stamp of the connection), @samp{Hrs ago} (interval between current time and Last seen), @samp{Avg comms interval} (average time between each connection), Uncertainty @samp{+/- hrs} (standard deviation of Average interval), and @samp{Remote host's key} (identifying key of the remote host).
+
+@sp 1
+@center @image{img-last-saw-neighbours-report-2-2,15cm,,Last saw neighbours report}
+@center Figure: Last saw neighbours report
+@sp 1
+
+@c @cartouche
+@c *** Use case: check if anyone else except policy hub has tried to get in touch with a client.
+@c Filter on remote host name (DNS name, not class): @code{(?:(?!policyhub).)*}
+@c sort by host
+@c Use case: Which machines connect at regular intervals, which are "unstable". ***
+@c @end cartouche
+
+@c 7 machines, 26 entries in last seen because all incoming and outgoing requests are recorded:
+@c 2 the policy hub contacts itself and is contacted by itself
+@c 6 x 2: 6 hosts. For each hub-client contact, both the hub and the client report incoming and outgoing connection (2 connections) 
+@c 6 x 2: 6 hosts. For each client-hub contact, both the client and the hub report incoming and outgoing connection (2 connections)
+
+
+@c -----------------------------------------------------
+@node Variables, Weakest Hosts, Last saw neighbours, System
+@subsection Variables
+
+@c Scalar variables are written @samp{$(name)} in CFEngine, and they represent a single value at a time. When they are written without a context, e.g. @samp{$(myvar)}, they are local to the current bundle (i.e. their scope is the current bundle). They are globally available everywhere provided one uses the context to verify them; e.g. @samp{$(context.myvar)} may be used to access the variable `myvar' in bundle `context'.
+
+The @samp{Variables report} is useful for tracking your variables and checking their values, for instance to see if they behave in the expected manner. Put your mouse over the @b{System} drop down menu in the @b{Reports} tab, then select @b{Variables}.
+
+@sp 1
+@center @image{img-variables-query-2-2,10cm,, Variables query}
+@center Figure: Variables query
+@sp 1
+
+The Variables query can filter by (patterns in) scope (bundle where the variable is used), Lvalue (name of variable), Rvalue (content of variable), and type (string, integer, etc.). Leaving the fields blank will result in a report listing all variables that were last observed on the system.
+
+Once you have clicked @b{Generate report}, CFEngine 3 Enterprise will list an overview of variables that suit the query criteria entered above. The results are presented in table form/blocks of scope (i.e. in which bundle the variables appear) with the following column format: @samp{Host} (name of host where the variable is defined), @samp{Type} (type of the variable, @samp{Name}, @samp{Value} and @samp{Last seen}.
+
+@sp 1
+@center @image{img-variables-report-2-2,15cm,, Variables report}
+@center Figure: Variables report
+@sp 1
+
+
+@c -----------------------------------------------------
+@node Weakest Hosts, , Variables, System
+@subsection Weakest Hosts
+
+@sp 1
+@center @image{img-weakest-hosts-report-2-2,10cm,, Weakest hosts report}
+@center Figure: Weakest hosts report
+@sp 1
+
+
+@c -----------------------------------------------------
+@node Software, File watch, System, Standard reports in CFEngine 3 Enterprise
+@section Software
+
+@menu
+* Installed::
+* Patches available::
+* Patches installed::
+@end menu
+
+
+@c -----------------------------------------------------
+@node Installed, Patches available, Software, Software
+@subsection Installed
+
+The @samp{Installed report} will list the software packages claimed to be installed according to the local package manager. Put your mouse over the @b{Software} drop down menu in the @b{Reports} tab, then select @b{Installed}.
+
+@sp 1
+@center @image{img-installed-query-2-2,10cm,, Software installed query}
+@center Figure: Software installed query
+@sp 1
+
+The Software installed query can filter by (patterns in) software name, version, and architecture. Leaving the fields blank will result in a report listing all hosts and software installed on the system.
+
+Once you have clicked @b{Generate report}, CFEngine 3 Enterprise will list an overview that suits the query criteria entered above. The results are presented as @samp{Host} (host name), @samp{Package name} (of software package), @samp{Version} (of software package), @samp{Architecture} (of machine on which software runs) and @samp{Last seen}.
+
+@sp 1
+@center @image{img-installed-report-2-2,15cm,, Software installed report}
+@center Figure: Software installed report
+@sp 1
+
+
+@c -----------------------------------------------------
+@node Patches available, Patches installed, Installed, Software
+@subsection Patches available
+
+Software packaging is a core paradigm in operating system release management today, and CFEngine supports a generic approach to integration with native operating support for packaging. Package promises allow CFEngine to make promises the state of software packages conditionally, given the assumption that a native package manager will perform the actual manipulations. Since no agent can make unconditional promises about another, this is the best that can be achieved. 
+
+Some package systems also support the idea of patches. These might be formally different objects to packages; a patch might contain material for several packages and be numbered differently. When you select patching-policy, the package name can be a regular expression that will match possible patch names, otherwise identifying specific patches can be cumbersome.
+
+The patches available report is useful to get an overview of patches claimed to be available by the local package manager. Put your mouse over the @b{Software} drop down menu in the @b{Reports} tab, then select @b{Patches available}.
+
+@sp 1
+@center @image{img-patches-available-query-2-2,10cm,,Patches available query}
+@center Figure: Patches available query
+@sp 1
+
+The Patches available query can filter by (patterns in) package name, package version, and package architecture. Leaving the fields blank will result in a report listing all patches that can be installed on the system.
+
+Once you have clicked @b{Generate report}, CFEngine 3 Enterprise will list an overview of patches that suit the query criteria entered above. The report presents the following columns: @samp{Host} (host name), @samp{Package name}, @samp{Version} (patch version), and @samp{Architecture}.
+
+@sp 1
+@center @image{img-patches-available-report-2-2,15cm,,Patches available report}
+@center Figure: Patches available report
+@sp 1
+
+
+@c -----------------------------------------------------
+@node Patches installed, , Patches available, Software
+@subsection Patches installed
+
+Patch management can be a delicate business: sometimes a patch can cause new problems, or perhaps even more problems than it fixes. IT managers therefore often like to be in control of what patches are applied to a system. The Patch status report gives system administrators a complete overview of applied patches according to the local package manager, and, in conjunction with the patches available report, allows them to consciously decide which patches to apply or not. 
+
+Put your mouse over the @b{Software} drop down menu in the @b{Reports} tab, then select @b{Patches installed}.
+
+@sp 1
+@center @image{img-patches-installed-query-2-2,10cm,,Patches installed query}
+@center Figure: Patches installed query
+@sp 1
+
+The Patches installed query can filter by (patterns in) package name, package version, and package architecture. Leaving the fields blank will result in a report listing all patches applied to the system.
+
+Once you have clicked @b{Generate report}, CFEngine 3 Enterprise will list an overview of patches that suit the query criteria entered above. The report presents results in the same format as the Patches available report: @samp{Host} (host name), @samp{Package name}, @samp{Version} (patch version), and @samp{Architecture}.
+
+@sp 1
+@center @image{img-patches-installed-report-2-2,15cm,,Patch status report}
+@center Figure: Patch status report
+@sp 1
+
+@c Patching is a subtle business with CFEngine, there is no simple way using the patch settings to install `all new system patches'. Here's why:
+
+@c If we specify the name of a patch, then CFEngine will try to see if it exists and/or is installed. If it exists in the pending list, it will be installed.  If it exists in the installed list it will not be installed. Now consider the pattern @samp{.*}. This will match any installed package, so CFEngine will assume the relevant patch has been installed already.  On the other hand, the pattern @samp{no match} will not match an installed patch, but it will not match a named patch either, so nothing is installed.
+
+@c Some systems provide a command to do this, which can be specified without specific patch arguments. If so, that command can be called periodically under @code{commands}. The main purposes of patching body items are:
+
+@c @itemize
+@c @item To install specific named patches in a controlled manner.
+@c @item To generate reports of available and installed patches during system reporting.
+@c @end itemize
+
+
+@c -----------------------------------------------------
+@node File watch, , Software, Standard reports in CFEngine 3 Enterprise
+@section File watch
+
+@menu
+* Change summary::
+* Setuid::
+* Text changes::
+@end menu
+
+
+@c -----------------------------------------------------
+@node Change summary, Setuid, File watch, File watch
+@subsection Change summary
+
+File change monitoring is about detecting when file information on a computer system changes. Awareness of changes is often considered a major part of management, especially if they are unexpected or inadvertent (expected changes are usually not a problem). With CFEngine you can either set a general tripwire to detect all changes, or, in the case of the @samp{Change summary}, monitor specific files with changes promises. The report gives you relative detail of change as it presents the name of files that have been changed, when they were changed and on what host they were changed.
+
+Put your mouse over the @b{File watch} drop down menu in the @b{Reports} tab, then select @b{Change summary}.
+
+@sp 1
+@center @image{img-change-summary-query-2-2,10cm,,File change summary query}
+@center Figure: File change summary query
+@sp 1
+
+The file change log query can filter by (patterns in) file name and time interval for when the change took place. Leaving the fields blank will result in a report listing changes detected on all monitored hosts and and policies.
+
+Once you have clicked @b{Generate report}, CFEngine 3 Enterprise will list an overview of hosts that suit the query criteria entered above. The result presents the host names (@samp{Host}), name of the file where a change was detected (@samp{File}), and time stamp of change detection (@samp{Change detected at}). You can add your personal note in the right column, documenting any thoughts or issues that you might have about the query result.
+
+@sp 1
+@center @image{img-filechangelogreport,15cm,,File change log report}
+@center Figure: File change log report
+@sp 1
+
+
+@c -----------------------------------------------------
+@node Setuid, Text changes, Change summary, File watch
+@subsection Setuid
+
+@c from wikipedia
+@code{setuid} and @code{setgid} (short for "set user ID upon execution" and "set group ID upon execution", respectively) are Unix access right flags that allow users to run an executable with the permissions of the executable's owner or group. They are often used to allow users on a computer system to run programs with temporarily elevated privileges in order to perform a specific task. The @samp{Setuid report} is useful to get an overview of what processes have been elevated to root privileges and potentially uncover security issues.
+
+Put your mouse over the @b{File watch} drop down menu in the @b{Reports} tab, then select @b{Setuid}.
+
+@sp 1
+@center @image{img-setuid-query-2-2,10cm,, Setuid query}
+@center Figure: Setuidquery
+@sp 1
+
+The Setuid/gid root programs query can filter by (patterns in) file name. Leaving the fields blank will result in a report listing all hosts and files that have their permissions elevated to root.
+
+Once you have clicked @b{Generate report}, CFEngine 3 Enterprise will list an overview of promises that suit the query criteria entered above. The results are presented as host name and files that have their permissions elevated to root.
+
+@sp 1
+@center @image{img-setuid-report-2-2,15cm,, Setuid report}
+@center Figure: Setuid report
+@sp 1
+
+
+@c -----------------------------------------------------
+@node Text changes, , Setuid, File watch
+@subsection Text changes
+
+A diff is a file comparison utility that outputs the differences between two files. It is typically used to show the changes between one version of a file and a former version of the same file. Diff displays the changes made per line for text files. Once a file change has been identified, for instance as seen in the file change log, you can browse the details of that change in a file change diff report. 
+
+Put your mouse over the @b{File watch} drop down menu in the @b{Reports} tab, then select @b{Text changes}.
+
+@sp 1
+@center @image{img-text-changes-query-2-2,10cm,,Text changes query}
+@center Figure: Text changes query
+@sp 1
+
+The Text changes query can filter by (pattern in) file name, (pattern in) content, and time interval for when the change took place.. Leaving the fields blank will result in a report listing changes detected on all monitored hosts and and policies.
+
+Once you have clicked @b{Generate report}, CFEngine 3 Enterprise will list an overview of hosts that suit the query criteria entered above. The result presents the host names (@samp{Host}), name of the file where a change was detected (@samp{File}), the time stamp of change detection (@samp{Change detected at}), and the actual diff (whether a line was added or deleted, the line number, and the content of the change; @samp{Change added (+), deleted (-); Line no; Content }).
+
+@sp 1
+@center @image{img-filechangediffsreport,15cm,,File change diffs report}
+@center Figure: File change diffs report
+@sp 1
+
+
+@c ------------------------------------------------------
+@c @node
+@c @section Example: Performance report
+
+@c Example: how to explicitly monitor performance (execution time) of a promise.
+@c @verbatim
+
+@c body common control
+@c {
+@c bundlesequence => {  "test" };
+@c }
+
+@c bundle agent test
+@c {
+@c command:
+@c    "/bin/sleep 10"
+@c       action  => background;
+@c       action  => performance_measure;
+@c }
+
+@c body action performance_measure
+@c {
+@c    measurement_class => "$(this.promiser) job scan of file sleep command";
+@c }
+
+@c @end verbatim
+
+@ignore
+@c *****************************************************
+@c * CHAPTER
+@c *****************************************************
+@node  CDP reports,  , Standard reports in CFEngine 3 Enterprise, Top
+@chapter CDP reports
+@menu
+* ACLs report - File access controls::  
+* Commands report - Scheduled commands to execute::  
+* File changes report - File changes observed on the system ::  
+* File diffs report - Delta/difference comparison showing file changes::  
+* Registry report - Promised Windows registry setting status::  
+* Services report - System service status::  
+@end menu
+
+Content-Driven Policies (CDP) were introduced to make policy management easier. In contrast to policies written in the CFEngine language, they are composed of semi-colon separated fields in a text file that the user fills with content, like a spreadsheet or tabular file. Each line in the file is parsed and results in a specific type of promise being made. Reports based on data from CDP policies can be found in @samp{Engineering room}: click the @b{Engineering} icon in the Mission Portal, then the @b{CDP reports} finder in the Engineering room:
+
+@sp 1
+@center @image{img-gotoengineering,7cm,,Go to Engineering}
+@center Figure: Go to Engineering
+@sp 1
+
+@center @image{img-gotocdpreportsfinder,13cm,,Go to CDP reports finder}
+@center Figure: Go to CDP reports finder
+
+@sp 1
+@center @image{img-cdpreportfinder,11cm,,Reports finder}
+@center Figure: CDP reports finder
+@sp 1
+
+@noindent We will now go through the different CDP reports and their corresponding input files.
+@c @noindent CFEngine 3 Enterprise comes with six default CDPs:
+
+@c @itemize -
+@c @item ACLs: File access controls
+@c @item Commands: Scheduled commands to execute
+@c @item File changes: File changes observed on the system
+@c @item File diffs: Delta/difference comparison showing file changes
+@c @item Registry: Promised Windows registry setting status
+@c @item Services: System service status
+@c @end itemize
+
+@c We will go through each type of CDP report below to explain the contents.
+
+
+@c ------------------------------------------------------
+@node ACLs report - File access controls, Commands report - Scheduled commands to execute, CDP reports, CDP reports
+@section ACLs report - File access controls
+
+An access control list (ACL) is a list of permissions attached to an object. An ACL specifies which users or system processes are granted access to objects, as well as what operations are allowed on given objects. Each entry in a typical ACL specifies a subject and an operation. For instance, if a file has an ACL that contains (Alice, delete), this would give Alice permission to delete the file.
+
+@page
+Click on @b{ACLs} in the @samp{CDP Reports finder} to access the ACLs CDP report:
+
+@sp 1
+@center @image{img-aclsreport,15cm,, ACLs report}
+@center Figure: ACLs report
+@sp 1
+
+The report lists an overview of host name (@samp{Host}), path of the affected object (@samp{Path}), the permission setting (@samp{Permission (ACL)}), owner of the affected object (@samp{Owner}), action to execute on the object (@samp{Action}), the context in which the promise was made (@samp{Class expression}), state of compliance (@samp{State}), and the time the promise was last checked (@samp{Last checked}).
+
+The default CFEngine 3 Enterprise ACLs policies allow you to set permissions to directories and files using two different input files (@file{acl_directory_list.txt} and @file{acl_file_list.txt}, respectively). We will limit ourselves to look at one of these in the following example as they are conceptually identical.
+
+The file @file{acl_file_list.txt} can be found under the @file{cdp_inputs} catalog in the policy editor, click it to open:
+
+@sp 1
+@center @image{img-openaclfilelistinput,11cm,, open ACLs input file}
+@center Figure: Open the ACLs input file
+@sp 1
+
+@page
+@noindent The content of the file looks like this (lines have been split and indented for presentability):
+
+@verbatim
+
+   #
+   #  ACLs On Files
+   #
+   #  FORMAT:   path;entity_type1:entity_name1:perms1,
+         entity_type2:entity_name2:perms2,...;owner;action;class_expression
+   #
+   #  EXAMPLE:  C:\tmp;user:Administrator:rwx,user:SYSTEM:r;
+         Administrator;fix;windows
+   #
+
+   # Windows 2003
+   c:\WINDOWS\system32\drivers\etc\hosts;user:Administrator:rw,user:SYSTEM:rw,
+       user:Guest:r;SYSTEM;fix;Windows_Server_2003.!Hr09
+   c:\WINDOWS\system32\drivers\etc\hosts;user:Administrator:rw,user:SYSTEM:rw,
+       user:Guest:rw;SYSTEM;fix;Windows_Server_2003.Hr09
+   # Windows 2008
+   c:\Windows\System32\drivers\etc\hosts;user:Administrator:rw,user:SYSTEM:rw,
+       user:Guest:r;SYSTEM;fix;Windows_Server_2008_R2.!Hr11
+   c:\Windows\System32\drivers\etc\hosts;user:Administrator:rw,user:SYSTEM:rw,
+       user:Guest:rw;SYSTEM;fix;Windows_Server_2008_R2.Hr11
+
+@end verbatim
+
+We need to look at the header of the file to understand its structure. We saw in the CDP reports introduction that the input consisted of lines containing semi colon separated fields, so anything with a @samp{;} before or after it is a field entry. The structure of these fields are explained in the @code{FORMAT} section of the file header, here we have:
+
+@verbatim
+
+  #  FORMAT:   path;entity_type1:entity_name1:perms1,
+         entity_type2:entity_name2:perms2,...;owner;action;class_expression
+
+@end verbatim
+
+@noindent Splitting this up into separate fields:
+@table @i
+@item path 
+Path of file to set permissions on.
+
+@item entity_type1:entity_name1:perms1
+This field defines the permissions (@samp{perms1}) that a user (@samp{entity_type1}), and member of the group (@samp{entity_name1}), has on the file defined in @samp{path}.
+
+@item entity_type2:entity_name2:perms2,...
+Same as entity_type1:entity_name1:perms1, but for different user, group, and permission settings.
+
+@item owner
+Defines the owner of the file defined in @samp{path}
+
+@item action
+Tells CFEngine what to do if the file permissions differ from what was defined in the ACLs policy. Can take the values @samp{fix} (set permissions as defined in ACLs policy), @samp{warn} (log and display a warning that the file permissions differ from what was defined in ACLs policy), and @samp{nop} (no operation; no log entry, but print a warning in command-line interface).
+
+@item class_expression
+Context in which the permissions are set, i.e. a class expression (boolean) that needs to be fulfilled for the permissions to be set.
+@end table
+
+
+@c ------------------------------------------------------
+@node Commands report - Scheduled commands to execute, File changes report - File changes observed on the system , ACLs report - File access controls, CDP reports
+@section Commands report - Scheduled commands to execute
+
+You may use the Commands CDP to schedule script execution on specific hosts. The Commands CDP uses a combination of class expressions to set the context (i.e. time and place) of execution. 
+
+Click on @b{Commands} in the @samp{CDP Reports finder} to access the Commands CDP report:
+
+@sp 1
+@center @image{img-commandsreport,15cm,, Commands report}
+@center Figure: Commands report
+@sp 1
+
+The report lists an overview of host name (@samp{Host}), the command to execute (@samp{Command}), the class to define if execution fails (@samp{Failclass}), action to execute if there is an error (@samp{Action}; see explanation of the CDP input file below for possible values), the context in which the promise was made (@samp{Class expression}), state of compliance (@samp{State}), and the time the promise was last checked (@samp{Last checked}).
+
+The Commands CDP input file, @file{command_list.txt}, can be found in the left menu in the @file{cdp_inputs} catalog. The content looks like this (lines have been split and indented for presentability):
+
+@verbatim
+
+   #
+   #  Command Execution
+   #
+   #  FORMAT:   command_path;on_error_define_class;action;class_expression
+   #
+   #  EXAMPLE:  c:\windows\system32\cmd.exe /c "echo hello";hello_failed;fix;
+         DomainController
+   #
+   #  NOTE:     You may use this Content-Driven Policy to schedule script
+   #            execution on a class of hosts by using a combination of
+   #            host and time classes in class_expression, e.g. set
+   #            class_expression to "windows.Tuesday.Hr10.Min30_35".
+   #
+
+   c:\windows\system32\cmd.exe /c "eho hello";hello_failed;fix;windows.Hr11
+   c:\windows\system32\cmd.exe /c "echo hello";hello_failed;fix;windows.!Hr11
+   c:\windows\system32\cmd.exe /c "echo hello failed > c:\reportfile.txt";
+       report_failed;fix;hello_failed.windows
+   c:\windows\system32\cmd.exe /c "echo hello succeeded > c:\reportfile.txt";
+       report_failed;fix;!hello_failed.windows
+   /usr/bin/sleep 5;sleep_failed_solaris;fix;solaris
+   /bin/sleep 5;sleep_failed_solaris;fix;linux
+
+@end verbatim
+
+@noindent Again, we need to look at the header of the file to understand its structure:
+
+@verbatim
+
+   #  FORMAT:   command_path;on_error_define_class;action;class_expression
+
+@end verbatim
+
+@noindent Separating the fields:
+@table @i
+@item command_path
+Path of command to execute.
+
+@item on_error_define_class
+Class to define if there is an error in command execution.
+
+@item action
+Tells CFEngine what to do if there is an error in command execution. Can take the values @samp{fix} (attempt to re-execute the command), @samp{warn} (log and display a warning that the command could not be executed), and @samp{nop} (no operation; no log entry, but print a warning in command-line interface).
+
+@item class_expression
+Context in which the command is to be executed, i.e. a class expression (boolean) that needs to be fulfilled for the command to take place. In the above example (@code{windows.Tuesday.Hr10.Min30_35}) the command will only be executed on Windows machines on Tuesdays between 10.30am and 10.35am.
+@end table
+
+@c ------------------------------------------------------
+@node File changes report - File changes observed on the system , File diffs report - Delta/difference comparison showing file changes, Commands report - Scheduled commands to execute, CDP reports
+@section File changes report - File changes observed on the system 
+
+We saw that awareness of changes often is considered a major part of infrastructure management in the walk-through of the CFEngine 3 Enterprise standard reports. The file changes CDP policy differs slightly from the Files changes log report in that it will restore the original file upon detecting a change and report whether the file remains compliant or not.
+
+Click on @b{File changes} in the @samp{CDP Reports finder} to access the File changes CDP report:
+
+@sp 1
+@center @image{img-filechangesreport,15cm,, File changes report}
+@center Figure: File changes report
+@sp 1
+
+The report lists an overview of host name (@samp{Host}), the path of the concerned file (@samp{Path}), the context in which the promise was made (@samp{Class expression}), time stamp of when a change was detected (@samp{Last Change Detected}), state of compliance (@samp{State}), and the time the promise was last checked (@samp{Last checked}).
+
+The File changes CDP input file, @file{file_change_list.txt}, can be found in the left menu in the @file{cdp_inputs} catalog. The content looks like this:
+
+@verbatim
+
+   #
+   #  File Changes Detection and Revert
+   #
+   #  FORMAT:   file_path;class_expression
+   #
+   #  EXAMPLE:  C:\pwd.txt;windows
+   #
+   #  NOTE:     The file is always restored on change, and change
+   #            reports will be generated.
+   #            Use file_diff Content-Driven Policy to allow changes.
+   #
+
+   /etc/shadow;linux|solarisx86
+
+@end verbatim
+
+Looking at the header of the file:
+@verbatim
+
+   #  FORMAT:   file_path;class_expression
+
+@end verbatim
+
+@noindent Separating the fields:
+@table @i
+@item file_path
+Path of file to monitor and repair changes on.
+
+@item class_expression
+Context in which the change detection/repair is to be executed, i.e. a class expression (boolean) that needs to be fulfilled for the event to take place.
+@end table
+
+@c ------------------------------------------------------
+@node File diffs report - Delta/difference comparison showing file changes, Registry report - Promised Windows registry setting status, File changes report - File changes observed on the system , CDP reports
+@section File diffs report - Delta/difference comparison showing file changes
+
+The file diff CDP policy does the same as the File change CDP policy, except that it does not repair the file to original state if a change is detected. Click on @b{File diffs} in the @samp{CDP Reports finder} to access the File diffs report:
+
+@sp 1
+@center @image{img-filediffsreport,15cm,, File diffs report}
+@center Figure: File diffs report
+@sp 1
+
+The report lists an overview of host name (@samp{Host}), the path of the concerned file (@samp{Path}), the context in which the promise was made (@samp{Class expression}), time stamp of when a change was detected (@samp{Last Change Detected}), state of compliance (@samp{State}), and the time the promise was last checked (@samp{Last checked}).
+
+The File diff CDP input file, @file{file_diff_list.txt}, can be found in the left menu in the @file{cdp_inputs} catalog. The content looks like this:
+
+@verbatim
+
+   #
+   #  File Difference Reporting
+   #
+   #  FORMAT:   file_path;class_expression
+   #
+   #  EXAMPLE:  C:\users.txt;windows
+   #
+   #  NOTE:     The file is always allowed to change. 
+   #            Use file_change Content-Driven Policies to revert a 
+   #	        changed file. Detailed change reports will 
+   #            be generated.
+   #
+
+   /etc/group;linux|solarisx86
+
+@end verbatim
+
+@noindent Looking at the header of the file:
+@verbatim
+
+   #  FORMAT:   file_path;class_expression
+
+@end verbatim
+
+@noindent Separating the fields:
+@table @i
+@item file_path
+Path of file to monitor and warn about changes on.
+
+@item class_expression
+Context in which the change detection/warning is to be executed, i.e. a class expression (boolean) that needs to be fulfilled for the event to take place.
+@end table
+
+
+@c ------------------------------------------------------
+@node Registry report - Promised Windows registry setting status, Services report - System service status, File diffs report - Delta/difference comparison showing file changes, CDP reports
+@section Registry report - Promised Windows registry setting status
+
+The Windows Registry is a hierarchical database that stores configuration settings and options on Microsoft Windows operating systems. It contains settings for low-level operating system components as well as the applications running on the platform. Registry keys are similar to folders: in addition to values, each key can contain subkeys, which may contain further subkeys, and so on. Keys are referenced with a syntax similar to Windows' path names, using backslashes to indicate levels of hierarchy. Each subkey has a mandatory name, which is a non-empty string that cannot contain any backslash, and whose letter case is insignificant.
+
+Click on @b{Registry} in the @samp{CDP Reports finder} to access the Registry report:
+
+@sp 1
+@center @image{img-registryreport,15cm,, Registry report}
+@center Figure: Registry report
+@sp 1
+
+The report lists an overview of host name (@samp{Host}), the key identifier (@samp{Key}), the key value (@samp{Value}), action to take if there is an error in the key (@samp{Action}; see explanation of the CDP input file below for possible values), the context in which the promise was made (@samp{Class expression}), the state of compliance (@samp{State}), and the time the promise was last checked (@samp{Last checked}).
+
+The Registry CDP input file, @file{registry_list.txt}, can be found in the left menu in the @file{cdp_inputs} catalog. The content looks like this (lines have been split and indented for presentability):
+
+@verbatim
+
+   #
+   #  Windows Registry Management
+   #
+   #  FORMAT:   key;name,type,data;action;class_expression
+   #
+   #  EXAMPLE:  HKEY_CURRENT_USER\Control Panel\Desktop;ScreenSaverIsSecure,
+         REG_SZ,1;fix;windows
+   #
+   #  NOTE:     Currently, type must be REG_SZ (string).
+   #
+
+   HKEY_CURRENT_USER\Control Panel\Desktop;ScreenSaverIsSecure,REG_SZ,1;
+      fix;windows.!Hr11
+   HKEY_CURRENT_USER\Control Panel\Desktop;ScreenSaverIsSecure,REG_SZ,0;
+      fix;windows.Hr11
+   HKEY_CURRENT_USER\Control Panel\Desktop;ScreenSaveTimeOut,REG_SZ,600;
+      fix;windows.!Hr11
+   HKEY_CURRENT_USER\Control Panel\Desktop;ScreenSaveTimeOut,REG_SZ,1200;
+      fix;windows.Hr11
+
+@end verbatim
+
+Looking at the header of the file:
+@verbatim
+
+   #  FORMAT:   key;name,type,data;action;class_expression
+
+@end verbatim
+
+@noindent Separating the fields:
+@table @i
+@item key
+The path to the key in question.
+
+@item name,type,data
+Name, type, and value of the key.  
+
+@item action
+Tells CFEngine what to do if there is a difference between the registry entry and the definition in the Registry CDP. Can take the values @samp{fix} (set the registry entry as defined in the  Registry CDP), @samp{warn} (log and display a warning that the there is a discrepancy between the registry entry and the Registry CDP), and @samp{nop} (no operation; no log entry, but print a warning in command-line interface).
+
+@item class_expression
+Context in which the promise is to be executed, i.e. a class expression (boolean) that needs to be fulfilled for the command to take place.
+@end table
+
+
+@c ------------------------------------------------------
+@node Services report - System service status,  , Registry report - Promised Windows registry setting status, CDP reports
+@section Services report - System service status
+
+Services are programs that once started run continuously in the background. They perform specific functions which are designed not to require user intervention and are ready for input or monitor changes in your system and respond to them. For example, the Apache server has a daemon called httpd that listens on port 80 on your machine. When it receives a request for a page it sends the appropriate data back to the client machine.
+
+With the three lines of semicolon separated fields, we ensure the correct status of three services on all our Windows machines and are given specialized reports on the outcome. The Content-Driven Policy services report is shown below. 
+Click on @b{Services} in the @samp{CDP Reports finder} to access the Services report:
+
+@sp 1
+@center @image{img-servicesreport,15cm,, Services report}
+@center Figure: Services report
+@sp 1
+
+The report lists an overview of host name (@samp{Host}), @samp{Service Name}, the runstatus of the service (@samp{Runstatus}), action to take if there is a difference from policy (@samp{Action}; see explanation of the CDP input file below for possible values), the context in which the promise was made (@samp{Class expression}), the state of compliance (@samp{State}), and the time the promise was last checked (@samp{Last checked}).
+
+The Registry CDP input file, @file{service_list.txt}, can be found in the left menu in the @file{cdp_inputs} catalog. The content looks like this (lines have been split and indented for presentability):
+
+@verbatim
+
+   #
+   #  Windows Service Management
+   #
+   #  FORMAT:   service_name;run_status;action;class_expression
+   #
+   #  EXAMPLE:  Dnscache;start;fix;windows
+   #
+   #  NOTE:     Service name is not the "Display name" 
+   #            -- see the properties of the service. 
+   #            run_status can be start/stop/disable. If start then 
+   #            the service is started, if disable then service is 
+   #            stopped and "Startup type" is set to disable,
+   #   	        if stop, then service is stopped "Startup type" is left 
+   #            unchanged.
+   #
+
+   Dnscache;stop;fix;windows.Hr10
+   wuauserv;stop;fix;windows.Hr10
+   Dnscache;start;fix;windows.!Hr10
+   wuauserv;start;fix;windows.!Hr10
+
+@end verbatim
+
+@noindent Looking at the header of the file:
+@verbatim
+
+   #  FORMAT:   service_name;run_status;action;class_expression
+
+@end verbatim
+
+@noindent Separating the fields:
+@table @i
+@item service_name
+Name of the service (not necessarily the same as the display name, see properties of the service).
+
+@item run_status
+The run status of the service defines whether it should be running or not. Can take the values @samp{start}, @samp{stop}, or @samp{disable} (will stop the service and change its startup mode to disable, i.e. will not be restarted upon reboot of the machine, for example).
+
+@item action
+Tells CFEngine what to do if there is a difference between the run status what has been defined in the Services CDP. Can take the values @samp{fix} (set the run status as defined in the Services CDP), @samp{warn} (log and display a warning that the there is a discrepancy between the run status and the Services CDP), and @samp{nop} (no operation; no log entry, but print a warning in command-line interface).
+
+@item class_expression
+Context in which the promise is to be executed, i.e. a class expression (boolean) that needs to be fulfilled for the command to take place.
+@end table
+
+@end ignore
+
+
+@c =========================================================================
+@c @node Index,  , CFEngine Methods, Top
+@c @unnumbered Concept Index
+@c @printindex cp
+@c =========================================================================
+
+
+@c  The file is structured like a programming language. Each chapter
+@c  starts with a chapter comment.
+@c
+@c  Menus list the subsections so that an online info-reader can parse
+@c  the file hierarchically.
+@ifhtml
+@html
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-2576171-2");
+pageTracker._initData();
+pageTracker._trackPageview();
+</script>
+@end html
+@end ifhtml
+@bye

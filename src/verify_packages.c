@@ -862,6 +862,9 @@ static int ExecuteSchedule(PackageManager *schedule, enum package_actions action
 
                 for (pi = pm->pack_list; pi != NULL; pi = pi->next)
                 {
+                    pp = pi->pp;
+                    a = GetPackageAttributes(pp);
+
                     char *sp, *offset = command_string + strlen(command_string);
 
                     if (a.packages.package_file_repositories && (action == cfa_addpack || action == cfa_update))

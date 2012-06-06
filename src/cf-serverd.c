@@ -54,7 +54,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv);
 static int OpenReceiverChannel(void);
 static void PurgeOldConnections(Item **list, time_t now);
 static void SpawnConnection(int sd_reply, char *ipaddr);
-static void CheckFileChanges(Policy *policy, GenericAgentConfig config);
+static void CheckFileChanges(Policy **policy, GenericAgentConfig config);
 static void *HandleConnection(ServerConnectionState *conn);
 static int BusyWithConnection(ServerConnectionState *conn);
 static int MatchClasses(ServerConnectionState *conn);
@@ -415,7 +415,7 @@ static void StartServer(Policy *policy, GenericAgentConfig config)
         {
             if (ACTIVE_THREADS == 0)
             {
-                CheckFileChanges(policy, config);
+                CheckFileChanges(&policy, config);
             }
             ThreadUnlock(cft_server_children);
         }
@@ -757,7 +757,7 @@ static void SpawnConnection(int sd_reply, char *ipaddr)
 
 /**************************************************************/
 
-static void CheckFileChanges(Policy *policy, GenericAgentConfig config)
+static void CheckFileChanges(Policy **policy, GenericAgentConfig config)
 {
     if (EnterpriseExpiry())
     {
@@ -811,8 +811,8 @@ static void CheckFileChanges(Policy *policy, GenericAgentConfig config)
             MULTICONNLIST = NULL;
             VINPUTLIST = NULL;
 
-            PolicyDestroy(policy);
-            policy = NULL;
+            PolicyDestroy(*policy);
+            *policy = NULL;
 
             ERRORCOUNT = 0;
 
@@ -842,8 +842,8 @@ static void CheckFileChanges(Policy *policy, GenericAgentConfig config)
             NewClass(CF_AGENTTYPES[THIS_AGENT_TYPE]);
 
             SetReferenceTime(true);
-            policy = ReadPromises(cf_server, CF_SERVERC, config);
-            KeepPromises(policy);
+            *policy = ReadPromises(cf_server, CF_SERVERC, config);
+            KeepPromises(*policy);
             Summarize();
 
         }

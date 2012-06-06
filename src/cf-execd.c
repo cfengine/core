@@ -57,7 +57,7 @@ static pthread_attr_t threads_attrs;
 
 static GenericAgentConfig CheckOpts(int argc, char **argv);
 static void ThisAgentInit(void);
-static bool ScheduleRun(Policy *policy);
+static bool ScheduleRun(Policy **policy);
 static void Apoptosis(void);
 
 #if defined(HAVE_PTHREAD)
@@ -473,7 +473,7 @@ void StartServer(Policy *policy)
     {
         while (true)
         {
-            if (ScheduleRun(policy))
+            if (ScheduleRun(&policy))
             {
                 CfOut(cf_verbose, "", "Sleeping for splaytime %d seconds\n\n", SPLAYTIME);
                 sleep(SPLAYTIME);
@@ -638,7 +638,7 @@ static Reload CheckNewPromises(void)
     return RELOAD_ENVIRONMENT;
 }
 
-static bool ScheduleRun(Policy *policy)
+static bool ScheduleRun(Policy **policy)
 {
     Item *ip;
 
@@ -681,8 +681,8 @@ static bool ScheduleRun(Policy *policy)
         VNEGHEAP = NULL;
         VINPUTLIST = NULL;
 
-        PolicyDestroy(policy);
-        policy = NULL;
+        PolicyDestroy(*policy);
+        *policy = NULL;
 
         ERRORCOUNT = 0;
 
@@ -712,8 +712,8 @@ static bool ScheduleRun(Policy *policy)
             .bundlesequence = NULL
         };
 
-        policy = ReadPromises(cf_executor, CF_EXECC, config);
-        KeepPromises(policy);
+        *policy = ReadPromises(cf_executor, CF_EXECC, config);
+        KeepPromises(*policy);
     }
     else
     {

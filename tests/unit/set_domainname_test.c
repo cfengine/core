@@ -1,5 +1,7 @@
 #include "cf3.defs.h"
 
+#include "sysinfo.h"
+
 #include <setjmp.h>
 #include <cmockery.h>
 

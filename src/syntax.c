@@ -47,15 +47,8 @@ void CheckBundle(const Policy *policy, const char *name, const char *type)
 {
     Bundle *bp;
     char output[CF_BUFSIZE];
-    const char *reserved[] = { "sys", "const", "mon", "edit", "match", "mon", "this", NULL };
 
     CfDebug("Checking for bundle (%s,%s)\n", name, type);
-
-    if (IsStrIn(name, reserved))
-    {
-        snprintf(output, CF_BUFSIZE, "Use of a reserved context as a bundle name \"%s\" ", name);
-        ReportError(output);
-    }
 
     for (bp = policy->bundles; bp != NULL; bp = bp->next)
     {

@@ -132,9 +132,21 @@ bool PolicyCheckPromise(const Promise *pp, Sequence *errors)
     return success;
 }
 
+
 static bool PolicyCheckBundle(const Bundle *bp, Sequence *errors)
 {
+    assert(bp);
     bool success = true;
+
+    {
+        static const char *reserved_names[] = { "sys", "const", "mon", "edit", "match", "mon", "this", NULL };
+        if (IsStrIn(bp->name, reserved_names))
+        {
+            SequenceAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_BUNDLE, bp,
+                                                  "Use of a reserved container name as a bundle name \"%s\" ", bp->name));
+            success = false;
+        }
+    }
 
     for (const SubType *type = bp->subtypes; type; type = type->next)
     {

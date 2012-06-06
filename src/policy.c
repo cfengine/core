@@ -133,22 +133,23 @@ bool PolicyCheckPromise(const Promise *pp, Sequence *errors)
 }
 
 
-static bool PolicyCheckBundle(const Bundle *bp, Sequence *errors)
+static bool PolicyCheckBundle(const Bundle *bundle, Sequence *errors)
 {
-    assert(bp);
+    assert(bundle);
     bool success = true;
 
+    // ensure no reserved bundle names are used
     {
         static const char *reserved_names[] = { "sys", "const", "mon", "edit", "match", "mon", "this", NULL };
-        if (IsStrIn(bp->name, reserved_names))
+        if (IsStrIn(bundle->name, reserved_names))
         {
-            SequenceAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_BUNDLE, bp,
-                                                  "Use of a reserved container name as a bundle name \"%s\" ", bp->name));
+            SequenceAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_BUNDLE, bundle,
+                                                  "Use of a reserved container name as a bundle name \"%s\" ", bundle->name));
             success = false;
         }
     }
 
-    for (const SubType *type = bp->subtypes; type; type = type->next)
+    for (const SubType *type = bundle->subtypes; type; type = type->next)
     {
         for (const Promise *pp = type->promiselist; pp; pp = pp->next)
         {
@@ -163,6 +164,23 @@ static bool PolicyCheckBundle(const Bundle *bp, Sequence *errors)
 bool PolicyCheck(const Policy *policy, Sequence *errors)
 {
     bool success = true;
+
+    // ensure bundle names are not duplicated
+    for (const Bundle *bp = policy->bundles; bp; bp = bp->next)
+    {
+        for (const Bundle *bp2 = policy->bundles; bp2; bp2 = bp2->next)
+        {
+            if (bp != bp2 &&
+                StringSafeEqual(bp->name, bp2->name) &&
+                StringSafeEqual(bp->type, bp2->type))
+            {
+                SequenceAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_BUNDLE, bp,
+                                                      "Duplicate definition of bundle %s with type %s",
+                                                      bp->name, bp->type));
+                success = false;
+            }
+        }
+    }
 
     for (const Bundle *bp = policy->bundles; bp; bp = bp->next)
     {

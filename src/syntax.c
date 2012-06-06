@@ -43,26 +43,6 @@ static void CheckFnCallType(const char *lval, const char *s, enum cfdatatype dty
 
 /*********************************************************/
 
-void CheckBundle(const Policy *policy, const char *name, const char *type)
-{
-    Bundle *bp;
-    char output[CF_BUFSIZE];
-
-    CfDebug("Checking for bundle (%s,%s)\n", name, type);
-
-    for (bp = policy->bundles; bp != NULL; bp = bp->next)
-    {
-        if ((strcmp(name, bp->name) == 0) && (strcmp(type, bp->type) == 0))
-        {
-            snprintf(output, CF_BUFSIZE, "Redefinition of bundle %s for %s is a broken promise", name, type);
-            ReportError(output);
-            ERRORCOUNT++;
-        }
-    }
-}
-
-/*********************************************************/
-
 void CheckBody(const Policy *policy, const char *name, const char *type)
 {
     char output[CF_BUFSIZE];

@@ -74,8 +74,6 @@ Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *
     }
     CfDebug(")\n");
 
-    CheckBundle(policy, name, type);
-
     Bundle *bundle = xcalloc(1, sizeof(Bundle));
     bundle->parent_policy = policy;
 

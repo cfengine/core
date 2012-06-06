@@ -16,6 +16,14 @@ static Sequence *LoadAndCheck(const char *filename)
     return errs;
 }
 
+static void test_bundle_redefinition(void **state)
+{
+    Sequence *errs = LoadAndCheck("bundle_redefinition.cf");
+    assert_int_equal(2, errs->length);
+
+    SequenceDestroy(errs);
+}
+
 static void test_bundle_reserved_name(void **state)
 {
     Sequence *errs = LoadAndCheck("bundle_reserved_name.cf");
@@ -44,6 +52,7 @@ int main()
 {
     const UnitTest tests[] =
     {
+        unit_test(test_bundle_redefinition),
         unit_test(test_bundle_reserved_name),
         unit_test(test_vars_multiple_types),
         unit_test(test_methods_invalid_arity),

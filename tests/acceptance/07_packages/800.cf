@@ -1,0 +1,61 @@
+# Test that classes are set on individual installation (Mantis #829)
+
+body common control
+{
+ inputs => { "../default.cf.sub" };
+ bundlesequence => { default("$(this.promise_filename)") };
+ version => "1.0";
+nova_edition::
+ host_licenses_paid => "5";
+}
+
+bundle agent init
+{
+vars:
+  "dummy" string => "dummy";
+}
+
+bundle agent test
+{
+packages:
+ "a:b:c"
+   package_policy => "add",
+   package_method => mock,
+   classes => ok("a");
+
+ "d:e:f"
+   package_policy => "add",
+   package_method => mock,
+   classes => ok("d");
+}
+
+body package_method mock
+{
+  package_changes => "individual";
+  package_list_command => "/bin/true";
+
+  package_list_name_regex => "^[^:]*";
+  package_list_version_regex => ":(?<=:).*(?=:)";
+  package_list_arch_regex => "[^:]\w+$";
+  package_installed_regex => "^[^:]*";
+
+  package_add_command => "/bin/true";
+  package_update_command => "/bin/true";
+  package_delete_command => "/bin/true";
+  package_verify_command => "/bin/true";
+}
+
+body classes ok(classname)
+{
+  promise_repaired => { "$(classname)" };
+  promise_kept => { "$(classname)" };
+}
+
+bundle agent check
+{
+reports:
+  a.d::
+    "$(this.promise_filename) Pass";
+  !a|!d::
+    "$(this.promise_filename) FAIL";
+}

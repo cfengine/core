@@ -2058,48 +2058,24 @@ int ExecPackageCommand(char *command, int verify, int setCmdClasses, Attributes 
 /* Level                                                                     */
 /*****************************************************************************/
 
-int ComparePackages(const char *n, const char *v, const char *a, PackageItem * pi, enum version_cmp cmp)
+static bool ComparePackageVersions(const char *v1, const char *v2, enum version_cmp cmp)
 {
+    Rlist *rp_pr, *rp_in;
+
+    int result = true;
+    int break_loop = false;
+    int cmp_result;
+    int version_matched = false;
+
     Rlist *numbers_pr = NULL, *separators_pr = NULL;
     Rlist *numbers_in = NULL, *separators_in = NULL;
-    Rlist *rp_pr, *rp_in;
-    int result = true;
-    int version_matched = false;
-    int version_equal = false;
-    int cmp_result;
-    int break_loop = false;
 
-    CfDebug("Compare (%s,%s,%s) and (%s,%s,%s)\n", n, v, a, pi->name, pi->version, pi->arch);
-
-    if (CompareCSVName(n, pi->name) != 0)
-    {
-        return false;
-    }
-
-    CfOut(cf_verbose, "", " -> Matched name %s\n", n);
-
-    if (strcmp(a, "*") != 0)
-    {
-        if (strcmp(a, pi->arch) != 0)
-        {
-            return false;
-        }
-
-        CfOut(cf_verbose, "", " -> Matched arch %s\n", a);
-    }
-
-    if (strcmp(v, "*") == 0)
-    {
-        CfOut(cf_verbose, "", " -> Matched version *\n");
-        return true;
-    }
-
-    ParsePackageVersion(CanonifyChar(v, ','), &numbers_pr, &separators_pr);
-    ParsePackageVersion(CanonifyChar(pi->version, ','), &numbers_in, &separators_in);
+    ParsePackageVersion(CanonifyChar(v1, ','), &numbers_pr, &separators_pr);
+    ParsePackageVersion(CanonifyChar(v2, ','), &numbers_in, &separators_in);
 
 /* If the format of the version string doesn't match, we're already doomed */
 
-    CfOut(cf_verbose, "", " -> Check for compatible versioning model in (%s,%s)\n", v, pi->version);
+    CfOut(cf_verbose, "", " -> Check for compatible versioning model in (%s,%s)\n", v1, v2);
 
     for (rp_pr = separators_pr, rp_in = separators_in; rp_pr != NULL && rp_in != NULL;
          rp_pr = rp_pr->next, rp_in = rp_in->next)
@@ -2123,10 +2099,10 @@ int ComparePackages(const char *n, const char *v, const char *a, PackageItem * p
     }
     else
     {
-        CfOut(cf_verbose, "", " !! Versioning models for (%s,%s) were incompatible\n", v, pi->version);
+        CfOut(cf_verbose, "", " !! Versioning models for (%s,%s) were incompatible\n", v1, v2);
     }
 
-    version_equal = (strcmp(pi->version, v) == 0);
+    int version_equal = (strcmp(v2, v1) == 0);
 
     if (result)
     {
@@ -2218,7 +2194,43 @@ int ComparePackages(const char *n, const char *v, const char *a, PackageItem * p
         }
     }
 
-    result = version_matched;
+    DeleteRlist(numbers_pr);
+    DeleteRlist(numbers_in);
+    DeleteRlist(separators_pr);
+    DeleteRlist(separators_in);
+
+    return version_matched;
+}
+
+
+int ComparePackages(const char *n, const char *v, const char *a, PackageItem * pi, enum version_cmp cmp)
+{
+    CfDebug("Compare (%s,%s,%s) and (%s,%s,%s)\n", n, v, a, pi->name, pi->version, pi->arch);
+
+    if (CompareCSVName(n, pi->name) != 0)
+    {
+        return false;
+    }
+
+    CfOut(cf_verbose, "", " -> Matched name %s\n", n);
+
+    if (strcmp(a, "*") != 0)
+    {
+        if (strcmp(a, pi->arch) != 0)
+        {
+            return false;
+        }
+
+        CfOut(cf_verbose, "", " -> Matched arch %s\n", a);
+    }
+
+    if (strcmp(v, "*") == 0)
+    {
+        CfOut(cf_verbose, "", " -> Matched version *\n");
+        return true;
+    }
+
+    bool result = ComparePackageVersions(v, pi->version, cmp);
 
     if (result)
     {
@@ -2229,10 +2241,6 @@ int ComparePackages(const char *n, const char *v, const char *a, PackageItem * p
         CfOut(cf_verbose, "", " -> Versions did not match\n");
     }
 
-    DeleteRlist(numbers_pr);
-    DeleteRlist(numbers_in);
-    DeleteRlist(separators_pr);
-    DeleteRlist(separators_in);
     return result;
 }
 

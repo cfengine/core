@@ -30,6 +30,15 @@
 
 #include <assert.h>
 
+//************************************************************************
+
+static const char *POLICY_ERROR_VARS_CONSTRAINT_DUPLICATE_TYPE = "Variable contains existing data type contstraint %s, tried to redefine with %s";
+static const char *POLICY_ERROR_METHODS_BUNDLE_ARITY = "Conflicting arity in calling bundle %s, expected %d arguments, %d given";
+static const char *POLICY_ERROR_BUNDLE_NAME_RESERVED = "Use of a reserved container name as a bundle name \"%s\"";
+static const char *POLICY_ERROR_BUNDLE_REDEFINITION = "Duplicate definition of bundle %s with type %s";
+
+//************************************************************************
+
 Policy *PolicyNew(void)
 {
     Policy *policy = xcalloc(1, sizeof(Policy));
@@ -73,7 +82,7 @@ static bool PolicyCheckPromiseVars(const Promise *pp, Sequence *errors)
                 if (data_type != NULL)
                 {
                     SequenceAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, cp,
-                                                          "Variable contains existing data type contstraint %s, tried to redefine with %s",
+                                                          POLICY_ERROR_VARS_CONSTRAINT_DUPLICATE_TYPE,
                                                           data_type, cp->lval));
                     success = false;
                 }
@@ -104,7 +113,7 @@ static bool PolicyCheckPromiseMethods(const Promise *pp, Sequence *errors)
                     if (RlistLen(call->args) != RlistLen(callee->args))
                     {
                         SequenceAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, cp,
-                                                              "Conflicting arity in calling bundle %s, expected %d arguments, %d given",
+                                                              POLICY_ERROR_METHODS_BUNDLE_ARITY,
                                                               call->name, RlistLen(callee->args), RlistLen(call->args)));
                         success = false;
                     }
@@ -144,7 +153,7 @@ static bool PolicyCheckBundle(const Bundle *bundle, Sequence *errors)
         if (IsStrIn(bundle->name, reserved_names))
         {
             SequenceAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_BUNDLE, bundle,
-                                                  "Use of a reserved container name as a bundle name \"%s\" ", bundle->name));
+                                                  POLICY_ERROR_BUNDLE_NAME_RESERVED, bundle->name));
             success = false;
         }
     }
@@ -175,7 +184,7 @@ bool PolicyCheck(const Policy *policy, Sequence *errors)
                 StringSafeEqual(bp->type, bp2->type))
             {
                 SequenceAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_BUNDLE, bp,
-                                                      "Duplicate definition of bundle %s with type %s",
+                                                      POLICY_ERROR_BUNDLE_REDEFINITION,
                                                       bp->name, bp->type));
                 success = false;
             }

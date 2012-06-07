@@ -23,10 +23,12 @@
 */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
+#include "promises.h"
 #include "files_names.h"
 #include "dbm_api.h"
+#include "mod_access.h"
+#include "item_lib.h"
 
 static int IsSpace(char *remainder);
 
@@ -1017,7 +1019,7 @@ double Str2Double(const char *s)
 
 /****************************************************************************/
 
-void IntRange2Int(char *intrange, long *min, long *max, Promise *pp)
+void IntRange2Int(char *intrange, long *min, long *max, const Promise *pp)
 {
     Item *split;
     long lmax = CF_LOWINIT, lmin = CF_HIGHINIT;
@@ -1373,7 +1375,7 @@ enum cfd_menu String2Menu(const char *s)
 /* Rlist to Uid/Gid lists                                                   */
 /****************************************************************************/
 
-UidList *Rlist2UidList(Rlist *uidnames, Promise *pp)
+UidList *Rlist2UidList(Rlist *uidnames, const Promise *pp)
 {
     UidList *uidlist = NULL;
     Rlist *rp;
@@ -1397,7 +1399,7 @@ UidList *Rlist2UidList(Rlist *uidnames, Promise *pp)
 
 /*********************************************************************/
 
-GidList *Rlist2GidList(Rlist *gidnames, Promise *pp)
+GidList *Rlist2GidList(Rlist *gidnames, const Promise *pp)
 {
     GidList *gidlist = NULL;
     Rlist *rp;
@@ -1421,7 +1423,7 @@ GidList *Rlist2GidList(Rlist *gidnames, Promise *pp)
 
 /*********************************************************************/
 
-uid_t Str2Uid(char *uidbuff, char *usercopy, Promise *pp)
+uid_t Str2Uid(char *uidbuff, char *usercopy, const Promise *pp)
 {
     Item *ip, *tmplist;
     struct passwd *pw;
@@ -1509,7 +1511,7 @@ uid_t Str2Uid(char *uidbuff, char *usercopy, Promise *pp)
 
 /*********************************************************************/
 
-gid_t Str2Gid(char *gidbuff, char *groupcopy, Promise *pp)
+gid_t Str2Gid(char *gidbuff, char *groupcopy, const Promise *pp)
 {
     struct group *gr;
     int gid = -2, tmp = -2;

@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include "cf.defs.h"
+#include "platform.h"
 #include "map.h"
 #include "alloc.h"
 #include "array_map_priv.h"

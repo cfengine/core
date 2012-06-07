@@ -1,0 +1,126 @@
+############################################################
+#
+# The self-healing tower: Anti-Dominoes
+#
+#  This method works with either Community of Enterprise
+#
+#  If you want to test this on localhost, just edit /etc/hosts
+#  to add host1 host2 host3 host4 as aliases to localhost
+#
+############################################################
+
+body common control
+{
+bundlesequence => { "weak_dependency_symphony" };
+inputs => { "cfengine_stdlib.cf" };
+}
+
+body server control
+{
+allowconnects         => { "127.0.0.1" , "::1", @(def.acl) };
+allowallconnects      => { "127.0.0.1" , "::1", @(def.acl) };
+}
+
+
+############################################################
+
+bundle agent weak_dependency_symphony
+{
+methods:
+
+   # We have to seed the beginning by creating the tower
+   # /tmp/tower_localhost
+
+   host1::
+    "tower"  usebundle => tier1,
+               classes => publish_ok("ok_O");
+
+   host2::
+    "tower"  usebundle => tier2,
+               classes => publish_ok("ok_1");
+
+   host3::
+    "tower"  usebundle => tier3,
+               classes => publish_ok("ok_2");
+
+   host4::
+    "tower"  usebundle => tier4,
+               classes => publish_ok("ok_f");
+
+classes:
+
+ ok_O:: # Wait for the methods, report on host1 only
+
+  "check1" expression => remoteclassesmatching("ok.*","host2","yes","a");
+  "check2" expression => remoteclassesmatching("ok.*","host3","yes","a");
+  "check3" expression => remoteclassesmatching("ok.*","host4","yes","a");
+
+reports:
+
+  ok_O&a_ok_1&a_ok_2&a_ok_f::
+
+   "The Tower is standing";
+
+  !(ok_O&a_ok_1&a_ok_2&a_ok_f)::
+
+   "The Tower is down";
+}
+
+############################################################
+
+bundle agent tier1
+{
+files:
+
+  "/tmp/something_to_do_1"
+      create => "true";
+}
+
+bundle agent tier2
+{
+files:
+
+  "/tmp/something_to_do_2"
+      create => "true";
+}
+
+bundle agent tier3
+{
+files:
+
+  "/tmp/something_to_do_3"
+      create => "true";
+
+}
+
+bundle agent tier4
+{
+files:
+
+  "/tmp/something_to_do_4"
+      create => "true";
+}
+
+############################################################
+
+
+bundle server access_rules()
+{
+access:
+
+  "ok.*"
+    resource_type => "context",
+    admit => { "127.0.0.1" };
+
+}
+
+############################################################
+
+body classes publish_ok(x)
+{
+promise_repaired => { "$(x)" };
+promise_kept => { "$(x)" };
+cancel_notkept => { "$(x)" };
+persist_time => "5";
+}
+

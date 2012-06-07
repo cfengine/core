@@ -22,25 +22,26 @@
   included file COSL.txt.
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: env_monitor.c                                                       */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
+
+#include "env_context.h"
 #include "monitoring.h"
 #include "granules.h"
+#include "dbm_api.h"
+#include "policy.h"
+#include "promises.h"
+#include "item_lib.h"
 
 #include <math.h>
-#include "dbm_api.h"
 
 /*****************************************************************************/
 /* Globals                                                                   */
 /*****************************************************************************/
 
 #define CF_ENVNEW_FILE   "env_data.new"
+#define cf_noise_threshold 6    /* number that does not warrent large anomaly status */
+#define MON_THRESHOLD_HIGH 1000000      // samples should stay below this threshold
+#define LDT_BUFSIZE 10
 
 static char ENVFILE_NEW[CF_BUFSIZE];
 static char ENVFILE[CF_BUFSIZE];
@@ -77,10 +78,10 @@ int NO_FORK = false;
 
 static void GetDatabaseAge(void);
 static void LoadHistogram(void);
-static void GetQ(void);
+static void GetQ(const Policy *policy);
 static Averages EvalAvQ(char *timekey);
 static void ArmClasses(Averages newvals, char *timekey);
-static void GatherPromisedMeasures(void);
+static void GatherPromisedMeasures(const Policy *policy);
 
 static void LeapDetection(void);
 static Averages *GetCurrentAverages(char *timekey);
@@ -231,7 +232,7 @@ static void LoadHistogram(void)
 
 /*********************************************************************/
 
-void MonitorStartServer(int argc, char **argv)
+void MonitorStartServer(const Policy *policy)
 {
     char timekey[CF_SMALLBUF];
     Averages averages;
@@ -278,7 +279,7 @@ void MonitorStartServer(int argc, char **argv)
 
     while (true)
     {
-        GetQ();
+        GetQ(policy);
         snprintf(timekey, sizeof(timekey), "%s", GenTimeKey(time(NULL)));
         averages = EvalAvQ(timekey);
         LeapDetection();
@@ -294,7 +295,7 @@ void MonitorStartServer(int argc, char **argv)
 
 /*********************************************************************/
 
-static void GetQ(void)
+static void GetQ(const Policy *policy)
 {
     CfDebug("========================= GET Q ==============================\n");
 
@@ -312,7 +313,7 @@ static void GetQ(void)
     MonTempGatherData(CF_THIS);
 #endif /* NOT MINGW */
     MonOtherGatherData(CF_THIS);
-    GatherPromisedMeasures();
+    GatherPromisedMeasures(policy);
 }
 
 /*********************************************************************/
@@ -1053,14 +1054,13 @@ static double RejectAnomaly(double new, double average, double variance, double 
 /* Level 5                                                     */
 /***************************************************************/
 
-static void GatherPromisedMeasures(void)
+static void GatherPromisedMeasures(const Policy *policy)
 {
-    Bundle *bp;
     SubType *sp;
     Promise *pp;
     char *scope;
 
-    for (bp = BUNDLES; bp != NULL; bp = bp->next)       /* get schedule */
+    for (const Bundle *bp = policy->bundles; bp != NULL; bp = bp->next)       /* get schedule */
     {
         scope = bp->name;
         SetNewScope(bp->name);

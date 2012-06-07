@@ -1,10 +1,33 @@
+/*
+   Copyright (C) Cfengine AS
+
+   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+   This program is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by the
+   Free Software Foundation; version 3.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+  To the extent this program is licensed as part of the Enterprise
+  versions of Cfengine, the applicable Commerical Open Source License
+  (COSL) may apply to this file if you as a licensee so wish it. See
+  included file COSL.txt.
+*/
+
 #ifndef CFENGINE_FILES_NAMES_H
 #define CFENGINE_FILES_NAMES_H
 
-#include "cf.defs.h"
+#include "platform.h"
 
 int IsNewerFileTree(char *dir, time_t reftime);
-char *Titleize(char *str);
 int DeEscapeQuotedString(const char *in, char *out);
 int CompareCSVName(const char *s1, const char *s2);
 int IsDir(char *path);
@@ -29,19 +52,9 @@ int CompressPath(char *dest, char *src);
 void Chop(char *str);
 void StripTrailingNewline(char *str);
 char *ScanPastChars(char *scanpast, char *input);
-bool IsStrIn(const char *str, const char **strs);
-bool IsStrCaseIn(const char *str, const char **strs);
-char **String2StringArray(char *str, char separator);
-void FreeStringArray(char **strs);
 int IsAbsoluteFileName(const char *f);
 bool IsFileOutsideDefaultRepository(const char *f);
 int RootDirLength(char *f);
-int SubStrnCopyChr(char *to, char *from, int len, char sep);
-int CountChar(char *string, char sp);
-void ReplaceChar(char *in, char *out, int outSz, char from, char to);
-void ReplaceTrailingChar(char *str, char from, char to);
-void ReplaceTrailingStr(char *str, char *from, char to);
-int ReplaceStr(char *in, char *out, int outSz, char *from, char *to);
 const char *GetSoftwareCacheFilename(char *buffer);
 
 #endif

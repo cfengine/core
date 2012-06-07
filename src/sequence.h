@@ -25,7 +25,7 @@
 #ifndef CFENGINE_SEQUENCE_H
 #define CFENGINE_SEQUENCE_H
 
-#include "cf.defs.h"
+#include "platform.h"
 
 /**
   @brief Sequence data-structure.

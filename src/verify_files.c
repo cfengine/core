@@ -23,15 +23,10 @@
 
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: verify_files.c                                                      */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
+#include "constraints.h"
+#include "promises.h"
 #include "vars.h"
 
 static void FindFilePromiserObjects(Promise *pp);

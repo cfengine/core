@@ -27,7 +27,8 @@
 #endif
 
 #include "cf3.defs.h"
-#include "prototypes3.h"
+
+#include "promises.h"
 
 int PrependPackageItem(PackageItem ** list, const char *name, const char *version, const char *arch, Attributes a,
                        Promise *pp)

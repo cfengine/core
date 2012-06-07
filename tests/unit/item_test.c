@@ -1,8 +1,8 @@
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
 #include <setjmp.h>
 #include <cmockery.h>
+#include "item_lib.h"
 
 static void test_prepend_item(void **state)
 {

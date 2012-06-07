@@ -24,19 +24,22 @@
 */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 #include "cf3.server.h"
 
+#include "env_context.h"
 #include "files_names.h"
+#include "mod_access.h"
+#include "constraints.h"
+#include "item_lib.h"
 
-static void KeepContextBundles(void);
+static void KeepContextBundles(Policy *policy);
 static void KeepServerPromise(Promise *pp);
 static void InstallServerAuthPath(char *path, Auth **list, Auth **listtop);
 static void KeepServerRolePromise(Promise *pp);
-static void KeepPromiseBundles(void);
+static void KeepPromiseBundles(Policy *policy);
 
-extern BodySyntax CFS_CONTROLBODY[];
-extern BodySyntax CF_REMROLE_BODIES[];
+extern const BodySyntax CFS_CONTROLBODY[];
+extern const BodySyntax CF_REMROLE_BODIES[];
 
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
@@ -64,11 +67,11 @@ void KeepQueryAccessPromise(Promise *pp, char *type);
 /* Level                                                           */
 /*******************************************************************/
 
-void KeepPromises(void)
+void KeepPromises(Policy *policy)
 {
-    KeepContextBundles();
-    KeepControlPromises();
-    KeepPromiseBundles();
+    KeepContextBundles(policy);
+    KeepControlPromises(policy);
+    KeepPromiseBundles(policy);
 }
 
 /*******************************************************************/
@@ -108,6 +111,35 @@ void Summarize()
         }
     }
 
+    CfOut(cf_verbose, "", "Granted access to literal/variable/query data :\n");
+
+    for (ptr = VARADMIT; ptr != NULL; ptr = ptr->next)
+    {
+        CfOut(cf_verbose, "", "  Object: %s (encrypt=%d)\n", ptr->path, ptr->encrypt);
+
+        for (ip = ptr->accesslist; ip != NULL; ip = ip->next)
+        {
+            CfOut(cf_verbose, "", "   Admit: %s root=", ip->name);
+            for (ipr = ptr->maproot; ipr != NULL; ipr = ipr->next)
+            {
+                CfOut(cf_verbose, "", "%s,", ipr->name);
+            }
+        }
+    }
+
+    CfOut(cf_verbose, "", "Denied access to literal/variable/query data :\n");
+
+    for (ptr = VARDENY; ptr != NULL; ptr = ptr->next)
+    {
+        CfOut(cf_verbose, "", "  Object: %s\n", ptr->path);
+
+        for (ip = ptr->accesslist; ip != NULL; ip = ip->next)
+        {
+            CfOut(cf_verbose, "", "   Deny: %s\n", ip->name);
+        }
+    }
+
+    
     CfOut(cf_verbose, "", " -> Host IPs allowed connection access :\n");
 
     for (ip = NONATTACKERLIST; ip != NULL; ip = ip->next)
@@ -163,7 +195,7 @@ void Summarize()
 /* Level                                                           */
 /*******************************************************************/
 
-void KeepControlPromises()
+void KeepControlPromises(Policy *policy)
 {
     Constraint *cp;
     Rval retval;
@@ -179,11 +211,11 @@ void KeepControlPromises()
 
     Banner("Server control promises..");
 
-    HashControls();
+    HashControls(policy);
 
 /* Now expand */
 
-    for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp = cp->next)
+    for (cp = ControlBodyConstraints(policy, cf_server); cp != NULL; cp = cp->next)
     {
         if (IsExcluded(cp->classes))
         {
@@ -405,16 +437,15 @@ void KeepControlPromises()
 
 /*********************************************************************/
 
-static void KeepContextBundles()
+static void KeepContextBundles(Policy *policy)
 {
-    Bundle *bp;
     SubType *sp;
     Promise *pp;
     char *scope;
 
 /* Dial up the generic promise expansion with a callback */
 
-    for (bp = BUNDLES; bp != NULL; bp = bp->next)       /* get schedule */
+    for (Bundle *bp = policy->bundles; bp != NULL; bp = bp->next)       /* get schedule */
     {
         scope = bp->name;
         SetNewScope(bp->name);
@@ -448,16 +479,15 @@ static void KeepContextBundles()
 
 /*********************************************************************/
 
-static void KeepPromiseBundles()
+static void KeepPromiseBundles(Policy *policy)
 {
-    Bundle *bp;
     SubType *sp;
     Promise *pp;
     char *scope;
 
 /* Dial up the generic promise expansion with a callback */
 
-    for (bp = BUNDLES; bp != NULL; bp = bp->next)       /* get schedule */
+    for (Bundle *bp = policy->bundles; bp != NULL; bp = bp->next)       /* get schedule */
     {
         scope = bp->name;
         SetNewScope(bp->name);
@@ -527,6 +557,12 @@ static void KeepServerPromise(Promise *pp)
         return;
     }
 
+    if (strcmp(pp->agentsubtype, "access") == 0 && sp && strcmp(sp, "variable") == 0)
+    {
+        KeepLiteralAccessPromise(pp, "variable");
+        return;
+    }
+    
     if (strcmp(pp->agentsubtype, "access") == 0 && sp && strcmp(sp, "query") == 0)
     {
         KeepQueryAccessPromise(pp, "query");
@@ -638,37 +674,61 @@ void KeepLiteralAccessPromise(Promise *pp, char *type)
     Auth *ap, *dp;
     char *handle = GetConstraintValue("handle", pp, CF_SCALAR);
 
-    if (handle == NULL)
+    if (handle == NULL && strcmp(type,"literal") == 0)
     {
         CfOut(cf_error, "", "Access to literal server data requires you to define a promise handle for reference");
         return;
     }
-
-    if (!GetAuthPath(handle, VARADMIT))
-    {
-        InstallServerAuthPath(handle, &VARADMIT, &VARADMITTOP);
-    }
-
-    RegisterLiteralServerData(handle, pp);
-
-    if (!GetAuthPath(handle, VARDENY))
-    {
-        InstallServerAuthPath(handle, &VARDENY, &VARDENYTOP);
-    }
-
-    ap = GetAuthPath(handle, VARADMIT);
-    dp = GetAuthPath(handle, VARDENY);
-
+    
     if (strcmp(type, "literal") == 0)
     {
+        CfOut(cf_verbose,""," -> Looking at literal access promise \"%s\", type %s",pp->promiser, type);
+
+        if (!GetAuthPath(handle, VARADMIT))
+        {
+            InstallServerAuthPath(handle, &VARADMIT, &VARADMITTOP);
+        }
+
+        if (!GetAuthPath(handle, VARDENY))
+        {
+            InstallServerAuthPath(handle, &VARDENY, &VARDENYTOP);
+        }
+
+        RegisterLiteralServerData(handle, pp);
+        ap = GetAuthPath(handle, VARADMIT);
+        dp = GetAuthPath(handle, VARDENY);
         ap->literal = true;
     }
-
-    if (strcmp(type, "context") == 0)
+    else
     {
-        ap->classpattern = true;
-    }
+        CfOut(cf_verbose,""," -> Looking at context/var access promise \"%s\", type %s",pp->promiser, type);
 
+        if (!GetAuthPath(pp->promiser, VARADMIT))
+        {
+            InstallServerAuthPath(pp->promiser, &VARADMIT, &VARADMITTOP);
+        }
+
+        if (!GetAuthPath(pp->promiser, VARDENY))
+        {
+            InstallServerAuthPath(pp->promiser, &VARDENY, &VARDENYTOP);
+        }
+
+
+        if (strcmp(type, "context") == 0)
+        {
+            ap = GetAuthPath(pp->promiser, VARADMIT);
+            dp = GetAuthPath(pp->promiser, VARDENY);
+            ap->classpattern = true;
+        }
+
+        if (strcmp(type, "variable") == 0)
+        {
+            ap = GetAuthPath(pp->promiser, VARADMIT); // Allow the promiser (preferred) as well as handle as variable name
+            dp = GetAuthPath(pp->promiser, VARDENY);
+            ap->variable = true;
+        }
+    }
+    
     for (cp = pp->conlist; cp != NULL; cp = cp->next)
     {
         if (!IsDefinedClass(cp->classes))

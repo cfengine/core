@@ -25,16 +25,17 @@
 
 #include "generic_agent.h"
 
-#include "cf3.extern.h"
-
+#include "env_context.h"
+#include "constraints.h"
 #include "files_names.h"
 #include "ontology.h"
 #include "export_xml.h"
+#include "item_lib.h"
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);
 
-static void KeepKnowControlPromises(void);
+static void KeepKnowControlPromises(Policy *policy);
 static void KeepKnowledgePromise(Promise *pp);
 static void VerifyTopicPromise(Promise *pp);
 static void VerifyThingsPromise(Promise *pp);
@@ -64,7 +65,7 @@ static void AddOccurrence(Occurrence **list, char *reference, Rlist *represents,
 static Topic *TopicExists(char *topic_name, char *topic_type);
 static TopicAssociation *AssociationExists(TopicAssociation *list, char *fwd, char *bwd);
 static Occurrence *OccurrenceExists(Occurrence *list, char *locator, enum representations repy_type, char *s);
-static void KeepPromiseBundles(void);
+static void KeepPromiseBundles(Policy *policy);
 int GetTopicPid(char *classified_topic);
 
 /*******************************************************************/
@@ -76,7 +77,7 @@ static Topic *TOPICHASH[CF_HASHTABLESIZE];
 int GLOBAL_ID = 1;              // Used as a primary key for convenience, 0 reserved
 static int BGOALS = false;
 
-extern BodySyntax CFK_CONTROLBODY[];
+extern const BodySyntax CFK_CONTROLBODY[];
 
 enum typesequence
 {
@@ -180,10 +181,10 @@ int main(int argc, char *argv[])
 {
     GenericAgentConfig config = CheckOpts(argc, argv);
 
-    GenericInitialize("knowledge", config);
+    Policy *policy = GenericInitialize("knowledge", config);
     ThisAgentInit();
 
-    KeepKnowControlPromises();
+    KeepKnowControlPromises(policy);
 
     if (BGOALS)
     {
@@ -216,7 +217,7 @@ int main(int argc, char *argv[])
        {
           char buffer[CF_BUFSIZE];
           
-                Constellation_HostStory(STORY, buffer, CF_BUFSIZE);
+                Constellation_HostStory(policy, STORY, buffer, CF_BUFSIZE);
                 printf("%s\n", buffer);
        }
        else
@@ -253,7 +254,7 @@ int main(int argc, char *argv[])
         int complete;
         double percent;
 
-        KeepPromiseBundles();
+        KeepPromiseBundles(policy);
         WriteKMDB();
         GenerateManual();
         ShowWords();
@@ -414,12 +415,12 @@ static void ThisAgentInit(void)
 
 /*****************************************************************************/
 
-static void KeepKnowControlPromises()
+static void KeepKnowControlPromises(Policy *policy)
 {
     Constraint *cp;
     Rval retval;
 
-    for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp = cp->next)
+    for (cp = ControlBodyConstraints(policy, cf_know); cp != NULL; cp = cp->next)
     {
         if (IsExcluded(cp->classes))
         {
@@ -551,7 +552,7 @@ static void KeepKnowControlPromises()
 
 /*****************************************************************************/
 
-static void KeepPromiseBundles()
+static void KeepPromiseBundles(Policy *policy)
 {
     Bundle *bp;
     SubType *sp;
@@ -593,7 +594,7 @@ static void KeepPromiseBundles()
             break;
         }
 
-        if (!(GetBundle(name, "knowledge") || (GetBundle(name, "common"))))
+        if (!(GetBundle(policy, name, "knowledge") || (GetBundle(policy, name, "common"))))
         {
             CfOut(cf_error, "", " !! Bundle \"%s\" listed in the bundlesequence was not found\n", name);
             ok = false;
@@ -624,7 +625,7 @@ static void KeepPromiseBundles()
                 break;
             }
 
-            if ((bp = GetBundle(name, "knowledge")) || (bp = GetBundle(name, "common")))
+            if ((bp = GetBundle(policy, name, "knowledge")) || (bp = GetBundle(policy, name, "common")))
             {
                 BannerBundle(bp, params);
                 AugmentScope(bp->name, bp->args, params);
@@ -893,6 +894,10 @@ static void VerifyThingsPromise(Promise *pp)
                                 pp->promiser);
         }
 
+        // Add bundle reference
+
+        AddTopicAssociation(tp, &(tp->associations), KM_MENTIONS_F, KM_MENTIONS_B, pp->bundle, true, rp->item, pp->promiser);
+
         // Treat comments as occurrences of information.
 
         if (pp->ref)
@@ -997,6 +1002,10 @@ static void VerifyTopicPromise(Promise *pp)
             otp = IdempInsertTopic(synonym);
             PrependRScalar(&(a.synonyms), otp->topic_name, CF_SCALAR);
         }
+
+        // Add bundle reference
+
+        AddTopicAssociation(tp, &(tp->associations), KM_MENTIONS_F, KM_MENTIONS_B, pp->bundle, true, rp->item, pp->promiser);
 
         // Treat comments as occurrences of information.
 

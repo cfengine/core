@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -20,24 +20,11 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
-/*******************************************************************/
-/*                                                                 */
-/*  GLOBAL class default variables for cfengine                    */
-/*  These variables are what needs to be modified if you add or    */
-/*  modify class definitions... remember also to change clsattr    */
-/*  and search for the os types in cfengine.c (mount stuff)        */
-/*                                                                 */
-/*******************************************************************/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
-/*********************************************************************/
-
-char *CLASSTEXT[HARD_CLASSES_MAX] =
+const char *CLASSTEXT[HARD_CLASSES_MAX] =
 {
     "<unknown>",
     "hpux",
@@ -58,11 +45,7 @@ char *CLASSTEXT[HARD_CLASSES_MAX] =
     "vmware",
 };
 
-/*********************************************************************/
-
-/*********************************************************************/
-
-char *VPSCOMM[HARD_CLASSES_MAX] =
+const char *VPSCOMM[HARD_CLASSES_MAX] =
 {
     "",
     "/bin/ps",                  /* hpux */
@@ -83,12 +66,10 @@ char *VPSCOMM[HARD_CLASSES_MAX] =
     "/bin/ps",                  /* vmware */
 };
 
-/*********************************************************************/
-
 // linux after rhel 3: ps -eo user,pid,ppid,pgid,%cpu,%mem,vsize,ni,rss,stat,nlwp,stime,time,args
 // solaris: ps -eo user,pid,ppid,pgid,pcpu,pmem,vsz,pri,rss,nlwp,stime,time,args
 
-char *VPSOPTS[HARD_CLASSES_MAX] =
+const char *VPSOPTS[HARD_CLASSES_MAX] =
 {
     "",
     "-ef",                      /* hpux */
@@ -109,7 +90,7 @@ char *VPSOPTS[HARD_CLASSES_MAX] =
     "?",                        /* vmware */
 };
 
-char *VFSTAB[HARD_CLASSES_MAX] =
+const char *VFSTAB[HARD_CLASSES_MAX] =
 {
     "-",
     "/etc/fstab",               /* hpux */
@@ -130,23 +111,3 @@ char *VFSTAB[HARD_CLASSES_MAX] =
     "/etc/fstab",               /* vmware */
 };
 
-char *VNETSTAT[HARD_CLASSES_MAX] =
-{
-    "-",
-    "/usr/bin/netstat -rn",     /* hpux */
-    "/usr/bin/netstat -rn",     /* aix */
-    "/bin/netstat -rn",         /* linux */
-    "/usr/bin/netstat -rn",     /* solaris */
-    "/usr/bin/netstat -rn",     /* freebsd */
-    "/usr/bin/netstat -rn",     /* netbsd */
-    "/usr/ucb/netstat -rn",     /* cray */
-    "/cygdrive/c/WINNT/System32/netstat",       /* NT */
-    "/usr/bin/netstat -rn",     /* Unixware */
-    "/usr/bin/netstat -rn",     /* openbsd */
-    "/usr/bin/netstat -rn",     /* sco */
-    "/usr/sbin/netstat -rn",    /* darwin */
-    "/usr/bin/netstat -rn",     /* qnx */
-    "/usr/bin/netstat -rn",     /* dragonfly */
-    "mingw-invalid",            /* mingw */
-    "/usr/bin/netstat",         /* vmware */
-};

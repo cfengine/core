@@ -23,15 +23,10 @@
 
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: verify_methods.c                                                    */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
+#include "env_context.h"
+#include "constraints.h"
 #include "vars.h"
 
 /*****************************************************************************/
@@ -89,15 +84,15 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp)
 
     PromiseBanner(pp);
 
-    if ((bp = GetBundle(method_name, "agent")))
+    if ((bp = GetBundle(PolicyFromPromise(pp), method_name, "agent")))
     {
-        char *bp_stack = THIS_BUNDLE;
+        const char *bp_stack = THIS_BUNDLE;
 
         BannerSubBundle(bp, params);
 
         DeleteScope(bp->name);
         NewScope(bp->name);
-        HashVariables(bp->name);
+        HashVariables(PolicyFromPromise(pp), bp->name);
 
         AugmentScope(bp->name, bp->args, params);
 
@@ -109,13 +104,20 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp)
         PopPrivateClassContext();
         THIS_BUNDLE = bp_stack;
 
-        if (retval)
+        switch (retval)
         {
-            cfPS(cf_verbose, CF_NOP, "", pp, a, " -> Method invoked successfully\n");
-        }
-        else
-        {
-            cfPS(cf_inform, CF_FAIL, "", pp, a, " !! Method could not be invoked successfully\n");
+        case CF_FAIL:
+            cfPS(cf_inform, CF_FAIL, "", pp, a, " !! Method failed in some repairs or aborted\n");
+            break;
+
+        case CF_CHG:
+            cfPS(cf_inform, CF_CHG, "", pp, a, " !! Method invoked repairs\n");
+            break;
+
+        default:
+            cfPS(cf_verbose, CF_NOP, "", pp, a, " -> Method verified\n");
+            break;
+
         }
 
         DeleteFromScope(bp->name, bp->args);

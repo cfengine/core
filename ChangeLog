@@ -4,6 +4,12 @@
 	- cf-promises --parse-tree option to parse policy file and dump it
 	  in JSON format
 
+	New semantics 
+	- methods promises now return the status of promises
+  	  kept within them. If any promise was not kept, the method is not
+	  kept, else if any promise is repaired, the method was repaired
+	  else it was kept.
+
 3.3.0
 
 	New promise types:

@@ -23,16 +23,12 @@
 
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: matching.c                                                          */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
+#include "env_context.h"
 #include "vars.h"
+#include "promises.h"
+#include "item_lib.h"
 
 #ifdef HAVE_PCRE_H
 # include <pcre.h>
@@ -229,7 +225,7 @@ char *ExtractFirstReference(const char *regexp, const char *teststring)
 
 /*************************************************************************/
 
-int BlockTextMatch(char *regexp, char *teststring, int *start, int *end)
+int BlockTextMatch(const char *regexp, const char *teststring, int *start, int *end)
 {
     pcre *rx = CompileRegExp(regexp);
 

@@ -23,30 +23,28 @@
 
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: manual.c                                                            */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "manual.h"
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
 #include "vars.h"
 #include "writer.h"
+#include "mod_knowledge.h"
+#include "mod_measurement.h"
+#include "mod_exec.h"
+#include "mod_access.h"
+#include "item_lib.h"
 
 extern char BUILD_DIR[CF_BUFSIZE];
 extern char MANDIR[CF_BUFSIZE];
 
 static void TexinfoHeader(FILE *fout);
 static void TexinfoFooter(FILE *fout);
-static void TexinfoBodyParts(FILE *fout, const BodySyntax *bs, char *context);
+static void TexinfoBodyParts(FILE *fout, const BodySyntax *bs, const char *context);
 static void TexinfoSubBodyParts(FILE *fout, BodySyntax *bs);
 static void TexinfoShowRange(FILE *fout, char *s, enum cfdatatype type);
 static void IncludeManualFile(FILE *fout, char *filename);
-static void TexinfoPromiseTypesFor(FILE *fout, SubTypeSyntax *st);
+static void TexinfoPromiseTypesFor(FILE *fout, const SubTypeSyntax *st);
 static void TexinfoSpecialFunction(FILE *fout, FnCallType fn);
 static void TexinfoVariables(FILE *fout, char *scope);
 static char *TexInfoEscape(char *s);
@@ -57,7 +55,7 @@ static void PrintPattern(FILE *fout, const char *pattern);
 void TexinfoManual(char *mandir)
 {
     char filename[CF_BUFSIZE];
-    SubTypeSyntax *st;
+    const SubTypeSyntax *st;
     Item *done = NULL;
     FILE *fout;
     int i;
@@ -257,7 +255,7 @@ static void TexinfoHeader(FILE *fout)
             "@c\n"
             "@c ***********************************************************************\n"
             "@c %%** start of header\n"
-            "@setfilename cf3-reference.info\n"
+            "@setfilename cf3-Reference.info\n"
             "@settitle CFEngine reference manual\n"
             "@setchapternewpage odd\n"
             "@c %%** end of header\n"
@@ -360,7 +358,7 @@ static void TexinfoFooter(FILE *fout)
 
 /*****************************************************************************/
 
-static void TexinfoPromiseTypesFor(FILE *fout, SubTypeSyntax *st)
+static void TexinfoPromiseTypesFor(FILE *fout, const SubTypeSyntax *st)
 {
     int j;
     char filename[CF_BUFSIZE];
@@ -396,7 +394,7 @@ static void TexinfoPromiseTypesFor(FILE *fout, SubTypeSyntax *st)
 /* Level                                                                     */
 /*****************************************************************************/
 
-static void TexinfoBodyParts(FILE *fout, const BodySyntax *bs, char *context)
+static void TexinfoBodyParts(FILE *fout, const BodySyntax *bs, const char *context)
 {
     int i;
     char filename[CF_BUFSIZE];

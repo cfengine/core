@@ -12,3 +12,11 @@ is designed for spreading globally calibrated information about a
 CFEngine swarm back to the client machines. The data available through
 this channel are generated automatically by discovery, unlike
 @code{remotescalar} which accesses user defined data.
+
+This function asks for an identifier; it is up to the server to interpret
+what this means and to return a value of its choosing. If the identifier matches
+a persistent scalar variable (such as is used to count distributed processes in CFEngine
+Enterprise) then this will be returned preferentially. If no such variable is found,
+then the server will look for a literal string in a server bundle with a handle that
+matches the requested object.
+

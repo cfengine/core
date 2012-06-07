@@ -26,34 +26,44 @@
 #define CFENGINE_CONSTRAINTS_H
 
 #include "cf3.defs.h"
+#include "policy.h"
 
 struct Constraint_
 {
+    PolicyElementType type;
+    union {
+        Promise *promise;
+        Body *body;
+    } parent;
+
     char *lval;
     Rval rval;
+
     char *classes;              /* only used within bodies */
-    int isbody;
+    bool references_body;
     Audit *audit;
-    Constraint *next;
 
     SourceOffset offset;
+    Constraint *next;
 };
 
-Constraint *AppendConstraint(Constraint **conlist, char *lval, Rval rval, char *classes, int body);
-Constraint *GetConstraint(Promise *promise, const char *lval);
+Constraint *ConstraintAppendToPromise(Promise *promise, const char *lval, Rval rval, const char *classes, bool references_body);
+Constraint *ConstraintAppendToBody(Body *body, const char *lval, Rval rval, const char *classes, bool references_body);
+
+Constraint *GetConstraint(const Promise *promise, const char *lval);
 void DeleteConstraintList(Constraint *conlist);
-void EditScalarConstraint(Constraint *conlist, char *lval, char *rval);
-void *GetConstraintValue(char *lval, Promise *promise, char type);
-int GetBooleanConstraint(char *lval, Promise *list);
-int GetRawBooleanConstraint(char *lval, Constraint *list);
-int GetIntConstraint(char *lval, Promise *list);
-double GetRealConstraint(char *lval, Promise *list);
-mode_t GetOctalConstraint(char *lval, Promise *list);
-uid_t GetUidConstraint(char *lval, Promise *pp);
-gid_t GetGidConstraint(char *lval, Promise *pp);
-Rlist *GetListConstraint(char *lval, Promise *list);
+void EditScalarConstraint(Constraint *conlist, const char *lval, const char *rval);
+void *GetConstraintValue(const char *lval, const Promise *promise, char type);
+int GetBooleanConstraint(const char *lval, const Promise *list);
+int GetRawBooleanConstraint(const char *lval, const Constraint *list);
+int GetIntConstraint(const char *lval, const Promise *list);
+double GetRealConstraint(const char *lval, const Promise *list);
+mode_t GetOctalConstraint(const char *lval, const Promise *list);
+uid_t GetUidConstraint(const char *lval, const Promise *pp);
+gid_t GetGidConstraint(char *lval, const Promise *pp);
+Rlist *GetListConstraint(const char *lval, const Promise *list);
 void ReCheckAllConstraints(Promise *pp);
-int GetBundleConstraint(char *lval, Promise *list);
+int GetBundleConstraint(const char *lval, const Promise *list);
 PromiseIdent *NewPromiseId(char *handle, Promise *pp);
 void DeleteAllPromiseIds(void);
 

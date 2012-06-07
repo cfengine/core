@@ -32,7 +32,6 @@ libpromises_la_SOURCES = \
         attributes.c attributes.h \
         bool.h \
         bootstrap.c \
-        cf.defs.h \
         cf.events.h \
         cf3.defs.h \
         cf3.extern.h \
@@ -59,7 +58,7 @@ libpromises_la_SOURCES = \
         dir.c dir.h dir_priv.h \
         dtypes.c \
         enterprise_stubs.c \
-        env_context.c \
+        env_context.c env_context.h \
         evalfunction.c evalfunction.h \
         exec_tools.c \
         expand.c \
@@ -84,7 +83,7 @@ libpromises_la_SOURCES = \
         html.c \
         install.c \
         instrumentation.c \
-        item_lib.c \
+        item_lib.c item_lib.h \
         iteration.c \
         json.c json.h \
         keyring.c \
@@ -96,35 +95,37 @@ libpromises_la_SOURCES = \
         map_common.h \
         matching.c \
         misc_lib.c misc_lib.h \
-        mod_access.c \
+        mod_access.c mod_access.h \
         mod_common.c \
-        mod_databases.c \
-        mod_environ.c \
-        mod_exec.c \
-        mod_files.c \
-        mod_interfaces.c \
-        mod_knowledge.c \
-        mod_measurement.c \
-        mod_methods.c \
-        mod_outputs.c \
-        mod_packages.c \
-        mod_process.c \
-        mod_report.c \
-        mod_services.c \
-        mod_storage.c \
+        mod_databases.c mod_databases.h \
+        mod_environ.c mod_environ.h \
+        mod_exec.c mod_exec.h \
+        mod_files.c mod_files.h \
+        mod_interfaces.c mod_interfaces.h \
+        mod_knowledge.c mod_knowledge.h \
+        mod_measurement.c mod_measurement.h \
+        mod_methods.c mod_methods.h \
+        mod_outputs.c mod_outputs.h \
+        mod_packages.c mod_packages.h \
+        mod_process.c mod_process.h \
+        mod_report.c mod_report.h \
+        mod_services.c mod_services.h \
+        mod_storage.c mod_storage.h \
         modes.c \
         monitoring.h \
         net.c \
         nfs.c \
         ontology.c ontology.h \
         package_lib.c \
+        policy.c policy.h \
         parser.c parser.h \
         parser_state.h \
         patches.c \
         pipes.c \
+        platform.h \
         proc_keyvalue.c proc_keyvalue.h \
         processes_select.c \
-        promises.c \
+        promises.c promises.h \
         prototypes3.h \
         recursion.c \
         reporting.c \
@@ -142,7 +143,7 @@ libpromises_la_SOURCES = \
         string_lib.c string_lib.h \
         string_map.c string_map.h \
         syntax.c syntax.h \
-        sysinfo.c \
+        sysinfo.c sysinfo.h \
         timeout.c \
         transaction.c transaction.h \
         unix.c \

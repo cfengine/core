@@ -25,7 +25,6 @@
 #include "crypto.h"
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 #include "lastseen.h"
 
 static void MD5Random(unsigned char digest[EVP_MAX_MD_SIZE + 1]);

@@ -1,0 +1,13 @@
+bundle agent foo
+{
+reports:
+  cfengine3::
+    "hello world";
+}
+
+bundle agent foo
+{
+reports:
+  cfengine3::
+    "other stuff";
+}

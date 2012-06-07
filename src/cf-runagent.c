@@ -24,11 +24,14 @@
 */
 
 #include "generic_agent.h"
-#include "cf3.extern.h"
 
+#include "sysinfo.h"
+#include "env_context.h"
 #include "lastseen.h"
 #include "crypto.h"
 #include "files_names.h"
+#include "promises.h"
+#include "constraints.h"
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);
@@ -97,7 +100,7 @@ static const char *HINTS[17] =
     NULL
 };
 
-extern BodySyntax CFR_CONTROLBODY[];
+extern const BodySyntax CFR_CONTROLBODY[];
 
 int INTERACTIVE = false;
 int OUTPUT_TO_FILE = false;
@@ -124,9 +127,9 @@ int main(int argc, char *argv[])
 
     GenericAgentConfig config = CheckOpts(argc, argv);
 
-    GenericInitialize("runagent", config);
+    Policy *policy = GenericInitialize("runagent", config);
     ThisAgentInit();
-    KeepControlPromises();      // Set RUNATTR using copy
+    KeepControlPromises(policy);      // Set RUNATTR using copy
 
     if (BACKGROUND && INTERACTIVE)
     {
@@ -457,7 +460,7 @@ static int HailServer(char *host, Attributes a, Promise *pp)
 #if defined(HAVE_NOVA)
         if (!Nova_ExecuteRunagent(conn, MENU))
         {
-            ServerDisconnection(conn);
+            DisconnectServer(conn);
             DeleteRlist(a.copy.servers);
             return false;
         }
@@ -477,7 +480,7 @@ static int HailServer(char *host, Attributes a, Promise *pp)
 /* Level 2                                                          */
 /********************************************************************/
 
-void KeepControlPromises()
+void KeepControlPromises(Policy *policy)
 {
     Constraint *cp;
     Rval retval;
@@ -489,7 +492,7 @@ void KeepControlPromises()
 
 /* Keep promised agent behaviour - control bodies */
 
-    for (cp = ControlBodyConstraints(cf_runagent); cp != NULL; cp = cp->next)
+    for (cp = ControlBodyConstraints(policy, cf_runagent); cp != NULL; cp = cp->next)
     {
         if (IsExcluded(cp->classes))
         {
@@ -677,7 +680,7 @@ static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *
     if (SendTransaction(conn->sd, sendbuffer, 0, CF_DONE) == -1)
     {
         CfOut(cf_error, "send", "Transmission rejected");
-        ServerDisconnection(conn);
+        DisconnectServer(conn);
         return;
     }
 
@@ -725,7 +728,7 @@ static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *
     }
 
     DeleteStream(fp);
-    ServerDisconnection(conn);
+    DisconnectServer(conn);
 }
 
 /********************************************************************/

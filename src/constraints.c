@@ -23,31 +23,23 @@
   included file COSL.txt.
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: constraints.c                                                       */
-/*                                                                           */
-/* Created: Wed Oct 17 13:00:08 2007                                         */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "constraints.h"
+
+#include "env_context.h"
+#include "promises.h"
+#include "syntax.h"
+#include "item_lib.h"
 
 static PromiseIdent *PromiseIdExists(char *handle);
 static void DeleteAllPromiseIdsRecurse(PromiseIdent *key);
 static int VerifyConstraintName(const char *lval);
-static void PostCheckConstraint(char *type, char *bundle, char *lval, Rval rval);
+static void PostCheckConstraint(const char *type, const char *bundle, const char *lval, Rval rval);
 
 /*******************************************************************/
 
-Constraint *AppendConstraint(Constraint **conlist, char *lval, Rval rval, char *classes, int body)
-/* Note rval must be pre-allocated for this function, e.g. use
-   CopyRvalItem in call.  This is to make the parser and var expansion
-   non-leaky */
+// FIX: copied nearly verbatim from AppendConstraint, needs review
+static Constraint *ConstraintNew(const char *lval, Rval rval, const char *classes, bool references_body)
 {
-    Constraint *cp, *lp;
-    char *sp = NULL;
-
     switch (rval.rtype)
     {
     case CF_SCALAR:
@@ -66,16 +58,28 @@ Constraint *AppendConstraint(Constraint **conlist, char *lval, Rval rval, char *
         CfDebug("   Appending a list to rhs\n");
     }
 
-// Check class
-
+    // Check class
     if (THIS_AGENT_TYPE == cf_common)
     {
         PostCheckConstraint("none", "none", lval, rval);
     }
 
-    cp = xcalloc(1, sizeof(Constraint));
+    Constraint *cp = xcalloc(1, sizeof(Constraint));
 
-    sp = xstrdup(lval);
+    cp->lval = SafeStringDuplicate(lval);
+    cp->rval = rval;
+
+    cp->audit = AUDITPTR;
+    cp->classes = SafeStringDuplicate(classes);
+    cp->references_body = references_body;
+
+    return cp;
+}
+
+// FIX: every type having its own list logic
+static void ConstraintAppendToList(Constraint **conlist, Constraint *cp)
+{
+    Constraint *lp = NULL;
 
     if (*conlist == NULL)
     {
@@ -89,23 +93,35 @@ Constraint *AppendConstraint(Constraint **conlist, char *lval, Rval rval, char *
 
         lp->next = cp;
     }
+}
 
-    if (classes != NULL)
-    {
-        cp->classes = xstrdup(classes);
-    }
+Constraint *ConstraintAppendToPromise(Promise *promise, const char *lval, Rval rval, const char *classes,
+                                      bool references_body)
+{
+    Constraint *cp = ConstraintNew(lval, rval, classes, references_body);
+    cp->type = POLICY_ELEMENT_TYPE_PROMISE;
+    cp->parent.promise = promise;
 
-    cp->audit = AUDITPTR;
-    cp->lval = sp;
-    cp->rval = rval;
-    cp->isbody = body;
+    ConstraintAppendToList(&promise->conlist, cp);
+
+    return cp;
+}
+
+Constraint *ConstraintAppendToBody(Body *body, const char *lval, Rval rval, const char *classes,
+                                   bool references_body)
+{
+    Constraint *cp = ConstraintNew(lval, rval, classes, references_body);
+    cp->type = POLICY_ELEMENT_TYPE_BODY;
+    cp->parent.body = body;
+
+    ConstraintAppendToList(&body->conlist, cp);
 
     return cp;
 }
 
 /*****************************************************************************/
 
-void EditScalarConstraint(Constraint *conlist, char *lval, char *rval)
+void EditScalarConstraint(Constraint *conlist, const char *lval, const char *rval)
 {
     Constraint *cp;
 
@@ -143,7 +159,7 @@ void DeleteConstraintList(Constraint *conlist)
 
 /*****************************************************************************/
 
-int GetBooleanConstraint(char *lval, Promise *pp)
+int GetBooleanConstraint(const char *lval, const Promise *pp)
 {
     Constraint *cp;
     int retval = CF_UNDEFINED;
@@ -196,12 +212,11 @@ int GetBooleanConstraint(char *lval, Promise *pp)
 
 /*****************************************************************************/
 
-int GetRawBooleanConstraint(char *lval, Constraint *list)
+int GetRawBooleanConstraint(const char *lval, const Constraint *list)
 {
-    Constraint *cp;
     int retval = CF_UNDEFINED;
 
-    for (cp = list; cp != NULL; cp = cp->next)
+    for (const Constraint *cp = list; cp != NULL; cp = cp->next)
     {
         if (strcmp(cp->lval, lval) == 0)
         {
@@ -247,12 +262,11 @@ int GetRawBooleanConstraint(char *lval, Constraint *list)
 
 /*****************************************************************************/
 
-int GetBundleConstraint(char *lval, Promise *pp)
+int GetBundleConstraint(const char *lval, const Promise *pp)
 {
-    Constraint *cp;
     int retval = CF_UNDEFINED;
 
-    for (cp = pp->conlist; cp != NULL; cp = cp->next)
+    for (const Constraint *cp = pp->conlist; cp != NULL; cp = cp->next)
     {
         if (strcmp(cp->lval, lval) == 0)
         {
@@ -287,7 +301,7 @@ int GetBundleConstraint(char *lval, Promise *pp)
 
 /*****************************************************************************/
 
-int GetIntConstraint(char *lval, Promise *pp)
+int GetIntConstraint(const char *lval, const Promise *pp)
 {
     Constraint *cp;
     int retval = CF_NOINT;
@@ -326,7 +340,7 @@ int GetIntConstraint(char *lval, Promise *pp)
 
 /*****************************************************************************/
 
-double GetRealConstraint(char *lval, Promise *pp)
+double GetRealConstraint(const char *lval, const Promise *pp)
 {
     Constraint *cp;
     double retval = CF_NODOUBLE;
@@ -363,7 +377,7 @@ double GetRealConstraint(char *lval, Promise *pp)
 
 /*****************************************************************************/
 
-mode_t GetOctalConstraint(char *lval, Promise *pp)
+mode_t GetOctalConstraint(const char *lval, const Promise *pp)
 {
     Constraint *cp;
     mode_t retval = 077;
@@ -404,7 +418,7 @@ mode_t GetOctalConstraint(char *lval, Promise *pp)
 
 /*****************************************************************************/
 
-uid_t GetUidConstraint(char *lval, Promise *pp)
+uid_t GetUidConstraint(const char *lval, const Promise *pp)
 #ifdef MINGW
 {                               // we use sids on windows instead
     return CF_SAME_OWNER;
@@ -451,7 +465,7 @@ uid_t GetUidConstraint(char *lval, Promise *pp)
 
 /*****************************************************************************/
 
-gid_t GetGidConstraint(char *lval, Promise *pp)
+gid_t GetGidConstraint(char *lval, const Promise *pp)
 #ifdef MINGW
 {                               // not applicable on windows: processes have no group
     return CF_SAME_GROUP;
@@ -498,7 +512,7 @@ gid_t GetGidConstraint(char *lval, Promise *pp)
 
 /*****************************************************************************/
 
-Rlist *GetListConstraint(char *lval, Promise *pp)
+Rlist *GetListConstraint(const char *lval, const Promise *pp)
 {
     Constraint *cp;
     Rlist *retval = NULL;
@@ -536,7 +550,7 @@ Rlist *GetListConstraint(char *lval, Promise *pp)
 
 /*****************************************************************************/
 
-Constraint *GetConstraint(Promise *promise, const char *lval)
+Constraint *GetConstraint(const Promise *promise, const char *lval)
 {
     Constraint *cp = NULL, *retval = NULL;
 
@@ -573,9 +587,9 @@ Constraint *GetConstraint(Promise *promise, const char *lval)
 
 /*****************************************************************************/
 
-void *GetConstraintValue(char *lval, Promise *promise, char rtype)
+void *GetConstraintValue(const char *lval, const Promise *promise, char rtype)
 {
-    Constraint *constraint = GetConstraint(promise, lval);
+    const Constraint *constraint = GetConstraint(promise, lval);
 
     if (constraint && constraint->rval.rtype == rtype)
     {
@@ -698,12 +712,12 @@ void ReCheckAllConstraints(Promise *pp)
 
 /*****************************************************************************/
 
-static void PostCheckConstraint(char *type, char *bundle, char *lval, Rval rval)
+static void PostCheckConstraint(const char *type, const char *bundle, const char *lval, Rval rval)
 {
     SubTypeSyntax ss;
     int i, j, l, m;
     const BodySyntax *bs, *bs2;
-    SubTypeSyntax *ssp;
+    const SubTypeSyntax *ssp;
 
     CfDebug("  Post Check Constraint %s: %s =>", type, lval);
 
@@ -795,7 +809,7 @@ static int VerifyConstraintName(const char *lval)
     SubTypeSyntax ss;
     int i, j, l, m;
     const BodySyntax *bs, *bs2;
-    SubTypeSyntax *ssp;
+    const SubTypeSyntax *ssp;
 
     CfDebug("  Verify Constrant name %s\n", lval);
 

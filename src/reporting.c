@@ -23,9 +23,13 @@
 */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
+#include "env_context.h"
+#include "mod_files.h"
+#include "constraints.h"
+#include "promises.h"
 #include "files_names.h"
+#include "item_lib.h"
 
 char *CFX[][2] =
 {
@@ -78,7 +82,7 @@ static void ReportBanner(char *s);
 static void Indent(int i);
 static void ShowDataTypes(void);
 static void ShowBundleTypes(void);
-static void ShowPromiseTypesFor(char *s);
+static void ShowPromiseTypesFor(const char *s);
 static void ShowBodyParts(const BodySyntax *bs);
 static void ShowRange(char *s, enum cfdatatype type);
 static void ShowBuiltinFunctions(void);
@@ -318,10 +322,12 @@ void ShowPromiseInReport(const char *version, Promise *pp, int indent)
         Indent(indent + 3);
         fprintf(FREPORT_TXT, "%10s => ", cp->lval);
 
+        Policy *policy = PolicyFromPromise(pp);
+
         switch (cp->rval.rtype)
         {
         case CF_SCALAR:
-            if ((bp = IsBody(BODIES, (char *) cp->rval.item)))
+            if ((bp = IsBody(policy->bodies, (char *) cp->rval.item)))
             {
                 ShowBody(bp, 15);
             }
@@ -347,7 +353,7 @@ void ShowPromiseInReport(const char *version, Promise *pp, int indent)
         case CF_FNCALL:
             fp = (FnCall *) cp->rval.item;
 
-            if ((bp = IsBody(BODIES, fp->name)))
+            if ((bp = IsBody(policy->bodies, fp->name)))
             {
                 ShowBody(bp, 15);
             }
@@ -643,7 +649,7 @@ static void ShowDataTypes()
 static void ShowBundleTypes()
 {
     int i;
-    SubTypeSyntax *st;
+    const SubTypeSyntax *st;
 
     printf("<h1>Bundle types (software components)</h1>\n");
 
@@ -674,10 +680,10 @@ static void ShowBundleTypes()
 
 /*******************************************************************/
 
-static void ShowPromiseTypesFor(char *s)
+static void ShowPromiseTypesFor(const char *s)
 {
     int i, j;
-    SubTypeSyntax *st;
+    const SubTypeSyntax *st;
 
     printf("<div id=\"promisetype\">");
     printf("<h4>Promise types for %s bundles</h4>\n", s);
@@ -807,7 +813,7 @@ void ShowAllReservedWords()
 {
     int i, j, k, l;
     Item *ip, *list = NULL;
-    SubTypeSyntax *ss;
+    const SubTypeSyntax *ss;
     const BodySyntax *bs, *bs2;
 
     for (i = 0; CF_ALL_BODIES[i].subtype != NULL; i++)

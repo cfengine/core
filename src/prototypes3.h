@@ -22,14 +22,6 @@
   included file COSL.txt.
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: prototypes3.h                                                       */
-/*                                                                           */
-/* Created: Sun Aug  5 13:43:56 2007                                         */
-/*                                                                           */
-/*****************************************************************************/
-
 #ifndef CFENGINE_PROTOTYPES3_H
 #define CFENGINE_PROTOTYPES3_H
 
@@ -67,8 +59,8 @@ void AgentDiagnostic(void);
 
 /* args.c */
 
-int MapBodyArgs(char *scopeid, Rlist *give, Rlist *take);
-Rlist *NewExpArgs(FnCall *fp, Promise *pp);
+int MapBodyArgs(const char *scopeid, Rlist *give, const Rlist *take);
+Rlist *NewExpArgs(const FnCall *fp, const Promise *pp);
 void ArgTemplate(FnCall *fp, const FnCallArg *argtemplate, Rlist *finalargs);
 void DeleteExpArgs(Rlist *args);
 
@@ -85,7 +77,6 @@ void DeleteExpArgs(Rlist *args);
 void CheckAutoBootstrap(void);
 void SetPolicyServer(char *name);
 void CreateFailSafe(char *name);
-void SetDocRoot(char *name);
 
 /* cfstream.c */
 
@@ -93,7 +84,7 @@ void CfFOut(char *filename, enum cfreport level, char *errstr, char *fmt, ...) F
 
 void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...) FUNC_ATTR_FORMAT(printf, 3, 4);
 
-void cfPS(enum cfreport level, char status, char *errstr, Promise *pp, Attributes attr, char *fmt, ...) FUNC_ATTR_FORMAT(printf, 6, 7);
+void cfPS(enum cfreport level, char status, char *errstr, const Promise *pp, Attributes attr, char *fmt, ...) FUNC_ATTR_FORMAT(printf, 6, 7);
 
 void CfFile(FILE *fp, char *fmt, ...) FUNC_ATTR_FORMAT(printf, 2, 3);
 
@@ -114,7 +105,7 @@ void CfDeleteQuery(CfdbConn *cfdb);
 void DetermineCfenginePort(void);
 AgentConnection *NewServerConnection(Attributes attr, Promise *pp);
 AgentConnection *ServerConnection(char *server, Attributes attr, Promise *pp);
-void ServerDisconnection(AgentConnection *conn);
+void DisconnectServer(AgentConnection *conn);
 int cf_remote_stat(char *file, struct stat *buf, char *stattype, Attributes attr, Promise *pp);
 void DeleteClientCache(Attributes attr, Promise *pp);
 int CompareHashNet(char *file1, char *file2, Attributes attr, Promise *pp);
@@ -157,8 +148,6 @@ void DeleteCompressedArray(CompressedArray *start);
 int CompressedArrayElementExists(CompressedArray *start, int key);
 char *CompressedArrayValue(CompressedArray *start, int key);
 
-#include "constraints.h"
-
 /* conversion.c */
 
 char *EscapeJson(char *s, char *out, int outSz);
@@ -190,7 +179,7 @@ long TimeCounter2Int(const char *s);
 long TimeAbs2Int(char *s);
 mode_t Str2Mode(char *s);
 double Str2Double(const char *s);
-void IntRange2Int(char *intrange, long *min, long *max, Promise *pp);
+void IntRange2Int(char *intrange, long *min, long *max, const Promise *pp);
 int Month2Int(char *string);
 int MonthLen2Int(char *string, int len);
 void TimeToDateStr(time_t t, char *outStr, int outStrSz);
@@ -212,10 +201,10 @@ int IsRealNumber(char *s);
 enum cfd_menu String2Menu(const char *s);
 
 #ifndef MINGW
-UidList *Rlist2UidList(Rlist *uidnames, Promise *pp);
-GidList *Rlist2GidList(Rlist *gidnames, Promise *pp);
-uid_t Str2Uid(char *uidbuff, char *copy, Promise *pp);
-gid_t Str2Gid(char *gidbuff, char *copy, Promise *pp);
+UidList *Rlist2UidList(Rlist *uidnames, const Promise *pp);
+GidList *Rlist2GidList(Rlist *gidnames, const Promise *pp);
+uid_t Str2Uid(char *uidbuff, char *copy, const Promise *pp);
+gid_t Str2Gid(char *gidbuff, char *copy, const Promise *pp);
 #endif /* NOT MINGW */
 
 /* dtypes.c */
@@ -225,6 +214,7 @@ int IsTCPType(char *s);
 
 /* enterprise_stubs.c */
 
+void SyntaxExport(void);
 void VerifyRegistryPromise(Attributes a, Promise *pp);
 int CfSessionKeySize(char c);
 char CfEnterpriseOptions(void);
@@ -237,7 +227,7 @@ int EnterpriseExpiry(void);
 const char *GetConsolePrefix(void);
 const char *MailSubject(void);
 void CheckAutoBootstrap(void);
-void RegisterBundleDependence(char *absscope, Promise *pp);
+void RegisterBundleDependence(char *absscope, const Promise *pp);
 void ShowTopicRepresentation(FILE *fp);
 void PreSanitizePromise(Promise *pp);
 void Nova_ShowTopicRepresentation(FILE *fp);
@@ -271,8 +261,8 @@ void MonOtherGatherData(double *cf_this);
 void RegisterLiteralServerData(char *handle, Promise *pp);
 int ReturnLiteralData(char *handle, char *ret);
 char *GetRemoteScalar(char *proto, char *handle, char *server, int encrypted, char *rcv);
-const char *PromiseID(Promise *pp);     /* Not thread-safe */
-void NotePromiseCompliance(Promise *pp, double val, PromiseState state, char *reasoin);
+const char *PromiseID(const Promise *pp);     /* Not thread-safe */
+void NotePromiseCompliance(const Promise *pp, double val, PromiseState state, char *reasoin);
 int GetRegistryValue(char *key, char *name, char *buf, int bufSz);
 void NoteVarUsage(void);
 void NoteVarUsageDB(void);
@@ -303,43 +293,6 @@ void SetSyslogPort(uint16_t port);
 
 void SyntaxCompletion(char *s);
 
-/* env_context.c */
-
-/* - Parsing/evaluating expressions - */
-void ValidateClassSyntax(const char *str);
-bool IsDefinedClass(const char *class);
-bool IsExcluded(const char *exception);
-
-bool EvalProcessResult(const char *process_result, AlphaList *proc_attr);
-bool EvalFileResult(const char *file_result, AlphaList *leaf_attr);
-
-/* - Rest - */
-int Abort(void);
-void AddAbortClass(const char *name, const char *classes);
-void KeepClassContextPromise(Promise *pp);
-void PushPrivateClassContext(void);
-void PopPrivateClassContext(void);
-void DeletePrivateClassContext(void);
-void DeleteEntireHeap(void);
-void NewPersistentContext(char *name, unsigned int ttl_minutes, enum statepolicy policy);
-void DeletePersistentContext(char *name);
-void LoadPersistentContext(void);
-void AddEphemeralClasses(Rlist *classlist);
-void NewClass(const char *oclass);      /* Copies oclass */
-void NewBundleClass(char *class, char *bundle);
-Rlist *SplitContextExpression(char *context, Promise *pp);
-void DeleteClass(char *class);
-int VarClassExcluded(Promise *pp, char **classes);
-void NewClassesFromString(char *classlist);
-void NegateClassesFromString(char *class);
-bool IsSoftClass(char *sp);
-bool IsHardClass(char *sp);
-bool IsTimeClass(char *sp);
-void SaveClassEnvironment(void);
-void DeleteAllClasses(Rlist *list);
-void AddAllClasses(Rlist *list, int persist, enum statepolicy policy);
-void ListAlphaList(FILE *fp, AlphaList al, char sep);
-
 #include "env_monitor.h"
 
 /* evalfunction.c */
@@ -351,22 +304,22 @@ void ModuleProtocol(char *command, char *line, int print);
 
 /* expand.c */
 
-void ExpandPromise(enum cfagenttype ag, char *scopeid, Promise *pp, void *fnptr);
-void ExpandPromiseAndDo(enum cfagenttype ag, char *scope, Promise *p, Rlist *scalarvars, Rlist *listvars,
+void ExpandPromise(enum cfagenttype ag, const char *scopeid, Promise *pp, void *fnptr);
+void ExpandPromiseAndDo(enum cfagenttype ag, const char *scope, Promise *p, Rlist *scalarvars, Rlist *listvars,
                         void (*fnptr) ());
-Rval ExpandDanglers(char *scope, Rval rval, Promise *pp);
-void MapIteratorsFromRval(const char *scope, Rlist **los, Rlist **lol, Rval rval, Promise *pp);
+Rval ExpandDanglers(const char *scope, Rval rval, const Promise *pp);
+void MapIteratorsFromRval(const char *scope, Rlist **los, Rlist **lol, Rval rval, const Promise *pp);
 
 int IsExpandable(const char *str);
 int ExpandScalar(const char *string, char buffer[CF_EXPANDSIZE]);
-Rval ExpandBundleReference(char *scopeid, Rval rval);
-FnCall *ExpandFnCall(char *contextid, FnCall *f, int expandnaked);
-Rval ExpandPrivateRval(char *contextid, Rval rval);
-Rlist *ExpandList(char *scopeid, Rlist *list, int expandnaked);
-Rval EvaluateFinalRval(char *scopeid, Rval rval, int forcelist, Promise *pp);
-int IsNakedVar(char *str, char vtype);
-void GetNaked(char *s1, char *s2);
-void ConvergeVarHashPromise(char *scope, Promise *pp, int checkdup);
+Rval ExpandBundleReference(const char *scopeid, Rval rval);
+FnCall *ExpandFnCall(const char *contextid, FnCall *f, int expandnaked);
+Rval ExpandPrivateRval(const char *contextid, Rval rval);
+Rlist *ExpandList(const char *scopeid, const Rlist *list, int expandnaked);
+Rval EvaluateFinalRval(const char *scopeid, Rval rval, int forcelist, const Promise *pp);
+int IsNakedVar(const char *str, char vtype);
+void GetNaked(char *s1, const char *s2);
+void ConvergeVarHashPromise(char *scope, const Promise *pp, int checkdup);
 int ExpandPrivateScalar(const char *contextid, const char *string, char buffer[CF_EXPANDSIZE]);
 
 /* exec_tool.c */
@@ -391,8 +344,8 @@ int FSWrite(char *new, int dd, char *buf, int towrite, int *last_write_made_hole
 
 EditContext *NewEditContext(char *filename, Attributes a, Promise *pp);
 void FinishEditContext(EditContext *ec, Attributes a, Promise *pp);
-int LoadFileAsItemList(Item **liststart, char *file, Attributes a, Promise *pp);
-int SaveItemListAsFile(Item *liststart, char *file, Attributes a, Promise *pp);
+int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, Promise *pp);
+int SaveItemListAsFile(Item *liststart, const char *file, Attributes a, Promise *pp);
 int AppendIfNoSuchLine(char *filename, char *line);
 
 /* files_editline.c */
@@ -548,65 +501,9 @@ void CfHtmlFooter(FILE *fp, char *footer);
 void CfHtmlTitle(FILE *fp, char *title);
 int IsHtmlHeader(char *s);
 
-/* item_lib.c */
-
-int PrintItemList(char *buffer, int bufsize, Item *list);
-void PrependFullItem(Item **liststart, char *itemstring, char *classes, int counter, time_t t);
-void PurgeItemList(Item **list, char *name);
-Item *ReturnItemIn(Item *list, const char *item);
-Item *ReturnItemInClass(Item *list, char *item, char *classes);
-Item *ReturnItemAtIndex(Item *list, int index);
-int GetItemIndex(Item *list, char *item);
-Item *EndOfList(Item *start);
-int IsItemInRegion(char *item, Item *begin, Item *end, Attributes a, Promise *pp);
-void PrependItemList(Item **liststart, char *itemstring);
-int SelectItemMatching(Item *s, char *regex, Item *begin, Item *end, Item **match, Item **prev, char *fl);
-int SelectNextItemMatching(char *regexp, Item *begin, Item *end, Item **match, Item **prev);
-int SelectLastItemMatching(char *regexp, Item *begin, Item *end, Item **match, Item **prev);
-void InsertAfter(Item **filestart, Item *ptr, char *string);
-int NeighbourItemMatches(Item *start, Item *location, char *string, enum cfeditorder pos, Attributes a, Promise *pp);
-int RawSaveItemList(Item *liststart, char *file);
-Item *SplitStringAsItemList(char *string, char sep);
-Item *SplitString(const char *string, char sep);
-int DeleteItemGeneral(Item **filestart, const char *string, enum matchtypes type);
-int DeleteItemLiteral(Item **filestart, const char *string);
-int DeleteItemStarting(Item **list, char *string);
-int DeleteItemNotStarting(Item **list, char *string);
-int DeleteItemMatching(Item **list, char *string);
-int DeleteItemNotMatching(Item **list, char *string);
-int DeleteItemContaining(Item **list, char *string);
-int DeleteItemNotContaining(Item **list, char *string);
-int CompareToFile(Item *liststart, char *file, Attributes a, Promise *pp);
-Item *String2List(char *string);
-int ListLen(Item *list);
-int ByteSizeList(const Item *list);
-bool IsItemIn(Item *list, const char *item);
-int IsMatchItemIn(Item *list, char *item);
-Item *ConcatLists(Item *list1, Item *list2);
-void CopyList(Item **dest, Item *source);
-void IdempItemCount(Item **liststart, const char *itemstring, const char *classes);
-Item *IdempPrependItem(Item **liststart, const char *itemstring, const char *classes);
-Item *IdempPrependItemClass(Item **liststart, char *itemstring, char *classes);
-Item *PrependItem(Item **liststart, const char *itemstring, const char *classes);
-void AppendItem(Item **liststart, const char *itemstring, const char *classes);
-void DeleteItemList(Item *item);
-void DeleteItem(Item **liststart, Item *item);
-void DebugListItemList(Item *liststart);
-Item *SplitStringAsItemList(char *string, char sep);
-void IncrementItemListCounter(Item *ptr, char *string);
-void SetItemListCounter(Item *ptr, char *string, int value);
-Item *SortItemListNames(Item *list);
-Item *SortItemListClasses(Item *list);
-Item *SortItemListCounters(Item *list);
-Item *SortItemListTimes(Item *list);
-char *ItemList2CSV(Item *list);
-int ItemListSize(Item *list);
-int MatchRegion(char *chunk, Item *location, Item *begin, Item *end);
-Item *DeleteRegion(Item **liststart, Item *begin, Item *end);
-
 /* iteration.c */
 
-Rlist *NewIterationContext(char *scopeid, Rlist *listvars);
+Rlist *NewIterationContext(const char *scopeid, Rlist *listvars);
 void DeleteIterationContext(Rlist *lol);
 int IncrementIterationContext(Rlist *iterators);
 int EndOfIteration(Rlist *iterator);
@@ -620,10 +517,9 @@ void EndMeasurePromise(struct timespec start, Promise *pp);
 void NoteClassUsage(AlphaList list, int purge);
 
 /* install.c */
-
-int RelevantBundle(char *agent, char *blocktype);
-Bundle *AppendBundle(Bundle **start, char *name, char *type, Rlist *args);
-Body *AppendBody(Body **start, char *name, char *type, Rlist *args);
+int RelevantBundle(const char *agent, const char *blocktype);
+Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *args, const char *source_path);
+Body *AppendBody(Policy *policy, const char *name, const char *type, Rlist *args, const char *source_path);
 SubType *AppendSubType(Bundle *bundle, char *typename);
 Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *classes, char *bundle, char *bundletype);
 void DeleteBundles(Bundle *bp);
@@ -641,7 +537,7 @@ bool HostKeyAddressUnknown(const char *value);
 
 void BeginAudit(void);
 void EndAudit(void);
-void ClassAuditLog(Promise *pp, Attributes attr, char *str, char status, char *error);
+void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, char *error);
 void PromiseLog(char *s);
 void FatalError(char *s, ...) FUNC_ATTR_NORETURN FUNC_ATTR_FORMAT(printf, 1, 2);
 
@@ -656,7 +552,7 @@ void TexinfoManual(char *mandir);
 bool ValidateRegEx(const char *regex);
 int FullTextMatch(const char *regptr, const char *cmpptr);
 char *ExtractFirstReference(const char *regexp, const char *teststring);        /* Not thread-safe */
-int BlockTextMatch(char *regexp, char *teststring, int *s, int *e);
+int BlockTextMatch(const char *regexp, const char *teststring, int *s, int *e);
 int IsRegexItemIn(Item *list, char *regex);
 int IsPathRegex(char *str);
 int IsRegex(char *str);
@@ -669,7 +565,7 @@ int MatchPolicy(char *needle, char *haystack, Attributes a, Promise *pp);
 
 /* modes.c */
 
-int ParseModeString(char *modestring, mode_t *plusmask, mode_t *minusmask);
+int ParseModeString(const char *modestring, mode_t *plusmask, mode_t *minusmask);
 
 /* net.c */
 
@@ -740,21 +636,6 @@ int cf_pwait(pid_t pid);
 int SelectProcess(char *procentry, char **names, int *start, int *end, Attributes a, Promise *pp);
 bool IsProcessNameRunning(char *procNameRegex);
 
-/* promises.c */
-
-char *BodyName(Promise *pp);
-Body *IsBody(Body *list, char *key);
-Bundle *IsBundle(Bundle *list, char *key);
-Promise *DeRefCopyPromise(char *scopeid, Promise *pp);
-Promise *ExpandDeRefPromise(char *scopeid, Promise *pp);
-Promise *CopyPromise(char *scopeid, Promise *pp);
-void DeletePromise(Promise *pp);
-void DeletePromises(Promise *pp);
-void PromiseRef(enum cfreport level, Promise *pp);
-Promise *NewPromise(char *typename, char *promiser);
-void HashPromise(char *salt, Promise *pp, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhashes type);
-void DebugPromise(Promise *pp);
-
 /* recursion.c */
 
 int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promise *pp);
@@ -790,10 +671,10 @@ int PrependPackageItem(PackageItem ** list, const char *name, const char *versio
 
 void SetScope(char *id);
 void SetNewScope(char *id);
-void NewScope(char *name);
+void NewScope(const char *name);
 void DeleteScope(char *name);
 Scope *GetScope(const char *scope);
-void CopyScope(char *new, char *old);
+void CopyScope(const char *new_scopename, const char *old_scopename);
 void DeleteAllScope(void);
 void AugmentScope(char *scope, Rlist *lvals, Rlist *rvals);
 void DeleteFromScope(char *scope, Rlist *args);
@@ -810,7 +691,7 @@ void TestExpandVariables(void);
 
 /* server_transform.c */
 
-void KeepControlPromises(void);
+void KeepControlPromises(Policy *policy);
 Auth *GetAuthPath(char *path, Auth *list);
 void Summarize(void);
 
@@ -840,27 +721,9 @@ bool sockaddr_pton(int af, void *src, void *addr);
 
 off_t GetDiskUsage(char *file, enum cfsizes type);
 
-/* syntax.c */
-#include "syntax.h"
-
-/* sysinfo.c */
-
-void GetNameInfo3(void);
-void GetInterfacesInfo(enum cfagenttype ag);
-void Get3Environment(void);
-void BuiltinClasses(void);
-void OSClasses(void);
-int IsInterfaceAddress(char *adr);
-int GetCurrentUserName(char *userName, int userNameLen);
-
-const char *GetWorkDir(void);
-
-/* For unit tests */
-void DetectDomainName(const char *orig_nodename);
-
 /* transaction.c */
 
-void SummarizeTransaction(Attributes attr, Promise *pp, char *logname);
+void SummarizeTransaction(Attributes attr, const Promise *pp, const char *logname);
 CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promise *pp, int ignoreProcesses);
 void YieldCurrentLock(CfLock this);
 void GetLockName(char *lockname, char *locktype, char *base, Rlist *params);
@@ -895,10 +758,10 @@ void SetStartTime(void);
  */
 enum cfdatatype GetVariable(const char *scope, const char *lval, Rval *returnv);
 
-void DeleteVariable(char *scope, char *id);
+void DeleteVariable(const char *scope, const char *id);
 bool StringContainsVar(const char *s, const char *v);
 int DefinedVariable(char *name);
-int IsCf3VarString(char *str);
+int IsCf3VarString(const char *str);
 int BooleanControl(const char *scope, const char *name);
 const char *ExtractInnerCf3VarString(const char *str, char *substr);
 const char *ExtractOuterCf3VarString(const char *str, char *substr);

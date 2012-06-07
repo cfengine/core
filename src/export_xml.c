@@ -23,7 +23,6 @@
 */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
 #include "xml_writer.h"
 #include "manual.h"
@@ -59,7 +58,7 @@ static char *MANUAL_DIRECTORY;
 
 static void XmlExportVariables(Writer *writer, const char *scope);
 static void XmlExportFunction(Writer *writer, FnCallType fn);
-static void XmlExportPromiseType(Writer *writer, SubTypeSyntax *st);
+static void XmlExportPromiseType(Writer *writer, const SubTypeSyntax *st);
 static void XmlExportControl(Writer *writer, SubTypeSyntax body);
 static void XmlExportConstraint(Writer *writer, const BodySyntax *bs);
 static void XmlExportConstraints(Writer *writer, const BodySyntax *bs);
@@ -71,7 +70,7 @@ void XmlManual(const char *mandir, FILE *fout)
 {
     Writer *writer = NULL;
     int i;
-    SubTypeSyntax *st = NULL;
+    const SubTypeSyntax *st = NULL;
 
     MANUAL_DIRECTORY = (char *) mandir;
     AddSlash(MANUAL_DIRECTORY);
@@ -245,7 +244,7 @@ static void XmlExportControl(Writer *writer, SubTypeSyntax type)
 
 /*****************************************************************************/
 
-void XmlExportPromiseType(Writer *writer, SubTypeSyntax *st)
+void XmlExportPromiseType(Writer *writer, const SubTypeSyntax *st)
 {
     int i;
     char *filebuffer = NULL;

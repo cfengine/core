@@ -1,15 +1,37 @@
 
 %{
 
-/*******************************************************************/
-/*                                                                 */
-/*  PARSER for cfengine 3                                          */
-/*                                                                 */
-/*******************************************************************/
+/*
+   Copyright (C) Cfengine AS
+
+   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+   This program is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by the
+   Free Software Foundation; version 3.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+  To the extent this program is licensed as part of the Enterprise
+  versions of Cfengine, the applicable Commerical Open Source License
+  (COSL) may apply to this file if you as a licensee so wish it. See
+  included file COSL.txt.
+*/
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 #include "parser_state.h"
+
+#include "constraints.h"
+#include "env_context.h"
+// FIX: remove
+#include "syntax.h"
 
 extern char *yytext;
 
@@ -106,12 +128,12 @@ aitem:                 ID  /* recipient of argument is never a literal */
 
 bundlebody:            '{'
                        {
-                           if (RelevantBundle(THIS_AGENT,P.blocktype))
+                           if (RelevantBundle(CF_AGENTTYPES[THIS_AGENT_TYPE], P.blocktype))
                            {
                                CfDebug("We a compiling everything here\n");
                                INSTALL_SKIP = false;
                            }
-                           else if (strcmp(THIS_AGENT,P.blocktype) != 0)
+                           else if (strcmp(CF_AGENTTYPES[THIS_AGENT_TYPE], P.blocktype) != 0)
                            {
                                CfDebug("This is for a different agent\n");
                                INSTALL_SKIP = true;
@@ -119,7 +141,7 @@ bundlebody:            '{'
 
                            if (!INSTALL_SKIP)
                            {
-                               P.currentbundle = AppendBundle(&BUNDLES,P.blockid,P.blocktype,P.useargs);
+                               P.currentbundle = AppendBundle(P.policy, P.blockid, P.blocktype, P.useargs, P.filename);
                                P.currentbundle->offset.line = P.line_no;
                                P.currentbundle->offset.start = P.offsets.last_block_id;
                            }
@@ -160,7 +182,7 @@ statement:             category
 
 bodybody:              '{'
                        {
-                           P.currentbody = AppendBody(&BODIES,P.blockid,P.blocktype,P.useargs);
+                           P.currentbody = AppendBody(P.policy, P.blockid, P.blocktype, P.useargs, P.filename);
                            if (P.currentbody)
                            {
                                P.currentbody->offset.line = P.line_no;
@@ -214,11 +236,11 @@ selection:             id                         /* BODY ONLY */
 
                                if (P.currentclasses == NULL)
                                {
-                                   cp = AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval,"any",P.isbody);
+                                   cp = ConstraintAppendToBody(P.currentbody, P.lval, P.rval, "any", P.references_body);
                                }
                                else
                                {
-                                   cp = AppendConstraint(&((P.currentbody)->conlist),P.lval,P.rval,P.currentclasses,P.isbody);
+                                   cp = ConstraintAppendToBody(P.currentbody,P.lval,P.rval,P.currentclasses,P.references_body);
                                }
                                cp->offset.line = P.line_no;
                                cp->offset.start = P.offsets.last_id;
@@ -392,13 +414,12 @@ constraint:            id                        /* BUNDLE ONLY */
                                Constraint *cp = NULL;
                                SubTypeSyntax ss = CheckSubType(P.blocktype,P.currenttype);
                                CheckConstraint(P.currenttype, P.blockid, P.lval, P.rval, ss);
-                               cp = AppendConstraint(&(P.currentpromise->conlist),P.lval,P.rval,"any",P.isbody);
+                               cp = ConstraintAppendToPromise(P.currentpromise, P.lval, P.rval, "any", P.references_body);
                                cp->offset.line = P.line_no;
                                cp->offset.start = P.offsets.last_id;
                                cp->offset.end = P.offsets.current;
                                cp->offset.context = P.offsets.last_class_id;
                                P.currentstype->offset.end = P.offsets.current;
-                               CheckPromise(P.currentpromise);
 
                                // Cache whether there are subbundles for later $(this.promiser) logic
 
@@ -440,7 +461,7 @@ id:                    ID
 rval:                  ID
                        {
                            P.rval = (Rval) { xstrdup(P.currentid), CF_SCALAR };
-                           P.isbody = true;
+                           P.references_body = true;
                            CfDebug("Recorded IDRVAL %s\n", P.currentid);
                        }
                      | QSTRING
@@ -449,7 +470,7 @@ rval:                  ID
                            CfDebug("Recorded scalarRVAL %s\n", P.currentstring);
 
                            P.currentstring = NULL;
-                           P.isbody = false;
+                           P.references_body = false;
 
                            if (P.currentpromise)
                            {
@@ -465,18 +486,18 @@ rval:                  ID
                            CfDebug("Recorded saclarvariableRVAL %s\n", P.currentstring);
 
                            P.currentstring = NULL;
-                           P.isbody = false;
+                           P.references_body = false;
                        }
                      | list
                        {
                            P.rval = (Rval) { P.currentRlist, CF_LIST };
                            P.currentRlist = NULL;
-                           P.isbody = false;
+                           P.references_body = false;
                        }
                      | usefunction
                        {
-                           P.isbody = false;
                            P.rval = (Rval) { P.currentfncall[P.arg_nesting+1], CF_FNCALL };
+                           P.references_body = false;
                        };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

@@ -6,7 +6,6 @@
 #include <assert.h>
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
 /* Stubs */
 
@@ -153,7 +152,7 @@ int ThreadUnlock(pthread_mutex_t *name)
 }
 #endif
 
-void ShowFnCall(FILE *fout, FnCall *fp)
+void ShowFnCall(FILE *fout, const FnCall *fp)
 {
     fail();
 }
@@ -163,7 +162,7 @@ void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
     fail();
 }
 
-int IsNakedVar(char *str, char vtype)
+int IsNakedVar(const char *str, char vtype)
 {
     fail();
 }
@@ -173,12 +172,12 @@ int JoinSilent(char *path, const char *leaf, int bufsize)
     fail();
 }
 
-void FnCallPrint(Writer *writer, FnCall *fp)
+void FnCallPrint(Writer *writer, const FnCall *fp)
 {
     fail();
 }
 
-void GetNaked(char *s1, char *s2)
+void GetNaked(char *s1, const char *s2)
 {
     fail();
 }
@@ -198,7 +197,7 @@ CfAssoc *CopyAssoc(CfAssoc *old)
     fail();
 }
 
-FnCall *CopyFnCall(FnCall *f)
+FnCall *CopyFnCall(const FnCall *f)
 {
     fail();
 }
@@ -218,12 +217,12 @@ void DeleteFnCall(FnCall *fp)
     fail();
 }
 
-int PrintFnCall(char *buffer, int bufsize, FnCall *fp)
+int PrintFnCall(char *buffer, int bufsize, const FnCall *fp)
 {
     fail();
 }
 
-int SubStrnCopyChr(char *to, char *from, int len, char sep)
+int SubStrnCopyChr(char *to, const char *from, int len, char sep)
 {
     fail();
 }
@@ -233,12 +232,12 @@ int StartJoin(char *path, char *leaf, int bufsize)
     fail();
 }
 
-int BlockTextMatch(char *regexp, char *teststring, int *s, int *e)
+int BlockTextMatch(const char *regexp, const char *teststring, int *s, int *e)
 {
     fail();
 }
 
-JsonElement *FnCallToJson(FnCall *fp)
+JsonElement *FnCallToJson(const FnCall *fp)
 {
     fail();
 }

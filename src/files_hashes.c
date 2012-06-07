@@ -24,14 +24,7 @@
 
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: file_hashes.c                                                       */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 #include "dbm_api.h"
 
 static int ReadHash(CF_DB *dbp, enum cfhashes type, char *name, unsigned char digest[EVP_MAX_MD_SIZE + 1]);

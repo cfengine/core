@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -20,50 +20,12 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
-
-/*****************************************************************************/
-/*                                                                           */
-/* File: mod_files.c                                                         */
-/*                                                                           */
-/*****************************************************************************/
-
-/*
-
- This file can act as a template for adding functionality to cfengine 3.
- All functionality can be added by extending the main array
-
- CF_MOD_SUBTYPES[CF3_MODULES]
-
- and its array dimension, in mod_common, in the manner shown here.
- 
-*/
-
-#define CF3_MOD_FILES
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
+#include "mod_files.h"
 
- /***********************************************************/
- /* Read this module file backwards, as dependencies have   */
- /* to be defined first - these arrays declare pairs of     */
- /* constraints                                             */
- /*                                                         */
- /* lval => rval                                            */
- /*                                                         */
- /* in the form (lval,type,range)                           */
- /*                                                         */
- /* If the type is cf_body then the range is a pointer      */
- /* to another array of pairs, like in a body "sub-routine" */
- /*                                                         */
- /***********************************************************/
-
-/**************************************************************/
-/* editing                                                    */
-/**************************************************************/
-
-BodySyntax CF_LOCATION_BODY[] =
+static const BodySyntax CF_LOCATION_BODY[] =
 {
     {"before_after", cf_opts, "before,after", "Menu option, point cursor before of after matched line", "after"},
     {"first_last", cf_opts, "first,last", "Menu option, choose first or last occurrence of match in file", "last"},
@@ -71,9 +33,7 @@ BodySyntax CF_LOCATION_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-
-BodySyntax CF_EDITCOL_BODY[] =
+static const BodySyntax CF_EDITCOL_BODY[] =
 {
     {"allow_blank_fields", cf_opts, CF_BOOL, "true/false allow blank fields in a line (do not purge)", "false"},
     {"extend_fields", cf_opts, CF_BOOL, "true/false add new fields at end of line if necessary to complete edit",
@@ -88,9 +48,7 @@ BodySyntax CF_EDITCOL_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-
-BodySyntax CF_REPLACEWITH_BODY[] =
+static const BodySyntax CF_REPLACEWITH_BODY[] =
 {
     {"occurrences", cf_opts, "all,first",
      "Menu option to replace all occurrences or just first (NB the latter is non-convergent)", "all"},
@@ -98,9 +56,7 @@ BodySyntax CF_REPLACEWITH_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-
-BodySyntax CF_EDSCOPE_BODY[] =
+static const BodySyntax CF_EDSCOPE_BODY[] =
 {
     {"include_start_delimiter", cf_opts, CF_BOOL, "Whether to include the section delimiter", "false"},
     {"include_end_delimiter", cf_opts, CF_BOOL, "Whether to include the section delimiter", "false"},
@@ -109,9 +65,7 @@ BodySyntax CF_EDSCOPE_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-
-BodySyntax CF_DELETESELECT_BODY[] =
+static const BodySyntax CF_DELETESELECT_BODY[] =
 {
     {"delete_if_startwith_from_list", cf_slist, CF_ANYSTRING, "Delete line if it starts with a string in the list"},
     {"delete_if_not_startwith_from_list", cf_slist, CF_ANYSTRING,
@@ -126,9 +80,7 @@ BodySyntax CF_DELETESELECT_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-
-BodySyntax CF_INSERTSELECT_BODY[] =
+static const BodySyntax CF_INSERTSELECT_BODY[] =
 {
     {"insert_if_startwith_from_list", cf_slist, CF_ANYSTRING, "Insert line if it starts with a string in the list"},
     {"insert_if_not_startwith_from_list", cf_slist, CF_ANYSTRING,
@@ -143,9 +95,7 @@ BodySyntax CF_INSERTSELECT_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-
-BodySyntax CF_INSERTLINES_BODIES[] =
+static const BodySyntax CF_INSERTLINES_BODIES[] =
 {
     {"expand_scalars", cf_opts, CF_BOOL, "Expand any unexpanded variables", "false"},
     {"insert_type", cf_opts, "literal,string,file,preserve_block", "Type of object the promiser string refers to",
@@ -157,46 +107,32 @@ BodySyntax CF_INSERTLINES_BODIES[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-
-BodySyntax CF_DELETELINES_BODIES[] =
+static const BodySyntax CF_DELETELINES_BODIES[] =
 {
     {"delete_select", cf_body, CF_DELETESELECT_BODY, "Delete only if lines pass filter criteria"},
     {"not_matching", cf_opts, CF_BOOL, "true/false negate match criterion", "false"},
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-
-BodySyntax CF_COLUMN_BODIES[] =
+static const BodySyntax CF_COLUMN_BODIES[] =
 {
     {"edit_field", cf_body, CF_EDITCOL_BODY, "Edit line-based file as matrix of fields"},
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-
-BodySyntax CF_REPLACE_BODIES[] =
+static const BodySyntax CF_REPLACE_BODIES[] =
 {
     {"replace_with", cf_body, CF_REPLACEWITH_BODY, "Search-replace pattern"},
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-/* Common to all edit_line promises                           */
-/**************************************************************/
-
-BodySyntax CF_COMMON_EDITBODIES[] =
+const BodySyntax CF_COMMON_EDITBODIES[] =
 {
     {"select_region", cf_body, CF_EDSCOPE_BODY, "Limit edits to a demarked region of the file"},
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-/* Main files                                                 */
-/**************************************************************/
-
-BodySyntax CF_ACL_BODY[] =
+static const BodySyntax CF_ACL_BODY[] =
 {
     {"aces", cf_slist,
      "((user|group):[^:]+:[-=+,rwx()dtTabBpcoD]*(:(allow|deny))?)|((all|mask):[-=+,rwx()]*(:(allow|deny))?)",
@@ -211,9 +147,7 @@ BodySyntax CF_ACL_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-
-BodySyntax CF_CHANGEMGT_BODY[] =
+static const BodySyntax CF_CHANGEMGT_BODY[] =
 {
     {"hash", cf_opts, "md5,sha1,sha224,sha256,sha384,sha512,best", "Hash files for change detection"},
     {"report_changes", cf_opts, "all,stats,content,none", "Specify criteria for change warnings"},
@@ -223,9 +157,7 @@ BodySyntax CF_CHANGEMGT_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-
-BodySyntax CF_RECURSION_BODY[] =
+static const BodySyntax CF_RECURSION_BODY[] =
 {
     {"depth", cf_int, CF_VALRANGE, "Maximum depth level for search"},
     {"exclude_dirs", cf_slist, ".*", "List of regexes of directory names NOT to include in depth search"},
@@ -237,9 +169,7 @@ BodySyntax CF_RECURSION_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-
-BodySyntax CF_EDITS_BODY[] =
+static const BodySyntax CF_EDITS_BODY[] =
 {
     {"edit_backup", cf_opts, "true,false,timestamp,rotate", "Menu option for backup policy on edit changes", "true"},
     {"empty_file_before_editing", cf_opts, CF_BOOL,
@@ -250,9 +180,7 @@ BodySyntax CF_EDITS_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-
-BodySyntax CF_TIDY_BODY[] =
+static const BodySyntax CF_TIDY_BODY[] =
 {
     {"dirlinks", cf_opts, "delete,tidy,keep",
      "Menu option policy for dealing with symbolic links to directories during deletion"},
@@ -260,9 +188,7 @@ BodySyntax CF_TIDY_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-
-BodySyntax CF_RENAME_BODY[] =
+static const BodySyntax CF_RENAME_BODY[] =
 {
     {"disable", cf_opts, CF_BOOL, "true/false automatically rename and remove permissions", "false"},
     {"disable_mode", cf_str, CF_MODERANGE, "The permissions to set when a file is disabled"},
@@ -272,9 +198,7 @@ BodySyntax CF_RENAME_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-
-BodySyntax CF_ACCESS_BODIES[] =
+static const BodySyntax CF_ACCESS_BODIES[] =
 {
     {"bsdflags", cf_slist, CF_BSDFLAGRANGE, "List of menu options for bsd file system flags to set"},
     {"groups", cf_slist, CF_USERRANGE, "List of acceptable groups of group ids, first is change target"},
@@ -284,9 +208,7 @@ BodySyntax CF_ACCESS_BODIES[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-
-BodySyntax CF_FILEFILTER_BODY[] =
+static const BodySyntax CF_FILEFILTER_BODY[] =
 {
     {"leaf_name", cf_slist, "", "List of regexes that match an acceptable name"},
     {"path_name", cf_slist, CF_ABSPATHRANGE, "List of pathnames to match acceptable target"},
@@ -310,14 +232,12 @@ BodySyntax CF_FILEFILTER_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-
 /* Copy and link are really the same body and should have
    non-overlapping patterns so that they are XOR but it's
    okay that some names overlap (like source) as there is
    no ambiguity in XOR */
 
-BodySyntax CF_LINKTO_BODY[] =
+static const BodySyntax CF_LINKTO_BODY[] =
 {
     {"copy_patterns", cf_slist, "", "A set of patterns that should be copied and synchronized instead of linked"},
     {"link_children", cf_opts, CF_BOOL, "true/false whether to link all directory's children to source originals",
@@ -330,9 +250,7 @@ BodySyntax CF_LINKTO_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/**************************************************************/
-
-BodySyntax CF_COPYFROM_BODY[] =
+static const BodySyntax CF_COPYFROM_BODY[] =
 {
     /* We use CF_PATHRANGE due to collision with LINKTO_BODY and a bug lurking in
      * a verification stage -- this attribute gets picked instead of another
@@ -367,11 +285,7 @@ BodySyntax CF_COPYFROM_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/***************************************************************/
-
-/* This is the primary set of constraints for a file object */
-
-BodySyntax CF_FILES_BODIES[] =
+static const BodySyntax CF_FILES_BODIES[] =
 {
     {"acl", cf_body, CF_ACL_BODY, "Criteria for access control lists on file"},
     {"changes", cf_body, CF_CHANGEMGT_BODY, "Criteria for change management"},
@@ -396,11 +310,7 @@ BodySyntax CF_FILES_BODIES[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/***************************************************************/
-/* This is the point of entry from mod_common.c                */
-/***************************************************************/
-
-SubTypeSyntax CF_FILES_SUBTYPES[] =
+const SubTypeSyntax CF_FILES_SUBTYPES[] =
 {
     /* Body lists belonging to "files:" type in Agent */
 

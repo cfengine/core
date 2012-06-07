@@ -24,11 +24,15 @@
 */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
+#include "env_context.h"
+#include "promises.h"
 #include "transaction.h"
 #include "dbm_api.h"
 #include "files_names.h"
+#include "item_lib.h"
+
+#define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
 
 static void WaitForCriticalSection(void);
 static void ReleaseCriticalSection(void);
@@ -43,7 +47,7 @@ static bool WriteLockData(CF_DB *dbp, char *lock_id, LockData *lock_data);
 
 /*****************************************************************************/
 
-void SummarizeTransaction(Attributes attr, Promise *pp, char *logname)
+void SummarizeTransaction(Attributes attr, const Promise *pp, const char *logname)
 {
     if (logname && attr.transaction.log_string)
     {

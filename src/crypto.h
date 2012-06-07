@@ -25,7 +25,7 @@
 #ifndef CFENGINE_CRYPTO_H
 #define CFENGINE_CRYPTO_H
 
-#include "cf.defs.h"
+#include "platform.h"
 
 void CryptoInitialize(void);
 

@@ -23,8 +23,9 @@
 */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
+#include "constraints.h"
+#include "promises.h"
 #include "vars.h"
 
 static int ServicesSanityChecks(Attributes a, Promise *pp);
@@ -208,7 +209,7 @@ static void DoVerifyServices(Attributes a, Promise *pp)
 
         default_bundle = NewFnCall("standard_services", args);
 
-        AppendConstraint(&(pp->conlist), "service_bundle", (Rval) {default_bundle, CF_FNCALL}, "any", false);
+        ConstraintAppendToPromise(pp, "service_bundle", (Rval) {default_bundle, CF_FNCALL}, "any", false);
         a.havebundle = true;
     }
 
@@ -227,7 +228,7 @@ static void DoVerifyServices(Attributes a, Promise *pp)
         break;
     }
 
-    if (default_bundle && GetBundle(default_bundle->name, "agent") == NULL)
+    if (default_bundle && GetBundle(PolicyFromPromise(pp), default_bundle->name, "agent") == NULL)
     {
         cfPS(cf_inform, CF_FAIL, "", pp, a, " !! Service %s could not be invoked successfully\n", pp->promiser);
     }

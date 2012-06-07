@@ -24,12 +24,15 @@
 */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
+#include "env_context.h"
+#include "constraints.h"
+#include "promises.h"
 #include "dir.h"
 #include "dbm_api.h"
 #include "files_names.h"
 #include "vars.h"
+#include "item_lib.h"
 
 extern AgentConnection *COMS;
 
@@ -244,7 +247,7 @@ int ScheduleCopyOperation(char *destination, Attributes attr, Promise *pp)
 
     if (attr.transaction.background)
     {
-        ServerDisconnection(conn);
+        DisconnectServer(conn);
     }
     else
     {
@@ -394,7 +397,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp)
     void *vp;
     FnCall *fp;
     char *edit_bundle_name = NULL, lockname[CF_BUFSIZE];
-    Rlist *params;
+    Rlist *params = { 0 };
     int retval = false;
     CfLock thislock;
 
@@ -415,6 +418,8 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp)
         YieldCurrentLock(thislock);
         return false;
     }
+
+    Policy *policy = PolicyFromPromise(pp);
 
     if (a.haveeditline)
     {
@@ -439,14 +444,13 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp)
         CfOut(cf_verbose, "", " -> Handling file edits in edit_line bundle %s\n", edit_bundle_name);
 
         // add current filename to context - already there?
-
-        if ((bp = GetBundle(edit_bundle_name, "edit_line")))
+        if ((bp = GetBundle(policy, edit_bundle_name, "edit_line")))
         {
             BannerSubBundle(bp, params);
 
             DeleteScope(bp->name);
             NewScope(bp->name);
-            HashVariables(bp->name);
+            HashVariables(policy, bp->name);
 
             AugmentScope(bp->name, bp->args, params);
             PushPrivateClassContext();
@@ -464,7 +468,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp)
 
             DeleteScope(bp->name);
             NewScope(bp->name);
-            HashVariables(bp->name);
+            HashVariables(policy, bp->name);
 
             PushPrivateClassContext();
             retval = ScheduleEditLineOperations(filename,bp,a,pp);
@@ -695,7 +699,7 @@ static void VerifyName(char *path, struct stat *sb, Attributes attr, Promise *pp
     }
     else
     {
-        if (attr.rename.rotate == CF_NOINT)
+        if (attr.rename.disable)
         {
             CfOut(cf_inform, "", " !! Warning - file object %s exists, contrary to promise\n", path);
         }
@@ -1669,16 +1673,16 @@ static void DeleteDirectoryTree(char *path, Promise *pp)
 
     snprintf(s, CF_MAXVARSIZE, "0,%ld", (long) now);
 
-    AppendConstraint(&(promise.conlist), "action", (Rval) {"true", CF_SCALAR}, "any", false);
-    AppendConstraint(&(promise.conlist), "ifelapsed", (Rval) {"0", CF_SCALAR}, "any", false);
-    AppendConstraint(&(promise.conlist), "delete", (Rval) {"true", CF_SCALAR}, "any", false);
-    AppendConstraint(&(promise.conlist), "dirlinks", (Rval) {"delete", CF_SCALAR}, "any", false);
-    AppendConstraint(&(promise.conlist), "rmdirs", (Rval) {"true", CF_SCALAR}, "any", false);
-    AppendConstraint(&(promise.conlist), "depth_search", (Rval) {"true", CF_SCALAR}, "any", false);
-    AppendConstraint(&(promise.conlist), "depth", (Rval) {"inf", CF_SCALAR}, "any", false);
-    AppendConstraint(&(promise.conlist), "file_select", (Rval) {"true", CF_SCALAR}, "any", false);
-    AppendConstraint(&(promise.conlist), "mtime", (Rval) {s, CF_SCALAR}, "any", false);
-    AppendConstraint(&(promise.conlist), "file_result", (Rval) {"mtime", CF_SCALAR}, "any", false);
+    ConstraintAppendToPromise(&promise, "action", (Rval) {"true", CF_SCALAR}, "any", false);
+    ConstraintAppendToPromise(&promise, "ifelapsed", (Rval) {"0", CF_SCALAR}, "any", false);
+    ConstraintAppendToPromise(&promise, "delete", (Rval) {"true", CF_SCALAR}, "any", false);
+    ConstraintAppendToPromise(&promise, "dirlinks", (Rval) {"delete", CF_SCALAR}, "any", false);
+    ConstraintAppendToPromise(&promise, "rmdirs", (Rval) {"true", CF_SCALAR}, "any", false);
+    ConstraintAppendToPromise(&promise, "depth_search", (Rval) {"true", CF_SCALAR}, "any", false);
+    ConstraintAppendToPromise(&promise, "depth", (Rval) {"inf", CF_SCALAR}, "any", false);
+    ConstraintAppendToPromise(&promise, "file_select", (Rval) {"true", CF_SCALAR}, "any", false);
+    ConstraintAppendToPromise(&promise, "mtime", (Rval) {s, CF_SCALAR}, "any", false);
+    ConstraintAppendToPromise(&promise, "file_result", (Rval) {"mtime", CF_SCALAR}, "any", false);
     VerifyFilePromise(promise.promiser, &promise);
     rmdir(path);
 }

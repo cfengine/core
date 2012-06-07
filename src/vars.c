@@ -23,15 +23,7 @@
 
 */
 
-/*******************************************************************/
-/*                                                                 */
-/* vars.c                                                          */
-/*                                                                 */
-/*******************************************************************/
-
 #include "vars.h"
-
-#include "cf3.extern.h"
 
 static int IsCf3Scalar(char *str);
 static int CompareVariableValue(Rval rval, CfAssoc *ap);
@@ -119,7 +111,7 @@ void DeleteScalar(const char *scope_name, const char *lval)
 
 /*******************************************************************/
 
-void NewList(char *scope, char *lval, void *rval, enum cfdatatype dt)
+void NewList(const char *scope, const char *lval, void *rval, enum cfdatatype dt)
 {
     char *sp1;
     Rval rvald;
@@ -228,7 +220,7 @@ enum cfdatatype GetVariable(const char *scope, const char *lval, Rval *returnv)
 
 /*******************************************************************/
 
-void DeleteVariable(char *scope, char *id)
+void DeleteVariable(const char *scope, const char *id)
 {
     Scope *ptr = GetScope(scope);
 
@@ -388,9 +380,8 @@ bool StringContainsVar(const char *s, const char *v)
 
 /*********************************************************************/
 
-int IsCf3VarString(char *str)
+int IsCf3VarString(const char *str)
 {
-    char *sp;
     char left = 'x', right = 'x';
     int dollar = false;
     int bracks = 0, vars = 0;
@@ -402,7 +393,7 @@ int IsCf3VarString(char *str)
         return false;
     }
 
-    for (sp = str; *sp != '\0'; sp++)   /* check for varitems */
+    for (const char *sp = str; *sp != '\0'; sp++)   /* check for varitems */
     {
         switch (*sp)
         {

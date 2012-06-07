@@ -25,9 +25,12 @@
 
 #include "generic_agent.h"
 
+#include "env_context.h"
+#include "constraints.h"
 #include "verify_environments.h"
 #include "addr_lib.h"
 #include "files_names.h"
+#include "item_lib.h"
 
 extern int PR_KEPT;
 extern int PR_REPAIRED;
@@ -80,15 +83,13 @@ static GenericAgentConfig CheckOpts(int argc, char **argv);
 static void CheckAgentAccess(Rlist *list);
 static void KeepAgentPromise(Promise *pp);
 static int NewTypeContext(enum typesequence type);
-static void DeleteTypeContext(enum typesequence type);
+static void DeleteTypeContext(Policy *policy, enum typesequence type);
 static void ClassBanner(enum typesequence type);
 static void ParallelFindAndVerifyFilesPromises(Promise *pp);
 static bool VerifyBootstrap(void);
-static void KeepPromiseBundles(Rlist *bundlesequence);
-static void KeepPromises(GenericAgentConfig config);
-static void NoteBundleCompliance(char *name, int save_pr_kept, int save_pr_repaired, int save_pr_notkept);
-
-extern const BodySyntax CFA_CONTROLBODY[];
+static void KeepPromiseBundles(Policy *policy, Rlist *bundlesequence);
+static void KeepPromises(Policy *policy, GenericAgentConfig config);
+static int NoteBundleCompliance(char *name, int save_pr_kept, int save_pr_repaired, int save_pr_notkept);
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -143,9 +144,9 @@ int main(int argc, char *argv[])
 
     GenericAgentConfig config = CheckOpts(argc, argv);
 
-    GenericInitialize("agent", config);
+    Policy *policy = GenericInitialize("agent", config);
     ThisAgentInit();
-    KeepPromises(config);
+    KeepPromises(policy, config);
     NoteClassUsage(VHEAP, true);
 #ifdef HAVE_NOVA
     Nova_NoteVarUsageDB();
@@ -356,13 +357,13 @@ static void ThisAgentInit(void)
 
 /*******************************************************************/
 
-static void KeepPromises(GenericAgentConfig config)
+static void KeepPromises(Policy *policy, GenericAgentConfig config)
 {
  double efficiency, model;
 
     BeginAudit();
-    KeepControlPromises();
-    KeepPromiseBundles(config.bundlesequence);
+    KeepControlPromises(policy);
+    KeepPromiseBundles(policy, config.bundlesequence);
     EndAudit();
 
 // TOPICS counts the number of currently defined promises
@@ -382,13 +383,12 @@ static void KeepPromises(GenericAgentConfig config)
 /* Level 2                                                         */
 /*******************************************************************/
 
-void KeepControlPromises()
+void KeepControlPromises(Policy *policy)
 {
-    Constraint *cp;
     Rval retval;
     Rlist *rp;
 
-    for (cp = ControlBodyConstraints(cf_agent); cp != NULL; cp = cp->next)
+    for (Constraint *cp = ControlBodyConstraints(policy, cf_agent); cp != NULL; cp = cp->next)
     {
         if (IsExcluded(cp->classes))
         {
@@ -760,7 +760,7 @@ void KeepControlPromises()
 
 /*********************************************************************/
 
-static void KeepPromiseBundles(Rlist *bundlesequence)
+static void KeepPromiseBundles(Policy *policy, Rlist *bundlesequence)
 {
     Bundle *bp;
     Rlist *rp, *params;
@@ -819,7 +819,7 @@ static void KeepPromiseBundles(Rlist *bundlesequence)
 
         if (!IGNORE_MISSING_BUNDLES)
         {
-            if (!(GetBundle(name, "agent") || (GetBundle(name, "common"))))
+            if (!(GetBundle(policy, name, "agent") || (GetBundle(policy, name, "common"))))
             {
                 CfOut(cf_error, "", "Bundle \"%s\" listed in the bundlesequence was not found\n", name);
                 ok = false;
@@ -856,7 +856,7 @@ static void KeepPromiseBundles(Rlist *bundlesequence)
             break;
         }
 
-        if ((bp = GetBundle(name, "agent")) || (bp = GetBundle(name, "common")))
+        if ((bp = GetBundle(policy, name, "agent")) || (bp = GetBundle(policy, name, "common")))
         {
             SetBundleOutputs(bp->name);
             AugmentScope(bp->name, bp->args, params);
@@ -879,7 +879,7 @@ int ScheduleAgentOperations(Bundle *bp)
     SubType *sp;
     Promise *pp;
     enum typesequence type;
-    int pass;
+    int pass, retval;
     int save_pr_kept = PR_KEPT;
     int save_pr_repaired = PR_REPAIRED;
     int save_pr_notkept = PR_NOTKEPT;
@@ -923,20 +923,18 @@ int ScheduleAgentOperations(Bundle *bp)
                 if (Abort())
                 {
                     NoteClassUsage(VADDCLASSES, false);
-                    DeleteTypeContext(type);
+                    DeleteTypeContext(bp->parent_policy, type);
                     NoteBundleCompliance(bp->name, save_pr_kept, save_pr_repaired, save_pr_notkept);
                     return false;
                 }
             }
 
-            DeleteTypeContext(type);
+            DeleteTypeContext(bp->parent_policy, type);
         }
     }
 
     NoteClassUsage(VADDCLASSES, false);
-    NoteBundleCompliance(bp->name, save_pr_kept, save_pr_repaired, save_pr_notkept);
-
-    return true;
+    return NoteBundleCompliance(bp->name, save_pr_kept, save_pr_repaired, save_pr_notkept);
 }
 
 /*********************************************************************/
@@ -1189,14 +1187,14 @@ static int NewTypeContext(enum typesequence type)
 
 /*********************************************************************/
 
-static void DeleteTypeContext(enum typesequence type)
+static void DeleteTypeContext(Policy *policy, enum typesequence type)
 {
     Attributes a = { {0} };
 
     switch (type)
     {
     case kp_classes:
-        HashVariables(THIS_BUNDLE);
+        HashVariables(policy, THIS_BUNDLE);
         break;
 
     case kp_environments:
@@ -1387,7 +1385,7 @@ static bool VerifyBootstrap(void)
 /* Compliance comp                                            */
 /**************************************************************/
 
-static void NoteBundleCompliance(char *name, int save_pr_kept, int save_pr_repaired, int save_pr_notkept)
+static int NoteBundleCompliance(char *name, int save_pr_kept, int save_pr_repaired, int save_pr_notkept)
 {
     double delta_pr_kept, delta_pr_repaired, delta_pr_notkept;
     double bundle_compliance = 0.0;
@@ -1399,7 +1397,7 @@ static void NoteBundleCompliance(char *name, int save_pr_kept, int save_pr_repai
     if (delta_pr_kept + delta_pr_notkept + delta_pr_repaired <= 0)
        {
        CfOut(cf_verbose, "", " ==> Zero promises executed for bundle \"%s\"", name);
-       return;
+       return CF_NOP;
        }
 
     CfOut(cf_verbose,""," ==> == Bundle Accounting Summary for \"%s\" ==",name);
@@ -1411,4 +1409,18 @@ static void NoteBundleCompliance(char *name, int save_pr_kept, int save_pr_repai
 
     CfOut(cf_verbose, "", " ==> Aggregate compliance (promises kept/repaired) for bundle \"%s\" = %.1lf%%", name, bundle_compliance * 100.0);
     LastSawBundle(name,bundle_compliance);
+
+    // return the worst case for the bundle status
+    
+    if (delta_pr_notkept > 0)
+    {
+        return CF_FAIL;
+    }
+
+    if (delta_pr_repaired > 0)
+    {
+        return CF_CHG;
+    }
+
+    return CF_NOP;
 }

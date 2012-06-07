@@ -66,9 +66,9 @@ int ValueSizeDB(CF_DB *dbp, const char *key, int key_size);
 bool ReadComplexKeyDB(CF_DB *dbp, const char *key, int key_size, void *dest, int destSz);
 bool WriteComplexKeyDB(CF_DB *dbp, const char *key, int keySz, const void *src, int srcSz);
 bool DeleteComplexKeyDB(CF_DB *dbp, const char *key, int size);
-bool ReadDB(CF_DB *dbp, char *key, void *dest, int destSz);
-bool WriteDB(CF_DB *dbp, char *key, const void *src, int srcSz);
-bool DeleteDB(CF_DB *dbp, char *key);
+bool ReadDB(CF_DB *dbp, const char *key, void *dest, int destSz);
+bool WriteDB(CF_DB *dbp, const char *key, const void *src, int srcSz);
+bool DeleteDB(CF_DB *dbp, const char *key);
 
 /*
  * Creating cursor locks the whole database, so keep the amount of work here to

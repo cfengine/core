@@ -24,12 +24,21 @@
 */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
+#include "env_context.h"
+#include "constraints.h"
+#include "promises.h"
 #include "files_names.h"
 #include "vars.h"
+#include "item_lib.h"
 
 /*****************************************************************************/
+
+#define CF_EDIT_IFELAPSED 3     /* NOTE: If doing copy template then edit working copy,
+                                   the edit ifelapsed must not be higher than
+                                   the copy ifelapsed. This will make the working
+                                   copy equal to the copied template file - not the
+                                   copied + edited file. */
 
 enum editlinetypesequence
 {
@@ -89,7 +98,7 @@ int ScheduleEditLineOperations(char *filename, Bundle *bp, Attributes a, Promise
     SubType *sp;
     Promise *pp;
     char lockname[CF_BUFSIZE];
-    char *bp_stack = THIS_BUNDLE;
+    const char *bp_stack = THIS_BUNDLE;
     CfLock thislock;
     int pass;
 
@@ -260,7 +269,7 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
             *(sp-1) = '\0'; // StripTrailingNewline(promiser) and terminate
 
             np = AppendPromise(tp, promiser, (Rval) { NULL, CF_NOPROMISEE }, context, bundlename, "edit_line");
-            AppendConstraint(&(np->conlist), "insert_type", (Rval) { xstrdup("preserve_block"), CF_SCALAR }, "any", false);
+            ConstraintAppendToPromise(np, "insert_type", (Rval) { xstrdup("preserve_block"), CF_SCALAR }, "any", false);
 
             DeleteItemList(lines);
             free(promiser);
@@ -277,7 +286,7 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
                 //install independent promise line
                 StripTrailingNewline(buffer);
                 np = AppendPromise(tp, buffer, (Rval) { NULL, CF_NOPROMISEE }, context, bundlename, "edit_line");
-                AppendConstraint(&(np->conlist), "insert_type", (Rval) { xstrdup("preserve_block"), CF_SCALAR }, "any", false);
+                ConstraintAppendToPromise(np, "insert_type", (Rval) { xstrdup("preserve_block"), CF_SCALAR }, "any", false);
             }
         }
     }

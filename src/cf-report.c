@@ -24,19 +24,23 @@
 */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
+#include "env_context.h"
 #include "dir.h"
 #include "writer.h"
 #include "dbm_api.h"
 #include "lastseen.h"
 #include "granules.h"
 #include "files_names.h"
+#include "constraints.h"
+#include "policy.h"
+#include "syntax.h"
+#include "item_lib.h"
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);
 
-static void KeepReportsControlPromises(void);
+static void KeepReportsControlPromises(Policy *policy);
 static void KeepReportsPromises(void);
 static void ShowLastSeen(void);
 static void ShowPerformance(void);
@@ -62,7 +66,7 @@ static void CloseMagnifyFiles(void);
 static void EraseAverages(void);
 static void RemoveHostSeen(char *hosts);
 
-extern BodySyntax CFRE_CONTROLBODY[];
+extern const BodySyntax CFRE_CONTROLBODY[];
 
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
@@ -280,12 +284,17 @@ int main(int argc, char *argv[])
 {
     GenericAgentConfig config = CheckOpts(argc, argv);
 
+    Policy *policy = NULL;
     if (!HUBQUERY)
     {
-        GenericInitialize("reporter", config);
+        policy = GenericInitialize("reporter", config);
+    }
+    else
+    {
+        policy = PolicyNew();
     }
     ThisAgentInit();
-    KeepReportsControlPromises();
+    KeepReportsControlPromises(policy);
     KeepReportsPromises();
     GenericDeInitialize();
     return 0;
@@ -294,18 +303,6 @@ int main(int argc, char *argv[])
 /*****************************************************************************/
 /* Level 1                                                                   */
 /*****************************************************************************/
-
-static void SyntaxExport()
-{
-#ifdef HAVE_NOVA
-    SyntaxTree2JavaScript();
-#else
-    Writer *writer = FileWriter(stdout);
-
-    SyntaxPrintAsJson(writer);
-    WriterClose(writer);
-#endif
-}
 
 /*****************************************************************************/
 
@@ -571,13 +568,13 @@ static void ThisAgentInit(void)
 
 /*****************************************************************************/
 
-static void KeepReportsControlPromises()
+static void KeepReportsControlPromises(Policy *policy)
 {
     Constraint *cp;
     Rlist *rp;
     Rval retval;
 
-    for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp = cp->next)
+    for (cp = ControlBodyConstraints(policy, cf_report); cp != NULL; cp = cp->next)
     {
         if (IsExcluded(cp->classes))
         {

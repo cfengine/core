@@ -25,7 +25,8 @@
 */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
+
+#include "syntax.h"
 
 #if !defined(HAVE_NOVA)
 
@@ -69,7 +70,7 @@ int EnterpriseExpiry(void)
 /* all agents: cfstream.c, expand.c, generic_agent.c */
 
 
-const char *PromiseID(Promise *pp)
+const char *PromiseID(const Promise *pp)
 {
     return "";
 }
@@ -78,7 +79,7 @@ const char *PromiseID(Promise *pp)
 /* all agents: expand.c */
 
 
-void RegisterBundleDependence(char *name, Promise *pp)
+void RegisterBundleDependence(char *name, const Promise *pp)
 {
 }
 
@@ -86,7 +87,7 @@ void RegisterBundleDependence(char *name, Promise *pp)
 /* all agents: logging.c */
 
 
-void NotePromiseCompliance(Promise *pp, double val, PromiseState state, char *reason)
+void NotePromiseCompliance(const Promise *pp, double val, PromiseState state, char *reason)
 {
 }
 
@@ -328,17 +329,11 @@ void AddGoalsToDB(char *goal_patterns)
 
 /* cf-report: cf-report.c */
 
-
-void SyntaxExport()
+void SyntaxExport(void)
 {
-# ifdef HAVE_NOVA
-    Nova_SyntaxTree2JavaScript();
-# else
     Writer *writer = FileWriter(stdout);
-
     SyntaxPrintAsJson(writer);
     WriterClose(writer);
-# endif
 }
 
 void LookupObservable(int i, char *name, char *desc)

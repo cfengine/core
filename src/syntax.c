@@ -24,56 +24,30 @@
 */
 
 #include "syntax.h"
-#include "cf3.extern.h"
 
+#include "constraints.h"
 #include "json.h"
 #include "files_names.h"
+#include "mod_files.h"
+#include "item_lib.h"
 
 static const int PRETTY_PRINT_SPACES_PER_INDENT = 2;
 
-static int CheckParseString(char *lv, char *s, const char *range);
-static void CheckParseInt(char *lv, char *s, const char *range);
-static void CheckParseReal(char *lv, char *s, const char *range);
-static void CheckParseRealRange(char *lval, char *s, const char *range);
-static void CheckParseIntRange(char *lval, char *s, const char *range);
-static void CheckParseOpts(char *lv, char *s, const char *range);
-static void CheckFnCallType(char *lval, const char *s, enum cfdatatype dtype, const char *range);
+static int CheckParseString(const char *lv, const char *s, const char *range);
+static void CheckParseInt(const char *lv, const char *s, const char *range);
+static void CheckParseReal(const char *lv, const char *s, const char *range);
+static void CheckParseRealRange(const char *lval, const char *s, const char *range);
+static void CheckParseIntRange(const char *lval, const char *s, const char *range);
+static void CheckParseOpts(const char *lv, const char *s, const char *range);
+static void CheckFnCallType(const char *lval, const char *s, enum cfdatatype dtype, const char *range);
 
 /*********************************************************/
 
-void CheckBundle(char *name, char *type)
+void CheckBody(const Policy *policy, const char *name, const char *type)
 {
-    Bundle *bp;
-    char output[CF_BUFSIZE];
-    const char *reserved[] = { "sys", "const", "mon", "edit", "match", "mon", "this", NULL };
-
-    CfDebug("Checking for bundle (%s,%s)\n", name, type);
-
-    if (IsStrIn(name, reserved))
-    {
-        snprintf(output, CF_BUFSIZE, "Use of a reserved context as a bundle name \"%s\" ", name);
-        ReportError(output);
-    }
-
-    for (bp = BUNDLES; bp != NULL; bp = bp->next)
-    {
-        if ((strcmp(name, bp->name) == 0) && (strcmp(type, bp->type) == 0))
-        {
-            snprintf(output, CF_BUFSIZE, "Redefinition of bundle %s for %s is a broken promise", name, type);
-            ReportError(output);
-            ERRORCOUNT++;
-        }
-    }
-}
-
-/*********************************************************/
-
-void CheckBody(char *name, char *type)
-{
-    Body *bp;
     char output[CF_BUFSIZE];
 
-    for (bp = BODIES; bp != NULL; bp = bp->next)
+    for (const Body *bp = policy->bodies; bp != NULL; bp = bp->next)
     {
         if ((strcmp(name, bp->name) == 0) && (strcmp(type, bp->type) == 0))
         {
@@ -89,7 +63,7 @@ void CheckBody(char *name, char *type)
 SubTypeSyntax CheckSubType(char *bundletype, char *subtype)
 {
     int i, j;
-    SubTypeSyntax *ss;
+    const SubTypeSyntax *ss;
     char output[CF_BUFSIZE];
 
     if (subtype == NULL)
@@ -131,40 +105,13 @@ SubTypeSyntax CheckSubType(char *bundletype, char *subtype)
     NULL, NULL, NULL};
 }
 
-void CheckPromise(Promise *pp)
-{
-    char output[CF_BUFSIZE];
-
-    if (strcmp(pp->agentsubtype, "vars") == 0)
-    {
-        char *data_type = NULL;
-        Constraint *cp;
-
-        for (cp = pp->conlist; cp != NULL; cp = cp->next)
-        {
-            if (IsDataType(cp->lval))
-            {
-                if (data_type != NULL)
-                {
-                    snprintf(output, CF_BUFSIZE,
-                             "Variable contains existing data type contstraint %s, tried to redefine with %s",
-                             data_type, cp->lval);
-                    ReportError(output);
-                    ERRORCOUNT++;
-                }
-                data_type = cp->lval;
-            }
-        }
-    }
-}
-
 /*********************************************************/
 
 enum cfdatatype ExpectedDataType(char *lvalname)
 {
     int i, j, k, l;
     const BodySyntax *bs, *bs2;
-    SubTypeSyntax *ss;
+    const SubTypeSyntax *ss;
 
     for (i = 0; i < CF3_MODULES; i++)
     {
@@ -317,7 +264,7 @@ void CheckConstraint(char *type, char *name, char *lval, Rval rval, SubTypeSynta
 int LvalWantsBody(char *stype, char *lval)
 {
     int i, j, l;
-    SubTypeSyntax *ss;
+    const SubTypeSyntax *ss;
     const BodySyntax *bs;
 
     for (i = 0; i < CF3_MODULES; i++)
@@ -365,7 +312,7 @@ void CheckSelection(char *type, char *name, char *lval, Rval rval)
 {
     int lmatch = false;
     int i, j, k, l;
-    SubTypeSyntax *ss;
+    const SubTypeSyntax *ss;
     const BodySyntax *bs, *bs2;
     char output[CF_BUFSIZE];
 
@@ -481,7 +428,7 @@ void CheckSelection(char *type, char *name, char *lval, Rval rval)
 /* Level 1                                                                  */
 /****************************************************************************/
 
-void CheckConstraintTypeMatch(char *lval, Rval rval, enum cfdatatype dt, const char *range, int level)
+void CheckConstraintTypeMatch(const char *lval, Rval rval, enum cfdatatype dt, const char *range, int level)
 {
     Rlist *rp;
     Item *checklist;
@@ -575,17 +522,17 @@ void CheckConstraintTypeMatch(char *lval, Rval rval, enum cfdatatype dt, const c
     {
     case cf_str:
     case cf_slist:
-        CheckParseString(lval, (char *) rval.item, range);
+        CheckParseString(lval, (const char *) rval.item, range);
         break;
 
     case cf_int:
     case cf_ilist:
-        CheckParseInt(lval, (char *) rval.item, range);
+        CheckParseInt(lval, (const char *) rval.item, range);
         break;
 
     case cf_real:
     case cf_rlist:
-        CheckParseReal(lval, (char *) rval.item, range);
+        CheckParseReal(lval, (const char *) rval.item, range);
         break;
 
     case cf_body:
@@ -595,16 +542,16 @@ void CheckConstraintTypeMatch(char *lval, Rval rval, enum cfdatatype dt, const c
 
     case cf_opts:
     case cf_olist:
-        CheckParseOpts(lval, (char *) rval.item, range);
+        CheckParseOpts(lval, (const char *) rval.item, range);
         break;
 
     case cf_class:
     case cf_clist:
-        CheckParseClass(lval, (char *) rval.item, range);
+        CheckParseClass(lval, (const char *) rval.item, range);
         break;
 
     case cf_irange:
-        CheckParseIntRange(lval, (char *) rval.item, range);
+        CheckParseIntRange(lval, (const char *) rval.item, range);
         break;
 
     case cf_rrange:
@@ -621,7 +568,7 @@ void CheckConstraintTypeMatch(char *lval, Rval rval, enum cfdatatype dt, const c
 
 /****************************************************************************/
 
-enum cfdatatype StringDataType(char *scopeid, char *string)
+enum cfdatatype StringDataType(const char *scopeid, const char *string)
 {
     enum cfdatatype dtype;
     Rval rval;
@@ -683,7 +630,7 @@ vars:
 /* Level 1                                                                  */
 /****************************************************************************/
 
-static int CheckParseString(char *lval, char *s, const char *range)
+static int CheckParseString(const char *lval, const char *s, const char *range)
 {
     char output[CF_BUFSIZE];
 
@@ -742,7 +689,7 @@ static int CheckParseString(char *lval, char *s, const char *range)
 
 /****************************************************************************/
 
-int CheckParseClass(char *lval, char *s, const char *range)
+int CheckParseClass(const char *lval, const char *s, const char *range)
 {
     char output[CF_BUFSIZE];
 
@@ -771,7 +718,7 @@ int CheckParseClass(char *lval, char *s, const char *range)
 
 /****************************************************************************/
 
-static void CheckParseInt(char *lval, char *s, const char *range)
+static void CheckParseInt(const char *lval, const char *s, const char *range)
 {
     Item *split;
     int n;
@@ -840,7 +787,7 @@ static void CheckParseInt(char *lval, char *s, const char *range)
 
 /****************************************************************************/
 
-static void CheckParseIntRange(char *lval, char *s, const char *range)
+static void CheckParseIntRange(const char *lval, const char *s, const char *range)
 {
     Item *split, *ip, *rangep;
     int n;
@@ -926,7 +873,7 @@ static void CheckParseIntRange(char *lval, char *s, const char *range)
 
 /****************************************************************************/
 
-static void CheckParseReal(char *lval, char *s, const char *range)
+static void CheckParseReal(const char *lval, const char *s, const char *range)
 {
     Item *split;
     double max = (double) CF_LOWINIT, min = (double) CF_HIGHINIT, val;
@@ -985,7 +932,7 @@ static void CheckParseReal(char *lval, char *s, const char *range)
 
 /****************************************************************************/
 
-static void CheckParseRealRange(char *lval, char *s, const char *range)
+static void CheckParseRealRange(const char *lval, const char *s, const char *range)
 {
     Item *split, *rangep, *ip;
     double max = (double) CF_LOWINIT, min = (double) CF_HIGHINIT, val;
@@ -1066,7 +1013,7 @@ static void CheckParseRealRange(char *lval, char *s, const char *range)
 
 /****************************************************************************/
 
-static void CheckParseOpts(char *lval, char *s, const char *range)
+static void CheckParseOpts(const char *lval, const char *s, const char *range)
 {
     Item *split;
     int err = false;
@@ -1177,7 +1124,7 @@ bool IsDataType(const char *s)
 
 /****************************************************************************/
 
-static void CheckFnCallType(char *lval, const char *s, enum cfdatatype dtype, const char *range)
+static void CheckFnCallType(const char *lval, const char *s, enum cfdatatype dtype, const char *range)
 {
     enum cfdatatype dt;
     char output[CF_BUFSIZE];
@@ -1337,10 +1284,10 @@ static JsonElement *ExportAttributesSyntaxAsJson(const BodySyntax attributes[])
     return json;
 }
 
-static JsonElement *ExportBundleTypeSyntaxAsJson(char *bundle_type)
+static JsonElement *ExportBundleTypeSyntaxAsJson(const char *bundle_type)
 {
     JsonElement *json = JsonObjectCreate(10);
-    SubTypeSyntax *st;
+    const SubTypeSyntax *st;
     int i = 0, j = 0;
 
     for (i = 0; i < CF3_MODULES; i++)

@@ -22,14 +22,6 @@
   included file COSL.txt.
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: cf3.extern.h                                                        */
-/*                                                                           */
-/* Created: Thu Aug  2 12:51:18 2007                                         */
-/*                                                                           */
-/*****************************************************************************/
-
 #ifndef CFENGINE_CF3_EXTERN_H
 #define CFENGINE_CF3_EXTERN_H
 
@@ -67,7 +59,7 @@ extern char VDAY[];
 extern char VMONTH[];
 extern char VSHIFT[];
 
-extern char *CLASSTEXT[];
+extern const char *CLASSTEXT[];
 extern char VINPUTFILE[];
 extern int AUDIT;
 extern char PURGE;
@@ -86,12 +78,8 @@ extern enum classes VSYSTEMHARDCLASS;
 extern char VFQNAME[];
 extern char VUQNAME[];
 
-extern Item *VNEGHEAP;
-
 extern Item *VSETUIDLIST;
 extern Item *SUSPICIOUSLIST;
-extern AlphaList VHEAP;
-extern AlphaList VADDCLASSES;
 
 extern int DEBUG;
 
@@ -107,11 +95,9 @@ extern int DONTDO;
 extern int IGNORELOCK;
 extern int MINUSF;
 
-extern char *VPSCOMM[];
-extern char *VPSOPTS[];
-extern char *VHOSTEQUIV[];
-extern char *VFSTAB[];
-extern char *VNETSTAT[];
+extern const char *VPSCOMM[];
+extern const char *VPSOPTS[];
+extern const char *VFSTAB[];
 
 extern int EDITFILESIZE;
 extern int VIFELAPSED;
@@ -141,7 +127,6 @@ extern char LICENSE_COMPANY[CF_SMALLBUF];
 extern int IGNORE_MISSING_INPUTS;
 extern int IGNORE_MISSING_BUNDLES;
 extern char WEBDRIVER[CF_MAXVARSIZE];
-extern char DOCROOT[CF_MAXVARSIZE];
 extern char BANNER[2 * CF_BUFSIZE];
 extern char FOOTER[CF_BUFSIZE];
 extern char STYLESHEET[CF_BUFSIZE];
@@ -152,8 +137,6 @@ extern enum cfhashes CF_DEFAULT_DIGEST;
 extern int CF_DEFAULT_DIGEST_LEN;
 extern Item *EDIT_ANCHORS;
 
-extern Bundle *BUNDLES;
-extern Body *BODIES;
 extern Scope *VSCOPE;
 extern Audit *AUDITPTR;
 extern Audit *VAUDIT;
@@ -191,16 +174,13 @@ extern const char *CF_AGENTTYPES[];
 extern int FSTAB_EDITS;
 
 extern int CFA_MAXTHREADS;
-extern char *THIS_BUNDLE;
-extern char THIS_AGENT[CF_MAXVARSIZE];
+extern const char *THIS_BUNDLE;
 extern enum cfagenttype THIS_AGENT_TYPE;
 extern int SHOWREPORTS;
 extern int SHOW_PARSE_TREE;
 extern int USE_GCC_BRIEF_FORMAT;
 extern time_t PROMISETIME;
-extern time_t CF_LOCKHORIZON;
-extern int ABORTBUNDLE;
-extern Item *ABORTBUNDLEHEAP;
+#define CF_LOCKHORIZON ((time_t)(SECONDS_PER_WEEK * 4))
 extern int LASTSEENEXPIREAFTER;
 extern char *DEFAULT_COPYTYPE;
 extern Item *PROCESSTABLE;
@@ -209,7 +189,6 @@ extern Item *FSTABLIST;
 extern Rlist *MOUNTEDFSLIST;
 
 extern int CF_MOUNTALL;
-extern int CF_SAVEFSTAB;
 
 extern const char *DAY_TEXT[];
 extern const char *MONTH_TEXT[];

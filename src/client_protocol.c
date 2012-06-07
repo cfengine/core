@@ -23,9 +23,10 @@
 */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 #include "client_protocol.h"
 
+#include "sysinfo.h"
+#include "promises.h"
 #include "lastseen.h"
 #include "crypto.h"
 

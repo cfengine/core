@@ -23,9 +23,11 @@
 */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
+#include "env_context.h"
+#include "promises.h"
 #include "vars.h"
+#include "item_lib.h"
 
 static int ProcessSanityChecks(Attributes a, Promise *pp);
 static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp);

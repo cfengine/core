@@ -23,7 +23,9 @@
 */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
+
+#include "promises.h"
+#include "constraints.h"
 
 static void ShowAttributes(Attributes a);
 
@@ -40,7 +42,7 @@ void SetChecksumUpdates(bool enabled)
 
 /*******************************************************************/
 
-Attributes GetFilesAttributes(Promise *pp)
+Attributes GetFilesAttributes(const Promise *pp)
 {
     Attributes attr = { {0} };
 
@@ -144,7 +146,7 @@ Attributes GetFilesAttributes(Promise *pp)
 
 /*******************************************************************/
 
-Attributes GetOutputsAttributes(Promise *pp)
+Attributes GetOutputsAttributes(const Promise *pp)
 {
     Attributes attr = { {0} };
 
@@ -158,7 +160,7 @@ Attributes GetOutputsAttributes(Promise *pp)
 
 /*******************************************************************/
 
-Attributes GetReportsAttributes(Promise *pp)
+Attributes GetReportsAttributes(const Promise *pp)
 {
     Attributes attr = { {0} };
 
@@ -171,7 +173,7 @@ Attributes GetReportsAttributes(Promise *pp)
 
 /*******************************************************************/
 
-Attributes GetEnvironmentsAttributes(Promise *pp)
+Attributes GetEnvironmentsAttributes(const Promise *pp)
 {
     Attributes attr = { {0} };
 
@@ -184,7 +186,7 @@ Attributes GetEnvironmentsAttributes(Promise *pp)
 
 /*******************************************************************/
 
-Attributes GetServicesAttributes(Promise *pp)
+Attributes GetServicesAttributes(const Promise *pp)
 {
     Attributes attr = { {0} };
 
@@ -198,7 +200,7 @@ Attributes GetServicesAttributes(Promise *pp)
 
 /*******************************************************************/
 
-Attributes GetPackageAttributes(Promise *pp)
+Attributes GetPackageAttributes(const Promise *pp)
 {
     Attributes attr = { {0} };
 
@@ -210,7 +212,7 @@ Attributes GetPackageAttributes(Promise *pp)
 
 /*******************************************************************/
 
-Attributes GetDatabaseAttributes(Promise *pp)
+Attributes GetDatabaseAttributes(const Promise *pp)
 {
     Attributes attr = { {0} };
 
@@ -222,7 +224,7 @@ Attributes GetDatabaseAttributes(Promise *pp)
 
 /*******************************************************************/
 
-Attributes GetClassContextAttributes(Promise *pp)
+Attributes GetClassContextAttributes(const Promise *pp)
 {
     Attributes a = { {0} };;
 
@@ -235,7 +237,7 @@ Attributes GetClassContextAttributes(Promise *pp)
 
 /*******************************************************************/
 
-Attributes GetExecAttributes(Promise *pp)
+Attributes GetExecAttributes(const Promise *pp)
 {
     Attributes attr = { {0} };
 
@@ -258,7 +260,7 @@ Attributes GetExecAttributes(Promise *pp)
 
 /*******************************************************************/
 
-Attributes GetProcessAttributes(Promise *pp)
+Attributes GetProcessAttributes(const Promise *pp)
 {
     static Attributes attr = { {0} };
 
@@ -284,7 +286,7 @@ Attributes GetProcessAttributes(Promise *pp)
 
 /*******************************************************************/
 
-Attributes GetStorageAttributes(Promise *pp)
+Attributes GetStorageAttributes(const Promise *pp)
 {
     Attributes attr = { {0} };
 
@@ -311,7 +313,7 @@ Attributes GetStorageAttributes(Promise *pp)
 
 /*******************************************************************/
 
-Attributes GetMethodAttributes(Promise *pp)
+Attributes GetMethodAttributes(const Promise *pp)
 {
     Attributes attr = { {0} };
 
@@ -330,7 +332,7 @@ Attributes GetMethodAttributes(Promise *pp)
 
 /*******************************************************************/
 
-Attributes GetInterfacesAttributes(Promise *pp)
+Attributes GetInterfacesAttributes(const Promise *pp)
 {
     Attributes attr = { {0} };
 
@@ -350,7 +352,7 @@ Attributes GetInterfacesAttributes(Promise *pp)
 
 /*******************************************************************/
 
-Attributes GetTopicsAttributes(Promise *pp)
+Attributes GetTopicsAttributes(const Promise *pp)
 {
     Attributes attr = { {0} };
 
@@ -364,7 +366,7 @@ Attributes GetTopicsAttributes(Promise *pp)
 
 /*******************************************************************/
 
-Attributes GetThingsAttributes(Promise *pp)
+Attributes GetThingsAttributes(const Promise *pp)
 {
     Attributes attr = { {0} };
     Rlist *rp;
@@ -695,7 +697,7 @@ Attributes GetThingsAttributes(Promise *pp)
 
 /*******************************************************************/
 
-Attributes GetInferencesAttributes(Promise *pp)
+Attributes GetInferencesAttributes(const Promise *pp)
 {
     Attributes attr = { {0} };
 
@@ -706,7 +708,7 @@ Attributes GetInferencesAttributes(Promise *pp)
 
 /*******************************************************************/
 
-Attributes GetOccurrenceAttributes(Promise *pp)
+Attributes GetOccurrenceAttributes(const Promise *pp)
 {
     Attributes attr = { {0} };
 
@@ -718,7 +720,7 @@ Attributes GetOccurrenceAttributes(Promise *pp)
 
 /*******************************************************************/
 
-Attributes GetMeasurementAttributes(Promise *pp)
+Attributes GetMeasurementAttributes(const Promise *pp)
 {
     Attributes attr = { {0} };
 
@@ -739,7 +741,7 @@ Attributes GetMeasurementAttributes(Promise *pp)
 /* Level                                                           */
 /*******************************************************************/
 
-Services GetServicesConstraints(Promise *pp)
+Services GetServicesConstraints(const Promise *pp)
 {
     Services s;
 
@@ -755,7 +757,7 @@ Services GetServicesConstraints(Promise *pp)
 
 /*******************************************************************/
 
-Environments GetEnvironmentsConstraints(Promise *pp)
+Environments GetEnvironmentsConstraints(const Promise *pp)
 {
     Environments e;
 
@@ -776,7 +778,7 @@ Environments GetEnvironmentsConstraints(Promise *pp)
 
 /*******************************************************************/
 
-ExecContain GetExecContainConstraints(Promise *pp)
+ExecContain GetExecContainConstraints(const Promise *pp)
 {
     ExecContain e;
 
@@ -795,7 +797,7 @@ ExecContain GetExecContainConstraints(Promise *pp)
 
 /*******************************************************************/
 
-Recursion GetRecursionConstraints(Promise *pp)
+Recursion GetRecursionConstraints(const Promise *pp)
 {
     Recursion r;
 
@@ -817,7 +819,7 @@ Recursion GetRecursionConstraints(Promise *pp)
 
 /*******************************************************************/
 
-Acl GetAclConstraints(Promise *pp)
+Acl GetAclConstraints(const Promise *pp)
 {
     Acl ac;
 
@@ -831,7 +833,7 @@ Acl GetAclConstraints(Promise *pp)
 
 /*******************************************************************/
 
-FilePerms GetPermissionConstraints(Promise *pp)
+FilePerms GetPermissionConstraints(const Promise *pp)
 {
     FilePerms p;
     char *value;
@@ -881,7 +883,7 @@ FilePerms GetPermissionConstraints(Promise *pp)
 
 /*******************************************************************/
 
-FileSelect GetSelectConstraints(Promise *pp)
+FileSelect GetSelectConstraints(const Promise *pp)
 {
     FileSelect s;
     char *value;
@@ -979,7 +981,7 @@ FileSelect GetSelectConstraints(Promise *pp)
 
 /*******************************************************************/
 
-TransactionContext GetTransactionConstraints(Promise *pp)
+TransactionContext GetTransactionConstraints(const Promise *pp)
 {
     TransactionContext t;
     char *value;
@@ -1046,7 +1048,7 @@ TransactionContext GetTransactionConstraints(Promise *pp)
 
 /*******************************************************************/
 
-DefineClasses GetClassDefinitionConstraints(Promise *pp)
+DefineClasses GetClassDefinitionConstraints(const Promise *pp)
 {
     DefineClasses c;
     char *pt = NULL;
@@ -1089,7 +1091,7 @@ DefineClasses GetClassDefinitionConstraints(Promise *pp)
 
 /*******************************************************************/
 
-FileDelete GetDeleteConstraints(Promise *pp)
+FileDelete GetDeleteConstraints(const Promise *pp)
 {
     FileDelete f;
     char *value;
@@ -1111,7 +1113,7 @@ FileDelete GetDeleteConstraints(Promise *pp)
 
 /*******************************************************************/
 
-FileRename GetRenameConstraints(Promise *pp)
+FileRename GetRenameConstraints(const Promise *pp)
 {
     FileRename r;
     char *value;
@@ -1134,7 +1136,7 @@ FileRename GetRenameConstraints(Promise *pp)
 
 /*******************************************************************/
 
-FileChange GetChangeMgtConstraints(Promise *pp)
+FileChange GetChangeMgtConstraints(const Promise *pp)
 {
     FileChange c;
     char *value;
@@ -1214,7 +1216,7 @@ FileChange GetChangeMgtConstraints(Promise *pp)
 
 /*******************************************************************/
 
-FileCopy GetCopyConstraints(Promise *pp)
+FileCopy GetCopyConstraints(const Promise *pp)
 {
     FileCopy f;
     char *value;
@@ -1280,7 +1282,7 @@ FileCopy GetCopyConstraints(Promise *pp)
 
 /*******************************************************************/
 
-FileLink GetLinkConstraints(Promise *pp)
+FileLink GetLinkConstraints(const Promise *pp)
 {
     FileLink f;
     char *value;
@@ -1323,7 +1325,7 @@ FileLink GetLinkConstraints(Promise *pp)
 
 /*******************************************************************/
 
-EditDefaults GetEditDefaults(Promise *pp)
+EditDefaults GetEditDefaults(const Promise *pp)
 {
     EditDefaults e = { 0 };
     char *value;
@@ -1364,9 +1366,9 @@ EditDefaults GetEditDefaults(Promise *pp)
 
 /*******************************************************************/
 
-Context GetContextConstraints(Promise *pp)
+ContextConstraint GetContextConstraints(const Promise *pp)
 {
-    Context a;
+    ContextConstraint a;
     Constraint *cp;
     int i;
 
@@ -1396,7 +1398,7 @@ Context GetContextConstraints(Promise *pp)
 
 /*******************************************************************/
 
-Packages GetPackageConstraints(Promise *pp)
+Packages GetPackageConstraints(const Promise *pp)
 {
     Packages p;
     enum package_actions action;
@@ -1459,7 +1461,7 @@ Packages GetPackageConstraints(Promise *pp)
 
 /*******************************************************************/
 
-ProcessSelect GetProcessFilterConstraints(Promise *pp)
+ProcessSelect GetProcessFilterConstraints(const Promise *pp)
 {
     ProcessSelect p;
     char *value;
@@ -1558,7 +1560,7 @@ ProcessSelect GetProcessFilterConstraints(Promise *pp)
 
 /*******************************************************************/
 
-ProcessCount GetMatchesConstraints(Promise *pp)
+ProcessCount GetMatchesConstraints(const Promise *pp)
 {
     ProcessCount p;
     char *value;
@@ -1628,7 +1630,7 @@ a.classes = GetClassDefinitionConstraints(pp);
 /* Edit sub-bundles have their own attributes                      */
 /*******************************************************************/
 
-Attributes GetInsertionAttributes(Promise *pp)
+Attributes GetInsertionAttributes(const Promise *pp)
 {
     Attributes attr = { {0} };
 
@@ -1659,7 +1661,7 @@ Attributes GetInsertionAttributes(Promise *pp)
 
 /*******************************************************************/
 
-EditLocation GetLocationAttributes(Promise *pp)
+EditLocation GetLocationAttributes(const Promise *pp)
 {
     EditLocation e;
     char *value;
@@ -1683,7 +1685,7 @@ EditLocation GetLocationAttributes(Promise *pp)
 
 /*******************************************************************/
 
-Attributes GetDeletionAttributes(Promise *pp)
+Attributes GetDeletionAttributes(const Promise *pp)
 {
     Attributes attr = { {0} };
 
@@ -1708,7 +1710,7 @@ Attributes GetDeletionAttributes(Promise *pp)
 
 /*******************************************************************/
 
-Attributes GetColumnAttributes(Promise *pp)
+Attributes GetColumnAttributes(const Promise *pp)
 {
     Attributes attr = { {0} };
 
@@ -1731,7 +1733,7 @@ Attributes GetColumnAttributes(Promise *pp)
 
 /*******************************************************************/
 
-Attributes GetReplaceAttributes(Promise *pp)
+Attributes GetReplaceAttributes(const Promise *pp)
 {
     Attributes attr = { {0} };
 
@@ -1756,7 +1758,7 @@ Attributes GetReplaceAttributes(Promise *pp)
 
 /*******************************************************************/
 
-EditRegion GetRegionConstraints(Promise *pp)
+EditRegion GetRegionConstraints(const Promise *pp)
 {
     EditRegion e;
 
@@ -1769,7 +1771,7 @@ EditRegion GetRegionConstraints(Promise *pp)
 
 /*******************************************************************/
 
-EditReplace GetReplaceConstraints(Promise *pp)
+EditReplace GetReplaceConstraints(const Promise *pp)
 {
     EditReplace r;
 
@@ -1781,7 +1783,7 @@ EditReplace GetReplaceConstraints(Promise *pp)
 
 /*******************************************************************/
 
-EditColumn GetColumnConstraints(Promise *pp)
+EditColumn GetColumnConstraints(const Promise *pp)
 {
     EditColumn c;
     char *value;
@@ -1816,7 +1818,7 @@ EditColumn GetColumnConstraints(Promise *pp)
 /* Storage                                                         */
 /*******************************************************************/
 
-StorageMount GetMountConstraints(Promise *pp)
+StorageMount GetMountConstraints(const Promise *pp)
 {
     StorageMount m;
 
@@ -1832,7 +1834,7 @@ StorageMount GetMountConstraints(Promise *pp)
 
 /*******************************************************************/
 
-StorageVolume GetVolumeConstraints(Promise *pp)
+StorageVolume GetVolumeConstraints(const Promise *pp)
 {
     StorageVolume v;
     char *value;
@@ -1863,7 +1865,7 @@ StorageVolume GetVolumeConstraints(Promise *pp)
 
 /*******************************************************************/
 
-TcpIp GetTCPIPAttributes(Promise *pp)
+TcpIp GetTCPIPAttributes(const Promise *pp)
 {
     TcpIp t;
 
@@ -1875,7 +1877,7 @@ TcpIp GetTCPIPAttributes(Promise *pp)
 
 /*******************************************************************/
 
-Report GetReportConstraints(Promise *pp)
+Report GetReportConstraints(const Promise *pp)
 {
     Report r;
 
@@ -1922,7 +1924,7 @@ Report GetReportConstraints(Promise *pp)
 
 /*******************************************************************/
 
-LineSelect GetInsertSelectConstraints(Promise *pp)
+LineSelect GetInsertSelectConstraints(const Promise *pp)
 {
     LineSelect s;
 
@@ -1938,7 +1940,7 @@ LineSelect GetInsertSelectConstraints(Promise *pp)
 
 /*******************************************************************/
 
-LineSelect GetDeleteSelectConstraints(Promise *pp)
+LineSelect GetDeleteSelectConstraints(const Promise *pp)
 {
     LineSelect s;
 
@@ -1954,7 +1956,7 @@ LineSelect GetDeleteSelectConstraints(Promise *pp)
 
 /*******************************************************************/
 
-Measurement GetMeasurementConstraint(Promise *pp)
+Measurement GetMeasurementConstraint(const Promise *pp)
 {
     Measurement m;
     char *value;
@@ -1982,7 +1984,7 @@ Measurement GetMeasurementConstraint(Promise *pp)
 
 /*******************************************************************/
 
-Database GetDatabaseConstraints(Promise *pp)
+Database GetDatabaseConstraints(const Promise *pp)
 {
     Database d;
     char *value;

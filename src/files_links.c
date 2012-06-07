@@ -24,9 +24,11 @@
 */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
+#include "promises.h"
 #include "files_names.h"
+
+#define CF_MAXLINKLEVEL 4
 
 static int MakeLink(char *from, char *to, Attributes attr, Promise *pp);
 static char *AbsLinkPath(char *from, char *relto);

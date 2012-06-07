@@ -26,7 +26,8 @@
 #define CFENGINE_GENERIC_AGENT_H
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
+
+#include "policy.h"
 
 typedef struct
 {
@@ -34,22 +35,22 @@ typedef struct
     bool verify_promises;
 } GenericAgentConfig;
 
-void GenericInitialize(char *agents, GenericAgentConfig config);
+Policy *GenericInitialize(char *agents, GenericAgentConfig config);
 void GenericDeInitialize(void);
 void InitializeGA(void);
 void Syntax(const char *comp, const struct option options[], const char *hints[], const char *id);
 void ManPage(const char *component, const struct option options[], const char *hints[], const char *id);
 void PrintVersionBanner(const char *component);
 int CheckPromises(enum cfagenttype ag);
-void ReadPromises(enum cfagenttype ag, char *agents, GenericAgentConfig config);
+Policy *ReadPromises(enum cfagenttype ag, char *agents, GenericAgentConfig config);
 int NewPromiseProposals(void);
-void CompilationReport(char *filename);
-void HashVariables(char *name);
-void HashControls(void);
+void CompilationReport(Policy *policy, char *fname);
+void HashVariables(Policy *policy, const char *name);
+void HashControls(const Policy *policy);
 void CloseLog(void);
-Constraint *ControlBodyConstraints(enum cfagenttype agent);
+Constraint *ControlBodyConstraints(const Policy *policy, enum cfagenttype agent);
 void SetFacility(const char *retval);
-Bundle *GetBundle(char *name, char *agent);
+Bundle *GetBundle(const Policy *policy, const char *name, const char *agent);
 SubType *GetSubTypeForBundle(char *type, Bundle *bp);
 void CheckBundleParameters(char *scope, Rlist *args);
 void PromiseBanner(Promise *pp);

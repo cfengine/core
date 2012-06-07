@@ -142,3 +142,4 @@ core.creator
 core.creator.user
 core.files
 core.includes
+*.autosave

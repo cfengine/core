@@ -25,13 +25,15 @@
 #include "generic_agent.h"
 #include "cf-execd-runner.h"
 
+#include "sysinfo.h"
+#include "env_context.h"
+#include "constraints.h"
+#include "promises.h"
 #include "vars.h"
+#include "item_lib.h"
 
-/*******************************************************************/
-
-extern BodySyntax CFEX_CONTROLBODY[];
-
-/*******************************************************************/
+#define CF_EXEC_IFELAPSED 0
+#define CF_EXEC_EXPIREAFTER 1
 
 static int NO_FORK;
 static int ONCE;
@@ -55,15 +57,15 @@ static pthread_attr_t threads_attrs;
 
 static GenericAgentConfig CheckOpts(int argc, char **argv);
 static void ThisAgentInit(void);
-static bool ScheduleRun(void);
+static bool ScheduleRun(Policy **policy);
 static void Apoptosis(void);
 
 #if defined(HAVE_PTHREAD)
 static bool LocalExecInThread(const ExecConfig *config);
 #endif
 
-void StartServer(void);
-static void KeepPromises(void);
+void StartServer(Policy *policy);
+static void KeepPromises(Policy *policy);
 
 static ExecConfig *CopyExecConfig(const ExecConfig *config);
 static void DestroyExecConfig(ExecConfig *config);
@@ -121,9 +123,9 @@ int main(int argc, char *argv[])
 {
     GenericAgentConfig config = CheckOpts(argc, argv);
 
-    GenericInitialize("executor", config);
+    Policy *policy = GenericInitialize("executor", config);
     ThisAgentInit();
-    KeepPromises();
+    KeepPromises(policy);
 
 #ifdef MINGW
     if (WINSERVICE)
@@ -133,7 +135,7 @@ int main(int argc, char *argv[])
     else
 #endif /* MINGW */
     {
-        StartServer();
+        StartServer(policy);
     }
 
     return 0;
@@ -285,9 +287,9 @@ static double GetSplay(void)
 
 /*****************************************************************************/
 
-static void KeepPromises(void)
+static void KeepPromises(Policy *policy)
 {
-    for (Constraint *cp = ControlBodyConstraints(cf_executor); cp != NULL; cp = cp->next)
+    for (Constraint *cp = ControlBodyConstraints(policy, cf_executor); cp != NULL; cp = cp->next)
     {
         if (IsExcluded(cp->classes))
         {
@@ -366,7 +368,7 @@ static void KeepPromises(void)
 /*****************************************************************************/
 
 /* Might be called back from NovaWin_StartExecService */
-void StartServer(void)
+void StartServer(Policy *policy)
 {
     time_t now = time(NULL);
     Promise *pp = NewPromise("exec_cfengine", "the executor agent");
@@ -471,7 +473,7 @@ void StartServer(void)
     {
         while (true)
         {
-            if (ScheduleRun())
+            if (ScheduleRun(&policy))
             {
                 CfOut(cf_verbose, "", "Sleeping for splaytime %d seconds\n\n", SPLAYTIME);
                 sleep(SPLAYTIME);
@@ -579,13 +581,13 @@ static void Apoptosis()
     PrependRlist(&signals, "term", CF_SCALAR);
     PrependRlist(&owners, mypid, CF_SCALAR);
 
-    AppendConstraint(&(pp.conlist), "signals", (Rval) {signals, CF_LIST}, "any", false);
-    AppendConstraint(&(pp.conlist), "process_select", (Rval) {xstrdup("true"), CF_SCALAR}, "any", false);
-    AppendConstraint(&(pp.conlist), "process_owner", (Rval) {owners, CF_LIST}, "any", false);
-    AppendConstraint(&(pp.conlist), "ifelapsed", (Rval) {xstrdup("0"), CF_SCALAR}, "any", false);
-    AppendConstraint(&(pp.conlist), "process_count", (Rval) {xstrdup("true"), CF_SCALAR}, "any", false);
-    AppendConstraint(&(pp.conlist), "match_range", (Rval) {xstrdup("0,2"), CF_SCALAR}, "any", false);
-    AppendConstraint(&(pp.conlist), "process_result", (Rval) {xstrdup("process_owner.process_count"), CF_SCALAR}, "any", false);
+    ConstraintAppendToPromise(&pp, "signals", (Rval) {signals, CF_LIST}, "any", false);
+    ConstraintAppendToPromise(&pp, "process_select", (Rval) {xstrdup("true"), CF_SCALAR}, "any", false);
+    ConstraintAppendToPromise(&pp, "process_owner", (Rval) {owners, CF_LIST}, "any", false);
+    ConstraintAppendToPromise(&pp, "ifelapsed", (Rval) {xstrdup("0"), CF_SCALAR}, "any", false);
+    ConstraintAppendToPromise(&pp, "process_count", (Rval) {xstrdup("true"), CF_SCALAR}, "any", false);
+    ConstraintAppendToPromise(&pp, "match_range", (Rval) {xstrdup("0,2"), CF_SCALAR}, "any", false);
+    ConstraintAppendToPromise(&pp, "process_result", (Rval) {xstrdup("process_owner.process_count"), CF_SCALAR}, "any", false);
 
     CfOut(cf_verbose, "", " -> Looking for cf-execd processes owned by %s", mypid);
 
@@ -636,7 +638,7 @@ static Reload CheckNewPromises(void)
     return RELOAD_ENVIRONMENT;
 }
 
-static bool ScheduleRun(void)
+static bool ScheduleRun(Policy **policy)
 {
     Item *ip;
 
@@ -679,11 +681,9 @@ static bool ScheduleRun(void)
         VNEGHEAP = NULL;
         VINPUTLIST = NULL;
 
-        DeleteBundles(BUNDLES);
-        DeleteBodies(BODIES);
+        PolicyDestroy(*policy);
+        *policy = NULL;
 
-        BUNDLES = NULL;
-        BODIES = NULL;
         ERRORCOUNT = 0;
 
         NewScope("sys");
@@ -704,7 +704,7 @@ static bool ScheduleRun(void)
         BuiltinClasses();
         OSClasses();
 
-        NewClass(THIS_AGENT);
+        NewClass(CF_AGENTTYPES[THIS_AGENT_TYPE]);
 
         SetReferenceTime(true);
 
@@ -712,8 +712,8 @@ static bool ScheduleRun(void)
             .bundlesequence = NULL
         };
 
-        ReadPromises(cf_executor, CF_EXECC, config);
-        KeepPromises();
+        *policy = ReadPromises(cf_executor, CF_EXECC, config);
+        KeepPromises(*policy);
     }
     else
     {

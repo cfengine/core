@@ -24,10 +24,11 @@
 */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
+#include "env_context.h"
 #include "vars.h"
 #include "files_names.h"
+#include "item_lib.h"
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>
@@ -41,6 +42,7 @@
 # include <sys/jail.h>
 #endif
 
+#define CF_IFREQ 2048           /* Reportedly the largest size that does not segfault 32/64 bit */
 #define CF_IGNORE_INTERFACES "ignore_interfaces.rx"
 
 #ifndef MINGW
@@ -268,10 +270,6 @@ int ShellCommandReturnsZero(const char *comm, int useshell)
     return false;
 }
 
-/**********************************************************************************/
-
-/* from verify_processes.c */
-
 int DoAllSignals(Item *siglist, Attributes a, Promise *pp)
 {
     Item *ip;
@@ -372,7 +370,7 @@ static int ForeignZone(char *s)
 
 /*****************************************************************************/
 
-static char *GetProcessOptions()
+static const char *GetProcessOptions(void)
 {
 # ifdef HAVE_GETZONEID
     zoneid_t zid;
@@ -400,10 +398,6 @@ static char *GetProcessOptions()
 
     return VPSOPTS[VSYSTEMHARDCLASS];
 }
-
-/*****************************************************************************/
-
-/* from verify_processes.c */
 
 int LoadProcessTable(Item **procdata)
 {
@@ -835,6 +829,10 @@ void GetInterfacesInfo(enum cfagenttype ag)
     NewList("sys", "interfaces", interfaces, cf_slist);
     NewList("sys", "hardware_addresses", hardware, cf_slist);
     NewList("sys", "ip_addresses", ips, cf_slist);
+
+    DeleteRlist(interfaces);
+    DeleteRlist(hardware);
+    DeleteRlist(ips);
 
     FindV6InterfacesInfo();
 }

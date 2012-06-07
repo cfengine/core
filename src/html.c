@@ -23,14 +23,7 @@
 
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: html.c                                                              */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
 void CfHtmlHeader(FILE *fp, char *title, char *css, char *webdriver, char *header)
 {

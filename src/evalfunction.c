@@ -23,15 +23,21 @@
 */
 
 #include "evalfunction.h"
-#include "cf3.extern.h"
+
+#include "env_context.h"
+#include "promises.h"
 #include "dir.h"
 #include "dbm_api.h"
 #include "lastseen.h"
 #include "files_names.h"
 #include "vars.h"
 #include "addr_lib.h"
+#include "syntax.h"
+#include "item_lib.h"
 
 #include <libgen.h>
+
+#define CF_NOVAL -0.7259285297502359
 
 static char *StripPatterns(char *file_buffer, char *pattern, char *filename);
 static void CloseStringHole(char *s, int start, int end);

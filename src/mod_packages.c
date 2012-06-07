@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -20,23 +20,12 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: mod_interfaces.c                                                    */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
+#include "mod_packages.h"
 
-/*****************************************************************************/
-
-#define CF3_MOD_PACKAGES
-
-BodySyntax CF_PKGMETHOD_BODY[] =
+static const BodySyntax CF_PKGMETHOD_BODY[] =
 {
     {"package_add_command", cf_str, CF_ABSPATHRANGE, "Command to install a package to the system"},
     {"package_arch_regex", cf_str, "",
@@ -82,11 +71,7 @@ BodySyntax CF_PKGMETHOD_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/***************************************************************/
-
-/* This is the primary set of constraints for an interfaces object */
-
-BodySyntax CF_PACKAGES_BODIES[] =
+static const BodySyntax CF_PACKAGES_BODIES[] =
 {
     {"package_architectures", cf_slist, "", "Select the architecture for package selection"},
     {"package_method", cf_body, CF_PKGMETHOD_BODY, "Criteria for installation and verification"},
@@ -98,11 +83,7 @@ BodySyntax CF_PACKAGES_BODIES[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/***************************************************************/
-/* This is the point of entry from mod_common.c                */
-/***************************************************************/
-
-SubTypeSyntax CF_PACKAGES_SUBTYPES[] =
+const SubTypeSyntax CF_PACKAGES_SUBTYPES[] =
 {
     {"agent", "packages", CF_PACKAGES_BODIES},
     {NULL, NULL, NULL},

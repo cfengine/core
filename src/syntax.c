@@ -43,23 +43,6 @@ static void CheckFnCallType(const char *lval, const char *s, enum cfdatatype dty
 
 /*********************************************************/
 
-void CheckBody(const Policy *policy, const char *name, const char *type)
-{
-    char output[CF_BUFSIZE];
-
-    for (const Body *bp = policy->bodies; bp != NULL; bp = bp->next)
-    {
-        if ((strcmp(name, bp->name) == 0) && (strcmp(type, bp->type) == 0))
-        {
-            snprintf(output, CF_BUFSIZE, "Redefinition of body \"%s\" for \"%s\" is a broken promise", name, type);
-            ReportError(output);
-            ERRORCOUNT++;
-        }
-    }
-}
-
-/*********************************************************/
-
 SubTypeSyntax CheckSubType(char *bundletype, char *subtype)
 {
     int i, j;

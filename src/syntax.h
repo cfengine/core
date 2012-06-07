@@ -31,7 +31,6 @@
 
 int LvalWantsBody(char *stype, char *lval);
 int CheckParseVariableName(char *name);
-void CheckBody(const Policy *policy, const char *name, const char *type);
 SubTypeSyntax CheckSubType(char *btype, char *type);
 void CheckConstraint(char *type, char *name, char *lval, Rval rval, SubTypeSyntax ss);
 void CheckSelection(char *type, char *name, char *lval, Rval rval);

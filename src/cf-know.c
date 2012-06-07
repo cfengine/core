@@ -894,6 +894,10 @@ static void VerifyThingsPromise(Promise *pp)
                                 pp->promiser);
         }
 
+        // Add bundle reference
+
+        AddTopicAssociation(tp, &(tp->associations), KM_MENTIONS_F, KM_MENTIONS_B, pp->bundle, true, rp->item, pp->promiser);
+
         // Treat comments as occurrences of information.
 
         if (pp->ref)
@@ -998,6 +1002,10 @@ static void VerifyTopicPromise(Promise *pp)
             otp = IdempInsertTopic(synonym);
             PrependRScalar(&(a.synonyms), otp->topic_name, CF_SCALAR);
         }
+
+        // Add bundle reference
+
+        AddTopicAssociation(tp, &(tp->associations), KM_MENTIONS_F, KM_MENTIONS_B, pp->bundle, true, rp->item, pp->promiser);
 
         // Treat comments as occurrences of information.
 

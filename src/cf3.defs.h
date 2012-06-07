@@ -998,6 +998,8 @@ enum storytype
 #define KM_INVOLVES_CERT_F "involves"
 #define KM_INVOLVES_CERT_B "is involved in"
 
+#define KM_MENTIONS_F "is mentioned in"
+#define KM_MENTIONS_B "mentions"
 
 #define KM_CAUSE_POSS_F "can cause"
 #define KM_CAUSE_POSS_B "can be caused by"

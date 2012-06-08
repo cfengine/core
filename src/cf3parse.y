@@ -304,7 +304,6 @@ category:              CATEGORY                  /* BUNDLE ONLY */
 
                            if (strcmp(P.block,"bundle") == 0)
                            {
-                               CheckSubType(P.blocktype,P.currenttype); /* FIXME: unused? */
                                if (!INSTALL_SKIP)
                                {
                                    P.currentstype = AppendSubType(P.currentbundle,P.currenttype);
@@ -412,7 +411,7 @@ constraint:            id                        /* BUNDLE ONLY */
                            if (!INSTALL_SKIP)
                            {
                                Constraint *cp = NULL;
-                               SubTypeSyntax ss = CheckSubType(P.blocktype,P.currenttype);
+                               SubTypeSyntax ss = SubTypeSyntaxLookup(P.blocktype,P.currenttype);
                                CheckConstraint(P.currenttype, P.blockid, P.lval, P.rval, ss);
                                cp = ConstraintAppendToPromise(P.currentpromise, P.lval, P.rval, "any", P.references_body);
                                cp->offset.line = P.line_no;

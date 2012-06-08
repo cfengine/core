@@ -31,6 +31,8 @@
 #include "mod_files.h"
 #include "item_lib.h"
 
+#include <assert.h>
+
 static const int PRETTY_PRINT_SPACES_PER_INDENT = 2;
 
 static int CheckParseString(const char *lv, const char *s, const char *range);
@@ -41,54 +43,33 @@ static void CheckParseIntRange(const char *lval, const char *s, const char *rang
 static void CheckParseOpts(const char *lv, const char *s, const char *range);
 static void CheckFnCallType(const char *lval, const char *s, enum cfdatatype dtype, const char *range);
 
+
 /*********************************************************/
 
-SubTypeSyntax CheckSubType(char *bundletype, char *subtype)
+SubTypeSyntax SubTypeSyntaxLookup(const char *bundle_type, const char *subtype_name)
 {
-    int i, j;
-    const SubTypeSyntax *ss;
-    char output[CF_BUFSIZE];
-
-    if (subtype == NULL)
+    for (int i = 0; i < CF3_MODULES; i++)
     {
-        snprintf(output, CF_BUFSIZE, "Missing promise type category for %s bundle", bundletype);
-        ReportError(output);
-        return (SubTypeSyntax)
-        {
-        NULL, NULL, NULL};
-    }
+        const SubTypeSyntax *syntax = NULL;
 
-    for (i = 0; i < CF3_MODULES; i++)
-    {
-        if ((ss = CF_ALL_SUBTYPES[i]) == NULL)
+        if ((syntax = CF_ALL_SUBTYPES[i]) == NULL)
         {
             continue;
         }
 
-        for (j = 0; ss[j].btype != NULL; j++)
+        for (int j = 0; syntax[j].btype != NULL; j++)
         {
-            if (subtype && strcmp(subtype, ss[j].subtype) == 0)
+            if (StringSafeEqual(subtype_name, syntax[j].subtype) &&
+                    (StringSafeEqual(bundle_type, syntax[j].btype) ||
+                     StringSafeEqual("*", syntax[j].btype)))
             {
-                if ((strcmp(bundletype, ss[j].btype) == 0) || (strcmp("*", ss[j].btype) == 0))
-                {
-                    /* Return a pointer to bodies for this subtype */
-                    CfDebug("Subtype %s syntax ok for %s\n", subtype, bundletype);
-                    return ss[j];
-                }
+                return syntax[j];
             }
         }
     }
 
-    snprintf(output, CF_BUFSIZE, "%s is not a valid type category for %s bundle", subtype, bundletype);
-    ReportError(output);
-    snprintf(output, CF_BUFSIZE, "Possibly the bundle type \"%s\" itself is undefined", bundletype);
-    ReportError(output);
-    return (SubTypeSyntax)
-    {
-    NULL, NULL, NULL};
+    return (SubTypeSyntax) { NULL, NULL, NULL };
 }
-
-/*********************************************************/
 
 enum cfdatatype ExpectedDataType(char *lvalname)
 {

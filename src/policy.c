@@ -37,6 +37,8 @@ static const char *POLICY_ERROR_METHODS_BUNDLE_ARITY = "Conflicting arity in cal
 static const char *POLICY_ERROR_BUNDLE_NAME_RESERVED = "Use of a reserved container name as a bundle name \"%s\"";
 static const char *POLICY_ERROR_BUNDLE_REDEFINITION = "Duplicate definition of bundle %s with type %s";
 static const char *POLICY_ERROR_BODY_REDEFINITION = "Duplicate definition of body %s with type %s";
+static const char *POLICY_ERROR_SUBTYPE_MISSING_NAME = "Missing promise type category for %s bundle";
+static const char *POLICY_ERROR_SUBTYPE_INVALID = "%s is not a valid type category for bundle %s";
 
 //************************************************************************
 
@@ -142,6 +144,40 @@ bool PolicyCheckPromise(const Promise *pp, Sequence *errors)
     return success;
 }
 
+static bool PolicyCheckSubType(const SubType *subtype, Sequence *errors)
+{
+    assert(subtype);
+    assert(subtype->parent_bundle);
+    bool success = true;
+
+    // ensure subtype name is defined
+    // FIX: shouldn't this be a syntax error in the parser?
+    // FIX: this was copied from syntax:CheckSubType
+    // FIX: if you are able to write a unit test for this error, please do
+    if (!subtype->name)
+    {
+        SequenceAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_SUBTYPE, subtype,
+                                              POLICY_ERROR_SUBTYPE_MISSING_NAME,
+                                              subtype->parent_bundle));
+        success = false;
+    }
+
+    // ensure subtype is allowed in bundle (type)
+    if (!SubTypeSyntaxLookup(subtype->parent_bundle->type, subtype->name).subtype)
+    {
+        SequenceAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_SUBTYPE, subtype,
+                                              POLICY_ERROR_SUBTYPE_INVALID,
+                                              subtype->name, subtype->parent_bundle->name));
+        success = false;
+    }
+
+    for (const Promise *pp = subtype->promiselist; pp; pp = pp->next)
+    {
+        success &= PolicyCheckPromise(pp, errors);
+    }
+
+    return success;
+}
 
 static bool PolicyCheckBundle(const Bundle *bundle, Sequence *errors)
 {
@@ -161,10 +197,7 @@ static bool PolicyCheckBundle(const Bundle *bundle, Sequence *errors)
 
     for (const SubType *type = bundle->subtypes; type; type = type->next)
     {
-        for (const Promise *pp = type->promiselist; pp; pp = pp->next)
-        {
-            success &= PolicyCheckPromise(pp, errors);
-        }
+        success &= PolicyCheckSubType(type, errors);
     }
 
     return success;

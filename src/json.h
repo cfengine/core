@@ -32,7 +32,24 @@ typedef struct JsonElement_ JsonElement;
 
 JsonElement *JsonObjectCreate(size_t initialCapacity);
 JsonElement *JsonArrayCreate(size_t initialCapacity);
+
+/**
+  @brief Create a new JSON string primitive.
+
+  @param value [in] The string to base the primitive on. Will be copied.
+  @returns The pointer to the created string primitive element.
+  */
 JsonElement *JsonStringCreate(const char *value);
+
+JsonElement *JsonIntegerCreate(int value);
+JsonElement *JsonRealCreate(double value);
+JsonElement *JsonBoolCreate(bool value);
+JsonElement *JsonNullCreate();
+
+/**
+  @brief Destroy a JSON element
+  @param element [in] The JSON element to destroy.
+  */
 void JsonElementDestroy(JsonElement *element);
 
 size_t JsonElementLength(JsonElement *element);

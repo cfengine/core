@@ -278,6 +278,24 @@ static void test_parse_array_object(void **state)
     JsonElementDestroy(arr);
 }
 
+static void test_parse_empty(void **state)
+{
+    const char *data = "";
+    JsonElement *json = JsonParse(&data);
+
+    assert_false(json);
+}
+
+static void test_parse_trim(void **state)
+{
+    const char *data = "           []    ";
+    JsonElement *json = JsonParse(&data);
+
+    assert_true(json);
+
+    JsonElementDestroy(json);
+}
+
 static void test_array_remove_range(void **state)
 {
     {
@@ -362,6 +380,8 @@ int main()
         unit_test(test_parse_array_simple),
         unit_test(test_parse_object_compound),
         unit_test(test_parse_array_object),
+        unit_test(test_parse_empty),
+        unit_test(test_parse_trim),
         unit_test(test_array_remove_range)
     };
 

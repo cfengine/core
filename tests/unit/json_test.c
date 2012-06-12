@@ -33,9 +33,12 @@ static void test_show_string(void **state)
     Writer *writer = StringWriter();
 
     JsonElementPrint(writer, str, 0);
-    assert_string_equal("\"snookie\"", StringWriterClose(writer));
+    char *output = StringWriterClose(writer);
+
+    assert_string_equal("\"snookie\"", output);
 
     JsonElementDestroy(str);
+    free(output);
 }
 
 static void test_show_object_simple(void **state)
@@ -48,10 +51,12 @@ static void test_show_object_simple(void **state)
     Writer *writer = StringWriter();
 
     JsonElementPrint(writer, json, 0);
+    char *output = StringWriterClose(writer);
 
-    assert_string_equal(OBJECT_SIMPLE, StringWriterData(writer));
+    assert_string_equal(OBJECT_SIMPLE, output);
 
     JsonElementDestroy(json);
+    free(output);
 }
 
 static void test_show_object_escaped(void **state)
@@ -63,10 +68,12 @@ static void test_show_object_escaped(void **state)
     Writer *writer = StringWriter();
 
     JsonElementPrint(writer, json, 0);
+    char *output = StringWriterClose(writer);
 
-    assert_string_equal(OBJECT_ESCAPED, StringWriterData(writer));
+    assert_string_equal(OBJECT_ESCAPED, output);
 
     JsonElementDestroy(json);
+    free(output);
 }
 
 static void test_show_object_numeric(void **state)
@@ -79,10 +86,12 @@ static void test_show_object_numeric(void **state)
     Writer *writer = StringWriter();
 
     JsonElementPrint(writer, json, 0);
+    char *output = StringWriterClose(writer);
 
-    assert_string_equal(OBJECT_NUMERIC, StringWriterData(writer));
+    assert_string_equal(OBJECT_NUMERIC, output);
 
     JsonElementDestroy(json);
+    free(output);
 }
 
 static void test_show_object_compound(void **state)
@@ -108,10 +117,12 @@ static void test_show_object_compound(void **state)
     Writer *writer = StringWriter();
 
     JsonElementPrint(writer, json, 0);
+    char *output = StringWriterClose(writer);
 
-    assert_string_equal(OBJECT_COMPOUND, StringWriterData(writer));
+    assert_string_equal(OBJECT_COMPOUND, output);
 
     JsonElementDestroy(json);
+    free(output);
 }
 
 static void test_show_object_array(void **state)
@@ -128,10 +139,12 @@ static void test_show_object_array(void **state)
     Writer *writer = StringWriter();
 
     JsonElementPrint(writer, json, 0);
+    char *output = StringWriterClose(writer);
 
-    assert_string_equal(OBJECT_ARRAY, StringWriterData(writer));
+    assert_string_equal(OBJECT_ARRAY, output);
 
     JsonElementDestroy(json);
+    free(output);
 }
 
 static void test_show_array(void **state)
@@ -144,10 +157,12 @@ static void test_show_array(void **state)
     Writer *writer = StringWriter();
 
     JsonElementPrint(writer, array, 0);
+    char *output = StringWriterClose(writer);
 
-    assert_string_equal(ARRAY_SIMPLE, StringWriterData(writer));
+    assert_string_equal(ARRAY_SIMPLE, output);
 
     JsonElementDestroy(array);
+    free(output);
 }
 
 static void test_show_array_object(void **state)
@@ -162,10 +177,12 @@ static void test_show_array_object(void **state)
     Writer *writer = StringWriter();
 
     JsonElementPrint(writer, array, 0);
+    char *output = StringWriterClose(writer);
 
-    assert_string_equal(ARRAY_OBJECT, StringWriterData(writer));
+    assert_string_equal(ARRAY_OBJECT, output);
 
     JsonElementDestroy(array);
+    free(output);
 }
 
 static void test_show_array_empty(void **state)
@@ -175,10 +192,12 @@ static void test_show_array_empty(void **state)
     Writer *writer = StringWriter();
 
     JsonElementPrint(writer, array, 0);
+    char *output = StringWriterClose(writer);
 
-    assert_string_equal("[]", StringWriterData(writer));
+    assert_string_equal("[]", output);
 
     JsonElementDestroy(array);
+    free(output);
 }
 
 static void test_object_get_string(void **state)
@@ -209,7 +228,7 @@ static void test_object_get_array(void **state)
 
     assert_string_equal(JsonArrayGetAsString(arr2, 1), "two");
 
-    JsonElementDestroy(arr);
+    JsonElementDestroy(obj);
 }
 
 static void test_array_get_string(void **state)

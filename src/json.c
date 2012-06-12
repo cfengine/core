@@ -636,7 +636,7 @@ void JsonElementPrint(Writer *writer, JsonElement *element, size_t indent_level)
 
 static JsonElement *JsonParseAsObject(const char **data);
 
-static const char *JsonParseAsString(const char **data)
+static char *JsonParseAsString(const char **data)
 {
     if (**data != '"')
     {
@@ -657,6 +657,7 @@ static const char *JsonParseAsString(const char **data)
     }
 
     CfDebug("Unable to parse json data as string, did not end with doublequote: %s", *data);
+    WriterClose(writer);
     return NULL;
 }
 
@@ -680,7 +681,11 @@ static JsonElement *JsonParseAsArray(const char **data)
         switch (**data)
         {
         case '"':
-            JsonArrayAppendString(array, JsonParseAsString(data));
+            {
+                char *value = JsonParseAsString(data);
+                JsonArrayAppendString(array, value);
+                free(value);
+            }
             break;
 
         case '[':
@@ -716,7 +721,7 @@ static JsonElement *JsonParseAsObject(const char **data)
     }
 
     JsonElement *object = JsonObjectCreate(DEFAULT_CONTAINER_CAPACITY);
-    const char *propertyName = NULL;
+    char *property_name = NULL;
 
     for (*data = *data + 1; **data != '\0'; *data = *data + 1)
     {
@@ -728,75 +733,88 @@ static JsonElement *JsonParseAsObject(const char **data)
         switch (**data)
         {
         case '"':
-            if (propertyName != NULL)
+            if (property_name != NULL)
             {
-                JsonObjectAppendString(object, propertyName, JsonParseAsString(data));
-                propertyName = NULL;
+                char *property_value = JsonParseAsString(data);
+                JsonObjectAppendString(object, property_name, property_value);
+                free(property_value);
+                free(property_name);
+                property_name = NULL;
             }
             else
             {
-                propertyName = JsonParseAsString(data);
+                property_name = JsonParseAsString(data);
             }
             break;
 
         case ':':
-            if (propertyName == NULL)
+            if (property_name == NULL)
             {
                 CfDebug("Unable to parse json data as object, ':' seen without having specified an l-value: %s", *data);
+                free(property_name);
                 return NULL;
             }
             break;
 
         case ',':
-            if (propertyName != NULL)
+            if (property_name != NULL)
             {
                 CfDebug("Unable to parse json data as object, ',' seen without having specified an r-value: %s", *data);
+                free(property_name);
                 return NULL;
             }
             break;
 
         case '[':
-            if (propertyName != NULL)
+            if (property_name != NULL)
             {
-                JsonObjectAppendArray(object, propertyName, JsonParseAsArray(data));
-                propertyName = NULL;
+                JsonObjectAppendArray(object, property_name, JsonParseAsArray(data));
+                free(property_name);
+                property_name = NULL;
             }
             else
             {
                 CfDebug("Unable to parse json data as object, array not allowed as l-value: %s", *data);
+                free(property_name);
                 return NULL;
             }
             break;
 
         case '{':
-            if (propertyName != NULL)
+            if (property_name != NULL)
             {
-                JsonObjectAppendObject(object, propertyName, JsonParseAsObject(data));
-                propertyName = NULL;
+                JsonObjectAppendObject(object, property_name, JsonParseAsObject(data));
+                free(property_name);
+                property_name = NULL;
             }
             else
             {
                 CfDebug("Unable to parse json data as object, object not allowed as l-value: %s", *data);
+                free(property_name);
                 return NULL;
             }
             break;
 
         case '}':
-            if (propertyName != NULL)
+            if (property_name != NULL)
             {
                 CfDebug("Unable to parse json data as object, tried to close object having opened an l-value: %s",
                         *data);
+                free(property_name);
                 return NULL;
             }
+            free(property_name);
             return object;
 
         default:
             CfDebug("Unable to parse json data as object, unrecognized token beginning entry: %s", *data);
+            free(property_name);
             return NULL;
         }
     }
 
     CfDebug("Unable to parse json data as string, did not end with '}': %s", *data);
+    free(property_name);
     return NULL;
 }
 

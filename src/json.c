@@ -802,23 +802,31 @@ static JsonElement *JsonParseAsObject(const char **data)
 
 JsonElement *JsonParse(const char **data)
 {
-    assert(**data && "Cannot parse NULL data");
-
-    if (**data == '{')
+    assert(data && *data);
+    if (data == NULL || *data == NULL)
     {
-        return JsonParseAsObject(data);
-    }
-    else if (**data == '[')
-    {
-        return JsonParseAsArray(data);
-    }
-    else if (**data == '"')
-    {
-        return JsonParseAsObject(data);
-    }
-    else
-    {
-        CfDebug("Don't know how to parse JSON input: %s", *data);
         return NULL;
     }
+
+    while (**data)
+    {
+        if (**data == '{')
+        {
+            return JsonParseAsObject(data);
+        }
+        else if (**data == '[')
+        {
+            return JsonParseAsArray(data);
+        }
+        else if (**data == '"')
+        {
+            return JsonParseAsObject(data);
+        }
+        else
+        {
+            (*data)++;
+        }
+    }
+
+    return NULL;
 }

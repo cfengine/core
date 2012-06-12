@@ -61,12 +61,16 @@ JsonElement *JsonArrayCreate(size_t initialCapacity);
 
 /**
   @brief Create a new JSON string primitive.
-  @note The usefulness of this function should be reviewed.
 
-  @param initial_capacity [in] The string to base the primitive on. Will be copied.
+  @param value [in] The string to base the primitive on. Will be copied.
   @returns The pointer to the created string primitive element.
   */
 JsonElement *JsonStringCreate(const char *value);
+
+JsonElement *JsonIntegerCreate(int value);
+JsonElement *JsonRealCreate(double value);
+JsonElement *JsonBoolCreate(bool value);
+JsonElement *JsonNullCreate();
 
 /**
   @brief Destroy a JSON element

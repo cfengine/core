@@ -744,7 +744,7 @@ static void PostCheckConstraint(const char *type, const char *bundle, const char
             continue;
         }
 
-        for (j = 0; ssp[j].btype != NULL; j++)
+        for (j = 0; ssp[j].bundle_type != NULL; j++)
         {
             ss = ssp[j];
 
@@ -820,7 +820,7 @@ static int VerifyConstraintName(const char *lval)
             continue;
         }
 
-        for (j = 0; ssp[j].btype != NULL; j++)
+        for (j = 0; ssp[j].bundle_type != NULL; j++)
         {
             ss = ssp[j];
 

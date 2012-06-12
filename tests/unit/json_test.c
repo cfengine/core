@@ -296,6 +296,78 @@ static void test_parse_trim(void **state)
     JsonElementDestroy(json);
 }
 
+static void test_parse_array_extra_closing(void **state)
+{
+    const char *data = "  []]";
+    JsonElement *json = JsonParse(&data);
+
+    assert_true(json);
+
+    JsonElementDestroy(json);
+}
+
+static void test_parse_bad_apple2(void **state)
+{
+    const char *data = "][";
+    JsonElement *json = JsonParse(&data);
+
+    assert_false(json);
+}
+
+static void test_parse_object_garbage(void **state)
+{
+    {
+        const char *data = "{ \"first\": 1, garbage \"second\": 2 }";
+        JsonElement *json = JsonParse(&data);
+        assert_false(json);
+    }
+
+    {
+        const char *data = "{ \"first\": 1 garbage \"second\": 2 }";
+        JsonElement *json = JsonParse(&data);
+        assert_false(json);
+    }
+
+    {
+        const char *data = "{ \"first\": garbage, \"second\": 2 }";
+        JsonElement *json = JsonParse(&data);
+        assert_false(json);
+    }
+
+    {
+        const char *data = "{ \"first\": garbage \"second\": 2 }";
+        JsonElement *json = JsonParse(&data);
+        assert_false(json);
+    }
+}
+
+static void test_parse_array_garbage(void **state)
+{
+    {
+        const char *data = "[1, garbage]";
+        JsonElement *json = JsonParse(&data);
+        assert_false(json);
+    }
+
+    {
+        const char *data = "[1 garbage]";
+        JsonElement *json = JsonParse(&data);
+        assert_false(json);
+    }
+
+    {
+        const char *data = "[garbage]";
+        JsonElement *json = JsonParse(&data);
+        assert_false(json);
+    }
+
+    {
+        const char *data = "[garbage, 1]";
+        JsonElement *json = JsonParse(&data);
+        assert_false(json);
+    }
+}
+
 static void test_array_remove_range(void **state)
 {
     {
@@ -382,6 +454,10 @@ int main()
         unit_test(test_parse_array_object),
         unit_test(test_parse_empty),
         unit_test(test_parse_trim),
+        unit_test(test_parse_array_extra_closing),
+        unit_test(test_parse_bad_apple2),
+        unit_test(test_parse_object_garbage),
+        unit_test(test_parse_array_garbage),
         unit_test(test_array_remove_range)
     };
 

@@ -704,11 +704,13 @@ static JsonElement *JsonParseAsArray(const char **data)
 
         default:
             CfDebug("Unable to parse json data as object, unrecognized token beginning entry: %s", *data);
+            JsonElementDestroy(array);
             return NULL;
         }
     }
 
     CfDebug("Unable to parse json data as array, did not end with ']': %s", *data);
+    JsonElementDestroy(array);
     return NULL;
 }
 
@@ -752,6 +754,7 @@ static JsonElement *JsonParseAsObject(const char **data)
             {
                 CfDebug("Unable to parse json data as object, ':' seen without having specified an l-value: %s", *data);
                 free(property_name);
+                JsonElementDestroy(object);
                 return NULL;
             }
             break;
@@ -761,6 +764,7 @@ static JsonElement *JsonParseAsObject(const char **data)
             {
                 CfDebug("Unable to parse json data as object, ',' seen without having specified an r-value: %s", *data);
                 free(property_name);
+                JsonElementDestroy(object);
                 return NULL;
             }
             break;
@@ -776,6 +780,7 @@ static JsonElement *JsonParseAsObject(const char **data)
             {
                 CfDebug("Unable to parse json data as object, array not allowed as l-value: %s", *data);
                 free(property_name);
+                JsonElementDestroy(object);
                 return NULL;
             }
             break;
@@ -791,6 +796,7 @@ static JsonElement *JsonParseAsObject(const char **data)
             {
                 CfDebug("Unable to parse json data as object, object not allowed as l-value: %s", *data);
                 free(property_name);
+                JsonElementDestroy(object);
                 return NULL;
             }
             break;
@@ -801,6 +807,7 @@ static JsonElement *JsonParseAsObject(const char **data)
                 CfDebug("Unable to parse json data as object, tried to close object having opened an l-value: %s",
                         *data);
                 free(property_name);
+                JsonElementDestroy(object);
                 return NULL;
             }
             free(property_name);
@@ -809,12 +816,14 @@ static JsonElement *JsonParseAsObject(const char **data)
         default:
             CfDebug("Unable to parse json data as object, unrecognized token beginning entry: %s", *data);
             free(property_name);
+            JsonElementDestroy(object);
             return NULL;
         }
     }
 
     CfDebug("Unable to parse json data as string, did not end with '}': %s", *data);
     free(property_name);
+    JsonElementDestroy(object);
     return NULL;
 }
 
@@ -840,9 +849,14 @@ JsonElement *JsonParse(const char **data)
         {
             return JsonParseAsObject(data);
         }
-        else
+        else if (IsWhitespace(**data))
         {
             (*data)++;
+        }
+        else
+        {
+            CfDebug("Unwilling to parse json data starting with invalid character: %c", **data);
+            return NULL;
         }
     }
 

@@ -266,6 +266,23 @@ static void test_parse_object_compound(void **state)
     JsonElementDestroy(obj);
 }
 
+static void test_parse_object_diverse(void **state)
+{
+    {
+        const char *data = "{ \"a\": 1, \"b\": \"snookie\", \"c\": 1.0, \"d\": {}, \"e\": [], \"f\": true, \"g\": false, \"h\": null }";
+        JsonElement *json = JsonParse(&data);
+        assert_true(json);
+        JsonElementDestroy(json);
+    }
+
+    {
+        const char *data = "{\"a\":1,\"b\":\"snookie\",\"c\":1.0,\"d\":{},\"e\":[],\"f\":true,\"g\":false,\"h\":null}";
+        JsonElement *json = JsonParse(&data);
+        assert_true(json);
+        JsonElementDestroy(json);
+    }
+}
+
 static void test_parse_array_object(void **state)
 {
     const char *data = ARRAY_OBJECT;
@@ -284,6 +301,129 @@ static void test_parse_empty(void **state)
     JsonElement *json = JsonParse(&data);
 
     assert_false(json);
+}
+
+static void test_parse_good_numbers(void **state)
+{
+    {
+        const char *data = "[0.1]";
+        JsonElement *json = JsonParse(&data);
+        assert_true(json);
+        JsonElementDestroy(json);
+    }
+
+    {
+        const char *data = "[0.1234567890123456789]";
+        JsonElement *json = JsonParse(&data);
+        assert_true(json);
+        JsonElementDestroy(json);
+    }
+
+    {
+        const char *data = "[0.1234e10]";
+        JsonElement *json = JsonParse(&data);
+        assert_true(json);
+        JsonElementDestroy(json);
+    }
+
+    {
+        const char *data = "[0.1234e+10]";
+        JsonElement *json = JsonParse(&data);
+        assert_true(json);
+        JsonElementDestroy(json);
+    }
+
+    {
+        const char *data = "[0.1234e-10]";
+        JsonElement *json = JsonParse(&data);
+        assert_true(json);
+        JsonElementDestroy(json);
+    }
+
+    {
+        const char *data = "[1203e10]";
+        JsonElement *json = JsonParse(&data);
+        assert_true(json);
+        JsonElementDestroy(json);
+    }
+
+    {
+        const char *data = "[1203e+10]";
+        JsonElement *json = JsonParse(&data);
+        assert_true(json);
+        JsonElementDestroy(json);
+    }
+
+    {
+        const char *data = "[123e-10]";
+        JsonElement *json = JsonParse(&data);
+        assert_true(json);
+        JsonElementDestroy(json);
+    }
+
+    {
+        const char *data = "[0e-10]";
+        JsonElement *json = JsonParse(&data);
+        assert_true(json);
+        JsonElementDestroy(json);
+    }
+
+    {
+        const char *data = "[0.0e-10]";
+        JsonElement *json = JsonParse(&data);
+        assert_true(json);
+        JsonElementDestroy(json);
+    }
+
+    {
+        const char *data = "[-0.0e-10]";
+        JsonElement *json = JsonParse(&data);
+        assert_true(json);
+        JsonElementDestroy(json);
+    }
+}
+
+static void test_parse_bad_numbers(void **state)
+{
+    {
+        const char *data = "[01]";
+        assert_false(JsonParse(&data));
+    }
+
+    {
+        const char *data = "[01.1]";
+        assert_false(JsonParse(&data));
+    }
+
+    {
+        const char *data = "[1.]";
+        assert_false(JsonParse(&data));
+    }
+
+    {
+        const char *data = "[e10]";
+        assert_false(JsonParse(&data));
+    }
+
+    {
+        const char *data = "[-e10]";
+        assert_false(JsonParse(&data));
+    }
+
+    {
+        const char *data = "[+2]";
+        assert_false(JsonParse(&data));
+    }
+
+    {
+        const char *data = "[1e]";
+        assert_false(JsonParse(&data));
+    }
+
+    {
+        const char *data = "[e10]";
+        assert_false(JsonParse(&data));
+    }
 }
 
 static void test_parse_trim(void **state)
@@ -308,12 +448,19 @@ static void test_parse_array_extra_closing(void **state)
 
 static void test_parse_array_diverse(void **state)
 {
-    const char *data = "[1, \"snookie\", 1.0, {}, true, false, null]";
-    JsonElement *json = JsonParse(&data);
+    {
+        const char *data = "[1, \"snookie\", 1.0, {}, [], true, false, null ]";
+        JsonElement *json = JsonParse(&data);
+        assert_true(json);
+        JsonElementDestroy(json);
+    }
 
-    assert_true(json);
-
-    JsonElementDestroy(json);
+    {
+        const char *data = "[1,\"snookie\",1.0,{},[],true,false,null]";
+        JsonElement *json = JsonParse(&data);
+        assert_true(json);
+        JsonElementDestroy(json);
+    }
 }
 
 static void test_parse_bad_apple2(void **state)
@@ -491,8 +638,11 @@ int main()
         unit_test(test_parse_object_simple),
         unit_test(test_parse_array_simple),
         unit_test(test_parse_object_compound),
+        unit_test(test_parse_object_diverse),
         unit_test(test_parse_array_object),
         unit_test(test_parse_empty),
+        unit_test(test_parse_good_numbers),
+        unit_test(test_parse_bad_numbers),
         unit_test(test_parse_trim),
         unit_test(test_parse_array_extra_closing),
         unit_test(test_parse_array_diverse),

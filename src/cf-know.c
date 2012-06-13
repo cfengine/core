@@ -896,8 +896,13 @@ static void VerifyThingsPromise(Promise *pp)
 
         // Add bundle reference
 
-        AddTopicAssociation(tp, &(tp->associations), KM_MENTIONS_F, KM_MENTIONS_B, pp->bundle, true, rp->item, pp->promiser);
+        rps = NULL;
+        PrependRScalar(&rps, pp->bundle, CF_SCALAR);
+        
+        AddTopicAssociation(tp, &(tp->associations), KM_MENTIONS_F, KM_MENTIONS_B, rps, true, rp->item, pp->promiser);
 
+        DeleteRlist(rps);
+        
         // Treat comments as occurrences of information.
 
         if (pp->ref)
@@ -1005,8 +1010,13 @@ static void VerifyTopicPromise(Promise *pp)
 
         // Add bundle reference
 
-        AddTopicAssociation(tp, &(tp->associations), KM_MENTIONS_F, KM_MENTIONS_B, pp->bundle, true, rp->item, pp->promiser);
+        rps = NULL;
+        PrependRScalar(&rps, pp->bundle, CF_SCALAR);
 
+        AddTopicAssociation(tp, &(tp->associations), KM_MENTIONS_F, KM_MENTIONS_B, rps, true, rp->item, pp->promiser);
+
+        DeleteRlist(rps);
+        
         // Treat comments as occurrences of information.
 
         if (pp->ref)

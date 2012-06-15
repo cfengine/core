@@ -1,0 +1,21 @@
+
+@verbatim
+
+bundle agent example
+
+{     
+meta:
+
+  "bundle_version" string => "1.2.3";
+  "works_with_cfengine" string => "3.4.0";
+
+reports:
+
+ cfengine_3::
+
+  "Not a local variable: $(bundle_version)";
+  "Meta data (variable): $(example_meta.bundle_version)";
+
+}
+
+@end verbatim

@@ -1,0 +1,4 @@
+
+Classes promises may be made in any bundle, i.e. in bundles pertaining to
+any agent. Classes that are defined in common bundles are global in scope,
+while classes in all other bundles are local.

@@ -1,0 +1,9 @@
+
+Variables in CFEngine are defined as promises that an identifier
+represents a particular value. Variables in CFEngine are dynamically
+typed as strings, integers and real numbers. Lists of these types
+are also possible.
+
+CFEngine supports a few operations on arrays. Arrays are simply a
+naming convention for scalar variables, using square brackets @samp{[]}
+to enclose an arbitrary key. Arrays are thus @code{associative}.

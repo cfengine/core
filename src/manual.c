@@ -369,16 +369,30 @@ static void TexinfoPromiseTypesFor(FILE *fout, const SubTypeSyntax *st)
     {
         CfOut(cf_verbose, "", " - Dealing with promise type %s\n", st[j].subtype);
 
-        if (strcmp("*", st[j].bundle_type) == 0)
+        if (strcmp("*", st[j].subtype) == 0 && strcmp("*", st[j].bundle_type) == 0)
         {
-            fprintf(fout, "\n\n@node %s in common promises\n@section @code{%s} promises\n\n", st[j].subtype,
+            fprintf(fout, "\n\n@node Miscellaneous in common promises\n@section @code{%s} promises\n\n", 
                     st[j].subtype);
             snprintf(filename, CF_BUFSIZE - 1, "promise_common_intro.texinfo");
         }
+        else if (strcmp("*", st[j].subtype) == 0 && strcmp("edit_line", st[j].bundle_type) == 0)
+        {
+            fprintf(fout, "\n\n@node Miscellaneous in edit_line promises\n@section Miscelleneous in @code{edit_line} promises\n\n");
+            snprintf(filename, CF_BUFSIZE - 1, "promises/edit_line_intro.texinfo");
+
+        }
         else
         {
-            fprintf(fout, "\n\n@node %s in %s promises\n@section @code{%s} promises in @samp{%s}\n\n", st[j].subtype,
+            if (strcmp("*", st[j].bundle_type) == 0)
+            {
+                fprintf(fout, "\n\n@node %s in common promises\n@section @code{%s} promises in @samp{%s}\n\n", st[j].subtype,
+                    st[j].subtype, st[j].bundle_type);            
+            }
+            else
+            {
+                fprintf(fout, "\n\n@node %s in %s promises\n@section @code{%s} promises in @samp{%s}\n\n", st[j].subtype,
                     st[j].bundle_type, st[j].subtype, st[j].bundle_type);
+            }
             snprintf(filename, CF_BUFSIZE - 1, "promises/%s_intro.texinfo", st[j].subtype);
             IncludeManualFile(fout, filename);
             snprintf(filename, CF_BUFSIZE - 1, "promises/%s_example.texinfo", st[j].subtype);

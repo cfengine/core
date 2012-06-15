@@ -452,7 +452,7 @@ void CheckConstraintTypeMatch(const char *lval, Rval rval, enum cfdatatype dt, c
         case cf_olist:
             break;
         default:
-            snprintf(output, CF_BUFSIZE, "!! Type mistach -- rhs is a list, but lhs (%s) is not a list type",
+            snprintf(output, CF_BUFSIZE, "!! Type mismatch -- rhs is a list, but lhs (%s) is not a list type",
                      CF_DATATYPES[dt]);
             ReportError(output);
             break;

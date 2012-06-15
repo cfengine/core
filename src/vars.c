@@ -24,6 +24,7 @@
 */
 
 #include "vars.h"
+#include "constraints.h"
 
 static int IsCf3Scalar(char *str);
 static int CompareVariableValue(Rval rval, CfAssoc *ap);
@@ -274,7 +275,63 @@ static int CompareVariableValue(Rval rval, CfAssoc *ap)
 /*******************************************************************/
 
 void DefaultVarPromise(Promise *pp)
+
 {
+    char *regex = GetConstraintValue("if_match_regex", pp, CF_SCALAR);
+    Rval rval;
+    enum cfdatatype dt;
+    Rlist *rp;
+    bool okay = true;
+
+    dt = GetVariable("this", pp->promiser, &rval);
+
+    switch (dt)
+       {
+       case cf_str:
+       case cf_int:
+       case cf_real:
+
+           if (regex && !FullTextMatch(regex,rval.item))
+              {
+              return;
+              }
+
+           if (regex == NULL)
+              {
+              return;
+              }
+
+           break;
+           
+       case cf_slist:
+       case cf_ilist:
+       case cf_rlist:
+
+           if (regex)
+              {
+              for (rp = (Rlist *) rval.item; rp != NULL; rp = rp->next)
+                 {
+                 if (FullTextMatch(regex,rp->item))
+                    {
+                    okay = false;
+                    break;
+                    }
+                 }
+              
+              if (okay)
+                 {
+                 return;
+                 }
+              }
+           
+       break;
+       
+       default:
+           break;           
+       }
+
+    ConvergeVarHashPromise(pp->bundle, pp, true);
+    
 }
 
 /*******************************************************************/

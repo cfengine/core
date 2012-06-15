@@ -116,6 +116,7 @@ const BodySyntax CF_METABODY[] =
 
 const BodySyntax CF_DEFAULTSBODY[] =
 {
+    {"if_match_regex", cf_str, "", "If this regular expression matches the current value of the variable, replace it with default"},
     {"string", cf_str, "", "A scalar string"},
     {"slist", cf_slist, "", "A list of scalar strings"},
     {NULL, cf_notype, NULL, NULL}

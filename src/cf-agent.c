@@ -43,7 +43,9 @@ extern int PR_NOTKEPT;
 
 enum typesequence
 {
+    kp_meta,
     kp_vars,
+    kp_defaults,
     kp_classes,
     kp_outputs,
     kp_interfaces,
@@ -62,7 +64,9 @@ enum typesequence
 
 char *TYPESEQUENCE[] =
 {
+    "meta",
     "vars",
+    "defaults",
     "classes",                  /* Maelstrom order 2 */
     "outputs",
     "interfaces",
@@ -859,6 +863,10 @@ static void KeepPromiseBundles(Policy *policy, Rlist *bundlesequence)
 
         if ((bp = GetBundle(policy, name, "agent")) || (bp = GetBundle(policy, name, "common")))
         {
+            char namespace[CF_BUFSIZE];
+            snprintf(namespace,CF_BUFSIZE,"%s_meta",bp->name);
+            NewScope(namespace);
+            
             SetBundleOutputs(bp->name);
             AugmentScope(bp->name, bp->args, params);
             BannerBundle(bp, params);
@@ -880,7 +888,7 @@ int ScheduleAgentOperations(Bundle *bp)
     SubType *sp;
     Promise *pp;
     enum typesequence type;
-    int pass, retval;
+    int pass;
     int save_pr_kept = PR_KEPT;
     int save_pr_repaired = PR_REPAIRED;
     int save_pr_notkept = PR_NOTKEPT;
@@ -1035,12 +1043,6 @@ static void KeepAgentPromise(Promise *pp)
 
 // Record promises examined for efficiency calc
 
-    if (strcmp("vars", pp->agentsubtype) == 0)
-    {
-        ConvergeVarHashPromise(pp->bundle, pp, true);
-        return;
-    }
-
     if (strcmp("meta", pp->agentsubtype) == 0)
     {
         char namespace[CF_BUFSIZE];
@@ -1049,6 +1051,11 @@ static void KeepAgentPromise(Promise *pp)
         return;
     }
 
+    if (strcmp("vars", pp->agentsubtype) == 0)
+    {
+        ConvergeVarHashPromise(pp->bundle, pp, true);
+        return;
+    }
 
     if (strcmp("defaults", pp->agentsubtype) == 0)
     {

@@ -275,6 +275,9 @@ void VerifyFilePromise(char *path, Promise *pp)
         return;
     }
 
+    DeleteScalar("this", "promiser");
+    NewScalar("this", "promiser", path, cf_str); 
+    
     thislock = AcquireLock(path, VUQNAME, CFSTARTTIME, a, pp, false);
 
     if (thislock.lock == NULL)

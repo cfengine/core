@@ -33,9 +33,12 @@ static void test_show_string(void **state)
     Writer *writer = StringWriter();
 
     JsonElementPrint(writer, str, 0);
-    assert_string_equal("\"snookie\"", StringWriterClose(writer));
+    char *output = StringWriterClose(writer);
+
+    assert_string_equal("\"snookie\"", output);
 
     JsonElementDestroy(str);
+    free(output);
 }
 
 static void test_show_object_simple(void **state)
@@ -48,10 +51,12 @@ static void test_show_object_simple(void **state)
     Writer *writer = StringWriter();
 
     JsonElementPrint(writer, json, 0);
+    char *output = StringWriterClose(writer);
 
-    assert_string_equal(OBJECT_SIMPLE, StringWriterData(writer));
+    assert_string_equal(OBJECT_SIMPLE, output);
 
     JsonElementDestroy(json);
+    free(output);
 }
 
 static void test_show_object_escaped(void **state)
@@ -63,10 +68,12 @@ static void test_show_object_escaped(void **state)
     Writer *writer = StringWriter();
 
     JsonElementPrint(writer, json, 0);
+    char *output = StringWriterClose(writer);
 
-    assert_string_equal(OBJECT_ESCAPED, StringWriterData(writer));
+    assert_string_equal(OBJECT_ESCAPED, output);
 
     JsonElementDestroy(json);
+    free(output);
 }
 
 static void test_show_object_numeric(void **state)
@@ -79,10 +86,12 @@ static void test_show_object_numeric(void **state)
     Writer *writer = StringWriter();
 
     JsonElementPrint(writer, json, 0);
+    char *output = StringWriterClose(writer);
 
-    assert_string_equal(OBJECT_NUMERIC, StringWriterData(writer));
+    assert_string_equal(OBJECT_NUMERIC, output);
 
     JsonElementDestroy(json);
+    free(output);
 }
 
 static void test_show_object_compound(void **state)
@@ -108,10 +117,12 @@ static void test_show_object_compound(void **state)
     Writer *writer = StringWriter();
 
     JsonElementPrint(writer, json, 0);
+    char *output = StringWriterClose(writer);
 
-    assert_string_equal(OBJECT_COMPOUND, StringWriterData(writer));
+    assert_string_equal(OBJECT_COMPOUND, output);
 
     JsonElementDestroy(json);
+    free(output);
 }
 
 static void test_show_object_array(void **state)
@@ -128,10 +139,12 @@ static void test_show_object_array(void **state)
     Writer *writer = StringWriter();
 
     JsonElementPrint(writer, json, 0);
+    char *output = StringWriterClose(writer);
 
-    assert_string_equal(OBJECT_ARRAY, StringWriterData(writer));
+    assert_string_equal(OBJECT_ARRAY, output);
 
     JsonElementDestroy(json);
+    free(output);
 }
 
 static void test_show_array(void **state)
@@ -144,10 +157,12 @@ static void test_show_array(void **state)
     Writer *writer = StringWriter();
 
     JsonElementPrint(writer, array, 0);
+    char *output = StringWriterClose(writer);
 
-    assert_string_equal(ARRAY_SIMPLE, StringWriterData(writer));
+    assert_string_equal(ARRAY_SIMPLE, output);
 
     JsonElementDestroy(array);
+    free(output);
 }
 
 static void test_show_array_object(void **state)
@@ -162,10 +177,12 @@ static void test_show_array_object(void **state)
     Writer *writer = StringWriter();
 
     JsonElementPrint(writer, array, 0);
+    char *output = StringWriterClose(writer);
 
-    assert_string_equal(ARRAY_OBJECT, StringWriterData(writer));
+    assert_string_equal(ARRAY_OBJECT, output);
 
     JsonElementDestroy(array);
+    free(output);
 }
 
 static void test_show_array_empty(void **state)
@@ -175,10 +192,12 @@ static void test_show_array_empty(void **state)
     Writer *writer = StringWriter();
 
     JsonElementPrint(writer, array, 0);
+    char *output = StringWriterClose(writer);
 
-    assert_string_equal("[]", StringWriterData(writer));
+    assert_string_equal("[]", output);
 
     JsonElementDestroy(array);
+    free(output);
 }
 
 static void test_object_get_string(void **state)
@@ -209,7 +228,7 @@ static void test_object_get_array(void **state)
 
     assert_string_equal(JsonArrayGetAsString(arr2, 1), "two");
 
-    JsonElementDestroy(arr);
+    JsonElementDestroy(obj);
 }
 
 static void test_array_get_string(void **state)
@@ -266,6 +285,23 @@ static void test_parse_object_compound(void **state)
     JsonElementDestroy(obj);
 }
 
+static void test_parse_object_diverse(void **state)
+{
+    {
+        const char *data = "{ \"a\": 1, \"b\": \"snookie\", \"c\": 1.0, \"d\": {}, \"e\": [], \"f\": true, \"g\": false, \"h\": null }";
+        JsonElement *json = JsonParse(&data);
+        assert_true(json);
+        JsonElementDestroy(json);
+    }
+
+    {
+        const char *data = "{\"a\":1,\"b\":\"snookie\",\"c\":1.0,\"d\":{},\"e\":[],\"f\":true,\"g\":false,\"h\":null}";
+        JsonElement *json = JsonParse(&data);
+        assert_true(json);
+        JsonElementDestroy(json);
+    }
+}
+
 static void test_parse_array_object(void **state)
 {
     const char *data = ARRAY_OBJECT;
@@ -276,6 +312,266 @@ static void test_parse_array_object(void **state)
     assert_string_equal(JsonObjectGetAsString(first, "first"), "one");
 
     JsonElementDestroy(arr);
+}
+
+static void test_parse_empty(void **state)
+{
+    const char *data = "";
+    JsonElement *json = JsonParse(&data);
+
+    assert_false(json);
+}
+
+static void test_parse_good_numbers(void **state)
+{
+    {
+        const char *data = "[0.1]";
+        JsonElement *json = JsonParse(&data);
+        assert_true(json);
+        JsonElementDestroy(json);
+    }
+
+    {
+        const char *data = "[0.1234567890123456789]";
+        JsonElement *json = JsonParse(&data);
+        assert_true(json);
+        JsonElementDestroy(json);
+    }
+
+    {
+        const char *data = "[0.1234e10]";
+        JsonElement *json = JsonParse(&data);
+        assert_true(json);
+        JsonElementDestroy(json);
+    }
+
+    {
+        const char *data = "[0.1234e+10]";
+        JsonElement *json = JsonParse(&data);
+        assert_true(json);
+        JsonElementDestroy(json);
+    }
+
+    {
+        const char *data = "[0.1234e-10]";
+        JsonElement *json = JsonParse(&data);
+        assert_true(json);
+        JsonElementDestroy(json);
+    }
+
+    {
+        const char *data = "[1203e10]";
+        JsonElement *json = JsonParse(&data);
+        assert_true(json);
+        JsonElementDestroy(json);
+    }
+
+    {
+        const char *data = "[1203e+10]";
+        JsonElement *json = JsonParse(&data);
+        assert_true(json);
+        JsonElementDestroy(json);
+    }
+
+    {
+        const char *data = "[123e-10]";
+        JsonElement *json = JsonParse(&data);
+        assert_true(json);
+        JsonElementDestroy(json);
+    }
+
+    {
+        const char *data = "[0e-10]";
+        JsonElement *json = JsonParse(&data);
+        assert_true(json);
+        JsonElementDestroy(json);
+    }
+
+    {
+        const char *data = "[0.0e-10]";
+        JsonElement *json = JsonParse(&data);
+        assert_true(json);
+        JsonElementDestroy(json);
+    }
+
+    {
+        const char *data = "[-0.0e-10]";
+        JsonElement *json = JsonParse(&data);
+        assert_true(json);
+        JsonElementDestroy(json);
+    }
+}
+
+static void test_parse_bad_numbers(void **state)
+{
+    {
+        const char *data = "[01]";
+        assert_false(JsonParse(&data));
+    }
+
+    {
+        const char *data = "[01.1]";
+        assert_false(JsonParse(&data));
+    }
+
+    {
+        const char *data = "[1.]";
+        assert_false(JsonParse(&data));
+    }
+
+    {
+        const char *data = "[e10]";
+        assert_false(JsonParse(&data));
+    }
+
+    {
+        const char *data = "[-e10]";
+        assert_false(JsonParse(&data));
+    }
+
+    {
+        const char *data = "[+2]";
+        assert_false(JsonParse(&data));
+    }
+
+    {
+        const char *data = "[1e]";
+        assert_false(JsonParse(&data));
+    }
+
+    {
+        const char *data = "[e10]";
+        assert_false(JsonParse(&data));
+    }
+}
+
+static void test_parse_trim(void **state)
+{
+    const char *data = "           []    ";
+    JsonElement *json = JsonParse(&data);
+
+    assert_true(json);
+
+    JsonElementDestroy(json);
+}
+
+static void test_parse_array_extra_closing(void **state)
+{
+    const char *data = "  []]";
+    JsonElement *json = JsonParse(&data);
+
+    assert_true(json);
+
+    JsonElementDestroy(json);
+}
+
+static void test_parse_array_diverse(void **state)
+{
+    {
+        const char *data = "[1, \"snookie\", 1.0, {}, [], true, false, null ]";
+        JsonElement *json = JsonParse(&data);
+        assert_true(json);
+        JsonElementDestroy(json);
+    }
+
+    {
+        const char *data = "[1,\"snookie\",1.0,{},[],true,false,null]";
+        JsonElement *json = JsonParse(&data);
+        assert_true(json);
+        JsonElementDestroy(json);
+    }
+}
+
+static void test_parse_bad_apple2(void **state)
+{
+    const char *data = "][";
+    JsonElement *json = JsonParse(&data);
+
+    assert_false(json);
+}
+
+static void test_parse_object_garbage(void **state)
+{
+    {
+        const char *data = "{ \"first\": 1, garbage \"second\": 2 }";
+        JsonElement *json = JsonParse(&data);
+        assert_false(json);
+    }
+
+    {
+        const char *data = "{ \"first\": 1 garbage \"second\": 2 }";
+        JsonElement *json = JsonParse(&data);
+        assert_false(json);
+    }
+
+    {
+        const char *data = "{ \"first\": garbage, \"second\": 2 }";
+        JsonElement *json = JsonParse(&data);
+        assert_false(json);
+    }
+
+    {
+        const char *data = "{ \"first\": garbage \"second\": 2 }";
+        JsonElement *json = JsonParse(&data);
+        assert_false(json);
+    }
+}
+
+static void test_parse_object_nested_garbage(void **state)
+{
+    {
+        const char *data = "{ \"first\": { garbage } }";
+        JsonElement *json = JsonParse(&data);
+        assert_false(json);
+    }
+
+    {
+        const char *data = "{ \"first\": [ garbage ] }";
+        JsonElement *json = JsonParse(&data);
+        assert_false(json);
+    }
+}
+
+static void test_parse_array_garbage(void **state)
+{
+    {
+        const char *data = "[1, garbage]";
+        JsonElement *json = JsonParse(&data);
+        assert_false(json);
+    }
+
+    {
+        const char *data = "[1 garbage]";
+        JsonElement *json = JsonParse(&data);
+        assert_false(json);
+    }
+
+    {
+        const char *data = "[garbage]";
+        JsonElement *json = JsonParse(&data);
+        assert_false(json);
+    }
+
+    {
+        const char *data = "[garbage, 1]";
+        JsonElement *json = JsonParse(&data);
+        assert_false(json);
+    }
+}
+
+static void test_parse_array_nested_garbage(void **state)
+{
+    {
+        const char *data = "[1, [garbage]]";
+        JsonElement *json = JsonParse(&data);
+        assert_false(json);
+    }
+
+    {
+        const char *data = "[1, { garbage }]";
+        JsonElement *json = JsonParse(&data);
+        assert_false(json);
+    }
 }
 
 static void test_array_remove_range(void **state)
@@ -361,7 +657,19 @@ int main()
         unit_test(test_parse_object_simple),
         unit_test(test_parse_array_simple),
         unit_test(test_parse_object_compound),
+        unit_test(test_parse_object_diverse),
         unit_test(test_parse_array_object),
+        unit_test(test_parse_empty),
+        unit_test(test_parse_good_numbers),
+        unit_test(test_parse_bad_numbers),
+        unit_test(test_parse_trim),
+        unit_test(test_parse_array_extra_closing),
+        unit_test(test_parse_array_diverse),
+        unit_test(test_parse_bad_apple2),
+        unit_test(test_parse_object_garbage),
+        unit_test(test_parse_object_nested_garbage),
+        unit_test(test_parse_array_garbage),
+        unit_test(test_parse_array_nested_garbage),
         unit_test(test_array_remove_range)
     };
 

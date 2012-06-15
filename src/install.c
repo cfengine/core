@@ -106,8 +106,6 @@ Body *AppendBody(Policy *policy, const char *name, const char *type, Rlist *args
 {
     CfDebug("Appending new promise body %s %s(", type, name);
 
-    CheckBody(policy, name, type);
-
     for (const Rlist *rp = args; rp; rp = rp->next)
     {
         CfDebug("%s,", (char *) rp->item);

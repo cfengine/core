@@ -137,9 +137,9 @@ static void ShowControlBodies()
 
     printf("<div id=\"bundles\">");
 
-    for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
+    for (i = 0; CF_ALL_BODIES[i].bundle_type != NULL; i++)
     {
-        printf("<h4>COMPONENT %s</h4>\n", CF_ALL_BODIES[i].btype);
+        printf("<h4>COMPONENT %s</h4>\n", CF_ALL_BODIES[i].bundle_type);
 
         printf("<h4>PROMISE TYPE %s</h4>\n", CF_ALL_BODIES[i].subtype);
         ShowBodyParts(CF_ALL_BODIES[i].bs);
@@ -655,10 +655,10 @@ static void ShowBundleTypes()
 
     printf("<div id=\"bundles\">");
 
-    for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
+    for (i = 0; CF_ALL_BODIES[i].bundle_type != NULL; i++)
     {
-        printf("<h4>COMPONENT %s</h4>\n", CF_ALL_BODIES[i].btype);
-        ShowPromiseTypesFor(CF_ALL_BODIES[i].btype);
+        printf("<h4>COMPONENT %s</h4>\n", CF_ALL_BODIES[i].bundle_type);
+        ShowPromiseTypesFor(CF_ALL_BODIES[i].bundle_type);
     }
 
     printf("<h4>EMBEDDED BUNDLE edit_line<h4>\n");
@@ -667,9 +667,9 @@ static void ShowBundleTypes()
 
     st = CF_FILES_SUBTYPES;
 
-    for (i = 0; st[i].btype != NULL; i++)
+    for (i = 0; st[i].bundle_type != NULL; i++)
     {
-        if (strcmp("edit_line", st[i].btype) == 0)
+        if (strcmp("edit_line", st[i].bundle_type) == 0)
         {
             ShowBodyParts(st[i].bs);
         }
@@ -693,9 +693,9 @@ static void ShowPromiseTypesFor(const char *s)
     {
         st = CF_ALL_SUBTYPES[i];
 
-        for (j = 0; st[j].btype != NULL; j++)
+        for (j = 0; st[j].bundle_type != NULL; j++)
         {
-            if (strcmp(s, st[j].btype) == 0 || strcmp("*", st[j].btype) == 0)
+            if (strcmp(s, st[j].bundle_type) == 0 || strcmp("*", st[j].bundle_type) == 0)
             {
                 printf("<h4>PROMISE TYPE %s</h4>\n", st[j].subtype);
                 ShowBodyParts(st[j].bs);

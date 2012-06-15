@@ -1,0 +1,9 @@
+body agent control
+{
+    ifelapsed => "60";
+}
+
+body agent control
+{
+    ifelapsed => "120";
+}

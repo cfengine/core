@@ -32,6 +32,22 @@ static void test_bundle_reserved_name(void **state)
     SequenceDestroy(errs);
 }
 
+static void test_body_redefinition(void **state)
+{
+    Sequence *errs = LoadAndCheck("body_redefinition.cf");
+    assert_int_equal(2, errs->length);
+
+    SequenceDestroy(errs);
+}
+
+static void test_subtype_invalid(void **state)
+{
+    Sequence *errs = LoadAndCheck("subtype_invalid.cf");
+    assert_int_equal(1, errs->length);
+
+    SequenceDestroy(errs);
+}
+
 static void test_vars_multiple_types(void **state)
 {
     Sequence *errs = LoadAndCheck("vars_multiple_types.cf");
@@ -54,6 +70,8 @@ int main()
     {
         unit_test(test_bundle_redefinition),
         unit_test(test_bundle_reserved_name),
+        unit_test(test_body_redefinition),
+        unit_test(test_subtype_invalid),
         unit_test(test_vars_multiple_types),
         unit_test(test_methods_invalid_arity),
     };

@@ -29,6 +29,7 @@
 #include "promises.h"
 #include "syntax.h"
 #include "item_lib.h"
+#include "files_names.h"
 
 static PromiseIdent *PromiseIdExists(char *handle);
 static void DeleteAllPromiseIdsRecurse(PromiseIdent *key);
@@ -76,6 +77,8 @@ static Constraint *ConstraintNew(const char *lval, Rval rval, const char *classe
     return cp;
 }
 
+/*****************************************************************************/
+
 // FIX: every type having its own list logic
 static void ConstraintAppendToList(Constraint **conlist, Constraint *cp)
 {
@@ -95,6 +98,8 @@ static void ConstraintAppendToList(Constraint **conlist, Constraint *cp)
     }
 }
 
+/*****************************************************************************/
+
 Constraint *ConstraintAppendToPromise(Promise *promise, const char *lval, Rval rval, const char *classes,
                                       bool references_body)
 {
@@ -106,6 +111,8 @@ Constraint *ConstraintAppendToPromise(Promise *promise, const char *lval, Rval r
 
     return cp;
 }
+
+/*****************************************************************************/
 
 Constraint *ConstraintAppendToBody(Body *body, const char *lval, Rval rval, const char *classes,
                                    bool references_body)
@@ -744,7 +751,7 @@ static void PostCheckConstraint(const char *type, const char *bundle, const char
             continue;
         }
 
-        for (j = 0; ssp[j].btype != NULL; j++)
+        for (j = 0; ssp[j].bundle_type != NULL; j++)
         {
             ss = ssp[j];
 
@@ -820,7 +827,7 @@ static int VerifyConstraintName(const char *lval)
             continue;
         }
 
-        for (j = 0; ssp[j].btype != NULL; j++)
+        for (j = 0; ssp[j].bundle_type != NULL; j++)
         {
             ss = ssp[j];
 

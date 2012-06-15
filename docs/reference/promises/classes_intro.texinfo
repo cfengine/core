@@ -1,0 +1,10 @@
+
+Classes promises refer to the classification of different
+run-contexts.  These are not related to object oriented classes, they
+are more like tag labels representing different properties of the
+environement.
+
+The term classes was introduced before the widespread use of the term in
+Object Orientation, and has since stuck. Today, we use the words class
+and context interchangeably.
+

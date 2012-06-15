@@ -89,22 +89,22 @@ void TexinfoManual(char *mandir)
     IncludeManualFile(fout, "reference_control_intro.texinfo");
 
     fprintf(fout, "@menu\n");
-    for (i = 0; CF_ALL_BODIES[i].btype != NULL; ++i)
+    for (i = 0; CF_ALL_BODIES[i].bundle_type != NULL; ++i)
     {
-        fprintf(fout, "* control %s::\n", CF_ALL_BODIES[i].btype);
+        fprintf(fout, "* control %s::\n", CF_ALL_BODIES[i].bundle_type);
     }
     fprintf(fout, "@end menu\n");
 
-    for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
+    for (i = 0; CF_ALL_BODIES[i].bundle_type != NULL; i++)
     {
-        fprintf(fout, "@node control %s\n@section @code{%s} control promises\n\n", CF_ALL_BODIES[i].btype,
-                CF_ALL_BODIES[i].btype);
-        snprintf(filename, CF_BUFSIZE - 1, "control/%s_example.texinfo", CF_ALL_BODIES[i].btype);
+        fprintf(fout, "@node control %s\n@section @code{%s} control promises\n\n", CF_ALL_BODIES[i].bundle_type,
+                CF_ALL_BODIES[i].bundle_type);
+        snprintf(filename, CF_BUFSIZE - 1, "control/%s_example.texinfo", CF_ALL_BODIES[i].bundle_type);
         IncludeManualFile(fout, filename);
-        snprintf(filename, CF_BUFSIZE - 1, "control/%s_notes.texinfo", CF_ALL_BODIES[i].btype);
+        snprintf(filename, CF_BUFSIZE - 1, "control/%s_notes.texinfo", CF_ALL_BODIES[i].bundle_type);
         IncludeManualFile(fout, filename);
 
-        TexinfoBodyParts(fout, CF_ALL_BODIES[i].bs, CF_ALL_BODIES[i].btype);
+        TexinfoBodyParts(fout, CF_ALL_BODIES[i].bs, CF_ALL_BODIES[i].bundle_type);
     }
 
 /* Components */
@@ -117,36 +117,36 @@ void TexinfoManual(char *mandir)
             || st == CF_KNOWLEDGE_SUBTYPES || st == CF_MEASUREMENT_SUBTYPES)
 
         {
-            CfOut(cf_verbose, "", "Dealing with chapter / bundle type %s\n", st->btype);
+            CfOut(cf_verbose, "", "Dealing with chapter / bundle type %s\n", st->bundle_type);
             fprintf(fout, "@c *****************************************************\n");
             fprintf(fout, "@c * CHAPTER \n");
             fprintf(fout, "@c *****************************************************\n");
 
-            if (strcmp(st->btype, "*") == 0)
+            if (strcmp(st->bundle_type, "*") == 0)
             {
                 fprintf(fout, "@node Bundles for common\n@chapter Bundles of @code{common}\n\n");
             }
             else
             {
-                fprintf(fout, "@node Bundles for %s\n@chapter Bundles of @code{%s}\n\n", st->btype, st->btype);
+                fprintf(fout, "@node Bundles for %s\n@chapter Bundles of @code{%s}\n\n", st->bundle_type, st->bundle_type);
             }
         }
 
-        if (!IsItemIn(done, st->btype)) /* Avoid multiple reading if several modules */
+        if (!IsItemIn(done, st->bundle_type)) /* Avoid multiple reading if several modules */
         {
-            PrependItem(&done, st->btype, NULL);
-            snprintf(filename, CF_BUFSIZE - 1, "bundletypes/%s_example.texinfo", st->btype);
+            PrependItem(&done, st->bundle_type, NULL);
+            snprintf(filename, CF_BUFSIZE - 1, "bundletypes/%s_example.texinfo", st->bundle_type);
             IncludeManualFile(fout, filename);
-            snprintf(filename, CF_BUFSIZE - 1, "bundletypes/%s_notes.texinfo", st->btype);
+            snprintf(filename, CF_BUFSIZE - 1, "bundletypes/%s_notes.texinfo", st->bundle_type);
             IncludeManualFile(fout, filename);
 
             fprintf(fout, "@menu\n");
             for (int k = 0; k < CF3_MODULES; ++k)
             {
-                for (int j = 0; CF_ALL_SUBTYPES[k][j].btype != NULL; ++j)
+                for (int j = 0; CF_ALL_SUBTYPES[k][j].bundle_type != NULL; ++j)
                 {
                     fprintf(fout, "* %s in %s promises::\n", CF_ALL_SUBTYPES[k][j].subtype,
-                            strcmp(CF_ALL_SUBTYPES[k][j].btype, "*") == 0 ? "common" : CF_ALL_SUBTYPES[k][j].btype);
+                            strcmp(CF_ALL_SUBTYPES[k][j].bundle_type, "*") == 0 ? "common" : CF_ALL_SUBTYPES[k][j].bundle_type);
                 }
             }
             fprintf(fout, "@end menu\n");
@@ -365,20 +365,34 @@ static void TexinfoPromiseTypesFor(FILE *fout, const SubTypeSyntax *st)
 
 /* Each array element is SubtypeSyntax representing an agent-promise assoc */
 
-    for (j = 0; st[j].btype != NULL; j++)
+    for (j = 0; st[j].bundle_type != NULL; j++)
     {
         CfOut(cf_verbose, "", " - Dealing with promise type %s\n", st[j].subtype);
 
-        if (strcmp("*", st[j].btype) == 0)
+        if (strcmp("*", st[j].subtype) == 0 && strcmp("*", st[j].bundle_type) == 0)
         {
-            fprintf(fout, "\n\n@node %s in common promises\n@section @code{%s} promises\n\n", st[j].subtype,
+            fprintf(fout, "\n\n@node Miscellaneous in common promises\n@section @code{%s} promises\n\n", 
                     st[j].subtype);
             snprintf(filename, CF_BUFSIZE - 1, "promise_common_intro.texinfo");
         }
+        else if (strcmp("*", st[j].subtype) == 0 && strcmp("edit_line", st[j].bundle_type) == 0)
+        {
+            fprintf(fout, "\n\n@node Miscellaneous in edit_line promises\n@section Miscelleneous in @code{edit_line} promises\n\n");
+            snprintf(filename, CF_BUFSIZE - 1, "promises/edit_line_intro.texinfo");
+
+        }
         else
         {
-            fprintf(fout, "\n\n@node %s in %s promises\n@section @code{%s} promises in @samp{%s}\n\n", st[j].subtype,
-                    st[j].btype, st[j].subtype, st[j].btype);
+            if (strcmp("*", st[j].bundle_type) == 0)
+            {
+                fprintf(fout, "\n\n@node %s in common promises\n@section @code{%s} promises in @samp{%s}\n\n", st[j].subtype,
+                    st[j].subtype, st[j].bundle_type);            
+            }
+            else
+            {
+                fprintf(fout, "\n\n@node %s in %s promises\n@section @code{%s} promises in @samp{%s}\n\n", st[j].subtype,
+                    st[j].bundle_type, st[j].subtype, st[j].bundle_type);
+            }
             snprintf(filename, CF_BUFSIZE - 1, "promises/%s_intro.texinfo", st[j].subtype);
             IncludeManualFile(fout, filename);
             snprintf(filename, CF_BUFSIZE - 1, "promises/%s_example.texinfo", st[j].subtype);

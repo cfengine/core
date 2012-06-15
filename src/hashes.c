@@ -381,9 +381,7 @@ void HashFree(AssocHashTable *hashtable)
 
 HashIterator HashIteratorInit(AssocHashTable *hashtable)
 {
-    return (HashIterator)
-    {
-    hashtable, 0};
+    return (HashIterator) { hashtable, 0 };
 }
 
 /*******************************************************************/

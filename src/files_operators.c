@@ -50,6 +50,8 @@ static void DeleteDirectoryTree(char *path, Promise *pp);
 static void VerifySetUidGid(char *file, struct stat *dstat, mode_t newperm, Promise *pp, Attributes attr);
 #endif
 
+/*****************************************************************************/
+
 int VerifyFileLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp)
 {
 /* Here we can assume that we are in the parent directory of the leaf */

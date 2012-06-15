@@ -106,6 +106,23 @@ const BodySyntax CF_VARBODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
+
+const BodySyntax CF_METABODY[] =
+{
+    {"string", cf_str, "", "A scalar string"},
+    {"slist", cf_slist, "", "A list of scalar strings"},
+    {NULL, cf_notype, NULL, NULL}
+};
+
+const BodySyntax CF_DEFAULTSBODY[] =
+{
+    {"if_match_regex", cf_str, "", "If this regular expression matches the current value of the variable, replace it with default"},
+    {"string", cf_str, "", "A scalar string"},
+    {"slist", cf_slist, "", "A list of scalar strings"},
+    {NULL, cf_notype, NULL, NULL}
+};
+
+
 const BodySyntax CF_CLASSBODY[] =
 {
     {"and", cf_clist, CF_CLASSRANGE, "Combine class sources with AND"},
@@ -373,7 +390,7 @@ const BodySyntax CF_COMMON_BODIES[] =
     {CF_DEFINECLASSES, cf_body, CF_DEFINECLASS_BODY, "Signalling behaviour"},
     {"comment", cf_str, "", "A comment about this promise's real intention that follows through the program"},
     {"depends_on", cf_slist, "","A list of promise handles that this promise builds on or depends on somehow (for knowledge management)"},
-    {"handle", cf_str, CF_IDRANGE, "A unique id-tag string for referring to this as a promisee elsewhere"},
+    {"handle", cf_str, "", "A unique id-tag string for referring to this as a promisee elsewhere"},
     {"ifvarclass", cf_str, "", "Extended classes ANDed with context"},
     {"meta", cf_slist, "", "User-data associated with policy, e.g. key=value strings"},
     {NULL, cf_notype, NULL, NULL}
@@ -384,9 +401,12 @@ const BodySyntax CF_COMMON_BODIES[] =
 
 const SubTypeSyntax CF_COMMON_SUBTYPES[] =
 {
-    {"*", "vars", CF_VARBODY},
+
     {"*", "classes", CF_CLASSBODY},
+    {"*", "defaults", CF_DEFAULTSBODY},
+    {"*", "meta", CF_METABODY},
     {"*", "reports", CF_REPORT_BODIES},
+    {"*", "vars", CF_VARBODY},
     {"*", "*", CF_COMMON_BODIES},
     {NULL, NULL, NULL}
 };

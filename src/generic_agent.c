@@ -1585,7 +1585,7 @@ static void CheckControlPromises(char *scope, char *agent, Constraint *controlli
     {
         bp = CF_ALL_BODIES[i].bs;
 
-        if (strcmp(agent, CF_ALL_BODIES[i].btype) == 0)
+        if (strcmp(agent, CF_ALL_BODIES[i].bundle_type) == 0)
         {
             break;
         }

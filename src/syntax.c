@@ -31,6 +31,8 @@
 #include "mod_files.h"
 #include "item_lib.h"
 
+#include <assert.h>
+
 static const int PRETTY_PRINT_SPACES_PER_INDENT = 2;
 
 static int CheckParseString(const char *lv, const char *s, const char *range);
@@ -41,71 +43,33 @@ static void CheckParseIntRange(const char *lval, const char *s, const char *rang
 static void CheckParseOpts(const char *lv, const char *s, const char *range);
 static void CheckFnCallType(const char *lval, const char *s, enum cfdatatype dtype, const char *range);
 
-/*********************************************************/
-
-void CheckBody(const Policy *policy, const char *name, const char *type)
-{
-    char output[CF_BUFSIZE];
-
-    for (const Body *bp = policy->bodies; bp != NULL; bp = bp->next)
-    {
-        if ((strcmp(name, bp->name) == 0) && (strcmp(type, bp->type) == 0))
-        {
-            snprintf(output, CF_BUFSIZE, "Redefinition of body \"%s\" for \"%s\" is a broken promise", name, type);
-            ReportError(output);
-            ERRORCOUNT++;
-        }
-    }
-}
 
 /*********************************************************/
 
-SubTypeSyntax CheckSubType(char *bundletype, char *subtype)
+SubTypeSyntax SubTypeSyntaxLookup(const char *bundle_type, const char *subtype_name)
 {
-    int i, j;
-    const SubTypeSyntax *ss;
-    char output[CF_BUFSIZE];
-
-    if (subtype == NULL)
+    for (int i = 0; i < CF3_MODULES; i++)
     {
-        snprintf(output, CF_BUFSIZE, "Missing promise type category for %s bundle", bundletype);
-        ReportError(output);
-        return (SubTypeSyntax)
-        {
-        NULL, NULL, NULL};
-    }
+        const SubTypeSyntax *syntax = NULL;
 
-    for (i = 0; i < CF3_MODULES; i++)
-    {
-        if ((ss = CF_ALL_SUBTYPES[i]) == NULL)
+        if ((syntax = CF_ALL_SUBTYPES[i]) == NULL)
         {
             continue;
         }
 
-        for (j = 0; ss[j].btype != NULL; j++)
+        for (int j = 0; syntax[j].bundle_type != NULL; j++)
         {
-            if (subtype && strcmp(subtype, ss[j].subtype) == 0)
+            if (StringSafeEqual(subtype_name, syntax[j].subtype) &&
+                    (StringSafeEqual(bundle_type, syntax[j].bundle_type) ||
+                     StringSafeEqual("*", syntax[j].bundle_type)))
             {
-                if ((strcmp(bundletype, ss[j].btype) == 0) || (strcmp("*", ss[j].btype) == 0))
-                {
-                    /* Return a pointer to bodies for this subtype */
-                    CfDebug("Subtype %s syntax ok for %s\n", subtype, bundletype);
-                    return ss[j];
-                }
+                return syntax[j];
             }
         }
     }
 
-    snprintf(output, CF_BUFSIZE, "%s is not a valid type category for %s bundle", subtype, bundletype);
-    ReportError(output);
-    snprintf(output, CF_BUFSIZE, "Possibly the bundle type \"%s\" itself is undefined", bundletype);
-    ReportError(output);
-    return (SubTypeSyntax)
-    {
-    NULL, NULL, NULL};
+    return (SubTypeSyntax) { NULL, NULL, NULL };
 }
-
-/*********************************************************/
 
 enum cfdatatype ExpectedDataType(char *lvalname)
 {
@@ -329,7 +293,7 @@ void CheckSelection(char *type, char *name, char *lval, Rval rval)
 
     for (i = 0; CF_ALL_BODIES[i].subtype != NULL; i++)
     {
-        if (strcmp(CF_ALL_BODIES[i].subtype, name) == 0 && strcmp(type, CF_ALL_BODIES[i].btype) == 0)
+        if (strcmp(CF_ALL_BODIES[i].subtype, name) == 0 && strcmp(type, CF_ALL_BODIES[i].bundle_type) == 0)
         {
             CfDebug("Found matching a body matching (%s,%s)\n", type, name);
 
@@ -488,7 +452,7 @@ void CheckConstraintTypeMatch(const char *lval, Rval rval, enum cfdatatype dt, c
         case cf_olist:
             break;
         default:
-            snprintf(output, CF_BUFSIZE, "!! Type mistach -- rhs is a list, but lhs (%s) is not a list type",
+            snprintf(output, CF_BUFSIZE, "!! Type mismatch -- rhs is a list, but lhs (%s) is not a list type",
                      CF_DATATYPES[dt]);
             ReportError(output);
             break;
@@ -1294,9 +1258,9 @@ static JsonElement *ExportBundleTypeSyntaxAsJson(const char *bundle_type)
     {
         st = CF_ALL_SUBTYPES[i];
 
-        for (j = 0; st[j].btype != NULL; j++)
+        for (j = 0; st[j].bundle_type != NULL; j++)
         {
-            if (strcmp(bundle_type, st[j].btype) == 0 || strcmp("*", st[j].btype) == 0)
+            if (strcmp(bundle_type, st[j].bundle_type) == 0 || strcmp("*", st[j].bundle_type) == 0)
             {
                 JsonElement *attributes = ExportAttributesSyntaxAsJson(st[j].bs);
 
@@ -1313,11 +1277,11 @@ static JsonElement *ExportControlBodiesSyntaxAsJson()
     JsonElement *control_bodies = JsonObjectCreate(10);
     int i = 0;
 
-    for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
+    for (i = 0; CF_ALL_BODIES[i].bundle_type != NULL; i++)
     {
         JsonElement *attributes = ExportAttributesSyntaxAsJson(CF_ALL_BODIES[i].bs);
 
-        JsonObjectAppendObject(control_bodies, CF_ALL_BODIES[i].btype, attributes);
+        JsonObjectAppendObject(control_bodies, CF_ALL_BODIES[i].bundle_type, attributes);
     }
 
     return control_bodies;
@@ -1337,11 +1301,11 @@ void SyntaxPrintAsJson(Writer *writer)
         JsonElement *bundle_types = JsonObjectCreate(10);
         int i = 0;
 
-        for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
+        for (i = 0; CF_ALL_BODIES[i].bundle_type != NULL; i++)
         {
-            JsonElement *bundle_type = ExportBundleTypeSyntaxAsJson(CF_ALL_BODIES[i].btype);
+            JsonElement *bundle_type = ExportBundleTypeSyntaxAsJson(CF_ALL_BODIES[i].bundle_type);
 
-            JsonObjectAppendObject(bundle_types, CF_ALL_BODIES[i].btype, bundle_type);
+            JsonObjectAppendObject(bundle_types, CF_ALL_BODIES[i].bundle_type, bundle_type);
         }
 
         JsonObjectAppendObject(syntax_tree, "bundle-types", bundle_types);

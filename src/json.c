@@ -31,6 +31,10 @@
 static const int SPACES_PER_INDENT = 2;
 static const int DEFAULT_CONTAINER_CAPACITY = 64;
 
+static const char *JSON_TRUE = "true";
+static const char *JSON_FALSE = "false";
+static const char *JSON_NULL = "null";
+
 typedef enum
 {
     JSON_ELEMENT_TYPE_CONTAINER,
@@ -47,7 +51,9 @@ typedef enum
 {
     JSON_PRIMITIVE_TYPE_STRING,
     JSON_PRIMITIVE_TYPE_INTEGER,
-    JSON_PRIMITIVE_TYPE_REAL
+    JSON_PRIMITIVE_TYPE_REAL,
+    JSON_PRIMITIVE_TYPE_BOOL,
+    JSON_PRIMITIVE_TYPE_NULL
 } JsonPrimitiveType;
 
 struct JsonElement_
@@ -104,14 +110,12 @@ static JsonElement *JsonElementCreateContainer(JsonContainerType containerType, 
     return element;
 }
 
-static JsonElement *JsonElementCreatePrimitive(JsonPrimitiveType primitiveType, const char *propertyName,
+static JsonElement *JsonElementCreatePrimitive(JsonPrimitiveType primitiveType,
                                                const char *value)
 {
     JsonElement *element = xcalloc(1, sizeof(JsonElement));
 
     element->type = JSON_ELEMENT_TYPE_PRIMITIVE;
-
-    JsonElementSetPropertyName(element, propertyName);
 
     element->primitive.type = primitiveType;
     element->primitive.value = value;
@@ -214,6 +218,20 @@ static const char *EscapeJsonString(const char *unescapedString)
     return StringWriterClose(writer);
 }
 
+static void _JsonObjectAppendPrimitive(JsonElement *object, const char *key, JsonElement *child_primitive)
+{
+    assert(object);
+    assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
+
+    assert(child_primitive);
+    assert(child_primitive->type == JSON_ELEMENT_TYPE_PRIMITIVE);
+
+    JsonElementSetPropertyName(child_primitive, key);
+
+    SequenceAppend(object->container.children, child_primitive);
+}
+
 void JsonObjectAppendString(JsonElement *object, const char *key, const char *value)
 {
     assert(object);
@@ -222,9 +240,8 @@ void JsonObjectAppendString(JsonElement *object, const char *key, const char *va
     assert(key);
     assert(value);
 
-    JsonElement *child = JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_STRING, key, EscapeJsonString(value));
-
-    SequenceAppend(object->container.children, child);
+    JsonElement *child = JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_STRING, EscapeJsonString(value));
+    _JsonObjectAppendPrimitive(object, key, child);
 }
 
 void JsonObjectAppendInteger(JsonElement *object, const char *key, int value)
@@ -234,13 +251,8 @@ void JsonObjectAppendInteger(JsonElement *object, const char *key, int value)
     assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
     assert(key);
 
-    char *buffer = xcalloc(32, sizeof(char));
-
-    snprintf(buffer, 32, "%d", value);
-
-    JsonElement *child = JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_INTEGER, key, buffer);
-
-    SequenceAppend(object->container.children, child);
+    JsonElement *child = JsonIntegerCreate(value);
+    _JsonObjectAppendPrimitive(object, key, child);
 }
 
 void JsonObjectAppendReal(JsonElement *object, const char *key, double value)
@@ -250,13 +262,8 @@ void JsonObjectAppendReal(JsonElement *object, const char *key, double value)
     assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
     assert(key);
 
-    char *buffer = xcalloc(32, sizeof(char));
-
-    snprintf(buffer, 32, "%.4f", value);
-
-    JsonElement *child = JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_REAL, key, buffer);
-
-    SequenceAppend(object->container.children, child);
+    JsonElement *child = JsonRealCreate(value);
+    _JsonObjectAppendPrimitive(object, key, child);
 }
 
 void JsonObjectAppendArray(JsonElement *object, const char *key, JsonElement *array)
@@ -368,6 +375,18 @@ JsonElement *JsonArrayCreate(size_t initialCapacity)
     return JsonElementCreateContainer(JSON_CONTAINER_TYPE_ARRAY, NULL, initialCapacity);
 }
 
+static void _JsonArrayAppendPrimitive(JsonElement *array, JsonElement *child_primitive)
+{
+    assert(array);
+    assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
+
+    assert(child_primitive);
+    assert(child_primitive->type == JSON_ELEMENT_TYPE_PRIMITIVE);
+
+    SequenceAppend(array->container.children, child_primitive);
+}
+
 void JsonArrayAppendString(JsonElement *array, const char *value)
 {
     assert(array);
@@ -375,24 +394,18 @@ void JsonArrayAppendString(JsonElement *array, const char *value)
     assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
     assert(value);
 
-    JsonElement *child = JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_STRING, NULL, EscapeJsonString(value));
-
-    SequenceAppend(array->container.children, child);
+    JsonElement *child = JsonStringCreate(value);
+    _JsonArrayAppendPrimitive(array, child);
 }
 
-void JsonArrayAppendInteger(JsonElement *object, int value)
+void JsonArrayAppendInteger(JsonElement *array, int value)
 {
-    assert(object);
-    assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
-    assert(object->container.type == JSON_CONTAINER_TYPE_ARRAY);
+    assert(array);
+    assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
 
-    char *buffer = xcalloc(32, sizeof(char));
-
-    snprintf(buffer, 32, "%d", value);
-
-    JsonElement *child = JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_INTEGER, NULL, buffer);
-
-    SequenceAppend(object->container.children, child);
+    JsonElement *child = JsonIntegerCreate(value);
+    _JsonArrayAppendPrimitive(array, child);
 }
 
 void JsonArrayAppendArray(JsonElement *array, JsonElement *childArray)
@@ -475,7 +488,35 @@ JsonElement *JsonArrayGetAsObject(JsonElement *array, size_t index)
 JsonElement *JsonStringCreate(const char *value)
 {
     assert(value);
-    return JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_STRING, NULL, EscapeJsonString(value));
+    return JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_STRING, EscapeJsonString(value));
+}
+
+JsonElement *JsonIntegerCreate(int value)
+{
+    char *buffer = xcalloc(32, sizeof(char));
+    snprintf(buffer, 32, "%d", value);
+
+    return JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_INTEGER, buffer);
+}
+
+JsonElement *JsonRealCreate(double value)
+{
+    char *buffer = xcalloc(32, sizeof(char));
+    snprintf(buffer, 32, "%.4f", value);
+
+    return  JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_REAL, buffer);
+}
+
+JsonElement *JsonBoolCreate(bool value)
+{
+    assert(value);
+
+    return  JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_BOOL, value ? JSON_TRUE : JSON_FALSE);
+}
+
+JsonElement *JsonNullCreate()
+{
+    return JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_NULL, JSON_NULL);
 }
 
 // *******************************************************************************************
@@ -487,6 +528,17 @@ static void JsonContainerPrint(Writer *writer, JsonElement *containerElement, si
 static bool IsWhitespace(char ch)
 {
     return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r';
+}
+
+static bool IsSeparator(char ch)
+{
+    return IsWhitespace(ch) || ch == ',' || ch == ']' || ch == '}';
+}
+
+static bool IsDigit(char ch)
+{
+    // [1,9]
+    return ch >= 49 && ch <= 57;
 }
 
 static void PrintIndent(Writer *writer, int num)
@@ -510,11 +562,10 @@ static void JsonPrimitivePrint(Writer *writer, JsonElement *primitiveElement, si
         WriterWriteF(writer, "\"%s\"", primitiveElement->primitive.value);
         break;
 
-    case JSON_PRIMITIVE_TYPE_INTEGER:
-    case JSON_PRIMITIVE_TYPE_REAL:
+    default:
         PrintIndent(writer, indent_level);
         WriterWrite(writer, primitiveElement->primitive.value);
-        break;
+        break;        
     }
 }
 
@@ -636,7 +687,46 @@ void JsonElementPrint(Writer *writer, JsonElement *element, size_t indent_level)
 
 static JsonElement *JsonParseAsObject(const char **data);
 
-static const char *JsonParseAsString(const char **data)
+static JsonElement *JsonParseAsBoolean(const char **data)
+{
+    if (StringMatch("^true", *data))
+    {
+        char next = *(*data + 4);
+        if (IsSeparator(next) || next == '\0')
+        {
+            *data += 3;
+            return JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_BOOL, SafeStringDuplicate(JSON_TRUE));
+        }
+    }
+    else if (StringMatch("^false", *data))
+    {
+        char next = *(*data + 5);
+        if (IsSeparator(next) || next == '\0')
+        {
+            *data += 4;
+            return JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_BOOL, SafeStringDuplicate(JSON_FALSE));
+        }
+    }
+
+    return NULL;
+}
+
+static JsonElement *JsonParseAsNull(const char **data)
+{
+    if (StringMatch("^null", *data))
+    {
+        char next = *(*data + 4);
+        if (IsSeparator(next) || next == '\0')
+        {
+            *data += 3;
+            return JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_NULL, SafeStringDuplicate(JSON_NULL));
+        }
+    }
+
+    return NULL;
+}
+
+static char *JsonParseAsString(const char **data)
 {
     if (**data != '"')
     {
@@ -657,7 +747,120 @@ static const char *JsonParseAsString(const char **data)
     }
 
     CfDebug("Unable to parse json data as string, did not end with doublequote: %s", *data);
+    WriterClose(writer);
     return NULL;
+}
+
+static JsonElement *JsonParseAsNumber(const char **data)
+{
+    Writer *writer = StringWriter();
+
+    bool zero_started = false;
+    bool seen_dot = false;
+    bool seen_exponent = false;
+
+    char prev_char = 0;
+
+    for (*data = *data; **data != '\0' && !IsSeparator(**data); prev_char = **data, *data = *data + 1)
+    {
+        switch (**data)
+        {
+        case '-':
+            if (prev_char != 0 && prev_char != 'e' && prev_char != 'E')
+            {
+                CfDebug("Unable to parse json data as number, - not at the start or not after exponent, %s", *data);
+                WriterClose(writer);
+                return NULL;
+            }
+            break;
+
+        case '+':
+            if (prev_char != 'e' && prev_char != 'E')
+            {
+                CfDebug("Unable to parse json data as number, + without preceding exponent, %s", *data);
+                WriterClose(writer);
+                return NULL;
+            }
+            break;
+
+        case '0':
+            if (zero_started && !seen_dot && !seen_exponent)
+            {
+                CfDebug("Unable to parse json data as number, started with 0 before dot or exponent, duplicate 0 seen, %s", *data);
+                WriterClose(writer);
+                return NULL;
+            }
+            if (prev_char == 0)
+            {
+                zero_started = true;
+            }
+            break;
+
+        case '.':
+            if (prev_char != '0' && !IsDigit(prev_char))
+            {
+                CfDebug("Unable to parse json data as number, dot not preceded by digit, %s", *data);
+                WriterClose(writer);
+                return NULL;
+            }
+            seen_dot = true;
+            break;
+
+        case 'e':
+        case 'E':
+            if (seen_exponent)
+            {
+                CfDebug("Unable to parse json data as number, duplicate exponent, %s", *data);
+                WriterClose(writer);
+                return NULL;
+            }
+            else if (!IsDigit(prev_char) && prev_char != '0')
+            {
+                CfDebug("Unable to parse json data as number, exponent without preceding digit, %s", *data);
+                WriterClose(writer);
+                return NULL;
+            }
+            seen_exponent = true;
+            break;
+
+        default:
+            if (zero_started && !seen_dot && !seen_exponent)
+            {
+                CfDebug("Unable to parse json data as number, dot or exponent must follow leading 0: %s", *data);
+                WriterClose(writer);
+                return NULL;
+            }
+
+            if (!IsDigit(**data))
+            {
+                CfDebug("Unable to parse json data as number, invalid symbol, %s", *data);
+                WriterClose(writer);
+                return NULL;
+            }
+            break;
+        }
+
+        WriterWriteChar(writer, **data);
+    }
+
+    if (prev_char != '0' && !IsDigit(prev_char))
+    {
+        CfDebug("Unable to parse json data as string, did not end with digit: %s", *data);
+        WriterClose(writer);
+        return NULL;
+    }
+
+    // rewind 1 char so caller will see separator next
+    *data = *data - 1;
+
+    if (seen_dot)
+    {
+        return JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_REAL, StringWriterClose(writer));
+    }
+    else
+    {
+        return JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_INTEGER, StringWriterClose(writer));
+    }
 }
 
 static JsonElement *JsonParseAsArray(const char **data)
@@ -680,15 +883,37 @@ static JsonElement *JsonParseAsArray(const char **data)
         switch (**data)
         {
         case '"':
-            JsonArrayAppendString(array, JsonParseAsString(data));
+            {
+                char *value = JsonParseAsString(data);
+                JsonArrayAppendString(array, value);
+                free(value);
+            }
             break;
 
         case '[':
-            JsonArrayAppendArray(array, JsonParseAsArray(data));
+            {
+                JsonElement *child_array = JsonParseAsArray(data);
+                if (!child_array)
+                {
+                    JsonElementDestroy(array);
+                    return NULL;
+                }
+
+                JsonArrayAppendArray(array, child_array);
+            }
             break;
 
         case '{':
-            JsonArrayAppendObject(array, JsonParseAsObject(data));
+            {
+                JsonElement *child_object = JsonParseAsObject(data);
+                if (!child_object)
+                {
+                    JsonElementDestroy(array);
+                    return NULL;
+                }
+
+                JsonArrayAppendObject(array, child_object);
+            }
             break;
 
         case ',':
@@ -698,12 +923,40 @@ static JsonElement *JsonParseAsArray(const char **data)
             return array;
 
         default:
+            if (**data == '-' || **data == '0' || IsDigit(**data))
+            {
+                JsonElement *child = JsonParseAsNumber(data);
+                if (!child)
+                {
+                    JsonElementDestroy(array);
+                    return NULL;
+                }
+                _JsonArrayAppendPrimitive(array, child);
+                break;
+            }
+
+            JsonElement *child_bool = JsonParseAsBoolean(data);
+            if (child_bool)
+            {
+                _JsonArrayAppendPrimitive(array, child_bool);
+                break;
+            }
+
+            JsonElement *child_null = JsonParseAsNull(data);
+            if (child_null)
+            {
+                _JsonArrayAppendPrimitive(array, child_null);
+                break;
+            }
+
             CfDebug("Unable to parse json data as object, unrecognized token beginning entry: %s", *data);
+            JsonElementDestroy(array);
             return NULL;
         }
     }
 
     CfDebug("Unable to parse json data as array, did not end with ']': %s", *data);
+    JsonElementDestroy(array);
     return NULL;
 }
 
@@ -716,7 +969,7 @@ static JsonElement *JsonParseAsObject(const char **data)
     }
 
     JsonElement *object = JsonObjectCreate(DEFAULT_CONTAINER_CAPACITY);
-    const char *propertyName = NULL;
+    char *property_name = NULL;
 
     for (*data = *data + 1; **data != '\0'; *data = *data + 1)
     {
@@ -728,97 +981,190 @@ static JsonElement *JsonParseAsObject(const char **data)
         switch (**data)
         {
         case '"':
-            if (propertyName != NULL)
+            if (property_name != NULL)
             {
-                JsonObjectAppendString(object, propertyName, JsonParseAsString(data));
-                propertyName = NULL;
+                char *property_value = JsonParseAsString(data);
+                if (!property_value)
+                {
+                    free(property_name);
+                    JsonElementDestroy(object);
+                    return NULL;
+                }
+
+                JsonObjectAppendString(object, property_name, property_value);
+                free(property_value);
+                free(property_name);
+                property_name = NULL;
             }
             else
             {
-                propertyName = JsonParseAsString(data);
+                property_name = JsonParseAsString(data);
+                if (!property_name)
+                {
+                    JsonElementDestroy(object);
+                    return NULL;
+                }
             }
             break;
 
         case ':':
-            if (propertyName == NULL)
+            if (property_name == NULL)
             {
                 CfDebug("Unable to parse json data as object, ':' seen without having specified an l-value: %s", *data);
+                free(property_name);
+                JsonElementDestroy(object);
                 return NULL;
             }
             break;
 
         case ',':
-            if (propertyName != NULL)
+            if (property_name != NULL)
             {
                 CfDebug("Unable to parse json data as object, ',' seen without having specified an r-value: %s", *data);
+                free(property_name);
+                JsonElementDestroy(object);
                 return NULL;
             }
             break;
 
         case '[':
-            if (propertyName != NULL)
+            if (property_name != NULL)
             {
-                JsonObjectAppendArray(object, propertyName, JsonParseAsArray(data));
-                propertyName = NULL;
+                JsonElement *child_array = JsonParseAsArray(data);
+                if (!child_array)
+                {
+                    free(property_name);
+                    JsonElementDestroy(object);
+                    return NULL;
+                }
+
+                JsonObjectAppendArray(object, property_name, child_array);
+                free(property_name);
+                property_name = NULL;
             }
             else
             {
                 CfDebug("Unable to parse json data as object, array not allowed as l-value: %s", *data);
+                free(property_name);
+                JsonElementDestroy(object);
                 return NULL;
             }
             break;
 
         case '{':
-            if (propertyName != NULL)
+            if (property_name != NULL)
             {
-                JsonObjectAppendObject(object, propertyName, JsonParseAsObject(data));
-                propertyName = NULL;
+                JsonElement *child_object = JsonParseAsObject(data);
+                if (!child_object)
+                {
+                    free(property_name);
+                    JsonElementDestroy(object);
+                    return NULL;
+                }
+
+                JsonObjectAppendObject(object, property_name, child_object);
+                free(property_name);
+                property_name = NULL;
             }
             else
             {
                 CfDebug("Unable to parse json data as object, object not allowed as l-value: %s", *data);
+                free(property_name);
+                JsonElementDestroy(object);
                 return NULL;
             }
             break;
 
         case '}':
-            if (propertyName != NULL)
+            if (property_name != NULL)
             {
                 CfDebug("Unable to parse json data as object, tried to close object having opened an l-value: %s",
                         *data);
+                free(property_name);
+                JsonElementDestroy(object);
                 return NULL;
             }
+            free(property_name);
             return object;
 
         default:
+            if (property_name)
+            {
+                if (**data == '-' || **data == '0' || IsDigit(**data))
+                {
+                    JsonElement *child = JsonParseAsNumber(data);
+                    if (!child)
+                    {
+                        free(property_name);
+                        JsonElementDestroy(object);
+                        return NULL;
+                    }
+                    _JsonObjectAppendPrimitive(object, property_name, child);
+                    free(property_name);
+                    property_name = NULL;
+                    break;
+                }
+
+                JsonElement *child_bool = JsonParseAsBoolean(data);
+                if (child_bool)
+                {
+                    _JsonObjectAppendPrimitive(object, property_name, child_bool);
+                    free(property_name);
+                    property_name = NULL;
+                    break;
+                }
+
+                JsonElement *child_null = JsonParseAsNull(data);
+                if (child_null)
+                {
+                    _JsonObjectAppendPrimitive(object, property_name, child_null);
+                    free(property_name);
+                    property_name = NULL;
+                    break;
+                }
+            }
+
             CfDebug("Unable to parse json data as object, unrecognized token beginning entry: %s", *data);
+            free(property_name);
+            JsonElementDestroy(object);
             return NULL;
         }
     }
 
     CfDebug("Unable to parse json data as string, did not end with '}': %s", *data);
+    free(property_name);
+    JsonElementDestroy(object);
     return NULL;
 }
 
 JsonElement *JsonParse(const char **data)
 {
-    assert(**data && "Cannot parse NULL data");
-
-    if (**data == '{')
+    assert(data && *data);
+    if (data == NULL || *data == NULL)
     {
-        return JsonParseAsObject(data);
-    }
-    else if (**data == '[')
-    {
-        return JsonParseAsArray(data);
-    }
-    else if (**data == '"')
-    {
-        return JsonParseAsObject(data);
-    }
-    else
-    {
-        CfDebug("Don't know how to parse JSON input: %s", *data);
         return NULL;
     }
+
+    while (**data)
+    {
+        if (**data == '{')
+        {
+            return JsonParseAsObject(data);
+        }
+        else if (**data == '[')
+        {
+            return JsonParseAsArray(data);
+        }
+        else if (IsWhitespace(**data))
+        {
+            (*data)++;
+        }
+        else
+        {
+            CfDebug("Unwilling to parse json data starting with invalid character: %c", **data);
+            return NULL;
+        }
+    }
+
+    return NULL;
 }

@@ -36,6 +36,7 @@
 #include "promises.h"
 #include "vars.h"
 #include "syntax.h"
+#include "files_names.h"
 
 static void MapIteratorsFromScalar(const char *scope, Rlist **los, Rlist **lol, char *string, int level, const Promise *pp);
 static int Epimenides(const char *var, Rval rval, int level);
@@ -671,7 +672,11 @@ void ExpandPromiseAndDo(enum cfagenttype agent, const char *scopeid, Promise *pp
 
         if (handle)
         {
-            NewScalar("this", "handle", handle, cf_str);
+            char tmp[CF_EXPANDSIZE];
+            // This ordering is necessary to get automated canonification
+            ExpandScalar(handle,tmp);
+            CanonifyNameInPlace(tmp);
+            NewScalar("this", "handle", tmp, cf_str);
         }
         else
         {
@@ -725,6 +730,13 @@ void ExpandPromiseAndDo(enum cfagenttype agent, const char *scopeid, Promise *pp
             ConvergeVarHashPromise(pp->bundle, pexp, true);
         }
 
+        if (strcmp(pp->agentsubtype, "meta") == 0)
+           {
+           char namespace[CF_BUFSIZE];
+           snprintf(namespace,CF_BUFSIZE,"%s_meta",pp->bundle);
+           ConvergeVarHashPromise(namespace, pp, true);
+           }
+        
         DeletePromise(pexp);
 
         /* End thread monitor */

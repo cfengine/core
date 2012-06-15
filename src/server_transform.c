@@ -671,7 +671,7 @@ void KeepLiteralAccessPromise(Promise *pp, char *type)
 {
     Constraint *cp;
     Rlist *rp;
-    Auth *ap, *dp;
+    Auth *ap = NULL, *dp = NULL;
     char *handle = GetConstraintValue("handle", pp, CF_SCALAR);
 
     if (handle == NULL && strcmp(type,"literal") == 0)

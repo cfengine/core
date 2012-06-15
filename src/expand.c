@@ -730,6 +730,13 @@ void ExpandPromiseAndDo(enum cfagenttype agent, const char *scopeid, Promise *pp
             ConvergeVarHashPromise(pp->bundle, pexp, true);
         }
 
+        if (strcmp(pp->agentsubtype, "meta") == 0)
+           {
+           char namespace[CF_BUFSIZE];
+           snprintf(namespace,CF_BUFSIZE,"%s_meta",pp->bundle);
+           ConvergeVarHashPromise(namespace, pp, true);
+           }
+        
         DeletePromise(pexp);
 
         /* End thread monitor */

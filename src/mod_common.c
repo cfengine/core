@@ -106,6 +106,22 @@ const BodySyntax CF_VARBODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
+
+const BodySyntax CF_METABODY[] =
+{
+    {"string", cf_str, "", "A scalar string"},
+    {"slist", cf_slist, "", "A list of scalar strings"},
+    {NULL, cf_notype, NULL, NULL}
+};
+
+const BodySyntax CF_DEFAULTSBODY[] =
+{
+    {"string", cf_str, "", "A scalar string"},
+    {"slist", cf_slist, "", "A list of scalar strings"},
+    {NULL, cf_notype, NULL, NULL}
+};
+
+
 const BodySyntax CF_CLASSBODY[] =
 {
     {"and", cf_clist, CF_CLASSRANGE, "Combine class sources with AND"},
@@ -384,9 +400,12 @@ const BodySyntax CF_COMMON_BODIES[] =
 
 const SubTypeSyntax CF_COMMON_SUBTYPES[] =
 {
-    {"*", "vars", CF_VARBODY},
+
     {"*", "classes", CF_CLASSBODY},
+    {"*", "defaults", CF_DEFAULTSBODY},
+    {"*", "meta", CF_METABODY},
     {"*", "reports", CF_REPORT_BODIES},
+    {"*", "vars", CF_VARBODY},
     {"*", "*", CF_COMMON_BODIES},
     {NULL, NULL, NULL}
 };

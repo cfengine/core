@@ -31,6 +31,7 @@
 #include "addr_lib.h"
 #include "files_names.h"
 #include "item_lib.h"
+#include "vars.h"
 
 extern int PR_KEPT;
 extern int PR_REPAIRED;
@@ -1040,6 +1041,22 @@ static void KeepAgentPromise(Promise *pp)
         return;
     }
 
+    if (strcmp("meta", pp->agentsubtype) == 0)
+    {
+        char namespace[CF_BUFSIZE];
+        snprintf(namespace,CF_BUFSIZE,"%s_meta",pp->bundle);
+        ConvergeVarHashPromise(namespace, pp, true);
+        return;
+    }
+
+
+    if (strcmp("defaults", pp->agentsubtype) == 0)
+    {
+        DefaultVarPromise(pp);
+        return;
+    }
+
+    
     if (strcmp("classes", pp->agentsubtype) == 0)
     {
         KeepClassContextPromise(pp);

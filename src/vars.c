@@ -273,6 +273,12 @@ static int CompareVariableValue(Rval rval, CfAssoc *ap)
 
 /*******************************************************************/
 
+void DefaultVarPromise(Promise *pp)
+{
+}
+
+/*******************************************************************/
+
 int UnresolvedVariables(CfAssoc *ap, char rtype)
 {
     Rlist *list, *rp;

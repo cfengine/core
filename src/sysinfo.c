@@ -968,6 +968,24 @@ void OSClasses(void)
 #if defined(__ANDROID__)
     SetFlavour("android");
 #endif
+
+    /* FIXME: this variable needs redhat/SuSE/debian classes to be defined and
+     * hence can't be initialized earlier */
+
+    if (IsDefinedClass("redhat"))
+    {
+        NewScalar("sys", "doc_root", "/var/www/html", cf_str);
+    }
+
+    if (IsDefinedClass("SuSE"))
+    {
+        NewScalar("sys", "doc_root", "/srv/www/htdocs", cf_str);
+    }
+
+    if (IsDefinedClass("debian"))
+    {
+        NewScalar("sys", "doc_root", "/var/www", cf_str);
+    }
 }
 
 /*********************************************************************************/

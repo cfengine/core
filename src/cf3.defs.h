@@ -2075,6 +2075,8 @@ typedef struct
     enum action_policy package_changes;
     Rlist *package_file_repositories;
 
+    char *package_default_arch_command;
+
     char *package_list_command;
     char *package_list_version_regex;
     char *package_list_name_regex;

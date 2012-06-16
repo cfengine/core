@@ -1431,6 +1431,8 @@ Packages GetPackageConstraints(const Promise *pp)
 
     p.package_file_repositories = GetListConstraint("package_file_repositories", pp);
 
+    p.package_default_arch_command = (char *) GetConstraintValue("package_default_arch_command", pp, CF_SCALAR);
+
     p.package_patch_list_command = (char *) GetConstraintValue("package_patch_list_command", pp, CF_SCALAR);
     p.package_patch_name_regex = (char *) GetConstraintValue("package_patch_name_regex", pp, CF_SCALAR);
     p.package_patch_arch_regex = (char *) GetConstraintValue("package_patch_arch_regex", pp, CF_SCALAR);

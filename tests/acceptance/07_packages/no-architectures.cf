@@ -1,0 +1,88 @@
+#
+# Test matching packages with no explicit default architecture set and no
+# architectures in list of installed packages.
+#
+# List of installed packages contains a single package with no architecture
+# specified.
+#
+
+body common control
+{
+ inputs => { "../default.cf.sub" };
+ bundlesequence => { default("$(this.promise_filename)") };
+ version => "1.0";
+nova_edition::
+ host_licenses_paid => "5";
+}
+
+bundle agent init
+{
+vars:
+  "dummy" string => "dummy";
+}
+
+bundle agent test
+{
+packages:
+
+  #
+  # Test that package is matched by a promise with no package_architectures
+  # constraint.
+  #
+
+ "foobar"
+  package_version => "1",
+  package_policy => "addupdate",
+  package_method => mock,
+  classes => kept("ok_1");
+
+  #
+  # Test that specifying architecture explicitly does not match the package with
+  # default architecture.
+  #
+
+ "foobar"
+  package_version => "1",
+  package_architectures => { "aldan" },
+  package_policy => "addupdate",
+  package_method => mock,
+  classes => fail("ok_2");
+}
+
+body package_method mock
+{
+package_changes => "individual";
+
+package_list_command => "/usr/bin/printf 'foobar-1'";
+package_list_name_regex => "^([^-]+)";
+package_list_version_regex => "^[^-]+-([\S+])";
+
+package_installed_regex => ".*";
+
+package_add_command => "/bin/false";
+package_update_command => "/bin/false";
+package_delete_command => "/bin/false";
+package_verify_command => "/bin/false";
+}
+
+body classes kept(classname)
+{
+  promise_kept => { "$(classname)" };
+}
+
+body classes fail(classname)
+{
+  repair_failed => { "$(classname)" };
+}
+
+bundle agent check
+{
+classes:
+  "ok" and => { "ok_1", "ok_2" };
+
+reports:
+  ok::
+    "$(this.promise_filename) Pass";
+  !ok::
+    "$(this.promise_filename) FAIL";
+}

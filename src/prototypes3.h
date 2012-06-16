@@ -660,12 +660,6 @@ void ShowPromiseInReport(const char *version, Promise *pp, int indent);
 
 /* rlist.c */
 #include "rlist.h"
-/*
- * TODO: Need to find a nice general solution to these sorts of situations.
- */
-int PrependListPackageItem(PackageItem ** list, char *item, Attributes a, Promise *pp);
-int PrependPackageItem(PackageItem ** list, const char *name, const char *version, const char *arch, Attributes a,
-                       Promise *pp);
 
 /* scope.c */
 

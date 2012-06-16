@@ -571,12 +571,6 @@ int SkipDirLinks(char *path, const char *lastnode, Recursion r);
 
 /* rlist.c */
 #include "rlist.h"
-/*
- * TODO: Need to find a nice general solution to these sorts of situations.
- */
-int PrependListPackageItem(PackageItem ** list, char *item, Attributes a, Promise *pp);
-int PrependPackageItem(PackageItem ** list, const char *name, const char *version, const char *arch, Attributes a,
-                       Promise *pp);
 
 /* scope.c */
 

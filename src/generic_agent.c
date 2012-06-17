@@ -483,6 +483,7 @@ void InitializeGA(void)
     NewClass("constellation_edition");
 #elif defined HAVE_NOVA
     NewClass("nova_edition");
+    NewClass("enterprise_edition");
 #else
     NewClass("community_edition");
 #endif

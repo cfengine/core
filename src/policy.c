@@ -48,6 +48,8 @@ Policy *PolicyNew(void)
     return policy;
 }
 
+/*************************************************************************/
+
 void PolicyDestroy(Policy *policy)
 {
     if (policy)
@@ -57,6 +59,8 @@ void PolicyDestroy(Policy *policy)
         free(policy);
     }
 }
+
+/*************************************************************************/
 
 Policy *PolicyFromPromise(const Promise *promise)
 {
@@ -70,6 +74,8 @@ Policy *PolicyFromPromise(const Promise *promise)
 
     return bundle->parent_policy;
 }
+
+/*************************************************************************/
 
 static bool PolicyCheckPromiseVars(const Promise *pp, Sequence *errors)
 {
@@ -96,6 +102,8 @@ static bool PolicyCheckPromiseVars(const Promise *pp, Sequence *errors)
 
     return success;
 }
+
+/*************************************************************************/
 
 static bool PolicyCheckPromiseMethods(const Promise *pp, Sequence *errors)
 {
@@ -128,6 +136,8 @@ static bool PolicyCheckPromiseMethods(const Promise *pp, Sequence *errors)
     return success;
 }
 
+/*************************************************************************/
+
 bool PolicyCheckPromise(const Promise *pp, Sequence *errors)
 {
     bool success = true;
@@ -143,6 +153,8 @@ bool PolicyCheckPromise(const Promise *pp, Sequence *errors)
 
     return success;
 }
+
+/*************************************************************************/
 
 static bool PolicyCheckSubType(const SubType *subtype, Sequence *errors)
 {
@@ -179,6 +191,8 @@ static bool PolicyCheckSubType(const SubType *subtype, Sequence *errors)
     return success;
 }
 
+/*************************************************************************/
+
 static bool PolicyCheckBundle(const Bundle *bundle, Sequence *errors)
 {
     assert(bundle);
@@ -203,6 +217,7 @@ static bool PolicyCheckBundle(const Bundle *bundle, Sequence *errors)
     return success;
 }
 
+/*************************************************************************/
 
 bool PolicyCheck(const Policy *policy, Sequence *errors)
 {
@@ -250,6 +265,8 @@ bool PolicyCheck(const Policy *policy, Sequence *errors)
     return success;
 }
 
+/*************************************************************************/
+
 PolicyError *PolicyErrorNew(PolicyElementType type, const void *subject, const char *error_msg, ...)
 {
     PolicyError *error = xmalloc(sizeof(PolicyError));
@@ -265,11 +282,15 @@ PolicyError *PolicyErrorNew(PolicyElementType type, const void *subject, const c
     return error;
 }
 
+/*************************************************************************/
+
 void PolicyErrorDestroy(PolicyError *error)
 {
     free(error->message);
     free(error);
 }
+
+/*************************************************************************/
 
 static SourceOffset PolicyElementSourceOffset(PolicyElementType type, const void *element)
 {
@@ -312,6 +333,8 @@ static SourceOffset PolicyElementSourceOffset(PolicyElementType type, const void
             return (SourceOffset) { 0 };
     }
 }
+
+/*************************************************************************/
 
 static char *PolicyElementSourceFile(PolicyElementType type, const void *element)
 {
@@ -365,6 +388,8 @@ static char *PolicyElementSourceFile(PolicyElementType type, const void *element
             return NULL;
     }
 }
+
+/*************************************************************************/
 
 void PolicyErrorWrite(Writer *writer, const PolicyError *error)
 {

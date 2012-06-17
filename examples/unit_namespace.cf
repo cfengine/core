@@ -1,0 +1,44 @@
+
+body common control
+{
+bundlesequence => { "main" };
+inputs => { "unit_namespace1.cf", "unit_namespace2.cf", "unit_namespace3.cf" };
+}
+
+
+bundle agent main
+{
+files:
+
+ "/tmp/bla"
+
+    create => "true",
+    perms => zub("700");
+
+methods:
+
+  "namespace demo" usebundle => name1.mymethod("arg1");
+
+  "namespace demo" usebundle => name2.mymethod("arg1","arg2");
+
+  "namespace demo" usebundle => test;
+
+  "namespace demo" usebundle => test_in_last_file;
+ 
+}
+
+
+body perms zub(x)
+{
+mode => "$(x)";
+}
+
+
+bundle agent test
+{
+reports:
+
+   !jh::
+
+     "TEST OK in no namespace";
+}

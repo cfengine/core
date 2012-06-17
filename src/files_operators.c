@@ -398,7 +398,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp)
     Bundle *bp;
     void *vp;
     FnCall *fp;
-    char *edit_bundle_name = NULL, lockname[CF_BUFSIZE];
+    char edit_bundle_name[CF_BUFSIZE], lockname[CF_BUFSIZE];
     Rlist *params = { 0 };
     int retval = false;
     CfLock thislock;
@@ -425,15 +425,24 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp)
 
     if (a.haveeditline)
     {
+        if (strcmp(pp->namespace,"default") == 0)
+           {
+           strcpy(edit_bundle_name,"");
+           }
+        else
+           {
+           snprintf(edit_bundle_name,CF_BUFSIZE-1, "%s_",pp->namespace);
+           }
+
         if ((vp = GetConstraintValue("edit_line", pp, CF_FNCALL)))
         {
             fp = (FnCall *) vp;
-            edit_bundle_name = fp->name;
+            strcat(edit_bundle_name,fp->name);
             params = fp->args;
         }
         else if ((vp = GetConstraintValue("edit_line", pp, CF_SCALAR)))
         {
-            edit_bundle_name = (char *) vp;
+            strcat(edit_bundle_name,(char *) vp);
             params = NULL;
         }
         else
@@ -442,6 +451,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp)
             YieldCurrentLock(thislock);
             return false;
         }
+
 
         CfOut(cf_verbose, "", " -> Handling file edits in edit_line bundle %s\n", edit_bundle_name);
 

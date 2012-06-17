@@ -56,8 +56,28 @@ void PolicyDestroy(Policy *policy)
     {
         DeleteBundles(policy->bundles);
         DeleteBodies(policy->bodies);
+        free(policy->current_namespace);
         free(policy);
     }
+}
+
+/*************************************************************************/
+
+void PolicySetNameSpace(Policy *policy, char *namespace)
+{
+    if (policy->current_namespace)
+    {
+        free(policy->current_namespace);
+    }
+
+    policy->current_namespace = xstrdup(namespace);
+}
+
+/*************************************************************************/
+
+char *CurrentNameSpace(Policy *policy)
+{
+    return policy->current_namespace;
 }
 
 /*************************************************************************/
@@ -245,7 +265,9 @@ bool PolicyCheck(const Policy *policy, Sequence *errors)
         success &= PolicyCheckBundle(bp, errors);
     }
 
+    
     // ensure body names are not duplicated
+
     for (const Body *bp = policy->bodies; bp; bp = bp->next)
     {
         for (const Body *bp2 = policy->bodies; bp2; bp2 = bp2->next)
@@ -254,10 +276,13 @@ bool PolicyCheck(const Policy *policy, Sequence *errors)
                 StringSafeEqual(bp->name, bp2->name) &&
                 StringSafeEqual(bp->type, bp2->type))
             {
-                SequenceAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_BODY, bp,
+                if (strcmp(bp->type,"file") != 0)
+                {
+                    SequenceAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_BODY, bp,
                                                       POLICY_ERROR_BODY_REDEFINITION,
                                                       bp->name, bp->type));
-                success = false;
+                    success = false;
+                }            
             }
         }
     }

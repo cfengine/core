@@ -695,6 +695,9 @@ void ExpandPromiseAndDo(enum cfagenttype agent, const char *scopeid, Promise *pp
         snprintf(v, CF_MAXVARSIZE, "%d", (int) getgid());
         NewScalar("this", "promiser_gid", v, cf_int);
 
+        NewScalar("this", "bundle", pp->bundle, cf_str);
+        NewScalar("this", "namespace", pp->namespace, cf_str);
+
         /* Must expand $(this.promiser) here for arg dereferencing in things
            like edit_line and methods, but we might have to
            adjust again later if the value changes  -- need to qualify this

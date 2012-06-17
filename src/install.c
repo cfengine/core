@@ -91,8 +91,19 @@ Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *
         bp->next = bundle;
     }
 
-    bundle->name = xstrdup(name);
+    if (strcmp(policy->current_namespace,"default") == 0)
+       {
+       bundle->name = xstrdup(name);
+       }
+    else
+       {
+       char fqname[CF_BUFSIZE];
+       snprintf(fqname,CF_BUFSIZE-1, "%s.%s",policy->current_namespace,name);
+       bundle->name = xstrdup(fqname);
+       }
+
     bundle->type = xstrdup(type);
+    bundle->namespace = xstrdup(policy->current_namespace);
     bundle->args = args;
     bundle->source_path = SafeStringDuplicate(source_path);
 
@@ -129,8 +140,19 @@ Body *AppendBody(Policy *policy, const char *name, const char *type, Rlist *args
         bp->next = body;
     }
 
-    body->name = xstrdup(name);
+    if (strcmp(policy->current_namespace,"default") == 0)
+       {
+       body->name = xstrdup(name);
+       }
+    else
+       {
+       char fqname[CF_BUFSIZE];
+       snprintf(fqname,CF_BUFSIZE-1, "%s.%s",policy->current_namespace,name);
+       body->name = xstrdup(fqname);
+       }
+
     body->type = xstrdup(type);
+    body->namespace = xstrdup(policy->current_namespace);
     body->args = args;
     body->source_path = SafeStringDuplicate(source_path);
 
@@ -182,7 +204,7 @@ SubType *AppendSubType(Bundle *bundle, char *typename)
 
 /*******************************************************************/
 
-Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *classes, char *bundle, char *bundletype)
+Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *classes, char *bundle, char *bundletype, char *namespace)
 {
     Promise *pp, *lp;
     char *sp = NULL, *spe = NULL;
@@ -244,6 +266,7 @@ Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *class
     pp->parent_subtype = type;
     pp->audit = AUDITPTR;
     pp->bundle = xstrdup(bundle);
+    pp->namespace = xstrdup(namespace);
     pp->promiser = sp;
     pp->promisee = promisee;
     pp->classes = spe;

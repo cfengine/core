@@ -521,7 +521,7 @@ int RelevantBundle(const char *agent, const char *blocktype);
 Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *args, const char *source_path);
 Body *AppendBody(Policy *policy, const char *name, const char *type, Rlist *args, const char *source_path);
 SubType *AppendSubType(Bundle *bundle, char *typename);
-Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *classes, char *bundle, char *bundletype);
+Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *classes, char *bundle, char *bundletype, char *namespace);
 void DeleteBundles(Bundle *bp);
 void DeleteBodies(Body *bp);
 

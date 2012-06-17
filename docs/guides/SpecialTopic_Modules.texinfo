@@ -221,7 +221,7 @@ standard methods, e.g. for editing files:
 
 @cartouche
 @verbatim
-body agent control 
+body common control 
 { 
 bundlesequence => {
                   webserver("on"),
@@ -265,15 +265,14 @@ files:
 @end smallexample
 @end cartouche
 
-@item Spread-sheet level
+@item Spread-sheet level (data-driven)
 
-CFEngine commercial editions support a spreadsheet
-In a spreadsheet approach, you create only the data to be inserted into predefined
-promises. The data are entered in tabular form, and may be browsed in the web interface.
-This form of entry is preferred in some environments, especially on the Windows platform.
+CFEngine commercial editions support a kind of spreadsheet. In a spreadsheet
+approach, you create only the data to be inserted into predefined
+promises. The data are entered in tabular form, and may be browsed in
+the web interface.  This form of entry is preferred in some
+environments, especially on the Windows platform.
 
-@center @image{cdp_services_report,15cm,,The Content-Driven Policy services report,png}
-@center Content-Driven Policies
 
 @end table
 

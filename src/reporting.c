@@ -327,7 +327,7 @@ void ShowPromiseInReport(const char *version, Promise *pp, int indent)
         switch (cp->rval.rtype)
         {
         case CF_SCALAR:
-            if ((bp = IsBody(policy->bodies, (char *) cp->rval.item)))
+            if ((bp = IsBody(policy->bodies, pp->namespace, (char *) cp->rval.item)))
             {
                 ShowBody(bp, 15);
             }
@@ -353,7 +353,7 @@ void ShowPromiseInReport(const char *version, Promise *pp, int indent)
         case CF_FNCALL:
             fp = (FnCall *) cp->rval.item;
 
-            if ((bp = IsBody(policy->bodies, fp->name)))
+            if ((bp = IsBody(policy->bodies, pp->namespace, fp->name)))
             {
                 ShowBody(bp, 15);
             }

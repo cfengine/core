@@ -32,11 +32,17 @@ typedef struct
     double var;
 } QPoint0;
 
-typedef struct
-{
-    char address[128];
-    QPoint0 Q;
-} KeyHostSeen0;
+#define QPOINT0_OFFSET 128
+
+/*
+ * Structure of version 0 lastseen entry:
+ *
+ * flag | hostkey -> address | QPoint
+ *  |        |          |         \- 3*double
+ *  |        |          \- 128 chars
+ *  |        \- N*chars
+ *  \- 1 byte, '+' or '-'
+ */
 
 static bool LastseenMigrationVersion0(DBHandle *db)
 {
@@ -76,11 +82,14 @@ static bool LastseenMigrationVersion0(DBHandle *db)
         bool incoming = key[0] == '-';
         const char *hostkey = key + 1;
 
-        KeyHostSeen0 *old_data = value;
+        /* Properly align the data */
+        const char *old_data_address = (const char *)value;
+        QPoint0 old_data_q;
+        memcpy(&old_data_q, (const char *)value + QPOINT0_OFFSET, sizeof(QPoint0));
 
         /* Only migrate sane data */
 
-        if (vsize != sizeof(KeyHostSeen0))
+        if (vsize != QPOINT0_OFFSET + sizeof(QPoint0))
         {
             CfOut(cf_inform, "", "LastseenMigrationVersion0: invalid value size for key %s, entry is deleted",
                   key);
@@ -91,7 +100,7 @@ static bool LastseenMigrationVersion0(DBHandle *db)
         char hostkey_key[CF_BUFSIZE];
         snprintf(hostkey_key, CF_BUFSIZE, "k%s", hostkey);
 
-        if (!WriteDB(db, hostkey_key, old_data->address, strlen(old_data->address) + 1))
+        if (!WriteDB(db, hostkey_key, old_data_address, strlen(old_data_address) + 1))
         {
             CfOut(cf_inform, "", "Unable to write version 1 lastseen entry for %s", key);
             errors = true;
@@ -99,7 +108,7 @@ static bool LastseenMigrationVersion0(DBHandle *db)
         }
 
         char address_key[CF_BUFSIZE];
-        snprintf(address_key, CF_BUFSIZE, "a%s", old_data->address);
+        snprintf(address_key, CF_BUFSIZE, "a%s", old_data_address);
 
         if (!WriteDB(db, address_key, hostkey, strlen(hostkey) + 1))
         {
@@ -115,10 +124,10 @@ static bool LastseenMigrationVersion0(DBHandle *db)
            Ignore malformed connection quality data
         */
 
-        if (!isfinite(old_data->Q.q)
-            || old_data->Q.q < 0
-            || !isfinite(old_data->Q.expect)
-            || !isfinite(old_data->Q.var))
+        if (!isfinite(old_data_q.q)
+            || old_data_q.q < 0
+            || !isfinite(old_data_q.expect)
+            || !isfinite(old_data_q.var))
         {
             CfOut(cf_inform, "", "Ignoring malformed connection quality data for %s", key);
             DBCursorDeleteEntry(cursor);
@@ -126,7 +135,7 @@ static bool LastseenMigrationVersion0(DBHandle *db)
         }
 
         KeyHostSeen data = {
-            .lastseen = (time_t)old_data->Q.q,
+            .lastseen = (time_t)old_data_q.q,
             .Q = {
                 /*
                    Previously .q wasn't stored in database, but was calculated
@@ -135,10 +144,10 @@ static bool LastseenMigrationVersion0(DBHandle *db)
                    the database upgrade, just assume that last reading is an
                    average one.
                 */
-                .q = old_data->Q.expect,
+                .q = old_data_q.expect,
                 .dq = 0,
-                .expect = old_data->Q.expect,
-                .var = old_data->Q.var,
+                .expect = old_data_q.expect,
+                .var = old_data_q.var,
             }
         };
 

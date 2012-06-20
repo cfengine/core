@@ -45,6 +45,7 @@ static const char *POLICY_ERROR_SUBTYPE_INVALID = "%s is not a valid type catego
 Policy *PolicyNew(void)
 {
     Policy *policy = xcalloc(1, sizeof(Policy));
+    policy->current_namespace = xstrdup("default");
     return policy;
 }
 

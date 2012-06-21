@@ -16,7 +16,6 @@ COMMON_GUIDES = \
     SpecialTopic_Agility \
     SpecialTopic_ApplMgt \
     SpecialTopic_BDMA \
-    SpecialTopic_Change \
     SpecialTopic_Cloud \
     SpecialTopic_Change \
     SpecialTopic_ContentDrivenPolicies \
@@ -25,7 +24,6 @@ COMMON_GUIDES = \
     SpecialTopic_Editing \
     SpecialTopic_Federation \
     SpecialTopic_FIPS \
-    SpecialTopic_Federation \
     SpecialTopic_Hierarchy \
     SpecialTopic_ITIL \
     SpecialTopic_Iteration \

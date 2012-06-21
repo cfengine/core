@@ -1,3 +1,16 @@
+3.3.4   (Bugfix and Stability release)
+
+	Evaluation of policies:
+
+	- Fix wrong classes set after installation of several packages
+	  using packages promises (Mantis #829).
+	- Fix segfault using edit_template on existing file (Mantis #1155).
+
+	Misc:
+
+	- Fix memory leak during re-read of network interfaces'
+	  information in cf-execd/cf-serverd.
+
 3.3.3   (Bugfix and Stability release)
 
 	Evaluation of policies:

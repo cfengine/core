@@ -185,12 +185,17 @@ static int PackageSanityCheck(Attributes a, Promise *pp)
 
     if (a.packages.package_name_regex || a.packages.package_version_regex || a.packages.package_arch_regex)
     {
+        if (a.packages.package_name_regex == NULL)
+        {
+            cfPS(cf_error, CF_FAIL, "", pp, a, " !! You must supply name regex if you supplied version or arch regex for parsing promiser string");
+            return false;
+        }
         if (a.packages.package_name_regex && a.packages.package_version_regex && a.packages.package_arch_regex)
         {
             if (a.packages.package_version || a.packages.package_architectures)
             {
                 cfPS(cf_error, CF_FAIL, "", pp, a,
-                     " !! You must either supply all regexs for (name,version,arch) xor a separate version number and architecture");
+                     " !! You must either supply all regexs for (name,version,arch) or a separate version number and architecture");
                 return false;
             }
         }
@@ -199,9 +204,23 @@ static int PackageSanityCheck(Attributes a, Promise *pp)
             if (a.packages.package_version && a.packages.package_architectures)
             {
                 cfPS(cf_error, CF_FAIL, "", pp, a,
-                     " !! You must either supply all regexs for (name,version,arch) xor a separate version number and architecture");
+                     " !! You must either supply all regexs for (name,version,arch) or a separate version number and architecture");
                 return false;
             }
+        }
+
+        if (a.packages.package_version_regex && a.packages.package_version)
+        {
+            cfPS(cf_error, CF_FAIL, "", pp, a,
+                 " !! You must either supply version regex or a separate version number");
+            return false;
+        }
+
+        if (a.packages.package_arch_regex && a.packages.package_architectures)
+        {
+            cfPS(cf_error, CF_FAIL, "", pp, a,
+                 " !! You must either supply arch regex or a separate architecture");
+            return false;
         }
     }
 

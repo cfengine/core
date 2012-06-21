@@ -2063,14 +2063,14 @@ FnCallResult FnCallHostInNetgroup(FnCall *fp, Rlist *finalargs)
 
     while (getnetgrent(&host, &user, &domain))
     {
-        if (host == NULL || strcmp(host, VUQNAME) == 0)
+        if (host == NULL)
         {
-            CfOut(cf_verbose, "", "Matched %s in netgroup %s\n", host, ScalarValue(finalargs));
+            CfOut(cf_verbose, "", "Matched %s in netgroup %s\n", VFQNAME, ScalarValue(finalargs));
             strcpy(buffer, "any");
             break;
         }
 
-        if (host == NULL || strcmp(host, VFQNAME) == 0)
+        if (strcmp(host, VFQNAME) == 0 || strcmp(host, VUQNAME) == 0)
         {
             CfOut(cf_verbose, "", "Matched %s in netgroup %s\n", host, ScalarValue(finalargs));
             strcpy(buffer, "any");

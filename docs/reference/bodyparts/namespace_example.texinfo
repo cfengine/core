@@ -1,0 +1,10 @@
+
+
+@verbatim
+
+body file control
+{
+namespace => "name1"; 
+}
+
+@end verbatim

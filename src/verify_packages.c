@@ -90,7 +90,6 @@ void VerifyPackagesPromise(Promise *pp)
 
     if (!PackageSanityCheck(a, pp))
     {
-        cfPS(cf_error, CF_FAIL, "", pp, a, " !! Unable to obtain a list of installed packages - aborting");
         return;
     }
 
@@ -153,8 +152,9 @@ static int PackageSanityCheck(Attributes a, Promise *pp)
 
     if (a.packages.package_list_command && !IsExecutable(GetArg0(a.packages.package_list_command)))
     {
-        CfOut(cf_error, "", "The proposed package list command \"%s\" was not executable",
-              a.packages.package_list_command);
+        cfPS(cf_error, CF_FAIL, "", pp, a,
+             "The proposed package list command \"%s\" was not executable",
+             a.packages.package_list_command);
         return false;
     }
 

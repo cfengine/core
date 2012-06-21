@@ -1,4 +1,4 @@
-SUBDIRS = manpages tools guides reference
+SUBDIRS = manpages tools guides reference tex-include
 
 html:
 	$(MAKE) -C guides $(AM_MAKEFLAGS) html

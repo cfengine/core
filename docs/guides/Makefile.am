@@ -55,11 +55,15 @@ COMMON_GUIDES = \
     cf3-upgrade \
     cf_Quickref3
 
-HTML_GUIDES = $(COMMON_GUIDES)
+HTML_ONLY_GUIDES =
 
-PDF_GUIDES = $(COMMON_GUIDES) \
+PDF_ONLY_GUIDES = \
     cf3-nova-mission-portal \
     cf3-nova-2-1-supplement
+
+HTML_GUIDES = $(COMMON_GUIDES) $(HTML_ONLY_GUIDES)
+
+PDF_GUIDES = $(COMMON_GUIDES) $(PDF_ONLY_GUIDES)
 
 .PRECIOUS: ../tools/build-solutions-guide
 
@@ -90,5 +94,42 @@ html: $(patsubst %,%.html,$(HTML_GUIDES))
 pdf: $(patsubst %,%.pdf,$(PDF_GUIDES))
 
 all:
+
+GUIDEDIR=$(DESTDIR)/$(projdocdir)/guides
+
+dist-guide-%: %
+	$(INSTALL_DATA) $^ $(distdir)
+	if test -n "`$(srcdir)/../tools/extract-images $^ | sort | uniq`"; then \
+		$(INSTALL_DATA) `$(srcdir)/../tools/extract-images $^ | sort | uniq` $(distdir); \
+	fi
+
+dist-common: $(patsubst %,dist-guide-%.texinfo,$(COMMON_GUIDES))
+
+install-html: html
+	$(MKDIR_P) $(GUIDEDIR)/html
+	$(INSTALL_DATA) $(patsubst %,%.html,$(HTML_GUIDES)) $(GUIDEDIR)/html
+	$(INSTALL_DATA) `$(srcdir)/../tools/extract-images $(patsubst %,%.texinfo,$(HTML_GUIDES)) | sort | uniq` $(GUIDEDIR)/html
+
+dist-html-only:
+
+install-pdf: pdf
+	$(MKDIR_P) $(GUIDEDIR)/pdf
+	$(INSTALL_DATA) $(patsubst %,%.pdf,$(PDF_GUIDES)) $(GUIDEDIR)/pdf
+
+dist-pdf-only: $(patsubst %,dist-guide-%.texinfo,$(PDF_ONLY_GUIDES))
+
+if PDF_DOCS
+all: pdf
+install-data-hook: install-pdf
+dist-hook: dist-pdf-only dist-common
+endif
+
+if HTML_DOCS
+all: html
+install-data-hook: install-html
+dist-hook: dist-html-only dist-common
+endif
+
+EXTRA_DIST = cf3-solutions.texinfo.in CFEngineFrontPage.pdf NewLogo.pdf cfcomdoc.css
 
 CLEANFILES = cf3-solutions.texinfo $(patsubst %,%.pdf,$(PDF_GUIDES)) $(patsubst %,%.html,$(HTML_GUIDES))

@@ -34,5 +34,38 @@ pdf: cf3-Reference.pdf
 
 all:
 
-CLEANFILES = cf3-Reference.html cf3-Reference.pdf cf3-Reference.texinfo
+install: install-html install-pdf
 
+REFDIR=$(DESTDIR)/$(projdocdir)/reference
+
+dist-reference-%: %
+	$(MKDIR_P) $(distdir)/$^
+	$(INSTALL_DATA) $(subst *,\*,$(wildcard $(srcdir)/$^/*.texinfo)) $(distdir)/$^
+
+dist-reference: $(addprefix dist-reference-,bodyparts bundletypes control functions promises varcontexts vars)
+	$(INSTALL_DATA) $(filter-out cf3-Reference.texinfo,$(wildcard $(srcdir)/*.texinfo)) $(distdir)
+
+install-html: html
+	$(MKDIR_P) $(REFDIR)/html
+	$(INSTALL_DATA) cf3-Reference.html $(REFDIR)/html
+	$(INSTALL_DATA) `$(srcdir)/../tools/extract-images cf3-Reference.texinfo | sort | uniq` $(REFDIR)/html
+
+install-pdf: pdf
+	$(MKDIR_P) $(REFDIR)/pdf
+	$(INSTALL_DATA) cf3-Reference.pdf $(REFDIR)/pdf
+
+if PDF_DOCS
+all: pdf
+install-data-hook: install-pdf
+dist-hook: dist-reference
+endif
+
+if HTML_DOCS
+all: html
+install-data-hook: install-html
+dist-hook: dist-reference
+endif
+
+EXTRA_DIST = CFEngineFrontPage.pdf NewLogo.pdf filelogic.png generate_manual.cf
+
+CLEANFILES = cf3-Reference.html cf3-Reference.pdf cf3-Reference.texinfo

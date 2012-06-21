@@ -12,12 +12,19 @@ AC_INIT
 AC_CONFIG_SRCDIR([src/cf-promises.c])
 AC_CANONICAL_TARGET
 
+dnl
+dnl This program needs to be checked early, as MAKEINFO variable is expanded in
+dnl AM_INIT_AUTOMAKE.
+dnl
+AC_CHECK_PROG(MAKEINFO, makeinfo, makeinfo)
+
 define([revision], esyscmd([sh -c "(git rev-list -1 --abbrev-commit HEAD || echo unknown) | tr -d '\n'" 2>/dev/null]))dnl
 
 dnl
 dnl The version in the next line is the only one to set
 dnl
 
+_AM_SET_OPTION([tar-ustar])
 AM_INIT_AUTOMAKE(cfengine, 3.4.0a1.revision)
 AM_MAINTAINER_MODE([enable])
 
@@ -78,8 +85,6 @@ AC_PROG_INSTALL
 AC_CONFIG_LIBOBJ_DIR(pub)
 AC_FUNC_GETLOADAVG 
 AC_PATH_PROG(GETCONF, getconf, false, $PATH:$prefix/bin:/usr/bin:/usr/local/bin:/sw/bin)
-
-AM_MISSING_PROG(TEXI2PDF, texi2pdf)
 
 AM_CONDITIONAL(CROSS_COMPILING, test "x$cross_compiling" = "xyes")
 
@@ -833,6 +838,33 @@ if test "x$use_coverage" = "xyes"; then
   LDFLAGS="$LDFLAGS -lgcov"
 fi
 
+dnl
+dnl Documentation generation
+dnl
+
+AC_ARG_ENABLE(docs, AC_HELP_STRING([--enable-docs=html|pdf|all],
+                                   [Enable generation of documentation in specified formats]),
+                    [use_docs=$enableval], [use_docs=no])
+
+if test "x$use_docs" != "xno"; then
+   if test "x$use_docs" = "xhtml" || test "x$use_docs" = "xall"; then
+     if test "$MAKEINFO" = "${am_missing_run}makeinfo"; then
+      AC_MSG_ERROR([makeinfo tool is required for HTML documentation generation])
+     fi
+   fi
+
+   if test "x$use_docs" = "xpdf" || test "x$use_docs" = "xall"; then
+      AC_CHECK_PROG(TEXI2PDF, texi2pdf, texi2pdf)
+
+      if test -z "$TEXI2PDF"; then
+        AC_MSG_ERROR([texi2pdf tool is required for PDF documentation generation])
+      fi
+   fi
+fi
+
+AM_CONDITIONAL(HTML_DOCS, test "x$use_docs" = "xhtml" || test "x$use_docs" = "xall")
+AM_CONDITIONAL(PDF_DOCS, test "x$use_docs" = "xpdf" || test "x$use_docs" = "xall")
+
 
 dnl ######################################################################
 dnl Summarize
@@ -889,11 +921,13 @@ AC_CONFIG_FILES([Makefile
 	docs/manpages/Makefile
 	docs/reference/Makefile
 	docs/tools/Makefile
+	docs/tex-include/Makefile
 	examples/Makefile
 	masterfiles/Makefile
 	tests/Makefile
 	tests/acceptance/Makefile
 	tests/unit/Makefile
+	tests/unit/data/Makefile
 	tests/load/Makefile])
 
 m4_indir(incstart[]incend, [nova/output.m4])

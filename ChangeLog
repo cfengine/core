@@ -1,14 +1,28 @@
 3.4.0 (in development)
 
 	New features:
+
 	- cf-promises --parse-tree option to parse policy file and dump it
 	  in JSON format
 
-	New semantics 
-	- methods promises now return the status of promises
+	- Namespaces support for bundles and bodies. See the
+	  examples/unit_namespace*.cf for the usage.
+
+	- Default arguments for bundles. See the examples/unit_defaults.cf
+
+	- Metadata promise type. See the examples/unit_meta.cf
+
+	New semantics:
+
+	- Methods promises now return the status of promises
   	  kept within them. If any promise was not kept, the method is not
 	  kept, else if any promise is repaired, the method was repaired
 	  else it was kept.
+
+	Misc:
+
+	- archlinux hard class on Arch Linux.
+	- Detect BSD Make and automatically switch to GNU Make.
 
 3.3.4   (Bugfix and Stability release)
 

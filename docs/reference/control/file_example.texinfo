@@ -1,0 +1,14 @@
+
+@verbatim
+
+body file control
+{
+namespace => "name1"; 
+}
+
+bundle agent private
+{
+....
+}
+
+@end verbatim

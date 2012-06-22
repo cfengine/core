@@ -29,7 +29,7 @@ insert_lines:
 
 reports:
 
-  !sdkfjh::
+  cfengine_3::
 
     "makefile in name 1";
 }

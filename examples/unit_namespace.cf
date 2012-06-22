@@ -38,7 +38,7 @@ bundle agent test
 {
 reports:
 
-   !jh::
+   cfengine_3::
 
      "TEST OK in no namespace";
 }

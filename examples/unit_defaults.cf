@@ -38,10 +38,15 @@ bundle agent example
 {     
 defaults:
 
+  # We can have default values even if variables are not defined at all.
+  # This is equivalent to a variable definition, so not particularly useful.
+
   "X" string => "I am a default value";
   "Y" slist => { "I am a default list item 1", "I am a default list item 2" };
 
 methods:
+
+ # More useful, defaults if parameters are passed to a param bundle
 
  "example" usebundle => mymethod("","bbb");
 

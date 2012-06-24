@@ -48,7 +48,7 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp)
     Bundle *bp;
     void *vp;
     FnCall *fp;
-    char method_name[CF_EXPANDSIZE];
+    char method_name[CF_EXPANDSIZE],*method_deref;
     Rlist *params = NULL;
     int retval = false;
     CfLock thislock;
@@ -84,7 +84,16 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp)
 
     PromiseBanner(pp);
 
-    if ((bp = GetBundle(PolicyFromPromise(pp), method_name, "agent")))
+    if (strncmp(method_name,"default.",strlen("default.")) == 0)
+       {
+       method_deref = strchr(method_name,'.') + 1;
+       }
+    else
+       {
+       method_deref = method_name;
+       }
+
+    if ((bp = GetBundle(PolicyFromPromise(pp), method_deref, "agent")))
     {
         const char *bp_stack = THIS_BUNDLE;
 

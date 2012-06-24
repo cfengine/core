@@ -373,7 +373,14 @@ Body *IsBody(Body *list, const char *namespace, const char *key)
 
         if (strcmp(namespace,"default") == 0)
         {
-            strcpy(fqname,key);
+            if (strncmp(key,"default.",strlen("default.")) == 0)
+            {
+                strcpy(fqname,strchr(key,'.')+1);
+            }
+            else
+            {
+                strcpy(fqname,key);
+            }        
         }
         else if (strchr(key,'.'))
         {
@@ -404,7 +411,14 @@ Bundle *IsBundle(Bundle *list, const char *key)
     {
         if (strcmp(bp->namespace,"default") == 0)
         {
-            strcpy(fqname,key);
+            if (strncmp(key,"default.",strlen("default.")) == 0)
+            {
+                strcpy(fqname,strchr(key,'.')+1);
+            }
+            else
+            {
+                strcpy(fqname,key);
+            }        
         }
         else if (strncmp(bp->namespace,key,strlen(bp->namespace)) == 0)
         {
@@ -414,6 +428,7 @@ Bundle *IsBundle(Bundle *list, const char *key)
         {
             snprintf(fqname,CF_BUFSIZE-1, "%s.%s",bp->namespace,key);
         }
+
 
         if (strcmp(bp->name, fqname) == 0)
         {

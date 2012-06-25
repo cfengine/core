@@ -25,12 +25,67 @@
 #ifndef CFENGINE_JSON_H
 #define CFENGINE_JSON_H
 
+/**
+  @brief JSON data-structure.
+
+  This is a JSON Document Object Model (DOM). Clients deal only with the opaque JsonElement, which may be either a container or
+  a primitive (client should probably not deal much with primitive elements). A JSON container may be either an object or an array.
+  The JSON DOM currently supports copy semantics for primitive values, but not for container types. In practice, this means that
+  clients always just free the parent element, but an element should just have a single parent, or none.
+
+  JSON primitives as JsonElement are currently not well supported.
+
+  JSON DOM is currently built upon Sequence.
+  The JSON specification may be found at @link http://www.json.org @endlink.
+
+  @see Sequence
+*/
+
+typedef enum
+{
+    JSON_ELEMENT_TYPE_CONTAINER,
+    JSON_ELEMENT_TYPE_PRIMITIVE
+} JsonElementType;
+
+typedef enum
+{
+    JSON_CONTAINER_TYPE_OBJECT,
+    JSON_CONTAINER_TYPE_ARRAY
+} JsonContainerType;
+
+typedef enum
+{
+    JSON_PRIMITIVE_TYPE_STRING,
+    JSON_PRIMITIVE_TYPE_INTEGER,
+    JSON_PRIMITIVE_TYPE_REAL,
+    JSON_PRIMITIVE_TYPE_BOOL,
+    JSON_PRIMITIVE_TYPE_NULL
+} JsonPrimitiveType;
+
 typedef struct JsonElement_ JsonElement;
 
 #include "cf3.defs.h"
 #include "writer.h"
 
-JsonElement *JsonObjectCreate(size_t initialCapacity);
+typedef struct
+{
+    const JsonElement *container;
+    size_t index;
+} JsonIterator;
+
+
+/**
+  @brief Create a new JSON object
+  @param initial_capacity [in] The number of fields to preallocate space for.
+  @returns A pointer to the created object.
+  */
+JsonElement *JsonObjectCreate(size_t initial_capacity);
+
+/**
+  @brief Create a new JSON array
+  @param initial_capacity [in] The number of fields to preallocate space for.
+  @returns The pointer to the created array.
+  */
 JsonElement *JsonArrayCreate(size_t initialCapacity);
 
 /**
@@ -52,7 +107,31 @@ JsonElement *JsonNullCreate();
   */
 void JsonElementDestroy(JsonElement *element);
 
-size_t JsonElementLength(JsonElement *element);
+/**
+  @brief Get the length of a JsonElement. This is the number of elements or fields in an array or object respectively.
+  @param element [in] The JSON element.
+  */
+size_t JsonElementLength(const JsonElement *element);
+
+JsonIterator JsonIteratorInit(const JsonElement *container);
+const char *JsonIteratorNextKey(JsonIterator *iter);
+const JsonElement *JsonIteratorNextValue(JsonIterator *iter);
+
+JsonElementType JsonGetElementType(const JsonElement *element);
+
+JsonContainerType JsonGetContrainerType(const JsonElement *container);
+
+JsonPrimitiveType JsonGetPrimitiveType(const JsonElement *primitive);
+const char *JsonPrimitiveGetAsString(const JsonElement *primitive);
+
+/**
+  @brief Pretty-print a JsonElement recurively into a Writer.
+  @see Writer
+  @param writer [in] The Writer object to use as a buffer.
+  @param element [in] The JSON element to print.
+  @param indent_level [in] The nesting level with which the printing should be done. This is mainly to allow the
+  function to be called recursively. Clients will normally want to set this to 0.
+  */
 void JsonElementPrint(Writer *writer, JsonElement *element, size_t indent_level);
 
 void JsonObjectAppendString(JsonElement *object, const char *key, const char *value);

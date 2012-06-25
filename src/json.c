@@ -35,27 +35,6 @@ static const char *JSON_TRUE = "true";
 static const char *JSON_FALSE = "false";
 static const char *JSON_NULL = "null";
 
-typedef enum
-{
-    JSON_ELEMENT_TYPE_CONTAINER,
-    JSON_ELEMENT_TYPE_PRIMITIVE
-} JsonElementType;
-
-typedef enum
-{
-    JSON_CONTAINER_TYPE_OBJECT,
-    JSON_CONTAINER_TYPE_ARRAY
-} JsonContainerType;
-
-typedef enum
-{
-    JSON_PRIMITIVE_TYPE_STRING,
-    JSON_PRIMITIVE_TYPE_INTEGER,
-    JSON_PRIMITIVE_TYPE_REAL,
-    JSON_PRIMITIVE_TYPE_BOOL,
-    JSON_PRIMITIVE_TYPE_NULL
-} JsonPrimitiveType;
-
 struct JsonElement_
 {
     JsonElementType type;
@@ -150,7 +129,7 @@ void JsonElementDestroy(JsonElement *element)
     free(element);
 }
 
-size_t JsonElementLength(JsonElement *element)
+size_t JsonElementLength(const JsonElement *element)
 {
     assert(element);
 
@@ -165,6 +144,68 @@ size_t JsonElementLength(JsonElement *element)
 
     return -1;                  // appease gcc
 }
+
+JsonIterator JsonIteratorInit(const JsonElement *container)
+{
+    assert(container);
+    assert(container->type == JSON_ELEMENT_TYPE_CONTAINER);
+
+    return (JsonIterator) { container, 0 };
+}
+
+const char *JsonIteratorNextKey(JsonIterator *iter)
+{
+    assert(iter);
+    assert(iter->container->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(iter->container->container.type == JSON_CONTAINER_TYPE_OBJECT);
+
+    const JsonElement *child = JsonIteratorNextValue(iter);
+    return child ? child->propertyName : NULL;
+}
+
+const JsonElement *JsonIteratorNextValue(JsonIterator *iter)
+{
+    assert(iter);
+    assert(iter->container->type == JSON_ELEMENT_TYPE_CONTAINER);
+
+    if (iter->index >= JsonElementLength(iter->container))
+    {
+        return NULL;
+    }
+
+    return iter->container->container.children->data[iter->index++];
+}
+
+JsonElementType JsonGetElementType(const JsonElement *element)
+{
+    assert(element);
+    return element->type;
+}
+
+JsonContainerType JsonGetContrainerType(const JsonElement *container)
+{
+    assert(container);
+    assert(container->type == JSON_ELEMENT_TYPE_CONTAINER);
+
+    return container->container.type;
+}
+
+JsonPrimitiveType JsonGetPrimitiveType(const JsonElement *primitive)
+{
+    assert(primitive);
+    assert(primitive->type == JSON_ELEMENT_TYPE_PRIMITIVE);
+
+    return primitive->primitive.type;
+}
+
+const char *JsonPrimitiveGetAsString(const JsonElement *primitive)
+{
+    assert(primitive);
+    assert(primitive->type == JSON_ELEMENT_TYPE_PRIMITIVE);
+
+    return primitive->primitive.value;
+}
+
 
 // *******************************************************************************************
 // JsonObject Functions

@@ -33,6 +33,7 @@ char *ToLowerStr(const char *str);
 void ToLowerStrInplace(char *str);
 
 long StringToLong(const char *str);
+double StringToDouble(const char *str);
 char *NULLStringToEmpty(char *str);
 
 bool IsNumber(const char *name);

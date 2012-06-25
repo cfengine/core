@@ -375,6 +375,20 @@ long StringToLong(const char *str)
 
 /*********************************************************************/
 
+double StringToDouble(const char *str)
+{
+    assert(str);
+
+    char *end;
+    double result = strtod(str, &end);
+
+    assert(!*end && "Failed to convert string to double");
+
+    return result;
+}
+
+/*********************************************************************/
+
 char *NULLStringToEmpty(char *str)
 {
     if(!str)

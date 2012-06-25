@@ -231,6 +231,32 @@ static void test_object_get_array(void **state)
     JsonElementDestroy(obj);
 }
 
+static void test_object_iterator(void **state)
+{
+    JsonElement *obj = JsonObjectCreate(10);
+
+    JsonObjectAppendString(obj, "first", "one");
+    JsonObjectAppendString(obj, "second", "two");
+
+    {
+        JsonIterator it = JsonIteratorInit(obj);
+
+        assert_string_equal("first", JsonIteratorNextKey(&it));
+        assert_string_equal("second", JsonIteratorNextKey(&it));
+        assert_false(JsonIteratorNextKey(&it));
+    }
+
+    {
+        JsonIterator it = JsonIteratorInit(obj);
+
+        assert_string_equal("one", JsonPrimitiveGetAsString(JsonIteratorNextValue(&it)));
+        assert_string_equal("two", JsonPrimitiveGetAsString(JsonIteratorNextValue(&it)));
+        assert_false(JsonIteratorNextValue(&it));
+    }
+
+    JsonElementDestroy(obj);
+}
+
 static void test_array_get_string(void **state)
 {
     JsonElement *arr = JsonArrayCreate(10);
@@ -240,6 +266,24 @@ static void test_array_get_string(void **state)
 
     assert_string_equal(JsonArrayGetAsString(arr, 1), "second");
     assert_string_equal(JsonArrayGetAsString(arr, 0), "first");
+
+    JsonElementDestroy(arr);
+}
+
+static void test_array_iterator(void **state)
+{
+    JsonElement *arr = JsonArrayCreate(10);
+
+    JsonArrayAppendString(arr, "first");
+    JsonArrayAppendString(arr, "second");
+
+    {
+        JsonIterator it = JsonIteratorInit(arr);
+
+        assert_string_equal("first", JsonPrimitiveGetAsString(JsonIteratorNextValue(&it)));
+        assert_string_equal("second", JsonPrimitiveGetAsString(JsonIteratorNextValue(&it)));
+        assert_false(JsonIteratorNextValue(&it));
+    }
 
     JsonElementDestroy(arr);
 }
@@ -653,7 +697,9 @@ int main()
         unit_test(test_show_array_empty),
         unit_test(test_object_get_string),
         unit_test(test_object_get_array),
+        unit_test(test_object_iterator),
         unit_test(test_array_get_string),
+        unit_test(test_array_iterator),
         unit_test(test_parse_object_simple),
         unit_test(test_parse_array_simple),
         unit_test(test_parse_object_compound),

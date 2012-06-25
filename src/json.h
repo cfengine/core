@@ -40,10 +40,39 @@
 
   @see Sequence
 */
+
+typedef enum
+{
+    JSON_ELEMENT_TYPE_CONTAINER,
+    JSON_ELEMENT_TYPE_PRIMITIVE
+} JsonElementType;
+
+typedef enum
+{
+    JSON_CONTAINER_TYPE_OBJECT,
+    JSON_CONTAINER_TYPE_ARRAY
+} JsonContainerType;
+
+typedef enum
+{
+    JSON_PRIMITIVE_TYPE_STRING,
+    JSON_PRIMITIVE_TYPE_INTEGER,
+    JSON_PRIMITIVE_TYPE_REAL,
+    JSON_PRIMITIVE_TYPE_BOOL,
+    JSON_PRIMITIVE_TYPE_NULL
+} JsonPrimitiveType;
+
 typedef struct JsonElement_ JsonElement;
 
 #include "cf3.defs.h"
 #include "writer.h"
+
+typedef struct
+{
+    const JsonElement *container;
+    size_t index;
+} JsonIterator;
+
 
 /**
   @brief Create a new JSON object
@@ -82,7 +111,18 @@ void JsonElementDestroy(JsonElement *element);
   @brief Get the length of a JsonElement. This is the number of elements or fields in an array or object respectively.
   @param element [in] The JSON element.
   */
-size_t JsonElementLength(JsonElement *element);
+size_t JsonElementLength(const JsonElement *element);
+
+JsonIterator JsonIteratorInit(const JsonElement *container);
+const char *JsonIteratorNextKey(JsonIterator *iter);
+const JsonElement *JsonIteratorNextValue(JsonIterator *iter);
+
+JsonElementType JsonGetElementType(const JsonElement *element);
+
+JsonContainerType JsonGetContrainerType(const JsonElement *container);
+
+JsonPrimitiveType JsonGetPrimitiveType(const JsonElement *primitive);
+const char *JsonPrimitiveGetAsString(const JsonElement *primitive);
 
 /**
   @brief Pretty-print a JsonElement recurively into a Writer.

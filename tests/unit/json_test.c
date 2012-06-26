@@ -12,9 +12,13 @@ static const char *OBJECT_SIMPLE = "{\n" "  \"first\": \"one\",\n" "  \"second\"
 
 static const char *OBJECT_NUMERIC = "{\n" "  \"real\": 1234.5678,\n" "  \"int\": -1234567890\n" "}";
 
+static const char *OBJECT_BOOLEAN = "{\n" "  \"bool_value\": true\n" "}";
+
 static const char *OBJECT_ESCAPED = "{\n" "  \"escaped\": \"quote\\\"stuff \\t \\n\\n\"\n" "}";
 
 static const char *ARRAY_SIMPLE = "[\n" "  \"one\",\n" "  \"two\"\n" "]";
+
+static const char *ARRAY_NUMERIC = "[\n" "  123,\n" "  123.1234\n" "]";
 
 static const char *ARRAY_OBJECT = "[\n" "  {\n" "    \"first\": \"one\"\n" "  }\n" "]";
 
@@ -89,6 +93,23 @@ static void test_show_object_numeric(void **state)
     char *output = StringWriterClose(writer);
 
     assert_string_equal(OBJECT_NUMERIC, output);
+
+    JsonElementDestroy(json);
+    free(output);
+}
+
+static void test_show_object_boolean(void **state)
+{
+    JsonElement *json = JsonObjectCreate(10);
+
+    JsonObjectAppendBool(json, "bool_value", true);
+
+    Writer *writer = StringWriter();
+
+    JsonElementPrint(writer, json, 0);
+    char *output = StringWriterClose(writer);
+
+    assert_string_equal(OBJECT_BOOLEAN, output);
 
     JsonElementDestroy(json);
     free(output);
@@ -171,12 +192,31 @@ static void test_show_array_boolean(void **state)
 
     JsonArrayAppendBool(array, true);
     JsonArrayAppendBool(array, false);
+
     Writer *writer = StringWriter();
 
     JsonElementPrint(writer, array, 0);
     char *output = StringWriterClose(writer);
 
     assert_string_equal("[\n" "  true,\n" "  false\n" "]", output);
+
+    JsonElementDestroy(array);
+    free(output);
+}
+
+static void test_show_array_numeric(void **state)
+{
+    JsonElement *array = JsonArrayCreate(10);
+
+    JsonArrayAppendInteger(array, 123);
+    JsonArrayAppendReal(array, 123.1234);
+
+    Writer *writer = StringWriter();
+
+    JsonElementPrint(writer, array, 0);
+    char *output = StringWriterClose(writer);
+
+    assert_string_equal(ARRAY_NUMERIC, output);
 
     JsonElementDestroy(array);
     free(output);
@@ -707,10 +747,12 @@ int main()
         unit_test(test_show_object_simple),
         unit_test(test_show_object_escaped),
         unit_test(test_show_object_numeric),
+        unit_test(test_show_object_boolean),
         unit_test(test_show_object_compound),
         unit_test(test_show_object_array),
         unit_test(test_show_array),
         unit_test(test_show_array_boolean),
+        unit_test(test_show_array_numeric),
         unit_test(test_show_array_object),
         unit_test(test_show_array_empty),
         unit_test(test_object_get_string),

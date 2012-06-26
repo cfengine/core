@@ -181,6 +181,58 @@ const JsonElement *JsonIteratorNextValue(JsonIterator *iter)
     return iter->container->container.children->data[iter->index++];
 }
 
+const JsonElement *JsonIteratorCurrentValue(JsonIterator *iter)
+{
+    assert(iter);
+    assert(iter->container->type == JSON_ELEMENT_TYPE_CONTAINER);
+
+    if (iter->index > JsonElementLength(iter->container))
+    {
+        return NULL;
+    }
+
+    return iter->container->container.children->data[(iter->index) - 1];
+}
+
+const char *JsonIteratorCurrentKey(JsonIterator *iter)
+{
+    assert(iter);
+    assert(iter->container->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(iter->container->container.type == JSON_CONTAINER_TYPE_OBJECT);
+
+    const JsonElement *child = JsonIteratorCurrentValue(iter);
+
+    return child ? child->propertyName : NULL;
+}
+
+JsonElementType JsonIteratorCurrentElementType(JsonIterator *iter)
+{
+    assert(iter);
+
+    const JsonElement *child = JsonIteratorCurrentValue(iter);
+    return child->type;
+}
+
+JsonContainerType JsonIteratorCurrentContrainerType(JsonIterator *iter)
+{
+    assert(iter);
+
+    const JsonElement *child = JsonIteratorCurrentValue(iter);
+    assert(child->type == JSON_ELEMENT_TYPE_CONTAINER);
+
+    return child->container.type;
+}
+
+JsonPrimitiveType JsonIteratorCurrentPrimitiveType(JsonIterator *iter)
+{
+    assert(iter);
+
+    const JsonElement *child = JsonIteratorCurrentValue(iter);
+    assert(child->type == JSON_ELEMENT_TYPE_PRIMITIVE);
+
+    return child->primitive.type;
+}
+
 JsonElementType JsonGetElementType(const JsonElement *element)
 {
     assert(element);
@@ -211,6 +263,12 @@ const char *JsonPrimitiveGetAsString(const JsonElement *primitive)
     return primitive->primitive.value;
 }
 
+const char *JsonGetPropertyAsString(const JsonElement *element)
+{
+    assert(element);
+
+    return element->propertyName;
+}
 
 // *******************************************************************************************
 // JsonObject Functions

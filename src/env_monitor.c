@@ -320,14 +320,14 @@ static void GetQ(const Policy *policy)
 
 static Averages EvalAvQ(char *t)
 {
-    Averages *currentvals, newvals;
+    Averages *lastweek_vals, newvals;
     double This[CF_OBSERVABLES];
     char name[CF_MAXVARSIZE];
     int i;
 
     Banner("Evaluating and storing new weekly averages");
 
-    if ((currentvals = GetCurrentAverages(t)) == NULL)
+    if ((lastweek_vals = GetCurrentAverages(t)) == NULL)
     {
         CfOut(cf_error, "", "Error reading average database");
         exit(1);
@@ -345,43 +345,45 @@ static Averages EvalAvQ(char *t)
 
         /* Overflow protection */
 
-        if (currentvals->Q[i].expect < 0)
+        if (lastweek_vals->Q[i].expect < 0)
         {
-            currentvals->Q[i].expect = 0;
+            lastweek_vals->Q[i].expect = 0;
         }
 
-        if (currentvals->Q[i].q < 0)
+        if (lastweek_vals->Q[i].q < 0)
         {
-            currentvals->Q[i].q = 0;
+            lastweek_vals->Q[i].q = 0;
         }
 
-        if (currentvals->Q[i].var < 0)
+        if (lastweek_vals->Q[i].var < 0)
         {
-            currentvals->Q[i].var = 0;
+            lastweek_vals->Q[i].var = 0;
         }
 
+        // lastweek_vals is last week's stored data
+        
         This[i] =
-            RejectAnomaly(CF_THIS[i], currentvals->Q[i].expect, currentvals->Q[i].var, LOCALAV.Q[i].expect,
+            RejectAnomaly(CF_THIS[i], lastweek_vals->Q[i].expect, lastweek_vals->Q[i].var, LOCALAV.Q[i].expect,
                           LOCALAV.Q[i].var);
 
         newvals.Q[i].q = This[i];
         LOCALAV.Q[i].q = This[i];
 
-        CfDebug("Current %s.q %lf\n", name, currentvals->Q[i].q);
-        CfDebug("Current %s.var %lf\n", name, currentvals->Q[i].var);
-        CfDebug("Current %s.ex %lf\n", name, currentvals->Q[i].expect);
+        CfDebug("Current %s.q %lf\n", name, lastweek_vals->Q[i].q);
+        CfDebug("Current %s.var %lf\n", name, lastweek_vals->Q[i].var);
+        CfDebug("Current %s.ex %lf\n", name, lastweek_vals->Q[i].expect);
         CfDebug("CF_THIS[%s] = %lf\n", name, CF_THIS[i]);
         CfDebug("This[%s] = %lf\n", name, This[i]);
 
-        newvals.Q[i].expect = WAverage(This[i], currentvals->Q[i].expect, WAGE);
+        newvals.Q[i].expect = WAverage(This[i], lastweek_vals->Q[i].expect, WAGE);
         LOCALAV.Q[i].expect = WAverage(newvals.Q[i].expect, LOCALAV.Q[i].expect, ITER);
 
-        newvals.Q[i].dq = newvals.Q[i].q - currentvals->Q[i].q;
-        LOCALAV.Q[i].dq = newvals.Q[i].q - currentvals->Q[i].q;
+        newvals.Q[i].dq = newvals.Q[i].q - lastweek_vals->Q[i].q;
+        LOCALAV.Q[i].dq = newvals.Q[i].q - lastweek_vals->Q[i].q;
 
-        delta2 = (This[i] - currentvals->Q[i].expect) * (This[i] - currentvals->Q[i].expect);
+        delta2 = (This[i] - lastweek_vals->Q[i].expect) * (This[i] - lastweek_vals->Q[i].expect);
 
-        if (currentvals->Q[i].var > delta2 * 2.0)
+        if (lastweek_vals->Q[i].var > delta2 * 2.0)
         {
             /* Clean up past anomalies */
             newvals.Q[i].var = delta2;
@@ -389,7 +391,7 @@ static Averages EvalAvQ(char *t)
         }
         else
         {
-            newvals.Q[i].var = WAverage(delta2, currentvals->Q[i].var, WAGE);
+            newvals.Q[i].var = WAverage(delta2, lastweek_vals->Q[i].var, WAGE);
             LOCALAV.Q[i].var = WAverage(newvals.Q[i].var, LOCALAV.Q[i].var, ITER);
         }
 
@@ -406,7 +408,7 @@ static Averages EvalAvQ(char *t)
     }
 
     UpdateAverages(t, newvals);
-    UpdateDistributions(t, currentvals);        /* Distribution about mean */
+    UpdateDistributions(t, lastweek_vals);        /* Distribution about mean */
 
     return newvals;
 }
@@ -508,6 +510,8 @@ static void PublishEnvironment(Item *classes)
 
     cf_rename(ENVFILE_NEW, ENVFILE);
 }
+
+/*********************************************************************/
 
 static void ArmClasses(Averages av, char *timekey)
 {

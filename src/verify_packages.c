@@ -223,12 +223,6 @@ static int PackageSanityCheck(Attributes a, Promise *pp)
         }
     }
 
-    if (a.packages.package_add_command == NULL || a.packages.package_delete_command == NULL)
-    {
-        cfPS(cf_verbose, CF_FAIL, "", pp, a, "!! Package add/delete command undefined");
-        return false;
-    }
-
     if (!a.packages.package_installed_regex)
     {
         cfPS(cf_verbose, CF_FAIL, "", pp, a, "!! Package installed regex undefined");
@@ -884,19 +878,25 @@ static int ExecuteSchedule(PackageManager *schedule, enum package_actions action
 
             CfOut(cf_verbose, "", "Execute scheduled package addition");
 
+            if (a.packages.package_add_command == NULL)
+            {
+                cfPS(cf_verbose, CF_FAIL, "", pp, a, "Package add command undefined");
+                return false;
+            }
+
             command_string = xmalloc(estimated_size + strlen(a.packages.package_add_command) + 2);
             strcpy(command_string, a.packages.package_add_command);
             break;
 
         case cfa_deletepack:
 
+            CfOut(cf_verbose, "", "Execute scheduled package deletion");
+
             if (a.packages.package_delete_command == NULL)
             {
                 cfPS(cf_verbose, CF_FAIL, "", pp, a, "Package delete command undefined");
                 return false;
             }
-
-            CfOut(cf_verbose, "", "Execute scheduled package deletion");
 
             command_string = xmalloc(estimated_size + strlen(a.packages.package_delete_command) + 2);
             strcpy(command_string, a.packages.package_delete_command);
@@ -1639,6 +1639,12 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
             }
 
             CfOut(cf_verbose, "", " -> Schedule package for addition\n");
+
+            if (a.packages.package_add_command == NULL)
+            {
+                cfPS(cf_verbose, CF_FAIL, "", pp, a, "Package add command undefined");
+                return false;
+            }
             manager =
                 NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_add_command, cfa_addpack,
                                   a.packages.package_changes);
@@ -1657,6 +1663,11 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
         {
             CfOut(cf_verbose, "", " -> Schedule package for deletion\n");
 
+            if (a.packages.package_delete_command == NULL)
+            {
+                cfPS(cf_verbose, CF_FAIL, "", pp, a, "Package delete command undefined");
+                return false;
+            }
             // expand local repository in the name convetion, if present
             if (a.packages.package_file_repositories)
             {
@@ -1703,6 +1714,11 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
         if (!no_version_specified)
         {
             CfOut(cf_verbose, "", " -> Schedule package for reinstallation\n");
+            if (a.packages.package_add_command == NULL)
+            {
+                cfPS(cf_verbose, CF_FAIL, "", pp, a, "Package add command undefined");
+                return false;
+            }
             if ((matched && package_select_in_range) || (installed && no_version_specified))
             {
                 manager =
@@ -1810,6 +1826,16 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
 
                 CfOut(cf_verbose, "", "Scheduling package with id \"%s\" for deletion", id_del);
 
+                if (a.packages.package_add_command == NULL)
+                {
+                    cfPS(cf_verbose, CF_FAIL, "", pp, a, "Package add command undefined");
+                    return false;
+                }
+                if (a.packages.package_delete_command == NULL)
+                {
+                    cfPS(cf_verbose, CF_FAIL, "", pp, a, "Package delete command undefined");
+                    return false;
+                }
                 manager =
                     NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_delete_command, cfa_deletepack,
                                       a.packages.package_changes);

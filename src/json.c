@@ -301,6 +301,17 @@ void JsonObjectAppendInteger(JsonElement *object, const char *key, int value)
     _JsonObjectAppendPrimitive(object, key, child);
 }
 
+void JsonObjectAppendBool(JsonElement *object, const char *key, _Bool value)
+{
+    assert(object);
+    assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
+    assert(key);
+
+    JsonElement *child = JsonBoolCreate(value);
+    _JsonObjectAppendPrimitive(object, key, child);
+}
+
 void JsonObjectAppendReal(JsonElement *object, const char *key, double value)
 {
     assert(object);
@@ -461,6 +472,16 @@ void JsonArrayAppendInteger(JsonElement *array, int value)
     assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
 
     JsonElement *child = JsonIntegerCreate(value);
+    _JsonArrayAppendPrimitive(array, child);
+}
+
+void JsonArrayAppendReal(JsonElement *array, double value)
+{
+    assert(array);
+    assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
+
+    JsonElement *child = JsonRealCreate(value);
     _JsonArrayAppendPrimitive(array, child);
 }
 

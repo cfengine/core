@@ -116,7 +116,12 @@ void JsonElementDestroy(JsonElement *element)
 
     case JSON_ELEMENT_TYPE_PRIMITIVE:
         assert(element->primitive.value);
-        free((void *) element->primitive.value);
+
+        if (element->primitive.type != JSON_PRIMITIVE_TYPE_NULL &&
+            element->primitive.type != JSON_PRIMITIVE_TYPE_BOOL)
+        {
+            free((void *) element->primitive.value);
+        }
         element->primitive.value = NULL;
         break;
     }
@@ -439,6 +444,16 @@ void JsonArrayAppendString(JsonElement *array, const char *value)
     _JsonArrayAppendPrimitive(array, child);
 }
 
+void JsonArrayAppendBool(JsonElement *array, bool value)
+{
+    assert(array);
+    assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
+
+    JsonElement *child = JsonBoolCreate(value);
+    _JsonArrayAppendPrimitive(array, child);
+}
+
 void JsonArrayAppendInteger(JsonElement *array, int value)
 {
     assert(array);
@@ -550,8 +565,6 @@ JsonElement *JsonRealCreate(double value)
 
 JsonElement *JsonBoolCreate(bool value)
 {
-    assert(value);
-
     return  JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_BOOL, value ? JSON_TRUE : JSON_FALSE);
 }
 
@@ -736,7 +749,7 @@ static JsonElement *JsonParseAsBoolean(const char **data)
         if (IsSeparator(next) || next == '\0')
         {
             *data += 3;
-            return JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_BOOL, SafeStringDuplicate(JSON_TRUE));
+            return JsonBoolCreate(true);
         }
     }
     else if (StringMatch("^false", *data))
@@ -745,7 +758,7 @@ static JsonElement *JsonParseAsBoolean(const char **data)
         if (IsSeparator(next) || next == '\0')
         {
             *data += 4;
-            return JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_BOOL, SafeStringDuplicate(JSON_FALSE));
+            return JsonBoolCreate(false);
         }
     }
 
@@ -760,7 +773,7 @@ static JsonElement *JsonParseAsNull(const char **data)
         if (IsSeparator(next) || next == '\0')
         {
             *data += 3;
-            return JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_NULL, SafeStringDuplicate(JSON_NULL));
+            return JsonNullCreate();
         }
     }
 

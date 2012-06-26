@@ -116,6 +116,11 @@ size_t JsonElementLength(const JsonElement *element);
 JsonIterator JsonIteratorInit(const JsonElement *container);
 const char *JsonIteratorNextKey(JsonIterator *iter);
 const JsonElement *JsonIteratorNextValue(JsonIterator *iter);
+const char *JsonIteratorCurrentKey(JsonIterator *iter);
+const JsonElement *JsonIteratorCurrentValue(JsonIterator *iter);
+JsonElementType JsonIteratorCurrentElementType(JsonIterator *iter);
+JsonContainerType JsonIteratorCurrentContrainerType(JsonIterator *iter);
+JsonPrimitiveType JsonIteratorCurrentPrimitiveType(JsonIterator *iter);
 
 JsonElementType JsonGetElementType(const JsonElement *element);
 
@@ -123,6 +128,7 @@ JsonContainerType JsonGetContrainerType(const JsonElement *container);
 
 JsonPrimitiveType JsonGetPrimitiveType(const JsonElement *primitive);
 const char *JsonPrimitiveGetAsString(const JsonElement *primitive);
+const char *JsonGetPropertyAsString(const JsonElement *element);
 
 /**
   @brief Pretty-print a JsonElement recurively into a Writer.

@@ -205,6 +205,8 @@ JsonElement *JsonObjectGetAsArray(JsonElement *object, const char *key);
   */
 void JsonArrayAppendString(JsonElement *array, const char *value);
 
+void JsonArrayAppendBool(JsonElement *array, bool value);
+
 /**
   @brief Append an integer to an array.
   @param array [in] The JSON array parent.

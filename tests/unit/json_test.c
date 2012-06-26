@@ -165,6 +165,23 @@ static void test_show_array(void **state)
     free(output);
 }
 
+static void test_show_array_boolean(void **state)
+{
+    JsonElement *array = JsonArrayCreate(10);
+
+    JsonArrayAppendBool(array, true);
+    JsonArrayAppendBool(array, false);
+    Writer *writer = StringWriter();
+
+    JsonElementPrint(writer, array, 0);
+    char *output = StringWriterClose(writer);
+
+    assert_string_equal("[\n" "  true,\n" "  false\n" "]", output);
+
+    JsonElementDestroy(array);
+    free(output);
+}
+
 static void test_show_array_object(void **state)
 {
     JsonElement *array = JsonArrayCreate(10);
@@ -693,6 +710,7 @@ int main()
         unit_test(test_show_object_compound),
         unit_test(test_show_object_array),
         unit_test(test_show_array),
+        unit_test(test_show_array_boolean),
         unit_test(test_show_array_object),
         unit_test(test_show_array_empty),
         unit_test(test_object_get_string),

@@ -258,6 +258,97 @@ static int PackageSanityCheck(Attributes a, Promise *pp)
         return false;
     }
 
+    /* Dependency checks */
+    if (!a.packages.package_delete_command)
+    {
+        if (a.packages.package_delete_convention)
+        {
+            cfPS(cf_verbose, CF_FAIL, "", pp, a,
+                 "!! Dependency conflict: package_delete_command is not used, but package_delete_convention is defined.");
+            return false;
+        }
+    }
+    if (!a.packages.package_list_command)
+    {
+        if (a.packages.package_installed_regex)
+        {
+            cfPS(cf_verbose, CF_FAIL, "", pp, a,
+                 "!! Dependency conflict: package_list_command is not used, but package_installed_regex is defined.");
+            return false;
+        }
+        if (a.packages.package_list_arch_regex)
+        {
+            cfPS(cf_verbose, CF_FAIL, "", pp, a,
+                 "!! Dependency conflict: package_list_command is not used, but package_arch_regex is defined.");
+            return false;
+        }
+        if (a.packages.package_list_name_regex)
+        {
+            cfPS(cf_verbose, CF_FAIL, "", pp, a,
+                 "!! Dependency conflict: package_list_command is not used, but package_name_regex is defined.");
+            return false;
+        }
+        if (a.packages.package_list_version_regex)
+        {
+            cfPS(cf_verbose, CF_FAIL, "", pp, a,
+                 "!! Dependency conflict: package_list_command is not used, but package_version_regex is defined.");
+            return false;
+        }
+    }
+    if (!a.packages.package_list_update_command)
+    {
+        if (a.packages.package_list_update_ifelapsed != CF_NOINT)
+        {
+            cfPS(cf_verbose, CF_FAIL, "", pp, a,
+                 "!! Dependency conflict: package_list_update is not used, but package_list_update_ifelapsed is defined.");
+            return false;
+        }
+    }
+    if (!a.packages.package_patch_command)
+    {
+        if (a.packages.package_patch_arch_regex)
+        {
+            cfPS(cf_verbose, CF_FAIL, "", pp, a,
+                 "!! Dependency conflict: package_patch_command is not used, but package_patch_arch_regex is defined.");
+            return false;
+        }
+        if (a.packages.package_patch_name_regex)
+        {
+            cfPS(cf_verbose, CF_FAIL, "", pp, a,
+                 "!! Dependency conflict: package_patch_command is not used, but package_patch_name_regex is defined.");
+            return false;
+        }
+        if (a.packages.package_patch_version_regex)
+        {
+            cfPS(cf_verbose, CF_FAIL, "", pp, a,
+                 "!! Dependency conflict: package_patch_command is not used, but package_patch_version_regex is defined.");
+            return false;
+        }
+    }
+    if (!a.packages.package_patch_list_command)
+    {
+        if (a.packages.package_patch_installed_regex)
+        {
+            cfPS(cf_verbose, CF_FAIL, "", pp, a,
+                 "!! Dependency conflict: package_patch_list_command is not used, but package_patch_installed_regex is defined.");
+            return false;
+        }
+    }
+    if (!a.packages.package_verify_command)
+    {
+        if (a.packages.package_noverify_regex)
+        {
+            cfPS(cf_verbose, CF_FAIL, "", pp, a,
+                 "!! Dependency conflict: package_verify_command is not used, but package_noverify_regex is defined.");
+            return false;
+        }
+        if (a.packages.package_noverify_returncode)
+        {
+            cfPS(cf_verbose, CF_FAIL, "", pp, a,
+                 "!! Dependency conflict: package_verify_command is not used, but package_noverify_returncode is defined.");
+            return false;
+        }
+    }
     return true;
 }
 

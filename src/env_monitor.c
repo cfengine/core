@@ -321,6 +321,7 @@ static void GetQ(const Policy *policy)
 static Averages EvalAvQ(char *t)
 {
     Averages *lastweek_vals, newvals;
+    double last5_vals[CF_OBSERVABLES];
     double This[CF_OBSERVABLES];
     char name[CF_MAXVARSIZE];
     int i;
@@ -369,17 +370,29 @@ static Averages EvalAvQ(char *t)
         newvals.Q[i].q = This[i];
         LOCALAV.Q[i].q = This[i];
 
-        CfDebug("Current %s.q %lf\n", name, lastweek_vals->Q[i].q);
-        CfDebug("Current %s.var %lf\n", name, lastweek_vals->Q[i].var);
-        CfDebug("Current %s.ex %lf\n", name, lastweek_vals->Q[i].expect);
-        CfDebug("CF_THIS[%s] = %lf\n", name, CF_THIS[i]);
-        CfDebug("This[%s] = %lf\n", name, This[i]);
+        CfDebug("Previous week's %s.q %lf\n", name, lastweek_vals->Q[i].q);
+        CfDebug("Previous week's %s.var %lf\n", name, lastweek_vals->Q[i].var);
+        CfDebug("Previous week's %s.ex %lf\n", name, lastweek_vals->Q[i].expect);
+
+        CfDebug("Just measured: CF_THIS[%s] = %lf\n", name, CF_THIS[i]);
+        CfDebug("Just sanitized: This[%s] = %lf\n", name, This[i]);
 
         newvals.Q[i].expect = WAverage(This[i], lastweek_vals->Q[i].expect, WAGE);
         LOCALAV.Q[i].expect = WAverage(newvals.Q[i].expect, LOCALAV.Q[i].expect, ITER);
 
-        newvals.Q[i].dq = newvals.Q[i].q - lastweek_vals->Q[i].q;
-        LOCALAV.Q[i].dq = newvals.Q[i].q - lastweek_vals->Q[i].q;
+        if (last5_vals[i] > 0)
+        {
+            newvals.Q[i].dq = newvals.Q[i].q - last5_vals[i];
+            LOCALAV.Q[i].dq = newvals.Q[i].q - last5_vals[i];
+        }
+        else
+        {
+            newvals.Q[i].dq = 0;
+            LOCALAV.Q[i].dq = 0;           
+        }
+
+        // Save the last measured value as the value "from five minutes ago" to get the gradient
+        last5_vals[i] = newvals.Q[i].q;
 
         delta2 = (This[i] - lastweek_vals->Q[i].expect) * (This[i] - lastweek_vals->Q[i].expect);
 

@@ -224,7 +224,14 @@ int ScheduleCopyOperation(char *destination, Attributes attr, Promise *pp)
 {
     AgentConnection *conn = NULL;
 
-    CfOut(cf_verbose, "", " -> Copy file %s from %s check\n", destination, attr.copy.source);
+    if (!attr.copy.source)
+    {
+        CfOut(cf_verbose, "", " -> Copy file %s check\n", destination);
+    }
+    else
+    {
+        CfOut(cf_verbose, "", " -> Copy file %s from %s check\n", destination, attr.copy.source);
+    }
 
     if (attr.copy.servers == NULL || strcmp(attr.copy.servers->item, "localhost") == 0)
     {

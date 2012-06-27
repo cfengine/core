@@ -1,0 +1,577 @@
+\input texinfo-altfont
+\input texinfo-logo
+\input texinfo
+@selectaltfont{cmbright}
+@setlogo{CFEngineFrontPage}
+@c *********************************************************************
+@c
+@c  This is a TEXINFO file. It generates both TEX documentation and
+@c  the "on line" documentation "info" files.
+@c
+@c  The file is structured like a programming language. Each chapter
+@c  starts with a chapter comment.
+@c
+@c  Menus list the subsections so that an online info-reader can parse
+@c  the file hierarchically.
+@c
+@c ***********************************************************************@c 
+@c %** start of header
+@setfilename Enterprise-2-2-GetStarted.info
+@settitle Get Started Guide for CFEngine 3 Enterprise 2.2
+@c @setchapternewpage odd
+@c %** end of header
+@titlepage
+@title Get Started Guide for CFEngine 3 Enterprise 2.2
+@subtitle CFEngine Enterprise Documentation
+@subtitle Updated 29. May 2012 @c also update in the @ifnottex section below
+@author CFEngine
+@c @smallbook
+@fonttextsize 10
+@c @page
+@vskip 0pt plus 1fill
+Copyright @copyright{} 2012 CFEngine AS.
+The features described herein are in provided for user convenience and imply no warranty whatsoever
+to the extent of applicable law.
+@end titlepage
+@c *************************** File begins here ************************
+@ifinfo
+@dircategory CFEngine Training
+@direntry
+* CFEngine Reference:
+                        CFEngine is a language based framework
+                        designed for configuring and maintaining
+                        Unix-like operating systems attached
+                        to a TCP/IP network.
+@end direntry
+@end ifinfo
+@ifnottex
+Updated 29. May 2012
+@node Top, , (dir), (dir)
+@top Igniting CFEngine 3 Enterprise!
+@end ifnottex
+@ifhtml
+@html
+<a href="#Contents"><h1>COMPLETE TABLE OF CONTENTS</h1></a>
+<h2>Summary of contents</h2>
+@end html
+@end ifhtml
+
+@iftex
+@contents
+@end iftex
+
+
+@menu
+* Introduction::
+* Installing CFEngine 3 Enterprise::  
+* Mission Portal::
+* Next steps::  
+@end menu
+
+
+@c *****************************************************
+@c * CHAPTER
+@c *****************************************************
+@node  Introduction, Installing CFEngine 3 Enterprise, Top, Top
+@chapter Introduction
+
+@menu
+* CFEngine 3 Enterprise - the new CFEngine 3 Nova!::
+* About CFEngine 3 Enterprise::
+@end menu
+
+
+@node CFEngine 3 Enterprise - the new CFEngine 3 Nova!, About CFEngine 3 Enterprise, Introduction, Introduction
+@section CFEngine 3 Enterprise - the new CFEngine 3 Nova!
+
+CFEngine 3 Enterprise 2.2 is the next generation of CFEngine 3 Nova (successor of CFEngine 3 Nova 2.1.3), upgraded with productivity and performance enhancements. We have made a new Mission Portal Engineering room tailored to the needs of infrastructure engineers, making it both easier and more powerful to use. Most notably we have introduced dynamic grouping of hosts through a flexible tree control, also referred to as the Navigation Tree. It allows system adminsitrators to flexibly group hosts based on CFEngine classes, both discovered (hard classes such as operating system, architecture, IP address, etc.) and user defined (soft classes such as webserver, development, staging, etc).
+
+CFEngine 3 Nova is compatible with CFEngine 3 Enterprise and can easily be upgraded by following the instructions in the @url{http://cfengine.com/manuals/Enterprise-2-2-OwnersManual, CFEngine 3 Enterprise Owner's Manual}.
+
+The launch of CFEngine 3 Enterprise also brings a new offering: CFEngine 3 Free Enterprise, our commercial enterprise product offered for free for up to 25 managed hosts. It differs from our commercial offer in that it has different licensing terms, different support and it is limited to a maximum of 25 hosts. The product is described in full detail at @url{http://cfengine.com/25free}.
+
+
+@c --------------------------------------------------
+@node About CFEngine 3 Enterprise, ,CFEngine 3 Enterprise - the new CFEngine 3 Nova!, Introduction
+@section About CFEngine 3 Enterprise
+CFEngine 3 Enterprise is a commercially licensed version of the core CFEngine
+software@footnote{Major version 3} with enterprise library extensions. All of
+the documentation for CFEngine 3 applies to CFEngine 3 Enterprise. 
+
+The aim of CFEngine 3 Enterprise is to offer a knowledge-enhanced framework for configuration man-
+agement that goes beyond mere technical configuration to support the needs of businesses. Features
+include compliance management, reporting and business integration, and tools for handling necessary
+complexity. CFEngine 3 Enterprise has features to support Cloud Computing for public and private clouds, as
+well as greater integration facilities with database resources.
+
+
+@c *****************************************************
+@c * CHAPTER
+@c *****************************************************
+@node Installing CFEngine 3 Enterprise, Mission Portal, Introduction, Top
+@chapter Installing CFEngine 3 Enterprise
+
+@menu
+* Installation procedure::      
+@end menu
+
+@node Installation procedure, , Installing CFEngine 3 Enterprise, Installing CFEngine 3 Enterprise
+@section Installation procedure
+
+CFEngine 3 Enterprise is designed to be simple to install in its default configuration. The installation
+process has three phases:
+
+@itemize
+@item Unpacking the software.
+@item For commercial customers: Obtaining a license. CFEngine 3 Free Enterprise users can use the product without a license file (provided they have accepted the licensing terms, see also @url{http://cfengine.com/25free}).
+@item Adapting policy.
+@end itemize
+
+@c For Windows related issues, see our special topic guide @url{http://cfengine.com/manuals/st-windows.html}.
+
+You should start from a blank system. If you have been using CFEngine Community Edition and you have
+already developed a policy, set aside this policy during the installation process. You will be able
+to integrate it back later.
+
+CFEngine 3 Enterprise is provided in two packages, @file{cfengine-nova} and @*
+@file{cfengine-nova-expansion}. The main software package 
+must be installed on every host (including the hub). The expansion package is only installed on the policy hub. You should install and set up the hub first.
+
+@enumerate
+@item Verify that the machine's network connection is working. On the hub, verify that package managers @code{yum},
+@code{zypper} or @code{apt-get} are working (e.g. @code{apt-get update}).
+
+@item Copy the CFEngine 3 Enterprise packages to the system.@*
+@noindent On the hub (policy server):
+@example
+cfengine-nova_2.2.@var{xxx.[rpm|deb]}
+cfengine-nova-expansion_2.2.@var{xxx.[rpm|deb]}
+@end example
+@noindent On all other machines:
+@example
+cfengine-nova_2.2.@var{xxx.[rpm|deb]}
+@end example
+
+@item Unpack the software:
+@table @i
+@item Red Hat family
+@example
+host# rpm -ihv @var{packages}
+@end example
+
+@item SUSE family
+@example
+host# rpm -ihv @var{packages}
+@end example
+
+@item Debian family
+@example
+host# dpkg --install  @var{packages}
+@end example
+
+@end table 
+
+@item On the hub, a public key has now been created in @file{/var/cfengine/ppkeys/localhost.pub} as part of the
+package installation. 
+@itemize -
+@item CFEngine 3 Enterprise 25 free users: You do not not need to do anything in regard to this step.
+@item Commercial CFEngine 3 Enterprise customers: You should send this public key to CFEngine Support@footnote{You will obtain credentials to the CFEngine Support ticketing system and software download repository as a part of your purchase. (Note: CFEngine 3 Free Enterprise users do not have access to commercial support, see http://cfengine.com/25free} as an attachment in the ticket system, to obtain a license file @file{license.dat}.
+@cartouche
+Save the returned license file to @file{/var/cfengine/masterfiles/license.dat} 
+on the hub before continuing.
+@end cartouche
+@end itemize
+
+
+@item The remaining steps apply to all hosts, but you should install the hub or policy server first. For large systems (> 1000 hosts) we recommend increasing the memory limit in php.ini on the hub (for instance to 128 MB).
+
+Find the hostname or IP address of the hub (policy server), here we assume @samp{123.456.789.123} is the address.
+@verbatim
+ hub # /var/cfengine/bin/cf-agent --bootstrap --policy-server 123.456.789.123
+@end verbatim
+Use the same command on all hosts, i.e. *** do not bootstrap the policy server with a localhost address *** 
+If you mistype the address of the hub, we recommend doing the following steps to re-boostrap:
+@verbatim
+ hub # /var/cfengine/bin/cf-agent --bootstrap --policy-server 123.456.789.124
+ hub # killall cf-execd cf-serverd cf-monitord cf-hub
+ hub # rm -rf /var/cfengine/inputs/*
+ hub # rm -f /var/cfengine/policy_server.dat
+ hub # /var/cfengine/bin/cf-agent --bootstrap --policy-server 123.456.789.123
+@end verbatim
+
+CFEngine will output diagnostic information upon bootstrap. Error messages will be displayed if bootstrapping failed, pursue these to get an indication of what went wrong and correct accordingly. If all is well you should see the following in the output:
+
+@verbatim
+
+-> Bootstrap to 123.456.789.123 completed successfully
+
+@end verbatim
+
+@item CFEngine should now be up and running on your system. It will copy its default policy files into @file{masterfiles} on the hub (policy server). When the clients are bootstrapped, they will contact the hub and copy them to their @file{inputs} directory.
+
+@item Commercial CFEngine 3 Enterprise customers: To complete licensing setup, you should make a promise to accept the license
+terms by editing @file{/var/cfengine/masterfiles/promises.cf}
+on the hub (policy server), changing the line @samp{host_licenses_paid => "<NUMBER>";}
+in @samp{body common control} to reflect the correct number of licenses that you have subscribed to.
+
+@end enumerate
+
+@noindent @b{How to assess success in this procedure:}
+
+@enumerate
+
+@item Look at the process list on the systems with @samp{ps waux | grep cf-}.
+You should be able to see @code{cf-execd} running, and eventually other processes from 
+the CFEngine suite like @code{cf-monitord} @code{cf-serverd}. On the hub, you should 
+also eventually see @code{cf-hub}. Note that it may take 5--10 minutes before all the
+processes get started.
+
+@item Look for files in @file{/var/cfengine/inputs} (Unix)
+or @file{C:\Program Files\Cfengine\inputs} (Windows). The license
+file will be copied out from the policy server to the clients as part
+of the normal distribution of policy. If you have obtained a license file (see step 4 above), each machine should get a
+copy of the @file{license.dat} file in @file{/var/cfengine/inputs}
+(Unix) or @file{C:\Program Files\Cfengine\inputs} (Windows).
+
+@item On the hub, the file @file{/var/cfengine/promise_knowledge.cf} should have been
+created, and should contain data.
+
+@item  Finally, try to connect to the web server at port 80 on the hub/policy host (for example at http://123.456.789.123).
+You should see a login page like the one shown in the figure below:
+
+@sp 1
+@center @image{img-login-2-2,5cm,,Mission Portal login}
+@center Figure: Mission Portal login screen
+@sp 1
+@end enumerate
+
+Default user name and password is 'admin' and 'admin' (make sure to change this at first login to prevent unauthorized access).
+
+Note that some of the displays in the Mission Portal may be blank when you log in just after installation; some reports and graphs are only updated every six hours. It may also take some time for the system to fully converge, do not get troubled if initially there are some promises repaired or not kept.
+
+Please refer to the CFEngine 3 Enterprise Owner's Manual @*
+(@url{http://www.cfengine.com/manuals/Enterprise-2-2-OwnersManual}) for complete information and help troubleshooting your installation.
+
+
+@c *****************************************************
+@c * CHAPTER
+@c *****************************************************
+@node  Mission Portal, Next steps, Installing CFEngine 3 Enterprise, Top
+@chapter Mission Portal
+
+@menu
+* Mission Portal Rooms::        
+@end menu
+
+The Mission Portal is the centerpiece
+of user interaction with CFEngine 3 Enterprise. It can be accessed by connecting to the hub (policy server) with your web browser (for example at http://123.456.789.123; default port 80). From here you can get a complete overview of operations and performance, business and compliance, organizational knowledge and library. We will make a quick introduction of the four main rooms in the Mission Portal, please refer to the @url{http://www.cfengine.com/manuals/Enterprise-2-2-OwnersManual, CFEngine 3 Enterprise Owner's Manual} for a complete overview.
+
+@image{img-mission-portal-2-2,15cm,,Mission Portal}
+@center Figure: The Mission Portal
+
+
+@node  Mission Portal Rooms, Mission Engineering, Mission Portal, Mission Portal
+@section Mission Portal Rooms
+
+@menu
+* Mission Engineering::         
+* Mission Business::              
+* Mission Planning::            
+* Mission Library::             
+@end menu
+
+There are four main rooms in the Mission Portal that offer insight into different aspects of operations:
+
+@itemize -
+@item Mission Engineering: a place to see the current state of system repair
+@item Mission Business: a top level overview of compliance status and business value
+@item Mission Planning: a place to plan and make policy changes
+@item Mission Library: a knowledge bank that connects information together
+@end itemize
+
+Each of these rooms is a beginning from which you can refine your overview and search
+through information.
+
+
+@node Mission Engineering, Mission Business, Mission Portal Rooms, Mission Portal Rooms
+@subsection Mission Engineering
+
+@menu
+* Navigation Tree::
+* Status tab::
+* Reports tab::
+@end menu
+
+Mission Engineering illustrates the state of the system in relation to the desired state at all scales. Zoom in to specific areas and examine the impact of promises, query data, and extract reports.
+
+The Mission Engineering room underwent a substantial rework for the release of CFEngine 3 Enterprise 2.2. Most notably we introduced a host Navigation Tree where hosts can be grouped and organized in a hierarchy defined by classes. The remaining content on the page is influenced by the selected tree context, i.e. the @b{Status} and @b{Reports} tabs will only show information for linux hosts if such a context/node is selected in the the tree (the active node is highlighted to show that it is selected). Another notable change is the new interface to interact with reports, now available as a tab and drop-down menus.
+
+@sp 1
+@image{img-engineering-room-2-2,15cm,,Mission Engineering}
+@center Figure: Mission Engineering
+@sp 1
+
+
+@c -----------------------------------------------------
+@node Navigation Tree, Status tab, Mission Engineering, Mission Engineering
+@subsubsection Navigation Tree
+
+The Navigation Tree consists of two main parts:
+
+@itemize
+@item Top menu:
+@sp 1
+@center @image{img-nav-tree-top-menu-2-2,5cm,,Top Menu}
+@center Figure: Top Menu
+@sp 1
+@itemize -
+@item The Tree Selector: Dropdown menu; choose between the default tree and custom trees defined by the user. Each tree can have a different subset of nodes. Click @code{Add} in the dropdown menu to add your own tree (input the name of the new tree in the field next to the add button). Click @code{X} next to a tree name to delete it.
+@item Class finder, Host finder and Promise finder to explore classes, hosts/IP-addresses or promises, respectively.
+@end itemize
+@item The tree itself, grouped by classes. The user can add up to four sublevels in the Navigation Tree and edit or delete existing nodes.
+@sp 1
+@center @image{img-nav-tree-edit-2-2,5cm,,Navigation Tree}
+@center Figure: Navigation Tree
+@sp 1
+@itemize -
+@item To add a node:
+@enumerate
+@item Put the mouse pointer over the node you wish to add a sublevel to, click the plus sign shown beside the node.
+@item A pop-up appears with fields to enter a label (name) to the node that you wish to create and the class expression you wish to filter by. The class expression field contains a button which opens a class finder to help you select classes.
+@end enumerate
+@item To delete a node: Put the mouse pointer over the node that you wish to delete, click the @code{X} shown beside the node.
+@item To edit a node: 
+@enumerate
+@item Put the mouse pointer over the node that you wish to edit, click the @code{Pencil icon} shown beside the node.
+@item A pop-up appears where you can edit the fields that you wish to change.
+@end enumerate
+@end itemize
+@end itemize
+
+@noindent The trees and nodes that a user creates will not be visible to other users of the Mission Portal.
+
+Click on any host in the tree to get a quick overview of that host in the status tab. Click the host name under the compliance graph to see more detailed information about the host. 
+
+
+@c -----------------------------------------------------
+@node Status tab, Reports tab, Navigation Tree, Mission Engineering
+@subsubsection Status tab
+
+The Status tab shows the overall status of the hosts selected in the Navigation Tree. This section contains: 
+
+@itemize
+@item Selected context: Shows the context (combination of selected classes) for which the data is valid.
+@item Compliance Summary: The row of bars shows the compliance of all registered hosts in blocks of five minutes for the last six hours or for the last week (depending on which is selected at the bottom of the graph)@footnote{Blue or black hosts will not appear here}. The hosts are classified into red, yellow and green according to the status of their compliance (see below). The height of a bar corresponds to the number of registered hosts. Note that the last column may have a lower height than the others (i.e. show information for fewer hosts)@footnote{This is because hosts check in at different times and some hosts may not yet be accounted for at the time of generation of the graph.}. Click on a bar to see which promises were repaired or not kept.
+@item Host Compliance (last hour): The hosts are classified into red, yellow and green according to the status of their compliance over the last hour:
+@itemize -
+@item A host is red if more than 20% of its promises are not kept
+@item A host is yellow if 20% or more of its promises were repaired and host is now compliant (> 20% repaired, now compliant)
+@item A host is green if more than 80% of its promises are kept (> 80% compliant)
+@end itemize
+@item Host Operations: The hosts are classified into blue and black according to their operational status. 
+@itemize -
+@item A host is blue if there has not been any contact between the hub and the client within a set time interval (host unreachable; default value is set to 15 minutes). 
+@item A host is black if CFEngine's scheduling daemon, @code{execd}, is not running (the hub will still able to contact the client to collect reports but the client will return stale data since it has not been running at regular intervals).
+@end itemize
+@item Clicking a link in any of the above categories (red/yellow/green/blue/black) produces a list of the hosts in that category (in the above mentioned context).
+
+@sp 1
+@center @image{img-compliant-hosts-2-2,14cm,,Compliant hosts}
+@center Figure: Compliant hosts
+@sp 1
+
+@noindent Action icons:
+@itemize -
+@item Yellow warning triangle: View the promises not kept on this host
+@item Pulse line: View vitals signs (statistics) on this host
+@item Red X: Delete this host (host will be deleted from database, but may re-appear if CFEngine is still running on it; see footnote below).@footnote{You have to stop CFEngine on the concerned host before deleting it in the Mission Portal, else the host will contact the hub and re-appear in the database.}
+@end itemize
+@end itemize
+
+
+@c -----------------------------------------------------
+@node Reports tab, , Status tab, Mission Engineering
+@subsubsection Reports tab
+
+Reports are sorted into five main categories that contain drop down menus to select default reports. Clicking a report will bring up a search filter specific to that report. 
+
+@sp 1
+@center @image{img-reports-tab-2-2,10cm,,Reports tab}
+@center Figure: Reports tab
+@sp 1
+
+Reports are updated at different intervals, the default values are every 5 minutes or every 6 hours (this can be changed by the user). Below is a list of standard reports, updated every 5 minutes unless otherwise noted:
+
+@itemize
+@item Policy
+@itemize -
+    @item Compliance by bundle: Status of promise bundles and when they were last verified
+    @item Compliance by promise: Compliance of each promise individually
+    @item Promises repaired log: Log of actual repairs made to the system
+    @item Promises repaired summary: Cumulative (histogram) summary of promises repaired
+    @item Promises not kept log: Log of promises that could not or would not be kept
+    @item Promises not kept summary: Cumulative (histogram) summary of promises not kept
+@end itemize
+@item Accounting
+@itemize -
+    @item Compliance summary: Total summary of host compliance
+    @item Business value report: Accumulated value of promises kept (6 hrs)
+    @item Benchmarks: Execution time used to verify selected promises
+@end itemize
+@item System
+@itemize -
+    @item Context classes: User defined classes observed on the system
+    @item Last saw neighbours: Log of when neighboring hosts were last observed online
+    @item Variables: Table of variable values last observed (6 hrs)
+@end itemize
+@item Software
+@itemize -
+    @item Patches available: A list of patches currently claimed to be available by the local package manager
+    @item Patch installed: A list of (un)applied patches according to the local package manager
+    @item Installed: List of software packages claimed to be installed according to the local package manager
+@end itemize
+@item File watch
+@itemize -
+    @item Change summary: Log of all detected changes to files from changes promises
+    @item Text changes: Delta/difference comparison showing file changes
+    @item Setuid: Current list of observed setuid/setgid root programs (6 hrs)
+@end itemize
+@end itemize
+
+@page
+@node  Mission Business, Mission Planning, Mission Engineering, Mission Portal Rooms
+@subsection Mission Business
+
+Mission status is a high level summary of how well the entire system is behaving. 
+
+@sp 1
+@image{img-business-status-2-2,15cm,,Mission Status}
+@center Figure: The status of IT operations.
+@sp 1
+
+Business Value and Host Status:
+The two pie charts show the business value of the promises kept/not kept and well as host status, respectively. Business value is associated with the value of promises as defined in policy files. In the Host Status chart, each host represents a slice of the pie and is classified into red, yellow, green and blue according to the level of their compliance. A host is red if less than 80% of its promises are kept, yellow if 20% or more of its promises were repaired and host is now compliant, green if more than 80% of its promises are kept, and blue if there is no contact between the hub and the client host.
+
+Compliance Summary:
+The row of bar meters shows the compliance (average percentage of promises kept, repaired or not kept) of all registered hosts @footnote{Blue or black hosts will not appear here} in blocks of 6 hours for the past week. It summarizes performance and anomalous behavior in a simple red (promises not kept), yellow (promises repaired) and green (promises kept) scale. Click on a bar to see which promises were kept/not kept.
+
+Services/Goals:
+A summary of Mission goals (as defined in user policy files). See the CFEngine 3 Enterprise Owners Manual for more information.
+
+
+@page
+@node Mission Planning, Mission Library, Mission Business, Mission Portal Rooms
+@subsection Mission Planning
+
+Make changes to policies, goals determined by promises and implement specific tactics to achieve the desired state. Interact with data, approve changes and anomalies. Get an overview of users logged on to the Mission Portal, as well as their current activity.
+
+@sp 1
+@image{img-planning-room-2-2,15cm,,Mission Planning}
+@center Figure: Mission Planning
+@sp 1
+
+@noindent Policy Goals:
+List of policy goals as defined in policy files; these examples are from @file{company_knowledge.cf}. Edit the file in the policy editor (@b{Edit policies} button) or edit the file in your own text editor. The "More..." button links  to the Service Catalogue, click to see which bundles contribute to these policy goals.
+
+@noindent Action buttons:
+@itemize -
+@item Edit policies: Edit policy files in the integrated policy editor (requires Subversion)
+@item Track records: Overview of promises repaired or not kept
+@item Approve policies: Give your approval of a submitted policy file
+@item Service catalogue: See which bundles contribute to policy goals
+@end itemize
+
+@noindent Logged on:
+Shows users currently logged on to the Mission Portal and their activity.
+
+@noindent Activity log:
+Shows the latest activity entries. Type in a new activity to keep colleagues posted on current work.
+
+
+@node Mission Library, Topics viewer (Knowledge map), Mission Planning, Mission Portal Rooms
+@subsection Mission Library
+
+@menu
+* Topics viewer (Knowledge map)::
+@end menu
+The Library contains finders for documents, topics, a notes archive, and (external) link to the CFEngine community.
+
+@sp 1
+@image{img-library,15cm,,Mission Library}
+@center Figure: Mission Library
+@sp 1
+
+@noindent Library buttons:
+@itemize -
+@item Docs: Overview of documentation that was packaged with CFEngine 3 Enterprise.
+@item Find Topic: Search for topics either by scrolling through the alphabetical list or by typing in the search box (same as the search box on top right of page).
+@item Notes Archive: Get overview of all notes made in regard to hosts or reports.
+@item Community: External link to the CFEngine community
+@end itemize
+
+
+@node Topics viewer (Knowledge map), , Mission Library, Mission Library
+@subsubsection Topics viewer (Knowledge map)
+
+The Topics viewer, or Knowledge map, is a @i{sematic web} of subject references and document pointers. In a semantic web, you are presented with links to
+documents about your chosen topic. In addition you are
+offered @i{leads} and possible pathways to topics that are known to be
+related. These leads don't just point you to more documents, but
+explain @i{how} neighboring issues are related.  The aim is to help
+the user learn from the experience of browsing, by conveying the
+meaning of the current topic in relation to other issues in the
+system. This is how @i{knowledge transfer} occurs.
+
+The Knowledge Map can be found by searching for a topic in the top right corner or through the topic finder in the Mission Library (this will sometimes also lead directly to a document or web page instead).
+
+@sp 1
+@center @image{img-topicsviewer,15cm,,Topics viewer}
+@center Figure: Topics viewer (Knowledge map)
+@sp 1
+
+The yellow sphere represents the current topic, surrounding (blue) spheres represent related topics, and the size of the spheres represents the number of associations each topic has. This map is navigable: click on a different topic to see a new view centered on that topic and its associations. The tabs will show leads, references, topics in the same context, and sub topics in the same context. Links can also lead to other viewers in the Mission Portal, documents and web pages related to the current topic.
+
+@c *****************************************************
+@c * CHAPTER
+@c *****************************************************
+@node Next steps, , Mission Portal, Top
+@chapter Next steps
+
+Please refer to the CFEngine 3 Enterprise Owner's Manual for complete information about this product. You may also wish to visit our getting started section on cfengine.com:
+
+@itemize
+@item @url{http://cfengine.com/manuals/Enterprise-2-2-OwnersManual}
+@item @url{http://cfengine.com/getting-started}
+@end itemize
+
+@c =========================================================================
+@c @node Index,  , CFEngine Methods, Top
+@c @unnumbered Concept Index
+@c @printindex cp
+@c =========================================================================
+@ifhtml
+@html
+<a name="Contents">
+@contents
+@end html
+@end ifhtml
+
+@c  The file is structured like a programming language. Each chapter
+@c  starts with a chapter comment.
+@c
+@c  Menus list the subsections so that an online info-reader can parse
+@c  the file hierarchically.
+@ifhtml
+@html
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-2576171-2");
+pageTracker._initData();
+pageTracker._trackPageview();
+</script>
+@end html
+@end ifhtml
+@bye

@@ -90,7 +90,6 @@ void VerifyPackagesPromise(Promise *pp)
 
     if (!PackageSanityCheck(a, pp))
     {
-        cfPS(cf_error, CF_FAIL, "", pp, a, " !! Unable to obtain a list of installed packages - aborting");
         return;
     }
 
@@ -185,12 +184,17 @@ static int PackageSanityCheck(Attributes a, Promise *pp)
 
     if (a.packages.package_name_regex || a.packages.package_version_regex || a.packages.package_arch_regex)
     {
+        if (a.packages.package_name_regex == NULL)
+        {
+            cfPS(cf_error, CF_FAIL, "", pp, a, " !! You must supply name regex if you supplied version or arch regex for parsing promiser string");
+            return false;
+        }
         if (a.packages.package_name_regex && a.packages.package_version_regex && a.packages.package_arch_regex)
         {
             if (a.packages.package_version || a.packages.package_architectures)
             {
                 cfPS(cf_error, CF_FAIL, "", pp, a,
-                     " !! You must either supply all regexs for (name,version,arch) xor a separate version number and architecture");
+                     " !! You must either supply all regexs for (name,version,arch) or a separate version number and architecture");
                 return false;
             }
         }
@@ -199,16 +203,24 @@ static int PackageSanityCheck(Attributes a, Promise *pp)
             if (a.packages.package_version && a.packages.package_architectures)
             {
                 cfPS(cf_error, CF_FAIL, "", pp, a,
-                     " !! You must either supply all regexs for (name,version,arch) xor a separate version number and architecture");
+                     " !! You must either supply all regexs for (name,version,arch) or a separate version number and architecture");
                 return false;
             }
         }
-    }
 
-    if (a.packages.package_add_command == NULL || a.packages.package_delete_command == NULL)
-    {
-        cfPS(cf_verbose, CF_FAIL, "", pp, a, "!! Package add/delete command undefined");
-        return false;
+        if (a.packages.package_version_regex && a.packages.package_version)
+        {
+            cfPS(cf_error, CF_FAIL, "", pp, a,
+                 " !! You must either supply version regex or a separate version number");
+            return false;
+        }
+
+        if (a.packages.package_arch_regex && a.packages.package_architectures)
+        {
+            cfPS(cf_error, CF_FAIL, "", pp, a,
+                 " !! You must either supply arch regex or a separate architecture");
+            return false;
+        }
     }
 
     if (!a.packages.package_installed_regex)
@@ -240,6 +252,97 @@ static int PackageSanityCheck(Attributes a, Promise *pp)
         return false;
     }
 
+    /* Dependency checks */
+    if (!a.packages.package_delete_command)
+    {
+        if (a.packages.package_delete_convention)
+        {
+            cfPS(cf_verbose, CF_FAIL, "", pp, a,
+                 "!! Dependency conflict: package_delete_command is not used, but package_delete_convention is defined.");
+            return false;
+        }
+    }
+    if (!a.packages.package_list_command)
+    {
+        if (a.packages.package_installed_regex)
+        {
+            cfPS(cf_verbose, CF_FAIL, "", pp, a,
+                 "!! Dependency conflict: package_list_command is not used, but package_installed_regex is defined.");
+            return false;
+        }
+        if (a.packages.package_list_arch_regex)
+        {
+            cfPS(cf_verbose, CF_FAIL, "", pp, a,
+                 "!! Dependency conflict: package_list_command is not used, but package_arch_regex is defined.");
+            return false;
+        }
+        if (a.packages.package_list_name_regex)
+        {
+            cfPS(cf_verbose, CF_FAIL, "", pp, a,
+                 "!! Dependency conflict: package_list_command is not used, but package_name_regex is defined.");
+            return false;
+        }
+        if (a.packages.package_list_version_regex)
+        {
+            cfPS(cf_verbose, CF_FAIL, "", pp, a,
+                 "!! Dependency conflict: package_list_command is not used, but package_version_regex is defined.");
+            return false;
+        }
+    }
+    if (!a.packages.package_list_update_command)
+    {
+        if (a.packages.package_list_update_ifelapsed != CF_NOINT)
+        {
+            cfPS(cf_verbose, CF_FAIL, "", pp, a,
+                 "!! Dependency conflict: package_list_update is not used, but package_list_update_ifelapsed is defined.");
+            return false;
+        }
+    }
+    if (!a.packages.package_patch_command)
+    {
+        if (a.packages.package_patch_arch_regex)
+        {
+            cfPS(cf_verbose, CF_FAIL, "", pp, a,
+                 "!! Dependency conflict: package_patch_command is not used, but package_patch_arch_regex is defined.");
+            return false;
+        }
+        if (a.packages.package_patch_name_regex)
+        {
+            cfPS(cf_verbose, CF_FAIL, "", pp, a,
+                 "!! Dependency conflict: package_patch_command is not used, but package_patch_name_regex is defined.");
+            return false;
+        }
+        if (a.packages.package_patch_version_regex)
+        {
+            cfPS(cf_verbose, CF_FAIL, "", pp, a,
+                 "!! Dependency conflict: package_patch_command is not used, but package_patch_version_regex is defined.");
+            return false;
+        }
+    }
+    if (!a.packages.package_patch_list_command)
+    {
+        if (a.packages.package_patch_installed_regex)
+        {
+            cfPS(cf_verbose, CF_FAIL, "", pp, a,
+                 "!! Dependency conflict: package_patch_list_command is not used, but package_patch_installed_regex is defined.");
+            return false;
+        }
+    }
+    if (!a.packages.package_verify_command)
+    {
+        if (a.packages.package_noverify_regex)
+        {
+            cfPS(cf_verbose, CF_FAIL, "", pp, a,
+                 "!! Dependency conflict: package_verify_command is not used, but package_noverify_regex is defined.");
+            return false;
+        }
+        if (a.packages.package_noverify_returncode)
+        {
+            cfPS(cf_verbose, CF_FAIL, "", pp, a,
+                 "!! Dependency conflict: package_verify_command is not used, but package_noverify_returncode is defined.");
+            return false;
+        }
+    }
     return true;
 }
 
@@ -775,19 +878,25 @@ static int ExecuteSchedule(PackageManager *schedule, enum package_actions action
 
             CfOut(cf_verbose, "", "Execute scheduled package addition");
 
+            if (a.packages.package_add_command == NULL)
+            {
+                cfPS(cf_verbose, CF_FAIL, "", pp, a, "Package add command undefined");
+                return false;
+            }
+
             command_string = xmalloc(estimated_size + strlen(a.packages.package_add_command) + 2);
             strcpy(command_string, a.packages.package_add_command);
             break;
 
         case cfa_deletepack:
 
+            CfOut(cf_verbose, "", "Execute scheduled package deletion");
+
             if (a.packages.package_delete_command == NULL)
             {
                 cfPS(cf_verbose, CF_FAIL, "", pp, a, "Package delete command undefined");
                 return false;
             }
-
-            CfOut(cf_verbose, "", "Execute scheduled package deletion");
 
             command_string = xmalloc(estimated_size + strlen(a.packages.package_delete_command) + 2);
             strcpy(command_string, a.packages.package_delete_command);
@@ -1530,6 +1639,12 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
             }
 
             CfOut(cf_verbose, "", " -> Schedule package for addition\n");
+
+            if (a.packages.package_add_command == NULL)
+            {
+                cfPS(cf_verbose, CF_FAIL, "", pp, a, "Package add command undefined");
+                return false;
+            }
             manager =
                 NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_add_command, cfa_addpack,
                                   a.packages.package_changes);
@@ -1548,6 +1663,11 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
         {
             CfOut(cf_verbose, "", " -> Schedule package for deletion\n");
 
+            if (a.packages.package_delete_command == NULL)
+            {
+                cfPS(cf_verbose, CF_FAIL, "", pp, a, "Package delete command undefined");
+                return false;
+            }
             // expand local repository in the name convetion, if present
             if (a.packages.package_file_repositories)
             {
@@ -1594,6 +1714,11 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
         if (!no_version_specified)
         {
             CfOut(cf_verbose, "", " -> Schedule package for reinstallation\n");
+            if (a.packages.package_add_command == NULL)
+            {
+                cfPS(cf_verbose, CF_FAIL, "", pp, a, "Package add command undefined");
+                return false;
+            }
             if ((matched && package_select_in_range) || (installed && no_version_specified))
             {
                 manager =
@@ -1701,6 +1826,16 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
 
                 CfOut(cf_verbose, "", "Scheduling package with id \"%s\" for deletion", id_del);
 
+                if (a.packages.package_add_command == NULL)
+                {
+                    cfPS(cf_verbose, CF_FAIL, "", pp, a, "Package add command undefined");
+                    return false;
+                }
+                if (a.packages.package_delete_command == NULL)
+                {
+                    cfPS(cf_verbose, CF_FAIL, "", pp, a, "Package delete command undefined");
+                    return false;
+                }
                 manager =
                     NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_delete_command, cfa_deletepack,
                                       a.packages.package_changes);

@@ -23,7 +23,7 @@
 @titlepage
 @title CFEngine 3 Enterprise 2.2 Owner's Manual
 @subtitle CFEngine Enterprise Documentation
-@subtitle Updated 29. May 2012 @c also update in ifnottex section below
+@subtitle Updated 6. June 2012 @c also update in ifnottex section below
 @author CFEngine
 @c @smallbook
 @fonttextsize 10
@@ -45,7 +45,7 @@ to the extent of applicable law.
 @end direntry
 @end ifinfo
 @ifnottex
-Updated 29. May 2012
+Updated 6. June 2012
 @node Top, Introduction, (dir), (dir)
 @top CFEngine 3 Enterprise 2.2 Owner's Manual
 @end ifnottex
@@ -73,7 +73,9 @@ Updated 29. May 2012
 * Environments and workflows::  
 * Virtualization::              
 * Content-Driven Policies::     
-* Windows-specific features in CFEngine 3 Enterprise::  
+* Windows-specific features in CFEngine 3 Enterprise::
+* REST API:: 
+* Troubleshooting::
 * Configuration of external authentication::  
 @end menu
 
@@ -96,7 +98,7 @@ CFEngine 3 Enterprise 2.2 is the next generation of CFEngine 3 Nova (successor o
 
 CFEngine 3 Nova is compatible with CFEngine 3 Enterprise and can easily be upgraded by following the instructions in this document.
 
-The launch of CFEngine 3 Enterprise also brings a new offering: CFEngine 3 Free Enterprise, our commercial enterprise product offered for free for up to 25 managed hosts. It differs from our commercial offer in that it has different licensing terms, different support and it is limited to a maximum of 25 hosts. The product is described in full detail at @url{http://cfengine.com/25free}.
+The launch of CFEngine 3 Enterprise also brings a new offering: CFEngine 3 Free Enterprise, our commercial enterprise product offered for free for up to 25 managed hosts. It differs from our commercial offer in that it has different licensing terms, different support and it is limited to a maximum of 25 hosts. The product is described in full detail at @url{http://cfengine.com/25free}. Please note that CFEngine 3 Enterprise should not be installed as an upgrade to CFEngine Community. I that case uninstall CEngine Community, do a clean install of CFEngine 3 Enterprise and then move your existing policies to the new Enterprise hub. See the @url{http://cfengine.com/enterprise/faq, Enterprise FAQ} for more information.
 
 
 @c --------------------------------------------------
@@ -182,12 +184,11 @@ A working package manager is required on the hub/policy server to install an Apa
 @chapter Installing CFEngine 3 Enterprise
 
 @menu
-* Installation procedure::      
-* Troubleshooting::             
+* Installation procedure::               
 * Frequently Asked Questions::  
 @end menu
 
-@node Installation procedure, Troubleshooting, Installing CFEngine 3 Enterprise, Installing CFEngine 3 Enterprise
+@node Installation procedure, Frequently Asked Questions, Installing CFEngine 3 Enterprise, Installing CFEngine 3 Enterprise
 @section Installation procedure
 
 CFEngine 3 Enterprise is designed to be simple to install in its default configuration. The installation
@@ -312,7 +313,7 @@ created, and should contain data.
 You should see a login page like the one shown in the figure below:
 
 @sp 1
-@center @image{img-login-2-2,5cm,,Mission Portal login}
+@c @center @image{img-login-2-2,5cm,,Mission Portal login}
 @center Figure: Mission Portal login screen
 @sp 1
 
@@ -326,7 +327,7 @@ Please see @ref{Frequently Asked Questions} below or @ref{Troubleshooting} if yo
 
 
 @c -----------------------------------------------------
-@node Frequently Asked Questions,  , Troubleshooting, Installing CFEngine 3 Enterprise
+@node Frequently Asked Questions,  , Installation procedure, Installing CFEngine 3 Enterprise
 @section Frequently Asked Questions
 
 @subsection How do I install the prerequisites for the hub manually?
@@ -664,8 +665,8 @@ current community policy. Install CFEngine 3 Enterprise, set up the Enterprise h
 following this document, and then integrate your existing
 policy to the hub manually, in small testable steps.
 
-CFEngine 3 Enterprise is compatible with the Community Edition of CFEngine 3, but
-some process files are now managed by CFEngine 3 Enterprise for user convenience.
+CFEngine 3 Enterprise is compatible with the Community Edition of CFEngine 3 for distributing policies, but
+some process files are now managed by CFEngine 3 Enterprise and reporting will not work in the CFEngine 3 Enterprise Mission Portal.
 
 Please see @ref{Troubleshooting} if you have any problems.
 
@@ -1447,7 +1448,7 @@ User group that will be able to access the Mission Portal through internal datab
 
 @sp 1
 @noindent @b{Role-Based Access Control}@*
-CFEngine 3 Enterprise 2.2.0 introduces Role-Based Access Control (RBAC) for all hosts, reports and promises shown in the Mission Portal. RBAC does not cover access control for making policy changes. It can be globally switched on or off, but see also @ref{Mission Portal User Admin} for more details.
+CFEngine 3 Enterprise 2.2.0 introduces Role-Based Access Control (RBAC) for all hosts, reports and promises shown in the Mission Portal. RBAC does not cover access control for making policy changes. If you wish to use RBAC in combination with external authentication (LDAP or AD), we recommend that you wait to turn on RBAC until you log on with the LDAP or AD user that has been designated a Mission Portal admin (i.e do not turn RBAC on while logged in with an internal database user in this case). RBAC can be globally switched on or off, but see also @ref{Mission Portal User Admin} for more details.
 
 @sp 1
 @noindent @b{Unreachable host threshold}
@@ -3401,7 +3402,7 @@ Knowledge Map on the policy hub.
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node Windows-specific features in CFEngine 3 Enterprise, Configuration of external authentication	, Content-Driven Policies, Top
+@node Windows-specific features in CFEngine 3 Enterprise, REST API, Content-Driven Policies, Top
 @chapter Windows-specific features in CFEngine 3 Enterprise
 
 In this section, we will explore the Windows-specific features of the
@@ -3589,10 +3590,621 @@ promises are ignored and not.  Also, @code{cf-agent} from CFEngine
 mode.
 
 
+@c **************************************************
+@c CHAPTER
+@c **************************************************
+@node REST API, Troubleshooting, Windows-specific features in CFEngine 3 Enterprise, Top
+@chapter REST API
+
+@menu
+* API Overview::
+* Resources::
+@end menu
+
+The Nova REST API allows HTTP clients to access report information gathered by the Nova Hub. Most of the information contained in the reports available through the Mission Portal are also available through REST, although in a slightly different form. Furthermore, the REST API is currently read-only.
+
+@c -----------------------------------------------------
+@node API Overview, Resources, REST API, REST API
+@section API Overview
+
+@menu
+* Response Codes::
+* Response Bodies::
+* Common Query Parameters::
+* Time::
+* Versioning and Content-Types::
+* Authentication::
+@end menu
+
+The API is composed of a set of HTTP resources available by issuing an HTTP GET request to the resource URI. The available resources at the top-level are:
+
+@itemize -
+@item @b{Status} @code{/rest/}: Version information and database connectivity status.
+@item @b{Contexts} @code{/rest/context}: Occurrences of contexts (classes) at hosts
+@item @b{Hosts} @code{/rest/host}: Host information and last seen records. 
+@item @b{Promises} @code{/rest/promise}: Promise compliance, logs and log summaries.
+@item @b{Setuid Programs} @code{/rest/setuid}: Programs running with the setuid flag.
+@item @b{Software} @code{/rest/software}: Installed software.
+@item @b{Variables} @code{/rest/variable}: Policy variables and their most recent values.
+@item @b{File Changes} @code{/rest/file}: Host file changes and their diffs if available.
+@end itemize
+
+
+@c -----------------------------------------------------
+@node Response Codes, Response Bodies, API Overview, API Overview
+@subsection Response Codes
+We have taken some care to return appropriate HTTP error codes and descriptive messages for responses. However, because the API is read-only, the set of codes a client should expect is limited. Some error codes an API should be able to handle are:
+
+@itemize -
+@item @b{200 OK}. This is the response you should normally expect when querying the API.
+@item @b{400 Bad request}. Usually indicates that query parameters where not accepted or malformed.
+@item @b{401 Unauthorized}. Client credentials did not authenticate.
+@item @b{403 Forbidden}. Client requested a specific resource that was denied by RBAC.
+@item @b{404 Not found}. A non-existing resource was requested.
+@item @b{406 Not Acceptable}. Unable to accomodate the @code{Accept} header of the request.
+@item @b{500 Internal Error}. Usually this means that there was a database connectivity problem. If not, it may indicate a bug.
+@end itemize
+
+
+@c -----------------------------------------------------
+@node Response Bodies, Common Query Parameters, Response Codes, API Overview
+@subsection Response Bodies
+The response body always consists of two elements, @code{meta} and @code{data}. @code{meta} always contains the fields @code{total} (the total number of results matched by the query), @code{page} (the page index returned), @code{count} (the number of results on the returned page) and @code{timestamp}. @code{data} contains the result set. Here is an example.
+
+@verbatim
+{
+  "meta": {
+    "total": 1,
+    "timestamp": 1329315702,
+    "page": 1,
+    "count": 1
+  },
+  "data": [{
+    "apiName": "CFEngine Nova",
+    "apiVersion": "v1",
+    "hubVersion": "2.2.0.a1.rexported",
+    "database": "connected"
+  }]
+}
+@end verbatim
+
+@b{Note}: For the remainder of this document we show only the contents of the @code{data} field for the sake of brevity.
+
+
+@c -----------------------------------------------------
+@node Common Query Parameters, Time, Response Bodies, API Overview
+@subsection Common Query Parameters
+Each resource accept their own set of query parameters, but we have attempted to keep to keep this set uniform within reason across resources. Moreover, a common set of query parameters will be accepted for all resources (and observed where it makes sense).
+
+@itemize -
+@item @b{count}: The number of results to return per page. Default is 50.
+@item @b{page}: The index of the results page to return: Default is 1.
+@item @b{from}: Unix timestamp before which we discard records as too old. Default is 0.
+@item @b{to}: Unix timestamp after which we discard records as too new. Default is current time.
+@end itemize
+
+@b{Note}: that Software and Setuid resources currently do not support time ranges.
+
+
+@c -----------------------------------------------------
+@node Time, Versioning and Content-Types, Common Query Parameters, API Overview
+@subsection Time
+Unless otherwise specified, all timestamps or durations are in seconds. Timestamps are reported in Unix time, i.e. seconds since 1970.
+
+
+@c -----------------------------------------------------
+@node Versioning and Content-Types, Authentication, Time, API Overview
+@subsection Versioning and Content-Types
+Clients may specify the version of the API to use by appending an @code{Accept} header to a request with an appropriate content-type. The server responds in turn by appending a @code{Content-Type} header to the response, encoding the API version employed. The content-type is a vendor MIME-type of the form @code{application/vnd.cfengine.nova-v<N>+<format>}. We only support JSON in this first release of the API, so the content-type header will be @code{application/vnd.cfengine.nova-v1+json}. If no @code{Accept} header is specified by the client, the server will always return the most recent version available. It is the responsibility of the client to request the desired version and condition on the type of response. In the future, the version will only be bumped in the event of breaking backward-compatibility, not merely adding new resources or options.
+
+
+@c -----------------------------------------------------
+@node Authentication, , Versioning and Content-Types, API Overview
+@subsection Authentication
+
+@menu
+* Role-based Access Control for REST::
+@end menu
+
+The REST API uses HTTP basic authentication. Unauthenticated requests will receive a @code{401} response with a @code{WWW-Authenticate} header. Clients are required to append an @code{Authorization: Basic <key>} header to each request (since REST is stateless, there is no notion of session state). The key is a Base64 encoded string of the format @code{<username>:<password>}. (Note that clients such as web-browsers and @code{curl} handle basic authentication seamlessly). This means that the username and password is transmitted effectively as plaintext. Encryption is commonly handled through SSL at the HTTP server.
+
+
+@c -----------------------------------------------------
+@node Role-based Access Control for REST, , Authentication, Authentication
+@subsubsection Role-based Access Control for REST
+The user table is the same as for the Mission Portal and is stored either in the database or delegated to LDAP. The REST API also works in conjunction with Role-based Access Control (RBAC). Most requests are effectively searches across multiple dimensions, and RBAC may render the result set empty without providing an authorization error. However, when requesting specific resources a client should be prepared for a @b{403 Forbidden}.
+
+
+@c -----------------------------------------------------
+@node Resources, , API Overview, REST API	
+@section Resources
+
+@menu
+* Status::
+* Contexts::
+* Hosts::
+* Promises::
+* Setuid Programs::
+* Software::
+* Variables::
+* File Changes::
+@end menu
+
+@c -----------------------------------------------------
+@node Status, Contexts, Resources, Resources
+@subsection Status
+
+@itemize -
+@item @b{URI Path}: @code{/rest/}
+@item @b{Query Parameters}: (common only)
+@end itemize
+
+The Status resource serves as a simple way to to see if the API is alive and to check which version of Nova it is running. Note that the Nova database (MongoDB) needs to be running in order to authenticate. The Status resource serves as a good starting point to demonstrate simple usage. Here we use @code{curl}, a command-line client. The @code{-v} flag shows the full HTTP request and response returned.
+
+@verbatim
+curl --user admin:admin -v http://localhost:8888/rest
+
+* About to connect() to localhost port 8888 (#0)
+*   Trying 127.0.0.1... connected
+* Connected to localhost (127.0.0.1) port 8888 (#0)
+* Server auth using Basic with user 'admin'
+> GET /rest HTTP/1.1
+> Authorization: Basic YWRtaW46YWRtaW4=
+> User-Agent: curl/7.21.6 (x86_64-pc-linux-gnu) libcurl/7.21.6 OpenSSL/1.0.0e zlib/1.2.3.4 libidn/1.22 librtmp/2.3
+> Host: localhost:8888
+> Accept: */*
+> 
+< HTTP/1.1 200 OK
+< Server: nginx/1.0.5
+< Date: Mon, 13 Feb 2012 17:23:39 GMT
+< Content-Type: application/vnd.cfengine.nova-v1+json
+< Transfer-Encoding: chunked
+< Connection: keep-alive
+< X-Powered-By: PHP/5.3.6-13ubuntu3.5
+< Allow: GET
+< X-Resource: Base
+< 
+{"status":"ok","timestamp":1329316866,"page":1,"count":50,"total":1,"result":
+ {"apiName":"CFEngine Nova","apiVersion":"v1","hubVersion":"2.2.0.a1.rexported",
+  "database":"connected"}}
+* Connection #0 to host localhost left intact
+* Closing connection #0
+@end verbatim
+
+Note that the REST API compacts the JSON response rather than pretty-printing it. It is possible to pipe the response from curl into a json prettifier at the command-line. Another option is to use a plugin for a browser like Firefox (e.g. RESTClient).
+
+
+@c -----------------------------------------------------
+@node Contexts, Hosts, Status, Resources
+@subsection Contexts
+
+A context (previously class) resource describes the probability of occurrence of a context at a host. Contexts are either defined or not defined during a single run of agent execution.
+
+@itemize -
+@item @b{URI Path}: /rest/context
+@item @b{Query Parameters}:
+
+@itemize 
+@item @b{hostkey}: Host the context occurs at.
+@item @b{context}: A regular expression to filter on contexts active at host.
+@end itemize
+
+@end itemize
+
+Example of a typical body from a context response:
+
+@verbatim
+[
+  {
+    "hostkey": "SHA=33736d45041e2a9407be8cf449aeffa95114bef661c20deaca1bbcfbc2922856",
+    "context": "entropy_udp_in_low",
+    "average": 0.7000,
+    "stdv": 0.8367,
+    "lastseen": 1328194134
+  },
+  ...
+]
+@end verbatim
+
+The average and standard deviation refer to the frequency with which the context is observed in agent runs at the host.
+
+
+@c -----------------------------------------------------
+@node Hosts, Promises, Contexts, Resources
+@subsection Hosts
+
+@menu
+* Listing hosts::
+* Basic Host Information::
+* Hosts Seen::
+@end menu
+
+Hosts are naturally fundamental to CFEngine, being the environment in which @code{cf-agent} runs. The REST API allows you to get at some basic information about hosts which agents have corresponded with the Hub. Hosts are universally identified by their @code{hostkey} - a SHA1 identifier. To list hosts visibile to the Hub, we can issue the following
+
+
+@c -----------------------------------------------------
+@node Listing hosts, Basic Host Information, Hosts, Hosts
+@subsubsection Listing hosts
+@itemize -
+@item @b{URI Path}: @code{/rest/host}
+@item @b{Query Parameters}:
+
+      @itemize 
+      @item @b{hostname}: Name of host.
+      @item @b{ip}: IP-address of host.
+      @item @b{context}: Context active at host (Regular Expression).
+      @end itemize
+
+@end itemize
+
+The base host resource simply returns a list of matching keys.
+
+@verbatim
+[
+  "SHA=305658693b94e003e765956f1609731419cbc0e5c9caa09e230df5e005f1f283",
+  "SHA=33736d45041e2a9407be8cf449aeffa95114bef661c20deaca1bbcfbc2922856"
+]
+@end verbatim
+
+
+@c -----------------------------------------------------
+@node Basic Host Information, Hosts Seen, Listing hosts, Hosts
+@subsubsection Basic Host Information
+Now, we can get the name and IP of a particular host, providing the hostkey.
+
+@itemize -
+@item @b{URI Path}: @code{/rest/host/:id}
+@item @b{Query Parameters}: (common only)
+@end itemize
+
+@verbatim
+{
+  "hostkey": "SHA=305658693b94e003e765956f1609731419cbc0e5c9caa09e230df5e005f1f283",
+  "name": "hostA",
+  "ip": "10.0.0.150"
+}
+@end verbatim
+
+Note that there are tons of other information we could have returned about the host, such as variables. You can get that by issuing requests like @code{/rest/variable?hostkey=SHA...}. As we need the capability of searching in variables by other properties than hostkey, we have opted to keep a separate variable resource, rather than a @code{/rest/host/:id/variable}.
+
+
+@c -----------------------------------------------------
+@node Hosts Seen, , Basic Host Information, Hosts
+@subsubsection Hosts Seen
+
+Next, we can get information about which hosts a host has seen or has been seen by.
+
+@itemize -
+@item @b{URI Path}: @code{/rest/host/:id/seen}
+@item @b{Query Parameters}: (common only)
+@end itemize
+
+@verbatim
+[
+  {
+    "hostkey": "SHA=33736d45041e2a9407be8cf449aeffa95114bef661c20deaca1bbcfbc2922856",
+    "lastseen": 108,
+    "average": 108,
+    "stdv": 180
+  },
+  ...
+]
+
+@end verbatim
+
+We can also discover when agents at other hosts discovered a given host. The format of the body of the response is the same - only the URI path is different.
+
+@itemize -
+@item @b{URI Path}: @code{/rest/host/:id/seen-by}
+@item @b{Query Parameters}: (common only)
+@end itemize
+
+
+@c -----------------------------------------------------
+@node Promises, Setuid Programs, Hosts, Resources
+@subsection Promises
+
+@menu
+* Promise Compliance::
+* Promise Log::
+* Promise Log Summary::
+@end menu
+
+Promises are the statements executed by CFEngine agents. We provide three views of promise execution results: Compliance, Log and Log Summary.
+
+
+@c -----------------------------------------------------
+@node Promise Compliance, Promise Log, Promises, Promises
+@subsubsection Promise Compliance
+
+Promise Compliance is the current status of promises in the system and their aggregated statistics.
+
+@itemize -
+@item @b{URI Path}: @code{/rest/promise/compliance}
+@item @b{Query Parameters}:
+
+      @itemize 
+      @item @b{hostkey}: Host of agent executing the promise.
+      @item @b{handle}: Handle of promise.
+      @item @b{context}: Context of agent executing the promise (Regular Expression).
+      @item @b{state}: Result state of promise, valid values are: @code{kept}, @code{notkept} and @code{repaired}.
+      @end itemize
+
+@end itemize
+
+Here is an examplary response:
+
+@verbatim
+[
+  {
+    "handle": "cfengine_correct_cftwin_files_libtwin",
+    "hostkey": "SHA=33736d45041e2a9407be8cf449aeffa95114bef661c20deaca1bbcfbc2922856",
+    "state": "kept",
+    "average": 100.0000,
+    "stdv": 0.0000,
+    "timestamp": 1328194134
+  },
+  ...
+]
+@end verbatim
+
+
+@c -----------------------------------------------------
+@node Promise Log, Promise Log Summary, Promise Compliance, Promises
+@subsubsection Promise Log
+
+A promise ends up in the promise log if the agent managed to repair a previously broken promise, or if a promise was broken. These are held as two separate logs by the Nova database, so we have opted to require the requestor to specify which log to look at, effectively specifying either state @code{repaired} or @code{notkept}. The results are the same for both states. 
+
+@itemize -
+@item @b{URI Path}: @code{/rest/promise/log/repaired} or @code{/rest/promise/log/notkept}
+@item @b{Query Parameters}:
+
+      @itemize 
+      @item @b{hostkey}: Host of agent executing the promise.
+      @item @b{handle}: Handle of promise.
+      @item @b{context}: Context of agent executing the promise (Regular Expression).
+      @item @b{to}: In addition to the common @b{from} parameter, discards entries newer than this upper bound.
+      @end itemize
+
+@end itemize
+
+Example response:
+
+@verbatim
+[
+  {
+    "handle": "garbage_collection_files_tidy_outputs",
+    "hostkey": "SHA=305658693b94e003e765956f1609731419cbc0e5c9caa09e230df5e005f1f283",
+    "description": " -> Deleted file /var/cfengine/outputs/cf_policy_test_cfengine_com__1326972365_Thu_Jan_19_12_26_05_2012_0x7ff1b940f700",
+    "state": "repaired",
+    "timestamp": 1327577464
+  },
+  ...
+]
+@end verbatim
+
+Note that the description field is the collected output from the agent, in this case having repaired a promise.
+
+
+@c -----------------------------------------------------
+@node Promise Log Summary, , Promise Log, Promises
+@subsubsection Promise Log Summary
+
+Promise log summaries provides an aggregated view of log messages by grouping similar agent reports and counting them up.
+
+@itemize -
+@item @b{URI Path}: @code{/rest/promise/log/repaired/summary} or @code{/rest/promise/log/notkept/summary}
+@item @b{Query Parameters}:
+
+      @itemize 
+      @item @b{hostkey}: Host of agent executing the promise.
+      @item @b{handle}: Handle of promise.
+      @item @b{context}: Context of agent executing the promise (Regular Expression).
+      @item @b{to}: In addition to the common @b{from} parameter, discards entries newer than this upper bound.
+      @end itemize
+
+@end itemize
+
+Example response:
+
+@verbatim
+[
+  {
+    "handle": "cfengine_correct_cftwin_files_libtwin",
+    "description": "Can't stat /var/cfengine/lib in files.copyfrom promise",
+    "count": 4,
+    "state": "notkept"
+  },
+  ...
+]
+@end verbatim
+
+From this response, we can deduce that the promise @code{cfengine_correct_cftwin_files_libtwin} failed four times across all hosts.
+
+
+@c -----------------------------------------------------
+@node Setuid Programs, Software, Promises, Resources
+@subsection Setuid Programs
+
+Setuid programs is a special report provided by agents about which programs are running with the setuid flag set.
+
+@itemize -
+@item @b{URI Path}: @code{/rest/setuid}
+@item @b{Query Parameters}:
+
+      @itemize 
+      @item @b{hostkey}: Host where the setuid program is running.
+      @item @b{path}: Path of the setuid program (Regular Expression).
+      @item @b{context}: Context active at host (Regular Expression).
+      @end itemize
+
+@end itemize
+
+Example response:
+
+@verbatim
+[
+  {
+    "path": "/usr/sbin/pppd",
+    "hostkeys": [
+      "SHA=305658693b94e003e765956f1609731419cbc0e5c9caa09e230df5e005f1f283"
+    ]
+  },
+  ...
+]
+@end verbatim
+
+
+@c -----------------------------------------------------
+@node Software, Variables, Setuid Programs, Resources
+@subsection Software
+
+The agent reports on which software is currently installed on the host.
+
+@itemize -
+@item @b{URI Path}: @code{/rest/software}
+@item @b{Query Parameters}:
+
+      @itemize 
+      @item @b{hostkey}: Host where the software is installed.
+      @item @b{name}: Name of the software.
+      @item @b{version}: Version of the software.
+      @item @b{arch}: Architecture of the software.
+      @item @b{context}: Context active at host (Regular Expression).
+      @end itemize
+
+@end itemize
+
+Example response:
+
+@verbatim
+[
+  {
+    "name": "sed",
+    "version": "4.1.5-5.fc6",
+    "arch": "x86_64",
+    "hostkeys": [
+      "SHA=33736d45041e2a9407be8cf449aeffa95114bef661c20deaca1bbcfbc2922856"
+    ]
+  },
+  ...
+]
+@end verbatim
+
+
+@c -----------------------------------------------------
+@node Variables, File Changes, Software, Resources
+@subsection Variables
+
+@menu
+* Variable Types::
+@end menu
+
+Variables are similar to contexts in that they are either built-in (hard) or promises (soft). In contrast to contexts, variables may assume a range of value types, whereas contexts are either defined or not defined. The scope of the variable is the name of the bundle (container of promises) where it was defined. In the case of variables redefined during execution, the final value is reported.
+
+@itemize -
+@item @b{URI Path}: @code{/rest/variable}
+@item @b{Query Parameters}:
+
+      @itemize 
+      @item @b{hostkey}: Host where the variable promise was executed.
+      @item @b{scope}: Name of the variable.
+      @item @b{name}: Name of the variable.
+      @item @b{value}: Value of the variable.
+      @item @b{type}: Type of the variable (see Variable Types).
+      @item @b{context}: Context active at host (Regular Expression).
+      @end itemize
+
+@end itemize
+
+
+@c -----------------------------------------------------
+@node Variable Types, , Variables, Variables
+@subsubsection Variable Types
+
+Variables are either lists of scalars, or scalars. The following are scalar types.
+
+@itemize 
+@item @b{string}
+@item @b{int}
+@item @b{real}
+@item @b{menu} (an enumerated value)
+@end itemize
+
+Correspondingly, the list types are @code{slist}, @code{ilist}, @code{rlist} and @code{mlist}.
+
+Here is an example response to a variable request.
+
+@verbatim
+[
+  {
+    "hostkey": "SHA=33736d45041e2a9407be8cf449aeffa95114bef661c20deaca1bbcfbc2922856",
+    "scope": "control_runagent",
+    "name": "hosts",
+    "type": "slist",
+    "value": [
+      "127.0.0.1"
+    ]
+  },
+  {
+    "hostkey": "SHA=33736d45041e2a9407be8cf449aeffa95114bef661c20deaca1bbcfbc2922856",
+    "scope": "control_reporter",
+    "name": "style_sheet",
+    "type": "string",
+    "value": "/cf_enterprise.css"
+  },
+  ...
+]
+@end verbatim
+
+
+@c -----------------------------------------------------
+@node File Changes, , Variables, Resources
+@subsection File Changes
+
+The agent is able to monitor files for changes, and optionally produce a diff for the changes.
+
+@itemize -
+@item @b{URI Path}: @code{/rest/file}
+@item @b{Query Parameters}:
+
+      @itemize 
+      @item @b{hostkey}: Host where the software is installed.
+      @item @b{path}: Path of file changed (Regular Expression)
+      @item @b{context}: Context active at host (Regular Expression).
+      @end itemize
+
+@end itemize
+
+Here is an example of a two file files, one for which a diff was also captured.
+
+@verbatim
+[
+    {
+        "hostkey": "SHA=305658693b94e003e765956f1609731419cbc0e5c9caa09e230df5e005f1f283",
+        "path": "/etc/passwd",
+        "timestamp": 1234567
+    },
+    {
+        "hostkey": "SHA=305658693b94e003e765956f1609731419cbc0e5c9caa09e230df5e005f1f283",
+        "path": "/etc/group",
+        "timestamp": 1234567,
+        "diff": {
+            "type": "add",
+            "line": 5,
+            "value": "sambashare:x:124:a10021"
+        }
+    },
+    ...
+]
+
+@end verbatim
+
+
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node Troubleshooting, Frequently Asked Questions, Installation procedure, Installing CFEngine 3 Enterprise
+@node Troubleshooting, Configuration of external authentication, REST API, Top
 @chapter Troubleshooting
 
 @menu
@@ -3690,7 +4302,7 @@ Warnings appear because the default environment is set to "Development" and in t
 @c *****************************************************
 @c * APPENDIX
 @c *****************************************************
-@node Configuration of external authentication,  Configure LDAP, Windows-specific features in CFEngine 3 Enterprise, Top
+@node Configuration of external authentication,  Configure LDAP, Troubleshooting, Top
 @appendix Configuration of external authentication
 
 External authentication is available for CFEngine 3 Nova 2.1 and later versions, but by default the Mission Portal will use the embedded database to store user information (default user name and password on the Mission Portal login page are "admin" and "admin"). Note that users in the default database will be locked out of the Mission Portal upon configuration of external authentication. They will regain access if external authentication is deactivated by selecting the Database button on the Mission Portal Settings page (see below).
@@ -3721,13 +4333,15 @@ Select the LDAP button and enter the appropriate configuration settings for your
 @item Base dn: LDAP root, the top entry (starting point) in the directory
 @item Login attribute: Field name used to match user name, e.g. uid.
 @item User directory: Directory name where user names are stored, e.g. cn=users or ou=people
+@item Encryption: Chose the encryption protocol to be used for authentication
+@item External admin user name: Enter the LDAP user name of the person that is supposed to have admin rights
 @item Fall-back role: User group that will be able to access the Mission Portal through internal database authentication if external authentication is down or misconfigured. 
 @c @item Member attribute: Field name used to match user group (only needed for OPENLDAP), e.g. memberUid
 @end itemize
 
 Always check that the entered configuration is correct by clicking the "Test it" button before submitting changes. Enter a valid user name and password in the popup to test LDAP bind. Submitting an incorrect configuration will put LDAP down and lock out all users, CFEngine 3 Enterprise therefore comes with a fallback solution. Select a fallback administrator group in the database from the dropbox, CFEngine 3 Enterprise will look for users in this group when an incorrect configuration has been passed. A member of this group will then be able to log on to the Mission Portal using his internal database user name and password and restart the external authentication configuration.
 
-Also select which user group will have general administrator privileges in the Mission Portal. This group will be able to access the Mission Portal settings and configuration tools.
+If you wish to use RBAC in combination with LDAP, we recommend that you wait to turn on RBAC until you log on with the LDAP user that has been designated a Mission Portal admin (i.e do not turn RBAC on while logged on with an internal database user in this case).
 
 
 @c ----------------------------------------------------------
@@ -3749,14 +4363,17 @@ Select the Active Directory button and enter the appropriate configuration setti
 @item Login attribute: Field name used to match user name, e.g. uid.
 @item User directory: Directory name where user names are stored, e.g. cn=users or ou=people
 @item Active directory domain: Field name used to match directory domain on Windows machines, e.g. windows1.test.cfengine.com
+@item Encryption: Chose the encryption protocol to be used for authentication
+@item External admin user name: Enter the AD user name of the person that is supposed to have admin rights
 @item Fall-back role: User group that will be able to access the Mission Portal through internal database authentication if external authentication is down or misconfigured.
 @end itemize
 
 Always check that the entered configuration is correct by clicking the "Test it" button before submitting changes. Enter a valid user name and password in the popup to test LDAP bind. Submitting an incorrect configuration will put LDAP down and lock out all users, CFEngine 3 Enterprise therefore comes with a fallback solution. Select a fallback administrator group in the database from the dropbox, CFEngine 3 Enterprise will look for users in this group when an incorrect configuration has been passed. A member of this group will then be able to log on to the Mission Portal using his internal database user name and password and restart the external authentication configuration.
 
-Also select which user group will have general administrator privileges in the Mission Portal. This group will be able to access the Mission Portal settings and configuration tools.
+If you wish to use RBAC in combination with LDAP, we recommend that you wait to turn on RBAC until you log on with the LDAP user that has been designated a Mission Portal admin (i.e do not turn RBAC on while logged on with an internal database user in this case).
 
 
+@c ----------------------------------------------------------
 @node Directory structure, , Configure Active Directory, Configuration of external authentication
 @section Directory structure
 

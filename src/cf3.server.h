@@ -89,4 +89,5 @@ void Constellation_RunQueries(Item *queries, Item **results_p);
 
 void KeepPromises(Policy *policy);
 
+void ServerEntryPoint(int sd_reply, struct sockaddr *cin);
 #endif

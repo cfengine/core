@@ -415,6 +415,27 @@ static void test_parse_array_object(void **state)
     JsonElementDestroy(arr);
 }
 
+static void test_iterator_current(void **state)
+{
+    const char *data = ARRAY_SIMPLE;
+    JsonElement *arr = JsonParse(&data);
+
+    JsonElement *json = JsonObjectCreate(1);
+    JsonObjectAppendArray(json, "array", arr);
+
+    JsonIterator it = JsonIteratorInit(json);
+    while (JsonIteratorNextValue(&it) != NULL)
+    {
+        assert_int_equal((int)JsonIteratorCurrentElementType(&it),
+                         (int)JSON_ELEMENT_TYPE_CONTAINER);
+        assert_int_equal((int)JsonIteratorCurrentContrainerType(&it),
+                         (int)JSON_CONTAINER_TYPE_ARRAY);
+        assert_string_equal(JsonIteratorCurrentKey(&it), "array");
+    }
+
+    JsonElementDestroy(json);
+}
+
 static void test_parse_empty(void **state)
 {
     const char *data = "";
@@ -758,6 +779,7 @@ int main()
         unit_test(test_object_get_string),
         unit_test(test_object_get_array),
         unit_test(test_object_iterator),
+        unit_test(test_iterator_current),
         unit_test(test_array_get_string),
         unit_test(test_array_iterator),
         unit_test(test_parse_object_simple),

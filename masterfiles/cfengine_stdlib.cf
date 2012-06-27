@@ -191,6 +191,7 @@ bundle edit_line replace_line_end(start,end)
 field_edits:
 
    "\s*$(start)\s.*"
+         comment => "Replace lines with $(this.start) and $(this.end)",
       edit_field => line("(^|\s)$(start)\s*", "2", "$(end)","set");
 }
 
@@ -211,6 +212,7 @@ bundle edit_line append_to_line_end(start,end)
 field_edits:
 
    "\s*$(start)\s.*"
+         comment => "Append lines with $(this.start) and $(this.end)",
       edit_field => line("(^|\s)$(start)\s*", "2", "$(end)","append");
 }
 
@@ -231,6 +233,148 @@ insert_lines:
 
   "search $(search)"    comment => "Add search domains to resolver";
   "nameserver $(list)"  comment => "Add name servers to resolver";
+}
+
+##
+
+bundle edit_line manage_variable_values_ini(tab, sectionName) {
+ # Sets the RHS of configuration items in the file of the form
+ # LHS=RHS
+ # If the line is commented out with #, it gets uncommented first.
+ # Adds a new line if none exists.
+ # Removes any variable value pairs not defined for the ini section
+ # The argument is an associative array containing tab[SectionName][LHS]="RHS"
+ # don't change value when the RHS is dontchange
+
+ # Based on set_variable_values_ini 
+ # Added delete lines section to empty out undefined variable values for INI section
+
+ # CAUTION : for it to work nicely, you should use Cfengine with the commit n°3229
+ # otherwise you may risk a segfault
+
+ #
+ # If you are running 3.2.1 or earlier or more specifically git commit # or
+ # earlier you can use this to work around the segfault bug.
+ # vars:
+ #     "$(file)"
+ #         edit_line => append_if_no_line("[#EOF#]"),
+ #         create => "true",
+ #         comment => "Work around bug<bug#here> where eof did not mean end
+ #                     of section and thus cannot select a region. This promise
+ #                     should be placed before your call to this bundle";
+ #      "$(file)"
+ #         edit_line   => manage_variable_values_ini("context.array", "SectionName"),
+ #         create => "true",
+ #         comment     => "Set the variale values only in the specified ini region";
+ # 
+
+    vars:
+        "index" slist => getindices("$(tab)[$(sectionName)]");
+
+    # Be careful if the index string contains funny chars
+        "cindex[$(index)]" string => canonify("$(index)");
+
+    classes:
+        "edit_$(cindex[$(index)])"     not => strcmp("$($(tab)[$(sectionName)][$(index)])","dontchange"),
+                                   comment => "Create conditions to make changes"; 
+
+    field_edits:
+
+    # If the line is there, but commented out, first uncomment it
+        "#+$(index)\s*=.*"
+            select_region => INI_section("$(sectionName)"),
+            edit_field => col("=","1","$(index)","set"),
+            ifvarclass => "edit_$(cindex[$(index)])";
+
+    # match a line starting like the key something
+        "$(index)\s*=.*"
+            edit_field => col("=","2","$($(tab)[$(sectionName)][$(index)])","set"),
+            select_region => INI_section("$(sectionName)"),
+            classes => if_ok("manage_variable_values_ini_not_$(cindex[$(index)])"),
+            ifvarclass => "edit_$(cindex[$(index)])";
+
+    delete_lines:
+        ".*"
+            select_region => INI_section("$(sectionName)"),
+            comment       => "Remove all entries in the region so there are no extra entries";
+
+    insert_lines:
+        "[$(sectionName)]"
+                location => start,
+                 comment => "Insert lines";
+
+        "$(index)=$($(tab)[$(sectionName)][$(index)])",
+                select_region => INI_section("$(sectionName)"),
+                ifvarclass => "!manage_variable_values_ini_not_$(cindex[$(index)]).edit_$(cindex[$(index)])";
+
+}
+
+##
+
+bundle edit_line set_variable_values_ini(tab, sectionName) {
+ # Sets the RHS of configuration items in the file of the form
+ # LHS=RHS
+ # If the line is commented out with #, it gets uncommented first.
+ # Adds a new line if none exists.
+ # The argument is an associative array containing tab[SectionName][LHS]="RHS"
+ # don't change value when the RHS is dontchange
+
+ # Based on set_variable_values from cfengine_stdlib.cf, modified to
+ # use section to define were to write, and to handle commented-out lines.
+
+ # CAUTION : for it to work nicely, you should use Cfengine with the commit n°3229
+ # otherwise you may risk a segfault
+
+ #
+ # If you are running 3.2.1 or earlier or more specifically git commit # or
+ # earlier you can use this to work around the segfault bug.
+ # vars:
+ #     "$(file)"
+ #         edit_line => append_if_no_line("[#EOF#]"),
+ #         create => "true",
+ #         comment => "Work around bug<bug#here> where eof did not mean end
+ #                     of section and thus cannot select a region. This promise
+ #                     should be placed before your call to this bundle";
+ #      "$(file)"
+ #         edit_line   => set_variable_values_ini("context.array", "SectionName"),
+ #         create => "true",
+ #         comment     => "Set the variale values only in the specified ini region";
+ # 
+
+    vars:
+        "index" slist => getindices("$(tab)[$(sectionName)]");
+
+    # Be careful if the index string contains funny chars
+        "cindex[$(index)]" string => canonify("$(index)");
+
+    classes:
+        "edit_$(cindex[$(index)])"     not => strcmp("$($(tab)[$(sectionName)][$(index)])","dontchange"),
+                                   comment => "Create conditions to make changes";
+
+    field_edits:
+
+    # If the line is there, but commented out, first uncomment it
+        "#+$(index)\s*=.*"
+            select_region => INI_section("$(sectionName)"),
+            edit_field => col("=","1","$(index)","set"),
+            ifvarclass => "edit_$(cindex[$(index)])";
+
+    # match a line starting like the key something
+        "$(index)\s*=.*"
+            edit_field => col("=","2","$($(tab)[$(sectionName)][$(index)])","set"),
+            select_region => INI_section("$(sectionName)"),
+            classes => if_ok("set_variable_values_ini_not_$(cindex[$(index)])"),
+            ifvarclass => "edit_$(cindex[$(index)])";
+
+    insert_lines:
+        "[$(sectionName)]"
+                location => start,
+                 comment => "Insert lines";
+
+        "$(index)=$($(tab)[$(sectionName)][$(index)])",
+                select_region => INI_section("$(sectionName)"),
+                ifvarclass => "!set_variable_values_ini_not_$(cindex[$(index)]).edit_$(cindex[$(index)])";
+
 }
 
 ##
@@ -294,8 +438,9 @@ replace_patterns:
   # If the line is there, maybe commented out, uncomment and replace with
   # the correct value
   "^\s*($(index)\s+(?!$($(v)[$(index)])).*|# ?$(index)\s+.*)$"
+         comment => "Correct the value",
     replace_with => value("$(index) $($(v)[$(index)])"),
-    classes => always("replace_attempted_$(cindex[$(index)])");
+         classes => always("replace_attempted_$(cindex[$(index)])");
 
 insert_lines:
   "$(index) $($(v)[$(index)])"
@@ -324,13 +469,46 @@ replace_patterns:
     # If the line is there, maybe commented out, uncomment and replace with
     # the correct value
     "^\s*($(index)\s+(?!$($(v)[$(index)])).*|# ?$(index)\s+.*)$"
+           comment => "Correct the value",
       replace_with => value("$(index) $($(v)[$(index)])"),
-      classes => always("replace_attempted_$(cindex[$(index)])");
+           classes => always("replace_attempted_$(cindex[$(index)])");
 
 insert_lines:
   "$(index) $($(v)[$(index)])"
     ifvarclass => "replace_attempted_$(cindex[$(index)])";
 
+}
+
+##
+
+bundle edit_line maintain_key_values(v,sep)
+{
+  vars:
+    "index" slist => getindices("$(v)");
+    # Be careful if the index string contains funny chars
+    "cindex[$(index)]" string => canonify("$(index)");
+    # Matching pattern for line (basically key-and-separator)
+    "keypat[$(index)]" string => "\s*$(index)\s*$(sep)\s*";
+
+    # Values may contain regexps. Escape them for replace_pattern matching.
+    "ve[$(index)]" string => escape("$($(v)[$(index)])");
+
+  classes:
+    "$(cindex[$(index)])_key_in_file"
+       comment => "Dynamic Class created if patterns matching",
+       expression => regline("^$(keypat[$(index)]).*", "$(edit.filename)");
+
+  replace_patterns:
+    # For convergence need to use negative lookahead on value:
+    # "key sep (?!value).*"
+    "^($(keypat[$(index)]))(?!$(ve[$(index)])).*"
+      comment => "Replace definition of $(index)",
+      replace_with => value("$(match.1)$($(v)[$(index)])");
+
+  insert_lines:
+    "$(index)$(sep)$($(v)[$(index)])",
+      comment => "Insert definition of $(index)",
+      ifvarclass => "!$(cindex[$(index)])_key_in_file";
 }
 
 ##
@@ -347,7 +525,8 @@ vars:
 
 classes:
 
-  "add_$(index)" not => userexists("$(index)");
+  "add_$(index)"     not => userexists("$(index)"),
+                 comment => "Class created if user does not exist";
 
 insert_lines:
 
@@ -371,7 +550,8 @@ vars:
 
 classes:
 
-  "add_$(index)" not => groupexists("$(index)");
+  "add_$(index)"     not => groupexists("$(index)"),
+                 comment => "Class created if group does not exist";
 
 insert_lines:
 
@@ -465,8 +645,9 @@ vars:
 
 replace_patterns:
   "^(?!$(line)$)$(pattern)$"
-  replace_with => value("$(line)"),
-  classes => always("replace_done_$(cline)");
+          comment => "Replace a pattern here",
+     replace_with => value("$(line)"),
+          classes => always("replace_done_$(cline)");
 
 insert_lines:
   "$(line)"
@@ -512,9 +693,9 @@ changed_crontab::
 
 
 
-##
+##-------------------------------------------------------
 ## editing bodies
-##
+##-------------------------------------------------------
 
 body edit_field quoted_var(newval,method)
 {
@@ -569,15 +750,15 @@ select_start => "\[$(x)\]\s*";
 select_end => "\[.*\]\s*";
 }
 
-##
+##-------------------------------------------------------
 ## edit_defaults
-##
+##-------------------------------------------------------
 
 body edit_defaults std_defs
 {
 empty_file_before_editing => "false";
 edit_backup => "false";
-max_file_size => "300000";
+#max_file_size => "300000";
 }
 
 ##
@@ -586,7 +767,7 @@ body edit_defaults empty
 {
 empty_file_before_editing => "true";
 edit_backup => "false";
-max_file_size => "300000";
+#max_file_size => "300000";
 }
 
 ##
@@ -596,9 +777,9 @@ body edit_defaults no_backup
 edit_backup => "false";
 }
 
-##
+##-------------------------------------------------------
 ## location
-##
+##-------------------------------------------------------
 
 body location start
 {
@@ -622,9 +803,9 @@ select_line_matching => "$(str)";
 }
 
 
-##
+##-------------------------------------------------------
 ## replace_with
-##
+##-------------------------------------------------------
 
 ##
 
@@ -646,9 +827,9 @@ occurrences => "all";
 ## agent bodyparts
 ####################################################
 
-##
+##-------------------------------------------------------
 ## action
-##
+##-------------------------------------------------------
 
 body action if_elapsed(x)
 {
@@ -729,9 +910,9 @@ body action log_verbose
 log_level => "verbose";
 }
 
-##
+##-------------------------------------------------------
 ## contain
-##
+##-------------------------------------------------------
 
 body contain silent
 {
@@ -786,6 +967,15 @@ no_output => "true";
 
 ##
 
+body contain in_dir_shell_and_silent(dir)
+{
+useshell => "true";
+no_output => "true";
+chdir => "$(dir)";
+}
+
+##
+
 body contain setuid(x)
 {
 exec_owner => "$(x)";
@@ -820,9 +1010,9 @@ chroot => "$(root)";
 }
 
 
-##
+##-------------------------------------------------------
 ## classes
-##
+##-------------------------------------------------------
 
 
 body classes if_repaired(x)
@@ -874,15 +1064,23 @@ promise_kept => { "$(x)" };
 
 ##
 
+body classes if_ok_cancel(x)
+{
+cancel_repaired => { "$(x)" };
+cancel_kept => { "$(x)" };
+}
+
+##
+
 body classes cmd_repair(code,cl)
 {
 repaired_returncodes => { "$(code)" };
 promise_repaired => { "$(cl)" };
 }
 
-##
+##-------------------------------------------------------
 ## Persistent classes
-##
+##-------------------------------------------------------
 
 body classes state_repaired(x)
 {
@@ -928,9 +1126,9 @@ body classes always(x)
 ## files promises
 ##..................................................
 
-##
+##-------------------------------------------------------
 ## copy_from
-##
+##-------------------------------------------------------
 
 body copy_from secure_cp(from,server)
 {
@@ -1037,9 +1235,9 @@ compare     => "mtime";
 copy_backup => "false";
 }
 
-##
+##-------------------------------------------------------
 ## link_from
-##
+##-------------------------------------------------------
 
 body link_from ln_s(x)
 {
@@ -1059,9 +1257,9 @@ link_children => "true";
 when_linking_children => "if_no_such_file"; # "override_file";
 }
 
-##
+##-------------------------------------------------------
 ## perms
-##
+##-------------------------------------------------------
 
 body perms m(mode)
 {
@@ -1100,9 +1298,9 @@ body perms owner(user)
 owners => { "$(user)" };
 }
 
-##
+##-------------------------------------------------------
 ## ACLS (extended Unix perms)
-##
+##-------------------------------------------------------
 
 body acl access_generic(acl)
 # default/inherited ACLs are left unchanged,
@@ -1141,9 +1339,9 @@ aces => { "user:Administrator:rwx" };
 aces => { "user:root:rwx" };
 }
 
-##
+##-------------------------------------------------------
 ## depth_search
-##
+##-------------------------------------------------------
 
 body depth_search recurse(d)
 
@@ -1167,9 +1365,9 @@ body depth_search include_base
 include_basedir => "true";
 }
 
-##
+##-------------------------------------------------------
 ## delete
-##
+##-------------------------------------------------------
 
 body delete tidy
 
@@ -1178,9 +1376,9 @@ dirlinks => "delete";
 rmdirs   => "true";
 }
 
-##
+##-------------------------------------------------------
 ## rename
-##
+##-------------------------------------------------------
 
 body rename disable
 {
@@ -1201,9 +1399,9 @@ body rename to(file)
 newname => "$(file)";
 }
 
-##
+##-------------------------------------------------------
 ## file_select
-##
+##-------------------------------------------------------
 
 body file_select name_age(name,days)
 {
@@ -1267,8 +1465,16 @@ file_result => "!leaf_name";
 }
 
 ##
+
+body file_select all
+{
+leaf_name => { ".*" };
+file_result => "leaf_name";
+}
+
+##-------------------------------------------------------
 ## changes
-##
+##-------------------------------------------------------
 
 body changes detect_all_change
 
@@ -1362,9 +1568,9 @@ body package_method apt
 {
 package_changes => "bulk";
 package_list_command => "/usr/bin/dpkg -l";
-package_list_name_regex    => "ii\s+([^\s]+).*";
-package_list_version_regex => "ii\s+[^\s]+\s+([^\s]+).*";
-package_installed_regex => ".*"; # all reported are installed
+package_list_name_regex    => ".i\s+([^\s]+).*";
+package_list_version_regex => ".i\s+[^\s]+\s+([^\s]+).*";
+package_installed_regex => ".i.*"; # packages that have been uninstalled may be listed
 package_name_convention => "$(name)";
 
 # set it to "0" to avoid caching of list during upgrade
@@ -1397,10 +1603,10 @@ package_list_command => "/usr/bin/dpkg -l";
 # set it to "0" to avoid caching of list during upgrade
 package_list_update_ifelapsed => "240";
 
-package_list_name_regex    => "ii\s+([^\s]+).*";
-package_list_version_regex => "ii\s+[^\s]+\s+([^\s]+).*";
+package_list_name_regex    => ".i\s+([^\s]+).*";
+package_list_version_regex => ".i\s+[^\s]+\s+([^\s]+).*";
 
-package_installed_regex => ".*"; # all reported are installed
+package_installed_regex => ".i.*"; # packages that have been uninstalled may be listed
 
 package_file_repositories => { "$(repo)" };
 
@@ -1523,7 +1729,7 @@ package_name_convention => "$(name).$(arch)";
 # set it to "0" to avoid caching of list during upgrade
 package_list_update_ifelapsed => "240";
 
-package_patch_installed_regex => "^\s.*";
+package_patch_installed_regex => "^[^*]\s.*";
 package_patch_name_regex    => "([^.]+).*";
 package_patch_version_regex => "[^\s]\s+([^\s]+).*";
 package_patch_arch_regex    => "[^.]+\.([^\s]+).*";
@@ -1557,7 +1763,7 @@ body package_method yum_rpm
   package_installed_regex => ".*";
   package_name_convention => "$(name)";
 
-  package_patch_installed_regex => "^\s.*";
+  package_patch_installed_regex => "^[^*]\s.*";
   package_patch_name_regex    => "([^.]+).*";
   package_patch_version_regex => "[^\s]\s+([^\s]+).*";
   package_patch_arch_regex    => "[^.]+\.([^\s]+).*";
@@ -1570,7 +1776,29 @@ body package_method yum_rpm
 
 ##
 
-# The solaris package system is poorly designed, with too many different
+# OpenSolaris based systems (Solaris 11, Illumos, etc) use the much better
+# Image Package System.
+
+body package_method ips {
+  package_changes => "bulk";
+  package_list_command => "/usr/bin/pkg list -v --no-refresh";
+  package_list_name_regex    => "pkg://.+?/([^\s]+)@.*$";
+  package_list_version_regex => "[^\s]+@([^\s]+).*";
+  package_installed_regex => ".*(i..)"; # all reported are installed
+
+  # set it to "0" to avoid caching of list during upgrade
+  package_list_update_ifelapsed => "240";
+
+  package_add_command => "/usr/bin/pkg install --accept ";
+  package_list_update_command => "/usr/bin/pkg refresh --full";
+  package_delete_command => "/usr/bin/pkg uninstall";
+  package_update_command =>  "/usr/bin/pkg install --accept";
+  package_verify_command =>  "/usr/bin/pkg list -a -v --no-refresh";
+  package_noverify_regex => "(.*---|pkg list: no packages matching .* installed)";
+}
+
+
+# The older solaris package system is poorly designed, with too many different
 # names to track. See the example in tests/units/unit_package_solaris.cf
 # to see how to use this
 
@@ -1613,7 +1841,8 @@ networkretries=3
 authentication=quit
 keystore=/var/sadm/security
 proxy=
-basedir=default";
+basedir=default",
+      comment => "Insert contents of Solaris admin file (automatically install packages)";
 }
 
 ##
@@ -1638,8 +1867,29 @@ body package_method freebsd
  package_name_convention => "$(name)-$(version)";
 
 
-package_add_command => "/usr/sbin/pkg_add -r";
-package_delete_command => "/usr/sbin/pkg_delete";
+ package_add_command => "/usr/sbin/pkg_add -r";
+ package_delete_command => "/usr/sbin/pkg_delete";
+}
+
+##
+
+body package_method emerge
+{
+ package_changes => "individual";
+ package_list_command => "/bin/sh -c '/bin/ls -d /var/db/pkg/*/* | cut -c 13-'";
+ package_list_name_regex => ".*/([^\s]+)-\d.*";
+ package_list_version_regex => ".*/[^\s]+-(\d.*)";
+ package_installed_regex => ".*";                          # all reported are installed
+ package_name_convention => "$(name)";
+ package_list_update_command => "/bin/true";               # I prefer manual syncing
+ #package_list_update_command => "/usr/bin/emerge --sync"; # if you like automatic
+ package_list_update_ifelapsed => "240";                   # should happen every 4 hours
+    
+ package_add_command => "/usr/bin/emerge -q --quiet-build";
+ package_delete_command => "/usr/bin/emerge --depclean";
+ package_update_command => "/usr/bin/emerge --update";
+ package_verify_command => "/usr/bin/emerge -s";
+ package_noverify_regex => ".*(Not Installed|Applications found : 0).*";
 }
 
 ##
@@ -1676,7 +1926,7 @@ redhat::
  package_installed_regex => ".*";
  package_name_convention => "$(name)";
  package_list_update_ifelapsed => "0";     # sometimes, caching is pretty disturbing
- package_patch_installed_regex => "^\s.*";
+ package_patch_installed_regex => "^[^*]\s.*";
  package_patch_name_regex    => "([^.]+).*";
  package_patch_version_regex => "[^\s]\s+([^\s]+).*";
  package_patch_arch_regex    => "[^.]+\.([^\s]+).*";
@@ -1694,7 +1944,7 @@ redhat::
 # package_installed_regex => ".*(installed|\s+@).*";
 # package_name_convention => "$(name).$(arch)";
 # package_list_update_ifelapsed => "240";
-# package_patch_installed_regex => "^\s.*";
+# package_patch_installed_regex => "^[^*]\s.*";
 # package_patch_name_regex    => "([^.]+).*";
 # package_patch_version_regex => "[^\s]\s+([^\s]+).*";
 # package_patch_arch_regex    => "[^.]+\.([^\s]+).*";
@@ -1705,9 +1955,9 @@ redhat::
 debian::
  package_changes => "bulk";
  package_list_command => "/usr/bin/dpkg -l";
- package_list_name_regex    => "ii\s+([^\s]+).*";
- package_list_version_regex => "ii\s+[^\s]+\s+([^\s]+).*";
- package_installed_regex => ".*"; # all reported are installed
+ package_list_name_regex    => ".i\s+([^\s]+).*";
+ package_list_version_regex => ".i\s+[^\s]+\s+([^\s]+).*";
+ package_installed_regex => ".i.*"; # packages that have been uninstalled may be listed
  package_name_convention => "$(name)";
  package_list_update_ifelapsed => "240";		# 4 hours
 
@@ -1738,6 +1988,23 @@ freebsd::
  package_name_convention => "$(name)-$(version)";
  package_add_command => "/usr/sbin/pkg_add -r";
  package_delete_command => "/usr/sbin/pkg_delete";
+
+gentoo::
+ package_changes => "individual";
+ package_list_command => "/bin/sh -c '/bin/ls -d /var/db/pkg/*/* | cut -c 13-'";
+ package_list_name_regex => ".*/([^\s]+)-\d.*";
+ package_list_version_regex => ".*/[^\s]+-(\d.*)";
+ package_installed_regex => ".*";                          # all reported are installed
+ package_name_convention => "$(name)";
+ package_list_update_command => "/bin/true";               # I prefer manual syncing
+ #package_list_update_command => "/usr/bin/emerge --sync"; # if you like automatic
+ package_list_update_ifelapsed => "240";                   # should happen every 4 hours
+    
+ package_add_command => "/usr/bin/emerge -q --quiet-build";
+ package_delete_command => "/usr/bin/emerge --depclean";
+ package_update_command => "/usr/bin/emerge --update";
+ package_verify_command => "/usr/bin/emerge -s";
+ package_noverify_regex => ".*(Not Installed|Applications found : 0).*";
 }
 
 ##
@@ -1820,9 +2087,9 @@ match_range => irange("$(lower)","$(upper)");
 out_of_range_define => { "$(name)_out_of_range" };
 }
 
-##
+##-------------------------------------------------------
 ## service promises
-##
+##-------------------------------------------------------
 
 body service_method bootstart
 {
@@ -1842,8 +2109,90 @@ windows::
 }
 
 ##
+
+bundle agent standard_services(service,state)
+{
+ # DATA, 
+
+vars:
+
+ linux::
+
+  "startcommand[varnish]" string => "/etc/init.d/varnish start";
+  "stopcommand[varnish]"  string => "/etc/init.d/varnish stop";
+  "pattern[varnish]"      string => ".*varnish.*";
+
+ suse|redhat::
+
+  "startcommand[www]" string => "/etc/init.d/apache2 start";
+  "stopcommand[www]"  string => "/etc/init.d/apache2 stop";
+  "pattern[www]"      string => ".*httpd.*";
+
+  "startcommand[mysql]" string => "/etc/init.d/mysqld start";
+  "stopcommand[mysql]"  string => "/etc/init.d/mysqld stop";
+  "pattern[mysql]"      string => ".*mysqld.*";
+
+  "startcommand[tomcat]" string => "/etc/init.d/tomcat5 start";
+  "stopcommand[tomcat]"  string => "/etc/init.d/tomcat5 stop";
+  "pattern[tomcat]"      string => ".*tomcat5.*";
+
+ debian|ubuntu::
+
+  "startcommand[www]"     string => "/etc/init.d/httpd stop";
+  "stopcommand[www]"      string => "/etc/init.d/httpd stop";
+  "pattern[www]"          string => ".*apache2.*";
+
+  "startcommand[mysql]" string => "/etc/init.d/mysql start";
+  "stopcommand[mysql]"  string => "/etc/init.d/mysql stop";
+  "pattern[mysql]"      string => ".*mysqld.*";
+
+  "startcommand[tomcat]" string => "/etc/init.d/tomcat6 start";
+  "stopcommand[tomcat]"  string => "/etc/init.d/tomcat6 stop";
+  "pattern[tomcat]"      string => ".*tomcat6.*";
+
+
+
+ # METHODS that implement these ............................................
+
+classes:
+
+  "start" expression => strcmp("start","$(state)"),
+             comment => "Check if to start a service";
+  "stop"  expression => strcmp("stop","$(state)"),
+             comment => "Check if to stop a service";
+
+# Do we want to include the packages here too?
+
+processes:
+
+  start::
+
+    "$(pattern)"
+
+             comment => "Verify that the service appears in the process table",
+       restart_class => "restart_$(service)";
+
+  stop::
+
+    "$(pattern)"
+
+            comment => "Verify that the service does not appear in the process",
+       process_stop => "$(stopcommand[$(service)])",
+            signals => { "term", "kill"};
+
+  commands:
+
+   "$(startcommand[$(service)])"
+
+            comment => "Execute command to restart the $(service) service",
+         ifvarclass => "restart_$(service)";
+
+}
+
+
+##-------------------------------------------------------
 ## database promises
-##
+##-------------------------------------------------------
 
 body database_server local_mysql(username, password)
 {
@@ -1865,9 +2214,9 @@ db_server_type => "postgres";
 db_server_connection_db => "postgres";
 }
 
-##
+##-------------------------------------------------------
 ## guest_environment promises
-##
+##-------------------------------------------------------
 
 body environment_resources kvm(name, arch, cpu_count, mem_kb, disk_file)
 {
@@ -1920,6 +2269,22 @@ body match_value scan_changing_file(line)
 {
 select_line_matching => "$(line)";
 track_growing_file => "false";
+}
+
+##
+
+body match_value single_value(regex)
+{
+select_line_matching => "$(regex)";
+extraction_regex => "($(regex))";
+}
+
+##
+
+body match_value line_match_value(line_match, extract_regex)
+{
+select_line_matching => "$(line_match)";
+extraction_regex => "$(extract_regex)";
 }
 
 ##

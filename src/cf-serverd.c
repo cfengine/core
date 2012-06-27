@@ -326,10 +326,8 @@ static void ThisAgentInit(void)
 
 static void StartServer(Policy *policy, GenericAgentConfig config)
 {
-    char ipaddr[CF_MAXVARSIZE], intime[64];
     int sd, sd_reply;
     fd_set rset;
-    time_t now;
     struct timeval timeout;
     int ret_val;
     Promise *pp = NewPromise("server_cfengine", "the server daemon");
@@ -451,68 +449,7 @@ static void StartServer(Policy *policy, GenericAgentConfig config)
 
         if ((sd_reply = accept(sd, (struct sockaddr *) &cin, &addrlen)) != -1)
         {
-            memset(ipaddr, 0, CF_MAXVARSIZE);
-            ThreadLock(cft_getaddr);
-            snprintf(ipaddr, CF_MAXVARSIZE - 1, "%s", sockaddr_ntop((struct sockaddr *) &cin));
-            ThreadUnlock(cft_getaddr);
-
-            CfDebug("Obtained IP address of %s on socket %d from accept\n", ipaddr, sd_reply);
-
-            if (NONATTACKERLIST && !IsMatchItemIn(NONATTACKERLIST, MapAddress(ipaddr)))
-            {
-                CfOut(cf_error, "", "Not allowing connection from non-authorized IP %s\n", ipaddr);
-                cf_closesocket(sd_reply);
-                continue;
-            }
-
-            if (IsMatchItemIn(ATTACKERLIST, MapAddress(ipaddr)))
-            {
-                CfOut(cf_error, "", "Denying connection from non-authorized IP %s\n", ipaddr);
-                cf_closesocket(sd_reply);
-                continue;
-            }
-
-            if ((now = time((time_t *) NULL)) == -1)
-            {
-                now = 0;
-            }
-
-            PurgeOldConnections(&CONNECTIONLIST, now);
-
-            if (!IsMatchItemIn(MULTICONNLIST, MapAddress(ipaddr)))
-            {
-                if (IsItemIn(CONNECTIONLIST, MapAddress(ipaddr)))
-                {
-                    CfOut(cf_error, "", "Denying repeated connection from \"%s\"\n", ipaddr);
-                    cf_closesocket(sd_reply);
-                    continue;
-                }
-            }
-
-            if (LOGCONNS)
-            {
-                CfOut(cf_log, "", "Accepting connection from \"%s\"\n", ipaddr);
-            }
-            else
-            {
-                CfOut(cf_inform, "", "Accepting connection from \"%s\"\n", ipaddr);
-            }
-
-            snprintf(intime, 63, "%d", (int) now);
-
-            if (!ThreadLock(cft_count))
-            {
-                return;
-            }
-
-            PrependItem(&CONNECTIONLIST, MapAddress(ipaddr), intime);
-
-            if (!ThreadUnlock(cft_count))
-            {
-                return;
-            }
-
-            SpawnConnection(sd_reply, ipaddr);
+        ServerEntryPoint(sd_reply, &cin);
         }
     }
 
@@ -662,6 +599,78 @@ static int OpenReceiverChannel(void)
 #endif
 
     return sd;
+}
+/*********************************************************************/
+
+void ServerEntryPoint(int sd_reply, struct sockaddr *cin)
+
+{
+    char ipaddr[CF_MAXVARSIZE], intime[64];
+    time_t now;
+
+    memset(ipaddr, 0, CF_MAXVARSIZE);
+    ThreadLock(cft_getaddr);
+    snprintf(ipaddr, CF_MAXVARSIZE - 1, "%s", sockaddr_ntop((struct sockaddr *) cin));
+    ThreadUnlock(cft_getaddr);
+    
+    CfDebug("Obtained IP address of %s on socket %d from accept\n", ipaddr, sd_reply);
+    
+    if (NONATTACKERLIST && !IsMatchItemIn(NONATTACKERLIST, MapAddress(ipaddr)))
+    {
+        CfOut(cf_error, "", "Not allowing connection from non-authorized IP %s\n", ipaddr);
+        cf_closesocket(sd_reply);
+        return;
+    }
+    
+    if (IsMatchItemIn(ATTACKERLIST, MapAddress(ipaddr)))
+    {
+        CfOut(cf_error, "", "Denying connection from non-authorized IP %s\n", ipaddr);
+        cf_closesocket(sd_reply);
+        return;
+    }
+    
+    if ((now = time((time_t *) NULL)) == -1)
+       {
+       now = 0;
+       }
+    
+    PurgeOldConnections(&CONNECTIONLIST, now);
+    
+    if (!IsMatchItemIn(MULTICONNLIST, MapAddress(ipaddr)))
+    {
+        if (IsItemIn(CONNECTIONLIST, MapAddress(ipaddr)))
+        {
+            CfOut(cf_error, "", "Denying repeated connection from \"%s\"\n", ipaddr);
+            cf_closesocket(sd_reply);
+            return;
+        }
+    }
+    
+    if (LOGCONNS)
+    {
+        CfOut(cf_log, "", "Accepting connection from \"%s\"\n", ipaddr);
+    }
+    else
+    {
+        CfOut(cf_inform, "", "Accepting connection from \"%s\"\n", ipaddr);
+    }
+    
+    snprintf(intime, 63, "%d", (int) now);
+    
+    if (!ThreadLock(cft_count))
+    {
+        return;
+    }
+    
+    PrependItem(&CONNECTIONLIST, MapAddress(ipaddr), intime);
+    
+    if (!ThreadUnlock(cft_count))
+    {
+       return;
+    }
+    
+    SpawnConnection(sd_reply, ipaddr);
+    
 }
 
 /*********************************************************************/

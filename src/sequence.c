@@ -123,6 +123,19 @@ void *SequenceLookup(Sequence *seq, const void *key, SequenceItemComparator Comp
     return NULL;
 }
 
+ssize_t SequenceIndexOf(Sequence *seq, const void *key, SequenceItemComparator Compare)
+{
+    for (size_t i = 0; i < seq->length; i++)
+    {
+        if (Compare(key, seq->data[i]) == 0)
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
 static void Swap(void **l, void **r)
 {
     void *t = *l;

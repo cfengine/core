@@ -58,12 +58,30 @@ static void test_lookup(void **state)
     *key = 5;
 
     size_t *result = SequenceLookup(seq, key, CompareNumbers);
-
     assert_int_equal(*result, *key);
 
     *key = 17;
     result = SequenceLookup(seq, key, CompareNumbers);
     assert_int_equal(result, NULL);
+
+    SequenceDestroy(seq);
+    free(key);
+}
+
+static void test_index_of(void **state)
+{
+    Sequence *seq = SequenceCreateRange(10, 0, 9);
+
+    size_t *key = xmalloc(sizeof(size_t));
+
+    *key = 5;
+
+    ssize_t index = SequenceIndexOf(seq, key, CompareNumbers);
+    assert_int_equal(index, 5);
+
+    *key = 17;
+    index = SequenceIndexOf(seq, key, CompareNumbers);
+    assert_true(index == -1);
 
     SequenceDestroy(seq);
     free(key);
@@ -132,6 +150,7 @@ int main()
         unit_test(test_create_destroy),
         unit_test(test_append),
         unit_test(test_lookup),
+        unit_test(test_index_of),
         unit_test(test_sort),
         unit_test(test_remove_range)
     };

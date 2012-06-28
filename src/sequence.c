@@ -110,6 +110,11 @@ void SequenceRemoveRange(Sequence *seq, size_t start, size_t end)
     seq->length -= end - start + 1;
 }
 
+void SequenceRemove(Sequence *seq, size_t index)
+{
+    SequenceRemoveRange(seq, index, index);
+}
+
 void *SequenceLookup(Sequence *seq, const void *key, SequenceItemComparator Compare)
 {
     for (size_t i = 0; i < seq->length; i++)

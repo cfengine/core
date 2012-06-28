@@ -143,6 +143,34 @@ static void test_remove_range(void **state)
     SequenceDestroy(seq);
 }
 
+static void test_remove(void **state)
+{
+
+    Sequence *seq = SequenceCreateRange(10, 0, 9);
+
+    SequenceRemove(seq, 5);
+
+    assert_int_equal(seq->length, 9);
+    assert_int_equal(*(size_t *) seq->data[5], 6);
+
+    SequenceDestroy(seq);
+    seq = SequenceCreateRange(10, 0, 9);
+
+    SequenceRemove(seq, 0);
+    assert_int_equal(seq->length, 9);
+    assert_int_equal(*(size_t *) seq->data[0], 1);
+
+    SequenceDestroy(seq);
+
+    seq = SequenceCreateRange(10, 0, 9);
+
+    SequenceRemove(seq, 9);
+    assert_int_equal(seq->length, 9);
+    assert_int_equal(*(size_t *) seq->data[8], 8);
+
+    SequenceDestroy(seq);
+}
+
 int main()
 {
     const UnitTest tests[] =
@@ -152,7 +180,8 @@ int main()
         unit_test(test_lookup),
         unit_test(test_index_of),
         unit_test(test_sort),
-        unit_test(test_remove_range)
+        unit_test(test_remove_range),
+        unit_test(test_remove)
     };
 
     return run_tests(tests);

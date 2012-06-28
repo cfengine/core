@@ -101,6 +101,11 @@ ssize_t SequenceIndexOf(Sequence *seq, const void *key, SequenceItemComparator C
 void SequenceRemoveRange(Sequence *seq, size_t start, size_t end);
 
 /**
+  @brief Remove a single item in the sequence
+  */
+void SequenceRemove(Sequence *seq, size_t index);
+
+/**
   @brief Sort a Sequence according to the given item comparator function
   @param compare [in] The comparator function used for sorting.
   */

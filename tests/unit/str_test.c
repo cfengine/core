@@ -252,6 +252,54 @@ static void test_match_full(void **state)
     assert_false(StringMatchFull("a", "ab"));
     assert_false(StringMatchFull("^a.*$", "bac"));
 }
+
+static void test_encode_base64(void **state)
+{
+    {
+        char *res = StringEncodeBase64("");
+        assert_string_equal("", res);
+        free(res);
+    }
+
+    {
+        char *res = StringEncodeBase64("a");
+        assert_string_equal("YQ==", res);
+        free(res);
+    }
+
+    {
+        char *res = StringEncodeBase64("aa");
+        assert_string_equal("YWE=", res);
+        free(res);
+    }
+
+    {
+        char *res = StringEncodeBase64("aaa");
+        assert_string_equal("YWFh", res);
+        free(res);
+    }
+
+    {
+        char *res =  StringEncodeBase64("aaaa");
+        assert_string_equal("YWFhYQ==", res);
+        free(res);
+    }
+
+    {
+        char *res = StringEncodeBase64("snookie");
+        assert_string_equal("c25vb2tpZQ==", res);
+        free(res);
+    }
+
+    {
+        char *res = StringEncodeBase64("test");
+        assert_string_equal("dGVzdA==", res);
+        free(res);
+    }
+
+    // valgrind leaks should be due to crypto one-time allocations
+}
+
 int main()
 {
     const UnitTest tests[] =
@@ -295,7 +343,9 @@ int main()
         unit_test(test_safe_equal),
 
         unit_test(test_match),
-        unit_test(test_match_full)
+        unit_test(test_match_full),
+
+        unit_test(test_encode_base64)
     };
 
     return run_tests(tests);

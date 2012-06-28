@@ -481,6 +481,41 @@ bool StringMatchFull(const char *regex, const char *str)
     }
 }
 
+char *StringEncodeBase64(const char *str)
+{
+    assert(str);
+    if (!str)
+    {
+        return NULL;
+    }
+
+    size_t input_len = strlen(str);
+    if (input_len == 0)
+    {
+        return xcalloc(1, sizeof(char));
+    }
+
+    BIO *b64 = BIO_new(BIO_f_base64());
+    BIO *bio = BIO_new(BIO_s_mem());
+    b64 = BIO_push(b64, bio);
+    BIO_write(b64, str, input_len);
+    if (!BIO_flush(b64))
+    {
+        assert(false && "Unable to encode string to base64" && str);
+        return NULL;
+    }
+
+    BUF_MEM *buffer = NULL;
+    BIO_get_mem_ptr(b64, &buffer);
+    char *out = xcalloc(1, buffer->length);
+    memcpy(out, buffer->data, buffer->length - 1);
+    out[buffer->length - 1] = '\0';
+
+    BIO_free_all(b64);
+
+    return out;
+}
+
 bool IsStrIn(const char *str, const char **strs)
 {
     int i;

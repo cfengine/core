@@ -38,6 +38,8 @@ char *NULLStringToEmpty(char *str);
 
 bool IsNumber(const char *name);
 
+char *StringEncodeBase64(const char *str);
+
 char *SafeStringDuplicate(const char *str);
 int SafeStringLength(const char *str);
 int StringSafeCompare(const char *a, const char *b);

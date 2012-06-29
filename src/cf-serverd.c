@@ -73,6 +73,8 @@ static void CfGetFile(ServerFileGetState *args);
 static void CfEncryptGetFile(ServerFileGetState *args);
 static void CompareLocalHash(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer);
 static void GetServerLiteral(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted);
+static int ReceiveCollectCall(ServerConnectionState *conn, char *sendbuffer);
+static int TryCollectCall(void);
 static int GetServerQuery(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer);
 static int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *oldDirname);
 static int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirname);
@@ -120,6 +122,7 @@ static const char *PROTOCOL[] =
     "CONTEXT",
     "SCONTEXT",
     "SQUERY",
+    "SCALL_ME_BACK",
     NULL
 };
 
@@ -181,6 +184,7 @@ int TRIES = 0;
 int MAXTRIES = 5;
 int LOGCONNS = false;
 int LOGENCRYPT = false;
+int COLLECT_INTERVAL = 0;
 
 Item *CONNECTIONLIST = NULL;
 
@@ -414,6 +418,7 @@ static void StartServer(Policy *policy, GenericAgentConfig config)
             if (ACTIVE_THREADS == 0)
             {
                 CheckFileChanges(&policy, config);
+                TryCollectCall();
             }
             ThreadUnlock(cft_server_children);
         }
@@ -449,7 +454,7 @@ static void StartServer(Policy *policy, GenericAgentConfig config)
 
         if ((sd_reply = accept(sd, (struct sockaddr *) &cin, &addrlen)) != -1)
         {
-        ServerEntryPoint(sd_reply, &cin);
+            ServerEntryPoint(sd_reply, (struct sockaddr *)&cin);
         }
     }
 
@@ -1466,7 +1471,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
         if (len >= sizeof(out) || received != len + CF_PROTO_OFFSET)
         {
             CfOut(cf_inform, "", "Decrypt error SQUERY\n");
-            RefuseAccess(conn, sendbuffer, 0, "decrypt error SVAR");
+            RefuseAccess(conn, sendbuffer, 0, "decrypt error SQUERY");
             return true;
         }
 
@@ -1498,6 +1503,49 @@ static int BusyWithConnection(ServerConnectionState *conn)
         {
             return true;
         }
+
+        break;
+
+    case cfd_call_me_back:
+
+        sscanf(recvbuffer, "SCALL_ME_BACK %u", &len);
+
+        if (len >= sizeof(out) || received != len + CF_PROTO_OFFSET)
+        {
+            CfOut(cf_inform, "", "Decrypt error CALL_ME_BACK\n");
+            RefuseAccess(conn, sendbuffer, 0, "decrypt error CALL_ME_BACK");
+            return true;
+        }
+
+        memcpy(out, recvbuffer + CF_PROTO_OFFSET, len);
+        plainlen = DecryptString(conn->encryption_type, out, recvbuffer, conn->session_key, len);
+
+        if (strncmp(recvbuffer, "CALL_ME_BACK", 5) != 0)
+        {
+            CfOut(cf_inform, "", "CALL_ME_BACK protocol defect\n");
+            RefuseAccess(conn, sendbuffer, 0, "decryption failure");
+            return false;
+        }
+
+        if (!conn->id_verified)
+        {
+            CfOut(cf_inform, "", "ID not verified\n");
+            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            return true;
+        }
+
+        if (!LiteralAccessControl(recvbuffer, conn, true, VARADMIT, VARDENY))
+        {
+            CfOut(cf_inform, "", "Query access failure\n");
+            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            return false;
+        }
+        
+        if (ReceiveCollectCall(conn, sendbuffer))
+        {
+            return true;
+        }
+
     }
 
     sprintf(sendbuffer, "BAD: Request denied\n");
@@ -2197,6 +2245,10 @@ static int LiteralAccessControl(char *in, ServerConnectionState *conn, int encry
     if (strncmp(in, "VAR", 3) == 0)
     {
         sscanf(in, "VAR %255[^\n]", name);
+    }
+    else if (strncmp(in, "CALL_ME_BACK", strlen("CALL_ME_BACK")) == 0)
+    {
+        sscanf(in, "CALL_ME_BACK %255[^\n]", name);
     }
     else
     {
@@ -3353,6 +3405,21 @@ static int GetServerQuery(ServerConnectionState *conn, char *sendbuffer, char *r
 #else
     return false;
 #endif
+}
+
+/********************************************************************/
+
+static int ReceiveCollectCall(ServerConnectionState *conn, char *sendbuffer)
+{
+
+ char out[CF_BUFSIZE];
+ // ask for a call back on this open / ecnrypted line
+
+// Do we need to send a confirmation?
+ int cipherlen = EncryptString(conn->encryption_type, sendbuffer, out, conn->session_key, strlen(sendbuffer) + 1);
+
+ SendTransaction(conn->sd_reply, out, cipherlen, CF_DONE);
+
 }
 
 /**************************************************************/

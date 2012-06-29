@@ -1,10 +1,11 @@
+#######################################################
 # Test for presence of "main" attribute, given the presence of "dependent"
 # attributes, which do not make sense without the "main" attribute.
-
+#
 # main attribute: package_list_update_command
 # dependent attributes: 
 #     package_list_update_ifelapsed
-
+#######################################################
 
 body common control
 {

@@ -1,10 +1,12 @@
+#######################################################
 # Test for presence of "main" attribute, given the presence of "dependent"
 # attributes, which do not make sense without the "main" attribute.
-
+#
 # main attribute: package_verify_command
 # dependent attributes: 
 #     package_noverify_regex
 #     package_noverify_returncode
+#######################################################
 
 body common control
 {
@@ -15,11 +17,15 @@ nova_edition::
   host_licenses_paid => "5";
 }
 
+#######################################################
+
 bundle agent init
 {
 vars:
   "dummy" string => "dummy";
 }
+
+#######################################################
 
 bundle agent test
 {

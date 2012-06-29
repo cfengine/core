@@ -101,7 +101,7 @@ commands:
         "/bin/test `/usr/bin/tail -100 /var/log/maillog | /usr/bin/grep 'Milter (dcc): to error state' | /usr/bin/wc -l` -gt 3 && echo '+start_dccm' || echo
 ''"
             contain => shell_command,
-            module => true;
+            module => "true";
 
     start_dccm::
         "/var/dcc/libexec/start-dccm"

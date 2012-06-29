@@ -481,7 +481,7 @@ bool StringMatchFull(const char *regex, const char *str)
     }
 }
 
-char *StringEncodeBase64(const char *str)
+char *StringEncodeBase64(const char *str, size_t len)
 {
     assert(str);
     if (!str)
@@ -489,8 +489,7 @@ char *StringEncodeBase64(const char *str)
         return NULL;
     }
 
-    size_t input_len = strlen(str);
-    if (input_len == 0)
+    if (len == 0)
     {
         return xcalloc(1, sizeof(char));
     }
@@ -498,7 +497,7 @@ char *StringEncodeBase64(const char *str)
     BIO *b64 = BIO_new(BIO_f_base64());
     BIO *bio = BIO_new(BIO_s_mem());
     b64 = BIO_push(b64, bio);
-    BIO_write(b64, str, input_len);
+    BIO_write(b64, str, len);
     if (!BIO_flush(b64))
     {
         assert(false && "Unable to encode string to base64" && str);

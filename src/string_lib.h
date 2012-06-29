@@ -38,7 +38,7 @@ char *NULLStringToEmpty(char *str);
 
 bool IsNumber(const char *name);
 
-char *StringEncodeBase64(const char *str);
+char *StringEncodeBase64(const char *str, size_t len);
 
 char *SafeStringDuplicate(const char *str);
 int SafeStringLength(const char *str);

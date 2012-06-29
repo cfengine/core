@@ -256,43 +256,43 @@ static void test_match_full(void **state)
 static void test_encode_base64(void **state)
 {
     {
-        char *res = StringEncodeBase64("");
+        char *res = StringEncodeBase64("", 0);
         assert_string_equal("", res);
         free(res);
     }
 
     {
-        char *res = StringEncodeBase64("a");
+        char *res = StringEncodeBase64("a", 1);
         assert_string_equal("YQ==", res);
         free(res);
     }
 
     {
-        char *res = StringEncodeBase64("aa");
+        char *res = StringEncodeBase64("aa", 2);
         assert_string_equal("YWE=", res);
         free(res);
     }
 
     {
-        char *res = StringEncodeBase64("aaa");
+        char *res = StringEncodeBase64("aaa", 3);
         assert_string_equal("YWFh", res);
         free(res);
     }
 
     {
-        char *res =  StringEncodeBase64("aaaa");
+        char *res =  StringEncodeBase64("aaaa", 4);
         assert_string_equal("YWFhYQ==", res);
         free(res);
     }
 
     {
-        char *res = StringEncodeBase64("snookie");
+        char *res = StringEncodeBase64("snookie", 7);
         assert_string_equal("c25vb2tpZQ==", res);
         free(res);
     }
 
     {
-        char *res = StringEncodeBase64("test");
+        char *res = StringEncodeBase64("test", 4);
         assert_string_equal("dGVzdA==", res);
         free(res);
     }

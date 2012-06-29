@@ -1,11 +1,13 @@
+#######################################################
 # Test for presence of "main" attribute, given the presence of "dependent"
 # attributes, which do not make sense without the "main" attribute.
-
+#
 # main attribute: package_patch_command
 # dependent attributes: 
 #     package_patch_arch_regex
 #     package_patch_name_regex
 #     package_patch_version_regex
+#######################################################
 
 body common control
 {

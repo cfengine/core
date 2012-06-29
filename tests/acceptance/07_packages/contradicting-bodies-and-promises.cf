@@ -1,5 +1,7 @@
+#######################################################
 # Test that specifying two incompatible ways to get package version is detected
 # and reported
+#######################################################
 
 body common control
 {
@@ -10,11 +12,15 @@ nova_edition::
   host_licenses_paid => "5";
 }
 
+#######################################################
+
 bundle agent init
 {
 vars:
   "dummy" string => "dummy";
 }
+
+#######################################################
 
 bundle agent test
 {

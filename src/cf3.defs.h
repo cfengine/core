@@ -205,7 +205,6 @@ typedef struct
 /* Client server defines                                           */
 /*******************************************************************/
 
-
 enum PROTOS
 {
     cfd_exec,
@@ -227,6 +226,7 @@ enum PROTOS
     cfd_context,
     cfd_scontext,
     cfd_squery,
+    cfd_call_me_back,
     cfd_bad
 };
 
@@ -787,6 +787,7 @@ enum cfscontrol
     cfs_auditing,
     cfs_bindtointerface,
     cfs_cfruncommand,
+    cfs_call_collect_interval,
     cfs_denybadclocks,
     cfs_denyconnects,
     cfs_dynamicaddresses,

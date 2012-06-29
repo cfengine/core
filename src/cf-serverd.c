@@ -74,7 +74,7 @@ static void CfEncryptGetFile(ServerFileGetState *args);
 static void CompareLocalHash(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer);
 static void GetServerLiteral(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted);
 static int ReceiveCollectCall(ServerConnectionState *conn, char *sendbuffer);
-static int TryCollectCall(void);
+static void TryCollectCall(void);
 static int GetServerQuery(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer);
 static int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *oldDirname);
 static int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirname);
@@ -413,16 +413,28 @@ static void StartServer(Policy *policy, GenericAgentConfig config)
 
     while (true)
     {
+        time_t last_collect = 0, now = time(NULL);
+
+        /* Note that this loop logic is single threaded, but ACTIVE_THREADS
+           might still change in threads pertaining to service handling */
+        
         if (ThreadLock(cft_server_children))
         {
             if (ACTIVE_THREADS == 0)
             {
                 CheckFileChanges(&policy, config);
-                TryCollectCall();
             }
             ThreadUnlock(cft_server_children);
         }
 
+        if ((COLLECT_INTERVAL > 0) && ((now - last_collect) > COLLECT_INTERVAL))
+           {
+           CfOut(cf_verbose, "", " -> Attempting to place a collect call for reporting with the policy server\n");
+           TryCollectCall();
+           last_collect = now;
+           continue;
+           }        
+        
         FD_ZERO(&rset);
         FD_SET(sd, &rset);
 
@@ -449,7 +461,7 @@ static void StartServer(Policy *policy, GenericAgentConfig config)
         {
             continue;
         }
-
+        
         CfOut(cf_verbose, "", " -> Accepting a connection\n");
 
         if ((sd_reply = accept(sd, (struct sockaddr *) &cin, &addrlen)) != -1)
@@ -3409,6 +3421,12 @@ static int GetServerQuery(ServerConnectionState *conn, char *sendbuffer, char *r
 
 /********************************************************************/
 
+static void TryCollectCall(void)
+{
+}
+
+/********************************************************************/
+
 static int ReceiveCollectCall(ServerConnectionState *conn, char *sendbuffer)
 {
 
@@ -3420,6 +3438,7 @@ static int ReceiveCollectCall(ServerConnectionState *conn, char *sendbuffer)
 
  SendTransaction(conn->sd_reply, out, cipherlen, CF_DONE);
 
+ return true;
 }
 
 /**************************************************************/

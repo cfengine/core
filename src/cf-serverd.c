@@ -523,7 +523,7 @@ static void StartServer(Policy *policy, GenericAgentConfig config)
 /* Level 2                                                           */
 /*********************************************************************/
 
-static int OpenReceiverChannel()
+static int OpenReceiverChannel(void)
 {
     int sd;
     int yes = 1;

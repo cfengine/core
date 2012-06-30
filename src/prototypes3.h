@@ -140,6 +140,7 @@ int IsIPV4Address(char *name);
 const char *Hostname2IPString(const char *hostname);
 char *IPString2Hostname(const char *ipaddress);
 int GetMyHostInfo(char nameBuf[MAXHOSTNAMELEN], char ipBuf[MAXIP4CHARLEN]);
+unsigned short SocketFamily(int sd);
 
 /* comparray.c */
 

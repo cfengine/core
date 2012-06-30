@@ -68,6 +68,7 @@
 #define SOCKET_INVALID -1
 #define CF_MONDAY_MORNING 345600
 
+#define MINUTES_PER_HOUR 60
 #define SECONDS_PER_MINUTE 60
 #define SECONDS_PER_HOUR (60 * SECONDS_PER_MINUTE)
 #define SECONDS_PER_DAY (24 * SECONDS_PER_HOUR)
@@ -1578,6 +1579,7 @@ enum cfd_menu
     cfd_menu_delta,
     cfd_menu_full,
     cfd_menu_relay,
+    cfd_collect_call,
     cfd_menu_error
 };
 
@@ -2389,4 +2391,6 @@ extern const BodySyntax CFEX_CONTROLBODY[];
 # include <cf.nova.h>
 #endif
 
+
 #endif
+

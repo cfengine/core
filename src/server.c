@@ -49,7 +49,7 @@ void ServerEntryPoint(int sd_reply, char *ipaddr, ServerAccess sv)
     char intime[64];
     time_t now;
     
-    CfDebug("Obtained IP address of %s on socket %d from accept\n", ipaddr, sd_reply);
+    CfOut(cf_verbose, "", "Obtained IP address of %s on socket %d from accept\n", ipaddr, sd_reply);
     
     if (sv.nonattackerlist && !IsMatchItemIn(sv.nonattackerlist, MapAddress(ipaddr)))
     {
@@ -160,7 +160,10 @@ void SpawnConnection(int sd_reply, char *ipaddr)
     pthread_attr_t threadattrs;
 #endif
 
-    conn = NewConn(sd_reply);
+    if ((conn = NewConn(sd_reply)) == NULL)
+    {
+        return;
+    }
 
     strncpy(conn->ipaddr, ipaddr, CF_MAX_IP_LEN - 1);
 
@@ -266,7 +269,7 @@ void *HandleConnection(ServerConnectionState *conn)
     {
     }
 
-    CfDebug("Terminating thread...\n");
+    CfOut(cf_verbose,"", "Terminating thread...\n");
 
     if (!ThreadLock(cft_server_children))
     {
@@ -314,7 +317,7 @@ int BusyWithConnection(ServerConnectionState *conn)
         return false;
     }
 
-    CfDebug("Received: [%s] on socket %d\n", recvbuffer, conn->sd_reply);
+    CfDebug(" * Received: [%s] on socket %d\n", recvbuffer, conn->sd_reply);
 
     switch (GetCommand(recvbuffer))
     {
@@ -844,7 +847,7 @@ int BusyWithConnection(ServerConnectionState *conn)
 
         memcpy(out, recvbuffer + CF_PROTO_OFFSET, len);
         plainlen = DecryptString(conn->encryption_type, out, recvbuffer, conn->session_key, len);
-
+        
         if (strncmp(recvbuffer, "CALL_ME_BACK collect_calls", strlen("CALL_ME_BACK collect_calls")) != 0)
         {
             CfOut(cf_inform, "", "CALL_ME_BACK protocol defect\n");
@@ -2755,33 +2758,23 @@ void TryCollectCall(void)
     pthread_attr_destroy(&threadattrs);
     
 #endif
+
 }
 
 /********************************************************************/
 
 int ReceiveCollectCall(ServerConnectionState *conn, char *sendbuffer)
 {
-
- char out[CF_BUFSIZE];
- // ask for a call back on this open / ecnrypted line
-
-// Do we need to send a confirmation?
- int cipherlen = EncryptString(conn->encryption_type, sendbuffer, out, conn->session_key, strlen(sendbuffer) + 1);
-
- SendTransaction(conn->sd_reply, out, cipherlen, CF_DONE);
-
 #ifdef HAVE_NOVA
- CfOut(cf_verbose, "", "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
- CfOut(cf_verbose, "", "  Accepting Collect Call from %s ", conn->hostname);
- CfOut(cf_verbose, "", "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"); 
-
-
+    CfOut(cf_verbose, "", "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+    CfOut(cf_verbose, "", "  Hub: Accepting Collect Call from %s ", conn->hostname);
+    CfOut(cf_verbose, "", "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"); 
 
     return Nova_AcceptCollectCall(conn);
 #else
 
     CfOut(cf_verbose, "", "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
-    CfOut(cf_verbose, "", "  Collect Call are only supported in the Entrerprise ");
+    CfOut(cf_verbose, "", "  Collect Call are only supported in the Enterprise ");
     CfOut(cf_verbose, "", "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"); 
 
     return false;
@@ -3241,7 +3234,14 @@ int CheckStoreKey(ServerConnectionState *conn, RSA *key)
 ServerConnectionState *NewConn(int sd)
 {
     ServerConnectionState *conn;
+    struct sockaddr addr;
+    socklen_t size = sizeof(addr);
 
+    if (getsockname(sd, &addr, &size) == -1)
+       {
+       return NULL;
+       }
+    
     ThreadLock(cft_system);
 
     conn = xmalloc(sizeof(ServerConnectionState));

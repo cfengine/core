@@ -302,7 +302,7 @@ static void StartServer(Policy *policy, GenericAgentConfig config)
         /* Note that this loop logic is single threaded, but ACTIVE_THREADS
            might still change in threads pertaining to service handling */
         
-        if (ThreadLock(cft_server_children))
+/*        if (ThreadLock(cft_server_children))
         {
             if (ACTIVE_THREADS == 0)
             {
@@ -310,14 +310,17 @@ static void StartServer(Policy *policy, GenericAgentConfig config)
             }
             ThreadUnlock(cft_server_children);
         }
-
-
+*/
+        // Check whether we should try to establish peering with a hub
+        
         if ((COLLECT_INTERVAL > 0) && ((now - last_collect) > COLLECT_INTERVAL))
            {
            TryCollectCall();
            last_collect = now;
            continue;
-           }        
+           }
+
+        // Look for normal incoming service requests
         
         FD_ZERO(&rset);
         FD_SET(sd, &rset);

@@ -34,7 +34,7 @@ pdf: cf3-Reference.pdf
 
 all:
 
-install: install-html install-pdf
+install:
 
 REFDIR=$(DESTDIR)/$(projdocdir)/reference
 

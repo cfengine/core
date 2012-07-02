@@ -22,7 +22,7 @@
 	Misc:
 
 	- archlinux hard class on Arch Linux.
-	- Detect BSD Make and automatically switch to GNU Make.
+	- Detect BSD Make and automatically switch to GNU Make during build.
 
 3.3.4   (Bugfix and Stability release)
 

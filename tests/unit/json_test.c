@@ -759,6 +759,21 @@ static void test_array_remove_range(void **state)
     }
 }
 
+static void test_remove_key_from_object(void **state)
+{
+    JsonElement *object = JsonObjectCreate(3);
+
+    JsonObjectAppendInteger(object, "one", 1);
+    JsonObjectAppendInteger(object, "two", 2);
+    JsonObjectAppendInteger(object, "three", 3);
+
+    JsonObjectRemoveKey(object, "two");
+
+    assert_int_equal(2, JsonElementLength(object));
+
+    JsonElementDestroy(object);
+}
+
 int main()
 {
     const UnitTest tests[] =
@@ -798,7 +813,8 @@ int main()
         unit_test(test_parse_object_nested_garbage),
         unit_test(test_parse_array_garbage),
         unit_test(test_parse_array_nested_garbage),
-        unit_test(test_array_remove_range)
+        unit_test(test_array_remove_range),
+        unit_test(test_remove_key_from_object)
     };
 
     return run_tests(tests);

@@ -24,6 +24,9 @@
 	- archlinux hard class on Arch Linux.
 	- Detect BSD Make and automatically switch to GNU Make during build.
 
+	Full list of issues fixed is available on
+	https://cfengine.com/bugtracker/changelog_page.php
+
 3.3.4   (Bugfix and Stability release)
 
 	Evaluation of policies:

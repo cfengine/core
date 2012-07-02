@@ -424,6 +424,35 @@ static int JsonElementHasProperty(const void *propertyName, const void *jsonElem
     return -1;
 }
 
+static int CompareString(const void *a, const void *b)
+{
+    return StringSafeCompare((char*)a, ((JsonElement*)b)->propertyName);
+}
+
+static size_t JsonElementIndexInParentObject(JsonElement *parent, const char* key)
+{
+    assert(parent);
+    assert(parent->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(parent->container.type == JSON_CONTAINER_TYPE_OBJECT);
+    assert(key);
+
+    return SequenceIndexOf(parent->container.children, key, CompareString);
+}
+
+void JsonObjectRemoveKey(JsonElement *object, const char *key)
+{
+    assert(object);
+    assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
+    assert(key);
+
+    size_t index = JsonElementIndexInParentObject(object, key);
+    if (index != -1)
+    {
+        SequenceRemove(object->container.children, index);
+    }
+}
+
 const char *JsonObjectGetAsString(JsonElement *object, const char *key)
 {
     assert(object);

@@ -201,4 +201,11 @@ JsonElement *JsonArrayGetAsObject(JsonElement *array, size_t index);
 // do not use parsing in production code.
 JsonElement *JsonParse(const char **data);
 
+/**
+  @brief Remove key from the object
+  @param object containing the key property
+  @param property name to be removed
+  */
+void JsonObjectRemoveKey(JsonElement *object, const char *key);
+
 #endif

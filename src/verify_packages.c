@@ -901,6 +901,8 @@ static int ExecuteSchedule(PackageManager *schedule, enum package_actions action
                 return false;
             }
 
+            CfOut(cf_inform, "", "Installing %-.39s...\n", pp->promiser);
+
             command_string = xmalloc(estimated_size + strlen(a.packages.package_add_command) + 2);
             strcpy(command_string, a.packages.package_add_command);
             break;
@@ -915,6 +917,8 @@ static int ExecuteSchedule(PackageManager *schedule, enum package_actions action
                 return false;
             }
 
+            CfOut(cf_inform, "", "Deleting %-.39s...\n", pp->promiser);
+
             command_string = xmalloc(estimated_size + strlen(a.packages.package_delete_command) + 2);
             strcpy(command_string, a.packages.package_delete_command);
             break;
@@ -928,6 +932,8 @@ static int ExecuteSchedule(PackageManager *schedule, enum package_actions action
                 cfPS(cf_verbose, CF_FAIL, "", pp, a, "Package update command undefined");
                 return false;
             }
+
+            CfOut(cf_inform, "", "Updating %-.39s...\n", pp->promiser);
 
             command_string = xcalloc(1, estimated_size + strlen(a.packages.package_update_command) + 2);
             strcpy(command_string, a.packages.package_update_command);
@@ -2123,7 +2129,6 @@ int ExecPackageCommand(char *command, int verify, int setCmdClasses, Attributes 
 
     if (DONTDO)
     {
-        CfOut(cf_error, "", " -> Need to execute %-.39s...\n", command);
         return true;
     }
 

@@ -1258,10 +1258,8 @@ static void DeleteTypeContext(Policy *policy, enum typesequence type)
 
     case kp_packages:
 
-        if (!DONTDO)
-        {
-            ExecuteScheduledPackages();
-        }
+        ExecuteScheduledPackages();
+
         CleanScheduledPackages();
         break;
 

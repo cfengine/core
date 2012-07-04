@@ -150,7 +150,7 @@ static int PackageSanityCheck(Attributes a, Promise *pp)
         return false;
     }
 
-    if (a.packages.package_list_command && !IsExecutable(GetArg0(a.packages.package_list_command)))
+    if (!a.packages.package_commands_useshell && a.packages.package_list_command && !IsExecutable(GetArg0(a.packages.package_list_command)))
     {
         cfPS(cf_error, CF_FAIL, "", pp, a,
              "The proposed package list command \"%s\" was not executable",
@@ -483,7 +483,7 @@ static int VerifyInstalledPackages(PackageManager **all_mgrs, Attributes a, Prom
         CfOut(cf_verbose, "", "   Reading patches from %s\n", GetArg0(a.packages.package_patch_list_command));
         CfOut(cf_verbose, "", " ???????????????????????????????????????????????????????????????\n");
 
-        if (!IsExecutable(GetArg0(a.packages.package_patch_list_command)))
+        if (!a.packages.package_commands_useshell && !IsExecutable(GetArg0(a.packages.package_patch_list_command)))
         {
             CfOut(cf_error, "", "The proposed patch list command \"%s\" was not executable",
                   a.packages.package_patch_list_command);
@@ -492,7 +492,16 @@ static int VerifyInstalledPackages(PackageManager **all_mgrs, Attributes a, Prom
 
         FILE *fin;
 
-        if ((fin = cf_popen(a.packages.package_patch_list_command, "r")) == NULL)
+        if (a.packages.package_commands_useshell)
+        {
+            if ((fin = cf_popen_sh(a.packages.package_patch_list_command, "r")) == NULL)
+            {
+                CfOut(cf_error, "cf_popen_sh", "Couldn't open the patch list with command %s\n",
+                      a.packages.package_patch_list_command);
+                return false;
+            }
+        }
+        else if ((fin = cf_popen(a.packages.package_patch_list_command, "r")) == NULL)
         {
             CfOut(cf_error, "cf_popen", "Couldn't open the patch list with command %s\n",
                   a.packages.package_patch_list_command);
@@ -545,7 +554,16 @@ static bool PackageListInstalledFromCommand(PackageItem **installed_list, Attrib
 
     FILE *fin;
     
-    if ((fin = cf_popen(a.packages.package_list_command, "r")) == NULL)
+    if (a.packages.package_commands_useshell)
+    {
+        if ((fin = cf_popen_sh(a.packages.package_list_command, "r")) == NULL)
+        {
+            CfOut(cf_error, "cf_popen_sh", "Couldn't open the package list with command %s",
+                  a.packages.package_list_command);
+            return false;
+        }
+    }
+    else if ((fin = cf_popen(a.packages.package_list_command, "r")) == NULL)
     {
         CfOut(cf_error, "cf_popen", "Couldn't open the package list with command %s",
               a.packages.package_list_command);
@@ -593,9 +611,7 @@ static bool PackageListInstalledFromCommand(PackageItem **installed_list, Attrib
         PrependMultiLinePackageItem(installed_list, buf, reset, a, pp);
     }
     
-    cf_pclose(fin);
-
-    return true;
+    return cf_pclose(fin) == 0;
 }
 
 /*****************************************************************************/
@@ -885,6 +901,8 @@ static int ExecuteSchedule(PackageManager *schedule, enum package_actions action
                 return false;
             }
 
+            CfOut(cf_inform, "", "Installing %-.39s...\n", pp->promiser);
+
             command_string = xmalloc(estimated_size + strlen(a.packages.package_add_command) + 2);
             strcpy(command_string, a.packages.package_add_command);
             break;
@@ -899,6 +917,8 @@ static int ExecuteSchedule(PackageManager *schedule, enum package_actions action
                 return false;
             }
 
+            CfOut(cf_inform, "", "Deleting %-.39s...\n", pp->promiser);
+
             command_string = xmalloc(estimated_size + strlen(a.packages.package_delete_command) + 2);
             strcpy(command_string, a.packages.package_delete_command);
             break;
@@ -912,6 +932,8 @@ static int ExecuteSchedule(PackageManager *schedule, enum package_actions action
                 cfPS(cf_verbose, CF_FAIL, "", pp, a, "Package update command undefined");
                 return false;
             }
+
+            CfOut(cf_inform, "", "Updating %-.39s...\n", pp->promiser);
 
             command_string = xcalloc(1, estimated_size + strlen(a.packages.package_update_command) + 2);
             strcpy(command_string, a.packages.package_update_command);
@@ -2099,7 +2121,7 @@ int ExecPackageCommand(char *command, int verify, int setCmdClasses, Attributes 
     FILE *pfp;
     int packmanRetval = 0;
 
-    if (!IsExecutable(GetArg0(command)))
+    if (!a.packages.package_commands_useshell && !IsExecutable(GetArg0(command)))
     {
         cfPS(cf_error, CF_FAIL, "", pp, a, "The proposed package schedule command \"%s\" was not executable", command);
         return false;
@@ -2107,16 +2129,27 @@ int ExecPackageCommand(char *command, int verify, int setCmdClasses, Attributes 
 
     if (DONTDO)
     {
-        CfOut(cf_error, "", " -> Need to execute %-.39s...\n", command);
         return true;
     }
 
 /* Use this form to avoid limited, intermediate argument processing - long lines */
 
-    if ((pfp = cf_popen_sh(command, "r")) == NULL)
+    if (a.packages.package_commands_useshell)
     {
-        cfPS(cf_error, CF_FAIL, "cf_popen", pp, a, "Couldn't start command %20s...\n", command);
-        return false;
+        CfOut(cf_verbose, "", "Running %s in shell", command);
+        if ((pfp = cf_popen_sh(command, "r")) == NULL)
+        {
+            cfPS(cf_error, CF_FAIL, "cf_popen_sh", pp, a, "Couldn't start command %20s...\n", command);
+            return false;
+        }
+    }
+    else
+    {
+        if ((pfp = cf_popen(command, "r")) == NULL)
+        {
+            cfPS(cf_error, CF_FAIL, "cf_popen", pp, a, "Couldn't start command %20s...\n", command);
+            return false;
+        }
     }
 
     CfOut(cf_verbose, "", "Executing %-.60s...\n", command);

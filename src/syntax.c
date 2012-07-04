@@ -1494,10 +1494,26 @@ static JsonElement *ExportBundleClassesAsJson(Promise *promises)
             JsonObjectAppendInteger(json_promise, "offset-end", context_offset_end);
 
             JsonObjectAppendString(json_promise, "promiser", pp->promiser);
-            /* FIXME: does not work for lists */
-            if (pp->promisee.rtype == CF_SCALAR || pp->promisee.rtype == CF_NOPROMISEE)
+
+            switch (pp->promisee.rtype)
             {
+            case CF_SCALAR:
                 JsonObjectAppendString(json_promise, "promisee", pp->promisee.item);
+                break;
+
+            case CF_LIST:
+                {
+                    JsonElement *promisee_list = JsonArrayCreate(10);
+                    for (const Rlist *rp = pp->promisee.item; rp; rp = rp->next)
+                    {
+                        JsonArrayAppendString(promisee_list, ScalarValue(rp));
+                    }
+                    JsonObjectAppendArray(json_promise, "promisee", promisee_list);
+                }
+                break;
+
+            default:
+                break;
             }
 
             JsonObjectAppendArray(json_promise, "attributes", json_promise_attributes);

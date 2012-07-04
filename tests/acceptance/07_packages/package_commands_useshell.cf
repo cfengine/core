@@ -1,0 +1,137 @@
+#######################################################
+#
+# Test package_commands_useshell works
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+  "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+packages:
+  "bash-1.0-amd64"
+    package_policy => "add",
+    package_method => mock_useshell_true,
+    classes => test_set_class("useshell_true_succ",
+                              "useshell_true_fail");
+
+  "bash-1.0-i386"
+    package_policy => "add",
+    package_method => mock_useshell_false,
+    classes => test_set_class("useshell_false_succ",
+                              "useshell_false_fail");
+
+  "bash-1.0-spark"
+    package_policy => "add",
+    package_method => mock_useshell_unset,
+    classes => test_set_class("useshell_unset_succ",
+                              "useshell_unset_fail");
+}
+
+body package_method mock_useshell_true
+{
+  package_changes => "individual";
+
+  package_name_regex => "^([^-]+)";
+  package_version_regex => "^[^-]+-([^-]+)";
+  package_arch_regex => "^[^-]+-[^-]+-(.*)";
+
+
+  package_list_command => "if true; then true; else false; fi";
+
+  package_list_name_regex => ".*";
+  package_list_version_regex => ".*";
+  package_list_arch_regex => ".*";
+  package_installed_regex => "^[^:]*";
+
+  package_add_command => "/bin/true";
+  package_update_command => "/bin/true";
+  package_delete_command => "/bin/true";
+  package_verify_command => "/bin/true";
+  
+  package_commands_useshell => "true";
+}
+
+body package_method mock_useshell_false
+{
+  package_changes => "individual";
+
+  package_name_regex => "^([^-]+)";
+  package_version_regex => "^[^-]+-([^-]+)";
+  package_arch_regex => "^[^-]+-[^-]+-(.*)";
+
+  package_list_command => "if true; then true; else false; fi";
+
+  package_list_name_regex => "^[^:]*";
+  package_list_version_regex => ":(?<=:).*(?=:)";
+  package_list_arch_regex => "[^:]\w+$";
+  package_installed_regex => "^[^:]*";
+
+  package_add_command => "/bin/true";
+  package_update_command => "/bin/true";
+  package_delete_command => "/bin/true";
+  package_verify_command => "/bin/true";
+  
+  package_commands_useshell => "false";
+}
+
+body package_method mock_useshell_unset
+{
+  package_changes => "individual";
+
+  package_name_regex => "^([^-]+)";
+  package_version_regex => "^[^-]+-([^-]+)";
+  package_arch_regex => "^[^-]+-[^-]+-(.*)";
+
+  package_list_command => "echo 'a:b:c\n'";
+
+  package_list_name_regex => "^[^:]*";
+  package_list_version_regex => ":(?<=:).*(?=:)";
+  package_list_arch_regex => "[^:]\w+$";
+  package_installed_regex => "^[^:]*";
+
+  package_add_command => "/bin/true";
+  package_update_command => "/bin/true";
+  package_delete_command => "/bin/true";
+  package_verify_command => "/bin/true";
+}
+
+body classes test_set_class(ok_class,notok_class)
+{
+promise_kept => { "$(ok_class)" };
+promise_repaired => { "$(ok_class)" };
+repair_failed => { "$(notok_class)" };
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+  "ok" and => { "useshell_true_succ", "!useshell_true_fail",
+                "!useshell_false_succ", "useshell_false_fail",
+                "useshell_unset_succ", "!useshell_unset_fail",
+                };
+reports:
+  ok::
+    "$(this.promise_filename) Pass";
+  !ok::
+    "$(this.promise_filename) FAIL";
+}

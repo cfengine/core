@@ -2102,6 +2102,8 @@ typedef struct
     char *package_name_convention;
     char *package_delete_convention;
 
+    bool package_commands_useshell;
+
     char *package_multiline_start;
 
     int package_noverify_returncode;

@@ -1452,6 +1452,15 @@ Packages GetPackageConstraints(const Promise *pp)
     p.package_noverify_regex = (char *) GetConstraintValue("package_noverify_regex", pp, CF_SCALAR);
     p.package_noverify_returncode = GetIntConstraint("package_noverify_returncode", pp);
 
+    if (GetConstraint(pp, "package_commands_useshell") == NULL)
+    {
+        p.package_commands_useshell = true;
+    }
+    else
+    {
+        p.package_commands_useshell = GetBooleanConstraint("package_commands_useshell", pp);
+    }
+
     p.package_name_convention = (char *) GetConstraintValue("package_name_convention", pp, CF_SCALAR);
     p.package_delete_convention = (char *) GetConstraintValue("package_delete_convention", pp, CF_SCALAR);
 

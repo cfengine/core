@@ -63,6 +63,8 @@ void UpdateLastSawHost(const char *hostkey, const char *address,
  * algebra sense) the data relations.
  */
 
+/*****************************************************************************/
+
 void LastSaw(char *ipaddress, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum roles role)
 {
     char databuf[CF_BUFSIZE];
@@ -84,6 +86,8 @@ void LastSaw(char *ipaddress, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum ro
 
     UpdateLastSawHost(databuf, mapip, role == cf_accept, time(NULL));
 }
+
+/*****************************************************************************/
 
 void UpdateLastSawHost(const char *hostkey, const char *address,
                        bool incoming, time_t timestamp)
@@ -131,6 +135,8 @@ void UpdateLastSawHost(const char *hostkey, const char *address,
     CloseDB(db);
 }
 
+/*****************************************************************************/
+
 bool RemoveHostFromLastSeen(const char *hostkey)
 {
     DBHandle *db;
@@ -174,6 +180,8 @@ bool RemoveHostFromLastSeen(const char *hostkey)
     return true;
 }
 
+/*****************************************************************************/
+
 static bool Address2HostkeyInDB(DBHandle *db, const char *address, char *result)
 {
     char address_key[CF_BUFSIZE];
@@ -211,6 +219,7 @@ static bool Address2HostkeyInDB(DBHandle *db, const char *address, char *result)
     return true;
 }
 
+/*****************************************************************************/
 
 bool Address2Hostkey(const char *address, char *result)
 {
@@ -239,6 +248,8 @@ bool Address2Hostkey(const char *address, char *result)
     CloseDB(db);
     return ret;
 }
+
+/*****************************************************************************/
 
 bool ScanLastSeenQuality(LastSeenQualityCallback callback, void *ctx)
 {

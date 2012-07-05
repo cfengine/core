@@ -365,6 +365,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
         return false;
     }
 
+    
     decrypted_cchall = xmalloc(encrypted_len);
 
     if (RSA_private_decrypt(encrypted_len, in, decrypted_cchall, PRIVKEY, RSA_PKCS1_PADDING) <= 0)

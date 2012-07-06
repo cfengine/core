@@ -38,4 +38,5 @@ be transmitted, @xref{Function remoteclassesmatching}.
 The term @code{query} may also be used in commercial versions of
 CFEngine to query the server for data from embedded databases. This is
 currently for internal use only, and is used to grant access to report
-`menus'.
+`menus'. If the promiser of a query request is called @samp{collect_calls},
+this grants access to server peering collect-call tunneling, @xref{call_collect_interval in server}.

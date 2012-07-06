@@ -25,6 +25,7 @@ int MAXTRIES = 5;
 int LOGCONNS = false;
 int LOGENCRYPT = false;
 int COLLECT_INTERVAL = 0;
+int COLLECT_WINDOW = 10;
 
 Auth *ROLES = NULL;
 Auth *ROLESTOP = NULL;

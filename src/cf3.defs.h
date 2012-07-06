@@ -789,6 +789,7 @@ enum cfscontrol
     cfs_bindtointerface,
     cfs_cfruncommand,
     cfs_call_collect_interval,
+    cfs_collect_window,
     cfs_denybadclocks,
     cfs_denyconnects,
     cfs_dynamicaddresses,
@@ -2395,3 +2396,4 @@ extern const BodySyntax CFEX_CONTROLBODY[];
 
 
 #endif
+

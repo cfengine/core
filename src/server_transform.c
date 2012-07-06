@@ -41,6 +41,7 @@ static void KeepPromiseBundles(Policy *policy);
 extern const BodySyntax CFS_CONTROLBODY[];
 extern const BodySyntax CF_REMROLE_BODIES[];
 extern int COLLECT_INTERVAL;
+extern int COLLECT_WINDOW;
 
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
@@ -261,6 +262,13 @@ void KeepControlPromises(Policy *policy)
         {
             COLLECT_INTERVAL = (int) 60 * Str2Int(retval.item);
             CfOut(cf_verbose, "", "SET call_collect_interval = %d (seconds)\n", COLLECT_INTERVAL);
+            continue;
+        }
+
+        if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_collect_window].lval) == 0)
+        {
+            COLLECT_WINDOW = (int) Str2Int(retval.item);
+            CfOut(cf_verbose, "", "SET collect_window = %d (seconds)\n", COLLECT_INTERVAL);
             continue;
         }
 

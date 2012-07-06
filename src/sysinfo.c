@@ -646,6 +646,8 @@ void Get3Environment()
             list = ParseShownRlist(value);
             DeleteVariable("mon", name);
             NewList("mon", name, list, cf_slist);
+
+            DeleteRlist(list);
         }
         else if (strstr(class, "="))
         {

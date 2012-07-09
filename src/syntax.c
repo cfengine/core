@@ -71,6 +71,8 @@ SubTypeSyntax SubTypeSyntaxLookup(const char *bundle_type, const char *subtype_n
     return (SubTypeSyntax) { NULL, NULL, NULL };
 }
 
+/****************************************************************************/
+
 enum cfdatatype ExpectedDataType(char *lvalname)
 {
     int i, j, k, l;

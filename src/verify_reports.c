@@ -45,12 +45,6 @@ void VerifyReportPromise(Promise *pp)
 
     a = GetReportsAttributes(pp);
 
-    if (strcmp(pp->classes, "any") == 0)
-    {
-        CfOut(cf_verbose, "", " --> Reports promises may not be in class \"any\"");
-        return;
-    }
-
     snprintf(unique_name, CF_EXPANDSIZE - 1, "%s_%zu", pp->promiser, pp->offset.line);
     thislock = AcquireLock(unique_name, VUQNAME, CFSTARTTIME, a, pp, false);
 

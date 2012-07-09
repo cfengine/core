@@ -629,8 +629,10 @@ void ReCheckAllConstraints(Promise *pp)
 
         if (in_class_any)
         {
-            CfOut(cf_error, "", "reports promises may not be in class \'any\' - risk of a notification explosion");
-            PromiseRef(cf_error, pp);
+        Attributes a = GetReportsAttributes(pp);
+        cfPS(cf_error, CF_INTERPT, "", pp, a, "reports promises may not be in class \'any\' - risk of a notification explosion");
+        PromiseRef(cf_error, pp);
+        ERRORCOUNT++;
         }
     }
 

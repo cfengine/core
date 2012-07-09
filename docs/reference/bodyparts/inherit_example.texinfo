@@ -1,0 +1,17 @@
+
+
+@verbatim
+bundle agent name
+{
+methods:
+
+  "group name" usebundle => my_method,
+                 inherit => "true";
+}
+
+
+body edit_defaults example
+{
+inherit => "true";
+}
+@end verbatim

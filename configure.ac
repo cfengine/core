@@ -348,6 +348,7 @@ AC_CHECK_HEADERS(sys/systeminfo.h)
 AC_CHECK_HEADERS(sys/acl.h winsock2.h)
 AC_CHECK_HEADERS(zone.h)
 AC_CHECK_HEADERS(sys/uio.h)
+AC_CHECK_HEADERS(sys/types.h)
 AC_CHECK_HEADERS(sys/jail.h, [], [], [AC_INCLUDES_DEFAULT
 #ifdef HAVE_SYS_PARAM_H
 # include <sys/param.h>
@@ -369,7 +370,13 @@ AC_TYPE_SIZE_T
 AC_TYPE_UID_T
 AC_TYPE_PID_T
 AC_CHECK_TYPES(clockid_t)
-AC_CHECK_TYPES(socklen_t, [], [], [[#include <sys/socket.h>]])
+AC_CHECK_TYPES(socklen_t, [], [], [[
+#ifdef HAVE_SYS_TYPES_H
+# include <sys/types.h>
+#endif
+
+#include <sys/socket.h>
+]])
 
 dnl ######################################################################
 dnl Checks for typedefs, structures, and compiler characteristics.

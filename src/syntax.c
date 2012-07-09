@@ -1217,6 +1217,8 @@ static char *PCREStringToJsonString(const char *pcre)
     return json;
 }
 
+/****************************************************************************/
+
 static JsonElement *ExportAttributesSyntaxAsJson(const BodySyntax attributes[])
 {
     JsonElement *json = JsonObjectCreate(10);
@@ -1278,6 +1280,8 @@ static JsonElement *ExportAttributesSyntaxAsJson(const BodySyntax attributes[])
     return json;
 }
 
+/****************************************************************************/
+
 static JsonElement *ExportBundleTypeSyntaxAsJson(const char *bundle_type)
 {
     JsonElement *json = JsonObjectCreate(10);
@@ -1302,6 +1306,8 @@ static JsonElement *ExportBundleTypeSyntaxAsJson(const char *bundle_type)
     return json;
 }
 
+/****************************************************************************/
+
 static JsonElement *ExportControlBodiesSyntaxAsJson()
 {
     JsonElement *control_bodies = JsonObjectCreate(10);
@@ -1316,6 +1322,8 @@ static JsonElement *ExportControlBodiesSyntaxAsJson()
 
     return control_bodies;
 }
+
+/****************************************************************************/
 
 void SyntaxPrintAsJson(Writer *writer)
 {
@@ -1408,6 +1416,8 @@ static JsonElement *ExportAttributeValueAsJson(Rval rval)
     }
 }
 
+/****************************************************************************/
+
 static JsonElement *CreateContextAsJson(const char *name, size_t offset,
                                         size_t offset_end, const char *children_name, JsonElement *children)
 {
@@ -1420,6 +1430,8 @@ static JsonElement *CreateContextAsJson(const char *name, size_t offset,
 
     return json;
 }
+
+/****************************************************************************/
 
 static JsonElement *ExportBodyClassesAsJson(Constraint *constraints)
 {
@@ -1457,6 +1469,8 @@ static JsonElement *ExportBodyClassesAsJson(Constraint *constraints)
 
     return json_contexts;
 }
+
+/****************************************************************************/
 
 static JsonElement *ExportBundleClassesAsJson(Promise *promises)
 {
@@ -1534,6 +1548,8 @@ static JsonElement *ExportBundleClassesAsJson(Promise *promises)
     return json_contexts;
 }
 
+/****************************************************************************/
+
 static JsonElement *ExportBundleAsJson(Bundle *bundle)
 {
     JsonElement *json_bundle = JsonObjectCreate(10);
@@ -1578,6 +1594,8 @@ static JsonElement *ExportBundleAsJson(Bundle *bundle)
     return json_bundle;
 }
 
+/****************************************************************************/
+
 static JsonElement *ExportBodyAsJson(Body *body)
 {
     JsonElement *json_body = JsonObjectCreate(10);
@@ -1604,6 +1622,8 @@ static JsonElement *ExportBodyAsJson(Body *body)
 
     return json_body;
 }
+
+/****************************************************************************/
 
 void PolicyPrintAsJson(Writer *writer, const char *filename, Bundle *bundles, Body *bodies)
 {
@@ -1651,17 +1671,23 @@ static void IndentPrint(Writer *writer, int indent_level)
     }
 }
 
+/****************************************************************************/
+
 static void RvalPrettyPrint(Writer *writer, Rval rval)
 {
 /* FIX: prettify */
     RvalPrint(writer, rval);
 }
 
+/****************************************************************************/
+
 static void AttributePrettyPrint(Writer *writer, Constraint *attribute, int indent_level)
 {
     WriterWriteF(writer, "%s => ", attribute->lval);
     RvalPrettyPrint(writer, attribute->rval);
 }
+
+/****************************************************************************/
 
 static void ArgumentsPrettyPrint(Writer *writer, Rlist *args)
 {
@@ -1679,6 +1705,8 @@ static void ArgumentsPrettyPrint(Writer *writer, Rlist *args)
     }
     WriterWriteChar(writer, ')');
 }
+
+/****************************************************************************/
 
 void BodyPrettyPrint(Writer *writer, Body *body)
 {
@@ -1712,6 +1740,8 @@ void BodyPrettyPrint(Writer *writer, Body *body)
 
     WriterWrite(writer, "\n}");
 }
+
+/****************************************************************************/
 
 void BundlePrettyPrint(Writer *writer, Bundle *bundle)
 {

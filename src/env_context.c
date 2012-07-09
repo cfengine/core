@@ -1098,13 +1098,21 @@ void DeletePrivateClassContext()
 
 /*****************************************************************************/
 
-void PushPrivateClassContext()
+void PushPrivateClassContext(int inherit)
 {
     AlphaList *ap = xmalloc(sizeof(AlphaList));
 
 // copy to heap
     PushStack(&PRIVCLASSHEAP, CopyAlphaListPointers(ap, &VADDCLASSES));
+
     InitAlphaList(&VADDCLASSES);
+
+    if (inherit)
+    {
+        InitAlphaList(&VADDCLASSES);
+        DupAlphaListPointers(&VADDCLASSES, ap);
+    }
+    
 }
 
 /*****************************************************************************/

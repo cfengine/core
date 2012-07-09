@@ -86,6 +86,7 @@ Attributes GetFilesAttributes(const Promise *pp)
     if (attr.template)
        {
        attr.edits.empty_before_use = true;
+       attr.edits.inherit = true;
        }
 
 /* Files, multiple use */
@@ -318,6 +319,8 @@ Attributes GetMethodAttributes(const Promise *pp)
     Attributes attr = { {0} };
 
     attr.havebundle = GetBundleConstraint("usebundle", pp);
+
+    attr.inherit = GetBooleanConstraint("inherit", pp);
 
 /* Common ("included") */
 
@@ -1360,6 +1363,8 @@ EditDefaults GetEditDefaults(const Promise *pp)
     e.empty_before_use = GetBooleanConstraint("empty_file_before_editing", pp); 
 
     e.joinlines = GetBooleanConstraint("recognize_join", pp);
+
+    e.inherit = GetBooleanConstraint("inherit", pp);
 
     return e;
 }

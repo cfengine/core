@@ -472,7 +472,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp)
             HashVariables(policy, bp->name);
 
             AugmentScope(bp->name, bp->args, params);
-            PushPrivateClassContext();
+            PushPrivateClassContext(a.edits.inherit);
             retval = ScheduleEditLineOperations(filename, bp, a, pp);
             PopPrivateClassContext();
             DeleteScope(bp->name);
@@ -489,7 +489,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp)
             NewScope(bp->name);
             HashVariables(policy, bp->name);
 
-            PushPrivateClassContext();
+            PushPrivateClassContext(a.edits.inherit);
             retval = ScheduleEditLineOperations(filename,bp,a,pp);
             PopPrivateClassContext();
             DeleteScope(bp->name);

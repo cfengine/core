@@ -65,7 +65,7 @@ bool EvalFileResult(const char *file_result, AlphaList *leaf_attr);
 int Abort(void);
 void AddAbortClass(const char *name, const char *classes);
 void KeepClassContextPromise(Promise *pp);
-void PushPrivateClassContext(void);
+void PushPrivateClassContext(int inherit);
 void PopPrivateClassContext(void);
 void DeletePrivateClassContext(void);
 void DeleteEntireHeap(void);

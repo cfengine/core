@@ -1,0 +1,27 @@
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle agent init
+{
+vars:
+  "dummy" string => "dummy";
+}
+
+bundle agent test
+{
+reports:
+  cfengine_3::
+    "$()";
+}
+
+bundle agent check
+{
+cfengine_3::
+  "$(this.promise_filename) Pass";
+}

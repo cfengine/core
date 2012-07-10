@@ -1322,7 +1322,7 @@ static int IsSpace(char *remainder)
 
     for (sp = remainder; *sp != '\0'; sp++)
     {
-        if (!isspace(*sp))
+        if (!isspace((int)*sp))
         {
             return false;
         }

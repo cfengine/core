@@ -107,7 +107,7 @@ int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp)
 
     for (sp = nodename; *sp != '\0'; sp++)      /* Check for files like ".. ." */
     {
-        if ((*sp != '.') && !isspace(*sp))
+        if ((*sp != '.') && !isspace((int)*sp))
         {
             return true;
         }

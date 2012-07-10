@@ -486,11 +486,11 @@ int MatchPolicy(char *camel, char *haystack, Attributes a, Promise *pp)
 
                 // Strip initial and final first
 
-                for (firstchar = final; isspace(*firstchar); firstchar++)
+                for (firstchar = final; isspace((int)*firstchar); firstchar++)
                 {
                 }
 
-                for (lastchar = final + strlen(final) - 1; lastchar > firstchar && isspace(*lastchar); lastchar--)
+                for (lastchar = final + strlen(final) - 1; lastchar > firstchar && isspace((int)*lastchar); lastchar--)
                 {
                 }
 
@@ -498,9 +498,9 @@ int MatchPolicy(char *camel, char *haystack, Attributes a, Promise *pp)
                 {
                     if (sp > firstchar && sp < lastchar)
                     {
-                        if (isspace(*sp))
+                        if (isspace((int)*sp))
                         {
-                            while (isspace(*(sp + 1)))
+                            while (isspace((int)*(sp + 1)))
                             {
                                 sp++;
                             }
@@ -526,7 +526,7 @@ int MatchPolicy(char *camel, char *haystack, Attributes a, Promise *pp)
             {
                 if (strncmp(final, "\\s*", 3) != 0)
                 {
-                    for (sp = final; isspace(*sp); sp++)
+                    for (sp = final; isspace((int)*sp); sp++)
                     {
                     }
                     strcpy(work, sp);
@@ -628,7 +628,7 @@ void EscapeSpecialChars(char *str, char *strEsc, int strEscSz, char *noEscSeq, c
         if (strchr(noEscList,*sp))
         {
         }        
-        else if (*sp != '\0' && !isalnum(*sp))
+        else if (*sp != '\0' && !isalnum((int)*sp))
         {
             strEsc[strEscPos++] = '\\';
         }

@@ -235,7 +235,7 @@ Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *class
 
     if (strcmp(type->name, "classes") == 0 || strcmp(type->name, "vars") == 0)
     {
-        if (isdigit(*promiser) && Str2Int(promiser) != CF_NOINT)
+        if (isdigit((int)*promiser) && Str2Int(promiser) != CF_NOINT)
         {
             yyerror("Variable or class identifier is purely numerical, which is not allowed");
         }

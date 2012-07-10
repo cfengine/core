@@ -350,7 +350,7 @@ bool IsNumber(const char *s)
 {
     for (; *s; s++)
     {
-        if (!isdigit(*s))
+        if (!isdigit((int)*s))
         {
             return false;
         }

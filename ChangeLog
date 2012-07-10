@@ -1,5 +1,24 @@
 3.4.0 (in development)
 
+	- Support for the following outdated platforms and corresponding
+	  classes has been removed. De facto those platforms were
+	  unsupported for a long time, as CFEngine codebase uses C99
+	  language features unavailable on old platforms:
+
+	   - SunOS 3.x (sun3)
+	   - SunOS 4.x (sun4)
+	   - Ultrix (ultrix)
+	   - DEC OSF/1 AXP (osf)
+	   - Digital UNIX (digital)
+	   - Sony NEWS (newsos)
+	   - 4.3BSD (bsd4_3)
+	   - IRIX (irix, irix4, irix64)
+	   - IBM Academic Operating System (aos)
+	   - BSD/OS / BSDi / BSD/386 (bsdos)
+	   - NeXTSTEP (nextstep)
+	   - GNU Hurd (gnu)
+	   - NEC UX/4800 (ux4800)
+
 	In alpha 1:
 
 	New features:

@@ -378,10 +378,7 @@ void StartServer(Policy *policy)
 #if defined(HAVE_PTHREAD)
     pthread_attr_init(&threads_attrs);
     pthread_attr_setdetachstate(&threads_attrs, PTHREAD_CREATE_DETACHED);
-
-# ifdef HAVE_PTHREAD_ATTR_SETSTACKSIZE
     pthread_attr_setstacksize(&threads_attrs, (size_t)2048*1024);
-# endif
 #endif
 
     Banner("Starting executor");

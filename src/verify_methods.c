@@ -106,7 +106,7 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp)
         AugmentScope(bp->name, bp->args, params);
 
         THIS_BUNDLE = bp->name;
-        PushPrivateClassContext();
+        PushPrivateClassContext(a.inherit);
 
         retval = ScheduleAgentOperations(bp);
 

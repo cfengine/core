@@ -1967,7 +1967,7 @@ static char *Format(char *s, int width)
         buffer[i] = '\0';
         count++;
 
-        if ((count > width - 5) && ispunct(*sp))
+        if ((count > width - 5) && ispunct((int)*sp))
         {
             strcat(buffer, "<br>");
             i += strlen("<br>");

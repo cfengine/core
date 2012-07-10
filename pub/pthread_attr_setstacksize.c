@@ -20,20 +20,20 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
+
 */
 
-#include "cf3.defs.h"
-#include "mod_methods.h"
+#ifdef HAVE_CONFIG_H
+# include "../src/conf.h"
+#endif
 
-static const BodySyntax CF_METHOD_BODIES[] =
-{
-    {"inherit", cf_opts, CF_BOOL, "If true this causes the sub-bundle to inherit the private classes of its parent"},
-    {"usebundle", cf_bundle, CF_BUNDLE, "Specify the name of a bundle to run as a parameterized method"},
-    {NULL, cf_notype, NULL}
-};
+#include <pthread.h>
 
-const SubTypeSyntax CF_METHOD_SUBTYPES[] =
+#if !HAVE_DECL_PTHREAD_ATTR_SETSTACKSIZE
+int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize);
+# endif
+
+int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize)
 {
-    {"agent", "methods", CF_METHOD_BODIES},
-    {NULL, NULL, NULL},
-};
+    return 0;
+}

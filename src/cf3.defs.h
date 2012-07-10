@@ -1980,6 +1980,7 @@ typedef struct
     int maxfilesize;
     int joinlines;
     int rotate;
+    int inherit;
 } EditDefaults;
 
 /*************************************************************************/
@@ -2271,6 +2272,7 @@ typedef struct
     int touch;
     int create;
     int move_obstructions;
+    int inherit;
 
     Recursion recursion;
     TransactionContext transaction;

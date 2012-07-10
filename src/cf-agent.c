@@ -236,12 +236,12 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
 
             for (sp = POLICY_SERVER; *sp != '\0'; sp++)
             {
-                if (isalpha(*sp))
+                if (isalpha((int)*sp))
                 {
                     alpha = true;
                 }
 
-                if (ispunct(*sp) && *sp != ':' && *sp != '.')
+                if (ispunct((int)*sp) && *sp != ':' && *sp != '.')
                 {
                     alpha = true;
                 }

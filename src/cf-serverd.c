@@ -357,7 +357,6 @@ static void StartServer(Policy *policy, GenericAgentConfig config)
     signal(SIGTERM, HandleSignals);
     signal(SIGHUP, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);
-    signal(SIGCHLD, SIG_IGN);
     signal(SIGUSR1, HandleSignals);
     signal(SIGUSR2, HandleSignals);
 
@@ -729,10 +728,7 @@ static void SpawnConnection(int sd_reply, char *ipaddr)
 
     pthread_attr_init(&threadattrs);
     pthread_attr_setdetachstate(&threadattrs, PTHREAD_CREATE_DETACHED);
-
-# ifdef HAVE_PTHREAD_ATTR_SETSTACKSIZE
     pthread_attr_setstacksize(&threadattrs, (size_t) 1024 * 1024);
-# endif
 
     int ret = pthread_create(&tid, &threadattrs, (void *) HandleConnection, (void *) conn);
     if (ret != 0)

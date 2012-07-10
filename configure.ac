@@ -119,10 +119,20 @@ AS_IF([test x"$enable_fhs" = xyes], [
   projlibdir='${libexecdir}/cfengine'
   projdatadir='${exec_prefix}/share/cfengine'
   projdocdir='${exec_prefix}/share/doc/cfengine'
+  WORKDIR='${localstatedir}/lib/cfengine'
 ], [
-  if test x"$prefix" = xNONE; then
+  if test x"$prefix" = xNONE || test x"$prefix" = x/var/cfengine; then
     prefix=/var/cfengine
+    case "$target_os" in
+      mingw*)
+        WORKDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g');;
+      *)
+        WORKDIR=/var/cfengine;;
+    esac
+  else
+    WORKDIR="${localstatedir}/cfengine"
   fi
+
   sbindir='${exec_prefix}/bin' # /var/cfengine/bin despite being sbin_?
   projlibdir='${exec_prefix}/lib'
   projdatadir='${exec_prefix}/share'
@@ -210,6 +220,9 @@ if test "x$with_mysql" != "xno"; then
    CF3_WITH_LIBRARY(mysql, [
      AC_CHECK_LIB(mysqlclient, mysql_real_connect, [], [if test "x$with_mysql" != xcheck; then AC_MSG_ERROR(Cannot find MySQL client library); fi])
      AC_CHECK_HEADERS(mysql.h, [], [if test "x$with_mysql" != xcheck; then AC_MSG_ERROR(Cannot find MySQL client library); fi])
+
+     AC_CHECK_LIB(mysqlclient, EVP_CIPHER_CTX_init,
+                               [AC_MSG_ERROR(MySQL client library exports symbols clashing with OpenSSL. Get the update from distribution provider, recompile MySQL library or disable MySQL connector. See http://bugs.mysql.com/bug.php?id=65055 for details.)])
    ])
 fi
 
@@ -348,6 +361,7 @@ AC_CHECK_HEADERS(sys/systeminfo.h)
 AC_CHECK_HEADERS(sys/acl.h winsock2.h)
 AC_CHECK_HEADERS(zone.h)
 AC_CHECK_HEADERS(sys/uio.h)
+AC_CHECK_HEADERS(sys/types.h)
 AC_CHECK_HEADERS(sys/jail.h, [], [], [AC_INCLUDES_DEFAULT
 #ifdef HAVE_SYS_PARAM_H
 # include <sys/param.h>
@@ -369,7 +383,13 @@ AC_TYPE_SIZE_T
 AC_TYPE_UID_T
 AC_TYPE_PID_T
 AC_CHECK_TYPES(clockid_t)
-AC_CHECK_TYPES(socklen_t, [], [], [[#include <sys/socket.h>]])
+AC_CHECK_TYPES(socklen_t, [], [], [[
+#ifdef HAVE_SYS_TYPES_H
+# include <sys/types.h>
+#endif
+
+#include <sys/socket.h>
+]])
 
 dnl ######################################################################
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -522,8 +542,10 @@ AC_CHECK_FUNCS(door_create)
 
 AC_CHECK_FUNC(lchown, AC_DEFINE(HAVE_LCHOWN, 1, [Whether to use lchown(3) to change ownerships]))
 
-AC_CHECK_FUNC(pthread_attr_setstacksize, AC_DEFINE(HAVE_PTHREAD_ATTR_SETSTACKSIZE, [], [Whether the thread library has setstacksize]))
-AC_CHECK_FUNC(pthread_sigmask, AC_DEFINE(HAVE_PTHREAD_SIGMASK, [], [Whether the thread library has setmask]))
+AC_CHECK_FUNCS(pthread_attr_setstacksize)
+AC_REPLACE_FUNCS(pthread_attr_setstacksize)
+
+AC_CHECK_FUNCS(pthread_sigmask)
 
 dnl ######################################################################
 dnl Check for sa_len in struct sockaddr
@@ -692,30 +714,17 @@ AC_ARG_WITH(workdir,
 	[
 		if test x$withval != x ; then
 			WORKDIR=$withval
-		else
-  		        WORKDIR=/var/cfengine
 		fi
-
-     	AC_DEFINE_UNQUOTED(WORKDIR, "${WORKDIR}", [lock and log directories])
-        AC_SUBST(workdir, "${WORKDIR}")
 	],
-	[
-
-        case "$target_os" in
-
-           mingw*)
-                WORKDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g')
-                ;;
-
-           *)
-                WORKDIR=/var/cfengine
-                ;;
-        esac
-
-		AC_DEFINE_UNQUOTED(WORKDIR, "${WORKDIR}")
-                AC_SUBST(workdir, "${WORKDIR}")
-	]
 )
+
+dnl Expand ${prefix} and whatnot in WORKDIR
+
+adl_RECURSIVE_EVAL("${WORKDIR}", WORKDIR)
+
+AC_DEFINE_UNQUOTED(WORKDIR, "${WORKDIR}", [Workdir location])
+AC_SUBST(workdir, "${WORKDIR}")
+
 
 AC_ARG_WITH(shell, [AS_HELP_STRING([--with-shell=PATH],
                    [Specify path to POSIX-compatible shell (if not /bin/sh)])],
@@ -904,6 +913,8 @@ fi
 m4_indir(incstart[]incend, [nova/config.m4])
 m4_indir(incstart[]incend, [constellation/config.m4])
 m4_indir(incstart[]incend, [galaxy/config.m4])
+
+AC_MSG_RESULT([-> Workdir: $WORKDIR])
 
 AC_MSG_RESULT( )
 

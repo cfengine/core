@@ -333,7 +333,7 @@ int EmptyString(char *s)
 
     for (sp = s; *sp != '\0'; sp++)
     {
-        if (!isspace(*sp))
+        if (!isspace((int)*sp))
         {
             return false;
         }
@@ -609,7 +609,7 @@ void CanonifyNameInPlace(char *s)
 {
     for (; *s != '\0'; s++)
     {
-        if (!isalnum(*s) || *s == '.')
+        if (!isalnum((int)*s) || *s == '.')
         {
             *s = '_';
         }

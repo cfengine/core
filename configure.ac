@@ -119,10 +119,20 @@ AS_IF([test x"$enable_fhs" = xyes], [
   projlibdir='${libexecdir}/cfengine'
   projdatadir='${exec_prefix}/share/cfengine'
   projdocdir='${exec_prefix}/share/doc/cfengine'
+  WORKDIR='${localstatedir}/lib/cfengine'
 ], [
   if test x"$prefix" = xNONE; then
     prefix=/var/cfengine
+    case "$target_os" in
+      mingw*)
+        WORKDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g');;
+      *)
+        WORKDIR=/var/cfengine;;
+    esac
+  else
+    WORKDIR="${localstatedir}/cfengine"
   fi
+
   sbindir='${exec_prefix}/bin' # /var/cfengine/bin despite being sbin_?
   projlibdir='${exec_prefix}/lib'
   projdatadir='${exec_prefix}/share'
@@ -702,30 +712,17 @@ AC_ARG_WITH(workdir,
 	[
 		if test x$withval != x ; then
 			WORKDIR=$withval
-		else
-  		        WORKDIR=/var/cfengine
 		fi
-
-     	AC_DEFINE_UNQUOTED(WORKDIR, "${WORKDIR}", [lock and log directories])
-        AC_SUBST(workdir, "${WORKDIR}")
 	],
-	[
-
-        case "$target_os" in
-
-           mingw*)
-                WORKDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g')
-                ;;
-
-           *)
-                WORKDIR=/var/cfengine
-                ;;
-        esac
-
-		AC_DEFINE_UNQUOTED(WORKDIR, "${WORKDIR}")
-                AC_SUBST(workdir, "${WORKDIR}")
-	]
 )
+
+dnl Expand ${prefix} and whatnot in WORKDIR
+
+adl_RECURSIVE_EVAL("${WORKDIR}", WORKDIR)
+
+AC_DEFINE_UNQUOTED(WORKDIR, "${WORKDIR}", [Workdir location])
+AC_SUBST(workdir, "${WORKDIR}")
+
 
 AC_ARG_WITH(shell, [AS_HELP_STRING([--with-shell=PATH],
                    [Specify path to POSIX-compatible shell (if not /bin/sh)])],

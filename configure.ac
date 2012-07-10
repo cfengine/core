@@ -210,6 +210,9 @@ if test "x$with_mysql" != "xno"; then
    CF3_WITH_LIBRARY(mysql, [
      AC_CHECK_LIB(mysqlclient, mysql_real_connect, [], [if test "x$with_mysql" != xcheck; then AC_MSG_ERROR(Cannot find MySQL client library); fi])
      AC_CHECK_HEADERS(mysql.h, [], [if test "x$with_mysql" != xcheck; then AC_MSG_ERROR(Cannot find MySQL client library); fi])
+
+     AC_CHECK_LIB(mysqlclient, EVP_CIPHER_CTX_init,
+                               [AC_MSG_ERROR(MySQL client library exports symbols clashing with OpenSSL. Get the update from distribution provider, recompile MySQL library or disable MySQL connector. See http://bugs.mysql.com/bug.php?id=65055 for details.)])
    ])
 fi
 

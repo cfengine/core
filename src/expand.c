@@ -1197,6 +1197,12 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
 
         if (cp->rval.rtype == CF_FNCALL)
         {
+            if (existing_var != cf_notype)
+               {
+               // Already did this
+               return;
+               }
+
             FnCallResult res = EvaluateFunctionCall(fp, pp);
 
             if (res.status == FNCALL_FAILURE)

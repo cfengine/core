@@ -68,6 +68,7 @@
 #define SOCKET_INVALID -1
 #define CF_MONDAY_MORNING 345600
 
+#define MINUTES_PER_HOUR 60
 #define SECONDS_PER_MINUTE 60
 #define SECONDS_PER_HOUR (60 * SECONDS_PER_MINUTE)
 #define SECONDS_PER_DAY (24 * SECONDS_PER_HOUR)
@@ -205,7 +206,6 @@ typedef struct
 /* Client server defines                                           */
 /*******************************************************************/
 
-
 enum PROTOS
 {
     cfd_exec,
@@ -227,6 +227,7 @@ enum PROTOS
     cfd_context,
     cfd_scontext,
     cfd_squery,
+    cfd_call_me_back,
     cfd_bad
 };
 
@@ -787,6 +788,8 @@ enum cfscontrol
     cfs_auditing,
     cfs_bindtointerface,
     cfs_cfruncommand,
+    cfs_call_collect_interval,
+    cfs_collect_window,
     cfs_denybadclocks,
     cfs_denyconnects,
     cfs_dynamicaddresses,
@@ -1577,6 +1580,7 @@ enum cfd_menu
     cfd_menu_delta,
     cfd_menu_full,
     cfd_menu_relay,
+    cfd_collect_call,
     cfd_menu_error
 };
 
@@ -2390,4 +2394,6 @@ extern const BodySyntax CFEX_CONTROLBODY[];
 # include <cf.nova.h>
 #endif
 
+
 #endif
+

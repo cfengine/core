@@ -915,6 +915,8 @@ m4_indir(incstart[]incend, [nova/config.m4])
 m4_indir(incstart[]incend, [constellation/config.m4])
 m4_indir(incstart[]incend, [galaxy/config.m4])
 
+AC_MSG_RESULT([-> Workdir: $WORKDIR])
+
 AC_MSG_RESULT( )
 
 

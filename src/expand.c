@@ -1189,6 +1189,8 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
 //a.transaction = GetTransactionConstraints(pp);
     a.classes = GetClassDefinitionConstraints(pp);
 
+    enum cfdatatype existing_var = GetVariable(scope, pp->promiser, &retval);
+    
     if (rval.item != NULL)
     {
         FnCall *fp = (FnCall *) rval.item;
@@ -1245,7 +1247,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
             rval = returnval;
         }
 
-        if (GetVariable(scope, pp->promiser, &retval) != cf_notype)
+        if (existing_var != cf_notype)
         {
             if (ok_redefine)    /* only on second iteration, else we ignore broken promises */
             {

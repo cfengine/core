@@ -542,8 +542,10 @@ AC_CHECK_FUNCS(door_create)
 
 AC_CHECK_FUNC(lchown, AC_DEFINE(HAVE_LCHOWN, 1, [Whether to use lchown(3) to change ownerships]))
 
-AC_CHECK_FUNC(pthread_attr_setstacksize, AC_DEFINE(HAVE_PTHREAD_ATTR_SETSTACKSIZE, [], [Whether the thread library has setstacksize]))
-AC_CHECK_FUNC(pthread_sigmask, AC_DEFINE(HAVE_PTHREAD_SIGMASK, [], [Whether the thread library has setmask]))
+AC_CHECK_FUNCS(pthread_attr_setstacksize)
+AC_REPLACE_FUNCS(pthread_attr_setstacksize)
+
+AC_CHECK_FUNCS(pthread_sigmask)
 
 dnl ######################################################################
 dnl Check for sa_len in struct sockaddr

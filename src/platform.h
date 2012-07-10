@@ -317,6 +317,10 @@ typedef int socklen_t;
 #  define PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP PTHREAD_MUTEX_INITIALIZER
 # endif
 
+# if !HAVE_DECL_PTHREAD_ATTR_SETSTACKSIZE
+int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize);
+# endif
+
 #endif
 
 #ifdef HAVE_SCHED_H

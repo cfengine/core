@@ -202,6 +202,8 @@ static bool CallHostsSeenCallback(const char *hostkey, const char *address,
     return true;
 }
 
+/*******************************************************************/
+
 static FnCallResult FnCallHostsSeen(FnCall *fp, Rlist *finalargs)
 {
     Item *addresses = NULL;
@@ -649,6 +651,8 @@ static FnCallResult FnCallLastNode(FnCall *fp, Rlist *finalargs)
         return (FnCallResult) { FNCALL_FAILURE };
     }
 }
+
+/*******************************************************************/
 
 static FnCallResult FnCallDirname(FnCall *fp, Rlist *finalargs)
 {

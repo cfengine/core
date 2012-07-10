@@ -16,6 +16,10 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#ifdef HAVE_CONFIG_H
+# include "../src/conf.h"
+#endif
+
 #include <sys/types.h>
 
 #include <stddef.h>

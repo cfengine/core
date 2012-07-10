@@ -381,6 +381,9 @@ int strcasecmp(const char *s1, const char *s2);
 #if !HAVE_DECL_STRNCASECMP
 int strncasecmp(const char *s1, const char *s2, size_t n);
 #endif
+#if !HAVE_DECL_STRSIGNAL
+char *strsignal(int sig);
+#endif
 #if !HAVE_DECL_STRDUP
 char *strdup(const char *str);
 #endif

@@ -121,7 +121,7 @@ AS_IF([test x"$enable_fhs" = xyes], [
   projdocdir='${exec_prefix}/share/doc/cfengine'
   WORKDIR='${localstatedir}/lib/cfengine'
 ], [
-  if test x"$prefix" = xNONE; then
+  if test x"$prefix" = xNONE || test x"$prefix" = x/var/cfengine; then
     prefix=/var/cfengine
     case "$target_os" in
       mingw*)

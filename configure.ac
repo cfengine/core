@@ -488,7 +488,16 @@ AC_REPLACE_FUNCS(strsignal)
 
 AC_CHECK_FUNCS(getpwent setpwent endpwent)
 
-AC_CHECK_FUNCS(getnetgrent waitpid seteuid setegid setreuid setregid)
+AC_CHECK_DECLS(getnetgrent)
+AC_CHECK_FUNCS(getnetgrent)
+
+AC_CHECK_DECLS(setnetgrent)
+AC_CHECK_FUNCS(setnetgrent)
+
+AC_CHECK_DECLS(endnetgrent)
+AC_CHECK_FUNCS(endnetgrent)
+
+AC_CHECK_FUNCS(waitpid seteuid setegid setreuid setregid)
 AC_CHECK_FUNCS(uname gethostname chflags)
 AC_CHECK_FUNCS(putenv)
 AC_CHECK_FUNCS(mkfifo statfs statvfs door)

@@ -141,41 +141,34 @@ char *MapNameForward(char *s)
 
 /*********************************************************/
 
-#ifndef HAVE_GETNETGRENT
+#ifndef HAVE_SETNETGRENT
 
-# if !defined __STDC__ || !__STDC__
-/* This is a separate conditional since some stdc systems
-   reject `defined (const)'.  */
-
-#  ifndef const
-#   define const
-#  endif
-# endif
-
-/*********************************************************/
-
-int setnetgrent(netgroup)
-     const char *netgroup;
-
+int setnetgrent(const char *netgroup)
 {
     return 0;
 }
+
+#endif
 
 /**********************************************************/
 
-int getnetgrent(a, b, c)
-     char **a, **b, **c;
+#ifndef HAVE_GETNETGRENT
 
+int getnetgrent(char **machinep, char **userp, char **domainp)
 {
-    *a = NULL;
-    *b = NULL;
-    *c = NULL;
+    *machinep = NULL;
+    *userp = NULL;
+    *domainp = NULL;
     return 0;
 }
 
+#endif
+
 /***********************************************************/
 
-void endnetgrent()
+#ifndef HAVE_ENDNETGRENT
+
+void endnetgrent(void)
 {
 }
 

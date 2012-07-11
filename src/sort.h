@@ -25,10 +25,15 @@
 #ifndef CFENGINE_SORT_H
 #define CFENGINE_SORT_H
 
-Item *SortItemListNames(Item *list);
-Item *SortItemListClasses(Item *list);
-Item *SortItemListCounters(Item *list);
-Item *SortItemListTimes(Item *list);
+/*
+ * Sorting is destructive, use the returned pointer to refer to sorted list.
+ */
+
+Item *SortItemListNames(Item *list); /* Alphabetical */
+Item *SortItemListClasses(Item *list); /* Alphabetical */
+Item *SortItemListCounters(Item *list); /* Reverse sort */
+Item *SortItemListTimes(Item *list); /* Reverse sort */
+
 Rlist *SortRlist(Rlist *list, int (*CompareItems) ());
 Rlist *AlphaSortRListNames(Rlist *list);
 

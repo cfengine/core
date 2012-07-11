@@ -125,7 +125,7 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp)
         if (IsCf3VarString(method_name))
         {
             CfOut(cf_error, "",
-                  " !! A variable seems to have been used for the name of the method. In this case, the promiser also needs to contain the uique name of the method");
+                  " !! A variable seems to have been used for the name of the method. In this case, the promiser also needs to contain the unique name of the method");
         }
         if (bp && bp->name)
         {

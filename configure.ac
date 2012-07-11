@@ -470,16 +470,16 @@ AC_REPLACE_FUNCS(drand48)
 AC_CHECK_DECLS(strerror)
 AC_REPLACE_FUNCS(strerror)
 
-AC_CHECK_FUNCS(strstr)
+AC_CHECK_DECLS(strstr)
 AC_REPLACE_FUNCS(strstr)
 
-AC_CHECK_FUNCS(strcasestr)
+AC_CHECK_DECLS(strcasestr)
 AC_REPLACE_FUNCS(strcasestr)
 
-AC_CHECK_FUNCS(strcasecmp)
+AC_CHECK_DECLS(strcasecmp)
 AC_REPLACE_FUNCS(strcasecmp)
 
-AC_CHECK_FUNCS(strncasecmp)
+AC_CHECK_DECLS(strncasecmp)
 AC_REPLACE_FUNCS(strncasecmp)
 
 AC_CHECK_FUNCS(getpwent setpwent endpwent)

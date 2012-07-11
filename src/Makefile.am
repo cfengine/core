@@ -136,7 +136,7 @@ libpromises_la_SOURCES = \
         show.h \
         signals.c \
         sockaddr.c \
-        sort.c \
+        sort.c sort.h \
 	statistics.c statistics.h \
         storage_tools.c \
         string_expressions.c string_expressions.h \

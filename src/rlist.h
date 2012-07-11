@@ -86,8 +86,6 @@ Rlist *AppendRlist(Rlist **start, const void *item, char type);
 Rlist *PrependRlist(Rlist **start, void *item, char type);
 Rlist *SplitStringAsRList(const char *string, char sep);
 Rlist *SplitRegexAsRList(const char *string, const char *regex, int max, int purge);
-Rlist *SortRlist(Rlist *list, int (*CompareItems) ());
-Rlist *AlphaSortRListNames(Rlist *list);
 
 Rlist *RlistAppendReference(Rlist **start, void *item, char type);
 

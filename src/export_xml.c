@@ -27,6 +27,7 @@
 #include "xml_writer.h"
 #include "manual.h"
 #include "files_names.h"
+#include "sort.h"
 
 static char *MANUAL_DIRECTORY;
 

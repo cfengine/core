@@ -5,7 +5,7 @@
 static Sequence *LoadAndCheck(const char *filename)
 {
     char path[1024];
-    sprintf(path, "data/%s", filename);
+    sprintf(path, "%s/%s", TESTDATADIR, filename);
 
     Policy *p = PolicyNew();
     ParserParseFile(p, path);

@@ -1,6 +1,6 @@
 SUBDIRS = data
 
-AM_CFLAGS = $(NOVA_CFLAGS) $(CONSTELLATION_CFLAGS) $(GCC_CFLAG) -I$(srcdir)/../../src
+AM_CFLAGS = $(NOVA_CFLAGS) $(CONSTELLATION_CFLAGS) $(GCC_CFLAG) -I$(srcdir)/../../src -DTESTDATADIR='"$(srcdir)/data"'
 
 LDADD = ../../src/libpromises.la libtest.la
 

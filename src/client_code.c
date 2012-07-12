@@ -161,13 +161,13 @@ AgentConnection *ServerConnection(char *server, Attributes attr, Promise *pp)
     AgentConnection *conn;
 
 #ifndef MINGW
-    static sigset_t signal_mask;
-
     signal(SIGPIPE, SIG_IGN);
+#endif /* NOT MINGW */
+
+    static sigset_t signal_mask;
     sigemptyset(&signal_mask);
     sigaddset(&signal_mask, SIGPIPE);
     pthread_sigmask(SIG_BLOCK, &signal_mask, NULL);
-#endif /* NOT MINGW */
 
     conn = NewAgentConn();
 

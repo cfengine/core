@@ -548,7 +548,8 @@ AC_CHECK_FUNC(lchown, AC_DEFINE(HAVE_LCHOWN, 1, [Whether to use lchown(3) to cha
 AC_CHECK_DECLS(pthread_attr_setstacksize)
 AC_REPLACE_FUNCS(pthread_attr_setstacksize)
 
-AC_CHECK_FUNCS(pthread_sigmask)
+AC_CHECK_DECLS(pthread_sigmask)
+AC_REPLACE_FUNCS(pthread_sigmask)
 
 dnl ######################################################################
 dnl Check for sa_len in struct sockaddr

@@ -499,11 +499,9 @@ void StartServer(Policy *policy)
 #if defined(HAVE_PTHREAD)
 static void *LocalExecThread(void *param)
 {
-#ifdef HAVE_PTHREAD_SIGMASK
     sigset_t sigmask;
     sigemptyset(&sigmask);
     pthread_sigmask(SIG_BLOCK, &sigmask, NULL);
-#endif
 
     ExecConfig *config = (ExecConfig *)param;
     LocalExec(config);

@@ -873,14 +873,9 @@ static void *HandleConnection(ServerConnectionState *conn)
 {
     char output[CF_BUFSIZE];
 
-#if defined(HAVE_PTHREAD)
-# ifdef HAVE_PTHREAD_SIGMASK
     sigset_t sigmask;
-
     sigemptyset(&sigmask);
     pthread_sigmask(SIG_BLOCK, &sigmask, NULL);
-# endif
-#endif
 
     if (!ThreadLock(cft_server_children))
     {

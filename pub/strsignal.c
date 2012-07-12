@@ -27,6 +27,12 @@
 # include "../src/conf.h"
 #endif
 
+#include <sys/types.h>
+
+#if !HAVE_SNPRINTF
+int rpl_snprintf(char *, size_t, const char *, ...);
+#endif
+
 #if !HAVE_DECL_STRSIGNAL
 char *strsignal(int sig);
 #endif

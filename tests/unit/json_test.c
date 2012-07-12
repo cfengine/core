@@ -275,12 +275,19 @@ static void test_object_iterator(void **state)
 
     JsonObjectAppendString(obj, "first", "one");
     JsonObjectAppendString(obj, "second", "two");
+    JsonObjectAppendInteger(obj, "third", 3);
+    JsonObjectAppendBool(obj, "fourth", true);
+    JsonObjectAppendBool(obj, "fifth", false);
+
 
     {
         JsonIterator it = JsonIteratorInit(obj);
 
         assert_string_equal("first", JsonIteratorNextKey(&it));
         assert_string_equal("second", JsonIteratorNextKey(&it));
+        assert_string_equal("third", JsonIteratorNextKey(&it));
+        assert_string_equal("fourth", JsonIteratorNextKey(&it));
+        assert_string_equal("fifth", JsonIteratorNextKey(&it));
         assert_false(JsonIteratorNextKey(&it));
     }
 
@@ -289,6 +296,9 @@ static void test_object_iterator(void **state)
 
         assert_string_equal("one", JsonPrimitiveGetAsString(JsonIteratorNextValue(&it)));
         assert_string_equal("two", JsonPrimitiveGetAsString(JsonIteratorNextValue(&it)));
+        assert_int_equal(3, JsonPrimitiveGetAsInteger(JsonIteratorNextValue(&it)));
+        assert_true(JsonPrimitiveGetAsBool(JsonIteratorNextValue(&it)));
+        assert_false(JsonPrimitiveGetAsBool(JsonIteratorNextValue(&it)));
         assert_false(JsonIteratorNextValue(&it));
     }
 

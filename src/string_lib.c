@@ -373,6 +373,13 @@ long StringToLong(const char *str)
     return result;
 }
 
+char *StringFromLong(long number)
+{
+    char *str = xcalloc(32, sizeof(char));
+    snprintf(str, 32, "%ld", number);
+    return str;
+}
+
 /*********************************************************************/
 
 double StringToDouble(const char *str)

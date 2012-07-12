@@ -213,6 +213,12 @@ static void test_string_to_long(void **state)
     assert_int_equal(1234567, StringToLong("1234567"));
 }
 
+static void test_string_from_long(void **state)
+{
+    assert_string_equal("123456789", StringFromLong(123456789));
+    assert_string_equal("-123456789", StringFromLong(-123456789));
+}
+
 static void test_string_to_double(void **state)
 {
     assert_true(1234.1234 == StringToDouble("1234.1234"));
@@ -337,6 +343,7 @@ int main()
         unit_test(test_substring_evil),
 
         unit_test(test_string_to_long),
+        unit_test(test_string_from_long),
         unit_test(test_string_to_double),
 
         unit_test(test_safe_compare),

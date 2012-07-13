@@ -29,6 +29,7 @@
 #include "vars.h"
 #include "files_names.h"
 #include "item_lib.h"
+#include "conversion.h"
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>

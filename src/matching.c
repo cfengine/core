@@ -29,6 +29,7 @@
 #include "vars.h"
 #include "promises.h"
 #include "item_lib.h"
+#include "conversion.h"
 
 #ifdef HAVE_PCRE_H
 # include <pcre.h>

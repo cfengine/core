@@ -26,6 +26,7 @@
 #include "cf3.defs.h"
 
 #include "dir.h"
+#include "conversion.h"
 
 static void FindStoragePromiserObjects(Promise *pp);
 static int VerifyFileSystem(char *name, Attributes a, Promise *pp);

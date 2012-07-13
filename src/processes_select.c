@@ -26,6 +26,7 @@
 
 #include "env_context.h"
 #include "files_names.h"
+#include "conversion.h"
 
 static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char **names, char **line);
 static int SelectProcRegexMatch(char *name1, char *name2, char *regex, char **colNames, char **line);

@@ -33,6 +33,7 @@
 #include "files_names.h"
 #include "vars.h"
 #include "item_lib.h"
+#include "conversion.h"
 
 extern AgentConnection *COMS;
 

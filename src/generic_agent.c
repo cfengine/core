@@ -36,6 +36,7 @@
 #include "crypto.h"
 #include "vars.h"
 #include "syntax.h"
+#include "conversion.h"
 
 extern char *CFH[][2];
 

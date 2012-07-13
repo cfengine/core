@@ -49,7 +49,7 @@ libpromises_la_SOURCES = \
         config.h \
         constants.c \
         constraints.c constraints.h \
-        conversion.c \
+        conversion.c conversion.h \
         crypto.c crypto.h \
         csv_writer.c csv_writer.h \
         dbm_api.c dbm_api.h dbm_lib.h dbm_lib.c dbm_priv.h \

@@ -30,6 +30,7 @@
 #include "policy.h"
 #include "syntax.h"
 #include "item_lib.h"
+#include "conversion.h"
 
 static void DeleteSubTypes(SubType *tp);
 

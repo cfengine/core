@@ -31,6 +31,7 @@
 #include "policy.h"
 #include "promises.h"
 #include "item_lib.h"
+#include "conversion.h"
 
 #include <math.h>
 

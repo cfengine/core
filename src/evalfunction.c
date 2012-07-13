@@ -34,6 +34,7 @@
 #include "addr_lib.h"
 #include "syntax.h"
 #include "item_lib.h"
+#include "conversion.h"
 
 #include <libgen.h>
 

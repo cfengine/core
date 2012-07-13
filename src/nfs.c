@@ -27,6 +27,7 @@
 
 #include "files_names.h"
 #include "item_lib.h"
+#include "conversion.h"
 
 /* seconds */
 #define RPCTIMEOUT 60

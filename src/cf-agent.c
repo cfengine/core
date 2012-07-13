@@ -32,6 +32,7 @@
 #include "files_names.h"
 #include "item_lib.h"
 #include "vars.h"
+#include "conversion.h"
 
 extern int PR_KEPT;
 extern int PR_REPAIRED;

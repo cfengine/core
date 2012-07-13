@@ -27,6 +27,7 @@
 # include "../src/conf.h"
 #endif
 
+#include <sys/types.h>
 #include <signal.h>
 #include <errno.h>
 

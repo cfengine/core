@@ -1557,7 +1557,10 @@ body package_method yum_rpm
   package_installed_regex => ".*";
   package_name_convention => "$(name)";
 
-  package_patch_installed_regex => "^\s.*";
+  # set it to "0" to avoid caching of list during upgrade
+  package_list_update_ifelapsed => "240";
+
+  package_patch_installed_regex => "^[^*]\s.*";
   package_patch_name_regex    => "([^.]+).*";
   package_patch_version_regex => "[^\s]\s+([^\s]+).*";
   package_patch_arch_regex    => "[^.]+\.([^\s]+).*";

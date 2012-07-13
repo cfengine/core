@@ -164,10 +164,12 @@ AgentConnection *ServerConnection(char *server, Attributes attr, Promise *pp)
     signal(SIGPIPE, SIG_IGN);
 #endif /* NOT MINGW */
 
+#if !defned(__MINGW32__)
     static sigset_t signal_mask;
     sigemptyset(&signal_mask);
     sigaddset(&signal_mask, SIGPIPE);
     pthread_sigmask(SIG_BLOCK, &signal_mask, NULL);
+#endif
 
     conn = NewAgentConn();
 

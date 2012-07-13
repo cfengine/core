@@ -500,9 +500,11 @@ void StartServer(Policy *policy)
 #if defined(HAVE_PTHREAD)
 static void *LocalExecThread(void *param)
 {
+#if !defned(__MINGW32__)
     sigset_t sigmask;
     sigemptyset(&sigmask);
     pthread_sigmask(SIG_BLOCK, &sigmask, NULL);
+#endif
 
     ExecConfig *config = (ExecConfig *)param;
     LocalExec(config);

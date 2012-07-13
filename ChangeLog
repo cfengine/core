@@ -1,5 +1,13 @@
 3.4.0 (in development)
 
+	New features:
+
+	- Implement inheritance of local classes by bundles called using
+	  "usebundle". By default classes are not inherited. See the
+	  examples/unit_inherit.cf for an example.
+
+	Misc:
+
 	- Support for the following outdated platforms and corresponding
 	  classes has been removed. De facto those platforms were
 	  unsupported for a long time, as CFEngine codebase uses C99
@@ -18,6 +26,41 @@
 	   - NeXTSTEP (nextstep)
 	   - GNU Hurd (gnu)
 	   - NEC UX/4800 (ux4800)
+
+	- (Old news) Since 3.3.0 the layout of CFEngine Community packages
+	  has changed slightly.
+
+	  cf-* binaries have been moved to /var/cfengine/bin, due to the
+	  following reasons:
+
+	   - cf-* binaries are linked to libraries installed to
+	     /var/cfengine/lib, so placing binaries in /usr/local/sbin does not
+	     increase reliability of the CFEngine,
+
+	   - keeping whole CFEngine under single prefix (/var/cfengine)
+	     makes packaging simpler,
+
+	   - it matches the layout of CFEngine Enterprise packages.
+
+	   Please adjust your policies (the recommended ways to deal with
+	   the move are either to adjust $PATH to include /var/cfengine or to
+	   create symlinks in /usr/local/sbin in case you are relying on
+	   binaries to be available in $PATH).
+
+	- Workdir location is properly changed if --prefix or --enable-fhs
+	  options are supplied to configure (Mantis #1195).
+
+	- Added check for broken libmysqlclient implementations (Mantis #1217).
+
+	- Standard library is updated from COPBL repository.
+
+	Bugfixes:
+
+	- Compatibility fixes for HP-UX, Solaris (Mantis #1185, Mantis #1177, Mantis #1109).
+	- Fixed broken socklen_t configure check under OpenBSD (Mantis #1168).
+	- Fixed hang in cf-promises under OpenBSD (Mantis #1113).
+	- Fixed endless loop in evaluating "$()" construct (Mantis #1023).
+	- Fixed memory leak in cf-execd occuring if cf-monitord is also running on the system.
 
 	In alpha 1:
 

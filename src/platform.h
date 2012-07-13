@@ -36,6 +36,7 @@
 # include "conf.h"
 #endif
 
+#define _POSIX 1
 #define _GNU_SOURCE 1
 
 #ifdef NT

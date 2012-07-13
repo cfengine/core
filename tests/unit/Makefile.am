@@ -42,7 +42,8 @@ check_PROGRAMS = \
 	package_versions_compare_test \
 	files_lib_test \
 	map_test \
-	policy_test
+	policy_test \
+	sort_test
 
 TESTS = $(check_PROGRAMS)
 
@@ -86,3 +87,6 @@ lastseen_migration_test_LDADD = libdb.la
 CLEANFILES = *.gcno *.gcda
 
 package_versions_compare_test_SOURCES = package_versions_compare_test.c ../../src/verify_packages.c
+
+sort_test_SOURCES = sort_test.c ../../src/sort.c
+sort_test_LDADD = libtest.la

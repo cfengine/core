@@ -164,7 +164,7 @@ AgentConnection *ServerConnection(char *server, Attributes attr, Promise *pp)
     signal(SIGPIPE, SIG_IGN);
 #endif /* NOT MINGW */
 
-#if !defned(__MINGW32__)
+#if !defined(__MINGW32__)
     static sigset_t signal_mask;
     sigemptyset(&signal_mask);
     sigaddset(&signal_mask, SIGPIPE);

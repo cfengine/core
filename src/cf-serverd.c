@@ -874,7 +874,7 @@ static void *HandleConnection(ServerConnectionState *conn)
 {
     char output[CF_BUFSIZE];
 
-#if !defned(__MINGW32__)
+#if !defined(__MINGW32__)
     sigset_t sigmask;
     sigemptyset(&sigmask);
     pthread_sigmask(SIG_BLOCK, &sigmask, NULL);

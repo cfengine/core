@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include "dbm_migration.h"
 #include "lastseen.h"
 
 typedef struct
@@ -179,13 +179,8 @@ static bool LastseenMigrationVersion0(DBHandle *db)
     return !errors;
 }
 
-bool LastseenMigration(DBHandle *db)
+DBMigrationFunction dbm_migration_plan_lastseen[] =
 {
-    char version[64];
-    if (ReadDB(db, "version", version, sizeof(version)) == false)
-    {
-        return LastseenMigrationVersion0(db);
-    }
-
-    return true;
-}
+    LastseenMigrationVersion0,
+    NULL
+};

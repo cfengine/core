@@ -48,7 +48,8 @@ typedef enum
     dbid_value,
     dbid_agent_execution,
     dbid_bundles,
-    dbid_count
+
+    dbid_max
 } dbid;
 
 typedef struct DBHandle_ DBHandle;

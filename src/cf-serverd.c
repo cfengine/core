@@ -2329,7 +2329,7 @@ static Item *ContextAccessControl(char *in, ServerConnectionState *conn, int enc
 
     while (NextDB(dbp, dbcp, &key, &ksize, &value, &vsize))
     {
-        memcpy((void *) &q, value, sizeof(CfState));
+        memcpy((void *) &q, value, MIN(vsize, sizeof(CfState)));
 
         if (now > q.expires)
         {

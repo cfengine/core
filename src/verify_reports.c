@@ -397,7 +397,7 @@ static void VerifyFriendConnections(int hours, Attributes a, Promise *pp)
 
         if (value != NULL)
         {
-            memcpy(&entry, value, sizeof(entry));
+            memcpy(&entry, value, MIN(vsize, sizeof(entry)));
             then = (time_t) entry.q;
             average = (double) entry.expect;
             var = (double) entry.var;

@@ -1313,7 +1313,7 @@ static void ShowClasses()
 
         if (value != NULL)
         {
-            memcpy(&entry, value, sizeof(entry));
+            memcpy(&entry, value, MIN(vsize, sizeof(entry)));
 
             then = entry.t;
             average = entry.Q.expect;
@@ -1671,7 +1671,7 @@ static void ShowLocks(int active)
         {
             if (value != NULL)
             {
-                memcpy(&entry, value, sizeof(entry));
+                memcpy(&entry, value, MIN(vsize, sizeof(entry)));
             }
 
             if (strncmp("lock", (char *) key, 4) == 0)
@@ -1833,7 +1833,7 @@ static void ShowCurrentAudit()
 
         if (value != NULL)
         {
-            memcpy(&entry, value, sizeof(entry));
+            memcpy(&entry, value, MIN(vsize, sizeof(entry)));
 
             if (XML)
             {

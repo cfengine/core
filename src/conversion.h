@@ -61,11 +61,6 @@ int Nova_CoarseLaterThan(const char *key, const char *from);
 int Nova_YearSlot(const char *day, const char *month, const char *lifecycle);
 int Nova_LaterThan(const char *bigger, const char *smaller);
 
-#ifdef HAVE_LIBMONGOC
-int Nova_GetReportedScalar(char *hostkey, char *scope, char *lval, char *returnval, int bufsize);
-int Nova_GetReportedList(char *hostkey, char *scope, char *lval, Rlist **list);
-#endif
-
 #endif
 
 #endif

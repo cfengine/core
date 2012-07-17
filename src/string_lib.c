@@ -298,12 +298,44 @@ char *SearchAndReplace(const char *source, const char *search, const char *repla
 
 /*********************************************************************/
 
-char *StringConcatenate(const char *a, size_t a_len, const char *b, size_t b_len)
+char *StringConcatenate(size_t count, const char *first, ...)
 {
-    char *result = xcalloc(a_len + b_len + 1, sizeof(char));
+    if (count < 1)
+    {
+        return NULL;
+    }
 
-    strncat(result, a, a_len);
-    strncat(result, b, b_len);
+    size_t total_length = first ? strlen(first) : 0;
+
+    va_list args;
+    va_start(args, first);
+    for (size_t i = 1; i < count; i++)
+    {
+        const char *arg = va_arg(args, const char*);
+        if (arg)
+        {
+            total_length += strlen(arg);
+        }
+    }
+    va_end(args);
+
+    char *result = xcalloc(total_length + 1, sizeof(char));
+    if (first)
+    {
+        strcat(result, first);
+    }
+
+    va_start(args, first);
+    for (size_t i = 1; i < count; i++)
+    {
+        const char *arg = va_arg(args, const char *);
+        if (arg)
+        {
+            strcat(result, arg);
+        }
+    }
+    va_end(args);
+
     return result;
 }
 

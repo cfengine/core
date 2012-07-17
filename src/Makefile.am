@@ -53,6 +53,7 @@ libpromises_la_SOURCES = \
         crypto.c crypto.h \
         csv_writer.c csv_writer.h \
         dbm_api.c dbm_api.h dbm_lib.h dbm_lib.c dbm_priv.h \
+        dbm_migration.c dbm_migration.h dbm_migration_lastseen.c dbm_migration_bundles.c \
         dbm_quick.c \
         dbm_tokyocab.c \
         dir.c dir.h dir_priv.h \
@@ -88,7 +89,6 @@ libpromises_la_SOURCES = \
         json.c json.h \
         keyring.c \
         lastseen.c lastseen.h \
-        lastseen_migration.c \
         logging.c \
         logic_expressions.c logic_expressions.h \
         map.c map.h \

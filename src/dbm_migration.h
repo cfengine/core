@@ -22,46 +22,13 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_POLICY_H
-#define CFENGINE_POLICY_H
+#ifndef CFENGINE_DB_MIGRATION_H
+#define CFENGINE_DB_MIGRATION_H
 
 #include "cf3.defs.h"
-#include "sequence.h"
 
-struct Policy_
-{
-    Bundle *bundles;
-    Body *bodies;
-    char *current_namespace;
-};
+typedef bool (*DBMigrationFunction)(DBHandle *db);
 
-Policy *PolicyNew(void);
-void PolicyDestroy(Policy *policy);
-
-Policy *PolicyFromPromise(const Promise *promise);
-char *BundleQualifiedName(const Bundle *bundle);
-
-typedef enum
-{
-    POLICY_ELEMENT_TYPE_BUNDLE,
-    POLICY_ELEMENT_TYPE_BODY,
-    POLICY_ELEMENT_TYPE_SUBTYPE,
-    POLICY_ELEMENT_TYPE_PROMISE,
-    POLICY_ELEMENT_TYPE_CONSTRAINT
-} PolicyElementType;
-
-typedef struct
-{
-    PolicyElementType type;
-    const void *subject;
-    char *message;
-} PolicyError;
-
-PolicyError *PolicyErrorNew(PolicyElementType type, const void *subject, const char *error_msg, ...);
-void PolicyErrorDestroy(PolicyError *error);
-void PolicyErrorWrite(Writer *writer, const PolicyError *error);
-bool PolicyCheck(const Policy *policy, Sequence *errors);
-void PolicySetNameSpace(Policy *policy, char *namespace);
-char *CurrentNameSpace(Policy *policy);
+bool DBMigrate(DBHandle *db, dbid id);
 
 #endif

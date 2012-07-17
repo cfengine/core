@@ -60,6 +60,7 @@ const char *Nova_ShortArch(const char *arch);
 int Nova_CoarseLaterThan(const char *key, const char *from);
 int Nova_YearSlot(const char *day, const char *month, const char *lifecycle);
 int Nova_LaterThan(const char *bigger, const char *smaller);
+bool BundleQualifiedNameSplit(const char *qualified_bundle_name, char namespace_out[CF_MAXVARSIZE], char bundle_name_out[CF_MAXVARSIZE]);
 
 #endif
 

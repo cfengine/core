@@ -26,6 +26,7 @@
 
 #include "promises.h"
 #include "constraints.h"
+#include "conversion.h"
 
 static void ShowAttributes(Attributes a);
 
@@ -86,6 +87,7 @@ Attributes GetFilesAttributes(const Promise *pp)
     if (attr.template)
        {
        attr.edits.empty_before_use = true;
+       attr.edits.inherit = true;
        }
 
 /* Files, multiple use */
@@ -318,6 +320,8 @@ Attributes GetMethodAttributes(const Promise *pp)
     Attributes attr = { {0} };
 
     attr.havebundle = GetBundleConstraint("usebundle", pp);
+
+    attr.inherit = GetBooleanConstraint("inherit", pp);
 
 /* Common ("included") */
 
@@ -1361,6 +1365,8 @@ EditDefaults GetEditDefaults(const Promise *pp)
 
     e.joinlines = GetBooleanConstraint("recognize_join", pp);
 
+    e.inherit = GetBooleanConstraint("inherit", pp);
+
     return e;
 }
 
@@ -1451,6 +1457,15 @@ Packages GetPackageConstraints(const Promise *pp)
     p.package_verify_command = (char *) GetConstraintValue("package_verify_command", pp, CF_SCALAR);
     p.package_noverify_regex = (char *) GetConstraintValue("package_noverify_regex", pp, CF_SCALAR);
     p.package_noverify_returncode = GetIntConstraint("package_noverify_returncode", pp);
+
+    if (GetConstraint(pp, "package_commands_useshell") == NULL)
+    {
+        p.package_commands_useshell = true;
+    }
+    else
+    {
+        p.package_commands_useshell = GetBooleanConstraint("package_commands_useshell", pp);
+    }
 
     p.package_name_convention = (char *) GetConstraintValue("package_name_convention", pp, CF_SCALAR);
     p.package_delete_convention = (char *) GetConstraintValue("package_delete_convention", pp, CF_SCALAR);

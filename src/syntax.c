@@ -30,6 +30,7 @@
 #include "files_names.h"
 #include "mod_files.h"
 #include "item_lib.h"
+#include "conversion.h"
 
 #include <assert.h>
 
@@ -70,6 +71,8 @@ SubTypeSyntax SubTypeSyntaxLookup(const char *bundle_type, const char *subtype_n
 
     return (SubTypeSyntax) { NULL, NULL, NULL };
 }
+
+/****************************************************************************/
 
 enum cfdatatype ExpectedDataType(char *lvalname)
 {
@@ -128,7 +131,7 @@ enum cfdatatype ExpectedDataType(char *lvalname)
 
 /*********************************************************/
 
-void CheckConstraint(char *type, char *name, char *lval, Rval rval, SubTypeSyntax ss)
+void CheckConstraint(char *type, char *namespace, char *name, char *lval, Rval rval, SubTypeSyntax ss)
 {
     int lmatch = false;
     int i, l, allowed = false;
@@ -166,8 +169,38 @@ void CheckConstraint(char *type, char *name, char *lval, Rval rval, SubTypeSynta
 
                     if (bs[l].dtype == cf_body)
                     {
-                        CfDebug("Constraint syntax ok, but definition of body is elsewhere %s=%c\n", lval, rval.rtype);
-                        PrependRlist(&BODYPARTS, rval.item, rval.rtype);
+                    char fqname[CF_BUFSIZE];
+                    FnCall *fp;
+                    
+                    CfDebug("Constraint syntax ok, but definition of body is elsewhere %s=%c\n", lval, rval.rtype);
+
+                    switch (rval.rtype)
+                       {
+                       case CF_SCALAR:
+                           if (strchr((char *)rval.item,'.'))
+                           {
+                               strcpy(fqname,(char *)rval.item);
+                           }
+                           else
+                           {
+                               snprintf(fqname,CF_BUFSIZE-1,"%s.%s",namespace,(char *)rval.item);
+                           }
+                           break;
+                           
+                       case CF_FNCALL:
+                           fp = (FnCall *) rval.item;
+                           if (strchr(fp->name,'.'))
+                           {
+                               strcpy(fqname,fp->name);
+                           }
+                           else
+                           {                              
+                               snprintf(fqname,CF_BUFSIZE-1,"%s.%s",namespace,fp->name);
+                           }
+                           break;
+                       }
+                        
+                        PrependRlist(&BODYPARTS, fqname, CF_SCALAR);
                         return;
                     }
                     else if (bs[l].dtype == cf_bundle)
@@ -1187,6 +1220,8 @@ static char *PCREStringToJsonString(const char *pcre)
     return json;
 }
 
+/****************************************************************************/
+
 static JsonElement *ExportAttributesSyntaxAsJson(const BodySyntax attributes[])
 {
     JsonElement *json = JsonObjectCreate(10);
@@ -1248,6 +1283,8 @@ static JsonElement *ExportAttributesSyntaxAsJson(const BodySyntax attributes[])
     return json;
 }
 
+/****************************************************************************/
+
 static JsonElement *ExportBundleTypeSyntaxAsJson(const char *bundle_type)
 {
     JsonElement *json = JsonObjectCreate(10);
@@ -1272,6 +1309,8 @@ static JsonElement *ExportBundleTypeSyntaxAsJson(const char *bundle_type)
     return json;
 }
 
+/****************************************************************************/
+
 static JsonElement *ExportControlBodiesSyntaxAsJson()
 {
     JsonElement *control_bodies = JsonObjectCreate(10);
@@ -1286,6 +1325,8 @@ static JsonElement *ExportControlBodiesSyntaxAsJson()
 
     return control_bodies;
 }
+
+/****************************************************************************/
 
 void SyntaxPrintAsJson(Writer *writer)
 {
@@ -1378,6 +1419,8 @@ static JsonElement *ExportAttributeValueAsJson(Rval rval)
     }
 }
 
+/****************************************************************************/
+
 static JsonElement *CreateContextAsJson(const char *name, size_t offset,
                                         size_t offset_end, const char *children_name, JsonElement *children)
 {
@@ -1390,6 +1433,8 @@ static JsonElement *CreateContextAsJson(const char *name, size_t offset,
 
     return json;
 }
+
+/****************************************************************************/
 
 static JsonElement *ExportBodyClassesAsJson(Constraint *constraints)
 {
@@ -1428,6 +1473,8 @@ static JsonElement *ExportBodyClassesAsJson(Constraint *constraints)
     return json_contexts;
 }
 
+/****************************************************************************/
+
 static JsonElement *ExportBundleClassesAsJson(Promise *promises)
 {
     JsonElement *json_contexts = JsonArrayCreate(10);
@@ -1464,10 +1511,26 @@ static JsonElement *ExportBundleClassesAsJson(Promise *promises)
             JsonObjectAppendInteger(json_promise, "offset-end", context_offset_end);
 
             JsonObjectAppendString(json_promise, "promiser", pp->promiser);
-            /* FIXME: does not work for lists */
-            if (pp->promisee.rtype == CF_SCALAR || pp->promisee.rtype == CF_NOPROMISEE)
+
+            switch (pp->promisee.rtype)
             {
+            case CF_SCALAR:
                 JsonObjectAppendString(json_promise, "promisee", pp->promisee.item);
+                break;
+
+            case CF_LIST:
+                {
+                    JsonElement *promisee_list = JsonArrayCreate(10);
+                    for (const Rlist *rp = pp->promisee.item; rp; rp = rp->next)
+                    {
+                        JsonArrayAppendString(promisee_list, ScalarValue(rp));
+                    }
+                    JsonObjectAppendArray(json_promise, "promisee", promisee_list);
+                }
+                break;
+
+            default:
+                break;
             }
 
             JsonObjectAppendArray(json_promise, "attributes", json_promise_attributes);
@@ -1487,6 +1550,8 @@ static JsonElement *ExportBundleClassesAsJson(Promise *promises)
 
     return json_contexts;
 }
+
+/****************************************************************************/
 
 static JsonElement *ExportBundleAsJson(Bundle *bundle)
 {
@@ -1532,6 +1597,8 @@ static JsonElement *ExportBundleAsJson(Bundle *bundle)
     return json_bundle;
 }
 
+/****************************************************************************/
+
 static JsonElement *ExportBodyAsJson(Body *body)
 {
     JsonElement *json_body = JsonObjectCreate(10);
@@ -1558,6 +1625,8 @@ static JsonElement *ExportBodyAsJson(Body *body)
 
     return json_body;
 }
+
+/****************************************************************************/
 
 void PolicyPrintAsJson(Writer *writer, const char *filename, Bundle *bundles, Body *bodies)
 {
@@ -1605,17 +1674,23 @@ static void IndentPrint(Writer *writer, int indent_level)
     }
 }
 
+/****************************************************************************/
+
 static void RvalPrettyPrint(Writer *writer, Rval rval)
 {
 /* FIX: prettify */
     RvalPrint(writer, rval);
 }
 
+/****************************************************************************/
+
 static void AttributePrettyPrint(Writer *writer, Constraint *attribute, int indent_level)
 {
     WriterWriteF(writer, "%s => ", attribute->lval);
     RvalPrettyPrint(writer, attribute->rval);
 }
+
+/****************************************************************************/
 
 static void ArgumentsPrettyPrint(Writer *writer, Rlist *args)
 {
@@ -1633,6 +1708,8 @@ static void ArgumentsPrettyPrint(Writer *writer, Rlist *args)
     }
     WriterWriteChar(writer, ')');
 }
+
+/****************************************************************************/
 
 void BodyPrettyPrint(Writer *writer, Body *body)
 {
@@ -1666,6 +1743,8 @@ void BodyPrettyPrint(Writer *writer, Body *body)
 
     WriterWrite(writer, "\n}");
 }
+
+/****************************************************************************/
 
 void BundlePrettyPrint(Writer *writer, Bundle *bundle)
 {

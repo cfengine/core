@@ -266,6 +266,11 @@ void NewList(const char *scope, const char *lval, void *rval, enum cfdatatype dt
     fail();
 }
 
+void DeleteRlist(Rlist *list)
+{
+    fail();
+}
+
 /* Stub out variables */
 
 int DEBUG;

@@ -33,6 +33,7 @@
 #include "files_names.h"
 #include "vars.h"
 #include "item_lib.h"
+#include "conversion.h"
 
 extern AgentConnection *COMS;
 
@@ -224,7 +225,14 @@ int ScheduleCopyOperation(char *destination, Attributes attr, Promise *pp)
 {
     AgentConnection *conn = NULL;
 
-    CfOut(cf_verbose, "", " -> Copy file %s from %s check\n", destination, attr.copy.source);
+    if (!attr.copy.source)
+    {
+        CfOut(cf_verbose, "", " -> Copy file %s check\n", destination);
+    }
+    else
+    {
+        CfOut(cf_verbose, "", " -> Copy file %s from %s check\n", destination, attr.copy.source);
+    }
 
     if (attr.copy.servers == NULL || strcmp(attr.copy.servers->item, "localhost") == 0)
     {
@@ -398,7 +406,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp)
     Bundle *bp;
     void *vp;
     FnCall *fp;
-    char *edit_bundle_name = NULL, lockname[CF_BUFSIZE];
+    char edit_bundle_name[CF_BUFSIZE], lockname[CF_BUFSIZE];
     Rlist *params = { 0 };
     int retval = false;
     CfLock thislock;
@@ -425,15 +433,24 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp)
 
     if (a.haveeditline)
     {
+        if (strcmp(pp->namespace,"default") == 0)
+           {
+           strcpy(edit_bundle_name,"");
+           }
+        else
+           {
+           snprintf(edit_bundle_name,CF_BUFSIZE-1, "%s_",pp->namespace);
+           }
+
         if ((vp = GetConstraintValue("edit_line", pp, CF_FNCALL)))
         {
             fp = (FnCall *) vp;
-            edit_bundle_name = fp->name;
+            strcat(edit_bundle_name,fp->name);
             params = fp->args;
         }
         else if ((vp = GetConstraintValue("edit_line", pp, CF_SCALAR)))
         {
-            edit_bundle_name = (char *) vp;
+            strcat(edit_bundle_name,(char *) vp);
             params = NULL;
         }
         else
@@ -442,6 +459,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp)
             YieldCurrentLock(thislock);
             return false;
         }
+
 
         CfOut(cf_verbose, "", " -> Handling file edits in edit_line bundle %s\n", edit_bundle_name);
 
@@ -455,7 +473,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp)
             HashVariables(policy, bp->name);
 
             AugmentScope(bp->name, bp->args, params);
-            PushPrivateClassContext();
+            PushPrivateClassContext(a.edits.inherit);
             retval = ScheduleEditLineOperations(filename, bp, a, pp);
             PopPrivateClassContext();
             DeleteScope(bp->name);
@@ -472,7 +490,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp)
             NewScope(bp->name);
             HashVariables(policy, bp->name);
 
-            PushPrivateClassContext();
+            PushPrivateClassContext(a.edits.inherit);
             retval = ScheduleEditLineOperations(filename,bp,a,pp);
             PopPrivateClassContext();
             DeleteScope(bp->name);

@@ -758,7 +758,7 @@ static void RemoveDates(char *s)
                 break;
             }
 
-            if (isdigit(*sp))
+            if (isdigit((int)*sp))
             {
                 *sp = 't';
             }

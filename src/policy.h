@@ -32,12 +32,14 @@ struct Policy_
 {
     Bundle *bundles;
     Body *bodies;
+    char *current_namespace;
 };
 
 Policy *PolicyNew(void);
 void PolicyDestroy(Policy *policy);
 
 Policy *PolicyFromPromise(const Promise *promise);
+char *BundleQualifiedName(const Bundle *bundle);
 
 typedef enum
 {
@@ -58,11 +60,8 @@ typedef struct
 PolicyError *PolicyErrorNew(PolicyElementType type, const void *subject, const char *error_msg, ...);
 void PolicyErrorDestroy(PolicyError *error);
 void PolicyErrorWrite(Writer *writer, const PolicyError *error);
-
 bool PolicyCheck(const Policy *policy, Sequence *errors);
-
-
-
-
+void PolicySetNameSpace(Policy *policy, char *namespace);
+char *CurrentNameSpace(Policy *policy);
 
 #endif

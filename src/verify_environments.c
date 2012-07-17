@@ -28,6 +28,7 @@
 #include "env_context.h"
 #include "promises.h"
 #include "vars.h"
+#include "conversion.h"
 
 #ifndef HAVE_LIBVIRT
 

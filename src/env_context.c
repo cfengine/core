@@ -33,6 +33,7 @@
 #include "dbm_api.h"
 #include "syntax.h"
 #include "item_lib.h"
+#include "conversion.h"
 
 /*****************************************************************************/
 
@@ -1098,13 +1099,21 @@ void DeletePrivateClassContext()
 
 /*****************************************************************************/
 
-void PushPrivateClassContext()
+void PushPrivateClassContext(int inherit)
 {
     AlphaList *ap = xmalloc(sizeof(AlphaList));
 
 // copy to heap
     PushStack(&PRIVCLASSHEAP, CopyAlphaListPointers(ap, &VADDCLASSES));
+
     InitAlphaList(&VADDCLASSES);
+
+    if (inherit)
+    {
+        InitAlphaList(&VADDCLASSES);
+        DupAlphaListPointers(&VADDCLASSES, ap);
+    }
+    
 }
 
 /*****************************************************************************/
@@ -1380,22 +1389,22 @@ bool IsTimeClass(const char *sp)
         return true;
     }
 
-    if (strncmp(sp, "Min", 3) == 0 && isdigit(*(sp + 3)))
+    if (strncmp(sp, "Min", 3) == 0 && isdigit((int)*(sp + 3)))
     {
         return true;
     }
 
-    if (strncmp(sp, "Hr", 2) == 0 && isdigit(*(sp + 2)))
+    if (strncmp(sp, "Hr", 2) == 0 && isdigit((int)*(sp + 2)))
     {
         return true;
     }
 
-    if (strncmp(sp, "Yr", 2) == 0 && isdigit(*(sp + 2)))
+    if (strncmp(sp, "Yr", 2) == 0 && isdigit((int)*(sp + 2)))
     {
         return true;
     }
 
-    if (strncmp(sp, "Day", 3) == 0 && isdigit(*(sp + 3)))
+    if (strncmp(sp, "Day", 3) == 0 && isdigit((int)*(sp + 3)))
     {
         return true;
     }

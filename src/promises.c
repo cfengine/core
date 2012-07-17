@@ -122,6 +122,7 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
     pcopy->audit = pp->audit;
     pcopy->offset.line = pp->offset.line;
     pcopy->bundle = xstrdup(pp->bundle);
+    pcopy->namespace = xstrdup(pp->namespace);
     pcopy->ref = pp->ref;
     pcopy->ref_alloc = pp->ref_alloc;
     pcopy->agentsubtype = pp->agentsubtype;
@@ -154,14 +155,14 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
             bodyname = (char *) cp->rval.item;
             if (cp->references_body)
             {
-                bp = IsBody(bodies, bodyname);
+                bp = IsBody(bodies, pp->namespace, bodyname);
             }
             fp = NULL;
             break;
         case CF_FNCALL:
             fp = (FnCall *) cp->rval.item;
             bodyname = fp->name;
-            bp = IsBody(bodies, bodyname);
+            bp = IsBody(bodies, pp->namespace, bodyname);
             break;
         default:
             bp = NULL;
@@ -304,6 +305,7 @@ Promise *ExpandDeRefPromise(const char *scopeid, Promise *pp)
     pcopy->audit = pp->audit;
     pcopy->offset.line = pp->offset.line;
     pcopy->bundle = xstrdup(pp->bundle);
+    pcopy->namespace = xstrdup(pp->namespace);
     pcopy->ref = pp->ref;
     pcopy->ref_alloc = pp->ref_alloc;
     pcopy->agentsubtype = pp->agentsubtype;
@@ -360,11 +362,36 @@ Promise *ExpandDeRefPromise(const char *scopeid, Promise *pp)
 
 /*******************************************************************/
 
-Body *IsBody(Body *list, const char *key)
+Body *IsBody(Body *list, const char *namespace, const char *key)
 {
+    char fqname[CF_BUFSIZE];
+
     for (Body *bp = list; bp != NULL; bp = bp->next)
     {
-        if (strcmp(bp->name, key) == 0)
+
+    // bp->namespace is where the body belongs, namespace is where we are now
+
+        if (strcmp(namespace,"default") == 0)
+        {
+            if (strncmp(key,"default.",strlen("default.")) == 0)
+            {
+                strcpy(fqname,strchr(key,'.')+1);
+            }
+            else
+            {
+                strcpy(fqname,key);
+            }        
+        }
+        else if (strchr(key,'.'))
+        {
+            strcpy(fqname,key);
+        }
+        else
+        {
+            snprintf(fqname,CF_BUFSIZE-1, "%s.%s",namespace,key);
+        }
+
+        if (strcmp(bp->name, fqname) == 0)
         {
             return bp;
         }
@@ -378,10 +405,32 @@ Body *IsBody(Body *list, const char *key)
 Bundle *IsBundle(Bundle *list, const char *key)
 {
     Bundle *bp;
+    char fqname[CF_BUFSIZE];
 
     for (bp = list; bp != NULL; bp = bp->next)
     {
-        if (strcmp(bp->name, key) == 0)
+        if (strcmp(bp->namespace,"default") == 0)
+        {
+            if (strncmp(key,"default.",strlen("default.")) == 0)
+            {
+                strcpy(fqname,strchr(key,'.')+1);
+            }
+            else
+            {
+                strcpy(fqname,key);
+            }        
+        }
+        else if (strncmp(bp->namespace,key,strlen(bp->namespace)) == 0)
+        {
+            strcpy(fqname,key);
+        }
+        else
+        {
+            snprintf(fqname,CF_BUFSIZE-1, "%s.%s",bp->namespace,key);
+        }
+
+
+        if (strcmp(bp->name, fqname) == 0)
         {
             return bp;
         }
@@ -435,6 +484,7 @@ Promise *NewPromise(char *typename, char *promiser)
 
     pp->audit = AUDITPTR;
     pp->bundle = xstrdup("internal_bundle");
+    pp->namespace = xstrdup("default");
     pp->promiser = xstrdup(promiser);
 
     ThreadUnlock(cft_policy);

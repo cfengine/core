@@ -1320,6 +1320,7 @@ none of the encryption settings affect the security of authentication.
 * Types in CFEngine 3::         
 * Datatypes in CFEngine 3::     
 * Variable expansion in CFEngine 3::  
+* Name spaces::
 * Normal ordering::             
 * Loops and lists in CFEngine 3::  
 * Pattern matching and referencing::  
@@ -1971,6 +1972,64 @@ commands:
 }
 
 @end verbatim
+
+
+@c -----------------------------------------------------------------------
+@node Name spaces
+@section Name spaces
+
+Name spaces are private bundle and body contexts, allowing multiple files
+to define the bundles and bodies with the same name, without conflict.
+
+To isolate a file into its own name space, you add a control promise
+to the file before the relevant bundles or bodies. All files start off in the
+default namespace if you don't explicitly set this. Once set, this applies
+until the end of the file or the next namespace change.
+
+@verbatim
+body file control
+{
+namespace => "myspace"; 
+}
+@end verbatim
+
+To distinguish the bundle @code{mymethod} in the default namespace
+from one in another namespace, you can prefix the 
+@verbatim
+methods:
+
+  "namespace demo" usebundle => myspace.mymethod("arg1");
+
+  "namespace demo" usebundle => mymethod("arg1","arg2");
+
+@end verbatim
+
+To distinguish a body
+from one in another namespace, you can prefix the 
+@verbatim
+files:
+
+   "/file"
+
+       create => "true",
+        perms => name1.settings;
+
+@end verbatim
+
+Global classes are not handled by namespaces, and you are advised to prefix
+them with the namespace like this:
+
+@verbatim
+files:
+
+   "/file"
+
+       create => "true",
+       action => if_repaired("namespace_done");
+
+@end verbatim
+@noindent This is not prepended automatically because references to this
+class in class expressions cannot be detected and modified automatically.
 
 @c -----------------------------------------------------------------------
 @node Normal ordering

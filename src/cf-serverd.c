@@ -35,6 +35,7 @@
 #include "vars.h"
 #include "promises.h"
 #include "item_lib.h"
+#include "conversion.h"
 
 #define QUEUESIZE 50
 #define CF_BUFEXT 128
@@ -357,7 +358,6 @@ static void StartServer(Policy *policy, GenericAgentConfig config)
     signal(SIGTERM, HandleSignals);
     signal(SIGHUP, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);
-    signal(SIGCHLD, SIG_IGN);
     signal(SIGUSR1, HandleSignals);
     signal(SIGUSR2, HandleSignals);
 
@@ -523,7 +523,7 @@ static void StartServer(Policy *policy, GenericAgentConfig config)
 /* Level 2                                                           */
 /*********************************************************************/
 
-static int OpenReceiverChannel()
+static int OpenReceiverChannel(void)
 {
     int sd;
     int yes = 1;
@@ -729,10 +729,7 @@ static void SpawnConnection(int sd_reply, char *ipaddr)
 
     pthread_attr_init(&threadattrs);
     pthread_attr_setdetachstate(&threadattrs, PTHREAD_CREATE_DETACHED);
-
-# ifdef HAVE_PTHREAD_ATTR_SETSTACKSIZE
     pthread_attr_setstacksize(&threadattrs, (size_t) 1024 * 1024);
-# endif
 
     int ret = pthread_create(&tid, &threadattrs, (void *) HandleConnection, (void *) conn);
     if (ret != 0)
@@ -877,13 +874,10 @@ static void *HandleConnection(ServerConnectionState *conn)
 {
     char output[CF_BUFSIZE];
 
-#if defined(HAVE_PTHREAD)
-# ifdef HAVE_PTHREAD_SIGMASK
+#if !defined(__MINGW32__)
     sigset_t sigmask;
-
     sigemptyset(&sigmask);
     pthread_sigmask(SIG_BLOCK, &sigmask, NULL);
-# endif
 #endif
 
     if (!ThreadLock(cft_server_children))
@@ -2326,7 +2320,7 @@ static Item *ContextAccessControl(char *in, ServerConnectionState *conn, int enc
 
     while (NextDB(dbp, dbcp, &key, &ksize, &value, &vsize))
     {
-        memcpy((void *) &q, value, sizeof(CfState));
+        memcpy((void *) &q, value, MIN(vsize, sizeof(CfState)));
 
         if (now > q.expires)
         {

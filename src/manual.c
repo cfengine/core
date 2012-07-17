@@ -34,6 +34,7 @@
 #include "mod_exec.h"
 #include "mod_access.h"
 #include "item_lib.h"
+#include "sort.h"
 
 extern char BUILD_DIR[CF_BUFSIZE];
 extern char MANDIR[CF_BUFSIZE];
@@ -145,8 +146,30 @@ void TexinfoManual(char *mandir)
             {
                 for (int j = 0; CF_ALL_SUBTYPES[k][j].bundle_type != NULL; ++j)
                 {
-                    fprintf(fout, "* %s in %s promises::\n", CF_ALL_SUBTYPES[k][j].subtype,
-                            strcmp(CF_ALL_SUBTYPES[k][j].bundle_type, "*") == 0 ? "common" : CF_ALL_SUBTYPES[k][j].bundle_type);
+                    const char *constraint_type_name;
+                    if (strcmp(CF_ALL_SUBTYPES[k][j].subtype, "*") == 0)
+                    {
+                        constraint_type_name = "Miscellaneous";
+                    }
+                    else
+                    {
+                        constraint_type_name = CF_ALL_SUBTYPES[k][j].subtype;
+                    }
+
+                    const char *bundle_type_name;
+                    if (strcmp(CF_ALL_SUBTYPES[k][j].bundle_type, "*") == 0)
+                    {
+                        bundle_type_name = "common";
+                    }
+                    else
+                    {
+                        bundle_type_name = CF_ALL_SUBTYPES[k][j].bundle_type;
+                    }
+
+                    fprintf(fout, "* %s in %s promises: %s in %s promises\n", CF_ALL_SUBTYPES[k][j].subtype,
+                            bundle_type_name,
+                            constraint_type_name,
+                            bundle_type_name);
                 }
             }
             fprintf(fout, "@end menu\n");

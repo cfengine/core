@@ -1,0 +1,52 @@
+
+@verbatim
+
+bundle agent example
+
+{     
+defaults:
+
+  "X" string => "I am a default value";
+  "Y" slist => { "I am a default list item 1", "I am a default list item 2" };
+
+methods:
+
+ "example" usebundle => mymethod("","bbb");
+
+reports:
+
+ !xyz::
+
+   "The default value of X is $(X)";
+   "The default value of Y is $(Y)";
+}
+
+###########################################################
+
+bundle agent mymethod(a,b)
+
+{
+vars:
+
+  "no_return" string => "ok"; # readfile("/dont/exist","123");
+
+defaults:
+
+  "a" string => "AAAAAAAAA",   if_match_regex => "";
+
+  "b" string => "BBBBBBBBB",   if_match_regex => "";
+
+  "no_return" string => "no such file";
+
+reports:
+
+  !xyz::
+
+     "The value of a is $(a)";
+     "The value of b is $(b)";
+
+     "The value of no_return is $(no_return)";
+
+}
+
+@end verbatim

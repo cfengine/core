@@ -30,6 +30,7 @@
 #include "dir.h"
 #include "files_names.h"
 #include "item_lib.h"
+#include "vars.h"
 
 static void PurgeLocalFiles(Item *filelist, char *directory, Attributes attr, Promise *pp);
 static void CfCopyFile(char *sourcefile, char *destfile, struct stat sourcestatbuf, Attributes attr, Promise *pp);

@@ -38,16 +38,21 @@ bundle agent example
 {     
 defaults:
 
+  # We can have default values even if variables are not defined at all.
+  # This is equivalent to a variable definition, so not particularly useful.
+
   "X" string => "I am a default value";
   "Y" slist => { "I am a default list item 1", "I am a default list item 2" };
 
 methods:
 
+ # More useful, defaults if parameters are passed to a param bundle
+
  "example" usebundle => mymethod("","bbb");
 
 reports:
 
- !xyz::
+ cfengine_3::
 
    "The default value of X is $(X)";
    "The default value of Y is $(Y)";
@@ -72,7 +77,7 @@ defaults:
 
 reports:
 
-  !xyz::
+  cfengine_3::
 
      "The value of a is $(a)";
      "The value of b is $(b)";

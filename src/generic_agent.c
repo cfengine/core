@@ -36,6 +36,7 @@
 #include "crypto.h"
 #include "vars.h"
 #include "syntax.h"
+#include "conversion.h"
 
 extern char *CFH[][2];
 
@@ -483,6 +484,7 @@ void InitializeGA(void)
     NewClass("constellation_edition");
 #elif defined HAVE_NOVA
     NewClass("nova_edition");
+    NewClass("enterprise_edition");
 #else
     NewClass("community_edition");
 #endif
@@ -629,6 +631,8 @@ static void Cf3ParseFiles(Policy *policy, bool check_not_writable_by_others)
     PARSING = true;
 
     PROMISETIME = time(NULL);
+
+    PolicySetNameSpace(policy, "default");    
 
     Cf3ParseFile(policy, VINPUTFILE, check_not_writable_by_others);
 
@@ -944,6 +948,8 @@ static void Cf3ParseFile(Policy *policy, char *filename, bool check_not_writable
     struct stat statbuf;
     char wfilename[CF_BUFSIZE];
 
+    PolicySetNameSpace(policy, "default");    
+
     strncpy(wfilename, InputLocation(filename), CF_BUFSIZE);
 
     if (cfstat(wfilename, &statbuf) == -1)
@@ -1058,6 +1064,9 @@ void SetFacility(const char *retval)
 
 Bundle *GetBundle(const Policy *policy, const char *name, const char *agent)
 {
+
+    // We don't need to check for the namespace here, as it is prefixed to the name already
+ 
     for (Bundle *bp = policy->bundles; bp != NULL; bp = bp->next)       /* get schedule */
     {
         if (strcmp(bp->name, name) == 0)
@@ -1436,26 +1445,26 @@ static void VerifyPromises(Policy *policy, Rlist *bundlesequence)
 
     for (rp = BODYPARTS; rp != NULL; rp = rp->next)
     {
-        switch (rp->type)
+    char namespace[CF_BUFSIZE],name[CF_BUFSIZE];
+    char fqname[CF_BUFSIZE];
+
+    // This is a bit messy because tracking the namespace is not natural with the existing structures here
+    
+        sscanf((char *)rp->item,"%[^.].%s",namespace,name); 
+
+        if (strcmp(namespace,"default") == 0)
         {
-        case CF_SCALAR:
-            if (!IsBody(policy->bodies, (char *) rp->item))
-            {
-                CfOut(cf_error, "", "Undeclared promise body \"%s()\" was referenced in a promise\n",
-                      (char *) rp->item);
-                ERRORCOUNT++;
-            }
-            break;
-
-        case CF_FNCALL:
-            fp = (FnCall *) rp->item;
-
-            if (!IsBody(policy->bodies, fp->name))
-            {
-                CfOut(cf_error, "", "Undeclared promise body \"%s()\" was referenced in a promise\n", fp->name);
-                ERRORCOUNT++;
-            }
-            break;
+            strcpy(fqname,name);
+        }
+        else
+        {
+            strcpy(fqname,(char *)rp->item);
+        }
+    
+        if (!IsBody(policy->bodies, namespace, fqname))
+        {
+            CfOut(cf_error, "", "Undeclared unparameterized promise body \"%s()\" was referenced in a promise in namespace \"%s\"\n", fqname, namespace);
+            ERRORCOUNT++;
         }
     }
 

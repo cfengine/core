@@ -186,7 +186,7 @@ char **ArgSplitCommand(const char *comm)
         const char *end;
         char *arg;
 
-        if (isspace(*s))        /* Skip whitespace */
+        if (isspace((int)*s))        /* Skip whitespace */
         {
             s++;
             continue;

@@ -1,4 +1,6 @@
+#######################################################
 # Test that classes are set on individual installation (Mantis #829)
+#######################################################
 
 body common control
 {

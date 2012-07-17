@@ -28,6 +28,7 @@
 #include "dbm_api.h"
 #include "files_names.h"
 #include "item_lib.h"
+#include "sort.h"
 
 static void ShowState(char *type);
 static void PrintFile(Attributes a, Promise *pp);
@@ -44,12 +45,6 @@ void VerifyReportPromise(Promise *pp)
     char unique_name[CF_EXPANDSIZE];
 
     a = GetReportsAttributes(pp);
-
-    if (strcmp(pp->classes, "any") == 0)
-    {
-        CfOut(cf_verbose, "", " --> Reports promises may not be in class \"any\"");
-        return;
-    }
 
     snprintf(unique_name, CF_EXPANDSIZE - 1, "%s_%zu", pp->promiser, pp->offset.line);
     thislock = AcquireLock(unique_name, VUQNAME, CFSTARTTIME, a, pp, false);

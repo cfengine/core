@@ -88,7 +88,7 @@ int IdentifyAgent(int sd, char *localip, int family)
             break;
 #endif
         default:
-            CfOut(cf_error, "", "Software error in IdentifyForVerification");
+            CfOut(cf_error, "", "Software error in IdentifyForVerification, family = %d", family);
         }
 
         if (getsockname(sd, (struct sockaddr *) &myaddr, &len) == -1)
@@ -99,7 +99,7 @@ int IdentifyAgent(int sd, char *localip, int family)
 
         snprintf(localip, CF_MAX_IP_LEN - 1, "%s", sockaddr_ntop((struct sockaddr *) &myaddr));
 
-        CfDebug("Identifying this agent as %s i.e. %s, with signature %d\n", localip, VFQNAME, CFSIGNATURE);
+        CfDebug("Identifying this agent as %s i.e. %s, with signature %d, family %d\n", localip, VFQNAME, CFSIGNATURE, family);
 
 #if defined(HAVE_GETADDRINFO)
 
@@ -483,6 +483,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
 
     free(out);
     RSA_free(server_pubkey);
+
     return true;
 }
 

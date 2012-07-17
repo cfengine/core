@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include "conversion.h"
 
 #include "promises.h"
 #include "files_names.h"
@@ -1322,7 +1322,7 @@ static int IsSpace(char *remainder)
 
     for (sp = remainder; *sp != '\0'; sp++)
     {
-        if (!isspace(*sp))
+        if (!isspace((int)*sp))
         {
             return false;
         }

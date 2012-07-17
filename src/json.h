@@ -40,10 +40,39 @@
 
   @see Sequence
 */
+
+typedef enum
+{
+    JSON_ELEMENT_TYPE_CONTAINER,
+    JSON_ELEMENT_TYPE_PRIMITIVE
+} JsonElementType;
+
+typedef enum
+{
+    JSON_CONTAINER_TYPE_OBJECT,
+    JSON_CONTAINER_TYPE_ARRAY
+} JsonContainerType;
+
+typedef enum
+{
+    JSON_PRIMITIVE_TYPE_STRING,
+    JSON_PRIMITIVE_TYPE_INTEGER,
+    JSON_PRIMITIVE_TYPE_REAL,
+    JSON_PRIMITIVE_TYPE_BOOL,
+    JSON_PRIMITIVE_TYPE_NULL
+} JsonPrimitiveType;
+
 typedef struct JsonElement_ JsonElement;
 
 #include "cf3.defs.h"
 #include "writer.h"
+
+typedef struct
+{
+    const JsonElement *container;
+    size_t index;
+} JsonIterator;
+
 
 /**
   @brief Create a new JSON object
@@ -82,7 +111,26 @@ void JsonElementDestroy(JsonElement *element);
   @brief Get the length of a JsonElement. This is the number of elements or fields in an array or object respectively.
   @param element [in] The JSON element.
   */
-size_t JsonElementLength(JsonElement *element);
+size_t JsonElementLength(const JsonElement *element);
+
+JsonIterator JsonIteratorInit(const JsonElement *container);
+const char *JsonIteratorNextKey(JsonIterator *iter);
+const JsonElement *JsonIteratorNextValue(JsonIterator *iter);
+const char *JsonIteratorCurrentKey(JsonIterator *iter);
+const JsonElement *JsonIteratorCurrentValue(JsonIterator *iter);
+JsonElementType JsonIteratorCurrentElementType(JsonIterator *iter);
+JsonContainerType JsonIteratorCurrentContrainerType(JsonIterator *iter);
+JsonPrimitiveType JsonIteratorCurrentPrimitiveType(JsonIterator *iter);
+
+JsonElementType JsonGetElementType(const JsonElement *element);
+
+JsonContainerType JsonGetContrainerType(const JsonElement *container);
+
+JsonPrimitiveType JsonGetPrimitiveType(const JsonElement *primitive);
+const char *JsonPrimitiveGetAsString(const JsonElement *primitive);
+bool JsonPrimitiveGetAsBool(const JsonElement *primitive);
+long JsonPrimitiveGetAsInteger(const JsonElement *primitive);
+const char *JsonGetPropertyAsString(const JsonElement *element);
 
 /**
   @brief Pretty-print a JsonElement recurively into a Writer.
@@ -117,6 +165,13 @@ void JsonObjectAppendInteger(JsonElement *object, const char *key, int value);
   @param value [in] The value of the field.
   */
 void JsonObjectAppendReal(JsonElement *object, const char *key, double value);
+
+/**
+  @param object [in] The JSON object parent.
+  @param key [in] the key of the field.
+  @param value [in] The value of the field.
+  */
+void JsonObjectAppendBool(JsonElement *object, const char *key, _Bool value);
 
 /**
   @brief Append an array field to an object.
@@ -165,12 +220,21 @@ JsonElement *JsonObjectGetAsArray(JsonElement *object, const char *key);
   */
 void JsonArrayAppendString(JsonElement *array, const char *value);
 
+void JsonArrayAppendBool(JsonElement *array, bool value);
+
 /**
   @brief Append an integer to an array.
   @param array [in] The JSON array parent.
   @param value [in] The integer value to append.
   */
 void JsonArrayAppendInteger(JsonElement *array, int value);
+
+/**
+  @brief Append an real to an array.
+  @param array [in] The JSON array parent.
+  @param value [in] The real value to append.
+  */
+void JsonArrayAppendReal(JsonElement *array, double value);
 
 /**
   @brief Append an array to an array.
@@ -218,5 +282,12 @@ JsonElement *JsonArrayGetAsObject(JsonElement *array, size_t index);
   @returns A pointer to the parsed JsonElement, or NULL if unsuccessful.
   */
 JsonElement *JsonParse(const char **data);
+
+/**
+  @brief Remove key from the object
+  @param object containing the key property
+  @param property name to be removed
+  */
+void JsonObjectRemoveKey(JsonElement *object, const char *key);
 
 #endif

@@ -32,6 +32,8 @@
 
 //************************************************************************
 
+static const char *DEFAULT_NAMESPACE = "default";
+
 static const char *POLICY_ERROR_VARS_CONSTRAINT_DUPLICATE_TYPE = "Variable contains existing data type contstraint %s, tried to redefine with %s";
 static const char *POLICY_ERROR_METHODS_BUNDLE_ARITY = "Conflicting arity in calling bundle %s, expected %d arguments, %d given";
 static const char *POLICY_ERROR_BUNDLE_NAME_RESERVED = "Use of a reserved container name as a bundle name \"%s\"";
@@ -45,8 +47,11 @@ static const char *POLICY_ERROR_SUBTYPE_INVALID = "%s is not a valid type catego
 Policy *PolicyNew(void)
 {
     Policy *policy = xcalloc(1, sizeof(Policy));
+    policy->current_namespace = xstrdup("default");
     return policy;
 }
+
+/*************************************************************************/
 
 void PolicyDestroy(Policy *policy)
 {
@@ -54,9 +59,31 @@ void PolicyDestroy(Policy *policy)
     {
         DeleteBundles(policy->bundles);
         DeleteBodies(policy->bodies);
+        free(policy->current_namespace);
         free(policy);
     }
 }
+
+/*************************************************************************/
+
+void PolicySetNameSpace(Policy *policy, char *namespace)
+{
+    if (policy->current_namespace)
+    {
+        free(policy->current_namespace);
+    }
+
+    policy->current_namespace = xstrdup(namespace);
+}
+
+/*************************************************************************/
+
+char *CurrentNameSpace(Policy *policy)
+{
+    return policy->current_namespace;
+}
+
+/*************************************************************************/
 
 Policy *PolicyFromPromise(const Promise *promise)
 {
@@ -70,6 +97,25 @@ Policy *PolicyFromPromise(const Promise *promise)
 
     return bundle->parent_policy;
 }
+
+char *BundleQualifiedName(const Bundle *bundle)
+{
+    assert(bundle);
+    if (!bundle)
+    {
+        return NULL;
+    }
+
+    if (bundle->name)
+    {
+        const char *namespace = bundle->namespace ? bundle->namespace : DEFAULT_NAMESPACE;
+        return StringConcatenate(3, namespace, ".", bundle->name);
+    }
+
+    return NULL;
+}
+
+/*************************************************************************/
 
 static bool PolicyCheckPromiseVars(const Promise *pp, Sequence *errors)
 {
@@ -96,6 +142,8 @@ static bool PolicyCheckPromiseVars(const Promise *pp, Sequence *errors)
 
     return success;
 }
+
+/*************************************************************************/
 
 static bool PolicyCheckPromiseMethods(const Promise *pp, Sequence *errors)
 {
@@ -128,6 +176,8 @@ static bool PolicyCheckPromiseMethods(const Promise *pp, Sequence *errors)
     return success;
 }
 
+/*************************************************************************/
+
 bool PolicyCheckPromise(const Promise *pp, Sequence *errors)
 {
     bool success = true;
@@ -143,6 +193,8 @@ bool PolicyCheckPromise(const Promise *pp, Sequence *errors)
 
     return success;
 }
+
+/*************************************************************************/
 
 static bool PolicyCheckSubType(const SubType *subtype, Sequence *errors)
 {
@@ -179,6 +231,8 @@ static bool PolicyCheckSubType(const SubType *subtype, Sequence *errors)
     return success;
 }
 
+/*************************************************************************/
+
 static bool PolicyCheckBundle(const Bundle *bundle, Sequence *errors)
 {
     assert(bundle);
@@ -203,6 +257,7 @@ static bool PolicyCheckBundle(const Bundle *bundle, Sequence *errors)
     return success;
 }
 
+/*************************************************************************/
 
 bool PolicyCheck(const Policy *policy, Sequence *errors)
 {
@@ -230,7 +285,9 @@ bool PolicyCheck(const Policy *policy, Sequence *errors)
         success &= PolicyCheckBundle(bp, errors);
     }
 
+    
     // ensure body names are not duplicated
+
     for (const Body *bp = policy->bodies; bp; bp = bp->next)
     {
         for (const Body *bp2 = policy->bodies; bp2; bp2 = bp2->next)
@@ -239,16 +296,21 @@ bool PolicyCheck(const Policy *policy, Sequence *errors)
                 StringSafeEqual(bp->name, bp2->name) &&
                 StringSafeEqual(bp->type, bp2->type))
             {
-                SequenceAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_BODY, bp,
+                if (strcmp(bp->type,"file") != 0)
+                {
+                    SequenceAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_BODY, bp,
                                                       POLICY_ERROR_BODY_REDEFINITION,
                                                       bp->name, bp->type));
-                success = false;
+                    success = false;
+                }            
             }
         }
     }
 
     return success;
 }
+
+/*************************************************************************/
 
 PolicyError *PolicyErrorNew(PolicyElementType type, const void *subject, const char *error_msg, ...)
 {
@@ -265,11 +327,15 @@ PolicyError *PolicyErrorNew(PolicyElementType type, const void *subject, const c
     return error;
 }
 
+/*************************************************************************/
+
 void PolicyErrorDestroy(PolicyError *error)
 {
     free(error->message);
     free(error);
 }
+
+/*************************************************************************/
 
 static SourceOffset PolicyElementSourceOffset(PolicyElementType type, const void *element)
 {
@@ -312,6 +378,8 @@ static SourceOffset PolicyElementSourceOffset(PolicyElementType type, const void
             return (SourceOffset) { 0 };
     }
 }
+
+/*************************************************************************/
 
 static char *PolicyElementSourceFile(PolicyElementType type, const void *element)
 {
@@ -365,6 +433,8 @@ static char *PolicyElementSourceFile(PolicyElementType type, const void *element
             return NULL;
     }
 }
+
+/*************************************************************************/
 
 void PolicyErrorWrite(Writer *writer, const PolicyError *error)
 {

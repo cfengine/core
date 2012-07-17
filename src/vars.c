@@ -24,7 +24,9 @@
 */
 
 #include "vars.h"
+
 #include "constraints.h"
+#include "conversion.h"
 
 static int IsCf3Scalar(char *str);
 static int CompareVariableValue(Rval rval, CfAssoc *ap);
@@ -693,6 +695,15 @@ const char *ExtractInnerCf3VarString(const char *str, char *substr)
         if (bracks == 0)
         {
             strncpy(substr, str + 2, sp - str - 2);
+
+            if (strlen(substr) == 0)
+            {
+                char output[CF_BUFSIZE];
+                snprintf(output, CF_BUFSIZE, "Empty variable name in brackets: %s", str);
+                yyerror(output);
+                return NULL;
+            }
+
             CfDebug("Returning substring value %s\n", substr);
             return substr;
         }

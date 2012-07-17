@@ -37,6 +37,7 @@
 #include "vars.h"
 #include "syntax.h"
 #include "files_names.h"
+#include "conversion.h"
 
 static void MapIteratorsFromScalar(const char *scope, Rlist **los, Rlist **lol, char *string, int level, const Promise *pp);
 static int Epimenides(const char *var, Rval rval, int level);
@@ -695,6 +696,9 @@ void ExpandPromiseAndDo(enum cfagenttype agent, const char *scopeid, Promise *pp
         snprintf(v, CF_MAXVARSIZE, "%d", (int) getgid());
         NewScalar("this", "promiser_gid", v, cf_int);
 
+        NewScalar("this", "bundle", pp->bundle, cf_str);
+        NewScalar("this", "namespace", pp->namespace, cf_str);
+
         /* Must expand $(this.promiser) here for arg dereferencing in things
            like edit_line and methods, but we might have to
            adjust again later if the value changes  -- need to qualify this
@@ -1186,12 +1190,20 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
 //a.transaction = GetTransactionConstraints(pp);
     a.classes = GetClassDefinitionConstraints(pp);
 
+    enum cfdatatype existing_var = GetVariable(scope, pp->promiser, &retval);
+    
     if (rval.item != NULL)
     {
         FnCall *fp = (FnCall *) rval.item;
 
         if (cp->rval.rtype == CF_FNCALL)
         {
+            if (existing_var != cf_notype)
+               {
+               // Already did this
+               return;
+               }
+
             FnCallResult res = EvaluateFunctionCall(fp, pp);
 
             if (res.status == FNCALL_FAILURE)
@@ -1242,7 +1254,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
             rval = returnval;
         }
 
-        if (GetVariable(scope, pp->promiser, &retval) != cf_notype)
+        if (existing_var != cf_notype)
         {
             if (ok_redefine)    /* only on second iteration, else we ignore broken promises */
             {

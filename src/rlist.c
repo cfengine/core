@@ -26,6 +26,7 @@
 #include "cf3.defs.h"
 
 #include "files_names.h"
+#include "conversion.h"
 
 #include <assert.h>
 
@@ -1023,16 +1024,16 @@ Rlist *SplitStringAsRList(const char *string, char sep)
     into a linked list of separate items, supports
     escaping separators, e.g. \, */
 {
+    if (string == NULL)
+    {
+        return NULL;
+    }
+
     Rlist *liststart = NULL;
     char node[CF_MAXVARSIZE];
     int maxlen = strlen(string);
 
     CfDebug("SplitStringAsRList(%s)\n", string);
-
-    if (string == NULL)
-    {
-        return NULL;
-    }
 
     for (const char *sp = string; *sp != '\0'; sp++)
     {

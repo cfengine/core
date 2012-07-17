@@ -298,12 +298,44 @@ char *SearchAndReplace(const char *source, const char *search, const char *repla
 
 /*********************************************************************/
 
-char *StringConcatenate(const char *a, size_t a_len, const char *b, size_t b_len)
+char *StringConcatenate(size_t count, const char *first, ...)
 {
-    char *result = xcalloc(a_len + b_len + 1, sizeof(char));
+    if (count < 1)
+    {
+        return NULL;
+    }
 
-    strncat(result, a, a_len);
-    strncat(result, b, b_len);
+    size_t total_length = first ? strlen(first) : 0;
+
+    va_list args;
+    va_start(args, first);
+    for (size_t i = 1; i < count; i++)
+    {
+        const char *arg = va_arg(args, const char*);
+        if (arg)
+        {
+            total_length += strlen(arg);
+        }
+    }
+    va_end(args);
+
+    char *result = xcalloc(total_length + 1, sizeof(char));
+    if (first)
+    {
+        strcat(result, first);
+    }
+
+    va_start(args, first);
+    for (size_t i = 1; i < count; i++)
+    {
+        const char *arg = va_arg(args, const char *);
+        if (arg)
+        {
+            strcat(result, arg);
+        }
+    }
+    va_end(args);
+
     return result;
 }
 
@@ -350,7 +382,7 @@ bool IsNumber(const char *s)
 {
     for (; *s; s++)
     {
-        if (!isdigit(*s))
+        if (!isdigit((int)*s))
         {
             return false;
         }
@@ -369,6 +401,27 @@ long StringToLong(const char *str)
     long result = strtol(str, &end, 10);
 
     assert(!*end && "Failed to convert string to long");
+
+    return result;
+}
+
+char *StringFromLong(long number)
+{
+    char *str = xcalloc(32, sizeof(char));
+    snprintf(str, 32, "%ld", number);
+    return str;
+}
+
+/*********************************************************************/
+
+double StringToDouble(const char *str)
+{
+    assert(str);
+
+    char *end;
+    double result = strtod(str, &end);
+
+    assert(!*end && "Failed to convert string to double");
 
     return result;
 }
@@ -465,6 +518,40 @@ bool StringMatchFull(const char *regex, const char *str)
     {
         return false;
     }
+}
+
+char *StringEncodeBase64(const char *str, size_t len)
+{
+    assert(str);
+    if (!str)
+    {
+        return NULL;
+    }
+
+    if (len == 0)
+    {
+        return xcalloc(1, sizeof(char));
+    }
+
+    BIO *b64 = BIO_new(BIO_f_base64());
+    BIO *bio = BIO_new(BIO_s_mem());
+    b64 = BIO_push(b64, bio);
+    BIO_write(b64, str, len);
+    if (!BIO_flush(b64))
+    {
+        assert(false && "Unable to encode string to base64" && str);
+        return NULL;
+    }
+
+    BUF_MEM *buffer = NULL;
+    BIO_get_mem_ptr(b64, &buffer);
+    char *out = xcalloc(1, buffer->length);
+    memcpy(out, buffer->data, buffer->length - 1);
+    out[buffer->length - 1] = '\0';
+
+    BIO_free_all(b64);
+
+    return out;
 }
 
 bool IsStrIn(const char *str, const char **strs)

@@ -43,7 +43,7 @@ static bool INSTALL_SKIP = false;
 
 %}
 
-%token ID QSTRING CLASS CATEGORY BUNDLE BODY ASSIGN ARROW NAKEDVAR
+%token ID BLOCKID QSTRING CLASS CATEGORY BUNDLE BODY ASSIGN ARROW NAKEDVAR
 
 %%
 
@@ -252,6 +252,21 @@ selection:             id                         /* BODY ONLY */
                                DeleteRvalItem(P.rval);
                            }
 
+                           if (strcmp(P.blockid,"control") == 0 && strcmp(P.blocktype,"file") == 0)
+                           {
+                               if (strcmp(P.lval,"namespace") == 0)
+                               {
+                                   if (P.rval.rtype != CF_SCALAR)
+                                   {
+                                       yyerror("namespace must be a constant scalar string");
+                                   }
+                                   else
+                                   {
+                                       PolicySetNameSpace(P.policy, P.rval.item);
+                                   }
+                               }
+                           }
+                           
                            if (strcmp(P.blockid,"control") == 0 && strcmp(P.blocktype,"common") == 0)
                            {
                                if (strcmp(P.lval,"inputs") == 0)
@@ -330,7 +345,7 @@ promise:               promiser                    /* BUNDLE ONLY */
                                P.currentpromise = AppendPromise(P.currentstype, P.promiser,
                                                                 P.rval,
                                                                 P.currentclasses ? P.currentclasses : "any",
-                                                                P.blockid, P.blocktype);
+                                                                P.blockid, P.blocktype,CurrentNameSpace(P.policy));
                                P.currentpromise->offset.line = P.line_no;
                                P.currentpromise->offset.start = P.offsets.last_string;
                                P.currentpromise->offset.context = P.offsets.last_class_id;
@@ -366,7 +381,7 @@ promise:               promiser                    /* BUNDLE ONLY */
                                P.currentpromise = AppendPromise(P.currentstype, P.promiser,
                                                                 (Rval) { NULL, CF_NOPROMISEE },
                                                                 P.currentclasses ? P.currentclasses : "any",
-                                                                P.blockid, P.blocktype);
+                                                                P.blockid, P.blocktype,CurrentNameSpace(P.policy));
                                P.currentpromise->offset.line = P.line_no;
                                P.currentpromise->offset.start = P.offsets.last_string;
                                P.currentpromise->offset.context = P.offsets.last_class_id;
@@ -412,7 +427,7 @@ constraint:            id                        /* BUNDLE ONLY */
                            {
                                Constraint *cp = NULL;
                                SubTypeSyntax ss = SubTypeSyntaxLookup(P.blocktype,P.currenttype);
-                               CheckConstraint(P.currenttype, P.blockid, P.lval, P.rval, ss);
+                               CheckConstraint(P.currenttype, CurrentNameSpace(P.policy), P.blockid, P.lval, P.rval, ss);
                                cp = ConstraintAppendToPromise(P.currentpromise, P.lval, P.rval, "any", P.references_body);
                                cp->offset.line = P.line_no;
                                cp->offset.start = P.offsets.last_id;
@@ -455,9 +470,16 @@ id:                    ID
                            CfDebug("Recorded LVAL %s\n",P.lval);
                        };
 
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 rval:                  ID
+                       {
+                           P.rval = (Rval) { xstrdup(P.currentid), CF_SCALAR };
+                           P.references_body = true;
+                           CfDebug("Recorded IDRVAL %s\n", P.currentid);
+                       }
+                     | BLOCKID
                        {
                            P.rval = (Rval) { xstrdup(P.currentid), CF_SCALAR };
                            P.references_body = true;
@@ -544,6 +566,10 @@ litem:                 ID
 functionid:            ID
                        {
                            CfDebug("Found function identifier %s\n",P.currentid);
+                       }
+                     | BLOCKID
+                       {
+                           CfDebug("Found qualified function identifier %s\n",P.currentid);
                        }
                      | NAKEDVAR
                        {

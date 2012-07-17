@@ -35,27 +35,6 @@ static const char *JSON_TRUE = "true";
 static const char *JSON_FALSE = "false";
 static const char *JSON_NULL = "null";
 
-typedef enum
-{
-    JSON_ELEMENT_TYPE_CONTAINER,
-    JSON_ELEMENT_TYPE_PRIMITIVE
-} JsonElementType;
-
-typedef enum
-{
-    JSON_CONTAINER_TYPE_OBJECT,
-    JSON_CONTAINER_TYPE_ARRAY
-} JsonContainerType;
-
-typedef enum
-{
-    JSON_PRIMITIVE_TYPE_STRING,
-    JSON_PRIMITIVE_TYPE_INTEGER,
-    JSON_PRIMITIVE_TYPE_REAL,
-    JSON_PRIMITIVE_TYPE_BOOL,
-    JSON_PRIMITIVE_TYPE_NULL
-} JsonPrimitiveType;
-
 struct JsonElement_
 {
     JsonElementType type;
@@ -137,7 +116,12 @@ void JsonElementDestroy(JsonElement *element)
 
     case JSON_ELEMENT_TYPE_PRIMITIVE:
         assert(element->primitive.value);
-        free((void *) element->primitive.value);
+
+        if (element->primitive.type != JSON_PRIMITIVE_TYPE_NULL &&
+            element->primitive.type != JSON_PRIMITIVE_TYPE_BOOL)
+        {
+            free((void *) element->primitive.value);
+        }
         element->primitive.value = NULL;
         break;
     }
@@ -150,7 +134,7 @@ void JsonElementDestroy(JsonElement *element)
     free(element);
 }
 
-size_t JsonElementLength(JsonElement *element)
+size_t JsonElementLength(const JsonElement *element)
 {
     assert(element);
 
@@ -164,6 +148,144 @@ size_t JsonElementLength(JsonElement *element)
     }
 
     return -1;                  // appease gcc
+}
+
+JsonIterator JsonIteratorInit(const JsonElement *container)
+{
+    assert(container);
+    assert(container->type == JSON_ELEMENT_TYPE_CONTAINER);
+
+    return (JsonIterator) { container, 0 };
+}
+
+const char *JsonIteratorNextKey(JsonIterator *iter)
+{
+    assert(iter);
+    assert(iter->container->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(iter->container->container.type == JSON_CONTAINER_TYPE_OBJECT);
+
+    const JsonElement *child = JsonIteratorNextValue(iter);
+    return child ? child->propertyName : NULL;
+}
+
+const JsonElement *JsonIteratorNextValue(JsonIterator *iter)
+{
+    assert(iter);
+    assert(iter->container->type == JSON_ELEMENT_TYPE_CONTAINER);
+
+    if (iter->index >= JsonElementLength(iter->container))
+    {
+        return NULL;
+    }
+
+    return iter->container->container.children->data[iter->index++];
+}
+
+const JsonElement *JsonIteratorCurrentValue(JsonIterator *iter)
+{
+    assert(iter);
+    assert(iter->container->type == JSON_ELEMENT_TYPE_CONTAINER);
+
+    if (iter->index > JsonElementLength(iter->container))
+    {
+        return NULL;
+    }
+
+    return iter->container->container.children->data[(iter->index) - 1];
+}
+
+const char *JsonIteratorCurrentKey(JsonIterator *iter)
+{
+    assert(iter);
+    assert(iter->container->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(iter->container->container.type == JSON_CONTAINER_TYPE_OBJECT);
+
+    const JsonElement *child = JsonIteratorCurrentValue(iter);
+
+    return child ? child->propertyName : NULL;
+}
+
+JsonElementType JsonIteratorCurrentElementType(JsonIterator *iter)
+{
+    assert(iter);
+
+    const JsonElement *child = JsonIteratorCurrentValue(iter);
+    return child->type;
+}
+
+JsonContainerType JsonIteratorCurrentContrainerType(JsonIterator *iter)
+{
+    assert(iter);
+
+    const JsonElement *child = JsonIteratorCurrentValue(iter);
+    assert(child->type == JSON_ELEMENT_TYPE_CONTAINER);
+
+    return child->container.type;
+}
+
+JsonPrimitiveType JsonIteratorCurrentPrimitiveType(JsonIterator *iter)
+{
+    assert(iter);
+
+    const JsonElement *child = JsonIteratorCurrentValue(iter);
+    assert(child->type == JSON_ELEMENT_TYPE_PRIMITIVE);
+
+    return child->primitive.type;
+}
+
+JsonElementType JsonGetElementType(const JsonElement *element)
+{
+    assert(element);
+    return element->type;
+}
+
+JsonContainerType JsonGetContrainerType(const JsonElement *container)
+{
+    assert(container);
+    assert(container->type == JSON_ELEMENT_TYPE_CONTAINER);
+
+    return container->container.type;
+}
+
+JsonPrimitiveType JsonGetPrimitiveType(const JsonElement *primitive)
+{
+    assert(primitive);
+    assert(primitive->type == JSON_ELEMENT_TYPE_PRIMITIVE);
+
+    return primitive->primitive.type;
+}
+
+const char *JsonPrimitiveGetAsString(const JsonElement *primitive)
+{
+    assert(primitive);
+    assert(primitive->type == JSON_ELEMENT_TYPE_PRIMITIVE);
+
+    return primitive->primitive.value;
+}
+
+bool JsonPrimitiveGetAsBool(const JsonElement *primitive)
+{
+    assert(primitive);
+    assert(primitive->type == JSON_ELEMENT_TYPE_PRIMITIVE);
+    assert(primitive->primitive.type == JSON_PRIMITIVE_TYPE_BOOL);
+
+    return StringSafeEqual(JSON_TRUE, primitive->primitive.value);
+}
+
+long JsonPrimitiveGetAsInteger(const JsonElement *primitive)
+{
+    assert(primitive);
+    assert(primitive->type == JSON_ELEMENT_TYPE_PRIMITIVE);
+    assert(primitive->primitive.type == JSON_PRIMITIVE_TYPE_INTEGER);
+
+    return StringToLong(primitive->primitive.value);
+}
+
+const char *JsonGetPropertyAsString(const JsonElement *element)
+{
+    assert(element);
+
+    return element->propertyName;
 }
 
 // *******************************************************************************************
@@ -255,6 +377,17 @@ void JsonObjectAppendInteger(JsonElement *object, const char *key, int value)
     _JsonObjectAppendPrimitive(object, key, child);
 }
 
+void JsonObjectAppendBool(JsonElement *object, const char *key, _Bool value)
+{
+    assert(object);
+    assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
+    assert(key);
+
+    JsonElement *child = JsonBoolCreate(value);
+    _JsonObjectAppendPrimitive(object, key, child);
+}
+
 void JsonObjectAppendReal(JsonElement *object, const char *key, double value)
 {
     assert(object);
@@ -307,6 +440,35 @@ static int JsonElementHasProperty(const void *propertyName, const void *jsonElem
         return 0;
     }
     return -1;
+}
+
+static int CompareKeyToPropertyName(const void *a, const void *b)
+{
+    return StringSafeCompare((char*)a, ((JsonElement*)b)->propertyName);
+}
+
+static size_t JsonElementIndexInParentObject(JsonElement *parent, const char* key)
+{
+    assert(parent);
+    assert(parent->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(parent->container.type == JSON_CONTAINER_TYPE_OBJECT);
+    assert(key);
+
+    return SequenceIndexOf(parent->container.children, key, CompareKeyToPropertyName);
+}
+
+void JsonObjectRemoveKey(JsonElement *object, const char *key)
+{
+    assert(object);
+    assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
+    assert(key);
+
+    size_t index = JsonElementIndexInParentObject(object, key);
+    if (index != -1)
+    {
+        SequenceRemove(object->container.children, index);
+    }
 }
 
 const char *JsonObjectGetAsString(JsonElement *object, const char *key)
@@ -398,6 +560,16 @@ void JsonArrayAppendString(JsonElement *array, const char *value)
     _JsonArrayAppendPrimitive(array, child);
 }
 
+void JsonArrayAppendBool(JsonElement *array, bool value)
+{
+    assert(array);
+    assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
+
+    JsonElement *child = JsonBoolCreate(value);
+    _JsonArrayAppendPrimitive(array, child);
+}
+
 void JsonArrayAppendInteger(JsonElement *array, int value)
 {
     assert(array);
@@ -405,6 +577,16 @@ void JsonArrayAppendInteger(JsonElement *array, int value)
     assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
 
     JsonElement *child = JsonIntegerCreate(value);
+    _JsonArrayAppendPrimitive(array, child);
+}
+
+void JsonArrayAppendReal(JsonElement *array, double value)
+{
+    assert(array);
+    assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
+
+    JsonElement *child = JsonRealCreate(value);
     _JsonArrayAppendPrimitive(array, child);
 }
 
@@ -509,8 +691,6 @@ JsonElement *JsonRealCreate(double value)
 
 JsonElement *JsonBoolCreate(bool value)
 {
-    assert(value);
-
     return  JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_BOOL, value ? JSON_TRUE : JSON_FALSE);
 }
 
@@ -695,7 +875,7 @@ static JsonElement *JsonParseAsBoolean(const char **data)
         if (IsSeparator(next) || next == '\0')
         {
             *data += 3;
-            return JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_BOOL, SafeStringDuplicate(JSON_TRUE));
+            return JsonBoolCreate(true);
         }
     }
     else if (StringMatch("^false", *data))
@@ -704,7 +884,7 @@ static JsonElement *JsonParseAsBoolean(const char **data)
         if (IsSeparator(next) || next == '\0')
         {
             *data += 4;
-            return JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_BOOL, SafeStringDuplicate(JSON_FALSE));
+            return JsonBoolCreate(false);
         }
     }
 
@@ -719,7 +899,7 @@ static JsonElement *JsonParseAsNull(const char **data)
         if (IsSeparator(next) || next == '\0')
         {
             *data += 3;
-            return JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_NULL, SafeStringDuplicate(JSON_NULL));
+            return JsonNullCreate();
         }
     }
 

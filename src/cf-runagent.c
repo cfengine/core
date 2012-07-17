@@ -32,6 +32,7 @@
 #include "files_names.h"
 #include "promises.h"
 #include "constraints.h"
+#include "conversion.h"
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);

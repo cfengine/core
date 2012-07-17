@@ -48,7 +48,7 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp)
     Bundle *bp;
     void *vp;
     FnCall *fp;
-    char method_name[CF_EXPANDSIZE];
+    char method_name[CF_EXPANDSIZE],*method_deref;
     Rlist *params = NULL;
     int retval = false;
     CfLock thislock;
@@ -84,7 +84,16 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp)
 
     PromiseBanner(pp);
 
-    if ((bp = GetBundle(PolicyFromPromise(pp), method_name, "agent")))
+    if (strncmp(method_name,"default.",strlen("default.")) == 0)
+       {
+       method_deref = strchr(method_name,'.') + 1;
+       }
+    else
+       {
+       method_deref = method_name;
+       }
+
+    if ((bp = GetBundle(PolicyFromPromise(pp), method_deref, "agent")))
     {
         const char *bp_stack = THIS_BUNDLE;
 
@@ -97,7 +106,7 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp)
         AugmentScope(bp->name, bp->args, params);
 
         THIS_BUNDLE = bp->name;
-        PushPrivateClassContext();
+        PushPrivateClassContext(a.inherit);
 
         retval = ScheduleAgentOperations(bp);
 
@@ -127,7 +136,7 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp)
         if (IsCf3VarString(method_name))
         {
             CfOut(cf_error, "",
-                  " !! A variable seems to have been used for the name of the method. In this case, the promiser also needs to contain the uique name of the method");
+                  " !! A variable seems to have been used for the name of the method. In this case, the promiser also needs to contain the unique name of the method");
         }
         if (bp && bp->name)
         {

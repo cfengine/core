@@ -163,10 +163,24 @@ static void test_no_replace(void **state)
 
 static void test_concatenate(void **state)
 {
-    char *new_string = StringConcatenate("snookie", 7, "sitch", 5);
-
+    char *new_string = StringConcatenate(2, "snookie", "sitch");
     assert_string_equal(new_string, "snookiesitch");
     free(new_string);
+
+    new_string = StringConcatenate(4, "a", NULL, "c", "d");
+    assert_string_equal(new_string, "acd");
+    free(new_string);
+
+    new_string = StringConcatenate(3, "a", "b", "c", "d");
+    assert_string_equal(new_string, "abc");
+    free(new_string);
+
+    new_string = StringConcatenate(1, "stuff");
+    assert_string_equal(new_string, "stuff");
+    free(new_string);
+
+    new_string = StringConcatenate(0, NULL);
+    assert_false(new_string);
 }
 
 static void test_substring_overshoot(void **state)
@@ -213,6 +227,17 @@ static void test_string_to_long(void **state)
     assert_int_equal(1234567, StringToLong("1234567"));
 }
 
+static void test_string_from_long(void **state)
+{
+    assert_string_equal("123456789", StringFromLong(123456789));
+    assert_string_equal("-123456789", StringFromLong(-123456789));
+}
+
+static void test_string_to_double(void **state)
+{
+    assert_true(1234.1234 == StringToDouble("1234.1234"));
+}
+
 static void test_safe_compare(void **state)
 {
     assert_true(StringSafeCompare(NULL, NULL) == 0);
@@ -247,6 +272,54 @@ static void test_match_full(void **state)
     assert_false(StringMatchFull("a", "ab"));
     assert_false(StringMatchFull("^a.*$", "bac"));
 }
+
+static void test_encode_base64(void **state)
+{
+    {
+        char *res = StringEncodeBase64("", 0);
+        assert_string_equal("", res);
+        free(res);
+    }
+
+    {
+        char *res = StringEncodeBase64("a", 1);
+        assert_string_equal("YQ==", res);
+        free(res);
+    }
+
+    {
+        char *res = StringEncodeBase64("aa", 2);
+        assert_string_equal("YWE=", res);
+        free(res);
+    }
+
+    {
+        char *res = StringEncodeBase64("aaa", 3);
+        assert_string_equal("YWFh", res);
+        free(res);
+    }
+
+    {
+        char *res =  StringEncodeBase64("aaaa", 4);
+        assert_string_equal("YWFhYQ==", res);
+        free(res);
+    }
+
+    {
+        char *res = StringEncodeBase64("snookie", 7);
+        assert_string_equal("c25vb2tpZQ==", res);
+        free(res);
+    }
+
+    {
+        char *res = StringEncodeBase64("test", 4);
+        assert_string_equal("dGVzdA==", res);
+        free(res);
+    }
+
+    // valgrind leaks should be due to crypto one-time allocations
+}
+
 int main()
 {
     const UnitTest tests[] =
@@ -284,12 +357,16 @@ int main()
         unit_test(test_substring_evil),
 
         unit_test(test_string_to_long),
+        unit_test(test_string_from_long),
+        unit_test(test_string_to_double),
 
         unit_test(test_safe_compare),
         unit_test(test_safe_equal),
 
         unit_test(test_match),
-        unit_test(test_match_full)
+        unit_test(test_match_full),
+
+        unit_test(test_encode_base64)
     };
 
     return run_tests(tests);

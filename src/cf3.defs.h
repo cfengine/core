@@ -1146,6 +1146,7 @@ struct Bundle_
 
     char *type;
     char *name;
+    char *namespace;
     Rlist *args;
     SubType *subtypes;
     struct Bundle_ *next;
@@ -1164,6 +1165,7 @@ struct Body_
 
     char *type;
     char *name;
+    char *namespace;
     Rlist *args;
     Constraint *conlist;
     Body *next;
@@ -1216,6 +1218,7 @@ struct Promise_
 
     char *agentsubtype;         /* cache the promise subtype */
     char *bundletype;           /* cache the agent type */
+    char *namespace;            /* cache the namespace */
     int done;                   /* this needs to be preserved across runs */
     int *donep;                 /* used by locks to mark as done */
     int makeholes;
@@ -1977,6 +1980,7 @@ typedef struct
     int maxfilesize;
     int joinlines;
     int rotate;
+    int inherit;
 } EditDefaults;
 
 /*************************************************************************/
@@ -2098,6 +2102,8 @@ typedef struct
     char *package_noverify_regex;
     char *package_name_convention;
     char *package_delete_convention;
+
+    bool package_commands_useshell;
 
     char *package_multiline_start;
 
@@ -2266,6 +2272,7 @@ typedef struct
     int touch;
     int create;
     int move_obstructions;
+    int inherit;
 
     Recursion recursion;
     TransactionContext transaction;

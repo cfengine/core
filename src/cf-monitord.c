@@ -27,6 +27,7 @@
 
 #include "env_context.h"
 #include "constraints.h"
+#include "conversion.h"
 
 /*****************************************************************************/
 
@@ -229,7 +230,6 @@ static void ThisAgentInit(void)
     signal(SIGTERM, HandleSignals);
     signal(SIGHUP, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);
-    signal(SIGCHLD, SIG_IGN);
     signal(SIGUSR1, HandleSignals);
     signal(SIGUSR2, HandleSignals);
 

@@ -30,10 +30,7 @@
 #include "dbm_api.h"
 #include "dbm_priv.h"
 #include "dbm_lib.h"
-
-/* FIXME: turn into a generic "on-open" hook for databases. */
-bool LastseenMigration(DBHandle *db);
-/* ENDFIXME */
+#include "dbm_migration.h"
 
 /******************************************************************************/
 
@@ -64,7 +61,7 @@ struct DBCursor_
  */
 static pthread_mutex_t db_handles_lock = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
 
-static DBHandle db_handles[dbid_count] = { { 0 } };
+static DBHandle db_handles[dbid_max] = { { 0 } };
 
 /******************************************************************************/
 
@@ -113,7 +110,7 @@ static char *DBIdToPath(dbid id)
 
 static DBHandle *DBHandleGet(int id)
 {
-    assert(id >= 0 && id < dbid_count);
+    assert(id >= 0 && id < dbid_max);
 
     pthread_mutex_lock(&db_handles_lock);
 
@@ -144,16 +141,14 @@ bool OpenDB(DBHandle **dbp, dbid id)
             DBPathUnLock(lock_fd);
         }
 
-        /* FIXME: turn into a generic "on-open" hook for databases. */
-        if (handle->priv && id == dbid_lastseen)
+        if (handle->priv)
         {
-            if (!LastseenMigration(handle))
+            if (!DBMigrate(handle, id))
             {
                 DBPrivCloseDB(handle->priv);
                 handle->priv = NULL;
             }
         }
-        /* ENDFIXME */
     }
 
     if (handle->priv)
@@ -192,7 +187,7 @@ void CloseAllDB(void)
 {
     pthread_mutex_lock(&db_handles_lock);
 
-    for (int i = 0; i < dbid_count; ++i)
+    for (int i = 0; i < dbid_max; ++i)
     {
         if (db_handles[i].refcount != 0)
         {

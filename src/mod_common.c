@@ -355,6 +355,12 @@ const BodySyntax CFH_CONTROLBODY[] =  /* enum cfh_control */
     {NULL, cf_notype, NULL, NULL}
 };
 
+const BodySyntax CFFILE_CONTROLBODY[] =  /* enum cfh_control */
+{
+    {"namespace", cf_str, CF_IDRANGE, "Switch to a private namespace to protect current file from duplicate definitions"},
+    {NULL, cf_notype, NULL, NULL}
+};
+
 /* This list is for checking free standing body lval => rval bindings */
 
 const SubTypeSyntax CF_ALL_BODIES[] =
@@ -368,6 +374,7 @@ const SubTypeSyntax CF_ALL_BODIES[] =
     {CF_KNOWC, "control", CFK_CONTROLBODY},
     {CF_REPORTC, "control", CFRE_CONTROLBODY},
     {CF_HUBC, "control", CFH_CONTROLBODY},
+    {"file", "control", CFFILE_CONTROLBODY},
 
     //  get others from modules e.g. "agent","files",CF_FILES_BODIES,
 

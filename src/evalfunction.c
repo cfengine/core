@@ -34,6 +34,7 @@
 #include "addr_lib.h"
 #include "syntax.h"
 #include "item_lib.h"
+#include "conversion.h"
 
 #include <libgen.h>
 
@@ -201,6 +202,8 @@ static bool CallHostsSeenCallback(const char *hostkey, const char *address,
 
     return true;
 }
+
+/*******************************************************************/
 
 static FnCallResult FnCallHostsSeen(FnCall *fp, Rlist *finalargs)
 {
@@ -649,6 +652,8 @@ static FnCallResult FnCallLastNode(FnCall *fp, Rlist *finalargs)
         return (FnCallResult) { FNCALL_FAILURE };
     }
 }
+
+/*******************************************************************/
 
 static FnCallResult FnCallDirname(FnCall *fp, Rlist *finalargs)
 {
@@ -2063,14 +2068,14 @@ FnCallResult FnCallHostInNetgroup(FnCall *fp, Rlist *finalargs)
 
     while (getnetgrent(&host, &user, &domain))
     {
-        if (host == NULL || strcmp(host, VUQNAME) == 0)
+        if (host == NULL)
         {
-            CfOut(cf_verbose, "", "Matched %s in netgroup %s\n", host, ScalarValue(finalargs));
+            CfOut(cf_verbose, "", "Matched %s in netgroup %s\n", VFQNAME, ScalarValue(finalargs));
             strcpy(buffer, "any");
             break;
         }
 
-        if (host == NULL || strcmp(host, VFQNAME) == 0)
+        if (strcmp(host, VFQNAME) == 0 || strcmp(host, VUQNAME) == 0)
         {
             CfOut(cf_verbose, "", "Matched %s in netgroup %s\n", host, ScalarValue(finalargs));
             strcpy(buffer, "any");

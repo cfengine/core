@@ -28,7 +28,7 @@
 #include "cf3.defs.h"
 
 char *BodyName(const Promise *pp);
-Body *IsBody(Body *list, const char *key);
+Body *IsBody(Body *list, const char *namespace, const char *key);
 Bundle *IsBundle(Bundle *list, const char *key);
 Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp);
 Promise *ExpandDeRefPromise(const char *scopeid, Promise *pp);

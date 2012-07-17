@@ -31,6 +31,8 @@
 #include "files_names.h"
 #include "vars.h"
 #include "item_lib.h"
+#include "sort.h"
+#include "conversion.h"
 
 /*****************************************************************************/
 
@@ -268,7 +270,7 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
 
             *(sp-1) = '\0'; // StripTrailingNewline(promiser) and terminate
 
-            np = AppendPromise(tp, promiser, (Rval) { NULL, CF_NOPROMISEE }, context, bundlename, "edit_line");
+            np = AppendPromise(tp, promiser, (Rval) { NULL, CF_NOPROMISEE }, context, bundlename, "edit_line", pp->namespace);
             ConstraintAppendToPromise(np, "insert_type", (Rval) { xstrdup("preserve_block"), CF_SCALAR }, "any", false);
 
             DeleteItemList(lines);
@@ -285,7 +287,7 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
             {
                 //install independent promise line
                 StripTrailingNewline(buffer);
-                np = AppendPromise(tp, buffer, (Rval) { NULL, CF_NOPROMISEE }, context, bundlename, "edit_line");
+                np = AppendPromise(tp, buffer, (Rval) { NULL, CF_NOPROMISEE }, context, bundlename, "edit_line", pp->namespace);
                 ConstraintAppendToPromise(np, "insert_type", (Rval) { xstrdup("preserve_block"), CF_SCALAR }, "any", false);
             }
         }

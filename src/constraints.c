@@ -30,6 +30,7 @@
 #include "syntax.h"
 #include "item_lib.h"
 #include "files_names.h"
+#include "conversion.h"
 
 static PromiseIdent *PromiseIdExists(char *handle);
 static void DeleteAllPromiseIdsRecurse(PromiseIdent *key);
@@ -629,8 +630,10 @@ void ReCheckAllConstraints(Promise *pp)
 
         if (in_class_any)
         {
-            CfOut(cf_error, "", "reports promises may not be in class \'any\' - risk of a notification explosion");
-            PromiseRef(cf_error, pp);
+        Attributes a = GetReportsAttributes(pp);
+        cfPS(cf_error, CF_INTERPT, "", pp, a, "reports promises may not be in class \'any\' - risk of a notification explosion");
+        PromiseRef(cf_error, pp);
+        ERRORCOUNT++;
         }
     }
 

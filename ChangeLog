@@ -1,14 +1,200 @@
 3.4.0 (in development)
 
 	New features:
+
+	- Implement inheritance of local classes by bundles called using
+	  "usebundle". By default classes are not inherited. See the
+	  examples/unit_inherit.cf for an example.
+
+	Misc:
+
+	- Support for the following outdated platforms and corresponding
+	  classes has been removed. De facto those platforms were
+	  unsupported for a long time, as CFEngine codebase uses C99
+	  language features unavailable on old platforms:
+
+	   - SunOS 3.x (sun3)
+	   - SunOS 4.x (sun4)
+	   - Ultrix (ultrix)
+	   - DEC OSF/1 AXP (osf)
+	   - Digital UNIX (digital)
+	   - Sony NEWS (newsos)
+	   - 4.3BSD (bsd4_3)
+	   - IRIX (irix, irix4, irix64)
+	   - IBM Academic Operating System (aos)
+	   - BSD/OS / BSDi / BSD/386 (bsdos)
+	   - NeXTSTEP (nextstep)
+	   - GNU Hurd (gnu)
+	   - NEC UX/4800 (ux4800)
+
+	- (Old news) Since 3.3.0 the layout of CFEngine Community packages
+	  has changed slightly.
+
+	  cf-* binaries have been moved to /var/cfengine/bin, due to the
+	  following reasons:
+
+	   - cf-* binaries are linked to libraries installed to
+	     /var/cfengine/lib, so placing binaries in /usr/local/sbin does not
+	     increase reliability of the CFEngine,
+
+	   - keeping whole CFEngine under single prefix (/var/cfengine)
+	     makes packaging simpler,
+
+	   - it matches the layout of CFEngine Enterprise packages.
+
+	   Please adjust your policies (the recommended ways to deal with
+	   the move are either to adjust $PATH to include /var/cfengine or to
+	   create symlinks in /usr/local/sbin in case you are relying on
+	   binaries to be available in $PATH).
+
+	- Workdir location is properly changed if --prefix or --enable-fhs
+	  options are supplied to configure (Mantis #1195).
+
+	- Added check for broken libmysqlclient implementations (Mantis #1217).
+
+	- Standard library is updated from COPBL repository.
+
+	Bugfixes:
+
+	- Compatibility fixes for HP-UX, Solaris (Mantis #1185, Mantis #1177, Mantis #1109).
+	- Fixed broken socklen_t configure check under OpenBSD (Mantis #1168).
+	- Fixed hang in cf-promises under OpenBSD (Mantis #1113).
+	- Fixed endless loop in evaluating "$()" construct (Mantis #1023).
+	- Fixed memory leak in cf-execd occuring if cf-monitord is also running on the system.
+
+	In alpha 1:
+
+	New features:
+
 	- cf-promises --parse-tree option to parse policy file and dump it
 	  in JSON format
 
-	New semantics 
-	- methods promises now return the status of promises
+	- Namespaces support for bundles and bodies. See the
+	  examples/unit_namespace*.cf for the usage.
+
+	- Default arguments for bundles. See the examples/unit_defaults.cf
+
+	- Metadata promise type. See the examples/unit_meta.cf
+
+	New semantics:
+
+	- Methods promises now return the status of promises
   	  kept within them. If any promise was not kept, the method is not
 	  kept, else if any promise is repaired, the method was repaired
 	  else it was kept.
+
+	Misc:
+
+	- archlinux hard class on Arch Linux.
+	- Detect BSD Make and automatically switch to GNU Make during build.
+
+	Full list of issues fixed is available on
+	https://cfengine.com/bugtracker/changelog_page.php
+
+3.3.4   (Bugfix and Stability release)
+
+	Evaluation of policies:
+
+	- Fix wrong classes set after installation of several packages
+	  using packages promises (Mantis #829).
+	- Fix segfault using edit_template on existing file (Mantis #1155).
+
+	Misc:
+
+	- Fix memory leak during re-read of network interfaces'
+	  information in cf-execd/cf-serverd.
+
+3.3.3   (Bugfix and Stability release)
+
+	Evaluation of policies:
+
+	- Zero-length files are valid for readfile() and similar functions
+	  (Mantis #1136).
+	- Unchoke agent in case it encounters symlinks in form ./foo
+	  (Similar to Mantis #1117).
+
+	Misc:
+
+	- Fix generation of reference manual on machines with umask more
+	  relaxed than 022.
+	- Use statvfs(3) on OpenBSD to obtain filesystem information
+	  (Mantis #1135).
+
+3.3.2   (Bugfix and Stability release)
+
+	Evaluation of policies:
+
+	- Do not segfault if file copy was interrupted due to network
+	  connectivity or server going away (Mantis #1089).
+	- Do not segfault if log_failed attribute is present in body, but
+	  log_kept is not (Mantis #1107).
+	- Do not mangle relative paths in symlinks during file copy
+	  Previously symlink a -> b was mangled to a -> ./b.
+	  (Mantis #1117)
+	- Properly compare 1.0 and 1.0.1 in packages promises. Previously
+	  only versions with equal amount of "segments" were comparable
+	  (Mantis #890, #1066).
+
+	Base policy:
+
+	- Properly set permissions on files for /var/cfengine/lib on HP-UX
+	  (Mantis #1114).
+	- Standard library (cfengine_stdlib.cf) is synced with COPBL
+	  repository.
+
+	Misc:
+
+	- Do not create huge file in case corrupted TokyoCabinet database
+	  is detected (Mantis #1106).
+	- Fix file descriptor leak on error paths, may have caused crashes
+	  of cf-execd and cf-serverd (Issue #1096).
+	- Fix intermittent segfault in cf-execd (Mantis #1116).
+	- Impose an upper limit on amount of listening sockets reported by
+	  cf-monitord. Huge amounts of listening sockets caused cf-agent to
+	  segfault on next run (Mantis #1098).
+	- Add missing function prototypes caused errors during compilation
+	  on HP-UX (Mantis #1109).
+	- Fix compilation on Solaris 11 (Mantis #1091).
+
+3.3.1   (Bugfix and Stability release)
+
+	Evaluation of policies:
+
+	- Do not cut off name of bundle in variables interpolation (Mantis #975).
+	- Do not segfault in function evaluation guarded by ifvaclass clause (Mantis #1084, #864).
+	- Do not segfault if "classes" promise does not declare any value to be evaluated (Mantis #1074).
+	- Do not segfault in database promises if there is no
+	    database_operation provided (Mantis #1046).
+
+	Built-in functions:
+
+	- Fix countclassesmatching() function which was misbehaving trying
+	    to match classes starting with alphanumeric symbol (Mantis #1073).
+	- Fix diskfree() to return kilobytes, as described in documentation (Mantis #980, #955).
+	- Fix hostsseen() function to avoid treating all hosts as not
+	    being seen since 1970 (Mantis #886).
+	- Do not output misleading error message if readtcp() is unable to connect (Mantis #1085).
+
+	Command-line interface:
+
+	- -d option previously reqired an argument, though help message disagreed (Mantis #1053).
+	- Disable --parse-tree option, not ready for the release (Mantis #1063).
+	- Acept -h as a --help option.
+	- Ensure that cf-execd might be started right after being shut down.
+
+	Misc:
+
+	- Plug file descriptor leak after failed file copy (Mantis #990).
+	- Fix unsafe admit rules in default promises.cf (Mantis #1040).
+	- Fix splaytime to match documentation: it is specified in minutes, not seconds (Mantis #1099).
+
+	Packaging:
+
+	- Fix owner/group of initscript and profile.d snippet in RPM builds (Mantis #1061, #1058).
+	- Fix location of libvirt socket CFEngine uses to connect to libvirtd (Mantis #1072).
+	- Install CoreBase to /var/cfengine/masterfiles during installation (Mantis #1075).
+	- Do not leave old cf-twin around after upgrade (Mantis #1068)
+	- Do not leave rcS.d symlinks after purging .deb package (Mantis #1092).
 
 3.3.0
 

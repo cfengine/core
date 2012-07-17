@@ -317,6 +317,10 @@ typedef int socklen_t;
 #  define PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP PTHREAD_MUTEX_INITIALIZER
 # endif
 
+# if !HAVE_DECL_PTHREAD_ATTR_SETSTACKSIZE
+int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize);
+# endif
+
 #endif
 
 #ifdef HAVE_SCHED_H
@@ -376,6 +380,9 @@ int strcasecmp(const char *s1, const char *s2);
 #endif
 #if !HAVE_DECL_STRNCASECMP
 int strncasecmp(const char *s1, const char *s2, size_t n);
+#endif
+#if !HAVE_DECL_STRSIGNAL
+char *strsignal(int sig);
 #endif
 #if !HAVE_DECL_STRDUP
 char *strdup(const char *str);

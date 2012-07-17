@@ -31,6 +31,8 @@
 #include "ontology.h"
 #include "export_xml.h"
 #include "item_lib.h"
+#include "sort.h"
+#include "conversion.h"
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);

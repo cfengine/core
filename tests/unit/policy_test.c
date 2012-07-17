@@ -64,6 +64,25 @@ static void test_methods_invalid_arity(void **state)
     SequenceDestroy(errs);
 }
 
+static void test_util_bundle_qualified_name(void **state)
+{
+    Bundle *b = xcalloc(1, sizeof(struct Bundle_));
+    assert_false(BundleQualifiedName(b));
+
+    b->name = "bar";
+
+    char *fqname = BundleQualifiedName(b);
+    assert_string_equal("default.bar", fqname);
+    free(fqname);
+
+    b->namespace = "foo";
+    fqname = BundleQualifiedName(b);
+    assert_string_equal("foo.bar", fqname);
+    free(fqname);
+
+    free(b);
+}
+
 int main()
 {
     const UnitTest tests[] =
@@ -74,6 +93,8 @@ int main()
         unit_test(test_subtype_invalid),
         unit_test(test_vars_multiple_types),
         unit_test(test_methods_invalid_arity),
+
+        unit_test(test_util_bundle_qualified_name)
     };
 
     return run_tests(tests);

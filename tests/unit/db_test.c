@@ -1,8 +1,8 @@
+#include "test.h"
+
 #include "cf3.defs.h"
 #include "dbm_api.h"
 
-#include <setjmp.h>
-#include <cmockery.h>
 
 char CFWORKDIR[CF_BUFSIZE] = "/tmp";
 
@@ -109,6 +109,7 @@ int main()
             unit_test(test_recreate),
         };
 
+    PRINT_TEST_BANNER();
     return run_tests(tests);
 }
 

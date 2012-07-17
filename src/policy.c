@@ -32,6 +32,8 @@
 
 //************************************************************************
 
+static const char *DEFAULT_NAMESPACE = "default";
+
 static const char *POLICY_ERROR_VARS_CONSTRAINT_DUPLICATE_TYPE = "Variable contains existing data type contstraint %s, tried to redefine with %s";
 static const char *POLICY_ERROR_METHODS_BUNDLE_ARITY = "Conflicting arity in calling bundle %s, expected %d arguments, %d given";
 static const char *POLICY_ERROR_BUNDLE_NAME_RESERVED = "Use of a reserved container name as a bundle name \"%s\"";
@@ -94,6 +96,23 @@ Policy *PolicyFromPromise(const Promise *promise)
     assert(bundle);
 
     return bundle->parent_policy;
+}
+
+char *BundleQualifiedName(const Bundle *bundle)
+{
+    assert(bundle);
+    if (!bundle)
+    {
+        return NULL;
+    }
+
+    if (bundle->name)
+    {
+        const char *namespace = bundle->namespace ? bundle->namespace : DEFAULT_NAMESPACE;
+        return StringConcatenate(3, namespace, ".", bundle->name);
+    }
+
+    return NULL;
 }
 
 /*************************************************************************/

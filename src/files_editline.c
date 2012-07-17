@@ -786,7 +786,7 @@ static int InsertMultipleLinesAtLocation(Item **start, Item *begin_ptr, Item *en
 // i.e. no insertion will be made if a neighbouring line matches
 
 {
-    int isfileinsert = a.sourcetype && strcmp(a.sourcetype, "file") == 0;
+    int isfileinsert = a.sourcetype && (strcmp(a.sourcetype, "file") == 0 || strcmp(a.sourcetype, "file_lines") == 0);
 
     if (isfileinsert)
     {
@@ -1243,7 +1243,8 @@ static int InsertFileAtLocation(Item **start, Item *begin_ptr, Item *end_ptr, It
     char buf[CF_BUFSIZE], exp[CF_EXPANDSIZE];
     int retval = false;
     Item *loc = NULL;
-        
+    int preserve_block = a.sourcetype && (strcmp(a.sourcetype, "file") == 0;
+    
     if ((fin = fopen(pp->promiser, "r")) == NULL)
     {
         cfPS(cf_error, CF_INTERPT, "fopen", pp, a, "Could not read file %s", pp->promiser);
@@ -1277,7 +1278,7 @@ static int InsertFileAtLocation(Item **start, Item *begin_ptr, Item *end_ptr, It
             continue;
         }
         
-        if (IsItemInRegion(exp, begin_ptr, end_ptr, a, pp))
+        if (!preserve_block && IsItemInRegion(exp, begin_ptr, end_ptr, a, pp))
         {
             cfPS(cf_verbose, CF_NOP, "", pp, a,
                  " -> Promised file line \"%s\" exists within file %s (promise kept)", exp, pp->this_server);
@@ -1338,8 +1339,6 @@ static int InsertCompoundLineAtLocation(char *chunk, Item **start, Item *begin_p
            continue;
            }
 
-        if (location && prev != CF_UNDEFINED_ITEM) printf("INSERT %s @ %s, %s\n",buf,location->name, prev->name);
-        
         result |= InsertLineAtLocation(buf, start, location, prev, a, pp);
 
         if (preserve_block && a.location.before_after == cfe_before && location == NULL && prev == CF_UNDEFINED_ITEM)

@@ -1243,8 +1243,8 @@ static int InsertFileAtLocation(Item **start, Item *begin_ptr, Item *end_ptr, It
     char buf[CF_BUFSIZE], exp[CF_EXPANDSIZE];
     int retval = false;
     Item *loc = NULL;
-    int preserve_block = a.sourcetype && (strcmp(a.sourcetype, "file") == 0;
-    
+    int preserve_block = a.sourcetype && strcmp(a.sourcetype, "file") == 0;
+
     if ((fin = fopen(pp->promiser, "r")) == NULL)
     {
         cfPS(cf_error, CF_INTERPT, "fopen", pp, a, "Could not read file %s", pp->promiser);
@@ -1288,15 +1288,31 @@ static int InsertFileAtLocation(Item **start, Item *begin_ptr, Item *end_ptr, It
         // Need to call CompoundLine here in case ExpandScalar has inserted \n into a string
         
         retval |= InsertCompoundLineAtLocation(exp, start, begin_ptr, end_ptr, loc, prev, a, pp);
+
+        if (preserve_block && prev == CF_UNDEFINED_ITEM)
+           {
+           // If we are inserting a preserved block before, need to flip the implied order after the first insertion
+           // to get the order of the block right
+           a.location.before_after == cfe_after;
+
+           }
         
         if (prev && prev != CF_UNDEFINED_ITEM)
         {
             prev = prev->next;
         }
+        else
+        {
+            prev = *start;
+        }
         
         if (loc)
         {
             loc = loc->next;
+        }
+        else
+        {
+            location = *start;
         }
     }
     
@@ -1313,7 +1329,7 @@ static int InsertCompoundLineAtLocation(char *chunk, Item **start, Item *begin_p
     int result = false;
     char buf[CF_EXPANDSIZE];
     char *sp;
-    int preserve_block = a.sourcetype && strcmp(a.sourcetype, "preserve_block") == 0;
+    int preserve_block = a.sourcetype && (strcmp(a.sourcetype, "preserve_block") == 0 || strcmp(a.sourcetype, "file") == 0);
 
     if (MatchRegion(chunk, *start, location, NULL))
        {

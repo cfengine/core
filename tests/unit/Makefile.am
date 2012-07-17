@@ -14,7 +14,7 @@ libstr_la_LIBADD = libtest.la
 
 
 check_LTLIBRARIES += libdb.la
-libdb_la_SOURCES = ../../src/dbm_api.c ../../src/dbm_quick.c ../../src/dbm_tokyocab.c ../../src/dbm_lib.c ../../src/patches.c ../../src/dbm_migration.c ../../src/dbm_migration_lastseen.c
+libdb_la_SOURCES = ../../src/dbm_api.c ../../src/dbm_quick.c ../../src/dbm_tokyocab.c ../../src/dbm_lib.c ../../src/patches.c ../../src/dbm_migration.c ../../src/dbm_migration_lastseen.c ../../src/dbm_migration_bundles.c
 libdb_la_LIBADD = libstr.la
 
 check_PROGRAMS = \
@@ -38,6 +38,7 @@ check_PROGRAMS = \
 	db_test \
 	lastseen_test \
 	lastseen_migration_test \
+	dbm_migration_bundles_test \
 	misc_lib_test \
 	crypto_symmetric_test \
 	persistent_lock_test  \
@@ -84,6 +85,10 @@ lastseen_test_LDADD = libdb.la
 
 lastseen_migration_test_SOURCES = lastseen_migration_test.c ../../src/lastseen.c ../../src/statistics.c
 lastseen_migration_test_LDADD = libdb.la
+
+dbm_migration_bundles_test_SOURCES = dbm_migration_bundles_test.c
+dbm_migration_bundles_test_LDADD = libdb.la
+
 
 CLEANFILES = *.gcno *.gcda
 

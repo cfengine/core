@@ -27,6 +27,7 @@
 
 #include "promises.h"
 #include "syntax.h"
+#include "reporting.h"
 
 /******************************************************************/
 /* Argument propagation                                           */

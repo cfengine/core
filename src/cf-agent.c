@@ -33,6 +33,7 @@
 #include "item_lib.h"
 #include "vars.h"
 #include "conversion.h"
+#include "reporting.h"
 
 extern int PR_KEPT;
 extern int PR_REPAIRED;

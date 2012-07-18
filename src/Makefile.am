@@ -128,7 +128,7 @@ libpromises_la_SOURCES = \
         promises.c promises.h \
         prototypes3.h \
         recursion.c \
-        reporting.c \
+        reporting.c reporting.h \
         rlist.c rlist.h \
         scope.c \
         selfdiagnostic.c \

@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include "reporting.h"
 
 #include "env_context.h"
 #include "mod_files.h"
@@ -79,13 +79,13 @@ char *CFH[][2] =
 /* Prototypes */
 
 static void ShowControlBodies(void);
-static void ReportBanner(char *s);
+static void ReportBanner(const char *s);
 static void Indent(int i);
 static void ShowDataTypes(void);
 static void ShowBundleTypes(void);
 static void ShowPromiseTypesFor(const char *s);
 static void ShowBodyParts(const BodySyntax *bs);
-static void ShowRange(char *s, enum cfdatatype type);
+static void ShowRange(const char *s, enum cfdatatype type);
 static void ShowBuiltinFunctions(void);
 
 /*******************************************************************/
@@ -149,7 +149,7 @@ static void ShowControlBodies()
 
 /*******************************************************************/
 
-void ShowPromises(Bundle *bundles, Body *bodies)
+void ShowPromises(const Bundle *bundles, const Body *bodies)
 {
 #if defined(HAVE_NOVA)
     Nova_ShowPromises(bundles, bodies);
@@ -160,16 +160,14 @@ void ShowPromises(Bundle *bundles, Body *bodies)
 
 /*******************************************************************/
 
-void ShowPromisesInReport(Bundle *bundles, Body *bodies)
+void ShowPromisesInReport(const Bundle *bundles, const Body *bodies)
 {
     Rval retval;
     char *v;
     char vbuff[CF_BUFSIZE];
-    Bundle *bp;
     Rlist *rp;
     SubType *sp;
     Promise *pp;
-    Body *bdp;
 
     if (GetVariable("control_common", "version", &retval) != cf_notype)
     {
@@ -188,7 +186,7 @@ void ShowPromisesInReport(Bundle *bundles, Body *bodies)
 
     fprintf(FREPORT_HTML, "<p>");
 
-    for (bp = bundles; bp != NULL; bp = bp->next)
+    for (const Bundle *bp = bundles; bp != NULL; bp = bp->next)
     {
         fprintf(FREPORT_HTML, "%s Bundle %s%s%s %s%s%s\n",
                 CFH[cfx_bundle][cfb],
@@ -236,7 +234,7 @@ void ShowPromisesInReport(Bundle *bundles, Body *bodies)
     fprintf(FREPORT_HTML, "<h1>All Bodies</h1>");
     fprintf(FREPORT_TXT, "\n\nAll Bodies\n\n");
 
-    for (bdp = bodies; bdp != NULL; bdp = bdp->next)
+    for (const Body *bdp = bodies; bdp != NULL; bdp = bdp->next)
     {
         fprintf(FREPORT_HTML, "%s%s\n", CFH[cfx_line][cfb], CFH[cfx_block][cfb]);
         fprintf(FREPORT_HTML, "%s\n", CFH[cfx_promise][cfb]);
@@ -277,7 +275,7 @@ void ShowPromise(Promise *pp, int indent)
 
 /*******************************************************************/
 
-void ShowPromiseInReport(const char *version, Promise *pp, int indent)
+void ShowPromiseInReport(const char *version, const Promise *pp, int indent)
 {
     Constraint *cp;
     Body *bp;
@@ -466,7 +464,7 @@ void ShowScopedVariables()
 
 /*******************************************************************/
 
-void Banner(char *s)
+void Banner(const char *s)
 {
     CfOut(cf_verbose, "", "***********************************************************\n");
     CfOut(cf_verbose, "", " %s ", s);
@@ -475,7 +473,7 @@ void Banner(char *s)
 
 /*******************************************************************/
 
-static void ReportBanner(char *s)
+static void ReportBanner(const char *s)
 {
     fprintf(FREPORT_TXT, "***********************************************************\n");
     fprintf(FREPORT_TXT, " %s \n", s);
@@ -484,7 +482,7 @@ static void ReportBanner(char *s)
 
 /**************************************************************/
 
-void BannerSubType(char *bundlename, char *type, int pass)
+void BannerSubType(const char *bundlename, const char *type, int pass)
 {
     CfOut(cf_verbose, "", "\n");
     CfOut(cf_verbose, "", "   =========================================================\n");
@@ -495,7 +493,7 @@ void BannerSubType(char *bundlename, char *type, int pass)
 
 /**************************************************************/
 
-void BannerSubSubType(char *bundlename, char *type)
+void BannerSubSubType(const char *bundlename, const char *type)
 {
     if (strcmp(type, "processes") == 0)
     {
@@ -523,15 +521,6 @@ void BannerSubSubType(char *bundlename, char *type)
 
 /*******************************************************************/
 
-void DebugBanner(char *s)
-{
-    CfDebug("----------------------------------------------------------------\n");
-    CfDebug("  %s                                                            \n", s);
-    CfDebug("----------------------------------------------------------------\n");
-}
-
-/*******************************************************************/
-
 static void Indent(int i)
 {
     int j;
@@ -544,7 +533,7 @@ static void Indent(int i)
 
 /*******************************************************************/
 
-void ShowBody(Body *body, int indent)
+void ShowBody(const Body *body, int indent)
 {
     Rlist *rp;
     Constraint *cp;
@@ -749,10 +738,8 @@ static void ShowBodyParts(const BodySyntax *bs)
 
 /*******************************************************************/
 
-static void ShowRange(char *s, enum cfdatatype type)
+static void ShowRange(const char *s, enum cfdatatype type)
 {
-    char *sp;
-
     if (strlen(s) == 0)
     {
         printf("(arbitrary string)");
@@ -764,7 +751,7 @@ static void ShowRange(char *s, enum cfdatatype type)
     case cf_opts:
     case cf_olist:
 
-        for (sp = s; *sp != '\0'; sp++)
+        for (const char *sp = s; *sp != '\0'; sp++)
         {
             printf("%c", *sp);
             if (*sp == ',')
@@ -776,7 +763,7 @@ static void ShowRange(char *s, enum cfdatatype type)
         break;
 
     default:
-        for (sp = s; *sp != '\0'; sp++)
+        for (const char *sp = s; *sp != '\0'; sp++)
         {
             printf("%c", *sp);
             if (*sp == '|')

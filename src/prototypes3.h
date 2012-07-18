@@ -589,23 +589,6 @@ bool IsProcessNameRunning(char *procNameRegex);
 int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promise *pp);
 int SkipDirLinks(char *path, const char *lastnode, Recursion r);
 
-/* reporting.c */
-
-void ShowAllReservedWords(void);
-void ShowContext(void);
-void ShowPromises(Bundle *bundles, Body *bodies);
-void ShowPromise(Promise *pp, int indent);
-void ShowScopedVariables(void);
-void SyntaxTree(void);
-void ShowBody(Body *body, int ident);
-void DebugBanner(char *s);
-void ReportError(char *s);
-void BannerSubType(char *bundlename, char *type, int p);
-void BannerSubSubType(char *bundlename, char *type);
-void Banner(char *s);
-void ShowPromisesInReport(Bundle *bundles, Body *bodies);
-void ShowPromiseInReport(const char *version, Promise *pp, int indent);
-
 /* rlist.c */
 #include "rlist.h"
 /*

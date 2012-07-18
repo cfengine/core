@@ -32,6 +32,7 @@
 #include "constraints.h"
 #include "item_lib.h"
 #include "conversion.h"
+#include "reporting.h"
 
 static void KeepContextBundles(Policy *policy);
 static void KeepServerPromise(Promise *pp);

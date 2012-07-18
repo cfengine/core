@@ -33,6 +33,7 @@
 #include "item_lib.h"
 #include "sort.h"
 #include "conversion.h"
+#include "reporting.h"
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);

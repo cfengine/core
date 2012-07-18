@@ -37,6 +37,7 @@
 #include "vars.h"
 #include "syntax.h"
 #include "conversion.h"
+#include "reporting.h"
 
 extern char *CFH[][2];
 

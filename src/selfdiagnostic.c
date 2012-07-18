@@ -29,6 +29,7 @@
 #include "constraints.h"
 #include "promises.h"
 #include "vars.h"
+#include "reporting.h"
 
 static void TestRegularExpressions(void);
 static void TestAgentPromises(void);

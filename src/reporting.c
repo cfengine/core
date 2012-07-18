@@ -79,7 +79,7 @@ char *CFH[][2] =
 /* Prototypes */
 
 static void ShowControlBodies(void);
-static void ReportBanner(const char *s);
+static void ReportBannerText(const char *s);
 static void Indent(int i);
 static void ShowDataTypes(void);
 static void ShowBundleTypes(void);
@@ -105,7 +105,7 @@ void ShowContext(void)
         {
             char vbuff[CF_BUFSIZE];
             snprintf(vbuff, CF_BUFSIZE, "Host %s's basic classified context", VFQNAME);
-            ReportBanner(vbuff);
+            ReportBannerText(vbuff);
         }
 
         Writer *writer = FileWriter(stdout);
@@ -179,7 +179,7 @@ void ShowPromisesInReport(const Bundle *bundles, const Body *bodies)
         v = "not specified";
     }
 
-    ReportBanner("Promises");
+    ReportBannerText("Promises");
 
     snprintf(vbuff, CF_BUFSIZE - 1, "Cfengine Site Policy Summary (version %s)", v);
 
@@ -491,7 +491,7 @@ void Banner(const char *s)
 
 /*******************************************************************/
 
-static void ReportBanner(const char *s)
+static void ReportBannerText(const char *s)
 {
     fprintf(FREPORT_TXT, "***********************************************************\n");
     fprintf(FREPORT_TXT, " %s \n", s);

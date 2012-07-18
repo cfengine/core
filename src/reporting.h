@@ -27,16 +27,18 @@
 
 #include "cf3.defs.h"
 
-void ShowContext(void);
 void ShowPromises(const Bundle *bundles, const Body *bodies);
 void ShowPromise(Promise *pp, int indent);
 void ShowScopedVariables(void);
+void ShowPromisesInReport(const Bundle *bundles, const Body *bodies);
+void ShowPromiseInReport(const char *version, const Promise *pp, int indent);
+
+// stdout only
 void SyntaxTree(void);
 void ReportError(char *s);
+void ShowContext(void);
 void BannerSubType(const char *bundlename, const char *type, int p);
 void BannerSubSubType(const char *bundlename, const char *type);
 void Banner(const char *s);
-void ShowPromisesInReport(const Bundle *bundles, const Body *bodies);
-void ShowPromiseInReport(const char *version, const Promise *pp, int indent);
 
 #endif

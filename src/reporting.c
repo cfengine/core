@@ -84,7 +84,6 @@ static void IndentText(int i);
 static void ShowDataTypes(void);
 static void ShowBundleTypes(void);
 static void ShowPromiseTypesFor(const char *s);
-static void ShowBody(const Body *body, int indent);
 static void ShowBodyText(const Body *body, int indent);
 static void ShowBodyHtml(const Body *body, int indent);
 static void ShowBodyParts(const BodySyntax *bs);
@@ -737,12 +736,6 @@ static void ShowBodyHtml(const Body *body, int indent)
                     CFH[cfx_class][cfe]);
         }
     }
-}
-
-static void ShowBody(const Body *body, int indent)
-{
-    ShowBodyText(body, indent);
-    ShowBodyHtml(body, indent);
 }
 
 /*******************************************************************/

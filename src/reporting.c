@@ -80,7 +80,7 @@ char *CFH[][2] =
 
 static void ShowControlBodies(void);
 static void ReportBannerText(const char *s);
-static void Indent(int i);
+static void IndentText(int i);
 static void ShowDataTypes(void);
 static void ShowBundleTypes(void);
 static void ShowPromiseTypesFor(const char *s);
@@ -303,7 +303,7 @@ void ShowPromiseInReport(const char *version, const Promise *pp, int indent)
                 CFH[cfx_object][cfb], pp->promiser, CFH[cfx_object][cfe], pp->bundletype, pp->agentsubtype);
     }
 
-    Indent(indent);
+    IndentText(indent);
     if (pp->promisee.item != NULL)
     {
         fprintf(FREPORT_TXT, "%s promise by \'%s\' -> ", pp->agentsubtype, pp->promiser);
@@ -319,7 +319,7 @@ void ShowPromiseInReport(const char *version, const Promise *pp, int indent)
     for (cp = pp->conlist; cp != NULL; cp = cp->next)
     {
         fprintf(FREPORT_HTML, "%s%s%s => ", CFH[cfx_lval][cfb], cp->lval, CFH[cfx_lval][cfe]);
-        Indent(indent + 3);
+        IndentText(indent + 3);
         fprintf(FREPORT_TXT, "%10s => ", cp->lval);
 
         Policy *policy = PolicyFromPromise(pp);
@@ -367,7 +367,7 @@ void ShowPromiseInReport(const char *version, const Promise *pp, int indent)
 
         if (cp->rval.rtype != CF_FNCALL)
         {
-            Indent(indent);
+            IndentText(indent);
             fprintf(FREPORT_HTML,
                     " , if body <a href=\"#class_context\">context</a> <span class=\"context\">%s</span>\n",
                     cp->classes);
@@ -377,7 +377,7 @@ void ShowPromiseInReport(const char *version, const Promise *pp, int indent)
 
     if (pp->audit)
     {
-        Indent(indent);
+        IndentText(indent);
         fprintf(FREPORT_HTML,
                 "<p><small>Promise (version %s) belongs to bundle <b>%s</b> (type %s) in \'<i>%s</i>\' near line %zu</small></p>\n",
                 version, pp->bundle, pp->bundletype, pp->audit->filename, pp->offset.line);
@@ -388,14 +388,14 @@ void ShowPromiseInReport(const char *version, const Promise *pp, int indent)
 
     if (pp->audit)
     {
-        Indent(indent);
+        IndentText(indent);
         fprintf(FREPORT_TXT, "Promise (version %s) belongs to bundle \'%s\' (type %s) in file \'%s\' near line %zu\n",
                 version, pp->bundle, pp->bundletype, pp->audit->filename, pp->offset.line);
         fprintf(FREPORT_TXT, "\n\n");
     }
     else
     {
-        Indent(indent);
+        IndentText(indent);
         fprintf(FREPORT_TXT, "Promise (version %s) belongs to bundle \'%s\' (type %s) near line %zu\n\n", version,
                 pp->bundle, pp->bundletype, pp->offset.line);
     }
@@ -539,7 +539,7 @@ void BannerSubSubType(const char *bundlename, const char *type)
 
 /*******************************************************************/
 
-static void Indent(int i)
+static void IndentText(int i)
 {
     int j;
 
@@ -551,62 +551,43 @@ static void Indent(int i)
 
 /*******************************************************************/
 
-static void ShowBody(const Body *body, int indent)
+static void ShowBodyText(const Body *body, int indent)
 {
-    Rlist *rp;
-    Constraint *cp;
-
     fprintf(FREPORT_TXT, "%s body for type %s", body->name, body->type);
-    fprintf(FREPORT_HTML, " %s%s%s ", CFH[cfx_blocktype][cfb], body->type, CFH[cfx_blocktype][cfe]);
-
-    fprintf(FREPORT_HTML, "%s%s%s", CFH[cfx_blockid][cfb], body->name, CFH[cfx_blockid][cfe]);
 
     if (body->args == NULL)
     {
-        fprintf(FREPORT_HTML, "%s(no parameters)%s\n", CFH[cfx_args][cfb], CFH[cfx_args][cfe]);
         fprintf(FREPORT_TXT, "(no parameters)\n");
     }
     else
     {
-        fprintf(FREPORT_HTML, "(");
         fprintf(FREPORT_TXT, "\n");
 
-        for (rp = body->args; rp != NULL; rp = rp->next)
+        for (const Rlist *rp = body->args; rp != NULL; rp = rp->next)
         {
             if (rp->type != CF_SCALAR)
             {
                 FatalError("ShowBody - non-scalar parameter container");
             }
 
-            fprintf(FREPORT_HTML, "%s%s%s,\n", CFH[cfx_args][cfb], (char *) rp->item, CFH[cfx_args][cfe]);
-            Indent(indent);
+            IndentText(indent);
             fprintf(FREPORT_TXT, "arg %s\n", (char *) rp->item);
         }
 
-        fprintf(FREPORT_HTML, ")");
         fprintf(FREPORT_TXT, "\n");
     }
 
-    Indent(indent);
+    IndentText(indent);
     fprintf(FREPORT_TXT, "{\n");
 
-    for (cp = body->conlist; cp != NULL; cp = cp->next)
+    for (const Constraint *cp = body->conlist; cp != NULL; cp = cp->next)
     {
-        fprintf(FREPORT_HTML, "%s.....%s%s => ", CFH[cfx_lval][cfb], cp->lval, CFH[cfx_lval][cfe]);
-        Indent(indent);
+        IndentText(indent);
         fprintf(FREPORT_TXT, "%s => ", cp->lval);
-
-        fprintf(FREPORT_HTML, "\'%s", CFH[cfx_rval][cfb]);
-
-        ShowRval(FREPORT_HTML, cp->rval);       /* literal */
         ShowRval(FREPORT_TXT, cp->rval);        /* literal */
-
-        fprintf(FREPORT_HTML, "\'%s", CFH[cfx_rval][cfe]);
 
         if (cp->classes != NULL)
         {
-            fprintf(FREPORT_HTML, " if sub-body context %s%s%s\n", CFH[cfx_class][cfb], cp->classes,
-                    CFH[cfx_class][cfe]);
             fprintf(FREPORT_TXT, " if sub-body context %s\n", cp->classes);
         }
         else
@@ -615,8 +596,59 @@ static void ShowBody(const Body *body, int indent)
         }
     }
 
-    Indent(indent);
+    IndentText(indent);
     fprintf(FREPORT_TXT, "}\n");
+}
+
+static void ShowBodyHtml(const Body *body, int indent)
+{
+    fprintf(FREPORT_HTML, " %s%s%s ", CFH[cfx_blocktype][cfb], body->type, CFH[cfx_blocktype][cfe]);
+
+    fprintf(FREPORT_HTML, "%s%s%s", CFH[cfx_blockid][cfb], body->name, CFH[cfx_blockid][cfe]);
+
+    if (body->args == NULL)
+    {
+        fprintf(FREPORT_HTML, "%s(no parameters)%s\n", CFH[cfx_args][cfb], CFH[cfx_args][cfe]);
+    }
+    else
+    {
+        fprintf(FREPORT_HTML, "(");
+
+        for (const Rlist *rp = body->args; rp != NULL; rp = rp->next)
+        {
+            if (rp->type != CF_SCALAR)
+            {
+                FatalError("ShowBody - non-scalar parameter container");
+            }
+
+            fprintf(FREPORT_HTML, "%s%s%s,\n", CFH[cfx_args][cfb], (char *) rp->item, CFH[cfx_args][cfe]);
+        }
+
+        fprintf(FREPORT_HTML, ")");
+    }
+
+    for (const Constraint *cp = body->conlist; cp != NULL; cp = cp->next)
+    {
+        fprintf(FREPORT_HTML, "%s.....%s%s => ", CFH[cfx_lval][cfb], cp->lval, CFH[cfx_lval][cfe]);
+
+        fprintf(FREPORT_HTML, "\'%s", CFH[cfx_rval][cfb]);
+
+        ShowRval(FREPORT_HTML, cp->rval);       /* literal */
+
+        fprintf(FREPORT_HTML, "\'%s", CFH[cfx_rval][cfe]);
+
+        if (cp->classes != NULL)
+        {
+            fprintf(FREPORT_HTML, " if sub-body context %s%s%s\n", CFH[cfx_class][cfb], cp->classes,
+                    CFH[cfx_class][cfe]);
+        }
+    }
+}
+
+static void ShowBody(const Body *body, int indent)
+{
+    ShowBodyText(body, indent);
+    ShowBodyHtml(body, indent);
 }
 
 /*******************************************************************/

@@ -155,13 +155,22 @@ static void ShowControlBodies()
 
 /*******************************************************************/
 
-void ShowPromises(const Bundle *bundles, const Body *bodies)
+void ShowPromises(ReportOutputType type, const Bundle *bundles, const Body *bodies)
 {
 #if defined(HAVE_NOVA)
     Nova_ShowPromises(bundles, bodies);
 #else
-    ShowPromisesInReportText(bundles, bodies);
-    ShowPromisesInReportHtml(bundles, bodies);
+    switch (type)
+    {
+    case REPORT_OUTPUT_TYPE_HTML:
+        ShowPromisesInReportHtml(bundles, bodies);
+        break;
+
+    default:
+    case REPORT_OUTPUT_TYPE_TEXT:
+        ShowPromisesInReportText(bundles, bodies);
+        break;
+    }
 #endif
 }
 

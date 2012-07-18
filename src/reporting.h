@@ -33,7 +33,7 @@ typedef enum
     REPORT_OUTPUT_TYPE_HTML
 } ReportOutputType;
 
-void ShowPromises(const Bundle *bundles, const Body *bodies);
+void ShowPromises(ReportOutputType type, const Bundle *bundles, const Body *bodies);
 void ShowPromise(ReportOutputType type, const Promise *pp, int indent);
 void ShowScopedVariables(void);
 

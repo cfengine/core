@@ -93,39 +93,39 @@ static void ShowBuiltinFunctions(void);
 /* Generic                                                         */
 /*******************************************************************/
 
-void ShowContext(void)
+void ShowContext()
 {
-    Item *ptr;
-    char vbuff[CF_BUFSIZE];
-    int i;
-
-    /* Text output */
-
-    for (i = 0; i < CF_ALPHABETSIZE; i++)
+    for (int i = 0; i < CF_ALPHABETSIZE; i++)
     {
-        ptr = SortItemListNames(VHEAP.list[i]);
-        VHEAP.list[i] = ptr;
+        VHEAP.list[i] = SortItemListNames(VHEAP.list[i]);
     }
 
     if (VERBOSE || DEBUG)
     {
-        snprintf(vbuff, CF_BUFSIZE, "Host %s's basic classified context", VFQNAME);
-        ReportBanner(vbuff);
-
-        printf("%s>  -> Defined classes = { ", VPREFIX);
-
-        ListAlphaList(stdout, VHEAP, ' ');
-
-        printf("}\n");
-
-        printf("%s>  -> Negated Classes = { ", VPREFIX);
-
-        for (ptr = VNEGHEAP; ptr != NULL; ptr = ptr->next)
         {
-            printf("%s ", ptr->name);
+            char vbuff[CF_BUFSIZE];
+            snprintf(vbuff, CF_BUFSIZE, "Host %s's basic classified context", VFQNAME);
+            ReportBanner(vbuff);
         }
 
-        printf("}\n");
+        Writer *writer = FileWriter(stdout);
+
+        WriterWriteF(writer, "%s>  -> Defined classes = { ", VPREFIX);
+
+        ListAlphaList(writer, VHEAP, ' ');
+
+        WriterWriteF(writer, "}\n");
+
+        WriterWriteF(writer, "%s>  -> Negated Classes = { ", VPREFIX);
+
+        for (const Item *ptr = VNEGHEAP; ptr != NULL; ptr = ptr->next)
+        {
+            WriterWriteF(writer, "%s ", ptr->name);
+        }
+
+        WriterWriteF(writer, "}\n");
+
+        FileWriterDetach(writer);
     }
 }
 

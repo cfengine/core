@@ -1243,7 +1243,7 @@ static int InsertFileAtLocation(Item **start, Item *begin_ptr, Item *end_ptr, It
     char buf[CF_BUFSIZE], exp[CF_EXPANDSIZE];
     int retval = false;
     Item *loc = NULL;
-    int preserve_block = a.sourcetype && strcmp(a.sourcetype, "file") == 0;
+    int preserve_block = a.sourcetype && strcmp(a.sourcetype, "file_preserve_block") == 0;
 
     if ((fin = fopen(pp->promiser, "r")) == NULL)
     {

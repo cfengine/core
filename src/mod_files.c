@@ -98,7 +98,7 @@ static const BodySyntax CF_INSERTSELECT_BODY[] =
 static const BodySyntax CF_INSERTLINES_BODIES[] =
 {
     {"expand_scalars", cf_opts, CF_BOOL, "Expand any unexpanded variables", "false"},
-    {"insert_type", cf_opts, "literal,string,file,file_lines,preserve_block", "Type of object the promiser string refers to",
+    {"insert_type", cf_opts, "literal,string,file,file_preserve_block,preserve_block", "Type of object the promiser string refers to",
      "literal"},
     {"insert_select", cf_body, CF_INSERTSELECT_BODY, "Insert only if lines pass filter criteria"},
     {"location", cf_body, CF_LOCATION_BODY, "Specify where in a file an insertion will be made"},

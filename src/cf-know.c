@@ -46,11 +46,6 @@ static void VerifyOccurrencePromises(Promise *pp);
 static void VerifyInferencePromise(Promise *pp);
 static void WriteKMDB(void);
 static void GenerateManual(void);
-
-static void CfGenerateStories(char *query, enum storytype type);
-static void CfGenerateTestData(int count);
-static void CfRemoveTestData(void);
-static void CfUpdateTestData(void);
 static void ShowSingletons(void);
 static void ShowWords(void);
 static void GenerateXml(void);
@@ -226,11 +221,11 @@ int main(int argc, char *argv[])
           strcpy(TOPIC_CMD, STORY);
           
           printf("Let's start with stories about cause-effect:\n\n");
-          CfGenerateStories(TOPIC_CMD, cfi_cause);
+          Constellation_GenerateStoriesCmdLine(TOPIC_CMD, cfi_cause);
           printf("Now looking for stories about connections between things:\n\n");
-          CfGenerateStories(TOPIC_CMD, cfi_connect);
+          Constellation_GenerateStoriesCmdLine(TOPIC_CMD, cfi_connect);
           printf("Anything about structure:\n\n");
-          CfGenerateStories(TOPIC_CMD, cfi_part);
+          Constellation_GenerateStoriesCmdLine(TOPIC_CMD, cfi_part);
        }
 
        exit(0);
@@ -373,17 +368,30 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
         case 't':
             if (atoi(optarg))
             {
-                CfGenerateTestData(atoi(optarg));
+                #if defined(HAVE_NOVA) && defined(HAVE_LIBMONGOC)
+                Nova_GenerateTestData(atoi(optarg));
+                #else
+                CfOut(cf_error, "", "Option avaliable only in Enterprise edition");
+                #endif
+
                 exit(0);
             }
             break;
 
         case 'r':
-            CfRemoveTestData();
+            #if defined(HAVE_NOVA) && defined(HAVE_LIBMONGOC)
+            Nova_RemoveTestData();
+            #else
+            CfOut(cf_error, "", "Option avaliable only in Enterprise edition");
+            #endif
             exit(0);
 
         case 'u':
-            CfUpdateTestData();
+            #if defined(HAVE_NOVA) && defined(HAVE_LIBMONGOC)
+            Nova_UpdateTestData();
+            #else
+            CfOut(cf_error, "", "Option avaliable only in Enterprise edition");
+            #endif
             exit(0);
 
         case 'T':
@@ -694,42 +702,6 @@ static void KeepKnowledgePromise(Promise *pp)
         VerifyReportPromise(pp);
         return;
     }
-}
-
-/*********************************************************************/
-
-#ifdef HAVE_NOVA
-void CfGenerateStories(char *query, enum storytype type)
-{
-    Constellation_GenerateStoriesCmdLine(query, type);
-}
-#endif
-
-/*********************************************************************/
-
-void CfGenerateTestData(int count)
-{
-#ifdef HAVE_NOVA
-    Nova_GenerateTestData(count);
-#endif
-}
-
-/*********************************************************************/
-
-void CfUpdateTestData(void)
-{
-#ifdef HAVE_NOVA
-    Nova_UpdateTestData();
-#endif
-}
-
-/*********************************************************************/
-
-void CfRemoveTestData(void)
-{
-#ifdef HAVE_NOVA
-    Nova_RemoveTestData();
-#endif
 }
 
 /*********************************************************************/

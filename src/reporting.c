@@ -90,6 +90,8 @@ static void ShowBodyHtml(const Body *body, int indent);
 static void ShowBodyParts(const BodySyntax *bs);
 static void ShowRange(const char *s, enum cfdatatype type);
 static void ShowBuiltinFunctions(void);
+static void ShowPromiseInReportText(const char *version, const Promise *pp, int indent);
+static void ShowPromiseInReportHtml(const char *version, const Promise *pp, int indent);
 
 /*******************************************************************/
 /* Generic                                                         */
@@ -272,7 +274,8 @@ void ShowPromise(Promise *pp, int indent)
 #if defined(HAVE_NOVA)
     Nova_ShowPromise(v, pp, indent);
 #else
-    ShowPromiseInReport(v, pp, indent);
+    ShowPromiseInReportText(v, pp, indent);
+    ShowPromiseInReportHtml(v, pp, indent);
 #endif
 }
 
@@ -450,12 +453,6 @@ static void ShowPromiseInReportHtml(const char *version, const Promise *pp, int 
 
     fprintf(FREPORT_HTML, "%s\n", CFH[cfx_promise][cfe]);
     fprintf(FREPORT_HTML, "%s\n", CFH[cfx_line][cfe]);
-}
-
-void ShowPromiseInReport(const char *version, const Promise *pp, int indent)
-{
-    ShowPromiseInReportText(version, pp, indent);
-    ShowPromiseInReportHtml(version, pp, indent);
 }
 
 /*******************************************************************/

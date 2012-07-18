@@ -27,14 +27,13 @@ TEXI2PDFFLAGS = -I $(TEX_INCLUDEDIR) --batch $(if $(filter-out 0,$(V)),,--quiet)
 	$(AM_V_GEN)$(srcdir)/../tools/texi2pdfclean $^ $(TEXI2PDF) -o $@ $(TEXI2PDFFLAGS)
 
 
-
+if HTML_DOCS
 html: cf3-Reference.html
+endif
 
+if PDF_DOCS
 pdf: cf3-Reference.pdf
-
-all:
-
-install:
+endif
 
 REFDIR=$(DESTDIR)/$(projdocdir)/reference
 
@@ -45,26 +44,22 @@ dist-reference-%: %
 dist-reference: $(addprefix dist-reference-,bodyparts bundletypes control functions promises varcontexts vars)
 	$(INSTALL_DATA) $(filter-out cf3-Reference.texinfo,$(wildcard $(srcdir)/*.texinfo)) $(distdir)
 
+if HTML_DOCS
 install-html: html
 	$(MKDIR_P) $(REFDIR)/html
 	$(INSTALL_DATA) cf3-Reference.html $(REFDIR)/html
 	$(INSTALL_DATA) `$(srcdir)/../tools/extract-images cf3-Reference.texinfo | sort | uniq` $(REFDIR)/html
+endif
 
+if PDF_DOCS
 install-pdf: pdf
 	$(MKDIR_P) $(REFDIR)/pdf
 	$(INSTALL_DATA) cf3-Reference.pdf $(REFDIR)/pdf
-
-if PDF_DOCS
-all: pdf
-install-data-hook: install-pdf
-dist-hook: dist-reference
 endif
 
-if HTML_DOCS
-all: html
-install-data-hook: install-html
+all: html pdf
+install-data-hook: install-html install-pdf
 dist-hook: dist-reference
-endif
 
 EXTRA_DIST = CFEngineFrontPage.pdf NewLogo.pdf filelogic.png generate_manual.cf
 

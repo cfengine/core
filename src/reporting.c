@@ -84,6 +84,7 @@ static void Indent(int i);
 static void ShowDataTypes(void);
 static void ShowBundleTypes(void);
 static void ShowPromiseTypesFor(const char *s);
+static void ShowBody(const Body *body, int indent);
 static void ShowBodyParts(const BodySyntax *bs);
 static void ShowRange(const char *s, enum cfdatatype type);
 static void ShowBuiltinFunctions(void);
@@ -533,7 +534,7 @@ static void Indent(int i)
 
 /*******************************************************************/
 
-void ShowBody(const Body *body, int indent)
+static void ShowBody(const Body *body, int indent)
 {
     Rlist *rp;
     Constraint *cp;

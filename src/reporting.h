@@ -32,7 +32,6 @@ void ShowPromises(const Bundle *bundles, const Body *bodies);
 void ShowPromise(Promise *pp, int indent);
 void ShowScopedVariables(void);
 void SyntaxTree(void);
-void ShowBody(const Body *body, int ident);
 void ReportError(char *s);
 void BannerSubType(const char *bundlename, const char *type, int p);
 void BannerSubSubType(const char *bundlename, const char *type);

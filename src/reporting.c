@@ -223,7 +223,8 @@ void ShowPromisesInReport(const Bundle *bundles, const Body *bodies)
 
             for (pp = sp->promiselist; pp != NULL; pp = pp->next)
             {
-                ShowPromise(pp, 6);
+                ShowPromise(REPORT_OUTPUT_TYPE_TEXT, pp, 6);
+                ShowPromise(REPORT_OUTPUT_TYPE_HTML, pp, 6);
             }
         }
 
@@ -257,7 +258,7 @@ void ShowPromisesInReport(const Bundle *bundles, const Body *bodies)
 
 /*******************************************************************/
 
-void ShowPromise(Promise *pp, int indent)
+void ShowPromise(ReportOutputType type, const Promise *pp, int indent)
 {
     char *v;
     Rval retval;
@@ -274,8 +275,17 @@ void ShowPromise(Promise *pp, int indent)
 #if defined(HAVE_NOVA)
     Nova_ShowPromise(v, pp, indent);
 #else
-    ShowPromiseInReportText(v, pp, indent);
-    ShowPromiseInReportHtml(v, pp, indent);
+    switch (type)
+    {
+    case REPORT_OUTPUT_TYPE_HTML:
+        ShowPromiseInReportHtml(v, pp, indent);
+        break;
+
+    default:
+    case REPORT_OUTPUT_TYPE_TEXT:
+        ShowPromiseInReportText(v, pp, indent);
+        break;
+    }
 #endif
 }
 

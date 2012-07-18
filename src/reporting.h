@@ -27,8 +27,14 @@
 
 #include "cf3.defs.h"
 
+typedef enum
+{
+    REPORT_OUTPUT_TYPE_TEXT,
+    REPORT_OUTPUT_TYPE_HTML
+} ReportOutputType;
+
 void ShowPromises(const Bundle *bundles, const Body *bodies);
-void ShowPromise(Promise *pp, int indent);
+void ShowPromise(ReportOutputType type, const Promise *pp, int indent);
 void ShowScopedVariables(void);
 void ShowPromisesInReport(const Bundle *bundles, const Body *bodies);
 

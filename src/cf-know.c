@@ -182,10 +182,10 @@ int main(int argc, char *argv[])
 
     KeepKnowControlPromises(policy);
 
+    #if defined(HAVE_NOVA) && defined(HAVE_LIBMONGOC)
+
     if (BGOALS)
     {
-#ifdef HAVE_NOVA
-# ifdef HAVE_LIBMONGOC
     char buffer[CF_BUFSIZE], *sp, name[CF_BUFSIZE],desc[CF_BUFSIZE], *end;
     
     Nova_GetUniqueBusinessGoals(buffer, CF_BUFSIZE);
@@ -202,13 +202,10 @@ int main(int argc, char *argv[])
        printf("%s => %s\n",name,desc);
        }
     return 0;
-#endif
-#endif    
     }
     
     if (strlen(STORY) > 0)
     {
-#ifdef HAVE_NOVA    
        if (strncmp(STORY, "SHA=", 4) == 0)
        {
           char buffer[CF_BUFSIZE];
@@ -229,18 +226,14 @@ int main(int argc, char *argv[])
        }
 
        exit(0);
-#endif
     }
     else if (strlen(FINDTOPIC) > 0)
     {
-#ifdef HAVE_NOVA
-# ifdef HAVE_LIBMONGOC
-         Nova_ShowTopic(FINDTOPIC);
-# endif
-         exit(0);
-#endif    
+        Nova_ShowTopic(FINDTOPIC);
+        exit(0);
     }
-    
+#endif
+
     if (GENERATE_XML)
     {
         GenerateXml();

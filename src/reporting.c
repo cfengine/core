@@ -92,6 +92,8 @@ static void ShowRange(const char *s, enum cfdatatype type);
 static void ShowBuiltinFunctions(void);
 static void ShowPromiseInReportText(const char *version, const Promise *pp, int indent);
 static void ShowPromiseInReportHtml(const char *version, const Promise *pp, int indent);
+static void ShowPromisesInReportText(const Bundle *bundles, const Body *bodies);
+static void ShowPromisesInReportHtml(const Bundle *bundles, const Body *bodies);
 
 /*******************************************************************/
 /* Generic                                                         */
@@ -159,35 +161,75 @@ void ShowPromises(const Bundle *bundles, const Body *bodies)
 #if defined(HAVE_NOVA)
     Nova_ShowPromises(bundles, bodies);
 #else
-    ShowPromisesInReport(bundles, bodies);
+    ShowPromisesInReportText(bundles, bodies);
+    ShowPromisesInReportHtml(bundles, bodies);
 #endif
 }
 
 /*******************************************************************/
 
-void ShowPromisesInReport(const Bundle *bundles, const Body *bodies)
+static void ShowPromisesInReportText(const Bundle *bundles, const Body *bodies)
 {
-    Rval retval;
-    char *v;
-    char vbuff[CF_BUFSIZE];
-    Rlist *rp;
-    SubType *sp;
-    Promise *pp;
-
-    if (GetVariable("control_common", "version", &retval) != cf_notype)
-    {
-        v = (char *) retval.item;
-    }
-    else
-    {
-        v = "not specified";
-    }
-
     ReportBannerText("Promises");
 
-    snprintf(vbuff, CF_BUFSIZE - 1, "Cfengine Site Policy Summary (version %s)", v);
+    for (const Bundle *bp = bundles; bp != NULL; bp = bp->next)
+    {
+        fprintf(FREPORT_TXT, "Bundle %s in the context of %s\n\n", bp->name, bp->type);
+        fprintf(FREPORT_TXT, "   ARGS:\n\n");
 
-    CfHtmlHeader(FREPORT_HTML, vbuff, STYLESHEET, WEBDRIVER, BANNER);
+        for (const Rlist *rp = bp->args; rp != NULL; rp = rp->next)
+        {
+            fprintf(FREPORT_TXT, "   scalar arg %s\n\n", (char *) rp->item);
+        }
+
+        fprintf(FREPORT_TXT, "   {\n");
+
+        for (const SubType *sp = bp->subtypes; sp != NULL; sp = sp->next)
+        {
+            fprintf(FREPORT_TXT, "   TYPE: %s\n\n", sp->name);
+
+            for (const Promise *pp = sp->promiselist; pp != NULL; pp = pp->next)
+            {
+                ShowPromise(REPORT_OUTPUT_TYPE_TEXT, pp, 6);
+            }
+        }
+
+        fprintf(FREPORT_TXT, "   }\n");
+        fprintf(FREPORT_TXT, "\n\n");
+    }
+
+/* Now summarize the remaining bodies */
+
+    fprintf(FREPORT_TXT, "\n\nAll Bodies\n\n");
+
+    for (const Body *bdp = bodies; bdp != NULL; bdp = bdp->next)
+    {
+        ShowBodyText(bdp, 3);
+
+        fprintf(FREPORT_TXT, "\n");
+    }
+}
+
+static void ShowPromisesInReportHtml(const Bundle *bundles, const Body *bodies)
+{
+    {
+        Rval retval;
+        char *v;
+        char vbuff[CF_BUFSIZE];
+
+        if (GetVariable("control_common", "version", &retval) != cf_notype)
+        {
+            v = (char *) retval.item;
+        }
+        else
+        {
+            v = "not specified";
+        }
+
+        snprintf(vbuff, CF_BUFSIZE - 1, "Cfengine Site Policy Summary (version %s)", v);
+
+        CfHtmlHeader(FREPORT_HTML, vbuff, STYLESHEET, WEBDRIVER, BANNER);
+    }
 
     fprintf(FREPORT_HTML, "<p>");
 
@@ -200,36 +242,26 @@ void ShowPromisesInReport(const Bundle *bundles, const Body *bodies)
 
         fprintf(FREPORT_HTML, " %s ARGS:%s\n\n", CFH[cfx_line][cfb], CFH[cfx_line][cfe]);
 
-        fprintf(FREPORT_TXT, "Bundle %s in the context of %s\n\n", bp->name, bp->type);
-        fprintf(FREPORT_TXT, "   ARGS:\n\n");
-
-        for (rp = bp->args; rp != NULL; rp = rp->next)
+        for (const Rlist *rp = bp->args; rp != NULL; rp = rp->next)
         {
             fprintf(FREPORT_HTML, "%s", CFH[cfx_line][cfb]);
             fprintf(FREPORT_HTML, "   scalar arg %s%s%s\n", CFH[cfx_args][cfb], (char *) rp->item, CFH[cfx_args][cfe]);
             fprintf(FREPORT_HTML, "%s", CFH[cfx_line][cfe]);
-
-            fprintf(FREPORT_TXT, "   scalar arg %s\n\n", (char *) rp->item);
         }
 
-        fprintf(FREPORT_TXT, "   {\n");
         fprintf(FREPORT_HTML, "%s", CFH[cfx_promise][cfb]);
 
-        for (sp = bp->subtypes; sp != NULL; sp = sp->next)
+        for (const SubType *sp = bp->subtypes; sp != NULL; sp = sp->next)
         {
             fprintf(FREPORT_HTML, "%s", CFH[cfx_line][cfb]);
             fprintf(FREPORT_HTML, "%s", CFH[cfx_line][cfe]);
-            fprintf(FREPORT_TXT, "   TYPE: %s\n\n", sp->name);
 
-            for (pp = sp->promiselist; pp != NULL; pp = pp->next)
+            for (const Promise *pp = sp->promiselist; pp != NULL; pp = pp->next)
             {
-                ShowPromise(REPORT_OUTPUT_TYPE_TEXT, pp, 6);
                 ShowPromise(REPORT_OUTPUT_TYPE_HTML, pp, 6);
             }
         }
 
-        fprintf(FREPORT_TXT, "   }\n");
-        fprintf(FREPORT_TXT, "\n\n");
         fprintf(FREPORT_HTML, "%s\n", CFH[cfx_promise][cfe]);
         fprintf(FREPORT_HTML, "%s\n", CFH[cfx_line][cfe]);
         fprintf(FREPORT_HTML, "%s\n", CFH[cfx_bundle][cfe]);
@@ -238,16 +270,14 @@ void ShowPromisesInReport(const Bundle *bundles, const Body *bodies)
 /* Now summarize the remaining bodies */
 
     fprintf(FREPORT_HTML, "<h1>All Bodies</h1>");
-    fprintf(FREPORT_TXT, "\n\nAll Bodies\n\n");
 
     for (const Body *bdp = bodies; bdp != NULL; bdp = bdp->next)
     {
         fprintf(FREPORT_HTML, "%s%s\n", CFH[cfx_line][cfb], CFH[cfx_block][cfb]);
         fprintf(FREPORT_HTML, "%s\n", CFH[cfx_promise][cfb]);
 
-        ShowBody(bdp, 3);
+        ShowBodyHtml(bdp, 3);
 
-        fprintf(FREPORT_TXT, "\n");
         fprintf(FREPORT_HTML, "%s\n", CFH[cfx_promise][cfe]);
         fprintf(FREPORT_HTML, "%s%s \n ", CFH[cfx_block][cfe], CFH[cfx_line][cfe]);
         fprintf(FREPORT_HTML, "</p>");

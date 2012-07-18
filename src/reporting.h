@@ -27,7 +27,6 @@
 
 #include "cf3.defs.h"
 
-void ShowAllReservedWords(void);
 void ShowContext(void);
 void ShowPromises(const Bundle *bundles, const Body *bodies);
 void ShowPromise(Promise *pp, int indent);

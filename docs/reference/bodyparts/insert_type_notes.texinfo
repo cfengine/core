@@ -11,7 +11,7 @@ break up multiple lines into individual, non-ordered objects, so that
 the block of text will be preserved. Even if some of the lines in the block
 already exist, they will be added again as a coherent block. Thus if
 you suspect that some stray / conflicting lines might be present they
-should be cleaned up with @cocde{delete_lines} first. 
+should be cleaned up with @code{delete_lines} first. 
 
 The value @code{file} is used to tell CFEngine that the string is
 non-literal and should be interpreted as a filename from which to

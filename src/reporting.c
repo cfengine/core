@@ -93,7 +93,7 @@ static void ShowBuiltinFunctions(void);
 /* Generic                                                         */
 /*******************************************************************/
 
-void ShowContext()
+void ShowContext(void)
 {
     for (int i = 0; i < CF_ALPHABETSIZE; i++)
     {
@@ -403,7 +403,7 @@ void ShowPromiseInReport(const char *version, const Promise *pp, int indent)
 
 /*******************************************************************/
 
-static void PrintVariablesInScope(FILE *fp, Scope *scope)
+static void PrintVariablesInScope(FILE *fp, const Scope *scope)
 {
     HashIterator i = HashIteratorInit(scope->hashtable);
     CfAssoc *assoc;
@@ -418,7 +418,7 @@ static void PrintVariablesInScope(FILE *fp, Scope *scope)
 
 /*******************************************************************/
 
-static void PrintVariablesInScopeHtml(FILE *fp, Scope *scope)
+static void PrintVariablesInScopeHtml(FILE *fp, const Scope *scope)
 {
     HashIterator i = HashIteratorInit(scope->hashtable);
     CfAssoc *assoc;
@@ -439,14 +439,26 @@ static void PrintVariablesInScopeHtml(FILE *fp, Scope *scope)
 
 /*******************************************************************/
 
-void ShowScopedVariables()
-/* WARNING: Not thread safe (access to VSCOPE) */
+static void ShowScopedVariablesText()
 {
-    Scope *ptr;
+    for (const Scope *ptr = VSCOPE; ptr != NULL; ptr = ptr->next)
+    {
+        if (strcmp(ptr->scope, "this") == 0)
+        {
+            continue;
+        }
 
+        fprintf(FREPORT_TXT, "\nScope %s:\n", ptr->scope);
+
+        PrintVariablesInScope(FREPORT_TXT, ptr);
+    }
+}
+
+static void ShowScopedVariablesHtml()
+{
     fprintf(FREPORT_HTML, "<div id=\"showvars\">");
 
-    for (ptr = VSCOPE; ptr != NULL; ptr = ptr->next)
+    for (const Scope *ptr = VSCOPE; ptr != NULL; ptr = ptr->next)
     {
         if (strcmp(ptr->scope, "this") == 0)
         {
@@ -454,13 +466,18 @@ void ShowScopedVariables()
         }
 
         fprintf(FREPORT_HTML, "<h4>\nScope %s:<h4>", ptr->scope);
-        fprintf(FREPORT_TXT, "\nScope %s:\n", ptr->scope);
 
-        PrintVariablesInScope(FREPORT_TXT, ptr);
         PrintVariablesInScopeHtml(FREPORT_HTML, ptr);
     }
 
     fprintf(FREPORT_HTML, "</div>");
+}
+
+void ShowScopedVariables()
+/* WARNING: Not thread safe (access to VSCOPE) */
+{
+    ShowScopedVariablesText();
+    ShowScopedVariablesHtml();
 }
 
 /*******************************************************************/

@@ -85,6 +85,8 @@ static void ShowDataTypes(void);
 static void ShowBundleTypes(void);
 static void ShowPromiseTypesFor(const char *s);
 static void ShowBody(const Body *body, int indent);
+static void ShowBodyText(const Body *body, int indent);
+static void ShowBodyHtml(const Body *body, int indent);
 static void ShowBodyParts(const BodySyntax *bs);
 static void ShowRange(const char *s, enum cfdatatype type);
 static void ShowBuiltinFunctions(void);
@@ -276,13 +278,94 @@ void ShowPromise(Promise *pp, int indent)
 
 /*******************************************************************/
 
-void ShowPromiseInReport(const char *version, const Promise *pp, int indent)
+static void ShowPromiseInReportText(const char *version, const Promise *pp, int indent)
 {
-    Constraint *cp;
-    Body *bp;
-    Rlist *rp;
-    FnCall *fp;
+    IndentText(indent);
+    if (pp->promisee.item != NULL)
+    {
+        fprintf(FREPORT_TXT, "%s promise by \'%s\' -> ", pp->agentsubtype, pp->promiser);
+        ShowRval(FREPORT_TXT, pp->promisee);
+        fprintf(FREPORT_TXT, " if context is %s\n\n", pp->classes);
+    }
+    else
+    {
+        fprintf(FREPORT_TXT, "%s promise by \'%s\' (implicit) if context is %s\n\n", pp->agentsubtype, pp->promiser,
+                pp->classes);
+    }
 
+    for (const Constraint *cp = pp->conlist; cp != NULL; cp = cp->next)
+    {
+        IndentText(indent + 3);
+        fprintf(FREPORT_TXT, "%10s => ", cp->lval);
+
+        Policy *policy = PolicyFromPromise(pp);
+
+        const Body *bp = NULL;
+        switch (cp->rval.rtype)
+        {
+        case CF_SCALAR:
+            if ((bp = IsBody(policy->bodies, pp->namespace, (char *) cp->rval.item)))
+            {
+                ShowBodyText(bp, 15);
+            }
+            else
+            {
+                ShowRval(FREPORT_TXT, cp->rval);        /* literal */
+            }
+            break;
+
+        case CF_LIST:
+            {
+                const Rlist *rp = (Rlist *) cp->rval.item;
+                ShowRlist(FREPORT_TXT, rp);
+                break;
+            }
+
+        case CF_FNCALL:
+            {
+                const FnCall *fp = (FnCall *) cp->rval.item;
+
+                if ((bp = IsBody(policy->bodies, pp->namespace, fp->name)))
+                {
+                    ShowBodyText(bp, 15);
+                }
+                else
+                {
+                    ShowRval(FREPORT_TXT, cp->rval);        /* literal */
+                }
+                break;
+            }
+        }
+
+        if (cp->rval.rtype != CF_FNCALL)
+        {
+            IndentText(indent);
+            fprintf(FREPORT_TXT, " if body context %s\n", cp->classes);
+        }
+    }
+
+    if (pp->audit)
+    {
+        IndentText(indent);
+    }
+
+    if (pp->audit)
+    {
+        IndentText(indent);
+        fprintf(FREPORT_TXT, "Promise (version %s) belongs to bundle \'%s\' (type %s) in file \'%s\' near line %zu\n",
+                version, pp->bundle, pp->bundletype, pp->audit->filename, pp->offset.line);
+        fprintf(FREPORT_TXT, "\n\n");
+    }
+    else
+    {
+        IndentText(indent);
+        fprintf(FREPORT_TXT, "Promise (version %s) belongs to bundle \'%s\' (type %s) near line %zu\n\n", version,
+                pp->bundle, pp->bundletype, pp->offset.line);
+    }
+}
+
+static void ShowPromiseInReportHtml(const char *version, const Promise *pp, int indent)
+{
     fprintf(FREPORT_HTML, "%s\n", CFH[cfx_line][cfb]);
     fprintf(FREPORT_HTML, "%s\n", CFH[cfx_promise][cfb]);
     fprintf(FREPORT_HTML, "Promise type is %s%s%s, ", CFH[cfx_subtype][cfb], pp->agentsubtype, CFH[cfx_subtype][cfe]);
@@ -303,81 +386,63 @@ void ShowPromiseInReport(const char *version, const Promise *pp, int indent)
                 CFH[cfx_object][cfb], pp->promiser, CFH[cfx_object][cfe], pp->bundletype, pp->agentsubtype);
     }
 
-    IndentText(indent);
-    if (pp->promisee.item != NULL)
-    {
-        fprintf(FREPORT_TXT, "%s promise by \'%s\' -> ", pp->agentsubtype, pp->promiser);
-        ShowRval(FREPORT_TXT, pp->promisee);
-        fprintf(FREPORT_TXT, " if context is %s\n\n", pp->classes);
-    }
-    else
-    {
-        fprintf(FREPORT_TXT, "%s promise by \'%s\' (implicit) if context is %s\n\n", pp->agentsubtype, pp->promiser,
-                pp->classes);
-    }
-
-    for (cp = pp->conlist; cp != NULL; cp = cp->next)
+    for (const Constraint *cp = pp->conlist; cp != NULL; cp = cp->next)
     {
         fprintf(FREPORT_HTML, "%s%s%s => ", CFH[cfx_lval][cfb], cp->lval, CFH[cfx_lval][cfe]);
-        IndentText(indent + 3);
-        fprintf(FREPORT_TXT, "%10s => ", cp->lval);
 
         Policy *policy = PolicyFromPromise(pp);
 
+        const Body *bp = NULL;
         switch (cp->rval.rtype)
         {
         case CF_SCALAR:
             if ((bp = IsBody(policy->bodies, pp->namespace, (char *) cp->rval.item)))
             {
-                ShowBody(bp, 15);
+                ShowBodyHtml(bp, 15);
             }
             else
             {
                 fprintf(FREPORT_HTML, "%s", CFH[cfx_rval][cfb]);
                 ShowRval(FREPORT_HTML, cp->rval);       /* literal */
                 fprintf(FREPORT_HTML, "%s", CFH[cfx_rval][cfe]);
-
-                ShowRval(FREPORT_TXT, cp->rval);        /* literal */
             }
             break;
 
         case CF_LIST:
-
-            rp = (Rlist *) cp->rval.item;
-            fprintf(FREPORT_HTML, "%s", CFH[cfx_rval][cfb]);
-            ShowRlist(FREPORT_HTML, rp);
-            fprintf(FREPORT_HTML, "%s", CFH[cfx_rval][cfe]);
-            ShowRlist(FREPORT_TXT, rp);
-            break;
+            {
+                const Rlist *rp = (Rlist *) cp->rval.item;
+                fprintf(FREPORT_HTML, "%s", CFH[cfx_rval][cfb]);
+                ShowRlist(FREPORT_HTML, rp);
+                fprintf(FREPORT_HTML, "%s", CFH[cfx_rval][cfe]);
+                break;
+            }
 
         case CF_FNCALL:
-            fp = (FnCall *) cp->rval.item;
+            {
+                const FnCall *fp = (FnCall *) cp->rval.item;
 
-            if ((bp = IsBody(policy->bodies, pp->namespace, fp->name)))
-            {
-                ShowBody(bp, 15);
+                if ((bp = IsBody(policy->bodies, pp->namespace, fp->name)))
+                {
+                    ShowBodyHtml(bp, 15);
+                }
+                else
+                {
+                    ShowRval(FREPORT_HTML, cp->rval);       /* literal */
+                }
+                break;
             }
-            else
-            {
-                ShowRval(FREPORT_HTML, cp->rval);       /* literal */
-                ShowRval(FREPORT_TXT, cp->rval);        /* literal */
-            }
-            break;
         }
 
         if (cp->rval.rtype != CF_FNCALL)
         {
-            IndentText(indent);
             fprintf(FREPORT_HTML,
                     " , if body <a href=\"#class_context\">context</a> <span class=\"context\">%s</span>\n",
                     cp->classes);
-            fprintf(FREPORT_TXT, " if body context %s\n", cp->classes);
         }
     }
 
     if (pp->audit)
     {
-        IndentText(indent);
         fprintf(FREPORT_HTML,
                 "<p><small>Promise (version %s) belongs to bundle <b>%s</b> (type %s) in \'<i>%s</i>\' near line %zu</small></p>\n",
                 version, pp->bundle, pp->bundletype, pp->audit->filename, pp->offset.line);
@@ -385,20 +450,12 @@ void ShowPromiseInReport(const char *version, const Promise *pp, int indent)
 
     fprintf(FREPORT_HTML, "%s\n", CFH[cfx_promise][cfe]);
     fprintf(FREPORT_HTML, "%s\n", CFH[cfx_line][cfe]);
+}
 
-    if (pp->audit)
-    {
-        IndentText(indent);
-        fprintf(FREPORT_TXT, "Promise (version %s) belongs to bundle \'%s\' (type %s) in file \'%s\' near line %zu\n",
-                version, pp->bundle, pp->bundletype, pp->audit->filename, pp->offset.line);
-        fprintf(FREPORT_TXT, "\n\n");
-    }
-    else
-    {
-        IndentText(indent);
-        fprintf(FREPORT_TXT, "Promise (version %s) belongs to bundle \'%s\' (type %s) near line %zu\n\n", version,
-                pp->bundle, pp->bundletype, pp->offset.line);
-    }
+void ShowPromiseInReport(const char *version, const Promise *pp, int indent)
+{
+    ShowPromiseInReportText(version, pp, indent);
+    ShowPromiseInReportHtml(version, pp, indent);
 }
 
 /*******************************************************************/

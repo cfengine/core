@@ -575,11 +575,20 @@ static void ShowScopedVariablesHtml()
     fprintf(FREPORT_HTML, "</div>");
 }
 
-void ShowScopedVariables()
+void ShowScopedVariables(ReportOutputType type)
 /* WARNING: Not thread safe (access to VSCOPE) */
 {
-    ShowScopedVariablesText();
-    ShowScopedVariablesHtml();
+    switch (type)
+    {
+    case REPORT_OUTPUT_TYPE_HTML:
+        ShowScopedVariablesHtml();
+        break;
+
+    default:
+    case REPORT_OUTPUT_TYPE_TEXT:
+        ShowScopedVariablesText();
+        break;
+    }
 }
 
 /*******************************************************************/

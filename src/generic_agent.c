@@ -437,7 +437,8 @@ Policy *ReadPromises(enum cfagenttype ag, char *agents, GenericAgentConfig confi
 
     if (ag != cf_common)
     {
-        ShowScopedVariables();
+        ShowScopedVariables(REPORT_OUTPUT_TYPE_TEXT);
+        ShowScopedVariables(REPORT_OUTPUT_TYPE_HTML);
     }
 
     fprintf(FREPORT_HTML, "</div>\n");

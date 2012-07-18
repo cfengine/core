@@ -47,9 +47,7 @@ static void VerifyInferencePromise(Promise *pp);
 static void WriteKMDB(void);
 static void GenerateManual(void);
 
-#ifdef HAVE_CONSTELLATION
 static void CfGenerateStories(char *query, enum storytype type);
-#endif
 static void CfGenerateTestData(int count);
 static void CfRemoveTestData(void);
 static void CfUpdateTestData(void);
@@ -215,7 +213,7 @@ int main(int argc, char *argv[])
     
     if (strlen(STORY) > 0)
     {
-#ifdef HAVE_CONSTELLATION
+#ifdef HAVE_NOVA    
        if (strncmp(STORY, "SHA=", 4) == 0)
        {
           char buffer[CF_BUFSIZE];
@@ -234,9 +232,9 @@ int main(int argc, char *argv[])
           printf("Anything about structure:\n\n");
           CfGenerateStories(TOPIC_CMD, cfi_part);
        }
-#endif
+
        exit(0);
-            
+#endif
     }
     else if (strlen(FINDTOPIC) > 0)
     {
@@ -700,7 +698,7 @@ static void KeepKnowledgePromise(Promise *pp)
 
 /*********************************************************************/
 
-#ifdef HAVE_CONSTELLATION
+#ifdef HAVE_NOVA
 void CfGenerateStories(char *query, enum storytype type)
 {
     Constellation_GenerateStoriesCmdLine(query, type);

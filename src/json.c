@@ -471,6 +471,25 @@ void JsonObjectRemoveKey(JsonElement *object, const char *key)
     }
 }
 
+JsonElement *JsonObjectDetachKey(JsonElement *object, const char *key)
+{
+    assert(object);
+    assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
+    assert(key);
+
+    JsonElement *detached = NULL;
+
+    size_t index = JsonElementIndexInParentObject(object, key);
+    if (index != -1)
+    {
+        detached = SequenceLookup(object->container.children, key, JsonElementHasProperty);
+        SequenceSoftRemove(object->container.children, index);
+    }
+
+    return detached;
+}
+
 const char *JsonObjectGetAsString(JsonElement *object, const char *key)
 {
     assert(object);

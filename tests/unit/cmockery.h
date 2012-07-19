@@ -271,8 +271,16 @@
  *     return run_tests(tests);
  * }
  */
-# define run_tests(tests) _run_tests(tests, sizeof(tests) / sizeof(tests)[0])
+# define run_tests(tests) _run_tests(tests, sizeof(tests) / sizeof(tests)[0], __FILE__)
 
+/*
+// XML init and print
+# define vinit_xml(format, args) _vinit_xml(__File__, format, args)
+# define vprint_xml(format, args) _vprint_xml(__FILE__, format, args)
+# define init_xml(format, ...) _init_xml(__FILE__, format, ...)
+# define print_xml(format, ...) _print_xml(__FILE__, format, ...)
+*/
+ 
 // Dynamic allocators
 # define test_malloc(size) _test_malloc(size, __FILE__, __LINE__)
 # define test_calloc(num, size) _test_calloc(num, size, __FILE__, __LINE__)
@@ -446,7 +454,17 @@ void _test_free(void *const ptr, const char *file, const int line);
 void _fail(const char *const file, const int line) FUNC_ATTR_NORETURN;
      int _run_test(const char *const function_name, const UnitTestFunction Function,
                    void **const state, const UnitTestFunctionType function_type, const void *const heap_check_point);
-     int _run_tests(const UnitTest *const tests, const size_t number_of_tests);
+     int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const char *file);
+
+// XML init and output
+    void vinit_xml (const char *file, const char *const format, va_list args);
+    void vprint_xml(const char *file, const char *const format, va_list args);
+    void init_xml (const char *file, const char *const format, ...);
+    void print_xml(const char *file, const char *const format, ...);
+//    void init_xml (const char *file, const char *const format, ...);
+//    void print_xml(char *file, const char *const format, ...);
+
+
 
 // Standard output and error print methods.
      void print_message(const char *const format, ...);

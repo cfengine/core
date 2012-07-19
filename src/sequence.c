@@ -189,3 +189,26 @@ void SequenceSort(Sequence *seq, SequenceItemComparator Compare)
 {
     QuickSortRecursive(seq->data, seq->length, Compare, 0);
 }
+
+void SequenceSoftRemoveRange(Sequence *seq, size_t start, size_t end)
+{
+    assert(seq);
+    assert(start >= 0);
+    assert(end < seq->length);
+    assert(start <= end);
+
+    size_t rest_len = seq->length - end - 1;
+
+    if (rest_len > 0)
+    {
+        memmove(seq->data + start, seq->data + end + 1, sizeof(void *) * rest_len);
+    }
+
+    seq->length -= end - start + 1;
+}
+
+void SequenceSoftRemove(Sequence *seq, size_t index)
+{
+    SequenceSoftRemoveRange(seq, index, index);
+}
+

@@ -111,4 +111,17 @@ void SequenceRemove(Sequence *seq, size_t index);
   */
 void SequenceSort(Sequence *seq, SequenceItemComparator compare);
 
+/**
+  @brief Remove an inclusive range of item handles in the Sequence. A single item may be removed by specifiying start = end.
+  @param seq [in] The Sequence to remove from.
+  @param start [in] Index of the first element to remove
+  @param end [in] Index of the last element to remove.
+ */
+void SequenceSoftRemoveRange(Sequence *seq, size_t start, size_t end);
+
+/**
+  @brief Remove a single item handle from the sequence
+  */
+void SequenceSoftRemove(Sequence *seq, size_t index);
+
 #endif

@@ -79,15 +79,20 @@ char *CFH[][2] =
 /* Prototypes */
 
 static void ShowControlBodies(void);
-static void ReportBanner(const char *s);
-static void Indent(int i);
+static void ReportBannerText(const char *s);
+static void IndentText(int i);
 static void ShowDataTypes(void);
 static void ShowBundleTypes(void);
 static void ShowPromiseTypesFor(const char *s);
-static void ShowBody(const Body *body, int indent);
+static void ShowBodyText(const Body *body, int indent);
+static void ShowBodyHtml(const Body *body, int indent);
 static void ShowBodyParts(const BodySyntax *bs);
 static void ShowRange(const char *s, enum cfdatatype type);
 static void ShowBuiltinFunctions(void);
+static void ShowPromiseInReportText(const char *version, const Promise *pp, int indent);
+static void ShowPromiseInReportHtml(const char *version, const Promise *pp, int indent);
+static void ShowPromisesInReportText(const Bundle *bundles, const Body *bodies);
+static void ShowPromisesInReportHtml(const Bundle *bundles, const Body *bodies);
 
 /*******************************************************************/
 /* Generic                                                         */
@@ -95,37 +100,37 @@ static void ShowBuiltinFunctions(void);
 
 void ShowContext(void)
 {
-    Item *ptr;
-    char vbuff[CF_BUFSIZE];
-    int i;
-
-    /* Text output */
-
-    for (i = 0; i < CF_ALPHABETSIZE; i++)
+    for (int i = 0; i < CF_ALPHABETSIZE; i++)
     {
-        ptr = SortItemListNames(VHEAP.list[i]);
-        VHEAP.list[i] = ptr;
+        VHEAP.list[i] = SortItemListNames(VHEAP.list[i]);
     }
 
     if (VERBOSE || DEBUG)
     {
-        snprintf(vbuff, CF_BUFSIZE, "Host %s's basic classified context", VFQNAME);
-        ReportBanner(vbuff);
-
-        printf("%s>  -> Defined classes = { ", VPREFIX);
-
-        ListAlphaList(stdout, VHEAP, ' ');
-
-        printf("}\n");
-
-        printf("%s>  -> Negated Classes = { ", VPREFIX);
-
-        for (ptr = VNEGHEAP; ptr != NULL; ptr = ptr->next)
         {
-            printf("%s ", ptr->name);
+            char vbuff[CF_BUFSIZE];
+            snprintf(vbuff, CF_BUFSIZE, "Host %s's basic classified context", VFQNAME);
+            ReportBannerText(vbuff);
         }
 
-        printf("}\n");
+        Writer *writer = FileWriter(stdout);
+
+        WriterWriteF(writer, "%s>  -> Defined classes = { ", VPREFIX);
+
+        ListAlphaList(writer, VHEAP, ' ');
+
+        WriterWriteF(writer, "}\n");
+
+        WriterWriteF(writer, "%s>  -> Negated Classes = { ", VPREFIX);
+
+        for (const Item *ptr = VNEGHEAP; ptr != NULL; ptr = ptr->next)
+        {
+            WriterWriteF(writer, "%s ", ptr->name);
+        }
+
+        WriterWriteF(writer, "}\n");
+
+        FileWriterDetach(writer);
     }
 }
 
@@ -150,40 +155,89 @@ static void ShowControlBodies()
 
 /*******************************************************************/
 
-void ShowPromises(const Bundle *bundles, const Body *bodies)
+void ShowPromises(ReportOutputType type, const Bundle *bundles, const Body *bodies)
 {
 #if defined(HAVE_NOVA)
     Nova_ShowPromises(bundles, bodies);
 #else
-    ShowPromisesInReport(bundles, bodies);
+    switch (type)
+    {
+    case REPORT_OUTPUT_TYPE_HTML:
+        ShowPromisesInReportHtml(bundles, bodies);
+        break;
+
+    default:
+    case REPORT_OUTPUT_TYPE_TEXT:
+        ShowPromisesInReportText(bundles, bodies);
+        break;
+    }
 #endif
 }
 
 /*******************************************************************/
 
-void ShowPromisesInReport(const Bundle *bundles, const Body *bodies)
+static void ShowPromisesInReportText(const Bundle *bundles, const Body *bodies)
 {
-    Rval retval;
-    char *v;
-    char vbuff[CF_BUFSIZE];
-    Rlist *rp;
-    SubType *sp;
-    Promise *pp;
+    ReportBannerText("Promises");
 
-    if (GetVariable("control_common", "version", &retval) != cf_notype)
+    for (const Bundle *bp = bundles; bp != NULL; bp = bp->next)
     {
-        v = (char *) retval.item;
+        fprintf(FREPORT_TXT, "Bundle %s in the context of %s\n\n", bp->name, bp->type);
+        fprintf(FREPORT_TXT, "   ARGS:\n\n");
+
+        for (const Rlist *rp = bp->args; rp != NULL; rp = rp->next)
+        {
+            fprintf(FREPORT_TXT, "   scalar arg %s\n\n", (char *) rp->item);
+        }
+
+        fprintf(FREPORT_TXT, "   {\n");
+
+        for (const SubType *sp = bp->subtypes; sp != NULL; sp = sp->next)
+        {
+            fprintf(FREPORT_TXT, "   TYPE: %s\n\n", sp->name);
+
+            for (const Promise *pp = sp->promiselist; pp != NULL; pp = pp->next)
+            {
+                ShowPromise(REPORT_OUTPUT_TYPE_TEXT, pp, 6);
+            }
+        }
+
+        fprintf(FREPORT_TXT, "   }\n");
+        fprintf(FREPORT_TXT, "\n\n");
     }
-    else
+
+/* Now summarize the remaining bodies */
+
+    fprintf(FREPORT_TXT, "\n\nAll Bodies\n\n");
+
+    for (const Body *bdp = bodies; bdp != NULL; bdp = bdp->next)
     {
-        v = "not specified";
+        ShowBodyText(bdp, 3);
+
+        fprintf(FREPORT_TXT, "\n");
     }
+}
 
-    ReportBanner("Promises");
+static void ShowPromisesInReportHtml(const Bundle *bundles, const Body *bodies)
+{
+    {
+        Rval retval;
+        char *v;
+        char vbuff[CF_BUFSIZE];
 
-    snprintf(vbuff, CF_BUFSIZE - 1, "Cfengine Site Policy Summary (version %s)", v);
+        if (GetVariable("control_common", "version", &retval) != cf_notype)
+        {
+            v = (char *) retval.item;
+        }
+        else
+        {
+            v = "not specified";
+        }
 
-    CfHtmlHeader(FREPORT_HTML, vbuff, STYLESHEET, WEBDRIVER, BANNER);
+        snprintf(vbuff, CF_BUFSIZE - 1, "Cfengine Site Policy Summary (version %s)", v);
+
+        CfHtmlHeader(FREPORT_HTML, vbuff, STYLESHEET, WEBDRIVER, BANNER);
+    }
 
     fprintf(FREPORT_HTML, "<p>");
 
@@ -196,35 +250,26 @@ void ShowPromisesInReport(const Bundle *bundles, const Body *bodies)
 
         fprintf(FREPORT_HTML, " %s ARGS:%s\n\n", CFH[cfx_line][cfb], CFH[cfx_line][cfe]);
 
-        fprintf(FREPORT_TXT, "Bundle %s in the context of %s\n\n", bp->name, bp->type);
-        fprintf(FREPORT_TXT, "   ARGS:\n\n");
-
-        for (rp = bp->args; rp != NULL; rp = rp->next)
+        for (const Rlist *rp = bp->args; rp != NULL; rp = rp->next)
         {
             fprintf(FREPORT_HTML, "%s", CFH[cfx_line][cfb]);
             fprintf(FREPORT_HTML, "   scalar arg %s%s%s\n", CFH[cfx_args][cfb], (char *) rp->item, CFH[cfx_args][cfe]);
             fprintf(FREPORT_HTML, "%s", CFH[cfx_line][cfe]);
-
-            fprintf(FREPORT_TXT, "   scalar arg %s\n\n", (char *) rp->item);
         }
 
-        fprintf(FREPORT_TXT, "   {\n");
         fprintf(FREPORT_HTML, "%s", CFH[cfx_promise][cfb]);
 
-        for (sp = bp->subtypes; sp != NULL; sp = sp->next)
+        for (const SubType *sp = bp->subtypes; sp != NULL; sp = sp->next)
         {
             fprintf(FREPORT_HTML, "%s", CFH[cfx_line][cfb]);
             fprintf(FREPORT_HTML, "%s", CFH[cfx_line][cfe]);
-            fprintf(FREPORT_TXT, "   TYPE: %s\n\n", sp->name);
 
-            for (pp = sp->promiselist; pp != NULL; pp = pp->next)
+            for (const Promise *pp = sp->promiselist; pp != NULL; pp = pp->next)
             {
-                ShowPromise(pp, 6);
+                ShowPromise(REPORT_OUTPUT_TYPE_HTML, pp, 6);
             }
         }
 
-        fprintf(FREPORT_TXT, "   }\n");
-        fprintf(FREPORT_TXT, "\n\n");
         fprintf(FREPORT_HTML, "%s\n", CFH[cfx_promise][cfe]);
         fprintf(FREPORT_HTML, "%s\n", CFH[cfx_line][cfe]);
         fprintf(FREPORT_HTML, "%s\n", CFH[cfx_bundle][cfe]);
@@ -233,16 +278,14 @@ void ShowPromisesInReport(const Bundle *bundles, const Body *bodies)
 /* Now summarize the remaining bodies */
 
     fprintf(FREPORT_HTML, "<h1>All Bodies</h1>");
-    fprintf(FREPORT_TXT, "\n\nAll Bodies\n\n");
 
     for (const Body *bdp = bodies; bdp != NULL; bdp = bdp->next)
     {
         fprintf(FREPORT_HTML, "%s%s\n", CFH[cfx_line][cfb], CFH[cfx_block][cfb]);
         fprintf(FREPORT_HTML, "%s\n", CFH[cfx_promise][cfb]);
 
-        ShowBody(bdp, 3);
+        ShowBodyHtml(bdp, 3);
 
-        fprintf(FREPORT_TXT, "\n");
         fprintf(FREPORT_HTML, "%s\n", CFH[cfx_promise][cfe]);
         fprintf(FREPORT_HTML, "%s%s \n ", CFH[cfx_block][cfe], CFH[cfx_line][cfe]);
         fprintf(FREPORT_HTML, "</p>");
@@ -253,7 +296,7 @@ void ShowPromisesInReport(const Bundle *bundles, const Body *bodies)
 
 /*******************************************************************/
 
-void ShowPromise(Promise *pp, int indent)
+void ShowPromise(ReportOutputType type, const Promise *pp, int indent)
 {
     char *v;
     Rval retval;
@@ -270,19 +313,110 @@ void ShowPromise(Promise *pp, int indent)
 #if defined(HAVE_NOVA)
     Nova_ShowPromise(v, pp, indent);
 #else
-    ShowPromiseInReport(v, pp, indent);
+    switch (type)
+    {
+    case REPORT_OUTPUT_TYPE_HTML:
+        ShowPromiseInReportHtml(v, pp, indent);
+        break;
+
+    default:
+    case REPORT_OUTPUT_TYPE_TEXT:
+        ShowPromiseInReportText(v, pp, indent);
+        break;
+    }
 #endif
 }
 
 /*******************************************************************/
 
-void ShowPromiseInReport(const char *version, const Promise *pp, int indent)
+static void ShowPromiseInReportText(const char *version, const Promise *pp, int indent)
 {
-    Constraint *cp;
-    Body *bp;
-    Rlist *rp;
-    FnCall *fp;
+    IndentText(indent);
+    if (pp->promisee.item != NULL)
+    {
+        fprintf(FREPORT_TXT, "%s promise by \'%s\' -> ", pp->agentsubtype, pp->promiser);
+        ShowRval(FREPORT_TXT, pp->promisee);
+        fprintf(FREPORT_TXT, " if context is %s\n\n", pp->classes);
+    }
+    else
+    {
+        fprintf(FREPORT_TXT, "%s promise by \'%s\' (implicit) if context is %s\n\n", pp->agentsubtype, pp->promiser,
+                pp->classes);
+    }
 
+    for (const Constraint *cp = pp->conlist; cp != NULL; cp = cp->next)
+    {
+        IndentText(indent + 3);
+        fprintf(FREPORT_TXT, "%10s => ", cp->lval);
+
+        Policy *policy = PolicyFromPromise(pp);
+
+        const Body *bp = NULL;
+        switch (cp->rval.rtype)
+        {
+        case CF_SCALAR:
+            if ((bp = IsBody(policy->bodies, pp->namespace, (char *) cp->rval.item)))
+            {
+                ShowBodyText(bp, 15);
+            }
+            else
+            {
+                ShowRval(FREPORT_TXT, cp->rval);        /* literal */
+            }
+            break;
+
+        case CF_LIST:
+            {
+                const Rlist *rp = (Rlist *) cp->rval.item;
+                ShowRlist(FREPORT_TXT, rp);
+                break;
+            }
+
+        case CF_FNCALL:
+            {
+                const FnCall *fp = (FnCall *) cp->rval.item;
+
+                if ((bp = IsBody(policy->bodies, pp->namespace, fp->name)))
+                {
+                    ShowBodyText(bp, 15);
+                }
+                else
+                {
+                    ShowRval(FREPORT_TXT, cp->rval);        /* literal */
+                }
+                break;
+            }
+        }
+
+        if (cp->rval.rtype != CF_FNCALL)
+        {
+            IndentText(indent);
+            fprintf(FREPORT_TXT, " if body context %s\n", cp->classes);
+        }
+    }
+
+    if (pp->audit)
+    {
+        IndentText(indent);
+    }
+
+    if (pp->audit)
+    {
+        IndentText(indent);
+        fprintf(FREPORT_TXT, "Promise (version %s) belongs to bundle \'%s\' (type %s) in file \'%s\' near line %zu\n",
+                version, pp->bundle, pp->bundletype, pp->audit->filename, pp->offset.line);
+        fprintf(FREPORT_TXT, "\n\n");
+    }
+    else
+    {
+        IndentText(indent);
+        fprintf(FREPORT_TXT, "Promise (version %s) belongs to bundle \'%s\' (type %s) near line %zu\n\n", version,
+                pp->bundle, pp->bundletype, pp->offset.line);
+    }
+}
+
+static void ShowPromiseInReportHtml(const char *version, const Promise *pp, int indent)
+{
     fprintf(FREPORT_HTML, "%s\n", CFH[cfx_line][cfb]);
     fprintf(FREPORT_HTML, "%s\n", CFH[cfx_promise][cfb]);
     fprintf(FREPORT_HTML, "Promise type is %s%s%s, ", CFH[cfx_subtype][cfb], pp->agentsubtype, CFH[cfx_subtype][cfe]);
@@ -303,81 +437,63 @@ void ShowPromiseInReport(const char *version, const Promise *pp, int indent)
                 CFH[cfx_object][cfb], pp->promiser, CFH[cfx_object][cfe], pp->bundletype, pp->agentsubtype);
     }
 
-    Indent(indent);
-    if (pp->promisee.item != NULL)
-    {
-        fprintf(FREPORT_TXT, "%s promise by \'%s\' -> ", pp->agentsubtype, pp->promiser);
-        ShowRval(FREPORT_TXT, pp->promisee);
-        fprintf(FREPORT_TXT, " if context is %s\n\n", pp->classes);
-    }
-    else
-    {
-        fprintf(FREPORT_TXT, "%s promise by \'%s\' (implicit) if context is %s\n\n", pp->agentsubtype, pp->promiser,
-                pp->classes);
-    }
-
-    for (cp = pp->conlist; cp != NULL; cp = cp->next)
+    for (const Constraint *cp = pp->conlist; cp != NULL; cp = cp->next)
     {
         fprintf(FREPORT_HTML, "%s%s%s => ", CFH[cfx_lval][cfb], cp->lval, CFH[cfx_lval][cfe]);
-        Indent(indent + 3);
-        fprintf(FREPORT_TXT, "%10s => ", cp->lval);
 
         Policy *policy = PolicyFromPromise(pp);
 
+        const Body *bp = NULL;
         switch (cp->rval.rtype)
         {
         case CF_SCALAR:
             if ((bp = IsBody(policy->bodies, pp->namespace, (char *) cp->rval.item)))
             {
-                ShowBody(bp, 15);
+                ShowBodyHtml(bp, 15);
             }
             else
             {
                 fprintf(FREPORT_HTML, "%s", CFH[cfx_rval][cfb]);
                 ShowRval(FREPORT_HTML, cp->rval);       /* literal */
                 fprintf(FREPORT_HTML, "%s", CFH[cfx_rval][cfe]);
-
-                ShowRval(FREPORT_TXT, cp->rval);        /* literal */
             }
             break;
 
         case CF_LIST:
-
-            rp = (Rlist *) cp->rval.item;
-            fprintf(FREPORT_HTML, "%s", CFH[cfx_rval][cfb]);
-            ShowRlist(FREPORT_HTML, rp);
-            fprintf(FREPORT_HTML, "%s", CFH[cfx_rval][cfe]);
-            ShowRlist(FREPORT_TXT, rp);
-            break;
+            {
+                const Rlist *rp = (Rlist *) cp->rval.item;
+                fprintf(FREPORT_HTML, "%s", CFH[cfx_rval][cfb]);
+                ShowRlist(FREPORT_HTML, rp);
+                fprintf(FREPORT_HTML, "%s", CFH[cfx_rval][cfe]);
+                break;
+            }
 
         case CF_FNCALL:
-            fp = (FnCall *) cp->rval.item;
+            {
+                const FnCall *fp = (FnCall *) cp->rval.item;
 
-            if ((bp = IsBody(policy->bodies, pp->namespace, fp->name)))
-            {
-                ShowBody(bp, 15);
+                if ((bp = IsBody(policy->bodies, pp->namespace, fp->name)))
+                {
+                    ShowBodyHtml(bp, 15);
+                }
+                else
+                {
+                    ShowRval(FREPORT_HTML, cp->rval);       /* literal */
+                }
+                break;
             }
-            else
-            {
-                ShowRval(FREPORT_HTML, cp->rval);       /* literal */
-                ShowRval(FREPORT_TXT, cp->rval);        /* literal */
-            }
-            break;
         }
 
         if (cp->rval.rtype != CF_FNCALL)
         {
-            Indent(indent);
             fprintf(FREPORT_HTML,
                     " , if body <a href=\"#class_context\">context</a> <span class=\"context\">%s</span>\n",
                     cp->classes);
-            fprintf(FREPORT_TXT, " if body context %s\n", cp->classes);
         }
     }
 
     if (pp->audit)
     {
-        Indent(indent);
         fprintf(FREPORT_HTML,
                 "<p><small>Promise (version %s) belongs to bundle <b>%s</b> (type %s) in \'<i>%s</i>\' near line %zu</small></p>\n",
                 version, pp->bundle, pp->bundletype, pp->audit->filename, pp->offset.line);
@@ -385,25 +501,11 @@ void ShowPromiseInReport(const char *version, const Promise *pp, int indent)
 
     fprintf(FREPORT_HTML, "%s\n", CFH[cfx_promise][cfe]);
     fprintf(FREPORT_HTML, "%s\n", CFH[cfx_line][cfe]);
-
-    if (pp->audit)
-    {
-        Indent(indent);
-        fprintf(FREPORT_TXT, "Promise (version %s) belongs to bundle \'%s\' (type %s) in file \'%s\' near line %zu\n",
-                version, pp->bundle, pp->bundletype, pp->audit->filename, pp->offset.line);
-        fprintf(FREPORT_TXT, "\n\n");
-    }
-    else
-    {
-        Indent(indent);
-        fprintf(FREPORT_TXT, "Promise (version %s) belongs to bundle \'%s\' (type %s) near line %zu\n\n", version,
-                pp->bundle, pp->bundletype, pp->offset.line);
-    }
 }
 
 /*******************************************************************/
 
-static void PrintVariablesInScope(FILE *fp, Scope *scope)
+static void PrintVariablesInScope(FILE *fp, const Scope *scope)
 {
     HashIterator i = HashIteratorInit(scope->hashtable);
     CfAssoc *assoc;
@@ -418,7 +520,7 @@ static void PrintVariablesInScope(FILE *fp, Scope *scope)
 
 /*******************************************************************/
 
-static void PrintVariablesInScopeHtml(FILE *fp, Scope *scope)
+static void PrintVariablesInScopeHtml(FILE *fp, const Scope *scope)
 {
     HashIterator i = HashIteratorInit(scope->hashtable);
     CfAssoc *assoc;
@@ -439,14 +541,26 @@ static void PrintVariablesInScopeHtml(FILE *fp, Scope *scope)
 
 /*******************************************************************/
 
-void ShowScopedVariables()
-/* WARNING: Not thread safe (access to VSCOPE) */
+static void ShowScopedVariablesText()
 {
-    Scope *ptr;
+    for (const Scope *ptr = VSCOPE; ptr != NULL; ptr = ptr->next)
+    {
+        if (strcmp(ptr->scope, "this") == 0)
+        {
+            continue;
+        }
 
+        fprintf(FREPORT_TXT, "\nScope %s:\n", ptr->scope);
+
+        PrintVariablesInScope(FREPORT_TXT, ptr);
+    }
+}
+
+static void ShowScopedVariablesHtml()
+{
     fprintf(FREPORT_HTML, "<div id=\"showvars\">");
 
-    for (ptr = VSCOPE; ptr != NULL; ptr = ptr->next)
+    for (const Scope *ptr = VSCOPE; ptr != NULL; ptr = ptr->next)
     {
         if (strcmp(ptr->scope, "this") == 0)
         {
@@ -454,13 +568,27 @@ void ShowScopedVariables()
         }
 
         fprintf(FREPORT_HTML, "<h4>\nScope %s:<h4>", ptr->scope);
-        fprintf(FREPORT_TXT, "\nScope %s:\n", ptr->scope);
 
-        PrintVariablesInScope(FREPORT_TXT, ptr);
         PrintVariablesInScopeHtml(FREPORT_HTML, ptr);
     }
 
     fprintf(FREPORT_HTML, "</div>");
+}
+
+void ShowScopedVariables(ReportOutputType type)
+/* WARNING: Not thread safe (access to VSCOPE) */
+{
+    switch (type)
+    {
+    case REPORT_OUTPUT_TYPE_HTML:
+        ShowScopedVariablesHtml();
+        break;
+
+    default:
+    case REPORT_OUTPUT_TYPE_TEXT:
+        ShowScopedVariablesText();
+        break;
+    }
 }
 
 /*******************************************************************/
@@ -474,7 +602,7 @@ void Banner(const char *s)
 
 /*******************************************************************/
 
-static void ReportBanner(const char *s)
+static void ReportBannerText(const char *s)
 {
     fprintf(FREPORT_TXT, "***********************************************************\n");
     fprintf(FREPORT_TXT, " %s \n", s);
@@ -522,7 +650,7 @@ void BannerSubSubType(const char *bundlename, const char *type)
 
 /*******************************************************************/
 
-static void Indent(int i)
+static void IndentText(int i)
 {
     int j;
 
@@ -534,62 +662,43 @@ static void Indent(int i)
 
 /*******************************************************************/
 
-static void ShowBody(const Body *body, int indent)
+static void ShowBodyText(const Body *body, int indent)
 {
-    Rlist *rp;
-    Constraint *cp;
-
     fprintf(FREPORT_TXT, "%s body for type %s", body->name, body->type);
-    fprintf(FREPORT_HTML, " %s%s%s ", CFH[cfx_blocktype][cfb], body->type, CFH[cfx_blocktype][cfe]);
-
-    fprintf(FREPORT_HTML, "%s%s%s", CFH[cfx_blockid][cfb], body->name, CFH[cfx_blockid][cfe]);
 
     if (body->args == NULL)
     {
-        fprintf(FREPORT_HTML, "%s(no parameters)%s\n", CFH[cfx_args][cfb], CFH[cfx_args][cfe]);
         fprintf(FREPORT_TXT, "(no parameters)\n");
     }
     else
     {
-        fprintf(FREPORT_HTML, "(");
         fprintf(FREPORT_TXT, "\n");
 
-        for (rp = body->args; rp != NULL; rp = rp->next)
+        for (const Rlist *rp = body->args; rp != NULL; rp = rp->next)
         {
             if (rp->type != CF_SCALAR)
             {
                 FatalError("ShowBody - non-scalar parameter container");
             }
 
-            fprintf(FREPORT_HTML, "%s%s%s,\n", CFH[cfx_args][cfb], (char *) rp->item, CFH[cfx_args][cfe]);
-            Indent(indent);
+            IndentText(indent);
             fprintf(FREPORT_TXT, "arg %s\n", (char *) rp->item);
         }
 
-        fprintf(FREPORT_HTML, ")");
         fprintf(FREPORT_TXT, "\n");
     }
 
-    Indent(indent);
+    IndentText(indent);
     fprintf(FREPORT_TXT, "{\n");
 
-    for (cp = body->conlist; cp != NULL; cp = cp->next)
+    for (const Constraint *cp = body->conlist; cp != NULL; cp = cp->next)
     {
-        fprintf(FREPORT_HTML, "%s.....%s%s => ", CFH[cfx_lval][cfb], cp->lval, CFH[cfx_lval][cfe]);
-        Indent(indent);
+        IndentText(indent);
         fprintf(FREPORT_TXT, "%s => ", cp->lval);
-
-        fprintf(FREPORT_HTML, "\'%s", CFH[cfx_rval][cfb]);
-
-        ShowRval(FREPORT_HTML, cp->rval);       /* literal */
         ShowRval(FREPORT_TXT, cp->rval);        /* literal */
-
-        fprintf(FREPORT_HTML, "\'%s", CFH[cfx_rval][cfe]);
 
         if (cp->classes != NULL)
         {
-            fprintf(FREPORT_HTML, " if sub-body context %s%s%s\n", CFH[cfx_class][cfb], cp->classes,
-                    CFH[cfx_class][cfe]);
             fprintf(FREPORT_TXT, " if sub-body context %s\n", cp->classes);
         }
         else
@@ -598,8 +707,53 @@ static void ShowBody(const Body *body, int indent)
         }
     }
 
-    Indent(indent);
+    IndentText(indent);
     fprintf(FREPORT_TXT, "}\n");
+}
+
+static void ShowBodyHtml(const Body *body, int indent)
+{
+    fprintf(FREPORT_HTML, " %s%s%s ", CFH[cfx_blocktype][cfb], body->type, CFH[cfx_blocktype][cfe]);
+
+    fprintf(FREPORT_HTML, "%s%s%s", CFH[cfx_blockid][cfb], body->name, CFH[cfx_blockid][cfe]);
+
+    if (body->args == NULL)
+    {
+        fprintf(FREPORT_HTML, "%s(no parameters)%s\n", CFH[cfx_args][cfb], CFH[cfx_args][cfe]);
+    }
+    else
+    {
+        fprintf(FREPORT_HTML, "(");
+
+        for (const Rlist *rp = body->args; rp != NULL; rp = rp->next)
+        {
+            if (rp->type != CF_SCALAR)
+            {
+                FatalError("ShowBody - non-scalar parameter container");
+            }
+
+            fprintf(FREPORT_HTML, "%s%s%s,\n", CFH[cfx_args][cfb], (char *) rp->item, CFH[cfx_args][cfe]);
+        }
+
+        fprintf(FREPORT_HTML, ")");
+    }
+
+    for (const Constraint *cp = body->conlist; cp != NULL; cp = cp->next)
+    {
+        fprintf(FREPORT_HTML, "%s.....%s%s => ", CFH[cfx_lval][cfb], cp->lval, CFH[cfx_lval][cfe]);
+
+        fprintf(FREPORT_HTML, "\'%s", CFH[cfx_rval][cfb]);
+
+        ShowRval(FREPORT_HTML, cp->rval);       /* literal */
+
+        fprintf(FREPORT_HTML, "\'%s", CFH[cfx_rval][cfe]);
+
+        if (cp->classes != NULL)
+        {
+            fprintf(FREPORT_HTML, " if sub-body context %s%s%s\n", CFH[cfx_class][cfb], cp->classes,
+                    CFH[cfx_class][cfe]);
+        }
+    }
 }
 
 /*******************************************************************/

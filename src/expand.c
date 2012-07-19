@@ -717,7 +717,8 @@ void ExpandPromiseAndDo(enum cfagenttype agent, const char *scopeid, Promise *pp
         switch (agent)
         {
         case cf_common:
-            ShowPromise(pexp, 6);
+            ShowPromise(REPORT_OUTPUT_TYPE_TEXT, pexp, 6);
+            ShowPromise(REPORT_OUTPUT_TYPE_HTML, pexp, 6);
             ReCheckAllConstraints(pexp);
             break;
 

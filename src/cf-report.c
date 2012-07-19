@@ -37,7 +37,12 @@
 #include "syntax.h"
 #include "item_lib.h"
 #include "conversion.h"
+
+#ifdef HAVE_NOVA
+#include "nova-reporting.h"
+#else
 #include "reporting.h"
+#endif
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);

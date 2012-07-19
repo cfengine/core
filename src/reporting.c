@@ -32,6 +32,10 @@
 #include "item_lib.h"
 #include "sort.h"
 
+#ifdef HAVE_NOVA
+#include "nova-reporting.h"
+#endif
+
 char *CFX[][2] =
 {
     {"<head>", "</head>"},
@@ -158,7 +162,7 @@ static void ShowControlBodies()
 void ShowPromises(ReportOutputType type, const Bundle *bundles, const Body *bodies)
 {
 #if defined(HAVE_NOVA)
-    Nova_ShowPromises(bundles, bodies);
+    Nova_ShowPromises(type, bundles, bodies);
 #else
     switch (type)
     {
@@ -294,6 +298,19 @@ static void ShowPromisesInReportHtml(const Bundle *bundles, const Body *bodies)
     CfHtmlFooter(FREPORT_HTML, FOOTER);
 }
 
+void ShowPromisesInReport(ReportOutputType type, const Bundle *bundles, const Body *bodies)
+{
+    switch (type)
+    {
+    case REPORT_OUTPUT_TYPE_HTML:
+        return ShowPromisesInReportHtml(bundles, bodies);
+
+    default:
+    case REPORT_OUTPUT_TYPE_TEXT:
+        return ShowPromisesInReportText(bundles, bodies);
+    }
+}
+
 /*******************************************************************/
 
 void ShowPromise(ReportOutputType type, const Promise *pp, int indent)
@@ -311,7 +328,7 @@ void ShowPromise(ReportOutputType type, const Promise *pp, int indent)
     }
 
 #if defined(HAVE_NOVA)
-    Nova_ShowPromise(v, pp, indent);
+    Nova_ShowPromise(type, v, pp, indent);
 #else
     switch (type)
     {
@@ -501,6 +518,19 @@ static void ShowPromiseInReportHtml(const char *version, const Promise *pp, int 
 
     fprintf(FREPORT_HTML, "%s\n", CFH[cfx_promise][cfe]);
     fprintf(FREPORT_HTML, "%s\n", CFH[cfx_line][cfe]);
+}
+
+void ShowPromiseInReport(ReportOutputType type, const char *version, const Promise *pp, int indent)
+{
+    switch (type)
+    {
+    case REPORT_OUTPUT_TYPE_HTML:
+        return ShowPromiseInReportHtml(version, pp, indent);
+
+    default:
+    case REPORT_OUTPUT_TYPE_TEXT:
+        return ShowPromiseInReportText(version, pp, indent);
+    }
 }
 
 /*******************************************************************/

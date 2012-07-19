@@ -36,6 +36,8 @@ typedef enum
 void ShowPromises(ReportOutputType type, const Bundle *bundles, const Body *bodies);
 void ShowPromise(ReportOutputType type, const Promise *pp, int indent);
 void ShowScopedVariables(ReportOutputType type);
+void ShowPromiseInReport(ReportOutputType type, const char *version, const Promise *pp, int indent);
+void ShowPromisesInReport(ReportOutputType type, const Bundle *bundles, const Body *bodies);
 
 // stdout only
 void SyntaxTree(void);

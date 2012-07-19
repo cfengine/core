@@ -33,7 +33,12 @@
 #include "item_lib.h"
 #include "vars.h"
 #include "conversion.h"
+
+#ifdef HAVE_NOVA
+#include "nova-reporting.h"
+#else
 #include "reporting.h"
+#endif
 
 extern int PR_KEPT;
 extern int PR_REPAIRED;

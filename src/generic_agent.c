@@ -37,7 +37,12 @@
 #include "vars.h"
 #include "syntax.h"
 #include "conversion.h"
+
+#ifdef HAVE_NOVA
+#include "nova-reporting.h"
+#else
 #include "reporting.h"
+#endif
 
 extern char *CFH[][2];
 

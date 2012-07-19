@@ -168,8 +168,9 @@ int getnetgrent(char **machinep, char **userp, char **domainp)
 
 #ifndef HAVE_ENDNETGRENT
 
-void endnetgrent(void)
+int endnetgrent(void)
 {
+    return 1;
 }
 
 #endif

@@ -370,7 +370,7 @@ int setnetgrent(const char *netgroup);
 #endif
 
 #if !HAVE_DECL_ENDNETGRENT
-int endnetgrent();
+int endnetgrent(void);
 #endif
 
 #ifndef HAVE_UNAME

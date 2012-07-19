@@ -3,6 +3,7 @@
 	Bugfixes:
 
 	- Fixed cf-execd memory leak on hosts with cf-monitord running.
+	- Robustify against wrongly-sized entires in embedded databases.
 
 	Standard library:
 

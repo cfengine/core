@@ -290,4 +290,11 @@ JsonElement *JsonParse(const char **data);
   */
 void JsonObjectRemoveKey(JsonElement *object, const char *key);
 
+/**
+  @brief Detach json element ownership from parent object;
+  @param object containing the key property
+  @param property name to be detached
+  */
+JsonElement *JsonObjectDetachKey(JsonElement *object, const char *key);
+
 #endif

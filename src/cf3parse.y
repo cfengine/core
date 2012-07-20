@@ -35,6 +35,7 @@
 
 extern char *yytext;
 
+static void DebugBanner(const char *s);
 static void fatal_yyerror(const char *s);
 
 static bool INSTALL_SKIP = false;
@@ -708,4 +709,11 @@ static void fatal_yyerror(const char *s)
     }
 
     FatalError("%s: %d,%d: Fatal error during parsing: %s, near token \'%.20s\'\n", P.filename, P.line_no, P.line_pos, s, sp ? sp : "NULL");
+}
+
+static void DebugBanner(const char *s)
+{
+    CfDebug("----------------------------------------------------------------\n");
+    CfDebug("  %s                                                            \n", s);
+    CfDebug("----------------------------------------------------------------\n");
 }

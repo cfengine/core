@@ -33,6 +33,7 @@
 #include "item_lib.h"
 #include "sort.h"
 #include "conversion.h"
+#include "reporting.h"
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);
@@ -45,13 +46,6 @@ static void VerifyOccurrencePromises(Promise *pp);
 static void VerifyInferencePromise(Promise *pp);
 static void WriteKMDB(void);
 static void GenerateManual(void);
-
-#ifdef HAVE_CONSTELLATION
-static void CfGenerateStories(char *query, enum storytype type);
-#endif
-static void CfGenerateTestData(int count);
-static void CfRemoveTestData(void);
-static void CfUpdateTestData(void);
 static void ShowSingletons(void);
 static void ShowWords(void);
 static void GenerateXml(void);
@@ -188,10 +182,10 @@ int main(int argc, char *argv[])
 
     KeepKnowControlPromises(policy);
 
+    #if defined(HAVE_NOVA) && defined(HAVE_LIBMONGOC)
+
     if (BGOALS)
     {
-#ifdef HAVE_NOVA
-# ifdef HAVE_LIBMONGOC
     char buffer[CF_BUFSIZE], *sp, name[CF_BUFSIZE],desc[CF_BUFSIZE], *end;
     
     Nova_GetUniqueBusinessGoals(buffer, CF_BUFSIZE);
@@ -208,13 +202,10 @@ int main(int argc, char *argv[])
        printf("%s => %s\n",name,desc);
        }
     return 0;
-#endif
-#endif    
     }
     
     if (strlen(STORY) > 0)
     {
-#ifdef HAVE_CONSTELLATION
        if (strncmp(STORY, "SHA=", 4) == 0)
        {
           char buffer[CF_BUFSIZE];
@@ -227,26 +218,22 @@ int main(int argc, char *argv[])
           strcpy(TOPIC_CMD, STORY);
           
           printf("Let's start with stories about cause-effect:\n\n");
-          CfGenerateStories(TOPIC_CMD, cfi_cause);
+          Constellation_GenerateStoriesCmdLine(TOPIC_CMD, cfi_cause);
           printf("Now looking for stories about connections between things:\n\n");
-          CfGenerateStories(TOPIC_CMD, cfi_connect);
+          Constellation_GenerateStoriesCmdLine(TOPIC_CMD, cfi_connect);
           printf("Anything about structure:\n\n");
-          CfGenerateStories(TOPIC_CMD, cfi_part);
+          Constellation_GenerateStoriesCmdLine(TOPIC_CMD, cfi_part);
        }
-#endif
+
        exit(0);
-            
     }
     else if (strlen(FINDTOPIC) > 0)
     {
-#ifdef HAVE_NOVA
-# ifdef HAVE_LIBMONGOC
-         Nova_ShowTopic(FINDTOPIC);
-# endif
-         exit(0);
-#endif    
+        Nova_ShowTopic(FINDTOPIC);
+        exit(0);
     }
-    
+#endif
+
     if (GENERATE_XML)
     {
         GenerateXml();
@@ -374,17 +361,30 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
         case 't':
             if (atoi(optarg))
             {
-                CfGenerateTestData(atoi(optarg));
+                #if defined(HAVE_NOVA) && defined(HAVE_LIBMONGOC)
+                Nova_GenerateTestData(atoi(optarg));
+                #else
+                CfOut(cf_error, "", "Option avaliable only in Enterprise edition");
+                #endif
+
                 exit(0);
             }
             break;
 
         case 'r':
-            CfRemoveTestData();
+            #if defined(HAVE_NOVA) && defined(HAVE_LIBMONGOC)
+            Nova_RemoveTestData();
+            #else
+            CfOut(cf_error, "", "Option avaliable only in Enterprise edition");
+            #endif
             exit(0);
 
         case 'u':
-            CfUpdateTestData();
+            #if defined(HAVE_NOVA) && defined(HAVE_LIBMONGOC)
+            Nova_UpdateTestData();
+            #else
+            CfOut(cf_error, "", "Option avaliable only in Enterprise edition");
+            #endif
             exit(0);
 
         case 'T':
@@ -695,42 +695,6 @@ static void KeepKnowledgePromise(Promise *pp)
         VerifyReportPromise(pp);
         return;
     }
-}
-
-/*********************************************************************/
-
-#ifdef HAVE_CONSTELLATION
-void CfGenerateStories(char *query, enum storytype type)
-{
-    Constellation_GenerateStoriesCmdLine(query, type);
-}
-#endif
-
-/*********************************************************************/
-
-void CfGenerateTestData(int count)
-{
-#ifdef HAVE_NOVA
-    Nova_GenerateTestData(count);
-#endif
-}
-
-/*********************************************************************/
-
-void CfUpdateTestData(void)
-{
-#ifdef HAVE_NOVA
-    Nova_UpdateTestData();
-#endif
-}
-
-/*********************************************************************/
-
-void CfRemoveTestData(void)
-{
-#ifdef HAVE_NOVA
-    Nova_RemoveTestData();
-#endif
 }
 
 /*********************************************************************/

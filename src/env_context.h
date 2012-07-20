@@ -28,6 +28,7 @@
 #include "cf3.defs.h"
 
 #include "alphalist.h"
+#include "writer.h"
 
 /**
   The global heap
@@ -86,6 +87,6 @@ bool IsTimeClass(const char *sp);
 void SaveClassEnvironment(void);
 void DeleteAllClasses(const Rlist *list);
 void AddAllClasses(const Rlist *list, int persist, enum statepolicy policy);
-void ListAlphaList(FILE *fp, AlphaList al, char sep);
+void ListAlphaList(Writer *writer, AlphaList al, char sep);
 
 #endif

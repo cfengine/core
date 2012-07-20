@@ -22,41 +22,29 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_WRITER_H
-#define CFENGINE_WRITER_H
-
-/*
- * Abstract "writer".
- *
- * Writes passed data either to
- *   passed FILE*, or
- *   memory buffer
- */
-
-typedef struct Writer_ Writer;
+#ifndef CFENGINE_REPORTING_H
+#define CFENGINE_REPORTING_H
 
 #include "cf3.defs.h"
-#include "compiler.h"
 
-Writer *FileWriter(FILE *);
-Writer *StringWriter(void);
+typedef enum
+{
+    REPORT_OUTPUT_TYPE_TEXT,
+    REPORT_OUTPUT_TYPE_HTML
+} ReportOutputType;
 
-size_t WriterWriteF(Writer *writer, const char *fmt, ...) FUNC_ATTR_FORMAT(printf, 2, 3);
-size_t WriterWriteVF(Writer *writer, const char *fmt, va_list ap) FUNC_ATTR_FORMAT(printf, 2, 0);
+void ShowPromises(ReportOutputType type, const Bundle *bundles, const Body *bodies);
+void ShowPromise(ReportOutputType type, const Promise *pp, int indent);
+void ShowScopedVariables(ReportOutputType type);
+void ShowPromiseInReport(ReportOutputType type, const char *version, const Promise *pp, int indent);
+void ShowPromisesInReport(ReportOutputType type, const Bundle *bundles, const Body *bodies);
 
-size_t WriterWrite(Writer *writer, const char *str);
-size_t WriterWriteLen(Writer *writer, const char *str, size_t len);
-size_t WriterWriteChar(Writer *writer, char c);
-
-size_t StringWriterLength(const Writer *writer);
-const char *StringWriterData(const Writer *writer);
-
-void WriterClose(Writer *writer);
-
-/* Returns modifiable string and destroys itself */
-char *StringWriterClose(Writer *writer);
-
-/* Returns the open file and destroys itself */
-FILE *FileWriterDetach(Writer *writer);
+// stdout only
+void SyntaxTree(void);
+void ReportError(char *s);
+void ShowContext(void);
+void BannerSubType(const char *bundlename, const char *type, int p);
+void BannerSubSubType(const char *bundlename, const char *type);
+void Banner(const char *s);
 
 #endif

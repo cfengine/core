@@ -33,7 +33,7 @@ int __gcov_execl(const char *path, char *arg, ...)
 
     va_end(ap);
 
-    args = (char **) alloca(length * sizeof(void *));
+    args = (char **) xmalloc(length * sizeof(void *));
     args[0] = arg;
     for (i = 1; i < length; i++)
         args[i] = va_arg(aq, char *);

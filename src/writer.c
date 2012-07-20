@@ -219,3 +219,14 @@ char *StringWriterClose(Writer *writer)
     free(writer);
     return data;
 }
+
+FILE *FileWriterDetach(Writer *writer)
+{
+    if (writer->type != WT_FILE)
+    {
+        FatalError("Wrong writer type");
+    }
+    FILE *file = writer->file;
+    free(writer);
+    return file;
+}

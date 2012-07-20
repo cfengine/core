@@ -89,11 +89,13 @@ TEXI2PDFFLAGS = -I $(TEX_INCLUDEDIR) --batch $(if $(filter-out 0,$(V)),,--quiet)
 	$(AM_V_GEN)$(srcdir)/../tools/texi2pdfclean $< $(TEXI2PDF) -o $@ $(TEXI2PDFFLAGS)
 
 
+if HTML_DOCS
 html: $(patsubst %,%.html,$(HTML_GUIDES))
+endif
 
+if PDF_DOCS
 pdf: $(patsubst %,%.pdf,$(PDF_GUIDES))
-
-all:
+endif
 
 GUIDEDIR=$(DESTDIR)/$(projdocdir)/guides
 
@@ -105,30 +107,30 @@ dist-guide-%: %
 
 dist-common: $(patsubst %,dist-guide-%.texinfo,$(COMMON_GUIDES))
 
+if HTML_DOCS
 install-html: html
 	$(MKDIR_P) $(GUIDEDIR)/html
 	$(INSTALL_DATA) $(patsubst %,%.html,$(HTML_GUIDES)) $(GUIDEDIR)/html
 	$(INSTALL_DATA) `$(srcdir)/../tools/extract-images $(patsubst %,%.texinfo,$(HTML_GUIDES)) | sort | uniq` $(GUIDEDIR)/html
+endif
 
 dist-html-only:
 
+if PDF_DOCS
 install-pdf: pdf
 	$(MKDIR_P) $(GUIDEDIR)/pdf
 	$(INSTALL_DATA) $(patsubst %,%.pdf,$(PDF_GUIDES)) $(GUIDEDIR)/pdf
-
-dist-pdf-only: $(patsubst %,dist-guide-%.texinfo,$(PDF_ONLY_GUIDES))
+endif
 
 if PDF_DOCS
-all: pdf
-install-data-hook: install-pdf
-dist-hook: dist-pdf-only dist-common
+dist-pdf-only: $(patsubst %,dist-guide-%.texinfo,$(PDF_ONLY_GUIDES))
+else
+dist-pdf-only:
 endif
 
-if HTML_DOCS
-all: html
-install-data-hook: install-html
-dist-hook: dist-html-only dist-common
-endif
+all: pdf html
+install-data-hook: install-pdf install-html
+dist-hook: dist-pdf-only dist-html dist-common
 
 EXTRA_DIST = cf3-solutions.texinfo.in CFEngineFrontPage.pdf NewLogo.pdf cfcomdoc.css
 

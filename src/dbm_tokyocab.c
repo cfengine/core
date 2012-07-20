@@ -270,9 +270,6 @@ DBCursorPriv *DBPrivOpenCursor(DBPriv *db)
 
     DBCursorPriv *cursor = xcalloc(1, sizeof(DBCursorPriv));
     cursor->db = db;
-    cursor->current_key = NULL;
-    cursor->current_key_size = 0;
-    cursor->curval = NULL;
 
     /* Cursor remains locked */
     return cursor;

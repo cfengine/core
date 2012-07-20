@@ -32,6 +32,7 @@
 #include "vars.h"
 #include "item_lib.h"
 #include "conversion.h"
+#include "reporting.h"
 
 #define CF_EXEC_IFELAPSED 0
 #define CF_EXEC_EXPIREAFTER 1

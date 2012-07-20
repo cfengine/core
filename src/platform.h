@@ -361,11 +361,18 @@ unsigned int alarm(unsigned int seconds);
 char *realpath(const char *path, char *resolved_path);
 #endif
 
-#ifndef HAVE_GETNETGRENT
-int setnetgrent(const char *netgroup);
+#if !HAVE_DECL_GETNETGRENT
 int getnetgrent(char **host, char **user, char **domain);
-void endnetgrent(void);
 #endif
+
+#if !HAVE_DECL_SETNETGRENT
+int setnetgrent(const char *netgroup);
+#endif
+
+#if !HAVE_DECL_ENDNETGRENT
+int endnetgrent(void);
+#endif
+
 #ifndef HAVE_UNAME
 int uname(struct utsname *name);
 #endif

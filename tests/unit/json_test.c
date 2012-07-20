@@ -784,6 +784,23 @@ static void test_remove_key_from_object(void **state)
     JsonElementDestroy(object);
 }
 
+static void test_detach_key_from_object(void **state)
+{
+    JsonElement *object = JsonObjectCreate(3);
+
+    JsonObjectAppendInteger(object, "one", 1);
+    JsonObjectAppendInteger(object, "two", 2);
+    JsonObjectAppendInteger(object, "three", 3);
+
+    JsonElement *detached = JsonObjectDetachKey(object, "two");
+
+    assert_int_equal(2, JsonElementLength(object));
+    JsonElementDestroy(object);
+
+    assert_int_equal(1, JsonElementLength(detached));
+    JsonElementDestroy(detached);
+}
+
 int main()
 {
     const UnitTest tests[] =
@@ -824,7 +841,8 @@ int main()
         unit_test(test_parse_array_garbage),
         unit_test(test_parse_array_nested_garbage),
         unit_test(test_array_remove_range),
-        unit_test(test_remove_key_from_object)
+        unit_test(test_remove_key_from_object),
+        unit_test(test_detach_key_from_object)
     };
 
     return run_tests(tests);

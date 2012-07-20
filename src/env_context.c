@@ -34,6 +34,7 @@
 #include "syntax.h"
 #include "item_lib.h"
 #include "conversion.h"
+#include "reporting.h"
 
 /*****************************************************************************/
 
@@ -1486,16 +1487,18 @@ void SaveClassEnvironment()
         FILE *fp;
 
         snprintf(file, CF_BUFSIZE, "%s/state/allclasses.txt", CFWORKDIR);
-
         if ((fp = fopen(file, "w")) == NULL)
         {
             CfOut(cf_inform, "", "Could not open allclasses cache file");
             return;
         }
 
-        ListAlphaList(fp, VHEAP, '\n');
-        ListAlphaList(fp, VADDCLASSES, '\n');
-        fclose(fp);
+        Writer *writer = FileWriter(fp);
+
+        ListAlphaList(writer, VHEAP, '\n');
+        ListAlphaList(writer, VADDCLASSES, '\n');
+
+        WriterClose(writer);
     }
 }
 
@@ -1568,7 +1571,7 @@ void AddAllClasses(const Rlist *list, int persist, enum statepolicy policy)
 
 /*****************************************************************************/
 
-void ListAlphaList(FILE *fout, AlphaList al, char sep)
+void ListAlphaList(Writer *writer, AlphaList al, char sep)
 {
     AlphaListIterator i = AlphaListIteratorInit(&al);
 
@@ -1576,7 +1579,7 @@ void ListAlphaList(FILE *fout, AlphaList al, char sep)
     {
         if (!IsItemIn(VNEGHEAP, ip->name))
         {
-            fprintf(fout, "%s%c", ip->name, sep);
+            WriterWriteF(writer, "%s%c", ip->name, sep);
         }
     }
 }

@@ -543,36 +543,3 @@ int ExclusiveUnlockFile(int fd)
 }
 
 #endif
-
-
-#if defined(__MINGW32__)
-
-/* On Windows, gmtime and localtime buffers are thread-specific,
-   so using them in place of the reentrant versions is safe      */
-
-struct tm *gmtime_r(const time_t *timep, struct tm *result)
-{
-    struct tm *result_gmtime = gmtime(timep);
-    
-    if(result_gmtime)
-    {
-        *result = *result_gmtime;
-    }
-    
-    return result_gmtime;
-}
-
-
-struct tm *localtime_r(const time_t *timep, struct tm *result)
-{
-    struct tm *result_localtime = localtime(timep);
-    
-    if(result_localtime)
-    {
-        *result = *result_localtime;
-    }
-    
-    return result_localtime;
-}
-
-#endif  /* __MINGW32__ */

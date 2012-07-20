@@ -486,6 +486,12 @@ AC_REPLACE_FUNCS(strncasecmp)
 AC_CHECK_DECLS(strsignal)
 AC_REPLACE_FUNCS(strsignal)
 
+AC_CHECK_DECLS(gmtime_r, [], [], [[#include <time.h>]])
+AC_REPLACE_FUNCS(gmtime_r)
+
+AC_CHECK_DECLS(localtime_r, [], [], [[#include <time.h>]])
+AC_REPLACE_FUNCS(localtime_r)
+
 AC_CHECK_FUNCS(getpwent setpwent endpwent)
 
 AC_CHECK_DECLS(getnetgrent, [], [], [[#include <netdb.h>]])

@@ -537,13 +537,6 @@ void CloseWmi(void);
 int LinkOrCopy(const char *from, const char *to, int sym);
 int ExclusiveLockFile(int fd);
 int ExclusiveUnlockFile(int fd);
-#if defined(__MINGW32__)
-
-#include <time.h>
-
-struct tm *gmtime_r(const time_t *timep, struct tm *result);
-struct tm *localtime_r(const time_t *timep, struct tm *result);
-#endif
 
 /* pipes.c */
 

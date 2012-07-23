@@ -61,6 +61,7 @@ branch()
       echo "In order to create stable branch you have to be on trunk!"
       exit 1
     fi
+    git tag "${BRANCH}-branchpoint"
     git checkout -b $BRANCH
   else
     detect_current_branch

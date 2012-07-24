@@ -33,6 +33,7 @@
 #include "item_lib.h"
 #include "vars.h"
 #include "conversion.h"
+#include "expand.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"

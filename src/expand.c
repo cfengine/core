@@ -29,7 +29,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-#include "cf3.defs.h"
+#include "expand.h"
 
 #include "env_context.h"
 #include "constraints.h"

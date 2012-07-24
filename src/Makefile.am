@@ -62,7 +62,7 @@ libpromises_la_SOURCES = \
         env_context.c env_context.h \
         evalfunction.c evalfunction.h \
         exec_tools.c \
-        expand.c \
+        expand.c expand.h \
         files_copy.c \
         files_edit.c \
         files_editline.c \

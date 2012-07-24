@@ -28,6 +28,7 @@
 #include "constraints.h"
 #include "conversion.h"
 #include "reporting.h"
+#include "expand.h"
 
 static int IsCf3Scalar(char *str);
 static int CompareVariableValue(Rval rval, CfAssoc *ap);

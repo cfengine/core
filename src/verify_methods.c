@@ -28,6 +28,7 @@
 #include "env_context.h"
 #include "constraints.h"
 #include "vars.h"
+#include "expand.h"
 
 /*****************************************************************************/
 

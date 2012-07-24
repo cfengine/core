@@ -250,26 +250,6 @@ int FnNumArgs(const FnCallType *call_type);
 
 void ModuleProtocol(char *command, char *line, int print);
 
-/* expand.c */
-
-void ExpandPromise(enum cfagenttype ag, const char *scopeid, Promise *pp, void *fnptr);
-void ExpandPromiseAndDo(enum cfagenttype ag, const char *scope, Promise *p, Rlist *scalarvars, Rlist *listvars,
-                        void (*fnptr) ());
-Rval ExpandDanglers(const char *scope, Rval rval, const Promise *pp);
-void MapIteratorsFromRval(const char *scope, Rlist **los, Rlist **lol, Rval rval, const Promise *pp);
-
-int IsExpandable(const char *str);
-int ExpandScalar(const char *string, char buffer[CF_EXPANDSIZE]);
-Rval ExpandBundleReference(const char *scopeid, Rval rval);
-FnCall *ExpandFnCall(const char *contextid, FnCall *f, int expandnaked);
-Rval ExpandPrivateRval(const char *contextid, Rval rval);
-Rlist *ExpandList(const char *scopeid, const Rlist *list, int expandnaked);
-Rval EvaluateFinalRval(const char *scopeid, Rval rval, int forcelist, const Promise *pp);
-int IsNakedVar(const char *str, char vtype);
-void GetNaked(char *s1, const char *s2);
-void ConvergeVarHashPromise(char *scope, const Promise *pp, int checkdup);
-int ExpandPrivateScalar(const char *contextid, const char *string, char buffer[CF_EXPANDSIZE]);
-
 /* exec_tool.c */
 
 int IsExecutable(const char *file);

@@ -34,6 +34,7 @@
 #include "sort.h"
 #include "conversion.h"
 #include "reporting.h"
+#include "expand.h"
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);

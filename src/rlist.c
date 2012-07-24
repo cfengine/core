@@ -27,6 +27,7 @@
 
 #include "files_names.h"
 #include "conversion.h"
+#include "expand.h"
 
 #include <assert.h>
 

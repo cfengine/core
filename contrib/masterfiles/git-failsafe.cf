@@ -40,13 +40,17 @@ bundle agent git_update
                        comment => "The master cfengine policy directory on the policy host",
                         handle => "update_vars_master_location";
 
-      "git_location" string => "http://myserver.com/myrepo.git",
+      "git_origin" string => "http://myserver.com/myrepo.git",
       comment => "The URL to the Git repository.",
-      handle => "update_vars_git_location";
+      handle => "update_vars_git_origin";
 
       "git_checkout_location" string => "$(master_location)/myrepo",
       comment => "The desired checkout location of the Git repository",
       handle => "update_vars_git_checkout_location";
+
+      "git_configfile" string => "$(git_checkout_location)/.git/config",
+      comment => "The .git/config file location",
+      handle => "update_vars_git_configfile";
 
       "git_branch" string => "master",
       comment => "The desired branch of the Git repository",
@@ -55,6 +59,36 @@ bundle agent git_update
       "git_binary" string => "/usr/bin/git",
       comment => "The location of the Git executable.  Leave blank if you don't want to use Git.",
       handle => "update_vars_git_binary";
+
+      # 1. Remove untracked files, 2. Discard changes to index and working tree since HEAD
+      # 3. Check out the proper branch; 4. Pull the latest changes from origin;
+      # 5. Reset the working tree to the latest updates
+      "git_update_command" string => "$(git_binary) clean -f -f -x -q -d .; $(git_binary) reset -q --hard HEAD; $(git_binary) checkout -q $(git_branch); $(git_binary) pull -q -s recursive -Xtheirs origin $(git_branch); $(git_binary) reset -q --hard HEAD",
+      comment => "The commands to do a Git update.  They should DTRT for your environment (checkout/reset/clean/etc).",
+      handle => "update_vars_git_update_command";
+
+      "git_clone_command" string => "$(git_binary) clone -b $(git_branch) $(git_origin) $(git_checkout_location)",
+      comment => "The commands to do a Git update.  They should DTRT for your environment (checkout/reset/clean/etc).",
+      handle => "update_vars_git_clone_command";
+
+      "git_config_template" string => "
+[core]
+        repositoryformatversion = 0
+        filemode = true
+        bare = false
+        logallrefupdates = true
+[remote \"origin\"]
+        fetch = +refs/heads/*:refs/remotes/origin/*
+        url = $(git_origin)
+[branch \"master\"]
+        remote = origin
+        merge = refs/heads/master
+[branch \"$(git_branch)\"]
+        remote = origin
+        merge = refs/heads/$(git_branch)
+",
+      comment => "The $(git_configfile) template.",
+      handle => "update_vars_git_config_template";
 
 #
 
@@ -129,15 +163,15 @@ bundle agent git_update
       comment => "Generate cfengine encryption keys if necessary",
        handle => "update_commands_generate_keys";
 
-    am_policy_hub.use_git.git_checkout_location_exists.git_checkout_exists::
-      "$(git_binary) pull $(git_location) $(git_branch); $(git_binary) checkout $(git_branch)"
+    am_policy_hub.use_git.git_config_ok::
+      "$(git_update_command)"
       contain => u_in_dir_shell("$(git_checkout_location)"),
       comment => "Update the Git repository.",
       handle => "update_commands_git_update",
       classes => u_if_repaired("git_resolved");
 
     am_policy_hub.use_git.!git_checkout_location_exists.!git_checkout_exists::
-      "$(git_binary) clone -b $(git_branch) $(git_location) $(git_checkout_location)"
+      "$(git_clone_command)"
       comment => "Clone the Git repository.",
       handle => "update_commands_git_clone",
       classes => u_if_repaired("git_resolved");
@@ -154,6 +188,15 @@ bundle agent git_update
       copy_from => u_rcp("$(master_location)/cf_promises_validated","$(sys.policy_hub)"),
          action => u_immediate,
         classes => u_if_repaired("validated_updates_ready");
+
+      # on the policy hub, converge the .git/config file iff the checkout has been made already
+    am_policy_hub.use_git.git_checkout_location_exists.git_checkout_exists::
+      "$(git_configfile)"
+      handle => "converge_git_configfile",
+      classes => u_if_ok("git_config_ok"),
+      perms => u_m("600"),
+      edit_defaults => u_empty,
+      edit_line => u_insert_lines("$(git_config_template)");
 
   # on the policy hub, do the following if a) we don't use Git
   # or b) the Git update succeeded
@@ -295,12 +338,36 @@ body classes u_if_repaired(x)
  promise_repaired => { "$(x)" };
 }
 
+body classes u_if_ok(x)
+{
+      promise_repaired => { "$(x)" };
+      promise_kept => { "$(x)" };
+}
+
 #########################################################
 
 body contain u_in_dir_shell(s)
 {
-chdir => "$(s)";
-useshell => "true";
+      chdir => "$(s)";
+      useshell => "true";
+}
+
+#########################################################
+
+bundle edit_line u_insert_lines(lines)
+{
+  insert_lines:
+
+      "$(lines)"
+      comment => "Append lines if they don't exist";
+}
+
+#########################################################
+
+body edit_defaults u_empty
+{
+      empty_file_before_editing => "true";
+      edit_backup => "false";
 }
 
 #########################################################

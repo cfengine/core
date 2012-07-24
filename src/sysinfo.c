@@ -172,13 +172,14 @@ void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname
         if (p != NULL)
         {
             strlcpy(uqname, nodename, MIN(CF_BUFSIZE, p - nodename + 1));
+            strcpy(domain, p + 1);
         }
         else
         {
             strcpy(uqname, nodename);
+            strcpy(domain, "");
         }
 
-        strcpy(domain, "");
     }
 }
 

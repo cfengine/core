@@ -40,8 +40,12 @@ struct tm *localtime_r(const time_t *timep, struct tm *result);
 
 struct tm *localtime_r(const time_t *timep, struct tm *result)
 {
-    *result = localtime(timep);
-    return result;
+    struct tm *ret = localtime(timep);
+    if (ret)
+    {
+        memcpy(result, ret, sizeof(struct tm));
+    }
+    return ret;
 }
 
 #endif

@@ -40,8 +40,12 @@ struct tm *gmtime_r(const time_t *timep, struct tm *result);
 
 struct tm *gmtime_r(const time_t *timep, struct tm *result)
 {
-    *result = gmtime(timep);
-    return result;
+    struct tm *ret = gmtime(timep);
+    if (ret)
+    {
+        memcpy(result, ret, sizeof(struct tm));
+    }
+    return ret;
 }
 
 #endif

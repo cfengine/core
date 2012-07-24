@@ -1293,7 +1293,7 @@ static int InsertFileAtLocation(Item **start, Item *begin_ptr, Item *end_ptr, It
            {
            // If we are inserting a preserved block before, need to flip the implied order after the first insertion
            // to get the order of the block right
-           a.location.before_after == cfe_after;
+           a.location.before_after = cfe_after;
 
            }
         
@@ -1361,7 +1361,7 @@ static int InsertCompoundLineAtLocation(char *chunk, Item **start, Item *begin_p
            {
            // If we are inserting a preserved block before, need to flip the implied order after the first insertion
            // to get the order of the block right
-           a.location.before_after == cfe_after;
+           a.location.before_after = cfe_after;
            location = *start;
            }
         

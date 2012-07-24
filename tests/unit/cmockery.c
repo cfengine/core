@@ -62,7 +62,7 @@ WINBASEAPI BOOL WINAPI IsDebuggerPresent(VOID);
 // Printf formatting for source code locations.
 #define SOURCE_LOCATION_FORMAT "%s:%d"
 
-// Printf formatting for xml CUNIT output
+// Printf formatting for xml CUNIT Schema
 #define CUNIT_INIT \
     "<\?xml version=\"1.0\" \?>\n" \
     "<\?xml-stylesheet type=\"text/xsl\" href=\"CUnit-Run.xsl\" \?>\n" \
@@ -145,7 +145,7 @@ WINBASEAPI BOOL WINAPI IsDebuggerPresent(VOID);
     pointer_type, largest_integral_type) \
     ((pointer_type)((ValuePointer*)&(largest_integral_type))->pointer)
 
-// Used to cast LargetIntegralType to void* and vice versa.
+// Used to cast LargestIntegralType to void* and vice versa.
 typedef union ValuePointer
 {
     LargestIntegralType value;
@@ -183,11 +183,11 @@ typedef struct TestState
 typedef struct XMLRunData
 {
     //running test_data
-    char *suitename;
+    const char *suitename;
     char *testname;
     char *assertname;
-    char *filename;
-    char *line;
+    const char *filename;
+    const int line;
 
     //testcase
     int tests_total;
@@ -1352,6 +1352,7 @@ void _check_expected(const char *const function_name, const char *const paramete
             print_xml(file, "            <CONDITION> There were no previously declared parameter values " "for this test. </CONDITION>\n"
                       "          </CUNIT_RUN_TEST_ERROR>\n");
         }
+        exit_test ();
     }
 }
 

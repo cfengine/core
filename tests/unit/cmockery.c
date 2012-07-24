@@ -1733,10 +1733,27 @@ void vinit_xml (const char *file, const char *const format, va_list args)
 {
     char buffer[1024];
 
+
+/*
+    //Name of xml file, for current testsuite
+    char suitename[80];
+    char xml_name[80];
+    char xml_filename[80];
+    int len = strlen(file)-2;
+
+    sprintf(xml_filename, "xml/%s", file);
+    strncpy(suitename, xml_filename, len);
+    sprintf(xml_filename, "xml/%s.xml", suitename);
+    const char *xml_file = xml_filename;
+*/
+
+
     //Name of xml file, for current testsuite
     char xml_filename[80];
     sprintf(xml_filename, "xml/%s.xml", file);
     const char *xml_file = xml_filename;
+
+
 
     FILE* xml_report = fopen(xml_file, "w");
     vsnprintf(buffer, sizeof(buffer), format, args);
@@ -1787,6 +1804,20 @@ void init_xml (const char *file, const char *const format, ...)
 void vprint_xml(const char *file, const char *const format, va_list args)
 {
     char buffer[1024];
+
+
+/*
+    //Name of xml file, for current testsuite
+    char suitename[80];
+    char xml_name[80];
+    char xml_filename[80];
+    int len = strlen(file)-2;
+
+    sprintf(xml_filename, "xml/%s", file);
+    strncpy(suitename, xml_filename, len);
+    sprintf(xml_filename, "xml/%s.xml", suitename);
+    const char *xml_file = xml_filename;
+*/
 
     //Name of xml file, for current testsuite
     char xml_filename[80];

@@ -56,11 +56,6 @@ void BeginAudit()
     Promise dummyp = { 0 };
     Attributes dummyattr = { {0} };
 
-    if (THIS_AGENT_TYPE != cf_agent)
-    {
-        return;
-    }
-
     memset(&dummyp, 0, sizeof(dummyp));
     memset(&dummyattr, 0, sizeof(dummyattr));
 
@@ -76,11 +71,6 @@ void EndAudit()
     Rval retval;
     Promise dummyp = { 0 };
     Attributes dummyattr = { {0} };
-
-    if (THIS_AGENT_TYPE != cf_agent)
-    {
-        return;
-    }
 
     memset(&dummyp, 0, sizeof(dummyp));
     memset(&dummyattr, 0, sizeof(dummyattr));
@@ -506,7 +496,12 @@ void FatalError(char *s, ...)
     }
 
     unlink(PIDFILE);
-    EndAudit();
+
+    if (THIS_AGENT_TYPE == cf_agent)
+    {
+        EndAudit();
+    }
+
     GenericDeInitialize();
     exit(1);
 }

@@ -118,8 +118,8 @@ void EndAudit()
     else
     {
         snprintf(string, CF_BUFSIZE,
-                 "Outcome of version %s (%s-%d): Promises observed to be kept %.0f%%, Promises repaired %.0f%%, Promises not repaired %.0f\%%",
-                 sp, CF_AGENTTYPES[THIS_AGENT_TYPE], CFA_BACKGROUND, (double) PR_KEPT / total, (double) PR_REPAIRED / total,
+                 "Outcome of version %s (" CF_AGENTC "-%d): Promises observed to be kept %.0f%%, Promises repaired %.0f%%, Promises not repaired %.0f\%%",
+                 sp, CFA_BACKGROUND, (double) PR_KEPT / total, (double) PR_REPAIRED / total,
                  (double) PR_NOTKEPT / total);
 
         CfOut(cf_verbose, "", "%s", string);

@@ -26,6 +26,6 @@
 #define CFENGINE_ENV_MONITOR_H
 
 void MonitorInitialize(void);
-void MonitorStartServer(const Policy *policy);
+void MonitorStartServer(const Policy *policy, const ReportContext *report_context);
 
 #endif

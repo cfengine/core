@@ -349,7 +349,9 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, c
 
     if (DEBUG)
     {
-        AuditStatusMessage(stdout, status);
+        Writer *writer = FileWriter(stdout);
+        AuditStatusMessage(writer, status);
+        FileWriterDetach(writer);
     }
 
     if (ap != NULL)
@@ -511,44 +513,44 @@ void FatalError(char *s, ...)
 
 /*****************************************************************************/
 
-void AuditStatusMessage(FILE *fp, char status)
+void AuditStatusMessage(Writer *writer, char status)
 {
     switch (status)             /* Reminder */
     {
     case CF_CHG:
-        fprintf(fp, "made a system correction");
+        WriterWriteF(writer, "made a system correction");
         break;
 
     case CF_WARN:
-        fprintf(fp, "promise not kept, no action taken");
+        WriterWriteF(writer, "promise not kept, no action taken");
         break;
 
     case CF_TIMEX:
-        fprintf(fp, "timed out");
+        WriterWriteF(writer, "timed out");
         break;
 
     case CF_FAIL:
-        fprintf(fp, "failed to make a correction");
+        WriterWriteF(writer, "failed to make a correction");
         break;
 
     case CF_DENIED:
-        fprintf(fp, "was denied access to an essential resource");
+        WriterWriteF(writer, "was denied access to an essential resource");
         break;
 
     case CF_INTERPT:
-        fprintf(fp, "was interrupted\n");
+        WriterWriteF(writer, "was interrupted\n");
         break;
 
     case CF_NOP:
-        fprintf(fp, "was applied but performed no required actions");
+        WriterWriteF(writer, "was applied but performed no required actions");
         break;
 
     case CF_UNKNOWN:
-        fprintf(fp, "was applied but status unknown");
+        WriterWriteF(writer, "was applied but status unknown");
         break;
 
     case CF_REPORT:
-        fprintf(fp, "report");
+        WriterWriteF(writer, "report");
         break;
     }
 

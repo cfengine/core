@@ -36,6 +36,7 @@
 #include "promises.h"
 #include "item_lib.h"
 #include "conversion.h"
+#include "reporting.h"
 
 #define QUEUESIZE 50
 #define CF_BUFEXT 128
@@ -55,7 +56,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv);
 static int OpenReceiverChannel(void);
 static void PurgeOldConnections(Item **list, time_t now);
 static void SpawnConnection(int sd_reply, char *ipaddr);
-static void CheckFileChanges(Policy **policy, GenericAgentConfig config);
+static void CheckFileChanges(Policy **policy, GenericAgentConfig config, const ReportContext *report_context);
 static void *HandleConnection(ServerConnectionState *conn);
 static int BusyWithConnection(ServerConnectionState *conn);
 static int MatchClasses(ServerConnectionState *conn);
@@ -96,7 +97,7 @@ static int OptionFound(char *args, char *pos, char *word);
 static in_addr_t GetInetAddr(char *host);
 #endif
 
-static void StartServer(Policy *policy, GenericAgentConfig config);
+static void StartServer(Policy *policy, GenericAgentConfig config, const ReportContext *report_context);
 
 char CFRUNCOMMAND[CF_BUFSIZE];
 
@@ -212,12 +213,15 @@ int main(int argc, char *argv[])
 {
     GenericAgentConfig config = CheckOpts(argc, argv);
 
-    Policy *policy = GenericInitialize("server", config);
+    ReportContext *report_context = OpenReports("server");
+    Policy *policy = GenericInitialize("server", config, report_context);
     ThisAgentInit();
-    KeepPromises(policy);
+    KeepPromises(policy, report_context);
     Summarize();
 
-    StartServer(policy, config);
+    StartServer(policy, config, report_context);
+
+    ReportContextDestroy(report_context);
     return 0;
 }
 
@@ -325,7 +329,7 @@ static void ThisAgentInit(void)
 
 /*******************************************************************/
 
-static void StartServer(Policy *policy, GenericAgentConfig config)
+static void StartServer(Policy *policy, GenericAgentConfig config, const ReportContext *report_context)
 {
     char ipaddr[CF_MAXVARSIZE], intime[64];
     int sd, sd_reply;
@@ -415,7 +419,7 @@ static void StartServer(Policy *policy, GenericAgentConfig config)
         {
             if (ACTIVE_THREADS == 0)
             {
-                CheckFileChanges(&policy, config);
+                CheckFileChanges(&policy, config, report_context);
             }
             ThreadUnlock(cft_server_children);
         }
@@ -754,7 +758,7 @@ static void SpawnConnection(int sd_reply, char *ipaddr)
 
 /**************************************************************/
 
-static void CheckFileChanges(Policy **policy, GenericAgentConfig config)
+static void CheckFileChanges(Policy **policy, GenericAgentConfig config, const ReportContext *report_context)
 {
     if (EnterpriseExpiry())
     {
@@ -767,7 +771,7 @@ static void CheckFileChanges(Policy **policy, GenericAgentConfig config)
     {
         CfOut(cf_verbose, "", " -> New promises detected...\n");
 
-        if (CheckPromises(cf_server))
+        if (CheckPromises(cf_server, report_context))
         {
             CfOut(cf_inform, "", "Rereading config files %s..\n", VINPUTFILE);
 
@@ -839,8 +843,8 @@ static void CheckFileChanges(Policy **policy, GenericAgentConfig config)
             NewClass(CF_AGENTTYPES[THIS_AGENT_TYPE]);
 
             SetReferenceTime(true);
-            *policy = ReadPromises(cf_server, CF_SERVERC, config);
-            KeepPromises(*policy);
+            *policy = ReadPromises(cf_server, CF_SERVERC, config, report_context);
+            KeepPromises(*policy, report_context);
             Summarize();
 
         }

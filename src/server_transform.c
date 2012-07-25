@@ -35,11 +35,11 @@
 #include "reporting.h"
 #include "expand.h"
 
-static void KeepContextBundles(Policy *policy);
+static void KeepContextBundles(Policy *policy, const ReportContext *report_context);
 static void KeepServerPromise(Promise *pp);
 static void InstallServerAuthPath(char *path, Auth **list, Auth **listtop);
 static void KeepServerRolePromise(Promise *pp);
-static void KeepPromiseBundles(Policy *policy);
+static void KeepPromiseBundles(Policy *policy, const ReportContext *report_context);
 
 extern const BodySyntax CFS_CONTROLBODY[];
 extern const BodySyntax CF_REMROLE_BODIES[];
@@ -70,11 +70,11 @@ void KeepQueryAccessPromise(Promise *pp, char *type);
 /* Level                                                           */
 /*******************************************************************/
 
-void KeepPromises(Policy *policy)
+void KeepPromises(Policy *policy, const ReportContext *report_context)
 {
-    KeepContextBundles(policy);
+    KeepContextBundles(policy, report_context);
     KeepControlPromises(policy);
-    KeepPromiseBundles(policy);
+    KeepPromiseBundles(policy, report_context);
 }
 
 /*******************************************************************/
@@ -440,7 +440,7 @@ void KeepControlPromises(Policy *policy)
 
 /*********************************************************************/
 
-static void KeepContextBundles(Policy *policy)
+static void KeepContextBundles(Policy *policy, const ReportContext *report_context)
 {
     SubType *sp;
     Promise *pp;
@@ -473,7 +473,7 @@ static void KeepContextBundles(Policy *policy)
 
                 for (pp = sp->promiselist; pp != NULL; pp = pp->next)
                 {
-                    ExpandPromise(cf_server, scope, pp, KeepServerPromise);
+                    ExpandPromise(cf_server, scope, pp, KeepServerPromise, report_context);
                 }
             }
         }
@@ -482,7 +482,7 @@ static void KeepContextBundles(Policy *policy)
 
 /*********************************************************************/
 
-static void KeepPromiseBundles(Policy *policy)
+static void KeepPromiseBundles(Policy *policy, const ReportContext *report_context)
 {
     SubType *sp;
     Promise *pp;
@@ -515,7 +515,7 @@ static void KeepPromiseBundles(Policy *policy)
 
                 for (pp = sp->promiselist; pp != NULL; pp = pp->next)
                 {
-                    ExpandPromise(cf_server, scope, pp, KeepServerPromise);
+                    ExpandPromise(cf_server, scope, pp, KeepServerPromise, report_context);
                 }
             }
         }

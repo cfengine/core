@@ -28,9 +28,11 @@
 
 #include "cf3.defs.h"
 
-void ExpandPromise(enum cfagenttype ag, const char *scopeid, Promise *pp, void *fnptr);
+#include "reporting.h"
+
+void ExpandPromise(enum cfagenttype ag, const char *scopeid, Promise *pp, void *fnptr, const ReportContext *report_context);
 void ExpandPromiseAndDo(enum cfagenttype ag, const char *scope, Promise *p, Rlist *scalarvars, Rlist *listvars,
-                        void (*fnptr) ());
+                        void (*fnptr) (), const ReportContext *report_context);
 Rval ExpandDanglers(const char *scope, Rval rval, const Promise *pp);
 void MapIteratorsFromRval(const char *scope, Rlist **los, Rlist **lol, Rval rval, const Promise *pp);
 

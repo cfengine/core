@@ -28,6 +28,7 @@
 #include "env_context.h"
 #include "constraints.h"
 #include "conversion.h"
+#include "reporting.h"
 
 /*****************************************************************************/
 
@@ -93,11 +94,14 @@ int main(int argc, char *argv[])
 {
     GenericAgentConfig config = CheckOpts(argc, argv);
 
-    Policy *policy = GenericInitialize("monitor", config);
+    ReportContext *report_context = OpenReports("monitor");
+    Policy *policy = GenericInitialize("monitor", config, report_context);
     ThisAgentInit();
     KeepPromises(policy);
 
-    MonitorStartServer(policy);
+    MonitorStartServer(policy, report_context);
+
+    ReportContextDestroy(report_context);
     return 0;
 }
 

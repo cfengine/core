@@ -87,6 +87,6 @@ int Constellation_ReturnRelayQueryData(ServerConnectionState *conn, char *query,
 void Constellation_RunQueries(Item *queries, Item **results_p);
 #endif
 
-void KeepPromises(Policy *policy);
+void KeepPromises(Policy *policy, const ReportContext *report_context);
 
 #endif

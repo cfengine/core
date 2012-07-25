@@ -32,19 +32,19 @@
 
 /*****************************************************************************/
 
-void VerifyMethodsPromise(Promise *pp)
+void VerifyMethodsPromise(Promise *pp, const ReportContext *report_context)
 {
     Attributes a = { {0} };
 
     a = GetMethodAttributes(pp);
 
-    VerifyMethod("usebundle", a, pp);
+    VerifyMethod("usebundle", a, pp, report_context);
     DeleteScalar("this", "promiser");
 }
 
 /*****************************************************************************/
 
-int VerifyMethod(char *attrname, Attributes a, Promise *pp)
+int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext *report_context)
 {
     Bundle *bp;
     void *vp;
@@ -102,14 +102,14 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp)
 
         DeleteScope(bp->name);
         NewScope(bp->name);
-        HashVariables(PolicyFromPromise(pp), bp->name);
+        HashVariables(PolicyFromPromise(pp), bp->name, report_context);
 
         AugmentScope(bp->name, bp->args, params);
 
         THIS_BUNDLE = bp->name;
         PushPrivateClassContext(a.inherit);
 
-        retval = ScheduleAgentOperations(bp);
+        retval = ScheduleAgentOperations(bp, report_context);
 
         PopPrivateClassContext();
         THIS_BUNDLE = bp_stack;

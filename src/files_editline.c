@@ -98,7 +98,8 @@ static int InsertFileAtLocation(Item **start, Item *begin_ptr, Item *end_ptr, It
 /* Level                                                                     */
 /*****************************************************************************/
 
-int ScheduleEditLineOperations(char *filename, Bundle *bp, Attributes a, Promise *parentp)
+int ScheduleEditLineOperations(char *filename, Bundle *bp, Attributes a, Promise *parentp,
+                               const ReportContext *report_context)
 {
     enum editlinetypesequence type;
     SubType *sp;
@@ -155,7 +156,7 @@ int ScheduleEditLineOperations(char *filename, Bundle *bp, Attributes a, Promise
                 pp->this_server = filename;
                 pp->donep = &(pp->done);
 
-                ExpandPromise(cf_agent, bp->name, pp, KeepEditLinePromise);
+                ExpandPromise(cf_agent, bp->name, pp, KeepEditLinePromise, report_context);
 
                 if (Abort())
                 {

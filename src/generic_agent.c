@@ -47,18 +47,16 @@
 
 extern char *CFH[][2];
 
-static void VerifyPromises(Policy *policy, Rlist *bundlesequence);
+static void VerifyPromises(Policy *policy, Rlist *bundlesequence, const ReportContext *report_context);
 static void SetAuditVersion(void);
-static void CheckWorkingDirectories(void);
+static void CheckWorkingDirectories(const ReportContext *report_context);
 static void Cf3ParseFile(Policy *policy, char *filename, _Bool check_not_writable_by_others);
-static void Cf3ParseFiles(Policy *policy, bool check_not_writable_by_others);
+static void Cf3ParseFiles(Policy *policy, bool check_not_writable_by_others, const ReportContext *report_context);
 static int MissingInputFile(void);
 static void CheckControlPromises(char *scope, char *agent, Constraint *controllist);
 static void CheckVariablePromises(char *scope, Promise *varlist);
-static void CheckCommonClassPromises(Promise *classlist);
+static void CheckCommonClassPromises(Promise *classlist, const ReportContext *report_context);
 static void PrependAuditFile(char *file);
-static void OpenReports(char *agents);
-static void CloseReports(char *agents);
 static char *InputLocation(char *filename);
 
 #if !defined(__MINGW32__)
@@ -102,7 +100,7 @@ void CheckLicenses(void)
 
 /*****************************************************************************/
 
-Policy *GenericInitialize(char *agents, GenericAgentConfig config)
+Policy *GenericInitialize(char *agents, GenericAgentConfig config, const ReportContext *report_context)
 {
     enum cfagenttype ag = Agent2Type(agents);
     char vbuff[CF_BUFSIZE];
@@ -116,7 +114,7 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig config)
     CF_DEFAULT_DIGEST_LEN = CF_MD5_LEN;
 #endif
 
-    InitializeGA();
+    InitializeGA(report_context);
 
     SetReferenceTime(true);
     SetStartTime();
@@ -206,7 +204,7 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig config)
 
             if (check_promises)
             {
-                ok = CheckPromises(ag);
+                ok = CheckPromises(ag, report_context);
                 if (BOOTSTRAP && !ok)
                 {
                     CfOut(cf_verbose, "", " -> Policy is not valid, but proceeding with bootstrap");
@@ -222,14 +220,14 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig config)
 
         if (ok)
         {
-            policy = ReadPromises(ag, agents, config);
+            policy = ReadPromises(ag, agents, config, report_context);
         }
         else
         {
             CfOut(cf_error, "",
                   "cf-agent was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
             SetInputFile("failsafe.cf");
-            policy = ReadPromises(ag, agents, config);
+            policy = ReadPromises(ag, agents, config, report_context);
         }
 
         if (SHOWREPORTS)
@@ -269,7 +267,7 @@ void GenericDeInitialize()
 /* Level                                                                     */
 /*****************************************************************************/
 
-int CheckPromises(enum cfagenttype ag)
+int CheckPromises(enum cfagenttype ag, const ReportContext *report_context)
 {
     char cmd[CF_BUFSIZE], cfpromises[CF_MAXVARSIZE];
     char filename[CF_MAXVARSIZE];
@@ -346,7 +344,7 @@ int CheckPromises(enum cfagenttype ag)
                 MapName(filename);
             }
 
-            MakeParentDirectory(filename, true);
+            MakeParentDirectory(filename, true, report_context);
 
             if ((fd = creat(filename, 0600)) != -1)
             {
@@ -375,7 +373,8 @@ int CheckPromises(enum cfagenttype ag)
 
 /*****************************************************************************/
 
-Policy *ReadPromises(enum cfagenttype ag, char *agents, GenericAgentConfig config)
+Policy *ReadPromises(enum cfagenttype ag, char *agents, GenericAgentConfig config,
+                     const ReportContext *report_context)
 {
     Rval retval;
     char vbuff[CF_BUFSIZE];
@@ -400,7 +399,7 @@ Policy *ReadPromises(enum cfagenttype ag, char *agents, GenericAgentConfig confi
 /* Parse the files*/
 
     Policy *policy = PolicyNew();
-    Cf3ParseFiles(policy, check_not_writable_by_others);
+    Cf3ParseFiles(policy, check_not_writable_by_others, report_context);
     {
         Sequence *errors = SequenceCreate(100, PolicyErrorDestroy);
         if (!PolicyCheck(policy, errors))
@@ -421,35 +420,32 @@ Policy *ReadPromises(enum cfagenttype ag, char *agents, GenericAgentConfig confi
 
 /* Make the compilation reports*/
 
-    OpenReports(agents);
-
     SetAuditVersion();
 
     GetVariable("control_common", "version", &retval);
 
     snprintf(vbuff, CF_BUFSIZE - 1, "Expanded promises for %s", agents);
-    CfHtmlHeader(FREPORT_HTML, vbuff, STYLESHEET, WEBDRIVER, BANNER);
+    CfHtmlHeader(report_context->report_writers[REPORT_OUTPUT_TYPE_HTML], vbuff, STYLESHEET, WEBDRIVER, BANNER);
 
-    fprintf(FREPORT_TXT, "Expanded promise list for %s component\n\n", agents);
+    WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_TEXT], "Expanded promise list for %s component\n\n", agents);
 
-    ShowContext();
+    ShowContext(report_context);
 
-    fprintf(FREPORT_HTML, "<div id=\"reporttext\">\n");
-    fprintf(FREPORT_HTML, "%s", CFH[cfx_promise][cfb]);
+    WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_HTML], "<div id=\"reporttext\">\n");
+    WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_HTML], "%s", CFH[cfx_promise][cfb]);
 
-    VerifyPromises(policy, config.bundlesequence);
+    VerifyPromises(policy, config.bundlesequence, report_context);
 
-    fprintf(FREPORT_HTML, "%s", CFH[cfx_promise][cfe]);
+    WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_HTML], "%s", CFH[cfx_promise][cfe]);
 
     if (ag != cf_common)
     {
-        ShowScopedVariables(REPORT_OUTPUT_TYPE_TEXT);
-        ShowScopedVariables(REPORT_OUTPUT_TYPE_HTML);
+        ShowScopedVariables(report_context, REPORT_OUTPUT_TYPE_TEXT);
+        ShowScopedVariables(report_context, REPORT_OUTPUT_TYPE_HTML);
     }
 
-    fprintf(FREPORT_HTML, "</div>\n");
-    CfHtmlFooter(FREPORT_HTML, FOOTER);
-    CloseReports(agents);
+    WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_HTML], "</div>\n");
+    CfHtmlFooter(report_context->report_writers[REPORT_OUTPUT_TYPE_HTML], FOOTER);
 
     return policy;
 }
@@ -476,7 +472,7 @@ void CloseLog(void)
 /* Level 1                                                         */
 /*******************************************************************/
 
-void InitializeGA(void)
+void InitializeGA(const ReportContext *report_context)
 {
     int force = false;
     struct stat statbuf, sb;
@@ -537,15 +533,15 @@ void InitializeGA(void)
         CfOut(cf_verbose, "", "Work directory is %s\n", CFWORKDIR);
 
         snprintf(vbuff, CF_BUFSIZE, "%s%cinputs%cupdate.conf", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-        MakeParentDirectory(vbuff, force);
+        MakeParentDirectory(vbuff, force, report_context);
         snprintf(vbuff, CF_BUFSIZE, "%s%cbin%ccf-agent -D from_cfexecd", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-        MakeParentDirectory(vbuff, force);
+        MakeParentDirectory(vbuff, force, report_context);
         snprintf(vbuff, CF_BUFSIZE, "%s%coutputs%cspooled_reports", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-        MakeParentDirectory(vbuff, force);
+        MakeParentDirectory(vbuff, force, report_context);
         snprintf(vbuff, CF_BUFSIZE, "%s%clastseen%cintermittencies", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-        MakeParentDirectory(vbuff, force);
+        MakeParentDirectory(vbuff, force, report_context);
         snprintf(vbuff, CF_BUFSIZE, "%s%creports%cvarious", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-        MakeParentDirectory(vbuff, force);
+        MakeParentDirectory(vbuff, force, report_context);
 
         snprintf(vbuff, CF_BUFSIZE, "%s%cinputs", CFWORKDIR, FILE_SEPARATOR);
 
@@ -570,7 +566,7 @@ void InitializeGA(void)
         }
 
         sprintf(ebuff, "%s%cstate%ccf_procs", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-        MakeParentDirectory(ebuff, force);
+        MakeParentDirectory(ebuff, force, report_context);
 
         if (cfstat(ebuff, &statbuf) == -1)
         {
@@ -598,7 +594,7 @@ void InitializeGA(void)
 
     if (!LOOKUP)
     {
-        CheckWorkingDirectories();
+        CheckWorkingDirectories(report_context);
     }
 
     LoadSecretKeys();
@@ -632,7 +628,7 @@ void InitializeGA(void)
 
 /*******************************************************************/
 
-static void Cf3ParseFiles(Policy *policy, bool check_not_writable_by_others)
+static void Cf3ParseFiles(Policy *policy, bool check_not_writable_by_others, const ReportContext *report_context)
 {
     Rlist *rp, *sl;
 
@@ -645,7 +641,7 @@ static void Cf3ParseFiles(Policy *policy, bool check_not_writable_by_others)
     Cf3ParseFile(policy, VINPUTFILE, check_not_writable_by_others);
 
     // Expand any lists in this list now
-    HashVariables(policy, NULL);
+    HashVariables(policy, NULL, report_context);
     HashControls(policy);
 
     if (VINPUTLIST != NULL)
@@ -684,12 +680,12 @@ static void Cf3ParseFiles(Policy *policy, bool check_not_writable_by_others)
                 DeleteRvalItem(returnval);
             }
 
-            HashVariables(policy, NULL);
+            HashVariables(policy, NULL, report_context);
             HashControls(policy);
         }
     }
 
-    HashVariables(policy, NULL);
+    HashVariables(policy, NULL, report_context);
 
     PARSING = false;
 }
@@ -855,54 +851,58 @@ int NewPromiseProposals()
 
 /*******************************************************************/
 
-static void OpenReports(char *agents)
+ReportContext *OpenReports(const char *agents)
 {
+    const char *workdir = GetWorkDir();
     char name[CF_BUFSIZE];
+
+    FILE *freport_text = NULL;
+    FILE *freport_html = NULL;
 
     if (SHOWREPORTS)
     {
-        snprintf(name, CF_BUFSIZE, "%s%creports%cpromise_output_%s.txt", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR,
+        snprintf(name, CF_BUFSIZE, "%s%creports%cpromise_output_%s.txt", workdir, FILE_SEPARATOR, FILE_SEPARATOR,
                  agents);
 
-        if ((FREPORT_TXT = fopen(name, "w")) == NULL)
+        if ((freport_text = fopen(name, "w")) == NULL)
         {
             CfOut(cf_error, "fopen", "Cannot open output file %s", name);
-            FREPORT_TXT = fopen(NULLFILE, "w");
+            freport_text = fopen(NULLFILE, "w");
         }
 
-        snprintf(name, CF_BUFSIZE, "%s%creports%cpromise_output_%s.html", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR,
+        snprintf(name, CF_BUFSIZE, "%s%creports%cpromise_output_%s.html", workdir, FILE_SEPARATOR, FILE_SEPARATOR,
                  agents);
 
-        if ((FREPORT_HTML = fopen(name, "w")) == NULL)
+        if ((freport_html = fopen(name, "w")) == NULL)
         {
             CfOut(cf_error, "fopen", "Cannot open output file %s", name);
-            FREPORT_HTML = fopen(NULLFILE, "w");
+            freport_html = fopen(NULLFILE, "w");
         }
 
-        snprintf(name, CF_BUFSIZE, "%s%cpromise_knowledge.cf", CFWORKDIR, FILE_SEPARATOR);
+        snprintf(name, CF_BUFSIZE, "%s%cpromise_knowledge.cf", workdir, FILE_SEPARATOR);
 
         if ((FKNOW = fopen(name, "w")) == NULL)
         {
             CfOut(cf_error, "fopen", "Cannot open output file %s", name);
         }
 
-        CfOut(cf_inform, "", " -> Writing knowledge output to %s", CFWORKDIR);
+        CfOut(cf_inform, "", " -> Writing knowledge output to %s", workdir);
     }
     else
     {
         snprintf(name, CF_BUFSIZE, NULLFILE);
-        if ((FREPORT_TXT = fopen(name, "w")) == NULL)
+        if ((freport_text = fopen(name, "w")) == NULL)
         {
             FatalError("Cannot open output file %s", name);
         }
 
-        if ((FREPORT_HTML = fopen(name, "w")) == NULL)
+        if ((freport_html = fopen(name, "w")) == NULL)
         {
             FatalError("Cannot open output file %s", name);
         }
     }
 
-    if (!(FREPORT_HTML && FREPORT_TXT))
+    if (!(freport_html && freport_text))
     {
         FatalError("Unable to continue as the null-file is unwritable");
     }
@@ -913,11 +913,17 @@ static void OpenReports(char *agents)
         ShowTopicRepresentation(FKNOW);
         fprintf(FKNOW, "}\n\nbundle knowledge CfengineSiteConfiguration\n{\n");
     }
+
+    ReportContext *context = ReportContextNew();
+    ReportContextAddWriter(context, REPORT_OUTPUT_TYPE_TEXT, FileWriter(freport_text));
+    ReportContextAddWriter(context, REPORT_OUTPUT_TYPE_HTML, FileWriter(freport_html));
+
+    return context;
 }
 
 /*******************************************************************/
 
-static void CloseReports(char *agents)
+void CloseReports(const char *agents, ReportContext *report_context)
 {
     char name[CF_BUFSIZE];
 
@@ -938,8 +944,8 @@ static void CloseReports(char *agents)
         fclose(FKNOW);
         FKNOW = NULL;
     }
-    fclose(FREPORT_HTML);
-    fclose(FREPORT_TXT);
+
+    ReportContextDestroy(report_context);
 
 // Make the knowledge readable in situ
 
@@ -1230,7 +1236,7 @@ void PromiseBanner(Promise *pp)
 
 /*********************************************************************/
 
-static void CheckWorkingDirectories()
+static void CheckWorkingDirectories(const ReportContext *report_context)
 /* NOTE: We do not care about permissions (ACLs) in windows */
 {
     struct stat statbuf;
@@ -1245,7 +1251,7 @@ static void CheckWorkingDirectories()
     }
 
     snprintf(vbuff, CF_BUFSIZE, "%s%c.", CFWORKDIR, FILE_SEPARATOR);
-    MakeParentDirectory(vbuff, false);
+    MakeParentDirectory(vbuff, false, report_context);
 
     CfOut(cf_verbose, "", "Making sure that locks are private...\n");
 
@@ -1261,7 +1267,7 @@ static void CheckWorkingDirectories()
     }
 
     snprintf(vbuff, CF_BUFSIZE, "%s%cstate%c.", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-    MakeParentDirectory(vbuff, false);
+    MakeParentDirectory(vbuff, false, report_context);
 
     if (strlen(CFPRIVKEYFILE) == 0)
     {
@@ -1275,7 +1281,7 @@ static void CheckWorkingDirectories()
     if (cfstat(vbuff, &statbuf) == -1)
     {
         snprintf(vbuff, CF_BUFSIZE, "%s%cstate%c.", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-        MakeParentDirectory(vbuff, false);
+        MakeParentDirectory(vbuff, false, report_context);
 
         if (chown(vbuff, getuid(), getgid()) == -1)
         {
@@ -1302,7 +1308,7 @@ static void CheckWorkingDirectories()
     if (cfstat(vbuff, &statbuf) == -1)
     {
         snprintf(vbuff, CF_BUFSIZE, "%s%cmodules%c.", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-        MakeParentDirectory(vbuff, false);
+        MakeParentDirectory(vbuff, false, report_context);
 
         if (chown(vbuff, getuid(), getgid()) == -1)
         {
@@ -1329,7 +1335,7 @@ static void CheckWorkingDirectories()
     if (cfstat(vbuff, &statbuf) == -1)
     {
         snprintf(vbuff, CF_BUFSIZE, "%s%cppkeys%c.", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-        MakeParentDirectory(vbuff, false);
+        MakeParentDirectory(vbuff, false, report_context);
 
         cf_chmod(vbuff, (mode_t) 0700); /* Keys must be immutable to others */
     }
@@ -1390,16 +1396,17 @@ void CompilationReport(Policy *policy, char *fname)
     }
 
 #if defined(HAVE_NOVA)
-    Nova_OpenCompilationReportFiles(fname);
+    ReportContext *compilation_report_context = Nova_OpenCompilationReportFiles(fname);
 #else
-    OpenCompilationReportFiles(fname);
+    ReportContext *compilation_report_context = OpenCompilationReportFiles(fname);
 #endif
 
-    ShowPromises(REPORT_OUTPUT_TYPE_TEXT, policy->bundles, policy->bodies);
-    ShowPromises(REPORT_OUTPUT_TYPE_HTML, policy->bundles, policy->bodies);
 
-    fclose(FREPORT_HTML);
-    fclose(FREPORT_TXT);
+
+    ShowPromises(compilation_report_context, REPORT_OUTPUT_TYPE_TEXT, policy->bundles, policy->bodies);
+    ShowPromises(compilation_report_context, REPORT_OUTPUT_TYPE_HTML, policy->bundles, policy->bodies);
+
+    ReportContextDestroy(compilation_report_context);
     if (FKNOW)
     {
         fclose(FKNOW);
@@ -1407,14 +1414,15 @@ void CompilationReport(Policy *policy, char *fname)
     }
 }
 
-void OpenCompilationReportFiles(const char *fname)
+ReportContext *OpenCompilationReportFiles(const char *fname)
 {
     char filename[CF_BUFSIZE];
+    FILE *freport_text = NULL, *freport_html = NULL;
 
     snprintf(filename, CF_BUFSIZE - 1, "%s.txt", fname);
     CfOut(cf_inform, "", "Summarizing promises as text to %s\n", filename);
 
-    if ((FREPORT_TXT = fopen(filename, "w")) == NULL)
+    if ((freport_text = fopen(filename, "w")) == NULL)
     {
         FatalError("Could not write output log to %s", filename);
     }
@@ -1422,15 +1430,22 @@ void OpenCompilationReportFiles(const char *fname)
     snprintf(filename, CF_BUFSIZE - 1, "%s.html", fname);
     CfOut(cf_inform, "", "Summarizing promises as html to %s\n", filename);
 
-    if ((FREPORT_HTML = fopen(filename, "w")) == NULL)
+    if ((freport_text = fopen(filename, "w")) == NULL)
     {
         FatalError("Could not write output log to %s", filename);
     }
+
+    ReportContext *context = ReportContextNew();
+    ReportContextAddWriter(context, REPORT_OUTPUT_TYPE_TEXT, FileWriter(freport_text));
+    ReportContextAddWriter(context, REPORT_OUTPUT_TYPE_HTML, FileWriter(freport_html));
+
+    return context;
 }
 
 /*******************************************************************/
 
-static void VerifyPromises(Policy *policy, Rlist *bundlesequence)
+static void VerifyPromises(Policy *policy, Rlist *bundlesequence,
+                           const ReportContext *report_context)
 {
     Bundle *bp;
     SubType *sp;
@@ -1517,12 +1532,12 @@ static void VerifyPromises(Policy *policy, Rlist *bundlesequence)
         {
             for (pp = sp->promiselist; pp != NULL; pp = pp->next)
             {
-                ExpandPromise(cf_common, scope, pp, NULL);
+                ExpandPromise(cf_common, scope, pp, NULL, report_context);
             }
         }
     }
 
-    HashVariables(policy, NULL);
+    HashVariables(policy, NULL, report_context);
     HashControls(policy);
 
     /* Now look once through the sequences bundles themselves */
@@ -1575,7 +1590,7 @@ static void CheckVariablePromises(char *scope, Promise *varlist)
 
 /*******************************************************************/
 
-static void CheckCommonClassPromises(Promise *classlist)
+static void CheckCommonClassPromises(Promise *classlist, const ReportContext *report_context)
 {
     Promise *pp;
 
@@ -1583,7 +1598,7 @@ static void CheckCommonClassPromises(Promise *classlist)
 
     for (pp = classlist; pp != NULL; pp = pp->next)
     {
-        ExpandPromise(cf_agent, THIS_BUNDLE, pp, KeepClassContextPromise);
+        ExpandPromise(cf_agent, THIS_BUNDLE, pp, KeepClassContextPromise, report_context);
     }
 }
 
@@ -1876,7 +1891,7 @@ void WritePID(char *filename)
 
 /*******************************************************************/
 
-void HashVariables(Policy *policy, const char *name)
+void HashVariables(Policy *policy, const char *name, const ReportContext *report_context)
 {
     Bundle *bp;
     SubType *sp;
@@ -1906,7 +1921,7 @@ void HashVariables(Policy *policy, const char *name)
 
             if (strcmp(bp->type, "common") == 0 && strcmp(sp->name, "classes") == 0)
             {
-                CheckCommonClassPromises(sp->promiselist);
+                CheckCommonClassPromises(sp->promiselist, report_context);
             }
 
             if (THIS_AGENT_TYPE == cf_common)

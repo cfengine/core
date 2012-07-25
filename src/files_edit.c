@@ -65,7 +65,7 @@ EditContext *NewEditContext(char *filename, Attributes a, Promise *pp)
 
 /*****************************************************************************/
 
-void FinishEditContext(EditContext *ec, Attributes a, Promise *pp)
+void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportContext *report_context)
 {
     Item *ip;
 
@@ -90,7 +90,7 @@ void FinishEditContext(EditContext *ec, Attributes a, Promise *pp)
         }
         else
         {
-            SaveItemListAsFile(ec->file_start, ec->filename, a, pp);
+            SaveItemListAsFile(ec->file_start, ec->filename, a, pp, report_context);
         }
     }
     else
@@ -192,7 +192,8 @@ int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, Promise
 
 /*********************************************************************/
 
-int SaveItemListAsFile(Item *liststart, const char *file, Attributes a, Promise *pp)
+int SaveItemListAsFile(Item *liststart, const char *file, Attributes a, Promise *pp,
+                       const ReportContext *report_context)
 {
     Item *ip;
     struct stat statbuf;
@@ -271,7 +272,7 @@ int SaveItemListAsFile(Item *liststart, const char *file, Attributes a, Promise 
 
     if (a.edits.backup != cfa_nobackup)
     {
-        if (ArchiveToRepository(backup, a, pp))
+        if (ArchiveToRepository(backup, a, pp, report_context))
         {
             unlink(backup);
         }

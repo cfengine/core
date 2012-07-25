@@ -51,8 +51,6 @@ bool ALLCLASSESREPORT = false;
 
 struct utsname VSYSNAME;
 
-FILE *FREPORT_HTML = NULL;
-FILE *FREPORT_TXT = NULL;
 FILE *FKNOW = NULL;
 int XML = false;
 

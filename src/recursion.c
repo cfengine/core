@@ -38,7 +38,8 @@ static void CheckLinkSecurity(struct stat *sb, char *name);
 /* Depth searches                                                    */
 /*********************************************************************/
 
-int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promise *pp)
+int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promise *pp,
+                const ReportContext *report_context)
 {
     Dir *dirh;
     int goback;
@@ -54,7 +55,7 @@ int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promis
         snprintf(basedir, sizeof(basedir), "%s", name);
         ChopLastNode(basedir);
         chdir(basedir);
-        return VerifyFileLeaf(name, sb, attr, pp);
+        return VerifyFileLeaf(name, sb, attr, pp, report_context);
     }
 
     if (rlevel > CF_RECURSION_LIMIT)
@@ -110,7 +111,7 @@ int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promis
         {
             if (!KillGhostLink(path, attr, pp))
             {
-                VerifyFileLeaf(path, &lsb, attr, pp);
+                VerifyFileLeaf(path, &lsb, attr, pp, report_context);
             }
             else
             {
@@ -154,18 +155,18 @@ int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promis
             if (attr.recursion.depth > 1 && rlevel <= attr.recursion.depth)
             {
                 CfOut(cf_verbose, "", " ->>  Entering %s (%d)\n", path, rlevel);
-                goback = DepthSearch(path, &lsb, rlevel + 1, attr, pp);
+                goback = DepthSearch(path, &lsb, rlevel + 1, attr, pp, report_context);
                 PopDirState(goback, name, sb, attr.recursion);
-                VerifyFileLeaf(path, &lsb, attr, pp);
+                VerifyFileLeaf(path, &lsb, attr, pp, report_context);
             }
             else
             {
-                VerifyFileLeaf(path, &lsb, attr, pp);
+                VerifyFileLeaf(path, &lsb, attr, pp, report_context);
             }
         }
         else
         {
-            VerifyFileLeaf(path, &lsb, attr, pp);
+            VerifyFileLeaf(path, &lsb, attr, pp, report_context);
         }
     }
 

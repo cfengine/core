@@ -29,7 +29,7 @@
 
 /*****************************************************************************/
 
-void *CopyFileSources(char *destination, Attributes attr, Promise *pp)
+void *CopyFileSources(char *destination, Attributes attr, Promise *pp, const ReportContext *report_context)
 {
     char *source = attr.copy.source;
     char *server = pp->this_server;
@@ -62,7 +62,7 @@ void *CopyFileSources(char *destination, Attributes attr, Promise *pp)
         strcat(vbuff, ".");
     }
 
-    if (!MakeParentDirectory(vbuff, attr.move_obstructions))
+    if (!MakeParentDirectory(vbuff, attr.move_obstructions, report_context))
     {
         cfPS(cf_inform, CF_FAIL, "", pp, attr, "Can't make directories for %s in files.copyfrom promise\n", vbuff);
         return NULL;
@@ -77,19 +77,19 @@ void *CopyFileSources(char *destination, Attributes attr, Promise *pp)
 
         CfOut(cf_verbose, "", " ->>  Entering %s\n", source);
         SetSearchDevice(&ssb, pp);
-        SourceSearchAndCopy(source, destination, attr.recursion.depth, attr, pp);
+        SourceSearchAndCopy(source, destination, attr.recursion.depth, attr, pp, report_context);
 
         if (cfstat(destination, &dsb) != -1)
         {
             if (attr.copy.check_root)
             {
-                VerifyCopiedFileAttributes(destination, &dsb, &ssb, attr, pp);
+                VerifyCopiedFileAttributes(destination, &dsb, &ssb, attr, pp, report_context);
             }
         }
     }
     else
     {
-        VerifyCopy(source, destination, attr, pp);
+        VerifyCopy(source, destination, attr, pp, report_context);
     }
 
     snprintf(eventname, CF_BUFSIZE - 1, "Copy(%s:%s > %s)", server, source, destination);

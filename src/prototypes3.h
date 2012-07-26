@@ -47,7 +47,7 @@ int yyparse(void);
 
 /* agent.c */
 
-int ScheduleAgentOperations(Bundle *bp);
+int ScheduleAgentOperations(Bundle *bp, const ReportContext *report_context);
 
 /* agentdiagnostic.c */
 
@@ -197,12 +197,12 @@ void VerifyMeasurement(double *this, Attributes a, Promise *pp);
 void SetMeasurementPromises(Item **classlist);
 void LongHaul(time_t current);
 void VerifyACL(char *file, Attributes a, Promise *pp);
-void LogFileChange(char *file, int change, Attributes a, Promise *pp);
+void LogFileChange(char *file, int change, Attributes a, Promise *pp, const ReportContext *report_context);
 void RemoteSysLog(int log_priority, const char *log_string);
 void ReportPatches(PackageManager *list);
 void SummarizeSoftware(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web);
 void SummarizeUpdates(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web);
-void VerifyServices(Attributes a, Promise *pp);
+void VerifyServices(Attributes a, Promise *pp, const ReportContext *report_context);
 void LoadSlowlyVaryingObservations(void);
 void MonOtherInit(void);
 void MonOtherGatherData(double *cf_this);
@@ -262,7 +262,7 @@ void ArgFree(char **args);
 
 /* files_copy.c */
 
-void *CopyFileSources(char *destination, Attributes attr, Promise *pp);
+void *CopyFileSources(char *destination, Attributes attr, Promise *pp, const ReportContext *report_context);
 int CopyRegularFileDisk(char *source, char *new, Attributes attr, Promise *pp);
 void CheckForFileHoles(struct stat *sstat, Promise *pp);
 int FSWrite(char *new, int dd, char *buf, int towrite, int *last_write_made_hole, int n_read, Attributes attr,
@@ -271,22 +271,22 @@ int FSWrite(char *new, int dd, char *buf, int towrite, int *last_write_made_hole
 /* files_edit.c */
 
 EditContext *NewEditContext(char *filename, Attributes a, Promise *pp);
-void FinishEditContext(EditContext *ec, Attributes a, Promise *pp);
+void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportContext *report_context);
 int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, Promise *pp);
-int SaveItemListAsFile(Item *liststart, const char *file, Attributes a, Promise *pp);
+int SaveItemListAsFile(Item *liststart, const char *file, Attributes a, Promise *pp, const ReportContext *report_context);
 int AppendIfNoSuchLine(char *filename, char *line);
 
 /* files_editline.c */
 
-int ScheduleEditLineOperations(char *filename, Bundle *bp, Attributes a, Promise *pp);
+int ScheduleEditLineOperations(char *filename, Bundle *bp, Attributes a, Promise *pp, const ReportContext *report_context);
 Bundle *MakeTemporaryBundleFromTemplate(Attributes a,Promise *pp);
 
 /* files_links.c */
 
-char VerifyLink(char *destination, char *source, Attributes attr, Promise *pp);
-char VerifyAbsoluteLink(char *destination, char *source, Attributes attr, Promise *pp);
-char VerifyRelativeLink(char *destination, char *source, Attributes attr, Promise *pp);
-char VerifyHardLink(char *destination, char *source, Attributes attr, Promise *pp);
+char VerifyLink(char *destination, char *source, Attributes attr, Promise *pp, const ReportContext *report_context);
+char VerifyAbsoluteLink(char *destination, char *source, Attributes attr, Promise *pp, const ReportContext *report_context);
+char VerifyRelativeLink(char *destination, char *source, Attributes attr, Promise *pp, const ReportContext *report_context);
+char VerifyHardLink(char *destination, char *source, Attributes attr, Promise *pp, const ReportContext *report_context);
 int KillGhostLink(char *name, Attributes attr, Promise *pp);
 int MakeHardLink(char *from, char *to, Attributes attr, Promise *pp);
 int ExpandLinks(char *dest, char *from, int level);
@@ -311,33 +311,33 @@ void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhash
 
 /* files_interfaces.c */
 
-void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes attr, Promise *pp);
-void VerifyCopy(char *source, char *destination, Attributes attr, Promise *pp);
-void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attributes attr, Promise *pp);
+void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes attr, Promise *pp, const ReportContext *report_context);
+void VerifyCopy(char *source, char *destination, Attributes attr, Promise *pp, const ReportContext *report_context);
+void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attributes attr, Promise *pp, const ReportContext *report_context);
 int cfstat(const char *path, struct stat *buf);
 int cf_stat(char *file, struct stat *buf, Attributes attr, Promise *pp);
 int cf_lstat(char *file, struct stat *buf, Attributes attr, Promise *pp);
-int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dstat, Attributes attr, Promise *pp);
+int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dstat, Attributes attr, Promise *pp, const ReportContext *report_context);
 int CfReadLine(char *buff, int size, FILE *fp);
 int cf_readlink(char *sourcefile, char *linkbuf, int buffsize, Attributes attr, Promise *pp);
 
 /* files_operators.c */
 
-int VerifyFileLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp);
-int CfCreateFile(char *file, Promise *pp, Attributes attr);
+int VerifyFileLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp, const ReportContext *report_context);
+int CfCreateFile(char *file, Promise *pp, Attributes attr, const ReportContext *report_context);
 FILE *CreateEmptyStream(void);
-int ScheduleCopyOperation(char *destination, Attributes attr, Promise *pp);
-int ScheduleLinkChildrenOperation(char *destination, char *source, int rec, Attributes attr, Promise *pp);
-int ScheduleLinkOperation(char *destination, char *source, Attributes attr, Promise *pp);
-int ScheduleEditOperation(char *filename, Attributes attr, Promise *pp);
+int ScheduleCopyOperation(char *destination, Attributes attr, Promise *pp, const ReportContext *report_context);
+int ScheduleLinkChildrenOperation(char *destination, char *source, int rec, Attributes attr, Promise *pp, const ReportContext *report_context);
+int ScheduleLinkOperation(char *destination, char *source, Attributes attr, Promise *pp, const ReportContext *report_context);
+int ScheduleEditOperation(char *filename, Attributes attr, Promise *pp, const ReportContext *report_context);
 FileCopy *NewFileCopy(Promise *pp);
-void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promise *pp);
-void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp);
+void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promise *pp, const ReportContext *report_context);
+void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp, const ReportContext *report_context);
 int VerifyOwner(char *file, Promise *pp, Attributes attr, struct stat *statbuf);
-void VerifyCopiedFileAttributes(char *file, struct stat *dstat, struct stat *sstat, Attributes attr, Promise *pp);
-int MoveObstruction(char *from, Attributes attr, Promise *pp);
+void VerifyCopiedFileAttributes(char *file, struct stat *dstat, struct stat *sstat, Attributes attr, Promise *pp, const ReportContext *report_context);
+int MoveObstruction(char *from, Attributes attr, Promise *pp, const ReportContext *report_context);
 void TouchFile(char *path, struct stat *sb, Attributes attr, Promise *pp);
-int MakeParentDirectory(char *parentandchild, int force);
+int MakeParentDirectory(char *parentandchild, int force, const ReportContext *report_context);
 void RotateFiles(char *name, int number);
 void CreateEmptyFile(char *name);
 void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp);
@@ -424,8 +424,8 @@ CfAssoc *HashIteratorNext(HashIterator *iterator);
 
 /* html.c */
 
-void CfHtmlHeader(FILE *fp, char *title, char *css, char *webdriver, char *banner);
-void CfHtmlFooter(FILE *fp, char *footer);
+void CfHtmlHeader(Writer *writer, char *title, char *css, char *webdriver, char *banner);
+void CfHtmlFooter(Writer *writer, char *footer);
 void CfHtmlTitle(FILE *fp, char *title);
 int IsHtmlHeader(char *s);
 
@@ -469,7 +469,7 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, c
 void PromiseLog(char *s);
 void FatalError(char *s, ...) FUNC_ATTR_NORETURN FUNC_ATTR_FORMAT(printf, 1, 2);
 
-void AuditStatusMessage(FILE *fp, char status);
+void AuditStatusMessage(Writer *writer, char status);
 
 /* manual.c */
 
@@ -559,7 +559,7 @@ bool IsProcessNameRunning(char *procNameRegex);
 
 /* recursion.c */
 
-int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promise *pp);
+int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promise *pp, const ReportContext *report_context);
 int SkipDirLinks(char *path, const char *lastnode, Recursion r);
 
 /* rlist.c */
@@ -584,8 +584,8 @@ void ShowScope(char *);
 
 void SelfDiagnostic(void);
 void TestVariableScan(void);
-void TestExpandPromise(void);
-void TestExpandVariables(void);
+void TestExpandPromise(const ReportContext *report_context);
+void TestExpandVariables(const ReportContext *report_context);
 
 /* server_transform.c */
 
@@ -680,10 +680,11 @@ void VerifyExecPromise(Promise *pp);
 
 /* verify_files.c */
 
-void VerifyFilePromise(char *path, Promise *pp);
+void VerifyFilePromise(char *path, Promise *pp, const ReportContext *report_context);
 
-void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *path, Promise *ptr));
-void *FindAndVerifyFilesPromises(Promise *pp);
+void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *path, Promise *ptr, const ReportContext *report_context),
+                             const ReportContext *report_context);
+void *FindAndVerifyFilesPromises(Promise *pp, const ReportContext *report_context);
 int FileSanityChecks(char *path, Attributes a, Promise *pp);
 
 /* verify_interfaces.c */
@@ -697,8 +698,8 @@ void VerifyMeasurementPromise(double *this, Promise *pp);
 
 /* verify_methods.c */
 
-void VerifyMethodsPromise(Promise *pp);
-int VerifyMethod(char *attrname, Attributes a, Promise *pp);
+void VerifyMethodsPromise(Promise *pp, const ReportContext *report_context);
+int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext *report_context);
 
 /* verify_packages.c */
 
@@ -717,12 +718,12 @@ void GetProcessColumnNames(char *proc, char **names, int *start, int *end);
 
 /* verify_services.c */
 
-void VerifyServicesPromise(Promise *pp);
+void VerifyServicesPromise(Promise *pp, const ReportContext *report_context);
 
 /* verify_storage.c */
 
-void *FindAndVerifyStoragePromises(Promise *pp);
-void VerifyStoragePromise(char *path, Promise *pp);
+void *FindAndVerifyStoragePromises(Promise *pp, const ReportContext *report_context);
+void VerifyStoragePromise(char *path, Promise *pp, const ReportContext *report_context);
 
 /* verify_reports.c */
 

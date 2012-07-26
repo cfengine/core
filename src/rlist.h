@@ -93,6 +93,7 @@ void ShowRlist(FILE *fp, const Rlist *list);
 void ShowRval(FILE *fp, Rval rval);
 
 void RvalPrint(Writer *writer, Rval rval);
+void RlistPrint(Writer *writer, const Rlist *list);
 
 Rlist *RlistAt(Rlist *start, size_t index);
 

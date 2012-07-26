@@ -1157,7 +1157,7 @@ Rlist *RlistAt(Rlist *start, size_t index)
 
 /*******************************************************************/
 
-static void RlistPrint(Writer *writer, const Rlist *list)
+void RlistPrint(Writer *writer, const Rlist *list)
 {
     WriterWrite(writer, " {");
 

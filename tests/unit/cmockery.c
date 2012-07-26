@@ -1,3 +1,4 @@
+/* LCOV_EXCL_STOP */
 /*
  * Copyright 2008 Google Inc.
  *
@@ -26,6 +27,7 @@
 #ifndef _WIN32
 # include <signal.h>
 #endif // !_WIN32
+#include <libgen.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -81,26 +83,36 @@ WINBASEAPI BOOL WINAPI IsDebuggerPresent(VOID);
     "          <CUNIT_RUN_TEST_FAILURE>\n" \
     "            <TEST_NAME> %s </TEST_NAME>\n"
 #define CUNIT_RUN_TEST_FAILURE_ASSERT \
+    "          <CUNIT_RUN_TEST_FAILURE>\n" \
+    "            <TEST_NAME> %s </TEST_NAME>\n" \
     "            <FILE_NAME> %s </FILE_NAME>\n" \
     "            <LINE_NUMBER> %d </LINE_NUMBER>\n" \
     "            <CONDITION> %s(%lld) </CONDITION>\n" \
     "          </CUNIT_RUN_TEST_FAILURE>\n"
 #define CUNIT_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD \
+    "          <CUNIT_RUN_TEST_FAILURE>\n" \
+    "            <TEST_NAME> %s </TEST_NAME>\n" \
     "            <FILE_NAME> %s </FILE_NAME>\n" \
     "            <LINE_NUMBER> %d </LINE_NUMBER>\n" \
     "            <CONDITION> %s(%lld, %lld) </CONDITION>\n" \
     "          </CUNIT_RUN_TEST_FAILURE>\n"
 #define CUNIT_RUN_TEST_FAILURE_ASSERT_EQUALITY_STRING \
+    "          <CUNIT_RUN_TEST_FAILURE>\n" \
+    "            <TEST_NAME> %s </TEST_NAME>\n" \
     "            <FILE_NAME> %s </FILE_NAME>\n" \
     "            <LINE_NUMBER> %d </LINE_NUMBER>\n" \
     "            <CONDITION> %s(%s %s) </CONDITION>\n" \
     "          </CUNIT_RUN_TEST_FAILURE>\n"
 #define CUNIT_RUN_TEST_FAILURE_ASSERT_RANGE_LLD \
+    "          <CUNIT_RUN_TEST_FAILURE>\n" \
+    "            <TEST_NAME> %s </TEST_NAME>\n" \
     "            <FILE_NAME> %s </FILE_NAME>\n" \
     "            <LINE_NUMBER> %d </LINE_NUMBER>\n" \
     "            <CONDITION> %s(value=%lld, min=%lld, max=%lld) </CONDITION>\n" \
     "          </CUNIT_RUN_TEST_FAILURE>\n"
 #define CUNIT_RUN_TEST_FAILURE_ASSERT_SET_LLD \
+    "          <CUNIT_RUN_TEST_FAILURE>\n" \
+    "            <TEST_NAME> %s </TEST_NAME>\n" \
     "            <FILE_NAME> %s </FILE_NAME>\n" \
     "            <LINE_NUMBER> %d </LINE_NUMBER>\n" \
     "            <CONDITION> %s(value=%lld, number_of_values=%lld) </CONDITION>\n" \
@@ -178,32 +190,6 @@ typedef struct TestState
     // setup function.
     void *state;                // State associated with the test.
 } TestState;
-
-// XML data for each test.
-typedef struct XMLRunData
-{
-    //running test_data
-    const char *suitename;
-    char *testname;
-    char *assertname;
-    const char *filename;
-    const int line;
-
-    //testcase
-    int tests_total;
-    int tests_executed;
-    int tests_succeeded;
-    int tests_failed;
-    int tests_errors;
-    //assertions
-    int asserts_total;
-    int asserts_executed;
-    int asserts_succeeded;
-    int asserts_failed;
-    int asserts_errors;
-    //footer
-    
-} XMLRunData;
 
 // Determines whether two values are the same.
 typedef int (*EqualityFunction) (const void *left, const void *right);
@@ -310,7 +296,8 @@ static SourceLocation global_last_parameter_location;
 static ListNode global_allocated_blocks;
 
 // Data of running tests for XML output.
-static XMLRunData global_xmldata;
+const char *global_suitename;
+const char *global_casename;
 
 #ifndef _WIN32
 // Signals caught by exception_handler().
@@ -833,27 +820,27 @@ LargestIntegralType _mock(const char *const function, const char *const file, co
         print_error("ERROR: " SOURCE_LOCATION_FORMAT " - Could not get value "
                     "to mock function %s\n", file, line, function);
 
-        print_xml(file, CUNIT_RUN_TEST_ERROR 
+/*        print_xml(CUNIT_RUN_TEST_ERROR 
                       "            <CONDITION> Could not get value to mock function %s </CONDITION>\n"
                       "            </CONDITION>\n"
                       "          </CUNIT_RUN_TEST_ERROR>\n",
-                      function, file, line, function);
+                      function, file, line, function);*/
 
         if (source_location_is_set(&global_last_mock_value_location))
         {
             print_error("Previously returned mock value was declared at "
                         SOURCE_LOCATION_FORMAT "\n",
                         global_last_mock_value_location.file, global_last_mock_value_location.line);
-/*            print_xml(file, "                       \"Previously returned mock value was declared at "
+/*            print_xml("                       \"Previously returned mock value was declared at "
                             SOURCE_LOCATION_FORMAT "\"\n",
                       global_last_mock_value_location.file, global_last_mock_value_location.line);*/
         }
         else
         {
             print_error("There were no previously returned mock values for " "this test.\n");
-//            print_xml(file, "                       \"There were no previously returned mock values for " "this test.\"\n");
+//            print_xml("                       \"There were no previously returned mock values for " "this test.\"\n");
         }
-//        print_xml(file, "        </error>\n");
+//        print_xml("        </error>\n");
         exit_test();
     }
     return 0;
@@ -1298,7 +1285,6 @@ void _check_expected(const char *const function_name, const char *const paramete
     const char *symbols[] = { function_name, parameter_name };
     const int rc = get_symbol_value(&global_function_parameter_map_head,
                                     symbols, 2, &result);
-
     if (rc)
     {
         CheckParameterEvent *const check = (CheckParameterEvent *) result;
@@ -1318,11 +1304,11 @@ void _check_expected(const char *const function_name, const char *const paramete
                         SOURCE_LOCATION_FORMAT "\n",
                         parameter_name, function_name,
                         global_last_parameter_location.file, global_last_parameter_location.line);
-            print_xml(file, CUNIT_RUN_TEST_ERROR 
+/*            print_xml(CUNIT_RUN_TEST_ERROR 
                           "            <CONDITION> Check of parameter %s, function %s failed </CONDITION>\n"
                           "          </CUNIT_RUN_TEST_ERROR>\n",
                           function_name, global_last_parameter_location.file, global_last_parameter_location.line,
-                          parameter_name, function_name);
+                          parameter_name, function_name);*/
             _fail(file, line);
         }
     }
@@ -1330,27 +1316,27 @@ void _check_expected(const char *const function_name, const char *const paramete
     {
         print_error("ERROR: " SOURCE_LOCATION_FORMAT " - Could not get value "
                     "to check parameter %s of function %s\n", file, line, parameter_name, function_name);
-        print_xml(file, CUNIT_RUN_TEST_ERROR 
+/*        print_xml(CUNIT_RUN_TEST_ERROR 
                   "            <CONDITION> Could not get value to check parameter %s of function %s </CONDITION>\n"
                   "          </CUNIT_RUN_TEST_ERROR>\n",
-                  function_name, file, line, parameter_name, function_name);
+                  function_name, file, line, parameter_name, function_name);*/
         _fail(file, line);
         if (source_location_is_set(&global_last_parameter_location))
         {
             print_error("Previously declared parameter value was declared at "
                         SOURCE_LOCATION_FORMAT "\n",
                         global_last_parameter_location.file, global_last_parameter_location.line);
-            print_xml(file, "            <CONDITION> Previously declared parameter value was declared at "
+/*            print_xml("            <CONDITION> Previously declared parameter value was declared at "
                       SOURCE_LOCATION_FORMAT "</CONDITION>\n"
                       "          </CUNIT_RUN_TEST_ERROR>\n",
-                      global_last_parameter_location.file, global_last_parameter_location.line);
+                      global_last_parameter_location.file, global_last_parameter_location.line);*/
             _fail(file, line);
         }
         else
         {
             print_error("There were no previously declared parameter values " "for this test.\n");
-            print_xml(file, "            <CONDITION> There were no previously declared parameter values " "for this test. </CONDITION>\n"
-                      "          </CUNIT_RUN_TEST_ERROR>\n");
+/*            print_xml("            <CONDITION> There were no previously declared parameter values " "for this test. </CONDITION>\n"
+                      "          </CUNIT_RUN_TEST_ERROR>\n");*/
         }
         exit_test ();
     }
@@ -1369,7 +1355,7 @@ void mock_assert(const int result, const char *const expression, const char *con
         else
         {
             print_error("ASSERT: %s\n", expression);
-            init_xml ("xml_tmp", CUNIT_RUN_TEST_FAILURE_ASSERT, file, line, "mock_assert", result);
+            print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT, global_casename, file, line, "mock_assert", result);
             _fail(file, line);
         }
     }
@@ -1380,8 +1366,7 @@ void _assert_true(const LargestIntegralType result,
 {
     if (!result)
     {
-        print_error("%s\n", expression);
-        init_xml ("xml_tmp", CUNIT_RUN_TEST_FAILURE_ASSERT, file, line, "assert_true", result);
+        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT, global_casename, file, line, "assert_true", result);
         _fail(file, line);
     }
 }
@@ -1390,7 +1375,7 @@ void _assert_int_equal(const LargestIntegralType a, const LargestIntegralType b,
 {
     if (!values_equal_display_error(a, b))
     {
-        init_xml ("xml_tmp", CUNIT_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD, file, line, "assert_int_equal", a, b);
+        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD, global_casename, file, line, "assert_int_equal", a, b);
         _fail(file, line);
     }
 }
@@ -1400,7 +1385,7 @@ void _assert_int_not_equal(const LargestIntegralType a, const LargestIntegralTyp
 {
     if (!values_not_equal_display_error(a, b))
     {
-        init_xml ("xml_tmp", CUNIT_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD, file, line, "assert_int_not_equal", a, b);
+        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD, global_casename, file, line, "assert_int_not_equal", a, b);
         _fail(file, line);
     }
 }
@@ -1409,7 +1394,7 @@ void _assert_string_equal(const char *const a, const char *const b, const char *
 {
     if (!string_equal_display_error(a, b))
     {
-        init_xml ("xml_tmp", CUNIT_RUN_TEST_FAILURE_ASSERT_EQUALITY_STRING, file, line, "assert_string_equal", a, b);
+        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_EQUALITY_STRING, global_casename, file, line, "assert_string_equal", a, b);
         _fail(file, line);
     }
 }
@@ -1418,7 +1403,7 @@ void _assert_string_not_equal(const char *const a, const char *const b, const ch
 {
     if (!string_not_equal_display_error(a, b))
     {
-        init_xml ("xml_tmp", CUNIT_RUN_TEST_FAILURE_ASSERT_EQUALITY_STRING, file, line, "assert_string_not_equal", a, b);
+        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_EQUALITY_STRING, global_casename, file, line, "assert_string_not_equal", a, b);
         _fail(file, line);
     }
 }
@@ -1428,7 +1413,7 @@ void _assert_memory_equal(const void *const a, const void *const b,
 {
     if (!memory_equal_display_error((const char *) a, (const char *) b, size))
     {
-        init_xml ("xml_tmp", CUNIT_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD, file, line, "assert_memory_equal", a, b);
+        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD, global_casename, file, line, "assert_memory_equal", a, b);
         _fail(file, line);
     }
 }
@@ -1438,7 +1423,7 @@ void _assert_memory_not_equal(const void *const a, const void *const b,
 {
     if (!memory_not_equal_display_error((const char *) a, (const char *) b, size))
     {
-        init_xml ("xml_tmp", CUNIT_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD, file, line, "assert_memory_not_equal", a, b);
+        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD, global_casename, file, line, "assert_memory_not_equal", a, b);
         _fail(file, line);
     }
 }
@@ -1448,7 +1433,7 @@ void _assert_in_range(const LargestIntegralType value, const LargestIntegralType
 {
     if (!integer_in_range_display_error(value, minimum, maximum))
     {
-        init_xml ("xml_tmp", CUNIT_RUN_TEST_FAILURE_ASSERT_RANGE_LLD, file, line, "assert_in_range", value, minimum, maximum);
+        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_RANGE_LLD, global_casename, file, line, "assert_in_range", value, minimum, maximum);
         _fail(file, line);
     }
 }
@@ -1458,7 +1443,7 @@ void _assert_not_in_range(const LargestIntegralType value, const LargestIntegral
 {
     if (!integer_not_in_range_display_error(value, minimum, maximum))
     {
-        init_xml ("xml_tmp", CUNIT_RUN_TEST_FAILURE_ASSERT_RANGE_LLD, file, line, "assert_not_in_range", value, minimum, maximum);
+        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_RANGE_LLD, global_casename, file, line, "assert_not_in_range", value, minimum, maximum);
         _fail(file, line);
     }
 }
@@ -1473,7 +1458,7 @@ void _assert_in_set(const LargestIntegralType value,
     check_integer_set.size_of_set = number_of_values;
     if (!value_in_set_display_error(value, &check_integer_set, 0))
     {
-        init_xml ("xml_tmp", CUNIT_RUN_TEST_FAILURE_ASSERT_SET_LLD, file, line, "assert_in_set", value, number_of_values);
+        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_SET_LLD, global_casename, file, line, "assert_in_set", value, number_of_values);
         _fail(file, line);
     }
 }
@@ -1488,7 +1473,7 @@ void _assert_not_in_set(const LargestIntegralType value,
     check_integer_set.size_of_set = number_of_values;
     if (!value_in_set_display_error(value, &check_integer_set, 1))
     {
-        init_xml ("xml_tmp", CUNIT_RUN_TEST_FAILURE_ASSERT_SET_LLD, file, line, "assert_not_in_set", value, number_of_values);
+        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_SET_LLD, global_casename, file, line, "assert_not_in_set", value, number_of_values);
         _fail(file, line);
     }
 }
@@ -1579,13 +1564,13 @@ void _test_free(void *const ptr, const char *file, const int line)
                                 SOURCE_LOCATION_FORMAT " at 0x%08x is corrupt\n",
                                 (size_t) ptr, block_info->size,
                                 block_info->location.file, block_info->location.line, (size_t) &guard[j]);
-                    print_xml(file, CUNIT_RUN_TEST_ERROR 
+/*                    print_xml(CUNIT_RUN_TEST_ERROR 
                               "            <CONDITION> Guard block of 0x%08x size=%d allocated by"
                               SOURCE_LOCATION_FORMAT " at 0x%08x is corrupt </CONDITION>\n"
                               "          </CUNIT_RUN_TEST_ERROR>\n",
                               "free_test", file, line,
                               (size_t) ptr, block_info->size,
-                              block_info->location.file, block_info->location.line, (size_t) &guard[j]);
+                              block_info->location.file, block_info->location.line, (size_t) &guard[j]);*/
                     _fail(file, line);
                 }
             }
@@ -1665,10 +1650,10 @@ static void fail_if_blocks_allocated(const ListNode *const check_point, const ch
         print_error("ERROR: %s leaked %d block(s)\n", test_name, allocated_blocks);
 
 
-        print_xml(global_xmldata.filename, CUNIT_RUN_TEST_ERROR 
+/*        print_xml(CUNIT_RUN_TEST_ERROR 
                   "            <CONDITION> %s leaked %d block(s) </CONDITION>\n"
                   "          </CUNIT_RUN_TEST_ERROR>\n",
-                  test_name, global_xmldata.filename, global_xmldata.line, test_name, allocated_blocks);
+                  test_name, global_xmldata.filename, global_xmldata.line, test_name, allocated_blocks);*/
         exit_test();
     }
 }
@@ -1726,34 +1711,12 @@ static LONG WINAPI exception_filter(EXCEPTION_POINTERS *exception_pointers)
 }
 #endif // !_WIN32
 
-
-
-// XML init and output
-void vinit_xml (const char *file, const char *const format, va_list args)
+void vinit_xml (const char *const format, va_list args)
 {
     char buffer[1024];
-
-
-/*
-    //Name of xml file, for current testsuite
-    char suitename[80];
-    char xml_name[80];
-    char xml_filename[80];
-    int len = strlen(file)-2;
-
-    sprintf(xml_filename, "xml/%s", file);
-    strncpy(suitename, xml_filename, len);
-    sprintf(xml_filename, "xml/%s.xml", suitename);
+    char xml_filename[1024];
+    sprintf(xml_filename, "xml/%s.xml", global_suitename);
     const char *xml_file = xml_filename;
-*/
-
-
-    //Name of xml file, for current testsuite
-    char xml_filename[80];
-    sprintf(xml_filename, "xml/%s.xml", file);
-    const char *xml_file = xml_filename;
-
-
 
     FILE* xml_report = fopen(xml_file, "w");
     vsnprintf(buffer, sizeof(buffer), format, args);
@@ -1764,64 +1727,19 @@ void vinit_xml (const char *file, const char *const format, va_list args)
 #endif // _WIN32
 }
 
-void append_xml_tmp(const char *file)
-{
-    char ch;
-
-    //Name of xml file, for current testsuite
-    char xml_filename[80];
-    sprintf(xml_filename, "xml/%s.xml", file);
-
-    const char *xml_file = xml_filename;
-    const char *xml_file2 = "xml/xml_tmp.xml";
-
-
-    FILE* xml_report = fopen(xml_file, "ab");
-    FILE* xml_tmp = fopen(xml_file2, "rb");
-
-    while(!feof(xml_tmp))
-    {
-        ch = getc(xml_tmp);
-        if(!feof(xml_tmp))
-           {
-               putc(ch, xml_report);
-           }
-    }
-
-    fclose(xml_report);
-    fclose(xml_tmp);
-
-}
-
-void init_xml (const char *file, const char *const format, ...)
+void init_xml (const char *const format, ...)
 {
     va_list args;
     va_start(args, format);
-    vinit_xml(file, format, args);
+    vinit_xml(format, args);
     va_end(args);
 }
 
-void vprint_xml(const char *file, const char *const format, va_list args)
+void vprint_xml(const char *const format, va_list args)
 {
     char buffer[1024];
-
-
-/*
-    //Name of xml file, for current testsuite
-    char suitename[80];
-    char xml_name[80];
-    char xml_filename[80];
-    int len = strlen(file)-2;
-
-    sprintf(xml_filename, "xml/%s", file);
-    strncpy(suitename, xml_filename, len);
-    sprintf(xml_filename, "xml/%s.xml", suitename);
-    const char *xml_file = xml_filename;
-*/
-
-    //Name of xml file, for current testsuite
-    char xml_filename[80];
-    sprintf(xml_filename, "xml/%s.xml", file);
+    char xml_filename[1024];
+    sprintf(xml_filename, "xml/%s.xml", global_suitename);
     const char *xml_file = xml_filename;
 
     FILE* xml_report = fopen(xml_file, "a");
@@ -1833,14 +1751,13 @@ void vprint_xml(const char *file, const char *const format, va_list args)
 #endif // _WIN32
 }
 
-void print_xml(const char *file, const char *const format, ...)
+void print_xml(const char *const format, ...)
 {
     va_list args;
     va_start(args, format);
-    vprint_xml(file, format, args);
+    vprint_xml(format, args);
     va_end(args);
 }
-
 
 // Standard output and error print methods.
 void vprint_message(const char *const format, va_list args)
@@ -1966,7 +1883,7 @@ int _run_test(const char *const function_name, const UnitTestFunction Function,
     return rc;
 }
 
-int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const char *file)
+int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const char *const file)
 {
     // Whether to execute the next test.
     int run_next_test = 1;
@@ -2010,10 +1927,25 @@ int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const 
     assert_true(sizeof(LargestIntegralType) >= sizeof(void *));
 
     //Initialize an xml file and parameters
-    global_xmldata.filename = file;
-    const char *xs_tmpfile = "xml_tmp";
-    init_xml(file, CUNIT_INIT, file);
-    init_xml("xml_tmp", "");
+//    initialize_xmldata (&global_xmldata);
+//    set_names_xmldata(&global_xmldata, file);
+//    const char *xmlfile = global_xmldata.xmlfile;
+//    const char *suitename = global_xmldata.suitename;
+    char path[1024]         = {0};
+    char filename[1024]     = {0};
+    char suitename[1024]    = {0};
+    char casename[1024]     = {0};
+    int len;
+
+    sprintf(path, "%s", file);
+    strcpy(filename, basename(path));
+    len = strrchr(filename, '.')-filename;
+
+    strcpy(suitename, "");
+    strncat(suitename, filename, len);
+    global_suitename = suitename;
+
+    init_xml(CUNIT_INIT, suitename);
 
     while (current_test < number_of_tests)
     {
@@ -2059,23 +1991,25 @@ int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const 
 
         if (run_next_test)
         {
-            print_xml(file, "        <CUNIT_RUN_TEST_RECORD>\n");
+            print_xml("        <CUNIT_RUN_TEST_RECORD>\n");
+            strcpy(casename, test->name);
+            global_casename = casename;
             int failed = _run_test(test->name, test->function, current_state,
                                    test->function_type, test_check_point);
             if (failed)
             {
                 failed_names[total_failed] = test->name;
 
-                print_xml(file, "          <CUNIT_RUN_TEST_FAILURE>\n"
-                                "            <TEST_NAME> %s </TEST_NAME>\n",
-                          test->name);
-                append_xml_tmp(file);
+//                print_xml("          <CUNIT_RUN_TEST_FAILURE>\n"
+//                                "            <TEST_NAME> %s </TEST_NAME>\n",
+//                          test->name);
+//                append_xml_tmp(file);
             }
             else
             {
-                print_xml(file, CUNIT_RUN_TEST_SUCCESS, test->name);
+                print_xml(CUNIT_RUN_TEST_SUCCESS, test->name);
             }
-            print_xml(file, "        </CUNIT_RUN_TEST_RECORD>\n");
+            print_xml("        </CUNIT_RUN_TEST_RECORD>\n");
 
             switch (test->function_type)
             {
@@ -2109,7 +2043,7 @@ int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const 
             }
         }
     }
-    print_xml(file, "      </CUNIT_RUN_SUITE_SUCCESS>\n"
+    print_xml("      </CUNIT_RUN_SUITE_SUCCESS>\n"
                     "    </CUNIT_RUN_SUITE>\n"
                     "  </CUNIT_RESULT_LISTING>\n"
                     "  <CUNIT_RUN_SUMMARY>\n"
@@ -2135,8 +2069,6 @@ int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const 
     {
         print_message("All %d tests passed\n", tests_executed);
     }
-
-    print_xml(file, "</testsuite>");
 
     if (number_of_test_states)
     {

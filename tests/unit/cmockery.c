@@ -1659,7 +1659,7 @@ void vinit_xml (const char *const format, va_list args)
 {
     char buffer[1024];
     char xml_filename[1024];
-    sprintf(xml_filename, "xml/%s.xml", global_suitename);
+    sprintf(xml_filename, "%s.xml", global_suitename);
     const char *xml_file = xml_filename;
 
     FILE* xml_report = fopen(xml_file, "w");
@@ -1683,7 +1683,7 @@ void vprint_xml(const char *const format, va_list args)
 {
     char buffer[1024];
     char xml_filename[1024];
-    sprintf(xml_filename, "xml/%s.xml", global_suitename);
+    sprintf(xml_filename, "%s.xml", global_suitename);
     const char *xml_file = xml_filename;
 
     FILE* xml_report = fopen(xml_file, "a");

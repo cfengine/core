@@ -37,9 +37,7 @@
 #include "item_lib.h"
 #include "conversion.h"
 
-#define QUEUESIZE 50
-#define CF_BUFEXT 128
-#define CF_NOSIZE -1
+static const size_t QUEUESIZE = 50;
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);

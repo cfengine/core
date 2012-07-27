@@ -30,19 +30,126 @@
 /*                                                                           */
 /*****************************************************************************/
 
-#include "cf3.defs.h"
-#include "cf3.extern.h"
+#include "server.h"
+
 #include "item_lib.h"
-#include "cf3.server.h"
 #include "crypto.h"
 #include "files_names.h"
 #include "env_context.h"
 #include "lastseen.h"
 #include "dir.h"
-#include "server_globals.h"
 #include "conversion.h"
 
-/*********************************************************************/
+//******************************************************************
+// GLOBAL STATE
+//******************************************************************
+
+int CLOCK_DRIFT = 3600;  /* 1hr */
+int ACTIVE_THREADS;
+
+int CFD_MAXPROCESSES = 0;
+int CFD_INTERVAL = 0;
+int DENYBADCLOCKS = true;
+
+int MAXTRIES = 5;
+int LOGCONNS = false;
+int LOGENCRYPT = false;
+int COLLECT_INTERVAL = 0;
+int COLLECT_WINDOW = 10;
+
+Auth *ROLES = NULL;
+Auth *ROLESTOP = NULL;
+
+ServerAccess SV;
+
+Auth *VADMIT = NULL;
+Auth *VADMITTOP = NULL;
+Auth *VDENY = NULL;
+Auth *VDENYTOP = NULL;
+
+Auth *VARADMIT = NULL;
+Auth *VARADMITTOP = NULL;
+Auth *VARDENY = NULL;
+Auth *VARDENYTOP = NULL;
+
+char CFRUNCOMMAND[CF_BUFSIZE] = { 0 };
+
+//******************************************************************/
+// LOCAL CONSTANTS
+//******************************************************************/
+
+static const size_t CF_BUFEXT = 128;
+static const int CF_NOSIZE = -1;
+
+static void PurgeOldConnections(Item **list, time_t now);
+static void SpawnConnection(int sd_reply, char *ipaddr);
+static void *HandleConnection(ServerConnectionState *conn);
+static int BusyWithConnection(ServerConnectionState *conn);
+static int MatchClasses(ServerConnectionState *conn);
+static void DoExec(ServerConnectionState *conn, char *sendbuffer, char *args);
+static int GetCommand(char *str);
+static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE]);
+static void RefuseAccess(ServerConnectionState *conn, char *sendbuffer, int size, char *errmesg);
+static int AccessControl(const char *req_path, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny);
+static int LiteralAccessControl(char *in, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny);
+static Item *ContextAccessControl(char *in, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny);
+static void ReplyServerContext(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted, Item *classes);
+static int CheckStoreKey(ServerConnectionState *conn, RSA *key);
+static int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename);
+static void CfGetFile(ServerFileGetState *args);
+static void CfEncryptGetFile(ServerFileGetState *args);
+static void CompareLocalHash(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer);
+static void GetServerLiteral(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted);
+static int ReceiveCollectCall(ServerConnectionState *conn, char *sendbuffer);
+static int GetServerQuery(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer);
+static int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *oldDirname);
+static int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirname);
+static void Terminate(int sd);
+static int AllowedUser(char *user);
+static int AuthorizeRoles(ServerConnectionState *conn, char *args);
+static int TransferRights(char *filename, int sd, ServerFileGetState *args, char *sendbuffer, struct stat *sb);
+static void AbortTransfer(int sd, char *sendbuffer, char *filename);
+static void FailedTransfer(int sd, char *sendbuffer, char *filename);
+static void ReplyNothing(ServerConnectionState *conn);
+static ServerConnectionState *NewConn(int sd);
+static void DeleteConn(ServerConnectionState *conn);
+static int cfscanf(char *in, int len1, int len2, char *out1, char *out2, char *out3);
+static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer, int recvlen);
+static int SafeOpen(char *filename);
+static int OptionFound(char *args, char *pos, char *word);
+
+//******************************************************************/
+// LOCAL STATE
+//******************************************************************/
+
+static const char *PROTOCOL[] =
+{
+    "EXEC",
+    "AUTH",                     /* old protocol */
+    "GET",
+    "OPENDIR",
+    "SYNCH",
+    "CLASSES",
+    "MD5",
+    "SMD5",
+    "CAUTH",
+    "SAUTH",
+    "SSYNCH",
+    "SGET",
+    "VERSION",
+    "SOPENDIR",
+    "VAR",
+    "SVAR",
+    "CONTEXT",
+    "SCONTEXT",
+    "SQUERY",
+    "SCALLBACK",
+    NULL
+};
+
+static int TRIES = 0;
+
+/*******************************************************************/
 
 void ServerEntryPoint(int sd_reply, char *ipaddr, ServerAccess sv)
 
@@ -112,7 +219,7 @@ void ServerEntryPoint(int sd_reply, char *ipaddr, ServerAccess sv)
 
 /**********************************************************************/
 
-void PurgeOldConnections(Item **list, time_t now)
+static void PurgeOldConnections(Item **list, time_t now)
    /* Some connections might not terminate properly. These should be cleaned
       every couple of hours. That should be enough to prevent spamming. */
 {
@@ -152,7 +259,7 @@ void PurgeOldConnections(Item **list, time_t now)
 
 /*********************************************************************/
 
-void SpawnConnection(int sd_reply, char *ipaddr)
+static void SpawnConnection(int sd_reply, char *ipaddr)
 {
     ServerConnectionState *conn;
 
@@ -213,7 +320,7 @@ void DisableSendDelays(int sockfd)
 
 /*********************************************************************/
 
-void *HandleConnection(ServerConnectionState *conn)
+static void *HandleConnection(ServerConnectionState *conn)
 {
     char output[CF_BUFSIZE];
 
@@ -287,7 +394,7 @@ void *HandleConnection(ServerConnectionState *conn)
 
 /*********************************************************************/
 
-int BusyWithConnection(ServerConnectionState *conn)
+static int BusyWithConnection(ServerConnectionState *conn)
   /* This is the protocol section. Here we must   */
   /* check that the incoming data are sensible    */
   /* and extract the information from the message */
@@ -884,7 +991,7 @@ int BusyWithConnection(ServerConnectionState *conn)
 /* Level 4                                                    */
 /**************************************************************/
 
-int MatchClasses(ServerConnectionState *conn)
+static int MatchClasses(ServerConnectionState *conn)
 {
     char recvbuffer[CF_BUFSIZE];
     Item *classlist = NULL, *ip;
@@ -953,7 +1060,7 @@ int MatchClasses(ServerConnectionState *conn)
 
 /******************************************************************/
 
-void DoExec(ServerConnectionState *conn, char *sendbuffer, char *args)
+static void DoExec(ServerConnectionState *conn, char *sendbuffer, char *args)
 {
     char ebuff[CF_EXPANDSIZE], line[CF_BUFSIZE], *sp;
     int print = false, i;
@@ -1087,7 +1194,7 @@ void DoExec(ServerConnectionState *conn, char *sendbuffer, char *args)
 
 /**************************************************************/
 
-int GetCommand(char *str)
+static int GetCommand(char *str)
 {
     int i;
     char op[CF_BUFSIZE];
@@ -1107,7 +1214,7 @@ int GetCommand(char *str)
 
 /*********************************************************************/
 
-int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
+static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
  /* Try reverse DNS lookup
     and RFC931 username lookup to check the authenticity. */
 {
@@ -1350,7 +1457,7 @@ int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
 
 /**************************************************************/
 
-int AllowedUser(char *user)
+static int AllowedUser(char *user)
 {
     if (IsItemIn(SV.allowuserlist, user))
     {
@@ -1414,7 +1521,7 @@ bool ResolveFilename(const char *req_path, char *res_path)
 
 /**************************************************************/
 
-int AccessControl(const char *req_path, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny)
+static int AccessControl(const char *req_path, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny)
 {
     Auth *ap;
     int access = false;
@@ -1560,7 +1667,7 @@ int AccessControl(const char *req_path, ServerConnectionState *conn, int encrypt
 
 /**************************************************************/
 
-int LiteralAccessControl(char *in, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny)
+static int LiteralAccessControl(char *in, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny)
 {
     Auth *ap;
     int access = false;
@@ -1680,7 +1787,7 @@ int LiteralAccessControl(char *in, ServerConnectionState *conn, int encrypt, Aut
 
 /**************************************************************/
 
-Item *ContextAccessControl(char *in, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny)
+static Item *ContextAccessControl(char *in, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny)
 {
     Auth *ap;
     int access = false;
@@ -1825,7 +1932,7 @@ Item *ContextAccessControl(char *in, ServerConnectionState *conn, int encrypt, A
 
 /**************************************************************/
 
-int AuthorizeRoles(ServerConnectionState *conn, char *args)
+static int AuthorizeRoles(ServerConnectionState *conn, char *args)
 {
     char *sp;
     Auth *ap;
@@ -1899,7 +2006,7 @@ int AuthorizeRoles(ServerConnectionState *conn, char *args)
 
 /**************************************************************/
 
-int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer, int recvlen)
+static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer, int recvlen)
 {
     char in[CF_BUFSIZE], *out, *decrypted_nonce;
     BIGNUM *counter_challenge = NULL;
@@ -2237,7 +2344,7 @@ int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer, int re
 
 /**************************************************************/
 
-int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
+static int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
 /* Because we do not know the size or structure of remote datatypes,*/
 /* the simplest way to transfer the data is to convert them into */
 /* plain text and interpret them on the other side. */
@@ -2413,7 +2520,7 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
 
 /***************************************************************/
 
-void CfGetFile(ServerFileGetState *args)
+static void CfGetFile(ServerFileGetState *args)
 {
     int sd, fd, n_read, total = 0, sendlen = 0, count = 0;
     char sendbuffer[CF_BUFSIZE + 256], filename[CF_BUFSIZE];
@@ -2514,7 +2621,7 @@ void CfGetFile(ServerFileGetState *args)
 
 /***************************************************************/
 
-void CfEncryptGetFile(ServerFileGetState *args)
+static void CfEncryptGetFile(ServerFileGetState *args)
 /* Because the stream doesn't end for each file, we need to know the
    exact number of bytes transmitted, which might change during
    encryption, hence we need to handle this with transactions */
@@ -2636,7 +2743,7 @@ void CfEncryptGetFile(ServerFileGetState *args)
 
 /**************************************************************/
 
-void CompareLocalHash(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer)
+static void CompareLocalHash(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer)
 {
     unsigned char digest1[EVP_MAX_MD_SIZE + 1], digest2[EVP_MAX_MD_SIZE + 1];
     char filename[CF_BUFSIZE], rfilename[CF_BUFSIZE];
@@ -2676,7 +2783,7 @@ void CompareLocalHash(ServerConnectionState *conn, char *sendbuffer, char *recvb
 
 /**************************************************************/
 
-void GetServerLiteral(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted)
+static void GetServerLiteral(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted)
 {
     char handle[CF_BUFSIZE], out[CF_BUFSIZE];
     int cipherlen;
@@ -2707,7 +2814,7 @@ void GetServerLiteral(ServerConnectionState *conn, char *sendbuffer, char *recvb
 
 /********************************************************************/
 
-int GetServerQuery(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer)
+static int GetServerQuery(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer)
 {
     char query[CF_BUFSIZE];
 
@@ -2764,7 +2871,7 @@ void TryCollectCall(void)
 
 /********************************************************************/
 
-int ReceiveCollectCall(ServerConnectionState *conn, char *sendbuffer)
+static int ReceiveCollectCall(ServerConnectionState *conn, char *sendbuffer)
 {
 #if defined(HAVE_NOVA) && defined(HAVE_LIBMONGOC)
     CfOut(cf_verbose, "", "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
@@ -2785,7 +2892,7 @@ int ReceiveCollectCall(ServerConnectionState *conn, char *sendbuffer)
 
 /**************************************************************/
 
-void ReplyServerContext(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted,
+static void ReplyServerContext(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted,
                                Item *classes)
 {
     char out[CF_BUFSIZE];
@@ -2823,7 +2930,7 @@ void ReplyServerContext(ServerConnectionState *conn, char *sendbuffer, char *rec
 
 /**************************************************************/
 
-int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *oldDirname)
+static int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *oldDirname)
 {
     Dir *dirh;
     const struct dirent *dirp;
@@ -2877,7 +2984,7 @@ int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *oldDirn
 
 /**************************************************************/
 
-int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirname)
+static int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirname)
 {
     Dir *dirh;
     const struct dirent *dirp;
@@ -2937,7 +3044,7 @@ int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirn
 
 /***************************************************************/
 
-void Terminate(int sd)
+static void Terminate(int sd)
 {
     char buffer[CF_BUFSIZE];
 
@@ -2972,7 +3079,7 @@ void DeleteAuthList(Auth *ap)
 /* Level 5                                                     */
 /***************************************************************/
 
-int OptionFound(char *args, char *pos, char *word)
+static int OptionFound(char *args, char *pos, char *word)
 /*
  * Returns true if the current position 'pos' in buffer
  * 'args' corresponds to the word 'word'.  Words are
@@ -3016,7 +3123,7 @@ int OptionFound(char *args, char *pos, char *word)
 
 /**************************************************************/
 
-void RefuseAccess(ServerConnectionState *conn, char *sendbuffer, int size, char *errmesg)
+static void RefuseAccess(ServerConnectionState *conn, char *sendbuffer, int size, char *errmesg)
 {
     char *hostname, *username, *ipaddr;
     char *def = "?";
@@ -3068,7 +3175,7 @@ void RefuseAccess(ServerConnectionState *conn, char *sendbuffer, int size, char 
 
 /***************************************************************/
 
-int TransferRights(char *filename, int sd, ServerFileGetState *args, char *sendbuffer, struct stat *sb)
+static int TransferRights(char *filename, int sd, ServerFileGetState *args, char *sendbuffer, struct stat *sb)
 {
 #ifdef MINGW
     SECURITY_DESCRIPTOR *secDesc;
@@ -3141,7 +3248,7 @@ int TransferRights(char *filename, int sd, ServerFileGetState *args, char *sendb
 
 /***************************************************************/
 
-void AbortTransfer(int sd, char *sendbuffer, char *filename)
+static void AbortTransfer(int sd, char *sendbuffer, char *filename)
 {
     CfOut(cf_verbose, "", "Aborting transfer of file due to source changes\n");
 
@@ -3155,7 +3262,7 @@ void AbortTransfer(int sd, char *sendbuffer, char *filename)
 
 /***************************************************************/
 
-void FailedTransfer(int sd, char *sendbuffer, char *filename)
+static void FailedTransfer(int sd, char *sendbuffer, char *filename)
 {
     CfOut(cf_verbose, "", "Transfer failure\n");
 
@@ -3169,7 +3276,7 @@ void FailedTransfer(int sd, char *sendbuffer, char *filename)
 
 /***************************************************************/
 
-void ReplyNothing(ServerConnectionState *conn)
+static void ReplyNothing(ServerConnectionState *conn)
 {
     char buffer[CF_BUFSIZE];
 
@@ -3183,7 +3290,7 @@ void ReplyNothing(ServerConnectionState *conn)
 
 /***************************************************************/
 
-int CheckStoreKey(ServerConnectionState *conn, RSA *key)
+static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
 {
     RSA *savedkey;
     char udigest[CF_MAXVARSIZE];
@@ -3232,7 +3339,7 @@ int CheckStoreKey(ServerConnectionState *conn, RSA *key)
 /* Toolkit/Class: conn                                         */
 /***************************************************************/
 
-ServerConnectionState *NewConn(int sd)
+static ServerConnectionState *NewConn(int sd)
 {
     ServerConnectionState *conn;
     struct sockaddr addr;
@@ -3266,7 +3373,7 @@ ServerConnectionState *NewConn(int sd)
 
 /***************************************************************/
 
-void DeleteConn(ServerConnectionState *conn)
+static void DeleteConn(ServerConnectionState *conn)
 {
     CfDebug("***Closing socket %d from %s\n", conn->sd_reply, conn->ipaddr);
 
@@ -3299,7 +3406,7 @@ void DeleteConn(ServerConnectionState *conn)
 /* ERS                                                         */
 /***************************************************************/
 
-int SafeOpen(char *filename)
+static int SafeOpen(char *filename)
 {
     int fd;
 
@@ -3313,7 +3420,7 @@ int SafeOpen(char *filename)
 
 /***************************************************************/
 
-int cfscanf(char *in, int len1, int len2, char *out1, char *out2, char *out3)
+static int cfscanf(char *in, int len1, int len2, char *out1, char *out2, char *out3)
 {
     int len3 = 0;
     char *sp;

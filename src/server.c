@@ -176,10 +176,7 @@ void SpawnConnection(int sd_reply, char *ipaddr)
 
     pthread_attr_init(&threadattrs);
     pthread_attr_setdetachstate(&threadattrs, PTHREAD_CREATE_DETACHED);
-
-# ifdef HAVE_PTHREAD_ATTR_SETSTACKSIZE
     pthread_attr_setstacksize(&threadattrs, (size_t) 1024 * 1024);
-# endif
 
     int ret = pthread_create(&tid, &threadattrs, (void *) HandleConnection, (void *) conn);
     if (ret != 0)

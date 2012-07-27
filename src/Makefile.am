@@ -132,6 +132,8 @@ libpromises_la_SOURCES = \
         scope.c \
         selfdiagnostic.c \
         sequence.c sequence.h \
+	server.c \
+	server_globals.c \
         show.h \
         signals.c \
         sockaddr.c \

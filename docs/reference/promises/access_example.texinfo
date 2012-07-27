@@ -22,9 +22,48 @@ bundle server access_rules()
 {
 access:
 
-  "/home/mark/LapTop"
+  "/source/directory"
+          comment => "Access to file transfer",
+          admit   => { "127.0.0.1" };
 
-    admit   => { "127.0.0.1" };
+  # Grant orchestration communication
+
+  "did.*"
+          comment => "Access to class context (enterprise)",
+    resource_type => "context",
+            admit => { "127.0.0.1" };
+
+
+  "value of my test_scalar, can expand variables here - $(sys.host)"
+          comment => "Grant access to the string in quotes, by name test_scalar",
+           handle => "test_scalar",
+    resource_type => "literal",
+            admit => { "127.0.0.1" };
+
+  "XYZ"
+          comment => "Grant access to contents of persistent scalar variable XYZ",
+    resource_type => "variable",
+            admit => { "127.0.0.1" };
+
+  # Client grants access to CFEngine hub access
+
+  "delta"
+    comment => "Grant access to cfengine hub to collect report deltas",
+    resource_type => "query",
+          admit   => { "127.0.0.1"  };
+  "full"
+          comment => "Grant access to cfengine hub to collect full report dump",
+    resource_type => "query",
+          admit   => { "127.0.0.1"  };
+
+  policy_hub::
+
+  "collect call"
+          comment => "Grant access to cfengine client to request the collection of its reports",
+    resource_type => "query",
+          admit   => { "10.1.2.*" };
+
+
 }
 
 @end verbatim

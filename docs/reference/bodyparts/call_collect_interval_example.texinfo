@@ -1,0 +1,6 @@
+
+@verbatim
+
+call_collect_interval => "5";
+
+@end verbatim

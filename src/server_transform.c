@@ -43,6 +43,8 @@ static void KeepPromiseBundles(Policy *policy);
 
 extern const BodySyntax CFS_CONTROLBODY[];
 extern const BodySyntax CF_REMROLE_BODIES[];
+extern int COLLECT_INTERVAL;
+extern int COLLECT_WINDOW;
 
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
@@ -145,49 +147,42 @@ void Summarize()
     
     CfOut(cf_verbose, "", " -> Host IPs allowed connection access :\n");
 
-    for (ip = NONATTACKERLIST; ip != NULL; ip = ip->next)
+    for (ip = SV.nonattackerlist; ip != NULL; ip = ip->next)
     {
         CfOut(cf_verbose, "", " .... IP: %s\n", ip->name);
     }
 
     CfOut(cf_verbose, "", "Host IPs denied connection access :\n");
 
-    for (ip = ATTACKERLIST; ip != NULL; ip = ip->next)
+    for (ip = SV.attackerlist; ip != NULL; ip = ip->next)
     {
         CfOut(cf_verbose, "", " .... IP: %s\n", ip->name);
     }
 
     CfOut(cf_verbose, "", "Host IPs allowed multiple connection access :\n");
 
-    for (ip = MULTICONNLIST; ip != NULL; ip = ip->next)
+    for (ip = SV.multiconnlist; ip != NULL; ip = ip->next)
     {
         CfOut(cf_verbose, "", " .... IP: %s\n", ip->name);
     }
 
     CfOut(cf_verbose, "", "Host IPs from whom we shall accept public keys on trust :\n");
 
-    for (ip = TRUSTKEYLIST; ip != NULL; ip = ip->next)
+    for (ip = SV.trustkeylist; ip != NULL; ip = ip->next)
     {
         CfOut(cf_verbose, "", " .... IP: %s\n", ip->name);
     }
 
     CfOut(cf_verbose, "", "Users from whom we accept connections :\n");
 
-    for (ip = ALLOWUSERLIST; ip != NULL; ip = ip->next)
+    for (ip = SV.allowuserlist; ip != NULL; ip = ip->next)
     {
         CfOut(cf_verbose, "", " .... USERS: %s\n", ip->name);
     }
 
     CfOut(cf_verbose, "", "Host IPs from NAT which we don't verify :\n");
 
-    for (ip = SKIPVERIFY; ip != NULL; ip = ip->next)
-    {
-        CfOut(cf_verbose, "", " .... IP: %s\n", ip->name);
-    }
-
-    CfOut(cf_verbose, "", "Dynamical Host IPs (e.g. DHCP) whose bindings could vary over time :\n");
-
-    for (ip = DHCPLIST; ip != NULL; ip = ip->next)
+    for (ip = SV.skipverify; ip != NULL; ip = ip->next)
     {
         CfOut(cf_verbose, "", " .... IP: %s\n", ip->name);
     }
@@ -253,7 +248,7 @@ void KeepControlPromises(Policy *policy)
 
         if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_logallconnections].lval) == 0)
         {
-            LOGCONNS = GetBoolean(retval.item);
+            SV.logconns = GetBoolean(retval.item);
             CfOut(cf_verbose, "", "SET LOGCONNS = %d\n", LOGCONNS);
             continue;
         }
@@ -263,6 +258,20 @@ void KeepControlPromises(Policy *policy)
             CFD_MAXPROCESSES = (int) Str2Int(retval.item);
             MAXTRIES = CFD_MAXPROCESSES / 3;
             CfOut(cf_verbose, "", "SET maxconnections = %d\n", CFD_MAXPROCESSES);
+            continue;
+        }
+
+        if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_call_collect_interval].lval) == 0)
+        {
+            COLLECT_INTERVAL = (int) 60 * Str2Int(retval.item);
+            CfOut(cf_verbose, "", "SET call_collect_interval = %d (seconds)\n", COLLECT_INTERVAL);
+            continue;
+        }
+
+        if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_collect_window].lval) == 0)
+        {
+            COLLECT_WINDOW = (int) Str2Int(retval.item);
+            CfOut(cf_verbose, "", "SET collect_window = %d (seconds)\n", COLLECT_INTERVAL);
             continue;
         }
 
@@ -281,9 +290,9 @@ void KeepControlPromises(Policy *policy)
 
             for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
             {
-                if (!IsItemIn(NONATTACKERLIST, rp->item))
+                if (!IsItemIn(SV.nonattackerlist, rp->item))
                 {
-                    AppendItem(&NONATTACKERLIST, rp->item, cp->classes);
+                    AppendItem(&SV.nonattackerlist, rp->item, cp->classes);
                 }
             }
 
@@ -298,9 +307,9 @@ void KeepControlPromises(Policy *policy)
 
             for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
             {
-                if (!IsItemIn(ATTACKERLIST, rp->item))
+                if (!IsItemIn(SV.attackerlist, rp->item))
                 {
-                    AppendItem(&ATTACKERLIST, rp->item, cp->classes);
+                    AppendItem(&SV.attackerlist, rp->item, cp->classes);
                 }
             }
 
@@ -315,31 +324,15 @@ void KeepControlPromises(Policy *policy)
 
             for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
             {
-                if (!IsItemIn(SKIPVERIFY, rp->item))
+                if (!IsItemIn(SV.skipverify, rp->item))
                 {
-                    AppendItem(&SKIPVERIFY, rp->item, cp->classes);
+                    AppendItem(&SV.skipverify, rp->item, cp->classes);
                 }
             }
 
             continue;
         }
 
-        if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_dynamicaddresses].lval) == 0)
-        {
-            Rlist *rp;
-
-            CfOut(cf_verbose, "", "SET Dynamic addresses from ...\n");
-
-            for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
-            {
-                if (!IsItemIn(DHCPLIST, rp->item))
-                {
-                    AppendItem(&DHCPLIST, rp->item, cp->classes);
-                }
-            }
-
-            continue;
-        }
 
         if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_allowallconnects].lval) == 0)
         {
@@ -349,9 +342,9 @@ void KeepControlPromises(Policy *policy)
 
             for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
             {
-                if (!IsItemIn(MULTICONNLIST, rp->item))
+                if (!IsItemIn(SV.multiconnlist, rp->item))
                 {
-                    AppendItem(&MULTICONNLIST, rp->item, cp->classes);
+                    AppendItem(&SV.multiconnlist, rp->item, cp->classes);
                 }
             }
 
@@ -366,9 +359,9 @@ void KeepControlPromises(Policy *policy)
 
             for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
             {
-                if (!IsItemIn(ALLOWUSERLIST, rp->item))
+                if (!IsItemIn(SV.allowuserlist, rp->item))
                 {
-                    AppendItem(&ALLOWUSERLIST, rp->item, cp->classes);
+                    AppendItem(&SV.allowuserlist, rp->item, cp->classes);
                 }
             }
 
@@ -383,9 +376,9 @@ void KeepControlPromises(Policy *policy)
 
             for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
             {
-                if (!IsItemIn(TRUSTKEYLIST, rp->item))
+                if (!IsItemIn(SV.trustkeylist, rp->item))
                 {
-                    AppendItem(&TRUSTKEYLIST, rp->item, cp->classes);
+                    AppendItem(&SV.trustkeylist, rp->item, cp->classes);
                 }
             }
 

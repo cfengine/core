@@ -153,6 +153,5 @@ extern Auth *VARDENY;
 extern Auth *VARDENYTOP;
 
 extern char CFRUNCOMMAND[];
-extern const char *PROTOCOL[];
 
 #endif

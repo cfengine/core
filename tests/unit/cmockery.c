@@ -1332,7 +1332,7 @@ void _assert_string_equal(const char *const a, const char *const b, const char *
     if (!string_equal_display_error(a, b))
     {
         print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_EQUALITY_STRING, global_casename, global_filename, line, "assert_string_equal", a, b);
-//        print_xml (XS_RUN_TEST_FAILURE_ASSERT, "assert_int_not_equal", a, b, global_casename);
+//        print_xml (XS_RUN_TEST_FAILURE_ASSERT, "assert_string_equal", a, b, global_casename);
         _fail(file, line);
     }
 }
@@ -1658,8 +1658,8 @@ static LONG WINAPI exception_filter(EXCEPTION_POINTERS *exception_pointers)
 
 void vinit_xml (const char *const format, va_list args)
 {
-    char buffer[1024];
-    char xml_filename[1024];
+    char buffer[1024] = {0};
+    char xml_filename[1024] = {0};
     sprintf(xml_filename, "%s.xml", global_suitename);
     const char *xml_file = xml_filename;
 
@@ -1682,8 +1682,8 @@ void init_xml (const char *const format, ...)
 
 void vprint_xml(const char *const format, va_list args)
 {
-    char buffer[1024];
-    char xml_filename[1024];
+    char buffer[1024] = {0};
+    char xml_filename[1024] = {0};
     sprintf(xml_filename, "%s.xml", global_suitename);
     const char *xml_file = xml_filename;
 
@@ -1704,7 +1704,7 @@ void print_xml(const char *const format, ...)
     va_end(args);
 }
 
-void init_cunit_run_files ()
+/*void init_cunit_run_files ()
 {
     FILE* dtd_file = fopen("CUnit-Run.dtd", "w");
     FILE* xsl_file = fopen("CUnit-Run.xsl", "w");
@@ -1712,6 +1712,30 @@ void init_cunit_run_files ()
     fprintf(xsl_file, CUNIT_RUN_XSL);
     fclose(dtd_file);
     fclose(xsl_file);
+}*/
+
+void vinit_cunit_run_files (const char *const file, const char *const format, va_list args)
+{
+    char buffer[8192] = {0};
+    char cunit_run_filename[1024] = {0};
+    sprintf(cunit_run_filename, "%s", file);
+    const char *cunit_run_file = cunit_run_filename;
+
+    FILE* cunit_run_report = fopen(cunit_run_file, "w");
+    vsnprintf(buffer, sizeof(buffer), format, args);
+    fprintf(cunit_run_report, "%s", buffer);
+    fclose(cunit_run_report);
+#ifdef _WIN32
+    OutputDebugString(buffer);
+#endif // _WIN32
+}
+
+void init_cunit_run_files (const char *const file, const char *const format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    vinit_cunit_run_files(file, format, args);
+    va_end(args);
 }
 
 // Standard output and error print methods.
@@ -1882,7 +1906,8 @@ int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const 
     assert_true(sizeof(LargestIntegralType) >= sizeof(void *));
 
     //Initialize an xml file and parameters
-    init_cunit_run_files();
+    init_cunit_run_files("CUnit-Run.dtd", CUNIT_RUN_DTD);
+    init_cunit_run_files("CUnit-Run.xsl", CUNIT_RUN_XSL);
     char path[1024]         = {0};
     char filename[1024]     = {0};
     char suitename[1024]    = {0};

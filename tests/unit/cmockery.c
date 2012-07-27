@@ -1882,7 +1882,7 @@ int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const 
     assert_true(sizeof(LargestIntegralType) >= sizeof(void *));
 
     //Initialize an xml file and parameters
-//    init_cunit_run_files();
+    init_cunit_run_files();
     char path[1024]         = {0};
     char filename[1024]     = {0};
     char suitename[1024]    = {0};

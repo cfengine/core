@@ -40,6 +40,7 @@
 #endif // _WIN32
 #include <assert.h>
 #include <cmockery.h>
+#include "CUnit-Run-Files.h"
 #include "schema.h"
 
 #ifdef _WIN32
@@ -1703,6 +1704,16 @@ void print_xml(const char *const format, ...)
     va_end(args);
 }
 
+void init_cunit_run_files ()
+{
+    FILE* dtd_file = fopen("CUnit-Run.dtd", "w");
+    FILE* xsl_file = fopen("CUnit-Run.xsl", "w");
+    fprintf(dtd_file, CUNIT_RUN_DTD);
+    fprintf(xsl_file, CUNIT_RUN_XSL);
+    fclose(dtd_file);
+    fclose(xsl_file);
+}
+
 // Standard output and error print methods.
 void vprint_message(const char *const format, va_list args)
 {
@@ -1871,6 +1882,7 @@ int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const 
     assert_true(sizeof(LargestIntegralType) >= sizeof(void *));
 
     //Initialize an xml file and parameters
+//    init_cunit_run_files();
     char path[1024]         = {0};
     char filename[1024]     = {0};
     char suitename[1024]    = {0};

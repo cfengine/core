@@ -453,6 +453,9 @@ void _fail(const char *const file, const int line) FUNC_ATTR_NORETURN;
     void vprint_xml(const char *const format, va_list args);
     void init_xml (const char *const format, ...);
     void print_xml(const char *const format, ...);
+    void vinit_cunit_run_files (const char *const file, const char *const format, va_list args);
+    void init_cunit_run_files (const char *const file, const char *const format, ...);
+    void append_xml_tmp(const char *ofile, const char *ifile);
 
 // Standard output and error print methods.
      void print_message(const char *const format, ...);

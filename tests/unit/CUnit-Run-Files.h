@@ -1,3 +1,7 @@
+
+#ifndef CUNIT_RUN_FILES_H_
+# define CUNIT_RUN_FILES_H_
+
 #define CUNIT_RUN_DTD \
 "<!ELEMENT CUNIT_TEST_RUN_REPORT\n" \
 "  (CUNIT_HEADER, CUNIT_RESULT_LISTING, CUNIT_RUN_SUMMARY, CUNIT_FOOTER)>\n" \
@@ -210,3 +214,5 @@
 "	</xsl:template>\n" \
 "\n" \
 "</xsl:stylesheet>"
+
+#endif

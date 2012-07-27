@@ -230,6 +230,7 @@ const char *global_path;
 const char *global_filename;
 const char *global_suitename;
 const char *global_casename;
+const char *global_xmlfile;
 
 #ifndef _WIN32
 // Signals caught by exception_handler().
@@ -1287,8 +1288,8 @@ void mock_assert(const int result, const char *const expression, const char *con
         else
         {
             print_error("ASSERT: %s\n", expression);
-            print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT, global_casename, file, line, "mock_assert", result);
-//            print_xml (XS_RUN_TEST_FAILURE_ASSERT, "mock_assert", result, global_casename);
+//            print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT, global_casename, file, line, "mock_assert", result);
+            init_xml (XS_RUN_TEST_FAILURE_ASSERT, "mock_assert", result, global_casename);
             _fail(file, line);
         }
     }
@@ -1300,8 +1301,8 @@ void _assert_true(const LargestIntegralType result,
     if (!result)
     {
         print_error("%s\n", expression);
-        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT, global_casename, global_filename, line, "assert_true", result);
-//        print_xml (XS_RUN_TEST_FAILURE_ASSERT, "assert_true", result, global_casename);
+//        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT, global_casename, global_filename, line, "assert_true", result);
+        init_xml (XS_RUN_TEST_FAILURE_ASSERT, "assert_true", result, global_casename);
         _fail(file, line);
     }
 }
@@ -1310,8 +1311,8 @@ void _assert_int_equal(const LargestIntegralType a, const LargestIntegralType b,
 {
     if (!values_equal_display_error(a, b))
     {
-        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD, global_casename, global_filename, line, "assert_int_equal", a, b);
-//        print_xml (XS_RUN_TEST_FAILURE_ASSERT, "assert_int_equal", a, b, global_casename);
+//        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD, global_casename, global_filename, line, "assert_int_equal", a, b);
+        init_xml (XS_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD, "assert_int_equal", a, b, global_casename);
         _fail(file, line);
     }
 }
@@ -1321,8 +1322,8 @@ void _assert_int_not_equal(const LargestIntegralType a, const LargestIntegralTyp
 {
     if (!values_not_equal_display_error(a, b))
     {
-        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD, global_casename, global_filename, line, "assert_int_not_equal", a, b);
-//        print_xml (XS_RUN_TEST_FAILURE_ASSERT, "assert_int_not_equal", a, b, global_casename);
+//        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD, global_casename, global_filename, line, "assert_int_not_equal", a, b);
+        init_xml (XS_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD, "assert_int_not_equal", a, b, global_casename);
         _fail(file, line);
     }
 }
@@ -1331,8 +1332,8 @@ void _assert_string_equal(const char *const a, const char *const b, const char *
 {
     if (!string_equal_display_error(a, b))
     {
-        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_EQUALITY_STRING, global_casename, global_filename, line, "assert_string_equal", a, b);
-//        print_xml (XS_RUN_TEST_FAILURE_ASSERT, "assert_string_equal", a, b, global_casename);
+//        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_EQUALITY_STRING, global_casename, global_filename, line, "assert_string_equal", a, b);
+        init_xml (XS_RUN_TEST_FAILURE_ASSERT_EQUALITY_STRING, "assert_string_equal", a, b, global_casename);
         _fail(file, line);
     }
 }
@@ -1341,8 +1342,8 @@ void _assert_string_not_equal(const char *const a, const char *const b, const ch
 {
     if (!string_not_equal_display_error(a, b))
     {
-        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_EQUALITY_STRING, global_casename, global_filename, line, "assert_string_not_equal", a, b);
-//        print_xml (XS_RUN_TEST_FAILURE_ASSERT, "assert_string_not_equal", a, b, global_casename);
+//        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_EQUALITY_STRING, global_casename, global_filename, line, "assert_string_not_equal", a, b);
+        init_xml (XS_RUN_TEST_FAILURE_ASSERT_EQUALITY_STRING, "assert_string_not_equal", a, b, global_casename);
         _fail(file, line);
     }
 }
@@ -1352,8 +1353,8 @@ void _assert_memory_equal(const void *const a, const void *const b,
 {
     if (!memory_equal_display_error((const char *) a, (const char *) b, size))
     {
-        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD, global_casename, global_filename, line, "assert_memory_equal", a, b);
-//        print_xml (XS_RUN_TEST_FAILURE_ASSERT, "assert_memory_equal", a, b, global_casename);
+//        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD, global_casename, global_filename, line, "assert_memory_equal", a, b);
+        init_xml (XS_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD, "assert_memory_equal", a, b, global_casename);
         _fail(file, line);
     }
 }
@@ -1363,8 +1364,8 @@ void _assert_memory_not_equal(const void *const a, const void *const b,
 {
     if (!memory_not_equal_display_error((const char *) a, (const char *) b, size))
     {
-        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD, global_casename, global_filename, line, "assert_memory_not_equal", a, b);
-//        print_xml (XS_RUN_TEST_FAILURE_ASSERT, "assert_memory_not_equal", a, b, global_casename);
+//        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD, global_casename, global_filename, line, "assert_memory_not_equal", a, b);
+        init_xml (XS_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD, "assert_memory_not_equal", a, b, global_casename);
         _fail(file, line);
     }
 }
@@ -1374,8 +1375,8 @@ void _assert_in_range(const LargestIntegralType value, const LargestIntegralType
 {
     if (!integer_in_range_display_error(value, minimum, maximum))
     {
-        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_RANGE_LLD, global_casename, global_filename, line, "assert_in_range", value, minimum, maximum);
-//        print_xml (XS_RUN_TEST_FAILURE_ASSERT, "assert_in_range", value, minimum, maximum, global_casename);
+//        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_RANGE_LLD, global_casename, global_filename, line, "assert_in_range", value, minimum, maximum);
+        init_xml (XS_RUN_TEST_FAILURE_ASSERT_RANGE_LLD, "assert_in_range", value, minimum, maximum, global_casename);
         _fail(file, line);
     }
 }
@@ -1385,8 +1386,8 @@ void _assert_not_in_range(const LargestIntegralType value, const LargestIntegral
 {
     if (!integer_not_in_range_display_error(value, minimum, maximum))
     {
-        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_RANGE_LLD, global_casename, global_filename, line, "assert_not_in_range", value, minimum, maximum);
-//        print_xml (XS_RUN_TEST_FAILURE_ASSERT, "assert_not_in_range", value, minimum, maximum, global_casename);
+//        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_RANGE_LLD, global_casename, global_filename, line, "assert_not_in_range", value, minimum, maximum);
+        init_xml (XS_RUN_TEST_FAILURE_ASSERT_RANGE_LLD, "assert_not_in_range", value, minimum, maximum, global_casename);
         _fail(file, line);
     }
 }
@@ -1401,8 +1402,8 @@ void _assert_in_set(const LargestIntegralType value,
     check_integer_set.size_of_set = number_of_values;
     if (!value_in_set_display_error(value, &check_integer_set, 0))
     {
-        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_SET_LLD, global_casename, global_filename, line, "assert_in_set", value, number_of_values);
-//        print_xml (XS_RUN_TEST_FAILURE_ASSERT, "assert_in_set", value, number_of_values, global_casename);
+//        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_SET_LLD, global_casename, global_filename, line, "assert_in_set", value, number_of_values);
+        init_xml (XS_RUN_TEST_FAILURE_ASSERT_SET_LLD, "assert_in_set", value, number_of_values, global_casename);
         _fail(file, line);
     }
 }
@@ -1417,8 +1418,8 @@ void _assert_not_in_set(const LargestIntegralType value,
     check_integer_set.size_of_set = number_of_values;
     if (!value_in_set_display_error(value, &check_integer_set, 1))
     {
-        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_SET_LLD, global_casename, global_filename, line, "assert_not_in_set", value, number_of_values);
-//        print_xml (XS_RUN_TEST_FAILURE_ASSERT, "assert_not_in_set", value, number_of_values, global_casename);
+//        print_xml (CUNIT_RUN_TEST_FAILURE_ASSERT_SET_LLD, global_casename, global_filename, line, "assert_not_in_set", value, number_of_values);
+        init_xml (XS_RUN_TEST_FAILURE_ASSERT_SET_LLD, "assert_not_in_set", value, number_of_values, global_casename);
         _fail(file, line);
     }
 }
@@ -1660,7 +1661,7 @@ void vinit_xml (const char *const format, va_list args)
 {
     char buffer[1024] = {0};
     char xml_filename[1024] = {0};
-    sprintf(xml_filename, "%s.xml", global_suitename);
+    sprintf(xml_filename, "%s.xml", global_xmlfile);
     const char *xml_file = xml_filename;
 
     FILE* xml_report = fopen(xml_file, "w");
@@ -1684,7 +1685,7 @@ void vprint_xml(const char *const format, va_list args)
 {
     char buffer[1024] = {0};
     char xml_filename[1024] = {0};
-    sprintf(xml_filename, "%s.xml", global_suitename);
+    sprintf(xml_filename, "%s.xml", global_xmlfile);
     const char *xml_file = xml_filename;
 
     FILE* xml_report = fopen(xml_file, "a");
@@ -1704,6 +1705,34 @@ void print_xml(const char *const format, ...)
     va_end(args);
 }
 
+void append_xml(const char *ofile, const char *ifile)
+{
+    char ch;
+
+    //Name of xml file, for current testsuite
+    char xml_ofilename[1024];
+    char xml_ifilename[1024];
+    sprintf(xml_ofilename, "%s.xml", ofile);
+    sprintf(xml_ifilename, "%s.xml", ifile);
+
+    const char *xml_ofile = xml_ofilename;
+    const char *xml_ifile = xml_ifilename;
+
+    FILE* xml_report = fopen(xml_ofile, "ab");
+    FILE* xml_tmp = fopen(xml_ifile, "rb");
+
+    while(!feof(xml_tmp))
+    {
+        ch = getc(xml_tmp);
+        if(!feof(xml_tmp))
+        {
+            putc(ch, xml_report);
+        }
+    }
+    fclose(xml_report);
+    fclose(xml_tmp);
+}
+
 /*void init_cunit_run_files ()
 {
     FILE* dtd_file = fopen("CUnit-Run.dtd", "w");
@@ -1714,7 +1743,7 @@ void print_xml(const char *const format, ...)
     fclose(xsl_file);
 }*/
 
-void vinit_cunit_run_files (const char *const file, const char *const format, va_list args)
+/*void vinit_cunit_run_files (const char *const file, const char *const format, va_list args)
 {
     char buffer[8192] = {0};
     char cunit_run_filename[1024] = {0};
@@ -1728,15 +1757,15 @@ void vinit_cunit_run_files (const char *const file, const char *const format, va
 #ifdef _WIN32
     OutputDebugString(buffer);
 #endif // _WIN32
-}
+}*/
 
-void init_cunit_run_files (const char *const file, const char *const format, ...)
+/*void init_cunit_run_files (const char *const file, const char *const format, ...)
 {
     va_list args;
     va_start(args, format);
     vinit_cunit_run_files(file, format, args);
     va_end(args);
-}
+}*/
 
 // Standard output and error print methods.
 void vprint_message(const char *const format, va_list args)
@@ -1875,8 +1904,11 @@ int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const 
 
 
     // Time of testsuite execution
-    time_t time_stamp;
-    time(&time_stamp);
+    time_t ttime;
+    time(&ttime);
+    char timestamp[1024];
+    strcpy(timestamp, ctime(&ttime));
+    timestamp[strlen(timestamp)-1] = '\0';
 
     // Current test being executed.
     size_t current_test = 0;
@@ -1906,12 +1938,13 @@ int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const 
     assert_true(sizeof(LargestIntegralType) >= sizeof(void *));
 
     //Initialize an xml file and parameters
-    init_cunit_run_files("CUnit-Run.dtd", CUNIT_RUN_DTD);
-    init_cunit_run_files("CUnit-Run.xsl", CUNIT_RUN_XSL);
+//    init_cunit_run_files("CUnit-Run.dtd", CUNIT_RUN_DTD);
+//    init_cunit_run_files("CUnit-Run.xsl", CUNIT_RUN_XSL);
     char path[1024]         = {0};
     char filename[1024]     = {0};
     char suitename[1024]    = {0};
     char casename[1024]     = {0};
+    char xmlfile[1024]     = {0};
     int len;
 
     sprintf(path, "%s", file);
@@ -1920,12 +1953,15 @@ int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const 
 
     strcpy(suitename, "");
     strncat(suitename, filename, len);
+    strcpy(xmlfile, "xml_tmp_suite");
+
     global_path = path;
     global_filename = filename;
     global_suitename = suitename;
+    global_xmlfile = xmlfile;
 
-    init_xml(CUNIT_INIT, suitename);
-//    init_xml(XS_INIT_TESTSUITE);
+//    init_xml(CUNIT_INIT, suitename);
+    init_xml("");
 
     while (current_test < number_of_tests)
     {
@@ -1971,20 +2007,25 @@ int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const 
 
         if (run_next_test)
         {
-//            print_xml(XS_TESTCASE);
             strcpy(casename, test->name);
+            strcpy(xmlfile, "xml_tmp_case");
             global_casename = casename;
+            global_xmlfile = xmlfile;
             int failed = _run_test(test->name, test->function, current_state,
                                    test->function_type, test_check_point);
+            strcpy(xmlfile, "xml_tmp_suite");
+            global_xmlfile = xmlfile;
+            print_xml(XS_TESTCASE, casename, path, "time_to_execute");
             if (failed)
             {
                 failed_names[total_failed] = test->name;
+                append_xml("xml_tmp_suite", "xml_tmp_case");
             }
             else
             {
-                print_xml(CUNIT_RUN_TEST_SUCCESS, test->name);
+//                print_xml(CUNIT_RUN_TEST_SUC            strcpy(xmlfile, "xml_tmp_suite");
             }
-//            print_xml(XS_TESTCASE_END, casename, path, "time_to_execute");
+            print_xml(XS_TESTCASE_END);
 
             switch (test->function_type)
             {
@@ -2019,12 +2060,16 @@ int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const 
         }
     }
 
-    print_xml(CUNIT_RUN_SUMMARY,
+/*    print_xml(CUNIT_RUN_SUMMARY,
               "Suites", 1, 1, 1, 0, 0,
               "Test Cases", number_of_tests, 0, 0, total_failed, 0,
               "Assertions", 0, 0, 0, 0, 0,
-              ctime(&time_stamp));
-//     print_xml(XS_TESTSUITE_END, suitename, ctime(&time_stamp), "localhost", number_of_tests, total_failed, 0, 0, 0);
+              ctime(&time_stamp));*/
+    global_xmlfile = suitename;
+    init_xml(XS_INIT_TESTSUITE, suitename, timestamp, "localhost", number_of_tests, total_failed, 0, 0, 0);
+    append_xml(suitename, "xml_tmp_suite");
+
+    print_xml(XS_TESTSUITE_END);
 
     if (total_failed)
     {

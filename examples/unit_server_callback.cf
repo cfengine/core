@@ -47,67 +47,7 @@ version => "1.2.3";
 
 bundle agent testbundle
 {
-files: 
-
-  "/tmp/testcopy" 
-        comment  => "test copy promise",
-    copy_from    => mycopy("/tmp/test-src","127.0.0.1"),
-    perms        => system,
-    depth_search => recurse("inf"),
-    classes      => satisfied("copy_ok");
-
-  "/tmp/testcopy/single_file" 
-
-        comment  => "test copy promise",
-    copy_from    => mycopy("/tmp/test-src/README","127.0.0.1"),
-    perms        => system;
-
-reports:
-
-  copy_ok::
-
-    "Files were copied..";
-}
-
-#########################################################
-
-body perms system
-
-{
-mode  => "0644";
-}
-
-#########################################################
-
-body depth_search recurse(d)
-
-{
-depth => "$(d)";
-}
-
-#########################################################
-
-body copy_from mycopy(from,server)
-
-{
-source      => "$(from)";
-servers     => { "$(server)" };
-compare     => "digest";
-encrypt     => "true";
-verify      => "true";
-copy_backup => "true";                  #/false/timestamp
-purge       => "false";
-type_check  => "true";
-force_ipv4  => "true";
-trustkey => "true";
-}
-
-#########################################################
-
-body classes satisfied(x)
-{
-promise_repaired => { "$(x)" };
-persist_time => "0";
+vars:
 }
 
 #########################################################
@@ -120,6 +60,7 @@ body server control
 allowconnects         => { "127.0.0.1" , "::1" };
 allowallconnects      => { "127.0.0.1" , "::1" };
 trustkeysfrom         => { "127.0.0.1" , "::1" };
+call_collect_interval => "1";
 # allowusers
 }
 
@@ -131,9 +72,23 @@ bundle server access_rules()
 
 access:
 
-  "/tmp/test-src"
+  # On the policy hub
 
-    admit   => { "127.0.0.1" };
+  "collect_calls"
+     resource_type => "query",
+           admit   => { "127.0.0.1" };
+
+  # On the isolated client in the field
+
+
+ "delta"
+    comment => "Grant access to cfengine hub to collect report deltas",
+    resource_type => "query",
+          admit   => { "127.0.0.1"  };
+  "full"
+          comment => "Grant access to cfengine hub to collect full report dump",
+    resource_type => "query",
+          admit   => { "127.0.0.1"  };
 }
 
 

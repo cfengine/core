@@ -2766,7 +2766,7 @@ void TryCollectCall(void)
 
 int ReceiveCollectCall(ServerConnectionState *conn, char *sendbuffer)
 {
-#ifdef HAVE_NOVA
+#if defined(HAVE_NOVA) && defined(HAVE_LIBMONGOC)
     CfOut(cf_verbose, "", "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
     CfOut(cf_verbose, "", "  Hub: Accepting Collect Call from %s ", conn->hostname);
     CfOut(cf_verbose, "", "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"); 

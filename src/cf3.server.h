@@ -105,8 +105,13 @@ extern int LOGENCYPRT;
 extern char CFRUNCOMMAND[];
 
 #ifdef HAVE_NOVA
+
 int Nova_ReturnQueryData(ServerConnectionState *conn, char *menu);
+
+#ifdef HAVE_LIBMONGOC
 int Nova_AcceptCollectCall(ServerConnectionState *conn);
+#endif
+
 #endif
 
 #ifdef HAVE_CONSTELLATION

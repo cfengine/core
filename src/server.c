@@ -40,15 +40,15 @@
 #include "dir.h"
 #include "conversion.h"
 
-/*******************************************************************/
-/* SERVER TYPES                                                    */
-/*******************************************************************/
+//******************************************************************
+// SERVER TYPES
+//******************************************************************
 
 
 
-/*******************************************************************/
-/* GLOBAL VARIABLES                                                */
-/*******************************************************************/
+//******************************************************************
+// GLOBAL STATE
+//******************************************************************
 
 int CLOCK_DRIFT = 3600;  /* 1hr */
 int ACTIVE_THREADS;
@@ -56,7 +56,7 @@ int ACTIVE_THREADS;
 int CFD_MAXPROCESSES = 0;
 int CFD_INTERVAL = 0;
 int DENYBADCLOCKS = true;
-int TRIES = 0;
+
 int MAXTRIES = 5;
 int LOGCONNS = false;
 int LOGENCRYPT = false;
@@ -82,7 +82,11 @@ char CFRUNCOMMAND[CF_BUFSIZE];
 
 // These strings should all fit inside 11 characters CF_PROTO_OFFSET - 4 - 1
 
-const char *PROTOCOL[] =
+//******************************************************************/
+// LOCAL STATE
+//******************************************************************/
+
+static const char *PROTOCOL[] =
 {
     "EXEC",
     "AUTH",                     /* old protocol */
@@ -106,6 +110,8 @@ const char *PROTOCOL[] =
     "SCALLBACK",
     NULL
 };
+
+static int TRIES = 0;
 
 /*******************************************************************/
 

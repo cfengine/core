@@ -29,6 +29,8 @@
 #include "constraints.h"
 #include "promises.h"
 #include "vars.h"
+#include "reporting.h"
+#include "expand.h"
 
 static void TestRegularExpressions(void);
 static void TestAgentPromises(void);
@@ -192,8 +194,11 @@ void TestExpandPromise()
     {
         printf("-----------------------------------------------------------\n");
         printf("Raw test promises\n\n");
-        ShowPromise(&pp, 4);
-        ShowPromise(pcopy, 6);
+        ShowPromise(REPORT_OUTPUT_TYPE_TEXT, &pp, 4);
+        ShowPromise(REPORT_OUTPUT_TYPE_HTML, &pp, 4);
+
+        ShowPromise(REPORT_OUTPUT_TYPE_TEXT, pcopy, 6);
+        ShowPromise(REPORT_OUTPUT_TYPE_HTML, pcopy, 6);
     }
     DeletePromise(pcopy);
 }

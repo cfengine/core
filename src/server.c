@@ -40,6 +40,7 @@
 #include "lastseen.h"
 #include "dir.h"
 #include "server_globals.h"
+#include "conversion.h"
 
 /*********************************************************************/
 

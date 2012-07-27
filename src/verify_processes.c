@@ -28,6 +28,7 @@
 #include "promises.h"
 #include "vars.h"
 #include "item_lib.h"
+#include "conversion.h"
 
 static int ProcessSanityChecks(Attributes a, Promise *pp);
 static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp);

@@ -29,6 +29,7 @@
 #include "vars.h"
 #include "files_names.h"
 #include "item_lib.h"
+#include "conversion.h"
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>
@@ -429,7 +430,7 @@ int LoadProcessTable(Item **procdata)
         memset(vbuff, 0, CF_BUFSIZE);
         CfReadLine(vbuff, CF_BUFSIZE, prp);
 
-        for (sp = vbuff + strlen(vbuff) - 1; sp > vbuff && isspace(*sp); sp--)
+        for (sp = vbuff + strlen(vbuff) - 1; sp > vbuff && isspace((int)*sp); sp--)
         {
             *sp = '\0';
         }

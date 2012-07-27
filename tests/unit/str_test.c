@@ -163,10 +163,24 @@ static void test_no_replace(void **state)
 
 static void test_concatenate(void **state)
 {
-    char *new_string = StringConcatenate("snookie", 7, "sitch", 5);
-
+    char *new_string = StringConcatenate(2, "snookie", "sitch");
     assert_string_equal(new_string, "snookiesitch");
     free(new_string);
+
+    new_string = StringConcatenate(4, "a", NULL, "c", "d");
+    assert_string_equal(new_string, "acd");
+    free(new_string);
+
+    new_string = StringConcatenate(3, "a", "b", "c", "d");
+    assert_string_equal(new_string, "abc");
+    free(new_string);
+
+    new_string = StringConcatenate(1, "stuff");
+    assert_string_equal(new_string, "stuff");
+    free(new_string);
+
+    new_string = StringConcatenate(0, NULL);
+    assert_false(new_string);
 }
 
 static void test_substring_overshoot(void **state)
@@ -211,6 +225,12 @@ static void test_substring_evil(void **state)
 static void test_string_to_long(void **state)
 {
     assert_int_equal(1234567, StringToLong("1234567"));
+}
+
+static void test_string_from_long(void **state)
+{
+    assert_string_equal("123456789", StringFromLong(123456789));
+    assert_string_equal("-123456789", StringFromLong(-123456789));
 }
 
 static void test_string_to_double(void **state)
@@ -337,6 +357,7 @@ int main()
         unit_test(test_substring_evil),
 
         unit_test(test_string_to_long),
+        unit_test(test_string_from_long),
         unit_test(test_string_to_double),
 
         unit_test(test_safe_compare),

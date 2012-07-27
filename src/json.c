@@ -263,6 +263,24 @@ const char *JsonPrimitiveGetAsString(const JsonElement *primitive)
     return primitive->primitive.value;
 }
 
+bool JsonPrimitiveGetAsBool(const JsonElement *primitive)
+{
+    assert(primitive);
+    assert(primitive->type == JSON_ELEMENT_TYPE_PRIMITIVE);
+    assert(primitive->primitive.type == JSON_PRIMITIVE_TYPE_BOOL);
+
+    return StringSafeEqual(JSON_TRUE, primitive->primitive.value);
+}
+
+long JsonPrimitiveGetAsInteger(const JsonElement *primitive)
+{
+    assert(primitive);
+    assert(primitive->type == JSON_ELEMENT_TYPE_PRIMITIVE);
+    assert(primitive->primitive.type == JSON_PRIMITIVE_TYPE_INTEGER);
+
+    return StringToLong(primitive->primitive.value);
+}
+
 const char *JsonGetPropertyAsString(const JsonElement *element)
 {
     assert(element);
@@ -451,6 +469,25 @@ void JsonObjectRemoveKey(JsonElement *object, const char *key)
     {
         SequenceRemove(object->container.children, index);
     }
+}
+
+JsonElement *JsonObjectDetachKey(JsonElement *object, const char *key)
+{
+    assert(object);
+    assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
+    assert(key);
+
+    JsonElement *detached = NULL;
+
+    size_t index = JsonElementIndexInParentObject(object, key);
+    if (index != -1)
+    {
+        detached = SequenceLookup(object->container.children, key, JsonElementHasProperty);
+        SequenceSoftRemove(object->container.children, index);
+    }
+
+    return detached;
 }
 
 const char *JsonObjectGetAsString(JsonElement *object, const char *key)

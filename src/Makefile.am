@@ -49,10 +49,11 @@ libpromises_la_SOURCES = \
         config.h \
         constants.c \
         constraints.c constraints.h \
-        conversion.c \
+        conversion.c conversion.h \
         crypto.c crypto.h \
         csv_writer.c csv_writer.h \
         dbm_api.c dbm_api.h dbm_lib.h dbm_lib.c dbm_priv.h \
+        dbm_migration.c dbm_migration.h dbm_migration_lastseen.c dbm_migration_bundles.c \
         dbm_quick.c \
         dbm_tokyocab.c \
         dir.c dir.h dir_priv.h \
@@ -61,7 +62,7 @@ libpromises_la_SOURCES = \
         env_context.c env_context.h \
         evalfunction.c evalfunction.h \
         exec_tools.c \
-        expand.c \
+        expand.c expand.h \
         files_copy.c \
         files_edit.c \
         files_editline.c \
@@ -88,7 +89,6 @@ libpromises_la_SOURCES = \
         json.c json.h \
         keyring.c \
         lastseen.c lastseen.h \
-        lastseen_migration.c \
         logging.c \
         logic_expressions.c logic_expressions.h \
         map.c map.h \
@@ -116,7 +116,6 @@ libpromises_la_SOURCES = \
         net.c \
         nfs.c \
         ontology.c ontology.h \
-        package_lib.c \
         policy.c policy.h \
         parser.c parser.h \
         parser_state.h \
@@ -128,7 +127,7 @@ libpromises_la_SOURCES = \
         promises.c promises.h \
         prototypes3.h \
         recursion.c \
-        reporting.c \
+        reporting.c reporting.h \
         rlist.c rlist.h \
         scope.c \
         selfdiagnostic.c \
@@ -138,7 +137,7 @@ libpromises_la_SOURCES = \
         show.h \
         signals.c \
         sockaddr.c \
-        sort.c \
+        sort.c sort.h \
 	statistics.c statistics.h \
         storage_tools.c \
         string_expressions.c string_expressions.h \

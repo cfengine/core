@@ -36,6 +36,13 @@
 #include "policy.h"
 #include "syntax.h"
 #include "item_lib.h"
+#include "conversion.h"
+
+#ifdef HAVE_NOVA
+#include "nova-reporting.h"
+#else
+#include "reporting.h"
+#endif
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);
@@ -1304,7 +1311,7 @@ static void ShowClasses()
 
         if (value != NULL)
         {
-            memcpy(&entry, value, sizeof(entry));
+            memcpy(&entry, value, MIN(vsize, sizeof(entry)));
 
             then = entry.t;
             average = entry.Q.expect;
@@ -1662,7 +1669,7 @@ static void ShowLocks(int active)
         {
             if (value != NULL)
             {
-                memcpy(&entry, value, sizeof(entry));
+                memcpy(&entry, value, MIN(vsize, sizeof(entry)));
             }
 
             if (strncmp("lock", (char *) key, 4) == 0)
@@ -1824,7 +1831,7 @@ static void ShowCurrentAudit()
 
         if (value != NULL)
         {
-            memcpy(&entry, value, sizeof(entry));
+            memcpy(&entry, value, MIN(vsize, sizeof(entry)));
 
             if (XML)
             {
@@ -1967,7 +1974,7 @@ static char *Format(char *s, int width)
         buffer[i] = '\0';
         count++;
 
-        if ((count > width - 5) && ispunct(*sp))
+        if ((count > width - 5) && ispunct((int)*sp))
         {
             strcat(buffer, "<br>");
             i += strlen("<br>");

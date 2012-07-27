@@ -30,6 +30,9 @@
 #include "files_names.h"
 #include "mod_files.h"
 #include "item_lib.h"
+#include "conversion.h"
+#include "reporting.h"
+#include "expand.h"
 
 #include <assert.h>
 

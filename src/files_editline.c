@@ -31,6 +31,10 @@
 #include "files_names.h"
 #include "vars.h"
 #include "item_lib.h"
+#include "sort.h"
+#include "conversion.h"
+#include "reporting.h"
+#include "expand.h"
 
 /*****************************************************************************/
 
@@ -69,13 +73,13 @@ static void VerifyLineDeletions(Promise *pp);
 static void VerifyColumnEdits(Promise *pp);
 static void VerifyPatterns(Promise *pp);
 static void VerifyLineInsertions(Promise *pp);
-static int InsertMissingLinesToRegion(Item **start, Item *begin_ptr, Item *end_ptr, Attributes a, Promise *pp);
-static int InsertMissingLinesAtLocation(Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev,
+static int InsertMultipleLinesToRegion(Item **start, Item *begin_ptr, Item *end_ptr, Attributes a, Promise *pp);
+static int InsertMultipleLinesAtLocation(Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev,
                                         Attributes a, Promise *pp);
 static int DeletePromisedLinesMatching(Item **start, Item *begin, Item *end, Attributes a, Promise *pp);
-static int InsertMissingLineAtLocation(char *newline, Item **start, Item *location, Item *prev, Attributes a,
+static int InsertLineAtLocation(char *newline, Item **start, Item *location, Item *prev, Attributes a,
                                        Promise *pp);
-static int InsertCompoundLineAtLocation(char *newline, Item **start, Item *location, Item *prev, Attributes a,
+static int InsertCompoundLineAtLocation(char *newline, Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, Attributes a,
                                         Promise *pp);
 static int ReplacePatterns(Item *start, Item *end, Attributes a, Promise *pp);
 static int EditColumns(Item *file_start, Item *file_end, Attributes a, Promise *pp);
@@ -87,6 +91,8 @@ static int SelectLine(char *line, Attributes a, Promise *pp);
 static int NotAnchored(char *s);
 static void EditClassBanner(enum editlinetypesequence type);
 static int SelectRegion(Item *start, Item **begin_ptr, Item **end_ptr, Attributes a, Promise *pp);
+static int MultiLineString(char *s);
+static int InsertFileAtLocation(Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, Attributes a, Promise *pp);
 
 /*****************************************************************************/
 /* Level                                                                     */
@@ -587,7 +593,7 @@ static void VerifyLineInsertions(Promise *pp)
     CfLock thislock;
     char lockname[CF_BUFSIZE];
 
-/* *(pp->donep) = true; */
+    /* *(pp->donep) = true; */
 
     a = GetInsertionAttributes(pp);
     a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
@@ -599,7 +605,7 @@ static void VerifyLineInsertions(Promise *pp)
         return;
     }
 
-/* Are we working in a restricted region? */
+    /* Are we working in a restricted region? */
 
     if (!a.haveregion)
     {
@@ -622,28 +628,25 @@ static void VerifyLineInsertions(Promise *pp)
         return;
     }
 
-/* Are we looking for an anchored line inside the region? */
+    /* Are we looking for an anchored line inside the region? */
 
     if (a.location.line_matching == NULL)
     {
-        if (InsertMissingLinesToRegion(start, begin_ptr, end_ptr, a, pp))
+        if (InsertMultipleLinesToRegion(start, begin_ptr, end_ptr, a, pp))
         {
             (pp->edcontext->num_edits)++;
         }
     }
     else
     {
-        if (!SelectItemMatching
-            (*start, a.location.line_matching, begin_ptr, end_ptr, &match, &prev, a.location.first_last))
+        if (!SelectItemMatching(*start, a.location.line_matching, begin_ptr, end_ptr, &match, &prev, a.location.first_last))
         {
-            cfPS(cf_error, CF_INTERPT, "", pp, a,
-                 " !! The promised line insertion (%s) could not select a locator matching regex \"%s\" in %s",
-                 pp->promiser, a.location.line_matching, pp->this_server);
+            cfPS(cf_error, CF_INTERPT, "", pp, a, " !! The promised line insertion (%s) could not select a locator matching regex \"%s\" in %s", pp->promiser, a.location.line_matching, pp->this_server);
             YieldCurrentLock(thislock);
             return;
         }
 
-        if (InsertMissingLinesAtLocation(start, begin_ptr, end_ptr, match, prev, a, pp))
+        if (InsertMultipleLinesAtLocation(start, begin_ptr, end_ptr, match, prev, a, pp))
         {
             (pp->edcontext->num_edits)++;
         }
@@ -727,37 +730,33 @@ If no such region matches, begin_ptr and end_ptr should point to CF_UNDEFINED_IT
 
 /***************************************************************************/
 
-static int InsertMissingLinesToRegion(Item **start, Item *begin_ptr, Item *end_ptr, Attributes a, Promise *pp)
+static int InsertMultipleLinesToRegion(Item **start, Item *begin_ptr, Item *end_ptr, Attributes a, Promise *pp)
 {
     Item *ip, *prev = CF_UNDEFINED_ITEM;
 
-/* find prev for region */
-
-    if (IsItemInRegion(pp->promiser, begin_ptr, end_ptr, a, pp))
-    {
-        cfPS(cf_verbose, CF_NOP, "", pp, a,
-             " -> Promised line \"%s\" exists within selected region of %s (promise kept)", pp->promiser,
-             pp->this_server);
-        return false;
-    }
-
+    // Insert at the start of the file
+    
     if (*start == NULL)
     {
-        return InsertMissingLinesAtLocation(start, begin_ptr, end_ptr, *start, prev, a, pp);
+        return InsertMultipleLinesAtLocation(start, begin_ptr, end_ptr, *start, prev, a, pp);
     }
 
+    // Insert at the start of the region
+    
     if (a.location.before_after == cfe_before)
     {
         for (ip = *start; ip != NULL; ip = ip->next)
         {
             if (ip == begin_ptr)
             {
-                return InsertMissingLinesAtLocation(start, begin_ptr, end_ptr, ip, prev, a, pp);
+                return InsertMultipleLinesAtLocation(start, begin_ptr, end_ptr, ip, prev, a, pp);
             }
 
             prev = ip;
         }
     }
+
+    // Insert at the end of the region / else end of the file
 
     if (a.location.before_after == cfe_after)
     {
@@ -765,12 +764,12 @@ static int InsertMissingLinesToRegion(Item **start, Item *begin_ptr, Item *end_p
         {
             if (ip->next != NULL && ip->next == end_ptr)
             {
-                return InsertMissingLinesAtLocation(start, begin_ptr, end_ptr, ip, prev, a, pp);
+                return InsertMultipleLinesAtLocation(start, begin_ptr, end_ptr, ip, prev, a, pp);
             }
 
             if (ip->next == NULL)
             {
-                return InsertMissingLinesAtLocation(start, begin_ptr, end_ptr, ip, prev, a, pp);
+                return InsertMultipleLinesAtLocation(start, begin_ptr, end_ptr, ip, prev, a, pp);
             }
 
             prev = ip;
@@ -782,149 +781,21 @@ static int InsertMissingLinesToRegion(Item **start, Item *begin_ptr, Item *end_p
 
 /***************************************************************************/
 
-static int InsertMissingLinesAtLocation(Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev,
-                                        Attributes a, Promise *pp)
+static int InsertMultipleLinesAtLocation(Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, Attributes a, Promise *pp)
+
+// Promises to insert a possibly multi-line promiser at the specificed location convergently,
+// i.e. no insertion will be made if a neighbouring line matches
+
 {
-    FILE *fin;
-    char buf[CF_BUFSIZE], exp[CF_EXPANDSIZE];
-    Item *loc = NULL;
-    int retval = false;
+    int isfileinsert = a.sourcetype && (strcmp(a.sourcetype, "file") == 0 || strcmp(a.sourcetype, "file_lines") == 0);
 
-    if (a.sourcetype && strcmp(a.sourcetype, "file") == 0)
+    if (isfileinsert)
     {
-        if ((fin = fopen(pp->promiser, "r")) == NULL)
-        {
-            cfPS(cf_error, CF_INTERPT, "fopen", pp, a, "Could not read file %s", pp->promiser);
-            return false;
-        }
-
-        loc = location;
-
-        while (!feof(fin))
-        {
-            buf[0] = '\0';
-            fgets(buf, CF_BUFSIZE, fin);
-            StripTrailingNewline(buf);
-
-            if (feof(fin) && strlen(buf) == 0)
-            {
-                break;
-            }
-
-            if (a.expandvars)
-            {
-                ExpandScalar(buf, exp);
-            }
-            else
-            {
-                strcpy(exp, buf);
-            }
-
-            if (!SelectLine(exp, a, pp))
-            {
-                continue;
-            }
-
-            if (IsItemInRegion(exp, begin_ptr, end_ptr, a, pp))
-            {
-                cfPS(cf_verbose, CF_NOP, "", pp, a,
-                     " -> Promised file line \"%s\" exists within file %s (promise kept)", exp, pp->this_server);
-                continue;
-            }
-
-            retval |= InsertCompoundLineAtLocation(exp, start, loc, prev, a, pp);
-
-            if (prev && prev != CF_UNDEFINED_ITEM)
-            {
-                prev = prev->next;
-            }
-
-            if (loc)
-            {
-                loc = loc->next;
-            }
-        }
-
-        fclose(fin);
-        return retval;
+        return InsertFileAtLocation(start, begin_ptr, end_ptr, location, prev, a, pp);
     }
     else
     {
-        int multiline = a.sourcetype && strcmp(a.sourcetype, "preserve_block") == 0;
-        int need_insert = false;
-
-        if (strchr(pp->promiser, '\n') != NULL) /* Multi-line string */
-        {
-            char *sp;
-
-            loc = location;
-
-            for (sp = pp->promiser; sp <= pp->promiser + strlen(pp->promiser); sp++)
-            {
-                memset(buf, 0, CF_BUFSIZE);
-                sscanf(sp, "%[^\n]", buf);
-                sp += strlen(buf);
-
-                if (!SelectLine(buf, a, pp))
-                {
-                    continue;
-                }
-
-                if (IsItemInRegion(buf, begin_ptr, end_ptr, a, pp))
-                {
-                    cfPS(cf_verbose, CF_NOP, "", pp, a,
-                         " -> Promised file line \"%s\" exists within file %s (promise kept)", buf, pp->this_server);
-                    continue;
-                }
-
-                if (!multiline)
-                {
-                    retval |= InsertCompoundLineAtLocation(buf, start, loc, prev, a, pp);
-
-                    if (prev && prev != CF_UNDEFINED_ITEM)
-                    {
-                        prev = prev->next;
-                    }
-
-                    if (loc)
-                    {
-                        loc = loc->next;
-                    }
-                }
-                else
-                {
-                    need_insert = true;
-                }
-            }
-
-            if (need_insert)
-            {
-                for (sp = pp->promiser; sp <= pp->promiser + strlen(pp->promiser); sp++)
-                {
-                    memset(buf, 0, CF_BUFSIZE);
-                    sscanf(sp, "%[^\n]", buf);
-                    sp += strlen(buf);
-
-                    retval |= InsertCompoundLineAtLocation(buf, start, loc, prev, a, pp);
-
-                    if (prev && prev != CF_UNDEFINED_ITEM)
-                    {
-                        prev = prev->next;
-                    }
-
-                    if (loc)
-                    {
-                        loc = loc->next;
-                    }
-                }
-            }
-
-            return retval;
-        }
-        else
-        {
-            return InsertCompoundLineAtLocation(pp->promiser, start, location, prev, a, pp);
-        }
+        return InsertCompoundLineAtLocation(pp->promiser, start, begin_ptr, end_ptr, location, prev, a, pp);
     }
 }
 
@@ -1271,7 +1142,7 @@ static int SanityCheckInsertions(Attributes a)
     Rlist *rp;
     enum insert_match opt;
     int exact = false, ignore_something = false;
-    int multiline = a.sourcetype && strcmp(a.sourcetype, "preserve_block") == 0;
+    int preserve_block = a.sourcetype && strcmp(a.sourcetype, "preserve_block") == 0;
 
     if (a.line_select.startwith_from_list)
     {
@@ -1328,7 +1199,7 @@ static int SanityCheckInsertions(Attributes a)
             break;
         default:
             ignore_something = true;
-            if (multiline)
+            if (preserve_block)
             {
                 CfOut(cf_error, "", " !! Line insertion should not use whitespace policy with preserve_block");
                 ok = false;
@@ -1351,7 +1222,7 @@ static int SanityCheckInsertions(Attributes a)
 
 static int SanityCheckDeletions(Attributes a, Promise *pp)
 {
-    if (strchr(pp->promiser, '\n') != NULL)     /* Multi-line string */
+    if (MultiLineString(pp->promiser))
     {
         if (a.not_matching)
         {
@@ -1367,44 +1238,164 @@ static int SanityCheckDeletions(Attributes a, Promise *pp)
 /* Level                                                                   */
 /***************************************************************************/
 
-static int InsertCompoundLineAtLocation(char *newline, Item **start, Item *location, Item *prev, Attributes a,
+static int InsertFileAtLocation(Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, Attributes a, Promise *pp)
+{
+    FILE *fin;
+    char buf[CF_BUFSIZE], exp[CF_EXPANDSIZE];
+    int retval = false;
+    Item *loc = NULL;
+    int preserve_block = a.sourcetype && strcmp(a.sourcetype, "file_preserve_block") == 0;
+
+    if ((fin = fopen(pp->promiser, "r")) == NULL)
+    {
+        cfPS(cf_error, CF_INTERPT, "fopen", pp, a, "Could not read file %s", pp->promiser);
+        return false;
+    }
+    
+    loc = location;
+
+    while (!feof(fin))
+    {
+        buf[0] = '\0';
+        fgets(buf, CF_BUFSIZE, fin);
+        StripTrailingNewline(buf);
+        
+        if (feof(fin) && strlen(buf) == 0)
+        {
+            break;
+        }
+        
+        if (a.expandvars)
+        {
+            ExpandScalar(buf, exp);
+        }
+        else
+        {
+            strcpy(exp, buf);
+        }
+        
+        if (!SelectLine(exp, a, pp))
+        {
+            continue;
+        }
+        
+        if (!preserve_block && IsItemInRegion(exp, begin_ptr, end_ptr, a, pp))
+        {
+            cfPS(cf_verbose, CF_NOP, "", pp, a,
+                 " -> Promised file line \"%s\" exists within file %s (promise kept)", exp, pp->this_server);
+            continue;
+        }
+        
+        // Need to call CompoundLine here in case ExpandScalar has inserted \n into a string
+        
+        retval |= InsertCompoundLineAtLocation(exp, start, begin_ptr, end_ptr, loc, prev, a, pp);
+
+        if (preserve_block && prev == CF_UNDEFINED_ITEM)
+           {
+           // If we are inserting a preserved block before, need to flip the implied order after the first insertion
+           // to get the order of the block right
+           a.location.before_after = cfe_after;
+
+           }
+        
+        if (prev && prev != CF_UNDEFINED_ITEM)
+        {
+            prev = prev->next;
+        }
+        else
+        {
+            prev = *start;
+        }
+        
+        if (loc)
+        {
+            loc = loc->next;
+        }
+        else
+        {
+            location = *start;
+        }
+    }
+    
+    fclose(fin);
+    return retval;
+    
+}
+
+/***************************************************************************/
+    
+static int InsertCompoundLineAtLocation(char *chunk, Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, Attributes a,
                                         Promise *pp)
 {
     int result = false;
     char buf[CF_EXPANDSIZE];
+    char *sp;
+    int preserve_block = a.sourcetype && (strcmp(a.sourcetype, "preserve_block") == 0 || strcmp(a.sourcetype, "file") == 0);
 
-    if (strchr(newline, '\n') != NULL)  /* Multi-line string */
+    if (MatchRegion(chunk, *start, location, NULL))
+       {
+       return false;
+       }
+
+    // Iterate over any lines within the chunk
+
+    for (sp = chunk; sp <= chunk + strlen(chunk); sp++)
     {
-        char *sp;
-
-        for (sp = newline; sp <= newline + strlen(newline); sp++)
+        memset(buf, 0, CF_BUFSIZE);
+        sscanf(sp, "%2048[^\n]", buf);
+        sp += strlen(buf);
+        
+        if (!SelectLine(buf, a, pp))
         {
-            memset(buf, 0, CF_BUFSIZE);
-            sscanf(sp, "%2048[^\n]", buf);
-            sp += strlen(buf);
+            continue;
+        }
 
-            if (!SelectLine(buf, a, pp))
-            {
-                continue;
-            }
+        if (!preserve_block && IsItemInRegion(buf, begin_ptr, end_ptr, a, pp))
+           {
+           cfPS(cf_verbose, CF_NOP, "", pp, a, " -> Promised chunk \"%s\" exists within selected region of %s (promise kept)", pp->promiser, pp->this_server);
+           continue;
+           }
 
-            result |= InsertMissingLineAtLocation(buf, start, location, prev, a, pp);
+        result |= InsertLineAtLocation(buf, start, location, prev, a, pp);
+
+        if (preserve_block && a.location.before_after == cfe_before && location == NULL && prev == CF_UNDEFINED_ITEM)
+           {
+           // If we are inserting a preserved block before, need to flip the implied order after the first insertion
+           // to get the order of the block right
+           a.location.before_after = cfe_after;
+           location = *start;
+           }
+        
+        if (prev && prev != CF_UNDEFINED_ITEM)
+        {
+            prev = prev->next;
+        }
+        else
+        {
+            prev = *start;
+        }
+        
+        if (location)
+        {
+            location = location->next;
+        }
+        else
+        {
+            location = *start;
         }
     }
-    else
-    {
-        result |= InsertMissingLineAtLocation(newline, start, location, prev, a, pp);
-    }
-
+    
     return result;
 }
 
 /***************************************************************************/
 
-static int InsertMissingLineAtLocation(char *newline, Item **start, Item *location, Item *prev, Attributes a,
-                                       Promise *pp)
-/* Check line neighbourhood in whole file to avoid edge effects */
-{
+static int InsertLineAtLocation(char *newline, Item **start, Item *location, Item *prev, Attributes a, Promise *pp)
+
+/* Check line neighbourhood in whole file to avoid edge effects, iff we are not preseving block structure */
+
+{   int preserve_block = a.sourcetype && strcmp(a.sourcetype, "preserve_block") == 0;
+
     if (prev == CF_UNDEFINED_ITEM)      /* Insert at first line */
     {
         if (a.location.before_after == cfe_before)
@@ -1456,8 +1447,8 @@ static int InsertMissingLineAtLocation(char *newline, Item **start, Item *locati
     }
 
     if (a.location.before_after == cfe_before)
-    {
-        if (NeighbourItemMatches(*start, location, newline, cfe_before, a, pp))
+    {    
+        if (!preserve_block && NeighbourItemMatches(*start, location, newline, cfe_before, a, pp))
         {
             cfPS(cf_verbose, CF_NOP, "", pp, a, " -> Promised line \"%s\" exists before locator in (promise kept)",
                  newline);
@@ -1484,10 +1475,11 @@ static int InsertMissingLineAtLocation(char *newline, Item **start, Item *locati
     }
     else
     {
-        if (NeighbourItemMatches(*start, location, newline, cfe_after, a, pp))
+        if (!preserve_block && NeighbourItemMatches(*start, location, newline, cfe_after, a, pp))
         {
             cfPS(cf_verbose, CF_NOP, "", pp, a, " -> Promised line \"%s\" exists after locator (promise kept)",
                  newline);
+                        printf("NEIGHMATCH %s\n",newline);
             return false;
         }
         else
@@ -1849,4 +1841,11 @@ static int NotAnchored(char *s)
     }
 
     return false;
+}
+
+/********************************************************************/
+
+static int MultiLineString(char *s)
+{
+    return (strchr(s, '\n') != NULL);
 }

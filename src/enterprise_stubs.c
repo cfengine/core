@@ -220,7 +220,7 @@ void NoteEfficiency(double e)
 {
 }
 
-void LastSawBundle(char *name, double comp)
+void LastSawBundle(const Bundle *bundle, double comp)
 {
 }
 

@@ -94,11 +94,6 @@ void DeleteItemList(Item *item)
 
 int MINUSF;
 
-bool IsStrIn(const char *str, const char **strs)
-{
-    exit(42);
-}
-
 char *MapAddress(char *addr)
 {
     exit(42);

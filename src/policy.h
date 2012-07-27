@@ -39,6 +39,7 @@ Policy *PolicyNew(void);
 void PolicyDestroy(Policy *policy);
 
 Policy *PolicyFromPromise(const Promise *promise);
+char *BundleQualifiedName(const Bundle *bundle);
 
 typedef enum
 {

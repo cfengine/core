@@ -3,6 +3,8 @@
 #include <setjmp.h>
 #include <cmockery.h>
 
+#include "conversion.h"
+
 static void test_split_empty(void **state)
 {
     char **s = ArgSplitCommand("");

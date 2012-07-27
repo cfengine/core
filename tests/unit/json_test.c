@@ -294,12 +294,19 @@ static void test_object_iterator(void **state)
 
     JsonObjectAppendString(obj, "first", "one");
     JsonObjectAppendString(obj, "second", "two");
+    JsonObjectAppendInteger(obj, "third", 3);
+    JsonObjectAppendBool(obj, "fourth", true);
+    JsonObjectAppendBool(obj, "fifth", false);
+
 
     {
         JsonIterator it = JsonIteratorInit(obj);
 
         assert_string_equal("first", JsonIteratorNextKey(&it));
         assert_string_equal("second", JsonIteratorNextKey(&it));
+        assert_string_equal("third", JsonIteratorNextKey(&it));
+        assert_string_equal("fourth", JsonIteratorNextKey(&it));
+        assert_string_equal("fifth", JsonIteratorNextKey(&it));
         assert_false(JsonIteratorNextKey(&it));
     }
 
@@ -308,6 +315,9 @@ static void test_object_iterator(void **state)
 
         assert_string_equal("one", JsonPrimitiveGetAsString(JsonIteratorNextValue(&it)));
         assert_string_equal("two", JsonPrimitiveGetAsString(JsonIteratorNextValue(&it)));
+        assert_int_equal(3, JsonPrimitiveGetAsInteger(JsonIteratorNextValue(&it)));
+        assert_true(JsonPrimitiveGetAsBool(JsonIteratorNextValue(&it)));
+        assert_false(JsonPrimitiveGetAsBool(JsonIteratorNextValue(&it)));
         assert_false(JsonIteratorNextValue(&it));
     }
 
@@ -774,6 +784,23 @@ static void test_remove_key_from_object(void **state)
     JsonElementDestroy(object);
 }
 
+static void test_detach_key_from_object(void **state)
+{
+    JsonElement *object = JsonObjectCreate(3);
+
+    JsonObjectAppendInteger(object, "one", 1);
+    JsonObjectAppendInteger(object, "two", 2);
+    JsonObjectAppendInteger(object, "three", 3);
+
+    JsonElement *detached = JsonObjectDetachKey(object, "two");
+
+    assert_int_equal(2, JsonElementLength(object));
+    JsonElementDestroy(object);
+
+    assert_int_equal(1, JsonElementLength(detached));
+    JsonElementDestroy(detached);
+}
+
 int main()
 {
     const UnitTest tests[] =
@@ -814,7 +841,8 @@ int main()
         unit_test(test_parse_array_garbage),
         unit_test(test_parse_array_nested_garbage),
         unit_test(test_array_remove_range),
-        unit_test(test_remove_key_from_object)
+        unit_test(test_remove_key_from_object),
+        unit_test(test_detach_key_from_object)
     };
 
     return run_tests(tests);

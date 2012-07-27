@@ -27,6 +27,7 @@
 
 #include "env_context.h"
 #include "files_names.h"
+#include "expand.h"
 
 #include <assert.h>
 

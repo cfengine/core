@@ -317,6 +317,10 @@ typedef int socklen_t;
 #  define PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP PTHREAD_MUTEX_INITIALIZER
 # endif
 
+# if !HAVE_DECL_PTHREAD_ATTR_SETSTACKSIZE
+int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize);
+# endif
+
 #endif
 
 #ifdef HAVE_SCHED_H
@@ -357,11 +361,18 @@ unsigned int alarm(unsigned int seconds);
 char *realpath(const char *path, char *resolved_path);
 #endif
 
-#ifndef HAVE_GETNETGRENT
-int setnetgrent(const char *netgroup);
+#if !HAVE_DECL_GETNETGRENT
 int getnetgrent(char **host, char **user, char **domain);
-void endnetgrent(void);
 #endif
+
+#if !HAVE_DECL_SETNETGRENT
+int setnetgrent(const char *netgroup);
+#endif
+
+#if !HAVE_DECL_ENDNETGRENT
+int endnetgrent(void);
+#endif
+
 #ifndef HAVE_UNAME
 int uname(struct utsname *name);
 #endif
@@ -376,6 +387,9 @@ int strcasecmp(const char *s1, const char *s2);
 #endif
 #if !HAVE_DECL_STRNCASECMP
 int strncasecmp(const char *s1, const char *s2, size_t n);
+#endif
+#if !HAVE_DECL_STRSIGNAL
+char *strsignal(int sig);
 #endif
 #if !HAVE_DECL_STRDUP
 char *strdup(const char *str);
@@ -419,6 +433,13 @@ int rpl_asprintf(char **, const char *, ...);
 #if !defined(isfinite)
 # define isfinite(x) finite(x)
 #endif
+#if !HAVE_DECL_GMTIME_R
+struct tm *gmtime_r(const time_t *timep, struct tm *result);
+#endif
+#if !HAVE_DECL_LOCALTIME_R
+struct tm *localtime_r(const time_t *timep, struct tm *result);
+#endif
+
 
 #ifndef NGROUPS
 # define NGROUPS 20

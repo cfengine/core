@@ -141,42 +141,36 @@ char *MapNameForward(char *s)
 
 /*********************************************************/
 
-#ifndef HAVE_GETNETGRENT
+#ifndef HAVE_SETNETGRENT
 
-# if !defined __STDC__ || !__STDC__
-/* This is a separate conditional since some stdc systems
-   reject `defined (const)'.  */
-
-#  ifndef const
-#   define const
-#  endif
-# endif
-
-/*********************************************************/
-
-int setnetgrent(netgroup)
-     const char *netgroup;
-
+int setnetgrent(const char *netgroup)
 {
     return 0;
 }
+
+#endif
 
 /**********************************************************/
 
-int getnetgrent(a, b, c)
-     char **a, **b, **c;
+#ifndef HAVE_GETNETGRENT
 
+int getnetgrent(char **machinep, char **userp, char **domainp)
 {
-    *a = NULL;
-    *b = NULL;
-    *c = NULL;
+    *machinep = NULL;
+    *userp = NULL;
+    *domainp = NULL;
     return 0;
 }
 
+#endif
+
 /***********************************************************/
 
-void endnetgrent()
+#ifndef HAVE_ENDNETGRENT
+
+int endnetgrent(void)
 {
+    return 1;
 }
 
 #endif
@@ -549,36 +543,3 @@ int ExclusiveUnlockFile(int fd)
 }
 
 #endif
-
-
-#if defined(__MINGW32__)
-
-/* On Windows, gmtime and localtime buffers are thread-specific,
-   so using them in place of the reentrant versions is safe      */
-
-struct tm *gmtime_r(const time_t *timep, struct tm *result)
-{
-    struct tm *result_gmtime = gmtime(timep);
-    
-    if(result_gmtime)
-    {
-        *result = *result_gmtime;
-    }
-    
-    return result_gmtime;
-}
-
-
-struct tm *localtime_r(const time_t *timep, struct tm *result)
-{
-    struct tm *result_localtime = localtime(timep);
-    
-    if(result_localtime)
-    {
-        *result = *result_localtime;
-    }
-    
-    return result_localtime;
-}
-
-#endif  /* __MINGW32__ */

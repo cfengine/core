@@ -3,7 +3,7 @@
 
 body agent control
 {
-single_copy => { "/etc/.*", "/special/file" };
+files_single_copy => { "/etc/.*", "/special/file" };
 }
 
 @end verbatim

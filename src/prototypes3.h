@@ -149,58 +149,6 @@ void DeleteCompressedArray(CompressedArray *start);
 int CompressedArrayElementExists(CompressedArray *start, int key);
 char *CompressedArrayValue(CompressedArray *start, int key);
 
-/* conversion.c */
-
-char *EscapeJson(char *s, char *out, int outSz);
-char *EscapeRegex(char *s, char *out, int outSz);
-char *EscapeQuotes(const char *s, char *out, int outSz);
-char *MapAddress(char *addr);
-enum cfhypervisors Str2Hypervisors(char *s);
-enum cfmeasurepolicy MeasurePolicy2Value(char *s);
-enum cfenvironment_state Str2EnvState(char *s);
-enum insert_match String2InsertMatch(char *s);
-long Months2Seconds(int m);
-enum cfinterval Str2Interval(char *s);
-int SyslogPriority2Int(char *s);
-enum cfdbtype Str2dbType(char *s);
-char *Rlist2String(Rlist *list, char *sep);
-int Signal2Int(char *s);
-enum cfreport String2ReportLevel(char *typestr);
-enum cfhashes String2HashType(char *typestr);
-enum cfcomparison String2Comparison(char *s);
-enum cflinktype String2LinkType(char *s);
-enum cfdatatype Typename2Datatype(char *name);
-enum cfdatatype GetControlDatatype(const char *varname, const BodySyntax *bp);
-enum cfagenttype Agent2Type(char *name);
-enum cfsbundle Type2Cfs(char *name);
-enum representations String2Representation(char *s);
-int GetBoolean(const char *val);
-long Str2Int(const char *s);
-long TimeCounter2Int(const char *s);
-long TimeAbs2Int(char *s);
-mode_t Str2Mode(char *s);
-double Str2Double(const char *s);
-void IntRange2Int(char *intrange, long *min, long *max, const Promise *pp);
-int Month2Int(char *string);
-int MonthLen2Int(char *string, int len);
-void TimeToDateStr(time_t t, char *outStr, int outStrSz);
-const char *GetArg0(const char *execstr);
-void CommPrefix(char *execstr, char *comm);
-int NonEmptyLine(char *s);
-int Day2Number(char *datestring);
-void UtcShiftInterval(time_t t, char *out, int outSz);
-enum action_policy Str2ActionPolicy(char *s);
-enum version_cmp Str2PackageSelect(char *s);
-enum package_actions Str2PackageAction(char *s);
-enum cf_acl_method Str2AclMethod(char *string);
-enum cf_acl_type Str2AclType(char *string);
-enum cf_acl_inherit Str2AclInherit(char *string);
-enum cf_srv_policy Str2ServicePolicy(char *string);
-char *Dtype2Str(enum cfdatatype dtype);
-char *Item2String(Item *ip);
-int IsRealNumber(char *s);
-enum cfd_menu String2Menu(const char *s);
-
 #ifndef MINGW
 UidList *Rlist2UidList(Rlist *uidnames, const Promise *pp);
 GidList *Rlist2GidList(Rlist *gidnames, const Promise *pp);
@@ -282,7 +230,7 @@ void SetBundleOutputs(char *name);
 void ResetBundleOutputs(char *name);
 void SetPromiseOutputs(Promise *pp);
 void VerifyOutputsPromise(Promise *pp);
-void LastSawBundle(char *name,double compliance);
+void LastSawBundle(const Bundle *bundle, double compliance);
 void NewPromiser(Promise *pp);
 void AnalyzePromiseConflicts(void);
 void AddGoalsToDB(char *goal_patterns);
@@ -302,26 +250,6 @@ FnCallResult CallFunction(const FnCallType *function, FnCall *fp, Rlist *finalar
 int FnNumArgs(const FnCallType *call_type);
 
 void ModuleProtocol(char *command, char *line, int print);
-
-/* expand.c */
-
-void ExpandPromise(enum cfagenttype ag, const char *scopeid, Promise *pp, void *fnptr);
-void ExpandPromiseAndDo(enum cfagenttype ag, const char *scope, Promise *p, Rlist *scalarvars, Rlist *listvars,
-                        void (*fnptr) ());
-Rval ExpandDanglers(const char *scope, Rval rval, const Promise *pp);
-void MapIteratorsFromRval(const char *scope, Rlist **los, Rlist **lol, Rval rval, const Promise *pp);
-
-int IsExpandable(const char *str);
-int ExpandScalar(const char *string, char buffer[CF_EXPANDSIZE]);
-Rval ExpandBundleReference(const char *scopeid, Rval rval);
-FnCall *ExpandFnCall(const char *contextid, FnCall *f, int expandnaked);
-Rval ExpandPrivateRval(const char *contextid, Rval rval);
-Rlist *ExpandList(const char *scopeid, const Rlist *list, int expandnaked);
-Rval EvaluateFinalRval(const char *scopeid, Rval rval, int forcelist, const Promise *pp);
-int IsNakedVar(const char *str, char vtype);
-void GetNaked(char *s1, const char *s2);
-void ConvergeVarHashPromise(char *scope, const Promise *pp, int checkdup);
-int ExpandPrivateScalar(const char *contextid, const char *string, char buffer[CF_EXPANDSIZE]);
 
 /* exec_tool.c */
 
@@ -610,13 +538,6 @@ void CloseWmi(void);
 int LinkOrCopy(const char *from, const char *to, int sym);
 int ExclusiveLockFile(int fd);
 int ExclusiveUnlockFile(int fd);
-#if defined(__MINGW32__)
-
-#include <time.h>
-
-struct tm *gmtime_r(const time_t *timep, struct tm *result);
-struct tm *localtime_r(const time_t *timep, struct tm *result);
-#endif
 
 /* pipes.c */
 
@@ -642,31 +563,8 @@ bool IsProcessNameRunning(char *procNameRegex);
 int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promise *pp);
 int SkipDirLinks(char *path, const char *lastnode, Recursion r);
 
-/* reporting.c */
-
-void ShowAllReservedWords(void);
-void ShowContext(void);
-void ShowPromises(Bundle *bundles, Body *bodies);
-void ShowPromise(Promise *pp, int indent);
-void ShowScopedVariables(void);
-void SyntaxTree(void);
-void ShowBody(Body *body, int ident);
-void DebugBanner(char *s);
-void ReportError(char *s);
-void BannerSubType(char *bundlename, char *type, int p);
-void BannerSubSubType(char *bundlename, char *type);
-void Banner(char *s);
-void ShowPromisesInReport(Bundle *bundles, Body *bodies);
-void ShowPromiseInReport(const char *version, Promise *pp, int indent);
-
 /* rlist.c */
 #include "rlist.h"
-/*
- * TODO: Need to find a nice general solution to these sorts of situations.
- */
-int PrependListPackageItem(PackageItem ** list, char *item, Attributes a, Promise *pp);
-int PrependPackageItem(PackageItem ** list, const char *name, const char *version, const char *arch, Attributes a,
-                       Promise *pp);
 
 /* scope.c */
 

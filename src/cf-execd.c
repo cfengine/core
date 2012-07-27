@@ -31,6 +31,8 @@
 #include "promises.h"
 #include "vars.h"
 #include "item_lib.h"
+#include "conversion.h"
+#include "reporting.h"
 
 #define CF_EXEC_IFELAPSED 0
 #define CF_EXEC_EXPIREAFTER 1
@@ -378,10 +380,7 @@ void StartServer(Policy *policy)
 #if defined(HAVE_PTHREAD)
     pthread_attr_init(&threads_attrs);
     pthread_attr_setdetachstate(&threads_attrs, PTHREAD_CREATE_DETACHED);
-
-# ifdef HAVE_PTHREAD_ATTR_SETSTACKSIZE
     pthread_attr_setstacksize(&threads_attrs, (size_t)2048*1024);
-# endif
 #endif
 
     Banner("Starting executor");
@@ -502,7 +501,7 @@ void StartServer(Policy *policy)
 #if defined(HAVE_PTHREAD)
 static void *LocalExecThread(void *param)
 {
-#ifdef HAVE_PTHREAD_SIGMASK
+#if !defined(__MINGW32__)
     sigset_t sigmask;
     sigemptyset(&sigmask);
     pthread_sigmask(SIG_BLOCK, &sigmask, NULL);

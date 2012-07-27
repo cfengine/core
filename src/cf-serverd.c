@@ -36,6 +36,11 @@
 #include "promises.h"
 #include "item_lib.h"
 #include "server_globals.h"
+#include "conversion.h"
+
+#define QUEUESIZE 50
+#define CF_BUFEXT 128
+#define CF_NOSIZE -1
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);
@@ -618,3 +623,100 @@ static void CheckFileChanges(Policy **policy, GenericAgentConfig config)
     }
 }
 
+static void DisableSendDelays(int sockfd)
+{
+    int yes = 1;
+
+    if (setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY, (void *) &yes, sizeof(yes)) == -1)
+    {
+        CfOut(cf_inform, "setsockopt(TCP_NODELAY)", "Unable to disable Nagle algorithm, expect performance problems");
+    }
+}
+
+/*********************************************************************/
+/* Level 4                                                           */
+/*********************************************************************/
+
+/* 'resolved' argument needs to be at least CF_BUFSIZE long */
+
+static bool ResolveFilename(const char *req_path, char *res_path)
+{
+    char req_dir[CF_BUFSIZE];
+    char req_filename[CF_BUFSIZE];
+
+/*
+ * Eliminate symlinks from path, but do not resolve the file itself if it is a
+ * symlink.
+ */
+
+    strlcpy(req_dir, req_path, CF_BUFSIZE);
+    ChopLastNode(req_dir);
+
+    strlcpy(req_filename, ReadLastNode(req_path), CF_BUFSIZE);
+
+#if defined HAVE_REALPATH && !defined NT
+    if (realpath(req_dir, res_path) == NULL)
+    {
+        return false;
+    }
+#else
+    memset(res_path, 0, CF_BUFSIZE);
+    CompressPath(res_path, req_dir);
+#endif
+
+    AddSlash(res_path);
+    strlcat(res_path, req_filename, CF_BUFSIZE);
+
+/* Adjust for forward slashes */
+
+    MapName(res_path);
+
+/* NT has case-insensitive path names */
+
+#ifdef MINGW
+    int i;
+
+    for (i = 0; i < strlen(res_path); i++)
+    {
+        res_path[i] = ToLower(res_path[i]);
+    }
+#endif /* MINGW */
+
+    return true;
+}
+
+/***************************************************************/
+/* Toolkit/Class: conn                                         */
+/***************************************************************/
+
+#if !defined(HAVE_GETADDRINFO)
+static in_addr_t GetInetAddr(char *host)
+{
+    struct in_addr addr;
+    struct hostent *hp;
+
+    addr.s_addr = inet_addr(host);
+
+    if ((addr.s_addr == INADDR_NONE) || (addr.s_addr == 0))
+    {
+        if ((hp = gethostbyname(host)) == 0)
+        {
+            FatalError("host not found: %s", host);
+        }
+
+        if (hp->h_addrtype != AF_INET)
+        {
+            FatalError("unexpected address family: %d\n", hp->h_addrtype);
+        }
+
+        if (hp->h_length != sizeof(addr))
+        {
+            FatalError("unexpected address length %d\n", hp->h_length);
+        }
+
+        memcpy((char *) &addr, hp->h_addr, hp->h_length);
+    }
+
+    return (addr.s_addr);
+}
+#endif

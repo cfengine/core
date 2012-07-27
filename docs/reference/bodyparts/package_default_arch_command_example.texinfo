@@ -1,0 +1,8 @@
+@verbatim
+body package_method dpkg
+{
+  package_default_arch_command => "/usr/bin/dpkg --print-architecture";
+
+  # ...
+}
+@end verbatim

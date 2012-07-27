@@ -32,6 +32,14 @@
 #include "files_names.h"
 #include "item_lib.h"
 #include "vars.h"
+#include "conversion.h"
+#include "expand.h"
+
+#ifdef HAVE_NOVA
+#include "nova-reporting.h"
+#else
+#include "reporting.h"
+#endif
 
 extern int PR_KEPT;
 extern int PR_REPAIRED;
@@ -94,7 +102,7 @@ static void ParallelFindAndVerifyFilesPromises(Promise *pp);
 static bool VerifyBootstrap(void);
 static void KeepPromiseBundles(Policy *policy, Rlist *bundlesequence);
 static void KeepPromises(Policy *policy, GenericAgentConfig config);
-static int NoteBundleCompliance(char *name, int save_pr_kept, int save_pr_repaired, int save_pr_notkept);
+static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save_pr_repaired, int save_pr_notkept);
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -236,12 +244,12 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
 
             for (sp = POLICY_SERVER; *sp != '\0'; sp++)
             {
-                if (isalpha(*sp))
+                if (isalpha((int)*sp))
                 {
                     alpha = true;
                 }
 
-                if (ispunct(*sp) && *sp != ':' && *sp != '.')
+                if (ispunct((int)*sp) && *sp != ':' && *sp != '.')
                 {
                     alpha = true;
                 }
@@ -933,7 +941,7 @@ int ScheduleAgentOperations(Bundle *bp)
                 {
                     NoteClassUsage(VADDCLASSES, false);
                     DeleteTypeContext(bp->parent_policy, type);
-                    NoteBundleCompliance(bp->name, save_pr_kept, save_pr_repaired, save_pr_notkept);
+                    NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
                     return false;
                 }
             }
@@ -943,7 +951,7 @@ int ScheduleAgentOperations(Bundle *bp)
     }
 
     NoteClassUsage(VADDCLASSES, false);
-    return NoteBundleCompliance(bp->name, save_pr_kept, save_pr_repaired, save_pr_notkept);
+    return NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
 }
 
 /*********************************************************************/
@@ -1407,7 +1415,7 @@ static bool VerifyBootstrap(void)
 /* Compliance comp                                            */
 /**************************************************************/
 
-static int NoteBundleCompliance(char *name, int save_pr_kept, int save_pr_repaired, int save_pr_notkept)
+static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save_pr_repaired, int save_pr_notkept)
 {
     double delta_pr_kept, delta_pr_repaired, delta_pr_notkept;
     double bundle_compliance = 0.0;
@@ -1418,19 +1426,20 @@ static int NoteBundleCompliance(char *name, int save_pr_kept, int save_pr_repair
 
     if (delta_pr_kept + delta_pr_notkept + delta_pr_repaired <= 0)
        {
-       CfOut(cf_verbose, "", " ==> Zero promises executed for bundle \"%s\"", name);
+       CfOut(cf_verbose, "", " ==> Zero promises executed for bundle \"%s\"", bundle->name);
        return CF_NOP;
        }
 
-    CfOut(cf_verbose,""," ==> == Bundle Accounting Summary for \"%s\" ==",name);
-    CfOut(cf_verbose,""," ==> Promises kept in \"%s\" = %.0lf",name,delta_pr_kept);
-    CfOut(cf_verbose,""," ==> Promises not kept in \"%s\" = %.0lf",name,delta_pr_notkept);
-    CfOut(cf_verbose,""," ==> Promises repaired in \"%s\" = %.0lf",name,delta_pr_repaired);
+    CfOut(cf_verbose,""," ==> == Bundle Accounting Summary for \"%s\" ==", bundle->name);
+    CfOut(cf_verbose,""," ==> Promises kept in \"%s\" = %.0lf", bundle->name, delta_pr_kept);
+    CfOut(cf_verbose,""," ==> Promises not kept in \"%s\" = %.0lf", bundle->name, delta_pr_notkept);
+    CfOut(cf_verbose,""," ==> Promises repaired in \"%s\" = %.0lf", bundle->name, delta_pr_repaired);
     
     bundle_compliance = (delta_pr_kept + delta_pr_repaired) / (delta_pr_kept + delta_pr_notkept + delta_pr_repaired);
 
-    CfOut(cf_verbose, "", " ==> Aggregate compliance (promises kept/repaired) for bundle \"%s\" = %.1lf%%", name, bundle_compliance * 100.0);
-    LastSawBundle(name,bundle_compliance);
+    CfOut(cf_verbose, "", " ==> Aggregate compliance (promises kept/repaired) for bundle \"%s\" = %.1lf%%",
+          bundle->name, bundle_compliance * 100.0);
+    LastSawBundle(bundle, bundle_compliance);
 
     // return the worst case for the bundle status
     

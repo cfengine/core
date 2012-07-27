@@ -78,20 +78,20 @@ bundle edit_line comment_lines_matching(regex,comment)
 
 {
 replace_patterns:
-	 
+
  "^($(regex))$" 
 
      replace_with => comment("$(comment)"),
           comment => "Search and replace string";
 }
-	 
+
 ##
-	 
+
 bundle edit_line uncomment_lines_matching(regex,comment)
-	 
+
  # Uncomment lines of a file where the regex matches
  # the text after the comment string
-	 
+
 {
 replace_patterns:
  
@@ -100,7 +100,7 @@ replace_patterns:
        replace_with => uncomment,
             comment => "Uncomment lines matching a regular expression";
 }
-	 
+
 ##
 
 bundle edit_line comment_lines_containing(regex,comment)
@@ -115,14 +115,14 @@ replace_patterns:
      replace_with => comment("$(comment)"),
           comment => "Comment out lines in a file";
 }
-	 
+
 ##
-	 
+
 bundle edit_line uncomment_lines_containing(regex,comment)
-	 
+
  # Uncomment lines of a file where the regex matches
  # the text after the comment string
-	 
+
 {
 replace_patterns:
  
@@ -437,7 +437,7 @@ vars:
 replace_patterns:
   # If the line is there, maybe commented out, uncomment and replace with
   # the correct value
-  "^\s*($(index)\s+(?!$($(v)[$(index)])).*|# ?$(index)\s+.*)$"
+  "^\s*($(index)\s+(?!$($(v)[$(index)])$).*|# ?$(index)\s+.*)$"
          comment => "Correct the value",
     replace_with => value("$(index) $($(v)[$(index)])"),
          classes => always("replace_attempted_$(cindex[$(index)])");
@@ -482,6 +482,10 @@ insert_lines:
 ##
 
 bundle edit_line maintain_key_values(v,sep)
+
+ # Contributed by David Lee
+ # Purpose: Sets the RHS of configuration items with an giving separator
+
 {
   vars:
     "index" slist => getindices("$(v)");
@@ -1743,6 +1747,7 @@ package_verify_command => "/bin/rpm -V";
 ##
 
 body package_method yum_rpm
+
 # Contributed by Trond Hasle Amundsen
 
 # More efficient package method for RedHat - uses rpm to list instead of yum
@@ -1751,6 +1756,7 @@ body package_method yum_rpm
 #   causes uninstallation to fail.
 # - using allmatches to remove for all architectures
 #
+
 {
   package_changes => "bulk";
   package_list_command => "/bin/rpm -qa --qf '%{name} %{version}-%{release} %{arch}\n'";
@@ -1763,6 +1769,9 @@ body package_method yum_rpm
   package_installed_regex => ".*";
   package_name_convention => "$(name)";
 
+  # set it to "0" to avoid caching of list during upgrade
+  package_list_update_ifelapsed => "240";
+
   package_patch_installed_regex => "^[^*]\s.*";
   package_patch_name_regex    => "([^.]+).*";
   package_patch_version_regex => "[^\s]\s+([^\s]+).*";
@@ -1771,6 +1780,56 @@ body package_method yum_rpm
   package_add_command    => "/usr/bin/yum -y install";
   package_update_command => "/usr/bin/yum -y update";
   package_delete_command => "/bin/rpm -e --nodeps --allmatches";
+  package_verify_command => "/bin/rpm -V";
+}
+
+##
+
+body package_method rpm_filebased(path)
+
+# Contributed by Aleksey Tsalolikhin. Written on 29-Feb-2012.
+# Based on yum_rpm body in COPBL by Trond Hasle Amundsen.
+# Purpose: install packages from local filesystem-based package repository.
+# Note: Specify the path to the local package repository in the argument.
+  
+# Example of how to use it:
+#
+# {{{
+# packages:
+# "epel-release"
+# package_policy => "add",
+# package_version => "5-4",
+# package_architectures => { "noarch" },
+# package_method => rpm_filebased("/repo/RPMs");
+# }}}
+
+{
+  package_file_repositories => { "$(path)" };
+  # the above is an addition to Trond's yum_rpm body
+  
+  package_add_command => "/bin/rpm -ihv ";
+  # The above is a change from Trond's yum_rpm body, this makes the commands rpm only.
+  # The reason I changed the install command from yum to rpm is yum will be default
+  # refuse to install the epel-release RPM as it does not have the EPEL GPG key,
+  # but rpm goes ahead and installs the epel-release RPM and the EPEL GPG key.
+  
+  package_name_convention => "$(name)-$(version).$(arch).rpm";
+  # The above is a change from Tron's yum_rpm body. When package_file_repositories is in play,
+  # package_name_convention has to match the file name, not the package name, per the
+  # CFEngine 3 Reference Manual
+  
+  # The rest is unchanged from Trond's yum_rpm body
+  package_changes => "bulk";
+  package_list_command => "/bin/rpm -qa --qf '%{name} %{version}-%{release} %{arch}\n'";
+  
+  package_list_name_regex => "^(\S+?)\s\S+?\s\S+$";
+  package_list_version_regex => "^\S+?\s(\S+?)\s\S+$";
+  package_list_arch_regex => "^\S+?\s\S+?\s(\S+)$";
+  
+  package_installed_regex => ".*";
+  
+
+  package_delete_command => "/bin/rpm -e --allmatches";
   package_verify_command => "/bin/rpm -V";
 }
 
@@ -1825,7 +1884,7 @@ package_delete_command => "/usr/sbin/pkgrm -n -a /tmp/$(adminfile)";
 bundle edit_line create_solaris_admin_file
 {
 insert_lines:
-		
+
   "mail=
 instance=unique
 partial=nocheck

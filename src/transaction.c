@@ -31,6 +31,7 @@
 #include "dbm_api.h"
 #include "files_names.h"
 #include "item_lib.h"
+#include "expand.h"
 
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
 
@@ -758,7 +759,7 @@ static void RemoveDates(char *s)
                 break;
             }
 
-            if (isdigit(*sp))
+            if (isdigit((int)*sp))
             {
                 *sp = 't';
             }

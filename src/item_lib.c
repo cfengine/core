@@ -540,7 +540,7 @@ int MatchRegion(char *chunk, Item *start, Item *begin, Item *end)
 /*
   Match a region in between the selection delimiters. It is
   called after SelectRegion. The end delimiter will be visible
-  here so we have to check for it.
+  here so we have to check for it. Can handle multi-line chunks
 */
 {
     Item *ip = begin;

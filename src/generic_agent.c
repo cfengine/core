@@ -36,6 +36,14 @@
 #include "crypto.h"
 #include "vars.h"
 #include "syntax.h"
+#include "conversion.h"
+#include "expand.h"
+
+#ifdef HAVE_NOVA
+#include "nova-reporting.h"
+#else
+#include "reporting.h"
+#endif
 
 extern char *CFH[][2];
 
@@ -435,7 +443,8 @@ Policy *ReadPromises(enum cfagenttype ag, char *agents, GenericAgentConfig confi
 
     if (ag != cf_common)
     {
-        ShowScopedVariables();
+        ShowScopedVariables(REPORT_OUTPUT_TYPE_TEXT);
+        ShowScopedVariables(REPORT_OUTPUT_TYPE_HTML);
     }
 
     fprintf(FREPORT_HTML, "</div>\n");
@@ -1386,7 +1395,8 @@ void CompilationReport(Policy *policy, char *fname)
     OpenCompilationReportFiles(fname);
 #endif
 
-    ShowPromises(policy->bundles, policy->bodies);
+    ShowPromises(REPORT_OUTPUT_TYPE_TEXT, policy->bundles, policy->bodies);
+    ShowPromises(REPORT_OUTPUT_TYPE_HTML, policy->bundles, policy->bodies);
 
     fclose(FREPORT_HTML);
     fclose(FREPORT_TXT);

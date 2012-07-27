@@ -30,6 +30,7 @@
 #include "syntax.h"
 #include "item_lib.h"
 #include "files_names.h"
+#include "conversion.h"
 
 static PromiseIdent *PromiseIdExists(char *handle);
 static void DeleteAllPromiseIdsRecurse(PromiseIdent *key);

@@ -37,6 +37,7 @@ static const BodySyntax CF_PKGMETHOD_BODY[] =
      "This is how the package manager expects the package to be referred to in the deletion part of a package update, e.g. $(name)"},
     {"package_file_repositories", cf_slist, "", "A list of machine-local directories to search for packages"},
     {"package_installed_regex", cf_str, "", "Regular expression which matches packages that are already installed"},
+    {"package_default_arch_command", cf_str, CF_ABSPATHRANGE, "Command to detect the default packages' architecture"},
     {"package_list_arch_regex", cf_str, "",
      "Regular expression with one backreference to extract package architecture string"},
     {"package_list_command", cf_str, CF_PATHRANGE, "Command to obtain a list of available packages"},

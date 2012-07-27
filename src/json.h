@@ -128,6 +128,8 @@ JsonContainerType JsonGetContrainerType(const JsonElement *container);
 
 JsonPrimitiveType JsonGetPrimitiveType(const JsonElement *primitive);
 const char *JsonPrimitiveGetAsString(const JsonElement *primitive);
+bool JsonPrimitiveGetAsBool(const JsonElement *primitive);
+long JsonPrimitiveGetAsInteger(const JsonElement *primitive);
 const char *JsonGetPropertyAsString(const JsonElement *element);
 
 /**
@@ -287,5 +289,12 @@ JsonElement *JsonParse(const char **data);
   @param property name to be removed
   */
 void JsonObjectRemoveKey(JsonElement *object, const char *key);
+
+/**
+  @brief Detach json element ownership from parent object;
+  @param object containing the key property
+  @param property name to be detached
+  */
+JsonElement *JsonObjectDetachKey(JsonElement *object, const char *key);
 
 #endif

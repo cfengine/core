@@ -33,6 +33,7 @@ char *ToLowerStr(const char *str);
 void ToLowerStrInplace(char *str);
 
 long StringToLong(const char *str);
+char *StringFromLong(long number);
 double StringToDouble(const char *str);
 char *NULLStringToEmpty(char *str);
 
@@ -45,7 +46,7 @@ int SafeStringLength(const char *str);
 int StringSafeCompare(const char *a, const char *b);
 bool StringSafeEqual(const char *a, const char *b);
 
-char *StringConcatenate(const char *a, size_t a_len, const char *b, size_t b_len);
+char *StringConcatenate(size_t count, const char *first, ...);
 char *StringSubstring(const char *source, size_t source_len, int start, int len);
 
 int GetStringListElement(char *strList, int index, char *outBuf, int outBufSz);

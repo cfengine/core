@@ -29,7 +29,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-#include "cf3.defs.h"
+#include "expand.h"
 
 #include "env_context.h"
 #include "constraints.h"
@@ -37,6 +37,8 @@
 #include "vars.h"
 #include "syntax.h"
 #include "files_names.h"
+#include "conversion.h"
+#include "reporting.h"
 
 static void MapIteratorsFromScalar(const char *scope, Rlist **los, Rlist **lol, char *string, int level, const Promise *pp);
 static int Epimenides(const char *var, Rval rval, int level);
@@ -715,7 +717,8 @@ void ExpandPromiseAndDo(enum cfagenttype agent, const char *scopeid, Promise *pp
         switch (agent)
         {
         case cf_common:
-            ShowPromise(pexp, 6);
+            ShowPromise(REPORT_OUTPUT_TYPE_TEXT, pexp, 6);
+            ShowPromise(REPORT_OUTPUT_TYPE_HTML, pexp, 6);
             ReCheckAllConstraints(pexp);
             break;
 

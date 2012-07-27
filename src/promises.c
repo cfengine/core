@@ -28,6 +28,7 @@
 #include "constraints.h"
 #include "policy.h"
 #include "syntax.h"
+#include "expand.h"
 
 #define PACK_UPIFELAPSED_SALT "packageuplist"
 

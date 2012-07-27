@@ -27,6 +27,7 @@
 
 #include "env_context.h"
 #include "constraints.h"
+#include "conversion.h"
 
 /*****************************************************************************/
 

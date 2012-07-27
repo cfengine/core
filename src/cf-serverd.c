@@ -23,7 +23,7 @@
 */
 
 #include "generic_agent.h"
-#include "cf3.server.h"
+#include "server.h"
 
 #include "sysinfo.h"
 #include "env_context.h"
@@ -35,7 +35,6 @@
 #include "vars.h"
 #include "promises.h"
 #include "item_lib.h"
-#include "server_globals.h"
 #include "conversion.h"
 
 #define QUEUESIZE 50

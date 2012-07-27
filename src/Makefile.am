@@ -35,7 +35,6 @@ libpromises_la_SOURCES = \
         cf.events.h \
         cf3.defs.h \
         cf3.extern.h \
-        cf3.server.h \
         cf3globals.c \
         cf_sql.c \
         cfstream.c \
@@ -132,8 +131,7 @@ libpromises_la_SOURCES = \
         scope.c \
         selfdiagnostic.c \
         sequence.c sequence.h \
-	server.c \
-	server_globals.c \
+	server.c server.h \
         show.h \
         signals.c \
         sockaddr.c \

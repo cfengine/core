@@ -30,19 +30,84 @@
 /*                                                                           */
 /*****************************************************************************/
 
-#include "cf3.defs.h"
-#include "cf3.extern.h"
+#include "server.h"
+
 #include "item_lib.h"
-#include "cf3.server.h"
 #include "crypto.h"
 #include "files_names.h"
 #include "env_context.h"
 #include "lastseen.h"
 #include "dir.h"
-#include "server_globals.h"
 #include "conversion.h"
 
-/*********************************************************************/
+/*******************************************************************/
+/* SERVER TYPES                                                    */
+/*******************************************************************/
+
+
+
+/*******************************************************************/
+/* GLOBAL VARIABLES                                                */
+/*******************************************************************/
+
+int CLOCK_DRIFT = 3600;  /* 1hr */
+int ACTIVE_THREADS;
+
+int CFD_MAXPROCESSES = 0;
+int CFD_INTERVAL = 0;
+int DENYBADCLOCKS = true;
+int TRIES = 0;
+int MAXTRIES = 5;
+int LOGCONNS = false;
+int LOGENCRYPT = false;
+int COLLECT_INTERVAL = 0;
+int COLLECT_WINDOW = 10;
+
+Auth *ROLES = NULL;
+Auth *ROLESTOP = NULL;
+
+ServerAccess SV;
+
+Auth *VADMIT = NULL;
+Auth *VADMITTOP = NULL;
+Auth *VDENY = NULL;
+Auth *VDENYTOP = NULL;
+
+Auth *VARADMIT = NULL;
+Auth *VARADMITTOP = NULL;
+Auth *VARDENY = NULL;
+Auth *VARDENYTOP = NULL;
+
+char CFRUNCOMMAND[CF_BUFSIZE];
+
+// These strings should all fit inside 11 characters CF_PROTO_OFFSET - 4 - 1
+
+const char *PROTOCOL[] =
+{
+    "EXEC",
+    "AUTH",                     /* old protocol */
+    "GET",
+    "OPENDIR",
+    "SYNCH",
+    "CLASSES",
+    "MD5",
+    "SMD5",
+    "CAUTH",
+    "SAUTH",
+    "SSYNCH",
+    "SGET",
+    "VERSION",
+    "SOPENDIR",
+    "VAR",
+    "SVAR",
+    "CONTEXT",
+    "SCONTEXT",
+    "SQUERY",
+    "SCALLBACK",
+    NULL
+};
+
+/*******************************************************************/
 
 void ServerEntryPoint(int sd_reply, char *ipaddr, ServerAccess sv)
 

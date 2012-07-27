@@ -1,42 +1,11 @@
-/*
-   Copyright (C) Cfengine AS
+#ifndef CFENGINE_SERVER_H
+#define CFENGINE_SERVER_H
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+#include "cf3.defs.h"
 
-   This program is free software; you can redistribute it and/or modify it
-   under the terms of the GNU General Public License as published by the
-   Free Software Foundation; version 3.
-
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
-
-  To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
-  (COSL) may apply to this file if you as a licensee so wish it. See
-  included file COSL.txt.
-*/
-
-/*******************************************************************/
-/*                                                                 */
-/*  HEADER for cfServerd - Not generically includable!             */
-/*                                                                 */
-/*******************************************************************/
-
-#ifndef CFENGINE_CF3_SERVER_H
-#define CFENGINE_CF3_SERVER_H
-
-#define connection 1
-#define QUEUESIZE 50
-#define CF_BUFEXT 128
-#define CF_NOSIZE -1
-
-/*******************************************************************/
+//*******************************************************************
+// TYPES
+//*******************************************************************
 
 typedef struct
 {
@@ -50,7 +19,11 @@ typedef struct
    int logconns;
 } ServerAccess;
 
-/*******************************************************************/
+
+#define connection 1
+#define QUEUESIZE 50
+#define CF_BUFEXT 128
+#define CF_NOSIZE -1
 
 typedef struct
 {
@@ -84,25 +57,6 @@ typedef struct
     char *replybuff;
     char *replyfile;
 } ServerFileGetState;
-
-/**********************************************************************/
-
-extern ServerAccess SV;
-
-extern Auth *VADMIT;
-extern Auth *VADMITTOP;
-extern Auth *VDENY;
-extern Auth *VDENYTOP;
-extern Auth *VARADMIT;
-extern Auth *VARADMITTOP;
-extern Auth *VARDENY;
-extern Auth *VARDENYTOP;
-
-extern int LOGENCYPRT;
-
-/**********************************************************************/
-
-extern char CFRUNCOMMAND[];
 
 #ifdef HAVE_NOVA
 
@@ -163,4 +117,42 @@ int AuthenticationDialogue(ServerConnectionState *conn, char *buffer, int buffer
 int SafeOpen(char *filename);
 int OptionFound(char *args, char *pos, char *word);
 AgentConnection *ExtractCallBackChannel(ServerConnectionState *conn);
+
+
+//*******************************************************************
+// STATE
+//*******************************************************************
+
+extern char CFRUNCOMMAND[];
+
+extern int CLOCK_DRIFT;
+extern int ACTIVE_THREADS;
+
+extern int CFD_MAXPROCESSES;
+extern int CFD_INTERVAL;
+extern int DENYBADCLOCKS;
+extern int TRIES;
+extern int MAXTRIES;
+extern int LOGCONNS;
+extern int LOGENCRYPT;
+extern int COLLECT_INTERVAL;
+
+extern Auth *ROLES;
+extern Auth *ROLESTOP;
+
+extern ServerAccess SV;
+
+extern Auth *VADMIT;
+extern Auth *VADMITTOP;
+extern Auth *VDENY;
+extern Auth *VDENYTOP;
+
+extern Auth *VARADMIT;
+extern Auth *VARADMITTOP;
+extern Auth *VARDENY;
+extern Auth *VARDENYTOP;
+
+extern char CFRUNCOMMAND[];
+extern const char *PROTOCOL[];
+
 #endif

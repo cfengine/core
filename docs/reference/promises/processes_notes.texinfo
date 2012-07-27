@@ -136,7 +136,7 @@ commands:
 # Parameterized body
 ######################
 
-body process_count("$(s)")
+body process_count up("$(s)")
 
 {
 match_range => "[0,10]";

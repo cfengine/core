@@ -1661,7 +1661,7 @@ void vinit_xml (const char *const format, va_list args)
 {
     char buffer[1024] = {0};
     char xml_filename[1024] = {0};
-    sprintf(xml_filename, "%s.xml", global_xmlfile);
+    sprintf(xml_filename, "%s", global_xmlfile);
     const char *xml_file = xml_filename;
 
     FILE* xml_report = fopen(xml_file, "w");
@@ -1688,7 +1688,7 @@ void vprint_xml(const char *const format, va_list args)
 {
     char buffer[1024] = {0};
     char xml_filename[1024] = {0};
-    sprintf(xml_filename, "%s.xml", global_xmlfile);
+    sprintf(xml_filename, "%s", global_xmlfile);
     const char *xml_file = xml_filename;
     FILE* xml_report = fopen(xml_file, "a");
     vsnprintf(buffer, sizeof(buffer), format, args);
@@ -1719,8 +1719,8 @@ void append_xml(const char *ofile, const char *ifile)
         //Name of xml file, for current testsuite
         char xml_ofilename[1024];
         char xml_ifilename[1024];
-        sprintf(xml_ofilename, "%s.xml", ofile);
-        sprintf(xml_ifilename, "%s.xml", ifile);
+        sprintf(xml_ofilename, "%s", ofile);
+        sprintf(xml_ifilename, "%s", ifile);
 
         const char *xml_ofile = xml_ofilename;
         const char *xml_ifile = xml_ifilename;
@@ -2074,10 +2074,11 @@ int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const 
               "Test Cases", number_of_tests, 0, 0, total_failed, 0,
               "Assertions", 0, 0, 0, 0, 0,
               timestamp);*/
-    global_xmlfile = suitename;
+    sprintf(xmlfile, "%s.xml", suitename);
+    global_xmlfile = xmlfile;
     time(&time_now);
     init_xml(XS_INIT_TESTSUITE, suitename, timestamp, "localhost", number_of_tests, total_failed, 0, 0, difftime(time_now, time_suite));
-    append_xml(suitename, "xml_tmp_suite");
+    append_xml(xmlfile, "xml_tmp_suite");
     print_xml(XS_TESTSUITE_END);
     if (total_failed)
     {

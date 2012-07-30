@@ -2023,7 +2023,7 @@ int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const 
             }
             else
             {
-//                print_xml(CUNIT_RUN_TEST_SUC            strcpy(xmlfile, "xml_tmp_suite");
+//                print_xml(CUNIT_RUN_TEST_SUCCESS, test->name);
             }
             print_xml(XS_TESTCASE_END);
 
@@ -2064,7 +2064,7 @@ int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const 
               "Suites", 1, 1, 1, 0, 0,
               "Test Cases", number_of_tests, 0, 0, total_failed, 0,
               "Assertions", 0, 0, 0, 0, 0,
-              ctime(&time_stamp));*/
+              timestamp);*/
     global_xmlfile = suitename;
     init_xml(XS_INIT_TESTSUITE, suitename, timestamp, "localhost", number_of_tests, total_failed, 0, 0, 0);
     append_xml(suitename, "xml_tmp_suite");

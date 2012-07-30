@@ -116,11 +116,11 @@
     "           failures=\"%d\"\n" \
     "           errors=\"%d\"\n" \
     "           skipped=\"%d\"\n" \
-    "           time=\"%d\">\n"
+    "           time=\"%2lf seconds\">\n"
 #define XS_TESTCASE \
     "    <testcase name=\"%s\"\n" \
     "              classname=\"%s\"\n" \
-    "              time=\"%s\">\n"
+    "              time=\"%2lf seconds\">\n"
 #define XS_RUN_TEST_FAILURE_ASSERT \
     "        <failure type=\"%s(%lld)\"\n" \
     "                 message=\"%s: Test failed.\">\n" \

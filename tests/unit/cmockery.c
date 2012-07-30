@@ -1904,6 +1904,7 @@ int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const 
 
 
     // Time of testsuite execution
+    time_t time_suite, time_case, time_now;
     time_t ttime;
     time(&ttime);
     char timestamp[1024];
@@ -1962,6 +1963,7 @@ int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const 
 
 //    init_xml(CUNIT_INIT, suitename);
     init_xml("");
+    time(&time_suite);
 
     while (current_test < number_of_tests)
     {
@@ -2011,11 +2013,13 @@ int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const 
             strcpy(xmlfile, "xml_tmp_case");
             global_casename = casename;
             global_xmlfile = xmlfile;
+            time(&time_case);
             int failed = _run_test(test->name, test->function, current_state,
                                    test->function_type, test_check_point);
             strcpy(xmlfile, "xml_tmp_suite");
             global_xmlfile = xmlfile;
-            print_xml(XS_TESTCASE, casename, path, "time_to_execute");
+            time(&time_now);
+            print_xml(XS_TESTCASE, casename, path, difftime(time_now, time_case));
             if (failed)
             {
                 failed_names[total_failed] = test->name;
@@ -2066,7 +2070,8 @@ int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const 
               "Assertions", 0, 0, 0, 0, 0,
               timestamp);*/
     global_xmlfile = suitename;
-    init_xml(XS_INIT_TESTSUITE, suitename, timestamp, "localhost", number_of_tests, total_failed, 0, 0, 0);
+    time(&time_now);
+    init_xml(XS_INIT_TESTSUITE, suitename, timestamp, "localhost", number_of_tests, total_failed, 0, 0, difftime(time_now, time_suite));
     append_xml(suitename, "xml_tmp_suite");
 
     print_xml(XS_TESTSUITE_END);

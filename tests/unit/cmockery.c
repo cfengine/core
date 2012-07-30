@@ -1675,10 +1675,13 @@ void vinit_xml (const char *const format, va_list args)
 
 void init_xml (const char *const format, ...)
 {
-    va_list args;
-    va_start(args, format);
-    vinit_xml(format, args);
-    va_end(args);
+    if(strcmp(global_suitename, "file_writer_test") != 0)
+    {
+        va_list args;
+        va_start(args, format);
+        vinit_xml(format, args);
+        va_end(args);
+    }
 }
 
 void vprint_xml(const char *const format, va_list args)
@@ -1687,7 +1690,6 @@ void vprint_xml(const char *const format, va_list args)
     char xml_filename[1024] = {0};
     sprintf(xml_filename, "%s.xml", global_xmlfile);
     const char *xml_file = xml_filename;
-
     FILE* xml_report = fopen(xml_file, "a");
     vsnprintf(buffer, sizeof(buffer), format, args);
     fprintf(xml_report, "%s", buffer);
@@ -1699,38 +1701,42 @@ void vprint_xml(const char *const format, va_list args)
 
 void print_xml(const char *const format, ...)
 {
-    va_list args;
-    va_start(args, format);
-    vprint_xml(format, args);
-    va_end(args);
+    if(strcmp(global_suitename, "file_writer_test") != 0)
+    {
+        va_list args;
+        va_start(args, format);
+        vprint_xml(format, args);
+        va_end(args);
+    }
 }
 
 void append_xml(const char *ofile, const char *ifile)
 {
-    char ch;
-
-    //Name of xml file, for current testsuite
-    char xml_ofilename[1024];
-    char xml_ifilename[1024];
-    sprintf(xml_ofilename, "%s.xml", ofile);
-    sprintf(xml_ifilename, "%s.xml", ifile);
-
-    const char *xml_ofile = xml_ofilename;
-    const char *xml_ifile = xml_ifilename;
-
-    FILE* xml_report = fopen(xml_ofile, "ab");
-    FILE* xml_tmp = fopen(xml_ifile, "rb");
-
-    while(!feof(xml_tmp))
+    if(strcmp(global_suitename, "file_writer_test") != 0)
     {
-        ch = getc(xml_tmp);
-        if(!feof(xml_tmp))
+        char ch;
+
+        //Name of xml file, for current testsuite
+        char xml_ofilename[1024];
+        char xml_ifilename[1024];
+        sprintf(xml_ofilename, "%s.xml", ofile);
+        sprintf(xml_ifilename, "%s.xml", ifile);
+
+        const char *xml_ofile = xml_ofilename;
+        const char *xml_ifile = xml_ifilename;
+        FILE* xml_report = fopen(xml_ofile, "ab");
+        FILE* xml_tmp = fopen(xml_ifile, "rb");
+        while(!feof(xml_tmp))
         {
-            putc(ch, xml_report);
+            ch = getc(xml_tmp);
+            if(!feof(xml_tmp))
+            {
+                putc(ch, xml_report);
+            }
         }
+        fclose(xml_report);
+        fclose(xml_tmp);
     }
-    fclose(xml_report);
-    fclose(xml_tmp);
 }
 
 /*void init_cunit_run_files ()
@@ -2030,7 +2036,6 @@ int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const 
 //                print_xml(CUNIT_RUN_TEST_SUCCESS, test->name);
             }
             print_xml(XS_TESTCASE_END);
-
             switch (test->function_type)
             {
             case UNIT_TEST_FUNCTION_TYPE_TEST:
@@ -2073,9 +2078,7 @@ int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const 
     time(&time_now);
     init_xml(XS_INIT_TESTSUITE, suitename, timestamp, "localhost", number_of_tests, total_failed, 0, 0, difftime(time_now, time_suite));
     append_xml(suitename, "xml_tmp_suite");
-
     print_xml(XS_TESTSUITE_END);
-
     if (total_failed)
     {
         size_t i;

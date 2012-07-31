@@ -28,5 +28,6 @@
 bool AcquireLockByID(char *lock_id, int acquire_after_minutes);
 time_t FindLockTime(char *name);
 bool InvalidateLockTime(char *lock_id);
+bool EnforcePromise(enum cfopaction action);
 
 #endif  /* NOT CFENGINE_TRANSACTION_H */

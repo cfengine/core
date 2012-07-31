@@ -868,3 +868,10 @@ int ShiftChange(void)
         return false;
     }
 }
+
+/************************************************************************/
+
+bool EnforcePromise(enum cfopaction action)
+{
+    return (!DONTDO && action != cfa_warn);
+}

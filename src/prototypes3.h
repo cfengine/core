@@ -339,6 +339,7 @@ void VerifyCopiedFileAttributes(char *file, struct stat *dstat, struct stat *sst
 int MoveObstruction(char *from, Attributes attr, Promise *pp, const ReportContext *report_context);
 void TouchFile(char *path, struct stat *sb, Attributes attr, Promise *pp);
 int MakeParentDirectory(char *parentandchild, int force, const ReportContext *report_context);
+int MakeParentDirectory2(char *parentandchild, int force, const ReportContext *report_context, bool enforce_promise);
 void RotateFiles(char *name, int number);
 void CreateEmptyFile(char *name);
 void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp);

@@ -1302,7 +1302,33 @@ static int TransformFile(char *file, Attributes attr, Promise *pp)
 
 /*******************************************************************/
 
+int MakeParentDirectory2(char *parentandchild, int force, const ReportContext *report_context, bool enforce_promise)
+/**
+ * Like MakeParentDirectory, but honours warn-only and dry-run mode.
+ * We should eventually migrate to this function to avoid making changes
+ * in these scenarios.
+ **/
+{
+    if(enforce_promise)
+    {
+        return MakeParentDirectory(parentandchild, report_context, force);
+    }
+
+    char *parent_dir = GetParentDirectoryCopy(parentandchild);
+
+    bool parent_exists = IsDir(parent_dir);
+
+    free(parent_dir);
+
+    return parent_exists;
+}
+
+/*******************************************************************/
+
 int MakeParentDirectory(char *parentandchild, int force, const ReportContext *report_context)
+/**
+ * Please consider using MakeParentDirectory2() instead.
+ **/
 {
     char *spc, *sp;
     char currentpath[CF_BUFSIZE];

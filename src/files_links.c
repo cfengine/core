@@ -27,6 +27,7 @@
 
 #include "promises.h"
 #include "files_names.h"
+#include "transaction.h"
 
 #define CF_MAXLINKLEVEL 4
 
@@ -107,9 +108,11 @@ if (MatchRlistItem(attr.link.copy_patterns,lastnode))
 
     if (readlink(destination, linkbuf, CF_BUFSIZE - 1) == -1)
     {
-        if (!MakeParentDirectory(destination, attr.move_obstructions, report_context))  /* link doesn't exist */
+
+        if (!MakeParentDirectory2(destination, attr.move_obstructions, report_context, EnforcePromise(attr.transaction.action)))
         {
-            cfPS(cf_verbose, CF_FAIL, "", pp, attr, " !! Unable to create link %s -> %s", destination, to);
+            cfPS(cf_error, CF_FAIL, "", pp, attr, " !! Unable to create parent directory of link %s -> %s (enforce=%d)",
+                 destination, to, EnforcePromise(attr.transaction.action));
             return CF_FAIL;
         }
         else

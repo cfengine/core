@@ -115,7 +115,6 @@
     "           tests=\"%d\"\n" \
     "           failures=\"%d\"\n" \
     "           errors=\"%d\"\n" \
-    "           skipped=\"%d\"\n" \
     "           time=\"%2lf seconds\">\n"
 #define XS_TESTCASE \
     "    <testcase name=\"%s\"\n" \
@@ -123,24 +122,31 @@
     "              time=\"%2lf seconds\">\n"
 #define XS_RUN_TEST_FAILURE_ASSERT \
     "        <failure type=\"%s(%lld)\"\n" \
-    "                 message=\"%s: Test failed.\">\n" \
+    "                 message=\"FAILED at %s:%d.\">\n" \
     "        </failure>\n"
 #define XS_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD \
     "        <failure type=\"%s(%lld, %lld)\"\n" \
-    "                 message=\"%s: Test failed.\">\n" \
+    "                 message=\"FAILED at %s:%d.\">\n" \
     "        </failure>\n"
 #define XS_RUN_TEST_FAILURE_ASSERT_EQUALITY_STRING \
-    "        <failure type=\"%s(%s %s)\"\n" \
-    "                 message=\"%s: Test failed.\">\n" \
+    "        <failure type=\"%s(%s, %s)\"\n" \
+    "                 message=\"FAILED at %s:%d.\">\n" \
     "        </failure>\n"
 #define XS_RUN_TEST_FAILURE_ASSERT_RANGE_LLD \
     "        <failure type=\"%s(value=%lld, min=%lld, max=%lld)\"\n" \
-    "                 message=\"%s: Test failed.\">\n" \
+    "                 message=\"FAILED at %s:%d.\">\n" \
     "        </failure>\n"
 #define XS_RUN_TEST_FAILURE_ASSERT_SET_LLD \
     "        <failure type=\"%s(value=%lld, number_of_values=%lld)\"\n" \
-    "                 message=\"%s: Test failed.\">\n" \
+    "                 message=\"FAILED at %s:%d.\">\n" \
     "        </failure>\n"
+
+#define XS_RUN_TEST_ERROR \
+    "        <error type=\"%s\"\n" \
+    "               message="
+#define XS_RUN_TEST_ERROR_END \
+    "        </error>\n"
+
 #define XS_TESTCASE_END \
     "    </testcase>\n"
 #define XS_TESTSUITE_END \

@@ -30,6 +30,7 @@
 #include "cf3.defs.h"
 #include "dir.h"
 #include "item_lib.h"
+#include "assert.h"
 
 /*****************************************************************************/
 
@@ -532,6 +533,42 @@ void AddSlash(char *str)
 
 /*********************************************************************/
 
+char *GetParentDirectoryCopy(const char *path)
+/**
+ * WARNING: Remember to free return value.
+ **/
+{
+    assert(path);
+    assert(strlen(path) > 0);
+
+    char *path_copy = xstrdup(path);
+
+    if(strcmp(path_copy, "/") == 0)
+    {
+        return path_copy;
+    }
+
+    char *sp = (char *)LastFileSeparator(path_copy);
+
+    if(!sp)
+    {
+        FatalError("Path %s does not contain file separators (GetParentDirectory())", path_copy);
+    }
+
+    if(sp == FirstFileSeparator(path_copy))  // don't chop off first path separator
+    {
+        *(sp + 1) = '\0';
+    }
+    else
+    {
+        *sp = '\0';
+    }
+
+    return path_copy;
+}
+
+/*********************************************************************/
+
 void DeleteSlash(char *str)
 {
     if ((strlen(str) == 0) || (str == NULL))
@@ -548,6 +585,36 @@ void DeleteSlash(char *str)
     {
         str[strlen(str) - 1] = '\0';
     }
+}
+
+/*********************************************************************/
+
+const char *FirstFileSeparator(const char *str)
+{
+    assert(str);
+    assert(strlen(str) > 0);
+
+    if(*str == '/')
+    {
+        return str;
+    }
+
+    if(strncmp(str, "\\\\", 2) == 0)  // windows share
+    {
+        return str + 1;
+    }
+
+    const char *pos;
+
+    for(pos = str; *pos != '\0'; pos++)  // windows "X:\file" path
+    {
+        if(*pos == '\\')
+        {
+            return pos;
+        }
+    }
+
+    return NULL;
 }
 
 /*********************************************************************/

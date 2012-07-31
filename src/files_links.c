@@ -45,7 +45,6 @@ char VerifyLink(char *destination, char *source, Attributes attr, Promise *pp,
 #else                           /* NOT MINGW */
 {
     char to[CF_BUFSIZE], linkbuf[CF_BUFSIZE], absto[CF_BUFSIZE];
-    int nofile = false;
     struct stat sb;
 
     CfDebug("Linkfiles(%s -> %s)\n", destination, source);
@@ -83,20 +82,22 @@ if (MatchRlistItem(attr.link.copy_patterns,lastnode))
         strcpy(absto, to);
     }
 
+    bool source_file_exists = true;
+
     if (cfstat(absto, &sb) == -1)
     {
         CfDebug("No source file\n");
-        nofile = true;
+        source_file_exists = false;
     }
 
-    if (nofile && (attr.link.when_no_file != cfa_force) && (attr.link.when_no_file != cfa_delete))
+    if (!source_file_exists && (attr.link.when_no_file != cfa_force) && (attr.link.when_no_file != cfa_delete))
     {
         CfOut(cf_inform, "", "Source %s for linking is absent", absto);
         cfPS(cf_verbose, CF_FAIL, "", pp, attr, " !! Unable to create link %s -> %s, no source", destination, to);
         return CF_WARN;
     }
 
-    if (nofile && attr.link.when_no_file == cfa_delete)
+    if (!source_file_exists && attr.link.when_no_file == cfa_delete)
     {
         KillGhostLink(destination, attr, pp);
         return CF_CHG;

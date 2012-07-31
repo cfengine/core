@@ -48,6 +48,10 @@ bundle agent git_update
       comment => "The desired checkout location of the Git repository",
       handle => "update_vars_git_checkout_location";
 
+      "git_checkout_umask" string => "077",
+      comment => "The desired umask while checking out the Git repository",
+      handle => "update_vars_git_checkout_umask";
+
       "git_configfile" string => "$(git_checkout_location)/.git/config",
       comment => "The .git/config file location",
       handle => "update_vars_git_configfile";
@@ -93,6 +97,10 @@ bundle agent git_update
 #
 
  classes:
+
+      # set this to "any" or a machine class to have those machines do
+      # the Git checkouts locally under inputs/
+      "idempotent_git" expression => "!any";
 
       "use_git" expression => fileexists("$(git_binary)"),
       comment => "True if we found the Git binary and should use Git.",
@@ -165,13 +173,14 @@ bundle agent git_update
 
     am_policy_hub.use_git.git_config_ok::
       "$(git_update_command)"
-      contain => u_in_dir_shell("$(git_checkout_location)"),
+      contain => u_in_dir_umask_shell("$(git_checkout_location)", "$(git_checkout_umask)"),
       comment => "Update the Git repository.",
       handle => "update_commands_git_update",
       classes => u_if_repaired("git_resolved");
 
     am_policy_hub.use_git.!git_checkout_location_exists.!git_checkout_exists::
       "$(git_clone_command)"
+      contain => u_in_dir_umask_shell("/", "$(git_checkout_umask)"),
       comment => "Clone the Git repository.",
       handle => "update_commands_git_clone",
       classes => u_if_repaired("git_resolved");
@@ -346,10 +355,11 @@ body classes u_if_ok(x)
 
 #########################################################
 
-body contain u_in_dir_shell(s)
+body contain u_in_dir_umask_shell(dir, umask)
 {
-      chdir => "$(s)";
+      chdir => "$(dir)";
       useshell => "true";
+      umask => "$(umask)";
 }
 
 #########################################################

@@ -62,7 +62,7 @@ static void AddOccurrence(Occurrence **list, char *reference, Rlist *represents,
 static Topic *TopicExists(char *topic_name, char *topic_type);
 static TopicAssociation *AssociationExists(TopicAssociation *list, char *fwd, char *bwd);
 static Occurrence *OccurrenceExists(Occurrence *list, char *locator, enum representations repy_type, char *s);
-static void KeepPromiseBundles(Policy *policy);
+static void KeepPromiseBundles(Policy *policy, const ReportContext *report_context);
 int GetTopicPid(char *classified_topic);
 
 /*******************************************************************/
@@ -178,7 +178,8 @@ int main(int argc, char *argv[])
 {
     GenericAgentConfig config = CheckOpts(argc, argv);
 
-    Policy *policy = GenericInitialize("knowledge", config);
+    ReportContext *report_context = OpenReports("knowledge");
+    Policy *policy = GenericInitialize("knowledge", config, report_context);
     ThisAgentInit();
 
     KeepKnowControlPromises(policy);
@@ -244,7 +245,7 @@ int main(int argc, char *argv[])
         int complete;
         double percent;
 
-        KeepPromiseBundles(policy);
+        KeepPromiseBundles(policy, report_context);
         WriteKMDB();
         GenerateManual();
         ShowWords();
@@ -258,6 +259,7 @@ int main(int argc, char *argv[])
         CfOut(cf_inform, "", " -> Hit probability (efficiency) yields %d/%d = %.4lf%%\n", CF_OCCUR, CF_TOPICS, percent);
     }
 
+    ReportContextDestroy(report_context);
     return 0;
 }
 
@@ -555,7 +557,7 @@ static void KeepKnowControlPromises(Policy *policy)
 
 /*****************************************************************************/
 
-static void KeepPromiseBundles(Policy *policy)
+static void KeepPromiseBundles(Policy *policy, const ReportContext *report_context)
 {
     Bundle *bp;
     SubType *sp;
@@ -644,7 +646,7 @@ static void KeepPromiseBundles(Policy *policy)
 
             for (pp = sp->promiselist; pp != NULL; pp = pp->next)
             {
-                ExpandPromise(cf_know, bp->name, pp, KeepKnowledgePromise);
+                ExpandPromise(cf_know, bp->name, pp, KeepKnowledgePromise, report_context);
             }
         }
     }

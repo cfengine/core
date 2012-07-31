@@ -81,10 +81,10 @@ int NO_FORK = false;
 
 static void GetDatabaseAge(void);
 static void LoadHistogram(void);
-static void GetQ(const Policy *policy);
+static void GetQ(const Policy *policy, const ReportContext *report_context);
 static Averages EvalAvQ(char *timekey);
 static void ArmClasses(Averages newvals, char *timekey);
-static void GatherPromisedMeasures(const Policy *policy);
+static void GatherPromisedMeasures(const Policy *policy, const ReportContext *report_context);
 
 static void LeapDetection(void);
 static Averages *GetCurrentAverages(char *timekey);
@@ -235,7 +235,7 @@ static void LoadHistogram(void)
 
 /*********************************************************************/
 
-void MonitorStartServer(const Policy *policy)
+void MonitorStartServer(const Policy *policy, const ReportContext *report_context)
 {
     char timekey[CF_SMALLBUF];
     Averages averages;
@@ -282,7 +282,7 @@ void MonitorStartServer(const Policy *policy)
 
     while (true)
     {
-        GetQ(policy);
+        GetQ(policy, report_context);
         snprintf(timekey, sizeof(timekey), "%s", GenTimeKey(time(NULL)));
         averages = EvalAvQ(timekey);
         LeapDetection();
@@ -298,7 +298,7 @@ void MonitorStartServer(const Policy *policy)
 
 /*********************************************************************/
 
-static void GetQ(const Policy *policy)
+static void GetQ(const Policy *policy, const ReportContext *report_context)
 {
     CfDebug("========================= GET Q ==============================\n");
 
@@ -316,7 +316,7 @@ static void GetQ(const Policy *policy)
     MonTempGatherData(CF_THIS);
 #endif /* NOT MINGW */
     MonOtherGatherData(CF_THIS);
-    GatherPromisedMeasures(policy);
+    GatherPromisedMeasures(policy, report_context);
 }
 
 /*********************************************************************/
@@ -1074,7 +1074,7 @@ static double RejectAnomaly(double new, double average, double variance, double 
 /* Level 5                                                     */
 /***************************************************************/
 
-static void GatherPromisedMeasures(const Policy *policy)
+static void GatherPromisedMeasures(const Policy *policy, const ReportContext *report_context)
 {
     SubType *sp;
     Promise *pp;
@@ -1091,7 +1091,7 @@ static void GatherPromisedMeasures(const Policy *policy)
             {
                 for (pp = sp->promiselist; pp != NULL; pp = pp->next)
                 {
-                    ExpandPromise(cf_monitor, scope, pp, KeepMonitorPromise);
+                    ExpandPromise(cf_monitor, scope, pp, KeepMonitorPromise, report_context);
                 }
             }
         }

@@ -28,12 +28,13 @@
 #include "env_context.h"
 #include "constraints.h"
 #include "conversion.h"
+#include "reporting.h"
 
 /*****************************************************************************/
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);
-static void KeepPromises(Policy *policy);
+static void KeepPromises(Policy *policy, const ReportContext *report_context);
 
 /*****************************************************************************/
 /* Globals                                                                   */
@@ -93,11 +94,14 @@ int main(int argc, char *argv[])
 {
     GenericAgentConfig config = CheckOpts(argc, argv);
 
-    Policy *policy = GenericInitialize("monitor", config);
+    ReportContext *report_context = OpenReports("monitor");
+    Policy *policy = GenericInitialize("monitor", config, report_context);
     ThisAgentInit();
-    KeepPromises(policy);
+    KeepPromises(policy, report_context);
 
-    MonitorStartServer(policy);
+    MonitorStartServer(policy, report_context);
+
+    ReportContextDestroy(report_context);
     return 0;
 }
 
@@ -178,7 +182,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
 
 /*****************************************************************************/
 
-static void KeepPromises(Policy *policy)
+static void KeepPromises(Policy *policy, const ReportContext *report_context)
 {
     Constraint *cp;
     Rval retval;

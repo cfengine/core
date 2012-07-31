@@ -33,7 +33,8 @@
 
 /*****************************************************************************/
 
-void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *path, Promise *ptr))
+void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *path, Promise *ptr, const ReportContext *report_context),
+                             const ReportContext *report_context)
 {
     Item *path, *ip, *remainder = NULL;
     char pbuffer[CF_BUFSIZE];
@@ -50,7 +51,7 @@ void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *p
     if (!IsPathRegex(wildpath) || (pathtype && (strcmp(pathtype, "literal") == 0)))
     {
         CfOut(cf_verbose, "", " -> Using literal pathtype for %s\n", wildpath);
-        (*fnptr) (wildpath, pp);
+        (*fnptr) (wildpath, pp, report_context);
         return;
     }
     else
@@ -120,7 +121,7 @@ void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *p
         {
             // Could be a dummy directory to be created so this is not an error.
             CfOut(cf_verbose, "", " -> Using best-effort expanded (but non-existent) file base path %s\n", wildpath);
-            (*fnptr) (wildpath, pp);
+            (*fnptr) (wildpath, pp, report_context);
             DeleteItemList(path);
             return;
         }
@@ -166,7 +167,7 @@ void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *p
 
                 if (!lastnode && (strcmp(nextbuffer, wildpath) != 0))
                 {
-                    LocateFilePromiserGroup(nextbuffer, pp, fnptr);
+                    LocateFilePromiserGroup(nextbuffer, pp, fnptr, report_context);
                 }
                 else
                 {
@@ -187,7 +188,7 @@ void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *p
                     /* If there were back references there could still be match.x vars to expand */
 
                     pcopy = ExpandDeRefPromise(CONTEXTID, pp);
-                    (*fnptr) (nextbufferOrig, pcopy);
+                    (*fnptr) (nextbufferOrig, pcopy, report_context);
                     DeletePromise(pcopy);
                 }
             }
@@ -198,7 +199,7 @@ void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *p
     else
     {
         CfOut(cf_verbose, "", " -> Using file base path %s\n", pbuffer);
-        (*fnptr) (pbuffer, pp);
+        (*fnptr) (pbuffer, pp, report_context);
     }
 
     if (count == 0)
@@ -207,7 +208,7 @@ void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *p
 
         if (create)
         {
-            VerifyFilePromise(pp->promiser, pp);
+            VerifyFilePromise(pp->promiser, pp, report_context);
         }
     }
 

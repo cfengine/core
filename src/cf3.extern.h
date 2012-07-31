@@ -164,8 +164,6 @@ extern int CF_PERSISTENCE;
 extern int LOOKUP;
 extern int BOOTSTRAP;
 extern int XML;
-extern FILE *FREPORT_HTML;
-extern FILE *FREPORT_TXT;
 extern FILE *FKNOW;
 extern int CSV;
 

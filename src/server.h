@@ -66,7 +66,7 @@ int Constellation_ReturnRelayQueryData(ServerConnectionState *conn, char *query,
 void Constellation_RunQueries(Item *queries, Item **results_p);
 #endif
 
-void KeepPromises(Policy *policy);
+void KeepPromises(Policy *policy, const ReportContext *report_context);
 
 void ServerEntryPoint(int sd_reply, char *ipaddr, ServerAccess sv);
 void TryCollectCall(void);

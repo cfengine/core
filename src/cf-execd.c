@@ -59,14 +59,14 @@ static pthread_attr_t threads_attrs;
 
 static GenericAgentConfig CheckOpts(int argc, char **argv);
 static void ThisAgentInit(void);
-static bool ScheduleRun(Policy **policy);
+static bool ScheduleRun(Policy **policy, const ReportContext *report_context);
 static void Apoptosis(void);
 
 #if defined(HAVE_PTHREAD)
 static bool LocalExecInThread(const ExecConfig *config);
 #endif
 
-void StartServer(Policy *policy);
+void StartServer(Policy *policy, const ReportContext *report_context);
 static void KeepPromises(Policy *policy);
 
 static ExecConfig *CopyExecConfig(const ExecConfig *config);
@@ -125,7 +125,8 @@ int main(int argc, char *argv[])
 {
     GenericAgentConfig config = CheckOpts(argc, argv);
 
-    Policy *policy = GenericInitialize("executor", config);
+    ReportContext *report_context = OpenReports("executor");
+    Policy *policy = GenericInitialize("executor", config, report_context);
     ThisAgentInit();
     KeepPromises(policy);
 
@@ -137,8 +138,10 @@ int main(int argc, char *argv[])
     else
 #endif /* MINGW */
     {
-        StartServer(policy);
+        StartServer(policy, report_context);
     }
+
+    ReportContextDestroy(report_context);
 
     return 0;
 }
@@ -370,7 +373,7 @@ static void KeepPromises(Policy *policy)
 /*****************************************************************************/
 
 /* Might be called back from NovaWin_StartExecService */
-void StartServer(Policy *policy)
+void StartServer(Policy *policy, const ReportContext *report_context)
 {
     time_t now = time(NULL);
     Promise *pp = NewPromise("exec_cfengine", "the executor agent");
@@ -472,7 +475,7 @@ void StartServer(Policy *policy)
     {
         while (true)
         {
-            if (ScheduleRun(&policy))
+            if (ScheduleRun(&policy, report_context))
             {
                 CfOut(cf_verbose, "", "Sleeping for splaytime %d seconds\n\n", SPLAYTIME);
                 sleep(SPLAYTIME);
@@ -613,13 +616,13 @@ typedef enum
     RELOAD_FULL
 } Reload;
 
-static Reload CheckNewPromises(void)
+static Reload CheckNewPromises(const ReportContext *report_context)
 {
     if (NewPromiseProposals())
     {
         CfOut(cf_verbose, "", " -> New promises detected...\n");
 
-        if (CheckPromises(cf_executor))
+        if (CheckPromises(cf_executor, report_context))
         {
             return RELOAD_FULL;
         }
@@ -637,7 +640,7 @@ static Reload CheckNewPromises(void)
     return RELOAD_ENVIRONMENT;
 }
 
-static bool ScheduleRun(Policy **policy)
+static bool ScheduleRun(Policy **policy, const ReportContext *report_context)
 {
     Item *ip;
 
@@ -656,7 +659,7 @@ static bool ScheduleRun(Policy **policy)
      * FIXME: this logic duplicates the one from cf-serverd.c. Unify ASAP.
      */
 
-    if (CheckNewPromises() == RELOAD_FULL)
+    if (CheckNewPromises(report_context) == RELOAD_FULL)
     {
         /* Full reload */
 
@@ -711,7 +714,7 @@ static bool ScheduleRun(Policy **policy)
             .bundlesequence = NULL
         };
 
-        *policy = ReadPromises(cf_executor, CF_EXECC, config);
+        *policy = ReadPromises(cf_executor, CF_EXECC, config, report_context);
         KeepPromises(*policy);
     }
     else

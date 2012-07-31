@@ -193,7 +193,7 @@ void SetMeasurementPromises(Item **classlist)
 /* cf-agent: files_operators.c */
 
 
-void LogFileChange(char *file, int change, Attributes a, Promise *pp)
+void LogFileChange(char *file, int change, Attributes a, Promise *pp, const ReportContext *report_context)
 {
     CfOut(cf_verbose, "", "Logging file differences requires version Nova or above");
 }

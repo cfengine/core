@@ -1287,6 +1287,7 @@ void _check_expected(const char *const function_name, const char *const paramete
 // Replacement for assert.
 void mock_assert(const int result, const char *const expression, const char *const file, const int line)
 {
+    const char *assertname = "mock_assert";
     if (!result)
     {
         if (global_expecting_assert)
@@ -1297,7 +1298,7 @@ void mock_assert(const int result, const char *const expression, const char *con
         else
         {
             print_error("ASSERT: %s\n", expression);
-            print_xml (XS_RUN_TEST_FAILURE_ASSERT, "mock_assert", result, global_filename, line, "mock_assert", result);
+            print_xml (XS_RUN_TEST_FAILURE_ASSERT, assertname, result, global_filename, line, assertname, result);
             _fail(file, line);
         }
     }
@@ -1306,10 +1307,11 @@ void mock_assert(const int result, const char *const expression, const char *con
 void _assert_true(const LargestIntegralType result,
                   const char *const expression, const char *const file, const int line)
 {
+    const char *assertname = "assert_true";
     if (!result)
     {
         print_error("%s\n", expression);
-        print_xml (XS_RUN_TEST_FAILURE_ASSERT, "assert_true", result, global_filename, line, "assert_true", result);
+        print_xml (XS_RUN_TEST_FAILURE_ASSERT, assertname, result, global_filename, line, assertname, result);
         _fail(file, line);
     }
 }
@@ -1318,7 +1320,8 @@ void _assert_int_equal(const LargestIntegralType a, const LargestIntegralType b,
 {
     if (!values_equal_display_error(a, b))
     {
-        print_xml (XS_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD, "assert_int_equal", a, b, global_filename, line, "assert_int_equal", a, b);
+        const char *assertname = "assert_int_equal";
+        print_xml (XS_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD, assertname, a, b, global_filename, line, assertname, a, b);
         _fail(file, line);
     }
 }
@@ -1328,7 +1331,8 @@ void _assert_int_not_equal(const LargestIntegralType a, const LargestIntegralTyp
 {
     if (!values_not_equal_display_error(a, b))
     {
-        print_xml (XS_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD, "assert_int_not_equal", a, b, global_filename, line, "assert_int_not_equal", a, b);
+        const char *assertname = "assert_int_not_equal";
+        print_xml (XS_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD, assertname, a, b, global_filename, line, assertname, a, b);
         _fail(file, line);
     }
 }
@@ -1337,7 +1341,8 @@ void _assert_string_equal(const char *const a, const char *const b, const char *
 {
     if (!string_equal_display_error(a, b))
     {
-        print_xml (XS_RUN_TEST_FAILURE_ASSERT_EQUALITY_STRING, "assert_string_equal", a, b, global_filename, line, "assert_string_equal", a, b);
+        const char *assertname = "assert_string_equal";
+        print_xml (XS_RUN_TEST_FAILURE_ASSERT_EQUALITY_STRING, assertname, a, b, global_filename, line, assertname, a, b);
         _fail(file, line);
     }
 }
@@ -1346,7 +1351,8 @@ void _assert_string_not_equal(const char *const a, const char *const b, const ch
 {
     if (!string_not_equal_display_error(a, b))
     {
-        print_xml (XS_RUN_TEST_FAILURE_ASSERT_EQUALITY_STRING, "assert_string_not_equal", a, b, global_filename, line, "assert_string_not_equal", a, b);
+        const char *assertname = "assert_string_not_equal";
+        print_xml (XS_RUN_TEST_FAILURE_ASSERT_EQUALITY_STRING, assertname, a, b, global_filename, line, assertname, a, b);
         _fail(file, line);
     }
 }
@@ -1356,7 +1362,8 @@ void _assert_memory_equal(const void *const a, const void *const b,
 {
     if (!memory_equal_display_error((const char *) a, (const char *) b, size))
     {
-        print_xml (XS_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD, "assert_memory_equal", a, b, global_filename, line, "assert_memory_equal", a, b);
+        const char *assertname = "assert_memory_equal";
+        print_xml (XS_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD, assertname, a, b, global_filename, line, assertname, a, b);
         _fail(file, line);
     }
 }
@@ -1366,7 +1373,8 @@ void _assert_memory_not_equal(const void *const a, const void *const b,
 {
     if (!memory_not_equal_display_error((const char *) a, (const char *) b, size))
     {
-        print_xml (XS_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD, "assert_memory_not_equal", a, b, global_filename, line, "assert_memory_not_equal", a, b);
+        const char *assertname = "assert_memory_not_equal";
+        print_xml (XS_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD, assertname, a, b, global_filename, line, assertname, a, b);
         _fail(file, line);
     }
 }
@@ -1376,7 +1384,8 @@ void _assert_in_range(const LargestIntegralType value, const LargestIntegralType
 {
     if (!integer_in_range_display_error(value, minimum, maximum))
     {
-        print_xml (XS_RUN_TEST_FAILURE_ASSERT_RANGE_LLD, "assert_in_range", value, minimum, maximum, global_filename, line, "assert_in_range", value, minimum, maximum);
+        const char *assertname = "assert_in_range";
+        print_xml (XS_RUN_TEST_FAILURE_ASSERT_RANGE_LLD, assertname, value, minimum, maximum, global_filename, line, assertname, value, minimum, maximum);
         _fail(file, line);
     }
 }
@@ -1386,7 +1395,8 @@ void _assert_not_in_range(const LargestIntegralType value, const LargestIntegral
 {
     if (!integer_not_in_range_display_error(value, minimum, maximum))
     {
-        print_xml (XS_RUN_TEST_FAILURE_ASSERT_RANGE_LLD, "assert_not_in_range", value, minimum, maximum, global_filename, line, "assert_not_in_range", value, minimum, maximum);
+        const char *assertname = "assert_not_in_range";
+        print_xml (XS_RUN_TEST_FAILURE_ASSERT_RANGE_LLD, assertname, value, minimum, maximum, global_filename, line, assertname, value, minimum, maximum);
         _fail(file, line);
     }
 }
@@ -1401,7 +1411,8 @@ void _assert_in_set(const LargestIntegralType value,
     check_integer_set.size_of_set = number_of_values;
     if (!value_in_set_display_error(value, &check_integer_set, 0))
     {
-        print_xml (XS_RUN_TEST_FAILURE_ASSERT_SET_LLD, "assert_in_set", value, number_of_values, global_filename, line, "assert_in_set", value, number_of_values);
+        const char *assertname = "assert_in_set";
+        print_xml (XS_RUN_TEST_FAILURE_ASSERT_SET_LLD, assertname, value, number_of_values, global_filename, line, assertname, value, number_of_values);
         _fail(file, line);
     }
 }
@@ -1416,7 +1427,8 @@ void _assert_not_in_set(const LargestIntegralType value,
     check_integer_set.size_of_set = number_of_values;
     if (!value_in_set_display_error(value, &check_integer_set, 1))
     {
-        print_xml (XS_RUN_TEST_FAILURE_ASSERT_SET_LLD, "assert_not_in_set", value, number_of_values, global_filename, line, "assert_not_in_set", value, number_of_values);
+        const char *assertname = "assert_not_in_set";
+        print_xml (XS_RUN_TEST_FAILURE_ASSERT_SET_LLD, assertname, value, number_of_values, global_filename, line, assertname, value, number_of_values);
         _fail(file, line);
     }
 }

@@ -1098,8 +1098,6 @@ typedef enum
     REPORT_OUTPUT_TYPE_MAX
 } ReportOutputType;
 
-typedef struct Writer_ Writer;
-
 typedef struct
 {
     Writer *report_writers[REPORT_OUTPUT_TYPE_MAX];

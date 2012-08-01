@@ -122,23 +122,23 @@
     "              time=\"%2lf seconds\">\n"
 #define XS_RUN_TEST_FAILURE_ASSERT \
     "        <failure type=\"%s(%lld)\"\n" \
-    "                 message=\"FAILED at %s:%d.\">\n" \
+    "                 message=\"FAILED at %s:%d - %s(%lld)\">\n" \
     "        </failure>\n"
 #define XS_RUN_TEST_FAILURE_ASSERT_EQUALITY_LLD \
     "        <failure type=\"%s(%lld, %lld)\"\n" \
-    "                 message=\"FAILED at %s:%d.\">\n" \
+    "                 message=\"FAILED at %s:%d - %s(%lld, %lld)\">\n" \
     "        </failure>\n"
 #define XS_RUN_TEST_FAILURE_ASSERT_EQUALITY_STRING \
     "        <failure type=\"%s(%s, %s)\"\n" \
-    "                 message=\"FAILED at %s:%d.\">\n" \
+    "                 message=\"FAILED at %s:%d - %s(%s, %s)\">\n" \
     "        </failure>\n"
 #define XS_RUN_TEST_FAILURE_ASSERT_RANGE_LLD \
     "        <failure type=\"%s(value=%lld, min=%lld, max=%lld)\"\n" \
-    "                 message=\"FAILED at %s:%d.\">\n" \
+    "                 message=\"FAILED at %s:%d - %s(value=%lld, min=%lld, max=%lld)\">\n" \
     "        </failure>\n"
 #define XS_RUN_TEST_FAILURE_ASSERT_SET_LLD \
     "        <failure type=\"%s(value=%lld, number_of_values=%lld)\"\n" \
-    "                 message=\"FAILED at %s:%d.\">\n" \
+    "                 message=\"FAILED at %s:%d - %s(value=%lld, number_of_values=%lld)\">\n" \
     "        </failure>\n"
 
 #define XS_RUN_TEST_ERROR \

@@ -1311,7 +1311,7 @@ int MakeParentDirectory2(char *parentandchild, int force, const ReportContext *r
 {
     if(enforce_promise)
     {
-        return MakeParentDirectory(parentandchild, report_context, force);
+        return MakeParentDirectory(parentandchild, force, report_context);
     }
 
     char *parent_dir = GetParentDirectoryCopy(parentandchild);

@@ -180,14 +180,14 @@ bundle agent git_update
       contain => u_in_dir_umask_shell("$(git_checkout_location)", "$(git_checkout_umask)"),
       comment => "Update the Git repository.",
       handle => "update_commands_git_update",
-      classes => u_if_repaired("git_resolve_cloned");
+      classes => u_if_repaired("git_resolve_updated");
 
     (idempotent_git||am_policy_hub).use_git.!git_checkout_location_exists.!git_checkout_exists::
       "$(git_clone_command)"
       contain => u_in_dir_umask_shell("/", "$(git_checkout_umask)"),
       comment => "Clone the Git repository.",
       handle => "update_commands_git_clone",
-      classes => u_if_repaired("git_resolve_updated");
+      classes => u_if_repaired("git_resolve_cloned");
 
 #
 

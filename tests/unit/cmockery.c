@@ -1287,7 +1287,6 @@ void _check_expected(const char *const function_name, const char *const paramete
 // Replacement for assert.
 void mock_assert(const int result, const char *const expression, const char *const file, const int line)
 {
-    const char *assertname = "mock_assert";
     if (!result)
     {
         if (global_expecting_assert)
@@ -1297,6 +1296,7 @@ void mock_assert(const int result, const char *const expression, const char *con
         }
         else
         {
+            const char *assertname = "mock_assert";
             print_error("ASSERT: %s\n", expression);
             print_xml (XS_RUN_TEST_FAILURE_ASSERT, assertname, result, global_filename, line, assertname, result);
             _fail(file, line);
@@ -1307,9 +1307,9 @@ void mock_assert(const int result, const char *const expression, const char *con
 void _assert_true(const LargestIntegralType result,
                   const char *const expression, const char *const file, const int line)
 {
-    const char *assertname = "assert_true";
     if (!result)
     {
+        const char *assertname = "assert_true";
         print_error("%s\n", expression);
         print_xml (XS_RUN_TEST_FAILURE_ASSERT, assertname, result, global_filename, line, assertname, result);
         _fail(file, line);

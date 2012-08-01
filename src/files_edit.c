@@ -28,6 +28,7 @@
 #include "env_context.h"
 #include "files_names.h"
 #include "item_lib.h"
+#include "transaction.h"
 
 /*****************************************************************************/
 
@@ -71,7 +72,7 @@ void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportC
 
     EDIT_MODEL = false;
 
-    if (DONTDO || a.transaction.action == cfa_warn)
+    if (!EnforcePromise(a.transaction.action))
     {
         if (ec && !CompareToFile(ec->file_start, ec->filename, a, pp) && ec->num_edits > 0)
         {

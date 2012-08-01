@@ -35,6 +35,7 @@
 #include "item_lib.h"
 #include "conversion.h"
 #include "expand.h"
+#include "transaction.h"
 
 extern AgentConnection *COMS;
 
@@ -163,7 +164,7 @@ int CfCreateFile(char *file, Promise *pp, Attributes attr,
     {
         CfDebug("File object \"%s \"seems to be a directory\n", file);
 
-        if (!DONTDO && attr.transaction.action != cfa_warn)
+        if (EnforcePromise(attr.transaction.action))
         {
             if (!MakeParentDirectory(file, attr.move_obstructions, report_context))
             {
@@ -181,7 +182,7 @@ int CfCreateFile(char *file, Promise *pp, Attributes attr,
     }
     else
     {
-        if (!DONTDO && attr.transaction.action != cfa_warn)
+        if (EnforcePromise(attr.transaction.action))
         {
             mode_t saveumask = umask(0);
             mode_t filemode = 0600;     /* Decide the mode for filecreation */
@@ -665,16 +666,8 @@ static int VerifyFinderType(char *file, struct stat *statbuf, Attributes a, Prom
     {
         fndrInfo.fi.fdType = *(long *) a.perms.findertype;
 
-        switch (a.transaction.action)
+        if(EnforcePromise(a.transaction.action))
         {
-        case cfa_fix:
-
-            if (DONTDO)
-            {
-                CfOut(cf_inform, "", "Promised to set Finder Type code of %s to %s\n", file, a.perms.findertype);
-                return 0;
-            }
-
             /* setattrlist does not take back in the long ssize */
             retval = setattrlist(file, &attrs, &fndrInfo.created, 4 * sizeof(struct timespec) + sizeof(FInfo), 0);
 
@@ -687,17 +680,14 @@ static int VerifyFinderType(char *file, struct stat *statbuf, Attributes a, Prom
             else
             {
                 cfPS(cf_error, CF_FAIL, "", pp, a, "Setting Finder Type code of %s to %s failed!!\n", file,
-                     a.perms.findertype);
+                 a.perms.findertype);
             }
 
             return retval;
-
-        case cfa_warn:
-            CfOut(cf_error, "", "Darwin FinderType does not match -- not fixing.\n");
-            return 0;
-
-        default:
-            return 0;
+        }
+        else
+        {
+            cfPs(cf_error, CF_FAIL, "", pp, a, "Darwin FinderType does not match -- not fixing.");
         }
     }
     else
@@ -793,7 +783,7 @@ static void VerifyName(char *path, struct stat *sb, Attributes attr, Promise *pp
     {
         char newname[CF_BUFSIZE];
 
-        if (attr.transaction.action == cfa_warn)
+        if (!EnforcePromise(attr.transaction.action))
         {
             cfPS(cf_error, CF_WARN, "", pp, attr, " !! %s '%s' should be renamed",
                  S_ISDIR(sb->st_mode) ? "Directory" : "File", path);
@@ -887,36 +877,28 @@ static void VerifyName(char *path, struct stat *sb, Attributes attr, Promise *pp
 
     if (attr.rename.rotate == 0)
     {
-        if (attr.transaction.action == cfa_warn)
+        if (!EnforcePromise(attr.transaction.action))
         {
             cfPS(cf_error, CF_WARN, "", pp, attr, " !! File '%s' should be truncated", path);
         }
-        else if (!DONTDO)
+        else
         {
             TruncateFile(path);
             cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Truncating (emptying) %s\n", path);
-        }
-        else
-        {
-            CfOut(cf_error, "", " * File %s needs emptying", path);
         }
         return;
     }
 
     if (attr.rename.rotate > 0)
     {
-        if (attr.transaction.action == cfa_warn)
+        if (!EnforcePromise(attr.transaction.action))
         {
             cfPS(cf_error, CF_WARN, "", pp, attr, " !! File '%s' should be rotated", path);
         }
-        else if (!DONTDO)
+        else
         {
             RotateFiles(path, attr.rename.rotate);
             cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Rotating files %s in %d fifo\n", path, attr.rename.rotate);
-        }
-        else
-        {
-            CfOut(cf_error, "", " * File %s needs rotating", path);
         }
 
         return;
@@ -932,74 +914,59 @@ static void VerifyDelete(char *path, struct stat *sb, Attributes attr, Promise *
 
     CfOut(cf_verbose, "", " -> Verifying file deletions for %s\n", path);
 
-    if (DONTDO)
+    if(!EnforcePromise(attr.transaction.action))
     {
-        CfOut(cf_inform, "", "Promise requires deletion of file object %s\n", path);
+        cfPS(cf_error, CF_WARN, "", pp, attr, " !! %s '%s' should be deleted",
+             S_ISDIR(sb->st_mode) ? "Directory" : "File", path);
+        return;
     }
-    else
+
+
+    if (!S_ISDIR(sb->st_mode))
     {
-        switch (attr.transaction.action)
+        if (unlink(lastnode) == -1)
         {
-        case cfa_warn:
+            cfPS(cf_verbose, CF_FAIL, "unlink", pp, attr, "Couldn't unlink %s tidying\n", path);
+        }
+        else
+        {
+            cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Deleted file %s\n", path);
+        }
+    }
+    else                // directory
+    {
+        if (!attr.delete.rmdirs)
+        {
+            CfOut(cf_inform, "unlink", "Keeping directory %s\n", path);
+            return;
+        }
 
-            cfPS(cf_error, CF_WARN, "", pp, attr, " !! %s '%s' should be deleted",
-                 S_ISDIR(sb->st_mode) ? "Directory" : "File", path);
-            break;
+        if (attr.havedepthsearch && strcmp(path, pp->promiser) == 0)
+        {
+            /* This is the parent and we cannot delete it from here - must delete separately */
+            return;
+        }
 
-        case cfa_fix:
+        // use the full path if we are to delete the current dir
+        if ((strcmp(lastnode, ".") == 0) && strlen(path) > 2)
+        {
+            snprintf(buf, sizeof(buf), "%s", path);
+            buf[strlen(path) - 1] = '\0';
+            buf[strlen(path) - 2] = '\0';
+        }
+        else
+        {
+            snprintf(buf, sizeof(buf), "%s", lastnode);
+        }
 
-            if (!S_ISDIR(sb->st_mode))
-            {
-                if (unlink(lastnode) == -1)
-                {
-                    cfPS(cf_verbose, CF_FAIL, "unlink", pp, attr, "Couldn't unlink %s tidying\n", path);
-                }
-                else
-                {
-                    cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Deleted file %s\n", path);
-                }
-            }
-            else                // directory
-            {
-                if (!attr.delete.rmdirs)
-                {
-                    CfOut(cf_inform, "unlink", "Keeping directory %s\n", path);
-                    return;
-                }
-
-                if (attr.havedepthsearch && strcmp(path, pp->promiser) == 0)
-                {
-                    /* This is the parent and we cannot delete it from here - must delete separately */
-                    return;
-                }
-
-                // use the full path if we are to delete the current dir
-                if ((strcmp(lastnode, ".") == 0) && strlen(path) > 2)
-                {
-                    snprintf(buf, sizeof(buf), "%s", path);
-                    buf[strlen(path) - 1] = '\0';
-                    buf[strlen(path) - 2] = '\0';
-                }
-                else
-                {
-                    snprintf(buf, sizeof(buf), "%s", lastnode);
-                }
-
-                if (rmdir(buf) == -1)
-                {
-                    cfPS(cf_verbose, CF_FAIL, "rmdir", pp, attr,
-                         " !! Delete directory %s failed (cannot delete node called \"%s\")\n", path, buf);
-                }
-                else
-                {
-                    cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Deleted directory %s\n", path);
-                }
-            }
-
-            break;
-
-        default:
-            FatalError("Cfengine: internal error: illegal file action\n");
+        if (rmdir(buf) == -1)
+        {
+            cfPS(cf_verbose, CF_FAIL, "rmdir", pp, attr,
+                 " !! Delete directory %s failed (cannot delete node called \"%s\")\n", path, buf);
+        }
+        else
+        {
+            cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Deleted directory %s\n", path);
         }
     }
 }
@@ -1905,88 +1872,86 @@ int VerifyOwner(char *file, Promise *pp, Attributes attr, struct stat *sb)
             }
         }
 
-        switch (attr.transaction.action)
+
+        if(!EnforcePromise(attr.transaction.action))
         {
-        case cfa_fix:
-
-            if (uid == CF_SAME_OWNER && gid == CF_SAME_GROUP)
-            {
-                CfOut(cf_verbose, "", " -> Touching %s\n", file);
-            }
-            else
-            {
-                if (uid != CF_SAME_OWNER)
-                {
-                    CfDebug("(Change owner to uid %ju if possible)\n", (uintmax_t)uid);
-                }
-
-                if (gid != CF_SAME_GROUP)
-                {
-                    CfDebug("Change group to gid %ju if possible)\n", (uintmax_t)gid);
-                }
-            }
-
-            if (!DONTDO && S_ISLNK(sb->st_mode))
-            {
-# ifdef HAVE_LCHOWN
-                CfDebug("Using LCHOWN function\n");
-                if (lchown(file, uid, gid) == -1)
-                {
-                    CfOut(cf_inform, "lchown", " !! Cannot set ownership on link %s!\n", file);
-                }
-                else
-                {
-                    return true;
-                }
-# endif
-            }
-            else if (!DONTDO)
-            {
-                if (!uidmatch)
-                {
-                    cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Owner of %s was %ju, setting to %ju", file, (uintmax_t)sb->st_uid,
-                         (uintmax_t)uid);
-                }
-
-                if (!gidmatch)
-                {
-                    cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Group of %s was %ju, setting to %ju", file, (uintmax_t)sb->st_gid,
-                         (uintmax_t)gid);
-                }
-
-                if (!S_ISLNK(sb->st_mode))
-                {
-                    if (chown(file, uid, gid) == -1)
-                    {
-                        cfPS(cf_inform, CF_DENIED, "chown", pp, attr, " !! Cannot set ownership on file %s!\n", file);
-                    }
-                    else
-                    {
-                        return true;
-                    }
-                }
-            }
-            break;
-
-        case cfa_warn:
-
             if ((pw = getpwuid(sb->st_uid)) == NULL)
             {
                 CfOut(cf_error, "", "File %s is not owned by anybody in the passwd database\n", file);
                 CfOut(cf_error, "", "(uid = %ju,gid = %ju)\n", (uintmax_t)sb->st_uid, (uintmax_t)sb->st_gid);
-                break;
+                return false;
             }
 
             if ((gp = getgrgid(sb->st_gid)) == NULL)
             {
                 cfPS(cf_error, CF_WARN, "", pp, attr, " !! File %s is not owned by any group in group database\n",
                      file);
-                break;
+                return false;
             }
 
             cfPS(cf_error, CF_WARN, "", pp, attr, " !! File %s is owned by [%s], group [%s]\n", file, pw->pw_name,
                  gp->gr_name);
-            break;
+
+            return false;
+        }
+
+
+        if (uid == CF_SAME_OWNER && gid == CF_SAME_GROUP)
+        {
+            CfOut(cf_verbose, "", " -> Touching %s\n", file);
+        }
+        else
+        {
+            if (uid != CF_SAME_OWNER)
+            {
+                CfDebug("(Change owner to uid %ju if possible)\n", (uintmax_t)uid);
+            }
+
+            if (gid != CF_SAME_GROUP)
+            {
+                CfDebug("Change group to gid %ju if possible)\n", (uintmax_t)gid);
+            }
+        }
+
+        if (S_ISLNK(sb->st_mode))
+        {
+# ifdef HAVE_LCHOWN
+            CfDebug("Using LCHOWN function\n");
+            if (lchown(file, uid, gid) == -1)
+            {
+                CfOut(cf_inform, "lchown", " !! Cannot set ownership on link %s!\n", file);
+            }
+            else
+            {
+                return true;
+            }
+# endif
+        }
+        else
+        {
+            if (!uidmatch)
+            {
+                cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Owner of %s was %ju, setting to %ju", file, (uintmax_t)sb->st_uid,
+                     (uintmax_t)uid);
+            }
+
+            if (!gidmatch)
+            {
+                cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Group of %s was %ju, setting to %ju", file, (uintmax_t)sb->st_gid,
+                     (uintmax_t)gid);
+            }
+
+            if (!S_ISLNK(sb->st_mode))
+            {
+                if (chown(file, uid, gid) == -1)
+                {
+                    cfPS(cf_inform, CF_DENIED, "chown", pp, attr, " !! Cannot set ownership on file %s!\n", file);
+                }
+                else
+                {
+                    return true;
+                }
+            }
         }
     }
 
@@ -2250,31 +2215,22 @@ void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promi
     {
         CfDebug("Trying to fix mode...newperm = %jo, stat = %jo\n", (uintmax_t)(newperm & 07777), (uintmax_t)(dstat->st_mode & 07777));
 
-        switch (attr.transaction.action)
+        if(!EnforcePromise(attr.transaction.action))
         {
-        case cfa_warn:
-
             cfPS(cf_error, CF_WARN, "", pp, attr, " !! %s has permission %jo - [should be %jo]\n", file,
                  (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
-            break;
-
-        case cfa_fix:
-
-            if (!DONTDO)
+        }
+        else
+        {
+            if (cf_chmod(file, newperm & 07777) == -1)
             {
-                if (cf_chmod(file, newperm & 07777) == -1)
-                {
-                    CfOut(cf_error, "cf_chmod", "cf_chmod failed on %s\n", file);
-                    break;
-                }
+                CfOut(cf_error, "cf_chmod", "cf_chmod failed on %s\n", file);
             }
-
+            else
+            {
             cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Object %s had permission %jo, changed it to %jo\n", file,
                  (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
-            break;
-
-        default:
-            FatalError("cfengine: internal error VerifyFileAttributes(): illegal file action\n");
+            }
         }
     }
 
@@ -2294,49 +2250,46 @@ void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promi
         CfDebug("BSD Fixing %s, newflags = %lx, flags = %lx\n", file, (newflags & CHFLAGS_MASK),
                 (dstat->st_flags & CHFLAGS_MASK));
 
-        switch (attr.transaction.action)
+        if(!EnforcePromise())
         {
-        case cfa_warn:
-
             cfPS(cf_error, CF_WARN, "", pp, attr, " !! %s has flags %o - [should be %o]\n", file,
                  dstat->st_mode & CHFLAGS_MASK, newflags & CHFLAGS_MASK);
-            break;
-
-        case cfa_fix:
-
-            if (!DONTDO)
-            {
-                if (chflags(file, newflags & CHFLAGS_MASK) == -1)
-                {
-                    cfPS(cf_error, CF_DENIED, "chflags", pp, attr, " !! Failed setting BSD flags %x on %s\n", newflags,
-                         file);
-                    break;
-                }
-                else
-                {
-                    cfPS(cf_inform, CF_CHG, "", pp, attr, " -> %s had flags %o, changed it to %o\n", file,
-                         dstat->st_flags & CHFLAGS_MASK, newflags & CHFLAGS_MASK);
-                }
-            }
-
-            break;
-
-        default:
-            FatalError("cfengine: internal error VerifyFileAttributes() illegal file action\n");
-        }
-    }
-# endif
-
-    if (attr.touch)
-    {
-        if (utime(file, NULL) == -1)
-        {
-            cfPS(cf_inform, CF_DENIED, "utime", pp, attr, " !! Touching file %s failed", file);
         }
         else
         {
-            cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Touching file %s", file);
+            if (chflags(file, newflags & CHFLAGS_MASK) == -1)
+            {
+                cfPS(cf_error, CF_DENIED, "chflags", pp, attr, " !! Failed setting BSD flags %x on %s\n", newflags,
+                     file);
+            }
+            else
+            {
+                cfPS(cf_inform, CF_CHG, "", pp, attr, " -> %s had flags %o, changed it to %o\n", file,
+                     dstat->st_flags & CHFLAGS_MASK, newflags & CHFLAGS_MASK);
+            }
+
         }
+
+    }
+# endif
+
+    if(EnforcePromise(attr.transaction.action))
+    {
+        if (attr.touch)
+        {
+            if (utime(file, NULL) == -1)
+            {
+                cfPS(cf_inform, CF_DENIED, "utime", pp, attr, " !! Touching file %s failed", file);
+            }
+            else
+            {
+                cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Touching file %s", file);
+            }
+        }
+    }
+    else
+    {
+        cfPS(cf_error, CF_WARN, "", pp, attr, " !! Should touch file %s, but only a warning was promised", file);
     }
 
     umask(maskvalue);

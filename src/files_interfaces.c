@@ -31,6 +31,7 @@
 #include "files_names.h"
 #include "item_lib.h"
 #include "vars.h"
+#include "transaction.h"
 
 static void PurgeLocalFiles(Item *filelist, char *directory, Attributes attr, Promise *pp, const ReportContext *report_context);
 static void CfCopyFile(char *sourcefile, char *destfile, struct stat sourcestatbuf, Attributes attr, Promise *pp, const ReportContext *report_context);
@@ -74,7 +75,7 @@ void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes attr, 
     AddSlash(newto);
     strcat(newto, "dummy");
 
-    if (attr.transaction.action != cfa_warn)
+    if (EnforcePromise(attr.transaction.action))
     {
         struct stat tostat;
 
@@ -848,7 +849,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
 
     if (found == -1)
     {
-        if (attr.transaction.action == cfa_warn)
+        if (!EnforcePromise(attr.transaction.action))
         {
             cfPS(cf_error, CF_WARN, "", pp, attr, " !! Image file \"%s\" is non-existent and should be a copy of %s\n",
                  destfile, sourcefile);
@@ -1004,7 +1005,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
             }
         }
 
-        if (ok_to_copy && (attr.transaction.action == cfa_warn))
+        if (ok_to_copy && !EnforcePromise(attr.transaction.action))
         {
             cfPS(cf_error, CF_WARN, "", pp, attr, " !! Image file \"%s\" exists but is not up to date wrt %s\n",
                  destfile, sourcefile);
@@ -2022,7 +2023,7 @@ static void RegisterAHardLink(int i, char *value, Attributes attr, Promise *pp)
         }
         else
         {
-            if (attr.transaction.action == cfa_warn)
+            if (!EnforcePromise(attr.transaction.action))
             {
                 CfOut(cf_verbose, "", " !! Need to remove old hard link %s to preserve structure..\n", value);
             }

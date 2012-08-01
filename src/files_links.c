@@ -461,7 +461,7 @@ static int MakeLink(char *from, char *to, Attributes attr, Promise *pp)
 }
 #else                           /* NOT MINGW */
 {
-    if (DONTDO || attr.transaction.action == cfa_warn)
+    if (!EnforcePromise(attr.transaction.action))
     {
         CfOut(cf_error, "", " !! Need to link files %s -> %s\n", from, to);
         return false;

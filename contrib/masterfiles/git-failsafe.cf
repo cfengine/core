@@ -98,8 +98,12 @@ bundle agent git_update
 
  classes:
 
-      # set this to "any" or a machine class to have those machines do
-      # the Git checkouts locally under inputs/
+      # Set this to "any" or a machine class to have those machines do
+      # the Git checkouts locally, effectively replacing the policy
+      # hub model for a "just checkout from Git everywhere" model.
+
+      # This is not recommended unless you are testing in isolation or
+      # have other very specific requirements.
       "idempotent_git" expression => "!any";
 
       "use_git" expression => fileexists("$(git_binary)"),
@@ -171,25 +175,25 @@ bundle agent git_update
       comment => "Generate cfengine encryption keys if necessary",
        handle => "update_commands_generate_keys";
 
-    am_policy_hub.use_git.git_config_ok::
+    (idempotent_git||am_policy_hub).use_git.git_config_ok::
       "$(git_update_command)"
       contain => u_in_dir_umask_shell("$(git_checkout_location)", "$(git_checkout_umask)"),
       comment => "Update the Git repository.",
       handle => "update_commands_git_update",
-      classes => u_if_repaired("git_resolved");
+      classes => u_if_repaired("git_resolve_cloned");
 
-    am_policy_hub.use_git.!git_checkout_location_exists.!git_checkout_exists::
+    (idempotent_git||am_policy_hub).use_git.!git_checkout_location_exists.!git_checkout_exists::
       "$(git_clone_command)"
       contain => u_in_dir_umask_shell("/", "$(git_checkout_umask)"),
       comment => "Clone the Git repository.",
       handle => "update_commands_git_clone",
-      classes => u_if_repaired("git_resolved");
+      classes => u_if_repaired("git_resolve_updated");
 
 #
 
  files:
 
-  !am_policy_hub::  # policy hub should not alter inputs/ uneccessary
+  !(idempotent_git||am_policy_hub)::  # policy hub should not alter inputs/ uneccessary
 
    "$(inputs_dir)/cf_promises_validated"
         comment => "Check whether a validation stamp is available for a new policy update to reduce the distributed load",
@@ -199,7 +203,7 @@ bundle agent git_update
         classes => u_if_repaired("validated_updates_ready");
 
       # on the policy hub, converge the .git/config file iff the checkout has been made already
-    am_policy_hub.use_git.git_checkout_location_exists.git_checkout_exists::
+    (idempotent_git||am_policy_hub).use_git.git_checkout_location_exists.git_checkout_exists::
       "$(git_configfile)"
       handle => "converge_git_configfile",
       classes => u_if_ok("git_config_ok"),
@@ -209,7 +213,7 @@ bundle agent git_update
 
   # on the policy hub, do the following if a) we don't use Git
   # or b) the Git update succeeded
-  (am_policy_hub.(git_resolved|!use_git))|validated_updates_ready::  # policy hub should always put masterfiles in inputs in order to check new policy
+  !idempotent_git.(am_policy_hub.((git_resolve_cloned||git_resolve_updated)|!use_git))|validated_updates_ready::  # policy hub should always put masterfiles in inputs in order to check new policy
 
    "$(inputs_dir)"
            comment => "Copy policy updates from master source on policy server if a new validation was acquired",
@@ -266,7 +270,10 @@ bundle agent git_update
   reports:
     git_checkout_location_exists.!git_checkout_exists::
       "$(git_checkout_location) already exists but it's not a Git checkout location.  Aborting.";
-
+    git_resolve_updated::
+      "Updated $(git_origin) (branch $(git_branch), umask $(git_checkout_umask)) into $(git_checkout_location)";
+    git_resolve_cloned::
+      "Cloned $(git_origin) (branch $(git_branch), umask $(git_checkout_umask)) into $(git_checkout_location)";
 }
 
 #########################################################

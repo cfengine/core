@@ -35,6 +35,7 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "expand.h"
+#include "transaction.h"
 
 /*****************************************************************************/
 
@@ -878,7 +879,7 @@ static int DeletePromisedLinesMatching(Item **start, Item *begin, Item *end, Att
         {
             CfOut(cf_verbose, "", " -> Delete chunk of %d lines\n", matches);
 
-            if (a.transaction.action == cfa_warn)
+            if (!EnforcePromise(a.transaction.action))
             {
                 cfPS(cf_error, CF_WARN, "", pp, a,
                      " -> Need to delete line \"%s\" from %s - but only a warning was promised", ip->name,
@@ -1027,7 +1028,7 @@ static int ReplacePatterns(Item *file_start, Item *file_end, Attributes a, Promi
             break;
         }
 
-        if (a.transaction.action == cfa_warn)
+        if (!EnforcePromise(a.transaction.action))
         {
             cfPS(cf_verbose, CF_WARN, "", pp, a,
                  " -> Need to replace line \"%s\" in %s - but only a warning was promised", pp->promiser,
@@ -1403,7 +1404,7 @@ static int InsertLineAtLocation(char *newline, Item **start, Item *location, Ite
         {
             if (*start == NULL)
             {
-                if (a.transaction.action == cfa_warn)
+                if (!EnforcePromise(a.transaction.action))
                 {
                     cfPS(cf_error, CF_WARN, "", pp, a,
                          " -> Need to insert the promised line \"%s\" in %s - but only a warning was promised", newline,
@@ -1422,7 +1423,7 @@ static int InsertLineAtLocation(char *newline, Item **start, Item *location, Ite
 
             if (strcmp((*start)->name, newline) != 0)
             {
-                if (a.transaction.action == cfa_warn)
+                if (!EnforcePromise(a.transaction.action))
                 {
                     cfPS(cf_error, CF_WARN, "", pp, a,
                          " -> Need to prepend the promised line \"%s\" to %s - but only a warning was promised",
@@ -1457,7 +1458,7 @@ static int InsertLineAtLocation(char *newline, Item **start, Item *location, Ite
         }
         else
         {
-            if (a.transaction.action == cfa_warn)
+            if (!EnforcePromise(a.transaction.action))
             {
                 cfPS(cf_error, CF_WARN, "", pp, a,
                      " -> Need to insert line \"%s\" into %s but only a warning was promised", newline,
@@ -1485,7 +1486,7 @@ static int InsertLineAtLocation(char *newline, Item **start, Item *location, Ite
         }
         else
         {
-            if (a.transaction.action == cfa_warn)
+            if (!EnforcePromise(a.transaction.action))
             {
                 cfPS(cf_error, CF_WARN, "", pp, a,
                      " -> Need to insert line \"%s\" in %s but only a warning was promised", newline, pp->this_server);
@@ -1570,7 +1571,7 @@ static int EditLineByColumn(Rlist **columns, Attributes a, Promise *pp)
 
         if (retval)
         {
-            if (a.transaction.action == cfa_warn)
+            if (!EnforcePromise(a.transaction.action))
             {
                 cfPS(cf_error, CF_WARN, "", pp, a, " -> Need to edit field in %s but only warning promised",
                      pp->this_server);
@@ -1600,7 +1601,7 @@ static int EditLineByColumn(Rlist **columns, Attributes a, Promise *pp)
 
         if (a.column.column_operation && strcmp(a.column.column_operation, "delete") == 0)
         {
-            if (a.transaction.action == cfa_warn)
+            if (!EnforcePromise(a.transaction.action))
             {
                 cfPS(cf_error, CF_WARN, "", pp, a,
                      " -> Need to delete field field value %s in %s but only a warning was promised", ScalarValue(rp),
@@ -1619,7 +1620,7 @@ static int EditLineByColumn(Rlist **columns, Attributes a, Promise *pp)
         }
         else
         {
-            if (a.transaction.action == cfa_warn)
+            if (!EnforcePromise(a.transaction.action))
             {
                 cfPS(cf_error, CF_WARN, "", pp, a,
                      " -> Need to set column field value %s to %s in %s but only a warning was promised",

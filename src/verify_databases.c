@@ -28,6 +28,7 @@
 #include "promises.h"
 #include "files_names.h"
 #include "conversion.h"
+#include "transaction.h"
 
 static int CheckDatabaseSanity(Attributes a, Promise *pp);
 static void VerifySQLPromise(Attributes a, Promise *pp);
@@ -287,7 +288,7 @@ static int VerifyDatabasePromise(CfdbConn *cfdb, char *database, Attributes a, P
 
     if (a.database.operation && strcmp(a.database.operation, "drop") == 0)
     {
-        if (a.transaction.action != cfa_warn && !DONTDO)
+        if (EnforcePromise(a.transaction.action))
         {
             CfOut(cf_verbose, "", " -> Attempting to delete the database %s", database);
             snprintf(query, CF_MAXVARSIZE - 1, "drop database %s", database);
@@ -303,7 +304,7 @@ static int VerifyDatabasePromise(CfdbConn *cfdb, char *database, Attributes a, P
 
     if (a.database.operation && strcmp(a.database.operation, "create") == 0)
     {
-        if (a.transaction.action != cfa_warn && !DONTDO)
+        if (EnforcePromise(a.transaction.action))
         {
             CfOut(cf_verbose, "", " -> Attempting to create the database %s", database);
             snprintf(query, CF_MAXVARSIZE - 1, "create database %s", database);
@@ -431,7 +432,7 @@ static int VerifyTablePromise(CfdbConn *cfdb, char *table_path, Rlist *columns, 
 
         if (a.database.operation && strcmp(a.database.operation, "create") == 0)
         {
-            if (!DONTDO && a.transaction.action != cfa_warn)
+            if (EnforcePromise(a.transaction.action))
             {
                 cfPS(cf_error, CF_CHG, "", pp, a, " -> Database.table %s doesn't seem to exist, creating\n",
                      table_path);
@@ -566,7 +567,7 @@ static int VerifyTablePromise(CfdbConn *cfdb, char *table_path, Rlist *columns, 
                 CfOut(cf_error, "", " !! Promised column \"%s\" missing from database table %s", name_table[i],
                       pp->promiser);
 
-                if (!DONTDO && a.transaction.action != cfa_warn)
+                if (EnforcePromise(a.transaction.action))
                 {
                     if (size_table[i] > 0)
                     {

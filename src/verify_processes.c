@@ -29,6 +29,7 @@
 #include "vars.h"
 #include "item_lib.h"
 #include "conversion.h"
+#include "transaction.h"
 
 static int ProcessSanityChecks(Attributes a, Promise *pp);
 static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp);
@@ -162,14 +163,15 @@ static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp)
         return;
     }
 
-    if (a.transaction.action == cfa_warn)
-    {
-        do_signals = false;
-    }
-    else
+    if(EnforcePromise(a.transaction.action))
     {
         do_signals = true;
     }
+    else
+    {
+        do_signals = false;
+    }
+
 
 /* signal/kill promises for existing matches */
 
@@ -215,15 +217,15 @@ static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp)
     }
     else
     {
-        if (a.transaction.action == cfa_warn)
-        {
-            cfPS(cf_error, CF_WARN, "", pp, a,
-                 " -- Need to keep restart promise for %s, but only a warning is promised", pp->promiser);
-        }
-        else
+        if (EnforcePromise(a.transaction.action))
         {
             cfPS(cf_inform, CF_CHG, "", pp, a, " -> Making a one-time restart promise for %s", pp->promiser);
             NewClass(a.restart_class);
+        }
+        else
+        {
+            cfPS(cf_error, CF_WARN, "", pp, a,
+                 " -- Need to keep restart promise for %s, but only a warning is promised", pp->promiser);
         }
     }
 }
@@ -295,7 +297,7 @@ static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, Promise
 
             promised_zero = a.process_count.min_range == 0 && a.process_count.max_range == 0;
 
-            if (a.transaction.action == cfa_warn && promised_zero)
+            if (!EnforcePromise(a.transaction.action) && promised_zero)
             {
                 CfOut(cf_error, "", "Process alert: %s\n", procdata->name);     /* legend */
                 CfOut(cf_error, "", "Process alert: %s\n", ip->name);

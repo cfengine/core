@@ -1,0 +1,390 @@
+###############################################################################
+#
+#   failsafe.cf - Basic Failsafe Policy for Community
+#
+###############################################################################
+
+body common control
+{
+ bundlesequence => { "git_update" };
+ version => "git-failsafe.cf 1.0.0";
+}
+
+#############################################################################
+
+body agent control
+{
+ ifelapsed => "1";
+ skipidentify => "true";
+}
+
+#############################################################################
+
+bundle agent git_update
+{
+ vars:
+
+   "inputs_dir"         string => translatepath("$(sys.workdir)/inputs"),
+                       comment => "Directory containing Cfengine policies",
+                        handle => "update_vars_inputs_dir";
+
+   "ppkeys_file"        string => translatepath("$(sys.workdir)/ppkeys/localhost.pub"),
+                       comment => "Path to public key file",
+                        handle => "update_vars_ppkeys_file";
+
+   "file_check"         string => translatepath("$(inputs_dir)/promises.cf"),
+                       comment => "Path to a policy file",
+                        handle => "update_vars_file_check";
+
+   "master_location"    string => "/var/cfengine/masterfiles",
+                       comment => "The master cfengine policy directory on the policy host",
+                        handle => "update_vars_master_location";
+
+      "git_origin" string => "http://myserver.com/myrepo.git",
+      comment => "The URL to the Git repository.",
+      handle => "update_vars_git_origin";
+
+      "git_checkout_location" string => "$(master_location)/myrepo",
+      comment => "The desired checkout location of the Git repository",
+      handle => "update_vars_git_checkout_location";
+
+      "git_checkout_umask" string => "077",
+      comment => "The desired umask while checking out the Git repository",
+      handle => "update_vars_git_checkout_umask";
+
+      "git_configfile" string => "$(git_checkout_location)/.git/config",
+      comment => "The .git/config file location",
+      handle => "update_vars_git_configfile";
+
+      "git_branch" string => "master",
+      comment => "The desired branch of the Git repository",
+      handle => "update_vars_git_branch";
+
+      "git_binary" string => "/usr/bin/git",
+      comment => "The location of the Git executable.  Leave blank if you don't want to use Git.",
+      handle => "update_vars_git_binary";
+
+      # 1. Remove untracked files, 2. Discard changes to index and working tree since HEAD
+      # 3. Check out the proper branch; 4. Pull the latest changes from origin;
+      # 5. Reset the working tree to the latest updates
+      "git_update_command" string => "$(git_binary) clean -f -f -x -q -d .; $(git_binary) reset -q --hard HEAD; $(git_binary) checkout -q $(git_branch); $(git_binary) pull -q -s recursive -Xtheirs origin $(git_branch); $(git_binary) reset -q --hard HEAD",
+      comment => "The commands to do a Git update.  They should DTRT for your environment (checkout/reset/clean/etc).",
+      handle => "update_vars_git_update_command";
+
+      "git_clone_command" string => "$(git_binary) clone -b $(git_branch) $(git_origin) $(git_checkout_location)",
+      comment => "The commands to do a Git update.  They should DTRT for your environment (checkout/reset/clean/etc).",
+      handle => "update_vars_git_clone_command";
+
+      "git_config_template" string => "
+[core]
+        repositoryformatversion = 0
+        filemode = true
+        bare = false
+        logallrefupdates = true
+[remote \"origin\"]
+        fetch = +refs/heads/*:refs/remotes/origin/*
+        url = $(git_origin)
+[branch \"master\"]
+        remote = origin
+        merge = refs/heads/master
+[branch \"$(git_branch)\"]
+        remote = origin
+        merge = refs/heads/$(git_branch)
+",
+      comment => "The $(git_configfile) template.",
+      handle => "update_vars_git_config_template";
+
+#
+
+ classes:
+
+      # Set this to "any" or a machine class to have those machines do
+      # the Git checkouts locally, effectively replacing the policy
+      # hub model for a "just checkout from Git everywhere" model.
+
+      # This is not recommended unless you are testing in isolation or
+      # have other very specific requirements.
+      "idempotent_git" expression => "!any";
+
+      "use_git" expression => fileexists("$(git_binary)"),
+      comment => "True if we found the Git binary and should use Git.",
+      handle => "update_classes_use_git";
+
+      "git_checkout_location_exists" expression => fileexists("$(git_checkout_location)"),
+      comment => "True if the Git checkout location exists.",
+      handle => "update_classes_git_checkout_location_exists";
+
+      "git_checkout_exists" expression => fileexists("$(git_checkout_location)/.git"),
+      comment => "True if the Git checkout has already happened.",
+      handle => "update_classes_git_checkout_exists";
+
+
+   "have_ppkeys"   expression => fileexists("$(ppkeys_file)"),
+                      comment => "Check for /var/cfengine/ppkeys/localhost.pub",
+                       handle => "update_classes_have_ppkeys";
+
+   "files_ok"      expression => fileexists("$(file_check)"),
+                      comment => "Check for /var/cfengine/masterfiles/promises.cf",
+                       handle => "update_classes_files_ok";
+
+#
+
+ processes:
+
+  files_ok::
+
+   "cf-serverd"  restart_class => "start_server",
+                       comment => "Monitor cf-serverd process",
+                        handle => "update_processes_cf_serverd";
+
+   "cf-monitord" restart_class => "start_monitor",
+                       comment => "Monitor cf-monitord process",
+                        handle => "update_processes_cf_monitord";
+
+  files_ok.!windows::
+
+   "cf-execd"    restart_class => "start_exec",
+                       comment => "Monitor cf-execd process",
+                        handle => "update_processes_cf_execd";
+
+#
+
+ commands:
+
+  start_server::
+
+   "$(sys.cf_serverd)"
+      comment => "Start cf-serverd process",
+       handle => "update_commands_start_cf_serverd";
+
+  start_monitor::
+
+   "$(sys.cf_monitord)"
+      comment => "Start cf-monitord process",
+       handle => "update_commands_start_cf_monitord";
+
+  !windows.start_exec::
+
+   "$(sys.cf_execd)"
+      comment => "Start cf-execd process",
+       handle => "update_commands_start_cf_execd_not_windows";
+
+  !have_ppkeys::
+
+   "$(sys.cf_key)",
+      comment => "Generate cfengine encryption keys if necessary",
+       handle => "update_commands_generate_keys";
+
+    (idempotent_git||am_policy_hub).use_git.git_config_ok::
+      "$(git_update_command)"
+      contain => u_in_dir_umask_shell("$(git_checkout_location)", "$(git_checkout_umask)"),
+      comment => "Update the Git repository.",
+      handle => "update_commands_git_update",
+      classes => u_if_repaired("git_resolve_updated");
+
+    (idempotent_git||am_policy_hub).use_git.!git_checkout_location_exists.!git_checkout_exists::
+      "$(git_clone_command)"
+      contain => u_in_dir_umask_shell("/", "$(git_checkout_umask)"),
+      comment => "Clone the Git repository.",
+      handle => "update_commands_git_clone",
+      classes => u_if_repaired("git_resolve_cloned");
+
+#
+
+ files:
+
+  !(idempotent_git||am_policy_hub)::  # policy hub should not alter inputs/ uneccessary
+
+   "$(inputs_dir)/cf_promises_validated"
+        comment => "Check whether a validation stamp is available for a new policy update to reduce the distributed load",
+         handle => "check_valid_update",
+      copy_from => u_rcp("$(master_location)/cf_promises_validated","$(sys.policy_hub)"),
+         action => u_immediate,
+        classes => u_if_repaired("validated_updates_ready");
+
+      # on the policy hub, converge the .git/config file iff the checkout has been made already
+    (idempotent_git||am_policy_hub).use_git.git_checkout_location_exists.git_checkout_exists::
+      "$(git_configfile)"
+      handle => "converge_git_configfile",
+      classes => u_if_ok("git_config_ok"),
+      perms => u_m("600"),
+      edit_defaults => u_empty,
+      edit_line => u_insert_lines("$(git_config_template)");
+
+  # on the policy hub, do the following if a) we don't use Git
+  # or b) the Git update succeeded
+  !idempotent_git.(am_policy_hub.((git_resolve_cloned||git_resolve_updated)|!use_git))|validated_updates_ready::  # policy hub should always put masterfiles in inputs in order to check new policy
+
+   "$(inputs_dir)"
+           comment => "Copy policy updates from master source on policy server if a new validation was acquired",
+            handle => "update_files_inputs_dir",
+         copy_from => u_rcp("$(master_location)","$(sys.policy_hub)"),
+      depth_search => u_recurse("inf"),
+      file_select  => u_input_files,
+        depends_on => { "check_valid_update" },
+            action => u_immediate,
+           classes => u_if_repaired("update_report");
+
+  !windows::
+
+   "$(sys.workdir)/bin"
+           comment => "Make sure cfengine binaries have right file permissions",
+            handle => "update_files_sys_workdir_bin",
+             perms => u_m("755"),
+      depth_search => u_recurse_basedir("inf"),
+            action => u_immediate;
+
+   "$(sys.workdir)/lib"
+           comment => "Make sure cfengine libraries have right file permissions",
+            handle => "update_files_sys_workdir_lib",
+             perms => u_m("644"),
+      depth_search => u_recurse_basedir("inf"),
+            action => u_immediate;
+
+   "$(sys.workdir)/lib"
+           comment => "Make sure cfengine libraries have right file permissions for only HP-UX",
+            handle => "update_files_sys_workdir_lib_hpux",
+             perms => u_m("755"),
+      depth_search => u_recurse_basedir("inf"),
+            action => u_immediate,
+        ifvarclass => "hpux";
+
+   "/usr/local/sbin"
+           comment => "Ensure cfengine binaries were copied to /usr/local/sbin",
+            handle => "update_files_usr_local_sbin",
+             perms => u_m("755"),
+         copy_from => u_cp_nobck("$(sys.workdir)/bin"),
+       file_select => u_cf3_files,
+      depth_search => u_recurse("1"),
+            action => u_immediate;
+
+  am_policy_hub::
+
+   "$(master_location)/."
+           comment => "Make sure masterfiles folder has right file permissions",
+            handle => "update_files_sys_workdir_masterfiles",
+             perms => u_m("644"),
+      depth_search => u_recurse_basedir("inf"),
+            action => u_immediate;
+
+  reports:
+    git_checkout_location_exists.!git_checkout_exists::
+      "$(git_checkout_location) already exists but it's not a Git checkout location.  Aborting.";
+    git_resolve_updated::
+      "Updated $(git_origin) (branch $(git_branch), umask $(git_checkout_umask)) into $(git_checkout_location)";
+    git_resolve_cloned::
+      "Cloned $(git_origin) (branch $(git_branch), umask $(git_checkout_umask)) into $(git_checkout_location)";
+}
+
+#########################################################
+# Self-contained bodies from the lib to avoid dependencies
+#########################################################
+
+body perms u_m(p)
+{
+ mode  => "$(p)";
+}
+
+#########################################################
+
+body file_select u_cf3_files
+{
+ leaf_name => { "cf-.*" };
+ file_result => "leaf_name";
+}
+
+#########################################################
+
+body file_select u_input_files
+{
+ leaf_name => { ".*.cf",".*.dat",".*.txt" };
+ file_result => "leaf_name";
+}
+
+#########################################################
+
+body copy_from u_rcp(from,server)
+{
+ source      => "$(from)";
+ compare     => "digest";
+ trustkey    => "false";
+
+!am_policy_hub::
+
+ servers => { "$(server)" };
+}
+
+#########################################################
+
+body copy_from u_cp_nobck(from)
+{
+ source      => "$(from)";
+ compare     => "digest";
+ copy_backup => "false";
+}
+
+#########################################################
+
+body action u_immediate
+{
+ ifelapsed => "0";
+}
+
+#########################################################
+
+body depth_search u_recurse(d)
+{
+ depth => "$(d)";
+ exclude_dirs => { "\.svn", "\.git" };
+}
+
+#########################################################
+
+body depth_search u_recurse_basedir(d)
+{
+ include_basedir => "true";
+ depth => "$(d)";
+ exclude_dirs => { "\.svn", "\.git" };
+}
+
+#########################################################
+
+body classes u_if_repaired(x)
+{
+ promise_repaired => { "$(x)" };
+}
+
+body classes u_if_ok(x)
+{
+      promise_repaired => { "$(x)" };
+      promise_kept => { "$(x)" };
+}
+
+#########################################################
+
+body contain u_in_dir_umask_shell(dir, umask)
+{
+      chdir => "$(dir)";
+      useshell => "true";
+      umask => "$(umask)";
+}
+
+#########################################################
+
+bundle edit_line u_insert_lines(lines)
+{
+  insert_lines:
+
+      "$(lines)"
+      comment => "Append lines if they don't exist";
+}
+
+#########################################################
+
+body edit_defaults u_empty
+{
+      empty_file_before_editing => "true";
+      edit_backup => "false";
+}
+
+#########################################################

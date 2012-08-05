@@ -938,13 +938,6 @@ void CloseReports(const char *agents, ReportContext *report_context)
         CfOut(cf_verbose, "", "Wrote knowledge map %s%cpromise_knowledge.cf", CFWORKDIR, FILE_SEPARATOR);
     }
 #endif
-
-    if (FKNOW)
-    {
-        fprintf(FKNOW, "}\n");
-        fclose(FKNOW);
-        FKNOW = NULL;
-    }
     
     ReportContextDestroy(report_context);
 
@@ -1403,17 +1396,13 @@ void CompilationReport(Policy *policy, char *fname)
 #endif
 
 
-
     ShowPromises(compilation_report_context, REPORT_OUTPUT_TYPE_TEXT, policy->bundles, policy->bodies);
     ShowPromises(compilation_report_context, REPORT_OUTPUT_TYPE_HTML, policy->bundles, policy->bodies);
 
     ReportContextDestroy(compilation_report_context);
-    if (FKNOW)
-    {
-        fclose(FKNOW);
-        FKNOW = NULL;
-    }
 }
+
+/****************************************************************************/
 
 ReportContext *OpenCompilationReportFiles(const char *fname)
 {

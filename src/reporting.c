@@ -109,6 +109,8 @@ ReportContext *ReportContextNew(void)
     return ctx;
 }
 
+/*******************************************************************/
+
 bool ReportContextAddWriter(ReportContext *context, ReportOutputType type, Writer *writer)
 {
     bool replaced = false;
@@ -123,6 +125,8 @@ bool ReportContextAddWriter(ReportContext *context, ReportOutputType type, Write
     return replaced;
 }
 
+/*******************************************************************/
+
 void ReportContextDestroy(ReportContext *context)
 {
     if (context)
@@ -136,9 +140,16 @@ void ReportContextDestroy(ReportContext *context)
         }
         free(context);
     }
+
+    
+    if (FKNOW)
+    {
+        fprintf(FKNOW, "}\n");
+        fclose(FKNOW);
+        FKNOW = NULL;
+    }
+
 }
-
-
 
 /*******************************************************************/
 /* Generic                                                         */

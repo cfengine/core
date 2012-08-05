@@ -142,6 +142,13 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig config, const ReportC
         CfOut(cf_verbose, "", " -> This is CFE Constellation\n");
     }
 
+    if (FKNOW)
+    {
+        fprintf(FKNOW, "bundle knowledge CfengineEnterpriseFundamentals\n{\n");
+        ShowTopicRepresentation(FKNOW);
+        fprintf(FKNOW, "}\n\nbundle knowledge CfengineSiteConfiguration\n{\n");
+    }       
+    
     NewScope("const");
     NewScope("match");
     NewScope("mon");
@@ -907,12 +914,6 @@ ReportContext *OpenReports(const char *agents)
         FatalError("Unable to continue as the null-file is unwritable");
     }
 
-    if (FKNOW)
-    {
-        fprintf(FKNOW, "bundle knowledge CfengineEnterpriseFundamentals\n{\n");
-        ShowTopicRepresentation(FKNOW);
-        fprintf(FKNOW, "}\n\nbundle knowledge CfengineSiteConfiguration\n{\n");
-    }
 
     ReportContext *context = ReportContextNew();
     ReportContextAddWriter(context, REPORT_OUTPUT_TYPE_TEXT, FileWriter(freport_text));

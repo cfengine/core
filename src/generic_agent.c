@@ -945,7 +945,7 @@ void CloseReports(const char *agents, ReportContext *report_context)
         fclose(FKNOW);
         FKNOW = NULL;
     }
-
+    
     ReportContextDestroy(report_context);
 
 // Make the knowledge readable in situ

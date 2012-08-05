@@ -214,6 +214,7 @@ int main(int argc, char *argv[])
           
                 Constellation_HostStory(policy, STORY, buffer, CF_BUFSIZE);
                 printf("%s\n", buffer);
+
        }
        else
        {

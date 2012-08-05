@@ -95,8 +95,7 @@ int main(int argc, char *argv[])
     ThisAgentInit();
     AnalyzePromiseConflicts();
     GenericDeInitialize();
-
-    ReportContextDestroy(report_context);
+    CloseReports("commmon", report_context);
 
     if (ERRORCOUNT > 0)
     {

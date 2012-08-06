@@ -51,7 +51,6 @@ bool ALLCLASSESREPORT = false;
 
 struct utsname VSYSNAME;
 
-FILE *FKNOW = NULL;
 int XML = false;
 
 int CFA_MAXTHREADS = 10;

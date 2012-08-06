@@ -142,11 +142,11 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig config, const ReportC
         CfOut(cf_verbose, "", " -> This is CFE Constellation\n");
     }
 
-    if (FKNOW)
+    if (report_context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE])
     {
-        fprintf(FKNOW, "bundle knowledge CfengineEnterpriseFundamentals\n{\n");
-        ShowTopicRepresentation(FKNOW);
-        fprintf(FKNOW, "}\n\nbundle knowledge CfengineSiteConfiguration\n{\n");
+        WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE], "bundle knowledge CfengineEnterpriseFundamentals\n{\n");
+        ShowTopicRepresentation(report_context);
+        WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE], "}\n\nbundle knowledge CfengineSiteConfiguration\n{\n");
     }       
     
     NewScope("const");
@@ -865,6 +865,7 @@ ReportContext *OpenReports(const char *agents)
 
     FILE *freport_text = NULL;
     FILE *freport_html = NULL;
+    FILE *freport_knowledge = NULL;
 
     if (SHOWREPORTS)
     {
@@ -888,7 +889,7 @@ ReportContext *OpenReports(const char *agents)
 
         snprintf(name, CF_BUFSIZE, "%s%cpromise_knowledge.cf", workdir, FILE_SEPARATOR);
 
-        if ((FKNOW = fopen(name, "w")) == NULL)
+        if ((freport_knowledge = fopen(name, "w")) == NULL)
         {
             CfOut(cf_error, "fopen", "Cannot open output file %s", name);
         }
@@ -918,6 +919,11 @@ ReportContext *OpenReports(const char *agents)
     ReportContext *context = ReportContextNew();
     ReportContextAddWriter(context, REPORT_OUTPUT_TYPE_TEXT, FileWriter(freport_text));
     ReportContextAddWriter(context, REPORT_OUTPUT_TYPE_HTML, FileWriter(freport_html));
+
+    if (freport_knowledge)
+    {
+        ReportContextAddWriter(context, REPORT_OUTPUT_TYPE_KNOWLEDGE, FileWriter(freport_knowledge));
+    }
 
     return context;
 }

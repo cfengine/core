@@ -177,7 +177,7 @@ const char *GetConsolePrefix(void);
 const char *MailSubject(void);
 void CheckAutoBootstrap(void);
 void RegisterBundleDependence(char *absscope, const Promise *pp);
-void ShowTopicRepresentation(FILE *fp);
+void ShowTopicRepresentation(const ReportContext *report_context);
 void PreSanitizePromise(Promise *pp);
 void Nova_ShowTopicRepresentation(FILE *fp);
 void NoteEfficiency(double e);

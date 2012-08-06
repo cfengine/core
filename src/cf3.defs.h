@@ -89,6 +89,7 @@
 /*******************************************************************/
 
 #define CF_FILECHANGE     "file_change.log"
+#define CF_FILECHANGE_NEW "file_changes.log"
 #define CF_PROMISE_LOG    "promise_summary.log"
 
 #define CF_ENV_FILE      "env_data"
@@ -1524,6 +1525,16 @@ typedef enum
     LAST_SEEN_DIRECTION_INCOMING = '-',
     LAST_SEEN_DIRECTION_OUTGOING = '+'
 } LastSeenDirection;
+
+/************************************************************************************/
+
+typedef enum
+{
+    cf_file_new,
+    cf_file_removed,
+    cf_file_content_changed,
+    cf_file_stats_changed
+}FileState;
 
 /************************************************************************************/
 

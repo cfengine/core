@@ -52,6 +52,8 @@ fi
 
 LOG=test.log
 SUMMARY=summary.log
+XML=test.xml
+XMLTMP=xml.tmp
 BASE_WORKDIR=$(pwd)/workdir
 QUIET=
 STAGING_TESTS=${STAGING_TESTS:-0}
@@ -174,8 +176,17 @@ $AGENT $VERBOSE -Kf \"$TEST\" -D AUTO,DEBUG 2>&1
 
     if [ "$RESULT" != Pass ] && [ -e .succeeded/"$FLATNAME" ]; then
       echo $RESULT $TEST '(UNEXPECTED FAILURE)' >> $SUMMARY
+      ( echo "    "\<testcase name=\"$TEST\"\>
+        echo "        "\<failure type=\"acceptance_test_failure\"
+        echo "                 "message=\"$RESULT $TEST '(UNEXPECTED FAILURE)'\"\>
+        echo "        "\<\/failure\>
+        echo "    "\<\/testcase\>
+      ) >> $XMLTMP
     else
       echo $RESULT $TEST >> $SUMMARY
+      ( echo "    "\<testcase name=\"$TEST\"\>
+        echo "    "\<\/testcase\>
+      ) >> $XMLTMP
     fi
 
     if [ -z "$QUIET" ]; then
@@ -214,7 +225,7 @@ $AGENT $VERBOSE -Kf \"$TEST\" -D AUTO,DEBUG 2>&1
     fi
   else
     echo Skip $TEST >> $SUMMARY
-
+    echo Skip $TEST >> $XMLTMP
     if [ -z "$QUIET" ]; then
       echo Skipped
     else
@@ -289,6 +300,15 @@ START_TIME=$(date +%s)
   echo
 ) | tee $LOG | tee $SUMMARY >&7
 
+( echo \<\?xml version=\"1.0\" encoding=\"UTF-8\"\?\>
+  echo \<testsuite name=\"$test\"
+  echo "           "timestamp=\"$(date "+%F %T")\"
+  echo "           hostname=\"localhost\""
+  echo "           "tests=\"$TESTS_COUNT\"
+) > $XML
+
+  echo -n "" > $XMLTMP
+
 for test in $TESTS; do
   if [ -n "$USE_VALGRIND" ]; then
     runtest "valgrind --leak-check=full --show-reachable=yes $AGENT" "$test"
@@ -310,6 +330,16 @@ END_TIME=$(date +%s)
   echo Failed to crash tests: $FAILED_TO_CRASH_TESTS
   echo Skipped tests: $SKIPPED_TESTS
 ) | tee -a $LOG | tee -a $SUMMARY
+
+(  echo "           "failures=\"$FAILED_TESTS\"
+   echo "           "time=\"$(($END_TIME - $START_TIME)) seconds\"\>
+) >> $XML
+
+
+
+  cat $XMLTMP >> $XML
+
+  echo \<\/testsuite\> >> $XML
 
 if [ "$FAILED_TESTS" -ne 0 ] || [ "$FAILED_TO_CRASH_TESTS" -ne 0 ]; then
   exit 1

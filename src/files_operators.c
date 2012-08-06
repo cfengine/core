@@ -1073,7 +1073,7 @@ void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp, const ReportC
     if (changed)
     {
         NewPersistentContext("checksum_alerts", CF_PERSISTENCE, cfpreserve);
-        LogHashChange(file);
+        LogHashChange(file, cf_file_content_changed, "Content changed");
     }
 
     if (attr.change.report_diffs)
@@ -1157,7 +1157,12 @@ void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp
         snprintf(message, CF_BUFSIZE - 1, "ALERT: Permissions for %s changed %jo -> %jo", file,
                  (uintmax_t)cmpsb.st_mode, (uintmax_t)sb->st_mode);
         CfOut(cf_error, "", "%s", message);
-        LogHashChange(message + strlen("ALERT: "));
+
+        char msg_temp[CF_MAXVARSIZE] = { 0 };
+        snprintf(msg_temp, sizeof(msg_temp), "Permission: %jo -> %jo",
+                 (uintmax_t)cmpsb.st_mode, (uintmax_t)sb->st_mode);
+
+        LogHashChange(file, cf_file_stats_changed, msg_temp);
     }
 
     if (cmpsb.st_uid != sb->st_uid)
@@ -1165,7 +1170,12 @@ void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp
         snprintf(message, CF_BUFSIZE - 1, "ALERT: owner for %s changed %jd -> %jd", file, (uintmax_t) cmpsb.st_uid,
                  (uintmax_t) sb->st_uid);
         CfOut(cf_error, "", "%s", message);
-        LogHashChange(message + strlen("ALERT: "));
+
+        char msg_temp[CF_MAXVARSIZE] = { 0 };
+        snprintf(msg_temp, sizeof(msg_temp), "Owner: %jd -> %jd",
+                 (uintmax_t)cmpsb.st_uid, (uintmax_t)sb->st_uid);
+
+        LogHashChange(file, cf_file_stats_changed, msg_temp);
     }
 
     if (cmpsb.st_gid != sb->st_gid)
@@ -1173,7 +1183,12 @@ void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp
         snprintf(message, CF_BUFSIZE - 1, "ALERT: group for %s changed %jd -> %jd", file, (uintmax_t) cmpsb.st_gid,
                  (uintmax_t) sb->st_gid);
         CfOut(cf_error, "", "%s", message);
-        LogHashChange(message + strlen("ALERT: "));
+
+        char msg_temp[CF_MAXVARSIZE] = { 0 };
+        snprintf(msg_temp, sizeof(msg_temp), "Group: %jd -> %jd",
+                 (uintmax_t)cmpsb.st_gid, (uintmax_t)sb->st_gid);
+
+        LogHashChange(file, cf_file_stats_changed, msg_temp);
     }
 
     if (cmpsb.st_dev != sb->st_dev)
@@ -1547,8 +1562,28 @@ static void TruncateFile(char *name)
 }
 
 /*********************************************************************/
+static char FileStateToChar(FileState status)
+{
+    switch(status)
+    {
+    case cf_file_new:
+        return 'N';
 
-void LogHashChange(char *file)
+    case cf_file_removed:
+        return 'R';
+
+    case cf_file_content_changed:
+        return 'C';
+
+    case cf_file_stats_changed:
+        return 'S';
+
+    default:
+        return 'U';
+    }
+}
+/*********************************************************************/
+void LogHashChange(char *file, FileState status, char *msg)
 {
     FILE *fp;
     char fname[CF_BUFSIZE];
@@ -1567,7 +1602,7 @@ void LogHashChange(char *file)
 
 /* This is inefficient but we don't want to lose any data */
 
-    snprintf(fname, CF_BUFSIZE, "%s/state/%s", CFWORKDIR, CF_FILECHANGE);
+    snprintf(fname, CF_BUFSIZE, "%s/state/%s", CFWORKDIR, CF_FILECHANGE_NEW);
     MapName(fname);
 
 #ifndef MINGW
@@ -1586,7 +1621,7 @@ void LogHashChange(char *file)
         return;
     }
 
-    fprintf(fp, "%ld,%s\n", (long) now, file);
+    fprintf(fp, "%ld,%s,%c,%s\n", (long) now, file, FileStateToChar(status), msg);
     fclose(fp);
 
     cf_chmod(fname, perm);

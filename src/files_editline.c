@@ -788,7 +788,7 @@ static int InsertMultipleLinesAtLocation(Item **start, Item *begin_ptr, Item *en
 // i.e. no insertion will be made if a neighbouring line matches
 
 {
-    int isfileinsert = a.sourcetype && (strcmp(a.sourcetype, "file") == 0 || strcmp(a.sourcetype, "file_lines") == 0);
+    int isfileinsert = a.sourcetype && (strcmp(a.sourcetype, "file") == 0 || strcmp(a.sourcetype, "file_preserve_block") == 0);
 
     if (isfileinsert)
     {
@@ -1295,8 +1295,7 @@ static int InsertFileAtLocation(Item **start, Item *begin_ptr, Item *end_ptr, It
            {
            // If we are inserting a preserved block before, need to flip the implied order after the first insertion
            // to get the order of the block right
-           a.location.before_after = cfe_after;
-
+           //a.location.before_after = cfe_after;
            }
         
         if (prev && prev != CF_UNDEFINED_ITEM)
@@ -1331,7 +1330,7 @@ static int InsertCompoundLineAtLocation(char *chunk, Item **start, Item *begin_p
     int result = false;
     char buf[CF_EXPANDSIZE];
     char *sp;
-    int preserve_block = a.sourcetype && (strcmp(a.sourcetype, "preserve_block") == 0 || strcmp(a.sourcetype, "file") == 0);
+    int preserve_block = a.sourcetype && (strcmp(a.sourcetype, "preserve_block") == 0 || strcmp(a.sourcetype, "file_preserve_block") == 0);
 
     if (MatchRegion(chunk, *start, location, NULL))
        {
@@ -1363,7 +1362,7 @@ static int InsertCompoundLineAtLocation(char *chunk, Item **start, Item *begin_p
            {
            // If we are inserting a preserved block before, need to flip the implied order after the first insertion
            // to get the order of the block right
-           a.location.before_after = cfe_after;
+           // a.location.before_after = cfe_after;
            location = *start;
            }
         

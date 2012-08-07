@@ -418,6 +418,8 @@ Policy *ReadPromises(enum cfagenttype ag, char *agents, GenericAgentConfig confi
             }
             WriterClose(writer);
         }
+
+        SequenceDestroy(errors);
     }
 
 /* Now import some web variables that are set in cf-know/control for the report options */

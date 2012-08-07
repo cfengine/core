@@ -118,7 +118,6 @@ void DeleteScalar(const char *scope_name, const char *lval)
 
 void NewList(const char *scope, const char *lval, void *rval, enum cfdatatype dt)
 {
-    char *sp1;
     Rval rvald;
 
     if (GetVariable(scope, lval, &rvald) != cf_notype)
@@ -126,8 +125,7 @@ void NewList(const char *scope, const char *lval, void *rval, enum cfdatatype dt
         DeleteVariable(scope, lval);
     }
 
-    sp1 = xstrdup(lval);
-    AddVariableHash(scope, sp1, (Rval) {rval, CF_LIST}, dt, NULL, 0);
+    AddVariableHash(scope, lval, (Rval) {rval, CF_LIST}, dt, NULL, 0);
 }
 
 /*******************************************************************/
@@ -334,8 +332,8 @@ void DefaultVarPromise(Promise *pp)
            break;           
        }
 
+    DeleteScalar(pp->bundle, pp->promiser);
     ConvergeVarHashPromise(pp->bundle, pp, true);
-    
 }
 
 /*******************************************************************/

@@ -106,7 +106,7 @@ Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *
 
     bundle->type = xstrdup(type);
     bundle->namespace = xstrdup(policy->current_namespace);
-    bundle->args = args;
+    bundle->args = CopyRlist(args);
     bundle->source_path = SafeStringDuplicate(source_path);
 
     return bundle;
@@ -155,7 +155,7 @@ Body *AppendBody(Policy *policy, const char *name, const char *type, Rlist *args
 
     body->type = xstrdup(type);
     body->namespace = xstrdup(policy->current_namespace);
-    body->args = args;
+    body->args = CopyRlist(args);
     body->source_path = SafeStringDuplicate(source_path);
 
     return body;

@@ -332,8 +332,8 @@ void DefaultVarPromise(Promise *pp)
            break;           
        }
 
+    DeleteScalar(pp->bundle, pp->promiser);
     ConvergeVarHashPromise(pp->bundle, pp, true);
-    
 }
 
 /*******************************************************************/

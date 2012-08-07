@@ -1162,7 +1162,7 @@ static FnCallResult FnCallGetValues(FnCall *fp, Rlist *finalargs)
             case CF_LIST:
                 for (rp = assoc->rval.item; rp != NULL; rp = rp->next)
                 {
-                    IdempAppendRScalar(&returnlist, assoc->rval.item, CF_SCALAR);
+                    IdempAppendRScalar(&returnlist, rp->item, CF_SCALAR);
                 }
                 break;
             }

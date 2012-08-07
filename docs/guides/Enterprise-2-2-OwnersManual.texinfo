@@ -23,7 +23,7 @@
 @titlepage
 @title CFEngine 3 Enterprise 2.2 Owner's Manual
 @subtitle CFEngine Enterprise Documentation
-@subtitle Updated 3. August 2012 @c also update in ifnottex section below
+@subtitle Updated 6. August 2012 @c also update in ifnottex section below
 @author CFEngine
 @c @smallbook
 @fonttextsize 10
@@ -45,7 +45,7 @@ to the extent of applicable law.
 @end direntry
 @end ifinfo
 @ifnottex
-Updated 3. August 2012
+Updated 6. August 2012
 @node Top, Introduction, (dir), (dir)
 @top CFEngine 3 Enterprise 2.2 Owner's Manual
 @end ifnottex
@@ -150,6 +150,8 @@ which should be up to date with patches. If we don't have packages for
 your particular operating systems we can usually make packages by
 special arrangement please contact your sales representative.
 
+CFEngine 3 Free Enterprise is only available for Linux Operating Systems (both hub and client). Commercial CFEngine 3 Enterprise customers have access to all the following Operating Systems.
+
 The hub (policy server) is only available for derivatives of the
 top GNU/Linux distributions (Debian, Red Hat, SuSE, Ubuntu), as these make available
 software that the hub relies on for data storage and processing.
@@ -159,6 +161,7 @@ Operating system choices for the hub are:
  Debian 6
  Ubuntu 8.04, 10.04, 12.04
  RHEL/CentOS 5, 6
+ SLES 11
 @end example
 
 @noindent Operating system choices for the clients are:
@@ -200,7 +203,9 @@ process has two phases (or three phases for commercial customers who need to obt
 @item Bootstrap the agents to a hub (the hub serves as a policy server and report collector)
 @end itemize
 
-You should start from a blank system @xref{Hardware requirements}. If you have been using CFEngine Community Edition and you have
+The following procedure counts for a fresh install, please see @ref{Upgrading to CFEngine 3 Enterprise} for how to upgrade from earlier versions of CFEngine. 
+
+You should start from a blank system (see also @ref{Hardware requirements}). If you have been using CFEngine Community Edition and you have
 already developed a policy, set aside this policy during the installation process. You will be able
 to integrate it back later.
 
@@ -210,10 +215,10 @@ must be installed on every host (including the hub). The expansion package is on
 References to package managers assume that additional packages might need to be installed on the hub (policy server). Root privilege is required for the installation.
 
 @enumerate
-@item Verify that the machine's network connection is working and that port 5308 is open for both incoming and outgoing connections (to assure communication between the hub and clients). On the hub, verify that package managers @code{yum},
+@item Verify that the machine's network connection is working and that port 5308 (used by CFEngine) and port 80 (used for the Mission Portal) is open for both incoming and outgoing connections. On the hub, verify that package managers @code{yum},
 @code{zypper} or @code{apt-get} are working. They will be used to
 install a web server, database, php server and subversion. If you are not able to set up a package manager and
-repository on the hub, please @xref{Frequently Asked Questions}, for manual installation.
+repository on the hub, please see @ref{How do I install the prerequisites for the hub manually?}
 
 @item Copy the CFEngine 3 Enterprise packages to the system. On the hub (policy server):
 @example
@@ -280,6 +285,10 @@ CFEngine will output diagnostic information upon bootstrap (written to command l
 
 @end verbatim
 
+@cartouche
+Commercial customers: Did you bootstrap before obtaining a license? See @ref{I did bootstrap the hub before obtaining a license file - what should I do?}
+@end cartouche
+
 @item CFEngine should now be up and running on your system. The Mission Portal will not be immediately accessible, you should wait 10-15 minutes for the system to converge before attempting to connect to the hub IP-address through your web browser (the convergence process can take up to 30 minutes). CFEngine will copy its default policy files into @file{masterfiles} on the hub (policy server) provided that the directory is empty (fresh install). When the clients are bootstrapped, they will contact the hub and copy them to their @file{inputs} directory.
 
 @item Skip this step for installation of CFEngine 3 Free Enterprise. To complete licensing setup, you should make a promise to accept the license
@@ -313,7 +322,7 @@ created, and should contain data.
 You should see a login page like the one shown in the figure below:
 
 @sp 1
-@center @image{img-login-2-2,5cm,,Mission Portal login}
+@center @image{img-login-2-2,7cm,,Mission Portal login}
 @center Figure: Mission Portal login screen
 @sp 1
 
@@ -330,6 +339,13 @@ Please see @ref{Frequently Asked Questions} below or @ref{Troubleshooting} if yo
 @node Frequently Asked Questions,  , Installation procedure, Installing CFEngine 3 Enterprise
 @section Frequently Asked Questions
 
+@menu
+* How do I install the prerequisites for the hub manually?::
+* I did bootstrap the hub before obtaining a license file - what should I do?::
+@end menu
+
+@c ----------------------------------------------------
+@node How do I install the prerequisites for the hub manually?, I did bootstrap the hub before obtaining a license file - what should I do?, Frequently Asked Questions, Frequently Asked Questions
 @subsection How do I install the prerequisites for the hub manually?
 
 See the bundled INSTALL file for a list of dependencies for the hub (can also be found on the CFEngine software download page: @url{https://cfengine.com/software/}). 
@@ -339,23 +355,8 @@ To install the packages you might want to use @code{yum} on Red Hat/CentOS/Fedor
 
 
 @c ----------------------------------------------------
-@subsection Why do I get a promise failed with the message @code{Can't stat
-/var/cfengine/master_software_updates/SOME-OS} on some hosts?
-
-There is a built-in promise to automatically upgrade the CFEngine 3 Enterprise
-binaries. By default, the clients will check for an update package
-every time CFEngine 3 Enterprise runs. So if the clients find that there is no source
-directory to download the files from, the message will be displayed.
-
-To fix the problem, simply create an empty directory mentioned in the
-message on the hub.
-@verbatim
- hub # mkdir /var/cfengine/master_software_updates/SOME-OS
-@end verbatim
-
-
-@c ----------------------------------------------------
-@subsection I did bootstrap the hub @emph{before} obtaining a license file, what should I do?
+@node I did bootstrap the hub before obtaining a license file - what should I do?, , How do I install the prerequisites for the hub manually?, Frequently Asked Questions
+@subsection I did bootstrap the hub @emph{before} obtaining a license file - what should I do?
 
 Four steps need to be followed to correct this minor issue.
 @enumerate
@@ -375,68 +376,6 @@ Four steps need to be followed to correct this minor issue.
 @verbatim
  hub # /var/cfengine/bin/cf-agent --bootstrap --policy-server 123.456.789.123
 @end verbatim
-@end enumerate
-
-
-@c ----------------------------------------------------
-@subsection On my hub, I get messages of connection failures to a database. For example, in @code{messages}, I can see something like @code{!! Could not open connection to report database for saving}. What should I do?
-
-This message comes from the @code{cf-hub} process. It is responsible
-for pulling reports from hosts that have contacted the hub to get
-policy updates. When these reports are fetched, they are stored in a local MongoDB database on the hub. This message is produced when there is a failure in the connection to the database.
-
-Probably, the issue is that the database server is not running on your
-hub. Run the @code{ps}-command to check this.
-@verbatim
- hub # ps -e | grep mongod
-@end verbatim
-
-If the @code{mongod} process @emph{is} running, it must be
-misconfigured or in some bad state. Please look at the newest entry in
-@file{/var/log/mongod.log} to diagnose the problem, and contact
-CFEngine Technical Support if necessary.
-
-If the @code{mongod} process @emph{is not} running, please follow the
-steps below.
-
-@enumerate
-@item Run 
-  hub # @code{/var/cfengine/bin/cf-twin -Kvf failsafe.cf > /tmp/cfout}
-@item Check again if the @code{mongod} is running, if so, the problem
-is probably fixed now.
-@item If @code{mongod} is still not running, please search the output
-file for lines starting as follows.
-
-@verbatim
-...
-nova>  -> Making a one-time restart promise for mongod
-...
-...
-nova>  -> Executing '/var/cfengine/bin/mongod....
-nova>  -> Backgrounding job /var/cfengine/bin/mongod...
-nova>  -> Completed execution of /var/cfengine/bin/mongod...
-...
-@end verbatim
-
-If you don't see the first line above, CFEngine 3 Enterprise does not try to start
-@code{mongod} --- so check if you bootstrapped your hub correctly. If
-you see all lines, it means that CFEngine 3 Enterprise starts @code{mongod}, but the process just
-terminates immediately after. If so, continue to the next step.
-
-@item Look at the newest entry in @file{/var/log/mongod.log}. It
-should give you more details of why the @code{mongod} process refuses
-to start. The two most common scenarios are described next.
-
-@item If @code{mongod} has been terminated unexpectedly, it might have
-left a lock-file behind that stops it from starting again. Try
-deleting @file{/var/cfengine/state/mongod.lock} if it exists.
-
-@item If the database is corrupted, you can have @file{mongod} create a new one by moving
-@file{/var/cfengine/state/cf-report.*} out of the way. There are also
-tools and documentation for repairing a database at
-@url{http://www.mongodb.org/}.
-
-Note that almost all of the @code{cfreport} database is recreated with data collected from clients. This happens every 5 minutes or 6 hours (depending on the probe), you may consider whether deleting the database is an acceptable solution. CFEngine AS or CFEngine Inc can not be held responsible for data loss in this respect.
 @end enumerate
 
 
@@ -486,7 +425,7 @@ or
    $ for i in cf-execd cf-serverd cf-monitord cf-hub mongod; do pkill $i; done
 @end verbatim
 
-@item Upgrade cfengine-nova and cfengine-nova-expansion @*
+@item Upgrade cfengine-nova and cfengine-nova-expansion (in that order or simultaneously as below):@*
 [RedHat/CentOS/SUSE]
 @verbatim
    $ rpm -Uvh /tmp/cfengine-nova-2.2.x-y.x86_64.rpm /tmp/cfengine-nova-
@@ -4231,10 +4170,13 @@ Here is an example of a two file files, one for which a diff was also captured.
 * Mission Portal Logs::
 * Apache HTTP error_log is your friend::  
 * Some report pages return HTTP error 404::  
-* First time login to Mission Portal fails::  
+* CFEngine processes are running but I cannot connect to the Mission Portal web page:: 
+* First time login to Mission Portal fails:: 
 * Cannot send emails from the Mission Portal::  
 * Warning messages on web pages in SLES/OpenSuSE Hub::  
 * Knowledge map remains unpopulated::
+* I get a promise failed with the message "Can't stat /var/cfengine/master_software_updates/SOME-OS" on some hosts::
+* I get messages of connection failures to a database on my hub::
 @end menu
 
 
@@ -4262,13 +4204,34 @@ The first place to diagnose (if all CFEngine processes and mongod are up and run
 
 
 @c -----------------------------------------------------
-@node Some report pages return HTTP error 404, First time login to Mission Portal fails, Apache HTTP error_log is your friend, Troubleshooting
+@node Some report pages return HTTP error 404, CFEngine processes are running but I cannot connect to the Mission Portal web page, Apache HTTP error_log is your friend, Troubleshooting
 @section Some report pages return HTTP error 404
 Confirm that Apache REWRITE module is ON. Restarting httpd/apache2 service is required if rewrite was disabled.
 
 
+@c ----------------------------------------------------
+@node CFEngine processes are running but I cannot connect to the Mission Portal web page, First time login to Mission Portal fails, Some report pages return HTTP error 404, Troubleshooting
+@section CFEngine processes are running but I cannot connect to the Mission Portal web page
+
+There can be several reasons for this, please check the following:
+
+@itemize *
+@item Check that apache is running (the process should appear in the list when you run this command):
+@verbatim
+   $ ps waux | grep apache
+@end verbatim
+
+@item Ensure that port 80 is open on the hub and not blocked by a firewall (the following telenet connection should succeed):
+@verbatim
+   $ telnet <IP-ADDRESS> 80
+@end verbatim
+
+@item Check that there are no problems with php-mod by looking for error messages in the httpd error log or apache_error log.
+@end itemize
+
+
 @c -----------------------------------------------------
-@node First time login to Mission Portal fails, Cannot send emails from the Mission Portal, Some report pages return HTTP error 404, Troubleshooting
+@node First time login to Mission Portal fails, Cannot send emails from the Mission Portal, CFEngine processes are running but I cannot connect to the Mission Portal web page, Troubleshooting
 @section First time login to Mission Portal fails
 MongoDB needs to be initialized for authentication of the default user. Run the following command (line has been split and indented for presentability):
 @sp 1
@@ -4299,7 +4262,7 @@ Warnings appear because the default environment is set to "Development" and in t
 
 
 @c -----------------------------------------------------
-@node Knowledge map remains unpopulated, , Warning messages on web pages in SLES/OpenSuSE Hub, Troubleshooting
+@node Knowledge map remains unpopulated, I get a promise failed with the message "Can't stat /var/cfengine/master_software_updates/SOME-OS" on some hosts, Warning messages on web pages in SLES/OpenSuSE Hub, Troubleshooting
 @section Knowledge map remains unpopulated
    Try building the Knowledge map manually:@*
    @i{RHEL 5 / CentOS 5}
@@ -4317,6 +4280,87 @@ Warnings appear because the default environment is set to "Development" and in t
    $ /var/cfengine/bin/cf-promises -r && /var/cfengine/bin/cf-know -f 
        /srv/www/htdocs/docs/enterprise_build.cf -b
 @end verbatim
+
+
+@c ----------------------------------------------------
+@node I get a promise failed with the message "Can't stat /var/cfengine/master_software_updates/SOME-OS" on some hosts, I get messages of connection failures to a database on my hub, Knowledge map remains unpopulated, Troubleshooting
+@section I get a promise failed with the message @code{Can't stat /var/cfengine/master_software_updates/SOME-OS} on some hosts
+
+There is a built-in promise to automatically upgrade the CFEngine 3 Enterprise
+binaries. By default, the clients will check for an update package
+every time CFEngine 3 Enterprise runs. So if the clients find that there is no source
+directory to download the files from, the message will be displayed.
+
+To fix the problem, simply create an empty directory mentioned in the
+message on the hub.
+@verbatim
+ hub # mkdir /var/cfengine/master_software_updates/SOME-OS
+@end verbatim
+
+
+@c ----------------------------------------------------
+@node I get messages of connection failures to a database on my hub, , I get a promise failed with the message "Can't stat /var/cfengine/master_software_updates/SOME-OS" on some hosts, Troubleshooting
+@section I get messages of connection failures to a database on my hub
+
+For example, in @code{messages}, I can see something like @code{!! Could not open connection to report database for saving}. What should I do?
+
+This message comes from the @code{cf-hub} process. It is responsible
+for pulling reports from hosts that have contacted the hub to get
+policy updates. When these reports are fetched, they are stored in a local MongoDB database on the hub. This message is produced when there is a failure in the connection to the database.
+
+Probably, the issue is that the database server is not running on your
+hub. Run the @code{ps}-command to check this.
+@verbatim
+ hub # ps -e | grep mongod
+@end verbatim
+
+If the @code{mongod} process @emph{is} running, it must be
+misconfigured or in some bad state. Please look at the newest entry in
+@file{/var/log/mongod.log} to diagnose the problem, and contact
+CFEngine Technical Support if necessary.
+
+If the @code{mongod} process @emph{is not} running, please follow the
+steps below.
+
+@enumerate
+@item Run 
+  hub # @code{/var/cfengine/bin/cf-twin -Kvf failsafe.cf > /tmp/cfout}
+@item Check again if the @code{mongod} is running, if so, the problem
+is probably fixed now.
+@item If @code{mongod} is still not running, please search the output
+file for lines starting as follows.
+
+@verbatim
+...
+nova>  -> Making a one-time restart promise for mongod
+...
+...
+nova>  -> Executing '/var/cfengine/bin/mongod....
+nova>  -> Backgrounding job /var/cfengine/bin/mongod...
+nova>  -> Completed execution of /var/cfengine/bin/mongod...
+...
+@end verbatim
+
+If you don't see the first line above, CFEngine 3 Enterprise does not try to start
+@code{mongod} --- so check if you bootstrapped your hub correctly. If
+you see all lines, it means that CFEngine 3 Enterprise starts @code{mongod}, but the process just
+terminates immediately after. If so, continue to the next step.
+
+@item Look at the newest entry in @file{/var/log/mongod.log}. It
+should give you more details of why the @code{mongod} process refuses
+to start. The two most common scenarios are described next.
+
+@item If @code{mongod} has been terminated unexpectedly, it might have
+left a lock-file behind that stops it from starting again. Try
+deleting @file{/var/cfengine/state/mongod.lock} if it exists.
+
+@item If the database is corrupted, you can have @file{mongod} create a new one by moving
+@file{/var/cfengine/state/cf-report.*} out of the way. There are also
+tools and documentation for repairing a database at
+@url{http://www.mongodb.org/}.
+
+Note that almost all of the @code{cfreport} database is recreated with data collected from clients. This happens every 5 minutes or 6 hours (depending on the probe), you may consider whether deleting the database is an acceptable solution. CFEngine AS or CFEngine Inc can not be held responsible for data loss in this respect.
+@end enumerate
 
 
 @c *****************************************************

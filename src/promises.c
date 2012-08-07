@@ -524,6 +524,7 @@ void DeletePromise(Promise *pp)
     free(pp->bundle);
     free(pp->bundletype);
     free(pp->classes);
+    free(pp->namespace);
 
 // ref and agentsubtype are only references, do not free
 

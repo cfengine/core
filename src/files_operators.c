@@ -36,6 +36,8 @@
 #include "conversion.h"
 #include "expand.h"
 
+#include <assert.h>
+
 extern AgentConnection *COMS;
 
 static void TruncateFile(char *name);
@@ -1564,6 +1566,11 @@ static void TruncateFile(char *name)
 /*********************************************************************/
 static char FileStateToChar(FileState status)
 {
+    assert((status == cf_file_new)
+           || (status == cf_file_removed)
+           || (status == cf_file_content_changed)
+           || (status == cf_file_stats_changed));
+
     switch(status)
     {
     case cf_file_new:
@@ -1579,7 +1586,8 @@ static char FileStateToChar(FileState status)
         return 'S';
 
     default:
-        return 'U';
+        assert(false && "Invalid Filechange status supplied");
+        break;
     }
 }
 /*********************************************************************/

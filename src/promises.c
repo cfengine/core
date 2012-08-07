@@ -372,7 +372,7 @@ Body *IsBody(Body *list, const char *namespace, const char *key)
 
     // bp->namespace is where the body belongs, namespace is where we are now
 
-        if (strcmp(namespace,"default") == 0)
+        if (strchr(key,'.') || strcmp(namespace,"default") == 0)
         {
             if (strncmp(key,"default.",strlen("default.")) == 0)
             {
@@ -382,10 +382,6 @@ Body *IsBody(Body *list, const char *namespace, const char *key)
             {
                 strcpy(fqname,key);
             }        
-        }
-        else if (strchr(key,'.'))
-        {
-            strcpy(fqname,key);
         }
         else
         {

@@ -2016,6 +2016,21 @@ files:
 
 @end verbatim
 
+The namespace that is default, i.e. that which is implied by not making any namespace
+declarations, can be accessed or referred to by prefixing with the default string
+
+@verbatim
+files:
+
+   "/file"
+
+       create => "true",
+        perms => default.settings;
+
+@end verbatim
+@noindent For example, this can be used to refer to standard library objects from
+within a private namespace.
+
 Global classes are not handled by namespaces, and you are advised to prefix
 them with the namespace like this:
 

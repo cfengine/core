@@ -49,7 +49,6 @@ if [ -f /usr/xpg4/bin/grep ]; then
   export PATH
 fi
 
-
 LOG=test.log
 SUMMARY=summary.log
 XML=test.xml
@@ -106,7 +105,6 @@ usage() {
 runtest() {
   AGENT="$1"
   TEST="$2"
-
   if [ -z "$QUIET" ]; then
     printf "$TEST "
   fi
@@ -134,6 +132,7 @@ runtest() {
   ) >> $LOG
 
   if [ -z "$SKIP" ]; then
+    TEST_START_TIME=$(date +%s)
 
     FLATNAME=$(echo "$TEST" | sed 's,[./],_,g')
 
@@ -160,6 +159,9 @@ $AGENT $VERBOSE -Kf \"$TEST\" -D AUTO,DEBUG 2>&1
 
     $GAINROOT rm -rf $WORKDIR
 
+    TEST_END_TIME=$(date +%s)
+    echo "              "time=\"$(($TEST_END_TIME - $TEST_START_TIME)) seconds\"\> >> $XMLTMP
+
     if [ -z "$EXPECTED_CRASH" ]; then
       if [ $RETVAL -eq 0 ] && echo "$OUT" | grep -q -F -e "R: $TEST Pass"; then
         RESULT=Pass
@@ -176,17 +178,23 @@ $AGENT $VERBOSE -Kf \"$TEST\" -D AUTO,DEBUG 2>&1
 
     if [ "$RESULT" != Pass ] && [ -e .succeeded/"$FLATNAME" ]; then
       echo $RESULT $TEST '(UNEXPECTED FAILURE)' >> $SUMMARY
-      ( echo "    "\<testcase name=\"$TEST\"\>
-        echo "        "\<failure type=\"acceptance_test_failure\"
+      ( echo "        "\<failure type=\"UNEXPECTED FAILURE\"
         echo "                 "message=\"$RESULT $TEST '(UNEXPECTED FAILURE)'\"\>
         echo "        "\<\/failure\>
-        echo "    "\<\/testcase\>
       ) >> $XMLTMP
     else
       echo $RESULT $TEST >> $SUMMARY
-      ( echo "    "\<testcase name=\"$TEST\"\>
-        echo "    "\<\/testcase\>
-      ) >> $XMLTMP
+      if [ "$RESULT" = FAIL ]; then
+        ( echo "        "\<failure type=\"FAIL\"
+          echo "                 "message=\"$RESULT $TEST\"\>
+          echo "        "\<\/failure\>
+        ) >> $XMLTMP
+      elif [ "$RESULT" = "FAILed to crash" ]; then
+        ( echo "        "\<failure type=\"FAILed to crash\"
+          echo "                 "message=\"$RESULT $TEST\"\>
+          echo "        "\<\/failure\>
+        ) >> $XMLTMP
+      fi
     fi
 
     if [ -z "$QUIET" ]; then
@@ -224,8 +232,11 @@ $AGENT $VERBOSE -Kf \"$TEST\" -D AUTO,DEBUG 2>&1
       FAILED_TO_CRASH_TESTS=$(($FAILED_TO_CRASH_TESTS + 1))
     fi
   else
+    echo "              "time=\"NULL\"\> >> $XMLTMP
     echo Skip $TEST >> $SUMMARY
-    echo Skip $TEST >> $XMLTMP
+    ( echo "        "\<skipped type=\"$SKIPREASON\"\>
+      echo "        "\<\/skipped\>
+    ) >> $XMLTMP
     if [ -z "$QUIET" ]; then
       echo Skipped
     else
@@ -301,7 +312,7 @@ START_TIME=$(date +%s)
 ) | tee $LOG | tee $SUMMARY >&7
 
 ( echo \<\?xml version=\"1.0\" encoding=\"UTF-8\"\?\>
-  echo \<testsuite name=\"$test\"
+  echo \<testsuite name=\"$(curdir)\"
   echo "           "timestamp=\"$(date "+%F %T")\"
   echo "           hostname=\"localhost\""
   echo "           "tests=\"$TESTS_COUNT\"
@@ -310,11 +321,14 @@ START_TIME=$(date +%s)
   echo -n "" > $XMLTMP
 
 for test in $TESTS; do
+  echo "    "\<testcase name=\"$(basename $test)\" >> $XMLTMP
+  echo "              "classname=\"$test\" >> $XMLTMP
   if [ -n "$USE_VALGRIND" ]; then
     runtest "valgrind --leak-check=full --show-reachable=yes $AGENT" "$test"
   else
     runtest $AGENT "$test"
   fi
+  echo "    "\<\/testcase\> >> $XMLTMP
 done
 
 END_TIME=$(date +%s)
@@ -332,10 +346,9 @@ END_TIME=$(date +%s)
 ) | tee -a $LOG | tee -a $SUMMARY
 
 (  echo "           "failures=\"$FAILED_TESTS\"
+   echo "           "skipped=\"$SKIPPED_TESTS\"
    echo "           "time=\"$(($END_TIME - $START_TIME)) seconds\"\>
 ) >> $XML
-
-
 
   cat $XMLTMP >> $XML
 

@@ -676,6 +676,8 @@ static void ArmClasses(Averages av, char *timekey)
     }
 
     PublishEnvironment(classlist);
+
+    DeleteItemList(classlist);
 }
 
 /*****************************************************************************/

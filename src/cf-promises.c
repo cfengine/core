@@ -27,6 +27,7 @@
 
 #include "env_context.h"
 #include "conversion.h"
+#include "reporting.h"
 
 /*******************************************************************/
 
@@ -88,11 +89,13 @@ static const char *HINTS[] =
 int main(int argc, char *argv[])
 {
     GenericAgentConfig config = CheckOpts(argc, argv);
-
-    GenericInitialize("common", config);
+    ReportContext *report_context = OpenReports("common");
+    
+    GenericInitialize("common", config, report_context);
     ThisAgentInit();
     AnalyzePromiseConflicts();
     GenericDeInitialize();
+    CloseReports("commmon", report_context);
 
     if (ERRORCOUNT > 0)
     {

@@ -35,7 +35,6 @@ libpromises_la_SOURCES = \
         cf.events.h \
         cf3.defs.h \
         cf3.extern.h \
-        cf3.server.h \
         cf3globals.c \
         cf_sql.c \
         cfstream.c \
@@ -62,7 +61,7 @@ libpromises_la_SOURCES = \
         env_context.c env_context.h \
         evalfunction.c evalfunction.h \
         exec_tools.c \
-        expand.c \
+        expand.c expand.h \
         files_copy.c \
         files_edit.c \
         files_editline.c \
@@ -116,7 +115,6 @@ libpromises_la_SOURCES = \
         net.c \
         nfs.c \
         ontology.c ontology.h \
-        package_lib.c \
         policy.c policy.h \
         parser.c parser.h \
         parser_state.h \
@@ -133,6 +131,7 @@ libpromises_la_SOURCES = \
         scope.c \
         selfdiagnostic.c \
         sequence.c sequence.h \
+	server.c server.h \
         show.h \
         signals.c \
         sockaddr.c \

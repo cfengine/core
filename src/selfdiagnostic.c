@@ -30,6 +30,7 @@
 #include "promises.h"
 #include "vars.h"
 #include "reporting.h"
+#include "expand.h"
 
 static void TestRegularExpressions(void);
 static void TestAgentPromises(void);
@@ -44,15 +45,16 @@ void SelfDiagnostic()
     int i, j;
     char *names, *numbers, *pattern;
 
+    ReportContext *report_context = ReportContextNew();
     if (VERBOSE || DEBUG)
     {
-        FREPORT_TXT = stdout;
-        FREPORT_HTML = fopen(NULLFILE, "w");
+        ReportContextAddWriter(report_context, REPORT_OUTPUT_TYPE_TEXT, FileWriter(stdout));
+        ReportContextAddWriter(report_context, REPORT_OUTPUT_TYPE_TEXT, FileWriter(fopen(NULLFILE, "w")));
     }
     else
     {
-        FREPORT_TXT = fopen(NULLFILE, "w");
-        FREPORT_HTML = fopen(NULLFILE, "w");
+        ReportContextAddWriter(report_context, REPORT_OUTPUT_TYPE_TEXT, FileWriter(fopen(NULLFILE, "w")));
+        ReportContextAddWriter(report_context, REPORT_OUTPUT_TYPE_HTML, FileWriter(fopen(NULLFILE, "w")));
     }
 
     printf("----------------------------------------------------------\n");
@@ -65,8 +67,8 @@ void SelfDiagnostic()
     printf("Cfengine - Level 2 self-diagnostic \n");
     printf("----------------------------------------------------------\n\n");
     TestVariableScan();
-    TestExpandPromise();
-    TestExpandVariables();
+    TestExpandPromise(report_context);
+    TestExpandVariables(report_context);
     TestRegularExpressions();
     TestAgentPromises();
 
@@ -104,6 +106,8 @@ void SelfDiagnostic()
 
     TestHashEntropy(pattern, "pattern 2");
 //#endif
+
+    ReportContextDestroy(report_context);
 }
 
 /*****************************************************************************/
@@ -157,7 +161,7 @@ void TestVariableScan()
 
 /*****************************************************************************/
 
-void TestExpandPromise()
+void TestExpandPromise(const ReportContext *report_context)
 {
     Promise pp = { 0 }, *pcopy;
 
@@ -193,18 +197,18 @@ void TestExpandPromise()
     {
         printf("-----------------------------------------------------------\n");
         printf("Raw test promises\n\n");
-        ShowPromise(REPORT_OUTPUT_TYPE_TEXT, &pp, 4);
-        ShowPromise(REPORT_OUTPUT_TYPE_HTML, &pp, 4);
+        ShowPromise(report_context, REPORT_OUTPUT_TYPE_TEXT, &pp, 4);
+        ShowPromise(report_context, REPORT_OUTPUT_TYPE_HTML, &pp, 4);
 
-        ShowPromise(REPORT_OUTPUT_TYPE_TEXT, pcopy, 6);
-        ShowPromise(REPORT_OUTPUT_TYPE_HTML, pcopy, 6);
+        ShowPromise(report_context, REPORT_OUTPUT_TYPE_TEXT, pcopy, 6);
+        ShowPromise(report_context, REPORT_OUTPUT_TYPE_HTML, pcopy, 6);
     }
     DeletePromise(pcopy);
 }
 
 /*****************************************************************************/
 
-void TestExpandVariables()
+void TestExpandVariables(const ReportContext *report_context)
 {
     Promise pp = { 0 }, *pcopy;
     Rlist *args, *listvars = NULL, *scalarvars = NULL;
@@ -261,7 +265,7 @@ void TestExpandVariables()
         MapIteratorsFromRval("diagnostic", &scalarvars, &listvars, cp->rval, NULL);
     }
 
-    ExpandPromiseAndDo(cf_common, "diagnostic", pcopy, scalarvars, listvars, NULL);
+    ExpandPromiseAndDo(cf_common, "diagnostic", pcopy, scalarvars, listvars, NULL, report_context);
 /* No cleanup */
 }
 

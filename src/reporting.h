@@ -27,22 +27,22 @@
 
 #include "cf3.defs.h"
 
-typedef enum
-{
-    REPORT_OUTPUT_TYPE_TEXT,
-    REPORT_OUTPUT_TYPE_HTML
-} ReportOutputType;
+#include "writer.h"
 
-void ShowPromises(ReportOutputType type, const Bundle *bundles, const Body *bodies);
-void ShowPromise(ReportOutputType type, const Promise *pp, int indent);
-void ShowScopedVariables(ReportOutputType type);
-void ShowPromiseInReport(ReportOutputType type, const char *version, const Promise *pp, int indent);
-void ShowPromisesInReport(ReportOutputType type, const Bundle *bundles, const Body *bodies);
+ReportContext *ReportContextNew(void);
+bool ReportContextAddWriter(ReportContext *context, ReportOutputType type, Writer *writer);
+void ReportContextDestroy(ReportContext *context);
+
+void ShowPromises(const ReportContext *context, ReportOutputType type, const Bundle *bundles, const Body *bodies);
+void ShowPromise(const ReportContext *context, ReportOutputType type, const Promise *pp, int indent);
+void ShowScopedVariables(const ReportContext *context, ReportOutputType type);
+void ShowPromiseInReport(const ReportContext *context, ReportOutputType type, const char *version, const Promise *pp, int indent);
+void ShowPromisesInReport(const ReportContext *context, ReportOutputType type, const Bundle *bundles, const Body *bodies);
+void ShowContext(const ReportContext *report_context);
 
 // stdout only
 void SyntaxTree(void);
 void ReportError(char *s);
-void ShowContext(void);
 void BannerSubType(const char *bundlename, const char *type, int p);
 void BannerSubSubType(const char *bundlename, const char *type);
 void Banner(const char *s);

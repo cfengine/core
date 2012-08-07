@@ -33,6 +33,7 @@
 #include "promises.h"
 #include "constraints.h"
 #include "conversion.h"
+#include "reporting.h"
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);
@@ -127,8 +128,9 @@ int main(int argc, char *argv[])
     int pid;
 
     GenericAgentConfig config = CheckOpts(argc, argv);
+    ReportContext *report_context = OpenReports("runagent");
 
-    Policy *policy = GenericInitialize("runagent", config);
+    Policy *policy = GenericInitialize("runagent", config, report_context);
     ThisAgentInit();
     KeepControlPromises(policy);      // Set RUNATTR using copy
 
@@ -201,6 +203,7 @@ int main(int argc, char *argv[])
 #endif
 
     DeletePromise(pp);
+    ReportContextDestroy(report_context);
 
     return 0;
 }

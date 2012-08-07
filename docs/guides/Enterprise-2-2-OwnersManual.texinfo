@@ -23,7 +23,7 @@
 @titlepage
 @title CFEngine 3 Enterprise 2.2 Owner's Manual
 @subtitle CFEngine Enterprise Documentation
-@subtitle Updated 6. June 2012 @c also update in ifnottex section below
+@subtitle Updated 3. August 2012 @c also update in ifnottex section below
 @author CFEngine
 @c @smallbook
 @fonttextsize 10
@@ -45,7 +45,7 @@ to the extent of applicable law.
 @end direntry
 @end ifinfo
 @ifnottex
-Updated 6. June 2012
+Updated 3. August 2012
 @node Top, Introduction, (dir), (dir)
 @top CFEngine 3 Enterprise 2.2 Owner's Manual
 @end ifnottex
@@ -94,7 +94,7 @@ Updated 6. June 2012
 @node CFEngine 3 Enterprise - the new CFEngine 3 Nova!, About CFEngine 3 Enterprise, Introduction, Introduction
 @section CFEngine 3 Enterprise - the new CFEngine 3 Nova!
 
-CFEngine 3 Enterprise 2.2 is the next generation of CFEngine 3 Nova (successor of CFEngine 3 Nova 2.1.3), upgraded with productivity and performance enhancements. We have made a new Mission Portal Engineering room tailored to the needs of infrastructure engineers, making it both easier and more powerful to use. Most notably we have introduced dynamic grouping of hosts through a flexible tree control, also referred to as the Navigation Tree. It allows system adminsitrators to flexibly group hosts based on CFEngine classes, both discovered (hard classes such as operating system, architecture, IP address, etc.) and user defined (soft classes such as webserver, development, staging, etc).
+CFEngine 3 Enterprise 2.2 is the next generation of CFEngine 3 Nova (successor of CFEngine 3 Nova 2.1.3), upgraded with productivity and performance enhancements. We have made a new Mission Portal Status and Reports room tailored to the needs of infrastructure engineers, making it both easier and more powerful to use. Most notably we have introduced dynamic grouping of hosts through a flexible tree control, also referred to as the Navigation Tree. It allows system adminsitrators to flexibly group hosts based on CFEngine classes, both discovered (hard classes such as operating system, architecture, IP address, etc.) and user defined (soft classes such as webserver, development, staging, etc).
 
 CFEngine 3 Nova is compatible with CFEngine 3 Enterprise and can easily be upgraded by following the instructions in this document.
 
@@ -192,12 +192,12 @@ A working package manager is required on the hub/policy server to install an Apa
 @section Installation procedure
 
 CFEngine 3 Enterprise is designed to be simple to install in its default configuration. The installation
-process has three phases:
+process has two phases (or three phases for commercial customers who need to obtain a license):
 
 @itemize
-@item Unpacking the software.
-@item Obtaining a license.
-@item Adapting policy.
+@item Unpack the software
+@item For commercial customers (skip for CFEngine 3 Free Enterprise): Obtain a license 
+@item Bootstrap the agents to a hub (the hub serves as a policy server and report collector)
 @end itemize
 
 You should start from a blank system @xref{Hardware requirements}. If you have been using CFEngine Community Edition and you have
@@ -244,8 +244,8 @@ host# dpkg --install  @var{packages}
 
 @end table 
 
-@item On the hub, a public key has now been created in @file{/var/cfengine/ppkeys/localhost.pub} as part of the
-package installation. You should send this public key to CFEngine Support@footnote{You will obtain credentials to the CFEngine Support ticketing system and software download repository as a part of your purchase.} as an attachment in the ticket system, 
+@item Skip this step for installation of CFEngine 3 Free Enterprise. On the hub, a public key has now been created in @file{/var/cfengine/ppkeys/localhost.pub} as part of the
+package installation. Commercial customers should send this public key to CFEngine Support@footnote{You will obtain credentials to the CFEngine Support ticketing system and software download repository as a part of your purchase.} as an attachment in the ticket system, 
 to obtain a license file @file{license.dat}. 
 
 @cartouche
@@ -253,10 +253,10 @@ Save the returned license file to @file{/var/cfengine/masterfiles/license.dat}
 on the hub before continuing.
 @end cartouche
 
- See more details for the software licensing here; 
-@url{https://cfengine.com/software/Licensing.pdf}
+@c See more details for the software licensing here; 
+@c @url{https://cfengine.com/software/Licensing.pdf}
 
-@item The remaining steps apply to all hosts, but you should install the hub or policy server first. For large systems (> 1000 hosts) we recommend increasing the memory limit in php.ini on the hub (for instance to 128 MB).
+@item The remaining steps apply to all hosts, but you should @b{install the hub (policy server) first}. For large systems (> 1000 hosts) we recommend increasing the memory limit in php.ini on the hub (for instance to 128 MB).
 
 Find the hostname or IP address of the hub (policy server), here we assume @samp{123.456.789.123} is the address.
 @verbatim
@@ -280,10 +280,10 @@ CFEngine will output diagnostic information upon bootstrap (written to command l
 
 @end verbatim
 
-@item CFEngine should now be up and running on your system. It will copy its default policy files into @file{masterfiles} on the hub (policy server) provided that the directory is empty (fresh install). When the clients are bootstrapped, they will contact the hub and copy them to their @file{inputs} directory.
+@item CFEngine should now be up and running on your system. The Mission Portal will not be immediately accessible, you should wait 10-15 minutes for the system to converge before attempting to connect to the hub IP-address through your web browser (the convergence process can take up to 30 minutes). CFEngine will copy its default policy files into @file{masterfiles} on the hub (policy server) provided that the directory is empty (fresh install). When the clients are bootstrapped, they will contact the hub and copy them to their @file{inputs} directory.
 
-@item To complete licensing setup, you should make a promise to accept the license
-terms by editing @file{/var/cfengine/masterfiles/promises.cf}
+@item Skip this step for installation of CFEngine 3 Free Enterprise. To complete licensing setup, you should make a promise to accept the license
+terms by editing @file{/var/cfengine/masterfiles/promises.cf} and @file{/var/cfengine/masterfiles/failsafe.cf}
 on the hub (policy server), changing the line @samp{host_licenses_paid => "<NUMBER>";}
 in @samp{body common control} to reflect the correct number of licenses that you have subscribed to.
 
@@ -309,11 +309,11 @@ copy of the @file{license.dat} file in @file{/var/cfengine/inputs}
 @item On the hub, the file @file{/var/cfengine/promise_knowledge.cf} should have been
 created, and should contain data.
 
-@item  Finally, try to connect to the web server at port 80 on the hub/policy host (for example at http://123.456.789.123).
+@item  Finally, after 10--15 minutes@footnote{You may have to wait as long as 30 minutes}, try to connect to the web server at port 80 on the hub/policy host (for example at http://123.456.789.123).
 You should see a login page like the one shown in the figure below:
 
 @sp 1
-@c @center @image{img-login-2-2,5cm,,Mission Portal login}
+@center @image{img-login-2-2,5cm,,Mission Portal login}
 @center Figure: Mission Portal login screen
 @sp 1
 
@@ -332,7 +332,7 @@ Please see @ref{Frequently Asked Questions} below or @ref{Troubleshooting} if yo
 
 @subsection How do I install the prerequisites for the hub manually?
 
-See INSTALLATION.TXT (can be found on the CFEngine software download page: @url{https://cfengine.com/software/}) for a list of dependencies for the hub. 
+See the bundled INSTALL file for a list of dependencies for the hub (can also be found on the CFEngine software download page: @url{https://cfengine.com/software/}). 
 
 To install the packages you might want to use @code{yum} on Red Hat/CentOS/Fedora, 
 @code{zypper} on SUSE or @code{apt} on Debian/Ubuntu.
@@ -476,7 +476,7 @@ in the standard way.
 @node Upgrade procedure, How can I do phased deployment?, Upgrading to CFEngine 3 Enterprise, Upgrading to CFEngine 3 Enterprise
 @section Upgrade procedure
 
-The following is a general procedure to upgrade to CFEngine 3 Enterprise from earlier versions. It is assumed that the packages are placed in the @file{/tmp} directory. To upgrade, start with the hub (policy server):
+The following is a general procedure to upgrade to CFEngine 3 Enterprise from earlier versions, please follow each step unless otherwise indicated. It is assumed that the packages are placed in the @file{/tmp} directory. To upgrade, start with the hub (policy server):
 
 @enumerate
 @item Stop all CFE processes
@@ -512,10 +512,10 @@ or
 @verbatim
    $ cd /var/cfengine/share/NovaBase
    $ cp CFE_cfengine.cf CFE_knowledge.cf CFE_hub_specific.cf 
-   company_knowledge.cf /var/cfengine/masterfiles
+   /var/cfengine/masterfiles
 
-[optional: do this when all hosts run Nova 2.2.0]
-$ cp /var/cfengine/share/NovaBase/cfengine_stdlib.cf /var/cfengine/masterfiles
+[optional: do this when all hosts run Nova 2.2.x]
+   $ cp /var/cfengine/share/NovaBase/cfengine_stdlib.cf /var/cfengine/masterfiles
 @end verbatim
 Comments:
 @itemize *
@@ -529,8 +529,6 @@ Comments:
     - mostly CFEngine 3 Enterprise Knowledge Map setup
 @item CFE_hub_specific.cf
     - all necessary bundles to build the CFEngine 3 Enterprise HUB (policy server) is in this file
-@item company_knowledge.cf
-    - a custom Knowledge Map configuration. You may add any information you'd like to incorporate your company knowledge into the CFEngine 3 Enterprise Knowledge Map
 @item cfengine_stdlib.cf
     - the latest standard CFEngine bodies and bundles
 @item If you are using an @file{update.cf} file older than from the Nova 2.0.2 release: package_method has been updated, the Nova/Enterprise self-upgrade will not work properly on some systems. We strongly recommended to synchronise contents of the file before rolling out new packages to clients. (Please contact your sales representative or file a ticket in the CFEngine support system to help you out.)
@@ -583,11 +581,23 @@ Comments:
 @end verbatim
 @end itemize
 
-@item Modify a line in @file{/var/cfengine/masterfiles/update.cf} to run mongod as follows (line 242 if upgrade from 2.1.x, line 299 if upgrade from 2.0.x; the line has been split and indented for presentability below):
+@item Modify two lines in @file{/var/cfengine/masterfiles/update.cf} to contain the following:
+@itemize *
+@item Change the package version number in line 131 (approximate location, please verify that you change the corresponding content) to ensure automatic updates of the CFEngine packages for the clients:
 @verbatim
-   "/var/cfengine/bin/mongod --fork --logpath /var/log/mongod.log --dbpath $
-      (sys.workdir)/state --bind_ip 127.0.0.1 --nohttpinterface –nojournal
+   package_version => "9.9.9",         # Install new Nova anyway
+@end verbatim
+@item Replace line 298 (approximate location, please verify that you change the corresponding content) to run mongod without journaling (the below line has been split and indented for presentability):
+@verbatim
+   "/var/cfengine/bin/mongod --fork --logpath /var/log/mongod.log --dbpath
+      $(sys.workdir)/state --bind_ip 127.0.0.1 --nohttpinterface --nojournal
       --logappend > /dev/null < /dev/null 2>&1"
+@end verbatim
+@end itemize
+
+@item Copy the modified update.cf to the inputs directory:
+@verbatim
+   $ cp /var/cfengine/masterfiles/update.cf /var/cfengine/inputs/update.cf
 @end verbatim
 
 @item Tidy up $(sys.doc_root) directory@*
@@ -687,7 +697,7 @@ Please see @ref{Troubleshooting} if you have any problems.
 The Mission Portal is the centerpiece
 of user interaction with CFEngine 3 Enterprise. It can be accessed by connecting to the hub (policy server) with your web browser (for example at http://123.456.789.123; default port 80). From here you can get a complete overview of operations and performance, business and compliance, organizational knowledge and library.
 
-@image{img-mission-portal-2-2,15cm,,Mission Portal}
+@image{img-mission-portal-2-2-2,15cm,,Mission Portal}
 @center Figure: The mission portal
 
 
@@ -695,7 +705,7 @@ of user interaction with CFEngine 3 Enterprise. It can be accessed by connecting
 @section Mission Portal Rooms
 
 @menu
-* Mission Engineering::         
+* Mission Status and Reports::         
 * Mission Business::              
 * Mission Planning::            
 * Mission Library::             
@@ -704,7 +714,7 @@ of user interaction with CFEngine 3 Enterprise. It can be accessed by connecting
 There are four main rooms in the Mission Portal that offer insight into different aspects of operations:
 
 @itemize -
-@item Mission Engineering: a place to see the current state of system repair
+@item Mission Status and Reports: a place to see the current state of system repair
 @item Mission Business: a top level overview of compliance status and business value
 @item Mission Planning: a place to plan and make policy changes
 @item Mission Library: a knowledge bank that connects information together
@@ -713,11 +723,13 @@ There are four main rooms in the Mission Portal that offer insight into differen
 Each of these rooms is a beginning from which you can refine your overview and search
 through information.
 
+In CFEngine 3 Enterprise 2.2.2 it is possible to toggle on or off the display of the Business and Planning rooms, see @ref{Mission Portal Settings} for more information.
+
 
 @c @page
 @c -----------------------------------------------------
-@node Mission Engineering, Mission Business, Mission Portal Rooms, Mission Portal Rooms
-@subsection Mission Engineering
+@node Mission Status and Reports, Mission Business, Mission Portal Rooms, Mission Portal Rooms
+@subsection Mission Status and Reports
 
 @menu
 * Navigation Tree::
@@ -725,18 +737,18 @@ through information.
 * Reports tab::
 @end menu
 
-Mission Engineering illustrates the state of the system in relation to the desired state at all scales. Zoom in to specific areas and examine the impact of promises, query data, and extract reports.
+Mission Status and Reports illustrates the state of the system in relation to the desired state at all scales. Zoom in to specific areas and examine the impact of promises, query data, and extract reports.
 
-The Mission Engineering room underwent a substantial rework for the release of CFEngine 3 Enterprise 2.2. Most notably we introduced a host Navigation Tree where hosts can be grouped and organized in a hierarchy defined by classes. The remaining content on the page is influenced by the selected tree context, i.e. the @b{Status} and @b{Reports} tabs will only show information for linux hosts if such a context/node is selected in the the tree (the active node is highlighted to show that it is selected). Another notable change is the new interface to interact with reports, now available as a tab and drop-down menus.
+The Mission Status and Reports room (previously Engineering room) underwent a substantial rework for the release of CFEngine 3 Enterprise 2.2. Most notably we introduced a host Navigation Tree where hosts can be grouped and organized in a hierarchy defined by classes. The remaining content on the page is influenced by the selected tree context, i.e. the @b{Status} and @b{Reports} tabs will only show information for linux hosts if such a context/node is selected in the the tree (the active node is highlighted to show that it is selected). Another notable change is the new interface to interact with reports, now available as a tab and drop-down menus.
 
 @sp 1
-@image{img-engineering-room-2-2,15cm,,Mission Engineering}
-@center Figure: Mission Engineering
+@image{img-engineering-room-2-2,15cm,,Mission Status and Reports}
+@center Figure: Mission Status and Reports
 @sp 1
 
 
 @c -----------------------------------------------------
-@node Navigation Tree, Status tab, Mission Engineering, Mission Engineering
+@node Navigation Tree, Status tab, Mission Status and Reports, Mission Status and Reports
 @subsubsection Navigation Tree
 
 The Navigation Tree consists of two main parts:
@@ -777,7 +789,7 @@ Click on any host in the tree to get a quick overview of that host in the status
 
 
 @c -----------------------------------------------------
-@node Status tab, Reports tab, Navigation Tree, Mission Engineering
+@node Status tab, Reports tab, Navigation Tree, Mission Status and Reports
 @subsubsection Status tab
 
 The Status tab shows the overall status of the hosts selected in the Navigation Tree. This section contains: 
@@ -816,7 +828,7 @@ Example, Compliant hosts: Click the link next to the green box under Host Compli
 
 
 @c -----------------------------------------------------
-@node Reports tab, , Status tab, Mission Engineering
+@node Reports tab, , Status tab, Mission Status and Reports
 @subsubsection Reports tab
 
 Reports are sorted into five main categories that contain drop down menus to select default reports. Clicking a report will bring up a search filter specific to that report. 
@@ -877,12 +889,12 @@ and anomalous behavior in a simple red (promises not kept), yellow (promises rep
 
 @sp 1
 @noindent @b{Finders:} @*
-The Mission Engineering room comes with six finder functions (modules that make it simple and intuitive to browse and search for objects of a particular type, see section on Finders): host, class, promises, reports, summary reports, and CDP (Content Driven Policies) reports.
+The Mission Status and Reports room comes with six finder functions (modules that make it simple and intuitive to browse and search for objects of a particular type, see section on Finders): host, class, promises, reports, summary reports, and CDP (Content Driven Policies) reports.
 @end ignore
 
 
 @c -----------------------------------------------------
-@node  Mission Business, Mission Planning, Mission Engineering, Mission Portal Rooms
+@node  Mission Business, Mission Planning, Mission Status and Reports, Mission Portal Rooms
 @subsection Mission Business
 
 Mission Business is a high level summary of how well the entire system is behaving. 
@@ -893,7 +905,7 @@ Mission Business is a high level summary of how well the entire system is behavi
 @sp 1
 
 Business Value and Host Status:
-The two pie charts show the business value of the promises kept/not kept and well as host status, respectively. Business value is associated with the value of promises as defined in policy files. In the Host Status chart, each host represents a slice of the pie and is classified into red, yellow, green and blue according to the level of their compliance. A host is red if less than 80% of its promises are kept, yellow if 20% or more of its promises were repaired and host is now compliant, green if more than 80% of its promises are kept, and blue if there is no contact between the hub and the client host (unreachable).
+The two pie charts show the business value (measured as arbitrary monetary units, 'mu') of the promises kept/not kept and host status, respectively. Business value is associated with the value of promises as defined by in policy files. In the Host Status chart, each host represents a slice of the pie and is classified into red, yellow, green and blue according to the level of their compliance. A host is red if less than 80% of its promises are kept, yellow if 20% or more of its promises were repaired and host is now compliant, green if more than 80% of its promises are kept, and blue if there is no contact between the hub and the client host (unreachable).
 
 Compliance Summary:
 The row of bar meters shows the compliance (average percentage of promises kept, repaired or not kept) of all registered hosts @footnote{Blue hosts will not appear here} in blocks of 6 hours for the past week. It summarizes performance and anomalous behavior in a simple red (promises not kept), yellow (promises repaired) and green (promises kept) scale. Click on a bar to see which promises were kept/not kept.
@@ -966,11 +978,11 @@ The Library contains finders for documents, topics, a notes archive, and (extern
 * Topic finder::                
 @end menu
 
-Finders are modules that make it simple and intuitive to browse and search for objects of a particular type. There are three finders in the Mission Engineering room and one in the Mission Library. The finders in Mission Engineering are located above the Navigation Tree (encircled in red below: Class finder, Host finder and Promise finder): 
+Finders are modules that make it simple and intuitive to browse and search for objects of a particular type. There are three finders in the Mission Status and Reports room and one in the Mission Library. The finders in Mission Status and Reports are located above the Navigation Tree (encircled in red below: Class finder, Host finder and Promise finder): 
 
 @sp 1
-@center @image{img-finders-2-2,14cm,,Finders}
-@center Figure: Finders in the Mission Engineering room
+@center @image{img-finders-2-2,7cm,,Finders}
+@center Figure: Finders in the Mission Status and Reports room
 @sp 1
 
 
@@ -978,7 +990,7 @@ Finders are modules that make it simple and intuitive to browse and search for o
 @node Class finder, Host finder, Finders, Finders
 @subsection Class finder
 
-The class finder is located in the Mission Engineering room and will display a list of classes to search by. Browse by scrolling through the list, click a letter corresponding to the first letter of a class name, or search for classes in the search box (top right corner; choose between searching all, time, soft or IP classes). Clicking on a class will bring you to a report for that class profile.
+The class finder is located in the Mission Status and Reports room and will display a list of classes to search by. Browse by scrolling through the list, click a letter corresponding to the first letter of a class name, or search for classes in the search box (top right corner; choose between searching all, time, soft or IP classes). Clicking on a class will bring you to a report for that class profile.
 
 @sp 1
 @center @image{img-class-finder-2-2,10cm,,Class finder}
@@ -990,7 +1002,7 @@ The class finder is located in the Mission Engineering room and will display a l
 @node Host finder, Promise finder, Class finder, Finders
 @subsection Host finder
 
-The host finder is located in the Mission Engineering room and will display a list of hosts. Browse by scrolling through the list, click a letter corresponding to the first letter of a host name, or search for hosts in the search box (top right corner). Clicking on a host name will bring you to the host viewer.
+The host finder is located in the Mission Status and Reports room and will display a list of hosts. Browse by scrolling through the list, click a letter corresponding to the first letter of a host name, or search for hosts in the search box (top right corner). Clicking on a host name will bring you to the host viewer.
 
 @sp 1
 @center @image{img-host-finder-2-2,10cm,,Host finder}
@@ -1002,7 +1014,7 @@ The host finder is located in the Mission Engineering room and will display a li
 @node Promise finder, Topic finder, Host finder, Finders
 @subsection Promise finder
 
-The promise finder is located in the Mission Engineering room and will display a list of promises. Browse by scrolling through the list, click a letter corresponding to the first letter of a promiser/bundle/handle name (set alternative in search box and click a letter in the right column), or search for promiser/bundle/handle in the search box (top right corner; choose between searching promiser, bundle, or handle). Clicking on a promise/bundle will bring you to the promise/bundle viewer.
+The promise finder is located in the Mission Status and Reports room and will display a list of promises. Browse by scrolling through the list, click a letter corresponding to the first letter of a promiser/bundle/handle name (set alternative in search box and click a letter in the right column), or search for promiser/bundle/handle in the search box (top right corner; choose between searching promiser, bundle, or handle). Clicking on a promise/bundle will bring you to the promise/bundle viewer.
 
 @sp 1
 @center @image{img-promise-finder-2-2,10cm,,Promise finder}
@@ -1013,7 +1025,7 @@ The promise finder is located in the Mission Engineering room and will display a
 @node Report finder, Summary report finder, Promise finder, Finders
 @subsection Report finder
 
-The report finder is located in the Mission Engineering room and will display a list of standard report categories. Browse by scrolling through the list. Clicking on a report category will bring up a query table that will produce a report according to the entered query criteria.
+The report finder is located in the Mission Status and Reports room and will display a list of standard report categories. Browse by scrolling through the list. Clicking on a report category will bring up a query table that will produce a report according to the entered query criteria.
 
 @sp 1
 @center @image{img-reportsfinder,10cm,,Report finder}
@@ -1203,7 +1215,7 @@ The yellow sphere represents the current topic, surrounding (blue) spheres repre
 @node Weakest hosts viewer, Report viewer, Topics viewer (Knowledge map), Viewers
 @subsection Weakest hosts viewer
 
-A link to the worst ranked hosts is located in the Mission Engineering room. This ranks all hosts that have reported to the hub @footnote{Blue hosts will not appear} according to their level of promises not kept during the last hour, with the worst host on top.
+A link to the worst ranked hosts is located in the Mission Status and Reports room. This ranks all hosts that have reported to the hub @footnote{Blue hosts will not appear} according to their level of promises not kept during the last hour, with the worst host on top.
 
 @sp 1
 @center @image{img-weakesthostsviewer,15cm,,Weakest hosts}
@@ -1222,7 +1234,7 @@ A significant capability of CFEngine 3 Enterprise is the existence of automated 
 @center Figure: Report viewer
 @sp 1
 
-The drop down menu from the Engineering room @b{Reports tab} (where the user can choose which report to view) can also be found on the top of all reports, as well as a drop down menu to fetch saved report searches. Clicking a different report or saved search from one of these menus will refresh the page content to reflect the selection.
+The drop down menu from the Status and Reports room @b{Reports tab} (where the user can choose which report to view) can also be found on the top of all reports, as well as a drop down menu to fetch saved report searches. Clicking a different report or saved search from one of these menus will refresh the page content to reflect the selection.
 
 The Report viewer also comes with different tools to drill down to specific information in the current report. To assist in this, the top line shows for how many hosts the report is valid for, along with an icon for selecting host context (the host context is pre-populated with data from the selected node in the Navigation Tree) and the title of the current report.
 
@@ -1422,10 +1434,10 @@ View a list of all searches that have been saved from different reports. Saved s
 @node  Mission Portal Settings, My Preferences, List of saved searches, User Settings and Preferences
 @subsubsection Mission Portal Settings
 
-Mission Portal settings allow the user to set or edit the administrative email, administrative role, authentication method, activation of role based access control (RBAC) and the unreachable (blue host) threshold.
+Mission Portal settings allow the user to set or edit the administrative email, administrative role, authentication method, activation of role based access control (RBAC), show/hide the Business and Planning rooms on the Mission Portal front page, and the unreachable (blue host) threshold.
 
 @sp 1
-@center @image{img-mission-portal-settings-2-2,15cm,,Mission Portal Settings}
+@center @image{img-mission-portal-settings-2-2-2,15cm,,Mission Portal Settings}
 @center Figure: Mission Portal Settings
 @sp 1
 
@@ -1449,6 +1461,14 @@ User group that will be able to access the Mission Portal through internal datab
 @sp 1
 @noindent @b{Role-Based Access Control}@*
 CFEngine 3 Enterprise 2.2.0 introduces Role-Based Access Control (RBAC) for all hosts, reports and promises shown in the Mission Portal. RBAC does not cover access control for making policy changes. If you wish to use RBAC in combination with external authentication (LDAP or AD), we recommend that you wait to turn on RBAC until you log on with the LDAP or AD user that has been designated a Mission Portal admin (i.e do not turn RBAC on while logged in with an internal database user in this case). RBAC can be globally switched on or off, but see also @ref{Mission Portal User Admin} for more details.
+
+@sp 1
+@noindent @b{Show Business Room}@*
+Set whether the Business room should be visible or not on the Mission Portal main page. This is a global setting that affects all users.
+
+@sp 1
+@noindent @b{Show Planning Room}@*
+Set whether the planning room should be visible or not on the Mission Portal main page. This is a global setting that affects all users.
 
 @sp 1
 @noindent @b{Unreachable host threshold}
@@ -1551,13 +1571,13 @@ entities are atomic with respect to RBAC --- either a user can see
 everything they contain, or nothing of it.
 
 Access to a host is required to see any information about it, e.g. all
-its reports (Engineering->Reports), host page, and compliance
+its reports (Status and Reports->Reports), host page, and compliance
 category. If a user is not allowed access to a host, the Mission
 Portal would look the same as if the host was not bootstrapped to that
 hub.
 
 Information about the running policy is also available in the Mission
-Portal, either through the Promise Finder at the Engineering page, or
+Portal, either through the Promise Finder at the Status and Reports page, or
 by clicking a promise handle from one of the reports. The searchable
 promises in the Promise Finder and information pages about promises
 and bundles are filtered in the same manner as the hosts, but defined

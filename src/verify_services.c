@@ -30,11 +30,11 @@
 
 static int ServicesSanityChecks(Attributes a, Promise *pp);
 static void SetServiceDefaults(Attributes *a);
-static void DoVerifyServices(Attributes a, Promise *pp);
+static void DoVerifyServices(Attributes a, Promise *pp, const ReportContext *report_context);
 
 /*****************************************************************************/
 
-void VerifyServicesPromise(Promise *pp)
+void VerifyServicesPromise(Promise *pp, const ReportContext *report_context)
 {
     Attributes a = { {0} };
 
@@ -44,7 +44,7 @@ void VerifyServicesPromise(Promise *pp)
 
     if (ServicesSanityChecks(a, pp))
     {
-        VerifyServices(a, pp);
+        VerifyServices(a, pp, report_context);
     }
 }
 
@@ -141,7 +141,7 @@ static void SetServiceDefaults(Attributes *a)
 /* Level                                                                     */
 /*****************************************************************************/
 
-void VerifyServices(Attributes a, Promise *pp)
+void VerifyServices(Attributes a, Promise *pp, const ReportContext *report_context)
 {
     CfLock thislock;
 
@@ -171,7 +171,7 @@ void VerifyServices(Attributes a, Promise *pp)
     }
     else
     {
-        DoVerifyServices(a, pp);
+        DoVerifyServices(a, pp, report_context);
     }
 
     DeleteScalar("this", "promiser");
@@ -182,7 +182,7 @@ void VerifyServices(Attributes a, Promise *pp)
 /* Level                                                                     */
 /*****************************************************************************/
 
-static void DoVerifyServices(Attributes a, Promise *pp)
+static void DoVerifyServices(Attributes a, Promise *pp, const ReportContext *report_context)
 {
     FnCall *default_bundle = NULL;
     Rlist *args = NULL;
@@ -235,6 +235,6 @@ static void DoVerifyServices(Attributes a, Promise *pp)
 
     if (!DONTDO)
     {
-        VerifyMethod("service_bundle", a, pp);  // Send list of classes to set privately?
+        VerifyMethod("service_bundle", a, pp, report_context);  // Send list of classes to set privately?
     }
 }

@@ -31,6 +31,7 @@
 #include "dbm_api.h"
 #include "files_names.h"
 #include "item_lib.h"
+#include "expand.h"
 
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
 
@@ -866,4 +867,11 @@ int ShiftChange(void)
     {
         return false;
     }
+}
+
+/************************************************************************/
+
+bool EnforcePromise(enum cfopaction action)
+{
+    return (!DONTDO && action != cfa_warn);
 }

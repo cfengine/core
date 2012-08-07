@@ -29,7 +29,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-#include "cf3.defs.h"
+#include "expand.h"
 
 #include "env_context.h"
 #include "constraints.h"
@@ -106,7 +106,8 @@ since these cannot be mapped into "this" without some magic.
    
 **********************************************************************/
 
-void ExpandPromise(enum cfagenttype agent, const char *scopeid, Promise *pp, void *fnptr)
+void ExpandPromise(enum cfagenttype agent, const char *scopeid, Promise *pp, void *fnptr,
+                   const ReportContext *report_context)
 {
     Rlist *listvars = NULL, *scalarvars = NULL;
     Constraint *cp;
@@ -143,7 +144,7 @@ void ExpandPromise(enum cfagenttype agent, const char *scopeid, Promise *pp, voi
     CopyLocalizedIteratorsToThisScope(scopeid, listvars);
 
     PushThisScope();
-    ExpandPromiseAndDo(agent, scopeid, pcopy, scalarvars, listvars, fnptr);
+    ExpandPromiseAndDo(agent, scopeid, pcopy, scalarvars, listvars, fnptr, report_context);
     PopThisScope();
 
     DeletePromise(pcopy);
@@ -629,7 +630,7 @@ int ExpandPrivateScalar(const char *scopeid, const char *string, char buffer[CF_
 /*********************************************************************/
 
 void ExpandPromiseAndDo(enum cfagenttype agent, const char *scopeid, Promise *pp, Rlist *scalarvars, Rlist *listvars,
-                        void (*fnptr) ())
+                        void (*fnptr) (), const ReportContext *report_context)
 {
     Rlist *lol = NULL;
     Promise *pexp;
@@ -717,8 +718,8 @@ void ExpandPromiseAndDo(enum cfagenttype agent, const char *scopeid, Promise *pp
         switch (agent)
         {
         case cf_common:
-            ShowPromise(REPORT_OUTPUT_TYPE_TEXT, pexp, 6);
-            ShowPromise(REPORT_OUTPUT_TYPE_HTML, pexp, 6);
+            ShowPromise(report_context, REPORT_OUTPUT_TYPE_TEXT, pexp, 6);
+            ShowPromise(report_context, REPORT_OUTPUT_TYPE_HTML, pexp, 6);
             ReCheckAllConstraints(pexp);
             break;
 

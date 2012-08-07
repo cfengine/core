@@ -47,7 +47,8 @@ check_PROGRAMS = \
 	files_lib_test \
 	map_test \
 	policy_test \
-	sort_test
+	sort_test \
+	file_name_test
 
 TESTS = $(check_PROGRAMS)
 

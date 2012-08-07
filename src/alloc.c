@@ -29,7 +29,9 @@ static void *CheckResult(void *ptr, const char *fn, bool check_result)
 {
     if (ptr == NULL && check_result)
     {
-        FatalError("%s: Unable to allocate memory", fn);
+        fputs(fn, stderr);
+        fputs(": Unable to allocate memory\n", stderr);
+        exit(255);
     }
     return ptr;
 }

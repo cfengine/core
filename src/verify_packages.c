@@ -30,13 +30,14 @@
 #include "files_names.h"
 #include "vars.h"
 #include "conversion.h"
+#include "expand.h"
 
 static void VerifyPromisedPatch(Attributes a, Promise *pp);
 static int ExecuteSchedule(PackageManager *schedule, enum package_actions action);
 static int ExecutePatch(PackageManager *schedule, enum package_actions action);
 static int PackageSanityCheck(Attributes a, Promise *pp);
-static int VerifyInstalledPackages(PackageManager **alllists, Attributes a, Promise *pp);
-static bool PackageListInstalledFromCommand(PackageItem **installed_list, Attributes a, Promise *pp);
+static int VerifyInstalledPackages(PackageManager **alllists, const char *default_arch, Attributes a, Promise *pp);
+static bool PackageListInstalledFromCommand(PackageItem **installed_list, const char *default_arch, Attributes a, Promise *pp);
 int ComparePackages(const char *n, const char *v, const char *a, PackageItem * pi, enum version_cmp cmp);
 static void VerifyPromisedPackage(Attributes a, Promise *pp);
 static void DeletePackageItems(PackageItem * pi);
@@ -51,8 +52,8 @@ static int FindLargestVersionAvail(char *matchName, char *matchVers, const char 
 static int VersionCmp(const char *vs1, const char *vs2);
 static int IsNewerThanInstalled(const char *n, const char *v, const char *a, char *instV, char *instA, Attributes attr);
 static int PackageInItemList(PackageItem * list, char *name, char *version, char *arch);
-static int PrependPatchItem(PackageItem ** list, char *item, PackageItem * chklist, Attributes a, Promise *pp);
-static int PrependMultiLinePackageItem(PackageItem ** list, char *item, int reset, Attributes a, Promise *pp);
+static int PrependPatchItem(PackageItem ** list, char *item, PackageItem * chklist, const char *default_arch, Attributes a, Promise *pp);
+static int PrependMultiLinePackageItem(PackageItem ** list, char *item, int reset, const char *default_arch, Attributes a, Promise *pp);
 static int ExecPackageCommand(char *command, int verify, int setCmdClasses, Attributes a, Promise *pp);
 static void ReportSoftware(PackageManager *list);
 
@@ -61,7 +62,10 @@ static void ExecutePackageSchedule(PackageManager *schedule);
 static void DeletePackageManagers(PackageManager *newlist);
 static PackageManager *NewPackageManager(PackageManager **lists, char *mgr, enum package_actions pa,
                                          enum action_policy x);
-static PackageItem *GetCachedPackageList(PackageManager *manager, Attributes a, Promise *pp);
+static PackageItem *GetCachedPackageList(PackageManager *manager, const char *default_arch, Attributes a, Promise *pp);
+static int PrependListPackageItem(PackageItem ** list, char *item, const char *default_arch, Attributes a, Promise *pp);
+static int PrependPackageItem(PackageItem ** list, const char *name, const char *version, const char *arch, Attributes a,
+                              Promise *pp);
 
 /*****************************************************************************/
 
@@ -71,6 +75,35 @@ PackageManager *INSTALLED_PACKAGE_LISTS = NULL;
 #define PACKAGE_LIST_COMMAND_WINAPI "/Windows_API"
 
 /*****************************************************************************/
+
+static char *GetDefaultArch(const char *command)
+{
+    if (command == NULL)
+    {
+        return xstrdup("default");
+    }
+
+    CfOut(cf_verbose, "", "Obtaining default architecture for package manager: %s", command);
+
+    FILE *fp = cf_popen_sh(command, "r");
+    if (fp == NULL)
+    {
+        return NULL;
+    }
+
+    char arch[CF_BUFSIZE];
+
+    if (CfReadLine(arch, CF_BUFSIZE, fp) == false || strlen(arch) == 0)
+    {
+        cf_pclose(fp);
+        return NULL;
+    }
+
+    CfOut(cf_verbose, "", "Default architecture for package manager is '%s'", arch);
+
+    cf_pclose(fp);
+    return xstrdup(arch);
+}
 
 void VerifyPackagesPromise(Promise *pp)
 {
@@ -111,11 +144,22 @@ void VerifyPackagesPromise(Promise *pp)
 
     chdir("/");
 
-    if (!VerifyInstalledPackages(&INSTALLED_PACKAGE_LISTS, a, pp))
+    char *default_arch = GetDefaultArch(a.packages.package_default_arch_command);
+
+    if (default_arch == NULL)
     {
-        cfPS(cf_error, CF_FAIL, "", pp, a, " !! Unable to obtain a list of installed packages - aborting");
+        cfPS(cf_error, CF_FAIL, "", pp, a, " !! Unable to obtain default architecture for package manager - aborting");
         return;
     }
+
+    if (!VerifyInstalledPackages(&INSTALLED_PACKAGE_LISTS, default_arch, a, pp))
+    {
+        cfPS(cf_error, CF_FAIL, "", pp, a, " !! Unable to obtain a list of installed packages - aborting");
+        free(default_arch);
+        return;
+    }
+
+    free(default_arch);
 
     switch (a.packages.package_policy)
     {
@@ -417,7 +461,7 @@ static void ExecutePackageSchedule(PackageManager *schedule)
 /* Level                                                                     */
 /*****************************************************************************/
 
-static int VerifyInstalledPackages(PackageManager **all_mgrs, Attributes a, Promise *pp)
+static int VerifyInstalledPackages(PackageManager **all_mgrs, const char *default_arch, Attributes a, Promise *pp)
 {
     PackageManager *manager = NewPackageManager(all_mgrs, a.packages.package_list_command, cfa_pa_none, cfa_no_ppolicy);
     char vbuff[CF_BUFSIZE];
@@ -434,7 +478,7 @@ static int VerifyInstalledPackages(PackageManager **all_mgrs, Attributes a, Prom
         return true;
     }
 
-    manager->pack_list = GetCachedPackageList(manager, a, pp);
+    manager->pack_list = GetCachedPackageList(manager, default_arch, a, pp);
 
     if (manager->pack_list != NULL)
     {
@@ -454,7 +498,7 @@ static int VerifyInstalledPackages(PackageManager **all_mgrs, Attributes a, Prom
     }
     else
     {
-        if(!PackageListInstalledFromCommand(&(manager->pack_list), a, pp))
+        if(!PackageListInstalledFromCommand(&(manager->pack_list), default_arch, a, pp))
         {
             CfOut(cf_error, "", "!! Could not get list of installed packages");
             return false;
@@ -465,7 +509,7 @@ static int VerifyInstalledPackages(PackageManager **all_mgrs, Attributes a, Prom
 
     if (a.packages.package_list_command)
     {
-        if(!PackageListInstalledFromCommand(&(manager->pack_list), a, pp))
+        if(!PackageListInstalledFromCommand(&(manager->pack_list), default_arch, a, pp))
         {
             CfOut(cf_error, "", "!! Could not get list of installed packages");
             return false;
@@ -518,11 +562,11 @@ static int VerifyInstalledPackages(PackageManager **all_mgrs, Attributes a, Prom
             if (a.packages.package_patch_installed_regex == NULL
                 || !FullTextMatch(a.packages.package_patch_installed_regex, vbuff))
             {
-                PrependPatchItem(&(manager->patch_avail), vbuff, manager->patch_list, a, pp);
+                PrependPatchItem(&(manager->patch_avail), vbuff, manager->patch_list, default_arch, a, pp);
                 continue;
             }
 
-            if (!PrependPatchItem(&(manager->patch_list), vbuff, manager->patch_list, a, pp))
+            if (!PrependPatchItem(&(manager->patch_list), vbuff, manager->patch_list, default_arch, a, pp))
             {
                 continue;
             }
@@ -542,7 +586,7 @@ static int VerifyInstalledPackages(PackageManager **all_mgrs, Attributes a, Prom
 
 /*****************************************************************************/
 
-static bool PackageListInstalledFromCommand(PackageItem **installed_list, Attributes a, Promise *pp)
+static bool PackageListInstalledFromCommand(PackageItem **installed_list, const char *default_arch, Attributes a, Promise *pp)
 {
     if (a.packages.package_list_update_command != NULL)
     {
@@ -584,11 +628,11 @@ static bool PackageListInstalledFromCommand(PackageItem **installed_list, Attrib
         {
             if (FullTextMatch(a.packages.package_multiline_start, buf))
             {
-                PrependMultiLinePackageItem(installed_list, buf, reset, a, pp);
+                PrependMultiLinePackageItem(installed_list, buf, reset, default_arch, a, pp);
             }
             else
             {
-                PrependMultiLinePackageItem(installed_list, buf, update, a, pp);
+                PrependMultiLinePackageItem(installed_list, buf, update, default_arch, a, pp);
             }
         }
         else
@@ -598,7 +642,7 @@ static bool PackageListInstalledFromCommand(PackageItem **installed_list, Attrib
                 continue;
             }
             
-            if (!PrependListPackageItem(installed_list, buf, a, pp))
+            if (!PrependListPackageItem(installed_list, buf, default_arch, a, pp))
             {
                 CfOut(cf_verbose, "", "Package line %s did not match one of the package_list_(name|version|arch)_regex patterns", buf);
                 continue;
@@ -609,7 +653,7 @@ static bool PackageListInstalledFromCommand(PackageItem **installed_list, Attrib
     
     if (a.packages.package_multiline_start)
     {
-        PrependMultiLinePackageItem(installed_list, buf, reset, a, pp);
+        PrependMultiLinePackageItem(installed_list, buf, reset, default_arch, a, pp);
     }
     
     return cf_pclose(fin) == 0;
@@ -1309,7 +1353,7 @@ static void DeletePackageManagers(PackageManager *newlist)
 
 /*****************************************************************************/
 
-static PackageItem *GetCachedPackageList(PackageManager *manager, Attributes a, Promise *pp)
+static PackageItem *GetCachedPackageList(PackageManager *manager, const char *default_arch, Attributes a, Promise *pp)
 {
     PackageItem *list = NULL;
     char name[CF_MAXVARSIZE], version[CF_MAXVARSIZE], arch[CF_MAXVARSIZE], mgr[CF_MAXVARSIZE], line[CF_BUFSIZE];
@@ -1359,6 +1403,19 @@ static PackageItem *GetCachedPackageList(PackageManager *manager, Attributes a, 
         fgets(line, CF_BUFSIZE - 1, fin);
         sscanf(line, "%250[^,],%250[^,],%250[^,],%250[^\n]", name, version, arch, mgr);
 
+        /*
+         * Transition to explicit default architecture, if package manager
+         * supports it.
+         *
+         * If old cache contains entries with 'default' architecture, and
+         * package method is updated to detect this architecture, on next
+         * execution update this architecture to the real one.
+         */
+        if (!strcmp(arch, "default"))
+        {
+            strlcpy(arch, default_arch, CF_MAXVARSIZE);
+        }
+
         if (strcmp(thismanager, mgr) == 0)
         {
             CfDebug("READPKG: %s\n", line);
@@ -1372,7 +1429,79 @@ static PackageItem *GetCachedPackageList(PackageManager *manager, Attributes a, 
 
 /*****************************************************************************/
 
-static int PrependMultiLinePackageItem(PackageItem ** list, char *item, int reset, Attributes a, Promise *pp)
+static int PrependPackageItem(PackageItem ** list, const char *name, const char *version, const char *arch, Attributes a,
+                              Promise *pp)
+{
+    PackageItem *pi;
+
+    if (strlen(name) == 0 || strlen(version) == 0 || strlen(arch) == 0)
+    {
+        return false;
+    }
+
+    CfOut(cf_verbose, "", " -> Package (%s,%s,%s) found", name, version, arch);
+
+    pi = xmalloc(sizeof(PackageItem));
+
+    if (list)
+    {
+        pi->next = *list;
+    }
+    else
+    {
+        pi->next = NULL;
+    }
+
+    pi->name = xstrdup(name);
+    pi->version = xstrdup(version);
+    pi->arch = xstrdup(arch);
+    *list = pi;
+
+/* Finally we need these for later schedule exec, once this iteration context has gone */
+
+    pi->pp = DeRefCopyPromise("this", pp);
+    return true;
+}
+
+/*****************************************************************************/
+
+static int PrependListPackageItem(PackageItem ** list, char *item, const char *default_arch, Attributes a, Promise *pp)
+{
+    char name[CF_MAXVARSIZE];
+    char arch[CF_MAXVARSIZE];
+    char version[CF_MAXVARSIZE];
+    char vbuff[CF_MAXVARSIZE];
+
+    strncpy(vbuff, ExtractFirstReference(a.packages.package_list_name_regex, item), CF_MAXVARSIZE - 1);
+    sscanf(vbuff, "%s", name);  /* trim */
+
+    strncpy(vbuff, ExtractFirstReference(a.packages.package_list_version_regex, item), CF_MAXVARSIZE - 1);
+    sscanf(vbuff, "%s", version);       /* trim */
+
+    if (a.packages.package_list_arch_regex)
+    {
+        strncpy(vbuff, ExtractFirstReference(a.packages.package_list_arch_regex, item), CF_MAXVARSIZE - 1);
+        sscanf(vbuff, "%s", arch);      /* trim */
+    }
+    else
+    {
+        strlcpy(arch, default_arch, CF_MAXVARSIZE);
+    }
+
+    if (strcmp(name, "CF_NOMATCH") == 0 || strcmp(version, "CF_NOMATCH") == 0 || strcmp(arch, "CF_NOMATCH") == 0)
+    {
+        return false;
+    }
+
+    CfDebug(" -? Package line \"%s\"\n", item);
+    CfDebug(" -?      with name \"%s\"\n", name);
+    CfDebug(" -?      with version \"%s\"\n", version);
+    CfDebug(" -?      with architecture \"%s\"\n", arch);
+
+    return PrependPackageItem(list, name, version, arch, a, pp);
+}
+
+static int PrependMultiLinePackageItem(PackageItem ** list, char *item, int reset, const char *default_arch, Attributes a, Promise *pp)
 {
     static char name[CF_MAXVARSIZE];
     static char arch[CF_MAXVARSIZE];
@@ -1397,7 +1526,7 @@ static int PrependMultiLinePackageItem(PackageItem ** list, char *item, int rese
 
         strcpy(name, "CF_NOMATCH");
         strcpy(version, "CF_NOMATCH");
-        strcpy(arch, "default");
+        strcpy(arch, default_arch);
     }
 
     if (FullTextMatch(a.packages.package_list_name_regex, item))
@@ -1426,7 +1555,7 @@ static int PrependMultiLinePackageItem(PackageItem ** list, char *item, int rese
 
 /*****************************************************************************/
 
-static int PrependPatchItem(PackageItem ** list, char *item, PackageItem * chklist, Attributes a, Promise *pp)
+static int PrependPatchItem(PackageItem ** list, char *item, PackageItem * chklist, const char *default_arch, Attributes a, Promise *pp)
 {
     char name[CF_MAXVARSIZE];
     char arch[CF_MAXVARSIZE];
@@ -1445,7 +1574,7 @@ static int PrependPatchItem(PackageItem ** list, char *item, PackageItem * chkli
     }
     else
     {
-        strncpy(arch, "default", CF_MAXVARSIZE - 1);
+        strncpy(arch, default_arch, CF_MAXVARSIZE - 1);
     }
 
     if (strcmp(name, "CF_NOMATCH") == 0 || strcmp(version, "CF_NOMATCH") == 0 || strcmp(arch, "CF_NOMATCH") == 0)
@@ -2091,7 +2220,7 @@ static int IsNewerThanInstalled(const char *n, const char *v, const char *a, cha
 
     for (pi = mp->pack_list; pi != NULL; pi = pi->next)
     {
-        if ((strcmp(n, pi->name) == 0) && ((strcmp(a, pi->arch) == 0) || (strcmp("default", pi->arch) == 0)))
+        if ((strcmp(n, pi->name) == 0) && (strcmp(a, pi->arch) == 0))
         {
             CfOut(cf_verbose, "", "Found installed package (%s,%s,%s)", pi->name, pi->version, pi->arch);
 

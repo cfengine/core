@@ -18,7 +18,7 @@ static void test_fqname(void **state)
 
     assert_string_equal(fqname, "mylaptop.example.com");
     assert_string_equal(uqname, "mylaptop");
-    assert_string_equal(domain, "");
+    assert_string_equal(domain, "example.com");
 }
 
 static void test_uqname(void **state)
@@ -45,7 +45,7 @@ static void test_fqname_not_really_fq(void **state)
 
     assert_string_equal(fqname, "user.laptop");
     assert_string_equal(uqname, "user");
-    assert_string_equal(domain, "");
+    assert_string_equal(domain, "laptop");
 }
 
 static void test_fqname_not_really_fq2(void **state)

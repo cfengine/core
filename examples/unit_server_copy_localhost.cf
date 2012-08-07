@@ -49,17 +49,17 @@ bundle agent testbundle
 {
 files: 
 
-  "/home/mark/tmp/testcopy" 
+  "/tmp/testcopy" 
         comment  => "test copy promise",
-    copy_from    => mycopy("/home/mark/LapTop/words","127.0.0.1"),
+    copy_from    => mycopy("/tmp/test-src","127.0.0.1"),
     perms        => system,
     depth_search => recurse("inf"),
     classes      => satisfied("copy_ok");
 
-  "/home/mark/tmp/testcopy/single_file" 
+  "/tmp/testcopy/single_file" 
 
         comment  => "test copy promise",
-    copy_from    => mycopy("/home/mark/LapTop/Cfengine3/trunk/README","127.0.0.1"),
+    copy_from    => mycopy("/tmp/test-src/README","127.0.0.1"),
     perms        => system;
 
 reports:
@@ -131,7 +131,7 @@ bundle server access_rules()
 
 access:
 
-  "/home/mark/LapTop"
+  "/tmp/test-src"
 
     admit   => { "127.0.0.1" };
 }

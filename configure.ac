@@ -222,7 +222,7 @@ if test "x$with_mysql" != "xno"; then
      AC_CHECK_HEADERS(mysql.h, [], [if test "x$with_mysql" != xcheck; then AC_MSG_ERROR(Cannot find MySQL client library); fi])
 
      AC_CHECK_LIB(mysqlclient, EVP_CIPHER_CTX_init,
-                               [AC_MSG_ERROR(MySQL client library exports symbols clashing with OpenSSL. Get the update from distribution provider, recompile MySQL library or disable MySQL connector. See http://bugs.mysql.com/bug.php?id=65055 for details.)])
+                               [AC_MSG_ERROR([MySQL client library exports symbols clashing with OpenSSL. Get the update from distribution provider, recompile MySQL library or disable MySQL connector. See http://bugs.mysql.com/bug.php?id=65055 for details.])])
    ])
 fi
 
@@ -485,6 +485,12 @@ AC_REPLACE_FUNCS(strncasecmp)
 
 AC_CHECK_DECLS(strsignal)
 AC_REPLACE_FUNCS(strsignal)
+
+AC_CHECK_DECLS(gmtime_r, [], [], [[#include <time.h>]])
+AC_REPLACE_FUNCS(gmtime_r)
+
+AC_CHECK_DECLS(localtime_r, [], [], [[#include <time.h>]])
+AC_REPLACE_FUNCS(localtime_r)
 
 AC_CHECK_FUNCS(getpwent setpwent endpwent)
 

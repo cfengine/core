@@ -27,6 +27,7 @@
 
 #include "files_names.h"
 #include "conversion.h"
+#include "expand.h"
 
 #include <assert.h>
 
@@ -1156,7 +1157,7 @@ Rlist *RlistAt(Rlist *start, size_t index)
 
 /*******************************************************************/
 
-static void RlistPrint(Writer *writer, const Rlist *list)
+void RlistPrint(Writer *writer, const Rlist *list)
 {
     WriterWrite(writer, " {");
 

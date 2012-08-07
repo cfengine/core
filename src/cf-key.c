@@ -28,6 +28,7 @@
 #include "dbm_api.h"
 #include "lastseen.h"
 #include "dir.h"
+#include "reporting.h"
 
 int SHOWHOSTS = false;
 bool REMOVEKEYS = false;
@@ -77,7 +78,8 @@ int main(int argc, char *argv[])
 
     THIS_AGENT_TYPE = cf_keygen;
 
-    GenericInitialize("keygenerator", config);
+    ReportContext *report_context = OpenReports("keygenerator");
+    GenericInitialize("keygenerator", config, report_context);
 
     if (SHOWHOSTS)
     {
@@ -91,6 +93,8 @@ int main(int argc, char *argv[])
     }
 
     KeepKeyPromises();
+
+    ReportContextDestroy(report_context);
     return 0;
 }
 

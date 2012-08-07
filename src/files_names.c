@@ -30,10 +30,12 @@
 #include "cf3.defs.h"
 #include "dir.h"
 #include "item_lib.h"
+#include "assert.h"
 
 /*****************************************************************************/
 
-void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *path, Promise *ptr))
+void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *path, Promise *ptr, const ReportContext *report_context),
+                             const ReportContext *report_context)
 {
     Item *path, *ip, *remainder = NULL;
     char pbuffer[CF_BUFSIZE];
@@ -50,7 +52,7 @@ void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *p
     if (!IsPathRegex(wildpath) || (pathtype && (strcmp(pathtype, "literal") == 0)))
     {
         CfOut(cf_verbose, "", " -> Using literal pathtype for %s\n", wildpath);
-        (*fnptr) (wildpath, pp);
+        (*fnptr) (wildpath, pp, report_context);
         return;
     }
     else
@@ -120,7 +122,7 @@ void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *p
         {
             // Could be a dummy directory to be created so this is not an error.
             CfOut(cf_verbose, "", " -> Using best-effort expanded (but non-existent) file base path %s\n", wildpath);
-            (*fnptr) (wildpath, pp);
+            (*fnptr) (wildpath, pp, report_context);
             DeleteItemList(path);
             return;
         }
@@ -166,7 +168,7 @@ void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *p
 
                 if (!lastnode && (strcmp(nextbuffer, wildpath) != 0))
                 {
-                    LocateFilePromiserGroup(nextbuffer, pp, fnptr);
+                    LocateFilePromiserGroup(nextbuffer, pp, fnptr, report_context);
                 }
                 else
                 {
@@ -187,7 +189,7 @@ void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *p
                     /* If there were back references there could still be match.x vars to expand */
 
                     pcopy = ExpandDeRefPromise(CONTEXTID, pp);
-                    (*fnptr) (nextbufferOrig, pcopy);
+                    (*fnptr) (nextbufferOrig, pcopy, report_context);
                     DeletePromise(pcopy);
                 }
             }
@@ -198,7 +200,7 @@ void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *p
     else
     {
         CfOut(cf_verbose, "", " -> Using file base path %s\n", pbuffer);
-        (*fnptr) (pbuffer, pp);
+        (*fnptr) (pbuffer, pp, report_context);
     }
 
     if (count == 0)
@@ -207,7 +209,7 @@ void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *p
 
         if (create)
         {
-            VerifyFilePromise(pp->promiser, pp);
+            VerifyFilePromise(pp->promiser, pp, report_context);
         }
     }
 
@@ -531,6 +533,42 @@ void AddSlash(char *str)
 
 /*********************************************************************/
 
+char *GetParentDirectoryCopy(const char *path)
+/**
+ * WARNING: Remember to free return value.
+ **/
+{
+    assert(path);
+    assert(strlen(path) > 0);
+
+    char *path_copy = xstrdup(path);
+
+    if(strcmp(path_copy, "/") == 0)
+    {
+        return path_copy;
+    }
+
+    char *sp = (char *)LastFileSeparator(path_copy);
+
+    if(!sp)
+    {
+        FatalError("Path %s does not contain file separators (GetParentDirectory())", path_copy);
+    }
+
+    if(sp == FirstFileSeparator(path_copy))  // don't chop off first path separator
+    {
+        *(sp + 1) = '\0';
+    }
+    else
+    {
+        *sp = '\0';
+    }
+
+    return path_copy;
+}
+
+/*********************************************************************/
+
 void DeleteSlash(char *str)
 {
     if ((strlen(str) == 0) || (str == NULL))
@@ -547,6 +585,36 @@ void DeleteSlash(char *str)
     {
         str[strlen(str) - 1] = '\0';
     }
+}
+
+/*********************************************************************/
+
+const char *FirstFileSeparator(const char *str)
+{
+    assert(str);
+    assert(strlen(str) > 0);
+
+    if(*str == '/')
+    {
+        return str;
+    }
+
+    if(strncmp(str, "\\\\", 2) == 0)  // windows share
+    {
+        return str + 1;
+    }
+
+    const char *pos;
+
+    for(pos = str; *pos != '\0'; pos++)  // windows "X:\file" path
+    {
+        if(*pos == '\\')
+        {
+            return pos;
+        }
+    }
+
+    return NULL;
 }
 
 /*********************************************************************/

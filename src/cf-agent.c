@@ -33,6 +33,7 @@
 #include "item_lib.h"
 #include "vars.h"
 #include "conversion.h"
+#include "expand.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"
@@ -93,14 +94,14 @@ char *TYPESEQUENCE[] =
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);
 static void CheckAgentAccess(Rlist *list);
-static void KeepAgentPromise(Promise *pp);
+static void KeepAgentPromise(Promise *pp, const ReportContext *report_context);
 static int NewTypeContext(enum typesequence type);
-static void DeleteTypeContext(Policy *policy, enum typesequence type);
+static void DeleteTypeContext(Policy *policy, enum typesequence type, const ReportContext *report_context);
 static void ClassBanner(enum typesequence type);
-static void ParallelFindAndVerifyFilesPromises(Promise *pp);
+static void ParallelFindAndVerifyFilesPromises(Promise *pp, const ReportContext *report_context);
 static bool VerifyBootstrap(void);
-static void KeepPromiseBundles(Policy *policy, Rlist *bundlesequence);
-static void KeepPromises(Policy *policy, GenericAgentConfig config);
+static void KeepPromiseBundles(Policy *policy, Rlist *bundlesequence, const ReportContext *report_context);
+static void KeepPromises(Policy *policy, GenericAgentConfig config, const ReportContext *report_context);
 static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save_pr_repaired, int save_pr_notkept);
 
 /*******************************************************************/
@@ -156,9 +157,11 @@ int main(int argc, char *argv[])
 
     GenericAgentConfig config = CheckOpts(argc, argv);
 
-    Policy *policy = GenericInitialize("agent", config);
+    ReportContext *report_context = OpenReports("agent");
+    Policy *policy = GenericInitialize("agent", config, report_context);
     ThisAgentInit();
-    KeepPromises(policy, config);
+    KeepPromises(policy, config, report_context);
+    CloseReports("agent", report_context);
     NoteClassUsage(VHEAP, true);
 #ifdef HAVE_NOVA
     Nova_NoteVarUsageDB();
@@ -369,13 +372,13 @@ static void ThisAgentInit(void)
 
 /*******************************************************************/
 
-static void KeepPromises(Policy *policy, GenericAgentConfig config)
+static void KeepPromises(Policy *policy, GenericAgentConfig config, const ReportContext *report_context)
 {
  double efficiency, model;
 
     BeginAudit();
     KeepControlPromises(policy);
-    KeepPromiseBundles(policy, config.bundlesequence);
+    KeepPromiseBundles(policy, config.bundlesequence, report_context);
     EndAudit();
 
 // TOPICS counts the number of currently defined promises
@@ -772,7 +775,7 @@ void KeepControlPromises(Policy *policy)
 
 /*********************************************************************/
 
-static void KeepPromiseBundles(Policy *policy, Rlist *bundlesequence)
+static void KeepPromiseBundles(Policy *policy, Rlist *bundlesequence, const ReportContext *report_context)
 {
     Bundle *bp;
     Rlist *rp, *params;
@@ -879,7 +882,7 @@ static void KeepPromiseBundles(Policy *policy, Rlist *bundlesequence)
             BannerBundle(bp, params);
             THIS_BUNDLE = bp->name;
             DeletePrivateClassContext();        // Each time we change bundle
-            ScheduleAgentOperations(bp);
+            ScheduleAgentOperations(bp, report_context);
             ResetBundleOutputs(bp->name);
         }
     }
@@ -889,7 +892,7 @@ static void KeepPromiseBundles(Policy *policy, Rlist *bundlesequence)
 /* Level 3                                                           */
 /*********************************************************************/
 
-int ScheduleAgentOperations(Bundle *bp)
+int ScheduleAgentOperations(Bundle *bp, const ReportContext *report_context)
 // NB - this function can be called recursively through "methods"
 {
     SubType *sp;
@@ -934,18 +937,18 @@ int ScheduleAgentOperations(Bundle *bp)
                     CF_TOPICS++;
                 }
 
-                ExpandPromise(cf_agent, bp->name, pp, KeepAgentPromise);
+                ExpandPromise(cf_agent, bp->name, pp, KeepAgentPromise, report_context);
 
                 if (Abort())
                 {
                     NoteClassUsage(VADDCLASSES, false);
-                    DeleteTypeContext(bp->parent_policy, type);
+                    DeleteTypeContext(bp->parent_policy, type, report_context);
                     NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
                     return false;
                 }
             }
 
-            DeleteTypeContext(bp->parent_policy, type);
+            DeleteTypeContext(bp->parent_policy, type, report_context);
         }
     }
 
@@ -1018,7 +1021,7 @@ static void CheckAgentAccess(Rlist *list)
 
 /*********************************************************************/
 
-static void KeepAgentPromise(Promise *pp)
+static void KeepAgentPromise(Promise *pp, const ReportContext *report_context)
 {
     char *sp = NULL;
     struct timespec start = BeginMeasure();
@@ -1099,7 +1102,7 @@ static void KeepAgentPromise(Promise *pp)
 
     if (strcmp("storage", pp->agentsubtype) == 0)
     {
-        FindAndVerifyStoragePromises(pp);
+        FindAndVerifyStoragePromises(pp, report_context);
         EndMeasurePromise(start, pp);
         return;
     }
@@ -1115,11 +1118,11 @@ static void KeepAgentPromise(Promise *pp)
     {
         if (GetBooleanConstraint("background", pp))
         {
-            ParallelFindAndVerifyFilesPromises(pp);
+            ParallelFindAndVerifyFilesPromises(pp, report_context);
         }
         else
         {
-            FindAndVerifyFilesPromises(pp);
+            FindAndVerifyFilesPromises(pp, report_context);
         }
 
         EndMeasurePromise(start, pp);
@@ -1142,14 +1145,14 @@ static void KeepAgentPromise(Promise *pp)
 
     if (strcmp("methods", pp->agentsubtype) == 0)
     {
-        VerifyMethodsPromise(pp);
+        VerifyMethodsPromise(pp, report_context);
         EndMeasurePromise(start, pp);
         return;
     }
 
     if (strcmp("services", pp->agentsubtype) == 0)
     {
-        VerifyServicesPromise(pp);
+        VerifyServicesPromise(pp, report_context);
         EndMeasurePromise(start, pp);
         return;
     }
@@ -1218,14 +1221,14 @@ static int NewTypeContext(enum typesequence type)
 
 /*********************************************************************/
 
-static void DeleteTypeContext(Policy *policy, enum typesequence type)
+static void DeleteTypeContext(Policy *policy, enum typesequence type, const ReportContext *report_context)
 {
     Attributes a = { {0} };
 
     switch (type)
     {
     case kp_classes:
-        HashVariables(policy, THIS_BUNDLE);
+        HashVariables(policy, THIS_BUNDLE, report_context);
         break;
 
     case kp_environments:
@@ -1248,7 +1251,7 @@ static void DeleteTypeContext(Policy *policy, enum typesequence type)
         {
             if (FSTABLIST)
             {
-                SaveItemListAsFile(FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a, NULL);
+                SaveItemListAsFile(FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a, NULL, report_context);
                 DeleteItemList(FSTABLIST);
                 FSTABLIST = NULL;
             }
@@ -1325,7 +1328,7 @@ static void ClassBanner(enum typesequence type)
 /* Thread context                                             */
 /**************************************************************/
 
-static void ParallelFindAndVerifyFilesPromises(Promise *pp)
+static void ParallelFindAndVerifyFilesPromises(Promise *pp, const ReportContext *report_context)
 {
     pid_t child = 1;
     int background = GetBooleanConstraint("background", pp);
@@ -1365,7 +1368,7 @@ static void ParallelFindAndVerifyFilesPromises(Promise *pp)
 
     if (child == 0 || !background)
     {
-        FindAndVerifyFilesPromises(pp);
+        FindAndVerifyFilesPromises(pp, report_context);
     }
 
 #endif /* NOT MINGW */

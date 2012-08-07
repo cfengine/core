@@ -111,7 +111,7 @@ void NewPromiser(Promise *pp)
 /* FIXME: all agents: generic_agent.c */
 
 
-void ShowTopicRepresentation(FILE *fp)
+void ShowTopicRepresentation(const ReportContext *report_context)
 {
     CfOut(cf_verbose, "", "# Knowledge map reporting feature is only available in version Nova and above\n");
 }

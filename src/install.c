@@ -95,7 +95,7 @@ Bundle *AppendBundle(Bundle **start, char *name, char *type, Rlist *args)
 
     bp->name = xstrdup(name);
     bp->type = xstrdup(type);
-    bp->args = args;
+    bp->args = CopyRlist(args);
 
     return bp;
 }
@@ -134,7 +134,7 @@ Body *AppendBody(Body **start, char *name, char *type, Rlist *args)
 
     bp->name = xstrdup(name);
     bp->type = xstrdup(type);
-    bp->args = args;
+    bp->args = CopyRlist(args);
 
     return bp;
 }

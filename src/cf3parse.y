@@ -71,6 +71,8 @@ typeid:                ID
                        {
                            strncpy(P.blocktype,P.currentid,CF_MAXVARSIZE);
                            CfDebug("Found block type %s for %s\n",P.blocktype,P.block);
+
+                           DeleteRlist(P.useargs);
                            P.useargs = NULL;
                        };
 
@@ -128,6 +130,7 @@ bundlebody:            '{'
                                P.currentbundle = NULL;
                            }
 
+                           DeleteRlist(P.useargs);
                            P.useargs = NULL;
                        }
 
@@ -166,7 +169,10 @@ bodybody:              '{'
                                P.currentbody->offset.line = P.line_no;
                                P.currentbody->offset.start = P.offsets.last_block_id;
                            }
+
+                           DeleteRlist(P.useargs);
                            P.useargs = NULL;
+
                            strcpy(P.currentid,"");
                            CfDebug("Starting block\n");
                        }

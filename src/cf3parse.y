@@ -70,6 +70,7 @@ bundle:                BUNDLE
                            DebugBanner("Bundle");
                            P.block = "bundle";
                            P.rval = (Rval) { NULL, '\0' };
+                           DeleteRlist(P.currentRlist);
                            P.currentRlist = NULL;
                            P.currentstring = NULL;
                            strcpy(P.blockid,"");
@@ -83,6 +84,7 @@ body:                  BODY
                            DebugBanner("Body");
                            P.block = "body";
                            strcpy(P.blockid,"");
+                           DeleteRlist(P.currentRlist);
                            P.currentRlist = NULL;
                            P.currentstring = NULL;
                            strcpy(P.blocktype,"");
@@ -367,6 +369,7 @@ promise:               promiser                    /* BUNDLE ONLY */
                        {
                            CfDebug("End implicit promise %s\n\n",P.promiser);
                            strcpy(P.currentid,"");
+                           DeleteRlist(P.currentRlist);
                            P.currentRlist = NULL;
                            free(P.promiser);
                            if (P.currentstring)
@@ -405,6 +408,7 @@ promise:               promiser                    /* BUNDLE ONLY */
 
                            /* Don't free these */
                            strcpy(P.currentid,"");
+                           DeleteRlist(P.currentRlist);
                            P.currentRlist = NULL;
                            free(P.promiser);
                            if (P.currentstring)
@@ -452,6 +456,7 @@ constraint:            id                        /* BUNDLE ONLY */
 
                                P.rval = (Rval) { NULL, '\0' };
                                strcpy(P.lval,"no lval");
+                               DeleteRlist(P.currentRlist);
                                P.currentRlist = NULL;
                            }
                            else
@@ -473,6 +478,7 @@ class:                 CLASS
 id:                    ID
                        {
                            strncpy(P.lval,P.currentid,CF_MAXVARSIZE);
+                           DeleteRlist(P.currentRlist);
                            P.currentRlist = NULL;
                            CfDebug("Recorded LVAL %s\n",P.lval);
                        };
@@ -518,7 +524,8 @@ rval:                  ID
                        }
                      | list
                        {
-                           P.rval = (Rval) { P.currentRlist, CF_LIST };
+                           P.rval = (Rval) { CopyRlist(P.currentRlist), CF_LIST };
+                           DeleteRlist(P.currentRlist);
                            P.currentRlist = NULL;
                            P.references_body = false;
                        }

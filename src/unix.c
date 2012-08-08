@@ -589,6 +589,10 @@ void GetInterfacesInfo(enum cfagenttype ag)
 
     CfDebug("GetInterfacesInfo()\n");
 
+    // Long-running processes may call this many times
+    DeleteItemList(IPADDRESSES);
+    IPADDRESSES = NULL;
+
     memset(ifbuf, 0, sizeof(ifbuf));
 
     InitIgnoreInterfaces();

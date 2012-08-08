@@ -892,7 +892,7 @@ static void VerifyThingsPromise(Promise *pp)
         Rlist *list = NULL, *topics = NULL;
 
             PrependRScalar(&list, handle, CF_SCALAR);
-            AddTopicAssociation(tp, &(tp->associations), "is the promise of", "stands for", list, true, rp->item,
+            AddTopicAssociation(tp, &(tp->associations), "is a promise of", "stands for", list, true, rp->item,
                                 pp->promiser);
             DeleteRlist(list);
             list = NULL;
@@ -1006,7 +1006,7 @@ static void VerifyTopicPromise(Promise *pp)
         Rlist *list = NULL, *topics = NULL;
 
             PrependRScalar(&list, handle, CF_SCALAR);
-            AddTopicAssociation(tp, &(tp->associations), "is the promise of", "stands for", list, true, rp->item,
+            AddTopicAssociation(tp, &(tp->associations), "is a promise of", "stands for", list, true, rp->item,
                                 pp->promiser);
             DeleteRlist(list);
             list = NULL;

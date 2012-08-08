@@ -4377,7 +4377,6 @@ To enable external authentication on a fresh install, log on to the Mission Port
 @menu
 * Configure LDAP::              
 * Configure Active Directory::  
-* Directory structure::         
 @end menu
 
 @node Configure LDAP, Configure Active Directory, Configuration of external authentication, Configuration of external authentication
@@ -4409,7 +4408,7 @@ If you wish to use RBAC in combination with LDAP, we recommend that you wait to 
 
 
 @c ----------------------------------------------------------
-@node Configure Active Directory, Directory structure, Configure LDAP, Configuration of external authentication
+@node Configure Active Directory, , Configure LDAP, Configuration of external authentication
 @section Configure Active Directory
 
 Select the Active Directory button and enter the appropriate configuration settings for you system.
@@ -4435,15 +4434,6 @@ Select the Active Directory button and enter the appropriate configuration setti
 Always check that the entered configuration is correct by clicking the "Test it" button before submitting changes. Enter a valid user name and password in the popup to test LDAP bind. Submitting an incorrect configuration will put LDAP down and lock out all users, CFEngine 3 Enterprise therefore comes with a fallback solution. Select a fallback administrator group in the database from the dropbox, CFEngine 3 Enterprise will look for users in this group when an incorrect configuration has been passed. A member of this group will then be able to log on to the Mission Portal using his internal database user name and password and restart the external authentication configuration.
 
 If you wish to use RBAC in combination with LDAP, we recommend that you wait to turn on RBAC until you log on with the LDAP user that has been designated a Mission Portal admin (i.e do not turn RBAC on while logged on with an internal database user in this case).
-
-
-@c ----------------------------------------------------------
-@node Directory structure, , Configure Active Directory, Configuration of external authentication
-@section Directory structure
-
-The Mission Portal imposes some limitations on directory structure for the use of external authentication. All users have to be stored in a direct child directory of the root (base dn). You may use subdirectories if you need to organize users into categories, but do not put more than one user directory directly under the root (base dn) as the user search will only cover the first encountered directory.
-
-The same counts for group directories.
 
 
 @c =========================================================================

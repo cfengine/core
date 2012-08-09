@@ -311,6 +311,27 @@ static const BodySyntax CF_FILES_BODIES[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
+// edit_xml body syntax
+
+const BodySyntax CF_COMMON_XMLBODIES[] =
+{
+    {"select_xpath", cf_str, "", "Select the XPath region of the XML file to edit"},
+    {NULL, cf_notype, NULL, NULL}
+};
+
+static const BodySyntax CF_INSERTTAGS_BODIES[] =
+{
+    {NULL, cf_notype, NULL, NULL}
+};
+
+static const BodySyntax CF_DELETETAGS_BODIES[] =
+{
+    {NULL, cf_notype, NULL, NULL}
+};
+
+
+// Master Syntax for Files 
+
 const SubTypeSyntax CF_FILES_SUBTYPES[] =
 {
     /* Body lists belonging to "files:" type in Agent */
@@ -324,5 +345,10 @@ const SubTypeSyntax CF_FILES_SUBTYPES[] =
     {"edit_line", "insert_lines", CF_INSERTLINES_BODIES},
     {"edit_line", "field_edits", CF_COLUMN_BODIES},
     {"edit_line", "replace_patterns", CF_REPLACE_BODIES},
+
+    {"edit_xml", "*", CF_COMMON_XMLBODIES},
+    {"edit_xml", "delete_tree", CF_DELETETAGS_BODIES},
+    {"edit_xml", "insert_tree", CF_INSERTTAGS_BODIES},
+
     {NULL, NULL, NULL},
 };

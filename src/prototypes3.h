@@ -282,6 +282,12 @@ int AppendIfNoSuchLine(char *filename, char *line);
 int ScheduleEditLineOperations(char *filename, Bundle *bp, Attributes a, Promise *pp, const ReportContext *report_context);
 Bundle *MakeTemporaryBundleFromTemplate(Attributes a,Promise *pp);
 
+/* files_editxmlx.c */
+
+int ScheduleEditXmlOperations(char *filename, Bundle *bp, Attributes a, Promise *parentp,
+                              const ReportContext *report_context);
+
+
 /* files_links.c */
 
 char VerifyLink(char *destination, char *source, Attributes attr, Promise *pp, const ReportContext *report_context);

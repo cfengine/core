@@ -5,9 +5,9 @@ This file contains a copy of:
 
 ----------------------------------------------------------------------------
 
-CFEngine is provided under the terms of the GNU General Public License (below), with
-explicit permission to link with the OpenSSL library, BerkeleyDB library and and
-PCRE library.
+CFEngine is provided under the terms of the GNU General Public License version 3
+(below), with explicit permission to link with the OpenSSL library, BerkeleyDB
+library and and PCRE library.
 
 On some systems, code under the Frontier Artistic License
 (/pub/snprintf) might become compiled. This is compatible with the

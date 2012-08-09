@@ -1,0 +1,100 @@
+#######################################################
+#
+# Insert a number of lines, insuring they are not printed in reverse order (Issue 809)
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+        "states" slist => { "actual", "expected" };
+
+        "actual" string =>
+"BEGIN
+    One potato
+    Two potato
+    Three potatos
+    Four
+END";
+
+
+      "insert" string =>
+"BEGIN
+    Five potato
+    Six potato
+    Seven potatoe
+    More!
+END";
+
+        "expected" string =>
+"BEGIN
+    Five potato
+    Six potato
+    Seven potatoe
+    More!
+END";
+
+files:
+        "$(G.testfile).$(states)"
+            create => "true",
+            edit_line => init_insert("$(init.$(states))"),
+            edit_defaults => init_empty;
+}
+
+bundle edit_line init_insert(str)
+{
+insert_lines:
+        "$(str)";
+}
+
+body edit_defaults init_empty
+{
+        empty_file_before_editing => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
+        "$(G.testfile).actual"
+            create => "true",
+            edit_line => test_insert("$(init.insert)");
+}
+
+bundle edit_line test_insert(str)
+{
+delete_lines:
+        ".*";
+
+insert_lines:
+        "$(str)"
+            insert_type => "preserve_block",
+            location => start;
+}
+
+body location start
+{
+before_after => "before";
+}
+
+#######################################################
+
+bundle agent check
+{
+methods:
+        "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                              "$(G.testfile).expected",
+                                              "$(this.promise_filename)");
+}

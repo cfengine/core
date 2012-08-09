@@ -488,6 +488,56 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
         }
     }
 
+
+    if (a.haveeditxml)
+    {
+        if (strcmp(pp->namespace,"default") == 0)
+           {
+           strcpy(edit_bundle_name,"");
+           }
+        else
+           {
+           snprintf(edit_bundle_name,CF_BUFSIZE-1, "%s_",pp->namespace);
+           }
+
+        if ((vp = GetConstraintValue("edit_xml", pp, CF_FNCALL)))
+        {
+            fp = (FnCall *) vp;
+            strcat(edit_bundle_name,fp->name);
+            params = fp->args;
+        }
+        else if ((vp = GetConstraintValue("edit_xml", pp, CF_SCALAR)))
+        {
+            strcat(edit_bundle_name,(char *) vp);
+            params = NULL;
+        }
+        else
+        {
+            FinishEditContext(pp->edcontext, a, pp, report_context);
+            YieldCurrentLock(thislock);
+            return false;
+        }
+
+
+        CfOut(cf_verbose, "", " -> Handling file edits in edit_xml bundle %s\n", edit_bundle_name);
+
+        if ((bp = GetBundle(policy, edit_bundle_name, "edit_xml")))
+        {
+            BannerSubBundle(bp, params);
+
+            DeleteScope(bp->name);
+            NewScope(bp->name);
+            HashVariables(policy, bp->name, report_context);
+
+            AugmentScope(bp->name, bp->args, params);
+            PushPrivateClassContext(a.edits.inherit);
+            retval = ScheduleEditXmlOperations(filename, bp, a, pp, report_context);
+            PopPrivateClassContext();
+            DeleteScope(bp->name);
+        }
+    }
+
+    
     if (a.template)
     {
         if ((bp = MakeTemporaryBundleFromTemplate(a,pp)))

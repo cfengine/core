@@ -46,10 +46,18 @@ EditContext *NewEditContext(char *filename, Attributes a, Promise *pp)
     ec->filename = filename;
     ec->empty_first = a.edits.empty_before_use;
 
-    if (!LoadFileAsItemList(&(ec->file_start), filename, a, pp))
+    if (a.haveeditline)
     {
+        if (!LoadFileAsItemList(&(ec->file_start), filename, a, pp))
+        {
         free(ec);
         return NULL;
+        }
+    }
+
+    if (a.haveeditxml)
+    {
+    // Fill me in
     }
 
     if (a.edits.empty_before_use)
@@ -81,17 +89,26 @@ void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportC
     }
     else if (ec && ec->num_edits > 0)
     {
-        if (CompareToFile(ec->file_start, ec->filename, a, pp))
+        if (a.haveeditline)
         {
-            if (ec)
+            if (CompareToFile(ec->file_start, ec->filename, a, pp))
             {
-                cfPS(cf_verbose, CF_NOP, "", pp, a, " -> No edit changes to file %s need saving", ec->filename);
+                if (ec)
+                {
+                    cfPS(cf_verbose, CF_NOP, "", pp, a, " -> No edit changes to file %s need saving", ec->filename);
+                }
+            }
+            else
+            {
+                SaveItemListAsFile(ec->file_start, ec->filename, a, pp, report_context);
             }
         }
-        else
+
+        if (a.haveeditxml)
         {
-            SaveItemListAsFile(ec->file_start, ec->filename, a, pp, report_context);
+        // Fill me in
         }
+        
     }
     else
     {

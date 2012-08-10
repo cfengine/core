@@ -1614,7 +1614,6 @@ enum cfd_menu
 {
     cfd_menu_delta,
     cfd_menu_full,
-    cfd_menu_relay,
     cfd_collect_call,
     cfd_menu_error
 };

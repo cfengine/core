@@ -882,6 +882,13 @@ static void VerifyThingsPromise(Promise *pp)
             snprintf(id, CF_MAXVARSIZE-1, "promisers::%s", pp->promiser);
             PrependRScalar(&list, "Comment", CF_SCALAR);
             PrependRScalar(&topics, id, CF_SCALAR);
+            
+            for (rps = a.synonyms; rps != NULL; rps = rps->next)
+            {
+                snprintf(id, CF_MAXVARSIZE-1, "promisers::%s", rps->item);
+                PrependRScalar(&topics, id, CF_SCALAR);
+            }
+
             AddOccurrence(&OCCURRENCES, pp->ref, list, cfk_literal, topics, pp->classes);
             DeleteRlist(list);
             DeleteRlist(topics);
@@ -996,6 +1003,13 @@ static void VerifyTopicPromise(Promise *pp)
             snprintf(id, CF_MAXVARSIZE-1, "promisers::%s", pp->promiser);
             PrependRScalar(&list, "Comment", CF_SCALAR);
             PrependRScalar(&topics, id, CF_SCALAR);
+
+            for (rps = a.synonyms; rps != NULL; rps = rps->next)
+            {
+                snprintf(id, CF_MAXVARSIZE-1, "promisers::%s", rps->item);
+                PrependRScalar(&topics, id, CF_SCALAR);
+            }
+            
             AddOccurrence(&OCCURRENCES, pp->ref, list, cfk_literal, topics, pp->classes);
             DeleteRlist(list);
             DeleteRlist(topics);

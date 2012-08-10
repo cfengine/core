@@ -212,7 +212,7 @@ int main(int argc, char *argv[])
        {
           char buffer[CF_BUFSIZE];
           
-                Constellation_HostStory(policy, STORY, buffer, CF_BUFSIZE);
+                Nova_HostStory(policy, STORY, buffer, CF_BUFSIZE);
                 printf("%s\n", buffer);
 
        }
@@ -221,11 +221,11 @@ int main(int argc, char *argv[])
           strcpy(TOPIC_CMD, STORY);
           
           printf("Let's start with stories about cause-effect:\n\n");
-          Constellation_GenerateStoriesCmdLine(TOPIC_CMD, cfi_cause);
+          Nova_GenerateStoriesCmdLine(TOPIC_CMD, cfi_cause);
           printf("Now looking for stories about connections between things:\n\n");
-          Constellation_GenerateStoriesCmdLine(TOPIC_CMD, cfi_connect);
+          Nova_GenerateStoriesCmdLine(TOPIC_CMD, cfi_connect);
           printf("Anything about structure:\n\n");
-          Constellation_GenerateStoriesCmdLine(TOPIC_CMD, cfi_part);
+          Nova_GenerateStoriesCmdLine(TOPIC_CMD, cfi_part);
        }
 
        exit(0);

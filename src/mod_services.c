@@ -40,7 +40,7 @@ static const BodySyntax CF_SERVMETHOD_BODY[] =
 
 static const BodySyntax CF_SERVICES_BODIES[] =
 {
-    {"service_policy", cf_opts, "start,stop,disable", "Policy for cfengine service status"},
+    {"service_policy", cf_opts, "start,stop,disable,reload", "Policy for cfengine service status"},
     {"service_dependencies", cf_slist, CF_IDRANGE, "A list of services on which the named service abstraction depends"},
     {"service_method", cf_body, CF_SERVMETHOD_BODY, "Details of promise body for the service abtraction feature"},
     {NULL, cf_notype, NULL, NULL}

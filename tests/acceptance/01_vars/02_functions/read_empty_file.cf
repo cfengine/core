@@ -1,0 +1,37 @@
+# Test that empty file is succesfully read by readfile() function
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle agent init
+{
+files:
+  "$(G.testfile)"
+    create => "true";
+}
+
+bundle agent test
+{
+vars:
+  "value" string => readfile("$(G.testfile)", 10000);
+}
+
+bundle agent check
+{
+classes:
+  "ok" expression => strcmp("$(test.value)", "");
+
+reports:
+  DEBUG::
+    "$(test.value)";
+  ok::
+    "$(this.promise_filename) Pass";
+  !ok::
+    "$(this.promise_filename) FAIL";
+}

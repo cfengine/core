@@ -30,7 +30,6 @@
 /*******************************************************************/
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
 /*********************************************************************/
 
@@ -374,4 +373,14 @@ int GetMyHostInfo(char nameBuf[MAXHOSTNAMELEN], char ipBuf[MAXIP4CHARLEN])
     }
 
     return false;
+}
+
+/*****************************************************************************/
+
+unsigned short SocketFamily(int sd)
+{
+   struct sockaddr sa;
+   size_t len;
+   getsockname(sd, &sa, &len);
+   return sa.sa_family;
 }

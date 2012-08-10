@@ -1,0 +1,11 @@
+
+
+@verbatim
+bundle agent mymethod(a,b)
+{
+defaults:
+
+  "a" string => "AAAAAAAAA",   if_match_regex => "";
+  "b" string => "BBBBBBBBB",   if_match_regex => "";
+}
+@end verbatim

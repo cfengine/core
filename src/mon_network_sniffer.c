@@ -23,10 +23,15 @@
 */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
+
+#include "sysinfo.h"
+#include "files_names.h"
 #include "monitoring.h"
+#include "item_lib.h"
 
 /* Constants */
+
+#define CF_TCPDUMP_COMM "/usr/sbin/tcpdump -t -n -v"
 
 static const int SLEEPTIME = 2.5 * 60;  /* Should be a fraction of 5 minutes */
 

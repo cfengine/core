@@ -38,9 +38,9 @@ reports:
 
    "/etc/passwd except $(const.n)"
 
-     printfile => pr("/etc/passwd","5");
+     printfile => pr("/etc/passwd","5"),
 
-    # showstate => { "otherprocs", "rootprocs" };
+     showstate => { "otherprocs", "rootprocs" };
 
 }
 

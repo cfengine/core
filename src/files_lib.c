@@ -22,9 +22,12 @@
   included file COSL.txt.
 */
 
-#include "files_lib.h"
+#include "cf3.defs.h"
 
-#include "cf3.extern.h"
+#include <assert.h>
+
+#include "files_lib.h"
+#include "item_lib.h"
 
 static Item *NextItem(Item *ip);
 static int ItemListsEqual(Item *list1, Item *list2, int report, Attributes a, Promise *pp);
@@ -248,6 +251,79 @@ ssize_t FileRead(const char *filename, char *buffer, size_t bufsize)
     }
     fclose(f);
     return ret;
+}
+
+/*********************************************************************/
+
+bool FileWriteOver(char *filename, char *contents)
+{
+    FILE *fp = fopen(filename, "w");
+
+    if(fp == NULL)
+    {
+        return false;
+    }
+
+    int bytes_to_write = strlen(contents);
+
+    size_t bytes_written = fwrite(contents, 1, bytes_to_write, fp);
+
+    bool res = true;
+
+    if(bytes_written != bytes_to_write)
+    {
+        res = false;
+    }
+
+    if(fclose(fp) != 0)
+    {
+        res = false;
+    }
+
+    return res;
+}
+
+
+/*********************************************************************/
+
+ssize_t FileReadMax(char **output, char *filename, size_t size_max)
+// TODO: there is CfReadFile and FileRead with slightly different semantics, merge
+// free(output) should be called on positive return value
+{
+    assert(size_max > 0);
+
+    struct stat sb;
+    if (cfstat(filename, &sb) == -1)
+    {
+        return -1;
+    }
+
+    FILE *fin;
+
+    if ((fin = fopen(filename, "r")) == NULL)
+    {
+        return -1;
+    }
+
+    ssize_t bytes_to_read = MIN(sb.st_size, size_max);
+    *output = xcalloc(bytes_to_read + 1, 1);
+    ssize_t bytes_read = fread(*output, 1, bytes_to_read, fin);
+
+    if (ferror(fin))
+    {
+        CfOut(cf_error, "ferror", "FileContentsRead: Error while reading file %s", filename);
+        fclose(fin);
+        free(*output);
+        *output = NULL;
+        return -1;
+    }
+
+    if (fclose(fin) != 0)
+    {
+        CfOut(cf_error, "fclose", "FileContentsRead: Could not close file %s", filename);
+    }
+
+    return bytes_read;
 }
 
 /*********************************************************************/

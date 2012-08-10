@@ -33,7 +33,6 @@
 #include "bool.h"
 #include "string_expressions.h"
 #include "cf3.defs.h"
-#include "prototypes3.h"
 
 /* <qname> */
 

@@ -23,7 +23,7 @@
 */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
+#include "item_lib.h"
 
 /*****************************************************************************/
 /* This library creates a simple indexed array of lists for optimization of
@@ -68,6 +68,28 @@ AlphaList *CopyAlphaListPointers(AlphaList *ap, AlphaList *al)
     if (ap != NULL)
     {
         memcpy(ap, al, sizeof(AlphaList));
+    }
+
+    return ap;
+}
+
+/*****************************************************************************/
+
+AlphaList *DupAlphaListPointers(AlphaList *ap, AlphaList *al)
+{
+    if (ap != NULL)
+    {
+        memcpy(ap, al, sizeof(AlphaList));
+    }
+
+    for (int i = 0; i < CF_ALPHABETSIZE; i++)
+    {
+        Item *tmp = NULL;
+        if (al->list[i])
+        {
+            CopyList(&tmp, al->list[i]);
+            al->list[i] = tmp;
+        }
     }
 
     return ap;

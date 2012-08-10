@@ -41,7 +41,7 @@ struct Rlist_
     Rlist *next;
 };
 
-#include "cf.defs.h"
+#include "platform.h"
 #include "writer.h"
 #include "json.h"
 
@@ -60,17 +60,17 @@ JsonElement *RvalToJson(Rval rval);
 int PrintRval(char *buffer, int bufsize, Rval rval);
 int PrintRlist(char *buffer, int bufsize, Rlist *list);
 Rlist *ParseShownRlist(char *string);
-int IsStringIn(Rlist *list, char *s);
-int IsIntIn(Rlist *list, int i);
+bool IsStringIn(const Rlist *list, const char *s);
+bool IsIntIn(const Rlist *list, int i);
 Rlist *KeyInRlist(Rlist *list, char *key);
-int RlistLen(Rlist *start);
+int RlistLen(const Rlist *start);
 void PopStack(Rlist **liststart, void **item, size_t size);
 void PushStack(Rlist **liststart, void *item);
-int IsInListOfRegex(Rlist *list, char *str);
+bool IsInListOfRegex(const Rlist *list, const char *str);
 
 Rval CopyRvalItem(Rval rval);
 void DeleteRvalItem(Rval rval);
-Rlist *CopyRlist(Rlist *list);
+Rlist *CopyRlist(const Rlist *list);
 void DeleteRlist(Rlist *list);
 void DeleteRlistEntry(Rlist **liststart, Rlist *entry);
 Rlist *AppendRlistAlien(Rlist **start, void *item);
@@ -84,17 +84,16 @@ Rlist *PrependRScalar(Rlist **start, void *item, char type);
 Rlist *PrependRlist(Rlist **start, void *item, char type);
 Rlist *AppendRlist(Rlist **start, const void *item, char type);
 Rlist *PrependRlist(Rlist **start, void *item, char type);
-Rlist *SplitStringAsRList(char *string, char sep);
-Rlist *SplitRegexAsRList(char *string, char *regex, int max, int purge);
-Rlist *SortRlist(Rlist *list, int (*CompareItems) ());
-Rlist *AlphaSortRListNames(Rlist *list);
+Rlist *SplitStringAsRList(const char *string, char sep);
+Rlist *SplitRegexAsRList(const char *string, const char *regex, int max, int purge);
 
 Rlist *RlistAppendReference(Rlist **start, void *item, char type);
 
-void ShowRlist(FILE *fp, Rlist *list);
+void ShowRlist(FILE *fp, const Rlist *list);
 void ShowRval(FILE *fp, Rval rval);
 
 void RvalPrint(Writer *writer, Rval rval);
+void RlistPrint(Writer *writer, const Rlist *list);
 
 Rlist *RlistAt(Rlist *start, size_t index);
 

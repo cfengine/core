@@ -23,14 +23,11 @@
 
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: verify_databases.c                                                  */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
+
+#include "promises.h"
+#include "files_names.h"
+#include "conversion.h"
 
 static int CheckDatabaseSanity(Attributes a, Promise *pp);
 static void VerifySQLPromise(Attributes a, Promise *pp);
@@ -139,6 +136,15 @@ static void VerifySQLPromise(Attributes a, Promise *pp)
     if (strlen(database) == 0)
     {
         strncpy(database, pp->promiser, CF_MAXVARSIZE - 1);
+    }
+
+    if (a.database.operation == NULL)
+    {
+        cfPS(cf_error, CF_FAIL, "", pp, a ,
+             "Missing database_operation in database promise");
+        PromiseRef(cf_error, pp);
+        YieldCurrentLock(thislock);
+        return;
     }
 
     if (strcmp(a.database.operation, "delete") == 0)

@@ -4,7 +4,6 @@
 #include <cmockery.h>
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
 static void test_create_destroy(void **state)
 {

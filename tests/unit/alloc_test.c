@@ -1,5 +1,4 @@
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
 #include <setjmp.h>
 #include <cmockery.h>
@@ -44,15 +43,3 @@ int main()
 
     return run_tests(tests);
 }
-
-/* LCOV_EXCL_START */
-
-/* Stub out functions we do not use in test */
-
-void FatalError(char *s, ...)
-{
-    fail();
-    exit(42);
-}
-
-/* LCOV_EXCL_STOP */

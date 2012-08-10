@@ -23,21 +23,23 @@
   included file COSL.txt.
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: cfknow.c                                                            */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "generic_agent.h"
-#include "cf3.extern.h"
+
+#include "env_context.h"
+#include "constraints.h"
+#include "files_names.h"
 #include "ontology.h"
 #include "export_xml.h"
+#include "item_lib.h"
+#include "sort.h"
+#include "conversion.h"
+#include "reporting.h"
+#include "expand.h"
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);
 
-static void KeepKnowControlPromises(void);
+static void KeepKnowControlPromises(Policy *policy);
 static void KeepKnowledgePromise(Promise *pp);
 static void VerifyTopicPromise(Promise *pp);
 static void VerifyThingsPromise(Promise *pp);
@@ -45,13 +47,6 @@ static void VerifyOccurrencePromises(Promise *pp);
 static void VerifyInferencePromise(Promise *pp);
 static void WriteKMDB(void);
 static void GenerateManual(void);
-
-#ifdef HAVE_CONSTELLATION
-static void CfGenerateStories(char *query, enum storytype type);
-#endif
-static void CfGenerateTestData(int count);
-static void CfRemoveTestData(void);
-static void CfUpdateTestData(void);
 static void ShowSingletons(void);
 static void ShowWords(void);
 static void GenerateXml(void);
@@ -67,7 +62,7 @@ static void AddOccurrence(Occurrence **list, char *reference, Rlist *represents,
 static Topic *TopicExists(char *topic_name, char *topic_type);
 static TopicAssociation *AssociationExists(TopicAssociation *list, char *fwd, char *bwd);
 static Occurrence *OccurrenceExists(Occurrence *list, char *locator, enum representations repy_type, char *s);
-static void KeepPromiseBundles(void);
+static void KeepPromiseBundles(Policy *policy, const ReportContext *report_context);
 int GetTopicPid(char *classified_topic);
 
 /*******************************************************************/
@@ -79,7 +74,7 @@ static Topic *TOPICHASH[CF_HASHTABLESIZE];
 int GLOBAL_ID = 1;              // Used as a primary key for convenience, 0 reserved
 static int BGOALS = false;
 
-extern BodySyntax CFK_CONTROLBODY[];
+extern const BodySyntax CFK_CONTROLBODY[];
 
 enum typesequence
 {
@@ -183,15 +178,16 @@ int main(int argc, char *argv[])
 {
     GenericAgentConfig config = CheckOpts(argc, argv);
 
-    GenericInitialize("knowledge", config);
+    ReportContext *report_context = OpenReports("knowledge");
+    Policy *policy = GenericInitialize("knowledge", config, report_context);
     ThisAgentInit();
 
-    KeepKnowControlPromises();
+    KeepKnowControlPromises(policy);
+
+    #if defined(HAVE_NOVA) && defined(HAVE_LIBMONGOC)
 
     if (BGOALS)
     {
-#ifdef HAVE_NOVA
-# ifdef HAVE_LIBMONGOC
     char buffer[CF_BUFSIZE], *sp, name[CF_BUFSIZE],desc[CF_BUFSIZE], *end;
     
     Nova_GetUniqueBusinessGoals(buffer, CF_BUFSIZE);
@@ -208,45 +204,39 @@ int main(int argc, char *argv[])
        printf("%s => %s\n",name,desc);
        }
     return 0;
-#endif
-#endif    
     }
     
     if (strlen(STORY) > 0)
     {
-#ifdef HAVE_CONSTELLATION
        if (strncmp(STORY, "SHA=", 4) == 0)
        {
           char buffer[CF_BUFSIZE];
           
-                Constellation_HostStory(STORY, buffer, CF_BUFSIZE);
+                Nova_HostStory(policy, STORY, buffer, CF_BUFSIZE);
                 printf("%s\n", buffer);
+
        }
        else
        {
           strcpy(TOPIC_CMD, STORY);
           
           printf("Let's start with stories about cause-effect:\n\n");
-          CfGenerateStories(TOPIC_CMD, cfi_cause);
+          Nova_GenerateStoriesCmdLine(TOPIC_CMD, cfi_cause);
           printf("Now looking for stories about connections between things:\n\n");
-          CfGenerateStories(TOPIC_CMD, cfi_connect);
+          Nova_GenerateStoriesCmdLine(TOPIC_CMD, cfi_connect);
           printf("Anything about structure:\n\n");
-          CfGenerateStories(TOPIC_CMD, cfi_part);
+          Nova_GenerateStoriesCmdLine(TOPIC_CMD, cfi_part);
        }
-#endif
+
        exit(0);
-            
     }
     else if (strlen(FINDTOPIC) > 0)
     {
-#ifdef HAVE_NOVA
-# ifdef HAVE_LIBMONGOC
-         Nova_ShowTopic(FINDTOPIC);
-# endif
-         exit(0);
-#endif    
+        Nova_ShowTopic(FINDTOPIC);
+        exit(0);
     }
-    
+#endif
+
     if (GENERATE_XML)
     {
         GenerateXml();
@@ -256,7 +246,7 @@ int main(int argc, char *argv[])
         int complete;
         double percent;
 
-        KeepPromiseBundles();
+        KeepPromiseBundles(policy, report_context);
         WriteKMDB();
         GenerateManual();
         ShowWords();
@@ -270,6 +260,7 @@ int main(int argc, char *argv[])
         CfOut(cf_inform, "", " -> Hit probability (efficiency) yields %d/%d = %.4lf%%\n", CF_OCCUR, CF_TOPICS, percent);
     }
 
+    ReportContextDestroy(report_context);
     return 0;
 }
 
@@ -374,17 +365,30 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
         case 't':
             if (atoi(optarg))
             {
-                CfGenerateTestData(atoi(optarg));
+                #if defined(HAVE_NOVA) && defined(HAVE_LIBMONGOC)
+                Nova_GenerateTestData(atoi(optarg));
+                #else
+                CfOut(cf_error, "", "Option avaliable only in Enterprise edition");
+                #endif
+
                 exit(0);
             }
             break;
 
         case 'r':
-            CfRemoveTestData();
+            #if defined(HAVE_NOVA) && defined(HAVE_LIBMONGOC)
+            Nova_RemoveTestData();
+            #else
+            CfOut(cf_error, "", "Option avaliable only in Enterprise edition");
+            #endif
             exit(0);
 
         case 'u':
-            CfUpdateTestData();
+            #if defined(HAVE_NOVA) && defined(HAVE_LIBMONGOC)
+            Nova_UpdateTestData();
+            #else
+            CfOut(cf_error, "", "Option avaliable only in Enterprise edition");
+            #endif
             exit(0);
 
         case 'T':
@@ -417,12 +421,12 @@ static void ThisAgentInit(void)
 
 /*****************************************************************************/
 
-static void KeepKnowControlPromises()
+static void KeepKnowControlPromises(Policy *policy)
 {
     Constraint *cp;
     Rval retval;
 
-    for (cp = ControlBodyConstraints(cf_know); cp != NULL; cp = cp->next)
+    for (cp = ControlBodyConstraints(policy, cf_know); cp != NULL; cp = cp->next)
     {
         if (IsExcluded(cp->classes))
         {
@@ -554,7 +558,7 @@ static void KeepKnowControlPromises()
 
 /*****************************************************************************/
 
-static void KeepPromiseBundles()
+static void KeepPromiseBundles(Policy *policy, const ReportContext *report_context)
 {
     Bundle *bp;
     SubType *sp;
@@ -596,7 +600,7 @@ static void KeepPromiseBundles()
             break;
         }
 
-        if (!(GetBundle(name, "knowledge") || (GetBundle(name, "common"))))
+        if (!(GetBundle(policy, name, "knowledge") || (GetBundle(policy, name, "common"))))
         {
             CfOut(cf_error, "", " !! Bundle \"%s\" listed in the bundlesequence was not found\n", name);
             ok = false;
@@ -627,7 +631,7 @@ static void KeepPromiseBundles()
                 break;
             }
 
-            if ((bp = GetBundle(name, "knowledge")) || (bp = GetBundle(name, "common")))
+            if ((bp = GetBundle(policy, name, "knowledge")) || (bp = GetBundle(policy, name, "common")))
             {
                 BannerBundle(bp, params);
                 AugmentScope(bp->name, bp->args, params);
@@ -643,7 +647,7 @@ static void KeepPromiseBundles()
 
             for (pp = sp->promiselist; pp != NULL; pp = pp->next)
             {
-                ExpandPromise(cf_know, bp->name, pp, KeepKnowledgePromise);
+                ExpandPromise(cf_know, bp->name, pp, KeepKnowledgePromise, report_context);
             }
         }
     }
@@ -695,42 +699,6 @@ static void KeepKnowledgePromise(Promise *pp)
         VerifyReportPromise(pp);
         return;
     }
-}
-
-/*********************************************************************/
-
-#ifdef HAVE_CONSTELLATION
-void CfGenerateStories(char *query, enum storytype type)
-{
-    Constellation_GenerateStoriesCmdLine(query, type);
-}
-#endif
-
-/*********************************************************************/
-
-void CfGenerateTestData(int count)
-{
-#ifdef HAVE_NOVA
-    Nova_GenerateTestData(count);
-#endif
-}
-
-/*********************************************************************/
-
-void CfUpdateTestData(void)
-{
-#ifdef HAVE_NOVA
-    Nova_UpdateTestData();
-#endif
-}
-
-/*********************************************************************/
-
-void CfRemoveTestData(void)
-{
-#ifdef HAVE_NOVA
-    Nova_RemoveTestData();
-#endif
 }
 
 /*********************************************************************/
@@ -896,6 +864,15 @@ static void VerifyThingsPromise(Promise *pp)
                                 pp->promiser);
         }
 
+        // Add bundle reference
+
+        rps = NULL;
+        PrependRScalar(&rps, pp->bundle, CF_SCALAR);
+        
+        AddTopicAssociation(tp, &(tp->associations), KM_MENTIONS_F, KM_MENTIONS_B, rps, true, rp->item, pp->promiser);
+
+        DeleteRlist(rps);
+        
         // Treat comments as occurrences of information.
 
         if (pp->ref)
@@ -905,6 +882,13 @@ static void VerifyThingsPromise(Promise *pp)
             snprintf(id, CF_MAXVARSIZE-1, "promisers::%s", pp->promiser);
             PrependRScalar(&list, "Comment", CF_SCALAR);
             PrependRScalar(&topics, id, CF_SCALAR);
+            
+            for (rps = a.synonyms; rps != NULL; rps = rps->next)
+            {
+                snprintf(id, CF_MAXVARSIZE-1, "promisers::%s", rps->item);
+                PrependRScalar(&topics, id, CF_SCALAR);
+            }
+
             AddOccurrence(&OCCURRENCES, pp->ref, list, cfk_literal, topics, pp->classes);
             DeleteRlist(list);
             DeleteRlist(topics);
@@ -914,12 +898,12 @@ static void VerifyThingsPromise(Promise *pp)
         {
         Rlist *list = NULL, *topics = NULL;
 
-            PrependRScalar(&list, handle, CF_SCALAR);
-            AddTopicAssociation(tp, &(tp->associations), "is the promise of", "stands for", list, true, rp->item,
+            snprintf(id, CF_MAXVARSIZE, "handles::%s", handle);
+            PrependRScalar(&list, id, CF_SCALAR);
+            AddTopicAssociation(tp, &(tp->associations), "is a promise with handles", "is a handle for", list, true, rp->item,
                                 pp->promiser);
             DeleteRlist(list);
             list = NULL;
-            snprintf(id, CF_MAXVARSIZE, "handles::%s", handle);
             PrependRScalar(&list, "promise handle", CF_SCALAR);
             PrependRScalar(&topics, id, CF_SCALAR);
             AddOccurrence(&OCCURRENCES, pp->ref, list, cfk_literal,  topics, pp->classes);
@@ -1001,6 +985,15 @@ static void VerifyTopicPromise(Promise *pp)
             PrependRScalar(&(a.synonyms), otp->topic_name, CF_SCALAR);
         }
 
+        // Add bundle reference
+
+        rps = NULL;
+        PrependRScalar(&rps, pp->bundle, CF_SCALAR);
+
+        AddTopicAssociation(tp, &(tp->associations), KM_MENTIONS_F, KM_MENTIONS_B, rps, true, rp->item, pp->promiser);
+
+        DeleteRlist(rps);
+        
         // Treat comments as occurrences of information.
 
         if (pp->ref)
@@ -1010,6 +1003,13 @@ static void VerifyTopicPromise(Promise *pp)
             snprintf(id, CF_MAXVARSIZE-1, "promisers::%s", pp->promiser);
             PrependRScalar(&list, "Comment", CF_SCALAR);
             PrependRScalar(&topics, id, CF_SCALAR);
+
+            for (rps = a.synonyms; rps != NULL; rps = rps->next)
+            {
+                snprintf(id, CF_MAXVARSIZE-1, "promisers::%s", rps->item);
+                PrependRScalar(&topics, id, CF_SCALAR);
+            }
+            
             AddOccurrence(&OCCURRENCES, pp->ref, list, cfk_literal, topics, pp->classes);
             DeleteRlist(list);
             DeleteRlist(topics);
@@ -1019,12 +1019,12 @@ static void VerifyTopicPromise(Promise *pp)
         {
         Rlist *list = NULL, *topics = NULL;
 
-            PrependRScalar(&list, handle, CF_SCALAR);
-            AddTopicAssociation(tp, &(tp->associations), "is the promise of", "stands for", list, true, rp->item,
+            snprintf(id, CF_MAXVARSIZE, "handles::%s", handle);
+            PrependRScalar(&list, id, CF_SCALAR);
+            AddTopicAssociation(tp, &(tp->associations), "is a promise with handles", "is a handle for", list, true, rp->item,
                                 pp->promiser);
             DeleteRlist(list);
             list = NULL;
-            snprintf(id, CF_MAXVARSIZE, "handles::%s", handle);
             PrependRScalar(&list, "promise handle", CF_SCALAR);
             PrependRScalar(&topics, id, CF_SCALAR);
             AddOccurrence(&OCCURRENCES, pp->ref, list, cfk_literal, topics, pp->classes);

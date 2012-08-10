@@ -22,25 +22,29 @@
   included file COSL.txt.
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: env_monitor.c                                                       */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
+
+#include "env_context.h"
 #include "monitoring.h"
 #include "granules.h"
+#include "dbm_api.h"
+#include "policy.h"
+#include "promises.h"
+#include "item_lib.h"
+#include "conversion.h"
+#include "reporting.h"
+#include "expand.h"
 
 #include <math.h>
-#include "dbm_api.h"
 
 /*****************************************************************************/
 /* Globals                                                                   */
 /*****************************************************************************/
 
 #define CF_ENVNEW_FILE   "env_data.new"
+#define cf_noise_threshold 6    /* number that does not warrent large anomaly status */
+#define MON_THRESHOLD_HIGH 1000000      // samples should stay below this threshold
+#define LDT_BUFSIZE 10
 
 static char ENVFILE_NEW[CF_BUFSIZE];
 static char ENVFILE[CF_BUFSIZE];
@@ -77,10 +81,10 @@ int NO_FORK = false;
 
 static void GetDatabaseAge(void);
 static void LoadHistogram(void);
-static void GetQ(void);
+static void GetQ(const Policy *policy, const ReportContext *report_context);
 static Averages EvalAvQ(char *timekey);
 static void ArmClasses(Averages newvals, char *timekey);
-static void GatherPromisedMeasures(void);
+static void GatherPromisedMeasures(const Policy *policy, const ReportContext *report_context);
 
 static void LeapDetection(void);
 static Averages *GetCurrentAverages(char *timekey);
@@ -231,7 +235,7 @@ static void LoadHistogram(void)
 
 /*********************************************************************/
 
-void MonitorStartServer(int argc, char **argv)
+void MonitorStartServer(const Policy *policy, const ReportContext *report_context)
 {
     char timekey[CF_SMALLBUF];
     Averages averages;
@@ -278,7 +282,7 @@ void MonitorStartServer(int argc, char **argv)
 
     while (true)
     {
-        GetQ();
+        GetQ(policy, report_context);
         snprintf(timekey, sizeof(timekey), "%s", GenTimeKey(time(NULL)));
         averages = EvalAvQ(timekey);
         LeapDetection();
@@ -294,7 +298,7 @@ void MonitorStartServer(int argc, char **argv)
 
 /*********************************************************************/
 
-static void GetQ(void)
+static void GetQ(const Policy *policy, const ReportContext *report_context)
 {
     CfDebug("========================= GET Q ==============================\n");
 
@@ -312,21 +316,22 @@ static void GetQ(void)
     MonTempGatherData(CF_THIS);
 #endif /* NOT MINGW */
     MonOtherGatherData(CF_THIS);
-    GatherPromisedMeasures();
+    GatherPromisedMeasures(policy, report_context);
 }
 
 /*********************************************************************/
 
 static Averages EvalAvQ(char *t)
 {
-    Averages *currentvals, newvals;
+    Averages *lastweek_vals, newvals;
+    double last5_vals[CF_OBSERVABLES];
     double This[CF_OBSERVABLES];
     char name[CF_MAXVARSIZE];
     int i;
 
     Banner("Evaluating and storing new weekly averages");
 
-    if ((currentvals = GetCurrentAverages(t)) == NULL)
+    if ((lastweek_vals = GetCurrentAverages(t)) == NULL)
     {
         CfOut(cf_error, "", "Error reading average database");
         exit(1);
@@ -344,43 +349,57 @@ static Averages EvalAvQ(char *t)
 
         /* Overflow protection */
 
-        if (currentvals->Q[i].expect < 0)
+        if (lastweek_vals->Q[i].expect < 0)
         {
-            currentvals->Q[i].expect = 0;
+            lastweek_vals->Q[i].expect = 0;
         }
 
-        if (currentvals->Q[i].q < 0)
+        if (lastweek_vals->Q[i].q < 0)
         {
-            currentvals->Q[i].q = 0;
+            lastweek_vals->Q[i].q = 0;
         }
 
-        if (currentvals->Q[i].var < 0)
+        if (lastweek_vals->Q[i].var < 0)
         {
-            currentvals->Q[i].var = 0;
+            lastweek_vals->Q[i].var = 0;
         }
 
+        // lastweek_vals is last week's stored data
+        
         This[i] =
-            RejectAnomaly(CF_THIS[i], currentvals->Q[i].expect, currentvals->Q[i].var, LOCALAV.Q[i].expect,
+            RejectAnomaly(CF_THIS[i], lastweek_vals->Q[i].expect, lastweek_vals->Q[i].var, LOCALAV.Q[i].expect,
                           LOCALAV.Q[i].var);
 
         newvals.Q[i].q = This[i];
         LOCALAV.Q[i].q = This[i];
 
-        CfDebug("Current %s.q %lf\n", name, currentvals->Q[i].q);
-        CfDebug("Current %s.var %lf\n", name, currentvals->Q[i].var);
-        CfDebug("Current %s.ex %lf\n", name, currentvals->Q[i].expect);
-        CfDebug("CF_THIS[%s] = %lf\n", name, CF_THIS[i]);
-        CfDebug("This[%s] = %lf\n", name, This[i]);
+        CfDebug("Previous week's %s.q %lf\n", name, lastweek_vals->Q[i].q);
+        CfDebug("Previous week's %s.var %lf\n", name, lastweek_vals->Q[i].var);
+        CfDebug("Previous week's %s.ex %lf\n", name, lastweek_vals->Q[i].expect);
 
-        newvals.Q[i].expect = WAverage(This[i], currentvals->Q[i].expect, WAGE);
+        CfDebug("Just measured: CF_THIS[%s] = %lf\n", name, CF_THIS[i]);
+        CfDebug("Just sanitized: This[%s] = %lf\n", name, This[i]);
+
+        newvals.Q[i].expect = WAverage(This[i], lastweek_vals->Q[i].expect, WAGE);
         LOCALAV.Q[i].expect = WAverage(newvals.Q[i].expect, LOCALAV.Q[i].expect, ITER);
 
-        newvals.Q[i].dq = newvals.Q[i].q - currentvals->Q[i].q;
-        LOCALAV.Q[i].dq = newvals.Q[i].q - currentvals->Q[i].q;
+        if (last5_vals[i] > 0)
+        {
+            newvals.Q[i].dq = newvals.Q[i].q - last5_vals[i];
+            LOCALAV.Q[i].dq = newvals.Q[i].q - last5_vals[i];
+        }
+        else
+        {
+            newvals.Q[i].dq = 0;
+            LOCALAV.Q[i].dq = 0;           
+        }
 
-        delta2 = (This[i] - currentvals->Q[i].expect) * (This[i] - currentvals->Q[i].expect);
+        // Save the last measured value as the value "from five minutes ago" to get the gradient
+        last5_vals[i] = newvals.Q[i].q;
 
-        if (currentvals->Q[i].var > delta2 * 2.0)
+        delta2 = (This[i] - lastweek_vals->Q[i].expect) * (This[i] - lastweek_vals->Q[i].expect);
+
+        if (lastweek_vals->Q[i].var > delta2 * 2.0)
         {
             /* Clean up past anomalies */
             newvals.Q[i].var = delta2;
@@ -388,7 +407,7 @@ static Averages EvalAvQ(char *t)
         }
         else
         {
-            newvals.Q[i].var = WAverage(delta2, currentvals->Q[i].var, WAGE);
+            newvals.Q[i].var = WAverage(delta2, lastweek_vals->Q[i].var, WAGE);
             LOCALAV.Q[i].var = WAverage(newvals.Q[i].var, LOCALAV.Q[i].var, ITER);
         }
 
@@ -405,7 +424,7 @@ static Averages EvalAvQ(char *t)
     }
 
     UpdateAverages(t, newvals);
-    UpdateDistributions(t, currentvals);        /* Distribution about mean */
+    UpdateDistributions(t, lastweek_vals);        /* Distribution about mean */
 
     return newvals;
 }
@@ -507,6 +526,8 @@ static void PublishEnvironment(Item *classes)
 
     cf_rename(ENVFILE_NEW, ENVFILE);
 }
+
+/*********************************************************************/
 
 static void ArmClasses(Averages av, char *timekey)
 {
@@ -635,19 +656,28 @@ static void ArmClasses(Averages av, char *timekey)
 
     // Port addresses
 
-    for (ip = MON_TCP6; ip != NULL; ip=ip->next)
+    if (ListLen(MON_TCP6) + ListLen(MON_TCP4) > 512)
     {
-        snprintf(buff,CF_BUFSIZE,"tcp6_port_addr[%s]=%s",ip->name,ip->classes);
-        AppendItem(&classlist,buff,NULL);       
+        CfOut(cf_inform, "", "Disabling address information of TCP ports in LISTEN state: more than 512 listening ports are detected");
     }
-
-    for (ip = MON_TCP4; ip != NULL; ip=ip->next)
+    else
     {
-        snprintf(buff,CF_BUFSIZE,"tcp4_port_addr[%s]=%s",ip->name,ip->classes);
-        AppendItem(&classlist,buff,NULL);       
+        for (ip = MON_TCP6; ip != NULL; ip=ip->next)
+        {
+            snprintf(buff,CF_BUFSIZE,"tcp6_port_addr[%s]=%s",ip->name,ip->classes);
+            AppendItem(&classlist,buff,NULL);       
+        }
+
+        for (ip = MON_TCP4; ip != NULL; ip=ip->next)
+        {
+            snprintf(buff,CF_BUFSIZE,"tcp4_port_addr[%s]=%s",ip->name,ip->classes);
+            AppendItem(&classlist,buff,NULL);       
+        }
     }
 
     PublishEnvironment(classlist);
+
+    DeleteItemList(classlist);
 }
 
 /*****************************************************************************/
@@ -1046,14 +1076,13 @@ static double RejectAnomaly(double new, double average, double variance, double 
 /* Level 5                                                     */
 /***************************************************************/
 
-static void GatherPromisedMeasures(void)
+static void GatherPromisedMeasures(const Policy *policy, const ReportContext *report_context)
 {
-    Bundle *bp;
     SubType *sp;
     Promise *pp;
     char *scope;
 
-    for (bp = BUNDLES; bp != NULL; bp = bp->next)       /* get schedule */
+    for (const Bundle *bp = policy->bundles; bp != NULL; bp = bp->next)       /* get schedule */
     {
         scope = bp->name;
         SetNewScope(bp->name);
@@ -1064,7 +1093,7 @@ static void GatherPromisedMeasures(void)
             {
                 for (pp = sp->promiselist; pp != NULL; pp = pp->next)
                 {
-                    ExpandPromise(cf_monitor, scope, pp, KeepMonitorPromise);
+                    ExpandPromise(cf_monitor, scope, pp, KeepMonitorPromise, report_context);
                 }
             }
         }

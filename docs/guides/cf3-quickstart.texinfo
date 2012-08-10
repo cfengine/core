@@ -468,6 +468,13 @@ ownership is the @samp{sys} group.
 @item Open a new terminal window and log on to cfhub. 
 @item Find the hostname or IP address of cfhub, here we will assume the address is 172.16.100.134
 @item Designate cfhub as the policy server by bootstrapping it using its own IP address:
+@cartouche
+Note: There is a bug in Community 3.3.0 where the default policy files are not copied to @code{/var/cfengine/masterfiles}. Workaround consists in manually copying these files before bootstrap:
+@verbatim
+cp /var/cfengine/share/CoreBase/*.cf /var/cfengine/masterfiles/
+@end verbatim
+This will be corrected in a bugfix release coming soon.
+@end cartouche
 
 @smallexample
 root@@cfhub# /var/cfengine/bin/cf-agent --bootstrap --policy-server 172.16.100.134
@@ -574,7 +581,7 @@ We recommend the following reading:
 @noindent For a complete overview:
 @itemize
 @item Tutorial: @url{http://cfengine.com/manuals/cf3-tutorial.html}
-@item Reference manual: @url{http://cfengine.com/manuals/cf3-reference.html}
+@item Reference manual: @url{http://cfengine.com/manuals/cf3-Reference.html}
 @end itemize
 
 @noindent Links to external resources:

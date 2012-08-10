@@ -45,7 +45,7 @@ struct ParserState
 
     char lval[CF_MAXVARSIZE];
     Rval rval;
-    int isbody;
+    bool references_body;
 
     char *promiser;
     void *promisee;
@@ -54,6 +54,8 @@ struct ParserState
     char currenttype[CF_MAXVARSIZE];
     char *currentstring;
     char *currentclasses;
+
+    Policy *policy;
 
     Bundle *currentbundle;
     Body *currentbody;

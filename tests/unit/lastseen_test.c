@@ -159,6 +159,7 @@ int main()
             unit_test(test_remove),
         };
 
+    PRINT_TEST_BANNER();
     int ret = run_tests(tests);
 
     teardown();
@@ -196,44 +197,9 @@ pthread_mutex_t *cft_output;
 char VIPADDRESS[18];
 RSA *PUBKEY;
 
-void Chop(char *str)
-{
-    fail();
-}
-
-AlphaListIterator AlphaListIteratorInit(AlphaList *al)
-{
-    fail();
-}
-
-const Item *AlphaListIteratorNext(AlphaListIterator *iterator)
-{
-    fail();
-}
-
-Item *IdempPrependItem(Item **liststart, const char *itemstring, const char *classes)
-{
-    fail();
-}
-
-bool IsItemIn(Item *list, const char *item)
-{
-    fail();
-}
-
 int DEBUG;
 
-void DeleteItemList(Item *item)
-{
-    fail();
-}
-
 int MINUSF;
-
-bool IsStrIn(const char *str, const char **strs)
-{
-    fail();
-}
 
 char *MapAddress(char *addr)
 {
@@ -260,7 +226,3 @@ void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhash
     fail();
 }
 
-void *GetConstraintValue(char *lval, Promise *promise, char type)
-{
-    fail();
-}

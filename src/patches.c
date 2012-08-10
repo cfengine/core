@@ -23,17 +23,15 @@
 
 */
 
-/*********************************************************/
-/* patches.c                                             */
-/*                                                       */
-/* Contains any fixes which need to be made because of   */
-/* lack of OS support on a given platform                */
-/* These are conditionally compiled, pending extensions  */
-/* or developments in the OS concerned.                  */
-/*********************************************************/
+/*
+  Contains any fixes which need to be made because of lack of OS support on a
+  given platform These are conditionally compiled, pending extensions or
+  developments in the OS concerned.
+
+  FIXME: move to the pub/ directory or to the apropriate source file.
+*/
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
 static char *cf_format_strtimestamp(struct tm *tm, char *buf);
 
@@ -55,7 +53,7 @@ char *MapNameCopy(const char *s)
         *c = '\\';
     }
 
-    return c;
+    return str;
 }
 
 char *MapName(char *s)
@@ -143,42 +141,36 @@ char *MapNameForward(char *s)
 
 /*********************************************************/
 
-#ifndef HAVE_GETNETGRENT
+#ifndef HAVE_SETNETGRENT
 
-# if !defined __STDC__ || !__STDC__
-/* This is a separate conditional since some stdc systems
-   reject `defined (const)'.  */
-
-#  ifndef const
-#   define const
-#  endif
-# endif
-
-/*********************************************************/
-
-int setnetgrent(netgroup)
-     const char *netgroup;
-
+int setnetgrent(const char *netgroup)
 {
     return 0;
 }
+
+#endif
 
 /**********************************************************/
 
-int getnetgrent(a, b, c)
-     char **a, **b, **c;
+#ifndef HAVE_GETNETGRENT
 
+int getnetgrent(char **machinep, char **userp, char **domainp)
 {
-    *a = NULL;
-    *b = NULL;
-    *c = NULL;
+    *machinep = NULL;
+    *userp = NULL;
+    *domainp = NULL;
     return 0;
 }
 
+#endif
+
 /***********************************************************/
 
-void endnetgrent()
+#ifndef HAVE_ENDNETGRENT
+
+int endnetgrent(void)
 {
+    return 1;
 }
 
 #endif

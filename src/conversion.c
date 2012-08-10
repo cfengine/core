@@ -22,9 +22,14 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
-#include "cf3.extern.h"
+#include "conversion.h"
+
+#include "promises.h"
+#include "files_names.h"
 #include "dbm_api.h"
+#include "mod_access.h"
+#include "item_lib.h"
+#include "reporting.h"
 
 static int IsSpace(char *remainder);
 
@@ -172,6 +177,30 @@ char *EscapeRegex(char *s, char *out, int outSz)
 
 /***************************************************************************/
 
+enum cfmeasurepolicy MeasurePolicy2Value(char *s)
+{
+    static char *names[] = { "average", "sum", "first", "last",  NULL };
+    int i;
+
+    if (s == NULL)
+    {
+        return cfm_nomeasure;
+    }
+
+    for (i = 0; names[i] != NULL; i++)
+    {
+        if (s && strcmp(s, names[i]) == 0)
+        {
+            return (enum cfmeasurepolicy) i;
+        }
+    }
+
+    return cfm_average;
+
+}
+    
+/***************************************************************************/
+    
 enum cfhypervisors Str2Hypervisors(char *s)
 {
     static char *names[] = { "xen", "kvm", "esx", "test",
@@ -991,7 +1020,7 @@ double Str2Double(const char *s)
 
 /****************************************************************************/
 
-void IntRange2Int(char *intrange, long *min, long *max, Promise *pp)
+void IntRange2Int(char *intrange, long *min, long *max, const Promise *pp)
 {
     Item *split;
     long lmax = CF_LOWINIT, lmin = CF_HIGHINIT;
@@ -1088,7 +1117,7 @@ enum cf_acl_inherit Str2AclInherit(char *string)
 
 enum cf_srv_policy Str2ServicePolicy(char *string)
 {
-    static char *text[4] = { "start", "stop", "disable", NULL };
+    static char *text[5] = { "start", "stop", "disable", "restart", NULL };
     int i;
 
     for (i = 0; i < 3; i++)
@@ -1181,25 +1210,35 @@ void TimeToDateStr(time_t t, char *outStr, int outStrSz)
 /*********************************************************************/
 
 const char *GetArg0(const char *execstr)
+/** 
+ * WARNING: Not thread-safe.
+ **/
 {
-    const char *sp;
     static char arg[CF_BUFSIZE];
-    int i = 0;
 
-    for (sp = execstr; *sp != ' ' && *sp != '\0'; sp++)
+    const char *start;
+    char end_delimiter;
+    
+    if(execstr[0] == '\"')
     {
-        i++;
-
-        if (*sp == '\"')
-        {
-            DeEscapeQuotedString(sp, arg);
-            return arg;
-        }
+        start = execstr + 1;
+        end_delimiter = '\"';
+    }
+    else
+    {
+        start = execstr;
+        end_delimiter = ' ';
     }
 
-    memset(arg, 0, CF_MAXVARSIZE);
-    strncpy(arg, execstr, i);
-    arg[i] = '\0';
+    strlcpy(arg, start, sizeof(arg));
+    
+    char *cut = strchr(arg, end_delimiter);
+    
+    if(cut)
+    {
+        *cut = '\0';
+    }
+
     return arg;
 }
 
@@ -1284,7 +1323,7 @@ static int IsSpace(char *remainder)
 
     for (sp = remainder; *sp != '\0'; sp++)
     {
-        if (!isspace(*sp))
+        if (!isspace((int)*sp))
         {
             return false;
         }
@@ -1313,7 +1352,7 @@ int IsRealNumber(char *s)
 
 enum cfd_menu String2Menu(const char *s)
 {
-    static const char *menus[] = { "delta", "full", "relay", NULL };
+    static const char *menus[] = { "delta", "full", "relay", "collect_call", NULL };
     int i;
 
     for (i = 0; menus[i] != NULL; i++)
@@ -1337,7 +1376,7 @@ enum cfd_menu String2Menu(const char *s)
 /* Rlist to Uid/Gid lists                                                   */
 /****************************************************************************/
 
-UidList *Rlist2UidList(Rlist *uidnames, Promise *pp)
+UidList *Rlist2UidList(Rlist *uidnames, const Promise *pp)
 {
     UidList *uidlist = NULL;
     Rlist *rp;
@@ -1361,7 +1400,7 @@ UidList *Rlist2UidList(Rlist *uidnames, Promise *pp)
 
 /*********************************************************************/
 
-GidList *Rlist2GidList(Rlist *gidnames, Promise *pp)
+GidList *Rlist2GidList(Rlist *gidnames, const Promise *pp)
 {
     GidList *gidlist = NULL;
     Rlist *rp;
@@ -1385,7 +1424,7 @@ GidList *Rlist2GidList(Rlist *gidnames, Promise *pp)
 
 /*********************************************************************/
 
-uid_t Str2Uid(char *uidbuff, char *usercopy, Promise *pp)
+uid_t Str2Uid(char *uidbuff, char *usercopy, const Promise *pp)
 {
     Item *ip, *tmplist;
     struct passwd *pw;
@@ -1473,7 +1512,7 @@ uid_t Str2Uid(char *uidbuff, char *usercopy, Promise *pp)
 
 /*********************************************************************/
 
-gid_t Str2Gid(char *gidbuff, char *groupcopy, Promise *pp)
+gid_t Str2Gid(char *gidbuff, char *groupcopy, const Promise *pp)
 {
     struct group *gr;
     int gid = -2, tmp = -2;

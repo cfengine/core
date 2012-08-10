@@ -23,8 +23,12 @@
 */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 #include "files_lib.h"
+
+#include "env_context.h"
+#include "promises.h"
+#include "vars.h"
+#include "conversion.h"
 
 #ifndef HAVE_LIBVIRT
 

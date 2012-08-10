@@ -1,0 +1,34 @@
+body common control
+{
+bundlesequence => { "test" };
+}
+
+bundle agent test
+{
+packages:
+
+  Windows_Server_2008_R2::
+    "Telnet-Client"
+             comment => "Install the telnet client",
+      package_policy => "add",
+      package_method => windows_feature;
+ 
+}
+
+ 
+body package_method windows_feature
+# NOTE: Windows feature names are case-sensitive
+{
+package_changes => "individual";
+  
+package_name_convention   => "$(name)";
+package_delete_convention => "$(name)";
+  
+package_installed_regex => ".*";
+package_list_name_regex => "(.*)";
+package_list_version_regex => "(.*)";  # FIXME: the listing does not give version, so takes name for version too now
+
+package_add_command    => "$(sys.winsysdir)\\WindowsPowerShell\\v1.0\\powershell.exe -Command \"Import-Module ServerManager; Add-WindowsFeature -Name\"";
+package_delete_command => "$(sys.winsysdir)\\WindowsPowerShell\\v1.0\\powershell.exe -Command \"Import-Module ServerManager; Remove-WindowsFeature -confirm:$false -Name\"";
+package_list_command   => "$(sys.winsysdir)\\WindowsPowerShell\\v1.0\\powershell.exe -Command \"Import-Module ServerManager; Get-WindowsFeature | where {$_.installed -eq $True} |foreach {$_.Name}\"";
+}

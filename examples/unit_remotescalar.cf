@@ -1,0 +1,92 @@
+
+#  Copyright (C) Cfengine AS
+
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commerical Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+########################################################################
+#
+# Testing comms for remote orchestration
+#
+########################################################################
+
+body common control
+{
+bundlesequence => { "overture" };
+inputs => { "cfengine_stdlib.cf" };
+}
+
+body server control 
+
+{
+allowconnects         => { "127.0.0.1" , "::1",};
+allowallconnects      => { "127.0.0.1" , "::1", };
+trustkeysfrom         => { "127.0.0.1" , "::1",};
+}
+
+#######################################################
+
+bundle agent overture
+{
+vars:
+
+  "remote" string => remotescalar("test_scalar","127.0.0.1","yes");
+
+  "know" string => hubknowledge("test_scalar");
+
+  "count_getty" string => hubknowledge("count_getty");
+
+processes:
+
+  # Use the enumerated library body to count hosts running getty
+
+  "getty" 
+
+       comment => "Count this host if a job is matched",
+       classes => enumerate("count_getty");
+
+reports:
+
+ !elsewhere::
+
+    "GOT remote scalar $(remote)";
+    "GOT knowedge scalar $(know)";
+    "GOT persistent scalar $(xyz)";
+
+}
+
+#######################################################
+
+bundle server access_rules()
+{
+access:
+
+  "value of my test_scalar, can expand variables here - $(sys.host)"
+    handle => "test_scalar",
+    comment => "Grant access to contents of test_scalar VAR",
+    resource_type => "literal",
+    admit => { "127.0.0.1" };
+
+  "XYZ"
+    resource_type => "variable",
+    handle => "XYZ",
+    admit => { "127.0.0.1" };
+
+}

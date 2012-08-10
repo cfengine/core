@@ -1,0 +1,43 @@
+# Test that long bundle names are not cut off (Mantis #975)
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle agent init
+{
+vars:
+  "dummy" string => "dummy";
+}
+
+bundle agent long_long_long_long_long_long_long_long_long_name
+{
+vars:
+  "foo[ok]" string => "abc";
+  "bar" slist => getindices("foo");
+}
+
+bundle agent test
+{
+methods:
+  "l" usebundle => "long_long_long_long_long_long_long_long_long_name";
+}
+
+bundle agent check
+{
+vars:
+  "res" string => join("", "long_long_long_long_long_long_long_long_long_name.bar");
+
+classes:
+  "ok" expression => strcmp("${res}", "ok");
+
+reports:
+  ok::
+   "$(this.promise_filename) Pass";
+  !ok::
+   "$(this.promise_filename) FAIL";
+}

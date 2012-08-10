@@ -23,30 +23,39 @@
   included file COSL.txt.
   
 */
-/*****************************************************************************/
-/*                                                                           */
-/* File: env_context.c                                                       */
-/*                                                                           */
-/*****************************************************************************/
 
-#include "cf3.defs.h"
-#include "cf3.extern.h"
+#include "env_context.h"
 
+#include "constraints.h"
+#include "promises.h"
+#include "files_names.h"
 #include "logic_expressions.h"
 #include "dbm_api.h"
+#include "syntax.h"
+#include "item_lib.h"
+#include "conversion.h"
+#include "reporting.h"
+#include "expand.h"
 
 /*****************************************************************************/
 
 static bool ValidClassName(const char *str);
-static int GetORAtom(char *start, char *buffer);
-static int HasBrackets(char *s, Promise *pp);
-static int IsBracketed(char *s);
+static int GetORAtom(const char *start, char *buffer);
+static int HasBrackets(const char *s, Promise *pp);
+static int IsBracketed(const char *s);
 
 /*****************************************************************************/
+
+AlphaList VHEAP;
+AlphaList VADDCLASSES;
+Item *VNEGHEAP = NULL;
+Item *ABORTBUNDLEHEAP = NULL;
 
 static Item *ABORTHEAP = NULL;
 static Item *VDELCLASSES = NULL;
 static Rlist *PRIVCLASSHEAP = NULL;
+
+static bool ABORTBUNDLE = false;
 
 /*****************************************************************************/
 /* Level                                                                     */
@@ -174,7 +183,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
             return false;
         }
 
-        snprintf(splay, CF_MAXVARSIZE, "%s+%s+%d", VFQNAME, VIPADDRESS, getuid());
+        snprintf(splay, CF_MAXVARSIZE, "%s+%s+%ju", VFQNAME, VIPADDRESS, (uintmax_t)getuid());
         hash = (double) GetHash(splay);
         n = (int) (total * hash / (double) CF_HASHTABLESIZE);
 
@@ -348,7 +357,7 @@ void KeepClassContextPromise(Promise *pp)
 
 // If this is some other kind of bundle (else here??)
 
-    if (strcmp(pp->bundletype, THIS_AGENT) == 0 || FullTextMatch("edit_.*", pp->bundletype))
+    if (strcmp(pp->bundletype, CF_AGENTTYPES[THIS_AGENT_TYPE]) == 0 || FullTextMatch("edit_.*", pp->bundletype))
     {
         if (EvalClassExpression(a.context.expression, pp))
         {
@@ -445,7 +454,7 @@ void NewClass(const char *oclass)
 
 /*********************************************************************/
 
-void DeleteClass(char *class)
+void DeleteClass(const char *class)
 {
     DeleteFromAlphaList(&VHEAP, class);
     DeleteFromAlphaList(&VADDCLASSES, class);
@@ -453,7 +462,7 @@ void DeleteClass(char *class)
 
 /*******************************************************************/
 
-void NewBundleClass(char *class, char *bundle)
+void NewBundleClass(const char *class, const char *bundle)
 {
     char copy[CF_BUFSIZE];
     Item *ip;
@@ -520,10 +529,10 @@ void NewBundleClass(char *class, char *bundle)
 
 /*********************************************************************/
 
-Rlist *SplitContextExpression(char *context, Promise *pp)
+Rlist *SplitContextExpression(const char *context, Promise *pp)
 {
     Rlist *list = NULL;
-    char *sp, cbuff[CF_MAXVARSIZE];
+    char cbuff[CF_MAXVARSIZE];
 
     if (context == NULL)
     {
@@ -531,7 +540,7 @@ Rlist *SplitContextExpression(char *context, Promise *pp)
     }
     else
     {
-        for (sp = context; *sp != '\0'; sp++)
+        for (const char *sp = context; *sp != '\0'; sp++)
         {
             while (*sp == '|')
             {
@@ -629,7 +638,7 @@ Rlist *SplitContextExpression(char *context, Promise *pp)
 
 /*********************************************************************/
 
-static int IsBracketed(char *s)
+static int IsBracketed(const char *s)
  /* return true if the entire string is bracketed, not just if
     if contains brackets */
 {
@@ -691,9 +700,9 @@ static int IsBracketed(char *s)
 
 /*********************************************************************/
 
-static int GetORAtom(char *start, char *buffer)
+static int GetORAtom(const char *start, char *buffer)
 {
-    char *sp = start;
+    const char *sp = start;
     char *spc = buffer;
     int bracklevel = 0, len = 0;
 
@@ -724,7 +733,7 @@ static int GetORAtom(char *start, char *buffer)
 
 /*********************************************************************/
 
-static int HasBrackets(char *s, Promise *pp)
+static int HasBrackets(const char *s, Promise *pp)
  /* return true if contains brackets */
 {
     int i, level = 0, yes = 0;
@@ -1074,7 +1083,7 @@ bool EvalFileResult(const char *file_result, AlphaList *leaf_attr)
 
 /*****************************************************************************/
 
-void DeleteEntireHeap()
+void DeleteEntireHeap(void)
 {
     DeleteAlphaList(&VHEAP);
     InitAlphaList(&VHEAP);
@@ -1092,13 +1101,21 @@ void DeletePrivateClassContext()
 
 /*****************************************************************************/
 
-void PushPrivateClassContext()
+void PushPrivateClassContext(int inherit)
 {
     AlphaList *ap = xmalloc(sizeof(AlphaList));
 
 // copy to heap
     PushStack(&PRIVCLASSHEAP, CopyAlphaListPointers(ap, &VADDCLASSES));
+
     InitAlphaList(&VADDCLASSES);
+
+    if (inherit)
+    {
+        InitAlphaList(&VADDCLASSES);
+        DupAlphaListPointers(&VADDCLASSES, ap);
+    }
+    
 }
 
 /*****************************************************************************/
@@ -1154,7 +1171,7 @@ void NewPersistentContext(char *name, unsigned int ttl_minutes, enum statepolicy
 
 /*****************************************************************************/
 
-void DeletePersistentContext(char *name)
+void DeletePersistentContext(const char *name)
 {
     CF_DB *dbp;
 
@@ -1227,11 +1244,9 @@ void LoadPersistentContext()
 
 /*****************************************************************************/
 
-void AddEphemeralClasses(Rlist *classlist)
+void AddEphemeralClasses(const Rlist *classlist)
 {
-    Rlist *rp;
-
-    for (rp = classlist; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = classlist; rp != NULL; rp = rp->next)
     {
         if (!InAlphaList(&VHEAP, rp->item))
         {
@@ -1242,7 +1257,7 @@ void AddEphemeralClasses(Rlist *classlist)
 
 /*********************************************************************/
 
-void NewClassesFromString(char *classlist)
+void NewClassesFromString(const char *classlist)
 {
     char *sp, currentitem[CF_MAXVARSIZE], local[CF_MAXVARSIZE];
 
@@ -1273,7 +1288,7 @@ void NewClassesFromString(char *classlist)
 
 /*********************************************************************/
 
-void NegateClassesFromString(char *classlist)
+void NegateClassesFromString(const char *classlist)
 {
     char *sp, currentitem[CF_MAXVARSIZE], local[CF_MAXVARSIZE];
 
@@ -1304,14 +1319,14 @@ void NegateClassesFromString(char *classlist)
 
 /*********************************************************************/
 
-bool IsSoftClass(char *sp)
+bool IsSoftClass(const char *sp)
 {
     return !IsHardClass(sp);
 }
 
 /*********************************************************************/
 
-bool IsHardClass(char *sp)
+bool IsHardClass(const char *sp)
 // FIXME: this is very ad-hoc and incorrect
 {
     int i;
@@ -1329,7 +1344,7 @@ bool IsHardClass(char *sp)
         NULL
     };
 
-    for (i = 2; CLASSTEXT[i] != '\0'; i++)
+    for (i = 1; i < HARD_CLASSES_MAX; i++)
     {
         if (strcmp(CLASSTEXT[i], sp) == 0)
         {
@@ -1358,7 +1373,7 @@ bool IsHardClass(char *sp)
 
 /***************************************************************************/
 
-bool IsTimeClass(char *sp)
+bool IsTimeClass(const char *sp)
 {
 
     if (IsStrIn(sp, DAY_TEXT))
@@ -1376,22 +1391,22 @@ bool IsTimeClass(char *sp)
         return true;
     }
 
-    if (strncmp(sp, "Min", 3) == 0 && isdigit(*(sp + 3)))
+    if (strncmp(sp, "Min", 3) == 0 && isdigit((int)*(sp + 3)))
     {
         return true;
     }
 
-    if (strncmp(sp, "Hr", 2) == 0 && isdigit(*(sp + 2)))
+    if (strncmp(sp, "Hr", 2) == 0 && isdigit((int)*(sp + 2)))
     {
         return true;
     }
 
-    if (strncmp(sp, "Yr", 2) == 0 && isdigit(*(sp + 2)))
+    if (strncmp(sp, "Yr", 2) == 0 && isdigit((int)*(sp + 2)))
     {
         return true;
     }
 
-    if (strncmp(sp, "Day", 3) == 0 && isdigit(*(sp + 3)))
+    if (strncmp(sp, "Day", 3) == 0 && isdigit((int)*(sp + 3)))
     {
         return true;
     }
@@ -1473,24 +1488,25 @@ void SaveClassEnvironment()
         FILE *fp;
 
         snprintf(file, CF_BUFSIZE, "%s/state/allclasses.txt", CFWORKDIR);
-
         if ((fp = fopen(file, "w")) == NULL)
         {
             CfOut(cf_inform, "", "Could not open allclasses cache file");
             return;
         }
 
-        ListAlphaList(fp, VHEAP, '\n');
-        ListAlphaList(fp, VADDCLASSES, '\n');
-        fclose(fp);
+        Writer *writer = FileWriter(fp);
+
+        ListAlphaList(writer, VHEAP, '\n');
+        ListAlphaList(writer, VADDCLASSES, '\n');
+
+        WriterClose(writer);
     }
 }
 
 /**********************************************************************/
 
-void DeleteAllClasses(Rlist *list)
+void DeleteAllClasses(const Rlist *list)
 {
-    Rlist *rp;
     char *string;
 
     if (list == NULL)
@@ -1498,7 +1514,7 @@ void DeleteAllClasses(Rlist *list)
         return;
     }
 
-    for (rp = list; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
         if (!CheckParseClass("class cancellation", (char *) rp->item, CF_IDRANGE))
         {
@@ -1523,16 +1539,14 @@ void DeleteAllClasses(Rlist *list)
 
 /*****************************************************************************/
 
-void AddAllClasses(Rlist *list, int persist, enum statepolicy policy)
+void AddAllClasses(const Rlist *list, int persist, enum statepolicy policy)
 {
-    Rlist *rp;
-
     if (list == NULL)
     {
         return;
     }
 
-    for (rp = list; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
         char *classname = xstrdup(rp->item);
 
@@ -1558,7 +1572,7 @@ void AddAllClasses(Rlist *list, int persist, enum statepolicy policy)
 
 /*****************************************************************************/
 
-void ListAlphaList(FILE *fout, AlphaList al, char sep)
+void ListAlphaList(Writer *writer, AlphaList al, char sep)
 {
     AlphaListIterator i = AlphaListIteratorInit(&al);
 
@@ -1566,7 +1580,7 @@ void ListAlphaList(FILE *fout, AlphaList al, char sep)
     {
         if (!IsItemIn(VNEGHEAP, ip->name))
         {
-            fprintf(fout, "%s%c", ip->name, sep);
+            WriterWriteF(writer, "%s%c", ip->name, sep);
         }
     }
 }

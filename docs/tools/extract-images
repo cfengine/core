@@ -1,0 +1,20 @@
+#!/bin/sh -e
+
+if [ "$#" -eq 0 ]; then
+  echo "Usage: extract-images <texinfo file>..."
+  echo
+  echo "  This tool extracts all image file names referenced in Texinfo file"
+  echo "  and prints them out to standard output"
+
+  exit 1
+fi
+
+# @c are comments
+# ...@image{filename,...,...,..}... -> filename.png
+# ...@image{filename,...,...,..,extension}... -> filename.extension
+
+sed -n \
+ -e 's/^@c .*//' \
+ -e 's/^.*@image{\([^,]*\),[^,]*,[^,]*,[^,]*,\([^,}]*\)}.*$/\1.\2/p' \
+ -e 's/^.*@image{\([^,]*\)[^}]*}.*$/\1.png/p' \
+ "$@"

@@ -23,14 +23,12 @@
 
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: verify_exec.c                                                       */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
+
+#include "promises.h"
+#include "files_names.h"
+#include "vars.h"
+#include "conversion.h"
 
 static int ExecSanityChecks(Attributes a, Promise *pp);
 static void PreviewProtocolLine(char *line, char *comm);

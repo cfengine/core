@@ -23,14 +23,10 @@
 
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: files_select.c                                                      */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
+
+#include "env_context.h"
+#include "files_names.h"
 
 static int SelectTypeMatch(struct stat *lstatptr, Rlist *crit);
 static int SelectOwnerMatch(char *path, struct stat *lstatptr, Rlist *crit);
@@ -47,7 +43,6 @@ static int SelectSizeMatch(size_t size, size_t min, size_t max);
 static int SelectBSDMatch(struct stat *lstatptr, Rlist *bsdflags, Promise *pp);
 #endif
 #ifndef MINGW
-static int Unix_GetOwnerName(struct stat *lstatptr, char *owner, int ownerSz);
 static int SelectGroupMatch(struct stat *lstatptr, Rlist *crit);
 #endif
 
@@ -280,22 +275,6 @@ static int SelectTypeMatch(struct stat *lstatptr, Rlist *crit)
     DeleteAlphaList(&leafattrib);
     return false;
 }
-
-/*******************************************************************/
-
-/* Writes the owner of file 'path', with stat 'lstatptr' into buffer 'owner' of
- * size 'ownerSz'. Returns true on success, false otherwise                      */
-
-int GetOwnerName(char *path, struct stat *lstatptr, char *owner, int ownerSz)
-{
-#ifdef MINGW
-    return NovaWin_GetOwnerName(path, owner, ownerSz);
-#else /* NOT MINGW */
-    return Unix_GetOwnerName(lstatptr, owner, ownerSz);
-#endif /* NOT MINGW */
-}
-
-/*******************************************************************/
 
 static int SelectOwnerMatch(char *path, struct stat *lstatptr, Rlist *crit)
 {
@@ -534,7 +513,7 @@ static int SelectExecProgram(char *filename, char *command)
 /* Unix implementations                                            */
 /*******************************************************************/
 
-static int Unix_GetOwnerName(struct stat *lstatptr, char *owner, int ownerSz)
+int GetOwnerName(char *path, struct stat *lstatptr, char *owner, int ownerSz)
 {
     struct passwd *pw;
 

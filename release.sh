@@ -46,9 +46,6 @@ detect_current_branch()
 {
   R=$(git symbolic-ref HEAD)
   case "$R" in
-    refs/heads/master)
-      echo "Trying to tag from trunk. Don't."
-      exit 1;;
     refs/heads/*)
       BRANCH=${R#refs/heads/};;
     *)
@@ -64,9 +61,21 @@ branch()
       echo "In order to create stable branch you have to be on trunk!"
       exit 1
     fi
+    git tag "${BRANCH}-branchpoint"
     git checkout -b $BRANCH
   else
     detect_current_branch
+
+    if [ "x$BRANCH" = xmaster ]; then
+      # Only allow tagging alpha releases from master
+
+      CURR_VERSION=$(sed -ne 's/AM_INIT_AUTOMAKE(cfengine, \(.*\)).*/\1/p' configure.ac)
+
+      if ! expr "$CURR_VERSION" : ".*a[0-9]\.revision.*" >/dev/null; then
+        echo "Trying to tag non-alpha version from master branch. Don't."
+        exit 1
+      fi
+    fi
   fi
 }
 

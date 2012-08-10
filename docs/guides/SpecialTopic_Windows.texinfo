@@ -268,13 +268,13 @@ At the time of writing, Nova supports the @code{REG_DWORD} (double
 word), @code{REG_SZ} (string) and @code{REG_EXPAND_SZ} (expandable
 string) data types, as given in the middle field of the
 @code{database_rows} list elements. See the
-@uref{http://cfengine.com/manuals/cf3-reference.html#database_005frows-in-databases,CFEngine
+@uref{http://cfengine.com/manuals/cf3-Reference.html#database_005frows-in-databases,CFEngine
 reference manual} for an updated list of supported data types.
 
 Also note the @code{registryvalue()} function which can be used to
 read out value data from the registry and act upon it. Examples of its
 use are also available in the
-@uref{http://cfengine.com/manuals/cf3-reference.html#Function-registryvalue,CFEngine
+@uref{http://cfengine.com/manuals/cf3-Reference.html#Function-registryvalue,CFEngine
 reference manual}. 
 
 
@@ -364,7 +364,7 @@ windows::
 }
 @end verbatim
 
-The @uref{http://cfengine.com/manuals/cf3-reference.html#acl-in-files,
+The @uref{http://cfengine.com/manuals/cf3-Reference.html#acl-in-files,
 CFEngine reference manual} contains a description of all the available
 @code{ACL} options. Also refer to the the CFEngine Nova Owner's manual
 for a more in-depth discussion of the @code{ACL} options available.
@@ -493,7 +493,8 @@ A potential problem source when writing policies for windows is that
 paths to executables often contain spaces. This makes it impossible
 for CFEngine to know where the executable ends and the parameters to
 it starts. To solve this, we place escaped quotes around the
-executable.
+executable. Windows share paths (double backslashes) also need
+escaping.
 
 Additionally, Windows does not support that processes start themselves
 in in the background (i.e. fork off a child process in the Unix
@@ -517,6 +518,8 @@ commands:
 
 "\"C:\Program Files\Some Dir\program name.bat\" --silent --batch"
   action => in_shell_bg;
+
+"\"\\\\computer\share path\my program.exe\" /some args";
 }
 
 @end verbatim
@@ -528,10 +531,10 @@ symbolic links, file groups, user and group identifiers.
 Thus, the parts of promises containing these features will be
 ignored. For example, the @code{getgid()} function does not return
 anything on Windows. The
-@uref{http://cfengine.com/manuals/cf3-reference.html,CFEngine
+@uref{http://cfengine.com/manuals/cf3-Reference.html,CFEngine
 reference manual} documents exactly which promises are ignored and
 not.  Also, @code{cf-agent.exe} from CFEngine Nova prints warning messages
-on ignored attributes when run in verbose mode (@code{cf-agent.exe-Kv}).
+on ignored attributes when run in verbose mode (@code{cf-agent.exe -Kv}).
 
 
 @ifhtml

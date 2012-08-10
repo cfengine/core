@@ -23,14 +23,13 @@
 
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: matching.c                                                          */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
+
+#include "env_context.h"
+#include "vars.h"
+#include "promises.h"
+#include "item_lib.h"
+#include "conversion.h"
 
 #ifdef HAVE_PCRE_H
 # include <pcre.h>
@@ -227,7 +226,7 @@ char *ExtractFirstReference(const char *regexp, const char *teststring)
 
 /*************************************************************************/
 
-int BlockTextMatch(char *regexp, char *teststring, int *start, int *end)
+int BlockTextMatch(const char *regexp, const char *teststring, int *start, int *end)
 {
     pcre *rx = CompileRegExp(regexp);
 
@@ -488,11 +487,11 @@ int MatchPolicy(char *camel, char *haystack, Attributes a, Promise *pp)
 
                 // Strip initial and final first
 
-                for (firstchar = final; isspace(*firstchar); firstchar++)
+                for (firstchar = final; isspace((int)*firstchar); firstchar++)
                 {
                 }
 
-                for (lastchar = final + strlen(final) - 1; lastchar > firstchar && isspace(*lastchar); lastchar--)
+                for (lastchar = final + strlen(final) - 1; lastchar > firstchar && isspace((int)*lastchar); lastchar--)
                 {
                 }
 
@@ -500,9 +499,9 @@ int MatchPolicy(char *camel, char *haystack, Attributes a, Promise *pp)
                 {
                     if (sp > firstchar && sp < lastchar)
                     {
-                        if (isspace(*sp))
+                        if (isspace((int)*sp))
                         {
-                            while (isspace(*(sp + 1)))
+                            while (isspace((int)*(sp + 1)))
                             {
                                 sp++;
                             }
@@ -528,7 +527,7 @@ int MatchPolicy(char *camel, char *haystack, Attributes a, Promise *pp)
             {
                 if (strncmp(final, "\\s*", 3) != 0)
                 {
-                    for (sp = final; isspace(*sp); sp++)
+                    for (sp = final; isspace((int)*sp); sp++)
                     {
                     }
                     strcpy(work, sp);
@@ -590,175 +589,6 @@ int MatchRlistItem(Rlist *listofregex, const char *teststring)
 /* Enumerated languages - fuzzy match model                          */
 /*********************************************************************/
 
-int FuzzyMatchParse(char *s)
-{
-    char *sp;
-    short isCIDR = false, isrange = false, isv6 = false, isv4 = false, isADDR = false;
-    char address[CF_ADDRSIZE];
-    int mask, count = 0;
-
-    CfDebug("Check ParsingIPRange(%s)\n", s);
-
-    for (sp = s; *sp != '\0'; sp++)     /* Is this an address or hostname */
-    {
-        if (!isxdigit((int) *sp))
-        {
-            isADDR = false;
-            break;
-        }
-
-        if (*sp == ':')         /* Catches any ipv6 address */
-        {
-            isADDR = true;
-            break;
-        }
-
-        if (isdigit((int) *sp)) /* catch non-ipv4 address - no more than 3 digits */
-        {
-            count++;
-            if (count > 3)
-            {
-                isADDR = false;
-                break;
-            }
-        }
-        else
-        {
-            count = 0;
-        }
-    }
-
-    if (!isADDR)
-    {
-        return true;
-    }
-
-    if (strstr(s, "/") != 0)
-    {
-        isCIDR = true;
-    }
-
-    if (strstr(s, "-") != 0)
-    {
-        isrange = true;
-    }
-
-    if (strstr(s, ".") != 0)
-    {
-        isv4 = true;
-    }
-
-    if (strstr(s, ":") != 0)
-    {
-        isv6 = true;
-    }
-
-    if (isv4 && isv6)
-    {
-        CfOut(cf_error, "", "Mixture of IPv6 and IPv4 addresses");
-        return false;
-    }
-
-    if (isCIDR && isrange)
-    {
-        CfOut(cf_error, "", "Cannot mix CIDR notation with xx-yy range notation");
-        return false;
-    }
-
-    if (isv4 && isCIDR)
-    {
-        if (strlen(s) > 4 + 3 * 4 + 1 + 2)      /* xxx.yyy.zzz.mmm/cc */
-        {
-            CfOut(cf_error, "", "IPv4 address looks too long");
-            return false;
-        }
-
-        address[0] = '\0';
-        mask = 0;
-        sscanf(s, "%16[^/]/%d", address, &mask);
-
-        if (mask < 8)
-        {
-            CfOut(cf_error, "", "Mask value %d in %s is less than 8", mask, s);
-            return false;
-        }
-
-        if (mask > 30)
-        {
-            CfOut(cf_error, "", "Mask value %d in %s is silly (> 30)", mask, s);
-            return false;
-        }
-    }
-
-    if (isv4 && isrange)
-    {
-        long i, from = -1, to = -1;
-        char *sp1, buffer1[CF_MAX_IP_LEN];
-
-        sp1 = s;
-
-        for (i = 0; i < 4; i++)
-        {
-            buffer1[0] = '\0';
-            sscanf(sp1, "%[^.]", buffer1);
-            sp1 += strlen(buffer1) + 1;
-
-            if (strstr(buffer1, "-"))
-            {
-                sscanf(buffer1, "%ld-%ld", &from, &to);
-
-                if (from < 0 || to < 0)
-                {
-                    CfOut(cf_error, "", "Error in IP range - looks like address, or bad hostname");
-                    return false;
-                }
-
-                if (to < from)
-                {
-                    CfOut(cf_error, "", "Bad IP range");
-                    return false;
-                }
-
-            }
-        }
-    }
-
-    if (isv6 && isCIDR)
-    {
-        char address[CF_ADDRSIZE];
-        int mask;
-
-        if (strlen(s) < 20)
-        {
-            CfOut(cf_error, "", "IPv6 address looks too short");
-            return false;
-        }
-
-        if (strlen(s) > 42)
-        {
-            CfOut(cf_error, "", "IPv6 address looks too long");
-            return false;
-        }
-
-        address[0] = '\0';
-        mask = 0;
-        sscanf(s, "%40[^/]/%d", address, &mask);
-
-        if (mask % 8 != 0)
-        {
-            CfOut(cf_error, "", "Cannot handle ipv6 masks which are not 8 bit multiples (fix me)");
-            return false;
-        }
-
-        if (mask > 15)
-        {
-            CfOut(cf_error, "", "IPv6 CIDR mask is too large");
-            return false;
-        }
-    }
-
-    return true;
-}
 
 /*********************************************************************/
 
@@ -799,7 +629,7 @@ void EscapeSpecialChars(char *str, char *strEsc, int strEscSz, char *noEscSeq, c
         if (strchr(noEscList,*sp))
         {
         }        
-        else if (*sp != '\0' && !isalnum(*sp))
+        else if (*sp != '\0' && !isalnum((int)*sp))
         {
             strEsc[strEscPos++] = '\\';
         }

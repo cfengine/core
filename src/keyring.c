@@ -23,11 +23,10 @@
 */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
 /***************************************************************/
 
-int HostKeyAddressUnknown(char *value)
+bool HostKeyAddressUnknown(const char *value)
 {
     if (strcmp(value, CF_UNKNOWN_IP) == 0)
     {

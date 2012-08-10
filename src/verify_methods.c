@@ -23,35 +23,33 @@
 
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: verify_methods.c                                                    */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
+
+#include "env_context.h"
+#include "constraints.h"
+#include "vars.h"
+#include "expand.h"
 
 /*****************************************************************************/
 
-void VerifyMethodsPromise(Promise *pp)
+void VerifyMethodsPromise(Promise *pp, const ReportContext *report_context)
 {
     Attributes a = { {0} };
 
     a = GetMethodAttributes(pp);
 
-    VerifyMethod("usebundle", a, pp);
+    VerifyMethod("usebundle", a, pp, report_context);
     DeleteScalar("this", "promiser");
 }
 
 /*****************************************************************************/
 
-int VerifyMethod(char *attrname, Attributes a, Promise *pp)
+int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext *report_context)
 {
     Bundle *bp;
     void *vp;
     FnCall *fp;
-    char method_name[CF_EXPANDSIZE];
+    char method_name[CF_EXPANDSIZE],*method_deref;
     Rlist *params = NULL;
     int retval = false;
     CfLock thislock;
@@ -87,33 +85,49 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp)
 
     PromiseBanner(pp);
 
-    if ((bp = GetBundle(method_name, "agent")))
+    if (strncmp(method_name,"default.",strlen("default.")) == 0)
+       {
+       method_deref = strchr(method_name,'.') + 1;
+       }
+    else
+       {
+       method_deref = method_name;
+       }
+
+    if ((bp = GetBundle(PolicyFromPromise(pp), method_deref, "agent")))
     {
-        char *bp_stack = THIS_BUNDLE;
+        const char *bp_stack = THIS_BUNDLE;
 
         BannerSubBundle(bp, params);
 
         DeleteScope(bp->name);
         NewScope(bp->name);
-        HashVariables(bp->name);
+        HashVariables(PolicyFromPromise(pp), bp->name, report_context);
 
         AugmentScope(bp->name, bp->args, params);
 
         THIS_BUNDLE = bp->name;
-        PushPrivateClassContext();
+        PushPrivateClassContext(a.inherit);
 
-        retval = ScheduleAgentOperations(bp);
+        retval = ScheduleAgentOperations(bp, report_context);
 
         PopPrivateClassContext();
         THIS_BUNDLE = bp_stack;
 
-        if (retval)
+        switch (retval)
         {
-            cfPS(cf_verbose, CF_NOP, "", pp, a, " -> Method invoked successfully\n");
-        }
-        else
-        {
-            cfPS(cf_inform, CF_FAIL, "", pp, a, " !! Method could not be invoked successfully\n");
+        case CF_FAIL:
+            cfPS(cf_inform, CF_FAIL, "", pp, a, " !! Method failed in some repairs or aborted\n");
+            break;
+
+        case CF_CHG:
+            cfPS(cf_inform, CF_CHG, "", pp, a, " !! Method invoked repairs\n");
+            break;
+
+        default:
+            cfPS(cf_verbose, CF_NOP, "", pp, a, " -> Method verified\n");
+            break;
+
         }
 
         DeleteFromScope(bp->name, bp->args);
@@ -123,7 +137,7 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp)
         if (IsCf3VarString(method_name))
         {
             CfOut(cf_error, "",
-                  " !! A variable seems to have been used for the name of the method. In this case, the promiser also needs to contain the uique name of the method");
+                  " !! A variable seems to have been used for the name of the method. In this case, the promiser also needs to contain the unique name of the method");
         }
         if (bp && bp->name)
         {

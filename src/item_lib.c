@@ -1,4 +1,3 @@
-
 /* 
    Copyright (C) Cfengine AS
 
@@ -25,7 +24,10 @@
 */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
+
+#include "files_names.h"
+#include "addr_lib.h"
+#include "item_lib.h"
 
 /*******************************************************************/
 
@@ -538,7 +540,7 @@ int MatchRegion(char *chunk, Item *start, Item *begin, Item *end)
 /*
   Match a region in between the selection delimiters. It is
   called after SelectRegion. The end delimiter will be visible
-  here so we have to check for it.
+  here so we have to check for it. Can handle multi-line chunks
 */
 {
     Item *ip = begin;

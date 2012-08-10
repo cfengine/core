@@ -194,8 +194,8 @@ Debug levels: 1=parsing, 2=running, 3=summary, 4=expression eval
 
 The server daemon provides two services: it acts as a
 file server for remote file copying and it allows an
-authorized cf-runagent to start start a cf-agent process
-and set certain additional classes with role-based access
+authorized cf-runagent to start a cf-agent process and
+set certain additional classes with role-based access
 control.
 
 

@@ -23,14 +23,10 @@
 
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: files_properties.c                                                  */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
+
+#include "files_names.h"
+#include "item_lib.h"
 
 /*********************************************************************/
 /* Files to be ignored when parsing directories                      */
@@ -42,7 +38,6 @@ int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp)
 {
     int i;
     struct stat statbuf;
-    char vbuff[CF_BUFSIZE];
     const char *sp;
 
     static char *skipfiles[] =
@@ -105,21 +100,22 @@ int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp)
         }
     }
 
-    strcpy(vbuff, path);
-    AddSlash(vbuff);
-    strcat(vbuff, nodename);
+    char buf[CF_BUFSIZE];
+
+    snprintf(buf, sizeof(buf), "%s/%s", path, nodename);
+    MapName(buf);
 
     for (sp = nodename; *sp != '\0'; sp++)      /* Check for files like ".. ." */
     {
-        if ((*sp != '.') && !isspace(*sp))
+        if ((*sp != '.') && !isspace((int)*sp))
         {
             return true;
         }
     }
 
-    if (cf_lstat(vbuff, &statbuf, attr, pp) == -1)
+    if (cf_lstat(buf, &statbuf, attr, pp) == -1)
     {
-        CfOut(cf_verbose, "lstat", "Couldn't stat %s", vbuff);
+        CfOut(cf_verbose, "lstat", "Couldn't stat %s", buf);
         return true;
     }
 

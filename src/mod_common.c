@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -20,23 +20,29 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: mod_common.c                                                        */
-/*                                                                           */
-/* This is a root node in the syntax tree                                    */
-/*                                                                           */
-/*****************************************************************************/
-
-#define CF3_MOD_COMMON
+/* This is a root node in the syntax tree */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
-BodySyntax CF_TRANSACTION_BODY[] =
+#include "mod_environ.h"
+#include "mod_outputs.h"
+#include "mod_access.h"
+#include "mod_interfaces.h"
+#include "mod_storage.h"
+#include "mod_databases.h"
+#include "mod_knowledge.h"
+#include "mod_packages.h"
+#include "mod_report.h"
+#include "mod_files.h"
+#include "mod_exec.h"
+#include "mod_methods.h"
+#include "mod_process.h"
+#include "mod_services.h"
+#include "mod_measurement.h"
+
+static const BodySyntax CF_TRANSACTION_BODY[] =
 {
     {"action_policy", cf_opts, "fix,warn,nop", "Whether to repair or report about non-kept promises"},
     {"ifelapsed", cf_int, CF_VALRANGE, "Number of minutes before next allowed assessment of promise",
@@ -65,9 +71,7 @@ BodySyntax CF_TRANSACTION_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/*********************************************************/
-
-BodySyntax CF_DEFINECLASS_BODY[] =
+static const BodySyntax CF_DEFINECLASS_BODY[] =
 {
     {"promise_repaired", cf_slist, CF_IDRANGE, "A list of classes to be defined globally"},
     {"repair_failed", cf_slist, CF_IDRANGE, "A list of classes to be defined globally"},
@@ -89,9 +93,7 @@ BodySyntax CF_DEFINECLASS_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/*********************************************************/
-
-BodySyntax CF_VARBODY[] =
+const BodySyntax CF_VARBODY[] =
 {
     {"string", cf_str, "", "A scalar string"},
     {"int", cf_int, CF_INTRANGE, "A scalar integer"},
@@ -104,15 +106,30 @@ BodySyntax CF_VARBODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/*********************************************************/
 
-BodySyntax CF_CLASSBODY[] =
+const BodySyntax CF_METABODY[] =
+{
+    {"string", cf_str, "", "A scalar string"},
+    {"slist", cf_slist, "", "A list of scalar strings"},
+    {NULL, cf_notype, NULL, NULL}
+};
+
+const BodySyntax CF_DEFAULTSBODY[] =
+{
+    {"if_match_regex", cf_str, "", "If this regular expression matches the current value of the variable, replace it with default"},
+    {"string", cf_str, "", "A scalar string"},
+    {"slist", cf_slist, "", "A list of scalar strings"},
+    {NULL, cf_notype, NULL, NULL}
+};
+
+
+const BodySyntax CF_CLASSBODY[] =
 {
     {"and", cf_clist, CF_CLASSRANGE, "Combine class sources with AND"},
     {"dist", cf_rlist, CF_REALRANGE, "Generate a probabilistic class distribution (from strategies in cfengine 2)"},
     {"expression", cf_class, CF_CLASSRANGE, "Evaluate string expression of classes in normal form"},
     {"or", cf_clist, CF_CLASSRANGE, "Combine class sources with inclusive OR"},
-    {"persistence", cf_int, CF_VALRANGE, "Make the class persistent (cached) to avoid reevaluation"},
+    {"persistence", cf_int, CF_VALRANGE, "Make the class persistent (cached) to avoid reevaluation, time in minutes"},
     {"not", cf_class, CF_CLASSRANGE, "Evaluate the negation of string expression in normal form"},
     {"select_class", cf_clist, CF_CLASSRANGE,
      "Select one of the named list of classes to define based on host identity", "random_selection"},
@@ -120,11 +137,7 @@ BodySyntax CF_CLASSBODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/*********************************************************/
-/* Control bodies                                        */
-/*********************************************************/
-
-BodySyntax CFG_CONTROLBODY[] =
+const BodySyntax CFG_CONTROLBODY[] =
 {
     {"bundlesequence", cf_slist, ".*", "List of promise bundles to verify in order"},
     {"goal_patterns", cf_slist, "",
@@ -151,7 +164,7 @@ BodySyntax CFG_CONTROLBODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CFA_CONTROLBODY[] =
+const BodySyntax CFA_CONTROLBODY[] =
 {
     {"abortclasses", cf_slist, ".*", "A list of classes which if defined lead to termination of cf-agent"},
     {"abortbundleclasses", cf_slist, ".*", "A list of classes which if defined lead to termination of current bundle"},
@@ -213,7 +226,7 @@ BodySyntax CFA_CONTROLBODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CFS_CONTROLBODY[] =
+const BodySyntax CFS_CONTROLBODY[] =
 {
     {"allowallconnects", cf_slist, "",
      "List of IPs or hostnames that may have more than one connection to the server port"},
@@ -222,6 +235,8 @@ BodySyntax CFS_CONTROLBODY[] =
     {"auditing", cf_opts, CF_BOOL, "true/false activate auditing of server connections", "false"},
     {"bindtointerface", cf_str, "", "IP of the interface to which the server should bind on multi-homed hosts"},
     {"cfruncommand", cf_str, CF_ABSPATHRANGE, "Path to the cf-agent command or cf-execd wrapper for remote execution"},
+    {"call_collect_interval", cf_int, CF_VALRANGE, "The interval in minutes in between collect calls to the policy hub offering a tunnel for report collection (Enterprise)"},
+    {"collect_window", cf_int, CF_VALRANGE, "A time in seconds that a collect-call tunnel remains open to a hub to attempt a report transfer before it is closed (Enterprise)"},
     {"denybadclocks", cf_opts, CF_BOOL, "true/false accept connections from hosts with clocks that are out of sync",
      "true"},
     {"denyconnects", cf_slist, "", "List of IPs or hostnames that may NOT connect to the server port"},
@@ -241,7 +256,7 @@ BodySyntax CFS_CONTROLBODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CFM_CONTROLBODY[] =
+const BodySyntax CFM_CONTROLBODY[] =
 {
     {"forgetrate", cf_real, "0,1", "Decimal fraction [0,1] weighting of new values over old in 2d-average computation",
      "0.6"},
@@ -252,7 +267,7 @@ BodySyntax CFM_CONTROLBODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CFR_CONTROLBODY[] =
+const BodySyntax CFR_CONTROLBODY[] =
 {
     {"hosts", cf_slist, "", "List of host or IP addresses to attempt connection with"},
     {"port", cf_int, "1024,99999", "Default port for cfengine server", "5308"},
@@ -267,7 +282,7 @@ BodySyntax CFR_CONTROLBODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CFEX_CONTROLBODY[] = /* enum cfexcontrol */
+const BodySyntax CFEX_CONTROLBODY[] = /* enum cfexcontrol */
 {
     {"splaytime", cf_int, CF_VALRANGE, "Time in minutes to splay this host based on its name hash", "0"},
     {"mailfrom", cf_str, ".*@.*", "Email-address cfengine mail appears to come from"},
@@ -281,7 +296,7 @@ BodySyntax CFEX_CONTROLBODY[] = /* enum cfexcontrol */
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CFK_CONTROLBODY[] =
+const BodySyntax CFK_CONTROLBODY[] =
 {
     {"build_directory", cf_str, ".*", "The directory in which to generate output files", "Current working directory"},
     {"document_root", cf_str, ".*", "The directory in which the web root resides"},
@@ -308,7 +323,7 @@ BodySyntax CFK_CONTROLBODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CFRE_CONTROLBODY[] = /* enum cfrecontrol */
+const BodySyntax CFRE_CONTROLBODY[] = /* enum cfrecontrol */
 {
     {"aggregation_point", cf_str, CF_ABSPATHRANGE, "The root directory of the data cache for CMDB aggregation"},
     {"auto_scaling", cf_opts, CF_BOOL, "true/false whether to auto-scale graph output to optimize use of space",
@@ -332,21 +347,24 @@ BodySyntax CFRE_CONTROLBODY[] = /* enum cfrecontrol */
     {NULL, cf_notype, NULL, NULL}
 };
 
-BodySyntax CFH_CONTROLBODY[] =  /* enum cfh_control */
+const BodySyntax CFH_CONTROLBODY[] =  /* enum cfh_control */
 {
-    {"export_zenoss", cf_opts, CF_BOOL, "Make data available for Zenoss integration in docroot/reports/summary.z"},
-    {"federation", cf_slist, "", "The list of CFEngine servers supporting constellation integration with this hub"},
+    {"export_zenoss", cf_str, CF_PATHRANGE, "Generate report for Zenoss integration"},
     {"exclude_hosts", cf_slist, "", "A list of IP addresses of hosts to exclude from report collection"},
     {"hub_schedule", cf_slist, "", "The class schedule used by cf-hub for report collation"},
     {"port", cf_int, "1024,99999", "Default port for contacting hub nodes", "5308"},
     {NULL, cf_notype, NULL, NULL}
 };
 
-/*********************************************************/
+const BodySyntax CFFILE_CONTROLBODY[] =  /* enum cfh_control */
+{
+    {"namespace", cf_str, CF_IDRANGE, "Switch to a private namespace to protect current file from duplicate definitions"},
+    {NULL, cf_notype, NULL, NULL}
+};
 
 /* This list is for checking free standing body lval => rval bindings */
 
-SubTypeSyntax CF_ALL_BODIES[] =
+const SubTypeSyntax CF_ALL_BODIES[] =
 {
     {CF_COMMONC, "control", CFG_CONTROLBODY},
     {CF_AGENTC, "control", CFA_CONTROLBODY},
@@ -357,6 +375,7 @@ SubTypeSyntax CF_ALL_BODIES[] =
     {CF_KNOWC, "control", CFK_CONTROLBODY},
     {CF_REPORTC, "control", CFRE_CONTROLBODY},
     {CF_HUBC, "control", CFH_CONTROLBODY},
+    {"file", "control", CFFILE_CONTROLBODY},
 
     //  get others from modules e.g. "agent","files",CF_FILES_BODIES,
 
@@ -373,28 +392,29 @@ SubTypeSyntax CF_ALL_BODIES[] =
     apply to more than one subtype, e.g. generic
     processing behavioural details */
 
-BodySyntax CF_COMMON_BODIES[] =
+const BodySyntax CF_COMMON_BODIES[] =
 {
     {CF_TRANSACTION, cf_body, CF_TRANSACTION_BODY, "Output behaviour"},
     {CF_DEFINECLASSES, cf_body, CF_DEFINECLASS_BODY, "Signalling behaviour"},
     {"comment", cf_str, "", "A comment about this promise's real intention that follows through the program"},
     {"depends_on", cf_slist, "","A list of promise handles that this promise builds on or depends on somehow (for knowledge management)"},
-    {"handle", cf_str, CF_IDRANGE, "A unique id-tag string for referring to this as a promisee elsewhere"},
+    {"handle", cf_str, "", "A unique id-tag string for referring to this as a promisee elsewhere"},
     {"ifvarclass", cf_str, "", "Extended classes ANDed with context"},
     {"meta", cf_slist, "", "User-data associated with policy, e.g. key=value strings"},
     {NULL, cf_notype, NULL, NULL}
 };
 
-/*********************************************************/
-
  /* This is where we place promise subtypes that apply
     to more than one type of bundle, e.g. agent,server.. */
 
-SubTypeSyntax CF_COMMON_SUBTYPES[] =
+const SubTypeSyntax CF_COMMON_SUBTYPES[] =
 {
-    {"*", "vars", CF_VARBODY},
+
     {"*", "classes", CF_CLASSBODY},
+    {"*", "defaults", CF_DEFAULTSBODY},
+    {"*", "meta", CF_METABODY},
     {"*", "reports", CF_REPORT_BODIES},
+    {"*", "vars", CF_VARBODY},
     {"*", "*", CF_COMMON_BODIES},
     {NULL, NULL, NULL}
 };
@@ -406,7 +426,7 @@ SubTypeSyntax CF_COMMON_SUBTYPES[] =
 /* Read in all parsable Bundle definitions */
 /* REMEMBER TO REGISTER THESE IN cf3.extern.h */
 
-SubTypeSyntax *CF_ALL_SUBTYPES[] =
+const SubTypeSyntax *CF_ALL_SUBTYPES[] =
 {
     CF_COMMON_SUBTYPES,         /* Add modules after this, mod_report.c is here */
     CF_EXEC_SUBTYPES,           /* mod_exec.c */

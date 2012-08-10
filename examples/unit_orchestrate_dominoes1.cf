@@ -1,0 +1,108 @@
+############################################################
+#
+#  Dominoes
+#
+#  This method works with either Community of Enterprise
+#
+#  If you want to test this on localhost, just edit /etc/hosts
+#  to add host1 host2 host3 host4 as aliases to localhost
+#
+############################################################
+
+body common control
+{
+bundlesequence => { "dominoes_symphony" };
+inputs => { "cfengine_stdlib.cf" };
+}
+
+############################################################
+
+bundle agent dominoes_symphony
+{
+methods:
+
+   # We have to seed the beginning by creating the dominoes
+   # /tmp/dominoes_localhost
+
+   host1::
+    "dominoes"  usebundle => hand_over("localhost","host1","overture");
+
+   host2::
+    "dominoes"  usebundle => hand_over("host1","host2","first movement");
+
+   host3::
+    "dominoes"  usebundle => hand_over("host2","host3","second movement");
+
+   host4::
+    "dominoes"  usebundle => hand_over("host3","host4","final movement"),
+                classes => if_ok("finale");
+
+reports:
+
+  finale::
+
+   "The visitors book of the Dominoes method"
+      printfile => visitors_book("/tmp/dominoes_host4");
+
+}
+
+############################################################
+
+bundle agent hand_over(predecessor,myalias,method)
+{
+
+ # This is a wrapper for the orchestration
+
+files:
+
+  "/tmp/tip_the_dominoes"
+
+        comment => "Wait for our cue or relay/conductor baton",
+      copy_from => secure_cp("/tmp/dominoes_$(predecessor)","$(predecessor)"),
+        classes => if_repaired("cue_action");
+
+  cue_action::
+
+   "/tmp/outcome_of_part"
+
+       comment => "One off activity",
+        create => "true",
+     edit_line => append_if_no_line("Do something meaningful by calling $(method)"),
+       classes => if_ok("pass_the_stick");
+
+  pass_the_stick::
+
+   "/tmp/tip_the_dominoes"
+       comment => "Add our signature to the dominoes's tail",
+     edit_line => append_if_no_line("Knocked over $(myalias) and did: $(method)");
+
+   "/tmp/dominoes_$(myalias)"
+
+    comment => "Dominoes in position to be beamed up by next agent",
+     copy_from => local_cp("/tmp/tip_the_dominoes");
+
+}
+
+############################################################
+
+bundle server access_rules()
+{
+access:
+
+  "/tmp"
+
+        admit => { "127.0.0.1" };
+
+  "did.*"
+    resource_type => "context",
+    admit => { "127.0.0.1" };
+
+}
+
+
+body printfile visitors_book(file)
+{
+file_to_print   => "$(file)";
+number_of_lines => "10";
+}
+

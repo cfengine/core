@@ -22,20 +22,19 @@
   included file COSL.txt.
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: monitor.c                                                           */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "generic_agent.h"
 #include "monitoring.h"
+
+#include "env_context.h"
+#include "constraints.h"
+#include "conversion.h"
+#include "reporting.h"
 
 /*****************************************************************************/
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);
-static void KeepPromises(void);
+static void KeepPromises(Policy *policy, const ReportContext *report_context);
 
 /*****************************************************************************/
 /* Globals                                                                   */
@@ -43,7 +42,7 @@ static void KeepPromises(void);
 
 extern int NO_FORK;
 
-extern BodySyntax CFM_CONTROLBODY[];
+extern const BodySyntax CFM_CONTROLBODY[];
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -95,11 +94,14 @@ int main(int argc, char *argv[])
 {
     GenericAgentConfig config = CheckOpts(argc, argv);
 
-    GenericInitialize("monitor", config);
+    ReportContext *report_context = OpenReports("monitor");
+    Policy *policy = GenericInitialize("monitor", config, report_context);
     ThisAgentInit();
-    KeepPromises();
+    KeepPromises(policy, report_context);
 
-    MonitorStartServer(argc, argv);
+    MonitorStartServer(policy, report_context);
+
+    ReportContextDestroy(report_context);
     return 0;
 }
 
@@ -112,7 +114,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig config = GenericAgentDefaultConfig(cf_monitor);
 
-    while ((c = getopt_long(argc, argv, "dvnIf:VSxHTKMF", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvnIf:VSxHTKMFh", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -180,12 +182,12 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
 
 /*****************************************************************************/
 
-static void KeepPromises(void)
+static void KeepPromises(Policy *policy, const ReportContext *report_context)
 {
     Constraint *cp;
     Rval retval;
 
-    for (cp = ControlBodyConstraints(cf_monitor); cp != NULL; cp = cp->next)
+    for (cp = ControlBodyConstraints(policy, cf_monitor); cp != NULL; cp = cp->next)
     {
         if (IsExcluded(cp->classes))
         {
@@ -232,7 +234,6 @@ static void ThisAgentInit(void)
     signal(SIGTERM, HandleSignals);
     signal(SIGHUP, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);
-    signal(SIGCHLD, SIG_IGN);
     signal(SIGUSR1, HandleSignals);
     signal(SIGUSR2, HandleSignals);
 

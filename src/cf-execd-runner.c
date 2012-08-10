@@ -25,6 +25,8 @@
 #include "cf3.defs.h"
 #include "cf-execd-runner.h"
 
+#include "files_names.h"
+
 /*******************************************************************/
 
 static const int INF_LINES = -2;
@@ -265,6 +267,7 @@ static int FileChecksum(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1
 
         if (!md)
         {
+            fclose(file);
             return 0;
         }
 
@@ -351,7 +354,9 @@ static void MailResult(const ExecConfig *config, char *file)
     struct sockaddr_in raddr;
     struct servent *server;
     struct stat statbuf;
+#if defined LINUX || defined NETBSD || defined FREEBSD || defined OPENBSD
     time_t now = time(NULL);
+#endif
     FILE *fp;
 
     CfOut(cf_verbose, "", "Mail result...\n");

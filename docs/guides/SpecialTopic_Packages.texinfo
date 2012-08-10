@@ -290,7 +290,7 @@ bundle agent test002
   redhat::
    "wget"
              package_policy => "addupdate",
-             package_method => rpm("/root"),
+             package_method => rpm_version("/root"),
              package_select => "==",
             package_version => "1.10.2-7.el5",
       package_architectures => { "x86_64" };
@@ -323,7 +323,7 @@ bundle agent test003
   redhat::
    "wget"
              package_policy => "addupdate",
-             package_method => rpm("/root"),
+             package_method => rpm_version("/root"),
              package_select => "==",
             package_version => "1.11.4-2.el5_4.1",
       package_architectures => { "x86_64" };
@@ -469,7 +469,7 @@ bundle agent test008
   SuSE::
    "tcpdump"
              package_policy => "addupdate",
-             package_method => rpm("/root"),
+             package_method => rpm_version("/root"),
              package_select => "==",
             package_version => "4.0.0-2.1",
       package_architectures => { "x86_64" };
@@ -499,7 +499,7 @@ bundle agent test009
   SuSE::
    "tcpdump"
              package_policy => "addupdate",
-             package_method => rpm("/root"),
+             package_method => rpm_version("/root"),
              package_select => "==",
             package_version => "4.1.1-1.11",
       package_architectures => { "x86_64" };

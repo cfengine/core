@@ -12,13 +12,20 @@ AC_INIT
 AC_CONFIG_SRCDIR([src/cf-promises.c])
 AC_CANONICAL_TARGET
 
+dnl
+dnl This program needs to be checked early, as MAKEINFO variable is expanded in
+dnl AM_INIT_AUTOMAKE.
+dnl
+AC_CHECK_PROG(MAKEINFO, makeinfo, makeinfo)
+
 define([revision], esyscmd([sh -c "(git rev-list -1 --abbrev-commit HEAD || echo unknown) | tr -d '\n'" 2>/dev/null]))dnl
 
 dnl
 dnl The version in the next line is the only one to set
 dnl
 
-AM_INIT_AUTOMAKE(cfengine, 3.4.0a1.revision)
+_AM_SET_OPTION([tar-ustar])
+AM_INIT_AUTOMAKE(cfengine, 3.4.0b1.revision)
 AM_MAINTAINER_MODE([enable])
 
 AC_DEFINE(BUILD_YEAR, esyscmd([date +%Y | tr -d '\n']), "Software build year")
@@ -79,8 +86,6 @@ AC_CONFIG_LIBOBJ_DIR(pub)
 AC_FUNC_GETLOADAVG 
 AC_PATH_PROG(GETCONF, getconf, false, $PATH:$prefix/bin:/usr/bin:/usr/local/bin:/sw/bin)
 
-AM_MISSING_PROG(TEXI2PDF, texi2pdf)
-
 AM_CONDITIONAL(CROSS_COMPILING, test "x$cross_compiling" = "xyes")
 
 #
@@ -114,10 +119,20 @@ AS_IF([test x"$enable_fhs" = xyes], [
   projlibdir='${libexecdir}/cfengine'
   projdatadir='${exec_prefix}/share/cfengine'
   projdocdir='${exec_prefix}/share/doc/cfengine'
+  WORKDIR='${localstatedir}/lib/cfengine'
 ], [
-  if test x"$prefix" = xNONE; then
+  if test x"$prefix" = xNONE || test x"$prefix" = x/var/cfengine; then
     prefix=/var/cfengine
+    case "$target_os" in
+      mingw*)
+        WORKDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g');;
+      *)
+        WORKDIR=/var/cfengine;;
+    esac
+  else
+    WORKDIR="${localstatedir}/cfengine"
   fi
+
   sbindir='${exec_prefix}/bin' # /var/cfengine/bin despite being sbin_?
   projlibdir='${exec_prefix}/lib'
   projdatadir='${exec_prefix}/share'
@@ -205,6 +220,9 @@ if test "x$with_mysql" != "xno"; then
    CF3_WITH_LIBRARY(mysql, [
      AC_CHECK_LIB(mysqlclient, mysql_real_connect, [], [if test "x$with_mysql" != xcheck; then AC_MSG_ERROR(Cannot find MySQL client library); fi])
      AC_CHECK_HEADERS(mysql.h, [], [if test "x$with_mysql" != xcheck; then AC_MSG_ERROR(Cannot find MySQL client library); fi])
+
+     AC_CHECK_LIB(mysqlclient, EVP_CIPHER_CTX_init,
+                               [AC_MSG_ERROR([MySQL client library exports symbols clashing with OpenSSL. Get the update from distribution provider, recompile MySQL library or disable MySQL connector. See http://bugs.mysql.com/bug.php?id=65055 for details.])])
    ])
 fi
 
@@ -215,10 +233,6 @@ AM_CONDITIONAL(MONGO, false)
 
 m4_indir(incstart[]incend, [nova/options.m4])
 AM_CONDITIONAL([HAVE_NOVA], [test "x$with_nova" != xno && test -d ${srcdir}/nova])
-m4_indir(incstart[]incend, [constellation/options.m4])
-AM_CONDITIONAL([HAVE_CONSTELLATION], [test "x$with_constellation" != xno && test -d ${srcdir}/constellation])
-m4_indir(incstart[]incend, [galaxy/options.m4])
-AM_CONDITIONAL([HAVE_GALAXY], [test "x$with_galaxy" != xno && test -d ${srcdir}/galaxy])
 
 dnl
 dnl In-process databases
@@ -343,6 +357,12 @@ AC_CHECK_HEADERS(sys/systeminfo.h)
 AC_CHECK_HEADERS(sys/acl.h winsock2.h)
 AC_CHECK_HEADERS(zone.h)
 AC_CHECK_HEADERS(sys/uio.h)
+AC_CHECK_HEADERS(sys/types.h)
+AC_CHECK_HEADERS(sys/jail.h, [], [], [AC_INCLUDES_DEFAULT
+#ifdef HAVE_SYS_PARAM_H
+# include <sys/param.h>
+#endif
+])
 
 AC_HEADER_STDC
 AC_HEADER_TIME
@@ -359,7 +379,13 @@ AC_TYPE_SIZE_T
 AC_TYPE_UID_T
 AC_TYPE_PID_T
 AC_CHECK_TYPES(clockid_t)
-AC_CHECK_TYPES(socklen_t, [], [], [[#include <sys/socket.h>]])
+AC_CHECK_TYPES(socklen_t, [], [], [[
+#ifdef HAVE_SYS_TYPES_H
+# include <sys/types.h>
+#endif
+
+#include <sys/socket.h>
+]])
 
 dnl ######################################################################
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -367,6 +393,7 @@ dnl ######################################################################
 
 AC_C_CONST
 
+AC_FUNC_FSEEKO
 AC_SYS_LARGEFILE
 AC_TYPE_OFF_T
 
@@ -440,21 +467,39 @@ AC_REPLACE_FUNCS(drand48)
 AC_CHECK_DECLS(strerror)
 AC_REPLACE_FUNCS(strerror)
 
-AC_CHECK_FUNCS(strstr)
+AC_CHECK_DECLS(strstr)
 AC_REPLACE_FUNCS(strstr)
 
-AC_CHECK_FUNCS(strcasestr)
+AC_CHECK_DECLS(strcasestr)
 AC_REPLACE_FUNCS(strcasestr)
 
-AC_CHECK_FUNCS(strcasecmp)
+AC_CHECK_DECLS(strcasecmp)
 AC_REPLACE_FUNCS(strcasecmp)
 
-AC_CHECK_FUNCS(strncasecmp)
+AC_CHECK_DECLS(strncasecmp)
 AC_REPLACE_FUNCS(strncasecmp)
+
+AC_CHECK_DECLS(strsignal)
+AC_REPLACE_FUNCS(strsignal)
+
+AC_CHECK_DECLS(gmtime_r, [], [], [[#include <time.h>]])
+AC_REPLACE_FUNCS(gmtime_r)
+
+AC_CHECK_DECLS(localtime_r, [], [], [[#include <time.h>]])
+AC_REPLACE_FUNCS(localtime_r)
 
 AC_CHECK_FUNCS(getpwent setpwent endpwent)
 
-AC_CHECK_FUNCS(getcwd getnetgrent waitpid seteuid setegid setreuid setregid)
+AC_CHECK_DECLS(getnetgrent, [], [], [[#include <netdb.h>]])
+AC_CHECK_FUNCS(getnetgrent)
+
+AC_CHECK_DECLS(setnetgrent, [], [], [[#include <netdb.h>]])
+AC_CHECK_FUNCS(setnetgrent)
+
+AC_CHECK_DECLS(endnetgrent, [], [], [[#include <netdb.h>]])
+AC_CHECK_FUNCS(endnetgrent)
+
+AC_CHECK_FUNCS(waitpid seteuid setegid setreuid setregid)
 AC_CHECK_FUNCS(uname gethostname chflags)
 AC_CHECK_FUNCS(putenv)
 AC_CHECK_FUNCS(mkfifo statfs statvfs door)
@@ -512,8 +557,11 @@ AC_CHECK_FUNCS(door_create)
 
 AC_CHECK_FUNC(lchown, AC_DEFINE(HAVE_LCHOWN, 1, [Whether to use lchown(3) to change ownerships]))
 
-AC_CHECK_FUNC(pthread_attr_setstacksize, AC_DEFINE(HAVE_PTHREAD_ATTR_SETSTACKSIZE, [], [Whether the thread library has setstacksize]))
-AC_CHECK_FUNC(pthread_sigmask, AC_DEFINE(HAVE_PTHREAD_SIGMASK, [], [Whether the thread library has setmask]))
+AC_CHECK_DECLS(pthread_attr_setstacksize)
+AC_REPLACE_FUNCS(pthread_attr_setstacksize)
+
+AC_CHECK_DECLS(pthread_sigmask)
+AC_REPLACE_FUNCS(pthread_sigmask)
 
 dnl ######################################################################
 dnl Check for sa_len in struct sockaddr
@@ -522,6 +570,10 @@ dnl ######################################################################
 AC_CHECK_MEMBERS([struct sockaddr.sa_len], , , [
 #include <sys/types.h>
 #include <sys/socket.h>])
+
+AC_CHECK_MEMBERS([struct ifreq.ifr_hwaddr],,, [
+#include <sys/ioctl.h>
+#include <net/if.h>])
    
 dnl #######################################################################
 dnl Newer BSD systems don't have a compatible rtentry - use ortentry
@@ -535,7 +587,7 @@ if test "$rtry" = rtentry; then
 fi
 AC_EGREP_HEADER(ortentry, net/route.h, rtry=ortentry)
 if test "$rtry" = ortentry; then
- AC_DEFINE(HAVE_ORTENTRY, 1)
+ AC_DEFINE(HAVE_ORTENTRY, 1, [The old route entry structure in newer BSDs])
 fi
 AC_MSG_RESULT([$rtry])
 
@@ -555,10 +607,10 @@ dnl ######################################################################
 dnl Collect all the options
 dnl ######################################################################
 
-CPPFLAGS="$CPPFLAGS $POSTGRESQL_CPPFLAGS $MYSQL_CPPFLAGS $TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $MONGO_CPPFLAGS $LDAP_CPPFLAGS $LIBVIRT_CPPFLAGS"
-CFLAGS="$CFLAGS $POSTGRESQL_CFLAGS $MYSQL_CFLAGS $TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $MONGO_CFLAGS $LDAP_CFLAGS $LIBVIRT_CFLAGS"
-LDFLAGS="$LDFLAGS $POSTGRESQL_LDFLAGS $MYSQL_LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $MONGO_LDFLAGS $LDAP_LDFLAGS $LIBVIRT_LDFLAGS"
-LIBS="$LIBS $POSTGRESQL_LIBS $MYSQL_LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $MONGO_LIBS $LDAP_LIBS $LIBVIRT_LIBS"
+CPPFLAGS="$CPPFLAGS $POSTGRESQL_CPPFLAGS $MYSQL_CPPFLAGS $TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $MONGO_CPPFLAGS $LDAP_CPPFLAGS $LIBVIRT_CPPFLAGS $SQLITE3_CPPFLAGS"
+CFLAGS="$CFLAGS $POSTGRESQL_CFLAGS $MYSQL_CFLAGS $TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $MONGO_CFLAGS $LDAP_CFLAGS $LIBVIRT_CFLAGS $SQLITE3_CFLAGS"
+LDFLAGS="$LDFLAGS $POSTGRESQL_LDFLAGS $MYSQL_LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $MONGO_LDFLAGS $LDAP_LDFLAGS $LIBVIRT_LDFLAGS $SQLITE3_LDFLAGS"
+LIBS="$LIBS $POSTGRESQL_LIBS $MYSQL_LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $MONGO_LIBS $LDAP_LIBS $LIBVIRT_LIBS $SQLITE3_LIBS"
 
 dnl ######################################################################
 dnl OS specific stuff
@@ -582,9 +634,6 @@ case "$target_os" in
         AC_DEFINE(_XOPEN_SOURCE, 600, [SUSv3])
         AC_DEFINE(__EXTENSIONS__, 1, [Extended UNIX 98 interfaces])
         LIBS="$LIBS -lelf -lsec";;
-   ultrix*)
-	AC_DEFINE(ULTRIX, [], [Ultrix build])
-        ;;
    hpux*|hp-ux*) 
 
 	AC_DEFINE(HPuUX, [], [HP/UX build])
@@ -593,24 +642,6 @@ case "$target_os" in
    aix*)
 	AC_DEFINE(AIX, [], [AIX build])
         CPPFLAGS="$CPPFLAGS -w"
-        ;;
-   osf*)
-	AC_DEFINE(OSF, [], [OSF/1 build])
-        ;;
-   irix6*)
-	# rtentry is detected OK on a 6.5.19 system.
-        AC_DEFINE(HAVE_ORTENTRY, 1, [The old route entry structure in newer BSDs]) # Have to hack this for 6.* owing to bug
-	AC_DEFINE(IRIX, [], [IRIX build])
-        CFLAGS="$CFLAGS -w"
-        ;;
-   irix4*)
-	AC_DEFINE(IRIX)
-        CFLAGS="$CFLAGS -w"
-        LIBS="$LIBS -lsun"
-        ;;
-   irix*)
-	AC_DEFINE(IRIX)
-        CFLAGS="$CFLAGS -w"
         ;;
    linux*)
 	AC_DEFINE(LINUX, [], [Linux build])
@@ -624,22 +655,6 @@ case "$target_os" in
    netbsd*)
 	AC_DEFINE(NETBSD, [], [NetBSD build])
         ;;
-   newsos*)
-	AC_DEFINE(NEWS_OS, [], [NewsOS build])
-        ;;
-   bsd/os*)
-	AC_DEFINE(BSDOS, [], [BSD/OS build])
-        ;;
-   bsd*)
-	AC_DEFINE(BSD43, [], [4.3BSD build])
-        ;;
-   aos*)
-	AC_DEFINE(AOS, [], [AOS build])
-        ;;
-   nextstep*)
-	AC_DEFINE(NEXTSTEP, [], [NeXTSTEP build])
-        ;;
-
    unicos*)
 	AC_DEFINE(CFCRAY, [], [Cray build])
         ;;
@@ -715,30 +730,17 @@ AC_ARG_WITH(workdir,
 	[
 		if test x$withval != x ; then
 			WORKDIR=$withval
-		else
-  		        WORKDIR=/var/cfengine
 		fi
-
-     	AC_DEFINE_UNQUOTED(WORKDIR, "${WORKDIR}", [lock and log directories])
-        AC_SUBST(workdir, "${WORKDIR}")
 	],
-	[
-
-        case "$target_os" in
-
-           mingw*)
-                WORKDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g')
-                ;;
-
-           *)
-                WORKDIR=/var/cfengine
-                ;;
-        esac
-
-		AC_DEFINE_UNQUOTED(WORKDIR, "${WORKDIR}")
-                AC_SUBST(workdir, "${WORKDIR}")
-	]
 )
+
+dnl Expand ${prefix} and whatnot in WORKDIR
+
+adl_RECURSIVE_EVAL("${WORKDIR}", WORKDIR)
+
+AC_DEFINE_UNQUOTED(WORKDIR, "${WORKDIR}", [Workdir location])
+AC_SUBST(workdir, "${WORKDIR}")
+
 
 AC_ARG_WITH(shell, [AS_HELP_STRING([--with-shell=PATH],
                    [Specify path to POSIX-compatible shell (if not /bin/sh)])],
@@ -861,6 +863,33 @@ if test "x$use_coverage" = "xyes"; then
   LDFLAGS="$LDFLAGS -lgcov"
 fi
 
+dnl
+dnl Documentation generation
+dnl
+
+AC_ARG_ENABLE(docs, AC_HELP_STRING([--enable-docs=html|pdf|all],
+                                   [Enable generation of documentation in specified formats]),
+                    [use_docs=$enableval], [use_docs=no])
+
+if test "x$use_docs" != "xno"; then
+   if test "x$use_docs" = "xhtml" || test "x$use_docs" = "xall"; then
+     if test "$MAKEINFO" = "${am_missing_run}makeinfo"; then
+      AC_MSG_ERROR([makeinfo tool is required for HTML documentation generation])
+     fi
+   fi
+
+   if test "x$use_docs" = "xpdf" || test "x$use_docs" = "xall"; then
+      AC_CHECK_PROG(TEXI2PDF, texi2pdf, texi2pdf)
+
+      if test -z "$TEXI2PDF"; then
+        AC_MSG_ERROR([texi2pdf tool is required for PDF documentation generation])
+      fi
+   fi
+fi
+
+AM_CONDITIONAL(HTML_DOCS, test "x$use_docs" = "xhtml" || test "x$use_docs" = "xall")
+AM_CONDITIONAL(PDF_DOCS, test "x$use_docs" = "xpdf" || test "x$use_docs" = "xall")
+
 
 dnl ######################################################################
 dnl Summarize
@@ -898,8 +927,8 @@ else
 fi
 
 m4_indir(incstart[]incend, [nova/config.m4])
-m4_indir(incstart[]incend, [constellation/config.m4])
-m4_indir(incstart[]incend, [galaxy/config.m4])
+
+AC_MSG_RESULT([-> Workdir: $WORKDIR])
 
 AC_MSG_RESULT( )
 
@@ -917,16 +946,16 @@ AC_CONFIG_FILES([Makefile
 	docs/manpages/Makefile
 	docs/reference/Makefile
 	docs/tools/Makefile
+	docs/tex-include/Makefile
 	examples/Makefile
 	masterfiles/Makefile
 	tests/Makefile
 	tests/acceptance/Makefile
 	tests/unit/Makefile
+	tests/unit/data/Makefile
 	tests/load/Makefile])
 
 m4_indir(incstart[]incend, [nova/output.m4])
-m4_indir(incstart[]incend, [constellation/output.m4])
-m4_indir(incstart[]incend, [galaxy/output.m4])
 
 AC_OUTPUT
 

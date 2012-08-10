@@ -23,34 +23,30 @@
 
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: selfdiagnostic.c                                                    */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
+
+#include "reporting.h"
 
 void AgentDiagnostic(void)
 {
+    ReportContext *report_context = ReportContextNew();
     if (VERBOSE || DEBUG)
     {
-        FREPORT_TXT = stdout;
-        FREPORT_HTML = fopen(NULLFILE, "w");
+        ReportContextAddWriter(report_context, REPORT_OUTPUT_TYPE_TEXT, FileWriter(stdout));
+        ReportContextAddWriter(report_context, REPORT_OUTPUT_TYPE_HTML, FileWriter(fopen(NULLFILE, "w")));
     }
     else
     {
-        FREPORT_TXT = fopen(NULLFILE, "w");
-        FREPORT_HTML = fopen(NULLFILE, "w");
+        ReportContextAddWriter(report_context, REPORT_OUTPUT_TYPE_TEXT, FileWriter(fopen(NULLFILE, "w")));
+        ReportContextAddWriter(report_context, REPORT_OUTPUT_TYPE_HTML, FileWriter(fopen(NULLFILE, "w")));
     }
-
-//getcwd(cwd,CF_BUFSIZE);
 
     printf("----------------------------------------------------------\n");
     printf("Cfengine 3 - Performing level 2 self-diagnostic (dialogue)\n");
     printf("----------------------------------------------------------\n\n");
     TestVariableScan();
-    TestExpandPromise();
-    TestExpandVariables();
+    TestExpandPromise(report_context);
+    TestExpandVariables(report_context);
+
+    ReportContextDestroy(report_context);
 }

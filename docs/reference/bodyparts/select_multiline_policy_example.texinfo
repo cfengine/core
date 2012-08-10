@@ -1,0 +1,12 @@
+
+
+@verbatim
+
+body match_value myvalue(xxx)
+{
+ select_line_matching => ".*$(xxx).*";
+ extraction_regex => "root\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+(\S+).*";
+ select_multiline_policy => "sum";
+} 
+
+@end verbatim

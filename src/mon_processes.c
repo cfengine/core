@@ -23,13 +23,14 @@
 */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 #include "monitoring.h"
+#include "item_lib.h"
 
 /* Prototypes */
 
+#ifndef __MINGW32__
 static int GatherProcessUsers(Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs);
-static int Unix_GatherProcessUsers(Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs);
+#endif
 
 /* Implementation */
 
@@ -60,18 +61,9 @@ void MonProcessesGatherData(double *cf_this)
           (int) cf_this[ob_otherprocs]);
 }
 
+#ifndef __MINGW32__
+
 static int GatherProcessUsers(Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs)
-{
-#ifdef MINGW
-    return NovaWin_GatherProcessUsers(userList, userListSz, numRootProcs, numOtherProcs);
-#else
-    return Unix_GatherProcessUsers(userList, userListSz, numRootProcs, numOtherProcs);
-#endif
-}
-
-#ifndef MINGW
-
-static int Unix_GatherProcessUsers(Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs)
 {
     FILE *pp;
     char pscomm[CF_BUFSIZE];

@@ -110,6 +110,11 @@ void SequenceRemoveRange(Sequence *seq, size_t start, size_t end)
     seq->length -= end - start + 1;
 }
 
+void SequenceRemove(Sequence *seq, size_t index)
+{
+    SequenceRemoveRange(seq, index, index);
+}
+
 void *SequenceLookup(Sequence *seq, const void *key, SequenceItemComparator Compare)
 {
     for (size_t i = 0; i < seq->length; i++)
@@ -121,6 +126,19 @@ void *SequenceLookup(Sequence *seq, const void *key, SequenceItemComparator Comp
     }
 
     return NULL;
+}
+
+ssize_t SequenceIndexOf(Sequence *seq, const void *key, SequenceItemComparator Compare)
+{
+    for (size_t i = 0; i < seq->length; i++)
+    {
+        if (Compare(key, seq->data[i]) == 0)
+        {
+            return i;
+        }
+    }
+
+    return -1;
 }
 
 static void Swap(void **l, void **r)
@@ -171,3 +189,26 @@ void SequenceSort(Sequence *seq, SequenceItemComparator Compare)
 {
     QuickSortRecursive(seq->data, seq->length, Compare, 0);
 }
+
+void SequenceSoftRemoveRange(Sequence *seq, size_t start, size_t end)
+{
+    assert(seq);
+    assert(start >= 0);
+    assert(end < seq->length);
+    assert(start <= end);
+
+    size_t rest_len = seq->length - end - 1;
+
+    if (rest_len > 0)
+    {
+        memmove(seq->data + start, seq->data + end + 1, sizeof(void *) * rest_len);
+    }
+
+    seq->length -= end - start + 1;
+}
+
+void SequenceSoftRemove(Sequence *seq, size_t index)
+{
+    SequenceSoftRemoveRange(seq, index, index);
+}
+

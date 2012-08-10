@@ -16,14 +16,14 @@
 @c
 @c *********************************************************************** 
 @c %** start of header
-@setfilename novaevaluationguide.info
+@setfilename NovaEvaluationGuide.info
 @settitle CFEngine 3 Nova Evaluation Guide
 @c @setchapternewpage odd
 @c %** end of header
 @titlepage
 @title CFEngine 3 Nova Evaluation Guide
 @subtitle CFEngine Enterprise Documentation
-@subtitle Updated 6. February 2012
+@subtitle Updated 7. May 2012 @c also update in ifnottex section below
 @author CFEngine AS
 @c @smallbook
 @fonttextsize 10
@@ -45,6 +45,7 @@ to the extent of applicable law.
 @end direntry
 @end ifinfo
 @ifnottex
+Updated 7. May 2012
 @node Top, , (dir), (dir)
 @top CFEngine 3 Nova Evaluation Guide
 @end ifnottex
@@ -67,7 +68,7 @@ to the extent of applicable law.
 * Content Driven Policy (CDP) reports::  
 * Introduction to CFEngine policies::  
 * Next steps::                  
-* Policy editing::              
+* Policy editor (beta)::              
 * Shell access (evaluation feature only)::
 @end menu
 
@@ -100,7 +101,7 @@ The Mission Portal is the centerpiece of user interaction with CFEngine 3 Nova, 
 @item File diffs
 @item Promises not kept
 @end itemize
-@item Understand a simple CFEngine Policy file
+@item Understand and write a simple CFEngine Policy file
 @c @item Experiment with CFEngine Policy files
 @c @item Drill-down and configure individual servers, files, services, etc.
 @end itemize
@@ -112,32 +113,34 @@ For the purpose of this evaluation program, CFEngine 3 Nova has been set up in a
 @end cartouche
 
 
-@c -----------------------------------------------------
-@c @node 
-@c @section CFEngine 3 Nova
+@ignore
+-----------------------------------------------------
+@node 
+@section CFEngine 3 Nova
 
-@c CFEngine software automates large-scale IT computing infrastructure, ensuring the availability, security and compliance of mission-critical applications and services. Our software is built upon well-established theory and high-quality engineering practices, as a result CFEngine has enjoyed an outstanding security record over its 18-year history. 
+CFEngine software automates large-scale IT computing infrastructure, ensuring the availability, security and compliance of mission-critical applications and services. Our software is built upon well-established theory and high-quality engineering practices, as a result CFEngine has enjoyed an outstanding security record over its 18-year history. 
 
 
 
-@c -----------------------------------------------------
-@c @node 
-@c @section Pilot scope
+-----------------------------------------------------
+@node 
+@section Pilot scope
 
-@c To CFEngine, IT operations is @i{The Mission}. The Nova Mission Portal was designed to give users an understanding of the current and past state of their system and act as a control and collaboration center. We will look at these concepts in the following sections and allow the user to quickly:
-@c To CFEngine, IT operations is @i{The Mission}. The Nova Mission Portal was designed to give users an understanding of the current and past state of their system, act as a control and collaboration center, and serve as a knowledge base. We will look at these concepts in the following sections and allow the user to quickly:
+To CFEngine, IT operations is @i{The Mission}. The Nova Mission Portal was designed to give users an understanding of the current and past state of their system and act as a control and collaboration center. We will look at these concepts in the following sections and allow the user to quickly:
+To CFEngine, IT operations is @i{The Mission}. The Nova Mission Portal was designed to give users an understanding of the current and past state of their system, act as a control and collaboration center, and serve as a knowledge base. We will look at these concepts in the following sections and allow the user to quickly:
 
-@c @enumerate
-@c @item View standard reports
-@c @item Create (query) reports
-@c @item Modify a Content Dependent Policy (CDP) data list, and verify the result
-@c @item Edit a generic policy and verify the result
-@c @item Create a generic policy and verify the result
-@c @end enumerate
+@enumerate
+@item View standard reports
+@item Create (query) reports
+@item Modify a Content Dependent Policy (CDP) data list, and verify the result
+@item Edit a generic policy and verify the result
+@item Create a generic policy and verify the result
+@end enumerate
 
-@c For the purpose of this pilot program, CFEngine 3 Nova has been set up in a network comprising several nodes. One node serves as a central hub to distribute CFEngine configuration policies and collect reports from the other nodes (clients). They run on different operating systems, comprising several linux flavors and windows servers.
+For the purpose of this pilot program, CFEngine 3 Nova has been set up in a network comprising several nodes. One node serves as a central hub to distribute CFEngine configuration policies and collect reports from the other nodes (clients). They run on different operating systems, comprising several linux flavors and windows servers.
 
-@c In the following we will demonstrate the capabilities of standard reports and query these reports to customize the output to your need. We will look at how to create and modify a policy. Through the use of best practices the user will learn how to document policies and the intent behind these. 
+In the following we will demonstrate the capabilities of standard reports and query these reports to customize the output to your need. We will look at how to create and modify a policy. Through the use of best practices the user will learn how to document policies and the intent behind these. 
+@end ignore
 
 
 @c *****************************************************
@@ -242,7 +245,7 @@ The row of bar meters shows the compliance (average percentage of promises kept,
 @c -----------------------------------------------------
 @node Services/Goals, , Compliance Summary, Status room
 @subsection Services/Goals
-A summary of Mission goals as defined in user policy files (these examples are from @file{company_knowledge.cf}). You can look at editing policy files in @ref{Policy editing}. @c Edit the file in the policy editor (Planning room -> repository), or edit the file in your own text editor, to change these goals.
+A summary of Mission goals as defined in user policy files (these examples are from @file{company_knowledge.cf}). You can look at editing policy files in @ref{Policy editor (beta)}. @c Edit the file in the policy editor (Planning room -> repository), or edit the file in your own text editor, to change these goals.
 
 @c We will now have a look in the @samp{Engineering} room: 
 
@@ -612,22 +615,22 @@ The report lists an overview of host name (@samp{Host}), path of the affected ob
 
 @menu
 * Content Driven Policy::       
-* CFEngine syntax::             
+* Standard CFEngine policy:: 
+* Example - Install packages from remote repository::            
+* Example - Install packages from local repository::
 @end menu
 
-There are two types of CFEngine policies:
+There are two types of policies that tell CFEngine what to do:
 @itemize -
-@item Content Driven Policy (CDP): A text file containing semi-colon separated fields (@file{.txt} file extension)
-@item Standard CFEngine policy file: Uses CFEngine syntax (@file{.cf} file extension)
+@item Content Driven Policy (CDP): A text file containing semi-colon separated fields (@file{.txt} file extension) that specify actions
+@item Standard CFEngine policy file: Uses Standard CFEngine policy (@file{.cf} file extension) to specify actions
 @end itemize
 
-In the following, you will find a short introduction to both CDP and standard policies. See @ref{The Policy Editor (beta)} for how to access the Policy Editor and edit these files. @footnote{In a standard CFEngine 3 Nova environment you would be able to choose between the integrated Policy Editor (beta) or an editor of your choice to view and edit policy files. The evaluation environment is limited to the Policy Editor (beta) for security reasons.}
-
-@c You may choose to view and edit policy files in a beta version of the integrated Policy Editor or in an editor of your choice. The evaluation environment provides ssh access through a web interface so you may explore the environment or access policy files there @footnote{This feature is only available in the evaluation environment and does not ship with the actual product} (@url{https://cfengine.com/pilots/<YOUR INSTANCE ADDRESS>/shell}, see also @ref{Shell access}). In the following, we will see a short introduction to both CDP and standard policies. See @ref{The Policy Editor (beta)} for how to access the Policy Editor and edit these files.
+In the following, you will find a short introduction to both CDP and standard policies. You may choose to view and edit policy files in a beta version of the integrated Policy Editor (@ref{The Policy Editor (beta)}) or in an editor of your choice. The evaluation environment provides ssh access through a web interface so you may explore the environment or access policy files there (@ref{Shell access (evaluation feature only)}). In the following, we will see a short introduction to both CDP and standard policies. 
 
 
 @c ------------------------------------------------------
-@node Content Driven Policy, CFEngine syntax, Introduction to CFEngine policies, Introduction to CFEngine policies
+@node Content Driven Policy, Standard CFEngine policy, Introduction to CFEngine policies, Introduction to CFEngine policies
 @section Content Driven Policy
 
 As explained previously, content driven policies consist of semi-colon separated fields in a text file. The files also contain a header that explains the format and meaning of the fields and typically looks like this (lines have been split and indented for presentability):
@@ -696,19 +699,21 @@ The advantage of CDPs is that it requires no knowledge of CFEngine syntax to qui
 
 
 @c ------------------------------------------------------
-@node CFEngine syntax,  , Content Driven Policy, Introduction to CFEngine policies
-@section CFEngine syntax
+@node Standard CFEngine policy, Example - Install packages from remote repository, Content Driven Policy, Introduction to CFEngine policies
+@section Standard CFEngine policy
 
 Standard CFEngine policies consist of a declarative language that describes the desired state of a system. Individual statements are called @i{promises}, they can be grouped in bundles and have parametrized body templates (@samp{bundle} and @samp{body} are keywords in CFEngine that correspond to these). Below is an example of a simple CFEngine policy:
 
-@c Click @b{New} in the file menu in the right column, a tab (@samp{Untitled-1}) will appear in the policy editor. You can always hit @b{Ctrl + h} to see a list of keyboard shortcuts available in the policy editor. We summarize the main commands below:
+@ignore
+Click @b{New} in the file menu in the right column, a tab (@samp{Untitled-1}) will appear in the policy editor. You can always hit @b{Ctrl + h} to see a list of keyboard shortcuts available in the policy editor. We summarize the main commands below:
 
-@c @sp 1
-@c @center @image{img-newfile,15cm,,Create a new file}
-@c @center Figure: Create a new file
-@c @sp 1
+@sp 1
+@center @image{img-newfile,15cm,,Create a new file}
+@center Figure: Create a new file
+@sp 1
 
-@c We encourage you to try the keyboard shortcuts along the way. The Policy Editor detects syntax errors and highlights these in red so you are immediately aware of mistakes you may have made. In addition, it is possible to run syntax check by pressing the @b{Check syntax} button. @footnote{The file has to be saved and included in the inputs list of a particular policy file (promises.cf) in order for this to take effect.}
+We encourage you to try the keyboard shortcuts along the way. The Policy Editor detects syntax errors and highlights these in red so you are immediately aware of mistakes you may have made. In addition, it is possible to run syntax check by pressing the @b{Check syntax} button. @footnote{The file has to be saved and included in the inputs list of a particular policy file (promises.cf) in order for this to take effect.}
+@end ignore
 
 @verbatim
 
@@ -728,28 +733,244 @@ files:		     # This is the promise type, i.e. we make a promise about files
 
 @end verbatim
 
-@c The main menu on the left hand panel shows the main work flow items for policy editing. Clicking the arrow in the panel divider collapses the menu and gives full-screen editing.
+@ignore
+This policy will create the file @file{/tmp/testfile}. It contains the bare minimum of a standalone CFEngine policy, consisting of the compulsory @samp{body common control}, containing (at least) a bundlesequence. Then follows a compulsory @samp{bundle}, of type @samp{agent} and with the arbitrary name @samp{test} (the bundle type reflects the affected CFEngine component and can take several values, here we use @samp{agent}). The bundle contains a promise type (here @samp{files}), a promiser (i.e. the affected object, here @samp{/tmp/testfile}) and a promise about desired state (here @samp{create => "true"}).
+@end ignore
+This policy contains the bare minimum of a standalone CFEngine policy and will create the file @file{/tmp/testfile}. A closer look at the different parts of the policy:
+@itemize -
+@item The compulsory @samp{body common control}, containing (at least) a bundlesequence.
+@item Then follows a compulsory @samp{bundle}, of type @samp{agent} and with the arbitrary name @samp{test} (the bundle type reflects the affected CFEngine component and can take several values, here we use @samp{agent}). 
+@item The bundle contains a promise type (here @samp{files:}), a promiser (i.e. the affected object, here @samp{/tmp/testfile}) and an attribute about desired state (here @samp{create => "true"}; will create the file if it does not already exist).
+@end itemize
 
-@c The right hand panel shows basic file and Subversion commands. The @code{Save} button will store a local/version of the opened files without committing to the repository. 
 
-This policy will create the file @file{/tmp/testfile}. It contains the bare minimum of a CFEngine policy, consisting of the compulsory @samp{body common control}, containing (at least) a bundlesequence. Then follows a compulsory @samp{bundle}, of type @samp{agent} and with the arbitrary name @samp{test} (the bundle type reflects the affected CFEngine component and can take several values, here we use @samp{agent}). The bundle contains a promise type (here @samp{files}), a promiser (i.e. the affected object, here @samp{/tmp/testfile}) and a promise about desired state (here @samp{create => "true"}).
+@c ------------------------------------------------------
+@node Example - Install packages from remote repository, Example - Install packages from local repository, Standard CFEngine policy, Introduction to CFEngine policies
+@section Example - Install packages from remote repository
 
-@c Then follows a compulsory @samp{bundle}and followed by bundle type (which reflects the affected CFEngine component, here @samp{agent}) and an arbitrary bundle name (here @samp{test}).
+In this example we will use the web based shell access to create and include a policy so that it installs a software package from the operating system standard repository. 
+@sp 1
+@cartouche
+@noindent @b{Action item}: Go to @samp{Shell access} as described in @ref{Shell access (evaluation feature only)}. Enter the number @b{1} and press @b{Enter} to log on to the host called @code{policyhub}. You will need to check out the files in the subversion repository connected to policyhub, type in the following to do so:
+@sp 1
+@verbatim
+   pilot@policyhub-1:~$ svn co http://localhost/svn/CFEnginePilot
+@end verbatim
+@sp 1
+@noindent Username and password for the subversion repository is 'pilot' and 'pilot'.
+@end cartouche
+@sp 1
+You now have read and write access to the policy files in the @file{~/CFEnginePilot} directory. Enter the following to change directories and create a new policy file, @file{pilot_packages.cf} (we use the vim editor in this example):
+@sp 1
+@cartouche
+@noindent @b{Action item}: Type in the following in the command line:
+ 
+@verbatim
+   pilot@policyhub-1:~$ cd CFEnginePilot
+   pilot@policyhub-1:~/CFEnginePilot$ vim pilot_packages.cf
+@end verbatim
+@end cartouche
+@sp 1
+@noindent Let us make a policy to install apache (httpd) on centos machines:
+@page 
+@cartouche
+@noindent @b{Action item}: Press @b{i} to enter edit mode in vim, then enter the following content in the file (comments (text behind the hash tag (#)) are optional):
+@verbatim
+
+bundle agent pilot_packages 	# bundle type agent, named 'pilot_packages'
+{
+vars:				# promise type vars (promise about variables)
+   "match_package" slist => {	# variable name is 'match_package' (this is the
+				# promiser) and has type 'list of strings'
+	"httpd"		# list entry value is httpd (for apache on centos)
+	};
+
+packages:			# promise type packages
+   centos::			# class, or context, in which the promise 
+				# applies (here on all centos machines)
+	"$(match_package)" 	# expand the variable 'match_package' (this is
+				# the promiser)
+	handle			=> "pilot_remote_package_install",
+	package_policy		=> "add",	# add all packages in variable 
+	package_method		=> yum;		# specify what package method
+						# to use (here yum)
+}
+@end verbatim
+@sp 1
+@noindent Press @b{Esc} to exit the vim edit mode, then type @code{:wq} to write to file and quit. 
+@end cartouche
+@c @sp 1
+@noindent The next step is to include this policy in @file{promises.cf}: 
+
+@cartouche
+@noindent @b{Action item}: Open @file{promises.cf}: 
+@verbatim
+   pilot@policyhub-1:~/CFEnginePilot$ vim promises.cf
+@end verbatim
+@c @sp 1
+@noindent Press @b{i} to enter edit mode in vim, then add the following lines to the first bundle (@code{bundle common pilot}) as indicated:
+@c @sp 1
+@verbatim
+   bundle common pilot {
+   vars:
+      "bundlesequence" slist => {
+				"pilot_simple_edit_policy",
+				"pilot_packages", 	# add this line
+   #				"pilot ̇simple ̇custom ̇install",
+   #				"pilot_simple_custom_report_policy",
+				};
+      "inputs"	slist => 	{
+				"pilot_simple_edit_policy.cf",
+				"pilot_packages.cf", 	# add this line
+   #				"pilot ̇simple ̇custom ̇install.cf",
+   #				"pilot_simple_custom_report_policy.cf",
+				};
+}
+@end verbatim
+@c @sp 1
+@noindent Press @b{Esc} to exit the vim edit mode, then type @code{:wq} to write to file and quit.
+@end cartouche
+@c @sp 1
+@noindent We now need to check the syntax of the file by running the syntax checker (@code{cf-promises}) on @file{promises.cf}:
+@sp 1
+@cartouche
+@noindent @b{Action item}: Type the following in the command line interface (line has been split and indented for presentability):
+@verbatim
+pilot@policyhub-1:~/CFEnginePilot$
+	 /var/cfengine/cf-promises -f ~/CFEnginePilot/promises.cf
+@end verbatim
+@end cartouche
+@sp 1
+cf-promises will only output an error message if there is a syntax error in the policy, i.e. the command prompt will be blinking and waiting for input on a new line if everything is fine. If applicable, please correct any errors by opening and editing @file{pilot_packages.cf} as shown previously and proceed to the next step when all problems have been solved.
+
+@noindent The next step to add @file{pilot_packages.cf} to the repository and commit the changes:
+@sp 1
+@cartouche
+@noindent @b{Action item}: Type in the following in the command line:
+
+@verbatim
+pilot@policyhub-1:~/CFEnginePilot$ svn add pilot_packages.cf
+pilot@policyhub-1:~/CFEnginePilot$ svn ci -m "added remote package install"
+@end verbatim
+@end cartouche
+@sp 1
+The policy will be executed at the next run of cf-agent (here in the evaluation environment we have set the interval to every two minutes). You can check that the policy has been implemented either through the mission portal or the web ssh interface:
+@sp 1
+@cartouche
+@noindent @b{Action item:}
+@itemize -
+@item Mission Portal: Software reports (@ref{Example - Software report}) are only updated every six hours so this is not a convenient place to look for immediate changes. We can use the @samp{Promises repaired (log)} report instead: Open the reports finder as shown in @ref{Reports finder}, scroll down and click @b{Promises repaired (log)}. Enter the bundle name (pilot_packages) or promise handle (pilot_remote_package_install) as search criteria and click @b{Generate report}. The report should list the promise (not be empty).
+@item Web ssh: Choose the centos machine from the web ssh menu (as shown in @ref{Shell access (evaluation feature only)}) and look for @file{/var/cfengine/inputs/pilot_packages.cf}.
+@end itemize
+@end cartouche
+
+
+@c ------------------------------------------------------
+@node Example - Install packages from local repository,  , Example - Install packages from remote repository, Introduction to CFEngine policies
+@section Example - Install packages from local repository
+
+In this example we will look at installing a custom package from a local repository. The package will install a text file in a given location, showing that the package has been successfully deployed. The example is transferable to other custom packages such as weblogic and includes installation on different operating systems (OS; CentOS, SuSE and Ubuntu). The following CFEngine policy has been written for this purpose (some lines have been split and indented for presentability):
+
+@page
+@verbatim
+bundle agent pilot_simple_custom_install {
+
+	vars:
+		any::
+			"pkg_version" string => "1.0.0-1";
+
+		centos|ubuntu|SuSE::
+			"pkg_name" string => "cfengine-testpackage";
+
+		ubuntu::
+			"pkg_file" string => "cfengine-testpackage_$(pkg_version)_
+				amd64.deb";
+
+		centos|SuSE::
+			"pkg_file" string => "cfengine-testpackage-$(pkg_version).
+				x86_64.rpm";
+
+	files:
+		centos|SuSE|ubuntu::
+			"$(sys.workdir)/software_repository/$(pkg_file)"
+				comment => "Copy test package to Linux hosts",
+				copy_from => remote_cp("$(def.dir_custompkgs)/
+					$(pkg_file)", "$(sys.policy_hub)"),
+				classes => if_ok("package_downloaded");
+                                
+	packages:
+		package_downloaded.(centos|SuSE)::
+			"$(pkg_name)"
+				comment => "Add package to rpm based hosts",
+				package_policy => "add",
+				package_version => "$(pkg_version)",
+				package_select => ">=",
+				package_architectures => { "x86_64" },
+				package_method => rpm_version("$(sys.workdir)/
+					software_repository/");
+
+		package_downloaded.ubuntu::
+			"$(pkg_name)"
+				comment => "Add package to dpkg based hosts",
+				package_policy => "add",
+				package_select => ">=",
+				package_version => "$(pkg_version)",
+				package_architectures => { ".*" },
+				package_method => dpkg_version("$(sys.workdir)/
+					software_repository/");
+}
+@end verbatim
+
+@noindent This policy is divided into three main parts, each involving different promise types (i.e. promises about):
+@itemize -
+@item vars: Promises about variables
+@itemize -
+@item In the context @code{any::} (valid for all OSs): @code{pkg_version} - the version of the package
+@item In the context @code{centos|ubuntu|suse} (valid for CentOS, Ubunto and SuSE): @code{pkg_name} - the name of the package
+@item In the context @code{ubuntu} (valid for Ubuntu): @code{pkg_file} - the OS-specific package file name
+@item In the context @code{centos|suse} (valid for CentOS and SuSE): @code{pkg_file} - the OS-specific package file name
+@end itemize
+@item files: Promises about files@*
+Promise to copy the OS-specific package files from the OS-specific work directories and set the class @code{package_downloaded} to true if the operation was successful
+@item packages: Promises about packages
+Promise to install the OS-specific package using the OS-specific package manager
+@end itemize
+
+The policy has already been prepared and is ready for use in the evaluation environment. To execute this policy:
+@sp 1
+@cartouche
+@noindent @b{Action item:} If you have not already checked out the subversion repository as shown in the previous example @ref{Example - Install packages from remote repository}, please do so. Open @file{promises.cf} as shown in the same example, then uncomment the following two lines (remove the hash tag (#)) in @code{bundle common pilot}:
+@itemize -
+@item # @code{pilot_simple_custom_install} 
+@item # @code{pilot_simple_custom_install.cf}.
+@end itemize
+@noindent Save and commit to subversion as shown in the same example.
+@end cartouche
+@sp 1
+The policy will be executed at the next run of cf-agent (here in the evaluation environment we have set the interval to every two minutes). You can check that the policy has been implemented either through the mission portal or the web ssh interface:
+@sp 1
+@cartouche
+@noindent @b{Action item:}
+@itemize -
+@item Mission Portal: Software reports (@ref{Example - Software report}) are only updated every six hours so this is not a convenient place to look for immediate changes. We can use the @samp{Promises repaired (log)} report instead: Open the reports finder as shown in @ref{Reports finder}, scroll down and click @b{Promises repaired (log)}. Enter the bundle name (pilot_packages) or promise handle (pilot_remote_package_install) as search criteria and click @b{Generate report}. The report should list the promise (not be empty).
+@item Web ssh: Choose the centos machine from the web ssh menu (as shown in @ref{Shell access (evaluation feature only)}) and look for @file{/etc/cfengine_installed.txt}.
+@end itemize
+@end cartouche
 
 
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node Next steps, Policy editing, Introduction to CFEngine policies, Top
+@node Next steps, Policy editor (beta), Introduction to CFEngine policies, Top
 @chapter Next steps
 
 We recommend that users familiarize themselves with the @url{http://cfengine.com/tech, CFEngine 3 documentation} and continue to learn about the CFEngine language and CFEngine 3 Nova. Documents of interest include: @*
 
 @itemize -
-@item @url{http://cfengine.com/manuals/http://cfengine.com/manuals/novaevaluationguidesupplement.html, Nova Evaluation Guide Supplement}@*
-@item @url{http://cfengine.com/manuals/NovaOwnersManual.html, CFEngine 3 Nova Owner's Manual}@*
+@item @url{http://cfengine.com/manuals/novaevaluationguidesupplement.html, Nova Evaluation Guide Supplement}@*
+@item @url{http://cfengine.com/manuals/Enterprise-2-2-OwnersManual.html, CFEngine 3 Nova Owner's Manual}@*
 @item @url{http://cfengine.com/manuals/cf3-conceptguide.html, CFEngine 3 Concept guide}@*
-@item @url{http://cfengine.com/manuals/cf3-reference.html, CFEngine 3 Reference Manual}@*
+@item @url{http://cfengine.com/manuals/cf3-Reference.html, CFEngine 3 Reference Manual}@*
 @end itemize
 
 We also recommend that you attend a @url{http://cfengine.com/training, CFEngine 3 Training Course} and/or employ @url{http://cfengine.com/consultancy, CFEngine Consulting} to help them plan your Nova implementation.
@@ -760,18 +981,18 @@ Use our @url{http://info.cfengine.com/ContactUs.html, contact form}, or send an 
 @c *****************************************************
 @c * CHAPTER
 @c *****************************************************
-@node Policy editing,  , Next steps, Top
-@appendix Policy editing
+@node Policy editor (beta),  , Next steps, Top
+@appendix Policy editor (beta)
 
 
 @c -----------------------------------------------------
 @menu
 * The Policy Editor (beta)::    
-* Edit a CDP input file::       
-* Create a standard policy::    
+* Example - Edit a CDP input file::       
+* Example - Create a standard policy::    
 @end menu
 
-@node The Policy Editor (beta), Edit a CDP input file, Policy editing, Policy editing
+@node The Policy Editor (beta), Example - Edit a CDP input file, Policy editor (beta), Policy editor (beta)
 @section The Policy Editor (beta)
 
 CFEngine 3 Nova has a beta version of an integrated editor, made for working on CFEngine policies. It provides syntax high-lighting and look-up to make policy writing easier. 
@@ -818,8 +1039,8 @@ The Policy Editor appears after a successful checkout. It consists of three main
 
 @page
 @c ---------------------------------------------------
-@node Edit a CDP input file, Create a standard policy, The Policy Editor (beta), Policy editing
-@section Edit a CDP input file
+@node Example - Edit a CDP input file, Example - Create a standard policy, The Policy Editor (beta), Policy editor (beta)
+@section Example - Edit a CDP input file
 
 If you have not already opened the Policy Editor, follow the instruction in @ref{The Policy Editor (beta)} to do so. The file @file{acl_file_list.txt} can be found under the @file{cdp_inputs} catalog in the policy editor.
 
@@ -854,8 +1075,8 @@ The result should look like the following figure (note that the value in the @sa
 
 
 @c ------------------------------------------------------
-@node Create a standard policy,  , Edit a CDP input file, Policy editing
-@section Create a standard policy
+@node Example - Create a standard policy,  , Example - Edit a CDP input file, Policy editor (beta)
+@section Example - Create a standard policy
 
 If you have not already opened the Policy Editor, follow the instruction in @ref{The Policy Editor (beta)} to do so. We will create a custom report as an example of writing a standard CFEngine policy. Custom reports are useful when your reporting needs differ from the CFEngine 3 Nova standard reports. Data processing and extraction from CFEngine's embedded databases must be scripted by the user if the procedure is not covered in any of the reports found in the Mission Portal. Output to files or logs may be customized on a per-promise basis and users can design their own log and report formats. 
 
@@ -876,8 +1097,8 @@ bundle agent pilot_simple_custom_report_policy {
       "file_exists" expression => fileexists("$(file_to_check)");		
 @end verbatim
 @sp 1
-@noindent (@i{The policy continues on the next page.})
-@page
+@c @noindent (@i{The policy continues on the next page.})
+@c @page
 @verbatim
    # promise type: make a promise about reports, see details below
    reports:

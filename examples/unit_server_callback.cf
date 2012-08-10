@@ -1,0 +1,94 @@
+#  Copyright (C) Cfengine AS
+
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commerical Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+########################################################
+#
+# Simple test copy from server connection to cfServer
+#
+########################################################
+
+ #
+ # run this as follows:
+ #
+ # cf-serverd -f runtest_1.cf [-v]
+ # cf-agent   -f runtest_2.cf
+ #
+ # Notice that the same file configures all parts of cfengine
+
+
+########################################################
+
+body common control
+{
+bundlesequence  => { "testbundle" };
+version => "1.2.3";
+#fips_mode => "true";
+}
+
+########################################################
+
+bundle agent testbundle
+{
+vars:
+}
+
+#########################################################
+# Server config
+#########################################################
+
+body server control 
+
+{
+allowconnects         => { "127.0.0.1" , "::1" };
+allowallconnects      => { "127.0.0.1" , "::1" };
+trustkeysfrom         => { "127.0.0.1" , "::1" };
+call_collect_interval => "1";
+# allowusers
+}
+
+#########################################################
+
+bundle server access_rules()
+
+{
+
+access:
+
+  # On the policy hub
+
+  "collect_calls"
+     resource_type => "query",
+           admit   => { "127.0.0.1" };
+
+  # On the isolated client in the field
+
+
+ "delta"
+    comment => "Grant access to cfengine hub to collect report deltas",
+    resource_type => "query",
+          admit   => { "127.0.0.1"  };
+  "full"
+          comment => "Grant access to cfengine hub to collect full report dump",
+    resource_type => "query",
+          admit   => { "127.0.0.1"  };
+}
+
+

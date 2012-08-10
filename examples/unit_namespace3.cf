@@ -1,0 +1,11 @@
+
+
+bundle agent test_in_last_file
+{
+reports:
+
+  !sdlfkj::
+
+    "Final namespace is the default";
+ 
+}

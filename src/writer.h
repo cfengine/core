@@ -56,4 +56,7 @@ void WriterClose(Writer *writer);
 /* Returns modifiable string and destroys itself */
 char *StringWriterClose(Writer *writer);
 
+/* Returns the open file and destroys itself */
+FILE *FileWriterDetach(Writer *writer);
+
 #endif

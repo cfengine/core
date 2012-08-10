@@ -23,17 +23,14 @@
 
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: instrumentation.c                                                   */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
+
+#include "constraints.h"
+#include "dbm_api.h"
+#include "files_names.h"
+#include "item_lib.h"
 
 #include <math.h>
-#include "dbm_api.h"
 
 static void NotePerformance(char *eventname, time_t t, double value);
 

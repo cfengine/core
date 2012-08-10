@@ -5,9 +5,9 @@ This file contains a copy of:
 
 ----------------------------------------------------------------------------
 
-CFEngine is provided under the terms of the GNU General Public License (below), with
-explicit permission to link with the OpenSSL library, BerkeleyDB library and and
-PCRE library.
+CFEngine is provided under the terms of the GNU General Public License version 3
+(below), with explicit permission to link with the OpenSSL library, BerkeleyDB
+library and and PCRE library.
 
 On some systems, code under the Frontier Artistic License
 (/pub/snprintf) might become compiled. This is compatible with the
@@ -783,10 +783,10 @@ edition of the Software.
 
 "Software" means: 
 
-a) the CFEngine enterprise edition Nova, Constellation and Galaxy data
-centre administration software downloaded by the Licensee or otherwise
-given access to including bundled documentation and other material, as
-described at http://www.cfengine.com/; and
+a) the CFEngine Enterprise data centre administration software 
+downloaded by the Licensee or otherwise given access to including 
+bundled documentation and other material, as described at 
+http://www.cfengine.com/; and
 
 b) new versions and updates to such software provided by Cfengine, and
 

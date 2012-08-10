@@ -1,0 +1,26 @@
+
+@verbatim
+
+bundle agent example
+
+{     
+vars:
+
+  "scalar1" string => "SCALAR 1";
+  "list1" slist => { "LIST1_1", "LIST1_2" } ;
+  "array[1]" string => "ARRAY 1";
+  "array[2]" string => "ARRAY 2";
+
+  "i" slist => getindices("array");
+
+reports:
+
+  cfengine_3::
+
+    "Scalar $(scalar1)";
+    "List $(list1)";
+    "Array $(array[$(i)])";
+}
+
+
+@end verbatim

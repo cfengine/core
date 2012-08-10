@@ -22,15 +22,39 @@
   included file COSL.txt.
 */
 
+#include "crypto.h"
+
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 #include "lastseen.h"
 
 static void MD5Random(unsigned char digest[EVP_MAX_MD_SIZE + 1]);
+static void RandomSeed(void);
 
 /**********************************************************************/
 
-void RandomSeed()
+void CryptoInitialize()
+{
+    static bool crypto_initialized = false;
+
+    if (!crypto_initialized)
+    {
+        OpenSSL_add_all_algorithms();
+        OpenSSL_add_all_digests();
+        ERR_load_crypto_strings();
+
+        RandomSeed();
+        unsigned char s[16] = { 0 };
+        int seed = 0;
+        RAND_bytes(s, 16);
+        s[15] = '\0';
+        seed = ElfHash(s);
+        srand48((long) seed);
+
+        crypto_initialized = true;
+    }
+}
+
+static void RandomSeed(void)
 {
     static unsigned char digest[EVP_MAX_MD_SIZE + 1];
     char vbuff[CF_BUFSIZE];
@@ -52,108 +76,6 @@ void RandomSeed()
         MD5Random(digest);
         RAND_seed((void *) digest, 16);
     }
-}
-
-/*****************************************************************************/
-
-void KeepKeyPromises()
-{
-    unsigned long err;
-    RSA *pair;
-    FILE *fp;
-    struct stat statbuf;
-    int fd;
-    static char *passphrase = "Cfengine passphrase";
-    const EVP_CIPHER *cipher;
-    char vbuff[CF_BUFSIZE];
-
-    NewScope("common");
-
-    cipher = EVP_des_ede3_cbc();
-
-    if (cfstat(CFPUBKEYFILE, &statbuf) != -1)
-    {
-        CfOut(cf_cmdout, "", "A key file already exists at %s\n", CFPUBKEYFILE);
-        return;
-    }
-
-    if (cfstat(CFPRIVKEYFILE, &statbuf) != -1)
-    {
-        CfOut(cf_cmdout, "", "A key file already exists at %s\n", CFPRIVKEYFILE);
-        return;
-    }
-
-    printf("Making a key pair for cfengine, please wait, this could take a minute...\n");
-
-    pair = RSA_generate_key(2048, 35, NULL, NULL);
-
-    if (pair == NULL)
-    {
-        err = ERR_get_error();
-        CfOut(cf_error, "", "Unable to generate key: %s\n", ERR_reason_error_string(err));
-        return;
-    }
-
-    if (DEBUG)
-    {
-        RSA_print_fp(stdout, pair, 0);
-    }
-
-    fd = open(CFPRIVKEYFILE, O_WRONLY | O_CREAT | O_TRUNC, 0600);
-
-    if (fd < 0)
-    {
-        CfOut(cf_error, "open", "Open %s failed: %s.", CFPRIVKEYFILE, strerror(errno));
-        return;
-    }
-
-    if ((fp = fdopen(fd, "w")) == NULL)
-    {
-        CfOut(cf_error, "fdopen", "Couldn't open private key %s.", CFPRIVKEYFILE);
-        close(fd);
-        return;
-    }
-
-    CfOut(cf_verbose, "", "Writing private key to %s\n", CFPRIVKEYFILE);
-
-    if (!PEM_write_RSAPrivateKey(fp, pair, cipher, passphrase, strlen(passphrase), NULL, NULL))
-    {
-        err = ERR_get_error();
-        CfOut(cf_error, "", "Couldn't write private key: %s\n", ERR_reason_error_string(err));
-        return;
-    }
-
-    fclose(fp);
-
-    fd = open(CFPUBKEYFILE, O_WRONLY | O_CREAT | O_TRUNC, 0600);
-
-    if (fd < 0)
-    {
-        CfOut(cf_error, "open", "Unable to open public key %s.", CFPUBKEYFILE);
-        return;
-    }
-
-    if ((fp = fdopen(fd, "w")) == NULL)
-    {
-        CfOut(cf_error, "fdopen", "Open %s failed.", CFPUBKEYFILE);
-        close(fd);
-        return;
-    }
-
-    CfOut(cf_verbose, "", "Writing public key to %s\n", CFPUBKEYFILE);
-
-    if (!PEM_write_RSAPublicKey(fp, pair))
-    {
-        err = ERR_get_error();
-        CfOut(cf_error, "", "Unable to write public key: %s\n", ERR_reason_error_string(err));
-        return;
-    }
-
-    fclose(fp);
-
-    snprintf(vbuff, CF_BUFSIZE, "%s/randseed", CFWORKDIR);
-    RAND_write_file(vbuff);
-    cf_chmod(vbuff, 0644);
 }
 
 /*********************************************************************/

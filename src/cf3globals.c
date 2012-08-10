@@ -23,14 +23,6 @@
   included file COSL.txt.
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: cf3globals.c                                                        */
-/*                                                                           */
-/* Created: Thu Aug  2 11:08:10 2007                                         */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
 
 /*****************************************************************************/
@@ -59,9 +51,6 @@ bool ALLCLASSESREPORT = false;
 
 struct utsname VSYSNAME;
 
-FILE *FREPORT_HTML = NULL;
-FILE *FREPORT_TXT = NULL;
-FILE *FKNOW = NULL;
 int XML = false;
 
 int CFA_MAXTHREADS = 10;
@@ -70,16 +59,13 @@ int CFA_BACKGROUND_LIMIT = 1;
 int AM_BACKGROUND_PROCESS = false;
 int CF_PERSISTENCE = 10;
 
-char *THIS_BUNDLE = NULL;
-char THIS_AGENT[CF_MAXVARSIZE] = { 0 };
+const char *THIS_BUNDLE = NULL;
 
 enum cfagenttype THIS_AGENT_TYPE;
 time_t PROMISETIME = 0;
-time_t CF_LOCKHORIZON = SECONDS_PER_WEEK * 4;
 
 int LICENSES = 0;
 int AM_NOVA = false;
-int AM_CONSTELLATION = false;
 int AM_PHP_MODULE = false;
 char EXPIRY[CF_SMALLBUF] = { 0 };
 char LICENSE_COMPANY[CF_SMALLBUF] = { 0 };
@@ -97,7 +83,6 @@ Item *PROCESSTABLE = NULL;
 Item *PROCESSREFRESH = NULL;
 Item *ROTATED = NULL;
 Item *FSTABLIST = NULL;
-Item *ABORTBUNDLEHEAP = NULL;
 Item *DONELIST = NULL;
 
 char *CBUNDLESEQUENCE_STR;
@@ -105,7 +90,6 @@ char *CBUNDLESEQUENCE_STR;
 int EDIT_MODEL = false;
 int CF_MOUNTALL = false;
 int FSTAB_EDITS;
-int ABORTBUNDLE = false;
 int BOOTSTRAP = false;
 
 /*****************************************************************************/
@@ -115,15 +99,10 @@ int BOOTSTRAP = false;
 double METER_KEPT[meter_endmark];
 double METER_REPAIRED[meter_endmark];
 
-double Q_MEAN;
-double Q_SIGMA;
-
 /*****************************************************************************/
 /* Internal data structures                                                  */
 /*****************************************************************************/
 
-Bundle *BUNDLES = NULL;
-Body *BODIES = NULL;
 Scope *VSCOPE = NULL;
 Rlist *VINPUTLIST = NULL;
 Rlist *BODYPARTS = NULL;
@@ -143,7 +122,6 @@ int LASTSEENEXPIREAFTER = SECONDS_PER_WEEK;
 char POLICY_SERVER[CF_BUFSIZE] = { 0 };
 
 char WEBDRIVER[CF_MAXVARSIZE] = { 0 };
-char DOCROOT[CF_MAXVARSIZE] = { 0 };
 char BANNER[2 * CF_BUFSIZE] = { 0 };
 char FOOTER[CF_BUFSIZE] = { 0 };
 char STYLESHEET[CF_BUFSIZE] = { 0 };
@@ -183,7 +161,7 @@ int ERRORCOUNT = 0;
 char VPREFIX[CF_MAXVARSIZE] = { 0 };
 char VINPUTFILE[CF_BUFSIZE] = { 0 };
 
-char CONTEXTID[32] = { 0 };
+char CONTEXTID[CF_MAXVARSIZE] = { 0 };
 char CFPUBKEYFILE[CF_BUFSIZE] = { 0 };
 char CFPRIVKEYFILE[CF_BUFSIZE] = { 0 };
 char CFWORKDIR[CF_BUFSIZE] = { 0 };
@@ -232,9 +210,7 @@ Item *IPADDRESSES = NULL;
 /* Context Management                                              */
 /*******************************************************************/
 
-AlphaList VHEAP;
-AlphaList VADDCLASSES;
-Item *VNEGHEAP = NULL;
+// see env_context.c
 
 Rlist *GOALS = NULL;
 
@@ -275,4 +251,4 @@ mode_t DEFAULTMODE = (mode_t) 0755;
 
 Item *VSETUIDLIST = NULL;
 Item *SUSPICIOUSLIST = NULL;
-enum classes VSYSTEMHARDCLASS = unused1;
+enum classes VSYSTEMHARDCLASS;

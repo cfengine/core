@@ -1,8 +1,8 @@
+#include "test.h"
+
 #include "cf3.defs.h"
 #include "dbm_api.h"
 
-#include <setjmp.h>
-#include <cmockery.h>
 
 char CFWORKDIR[CF_BUFSIZE] = "/tmp";
 
@@ -75,14 +75,41 @@ void test_iter_delete_entry(void **state)
     CloseDB(db);
 }
 
+static void CreateGarbage(const char *filename)
+{
+    FILE *fh = fopen(filename, "w");
+    for(int i = 0; i < 1000; ++i)
+    {
+        fwrite("some garbage!", 14, 1, fh);
+    }
+    fclose(fh);
+}
+
+void test_recreate(void **state)
+{
+    /* Test that recreating database works properly */
+
+    unlink("/tmp/cf_classes.tcdb");
+    unlink("/tmp/cf_classes.qdbm");
+
+    CreateGarbage("/tmp/cf_classes.tcdb");
+    CreateGarbage("/tmp/cf_classes.qdbm");
+
+    CF_DB *db;
+    assert_int_equal(OpenDB(&db, dbid_classes), true);
+    CloseDB(db);
+}
+
 int main()
 {
     const UnitTest tests[] =
         {
             unit_test(test_iter_modify_entry),
             unit_test(test_iter_delete_entry),
+            unit_test(test_recreate),
         };
 
+    PRINT_TEST_BANNER();
     return run_tests(tests);
 }
 

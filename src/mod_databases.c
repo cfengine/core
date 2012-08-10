@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -20,46 +20,12 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
-
-/*****************************************************************************/
-/*                                                                           */
-/* File: mod_databases.c                                                     */
-/*                                                                           */
-/*****************************************************************************/
-
-/*
-
- This file can act as a template for adding functionality to cfengine 3.
- All functionality can be added by extending the main array
-
- CF_MOD_SUBTYPES[CF3_MODULES]
-
- and its array dimension, in mod_common, in the manner shown here.
- 
-*/
-
-#define CF3_MOD_DATABASES
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
+#include "mod_databases.h"
 
- /***********************************************************/
- /* Read this module file backwards, as dependencies have   */
- /* to be defined first - these arrays declare pairs of     */
- /* constraints                                             */
- /*                                                         */
- /* lval => rval                                            */
- /*                                                         */
- /* in the form (lval,type,range)                           */
- /*                                                         */
- /* If the type is cf_body then the range is a pointer      */
- /* to another array of pairs, like in a body "sub-routine" */
- /*                                                         */
- /***********************************************************/
-
-BodySyntax CF_SQLSERVER_BODY[] =
+static const BodySyntax CF_SQLSERVER_BODY[] =
 {
     {"db_server_owner", cf_str, "", "User name for database connection"},
     {"db_server_password", cf_str, "", "Clear text password for database connection"},
@@ -70,9 +36,7 @@ BodySyntax CF_SQLSERVER_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/***************************************************************/
-
-BodySyntax CF_DATABASES_BODIES[] =
+static const BodySyntax CF_DATABASES_BODIES[] =
 {
     {"database_server", cf_body, CF_SQLSERVER_BODY, "Credentials for connecting to a local/remote database server"},
     {"database_type", cf_opts, "sql,ms_registry", "The type of database that is to be manipulated", "none"},
@@ -84,11 +48,7 @@ BodySyntax CF_DATABASES_BODIES[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/***************************************************************/
-/* This is the point of entry from mod_common.c                */
-/***************************************************************/
-
-SubTypeSyntax CF_DATABASES_SUBTYPES[] =
+const SubTypeSyntax CF_DATABASES_SUBTYPES[] =
 {
     {"agent", "databases", CF_DATABASES_BODIES},
     {NULL, NULL, NULL},

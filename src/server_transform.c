@@ -23,24 +23,28 @@
 
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: server_transform.c                                                  */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
-#include "cf3.server.h"
+#include "server.h"
 
-static void KeepContextBundles(void);
+#include "env_context.h"
+#include "files_names.h"
+#include "mod_access.h"
+#include "constraints.h"
+#include "item_lib.h"
+#include "conversion.h"
+#include "reporting.h"
+#include "expand.h"
+
+static void KeepContextBundles(Policy *policy, const ReportContext *report_context);
 static void KeepServerPromise(Promise *pp);
 static void InstallServerAuthPath(char *path, Auth **list, Auth **listtop);
 static void KeepServerRolePromise(Promise *pp);
-static void KeepPromiseBundles(void);
+static void KeepPromiseBundles(Policy *policy, const ReportContext *report_context);
 
-extern BodySyntax CFS_CONTROLBODY[];
-extern BodySyntax CF_REMROLE_BODIES[];
+extern const BodySyntax CFS_CONTROLBODY[];
+extern const BodySyntax CF_REMROLE_BODIES[];
+extern int COLLECT_INTERVAL;
+extern int COLLECT_WINDOW;
 
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
@@ -68,11 +72,11 @@ void KeepQueryAccessPromise(Promise *pp, char *type);
 /* Level                                                           */
 /*******************************************************************/
 
-void KeepPromises(void)
+void KeepPromises(Policy *policy, const ReportContext *report_context)
 {
-    KeepContextBundles();
-    KeepControlPromises();
-    KeepPromiseBundles();
+    KeepContextBundles(policy, report_context);
+    KeepControlPromises(policy);
+    KeepPromiseBundles(policy, report_context);
 }
 
 /*******************************************************************/
@@ -112,51 +116,73 @@ void Summarize()
         }
     }
 
+    CfOut(cf_verbose, "", "Granted access to literal/variable/query data :\n");
+
+    for (ptr = VARADMIT; ptr != NULL; ptr = ptr->next)
+    {
+        CfOut(cf_verbose, "", "  Object: %s (encrypt=%d)\n", ptr->path, ptr->encrypt);
+
+        for (ip = ptr->accesslist; ip != NULL; ip = ip->next)
+        {
+            CfOut(cf_verbose, "", "   Admit: %s root=", ip->name);
+            for (ipr = ptr->maproot; ipr != NULL; ipr = ipr->next)
+            {
+                CfOut(cf_verbose, "", "%s,", ipr->name);
+            }
+        }
+    }
+
+    CfOut(cf_verbose, "", "Denied access to literal/variable/query data :\n");
+
+    for (ptr = VARDENY; ptr != NULL; ptr = ptr->next)
+    {
+        CfOut(cf_verbose, "", "  Object: %s\n", ptr->path);
+
+        for (ip = ptr->accesslist; ip != NULL; ip = ip->next)
+        {
+            CfOut(cf_verbose, "", "   Deny: %s\n", ip->name);
+        }
+    }
+
+    
     CfOut(cf_verbose, "", " -> Host IPs allowed connection access :\n");
 
-    for (ip = NONATTACKERLIST; ip != NULL; ip = ip->next)
+    for (ip = SV.nonattackerlist; ip != NULL; ip = ip->next)
     {
         CfOut(cf_verbose, "", " .... IP: %s\n", ip->name);
     }
 
     CfOut(cf_verbose, "", "Host IPs denied connection access :\n");
 
-    for (ip = ATTACKERLIST; ip != NULL; ip = ip->next)
+    for (ip = SV.attackerlist; ip != NULL; ip = ip->next)
     {
         CfOut(cf_verbose, "", " .... IP: %s\n", ip->name);
     }
 
     CfOut(cf_verbose, "", "Host IPs allowed multiple connection access :\n");
 
-    for (ip = MULTICONNLIST; ip != NULL; ip = ip->next)
+    for (ip = SV.multiconnlist; ip != NULL; ip = ip->next)
     {
         CfOut(cf_verbose, "", " .... IP: %s\n", ip->name);
     }
 
     CfOut(cf_verbose, "", "Host IPs from whom we shall accept public keys on trust :\n");
 
-    for (ip = TRUSTKEYLIST; ip != NULL; ip = ip->next)
+    for (ip = SV.trustkeylist; ip != NULL; ip = ip->next)
     {
         CfOut(cf_verbose, "", " .... IP: %s\n", ip->name);
     }
 
     CfOut(cf_verbose, "", "Users from whom we accept connections :\n");
 
-    for (ip = ALLOWUSERLIST; ip != NULL; ip = ip->next)
+    for (ip = SV.allowuserlist; ip != NULL; ip = ip->next)
     {
         CfOut(cf_verbose, "", " .... USERS: %s\n", ip->name);
     }
 
     CfOut(cf_verbose, "", "Host IPs from NAT which we don't verify :\n");
 
-    for (ip = SKIPVERIFY; ip != NULL; ip = ip->next)
-    {
-        CfOut(cf_verbose, "", " .... IP: %s\n", ip->name);
-    }
-
-    CfOut(cf_verbose, "", "Dynamical Host IPs (e.g. DHCP) whose bindings could vary over time :\n");
-
-    for (ip = DHCPLIST; ip != NULL; ip = ip->next)
+    for (ip = SV.skipverify; ip != NULL; ip = ip->next)
     {
         CfOut(cf_verbose, "", " .... IP: %s\n", ip->name);
     }
@@ -167,7 +193,7 @@ void Summarize()
 /* Level                                                           */
 /*******************************************************************/
 
-void KeepControlPromises()
+void KeepControlPromises(Policy *policy)
 {
     Constraint *cp;
     Rval retval;
@@ -183,11 +209,11 @@ void KeepControlPromises()
 
     Banner("Server control promises..");
 
-    HashControls();
+    HashControls(policy);
 
 /* Now expand */
 
-    for (cp = ControlBodyConstraints(cf_server); cp != NULL; cp = cp->next)
+    for (cp = ControlBodyConstraints(policy, cf_server); cp != NULL; cp = cp->next)
     {
         if (IsExcluded(cp->classes))
         {
@@ -222,7 +248,7 @@ void KeepControlPromises()
 
         if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_logallconnections].lval) == 0)
         {
-            LOGCONNS = GetBoolean(retval.item);
+            SV.logconns = GetBoolean(retval.item);
             CfOut(cf_verbose, "", "SET LOGCONNS = %d\n", LOGCONNS);
             continue;
         }
@@ -232,6 +258,20 @@ void KeepControlPromises()
             CFD_MAXPROCESSES = (int) Str2Int(retval.item);
             MAXTRIES = CFD_MAXPROCESSES / 3;
             CfOut(cf_verbose, "", "SET maxconnections = %d\n", CFD_MAXPROCESSES);
+            continue;
+        }
+
+        if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_call_collect_interval].lval) == 0)
+        {
+            COLLECT_INTERVAL = (int) 60 * Str2Int(retval.item);
+            CfOut(cf_verbose, "", "SET call_collect_interval = %d (seconds)\n", COLLECT_INTERVAL);
+            continue;
+        }
+
+        if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_collect_window].lval) == 0)
+        {
+            COLLECT_WINDOW = (int) Str2Int(retval.item);
+            CfOut(cf_verbose, "", "SET collect_window = %d (seconds)\n", COLLECT_INTERVAL);
             continue;
         }
 
@@ -250,9 +290,9 @@ void KeepControlPromises()
 
             for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
             {
-                if (!IsItemIn(NONATTACKERLIST, rp->item))
+                if (!IsItemIn(SV.nonattackerlist, rp->item))
                 {
-                    AppendItem(&NONATTACKERLIST, rp->item, cp->classes);
+                    AppendItem(&SV.nonattackerlist, rp->item, cp->classes);
                 }
             }
 
@@ -267,9 +307,9 @@ void KeepControlPromises()
 
             for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
             {
-                if (!IsItemIn(ATTACKERLIST, rp->item))
+                if (!IsItemIn(SV.attackerlist, rp->item))
                 {
-                    AppendItem(&ATTACKERLIST, rp->item, cp->classes);
+                    AppendItem(&SV.attackerlist, rp->item, cp->classes);
                 }
             }
 
@@ -284,31 +324,15 @@ void KeepControlPromises()
 
             for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
             {
-                if (!IsItemIn(SKIPVERIFY, rp->item))
+                if (!IsItemIn(SV.skipverify, rp->item))
                 {
-                    AppendItem(&SKIPVERIFY, rp->item, cp->classes);
+                    AppendItem(&SV.skipverify, rp->item, cp->classes);
                 }
             }
 
             continue;
         }
 
-        if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_dynamicaddresses].lval) == 0)
-        {
-            Rlist *rp;
-
-            CfOut(cf_verbose, "", "SET Dynamic addresses from ...\n");
-
-            for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
-            {
-                if (!IsItemIn(DHCPLIST, rp->item))
-                {
-                    AppendItem(&DHCPLIST, rp->item, cp->classes);
-                }
-            }
-
-            continue;
-        }
 
         if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_allowallconnects].lval) == 0)
         {
@@ -318,9 +342,9 @@ void KeepControlPromises()
 
             for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
             {
-                if (!IsItemIn(MULTICONNLIST, rp->item))
+                if (!IsItemIn(SV.multiconnlist, rp->item))
                 {
-                    AppendItem(&MULTICONNLIST, rp->item, cp->classes);
+                    AppendItem(&SV.multiconnlist, rp->item, cp->classes);
                 }
             }
 
@@ -335,9 +359,9 @@ void KeepControlPromises()
 
             for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
             {
-                if (!IsItemIn(ALLOWUSERLIST, rp->item))
+                if (!IsItemIn(SV.allowuserlist, rp->item))
                 {
-                    AppendItem(&ALLOWUSERLIST, rp->item, cp->classes);
+                    AppendItem(&SV.allowuserlist, rp->item, cp->classes);
                 }
             }
 
@@ -352,9 +376,9 @@ void KeepControlPromises()
 
             for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
             {
-                if (!IsItemIn(TRUSTKEYLIST, rp->item))
+                if (!IsItemIn(SV.trustkeylist, rp->item))
                 {
-                    AppendItem(&TRUSTKEYLIST, rp->item, cp->classes);
+                    AppendItem(&SV.trustkeylist, rp->item, cp->classes);
                 }
             }
 
@@ -409,16 +433,15 @@ void KeepControlPromises()
 
 /*********************************************************************/
 
-static void KeepContextBundles()
+static void KeepContextBundles(Policy *policy, const ReportContext *report_context)
 {
-    Bundle *bp;
     SubType *sp;
     Promise *pp;
     char *scope;
 
 /* Dial up the generic promise expansion with a callback */
 
-    for (bp = BUNDLES; bp != NULL; bp = bp->next)       /* get schedule */
+    for (Bundle *bp = policy->bundles; bp != NULL; bp = bp->next)       /* get schedule */
     {
         scope = bp->name;
         SetNewScope(bp->name);
@@ -443,7 +466,7 @@ static void KeepContextBundles()
 
                 for (pp = sp->promiselist; pp != NULL; pp = pp->next)
                 {
-                    ExpandPromise(cf_server, scope, pp, KeepServerPromise);
+                    ExpandPromise(cf_server, scope, pp, KeepServerPromise, report_context);
                 }
             }
         }
@@ -452,16 +475,15 @@ static void KeepContextBundles()
 
 /*********************************************************************/
 
-static void KeepPromiseBundles()
+static void KeepPromiseBundles(Policy *policy, const ReportContext *report_context)
 {
-    Bundle *bp;
     SubType *sp;
     Promise *pp;
     char *scope;
 
 /* Dial up the generic promise expansion with a callback */
 
-    for (bp = BUNDLES; bp != NULL; bp = bp->next)       /* get schedule */
+    for (Bundle *bp = policy->bundles; bp != NULL; bp = bp->next)       /* get schedule */
     {
         scope = bp->name;
         SetNewScope(bp->name);
@@ -486,7 +508,7 @@ static void KeepPromiseBundles()
 
                 for (pp = sp->promiselist; pp != NULL; pp = pp->next)
                 {
-                    ExpandPromise(cf_server, scope, pp, KeepServerPromise);
+                    ExpandPromise(cf_server, scope, pp, KeepServerPromise, report_context);
                 }
             }
         }
@@ -531,6 +553,12 @@ static void KeepServerPromise(Promise *pp)
         return;
     }
 
+    if (strcmp(pp->agentsubtype, "access") == 0 && sp && strcmp(sp, "variable") == 0)
+    {
+        KeepLiteralAccessPromise(pp, "variable");
+        return;
+    }
+    
     if (strcmp(pp->agentsubtype, "access") == 0 && sp && strcmp(sp, "query") == 0)
     {
         KeepQueryAccessPromise(pp, "query");
@@ -639,40 +667,64 @@ void KeepLiteralAccessPromise(Promise *pp, char *type)
 {
     Constraint *cp;
     Rlist *rp;
-    Auth *ap, *dp;
+    Auth *ap = NULL, *dp = NULL;
     char *handle = GetConstraintValue("handle", pp, CF_SCALAR);
 
-    if (handle == NULL)
+    if (handle == NULL && strcmp(type,"literal") == 0)
     {
         CfOut(cf_error, "", "Access to literal server data requires you to define a promise handle for reference");
         return;
     }
-
-    if (!GetAuthPath(handle, VARADMIT))
-    {
-        InstallServerAuthPath(handle, &VARADMIT, &VARADMITTOP);
-    }
-
-    RegisterLiteralServerData(handle, pp);
-
-    if (!GetAuthPath(handle, VARDENY))
-    {
-        InstallServerAuthPath(handle, &VARDENY, &VARDENYTOP);
-    }
-
-    ap = GetAuthPath(handle, VARADMIT);
-    dp = GetAuthPath(handle, VARDENY);
-
+    
     if (strcmp(type, "literal") == 0)
     {
+        CfOut(cf_verbose,""," -> Looking at literal access promise \"%s\", type %s",pp->promiser, type);
+
+        if (!GetAuthPath(handle, VARADMIT))
+        {
+            InstallServerAuthPath(handle, &VARADMIT, &VARADMITTOP);
+        }
+
+        if (!GetAuthPath(handle, VARDENY))
+        {
+            InstallServerAuthPath(handle, &VARDENY, &VARDENYTOP);
+        }
+
+        RegisterLiteralServerData(handle, pp);
+        ap = GetAuthPath(handle, VARADMIT);
+        dp = GetAuthPath(handle, VARDENY);
         ap->literal = true;
     }
-
-    if (strcmp(type, "context") == 0)
+    else
     {
-        ap->classpattern = true;
-    }
+        CfOut(cf_verbose,""," -> Looking at context/var access promise \"%s\", type %s",pp->promiser, type);
 
+        if (!GetAuthPath(pp->promiser, VARADMIT))
+        {
+            InstallServerAuthPath(pp->promiser, &VARADMIT, &VARADMITTOP);
+        }
+
+        if (!GetAuthPath(pp->promiser, VARDENY))
+        {
+            InstallServerAuthPath(pp->promiser, &VARDENY, &VARDENYTOP);
+        }
+
+
+        if (strcmp(type, "context") == 0)
+        {
+            ap = GetAuthPath(pp->promiser, VARADMIT);
+            dp = GetAuthPath(pp->promiser, VARDENY);
+            ap->classpattern = true;
+        }
+
+        if (strcmp(type, "variable") == 0)
+        {
+            ap = GetAuthPath(pp->promiser, VARADMIT); // Allow the promiser (preferred) as well as handle as variable name
+            dp = GetAuthPath(pp->promiser, VARDENY);
+            ap->variable = true;
+        }
+    }
+    
     for (cp = pp->conlist; cp != NULL; cp = cp->next)
     {
         if (!IsDefinedClass(cp->classes))

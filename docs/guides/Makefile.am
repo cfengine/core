@@ -6,21 +6,23 @@ TEX_INCLUDEDIR = ../tex-include
 #    OrionCloudPack
 
 # Missing .png pictures:
-#    NovaEvaluationGuide
 
 COMMON_GUIDES = \
     Licensing \
+    NovaEvaluationGuide \
     NovaEvaluationGuideSupplement \
-    NovaOwnersManual \
+    Enterprise-2-2-OwnersManual \
     SpecialTopic_Adoption \
     SpecialTopic_Agility \
     SpecialTopic_ApplMgt \
     SpecialTopic_BDMA \
     SpecialTopic_Cloud \
+    SpecialTopic_Change \
     SpecialTopic_ContentDrivenPolicies \
     SpecialTopic_DevOps \
     SpecialTopic_DistributedScheduling \
     SpecialTopic_Editing \
+    SpecialTopic_Federation \
     SpecialTopic_FIPS \
     SpecialTopic_Hierarchy \
     SpecialTopic_ITIL \
@@ -30,9 +32,11 @@ COMMON_GUIDES = \
     SpecialTopic_MissionCritical \
     SpecialTopic_Modules \
     SpecialTopic_Monitoring \
+    SpecialTopic_OpenNebula \
     SpecialTopic_Packages \
     SpecialTopic_RBAC \
     SpecialTopic_Reporting \
+    SpecialTopic_Rollback \
     SpecialTopic_Scalability \
     SpecialTopic_Scan \
     SpecialTopic_Schedule \
@@ -51,15 +55,15 @@ COMMON_GUIDES = \
     cf3-upgrade \
     cf_Quickref3
 
-HTML_GUIDES = $(COMMON_GUIDES)
+HTML_ONLY_GUIDES =
 
-PDF_GUIDES = $(COMMON_GUIDES) \
+PDF_ONLY_GUIDES = \
     cf3-nova-mission-portal \
-    SpecialTopic_Federation \
-    cf3-nova-2-1-supplement \
-    SpecialTopic_OpenNebula \
-    SpecialTopic_Rollback \
-    SpecialTopic_Change
+    cf3-nova-2-1-supplement
+
+HTML_GUIDES = $(COMMON_GUIDES) $(HTML_ONLY_GUIDES)
+
+PDF_GUIDES = $(COMMON_GUIDES) $(PDF_ONLY_GUIDES)
 
 .PRECIOUS: ../tools/build-solutions-guide
 
@@ -85,10 +89,49 @@ TEXI2PDFFLAGS = -I $(TEX_INCLUDEDIR) --batch $(if $(filter-out 0,$(V)),,--quiet)
 	$(AM_V_GEN)$(srcdir)/../tools/texi2pdfclean $< $(TEXI2PDF) -o $@ $(TEXI2PDFFLAGS)
 
 
+if HTML_DOCS
 html: $(patsubst %,%.html,$(HTML_GUIDES))
+endif
 
+if PDF_DOCS
 pdf: $(patsubst %,%.pdf,$(PDF_GUIDES))
+endif
 
-all:
+GUIDEDIR=$(DESTDIR)/$(projdocdir)/guides
+
+dist-guide-%: %
+	$(INSTALL_DATA) $^ $(distdir)
+	if test -n "`$(srcdir)/../tools/extract-images $^ | sort | uniq`"; then \
+		$(INSTALL_DATA) `$(srcdir)/../tools/extract-images $^ | sort | uniq` $(distdir); \
+	fi
+
+dist-common: $(patsubst %,dist-guide-%.texinfo,$(COMMON_GUIDES))
+
+if HTML_DOCS
+install-html: html
+	$(MKDIR_P) $(GUIDEDIR)/html
+	$(INSTALL_DATA) $(patsubst %,%.html,$(HTML_GUIDES)) $(GUIDEDIR)/html
+	$(INSTALL_DATA) `$(srcdir)/../tools/extract-images $(patsubst %,%.texinfo,$(HTML_GUIDES)) | sort | uniq` $(GUIDEDIR)/html
+endif
+
+dist-html-only:
+
+if PDF_DOCS
+install-pdf: pdf
+	$(MKDIR_P) $(GUIDEDIR)/pdf
+	$(INSTALL_DATA) $(patsubst %,%.pdf,$(PDF_GUIDES)) $(GUIDEDIR)/pdf
+endif
+
+if PDF_DOCS
+dist-pdf-only: $(patsubst %,dist-guide-%.texinfo,$(PDF_ONLY_GUIDES))
+else
+dist-pdf-only:
+endif
+
+all: pdf html
+install-data-hook: install-pdf install-html
+dist-hook: dist-pdf-only dist-html dist-common
+
+EXTRA_DIST = cf3-solutions.texinfo.in CFEngineFrontPage.pdf NewLogo.pdf cfcomdoc.css
 
 CLEANFILES = cf3-solutions.texinfo $(patsubst %,%.pdf,$(PDF_GUIDES)) $(patsubst %,%.html,$(HTML_GUIDES))

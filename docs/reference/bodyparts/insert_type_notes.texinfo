@@ -2,17 +2,22 @@
 The default is to treat the promiser as a literal string of convergent
 lines (the values @code{literal} and @code{string} are synonymonous).
 
-The value @code{file} is used to tell CFEngine that the string is non-literal
-and should be interpreted as a filename from which to import lines, see
-@ref{insert_select in insert_lines, ,insert_select}
-
 The default behaviour assumes that multi-line entries are not ordered
 specifically, and should be treated as a collection of lines of text
 and not as a single unbroken object.
+
 If the option @samp{preserve_block} is used, then CFEngine will not
 break up multiple lines into individual, non-ordered objects, so that
-the block of text will be preserved. However, due to convergence
-constraints, if all the lines exist at the start, CFEngine will not
-see the need to add any new text. If any one of the lines is missing
-from the block, then the whole block will be added as a single entity.
-(This is the only way to achieve convergent behaviour in block editing.)
+the block of text will be preserved. Even if some of the lines in the block
+already exist, they will be added again as a coherent block. Thus if
+you suspect that some stray / conflicting lines might be present they
+should be cleaned up with @code{delete_lines} first. 
+
+The value @code{file} is used to tell CFEngine that the string is
+non-literal and should be interpreted as a filename from which to
+import lines, see @ref{insert_select in insert_lines,
+,insert_select}. Inserted files assume non-@samp{preserve_block}
+semantics. An equivalent files setting that does preserve the
+ordering of lines in the file is called @code{file_preserve_block}. This
+was added in CFEngine Core 3.5.x.
+

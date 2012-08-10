@@ -23,7 +23,6 @@
 */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"

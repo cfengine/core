@@ -1,8 +1,9 @@
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
 #include <setjmp.h>
 #include <cmockery.h>
+
+#include "conversion.h"
 
 static void test_split_empty(void **state)
 {
@@ -86,6 +87,67 @@ static void test_arguments_resize(void **state)
     ArgFree(s);
 }
 
+static void test_command_promiser(void **state)
+{
+    char *t1 = "/bin/echo";
+    assert_string_equal(GetArg0(t1), "/bin/echo");
+
+    char *t2 = "/bin/rpm -qa --queryformat \"i | repos | %{name} | %{version}-%{release} | %{arch}\n\"";
+    assert_string_equal(GetArg0(t2), "/bin/rpm");
+    
+    char *t3 = "/bin/mount -va";
+    assert_string_equal(GetArg0(t3), "/bin/mount");
+
+    char *t4 = "\"/bin/echo\"";
+    assert_string_equal(GetArg0(t4), "/bin/echo");
+    
+    char *t5 = "\"/bin/echo\" 123";
+    assert_string_equal(GetArg0(t5), "/bin/echo");
+
+    char *t6 = "\"/bin/echo with space\" 123";
+    assert_string_equal(GetArg0(t6), "/bin/echo with space");
+
+    char *t7 = "c:\\Windows\\System32\\cmd.exe";
+    assert_string_equal(GetArg0(t7), "c:\\Windows\\System32\\cmd.exe");
+
+    char *t8 = "\"c:\\Windows\\System32\\cmd.exe\"";
+    assert_string_equal(GetArg0(t8), "c:\\Windows\\System32\\cmd.exe");
+
+    char *t9 = "\"c:\\Windows\\System32\\cmd.exe\" /some args here";
+    assert_string_equal(GetArg0(t9), "c:\\Windows\\System32\\cmd.exe");
+
+    char *t10 = "\"c:\\Windows\\System32 with space\\cmd.exe\"";
+    assert_string_equal(GetArg0(t10), "c:\\Windows\\System32 with space\\cmd.exe");
+
+    char *t11 = "\"c:\\Windows\\System32 with space\\cmd.exe\" /some args here";
+    assert_string_equal(GetArg0(t11), "c:\\Windows\\System32 with space\\cmd.exe");
+
+    char *t12 = "\"c:\\Windows\\System32 with space\\cmd.exe\" /some \"args here\"";
+    assert_string_equal(GetArg0(t12), "c:\\Windows\\System32 with space\\cmd.exe");
+
+    char *t13 = "\\\\mycommand";
+    assert_string_equal(GetArg0(t13), "\\\\mycommand");
+
+    char *t14 = "\\\\myhost\\share\\command.exe";
+    assert_string_equal(GetArg0(t14), "\\\\myhost\\share\\command.exe");
+
+    char *t15 = "\"\\\\myhost\\share\\command.exe\"";
+    assert_string_equal(GetArg0(t15), "\\\\myhost\\share\\command.exe");
+
+
+    /* bad input */
+
+    char *b1 = "\"/bin/echo 123";
+    assert_string_equal(GetArg0(b1), "/bin/echo 123");
+
+    char *b2 = "/bin/echo\" 123";
+    assert_string_equal(GetArg0(b2), "/bin/echo\"");
+
+    char *b3 = "";
+    assert_string_equal(GetArg0(b3), "");
+    
+}
+
 int main()
 {
     const UnitTest tests[] =
@@ -98,6 +160,7 @@ int main()
         unit_test(test_complex_quoting),
         unit_test(test_arguments_resize_for_null),
         unit_test(test_arguments_resize),
+        unit_test(test_command_promiser),
     };
 
     return run_tests(tests);

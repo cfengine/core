@@ -23,13 +23,34 @@
 */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 #include "monitoring.h"
+#include "item_lib.h"
 
 /* Globals */
 
 Item *ALL_INCOMING;
 Item *MON_TCP4 = NULL, *MON_TCP6 = NULL;
+
+static const char *VNETSTAT[HARD_CLASSES_MAX] =
+{
+    "-",
+    "/usr/bin/netstat -rn",     /* hpux */
+    "/usr/bin/netstat -rn",     /* aix */
+    "/bin/netstat -rn",         /* linux */
+    "/usr/bin/netstat -rn",     /* solaris */
+    "/usr/bin/netstat -rn",     /* freebsd */
+    "/usr/bin/netstat -rn",     /* netbsd */
+    "/usr/ucb/netstat -rn",     /* cray */
+    "/cygdrive/c/WINNT/System32/netstat",       /* NT */
+    "/usr/bin/netstat -rn",     /* Unixware */
+    "/usr/bin/netstat -rn",     /* openbsd */
+    "/usr/bin/netstat -rn",     /* sco */
+    "/usr/sbin/netstat -rn",    /* darwin */
+    "/usr/bin/netstat -rn",     /* qnx */
+    "/usr/bin/netstat -rn",     /* dragonfly */
+    "mingw-invalid",            /* mingw */
+    "/usr/bin/netstat",         /* vmware */
+};
 
 /* Implementation */
 

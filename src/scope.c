@@ -23,14 +23,10 @@
 
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: scope.c                                                             */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
+
+#include "vars.h"
+#include "expand.h"
 
 /*******************************************************************/
 
@@ -59,7 +55,7 @@ Scope *GetScope(const char *scope)
 
 void SetScope(char *id)
 {
-    strncpy(CONTEXTID, id, 31);
+    strlcpy(CONTEXTID, id, CF_MAXVARSIZE);
 }
 
 /*******************************************************************/
@@ -67,12 +63,12 @@ void SetScope(char *id)
 void SetNewScope(char *id)
 {
     NewScope(id);
-    strncpy(CONTEXTID, id, 31);
+    SetScope(id);
 }
 
 /*******************************************************************/
 
-void NewScope(char *name)
+void NewScope(const char *name)
 /*
  * Thread safe
  */
@@ -203,7 +199,7 @@ void DeleteAllScope()
     {
         this = ptr;
         CfDebug(" -> Deleting scope %s\n", ptr->scope);
-        HashClear(this->hashtable);
+        HashFree(this->hashtable);
         free(this->scope);
         ptr = this->next;
         free((char *) this);
@@ -286,16 +282,16 @@ void DeleteFromScope(char *scope, Rlist *args)
 
 /*******************************************************************/
 
-void CopyScope(char *new, char *old)
+void CopyScope(const char *new_scopename, const char *old_scopename)
 /*
  * Thread safe
  */
 {
     Scope *op, *np;
 
-    CfDebug("\n*\nCopying scope data %s to %s\n*\n", old, new);
+    CfDebug("\n*\nCopying scope data %s to %s\n*\n", old_scopename, new_scopename);
 
-    NewScope(new);
+    NewScope(new_scopename);
 
     if (!ThreadLock(cft_vscope))
     {
@@ -303,9 +299,9 @@ void CopyScope(char *new, char *old)
         return;
     }
 
-    if ((op = GetScope(old)))
+    if ((op = GetScope(old_scopename)))
     {
-        np = GetScope(new);
+        np = GetScope(new_scopename);
         HashCopy(np->hashtable, op->hashtable);
     }
 

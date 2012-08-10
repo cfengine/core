@@ -121,7 +121,6 @@ extern int ALWAYS_VALIDATE;
 extern bool ALLCLASSESREPORT;
 extern int LICENSES;
 extern int AM_NOVA;
-extern int AM_CONSTELLATION;
 extern char EXPIRY[CF_SMALLBUF];
 extern char LICENSE_COMPANY[CF_SMALLBUF];
 extern int IGNORE_MISSING_INPUTS;

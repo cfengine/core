@@ -66,7 +66,6 @@ time_t PROMISETIME = 0;
 
 int LICENSES = 0;
 int AM_NOVA = false;
-int AM_CONSTELLATION = false;
 int AM_PHP_MODULE = false;
 char EXPIRY[CF_SMALLBUF] = { 0 };
 char LICENSE_COMPANY[CF_SMALLBUF] = { 0 };

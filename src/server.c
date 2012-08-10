@@ -2826,13 +2826,6 @@ static int GetServerQuery(ServerConnectionState *conn, char *sendbuffer, char *r
         return false;
     }
     
-#ifdef HAVE_CONSTELLATION
-    if (strncmp(query, "relay", 5) == 0)
-    {
-        return Constellation_ReturnRelayQueryData(conn, query, sendbuffer);
-    }
-#endif
-
 #ifdef HAVE_NOVA
     return Nova_ReturnQueryData(conn, query);
 #else

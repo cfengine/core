@@ -25,6 +25,8 @@
 #ifndef CFENGINE_PARSER_H
 #define CFENGINE_PARSER_H
 
-void ParserParseFile(const char *path);
+#include "policy.h"
+
+Policy *ParserParseFile(Policy *policy, const char *path);
 
 #endif

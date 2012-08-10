@@ -23,7 +23,12 @@
 */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
+
+#include "env_context.h"
+#include "promises.h"
+#include "vars.h"
+#include "item_lib.h"
+#include "conversion.h"
 
 static int ProcessSanityChecks(Attributes a, Promise *pp);
 static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp);
@@ -119,25 +124,6 @@ void VerifyProcesses(Attributes a, Promise *pp)
 
     YieldCurrentLock(thislock);
 }
-
-/*******************************************************************/
-
-int LoadProcessTable(Item **procdata)
-{
-    if (PROCESSTABLE)
-    {
-        CfOut(cf_verbose, "", " -> Reusing cached process state");
-        return true;
-    }
-
-#ifdef MINGW
-    return NovaWin_LoadProcessTable(procdata);
-#else
-    return Unix_LoadProcessTable(procdata);
-#endif
-}
-
-/*******************************************************************/
 
 static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp)
 {
@@ -340,21 +326,6 @@ static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, Promise
     return matches;
 }
 
-/**********************************************************************************/
-
-int DoAllSignals(Item *siglist, Attributes a, Promise *pp)
-{
-#ifdef MINGW
-    return NovaWin_DoAllSignals(siglist, a, pp);
-#else
-    return Unix_DoAllSignals(siglist, a, pp);
-#endif
-}
-
-/**********************************************************************************/
-/* Level                                                                          */
-/**********************************************************************************/
-
 static int ExtractPid(char *psentry, char **names, int *start, int *end)
 {
     char *sp;
@@ -449,15 +420,4 @@ void GetProcessColumnNames(char *proc, char **names, int *start, int *end)
         CfDebug("End of %s is %d\n", title, offset);
         end[col] = offset;
     }
-}
-
-/**********************************************************************************/
-
-int GracefulTerminate(pid_t pid)
-{
-#ifdef MINGW
-    return NovaWin_GracefulTerminate(pid);
-#else
-    return Unix_GracefulTerminate(pid);
-#endif
 }

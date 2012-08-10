@@ -23,16 +23,11 @@
   included file COSL.txt.
 */
 
-/*******************************************************************/
-/*                                                                 */
-/*  Promises cfpromises.c                                          */
-/*                                                                 */
-/*  Cfengine AS 1994/96                                           */
-/*                                                                 */
-/*******************************************************************/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
+
+#include "env_context.h"
+#include "conversion.h"
+#include "reporting.h"
 
 /*******************************************************************/
 
@@ -94,11 +89,13 @@ static const char *HINTS[] =
 int main(int argc, char *argv[])
 {
     GenericAgentConfig config = CheckOpts(argc, argv);
-
-    GenericInitialize("common", config);
+    ReportContext *report_context = OpenReports("common");
+    
+    GenericInitialize("common", config, report_context);
     ThisAgentInit();
     AnalyzePromiseConflicts();
     GenericDeInitialize();
+    CloseReports("commmon", report_context);
 
     if (ERRORCOUNT > 0)
     {
@@ -123,7 +120,7 @@ GenericAgentConfig CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig config = GenericAgentDefaultConfig(cf_common);
 
-    while ((c = getopt_long(argc, argv, "advnIf:D:N:VSrxMb:pg:", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "advnIf:D:N:VSrxMb:pg:h", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {

@@ -23,7 +23,6 @@
 */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 #include "writer.h"
 
 #include <assert.h>
@@ -299,12 +298,44 @@ char *SearchAndReplace(const char *source, const char *search, const char *repla
 
 /*********************************************************************/
 
-char *StringConcatenate(const char *a, size_t a_len, const char *b, size_t b_len)
+char *StringConcatenate(size_t count, const char *first, ...)
 {
-    char *result = xcalloc(a_len + b_len + 1, sizeof(char));
+    if (count < 1)
+    {
+        return NULL;
+    }
 
-    strncat(result, a, a_len);
-    strncat(result, b, b_len);
+    size_t total_length = first ? strlen(first) : 0;
+
+    va_list args;
+    va_start(args, first);
+    for (size_t i = 1; i < count; i++)
+    {
+        const char *arg = va_arg(args, const char*);
+        if (arg)
+        {
+            total_length += strlen(arg);
+        }
+    }
+    va_end(args);
+
+    char *result = xcalloc(total_length + 1, sizeof(char));
+    if (first)
+    {
+        strcat(result, first);
+    }
+
+    va_start(args, first);
+    for (size_t i = 1; i < count; i++)
+    {
+        const char *arg = va_arg(args, const char *);
+        if (arg)
+        {
+            strcat(result, arg);
+        }
+    }
+    va_end(args);
+
     return result;
 }
 
@@ -351,7 +382,7 @@ bool IsNumber(const char *s)
 {
     for (; *s; s++)
     {
-        if (!isdigit(*s))
+        if (!isdigit((int)*s))
         {
             return false;
         }
@@ -374,6 +405,27 @@ long StringToLong(const char *str)
     return result;
 }
 
+char *StringFromLong(long number)
+{
+    char *str = xcalloc(32, sizeof(char));
+    snprintf(str, 32, "%ld", number);
+    return str;
+}
+
+/*********************************************************************/
+
+double StringToDouble(const char *str)
+{
+    assert(str);
+
+    char *end;
+    double result = strtod(str, &end);
+
+    assert(!*end && "Failed to convert string to double");
+
+    return result;
+}
+
 /*********************************************************************/
 
 char *NULLStringToEmpty(char *str)
@@ -386,13 +438,22 @@ char *NULLStringToEmpty(char *str)
     return str;
 }
 
-bool StringMatch(const char *regex, const char *str)
+static bool StringMatchInternal(const char *regex, const char *str, int *start, int *end)
 {
     assert(regex);
     assert(str);
 
     if (strcmp(regex, str) == 0)
     {
+        if (start)
+        {
+            *start = 0;
+        }
+        if (end)
+        {
+            *end = strlen(str);
+        }
+
         return true;
     }
 
@@ -409,9 +470,389 @@ bool StringMatch(const char *regex, const char *str)
         return false;
     }
 
-    int result = pcre_exec(pattern, NULL, str, strlen(str), 0, 0, NULL, 0);
+    int ovector[OVECCOUNT] = { 0 };
+    int result = pcre_exec(pattern, NULL, str, strlen(str), 0, 0, ovector, OVECCOUNT);
+
+    if (result)
+    {
+        if (start)
+        {
+            *start = ovector[0];
+        }
+        if (end)
+        {
+            *end = ovector[1];
+        }
+    }
+    else
+    {
+        if (start)
+        {
+            *start = 0;
+        }
+        if (end)
+        {
+            *end = 0;
+        }
+    }
 
     free(pattern);
 
     return result >= 0;
+}
+
+bool StringMatch(const char *regex, const char *str)
+{
+    return StringMatchInternal(regex, str, NULL, NULL);
+}
+
+bool StringMatchFull(const char *regex, const char *str)
+{
+    int start = 0, end = 0;
+
+    if (StringMatchInternal(regex, str, &start, &end))
+    {
+        return start == 0 && end == strlen(str);
+    }
+    else
+    {
+        return false;
+    }
+}
+
+char *StringEncodeBase64(const char *str, size_t len)
+{
+    assert(str);
+    if (!str)
+    {
+        return NULL;
+    }
+
+    if (len == 0)
+    {
+        return xcalloc(1, sizeof(char));
+    }
+
+    BIO *b64 = BIO_new(BIO_f_base64());
+    BIO *bio = BIO_new(BIO_s_mem());
+    b64 = BIO_push(b64, bio);
+    BIO_write(b64, str, len);
+    if (!BIO_flush(b64))
+    {
+        assert(false && "Unable to encode string to base64" && str);
+        return NULL;
+    }
+
+    BUF_MEM *buffer = NULL;
+    BIO_get_mem_ptr(b64, &buffer);
+    char *out = xcalloc(1, buffer->length);
+    memcpy(out, buffer->data, buffer->length - 1);
+    out[buffer->length - 1] = '\0';
+
+    BIO_free_all(b64);
+
+    return out;
+}
+
+bool IsStrIn(const char *str, const char **strs)
+{
+    int i;
+
+    for (i = 0; strs[i]; ++i)
+    {
+        if (strcmp(str, strs[i]) == 0)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool IsStrCaseIn(const char *str, const char **strs)
+{
+    int i;
+
+    for (i = 0; strs[i]; ++i)
+    {
+        if (strcasecmp(str, strs[i]) == 0)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+char *Titleize(char *str)
+{
+    static char buffer[CF_BUFSIZE];
+    int i;
+
+    if (str == NULL)
+    {
+        return NULL;
+    }
+
+    strcpy(buffer, str);
+
+    if (strlen(buffer) > 1)
+    {
+        for (i = 1; buffer[i] != '\0'; i++)
+        {
+            buffer[i] = ToLower(str[i]);
+        }
+    }
+
+    *buffer = ToUpper(*buffer);
+
+    return buffer;
+}
+
+int SubStrnCopyChr(char *to, const char *from, int len, char sep)
+{
+    char *sto = to;
+    int count = 0;
+
+    memset(to, 0, len);
+
+    if (from == NULL)
+    {
+        return 0;
+    }
+
+    if (from && strlen(from) == 0)
+    {
+        return 0;
+    }
+
+    for (const char *sp = from; *sp != '\0'; sp++)
+    {
+        if (count > len - 1)
+        {
+            break;
+        }
+
+        if (*sp == '\\' && *(sp + 1) == sep)
+        {
+            *sto++ = *++sp;
+        }
+        else if (*sp == sep)
+        {
+            break;
+        }
+        else
+        {
+            *sto++ = *sp;
+        }
+
+        count++;
+    }
+
+    return count;
+}
+
+int CountChar(char *string, char sep)
+{
+    char *sp;
+    int count = 0;
+
+    if (string == NULL)
+    {
+        return 0;
+    }
+
+    if (string && strlen(string) == 0)
+    {
+        return 0;
+    }
+
+    for (sp = string; *sp != '\0'; sp++)
+    {
+        if (*sp == '\\' && *(sp + 1) == sep)
+        {
+            ++sp;
+        }
+        else if (*sp == sep)
+        {
+            count++;
+        }
+    }
+
+    return count;
+}
+
+void ReplaceChar(char *in, char *out, int outSz, char from, char to)
+/* Replaces all occurences of 'from' to 'to' in preallocated
+ * string 'out'. */
+{
+    int len;
+    int i;
+
+    memset(out, 0, outSz);
+    len = strlen(in);
+
+    for (i = 0; (i < len) && (i < outSz - 1); i++)
+    {
+        if (in[i] == from)
+        {
+            out[i] = to;
+        }
+        else
+        {
+            out[i] = in[i];
+        }
+    }
+}
+
+int ReplaceStr(char *in, char *out, int outSz, char *from, char *to)
+/* Replaces all occurences of strings 'from' to 'to' in preallocated
+ * string 'out'. Returns true on success, false otherwise. */
+{
+    int inSz;
+    int outCount;
+    int inCount;
+    int fromSz, toSz;
+
+    memset(out, 0, outSz);
+
+    inSz = strlen(in);
+    fromSz = strlen(from);
+    toSz = strlen(to);
+
+    inCount = 0;
+    outCount = 0;
+
+    while ((inCount < inSz) && (outCount < outSz))
+    {
+        if (strncmp(in + inCount, from, fromSz) == 0)
+        {
+            if (outCount + toSz >= outSz)
+            {
+                return false;
+            }
+
+            strcat(out, to);
+
+            inCount += fromSz;
+            outCount += toSz;
+        }
+        else
+        {
+            out[outCount] = in[inCount];
+
+            inCount++;
+            outCount++;
+        }
+    }
+
+    return true;
+}
+
+void ReplaceTrailingChar(char *str, char from, char to)
+/* Replaces any unwanted last char in str. */
+{
+    int strLen;
+
+    strLen = SafeStringLength(str);
+
+    if (strLen == 0)
+    {
+        return;
+    }
+
+    if (str[strLen - 1] == from)
+    {
+        str[strLen - 1] = to;
+    }
+}
+
+void ReplaceTrailingStr(char *str, char *from, char to)
+/* Replaces any unwanted last chars in str. */
+{
+    int strLen;
+    int fromLen;
+    char *startCmp = NULL;
+
+    strLen = strlen(str);
+    fromLen = strlen(from);
+
+    if (strLen == 0)
+    {
+        return;
+    }
+
+    startCmp = str + strLen - fromLen;
+
+    if (strcmp(startCmp, from) == 0)
+    {
+        memset(startCmp, to, fromLen);
+    }
+}
+
+char **String2StringArray(char *str, char separator)
+/**
+ * Parse CSVs into char **.
+ * MEMORY NOTE: Caller must free return value with FreeStringArray().
+ **/
+{
+    char *sp, *esp;
+    int i = 0, len;
+
+    if (str == NULL)
+    {
+        return NULL;
+    }
+
+    for (sp = str; *sp != '\0'; sp++)
+    {
+        if (*sp == separator)
+        {
+            i++;
+        }
+    }
+
+    char **arr = (char **) xcalloc(i + 2, sizeof(char *));
+
+    sp = str;
+    i = 0;
+
+    while (sp)
+    {
+        esp = strchr(sp, separator);
+
+        if (esp)
+        {
+            len = esp - sp;
+            esp++;
+        }
+        else
+        {
+            len = strlen(sp);
+        }
+
+        arr[i] = xcalloc(len + 1, sizeof(char));
+        strncpy(arr[i], sp, len);
+
+        sp = esp;
+        i++;
+    }
+
+    return arr;
+}
+
+void FreeStringArray(char **strs)
+{
+    int i;
+
+    if (strs == NULL)
+    {
+        return;
+    }
+
+    for (i = 0; strs[i] != NULL; i++)
+    {
+        free(strs[i]);
+    }
+
+    free(strs);
+    strs = NULL;
 }

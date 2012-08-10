@@ -25,11 +25,17 @@
 #include "generic_agent.h"
 #include "cf-execd-runner.h"
 
-/*******************************************************************/
+#include "sysinfo.h"
+#include "env_context.h"
+#include "constraints.h"
+#include "promises.h"
+#include "vars.h"
+#include "item_lib.h"
+#include "conversion.h"
+#include "reporting.h"
 
-extern BodySyntax CFEX_CONTROLBODY[];
-
-/*******************************************************************/
+#define CF_EXEC_IFELAPSED 0
+#define CF_EXEC_EXPIREAFTER 1
 
 static int NO_FORK;
 static int ONCE;
@@ -53,15 +59,15 @@ static pthread_attr_t threads_attrs;
 
 static GenericAgentConfig CheckOpts(int argc, char **argv);
 static void ThisAgentInit(void);
-static bool ScheduleRun(void);
+static bool ScheduleRun(Policy **policy, const ReportContext *report_context);
 static void Apoptosis(void);
 
 #if defined(HAVE_PTHREAD)
 static bool LocalExecInThread(const ExecConfig *config);
 #endif
 
-void StartServer(void);
-static void KeepPromises(void);
+void StartServer(Policy *policy, const ReportContext *report_context);
+static void KeepPromises(Policy *policy);
 
 static ExecConfig *CopyExecConfig(const ExecConfig *config);
 static void DestroyExecConfig(ExecConfig *config);
@@ -119,9 +125,10 @@ int main(int argc, char *argv[])
 {
     GenericAgentConfig config = CheckOpts(argc, argv);
 
-    GenericInitialize("executor", config);
+    ReportContext *report_context = OpenReports("executor");
+    Policy *policy = GenericInitialize("executor", config, report_context);
     ThisAgentInit();
-    KeepPromises();
+    KeepPromises(policy);
 
 #ifdef MINGW
     if (WINSERVICE)
@@ -131,8 +138,10 @@ int main(int argc, char *argv[])
     else
 #endif /* MINGW */
     {
-        StartServer();
+        StartServer(policy, report_context);
     }
+
+    ReportContextDestroy(report_context);
 
     return 0;
 }
@@ -276,16 +285,16 @@ static double GetSplay(void)
 {
     char splay[CF_BUFSIZE];
 
-    snprintf(splay, CF_BUFSIZE, "%s+%s+%d", VFQNAME, VIPADDRESS, getuid());
+    snprintf(splay, CF_BUFSIZE, "%s+%s+%ju", VFQNAME, VIPADDRESS, (uintmax_t)getuid());
 
     return ((double) GetHash(splay)) / CF_HASHTABLESIZE;
 }
 
 /*****************************************************************************/
 
-static void KeepPromises(void)
+static void KeepPromises(Policy *policy)
 {
-    for (Constraint *cp = ControlBodyConstraints(cf_executor); cp != NULL; cp = cp->next)
+    for (Constraint *cp = ControlBodyConstraints(policy, cf_executor); cp != NULL; cp = cp->next)
     {
         if (IsExcluded(cp->classes))
         {
@@ -339,7 +348,7 @@ static void KeepPromises(void)
         {
             int time = Str2Int(ScalarRvalValue(retval));
 
-            SPLAYTIME = (int) (time * GetSplay());
+            SPLAYTIME = (int) (time * SECONDS_PER_MINUTE * GetSplay());
         }
 
         if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_schedule].lval) == 0)
@@ -364,7 +373,7 @@ static void KeepPromises(void)
 /*****************************************************************************/
 
 /* Might be called back from NovaWin_StartExecService */
-void StartServer(void)
+void StartServer(Policy *policy, const ReportContext *report_context)
 {
     time_t now = time(NULL);
     Promise *pp = NewPromise("exec_cfengine", "the executor agent");
@@ -374,10 +383,7 @@ void StartServer(void)
 #if defined(HAVE_PTHREAD)
     pthread_attr_init(&threads_attrs);
     pthread_attr_setdetachstate(&threads_attrs, PTHREAD_CREATE_DETACHED);
-
-# ifdef HAVE_PTHREAD_ATTR_SETSTACKSIZE
     pthread_attr_setstacksize(&threads_attrs, (size_t)2048*1024);
-# endif
 #endif
 
     Banner("Starting executor");
@@ -399,6 +405,20 @@ void StartServer(void)
 
         /* Kill previous instances of cf-execd if those are still running */
         Apoptosis();
+
+        /* FIXME: kludge. This code re-sets "last" lock to the one we have
+           acquired a few lines before. If the cf-execd is terminated, this lock
+           will be removed, and subsequent restart of cf-execd won't fail.
+
+           The culprit is Apoptosis(), which creates a promise and executes it,
+           taking locks during it, so CFLOCK/CFLAST/CFLOG get reset.
+
+           Proper fix is to keep all the taken locks in the memory, and release
+           all of them during process termination.
+         */
+        strcpy(CFLOCK, thislock.lock);
+        strcpy(CFLAST, thislock.last ? thislock.last : "");
+        strcpy(CFLOG, thislock.log ? thislock.log : "");
     }
 
 #ifdef MINGW
@@ -455,7 +475,7 @@ void StartServer(void)
     {
         while (true)
         {
-            if (ScheduleRun())
+            if (ScheduleRun(&policy, report_context))
             {
                 CfOut(cf_verbose, "", "Sleeping for splaytime %d seconds\n\n", SPLAYTIME);
                 sleep(SPLAYTIME);
@@ -484,7 +504,7 @@ void StartServer(void)
 #if defined(HAVE_PTHREAD)
 static void *LocalExecThread(void *param)
 {
-#ifdef HAVE_PTHREAD_SIGMASK
+#if !defined(__MINGW32__)
     sigset_t sigmask;
     sigemptyset(&sigmask);
     pthread_sigmask(SIG_BLOCK, &sigmask, NULL);
@@ -563,13 +583,13 @@ static void Apoptosis()
     PrependRlist(&signals, "term", CF_SCALAR);
     PrependRlist(&owners, mypid, CF_SCALAR);
 
-    AppendConstraint(&(pp.conlist), "signals", (Rval) {signals, CF_LIST}, "any", false);
-    AppendConstraint(&(pp.conlist), "process_select", (Rval) {xstrdup("true"), CF_SCALAR}, "any", false);
-    AppendConstraint(&(pp.conlist), "process_owner", (Rval) {owners, CF_LIST}, "any", false);
-    AppendConstraint(&(pp.conlist), "ifelapsed", (Rval) {xstrdup("0"), CF_SCALAR}, "any", false);
-    AppendConstraint(&(pp.conlist), "process_count", (Rval) {xstrdup("true"), CF_SCALAR}, "any", false);
-    AppendConstraint(&(pp.conlist), "match_range", (Rval) {xstrdup("0,2"), CF_SCALAR}, "any", false);
-    AppendConstraint(&(pp.conlist), "process_result", (Rval) {xstrdup("process_owner.process_count"), CF_SCALAR}, "any", false);
+    ConstraintAppendToPromise(&pp, "signals", (Rval) {signals, CF_LIST}, "any", false);
+    ConstraintAppendToPromise(&pp, "process_select", (Rval) {xstrdup("true"), CF_SCALAR}, "any", false);
+    ConstraintAppendToPromise(&pp, "process_owner", (Rval) {owners, CF_LIST}, "any", false);
+    ConstraintAppendToPromise(&pp, "ifelapsed", (Rval) {xstrdup("0"), CF_SCALAR}, "any", false);
+    ConstraintAppendToPromise(&pp, "process_count", (Rval) {xstrdup("true"), CF_SCALAR}, "any", false);
+    ConstraintAppendToPromise(&pp, "match_range", (Rval) {xstrdup("0,2"), CF_SCALAR}, "any", false);
+    ConstraintAppendToPromise(&pp, "process_result", (Rval) {xstrdup("process_owner.process_count"), CF_SCALAR}, "any", false);
 
     CfOut(cf_verbose, "", " -> Looking for cf-execd processes owned by %s", mypid);
 
@@ -596,13 +616,13 @@ typedef enum
     RELOAD_FULL
 } Reload;
 
-static Reload CheckNewPromises(void)
+static Reload CheckNewPromises(const ReportContext *report_context)
 {
     if (NewPromiseProposals())
     {
         CfOut(cf_verbose, "", " -> New promises detected...\n");
 
-        if (CheckPromises(cf_executor))
+        if (CheckPromises(cf_executor, report_context))
         {
             return RELOAD_FULL;
         }
@@ -620,7 +640,7 @@ static Reload CheckNewPromises(void)
     return RELOAD_ENVIRONMENT;
 }
 
-static bool ScheduleRun(void)
+static bool ScheduleRun(Policy **policy, const ReportContext *report_context)
 {
     Item *ip;
 
@@ -639,7 +659,7 @@ static bool ScheduleRun(void)
      * FIXME: this logic duplicates the one from cf-serverd.c. Unify ASAP.
      */
 
-    if (CheckNewPromises() == RELOAD_FULL)
+    if (CheckNewPromises(report_context) == RELOAD_FULL)
     {
         /* Full reload */
 
@@ -655,8 +675,6 @@ static bool ScheduleRun(void)
 
         DeleteItemList(VNEGHEAP);
 
-        VSYSTEMHARDCLASS = unused1;
-
         DeleteAllScope();
 
         strcpy(VDOMAIN, "undefinded.domain");
@@ -665,11 +683,9 @@ static bool ScheduleRun(void)
         VNEGHEAP = NULL;
         VINPUTLIST = NULL;
 
-        DeleteBundles(BUNDLES);
-        DeleteBodies(BODIES);
+        PolicyDestroy(*policy);
+        *policy = NULL;
 
-        BUNDLES = NULL;
-        BODIES = NULL;
         ERRORCOUNT = 0;
 
         NewScope("sys");
@@ -685,12 +701,12 @@ static bool ScheduleRun(void)
         NewScope("remote_access");
 
         GetNameInfo3();
-        CfGetInterfaceInfo(cf_executor);
+        GetInterfacesInfo(cf_executor);
         Get3Environment();
         BuiltinClasses();
         OSClasses();
 
-        NewClass(THIS_AGENT);
+        NewClass(CF_AGENTTYPES[THIS_AGENT_TYPE]);
 
         SetReferenceTime(true);
 
@@ -698,8 +714,8 @@ static bool ScheduleRun(void)
             .bundlesequence = NULL
         };
 
-        ReadPromises(cf_executor, CF_EXECC, config);
-        KeepPromises();
+        *policy = ReadPromises(cf_executor, CF_EXECC, config, report_context);
+        KeepPromises(*policy);
     }
     else
     {
@@ -721,7 +737,7 @@ static bool ScheduleRun(void)
         NewScope("mon");
         NewScope("sys");
 
-        CfGetInterfaceInfo(cf_executor);
+        GetInterfacesInfo(cf_executor);
         Get3Environment();
         BuiltinClasses();
         OSClasses();

@@ -2,9 +2,10 @@
 @verbatim
 
 reports:
+  cfengine::
 
-  "Comment"
+    "Comment"
 
-    showstate => {"www_in", "ssh_out", "otherprocs" };
+      showstate => {"www_in", "ssh_out", "otherprocs" };
 
 @end verbatim

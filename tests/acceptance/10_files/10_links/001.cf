@@ -1,0 +1,60 @@
+#######################################################
+#
+# Subdirectories shall not be created when action is
+# warn. Related to bug #926.
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
+  "$(G.testdir)/subdir/mylink"
+    link_from => ln_s("$(G.testdir)/sourcefile"),
+       action => warn_only;
+}
+
+body action warn_only
+{
+action_policy => "warn";
+}
+
+body link_from ln_s(x)
+{
+link_type => "symlink";
+source => "$(x)";
+when_no_source => "force";
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+  "subdir_created" expression => fileexists("$(G.testdir)/subdir");
+
+reports:
+!subdir_created::
+  "$(this.promise_filename) Pass";
+
+subdir_created::
+  "$(this.promise_filename) Fail";
+}
+

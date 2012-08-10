@@ -23,25 +23,33 @@
   included file COSL.txt.
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: cfreport.c                                                          */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
+#include "env_context.h"
 #include "dir.h"
 #include "writer.h"
 #include "dbm_api.h"
 #include "lastseen.h"
 #include "granules.h"
+#include "files_names.h"
+#include "constraints.h"
+#include "policy.h"
+#include "syntax.h"
+#include "item_lib.h"
+#include "conversion.h"
+
+#ifdef HAVE_NOVA
+#include "nova-reporting.h"
+#else
+#include "reporting.h"
+#endif
+
+#include <assert.h>
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);
 
-static void KeepReportsControlPromises(void);
+static void KeepReportsControlPromises(Policy *policy);
 static void KeepReportsPromises(void);
 static void ShowLastSeen(void);
 static void ShowPerformance(void);
@@ -67,7 +75,7 @@ static void CloseMagnifyFiles(void);
 static void EraseAverages(void);
 static void RemoveHostSeen(char *hosts);
 
-extern BodySyntax CFRE_CONTROLBODY[];
+extern const BodySyntax CFRE_CONTROLBODY[];
 
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
@@ -285,32 +293,27 @@ int main(int argc, char *argv[])
 {
     GenericAgentConfig config = CheckOpts(argc, argv);
 
+    ReportContext *report_context = OpenReports("reporter");
+    Policy *policy = NULL;
     if (!HUBQUERY)
     {
-        GenericInitialize("reporter", config);
+        policy = GenericInitialize("reporter", config, report_context);
+    }
+    else
+    {
+        policy = PolicyNew();
     }
     ThisAgentInit();
-    KeepReportsControlPromises();
+    KeepReportsControlPromises(policy);
     KeepReportsPromises();
     GenericDeInitialize();
+    ReportContextDestroy(report_context);
     return 0;
 }
 
 /*****************************************************************************/
 /* Level 1                                                                   */
 /*****************************************************************************/
-
-static void SyntaxExport()
-{
-#ifdef HAVE_NOVA
-    SyntaxTree2JavaScript();
-#else
-    Writer *writer = FileWriter(stdout);
-
-    SyntaxPrintAsJson(writer);
-    WriterClose(writer);
-#endif
-}
 
 /*****************************************************************************/
 
@@ -576,13 +579,13 @@ static void ThisAgentInit(void)
 
 /*****************************************************************************/
 
-static void KeepReportsControlPromises()
+static void KeepReportsControlPromises(Policy *policy)
 {
     Constraint *cp;
     Rlist *rp;
     Rval retval;
 
-    for (cp = ControlBodyConstraints(cf_report); cp != NULL; cp = cp->next)
+    for (cp = ControlBodyConstraints(policy, cf_report); cp != NULL; cp = cp->next)
     {
         if (IsExcluded(cp->classes))
         {
@@ -910,12 +913,12 @@ typedef struct
 {
     FILE *fout;
     time_t now;
-} ReportContext;
+} LastSeenReportContext;
 
 bool ReportHost(const char *hostkey, const char *address, bool incoming,
                 const KeyHostSeen *quality, void *ctx_)
 {
-    ReportContext *ctx = ctx_;
+    LastSeenReportContext *ctx = ctx_;
 
     if (ctx->now - quality->lastseen > LASTSEENEXPIREAFTER)
     {
@@ -980,7 +983,7 @@ bool ReportHost(const char *hostkey, const char *address, bool incoming,
 
 static void ShowLastSeen()
 {
-    ReportContext ctx = {
+    LastSeenReportContext ctx = {
         .now = time(NULL)
     };
 
@@ -1003,29 +1006,32 @@ static void ShowLastSeen()
         snprintf(name, CF_BUFSIZE, "lastseen.txt");
     }
 
-    FILE *fout;
-
-    if ((fout = fopen(name, "w")) == NULL)
+    Writer *writer = NULL;
     {
-        CfOut(cf_error, "fopen", " !! Unable to write to %s/lastseen.html\n", OUTPUTDIR);
-        exit(1);
+        FILE *fout = NULL;
+        if ((fout = fopen(name, "w")) == NULL)
+        {
+            CfOut(cf_error, "fopen", " !! Unable to write to %s/lastseen.html\n", OUTPUTDIR);
+            exit(1);
+        }
+        ctx.fout = fout;
+        writer = FileWriter(fout);
     }
+    assert(writer);
 
     if (HTML && !EMBEDDED)
     {
         time_t tid = time(NULL);
         snprintf(name, CF_BUFSIZE, "Peers as last seen by %s", VFQNAME);
-        CfHtmlHeader(fout, name, STYLESHEET, WEBDRIVER, BANNER);
-        fprintf(fout, "<div id=\"reporttext\">\n");
-        fprintf(fout, "<h4>This report was last updated at %s</h4>", cf_ctime(&tid));
-        fprintf(fout, "<table class=border cellpadding=5>\n");
+        CfHtmlHeader(writer, name, STYLESHEET, WEBDRIVER, BANNER);
+        WriterWriteF(writer, "<div id=\"reporttext\">\n");
+        WriterWriteF(writer, "<h4>This report was last updated at %s</h4>", cf_ctime(&tid));
+        WriterWriteF(writer, "<table class=border cellpadding=5>\n");
     }
     else if (XML)
     {
-        fprintf(fout, "<?xml version=\"1.0\"?>\n<output>\n");
+        WriterWriteF(writer, "<?xml version=\"1.0\"?>\n<output>\n");
     }
-
-    ctx.fout = fout;
 
     if (!ScanLastSeenQuality(ReportHost, &ctx))
     {
@@ -1035,16 +1041,16 @@ static void ShowLastSeen()
 
     if (HTML && !EMBEDDED)
     {
-        fprintf(fout, "</table></div>\n");
-        CfHtmlFooter(fout, FOOTER);
+        WriterWriteF(writer, "</table></div>\n");
+        CfHtmlFooter(writer, FOOTER);
     }
 
     if (XML)
     {
-        fprintf(fout, "</output>\n");
+        WriterWriteF(writer, "</output>\n");
     }
 
-    fclose(fout);
+    WriterClose(writer);
 }
 
 /*******************************************************************/
@@ -1055,7 +1061,6 @@ static void ShowPerformance()
     CF_DBC *dbcp;
     char *key;
     void *value;
-    FILE *fout;
     double now = (double) time(NULL), average = 0, var = 0;
     double ticksperminute = 60.0;
     char name[CF_BUFSIZE], eventname[CF_BUFSIZE];
@@ -1072,6 +1077,7 @@ static void ShowPerformance()
     if (!NewDBCursor(dbp, &dbcp))
     {
         CfOut(cf_inform, "", " !! Unable to scan hash database");
+        CloseDB(dbp);
         return;
     }
 
@@ -1092,11 +1098,17 @@ static void ShowPerformance()
         snprintf(name, CF_BUFSIZE, "performance.txt");
     }
 
-    if ((fout = fopen(name, "w")) == NULL)
+    Writer *writer = NULL;
     {
-        CfOut(cf_error, "fopen", " !! Unable to write to %s/%s\n", OUTPUTDIR, name);
-        exit(1);
+        FILE *fout = NULL;
+        if ((fout = fopen(name, "w")) == NULL)
+        {
+            CfOut(cf_error, "fopen", " !! Unable to write to %s/%s\n", OUTPUTDIR, name);
+            exit(1);
+        }
+        writer = FileWriter(fout);
     }
+    assert(writer);
 
     /* Initialize the key/data return pair. */
 
@@ -1107,14 +1119,14 @@ static void ShowPerformance()
     if (HTML && !EMBEDDED)
     {
         snprintf(name, CF_BUFSIZE, "Promises last kept by %s", VFQNAME);
-        CfHtmlHeader(fout, name, STYLESHEET, WEBDRIVER, BANNER);
-        fprintf(fout, "<div id=\"reporttext\">\n");
-        fprintf(fout, "<table class=border cellpadding=5>\n");
+        CfHtmlHeader(writer, name, STYLESHEET, WEBDRIVER, BANNER);
+        WriterWriteF(writer, "<div id=\"reporttext\">\n");
+        WriterWriteF(writer, "<table class=border cellpadding=5>\n");
     }
 
     if (XML)
     {
-        fprintf(fout, "<?xml version=\"1.0\"?>\n<output>\n");
+        WriterWriteF(writer, "<?xml version=\"1.0\"?>\n<output>\n");
     }
 
     /* Walk through the database and print out the key/data pairs. */
@@ -1163,33 +1175,33 @@ static void ShowPerformance()
 
             if (XML)
             {
-                fprintf(fout, "%s", CFRX[cfx_entry][cfb]);
-                fprintf(fout, "%s%s%s", CFRX[cfx_event][cfb], eventname, CFRX[cfx_event][cfe]);
-                fprintf(fout, "%s%s%s", CFRX[cfx_date][cfb], tbuf, CFRX[cfx_date][cfe]);
-                fprintf(fout, "%s%.4lf%s", CFRX[cfx_q][cfb], measure, CFRX[cfx_q][cfe]);
-                fprintf(fout, "%s%.4lf%s", CFRX[cfx_av][cfb], average, CFRX[cfx_av][cfe]);
-                fprintf(fout, "%s%.4lf%s", CFRX[cfx_dev][cfb], sqrt(var) / ticksperminute, CFRX[cfx_dev][cfe]);
-                fprintf(fout, "%s", CFRX[cfx_entry][cfe]);
+                WriterWriteF(writer, "%s", CFRX[cfx_entry][cfb]);
+                WriterWriteF(writer, "%s%s%s", CFRX[cfx_event][cfb], eventname, CFRX[cfx_event][cfe]);
+                WriterWriteF(writer, "%s%s%s", CFRX[cfx_date][cfb], tbuf, CFRX[cfx_date][cfe]);
+                WriterWriteF(writer, "%s%.4lf%s", CFRX[cfx_q][cfb], measure, CFRX[cfx_q][cfe]);
+                WriterWriteF(writer, "%s%.4lf%s", CFRX[cfx_av][cfb], average, CFRX[cfx_av][cfe]);
+                WriterWriteF(writer, "%s%.4lf%s", CFRX[cfx_dev][cfb], sqrt(var) / ticksperminute, CFRX[cfx_dev][cfe]);
+                WriterWriteF(writer, "%s", CFRX[cfx_entry][cfe]);
             }
             else if (HTML)
             {
-                fprintf(fout, "%s", CFRH[cfx_entry][cfb]);
-                fprintf(fout, "%s%s%s", CFRH[cfx_event][cfb], eventname, CFRH[cfx_event][cfe]);
-                fprintf(fout, "%s last performed at %s%s", CFRH[cfx_date][cfb], tbuf, CFRH[cfx_date][cfe]);
-                fprintf(fout, "%s completed in %.4lf mins %s", CFRH[cfx_q][cfb], measure, CFRH[cfx_q][cfe]);
-                fprintf(fout, "%s Av %.4lf mins %s", CFRH[cfx_av][cfb], average, CFRH[cfx_av][cfe]);
-                fprintf(fout, "%s &plusmn; %.4lf mins %s", CFRH[cfx_dev][cfb], sqrt(var) / ticksperminute,
+                WriterWriteF(writer, "%s", CFRH[cfx_entry][cfb]);
+                WriterWriteF(writer, "%s%s%s", CFRH[cfx_event][cfb], eventname, CFRH[cfx_event][cfe]);
+                WriterWriteF(writer, "%s last performed at %s%s", CFRH[cfx_date][cfb], tbuf, CFRH[cfx_date][cfe]);
+                WriterWriteF(writer, "%s completed in %.4lf mins %s", CFRH[cfx_q][cfb], measure, CFRH[cfx_q][cfe]);
+                WriterWriteF(writer, "%s Av %.4lf mins %s", CFRH[cfx_av][cfb], average, CFRH[cfx_av][cfe]);
+                WriterWriteF(writer, "%s &plusmn; %.4lf mins %s", CFRH[cfx_dev][cfb], sqrt(var) / ticksperminute,
                         CFRH[cfx_dev][cfe]);
-                fprintf(fout, "%s", CFRH[cfx_entry][cfe]);
+                WriterWriteF(writer, "%s", CFRH[cfx_entry][cfe]);
             }
             else if (CSV)
             {
-                fprintf(fout, "%7.4lf,%s,%7.4lf,%7.4lf,%s \n", measure, tbuf, average, sqrt(var) / ticksperminute,
+                WriterWriteF(writer, "%7.4lf,%s,%7.4lf,%7.4lf,%s \n", measure, tbuf, average, sqrt(var) / ticksperminute,
                         eventname);
             }
             else
             {
-                fprintf(fout, "(%7.4lf mins @ %s) Av %7.4lf +/- %7.4lf for %s \n", measure, tbuf, average,
+                WriterWriteF(writer, "(%7.4lf mins @ %s) Av %7.4lf +/- %7.4lf for %s \n", measure, tbuf, average,
                         sqrt(var) / ticksperminute, eventname);
             }
         }
@@ -1201,19 +1213,19 @@ static void ShowPerformance()
 
     if (HTML && !EMBEDDED)
     {
-        fprintf(fout, "</table>");
-        fprintf(fout, "</div>\n");
-        CfHtmlFooter(fout, FOOTER);
+        WriterWriteF(writer, "</table>");
+        WriterWriteF(writer, "</div>\n");
+        CfHtmlFooter(writer, FOOTER);
     }
 
     if (XML)
     {
-        fprintf(fout, "</output>\n");
+        WriterWriteF(writer, "</output>\n");
     }
 
     DeleteDBCursor(dbp, dbcp);
     CloseDB(dbp);
-    fclose(fout);
+    WriterClose(writer);
 }
 
 /*******************************************************************/
@@ -1224,7 +1236,7 @@ static void ShowClasses()
     CF_DBC *dbcp;
     char *key;
     void *value;
-    FILE *fout, *fnotes;
+    FILE *fnotes;
     Item *already = NULL;
     const Item *ip;
     double now = (double) time(NULL), average = 0, var = 0;
@@ -1243,6 +1255,7 @@ static void ShowClasses()
     if (!NewDBCursor(dbp, &dbcp))
     {
         CfOut(cf_inform, "", " !! Unable to scan class db");
+        CloseDB(dbp);
         return;
     }
 
@@ -1263,11 +1276,17 @@ static void ShowClasses()
         snprintf(name, CF_BUFSIZE, "classes.txt");
     }
 
-    if ((fout = fopen(name, "w")) == NULL)
+    Writer *writer = NULL;
     {
-        CfOut(cf_error, "fopen", " !! Unable to write to %s/%s\n", OUTPUTDIR, name);
-        exit(1);
+        FILE *fout = NULL;
+        if ((fout = fopen(name, "w")) == NULL)
+        {
+            CfOut(cf_error, "fopen", " !! Unable to write to %s/%s\n", OUTPUTDIR, name);
+            exit(1);
+        }
+        writer = FileWriter(fout);
     }
+    assert(writer);
 
 /* Initialize the key/data return pair. */
 
@@ -1278,16 +1297,16 @@ static void ShowClasses()
         time_t now = time(NULL);
 
         snprintf(name, CF_BUFSIZE, "Classes last observed on %s at %s", VFQNAME, cf_ctime(&now));
-        CfHtmlHeader(fout, name, STYLESHEET, WEBDRIVER, BANNER);
-        fprintf(fout, "<div id=\"reporttext\">\n");
+        CfHtmlHeader(writer, name, STYLESHEET, WEBDRIVER, BANNER);
+        WriterWriteF(writer, "<div id=\"reporttext\">\n");
 
-        fprintf(fout, "<h4>Soft classes</h4>");
-        fprintf(fout, "<table class=\"border\" cellpadding=\"5\">\n");
+        WriterWriteF(writer, "<h4>Soft classes</h4>");
+        WriterWriteF(writer, "<table class=\"border\" cellpadding=\"5\">\n");
     }
 
     if (XML)
     {
-        fprintf(fout, "<?xml version=\"1.0\"?>\n<output>\n");
+        WriterWriteF(writer, "<?xml version=\"1.0\"?>\n<output>\n");
     }
 
     /* Walk through the database and print out the key/data pairs. */
@@ -1310,7 +1329,7 @@ static void ShowClasses()
 
         if (value != NULL)
         {
-            memcpy(&entry, value, sizeof(entry));
+            memcpy(&entry, value, MIN(vsize, sizeof(entry)));
 
             then = entry.t;
             average = entry.Q.expect;
@@ -1367,38 +1386,38 @@ static void ShowClasses()
 
         if (XML)
         {
-            fprintf(fout, "%s", CFRX[cfx_entry][cfb]);
-            fprintf(fout, "%s%s%s", CFRX[cfx_event][cfb], array[i].name, CFRX[cfx_event][cfe]);
-            fprintf(fout, "%s%s%s", CFRX[cfx_date][cfb], array[i].date, CFRX[cfx_date][cfe]);
-            fprintf(fout, "%s%.4lf%s", CFRX[cfx_av][cfb], array[i].q, CFRX[cfx_av][cfe]);
-            fprintf(fout, "%s%.4lf%s", CFRX[cfx_dev][cfb], sqrt(array[i].d), CFRX[cfx_dev][cfe]);
-            fprintf(fout, "%s", CFRX[cfx_entry][cfe]);
+            WriterWriteF(writer, "%s", CFRX[cfx_entry][cfb]);
+            WriterWriteF(writer, "%s%s%s", CFRX[cfx_event][cfb], array[i].name, CFRX[cfx_event][cfe]);
+            WriterWriteF(writer, "%s%s%s", CFRX[cfx_date][cfb], array[i].date, CFRX[cfx_date][cfe]);
+            WriterWriteF(writer, "%s%.4lf%s", CFRX[cfx_av][cfb], array[i].q, CFRX[cfx_av][cfe]);
+            WriterWriteF(writer, "%s%.4lf%s", CFRX[cfx_dev][cfb], sqrt(array[i].d), CFRX[cfx_dev][cfe]);
+            WriterWriteF(writer, "%s", CFRX[cfx_entry][cfe]);
         }
         else if (HTML)
         {
-            fprintf(fout, "%s", CFRH[cfx_entry][cfb]);
-            fprintf(fout, "%s%s%s", CFRH[cfx_event][cfb], array[i].name, CFRH[cfx_event][cfe]);
-            fprintf(fout, "%s last occured at %s%s", CFRH[cfx_date][cfb], array[i].date, CFRH[cfx_date][cfe]);
-            fprintf(fout, "%s Probability %.4lf %s", CFRH[cfx_av][cfb], array[i].q, CFRH[cfx_av][cfe]);
-            fprintf(fout, "%s &plusmn; %.4lf %s", CFRH[cfx_dev][cfb], sqrt(array[i].d), CFRH[cfx_dev][cfe]);
-            fprintf(fout, "%s", CFRH[cfx_entry][cfe]);
+            WriterWriteF(writer, "%s", CFRH[cfx_entry][cfb]);
+            WriterWriteF(writer, "%s%s%s", CFRH[cfx_event][cfb], array[i].name, CFRH[cfx_event][cfe]);
+            WriterWriteF(writer, "%s last occured at %s%s", CFRH[cfx_date][cfb], array[i].date, CFRH[cfx_date][cfe]);
+            WriterWriteF(writer, "%s Probability %.4lf %s", CFRH[cfx_av][cfb], array[i].q, CFRH[cfx_av][cfe]);
+            WriterWriteF(writer, "%s &plusmn; %.4lf %s", CFRH[cfx_dev][cfb], sqrt(array[i].d), CFRH[cfx_dev][cfe]);
+            WriterWriteF(writer, "%s", CFRH[cfx_entry][cfe]);
         }
         else if (CSV)
         {
-            fprintf(fout, "%7.4lf,%7.4lf,%s,%s\n", array[i].q, sqrt(array[i].d), array[i].name, array[i].date);
+            WriterWriteF(writer, "%7.4lf,%7.4lf,%s,%s\n", array[i].q, sqrt(array[i].d), array[i].name, array[i].date);
         }
         else
         {
-            fprintf(fout, "Probability %7.4lf +/- %7.4lf for %s (last observed @ %s)\n", array[i].q, sqrt(array[i].d),
+            WriterWriteF(writer, "Probability %7.4lf +/- %7.4lf for %s (last observed @ %s)\n", array[i].q, sqrt(array[i].d),
                     array[i].name, array[i].date);
         }
     }
 
     if (HTML && !EMBEDDED)
     {
-        fprintf(fout, "</table>");
-        fprintf(fout, "<h4>All classes</h4>\n");
-        fprintf(fout, "<table class=\"border\" cellpadding=\"5\">\n");
+        WriterWriteF(writer, "</table>");
+        WriterWriteF(writer, "<h4>All classes</h4>\n");
+        WriterWriteF(writer, "<table class=\"border\" cellpadding=\"5\">\n");
     }
 
     AlphaListIterator it = AlphaListIteratorInit(&VHEAP);
@@ -1420,43 +1439,43 @@ static void ShowClasses()
 
         if (XML)
         {
-            fprintf(fout, "%s", CFRX[cfx_entry][cfb]);
-            fprintf(fout, "%s%s%s", CFRX[cfx_event][cfb], ip->name, CFRX[cfx_event][cfe]);
-            fprintf(fout, "%s%s%s", CFRX[cfx_date][cfb], "often", CFRX[cfx_date][cfe]);
-            fprintf(fout, "%s%.4lf%s", CFRX[cfx_av][cfb], 1.0, CFRX[cfx_av][cfe]);
-            fprintf(fout, "%s%.4lf%s", CFRX[cfx_dev][cfb], 0.0, CFRX[cfx_dev][cfe]);
-            fprintf(fout, "%s", CFRX[cfx_entry][cfe]);
+            WriterWriteF(writer, "%s", CFRX[cfx_entry][cfb]);
+            WriterWriteF(writer, "%s%s%s", CFRX[cfx_event][cfb], ip->name, CFRX[cfx_event][cfe]);
+            WriterWriteF(writer, "%s%s%s", CFRX[cfx_date][cfb], "often", CFRX[cfx_date][cfe]);
+            WriterWriteF(writer, "%s%.4lf%s", CFRX[cfx_av][cfb], 1.0, CFRX[cfx_av][cfe]);
+            WriterWriteF(writer, "%s%.4lf%s", CFRX[cfx_dev][cfb], 0.0, CFRX[cfx_dev][cfe]);
+            WriterWriteF(writer, "%s", CFRX[cfx_entry][cfe]);
         }
         else if (HTML)
         {
-            fprintf(fout, "%s", CFRH[cfx_entry][cfb]);
-            fprintf(fout, "%s%s%s", CFRH[cfx_event][cfb], ip->name, CFRH[cfx_event][cfe]);
-            fprintf(fout, "%s occurred %s%s", CFRH[cfx_date][cfb], "often", CFRH[cfx_date][cfe]);
-            fprintf(fout, "%s Probability %.4lf %s", CFRH[cfx_av][cfb], 1.0, CFRH[cfx_av][cfe]);
-            fprintf(fout, "%s &plusmn; %.4lf %s", CFRH[cfx_dev][cfb], 0.0, CFRH[cfx_dev][cfe]);
-            fprintf(fout, "%s", CFRH[cfx_entry][cfe]);
+            WriterWriteF(writer, "%s", CFRH[cfx_entry][cfb]);
+            WriterWriteF(writer, "%s%s%s", CFRH[cfx_event][cfb], ip->name, CFRH[cfx_event][cfe]);
+            WriterWriteF(writer, "%s occurred %s%s", CFRH[cfx_date][cfb], "often", CFRH[cfx_date][cfe]);
+            WriterWriteF(writer, "%s Probability %.4lf %s", CFRH[cfx_av][cfb], 1.0, CFRH[cfx_av][cfe]);
+            WriterWriteF(writer, "%s &plusmn; %.4lf %s", CFRH[cfx_dev][cfb], 0.0, CFRH[cfx_dev][cfe]);
+            WriterWriteF(writer, "%s", CFRH[cfx_entry][cfe]);
         }
         else if (CSV)
         {
-            fprintf(fout, "%7.4lf,%7.4lf,%s,%s\n", 1.0, 0.0, ip->name, "often");
+            WriterWriteF(writer, "%7.4lf,%7.4lf,%s,%s\n", 1.0, 0.0, ip->name, "often");
         }
     }
 
     if (HTML && !EMBEDDED)
     {
-        fprintf(fout, "</table>");
-        fprintf(fout, "</div>\n");
-        CfHtmlFooter(fout, FOOTER);
+        WriterWriteF(writer, "</table>");
+        WriterWriteF(writer, "</div>\n");
+        CfHtmlFooter(writer, FOOTER);
     }
 
     if (XML)
     {
-        fprintf(fout, "</output>\n");
+        WriterWriteF(writer, "</output>\n");
     }
 
     DeleteDBCursor(dbp, dbcp);
     CloseDB(dbp);
-    fclose(fout);
+    WriterClose(writer);
     fclose(fnotes);
     DeleteItemList(already);
 }
@@ -1470,7 +1489,6 @@ static void ShowChecksums()
     char *key;
     void *value;
     int ksize, vsize;
-    FILE *fout;
     char name[CF_BUFSIZE];
 
     if (!OpenDB(&dbp, dbid_checksums))
@@ -1495,22 +1513,28 @@ static void ShowChecksums()
         snprintf(name, CF_BUFSIZE, "hashes.txt");
     }
 
-    if ((fout = fopen(name, "w")) == NULL)
+    Writer *writer = NULL;
     {
-        CfOut(cf_error, "fopen", " !! Unable to write to %s/%s\n", OUTPUTDIR, name);
-        exit(1);
+        FILE *fout = NULL;
+        if ((fout = fopen(name, "w")) == NULL)
+        {
+            CfOut(cf_error, "fopen", " !! Unable to write to %s/%s\n", OUTPUTDIR, name);
+            exit(1);
+        }
+        writer = FileWriter(fout);
     }
+    assert(writer);
 
     if (HTML && !EMBEDDED)
     {
-        CfHtmlHeader(fout, "File hashes", STYLESHEET, WEBDRIVER, BANNER);
-        fprintf(fout, "<div id=\"reporttext\">\n");
-        fprintf(fout, "<table class=border cellpadding=5>\n");
+        CfHtmlHeader(writer, "File hashes", STYLESHEET, WEBDRIVER, BANNER);
+        WriterWriteF(writer, "<div id=\"reporttext\">\n");
+        WriterWriteF(writer, "<table class=border cellpadding=5>\n");
     }
 
     if (XML)
     {
-        fprintf(fout, "<?xml version=\"1.0\"?>\n<output>\n");
+        WriterWriteF(writer, "<?xml version=\"1.0\"?>\n<output>\n");
     }
 
 /* Acquire a cursor for the database. */
@@ -1540,27 +1564,27 @@ static void ShowChecksums()
 
         if (XML)
         {
-            fprintf(fout, "%s", CFRX[cfx_entry][cfb]);
-            fprintf(fout, "%s%s%s", CFRX[cfx_event][cfb], name, CFRX[cfx_event][cfe]);
-            fprintf(fout, "%s%s%s", CFRX[cfx_q][cfb], HashPrint(type, digest), CFRX[cfx_q][cfe]);
-            fprintf(fout, "%s", CFRX[cfx_entry][cfe]);
+            WriterWriteF(writer, "%s", CFRX[cfx_entry][cfb]);
+            WriterWriteF(writer, "%s%s%s", CFRX[cfx_event][cfb], name, CFRX[cfx_event][cfe]);
+            WriterWriteF(writer, "%s%s%s", CFRX[cfx_q][cfb], HashPrint(type, digest), CFRX[cfx_q][cfe]);
+            WriterWriteF(writer, "%s", CFRX[cfx_entry][cfe]);
         }
         else if (HTML)
         {
-            fprintf(fout, "%s", CFRH[cfx_entry][cfb]);
-            fprintf(fout, "%s%s%s", CFRH[cfx_filename][cfb], name, CFRH[cfx_filename][cfe]);
-            fprintf(fout, "%s%s%s", CFRH[cfx_q][cfb], HashPrint(type, digest), CFRH[cfx_q][cfe]);
-            fprintf(fout, "%s", CFRH[cfx_entry][cfe]);
+            WriterWriteF(writer, "%s", CFRH[cfx_entry][cfb]);
+            WriterWriteF(writer, "%s%s%s", CFRH[cfx_filename][cfb], name, CFRH[cfx_filename][cfe]);
+            WriterWriteF(writer, "%s%s%s", CFRH[cfx_q][cfb], HashPrint(type, digest), CFRH[cfx_q][cfe]);
+            WriterWriteF(writer, "%s", CFRH[cfx_entry][cfe]);
         }
         else if (CSV)
         {
-            fprintf(fout, "%s,", name);
-            fprintf(fout, "%s\n", HashPrint(type, digest));
+            WriterWriteF(writer, "%s,", name);
+            WriterWriteF(writer, "%s\n", HashPrint(type, digest));
         }
         else
         {
-            fprintf(fout, "%s = ", name);
-            fprintf(fout, "%s\n", HashPrint(type, digest));
+            WriterWriteF(writer, "%s = ", name);
+            WriterWriteF(writer, "%s\n", HashPrint(type, digest));
         }
 
         memset(&key, 0, sizeof(key));
@@ -1569,19 +1593,19 @@ static void ShowChecksums()
 
     if (HTML && !EMBEDDED)
     {
-        fprintf(fout, "</table>");
-        fprintf(fout, "</div>\n");
-        CfHtmlFooter(fout, FOOTER);
+        WriterWriteF(writer, "</table>");
+        WriterWriteF(writer, "</div>\n");
+        CfHtmlFooter(writer, FOOTER);
     }
 
     if (XML)
     {
-        fprintf(fout, "</output>\n");
+        WriterWriteF(writer, "</output>\n");
     }
 
     DeleteDBCursor(dbp, dbcp);
     CloseDB(dbp);
-    fclose(fout);
+    WriterClose(writer);
 }
 
 /*********************************************************************/
@@ -1592,7 +1616,6 @@ static void ShowLocks(int active)
     CF_DBC *dbcp;
     char *key;
     void *value;
-    FILE *fout;
     int ksize, vsize;
     char name[CF_BUFSIZE];
     LockData entry;
@@ -1630,26 +1653,32 @@ static void ShowLocks(int active)
         snprintf(name, CF_BUFSIZE, "%s_locks.txt", lock_state);
     }
 
-    if ((fout = fopen(name, "w")) == NULL)
+    Writer *writer = NULL;
     {
-        CfOut(cf_error, "fopen", " !! Unable to write to %s/%s\n", OUTPUTDIR, name);
-        CloseDB(dbp);
-        return;
+        FILE *fout = NULL;
+        if ((fout = fopen(name, "w")) == NULL)
+        {
+            CfOut(cf_error, "fopen", " !! Unable to write to %s/%s\n", OUTPUTDIR, name);
+            CloseDB(dbp);
+            return;
+        }
+        writer = FileWriter(fout);
     }
+    assert(writer);
 
     if (HTML && !EMBEDDED)
     {
         time_t now = time(NULL);
 
         snprintf(name, CF_BUFSIZE, "%s lock data observed on %s at %s", lock_state, VFQNAME, cf_ctime(&now));
-        CfHtmlHeader(fout, name, STYLESHEET, WEBDRIVER, BANNER);
-        fprintf(fout, "<div id=\"reporttext\">\n");
-        fprintf(fout, "<table class=border cellpadding=5>\n");
+        CfHtmlHeader(writer, name, STYLESHEET, WEBDRIVER, BANNER);
+        WriterWriteF(writer, "<div id=\"reporttext\">\n");
+        WriterWriteF(writer, "<table class=border cellpadding=5>\n");
     }
 
     if (XML)
     {
-        fprintf(fout, "<?xml version=\"1.0\"?>\n<output>\n");
+        WriterWriteF(writer, "<?xml version=\"1.0\"?>\n<output>\n");
     }
 
 /* Acquire a cursor for the database. */
@@ -1658,7 +1687,7 @@ static void ShowLocks(int active)
     {
         CfOut(cf_inform, "", " !! Unable to scan last-seen db");
         CloseDB(dbp);
-        fclose(fout);
+        WriterClose(writer);
         return;
     }
 
@@ -1668,29 +1697,29 @@ static void ShowLocks(int active)
         {
             if (value != NULL)
             {
-                memcpy(&entry, value, sizeof(entry));
+                memcpy(&entry, value, MIN(vsize, sizeof(entry)));
             }
 
             if (strncmp("lock", (char *) key, 4) == 0)
             {
                 if (XML)
                 {
-                    fprintf(fout, "%s", CFRX[cfx_entry][cfb]);
-                    fprintf(fout, "%s%s%s", CFRX[cfx_filename][cfb], (char *) key, CFRX[cfx_filename][cfe]);
-                    fprintf(fout, "%s%s%s", CFRX[cfx_date][cfb], cf_ctime(&entry.time), CFRX[cfx_date][cfe]);
-                    fprintf(fout, "%s", CFRX[cfx_entry][cfe]);
+                    WriterWriteF(writer, "%s", CFRX[cfx_entry][cfb]);
+                    WriterWriteF(writer, "%s%s%s", CFRX[cfx_filename][cfb], (char *) key, CFRX[cfx_filename][cfe]);
+                    WriterWriteF(writer, "%s%s%s", CFRX[cfx_date][cfb], cf_ctime(&entry.time), CFRX[cfx_date][cfe]);
+                    WriterWriteF(writer, "%s", CFRX[cfx_entry][cfe]);
                 }
                 else if (HTML)
                 {
-                    fprintf(fout, "%s", CFRH[cfx_entry][cfb]);
-                    fprintf(fout, "%s%s%s", CFRH[cfx_filename][cfb], (char *) key, CFRH[cfx_filename][cfe]);
-                    fprintf(fout, "%s%s%s", CFRH[cfx_date][cfb], cf_ctime(&entry.time), CFRH[cfx_date][cfe]);
-                    fprintf(fout, "%s", CFRH[cfx_entry][cfe]);
+                    WriterWriteF(writer, "%s", CFRH[cfx_entry][cfb]);
+                    WriterWriteF(writer, "%s%s%s", CFRH[cfx_filename][cfb], (char *) key, CFRH[cfx_filename][cfe]);
+                    WriterWriteF(writer, "%s%s%s", CFRH[cfx_date][cfb], cf_ctime(&entry.time), CFRH[cfx_date][cfe]);
+                    WriterWriteF(writer, "%s", CFRH[cfx_entry][cfe]);
                 }
                 else
                 {
-                    fprintf(fout, "%s = ", (char *) key);
-                    fprintf(fout, "%s\n", cf_ctime(&entry.time));
+                    WriterWriteF(writer, "%s = ", (char *) key);
+                    WriterWriteF(writer, "%s\n", cf_ctime(&entry.time));
                 }
 
                 CfOut(cf_inform, "", "Active lock %s = ", (char *) key);
@@ -1702,27 +1731,27 @@ static void ShowLocks(int active)
             {
                 if (XML)
                 {
-                    fprintf(fout, "%s", CFRX[cfx_entry][cfb]);
-                    fprintf(fout, "%s%s%s", CFRX[cfx_filename][cfb], (char *) key, CFRX[cfx_filename][cfe]);
-                    fprintf(fout, "%s%s%s", CFRX[cfx_date][cfb], cf_ctime(&entry.time), CFRX[cfx_date][cfe]);
-                    fprintf(fout, "%s", CFRX[cfx_entry][cfe]);
+                    WriterWriteF(writer, "%s", CFRX[cfx_entry][cfb]);
+                    WriterWriteF(writer, "%s%s%s", CFRX[cfx_filename][cfb], (char *) key, CFRX[cfx_filename][cfe]);
+                    WriterWriteF(writer, "%s%s%s", CFRX[cfx_date][cfb], cf_ctime(&entry.time), CFRX[cfx_date][cfe]);
+                    WriterWriteF(writer, "%s", CFRX[cfx_entry][cfe]);
                 }
                 else if (HTML)
                 {
-                    fprintf(fout, "%s", CFRH[cfx_entry][cfb]);
-                    fprintf(fout, "%s%s%s", CFRH[cfx_filename][cfb], (char *) key, CFRH[cfx_filename][cfe]);
-                    fprintf(fout, "%s%s%s", CFRH[cfx_date][cfb], cf_ctime(&entry.time), CFRH[cfx_date][cfe]);
-                    fprintf(fout, "%s", CFRH[cfx_entry][cfe]);
+                    WriterWriteF(writer, "%s", CFRH[cfx_entry][cfb]);
+                    WriterWriteF(writer, "%s%s%s", CFRH[cfx_filename][cfb], (char *) key, CFRH[cfx_filename][cfe]);
+                    WriterWriteF(writer, "%s%s%s", CFRH[cfx_date][cfb], cf_ctime(&entry.time), CFRH[cfx_date][cfe]);
+                    WriterWriteF(writer, "%s", CFRH[cfx_entry][cfe]);
                 }
                 else if (CSV)
                 {
-                    fprintf(fout, "%s", (char *) key);
-                    fprintf(fout, ",%s\n", cf_ctime(&entry.time));
+                    WriterWriteF(writer, "%s", (char *) key);
+                    WriterWriteF(writer, ",%s\n", cf_ctime(&entry.time));
                 }
                 else
                 {
-                    fprintf(fout, "%s = ", (char *) key);
-                    fprintf(fout, "%s\n", cf_ctime(&entry.time));
+                    WriterWriteF(writer, "%s = ", (char *) key);
+                    WriterWriteF(writer, "%s\n", cf_ctime(&entry.time));
                 }
             }
         }
@@ -1730,19 +1759,19 @@ static void ShowLocks(int active)
 
     if (HTML && !EMBEDDED)
     {
-        fprintf(fout, "</table>");
-        fprintf(fout, "</div>\n");
-        CfHtmlFooter(fout, FOOTER);
+        WriterWriteF(writer, "</table>");
+        WriterWriteF(writer, "</div>\n");
+        CfHtmlFooter(writer, FOOTER);
     }
 
     if (XML)
     {
-        fprintf(fout, "</output>\n");
+        WriterWriteF(writer, "</output>\n");
     }
 
     DeleteDBCursor(dbp, dbcp);
     CloseDB(dbp);
-    fclose(fout);
+    WriterClose(writer);
 }
 
 /*******************************************************************/
@@ -1751,7 +1780,6 @@ static void ShowCurrentAudit()
 {
     char operation[CF_BUFSIZE];
     AuditLog entry;
-    FILE *fout;
     char *key;
     void *value;
     CF_DB *dbp;
@@ -1768,6 +1796,7 @@ static void ShowCurrentAudit()
     if (!NewDBCursor(dbp, &dbcp))
     {
         CfOut(cf_inform, "", " !! Unable to scan last-seen db");
+        CloseDB(dbp);
         return;
     }
 
@@ -1792,32 +1821,39 @@ static void ShowCurrentAudit()
         snprintf(name, CF_BUFSIZE, "audit.txt");
     }
 
-    if ((fout = fopen(name, "w")) == NULL)
+    Writer *writer = NULL;
     {
-        CfOut(cf_error, "fopen", "Unable to write to %s/%s\n", OUTPUTDIR, name);
-        return;
+        FILE *fout = NULL;
+        if ((fout = fopen(name, "w")) == NULL)
+        {
+            CfOut(cf_error, "fopen", "Unable to write to %s/%s\n", OUTPUTDIR, name);
+            CloseDB(dbp);
+            return;
+        }
+        writer = FileWriter(fout);
     }
+    assert(writer);
 
     if (HTML && !EMBEDDED)
     {
         time_t now = time(NULL);
 
         snprintf(name, CF_BUFSIZE, "Audit collected on %s at %s", VFQNAME, cf_ctime(&now));
-        CfHtmlHeader(fout, name, STYLESHEET, WEBDRIVER, BANNER);
+        CfHtmlHeader(writer, name, STYLESHEET, WEBDRIVER, BANNER);
 
-        fprintf(fout, "<table class=border cellpadding=5>\n");
+        WriterWriteF(writer, "<table class=border cellpadding=5>\n");
         /* fprintf(fout,"<th> t-index </th>"); */
-        fprintf(fout, "<th> Scan convergence </th>");
-        fprintf(fout, "<th> Observed </th>");
-        fprintf(fout, "<th> Promise made </th>");
-        fprintf(fout, "<th> Promise originates in </th>");
-        fprintf(fout, "<th> Promise version </th>");
-        fprintf(fout, "<th> line </th>");
+        WriterWriteF(writer, "<th> Scan convergence </th>");
+        WriterWriteF(writer, "<th> Observed </th>");
+        WriterWriteF(writer, "<th> Promise made </th>");
+        WriterWriteF(writer, "<th> Promise originates in </th>");
+        WriterWriteF(writer, "<th> Promise version </th>");
+        WriterWriteF(writer, "<th> line </th>");
     }
 
     if (XML)
     {
-        fprintf(fout, "<?xml version=\"1.0\"?>\n<output>\n");
+        WriterWriteF(writer, "<?xml version=\"1.0\"?>\n<output>\n");
     }
 
     /* Walk through the database and print out the key/data pairs. */
@@ -1828,57 +1864,57 @@ static void ShowCurrentAudit()
 
         if (value != NULL)
         {
-            memcpy(&entry, value, sizeof(entry));
+            memcpy(&entry, value, MIN(vsize, sizeof(entry)));
 
             if (XML)
             {
-                fprintf(fout, "%s", CFRX[cfx_entry][cfb]);
-                fprintf(fout, "%s %s %s", CFRX[cfx_index][cfb], operation, CFRX[cfx_index][cfe]);
-                fprintf(fout, "%s %s, ", CFRX[cfx_event][cfb], entry.operator);
-                AuditStatusMessage(fout, entry.status);
-                fprintf(fout, "%s", CFRX[cfx_event][cfe]);
-                fprintf(fout, "%s %s %s", CFRX[cfx_q][cfb], entry.comment, CFRX[cfx_q][cfe]);
-                fprintf(fout, "%s %s %s", CFRX[cfx_date][cfb], entry.date, CFRX[cfx_date][cfe]);
-                fprintf(fout, "%s %s %s", CFRX[cfx_av][cfb], entry.filename, CFRX[cfx_av][cfe]);
-                fprintf(fout, "%s %s %s", CFRX[cfx_version][cfb], entry.version, CFRX[cfx_version][cfe]);
-                fprintf(fout, "%s %d %s", CFRX[cfx_ref][cfb], entry.line_number, CFRX[cfx_ref][cfe]);
-                fprintf(fout, "%s", CFRX[cfx_entry][cfe]);
+                WriterWriteF(writer, "%s", CFRX[cfx_entry][cfb]);
+                WriterWriteF(writer, "%s %s %s", CFRX[cfx_index][cfb], operation, CFRX[cfx_index][cfe]);
+                WriterWriteF(writer, "%s %s, ", CFRX[cfx_event][cfb], entry.operator);
+                AuditStatusMessage(writer, entry.status);
+                WriterWriteF(writer, "%s", CFRX[cfx_event][cfe]);
+                WriterWriteF(writer, "%s %s %s", CFRX[cfx_q][cfb], entry.comment, CFRX[cfx_q][cfe]);
+                WriterWriteF(writer, "%s %s %s", CFRX[cfx_date][cfb], entry.date, CFRX[cfx_date][cfe]);
+                WriterWriteF(writer, "%s %s %s", CFRX[cfx_av][cfb], entry.filename, CFRX[cfx_av][cfe]);
+                WriterWriteF(writer, "%s %s %s", CFRX[cfx_version][cfb], entry.version, CFRX[cfx_version][cfe]);
+                WriterWriteF(writer, "%s %d %s", CFRX[cfx_ref][cfb], entry.line_number, CFRX[cfx_ref][cfe]);
+                WriterWriteF(writer, "%s", CFRX[cfx_entry][cfe]);
             }
             else if (HTML)
             {
-                fprintf(fout, "%s", CFRH[cfx_entry][cfb]);
+                WriterWriteF(writer, "%s", CFRH[cfx_entry][cfb]);
                 /* fprintf(fout,"%s %s %s",CFRH[cfx_index][cfb],operation,CFRH[cfx_index][cfe]); */
-                fprintf(fout, "%s %s, ", CFRH[cfx_event][cfb], Format(entry.operator, 40));
-                AuditStatusMessage(fout, entry.status);
-                fprintf(fout, "%s", CFRH[cfx_event][cfe]);
-                fprintf(fout, "%s %s %s", CFRH[cfx_q][cfb], Format(entry.comment, 40), CFRH[cfx_q][cfe]);
-                fprintf(fout, "%s %s %s", CFRH[cfx_date][cfb], entry.date, CFRH[cfx_date][cfe]);
-                fprintf(fout, "%s %s %s", CFRH[cfx_av][cfb], entry.filename, CFRH[cfx_av][cfe]);
-                fprintf(fout, "%s %s %s", CFRH[cfx_version][cfb], entry.version, CFRH[cfx_version][cfe]);
-                fprintf(fout, "%s %d %s", CFRH[cfx_ref][cfb], entry.line_number, CFRH[cfx_ref][cfe]);
-                fprintf(fout, "%s", CFRH[cfx_entry][cfe]);
+                WriterWriteF(writer, "%s %s, ", CFRH[cfx_event][cfb], Format(entry.operator, 40));
+                AuditStatusMessage(writer, entry.status);
+                WriterWriteF(writer, "%s", CFRH[cfx_event][cfe]);
+                WriterWriteF(writer, "%s %s %s", CFRH[cfx_q][cfb], Format(entry.comment, 40), CFRH[cfx_q][cfe]);
+                WriterWriteF(writer, "%s %s %s", CFRH[cfx_date][cfb], entry.date, CFRH[cfx_date][cfe]);
+                WriterWriteF(writer, "%s %s %s", CFRH[cfx_av][cfb], entry.filename, CFRH[cfx_av][cfe]);
+                WriterWriteF(writer, "%s %s %s", CFRH[cfx_version][cfb], entry.version, CFRH[cfx_version][cfe]);
+                WriterWriteF(writer, "%s %d %s", CFRH[cfx_ref][cfb], entry.line_number, CFRH[cfx_ref][cfe]);
+                WriterWriteF(writer, "%s", CFRH[cfx_entry][cfe]);
 
                 if (strstr(entry.comment, "closing"))
                 {
-                    fprintf(fout, "<th></th>");
-                    fprintf(fout, "<th></th>");
-                    fprintf(fout, "<th></th>");
-                    fprintf(fout, "<th></th>");
-                    fprintf(fout, "<th></th>");
-                    fprintf(fout, "<th></th>");
-                    fprintf(fout, "<th></th>");
+                    WriterWriteF(writer, "<th></th>");
+                    WriterWriteF(writer, "<th></th>");
+                    WriterWriteF(writer, "<th></th>");
+                    WriterWriteF(writer, "<th></th>");
+                    WriterWriteF(writer, "<th></th>");
+                    WriterWriteF(writer, "<th></th>");
+                    WriterWriteF(writer, "<th></th>");
                 }
             }
             else if (CSV)
             {
-                fprintf(fout, "%s,", operation);
-                fprintf(fout, "%s,", entry.operator);
+                WriterWriteF(writer, "%s,", operation);
+                WriterWriteF(writer, "%s,", entry.operator);
 
-                AuditStatusMessage(fout, entry.status); /* Reminder */
+                AuditStatusMessage(writer, entry.status); /* Reminder */
 
                 if (strlen(entry.comment) > 0)
                 {
-                    fprintf(fout, ",%s\n", entry.comment);
+                    WriterWriteF(writer, ",%s\n", entry.comment);
                 }
 
                 if (strcmp(entry.filename, "Terminal") == 0)
@@ -1888,33 +1924,33 @@ static void ShowCurrentAudit()
                 {
                     if (strlen(entry.version) == 0)
                     {
-                        fprintf(fout, ",%s,,%s,%d\n", entry.filename, entry.date, entry.line_number);
+                        WriterWriteF(writer, ",%s,,%s,%d\n", entry.filename, entry.date, entry.line_number);
                     }
                     else
                     {
-                        fprintf(fout, ",%s,%s,%s,%d\n", entry.filename, entry.version, entry.date, entry.line_number);
+                        WriterWriteF(writer, ",%s,%s,%s,%d\n", entry.filename, entry.version, entry.date, entry.line_number);
                     }
                 }
             }
             else
             {
-                fprintf(fout,
+                WriterWriteF(writer,
                         ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n");
-                fprintf(fout, "Operation index: \'%s\'\n", operation);
-                fprintf(fout, "Converge \'%s\' ", entry.operator);
+                WriterWriteF(writer, "Operation index: \'%s\'\n", operation);
+                WriterWriteF(writer, "Converge \'%s\' ", entry.operator);
 
-                AuditStatusMessage(fout, entry.status); /* Reminder */
+                AuditStatusMessage(writer, entry.status); /* Reminder */
 
                 if (strlen(entry.comment) > 0)
                 {
-                    fprintf(fout, "Comment: %s\n", entry.comment);
+                    WriterWriteF(writer, "Comment: %s\n", entry.comment);
                 }
 
                 if (strcmp(entry.filename, "Terminal") == 0)
                 {
                     if (strstr(entry.comment, "closing"))
                     {
-                        fprintf(fout,
+                        WriterWriteF(writer,
                                 "\n===============================================================================================\n\n");
                     }
                 }
@@ -1922,12 +1958,12 @@ static void ShowCurrentAudit()
                 {
                     if (strlen(entry.version) == 0)
                     {
-                        fprintf(fout, "Promised in %s (unamed version last edited at %s) at/before line %d\n",
+                        WriterWriteF(writer, "Promised in %s (unamed version last edited at %s) at/before line %d\n",
                                 entry.filename, entry.date, entry.line_number);
                     }
                     else
                     {
-                        fprintf(fout, "Promised in %s (version %s last edited at %s) at/before line %d\n",
+                        WriterWriteF(writer, "Promised in %s (version %s last edited at %s) at/before line %d\n",
                                 entry.filename, entry.version, entry.date, entry.line_number);
                     }
                 }
@@ -1941,18 +1977,18 @@ static void ShowCurrentAudit()
 
     if (HTML && !EMBEDDED)
     {
-        fprintf(fout, "</table>");
-        CfHtmlFooter(fout, FOOTER);
+        WriterWriteF(writer, "</table>");
+        CfHtmlFooter(writer, FOOTER);
     }
 
     if (XML)
     {
-        fprintf(fout, "</output>\n");
+        WriterWriteF(writer, "</output>\n");
     }
 
     DeleteDBCursor(dbp, dbcp);
     CloseDB(dbp);
-    fclose(fout);
+    WriterClose(writer);
 }
 
 /*********************************************************************/
@@ -1971,7 +2007,7 @@ static char *Format(char *s, int width)
         buffer[i] = '\0';
         count++;
 
-        if ((count > width - 5) && ispunct(*sp))
+        if ((count > width - 5) && ispunct((int)*sp))
         {
             strcat(buffer, "<br>");
             i += strlen("<br>");
@@ -2109,7 +2145,6 @@ static void EraseAverages()
 static void SummarizeAverages()
 {
     int i;
-    FILE *fout;
     char name[CF_BUFSIZE];
     CF_DB *dbp;
 
@@ -2132,21 +2167,27 @@ static void SummarizeAverages()
         snprintf(name, CF_BUFSIZE, "monitor_summary.txt");
     }
 
-    if ((fout = fopen(name, "w")) == NULL)
+    Writer *writer = NULL;
     {
-        CfOut(cf_error, "fopen", "Unable to write to %s/%s\n", OUTPUTDIR, name);
-        return;
+        FILE *fout = NULL;
+        if ((fout = fopen(name, "w")) == NULL)
+        {
+            CfOut(cf_error, "fopen", "Unable to write to %s/%s\n", OUTPUTDIR, name);
+            return;
+        }
+        writer = FileWriter(fout);
     }
+    assert(writer);
 
     if (HTML && !EMBEDDED)
     {
         snprintf(name, CF_BUFSIZE, "Monitor summary for %s", VFQNAME);
-        CfHtmlHeader(fout, name, STYLESHEET, WEBDRIVER, BANNER);
-        fprintf(fout, "<table class=border cellpadding=5>\n");
+        CfHtmlHeader(writer, name, STYLESHEET, WEBDRIVER, BANNER);
+        WriterWriteF(writer, "<table class=border cellpadding=5>\n");
     }
     else if (XML)
     {
-        fprintf(fout, "<?xml version=\"1.0\"?>\n<output>\n");
+        WriterWriteF(writer, "<?xml version=\"1.0\"?>\n<output>\n");
     }
 
     CfOut(cf_inform, "", "Writing report to %s\n", name);
@@ -2159,30 +2200,30 @@ static void SummarizeAverages()
 
         if (XML)
         {
-            fprintf(fout, "%s", CFRX[cfx_entry][cfb]);
-            fprintf(fout, "%s %s %s", CFRX[cfx_event][cfb], name, CFRX[cfx_event][cfe]);
-            fprintf(fout, "%s %.4lf %s", CFRX[cfx_min][cfb], MIN.Q[i].expect, CFRX[cfx_min][cfe]);
-            fprintf(fout, "%s %.4lf %s", CFRX[cfx_max][cfb], MAX.Q[i].expect, CFRX[cfx_max][cfe]);
-            fprintf(fout, "%s %.4lf %s", CFRX[cfx_dev][cfb], sqrt(MAX.Q[i].var), CFRX[cfx_dev][cfe]);
-            fprintf(fout, "%s", CFRX[cfx_entry][cfe]);
+            WriterWriteF(writer, "%s", CFRX[cfx_entry][cfb]);
+            WriterWriteF(writer, "%s %s %s", CFRX[cfx_event][cfb], name, CFRX[cfx_event][cfe]);
+            WriterWriteF(writer, "%s %.4lf %s", CFRX[cfx_min][cfb], MIN.Q[i].expect, CFRX[cfx_min][cfe]);
+            WriterWriteF(writer, "%s %.4lf %s", CFRX[cfx_max][cfb], MAX.Q[i].expect, CFRX[cfx_max][cfe]);
+            WriterWriteF(writer, "%s %.4lf %s", CFRX[cfx_dev][cfb], sqrt(MAX.Q[i].var), CFRX[cfx_dev][cfe]);
+            WriterWriteF(writer, "%s", CFRX[cfx_entry][cfe]);
         }
         else if (HTML)
         {
-            fprintf(fout, "%s\n", CFRH[cfx_entry][cfb]);
-            fprintf(fout, "%s %s %s\n", CFRH[cfx_event][cfb], name, CFRH[cfx_event][cfe]);
-            fprintf(fout, "%s Min %.4lf %s\n", CFRH[cfx_min][cfb], MIN.Q[i].expect, CFRH[cfx_min][cfe]);
-            fprintf(fout, "%s Max %.4lf %s\n", CFRH[cfx_max][cfb], MAX.Q[i].expect, CFRH[cfx_max][cfe]);
-            fprintf(fout, "%s %.4lf %s\n", CFRH[cfx_dev][cfb], sqrt(MAX.Q[i].var), CFRH[cfx_dev][cfe]);
-            fprintf(fout, "%s\n", CFRH[cfx_entry][cfe]);
+            WriterWriteF(writer, "%s\n", CFRH[cfx_entry][cfb]);
+            WriterWriteF(writer, "%s %s %s\n", CFRH[cfx_event][cfb], name, CFRH[cfx_event][cfe]);
+            WriterWriteF(writer, "%s Min %.4lf %s\n", CFRH[cfx_min][cfb], MIN.Q[i].expect, CFRH[cfx_min][cfe]);
+            WriterWriteF(writer, "%s Max %.4lf %s\n", CFRH[cfx_max][cfb], MAX.Q[i].expect, CFRH[cfx_max][cfe]);
+            WriterWriteF(writer, "%s %.4lf %s\n", CFRH[cfx_dev][cfb], sqrt(MAX.Q[i].var), CFRH[cfx_dev][cfe]);
+            WriterWriteF(writer, "%s\n", CFRH[cfx_entry][cfe]);
         }
         else if (CSV)
         {
-            fprintf(fout, "%2d,%-10s,%10lf,%10lf,%10lf\n", i, name, MIN.Q[i].expect, MAX.Q[i].expect,
+            WriterWriteF(writer, "%2d,%-10s,%10lf,%10lf,%10lf\n", i, name, MIN.Q[i].expect, MAX.Q[i].expect,
                     sqrt(MAX.Q[i].var));
         }
         else
         {
-            fprintf(fout, "%2d. MAX <%-10s-in>   = %10lf - %10lf u %10lf\n", i, name, MIN.Q[i].expect, MAX.Q[i].expect,
+            WriterWriteF(writer, "%2d. MAX <%-10s-in>   = %10lf - %10lf u %10lf\n", i, name, MIN.Q[i].expect, MAX.Q[i].expect,
                     sqrt(MAX.Q[i].var));
         }
     }
@@ -2201,16 +2242,16 @@ static void SummarizeAverages()
 
     if (HTML && !EMBEDDED)
     {
-        fprintf(fout, "</table>");
-        CfHtmlFooter(fout, FOOTER);
+        WriterWriteF(writer, "</table>");
+        CfHtmlFooter(writer, FOOTER);
     }
 
     if (XML)
     {
-        fprintf(fout, "</output>\n");
+        WriterWriteF(writer, "</output>\n");
     }
 
-    fclose(fout);
+    WriterClose(writer);
 }
 
 /*****************************************************************************/

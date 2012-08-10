@@ -1,0 +1,62 @@
+############################################################
+#
+#  Keep a special promise only if at least n or m hosts
+#  keep a specific promise
+#
+#  This method works with Enterprise CFEngine
+#
+#  If you want to test this on localhost, just edit /etc/hosts
+#  to add host1 host2 host3 host4 as aliases to localhost
+#
+############################################################
+
+body common control
+{
+bundlesequence => { "n_of_m_symphony" };
+inputs => { "cfengine_stdlib.cf" };
+}
+
+############################################################
+
+bundle agent n_of_m_symphony
+{
+vars:
+
+  "count_compliant_hosts"  string => hubknowledge("running_myprocess");
+
+classes:
+
+  "reboot" expression => isgreaterthan("$(count_compliant_hosts)","20");
+
+processes:
+
+  "myprocess" 
+
+       comment => "Count this host if a job is matched",
+       classes => enumerate("running_myprocess");
+
+commands:
+
+  reboot::
+
+     "/bin/shutdown now";
+}
+
+
+#######################################################
+
+bundle server access_rules()
+{
+access:
+
+  "value of my test_scalar, can expand variables here - $(sys.host)"
+    handle => "test_scalar",
+    comment => "Grant access to contents of test_scalar VAR",
+    resource_type => "literal",
+    admit => { "127.0.0.1" };
+
+  "running_myprocess"
+    resource_type => "variable",
+    admit => { "127.0.0.1" };
+
+}

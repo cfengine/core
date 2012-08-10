@@ -5,3 +5,5 @@ promise. Handles are essential for mapping dependencies and performing
 impact analyses.  In Enterprise versions of CFEngine, promise handles
 can also be used in @code{outputs} promises, @xref{outputs in agent
 promises}.
+
+Handles may consist of regular indentifier characters. CFEngine automatically `canonifies' the names of handles to conform to this standard. Caution: if the handle name is based on a variable, and the variable fails to expand, the handle will be based on the name of the variable rather than its content.

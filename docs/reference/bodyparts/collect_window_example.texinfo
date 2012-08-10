@@ -1,0 +1,6 @@
+
+@verbatim
+
+collect_window => "15";
+
+@end verbatim

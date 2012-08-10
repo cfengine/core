@@ -73,8 +73,10 @@ Copyright @copyright{} 2009 CFEngine AS
 
 @ifnottex
 
+
 @node Top, What is modularity?, (dir), (dir)
 @top Orchestration
+
 @menu
 * What is modularity?::         
 * What is orchestration?::      
@@ -83,13 +85,14 @@ Copyright @copyright{} 2009 CFEngine AS
 * Is CFEngine patch or package oriented?::  
 * High level services in CFEngine::  
 * Hiding details::              
-* Black::                       
+* Black grey and white box encapsulation in CFEngine::  
 * Bulk operations are handled by repeating patterns over lists::  
 * Ordering operations in CFEngine::  
 * Bundle ordering::             
 * Overriding order::            
-* Distributing Ordering between hosts with CFEngine Nova::  
+* Distributed Orchestration between hosts with CFEngine Enterprise::  
 @end menu
+
 @end ifnottex
 @iftex
 @contents
@@ -121,17 +124,18 @@ the containers.
 
 @sp 1
 Orchestration is the ability to coordinate many different processes in
-a system so that the sum of those processes yields a harmonious result.
-Orchestration is not about centralized control, though this is common
-misperception.
+time and space, around a system, so that the sum of those processes
+yields a harmonious result through cooperation.  
 
-An orchestra does not manage to play a symphony because the conductor
-pulls every player's strings or blows every trumpet in person, but
-rather because each @i{autonomous} player has a copy of the script,
-knows what to do, and can use just the little additional information
-from the conductor to access a viewpoint that is not available to an
-individual. An orchestra is a weakly coupled expert system in which
-the management (conductor) provides a service to the players.
+Orchestration is not about centralized control, though this is common
+misperception.  An orchestra does not manage to play a symphony
+because the conductor pulls every player's strings or blows every
+trumpet in person, but rather because each @i{autonomous} player has a
+copy of the script, knows what to do, and can use just the little
+additional information from the conductor to access a viewpoint that
+is not available to an individual. An orchestra is a weakly coupled
+expert system in which the management (conductor) provides a service
+to the players.
 
 CFEngine works like an orchestra -- this is why is scales so well.
 Each computer is an autonomous entity, getting its script and a few
@@ -217,7 +221,7 @@ standard methods, e.g. for editing files:
 
 @cartouche
 @verbatim
-body agent control 
+body common control 
 { 
 bundlesequence => {
                   webserver("on"),
@@ -261,15 +265,14 @@ files:
 @end smallexample
 @end cartouche
 
-@item Spread-sheet level
+@item Spread-sheet level (data-driven)
 
-CFEngine commercial editions support a spreadsheet
-In a spreadsheet approach, you create only the data to be inserted into predefined
-promises. The data are entered in tabular form, and may be browsed in the web interface.
-This form of entry is preferred in some environments, especially on the Windows platform.
+CFEngine commercial editions support a kind of spreadsheet. In a spreadsheet
+approach, you create only the data to be inserted into predefined
+promises. The data are entered in tabular form, and may be browsed in
+the web interface.  This form of entry is preferred in some
+environments, especially on the Windows platform.
 
-@center @image{cdp_services_report,15cm,,The Content-Driven Policy services report,png}
-@center Content-Driven Policies
 
 @end table
 
@@ -375,25 +378,14 @@ vars:
  # Apply the following promises to this list...
  #
 
-processes:
+services:
 
-  "$(daemon[$(service)])" restart_class => canonify("start_$(service)");
-
-commands:
-
-   "$(start[$(service)])"
-       ifvarclass => canonify("start_$(service)");
+   "$(service)";
 
 }
 @end verbatim
 
-This assumes that we can define the necessary information about these
-services in array variables of the form @code{$(array[index])}.
-This is what other tools refer to as a @i{resource abstraction layer},
-though in some other tools this layer has to be partially hard-coded.
-We can see some more approaches below, but let's look at this abstraction for a moment.
-
-@node Hiding details, Black, High level services in CFEngine, Top
+@node Hiding details, Black grey and white box encapsulation in CFEngine, High level services in CFEngine, Top
 @unnumberedsec Hiding details
 
 Resource abstraction, or hiding system specific details inside a kind of
@@ -445,7 +437,7 @@ require basic recoding of the software. CFEngine does not make decisions
 for you without your permission.
 
 
-@node Black, Bulk operations are handled by repeating patterns over lists, Hiding details, Top
+@node Black grey and white box encapsulation in CFEngine, Bulk operations are handled by repeating patterns over lists, Hiding details, Top
 @unnumberedsec Black, grey and white box encapsulation in CFEngine
 
 CFEngine's ability to abstract system decisions as promises also
@@ -509,7 +501,7 @@ commands:
 
 @end verbatim
 
-@node Bulk operations are handled by repeating patterns over lists, Ordering operations in CFEngine, Black, Top
+@node Bulk operations are handled by repeating patterns over lists, Ordering operations in CFEngine, Black grey and white box encapsulation in CFEngine, Top
 @unnumberedsec Bulk operations are handled by repeating patterns over lists
 
 
@@ -677,7 +669,7 @@ methods:
 
 
 @page
-@node Overriding order, Distributing Ordering between hosts with CFEngine Nova, Bundle ordering, Top
+@node Overriding order, Distributed Orchestration between hosts with CFEngine Enterprise, Bundle ordering, Top
 @unnumberedsec Overriding order
 
 CFEngine is designed to handle non-deterministic events, such as
@@ -719,10 +711,12 @@ Q: ".../bin/echo four": four
 Q: ".../bin/echo five": five
 @end verbatim
 
-@node Distributing Ordering between hosts with CFEngine Nova,  , Overriding order, Top
-@unnumberedsec Distributing Ordering between hosts with CFEngine Nova
 
-CFEngine Nova adds many powerful features to CFEngine, including
+
+@node Distributed Orchestration between hosts with CFEngine Enterprise,  , Overriding order, Top
+@unnumberedsec Distributed Orchestration between hosts with CFEngine Enterprise
+
+CFEngine Enterprise edition adds many powerful features to CFEngine, including
 a decentralized approach to coordinating activities across multiple
 hosts. Some tools try to approach this by centralizing data from the
 network in a single location, but this has two problems:
@@ -735,6 +729,1021 @@ network in a single location, but this has two problems:
 With CFEngine Nova there are are both decentralized network approaches
 to this problem, and probabilistic methods that do not require the network
 at all.
+
+@menu
+* Basic communication methods for orchestration::  
+* Run job or reboot only if n out m systems are running::  
+* The self-healing chain - inverse Dominoes::  
+* A Domino sequence::           
+* A Chinese Dragon::            
+@end menu
+
+@node  Basic communication methods for orchestration, Run job or reboot only if n out m systems are running, Distributed Orchestration between hosts with CFEngine Enterprise, Distributed Orchestration between hosts with CFEngine Enterprise
+@unnumberedsubsec Basic communication methods for orchestration
+
+The two examples below illustrate the basic syntax constructions for
+communication using systems. We can pass class data and variable data between
+systems in a peer to peer fashion, or through an Enterprise hub. You can 
+run these with a server and an agent just on localhost to illustrate the
+principles.
+
+In this first example, three persistent classes, with names following
+a known pattern are defined on a remote system (by the agent). The
+server bundle then grants access to these using an access
+promise. Finally, a function call to @code{remoteclassesmatching}
+imports the classes, with a prefix to the local system.
+
+@verbatim
+
+body common control
+{
+bundlesequence => { "overture" };
+inputs => { "cfengine_stdlib.cf" };
+}
+
+body server control 
+
+{
+allowconnects         => { "127.0.0.1" , "::1",};
+allowallconnects      => { "127.0.0.1" , "::1", };
+trustkeysfrom         => { "127.0.0.1" , "::1",};
+}
+
+#######################################################
+
+bundle agent overture
+{
+classes:
+  "extended_context" 
+     expression => remoteclassesmatching(".*did.*","127.0.0.1","yes","got");
+
+files:
+
+   "/etc/passwd"
+     create => "true",
+    classes => set_outcome_classes;
+
+
+reports:
+
+ got_did_task_one::
+    "task 1 complete";
+
+ extended_context.got_did_task_two::
+    "task 2 complete";
+
+ extended_context.got_did_task_three::
+    "task 3 complete";
+
+}
+
+body classes set_outcome_classes
+{
+promise_kept => { "did_task_one","did_task_two", "did_task_three" };
+promise_repaired => { "did_task_one","did_task_two", "did_task_three" };
+#cancel_kept => { "did_task_one" };
+persist_time => "10";
+}
+
+bundle server access_rules()
+{
+access:
+
+  "did.*"
+    resource_type => "context",
+    admit => { "127.0.0.1" };
+
+}
+
+@end verbatim
+@noindent The output of this, on success is simply:
+@smallexample
+
+R: task 1 complete
+R: task 2 complete
+R: task 3 complete
+
+@end smallexample
+
+
+@noindent In this second example, we pass actual variable data between hosts.
+The generic peer function @code{remotescalar} can address any other host
+running  @code{cf-serverd}. The abbreviated interface @code{hubknowledge}
+assumes that it should get data from a hub.
+
+Both these functions ask for an identifier; it is up to the server to interpret
+what this means and to return a value of its choosing. If the identifier matches
+a persistent scalar variable (such as is used to count distributed processes in CFEngine
+Enterprise) then this will be returned preferentially. If no such variable is found,
+then the server will look for a literal string in a server bundle with a handle that
+matches the requested object.
+
+
+
+@verbatim
+
+body common control
+{
+bundlesequence => { "overture" };
+inputs => { "cfengine_stdlib.cf" };
+}
+
+body server control 
+
+{
+allowconnects         => { "127.0.0.1" , "::1",};
+allowallconnects      => { "127.0.0.1" , "::1", };
+trustkeysfrom         => { "127.0.0.1" , "::1",};
+}
+
+#######################################################
+
+bundle agent overture
+{
+vars:
+
+  "remote" string => remotescalar("test_scalar","127.0.0.1","yes");
+
+  "know" string => hubknowledge("test_scalar");
+
+  "count_getty" string => hubknowledge("count_getty");
+
+processes:
+
+  # Use the enumerated library body to count hosts running getty
+
+  "getty" 
+
+       comment => "Count this host if a job is matched",
+       classes => enumerate("count_getty");
+
+reports:
+
+ !elsewhere::
+
+    "GOT remote scalar $(remote)";
+    "GOT knowedge scalar $(know)";
+    "GOT persistent scalar $(xyz)";
+
+}
+
+#######################################################
+
+bundle server access_rules()
+{
+access:
+
+  "value of my test_scalar, can expand variables here - $(sys.host)"
+    handle => "test_scalar",
+    comment => "Grant access to contents of test_scalar VAR",
+    resource_type => "literal",
+    admit => { "127.0.0.1" };
+
+  "XYZ"
+    resource_type => "variable",
+    handle => "XYZ",
+    admit => { "127.0.0.1" };
+
+}
+@end verbatim
+
+@noindent You can run this example on a single host, running the server, the agent and the hub (if you have Enterprise CFEngine). 
+The output will be something like this:
+@smallexample
+
+host$ ./cf-agent -f ~/test.cf -K
+R: GOT remote scalar value of my test_scalar, can expand variables here - cflu-10004
+R: GOT knowedge scalar value of my test_scalar, can expand variables here - cflu-10004
+R: GOT persistent scalar 1
+
+@end smallexample
+
+
+
+@node Run job or reboot only if n out m systems are running, The self-healing chain - inverse Dominoes, Basic communication methods for orchestration, Distributed Orchestration between hosts with CFEngine Enterprise
+@unnumberedsubsec Run job or reboot only if n out m systems are running
+
+
+The ability to base local promises on global knowledge seems
+superficially attractive in some cases.  As a strategy this way of
+thinking requires a lot of caution.  We have to assume that all
+knowledge gathered about an environment is subject to errors,
+latencies and a dozen other uncertainties that make any snapshot of
+remotely assessed current state subject to considerable healthy
+suspicion. This is not a weakness of CFEngine -- in fact CFEngine has
+mechanisms that make it as reliable as you are likely to find in any
+technology -- rather it is a fundamental limitation of distributed
+systems, and it is strongly dependent on the architectures you build.
+
+In the following example, we show how you can make certain decisions
+based on global, uncertain knowledge, allowing for the fact that the
+information is uncertain. In other words, we aim to err on the safe
+side. In this case we ask how could we reboot systems after an upgrade
+only if doing so would not jeopardize a Service Level Agreement to have
+at least 20 machines running at all times. Since the globally
+counted instances of a running process cannot be greater than the actual
+number, this particular problem satisfies the constraint of erring
+on the side of caution.
+
+@verbatim
+############################################################
+#
+#  Keep a special promise only if at least n or m hosts
+#  keep a specific promise
+#
+#  This method works with Enterprise CFEngine
+#
+#  If you want to test this on localhost, just edit /etc/hosts
+#  to add host1 host2 host3 host4 as aliases to localhost
+#
+############################################################
+
+body common control
+{
+bundlesequence => { "n_of_m_symphony" };
+inputs => { "cfengine_stdlib.cf" };
+}
+
+############################################################
+
+bundle agent n_of_m_symphony
+{
+vars:
+
+  "count_compliant_hosts"  string => hubknowledge("running_myprocess");
+
+classes:
+
+  "reboot" expression => isgreaterthan("$(count_compliant_hosts)","20");
+
+processes:
+
+  "myprocess" 
+
+       comment => "Count this host if a job is matched",
+       classes => enumerate("running_myprocess");
+
+commands:
+
+  reboot::
+
+     "/bin/shutdown now";
+}
+
+
+#######################################################
+
+bundle server access_rules()
+{
+access:
+
+  "value of my test_scalar, can expand variables here - $(sys.host)"
+    handle => "test_scalar",
+    comment => "Grant access to contents of test_scalar VAR",
+    resource_type => "literal",
+    admit => { "127.0.0.1" };
+
+  "running_myprocess"
+    resource_type => "variable",
+    admit => { "127.0.0.1" };
+
+}
+
+@end verbatim
+
+
+
+
+
+@node The self-healing chain - inverse Dominoes, A Domino sequence, Run job or reboot only if n out m systems are running, Distributed Orchestration between hosts with CFEngine Enterprise
+@unnumberedsubsec The self-healing chain - inverse Dominoes
+
+
+A self-healing chain is the opposite of a dominoe event. If a part of
+the chain is `down', it will be revived. If these events depend on one
+another, then the resuscitation of this part which cause all of the
+subsequent parts to be repaired too.
+
+Let's start with the more common case of the independently repairable
+services, such as one might find in a multi-tier architecture:
+database, web-servers, applications etc.
+
+The following example can be run on a multiple hosts or on a single
+host, using the aliases described in the example. It illustrates
+coordination through the use of CFEngine's @code{remoteclasses}
+function in the Enterprise edition to get confirmation of the
+self-healing structure. In fact, the verification of the self-healing
+is optional if one trusts the underlying system.
+
+@verbatim
+############################################################
+#
+# The self-healing tower: Anti-Dominoes
+#
+#  This method works with CFEngine Enterprise
+#
+#  If you want to test this on localhost, just edit /etc/hosts
+#  to add host1 host2 host3 host4 as aliases to localhost
+#
+############################################################
+
+body common control
+{
+bundlesequence => { "weak_dependency_symphony" };
+inputs => { "cfengine_stdlib.cf" };
+}
+
+body server control
+{
+allowconnects         => { "127.0.0.1" , "::1", @(def.acl) };
+allowallconnects      => { "127.0.0.1" , "::1", @(def.acl) };
+}
+
+############################################################
+
+bundle agent weak_dependency_symphony
+{
+methods:
+
+   # We have to seed the beginning by creating the tower
+   # /tmp/tower_localhost
+
+   host1::
+    "tower"  usebundle => tier1,
+               classes => publish_ok("ok_O");
+
+   host2::
+    "tower"  usebundle => tier2,
+               classes => publish_ok("ok_1");
+
+   host3::
+    "tower"  usebundle => tier3,
+               classes => publish_ok("ok_2");
+
+   host4::
+    "tower"  usebundle => tier4,
+               classes => publish_ok("ok_f");
+
+classes:
+
+ ok_O:: # Wait for the methods, report on host1 only
+
+  "check1" expression => remoteclassesmatching("ok.*","host2","yes","a");
+  "check2" expression => remoteclassesmatching("ok.*","host3","yes","a");
+  "check3" expression => remoteclassesmatching("ok.*","host4","yes","a");
+
+reports:
+
+  ok_O::
+   "tier 1 is ok";
+  a_ok_1::
+   "tier 2 is ok";
+  a_ok_2::
+   "tier 3 is ok";
+  a_ok_f::
+   "tier 4 is ok";
+
+  ok_O&a_ok_1&a_ok_2&a_ok_f::
+   "The Tower is standing";
+
+  !(ok_O&a_ok_1&a_ok_2&a_ok_f)::
+   "The Tower is down";
+}
+
+############################################################
+
+bundle agent tier1
+{
+files:
+
+  "/tmp/something_to_do_1"
+      create => "true";
+}
+
+bundle agent tier2
+{
+files:
+
+  "/tmp/something_to_do_2"
+      create => "true";
+}
+
+bundle agent tier3
+{
+files:
+
+  "/tmp/something_to_do_3"
+      create => "true";
+
+}
+
+bundle agent tier4
+{
+files:
+
+  "/tmp/something_to_do_4"
+      create => "true";
+}
+
+############################################################
+
+
+bundle server access_rules()
+{
+access:
+
+  "ok.*"
+    resource_type => "context",
+    admit => { "127.0.0.1" };
+
+}
+
+############################################################
+
+body classes publish_ok(x)
+{
+promise_repaired => { "$(x)" };
+promise_kept => { "$(x)" };
+cancel_notkept => { "$(x)" };
+persist_time => "2";
+}
+
+@end verbatim
+
+@noindent If we execute this simple test on a single host, or allow it to be executed on distributed
+hosts, the chain forms and quickly stands up the system into a tower of dependencies.
+@verbatim
+host$ ~/LapTop/cfengine/core/src/cf-agent -f ~/orchestrate/self-healing-chain.cf -K
+R: tier 1 is ok
+R: tier 2 is ok
+R: tier 3 is ok
+R: tier 4 is ok
+R: The Tower is standing
+@end verbatim
+If we break the tower, by giving it an impossible promise to keep, e.g. changing the name
+of the directory in tier 3 to something that cannot be created@footnote{For this illustration,
+we run in non-privileged mode and choose a directory name we do not have permission to create.},
+then tier 3 will fail and the output looks like this:
+@verbatim
+host$ ~/LapTop/cfengine/core/src/cf-agent -f ~/orchestrate/self-healing-chain.cf -K
+Unable to make directories to /xtmp/something_to_do_3
+ !!! System reports error for cf_mkdir: "Permission denied"
+R: tier 1 is ok
+R: tier 2 is ok
+R: tier 4 is ok
+R: The Tower is down
+@end verbatim
+@noindent Clearly, whatever tier 3 is really supposed to do, any promise failure
+would result in the same behaviour. If we then correct the policy to make it repairable, the output
+heals quickly:
+@verbatim
+host$ ~/LapTop/cfengine/core/src/cf-agent -f ~/orchestrate/self-healing-chain.cf -K
+R: tier 1 is ok
+R: tier 2 is ok
+R: tier 4 is ok
+R: The Tower is down
+R: tier 3 is ok
+R: The Tower is standing
+@end verbatim
+
+
+
+@node A Domino sequence, A Chinese Dragon, The self-healing chain - inverse Dominoes, Distributed Orchestration between hosts with CFEngine Enterprise
+@unnumberedsubsec A Domino sequence
+
+
+A different kind of orchestration is a domino cascade, that starts
+from some initial trigger, and causes a change in one host that causes
+a change in the next, etc. These examples show how this can easily be
+carried out by CFEngine. Dominio cascades can be done with Community
+or Enterprise editions, but are limited to single machines in each
+step.
+
+The basic principle is shown below@footnote{This example has deliberately been
+made general enough to demonstrate on a single host with several aliases. If each
+host can be guaranteed to have a unique name and address, we could simplify
+the @code{hand_over} wrapper}.
+
+@i{Note: to simulate this on a single host, start the server and agent
+with this same file as input, and make aliases to localhost in @file{/etc/hosts}
+as described in the example.}
+
+@verbatim
+############################################################
+#
+#  Dominoes
+#
+#  This method works with either Community of Enterprise
+#
+#  If you want to test this on localhost, just edit /etc/hosts
+#  to add host1 host2 host3 host4 as aliases to localhost
+#
+############################################################
+
+body common control
+{
+bundlesequence => { "dominoes_symphony" };
+inputs => { "cfengine_stdlib.cf" };
+}
+
+############################################################
+
+bundle agent dominoes_symphony
+{
+methods:
+
+   # We have to seed the beginning by creating the dominoes
+   # /tmp/dominoes_localhost
+
+   host1::
+    "dominoes"  usebundle => hand_over("localhost","host1","overture");
+
+   host2::
+    "dominoes"  usebundle => hand_over("host1","host2","first_movement");
+
+   host3::
+    "dominoes"  usebundle => hand_over("host2","host3","second_movement");
+
+   host4::
+    "dominoes"  usebundle => hand_over("host3","host4","final_movement"),
+                classes => if_ok("finale");
+
+reports:
+
+  finale::
+
+   "The visitors book of the Dominoes method"
+      printfile => visitors_book("/tmp/dominoes_host4");
+
+}
+
+############################################################
+
+bundle agent hand_over(predecessor,myalias,method)
+{
+
+ # This is a wrapper for the orchestration
+
+files:
+
+  "/tmp/tip_the_dominoes"
+
+        comment => "Wait for our cue or relay/conductor baton",
+      copy_from => secure_cp("/tmp/dominoes_$(predecessor)","$(predecessor)"),
+        classes => if_repaired("cue_action");
+
+methods:
+
+  cue_action::
+
+   "the music happens"
+
+       comment => "One off activity",
+     usebundle => $(method),
+       classes => if_ok("pass_the_stick");
+
+files:
+
+  pass_the_stick::
+
+   "/tmp/tip_the_dominoes"
+       comment => "Add our signature to the dominoes's tail",
+     edit_line => append_if_no_line("Knocked over $(myalias) and did: $(method)");
+
+   "/tmp/dominoes_$(myalias)"
+
+    comment => "Dominoes in position to be beamed up by next agent",
+     copy_from => local_cp("/tmp/tip_the_dominoes");
+
+}
+
+############################################################
+
+bundle agent overture
+{
+reports:
+
+  !xyz::
+
+    "Singing the overture...";
+}
+
+bundle agent first_movement
+{
+reports:
+
+  !xyz::
+
+    "Singing the first adagio...";
+}
+
+bundle agent second_movement
+{
+reports:
+
+  !xyz::
+
+    "Singing second allegro...";
+
+}
+
+bundle agent final_movement
+{
+reports:
+
+  !xyz::
+
+    "Trumpets for the finale";
+
+}
+
+############################################################
+
+
+bundle server access_rules()
+{
+access:
+
+  "/tmp"
+
+        admit => { "127.0.0.1" };
+
+  "did.*"
+    resource_type => "context",
+    admit => { "127.0.0.1" };
+
+}
+
+
+body printfile visitors_book(file)
+{
+file_to_print   => "$(file)";
+number_of_lines => "10";
+}
+
+
+@end verbatim
+@noindent When executed, this produces output only on the final host
+in the chain, showing the correct ordering out operations. The
+sequence also passes a file from host to host as a coordination
+token, like a baton in a relay race, and each host signs this
+so that the final host has a log of eery host involved in the
+cascade.
+
+@verbatim
+R: Singing the overture...
+R: Singing the first adagio...
+R: Singing second allegro...
+R: Trumpets for the finale
+
+R: The visitors book of the Dominoes method
+R: Knocked over host1 and did: overture
+R: Knocked over host2 and did: first_movement
+R: Knocked over host3 and did: second_movement
+R: Knocked over host4 and did: final_movement
+
+@end verbatim
+
+The average time for such a cascade to complete will be half the
+length of the chain multiplied by the run-interval, if normal cf-execd
+splaytime is used. Without any splaying, the average time will be the
+run interval multiplied by the chain length. The completion time
+could be increased by using cf-runagent.
+
+
+@node A Chinese Dragon,  , A Domino sequence, Distributed Orchestration between hosts with CFEngine Enterprise
+@unnumberedsubsec A Chinese Dragon star pattern
+
+The Chinese dragon darts back and forth between different hosts,
+forming a chain of events, and leaving a trail behind it. This pattern
+is much like the Domino pattern, except that it follows a star. The
+orchestrated sequence of events follows the dragon from its lair to
+the first satellite host, then back to its lair to record the journey,
+then out to the next satellite, then back to its lair, etc.
+
+A prototypical application for this kind of pattern is taking servers, one by one,
+off a load balancer (in the dragon's lair) and then upgrading them, before
+reinstating them and moving on to the next host.
+
+
+@verbatim
+############################################################
+#
+#  Chinese Dragon Dancing on a Star
+#
+#  This method works with either Community or Enterprise.
+#  and uses named signals
+#
+#  If you want to test this on localhost, just edit /etc/hosts
+#  to add host1 host2 host3 host4 as aliases to localhost
+#
+############################################################
+
+body common control
+{
+bundlesequence => { "dragon_symphony" };
+inputs => { "cfengine_stdlib.cf" };
+}
+
+############################################################
+
+bundle agent dragon_symphony
+{
+methods:
+
+   # We have to seed the beginning by creating the dragon
+   # /tmp/dragon_localhost
+
+    "dragon"  usebundle => visit("localhost","host1","chapter1");
+
+    "dragon"  usebundle => visit("host1","host2","chapter2");
+
+    "dragon"  usebundle => visit("host2","host3","chapter3");
+
+    "dragon"  usebundle => visit("host3","host4","chapter4"),
+                classes => if_ok("finale");
+
+reports:
+
+  finale::
+
+    "The dragon is slain:"
+       printfile => visitors_book("/tmp/shoo_dragon_host4");
+}
+
+############################################################
+# Define the 
+############################################################
+
+bundle agent chapter1(x)
+{
+# Do something significant here
+
+reports:
+
+ host1::
+    " ----> Breathing fire on $(x)";
+}
+
+################################
+
+bundle agent chapter2(x)
+{
+# Do something significant here
+
+reports:
+
+ host2::
+    " ----> Breathing fire on $(x)";
+
+}
+
+################################
+
+bundle agent chapter3(x)
+{
+# Do something significant here
+
+reports:
+
+ host3::
+    " ----> Breathing fire on $(x)";
+
+}
+
+################################
+
+bundle agent chapter4(x)
+{
+# Do something significant here
+
+reports:
+
+ host4::
+    " ----> Breathing fire on $(x)";
+
+}
+
+############################################################
+# Orchestration wrappers
+############################################################
+
+bundle agent visit(predecessor,satellite,method)
+{
+
+ # This is a wrapper for the orchestration will be acted on
+ # first by the dragon's lair and then by the satellite
+
+vars:
+
+  "dragons_lair" string => "host0";
+
+files:
+
+  # We start in the dragon's lair ..
+
+  "/tmp/unleash_dragon"
+
+        comment => "Unleash the dragon",
+      rename => to("/tmp/enter_the_dragon"),
+        classes => if_repaired("dispatch_dragon_$(satellite)"),
+     ifvarclass => "$(dragons_lair)";
+
+  # if we are the dragon's lair, welcome the dragon back, shooed from the satellite
+
+  "/tmp/enter_the_dragon"
+
+        comment => "Returning from a visit to a satellite",
+      copy_from => secure_cp("/tmp/shoo_dragon_$(predecessor)","$(predecessor)"),
+        classes => if_repaired("dispatch_dragon_$(satellite)"),
+     ifvarclass => "$(dragons_lair)";
+
+  # If we are a satellite, receive the dragon from its lair
+
+  "/tmp/enter_the_dragon"
+        comment => "Wait for our cue or relay/conductor baton",
+      copy_from => secure_cp("/tmp/dragon_$(satellite)","$(dragons_lair)"),
+        classes => if_repaired("cue_action_on_$(satellite)"),
+     ifvarclass => "$(satellite)";
+
+methods:
+
+   "check in at home"
+        comment => "Edit the load balancer?",
+      usebundle => switch_satellite(" -> Send dragon to $(satellite)"),
+        classes => if_repaired("send_the_dragon_to_$(satellite)"),
+     ifvarclass => "dispatch_dragon_$(satellite)";
+
+   "dragon visits"
+        comment => "One off activity that the nodes carry out while the dragon visits",
+      usebundle => $(method)("$(satellite)"),
+        classes => if_repaired("send_the_dragon_back_from_$(satellite)"),
+     ifvarclass => "cue_action_on_$(satellite)";
+
+
+files:
+
+  # hub/lair hub signs the book too and schedules the dragon for next satellite
+
+   "/tmp/dragon_$(satellite)"   
+         create => "true",
+        comment => "Add our signature to the dragon's tail",
+      edit_line => sign_visitor_book("Dragon returned from $(predecessor)"),
+     ifvarclass => "send_the_dragon_to_$(satellite)";
+
+   # Satellite signs the book and shoos dragon for hub to collect
+
+   "/tmp/shoo_dragon_$(satellite)"
+         create => "true",
+        comment => "Add our signature to the dragon's tail",
+      edit_line => sign_visitor_book("Dragon visited $(satellite) and did: $(method)"),
+     ifvarclass => "send_the_dragon_back_from_$(satellite)";
+
+reports:
+
+  !xyz::
+
+    "Done $(satellite)";
+
+}
+
+############################################################
+
+bundle agent switch_satellite(name)
+{
+files:
+
+   "/tmp/enter_the_dragon"
+        comment => "Add our signature to the dragon's tail",
+      edit_line => append_if_no_line("Switch new dragon's target $(name)");
+
+reports:
+
+  !xyz::
+   " X Switching new dragon's target $(name)";
+}
+
+
+############################################################
+
+bundle edit_line sign_visitor_book(s)
+{
+insert_lines:
+
+  "/tmp/enter_the_dragon"
+        comment => "Import the current visitor's book",
+    insert_type => "file";
+
+  "$(s)" comment => "Append this string to the visitor's book";
+}
+
+############################################################
+
+
+bundle server access_rules()
+{
+access:
+
+  "/tmp"
+
+        admit => { "127.0.0.1" };
+
+  "did.*"
+    resource_type => "context",
+    admit => { "127.0.0.1" };
+
+}
+
+############################################################
+
+body printfile visitors_book(file)
+{
+file_to_print   => "$(file)";
+number_of_lines => "100";
+}
+
+@end verbatim
+
+
+
+Let's test it on a single host, equipped with aliases to the see entire flow.
+
+@noindent Without the trigger, this simply yields
+@verbatim
+R: Done host1
+R: Done host2
+R: Done host3
+R: Done host4
+@end verbatim
+
+@verbatim
+host$ touch /tmp/unleash_dragon
+
+host$ ~/LapTop/cfengine/core/src/cf-agent -f ~/orchestrate/dragon.cf -K
+R:  X Switching new dragon's target  -> Send dragon to host1
+R: Done host1
+R: Done host2
+R: Done host3
+R: Done host4
+
+host$ ~/LapTop/cfengine/core/src/cf-agent -f ~/orchestrate/dragon.cf -K
+R:  ----> Breathing fire on host1
+R: Done host1
+R:  X Switching new dragon's target  -> Send dragon to host2
+R: Done host2
+R: Done host3
+R: Done host4
+host$ 
+
+host$ ~/LapTop/cfengine/core/src/cf-agent -f ~/orchestrate/dragon.cf -K
+R:  ----> Breathing fire on host1
+R: Done host1
+R:  X Switching new dragon's target  -> Send dragon to host2
+R:  ----> Breathing fire on host2
+R: Done host2
+R:  X Switching new dragon's target  -> Send dragon to host3
+R: Done host3
+R: Done host4
+
+host$ ~/LapTop/cfengine/core/src/cf-agent -f ~/orchestrate/dragon.cf -K
+R:  ----> Breathing fire on host1
+R: Done host1
+R:  X Switching new dragon's target  -> Send dragon to host2
+R:  ----> Breathing fire on host2
+R: Done host2
+R:  X Switching new dragon's target  -> Send dragon to host3
+R:  ----> Breathing fire on host3
+R: Done host3
+R:  X Switching new dragon's target  -> Send dragon to host4
+R: Done host4
+host$ ~/LapTop/cfengine/core/src/cf-agent -f ~/orchestrate/dragon.cf -K
+R:  ----> Breathing fire on host1
+R: Done host1
+R:  X Switching new dragon's target  -> Send dragon to host2
+R:  ----> Breathing fire on host2
+R: Done host2
+R:  X Switching new dragon's target  -> Send dragon to host3
+R:  ----> Breathing fire on host3
+R: Done host3
+R:  X Switching new dragon's target  -> Send dragon to host4
+R:  ----> Breathing fire on host4
+R: Done host4
+
+R: The dragon is slain:
+R: Switch new dragon's target  -> Send dragon to host1
+R: Dragon returned from localhost
+R: Dragon visited host1 and did: chapter1
+R: Switch new dragon's target  -> Send dragon to host2
+R: Dragon returned from host1
+R: Dragon visited host2 and did: chapter2
+R: Switch new dragon's target  -> Send dragon to host3
+R: Dragon returned from host2
+R: Dragon visited host3 and did: chapter3
+R: Switch new dragon's target  -> Send dragon to host4
+R: Dragon returned from host3
+R: Dragon visited host4 and did: chapter4
+
+@end verbatim
 
 
 

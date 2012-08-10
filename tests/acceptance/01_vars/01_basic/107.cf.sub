@@ -1,0 +1,17 @@
+body common control
+{
+    bundlesequence => { "main" };
+}
+
+bundle agent main
+{
+methods:
+  "TEST" usebundle => test("any");
+}
+
+bundle common test(var)
+{
+vars:
+  "something" string => and("any", "any"),
+              ifvarclass => canonify("${var}");
+}

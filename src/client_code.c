@@ -33,14 +33,26 @@
 /*******************************************************************/
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
+#include "sysinfo.h"
 #include "dir.h"
 #include "dir_priv.h"
 #include "client_protocol.h"
+#include "crypto.h"
+
+typedef struct
+{
+    char *server;
+    AgentConnection *conn;
+    int busy;
+} ServerItem;
+
+#define CFENGINE_SERVICE "cfengine"
 
 /* seconds */
 #define RECVTIMEOUT 30
+
+#define CF_COULD_NOT_CONNECT -2
 
 Rlist *SERVERLIST = NULL;
 
@@ -149,13 +161,15 @@ AgentConnection *ServerConnection(char *server, Attributes attr, Promise *pp)
     AgentConnection *conn;
 
 #ifndef MINGW
-    static sigset_t signal_mask;
-
     signal(SIGPIPE, SIG_IGN);
+#endif /* NOT MINGW */
+
+#if !defined(__MINGW32__)
+    static sigset_t signal_mask;
     sigemptyset(&signal_mask);
     sigaddset(&signal_mask, SIGPIPE);
     pthread_sigmask(SIG_BLOCK, &signal_mask, NULL);
-#endif /* NOT MINGW */
+#endif
 
     conn = NewAgentConn();
 
@@ -186,7 +200,7 @@ AgentConnection *ServerConnection(char *server, Attributes attr, Promise *pp)
 
             if (conn->sd != SOCKET_INVALID)
             {
-                ServerDisconnection(conn);
+                DisconnectServer(conn);
             }
 
             return NULL;
@@ -203,7 +217,7 @@ AgentConnection *ServerConnection(char *server, Attributes attr, Promise *pp)
         {
             CfOut(cf_error, "", " !! Id-authentication for %s failed\n", VFQNAME);
             errno = EPERM;
-            ServerDisconnection(conn);
+            DisconnectServer(conn);
             return NULL;
         }
 
@@ -211,7 +225,7 @@ AgentConnection *ServerConnection(char *server, Attributes attr, Promise *pp)
         {
             CfOut(cf_error, "", " !! Authentication dialogue with %s failed\n", server);
             errno = EPERM;
-            ServerDisconnection(conn);
+            DisconnectServer(conn);
             return NULL;
         }
 
@@ -228,7 +242,7 @@ AgentConnection *ServerConnection(char *server, Attributes attr, Promise *pp)
 
 /*********************************************************************/
 
-void ServerDisconnection(AgentConnection *conn)
+void DisconnectServer(AgentConnection *conn)
 {
     CfDebug("Closing current server connection\n");
 
@@ -309,7 +323,6 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, Attributes attr
 
     if (ReceiveTransaction(conn->sd, recvbuffer, NULL) == -1)
     {
-        DestroyServerConnection(conn);
         return -1;
     }
 
@@ -361,7 +374,6 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, Attributes attr
 
         if (ReceiveTransaction(conn->sd, recvbuffer, NULL) == -1)
         {
-            DestroyServerConnection(conn);
             return -1;
         }
 
@@ -500,7 +512,6 @@ Dir *OpenDirRemote(const char *dirname, Attributes attr, Promise *pp)
     {
         if ((n = ReceiveTransaction(conn->sd, recvbuffer, NULL)) == -1)
         {
-            DestroyServerConnection(conn);
             free((char *) cfdirh);
             return NULL;
         }
@@ -654,7 +665,6 @@ int CompareHashNet(char *file1, char *file2, Attributes attr, Promise *pp)
 
     if (ReceiveTransaction(conn->sd, recvbuffer, NULL) == -1)
     {
-        DestroyServerConnection(conn);
         cfPS(cf_error, CF_INTERPT, "recv", pp, attr, "Failed send");
         CfOut(cf_verbose, "", "No answer from host, assuming checksum ok to avoid remote copy for now...\n");
         return false;
@@ -744,7 +754,6 @@ int CopyRegularFileNet(char *source, char *new, off_t size, Attributes attr, Pro
 
         if ((n_read = RecvSocketStream(conn->sd, buf, toget, 0)) == -1)
         {
-            DestroyServerConnection(conn);
             cfPS(cf_error, CF_INTERPT, "recv", pp, attr, "Error in client-server stream");
             close(dd);
             free(buf);
@@ -893,7 +902,6 @@ int EncryptCopyRegularFileNet(char *source, char *new, off_t size, Attributes at
     {
         if ((cipherlen = ReceiveTransaction(conn->sd, buf, &more)) == -1)
         {
-            DestroyServerConnection(conn);
             free(buf);
             return false;
         }
@@ -1100,9 +1108,13 @@ int ServerConnect(AgentConnection *conn, char *host, Attributes attr, Promise *p
             freeaddrinfo(response);
         }
 
-        if (!connected && pp)
+        if (!connected)
         {
-            cfPS(cf_verbose, CF_FAIL, "connect", pp, attr, " !! Unable to connect to server %s", host);
+            if (pp)
+            {
+                cfPS(cf_verbose, CF_FAIL, "connect", pp, attr, " !! Unable to connect to server %s", host);
+            }
+
             return false;
         }
 
@@ -1188,11 +1200,11 @@ void DestroyServerConnection(AgentConnection *conn)
 {
     Rlist *entry = KeyInRlist(SERVERLIST, conn->remoteip);
 
-    ServerDisconnection(conn);
+    DisconnectServer(conn);
 
     if (entry != NULL)
     {
-        entry->item = NULL;     /* Has been freed by ServerDisconnection */
+        entry->item = NULL;     /* Has been freed by DisconnectServer */
         DeleteRlistEntry(&SERVERLIST, entry);
     }
 }
@@ -1421,7 +1433,7 @@ void ConnectionsCleanup(void)
             continue;
         }
 
-        ServerDisconnection(svp->conn);
+        DisconnectServer(svp->conn);
 
         if (svp->server)
         {

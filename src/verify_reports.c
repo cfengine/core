@@ -23,18 +23,14 @@
 
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: verify_reports.c                                                    */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
 #include "dbm_api.h"
+#include "files_names.h"
+#include "item_lib.h"
+#include "sort.h"
 
-static void ShowState(char *type, Attributes a, Promise *pp);
+static void ShowState(char *type);
 static void PrintFile(Attributes a, Promise *pp);
 
 /*******************************************************************/
@@ -49,12 +45,6 @@ void VerifyReportPromise(Promise *pp)
     char unique_name[CF_EXPANDSIZE];
 
     a = GetReportsAttributes(pp);
-
-    if (strcmp(pp->classes, "any") == 0)
-    {
-        CfOut(cf_verbose, "", " --> Reports promises may not be in class \"any\"");
-        return;
-    }
 
     snprintf(unique_name, CF_EXPANDSIZE - 1, "%s_%zu", pp->promiser, pp->offset.line);
     thislock = AcquireLock(unique_name, VUQNAME, CFSTARTTIME, a, pp, false);
@@ -86,7 +76,7 @@ void VerifyReportPromise(Promise *pp)
     {
         for (rp = a.report.showstate; rp != NULL; rp = rp->next)
         {
-            ShowState(rp->item, a, pp);
+            ShowState(rp->item);
         }
     }
 
@@ -133,7 +123,7 @@ static void PrintFile(Attributes a, Promise *pp)
 
 /*********************************************************************/
 
-static void ShowState(char *type, Attributes a, Promise *pp)
+static void ShowState(char *type)
 {
     struct stat statbuf;
     char buffer[CF_BUFSIZE], vbuff[CF_BUFSIZE], assemble[CF_BUFSIZE];
@@ -239,11 +229,6 @@ static void ShowState(char *type, Attributes a, Promise *pp)
 
         if (IsSocketType(type) || IsTCPType(type))
         {
-            if (addresses != NULL)
-            {
-                cfPS(cf_error, CF_CHG, "", pp, a, " {\n");
-            }
-
             for (ip = addresses; ip != NULL; ip = ip->next)
             {
                 tot += ip->counter;

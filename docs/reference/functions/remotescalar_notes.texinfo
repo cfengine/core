@@ -2,6 +2,13 @@ The remote system's cf-serverd must accept the query for the requested variable 
 the host that is requesting it. 
 An example of this configuration follows.
 
+This function asks for an identifier; it is up to the server to interpret
+what this means and to return a value of its choosing. If the identifier matches
+a persistent scalar variable (such as is used to count distributed processes in CFEngine
+Enterprise) then this will be returned preferentially. If no such variable is found,
+then the server will look for a literal string in a server bundle with a handle that
+matches the requested object.
+
 @verbatim
 bundle server access
 {

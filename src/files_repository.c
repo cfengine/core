@@ -23,14 +23,10 @@
 
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: files_repository.c                                                  */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
+
+#include "files_names.h"
+#include "item_lib.h"
 
 /*********************************************************************/
 
@@ -91,7 +87,7 @@ bool GetRepositoryPath(const char *file, Attributes attr, char *destination)
 
 /*********************************************************************/
 
-int ArchiveToRepository(char *file, Attributes attr, Promise *pp)
+int ArchiveToRepository(char *file, Attributes attr, Promise *pp, const ReportContext *report_context)
  /* Returns true if the file was backup up and false if not */
 {
     char destination[CF_BUFSIZE];
@@ -123,7 +119,7 @@ int ArchiveToRepository(char *file, Attributes attr, Promise *pp)
     
     JoinPath(destination, CanonifyName(file));
 
-    if (!MakeParentDirectory(destination, attr.move_obstructions))
+    if (!MakeParentDirectory(destination, attr.move_obstructions, report_context))
     {
     }
 

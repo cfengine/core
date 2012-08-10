@@ -23,10 +23,10 @@
 */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
 #include "dir.h"
 #include "dir_priv.h"
+#include "item_lib.h"
 
 /*********************************************************************/
 

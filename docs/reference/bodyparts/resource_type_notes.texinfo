@@ -6,7 +6,37 @@ hashed passwords etc for easy access. In the case of literal data, the
 promise handle serves as the reference identifier for queries. Queries
 are instigated by function calls by any agent.
 
+If the resource type is @code{literal}, CFEngine will grant access to a
+literal datastring. This string is defined either by the promiser
+itself, but the name of the variable is the identifier given by the promise
+handle of the access promise, since the promiser string might be complex.
+
+If the resource type is @code{variable} then the promiser is the name
+of a persistent scalar variable defined on the server-host.  Currently
+persistent scalars are only used internally by Enterprise CFEngine to
+hold enumerated classes for orchestration purposes. 
+
+If you want to send the value of a policy defined variable in the
+server host (which for some reason is not available directly through
+policy on the client, e.g. because they have differnet policies), then
+you could use the construction
+
+@verbatim
+access:
+
+  "$(variable_name)"
+
+         handle => "variable_name",
+  resource_type => "literal";
+@end verbatim
+
+If the resource type is @code{context}, the promiser is treated as a
+regular expression to match persistent classes defined on the server
+host. If these are matched by the request from the client, they will
+be transmitted, @xref{Function remoteclassesmatching}.
+
 The term @code{query} may also be used in commercial versions of
 CFEngine to query the server for data from embedded databases. This is
 currently for internal use only, and is used to grant access to report
-`menus'.
+`menus'. If the promiser of a query request is called @samp{collect_calls},
+this grants access to server peering collect-call tunneling, @xref{call_collect_interval in server}.

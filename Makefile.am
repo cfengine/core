@@ -4,17 +4,18 @@ MAKEFLAGS = $(if $(filter-out 0,$(V)),,--no-print-directory --quiet)
 
 LCOV_FLAGS = $(if $(filter-out 0,$(V)),,-q)
 
-SUBDIRS = pub $(NOVA_SUBDIR) $(CONSTELLATION_SUBDIR) src docs examples masterfiles tests $(CFMOD_SUBDIR)
+SUBDIRS = pub $(NOVA_SUBDIR) src docs examples masterfiles tests $(ENTERPRISE_API_SUBDIR) $(CFMOD_SUBDIR) $(NOVA_DOC_SUBDIR)
 
 DIST_SUBDIRS = pub src docs examples masterfiles tests
 
-# Set explicitly to avoid picking up {nova,constellation,galaxy}/*.m4
+# Set explicitly to avoid picking up {nova}/*.m4
 
 DIST_COMMON = README Makefile.am Makefile.in configure AUTHORS aclocal.m4 \
         ChangeLog INSTALL config.guess config.sub depcomp install-sh \
         ltmain.sh missing ylwrap m4/acinclude.m4 m4/libtool.m4 m4/ltoptions.m4 \
         m4/ltsugar.m4 m4/ltversion.m4 m4/lt~obsolete.m4 m4/cf3_with_library.m4 \
-        m4/snprintf.m4 m4/old-autoconf.m4 configure.ac autogen.sh compile
+        m4/snprintf.m4 m4/old-autoconf.m4 m4/adl_recursive_eval.m4 configure.ac \
+        autogen.sh compile
 
 EXTRA_DIST = ChangeLog INSTALL README LICENSE
 
@@ -74,9 +75,14 @@ pdf:
 # Code coverage
 #
 
-coverage:
+clean-coverage:
 	find -L $(srcdir) -name '*.gcda' -delete
+
+run-coverage:
 	-$(MAKE) check -k
+
+
+collect-coverage:
 	$(LCOV) $(LCOV_FLAGS) --capture --initial --directory . --output-file cfengine-lcov-base.info
 	$(LCOV) $(LCOV_FLAGS) --capture --directory . --output-file cfengine-lcov.info --test-name CFENGINE --no-checksum --compat-libtool
 	$(LCOV) $(LCOV_FLAGS) -a cfengine-lcov-base.info -a cfengine-lcov.info --output-file cfengine-lcov.info
@@ -85,3 +91,5 @@ coverage:
 	@echo
 	@echo " Code coverage information: file://"`pwd`"/coverage-html/index.html"
 	@echo
+
+coverage: clean-coverage run-coverage collect-coverage

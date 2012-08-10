@@ -1,0 +1,1279 @@
+\input texinfo-altfont
+\input texinfo-logo
+\input texinfo
+@selectaltfont{cmbright}
+@setlogo{CFEngineFrontPage}
+@c *********************************************************************
+@c
+@c  This is a TEXINFO file. It generates both TEX documentation and
+@c  the "on line" documentation "info" files.
+@c
+@c  The file is structured like a programming language. Each chapter
+@c  starts with a chapter comment.
+@c
+@c  Menus list the subsections so that an online info-reader can parse
+@c  the file hierarchically.
+@c
+@c *********************************************************************** 
+@c %** start of header
+@setfilename Enterprise-2-2-EvaluationGuide.info
+@settitle CFEngine 3 Enterprise Evaluation Guide
+@c @setchapternewpage odd
+@c %** end of header
+@titlepage
+@title CFEngine 3 Enterprise Evaluation Guide
+@subtitle CFEngine Enterprise Documentation
+@subtitle Updated 3. June 2012 @c also update in ifnottex section below
+@author CFEngine AS
+@c @smallbook
+@fonttextsize 10
+@c @page
+@vskip 0pt plus 1filll
+Copyright @copyright{} 2012 CFEngine AS.
+The features described herein are in provided for user convenience and imply no warranty whatsoever
+to the extent of applicable law.
+@end titlepage
+@c *************************** File begins here ************************
+@ifinfo
+@dircategory CFEngine Training
+@direntry
+* CFEngine Reference:
+                        CFEngine is a language based framework
+                        designed for configuring and maintaining
+                        Unix-like operating systems attached
+                        to a TCP/IP network.
+@end direntry
+@end ifinfo
+@ifnottex
+Updated 3. June 2012
+@node Top, , (dir), (dir)
+@top CFEngine 3 Enterprise Evaluation Guide
+@end ifnottex
+@ifhtml
+@html
+<a name="Contents">
+@contents
+@end html
+@end ifhtml
+
+@iftex
+@contents
+@end iftex
+
+
+@menu
+* Introduction::                
+* Get started::                 
+* Standard reports in CFEngine 3 Enterprise::  
+@c * Content Driven Policy (CDP) reports::  
+* Introduction to CFEngine policies::  
+* Next steps::                  
+* Policy editor (beta)::              
+* Shell access (evaluation feature only)::
+@end menu
+
+@c *****************************************************
+@c * CHAPTER
+@c *****************************************************
+@node  Introduction, Get started, Top, Top
+@chapter Introduction
+
+@c TODO: EXPLAIN DIFFERENT MODES OF ACCESSING PILOTS
+
+CFEngine comes in two software editions: CFEngine Community and CFEngine 3 Enterprise. CFEngine 3 Enterprise is a commercial subscription offering, with simple productivity enhancements and reporting extensions. Features include compliance management, reporting and business integration, and tools for handling necessary complexity. CFEngine 3 Enterprise has features to support Cloud Computing for public and private clouds, as well as greater integration facilities with database resources.
+
+The evaluation program aims to familiarize the user with CFEngine 3 Enterprise through examples and practical use of the Enterprise Mission Portal, a web based graphical user interface. You do not need experience with CFEngine 3, the current document provides a step-by-step guide to help you find and use the product's major features.  Of course, the deeper knowledge of system administration and CFEngine 3 language that you possess, the more you will get out of this evaluation.
+
+The Mission Portal is the centerpiece of user interaction with CFEngine 3 Enterprise, designed to suit the needs of the next generation of system administrators and IT managers alike. The evaluation program will allow the user to quickly:
+
+@c @itemize -
+@c @item View standard reports
+@c @item Create (query) reports
+@c @item Modify a Content Dependent Policy (CDP) data list, and verify the result
+@c @item Edit a generic policy and verify the result
+@c @item Create a generic policy and verify the result
+@c @end itemize
+
+@itemize 
+@item View the status of all servers (e.g. availability, compliance, performance)
+@item Consult out-of-the-box reports, such as:
+@itemize -
+@item Software installed (by machine)
+@item Compliance
+@item File diffs
+@item Promises not kept
+@end itemize
+@item Understand and write a simple CFEngine Policy file
+@c @item Experiment with CFEngine Policy files
+@c @item Drill-down and configure individual servers, files, services, etc.
+@end itemize
+
+For the purpose of this evaluation program, CFEngine 3 Enterprise has been set up in a network comprising several nodes. One node serves as a central hub to distribute CFEngine configuration policies and collect reports from the other nodes (clients). They run on different operating systems, comprising several linux flavors and windows servers.
+
+@cartouche
+@noindent @i{If you have not already done so, you may request access to the CFEngine Enterprise Evaluation Program by entering your information at} @url{http://cfengine.com/evaluation}.
+@end cartouche
+
+
+@ignore
+-----------------------------------------------------
+@node 
+@section CFEngine 3 Enterprise
+
+CFEngine software automates large-scale IT computing infrastructure, ensuring the availability, security and compliance of mission-critical applications and services. Our software is built upon well-established theory and high-quality engineering practices, as a result CFEngine has enjoyed an outstanding security record over its 18-year history. 
+
+
+
+-----------------------------------------------------
+@node 
+@section Pilot scope
+
+To CFEngine, IT operations is @i{The Mission}. The Enterprise Mission Portal was designed to give users an understanding of the current and past state of their system and act as a control and collaboration center. We will look at these concepts in the following sections and allow the user to quickly:
+To CFEngine, IT operations is @i{The Mission}. The Enterprise Mission Portal was designed to give users an understanding of the current and past state of their system, act as a control and collaboration center, and serve as a knowledge base. We will look at these concepts in the following sections and allow the user to quickly:
+
+@enumerate
+@item View standard reports
+@item Create (query) reports
+@item Modify a Content Dependent Policy (CDP) data list, and verify the result
+@item Edit a generic policy and verify the result
+@item Create a generic policy and verify the result
+@end enumerate
+
+For the purpose of this pilot program, CFEngine 3 Enterprise has been set up in a network comprising several nodes. One node serves as a central hub to distribute CFEngine configuration policies and collect reports from the other nodes (clients). They run on different operating systems, comprising several linux flavors and windows servers.
+
+In the following we will demonstrate the capabilities of standard reports and query these reports to customize the output to your need. We will look at how to create and modify a policy. Through the use of best practices the user will learn how to document policies and the intent behind these. 
+@end ignore
+
+
+@c *****************************************************
+@c * CHAPTER
+@c *****************************************************
+@node Get started, Standard reports in CFEngine 3 Enterprise, Introduction, Top
+@chapter Get started
+
+@menu
+* Accessing CFEngine 3 Enterprise::   
+* CFEngine terms used in this document::  
+* Introduction to the Mission Portal::
+@ignore
+* Engineering room::            
+* Business room::                 
+* Planning room::               
+* Library room::                
+* Shell access (evaluation feature only)::
+@end ignore
+@end menu
+
+@c -----------------------------------------------------
+@node Accessing CFEngine 3 Enterprise, CFEngine terms used in this document, Get started, Get started
+@section Accessing CFEngine 3 Enterprise
+
+You should have received an email with account information after making an evaluation agreement with CFEngine. In it, you will find information on how to access your dedicated CFEngine 3 Enterprise instance, the CFEngine support ticketing system, and other online resources. Go to the url indicated in this email to access the Enterprise Mission Portal, use your credentials to log in.
+
+@sp 1
+@center @image{img-login,5cm,,Enterprise Mission Portal login screen}
+@center Figure: Enterprise Mission Portal login screen
+
+The normal Enterprise Mission Portal is divided into four main sections called @i{rooms}. Here we have added a fifth room which is specific to the evaluation environment (i.e. is not shipped with the actual product): shell access to machines. Each @i{room} offers insight into different aspects of operations and is a beginning from which you can refine your overview and search through information.
+
+@sp 1
+@center @image{img-mission-portal-2-2,12cm,,Enterprise Mission Portal}
+@center Figure: Enterprise Mission Portal
+
+@itemize -
+@item Engineering: a place to see the current state of system repair
+@item Business: a top level overview of compliance status and business value
+@item Planning: a place to plan and make policy changes
+@item Library: a knowledge and document bank that connects information together
+@item Shell: web based ssh access to the machines in the network (only available in evaluation environment).
+@end itemize
+
+@c The rooms contain various information presented in text format and performance graphs. They also contain finders, represented by square icons, that allow the user to explore the environment further. We will mostly look into the Engineering and Planning rooms in this pilot setting, but we encourage exploration of both the Status and Library room as well. Refer to the CFEngine 3 Enterprise Owner's Manual for more information.
+
+@c @noindent We will now go through the points listed in the scope of this pilot, beginning with standard reports.
+
+You can always use the breadcrumb in the top left corner to navigate and see where you are in the Mission Portal.
+
+
+@c -----------------------------------------------------
+@node CFEngine terms used in this document, Introduction to the Mission Portal, Accessing CFEngine 3 Enterprise, Get started
+@section CFEngine terms used in this document
+CFEngine uses a declarative language that describes the desired state of a system. Individual statements are called @i{promises}. Promises can be @i{kept} (CFEngine was able to keep the promise about the desired state), @i{not kept} (CFEngine was not able to keep the promise about the desired state) or @i{repaired} (promise was initially not kept, CFEngine fixed this). The desired state of your system is thus described in collections of promises, assembled in CFEngine policy files with the extension @file{.cf}.
+
+
+@c -----------------------------------------------------
+@node Introduction to the Mission Portal, Engineering room, CFEngine terms used in this document, Get started
+@section Introduction to the Mission Portal
+
+@menu
+* Engineering room::
+* Business room::
+* Planning room::
+* Library room::
+* Shell access (evaluation feature only)::
+@end menu
+
+@c -----------------------------------------------------
+@node Engineering room, Business room, Introduction to the Mission Portal, Introduction to the Mission Portal
+@subsection Engineering room
+
+@menu
+* Navigation Tree::
+* Status tab::
+* Reports tab::
+@end menu
+
+@sp 1
+@cartouche
+@noindent @b{Action item:} Click the @b{Engineering} icon in the main page of the Mission Portal to enter the @samp{Engineering} room.
+
+@sp 1
+@center @image{img-goto-engineering-2-2,9.5cm,,Go to Engineering room}
+@center Figure: Go to Engineering room
+@end cartouche
+
+Mission Engineering illustrates the state of the system in relation to the desired state at all scales. Zoom in to specific areas and examine the impact of promises, query data, and extract reports.
+
+The Mission Engineering room underwent a substantial rework for the release of CFEngine 3 Enterprise 2.2. Most notably we introduced a host Navigation Tree where hosts can be grouped and organized in a hierarchy defined by classes. The remaining content on the page is influenced by the selected tree context, i.e. the @b{Status} and @b{Reports} tabs will only show information for linux hosts if such a context/node is selected in the the tree (the active node is highlighted to show that it is selected). Another notable change is the new interface to interact with reports, now available as a tab and drop-down menus.
+
+@sp 1
+@image{img-pilot-engineering-2-2,15cm,,Mission Engineering}
+@center Figure: Mission Engineering
+@sp 1
+
+
+@c -----------------------------------------------------
+@node Navigation Tree, Status tab, Engineering room, Engineering room
+@subsubsection Navigation Tree
+
+The Navigation Tree consists of two main parts:
+
+@itemize
+@item Top menu:
+@sp 1
+@center @image{img-nav-tree-top-menu-2-2,5cm,,Top Menu}
+@center Figure: Top Menu
+@sp 1
+
+@itemize -
+@item The Tree Selector: Dropdown menu; choose between the default tree and custom trees defined by the user. Each tree can have a different subset of nodes.
+@item Class finder, Host finder and Promise finder o explore classes, hosts/IP-addresses or promises, respectively.
+@cartouche
+@noindent @b{Action item:} Add a custom tree: Click the drop down menu and input the name of the new tree in the @i{Add Tree} field to the left of the add button (let us use @code{OS} as an example). Click the @b{Add} button. We will add nodes to this tree below.
+@end cartouche
+@noindent You can always click the @code{X} next to a tree name to delete it.
+@end itemize
+
+@item The tree itself, grouped by classes. The user can add up to four sublevels in the Navigation Tree and edit or delete existing nodes.
+@sp 1
+@center @image{img-pilot-nav-tree-add-2-2,5cm,,Navigation Tree}
+@center Figure: Navigation Tree
+@sp 1
+@cartouche
+@noindent @b{Action item:} Add a node to the top level in the tree:
+@enumerate
+@item Put the mouse pointer over the @b{All hosts} node, click the plus sign to the right.
+@item A pop-up appears with fields to enter a label (name) to the node that you wish to create and the class expression you wish to filter by. Enter @b{Linux} in the name field. The class expression field contains a button which opens a class finder to help you select classes. You can either enter @b{linux} directly in the class expression field or select the finder and search for that class there. Press @b{Add} when you are done.
+@item The new node appears in the navigation tree. Click on the node to expand and see what hosts were put under it.
+@sp 1
+@center @image{img-pilot-linux-tree-2-2,5cm,,Navigation Tree with Linux node}
+@center Figure: Navigation Tree with Linux node
+@end enumerate
+@end cartouche
+@end itemize
+
+@sp 1
+@noindent Other tree manipulating functions:
+@itemize
+@item To delete a node: Put the mouse pointer over the node that you wish to delete, click the @code{X} shown beside the node.
+@item To edit a node: 
+@enumerate
+@item Put the mouse pointer over the node that you wish to edit, click the @code{Pencil icon} shown beside the node.
+@item A pop-up appears where you can edit the fields that you wish to change.
+@end enumerate
+@end itemize
+
+@noindent The trees and nodes that a user creates will not be visible to other users of the Mission Portal.
+
+
+@c -----------------------------------------------------
+@node Status tab, Reports tab, Navigation Tree, Engineering room
+@subsubsection Status tab
+
+The Status tab shows the overall status of the hosts selected in the Navigation Tree. This section contains: 
+
+@sp 1
+@center @image{img-pilot-status-tab-2-2,10cm,,Status tab}
+@center Figure: Status tab
+@sp 1
+
+@itemize
+@item Selected context: Shows the context (combination of selected classes) for which the data is valid. Here we see that the Linux context created earlier is selected.
+@item Compliance Summary: The row of bars shows the compliance of all registered hosts in blocks of five minutes for the last six hours or for the last week (depending on which is selected at the bottom of the graph)@footnote{Blue or black hosts will not appear here}. The hosts are classified into red, yellow and green according to the status of their compliance (see below). The height of a bar corresponds to the number of registered hosts. Note that the last column may have a lower height than the others (i.e. show information for fewer hosts)@footnote{This is because hosts check in at different times and some hosts may not yet be accounted for at the time of generation of the graph.}. Click on a bar to see which promises were repaired or not kept.
+@item Host Compliance (last hour): The hosts are classified into red, yellow and green according to the status of their compliance over the last hour:
+@itemize -
+@item A host is red if more than 20% of its promises are not kept
+@item A host is yellow if 20% or more of its promises were repaired and host is now compliant (> 20% repaired, now compliant)
+@item A host is green if more than 80% of its promises are kept (> 80% compliant)
+@end itemize
+@item Host Operations: The hosts are classified into blue and black according to their operational status. 
+@itemize -
+@item A host is blue if there there are connection problems and the hub has not been in contact with the client within a set time interval (host unreachable; default value is set to 15 minutes). 
+@item A host is black if CFEngine's scheduling daemon, @code{execd}, is not running (the hub will still able to contact the client to collect reports but the client will return stale data since it has not been running at regular intervals).
+@end itemize
+@item Clicking a link in any of the above categories (red/yellow/green/blue/black) produces a list of the hosts in that category (in the above mentioned context).
+@c the below end itemize need to be taken away if include below ignore field
+@end itemize
+@ignore
+@sp 1
+@cartouche
+@noindent @b{Action items:}
+@itemize -
+@item Click on any host in the tree to get a quick overview of that host in the status tab. Click the host name under the compliance graph to see more detailed information about the host. 
+@end itemize
+@end cartouche
+
+Example, Compliant hosts: Click the link next to the green box under Host Compliance, a report appears showing host names, time stamp of last data collected and three action icons:
+
+@page
+@sp 1
+@center @image{img-compliant-hosts-2-2,14cm,,Compliant hosts}
+@center Figure: Compliant hosts
+@sp 1
+
+@noindent Action icons:
+@itemize -
+@item Yellow warning triangle: View the promises not kept on this host
+@item Pulse line: View vitals signs (statistics) on this host
+@item Red X: Delete this host (host will be deleted from database, but may re-appear if CFEngine is still running on it; see footnote below).@footnote{You have to stop CFEngine on the concerned host before deleting it in the Mission Portal, else the host will contact the hub and re-appear in the database.}
+@end itemize
+@end itemize
+@end ignore
+
+@c -----------------------------------------------------
+@node Reports tab, , Status tab, Engineering room
+@subsubsection Reports tab
+
+Reports are sorted into five main categories that contain drop down menus to select default reports. Clicking a report will bring up a search filter specific to that report. We will take a closer look at Reports later in this document (see @ref{Standard reports in CFEngine 3 Enterprise}).
+
+@sp 1
+@center @image{img-reports-tab-2-2,10cm,,Reports tab}
+@center Figure: Reports tab
+@sp 1
+
+@ignore
+Reports are updated at different intervals, the default values are every 5 minutes or every 6 hours (this can be changed by the user). Below is a list of standard reports, updated every 5 minutes unless otherwise noted:
+
+@itemize
+@item Policy
+@itemize -
+    @item Compliance by bundle: Status of promise bundles and when they were last verified
+    @item Compliance by promise: Compliance of each promise individually
+    @item Promises repaired log: Log of actual repairs made to the system
+    @item Promises repaired summary: Cumulative (histogram) summary of promises repaired
+    @item Promises not kept log: Log of promises that could not or would not be kept
+    @item Promises not kept summary: Cumulative (histogram) summary of promises not kept
+@end itemize
+@item Accounting
+@itemize -
+    @item Compliance summary: Total summary of host compliance
+    @item Business value report: Accumulated value of promises kept (6 hrs)
+    @item Benchmarks: Execution time used to verify selected promises
+@end itemize
+@item System
+@itemize -
+    @item Context classes: User defined classes observed on the system
+    @item Last saw neighbours: Log of when neighboring hosts were last observed online
+    @item Variables: Table of variable values last observed (6 hrs)
+@end itemize
+@item Software
+@itemize -
+    @item Patches available: A list of patches currently claimed to be available by the local package manager
+    @item Patch installed: A list of (un)applied patches according to the local package manager
+    @item Installed: List of software packages claimed to be installed according to the local package manager
+@end itemize
+@item File watch
+@itemize -
+    @item Change summary: Log of all detected changes to files from changes promises
+    @item Text changes: Delta/difference comparison showing file changes
+    @item Setuid: Current list of observed setuid/setgid root programs (6 hrs)
+@end itemize
+@end itemize
+@end ignore
+
+
+@c -----------------------------------------------------
+@node Business room, Planning room, Engineering room, Introduction to the Mission Portal
+@subsection Business room
+
+@menu
+* Business Value and Host Status::  
+* Compliance Summary::          
+* Services/Goals::              
+@end menu
+
+@c The @samp{Status} room provides a high level summary of how well the entire system is behaving in a manner that is understandable for non-technical people. 
+
+@cartouche
+@noindent @b{Action item:} Click the @b{Status} icon in the main page of the Mission Portal to enter the @samp{Status} room.
+
+@sp 1
+@center @image{img-goto-business-2-2,8.5cm,,Go to Business room}
+@center Figure: Go to Business room
+@end cartouche
+
+@sp 1
+@noindent The Business room gives an overview of IT goals and how close you are to an ideal state. Each section in the room is described below.
+
+@sp 1
+@center @image{img-pilotstatus,11.5cm,,Business room}
+@center Figure: Business room
+
+
+@page
+@c -----------------------------------------------------
+@node Business Value and Host Status, Compliance Summary, Business room, Business room
+@subsubsection Business Value and Host Status
+The two pie charts show the business value of the promises kept/not kept and well as host status, respectively. Business value is associated with the value of promises as defined in policy files. In the Host Status chart, each node in the network represents a slice of the pie and is classified into red, yellow, green and blue according to the level of their compliance:
+
+@itemize -
+@item Red: more than 20% of the promises were not kept
+@item Yellow: 20% or more of the promises were repaired and total compliance is above 80%
+@item Green: more than 80% of the promises were kept
+@item Blue: there is no contact between the hub and the client host (host unreachable)
+@end itemize
+
+@c -----------------------------------------------------
+@node Compliance Summary, Services/Goals, Business Value and Host Status, Business room
+@subsubsection Compliance Summary
+The row of bar meters shows the compliance (average percentage of promises kept, repaired or not kept) of all registered hosts in blocks of 6 hours for the past week. It summarizes performance and anomalous behavior in a simple red (promises not kept), yellow (promises repaired) and green (promises kept) scale. Click on a bar to see which promises were kept/not kept.
+
+@c -----------------------------------------------------
+@node Services/Goals, , Compliance Summary, Business room
+@subsubsection Services/Goals
+A summary of Mission goals as defined in user policy files (these examples are from @file{company_knowledge.cf}). You can look at editing policy files in @ref{Policy editor (beta)}. @c Edit the file in the policy editor (Planning room -> repository), or edit the file in your own text editor, to change these goals.
+
+@c We will now have a look in the @samp{Engineering} room: 
+
+
+@c -----------------------------------------------------
+@node Planning room, Library room, Business room, Introduction to the Mission Portal
+@subsection Planning room
+
+@sp 1
+@cartouche
+@noindent @b{Action item:} Click @b{Enterprise MISSION PORTAL} on the top left (or @b{MISSION PORTAL} in the breadcrumb) to go back to the main Mission Portal page. Click the @b{Planning} icon in the main page of the Mission Portal to enter the @samp{Planning} room.
+
+@sp 1
+@center @image{img-goto-planning-2-2,8.5cm,,Go to Planning room}
+@center Figure: Go to Planning room
+@end cartouche
+
+@sp 1
+The @samp{Planning} room allows you to make changes to policies, goals and implement specific tactics to achieve the desired state. Interact with data, approve changes and anomalies. Get an overview of users logged on to the Mission Portal, as well as their current activity. Each section in the room is described below.
+
+@sp 1
+@center @image{img-pilotplanning,12cm,,Planning room}
+@center Figure: Planning room
+@sp 1
+
+@c @node 
+@c @subsection Policy Goals
+@noindent @i{Policy Goals:}
+List of policy goals as defined in policy files; these examples are from @file{company_knowledge.cf} (same as in the @samp{Status} room).
+
+@page
+@c @node 
+@c @subsection Action icons
+@noindent @i{Icons:}
+@itemize -
+@item Edit policies: Edit policy files in the integrated policy editor
+@item Track records: Overview of promises repaired or not kept
+@item Approve policies: Add your approval to adopt a policy revision (attaches your comments to a revision number)
+@item Service catalogue: See which bundles contribute to policy goals
+@end itemize
+
+@c @node
+@c @subsection Logged on
+@noindent @i{Logged on:}
+Shows users currently logged on to the Mission Portal and their activity as stated in their activity log (see below).
+
+@c @node Activity log
+@c @subsection Activity log
+@noindent @i{Activity log:}
+Shows the latest activity entries. Type in a new activity to keep colleagues posted on current work.
+
+
+@c -----------------------------------------------------
+@node Library room, Shell access (evaluation feature only), Planning room, Introduction to the Mission Portal
+@subsection Library room
+
+@cartouche
+@noindent @b{Action item:} Click @b{Enterprise MISSION PORTAL} on the top left (or @b{MISSION PORTAL} in the breadcrumb) to go back to the main Mission Portal page. Click the @b{Library} icon in the main page of the Mission Portal to enter the @samp{Library} room.
+
+@sp 1
+@center @image{img-goto-library-2-2,8.5cm,,Go to Library room}
+@center Figure: Go to Library room
+@end cartouche
+@sp 1
+
+The Library room contains finders for documents, topics, a notes archive, and a link to the CFEngine community web pages.
+
+@sp 1
+@center @image{img-library,12cm,,Library room}
+@center Figure: Library room
+
+@itemize -
+@item Docs: Overview of documentation that was packaged with CFEngine 3 Enterprise.
+@item Find Topic: Opens a finder where you can search for topics either by scrolling through the alphabetical list or by typing in a search box (same as the search box on top right of page).
+@item Notes Archive: Get an overview of all notes made by Mission Portal users.
+@item Community: External link to the CFEngine community
+@end itemize
+
+
+@c -----------------------------------------------------
+@node Shell access (evaluation feature only), , Library room, Introduction to the Mission Portal
+@subsection Shell access (evaluation feature only)
+
+Although the Mission Portal is the centerpiece of user interaction with CFEngine 3 Enterprise, system administrators often also wish to have shell access to their machines. We have therefore added a web based application specific to the Mission Portal in the evaluation environment (i.e. not found in the actual product) to provide a shell interface.  You may explore the environment and verify the behavior of the Mission Portal by using this application.
+
+@c @node
+@c @subsection Access the shell (command line interface)
+
+@cartouche
+@noindent @b{Action item:} Click @b{Enterprise MISSION PORTAL} on the top left (or @b{MISSION PORTAL} in the breadcrumb) to go back to the main Mission Portal page. Click the @b{Shell} icon to enter the web based shell application.
+
+@sp 1
+@center @image{img-goto-shell-2-2,9.5cm,,Go to shell application}
+@center Figure: Go to shell application
+@end cartouche
+@sp 1
+
+@noindent The following screen will appear once the application is loaded:
+
+@sp 1
+@center @image{img-pilotshell-menu,15cm,, Shell menu}
+@center Figure: Shell menu
+@sp 1
+
+The shell application has restricted access on the hub (policy host) for security reasons. Root access has been granted on the clients, so you should be able to perform most tasks from this interface (although some restrictions have been put in place to contain access to the evaluation environment only).
+
+@sp 1
+@cartouche
+@noindent @b{Action item:} Type the number of the node you wish to log on to and press @b{Enter}.
+@end cartouche
+@sp 1
+
+@noindent The following screen will appear after a successful login:
+
+@sp 1
+@center @image{img-pilotshell-login,15cm,, Shell logged in view}
+@center Figure: Shell logged in view
+@sp 1
+
+@cartouche
+@noindent @b{Action item:} Explore the environment through the command line interface. Type @b{exit} to finish the session on the current node. The following screenshot will appear:
+
+@sp 1
+@center @image{img-pilotshell-connect,15cm,, Shell logout/connect}
+@center Figure: Shell logout/connect
+
+@noindent Click @b{Connect} to access the @samp{Shell Menu} again and choose another node to log on to. Alternatively you can navigate away from the shell access by clicking @b{Enterprise MISSION PORTAL} on the top left (or @b{MISSION PORTAL} in the breadcrumb).
+@end cartouche
+
+
+
+@c *****************************************************
+@c * CHAPTER
+@c *****************************************************
+@c @node  Standard reports in CFEngine 3 Enterprise, Content Driven Policy (CDP) reports, Get started, Top
+@node  Standard reports in CFEngine 3 Enterprise, Introduction to CFEngine policies, Get started, Top
+@chapter Standard reports in CFEngine 3 Enterprise
+
+@menu
+* Example - Software Installed report::    
+@end menu
+
+A significant capability of CFEngine 3 Enterprise is automated system reporting: it collects history, state and change data about computers and ties them together. A report is a tabular summary of CFEngine's internal information, tailored to a particular purpose, searchable, and describes attributes and qualities of managed hosts. 
+
+@noindent Standard reports in CFEngine 3 Enterprise can be accessed through the @ref{Reports tab} in the @ref{Engineering room}.
+
+@cartouche
+@noindent @b{Action item:} Enter the @samp{Engineering} room as shown in @ref{Engineering room}, locate and click the @b{Reports tab}.
+@end cartouche
+
+The five drop down menus contain information about different aspects of the Mission (Policy, Accounting, System, Software, and File watch) and list all the standard reports. When you click one of them, the Mission Portal will present a query form that is adapted to the chosen report category.
+
+
+@c -----------------------------------------------------
+@node Example - Software Installed report,  , Standard reports in CFEngine 3 Enterprise, Standard reports in CFEngine 3 Enterprise
+@section Example - Software Installed report
+
+@cartouche
+@noindent @b{Action item:} Put the mouse pointer over the @b{Software} tab and select @b{Installed} to access the query form.
+@end cartouche
+
+@sp 1
+@center @image{img-software-installed-query-2-2,10cm,, Software installed query}
+@center Figure: Software installed query
+@sp 1
+
+@cartouche
+@noindent @b{Action item:} Click @b{Generate report} in the query window without filling in any of the search fields.
+@end cartouche
+The above action will make a report listing all hosts and software packages claimed to be installed according to the local package manager. The results are presented in table form, with the columns @samp{Host} (host name), @samp{Name} (of software package), @samp{Version} (of software package), and @samp{Architecture} (of machine on which software runs).
+
+@sp 1
+@center @image{img-software-installed-report-2-2,14cm,, Software installed report}
+@center Figure: Software installed report
+@sp 1
+
+There are two ways of narrowing down the listing in these reports: one is to enter filtering criteria directly in the report query form on the previous page, the other is to enter the search criteria in the form located above the report. We will do the latter: 
+@cartouche
+@noindent @b{Action item:} Enter your search criteria as a regular expression (for instance, enter @samp{apache.*} in the @samp{Name} field to see what version of apache is running on the different hosts). Click @b{Generate report}.
+@end cartouche
+
+Once you have clicked @samp{Generate report}, CFEngine 3 Enterprise will list an overview of all machines running some version of apache. 
+
+The combination of the extensive reports and detailed filtering is a flexible and powerful tool, made to give as general or granular an overview as the user needs it to be. A summary and explanation to all the standard reports can be found in the @url{http://cfengine.com/manuals/novaevaluationguidesupplement.html, Enterprise Evaluation Guide Supplement}.
+
+@c Before moving on to Content Driven Policies (CDPs) and CDP reports, we would like to give you the opportunity to enjoy some hands-on experience with CFEngine. We will first have a look at how you can work with CFEngine policies in the policy editor, and the move on to edit polices relevant to the above examples.
+
+@ignore
+@c *****************************************************
+@c * CHAPTER
+@c *****************************************************
+@node  Content Driven Policy (CDP) reports, Introduction to CFEngine policies, Standard reports in CFEngine 3 Enterprise, Top
+@chapter Content Driven Policy (CDP) reports
+
+@menu
+* Example - ACLs (file access controls)::  
+@end menu
+
+Content-Driven Policies (CDPs) were introduced to make policy management easier. In contrast to policies written in the CFEngine language, they are composed of semi-colon separated fields in a text file that the user fills with content, like a spreadsheet or tabular file. Each line in the file is parsed and translated to be part of a regular CFEngine policy. We will take a closer look at CDP input files in a later section.
+
+CDP reports are similar to standard reports, except that they reflect the effects of CDP input files instead of regular CFEngine policy files. 
+
+@cartouche
+@noindent @b{Action item:} Enter the @samp{Engineering} room as shown in @ref{Engineering room}, then click the @b{CDP reports} icon to access the @samp{CDP reports finder}.
+
+@c @sp 1
+@c @center @image{img-gotoengineering,7cm,,Go to Engineering}
+@c @center Figure: Go to Engineering
+@sp 1
+
+@center @image{img-gotocdpreportsfinder,13cm,,Go to CDP reports finder}
+@center Figure: Go to CDP reports finder
+@end cartouche
+
+@sp 1
+@center @image{img-cdpreportfinder,11cm,,Reports finder}
+@center Figure: CDP reports finder
+@sp 1
+
+@c @noindent CFEngine 3 Enterprise comes with six default CDPs:
+
+@c @itemize -
+@c @item ACLs: File access controls
+@c @item Commands: Scheduled commands to execute
+@c @item File changes: File changes observed on the system
+@c @item File diffs: Delta/difference comparison showing file changes
+@c @item Registry: Promised Windows registry setting status
+@c @item Services: System service status
+@c @end itemize
+
+@c We will go through each type of CDP report below to explain the contents and show how to edit the delimited input files.
+
+
+@c ------------------------------------------------------
+@node Example - ACLs (file access controls),  , Content Driven Policy (CDP) reports, Content Driven Policy (CDP) reports
+@section Example - ACLs (file access controls)
+
+CFEngine 3 Enterprise comes with several default CDPs, we will use the @samp{ACLs report} as an example. An access control list (ACL) is a list which specifies which users or system processes are granted access to objects, as well as what operations are allowed on given objects. Each entry in a typical ACL specifies a subject and an operation. For instance, if a file has an ACL that contains (Alice, delete), this would give Alice permission to delete the file.
+
+@cartouche
+@noindent @b{Action item:} Click on @b{ACLs} in the @samp{CDP Reports finder} to access the ACLs report (there is no query window for CDP reports).
+@end cartouche
+
+@page
+@sp 1
+@center @image{img-aclsreport,15cm,, ACLs report}
+@center Figure: ACLs report
+@sp 1
+
+The report lists an overview of host name (@samp{Host}), path of the affected object (@samp{Path}), the permission setting (@samp{Permission (ACL)}), owner of the affected object (@samp{Owner}), action that CFEngine should execute on the object (@samp{Action}), the context in which the promise was made (@samp{Class expression}), state of compliance (@samp{State}), and the time the promise was last checked (@samp{Last checked}).
+@end ignore
+
+
+@c *****************************************************
+@c * CHAPTER
+@c *****************************************************
+@node  Introduction to CFEngine policies, Next steps, Standard reports in CFEngine 3 Enterprise, Top
+@chapter Introduction to CFEngine policies
+
+@menu
+* Content Driven Policy (CDP)::       
+* Standard CFEngine policy:: 
+* Example - Install packages from remote repository::            
+* Example - Install packages from local repository::
+@end menu
+
+There are two types of policies that tell CFEngine what to do:
+@itemize -
+@item Content Driven Policy (CDP): A text file containing semi-colon separated fields (@file{.txt} file extension) that specify actions
+@item Standard CFEngine policy file: Uses Standard CFEngine policy (@file{.cf} file extension) to specify actions
+@end itemize
+
+In the following, you will find a short introduction to both CDP and standard policies. You may choose to view and edit policy files in a beta version of the integrated Policy Editor (@ref{The Policy Editor (beta)}) or in an editor of your choice. The evaluation environment provides ssh access through a web interface so you may explore the environment or access policy files there (@ref{Shell access (evaluation feature only)}). In the following, we will see a short introduction to both CDP and standard policies. 
+
+
+@c ------------------------------------------------------
+@node Content Driven Policy (CDP), Standard CFEngine policy, Introduction to CFEngine policies, Introduction to CFEngine policies
+@section Content Driven Policy (CDP)
+
+Content-Driven Policies (CDPs) were introduced to make policy management easier. In contrast to policies written in the CFEngine language, they are composed of semi-colon separated fields in a text file that the user fills with content, like a spreadsheet or tabular file. Each line in the file is parsed and translated to be part of a regular CFEngine policy. The files also contain a header that explains the format and meaning of the fields and typically looks like this (lines have been split and indented for presentability):
+
+@verbatim
+
+   #  ACLs On Files
+   #
+   #  FORMAT:   path;entity_type1:entity_name1:perms1,
+         entity_type2:entity_name2:perms2,...;owner;action;class_expression
+   #
+   #  EXAMPLE:  C:\tmp;user:Administrator:rwx,user:SYSTEM:r;
+         Administrator;fix;windows
+   #
+
+   # Windows 2003
+   c:\WINDOWS\system32\drivers\etc\hosts;user:Administrator:rw,user:SYSTEM:rw,
+       user:Guest:r;SYSTEM;fix;Windows_Server_2003.!Hr09
+   c:\WINDOWS\system32\drivers\etc\hosts;user:Administrator:rw,user:SYSTEM:rw,
+       user:Guest:rw;SYSTEM;fix;Windows_Server_2003.Hr09
+   # Windows 2008
+   c:\Windows\System32\drivers\etc\hosts;user:Administrator:rw,user:SYSTEM:rw,
+       user:Guest:r;SYSTEM;fix;Windows_Server_2008_R2.!Hr11
+   c:\Windows\System32\drivers\etc\hosts;user:Administrator:rw,user:SYSTEM:rw,
+       user:Guest:rw;SYSTEM;fix;Windows_Server_2008_R2.Hr11
+
+@end verbatim
+
+Anything with a @samp{;} before or after it is a field entry. We need to look at the header of the file to understand the structure and meaning of the fields (under the @code{FORMAT} and @code{EXAMPLE} sections). In this case we have (line has been split and indented for presentability):
+
+@c As explained previously, content driven policies consist of semi-colon separated fields in a text file. The files also contain a header that explains the format and meaning of the fields. We will look at an Access Control List (ACL) input file as an example. The default CFEngine 3 Enterprise ACLs policies allow you to set permissions to directories and files using two different input files (@file{acl_directory_list.txt} and @file{acl_file_list.txt}, respectively). We will limit ourselves to look at one of these as they are conceptually identical.
+
+@c We saw earlier that the input consisted of lines containing semi colon separated fields, so anything with a @samp{;} before or after it is a field entry. We need to look at the header of the file to understand its structure, the input fields are explained in the @code{FORMAT} section. In this case we have (line has been split and indented for presentability):
+@page
+@verbatim
+
+  #  FORMAT:   path;entity_type1:entity_name1:perms1,
+         entity_type2:entity_name2:perms2,...;owner;action;class_expression
+
+@end verbatim
+
+@noindent Splitting this up into separate fields:
+@table @i
+@item path 
+Path of file to set permissions on.
+
+@item entity_type1:entity_name1:perms1
+This field defines the permissions (@samp{perms1}) that a user (@samp{entity_type1}), and member of the group (@samp{entity_name1}), has on the file defined in @samp{path}.
+
+@item entity_type2:entity_name2:perms2,...
+Same as entity_type1:entity_name1:perms1, but for different user, group, and permission settings.
+
+@item owner
+Defines the owner of the file defined in @samp{path}
+
+@item action
+Tells CFEngine what to do if the file permissions differ from what was defined in the ACLs policy. Can take the values @samp{fix} (set permissions as defined in ACLs policy), @samp{warn} (log and display a warning that the file permissions differ from what was defined in ACLs policy), and @samp{nop} (no operation; no log entry, but print a warning in command-line interface).
+
+@item class_expression
+Context in which the permissions are set, i.e. a class expression (boolean) that needs to be fulfilled for the permissions to be set.
+@end table
+
+The advantage of CDPs is that it requires no knowledge of CFEngine syntax to quickly set up a basic policy. They function as an abstraction layer and allow system administrators to define specific functions with parameters that can be manipulated by others. The list format also allows for quick editing of multiple parameters, without having to go through tens or hundreds of lines of regular CFEngine code.
+
+@c We have now seen how easy it is to set access control with content driven policies in CFEngine and verify the result!
+
+
+@c ------------------------------------------------------
+@node Standard CFEngine policy, Example - Install packages from remote repository, Content Driven Policy (CDP), Introduction to CFEngine policies
+@section Standard CFEngine policy
+
+Standard CFEngine policies consist of a declarative language that describes the desired state of a system. Individual statements are called @i{promises}, they can be grouped in bundles and have parametrized body templates (@samp{bundle} and @samp{body} are keywords in CFEngine that correspond to these). Below is an example of a simple CFEngine policy:
+
+@ignore
+Click @b{New} in the file menu in the right column, a tab (@samp{Untitled-1}) will appear in the policy editor. You can always hit @b{Ctrl + h} to see a list of keyboard shortcuts available in the policy editor. We summarize the main commands below:
+
+@sp 1
+@center @image{img-newfile,15cm,,Create a new file}
+@center Figure: Create a new file
+@sp 1
+
+We encourage you to try the keyboard shortcuts along the way. The Policy Editor detects syntax errors and highlights these in red so you are immediately aware of mistakes you may have made. In addition, it is possible to run syntax check by pressing the @b{Check syntax} button. @footnote{The file has to be saved and included in the inputs list of a particular policy file (promises.cf) in order for this to take effect.}
+@end ignore
+
+@verbatim
+
+body common control
+{
+  bundlesequence => { "test" };
+}
+
+# Comments are defined by the hash tag (#), they will not be parsed by CFEngine.
+
+bundle agent test      # This is a bundle of type agent, named 'test'
+{
+files:		     # This is the promise type, i.e. we make a promise about files
+  "/tmp/testfile"	     # This is the promiser (i.e. the concerned object)
+    create => "true";  # This tells CFEngine to create the file
+}
+
+@end verbatim
+
+@ignore
+This policy will create the file @file{/tmp/testfile}. It contains the bare minimum of a standalone CFEngine policy, consisting of the compulsory @samp{body common control}, containing (at least) a bundlesequence. Then follows a compulsory @samp{bundle}, of type @samp{agent} and with the arbitrary name @samp{test} (the bundle type reflects the affected CFEngine component and can take several values, here we use @samp{agent}). The bundle contains a promise type (here @samp{files}), a promiser (i.e. the affected object, here @samp{/tmp/testfile}) and a promise about desired state (here @samp{create => "true"}).
+@end ignore
+This policy contains the bare minimum of a standalone CFEngine policy and will create the file @file{/tmp/testfile}. A closer look at the different parts of the policy:
+@itemize -
+@item The compulsory @samp{body common control}, containing (at least) a bundlesequence.
+@item Then follows a compulsory @samp{bundle}, of type @samp{agent} and with the arbitrary name @samp{test} (the bundle type reflects the affected CFEngine component and can take several values, here we use @samp{agent}). 
+@item The bundle contains a promise type (here @samp{files:}), a promiser (i.e. the affected object, here @samp{/tmp/testfile}) and an attribute about desired state (here @samp{create => "true"}; will create the file if it does not already exist).
+@end itemize
+
+
+@c ------------------------------------------------------
+@node Example - Install packages from remote repository, Example - Install packages from local repository, Standard CFEngine policy, Introduction to CFEngine policies
+@section Example - Install packages from remote repository
+
+In this example we will use the web based shell access to create and include a policy so that it installs a software package from the operating system standard repository. 
+@sp 1
+@cartouche
+@noindent @b{Action item}: Go to @samp{Shell access} as described in @ref{Shell access (evaluation feature only)}. Enter the number @b{1} and press @b{Enter} to log on to the host called @code{policyhub}. You will need to check out the files in the subversion repository connected to policyhub, type in the following to do so:
+@sp 1
+@verbatim
+   pilot@policyhub-1:~$ svn co http://localhost/svn/CFEnginePilot
+@end verbatim
+@sp 1
+@noindent Username and password for the subversion repository is 'pilot' and 'pilot'.
+@end cartouche
+@sp 1
+You now have read and write access to the policy files in the @file{~/CFEnginePilot} directory. Enter the following to change directories and create a new policy file, @file{pilot_packages.cf} (we use the vim editor in this example):
+@sp 1
+@cartouche
+@noindent @b{Action item}: Type in the following in the command line:
+ 
+@verbatim
+   pilot@policyhub-1:~$ cd CFEnginePilot
+   pilot@policyhub-1:~/CFEnginePilot$ vim pilot_packages.cf
+@end verbatim
+@end cartouche
+@sp 1
+@noindent Let us make a policy to install apache (httpd) on centos machines:
+@page 
+@cartouche
+@noindent @b{Action item}: Press @b{i} to enter edit mode in vim, then enter the following content in the file (comments (text behind the hash tag (#)) are optional):
+@verbatim
+
+bundle agent pilot_packages 	# bundle type agent, named 'pilot_packages'
+{
+vars:				# promise type vars (promise about variables)
+   "match_package" slist => {	# variable name is 'match_package' (this is the
+				# promiser) and has type 'list of strings'
+	"httpd"		# list entry value is httpd (for apache on centos)
+	};
+
+packages:			# promise type packages
+   centos::			# class, or context, in which the promise 
+				# applies (here on all centos machines)
+	"$(match_package)" 	# expand the variable 'match_package' (this is
+				# the promiser)
+	handle			=> "pilot_remote_package_install",
+	package_policy		=> "add",	# add all packages in variable 
+	package_method		=> yum;		# specify what package method
+						# to use (here yum)
+}
+@end verbatim
+@sp 1
+@noindent Press @b{Esc} to exit the vim edit mode, then type @code{:wq} to write to file and quit. 
+@end cartouche
+@c @sp 1
+@noindent The next step is to include this policy in @file{promises.cf}: 
+
+@cartouche
+@noindent @b{Action item}: Open @file{promises.cf}: 
+@verbatim
+   pilot@policyhub-1:~/CFEnginePilot$ vim promises.cf
+@end verbatim
+@c @sp 1
+@noindent Press @b{i} to enter edit mode in vim, then add the following lines to the first bundle (@code{bundle common pilot}) as indicated:
+@c @sp 1
+@verbatim
+   bundle common pilot {
+   vars:
+      "bundlesequence" slist => {
+				"pilot_simple_edit_policy",
+				"pilot_packages", 	# add this line
+   #				"pilot ̇simple ̇custom ̇install",
+   #				"pilot_simple_custom_report_policy",
+				};
+      "inputs"	slist => 	{
+				"pilot_simple_edit_policy.cf",
+				"pilot_packages.cf", 	# add this line
+   #				"pilot ̇simple ̇custom ̇install.cf",
+   #				"pilot_simple_custom_report_policy.cf",
+				};
+}
+@end verbatim
+@c @sp 1
+@noindent Press @b{Esc} to exit the vim edit mode, then type @code{:wq} to write to file and quit.
+@end cartouche
+@c @sp 1
+@noindent We now need to check the syntax of the file by running the syntax checker (@code{cf-promises}) on @file{promises.cf}:
+@sp 1
+@cartouche
+@noindent @b{Action item}: Type the following in the command line interface (line has been split and indented for presentability):
+@verbatim
+pilot@policyhub-1:~/CFEnginePilot$
+	 /var/cfengine/cf-promises -f ~/CFEnginePilot/promises.cf
+@end verbatim
+@end cartouche
+@sp 1
+cf-promises will only output an error message if there is a syntax error in the policy, i.e. the command prompt will be blinking and waiting for input on a new line if everything is fine. If applicable, please correct any errors by opening and editing @file{pilot_packages.cf} as shown previously and proceed to the next step when all problems have been solved.
+
+@noindent The next step to add @file{pilot_packages.cf} to the repository and commit the changes:
+@sp 1
+@cartouche
+@noindent @b{Action item}: Type in the following in the command line:
+
+@verbatim
+pilot@policyhub-1:~/CFEnginePilot$ svn add pilot_packages.cf
+pilot@policyhub-1:~/CFEnginePilot$ svn ci -m "added remote package install"
+@end verbatim
+@end cartouche
+@sp 1
+The policy will be executed at the next run of cf-agent (here in the evaluation environment we have set the interval to every two minutes). You can check that the policy has been implemented either through the Mission Portal or the web ssh interface:
+@sp 1
+@cartouche
+@noindent @b{Action item:}
+@itemize -
+@item Mission Portal, Software Installed report (@ref{Example - Software Installed report}): enter the bundle name (pilot_packages) or promise handle (pilot_remote_package_install) as search criteria and click @b{Generate report}. The report should list the promise (not be empty).
+@item Web ssh: Choose the centos machine from the web ssh menu (as shown in @ref{Shell access (evaluation feature only)}) and look for @file{/var/cfengine/inputs/pilot_packages.cf}.
+@end itemize
+@end cartouche
+
+
+@c ------------------------------------------------------
+@node Example - Install packages from local repository,  , Example - Install packages from remote repository, Introduction to CFEngine policies
+@section Example - Install packages from local repository
+
+In this example we will look at installing a custom package from a local repository. The package will install a text file in a given location, showing that the package has been successfully deployed. The example is transferable to other custom packages such as weblogic and includes installation on different operating systems (OS; CentOS, SuSE and Ubuntu). The following CFEngine policy has been written for this purpose (some lines have been split and indented for presentability):
+
+@page
+@verbatim
+bundle agent pilot_simple_custom_install {
+
+	vars:
+		any::
+			"pkg_version" string => "1.0.0-1";
+
+		centos|ubuntu|SuSE::
+			"pkg_name" string => "cfengine-testpackage";
+
+		ubuntu::
+			"pkg_file" string => "cfengine-testpackage_$(pkg_version)_
+				amd64.deb";
+
+		centos|SuSE::
+			"pkg_file" string => "cfengine-testpackage-$(pkg_version).
+				x86_64.rpm";
+
+	files:
+		centos|SuSE|ubuntu::
+			"$(sys.workdir)/software_repository/$(pkg_file)"
+				comment => "Copy test package to Linux hosts",
+				copy_from => remote_cp("$(def.dir_custompkgs)/
+					$(pkg_file)", "$(sys.policy_hub)"),
+				classes => if_ok("package_downloaded");
+                                
+	packages:
+		package_downloaded.(centos|SuSE)::
+			"$(pkg_name)"
+				comment => "Add package to rpm based hosts",
+				package_policy => "add",
+				package_version => "$(pkg_version)",
+				package_select => ">=",
+				package_architectures => { "x86_64" },
+				package_method => rpm_version("$(sys.workdir)/
+					software_repository/");
+
+		package_downloaded.ubuntu::
+			"$(pkg_name)"
+				comment => "Add package to dpkg based hosts",
+				package_policy => "add",
+				package_select => ">=",
+				package_version => "$(pkg_version)",
+				package_architectures => { ".*" },
+				package_method => dpkg_version("$(sys.workdir)/
+					software_repository/");
+}
+@end verbatim
+
+@noindent This policy is divided into three main parts, each involving different promise types (i.e. promises about):
+@itemize -
+@item vars: Promises about variables
+@itemize -
+@item In the context @code{any::} (valid for all OSs): @code{pkg_version} - the version of the package
+@item In the context @code{centos|ubuntu|suse} (valid for CentOS, Ubunto and SuSE): @code{pkg_name} - the name of the package
+@item In the context @code{ubuntu} (valid for Ubuntu): @code{pkg_file} - the OS-specific package file name
+@item In the context @code{centos|suse} (valid for CentOS and SuSE): @code{pkg_file} - the OS-specific package file name
+@end itemize
+@item files: Promises about files@*
+Promise to copy the OS-specific package files from the OS-specific work directories and set the class @code{package_downloaded} to true if the operation was successful
+@item packages: Promises about packages
+Promise to install the OS-specific package using the OS-specific package manager
+@end itemize
+
+The policy has already been prepared and is ready for use in the evaluation environment. To execute this policy:
+@sp 1
+@cartouche
+@noindent @b{Action item:} If you have not already checked out the subversion repository as shown in the previous example @ref{Example - Install packages from remote repository}, please do so. Open @file{promises.cf} as shown in the same example, then uncomment the following two lines (remove the hash tag (#)) in @code{bundle common pilot}:
+@itemize -
+@item # @code{pilot_simple_custom_install} 
+@item # @code{pilot_simple_custom_install.cf}.
+@end itemize
+@noindent Save and commit to subversion as shown in the same example.
+@end cartouche
+@sp 1
+The policy will be executed at the next run of cf-agent (here in the evaluation environment we have set the interval to every two minutes). You can check that the policy has been implemented either through the Mission Portal or the web ssh interface:
+@sp 1
+@cartouche
+@noindent @b{Action item:}
+@itemize -
+@item Mission Portal, Software Installed report (@ref{Example - Software Installed report}): enter the bundle name (pilot_simple_custom_install) as search criteria and click @b{Generate report}. The report should list the promise (not be empty).
+@item Web ssh: Choose the centos machine from the web ssh menu (as shown in @ref{Shell access (evaluation feature only)}) and look for @file{/etc/cfengine_installed.txt}.
+@end itemize
+@end cartouche
+
+
+@c *****************************************************
+@c * CHAPTER
+@c *****************************************************
+@node Next steps, Policy editor (beta), Introduction to CFEngine policies, Top
+@chapter Next steps
+
+We recommend that users familiarize themselves with the @url{http://cfengine.com/tech, CFEngine 3 documentation} and continue to learn about the CFEngine language and CFEngine 3 Enterprise. Documents of interest include: @*
+
+@itemize -
+@item @url{http://cfengine.com/manuals/novaevaluationguidesupplement.html, Enterprise Evaluation Guide Supplement}@*
+@item @url{http://cfengine.com/manuals/Enterprise-2-2-OwnersManual.html, CFEngine 3 Enterprise Owner's Manual}@*
+@item @url{http://cfengine.com/manuals/cf3-conceptguide.html, CFEngine 3 Concept guide}@*
+@item @url{http://cfengine.com/manuals/cf3-Reference.html, CFEngine 3 Reference Manual}@*
+@end itemize
+
+We also recommend that you attend a @url{http://cfengine.com/training, CFEngine 3 Training Course} and/or employ @url{http://cfengine.com/consultancy, CFEngine Consulting} to help them plan your Enterprise implementation.
+
+Use our @url{http://info.cfengine.com/ContactUs.html, contact form}, or send an email to @email{contact@@cfengine.com, contact@@cfengine.com}, to be contacted about purchasing CFEngine 3 Enterprise. 
+
+
+@c *****************************************************
+@c * CHAPTER
+@c *****************************************************
+@node Policy editor (beta),  , Next steps, Top
+@appendix Policy editor (beta)
+
+
+@c -----------------------------------------------------
+@menu
+* The Policy Editor (beta)::    
+* Example - Edit a CDP input file::       
+* Example - Create a standard policy::    
+@end menu
+
+@node The Policy Editor (beta), Example - Edit a CDP input file, Policy editor (beta), Policy editor (beta)
+@section The Policy Editor (beta)
+
+CFEngine 3 Enterprise has a beta version of an integrated editor, made for working on CFEngine policies. It provides syntax high-lighting and look-up to make policy writing easier. 
+
+@cartouche
+@noindent @b{Action item:} To access the policy editor, enter the @samp{Planning} room as described in @ref{Planning room}, then click the @b{Edit policies} icon.
+
+@c @sp 1
+@c @center @image{img-gotoplanning,11cm,,Go to Planning room}
+@c @center Figure: Go to Planning room
+@sp 1
+@center @image{img-gotoeditpolicies,6.5cm,,Go to Edit policies}
+@center Figure: Go to Edit policies
+@end cartouche
+
+@sp 1
+The policy editor comes with a tie-in for Subversion version control repositories; the Enterprise Mission Portal will prompt you for the path and credentials to perform an SVN checkout. 
+
+@cartouche
+@noindent @b{Action item:} Enter the path @samp{http://localhost/svn/CFEnginePilot}, username @samp{pilot}, and password @samp{pilot}. Click @b{Add}.
+
+@sp 1
+@center @image{img-pilotaddrepository,8cm,,Add SVN repository}
+@center Figure: Add SVN repository
+@end cartouche
+
+@c @noindent The following screenshot will appear after the Subversion repository has been added. 
+@page
+@cartouche
+@noindent @b{Action item:} Click on @b{Checkout} to complete the checkout procedure.
+
+@sp 1
+@center @image{img-pilotsvncheckout,8cm,,SVN checkout}
+@center Figure: SVN checkout
+@end cartouche
+
+@sp 1
+The Policy Editor appears after a successful checkout. It consists of three main columns: on the left, a list of all the policies in the checked out repository (@samp{Enterprise Policies}); in the center, the editor space (where policy files will appear as sheets/tabs); on the right, basic file and Subversion commands. We take a closer look at these functions in the following sections.
+
+@sp 1
+@center @image{img-pilotpolicyeditorblank,15cm,,Policy Editor}
+@center Figure: The Policy Editor
+@sp 1
+
+@page
+@c ---------------------------------------------------
+@node Example - Edit a CDP input file, Example - Create a standard policy, The Policy Editor (beta), Policy editor (beta)
+@section Example - Edit a CDP input file
+
+If you have not already opened the Policy Editor, follow the instruction in @ref{The Policy Editor (beta)} to do so. The file @file{acl_file_list.txt} can be found under the @file{cdp_inputs} catalog in the policy editor.
+
+@cartouche
+@noindent @b{Action item:} Click @b{cdp_inputs} in the file menu, then click @b{acl_file_list.txt} to open the file in the editor window.
+@end cartouche
+
+@sp 1
+@center @image{img-openaclfilelistinput,12cm,, open ACLs input file}
+@center Figure: Open the ACLs input file
+@sp 1
+
+@noindent The content of the file looks like this:
+
+@sp 1
+@center @image{img-aclspolicy,15.2cm,, ACLs input file}
+@center Figure: ACLs input file
+@sp 1
+
+We will now modify a field in this policy and check the result in the Mission Portal. The first two lines below @code{# Windows 2003} concern the file @file{c:\WINDOWS\system32\drivers\etc\hosts}, lets change the action taken by CFEngine if the promise is not compliant.
+
+@cartouche
+@noindent @b{Action item:} Change the next to last field from @samp{fix} to @samp{warn}. Click the @b{Save} icon on the right, then @b{Commit} (add a comment in the pop up, for example 'Changed to warn'), click @b{Run now} and wait for the execution to have finished (can take up to a minute). To check the result, go back to the main page, enter the @samp{Engineering} room (@ref{Engineering room}), click the @b{CDP reports} icon and finally click @b{ACLs File access controls} in the @samp{CDP reports} finder.
+@end cartouche
+
+The result should look like the following figure (note that the value in the @samp{Action} column says @samp{warn} instead of @samp{fix}). 
+
+@sp 1
+@center @image{img-aclsreportwarn,15cm,, ACLs report}
+@center Figure: ACLs report
+@sp 1
+
+
+@c ------------------------------------------------------
+@node Example - Create a standard policy,  , Example - Edit a CDP input file, Policy editor (beta)
+@section Example - Create a standard policy
+
+If you have not already opened the Policy Editor, follow the instruction in @ref{The Policy Editor (beta)} to do so. We will create a custom report as an example of writing a standard CFEngine policy. Custom reports are useful when your reporting needs differ from the CFEngine 3 Enterprise standard reports. Data processing and extraction from CFEngine's embedded databases must be scripted by the user if the procedure is not covered in any of the reports found in the Mission Portal. Output to files or logs may be customized on a per-promise basis and users can design their own log and report formats. 
+
+@cartouche
+@noindent @b{Action item:} Click @b{New} in file menu in the right column of the policy editor, a tab (@samp{Untitled-1}) will appear in the center, and enter the following in the text space (you can always hit @b{Ctrl + h} to see a list of available keyboard shortcuts).
+@end cartouche
+
+@verbatim
+
+bundle agent pilot_simple_custom_report_policy {
+
+   # promise type: make a promise about variables, see details below
+   vars:
+      "file_to_check" string => "/tmp/somefile.txt";
+
+   # promise type: promise about classes (context), see details below
+   classes:
+      "file_exists" expression => fileexists("$(file_to_check)");		
+@end verbatim
+@sp 1
+@c @noindent (@i{The policy continues on the next page.})
+@c @page
+@verbatim
+   # promise type: make a promise about reports, see details below
+   reports:
+      !file_exists::		# context in which the promise should be executed
+				# in this case if the file does not exist 
+         "WARNING: File $(file_to_check) does not exist on host $(sys.uqhost)"
+            handle  => "pilot_simple_report_policy",
+            comment => "Simple reports policy to show up in Mission Portal";
+}
+
+@end verbatim
+
+The astute reader will remark that there is no @samp{body common control} statement in the above policy. The reason is that we will use this bundle in the global policy @file{promises.cf}, which already contains the compulsory @code{body common control}. We can therefore omit that statement here. This policy consists of a bundle with three main parts:
+
+@enumerate
+@item Variable definition: Define a variable called @code{file_to_check}, of type @code{string}, containing a value that represents a file name (@file{/tmp/somefile.txt}). 
+@item Class definition: check whether the file exists through the CFEngine function @code{fileexists} and set a class (boolean) called @code{file_exists} based on the result. 
+@item Report definition: Generate a report if the file does not exist (consists of a warning; it uses the @code{file_to_check} and @code{sys.uqhost} variables to display the appropriate file- and host names, respectively.
+@end enumerate
+
+@cartouche
+@noindent @b{Action item:} Save this file as @file{pilot_simple_custom_report_policy.cf}: click @b{Save} in the right menu and enter the file name.
+@end cartouche
+
+We now need to add the policy to @file{promises.cf} to verify the results in the Mission Portal:
+
+@cartouche
+@noindent @b{Action item:}
+@enumerate
+@c @item Save the edited policy
+@item Open @file{promises.cf} by clicking it in the policy listing on the left
+@item Uncomment the corresponding line by removing the hash tag (@code{#}) in front of it (only if you have created and saved the file as instructed above)
+@verbatim
+    "bundlesequence" slist => {
+                   "pilot_simple_edit_policy"
+#                  "pilot_simple_custom_report_policy",    #Uncomment this line
+                              };
+    "inputs"         slist => {
+                   "pilot_simple_edit_policy.cf"
+#                  "pilot_simple_custom_report_policy.cf", #Uncomment this line
+                              };
+@end verbatim
+@item Save @file{promises.cf}
+@item Run syntax check by clicking @b{Check syntax} on the right
+@item If everything is fine, commit the changes by clicking @b{Commit} on the right (you will be prompted for a comment, enter for example 'Added custom report')
+@end enumerate
+@end cartouche
+
+The policy will have been adopted and executed at the next CFEngine run (every five minutes by default). Again, you may execute the policy immediately by clicking the @b{Run now} button in the right column (this might take a while, please be patient and wait until the execution is finished before checking the reports for updates). You can check that the policy has been run by searching for its handle in a report.
+
+@cartouche
+@noindent @b{Action item:} Open the @samp{Report finder} as shown previously, scroll to and click @b{Compliance by promise}, enter the handle (@samp{pilot_simple_custom_report_policy}) in the @samp{By handle} query field and click @b{Generate}.
+@end cartouche
+
+
+@c =========================================================================
+@c @node Index,  , CFEngine Methods, Top
+@c @unnumbered Concept Index
+@c @printindex cp
+@c =========================================================================
+
+@c  The file is structured like a programming language. Each chapter
+@c  starts with a chapter comment.
+@c
+@c  Menus list the subsections so that an online info-reader can parse
+@c  the file hierarchically.
+@ifhtml
+@html
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-2576171-2");
+pageTracker._initData();
+pageTracker._trackPageview();
+</script>
+@end html
+@end ifhtml
+@bye

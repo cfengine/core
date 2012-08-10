@@ -38,6 +38,7 @@ void PrependAlphaList(AlphaList *al, const char *string);
 void IdempPrependAlphaList(AlphaList *al, const char *string);
 void DeleteAlphaList(AlphaList *al);
 AlphaList *CopyAlphaListPointers(AlphaList *al, AlphaList *ap);
+AlphaList *DupAlphaListPointers(AlphaList *ap, AlphaList *al);
 void DeleteFromAlphaList(AlphaList *al, const char *string);
 
 /*

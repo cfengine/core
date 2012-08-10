@@ -23,155 +23,64 @@
 
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: syntax.c                                                            */
-/*                                                                           */
-/* Created: Wed Aug  8 14:01:42 2007                                         */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "syntax.h"
-#include "cf3.extern.h"
 
+#include "constraints.h"
 #include "json.h"
+#include "files_names.h"
+#include "mod_files.h"
+#include "item_lib.h"
+#include "conversion.h"
+#include "reporting.h"
+#include "expand.h"
+
+#include <assert.h>
 
 static const int PRETTY_PRINT_SPACES_PER_INDENT = 2;
 
-static int CheckParseString(char *lv, char *s, const char *range);
-static void CheckParseInt(char *lv, char *s, const char *range);
-static void CheckParseReal(char *lv, char *s, const char *range);
-static void CheckParseRealRange(char *lval, char *s, const char *range);
-static void CheckParseIntRange(char *lval, char *s, const char *range);
-static void CheckParseOpts(char *lv, char *s, const char *range);
-static void CheckFnCallType(char *lval, const char *s, enum cfdatatype dtype, const char *range);
+static int CheckParseString(const char *lv, const char *s, const char *range);
+static void CheckParseInt(const char *lv, const char *s, const char *range);
+static void CheckParseReal(const char *lv, const char *s, const char *range);
+static void CheckParseRealRange(const char *lval, const char *s, const char *range);
+static void CheckParseIntRange(const char *lval, const char *s, const char *range);
+static void CheckParseOpts(const char *lv, const char *s, const char *range);
+static void CheckFnCallType(const char *lval, const char *s, enum cfdatatype dtype, const char *range);
+
 
 /*********************************************************/
 
-void CheckBundle(char *name, char *type)
+SubTypeSyntax SubTypeSyntaxLookup(const char *bundle_type, const char *subtype_name)
 {
-    Bundle *bp;
-    char output[CF_BUFSIZE];
-    const char *reserved[] = { "sys", "const", "mon", "edit", "match", "mon", "this", NULL };
-
-    CfDebug("Checking for bundle (%s,%s)\n", name, type);
-
-    if (IsStrIn(name, reserved))
+    for (int i = 0; i < CF3_MODULES; i++)
     {
-        snprintf(output, CF_BUFSIZE, "Use of a reserved context as a bundle name \"%s\" ", name);
-        ReportError(output);
-    }
+        const SubTypeSyntax *syntax = NULL;
 
-    for (bp = BUNDLES; bp != NULL; bp = bp->next)
-    {
-        if ((strcmp(name, bp->name) == 0) && (strcmp(type, bp->type) == 0))
-        {
-            snprintf(output, CF_BUFSIZE, "Redefinition of bundle %s for %s is a broken promise", name, type);
-            ReportError(output);
-            ERRORCOUNT++;
-        }
-    }
-}
-
-/*********************************************************/
-
-void CheckBody(char *name, char *type)
-{
-    Body *bp;
-    char output[CF_BUFSIZE];
-
-    for (bp = BODIES; bp != NULL; bp = bp->next)
-    {
-        if ((strcmp(name, bp->name) == 0) && (strcmp(type, bp->type) == 0))
-        {
-            snprintf(output, CF_BUFSIZE, "Redefinition of body \"%s\" for \"%s\" is a broken promise", name, type);
-            ReportError(output);
-            ERRORCOUNT++;
-        }
-    }
-}
-
-/*********************************************************/
-
-SubTypeSyntax CheckSubType(char *bundletype, char *subtype)
-{
-    int i, j;
-    SubTypeSyntax *ss;
-    char output[CF_BUFSIZE];
-
-    if (subtype == NULL)
-    {
-        snprintf(output, CF_BUFSIZE, "Missing promise type category for %s bundle", bundletype);
-        ReportError(output);
-        return (SubTypeSyntax)
-        {
-        NULL, NULL, NULL};
-    }
-
-    for (i = 0; i < CF3_MODULES; i++)
-    {
-        if ((ss = CF_ALL_SUBTYPES[i]) == NULL)
+        if ((syntax = CF_ALL_SUBTYPES[i]) == NULL)
         {
             continue;
         }
 
-        for (j = 0; ss[j].btype != NULL; j++)
+        for (int j = 0; syntax[j].bundle_type != NULL; j++)
         {
-            if (subtype && strcmp(subtype, ss[j].subtype) == 0)
+            if (StringSafeEqual(subtype_name, syntax[j].subtype) &&
+                    (StringSafeEqual(bundle_type, syntax[j].bundle_type) ||
+                     StringSafeEqual("*", syntax[j].bundle_type)))
             {
-                if ((strcmp(bundletype, ss[j].btype) == 0) || (strcmp("*", ss[j].btype) == 0))
-                {
-                    /* Return a pointer to bodies for this subtype */
-                    CfDebug("Subtype %s syntax ok for %s\n", subtype, bundletype);
-                    return ss[j];
-                }
+                return syntax[j];
             }
         }
     }
 
-    snprintf(output, CF_BUFSIZE, "%s is not a valid type category for %s bundle", subtype, bundletype);
-    ReportError(output);
-    snprintf(output, CF_BUFSIZE, "Possibly the bundle type \"%s\" itself is undefined", bundletype);
-    ReportError(output);
-    return (SubTypeSyntax)
-    {
-    NULL, NULL, NULL};
+    return (SubTypeSyntax) { NULL, NULL, NULL };
 }
 
-void CheckPromise(Promise *pp)
-{
-    char output[CF_BUFSIZE];
-
-    if (strcmp(pp->agentsubtype, "vars") == 0)
-    {
-        char *data_type = NULL;
-        Constraint *cp;
-
-        for (cp = pp->conlist; cp != NULL; cp = cp->next)
-        {
-            if (IsDataType(cp->lval))
-            {
-                if (data_type != NULL)
-                {
-                    snprintf(output, CF_BUFSIZE,
-                             "Variable contains existing data type contstraint %s, tried to redefine with %s",
-                             data_type, cp->lval);
-                    ReportError(output);
-                    ERRORCOUNT++;
-                }
-                data_type = cp->lval;
-            }
-        }
-    }
-}
-
-/*********************************************************/
+/****************************************************************************/
 
 enum cfdatatype ExpectedDataType(char *lvalname)
 {
     int i, j, k, l;
     const BodySyntax *bs, *bs2;
-    SubTypeSyntax *ss;
+    const SubTypeSyntax *ss;
 
     for (i = 0; i < CF3_MODULES; i++)
     {
@@ -224,7 +133,7 @@ enum cfdatatype ExpectedDataType(char *lvalname)
 
 /*********************************************************/
 
-void CheckConstraint(char *type, char *name, char *lval, Rval rval, SubTypeSyntax ss)
+void CheckConstraint(char *type, char *namespace, char *name, char *lval, Rval rval, SubTypeSyntax ss)
 {
     int lmatch = false;
     int i, l, allowed = false;
@@ -262,8 +171,38 @@ void CheckConstraint(char *type, char *name, char *lval, Rval rval, SubTypeSynta
 
                     if (bs[l].dtype == cf_body)
                     {
-                        CfDebug("Constraint syntax ok, but definition of body is elsewhere %s=%c\n", lval, rval.rtype);
-                        PrependRlist(&BODYPARTS, rval.item, rval.rtype);
+                    char fqname[CF_BUFSIZE];
+                    FnCall *fp;
+                    
+                    CfDebug("Constraint syntax ok, but definition of body is elsewhere %s=%c\n", lval, rval.rtype);
+
+                    switch (rval.rtype)
+                       {
+                       case CF_SCALAR:
+                           if (strchr((char *)rval.item,'.'))
+                           {
+                               strcpy(fqname,(char *)rval.item);
+                           }
+                           else
+                           {
+                               snprintf(fqname,CF_BUFSIZE-1,"%s.%s",namespace,(char *)rval.item);
+                           }
+                           break;
+                           
+                       case CF_FNCALL:
+                           fp = (FnCall *) rval.item;
+                           if (strchr(fp->name,'.'))
+                           {
+                               strcpy(fqname,fp->name);
+                           }
+                           else
+                           {                              
+                               snprintf(fqname,CF_BUFSIZE-1,"%s.%s",namespace,fp->name);
+                           }
+                           break;
+                       }
+                        
+                        PrependRlist(&BODYPARTS, fqname, CF_SCALAR);
                         return;
                     }
                     else if (bs[l].dtype == cf_bundle)
@@ -324,7 +263,7 @@ void CheckConstraint(char *type, char *name, char *lval, Rval rval, SubTypeSynta
 int LvalWantsBody(char *stype, char *lval)
 {
     int i, j, l;
-    SubTypeSyntax *ss;
+    const SubTypeSyntax *ss;
     const BodySyntax *bs;
 
     for (i = 0; i < CF3_MODULES; i++)
@@ -372,7 +311,7 @@ void CheckSelection(char *type, char *name, char *lval, Rval rval)
 {
     int lmatch = false;
     int i, j, k, l;
-    SubTypeSyntax *ss;
+    const SubTypeSyntax *ss;
     const BodySyntax *bs, *bs2;
     char output[CF_BUFSIZE];
 
@@ -389,7 +328,7 @@ void CheckSelection(char *type, char *name, char *lval, Rval rval)
 
     for (i = 0; CF_ALL_BODIES[i].subtype != NULL; i++)
     {
-        if (strcmp(CF_ALL_BODIES[i].subtype, name) == 0 && strcmp(type, CF_ALL_BODIES[i].btype) == 0)
+        if (strcmp(CF_ALL_BODIES[i].subtype, name) == 0 && strcmp(type, CF_ALL_BODIES[i].bundle_type) == 0)
         {
             CfDebug("Found matching a body matching (%s,%s)\n", type, name);
 
@@ -488,7 +427,7 @@ void CheckSelection(char *type, char *name, char *lval, Rval rval)
 /* Level 1                                                                  */
 /****************************************************************************/
 
-void CheckConstraintTypeMatch(char *lval, Rval rval, enum cfdatatype dt, const char *range, int level)
+void CheckConstraintTypeMatch(const char *lval, Rval rval, enum cfdatatype dt, const char *range, int level)
 {
     Rlist *rp;
     Item *checklist;
@@ -548,7 +487,7 @@ void CheckConstraintTypeMatch(char *lval, Rval rval, enum cfdatatype dt, const c
         case cf_olist:
             break;
         default:
-            snprintf(output, CF_BUFSIZE, "!! Type mistach -- rhs is a list, but lhs (%s) is not a list type",
+            snprintf(output, CF_BUFSIZE, "!! Type mismatch -- rhs is a list, but lhs (%s) is not a list type",
                      CF_DATATYPES[dt]);
             ReportError(output);
             break;
@@ -582,17 +521,17 @@ void CheckConstraintTypeMatch(char *lval, Rval rval, enum cfdatatype dt, const c
     {
     case cf_str:
     case cf_slist:
-        CheckParseString(lval, (char *) rval.item, range);
+        CheckParseString(lval, (const char *) rval.item, range);
         break;
 
     case cf_int:
     case cf_ilist:
-        CheckParseInt(lval, (char *) rval.item, range);
+        CheckParseInt(lval, (const char *) rval.item, range);
         break;
 
     case cf_real:
     case cf_rlist:
-        CheckParseReal(lval, (char *) rval.item, range);
+        CheckParseReal(lval, (const char *) rval.item, range);
         break;
 
     case cf_body:
@@ -602,16 +541,16 @@ void CheckConstraintTypeMatch(char *lval, Rval rval, enum cfdatatype dt, const c
 
     case cf_opts:
     case cf_olist:
-        CheckParseOpts(lval, (char *) rval.item, range);
+        CheckParseOpts(lval, (const char *) rval.item, range);
         break;
 
     case cf_class:
     case cf_clist:
-        CheckParseClass(lval, (char *) rval.item, range);
+        CheckParseClass(lval, (const char *) rval.item, range);
         break;
 
     case cf_irange:
-        CheckParseIntRange(lval, (char *) rval.item, range);
+        CheckParseIntRange(lval, (const char *) rval.item, range);
         break;
 
     case cf_rrange:
@@ -628,7 +567,7 @@ void CheckConstraintTypeMatch(char *lval, Rval rval, enum cfdatatype dt, const c
 
 /****************************************************************************/
 
-enum cfdatatype StringDataType(char *scopeid, char *string)
+enum cfdatatype StringDataType(const char *scopeid, const char *string)
 {
     enum cfdatatype dtype;
     Rval rval;
@@ -690,7 +629,7 @@ vars:
 /* Level 1                                                                  */
 /****************************************************************************/
 
-static int CheckParseString(char *lval, char *s, const char *range)
+static int CheckParseString(const char *lval, const char *s, const char *range)
 {
     char output[CF_BUFSIZE];
 
@@ -749,7 +688,7 @@ static int CheckParseString(char *lval, char *s, const char *range)
 
 /****************************************************************************/
 
-int CheckParseClass(char *lval, char *s, const char *range)
+int CheckParseClass(const char *lval, const char *s, const char *range)
 {
     char output[CF_BUFSIZE];
 
@@ -778,7 +717,7 @@ int CheckParseClass(char *lval, char *s, const char *range)
 
 /****************************************************************************/
 
-static void CheckParseInt(char *lval, char *s, const char *range)
+static void CheckParseInt(const char *lval, const char *s, const char *range)
 {
     Item *split;
     int n;
@@ -847,7 +786,7 @@ static void CheckParseInt(char *lval, char *s, const char *range)
 
 /****************************************************************************/
 
-static void CheckParseIntRange(char *lval, char *s, const char *range)
+static void CheckParseIntRange(const char *lval, const char *s, const char *range)
 {
     Item *split, *ip, *rangep;
     int n;
@@ -933,7 +872,7 @@ static void CheckParseIntRange(char *lval, char *s, const char *range)
 
 /****************************************************************************/
 
-static void CheckParseReal(char *lval, char *s, const char *range)
+static void CheckParseReal(const char *lval, const char *s, const char *range)
 {
     Item *split;
     double max = (double) CF_LOWINIT, min = (double) CF_HIGHINIT, val;
@@ -992,7 +931,7 @@ static void CheckParseReal(char *lval, char *s, const char *range)
 
 /****************************************************************************/
 
-static void CheckParseRealRange(char *lval, char *s, const char *range)
+static void CheckParseRealRange(const char *lval, const char *s, const char *range)
 {
     Item *split, *rangep, *ip;
     double max = (double) CF_LOWINIT, min = (double) CF_HIGHINIT, val;
@@ -1073,7 +1012,7 @@ static void CheckParseRealRange(char *lval, char *s, const char *range)
 
 /****************************************************************************/
 
-static void CheckParseOpts(char *lval, char *s, const char *range)
+static void CheckParseOpts(const char *lval, const char *s, const char *range)
 {
     Item *split;
     int err = false;
@@ -1184,7 +1123,7 @@ bool IsDataType(const char *s)
 
 /****************************************************************************/
 
-static void CheckFnCallType(char *lval, const char *s, enum cfdatatype dtype, const char *range)
+static void CheckFnCallType(const char *lval, const char *s, enum cfdatatype dtype, const char *range)
 {
     enum cfdatatype dt;
     char output[CF_BUFSIZE];
@@ -1283,6 +1222,8 @@ static char *PCREStringToJsonString(const char *pcre)
     return json;
 }
 
+/****************************************************************************/
+
 static JsonElement *ExportAttributesSyntaxAsJson(const BodySyntax attributes[])
 {
     JsonElement *json = JsonObjectCreate(10);
@@ -1344,19 +1285,21 @@ static JsonElement *ExportAttributesSyntaxAsJson(const BodySyntax attributes[])
     return json;
 }
 
-static JsonElement *ExportBundleTypeSyntaxAsJson(char *bundle_type)
+/****************************************************************************/
+
+static JsonElement *ExportBundleTypeSyntaxAsJson(const char *bundle_type)
 {
     JsonElement *json = JsonObjectCreate(10);
-    SubTypeSyntax *st;
+    const SubTypeSyntax *st;
     int i = 0, j = 0;
 
     for (i = 0; i < CF3_MODULES; i++)
     {
         st = CF_ALL_SUBTYPES[i];
 
-        for (j = 0; st[j].btype != NULL; j++)
+        for (j = 0; st[j].bundle_type != NULL; j++)
         {
-            if (strcmp(bundle_type, st[j].btype) == 0 || strcmp("*", st[j].btype) == 0)
+            if (strcmp(bundle_type, st[j].bundle_type) == 0 || strcmp("*", st[j].bundle_type) == 0)
             {
                 JsonElement *attributes = ExportAttributesSyntaxAsJson(st[j].bs);
 
@@ -1368,20 +1311,24 @@ static JsonElement *ExportBundleTypeSyntaxAsJson(char *bundle_type)
     return json;
 }
 
+/****************************************************************************/
+
 static JsonElement *ExportControlBodiesSyntaxAsJson()
 {
     JsonElement *control_bodies = JsonObjectCreate(10);
     int i = 0;
 
-    for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
+    for (i = 0; CF_ALL_BODIES[i].bundle_type != NULL; i++)
     {
         JsonElement *attributes = ExportAttributesSyntaxAsJson(CF_ALL_BODIES[i].bs);
 
-        JsonObjectAppendObject(control_bodies, CF_ALL_BODIES[i].btype, attributes);
+        JsonObjectAppendObject(control_bodies, CF_ALL_BODIES[i].bundle_type, attributes);
     }
 
     return control_bodies;
 }
+
+/****************************************************************************/
 
 void SyntaxPrintAsJson(Writer *writer)
 {
@@ -1397,11 +1344,11 @@ void SyntaxPrintAsJson(Writer *writer)
         JsonElement *bundle_types = JsonObjectCreate(10);
         int i = 0;
 
-        for (i = 0; CF_ALL_BODIES[i].btype != NULL; i++)
+        for (i = 0; CF_ALL_BODIES[i].bundle_type != NULL; i++)
         {
-            JsonElement *bundle_type = ExportBundleTypeSyntaxAsJson(CF_ALL_BODIES[i].btype);
+            JsonElement *bundle_type = ExportBundleTypeSyntaxAsJson(CF_ALL_BODIES[i].bundle_type);
 
-            JsonObjectAppendObject(bundle_types, CF_ALL_BODIES[i].btype, bundle_type);
+            JsonObjectAppendObject(bundle_types, CF_ALL_BODIES[i].bundle_type, bundle_type);
         }
 
         JsonObjectAppendObject(syntax_tree, "bundle-types", bundle_types);
@@ -1474,6 +1421,8 @@ static JsonElement *ExportAttributeValueAsJson(Rval rval)
     }
 }
 
+/****************************************************************************/
+
 static JsonElement *CreateContextAsJson(const char *name, size_t offset,
                                         size_t offset_end, const char *children_name, JsonElement *children)
 {
@@ -1486,6 +1435,8 @@ static JsonElement *CreateContextAsJson(const char *name, size_t offset,
 
     return json;
 }
+
+/****************************************************************************/
 
 static JsonElement *ExportBodyClassesAsJson(Constraint *constraints)
 {
@@ -1524,6 +1475,8 @@ static JsonElement *ExportBodyClassesAsJson(Constraint *constraints)
     return json_contexts;
 }
 
+/****************************************************************************/
+
 static JsonElement *ExportBundleClassesAsJson(Promise *promises)
 {
     JsonElement *json_contexts = JsonArrayCreate(10);
@@ -1560,10 +1513,26 @@ static JsonElement *ExportBundleClassesAsJson(Promise *promises)
             JsonObjectAppendInteger(json_promise, "offset-end", context_offset_end);
 
             JsonObjectAppendString(json_promise, "promiser", pp->promiser);
-            /* FIXME: does not work for lists */
-            if (pp->promisee.rtype == CF_SCALAR || pp->promisee.rtype == CF_NOPROMISEE)
+
+            switch (pp->promisee.rtype)
             {
+            case CF_SCALAR:
                 JsonObjectAppendString(json_promise, "promisee", pp->promisee.item);
+                break;
+
+            case CF_LIST:
+                {
+                    JsonElement *promisee_list = JsonArrayCreate(10);
+                    for (const Rlist *rp = pp->promisee.item; rp; rp = rp->next)
+                    {
+                        JsonArrayAppendString(promisee_list, ScalarValue(rp));
+                    }
+                    JsonObjectAppendArray(json_promise, "promisee", promisee_list);
+                }
+                break;
+
+            default:
+                break;
             }
 
             JsonObjectAppendArray(json_promise, "attributes", json_promise_attributes);
@@ -1583,6 +1552,8 @@ static JsonElement *ExportBundleClassesAsJson(Promise *promises)
 
     return json_contexts;
 }
+
+/****************************************************************************/
 
 static JsonElement *ExportBundleAsJson(Bundle *bundle)
 {
@@ -1628,6 +1599,8 @@ static JsonElement *ExportBundleAsJson(Bundle *bundle)
     return json_bundle;
 }
 
+/****************************************************************************/
+
 static JsonElement *ExportBodyAsJson(Body *body)
 {
     JsonElement *json_body = JsonObjectCreate(10);
@@ -1654,6 +1627,8 @@ static JsonElement *ExportBodyAsJson(Body *body)
 
     return json_body;
 }
+
+/****************************************************************************/
 
 void PolicyPrintAsJson(Writer *writer, const char *filename, Bundle *bundles, Body *bodies)
 {
@@ -1701,17 +1676,23 @@ static void IndentPrint(Writer *writer, int indent_level)
     }
 }
 
+/****************************************************************************/
+
 static void RvalPrettyPrint(Writer *writer, Rval rval)
 {
 /* FIX: prettify */
     RvalPrint(writer, rval);
 }
 
+/****************************************************************************/
+
 static void AttributePrettyPrint(Writer *writer, Constraint *attribute, int indent_level)
 {
     WriterWriteF(writer, "%s => ", attribute->lval);
     RvalPrettyPrint(writer, attribute->rval);
 }
+
+/****************************************************************************/
 
 static void ArgumentsPrettyPrint(Writer *writer, Rlist *args)
 {
@@ -1729,6 +1710,8 @@ static void ArgumentsPrettyPrint(Writer *writer, Rlist *args)
     }
     WriterWriteChar(writer, ')');
 }
+
+/****************************************************************************/
 
 void BodyPrettyPrint(Writer *writer, Body *body)
 {
@@ -1762,6 +1745,8 @@ void BodyPrettyPrint(Writer *writer, Body *body)
 
     WriterWrite(writer, "\n}");
 }
+
+/****************************************************************************/
 
 void BundlePrettyPrint(Writer *writer, Bundle *bundle)
 {

@@ -24,391 +24,160 @@
 
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: enterprise_stubs.c                                                  */
-/*                                                                           */
-/*****************************************************************************/
-
-/*
-
-This file is a stub for generating cfengine's commerical enterprise level
-versions. We appreciate your respect of our commercial offerings, which go
-to accelerate future developments of both free and commercial versions. If
-you have a good reason why a particular feature of the commercial version
-should be free, please let us know and we will consider this carefully.
-
-*/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
-#ifdef HAVE_CFLIBNOVA
-# include <cf.nova.h>
-#endif
-
-/*****************************************************************************/
+#include "syntax.h"
 
 #if !defined(HAVE_NOVA)
 
-void EnterpriseModuleTrick()
-{
-}
 
-/*****************************************************************************/
+/* all agents: generic_agent.c */
+
 
 const char *GetConsolePrefix(void)
 {
     return "cf3";
 }
 
-/*****************************************************************************/
-
-const char *MailSubject(void)
-{
-    return "community";
-}
-
-/*****************************************************************************/
-
 int IsEnterprise(void)
 {
     return false;
 }
 
-/*****************************************************************************/
+
+/* all agents: sysinfo.c */
+
 
 void EnterpriseContext(void)
 {
 }
-
-/*****************************************************************************/
-
-int CfSessionKeySize(char type)
-{
-    return CF_BLOWFISHSIZE;
-}
-
-/*****************************************************************************/
-
-char CfEnterpriseOptions(void)
-{
-    return 'c';
-}
-
-/*****************************************************************************/
-
-const EVP_CIPHER *CfengineCipher(char type)
-{
-    return EVP_bf_cbc();
-}
-
-/*****************************************************************************/
-
-int EnterpriseExpiry(void)
-{
-    return false;
-}
-
-/*****************************************************************************/
-
-void HistoryUpdate(Averages newvals)
-{
-}
-
-/*****************************************************************************/
-
-void LogFileChange(char *file, int change, Attributes a, Promise *pp)
-{
-    CfOut(cf_verbose, "", "Logging file differences requires version Nova or above");
-}
-
-/*****************************************************************************/
-
-void RemoteSysLog(int log_priority, const char *log_string)
-{
-    CfOut(cf_verbose, "", "Remote logging requires version Nova or above");
-}
-
-/*****************************************************************************/
-
-const char *PromiseID(Promise *pp)
-{
-    return "";
-}
-
-/*****************************************************************************/
-
-void NotePromiseCompliance(Promise *pp, double val, PromiseState state, char *reason)
-{
-}
-
-/*****************************************************************************/
-
-void NoteEfficiency(double e)
-{
-}
-
-/*****************************************************************************/
-
-void PreSanitizePromise(Promise *pp)
-{
-}
-
-/*****************************************************************************/
-
-void TrackValue(char *date, double kept, double repaired, double notkept)
-{
-}
-
-/*****************************************************************************/
-
-time_t GetPromiseCompliance(Promise *pp, double *value, double *average, double *var, time_t *lastseen)
-{
-    return time(NULL);
-}
-
-/*****************************************************************************/
-
-void ShowTopicRepresentation(FILE *fp)
-{
-    CfOut(cf_verbose, "", "# Knowledge map reporting feature is only available in version Nova and above\n");
-}
-
-/*****************************************************************************/
-
-void NewPromiser(Promise *pp)
-{
-}
-
-/*****************************************************************************/
-
-void AnalyzePromiseConflicts(void)
-{
-}
-
-/*****************************************************************************/
-
-void RegisterBundleDependence(char *name, Promise *pp)
-{
-}
-
-/*****************************************************************************/
-
-void SyntaxCompletion(char *s)
-{
-    printf("Syntax completion is available in cfengine Nova,Constellation or Galaxy\n\n");
-}
-
-/*****************************************************************************/
-
-void SyntaxExport()
-{
-# ifdef HAVE_NOVA
-    Nova_SyntaxTree2JavaScript();
-# else
-    Writer *writer = FileWriter(stdout);
-
-    SyntaxPrintAsJson(writer);
-    WriterClose(writer);
-# endif
-}
-
-/*****************************************************************************/
-
-void VerifyOutputsPromise(Promise *pp)
-{
-    printf(" !! Outputs promises are not available in the community edition of Cfengine\n");
-}
-
-/*****************************************************************************/
-
-void SetPromiseOutputs(Promise *pp)
-{
-}
-
-/*****************************************************************************/
-
-void LastSawBundle(char *name, double comp)
-{
-}
-
-/*****************************************************************************/
-
-void SetBundleOutputs(char *name)
-{
-}
-
-/*****************************************************************************/
-
-void ResetBundleOutputs(char *name)
-{
-}
-
-/*****************************************************************************/
-
-void SpecialQuote(char *topic, char *type)
-{
-}
-
-/*****************************************************************************/
-
-void GetObservable(int i, char *name, char *desc)
-{
-    strcpy(name, OBS[i][0]);
-}
-
-/*****************************************************************************/
-
-void LookupObservable(int i, char *name, char *desc)
-{
-    strcpy(name, OBS[i][0]);
-}
-
-/*****************************************************************************/
 
 void LoadSlowlyVaryingObservations()
 {
     CfOut(cf_verbose, "", "# Extended system discovery is only available in version Nova and above\n");
 }
 
-/*****************************************************************************/
 
-void RegisterLiteralServerData(char *handle, Promise *pp)
+/* all agents: generic_agent.c, cf-execd.c, cf-serverd.c */
+
+
+int EnterpriseExpiry(void)
 {
-    CfOut(cf_verbose, "", "# Access to server literals is only available in version Nova and above\n");
-}
-
-/*****************************************************************************/
-
-int ReturnLiteralData(char *handle, char *ret)
-{
-    CfOut(cf_verbose, "", "# Access to server literals is only available in version Nova and above\n");
-    return 0;
-}
-
-/*****************************************************************************/
-
-char *GetRemoteScalar(char *proto, char *handle, char *server, int encrypted, char *rcv)
-{
-    CfOut(cf_verbose, "", "# Access to server literals is only available in version Nova and above\n");
-    return "";
-}
-
-/*****************************************************************************/
-
-void CacheUnreliableValue(char *caller, char *handle, char *buffer)
-{
-    CfOut(cf_verbose, "", "# Value fault-tolerance in version Nova and above\n");
-}
-
-/*****************************************************************************/
-
-int RetrieveUnreliableValue(char *caller, char *handle, char *buffer)
-{
-    CfOut(cf_verbose, "", "# Value fault-tolerance in version Nova and above\n");
     return false;
 }
 
-/*****************************************************************************/
 
-void TranslatePath(char *new, const char *old)
+/* all agents: cfstream.c, expand.c, generic_agent.c */
+
+
+const char *PromiseID(const Promise *pp)
 {
-    strncpy(new, old, CF_BUFSIZE - 1);
+    return "";
 }
 
-/*****************************************************************************/
 
-void SummarizeCompliance(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
+/* all agents: expand.c */
+
+
+void RegisterBundleDependence(char *name, const Promise *pp)
 {
-    CfOut(cf_verbose, "", "# Compliance reporting feature is only available in version Nova and above\n");
 }
 
-/*****************************************************************************/
 
-void SummarizeValue(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
+/* all agents: logging.c */
+
+
+void NotePromiseCompliance(const Promise *pp, double val, PromiseState state, char *reason)
 {
-    CfOut(cf_verbose, "",
-          "# Value reporting feature is only available in version Nova and above - use the state/cf_value.log\n");
 }
 
-/*****************************************************************************/
-
-void SummarizePromiseRepaired(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot,
-                              char *web)
+void TrackValue(char *date, double kept, double repaired, double notkept)
 {
-    CfOut(cf_verbose, "", "# Compliance reporting feature is only available in version Nova and above\n");
 }
 
-/*****************************************************************************/
 
-void SummarizePromiseNotKept(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
+/* all agents: constraints.c */
+
+
+void PreSanitizePromise(Promise *pp)
 {
-    CfOut(cf_verbose, "", "# Compliance reporting feature is only available in version Nova and above\n");
 }
 
-/*****************************************************************************/
-
-void GrandSummary()
+void NewPromiser(Promise *pp)
 {
-    CfOut(cf_verbose, "", "# Reporting feature is only available in version Nova and above\n");
 }
 
-/*****************************************************************************/
 
-void CSV2XML(Rlist *list)
+/* FIXME: all agents: generic_agent.c */
+
+
+void ShowTopicRepresentation(const ReportContext *report_context)
 {
-    CfOut(cf_verbose, "", "# Format conversion feature is only available in version Nova and above\n");
+    CfOut(cf_verbose, "", "# Knowledge map reporting feature is only available in version Nova and above\n");
 }
 
-/*****************************************************************************/
-
-void SummarizeVariables(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
+void VerifyOutputsPromise(Promise *pp)
 {
-    CfOut(cf_verbose, "", "# Variable reporting feature is only available in version Nova and above\n");
+    printf(" !! Outputs promises are not available in the community edition of Cfengine\n");
 }
 
-/*****************************************************************************/
-
-void SummarizePerPromiseCompliance(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot,
-                                   char *web)
+void SetPromiseOutputs(Promise *pp)
 {
-    CfOut(cf_verbose, "", "# Compliance reporting feature is only available in version Nova and above\n");
 }
 
-/*****************************************************************************/
 
-void SummarizeFileChanges(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
+/* cf-agent, cf-serverd */
+
+
+void SetSyslogHost(const char *host)
 {
-    CfOut(cf_verbose, "", "# File change reporting feature is only available in version Nova and above\n");
+    CfOut(cf_error, "", "!! Remote syslog functionality is only available in Nova");
 }
 
-/*****************************************************************************/
-
-void SummarizeSetuid(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
+void SetSyslogPort(uint16_t port)
 {
-    CfOut(cf_verbose, "", "# Setuid reporting feature is only available in version Nova and above\n");
+    CfOut(cf_error, "", "!! Remote syslog functionality is only available in Nova");
 }
 
-/*****************************************************************************/
 
-void ReportPatches(PackageManager *list)
+/* cf-execd: cf-execd-runner.c */
+
+
+const char *MailSubject(void)
 {
-    CfOut(cf_verbose, "", "# Patch reporting feature is only available in version Nova and above\n");
+    return "community";
 }
 
-/*****************************************************************************/
 
-void SummarizeSoftware(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
+/* network communication: cf-serverd.c, client_protocol.c, client_code.c, crypto.c */
+
+
+int CfSessionKeySize(char type)
 {
-    CfOut(cf_verbose, "", "# Software summary reporting feature is only available in version Nova and above\n");
+    return CF_BLOWFISHSIZE;
 }
 
-/*****************************************************************************/
-
-void SummarizeUpdates(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
+char CfEnterpriseOptions(void)
 {
-    CfOut(cf_verbose, "", "# Software summary reporting feature is only available in version Nova and above\n");
+    return 'c';
+}
+
+const EVP_CIPHER *CfengineCipher(char type)
+{
+    return EVP_bf_cbc();
+}
+
+
+/* cf-monitord: env_monitor.c, verify_measurement.c */
+
+
+void HistoryUpdate(Averages newvals)
+{
+}
+
+void GetObservable(int i, char *name, char *desc)
+{
+    strcpy(name, OBS[i][0]);
 }
 
 void VerifyMeasurement(double *this, Attributes a, Promise *pp)
@@ -416,54 +185,87 @@ void VerifyMeasurement(double *this, Attributes a, Promise *pp)
     CfOut(cf_verbose, "", "# Custom monitoring feature is only available in version Nova and above\n");
 }
 
-/*****************************************************************************/
-
-void LongHaul(time_t current)
-{
-}
-
-/*****************************************************************************/
-
 void SetMeasurementPromises(Item **classlist)
 {
 }
 
-/*****************************************************************************/
 
-int VerifyDatabasePromise(CfdbConn *cfdb, char *database, Attributes a, Promise *pp)
+/* cf-agent: files_operators.c */
+
+
+void LogFileChange(char *file, int change, Attributes a, Promise *pp, const ReportContext *report_context)
 {
-    CfOut(cf_verbose, "", "Verifying SQL database promises is only available with Cfengine Nova or above");
-    return false;
+    CfOut(cf_verbose, "", "Logging file differences requires version Nova or above");
 }
-
-/*****************************************************************************/
 
 void VerifyACL(char *file, Attributes a, Promise *pp)
 {
     CfOut(cf_verbose, "", "Verifying ACL promises is only available with Cfengine Nova or above");
 }
 
-/*****************************************************************************/
 
-int CheckACLSyntax(char *file, Acl acl, Promise *pp)
+/* cf-agent: transaction.c */
+
+
+void RemoteSysLog(int log_priority, const char *log_string)
 {
-    return true;
+    CfOut(cf_verbose, "", "Remote logging requires version Nova or above");
 }
 
-/*****************************************************************************/
 
-void VerifyRegistryPromise(Attributes a, Promise *pp)
+/* cf-agent: cf-agent.c */
+
+
+void NoteEfficiency(double e)
 {
 }
 
-/*****************************************************************************/
+void LastSawBundle(const Bundle *bundle, double comp)
+{
+}
+
+void SetBundleOutputs(char *name)
+{
+}
+
+void ResetBundleOutputs(char *name)
+{
+}
+
+
+/* cf-agent: verify_packages.c */
+
+
+void ReportPatches(PackageManager *list)
+{
+    CfOut(cf_verbose, "", "# Patch reporting feature is only available in version Nova and above\n");
+}
+
+
+/* cf-agent: evalfunction.c */
+
+
+char *GetRemoteScalar(char *proto, char *handle, char *server, int encrypted, char *rcv)
+{
+    CfOut(cf_verbose, "", "# Access to server literals is only available in version Nova and above\n");
+    return "";
+}
+
+void CacheUnreliableValue(char *caller, char *handle, char *buffer)
+{
+    CfOut(cf_verbose, "", "# Value fault-tolerance in version Nova and above\n");
+}
+
+int RetrieveUnreliableValue(char *caller, char *handle, char *buffer)
+{
+    CfOut(cf_verbose, "", "# Value fault-tolerance in version Nova and above\n");
+    return false;
+}
 
 int GetRegistryValue(char *key, char *name, char *buf, int bufSz)
 {
     return 0;
 }
-
-/*****************************************************************************/
 
 void *CfLDAPValue(char *uri, char *dn, char *filter, char *name, char *scope, char *sec)
 {
@@ -471,15 +273,11 @@ void *CfLDAPValue(char *uri, char *dn, char *filter, char *name, char *scope, ch
     return NULL;
 }
 
-/*****************************************************************************/
-
 void *CfLDAPList(char *uri, char *dn, char *filter, char *name, char *scope, char *sec)
 {
     CfOut(cf_error, "", "LDAP support available in Nova and above");
     return NULL;
 }
-
-/*****************************************************************************/
 
 void *CfLDAPArray(char *array, char *uri, char *dn, char *filter, char *scope, char *sec)
 {
@@ -487,64 +285,153 @@ void *CfLDAPArray(char *array, char *uri, char *dn, char *filter, char *scope, c
     return NULL;
 }
 
-/*****************************************************************************/
-
 void *CfRegLDAP(char *uri, char *dn, char *filter, char *name, char *scope, char *regex, char *sec)
 {
     CfOut(cf_error, "", "LDAP support available in Nova and above");
     return NULL;
 }
 
-/*****************************************************************************/
-
-int GetInstalledPkgsRpath(PackageItem ** pkgList, Attributes a, Promise *pp)
+bool CFDB_HostsWithClass(Rlist **return_list, char *class_name, char *return_format)
 {
-    CfOut(cf_error, "", "!! rPath internal package listing only available in Nova or above");
+    CfOut(cf_error, "", "!! Host class counting is only available in CFEngine Nova");
     return false;
 }
 
-/*****************************************************************************/
 
-int ExecPackageCommandRpath(char *command, int verify, int setCmdClasses, Attributes a, Promise *pp)
-{
-    CfOut(cf_error, "", "!! rPath internal package commands only available in Nova or above");
-    return false;
-}
+/* cf-agent: verify_databases.c */
 
-/*****************************************************************************/
 
-void AddGoalsToDB(char *goal_patterns)
+void VerifyRegistryPromise(Attributes a, Promise *pp)
 {
 }
 
-/*****************************************************************************/
 
-void SetSyslogHost(const char *host)
-{
-    CfOut(cf_error, "", "!! Remote syslog functionality is only available in Nova");
-}
+/* cf-agent: verify_services.c */
 
-/*****************************************************************************/
-
-void SetSyslogPort(uint16_t port)
-{
-    CfOut(cf_error, "", "!! Remote syslog functionality is only available in Nova");
-}
-
-/*****************************************************************************/
 
 void VerifyWindowsService(Attributes a, Promise *pp)
 {
     CfOut(cf_error, "", "!! Windows service management is only supported in CFEngine Nova");
 }
 
-/*****************************************************************************/
 
-bool CFDB_HostsWithClass(Rlist **return_list, char *class_name, char *return_format)
+/* cf-promises: cf-promises.c */
+
+
+void AnalyzePromiseConflicts(void)
 {
-    CfOut(cf_error, "", "!! Host class counting is only available in CFEngine Nova");
-    
-    return false;
+}
+
+void AddGoalsToDB(char *goal_patterns)
+{
+}
+
+
+/* cf-report: cf-report.c */
+
+void SyntaxExport(void)
+{
+    Writer *writer = FileWriter(stdout);
+    SyntaxPrintAsJson(writer);
+    WriterClose(writer);
+}
+
+void LookupObservable(int i, char *name, char *desc)
+{
+    strcpy(name, OBS[i][0]);
+}
+
+void SummarizeCompliance(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
+{
+    CfOut(cf_verbose, "", "# Compliance reporting feature is only available in version Nova and above\n");
+}
+
+void SummarizeValue(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
+{
+    CfOut(cf_verbose, "",
+          "# Value reporting feature is only available in version Nova and above - use the state/cf_value.log\n");
+}
+
+void SummarizePromiseRepaired(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot,
+                              char *web)
+{
+    CfOut(cf_verbose, "", "# Compliance reporting feature is only available in version Nova and above\n");
+}
+
+void SummarizePromiseNotKept(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
+{
+    CfOut(cf_verbose, "", "# Compliance reporting feature is only available in version Nova and above\n");
+}
+
+void GrandSummary()
+{
+    CfOut(cf_verbose, "", "# Reporting feature is only available in version Nova and above\n");
+}
+
+void CSV2XML(Rlist *list)
+{
+    CfOut(cf_verbose, "", "# Format conversion feature is only available in version Nova and above\n");
+}
+
+void SummarizeVariables(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
+{
+    CfOut(cf_verbose, "", "# Variable reporting feature is only available in version Nova and above\n");
+}
+
+void SummarizePerPromiseCompliance(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot,
+                                   char *web)
+{
+    CfOut(cf_verbose, "", "# Compliance reporting feature is only available in version Nova and above\n");
+}
+
+void SummarizeFileChanges(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
+{
+    CfOut(cf_verbose, "", "# File change reporting feature is only available in version Nova and above\n");
+}
+
+void SummarizeSetuid(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
+{
+    CfOut(cf_verbose, "", "# Setuid reporting feature is only available in version Nova and above\n");
+}
+
+void SummarizeSoftware(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
+{
+    CfOut(cf_verbose, "", "# Software summary reporting feature is only available in version Nova and above\n");
+}
+
+void SummarizeUpdates(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
+{
+    CfOut(cf_verbose, "", "# Software summary reporting feature is only available in version Nova and above\n");
+}
+
+void LongHaul(time_t current)
+{
+}
+
+
+/* cf-serverd: server_transform.c, cf-serverd.c */
+
+
+void TranslatePath(char *new, const char *old)
+{
+    strncpy(new, old, CF_BUFSIZE - 1);
+}
+
+void RegisterLiteralServerData(char *handle, Promise *pp)
+{
+    CfOut(cf_verbose, "", "# Access to server literals is only available in version Nova and above\n");
+}
+
+int ReturnLiteralData(char *handle, char *ret)
+{
+    CfOut(cf_verbose, "", "# Access to server literals is only available in version Nova and above\n");
+    return 0;
+}
+
+/* cf-know */
+
+void SyntaxCompletion(char *s)
+{
 }
 
 #endif

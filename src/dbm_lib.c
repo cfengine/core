@@ -23,16 +23,8 @@
   included file COSL.txt.
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: dbm_lib.c                                                           */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 #include "dbm_lib.h"
-#include "prototypes3.h"
 
 int DBPathLock(const char *filename)
 {

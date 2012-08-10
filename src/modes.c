@@ -30,7 +30,6 @@
 /*****************************************************************************/
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
 /***************************************************************/
 
@@ -56,9 +55,8 @@ static int SetModeMask(char action, int value, int affected, mode_t *p, mode_t *
 
 /***************************************************************/
 
-int ParseModeString(char *modestring, mode_t *plusmask, mode_t *minusmask)
+int ParseModeString(const char *modestring, mode_t *plusmask, mode_t *minusmask)
 {
-    char *sp;
     int affected = 0, value = 0, gotaction, no_error = true;
     char action = '=';
     enum modestate state = wild;
@@ -76,7 +74,7 @@ int ParseModeString(char *modestring, mode_t *plusmask, mode_t *minusmask)
 
     gotaction = false;
 
-    for (sp = modestring; true; sp++)
+    for (const char *sp = modestring; true; sp++)
     {
         switch (*sp)
         {

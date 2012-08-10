@@ -24,14 +24,7 @@
 
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: file_hashes.c                                                       */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 #include "dbm_api.h"
 
 static int ReadHash(CF_DB *dbp, enum cfhashes type, char *name, unsigned char digest[EVP_MAX_MD_SIZE + 1]);
@@ -181,10 +174,7 @@ int FileHashChanged(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], i
         CfDebug("Storing checksum for %s in database %s\n", filename, HashPrint(type, digest));
         WriteHash(dbp, type, filename, digest);
 
-        char s[CF_BUFSIZE];
-
-        snprintf(s, CF_BUFSIZE, " !! File %s was not in %s database - new file found", filename, FileHashName(type));
-        LogHashChange(s);
+        LogHashChange(filename, cf_file_new, "New file found");
 
         CloseDB(dbp);
         return false;
@@ -518,10 +508,7 @@ void PurgeHashes(char *path, Attributes attr, Promise *pp)
                 cfPS(cf_error, CF_WARN, "", pp, attr, "ALERT: File %s no longer exists!", obj);
             }
 
-            char s[CF_BUFSIZE];
-
-            snprintf(s, CF_BUFSIZE, "ALERT: %s file no longer exists!", obj);
-            LogHashChange(s);
+            LogHashChange(obj, cf_file_removed, "File removed");
         }
 
         memset(&key, 0, sizeof(key));

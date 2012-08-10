@@ -1,0 +1,9 @@
+
+@verbatim
+
+ "/docs/SpecialTopic_RBAC.html#tag"
+
+     represents => { "Text section" }, 
+   about_topics => { "defining roles" };
+
+@end verbatim

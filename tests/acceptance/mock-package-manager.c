@@ -369,7 +369,7 @@ int main(int argc, char *argv[])
 {
     extern char *optarg;
     int option_index = 0;
-    char c;
+    int c;
 
     char *workdir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
 

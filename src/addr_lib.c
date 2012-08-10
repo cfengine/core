@@ -23,16 +23,16 @@
 */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
-/*********************************************************************/
+#define CF_ADDRSIZE 128
 
-int FuzzySetMatch(char *s1, char *s2)
 /* Match two IP strings - with : or . in hex or decimal
    s1 is the test string, and s2 is the reference e.g.
    FuzzySetMatch("128.39.74.10/23","128.39.75.56") == 0
 
    Returns 0 on match. */
+
+int FuzzySetMatch(char *s1, char *s2)
 {
     short isCIDR = false, isrange = false, isv6 = false, isv4 = false;
     char address[CF_ADDRSIZE];
@@ -278,8 +278,6 @@ int FuzzySetMatch(char *s1, char *s2)
     return -1;
 }
 
-/*********************************************************************/
-
 int FuzzyHostParse(char *arg1, char *arg2)
 {
     long start = -1, end = -1;
@@ -296,8 +294,6 @@ int FuzzyHostParse(char *arg1, char *arg2)
 
     return true;
 }
-
-/*********************************************************************/
 
 int FuzzyHostMatch(char *arg0, char *arg1, char *refhost)
 {
@@ -343,6 +339,176 @@ int FuzzyHostMatch(char *arg0, char *arg1, char *refhost)
     }
 
     return 0;
+}
+
+int FuzzyMatchParse(char *s)
+{
+    char *sp;
+    short isCIDR = false, isrange = false, isv6 = false, isv4 = false, isADDR = false;
+    char address[CF_ADDRSIZE];
+    int mask, count = 0;
+
+    CfDebug("Check ParsingIPRange(%s)\n", s);
+
+    for (sp = s; *sp != '\0'; sp++)     /* Is this an address or hostname */
+    {
+        if (!isxdigit((int) *sp))
+        {
+            isADDR = false;
+            break;
+        }
+
+        if (*sp == ':')         /* Catches any ipv6 address */
+        {
+            isADDR = true;
+            break;
+        }
+
+        if (isdigit((int) *sp)) /* catch non-ipv4 address - no more than 3 digits */
+        {
+            count++;
+            if (count > 3)
+            {
+                isADDR = false;
+                break;
+            }
+        }
+        else
+        {
+            count = 0;
+        }
+    }
+
+    if (!isADDR)
+    {
+        return true;
+    }
+
+    if (strstr(s, "/") != 0)
+    {
+        isCIDR = true;
+    }
+
+    if (strstr(s, "-") != 0)
+    {
+        isrange = true;
+    }
+
+    if (strstr(s, ".") != 0)
+    {
+        isv4 = true;
+    }
+
+    if (strstr(s, ":") != 0)
+    {
+        isv6 = true;
+    }
+
+    if (isv4 && isv6)
+    {
+        CfOut(cf_error, "", "Mixture of IPv6 and IPv4 addresses");
+        return false;
+    }
+
+    if (isCIDR && isrange)
+    {
+        CfOut(cf_error, "", "Cannot mix CIDR notation with xx-yy range notation");
+        return false;
+    }
+
+    if (isv4 && isCIDR)
+    {
+        if (strlen(s) > 4 + 3 * 4 + 1 + 2)      /* xxx.yyy.zzz.mmm/cc */
+        {
+            CfOut(cf_error, "", "IPv4 address looks too long");
+            return false;
+        }
+
+        address[0] = '\0';
+        mask = 0;
+        sscanf(s, "%16[^/]/%d", address, &mask);
+
+        if (mask < 8)
+        {
+            CfOut(cf_error, "", "Mask value %d in %s is less than 8", mask, s);
+            return false;
+        }
+
+        if (mask > 30)
+        {
+            CfOut(cf_error, "", "Mask value %d in %s is silly (> 30)", mask, s);
+            return false;
+        }
+    }
+
+    if (isv4 && isrange)
+    {
+        long i, from = -1, to = -1;
+        char *sp1, buffer1[CF_MAX_IP_LEN];
+
+        sp1 = s;
+
+        for (i = 0; i < 4; i++)
+        {
+            buffer1[0] = '\0';
+            sscanf(sp1, "%[^.]", buffer1);
+            sp1 += strlen(buffer1) + 1;
+
+            if (strstr(buffer1, "-"))
+            {
+                sscanf(buffer1, "%ld-%ld", &from, &to);
+
+                if (from < 0 || to < 0)
+                {
+                    CfOut(cf_error, "", "Error in IP range - looks like address, or bad hostname");
+                    return false;
+                }
+
+                if (to < from)
+                {
+                    CfOut(cf_error, "", "Bad IP range");
+                    return false;
+                }
+
+            }
+        }
+    }
+
+    if (isv6 && isCIDR)
+    {
+        char address[CF_ADDRSIZE];
+        int mask;
+
+        if (strlen(s) < 20)
+        {
+            CfOut(cf_error, "", "IPv6 address looks too short");
+            return false;
+        }
+
+        if (strlen(s) > 42)
+        {
+            CfOut(cf_error, "", "IPv6 address looks too long");
+            return false;
+        }
+
+        address[0] = '\0';
+        mask = 0;
+        sscanf(s, "%40[^/]/%d", address, &mask);
+
+        if (mask % 8 != 0)
+        {
+            CfOut(cf_error, "", "Cannot handle ipv6 masks which are not 8 bit multiples (fix me)");
+            return false;
+        }
+
+        if (mask > 15)
+        {
+            CfOut(cf_error, "", "IPv6 CIDR mask is too large");
+            return false;
+        }
+    }
+
+    return true;
 }
 
 /* FIXME: handle 127.0.0.2, 127.255.255.254, ::1,

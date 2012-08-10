@@ -23,18 +23,12 @@
   included file COSL.txt.
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: exec.c                                                              */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
 #include "dbm_api.h"
 #include "lastseen.h"
 #include "dir.h"
+#include "reporting.h"
 
 int SHOWHOSTS = false;
 bool REMOVEKEYS = false;
@@ -44,6 +38,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv);
 
 static void ShowLastSeenHosts(void);
 static int RemoveKeys(const char *host);
+static void KeepKeyPromises(void);
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -83,7 +78,8 @@ int main(int argc, char *argv[])
 
     THIS_AGENT_TYPE = cf_keygen;
 
-    GenericInitialize("keygenerator", config);
+    ReportContext *report_context = OpenReports("keygenerator");
+    GenericInitialize("keygenerator", config, report_context);
 
     if (SHOWHOSTS)
     {
@@ -97,6 +93,8 @@ int main(int argc, char *argv[])
     }
 
     KeepKeyPromises();
+
+    ReportContextDestroy(report_context);
     return 0;
 }
 
@@ -111,7 +109,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig config = GenericAgentDefaultConfig(cf_keygen);
 
-    while ((c = getopt_long(argc, argv, "dvf:VMsr:", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvf:VMsr:h", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -290,4 +288,104 @@ static int RemoveKeys(const char *host)
               removed_by_ip + removed_by_digest, remove_keys_host);
         return 0;
     }
+}
+
+static void KeepKeyPromises(void)
+{
+    unsigned long err;
+    RSA *pair;
+    FILE *fp;
+    struct stat statbuf;
+    int fd;
+    static char *passphrase = "Cfengine passphrase";
+    const EVP_CIPHER *cipher;
+    char vbuff[CF_BUFSIZE];
+
+    NewScope("common");
+
+    cipher = EVP_des_ede3_cbc();
+
+    if (cfstat(CFPUBKEYFILE, &statbuf) != -1)
+    {
+        CfOut(cf_cmdout, "", "A key file already exists at %s\n", CFPUBKEYFILE);
+        return;
+    }
+
+    if (cfstat(CFPRIVKEYFILE, &statbuf) != -1)
+    {
+        CfOut(cf_cmdout, "", "A key file already exists at %s\n", CFPRIVKEYFILE);
+        return;
+    }
+
+    printf("Making a key pair for cfengine, please wait, this could take a minute...\n");
+
+    pair = RSA_generate_key(2048, 35, NULL, NULL);
+
+    if (pair == NULL)
+    {
+        err = ERR_get_error();
+        CfOut(cf_error, "", "Unable to generate key: %s\n", ERR_reason_error_string(err));
+        return;
+    }
+
+    if (DEBUG)
+    {
+        RSA_print_fp(stdout, pair, 0);
+    }
+
+    fd = open(CFPRIVKEYFILE, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+
+    if (fd < 0)
+    {
+        CfOut(cf_error, "open", "Open %s failed: %s.", CFPRIVKEYFILE, strerror(errno));
+        return;
+    }
+
+    if ((fp = fdopen(fd, "w")) == NULL)
+    {
+        CfOut(cf_error, "fdopen", "Couldn't open private key %s.", CFPRIVKEYFILE);
+        close(fd);
+        return;
+    }
+
+    CfOut(cf_verbose, "", "Writing private key to %s\n", CFPRIVKEYFILE);
+
+    if (!PEM_write_RSAPrivateKey(fp, pair, cipher, passphrase, strlen(passphrase), NULL, NULL))
+    {
+        err = ERR_get_error();
+        CfOut(cf_error, "", "Couldn't write private key: %s\n", ERR_reason_error_string(err));
+        return;
+    }
+
+    fclose(fp);
+
+    fd = open(CFPUBKEYFILE, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+
+    if (fd < 0)
+    {
+        CfOut(cf_error, "open", "Unable to open public key %s.", CFPUBKEYFILE);
+        return;
+    }
+
+    if ((fp = fdopen(fd, "w")) == NULL)
+    {
+        CfOut(cf_error, "fdopen", "Open %s failed.", CFPUBKEYFILE);
+        close(fd);
+        return;
+    }
+
+    CfOut(cf_verbose, "", "Writing public key to %s\n", CFPUBKEYFILE);
+
+    if (!PEM_write_RSAPublicKey(fp, pair))
+    {
+        err = ERR_get_error();
+        CfOut(cf_error, "", "Unable to write public key: %s\n", ERR_reason_error_string(err));
+        return;
+    }
+
+    fclose(fp);
+
+    snprintf(vbuff, CF_BUFSIZE, "%s/randseed", CFWORKDIR);
+    RAND_write_file(vbuff);
+    cf_chmod(vbuff, 0644);
 }

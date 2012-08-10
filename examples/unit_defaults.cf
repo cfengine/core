@@ -1,0 +1,89 @@
+
+#  Copyright (C) Cfengine AS
+
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commerical Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+#
+# Default values for variables and parameters, introduced 3.4.0
+#
+
+body common control
+
+{
+bundlesequence  => { "example" };
+}
+
+###########################################################
+
+bundle agent example
+
+{     
+defaults:
+
+  # We can have default values even if variables are not defined at all.
+  # This is equivalent to a variable definition, so not particularly useful.
+
+  "X" string => "I am a default value";
+  "Y" slist => { "I am a default list item 1", "I am a default list item 2" };
+
+methods:
+
+ # More useful, defaults if parameters are passed to a param bundle
+
+ "example" usebundle => mymethod("","bbb");
+
+reports:
+
+ cfengine_3::
+
+   "The default value of X is $(X)";
+   "The default value of Y is $(Y)";
+}
+
+###########################################################
+
+bundle agent mymethod(a,b)
+
+{
+vars:
+
+  "no_return" string => "ok"; # readfile("/dont/exist","123");
+
+defaults:
+
+  "a" string => "AAAAAAAAA",   if_match_regex => "";
+
+  "b" string => "BBBBBBBBB",   if_match_regex => "";
+
+  "no_return" string => "no such file";
+
+reports:
+
+  cfengine_3::
+
+     "The value of a is $(a)";
+     "The value of b is $(b)";
+
+     "The value of no_return is $(no_return)";
+
+}
+
+

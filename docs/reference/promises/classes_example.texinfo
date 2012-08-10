@@ -1,0 +1,14 @@
+
+
+@verbatim
+
+bundle common g
+{
+classes:
+
+  "one" expression => "any";
+
+  "client_network" expression => iprange("128.39.89.0/24");
+}
+
+@end verbatim

@@ -24,10 +24,11 @@
 */
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
-#include "dir.h"
 
-static void FindStoragePromiserObjects(Promise *pp);
+#include "dir.h"
+#include "conversion.h"
+
+static void FindStoragePromiserObjects(Promise *pp, const ReportContext *report_context);
 static int VerifyFileSystem(char *name, Attributes a, Promise *pp);
 static int VerifyFreeSpace(char *file, Attributes a, Promise *pp);
 static void VolumeScanArrivals(char *file, Attributes a, Promise *pp);
@@ -35,31 +36,31 @@ static int FileSystemMountedCorrectly(Rlist *list, char *name, char *options, At
 static int IsForeignFileSystem(struct stat *childstat, char *dir);
 
 #ifndef MINGW
-static int VerifyMountPromise(char *file, Attributes a, Promise *pp);
+static int VerifyMountPromise(char *file, Attributes a, Promise *pp, const ReportContext *report_context);
 #endif /* NOT MINGW */
 
 /*****************************************************************************/
 
-void *FindAndVerifyStoragePromises(Promise *pp)
+void *FindAndVerifyStoragePromises(Promise *pp, const ReportContext *report_context)
 {
     PromiseBanner(pp);
-    FindStoragePromiserObjects(pp);
+    FindStoragePromiserObjects(pp, report_context);
 
     return (void *) NULL;
 }
 
 /*****************************************************************************/
 
-static void FindStoragePromiserObjects(Promise *pp)
+static void FindStoragePromiserObjects(Promise *pp, const ReportContext *report_context)
 {
 /* Check if we are searching over a regular expression */
 
-    LocateFilePromiserGroup(pp->promiser, pp, VerifyStoragePromise);
+    LocateFilePromiserGroup(pp->promiser, pp, VerifyStoragePromise, report_context);
 }
 
 /*****************************************************************************/
 
-void VerifyStoragePromise(char *path, Promise *pp)
+void VerifyStoragePromise(char *path, Promise *pp, const ReportContext *report_context)
 {
     Attributes a = { {0} };
     CfLock thislock;
@@ -112,7 +113,7 @@ void VerifyStoragePromise(char *path, Promise *pp)
 
     if (a.havemount)
     {
-        VerifyMountPromise(path, a, pp);
+        VerifyMountPromise(path, a, pp, report_context);
     }
 #endif /* NOT MINGW */
 
@@ -410,7 +411,7 @@ static int IsForeignFileSystem(struct stat *childstat, char *dir)
 
 #ifndef MINGW
 
-static int VerifyMountPromise(char *name, Attributes a, Promise *pp)
+static int VerifyMountPromise(char *name, Attributes a, Promise *pp, const ReportContext *report_context)
 {
     char *options;
     char dir[CF_BUFSIZE];
@@ -432,7 +433,7 @@ static int VerifyMountPromise(char *name, Attributes a, Promise *pp)
     {
         if (!a.mount.unmount)
         {
-            if (!MakeParentDirectory(dir, a.move_obstructions))
+            if (!MakeParentDirectory(dir, a.move_obstructions, report_context))
             {
             }
 

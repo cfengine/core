@@ -31,17 +31,14 @@
 
 int LvalWantsBody(char *stype, char *lval);
 int CheckParseVariableName(char *name);
-void CheckBundle(char *name, char *type);
-void CheckBody(char *name, char *type);
-SubTypeSyntax CheckSubType(char *btype, char *type);
-void CheckConstraint(char *type, char *name, char *lval, Rval rval, SubTypeSyntax ss);
+void CheckConstraint(char *type, char *ns, char *name, char *lval, Rval rval, SubTypeSyntax ss);
 void CheckSelection(char *type, char *name, char *lval, Rval rval);
-void CheckConstraintTypeMatch(char *lval, Rval rval, enum cfdatatype dt, const char *range, int level);
-void CheckPromise(Promise *pp);
-int CheckParseClass(char *lv, char *s, const char *range);
-enum cfdatatype StringDataType(char *scopeid, char *string);
+void CheckConstraintTypeMatch(const char *lval, Rval rval, enum cfdatatype dt, const char *range, int level);
+int CheckParseClass(const char *lv, const char *s, const char *range);
+enum cfdatatype StringDataType(const char *scopeid, const char *string);
 enum cfdatatype ExpectedDataType(char *lvalname);
 bool IsDataType(const char *s);
+SubTypeSyntax SubTypeSyntaxLookup(const char *bundle_type, const char *subtype_name);
 
 /* print a specification of the CFEngine language */
 void SyntaxPrintAsJson(Writer *writer);

@@ -23,36 +23,9 @@
   included file COSL.txt.
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: exec_tools.c                                                        */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
-/*************************************************************/
-
-int IsExecutable(const char *file)
-{
-#ifdef MINGW
-    return NovaWin_IsExecutable(file);
-#else
-    return Unix_IsExecutable(file);
-#endif
-}
-
-/*******************************************************************/
-
-int ShellCommandReturnsZero(char *comm, int useshell)
-{
-#ifdef MINGW
-    return NovaWin_ShellCommandReturnsZero(comm, useshell);
-#else
-    return Unix_ShellCommandReturnsZero(comm, useshell);
-#endif
-}
+#include "files_names.h"
 
 /********************************************************************/
 
@@ -213,7 +186,7 @@ char **ArgSplitCommand(const char *comm)
         const char *end;
         char *arg;
 
-        if (isspace(*s))        /* Skip whitespace */
+        if (isspace((int)*s))        /* Skip whitespace */
         {
             s++;
             continue;

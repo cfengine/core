@@ -1,0 +1,5 @@
+
+Line based editing is a simple model for editing files. Before XML,
+and later JSON, most configuration files were line based. The
+line-based editing offers a powerful environment for model-based editing and
+templating.

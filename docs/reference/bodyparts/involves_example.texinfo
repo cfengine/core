@@ -1,0 +1,13 @@
+
+@verbatim
+things:
+
+   "desired state"
+
+      involves => { 
+                  "business goals", 
+                  "knowing what state to configure", 
+                  "knowing what objects to maintain" 
+                  };
+
+@end verbatim

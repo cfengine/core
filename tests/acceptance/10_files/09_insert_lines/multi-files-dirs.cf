@@ -1,0 +1,87 @@
+#######################################################
+#
+# Insert a line into variously named files, in various directories (Issue 888)
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+        "states" slist => { "expected", "$(results)" };
+        "testdirs" slist => { "dirA/", "dirB/", "dirC/" };
+        "testfiles" slist => { "dirA/testfa", "dirB/testfb", "dirC/testfc" };
+
+files:
+    "$(G.testdir)/$(testdirs)"
+      comment => "Create directory: $(testdirs).";
+
+    "$(G.testdir)/$(testfiles)"
+      comment => "Create target file: $(testfiles).",
+      create => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
+  any::
+    "$(G.testdir)/.*/testf.*"
+      create => "true",
+      edit_line => myedit;
+}
+
+bundle edit_line myedit
+{
+insert_lines:
+  any::
+    "one two three test";
+}
+
+#######################################################
+
+bundle agent check
+{
+vars:
+        "expect" string => "one two three test";
+        "results" slist => { "resultA", "resultB", "resultC" };
+
+        "resultA" string => readfile(
+            "$(G.testdir)/dirA/testfa", "33");
+        "resultB" string => readfile(
+            "$(G.testdir)/dirB/testfb", "33");
+        "resultC" string => readfile(
+            "$(G.testdir)/dirC/testfc", "33");
+
+classes:
+        "ok_A" expression => strcmp("$(expect)", "$(resultA)");
+        "ok_B" expression => strcmp("$(expect)", "$(resultB)");
+        "ok_C" expression => strcmp("$(expect)", "$(resultC)");
+
+        "ok" and => { "ok_A", "ok_B", "ok_C" };
+
+reports:
+    DEBUG::
+        "expected: '$(expect)'";
+        "results:";
+        "resultA: '$(resultA)'";
+        "resultB: '$(resultB)'";
+        "resultC: '$(resultC)'";
+
+    ok::
+        "$(this.promise_filename) Pass";
+    !ok::
+        "$(this.promise_filename) FAIL";
+}
+

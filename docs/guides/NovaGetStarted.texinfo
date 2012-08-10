@@ -208,7 +208,7 @@ Default user name and password is 'admin' and 'admin' (make sure to change this 
 Note that some of the displays in the Mission Portal may be blank when you log in just after installation; some reports and graphs are only updated every six hours. It may also take some time for the system to fully converge, do not get troubled if initially there are some promises repaired or not kept.
 
 Please refer to the CFEngine 3 Nova Owner's Manual @*
-(@url{http://www.cfengine.com/manuals/NovaOwnersManual.html}) for complete information and help troubleshooting your installation.
+(@url{http://www.cfengine.com/manuals/Enterprise-2-2-OwnersManual.html}) for complete information and help troubleshooting your installation.
 
 
 @c *****************************************************
@@ -222,7 +222,7 @@ Please refer to the CFEngine 3 Nova Owner's Manual @*
 @end menu
 
 The Mission Portal is the centerpiece
-of user interaction with CFEngine 3 Nova. It can be accessed by connecting to the hub (policy server) with your web browser (for example at http://123.456.789.123; default port 80). From here you can get a complete overview of operations and performance, business and compliance, organizational knowledge and library. We will make a quick introduction of the four main rooms in the Mission Portal, please refer to the CFEngine 3 Nova Owner's Manual for a complete overview: @url{http://www.cfengine.com/manuals/NovaOwnersManual.html}
+of user interaction with CFEngine 3 Nova. It can be accessed by connecting to the hub (policy server) with your web browser (for example at http://123.456.789.123; default port 80). From here you can get a complete overview of operations and performance, business and compliance, organizational knowledge and library. We will make a quick introduction of the four main rooms in the Mission Portal, please refer to the CFEngine 3 Nova Owner's Manual for a complete overview: @url{http://www.cfengine.com/manuals/Enterprise-2-2-OwnersManual.html}
 
 @image{img-missionportal,15cm,,Mission Portal}
 @center Figure: The mission portal
@@ -380,7 +380,7 @@ The yellow sphere represents the current topic, surrounding (blue) spheres repre
 Please refer to the CFEngine 3 Nova Owner's Manual for complete information about this product. You may also wish to visit our getting started section on cfengine.com:
 
 @itemize
-@item @url{http://cfengine.com/manuals/NovaOwnersManual.html}
+@item @url{http://cfengine.com/manuals/Enterprise-2-2-OwnersManual.html}
 @item @url{http://cfengine.com/getting-started}
 @end itemize
 

@@ -2474,7 +2474,7 @@ details.
 @noindent For a complete overview:
 @itemize
 @item Tutorial: @url{http://cfengine.com/manuals/cf3-tutorial.html}
-@item Reference manual: @url{http://cfengine.com/manuals/cf3-reference.html}
+@item Reference manual: @url{http://cfengine.com/manuals/cf3-Reference.html}
 @end itemize
 
 

@@ -30,9 +30,11 @@
 /*******************************************************************/
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 #include "cf3parse.h"
+
+#include "env_context.h"
 #include "parser_state.h"
+#include "files_names.h"
 
 /* yyinput/input are generated and unused */
 #pragma GCC diagnostic ignored "-Wunused-function"
@@ -68,9 +70,11 @@ promises   bundle
 
 body       body
 
-nakedvar   [$@][(][a-zA-Z0-9_\200-\377.]+[)]|[$@][{][a-zA-Z0-9_\200-\377.]+[}]
+nakedvar   [$@][(][a-zA-Z0-9_\[\]\200-\377.]+[)]|[$@][{][a-zA-Z0-9_\[\]\200-\377.]+[}]
 
 id         [a-zA-Z0-9_\200-\377]+
+
+blockid    [a-zA-Z0-9_\200-\377]+[.][a-zA-Z0-9_\200-\377]+
 
 assign     =>
 
@@ -142,6 +146,19 @@ category   [a-zA-Z_]+:
                           if (strlen(yytext) > CF_MAXVARSIZE-1)
                           {
                               yyerror("identifier too long");
+                          }
+                          strncpy(P.currentid, yytext, CF_MAXVARSIZE);
+                          return ID;
+                      }
+
+
+{blockid}             {
+                          size_t token_length = strlen(yytext);
+                          P.offsets.last_id = P.offsets.current - token_length;
+                          P.line_pos += token_length;
+                          if (strlen(yytext) > CF_MAXVARSIZE-1)
+                          {
+                              yyerror("qualified identifier too long");
                           }
                           strncpy(P.currentid, yytext, CF_MAXVARSIZE);
                           return ID;

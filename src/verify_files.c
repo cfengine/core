@@ -23,23 +23,20 @@
 
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: verify_files.c                                                      */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
-static void FindFilePromiserObjects(Promise *pp);
+#include "constraints.h"
+#include "promises.h"
+#include "vars.h"
+
+static void FindFilePromiserObjects(Promise *pp, const ReportContext *report_context);
 
 /*****************************************************************************/
 
-void *FindAndVerifyFilesPromises(Promise *pp)
+void *FindAndVerifyFilesPromises(Promise *pp, const ReportContext *report_context)
 {
     PromiseBanner(pp);
-    FindFilePromiserObjects(pp);
+    FindFilePromiserObjects(pp, report_context);
 
     if (AM_BACKGROUND_PROCESS && !pp->done)
     {
@@ -53,7 +50,7 @@ void *FindAndVerifyFilesPromises(Promise *pp)
 
 /*****************************************************************************/
 
-static void FindFilePromiserObjects(Promise *pp)
+static void FindFilePromiserObjects(Promise *pp, const ReportContext *report_context)
 {
     char *val = GetConstraintValue("pathtype", pp, CF_SCALAR);
     int literal = GetBooleanConstraint("copy_from", pp) || ((val != NULL) && (strcmp(val, "literal") == 0));
@@ -64,10 +61,10 @@ static void FindFilePromiserObjects(Promise *pp)
     {
         // Prime the promiser temporarily, may override later
         NewScalar("this", "promiser", pp->promiser, cf_str);
-        VerifyFilePromise(pp->promiser, pp);
+        VerifyFilePromise(pp->promiser, pp, report_context);
     }
     else                        // Default is to expand regex paths
     {
-        LocateFilePromiserGroup(pp->promiser, pp, VerifyFilePromise);
+        LocateFilePromiserGroup(pp->promiser, pp, VerifyFilePromise, report_context);
     }
 }

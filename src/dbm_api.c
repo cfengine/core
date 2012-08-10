@@ -23,24 +23,14 @@
   included file COSL.txt.
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: dbm_api.c                                                           */
-/*                                                                           */
-/*****************************************************************************/
-
 #include <assert.h>
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
 #include "dbm_api.h"
 #include "dbm_priv.h"
 #include "dbm_lib.h"
-
-/* FIXME: turn into a generic "on-open" hook for databases. */
-bool LastseenMigration(DBHandle *db);
-/* ENDFIXME */
+#include "dbm_migration.h"
 
 /******************************************************************************/
 
@@ -71,7 +61,7 @@ struct DBCursor_
  */
 static pthread_mutex_t db_handles_lock = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
 
-static DBHandle db_handles[dbid_count] = { { 0 } };
+static DBHandle db_handles[dbid_max] = { { 0 } };
 
 /******************************************************************************/
 
@@ -120,7 +110,7 @@ static char *DBIdToPath(dbid id)
 
 static DBHandle *DBHandleGet(int id)
 {
-    assert(id >= 0 && id < dbid_count);
+    assert(id >= 0 && id < dbid_max);
 
     pthread_mutex_lock(&db_handles_lock);
 
@@ -151,16 +141,14 @@ bool OpenDB(DBHandle **dbp, dbid id)
             DBPathUnLock(lock_fd);
         }
 
-        /* FIXME: turn into a generic "on-open" hook for databases. */
-        if (handle->priv && id == dbid_lastseen)
+        if (handle->priv)
         {
-            if (!LastseenMigration(handle))
+            if (!DBMigrate(handle, id))
             {
                 DBPrivCloseDB(handle->priv);
                 handle->priv = NULL;
             }
         }
-        /* ENDFIXME */
     }
 
     if (handle->priv)
@@ -199,7 +187,7 @@ void CloseAllDB(void)
 {
     pthread_mutex_lock(&db_handles_lock);
 
-    for (int i = 0; i < dbid_count; ++i)
+    for (int i = 0; i < dbid_max; ++i)
     {
         if (db_handles[i].refcount != 0)
         {
@@ -249,12 +237,12 @@ bool DeleteComplexKeyDB(DBHandle *handle, const char *key, int key_size)
     return DBPrivDelete(handle->priv, key, key_size);
 }
 
-bool ReadDB(DBHandle *handle, char *key, void *dest, int destSz)
+bool ReadDB(DBHandle *handle, const char *key, void *dest, int destSz)
 {
     return DBPrivRead(handle->priv, key, strlen(key) + 1, dest, destSz);
 }
 
-bool WriteDB(DBHandle *handle, char *key, const void *src, int srcSz)
+bool WriteDB(DBHandle *handle, const char *key, const void *src, int srcSz)
 {
     return DBPrivWrite(handle->priv, key, strlen(key) + 1, src, srcSz);
 }
@@ -269,7 +257,7 @@ int ValueSizeDB(DBHandle *handle, const char *key, int key_size)
     return DBPrivGetValueSize(handle->priv, key, key_size);
 }
 
-bool DeleteDB(DBHandle *handle, char *key)
+bool DeleteDB(DBHandle *handle, const char *key)
 {
     return DBPrivDelete(handle->priv, key, strlen(key) + 1);
 }

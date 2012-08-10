@@ -1,0 +1,40 @@
+
+body file control
+{
+namespace => "name1"; 
+}
+
+
+bundle agent mymethod(one)
+{
+files:
+
+   "/tmp/$(one)"
+
+       create => "true",
+    edit_line => makefile,
+        perms => name2.settings;
+
+reports:
+
+  cfengine_3::  "test $(one) in $(this.namespace)_$(this.bundle)";
+}
+
+
+bundle edit_line makefile
+{
+insert_lines:
+
+   "THIS IS NAME1";
+
+reports:
+
+  cfengine_3::
+
+    "makefile in name 1";
+}
+
+body perms settings
+{
+mode => "600";
+}

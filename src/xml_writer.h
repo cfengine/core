@@ -26,7 +26,6 @@
 #define CFENGINE_XML_WRITER_H
 
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 #include "writer.h"
 
 typedef struct

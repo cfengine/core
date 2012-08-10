@@ -3,7 +3,6 @@
 
 body monitor control
 {
-threshold => "0.3";
 forgetrate => "0.7";
 }
 

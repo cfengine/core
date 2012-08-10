@@ -355,7 +355,7 @@ ignored.
 have been defined by an enterprise-wide global infrastructure service.
 
 @sp 1
-@center @image{fed2,10cm,,,pdf}
+@center @image{fed2,10cm,,,png}
 @center Independent configurations using a common baseline
 @sp 1
 

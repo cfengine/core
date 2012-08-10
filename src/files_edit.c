@@ -23,14 +23,11 @@
   included file COSL.txt.
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: files_edit.c                                                        */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
+
+#include "env_context.h"
+#include "files_names.h"
+#include "item_lib.h"
 
 /*****************************************************************************/
 
@@ -49,10 +46,18 @@ EditContext *NewEditContext(char *filename, Attributes a, Promise *pp)
     ec->filename = filename;
     ec->empty_first = a.edits.empty_before_use;
 
-    if (!LoadFileAsItemList(&(ec->file_start), filename, a, pp))
+    if (a.haveeditline)
     {
+        if (!LoadFileAsItemList(&(ec->file_start), filename, a, pp))
+        {
         free(ec);
         return NULL;
+        }
+    }
+
+    if (a.haveeditxml)
+    {
+    // Fill me in
     }
 
     if (a.edits.empty_before_use)
@@ -68,7 +73,7 @@ EditContext *NewEditContext(char *filename, Attributes a, Promise *pp)
 
 /*****************************************************************************/
 
-void FinishEditContext(EditContext *ec, Attributes a, Promise *pp)
+void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportContext *report_context)
 {
     Item *ip;
 
@@ -84,17 +89,26 @@ void FinishEditContext(EditContext *ec, Attributes a, Promise *pp)
     }
     else if (ec && ec->num_edits > 0)
     {
-        if (CompareToFile(ec->file_start, ec->filename, a, pp))
+        if (a.haveeditline)
         {
-            if (ec)
+            if (CompareToFile(ec->file_start, ec->filename, a, pp))
             {
-                cfPS(cf_verbose, CF_NOP, "", pp, a, " -> No edit changes to file %s need saving", ec->filename);
+                if (ec)
+                {
+                    cfPS(cf_verbose, CF_NOP, "", pp, a, " -> No edit changes to file %s need saving", ec->filename);
+                }
+            }
+            else
+            {
+                SaveItemListAsFile(ec->file_start, ec->filename, a, pp, report_context);
             }
         }
-        else
+
+        if (a.haveeditxml)
         {
-            SaveItemListAsFile(ec->file_start, ec->filename, a, pp);
+        // Fill me in
         }
+        
     }
     else
     {
@@ -120,7 +134,7 @@ void FinishEditContext(EditContext *ec, Attributes a, Promise *pp)
 /* Level                                                             */
 /*********************************************************************/
 
-int LoadFileAsItemList(Item **liststart, char *file, Attributes a, Promise *pp)
+int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, Promise *pp)
 {
     FILE *fp;
     struct stat statbuf;
@@ -195,7 +209,8 @@ int LoadFileAsItemList(Item **liststart, char *file, Attributes a, Promise *pp)
 
 /*********************************************************************/
 
-int SaveItemListAsFile(Item *liststart, char *file, Attributes a, Promise *pp)
+int SaveItemListAsFile(Item *liststart, const char *file, Attributes a, Promise *pp,
+                       const ReportContext *report_context)
 {
     Item *ip;
     struct stat statbuf;
@@ -274,7 +289,7 @@ int SaveItemListAsFile(Item *liststart, char *file, Attributes a, Promise *pp)
 
     if (a.edits.backup != cfa_nobackup)
     {
-        if (ArchiveToRepository(backup, a, pp))
+        if (ArchiveToRepository(backup, a, pp, report_context))
         {
             unlink(backup);
         }

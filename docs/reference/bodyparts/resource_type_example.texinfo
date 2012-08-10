@@ -5,17 +5,39 @@
 bundle server access_rules()
 
 {
-vars:
-
-  "localvar" string => "literal string";
-
 access:
 
-  "This is a $(localvar) for remote access"
- 
-        handle  => "test_scalar",
-  resource_type => "literal",
-        admit   => { "127.0.0.1" };
+  "value of my test_scalar, can expand variables here - $(sys.host)"
+    handle => "test_scalar",
+    comment => "Grant access to contents of test_scalar VAR",
+    resource_type => "literal",
+    admit => { "127.0.0.1" };
+
+  "XYZ"
+    resource_type => "variable",
+    handle => "XYZ",
+    admit => { "127.0.0.1" };
+
+
+  # On the policy hub
+
+  "collect_calls"
+     resource_type => "query",
+           admit   => { "127.0.0.1" };
+
+  # On the isolated client in the field
+
+
+ "delta"
+    comment => "Grant access to cfengine hub to collect report deltas",
+    resource_type => "query",
+          admit   => { "127.0.0.1"  };
+  "full"
+          comment => "Grant access to cfengine hub to collect full report dump",
+    resource_type => "query",
+          admit   => { "127.0.0.1"  };
+
+
 }
 
 @end verbatim

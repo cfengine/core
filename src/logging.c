@@ -23,16 +23,13 @@
   included file COSL.txt.
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: logging.c                                                           */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
-#include "cf3.extern.h"
 
+#include "env_context.h"
 #include "dbm_api.h"
+#include "files_names.h"
+
+#define CF_VALUE_LOG      "cf_value.log"
 
 static void ExtractOperationLock(char *op);
 
@@ -132,7 +129,7 @@ void EndAudit()
     {
         snprintf(string, CF_BUFSIZE,
                  "Outcome of version %s (%s-%d): Promises observed to be kept %.0f%%, Promises repaired %.0f%%, Promises not repaired %.0f\%%",
-                 sp, THIS_AGENT, CFA_BACKGROUND, (double) PR_KEPT / total, (double) PR_REPAIRED / total,
+                 sp, CF_AGENTTYPES[THIS_AGENT_TYPE], CFA_BACKGROUND, (double) PR_KEPT / total, (double) PR_REPAIRED / total,
                  (double) PR_NOTKEPT / total);
 
         CfOut(cf_verbose, "", "%s", string);
@@ -174,7 +171,7 @@ static bool IsPromiseValuableForLogging(const Promise *pp)
 
 /*****************************************************************************/
 
-void ClassAuditLog(Promise *pp, Attributes attr, char *str, char status, char *reason)
+void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, char *reason)
 {
     time_t now = time(NULL);
     char date[CF_BUFSIZE], lock[CF_BUFSIZE], key[CF_BUFSIZE], operator[CF_BUFSIZE];
@@ -328,6 +325,7 @@ void ClassAuditLog(Promise *pp, Attributes attr, char *str, char status, char *r
 
     if (AUDITDBP == NULL || THIS_AGENT_TYPE != cf_agent)
     {
+        CloseDB(AUDITDBP);
         return;
     }
 
@@ -351,7 +349,9 @@ void ClassAuditLog(Promise *pp, Attributes attr, char *str, char status, char *r
 
     if (DEBUG)
     {
-        AuditStatusMessage(stdout, status);
+        Writer *writer = FileWriter(stdout);
+        AuditStatusMessage(writer, status);
+        FileWriterDetach(writer);
     }
 
     if (ap != NULL)
@@ -513,44 +513,44 @@ void FatalError(char *s, ...)
 
 /*****************************************************************************/
 
-void AuditStatusMessage(FILE *fp, char status)
+void AuditStatusMessage(Writer *writer, char status)
 {
     switch (status)             /* Reminder */
     {
     case CF_CHG:
-        fprintf(fp, "made a system correction");
+        WriterWriteF(writer, "made a system correction");
         break;
 
     case CF_WARN:
-        fprintf(fp, "promise not kept, no action taken");
+        WriterWriteF(writer, "promise not kept, no action taken");
         break;
 
     case CF_TIMEX:
-        fprintf(fp, "timed out");
+        WriterWriteF(writer, "timed out");
         break;
 
     case CF_FAIL:
-        fprintf(fp, "failed to make a correction");
+        WriterWriteF(writer, "failed to make a correction");
         break;
 
     case CF_DENIED:
-        fprintf(fp, "was denied access to an essential resource");
+        WriterWriteF(writer, "was denied access to an essential resource");
         break;
 
     case CF_INTERPT:
-        fprintf(fp, "was interrupted\n");
+        WriterWriteF(writer, "was interrupted\n");
         break;
 
     case CF_NOP:
-        fprintf(fp, "was applied but performed no required actions");
+        WriterWriteF(writer, "was applied but performed no required actions");
         break;
 
     case CF_UNKNOWN:
-        fprintf(fp, "was applied but status unknown");
+        WriterWriteF(writer, "was applied but status unknown");
         break;
 
     case CF_REPORT:
-        fprintf(fp, "report");
+        WriterWriteF(writer, "report");
         break;
     }
 

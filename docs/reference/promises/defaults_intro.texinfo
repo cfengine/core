@@ -1,0 +1,4 @@
+
+Defaults promises are related to variables. If a variable or paramter
+in a promise bundle is undefined, or its value is defined to be invalid,
+a default value can be promised instead.

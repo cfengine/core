@@ -139,9 +139,9 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig config, const ReportC
 
     if (report_context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE])
     {
-        WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE], "bundle knowledge CfengineEnterpriseFundamentals\n{\n");
+        WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE], "bundle knowledge CFEngine_nomenclature\n{\n");
         ShowTopicRepresentation(report_context);
-        WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE], "}\n\nbundle knowledge CfengineSiteConfiguration\n{\n");
+        WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE], "}\n\nbundle knowledge policy_analysis\n{\n");
     }       
     
     NewScope("const");

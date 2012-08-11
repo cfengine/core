@@ -1723,6 +1723,7 @@ struct Topic_
     int id;
     char *topic_context;
     char *topic_name;
+    char *bundle;
     double evc;
     TopicAssociation *associations;
     Topic *next;
@@ -1744,6 +1745,7 @@ struct Occurrence_
 {
     char *occurrence_context;
     char *locator;                 /* Promiser */
+    char *bundle;
     enum representations rep_type;
     Rlist *represents;
     Rlist *about_topics;    

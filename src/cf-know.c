@@ -1323,6 +1323,7 @@ static void AddOccurrence(Occurrence **list, char *reference, Rlist *represents,
 
         op->occurrence_context = xstrdup(ToLowerStr(context));
         op->locator = xstrdup(reference);
+        op->bundle = xstrdup(bundle);
         op->rep_type = rtype;
         op->next = *list;
         *list = op;

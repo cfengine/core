@@ -23,7 +23,7 @@
 @titlepage
 @title CFEngine 3 Enterprise 2.2 Owner's Manual
 @subtitle CFEngine Enterprise Documentation
-@subtitle Updated 6. August 2012 @c also update in ifnottex section below
+@subtitle Updated 9. August 2012 @c also update in ifnottex section below
 @author CFEngine
 @c @smallbook
 @fonttextsize 10
@@ -45,7 +45,7 @@ to the extent of applicable law.
 @end direntry
 @end ifinfo
 @ifnottex
-Updated 6. August 2012
+Updated 9. August 2012
 @node Top, Introduction, (dir), (dir)
 @top CFEngine 3 Enterprise 2.2 Owner's Manual
 @end ifnottex
@@ -161,15 +161,14 @@ Operating system choices for the hub are:
  Debian 6
  Ubuntu 8.04, 10.04, 12.04
  RHEL/CentOS 5, 6
- SLES 11
 @end example
 
 @noindent Operating system choices for the clients are:
 @example
 AIX 5.3, 6.1, CentOS 5, 6, Debian 5, 6, Fedora 14, 15, 16, FreeBSD 7, 8, 
-HP-UX, NetBSD 4.0, 5.0, NetBSD 5.1, openSUSE 10.2, 10.3, 11.1, 11.2, 11.3,
+HP-UX, NetBSD 4.0, 5.0, 5.1, openSUSE 10.2, 10.3, 11.1, 11.2, 11.3,
 11.4, RHEL 4, 5, 6, SLES 9, 10, 11, SUSE Linux 9.1, 9.2, 9.3, 10.0, 10.1, 
-Solaris 8, 9, 10, Solaris 10, Ubuntu 8.04, 8.10, 9.04, 9.10, 10.04, 10.10, 
+Solaris 8, 9, 10, Ubuntu 8.04, 8.10, 9.04, 9.10, 10.04, 10.10, 
 11.04, 11.10, 12.04, Windows XP, Vista, 7, Server 2003, Server 2008
 @end example
 
@@ -385,7 +384,7 @@ Four steps need to be followed to correct this minor issue.
 @node  Upgrading to CFEngine 3 Enterprise, Mission Portal, Installing CFEngine 3 Enterprise, Top
 @chapter Upgrading to CFEngine 3 Enterprise
 
-When upgrading the software from an earlier version, you should
+Please follow the following instructions to the point to ensure a smooth upgrade. When upgrading the software from an earlier version, you should
 upgrade the hub (policy server) machine first. Any other hosts
 in your network that act as servers for encrypted copy operations
 would preferably be upgraded next. This is because a stronger form of
@@ -405,15 +404,17 @@ in the standard way.
 
 @c ------------------------------------------------------
 @menu
-* Upgrade procedure::           
+* Upgrade procedure for the hub (and policy)::           
+* Upgrade procedure for the clients::           
+* Upgrade procedure for the standard library::
 * How can I do phased deployment?::  
 * What if I have multiple operating system platforms?::  
 * How do CFEngine 3 Enterprise policies update if I already have my own policy?::  
 * How do I upgrade from CFEngine Community 3 to CFEngine 3 Enterprise?::
 @end menu
 
-@node Upgrade procedure, How can I do phased deployment?, Upgrading to CFEngine 3 Enterprise, Upgrading to CFEngine 3 Enterprise
-@section Upgrade procedure
+@node Upgrade procedure for the hub (and policy), Upgrade procedure for the clients, Upgrading to CFEngine 3 Enterprise, Upgrading to CFEngine 3 Enterprise
+@section Upgrade procedure for the hub (and policy)
 
 The following is a general procedure to upgrade to CFEngine 3 Enterprise from earlier versions, please follow each step unless otherwise indicated. It is assumed that the packages are placed in the @file{/tmp} directory. To upgrade, start with the hub (policy server):
 
@@ -437,14 +438,14 @@ or
    expansion_2.2.x-y_x86_64.deb
 @end verbatim
 
-@item CFEngine 3 Enterprise's dependencies have changed so we have to correct cf-twin (libgnutls and libmongo.c were updated)
-@verbatim
-   $ cp /var/cfengine/bin/cf-agent /var/cfengine/bin/cf-twin
-@end verbatim
-
 @item Remove Mongodb lock if present
 @verbatim
    $ rm -f /var/cfengine/state/mongod.lock
+@end verbatim
+
+@item If you upgrade from CFEngine Enterprise 2.2.0 or 2.2.1, skip this step and go directly to step 7. For all other versions, CFEngine 3 Enterprise's dependencies have changed so we have to correct cf-twin (libgnutls and libmongo.c were updated)
+@verbatim
+   $ cp /var/cfengine/bin/cf-agent /var/cfengine/bin/cf-twin
 @end verbatim
 
 @item Copy the new CFE_ prefixed policy files to $(sys.workdir)/masterfiles (the files with a prefix "CFE_" are maintained by CFEngine, do not make changes to these, they are there to ensure that the Mission Portal works properly).
@@ -452,11 +453,10 @@ or
    $ cd /var/cfengine/share/NovaBase
    $ cp CFE_cfengine.cf CFE_knowledge.cf CFE_hub_specific.cf 
    /var/cfengine/masterfiles
-
-[optional: do this when all hosts run Nova 2.2.x]
-   $ cp /var/cfengine/share/NovaBase/cfengine_stdlib.cf /var/cfengine/masterfiles
 @end verbatim
-Comments:
+
+@page
+Comments (for your information, no need to verify anything):
 @itemize *
 @item CFE_cfengine.cf
     - contains 
@@ -470,10 +470,10 @@ Comments:
     - all necessary bundles to build the CFEngine 3 Enterprise HUB (policy server) is in this file
 @item cfengine_stdlib.cf
     - the latest standard CFEngine bodies and bundles
-@item If you are using an @file{update.cf} file older than from the Nova 2.0.2 release: package_method has been updated, the Nova/Enterprise self-upgrade will not work properly on some systems. We strongly recommended to synchronise contents of the file before rolling out new packages to clients. (Please contact your sales representative or file a ticket in the CFEngine support system to help you out.)
+@item If you are using CFEngine 3 Nova 2.0.1 or older: package_method has been updated, the Nova/Enterprise self-upgrade will not work properly on some systems. We strongly recommended to synchronise contents of the file before rolling out new packages to clients. (Please contact your sales representative or file a ticket in the CFEngine support system to help you out.)
 @end itemize
 
-@item Upgrade from Nova 2.0.x (skip this step if you run Nova 2.1.x): Modify contents in @file{/var/cfengine/masterfiles/promises.cf}
+@item Upgrade from Nova 2.0.x (skip this step if you run 2.1.x or higher): Modify contents in @file{/var/cfengine/masterfiles/promises.cf}
 @itemize *
 @item Correct input files in 
 @verbatim
@@ -520,21 +520,80 @@ Comments:
 @end verbatim
 @end itemize
 
-@item Modify two lines in @file{/var/cfengine/masterfiles/update.cf} to contain the following:
-@itemize *
-@item Change the package version number in line 131 (approximate location, please verify that you change the corresponding content) to ensure automatic updates of the CFEngine packages for the clients:
+@item If you upgrade from CFEngine Enterprise 2.2.0 or 2.2.1 (skip this step for other versions), modify line 131 in @file{/var/cfengine/masterfiles/update.cf} (approximate location, please verify that you change the corresponding content) to ensure automatic updates of the CFEngine packages for the clients. The packages promises changed behavior in the new version and the following modification will make sure that the newest packages up to version 9.9.9 are installed. The original line looks like this:
+@verbatim
+   package_version => "1.0.0",         # Install new Nova anyway
+@end verbatim
+@noindent The modified line looks like this (i.e. changed the version number):
 @verbatim
    package_version => "9.9.9",         # Install new Nova anyway
 @end verbatim
-@item Replace line 298 (approximate location, please verify that you change the corresponding content) to run mongod without journaling (the below line has been split and indented for presentability):
+
+@item If you run any Windows machines under CFEngine management (CFEngine Enterprise 2.2.x or CFEngine Nova 2.1.x), replace the packages promises in @file{/var/cfengine/masterfiles/update.cf}. The original version looks like this:
+@verbatim
+ packages:
+  # update packages after all Cfengine have been killed
+
+  stopped_cfprocs::
+   "$(novapkg)"
+                  comment => "Update Nova package to a newer version",
+                   handle => "update_bins_packages_nova_update_all",
+           package_policy => "update",
+           package_select => ">=", # picks the newest Nova available
+    package_architectures => { "$(pkgarch)" },
+          package_version => "1.0.0", # at least Nova version 1.0.0
+           package_method => u_generic( "$(local_software_dir)" ),
+               ifvarclass => "nova_edition",
+                  classes => u_if_else("bin_update_success", "bin_update_fail");
+
+@end verbatim
+
+The modified version looks like this (modified package_version number and added separate section for windows):
+@verbatim
+packages:
+  # update packages after all CFEngine have been killed
+
+  stopped_cfprocs.!windows::
+   "$(novapkg)" 
+                  comment => "Update Nova package to a newer version",
+                   handle => "update_bins_packages_nova_update_all",
+           package_policy => "update",
+           package_select => ">=",           # picks the newest Nova available
+    package_architectures => { "$(pkgarch)" },
+          package_version => "9.9.9",        # Install new Nova anyway
+           package_method => u_generic( "$(local_software_dir)" ),
+               ifvarclass => "nova_edition",
+                  classes => u_if_else("bin_update_success", "bin_update_fail");
+
+  stopped_cfprocs.windows::
+   "$(novapkg)" 
+                  comment => "Update Nova package to a newer version",
+                   handle => "update_bins_packages_nova_update_all",
+           package_policy => "update",
+           package_select => ">=",           # picks the newest Nova available
+    package_architectures => { "$(pkgarch)" },
+          package_version => "9.9.9.9",      # Install new Nova anyway
+           package_method => u_generic( "$(local_software_dir)" ),
+               ifvarclass => "nova_edition",
+                  classes => u_if_else("bin_update_success", "bin_update_fail");
+
+@end verbatim
+
+@item If you upgrade from CFEngine Nova 2.1.x or earlier, modify line 298 in@* @file{/var/cfengine/masterfiles/update.cf} (approximate location, please verify that you change the corresponding content) to run mongod without journaling. The original line looks like this (line has been split and indented for presentability):
+@verbatim
+   "/var/cfengine/bin/mongod --fork --logpath /var/log/mongod.log --dbpath
+      $(sys.workdir)/state --bind_ip 127.0.0.1 --nohttpinterface > /dev/null
+      < /dev/null 2>&1"
+@end verbatim
+
+The modified line looks like this (add @code{--nojournal --logappend}; line has been split and indented for presentability):
 @verbatim
    "/var/cfengine/bin/mongod --fork --logpath /var/log/mongod.log --dbpath
       $(sys.workdir)/state --bind_ip 127.0.0.1 --nohttpinterface --nojournal
       --logappend > /dev/null < /dev/null 2>&1"
 @end verbatim
-@end itemize
 
-@item Copy the modified update.cf to the inputs directory:
+@noindent As a final part of step 9, copy the modified update.cf to the inputs directory:
 @verbatim
    $ cp /var/cfengine/masterfiles/update.cf /var/cfengine/inputs/update.cf
 @end verbatim
@@ -563,16 +622,37 @@ or
 @item You will need to re-initialize the MongoDB if you have trouble logging in after upgrade, see @xref{First time login to Mission Portal fails}.
 @end enumerate
 
-@sp 1
+
+@c -----------------------------------------------------
+@node Upgrade procedure for the clients, Upgrade procedure for the standard library, Upgrade procedure for the hub (and policy), Upgrading to CFEngine 3 Enterprise
+@section Upgrade procedure for the clients
+
 @noindent For client upgrades there are 2 approaches: manual or automatic upgrade.
 @enumerate
-@item Manual: Update cfengine-nova on each client by @code{rpm} or @code{dpkg} command. Update cf-twin as described in step 3 in the update procedure for the hub (i.e. overwrite the old cf-twin).
+@item Manual: Update cfengine-nova on each client by @code{rpm}, @code{dpkg} or corresponding Windows command. For Linux/UNIX systems, update cf-twin as described in step 4 in the upgrade procedure for the hub (i.e. overwrite the old cf-twin). For Windows systems copy/overwrite the content of 
+@verbatim
+   C:\Program Files\Cfengine\bin
+@end verbatim
+@noindent to 
+@verbatim
+   C:\Program Files\Cfengine\bin-twin
+@end verbatim
 @item Automatic: On the hub, copy the cfengine-nova packages to the operating system specific distribution directories in @file{/var/cfengine/master_software_updates} (i.e. put the files in the respective operating specific subdirectories) and CFEngine 3 Enterprise will take care of the rest.
 @end enumerate
 
 
 @c -----------------------------------------------------
-@node How can I do phased deployment?, What if I have multiple operating system platforms?, Upgrade procedure, Upgrading to CFEngine 3 Enterprise
+@node Upgrade procedure for the standard library, How can I do phased deployment?, Upgrade procedure for the clients, Upgrading to CFEngine 3 Enterprise
+@section Upgrade procedure for the standard library
+
+When all clients have been upgraded to CFEngine 3 Enterprise 2.2.x, i.e. you have completed both hub and client upgrades as described above, copy the most recent standard library to @file{/var/cfengine/masterfiles} on the hub (note that the new library version is incompatible with versions of CFEngine 3 Enterprise older than 2.2.0):
+@verbatim
+   $ cp /var/cfengine/share/NovaBase/cfengine_stdlib.cf /var/cfengine/masterfiles
+@end verbatim
+
+
+@c -----------------------------------------------------
+@node How can I do phased deployment?, What if I have multiple operating system platforms?, Upgrade procedure for the standard library, Upgrading to CFEngine 3 Enterprise
 @section How can I do phased deployment?
 
 Using CFEngine classes to select a subset of machines, you can deploy of updates on a small
@@ -4377,7 +4457,6 @@ To enable external authentication on a fresh install, log on to the Mission Port
 @menu
 * Configure LDAP::              
 * Configure Active Directory::  
-* Directory structure::         
 @end menu
 
 @node Configure LDAP, Configure Active Directory, Configuration of external authentication, Configuration of external authentication
@@ -4409,7 +4488,7 @@ If you wish to use RBAC in combination with LDAP, we recommend that you wait to 
 
 
 @c ----------------------------------------------------------
-@node Configure Active Directory, Directory structure, Configure LDAP, Configuration of external authentication
+@node Configure Active Directory, , Configure LDAP, Configuration of external authentication
 @section Configure Active Directory
 
 Select the Active Directory button and enter the appropriate configuration settings for you system.
@@ -4435,15 +4514,6 @@ Select the Active Directory button and enter the appropriate configuration setti
 Always check that the entered configuration is correct by clicking the "Test it" button before submitting changes. Enter a valid user name and password in the popup to test LDAP bind. Submitting an incorrect configuration will put LDAP down and lock out all users, CFEngine 3 Enterprise therefore comes with a fallback solution. Select a fallback administrator group in the database from the dropbox, CFEngine 3 Enterprise will look for users in this group when an incorrect configuration has been passed. A member of this group will then be able to log on to the Mission Portal using his internal database user name and password and restart the external authentication configuration.
 
 If you wish to use RBAC in combination with LDAP, we recommend that you wait to turn on RBAC until you log on with the LDAP user that has been designated a Mission Portal admin (i.e do not turn RBAC on while logged on with an internal database user in this case).
-
-
-@c ----------------------------------------------------------
-@node Directory structure, , Configure Active Directory, Configuration of external authentication
-@section Directory structure
-
-The Mission Portal imposes some limitations on directory structure for the use of external authentication. All users have to be stored in a direct child directory of the root (base dn). You may use subdirectories if you need to organize users into categories, but do not put more than one user directory directly under the root (base dn) as the user search will only cover the first encountered directory.
-
-The same counts for group directories.
 
 
 @c =========================================================================

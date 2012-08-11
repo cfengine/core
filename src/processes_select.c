@@ -395,6 +395,11 @@ static int SplitProcLine(char *proc, char **names, int *start, int *end, char **
                 {
                     e--;
                 }
+
+                if(e == 0)
+                {
+                    break;
+                }
             }
         }
 

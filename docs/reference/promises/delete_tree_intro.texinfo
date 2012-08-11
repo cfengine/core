@@ -1,0 +1,9 @@
+
+@i{History}: Was introduced in 3.4.0b1.df1d3bcd9402a4bbac8dacbbfefdcef1e4dea4b3, Nova 2.3.0.a1.a7264de65beca779c213af4c7179b5ee41a18413 (2012)
+
+
+@verbatim
+
+Fill me in (.//promises/delete_tree_intro.texinfo)
+""
+@end verbatim

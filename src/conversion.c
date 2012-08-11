@@ -1117,7 +1117,7 @@ enum cf_acl_inherit Str2AclInherit(char *string)
 
 enum cf_srv_policy Str2ServicePolicy(char *string)
 {
-    static char *text[4] = { "start", "stop", "disable", NULL };
+    static char *text[5] = { "start", "stop", "disable", "restart", NULL };
     int i;
 
     for (i = 0; i < 3; i++)

@@ -8,9 +8,9 @@ cd $srcdir
 
 if [ -z "$NO_SUBPROJECTS" ]; then
   #
-  # Include nova/constellation
+  # Include nova
   #
-  for s in nova constellation; do
+  for s in nova; do
     if [ -d ${srcdir}/../${s} ]; then
       if [ -h ${srcdir}/${s} ]; then
         rm -f ${srcdir}/${s}
@@ -22,7 +22,7 @@ else
   #
   # Clean up just in case
   #
-  rm -f ${srcdir}/nova ${srcdir}/constellation
+  rm -f ${srcdir}/nova
 fi
 
 autoreconf -Wno-portability --force --install -I m4 || exit 1

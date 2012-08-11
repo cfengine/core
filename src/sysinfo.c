@@ -373,10 +373,6 @@ void GetNameInfo3()
 /* FIXME: type conversion */
     NewScalar("sys", "nova_version", (char *) Nova_Version(), cf_str);
 #endif
-#ifdef HAVE_CONSTELLATION
-/* FIXME: type conversion */
-    NewScalar("sys", "constellation_version", (char *) Constellation_Version(), cf_str);
-#endif
 
     if (PUBKEY)
     {
@@ -701,12 +697,7 @@ void BuiltinClasses(void)
     snprintf(vbuff, CF_BUFSIZE, "cfengine_%s", CanonifyName(Version()));
     CreateClassesFromCanonification(vbuff);
 
-#ifdef HAVE_CONSTELLATION
-
-    snprintf(vbuff, sizeof(vbuff), "constellation_%s", CanonifyName(Constellation_Version()));
-    CreateClassesFromCanonification(vbuff);
-
-#elif defined HAVE_NOVA
+#if defined HAVE_NOVA
 
     snprintf(vbuff, sizeof(vbuff), "nova_%s", CanonifyName(Nova_Version()));
     CreateClassesFromCanonification(vbuff);

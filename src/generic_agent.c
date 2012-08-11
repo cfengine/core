@@ -137,11 +137,6 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig config, const ReportC
         CfOut(cf_verbose, "", " -> This is CFE Nova\n");
     }
 
-    if (AM_CONSTELLATION)
-    {
-        CfOut(cf_verbose, "", " -> This is CFE Constellation\n");
-    }
-
     if (report_context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE])
     {
         WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE], "bundle knowledge CfengineEnterpriseFundamentals\n{\n");
@@ -493,9 +488,7 @@ void InitializeGA(const ReportContext *report_context)
 
     NewClass("any");
 
-#if defined HAVE_CONSTELLATION
-    NewClass("constellation_edition");
-#elif defined HAVE_NOVA
+#if defined HAVE_NOVA
     NewClass("nova_edition");
     NewClass("enterprise_edition");
 #else
@@ -1840,9 +1833,6 @@ void PrintVersionBanner(const char *component)
         NameVersion(),
 #ifdef HAVE_NOVA
         Nova_NameVersion(),
-#endif
-#ifdef HAVE_CONSTELLATION
-        Constellation_NameVersion(),
 #endif
         NULL
     };

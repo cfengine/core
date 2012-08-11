@@ -65,6 +65,7 @@ libpromises_la_SOURCES = \
         files_copy.c \
         files_edit.c \
         files_editline.c \
+        files_editxml.c \
         files_hashes.c \
         files_interfaces.c \
         files_lib.c files_lib.h \

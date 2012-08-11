@@ -52,14 +52,14 @@ static void ShowWords(void);
 static void GenerateXml(void);
 static char *NormalizeTopic(char *s);
 static void AddInference(Inference **list, char *result, char *pre, char *qual);
-static Topic *IdempInsertTopic(char *classified_name);
-static Topic *InsertTopic(char *name, char *context);
-static Topic *AddTopic(Topic **list, char *name, char *type);
+static Topic *IdempInsertTopic(char *bundle, char *classified_name);
+static Topic *InsertTopic(char *bundle, char *name, char *context);
+static Topic *AddTopic(Topic **list, char *bundle ,char *name, char *type);
 static void AddTopicAssociation(Topic *tp, TopicAssociation **list, char *fwd_name, char *bwd_name, Rlist *li, int ok,
                                 char *from_context, char *from_topic);
 static void AddOccurrence(Occurrence **list, char *reference, Rlist *represents, enum representations rtype,
-                          Rlist *add_topics, char *context);
-static Topic *TopicExists(char *topic_name, char *topic_type);
+                          Rlist *add_topics, char *context, char *bundle);
+static Topic *TopicExists(char *bundle, char *topic_name, char *topic_type);
 static TopicAssociation *AssociationExists(TopicAssociation *list, char *fwd, char *bwd);
 static Occurrence *OccurrenceExists(Occurrence *list, char *locator, enum representations repy_type, char *s);
 static void KeepPromiseBundles(Policy *policy, const ReportContext *report_context);
@@ -212,7 +212,7 @@ int main(int argc, char *argv[])
        {
           char buffer[CF_BUFSIZE];
           
-                Constellation_HostStory(policy, STORY, buffer, CF_BUFSIZE);
+                Nova_HostStory(policy, STORY, buffer, CF_BUFSIZE);
                 printf("%s\n", buffer);
 
        }
@@ -221,11 +221,11 @@ int main(int argc, char *argv[])
           strcpy(TOPIC_CMD, STORY);
           
           printf("Let's start with stories about cause-effect:\n\n");
-          Constellation_GenerateStoriesCmdLine(TOPIC_CMD, cfi_cause);
+          Nova_GenerateStoriesCmdLine(TOPIC_CMD, cfi_cause);
           printf("Now looking for stories about connections between things:\n\n");
-          Constellation_GenerateStoriesCmdLine(TOPIC_CMD, cfi_connect);
+          Nova_GenerateStoriesCmdLine(TOPIC_CMD, cfi_connect);
           printf("Anything about structure:\n\n");
-          Constellation_GenerateStoriesCmdLine(TOPIC_CMD, cfi_part);
+          Nova_GenerateStoriesCmdLine(TOPIC_CMD, cfi_part);
        }
 
        exit(0);
@@ -809,7 +809,7 @@ static void VerifyThingsPromise(Promise *pp)
 
     for (rp = contexts; rp != NULL; rp = rp->next)
     {
-        if ((tp = InsertTopic(pp->promiser, rp->item)) == NULL)
+        if ((tp = InsertTopic(pp->bundle, pp->promiser, rp->item)) == NULL)
         {
             return;
         }
@@ -832,7 +832,7 @@ static void VerifyThingsPromise(Promise *pp)
             char synonym[CF_BUFSIZE];
 
             snprintf(synonym, CF_BUFSIZE - 1, "handles::%s", handle);
-            otp = IdempInsertTopic(synonym);
+            otp = IdempInsertTopic(pp->bundle, synonym);
             PrependRScalar(&(a.synonyms), otp->topic_name, CF_SCALAR);
         }
 
@@ -842,7 +842,7 @@ static void VerifyThingsPromise(Promise *pp)
         {
             for (rps = a.synonyms; rps != NULL; rps = rps->next)
             {
-                otp = IdempInsertTopic(rps->item);
+                otp = IdempInsertTopic(pp->bundle, rps->item);
                 CfOut(cf_verbose, "", " ---> %s is a synonym for %s", ScalarValue(rps), tp->topic_name);
             }
 
@@ -856,7 +856,7 @@ static void VerifyThingsPromise(Promise *pp)
         {
             for (rps = a.general; rps != NULL; rps = rps->next)
             {
-                otp = IdempInsertTopic(rps->item);
+                otp = IdempInsertTopic(pp->bundle, rps->item);
                 CfOut(cf_verbose, "", " ---> %s is a generalization for %s", ScalarValue(rps), tp->topic_name);
             }
 
@@ -882,7 +882,14 @@ static void VerifyThingsPromise(Promise *pp)
             snprintf(id, CF_MAXVARSIZE-1, "promisers::%s", pp->promiser);
             PrependRScalar(&list, "Comment", CF_SCALAR);
             PrependRScalar(&topics, id, CF_SCALAR);
-            AddOccurrence(&OCCURRENCES, pp->ref, list, cfk_literal, topics, pp->classes);
+            
+            for (rps = a.synonyms; rps != NULL; rps = rps->next)
+            {
+                snprintf(id, CF_MAXVARSIZE-1, "promisers::%s", rps->item);
+                PrependRScalar(&topics, id, CF_SCALAR);
+            }
+
+            AddOccurrence(&OCCURRENCES, pp->ref, list, cfk_literal, topics, pp->classes, pp->bundle);
             DeleteRlist(list);
             DeleteRlist(topics);
         }
@@ -891,15 +898,15 @@ static void VerifyThingsPromise(Promise *pp)
         {
         Rlist *list = NULL, *topics = NULL;
 
-            PrependRScalar(&list, handle, CF_SCALAR);
-            AddTopicAssociation(tp, &(tp->associations), "is the promise of", "stands for", list, true, rp->item,
+            snprintf(id, CF_MAXVARSIZE, "handles::%s", handle);
+            PrependRScalar(&list, id, CF_SCALAR);
+            AddTopicAssociation(tp, &(tp->associations), "is a promise with handles", "is a handle for", list, true, rp->item,
                                 pp->promiser);
             DeleteRlist(list);
             list = NULL;
-            snprintf(id, CF_MAXVARSIZE, "handles::%s", handle);
             PrependRScalar(&list, "promise handle", CF_SCALAR);
             PrependRScalar(&topics, id, CF_SCALAR);
-            AddOccurrence(&OCCURRENCES, pp->ref, list, cfk_literal,  topics, pp->classes);
+            AddOccurrence(&OCCURRENCES, pp->ref, list, cfk_literal,  topics, pp->classes, pp->bundle);
             DeleteRlist(list);
             DeleteRlist(topics);
         }
@@ -928,7 +935,7 @@ static void VerifyTopicPromise(Promise *pp)
 
     for (rp = contexts; rp != NULL; rp = rp->next)
     {
-        if ((tp = InsertTopic(pp->promiser, rp->item)) == NULL)
+        if ((tp = InsertTopic(pp->bundle, pp->promiser, rp->item)) == NULL)
         {
             return;
         }
@@ -947,7 +954,7 @@ static void VerifyTopicPromise(Promise *pp)
         {
             for (rps = a.synonyms; rps != NULL; rps = rps->next)
             {
-                otp = IdempInsertTopic(rps->item);
+                otp = IdempInsertTopic(pp->bundle, rps->item);
                 CfOut(cf_verbose, "", " ---> %s is a synonym for %s", ScalarValue(rps), tp->topic_name);
             }
 
@@ -961,7 +968,7 @@ static void VerifyTopicPromise(Promise *pp)
         {
             for (rps = a.general; rps != NULL; rps = rps->next)
             {
-                otp = IdempInsertTopic(rps->item);
+                otp = IdempInsertTopic(pp->bundle, rps->item);
                 CfOut(cf_verbose, "", " ---> %s is a generalization for %s", ScalarValue(rps), tp->topic_name);
             }
 
@@ -974,7 +981,7 @@ static void VerifyTopicPromise(Promise *pp)
             char synonym[CF_BUFSIZE];
 
             snprintf(synonym, CF_BUFSIZE - 1, "handles::%s", handle);
-            otp = IdempInsertTopic(synonym);
+            otp = IdempInsertTopic(pp->bundle, synonym);
             PrependRScalar(&(a.synonyms), otp->topic_name, CF_SCALAR);
         }
 
@@ -996,7 +1003,14 @@ static void VerifyTopicPromise(Promise *pp)
             snprintf(id, CF_MAXVARSIZE-1, "promisers::%s", pp->promiser);
             PrependRScalar(&list, "Comment", CF_SCALAR);
             PrependRScalar(&topics, id, CF_SCALAR);
-            AddOccurrence(&OCCURRENCES, pp->ref, list, cfk_literal, topics, pp->classes);
+
+            for (rps = a.synonyms; rps != NULL; rps = rps->next)
+            {
+                snprintf(id, CF_MAXVARSIZE-1, "promisers::%s", rps->item);
+                PrependRScalar(&topics, id, CF_SCALAR);
+            }
+            
+            AddOccurrence(&OCCURRENCES, pp->ref, list, cfk_literal, topics, pp->classes, pp->bundle);
             DeleteRlist(list);
             DeleteRlist(topics);
         }
@@ -1005,15 +1019,15 @@ static void VerifyTopicPromise(Promise *pp)
         {
         Rlist *list = NULL, *topics = NULL;
 
-            PrependRScalar(&list, handle, CF_SCALAR);
-            AddTopicAssociation(tp, &(tp->associations), "is the promise of", "stands for", list, true, rp->item,
+            snprintf(id, CF_MAXVARSIZE, "handles::%s", handle);
+            PrependRScalar(&list, id, CF_SCALAR);
+            AddTopicAssociation(tp, &(tp->associations), "is a promise with handles", "is a handle for", list, true, rp->item,
                                 pp->promiser);
             DeleteRlist(list);
             list = NULL;
-            snprintf(id, CF_MAXVARSIZE, "handles::%s", handle);
             PrependRScalar(&list, "promise handle", CF_SCALAR);
             PrependRScalar(&topics, id, CF_SCALAR);
-            AddOccurrence(&OCCURRENCES, pp->ref, list, cfk_literal, topics, pp->classes);
+            AddOccurrence(&OCCURRENCES, pp->ref, list, cfk_literal, topics, pp->classes, pp->bundle);
             DeleteRlist(list);
             DeleteRlist(topics);
         }
@@ -1068,7 +1082,7 @@ static void VerifyOccurrencePromises(Promise *pp)
         {
         default:
 
-            AddOccurrence(&OCCURRENCES, pp->promiser, a.represents, rep_type, a.about_topics, rp->item);
+            AddOccurrence(&OCCURRENCES, pp->promiser, a.represents, rep_type, a.about_topics, rp->item, pp->bundle);
             break;
         }
     }
@@ -1121,7 +1135,7 @@ static void GenerateXml(void)
 
 /*****************************************************************************/
 
-static Topic *IdempInsertTopic(char *classified_name)
+static Topic *IdempInsertTopic(char *bundle, char *classified_name)
 {
     char context[CF_MAXVARSIZE], topic[CF_MAXVARSIZE];
 
@@ -1130,25 +1144,25 @@ static Topic *IdempInsertTopic(char *classified_name)
 
     DeClassifyTopic(classified_name, topic, context);
 
-    return InsertTopic(topic, context);
+    return InsertTopic(bundle, topic, context);
 }
 
 /*****************************************************************************/
 
-static Topic *InsertTopic(char *name, char *context)
+static Topic *InsertTopic(char *bundle, char *name, char *context)
 {
     int slot = GetHash(ToLowerStr(name));
 
-    return AddTopic(&(TOPICHASH[slot]), name, context);
+    return AddTopic(&(TOPICHASH[slot]), bundle, name, context);
 }
 
 /*****************************************************************************/
 
-static Topic *AddTopic(Topic **list, char *name, char *context)
+static Topic *AddTopic(Topic **list, char *bundle, char *name, char *context)
 {
     Topic *tp;
 
-    if ((tp = TopicExists(name, context)))
+    if ((tp = TopicExists(bundle, name, context)))
     {
         CfOut(cf_verbose, "", " -> Topic %s already defined, ok\n", name);
     }
@@ -1167,6 +1181,7 @@ static Topic *AddTopic(Topic **list, char *name, char *context)
             tp->topic_context = xstrdup("any");
         }
 
+        tp->bundle = xstrdup(bundle);
         tp->id = GLOBAL_ID++;
         tp->associations = NULL;
         tp->next = *list;
@@ -1238,7 +1253,7 @@ static void AddTopicAssociation(Topic *this_tp, TopicAssociation **list, char *f
         char normalform[CF_BUFSIZE] = { 0 };
 
         strncpy(normalform, NormalizeTopic(rp->item), CF_BUFSIZE - 1);
-        new_tp = IdempInsertTopic(normalform);
+        new_tp = IdempInsertTopic(this_tp->bundle, normalform);
 
         if (strcmp(contexttopic, normalform) == 0)
         {
@@ -1297,7 +1312,7 @@ static void AddTopicAssociation(Topic *this_tp, TopicAssociation **list, char *f
 /*****************************************************************************/
 
 static void AddOccurrence(Occurrence **list, char *reference, Rlist *represents, enum representations rtype,
-                          Rlist *about_topics, char *context)
+                          Rlist *about_topics, char *context, char *bundle)
 {
     Occurrence *op = NULL;
     Rlist *rp;
@@ -1330,7 +1345,7 @@ static void AddOccurrence(Occurrence **list, char *reference, Rlist *represents,
     for (rp = about_topics; rp != NULL; rp = rp->next)
     {
         IdempPrependRScalar(&(op->about_topics), ToLowerStr(rp->item), rp->type);
-        IdempInsertTopic(ToLowerStr(rp->item));
+        IdempInsertTopic(bundle, ToLowerStr(rp->item));
     }
 
 }
@@ -1354,7 +1369,7 @@ void AddInference(Inference **list, char *result, char *pre, char *qual)
 /* Level                                                                     */
 /*****************************************************************************/
 
-static Topic *TopicExists(char *topic_name, char *topic_context)
+static Topic *TopicExists(char *bundle, char *topic_name, char *topic_context)
 {
     Topic *tp;
     int slot;
@@ -1364,8 +1379,8 @@ static Topic *TopicExists(char *topic_name, char *topic_context)
     for (tp = TOPICHASH[slot]; tp != NULL; tp = tp->next)
     {
         if (strcmp(tp->topic_name, NormalizeTopic(topic_name)) == 0)
-        {
-            if (topic_context)
+        {        
+            if (topic_context && (strcmp(tp->bundle, bundle) == 0))
             {
                 if (strlen(topic_context) > 0 && strcmp(tp->topic_context, NormalizeTopic(topic_context)) == 0)
                 {

@@ -233,10 +233,6 @@ AM_CONDITIONAL(MONGO, false)
 
 m4_indir(incstart[]incend, [nova/options.m4])
 AM_CONDITIONAL([HAVE_NOVA], [test "x$with_nova" != xno && test -d ${srcdir}/nova])
-m4_indir(incstart[]incend, [constellation/options.m4])
-AM_CONDITIONAL([HAVE_CONSTELLATION], [test "x$with_constellation" != xno && test -d ${srcdir}/constellation])
-m4_indir(incstart[]incend, [galaxy/options.m4])
-AM_CONDITIONAL([HAVE_GALAXY], [test "x$with_galaxy" != xno && test -d ${srcdir}/galaxy])
 
 dnl
 dnl In-process databases
@@ -931,8 +927,6 @@ else
 fi
 
 m4_indir(incstart[]incend, [nova/config.m4])
-m4_indir(incstart[]incend, [constellation/config.m4])
-m4_indir(incstart[]incend, [galaxy/config.m4])
 
 AC_MSG_RESULT([-> Workdir: $WORKDIR])
 
@@ -962,8 +956,6 @@ AC_CONFIG_FILES([Makefile
 	tests/load/Makefile])
 
 m4_indir(incstart[]incend, [nova/output.m4])
-m4_indir(incstart[]incend, [constellation/output.m4])
-m4_indir(incstart[]incend, [galaxy/output.m4])
 
 AC_OUTPUT
 

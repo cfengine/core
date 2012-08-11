@@ -38,7 +38,6 @@ int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp)
 {
     int i;
     struct stat statbuf;
-    char vbuff[CF_BUFSIZE];
     const char *sp;
 
     static char *skipfiles[] =
@@ -101,9 +100,10 @@ int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp)
         }
     }
 
-    strcpy(vbuff, path);
-    AddSlash(vbuff);
-    strcat(vbuff, nodename);
+    char buf[CF_BUFSIZE];
+
+    snprintf(buf, sizeof(buf), "%s/%s", path, nodename);
+    MapName(buf);
 
     for (sp = nodename; *sp != '\0'; sp++)      /* Check for files like ".. ." */
     {
@@ -113,9 +113,9 @@ int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp)
         }
     }
 
-    if (cf_lstat(vbuff, &statbuf, attr, pp) == -1)
+    if (cf_lstat(buf, &statbuf, attr, pp) == -1)
     {
-        CfOut(cf_verbose, "lstat", "Couldn't stat %s", vbuff);
+        CfOut(cf_verbose, "lstat", "Couldn't stat %s", buf);
         return true;
     }
 

@@ -287,9 +287,6 @@ static void TexinfoHeader(FILE *fout)
 #ifdef HAVE_NOVA
             "@subtitle %s\n"
 #endif
-#ifdef HAVE_CONSTELLATION
-            "@subtitle %s\n"
-#endif
             "@author cfengine.com\n"
             "@c @smallbook\n"
             "@fonttextsize 10\n"
@@ -339,9 +336,6 @@ static void TexinfoHeader(FILE *fout)
             "@end html\n" "@end ifhtml\n" "@iftex\n" "@contents\n" "@end iftex\n", NameVersion()
 #ifdef HAVE_NOVA
             , Nova_NameVersion()
-#endif
-#ifdef HAVE_CONSTELLATION
-            , Constellation_NameVersion()
 #endif
         );
 }
@@ -665,10 +659,7 @@ static bool GenerateStub(const char *filename)
         return false;
     }
 
-#ifdef HAVE_CONSTELLATION
-    fprintf(fp, "\n@i{History}: Was introduced in %s, Nova %s, Constellation %s (%d)\n\n",
-            Version(), Nova_Version(), Constellation_Version(), BUILD_YEAR);
-#elif HAVE_NOVA
+#ifdef HAVE_NOVA
     fprintf(fp, "\n@i{History}: Was introduced in %s, Nova %s (%d)\n\n", Version(), Nova_Version(), BUILD_YEAR);
 #else
     fprintf(fp, "\n@i{History}: Was introduced in %s (%d)\n\n", Version(), BUILD_YEAR);

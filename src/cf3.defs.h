@@ -86,9 +86,18 @@
 
 #define MAXIP4CHARLEN 16
 
+
+#define CF_EDIT_IFELAPSED 3     /* NOTE: If doing copy template then edit working copy,
+                                   the edit ifelapsed must not be higher than
+                                   the copy ifelapsed. This will make the working
+                                   copy equal to the copied template file - not the
+                                   copied + edited file. */
+
+
 /*******************************************************************/
 
 #define CF_FILECHANGE     "file_change.log"
+#define CF_FILECHANGE_NEW "file_changes.log"
 #define CF_PROMISE_LOG    "promise_summary.log"
 
 #define CF_ENV_FILE      "env_data"
@@ -856,7 +865,6 @@ enum cfrecontrol
 enum cfhcontrol
 {
     cfh_export_zenoss,
-    cfh_federation,
     cfh_exclude_hosts,
     cfh_schedule,
     cfh_port,
@@ -1527,6 +1535,16 @@ typedef enum
 
 /************************************************************************************/
 
+typedef enum
+{
+    cf_file_new,
+    cf_file_removed,
+    cf_file_content_changed,
+    cf_file_stats_changed
+}FileState;
+
+/************************************************************************************/
+
 enum cf_acl_method
 {
     cfacl_append,
@@ -1596,7 +1614,6 @@ enum cfd_menu
 {
     cfd_menu_delta,
     cfd_menu_full,
-    cfd_menu_relay,
     cfd_collect_call,
     cfd_menu_error
 };
@@ -1706,6 +1723,7 @@ struct Topic_
     int id;
     char *topic_context;
     char *topic_name;
+    char *bundle;
     double evc;
     TopicAssociation *associations;
     Topic *next;
@@ -1727,6 +1745,7 @@ struct Occurrence_
 {
     char *occurrence_context;
     char *locator;                 /* Promiser */
+    char *bundle;
     enum representations rep_type;
     Rlist *represents;
     Rlist *about_topics;    
@@ -2189,6 +2208,7 @@ enum cf_srv_policy
     cfsrv_start,
     cfsrv_stop,
     cfsrv_disable,
+    cfsrv_restart,
     cfsrv_nostatus
 };
 

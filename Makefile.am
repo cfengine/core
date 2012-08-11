@@ -4,11 +4,11 @@ MAKEFLAGS = $(if $(filter-out 0,$(V)),,--no-print-directory --quiet)
 
 LCOV_FLAGS = $(if $(filter-out 0,$(V)),,-q)
 
-SUBDIRS = pub $(NOVA_SUBDIR) $(CONSTELLATION_SUBDIR) src docs examples masterfiles tests $(ENTERPRISE_API_SUBDIR) $(CFMOD_SUBDIR) $(NOVA_DOC_SUBDIR)
+SUBDIRS = pub $(NOVA_SUBDIR) src docs examples masterfiles tests $(ENTERPRISE_API_SUBDIR) $(CFMOD_SUBDIR) $(NOVA_DOC_SUBDIR)
 
 DIST_SUBDIRS = pub src docs examples masterfiles tests
 
-# Set explicitly to avoid picking up {nova,constellation,galaxy}/*.m4
+# Set explicitly to avoid picking up {nova}/*.m4
 
 DIST_COMMON = README Makefile.am Makefile.in configure AUTHORS aclocal.m4 \
         ChangeLog INSTALL config.guess config.sub depcomp install-sh \

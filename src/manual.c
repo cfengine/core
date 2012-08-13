@@ -392,10 +392,10 @@ static void TexinfoPromiseTypesFor(FILE *fout, const SubTypeSyntax *st)
                     st[j].subtype);
             snprintf(filename, CF_BUFSIZE - 1, "promise_common_intro.texinfo");
         }
-        else if (strcmp("*", st[j].subtype) == 0 && strcmp("edit_line", st[j].bundle_type) == 0)
+        else if (strcmp("*", st[j].subtype) == 0 && (strcmp("edit_line", st[j].bundle_type) == 0 || strcmp("edit_xml", st[j].bundle_type) == 0))
         {
-            fprintf(fout, "\n\n@node Miscellaneous in edit_line promises\n@section Miscelleneous in @code{edit_line} promises\n\n");
-            snprintf(filename, CF_BUFSIZE - 1, "promises/edit_line_intro.texinfo");
+            fprintf(fout, "\n\n@node Miscellaneous in %s promises\n@section Miscelleneous in @code{%s} promises\n\n", st[j].bundle_type, st[j].bundle_type);
+            snprintf(filename, CF_BUFSIZE - 1, "promises/%s_intro.texinfo", st[j].bundle_type);
 
         }
         else

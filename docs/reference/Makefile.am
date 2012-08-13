@@ -11,9 +11,6 @@ cf3-Reference.texinfo: ../../src/cf-know \
     $(wildcard */*.texinfo)
 	chmod g-w generate_manual.cf
 	$(AM_V_GEN)../../src/cf-know -f ./generate_manual.cf
-	xemacs -batch $@ -f texinfo-every-node-update \
-			 -f texinfo-all-menus-update \
-			 -f save-buffer
 
 %.html: %.texinfo
 	$(AM_V_GEN)$(MAKEINFO) \

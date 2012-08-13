@@ -25,6 +25,6 @@
 #ifndef CFENGINE_MANUAL_H
 #define CFENGINE_MANUAL_H
 
-char *ReadTexinfoFileF(const char *fmt, ...);
+char *ReadTexinfoFileF(const char *source_dir, const char *fmt, ...);
 
 #endif

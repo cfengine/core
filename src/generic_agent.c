@@ -182,7 +182,7 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig config, const ReportC
 
     Policy *policy = NULL;
 
-    if (ag != cf_keygen)        // && ag != cf_know)
+    if (ag != cf_keygen && ag != cf_gendoc)
     {
         if (!MissingInputFile())
         {
@@ -1952,7 +1952,7 @@ static bool VerifyBundleSequence(const Policy *policy, enum cfagenttype agent, R
     int ok = true;
     FnCall *fp;
 
-    if ((THIS_AGENT_TYPE != cf_agent) && (THIS_AGENT_TYPE != cf_know) && (THIS_AGENT_TYPE != cf_common))
+    if ((THIS_AGENT_TYPE != cf_agent) && (THIS_AGENT_TYPE != cf_know) && (THIS_AGENT_TYPE != cf_common) && (THIS_AGENT_TYPE != cf_gendoc))
     {
         return true;
     }

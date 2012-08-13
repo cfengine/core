@@ -487,7 +487,7 @@ void AuditStatusMessage(Writer *writer, char status);
 
 /* manual.c */
 
-void TexinfoManual(char *mandir);
+void TexinfoManual(const char *source_dir, const char *output_file);
 
 /* matching.c */
 

@@ -167,7 +167,6 @@ sbin_PROGRAMS = \
         cf-agent \
         cf-execd \
         cf-key \
-        cf-know \
         cf-monitord \
         cf-promises \
         cf-report \
@@ -183,6 +182,10 @@ if MONGO
 endif
 endif
 
+if HAVE_NOVA
+  sbin_PROGRAMS += cf-know
+endif
+
 cf_agent_SOURCES = \
         cf-agent.c \
         verify_files.c \
@@ -195,6 +198,11 @@ cf_agent_SOURCES = \
         verify_services.c \
         verify_environments.c verify_environments.h \
         agentdiagnostic.c
+
+cf_gendoc_SOURCES = \
+	cf-gendoc.c \
+        manual.c manual.h \
+        export_xml.c export_xml.h
 
 cf_serverd_SOURCES = \
         cf-serverd.c \
@@ -232,22 +240,12 @@ cf_hub_LDADD = \
 endif
 endif
 
-cf_know_SOURCES = \
-        cf-know.c
-
-cf_know_LDADD = libpromises.la
-
 if HAVE_NOVA
-cf_know_LDADD += ../nova/src/libcfknow.la
+cf_know_SOURCES =
+
+cf_know_LDADD = \
+        ../nova/src/libcfknow.la libpromises.la
 endif
-
-
-cf_gendoc_LDADD = libpromises.la
-
-cf_gendoc_SOURCES = \
-	cf-gendoc.c \
-        manual.c manual.h \
-        export_xml.c export_xml.h
 
 CLEANFILES = *.gcno *.gcda
 

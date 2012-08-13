@@ -428,6 +428,19 @@ int ReturnLiteralData(char *handle, char *ret)
     return 0;
 }
 
+void TryCollectCall(void)
+{
+    CfOut(cf_verbose, "", " !! Collect calling is only supported in CFEngine Enterprise");
+}
+
+int ReceiveCollectCall(ServerConnectionState *conn, char *sendbuffer)
+{
+    CfOut(cf_verbose, "", "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+    CfOut(cf_verbose, "", "  Collect Call are only supported in the Enterprise ");
+    CfOut(cf_verbose, "", "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"); 
+    return false;
+}
+
 /* cf-know */
 
 void SyntaxCompletion(char *s)

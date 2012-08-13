@@ -19,7 +19,7 @@ typedef struct
    int logconns;
 } ServerAccess;
 
-typedef struct
+typedef struct ServerConnectionState
 {
     int id_verified;
     int rsa_auth;
@@ -54,10 +54,6 @@ typedef struct
 #ifdef HAVE_NOVA
 
 int Nova_ReturnQueryData(ServerConnectionState *conn, char *menu);
-
-#ifdef HAVE_LIBMONGOC
-int Nova_AcceptCollectCall(ServerConnectionState *conn);
-#endif
 
 #endif
 

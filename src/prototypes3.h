@@ -241,6 +241,11 @@ void SetSyslogHost(const char *host);
 void SetSyslogPort(uint16_t port);
 
 void SyntaxCompletion(char *s);
+void TryCollectCall(void);
+
+struct ServerConnectionState;
+
+int ReceiveCollectCall(struct ServerConnectionState *conn, char *sendbuffer);
 
 #include "env_monitor.h"
 

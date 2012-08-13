@@ -1,4 +1,4 @@
-AM_CFLAGS = $(GCC_CFLAG) $(NOVA_CFLAGS) $(CONSTELLATION_CFLAGS) @CFLAGS@
+AM_CFLAGS = $(GCC_CFLAG) $(NOVA_CFLAGS) @CFLAGS@
 AM_YFLAGS = -d
 LDADD = libpromises.la
 
@@ -14,7 +14,7 @@ LDADD = libpromises.la
 projlib_LTLIBRARIES = libpromises.la
 
 libpromises_la_LDFLAGS = -version-info 1:0:0 -no-undefined
-libpromises_la_LIBADD = ../pub/libcfpub.la $(NOVA_LDADD) $(CONSTELLATION_LDADD)
+libpromises_la_LIBADD = ../pub/libcfpub.la $(NOVA_LDADD)
 
 libpromises_la_CFLAGS = $(AM_CFLAGS)
 
@@ -161,7 +161,7 @@ endif
 BUILT_SOURCES = cf3parse.h
 
 # Automake need to be guided due to symlinking
-libpromises_la_DEPENDENCIES = ../pub/libcfpub.la $(NOVA_LDADD) $(CONSTELLATION_LDADD)
+libpromises_la_DEPENDENCIES = ../pub/libcfpub.la $(NOVA_LDADD)
 
 sbin_PROGRAMS = \
         cf-agent \

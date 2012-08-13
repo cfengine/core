@@ -61,11 +61,6 @@ int Nova_AcceptCollectCall(ServerConnectionState *conn);
 
 #endif
 
-#ifdef HAVE_CONSTELLATION
-int Constellation_ReturnRelayQueryData(ServerConnectionState *conn, char *query, char *sendbuffer);
-void Constellation_RunQueries(Item *queries, Item **results_p);
-#endif
-
 void KeepPromises(Policy *policy, const ReportContext *report_context);
 
 void ServerEntryPoint(int sd_reply, char *ipaddr, ServerAccess sv);

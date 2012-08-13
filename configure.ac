@@ -309,7 +309,9 @@ fi
 
 CF3_WITH_LIBRARY(pcre, [
   AC_CHECK_LIB(pcre, pcre_exec, [], [AC_MSG_ERROR(Cannot find PCRE)])
-  AC_CHECK_HEADERS([pcre.h pcre/pcre.h], [break], [AC_MSG_ERROR(Cannot find PCRE)])
+  AC_CHECK_HEADERS([pcre.h], [],
+    [AC_CHECK_HEADERS([pcre/pcre.h], [],
+                      AC_MSG_ERROR(Cannot find PCRE))])
 ])
 
 dnl libvirt

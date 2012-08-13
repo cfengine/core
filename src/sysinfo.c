@@ -56,7 +56,6 @@ static bool ReadLine(const char *filename, char *buf, int bufsize);
 static FILE *ReadFirstLine(const char *filename, char *buf, int bufsize);
 #endif
 
-static void CreateClassesFromCanonification(char *canonified);
 static void GetCPUInfo(void);
 
 static const char *CLASSATTRIBUTES[HARD_CLASSES_MAX][3] =
@@ -369,10 +368,6 @@ void GetNameInfo3()
     NewScalar("sys", "expires", EXPIRY, cf_str);
 /* FIXME: type conversion */
     NewScalar("sys", "cf_version", (char *) Version(), cf_str);
-#ifdef HAVE_NOVA
-/* FIXME: type conversion */
-    NewScalar("sys", "nova_version", (char *) Nova_Version(), cf_str);
-#endif
 
     if (PUBKEY)
     {
@@ -711,18 +706,12 @@ void BuiltinClasses(void)
     snprintf(vbuff, CF_BUFSIZE, "cfengine_%s", CanonifyName(Version()));
     CreateClassesFromCanonification(vbuff);
 
-#if defined HAVE_NOVA
-
-    snprintf(vbuff, sizeof(vbuff), "nova_%s", CanonifyName(Nova_Version()));
-    CreateClassesFromCanonification(vbuff);
-
-#endif
 
 }
 
 /*******************************************************************/
 
-static void CreateClassesFromCanonification(char *canonified)
+void CreateClassesFromCanonification(char *canonified)
 {
     char buf[CF_MAXVARSIZE];
 

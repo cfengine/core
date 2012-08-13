@@ -280,11 +280,11 @@ void XmlExportPromiseType(Writer *writer, const SubTypeSyntax *st)
         /* XML ELEMENT -- INTRO */
         if (strcmp("*", st[i].bundle_type) == 0)
         {
-            filebuffer = ReadTexinfoFileF("promise_common_intro.texinfo");
+            filebuffer = ReadTexinfoFileF(MANUAL_DIRECTORY, "promise_common_intro.texinfo");
         }
         else
         {
-            filebuffer = ReadTexinfoFileF("promises/%s_intro.texinfo", st[i].subtype);
+            filebuffer = ReadTexinfoFileF(MANUAL_DIRECTORY, "promises/%s_intro.texinfo", st[i].subtype);
         }
         XmlTag(writer, XMLTAG_INTRO, filebuffer, 0);
         free(filebuffer);
@@ -292,12 +292,12 @@ void XmlExportPromiseType(Writer *writer, const SubTypeSyntax *st)
         if (strcmp("*", st[i].bundle_type) != 0)
         {
             /* XML ELEMENT -- LONG DESCRIPTION */
-            filebuffer = ReadTexinfoFileF("promises/%s_notes.texinfo", st[i].subtype);
+            filebuffer = ReadTexinfoFileF(MANUAL_DIRECTORY, "promises/%s_notes.texinfo", st[i].subtype);
             XmlTag(writer, XMLTAG_LONGDESCRIPTION, filebuffer, 0);
             free(filebuffer);
 
             /* XML ELEMENT -- EXAMPLE */
-            filebuffer = ReadTexinfoFileF("promises/%s_example.texinfo", st[i].subtype);
+            filebuffer = ReadTexinfoFileF(MANUAL_DIRECTORY, "promises/%s_example.texinfo", st[i].subtype);
             XmlTag(writer, XMLTAG_EXAMPLE, filebuffer, 0);
             free(filebuffer);
         }
@@ -369,12 +369,12 @@ void XmlExportConstraint(Writer *writer, const BodySyntax *bs)
         XmlTag(writer, XMLTAG_DESCRIPTION, bs->description, 0);
 
         /* XML ELEMENT -- LONG-DESCRIPTION */
-        filebuffer = ReadTexinfoFileF("bodyparts/%s_notes.texinfo", bs->lval);
+        filebuffer = ReadTexinfoFileF(MANUAL_DIRECTORY, "bodyparts/%s_notes.texinfo", bs->lval);
         XmlTag(writer, XMLTAG_LONGDESCRIPTION, filebuffer, 0);
         free(filebuffer);
 
         /* XML ELEMENT -- EXAMPLE */
-        filebuffer = ReadTexinfoFileF("bodyparts/%s_example.texinfo", bs->lval);
+        filebuffer = ReadTexinfoFileF(MANUAL_DIRECTORY, "bodyparts/%s_example.texinfo", bs->lval);
         XmlTag(writer, XMLTAG_EXAMPLE, filebuffer, 0);
         free(filebuffer);
     }

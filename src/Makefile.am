@@ -174,6 +174,9 @@ sbin_PROGRAMS = \
         cf-runagent \
         cf-serverd
 
+noinst_PROGRAMS = \
+        cf-gendoc
+
 if HAVE_NOVA
 if MONGO
   sbin_PROGRAMS += cf-hub
@@ -230,15 +233,21 @@ endif
 endif
 
 cf_know_SOURCES = \
-        cf-know.c \
-        manual.c manual.h \
-        export_xml.c export_xml.h
+        cf-know.c
 
 cf_know_LDADD = libpromises.la
 
 if HAVE_NOVA
 cf_know_LDADD += ../nova/src/libcfknow.la
 endif
+
+
+cf_gendoc_LDADD = libpromises.la
+
+cf_gendoc_SOURCES = \
+	cf-gendoc.c \
+        manual.c manual.h \
+        export_xml.c export_xml.h
 
 CLEANFILES = *.gcno *.gcda
 

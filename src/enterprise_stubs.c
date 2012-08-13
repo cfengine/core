@@ -26,6 +26,7 @@
 
 #include "cf3.defs.h"
 
+#include "prototypes3.h"
 #include "syntax.h"
 
 #if !defined(HAVE_NOVA)
@@ -433,7 +434,7 @@ void TryCollectCall(void)
     CfOut(cf_verbose, "", " !! Collect calling is only supported in CFEngine Enterprise");
 }
 
-int ReceiveCollectCall(ServerConnectionState *conn, char *sendbuffer)
+int ReceiveCollectCall(struct ServerConnectionState *conn, char *sendbuffer)
 {
     CfOut(cf_verbose, "", "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
     CfOut(cf_verbose, "", "  Collect Call are only supported in the Enterprise ");

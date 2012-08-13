@@ -109,6 +109,17 @@ static void test_rval_to_fncall2(void **state)
     assert_false(FnCallRvalValue(rval));
 }
 
+static void test_last(void **state)
+{
+    Rlist *l = NULL;
+    assert_true(RlistLast(l) == NULL);
+    AppendRlist(&l, "a", CF_SCALAR);
+    assert_string_equal("a", ScalarValue(RlistLast(l)));
+    AppendRlist(&l, "b", CF_SCALAR);
+    assert_string_equal("b", ScalarValue(RlistLast(l)));
+    DeleteRlist(l);
+}
+
 int main()
 {
     const UnitTest tests[] =
@@ -123,6 +134,7 @@ int main()
         unit_test(test_rval_to_list2),
         unit_test(test_rval_to_fncall),
         unit_test(test_rval_to_fncall2),
+        unit_test(test_last),
     };
 
     return run_tests(tests);

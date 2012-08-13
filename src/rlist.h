@@ -96,5 +96,6 @@ void RvalPrint(Writer *writer, Rval rval);
 void RlistPrint(Writer *writer, const Rlist *list);
 
 Rlist *RlistAt(Rlist *start, size_t index);
+Rlist *RlistLast(Rlist *start);
 
 #endif

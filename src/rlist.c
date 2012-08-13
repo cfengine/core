@@ -1155,6 +1155,17 @@ Rlist *RlistAt(Rlist *start, size_t index)
     return NULL;
 }
 
+Rlist *RlistLast(Rlist *start)
+{
+    if (start == NULL)
+    {
+        return NULL;
+    }
+    Rlist *rp;
+    for (rp = start; rp->next; rp = rp->next);
+    return rp;
+}
+
 /*******************************************************************/
 
 void RlistPrint(Writer *writer, const Rlist *list)

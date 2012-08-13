@@ -90,6 +90,9 @@ tests/acceptance/workdir
 tests/acceptance/mock-package-manager
 tests/acceptance/mock-package-manager.exe
 tests/acceptance/dnswrapper.so
+tests/*/*.xml
+tests/*/xml.tmp
+tests/*/xml_tmp_*
 
 # unit tests
 

@@ -40,8 +40,6 @@
 
 #include <libgen.h>
 
-#define CF_NOVAL -0.7259285297502359
-
 static char *StripPatterns(char *file_buffer, char *pattern, char *filename);
 static void CloseStringHole(char *s, int start, int end);
 static int BuildLineArray(char *array_lval, char *file_buffer, char *split, int maxent, enum cfdatatype type,
@@ -2668,7 +2666,6 @@ static FnCallResult FnCallRegLine(FnCall *fp, Rlist *finalargs)
 static FnCallResult FnCallIsLessGreaterThan(FnCall *fp, Rlist *finalargs)
 {
     char buffer[CF_BUFSIZE];
-    double a = CF_NOVAL, b = CF_NOVAL;
 
     buffer[0] = '\0';
 
@@ -2677,41 +2674,36 @@ static FnCallResult FnCallIsLessGreaterThan(FnCall *fp, Rlist *finalargs)
 
     if (IsRealNumber(argv0) && IsRealNumber(argv1))
     {
-        a = Str2Double(argv0);
-        b = Str2Double(argv1);
+        double a = Str2Double(argv0);
+        double b = Str2Double(argv1);
 
         if (a == CF_NODOUBLE || b == CF_NODOUBLE)
         {
             return (FnCallResult) { FNCALL_FAILURE };
         }
 
-/* begin fn specific content */
+        CfDebug("%s and %s are numerical\n", argv0, argv1);
 
-        if ((a != CF_NOVAL) && (b != CF_NOVAL))
+        if (!strcmp(fp->name, "isgreaterthan"))
         {
-            CfDebug("%s and %s are numerical\n", argv0, argv1);
-
-            if (!strcmp(fp->name, "isgreaterthan"))
+            if (a > b)
             {
-                if (a > b)
-                {
-                    strcpy(buffer, "any");
-                }
-                else
-                {
-                    strcpy(buffer, "!any");
-                }
+                strcpy(buffer, "any");
             }
             else
             {
-                if (a < b)
-                {
-                    strcpy(buffer, "any");
-                }
-                else
-                {
-                    strcpy(buffer, "!any");
-                }
+                strcpy(buffer, "!any");
+            }
+        }
+        else
+        {
+            if (a < b)
+            {
+                strcpy(buffer, "any");
+            }
+            else
+            {
+                strcpy(buffer, "!any");
             }
         }
     }

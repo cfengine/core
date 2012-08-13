@@ -34,6 +34,7 @@
 #include "vars.h"
 #include "conversion.h"
 #include "expand.h"
+#include "transaction.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"

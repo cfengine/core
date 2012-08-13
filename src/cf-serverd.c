@@ -37,6 +37,7 @@
 #include "item_lib.h"
 #include "conversion.h"
 #include "reporting.h"
+#include "transaction.h"
 
 static const size_t QUEUESIZE = 50;
 

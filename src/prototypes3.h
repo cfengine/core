@@ -198,7 +198,6 @@ void VerifyMeasurement(double *this, Attributes a, Promise *pp);
 void SetMeasurementPromises(Item **classlist);
 void LongHaul(time_t current);
 void LogFileChange(char *file, int change, Attributes a, Promise *pp, const ReportContext *report_context);
-void RemoteSysLog(int log_priority, const char *log_string);
 void ReportPatches(PackageManager *list);
 void SummarizeSoftware(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web);
 void SummarizeUpdates(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web);
@@ -235,9 +234,6 @@ void AnalyzePromiseConflicts(void);
 void AddGoalsToDB(char *goal_patterns);
 void VerifyWindowsService(Attributes a, Promise *pp);
 bool CFDB_HostsWithClass(Rlist **return_list, char *class_name, char *return_format);
-
-void SetSyslogHost(const char *host);
-void SetSyslogPort(uint16_t port);
 
 void SyntaxCompletion(char *s);
 void TryCollectCall(void);

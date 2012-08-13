@@ -127,20 +127,6 @@ void SetPromiseOutputs(Promise *pp)
 }
 
 
-/* cf-agent, cf-serverd */
-
-
-void SetSyslogHost(const char *host)
-{
-    CfOut(cf_error, "", "!! Remote syslog functionality is only available in Nova");
-}
-
-void SetSyslogPort(uint16_t port)
-{
-    CfOut(cf_error, "", "!! Remote syslog functionality is only available in Nova");
-}
-
-
 /* cf-execd: cf-execd-runner.c */
 
 
@@ -197,14 +183,6 @@ void SetMeasurementPromises(Item **classlist)
 void LogFileChange(char *file, int change, Attributes a, Promise *pp, const ReportContext *report_context)
 {
     CfOut(cf_verbose, "", "Logging file differences requires version Nova or above");
-}
-
-/* cf-agent: transaction.c */
-
-
-void RemoteSysLog(int log_priority, const char *log_string)
-{
-    CfOut(cf_verbose, "", "Remote logging requires version Nova or above");
 }
 
 

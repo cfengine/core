@@ -38,6 +38,7 @@
 #include "syntax.h"
 #include "conversion.h"
 #include "expand.h"
+#include "transaction.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"
@@ -529,6 +530,7 @@ void InitializeGA(const ReportContext *report_context)
 #endif
 
     OpenLog(LOG_USER);
+    SetSyslogFacility(LOG_USER);
 
     if (!LOOKUP)                /* cf-know should not do this in lookup mode */
     {
@@ -1067,6 +1069,7 @@ void SetFacility(const char *retval)
 
     CloseLog();
     OpenLog(ParseFacility(retval));
+    SetSyslogFacility(ParseFacility(retval));
 }
 
 /**************************************************************/

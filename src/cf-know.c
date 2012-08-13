@@ -184,42 +184,41 @@ int main(int argc, char *argv[])
 
     KeepKnowControlPromises(policy);
 
-    #if defined(HAVE_NOVA) && defined(HAVE_LIBMONGOC)
+#if defined(HAVE_NOVA) && defined(HAVE_LIBMONGOC)
 
     if (BGOALS)
     {
-    char buffer[CF_BUFSIZE], *sp, name[CF_BUFSIZE],desc[CF_BUFSIZE], *end;
-    
-    Nova_GetUniqueBusinessGoals(buffer, CF_BUFSIZE);
+        char buffer[CF_BUFSIZE], *sp, name[CF_BUFSIZE],desc[CF_BUFSIZE], *end;
 
-    end = buffer + strlen(buffer);
-    
-    for (sp = strstr(buffer,"desc"); sp < end && sp != NULL; sp = strstr(sp,"desc"))
-       {
-       desc[0] = '\0';
-       name[0] = '\0';
-       sscanf(sp+strlen("desc")+2,"%*[ \"]%[^\"]",desc);
-       sp = strstr(sp+strlen(desc),"name");
-       sscanf(sp+strlen("name")+2,"%*[ \"]%[^\"]",name);
-       printf("%s => %s\n",name,desc);
-       }
-    return 0;
+        Nova_GetUniqueBusinessGoals(buffer, CF_BUFSIZE);
+
+        end = buffer + strlen(buffer);
+
+        for (sp = strstr(buffer,"desc"); sp < end && sp != NULL; sp = strstr(sp,"desc"))
+        {
+            desc[0] = '\0';
+            name[0] = '\0';
+            sscanf(sp+strlen("desc")+2,"%*[ \"]%[^\"]",desc);
+            sp = strstr(sp+strlen(desc),"name");
+            sscanf(sp+strlen("name")+2,"%*[ \"]%[^\"]",name);
+            printf("%s => %s\n",name,desc);
+        }
+        return 0;
     }
-    
+
     if (strlen(STORY) > 0)
     {
        if (strncmp(STORY, "SHA=", 4) == 0)
        {
           char buffer[CF_BUFSIZE];
-          
-                Nova_HostStory(policy, STORY, buffer, CF_BUFSIZE);
-                printf("%s\n", buffer);
 
+          Nova_HostStory(policy, STORY, buffer, CF_BUFSIZE);
+          printf("%s\n", buffer);
        }
        else
        {
           strcpy(TOPIC_CMD, STORY);
-          
+
           printf("Let's start with stories about cause-effect:\n\n");
           Nova_GenerateStoriesCmdLine(TOPIC_CMD, cfi_cause);
           printf("Now looking for stories about connections between things:\n\n");

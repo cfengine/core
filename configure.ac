@@ -557,10 +557,10 @@ AC_CHECK_FUNCS(door_create)
 
 AC_CHECK_FUNC(lchown, AC_DEFINE(HAVE_LCHOWN, 1, [Whether to use lchown(3) to change ownerships]))
 
-AC_CHECK_DECLS(pthread_attr_setstacksize)
+AC_CHECK_DECLS(pthread_attr_setstacksize, [], [], [[#include <pthread.h>]])
 AC_REPLACE_FUNCS(pthread_attr_setstacksize)
 
-AC_CHECK_DECLS(pthread_sigmask)
+AC_CHECK_DECLS(pthread_sigmask, [], [], [[#include <signal.h>]])
 AC_REPLACE_FUNCS(pthread_sigmask)
 
 dnl ######################################################################

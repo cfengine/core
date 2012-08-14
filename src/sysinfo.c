@@ -31,6 +31,10 @@
 #include "vars.h"
 #include "item_lib.h"
 
+#ifdef HAVE_ZONE_H
+# include <zone.h>
+#endif
+
 void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname, char *uqname, char *domain);
 
 #ifdef LINUX

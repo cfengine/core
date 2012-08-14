@@ -47,7 +47,7 @@ bool SetContains(const Set *set, const void *element)
     return MapHasKey(set, element);
 }
 
-bool SetRemove(Set *set, void *element)
+bool SetRemove(Set *set, const void *element)
 {
     return MapRemove(set, element);
 }

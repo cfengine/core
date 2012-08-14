@@ -37,8 +37,10 @@ void SetDestroy(void *set);
 
 void SetAdd(Set *set, void *element);
 bool SetContains(const Set *set, const void *element);
-bool SetRemove(Set *set, void *element);
+bool SetRemove(Set *set, const void *element);
 void SetClear(Set *set);
+
+void SetUnion(Set *set, const Set *other);
 
 SetIterator SetIteratorInit(Set *set);
 void *SetIteratorNext(SetIterator *i);
@@ -49,14 +51,14 @@ void *SetIteratorNext(SetIterator *i);
         Set *impl;                                                      \
     } Prefix##Set;                                                      \
                                                                         \
-    Set##Set *Prefix##SetNew(void);                                     \
+    Prefix##Set *Prefix##SetNew(void);                                  \
     void Prefix##SetAdd(const Prefix##Set *set, ElementType element);   \
     bool Prefix##SetContains(const Prefix##Set *Set, const ElementType element);  \
     bool Prefix##SetRemove(const Prefix##Set *Set, const ElementType element);  \
     void Prefix##SetClear(Prefix##Set *set);                            \
     void Prefix##SetDestroy(Prefix##Set *set);                          \
 
-#define TYPED_SET_DEFINE(Prefix, ElementType, hash_fn, equal_fn, destroy__fn) \
+#define TYPED_SET_DEFINE(Prefix, ElementType, hash_fn, equal_fn, destroy_fn) \
                                                                         \
     Prefix##Set *Prefix##SetNew(void)                                   \
     {                                                                   \

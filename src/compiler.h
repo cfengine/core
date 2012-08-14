@@ -34,10 +34,15 @@
 #endif
 
 #if defined(__GNUC__)
-# define FUNC_ATTR_FORMAT(archetype, string_index, first_to_check) \
-    __attribute__((format(archetype, string_index, first_to_check)))
+# if defined (__MINGW32__)
+#  define FUNC_ATTR_PRINTF(string_index, first_to_check) \
+    __attribute__((format(gnu_printf, string_index, first_to_check)))
+# else
+#  define FUNC_ATTR_PRINTF(string_index, first_to_check) \
+    __attribute__((format(printf, string_index, first_to_check)))
+# endif
 #else
-# define FUNC_ATTR_FORMAT(archetype, string_index, first_to_check)
+# define FUNC_ATTR_PRINTF(string_index, first_to_check)
 #endif
 
 #endif

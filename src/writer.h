@@ -41,8 +41,8 @@ typedef struct Writer_ Writer;
 Writer *FileWriter(FILE *);
 Writer *StringWriter(void);
 
-size_t WriterWriteF(Writer *writer, const char *fmt, ...) FUNC_ATTR_FORMAT(printf, 2, 3);
-size_t WriterWriteVF(Writer *writer, const char *fmt, va_list ap) FUNC_ATTR_FORMAT(printf, 2, 0);
+size_t WriterWriteF(Writer *writer, const char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);
+size_t WriterWriteVF(Writer *writer, const char *fmt, va_list ap) FUNC_ATTR_PRINTF(2, 0);
 
 size_t WriterWrite(Writer *writer, const char *str);
 size_t WriterWriteLen(Writer *writer, const char *str, size_t len);

@@ -37,7 +37,7 @@ typedef struct CsvWriter_ CsvWriter;
 CsvWriter *CsvWriterOpen(Writer *w);
 
 void CsvWriterField(CsvWriter * csvw, const char *str);
-void CsvWriterFieldF(CsvWriter * csvw, const char *fmt, ...) FUNC_ATTR_FORMAT(printf, 2, 3);
+void CsvWriterFieldF(CsvWriter * csvw, const char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);
 
 void CsvWriterNewRecord(CsvWriter * csvw);
 

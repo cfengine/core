@@ -80,13 +80,13 @@ void CreateFailSafe(char *name);
 
 /* cfstream.c */
 
-void CfFOut(char *filename, enum cfreport level, char *errstr, char *fmt, ...) FUNC_ATTR_FORMAT(printf, 4, 5);
+void CfFOut(char *filename, enum cfreport level, char *errstr, char *fmt, ...) FUNC_ATTR_PRINTF(4, 5);
 
-void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...) FUNC_ATTR_FORMAT(printf, 3, 4);
+void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...) FUNC_ATTR_PRINTF(3, 4);
 
-void cfPS(enum cfreport level, char status, char *errstr, const Promise *pp, Attributes attr, char *fmt, ...) FUNC_ATTR_FORMAT(printf, 6, 7);
+void cfPS(enum cfreport level, char status, char *errstr, const Promise *pp, Attributes attr, char *fmt, ...) FUNC_ATTR_PRINTF(6, 7);
 
-void CfFile(FILE *fp, char *fmt, ...) FUNC_ATTR_FORMAT(printf, 2, 3);
+void CfFile(FILE *fp, char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);
 
 const char *GetErrorStr(void);
 
@@ -480,7 +480,7 @@ void BeginAudit(void);
 void EndAudit(void);
 void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, char *error);
 void PromiseLog(char *s);
-void FatalError(char *s, ...) FUNC_ATTR_NORETURN FUNC_ATTR_FORMAT(printf, 1, 2);
+void FatalError(char *s, ...) FUNC_ATTR_NORETURN FUNC_ATTR_PRINTF(1, 2);
 
 void AuditStatusMessage(Writer *writer, char status);
 

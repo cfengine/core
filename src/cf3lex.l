@@ -37,7 +37,13 @@
 #include "files_names.h"
 
 /* yyinput/input are generated and unused */
-#pragma GCC diagnostic ignored "-Wunused-function"
+
+#if defined(__GNUC__)
+# define GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
+# if GCC_VERSION >= 40200
+#  pragma GCC diagnostic ignored "-Wunused-function"
+# endif
+#endif
 
 #undef malloc
 #undef realloc

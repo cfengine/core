@@ -1631,8 +1631,7 @@ static char FileStateToChar(FileState status)
         return 'S';
 
     default:
-        assert(false && "Invalid Filechange status supplied");
-        break;
+        FatalError("Invalid Filechange status supplied");
     }
 }
 /*********************************************************************/

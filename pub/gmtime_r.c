@@ -28,6 +28,7 @@
 #endif
 
 #include <time.h>
+#include <string.h>
 
 #if !HAVE_DECL_GMTIME_R
 struct tm *gmtime_r(const time_t *timep, struct tm *result);

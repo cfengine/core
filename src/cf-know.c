@@ -29,7 +29,6 @@
 #include "constraints.h"
 #include "files_names.h"
 #include "ontology.h"
-#include "export_xml.h"
 #include "item_lib.h"
 #include "sort.h"
 #include "conversion.h"
@@ -46,10 +45,8 @@ static void VerifyThingsPromise(Promise *pp);
 static void VerifyOccurrencePromises(Promise *pp);
 static void VerifyInferencePromise(Promise *pp);
 static void WriteKMDB(void);
-static void GenerateManual(void);
 static void ShowSingletons(void);
 static void ShowWords(void);
-static void GenerateXml(void);
 static char *NormalizeTopic(char *s);
 static void AddInference(Inference **list, char *result, char *pre, char *qual);
 static Topic *IdempInsertTopic(char *bundle, char *classified_name);
@@ -96,16 +93,11 @@ char *TYPESEQUENCE[] =
     NULL
 };
 
-char BUILD_DIR[CF_BUFSIZE];
 char TOPIC_CMD[CF_MAXVARSIZE];
 
 int WORDS = false;
 int HTML = false;
 int WRITE_KMDB = false;
-int GENERATE_MANUAL = false;
-int GENERATE_XML = false;
-static char *OUTPUT_FILE;
-char MANDIR[CF_BUFSIZE];
 char STORY[CF_BUFSIZE];
 char FINDTOPIC[CF_BUFSIZE];
 
@@ -121,8 +113,7 @@ static const char *ID = "The knowledge management agent is capable of building\n
     "configure a relational database to contain an ISO\n"
     "standard topic map and permit regular-expression based\n"
     "searching of the map. Analysis of the semantic network\n"
-    "can be performed providing graphical output of the data,\n"
-    "and cf-know can assemble and converge the reference manual\n" "for the current version of the Cfengine software.";
+    "can be performed providing graphical output of the data.\n";
 
 static const struct option OPTIONS[] =
 {
@@ -135,7 +126,6 @@ static const struct option OPTIONS[] =
     {"goals", no_argument, 0, 'g'},
     {"inform", no_argument, 0, 'I'},
     {"lookup", required_argument, 0, 'l'},
-    {"manual", no_argument, 0, 'm'},
     {"manpage", no_argument, 0, 'M'},
     {"tell-me-about", required_argument, 0, 'z'},
     {"syntax", required_argument, 0, 'S'},
@@ -143,8 +133,6 @@ static const struct option OPTIONS[] =
     {"test", required_argument, 0, 't'},
     {"removetest", no_argument, 0, 'r'},
     {"updatetest", no_argument, 0, 'u'},
-    {"xml", no_argument, 0, 'x'},
-    {"output-file", required_argument, 0, 'o'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -159,7 +147,6 @@ static const char *HINTS[] =
     "Print basic information about changes made to the system, i.e. promises repaired",
     "Print JSON output about a possibly qualified context::topic",
     "lookup",
-    "Generate reference manual from internal data",
     "Generate reference manpage from internal data",
     "Look up stories for a given topic on the command line (use \"any\" to list possible)",
     "Print a syntax summary of the optional keyword or this cfengine version",
@@ -167,8 +154,6 @@ static const char *HINTS[] =
     "Generate test data",
     "Remove test data",
     "Update test data",
-    "Generate documentation in XML format",
-    "Output file for XML documentation",
     NULL
 };
 
@@ -236,18 +221,13 @@ int main(int argc, char *argv[])
     }
 #endif
 
-    if (GENERATE_XML)
-    {
-        GenerateXml();
-    }
-    else if (strlen(TOPIC_CMD) == 0)
+    if (strlen(TOPIC_CMD) == 0)
     {
         int complete;
         double percent;
 
         KeepPromiseBundles(policy, report_context);
         WriteKMDB();
-        GenerateManual();
         ShowWords();
         ShowSingletons();
 
@@ -276,7 +256,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
 
     LOOKUP = false;
 
-    while ((c = getopt_long(argc, argv, "gIhbdvVf:mxMz:St:ruTl:", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "gIhbdvVf:Mz:St:ruTl:", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -349,18 +329,6 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
             }
             break;
 
-        case 'm':
-            GENERATE_MANUAL = true;
-            break;
-
-        case 'x':
-            GENERATE_XML = true;
-            break;
-
-        case 'o':
-            OUTPUT_FILE = optarg;
-            break;
-
         case 't':
             if (atoi(optarg))
             {
@@ -414,7 +382,6 @@ static void ThisAgentInit(void)
 {
     strcpy(WEBDRIVER, "");
     strcpy(LICENSE_COMPANY, "");
-    strcpy(MANDIR, ".");
     SHOWREPORTS = false;
 }
 
@@ -446,12 +413,7 @@ static void KeepKnowControlPromises(Policy *policy)
 
         if (strcmp(cp->lval, CFK_CONTROLBODY[cfk_builddir].lval) == 0)
         {
-            strncpy(BUILD_DIR, retval.item, CF_BUFSIZE);
-
-            if (strlen(MANDIR) < 2)     /* MANDIR defaults to BUILDDIR */
-            {
-                strncpy(MANDIR, retval.item, CF_BUFSIZE);
-            }
+            CfOut(cf_verbose, "", " -> Option %s has been deprecated", cp->lval);
             continue;
         }
 
@@ -535,15 +497,13 @@ static void KeepKnowControlPromises(Policy *policy)
 
         if (strcmp(cp->lval, CFK_CONTROLBODY[cfk_genman].lval) == 0)
         {
-            GENERATE_MANUAL = GetBoolean(retval.item);
-            CfOut(cf_verbose, "", "SET generate_manual = %d\n", GENERATE_MANUAL);
+            CfOut(cf_verbose, "", " -> Option %s has been deprecated", cp->lval);
             continue;
         }
 
         if (strcmp(cp->lval, CFK_CONTROLBODY[cfk_mandir].lval) == 0)
         {
-            strncpy(MANDIR, retval.item, CF_MAXVARSIZE);
-            CfOut(cf_verbose, "", "SET manual_source_directory = %s\n", MANDIR);
+            CfOut(cf_verbose, "", " -> Option %s has been deprecated", cp->lval);
             continue;
         }
 
@@ -1102,37 +1062,6 @@ static void WriteKMDB()
 }
 
 /*********************************************************************/
-
-static void GenerateManual()
-{
-    if (GENERATE_MANUAL)
-    {
-        TexinfoManual(MANDIR);
-    }
-}
-
-/*********************************************************************/
-
-static void GenerateXml(void)
-{
-    if (OUTPUT_FILE == NULL)
-    {
-        /* Reconsider this once agents do not output any error messages to stdout */
-        FatalError("Please specify output file");
-    }
-    else
-    {
-        FILE *out = fopen(OUTPUT_FILE, "w");
-
-        if (out == NULL)
-        {
-            FatalError("Unable to open %s for writing\n", OUTPUT_FILE);
-        }
-        XmlManual(MANDIR, out);
-    }
-}
-
-/*****************************************************************************/
 
 static Topic *IdempInsertTopic(char *bundle, char *classified_name)
 {

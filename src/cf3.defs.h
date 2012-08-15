@@ -656,6 +656,7 @@ enum cfx_format
 #define CF_REPORTC  "reporter"
 #define CF_KEYGEN   "keygenerator"
 #define CF_HUBC     "hub"
+#define CF_GENDOC   "gendoc"
 
 enum cfagenttype
 {
@@ -669,6 +670,7 @@ enum cfagenttype
     cf_report,
     cf_keygen,
     cf_hub,
+    cf_gendoc,
     cf_noagent
 };
 

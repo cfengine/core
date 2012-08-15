@@ -149,6 +149,7 @@ libpromises_la_SOURCES = \
         transaction.c transaction.h \
         unix.c \
         vars.c vars.h \
+        verify_packages.c \
         verify_processes.c \
         verify_reports.c \
         writer.c writer.h \
@@ -188,7 +189,6 @@ cf_agent_SOURCES = \
         verify_exec.c \
         verify_methods.c \
         verify_interfaces.c \
-        verify_packages.c \
         verify_databases.c \
         verify_services.c \
         verify_environments.c verify_environments.h \

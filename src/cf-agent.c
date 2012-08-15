@@ -1340,7 +1340,7 @@ static void ParallelFindAndVerifyFilesPromises(Promise *pp, const ReportContext 
         CfOut(cf_verbose, "", "Background processing of files promises is not supported on Windows");
     }
 
-    FindAndVerifyFilesPromises(pp);
+    FindAndVerifyFilesPromises(pp, report_context);
 
 #else /* NOT MINGW */
 

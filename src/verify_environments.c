@@ -212,6 +212,11 @@ static void VerifyEnvironments(Attributes a, Promise *pp)
         envtype = cfv_virt_test;
         break;
 
+    case cfv_virt_vbox:
+        snprintf(hyper_uri, CF_MAXVARSIZE - 1, "vbox:///session");
+        envtype = cfv_virt_vbox;
+        break;
+
     case cfv_zone:
         snprintf(hyper_uri, CF_MAXVARSIZE - 1, "solaris_zone");
         envtype = cfv_zone;
@@ -253,6 +258,7 @@ static void VerifyEnvironments(Attributes a, Promise *pp)
         case cfv_virt_xen:
         case cfv_virt_kvm:
         case cfv_virt_esx:
+        case cfv_virt_vbox:
         case cfv_virt_test:
             VerifyVirtDomain(hyper_uri, envtype, a, pp);
             break;

@@ -34,6 +34,7 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "expand.h"
+#include "transaction.h"
 
 static void KeepContextBundles(Policy *policy, const ReportContext *report_context);
 static void KeepServerPromise(Promise *pp);

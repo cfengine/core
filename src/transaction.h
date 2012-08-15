@@ -30,4 +30,9 @@ time_t FindLockTime(char *name);
 bool InvalidateLockTime(char *lock_id);
 bool EnforcePromise(enum cfopaction action);
 
+void SetSyslogHost(const char *host);
+void SetSyslogPort(uint16_t port);
+void SetSyslogFacility(int facility);
+void RemoteSysLog(int log_priority, const char *log_string);
+
 #endif  /* NOT CFENGINE_TRANSACTION_H */

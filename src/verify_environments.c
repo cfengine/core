@@ -277,6 +277,24 @@ static void VerifyEnvironments(Attributes a, Promise *pp)
         }
         break;
 
+    case darwin:
+        switch (Str2Hypervisors(a.env.type))
+        {
+        case cfv_virt_vbox:
+        case cfv_virt_test:
+            VerifyVirtDomain(hyper_uri, envtype, a, pp);
+            break;
+        case cfv_virt_xen_net:
+        case cfv_virt_kvm_net:
+        case cfv_virt_esx_net:
+        case cfv_virt_test_net:
+            VerifyVirtNetwork(hyper_uri, envtype, a, pp);
+            break;
+        default:
+            break;
+        }
+        break;
+
     case solaris:
 
         switch (Str2Hypervisors(a.env.type))

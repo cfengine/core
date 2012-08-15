@@ -2238,6 +2238,7 @@ enum cfhypervisors
     cfv_virt_xen,
     cfv_virt_kvm,
     cfv_virt_esx,
+    cfv_virt_vbox,
     cfv_virt_test,
     cfv_virt_xen_net,
     cfv_virt_kvm_net,

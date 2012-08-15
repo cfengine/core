@@ -64,8 +64,6 @@ static PackageManager *NewPackageManager(PackageManager **lists, char *mgr, enum
                                          enum action_policy x);
 static PackageItem *GetCachedPackageList(PackageManager *manager, const char *default_arch, Attributes a, Promise *pp);
 static int PrependListPackageItem(PackageItem ** list, char *item, const char *default_arch, Attributes a, Promise *pp);
-static int PrependPackageItem(PackageItem ** list, const char *name, const char *version, const char *arch, Attributes a,
-                              Promise *pp);
 
 /*****************************************************************************/
 
@@ -1429,8 +1427,7 @@ static PackageItem *GetCachedPackageList(PackageManager *manager, const char *de
 
 /*****************************************************************************/
 
-static int PrependPackageItem(PackageItem ** list, const char *name, const char *version, const char *arch, Attributes a,
-                              Promise *pp)
+int PrependPackageItem(PackageItem ** list, const char *name, const char *version, const char *arch, Attributes a, Promise *pp)
 {
     PackageItem *pi;
 

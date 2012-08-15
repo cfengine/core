@@ -719,6 +719,7 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
 void VerifyPackagesPromise(Promise *pp);
 void ExecuteScheduledPackages(void);
 void CleanScheduledPackages(void);
+int PrependPackageItem(PackageItem ** list, const char *name, const char *version, const char *arch, Attributes a, Promise *pp);
 
 /* verify_processes.c */
 

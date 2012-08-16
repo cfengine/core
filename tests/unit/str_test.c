@@ -325,27 +325,27 @@ static void test_encode_base64(void **state)
 static void test_escape_char_copy(void **state)
 {
     char *in1 = "my test with no escape";
-    char *out1 = EscapeCharCopy(in1, '7');
+    char *out1 = EscapeCharCopy(in1, '7', '\\');
     assert_string_equal(out1, in1);
     free(out1);
 
     char *in2 = "my test with 'some' escape";
-    char *out2 = EscapeCharCopy(in2, '\'');
+    char *out2 = EscapeCharCopy(in2, '\'', '\\');
     assert_string_equal(out2, "my test with \\'some\\' escape");
     free(out2);
 
     char *in3 = "my test with 7some7";
-    char *out3 = EscapeCharCopy(in3, '7');
+    char *out3 = EscapeCharCopy(in3, '7', '\\');
     assert_string_equal(out3, "my test with \\7some\\7");
     free(out3);
 
     char *in4 = "\"my\" test with 7some7";
-    char *out4 = EscapeCharCopy(in4, '\"');
+    char *out4 = EscapeCharCopy(in4, '\"', '\\');
     assert_string_equal(out4, "\\\"my\\\" test with 7some7");
     free(out4);
 
     char *in5 = "\"my test with 7some7\"";
-    char *out5 = EscapeCharCopy(in5, '\"');
+    char *out5 = EscapeCharCopy(in5, '\"', '\\');
     assert_string_equal(out5, "\\\"my test with 7some7\\\"");
     free(out5);
 }

@@ -858,9 +858,9 @@ void FreeStringArray(char **strs)
 }
 
 
-char *EscapeCharCopy(char *str, char to_escape)
+char *EscapeCharCopy(char *str, char to_escape, char escape_with)
 /*
- * Escapes the to_escape-chars found in str, by prefixing them with '\'.
+ * Escapes the 'to_escape'-chars found in str, by prefixing them with 'escape_with'.
  * Returns newly allocated string.
  */
 {
@@ -878,7 +878,7 @@ char *EscapeCharCopy(char *str, char to_escape)
     {
         if(*in_pos == to_escape)
         {
-            *out_pos = '\\';
+            *out_pos = escape_with;
             out_pos++;
         }
         *out_pos = *in_pos;

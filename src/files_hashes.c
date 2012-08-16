@@ -455,6 +455,19 @@ char *HashPrintSafe(enum cfhashes type, unsigned char digest[EVP_MAX_MD_SIZE + 1
     return buffer;
 }
 
+
+char *SkipHashType(char *hash)
+{
+    char *str = hash;
+
+    if(BEGINSWITH(hash, "MD5=") || BEGINSWITH(hash, "SHA="))
+    {
+        str = hash + 4;
+    }
+
+    return str;
+}
+
 /***************************************************************/
 
 void PurgeHashes(char *path, Attributes attr, Promise *pp)

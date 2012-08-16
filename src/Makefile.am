@@ -196,6 +196,8 @@ cf_agent_SOURCES = \
 
 cf_serverd_SOURCES = \
         cf-serverd.c \
+        cf-serverd-functions.c \
+        cf-serverd-functions.h \
         server_transform.c
 
 cf_monitord_SOURCES = \

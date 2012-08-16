@@ -232,6 +232,12 @@ cf_monitord_LDADD += ../nova/src/libcfmonitord.la
 endif
 cf_monitord_LDADD += libpromises.la
 
+cf_report_LDADD =
+if HAVE_NOVA
+cf_report_LDADD += ../nova/src/libcfreport.la
+endif
+cf_report_LDADD += libpromises.la
+
 cf_execd_SOURCES = \
         cf-execd.c \
         cf-execd-runner.c cf-execd-runner.h

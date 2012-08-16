@@ -22,20 +22,34 @@
   included file COSL.txt.
 */
 
-#include "cf-serverd-functions.h"
+#ifndef CFSERVERDFUNCTIONS_H
+#define CFSERVERDFUNCTIONS_H
 
-int main(int argc, char *argv[])
-{
-    GenericAgentConfig config = CheckOpts(argc, argv);
+#include "generic_agent.h"
+#include "server.h"
 
-    ReportContext *report_context = OpenReports("server");
-    Policy *policy = GenericInitialize("server", config, report_context);
-    ThisAgentInit();
-    KeepPromises(policy, report_context);
-    Summarize();
+#include "sysinfo.h"
+#include "env_context.h"
+#include "dir.h"
+#include "dbm_api.h"
+#include "lastseen.h"
+#include "crypto.h"
+#include "files_names.h"
+#include "vars.h"
+#include "promises.h"
+#include "item_lib.h"
+#include "conversion.h"
+#include "reporting.h"
 
-    StartServer(policy, config, report_context);
+void ThisAgentInit(void);
+GenericAgentConfig CheckOpts(int argc, char **argv);
+int OpenReceiverChannel(void);
+void CheckFileChanges(Policy **policy, GenericAgentConfig config, const ReportContext *report_context);
 
-    ReportContextDestroy(report_context);
-    return 0;
-}
+#if !defined(HAVE_GETADDRINFO)
+in_addr_t GetInetAddr(char *host);
+#endif
+
+void StartServer(Policy *policy, GenericAgentConfig config, const ReportContext *report_context);
+
+#endif // CFSERVERDFUNCTIONS_H

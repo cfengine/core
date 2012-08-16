@@ -474,8 +474,7 @@ static FnCallResult FnCallHash(FnCall *fp, Rlist *finalargs)
 
     snprintf(buffer, CF_BUFSIZE - 1, "%s", HashPrint(type, digest));
 
-/* lopp off prefix */
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer + 4), CF_SCALAR } };
+    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(SkipHashType(buffer)), CF_SCALAR } };
 }
 
 /*********************************************************************/

@@ -199,12 +199,6 @@ void LogFileChange(char *file, int change, Attributes a, Promise *pp, const Repo
     CfOut(cf_verbose, "", "Logging file differences requires version Nova or above");
 }
 
-void VerifyACL(char *file, Attributes a, Promise *pp)
-{
-    CfOut(cf_verbose, "", "Verifying ACL promises is only available with Cfengine Nova or above");
-}
-
-
 /* cf-agent: transaction.c */
 
 

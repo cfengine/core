@@ -197,7 +197,6 @@ void SummarizeValue(int xml, int html, int csv, int embed, char *stylesheet, cha
 void VerifyMeasurement(double *this, Attributes a, Promise *pp);
 void SetMeasurementPromises(Item **classlist);
 void LongHaul(time_t current);
-void VerifyACL(char *file, Attributes a, Promise *pp);
 void LogFileChange(char *file, int change, Attributes a, Promise *pp, const ReportContext *report_context);
 void RemoteSysLog(int log_priority, const char *log_string);
 void ReportPatches(PackageManager *list);

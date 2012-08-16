@@ -856,3 +856,33 @@ void FreeStringArray(char **strs)
     free(strs);
     strs = NULL;
 }
+
+
+char *EscapeCharCopy(char *str, char to_escape)
+/*
+ * Escapes the to_escape-chars found in str, by prefixing them with '\'.
+ * Returns newly allocated string.
+ */
+{
+    assert(str);
+
+    int in_size = strlen(str);
+    int out_size = in_size + CountChar(str, to_escape) + 1;
+
+    char *out = xcalloc(1, out_size);
+
+    char *in_pos = str;
+    char *out_pos = out;
+
+    for(; *in_pos != '\0'; in_pos++, out_pos++)
+    {
+        if(*in_pos == to_escape)
+        {
+            *out_pos = '\\';
+            out_pos++;
+        }
+        *out_pos = *in_pos;
+    }
+
+    return out;
+}

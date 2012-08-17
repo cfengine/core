@@ -1641,7 +1641,6 @@ void LogHashChange(char *file, FileState status, char *msg)
     FILE *fp;
     char fname[CF_BUFSIZE];
     time_t now = time(NULL);
-    struct stat sb;
     mode_t perm = 0600;
     static char prevFile[CF_MAXVARSIZE] = { 0 };
 
@@ -1659,6 +1658,7 @@ void LogHashChange(char *file, FileState status, char *msg)
     MapName(fname);
 
 #ifndef MINGW
+    struct stat sb;
     if (cfstat(fname, &sb) != -1)
     {
         if (sb.st_mode & (S_IWGRP | S_IWOTH))

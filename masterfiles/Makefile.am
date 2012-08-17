@@ -1,5 +1,5 @@
 masterfilesdir = $(projdatadir)/CoreBase
-dist_masterfiles_DATA = $(srcdir)/failsafe.cf $(srcdir)/cfengine_stdlib.cf $(srcdir)/promises.cf
+dist_masterfiles_DATA = $(srcdir)/failsafe/failsafe.cf $(srcdir)/libraries/cfengine_stdlib.cf $(srcdir)/promises.cf $(srcdir)/def.cf $(srcdir)/controls/cf_agent.cf $(srcdir)/controls/cf_execd.cf $(srcdir)/controls/cf_report.cf $(srcdir)/controls/cf_agent.cf $(srcdir)/controls/cf_runagent.cf $(srcdir)/controls/cf_monitord.cf $(srcdir)/services/init_msg.cf
 
 #
 # Some basic clean ups

@@ -1,0 +1,20 @@
+###############################################################################
+# This part is for cf-runagent
+#
+# The most important parameter here is the list of hosts that the agent will 
+# poll for connections.
+###############################################################################
+
+body runagent control
+
+{
+
+# A list of hosts to contact when using cf-runagent
+
+ any::
+
+  hosts => { "127.0.0.1" };
+
+# , "myhost.example.com:5308", ...
+
+}

@@ -7,7 +7,7 @@
 body common control
 {
  bundlesequence => { "update" };
- version => "Community Failsafe.cf 1.0.0";
+ version => "Community Failsafe.cf 3.4.0";
 }
 
 #############################################################################
@@ -247,4 +247,3 @@ body classes u_if_repaired(x)
 }
 
 #########################################################
-

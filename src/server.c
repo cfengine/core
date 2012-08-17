@@ -3125,7 +3125,7 @@ static int TransferRights(char *filename, int sd, ServerFileGetState *args, char
 
     if (GetNamedSecurityInfo
         (filename, SE_FILE_OBJECT, OWNER_SECURITY_INFORMATION, (PSID *) & ownerSid, NULL, NULL, NULL,
-         &secDesc) == ERROR_SUCCESS)
+         (void **)&secDesc) == ERROR_SUCCESS)
     {
         if (IsValidSid((args->connect)->sid) && EqualSid(ownerSid, (args->connect)->sid))
         {

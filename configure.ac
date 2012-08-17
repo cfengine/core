@@ -330,12 +330,12 @@ fi
 dnl libacl
 
 AC_ARG_WITH([libacl],
-    [AS_HELP_STRING([--with-libacl[[=PATH]]], [Specify libacl path]), [], [with_libacl=check]])
+    [AS_HELP_STRING([--with-libacl[[=PATH]]], [Specify libacl path])], [], [with_libacl=check])
 
 if test "x$with_libacl" != xno; then
   CF3_WITH_LIBRARY(libacl, [
     AC_CHECK_LIB(acl, acl_init, [], [if test "x$with_libacl" != xcheck; then AC_MSG_ERROR(Cannot find libacl library); fi])
-    AC_CHECK_HEADERS([acl.h sys/acl.h acl/libacl.h])
+    AC_CHECK_HEADERS([acl.h sys/acl.h acl/libacl.h], [], [if test "x$with_libacl" != xcheck; then AC_MSG_ERROR(Cannot find libacl library headers); fi])
   ])
 fi
 

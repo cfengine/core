@@ -22,6 +22,7 @@ In order to build CFEngine you need the following tools and libraries installed:
 * MySQL client library (optional)
 * PostgreSQL client library (optional)
 * SELinux library (optional)
+* libacl library (optional)
 
 In order to build CFEngine cloned from git, you will need the
 following additional tools:

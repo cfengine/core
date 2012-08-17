@@ -330,7 +330,7 @@ fi
 dnl libacl
 
 AC_ARG_WITH([libacl],
-    [AS_HELP_STRING([--with-libacl[[=PATH]]], [Specify libacl path]), [], [with_libacl=yes]])
+    [AS_HELP_STRING([--with-libacl[[=PATH]]], [Specify libacl path]), [], [with_libacl=check]])
 
 if test "x$with_libacl" != xno; then
   CF3_WITH_LIBRARY(libacl, [

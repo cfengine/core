@@ -375,7 +375,9 @@ static void KeepPromises(Policy *policy)
 /* Might be called back from NovaWin_StartExecService */
 void StartServer(Policy *policy, const ReportContext *report_context)
 {
+#if !defined(__MINGW32__)
     time_t now = time(NULL);
+#endif
     Promise *pp = NewPromise("exec_cfengine", "the executor agent");
     Attributes dummyattr;
     CfLock thislock;

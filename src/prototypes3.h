@@ -224,10 +224,6 @@ int RetrieveUnreliableValue(char *caller, char *handle, char *buffer);
 void TranslatePath(char *new, const char *old);
 void GrandSummary(void);
 void TrackValue(char *date, double kept, double repaired, double notkept);
-void SetBundleOutputs(char *name);
-void ResetBundleOutputs(char *name);
-void SetPromiseOutputs(Promise *pp);
-void VerifyOutputsPromise(Promise *pp);
 void LastSawBundle(const Bundle *bundle, double compliance);
 void NewPromiser(Promise *pp);
 void AnalyzePromiseConflicts(void);
@@ -709,6 +705,13 @@ void VerifyMeasurementPromise(double *this, Promise *pp);
 
 void VerifyMethodsPromise(Promise *pp, const ReportContext *report_context);
 int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext *report_context);
+
+/* verify_outputs.c */
+
+void VerifyOutputsPromise(Promise *pp);
+void SetPromiseOutputs(Promise *pp);
+void SetBundleOutputs(char *name);
+void ResetBundleOutputs(char *name);
 
 /* verify_packages.c */
 

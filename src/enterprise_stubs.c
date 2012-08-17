@@ -117,16 +117,6 @@ void ShowTopicRepresentation(const ReportContext *report_context)
     CfOut(cf_verbose, "", "# Knowledge map reporting feature is only available in version Nova and above\n");
 }
 
-void VerifyOutputsPromise(Promise *pp)
-{
-    printf(" !! Outputs promises are not available in the community edition of Cfengine\n");
-}
-
-void SetPromiseOutputs(Promise *pp)
-{
-}
-
-
 /* cf-execd: cf-execd-runner.c */
 
 
@@ -194,14 +184,6 @@ void NoteEfficiency(double e)
 }
 
 void LastSawBundle(const Bundle *bundle, double comp)
-{
-}
-
-void SetBundleOutputs(char *name)
-{
-}
-
-void ResetBundleOutputs(char *name)
 {
 }
 

@@ -94,7 +94,6 @@ char *sockaddr_ntop(struct sockaddr *sa)
     void *addr;
 #else
     static char addrbuf[20];
-    struct in_addr addr;
 #endif
 
     switch (sa->sa_family)

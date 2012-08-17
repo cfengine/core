@@ -99,7 +99,9 @@ static void VerifyExec(Attributes a, Promise *pp)
     char comm[20];
     char execstr[CF_EXPANDSIZE];
     int outsourced, count = 0;
+#if !defined(__MINGW32__)
     mode_t maskval = 0;
+#endif
     FILE *pfp;
     char cmdOutBuf[CF_BUFSIZE];
     int cmdOutBufPos = 0;

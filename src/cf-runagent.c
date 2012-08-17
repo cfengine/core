@@ -123,9 +123,11 @@ int main(int argc, char *argv[])
 {
     Rlist *rp;
     Promise *pp;
+#if !defined(__MINGW32__)
     int count = 0;
     int status;
     int pid;
+#endif
 
     GenericAgentConfig config = CheckOpts(argc, argv);
     ReportContext *report_context = OpenReports("runagent");

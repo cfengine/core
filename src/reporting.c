@@ -408,14 +408,16 @@ void ShowPromise(const ReportContext *context, ReportOutputType type, const Prom
         Nova_ShowPromise(context, type, v, pp, indent);
 #else
         ShowPromiseInReportHtml(context, v, pp, indent);
+#endif
         break;
 
     default:
     case REPORT_OUTPUT_TYPE_TEXT:
+#if !defined(HAVE_NOVA)
         ShowPromiseInReportText(context, v, pp, indent);
+#endif
         break;
     }
-#endif
 }
 
 /*******************************************************************/

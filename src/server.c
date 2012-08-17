@@ -1220,7 +1220,6 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
     char ipstring[CF_MAXVARSIZE], fqname[CF_MAXVARSIZE], username[CF_MAXVARSIZE];
     char dns_assert[CF_MAXVARSIZE], ip_assert[CF_MAXVARSIZE];
     int matched = false;
-    struct passwd *pw;
 
 #if defined(HAVE_GETADDRINFO)
     struct addrinfo query, *response = NULL, *ap;
@@ -1230,7 +1229,6 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
     int i, j;
     socklen_t len = sizeof(struct sockaddr_in);
     struct hostent *hp = NULL;
-    Item *ip_aliases = NULL, *ip_addresses = NULL;
 #endif
 
     CfDebug("Connecting host identifies itself as %s\n", buf);
@@ -1271,6 +1269,7 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
 
 #else /* NOT MINGW */
 
+        struct passwd *pw;
         if ((pw = getpwnam(username)) == NULL)  /* Keep this inside mutex */
         {
             conn->uid = -2;

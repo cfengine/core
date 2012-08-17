@@ -6,6 +6,21 @@
 	  "usebundle". By default classes are not inherited. See the
 	  examples/unit_inherit.cf for an example.
 
+	- packages_default_arch_command hook in packages promises, to
+	  specify default architecture of the packages on the system.
+
+	- Running in Solaris zone is now detected and classes "zone" and
+	  "zone_<name>" are created in this case.
+
+	- VirtualBox support added to guest_environment promises.
+
+	- guest_environment promises are supported under OS X.
+
+	- Moved from Nova/Enterirpse:
+	  - POSIX ACL support,
+	  - "outputs" promise type,
+	  - remote syslog support.
+
 	Misc:
 
 	- Support for the following outdated platforms and corresponding
@@ -54,13 +69,19 @@
 
 	- Standard library is updated from COPBL repository.
 
+	- cf-know is no longer built in Community releases. The only
+	  functionality useful in Community, namely the reference manual
+	  generation, is provided by new compile-time cf-gendoc tool.
+
 	Bugfixes:
 
-	- Compatibility fixes for HP-UX, Solaris (Mantis #1185, Mantis #1177, Mantis #1109).
+	- Compatibility fixes for AIX, HP-UX, Solaris (Mantis #1185, Mantis #1177, Mantis #1109).
 	- Fixed broken socklen_t configure check under OpenBSD (Mantis #1168).
 	- Fixed hang in cf-promises under OpenBSD (Mantis #1113).
 	- Fixed endless loop in evaluating "$()" construct (Mantis #1023).
-	- Fixed memory leak in cf-execd occuring if cf-monitord is also running on the system.
+	- Fixed check for old PCRE versions (Mantis #1262).
+	- Fixed insertion of multi-line blocks at the start of file (Mantis #809).
+	- Fixed numerous memory leaks.
 
 	In alpha 1:
 

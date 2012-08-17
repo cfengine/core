@@ -1,6 +1,5 @@
 
-Outputs promises are only available in commercial editions of
-CFEngine. They allow promises to make meta-promises about their output
+Outputs promises allow promises to make meta-promises about their output
 levels. More simply, you can switch on @samp{verbose} or @samp{inform}
 level output to named promises, or whole bundles for debugging
 purposes.

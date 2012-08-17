@@ -790,7 +790,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
             {
                 CfOut(cf_verbose, "", "Copy item %s marked for linking\n", sourcefile);
 #ifdef MINGW
-                CfOut(cf_verbose, "", "Links are not yet supported on Windows - copying instead\n", sourcefile);
+                CfOut(cf_verbose, "", "Links are not yet supported on Windows - copying %s instead\n", sourcefile);
 #else
                 LinkCopy(sourcefile, destfile, &ssb, attr, pp, report_context);
                 return;

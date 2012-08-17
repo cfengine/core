@@ -33,6 +33,7 @@
 #define CF_NATIVE_PERMS_SEP_END ')'
 
 #define CF_VALID_NPERMS_POSIX "rwx"
+#define CF_VALID_NPERMS_NTFS "drtxTwabBpcoD"
 
 void VerifyACL(char *file, Attributes a, Promise *pp);
 

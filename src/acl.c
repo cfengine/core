@@ -32,9 +32,6 @@
 
 /*****************************************************************************/
 
-// Valid native permission characters
-#define CF_VALID_NPERMS_NTFS "drtxTwabBpcoD"
-
 // Valid operations (first char of mode)
 #define CF_VALID_OPS_METHOD_OVERWRITE "=+-"
 #define CF_VALID_OPS_METHOD_APPEND "=+-"

@@ -47,7 +47,6 @@ Attributes GetReplaceAttributes(const Promise *pp);
 Attributes GetReportsAttributes(const Promise *pp);
 Attributes GetServicesAttributes(const Promise *pp);
 Attributes GetStorageAttributes(const Promise *pp);
-Attributes GetThingsAttributes(const Promise *pp);
 Attributes GetTopicsAttributes(const Promise *pp);
 
 Acl GetAclConstraints(const Promise *pp);

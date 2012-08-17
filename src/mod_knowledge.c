@@ -50,6 +50,7 @@ static const BodySyntax CF_TOPICS_BODIES[] =
     {"synonyms", cf_slist, "", "A list of words to be treated as equivalents in the defined context"},
     {"generalizations", cf_slist, "",
      "A list of words to be treated as super-sets for the current topic, used when reasoning"},
+    {"implements", cf_slist, "", "Special fixed relation for describing topics that are things"},
     {NULL, cf_notype, NULL, NULL}
 };
 
@@ -69,6 +70,7 @@ static const BodySyntax CF_THING_BODIES[] =
     {"is_connected_to", cf_slist, "", "Special fixed relation for describing topics that are things"},
     {"is_determined_by", cf_slist, "", "Special fixed relation for describing topics that are things"},
     {"is_followed_by", cf_slist, "", "Special fixed relation for describing topics that are things"},
+    {"is_implemented_by", cf_slist, "", "Special fixed relation for describing topics that are things"},
     {"is_located_in", cf_slist, "", "Special fixed relation for describing topics that are things"},
     {"is_part_of", cf_slist, "", "Special fixed relation for describing topics that are things"},
     {"is_preceded_by", cf_slist, "", "Special fixed relation for describing topics that are things"},

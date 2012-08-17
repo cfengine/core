@@ -400,12 +400,13 @@ void ShowPromise(const ReportContext *context, ReportOutputType type, const Prom
         v = "not specified";
     }
 
-#if defined(HAVE_NOVA)
-    Nova_ShowPromise(context, type, v, pp, indent);
-#else
     switch (type)
     {
     case REPORT_OUTPUT_TYPE_HTML:
+        /* Ugly hack: we rely on the fact we will be called twice with different report types */
+#if defined(HAVE_NOVA)
+        Nova_ShowPromise(context, type, v, pp, indent);
+#else
         ShowPromiseInReportHtml(context, v, pp, indent);
         break;
 

@@ -131,15 +131,15 @@ void ReportContextDestroy(ReportContext *context)
 {
     if (context)
     {
+        if (context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE])
+        {
+            WriterWriteF(context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE], "}\n");
+        }
+
         for (size_t i = 0; i < REPORT_OUTPUT_TYPE_MAX; i++)
-        {            
+        {
             if (context->report_writers[i])
             {
-                if (i == REPORT_OUTPUT_TYPE_KNOWLEDGE)
-                {
-                    WriterWriteF(context->report_writers[i], "}\n");
-                }
-
                 WriterClose(context->report_writers[i]);
             }
         }

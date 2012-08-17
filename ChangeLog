@@ -73,6 +73,17 @@
 	  functionality useful in Community, namely the reference manual
 	  generation, is provided by new compile-time cf-gendoc tool.
 
+        - Filename (for storing filechanges) changed
+          from file_change.log -> file_changes.log (in /var/cfengine/state)
+
+          New format for storing file changes introduced:
+          [timestamp,filename,<N/C/S/R>,Message]
+
+          N = New file found
+          C = Content Changed
+          S = Stats changed
+          R = File removed
+
 	Bugfixes:
 
 	- Compatibility fixes for AIX, HP-UX, Solaris (Mantis #1185, Mantis #1177, Mantis #1109).

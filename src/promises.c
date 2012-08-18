@@ -29,6 +29,7 @@
 #include "policy.h"
 #include "syntax.h"
 #include "expand.h"
+#include "files_names.h"
 
 #define PACK_UPIFELAPSED_SALT "packageuplist"
 
@@ -385,9 +386,12 @@ Body *IsBody(Body *list, const char *namespace, const char *key)
         }
         else
         {
-            snprintf(fqname,CF_BUFSIZE-1, "%s.%s",namespace,key);
+            snprintf(fqname,CF_BUFSIZE-1, "%s:%s",namespace,key);
         }
 
+        // Transform the dot in syntax to internal representation : which does not confict with scope 
+        TransformNameInPlace(fqname, '.', ':');
+        
         if (strcmp(bp->name, fqname) == 0)
         {
             return bp;
@@ -423,10 +427,12 @@ Bundle *IsBundle(Bundle *list, const char *key)
         }
         else
         {
-            snprintf(fqname,CF_BUFSIZE-1, "%s.%s",bp->namespace,key);
+            snprintf(fqname,CF_BUFSIZE-1, "%s:%s",bp->namespace,key);
         }
 
-
+        // Transform the dot in syntax to internal representation : which does not confict with scope 
+        TransformNameInPlace(fqname, '.', ':');
+        
         if (strcmp(bp->name, fqname) == 0)
         {
             return bp;

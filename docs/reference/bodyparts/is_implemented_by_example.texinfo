@@ -1,0 +1,11 @@
+
+
+@verbatim
+things:
+
+   "my goal"  
+              is_implemented_by => { "my promise" };
+
+@end verbatim
+
+

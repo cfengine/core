@@ -1,0 +1,27 @@
+
+body common control
+{
+    bundlesequence => { "main" };
+    version => "0.1";
+    inputs => { "unit_namespace_var_meta2.cf"};
+}
+
+bundle agent main
+{
+
+classes:
+
+  "abc" expression => "any";
+
+
+methods:
+
+ "bla "usebundle => fred.example;
+
+reports:
+
+  !sdf::
+
+   "remote var: $(fred:example.bundle_version)";
+
+}

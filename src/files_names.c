@@ -686,6 +686,19 @@ void CanonifyNameInPlace(char *s)
 
 /*********************************************************************/
 
+void TransformNameInPlace(char *s, char from, char to)
+{
+    for (; *s != '\0'; s++)
+    {
+        if (*s == from)
+        {
+            *s = to;
+        }
+    }
+}
+
+/*********************************************************************/
+
 char *CanonifyName(const char *str)
 {
     static char buffer[CF_BUFSIZE];

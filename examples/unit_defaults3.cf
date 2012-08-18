@@ -1,0 +1,31 @@
+
+
+body common control
+{
+bundlesequence => { "main" };
+}
+
+bundle agent main
+{
+methods:
+
+  "example"  usebundle => test("one","x","","$(four)");
+
+}
+
+
+bundle agent test(a,b,c,d)
+{
+defaults:
+
+ "a" string => "default a", if_match_regex => "";
+ "b" string => "default b", if_match_regex => "x";
+ "c" string => "default c", if_match_regex => "";
+ "d" string => "default d", if_match_regex => "\$\([a-zA-Z0-9_.]+\)";
+
+reports:
+
+   !nothing::
+
+   "a = '$(a)', b = '$(b)', c = '$(c)' d = '$(d)'";
+}

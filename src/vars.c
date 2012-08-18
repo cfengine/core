@@ -137,8 +137,8 @@ enum cfdatatype GetVariable(const char *scope, const char *lval, Rval *returnv)
     char expbuf[CF_EXPANDSIZE];
     CfAssoc *assoc;
 
-    CfDebug("\nGetVariable(%s,%s) type=(to be determined)\n", scope, lval);
-
+    CfDebug("GetVariable(%s,%s) type=(to be determined)\n", scope, lval);
+    
     if (lval == NULL)
     {
         *returnv = (Rval) {NULL, CF_SCALAR};
@@ -178,8 +178,6 @@ enum cfdatatype GetVariable(const char *scope, const char *lval, Rval *returnv)
         strlcpy(scopeid, scope, sizeof(scopeid));
     }
 
-    CfDebug("Looking for %s.%s\n", scopeid, vlval);
-
     if (ptr == NULL)
     {
         /* Assume current scope */
@@ -205,8 +203,11 @@ enum cfdatatype GetVariable(const char *scope, const char *lval, Rval *returnv)
         CfDebug("No such variable found %s.%s\n\n", scopeid, lval);
         /* C type system does not allow us to express the fact that returned
            value may contain immutable string. */
+
+
         *returnv = (Rval) {(char *) lval, CF_SCALAR};
         return cf_notype;
+
     }
 
     CfDebug("return final variable type=%s, value={\n", CF_DATATYPES[assoc->dtype]);
@@ -950,8 +951,7 @@ int AddVariableHash(const char *scope, const char *lval, Rval rval, enum cfdatat
             /* Different value, bark and replace */
             if (!UnresolvedVariables(assoc, rval.rtype))
             {
-                CfOut(cf_inform, "", " !! Duplicate selection of value for variable \"%s\" in scope %s", lval,
-                      ptr->scope);
+                CfOut(cf_inform, "", " !! Duplicate selection of value for variable \"%s\" in scope %s", lval, ptr->scope);
                 if (fname)
                 {
                     CfOut(cf_inform, "", " !! Rule from %s at/before line %d\n", fname, lineno);

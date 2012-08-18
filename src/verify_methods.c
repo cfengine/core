@@ -29,6 +29,7 @@
 #include "constraints.h"
 #include "vars.h"
 #include "expand.h"
+#include "files_names.h"
 
 /*****************************************************************************/
 
@@ -91,7 +92,9 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
        }
     else
        {
-       method_deref = method_name;
+           // Transform syntactic . into internal : representation
+           TransformNameInPlace(method_name, '.', ':');
+           method_deref = method_name;
        }
 
     if ((bp = GetBundle(PolicyFromPromise(pp), method_deref, "agent")))
@@ -104,12 +107,19 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
         NewScope(bp->name);
         HashVariables(PolicyFromPromise(pp), bp->name, report_context);
 
+        char namespace[CF_BUFSIZE];
+        snprintf(namespace,CF_BUFSIZE,"%s_meta",method_name);
+        NewScope(namespace);
+        SetBundleOutputs(bp->name);
+
         AugmentScope(bp->name, bp->args, params);
 
         THIS_BUNDLE = bp->name;
         PushPrivateClassContext(a.inherit);
 
         retval = ScheduleAgentOperations(bp, report_context);
+
+        ResetBundleOutputs(bp->name);
 
         PopPrivateClassContext();
         THIS_BUNDLE = bp_stack;

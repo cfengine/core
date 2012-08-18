@@ -1,0 +1,11 @@
+
+
+@verbatim
+things:
+
+   "my promise"  
+              implements => { "my goal" };
+
+@end verbatim
+
+

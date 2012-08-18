@@ -883,9 +883,9 @@ static void KeepPromiseBundles(Policy *policy, Rlist *bundlesequence, const Repo
         if ((bp = GetBundle(policy, name, "agent")) || (bp = GetBundle(policy, name, "common")))
         {
             char namespace[CF_BUFSIZE];
-            snprintf(namespace,CF_BUFSIZE,"%s_meta",bp->name);
+            snprintf(namespace,CF_BUFSIZE,"%s_meta", name);
             NewScope(namespace);
-            
+
             SetBundleOutputs(bp->name);
             AugmentScope(bp->name, bp->args, params);
             BannerBundle(bp, params);
@@ -1066,6 +1066,7 @@ static void KeepAgentPromise(Promise *pp, const ReportContext *report_context)
     {
         char namespace[CF_BUFSIZE];
         snprintf(namespace,CF_BUFSIZE,"%s_meta",pp->bundle);
+        NewScope(namespace);
         ConvergeVarHashPromise(namespace, pp, true);
         return;
     }

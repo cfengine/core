@@ -137,15 +137,15 @@ const Sock ECGSOCKS[ATTR] =     /* extended to map old to new using enum */
 {
     {"137", "netbiosns", ob_netbiosns_in, ob_netbiosns_out},
     {"138", "netbiosdgm", ob_netbiosdgm_in, ob_netbiosdgm_out},
-    {"139", "netbiosssn", ob_netbiosssn_in, ob_netbiosssn_out},
-    {"194", "irc", ob_irc_in, ob_irc_out},
     {"5308", "cfengine", ob_cfengine_in, ob_cfengine_out},
     {"2049", "nfsd", ob_nfsd_in, ob_nfsd_out},
     {"25", "smtp", ob_smtp_in, ob_smtp_out},
     {"80", "www", ob_www_in, ob_www_out},
     {"21", "ftp", ob_ftp_in, ob_ftp_out},
     {"22", "ssh", ob_ssh_in, ob_ssh_out},
-    {"443", "wwws", ob_wwws_in, ob_wwws_out}
+    {"443", "wwws", ob_wwws_in, ob_wwws_out},
+    {"143", "imap", ob_imap_in, ob_imap_out},
+    {"993", "imaps", ob_imaps_in, ob_imaps_out},
 };
 
 const char *TCPNAMES[CF_NETATTR] =
@@ -161,7 +161,7 @@ const char *TCPNAMES[CF_NETATTR] =
 
 const char *OBS[CF_OBSERVABLES][2] =
 {
-    {"users", "Users with active processes"},
+    {"users", "Users with active processes - including system users"},
     {"rootprocs", "Sum privileged system processes"},
     {"otherprocs", "Sum non-privileged process"},
     {"diskfree", "Free disk on / partition"},
@@ -170,10 +170,10 @@ const char *OBS[CF_OBSERVABLES][2] =
     {"netbiosns_out", "netbios name lookups (out)"},
     {"netbiosdgm_in", "netbios name datagrams (in)"},
     {"netbiosdgm_out", "netbios name datagrams (out)"},
-    {"netbiosssn_in", "netbios name sessions (in)"},
-    {"netbiosssn_out", "netbios name sessions (out)"},
-    {"irc_in", "IRC connections (in)"},
-    {"irc_out", "IRC connections (out)"},
+    {"imap_in", "imap mail client sessions (in)"},
+    {"imap_out", "imap mail client sessions (out)"},
+    {"imaps_in", "encrypted imap mail client sessions (in)"},
+    {"imaps_out", "encrypted imap mail client sessions (out)"},
     {"cfengine_in", "cfengine connections (in)"},
     {"cfengine_out", "cfengine connections (out)"},
     {"nfsd_in", "nfs connections (in)"},

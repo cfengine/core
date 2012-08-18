@@ -2046,6 +2046,17 @@ files:
 @noindent This is not prepended automatically because references to this
 class in class expressions cannot be detected and modified automatically.
 
+To access variables or meta-data in bundles in a different namespace, use the colon
+as a namespace prefix:
+
+@verbatim
+
+ $(namespace:bundle.variable)
+ $(namespace:bundle_meta.variable)
+
+@end verbatim
+
+
 @c -----------------------------------------------------------------------
 @node Normal ordering
 @section Normal ordering

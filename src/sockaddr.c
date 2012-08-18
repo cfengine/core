@@ -31,8 +31,8 @@
 /* Note these functions are not thread safe                                  */
 /*****************************************************************************/
 
-#if defined(HAVE_GETADDRINFO)
-static const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt)
+#if defined(HAVE_GETADDRINFO) && defined(MINGW)
+const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt)
 {
     if (af == AF_INET)
     {
@@ -59,7 +59,7 @@ static const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt)
 
 /*****************************************************************************/
 
-static int inet_pton(int af, const char *src, void *dst)
+int inet_pton(int af, const char *src, void *dst)
 {
     struct addrinfo hints, *res, *ressave;
 

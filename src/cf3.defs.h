@@ -152,7 +152,7 @@
 #define CF_START_DOMAIN "undefined.domain"
 
 #define CF_GRAINS   64
-#define ATTR     11
+#define ATTR        16
 #define CF_NETATTR   7          /* icmp udp dns tcpsyn tcpfin tcpack */
 #define CF_MEASURE_INTERVAL (5.0*60.0)
 #define CF_SHIFT_INTERVAL (6*3600)
@@ -357,10 +357,10 @@ enum observables
     ob_netbiosns_out,
     ob_netbiosdgm_in,
     ob_netbiosdgm_out,
+    ob_netbiosssn_in,
+    ob_netbiosssn_out,
     ob_imap_in,
     ob_imap_out,
-    ob_imaps_in,
-    ob_imaps_out,
     ob_cfengine_in,
     ob_cfengine_out,
     ob_nfsd_in,
@@ -402,6 +402,16 @@ enum observables
     ob_cpu1,
     ob_cpu2,
     ob_cpu3,
+    ob_microsoft_ds_in,
+    ob_microsoft_ds_out,
+    ob_www_alt_in,
+    ob_www_alt_out,
+    ob_imaps_in,
+    ob_imaps_out,
+    ob_ldap_in,
+    ob_ldap_out,
+    ob_ldaps_in,
+    ob_ldaps_out,
     ob_spare
 };
 

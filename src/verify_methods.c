@@ -117,6 +117,8 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
 
         retval = ScheduleAgentOperations(bp, report_context);
 
+        ResetBundleOutputs(bp->name);
+
         PopPrivateClassContext();
         THIS_BUNDLE = bp_stack;
 

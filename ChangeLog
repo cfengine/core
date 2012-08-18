@@ -21,6 +21,8 @@
 	  - "outputs" promise type,
 	  - remote syslog support.
 
+	- Changed some port numbers to replace old services with imap(s)
+	
 	Misc:
 
 	- Support for the following outdated platforms and corresponding
@@ -93,6 +95,8 @@
 	- Fixed check for old PCRE versions (Mantis #1262).
 	- Fixed insertion of multi-line blocks at the start of file (Mantis #809).
 	- Fixed numerous memory leaks.
+	- Fixes for metadata that were not resolvable
+	- Fixes for namespaces that would not support metadata and variable expansion
 
 	In alpha 1:
 
@@ -114,6 +118,7 @@
   	  kept within them. If any promise was not kept, the method is not
 	  kept, else if any promise is repaired, the method was repaired
 	  else it was kept.
+	- Remote variable access in namespaces by $(namespace:bundle.variable)
 
 	Misc:
 

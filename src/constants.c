@@ -154,7 +154,6 @@ const Sock ECGSOCKS[ATTR] =     /* extended to map old to new using enum */
     {"27017", "mongo", ob_mongo_in, ob_mongo_out},
     {"3306", "mysql", ob_mysql_in, ob_mysql_out},
     {"5432", "postgresql", ob_postgresql_in, ob_postgresql_out},
-    {"0", NULL, ob_spare, ob_spare},
 };
 
 const char *TCPNAMES[CF_NETATTR] =

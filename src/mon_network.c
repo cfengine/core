@@ -29,7 +29,7 @@
 /* Globals */
 
 Item *ALL_INCOMING;
-Item *MON_TCP4 = NULL, *MON_TCP6 = NULL;
+Item *MON_UDP4 = NULL, *MON_UDP6 = NULL, *MON_TCP4 = NULL, *MON_TCP6 = NULL;
 
 static const char *VNETSTAT[HARD_CLASSES_MAX] =
 {
@@ -59,8 +59,10 @@ void MonNetworkInit(void)
  
     DeleteItemList(MON_TCP4);
     DeleteItemList(MON_TCP6);
+    DeleteItemList(MON_UDP4);
+    DeleteItemList(MON_UDP6);
  
-    MON_TCP4 = MON_TCP6 = NULL;
+    MON_UDP4 = MON_UDP6 = MON_TCP4 = MON_TCP6 = NULL;
 
     for (int i = 0; i < ATTR; i++)
     {
@@ -135,7 +137,7 @@ void MonNetworkGatherData(double *cf_this)
     int i;
     char vbuff[CF_BUFSIZE];
     enum cf_netstat_type { cfn_new, cfn_old } type = cfn_new;
-    enum cf_packet_type { cfn_tcp4, cfn_tcp6 } packet = cfn_tcp4;
+    enum cf_packet_type { cfn_udp4, cfn_udp6, cfn_tcp4, cfn_tcp6} packet = cfn_tcp4;
 
     CfDebug("GatherSocketData()\n");
 
@@ -177,9 +179,21 @@ void MonNetworkGatherData(double *cf_this)
 
         // If this is old style, we look for chapter headings, e.g. "TCP: IPv4"
 
-        if (strncmp(vbuff,"TCP:",4) == 0 && strstr(vbuff+4,"6"))
+        if (strncmp(vbuff,"UDP:",4) == 0 && strstr(vbuff+4,"6"))
+        {
+            packet = cfn_udp6;
+            type = cfn_old;
+            continue;
+        }
+        else if (strncmp(vbuff,"TCP:",4) == 0 && strstr(vbuff+4,"6"))       
         {
             packet = cfn_tcp6;
+            type = cfn_old;
+            continue;
+        }
+        else if (strncmp(vbuff,"UDP:",4) == 0 && strstr(vbuff+4,"4"))
+        {
+            packet = cfn_udp4;
             type = cfn_old;
             continue;
         }
@@ -192,9 +206,19 @@ void MonNetworkGatherData(double *cf_this)
 
         // Line by line state in modern/linux output
 
-        if (strncmp(vbuff,"tcp6",4) == 0)
+        if (strncmp(vbuff,"udp6",4) == 0)
+        {
+            packet = cfn_udp6;
+            type = cfn_new;
+        }
+        else if (strncmp(vbuff,"tcp6",4) == 0)
         {
             packet = cfn_tcp6;
+            type = cfn_new;
+        }
+        else if (strncmp(vbuff,"udp",3) == 0)
+        {
+            packet = cfn_udp4;
             type = cfn_new;
         }
         else if (strncmp(vbuff,"tcp",3) == 0)
@@ -241,6 +265,12 @@ void MonNetworkGatherData(double *cf_this)
 
             switch (packet)
             {
+            case cfn_udp4:
+                IdempPrependItem(&MON_UDP4, sp, local);
+                break;
+            case cfn_udp6:
+                IdempPrependItem(&MON_UDP6, sp, local);
+                break;
             case cfn_tcp4:
                 IdempPrependItem(&MON_TCP4, localport, local);
                 break;

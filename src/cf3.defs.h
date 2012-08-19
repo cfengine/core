@@ -152,12 +152,12 @@
 #define CF_START_DOMAIN "undefined.domain"
 
 #define CF_GRAINS   64
-#define ATTR        16
+#define ATTR        20
 #define CF_NETATTR   7          /* icmp udp dns tcpsyn tcpfin tcpack */
 #define CF_MEASURE_INTERVAL (5.0*60.0)
 #define CF_SHIFT_INTERVAL (6*3600)
 
-#define CF_OBSERVABLES 91
+#define CF_OBSERVABLES 100
 
 /* Output control defines */
 
@@ -412,6 +412,12 @@ enum observables
     ob_ldap_out,
     ob_ldaps_in,
     ob_ldaps_out,
+    ob_mongo_in,
+    ob_mongo_out,
+    ob_mysql_in,
+    ob_mysql_out,
+    ob_postgresql_in,
+    ob_postgresql_out,
     ob_spare
 };
 

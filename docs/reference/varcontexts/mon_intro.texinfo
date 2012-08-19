@@ -1,6 +1,9 @@
 
-The variables discovered by @code{cf-monitord} are placed in this monitoring
-context. Monitoring variables are expected to be ephemeral properties, rapidly changing.
+The variables discovered by @code{cf-monitord} are placed in this
+monitoring context. Monitoring variables are expected to be ephemeral
+properties, rapidly changing.
 
-In enterprise versions of CFEngine, custom defined monitoring targets also become
-variables in this context, named by the handle of the promise that defined them.
+In enterprise versions of CFEngine, custom defined monitoring targets
+also become variables in this context, named by the handle of the
+promise that defined them.
+

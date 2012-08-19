@@ -491,6 +491,8 @@ static void TexinfoVariables(const char *source_dir, FILE *fout, char *scope)
     Rlist *rp, *list = NULL;
     int i;
 
+    char *extra_mon[] = { "listening_udp4_ports", "listening_tcp4_ports", "listening_udp6_ports", "listening_tcp6_ports", NULL };
+    
     HashToList(GetScope(scope), &list);
     list = AlphaSortRListNames(list);
 
@@ -509,6 +511,11 @@ static void TexinfoVariables(const char *source_dir, FILE *fout, char *scope)
     }
     else
     {
+        for (i = 0; extra_mon[i] != NULL; i++)        
+        {
+            fprintf(fout, "* Variable %s.%s::\n", "mon", extra_mon[i]);
+        }
+
         for (i = 0; i < CF_OBSERVABLES; ++i)
         {
             if (strcmp(OBS[i][0], "spare") == 0)
@@ -536,6 +543,14 @@ static void TexinfoVariables(const char *source_dir, FILE *fout, char *scope)
     }
     else
     {
+        for (i = 0; extra_mon[i] != NULL; i++)        
+        {
+            fprintf(fout, "\n@node Variable %s.%s\n@subsection Variable %s.%s \n\n", "mon", extra_mon[i], "mon", extra_mon[i]);
+            fprintf(fout, "List variable containing an observational measure collected every 2.5 minutes from cf-monitord, description: port numbers that were observed to be set up to receive connections on the host concerned");
+
+        }
+
+    
         for (i = 0; i < CF_OBSERVABLES; i++)
         {
             if (strcmp(OBS[i][0], "spare") == 0)

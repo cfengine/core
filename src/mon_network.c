@@ -221,7 +221,7 @@ void MonNetworkGatherData(double *cf_this)
         }
 
         // Extract the port number from the end of the string
-        
+
         for (sp = local + strlen(local); (*sp != '.') && (*sp != ':')  && (sp > local); sp--)
         {
         }
@@ -229,6 +229,8 @@ void MonNetworkGatherData(double *cf_this)
         *sp = '\0'; // Separate address from port number
         sp++;
 
+        char *localport = sp;
+        
         if (strstr(vbuff, "LISTEN"))
         {
             // General bucket
@@ -240,10 +242,10 @@ void MonNetworkGatherData(double *cf_this)
             switch (packet)
             {
             case cfn_tcp4:
-                IdempPrependItem(&MON_TCP4, sp, local);
+                IdempPrependItem(&MON_TCP4, localport, local);
                 break;
             case cfn_tcp6:
-                IdempPrependItem(&MON_TCP6, sp, local);
+                IdempPrependItem(&MON_TCP6, localport, local);
                 break;
             default:
                 break;
@@ -253,40 +255,29 @@ void MonNetworkGatherData(double *cf_this)
 
         // Now look at outgoing
         
-        for (sp = remote + strlen(remote); (sp >= remote) && !isdigit((int) *sp); sp--)
+        for (sp = remote + strlen(remote) - 1; (sp >= remote) && isdigit((int) *sp); sp--)
         {
         }
 
         sp++;
+        char *remoteport = sp;
 
         // Now look for the specific vital signs to count frequencies
-        
+            
         for (i = 0; i < ATTR; i++)
         {
-            char *spend;
-
-            for (spend = local + strlen(local) - 1; isdigit((int) *spend); spend--)
-            {
-            }
-
-            spend++;
-
-            if (strcmp(spend, ECGSOCKS[i].portnr) == 0)
+            if (strcmp(localport, ECGSOCKS[i].portnr) == 0)
             {
                 cf_this[ECGSOCKS[i].in]++;
                 AppendItem(&in[i], vbuff, "");
+
             }
 
-            for (spend = remote + strlen(remote) - 1; (sp >= remote) && isdigit((int) *spend); spend--)
-            {
-            }
-
-            spend++;
-
-            if (strcmp(spend, ECGSOCKS[i].portnr) == 0)
+            if (strcmp(remoteport, ECGSOCKS[i].portnr) == 0)
             {
                 cf_this[ECGSOCKS[i].out]++;
                 AppendItem(&out[i], vbuff, "");
+
             }
         }
     }

@@ -134,7 +134,6 @@ libpromises_la_SOURCES = \
         scope.c \
         selfdiagnostic.c \
         sequence.c sequence.h \
-	server.c server.h \
         set.c set.h \
         show.h \
         signals.c \
@@ -212,6 +211,7 @@ cf_serverd_SOURCES = \
         cf-serverd.c \
         cf-serverd-functions.c \
         cf-serverd-functions.h \
+        server.c server.h \
         server_transform.c
 
 cf_serverd_LDADD =

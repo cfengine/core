@@ -27,9 +27,9 @@
 
 char ToLower(char ch);
 char ToUpper(char ch);
-char *ToUpperStr(const char *str) FUNC_DEPRECATED("Function ToUpperStr is unsafe as it uses static buffer for return values. Use ToUpperStrInplace instead.");
+char *ToUpperStr(const char *str) FUNC_DEPRECATED;
 void ToUpperStrInplace(char *str);
-char *ToLowerStr(const char *str) FUNC_DEPRECATED("Function ToUpperStr is unsafe as it uses static buffer for return values. Use ToLowerStrInplace instead.");
+char *ToLowerStr(const char *str) FUNC_DEPRECATED;
 void ToLowerStrInplace(char *str);
 
 long StringToLong(const char *str);

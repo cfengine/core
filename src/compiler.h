@@ -47,7 +47,7 @@
 
 #if defined(__GNUC__)
 #  define FUNC_DEPRECATED(warning_text) \
-    __attribute__((deprecated(warning_text)))
+    __attribute__((deprecated)) __attribute__((warning(warning_text)))
 #else
 #  define FUNC_DEPRECATED(warning_text)
 #endif

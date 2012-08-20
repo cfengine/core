@@ -217,10 +217,12 @@ int RetrieveUnreliableValue(char *caller, char *handle, char *buffer)
     return false;
 }
 
+#if defined(__MINGW32__)
 int GetRegistryValue(char *key, char *name, char *buf, int bufSz)
 {
     return 0;
 }
+#endif
 
 void *CfLDAPValue(char *uri, char *dn, char *filter, char *name, char *scope, char *sec)
 {
@@ -256,9 +258,11 @@ bool CFDB_HostsWithClass(Rlist **return_list, char *class_name, char *return_for
 /* cf-agent: verify_databases.c */
 
 
+#if defined(__MINGW32__)
 void VerifyRegistryPromise(Attributes a, Promise *pp)
 {
 }
+#endif
 
 
 /* cf-agent: verify_services.c */

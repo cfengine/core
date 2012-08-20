@@ -164,7 +164,9 @@ int IsTCPType(char *s);
 /* enterprise_stubs.c */
 
 void SyntaxExport(void);
+#if defined(__MINGW32__)
 void VerifyRegistryPromise(Attributes a, Promise *pp);
+#endif
 int CfSessionKeySize(char c);
 char CfEnterpriseOptions(void);
 const EVP_CIPHER *CfengineCipher(char type);
@@ -210,7 +212,9 @@ int ReturnLiteralData(char *handle, char *ret);
 char *GetRemoteScalar(char *proto, char *handle, char *server, int encrypted, char *rcv);
 const char *PromiseID(const Promise *pp);     /* Not thread-safe */
 void NotePromiseCompliance(const Promise *pp, double val, PromiseState state, char *reasoin);
+#if defined(__MINGW32__)
 int GetRegistryValue(char *key, char *name, char *buf, int bufSz);
+#endif
 void NoteVarUsage(void);
 void NoteVarUsageDB(void);
 void SummarizeVariables(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web);

@@ -76,7 +76,7 @@ void VerifyDatabasePromises(Promise *pp)
 
     if (strcmp(a.database.type, "ms_registry") == 0)
     {
-#ifdef HAVE_NOVA
+#if defined(__MINGW32__)
         VerifyRegistryPromise(a, pp);
 #endif
         return;

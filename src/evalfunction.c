@@ -2141,6 +2141,7 @@ static FnCallResult FnCallRegistryValue(FnCall *fp, Rlist *finalargs)
 
 /* begin fn specific content */
 
+#if defined(__MINGW32__)
     if (GetRegistryValue(ScalarValue(finalargs), ScalarValue(finalargs->next), buffer, sizeof(buffer)))
     {
         return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
@@ -2149,7 +2150,9 @@ static FnCallResult FnCallRegistryValue(FnCall *fp, Rlist *finalargs)
     {
         return (FnCallResult) { FNCALL_FAILURE };
     }
-
+#else
+    return (FnCallResult) { FNCALL_FAILURE };
+#endif
 }
 
 /*********************************************************************/

@@ -22,4 +22,6 @@ body executor control
 #               "Min25", "Min30", "Min35", "Min40", "Min45",
 #               "Min50", "Min55" };
 
+  exec_command => "$(sys.cf_twin) -f $(sys.workdir)\inputs\failsafe\failsafe.cf && $(sys.cf_agent)";
+
 }

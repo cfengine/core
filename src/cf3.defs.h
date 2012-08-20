@@ -2090,6 +2090,7 @@ enum cf_srv_policy
     cfsrv_stop,
     cfsrv_disable,
     cfsrv_restart,
+    cfsrv_reload,
     cfsrv_nostatus
 };
 

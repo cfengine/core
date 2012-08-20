@@ -203,6 +203,11 @@ static void DoVerifyServices(Attributes a, Promise *pp, const ReportContext *rep
             AppendRlist(&args, "restart", CF_SCALAR);
             break;
 
+        case cfsrv_reload:
+            AppendRlist(&args, pp->promiser, CF_SCALAR);
+            AppendRlist(&args, "restart", CF_SCALAR);
+            break;
+            
         case cfsrv_stop:
         case cfsrv_disable:
         default:
@@ -228,6 +233,10 @@ static void DoVerifyServices(Attributes a, Promise *pp, const ReportContext *rep
 
     case cfsrv_restart:
         NewScalar("this", "service_policy", "restart", cf_str);
+        break;
+
+    case cfsrv_reload:
+        NewScalar("this", "service_policy", "reload", cf_str);
         break;
         
     case cfsrv_stop:

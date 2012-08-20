@@ -1243,7 +1243,9 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
 
     ThreadLock(cft_system);
 
-    strncpy(dns_assert, ToLowerStr(fqname), CF_MAXVARSIZE - 1);
+    strlcpy(dns_assert, fqname, CF_MAXVARSIZE);
+    ToLowerStrInplace(dns_assert);
+
     strncpy(ip_assert, ipstring, CF_MAXVARSIZE - 1);
 
     ThreadUnlock(cft_system);

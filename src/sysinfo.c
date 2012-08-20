@@ -296,7 +296,11 @@ void GetNameInfo3()
 
     for (i = 0; i < HARD_CLASSES_MAX; i++)
     {
-        if (FullTextMatch(CLASSATTRIBUTES[i][0], ToLowerStr(VSYSNAME.sysname)))
+        char sysname[CF_BUFSIZE];
+        strlcpy(sysname, VSYSNAME.sysname, CF_BUFSIZE);
+        ToLowerStrInplace(sysname);
+
+        if (FullTextMatch(CLASSATTRIBUTES[i][0], sysname))
         {
             if (FullTextMatch(CLASSATTRIBUTES[i][1], VSYSNAME.machine))
             {

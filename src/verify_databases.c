@@ -563,8 +563,9 @@ static int VerifyTablePromise(CfdbConn *cfdb, char *table_path, Rlist *columns, 
         type[0] = '\0';
         size = CF_NOINT;
 
-        strncpy(name, CfFetchColumn(cfdb, 0), CF_MAXVARSIZE - 1);
-        strncpy(type, ToLowerStr(CfFetchColumn(cfdb, 1)), CF_MAXVARSIZE - 1);
+        strlcpy(name, CfFetchColumn(cfdb, 0), CF_MAXVARSIZE);
+        strlcpy(type, CfFetchColumn(cfdb, 1), CF_MAXVARSIZE);
+        ToLowerStrInplace(type);
         sizestr = CfFetchColumn(cfdb, 2);
 
         if (sizestr)

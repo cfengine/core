@@ -214,6 +214,11 @@ cf_serverd_SOURCES = \
         cf-serverd-functions.h \
         server_transform.c
 
+cf_serverd_LDADD = libpromises.la
+if HAVE_NOVA
+cf_serverd_LDADD += ../nova/src/libcfserverd.la
+endif
+
 cf_monitord_SOURCES = \
         verify_measurements.c \
         env_monitor.c env_monitor.h \

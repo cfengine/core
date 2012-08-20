@@ -152,7 +152,7 @@
 #define CF_START_DOMAIN "undefined.domain"
 
 #define CF_GRAINS   64
-#define ATTR        20
+#define ATTR        19
 #define CF_NETATTR   7          /* icmp udp dns tcpsyn tcpfin tcpack */
 #define CF_MEASURE_INTERVAL (5.0*60.0)
 #define CF_SHIFT_INTERVAL (6*3600)

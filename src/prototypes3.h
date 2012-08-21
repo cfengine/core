@@ -361,6 +361,7 @@ void LogHashChange(char *file, FileState status, char *msg);
 
 /* files_properties.c */
 
+void AddFilenameToListOfSuspicious(const char *filename);
 int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp);
 void SetSearchDevice(struct stat *sb, Promise *pp);
 int DeviceBoundary(struct stat *sb, Promise *pp);

@@ -79,7 +79,6 @@ extern char VFQNAME[];
 extern char VUQNAME[];
 
 extern Item *VSETUIDLIST;
-extern Item *SUSPICIOUSLIST;
 
 extern int DEBUG;
 

@@ -28,6 +28,19 @@
 #include "files_names.h"
 #include "item_lib.h"
 
+static Item *SUSPICIOUSLIST = NULL;
+
+void AddFilenameToListOfSuspicious(const char *pattern)
+{
+    PrependItem(&SUSPICIOUSLIST, pattern, NULL);
+}
+
+bool SuspiciousFile(const char *filename)
+{
+    return IsItemIn(SUSPICIOUSLIST, filename);
+}
+
+
 /*********************************************************************/
 /* Files to be ignored when parsing directories                      */
 /*********************************************************************/
@@ -55,7 +68,7 @@ int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp)
         return true;
     }
 
-    if (IsItemIn(SUSPICIOUSLIST, nodename))
+    if (SuspiciousFile(nodename))
     {
         struct stat statbuf;
 

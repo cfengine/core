@@ -666,7 +666,7 @@ void KeepControlPromises(Policy *policy)
 
             for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
             {
-                PrependItem(&SUSPICIOUSLIST, rp->item, NULL);
+                AddFilenameToListOfSuspicious(ScalarValue(rp));
                 CfOut(cf_verbose, "", "-> Concidering %s as suspicious file", ScalarValue(rp));
             }
 

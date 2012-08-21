@@ -358,7 +358,7 @@ void AppendItem(Item **liststart, const char *itemstring, const char *classes)
 
 /*********************************************************************/
 
-void PrependItemList(Item **liststart, char *itemstring)
+void PrependItemList(Item **liststart, const char *itemstring)
 {
     Item *ip = xcalloc(1, sizeof(Item));
 

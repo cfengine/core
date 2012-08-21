@@ -34,7 +34,7 @@ Item *ReturnItemAtIndex(Item *list, int index);
 int GetItemIndex(Item *list, char *item);
 Item *EndOfList(Item *start);
 int IsItemInRegion(char *item, Item *begin, Item *end, Attributes a, Promise *pp);
-void PrependItemList(Item **liststart, char *itemstring);
+void PrependItemList(Item **liststart, const char *itemstring);
 int SelectItemMatching(Item *s, char *regex, Item *begin, Item *end, Item **match, Item **prev, char *fl);
 int SelectNextItemMatching(char *regexp, Item *begin, Item *end, Item **match, Item **prev);
 int SelectLastItemMatching(char *regexp, Item *begin, Item *end, Item **match, Item **prev);

@@ -1985,10 +1985,7 @@ static int Xen_Hv_Check(void)
     {
         uint32_t u[3];
         char s[13];
-    } sig =
-    {
-        {
-    0}};
+    } sig = {{0}};
 
     Xen_Cpuid(0x40000000, &eax, &sig.u[0], &sig.u[1], &sig.u[2]);
 

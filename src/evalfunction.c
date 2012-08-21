@@ -2135,13 +2135,11 @@ static FnCallResult FnCallTranslatePath(FnCall *fp, Rlist *finalargs)
 
 static FnCallResult FnCallRegistryValue(FnCall *fp, Rlist *finalargs)
 {
-    char buffer[CF_BUFSIZE];
-
-    buffer[0] = '\0';
-
 /* begin fn specific content */
 
 #if defined(__MINGW32__)
+    char buffer[CF_BUFSIZE] = "";
+
     if (GetRegistryValue(ScalarValue(finalargs), ScalarValue(finalargs->next), buffer, sizeof(buffer)))
     {
         return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };

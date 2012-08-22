@@ -708,7 +708,7 @@ void GetInterfacesInfo(enum cfagenttype ag)
                 if ((hp =
                      gethostbyaddr((char *) &(sin->sin_addr.s_addr), sizeof(sin->sin_addr.s_addr), AF_INET)) == NULL)
                 {
-                    CfDebug("No hostinformation for %s not found\n", inet_ntoa(sin->sin_addr));
+                    CfDebug("No hostinformation for %s found\n", inet_ntoa(sin->sin_addr));
                 }
                 else
                 {

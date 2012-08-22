@@ -1021,19 +1021,6 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
                     CfOut(cf_error, "", "Should update file %s from source %s on %s", destfile, sourcefile, server);
                     return;
                 }
-                else
-                {
-                    if (server)
-                    {
-                        cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Updated %s from source %s on %s", destfile,
-                             sourcefile, server);
-                    }
-                    else
-                    {
-                        cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Updated %s from source %s on localhost", destfile,
-                             sourcefile);
-                    }
-                }
 
                 if (MatchRlistItem(AUTO_DEFINE_LIST, destfile))
                 {
@@ -1048,6 +1035,11 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
                     }
                     else
                     {
+                        char *source_host = server ? server : "localhost";
+
+                        cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Updated %s from source %s on %s", destfile,
+                             sourcefile, source_host);
+
                         VerifyCopiedFileAttributes(destfile, &dsb, &ssb, attr, pp, report_context);
                     }
 

@@ -3,6 +3,8 @@ bundle common G
 classes:
   "bin_$(cmds)" expression => fileexists("/bin/$(cmds)");
   "usr_bin_$(cmds)" expression => fileexists("/usr/bin/$(cmds)");
+  "usr_local_bin_$(cmds)" expression => fileexists("/usr/local/bin/$(cmds)");
+  "usr_contrib_bin_$(cmds)" expression => fileexists("/usr/contrib/bin/$(cmds)");
   "has_$(cmds)" or => { "bin_$(cmds)", "usr_bin_$(cmds)" };
 
   "temp_declared" not => strcmp(getenv("TEMP", "65536"), "");
@@ -15,6 +17,10 @@ vars:
       ifvarclass => "bin_$(cmds)";
   "$(cmds)"  string => "/usr/bin/$(cmds)",
       ifvarclass => "!bin_$(cmds).usr_bin_$(cmds)";
+  "$(cmds)"  string => "/usr/local/bin/$(cmds)",
+      ifvarclass => "!bin_$(cmds).!usr_bin_$(cmds).usr_local_bin_$(cmds)";
+  "$(cmds)"  string => "/usr/contrib/bin/$(cmds)",
+      ifvarclass => "!bin_$(cmds).!usr_bin_$(cmds).!usr_local_bin_$(cmds).usr_contrib_bin_$(cmds)";
 
   temp_declared::
     "testroot" string => getenv("TEMP", "65535");

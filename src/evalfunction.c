@@ -3403,6 +3403,11 @@ static FnCallResult FnCallSplitString(FnCall *fp, Rlist *finalargs)
 
     newlist = SplitRegexAsRList(string, split, max, true);
 
+    if (newlist == NULL)
+    {
+        PrependRScalar(&newlist, "cf_null", CF_SCALAR);
+    }
+
     return (FnCallResult) { FNCALL_SUCCESS, { newlist, CF_LIST } };
 }
 

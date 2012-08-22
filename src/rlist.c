@@ -1099,7 +1099,7 @@ Rlist *SplitRegexAsRList(const char *string, const char *regex, int max, int bla
         memset(node, 0, CF_MAXVARSIZE);
         strncpy(node, sp, CF_MAXVARSIZE - 1);
 
-        if (blanks || strlen(node) > 0)
+        if ((blanks && sp != string) || strlen(node) > 0)
         {
             AppendRScalar(&liststart, node, CF_SCALAR);
         }

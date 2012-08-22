@@ -509,6 +509,11 @@ AC_CHECK_FUNCS(getnetgrent)
 
 AC_CHECK_DECLS(setnetgrent, [], [], [[#include <netdb.h>]])
 AC_CHECK_FUNCS(setnetgrent)
+AC_COMPILE_IFELSE(AC_LANG_PROGRAM([[#include <netdb.h>]],
+                                   [extern int setnetgrent(const char *)]),
+  [AC_DEFINE([SETNETGRENT_RETURNS_INT], 1, [Whether setnetgrent returns int])],
+  [AC_DEFINE([SETNETGRENT_RETURNS_INT], 0, [Whether setnetgrent returns int])])
+
 
 AC_CHECK_DECLS(endnetgrent, [], [], [[#include <netdb.h>]])
 AC_CHECK_FUNCS(endnetgrent)

@@ -692,7 +692,7 @@ void GetInterfacesInfo(enum cfagenttype ag)
                 continue;
             }
 
-            if ((ifr.ifr_flags & IFF_BROADCAST) && !(ifr.ifr_flags & IFF_LOOPBACK))
+            if ((ifr.ifr_flags & IFF_UP) && !(ifr.ifr_flags & IFF_LOOPBACK))
             {
                 sin = (struct sockaddr_in *) &ifp->ifr_addr;
 

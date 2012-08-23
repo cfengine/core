@@ -58,6 +58,11 @@ EditContext *NewEditContext(char *filename, Attributes a, Promise *pp)
     if (a.haveeditxml)
     {
     // Fill me in
+        if(!LoadFileAsXmlDoc(&(ec->xmldoc), filename, a, pp))
+        {
+            free(ec);
+            return NULL;
+        }
     }
 
     if (a.edits.empty_before_use)
@@ -107,6 +112,17 @@ void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportC
         if (a.haveeditxml)
         {
         // Fill me in
+            if(CompareToXml(ec->xmldoc, ec->filename, a, pp))
+            {
+                if (ec)
+                {
+                    cfPS(cf_verbose, CF_NOP, "", pp, a, " -> No edit changes to file %s need saving", ec->filename);
+                }
+            }
+            else
+            {
+                SaveXmlDocAsFile(ec->xmldoc, ec->filename, a, pp, report_context);
+            }
         }
         
     }

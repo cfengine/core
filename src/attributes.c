@@ -1336,6 +1336,9 @@ Attributes GetInsertionAttributes(const Promise *pp)
     attr.haveregion = GetBooleanConstraint("select_region", pp);
     attr.region = GetRegionConstraints(pp);
 
+//    attr.havexpath = GetBooleanConstraint ("select_xpath", pp);
+    attr.xml = GetXmlConstraints(pp);
+
     attr.havetrans = GetBooleanConstraint(CF_TRANSACTION, pp);
     attr.transaction = GetTransactionConstraints(pp);
 
@@ -1385,6 +1388,8 @@ Attributes GetDeletionAttributes(const Promise *pp)
     attr.haveregion = GetBooleanConstraint("select_region", pp);
     attr.region = GetRegionConstraints(pp);
 
+    attr.xml = GetXmlConstraints(pp);
+
     attr.havetrans = GetBooleanConstraint(CF_TRANSACTION, pp);
     attr.transaction = GetTransactionConstraints(pp);
 
@@ -1433,6 +1438,8 @@ Attributes GetReplaceAttributes(const Promise *pp)
     attr.haveregion = GetBooleanConstraint("select_region", pp);
     attr.region = GetRegionConstraints(pp);
 
+    attr.xml = GetXmlConstraints(pp);
+
     attr.havetrans = GetBooleanConstraint(CF_TRANSACTION, pp);
     attr.transaction = GetTransactionConstraints(pp);
 
@@ -1440,6 +1447,53 @@ Attributes GetReplaceAttributes(const Promise *pp)
     attr.classes = GetClassDefinitionConstraints(pp);
 
     return attr;
+}
+
+/*******************************************************************/
+
+EditXml GetXmlConstraints(const Promise *pp)
+{
+    EditXml x;
+
+/*    x.select_xpath = GetConstraintValue("select_xpath", pp, CF_SCALAR);
+    x.insert_xpath = GetConstraintValue("insert_xpath", pp, CF_SCALAR);
+    x.delete_xpath = GetConstraintValue("delete_xpath", pp, CF_SCALAR);
+    x.verify_xpath = GetConstraintValue("verify_xpath", pp, CF_SCALAR);
+*/
+
+    if ((x.select_xpath = GetConstraintValue("select_xpath", pp, CF_SCALAR)))
+    {
+        x.haveselectxpath = true;
+    }
+    if ((x.verify_xpath = GetConstraintValue("verify_xpath", pp, CF_SCALAR)))
+    {
+        x.haveverifyxpath = true;
+    }
+    if ((x.insert_tree_xpath = GetConstraintValue("insert_tree_xpath", pp, CF_SCALAR)))
+    {
+        x.haveinserttreexpath = true;
+    }
+    if ((x.delete_tree_xpath = GetConstraintValue("delete_tree_xpath", pp, CF_SCALAR)))
+    {
+        x.havedeletetreexpath = true;
+    }
+    if ((x.verify_tree_xpath = GetConstraintValue("verify_tree_xpath", pp, CF_SCALAR)))
+    {
+        x.haveverifytreexpath = true;
+    }
+    if ((x.insert_attribute_xpath = GetConstraintValue("insert_attribute_xpath", pp, CF_SCALAR)))
+    {
+        x.haveinsertattributexpath = true;
+    }
+    if ((x.delete_attribute_xpath = GetConstraintValue("delete_attribute_xpath", pp, CF_SCALAR)))
+    {
+        x.havedeleteattributexpath = true;
+    }
+    if ((x.verify_attribute_xpath = GetConstraintValue("verify_attribute_xpath", pp, CF_SCALAR)))
+    {
+        x.haveverifyattributexpath = true;
+    }
+    return x;
 }
 
 /*******************************************************************/

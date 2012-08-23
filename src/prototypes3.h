@@ -286,7 +286,10 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a,Promise *pp);
 
 int ScheduleEditXmlOperations(char *filename, Bundle *bp, Attributes a, Promise *parentp,
                               const ReportContext *report_context);
-
+int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, Attributes a, Promise *pp);
+int SaveXmlDocAsFile(xmlDocPtr doc, const char *file, Attributes a, Promise *pp,
+                       const ReportContext *report_context);
+int CompareToXml(xmlDocPtr doc, char *file, Attributes a, Promise *pp);
 
 /* files_links.c */
 

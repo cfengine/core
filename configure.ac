@@ -233,6 +233,10 @@ AM_CONDITIONAL(MONGO, false)
 
 m4_indir(incstart[]incend, [nova/options.m4])
 AM_CONDITIONAL([HAVE_NOVA], [test "x$with_nova" != xno && test -d ${srcdir}/nova])
+m4_indir(incstart[]incend, [constellation/options.m4])
+AM_CONDITIONAL([HAVE_CONSTELLATION], [test "x$with_constellation" != xno && test -d ${srcdir}/constellation])
+m4_indir(incstart[]incend, [galaxy/options.m4])
+AM_CONDITIONAL([HAVE_GALAXY], [test "x$with_galaxy" != xno && test -d ${srcdir}/galaxy])
 
 dnl
 dnl In-process databases
@@ -309,9 +313,7 @@ fi
 
 CF3_WITH_LIBRARY(pcre, [
   AC_CHECK_LIB(pcre, pcre_exec, [], [AC_MSG_ERROR(Cannot find PCRE)])
-  AC_CHECK_HEADERS([pcre.h], [],
-    [AC_CHECK_HEADERS([pcre/pcre.h], [],
-                      AC_MSG_ERROR(Cannot find PCRE))])
+  AC_CHECK_HEADERS([pcre.h pcre/pcre.h], [break], [AC_MSG_ERROR(Cannot find PCRE)])
 ])
 
 dnl libvirt
@@ -327,16 +329,31 @@ if test "x$with_libvirt" != xno; then
    ])
 fi
 
-dnl libacl
+dnl libxml2
 
-AC_ARG_WITH([libacl],
-    [AS_HELP_STRING([--with-libacl[[=PATH]]], [Specify libacl path])], [], [with_libacl=check])
+AC_ARG_WITH([libxml2],
+    [AS_HELP_STRING([--with-libxml2[[=PATH]]],
+                    [Specify libxml2 path])], [], [with_libxml2=check])
 
-if test "x$with_libacl" != xno; then
-  CF3_WITH_LIBRARY(libacl, [
-    AC_CHECK_LIB(acl, acl_init, [], [if test "x$with_libacl" != xcheck; then AC_MSG_ERROR(Cannot find libacl library); fi])
-    AC_CHECK_HEADERS([acl.h sys/acl.h acl/libacl.h], [], [if test "x$with_libacl" != xcheck; then AC_MSG_ERROR(Cannot find libacl library headers); fi])
-  ])
+if test "x$with_libxml2" != xno; then
+
+   if test "x$with_libxml2" != xyes && test "x$with_libxml2" != xcheck; then
+      XML2_CONFIG=$with_libxml2/bin/xml2-config
+   else
+      XML2_CONFIG=xml2-config
+   fi
+
+   # xml2-config is only for native builds
+   if test "x$cross_compiling" = "xno"; then
+      if test x`which $XML2_CONFIG` != x ; then
+         CPPFLAGS="$CPPFLAGS `$XML2_CONFIG --cflags`"
+      fi
+   fi
+
+    CF3_WITH_LIBRARY(libxml2, [
+      AC_CHECK_LIB(xml2, xmlXPathNewContext, [], [if test "x$with_libxml2" != xcheck; then AC_MSG_ERROR(Cannot find libxml2); fi])
+      AC_CHECK_HEADERS([libxml/xmlwriter.h], [break], [if test "x$with_libxml2" != xcheck; then AC_MSG_ERROR(Cannot find libxml2); fi])
+    ])
 fi
 
 dnl
@@ -368,7 +385,7 @@ AC_CHECK_HEADERS(fcntl.h)
 AC_CHECK_HEADERS(sys/filesys.h)
 AC_CHECK_HEADERS(dustat.h)
 AC_CHECK_HEADERS(sys/systeminfo.h)
-AC_CHECK_HEADERS(winsock2.h)
+AC_CHECK_HEADERS(sys/acl.h winsock2.h)
 AC_CHECK_HEADERS(zone.h)
 AC_CHECK_HEADERS(sys/uio.h)
 AC_CHECK_HEADERS(sys/types.h)
@@ -571,10 +588,10 @@ AC_CHECK_FUNCS(door_create)
 
 AC_CHECK_FUNC(lchown, AC_DEFINE(HAVE_LCHOWN, 1, [Whether to use lchown(3) to change ownerships]))
 
-AC_CHECK_DECLS(pthread_attr_setstacksize, [], [], [[#include <pthread.h>]])
+AC_CHECK_DECLS(pthread_attr_setstacksize)
 AC_REPLACE_FUNCS(pthread_attr_setstacksize)
 
-AC_CHECK_DECLS(pthread_sigmask, [], [], [[#include <signal.h>]])
+AC_CHECK_DECLS(pthread_sigmask)
 AC_REPLACE_FUNCS(pthread_sigmask)
 
 dnl ######################################################################
@@ -621,10 +638,10 @@ dnl ######################################################################
 dnl Collect all the options
 dnl ######################################################################
 
-CPPFLAGS="$CPPFLAGS $POSTGRESQL_CPPFLAGS $MYSQL_CPPFLAGS $TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $MONGO_CPPFLAGS $LDAP_CPPFLAGS $LIBVIRT_CPPFLAGS $SQLITE3_CPPFLAGS $LIBACL_CPPFLAGS"
-CFLAGS="$CFLAGS $POSTGRESQL_CFLAGS $MYSQL_CFLAGS $TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $MONGO_CFLAGS $LDAP_CFLAGS $LIBVIRT_CFLAGS $SQLITE3_CFLAGS $LIBACL_CFLAGS"
-LDFLAGS="$LDFLAGS $POSTGRESQL_LDFLAGS $MYSQL_LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $MONGO_LDFLAGS $LDAP_LDFLAGS $LIBVIRT_LDFLAGS $SQLITE3_LDFLAGS $LIBACL_LDFLAGS"
-LIBS="$LIBS $POSTGRESQL_LIBS $MYSQL_LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $MONGO_LIBS $LDAP_LIBS $LIBVIRT_LIBS $SQLITE3_LIBS $LIBACL_LIBS"
+CPPFLAGS="$CPPFLAGS $POSTGRESQL_CPPFLAGS $MYSQL_CPPFLAGS $TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $MONGO_CPPFLAGS $LDAP_CPPFLAGS $LIBVIRT_CPPFLAGS $SQLITE3_CPPFLAGS $LIBXML2_CPPFLAGS"
+CFLAGS="$CFLAGS $POSTGRESQL_CFLAGS $MYSQL_CFLAGS $TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $MONGO_CFLAGS $LDAP_CFLAGS $LIBVIRT_CFLAGS $SQLITE3_CFLAGS $LIBXML2_CFLAGS"
+LDFLAGS="$LDFLAGS $POSTGRESQL_LDFLAGS $MYSQL_LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $MONGO_LDFLAGS $LDAP_LDFLAGS $LIBVIRT_LDFLAGS $SQLITE3_LDFLAGS $LIBXML2_LDFLAGS"
+LIBS="$LIBS $POSTGRESQL_LIBS $MYSQL_LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $MONGO_LIBS $LDAP_LIBS $LIBVIRT_LIBS $SQLITE3_LIBS $LIBXML2_LIBS"
 
 dnl ######################################################################
 dnl OS specific stuff
@@ -660,6 +677,8 @@ case "$target_os" in
    linux*)
 	AC_DEFINE(LINUX, [], [Linux build])
 	AC_CHECK_LIB(nss_nis, yp_get_default_domain)
+        AC_CHECK_LIB(acl,main)
+        AC_CHECK_HEADERS(acl.h sys/acl.h acl/libacl.h)
         ;;
    freebsd*|dragonfly*)
 	AC_DEFINE(FREEBSD, [], [FreeBSD build])
@@ -938,13 +957,15 @@ else
   AC_MSG_RESULT([-> libvirt: disabled])
 fi
 
-if test "x$ac_cv_lib_acl_acl_init" = xyes; then
-  AC_MSG_RESULT([-> libacl: $LIBACL_PATH])
+if test "x$ac_cv_lib_xml2_xmlXPathNewContext" = xyes; then
+  AC_MSG_RESULT([-> libxml2: $LIBXML2_PATH])
 else
-  AC_MSG_RESULT([-> libacl: disabled])
+  AC_MSG_RESULT([-> libxml2: disabled])
 fi
 
 m4_indir(incstart[]incend, [nova/config.m4])
+m4_indir(incstart[]incend, [constellation/config.m4])
+m4_indir(incstart[]incend, [galaxy/config.m4])
 
 AC_MSG_RESULT([-> Workdir: $WORKDIR])
 
@@ -974,6 +995,8 @@ AC_CONFIG_FILES([Makefile
 	tests/load/Makefile])
 
 m4_indir(incstart[]incend, [nova/output.m4])
+m4_indir(incstart[]incend, [constellation/output.m4])
+m4_indir(incstart[]incend, [galaxy/output.m4])
 
 AC_OUTPUT
 

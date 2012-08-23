@@ -29,6 +29,9 @@
 #include "rlist.h"
 #include "compiler.h"
 
+#include <libxml/parser.h>
+#include <libxml/xpathInternals.h>
+
 /*******************************************************************/
 /* Preprocessor tricks                                             */
 /*******************************************************************/
@@ -1105,6 +1108,7 @@ typedef struct
     Item *file_classes;
     int num_edits;
     int empty_first;
+    xmlDocPtr xmldoc;
 } EditContext;
 
 /*************************************************************************/
@@ -1918,6 +1922,27 @@ typedef struct
 
 typedef struct
 {
+    char *select_xpath;
+    char *verify_xpath;
+    char *insert_tree_xpath;
+    char *delete_tree_xpath;
+    char *verify_tree_xpath;
+    char *insert_attribute_xpath;
+    char *delete_attribute_xpath;
+    char *verify_attribute_xpath;
+    int haveselectxpath;
+    int haveverifyxpath;
+    int haveinserttreexpath;
+    int havedeletetreexpath;
+    int haveverifytreexpath;
+    int haveselectattributexpath;
+    int haveinsertattributexpath;
+    int havedeleteattributexpath;
+    int haveverifyattributexpath;
+} EditXml;
+
+typedef struct
+{
     char *line_matching;
     enum cfeditorder before_after;
     char *first_last;
@@ -2247,6 +2272,7 @@ typedef struct
     EditLocation location;
     EditColumn column;
     EditReplace replace;
+    EditXml xml;
     int haveregion;
     int havelocation;
     int havecolumn;

@@ -312,20 +312,36 @@ static const BodySyntax CF_FILES_BODIES[] =
 };
 
 // edit_xml body syntax
-
 const BodySyntax CF_COMMON_XMLBODIES[] =
 {
-    {"select_xpath", cf_str, "", "Select the XPath region of the XML file to edit"},
+    {"select_xpath", cf_str, "", "Select the XPath node in the XML file to edit"},
+    {"verify_xpath", cf_str, "", "Verify the XPath region of the XML file, before and after insertion"},
     {NULL, cf_notype, NULL, NULL}
 };
 
 static const BodySyntax CF_INSERTTAGS_BODIES[] =
 {
+    {"insert_tree_xpath", cf_str, "", "Select the XPath node in the XML file to insert a tree"},
+    {"verify_tree_xpath", cf_str, "", "Verify the XPath node in the XML file, before and after inserting a tree"},
     {NULL, cf_notype, NULL, NULL}
 };
 
 static const BodySyntax CF_DELETETAGS_BODIES[] =
 {
+    {"delete_tree_xpath", cf_str, "", "Select the XPath node in the XML file to be deleted"},
+    {NULL, cf_notype, NULL, NULL}
+};
+
+static const BodySyntax CF_INSERTATTRIBUTES_BODIES[] =
+{
+    {"insert_attribute_xpath", cf_str, "", "Select the XPath node in the XML file to insert an attribute"},
+    {"verify_tree_xpath", cf_str, "", "Verify the XPath node in the XML file, before and after inserting a tree"},
+    {NULL, cf_notype, NULL, NULL}
+};
+
+static const BodySyntax CF_DELETEATTRIBUTES_BODIES[] =
+{
+    {"delete_attribute_xpath", cf_str, "", "Select the XPath node in the XML file delete an attribute"},
     {NULL, cf_notype, NULL, NULL}
 };
 

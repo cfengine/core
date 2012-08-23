@@ -6,6 +6,8 @@ dnl # Run ./autogen.sh to build configure script
 dnl #
 dnl ##########################################################################
 
+AC_MSG_ERROR(Closed branch, don't build anything from it)
+
 AC_PREREQ(2.59)
 
 AC_INIT

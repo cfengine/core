@@ -22,7 +22,7 @@
 	  - remote syslog support.
 
 	- Changed some port numbers to replace old services with imap(s)
-	
+
 	Misc:
 
 	- Support for the following outdated platforms and corresponding
@@ -97,6 +97,8 @@
 	- Fixed numerous memory leaks.
 	- Fixes for metadata that were not resolvable
 	- Fixes for namespaces that would not support metadata and variable expansion
+	- Point-to-point network interfaces are detected and reported by CFEngine (Mantis #1246)
+	- Partial non-GNU userspace support in acceptance testsuite (Mantis #1255)
 
 	In alpha 1:
 

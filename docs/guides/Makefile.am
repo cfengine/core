@@ -130,7 +130,7 @@ endif
 
 all: pdf html
 install-data-hook: install-pdf install-html
-dist-hook: dist-pdf-only dist-html dist-common
+dist-hook: dist-pdf-only dist-html-only dist-common
 
 EXTRA_DIST = cf3-solutions.texinfo.in CFEngineFrontPage.pdf NewLogo.pdf cfcomdoc.css
 

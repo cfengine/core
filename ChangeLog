@@ -99,6 +99,7 @@
 	- Fixes for namespaces that would not support metadata and variable expansion
 	- Point-to-point network interfaces are detected and reported by CFEngine (Mantis #1246)
 	- Partial non-GNU userspace support in acceptance testsuite (Mantis #1255)
+	- Robustify against wrongly-sized entires in embedded databases.
 
 	In alpha 1:
 

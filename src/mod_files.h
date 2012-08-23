@@ -27,5 +27,6 @@
 
 extern const SubTypeSyntax CF_FILES_SUBTYPES[];
 extern const BodySyntax CF_COMMON_EDITBODIES[];
+extern const BodySyntax CF_COMMON_XMLBODIES[];
 
 #endif

@@ -32,11 +32,14 @@ bundle common def
 
   # End change #
 
-  "dir_masterfiles" string => translatepath("$(sys.workdir)/masterfiles"),
-                   comment => "Define masterfiles path",
-                    handle => "common_def_vars_dir_masterfiles";
-  "dir_bin"         string => translatepath("$(sys.workdir)/bin"),
-                   comment => "Define binary path",
-                    handle => "common_def_vars_dir_bin";
+   "dir_masterfiles" string => translatepath("$(sys.workdir)/masterfiles"),
+                    comment => "Define masterfiles path",
+                     handle => "common_def_vars_dir_masterfiles";
+   "dir_bin"         string => translatepath("$(sys.workdir)/bin"),
+                    comment => "Define binary path",
+                     handle => "common_def_vars_dir_bin";
+   "dir_modules"     string => translatepath("$(sys.workdir)/modules"),
+                    comment => "Define modules path",
+                     handle => "common_def_vars_dir_modules";
 
 }

@@ -158,7 +158,31 @@ void AugmentScope(char *scope, Rlist *lvals, Rlist *rvals)
         }
         else
         {
-            NewScalar(scope, lval, rpr->item, cf_str);
+        FnCall *subfp;
+        Promise *pp = NULL; // This argument should really get passed down.
+        
+        switch(rpr->type)
+           {
+           case CF_SCALAR:
+               NewScalar(scope, lval, rpr->item, cf_str);
+               break;
+               
+           case CF_FNCALL:
+               subfp = (FnCall *) rpr->item;
+               Rval rval = EvaluateFunctionCall(subfp, pp).rval;
+               if (rval.rtype == CF_SCALAR)
+               {
+                   NewScalar(scope, lval, rval.item, cf_str);
+               }
+               else
+               {
+                   CfOut(cf_error, "", "Only functions returning scalars can be used as arguments");
+               }
+               break;
+           default:
+               FatalError("An argument neither a scalar nor a list seemed to appear. Impossible");
+           }
+
         }
     }
 

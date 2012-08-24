@@ -1016,7 +1016,7 @@ static void SetVariable(char *name, double value, double average, double stddev,
 {
     char var[CF_BUFSIZE];
 
-    snprintf(var, CF_MAXVARSIZE, "value_%s=%.0lf", name, value);
+    snprintf(var, CF_MAXVARSIZE, "value_%s=%.2lf", name, value);
     AppendItem(classlist, var, "");
 
     snprintf(var, CF_MAXVARSIZE, "av_%s=%.2lf", name, average);

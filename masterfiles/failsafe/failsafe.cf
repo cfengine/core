@@ -118,11 +118,12 @@ bundle agent update
         classes => u_if_repaired("validated_updates_ready");
 
    "$(modules_dir)"
-        comment => "Always update modules files on client side",
-         handle => "update_files_update_modules",
-      copy_from => u_rcp("$(modules_dir)","$(sys.policy_hub)"),
-          perms => u_m("755"),
-         action => u_immediate;
+           comment => "Always update modules files on client side",
+            handle => "update_files_update_modules",
+         copy_from => u_rcp("$(modules_dir)","$(sys.policy_hub)"),
+      depth_search => u_recurse("inf"),
+             perms => u_m("755"),
+            action => u_immediate;
 
   am_policy_hub|validated_updates_ready::  # policy hub should always put masterfiles in inputs in order to check new policy
 

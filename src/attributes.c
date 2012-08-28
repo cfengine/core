@@ -1565,8 +1565,10 @@ TcpIp GetTCPIPAttributes(const Promise *pp)
 
 Report GetReportConstraints(const Promise *pp)
 {
-    Report r;
-
+ Report r = {0};
+ 
+    r.result = GetBooleanConstraint("bundle_return_value", pp);
+    
     if (GetConstraintValue("lastseen", pp, CF_SCALAR))
     {
         r.havelastseen = true;
@@ -1605,6 +1607,11 @@ Report GetReportConstraints(const Promise *pp)
 
     r.to_file = GetConstraintValue("report_to_file", pp, CF_SCALAR);
 
+    if (r.result && (r.haveprintfile || r.filename || r.showstate || r.to_file || r.lastseen))
+    {
+        CfOut(cf_error, "", " !! bundle_return_value promise for \"%s\" in bundle \"%s\" with too many constraints (ignored)", pp->promiser, pp->bundle);
+    }
+    
     return r;
 }
 

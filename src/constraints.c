@@ -550,6 +550,7 @@ Rlist *GetListConstraint(const char *lval, const Promise *pp)
             }
 
             retval = (Rlist *) cp->rval.item;
+            break;
         }
     }
 

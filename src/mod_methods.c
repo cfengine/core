@@ -29,6 +29,7 @@ static const BodySyntax CF_METHOD_BODIES[] =
 {
     {"inherit", cf_opts, CF_BOOL, "If true this causes the sub-bundle to inherit the private classes of its parent"},
     {"usebundle", cf_bundle, CF_BUNDLE, "Specify the name of a bundle to run as a parameterized method"},
+    {"useresult", cf_str, CF_IDRANGE, "Specify the name of a local variable to contain any result/return value from the child"},    
     {NULL, cf_notype, NULL}
 };
 

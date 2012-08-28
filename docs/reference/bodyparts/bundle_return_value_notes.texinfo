@@ -1,0 +1,5 @@
+
+@i{History}: Was introduced in 3.4.0 (2012)
+
+It is currently believed that only scalar return values make sense, hence
+return values are limited to scalars.

@@ -23,6 +23,11 @@
 
 	- Changed some port numbers to replace old services with imap(s)
 
+	- The "depends_on" attribute is now active, for the partal ordering
+	  of promises. If a promise depends on another (referred by handle)
+	  it will only be considered if the depends_on list is either kept
+	  or repaired already.
+	
 	Misc:
 
 	- Support for the following outdated platforms and corresponding

@@ -172,18 +172,57 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
 
 static void GetReturnValue(char *scope, Promise *pp)
 {
- 
     char *result = GetConstraintValue("useresult", pp, CF_SCALAR);
 
     if (result)
     {
-        Rval retval;
+        HashIterator i;
+        CfAssoc *assoc;
+        char newname[CF_BUFSIZE];                 
+        Scope *ptr;
+        char index[CF_MAXVARSIZE], match[CF_MAXVARSIZE];    
 
-        if (GetVariable(scope, "last-result", &retval) != cf_notype)
+        if ((ptr = GetScope(scope)) == NULL)
         {
-            NewScalar(pp->bundle, result, retval.item, cf_str);           
+            CfOut(cf_inform, "", " !! useresult was specified but the method returned no data");
+            return;
         }
-    }
+    
+        i = HashIteratorInit(ptr->hashtable);
+    
+        while ((assoc = HashIteratorNext(&i)))
+        {
+            snprintf(match, CF_MAXVARSIZE - 1, "last-result[");
 
+            if (strncmp(match, assoc->lval, strlen(match)) == 0)
+            {
+                char *sp;
+          
+                index[0] = '\0';
+                sscanf(assoc->lval + strlen(match), "%127[^\n]", index);
+                if ((sp = strchr(index, ']')))
+                {
+                    *sp = '\0';
+                }
+                else
+                {
+                    index[strlen(index) - 1] = '\0';
+                }
+          
+                if (strlen(index) > 0)
+                {
+                    snprintf(newname, CF_BUFSIZE, "%s[%s]", result, index);
+                }
+                else
+                {
+                    snprintf(newname, CF_BUFSIZE, "%s", result);
+                }
+
+                NewScalar(pp->bundle, newname, assoc->rval.item, cf_str);           
+            }
+        }
+        
+    }
+    
 }
 

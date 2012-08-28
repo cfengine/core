@@ -39,7 +39,7 @@ const const BodySyntax CF_REPORT_BODIES[] =
     {"lastseen", cf_int, CF_VALRANGE, "Integer time threshold in hours since current peers were last seen, report absence"},
     {"printfile", cf_body, CF_PRINTFILE_BODY, "Quote part of a file to standard output"},
     {"report_to_file", cf_str, CF_ABSPATHRANGE, "The path and filename to which output should be appended"},
-    {"bundle_return_value", cf_opts, CF_BOOL, "The report promiser is to be interpreted as a literal value that the caller can accept as a result for this bundle, i.e. a return value."},    
+    {"bundle_return_value_index", cf_str, CF_IDRANGE, "The promiser is to be interpreted as a literal value that the caller can accept as a result for this bundle, i.e. a return value with array index defined by this attribute."},    
     {"showstate", cf_slist, "", "List of services about which status reports should be reported to standard output"},
     {NULL, cf_notype, NULL}
 };

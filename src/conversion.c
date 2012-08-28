@@ -1133,8 +1133,6 @@ enum cf_srv_policy Str2ServicePolicy(char *string)
 
 /*********************************************************************/
 
-/*********************************************************************/
-
 char *Dtype2Str(enum cfdatatype dtype)
 {
     switch (dtype)

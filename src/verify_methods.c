@@ -31,6 +31,8 @@
 #include "expand.h"
 #include "files_names.h"
 
+static void GetReturnValue(char *scope, Promise *pp);
+    
 /*****************************************************************************/
 
 void VerifyMethodsPromise(Promise *pp, const ReportContext *report_context)
@@ -88,7 +90,7 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
 
     if (strncmp(method_name,"default.",strlen("default.")) == 0)
        {
-       method_deref = strchr(method_name,'.') + 1;
+           method_deref = strchr(method_name,'.') + 1;
        }
     else
        {
@@ -119,6 +121,7 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
 
         retval = ScheduleAgentOperations(bp, report_context);
 
+        GetReturnValue(bp->name, pp);
         ResetBundleOutputs(bp->name);
 
         PopPrivateClassContext();
@@ -160,6 +163,27 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
         }
     }
 
+    
     YieldCurrentLock(thislock);
     return retval;
 }
+
+/***********************************************************************/
+
+static void GetReturnValue(char *scope, Promise *pp)
+{
+ 
+    char *result = GetConstraintValue("useresult", pp, CF_SCALAR);
+
+    if (result)
+    {
+        Rval retval;
+
+        if (GetVariable(scope, "last-result", &retval) != cf_notype)
+        {
+            NewScalar(pp->bundle, result, retval.item, cf_str);           
+        }
+    }
+
+}
+

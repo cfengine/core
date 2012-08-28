@@ -1,0 +1,32 @@
+
+body common control
+{
+bundlesequence => { "test" };
+}
+
+
+bundle agent test
+{
+methods:
+
+   "any" usebundle => child,
+    useresult => "returnval";
+
+
+reports:
+
+  cfengine_3::
+
+    "My return was: $(returnval)"; 
+  
+    
+}
+
+bundle agent child
+{
+reports:
+
+ cfengine_3::
+
+   "this is a return value"  bundle_return_value => "true";
+}

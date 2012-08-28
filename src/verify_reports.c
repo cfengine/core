@@ -49,6 +49,17 @@ void VerifyReportPromise(Promise *pp)
     snprintf(unique_name, CF_EXPANDSIZE - 1, "%s_%zu", pp->promiser, pp->offset.line);
     thislock = AcquireLock(unique_name, VUQNAME, CFSTARTTIME, a, pp, false);
 
+    // Handle return values before locks, as we always do this
+
+    if (a.report.result)
+    {
+        // User-unwritable value last-result contains the useresult
+        NewScalar(pp->bundle, "last-result", pp->promiser, cf_str);
+        return;
+    }
+       
+    // Now do regular human reports
+    
     if (thislock.lock == NULL)
     {
         return;

@@ -27,6 +27,8 @@
 	  of promises. If a promise depends on another (referred by handle)
 	  it will only be considered if the depends_on list is either kept
 	  or repaired already.
+
+	- methods return values, initial implementation
 	
 	Misc:
 

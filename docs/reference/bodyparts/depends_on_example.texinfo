@@ -1,11 +1,24 @@
 
 @verbatim
 
-files:
+body common control
+{
+bundlesequence => { "one"  };
+}
 
-  "/home/mark/tmp/testcopy" 
+bundle agent one
+{
+reports:
 
-    depends_on    => { "server_promise_1" },
-    copy_from     => mycopy("/source");
+ cfengine_3::
+
+   "two"
+     depends_on => { "handle_one" };
+
+   "one"
+     handle => "handle_one";
+
+}
+
 
 @end verbatim

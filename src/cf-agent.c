@@ -1060,6 +1060,12 @@ static void KeepAgentPromise(Promise *pp, const ReportContext *report_context)
         return;
     }
 
+
+    if (MissingDependencies(pp))
+    {
+        return;
+    }
+    
 // Record promises examined for efficiency calc
 
     if (strcmp("meta", pp->agentsubtype) == 0)

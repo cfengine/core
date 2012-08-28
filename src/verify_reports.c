@@ -54,7 +54,16 @@ void VerifyReportPromise(Promise *pp)
     if (a.report.result)
     {
         // User-unwritable value last-result contains the useresult
-        NewScalar(pp->bundle, "last-result", pp->promiser, cf_str);
+        if (strlen(a.report.result) > 0)
+        {
+            snprintf(unique_name, CF_BUFSIZE, "last-result[%s]", a.report.result);
+        }
+        else
+        {
+            snprintf(unique_name, CF_BUFSIZE, "last-result", a.report.result);
+        }
+
+        NewScalar(pp->bundle, unique_name, pp->promiser, cf_str);
         return;
     }
        

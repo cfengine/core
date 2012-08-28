@@ -1,5 +1,4 @@
 
-@verbatim
 
 body common control
 {
@@ -19,6 +18,3 @@ reports:
      handle => "handle_one";
 
 }
-
-
-@end verbatim

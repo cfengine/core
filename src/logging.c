@@ -187,6 +187,7 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, c
         }
 
         AddAllClasses(attr.classes.change, attr.classes.persist, attr.classes.timer);
+        MarkPromiseHandleDone(pp);
         DeleteAllClasses(attr.classes.del_change);
 
         if (IsPromiseValuableForLogging(pp))
@@ -300,6 +301,7 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, c
             VAL_KEPT += attr.transaction.value_kept;
         }
 
+        MarkPromiseHandleDone(pp);
         break;
     }
 

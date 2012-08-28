@@ -88,5 +88,7 @@ void SaveClassEnvironment(void);
 void DeleteAllClasses(const Rlist *list);
 void AddAllClasses(const Rlist *list, int persist, enum statepolicy policy);
 void ListAlphaList(Writer *writer, AlphaList al, char sep);
+void MarkPromiseHandleDone(const Promise *pp);
+int MissingDependencies(const Promise *pp);
 
 #endif

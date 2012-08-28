@@ -1976,7 +1976,7 @@ typedef struct
     int haveprintfile;
     int havelastseen;
     int lastseen;
-    int result;
+    char *result;
     double intermittency;
     char *friend_pattern;
     char *filename;

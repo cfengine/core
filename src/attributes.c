@@ -1567,7 +1567,7 @@ Report GetReportConstraints(const Promise *pp)
 {
  Report r = {0};
  
-    r.result = GetBooleanConstraint("bundle_return_value", pp);
+ r.result = GetConstraintValue("bundle_return_value_index", pp, CF_SCALAR);
     
     if (GetConstraintValue("lastseen", pp, CF_SCALAR))
     {

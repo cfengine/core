@@ -10,15 +10,14 @@ bundle agent test
 methods:
 
    "any" usebundle => child,
-    useresult => "returnval";
+    useresult => "my_return_var";
 
 
 reports:
 
   cfengine_3::
 
-    "My return was: $(returnval)"; 
-  
+    "My return was: \"$(my_return_var[1])\" and \"$(my_return_var[2])\""; 
     
 }
 
@@ -28,5 +27,12 @@ reports:
 
  cfengine_3::
 
-   "this is a return value"  bundle_return_value => "true";
+   # Map these indices into the useresult namespace
+
+   "this is a return value"  
+      bundle_return_value_index => "1";
+
+   "this is another return value"  
+      bundle_return_value_index => "2";
+
 }

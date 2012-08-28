@@ -1,6 +1,5 @@
 
 @verbatim
-
 body common control
 {
 bundlesequence => { "test" };

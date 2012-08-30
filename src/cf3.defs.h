@@ -1922,9 +1922,9 @@ typedef struct
 
 typedef struct
 {
-    char *select_xpath;
+    char *select_xpath_region;
     char *attribute_value;
-    int haveselectxpath;
+    int haveselectxpathregion;
     int haveattributevalue;
 } EditXml;
 

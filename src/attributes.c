@@ -1336,7 +1336,6 @@ Attributes GetInsertionAttributes(const Promise *pp)
     attr.haveregion = GetBooleanConstraint("select_region", pp);
     attr.region = GetRegionConstraints(pp);
 
-//    attr.havexpath = GetBooleanConstraint ("select_xpath", pp);
     attr.xml = GetXmlConstraints(pp);
 
     attr.havetrans = GetBooleanConstraint(CF_TRANSACTION, pp);
@@ -1455,9 +1454,9 @@ EditXml GetXmlConstraints(const Promise *pp)
 {
     EditXml x;
 
-    if ((x.select_xpath = GetConstraintValue("select_xpath", pp, CF_SCALAR)))
+    if ((x.select_xpath_region = GetConstraintValue("select_xpath_region", pp, CF_SCALAR)))
     {
-        x.haveselectxpath = true;
+        x.haveselectxpathregion = true;
     }
     if ((x.attribute_value = GetConstraintValue("attribute_value", pp, CF_SCALAR)))
     {

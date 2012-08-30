@@ -498,7 +498,7 @@ If no such node matches, attr should point to NULL
     if ((attrname = CharToXmlChar(pp->promiser)) == NULL)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! Error: unable to create new XPath expression from select_xpath");
+             " !! Error: unable to create new XPath expression from select_xpath_region");
         *attr = cur;
         return false;
     }
@@ -533,7 +533,7 @@ If no such node matches, docnode should point to NULL
     const xmlChar* xpathExpr = NULL;
     int i, size;
 
-    if ((xpathExpr = CharToXmlChar(a.xml.select_xpath)) == NULL)
+    if ((xpathExpr = CharToXmlChar(a.xml.select_xpath_region)) == NULL)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
              " !! Unable to create new XPath expression");
@@ -572,7 +572,7 @@ If no such node matches, docnode should point to NULL
     if (size > 1)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! Current select_xpath expression \"%s\" returns (%d) edit nodes, please modify to select a unique edit node", xpathExpr, size);
+             " !! Current select_xpath_region expression \"%s\" returns (%d) edit nodes, please modify to select a unique edit node", xpathExpr, size);
         xmlXPathFreeContext(xpathCtx);
         xmlXPathFreeObject(xpathObj);
         return false;
@@ -820,10 +820,10 @@ static int SanityCheckTreeDeletions(Attributes a, Promise *pp)
 {
     long ok = true;
 
-    if(!a.xml.haveselectxpath)
+    if(!a.xml.haveselectxpathregion)
     {
         CfOut(cf_error, "",
-              " !! Tree deletion requires select_xpath to be specified");
+              " !! Tree deletion requires select_xpath_region to be specified");
         ok = false;
     }
 
@@ -836,10 +836,10 @@ static int SanityCheckTreeInsertions(Attributes a)
 {
     long ok = true;
 
-    if(!(a.xml.haveselectxpath))
+    if(!(a.xml.haveselectxpathregion))
     {
         CfOut(cf_error, "",
-              " !! Tree insertion requires select_xpath to be specified");
+              " !! Tree insertion requires select_xpath_region to be specified");
         ok = false;
     }
 
@@ -852,10 +852,10 @@ static int SanityCheckAttributeDeletions(Attributes a, Promise *pp)
 {
     long ok = true;
 
-    if(!(a.xml.haveselectxpath))
+    if(!(a.xml.haveselectxpathregion))
     {
         CfOut(cf_error, "",
-              " !! Attribute deletion requires select_xpath to be specified");
+              " !! Attribute deletion requires select_xpath_region to be specified");
         ok = false;
     }
 
@@ -868,10 +868,10 @@ static int SanityCheckAttributeInsertions(Attributes a)
 {
     long ok = true;
 
-    if(!(a.xml.haveselectxpath))
+    if(!(a.xml.haveselectxpathregion))
     {
         CfOut(cf_error, "",
-              " !! Attribute insertion requires select_xpath to be specified");
+              " !! Attribute insertion requires select_xpath_region to be specified");
         ok = false;
     }
 

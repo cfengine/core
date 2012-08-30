@@ -1,0 +1,91 @@
+######################################################################
+#
+# File editing edit_xml
+#
+######################################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+        "states" slist => { "actual", "expected" };
+
+        "actual" string =>
+"<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>
+<Potatoes>
+  <Potato name=\"OnePotato\" topping=\"brocolli\">
+  </Potato>
+  <Potato name=\"TwoPotato\">
+  </Potato>
+  <Potato name=\"ThreePotato\">
+  </Potato>
+</Potatoes>";
+
+        "expected" string =>
+"<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>
+<Potatoes>
+  <Potato name=\"OnePotato\">
+  </Potato>
+  <Potato name=\"TwoPotato\">
+  </Potato>
+  <Potato name=\"ThreePotato\">
+  </Potato>
+</Potatoes>";
+
+files:
+        "$(G.testfile).$(states)"
+            create => "true",
+            edit_line => init_insert("$(init.$(states))"),
+            edit_defaults => init_empty;
+}
+
+bundle edit_line init_insert(str)
+{
+insert_lines:
+        "$(str)";
+}
+
+body edit_defaults init_empty
+{
+        empty_file_before_editing => "true";
+}
+
+#######################################################
+bundle agent test
+{
+vars:
+      "attribute_name" string => "topping";
+
+files:
+        "$(G.testfile).actual"
+            create => "true",
+            edit_xml => test_delete_attribute("$(test.attribute_name)");
+}
+
+bundle edit_xml test_delete_attribute(str)
+{
+delete_attribute:
+        "$(str)"
+        select_xpath => "/Potatoes/Potato[@topping=\'brocolli\']";
+}
+
+#######################################################
+
+bundle agent check
+{
+methods:
+        "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                              "$(G.testfile).expected",
+                                              "$(this.promise_filename)");
+}
+

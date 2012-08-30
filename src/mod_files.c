@@ -315,33 +315,32 @@ static const BodySyntax CF_FILES_BODIES[] =
 const BodySyntax CF_COMMON_XMLBODIES[] =
 {
     {"select_xpath", cf_str, "", "Select the XPath node in the XML file to edit"},
-    {"verify_xpath", cf_str, "", "Verify the XPath region of the XML file, before and after insertion"},
+    {"verify_xpath", cf_str, "", "Verify the XPath node of the XML file, before and after insertion"},
     {NULL, cf_notype, NULL, NULL}
 };
 
 static const BodySyntax CF_INSERTTAGS_BODIES[] =
 {
-    {"insert_tree_xpath", cf_str, "", "Select the XPath node in the XML file to insert a tree"},
-    {"verify_tree_xpath", cf_str, "", "Verify the XPath node in the XML file, before and after inserting a tree"},
+    {"tree_content", cf_str, "", "Content of the tree to be inserted into the XPath node of the XML file"},
     {NULL, cf_notype, NULL, NULL}
 };
 
 static const BodySyntax CF_DELETETAGS_BODIES[] =
 {
-    {"delete_tree_xpath", cf_str, "", "Select the XPath node in the XML file to be deleted"},
     {NULL, cf_notype, NULL, NULL}
 };
 
 static const BodySyntax CF_INSERTATTRIBUTES_BODIES[] =
 {
-    {"insert_attribute_xpath", cf_str, "", "Select the XPath node in the XML file to insert an attribute"},
-    {"verify_tree_xpath", cf_str, "", "Verify the XPath node in the XML file, before and after inserting a tree"},
+    {"attribute_content", cf_str, "", "Name of the attribute to be inserted into the XPath node of the XML file"},
+    {"attribute_name", cf_str, "", "Name of the attribute to be inserted into the XPath node of the XML file"},
+    {"attribute_value", cf_str, "", "Value of the attribute to be inserted into the XPath node of the XML file"},
     {NULL, cf_notype, NULL, NULL}
 };
 
 static const BodySyntax CF_DELETEATTRIBUTES_BODIES[] =
 {
-    {"delete_attribute_xpath", cf_str, "", "Select the XPath node in the XML file delete an attribute"},
+    {"attribute_name", cf_str, "", "Name of the attribute to be inserted into the XPath node of the XML file"},
     {NULL, cf_notype, NULL, NULL}
 };
 
@@ -365,6 +364,8 @@ const SubTypeSyntax CF_FILES_SUBTYPES[] =
     {"edit_xml", "*", CF_COMMON_XMLBODIES},
     {"edit_xml", "delete_tree", CF_DELETETAGS_BODIES},
     {"edit_xml", "insert_tree", CF_INSERTTAGS_BODIES},
+    {"edit_xml", "delete_attribute", CF_DELETEATTRIBUTES_BODIES},
+    {"edit_xml", "insert_attribute", CF_INSERTATTRIBUTES_BODIES},
 
     {NULL, NULL, NULL},
 };

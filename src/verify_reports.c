@@ -29,6 +29,7 @@
 #include "files_names.h"
 #include "item_lib.h"
 #include "sort.h"
+#include "vars.h"
 
 static void ShowState(char *type);
 static void PrintFile(Attributes a, Promise *pp);

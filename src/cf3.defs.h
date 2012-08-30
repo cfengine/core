@@ -1923,22 +1923,9 @@ typedef struct
 typedef struct
 {
     char *select_xpath;
-    char *verify_xpath;
-    char *insert_tree_xpath;
-    char *delete_tree_xpath;
-    char *verify_tree_xpath;
-    char *insert_attribute_xpath;
-    char *delete_attribute_xpath;
-    char *verify_attribute_xpath;
+    char *attribute_value;
     int haveselectxpath;
-    int haveverifyxpath;
-    int haveinserttreexpath;
-    int havedeletetreexpath;
-    int haveverifytreexpath;
-    int haveselectattributexpath;
-    int haveinsertattributexpath;
-    int havedeleteattributexpath;
-    int haveverifyattributexpath;
+    int haveattributevalue;
 } EditXml;
 
 typedef struct

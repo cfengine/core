@@ -1,0 +1,110 @@
+######################################################################
+#
+# File editing edit_xml
+#
+######################################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+        "states" slist => { "actual", "expected" };
+
+        "actual" string =>
+"<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>
+<Potatoes>
+  <Potato name=\"OnePotato\">
+    <BabyPotato name=\"FivePotato\">
+    </BabyPotato>
+    <BabyPotato name=\"SixPotato\">
+    </BabyPotato>
+    <BabyPotato name=\"SevenPotato\">
+    </BabyPotato>
+    <BabyPotato name=\"More\">
+    </BabyPotato>
+  </Potato>
+  <Potato name=\"TwoPotato\">
+  </Potato>
+  <Potato name=\"ThreePotato\">
+  </Potato>
+</Potatoes>";
+
+        "expected" string =>
+"<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>
+<Potatoes>
+  <Potato name=\"OnePotato\">
+    <BabyPotato name=\"FivePotato\">
+    </BabyPotato>
+    <BabyPotato name=\"SixPotato\">
+    </BabyPotato>
+    <BabyPotato name=\"SevenPotato\">
+    </BabyPotato>
+    <BabyPotato name=\"More\">
+    </BabyPotato>
+  <BabyPotato name=\"Four\">
+</BabyPotato></Potato>
+  <Potato name=\"TwoPotato\">
+  </Potato>
+  <Potato name=\"ThreePotato\">
+  </Potato>
+</Potatoes>";
+
+files:
+        "$(G.testfile).$(states)"
+            create => "true",
+            edit_line => init_insert("$(init.$(states))"),
+            edit_defaults => init_empty;
+}
+
+bundle edit_line init_insert(str)
+{
+insert_lines:
+        "$(str)";
+}
+
+body edit_defaults init_empty
+{
+        empty_file_before_editing => "true";
+}
+
+#######################################################
+bundle agent test
+{
+vars:
+      "tree" string =>
+"<BabyPotato name=\"Four\">
+</BabyPotato>";
+
+files:
+        "$(G.testfile).actual"
+            create => "true",
+            edit_xml => test_insert("$(test.tree)");
+}
+
+bundle edit_xml test_insert(str)
+{
+insert_tree:
+        "$(str)"
+        select_xpath => "/Potatoes/Potato[@name=\'OnePotato\']";
+}
+
+#######################################################
+
+bundle agent check
+{
+methods:
+        "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                              "$(G.testfile).expected",
+                                              "$(this.promise_filename)");
+}
+

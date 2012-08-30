@@ -112,7 +112,7 @@ void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportC
         if (a.haveeditxml)
         {
         // Fill me in
-            if(CompareToXml(ec->xmldoc, ec->filename, a, pp))
+            if(XmlCompareToFile(ec->xmldoc, ec->filename, a, pp))
             {
                 if (ec)
                 {

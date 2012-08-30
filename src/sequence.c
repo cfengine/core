@@ -61,15 +61,16 @@ static void DestroyRange(Sequence *seq, size_t start, size_t end)
 
 void SequenceDestroy(Sequence *seq)
 {
-    assert(seq && "Attempted to destroy a null sequence");
-
-    if (seq->length > 0)
+    if (seq)
     {
-        DestroyRange(seq, 0, seq->length - 1);
-    }
+        if (seq->length > 0)
+        {
+            DestroyRange(seq, 0, seq->length - 1);
+        }
 
-    free(seq->data);
-    free(seq);
+        free(seq->data);
+        free(seq);
+    }
 }
 
 static void ExpandIfNeccessary(Sequence *seq)

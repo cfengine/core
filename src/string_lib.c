@@ -650,9 +650,8 @@ int SubStrnCopyChr(char *to, const char *from, int len, char sep)
     return count;
 }
 
-int CountChar(char *string, char sep)
+int CountChar(const char *string, char sep)
 {
-    char *sp;
     int count = 0;
 
     if (string == NULL)
@@ -665,7 +664,7 @@ int CountChar(char *string, char sep)
         return 0;
     }
 
-    for (sp = string; *sp != '\0'; sp++)
+    for (const char *sp = string; *sp != '\0'; sp++)
     {
         if (*sp == '\\' && *(sp + 1) == sep)
         {

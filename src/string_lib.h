@@ -71,7 +71,7 @@ void FreeStringArray(char **strs);
 char *Titleize(char *str);
 
 int SubStrnCopyChr(char *to, const char *from, int len, char sep);
-int CountChar(char *string, char sp);
+int CountChar(const char *string, char sp);
 void ReplaceChar(char *in, char *out, int outSz, char from, char to);
 void ReplaceTrailingChar(char *str, char from, char to);
 void ReplaceTrailingStr(char *str, char *from, char to);

@@ -336,7 +336,6 @@ static const BodySyntax CF_INSERTATTRIBUTES_BODIES[] =
 
 static const BodySyntax CF_DELETEATTRIBUTES_BODIES[] =
 {
-    {"attribute_name", cf_str, "", "Name of the attribute to be inserted into the XPath region of the XML file"},
     {NULL, cf_notype, NULL, NULL}
 };
 

@@ -644,8 +644,18 @@ static int DeleteTreeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode, Attr
     //remove the subtree from xml document
     CfOut(cf_inform, "", " -> Deleting tree (%s) in %s", pp->promiser,
           pp->this_server);
-    xmlUnlinkNode(deletetree);
-    xmlFreeNode(deletetree);
+    if (a.transaction.action == cfa_warn)
+    {
+        cfPS(cf_error, CF_WARN, "", pp, a,
+             " -> Need to delete the promised tree \"%s\" to %s - but only a warning was promised",
+             pp->promiser, pp->this_server);
+        return true;
+    }
+    else
+    {
+        xmlUnlinkNode(deletetree);
+        xmlFreeNode(deletetree);
+    }
 
     //verify treenode no longer exists inside docnode
     if (XmlVerifyNodeInNode(treenode, docnode, a, pp))
@@ -694,12 +704,22 @@ static int InsertTreeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode, Attr
     //insert the subtree into xml document
     CfOut(cf_inform, "", " -> Inserting tree (%s) in %s", pp->promiser,
           pp->this_server);
-    if (!xmlAddChild(docnode, treenode))
+    if (a.transaction.action == cfa_warn)
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised tree (%s) was not inserted successfully in %s", pp->promiser,
-             pp->this_server);
-        return false;
+        cfPS(cf_error, CF_WARN, "", pp, a,
+             " -> Need to insert the promised tree \"%s\" to %s - but only a warning was promised",
+             pp->promiser, pp->this_server);
+        return true;
+    }
+    else
+    {
+        if (!xmlAddChild(docnode, treenode))
+        {
+            cfPS(cf_error, CF_INTERPT, "", pp, a,
+                 " !! The promised tree (%s) was not inserted successfully in %s", pp->promiser,
+                 pp->this_server);
+            return false;
+        }
     }
 
     //verify node was inserted
@@ -738,13 +758,23 @@ static int DeleteAttributeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode,
     }
 
     //delete attribute from docnode
-    CfOut(cf_inform, "", " -> Deleting attribute (%s) in %s", pp->promiser,
+    CfOut(cf_inform, "", " -> Deleting attribute \"%s\" in %s", pp->promiser,
           pp->this_server);
-    if ((xmlRemoveProp(attr)) == -1)
+    if (a.transaction.action == cfa_warn)
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised attribute to be deleted was not deleted successfully.");
-        return false;
+        cfPS(cf_error, CF_WARN, "", pp, a,
+             " -> Need to delete the promised attribute \"%s\" from %s - but only a warning was promised",
+             pp->promiser, pp->this_server);
+        return true;
+    }
+    else
+    {
+        if ((xmlRemoveProp(attr)) == -1)
+        {
+            cfPS(cf_error, CF_INTERPT, "", pp, a,
+                 " !! The promised attribute to be deleted was not deleted successfully.");
+            return false;
+        }
     }
 
     //verify attribute no longer exists inside docnode
@@ -791,13 +821,23 @@ static int InsertAttributeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode,
     }
 
     //insert a new attribute into docnode
-    CfOut(cf_inform, "", " -> Inserting attribute (%s) in %s", pp->promiser,
+    CfOut(cf_inform, "", " -> Inserting attribute \"%s\" in %s", pp->promiser,
           pp->this_server);
-    if ((attr = xmlNewProp(docnode, name, value)) == NULL)
+    if (a.transaction.action == cfa_warn)
     {
-        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! WARNING: Attribute was not successfully inserted into xml document");
-        return false;
+        cfPS(cf_error, CF_WARN, "", pp, a,
+             " -> Need to insert the promised attribute \"%s\" to %s - but only a warning was promised",
+             pp->promiser, pp->this_server);
+        return true;
+    }
+    else
+    {
+        if ((attr = xmlNewProp(docnode, name, value)) == NULL)
+        {
+            cfPS(cf_verbose, CF_INTERPT, "", pp, a,
+                 " !! WARNING: Attribute was not successfully inserted into xml document");
+            return false;
+        }
     }
 
     //verify attribute now exists inside docnode

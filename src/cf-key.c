@@ -163,13 +163,14 @@ static bool ShowHost(const char *hostkey, const char *address, bool incoming,
                      const KeyHostSeen *quality, void *ctx)
 {
     int *count = ctx;
+    char timebuf[26];
 
     char hostname[CF_BUFSIZE];
     strlcpy(hostname, IPString2Hostname(address), CF_BUFSIZE);
 
     (*count)++;
-    printf("%-9.9s %17.17s %-25.25s %s\n", incoming ? "Incoming" : "Outgoing",
-           address, hostname, hostkey);
+    printf("%-10.10s %-17.17s %-25.25s %-26.26s %-s\n", incoming ? "Incoming" : "Outgoing",
+           address, hostname, cf_strtimestamp_local(quality->lastseen, timebuf), hostkey);
 
     return true;
 }
@@ -178,7 +179,7 @@ static void ShowLastSeenHosts()
 {
     int count = 0;
 
-    printf("%9.9s %17.17s %-25.25s %15.15s\n", "Direction", "IP", "Name", "Key");
+    printf("%-10.10s %-17.17s %-25.25s %-26.26s %-s\n", "Direction", "IP", "Name", "Last connection", "Key");
 
     if (!ScanLastSeenQuality(ShowHost, &count))
     {

@@ -92,10 +92,12 @@ static int XmlNodesCompareAttributes(xmlNodePtr node1, xmlNodePtr node2, Attribu
 static int XmlNodesCompareNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
 static int XmlNodesCompareTags(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
 static int XmlNodesCompareText(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
+static int XmlNodesSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
 static int XmlNodesSubsetOfAttributes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
 static int XmlNodesSubsetOfNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
 xmlAttrPtr XmlVerifyAttributeInNode(const xmlChar *name, xmlChar *value, xmlNodePtr node, Attributes a, Promise *pp);
-xmlNodePtr XmlVerifyNodeInNode(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
+xmlNodePtr XmlVerifyNodeInNodeExact(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
+xmlNodePtr XmlVerifyNodeInNodeSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
 
 xmlChar *CharToXmlChar(char* c);
 static int XmlAttributeCount(xmlNodePtr node, Attributes a, Promise *pp);
@@ -633,7 +635,7 @@ static int DeleteTreeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode, Attr
     }
 
     //verify treenode exists inside docnode
-    if ((deletetree = XmlVerifyNodeInNode(treenode, docnode, a, pp)) == NULL)
+    if ((deletetree = XmlVerifyNodeInNodeSubset(treenode, docnode, a, pp)) == NULL)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
              " !! The promised tree to be deleted(%s) does not exists in %s", pp->promiser,
@@ -642,23 +644,23 @@ static int DeleteTreeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode, Attr
     }
 
     //remove the subtree from xml document
-    CfOut(cf_inform, "", " -> Deleting tree (%s) in %s", pp->promiser,
-          pp->this_server);
     if (a.transaction.action == cfa_warn)
     {
         cfPS(cf_error, CF_WARN, "", pp, a,
-             " -> Need to delete the promised tree \"%s\" to %s - but only a warning was promised",
+             " -> Need to delete the promised tree \"%s\" from %s - but only a warning was promised",
              pp->promiser, pp->this_server);
         return true;
     }
     else
     {
+        CfOut(cf_inform, "", " -> Deleting tree \"%s\" in %s", pp->promiser,
+              pp->this_server);
         xmlUnlinkNode(deletetree);
         xmlFreeNode(deletetree);
     }
 
     //verify treenode no longer exists inside docnode
-    if (XmlVerifyNodeInNode(treenode, docnode, a, pp))
+    if (XmlVerifyNodeInNodeSubset(treenode, docnode, a, pp))
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
              " !! The promised tree to be deleted(%s) was not successfully deleted, in %s", pp->promiser,
@@ -693,7 +695,7 @@ static int InsertTreeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode, Attr
     }
 
     //verify treenode does not already exist inside docnode
-    if (XmlVerifyNodeInNode(treenode, docnode, a, pp))
+    if (XmlVerifyNodeInNodeExact(treenode, docnode, a, pp))
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
              " !! The promised tree (%s) already exists in %s", pp->promiser,
@@ -702,8 +704,6 @@ static int InsertTreeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode, Attr
     }
 
     //insert the subtree into xml document
-    CfOut(cf_inform, "", " -> Inserting tree (%s) in %s", pp->promiser,
-          pp->this_server);
     if (a.transaction.action == cfa_warn)
     {
         cfPS(cf_error, CF_WARN, "", pp, a,
@@ -713,6 +713,8 @@ static int InsertTreeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode, Attr
     }
     else
     {
+        CfOut(cf_inform, "", " -> Inserting tree \"%s\" in %s", pp->promiser,
+              pp->this_server);
         if (!xmlAddChild(docnode, treenode))
         {
             cfPS(cf_error, CF_INTERPT, "", pp, a,
@@ -723,7 +725,7 @@ static int InsertTreeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode, Attr
     }
 
     //verify node was inserted
-    if (!XmlVerifyNodeInNode(treenode, docnode, a, pp))
+    if (!XmlVerifyNodeInNodeExact(treenode, docnode, a, pp))
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
              " !! The promised tree (%s) was not inserted successfully in %s", pp->promiser,
@@ -758,8 +760,6 @@ static int DeleteAttributeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode,
     }
 
     //delete attribute from docnode
-    CfOut(cf_inform, "", " -> Deleting attribute \"%s\" in %s", pp->promiser,
-          pp->this_server);
     if (a.transaction.action == cfa_warn)
     {
         cfPS(cf_error, CF_WARN, "", pp, a,
@@ -769,6 +769,8 @@ static int DeleteAttributeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode,
     }
     else
     {
+        CfOut(cf_inform, "", " -> Deleting attribute \"%s\" in %s", pp->promiser,
+              pp->this_server);
         if ((xmlRemoveProp(attr)) == -1)
         {
             cfPS(cf_error, CF_INTERPT, "", pp, a,
@@ -821,8 +823,6 @@ static int InsertAttributeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode,
     }
 
     //insert a new attribute into docnode
-    CfOut(cf_inform, "", " -> Inserting attribute \"%s\" in %s", pp->promiser,
-          pp->this_server);
     if (a.transaction.action == cfa_warn)
     {
         cfPS(cf_error, CF_WARN, "", pp, a,
@@ -832,6 +832,8 @@ static int InsertAttributeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode,
     }
     else
     {
+        CfOut(cf_inform, "", " -> Inserting attribute \"%s\" in %s", pp->promiser,
+              pp->this_server);
         if ((attr = xmlNewProp(docnode, name, value)) == NULL)
         {
             cfPS(cf_verbose, CF_INTERPT, "", pp, a,
@@ -1309,7 +1311,7 @@ static int XmlNodesCompareNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a
 
     while (child1)
     {
-        if (XmlVerifyNodeInNode(child1, copynode2, a, pp) == NULL)
+        if (XmlVerifyNodeInNodeExact(child1, copynode2, a, pp) == NULL)
         {
             return false;
         }
@@ -1392,7 +1394,56 @@ static int XmlNodesCompareText(xmlNodePtr node1, xmlNodePtr node2, Attributes a,
 
 /*********************************************************************/
 
+static int XmlNodesSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
+{
+    xmlNodePtr copynode1, copynode2;
+
+    if ((node1 == NULL) && (node2 == NULL))
+    {
+        return true;
+    }
+
+    if ((node2 == NULL))
+    {
+        return false;
+    }
+
+    copynode1 = xmlCopyNode(node1, 1);
+    copynode2 = xmlCopyNode(node2, 1);
+
+    if (!XmlNodesCompareTags(node1, node2, a, pp))
+    {
+        xmlFree(copynode1);
+        xmlFree(copynode2);
+        return false;
+    }
+
+    if (!XmlNodesSubsetOfAttributes(node1, node2, a, pp))
+    {
+        xmlFree(copynode1);
+        xmlFree(copynode2);
+        return false;
+    }
+
+    //XmlNodesCompareText(node1, node2, a, pp);
+
+    if (!XmlNodesSubsetOfNodes(node1, node2, a, pp))
+    {
+        xmlFree(copynode1);
+        xmlFree(copynode2);
+        return false;
+    }
+
+    xmlFree(copynode1);
+    xmlFree(copynode2);
+
+    return true;
+}
+
+/*********************************************************************/
+
 static int XmlNodesSubsetOfAttributes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
+// Does node1 contain a subset of attributes found in node2?
 {
     xmlNodePtr copynode1, copynode2;
     xmlAttrPtr attr1 = NULL;
@@ -1448,6 +1499,7 @@ static int XmlNodesSubsetOfAttributes(xmlNodePtr node1, xmlNodePtr node2, Attrib
 /*********************************************************************/
 
 static int XmlNodesSubsetOfNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
+// Does node1 contain a subset of nodes found in node2?
 {
     xmlNodePtr copynode1, copynode2;
     xmlNodePtr child1 = NULL;
@@ -1470,7 +1522,7 @@ static int XmlNodesSubsetOfNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes 
 
     while (child1)
     {
-        if (XmlVerifyNodeInNode(child1, copynode2, a, pp) == NULL)
+        if (XmlVerifyNodeInNodeExact(child1, copynode2, a, pp) == NULL)
         {
             return false;
         }
@@ -1483,6 +1535,8 @@ static int XmlNodesSubsetOfNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes 
 /*********************************************************************/
 
 xmlAttrPtr XmlVerifyAttributeInNode(const xmlChar *name, xmlChar *value, xmlNodePtr node, Attributes a, Promise *pp)
+/* Does node contain an attribute with given name and value?
+   Returns a pointer to attribute found in node or NULL */
 {
     xmlAttrPtr attr2 = NULL;
     xmlChar *value2 = NULL;
@@ -1511,7 +1565,9 @@ xmlAttrPtr XmlVerifyAttributeInNode(const xmlChar *name, xmlChar *value, xmlNode
 
 /*********************************************************************/
 
-xmlNodePtr XmlVerifyNodeInNode(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
+xmlNodePtr XmlVerifyNodeInNodeExact(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
+/* Does node2 contain a node with content matching all content in node1?
+   Returns a pointer to node found in node2 or NULL */
 {
     xmlNodePtr comparenode = NULL;
 
@@ -1528,6 +1584,37 @@ xmlNodePtr XmlVerifyNodeInNode(xmlNodePtr node1, xmlNodePtr node2, Attributes a,
     while(comparenode)
     {
         if(XmlNodesCompare(node1, comparenode, a, pp))
+        {
+
+            return comparenode;
+        }
+        comparenode = xmlNextElementSibling(comparenode);
+    }
+
+    return NULL;
+}
+
+/*********************************************************************/
+
+xmlNodePtr XmlVerifyNodeInNodeSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
+/* Does node2 contain: node with subset of content matching all content in node1?
+   Returns a pointer to node found in node2 or NULL */
+{
+    xmlNodePtr comparenode = NULL;
+
+    if ((node1 == NULL) || (node2 == NULL))
+    {
+        return comparenode;
+    }
+
+    if ((comparenode = xmlFirstElementChild(node2)) == NULL)
+    {
+        return comparenode;
+    }
+
+    while(comparenode)
+    {
+        if(XmlNodesSubset(node1, comparenode, a, pp))
         {
 
             return comparenode;
@@ -1572,6 +1659,8 @@ static int XmlAttributeCount(xmlNodePtr node, Attributes a, Promise *pp)
         count++;
         attr = attr->next;
     }
+
+    xmlFree(copynode);
 
     return count;
 }

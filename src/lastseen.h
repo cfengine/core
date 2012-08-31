@@ -44,5 +44,6 @@ typedef bool (*LastSeenQualityCallback)(const char *hostkey, const char *address
                                         void *ctx);
 
 bool ScanLastSeenQuality(LastSeenQualityCallback callback, void *ctx);
+int LastSeenHostKeyCount(void);
 
 #endif

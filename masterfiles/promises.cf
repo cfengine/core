@@ -16,7 +16,7 @@ body common control
                  # Design Center
                     "cfsketch_run",
 
-                 # Agent buddles from here
+                 # Agent bundles from here
                     "main",
 
                    };

@@ -544,6 +544,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
         if ((bp = MakeTemporaryBundleFromTemplate(a,pp)))
         {
             BannerSubBundle(bp,params);
+            a.haveeditline = true;
 
             DeleteScope(bp->name);
             NewScope(bp->name);

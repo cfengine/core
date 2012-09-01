@@ -13,7 +13,7 @@ body common control
                  # Common bundles first for best practice 
                     "def",
 
-                 # Agent buddles from here
+                 # Agent bundles from here
                     "main",
 
                    };

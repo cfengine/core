@@ -43,6 +43,14 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "expand.h"
+//#include "matching.c"
+#ifdef HAVE_PCRE_H
+# include <pcre.h>
+#endif
+
+#ifdef HAVE_PCRE_PCRE_H
+# include <pcre/pcre.h>
+#endif
 
 /*****************************************************************************/
 
@@ -101,6 +109,7 @@ xmlNodePtr XmlVerifyNodeInNodeSubset(xmlNodePtr node1, xmlNodePtr node2, Attribu
 
 xmlChar *CharToXmlChar(char* c);
 static int XmlAttributeCount(xmlNodePtr node, Attributes a, Promise *pp);
+static int XmlXPathConvergent(const char* xpath, Attributes a, Promise *pp);
 
 /*****************************************************************************/
 /* Level                                                                     */
@@ -534,6 +543,13 @@ If no such node matches, docnode should point to NULL
     xmlNodeSetPtr nodes = NULL;
     const xmlChar* xpathExpr = NULL;
     int i, size;
+
+    if (!XmlXPathConvergent(a.xml.select_xpath_region, a, pp))
+    {
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! select_xpath_region expression (%s) is not convergent", a.xml.select_xpath_region);
+        return false;
+    }
 
     if ((xpathExpr = CharToXmlChar(a.xml.select_xpath_region)) == NULL)
     {
@@ -1663,4 +1679,27 @@ static int XmlAttributeCount(xmlNodePtr node, Attributes a, Promise *pp)
     xmlFree(copynode);
 
     return count;
+}
+
+/*********************************************************************/
+
+static int XmlXPathConvergent(const char* xpath, Attributes a, Promise *pp)
+{
+    //verify that xpath does not contain position specific content: [#] [last()] [position()]
+    const char *regexp = "\\[\\s*\\d+\\s*\\]|\\[\\s*last\\(\\).*\\]|\\[\\s*position\\(\\).*\\]";
+
+    int ovector[OVECCOUNT], rc;
+    const char *errorstr;
+    int erroffset;
+
+    pcre *rx = pcre_compile(regexp, 0, &errorstr, &erroffset, NULL);
+
+    if ((rc = pcre_exec(rx, NULL, xpath, strlen(xpath), 0, 0, ovector, OVECCOUNT)) >= 0)
+    {
+        free(rx);
+        return false;
+    }
+
+    free(rx);
+    return true;
 }

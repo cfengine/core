@@ -28,6 +28,7 @@
 #include "dbm_api.h"
 #include "files_names.h"
 #include "item_lib.h"
+#include "vars.h"
 #include "sort.h"
 
 static void ShowState(char *type);
@@ -60,7 +61,7 @@ void VerifyReportPromise(Promise *pp)
         }
         else
         {
-            snprintf(unique_name, CF_BUFSIZE, "last-result", a.report.result);
+            snprintf(unique_name, CF_BUFSIZE, "last-result");
         }
 
         NewScalar(pp->bundle, unique_name, pp->promiser, cf_str);

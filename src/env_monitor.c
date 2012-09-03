@@ -546,9 +546,7 @@ static void ArmClasses(Averages av, char *timekey)
         char desc[CF_BUFSIZE];
 
         GetObservable(i, name, desc);
-        sigma =
-            SetClasses(name, CF_THIS[i], av.Q[i].expect, av.Q[i].var, LOCALAV.Q[i].expect, LOCALAV.Q[i].var, &classlist,
-                       timekey);
+        sigma = SetClasses(name, CF_THIS[i], av.Q[i].expect, av.Q[i].var, LOCALAV.Q[i].expect, LOCALAV.Q[i].var, &classlist, timekey);
         SetVariable(name, CF_THIS[i], av.Q[i].expect, sigma, &classlist);
 
         /* LDT */

@@ -95,6 +95,10 @@ CFEngine might be installed in two configurations:
 
 * FHS file layout, enabled by --enable-fhs. This layout follows FHS 2.3.
 
+After the build process has completed (see BUILD INSTRUCTIONS above), type:
+
+$ make install
+
 RUNNING TESTSUITE
 -----------------
 

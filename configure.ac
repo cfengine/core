@@ -233,10 +233,6 @@ AM_CONDITIONAL(MONGO, false)
 
 m4_indir(incstart[]incend, [nova/options.m4])
 AM_CONDITIONAL([HAVE_NOVA], [test "x$with_nova" != xno && test -d ${srcdir}/nova])
-m4_indir(incstart[]incend, [constellation/options.m4])
-AM_CONDITIONAL([HAVE_CONSTELLATION], [test "x$with_constellation" != xno && test -d ${srcdir}/constellation])
-m4_indir(incstart[]incend, [galaxy/options.m4])
-AM_CONDITIONAL([HAVE_GALAXY], [test "x$with_galaxy" != xno && test -d ${srcdir}/galaxy])
 
 dnl
 dnl In-process databases
@@ -313,7 +309,9 @@ fi
 
 CF3_WITH_LIBRARY(pcre, [
   AC_CHECK_LIB(pcre, pcre_exec, [], [AC_MSG_ERROR(Cannot find PCRE)])
-  AC_CHECK_HEADERS([pcre.h pcre/pcre.h], [break], [AC_MSG_ERROR(Cannot find PCRE)])
+  AC_CHECK_HEADERS([pcre.h], [],
+    [AC_CHECK_HEADERS([pcre/pcre.h], [],
+                      AC_MSG_ERROR(Cannot find PCRE))])
 ])
 
 dnl libvirt
@@ -328,6 +326,17 @@ if test "x$with_libvirt" != xno; then
       AC_CHECK_HEADERS(libvirt/libvirt.h, [], [if test "x$with_libvirt" != xcheck; then AC_MSG_ERROR(Cannot find libvirt library headers); fi])
    ])
 fi
+
+dnl libacl2
+AC_ARG_WITH([libacl],
+    [AS_HELP_STRING([--with-libacl[[=PATH]]], [Specify libacl path])], [], [with_libacl=check])
+
+if test "x$with_libacl" != xno; then
+  CF3_WITH_LIBRARY(libacl, [
+    AC_CHECK_LIB(acl, acl_init, [], [if test "x$with_libacl" != xcheck; then AC_MSG_ERROR(Cannot find libacl library); fi])
+    AC_CHECK_HEADERS([acl.h sys/acl.h acl/libacl.h], [], [if test "x$with_libacl" != xcheck; then AC_MSG_ERROR(Cannot find libacl library headers); fi])
+  ])
+ fi
 
 dnl libxml2
 
@@ -385,7 +394,7 @@ AC_CHECK_HEADERS(fcntl.h)
 AC_CHECK_HEADERS(sys/filesys.h)
 AC_CHECK_HEADERS(dustat.h)
 AC_CHECK_HEADERS(sys/systeminfo.h)
-AC_CHECK_HEADERS(sys/acl.h winsock2.h)
+AC_CHECK_HEADERS(winsock2.h)
 AC_CHECK_HEADERS(zone.h)
 AC_CHECK_HEADERS(sys/uio.h)
 AC_CHECK_HEADERS(sys/types.h)
@@ -588,10 +597,10 @@ AC_CHECK_FUNCS(door_create)
 
 AC_CHECK_FUNC(lchown, AC_DEFINE(HAVE_LCHOWN, 1, [Whether to use lchown(3) to change ownerships]))
 
-AC_CHECK_DECLS(pthread_attr_setstacksize)
+AC_CHECK_DECLS(pthread_attr_setstacksize, [], [], [[#include <pthread.h>]])
 AC_REPLACE_FUNCS(pthread_attr_setstacksize)
 
-AC_CHECK_DECLS(pthread_sigmask)
+AC_CHECK_DECLS(pthread_sigmask, [], [], [[#include <signal.h>]])
 AC_REPLACE_FUNCS(pthread_sigmask)
 
 dnl ######################################################################
@@ -677,8 +686,6 @@ case "$target_os" in
    linux*)
 	AC_DEFINE(LINUX, [], [Linux build])
 	AC_CHECK_LIB(nss_nis, yp_get_default_domain)
-        AC_CHECK_LIB(acl,main)
-        AC_CHECK_HEADERS(acl.h sys/acl.h acl/libacl.h)
         ;;
    freebsd*|dragonfly*)
 	AC_DEFINE(FREEBSD, [], [FreeBSD build])
@@ -957,6 +964,12 @@ else
   AC_MSG_RESULT([-> libvirt: disabled])
 fi
 
+if test "x$ac_cv_lib_acl_acl_init" = xyes; then
+  AC_MSG_RESULT([-> libacl: $LIBACL_PATH])
+else
+  AC_MSG_RESULT([-> libacl: disabled])
+fi
+
 if test "x$ac_cv_lib_xml2_xmlXPathNewContext" = xyes; then
   AC_MSG_RESULT([-> libxml2: $LIBXML2_PATH])
 else
@@ -964,8 +977,6 @@ else
 fi
 
 m4_indir(incstart[]incend, [nova/config.m4])
-m4_indir(incstart[]incend, [constellation/config.m4])
-m4_indir(incstart[]incend, [galaxy/config.m4])
 
 AC_MSG_RESULT([-> Workdir: $WORKDIR])
 
@@ -995,8 +1006,6 @@ AC_CONFIG_FILES([Makefile
 	tests/load/Makefile])
 
 m4_indir(incstart[]incend, [nova/output.m4])
-m4_indir(incstart[]incend, [constellation/output.m4])
-m4_indir(incstart[]incend, [galaxy/output.m4])
 
 AC_OUTPUT
 

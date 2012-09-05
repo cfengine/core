@@ -327,7 +327,7 @@ if test "x$with_libvirt" != xno; then
    ])
 fi
 
-dnl libacl2
+dnl libacl
 
 AC_ARG_WITH([libacl],
     [AS_HELP_STRING([--with-libacl[[=PATH]]], [Specify libacl path])], [], [with_libacl=check])

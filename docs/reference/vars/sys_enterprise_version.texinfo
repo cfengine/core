@@ -1,0 +1,10 @@
+
+@i{History}: Was introduced in 3.5.0, Enterprise 3.0.0
+
+The variable gives the version of the running CFEngine Enterprise Edition.
+
+@verbatim
+
+# enterprise_version = 3.0.0
+
+@end verbatim

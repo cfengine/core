@@ -469,8 +469,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
            // Transform syntactic . into internal : representation
            TransformNameInPlace(edit_bundle_name, '.', ':');
            method_deref = edit_bundle_name;
-           }
-        
+           }        
 
         CfOut(cf_verbose, "", " -> Handling file edits in edit_line bundle %s\n", method_deref);
 
@@ -494,15 +493,6 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
 
     if (a.haveeditxml)
     {
-        if (strcmp(pp->namespace,"default") == 0)
-           {
-           strcpy(edit_bundle_name,"");
-           }
-        else
-           {
-           snprintf(edit_bundle_name,CF_BUFSIZE-1, "%s_",pp->namespace);
-           }
-
         if ((vp = GetConstraintValue("edit_xml", pp, CF_FNCALL)))
         {
             fp = (FnCall *) vp;
@@ -521,10 +511,20 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
             return false;
         }
 
+        if (strncmp(edit_bundle_name,"default.",strlen("default.")) == 0)
+           {
+           method_deref = strchr(edit_bundle_name,'.') + 1;
+           }
+        else
+           {
+           // Transform syntactic . into internal : representation
+           TransformNameInPlace(edit_bundle_name, '.', ':');
+           method_deref = edit_bundle_name;
+           }
+        
+        CfOut(cf_verbose, "", " -> Handling file edits in edit_xml bundle %s\n", method_deref);
 
-        CfOut(cf_verbose, "", " -> Handling file edits in edit_xml bundle %s\n", edit_bundle_name);
-
-        if ((bp = GetBundle(policy, edit_bundle_name, "edit_xml")))
+        if ((bp = GetBundle(policy, method_deref, "edit_xml")))
         {
             BannerSubBundle(bp, params);
 

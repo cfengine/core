@@ -448,7 +448,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
            }
         else
            {
-           snprintf(edit_bundle_name,CF_BUFSIZE-1, "%s_",pp->namespace);
+           snprintf(edit_bundle_name,CF_BUFSIZE-1, "%s:",pp->namespace);
            }
 
         if ((vp = GetConstraintValue("edit_line", pp, CF_FNCALL)))
@@ -476,6 +476,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
         if ((bp = GetBundle(policy, edit_bundle_name, "edit_line")))
         {
             BannerSubBundle(bp, params);
+
 
             DeleteScope(bp->name);
             NewScope(bp->name);

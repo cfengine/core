@@ -415,7 +415,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
     Bundle *bp;
     void *vp;
     FnCall *fp;
-    char edit_bundle_name[CF_BUFSIZE], lockname[CF_BUFSIZE];
+    char edit_bundle_name[CF_BUFSIZE], lockname[CF_BUFSIZE], *method_deref;
     Rlist *params = { 0 };
     int retval = false;
     CfLock thislock;
@@ -442,15 +442,6 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
 
     if (a.haveeditline)
     {
-        if (strcmp(pp->namespace,"default") == 0)
-           {
-           strcpy(edit_bundle_name,"");
-           }
-        else
-           {
-           snprintf(edit_bundle_name,CF_BUFSIZE-1, "%s:",pp->namespace);
-           }
-
         if ((vp = GetConstraintValue("edit_line", pp, CF_FNCALL)))
         {
             fp = (FnCall *) vp;
@@ -469,14 +460,24 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
             return false;
         }
 
+        if (strncmp(edit_bundle_name,"default.",strlen("default.")) == 0)
+           {
+           method_deref = strchr(edit_bundle_name,'.') + 1;
+           }
+        else
+           {
+           // Transform syntactic . into internal : representation
+           TransformNameInPlace(edit_bundle_name, '.', ':');
+           method_deref = edit_bundle_name;
+           }
+        
 
-        CfOut(cf_verbose, "", " -> Handling file edits in edit_line bundle %s\n", edit_bundle_name);
+        CfOut(cf_verbose, "", " -> Handling file edits in edit_line bundle %s\n", method_deref);
 
         // add current filename to context - already there?
-        if ((bp = GetBundle(policy, edit_bundle_name, "edit_line")))
+        if ((bp = GetBundle(policy, method_deref, "edit_line")))
         {
             BannerSubBundle(bp, params);
-
 
             DeleteScope(bp->name);
             NewScope(bp->name);

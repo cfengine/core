@@ -1454,14 +1454,9 @@ EditXml GetXmlConstraints(const Promise *pp)
 {
     EditXml x;
 
-    if ((x.select_xpath_region = GetConstraintValue("select_xpath_region", pp, CF_SCALAR)))
-    {
-        x.haveselectxpathregion = true;
-    }
-    if ((x.attribute_value = GetConstraintValue("attribute_value", pp, CF_SCALAR)))
-    {
-        x.haveattributevalue = true;
-    }
+    x.haveselectxpathregion = (x.select_xpath_region = GetConstraintValue("select_xpath_region", pp, CF_SCALAR))? true:false;
+    x.haveattributevalue = (x.attribute_value = GetConstraintValue("attribute_value", pp, CF_SCALAR))? true:false;
+
     return x;
 }
 

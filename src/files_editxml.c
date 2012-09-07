@@ -43,7 +43,7 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "expand.h"
-//#include "matching.c"
+
 #ifdef HAVE_PCRE_H
 # include <pcre.h>
 #endif
@@ -71,6 +71,8 @@ char *EDITXMLTYPESEQUENCE[] =
     "insert_tree",
     "delete_attribute",
     "insert_attribute",
+    "delete_text",
+    "insert_text",
     //"replace_patterns",
     "reports",
     NULL
@@ -82,16 +84,21 @@ static void VerifyTreeDeletions(Promise *pp);
 static void VerifyTreeInsertions(Promise *pp);
 static void VerifyAttributeDeletions(Promise *pp);
 static void VerifyAttributeInsertions(Promise *pp);
-static int XmlSelectAttribute(xmlNodePtr docnode, xmlAttrPtr *attr, Attributes a, Promise *pp);
+static void VerifyTextDeletions(Promise *pp);
+static void VerifyTextInsertions(Promise *pp);
 static int XmlSelectNode(xmlDocPtr doc, xmlNodePtr *node, Attributes a, Promise *pp);
-static int DeleteTreeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
-static int InsertTreeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
-static int DeleteAttributeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
-static int InsertAttributeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
+static int DeleteTreeAtNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
+static int InsertTreeAtNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
+static int DeleteAttributeAtNode(char *attrname, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
+static int InsertAttributeAtNode(char *attrname, char *attrvalue, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
+static int DeleteTextAtNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
+static int InsertTextAtNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
 static int SanityCheckTreeDeletions(Attributes a, Promise *pp);
 static int SanityCheckTreeInsertions(Attributes a);
 static int SanityCheckAttributeDeletions(Attributes a, Promise *pp);
 static int SanityCheckAttributeInsertions(Attributes a);
+static int SanityCheckTextDeletions(Attributes a, Promise *pp);
+static int SanityCheckTextInsertions(Attributes a);
 
 static int XmlDocsEqualContent(xmlDocPtr doc1, xmlDocPtr doc2, int warnings, Attributes a, Promise *pp);
 static int XmlDocsEqualMem(xmlDocPtr doc1, xmlDocPtr doc2, int warnings, Attributes a, Promise *pp);
@@ -103,7 +110,10 @@ static int XmlNodesCompareText(xmlNodePtr node1, xmlNodePtr node2, Attributes a,
 static int XmlNodesSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
 static int XmlNodesSubsetOfAttributes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
 static int XmlNodesSubsetOfNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
-xmlAttrPtr XmlVerifyAttributeInNode(const xmlChar *name, xmlChar *value, xmlNodePtr node, Attributes a, Promise *pp);
+static int XmlNodesSubstringOfText(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
+xmlAttrPtr XmlVerifyAttributeInNode(const xmlChar *attrname, xmlChar *attrvalue, xmlNodePtr node, Attributes a, Promise *pp);
+xmlChar* XmlVerifyTextInNodeExact(const xmlChar *text, xmlNodePtr node, Attributes a, Promise *pp);
+xmlChar* XmlVerifyTextInNodeSubstring(const xmlChar *text, xmlNodePtr node, Attributes a, Promise *pp);
 xmlNodePtr XmlVerifyNodeInNodeExact(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
 xmlNodePtr XmlVerifyNodeInNodeSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
 
@@ -286,6 +296,22 @@ static void KeepEditXmlPromise(Promise *pp)
         return;
     }
 
+    if (strcmp("delete_text", pp->agentsubtype) == 0)
+    {
+        xmlInitParser();
+        VerifyTextDeletions(pp);
+        xmlCleanupParser();
+        return;
+    }
+
+    if (strcmp("insert_text", pp->agentsubtype) == 0)
+    {
+        xmlInitParser();
+        VerifyTextInsertions(pp);
+        xmlCleanupParser();
+        return;
+    }
+
     if (strcmp("reports", pp->agentsubtype) == 0)
     {
         VerifyReportPromise(pp);
@@ -347,7 +373,7 @@ static void VerifyTreeDeletions(Promise *pp)
 
 static void VerifyTreeInsertions(Promise *pp)
 {
-    xmlDocPtr doc = pp->edcontext->xmldoc;
+    xmlDocPtr doc;
     xmlNodePtr docnode;
 
     Attributes a = { {0} };
@@ -364,7 +390,7 @@ static void VerifyTreeInsertions(Promise *pp)
         return;
     }
 
-    if(doc == NULL)
+    if((doc = pp->edcontext->xmldoc) == NULL)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a,
              " !! Unable to load xml document");
@@ -481,7 +507,104 @@ static void VerifyAttributeInsertions(Promise *pp)
         return;
     }
 
-    if (InsertAttributeAtNode(pp->promiser, doc, docnode, a, pp))
+    if (InsertAttributeAtNode(pp->promiser, a.xml.attribute_value, doc, docnode, a, pp))
+    {
+        (pp->edcontext->num_edits)++;
+    }
+
+    YieldCurrentLock(thislock);
+}
+
+/***************************************************************************/
+
+static void VerifyTextDeletions(Promise *pp)
+{
+    xmlDocPtr doc = NULL;
+    xmlNodePtr docnode = NULL;
+
+    Attributes a = { {0} };
+    CfLock thislock;
+    char lockname[CF_BUFSIZE];
+
+    a = GetDeletionAttributes(pp);
+    a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
+
+    if (!SanityCheckTextDeletions(a, pp))
+    {
+        cfPS(cf_error, CF_INTERPT, "", pp, a, " !! The promised text deletion (%s) is inconsistent", pp->promiser);
+        return;
+    }
+
+    if((doc = pp->edcontext->xmldoc) == NULL)
+    {
+        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
+             " !! Unable to load xml document");
+        return;
+    }
+
+    if (!XmlSelectNode(doc, &docnode, a, pp))
+    {
+        return;
+    }
+
+    snprintf(lockname, CF_BUFSIZE - 1, "deletetext-%s-%s", pp->promiser, pp->this_server);
+    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a, pp, true);
+
+    if (thislock.lock == NULL)
+    {
+        return;
+    }
+
+    if (DeleteTextAtNode(pp->promiser, doc, docnode, a, pp))
+    {
+        (pp->edcontext->num_edits)++;
+    }
+
+    YieldCurrentLock(thislock);
+}
+
+/***************************************************************************/
+
+static void VerifyTextInsertions(Promise *pp)
+{
+    xmlDocPtr doc = NULL;
+    xmlNodePtr docnode = NULL;
+
+    Attributes a = { {0} };
+    CfLock thislock;
+    char lockname[CF_BUFSIZE];
+
+    a = GetInsertionAttributes(pp);
+    a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
+
+    if (!SanityCheckTextInsertions(a))
+    {
+        cfPS(cf_error, CF_INTERPT, "", pp, a, " !! The promised text insertion (%s) breaks its own promises",
+             pp->promiser);
+        return;
+    }
+
+    if((doc = pp->edcontext->xmldoc) == NULL)
+    {
+        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
+             " !! Unable to load xml document");
+        return;
+    }
+
+    if (!XmlSelectNode(doc, &docnode, a, pp))
+    {
+        return;
+    }
+
+    snprintf(lockname, CF_BUFSIZE - 1, "inserttext-%s-%s", pp->promiser, pp->this_server);
+    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a, pp, true);
+
+    if (thislock.lock == NULL)
+    {
+        return;
+    }
+
+    if (InsertTextAtNode(pp->promiser, doc, docnode, a, pp))
     {
         (pp->edcontext->num_edits)++;
     }
@@ -491,40 +614,6 @@ static void VerifyAttributeInsertions(Promise *pp)
 
 /***************************************************************************/
 /* Level                                                                   */
-/***************************************************************************/
-
-static int XmlSelectAttribute(xmlNodePtr docnode, xmlAttrPtr *attr, Attributes a, Promise *pp)
-/*
-
-This should provide a pointer to the edit attribute within the xml document node.
-It returns true if a match was identified, else false.
-
-If no such node matches, attr should point to NULL
-
-*/
-{
-    xmlAttrPtr cur = NULL;
-    const xmlChar* attrname;
-
-    if ((attrname = CharToXmlChar(pp->promiser)) == NULL)
-    {
-        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! Error: unable to create new XPath expression from select_xpath_region");
-        *attr = cur;
-        return false;
-    }
-
-    if ((cur = xmlHasProp(docnode, attrname)) == NULL)
-    {
-        *attr = NULL;
-        return false;
-    }
-
-    *attr = cur;
-
-    return true;
-}
-
 /***************************************************************************/
 
 static int XmlSelectNode(xmlDocPtr doc, xmlNodePtr *docnode, Attributes a, Promise *pp)
@@ -542,7 +631,9 @@ If no such node matches, docnode should point to NULL
     xmlXPathObjectPtr xpathObj = NULL;
     xmlNodeSetPtr nodes = NULL;
     const xmlChar* xpathExpr = NULL;
-    int i, size;
+    int i, size = 0, select = true;
+
+    *docnode = NULL;
 
     if (!XmlXPathConvergent(a.xml.select_xpath_region, a, pp))
     {
@@ -573,47 +664,36 @@ If no such node matches, docnode should point to NULL
         return false;
     }
 
-    if ((nodes = xpathObj->nodesetval) == NULL)
+    if ((size = (nodes = xpathObj->nodesetval) ? nodes->nodeNr : 0) == 0)
     {
-        xmlXPathFreeContext(xpathCtx);
-        xmlXPathFreeObject(xpathObj);
-        return false;
-    }
-
-    if ((size = (nodes) ? nodes->nodeNr : 0) == 0)
-    {
-        xmlXPathFreeContext(xpathCtx);
-        xmlXPathFreeObject(xpathObj);
-        return false;
+        select = false;
     }
 
     if (size > 1)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
              " !! Current select_xpath_region expression \"%s\" returns (%d) edit nodes, please modify to select a unique edit node", xpathExpr, size);
-        xmlXPathFreeContext(xpathCtx);
-        xmlXPathFreeObject(xpathObj);
-        return false;
+        select = false;
     }
 
     //select first matching node
-    for(i = 0; i < size; ++i)
+    if (select)
     {
-        if(nodes->nodeTab[i]->type == XML_ELEMENT_NODE)
+        for(i = 0; i < size; ++i)
         {
-            cur = nodes->nodeTab[i];
-            break;
+            if(nodes->nodeTab[i]->type == XML_ELEMENT_NODE)
+            {
+                cur = nodes->nodeTab[i];
+                break;
+            }
         }
-    }
-
-    if(cur == NULL)
-    {
-        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! The promised xpath pattern (%s) was not found when selecting edit node in %s",
-             xpathExpr, pp->this_server);
-        xmlXPathFreeContext(xpathCtx);
-        xmlXPathFreeObject(xpathObj);
-        return false;
+        if(cur == NULL)
+        {
+            cfPS(cf_verbose, CF_INTERPT, "", pp, a,
+                 " !! The promised xpath pattern (%s) was not found when selecting edit node in %s",
+                 xpathExpr, pp->this_server);
+            select = false;
+        }
     }
 
     *docnode = cur;
@@ -621,21 +701,21 @@ If no such node matches, docnode should point to NULL
     xmlXPathFreeContext(xpathCtx);
     xmlXPathFreeObject(xpathObj);
 
-    return true;
+    return select;
 }
 
 /***************************************************************************/
 /* Level                                                                   */
 /***************************************************************************/
 
-static int DeleteTreeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
+static int DeleteTreeAtNode(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
 {
     xmlNodePtr treenode = NULL;
     xmlNodePtr deletetree = NULL;
     xmlChar *buf = NULL;
 
     //for parsing subtree from memory
-    if ((buf = CharToXmlChar(chunk)) == NULL)
+    if ((buf = CharToXmlChar(rawtree)) == NULL)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a,
              " !! WARNING: Tree to be deleted was not successfully loaded into an xml buffer");
@@ -643,7 +723,7 @@ static int DeleteTreeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode, Attr
     }
 
     //parse the subtree
-    if (xmlParseBalancedChunkMemory(doc, NULL, NULL, 0, buf, &treenode))
+    if (xmlParseBalancedChunkMemory(doc, NULL, NULL, 0, buf, &treenode) != 0)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a,
              " !! WARNING: Tree to be deleted was not parsed successfully");
@@ -659,7 +739,6 @@ static int DeleteTreeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode, Attr
         return false;
     }
 
-    //remove the subtree from xml document
     if (a.transaction.action == cfa_warn)
     {
         cfPS(cf_error, CF_WARN, "", pp, a,
@@ -667,13 +746,12 @@ static int DeleteTreeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode, Attr
              pp->promiser, pp->this_server);
         return true;
     }
-    else
-    {
-        CfOut(cf_inform, "", " -> Deleting tree \"%s\" in %s", pp->promiser,
-              pp->this_server);
-        xmlUnlinkNode(deletetree);
-        xmlFreeNode(deletetree);
-    }
+
+    //remove the subtree from xml document
+    CfOut(cf_inform, "", " -> Deleting tree \"%s\" in %s", pp->promiser,
+          pp->this_server);
+    xmlUnlinkNode(deletetree);
+    xmlFreeNode(deletetree);
 
     //verify treenode no longer exists inside docnode
     if (XmlVerifyNodeInNodeSubset(treenode, docnode, a, pp))
@@ -689,13 +767,13 @@ static int DeleteTreeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode, Attr
 
 /***************************************************************************/
 
-static int InsertTreeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
+static int InsertTreeAtNode(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
 {
     xmlNodePtr treenode = NULL;
     xmlChar *buf = NULL;
 
     //for parsing subtree from memory
-    if ((buf = CharToXmlChar(chunk)) == NULL)
+    if ((buf = CharToXmlChar(rawtree)) == NULL)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a,
              " !! Tree to be inserted was not successfully loaded into an xml buffer");
@@ -703,15 +781,27 @@ static int InsertTreeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode, Attr
     }
 
     //parse the subtree
-    if (xmlParseBalancedChunkMemory(doc, NULL, NULL, 0, buf, &treenode))
+    if (xmlParseBalancedChunkMemory(doc, NULL, NULL, 0, buf, &treenode) != 0)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a,
              " !! Tree to be inserted was not parsed successfully");
         return false;
     }
 
+    if (treenode == NULL || (treenode->name) == NULL)
+    {
+        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
+             " !! The promised tree to be inserted is empty");
+        return false;
+    }
+    else
+    {
+        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
+             " !! The promised tree to be inserted has name (%s)", treenode->name);
+    }
+
     //verify treenode does not already exist inside docnode
-    if (XmlVerifyNodeInNodeExact(treenode, docnode, a, pp))
+    if (XmlVerifyNodeInNodeSubset(treenode, docnode, a, pp))
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
              " !! The promised tree (%s) already exists in %s", pp->promiser,
@@ -719,7 +809,6 @@ static int InsertTreeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode, Attr
         return false;
     }
 
-    //insert the subtree into xml document
     if (a.transaction.action == cfa_warn)
     {
         cfPS(cf_error, CF_WARN, "", pp, a,
@@ -727,21 +816,20 @@ static int InsertTreeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode, Attr
              pp->promiser, pp->this_server);
         return true;
     }
-    else
+
+    //insert the subtree into xml document
+    CfOut(cf_inform, "", " -> Inserting tree \"%s\" in %s", pp->promiser,
+          pp->this_server);
+    if (!xmlAddChild(docnode, treenode))
     {
-        CfOut(cf_inform, "", " -> Inserting tree \"%s\" in %s", pp->promiser,
-              pp->this_server);
-        if (!xmlAddChild(docnode, treenode))
-        {
-            cfPS(cf_error, CF_INTERPT, "", pp, a,
-                 " !! The promised tree (%s) was not inserted successfully in %s", pp->promiser,
-                 pp->this_server);
-            return false;
-        }
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! The promised tree (%s) was not inserted successfully in %s", pp->promiser,
+             pp->this_server);
+        return false;
     }
 
     //verify node was inserted
-    if (!XmlVerifyNodeInNodeExact(treenode, docnode, a, pp))
+    if (!XmlVerifyNodeInNodeSubset(treenode, docnode, a, pp))
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
              " !! The promised tree (%s) was not inserted successfully in %s", pp->promiser,
@@ -754,12 +842,12 @@ static int InsertTreeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode, Attr
 
 /***************************************************************************/
 
-static int DeleteAttributeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
+static int DeleteAttributeAtNode(char *rawname, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
 {
     xmlAttrPtr attr = NULL;
     xmlChar *name = NULL;
 
-    if ((name = CharToXmlChar(pp->promiser)) == NULL)
+    if ((name = CharToXmlChar(rawname)) == NULL)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a,
              " !! WARNING: Attribute name to be inserted was not successfully loaded into an xml buffer");
@@ -775,7 +863,6 @@ static int DeleteAttributeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode,
         return false;
     }
 
-    //delete attribute from docnode
     if (a.transaction.action == cfa_warn)
     {
         cfPS(cf_error, CF_WARN, "", pp, a,
@@ -783,16 +870,15 @@ static int DeleteAttributeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode,
              pp->promiser, pp->this_server);
         return true;
     }
-    else
+
+    //delete attribute from docnode
+    CfOut(cf_inform, "", " -> Deleting attribute \"%s\" in %s", pp->promiser,
+          pp->this_server);
+    if ((xmlRemoveProp(attr)) == -1)
     {
-        CfOut(cf_inform, "", " -> Deleting attribute \"%s\" in %s", pp->promiser,
-              pp->this_server);
-        if ((xmlRemoveProp(attr)) == -1)
-        {
-            cfPS(cf_error, CF_INTERPT, "", pp, a,
-                 " !! The promised attribute to be deleted was not deleted successfully.");
-            return false;
-        }
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! The promised attribute to be deleted was not deleted successfully.");
+        return false;
     }
 
     //verify attribute no longer exists inside docnode
@@ -809,20 +895,20 @@ static int DeleteAttributeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode,
 
 /***************************************************************************/
 
-static int InsertAttributeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
+static int InsertAttributeAtNode(char *rawname, char *rawvalue, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
 {
     xmlAttrPtr attr = NULL;
     xmlChar *name = NULL;
     xmlChar *value = NULL;
 
-    if ((name = CharToXmlChar(pp->promiser)) == NULL)
+    if ((name = CharToXmlChar(rawname)) == NULL)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a,
              " !! WARNING: Attribute name to be inserted was not successfully loaded into an xml buffer");
         return false;
     }
 
-    if ((value = CharToXmlChar(a.xml.attribute_value)) == NULL)
+    if ((value = CharToXmlChar(rawvalue)) == NULL)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a,
              " !! WARNING: Attribute value to be inserted was not successfully loaded into an xml buffer");
@@ -838,7 +924,6 @@ static int InsertAttributeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode,
         return false;
     }
 
-    //insert a new attribute into docnode
     if (a.transaction.action == cfa_warn)
     {
         cfPS(cf_error, CF_WARN, "", pp, a,
@@ -846,19 +931,18 @@ static int InsertAttributeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode,
              pp->promiser, pp->this_server);
         return true;
     }
-    else
+
+    //insert attribute into docnode
+    CfOut(cf_inform, "", " -> Inserting attribute \"%s\" in %s", pp->promiser,
+          pp->this_server);
+    if ((attr = xmlNewProp(docnode, name, value)) == NULL)
     {
-        CfOut(cf_inform, "", " -> Inserting attribute \"%s\" in %s", pp->promiser,
-              pp->this_server);
-        if ((attr = xmlNewProp(docnode, name, value)) == NULL)
-        {
-            cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-                 " !! WARNING: Attribute was not successfully inserted into xml document");
-            return false;
-        }
+        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
+             " !! WARNING: Attribute was not successfully inserted into xml document");
+        return false;
     }
 
-    //verify attribute now exists inside docnode
+    //verify attribute was inserted
     if ((attr = XmlVerifyAttributeInNode(name, value, docnode, a, pp)) == NULL)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
@@ -871,12 +955,104 @@ static int InsertAttributeAtNode(char *chunk, xmlDocPtr doc, xmlNodePtr docnode,
 }
 
 /***************************************************************************/
+
+static int DeleteTextAtNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
+{
+    xmlChar *text = NULL;
+
+    if ((text = CharToXmlChar(rawtext)) == NULL)
+    {
+        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
+             " !! WARNING: Attribute name to be inserted was not successfully loaded into an xml buffer");
+        return false;
+    }
+
+    //verify text exists inside docnode
+    if (XmlVerifyTextInNodeSubstring(text, docnode, a, pp) == NULL)
+    {
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! The promised text to be deleted (%s) does not exist in %s", pp->promiser, pp->this_server);
+        return false;
+    }
+
+    if (a.transaction.action == cfa_warn)
+    {
+        cfPS(cf_error, CF_WARN, "", pp, a,
+             " -> Need to insert the promised text \"%s\" to %s - but only a warning was promised",
+             pp->promiser, pp->this_server);
+        return true;
+    }
+
+    //delete text from docnode
+    CfOut(cf_inform, "", " -> Deleting text \"%s\" in %s", pp->promiser,
+          pp->this_server);
+
+    xmlNodeSetContent(docnode, "");
+
+    //verify text no longer exists inside docnode
+    if (XmlVerifyTextInNodeSubstring(text, docnode, a, pp) != NULL)
+    {
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! The promised text (%s) was not deleted successfully from %s", pp->promiser, pp->this_server);
+        return false;
+    }
+
+    return true;
+}
+
+/***************************************************************************/
+
+static int InsertTextAtNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
+{
+    xmlChar *text = NULL;
+
+    if ((text = CharToXmlChar(rawtext)) == NULL)
+    {
+        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
+             " !! WARNING: Attribute name to be inserted was not successfully loaded into an xml buffer");
+        return false;
+    }
+
+    //verify text does not exist inside docnode
+    if (XmlVerifyTextInNodeSubstring(text, docnode, a, pp) != NULL)
+    {
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! The promised text (%s) already exists in %s", pp->promiser, pp->this_server);
+        return false;
+    }
+
+    if (a.transaction.action == cfa_warn)
+    {
+        cfPS(cf_error, CF_WARN, "", pp, a,
+             " -> Need to insert the promised text \"%s\" to %s - but only a warning was promised",
+             pp->promiser, pp->this_server);
+        return true;
+    }
+
+    //insert text into docnode
+    CfOut(cf_inform, "", " -> Inserting text \"%s\" in %s", pp->promiser,
+          pp->this_server);
+
+    xmlNodeSetContent(docnode, text);
+
+    //verify text was inserted
+    if (XmlVerifyTextInNodeSubstring(text, docnode, a, pp) == NULL)
+    {
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! The promised text (%s) was not inserted successfully in %s", pp->promiser, pp->this_server);
+        return false;
+    }
+
+    return true;
+}
+
+/***************************************************************************/
 /* Level                                                                   */
 /***************************************************************************/
 
 static int SanityCheckTreeDeletions(Attributes a, Promise *pp)
 {
-    long ok = true;
+    int ok = true;
 
     if(!a.xml.haveselectxpathregion)
     {
@@ -892,7 +1068,7 @@ static int SanityCheckTreeDeletions(Attributes a, Promise *pp)
 
 static int SanityCheckTreeInsertions(Attributes a)
 {
-    long ok = true;
+    int ok = true;
 
     if(!(a.xml.haveselectxpathregion))
     {
@@ -908,7 +1084,7 @@ static int SanityCheckTreeInsertions(Attributes a)
 
 static int SanityCheckAttributeDeletions(Attributes a, Promise *pp)
 {
-    long ok = true;
+    int ok = true;
 
     if(!(a.xml.haveselectxpathregion))
     {
@@ -924,12 +1100,44 @@ static int SanityCheckAttributeDeletions(Attributes a, Promise *pp)
 
 static int SanityCheckAttributeInsertions(Attributes a)
 {
-    long ok = true;
+    int ok = true;
 
     if(!(a.xml.haveselectxpathregion))
     {
         CfOut(cf_error, "",
               " !! Attribute insertion requires select_xpath_region to be specified");
+        ok = false;
+    }
+
+    return ok;
+}
+
+/***************************************************************************/
+
+static int SanityCheckTextDeletions(Attributes a, Promise *pp)
+{
+    int ok = true;
+
+    if(!(a.xml.haveselectxpathregion))
+    {
+        CfOut(cf_error, "",
+              " !! Tree insertion requires select_xpath_region to be specified");
+        ok = false;
+    }
+
+    return ok;
+}
+
+/***************************************************************************/
+
+static int SanityCheckTextInsertions(Attributes a)
+{
+    int ok = true;
+
+    if(!(a.xml.haveselectxpathregion))
+    {
+        CfOut(cf_error, "",
+              " !! Tree insertion requires select_xpath_region to be specified");
         ok = false;
     }
 
@@ -954,7 +1162,7 @@ int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, Attributes a, Promise *pp
     {
         CfOut(cf_inform, "", " !! File %s is bigger than the limit edit.max_file_size = %jd > %d bytes\n", file,
               (intmax_t) statbuf.st_size, a.edits.maxfilesize);
-        return (false);
+        return false;
     }
 
     if (!S_ISREG(statbuf.st_mode))
@@ -969,7 +1177,7 @@ int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, Attributes a, Promise *pp
         return false;
     }
 
-    return (true);
+    return true;
 }
 
 /*********************************************************************/
@@ -1018,16 +1226,13 @@ int SaveXmlDocAsFile(xmlDocPtr doc, const char *file, Attributes a, Promise *pp,
     strcat(new, ".cf-after-edit");
     unlink(new);                /* Just in case of races */
 
-    // Save xml document to file and then free document
     if (xmlSaveFile(new, doc) == -1)
     {
         cfPS(cf_error, CF_FAIL, "xmlSaveFile", pp, a, "Failed to write xml document to file %s after editing\n", new);
-        xmlFreeDoc(doc);
         return false;
     }
-    xmlFreeDoc(doc);
 
-    cfPS(cf_inform, CF_CHG, "", pp, a, " -> Edited file %s \n", file);
+    cfPS(cf_inform, CF_CHG, "", pp, a, " -> Edited xml file %s \n", file);
 
     if (cf_rename(file, backup) == -1)
     {
@@ -1109,16 +1314,15 @@ int XmlCompareToFile(xmlDocPtr doc, char *file, Attributes a, Promise *pp)
         return false;
     }
 
-    if (!XmlDocsEqualContent(cmpdoc, doc, (a.transaction.action == cfa_warn), a, pp))
+    if (!XmlDocsEqualMem(cmpdoc, doc, (a.transaction.action == cfa_warn), a, pp))
     {
         xmlFreeDoc(cmpdoc);
         return false;
     }
 
     xmlFreeDoc(cmpdoc);
-    xmlFreeDoc(doc);
 
-    return (true);
+    return true;
 }
 
 /*********************************************************************/
@@ -1129,6 +1333,17 @@ static int XmlDocsEqualContent(xmlDocPtr doc1, xmlDocPtr doc2, int warnings, Att
     xmlNodePtr root2 = NULL;
     xmlNodePtr copynode1 = NULL;
     xmlNodePtr copynode2 = NULL;
+    int equal = true;
+
+    if (!doc1 && !doc2)
+    {
+        return true;
+    }
+
+    if (!doc1 || !doc2)
+    {
+        return false;
+    }
 
     root1 = xmlDocGetRootElement(doc1);
     root2 = xmlDocGetRootElement(doc2);
@@ -1138,15 +1353,13 @@ static int XmlDocsEqualContent(xmlDocPtr doc1, xmlDocPtr doc2, int warnings, Att
 
     if (!XmlNodesCompare(copynode1, copynode2, a, pp))
     {
-        xmlFree(copynode1);
-        xmlFree(copynode2);
-        return false;
+        equal = false;
     }
 
     xmlFree(copynode1);
     xmlFree(copynode2);
 
-    return true;
+    return equal;
 }
 /*********************************************************************/
 
@@ -1154,24 +1367,32 @@ static int XmlDocsEqualMem(xmlDocPtr doc1, xmlDocPtr doc2, int warnings, Attribu
 {
     xmlChar *mem1;
     xmlChar *mem2;
-
     int memsize1;
     int memsize2;
+    int equal = true;
+
+    if (!doc1 && !doc2)
+    {
+        return true;
+    }
+
+    if (!doc1 || !doc2)
+    {
+        return false;
+    }
 
     xmlDocDumpMemory(doc1, &mem1, &memsize1);
     xmlDocDumpMemory(doc2, &mem2, &memsize2);
 
     if (!xmlStrEqual(mem1, mem2))
     {
-        xmlFree(mem1);
-        xmlFree(mem2);
-        return false;
+        equal = false;
     }
 
     xmlFree(mem1);
     xmlFree(mem2);
 
-    return true;
+    return equal;
 }
 
 /*********************************************************************/
@@ -1181,13 +1402,14 @@ static int XmlDocsEqualMem(xmlDocPtr doc1, xmlDocPtr doc2, int warnings, Attribu
 static int XmlNodesCompare(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
 {
     xmlNodePtr copynode1, copynode2;
+    int compare = true;
 
-    if ((node1 == NULL) && (node2 == NULL))
+    if (!node1 && !node2)
     {
         return true;
     }
 
-    if ((node1 == NULL) || (node2 == NULL))
+    if (!node1 || !node2)
     {
         return false;
     }
@@ -1197,31 +1419,28 @@ static int XmlNodesCompare(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Pro
 
     if (!XmlNodesCompareTags(node1, node2, a, pp))
     {
-        xmlFree(copynode1);
-        xmlFree(copynode2);
-        return false;
+        compare = false;
     }
 
-    if (!XmlNodesCompareAttributes(node1, node2, a, pp))
+    if (compare && !XmlNodesCompareAttributes(node1, node2, a, pp))
     {
-        xmlFree(copynode1);
-        xmlFree(copynode2);
-        return false;
+        compare = false;
     }
 
-    //XmlNodesCompareText(node1, node2, a, pp);
-
-    if (!XmlNodesCompareNodes(node1, node2, a, pp))
+    if (compare && !XmlNodesCompareText(node1, node2, a, pp))
     {
-        xmlFree(copynode1);
-        xmlFree(copynode2);
-        return false;
+        compare = false;
+    }
+
+    if (compare && !XmlNodesCompareNodes(node1, node2, a, pp))
+    {
+        compare = false;
     }
 
     xmlFree(copynode1);
     xmlFree(copynode2);
 
-    return true;
+    return compare;
 }
 
 /*********************************************************************/
@@ -1233,6 +1452,7 @@ static int XmlNodesCompareAttributes(xmlNodePtr node1, xmlNodePtr node2, Attribu
     xmlAttrPtr attr2 = NULL;
     xmlChar *value = NULL;
     int count1, count2;
+    int compare = true;
 
     if(!node1 && !node2)
     {
@@ -1278,9 +1498,8 @@ static int XmlNodesCompareAttributes(xmlNodePtr node1, xmlNodePtr node2, Attribu
 
         if ((XmlVerifyAttributeInNode(attr1->name, value, copynode2, a, pp)) == NULL)
         {
-            xmlFree(copynode1);
-            xmlFree(copynode2);
-            return false;
+            compare = false;
+            break;
         }
 
         attr1 = attr1->next;
@@ -1290,7 +1509,7 @@ static int XmlNodesCompareAttributes(xmlNodePtr node1, xmlNodePtr node2, Attribu
     xmlFree(copynode1);
     xmlFree(copynode2);
 
-    return true;
+    return compare;
 }
 
 /*********************************************************************/
@@ -1334,6 +1553,9 @@ static int XmlNodesCompareNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a
         child1 = xmlNextElementSibling(copynode1);
     }
 
+    xmlFree(copynode1);
+    xmlFree(copynode2);
+
     return true;
 }
 
@@ -1342,6 +1564,7 @@ static int XmlNodesCompareNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a
 static int XmlNodesCompareTags(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
 {
     xmlNodePtr copynode1, copynode2;
+    int compare = true;
 
     if(!node1 && !node2)
     {
@@ -1369,21 +1592,19 @@ static int XmlNodesCompareTags(xmlNodePtr node1, xmlNodePtr node2, Attributes a,
     //check tag in node1 is the same as tag in node2
     if (!xmlStrEqual(copynode1->name, copynode2->name))
     {
-        xmlFree(copynode1);
-        xmlFree(copynode2);
-        return false;
+        compare = false;
     }
 
     xmlFree(copynode1);
     xmlFree(copynode2);
-    return true;
+    return compare;
 }
 
 /*********************************************************************/
 
 static int XmlNodesCompareText(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
 {
-    xmlNodePtr copynode1, copynode2;
+    xmlChar *text1 = NULL, *text2 = NULL;
 
     if(!node1 && !node2)
     {
@@ -1395,15 +1616,25 @@ static int XmlNodesCompareText(xmlNodePtr node1, xmlNodePtr node2, Attributes a,
         return false;
     }
 
-    copynode1 = xmlCopyNode(node1, 1);
-    copynode2 = xmlCopyNode(node2, 1);
-
     //get text from nodes
+    text1 = xmlNodeGetContent(node1->children);
+    text2 = xmlNodeGetContent(node2->children);
 
-    //check that text from node1 is in node2
+    if(!text1 && !text2)
+    {
+        return true;
+    }
 
-    xmlFree(copynode1);
-    xmlFree(copynode2);
+    if (!text2)
+    {
+        return false;
+    }
+
+    //check text in node1 is the same as text in node2
+    if (!xmlStrEqual(text1, text2))
+    {
+        return false;
+    }
 
     return true;
 }
@@ -1413,13 +1644,14 @@ static int XmlNodesCompareText(xmlNodePtr node1, xmlNodePtr node2, Attributes a,
 static int XmlNodesSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
 {
     xmlNodePtr copynode1, copynode2;
+    int subset = true;
 
-    if ((node1 == NULL) && (node2 == NULL))
+    if (!node1 && !node2)
     {
         return true;
     }
 
-    if ((node2 == NULL))
+    if (!node2)
     {
         return false;
     }
@@ -1429,41 +1661,39 @@ static int XmlNodesSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Prom
 
     if (!XmlNodesCompareTags(node1, node2, a, pp))
     {
-        xmlFree(copynode1);
-        xmlFree(copynode2);
-        return false;
+        subset = false;
     }
 
-    if (!XmlNodesSubsetOfAttributes(node1, node2, a, pp))
+    if (subset && !XmlNodesSubsetOfAttributes(node1, node2, a, pp))
     {
-        xmlFree(copynode1);
-        xmlFree(copynode2);
-        return false;
+        subset = false;
     }
 
-    //XmlNodesCompareText(node1, node2, a, pp);
-
-    if (!XmlNodesSubsetOfNodes(node1, node2, a, pp))
+    if (subset && !XmlNodesSubstringOfText(node1, node2, a, pp))
     {
-        xmlFree(copynode1);
-        xmlFree(copynode2);
-        return false;
+        subset = false;
+    }
+
+    if (subset && !XmlNodesSubsetOfNodes(node1, node2, a, pp))
+    {
+        subset = false;
     }
 
     xmlFree(copynode1);
     xmlFree(copynode2);
 
-    return true;
+    return subset;
 }
 
 /*********************************************************************/
 
 static int XmlNodesSubsetOfAttributes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
-// Does node1 contain a subset of attributes found in node2?
+/* Does node1 contain a subset of attributes found in node2? */
 {
     xmlNodePtr copynode1, copynode2;
     xmlAttrPtr attr1 = NULL;
     xmlChar *value = NULL;
+    int subset = true;
 
     if(!node1 && !node2)
     {
@@ -1498,9 +1728,8 @@ static int XmlNodesSubsetOfAttributes(xmlNodePtr node1, xmlNodePtr node2, Attrib
 
         if ((XmlVerifyAttributeInNode(attr1->name, value, copynode2, a, pp)) == NULL)
         {
-            xmlFree(copynode1);
-            xmlFree(copynode2);
-            return false;
+            subset = false;
+            break;
         }
 
         attr1 = attr1->next;
@@ -1509,16 +1738,17 @@ static int XmlNodesSubsetOfAttributes(xmlNodePtr node1, xmlNodePtr node2, Attrib
     xmlFree(copynode1);
     xmlFree(copynode2);
 
-    return true;
+    return subset;
 }
 
 /*********************************************************************/
 
 static int XmlNodesSubsetOfNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
-// Does node1 contain a subset of nodes found in node2?
+/* Does node1 contain a subset of nodes found in node2? */
 {
     xmlNodePtr copynode1, copynode2;
     xmlNodePtr child1 = NULL;
+    int subset = true;
 
     if(!node1 && !node2)
     {
@@ -1540,9 +1770,54 @@ static int XmlNodesSubsetOfNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes 
     {
         if (XmlVerifyNodeInNodeExact(child1, copynode2, a, pp) == NULL)
         {
-            return false;
+            subset = false;
+            break;
         }
         child1 = xmlNextElementSibling(copynode1);
+    }
+
+    xmlFree(copynode1);
+    xmlFree(copynode2);
+
+    return subset;
+}
+
+/*********************************************************************/
+
+static int XmlNodesSubstringOfText(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
+/* Does node1 text content match a substring of text content found in node2? */
+{
+    xmlChar *text1, *text2;
+
+    if(!node1 && !node2)
+    {
+        return true;
+    }
+
+    if(!node1 || !node2)
+    {
+        return false;
+    }
+
+    text1 = xmlNodeGetContent(node1->children);
+    text2 = xmlNodeGetContent(node2->children);
+
+    if(!text1)
+    {
+        return true;
+    }
+
+    if(!text2)
+    {
+        return false;
+    }
+
+    cfPS(cf_verbose, CF_INTERPT, "", pp, a,
+             " !! node1->text: (%s)    node2->text: (%s)", text1, text2);
+
+    if (!xmlStrstr(text2, text1))
+    {
+        return false;
     }
 
     return true;
@@ -1557,15 +1832,15 @@ xmlAttrPtr XmlVerifyAttributeInNode(const xmlChar *name, xmlChar *value, xmlNode
     xmlAttrPtr attr2 = NULL;
     xmlChar *value2 = NULL;
 
-    if ((name == NULL) || (node->properties == NULL))
+    if ((node == NULL) || (name == NULL) || (node->properties == NULL))
     {
-        return attr2;
+        return NULL;
     }
 
     //get attribute with matching name from node, if it exists
     if ((attr2 = xmlHasProp(node, name)) == NULL)
     {
-        return attr2;
+        return NULL;
     }
 
     //compare values
@@ -1581,6 +1856,52 @@ xmlAttrPtr XmlVerifyAttributeInNode(const xmlChar *name, xmlChar *value, xmlNode
 
 /*********************************************************************/
 
+xmlChar* XmlVerifyTextInNodeExact(const xmlChar *text, xmlNodePtr node, Attributes a, Promise *pp)
+/* Does node contain: text content exactly matching the givin string text?
+   Returns a pointer to text content in node or NULL */
+{
+    xmlChar *text2;
+
+    if (node == NULL)
+    {
+        return NULL;
+    }
+
+    text2 = xmlNodeGetContent(node->children);
+
+    if (!xmlStrEqual(text2, text))
+    {
+        return NULL;
+    }
+
+    return text2;
+}
+
+/*********************************************************************/
+
+xmlChar* XmlVerifyTextInNodeSubstring(const xmlChar *text, xmlNodePtr node, Attributes a, Promise *pp)
+/* Does node contain: text content, contains substring, matching the given string of text?
+   Returns a pointer to text content in node or NULL */
+{
+    xmlChar *text2 = NULL;
+
+    if (node == NULL)
+    {
+        return NULL;
+    }
+
+    text2 = xmlNodeGetContent(node->children);
+
+    if (!xmlStrstr(text2, text))
+    {
+        return NULL;
+    }
+
+    return text2;
+}
+
+/*********************************************************************/
+
 xmlNodePtr XmlVerifyNodeInNodeExact(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
 /* Does node2 contain a node with content matching all content in node1?
    Returns a pointer to node found in node2 or NULL */
@@ -1589,12 +1910,12 @@ xmlNodePtr XmlVerifyNodeInNodeExact(xmlNodePtr node1, xmlNodePtr node2, Attribut
 
     if ((node1 == NULL) || (node2 == NULL))
     {
-        return comparenode;
+        return NULL;
     }
 
     if ((comparenode = xmlFirstElementChild(node2)) == NULL)
     {
-        return comparenode;
+        return NULL;
     }
 
     while(comparenode)

@@ -57,7 +57,6 @@ EditContext *NewEditContext(char *filename, Attributes a, Promise *pp)
 
     if (a.haveeditxml)
     {
-    // Fill me in
         if(!LoadFileAsXmlDoc(&(ec->xmldoc), filename, a, pp))
         {
             free(ec);
@@ -111,7 +110,6 @@ void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportC
 
         if (a.haveeditxml)
         {
-        // Fill me in
             if(XmlCompareToFile(ec->xmldoc, ec->filename, a, pp))
             {
                 if (ec)
@@ -123,8 +121,8 @@ void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportC
             {
                 SaveXmlDocAsFile(ec->xmldoc, ec->filename, a, pp, report_context);
             }
+            xmlFreeDoc(ec->xmldoc);
         }
-        
     }
     else
     {

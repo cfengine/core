@@ -718,7 +718,7 @@ static int DeleteTreeAtNode(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, At
     if ((buf = CharToXmlChar(rawtree)) == NULL)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! WARNING: Tree to be deleted was not successfully loaded into an xml buffer");
+             " !! Tree to be deleted was not successfully loaded into an xml buffer");
         return false;
     }
 
@@ -726,7 +726,7 @@ static int DeleteTreeAtNode(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, At
     if (xmlParseBalancedChunkMemory(doc, NULL, NULL, 0, buf, &treenode) != 0)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! WARNING: Tree to be deleted was not parsed successfully");
+             " !! Tree to be deleted was not parsed successfully");
         return false;
     }
 
@@ -850,7 +850,7 @@ static int DeleteAttributeAtNode(char *rawname, xmlDocPtr doc, xmlNodePtr docnod
     if ((name = CharToXmlChar(rawname)) == NULL)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! WARNING: Attribute name to be inserted was not successfully loaded into an xml buffer");
+             " !! Attribute name to be inserted was not successfully loaded into an xml buffer");
         return false;
     }
 
@@ -904,14 +904,14 @@ static int InsertAttributeAtNode(char *rawname, char *rawvalue, xmlDocPtr doc, x
     if ((name = CharToXmlChar(rawname)) == NULL)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! WARNING: Attribute name to be inserted was not successfully loaded into an xml buffer");
+             " !! Attribute name to be inserted was not successfully loaded into an xml buffer");
         return false;
     }
 
     if ((value = CharToXmlChar(rawvalue)) == NULL)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! WARNING: Attribute value to be inserted was not successfully loaded into an xml buffer");
+             " !! Attribute value to be inserted was not successfully loaded into an xml buffer");
         return false;
     }
 
@@ -938,7 +938,7 @@ static int InsertAttributeAtNode(char *rawname, char *rawvalue, xmlDocPtr doc, x
     if ((attr = xmlNewProp(docnode, name, value)) == NULL)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! WARNING: Attribute was not successfully inserted into xml document");
+             " !! Attribute was not successfully inserted into xml document");
         return false;
     }
 
@@ -963,7 +963,7 @@ static int DeleteTextAtNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, At
     if ((text = CharToXmlChar(rawtext)) == NULL)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! WARNING: Attribute name to be inserted was not successfully loaded into an xml buffer");
+             " !! Attribute name to be inserted was not successfully loaded into an xml buffer");
         return false;
     }
 
@@ -1009,7 +1009,7 @@ static int InsertTextAtNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, At
     if ((text = CharToXmlChar(rawtext)) == NULL)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! WARNING: Attribute name to be inserted was not successfully loaded into an xml buffer");
+             " !! Attribute name to be inserted was not successfully loaded into an xml buffer");
         return false;
     }
 
@@ -1473,8 +1473,6 @@ static int XmlNodesCompareAttributes(xmlNodePtr node1, xmlNodePtr node2, Attribu
 
     if ((node1->properties) == NULL || (node2->properties) == NULL)
     {
-        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! node1->properties or node2->properties are NULL");
         return false;
     }
 
@@ -1818,9 +1816,6 @@ static int XmlNodesSubstringOfText(xmlNodePtr node1, xmlNodePtr node2, Attribute
     {
         return false;
     }
-
-    cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! node1->text: (%s)    node2->text: (%s)", text1, text2);
 
     if (!xmlStrstr(text2, text1))
     {

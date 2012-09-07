@@ -1560,7 +1560,7 @@ static int XmlNodesCompareNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a
     xmlFree(copynode1);
     xmlFree(copynode2);
 
-    return true;
+    return compare;
 }
 
 /*********************************************************************/

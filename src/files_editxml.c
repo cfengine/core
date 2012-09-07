@@ -1400,6 +1400,7 @@ static int XmlDocsEqualMem(xmlDocPtr doc1, xmlDocPtr doc2, int warnings, Attribu
 /*********************************************************************/
 
 static int XmlNodesCompare(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
+/* Does node1 contain all content(tag/attributes/text/nodes) found in node2? */
 {
     xmlNodePtr copynode1, copynode2;
     int compare = true;
@@ -1446,6 +1447,7 @@ static int XmlNodesCompare(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Pro
 /*********************************************************************/
 
 static int XmlNodesCompareAttributes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
+/* Does node1 contain same attributes found in node2? */
 {
     xmlNodePtr copynode1, copynode2;
     xmlAttrPtr attr1 = NULL;
@@ -1515,6 +1517,7 @@ static int XmlNodesCompareAttributes(xmlNodePtr node1, xmlNodePtr node2, Attribu
 /*********************************************************************/
 
 static int XmlNodesCompareNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
+/* Does node1 contain same nodes found in node2? */
 {
     xmlNodePtr copynode1, copynode2;
     xmlNodePtr child1 = NULL;
@@ -1562,6 +1565,7 @@ static int XmlNodesCompareNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a
 /*********************************************************************/
 
 static int XmlNodesCompareTags(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
+/* Does node1 contain same tag found in node2? */
 {
     xmlNodePtr copynode1, copynode2;
     int compare = true;
@@ -1603,6 +1607,7 @@ static int XmlNodesCompareTags(xmlNodePtr node1, xmlNodePtr node2, Attributes a,
 /*********************************************************************/
 
 static int XmlNodesCompareText(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
+/* Does node1 contain same text found in node2? */
 {
     xmlChar *text1 = NULL, *text2 = NULL;
 
@@ -1642,6 +1647,7 @@ static int XmlNodesCompareText(xmlNodePtr node1, xmlNodePtr node2, Attributes a,
 /*********************************************************************/
 
 static int XmlNodesSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
+/* Does node1 contain matching subset of content(tag/attributes/text/nodes) found in node2? */
 {
     xmlNodePtr copynode1, copynode2;
     int subset = true;
@@ -1688,7 +1694,7 @@ static int XmlNodesSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Prom
 /*********************************************************************/
 
 static int XmlNodesSubsetOfAttributes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
-/* Does node1 contain a subset of attributes found in node2? */
+/* Does node1 contain matching subset of attributes found in node2? */
 {
     xmlNodePtr copynode1, copynode2;
     xmlAttrPtr attr1 = NULL;
@@ -1744,7 +1750,7 @@ static int XmlNodesSubsetOfAttributes(xmlNodePtr node1, xmlNodePtr node2, Attrib
 /*********************************************************************/
 
 static int XmlNodesSubsetOfNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
-/* Does node1 contain a subset of nodes found in node2? */
+/* Does node1 contain matching subset of nodes found in node2? */
 {
     xmlNodePtr copynode1, copynode2;
     xmlNodePtr child1 = NULL;
@@ -1785,7 +1791,7 @@ static int XmlNodesSubsetOfNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes 
 /*********************************************************************/
 
 static int XmlNodesSubstringOfText(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
-/* Does node1 text content match a substring of text content found in node2? */
+/* Does node1 contain matching substring of text found in node2? */
 {
     xmlChar *text1, *text2;
 

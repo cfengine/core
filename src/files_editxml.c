@@ -1478,16 +1478,16 @@ static int XmlNodesCompareAttributes(xmlNodePtr node1, xmlNodePtr node2, Attribu
         return false;
     }
 
-    copynode1 = xmlCopyNode(node1, 1);
-    copynode2 = xmlCopyNode(node2, 1);
-
-    count1 = XmlAttributeCount(copynode1, a, pp);
-    count2 = XmlAttributeCount(copynode2, a, pp);
+    count1 = XmlAttributeCount(node1, a, pp);
+    count2 = XmlAttributeCount(node2, a, pp);
 
     if (count1 != count2)
     {
         return false;
     }
+
+    copynode1 = xmlCopyNode(node1, 1);
+    copynode2 = xmlCopyNode(node2, 1);
 
     //get attribute list from node1 and node2
     attr1 = copynode1->properties;
@@ -1521,7 +1521,7 @@ static int XmlNodesCompareNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a
 {
     xmlNodePtr copynode1, copynode2;
     xmlNodePtr child1 = NULL;
-    int count1, count2;
+    int count1, count2, compare = true;
 
     if(!node1 && !node2)
     {
@@ -1533,16 +1533,16 @@ static int XmlNodesCompareNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a
         return false;
     }
 
-    copynode1 = xmlCopyNode(node1, 1);
-    copynode2 = xmlCopyNode(node2, 1);
-
-    count1 = xmlChildElementCount(copynode1);
-    count2 = xmlChildElementCount(copynode2);
+    count1 = xmlChildElementCount(node1);
+    count2 = xmlChildElementCount(node2);
 
     if (count1 != count2)
     {
         return false;
     }
+
+    copynode1 = xmlCopyNode(node1, 1);
+    copynode2 = xmlCopyNode(node2, 1);
 
     //get node list from node1 and node2
     child1 = xmlFirstElementChild(copynode1);
@@ -1551,7 +1551,8 @@ static int XmlNodesCompareNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a
     {
         if (XmlVerifyNodeInNodeExact(child1, copynode2, a, pp) == NULL)
         {
-            return false;
+            compare = false;
+            break;
         }
         child1 = xmlNextElementSibling(copynode1);
     }
@@ -1992,10 +1993,7 @@ static int XmlAttributeCount(xmlNodePtr node, Attributes a, Promise *pp)
 
     copynode = xmlCopyNode(node, 1);
 
-    if ((attr = copynode->properties) == NULL)
-    {
-        return count;
-    }
+    attr = copynode->properties;
 
     while (attr)
     {

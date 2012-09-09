@@ -692,6 +692,27 @@ enum cfagenttype
     cf_noagent
 };
 
+enum typesequence
+{
+    kp_meta,
+    kp_vars,
+    kp_defaults,
+    kp_classes,
+    kp_outputs,
+    kp_interfaces,
+    kp_files,
+    kp_packages,
+    kp_environments,
+    kp_methods,
+    kp_processes,
+    kp_services,
+    kp_commands,
+    kp_storage,
+    kp_databases,
+    kp_reports,
+    kp_none
+};
+
 /*************************************************************************/
 
 enum cfgcontrol

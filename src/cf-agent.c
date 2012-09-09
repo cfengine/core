@@ -50,48 +50,6 @@ extern int PR_NOTKEPT;
 /* Agent specific variables                                        */
 /*******************************************************************/
 
-enum typesequence
-{
-    kp_meta,
-    kp_vars,
-    kp_defaults,
-    kp_classes,
-    kp_outputs,
-    kp_interfaces,
-    kp_files,
-    kp_packages,
-    kp_environments,
-    kp_methods,
-    kp_processes,
-    kp_services,
-    kp_commands,
-    kp_storage,
-    kp_databases,
-    kp_reports,
-    kp_none
-};
-
-char *TYPESEQUENCE[] =
-{
-    "meta",
-    "vars",
-    "defaults",
-    "classes",                  /* Maelstrom order 2 */
-    "outputs",
-    "interfaces",
-    "files",
-    "packages",
-    "guest_environments",
-    "methods",
-    "processes",
-    "services",
-    "commands",
-    "storage",
-    "databases",
-    "reports",
-    NULL
-};
-
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);
 static void CheckAgentAccess(Rlist *list);
@@ -920,11 +878,11 @@ int ScheduleAgentOperations(Bundle *bp, const ReportContext *report_context)
 
     for (pass = 1; pass < CF_DONEPASSES; pass++)
     {
-        for (type = 0; TYPESEQUENCE[type] != NULL; type++)
+        for (type = 0; AGENT_TYPESEQUENCE[type] != NULL; type++)
         {
             ClassBanner(type);
 
-            if ((sp = GetSubTypeForBundle(TYPESEQUENCE[type], bp)) == NULL)
+            if ((sp = GetSubTypeForBundle(AGENT_TYPESEQUENCE[type], bp)) == NULL)
             {
                 continue;
             }

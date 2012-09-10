@@ -1690,8 +1690,6 @@ void RotateFiles(char *name, int number)
     int i, fd;
     struct stat statbuf;
     char from[CF_BUFSIZE], to[CF_BUFSIZE];
-    Attributes attr = { {0} };
-    Promise dummyp = { 0 };
 
     if (IsItemIn(ROTATED, name))
     {
@@ -1750,11 +1748,8 @@ void RotateFiles(char *name, int number)
     }
 
     snprintf(to, CF_BUFSIZE, "%s.1", name);
-    memset(&dummyp, 0, sizeof(dummyp));
-    memset(&attr, 0, sizeof(attr));
-    dummyp.this_server = "localdisk";
 
-    if (CopyRegularFileDisk(name, to, attr, &dummyp) == -1)
+    if (CopyRegularFileDisk(name, to, false) == -1)
     {
         CfDebug("cfengine: copy failed in RotateFiles %s -> %s\n", name, to);
         return;

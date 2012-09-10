@@ -1733,7 +1733,7 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
     }
     else
     {
-        if (!CopyRegularFileDisk(source, new, attr, pp))
+        if (!CopyRegularFileDiskReport(source, new, attr, pp))
         {
             return false;
         }

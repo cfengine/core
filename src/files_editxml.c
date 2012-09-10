@@ -1033,7 +1033,7 @@ static int InsertTextAtNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, At
     CfOut(cf_inform, "", " -> Inserting text \"%s\" in %s", pp->promiser,
           pp->this_server);
 
-    xmlNodeSetContent(docnode, text);
+    xmlNodeAddContent(docnode, text);
 
     //verify text was inserted
     if (XmlVerifyTextInNodeSubstring(text, docnode, a, pp) == NULL)

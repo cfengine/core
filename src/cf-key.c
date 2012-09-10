@@ -44,7 +44,7 @@ static void KeepKeyPromises(void);
 /* Command line options                                            */
 /*******************************************************************/
 
-static const char *ID = "The cfengine's generator makes key pairs for remote authentication.\n";
+static const char *ID = "The CFEngine key generator makes key pairs for remote authentication.\n";
 
 static const struct option OPTIONS[17] =
 {
@@ -140,15 +140,15 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
             break;
 
         case 'h':
-            Syntax("cf-key - cfengine's key generator", OPTIONS, HINTS, ID);
+            Syntax("cf-key - CFEngine's key generator", OPTIONS, HINTS, ID);
             exit(0);
 
         case 'M':
-            ManPage("cf-key - cfengine's key generator", OPTIONS, HINTS, ID);
+            ManPage("cf-key - CFEngine's key generator", OPTIONS, HINTS, ID);
             exit(0);
 
         default:
-            Syntax("cf-key - cfengine's key generator", OPTIONS, HINTS, ID);
+            Syntax("cf-key - CFEngine's key generator", OPTIONS, HINTS, ID);
             exit(1);
 
         }

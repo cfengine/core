@@ -310,12 +310,17 @@ static int RemoveKeys(const char *host)
 
 static bool InstallLicense(char *path_source)
 {
-    char path_destination[MAX_FILENAME];
+    struct stat sb;
 
+    if(cfstat(path_source, &sb) == -1)
+    {
+        CfOut(cf_error, "cfstat", "!! Can not stat input license file %s", path_source);
+        return false;
+    }
+
+    char path_destination[MAX_FILENAME];
     snprintf(path_destination, sizeof(path_destination), "%s/inputs/license.dat", CFWORKDIR);
     MapName(path_destination);
-
-    struct stat sb;
 
     if(cfstat(path_destination, &sb) == 0)
     {

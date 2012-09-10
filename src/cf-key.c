@@ -32,12 +32,15 @@
 
 int SHOWHOSTS = false;
 bool REMOVEKEYS = false;
+bool LICENSE_INSTALL = false;
+char LICENSE_SOURCE[MAX_FILENAME];
 const char *remove_keys_host;
 
 static GenericAgentConfig CheckOpts(int argc, char **argv);
 
 static void ShowLastSeenHosts(void);
 static int RemoveKeys(const char *host);
+static bool InstallLicense(char *path_source);
 static void KeepKeyPromises(void);
 
 /*******************************************************************/
@@ -55,6 +58,7 @@ static const struct option OPTIONS[17] =
     {"output-file", required_argument, 0, 'f'},
     {"show-hosts", no_argument, 0, 's'},
     {"remove-keys", required_argument, 0, 'r'},
+    {"install-license", required_argument, 0, 'l'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -67,6 +71,7 @@ static const char *HINTS[17] =
     "Specify an alternative output file than the default (localhost)",
     "Show lastseen hostnames and IP addresses",
     "Remove keys for specified hostname/IP",
+    "Install license without boostrapping (CFEngine Enterprise only)",
     NULL
 };
 
@@ -92,6 +97,12 @@ int main(int argc, char *argv[])
         return RemoveKeys(remove_keys_host);
     }
 
+    if(LICENSE_INSTALL)
+    {
+        bool success = InstallLicense(LICENSE_SOURCE);
+        return success ? 0 : 1;
+    }
+
     KeepKeyPromises();
 
     ReportContextDestroy(report_context);
@@ -109,7 +120,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig config = GenericAgentDefaultConfig(cf_keygen);
 
-    while ((c = getopt_long(argc, argv, "dvf:VMsr:h", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvf:VMsr:hl:", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -137,6 +148,11 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
         case 'r':
             REMOVEKEYS = true;
             remove_keys_host = optarg;
+            break;
+
+        case 'l':
+            LICENSE_INSTALL = true;
+            strlcpy(LICENSE_SOURCE, optarg, sizeof(LICENSE_SOURCE));
             break;
 
         case 'h':
@@ -290,6 +306,26 @@ static int RemoveKeys(const char *host)
         return 0;
     }
 }
+
+
+static bool InstallLicense(char *path_source)
+{
+    char path_destination[MAX_FILENAME];
+
+    snprintf(path_destination, sizeof(path_destination), "%s/inputs/license.dat", CFWORKDIR);
+    MapName(path_destination);
+
+    struct stat sb;
+
+    if(cfstat(path_destination, &sb) == 0)
+    {
+        CfOut(cf_error, "", "!! A license file is already installed in %s -- please move it out of the way and try again", path_destination);
+        return false;
+    }
+
+    return CopyRegularFileDisk(path_source, path_destination, false);
+}
+
 
 static void KeepKeyPromises(void)
 {

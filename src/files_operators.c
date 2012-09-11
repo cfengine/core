@@ -482,7 +482,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
             NewScope(bp->name);
             HashVariables(policy, bp->name, report_context);
 
-            AugmentScope(bp->name, bp->args, params);
+            AugmentScope(bp->name, bp->namespace, bp->args, params);
             PushPrivateClassContext(a.edits.inherit);
             retval = ScheduleEditLineOperations(filename, bp, a, pp, report_context);
             PopPrivateClassContext();
@@ -532,7 +532,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
             NewScope(bp->name);
             HashVariables(policy, bp->name, report_context);
 
-            AugmentScope(bp->name, bp->args, params);
+            AugmentScope(bp->name, bp->namespace, bp->args, params);
             PushPrivateClassContext(a.edits.inherit);
             retval = ScheduleEditXmlOperations(filename, bp, a, pp, report_context);
             PopPrivateClassContext();

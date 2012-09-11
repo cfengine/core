@@ -1164,7 +1164,7 @@ char *Dtype2Str(enum cfdatatype dtype)
 
 int Month2Int(char *string)
 {
-    return MonthLen2Int(string, 10);    // no month names longer than 10 chars
+    return MonthLen2Int(string, MAX_MONTH_NAME);
 }
 
 /*************************************************************/

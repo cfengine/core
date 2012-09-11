@@ -85,6 +85,7 @@
 #define CF_INDEX_OFFSET  CF_INDEX_FIELD_LEN+1
 
 #define MAXIP4CHARLEN 16
+#define MAX_MONTH_NAME 9
 
 
 #define CF_EDIT_IFELAPSED 3     /* NOTE: If doing copy template then edit working copy,

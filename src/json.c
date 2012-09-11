@@ -547,6 +547,16 @@ JsonElement *JsonObjectGetAsArray(JsonElement *object, const char *key)
     return NULL;
 }
 
+const JsonElement *JsonObjectGet(const JsonElement *object, const char *key)
+{
+    assert(object);
+    assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
+    assert(key);
+
+    return SequenceLookup(object->container.children, key, JsonElementHasProperty);
+}
+
 // *******************************************************************************************
 // JsonArray Functions
 // *******************************************************************************************

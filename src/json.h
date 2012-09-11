@@ -213,6 +213,8 @@ JsonElement *JsonObjectGetAsObject(JsonElement *object, const char *key);
   */
 JsonElement *JsonObjectGetAsArray(JsonElement *object, const char *key);
 
+const JsonElement *JsonObjectGet(const JsonElement *object, const char *key);
+
 /**
   @brief Append a string to an array.
   @param array [in] The JSON array parent.

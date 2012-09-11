@@ -584,7 +584,7 @@ void DeleteScope(char *name);
 Scope *GetScope(const char *scope);
 void CopyScope(const char *new_scopename, const char *old_scopename);
 void DeleteAllScope(void);
-void AugmentScope(char *scope, Rlist *lvals, Rlist *rvals);
+void AugmentScope(char *scope, char *ns, Rlist *lvals, Rlist *rvals);
 void DeleteFromScope(char *scope, Rlist *args);
 void PushThisScope(void);
 void PopThisScope(void);

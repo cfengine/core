@@ -49,7 +49,7 @@ void VerifyMethodsPromise(Promise *pp, const ReportContext *report_context)
 
 int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext *report_context)
 {
-    Bundle *bp;
+    Bundle *bp, *cbp;
     void *vp;
     FnCall *fp;
     char method_name[CF_EXPANDSIZE],*method_deref;
@@ -99,6 +99,7 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
            method_deref = method_name;
        }
 
+    
     if ((bp = GetBundle(PolicyFromPromise(pp), method_deref, "agent")))
     {
         const char *bp_stack = THIS_BUNDLE;
@@ -114,7 +115,7 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
         NewScope(namespace);
         SetBundleOutputs(bp->name);
 
-        AugmentScope(bp->name, bp->args, params);
+        AugmentScope(method_deref, pp->namespace, bp->args, params);
 
         THIS_BUNDLE = bp->name;
         PushPrivateClassContext(a.inherit);

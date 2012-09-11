@@ -845,7 +845,7 @@ static void KeepPromiseBundles(Policy *policy, Rlist *bundlesequence, const Repo
             NewScope(namespace);
 
             SetBundleOutputs(bp->name);
-            AugmentScope(bp->name, bp->args, params);
+            AugmentScope(bp->name, bp->namespace, bp->args, params);
             BannerBundle(bp, params);
             THIS_BUNDLE = bp->name;
             DeletePrivateClassContext();        // Each time we change bundle

@@ -70,10 +70,10 @@ char *EDITXMLTYPESEQUENCE[] =
     "delete_tree",
     "insert_tree",
     "delete_attribute",
-    "insert_attribute",
+    "set_attribute",
     "delete_text",
+    "set_text",
     "insert_text",
-    //"replace_patterns",
     "reports",
     NULL
 };
@@ -83,21 +83,24 @@ static void KeepEditXmlPromise(Promise *pp);
 static void VerifyTreeDeletions(Promise *pp);
 static void VerifyTreeInsertions(Promise *pp);
 static void VerifyAttributeDeletions(Promise *pp);
-static void VerifyAttributeInsertions(Promise *pp);
+static void VerifyAttributeSet(Promise *pp);
 static void VerifyTextDeletions(Promise *pp);
+static void VerifyTextSet(Promise *pp);
 static void VerifyTextInsertions(Promise *pp);
 static int XmlSelectNode(xmlDocPtr doc, xmlNodePtr *node, Attributes a, Promise *pp);
-static int DeleteTreeAtNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
-static int InsertTreeAtNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
-static int DeleteAttributeAtNode(char *attrname, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
-static int InsertAttributeAtNode(char *attrname, char *attrvalue, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
-static int DeleteTextAtNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
-static int InsertTextAtNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
+static int DeleteTreeInNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
+static int InsertTreeInNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
+static int DeleteAttributeInNode(char *attrname, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
+static int SetAttributeInNode(char *attrname, char *attrvalue, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
+static int DeleteTextInNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
+static int SetTextInNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
+static int InsertTextInNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
 static int SanityCheckTreeDeletions(Attributes a, Promise *pp);
 static int SanityCheckTreeInsertions(Attributes a);
 static int SanityCheckAttributeDeletions(Attributes a, Promise *pp);
-static int SanityCheckAttributeInsertions(Attributes a);
+static int SanityCheckAttributeSet(Attributes a);
 static int SanityCheckTextDeletions(Attributes a, Promise *pp);
+static int SanityCheckTextSet(Attributes a);
 static int SanityCheckTextInsertions(Attributes a);
 
 static int XmlDocsEqualContent(xmlDocPtr doc1, xmlDocPtr doc2, int warnings, Attributes a, Promise *pp);
@@ -288,10 +291,10 @@ static void KeepEditXmlPromise(Promise *pp)
         return;
     }
 
-    if (strcmp("insert_attribute", pp->agentsubtype) == 0)
+    if (strcmp("set_attribute", pp->agentsubtype) == 0)
     {
         xmlInitParser();
-        VerifyAttributeInsertions(pp);
+        VerifyAttributeSet(pp);
         xmlCleanupParser();
         return;
     }
@@ -300,6 +303,14 @@ static void KeepEditXmlPromise(Promise *pp)
     {
         xmlInitParser();
         VerifyTextDeletions(pp);
+        xmlCleanupParser();
+        return;
+    }
+
+    if (strcmp("set_text", pp->agentsubtype) == 0)
+    {
+        xmlInitParser();
+        VerifyTextSet(pp);
         xmlCleanupParser();
         return;
     }
@@ -361,7 +372,7 @@ static void VerifyTreeDeletions(Promise *pp)
         return;
     }
 
-    if (DeleteTreeAtNode(pp->promiser, doc, docnode, a, pp))
+    if (DeleteTreeInNode(pp->promiser, doc, docnode, a, pp))
     {
         (pp->edcontext->num_edits)++;
     }
@@ -410,7 +421,7 @@ static void VerifyTreeInsertions(Promise *pp)
         return;
     }
 
-    if (InsertTreeAtNode(pp->promiser, doc, docnode, a, pp))
+    if (InsertTreeInNode(pp->promiser, doc, docnode, a, pp))
     {
         (pp->edcontext->num_edits)++;
     }
@@ -458,7 +469,7 @@ static void VerifyAttributeDeletions(Promise *pp)
         return;
     }
 
-    if (DeleteAttributeAtNode(pp->promiser, doc, docnode, a, pp))
+    if (DeleteAttributeInNode(pp->promiser, doc, docnode, a, pp))
     {
         (pp->edcontext->num_edits)++;
     }
@@ -468,7 +479,7 @@ static void VerifyAttributeDeletions(Promise *pp)
 
 /***************************************************************************/
 
-static void VerifyAttributeInsertions(Promise *pp)
+static void VerifyAttributeSet(Promise *pp)
 {
     xmlDocPtr doc = pp->edcontext->xmldoc;
     xmlNodePtr docnode;
@@ -480,9 +491,9 @@ static void VerifyAttributeInsertions(Promise *pp)
     a = GetInsertionAttributes(pp);
     a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
 
-    if (!SanityCheckAttributeInsertions(a))
+    if (!SanityCheckAttributeSet(a))
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, a, " !! The promised attribute insertion (%s) breaks its own promises",
+        cfPS(cf_error, CF_INTERPT, "", pp, a, " !! The promised attribute set (%s) breaks its own promises",
              pp->promiser);
         return;
     }
@@ -499,7 +510,7 @@ static void VerifyAttributeInsertions(Promise *pp)
         return;
     }
 
-    snprintf(lockname, CF_BUFSIZE - 1, "insertattribute-%s-%s", pp->promiser, pp->this_server);
+    snprintf(lockname, CF_BUFSIZE - 1, "setattribute-%s-%s", pp->promiser, pp->this_server);
     thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a, pp, true);
 
     if (thislock.lock == NULL)
@@ -507,7 +518,7 @@ static void VerifyAttributeInsertions(Promise *pp)
         return;
     }
 
-    if (InsertAttributeAtNode(pp->promiser, a.xml.attribute_value, doc, docnode, a, pp))
+    if (SetAttributeInNode(pp->promiser, a.xml.attribute_value, doc, docnode, a, pp))
     {
         (pp->edcontext->num_edits)++;
     }
@@ -555,7 +566,56 @@ static void VerifyTextDeletions(Promise *pp)
         return;
     }
 
-    if (DeleteTextAtNode(pp->promiser, doc, docnode, a, pp))
+    if (DeleteTextInNode(pp->promiser, doc, docnode, a, pp))
+    {
+        (pp->edcontext->num_edits)++;
+    }
+
+    YieldCurrentLock(thislock);
+}
+
+/***************************************************************************/
+
+static void VerifyTextSet(Promise *pp)
+{
+    xmlDocPtr doc = NULL;
+    xmlNodePtr docnode = NULL;
+
+    Attributes a = { {0} };
+    CfLock thislock;
+    char lockname[CF_BUFSIZE];
+
+    a = GetInsertionAttributes(pp);
+    a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
+
+    if (!SanityCheckTextSet(a))
+    {
+        cfPS(cf_error, CF_INTERPT, "", pp, a, " !! The promised text set (%s) breaks its own promises",
+             pp->promiser);
+        return;
+    }
+
+    if((doc = pp->edcontext->xmldoc) == NULL)
+    {
+        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
+             " !! Unable to load xml document");
+        return;
+    }
+
+    if (!XmlSelectNode(doc, &docnode, a, pp))
+    {
+        return;
+    }
+
+    snprintf(lockname, CF_BUFSIZE - 1, "settext-%s-%s", pp->promiser, pp->this_server);
+    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a, pp, true);
+
+    if (thislock.lock == NULL)
+    {
+        return;
+    }
+
+    if (SetTextInNode(pp->promiser, doc, docnode, a, pp))
     {
         (pp->edcontext->num_edits)++;
     }
@@ -604,7 +664,7 @@ static void VerifyTextInsertions(Promise *pp)
         return;
     }
 
-    if (InsertTextAtNode(pp->promiser, doc, docnode, a, pp))
+    if (InsertTextInNode(pp->promiser, doc, docnode, a, pp))
     {
         (pp->edcontext->num_edits)++;
     }
@@ -708,7 +768,7 @@ If no such node matches, docnode should point to NULL
 /* Level                                                                   */
 /***************************************************************************/
 
-static int DeleteTreeAtNode(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
+static int DeleteTreeInNode(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
 {
     xmlNodePtr treenode = NULL;
     xmlNodePtr deletetree = NULL;
@@ -767,7 +827,7 @@ static int DeleteTreeAtNode(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, At
 
 /***************************************************************************/
 
-static int InsertTreeAtNode(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
+static int InsertTreeInNode(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
 {
     xmlNodePtr treenode = NULL;
     xmlChar *buf = NULL;
@@ -793,11 +853,6 @@ static int InsertTreeAtNode(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, At
         cfPS(cf_verbose, CF_INTERPT, "", pp, a,
              " !! The promised tree to be inserted is empty");
         return false;
-    }
-    else
-    {
-        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! The promised tree to be inserted has name (%s)", treenode->name);
     }
 
     //verify treenode does not already exist inside docnode
@@ -842,7 +897,7 @@ static int InsertTreeAtNode(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, At
 
 /***************************************************************************/
 
-static int DeleteAttributeAtNode(char *rawname, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
+static int DeleteAttributeInNode(char *rawname, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
 {
     xmlAttrPtr attr = NULL;
     xmlChar *name = NULL;
@@ -895,7 +950,7 @@ static int DeleteAttributeAtNode(char *rawname, xmlDocPtr doc, xmlNodePtr docnod
 
 /***************************************************************************/
 
-static int InsertAttributeAtNode(char *rawname, char *rawvalue, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
+static int SetAttributeInNode(char *rawname, char *rawvalue, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
 {
     xmlAttrPtr attr = NULL;
     xmlChar *name = NULL;
@@ -956,7 +1011,7 @@ static int InsertAttributeAtNode(char *rawname, char *rawvalue, xmlDocPtr doc, x
 
 /***************************************************************************/
 
-static int DeleteTextAtNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
+static int DeleteTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
 {
     xmlChar *text = NULL;
 
@@ -1002,7 +1057,53 @@ static int DeleteTextAtNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, At
 
 /***************************************************************************/
 
-static int InsertTextAtNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
+static int SetTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
+{
+    xmlChar *text = NULL;
+
+    if ((text = CharToXmlChar(rawtext)) == NULL)
+    {
+        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
+             " !! Attribute name to be inserted was not successfully loaded into an xml buffer");
+        return false;
+    }
+
+    //verify text does not exist inside docnode
+    if (XmlVerifyTextInNodeExact(text, docnode, a, pp) != NULL)
+    {
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! The promised text (%s) already exists in %s", pp->promiser, pp->this_server);
+        return false;
+    }
+
+    if (a.transaction.action == cfa_warn)
+    {
+        cfPS(cf_error, CF_WARN, "", pp, a,
+             " -> Need to set the promised text \"%s\" to %s - but only a warning was promised",
+             pp->promiser, pp->this_server);
+        return true;
+    }
+
+    //set text in docnode
+    CfOut(cf_inform, "", " -> Setting text \"%s\" in %s", pp->promiser,
+          pp->this_server);
+
+    xmlNodeSetContent(docnode, text);
+
+    //verify text was inserted
+    if (XmlVerifyTextInNodeExact(text, docnode, a, pp) == NULL)
+    {
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! The promised text (%s) was not inserted successfully in %s", pp->promiser, pp->this_server);
+        return false;
+    }
+
+    return true;
+}
+
+/***************************************************************************/
+
+static int InsertTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
 {
     xmlChar *text = NULL;
 
@@ -1098,7 +1199,7 @@ static int SanityCheckAttributeDeletions(Attributes a, Promise *pp)
 
 /***************************************************************************/
 
-static int SanityCheckAttributeInsertions(Attributes a)
+static int SanityCheckAttributeSet(Attributes a)
 {
     int ok = true;
 
@@ -1115,6 +1216,22 @@ static int SanityCheckAttributeInsertions(Attributes a)
 /***************************************************************************/
 
 static int SanityCheckTextDeletions(Attributes a, Promise *pp)
+{
+    int ok = true;
+
+    if(!(a.xml.haveselectxpathregion))
+    {
+        CfOut(cf_error, "",
+              " !! Tree insertion requires select_xpath_region to be specified");
+        ok = false;
+    }
+
+    return ok;
+}
+
+/***************************************************************************/
+
+static int SanityCheckTextSet(Attributes a)
 {
     int ok = true;
 

@@ -360,8 +360,9 @@ const SubTypeSyntax CF_FILES_SUBTYPES[] =
     {"edit_xml", "delete_tree", CF_DELETETAGS_BODIES},
     {"edit_xml", "insert_tree", CF_INSERTTAGS_BODIES},
     {"edit_xml", "delete_attribute", CF_DELETEATTRIBUTES_BODIES},
-    {"edit_xml", "insert_attribute", CF_INSERTATTRIBUTES_BODIES},
+    {"edit_xml", "set_attribute", CF_INSERTATTRIBUTES_BODIES},
     {"edit_xml", "delete_text", CF_DELETETAGS_BODIES},
+    {"edit_xml", "set_text", CF_INSERTTAGS_BODIES},
     {"edit_xml", "insert_text", CF_INSERTTAGS_BODIES},
 
     {NULL, NULL, NULL},

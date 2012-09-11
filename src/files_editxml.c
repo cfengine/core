@@ -124,8 +124,6 @@ xmlChar *CharToXmlChar(char* c);
 static int XmlAttributeCount(xmlNodePtr node, Attributes a, Promise *pp);
 static int XmlXPathConvergent(const char* xpath, Attributes a, Promise *pp);
 
-// change!!!
-
 /*****************************************************************************/
 /* Level                                                                     */
 /*****************************************************************************/

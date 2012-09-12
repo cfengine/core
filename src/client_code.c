@@ -1516,7 +1516,7 @@ static int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockadd
 
 # ifdef LINUX
 
-    tvRecv.tv_sec = RECVTIMEOUT;
+    tvRecv.tv_sec = tvp->tv_sec;
     tvRecv.tv_usec = 0;
 
     if (setsockopt(conn->sd, SOL_SOCKET, SO_RCVTIMEO, (char *) &tvRecv, sizeof(tvRecv)))

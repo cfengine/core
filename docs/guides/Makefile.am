@@ -5,8 +5,6 @@ TEX_INCLUDEDIR = ../tex-include
 #    SpecialTopic_Comparison
 #    OrionCloudPack
 
-# Missing .png pictures:
-
 COMMON_GUIDES = \
     Licensing \
     NovaEvaluationGuide \

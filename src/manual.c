@@ -675,7 +675,7 @@ static bool GenerateStub(const char *filename)
     }
 
 #ifdef HAVE_NOVA
-    fprintf(fp, "\n@i{History}: Was introduced in %s, Nova %s (%d)\n\n", Version(), Nova_Version(), BUILD_YEAR);
+    fprintf(fp, "\n@i{History}: Was introduced in %s, Enterprise %s (%d)\n\n", Version(), Nova_Version(), BUILD_YEAR);
 #else
     fprintf(fp, "\n@i{History}: Was introduced in %s (%d)\n\n", Version(), BUILD_YEAR);
 #endif

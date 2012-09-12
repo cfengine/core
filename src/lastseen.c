@@ -316,3 +316,42 @@ bool ScanLastSeenQuality(LastSeenQualityCallback callback, void *ctx)
     return true;
 }
 
+/*****************************************************************************/
+
+int LastSeenHostKeyCount(void)
+{
+    CF_DB *dbp;
+    CF_DBC *dbcp;
+    QPoint entry;
+    char *key;
+    void *value;
+    int ksize, vsize;
+
+    int count = 0;
+
+    if (OpenDB(&dbp, dbid_lastseen))
+    {
+        memset(&entry, 0, sizeof(entry));
+
+        if (NewDBCursor(dbp, &dbcp))
+        {
+            while (NextDB(dbp, dbcp, &key, &ksize, &value, &vsize))
+            {
+                /* Only look for valid "hostkey" entries */
+
+                if (key[0] != 'k' || value == NULL)
+                {
+                    continue;
+                }
+
+                count++;
+            }
+
+            DeleteDBCursor(dbp, dbcp);
+        }
+
+        CloseDB(dbp);
+    }
+
+    return count;
+}

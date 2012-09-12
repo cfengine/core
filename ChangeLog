@@ -29,6 +29,8 @@
 	  or repaired already.
 
 	- methods return values, initial implementation
+
+	- New format for cf-key -s, includes timestamp of last connection
 	
 	Misc:
 

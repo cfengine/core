@@ -13,7 +13,7 @@ files:
 
        create => "true",
     edit_line => makefile,
-        perms => name2.settings;
+        perms => name2:settings;
 
 reports:
 

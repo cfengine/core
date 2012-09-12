@@ -138,7 +138,7 @@ enum cfdatatype GetVariable(const char *scope, const char *lval, Rval *returnv)
     CfAssoc *assoc;
 
     CfDebug("GetVariable(%s,%s) type=(to be determined)\n", scope, lval);
-    
+
     if (lval == NULL)
     {
         *returnv = (Rval) {NULL, CF_SCALAR};
@@ -169,7 +169,7 @@ enum cfdatatype GetVariable(const char *scope, const char *lval, Rval *returnv)
     {
         scopeid[0] = '\0';
         sscanf(sval, "%[^.].%s", scopeid, vlval);
-        CfDebug("Variable identifier %s is prefixed with scope id %s\n", vlval, scopeid);
+        CfDebug("Variable identifier \"%s\" is prefixed with scope id \"%s\"\n", vlval, scopeid);
         ptr = GetScope(scopeid);
     }
     else
@@ -187,7 +187,7 @@ enum cfdatatype GetVariable(const char *scope, const char *lval, Rval *returnv)
 
     if (ptr == NULL)
     {
-        CfDebug("Scope for variable \"%s.%s\" does not seem to exist\n", scope, lval);
+        CfDebug("Scope \"%s\" for variable \"%s\" does not seem to exist\n", scopeid, vlval);
         /* C type system does not allow us to express the fact that returned
            value may contain immutable string. */
         *returnv = (Rval) {(char *) lval, CF_SCALAR};

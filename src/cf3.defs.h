@@ -88,7 +88,10 @@
 #define CF_INDEX_OFFSET  CF_INDEX_FIELD_LEN+1
 
 #define MAXIP4CHARLEN 16
+#define MAX_MONTH_NAME 9
 
+#define MAX_DIGEST_BYTES (512 / 8)  /* SHA-512 */
+#define MAX_DIGEST_HEX (MAX_DIGEST_BYTES * 2)
 
 #define CF_EDIT_IFELAPSED 3     /* NOTE: If doing copy template then edit working copy,
                                    the edit ifelapsed must not be higher than
@@ -155,7 +158,7 @@
 #define CF_START_DOMAIN "undefined.domain"
 
 #define CF_GRAINS   64
-#define ATTR        19
+#define ATTR        20
 #define CF_NETATTR   7          /* icmp udp dns tcpsyn tcpfin tcpack */
 #define CF_MEASURE_INTERVAL (5.0*60.0)
 #define CF_SHIFT_INTERVAL (6*3600)
@@ -421,6 +424,8 @@ enum observables
     ob_mysql_out,
     ob_postgresql_in,
     ob_postgresql_out,
+    ob_ipp_in,
+    ob_ipp_out,
     ob_spare
 };
 
@@ -691,6 +696,27 @@ enum cfagenttype
     cf_hub,
     cf_gendoc,
     cf_noagent
+};
+
+enum typesequence
+{
+    kp_meta,
+    kp_vars,
+    kp_defaults,
+    kp_classes,
+    kp_outputs,
+    kp_interfaces,
+    kp_files,
+    kp_packages,
+    kp_environments,
+    kp_methods,
+    kp_processes,
+    kp_services,
+    kp_commands,
+    kp_storage,
+    kp_databases,
+    kp_reports,
+    kp_none
 };
 
 /*************************************************************************/

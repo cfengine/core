@@ -49,7 +49,7 @@ void VerifyMethodsPromise(Promise *pp, const ReportContext *report_context)
 
 int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext *report_context)
 {
-    Bundle *bp, *cbp;
+    Bundle *bp;
     void *vp;
     FnCall *fp;
     char method_name[CF_EXPANDSIZE],*method_deref;
@@ -88,14 +88,13 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
 
     PromiseBanner(pp);
 
-    if (strncmp(method_name,"default.",strlen("default.")) == 0)
+    if (strncmp(method_name,"default:",strlen("default:")) == 0)
        {
-           method_deref = strchr(method_name,'.') + 1;
+           method_deref = strchr(method_name,':') + 1;
        }
     else
        {
            // Transform syntactic . into internal : representation
-           TransformNameInPlace(method_name, '.', ':');
            method_deref = method_name;
        }
 

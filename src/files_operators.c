@@ -460,14 +460,12 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
             return false;
         }
 
-        if (strncmp(edit_bundle_name,"default.",strlen("default.")) == 0)
+        if (strncmp(edit_bundle_name,"default:",strlen("default:")) == 0)
            {
-           method_deref = strchr(edit_bundle_name,'.') + 1;
+           method_deref = strchr(edit_bundle_name,':') + 1;
            }
         else
            {
-           // Transform syntactic . into internal : representation
-           TransformNameInPlace(edit_bundle_name, '.', ':');
            method_deref = edit_bundle_name;
            }        
 
@@ -511,14 +509,12 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
             return false;
         }
 
-        if (strncmp(edit_bundle_name,"default.",strlen("default.")) == 0)
+        if (strncmp(edit_bundle_name,"default:",strlen("default:")) == 0)
            {
-           method_deref = strchr(edit_bundle_name,'.') + 1;
+           method_deref = strchr(edit_bundle_name,':') + 1;
            }
         else
            {
-           // Transform syntactic . into internal : representation
-           TransformNameInPlace(edit_bundle_name, '.', ':');
            method_deref = edit_bundle_name;
            }
         
@@ -564,10 +560,6 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
     YieldCurrentLock(thislock);
     return retval;
 }
-
-/*****************************************************************************/
-/* Level                                                                     */
-/*****************************************************************************/
 
 /*****************************************************************************/
 /* Level                                                                     */

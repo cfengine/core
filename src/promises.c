@@ -373,11 +373,11 @@ Body *IsBody(Body *list, const char *namespace, const char *key)
 
     // bp->namespace is where the body belongs, namespace is where we are now
 
-        if (strchr(key,'.') || strcmp(namespace,"default") == 0)
+        if (strchr(key,':') || strcmp(namespace,"default") == 0)
         {
-            if (strncmp(key,"default.",strlen("default.")) == 0)
+            if (strncmp(key,"default:",strlen("default:")) == 0)
             {
-                strcpy(fqname,strchr(key,'.')+1);
+                strcpy(fqname,strchr(key,':')+1);
             }
             else
             {
@@ -389,9 +389,6 @@ Body *IsBody(Body *list, const char *namespace, const char *key)
             snprintf(fqname,CF_BUFSIZE-1, "%s:%s",namespace,key);
         }
 
-        // Transform the dot in syntax to internal representation : which does not confict with scope 
-        TransformNameInPlace(fqname, '.', ':');
-        
         if (strcmp(bp->name, fqname) == 0)
         {
             return bp;
@@ -412,9 +409,9 @@ Bundle *IsBundle(Bundle *list, const char *key)
     {
         if (strcmp(bp->namespace,"default") == 0)
         {
-            if (strncmp(key,"default.",strlen("default.")) == 0)
+            if (strncmp(key,"default:",strlen("default:")) == 0)
             {
-                strcpy(fqname,strchr(key,'.')+1);
+                strcpy(fqname,strchr(key,':')+1);
             }
             else
             {
@@ -430,9 +427,6 @@ Bundle *IsBundle(Bundle *list, const char *key)
             snprintf(fqname,CF_BUFSIZE-1, "%s:%s",bp->namespace,key);
         }
 
-        // Transform the dot in syntax to internal representation : which does not confict with scope 
-        TransformNameInPlace(fqname, '.', ':');
-        
         if (strcmp(bp->name, fqname) == 0)
         {
             return bp;

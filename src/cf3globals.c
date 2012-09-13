@@ -261,7 +261,7 @@ time_t CFINITSTARTTIME;
 char STR_CFENGINEPORT[16] = { 0 };
 
 unsigned short SHORT_CFENGINEPORT;
-time_t CONNTIMEOUT = 10;        /* seconds */
+time_t CONNTIMEOUT = 30;        /* seconds */
 pid_t ALARM_PID = -1;
 int EDITFILESIZE = 10000;
 int VIFELAPSED = 1;

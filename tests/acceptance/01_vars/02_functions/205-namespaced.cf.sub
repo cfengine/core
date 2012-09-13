@@ -1,0 +1,29 @@
+body file control
+{
+      namespace => "testing_arrays";
+}
+
+bundle agent namespaced_test(file, arrayname)
+{
+  vars:
+      "keys" slist => getindices("$(arrayname)");
+
+  files:
+      "$(G.testfile).actual"
+      create => "true",
+      edit_line => test_insert;
+
+  reports:
+    DEBUG::
+      "Working in namespace; array name $(arrayname)";
+      "Inserting line: $(keys)";
+}
+
+bundle edit_line test_insert
+{
+  vars:
+      "keys" slist => { @{namespaced_test.keys} };
+
+  insert_lines:
+      "$(keys)";
+}

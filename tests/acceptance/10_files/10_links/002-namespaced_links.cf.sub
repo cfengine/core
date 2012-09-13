@@ -1,0 +1,12 @@
+body file control
+{
+  namespace => "testing_links";
+}
+
+bundle agent namespaced_test
+{
+files:
+  "$(G.testdir)/subdir/mylink"
+    link_from => default:ln_s("$(G.testdir)/sourcefile"),
+       action => default:warn_only;
+}

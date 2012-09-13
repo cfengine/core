@@ -89,6 +89,7 @@ static void VerifyTextSet(Promise *pp);
 static void VerifyTextInsertions(Promise *pp);
 static int XmlSelectNode(xmlDocPtr doc, xmlNodePtr *node, Attributes a, Promise *pp);
 static int DeleteTreeInNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
+static int InsertTreeInFile(char *root, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
 static int InsertTreeInNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
 static int DeleteAttributeInNode(char *attrname, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
 static int SetAttributeInNode(char *attrname, char *attrvalue, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
@@ -96,7 +97,7 @@ static int DeleteTextInNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attri
 static int SetTextInNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
 static int InsertTextInNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
 static int SanityCheckTreeDeletions(Attributes a, Promise *pp);
-static int SanityCheckTreeInsertions(Attributes a);
+static int SanityCheckTreeInsertions(Attributes a, Promise *pp);
 static int SanityCheckAttributeDeletions(Attributes a, Promise *pp);
 static int SanityCheckAttributeSet(Attributes a);
 static int SanityCheckTextDeletions(Attributes a, Promise *pp);
@@ -394,7 +395,7 @@ static void VerifyTreeInsertions(Promise *pp)
     a = GetInsertionAttributes(pp);
     a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
 
-    if (!SanityCheckTreeInsertions(a))
+    if (!SanityCheckTreeInsertions(a, pp))
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a, " !! The promised tree insertion (%s) breaks its own promises",
              pp->promiser);
@@ -408,7 +409,8 @@ static void VerifyTreeInsertions(Promise *pp)
         return;
     }
 
-    if (!XmlSelectNode(doc, &docnode, a, pp))
+    //if file is not empty: select an edit node, for tree insertion
+    if (a.xml.haveselectxpathregion && !XmlSelectNode(doc, &docnode, a, pp))
     {
         return;
     }
@@ -421,7 +423,15 @@ static void VerifyTreeInsertions(Promise *pp)
         return;
     }
 
-    if (InsertTreeInNode(pp->promiser, doc, docnode, a, pp))
+    //insert tree into empty file or selected node
+    if (!a.xml.haveselectxpathregion && !xmlDocGetRootElement(doc))
+    {
+        if (InsertTreeInFile(pp->promiser, doc, docnode, a, pp))
+        {
+            (pp->edcontext->num_edits)++;
+        }
+    }
+    else if (InsertTreeInNode(pp->promiser, doc, docnode, a, pp))
     {
         (pp->edcontext->num_edits)++;
     }
@@ -766,6 +776,76 @@ If no such node matches, docnode should point to NULL
 
 /***************************************************************************/
 /* Level                                                                   */
+/***************************************************************************/
+
+static int InsertTreeInFile(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
+{
+    xmlNodePtr treenode = NULL, rootnode = NULL;
+    xmlChar *buf = NULL;
+
+    //for parsing subtree from memory
+    if ((buf = CharToXmlChar(rawtree)) == NULL)
+    {
+        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
+             " !! Tree to be inserted was not successfully loaded into an xml buffer");
+        return false;
+    }
+
+    //parse the subtree
+    if (xmlParseBalancedChunkMemory(doc, NULL, NULL, 0, buf, &treenode) != 0)
+    {
+        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
+             " !! Tree to be inserted was not parsed successfully");
+        return false;
+    }
+
+    if (treenode == NULL || (treenode->name) == NULL)
+    {
+        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
+             " !! The promised tree to be inserted is empty");
+        return false;
+    }
+
+    //verify treenode does not already exist inside docnode
+    if ((rootnode = xmlDocGetRootElement(doc)) != NULL)
+    {
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! The promised xmldoc (%s) already exists and contains a root element %s", pp->promiser,
+             pp->this_server);
+        return false;
+    }
+
+    if (a.transaction.action == cfa_warn)
+    {
+        cfPS(cf_error, CF_WARN, "", pp, a,
+             " -> Need to create the promised xmldoc \"%s\" in %s - but only a warning was promised",
+             pp->promiser, pp->this_server);
+        return true;
+    }
+
+    //insert the content into new xml document
+    CfOut(cf_inform, "", " -> Inserting tree \"%s\" in %s", pp->promiser,
+          pp->this_server);
+    if (xmlDocSetRootElement(doc, treenode) != NULL)
+    {
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! The promised tree (%s) was not inserted successfully in %s", pp->promiser,
+             pp->this_server);
+        return false;
+    }
+
+    //verify node was inserted
+    if (((rootnode = xmlDocGetRootElement(doc)) == NULL) || !XmlNodesCompare(treenode, rootnode, a, pp))
+    {
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! The promised tree (%s) was not inserted successfully in %s", pp->promiser,
+             pp->this_server);
+        return false;
+    }
+
+    return true;
+}
+
 /***************************************************************************/
 
 static int DeleteTreeInNode(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
@@ -1167,14 +1247,21 @@ static int SanityCheckTreeDeletions(Attributes a, Promise *pp)
 
 /***************************************************************************/
 
-static int SanityCheckTreeInsertions(Attributes a)
+static int SanityCheckTreeInsertions(Attributes a, Promise *pp)
 {
     int ok = true;
 
-    if(!(a.xml.haveselectxpathregion))
+    if((a.xml.haveselectxpathregion && !xmlDocGetRootElement(pp->edcontext->xmldoc)))
     {
         CfOut(cf_error, "",
-              " !! Tree insertion requires select_xpath_region to be specified");
+              " !! Tree insertion into an empty file, using select_xpath_region, does not make sense");
+        ok = false;
+    }
+
+    else if((!a.xml.haveselectxpathregion &&  xmlDocGetRootElement(pp->edcontext->xmldoc)))
+    {
+        CfOut(cf_error, "Tree insertion requires select_xpath_region to be specified, unless inserting into an empty file",
+              " !! ");
         ok = false;
     }
 
@@ -1288,7 +1375,15 @@ int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, Attributes a, Promise *pp
         return false;
     }
 
-    if ((*doc = xmlParseFile(file)) == NULL)
+    if (statbuf.st_size == 0)
+    {
+        if ((*doc = xmlNewDoc(BAD_CAST "1.0")) == NULL)
+        {
+            cfPS(cf_inform, CF_INTERPT, "xmlParseFile", pp, a, "Document %s not parsed successfully\n", file);
+            return false;
+        }
+    }
+    else if ((*doc = xmlParseFile(file)) == NULL)
     {
         cfPS(cf_inform, CF_INTERPT, "xmlParseFile", pp, a, "Document %s not parsed successfully\n", file);
         return false;

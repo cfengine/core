@@ -191,7 +191,7 @@ void CheckConstraint(char *type, char *namespace, char *name, char *lval, Rval r
                            
                        case CF_FNCALL:
                            fp = (FnCall *) rval.item;
-                           if (strchr(fp->name,'.'))
+                           if (strchr(fp->name,':'))
                            {
                                strcpy(fqname,fp->name);
                            }

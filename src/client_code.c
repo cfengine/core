@@ -734,6 +734,9 @@ int CopyRegularFileNet(char *source, char *new, off_t size, Attributes attr, Pro
     buf = xmalloc(CF_BUFSIZE + sizeof(int));    /* Note CF_BUFSIZE not buf_size !! */
     n_read_total = 0;
 
+    CfOut(cf_verbose, "", "Copying remote file %s:%s, expecting %jd bytes",
+          pp->this_server, source, (intmax_t)size);
+
     while (!done)
     {
         if ((size - n_read_total) / buf_size > 0)
@@ -754,7 +757,10 @@ int CopyRegularFileNet(char *source, char *new, off_t size, Attributes attr, Pro
 
         if ((n_read = RecvSocketStream(conn->sd, buf, toget, 0)) == -1)
         {
-            cfPS(cf_error, CF_INTERPT, "recv", pp, attr, "Error in client-server stream");
+            /* This may happen on race conditions,
+             * where the file has shrunk since we asked for its size in SYNCH ... STAT source */
+
+            cfPS(cf_error, CF_INTERPT, "", pp, attr, "Error in client-server stream (has %s:%s shrunk?)", pp->this_server, source);
             close(dd);
             free(buf);
             return false;
@@ -1529,7 +1535,7 @@ static int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockadd
 
 # ifdef LINUX
 
-    tvRecv.tv_sec = RECVTIMEOUT;
+    tvRecv.tv_sec = tvp->tv_sec;
     tvRecv.tv_usec = 0;
 
     if (setsockopt(conn->sd, SOL_SOCKET, SO_RCVTIMEO, (char *) &tvRecv, sizeof(tvRecv)))

@@ -7,7 +7,7 @@
 body common control
 {
  bundlesequence => { "update" };
- version => "Community Failsafe.cf 1.0.0";
+ version => "Community Failsafe.cf 3.4.0";
 }
 
 #############################################################################
@@ -27,6 +27,10 @@ bundle agent update
    "inputs_dir"         string => translatepath("$(sys.workdir)/inputs"),
                        comment => "Directory containing Cfengine policies",
                         handle => "update_vars_inputs_dir";
+
+   "modules_dir"        string => translatepath("$(sys.workdir)/modules"),
+                       comment => "Directory containing CFEngine modules",
+                        handle => "update_vars_modules_dir";
 
    "ppkeys_file"        string => translatepath("$(sys.workdir)/ppkeys/localhost.pub"),
                        comment => "Path to public key file",
@@ -108,10 +112,18 @@ bundle agent update
 
    "$(inputs_dir)/cf_promises_validated"
         comment => "Check whether a validation stamp is available for a new policy update to reduce the distributed load",
-         handle => "check_valid_update",
+         handle => "update_files_check_valid_update",
       copy_from => u_rcp("$(master_location)/cf_promises_validated","$(sys.policy_hub)"),
          action => u_immediate,
         classes => u_if_repaired("validated_updates_ready");
+
+   "$(modules_dir)"
+           comment => "Always update modules files on client side",
+            handle => "update_files_update_modules",
+         copy_from => u_rcp("$(modules_dir)","$(sys.policy_hub)"),
+      depth_search => u_recurse("inf"),
+             perms => u_m("755"),
+            action => u_immediate;
 
   am_policy_hub|validated_updates_ready::  # policy hub should always put masterfiles in inputs in order to check new policy
 
@@ -247,4 +259,3 @@ body classes u_if_repaired(x)
 }
 
 #########################################################
-

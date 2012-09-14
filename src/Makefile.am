@@ -1,4 +1,4 @@
-AM_CFLAGS = $(GCC_CFLAG) $(NOVA_CFLAGS) $(CONSTELLATION_CFLAGS) @CFLAGS@
+AM_CFLAGS = $(GCC_CFLAG) $(NOVA_CFLAGS) @CFLAGS@
 AM_YFLAGS = -d
 LDADD = libpromises.la
 
@@ -14,7 +14,7 @@ LDADD = libpromises.la
 projlib_LTLIBRARIES = libpromises.la
 
 libpromises_la_LDFLAGS = -version-info 1:0:0 -no-undefined
-libpromises_la_LIBADD = ../pub/libcfpub.la $(NOVA_LDADD) $(CONSTELLATION_LDADD)
+libpromises_la_LIBADD = ../pub/libcfpub.la $(NOVA_LDADD)
 
 libpromises_la_CFLAGS = $(AM_CFLAGS)
 
@@ -26,6 +26,8 @@ libpromises_la_SOURCES = \
         addr_lib.c addr_lib.h \
         alloc.c alloc.h \
         alphalist.c alphalist.h \
+        acl.c acl.h \
+        acl_posix.c acl_posix.h \
         args.c \
         array_map.c array_map_priv.h \
         assoc.c assoc.h \
@@ -132,7 +134,7 @@ libpromises_la_SOURCES = \
         scope.c \
         selfdiagnostic.c \
         sequence.c sequence.h \
-	server.c server.h \
+        set.c set.h \
         show.h \
         signals.c \
         sockaddr.c \
@@ -148,6 +150,7 @@ libpromises_la_SOURCES = \
         transaction.c transaction.h \
         unix.c \
         vars.c vars.h \
+        verify_packages.c \
         verify_processes.c \
         verify_reports.c \
         writer.c writer.h \
@@ -161,23 +164,29 @@ endif
 BUILT_SOURCES = cf3parse.h
 
 # Automake need to be guided due to symlinking
-libpromises_la_DEPENDENCIES = ../pub/libcfpub.la $(NOVA_LDADD) $(CONSTELLATION_LDADD)
+libpromises_la_DEPENDENCIES = ../pub/libcfpub.la $(NOVA_LDADD)
 
 sbin_PROGRAMS = \
         cf-agent \
         cf-execd \
         cf-key \
-        cf-know \
         cf-monitord \
         cf-promises \
         cf-report \
         cf-runagent \
         cf-serverd
 
+noinst_PROGRAMS = \
+        cf-gendoc
+
 if HAVE_NOVA
 if MONGO
   sbin_PROGRAMS += cf-hub
 endif
+endif
+
+if HAVE_NOVA
+  sbin_PROGRAMS += cf-know
 endif
 
 cf_agent_SOURCES = \
@@ -187,15 +196,29 @@ cf_agent_SOURCES = \
         verify_exec.c \
         verify_methods.c \
         verify_interfaces.c \
-        verify_packages.c \
         verify_databases.c \
+        verify_outputs.c \
         verify_services.c \
         verify_environments.c verify_environments.h \
         agentdiagnostic.c
 
+cf_gendoc_SOURCES = \
+	cf-gendoc.c \
+        manual.c manual.h \
+        export_xml.c export_xml.h
+
 cf_serverd_SOURCES = \
         cf-serverd.c \
+        cf-serverd-functions.c \
+        cf-serverd-functions.h \
+        server.c server.h \
         server_transform.c
+
+cf_serverd_LDADD =
+if HAVE_NOVA
+cf_serverd_LDADD += ../nova/src/libcfserverd.la
+endif
+cf_serverd_LDADD += libpromises.la
 
 cf_monitord_SOURCES = \
         verify_measurements.c \
@@ -216,6 +239,12 @@ cf_monitord_LDADD += ../nova/src/libcfmonitord.la
 endif
 cf_monitord_LDADD += libpromises.la
 
+cf_report_LDADD =
+if HAVE_NOVA
+cf_report_LDADD += ../nova/src/libcfreport.la
+endif
+cf_report_LDADD += libpromises.la
+
 cf_execd_SOURCES = \
         cf-execd.c \
         cf-execd-runner.c cf-execd-runner.h
@@ -229,15 +258,11 @@ cf_hub_LDADD = \
 endif
 endif
 
-cf_know_SOURCES = \
-        cf-know.c \
-        manual.c manual.h \
-        export_xml.c export_xml.h
-
-cf_know_LDADD = libpromises.la
-
 if HAVE_NOVA
-cf_know_LDADD += ../nova/src/libcfknow.la
+cf_know_SOURCES =
+
+cf_know_LDADD = \
+        ../nova/src/libcfknow.la libpromises.la
 endif
 
 CLEANFILES = *.gcno *.gcda

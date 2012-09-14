@@ -1,0 +1,35 @@
+###############################################################################
+# This part is for cf-agent 
+#
+# Settings describing the details of the fixed behavioural promises made by 
+# cf-agent.
+###############################################################################
+
+body agent control
+
+{
+# Global default for time that must elapse before promise will be rechecked.
+# Don't keep any promises.
+
+ any::
+
+ # This should normally be set to an interval like 1-5 mins
+ # We set it to one initially to avoid confusion.
+
+  ifelapsed => "1";
+
+ # Do not send IP/name during server connection if address resolution is broken.
+ # Comment it out if you do NOT have a problem with DNS
+
+  skipidentify => "true";
+
+ # Environment variables based on Distro
+
+ debian::
+  environment => {
+                  "DEBIAN_FRONTEND=noninteractive",
+#                  "APT_LISTBUGS_FRONTEND=none",
+#                  "APT_LISTCHANGES_FRONTEND=none",
+                 };
+
+}

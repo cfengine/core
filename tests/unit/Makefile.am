@@ -1,11 +1,11 @@
 SUBDIRS = data
 
-AM_CFLAGS = $(NOVA_CFLAGS) $(CONSTELLATION_CFLAGS) $(GCC_CFLAG) -I$(srcdir)/../../src -DTESTDATADIR='"$(srcdir)/data"'
+AM_CFLAGS = $(NOVA_CFLAGS) $(GCC_CFLAG) -I$(srcdir)/../../src -DTESTDATADIR='"$(srcdir)/data"'
 
 LDADD = ../../src/libpromises.la libtest.la
 
 check_LTLIBRARIES = libtest.la
-libtest_la_SOURCES = cmockery.c cmockery.h test.c test.h ../../src/alloc.c
+libtest_la_SOURCES = cmockery.c cmockery.h schema.h test.c test.h ../../src/alloc.c
 libtest_la_LIBADD = ../../pub/libcfpub.la
 
 check_LTLIBRARIES += libstr.la
@@ -48,7 +48,9 @@ check_PROGRAMS = \
 	map_test \
 	policy_test \
 	sort_test \
-	file_name_test
+	file_name_test \
+	logging_test \
+	granules_test
 
 TESTS = $(check_PROGRAMS)
 

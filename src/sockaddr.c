@@ -31,8 +31,8 @@
 /* Note these functions are not thread safe                                  */
 /*****************************************************************************/
 
-#ifdef MINGW
-static const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt)
+#if defined(HAVE_GETADDRINFO) && defined(MINGW)
+const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt)
 {
     if (af == AF_INET)
     {
@@ -59,7 +59,7 @@ static const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt)
 
 /*****************************************************************************/
 
-static int inet_pton(int af, const char *src, void *dst)
+int inet_pton(int af, const char *src, void *dst)
 {
     struct addrinfo hints, *res, *ressave;
 
@@ -83,7 +83,7 @@ static int inet_pton(int af, const char *src, void *dst)
     freeaddrinfo(ressave);
     return 0;
 }
-#endif /* MINGW */
+#endif /* HAVE_GETADDRINFO */
 
 /*****************************************************************************/
 
@@ -94,7 +94,6 @@ char *sockaddr_ntop(struct sockaddr *sa)
     void *addr;
 #else
     static char addrbuf[20];
-    struct in_addr addr;
 #endif
 
     switch (sa->sa_family)

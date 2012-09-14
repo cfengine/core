@@ -1,0 +1,72 @@
+###############################################################################
+# This part is for cf-serverd
+#
+# Server controls are mainly about determining access policy for the connection 
+# protocol: i.e. access to the server itself. 
+# Access to specific files must be granted in addition. 
+###############################################################################
+
+body server control
+
+{
+
+ denybadclocks         => "false";
+ allowconnects         => { "127.0.0.1" , "::1", @(def.acl) };
+ allowallconnects      => { "127.0.0.1" , "::1", @(def.acl) };
+ trustkeysfrom         => { "127.0.0.1" , "::1", @(def.acl) };
+
+ skipverify            => { ".*\.$(def.domain)", "127.0.0.1" , "::1", @(def.acl) };
+
+ allowusers            => { "root" };
+ maxconnections        => "100";
+
+ !windows::
+  cfruncommand => "$(sys.cf_twin) -f $(sys.workdir)/inputs/failsafe/failsafe.cf && $(sys.cf_agent)";
+
+}
+
+###############################################################################
+
+bundle server access_rules()
+
+{
+
+ access:
+
+  any::
+
+   "$(def.dir_masterfiles)"
+       handle => "server_access_rule_grant_access_policy",
+      comment => "Grant access to the policy updates",
+        admit => { ".*\.$(def.domain)", @(def.acl) };
+
+   "$(def.dir_bin)"
+       handle => "server_access_grant_access_binary",
+      comment => "Grant access to binary for cf-runagent",
+      admit   => { ".*$(def.domain)", @(def.acl) };
+
+   "$(def.dir_modules)"
+       handle => "server_access_grant_access_modules",
+      comment => "Grant access to modules directory",
+      admit   => { ".*$(def.domain)", @(def.acl) };
+
+# Uncomment the promise below to allow cf-runagent to
+# access cf-agent on Windows machines
+#       
+#  "c:\program files\cfengine\bin\cf-agent.exe"
+#
+#    handle => "server_access_rule_grant_access_cfagent_windows",
+#    comment => "Grant access to the agent (for cf-runagent)",
+#    admit   => { ".*\.$(def.domain)", @(def.acl) };
+
+ roles:
+
+# Use roles to allow specific remote cf-runagent users to
+# define certain soft-classes when running cf-agent on this host        
+
+  cfengine_3::
+
+   ".*"  authorize => { "root" };
+
+}
+

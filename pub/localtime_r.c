@@ -28,6 +28,7 @@
 #endif
 
 #include <time.h>
+#include <string.h>
 
 #if !HAVE_DECL_LOCALTIME_R
 struct tm *localtime_r(const time_t *timep, struct tm *result);

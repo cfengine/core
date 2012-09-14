@@ -336,7 +336,6 @@ static void MapIteratorsFromScalar(const char *scopeid, Rlist **scal, Rlist **it
 
 int ExpandScalar(const char *string, char buffer[CF_EXPANDSIZE])
 {
-    CfDebug("ExpandScalar(context=%s,id=%s)\n", CONTEXTID, string);
     return ExpandPrivateScalar(CONTEXTID, string, buffer);
 }
 

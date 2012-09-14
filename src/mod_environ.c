@@ -52,7 +52,7 @@ static const BodySyntax CF_ENVIRON_BODIES[] =
     {"environment_resources", cf_body, CF_RESOURCE_BODY, "Virtual environment resource description"},
     {"environment_state", cf_opts, "create,delete,running,suspended,down",
      "The desired dynamical state of the specified environment"},
-    {"environment_type", cf_opts, "xen,kvm,esx,test,xen_net,kvm_net,esx_net,test_net,zone,ec2,eucalyptus",
+    {"environment_type", cf_opts, "xen,kvm,esx,vbox,test,xen_net,kvm_net,esx_net,test_net,zone,ec2,eucalyptus",
      "Virtual environment type"},
     {NULL, cf_notype, NULL, NULL}
 };

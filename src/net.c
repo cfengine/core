@@ -32,6 +32,25 @@
 
 /*************************************************************************/
 
+static bool LastRecvTimedOut(void)
+{
+#ifndef MINGW
+	if (errno == EAGAIN || errno == EWOULDBLOCK)
+	{
+		return true;
+	}
+#else
+	int lasterror = GetLastError();
+
+	if (lasterror == EAGAIN || lasterror == WSAEWOULDBLOCK)
+	{
+		return true;
+	}
+#endif
+
+	return false;
+}
+
 int SendTransaction(int sd, char *buffer, int len, char status)
 {
     char work[CF_BUFSIZE];
@@ -137,9 +156,16 @@ int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget, int nothing)
             continue;
         }
 
+        if (got == -1 && LastRecvTimedOut())
+        {
+            CfOut(cf_error, "recv", "!! Timeout - remote end did not respond with the expected amount of data (received=%d, expecting=%d)",
+                  already, toget);
+            return -1;
+        }
+
         if (got == -1)
         {
-            CfOut(cf_verbose, "recv", "Couldn't recv");
+            CfOut(cf_error, "recv", "Couldn't recv");
             return -1;
         }
 

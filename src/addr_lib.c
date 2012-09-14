@@ -330,8 +330,11 @@ int FuzzyHostMatch(char *arg0, char *arg1, char *refhost)
         return 1;
     }
 
-    strncpy(buf1, ToLowerStr(refbase), CF_BUFSIZE - 1);
-    strncpy(buf2, ToLowerStr(arg0), CF_BUFSIZE - 1);
+    strlcpy(buf1, refbase, CF_BUFSIZE);
+    strlcpy(buf2, arg0, CF_BUFSIZE);
+
+    ToLowerStrInplace(buf1);
+    ToLowerStrInplace(buf2);
 
     if (strcmp(buf1, buf2) != 0)
     {

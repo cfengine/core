@@ -1,6 +1,7 @@
 
-Access Control Lists are only available with CFEngine Nova or above.
-Form of the permissions is:
+POSIX ACL are available in CFEngine Community starting with
+3.4.0. NTFS ACL are available with CFEngine Nova or above.  Form of
+the permissions is:
 
 @cartouche
 @smallexample

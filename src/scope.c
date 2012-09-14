@@ -36,12 +36,18 @@ Scope *GetScope(const char *scope)
  */
 {
     Scope *cp = NULL;
+    char *name = scope;
 
+    if (strncmp(scope, "default:", strlen("default:")) == 0)
+       {
+       name = scope + strlen("default:");
+       }
+    
     CfDebug("Searching for scope context %s\n", scope);
 
     for (cp = VSCOPE; cp != NULL; cp = cp->next)
     {
-        if (strcmp(cp->scope, scope) == 0)
+        if (strcmp(cp->scope, name) == 0)
         {
             CfDebug("Found scope reference %s\n", scope);
             return cp;
@@ -104,7 +110,7 @@ void NewScope(const char *name)
 
 /*******************************************************************/
 
-void AugmentScope(char *scope, Rlist *lvals, Rlist *rvals)
+void AugmentScope(char *scope, char *namespace, Rlist *lvals, Rlist *rvals)
 {
     Scope *ptr;
     Rlist *rpl, *rpr;
@@ -136,10 +142,16 @@ void AugmentScope(char *scope, Rlist *lvals, Rlist *rvals)
         if (IsNakedVar(rpr->item, '@'))
         {
             enum cfdatatype vtype;
-
+            char qnaked[CF_MAXVARSIZE];
+            
             GetNaked(naked, rpr->item);
 
-            vtype = GetVariable(scope, naked, &retval);
+            if (IsQualifiedVariable(naked) && strchr(naked, ':') == NULL)
+               {
+               snprintf(qnaked, CF_MAXVARSIZE, "%s:%s", namespace, naked);
+               }
+            
+            vtype = GetVariable(scope, qnaked, &retval); 
 
             switch (vtype)
             {
@@ -149,16 +161,38 @@ void AugmentScope(char *scope, Rlist *lvals, Rlist *rvals)
                 NewList(scope, lval, CopyRvalItem((Rval) {retval.item, CF_LIST}).item, cf_slist);
                 break;
             default:
-                CfOut(cf_error, "",
-                      " !! List parameter \"%s\" not found while constructing scope \"%s\" - use @(scope.variable) in calling reference",
-                      naked, scope);
+                CfOut(cf_error, "", " !! List parameter \"%s\" not found while constructing scope \"%s\" - use @(scope.variable) in calling reference", qnaked, scope);
                 NewScalar(scope, lval, rpr->item, cf_str);
                 break;
             }
         }
         else
         {
-            NewScalar(scope, lval, rpr->item, cf_str);
+        FnCall *subfp;
+        Promise *pp = NULL; // This argument should really get passed down.
+        
+        switch(rpr->type)
+           {
+           case CF_SCALAR:
+               NewScalar(scope, lval, rpr->item, cf_str);
+               break;
+               
+           case CF_FNCALL:
+               subfp = (FnCall *) rpr->item;
+               Rval rval = EvaluateFunctionCall(subfp, pp).rval;
+               if (rval.rtype == CF_SCALAR)
+               {
+                   NewScalar(scope, lval, rval.item, cf_str);
+               }
+               else
+               {
+                   CfOut(cf_error, "", "Only functions returning scalars can be used as arguments");
+               }
+               break;
+           default:
+               FatalError("An argument neither a scalar nor a list seemed to appear. Impossible");
+           }
+
         }
     }
 

@@ -378,8 +378,14 @@ int VerifyInFstab(char *name, Attributes a, Promise *pp)
         break;
 
     case crayos:
-        snprintf(fstab, CF_BUFSIZE, "%s:%s \t %s %s\t%s", host, rmountpt, mountpt, ToUpperStr(fstype), opts);
+    {
+        char fstype_upper[CF_BUFSIZE];
+        strlcpy(fstype_upper, fstype, CF_BUFSIZE);
+        ToUpperStrInplace(fstype_upper);
+
+        snprintf(fstab, CF_BUFSIZE, "%s:%s \t %s %s\t%s", host, rmountpt, mountpt, fstype_upper, opts);
         break;
+    }
     case hp:
         snprintf(fstab, CF_BUFSIZE, "%s:%s %s \t %s \t %s 0 0", host, rmountpt, mountpt, fstype, opts);
         break;

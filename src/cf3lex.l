@@ -37,7 +37,13 @@
 #include "files_names.h"
 
 /* yyinput/input are generated and unused */
-#pragma GCC diagnostic ignored "-Wunused-function"
+
+#if defined(__GNUC__)
+# define GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
+# if GCC_VERSION >= 40200
+#  pragma GCC diagnostic ignored "-Wunused-function"
+# endif
+#endif
 
 #undef malloc
 #undef realloc
@@ -70,11 +76,11 @@ promises   bundle
 
 body       body
 
-nakedvar   [$@][(][a-zA-Z0-9_\[\]\200-\377.]+[)]|[$@][{][a-zA-Z0-9_\[\]\200-\377.]+[}]
+nakedvar   [$@][(][a-zA-Z0-9_\[\]\200-\377.:]+[)]|[$@][{][a-zA-Z0-9_\[\]\200-\377.:]+[}]
 
 id         [a-zA-Z0-9_\200-\377]+
 
-blockid    [a-zA-Z0-9_\200-\377]+[.][a-zA-Z0-9_\200-\377]+
+blockid    [a-zA-Z0-9_\200-\377]+[:][a-zA-Z0-9_\200-\377]+
 
 assign     =>
 

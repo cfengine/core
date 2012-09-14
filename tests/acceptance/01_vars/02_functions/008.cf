@@ -1,0 +1,97 @@
+# splitstring()
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle agent init
+{
+vars:
+  "dummy" string => "dummy";
+}
+
+bundle agent test
+{
+vars:
+  # Basic stuff
+  "test1" slist => splitstring("abcXdefXghiXjkl", "X", "100");
+
+  "test1_result" string => join(":", "test1");
+  "test1_expected" string => "abc:def:ghi:jkl";
+
+  # Empty last item
+  "test2" slist => splitstring("abcX", "X", "100");
+
+  "test2_result" string => join(":", "test2");
+  "test2_expected" string => "abc:";
+
+  # Empty first item
+  "test3" slist => splitstring("Xabc", "X", "100");
+
+  "test3_result" string => join(":", "test3");
+  "test3_expected" string => ":abc";
+
+  # Regex
+  "test4" slist => splitstring("abc0123def", "[0-9]", "100");
+
+  "test4_result" string => join(":", "test4");
+  "test4_expected" string => "abc::::def";
+
+  # No matches
+  "test5" slist => splitstring("abcYdef", "X", "100");
+
+  "test5_result" string => join(":", "test5");
+  "test5_expected" string => "abcYdef";
+
+  # Empty string
+  "test6" slist => splitstring("", "X", "100");
+  
+  "test6_result" string => join(":", "test6");
+  "test6_expected" string => "$(const.dollar)(test.test6_result)";
+
+  # Limit
+  "test7" slist => splitstring("abcXdefXghiXjklXmno", "X", 3);
+  
+  "test7_result" string => join(":", "test7");
+  "test7_expected" string => "abc:def:ghi";
+}
+
+bundle agent check
+{
+classes:
+  "ok1" expression => strcmp("$(test.test1_result)", "$(test.test1_expected)");
+  "ok2" expression => strcmp("$(test.test2_result)", "$(test.test2_expected)");
+  "ok3" expression => strcmp("$(test.test3_result)", "$(test.test3_expected)");
+  "ok4" expression => strcmp("$(test.test4_result)", "$(test.test4_expected)");
+  "ok5" expression => strcmp("$(test.test5_result)", "$(test.test5_expected)");
+  "ok6" expression => strcmp("$(test.test6_result)", "$(test.test6_expected)");
+  "ok7" expression => strcmp("$(test.test7_result)", "$(test.test7_expected)");
+
+  "ok" and => { "ok1", "ok2", "ok3", "ok4", "ok5", "ok6", "ok7" };
+
+reports:
+  DEBUG.!ok1::
+    "$(test.test1_result) != $(test.test1_expected)";
+  DEBUG.!ok2::
+    "$(test.test2_result) != $(test.test2_expected)";
+  DEBUG.!ok3::
+    "$(test.test3_result) != $(test.test3_expected)";
+  DEBUG.!ok4::
+    "$(test.test4_result) != $(test.test4_expected)";
+  DEBUG.!ok5::
+    "$(test.test5_result) != $(test.test5_expected)";
+  DEBUG.!ok6::
+    "$(test.test6_result) != $(test.test6_expected)";
+  DEBUG.!ok7::
+    "$(test.test7_result) != $(test.test7_expected)";
+
+    ok::
+        "$(this.promise_filename) Pass";
+    !ok::
+        "$(this.promise_filename) FAIL";
+}

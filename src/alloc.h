@@ -35,8 +35,8 @@ void *xrealloc(void *ptr, size_t size);
 char *xstrdup(const char *str);
 char *xstrndup(const char *str, size_t n);
 void *xmemdup(const void *mem, size_t size);
-int xasprintf(char **strp, const char *fmt, ...) FUNC_ATTR_FORMAT(printf, 2, 3);
-int xvasprintf(char **strp, const char *fmt, va_list ap) FUNC_ATTR_FORMAT(printf, 2, 0);
+int xasprintf(char **strp, const char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);
+int xvasprintf(char **strp, const char *fmt, va_list ap) FUNC_ATTR_PRINTF(2, 0);
 
 /*
  * Prevent any code from using un-wrapped allocators.

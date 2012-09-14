@@ -100,7 +100,7 @@ Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *
     else
        {
        char fqname[CF_BUFSIZE];
-       snprintf(fqname,CF_BUFSIZE-1, "%s.%s",policy->current_namespace,name);
+       snprintf(fqname,CF_BUFSIZE-1, "%s:%s",policy->current_namespace,name);
        bundle->name = xstrdup(fqname);
        }
 
@@ -149,7 +149,7 @@ Body *AppendBody(Policy *policy, const char *name, const char *type, Rlist *args
     else
        {
        char fqname[CF_BUFSIZE];
-       snprintf(fqname,CF_BUFSIZE-1, "%s.%s",policy->current_namespace,name);
+       snprintf(fqname,CF_BUFSIZE-1, "%s:%s",policy->current_namespace,name);
        body->name = xstrdup(fqname);
        }
 

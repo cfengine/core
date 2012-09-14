@@ -109,6 +109,67 @@ static void test_rval_to_fncall2(void **state)
     assert_false(FnCallRvalValue(rval));
 }
 
+static void test_last(void **state)
+{
+    Rlist *l = NULL;
+    assert_true(RlistLast(l) == NULL);
+    AppendRlist(&l, "a", CF_SCALAR);
+    assert_string_equal("a", ScalarValue(RlistLast(l)));
+    AppendRlist(&l, "b", CF_SCALAR);
+    assert_string_equal("b", ScalarValue(RlistLast(l)));
+    DeleteRlist(l);
+}
+
+static bool is_even(void *item)
+{
+    int *i = item;
+    return *i % 2 == 0;
+}
+
+static void test_filter(void **state)
+{
+    Rlist *list = NULL;
+    for (int i = 0; i < 10; i++)
+    {
+        void *item = xmemdup(&i, sizeof(int));
+        AppendRlistAlien(&list, item);
+    }
+
+    assert_int_equal(10, RlistLen(list));
+    RlistFilter(&list, is_even, free);
+    assert_int_equal(5, RlistLen(list));
+
+    int i = 0;
+    for (Rlist *rp = list; rp; rp = rp->next)
+    {
+        int *k = rp->item;
+        assert_int_equal(i, *k);
+
+        free(k);
+        rp->item = NULL;
+
+        i += 2;
+    }
+
+    DeleteRlist(list);
+}
+
+static void test_filter_everything(void **state)
+{
+    Rlist *list = NULL;
+    for (int i = 1; i < 10; i += 2)
+    {
+        void *item = xmemdup(&i, sizeof(int));
+        AppendRlistAlien(&list, item);
+    }
+
+    assert_int_equal(5, RlistLen(list));
+    RlistFilter(&list, is_even, free);
+    assert_int_equal(0, RlistLen(list));
+
+    assert_true(list == NULL);
+}
+
 int main()
 {
     const UnitTest tests[] =
@@ -123,6 +184,9 @@ int main()
         unit_test(test_rval_to_list2),
         unit_test(test_rval_to_fncall),
         unit_test(test_rval_to_fncall2),
+        unit_test(test_last),
+        unit_test(test_filter),
+        unit_test(test_filter_everything)
     };
 
     return run_tests(tests);

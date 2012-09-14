@@ -1,9 +1,0 @@
-This variable contains the version of running CFEngine Constellation
-
-@i{History}: Was introduced in 3.2.0, Nova 2.1.0, Constellation 1.0.0 (2011)
-
-@verbatim
-
-# constellation_version = 1.0.0
-
-@end verbatim

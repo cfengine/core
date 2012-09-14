@@ -40,8 +40,6 @@
 
 #include <libgen.h>
 
-#define CF_NOVAL -0.7259285297502359
-
 static char *StripPatterns(char *file_buffer, char *pattern, char *filename);
 static void CloseStringHole(char *s, int start, int end);
 static int BuildLineArray(char *array_lval, char *file_buffer, char *split, int maxent, enum cfdatatype type,
@@ -476,8 +474,7 @@ static FnCallResult FnCallHash(FnCall *fp, Rlist *finalargs)
 
     snprintf(buffer, CF_BUFSIZE - 1, "%s", HashPrint(type, digest));
 
-/* lopp off prefix */
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer + 4), CF_SCALAR } };
+    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(SkipHashType(buffer)), CF_SCALAR } };
 }
 
 /*********************************************************************/
@@ -2138,11 +2135,10 @@ static FnCallResult FnCallTranslatePath(FnCall *fp, Rlist *finalargs)
 
 static FnCallResult FnCallRegistryValue(FnCall *fp, Rlist *finalargs)
 {
-    char buffer[CF_BUFSIZE];
-
-    buffer[0] = '\0';
-
 /* begin fn specific content */
+
+#if defined(__MINGW32__)
+    char buffer[CF_BUFSIZE] = "";
 
     if (GetRegistryValue(ScalarValue(finalargs), ScalarValue(finalargs->next), buffer, sizeof(buffer)))
     {
@@ -2152,7 +2148,9 @@ static FnCallResult FnCallRegistryValue(FnCall *fp, Rlist *finalargs)
     {
         return (FnCallResult) { FNCALL_FAILURE };
     }
-
+#else
+    return (FnCallResult) { FNCALL_FAILURE };
+#endif
 }
 
 /*********************************************************************/
@@ -2668,7 +2666,6 @@ static FnCallResult FnCallRegLine(FnCall *fp, Rlist *finalargs)
 static FnCallResult FnCallIsLessGreaterThan(FnCall *fp, Rlist *finalargs)
 {
     char buffer[CF_BUFSIZE];
-    double a = CF_NOVAL, b = CF_NOVAL;
 
     buffer[0] = '\0';
 
@@ -2677,41 +2674,36 @@ static FnCallResult FnCallIsLessGreaterThan(FnCall *fp, Rlist *finalargs)
 
     if (IsRealNumber(argv0) && IsRealNumber(argv1))
     {
-        a = Str2Double(argv0);
-        b = Str2Double(argv1);
+        double a = Str2Double(argv0);
+        double b = Str2Double(argv1);
 
         if (a == CF_NODOUBLE || b == CF_NODOUBLE)
         {
             return (FnCallResult) { FNCALL_FAILURE };
         }
 
-/* begin fn specific content */
+        CfDebug("%s and %s are numerical\n", argv0, argv1);
 
-        if ((a != CF_NOVAL) && (b != CF_NOVAL))
+        if (!strcmp(fp->name, "isgreaterthan"))
         {
-            CfDebug("%s and %s are numerical\n", argv0, argv1);
-
-            if (!strcmp(fp->name, "isgreaterthan"))
+            if (a > b)
             {
-                if (a > b)
-                {
-                    strcpy(buffer, "any");
-                }
-                else
-                {
-                    strcpy(buffer, "!any");
-                }
+                strcpy(buffer, "any");
             }
             else
             {
-                if (a < b)
-                {
-                    strcpy(buffer, "any");
-                }
-                else
-                {
-                    strcpy(buffer, "!any");
-                }
+                strcpy(buffer, "!any");
+            }
+        }
+        else
+        {
+            if (a < b)
+            {
+                strcpy(buffer, "any");
+            }
+            else
+            {
+                strcpy(buffer, "!any");
             }
         }
     }
@@ -3410,6 +3402,11 @@ static FnCallResult FnCallSplitString(FnCall *fp, Rlist *finalargs)
 // Read once to validate structure of file in itemlist
 
     newlist = SplitRegexAsRList(string, split, max, true);
+
+    if (newlist == NULL)
+    {
+        PrependRScalar(&newlist, "cf_null", CF_SCALAR);
+    }
 
     return (FnCallResult) { FNCALL_SUCCESS, { newlist, CF_LIST } };
 }

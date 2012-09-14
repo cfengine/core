@@ -539,7 +539,7 @@ static void GetMacAddress(enum cfagenttype ag, int fd, struct ifreq *ifr, struct
 {
     char name[CF_MAXVARSIZE];
 
-    if (ag != cf_know)
+    if (ag != cf_know && ag != cf_gendoc)
     {
         snprintf(name, CF_MAXVARSIZE, "hardware_mac[%s]", ifp->ifr_name);
     }
@@ -692,7 +692,7 @@ void GetInterfacesInfo(enum cfagenttype ag)
                 continue;
             }
 
-            if ((ifr.ifr_flags & IFF_BROADCAST) && !(ifr.ifr_flags & IFF_LOOPBACK))
+            if ((ifr.ifr_flags & IFF_UP) && !(ifr.ifr_flags & IFF_LOOPBACK))
             {
                 sin = (struct sockaddr_in *) &ifp->ifr_addr;
 
@@ -708,7 +708,7 @@ void GetInterfacesInfo(enum cfagenttype ag)
                 if ((hp =
                      gethostbyaddr((char *) &(sin->sin_addr.s_addr), sizeof(sin->sin_addr.s_addr), AF_INET)) == NULL)
                 {
-                    CfDebug("No hostinformation for %s not found\n", inet_ntoa(sin->sin_addr));
+                    CfDebug("No hostinformation for %s found\n", inet_ntoa(sin->sin_addr));
                 }
                 else
                 {
@@ -791,7 +791,7 @@ void GetInterfacesInfo(enum cfagenttype ag)
 
                 strcpy(ip, inet_ntoa(sin->sin_addr));
 
-                if (ag != cf_know)
+                if (ag != cf_know && ag != cf_gendoc)
                 {
                     snprintf(name, CF_MAXVARSIZE - 1, "ipv4[%s]", CanonifyName(ifp->ifr_name));
                 }
@@ -810,7 +810,7 @@ void GetInterfacesInfo(enum cfagenttype ag)
                     {
                         *sp = '\0';
 
-                        if (ag != cf_know)
+                        if (ag != cf_know && ag != cf_gendoc)
                         {
                             snprintf(name, CF_MAXVARSIZE - 1, "ipv4_%d[%s]", i--, CanonifyName(ifp->ifr_name));
                         }

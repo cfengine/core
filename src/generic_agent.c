@@ -38,6 +38,7 @@
 #include "syntax.h"
 #include "conversion.h"
 #include "expand.h"
+#include "transaction.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"
@@ -139,9 +140,9 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig config, const ReportC
 
     if (report_context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE])
     {
-        WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE], "bundle knowledge CfengineEnterpriseFundamentals\n{\n");
+        WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE], "bundle knowledge CFEngine_nomenclature\n{\n");
         ShowTopicRepresentation(report_context);
-        WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE], "}\n\nbundle knowledge CfengineSiteConfiguration\n{\n");
+        WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE], "}\n\nbundle knowledge policy_analysis\n{\n");
     }       
     
     NewScope("const");
@@ -182,7 +183,7 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig config, const ReportC
 
     Policy *policy = NULL;
 
-    if (ag != cf_keygen)        // && ag != cf_know)
+    if (ag != cf_keygen && ag != cf_gendoc)
     {
         if (!MissingInputFile())
         {
@@ -529,6 +530,7 @@ void InitializeGA(const ReportContext *report_context)
 #endif
 
     OpenLog(LOG_USER);
+    SetSyslogFacility(LOG_USER);
 
     if (!LOOKUP)                /* cf-know should not do this in lookup mode */
     {
@@ -1067,6 +1069,7 @@ void SetFacility(const char *retval)
 
     CloseLog();
     OpenLog(ParseFacility(retval));
+    SetSyslogFacility(ParseFacility(retval));
 }
 
 /**************************************************************/
@@ -1460,12 +1463,12 @@ static void VerifyPromises(Policy *policy, Rlist *bundlesequence,
 
     for (rp = BODYPARTS; rp != NULL; rp = rp->next)
     {
-    char namespace[CF_BUFSIZE],name[CF_BUFSIZE];
-    char fqname[CF_BUFSIZE];
+        char namespace[CF_BUFSIZE],name[CF_BUFSIZE];
+        char fqname[CF_BUFSIZE];
 
-    // This is a bit messy because tracking the namespace is not natural with the existing structures here
-    
-        sscanf((char *)rp->item,"%[^.].%s",namespace,name); 
+        // This is a bit messy because tracking the namespace is not natural with the existing structures here
+
+        sscanf((char *)rp->item,"%[^:]:%s",namespace,name); 
 
         if (strcmp(namespace,"default") == 0)
         {
@@ -1493,8 +1496,7 @@ static void VerifyPromises(Policy *policy, Rlist *bundlesequence,
 
             if (!IGNORE_MISSING_BUNDLES && !IsCf3VarString(rp->item) && !IsBundle(policy->bundles, (char *) rp->item))
             {
-                CfOut(cf_error, "", "Undeclared promise bundle \"%s()\" was referenced in a promise\n",
-                      (char *) rp->item);
+                CfOut(cf_error, "", "Undeclared promise bundle \"%s()\" was referenced in a promise\n", (char *) rp->item);
                 ERRORCOUNT++;
             }
             break;
@@ -1952,7 +1954,7 @@ static bool VerifyBundleSequence(const Policy *policy, enum cfagenttype agent, R
     int ok = true;
     FnCall *fp;
 
-    if ((THIS_AGENT_TYPE != cf_agent) && (THIS_AGENT_TYPE != cf_know) && (THIS_AGENT_TYPE != cf_common))
+    if ((THIS_AGENT_TYPE != cf_agent) && (THIS_AGENT_TYPE != cf_know) && (THIS_AGENT_TYPE != cf_common) && (THIS_AGENT_TYPE != cf_gendoc))
     {
         return true;
     }

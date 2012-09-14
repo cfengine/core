@@ -79,7 +79,6 @@ extern char VFQNAME[];
 extern char VUQNAME[];
 
 extern Item *VSETUIDLIST;
-extern Item *SUSPICIOUSLIST;
 
 extern int DEBUG;
 
@@ -168,6 +167,8 @@ extern int CSV;
 extern const char *CF_DATATYPES[];
 extern const char *CF_AGENTTYPES[];
 extern int FSTAB_EDITS;
+
+extern char *AGENT_TYPESEQUENCE[];
 
 extern int CFA_MAXTHREADS;
 extern const char *THIS_BUNDLE;

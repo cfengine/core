@@ -179,25 +179,25 @@ void CheckConstraint(char *type, char *namespace, char *name, char *lval, Rval r
                     switch (rval.rtype)
                        {
                        case CF_SCALAR:
-                           if (strchr((char *)rval.item,'.'))
+                           if (strchr((char *)rval.item,':'))
                            {
                                strcpy(fqname,(char *)rval.item);
                            }
                            else
                            {
-                               snprintf(fqname,CF_BUFSIZE-1,"%s.%s",namespace,(char *)rval.item);
+                               snprintf(fqname,CF_BUFSIZE-1,"%s:%s",namespace,(char *)rval.item);
                            }
                            break;
                            
                        case CF_FNCALL:
                            fp = (FnCall *) rval.item;
-                           if (strchr(fp->name,'.'))
+                           if (strchr(fp->name,':'))
                            {
                                strcpy(fqname,fp->name);
                            }
                            else
                            {                              
-                               snprintf(fqname,CF_BUFSIZE-1,"%s.%s",namespace,fp->name);
+                               snprintf(fqname,CF_BUFSIZE-1,"%s:%s",namespace,fp->name);
                            }
                            break;
                        }
@@ -244,11 +244,23 @@ void CheckConstraint(char *type, char *namespace, char *name, char *lval, Rval r
 
         if (strcmp(lval, CF_COMMON_EDITBODIES[i].lval) == 0)
         {
-            CfDebug("Found a match for lval %s in the common edit constraint attributes\n", lval);
+            CfDebug("Found a match for lval %s in the common edit_line constraint attributes\n", lval);
             return;
         }
     }
 
+    for (i = 0; CF_COMMON_XMLBODIES[i].lval != NULL; i++)
+    {
+        CfDebug("CMP-common # %s,%s\n", lval, CF_COMMON_XMLBODIES[i].lval);
+
+        if (strcmp(lval, CF_COMMON_XMLBODIES[i].lval) == 0)
+        {
+            CfDebug("Found a match for lval %s in the common edit_xml constraint attributes\n", lval);
+            return;
+        }
+    }
+
+    
 // Now check if it is in the common list...
 
     if (!lmatch || !allowed)

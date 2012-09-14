@@ -380,7 +380,7 @@ int GetMyHostInfo(char nameBuf[MAXHOSTNAMELEN], char ipBuf[MAXIP4CHARLEN])
 unsigned short SocketFamily(int sd)
 {
    struct sockaddr sa;
-   size_t len;
+   socklen_t len;
    getsockname(sd, &sa, &len);
    return sa.sa_family;
 }

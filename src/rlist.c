@@ -1,4 +1,4 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
@@ -1099,7 +1099,7 @@ Rlist *SplitRegexAsRList(const char *string, const char *regex, int max, int bla
         memset(node, 0, CF_MAXVARSIZE);
         strncpy(node, sp, CF_MAXVARSIZE - 1);
 
-        if (blanks || strlen(node) > 0)
+        if ((blanks && sp != string) || strlen(node) > 0)
         {
             AppendRScalar(&liststart, node, CF_SCALAR);
         }
@@ -1155,6 +1155,17 @@ Rlist *RlistAt(Rlist *start, size_t index)
     return NULL;
 }
 
+Rlist *RlistLast(Rlist *start)
+{
+    if (start == NULL)
+    {
+        return NULL;
+    }
+    Rlist *rp;
+    for (rp = start; rp->next; rp = rp->next);
+    return rp;
+}
+
 /*******************************************************************/
 
 void RlistPrint(Writer *writer, const Rlist *list)
@@ -1207,5 +1218,44 @@ void RvalPrint(Writer *writer, Rval rval)
     case CF_NOPROMISEE:
         WriterWrite(writer, "(no-one)");
         break;
+    }
+}
+
+void RlistFilter(Rlist **list, _Bool (*KeepPredicate)(void *), void (*DestroyItem)(void *))
+{
+    assert(KeepPredicate);
+
+    Rlist *start = *list;
+    Rlist *prev = NULL;
+
+    for (Rlist *rp = start; rp;)
+    {
+        if (!KeepPredicate(rp->item))
+        {
+            if (prev)
+            {
+                prev->next = rp->next;
+            }
+            else
+            {
+                *list = rp->next;
+            }
+
+            if (DestroyItem)
+            {
+                DestroyItem(rp->item);
+                rp->item = NULL;
+            }
+
+            Rlist *next = rp->next;
+            rp->next = NULL;
+            DeleteRlist(rp);
+            rp = next;
+        }
+        else
+        {
+            prev = rp;
+            rp = rp->next;
+        }
     }
 }

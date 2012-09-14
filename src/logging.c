@@ -56,11 +56,6 @@ void BeginAudit()
     Promise dummyp = { 0 };
     Attributes dummyattr = { {0} };
 
-    if (THIS_AGENT_TYPE != cf_agent)
-    {
-        return;
-    }
-
     memset(&dummyp, 0, sizeof(dummyp));
     memset(&dummyattr, 0, sizeof(dummyattr));
 
@@ -76,11 +71,6 @@ void EndAudit()
     Rval retval;
     Promise dummyp = { 0 };
     Attributes dummyattr = { {0} };
-
-    if (THIS_AGENT_TYPE != cf_agent)
-    {
-        return;
-    }
 
     memset(&dummyp, 0, sizeof(dummyp));
     memset(&dummyattr, 0, sizeof(dummyattr));
@@ -128,8 +118,8 @@ void EndAudit()
     else
     {
         snprintf(string, CF_BUFSIZE,
-                 "Outcome of version %s (%s-%d): Promises observed to be kept %.0f%%, Promises repaired %.0f%%, Promises not repaired %.0f\%%",
-                 sp, CF_AGENTTYPES[THIS_AGENT_TYPE], CFA_BACKGROUND, (double) PR_KEPT / total, (double) PR_REPAIRED / total,
+                 "Outcome of version %s (" CF_AGENTC "-%d): Promises observed to be kept %.0f%%, Promises repaired %.0f%%, Promises not repaired %.0f\%%",
+                 sp, CFA_BACKGROUND, (double) PR_KEPT / total, (double) PR_REPAIRED / total,
                  (double) PR_NOTKEPT / total);
 
         CfOut(cf_verbose, "", "%s", string);
@@ -197,6 +187,7 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, c
         }
 
         AddAllClasses(attr.classes.change, attr.classes.persist, attr.classes.timer);
+        MarkPromiseHandleDone(pp);
         DeleteAllClasses(attr.classes.del_change);
 
         if (IsPromiseValuableForLogging(pp))
@@ -310,6 +301,7 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, c
             VAL_KEPT += attr.transaction.value_kept;
         }
 
+        MarkPromiseHandleDone(pp);
         break;
     }
 
@@ -506,7 +498,12 @@ void FatalError(char *s, ...)
     }
 
     unlink(PIDFILE);
-    EndAudit();
+
+    if (THIS_AGENT_TYPE == cf_agent)
+    {
+        EndAudit();
+    }
+
     GenericDeInitialize();
     exit(1);
 }

@@ -19,7 +19,7 @@ typedef struct
    int logconns;
 } ServerAccess;
 
-typedef struct
+typedef struct ServerConnectionState
 {
     int id_verified;
     int rsa_auth;
@@ -55,15 +55,6 @@ typedef struct
 
 int Nova_ReturnQueryData(ServerConnectionState *conn, char *menu);
 
-#ifdef HAVE_LIBMONGOC
-int Nova_AcceptCollectCall(ServerConnectionState *conn);
-#endif
-
-#endif
-
-#ifdef HAVE_CONSTELLATION
-int Constellation_ReturnRelayQueryData(ServerConnectionState *conn, char *query, char *sendbuffer);
-void Constellation_RunQueries(Item *queries, Item **results_p);
 #endif
 
 void KeepPromises(Policy *policy, const ReportContext *report_context);

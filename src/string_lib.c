@@ -650,9 +650,8 @@ int SubStrnCopyChr(char *to, const char *from, int len, char sep)
     return count;
 }
 
-int CountChar(char *string, char sep)
+int CountChar(const char *string, char sep)
 {
-    char *sp;
     int count = 0;
 
     if (string == NULL)
@@ -665,7 +664,7 @@ int CountChar(char *string, char sep)
         return 0;
     }
 
-    for (sp = string; *sp != '\0'; sp++)
+    for (const char *sp = string; *sp != '\0'; sp++)
     {
         if (*sp == '\\' && *(sp + 1) == sep)
         {
@@ -855,4 +854,34 @@ void FreeStringArray(char **strs)
 
     free(strs);
     strs = NULL;
+}
+
+
+char *EscapeCharCopy(const char *str, char to_escape, char escape_with)
+/*
+ * Escapes the 'to_escape'-chars found in str, by prefixing them with 'escape_with'.
+ * Returns newly allocated string.
+ */
+{
+    assert(str);
+
+    int in_size = strlen(str);
+    int out_size = in_size + CountChar(str, to_escape) + 1;
+
+    char *out = xcalloc(1, out_size);
+
+    const char *in_pos = str;
+    char *out_pos = out;
+
+    for(; *in_pos != '\0'; in_pos++, out_pos++)
+    {
+        if(*in_pos == to_escape)
+        {
+            *out_pos = escape_with;
+            out_pos++;
+        }
+        *out_pos = *in_pos;
+    }
+
+    return out;
 }

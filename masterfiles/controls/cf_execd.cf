@@ -1,0 +1,27 @@
+###############################################################################
+# This part is for cf-execd
+#
+# These body settings determine the behaviour of cf-execd, including scheduling
+# times and output capture to $(sys.workdir)/outputs and relay via email.
+###############################################################################
+
+body executor control
+
+{
+
+ any::
+
+  splaytime  => "1";
+  mailto     => "cfengine@$(def.domain)";
+  mailfrom   => "cfengine@$(sys.host)\.$(def.domain)";
+  smtpserver => "localhost";
+
+# Default:
+#
+# schedule => { "Min00", "Min05", "Min10", "Min15", "Min20", 
+#               "Min25", "Min30", "Min35", "Min40", "Min45",
+#               "Min50", "Min55" };
+
+  exec_command => "$(sys.cf_twin) -f $(sys.workdir)/inputs/failsafe/failsafe.cf && $(sys.cf_agent)";
+
+}

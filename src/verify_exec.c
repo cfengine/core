@@ -99,7 +99,9 @@ static void VerifyExec(Attributes a, Promise *pp)
     char comm[20];
     char execstr[CF_EXPANDSIZE];
     int outsourced, count = 0;
+#if !defined(__MINGW32__)
     mode_t maskval = 0;
+#endif
     FILE *pfp;
     char cmdOutBuf[CF_BUFSIZE];
     int cmdOutBufPos = 0;
@@ -142,8 +144,31 @@ static void VerifyExec(Attributes a, Promise *pp)
 
     PromiseBanner(pp);
 
-    CfOut(cf_inform, "", " -> Executing \'%s\' ...(timeout=%d,owner=%ju,group=%ju)\n", execstr, a.contain.timeout,
-          (uintmax_t)a.contain.owner, (uintmax_t)a.contain.group);
+    char timeout_str[CF_BUFSIZE];
+    if (a.contain.timeout == CF_NOINT)
+    {
+        snprintf(timeout_str, CF_BUFSIZE, "no timeout");
+    }
+    else
+    {
+        snprintf(timeout_str, CF_BUFSIZE, "timeout=%ds", a.contain.timeout);
+    }
+
+    char owner_str[CF_BUFSIZE] = "";
+    if (a.contain.owner != -1)
+    {
+        snprintf(owner_str, CF_BUFSIZE, ",uid=%ju", (uintmax_t)a.contain.owner);
+    }
+
+    char group_str[CF_BUFSIZE] = "";
+    if (a.contain.group != -1)
+    {
+        snprintf(group_str, CF_BUFSIZE, ",gid=%ju", (uintmax_t)a.contain.group);
+    }
+
+
+    CfOut(cf_inform, "", " -> Executing \'%s\' ... (%s%s%s)\n", execstr,
+          timeout_str, owner_str, group_str);
 
     BeginMeasure();
 

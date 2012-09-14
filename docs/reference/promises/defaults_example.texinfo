@@ -1,4 +1,46 @@
 
+A basic example, illustrating different ways to test for missing
+input.  Note carefully that CFEngine does not use Perl semantics:
+i.e. undefined variables do not map to the empty string, they remain
+as variables for possible future expansion.  Because of
+the convergence of CFEngine, some variables might in the strictest sense
+be defined but still contain unresolved variables, to handle this
+you will need to match the @code{$(abc)} form of the variables.
+
+@verbatim
+
+body common control
+{
+bundlesequence => { "main" };
+}
+
+bundle agent main
+{
+methods:
+
+  "example"  usebundle => test("one","x","","$(four)");
+
+}
+
+bundle agent test(a,b,c,d)
+{
+defaults:
+
+ "a" string => "default a", if_match_regex => "";
+ "b" string => "default b", if_match_regex => "x";
+ "c" string => "default c", if_match_regex => "";
+ "d" string => "default d", if_match_regex => "\$\([a-zA-Z0-9_.]+\)";
+
+reports:
+
+   !nothing::
+
+   "a = '$(a)', b = '$(b)', c = '$(c)' d = '$(d)'";
+}
+
+@end verbatim
+@noindent Another example:
+
 @verbatim
 
 bundle agent example

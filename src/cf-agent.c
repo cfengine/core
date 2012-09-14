@@ -34,6 +34,7 @@
 #include "vars.h"
 #include "conversion.h"
 #include "expand.h"
+#include "transaction.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"
@@ -48,48 +49,6 @@ extern int PR_NOTKEPT;
 /*******************************************************************/
 /* Agent specific variables                                        */
 /*******************************************************************/
-
-enum typesequence
-{
-    kp_meta,
-    kp_vars,
-    kp_defaults,
-    kp_classes,
-    kp_outputs,
-    kp_interfaces,
-    kp_files,
-    kp_packages,
-    kp_environments,
-    kp_methods,
-    kp_processes,
-    kp_services,
-    kp_commands,
-    kp_storage,
-    kp_databases,
-    kp_reports,
-    kp_none
-};
-
-char *TYPESEQUENCE[] =
-{
-    "meta",
-    "vars",
-    "defaults",
-    "classes",                  /* Maelstrom order 2 */
-    "outputs",
-    "interfaces",
-    "files",
-    "packages",
-    "guest_environments",
-    "methods",
-    "processes",
-    "services",
-    "commands",
-    "storage",
-    "databases",
-    "reports",
-    NULL
-};
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);
@@ -376,10 +335,18 @@ static void KeepPromises(Policy *policy, GenericAgentConfig config, const Report
 {
  double efficiency, model;
 
-    BeginAudit();
+    if (THIS_AGENT_TYPE == cf_agent)
+    {
+        BeginAudit();
+    }
+
     KeepControlPromises(policy);
     KeepPromiseBundles(policy, config.bundlesequence, report_context);
-    EndAudit();
+
+    if (THIS_AGENT_TYPE == cf_agent)
+    {
+        EndAudit();
+    }
 
 // TOPICS counts the number of currently defined promises
 // OCCUR counts the number of objects touched while verifying config
@@ -657,7 +624,7 @@ void KeepControlPromises(Policy *policy)
 
             for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
             {
-                PrependItem(&SUSPICIOUSLIST, rp->item, NULL);
+                AddFilenameToListOfSuspicious(ScalarValue(rp));
                 CfOut(cf_verbose, "", "-> Concidering %s as suspicious file", ScalarValue(rp));
             }
 
@@ -874,11 +841,11 @@ static void KeepPromiseBundles(Policy *policy, Rlist *bundlesequence, const Repo
         if ((bp = GetBundle(policy, name, "agent")) || (bp = GetBundle(policy, name, "common")))
         {
             char namespace[CF_BUFSIZE];
-            snprintf(namespace,CF_BUFSIZE,"%s_meta",bp->name);
+            snprintf(namespace,CF_BUFSIZE,"%s_meta", name);
             NewScope(namespace);
-            
+
             SetBundleOutputs(bp->name);
-            AugmentScope(bp->name, bp->args, params);
+            AugmentScope(bp->name, bp->namespace, bp->args, params);
             BannerBundle(bp, params);
             THIS_BUNDLE = bp->name;
             DeletePrivateClassContext();        // Each time we change bundle
@@ -911,11 +878,11 @@ int ScheduleAgentOperations(Bundle *bp, const ReportContext *report_context)
 
     for (pass = 1; pass < CF_DONEPASSES; pass++)
     {
-        for (type = 0; TYPESEQUENCE[type] != NULL; type++)
+        for (type = 0; AGENT_TYPESEQUENCE[type] != NULL; type++)
         {
             ClassBanner(type);
 
-            if ((sp = GetSubTypeForBundle(TYPESEQUENCE[type], bp)) == NULL)
+            if ((sp = GetSubTypeForBundle(AGENT_TYPESEQUENCE[type], bp)) == NULL)
             {
                 continue;
             }
@@ -1051,12 +1018,19 @@ static void KeepAgentPromise(Promise *pp, const ReportContext *report_context)
         return;
     }
 
+
+    if (MissingDependencies(pp))
+    {
+        return;
+    }
+    
 // Record promises examined for efficiency calc
 
     if (strcmp("meta", pp->agentsubtype) == 0)
     {
         char namespace[CF_BUFSIZE];
         snprintf(namespace,CF_BUFSIZE,"%s_meta",pp->bundle);
+        NewScope(namespace);
         ConvergeVarHashPromise(namespace, pp, true);
         return;
     }
@@ -1340,7 +1314,7 @@ static void ParallelFindAndVerifyFilesPromises(Promise *pp, const ReportContext 
         CfOut(cf_verbose, "", "Background processing of files promises is not supported on Windows");
     }
 
-    FindAndVerifyFilesPromises(pp);
+    FindAndVerifyFilesPromises(pp, report_context);
 
 #else /* NOT MINGW */
 

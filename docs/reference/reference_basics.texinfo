@@ -1998,21 +1998,21 @@ from one in another namespace, you can prefix the
 @verbatim
 methods:
 
-  "namespace demo" usebundle => myspace.mymethod("arg1");
+  "namespace demo" usebundle => myspace:mymethod("arg1");
 
   "namespace demo" usebundle => mymethod("arg1","arg2");
 
 @end verbatim
 
-To distinguish a body
-from one in another namespace, you can prefix the 
+To distinguish a body from one in another namespace, you can prefix
+the
 @verbatim
 files:
 
    "/file"
 
        create => "true",
-        perms => name1.settings;
+        perms => name1:settings;
 
 @end verbatim
 
@@ -2025,7 +2025,7 @@ files:
    "/file"
 
        create => "true",
-        perms => default.settings;
+        perms => default:settings;
 
 @end verbatim
 @noindent For example, this can be used to refer to standard library objects from
@@ -2045,6 +2045,17 @@ files:
 @end verbatim
 @noindent This is not prepended automatically because references to this
 class in class expressions cannot be detected and modified automatically.
+
+To access variables or meta-data in bundles in a different namespace, use the colon
+as a namespace prefix:
+
+@verbatim
+
+ $(namespace:bundle.variable)
+ $(namespace:bundle_meta.variable)
+
+@end verbatim
+
 
 @c -----------------------------------------------------------------------
 @node Normal ordering

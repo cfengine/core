@@ -46,6 +46,7 @@ static int IsBracketed(const char *s);
 
 /*****************************************************************************/
 
+AlphaList VHANDLES;
 AlphaList VHEAP;
 AlphaList VADDCLASSES;
 Item *VNEGHEAP = NULL;
@@ -1594,3 +1595,64 @@ void AddAbortClass(const char *name, const char *classes)
         AppendItem(&ABORTHEAP, name, classes);
     }
 }
+
+/*****************************************************************************/
+
+void MarkPromiseHandleDone(const Promise *pp)
+{
+    if (pp == NULL)
+    {
+        return;
+    }
+
+    char name[CF_BUFSIZE];
+    char *handle = GetConstraintValue("handle", pp, CF_SCALAR);
+
+    if (handle == NULL)
+    {
+       return;
+    }
+    
+    snprintf(name, CF_BUFSIZE, "%s.%s", pp->namespace, handle);    
+    IdempPrependAlphaList(&VHANDLES, name);
+
+}
+
+/*****************************************************************************/
+
+int MissingDependencies(const Promise *pp)
+{
+    if (pp == NULL)
+    {
+        return false;
+    }
+
+    char name[CF_BUFSIZE], *d;
+    Rlist *rp, *deps = GetListConstraint("depends_on", pp);
+    
+    for (rp = deps; rp != NULL; rp = rp->next)
+       {
+       if (strchr(rp->item, '.'))
+          {
+          d = (char *)rp->item;
+          }
+       else
+          {
+          snprintf(name, CF_BUFSIZE, "%s.%s", pp->namespace, rp->item);
+          d = name;
+          }
+
+       if (!InAlphaList(&VHANDLES, d))
+          {
+          CfOut(cf_verbose, "", "\n");
+          CfOut(cf_verbose, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+          CfOut(cf_verbose, "", "Skipping whole next promise (%s), as promise dependency %s has not yet been kept\n", pp->promiser, d);
+          CfOut(cf_verbose, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+
+          return true;
+          }
+       }
+
+    return false;
+}
+

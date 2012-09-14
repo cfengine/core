@@ -34,6 +34,7 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "expand.h"
+#include "transaction.h"
 
 static void KeepContextBundles(Policy *policy, const ReportContext *report_context);
 static void KeepServerPromise(Promise *pp);
@@ -462,7 +463,7 @@ static void KeepContextBundles(Policy *policy, const ReportContext *report_conte
 
                 BannerSubType(scope, sp->name, 0);
                 SetScope(scope);
-                AugmentScope(scope, NULL, NULL);
+                AugmentScope(scope, bp->namespace, NULL, NULL);
 
                 for (pp = sp->promiselist; pp != NULL; pp = pp->next)
                 {
@@ -504,7 +505,7 @@ static void KeepPromiseBundles(Policy *policy, const ReportContext *report_conte
 
                 BannerSubType(scope, sp->name, 0);
                 SetScope(scope);
-                AugmentScope(scope, NULL, NULL);
+                AugmentScope(scope, bp->namespace, NULL, NULL);
 
                 for (pp = sp->promiselist; pp != NULL; pp = pp->next)
                 {

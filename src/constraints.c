@@ -32,7 +32,7 @@
 #include "files_names.h"
 #include "conversion.h"
 
-static PromiseIdent *PromiseIdExists(char *handle);
+static PromiseIdent *PromiseIdExists(char *namespace, char *handle);
 static void DeleteAllPromiseIdsRecurse(PromiseIdent *key);
 static int VerifyConstraintName(const char *lval);
 static void PostCheckConstraint(const char *type, const char *bundle, const char *lval, Rval rval);
@@ -550,6 +550,7 @@ Rlist *GetListConstraint(const char *lval, const Promise *pp)
             }
 
             retval = (Rlist *) cp->rval.item;
+            break;
         }
     }
 
@@ -662,7 +663,7 @@ void ReCheckAllConstraints(Promise *pp)
             return;
         }
 
-        if ((prid = PromiseIdExists(handle)))
+        if ((prid = PromiseIdExists(pp->namespace, handle)))
         {
             if ((strcmp(prid->filename, pp->audit->filename) != 0) || (prid->line_number != pp->offset.line))
             {
@@ -887,9 +888,10 @@ static int VerifyConstraintName(const char *lval)
 PromiseIdent *NewPromiseId(char *handle, Promise *pp)
 {
     PromiseIdent *ptr;
-
+    char name[CF_BUFSIZE];
     ptr = xmalloc(sizeof(PromiseIdent));
 
+    snprintf(name, CF_BUFSIZE, "%s.%s", pp->namespace, handle);
     ptr->filename = xstrdup(pp->audit->filename);
     ptr->line_number = pp->offset.line;
     ptr->handle = xstrdup(handle);
@@ -933,13 +935,16 @@ void DeleteAllPromiseIds(void)
 
 /*****************************************************************************/
 
-static PromiseIdent *PromiseIdExists(char *handle)
+static PromiseIdent *PromiseIdExists(char *namespace, char *handle)
 {
     PromiseIdent *key;
+    char name[CF_BUFSIZE];
 
+    snprintf(name, CF_BUFSIZE, "%s.%s", namespace, handle);
+    
     for (key = PROMISE_ID_LIST; key != NULL; key = key->next)
     {
-        if (strcmp(handle, key->handle) == 0)
+        if (strcmp(name, key->handle) == 0)
         {
             return key;
         }

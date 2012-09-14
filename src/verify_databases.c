@@ -46,7 +46,8 @@ static int CheckSQLDataType(char *type, char *ref_type, Promise *pp);
 static int TableExists(CfdbConn *cfdb, char *name);
 static Rlist *GetSQLTables(CfdbConn *cfdb);
 static void ListTables(int type, char *query);
-
+static int ValidateRegistryPromiser(char *s, Attributes a, Promise *pp);
+static int CheckRegistrySanity(Attributes a, Promise *pp);
 
 /*****************************************************************************/
 
@@ -76,7 +77,7 @@ void VerifyDatabasePromises(Promise *pp)
 
     if (strcmp(a.database.type, "ms_registry") == 0)
     {
-#ifdef HAVE_NOVA
+#if defined(__MINGW32__)
         VerifyRegistryPromise(a, pp);
 #endif
         return;
@@ -329,9 +330,7 @@ static int CheckDatabaseSanity(Attributes a, Promise *pp)
 
     if (a.database.type && strcmp(a.database.type, "ms_registry") == 0)
     {
-#ifdef HAVE_NOVA
         retval = CheckRegistrySanity(a, pp);
-#endif
     }
     else if (a.database.type && strcmp(a.database.type, "sql") == 0)
     {
@@ -398,6 +397,90 @@ static int CheckDatabaseSanity(Attributes a, Promise *pp)
     }
 
     return retval;
+}
+
+static int CheckRegistrySanity(Attributes a, Promise *pp)
+{
+    bool retval = true;
+
+    ValidateRegistryPromiser(pp->promiser, a, pp);
+
+    if (a.database.operation && strcmp(a.database.operation, "create") == 0)
+    {
+        if (a.database.rows == NULL)
+        {
+            CfOut(cf_inform, "", "No row values promised for the MS registry database");
+        }
+
+        if (a.database.columns != NULL)
+        {
+            CfOut(cf_error, "", "Columns are only used to delete promised values for the MS registry database");
+            retval = false;
+        }
+    }
+
+    if (a.database.operation
+        && (strcmp(a.database.operation, "delete") == 0 || strcmp(a.database.operation, "drop") == 0))
+    {
+        if (a.database.columns == NULL)
+        {
+            CfOut(cf_inform, "", "No columns were promised deleted in the MS registry database");
+        }
+
+        if (a.database.rows != NULL)
+        {
+            CfOut(cf_error, "", "Rows cannot be deleted in the MS registry database, only entire columns");
+            retval = false;
+        }
+    }
+
+    for (Rlist *rp = a.database.rows; rp != NULL; rp = rp->next)
+    {
+        if (CountChar(ScalarValue(rp), ',') != 2)
+        {
+            CfOut(cf_error, "", "Registry row format should be NAME,REG_SZ,VALUE, not \"%s\"", ScalarValue(rp));
+            retval = false;
+        }
+    }
+
+    for (Rlist *rp = a.database.columns; rp != NULL; rp = rp->next)
+    {
+        if (CountChar(rp->item, ',') > 0)
+        {
+            CfOut(cf_error, "", "MS registry column format should be NAME only in deletion");
+            retval = false;
+        }
+    }
+
+    return retval;
+}
+
+static int ValidateRegistryPromiser(char *key, Attributes a, Promise *pp)
+{
+    static char *valid[] = { "HKEY_CLASSES_ROOT", "HKEY_CURRENT_CONFIG",
+        "HKEY_CURRENT_USER", "HKEY_LOCAL_MACHINE", "HKEY_USERS", NULL
+    };
+    char root_key[CF_MAXVARSIZE];
+    char *sp;
+    int i;
+
+    /* First remove the root key */
+
+    strncpy(root_key, key, CF_MAXVARSIZE - 1);
+    sp = strchr(root_key, '\\');
+    *sp = '\0';
+
+    for (i = 0; valid[i] != NULL; i++)
+    {
+        if (strcmp(root_key, valid[i]) == 0)
+        {
+            return true;
+        }
+    }
+
+    CfOut(cf_error, "", "Non-editable registry prefix \"%s\"", root_key);
+    PromiseRef(cf_error, pp);
+    return false;
 }
 
 /*****************************************************************************/
@@ -480,8 +563,9 @@ static int VerifyTablePromise(CfdbConn *cfdb, char *table_path, Rlist *columns, 
         type[0] = '\0';
         size = CF_NOINT;
 
-        strncpy(name, CfFetchColumn(cfdb, 0), CF_MAXVARSIZE - 1);
-        strncpy(type, ToLowerStr(CfFetchColumn(cfdb, 1)), CF_MAXVARSIZE - 1);
+        strlcpy(name, CfFetchColumn(cfdb, 0), CF_MAXVARSIZE);
+        strlcpy(type, CfFetchColumn(cfdb, 1), CF_MAXVARSIZE);
+        ToLowerStrInplace(type);
         sizestr = CfFetchColumn(cfdb, 2);
 
         if (sizestr)

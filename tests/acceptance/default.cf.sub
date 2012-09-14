@@ -3,17 +3,24 @@ bundle common G
 classes:
   "bin_$(cmds)" expression => fileexists("/bin/$(cmds)");
   "usr_bin_$(cmds)" expression => fileexists("/usr/bin/$(cmds)");
+  "usr_local_bin_$(cmds)" expression => fileexists("/usr/local/bin/$(cmds)");
+  "usr_contrib_bin_$(cmds)" expression => fileexists("/usr/contrib/bin/$(cmds)");
+  "has_$(cmds)" or => { "bin_$(cmds)", "usr_bin_$(cmds)" };
 
   "temp_declared" not => strcmp(getenv("TEMP", "65536"), "");
 
 vars:
   "cwd" string => execresult("/bin/pwd", "noshell");
-  "cmds" slist => { "sort", "touch", "grep" };
+  "cmds" slist => { "sort", "touch", "grep", "gzip", "hexdump", "od", "diff", "rm" };
 
   "$(cmds)"  string => "/bin/$(cmds)",
       ifvarclass => "bin_$(cmds)";
   "$(cmds)"  string => "/usr/bin/$(cmds)",
       ifvarclass => "!bin_$(cmds).usr_bin_$(cmds)";
+  "$(cmds)"  string => "/usr/local/bin/$(cmds)",
+      ifvarclass => "!bin_$(cmds).!usr_bin_$(cmds).usr_local_bin_$(cmds)";
+  "$(cmds)"  string => "/usr/contrib/bin/$(cmds)",
+      ifvarclass => "!bin_$(cmds).!usr_bin_$(cmds).!usr_local_bin_$(cmds).usr_contrib_bin_$(cmds)";
 
   temp_declared::
     "testroot" string => getenv("TEMP", "65535");
@@ -92,14 +99,27 @@ bundle agent check_diff(file1, file2, test, expected_difference)
 vars:
     DEBUG.!no_difference::
         "file1r" string => readfile("$(file1)", "99999999");
-        "file1h" string => execresult("/usr/bin/hexdump -C $(file1)", "useshell");
         "file2r" string => readfile("$(file2)", "99999999");
-        "file2h" string => execresult("/usr/bin/hexdump -C $(file2)", "useshell");
-        "diffu"  string => execresult("/usr/bin/diff -u $(file2) $(file1)", "noshell");
+
+    DEBUG.!no_difference.has_hexdump::
+        "file1h" string => execresult("$(G.hexdump) -C $(file1)", "useshell");
+        "file2h" string => execresult("$(G.hexdump) -C $(file2)", "useshell");
+
+    DEBUG.!no_difference.!has_hexdump::
+        "file1h" string => execresult("$(G.od) -c $(file1)", "useshell");
+        "file2h" string => execresult("$(G.od) -c $(file2)", "useshell");
+
+    DEBUG.!no_difference.has_unified_diff::
+        "diffu" string => execresult("$(G.diff) -u $(file2) $(file1) 2>/dev/null", "noshell");
+    DEBUG.!no_difference.!has_unified_diff::
+        "diffu" string => execresult("$(G.diff) -c $(file2) $(file1) 2>/dev/null", "noshell");
 
 classes:
+    "has_unified_diff" expression => returnszero(
+      "$(G.diff) -u /dev/null /dev/null >/dev/null 2>/dev/null", "useshell");
+
     "no_difference" expression => returnszero(
-        "/usr/bin/diff -q $(file1) $(file2)",
+        "$(G.diff) $(file1) $(file2) >/dev/null 2>/dev/null",
         "useshell");
 
         "expected_difference" expression => strcmp("$(expected_difference)", "yes");
@@ -118,9 +138,9 @@ reports:
         "$(file1) and $(file2) differ:";
         "$(file1): <$(file1r)>";
         "$(file2): <$(file2r)>";
-        "hexdump $(file1):
+        "dump $(file1):
 $(file1h)";
-        "hexdump $(file2):
+        "dump $(file2):
 $(file2h)";
         "$(diffu)";
     DEBUG.no_difference.expected_difference::
@@ -140,9 +160,9 @@ useshell => "true";
 bundle agent default_fini(file)
 {
 commands:
-  "/bin/rm -rf $(file)*"
+  "$(G.rm) -rf $(file)*"
     contain => useshell;
-  "/bin/rm -rf $(sys.workdir)/state/cf_state.*"
+  "$(G.rm) -rf $(sys.workdir)/state/cf_state.*"
     contain => useshell;
 }
 

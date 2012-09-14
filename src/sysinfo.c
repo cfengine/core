@@ -31,6 +31,10 @@
 #include "vars.h"
 #include "item_lib.h"
 
+#ifdef HAVE_ZONE_H
+# include <zone.h>
+#endif
+
 void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname, char *uqname, char *domain);
 
 #ifdef LINUX
@@ -56,7 +60,6 @@ static bool ReadLine(const char *filename, char *buf, int bufsize);
 static FILE *ReadFirstLine(const char *filename, char *buf, int bufsize);
 #endif
 
-static void CreateClassesFromCanonification(char *canonified);
 static void GetCPUInfo(void);
 
 static const char *CLASSATTRIBUTES[HARD_CLASSES_MAX][3] =
@@ -293,7 +296,11 @@ void GetNameInfo3()
 
     for (i = 0; i < HARD_CLASSES_MAX; i++)
     {
-        if (FullTextMatch(CLASSATTRIBUTES[i][0], ToLowerStr(VSYSNAME.sysname)))
+        char sysname[CF_BUFSIZE];
+        strlcpy(sysname, VSYSNAME.sysname, CF_BUFSIZE);
+        ToLowerStrInplace(sysname);
+
+        if (FullTextMatch(CLASSATTRIBUTES[i][0], sysname))
         {
             if (FullTextMatch(CLASSATTRIBUTES[i][1], VSYSNAME.machine))
             {
@@ -369,10 +376,6 @@ void GetNameInfo3()
     NewScalar("sys", "expires", EXPIRY, cf_str);
 /* FIXME: type conversion */
     NewScalar("sys", "cf_version", (char *) Version(), cf_str);
-#ifdef HAVE_NOVA
-/* FIXME: type conversion */
-    NewScalar("sys", "nova_version", (char *) Nova_Version(), cf_str);
-#endif
 
     if (PUBKEY)
     {
@@ -578,6 +581,20 @@ void GetNameInfo3()
             NewClass(hp->h_aliases[i]);
         }
     }
+
+#ifdef HAVE_GETZONEID
+    zoneid_t zid;
+    char zone[ZONENAME_MAX];
+    char vbuff[CF_BUFSIZE];
+
+    zid = getzoneid();
+    getzonenamebyid(zid, zone, ZONENAME_MAX);
+    CfOut(cf_verbose, "", " -> Cfengine seems to be running inside a solaris zone of name \"%s\"", zone);
+
+    NewScalar("sys", "zone", zone, cf_str);
+    snprintf(vbuff, CF_BUFSIZE - 1, "zone_%s", zone);
+    NewClass(vbuff);
+#endif
 }
 
 void Get3Environment()
@@ -697,18 +714,12 @@ void BuiltinClasses(void)
     snprintf(vbuff, CF_BUFSIZE, "cfengine_%s", CanonifyName(Version()));
     CreateClassesFromCanonification(vbuff);
 
-#if defined HAVE_NOVA
-
-    snprintf(vbuff, sizeof(vbuff), "nova_%s", CanonifyName(Nova_Version()));
-    CreateClassesFromCanonification(vbuff);
-
-#endif
 
 }
 
 /*******************************************************************/
 
-static void CreateClassesFromCanonification(char *canonified)
+void CreateClassesFromCanonification(char *canonified)
 {
     char buf[CF_MAXVARSIZE];
 
@@ -1974,10 +1985,7 @@ static int Xen_Hv_Check(void)
     {
         uint32_t u[3];
         char s[13];
-    } sig =
-    {
-        {
-    0}};
+    } sig = {{0}};
 
     Xen_Cpuid(0x40000000, &eax, &sig.u[0], &sig.u[1], &sig.u[2]);
 

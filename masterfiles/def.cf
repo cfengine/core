@@ -1,0 +1,45 @@
+###############################################################################
+#
+# common def
+#  - common/global variables and classes here  
+#
+###############################################################################
+
+bundle common def
+
+{
+
+ vars:
+
+  # Begin change # Your domain name, for use in access control
+
+     "domain"  string => "example.com",
+              comment => "Define a global domain for all hosts",
+               handle => "common_def_vars_domain";
+
+  # List here the IP masks that we grant access to on the server
+
+    "acl" slist => {
+                # Assume /16 LAN clients to start with
+                   "$(sys.policy_hub)/16", 
+
+                 #  "2001:700:700:3.*", 
+                 #  "217.77.34.18", 
+                 #  "217.77.34.19",
+                   },
+       comment => "Define an acl for the machines to be granted accesses",
+        handle => "common_def_vars_acl";
+
+  # End change #
+
+   "dir_masterfiles" string => translatepath("$(sys.workdir)/masterfiles"),
+                    comment => "Define masterfiles path",
+                     handle => "common_def_vars_dir_masterfiles";
+   "dir_bin"         string => translatepath("$(sys.workdir)/bin"),
+                    comment => "Define binary path",
+                     handle => "common_def_vars_dir_bin";
+   "dir_modules"     string => translatepath("$(sys.workdir)/modules"),
+                    comment => "Define modules path",
+                     handle => "common_def_vars_dir_modules";
+
+}

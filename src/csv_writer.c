@@ -33,7 +33,7 @@ struct CsvWriter_
 /*****************************************************************************/
 
 static void WriteCsvEscapedString(Writer *w, const char *str);
-static void CsvWriterFieldVF(CsvWriter * csvw, const char *fmt, va_list ap) FUNC_ATTR_FORMAT(printf, 2, 0);
+static void CsvWriterFieldVF(CsvWriter * csvw, const char *fmt, va_list ap) FUNC_ATTR_PRINTF(2, 0);
 
 /*****************************************************************************/
 

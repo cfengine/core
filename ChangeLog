@@ -6,6 +6,32 @@
 	  "usebundle". By default classes are not inherited. See the
 	  examples/unit_inherit.cf for an example.
 
+	- packages_default_arch_command hook in packages promises, to
+	  specify default architecture of the packages on the system.
+
+	- Running in Solaris zone is now detected and classes "zone" and
+	  "zone_<name>" are created in this case.
+
+	- VirtualBox support added to guest_environment promises.
+
+	- guest_environment promises are supported under OS X.
+
+	- Moved from Nova/Enterirpse:
+	  - POSIX ACL support,
+	  - "outputs" promise type,
+	  - remote syslog support.
+
+	- Changed some port numbers to replace old services with imap(s)
+
+	- The "depends_on" attribute is now active, for the partal ordering
+	  of promises. If a promise depends on another (referred by handle)
+	  it will only be considered if the depends_on list is either kept
+	  or repaired already.
+
+	- methods return values, initial implementation
+
+	- New format for cf-key -s, includes timestamp of last connection
+	
 	Misc:
 
 	- Support for the following outdated platforms and corresponding
@@ -54,13 +80,34 @@
 
 	- Standard library is updated from COPBL repository.
 
+	- cf-know is no longer built in Community releases. The only
+	  functionality useful in Community, namely the reference manual
+	  generation, is provided by new compile-time cf-gendoc tool.
+
+        - Filename (for storing filechanges) changed
+          from file_change.log -> file_changes.log (in /var/cfengine/state)
+
+          New format for storing file changes introduced:
+          [timestamp,filename,<N/C/S/R>,Message]
+
+          N = New file found
+          C = Content Changed
+          S = Stats changed
+          R = File removed
+
 	Bugfixes:
 
-	- Compatibility fixes for HP-UX, Solaris (Mantis #1185, Mantis #1177, Mantis #1109).
+	- Compatibility fixes for AIX, HP-UX, Solaris (Mantis #1185, Mantis #1177, Mantis #1109).
 	- Fixed broken socklen_t configure check under OpenBSD (Mantis #1168).
 	- Fixed hang in cf-promises under OpenBSD (Mantis #1113).
 	- Fixed endless loop in evaluating "$()" construct (Mantis #1023).
-	- Fixed memory leak in cf-execd occuring if cf-monitord is also running on the system.
+	- Fixed check for old PCRE versions (Mantis #1262).
+	- Fixed insertion of multi-line blocks at the start of file (Mantis #809).
+	- Fixed numerous memory leaks.
+	- Fixes for metadata that were not resolvable
+	- Fixes for namespaces that would not support metadata and variable expansion
+	- Point-to-point network interfaces are detected and reported by CFEngine (Mantis #1246)
+	- Partial non-GNU userspace support in acceptance testsuite (Mantis #1255)
 
 	In alpha 1:
 
@@ -82,6 +129,7 @@
   	  kept within them. If any promise was not kept, the method is not
 	  kept, else if any promise is repaired, the method was repaired
 	  else it was kept.
+	- Remote variable access in namespaces by $(namespace:bundle.variable)
 
 	Misc:
 

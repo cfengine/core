@@ -29,6 +29,7 @@
 #include "policy.h"
 #include "syntax.h"
 #include "expand.h"
+#include "files_names.h"
 
 #define PACK_UPIFELAPSED_SALT "packageuplist"
 
@@ -372,11 +373,11 @@ Body *IsBody(Body *list, const char *namespace, const char *key)
 
     // bp->namespace is where the body belongs, namespace is where we are now
 
-        if (strchr(key,'.') || strcmp(namespace,"default") == 0)
+        if (strchr(key,':') || strcmp(namespace,"default") == 0)
         {
-            if (strncmp(key,"default.",strlen("default.")) == 0)
+            if (strncmp(key,"default:",strlen("default:")) == 0)
             {
-                strcpy(fqname,strchr(key,'.')+1);
+                strcpy(fqname,strchr(key,':')+1);
             }
             else
             {
@@ -385,7 +386,7 @@ Body *IsBody(Body *list, const char *namespace, const char *key)
         }
         else
         {
-            snprintf(fqname,CF_BUFSIZE-1, "%s.%s",namespace,key);
+            snprintf(fqname,CF_BUFSIZE-1, "%s:%s",namespace,key);
         }
 
         if (strcmp(bp->name, fqname) == 0)
@@ -408,9 +409,9 @@ Bundle *IsBundle(Bundle *list, const char *key)
     {
         if (strcmp(bp->namespace,"default") == 0)
         {
-            if (strncmp(key,"default.",strlen("default.")) == 0)
+            if (strncmp(key,"default:",strlen("default:")) == 0)
             {
-                strcpy(fqname,strchr(key,'.')+1);
+                strcpy(fqname,strchr(key,':')+1);
             }
             else
             {
@@ -423,9 +424,8 @@ Bundle *IsBundle(Bundle *list, const char *key)
         }
         else
         {
-            snprintf(fqname,CF_BUFSIZE-1, "%s.%s",bp->namespace,key);
+            snprintf(fqname,CF_BUFSIZE-1, "%s:%s",bp->namespace,key);
         }
-
 
         if (strcmp(bp->name, fqname) == 0)
         {

@@ -22,6 +22,7 @@ In order to build CFEngine you need the following tools and libraries installed:
 * MySQL client library (optional)
 * PostgreSQL client library (optional)
 * SELinux library (optional)
+* libacl library (optional)
 
 In order to build CFEngine cloned from git, you will need the
 following additional tools:
@@ -93,6 +94,10 @@ CFEngine might be installed in two configurations:
    mounted due to NFS breakage).
 
 * FHS file layout, enabled by --enable-fhs. This layout follows FHS 2.3.
+
+After the build process has completed (see BUILD INSTRUCTIONS above), type:
+
+$ make install
 
 RUNNING TESTSUITE
 -----------------

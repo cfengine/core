@@ -20,16 +20,6 @@ bundle agent init
 vars:
     any::
         "files" slist => { "1", "2", "3" };
-    bin_gzip::
-        "gzip" string => "/bin/gzip",
-            policy => "free";
-    usr_bin_gzip::
-        "gzip" string => "/usr/bin/gzip",
-            policy => "free";
-
-classes:
-    "bin_gzip" expression => fileexists("/bin/gzip");
-    "usr_bin_gzip" expression => fileexists("/usr/bin/gzip");
 
 files:
         "$(G.testdir)/."
@@ -68,7 +58,7 @@ bundle agent test_dry_run
 {
 files:
         "$(G.testdir)"
-            transformer => "$(init.gzip) $(this.promiser)",
+            transformer => "$(G.gzip) $(this.promiser)",
             file_select => test_plain,
             depth_search => test_recurse;
 

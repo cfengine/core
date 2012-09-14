@@ -85,7 +85,10 @@
 #define CF_INDEX_OFFSET  CF_INDEX_FIELD_LEN+1
 
 #define MAXIP4CHARLEN 16
+#define MAX_MONTH_NAME 9
 
+#define MAX_DIGEST_BYTES (512 / 8)  /* SHA-512 */
+#define MAX_DIGEST_HEX (MAX_DIGEST_BYTES * 2)
 
 #define CF_EDIT_IFELAPSED 3     /* NOTE: If doing copy template then edit working copy,
                                    the edit ifelapsed must not be higher than
@@ -152,12 +155,12 @@
 #define CF_START_DOMAIN "undefined.domain"
 
 #define CF_GRAINS   64
-#define ATTR     11
+#define ATTR        20
 #define CF_NETATTR   7          /* icmp udp dns tcpsyn tcpfin tcpack */
 #define CF_MEASURE_INTERVAL (5.0*60.0)
 #define CF_SHIFT_INTERVAL (6*3600)
 
-#define CF_OBSERVABLES 91
+#define CF_OBSERVABLES 100
 
 /* Output control defines */
 
@@ -359,8 +362,8 @@ enum observables
     ob_netbiosdgm_out,
     ob_netbiosssn_in,
     ob_netbiosssn_out,
-    ob_irc_in,
-    ob_irc_out,
+    ob_imap_in,
+    ob_imap_out,
     ob_cfengine_in,
     ob_cfengine_out,
     ob_nfsd_in,
@@ -402,6 +405,24 @@ enum observables
     ob_cpu1,
     ob_cpu2,
     ob_cpu3,
+    ob_microsoft_ds_in,
+    ob_microsoft_ds_out,
+    ob_www_alt_in,
+    ob_www_alt_out,
+    ob_imaps_in,
+    ob_imaps_out,
+    ob_ldap_in,
+    ob_ldap_out,
+    ob_ldaps_in,
+    ob_ldaps_out,
+    ob_mongo_in,
+    ob_mongo_out,
+    ob_mysql_in,
+    ob_mysql_out,
+    ob_postgresql_in,
+    ob_postgresql_out,
+    ob_ipp_in,
+    ob_ipp_out,
     ob_spare
 };
 
@@ -656,6 +677,7 @@ enum cfx_format
 #define CF_REPORTC  "reporter"
 #define CF_KEYGEN   "keygenerator"
 #define CF_HUBC     "hub"
+#define CF_GENDOC   "gendoc"
 
 enum cfagenttype
 {
@@ -669,7 +691,29 @@ enum cfagenttype
     cf_report,
     cf_keygen,
     cf_hub,
+    cf_gendoc,
     cf_noagent
+};
+
+enum typesequence
+{
+    kp_meta,
+    kp_vars,
+    kp_defaults,
+    kp_classes,
+    kp_outputs,
+    kp_interfaces,
+    kp_files,
+    kp_packages,
+    kp_environments,
+    kp_methods,
+    kp_processes,
+    kp_services,
+    kp_commands,
+    kp_storage,
+    kp_databases,
+    kp_reports,
+    kp_none
 };
 
 /*************************************************************************/
@@ -958,143 +1002,6 @@ enum cfeditorder
 // Put this here now for caching efficiency
 
 #define SOFTWARE_PACKAGES_CACHE "software_packages.csv"
-
-/***************************************************************************/
-/* Knowledge relationships                                                 */
-/***************************************************************************/
-
-enum storytype
-{
-    cfi_cause,
-    cfi_connect,
-    cfi_part,
-    cfi_access,
-    cfi_none
-};
-
-#define KM_AFFECTS_CERT_F "affects"
-#define KM_AFFECTS_CERT_B "is affected by"
-#define KM_CAUSE_CERT_F "causes"
-#define KM_CAUSE_CERT_B "is caused by"
-#define KM_PARTOF_CERT_F "is/are a part of"
-#define KM_PARTOF_CERT_B "has/have a part"
-#define KM_DETERMINES_CERT_F "determine(s)"
-#define KM_DETERMINES_CERT_B "is/are determined by"
-#define KM_CONTRIBUTES_CERT_F "contibutes to"
-#define KM_CONTRIBUTES_CERT_B "is contibuted to by"
-#define KM_USES_CERT_F "use(s)"
-#define KM_USES_CERT_B "is/are used by"
-#define KM_PROVIDES_CERT_F "provide(s)"
-#define KM_PROVIDES_CERT_B "is/are provided by"
-#define KM_BELONGS_CERT_F "belongs to"
-#define KM_BELONGS_CERT_B "owns"
-#define KM_CONNECTS_CERT_F "connects to"
-#define KM_CONNECTS_CERT_B "connects to"
-#define KM_NEEDS_CERT_F "need(s)"
-#define KM_NEEDS_CERT_B "is needed by"
-#define KM_EQUIV_CERT_F "is equivalent to"
-#define KM_EQUIV_CERT_B "is equivalent to"
-#define KM_SHIELD_CERT_F "denies access from"
-#define KM_SHIELD_CERT_B "is not allowed access to"
-#define KM_ACCESS_CERT_F "grants access to"
-#define KM_ACCESS_CERT_B "is allowed to access"
-#define KM_MONITOR_CERT_F "monitor(s)"
-#define KM_MONITOR_CERT_B "is/are monitored by"
-#define KM_LOCATED_CERT_F "is located in"
-#define KM_LOCATED_CERT_B "situates"
-#define KM_REPAIR_CERT_F "repairs"
-#define KM_REPAIR_CERT_B "is repaired by"
-#define KM_FOLLOW_CERT_F "is followed by"
-#define KM_FOLLOW_CERT_B "is preceded by"
-#define KM_INVOLVES_CERT_F "involves"
-#define KM_INVOLVES_CERT_B "is involved in"
-
-#define KM_MENTIONS_F "is mentioned in"
-#define KM_MENTIONS_B "mentions"
-
-#define KM_CAUSE_POSS_F "can cause"
-#define KM_CAUSE_POSS_B "can be caused by"
-#define KM_PARTOF_POSS_F "can be a part of"
-#define KM_PARTOF_POSS_B "can have a part"
-#define KM_DETERMINES_POSS_F "can determine"
-#define KM_DETERMINES_POSS_B "can be determined by"
-#define KM_CONTRIBUTES_POSS_F "can contibute to"
-#define KM_CONTRIBUTES_POSS_B "can be contibuted to by"
-#define KM_USES_POSS_F "can use"
-#define KM_USES_POSS_B "can be used by"
-#define KM_PROVIDES_POSS_F "can provide"
-#define KM_PROVIDES_POSS_B "can be provided by"
-#define KM_BELONGS_POSS_F "can belong to"
-#define KM_BELONGS_POSS_B "can own"
-#define KM_AFFECTS_POSS_F "can affect"
-#define KM_AFFECTS_POSS_B "can be affected by"
-#define KM_CONNECTS_POSS_F "can connect to"
-#define KM_CONNECTS_POSS_B "can connect to"
-#define KM_NEEDS_POSS_F "can need"
-#define KM_NEEDS_POSS_B "can be needed by"
-#define KM_EQUIV_POSS_F "can be equivalent to"
-#define KM_EQUIV_POSS_B "can be equivalent to"
-#define KM_MONITOR_POSS_F "can monitor"
-#define KM_MONITOR_POSS_B "can be monitored by"
-#define KM_ACCESS_POSS_F "can access to"
-#define KM_ACCESS_POSS_B "can be allowed to access"
-#define KM_LOCATED_POSS_F "can be located in"
-#define KM_LOCATED_POSS_B "can situate"
-#define KM_REPAIR_POSS_F "can repair"
-#define KM_REPAIR_POSS_B "can be repaired by"
-#define KM_FOLLOW_POSS_F "can be followed by"
-#define KM_FOLLOW_POSS_B "can be preceded by"
-#define KM_INVOLVES_POSS_F "can involve"
-#define KM_INVOLVES_POSS_B "can be involved in"
-
-#define KM_CAUSE_UNCERT_F "might cause"
-#define KM_CAUSE_UNCERT_B "might be caused by"
-#define KM_PARTOF_UNCERT_F "might be a part of"
-#define KM_PARTOF_UNCERT_B "might have a part"
-#define KM_DETERMINES_UNCERT_F "might determine"
-#define KM_DETERMINES_UNCERT_B "might be determined by"
-#define KM_CONTRIBUTES_UNCERT_F "might contibute to"
-#define KM_CONTRIBUTES_UNCERT_B "might be contibuted to by"
-#define KM_USES_UNCERT_F "might use"
-#define KM_USES_UNCERT_B "might be used by"
-#define KM_PROVIDES_UNCERT_F "might provide"
-#define KM_PROVIDES_UNCERT_B "might be provided by"
-#define KM_BELONGS_UNCERT_F "might belong to"
-#define KM_BELONGS_UNCERT_B "might own"
-#define KM_AFFECTS_UNCERT_F "might affect"
-#define KM_AFFECTS_UNCERT_B "might be affected by"
-#define KM_CONNECTS_UNCERT_F "might connect to"
-#define KM_CONNECTS_UNCERT_B "might connect to"
-#define KM_NEEDS_UNCERT_F "might need"
-#define KM_NEEDS_UNCERT_B "might be needed by"
-#define KM_EQUIV_UNCERT_F "might be equivalent to"
-#define KM_EQUIV_UNCERT_B "might be equivalent to"
-#define KM_SHIELD_UNCERT_F "might deny access from"
-#define KM_SHIELD_UNCERT_B "might not be allowed access to"
-#define KM_MONITOR_UNCERT_F "might monitor"
-#define KM_MONITOR_UNCERT_B "might be monitored by"
-#define KM_ACCESS_UNCERT_F "might grant access to"
-#define KM_ACCESS_UNCERT_B "might be allowed to access"
-#define KM_LOCATED_UNCERT_F "might be located in"
-#define KM_LOCATED_UNCERT_B "might situate"
-#define KM_REPAIR_UNCERT_F "might repair"
-#define KM_REPAIR_UNCERT_B "might be repaired by"
-#define KM_FOLLOW_UNCERT_F "might be followed by"
-#define KM_FOLLOW_UNCERT_B "might be preceded by"
-#define KM_INVOLVES_UNCERT_F "might involve"
-#define KM_INVOLVES_UNCERT_B "might be involved in"
-
-
-#define KM_GENERALIZES_F "is a generalization of"
-#define KM_GENERALIZES_B "is a special case of"
-#define KM_SYNONYM "is a synonym for"
-
-enum knowledgecertainty
-{
-    cfk_certain,
-    cfk_uncertain,
-    cfk_possible
-};
 
 /*************************************************************************/
 
@@ -2095,6 +2002,7 @@ typedef struct
     int haveprintfile;
     int havelastseen;
     int lastseen;
+    char *result;
     double intermittency;
     char *friend_pattern;
     char *filename;
@@ -2209,6 +2117,7 @@ enum cf_srv_policy
     cfsrv_stop,
     cfsrv_disable,
     cfsrv_restart,
+    cfsrv_reload,
     cfsrv_nostatus
 };
 
@@ -2238,6 +2147,7 @@ enum cfhypervisors
     cfv_virt_xen,
     cfv_virt_kvm,
     cfv_virt_esx,
+    cfv_virt_vbox,
     cfv_virt_test,
     cfv_virt_xen_net,
     cfv_virt_kvm_net,

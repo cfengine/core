@@ -5,4 +5,4 @@ reserved word @samp{none} may be used to match files that are not
 owned by a registered group. On windows, files do not have file groups
 associated with them and thus this attribute is ignored.
 
-In CFEngine Nova, ACLs may be used in place for this.
+ACLs may be used in place for this.

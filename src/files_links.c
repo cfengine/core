@@ -452,14 +452,8 @@ int KillGhostLink(char *name, Attributes attr, Promise *pp)
 
 /*****************************************************************************/
 
+#if !defined(__MINGW32__)
 static int MakeLink(char *from, char *to, Attributes attr, Promise *pp)
-#ifdef MINGW                    // TODO: Remove? Should never get called.
-{
-    CfOut(cf_verbose, "", "Windows does not support symbolic links");
-    cfPS(cf_error, CF_FAIL, "symlink", pp, attr, " !! Couldn't link %s to %s\n", to, from);
-    return false;
-}
-#else                           /* NOT MINGW */
 {
     if (DONTDO || attr.transaction.action == cfa_warn)
     {

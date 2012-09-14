@@ -72,6 +72,8 @@ src/cf-runagent
 src/cf-runagent.exe
 src/cf-serverd
 src/cf-serverd.exe
+src/cf-gendoc
+src/cf-gendoc.exe
 
 # autogen
 
@@ -90,6 +92,9 @@ tests/acceptance/workdir
 tests/acceptance/mock-package-manager
 tests/acceptance/mock-package-manager.exe
 tests/acceptance/dnswrapper.so
+tests/*/*.xml
+tests/*/xml.tmp
+tests/*/xml_tmp_*
 
 # unit tests
 
@@ -115,7 +120,6 @@ coverage-html/
 # links
 
 nova
-constellation
 galaxy
 
 # tags

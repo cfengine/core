@@ -49,6 +49,7 @@ enum cf_acl_type Str2AclType(char *string);
 enum cf_acl_inherit Str2AclInherit(char *string);
 enum cf_srv_policy Str2ServicePolicy(char *string);
 char *Dtype2Str(enum cfdatatype dtype);
+const char *DataTypeShortToType(char *short_type);
 char *Item2String(Item *ip);
 int IsRealNumber(char *s);
 enum cfd_menu String2Menu(const char *s);

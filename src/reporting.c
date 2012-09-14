@@ -131,15 +131,15 @@ void ReportContextDestroy(ReportContext *context)
 {
     if (context)
     {
+        if (context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE])
+        {
+            WriterWriteF(context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE], "}\n");
+        }
+
         for (size_t i = 0; i < REPORT_OUTPUT_TYPE_MAX; i++)
-        {            
+        {
             if (context->report_writers[i])
             {
-                if (i == REPORT_OUTPUT_TYPE_KNOWLEDGE)
-                {
-                    WriterWriteF(context->report_writers[i], "}\n");
-                }
-
                 WriterClose(context->report_writers[i]);
             }
         }
@@ -400,21 +400,24 @@ void ShowPromise(const ReportContext *context, ReportOutputType type, const Prom
         v = "not specified";
     }
 
-#if defined(HAVE_NOVA)
-    Nova_ShowPromise(context, type, v, pp, indent);
-#else
     switch (type)
     {
     case REPORT_OUTPUT_TYPE_HTML:
+        /* Ugly hack: we rely on the fact we will be called twice with different report types */
+#if defined(HAVE_NOVA)
+        Nova_ShowPromise(context, type, v, pp, indent);
+#else
         ShowPromiseInReportHtml(context, v, pp, indent);
+#endif
         break;
 
     default:
     case REPORT_OUTPUT_TYPE_TEXT:
+#if !defined(HAVE_NOVA)
         ShowPromiseInReportText(context, v, pp, indent);
+#endif
         break;
     }
-#endif
 }
 
 /*******************************************************************/

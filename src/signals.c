@@ -83,6 +83,11 @@ void SelfTerminatePrelude(void)
     best_guess.log = xstrdup(CFLOG);
     YieldCurrentLock(best_guess);
     unlink(PIDFILE);
-    EndAudit();
+
+    if (THIS_AGENT_TYPE == cf_agent)
+    {
+        EndAudit();
+    }
+
     GenericDeInitialize();
 }

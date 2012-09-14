@@ -1,19 +1,15 @@
 TEX_INCLUDEDIR=$(srcdir)/../tex-include
 
-.PRECIOUS: ../../src/cf-know
+.PRECIOUS: ../../src/cf-gendoc
 
-../../src/cf-know:
-	$(MAKE) -C ../../src $(AM_MAKEFLAGS) cf-know
+../../src/cf-gendoc:
+	$(MAKE) -C ../../src $(AM_MAKEFLAGS) cf-gendoc
 
-cf3-Reference.texinfo: ../../src/cf-know \
+cf3-Reference.texinfo: ../../src/cf-gendoc \
     generate_manual.cf \
     $(filter-out cf3-Reference.texinfo,$(wildcard *.texinfo)) \
     $(wildcard */*.texinfo)
-	chmod g-w generate_manual.cf
-	$(AM_V_GEN)../../src/cf-know -f ./generate_manual.cf
-	xemacs -batch $@ -f texinfo-every-node-update \
-			 -f texinfo-all-menus-update \
-			 -f save-buffer
+	$(AM_V_GEN)../../src/cf-gendoc -i . -o $@
 
 %.html: %.texinfo
 	$(AM_V_GEN)$(MAKEINFO) \

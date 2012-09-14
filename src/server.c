@@ -100,7 +100,6 @@ static void CfGetFile(ServerFileGetState *args);
 static void CfEncryptGetFile(ServerFileGetState *args);
 static void CompareLocalHash(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer);
 static void GetServerLiteral(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted);
-static int ReceiveCollectCall(ServerConnectionState *conn, char *sendbuffer);
 static int GetServerQuery(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer);
 static int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *oldDirname);
 static int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirname);
@@ -1221,7 +1220,6 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
     char ipstring[CF_MAXVARSIZE], fqname[CF_MAXVARSIZE], username[CF_MAXVARSIZE];
     char dns_assert[CF_MAXVARSIZE], ip_assert[CF_MAXVARSIZE];
     int matched = false;
-    struct passwd *pw;
 
 #if defined(HAVE_GETADDRINFO)
     struct addrinfo query, *response = NULL, *ap;
@@ -1231,7 +1229,6 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
     int i, j;
     socklen_t len = sizeof(struct sockaddr_in);
     struct hostent *hp = NULL;
-    Item *ip_aliases = NULL, *ip_addresses = NULL;
 #endif
 
     CfDebug("Connecting host identifies itself as %s\n", buf);
@@ -1246,7 +1243,9 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
 
     ThreadLock(cft_system);
 
-    strncpy(dns_assert, ToLowerStr(fqname), CF_MAXVARSIZE - 1);
+    strlcpy(dns_assert, fqname, CF_MAXVARSIZE);
+    ToLowerStrInplace(dns_assert);
+
     strncpy(ip_assert, ipstring, CF_MAXVARSIZE - 1);
 
     ThreadUnlock(cft_system);
@@ -1272,6 +1271,7 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
 
 #else /* NOT MINGW */
 
+        struct passwd *pw;
         if ((pw = getpwnam(username)) == NULL)  /* Keep this inside mutex */
         {
             conn->uid = -2;
@@ -2833,56 +2833,6 @@ static int GetServerQuery(ServerConnectionState *conn, char *sendbuffer, char *r
 #endif
 }
 
-/********************************************************************/
-
-void TryCollectCall(void)
-{
-#ifdef HAVE_NOVA 
-# if defined(HAVE_PTHREAD)
-    pthread_t tid;
-    pthread_attr_t threadattrs;
-
-    CfOut(cf_verbose, "", " -> Spawning new thread for the collect call...\n");
-
-    pthread_attr_init(&threadattrs);
-    pthread_attr_setdetachstate(&threadattrs, PTHREAD_CREATE_DETACHED);
-
-#  ifdef HAVE_PTHREAD_ATTR_SETSTACKSIZE
-    pthread_attr_setstacksize(&threadattrs, (size_t) 1024 * 1024);
-#  endif
-
-    // This thread will eventually be appropriated to run the ServerEntryPoint
-
-    pthread_create(&tid, &threadattrs, (void *) Nova_DoTryCollectCall, (void *) NULL);
-    pthread_attr_destroy(&threadattrs);
-    
-# endif
-#else
-    CfOut(cf_verbose, "", " !! Collect calling is only supported in CFEngine Enterprise");
-#endif    
-}
-
-/********************************************************************/
-
-static int ReceiveCollectCall(ServerConnectionState *conn, char *sendbuffer)
-{
-#if defined(HAVE_NOVA) && defined(HAVE_LIBMONGOC)
-    CfOut(cf_verbose, "", "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
-    CfOut(cf_verbose, "", "  Hub: Accepting Collect Call from %s ", conn->hostname);
-    CfOut(cf_verbose, "", "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"); 
-
-    return Nova_AcceptCollectCall(conn);
-#else
-
-    CfOut(cf_verbose, "", "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
-    CfOut(cf_verbose, "", "  Collect Call are only supported in the Enterprise ");
-    CfOut(cf_verbose, "", "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"); 
-
-    return false;
-#endif
-
-}
-
 /**************************************************************/
 
 static void ReplyServerContext(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted,
@@ -3176,7 +3126,7 @@ static int TransferRights(char *filename, int sd, ServerFileGetState *args, char
 
     if (GetNamedSecurityInfo
         (filename, SE_FILE_OBJECT, OWNER_SECURITY_INFORMATION, (PSID *) & ownerSid, NULL, NULL, NULL,
-         &secDesc) == ERROR_SUCCESS)
+         (void **)&secDesc) == ERROR_SUCCESS)
     {
         if (IsValidSid((args->connect)->sid) && EqualSid(ownerSid, (args->connect)->sid))
         {
@@ -3432,37 +3382,3 @@ static int cfscanf(char *in, int len1, int len2, char *out1, char *out2, char *o
 
     return (len1 + len2 + len3 + 2);
 }
-
-/***************************************************************/
-
-#if !defined(HAVE_GETADDRINFO)
-in_addr_t GetInetAddr(char *host)
-{
-    struct in_addr addr;
-    struct hostent *hp;
-
-    addr.s_addr = inet_addr(host);
-
-    if ((addr.s_addr == INADDR_NONE) || (addr.s_addr == 0))
-    {
-        if ((hp = gethostbyname(host)) == 0)
-        {
-            FatalError("host not found: %s", host);
-        }
-
-        if (hp->h_addrtype != AF_INET)
-        {
-            FatalError("unexpected address family: %d\n", hp->h_addrtype);
-        }
-
-        if (hp->h_length != sizeof(addr))
-        {
-            FatalError("unexpected address length %d\n", hp->h_length);
-        }
-
-        memcpy((char *) &addr, hp->h_addr, hp->h_length);
-    }
-
-    return (addr.s_addr);
-}
-#endif

@@ -14,16 +14,16 @@ files:
 
     create => "true",
     perms => zub("700");
-    # or perms => default.zub("700");
+    # or perms => default:zub("700");
 
 methods:
 
-  "namespace demo" usebundle => name1.mymethod("arg1");
+  "namespace demo" usebundle => name1:mymethod("arg1");
 
-  "namespace demo" usebundle => name2.mymethod("arg1","arg2");
+  "namespace demo" usebundle => name2:mymethod("arg1","arg2");
 
   "namespace demo" usebundle => test;
-  # Or "namespace demo" usebundle => default.test;
+  # Or "namespace demo" usebundle => default:test;
 
   "namespace demo" usebundle => test_in_last_file;
  

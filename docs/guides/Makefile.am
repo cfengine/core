@@ -5,13 +5,7 @@ TEX_INCLUDEDIR = ../tex-include
 #    SpecialTopic_Comparison
 #    OrionCloudPack
 
-# Missing .png pictures:
-
 COMMON_GUIDES = \
-    Licensing \
-    NovaEvaluationGuide \
-    NovaEvaluationGuideSupplement \
-    Enterprise-2-2-OwnersManual \
     SpecialTopic_Adoption \
     SpecialTopic_Agility \
     SpecialTopic_ApplMgt \
@@ -44,10 +38,8 @@ COMMON_GUIDES = \
     SpecialTopic_Teamwork \
     SpecialTopic_Virtualization \
     SpecialTopic_Windows \
-    UpgradingCfengineNova \
     cf3-bestpractice \
     cf3-conceptguide \
-    cf3-constellation-mission-obs \
     cf3-glossary \
     cf3-quickstart \
     cf3-solutions \
@@ -57,9 +49,11 @@ COMMON_GUIDES = \
 
 HTML_ONLY_GUIDES =
 
-PDF_ONLY_GUIDES = \
-    cf3-nova-mission-portal \
-    cf3-nova-2-1-supplement
+PDF_ONLY_GUIDES =
+
+if HAVE_NOVA
+-include ../../nova/docs/Makefile.am
+endif
 
 HTML_GUIDES = $(COMMON_GUIDES) $(HTML_ONLY_GUIDES)
 
@@ -130,7 +124,7 @@ endif
 
 all: pdf html
 install-data-hook: install-pdf install-html
-dist-hook: dist-pdf-only dist-html dist-common
+dist-hook: dist-pdf-only dist-html-only dist-common
 
 EXTRA_DIST = cf3-solutions.texinfo.in CFEngineFrontPage.pdf NewLogo.pdf cfcomdoc.css
 

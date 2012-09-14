@@ -37,7 +37,7 @@ desired state management on all major operating systems.
 
 However, some operating systems are designed fundamentally different
 than others, requiring special CFEngine language features when being
-described. In this document, we highlight the Enterprise extensions provided
+described. In this document, we highlight the CFE Enterprise extensions provided
 to the Windows platform.
 
 @end quotation
@@ -129,7 +129,7 @@ memory usage is less than 30 @code{MB}.
 @sp 1
 
 The installation and set-up procedure on Windows is not different than
-that for other operating systems Enterprise runs on, so the Enterprise getting
+that for other operating systems CFE Enterprise runs on, so the CFE Enterprise getting
 started document available at @url{http://software.cfengine.com}
 applies to the Windows version as well.
 
@@ -142,11 +142,20 @@ Prompt} in Administrative mode and run @samp{msiexec -i
 cfengine-nova-VERSION-ARCH.msi} (replace @code{VERSION} and
 @code{ARCH} appropriately).
 
-Note that you need a policy hub to bootstrap to in order for
-the license to get downloaded and verified. This is required even if
-you just want to run some tests on the local machine manually. The
-policy hub needs to run a flavour of Linux, as noted in the Enterprise
-getting started document. Find the hostname or IP address of the hub, here we assume the address is '123.456.789.123' (do not bootstrap with a localhost address):
+If you are just going to test your policies on a Windows host, it is
+more efficient to not bootstrap to a policy server, but run the
+policies locally just after you create them. You can install the license
+with the @code{cf-key -l} command -- you will need to copy over the
+licensed public key as advised by @code{cf-key -l}.@footnote{Avaliable
+in CFEngine Enterprise 3.0 and beyond. Run @code{cf-key -l
+C:\path\to\license.dat} and follow the instructions.}
+
+Eventually, when you are done testing and want to bootstrap a Windows
+host to a policy server, please run the following command (against a
+Linux-based policy server, as advised in the CFE Enterprise getting
+started document). If we assume the policy server's IP address is
+'123.456.789.123', you need to run the following command to bootstrap
+the Windows host.
 
 @verbatim
    C:\Program Files\Cfengine\bin\cf-agent.exe --bootstrap --policy-server 123.456.789.123
@@ -155,13 +164,6 @@ getting started document. Find the hostname or IP address of the hub, here we as
 
 @node  Testing policies locally, Windows registry management, Installation, Top
 @unnumberedsec Testing policies locally
-
-After correctly bootstrapping, however, you can stop the CFEngine Enterprise
-service (the @code{cf-execd} process), and kill @code{cf-serverd} and
-@code{cf-monitord} to create an off-line test environment. You can
-also delete everything under @code{Cfengine\inputs} except
-@code{license.dat} and @code{cfengine_stdlib.cf} to test local
-policies manually.
 
 Create a new text file @code{Cfengine\inputs\promises.cf} and input
 the following text using your favourite text editor.
@@ -264,7 +266,7 @@ Now, if you create @samp{value1} and @samp{value2} in the key above,
 @center @image{winreg-delete,13cm,,Windows registry delete output,png}
 
 
-At the time of writing, Enterprise supports the @code{REG_DWORD} (double
+At the time of writing, CFE Enterprise supports the @code{REG_DWORD} (double
 word), @code{REG_SZ} (string) and @code{REG_EXPAND_SZ} (expandable
 string) data types, as given in the middle field of the
 @code{database_rows} list elements. See the
@@ -334,7 +336,7 @@ Windows hosts, and that Remote registry is disabled on all Windows
 CFEngine Enterprise can ensure the permissions or Access Control Lists
 (@code{ACLs}) of your Windows systems are correctly set. Windows
 @code{ACLs} are a complex topic by itself, with support for more than
-ten different permission bits and inheritance. Enterprise supports all of
+ten different permission bits and inheritance. CFE Enterprise supports all of
 this, but we will just cover the basics in this document.
 
 The following policy will ensure strict permissions on a directory
@@ -375,7 +377,7 @@ for a more in-depth discussion of the @code{ACL} options available.
 CFEngine Enterprise integrates with the Windows operating system in multiple
 ways.
 
-The CFEngine scheduler in Enterprise (@code{cf-execd}) runs as a Windows
+The CFEngine scheduler in CFE Enterprise (@code{cf-execd}) runs as a Windows
 service. This means it runs in the background and starts with Windows,
 before any user logs in. It can be configured, started and stopped
 from the ``Services'' listing in Windows, just like any other Windows
@@ -385,7 +387,7 @@ Event logs are the Windows counterpart to syslog from Unix. The main
 difference is that event logs aim to group similar log messages,
 giving each group an event id. The following event ids are defined in
 CFEngine Enterprise, allowing categorisation of the log message based on its
-type. The Enterprise event logs can be found under the ``System'' logs.
+type. The CFE Enterprise event logs can be found under the ``System'' logs.
 
 @multitable @columnfractions .4 .2 .2
 @headitem Description @tab Event ID @tab Type

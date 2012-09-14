@@ -275,7 +275,11 @@ int FSWrite(char *new, int dd, char *buf, int towrite, int *last_write_made_hole
 EditContext *NewEditContext(char *filename, Attributes a, Promise *pp);
 void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportContext *report_context);
 int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, Promise *pp);
+int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, Attributes a, Promise *pp);
 int SaveItemListAsFile(Item *liststart, const char *file, Attributes a, Promise *pp, const ReportContext *report_context);
+int SaveXmlDocAsFile(xmlDocPtr doc, const char *file, Attributes a, Promise *pp, const ReportContext *report_context);
+int BeginSaveAsFile(const char *file, char *new, char *backup, struct stat *statbuf, Attributes a, Promise *pp);
+int FinishSaveAsFile(const char *file, char *new, char *backup, struct stat *statbuf, Attributes a, Promise *pp, const ReportContext *report_context);
 int AppendIfNoSuchLine(char *filename, char *line);
 
 /* files_editline.c */
@@ -287,9 +291,6 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a,Promise *pp);
 
 int ScheduleEditXmlOperations(char *filename, Bundle *bp, Attributes a, Promise *parentp,
                               const ReportContext *report_context);
-int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, Attributes a, Promise *pp);
-int SaveXmlDocAsFile(xmlDocPtr doc, const char *file, Attributes a, Promise *pp,
-                       const ReportContext *report_context);
 int XmlCompareToFile(xmlDocPtr doc, char *file, Attributes a, Promise *pp);
 
 /* files_links.c */

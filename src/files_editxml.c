@@ -87,43 +87,44 @@ static void VerifyAttributeSet(Promise *pp);
 static void VerifyTextDeletions(Promise *pp);
 static void VerifyTextSet(Promise *pp);
 static void VerifyTextInsertions(Promise *pp);
-static int XmlSelectNode(xmlDocPtr doc, xmlNodePtr *node, Attributes a, Promise *pp);
-static int DeleteTreeInNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
-static int InsertTreeInFile(char *root, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
-static int InsertTreeInNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
-static int DeleteAttributeInNode(char *attrname, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
-static int SetAttributeInNode(char *attrname, char *attrvalue, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
-static int DeleteTextInNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
-static int SetTextInNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
-static int InsertTextInNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
-static int SanityCheckTreeDeletions(Attributes a, Promise *pp);
-static int SanityCheckTreeInsertions(Attributes a, Promise *pp);
-static int SanityCheckAttributeDeletions(Attributes a, Promise *pp);
-static int SanityCheckAttributeSet(Attributes a);
-static int SanityCheckTextDeletions(Attributes a, Promise *pp);
-static int SanityCheckTextSet(Attributes a);
-static int SanityCheckTextInsertions(Attributes a);
+static bool XmlSelectNode(xmlDocPtr doc, xmlNodePtr *node, Attributes a, Promise *pp);
+static bool DeleteTreeInNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
+static bool InsertTreeInFile(char *root, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
+static bool InsertTreeInNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
+static bool DeleteAttributeInNode(char *attrname, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
+static bool SetAttributeInNode(char *attrname, char *attrvalue, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
+static bool DeleteTextInNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
+static bool SetTextInNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
+static bool InsertTextInNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
+static bool SanityCheckTreeDeletions(Attributes a, Promise *pp);
+static bool SanityCheckTreeInsertions(Attributes a, Promise *pp);
+static bool SanityCheckAttributeDeletions(Attributes a, Promise *pp);
+static bool SanityCheckAttributeSet(Attributes a);
+static bool SanityCheckTextDeletions(Attributes a, Promise *pp);
+static bool SanityCheckTextSet(Attributes a);
+static bool SanityCheckTextInsertions(Attributes a);
 
-static int XmlDocsEqualContent(xmlDocPtr doc1, xmlDocPtr doc2, int warnings, Attributes a, Promise *pp);
-static int XmlDocsEqualMem(xmlDocPtr doc1, xmlDocPtr doc2, int warnings, Attributes a, Promise *pp);
-static int XmlNodesCompare(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
-static int XmlNodesCompareAttributes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
-static int XmlNodesCompareNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
-static int XmlNodesCompareTags(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
-static int XmlNodesCompareText(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
-static int XmlNodesSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
-static int XmlNodesSubsetOfAttributes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
-static int XmlNodesSubsetOfNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
-static int XmlNodesSubstringOfText(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
+static bool XmlDocsEqualContent(xmlDocPtr doc1, xmlDocPtr doc2, int warnings, Attributes a, Promise *pp);
+static bool XmlDocsEqualMem(xmlDocPtr doc1, xmlDocPtr doc2, int warnings, Attributes a, Promise *pp);
+static bool XmlNodesCompare(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
+static bool XmlNodesCompareAttributes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
+static bool XmlNodesCompareNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
+static bool XmlNodesCompareTags(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
+static bool XmlNodesCompareText(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
+static bool XmlNodesSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
+static bool XmlNodesSubsetOfAttributes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
+static bool XmlNodesSubsetOfNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
+static bool XmlNodesSubstringOfText(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
 xmlAttrPtr XmlVerifyAttributeInNode(const xmlChar *attrname, xmlChar *attrvalue, xmlNodePtr node, Attributes a, Promise *pp);
 xmlChar* XmlVerifyTextInNodeExact(const xmlChar *text, xmlNodePtr node, Attributes a, Promise *pp);
 xmlChar* XmlVerifyTextInNodeSubstring(const xmlChar *text, xmlNodePtr node, Attributes a, Promise *pp);
 xmlNodePtr XmlVerifyNodeInNodeExact(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
 xmlNodePtr XmlVerifyNodeInNodeSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
 
+
 xmlChar *CharToXmlChar(char* c);
 static int XmlAttributeCount(xmlNodePtr node, Attributes a, Promise *pp);
-static int XmlXPathConvergent(const char* xpath, Attributes a, Promise *pp);
+static bool XmlXPathConvergent(const char* xpath, Attributes a, Promise *pp);
 
 /*****************************************************************************/
 /* Level                                                                     */
@@ -686,7 +687,7 @@ static void VerifyTextInsertions(Promise *pp)
 /* Level                                                                   */
 /***************************************************************************/
 
-static int XmlSelectNode(xmlDocPtr doc, xmlNodePtr *docnode, Attributes a, Promise *pp)
+static bool XmlSelectNode(xmlDocPtr doc, xmlNodePtr *docnode, Attributes a, Promise *pp)
 /*
 
 This should provide pointers to the edit node within the xml document.
@@ -778,7 +779,7 @@ If no such node matches, docnode should point to NULL
 /* Level                                                                   */
 /***************************************************************************/
 
-static int InsertTreeInFile(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
+static bool InsertTreeInFile(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
 {
     xmlNodePtr treenode = NULL, rootnode = NULL;
     xmlChar *buf = NULL;
@@ -848,7 +849,7 @@ static int InsertTreeInFile(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, At
 
 /***************************************************************************/
 
-static int DeleteTreeInNode(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
+static bool DeleteTreeInNode(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
 {
     xmlNodePtr treenode = NULL;
     xmlNodePtr deletetree = NULL;
@@ -907,7 +908,7 @@ static int DeleteTreeInNode(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, At
 
 /***************************************************************************/
 
-static int InsertTreeInNode(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
+static bool InsertTreeInNode(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
 {
     xmlNodePtr treenode = NULL;
     xmlChar *buf = NULL;
@@ -977,7 +978,7 @@ static int InsertTreeInNode(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, At
 
 /***************************************************************************/
 
-static int DeleteAttributeInNode(char *rawname, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
+static bool DeleteAttributeInNode(char *rawname, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
 {
     xmlAttrPtr attr = NULL;
     xmlChar *name = NULL;
@@ -1030,7 +1031,7 @@ static int DeleteAttributeInNode(char *rawname, xmlDocPtr doc, xmlNodePtr docnod
 
 /***************************************************************************/
 
-static int SetAttributeInNode(char *rawname, char *rawvalue, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
+static bool SetAttributeInNode(char *rawname, char *rawvalue, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
 {
     xmlAttrPtr attr = NULL;
     xmlChar *name = NULL;
@@ -1091,7 +1092,7 @@ static int SetAttributeInNode(char *rawname, char *rawvalue, xmlDocPtr doc, xmlN
 
 /***************************************************************************/
 
-static int DeleteTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
+static bool DeleteTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
 {
     xmlChar *text = NULL;
 
@@ -1137,7 +1138,7 @@ static int DeleteTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, At
 
 /***************************************************************************/
 
-static int SetTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
+static bool SetTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
 {
     xmlChar *text = NULL;
 
@@ -1183,7 +1184,7 @@ static int SetTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attri
 
 /***************************************************************************/
 
-static int InsertTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
+static bool InsertTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
 {
     xmlChar *text = NULL;
 
@@ -1231,266 +1232,102 @@ static int InsertTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, At
 /* Level                                                                   */
 /***************************************************************************/
 
-static int SanityCheckTreeDeletions(Attributes a, Promise *pp)
+static bool SanityCheckTreeDeletions(Attributes a, Promise *pp)
 {
-    int ok = true;
-
     if(!a.xml.haveselectxpathregion)
     {
         CfOut(cf_error, "",
               " !! Tree deletion requires select_xpath_region to be specified");
-        ok = false;
-    }
-
-    return ok;
-}
-
-/***************************************************************************/
-
-static int SanityCheckTreeInsertions(Attributes a, Promise *pp)
-{
-    int ok = true;
-
-    if((a.xml.haveselectxpathregion && !xmlDocGetRootElement(pp->edcontext->xmldoc)))
-    {
-        CfOut(cf_error, "",
-              " !! Tree insertion into an empty file, using select_xpath_region, does not make sense");
-        ok = false;
-    }
-
-    else if((!a.xml.haveselectxpathregion &&  xmlDocGetRootElement(pp->edcontext->xmldoc)))
-    {
-        CfOut(cf_error, "Tree insertion requires select_xpath_region to be specified, unless inserting into an empty file",
-              " !! ");
-        ok = false;
-    }
-
-    return ok;
-}
-
-/***************************************************************************/
-
-static int SanityCheckAttributeDeletions(Attributes a, Promise *pp)
-{
-    int ok = true;
-
-    if(!(a.xml.haveselectxpathregion))
-    {
-        CfOut(cf_error, "",
-              " !! Attribute deletion requires select_xpath_region to be specified");
-        ok = false;
-    }
-
-    return ok;
-}
-
-/***************************************************************************/
-
-static int SanityCheckAttributeSet(Attributes a)
-{
-    int ok = true;
-
-    if(!(a.xml.haveselectxpathregion))
-    {
-        CfOut(cf_error, "",
-              " !! Attribute insertion requires select_xpath_region to be specified");
-        ok = false;
-    }
-
-    return ok;
-}
-
-/***************************************************************************/
-
-static int SanityCheckTextDeletions(Attributes a, Promise *pp)
-{
-    int ok = true;
-
-    if(!(a.xml.haveselectxpathregion))
-    {
-        CfOut(cf_error, "",
-              " !! Tree insertion requires select_xpath_region to be specified");
-        ok = false;
-    }
-
-    return ok;
-}
-
-/***************************************************************************/
-
-static int SanityCheckTextSet(Attributes a)
-{
-    int ok = true;
-
-    if(!(a.xml.haveselectxpathregion))
-    {
-        CfOut(cf_error, "",
-              " !! Tree insertion requires select_xpath_region to be specified");
-        ok = false;
-    }
-
-    return ok;
-}
-
-/***************************************************************************/
-
-static int SanityCheckTextInsertions(Attributes a)
-{
-    int ok = true;
-
-    if(!(a.xml.haveselectxpathregion))
-    {
-        CfOut(cf_error, "",
-              " !! Tree insertion requires select_xpath_region to be specified");
-        ok = false;
-    }
-
-    return ok;
-}
-
-/*********************************************************************/
-/* Level                                                             */
-/*********************************************************************/
-
-int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, Attributes a, Promise *pp)
-{
-    struct stat statbuf;
-
-    if (cfstat(file, &statbuf) == -1)
-    {
-        CfOut(cf_verbose, "stat", " ** Information: the proposed file \"%s\" could not be loaded", file);
-        return false;
-    }
-
-    if (a.edits.maxfilesize != 0 && statbuf.st_size > a.edits.maxfilesize)
-    {
-        CfOut(cf_inform, "", " !! File %s is bigger than the limit edit.max_file_size = %jd > %d bytes\n", file,
-              (intmax_t) statbuf.st_size, a.edits.maxfilesize);
-        return false;
-    }
-
-    if (!S_ISREG(statbuf.st_mode))
-    {
-        cfPS(cf_inform, CF_INTERPT, "", pp, a, "%s is not a plain file\n", file);
-        return false;
-    }
-
-    if (statbuf.st_size == 0)
-    {
-        if ((*doc = xmlNewDoc(BAD_CAST "1.0")) == NULL)
-        {
-            cfPS(cf_inform, CF_INTERPT, "xmlParseFile", pp, a, "Document %s not parsed successfully\n", file);
-            return false;
-        }
-    }
-    else if ((*doc = xmlParseFile(file)) == NULL)
-    {
-        cfPS(cf_inform, CF_INTERPT, "xmlParseFile", pp, a, "Document %s not parsed successfully\n", file);
         return false;
     }
 
     return true;
 }
 
-/*********************************************************************/
+/***************************************************************************/
 
-int SaveXmlDocAsFile(xmlDocPtr doc, const char *file, Attributes a, Promise *pp,
-                       const ReportContext *report_context)
+static bool SanityCheckTreeInsertions(Attributes a, Promise *pp)
 {
-    struct stat statbuf;
-    char new[CF_BUFSIZE], backup[CF_BUFSIZE];
-    mode_t mask;
-    char stamp[CF_BUFSIZE];
-    time_t stamp_now;
-
-#ifdef WITH_SELINUX
-    int selinux_enabled = 0;
-    security_context_t scontext = NULL;
-
-    selinux_enabled = (is_selinux_enabled() > 0);
-
-    if (selinux_enabled)
+    if((a.xml.haveselectxpathregion && !xmlDocGetRootElement(pp->edcontext->xmldoc)))
     {
-        /* get current security context */
-        getfilecon(file, &scontext);
-    }
-#endif
-
-    stamp_now = time((time_t *) NULL);
-
-    if (cfstat(file, &statbuf) == -1)
-    {
-        cfPS(cf_error, CF_FAIL, "stat", pp, a, " !! Can no longer access file %s, which needed editing!\n", file);
+        CfOut(cf_error, "",
+              " !! Tree insertion into an empty file, using select_xpath_region, does not make sense");
         return false;
     }
 
-    strcpy(backup, file);
-
-    if (a.edits.backup == cfa_timestamp)
+    else if((!a.xml.haveselectxpathregion &&  xmlDocGetRootElement(pp->edcontext->xmldoc)))
     {
-        snprintf(stamp, CF_BUFSIZE, "_%jd_%s", (intmax_t) CFSTARTTIME, CanonifyName(cf_ctime(&stamp_now)));
-        strcat(backup, stamp);
-    }
-
-    strcat(backup, ".cf-before-edit");
-
-    strcpy(new, file);
-    strcat(new, ".cf-after-edit");
-    unlink(new);                /* Just in case of races */
-
-    if (xmlSaveFile(new, doc) == -1)
-    {
-        cfPS(cf_error, CF_FAIL, "xmlSaveFile", pp, a, "Failed to write xml document to file %s after editing\n", new);
+        CfOut(cf_error, "Tree insertion requires select_xpath_region to be specified, unless inserting into an empty file",
+              " !! ");
         return false;
     }
 
-    cfPS(cf_inform, CF_CHG, "", pp, a, " -> Edited xml file %s \n", file);
+    return true;
+}
 
-    if (cf_rename(file, backup) == -1)
+/***************************************************************************/
+
+static bool SanityCheckAttributeDeletions(Attributes a, Promise *pp)
+{
+    if(!(a.xml.haveselectxpathregion))
     {
-        cfPS(cf_error, CF_FAIL, "cf_rename", pp, a,
-             " !! Can't rename %s to %s - so promised edits could not be moved into place\n", file, backup);
+        CfOut(cf_error, "",
+              " !! Attribute deletion requires select_xpath_region to be specified");
         return false;
     }
 
-    if (a.edits.backup == cfa_rotate)
-    {
-        RotateFiles(backup, a.edits.rotate);
-        unlink(backup);
-    }
+    return true;
+}
 
-    if (a.edits.backup != cfa_nobackup)
-    {
-        if (ArchiveToRepository(backup, a, pp, report_context))
-        {
-            unlink(backup);
-        }
-    }
-    else
-    {
-        unlink(backup);
-    }
+/***************************************************************************/
 
-    if (cf_rename(new, file) == -1)
+static bool SanityCheckAttributeSet(Attributes a)
+{
+    if(!(a.xml.haveselectxpathregion))
     {
-        cfPS(cf_error, CF_FAIL, "cf_rename", pp, a,
-             " !! Can't rename %s to %s - so promised edits could not be moved into place\n", new, file);
+        CfOut(cf_error, "",
+              " !! Attribute insertion requires select_xpath_region to be specified");
         return false;
     }
+    return true;
+}
 
-    mask = umask(0);
-    cf_chmod(file, statbuf.st_mode);    /* Restore file permissions etc */
-    chown(file, statbuf.st_uid, statbuf.st_gid);
-    umask(mask);
+/***************************************************************************/
 
-#ifdef WITH_SELINUX
-    if (selinux_enabled)
+static bool SanityCheckTextDeletions(Attributes a, Promise *pp)
+{
+    if(!(a.xml.haveselectxpathregion))
     {
-        /* restore file context */
-        setfilecon(file, scontext);
+        CfOut(cf_error, "",
+              " !! Tree insertion requires select_xpath_region to be specified");
+        return false;
     }
-#endif
+    return true;
+}
 
+/***************************************************************************/
+
+static bool SanityCheckTextSet(Attributes a)
+{
+    if(!(a.xml.haveselectxpathregion))
+    {
+        CfOut(cf_error, "",
+              " !! Tree insertion requires select_xpath_region to be specified");
+        return false;
+    }
+    return true;
+}
+
+/***************************************************************************/
+
+static bool SanityCheckTextInsertions(Attributes a)
+{
+    if(!(a.xml.haveselectxpathregion))
+    {
+        CfOut(cf_error, "",
+              " !! Tree insertion requires select_xpath_region to be specified");
+        return false;
+    }
     return true;
 }
 
@@ -1539,7 +1376,7 @@ int XmlCompareToFile(xmlDocPtr doc, char *file, Attributes a, Promise *pp)
 
 /*********************************************************************/
 
-static int XmlDocsEqualContent(xmlDocPtr doc1, xmlDocPtr doc2, int warnings, Attributes a, Promise *pp)
+static bool XmlDocsEqualContent(xmlDocPtr doc1, xmlDocPtr doc2, int warnings, Attributes a, Promise *pp)
 {
     xmlNodePtr root1 = NULL;
     xmlNodePtr root2 = NULL;
@@ -1575,7 +1412,7 @@ static int XmlDocsEqualContent(xmlDocPtr doc1, xmlDocPtr doc2, int warnings, Att
 }
 /*********************************************************************/
 
-static int XmlDocsEqualMem(xmlDocPtr doc1, xmlDocPtr doc2, int warnings, Attributes a, Promise *pp)
+static bool XmlDocsEqualMem(xmlDocPtr doc1, xmlDocPtr doc2, int warnings, Attributes a, Promise *pp)
 {
     xmlChar *mem1;
     xmlChar *mem2;
@@ -1607,11 +1444,9 @@ static int XmlDocsEqualMem(xmlDocPtr doc1, xmlDocPtr doc2, int warnings, Attribu
     return equal;
 }
 
-/*********************************************************************/
-/* Level                                                             */
-/*********************************************************************/
+/***************************************************************************/
 
-static int XmlNodesCompare(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
+static bool XmlNodesCompare(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
 /* Does node1 contain all content(tag/attributes/text/nodes) found in node2? */
 {
     xmlNodePtr copynode1, copynode2;
@@ -1658,7 +1493,7 @@ static int XmlNodesCompare(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Pro
 
 /*********************************************************************/
 
-static int XmlNodesCompareAttributes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
+static bool XmlNodesCompareAttributes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
 /* Does node1 contain same attributes found in node2? */
 {
     xmlNodePtr copynode1, copynode2;
@@ -1726,7 +1561,7 @@ static int XmlNodesCompareAttributes(xmlNodePtr node1, xmlNodePtr node2, Attribu
 
 /*********************************************************************/
 
-static int XmlNodesCompareNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
+static bool XmlNodesCompareNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
 /* Does node1 contain same nodes found in node2? */
 {
     xmlNodePtr copynode1, copynode2;
@@ -1775,7 +1610,7 @@ static int XmlNodesCompareNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a
 
 /*********************************************************************/
 
-static int XmlNodesCompareTags(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
+static bool XmlNodesCompareTags(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
 /* Does node1 contain same tag found in node2? */
 {
     xmlNodePtr copynode1, copynode2;
@@ -1817,7 +1652,7 @@ static int XmlNodesCompareTags(xmlNodePtr node1, xmlNodePtr node2, Attributes a,
 
 /*********************************************************************/
 
-static int XmlNodesCompareText(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
+static bool XmlNodesCompareText(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
 /* Does node1 contain same text found in node2? */
 {
     xmlChar *text1 = NULL, *text2 = NULL;
@@ -1857,7 +1692,7 @@ static int XmlNodesCompareText(xmlNodePtr node1, xmlNodePtr node2, Attributes a,
 
 /*********************************************************************/
 
-static int XmlNodesSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
+static bool XmlNodesSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
 /* Does node1 contain matching subset of content(tag/attributes/text/nodes) found in node2? */
 {
     xmlNodePtr copynode1, copynode2;
@@ -1904,7 +1739,7 @@ static int XmlNodesSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Prom
 
 /*********************************************************************/
 
-static int XmlNodesSubsetOfAttributes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
+static bool XmlNodesSubsetOfAttributes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
 /* Does node1 contain matching subset of attributes found in node2? */
 {
     xmlNodePtr copynode1, copynode2;
@@ -1960,7 +1795,7 @@ static int XmlNodesSubsetOfAttributes(xmlNodePtr node1, xmlNodePtr node2, Attrib
 
 /*********************************************************************/
 
-static int XmlNodesSubsetOfNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
+static bool XmlNodesSubsetOfNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
 /* Does node1 contain matching subset of nodes found in node2? */
 {
     xmlNodePtr copynode1, copynode2;
@@ -2001,7 +1836,7 @@ static int XmlNodesSubsetOfNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes 
 
 /*********************************************************************/
 
-static int XmlNodesSubstringOfText(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
+static bool XmlNodesSubstringOfText(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
 /* Does node1 contain matching substring of text found in node2? */
 {
     xmlChar *text1, *text2;
@@ -2215,7 +2050,7 @@ static int XmlAttributeCount(xmlNodePtr node, Attributes a, Promise *pp)
 
 /*********************************************************************/
 
-static int XmlXPathConvergent(const char* xpath, Attributes a, Promise *pp)
+static bool XmlXPathConvergent(const char* xpath, Attributes a, Promise *pp)
 {
     //verify that xpath does not contain position specific content: [#] [last()] [position()]
     const char *regexp = "\\[\\s*\\d+\\s*\\]|\\[\\s*last\\(\\).*\\]|\\[\\s*position\\(\\).*\\]";

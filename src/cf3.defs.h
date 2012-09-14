@@ -29,8 +29,10 @@
 #include "rlist.h"
 #include "compiler.h"
 
+#ifdef HAVE_LIBXML2
 #include <libxml/parser.h>
 #include <libxml/xpathInternals.h>
+#endif
 
 /*******************************************************************/
 /* Preprocessor tricks                                             */
@@ -1134,7 +1136,10 @@ typedef struct
     Item *file_classes;
     int num_edits;
     int empty_first;
+#ifdef HAVE_LIBXML2
     xmlDocPtr xmldoc;
+#endif
+
 } EditContext;
 
 /*************************************************************************/

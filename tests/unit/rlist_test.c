@@ -120,6 +120,40 @@ static void test_last(void **state)
     DeleteRlist(l);
 }
 
+static bool is_even(void *item)
+{
+    int *i = item;
+    return *i % 2 == 0;
+}
+
+static void test_filter(void **state)
+{
+    Rlist *list = NULL;
+    for (int i = 0; i < 10; i++)
+    {
+        void *item = xmemdup(&i, sizeof(int));
+        AppendRlistAlien(&list, item);
+    }
+
+    assert_int_equal(10, RlistLen(list));
+    RlistFilter(&list, is_even, free);
+    assert_int_equal(5, RlistLen(list));
+
+    int i = 0;
+    for (Rlist *rp = list; rp; rp = rp->next)
+    {
+        int *k = rp->item;
+        assert_int_equal(i, *k);
+
+        free(k);
+        rp->item = NULL;
+
+        i += 2;
+    }
+
+    DeleteRlist(list);
+}
+
 int main()
 {
     const UnitTest tests[] =
@@ -135,6 +169,7 @@ int main()
         unit_test(test_rval_to_fncall),
         unit_test(test_rval_to_fncall2),
         unit_test(test_last),
+        unit_test(test_filter)
     };
 
     return run_tests(tests);

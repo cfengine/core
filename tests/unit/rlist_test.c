@@ -154,6 +154,22 @@ static void test_filter(void **state)
     DeleteRlist(list);
 }
 
+static void test_filter_everything(void **state)
+{
+    Rlist *list = NULL;
+    for (int i = 1; i < 10; i += 2)
+    {
+        void *item = xmemdup(&i, sizeof(int));
+        AppendRlistAlien(&list, item);
+    }
+
+    assert_int_equal(5, RlistLen(list));
+    RlistFilter(&list, is_even, free);
+    assert_int_equal(0, RlistLen(list));
+
+    assert_true(list == NULL);
+}
+
 int main()
 {
     const UnitTest tests[] =
@@ -169,7 +185,8 @@ int main()
         unit_test(test_rval_to_fncall),
         unit_test(test_rval_to_fncall2),
         unit_test(test_last),
-        unit_test(test_filter)
+        unit_test(test_filter),
+        unit_test(test_filter_everything)
     };
 
     return run_tests(tests);

@@ -1236,6 +1236,10 @@ void RlistFilter(Rlist **list, _Bool (*KeepPredicate)(void *), void (*DestroyIte
             {
                 prev->next = rp->next;
             }
+            else
+            {
+                *list = rp->next;
+            }
 
             if (DestroyItem)
             {

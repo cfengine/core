@@ -75,6 +75,6 @@ int CountChar(const char *string, char sp);
 void ReplaceChar(char *in, char *out, int outSz, char from, char to);
 void ReplaceTrailingChar(char *str, char from, char to);
 void ReplaceTrailingStr(char *str, char *from, char to);
-char *EscapeCharCopy(char *str, char to_escape, char escape_with);
+char *EscapeCharCopy(const char *str, char to_escape, char escape_with);
 
 #endif

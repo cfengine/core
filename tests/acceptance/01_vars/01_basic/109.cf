@@ -1,0 +1,43 @@
+# Test that classes in common bundles can be passed across bundles and namespaces
+
+body common control
+{
+  inputs => { "../../default.cf.sub", "109.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle agent init
+{
+vars:
+  "dummy" string => "dummy";
+}
+
+bundle common shared
+{
+  classes:
+      "shared_class" expression => "any";
+}
+
+bundle agent test
+{
+  methods:
+      "shared" usebundle => shared;
+      "namespaced" usebundle => ns109:pass();
+}
+
+bundle agent check
+{
+classes:
+  "ok" expression => strcmp("works", "$(ns109:pass.shared_dependent)");
+
+reports:
+  DEBUG::
+    "The class expression in ns109:pass() was $(ns109:pass.class_needed)";
+  ok::
+    "$(this.promise_filename) Pass";
+  !ok::
+    "$(this.promise_filename) FAIL";
+}

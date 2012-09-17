@@ -171,3 +171,22 @@ time_t MeasurementSlotStart(time_t t)
 {
     return (t - t % (time_t)CF_MEASURE_INTERVAL);
 }
+
+time_t MeasurementSlotTime(size_t slot, size_t num_slots, time_t now)
+{
+    assert(slot <= num_slots);
+
+    size_t start_slot = GetTimeSlot(now);
+    size_t distance = 0;
+    if (slot <= start_slot)
+    {
+        distance = start_slot - slot;
+    }
+    else
+    {
+        distance = start_slot + (num_slots - slot - 1);
+    }
+
+    time_t start_time = MeasurementSlotStart(now);
+    return start_time - (distance * CF_MEASURE_INTERVAL);
+}

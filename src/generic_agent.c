@@ -1463,12 +1463,12 @@ static void VerifyPromises(Policy *policy, Rlist *bundlesequence,
 
     for (rp = BODYPARTS; rp != NULL; rp = rp->next)
     {
-    char namespace[CF_BUFSIZE],name[CF_BUFSIZE];
-    char fqname[CF_BUFSIZE];
+        char namespace[CF_BUFSIZE],name[CF_BUFSIZE];
+        char fqname[CF_BUFSIZE];
 
-    // This is a bit messy because tracking the namespace is not natural with the existing structures here
-    
-        sscanf((char *)rp->item,"%[^.].%s",namespace,name); 
+        // This is a bit messy because tracking the namespace is not natural with the existing structures here
+
+        sscanf((char *)rp->item,"%[^:]:%s",namespace,name); 
 
         if (strcmp(namespace,"default") == 0)
         {
@@ -1496,8 +1496,7 @@ static void VerifyPromises(Policy *policy, Rlist *bundlesequence,
 
             if (!IGNORE_MISSING_BUNDLES && !IsCf3VarString(rp->item) && !IsBundle(policy->bundles, (char *) rp->item))
             {
-                CfOut(cf_error, "", "Undeclared promise bundle \"%s()\" was referenced in a promise\n",
-                      (char *) rp->item);
+                CfOut(cf_error, "", "Undeclared promise bundle \"%s()\" was referenced in a promise\n", (char *) rp->item);
                 ERRORCOUNT++;
             }
             break;

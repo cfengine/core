@@ -415,7 +415,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
     Bundle *bp;
     void *vp;
     FnCall *fp;
-    char edit_bundle_name[CF_BUFSIZE], lockname[CF_BUFSIZE];
+    char edit_bundle_name[CF_BUFSIZE], lockname[CF_BUFSIZE], *method_deref;
     Rlist *params = { 0 };
     int retval = false;
     CfLock thislock;
@@ -442,15 +442,6 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
 
     if (a.haveeditline)
     {
-        if (strcmp(pp->namespace,"default") == 0)
-           {
-           strcpy(edit_bundle_name,"");
-           }
-        else
-           {
-           snprintf(edit_bundle_name,CF_BUFSIZE-1, "%s_",pp->namespace);
-           }
-
         if ((vp = GetConstraintValue("edit_line", pp, CF_FNCALL)))
         {
             fp = (FnCall *) vp;
@@ -469,11 +460,19 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
             return false;
         }
 
+        if (strncmp(edit_bundle_name,"default:",strlen("default:")) == 0)
+           {
+           method_deref = strchr(edit_bundle_name,':') + 1;
+           }
+        else
+           {
+           method_deref = edit_bundle_name;
+           }        
 
-        CfOut(cf_verbose, "", " -> Handling file edits in edit_line bundle %s\n", edit_bundle_name);
+        CfOut(cf_verbose, "", " -> Handling file edits in edit_line bundle %s\n", method_deref);
 
         // add current filename to context - already there?
-        if ((bp = GetBundle(policy, edit_bundle_name, "edit_line")))
+        if ((bp = GetBundle(policy, method_deref, "edit_line")))
         {
             BannerSubBundle(bp, params);
 
@@ -481,7 +480,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
             NewScope(bp->name);
             HashVariables(policy, bp->name, report_context);
 
-            AugmentScope(bp->name, bp->args, params);
+            AugmentScope(bp->name, bp->namespace, bp->args, params);
             PushPrivateClassContext(a.edits.inherit);
             retval = ScheduleEditLineOperations(filename, bp, a, pp, report_context);
             PopPrivateClassContext();
@@ -492,15 +491,6 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
 
     if (a.haveeditxml)
     {
-        if (strcmp(pp->namespace,"default") == 0)
-           {
-           strcpy(edit_bundle_name,"");
-           }
-        else
-           {
-           snprintf(edit_bundle_name,CF_BUFSIZE-1, "%s_",pp->namespace);
-           }
-
         if ((vp = GetConstraintValue("edit_xml", pp, CF_FNCALL)))
         {
             fp = (FnCall *) vp;
@@ -519,10 +509,18 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
             return false;
         }
 
+        if (strncmp(edit_bundle_name,"default:",strlen("default:")) == 0)
+           {
+           method_deref = strchr(edit_bundle_name,':') + 1;
+           }
+        else
+           {
+           method_deref = edit_bundle_name;
+           }
+        
+        CfOut(cf_verbose, "", " -> Handling file edits in edit_xml bundle %s\n", method_deref);
 
-        CfOut(cf_verbose, "", " -> Handling file edits in edit_xml bundle %s\n", edit_bundle_name);
-
-        if ((bp = GetBundle(policy, edit_bundle_name, "edit_xml")))
+        if ((bp = GetBundle(policy, method_deref, "edit_xml")))
         {
             BannerSubBundle(bp, params);
 
@@ -530,7 +528,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
             NewScope(bp->name);
             HashVariables(policy, bp->name, report_context);
 
-            AugmentScope(bp->name, bp->args, params);
+            AugmentScope(bp->name, bp->namespace, bp->args, params);
             PushPrivateClassContext(a.edits.inherit);
             retval = ScheduleEditXmlOperations(filename, bp, a, pp, report_context);
             PopPrivateClassContext();
@@ -562,10 +560,6 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
     YieldCurrentLock(thislock);
     return retval;
 }
-
-/*****************************************************************************/
-/* Level                                                                     */
-/*****************************************************************************/
 
 /*****************************************************************************/
 /* Level                                                                     */
@@ -1688,8 +1682,6 @@ void RotateFiles(char *name, int number)
     int i, fd;
     struct stat statbuf;
     char from[CF_BUFSIZE], to[CF_BUFSIZE];
-    Attributes attr = { {0} };
-    Promise dummyp = { 0 };
 
     if (IsItemIn(ROTATED, name))
     {
@@ -1748,11 +1740,8 @@ void RotateFiles(char *name, int number)
     }
 
     snprintf(to, CF_BUFSIZE, "%s.1", name);
-    memset(&dummyp, 0, sizeof(dummyp));
-    memset(&attr, 0, sizeof(attr));
-    dummyp.this_server = "localdisk";
 
-    if (CopyRegularFileDisk(name, to, attr, &dummyp) == -1)
+    if (CopyRegularFileDisk(name, to, false) == -1)
     {
         CfDebug("cfengine: copy failed in RotateFiles %s -> %s\n", name, to);
         return;

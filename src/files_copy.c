@@ -129,7 +129,29 @@ void CheckForFileHoles(struct stat *sstat, Promise *pp)
 
 /*********************************************************************/
 
-int CopyRegularFileDisk(char *source, char *new, Attributes attr, Promise *pp)
+bool CopyRegularFileDiskReport(char *source, char *destination, Attributes attr, Promise *pp)
+// TODO: return error codes in CopyRegularFileDisk and print them to cfPS here
+{
+    bool make_holes = false;
+
+    if(pp && pp->makeholes)
+    {
+        make_holes = true;
+    }
+
+    bool result = CopyRegularFileDisk(source, destination, make_holes);
+
+    if(!result)
+    {
+        cfPS(cf_inform, CF_FAIL, "", pp, attr, "Failed copying file %s to %s", source, destination);
+    }
+
+    return result;
+}
+
+/*********************************************************************/
+
+bool CopyRegularFileDisk(char *source, char *destination, bool make_holes)
 {
     int sd, dd, buf_size;
     char *buf, *cp;
@@ -140,18 +162,16 @@ int CopyRegularFileDisk(char *source, char *new, Attributes attr, Promise *pp)
     if ((sd = open(source, O_RDONLY | O_BINARY)) == -1)
     {
         CfOut(cf_inform, "open", "Can't copy %s!\n", source);
-        unlink(new);
+        unlink(destination);
         return false;
     }
 
-    unlink(new);                /* To avoid link attacks */
+    unlink(destination);                /* To avoid link attacks */
 
-    if ((dd = open(new, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, 0600)) == -1)
+    if ((dd = open(destination, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, 0600)) == -1)
     {
-        cfPS(cf_inform, CF_FAIL, "open", pp, attr,
-             "Copy %s possible security violation (race) or permission denied (Not copied)\n", new);
         close(sd);
-        unlink(new);
+        unlink(destination);
         return false;
     }
 
@@ -182,7 +202,7 @@ int CopyRegularFileDisk(char *source, char *new, Attributes attr, Promise *pp)
 
         intp = 0;
 
-        if (pp && pp->makeholes)
+        if (make_holes)
         {
             buf[n_read] = 1;    /* Sentinel to stop loop.  */
 
@@ -210,9 +230,9 @@ int CopyRegularFileDisk(char *source, char *new, Attributes attr, Promise *pp)
                 /* Make a hole.  */
                 if (lseek(dd, (off_t) n_read, SEEK_CUR) < 0L)
                 {
-                    CfOut(cf_error, "lseek", "Copy failed (no space?) while doing %s to %s\n", source, new);
+                    CfOut(cf_error, "lseek", "Copy failed (no space?) while doing %s to %s\n", source, destination);
                     free(buf);
-                    unlink(new);
+                    unlink(destination);
                     close(dd);
                     close(sd);
                     return false;
@@ -230,11 +250,11 @@ int CopyRegularFileDisk(char *source, char *new, Attributes attr, Promise *pp)
         {
             if (FullWrite(dd, buf, n_read) < 0)
             {
-                CfOut(cf_error, "", "Copy failed (no space?) while doing %s to %s\n", source, new);
+                CfOut(cf_error, "", "Copy failed (no space?) while doing %s to %s\n", source, destination);
                 close(sd);
                 close(dd);
                 free(buf);
-                unlink(new);
+                unlink(destination);
                 return false;
             }
             last_write_made_hole = 0;
@@ -253,7 +273,7 @@ int CopyRegularFileDisk(char *source, char *new, Attributes attr, Promise *pp)
         {
             CfOut(cf_error, "write", "cfengine: full_write or ftruncate error in CopyReg\n");
             free(buf);
-            unlink(new);
+            unlink(destination);
             close(sd);
             close(dd);
             return false;

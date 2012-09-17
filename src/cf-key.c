@@ -30,8 +30,15 @@
 #include "dir.h"
 #include "reporting.h"
 
+#ifdef HAVE_NOVA
+#include "license.h"
+#endif
+
+
 int SHOWHOSTS = false;
 bool REMOVEKEYS = false;
+bool LICENSE_INSTALL = false;
+char LICENSE_SOURCE[MAX_FILENAME];
 const char *remove_keys_host;
 
 static GenericAgentConfig CheckOpts(int argc, char **argv);
@@ -40,11 +47,15 @@ static void ShowLastSeenHosts(void);
 static int RemoveKeys(const char *host);
 static void KeepKeyPromises(void);
 
+#ifndef HAVE_NOVA
+bool LicenseInstall(char *path_source);
+#endif
+
 /*******************************************************************/
 /* Command line options                                            */
 /*******************************************************************/
 
-static const char *ID = "The cfengine's generator makes key pairs for remote authentication.\n";
+static const char *ID = "The CFEngine key generator makes key pairs for remote authentication.\n";
 
 static const struct option OPTIONS[17] =
 {
@@ -55,6 +66,7 @@ static const struct option OPTIONS[17] =
     {"output-file", required_argument, 0, 'f'},
     {"show-hosts", no_argument, 0, 's'},
     {"remove-keys", required_argument, 0, 'r'},
+    {"install-license", required_argument, 0, 'l'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -67,6 +79,7 @@ static const char *HINTS[17] =
     "Specify an alternative output file than the default (localhost)",
     "Show lastseen hostnames and IP addresses",
     "Remove keys for specified hostname/IP",
+    "Install license without boostrapping (CFEngine Enterprise only)",
     NULL
 };
 
@@ -92,6 +105,12 @@ int main(int argc, char *argv[])
         return RemoveKeys(remove_keys_host);
     }
 
+    if(LICENSE_INSTALL)
+    {
+        bool success = LicenseInstall(LICENSE_SOURCE);
+        return success ? 0 : 1;
+    }
+
     KeepKeyPromises();
 
     ReportContextDestroy(report_context);
@@ -109,7 +128,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig config = GenericAgentDefaultConfig(cf_keygen);
 
-    while ((c = getopt_long(argc, argv, "dvf:VMsr:h", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvf:VMsr:hl:", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -139,16 +158,21 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
             remove_keys_host = optarg;
             break;
 
+        case 'l':
+            LICENSE_INSTALL = true;
+            strlcpy(LICENSE_SOURCE, optarg, sizeof(LICENSE_SOURCE));
+            break;
+
         case 'h':
-            Syntax("cf-key - cfengine's key generator", OPTIONS, HINTS, ID);
+            Syntax("cf-key - CFEngine's key generator", OPTIONS, HINTS, ID);
             exit(0);
 
         case 'M':
-            ManPage("cf-key - cfengine's key generator", OPTIONS, HINTS, ID);
+            ManPage("cf-key - CFEngine's key generator", OPTIONS, HINTS, ID);
             exit(0);
 
         default:
-            Syntax("cf-key - cfengine's key generator", OPTIONS, HINTS, ID);
+            Syntax("cf-key - CFEngine's key generator", OPTIONS, HINTS, ID);
             exit(1);
 
         }
@@ -291,6 +315,7 @@ static int RemoveKeys(const char *host)
     }
 }
 
+
 static void KeepKeyPromises(void)
 {
     unsigned long err;
@@ -390,3 +415,13 @@ static void KeepKeyPromises(void)
     RAND_write_file(vbuff);
     cf_chmod(vbuff, 0644);
 }
+
+
+#ifndef HAVE_NOVA
+bool LicenseInstall(char *path_source)
+{
+    CfOut(cf_error, "", "!! License installation only applies to CFEngine Enterprise");
+
+    return false;
+}
+#endif  /* HAVE_NOVA */

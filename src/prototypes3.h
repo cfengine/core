@@ -264,7 +264,8 @@ void ArgFree(char **args);
 /* files_copy.c */
 
 void *CopyFileSources(char *destination, Attributes attr, Promise *pp, const ReportContext *report_context);
-int CopyRegularFileDisk(char *source, char *new, Attributes attr, Promise *pp);
+bool CopyRegularFileDiskReport(char *source, char *destination, Attributes attr, Promise *pp);
+bool CopyRegularFileDisk(char *source, char *destination, bool make_holes);
 void CheckForFileHoles(struct stat *sstat, Promise *pp);
 int FSWrite(char *new, int dd, char *buf, int towrite, int *last_write_made_hole, int n_read, Attributes attr,
             Promise *pp);
@@ -584,7 +585,7 @@ void DeleteScope(char *name);
 Scope *GetScope(const char *scope);
 void CopyScope(const char *new_scopename, const char *old_scopename);
 void DeleteAllScope(void);
-void AugmentScope(char *scope, Rlist *lvals, Rlist *rvals);
+void AugmentScope(char *scope, char *ns, Rlist *lvals, Rlist *rvals);
 void DeleteFromScope(char *scope, Rlist *args);
 void PushThisScope(void);
 void PopThisScope(void);

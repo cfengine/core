@@ -2048,6 +2048,8 @@ static int XmlAttributeCount(xmlNodePtr node, Attributes a, Promise *pp)
     return count;
 }
 
+/*********************************************************************/
+
 static bool XmlXPathConvergent(const char* xpath, Attributes a, Promise *pp)
 /*verify that xpath does not specify position wrt sibling-axis (such as):[#] [last()] [position()] following-sibling:: preceding-sibling:: */
 {

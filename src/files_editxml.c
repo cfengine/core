@@ -2049,7 +2049,7 @@ static int XmlAttributeCount(xmlNodePtr node, Attributes a, Promise *pp)
 }
 
 static bool XmlXPathConvergent(const char* xpath, Attributes a, Promise *pp)
-/*verify that xpath does not contain position specific (such as):[#] [last()] [position()] following-sibling:: preceding-sibling:: */
+/*verify that xpath does not specify position wrt sibling-axis (such as):[#] [last()] [position()] following-sibling:: preceding-sibling:: */
 {
     const char *regexp = "\\[\\s*([^\\[\\]]*\\s*(\\||(or)|(and)))?\\s*"     // [ (stuff) (|/or/and)
         // position() (=/!=/</<=/>/>=)

@@ -50,17 +50,6 @@ char VerifyLink(char *destination, char *source, Attributes attr, Promise *pp,
 
     CfDebug("Linkfiles(%s -> %s)\n", destination, source);
 
-/*
-if (MatchRlistItem(attr.link.copy_patterns,lastnode))
-   {
-   CfOut(cf_verbose,"","cfengine: link item %s marked for copying instead\n",sourcefile);
-   LinkCopy(sourcefile,destfile,&ssb,attr,pp);
-   attr.copy_backup = true;
-   CopyFile(source,destination,ssb,attr,pp);
-   return;
-   }
-*/
-
     memset(to, 0, CF_BUFSIZE);
 
     if (!IsAbsoluteFileName(source) && (*source != '.'))        /* links without a directory reference */

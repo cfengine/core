@@ -2048,12 +2048,18 @@ static int XmlAttributeCount(xmlNodePtr node, Attributes a, Promise *pp)
     return count;
 }
 
-/*********************************************************************/
-
 static bool XmlXPathConvergent(const char* xpath, Attributes a, Promise *pp)
+/*verify that xpath does not contain position specific (such as):[#] [last()] [position()] following-sibling:: preceding-sibling:: */
 {
-    //verify that xpath does not contain position specific content: [#] [last()] [position()]
-    const char *regexp = "\\[\\s*\\d+\\s*\\]|\\[\\s*last\\(\\).*\\]|\\[\\s*position\\(\\).*\\]";
+    const char *regexp = "\\[\\s*([^\\[\\]]*\\s*(\\||(or)|(and)))?\\s*"     // [ (stuff) (|/or/and)
+        // | position() (=/!=/</<=/>/>=)
+        "((position)\\s*\\(\\s*\\)\\s*((=)|(!=)|(<)|(<=)|(>)|(>=))\\s*)?\\s*"
+        // (number) | (number) (+/-/*/div/mod) (number) | last() | last() (+/-/*/div/mod) (number)
+        "(((\\d+)\\s*|((last)\\s*\\(\\s*\\)\\s*))(((\\+)|(-)|(\\*)|(div)|(mod))\\s*(\\d+)\\s*)*)\\s*"
+        // (|/or/and) (stuff) ]
+        "((\\||(or)|(and))[^\\[\\]]*)?\\]"
+        // following:: preceding:: following-sibling:: preceding-sibling::
+        "|((following)|(preceding))(-sibling)?\\s*(::)";
 
     int ovector[OVECCOUNT], rc;
     const char *errorstr;

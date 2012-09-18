@@ -8,6 +8,12 @@ inputs => { "unit_namespace1.cf", "unit_namespace2.cf", "unit_namespace3.cf" };
 
 bundle agent main
 {
+vars: 
+
+  "alien_list" slist => { getindices("name1:mymethod.array")};
+
+  "local_list" slist => { getindices("test.array") };
+
 files:
 
  "/tmp/bla"
@@ -26,7 +32,13 @@ methods:
   # Or "namespace demo" usebundle => default:test;
 
   "namespace demo" usebundle => test_in_last_file;
- 
+
+reports:
+
+  cfengine_3::
+
+    "Foreign namespace index list: $(alien_list)";
+    "Local index list: $(local_list)";
 }
 
 
@@ -38,6 +50,12 @@ mode => "$(x)";
 
 bundle agent test
 {
+vars:
+
+  "array[one]" string => "text one";
+  "array[two]" string => "text two";
+  "array[three]" string => "text three";
+
 reports:
 
    cfengine_3::

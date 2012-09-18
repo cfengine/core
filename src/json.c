@@ -168,6 +168,14 @@ const char *JsonIteratorNextKey(JsonIterator *iter)
     return child ? child->propertyName : NULL;
 }
 
+const bool JsonIteratorHasNext(JsonIterator *iter)
+{
+    assert(iter);
+    assert(iter->container->type == JSON_ELEMENT_TYPE_CONTAINER);
+
+    return iter->index < JsonElementLength(iter->container);
+}
+
 const JsonElement *JsonIteratorNextValue(JsonIterator *iter)
 {
     assert(iter);
@@ -213,7 +221,7 @@ JsonElementType JsonIteratorCurrentElementType(JsonIterator *iter)
     return child->type;
 }
 
-JsonContainerType JsonIteratorCurrentContrainerType(JsonIterator *iter)
+JsonContainerType JsonIteratorCurrentContainerType(JsonIterator *iter)
 {
     assert(iter);
 
@@ -239,7 +247,7 @@ JsonElementType JsonGetElementType(const JsonElement *element)
     return element->type;
 }
 
-JsonContainerType JsonGetContrainerType(const JsonElement *container)
+JsonContainerType JsonGetContainerType(const JsonElement *container)
 {
     assert(container);
     assert(container->type == JSON_ELEMENT_TYPE_CONTAINER);
@@ -1373,6 +1381,62 @@ JsonElement *JsonParse(const char **data)
             CfDebug("Unwilling to parse json data starting with invalid character: %c", **data);
             return NULL;
         }
+    }
+
+    return NULL;
+}
+
+/* Convenience functions */
+const JsonElement *JsonResolvePath(JsonIterator *path_iter, JsonElement *target)
+{
+    JsonElement *retrieved = NULL;
+    JsonElement *key = NULL;
+
+    assert(path_iter);
+    assert(target);
+    assert(JSON_ELEMENT_TYPE_CONTAINER == JsonGetElementType(target));
+    assert(path_iter->container->type == JSON_ELEMENT_TYPE_CONTAINER);
+
+    if (JsonIteratorHasNext(path_iter))
+    {
+      key = JsonIteratorNextValue(path_iter);
+
+      if (NULL != key &&
+          JSON_ELEMENT_TYPE_PRIMITIVE == JsonIteratorCurrentElementType(path_iter))
+      {
+        if (JSON_PRIMITIVE_TYPE_STRING == JsonIteratorCurrentPrimitiveType(path_iter) &&
+            JSON_CONTAINER_TYPE_OBJECT == JsonGetContainerType(target))
+        {
+          retrieved = JsonObjectGet(target, JsonPrimitiveGetAsString(key));
+        }
+        else if (JSON_PRIMITIVE_TYPE_INTEGER == JsonIteratorCurrentPrimitiveType(path_iter) &&
+                 JSON_CONTAINER_TYPE_ARRAY == JsonGetContainerType(target))
+        {
+          retrieved = JsonArrayGetAsObject(target, JsonPrimitiveGetAsInteger(key));
+        }
+      }
+      else
+      {
+        return NULL;
+      }
+    }
+    else
+    {
+      return target;
+    }
+
+    if (NULL == retrieved)
+    {
+      return NULL;
+    }
+
+    if (JSON_ELEMENT_TYPE_PRIMITIVE == JsonGetElementType(retrieved))
+    {
+      return retrieved;
+    }
+    else if (JSON_ELEMENT_TYPE_CONTAINER == JsonGetElementType(retrieved))
+    {
+      return JsonResolvePath(path_iter, retrieved);
     }
 
     return NULL;

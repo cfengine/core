@@ -119,12 +119,13 @@ const JsonElement *JsonIteratorNextValue(JsonIterator *iter);
 const char *JsonIteratorCurrentKey(JsonIterator *iter);
 const JsonElement *JsonIteratorCurrentValue(JsonIterator *iter);
 JsonElementType JsonIteratorCurrentElementType(JsonIterator *iter);
-JsonContainerType JsonIteratorCurrentContrainerType(JsonIterator *iter);
+JsonContainerType JsonIteratorCurrentContainerType(JsonIterator *iter);
 JsonPrimitiveType JsonIteratorCurrentPrimitiveType(JsonIterator *iter);
+const bool JsonIteratorHasNext(JsonIterator *iter);
 
 JsonElementType JsonGetElementType(const JsonElement *element);
 
-JsonContainerType JsonGetContrainerType(const JsonElement *container);
+JsonContainerType JsonGetContainerType(const JsonElement *container);
 
 JsonPrimitiveType JsonGetPrimitiveType(const JsonElement *primitive);
 const char *JsonPrimitiveGetAsString(const JsonElement *primitive);
@@ -298,5 +299,12 @@ void JsonObjectRemoveKey(JsonElement *object, const char *key);
   @param property name to be detached
   */
 JsonElement *JsonObjectDetachKey(JsonElement *object, const char *key);
+
+/**
+  @brief Resolve a path spec (iterator on strings and integers) to find an element, ending as soon as a non-container is found;
+  @param path iterator, can only contain strings and integers
+  @param target element to resolve
+  */
+const JsonElement *JsonResolvePath(JsonIterator *path_iter, JsonElement *target);
 
 #endif

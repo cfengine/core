@@ -37,6 +37,7 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "expand.h"
+#include "json.h"
 
 #include <libgen.h>
 
@@ -839,6 +840,296 @@ static FnCallResult FnCallSplayClass(FnCall *fp, Rlist *finalargs)
     {
         strcpy(buffer, "!any");
     }
+
+    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
+}
+
+/*
+FnCallIsJSONExists
+FnCallIsJSONFalse
+FnCallIsJSONArray
+FnCallIsJSONString
+FnCallIsJSONSlist
+FnCallIsJSONTrue
+FnCallReadJSONSlist
+FnCallReadJSONKeys
+
+    char name[CF_BUFSIZE], content[CF_BUFSIZE], context[CF_BUFSIZE];
+    char arg0[CF_BUFSIZE];
+    char *filename;
+
+    snprintf(arg0, CF_BUFSIZE, "%s", GetArg0(command));
+    filename = basename(arg0);
+
+    CanonifyNameInPlace(filename);
+    strcpy(context, filename);
+    CfOut(cf_verbose, "", "Module context: %s\n", context);
+
+    NewScope(context);
+    name[0] = '\0';
+    content[0] = '\0';
+
+    switch (*line)
+    {
+    case '+':
+        CfOut(cf_verbose, "", "Activated classes: %s\n", line + 1);
+        if (CheckID(line + 1))
+        {
+            NewClass(line + 1);
+        }
+        break;
+    case '-':
+        CfOut(cf_verbose, "", "Deactivated classes: %s\n", line + 1);
+        if (CheckID(line + 1))
+        {
+            NegateClassesFromString(line + 1);
+        }
+        break;
+    case '=':
+        content[0] = '\0';
+        sscanf(line + 1, "%[^=]=%[^\n]", name, content);
+
+        if (CheckID(name))
+        {
+            CfOut(cf_verbose, "", "Defined variable: %s in context %s with value: %s\n", name, context, content);
+            NewScalar(context, name, content, cf_str);
+        }
+        break;
+
+    case '@':
+        content[0] = '\0';
+        sscanf(line + 1, "%[^=]=%[^\n]", name, content);
+
+        if (CheckID(name))
+        {
+            Rlist *list = NULL;
+
+            CfOut(cf_verbose, "", "Defined variable: %s in context %s with value: %s\n", name, context, content);
+            list = ParseShownRlist(content);
+            NewList(context, name, list, cf_slist);
+        }
+        break;
+
+    case '\0':
+        break;
+
+    default:
+        if (print)
+        {
+            CfOut(cf_cmdout, "", "M \"%s\": %s\n", command, line);
+        }
+        break;
+    }
+
+*/
+
+/* convenience wrapper for the two modes or reading slists; mode = 0 for keys and 1 for slist */
+static FnCallResult InternalReadJSONKeysOrSlist(FnCall *fp, Rlist *finalargs, int mode)
+{
+    char path_buffer[CF_BUFSIZE];
+    char data_buffer[CF_BUFSIZE];
+    Rlist *newlist = NULL;
+    JsonElement *path, *obj;
+
+    memset(path_buffer, 0, sizeof(path_buffer));
+    memset(data_buffer, 0, sizeof(data_buffer));
+
+/* begin fn specific content */
+
+    const char *json_string = data_buffer;
+    strncpy(json_string, ScalarValue(finalargs), CF_BUFSIZE-1);
+    const char *json_path = path_buffer;
+    strncpy(json_path, ScalarValue(finalargs->next), CF_BUFSIZE-1);
+
+    int max = Str2Int(ScalarValue(finalargs->next->next));
+
+    if (max < 0 || THIS_AGENT_TYPE == cf_common)
+    {
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    /* TODO: how should this be limited? */
+    if (max > 5000)
+    {
+        CfOut(cf_error, "", "Too many items to read from JSON string");
+        max = 5000;
+    }
+
+    /* Accept "" as a path equivalent to "[]" */
+    if (0 == strcmp(json_path, ""))
+    {
+      strcpy(path_buffer, "[]");
+    }
+
+    CfDebug("Want to read %d keys from JSON string %s at path %s\n", max, json_string, json_path);
+    CfOut(cf_error, "", "TZZ Want to read %d keys from JSON string %s at path %s\n", max, json_string, json_path);
+
+    path = JsonParse(&json_path);
+
+    if (NULL == path)
+    {
+        CfOut(cf_inform, "", "Couldn't parse JSON path string");
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    if (JSON_ELEMENT_TYPE_CONTAINER != JsonGetElementType(path) ||
+        JSON_CONTAINER_TYPE_ARRAY != JsonGetContainerType(path))
+    {
+        CfOut(cf_inform, "", "Couldn't use JSON path string: it does not contain an array");
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    obj = JsonParse(&json_string);
+
+    if (NULL == obj)
+    {
+        JsonElementDestroy(path);
+        CfOut(cf_inform, "", "Couldn't parse JSON data string");
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    if (JSON_ELEMENT_TYPE_CONTAINER != JsonGetElementType(obj))
+    {
+        JsonElementDestroy(path);
+        JsonElementDestroy(obj);
+        CfOut(cf_inform, "", "Couldn't use JSON data string: it does not contain a container");
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    {
+      CfOut(cf_error, "", "TZZ Appending to slist from JSON string %s at path %s\n", data_buffer, path_buffer);
+      JsonIterator path_iter = JsonIteratorInit(path);
+      JsonElement *resolved = JsonResolvePath(&path_iter, obj);
+      newlist = SplitRegexAsRList("", ".", max, false);
+
+      CfOut(cf_error, "", "TZZ Appending to slist");
+      if (NULL == resolved ||
+          JSON_ELEMENT_TYPE_CONTAINER != JsonGetElementType(resolved))
+      {
+        CfOut(cf_error, "", "TZZ Empty slist: not a container");
+        PrependRScalar(&newlist, "cf_null", CF_SCALAR);
+      }
+      else if (mode == 0 && JSON_CONTAINER_TYPE_OBJECT != JsonGetContainerType(resolved))
+      {
+        CfOut(cf_error, "", "TZZ Empty slist: not an object, keys wanted");
+        PrependRScalar(&newlist, "cf_null", CF_SCALAR);
+      }
+      else if (mode == 1 && JSON_CONTAINER_TYPE_ARRAY != JsonGetContainerType(resolved))
+      {
+        CfOut(cf_error, "", "TZZ Empty slist: not an array, slist wanted");
+        PrependRScalar(&newlist, "cf_null", CF_SCALAR);
+      }
+      else
+      {
+        JsonIterator data_iter = JsonIteratorInit(resolved);
+        JsonElement *cur = NULL;
+        int i=0;
+        CfOut(cf_error, "", "TZZ iter slist");
+        while (JsonIteratorHasNext(&data_iter) && i < max)
+        {
+          cur = mode == 0 ? JsonIteratorNextKey(&data_iter) : JsonIteratorNextValue(&data_iter);
+          if (NULL == cur || JSON_ELEMENT_TYPE_PRIMITIVE != JsonIteratorCurrentElementType(&data_iter))
+          {
+            break;
+          }
+
+          PrependRScalar(&newlist, JsonPrimitiveGetAsString(cur), CF_SCALAR);
+          i++;
+        }
+      }
+    }
+
+    JsonElementDestroy(path);
+    JsonElementDestroy(obj);
+
+    return (FnCallResult) { FNCALL_SUCCESS, { newlist, CF_LIST } };
+}
+
+static FnCallResult FnCallReadJSONSlist(FnCall *fp, Rlist *finalargs)
+ /* ReadJSONSlist("{\"x\", \"y\"}", "[]", 1000) */
+{
+  return InternalReadJSONKeysOrSlist(fp, finalargs, 1);
+}
+
+static FnCallResult FnCallReadJSONKeys(FnCall *fp, Rlist *finalargs)
+ /* ReadJSONKeys("{\"x\": \"y\"}", "[]", 1000) */
+{
+  return InternalReadJSONKeysOrSlist(fp, finalargs, 0);
+}
+
+static FnCallResult FnCallReadJSONString(FnCall *fp, Rlist *finalargs)
+ /* ReadJSONString("{\"x\": \"y\"}", "[\"x\"]", 1000) */
+{
+    char buffer[CF_BUFSIZE];
+    JsonElement *path, *obj;
+    memset(buffer, 0, sizeof(buffer));
+
+/* begin fn specific content */
+
+    const char *json_string = ScalarValue(finalargs);
+    const char *json_path = ScalarValue(finalargs->next);
+    int max = Str2Int(ScalarValue(finalargs->next->next));
+
+    if (max < 0 || THIS_AGENT_TYPE == cf_common)
+    {
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    if (max > CF_BUFSIZE - 1)
+    {
+        CfOut(cf_error, "", "Too many bytes to read from JSON string");
+        max = CF_BUFSIZE - CF_BUFFERMARGIN;
+    }
+
+    CfDebug("Want to read %d bytes from JSON string %s at path %s\n", max, json_string, json_path);
+
+    path = JsonParse(&json_path);
+
+    if (NULL == path)
+    {
+        CfOut(cf_inform, "", "Couldn't parse JSON path string");
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    if (JSON_ELEMENT_TYPE_CONTAINER != JsonGetElementType(path) ||
+        JSON_CONTAINER_TYPE_ARRAY != JsonGetContainerType(path))
+    {
+        CfOut(cf_inform, "", "Couldn't use JSON path string: it does not contain an array");
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    obj = JsonParse(&json_string);
+
+    if (NULL == obj)
+    {
+        JsonElementDestroy(path);
+        CfOut(cf_inform, "", "Couldn't parse JSON data string");
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    if (JSON_ELEMENT_TYPE_CONTAINER != JsonGetElementType(obj))
+    {
+        JsonElementDestroy(path);
+        JsonElementDestroy(obj);
+        CfOut(cf_inform, "", "Couldn't use JSON data string: it does not contain a container");
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    {
+      JsonIterator path_iter = JsonIteratorInit(path);
+      JsonElement *resolved = JsonResolvePath(&path_iter, obj);
+      if (NULL == resolved)
+      {
+        sprintf(buffer, "");
+      }
+      else
+      {
+        snprintf(buffer, CF_BUFSIZE-1, "%s", JsonPrimitiveGetAsString(resolved));
+      }
+    }
+
+    JsonElementDestroy(path);
+    JsonElementDestroy(obj);
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
 }
@@ -4555,6 +4846,14 @@ FnCallArg READSTRINGLIST_ARGS[] =
     {NULL, cf_notype, NULL}
 };
 
+FnCallArg READJSON_ARGS[] =
+{
+    {CF_ANYSTRING, cf_str, "JSON string"},
+    {CF_ANYSTRING, cf_str, "JSON spec of the path"},
+    {CF_VALRANGE, cf_int, "Maximum number of bytes to read"},
+    {NULL, cf_notype, NULL}
+};
+
 FnCallArg READTCP_ARGS[] =
 {
     {CF_ANYSTRING, cf_str, "Host name or IP address of server socket"},
@@ -4781,6 +5080,12 @@ const FnCallType CF_FNCALL_TYPES[] =
      "True if the named object has execution rights for the current user"},
     {"isgreaterthan", cf_class, ISGREATERTHAN_ARGS, &FnCallIsLessGreaterThan,
      "True if arg1 is numerically greater than arg2, else compare strings like strcmp"},
+    // {"isjsonexists", cf_class, READJSON_ARGS, &FnCallIsJSONExists, "True if a path from a JSON string exists"},
+    // {"isjsonfalse", cf_class, READJSON_ARGS, &FnCallIsJSONFalse, "True if a path from a JSON string does not exist or is 'false'"},
+    // {"isjsonarray", cf_class, READJSON_ARGS, &FnCallIsJSONArray, "True if a path from a JSON string exists and is an array"},
+    // {"isjsonscalar", cf_class, READJSON_ARGS, &FnCallIsJSONString, "True if a path from a JSON string exists and is a scalar (number or string)"},
+    // {"isjsonslist", cf_class, READJSON_ARGS, &FnCallIsJSONSlist, "True if a path from a JSON string exists and is a slist (list of numbers or strings)"},
+    // {"isjsontrue", cf_class, READJSON_ARGS, &FnCallIsJSONTrue, "True if a path from a JSON string exists and is 'true'"},
     {"islessthan", cf_class, ISLESSTHAN_ARGS, &FnCallIsLessGreaterThan,
      "True if arg1 is numerically less than arg2, else compare strings like NOT strcmp"},
     {"islink", cf_class, FILESTAT_ARGS, &FnCallFileStat, "True if the named object is a symbolic link"},
@@ -4835,6 +5140,9 @@ const FnCallType CF_FNCALL_TYPES[] =
      "Read an array of strings from a file and assign the dimension to a variable with integer indeces"},
     {"readstringlist", cf_slist, READSTRINGLIST_ARGS, &FnCallReadStringList,
      "Read and assign a list variable from a file of separated strings"},
+    {"readjsonstring", cf_str, READJSON_ARGS, &FnCallReadJSONString, "Read a path from a JSON string and assign result to string variable"},
+    {"readjsonlist", cf_slist, READJSON_ARGS, &FnCallReadJSONSlist, "Read a path from a JSON string and assign result to slist variable"},
+    {"readjsonkeys", cf_slist, READJSON_ARGS, &FnCallReadJSONKeys, "Read a path from a JSON string and assign the keys of the array at that location to slist variable"},
     {"readtcp", cf_str, READTCP_ARGS, &FnCallReadTcp, "Connect to tcp port, send string and assign result to variable"},
     {"regarray", cf_class, REGARRAY_ARGS, &FnCallRegArray,
      "True if arg1 matches any item in the associative array with id=arg2"},

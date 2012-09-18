@@ -2052,7 +2052,7 @@ static bool XmlXPathConvergent(const char* xpath, Attributes a, Promise *pp)
 /*verify that xpath does not contain position specific (such as):[#] [last()] [position()] following-sibling:: preceding-sibling:: */
 {
     const char *regexp = "\\[\\s*([^\\[\\]]*\\s*(\\||(or)|(and)))?\\s*"     // [ (stuff) (|/or/and)
-        // | position() (=/!=/</<=/>/>=)
+        // position() (=/!=/</<=/>/>=)
         "((position)\\s*\\(\\s*\\)\\s*((=)|(!=)|(<)|(<=)|(>)|(>=))\\s*)?\\s*"
         // (number) | (number) (+/-/*/div/mod) (number) | last() | last() (+/-/*/div/mod) (number)
         "(((\\d+)\\s*|((last)\\s*\\(\\s*\\)\\s*))(((\\+)|(-)|(\\*)|(div)|(mod))\\s*(\\d+)\\s*)*)\\s*"

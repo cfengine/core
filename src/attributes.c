@@ -1296,19 +1296,6 @@ static void ShowAttributes(Attributes a)
     if (a.transformer)
         printf(" * transformer %s\n", a.transformer);
 
-/*
-if (a.perms) printf(" * perms %o\n",a.perms.mode);
-a.select = GetSelectConstraints(pp);
-a.delete = GetDeleteConstraints(pp);
-a.rename = GetRenameConstraints(pp);
-a.change = GetChangeMgtConstraints(pp);
-a.copy = GetCopyConstraints(pp);
-a.link = GetLinkConstraints(pp);
-a.recursion = GetRecursionConstraints(pp);
-
-a.transaction = GetTransactionConstraints(pp);
-a.classes = GetClassDefinitionConstraints(pp);
-*/
     printf(".....................................................\n\n");
 }
 

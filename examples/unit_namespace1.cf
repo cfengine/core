@@ -7,6 +7,12 @@ namespace => "name1";
 
 bundle agent mymethod(one)
 {
+vars:
+
+ "array[one]" string => "text one";
+ "array[two]" string => "text two";
+ "array[three]" string => "text three";
+
 files:
 
    "/tmp/$(one)"

@@ -687,8 +687,6 @@ void GetInterfacesInfo(enum cfagenttype ag)
             if (ioctl(fd, SIOCGIFFLAGS, &ifr) == -1)
             {
                 CfOut(cf_error, "ioctl", "No such network device");
-                //close(fd);
-                //return;
                 continue;
             }
 
@@ -758,8 +756,6 @@ void GetInterfacesInfo(enum cfagenttype ag)
                             NewScalar("sys", name, ip, cf_str);
                         }
                     }
-                    //close(fd);
-                    //return;
                     continue;
                 }
 

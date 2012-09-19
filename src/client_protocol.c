@@ -509,8 +509,6 @@ static void SetSessionKey(AgentConnection *conn)
         FatalError("Can't generate cryptographic key");
     }
 
-//BN_print_fp(stdout,bp);
-
     conn->session_key = (unsigned char *) bp->d;
 }
 

@@ -5141,7 +5141,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     {"readstringlist", cf_slist, READSTRINGLIST_ARGS, &FnCallReadStringList,
      "Read and assign a list variable from a file of separated strings"},
     {"readjsonstring", cf_str, READJSON_ARGS, &FnCallReadJSONString, "Read a path from a JSON string and assign result to string variable"},
-    {"readjsonlist", cf_slist, READJSON_ARGS, &FnCallReadJSONSlist, "Read a path from a JSON string and assign result to slist variable"},
+    {"readjsonslist", cf_slist, READJSON_ARGS, &FnCallReadJSONSlist, "Read a path from a JSON string and assign result to slist variable"},
     {"readjsonkeys", cf_slist, READJSON_ARGS, &FnCallReadJSONKeys, "Read a path from a JSON string and assign the keys of the array at that location to slist variable"},
     {"readtcp", cf_str, READTCP_ARGS, &FnCallReadTcp, "Connect to tcp port, send string and assign result to variable"},
     {"regarray", cf_class, REGARRAY_ARGS, &FnCallRegArray,

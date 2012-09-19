@@ -29,10 +29,10 @@ bundle agent test
       "test2_result" string => join(":", "test2");
       "test2_expected" string => "1:2";
 
-      "test3" slist => readjsonslist("{\"ax\":5, \"ay\":6}", "", 100);
+      "test3" slist => readjsonslist("{\"ax\":null, \"ay\":true}", "", 100);
 
       "test3_result" string => join(":", "test3");
-      "test3_expected" string => "5:6";
+      "test3_expected" string => "null:true";
 
       "test4" slist => readjsonkeys("[7, 8]", "", 100);
 

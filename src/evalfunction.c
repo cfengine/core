@@ -844,16 +844,6 @@ static FnCallResult FnCallSplayClass(FnCall *fp, Rlist *finalargs)
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
 }
 
-/*
-FnCallIsJSONExists
-FnCallIsJSONFalse
-FnCallIsJSONArray
-FnCallIsJSONString
-FnCallIsJSONSlist
-FnCallIsJSONTrue
-
-*/
-
 /* convenience wrapper for the two modes of reading slists; mode = 0 for keys and 1 for slist */
 static FnCallResult InternalReadJSONKeysOrSlist(FnCall *fp, Rlist *finalargs, int mode)
 {
@@ -936,6 +926,8 @@ static FnCallResult InternalReadJSONKeysOrSlist(FnCall *fp, Rlist *finalargs, in
       if (NULL == resolved ||
           JSON_ELEMENT_TYPE_CONTAINER != JsonGetElementType(resolved))
       {
+        JsonElementDestroy(path);
+        JsonElementDestroy(obj);
         return (FnCallResult) { FNCALL_FAILURE };
       }
       else
@@ -1010,14 +1002,22 @@ static FnCallResult FnCallReadJSONKeys(FnCall *fp, Rlist *finalargs)
 static FnCallResult FnCallReadJSONString(FnCall *fp, Rlist *finalargs)
  /* ReadJSONString("{\"x\": \"y\"}", "[\"x\"]", 1000) */
 {
+    char path_buffer[CF_BUFSIZE];
+    char data_buffer[CF_BUFSIZE];
     char buffer[CF_BUFSIZE];
     JsonElement *path, *obj;
+
+    memset(path_buffer, 0, sizeof(path_buffer));
+    memset(data_buffer, 0, sizeof(data_buffer));
     memset(buffer, 0, sizeof(buffer));
 
 /* begin fn specific content */
 
-    const char *json_string = ScalarValue(finalargs);
-    const char *json_path = ScalarValue(finalargs->next);
+    const char *json_string = data_buffer;
+    strncpy(json_string, ScalarValue(finalargs), CF_BUFSIZE-1);
+    const char *json_path = path_buffer;
+    strncpy(json_path, ScalarValue(finalargs->next), CF_BUFSIZE-1);
+
     int max = Str2Int(ScalarValue(finalargs->next->next));
 
     if (max < 0 || THIS_AGENT_TYPE == cf_common)
@@ -1029,6 +1029,12 @@ static FnCallResult FnCallReadJSONString(FnCall *fp, Rlist *finalargs)
     {
         CfOut(cf_error, "", "Too many bytes to read from JSON string");
         max = CF_BUFSIZE - CF_BUFFERMARGIN;
+    }
+
+    /* Accept "" as a path equivalent to "[]" */
+    if (0 == strcmp(json_path, ""))
+    {
+      strcpy(path_buffer, "[]");
     }
 
     CfDebug("Want to read %d bytes from JSON string %s at path %s\n", max, json_string, json_path);
@@ -1082,6 +1088,156 @@ static FnCallResult FnCallReadJSONString(FnCall *fp, Rlist *finalargs)
     JsonElementDestroy(obj);
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
+}
+
+/* convenience wrapper for the JSON predicates */
+static FnCallResult InternalIsJSONPredicate(FnCall *fp, Rlist *finalargs, int mode)
+{
+  char yes[] = "any";
+  char no[] = "any";
+  char path_buffer[CF_BUFSIZE];
+  char data_buffer[CF_BUFSIZE];
+  char ret_buffer[CF_BUFSIZE];
+  JsonElement *path, *obj;
+
+    memset(path_buffer, 0, sizeof(path_buffer));
+    memset(data_buffer, 0, sizeof(data_buffer));
+    memset(ret_buffer, 0, sizeof(ret_buffer));
+
+/* begin fn specific content */
+
+    const char *json_string = data_buffer;
+    strncpy(json_string, ScalarValue(finalargs), CF_BUFSIZE-1);
+    const char *json_path = path_buffer;
+    strncpy(json_path, ScalarValue(finalargs->next), CF_BUFSIZE-1);
+
+    /* Accept "" as a path equivalent to "[]" */
+    if (0 == strcmp(json_path, ""))
+    {
+      strcpy(path_buffer, "[]");
+    }
+
+    path = JsonParse(&json_path);
+
+    if (NULL == path)
+    {
+        CfOut(cf_inform, "", "Couldn't parse JSON path string");
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    if (JSON_ELEMENT_TYPE_CONTAINER != JsonGetElementType(path) ||
+        JSON_CONTAINER_TYPE_ARRAY != JsonGetContainerType(path))
+    {
+        CfOut(cf_inform, "", "Couldn't use JSON path string: it does not contain an array");
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    obj = JsonParse(&json_string);
+
+    if (NULL == obj)
+    {
+        JsonElementDestroy(path);
+        CfOut(cf_inform, "", "Couldn't parse JSON data string");
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    if (JSON_ELEMENT_TYPE_CONTAINER != JsonGetElementType(obj))
+    {
+        JsonElementDestroy(path);
+        JsonElementDestroy(obj);
+        CfOut(cf_inform, "", "Couldn't use JSON data string: it does not contain a container");
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    {
+      JsonIterator path_iter = JsonIteratorInit(path);
+      JsonElement *resolved = JsonResolvePath(&path_iter, obj);
+      char* answer = NULL;
+      bool primitive = (NULL != resolved && JSON_ELEMENT_TYPE_PRIMITIVE == JsonGetElementType(resolved));
+      bool container = (NULL != resolved && JSON_ELEMENT_TYPE_CONTAINER == JsonGetElementType(resolved));
+      char* as_string = primitive ? JsonPrimitiveGetAsString(resolved) : "";
+
+      switch(mode)
+      {
+      case 0: // exists
+        answer = (NULL != resolved) ? yes : no;
+        break;
+      case 1: // false
+        answer = (NULL == resolved || 0 == strcmp("false", as_string)) ? yes : no;
+        break;
+      case 2: // true
+        answer = (NULL != resolved && 0 != strcmp("false", as_string)) ? yes : no;
+        break;
+      case 10: // primitive
+        answer = primitive ? yes : no;
+        break;
+      case 20: // container
+        answer = container ? yes : no;
+        break;
+      case 21: // array
+        answer = (container && JSON_CONTAINER_TYPE_ARRAY == JsonGetContainerType(path)) ? yes : no;
+        break;
+      case 22: // object
+        answer = (container && JSON_CONTAINER_TYPE_OBJECT == JsonGetContainerType(path)) ? yes : no;
+        break;
+      }
+
+      if (NULL == answer)
+      {
+        JsonElementDestroy(path);
+        JsonElementDestroy(obj);
+        return (FnCallResult) { FNCALL_FAILURE };
+      }
+
+      strcpy(ret_buffer, answer);
+    }
+
+    JsonElementDestroy(path);
+    JsonElementDestroy(obj);
+
+    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(ret_buffer), CF_SCALAR } };
+}
+
+static FnCallResult FnCallIsJSONExists(FnCall *fp, Rlist *finalargs)
+ /* IsJsonExists("{\"x\": \"y\"}", "[]") */
+{
+  return InternalIsJSONPredicate(fp, finalargs, 0);
+}
+
+static FnCallResult FnCallIsJSONFalse(FnCall *fp, Rlist *finalargs)
+ /* IsJsonFalse("{\"x\": false}", "[\"x\"]") */
+{
+  return InternalIsJSONPredicate(fp, finalargs, 1);
+}
+
+static FnCallResult FnCallIsJSONTrue(FnCall *fp, Rlist *finalargs)
+ /* IsJsonTrue("{\"x\": true}", "[\"x\"]") */
+{
+  return InternalIsJSONPredicate(fp, finalargs, 2);
+}
+
+static FnCallResult FnCallIsJSONPrimitive(FnCall *fp, Rlist *finalargs)
+ /* IsJsonPrimitive("[\"x\"]", "[]") */
+{
+  return InternalIsJSONPredicate(fp, finalargs, 10);
+}
+
+static FnCallResult FnCallIsJSONContainer(FnCall *fp, Rlist *finalargs)
+ /* IsJsonContainer("[\"x\"]", "[]") */
+{
+  return InternalIsJSONPredicate(fp, finalargs, 20);
+}
+
+static FnCallResult FnCallIsJSONArray(FnCall *fp, Rlist *finalargs)
+ /* IsJsonArray("[\"x\"]", "[]") */
+{
+  return InternalIsJSONPredicate(fp, finalargs, 21);
+}
+
+static FnCallResult FnCallIsJSONObject(FnCall *fp, Rlist *finalargs)
+ /* IsJsonObject("[\"x\"]", "[]") */
+{
+  return InternalIsJSONPredicate(fp, finalargs, 22);
 }
 
 /*********************************************************************/
@@ -4603,6 +4759,13 @@ FnCallArg ISVARIABLE_ARGS[] =
     {NULL, cf_notype, NULL}
 };
 
+FnCallArg ISJSON_ARGS[] =
+{
+    {CF_ANYSTRING, cf_str, "JSON string"},
+    {CF_ANYSTRING, cf_str, "JSON spec of the path"},
+    {NULL, cf_notype, NULL}
+};
+
 FnCallArg JOIN_ARGS[] =
 {
     {CF_ANYSTRING, cf_str, "Join glue-string"},
@@ -5030,12 +5193,13 @@ const FnCallType CF_FNCALL_TYPES[] =
      "True if the named object has execution rights for the current user"},
     {"isgreaterthan", cf_class, ISGREATERTHAN_ARGS, &FnCallIsLessGreaterThan,
      "True if arg1 is numerically greater than arg2, else compare strings like strcmp"},
-    // {"isjsonexists", cf_class, READJSON_ARGS, &FnCallIsJSONExists, "True if a path from a JSON string exists"},
-    // {"isjsonfalse", cf_class, READJSON_ARGS, &FnCallIsJSONFalse, "True if a path from a JSON string does not exist or is 'false'"},
-    // {"isjsonarray", cf_class, READJSON_ARGS, &FnCallIsJSONArray, "True if a path from a JSON string exists and is an array"},
-    // {"isjsonscalar", cf_class, READJSON_ARGS, &FnCallIsJSONString, "True if a path from a JSON string exists and is a scalar (number or string)"},
-    // {"isjsonslist", cf_class, READJSON_ARGS, &FnCallIsJSONSlist, "True if a path from a JSON string exists and is a slist (list of numbers or strings)"},
-    // {"isjsontrue", cf_class, READJSON_ARGS, &FnCallIsJSONTrue, "True if a path from a JSON string exists and is 'true'"},
+    {"isjsonexists", cf_class, ISJSON_ARGS, &FnCallIsJSONExists, "True if a path from a JSON string exists"},
+    {"isjsonfalse", cf_class, ISJSON_ARGS, &FnCallIsJSONFalse, "True if a path from a JSON string does not exist or is 'false'"},
+    {"isjsontrue", cf_class, ISJSON_ARGS, &FnCallIsJSONTrue, "True if a path from a JSON string exists and is 'true'"},
+    {"isjsonprimitive", cf_class, ISJSON_ARGS, &FnCallIsJSONPrimitive, "True if a path from a JSON string exists and is a primitive (can be stringified)"},
+    {"isjsoncontainer", cf_class, ISJSON_ARGS, &FnCallIsJSONContainer, "True if a path from a JSON string exists and is a container"},
+    {"isjsonarray", cf_class, ISJSON_ARGS, &FnCallIsJSONArray, "True if a path from a JSON string exists and is an array"},
+    {"isjsonobject", cf_class, ISJSON_ARGS, &FnCallIsJSONObject, "True if a path from a JSON string exists and is an object"},
     {"islessthan", cf_class, ISLESSTHAN_ARGS, &FnCallIsLessGreaterThan,
      "True if arg1 is numerically less than arg2, else compare strings like NOT strcmp"},
     {"islink", cf_class, FILESTAT_ARGS, &FnCallFileStat, "True if the named object is a symbolic link"},

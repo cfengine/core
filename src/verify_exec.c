@@ -95,7 +95,7 @@ static int ExecSanityChecks(Attributes a, Promise *pp)
 static void VerifyExec(Attributes a, Promise *pp)
 {
     CfLock thislock;
-    char unsafeLine[CF_BUFSIZE], line[sizeof(unsafeLine) * 2], eventname[CF_BUFSIZE];
+    char line[CF_BUFSIZE], eventname[CF_BUFSIZE];
     char comm[20];
     char execstr[CF_EXPANDSIZE];
     int outsourced, count = 0;
@@ -246,8 +246,7 @@ static void VerifyExec(Attributes a, Promise *pp)
                     return;
                 }
 
-                CfReadLine(unsafeLine, CF_BUFSIZE - 1, pfp);
-                ReplaceStr(unsafeLine, line, sizeof(line), "%", "%%");  // escape format char
+                CfReadLine(line, CF_BUFSIZE - 1, pfp);
 
                 if (strstr(line, "cfengine-die"))
                 {

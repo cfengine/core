@@ -325,9 +325,6 @@ static void VerifyVirtDomain(char *uri, enum cfhypervisors envtype, Attributes a
 /* set up the library error handler */
     virSetErrorFunc(NULL, (void *) EnvironmentErrorHandler);
 
-/* set up the signals handlers to catch disconnections */
-//vshSetupSignals();
-
     if (CFVC[envtype] == NULL)
     {
         if ((CFVC[envtype] = virConnectOpenAuth(uri, virConnectAuthPtrDefault, 0)) == NULL)
@@ -379,12 +376,6 @@ static void VerifyVirtNetwork(char *uri, enum cfhypervisors envtype, Attributes 
 {
     int num, i;
     char *networks[CF_MAX_CONCURRENT_ENVIRONMENTS];
-
-/* set up the library error handler */
-//virSetErrorFunc(NULL,EnvironmentErrorHandler);
-
-/* set up the signals handlers to catch disconnections */
-//vshSetupSignals();
 
     if (CFVC[envtype] == NULL)
     {

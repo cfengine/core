@@ -193,11 +193,6 @@ static void KeepEditXmlPromise(Promise *pp)
         return;
     }
 
-    if (pp->done)
-    {
-//   return;
-    }
-
     if (VarClassExcluded(pp, &sp))
     {
         CfOut(cf_verbose, "", "\n");

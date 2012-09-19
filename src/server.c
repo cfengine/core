@@ -1659,7 +1659,6 @@ static int AccessControl(const char *req_path, ServerConnectionState *conn, int 
     {
         CfOut(cf_verbose, "", "Cannot map root access without RSA authentication");
         conn->maproot = false;  /* only public files accessible */
-        /* return false; */
     }
 
     return access;
@@ -1779,7 +1778,6 @@ static int LiteralAccessControl(char *in, ServerConnectionState *conn, int encry
     {
         CfOut(cf_verbose, "", "Cannot map root access without RSA authentication");
         conn->maproot = false;  /* only public files accessible */
-        /* return false; */
     }
 
     return access;
@@ -2333,7 +2331,6 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
     ThreadUnlock(cft_system);
 
-//DebugBinOut(conn->session_key,session_size,"Session key received");
 
     BN_free(counter_challenge);
     free(out);
@@ -2712,7 +2709,6 @@ static void CfEncryptGetFile(ServerFileGetState *args)
 
             cnt++;
 
-            //if (n_read < blocksize) // Last transaction
             if (total >= savedlen)
             {
                 if (SendTransaction(sd, out, cipherlen + finlen, CF_DONE) == -1)

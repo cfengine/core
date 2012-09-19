@@ -237,8 +237,6 @@ int IsNewerFileTree(char *dir, time_t reftime)
 
     if (S_ISDIR(sb.st_mode))
     {
-        //CfOut(cf_verbose,""," ?? Looking at %s (%ld)",dir,sb.st_mtime-reftime);      
-
         if (sb.st_mtime > reftime)
         {
             CfOut(cf_verbose, "", " >> Detected change in %s", dir);

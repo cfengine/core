@@ -851,21 +851,21 @@ FnCallIsJSONArray
 FnCallIsJSONString
 FnCallIsJSONSlist
 FnCallIsJSONTrue
-FnCallReadJSONSlist
-FnCallReadJSONKeys
 
 */
 
-/* convenience wrapper for the two modes or reading slists; mode = 0 for keys and 1 for slist */
+/* convenience wrapper for the two modes of reading slists; mode = 0 for keys and 1 for slist */
 static FnCallResult InternalReadJSONKeysOrSlist(FnCall *fp, Rlist *finalargs, int mode)
 {
     char path_buffer[CF_BUFSIZE];
     char data_buffer[CF_BUFSIZE];
+    char temp_buffer[CF_BUFSIZE];
     Rlist *newlist = NULL;
     JsonElement *path, *obj;
 
     memset(path_buffer, 0, sizeof(path_buffer));
     memset(data_buffer, 0, sizeof(data_buffer));
+    memset(temp_buffer, 0, sizeof(temp_buffer));
 
 /* begin fn specific content */
 
@@ -895,7 +895,6 @@ static FnCallResult InternalReadJSONKeysOrSlist(FnCall *fp, Rlist *finalargs, in
     }
 
     CfDebug("Want to read %d keys from JSON string %s at path %s\n", max, json_string, json_path);
-    CfOut(cf_error, "", "TZZ Want to read %d keys from JSON string %s at path %s\n", max, json_string, json_path);
 
     path = JsonParse(&json_path);
 
@@ -930,43 +929,61 @@ static FnCallResult InternalReadJSONKeysOrSlist(FnCall *fp, Rlist *finalargs, in
     }
 
     {
-      CfOut(cf_error, "", "TZZ Appending to slist from JSON string %s at path %s\n", data_buffer, path_buffer);
       JsonIterator path_iter = JsonIteratorInit(path);
       JsonElement *resolved = JsonResolvePath(&path_iter, obj);
       newlist = SplitRegexAsRList("", ".", max, false);
 
-      CfOut(cf_error, "", "TZZ Appending to slist");
       if (NULL == resolved ||
           JSON_ELEMENT_TYPE_CONTAINER != JsonGetElementType(resolved))
       {
-        CfOut(cf_error, "", "TZZ Empty slist: not a container");
-        PrependRScalar(&newlist, "cf_null", CF_SCALAR);
-      }
-      else if (mode == 0 && JSON_CONTAINER_TYPE_OBJECT != JsonGetContainerType(resolved))
-      {
-        CfOut(cf_error, "", "TZZ Empty slist: not an object, keys wanted");
-        PrependRScalar(&newlist, "cf_null", CF_SCALAR);
-      }
-      else if (mode == 1 && JSON_CONTAINER_TYPE_ARRAY != JsonGetContainerType(resolved))
-      {
-        CfOut(cf_error, "", "TZZ Empty slist: not an array, slist wanted");
-        PrependRScalar(&newlist, "cf_null", CF_SCALAR);
+        return (FnCallResult) { FNCALL_FAILURE };
       }
       else
       {
         JsonIterator data_iter = JsonIteratorInit(resolved);
-        JsonElement *cur = NULL;
         int i=0;
-        CfOut(cf_error, "", "TZZ iter slist");
         while (JsonIteratorHasNext(&data_iter) && i < max)
         {
-          cur = mode == 0 ? JsonIteratorNextKey(&data_iter) : JsonIteratorNextValue(&data_iter);
-          if (NULL == cur || JSON_ELEMENT_TYPE_PRIMITIVE != JsonIteratorCurrentElementType(&data_iter))
+          JsonElement *cur = JsonIteratorNextValue(&data_iter);
+          if (NULL == cur)
           {
             break;
           }
 
-          PrependRScalar(&newlist, JsonPrimitiveGetAsString(cur), CF_SCALAR);
+          char* str = NULL;
+          if (mode == 0)                // key mode
+          {
+            if (JSON_CONTAINER_TYPE_OBJECT == JsonGetContainerType(resolved))
+            {
+              /* for keys, just copy them */
+              str = JsonGetPropertyAsString(cur);
+            }
+            else if (JSON_CONTAINER_TYPE_ARRAY == JsonGetContainerType(resolved))
+            {
+              /* for array indices, use them as string keys */
+              sprintf(temp_buffer, "%d", i);
+              str = temp_buffer;
+            }
+          }
+          else if (mode == 1)
+          {
+            if (JSON_ELEMENT_TYPE_PRIMITIVE == JsonIteratorCurrentElementType(&data_iter))
+            {
+              /* for values, just copy them */
+              str = JsonPrimitiveGetAsString(cur);
+            }
+            else
+            {
+              /* TODO: for non-primitives, maybe print them? */
+            }
+          }
+
+          if (NULL == str)
+          {
+            break;
+          }
+
+          AppendRScalar(&newlist, str, CF_SCALAR);
           i++;
         }
       }

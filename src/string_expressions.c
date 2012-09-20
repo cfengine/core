@@ -141,7 +141,7 @@ static bool ValidTokenCharacter(char c)
         return true;
     }
 
-    if (c == '_' || c == '[' || c == ']')
+    if (c == '_' || c == '[' || c == ']' || c == ':')
     {
         return true;
     }

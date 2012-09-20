@@ -485,7 +485,7 @@ void PromiseLog(char *s)
 
     if ((fout = fopen(filename, "a")) == NULL)
     {
-        CfOut(cf_error, "fopen", "Could not open %s", CF_PROMISE_LOG);
+        CfOut(cf_error, "fopen", "Could not open %s", filename);
         return;
     }
 

@@ -137,6 +137,11 @@ int SelectProcess(char *procentry, char **names, int *start, int *end, Attribute
         PrependAlphaList(&proc_attr, "tty");
     }
 
+    if ((result = EvalProcessResult(a.process_select.process_result, &proc_attr)))
+    {
+    //NewClassesFromString(fp->defines, pp->namespace);
+    }
+   
     DeleteAlphaList(&proc_attr);
 
     if (result)

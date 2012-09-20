@@ -2180,6 +2180,12 @@ enum cf_meter
     meter_other_day,
     meter_comms_hour,
     meter_anomalies_day,
+    meter_compliance_week_user,
+    meter_compliance_week_internal,
+    meter_compliance_day_user,
+    meter_compliance_day_internal,
+    meter_compliance_hour_user,
+    meter_compliance_hour_internal,
     meter_endmark
 };
 

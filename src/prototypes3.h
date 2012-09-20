@@ -212,6 +212,7 @@ int ReturnLiteralData(char *handle, char *ret);
 char *GetRemoteScalar(char *proto, char *handle, char *server, int encrypted, char *rcv);
 const char *PromiseID(const Promise *pp);     /* Not thread-safe */
 void NotePromiseCompliance(const Promise *pp, double val, PromiseState state, char *reasoin);
+void LogTotalCompliance(const char *version);
 #if defined(__MINGW32__)
 int GetRegistryValue(char *key, char *name, char *buf, int bufSz);
 #endif

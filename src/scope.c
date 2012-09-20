@@ -23,10 +23,12 @@
 
 */
 
-#include "cf3.defs.h"
+#include "scope.h"
 
 #include "vars.h"
 #include "expand.h"
+
+#include <assert.h>
 
 /*******************************************************************/
 
@@ -35,8 +37,7 @@ Scope *GetScope(const char *scope)
  * Not thread safe - returns pointer to global memory
  */
 {
-    Scope *cp = NULL;
-    char *name = scope;
+    const char *name = scope;
 
     if (strncmp(scope, "default:", strlen("default:")) == 0)
        {
@@ -45,7 +46,7 @@ Scope *GetScope(const char *scope)
     
     CfDebug("Searching for scope context %s\n", scope);
 
-    for (cp = VSCOPE; cp != NULL; cp = cp->next)
+    for (Scope *cp = VSCOPE; cp != NULL; cp = cp->next)
     {
         if (strcmp(cp->scope, name) == 0)
         {
@@ -383,5 +384,37 @@ void PopThisScope()
         CF_STCKFRAME--;
         free(op->scope);
         op->scope = xstrdup("this");
+    }
+}
+
+/*******************************************************************/
+/* Utility functions                                               */
+/*******************************************************************/
+
+void SplitScopeName(const char *scope, char ns_out[CF_MAXVARSIZE], char bundle_out[CF_MAXVARSIZE])
+{
+    char *split_point = strstr(scope, ":");
+    if (split_point)
+    {
+        strncpy(ns_out, scope, split_point - scope);
+        strncpy(bundle_out, split_point + 1, 100);
+    }
+    else
+    {
+        strncpy(bundle_out, scope, 100);
+    }
+}
+
+void JoinScopeName(const char *ns, const char *bundle, char scope_out[CF_MAXVARSIZE])
+{
+    assert(bundle);
+
+    if (ns)
+    {
+        snprintf(scope_out, CF_MAXVARSIZE, "%s:%s", ns, bundle);
+    }
+    else
+    {
+        snprintf(scope_out, CF_MAXVARSIZE, "%s", bundle);
     }
 }

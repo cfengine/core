@@ -43,6 +43,7 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "expand.h"
+#include "scope.h"
 
 
 /*****************************************************************************/

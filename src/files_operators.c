@@ -36,6 +36,7 @@
 #include "item_lib.h"
 #include "conversion.h"
 #include "expand.h"
+#include "scope.h"
 
 #include <assert.h>
 

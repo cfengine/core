@@ -31,6 +31,7 @@
 #include "vars.h"
 #include "reporting.h"
 #include "expand.h"
+#include "scope.h"
 
 static void TestRegularExpressions(void);
 static void TestAgentPromises(void);

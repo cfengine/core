@@ -30,6 +30,7 @@
 #include "vars.h"
 #include "expand.h"
 #include "files_names.h"
+#include "scope.h"
 
 static void GetReturnValue(char *scope, Promise *pp);
     

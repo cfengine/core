@@ -587,7 +587,7 @@ static void KeepReportsControlPromises(Policy *policy)
 
     for (cp = ControlBodyConstraints(policy, cf_report); cp != NULL; cp = cp->next)
     {
-        if (IsExcluded(cp->classes))
+        if (IsExcluded(cp->classes, NULL))
         {
             continue;
         }

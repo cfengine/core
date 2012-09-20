@@ -136,7 +136,7 @@ GenericAgentConfig CheckOpts(int argc, char **argv)
             break;
 
         case 'd':
-            NewClass("opt_debug");
+            HardClass("opt_debug", NULL);
             DEBUG = true;
             break;
 
@@ -172,7 +172,7 @@ GenericAgentConfig CheckOpts(int argc, char **argv)
             DONTDO = true;
             IGNORELOCK = true;
             LOOKUP = true;
-            NewClass("opt_dry_run");
+            HardClass("opt_dry_run", NULL);
             break;
 
         case 'V':

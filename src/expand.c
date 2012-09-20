@@ -1082,7 +1082,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
         return;
     }
 
-    if (IsExcluded(pp->classes))
+    if (IsExcluded(pp->classes, pp->namespace))
     {
         return;
     }
@@ -1107,7 +1107,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
             {
             case CF_SCALAR:
 
-                if (IsExcluded(cp->rval.item))
+                if (IsExcluded(cp->rval.item, pp->namespace))
                 {
                     return;
                 }
@@ -1129,7 +1129,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
                     return;
                 }
 
-                excluded = IsExcluded(res.item);
+                excluded = IsExcluded(res.item, pp->namespace);
 
                 DeleteRvalItem(res);
 

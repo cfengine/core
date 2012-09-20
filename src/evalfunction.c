@@ -42,9 +42,8 @@
 
 static char *StripPatterns(char *file_buffer, char *pattern, char *filename);
 static void CloseStringHole(char *s, int start, int end);
-static int BuildLineArray(char *array_lval, char *file_buffer, char *split, int maxent, enum cfdatatype type,
-                          int intIndex);
-static int ExecModule(char *command);
+static int BuildLineArray(char *array_lval, char *file_buffer, char *split, int maxent, enum cfdatatype type, int intIndex);
+static int ExecModule(char *command, const char*namespace);
 static int CheckID(char *id);
 
 static void *CfReadFile(char *filename, int maxsize);
@@ -173,7 +172,7 @@ static FnCallResult FnCallAnd(FnCall *fp, Rlist *finalargs)
 
     for (arg = finalargs; arg; arg = arg->next)
     {
-        if (!IsDefinedClass(ScalarValue(arg)))
+        if (!IsDefinedClass(ScalarValue(arg), fp->namespace))
         {
             return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), CF_SCALAR } };
         }
@@ -668,7 +667,7 @@ static FnCallResult FnCallDirname(FnCall *fp, Rlist *finalargs)
 
 static FnCallResult FnCallClassify(FnCall *fp, Rlist *finalargs)
 {
-    bool is_defined = IsDefinedClass(CanonifyName(ScalarValue(finalargs)));
+    bool is_defined = IsDefinedClass(CanonifyName(ScalarValue(finalargs)), fp->namespace);
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(is_defined ? "any" : "!any"), CF_SCALAR } };
 }
@@ -778,7 +777,7 @@ static FnCallResult FnCallUseModule(FnCall *fp, Rlist *finalargs)
     snprintf(modulecmd, CF_BUFSIZE, "%s%cmodules%c%s %s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, command, args);
     CfOut(cf_verbose, "", "Executing and using module [%s]\n", modulecmd);
 
-    if (!ExecModule(modulecmd))
+    if (!ExecModule(modulecmd, fp->namespace))
     {
         return (FnCallResult) { FNCALL_FAILURE};
     }
@@ -831,7 +830,7 @@ static FnCallResult FnCallSplayClass(FnCall *fp, Rlist *finalargs)
 
     snprintf(class, CF_MAXVARSIZE, "Min%02d_%02d.%s", (box * 5) % 60, (box + 1) * 5 % 60, hrs);
 
-    if (IsDefinedClass(class))
+    if (IsDefinedClass(class, fp->namespace))
     {
         strcpy(buffer, "any");
     }
@@ -1803,11 +1802,11 @@ static FnCallResult FnCallSelectServers(FnCall *fp, Rlist *finalargs)
             snprintf(buffer, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, count);
             NewScalar(CONTEXTID, buffer, rp->item, cf_str);
 
-            if (IsDefinedClass(CanonifyName(rp->item)))
+            if (IsDefinedClass(CanonifyName(rp->item), fp->namespace))
             {
                 CfOut(cf_verbose, "", "This host is in the list and has promised to join the class %s - joined\n",
                       array_lval);
-                NewClass(array_lval);
+                NewClass(array_lval, fp->namespace);
             }
 
             count++;
@@ -2270,7 +2269,7 @@ static FnCallResult FnCallRemoteClassesMatching(FnCall *fp, Rlist *finalargs)
             for (rp = classlist; rp != NULL; rp = rp->next)
             {
                 snprintf(class, CF_MAXVARSIZE - 1, "%s_%s", prefix, (char *) rp->item);
-                NewBundleClass(class, THIS_BUNDLE);
+                NewBundleClass(class, THIS_BUNDLE, fp->namespace);
             }
             DeleteRlist(classlist);
         }
@@ -2871,7 +2870,7 @@ static FnCallResult FnCallOr(FnCall *fp, Rlist *finalargs)
 
     for (arg = finalargs; arg; arg = arg->next)
     {
-        if (IsDefinedClass(ScalarValue(arg)))
+        if (IsDefinedClass(ScalarValue(arg), fp->namespace))
         {
             return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), CF_SCALAR } };
         }
@@ -3027,7 +3026,7 @@ static FnCallResult FnCallAccumulatedDate(FnCall *fp, Rlist *finalargs)
 
 static FnCallResult FnCallNot(FnCall *fp, Rlist *finalargs)
 {
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(IsDefinedClass(ScalarValue(finalargs)) ? "!any" : "any"), CF_SCALAR } };
+    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(IsDefinedClass(ScalarValue(finalargs), fp->namespace) ? "!any" : "any"), CF_SCALAR } };
 }
 
 /*********************************************************************/
@@ -3922,7 +3921,7 @@ static int BuildLineArray(char *array_lval, char *file_buffer, char *split, int 
 
 /*********************************************************************/
 
-static int ExecModule(char *command)
+static int ExecModule(char *command, const char *namespace)
 {
     FILE *pp;
     char *sp, line[CF_BUFSIZE];
@@ -3967,7 +3966,7 @@ static int ExecModule(char *command)
             }
         }
 
-        ModuleProtocol(command, line, print);
+        ModuleProtocol(command, line, print, namespace);
     }
 
     cf_pclose(pp);
@@ -3978,7 +3977,7 @@ static int ExecModule(char *command)
 /* Level                                                             */
 /*********************************************************************/
 
-void ModuleProtocol(char *command, char *line, int print)
+void ModuleProtocol(char *command, char *line, int print, const char *namespace)
 {
     char name[CF_BUFSIZE], content[CF_BUFSIZE], context[CF_BUFSIZE];
     char arg0[CF_BUFSIZE];
@@ -4005,7 +4004,7 @@ void ModuleProtocol(char *command, char *line, int print)
         CfOut(cf_verbose, "", "Activated classes: %s\n", line + 1);
         if (CheckID(line + 1))
         {
-            NewClass(line + 1);
+             NewClass(line + 1, namespace);
         }
         break;
     case '-':

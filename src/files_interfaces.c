@@ -37,7 +37,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat sourcestatb
 static int CompareForFileCopy(char *sourcefile, char *destfile, struct stat *ssb, struct stat *dsb, Attributes attr,
                               Promise *pp);
 static void RegisterAHardLink(int i, char *value, Attributes attr, Promise *pp);
-static void FileAutoDefine(char *destfile);
+static void FileAutoDefine(char *destfile, const char *namespace);
 static void LoadSetuid(Attributes a, Promise *pp);
 static void SaveSetuid(Attributes a, Promise *pp, const ReportContext *report_context);
 
@@ -432,7 +432,7 @@ void VerifyFilePromise(char *path, Promise *pp, const ReportContext *report_cont
         else
         {
             /* unless child nodes were repaired, set a promise kept class */
-            if (!IsDefinedClass("repaired"))
+            if (!IsDefinedClass("repaired" , pp->namespace))
             {
                 cfPS(cf_verbose, CF_NOP, "", pp, a, " -> Basedir \"%s\" not promising anything", path);
             }
@@ -908,7 +908,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
 
                 if (MatchRlistItem(AUTO_DEFINE_LIST, destfile))
                 {
-                    FileAutoDefine(destfile);
+                    FileAutoDefine(destfile, pp->namespace);
                 }
             }
             else
@@ -1024,7 +1024,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
 
                 if (MatchRlistItem(AUTO_DEFINE_LIST, destfile))
                 {
-                    FileAutoDefine(destfile);
+                    FileAutoDefine(destfile, pp->namespace);
                 }
 
                 if (CopyRegularFile(sourcefile, destfile, ssb, dsb, attr, pp, report_context))
@@ -1990,12 +1990,12 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
 
 /*********************************************************************/
 
-static void FileAutoDefine(char *destfile)
+static void FileAutoDefine(char *destfile, const char *namespace)
 {
     char class[CF_MAXVARSIZE];
 
     snprintf(class, CF_MAXVARSIZE, "auto_%s", CanonifyName(destfile));
-    NewClass(class);
+    NewClass(class,  namespace);
     CfOut(cf_inform, "", "Auto defining class %s\n", class);
 }
 

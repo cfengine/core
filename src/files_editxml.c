@@ -2034,8 +2034,6 @@ xmlNodePtr XmlVerifyNodeInNodeSubset(xmlNodePtr node1, xmlNodePtr node2, Attribu
 }
 
 /*********************************************************************/
-/* Level                                                             */
-/*********************************************************************/
 
 xmlChar *CharToXmlChar(char* c)
 {

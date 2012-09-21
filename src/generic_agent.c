@@ -1662,7 +1662,7 @@ static void CheckControlPromises(char *scope, char *agent, Constraint *controlli
             NewScalar("sys", "fqhost", VFQNAME, cf_str);
             NewScalar("sys", "domain", VDOMAIN, cf_str);
             DeleteClass("undefined_domain", NULL);
-            NewClass(VDOMAIN, NULL);
+            HardClass(VDOMAIN, NULL);
         }
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[cfg_ignore_missing_inputs].lval) == 0)

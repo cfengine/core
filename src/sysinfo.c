@@ -35,6 +35,7 @@
 # include <zone.h>
 #endif
 
+static void CreateClassesFromCanonification(char *canonified);
 void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname, char *uqname, char *domain);
 
 #ifdef LINUX
@@ -230,7 +231,7 @@ void DetectDomainName(const char *orig_nodename)
     while (ptr != NULL);
 
     HardClass(VUQNAME, NULL);
-    NewClass(VDOMAIN, NULL);
+    HardClass(VDOMAIN, NULL);
 
     NewScalar("sys", "host", nodename, cf_str);
     NewScalar("sys", "uqhost", VUQNAME, cf_str);
@@ -718,20 +719,20 @@ void BuiltinClasses(void)
 
 /*******************************************************************/
 
-void CreateClassesFromCanonification(char *canonified)
+static void CreateClassesFromCanonification(char *canonified)
 {
     char buf[CF_MAXVARSIZE];
 
     strlcpy(buf, canonified, sizeof(buf));
 
-    NewClass(buf, NULL);
+    HardClass(buf, NULL);
 
     char *sp;
 
     while ((sp = strrchr(buf, '_')))
     {
         *sp = 0;
-        NewClass(buf, NULL);
+        HardClass(buf, NULL);
     }
 }
 

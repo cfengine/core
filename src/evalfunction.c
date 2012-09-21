@@ -1428,6 +1428,7 @@ static FnCallResult FnCallJoin(FnCall *fp, Rlist *finalargs)
     joined = xmalloc(size + 1);
 
     size = 0;
+    strcpy(joined, "");
 
     for (rp = (Rlist *) rval2.item; rp != NULL; rp = rp->next)
     {

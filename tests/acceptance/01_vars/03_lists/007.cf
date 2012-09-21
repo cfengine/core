@@ -1,0 +1,42 @@
+# Test that cf_null lists can be joined
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+    nova_edition::
+      host_licenses_paid => "5";
+}
+
+bundle agent init
+{
+  vars:
+      "dummy" string => "";
+}
+
+bundle agent test
+{
+  vars:
+      "dummy" string => "";
+}
+
+bundle agent check
+{
+  vars:
+      "emptylist" slist => { "cf_null" };
+      "joined" string => join(":", "emptylist");
+
+  classes:
+      "ok1" expression => strcmp($(joined), "");
+
+      "ok" and => { "ok1" };
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+    DEBUG::
+      "Expected empty string, got $(joined)!";
+}

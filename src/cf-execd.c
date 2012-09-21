@@ -175,7 +175,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
             break;
 
         case 'd':
-            HardClass("opt_debug", NULL);
+            HardClass("opt_debug");
             DEBUG = true;
             break;
 
@@ -203,7 +203,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
         case 'n':
             DONTDO = true;
             IGNORELOCK = true;
-            HardClass("opt_dry_run", NULL);
+            HardClass("opt_dry_run");
             break;
 
         case 'L':
@@ -711,7 +711,7 @@ static bool ScheduleRun(Policy **policy, const ReportContext *report_context)
         BuiltinClasses();
         OSClasses();
 
-        HardClass(CF_AGENTTYPES[THIS_AGENT_TYPE], NULL);
+        HardClass(CF_AGENTTYPES[THIS_AGENT_TYPE]);
 
         SetReferenceTime(true);
 

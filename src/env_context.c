@@ -492,7 +492,7 @@ void DeleteClass(const char *oclass, const char *namespace)
 
 /*******************************************************************/
 
-void HardClass(const char *oclass, const char *namespace)
+void HardClass(const char *oclass)
 {
     Item *ip;
     char class[CF_MAXVARSIZE];
@@ -529,7 +529,7 @@ void HardClass(const char *oclass, const char *namespace)
 
     for (ip = ABORTHEAP; ip != NULL; ip = ip->next)
     {
-        if (IsDefinedClass(ip->name, namespace))
+        if (IsDefinedClass(ip->name, NULL))
         {
             CfOut(cf_error, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", class, THIS_BUNDLE);
             exit(1);
@@ -540,7 +540,7 @@ void HardClass(const char *oclass, const char *namespace)
     {
         for (ip = ABORTBUNDLEHEAP; ip != NULL; ip = ip->next)
         {
-            if (IsDefinedClass(ip->name, namespace))
+            if (IsDefinedClass(ip->name, NULL))
             {
                 CfOut(cf_error, "", " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, class);
                 ABORTBUNDLE = true;

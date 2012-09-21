@@ -565,10 +565,10 @@ static void GetMacAddress(enum cfagenttype ag, int fd, struct ifreq *ifr, struct
     AppendRlist(interfaces, ifp->ifr_name, CF_SCALAR);
 
     snprintf(name, CF_MAXVARSIZE, "mac_%s", CanonifyName(hw_mac));
-    HardClass(name, NULL);
+    HardClass(name);
 # else
     NewScalar("sys", name, "mac_unknown", cf_str);
-    HardClass("mac_unknown", NULL);
+    HardClass("mac_unknown");
 # endif
 }
 
@@ -678,7 +678,7 @@ void GetInterfacesInfo(enum cfagenttype ag)
 
         snprintf(workbuf, CF_BUFSIZE, "net_iface_%s", CanonifyName(ifp->ifr_name));
 
-        HardClass(workbuf, NULL);
+        HardClass(workbuf);
 
         if (ifp->ifr_addr.sa_family == AF_INET)
         {
@@ -701,7 +701,7 @@ void GetInterfacesInfo(enum cfagenttype ag)
                 }
 
                 CfDebug("Adding hostip %s..\n", inet_ntoa(sin->sin_addr));
-                HardClass(inet_ntoa(sin->sin_addr), NULL);
+                HardClass(inet_ntoa(sin->sin_addr));
 
                 if ((hp =
                      gethostbyaddr((char *) &(sin->sin_addr.s_addr), sizeof(sin->sin_addr.s_addr), AF_INET)) == NULL)
@@ -713,14 +713,14 @@ void GetInterfacesInfo(enum cfagenttype ag)
                     if (hp->h_name != NULL)
                     {
                         CfDebug("Adding hostname %s..\n", hp->h_name);
-                        HardClass(hp->h_name, NULL);
+                        HardClass(hp->h_name);
 
                         if (hp->h_aliases != NULL)
                         {
                             for (i = 0; hp->h_aliases[i] != NULL; i++)
                             {
                                 CfOut(cf_verbose, "", "Adding alias %s..\n", hp->h_aliases[i]);
-                                HardClass(hp->h_aliases[i], NULL);
+                                HardClass(hp->h_aliases[i]);
                             }
                         }
                     }
@@ -740,7 +740,7 @@ void GetInterfacesInfo(enum cfagenttype ag)
                         if (*sp == '.')
                         {
                             *sp = '\0';
-                            HardClass(ip, NULL);
+                            HardClass(ip);
                         }
                     }
 
@@ -761,7 +761,7 @@ void GetInterfacesInfo(enum cfagenttype ag)
 
                 strncpy(ip, "ipv4_", CF_MAXVARSIZE);
                 strncat(ip, inet_ntoa(sin->sin_addr), CF_MAXVARSIZE - 6);
-                HardClass(ip, NULL);
+                HardClass(ip);
 
                 if (!ipdefault)
                 {
@@ -779,7 +779,7 @@ void GetInterfacesInfo(enum cfagenttype ag)
                     if (*sp == '.')
                     {
                         *sp = '\0';
-                        HardClass(ip, NULL);
+                        HardClass(ip);
                     }
                 }
 
@@ -922,7 +922,7 @@ static void FindV6InterfacesInfo(void)
                 {
                     CfOut(cf_verbose, "", "Found IPv6 address %s\n", ip->name);
                     AppendItem(&IPADDRESSES, ip->name, "");
-                    HardClass(ip->name, NULL);
+                    HardClass(ip->name);
                 }
             }
 

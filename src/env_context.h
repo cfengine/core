@@ -75,7 +75,7 @@ void NewPersistentContext(char *name, unsigned int ttl_minutes, enum statepolicy
 void DeletePersistentContext(const char *name);
 void LoadPersistentContext(void);
 void AddEphemeralClasses(const Rlist *classlist, const char *ns);
-void HardClass(const char *oclass, const char *namespace);
+void HardClass(const char *oclass);
 void NewClass(const char *oclass, const char *namespace);      /* Copies oclass */
 void NewBundleClass(const char *oclass, const char *bundle, const char *namespace);
 Rlist *SplitContextExpression(const char *context, Promise *pp);

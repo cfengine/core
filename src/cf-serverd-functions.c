@@ -566,7 +566,7 @@ void CheckFileChanges(Policy **policy, GenericAgentConfig config, const ReportCo
             BuiltinClasses();
             OSClasses();
 
-            HardClass(CF_AGENTTYPES[THIS_AGENT_TYPE], NULL);
+            HardClass(CF_AGENTTYPES[THIS_AGENT_TYPE]);
 
             SetReferenceTime(true);
             *policy = ReadPromises(cf_server, CF_SERVERC, config, report_context);

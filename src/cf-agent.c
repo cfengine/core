@@ -180,7 +180,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
             break;
 
         case 'd':
-            HardClass("opt_debug", NULL);
+            HardClass("opt_debug");
             DEBUG = true;
             break;
 
@@ -188,7 +188,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
             BOOTSTRAP = true;
             MINUSF = true;
             IGNORELOCK = true;
-            HardClass("bootstrap_mode", NULL);
+            HardClass("bootstrap_mode");
             break;
 
         case 's':
@@ -254,7 +254,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
         case 'n':
             DONTDO = true;
             IGNORELOCK = true;
-            HardClass("opt_dry_run", NULL);
+            HardClass("opt_dry_run");
             break;
 
         case 'V':

@@ -145,7 +145,7 @@ void CheckAutoBootstrap()
 
     if (am_appliance)
     {
-        HardClass("am_policy_hub", NULL);
+        HardClass("am_policy_hub");
         printf
             (" ** This host recognizes itself as a CFEngine Policy Hub, with policy distribution and knowledge base.\n");
         printf

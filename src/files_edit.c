@@ -57,7 +57,12 @@ EditContext *NewEditContext(char *filename, Attributes a, Promise *pp)
 
     if (a.haveeditxml)
     {
-        if(!LoadFileAsXmlDoc(&(ec->xmldoc), filename, a, pp))
+        #ifndef HAVE_LIBXML2
+        free(ec);
+        return NULL;
+        #endif
+
+        if (!LoadFileAsXmlDoc(&(ec->xmldoc), filename, a, pp))
         {
             free(ec);
             return NULL;
@@ -110,7 +115,8 @@ void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportC
 
         if (a.haveeditxml)
         {
-            if(XmlCompareToFile(ec->xmldoc, ec->filename, a, pp))
+            #ifdef HAVE_LIBXML2
+            if (XmlCompareToFile(ec->xmldoc, ec->filename, a, pp))
             {
                 if (ec)
                 {
@@ -122,6 +128,7 @@ void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportC
                 SaveXmlDocAsFile(ec->xmldoc, ec->filename, a, pp, report_context);
             }
             xmlFreeDoc(ec->xmldoc);
+            #endif
         }
     }
     else
@@ -229,7 +236,7 @@ int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, Attributes a, Promise *pp
 
     if (cfstat(file, &statbuf) == -1)
     {
-        CfOut(cf_verbose, "stat", " ** Information: the proposed file \"%s\" could not be loaded", file);
+        cfPS(cf_error, CF_FAIL, "stat", pp, a, " ** Information: the proposed file \"%s\" could not be loaded", file);
         return false;
     }
 
@@ -265,113 +272,33 @@ int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, Attributes a, Promise *pp
 
 /*********************************************************************/
 
-int SaveItemListAsFile(Item *liststart, const char *file, Attributes a, Promise *pp,
-                       const ReportContext *report_context)
-{
-    Item *ip;
-    struct stat statbuf;
-    char new[CF_BUFSIZE], backup[CF_BUFSIZE];
-    FILE *fp;
+typedef bool (*SaveCallbackFn)(const char *dest_filename, const char *orig_filename, void *param, Attributes a, Promise *pp);
 
-#ifdef WITH_SELINUX
-    int selinux_enabled = 0;
-    security_context_t scontext = NULL;
-
-    selinux_enabled = (is_selinux_enabled() > 0);
-
-    if (selinux_enabled)
-    {
-        /* get current security context */
-        getfilecon(file, &scontext);
-    }
-#endif
-
-    BeginSaveAsFile(file, new, backup, &statbuf, a, pp);
-
-    //saving list to file
-    if ((fp = fopen(new, "w")) == NULL)
-    {
-        cfPS(cf_error, CF_FAIL, "fopen", pp, a, "Couldn't write file %s after editing\n", new);
-        return false;
-    }
-
-    for (ip = liststart; ip != NULL; ip = ip->next)
-    {
-        fprintf(fp, "%s\n", ip->name);
-    }
-
-    if (fclose(fp) == -1)
-    {
-        cfPS(cf_error, CF_FAIL, "fclose", pp, a, "Unable to close file while writing");
-        return false;
-    }
-
-    FinishSaveAsFile(file, new, backup, &statbuf, a, pp, report_context);
-
-#ifdef WITH_SELINUX
-    if (selinux_enabled)
-    {
-        /* restore file context */
-        setfilecon(file, scontext);
-    }
-#endif
-
-    return true;
-}
-
-/*********************************************************************/
-
-int SaveXmlDocAsFile(xmlDocPtr doc, const char *file, Attributes a, Promise *pp,
+int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attributes a, Promise *pp,
                        const ReportContext *report_context)
 {
     struct stat statbuf;
     char new[CF_BUFSIZE], backup[CF_BUFSIZE];
-
-#ifdef WITH_SELINUX
-    int selinux_enabled = 0;
-    security_context_t scontext = NULL;
-
-    selinux_enabled = (is_selinux_enabled() > 0);
-
-    if (selinux_enabled)
-    {
-        /* get current security context */
-        getfilecon(file, &scontext);
-    }
-#endif
-
-    BeginSaveAsFile(file, new, backup, &statbuf, a, pp);
-
-    //saving xml to file
-    if (xmlSaveFile(new, doc) == -1)
-    {
-        cfPS(cf_error, CF_FAIL, "xmlSaveFile", pp, a, "Failed to write xml document to file %s after editing\n", new);
-        return false;
-    }
-
-    FinishSaveAsFile(file, new, backup, &statbuf, a, pp, report_context);
-
-#ifdef WITH_SELINUX
-    if (selinux_enabled)
-    {
-        /* restore file context */
-        setfilecon(file, scontext);
-    }
-#endif
-
-    return true;
-}
-
-/*********************************************************************/
-
-int BeginSaveAsFile(const char *file, char *new, char *backup, struct stat *statbuf, Attributes a, Promise *pp)
-{
+    mode_t mask;
     char stamp[CF_BUFSIZE];
     time_t stamp_now;
 
+#ifdef WITH_SELINUX
+    int selinux_enabled = 0;
+    security_context_t scontext = NULL;
+
+    selinux_enabled = (is_selinux_enabled() > 0);
+
+    if (selinux_enabled)
+    {
+        /* get current security context */
+        getfilecon(file, &scontext);
+    }
+#endif
+
     stamp_now = time((time_t *) NULL);
 
-    if (cfstat(file, statbuf) == -1)
+    if (cfstat(file, &statbuf) == -1)
     {
         cfPS(cf_error, CF_FAIL, "stat", pp, a, " !! Can no longer access file %s, which needed editing!\n", file);
         return false;
@@ -390,16 +317,11 @@ int BeginSaveAsFile(const char *file, char *new, char *backup, struct stat *stat
     strcpy(new, file);
     strcat(new, ".cf-after-edit");
     unlink(new);                /* Just in case of races */
-    return true;
-}
 
-/*********************************************************************/
-
-int FinishSaveAsFile(const char *file, char *new, char *backup, struct stat *statbuf, Attributes a, Promise *pp, const ReportContext *report_context)
-{
-    mode_t mask;
-
-    cfPS(cf_inform, CF_CHG, "", pp, a, " -> Edited xml file %s \n", file);
+    if ((*callback)(new, file, param, a, pp) == false)
+    {
+        return false;
+    }
 
     if (cf_rename(file, backup) == -1)
     {
@@ -434,11 +356,83 @@ int FinishSaveAsFile(const char *file, char *new, char *backup, struct stat *sta
     }
 
     mask = umask(0);
-    cf_chmod(file, (*statbuf).st_mode);    /* Restore file permissions etc */
-    chown(file, (*statbuf).st_uid, (*statbuf).st_gid);
+    cf_chmod(file, statbuf.st_mode);    /* Restore file permissions etc */
+    chown(file, statbuf.st_uid, statbuf.st_gid);
     umask(mask);
 
     return true;
+
+#ifdef WITH_SELINUX
+    if (selinux_enabled)
+    {
+        /* restore file context */
+        setfilecon(file, scontext);
+    }
+#endif
+
+    return true;
+}
+
+/*********************************************************************/
+
+bool SaveItemListCallback(const char *dest_filename, const char *orig_filename, void *param, Attributes a, Promise *pp)
+{
+    Item *liststart = param, *ip;
+    FILE *fp;
+
+    //saving list to file
+    if ((fp = fopen(dest_filename, "w")) == NULL)
+    {
+        cfPS(cf_error, CF_FAIL, "fopen", pp, a, "Couldn't write file %s after editing\n", dest_filename);
+        return false;
+    }
+
+    for (ip = liststart; ip != NULL; ip = ip->next)
+    {
+        fprintf(fp, "%s\n", ip->name);
+    }
+
+    if (fclose(fp) == -1)
+    {
+        cfPS(cf_error, CF_FAIL, "fclose", pp, a, "Unable to close file while writing");
+        return false;
+    }
+
+    cfPS(cf_inform, CF_CHG, "", pp, a, " -> Edited file %s \n", orig_filename);
+    return true;
+}
+
+/*********************************************************************/
+
+int SaveItemListAsFile(Item *liststart, const char *file, Attributes a, Promise *pp,
+                       const ReportContext *report_context)
+{
+    return SaveAsFile(&SaveItemListCallback, liststart, file, a, pp, report_context);
+}
+
+/*********************************************************************/
+
+bool SaveXmlCallback(const char *dest_filename, const char *orig_filename, void *param, Attributes a, Promise *pp)
+{
+    xmlDocPtr doc = param;
+
+    //saving xml to file
+    if (xmlSaveFile(dest_filename, doc) == -1)
+    {
+        cfPS(cf_error, CF_FAIL, "xmlSaveFile", pp, a, "Failed to write xml document to file %s after editing\n", dest_filename);
+        return false;
+    }
+
+    cfPS(cf_inform, CF_CHG, "", pp, a, " -> Edited xml file %s \n", orig_filename);
+    return true;
+}
+
+/*********************************************************************/
+
+int SaveXmlDocAsFile(xmlDocPtr doc, const char *file, Attributes a, Promise *pp,
+                       const ReportContext *report_context)
+{
+    return SaveAsFile(&SaveXmlCallback, doc, file, a, pp, report_context);
 }
 
 /*********************************************************************/

@@ -93,7 +93,7 @@ void CheckLicenses(void)
 
     if (stat(name, &sb) != -1)
     {
-        NewClass("am_policy_hub");
+        HardClass("am_policy_hub", NULL);
         CfOut(cf_verbose, "", " -> Additional class defined: am_policy_hub");
     }
 }
@@ -123,7 +123,7 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig config, const ReportC
     SanitizeEnvironment();
 
     THIS_AGENT_TYPE = ag;
-    NewClass(CF_AGENTTYPES[THIS_AGENT_TYPE]);
+    HardClass(CF_AGENTTYPES[THIS_AGENT_TYPE], NULL);
 
 // need scope sys to set vars in expiry function
     SetNewScope("sys");
@@ -488,30 +488,30 @@ void InitializeGA(const ReportContext *report_context)
     SHORT_CFENGINEPORT = htons((unsigned short) 5308);
     snprintf(STR_CFENGINEPORT, 15, "5308");
 
-    NewClass("any");
+    HardClass("any", NULL);
 
 #if defined HAVE_NOVA
-    NewClass("nova_edition");
-    NewClass("enterprise_edition");
+    HardClass("nova_edition", NULL);
+    HardClass("enterprise_edition", NULL);
 #else
-    NewClass("community_edition");
+    HardClass("community_edition", NULL);
 #endif
 
     strcpy(VPREFIX, GetConsolePrefix());
 
     if (VERBOSE)
     {
-        NewClass("verbose_mode");
+        HardClass("verbose_mode", NULL);
     }
 
     if (INFORM)
     {
-        NewClass("inform_mode");
+        HardClass("inform_mode", NULL);
     }
 
     if (DEBUG)
     {
-        NewClass("debug_mode");
+        HardClass("debug_mode", NULL);
     }
 
     CfOut(cf_verbose, "", "CFEngine - autonomous configuration engine - commence self-diagnostic prelude\n");
@@ -1625,7 +1625,7 @@ static void CheckControlPromises(char *scope, char *agent, Constraint *controlli
 
     for (cp = controllist; cp != NULL; cp = cp->next)
     {
-        if (IsExcluded(cp->classes))
+        if (IsExcluded(cp->classes, NULL))
         {
             continue;
         }
@@ -1661,8 +1661,8 @@ static void CheckControlPromises(char *scope, char *agent, Constraint *controlli
             snprintf(VFQNAME, CF_MAXVARSIZE, "%s.%s", VUQNAME, VDOMAIN);
             NewScalar("sys", "fqhost", VFQNAME, cf_str);
             NewScalar("sys", "domain", VDOMAIN, cf_str);
-            DeleteClass("undefined_domain");
-            NewClass(VDOMAIN);
+            DeleteClass("undefined_domain", NULL);
+            NewClass(VDOMAIN, NULL);
         }
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[cfg_ignore_missing_inputs].lval) == 0)

@@ -792,11 +792,9 @@ static bool XmlSelectNode(xmlDocPtr doc, xmlNodePtr *docnode, Attributes a, Prom
     xmlXPathFreeContext(xpathCtx);
     xmlXPathFreeObject(xpathObj);
 
-    return select;
+    return valid;
 }
 
-/***************************************************************************/
-/* Level                                                                   */
 /***************************************************************************/
 
 static bool InsertTreeInFile(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)

@@ -269,16 +269,6 @@ static void KeepEditXmlPromise(Promise *pp)
         return;
     }
 
-    if (strcmp("build_xpath", pp->agentsubtype) == 0)
-    {
-        #ifdef HAVE_LIBXML2
-        xmlInitParser();
-        VerifyXPathBuild(pp);
-        xmlCleanupParser();
-        #endif
-        return;
-    }
-
     if (strcmp("delete_tree", pp->agentsubtype) == 0)
     {
         #ifdef HAVE_LIBXML2
@@ -1244,13 +1234,6 @@ static bool InsertTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, A
         return false;
     }
 
-    return true;
-}
-
-/***************************************************************************/
-
-static bool SanityCheckXPathBuild(Attributes a, Promise *pp)
-{
     return true;
 }
 

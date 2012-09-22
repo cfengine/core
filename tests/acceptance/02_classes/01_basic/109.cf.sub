@@ -5,13 +5,14 @@ body file control
 
 bundle agent pass()
 {
+  classes:
+      "shred" expression => "default:shared_class";
+
   vars:
-      "class_needed" string => "shared_class";
-
       "shared_dependent" string => "works",
-      ifvarclass => "$(class_needed)";
+      ifvarclass => "default:shared_class";
 
-    shared_class::
+    shred::
       "forced_dependent" string => "works";
 
   reports:

@@ -111,8 +111,9 @@ static void SetNetworkEntropyClasses(const char *service, const char *direction,
             }
 
             strncpy(vbuff, remote, CF_BUFSIZE - 1);
+            vbuff[CF_BUFSIZE-1] = '\0';
 
-            for (sp = vbuff + strlen(vbuff) - 1; isdigit((int) *sp); sp--)
+            for (sp = vbuff + strlen(vbuff) - 1; isdigit((int) *sp) && (sp > vbuff); sp--)
             {
             }
 

@@ -56,3 +56,5 @@
         (subword-mode 1))))
 
 (add-hook 'c-mode-hook 'cfengine-c-mode-hook)
+
+(provide 'cfengine-code-style)

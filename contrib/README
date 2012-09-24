@@ -10,3 +10,7 @@ future work, but I am not responsible for them, nor do I
 maintain them.
 
 Mark
+
+dir-locals.el can be used like so:
+
+ln -s $YOUR_CHECKOUT/contrib/dir-locals.el $YOUR_CHECKOUT/.dir-locals.el

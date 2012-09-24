@@ -28,6 +28,12 @@
 	  it will only be considered if the depends_on list is either kept
 	  or repaired already.
 
+	  ** WARNING: When upgrading, make sure that any existing use
+	              of depends_on does not make some promises being
+	              unintentionally ignored. This can happen if you are
+	              currently refering to non-existant or never-run handles
+	              in depends_on attributes.
+
 	- methods return values, initial implementation
 
 	- New format for cf-key -s, includes timestamp of last connection

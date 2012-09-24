@@ -131,9 +131,9 @@ void CheckAutoBootstrap()
 
     printf(" -> Attempting to initiate promised autonomous services...\n\n");
 
-    am_appliance = IsDefinedClass(CanonifyName(POLICY_SERVER));
+    am_appliance = IsDefinedClass(CanonifyName(POLICY_SERVER), NULL);
     snprintf(name, CF_MAXVARSIZE, "ipv4_%s", CanonifyName(POLICY_SERVER));
-    am_appliance |= IsDefinedClass(name);
+    am_appliance |= IsDefinedClass(name, NULL);
 
     if (strlen(POLICY_SERVER) == 0)
     {
@@ -145,7 +145,7 @@ void CheckAutoBootstrap()
 
     if (am_appliance)
     {
-        NewClass("am_policy_hub");
+        HardClass("am_policy_hub", NULL);
         printf
             (" ** This host recognizes itself as a CFEngine Policy Hub, with policy distribution and knowledge base.\n");
         printf

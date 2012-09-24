@@ -405,7 +405,7 @@ int IsRegexItemIn(Item *list, char *regex)
 
     for (ptr = list; ptr != NULL; ptr = ptr->next)
     {
-        if (ptr->classes && IsExcluded(ptr->classes))
+        if (ptr->classes && IsExcluded(ptr->classes, NULL)) // This NULL might be wrong
         {
             continue;
         }

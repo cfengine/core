@@ -342,8 +342,6 @@ void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhash
 
     CfDebug("HashPubKey(%d)\n", type);
 
-//RSA_print_fp(stdout,key,0);
-
     if (key->n)
     {
         buf_len = (size_t) BN_num_bytes(key->n);

@@ -131,7 +131,7 @@ libpromises_la_SOURCES = \
         recursion.c \
         reporting.c reporting.h \
         rlist.c rlist.h \
-        scope.c \
+        scope.c scope.h \
         selfdiagnostic.c \
         sequence.c sequence.h \
         set.c set.h \

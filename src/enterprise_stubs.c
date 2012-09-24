@@ -31,6 +31,9 @@
 
 #if !defined(HAVE_NOVA)
 
+extern int PR_KEPT;
+extern int PR_REPAIRED;
+extern int PR_NOTKEPT;
 
 /* all agents: generic_agent.c */
 
@@ -47,7 +50,6 @@ int IsEnterprise(void)
 
 
 /* all agents: sysinfo.c */
-
 
 void EnterpriseContext(void)
 {
@@ -94,6 +96,24 @@ void NotePromiseCompliance(const Promise *pp, double val, PromiseState state, ch
 
 void TrackValue(char *date, double kept, double repaired, double notkept)
 {
+}
+
+void LogTotalCompliance(const char *version)
+{
+    double total = (double) (PR_KEPT + PR_NOTKEPT + PR_REPAIRED) / 100.0;
+
+    char string[CF_BUFSIZE] = { 0 };
+
+    snprintf(string, CF_BUFSIZE,
+             "Outcome of version %s (" CF_AGENTC "-%d): Promises observed to be kept %.0f%%, Promises repaired %.0f%%, Promises not repaired %.0f\%%",
+             version, CFA_BACKGROUND,
+             (double) PR_KEPT / total,
+             (double) PR_REPAIRED / total,
+             (double) PR_NOTKEPT / total);
+
+    CfOut(cf_verbose, "", "Total: %s", string);
+
+    PromiseLog(string);
 }
 
 

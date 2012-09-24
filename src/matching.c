@@ -30,6 +30,7 @@
 #include "promises.h"
 #include "item_lib.h"
 #include "conversion.h"
+#include "scope.h"
 
 #ifdef HAVE_PCRE_H
 # include <pcre.h>

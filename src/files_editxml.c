@@ -43,6 +43,7 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "expand.h"
+#include "scope.h"
 
 
 /*****************************************************************************/
@@ -191,11 +192,6 @@ static void KeepEditXmlPromise(Promise *pp)
         CfOut(cf_verbose, "", "   Skipping whole next edit promise, as context %s is not relevant\n", pp->classes);
         CfOut(cf_verbose, "", "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . \n");
         return;
-    }
-
-    if (pp->done)
-    {
-//   return;
     }
 
     if (VarClassExcluded(pp, &sp))

@@ -978,7 +978,7 @@ enum cfeditorder
 #define CF_MODERANGE   "[0-7augorwxst,+-]+"
 #define CF_BSDFLAGRANGE "[+-]*[(arch|archived|nodump|opaque|sappnd|sappend|schg|schange|simmutable|sunlnk|sunlink|uappnd|uappend|uchg|uchange|uimmutable|uunlnk|uunlink)]+"
 #define CF_CLASSRANGE  "[a-zA-Z0-9_!&@@$|.()\\[\\]{}]+"
-#define CF_IDRANGE     "[a-zA-Z0-9_$(){}\\[\\].]+"
+#define CF_IDRANGE     "[a-zA-Z0-9_$(){}\\[\\].:]+"
 #define CF_USERRANGE   "[a-zA-Z0-9_$.-]+"
 #define CF_IPRANGE     "[a-zA-Z0-9_$(){}.:-]+"
 #define CF_FNCALLRANGE "[a-zA-Z0-9_(){}.$@]+"
@@ -2180,6 +2180,12 @@ enum cf_meter
     meter_other_day,
     meter_comms_hour,
     meter_anomalies_day,
+    meter_compliance_week_user,
+    meter_compliance_week_internal,
+    meter_compliance_day_user,
+    meter_compliance_day_internal,
+    meter_compliance_hour_user,
+    meter_compliance_hour_internal,
     meter_endmark
 };
 

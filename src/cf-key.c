@@ -29,6 +29,7 @@
 #include "lastseen.h"
 #include "dir.h"
 #include "reporting.h"
+#include "scope.h"
 
 #ifdef HAVE_NOVA
 #include "license.h"

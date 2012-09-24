@@ -212,6 +212,7 @@ int ReturnLiteralData(char *handle, char *ret);
 char *GetRemoteScalar(char *proto, char *handle, char *server, int encrypted, char *rcv);
 const char *PromiseID(const Promise *pp);     /* Not thread-safe */
 void NotePromiseCompliance(const Promise *pp, double val, PromiseState state, char *reasoin);
+void LogTotalCompliance(const char *version);
 #if defined(__MINGW32__)
 int GetRegistryValue(char *key, char *name, char *buf, int bufSz);
 #endif
@@ -575,21 +576,6 @@ int SkipDirLinks(char *path, const char *lastnode, Recursion r);
 
 /* rlist.c */
 #include "rlist.h"
-
-/* scope.c */
-
-void SetScope(char *id);
-void SetNewScope(char *id);
-void NewScope(const char *name);
-void DeleteScope(char *name);
-Scope *GetScope(const char *scope);
-void CopyScope(const char *new_scopename, const char *old_scopename);
-void DeleteAllScope(void);
-void AugmentScope(char *scope, char *ns, Rlist *lvals, Rlist *rvals);
-void DeleteFromScope(char *scope, Rlist *args);
-void PushThisScope(void);
-void PopThisScope(void);
-void ShowScope(char *);
 
 /* selfdiagnostic.c */
 

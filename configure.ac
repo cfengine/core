@@ -116,7 +116,7 @@ AC_ARG_ENABLE([fhs],
 #
 
 AS_IF([test x"$enable_fhs" = xyes], [
-  projlibdir='${libexecdir}/cfengine'
+  projlibdir='${libdir}/cfengine'
   projdatadir='${exec_prefix}/share/cfengine'
   projdocdir='${exec_prefix}/share/doc/cfengine'
   WORKDIR='${localstatedir}/lib/cfengine'

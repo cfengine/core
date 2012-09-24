@@ -1,0 +1,15 @@
+Emacs users
+-----------
+
+There is Elisp snippet in contrib/cfengine-code-style.el which defines the
+project's coding style. Please use it when working with source code. The easiest
+way to do so is to add
+
+ (add-to-list 'load-path "<core checkout directory>/contrib")
+ (require 'cfengine-code-style)
+
+and run
+
+ ln -s contrib/dir-locals.el .dir-locals.el
+
+in the top directory of the source code checkout.

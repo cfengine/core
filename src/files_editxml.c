@@ -87,7 +87,7 @@ static void VerifyAttributeSet(Promise *pp);
 static void VerifyTextDeletions(Promise *pp);
 static void VerifyTextSet(Promise *pp);
 static void VerifyTextInsertions(Promise *pp);
-static bool XmlSelectNode(xmlDocPtr doc, xmlNodePtr *node, Attributes a, Promise *pp);
+static bool XmlSelectNode(char *xpath, xmlDocPtr doc, xmlNodePtr *docnode, Attributes a, Promise *pp);
 static bool DeleteTreeInNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
 static bool InsertTreeInFile(char *root, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
 static bool InsertTreeInNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
@@ -271,71 +271,71 @@ static void KeepEditXmlPromise(Promise *pp)
 
     if (strcmp("delete_tree", pp->agentsubtype) == 0)
     {
-        #ifdef HAVE_LIBXML2
+#ifdef HAVE_LIBXML2
         xmlInitParser();
         VerifyTreeDeletions(pp);
         xmlCleanupParser();
-        #endif
+#endif
         return;
     }
 
     if (strcmp("insert_tree", pp->agentsubtype) == 0)
     {
-        #ifdef HAVE_LIBXML2
+#ifdef HAVE_LIBXML2
         xmlInitParser();
         VerifyTreeInsertions(pp);
         xmlCleanupParser();
-        #endif
+#endif
         return;
     }
 
     if (strcmp("delete_attribute", pp->agentsubtype) == 0)
     {
-        #ifdef HAVE_LIBXML2
+#ifdef HAVE_LIBXML2
         xmlInitParser();
         VerifyAttributeDeletions(pp);
         xmlCleanupParser();
-        #endif
+#endif
         return;
     }
 
     if (strcmp("set_attribute", pp->agentsubtype) == 0)
     {
-        #ifdef HAVE_LIBXML2
+#ifdef HAVE_LIBXML2
         xmlInitParser();
         VerifyAttributeSet(pp);
         xmlCleanupParser();
-        #endif
+#endif
         return;
     }
 
     if (strcmp("delete_text", pp->agentsubtype) == 0)
     {
-        #ifdef HAVE_LIBXML2
+#ifdef HAVE_LIBXML2
         xmlInitParser();
         VerifyTextDeletions(pp);
         xmlCleanupParser();
-        #endif
+#endif
         return;
     }
 
     if (strcmp("set_text", pp->agentsubtype) == 0)
     {
-        #ifdef HAVE_LIBXML2
+#ifdef HAVE_LIBXML2
         xmlInitParser();
         VerifyTextSet(pp);
         xmlCleanupParser();
-        #endif
+#endif
         return;
     }
 
     if (strcmp("insert_text", pp->agentsubtype) == 0)
     {
-        #ifdef HAVE_LIBXML2
+#ifdef HAVE_LIBXML2
         xmlInitParser();
         VerifyTextInsertions(pp);
         xmlCleanupParser();
-        #endif
+#endif
         return;
     }
 
@@ -375,7 +375,7 @@ static void VerifyTreeDeletions(Promise *pp)
         return;
     }
 
-    if (!XmlSelectNode(doc, &docnode, a, pp))
+    if (!XmlSelectNode(a.xml.select_xpath_region, doc, &docnode, a, pp))
     {
         return;
     }
@@ -424,7 +424,7 @@ static void VerifyTreeInsertions(Promise *pp)
     }
 
     //if file is not empty: select an edit node, for tree insertion
-    if (a.xml.haveselectxpathregion && !XmlSelectNode(doc, &docnode, a, pp))
+    if (a.xml.haveselectxpathregion && !XmlSelectNode(a.xml.select_xpath_region, doc, &docnode, a, pp))
     {
         return;
     }
@@ -480,7 +480,7 @@ static void VerifyAttributeDeletions(Promise *pp)
         return;
     }
 
-    if (!XmlSelectNode(doc, &docnode, a, pp))
+    if (!XmlSelectNode(a.xml.select_xpath_region, doc, &docnode, a, pp))
     {
         return;
     }
@@ -528,7 +528,7 @@ static void VerifyAttributeSet(Promise *pp)
         return;
     }
 
-    if (!XmlSelectNode(doc, &docnode, a, pp))
+    if (!XmlSelectNode(a.xml.select_xpath_region, doc, &docnode, a, pp))
     {
         return;
     }
@@ -576,7 +576,7 @@ static void VerifyTextDeletions(Promise *pp)
         return;
     }
 
-    if (!XmlSelectNode(doc, &docnode, a, pp))
+    if (!XmlSelectNode(a.xml.select_xpath_region, doc, &docnode, a, pp))
     {
         return;
     }
@@ -624,7 +624,7 @@ static void VerifyTextSet(Promise *pp)
         return;
     }
 
-    if (!XmlSelectNode(doc, &docnode, a, pp))
+    if (!XmlSelectNode(a.xml.select_xpath_region, doc, &docnode, a, pp))
     {
         return;
     }
@@ -672,7 +672,7 @@ static void VerifyTextInsertions(Promise *pp)
         return;
     }
 
-    if (!XmlSelectNode(doc, &docnode, a, pp))
+    if (!XmlSelectNode(a.xml.select_xpath_region, doc, &docnode, a, pp))
     {
         return;
     }
@@ -703,7 +703,7 @@ It returns true if a match was identified, else false.
 If no such node matches, docnode should point to NULL
 
 */
-static bool XmlSelectNode(xmlDocPtr doc, xmlNodePtr *docnode, Attributes a, Promise *pp)
+static bool XmlSelectNode(char *rawxpath, xmlDocPtr doc, xmlNodePtr *docnode, Attributes a, Promise *pp)
 {
     xmlNodePtr cur = NULL;
     xmlXPathContextPtr xpathCtx = NULL;
@@ -715,14 +715,14 @@ static bool XmlSelectNode(xmlDocPtr doc, xmlNodePtr *docnode, Attributes a, Prom
 
     *docnode = NULL;
 
-    if (!XmlXPathConvergent(a.xml.select_xpath_region, a, pp))
+    if (!XmlXPathConvergent(rawxpath, a, pp))
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
              " !! select_xpath_region expression (%s) is not convergent", a.xml.select_xpath_region);
         return false;
     }
 
-    if ((xpathExpr = CharToXmlChar(a.xml.select_xpath_region)) == NULL)
+    if ((xpathExpr = CharToXmlChar(rawxpath)) == NULL)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a, " !! Unable to create new XPath expression");
         return false;

@@ -57,10 +57,10 @@ EditContext *NewEditContext(char *filename, Attributes a, Promise *pp)
 
     if (a.haveeditxml)
     {
-        #ifndef HAVE_LIBXML2
+#ifndef HAVE_LIBXML2
         free(ec);
         return NULL;
-        #endif
+#endif
 
         if (!LoadFileAsXmlDoc(&(ec->xmldoc), filename, a, pp))
         {
@@ -115,7 +115,7 @@ void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportC
 
         if (a.haveeditxml)
         {
-            #ifdef HAVE_LIBXML2
+#ifdef HAVE_LIBXML2
             if (XmlCompareToFile(ec->xmldoc, ec->filename, a, pp))
             {
                 if (ec)
@@ -128,7 +128,7 @@ void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportC
                 SaveXmlDocAsFile(ec->xmldoc, ec->filename, a, pp, report_context);
             }
             xmlFreeDoc(ec->xmldoc);
-            #endif
+#endif
         }
     }
     else

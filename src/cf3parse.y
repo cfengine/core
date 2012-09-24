@@ -280,7 +280,7 @@ selection:             id                         /* BODY ONLY */
                            {
                                if (strcmp(P.lval,"inputs") == 0)
                                {
-                                   if (IsDefinedClass(P.currentclasses))
+                                   if (IsDefinedClass(P.currentclasses, CurrentNameSpace(P.policy)))
                                    {
                                        if (VINPUTLIST == NULL)
                                        {

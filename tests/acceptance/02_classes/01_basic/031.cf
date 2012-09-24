@@ -37,9 +37,10 @@ bundle agent check
   classes:
       "ok1" expression => strcmp("$(test_namespace:classchecker.var1)", "data1");
       "ok2" expression => strcmp("$(test_namespace:classchecker.var2)", "data2");
+      "ok3" expression => strcmp("$(test_namespace:classchecker.var3)", "data3");
 
     any::
-      "ok" and => { "ok1", "ok2" };
+      "ok" and => { "ok1", "ok2", "ok3" };
 
   reports:
     ok::
@@ -50,4 +51,6 @@ bundle agent check
       "Expected data1, got $(test_namespace:classchecker.var1)";
     !ok2||DEBUG::
       "Expected data2, got $(test_namespace:classchecker.var2)";
+    !ok3||DEBUG::
+      "Expected data3, got $(test_namespace:classchecker.var3)";
 }

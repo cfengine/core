@@ -53,6 +53,9 @@
       (progn
         (setq indent-tabs-mode nil)
         (setq c-tab-always-indent t)
+        (setq tab-width 4)
         (subword-mode 1))))
 
 (add-hook 'c-mode-hook 'cfengine-c-mode-hook)
+
+(provide 'cfengine-code-style)

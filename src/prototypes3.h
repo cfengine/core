@@ -250,7 +250,7 @@ int ReceiveCollectCall(struct ServerConnectionState *conn, char *sendbuffer);
 FnCallResult CallFunction(const FnCallType *function, FnCall *fp, Rlist *finalargs);
 int FnNumArgs(const FnCallType *call_type);
 
-void ModuleProtocol(char *command, char *line, int print);
+void ModuleProtocol(char *command, char *line, int print, const char *namespace);
 
 /* exec_tool.c */
 

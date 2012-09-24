@@ -1,0 +1,56 @@
+body common control
+{
+      inputs => { "../../default.cf.sub", "031.cf.namespaced.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+    nova_edition::
+      host_licenses_paid => "5";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle common globalclasses
+{
+  classes:
+      "GLOBALCLASS" expression => "any";
+}
+
+bundle agent test
+{
+  methods:
+      "globals" usebundle => globalclasses;
+      "call" usebundle => test_namespace:classchecker;
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "ok1" expression => strcmp("$(test_namespace:classchecker.var1)", "data1");
+      "ok2" expression => strcmp("$(test_namespace:classchecker.var2)", "data2");
+      "ok3" expression => strcmp("$(test_namespace:classchecker.var3)", "data3");
+
+    any::
+      "ok" and => { "ok1", "ok2", "ok3" };
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+    !ok1||DEBUG::
+      "Expected data1, got $(test_namespace:classchecker.var1)";
+    !ok2||DEBUG::
+      "Expected data2, got $(test_namespace:classchecker.var2)";
+    !ok3||DEBUG::
+      "Expected data3, got $(test_namespace:classchecker.var3)";
+}

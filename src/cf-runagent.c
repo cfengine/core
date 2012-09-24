@@ -240,7 +240,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
             break;
 
         case 'd':
-            NewClass("opt_debug");
+            HardClass("opt_debug", NULL);
             DEBUG = true;
             break;
 
@@ -302,7 +302,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
         case 'n':
             DONTDO = true;
             IGNORELOCK = true;
-            NewClass("opt_dry_run");
+            HardClass("opt_dry_run", NULL);
             break;
 
         case 't':
@@ -500,7 +500,7 @@ void KeepControlPromises(Policy *policy)
 
     for (cp = ControlBodyConstraints(policy, cf_runagent); cp != NULL; cp = cp->next)
     {
-        if (IsExcluded(cp->classes))
+        if (IsExcluded(cp->classes, NULL))
         {
             continue;
         }

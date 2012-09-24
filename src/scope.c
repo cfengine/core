@@ -393,6 +393,8 @@ void PopThisScope()
 
 void SplitScopeName(const char *scope, char ns_out[CF_MAXVARSIZE], char bundle_out[CF_MAXVARSIZE])
 {
+    assert(scope);
+
     char *split_point = strstr(scope, ":");
     if (split_point)
     {

@@ -575,7 +575,7 @@ enum cfagenttype Agent2Type(char *name)
 
     CfDebug("Agent2Type(%s)\n", name);
 
-    for (i = 0; i < (int) cf_notype; i++)
+    for (i = 0; i < (int) cf_noagent; i++)
     {
         if (name && strcmp(CF_AGENTTYPES[i], name) == 0)
         {

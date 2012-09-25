@@ -15,11 +15,18 @@ static void test_invalid_agent_type_to_string(void **state)
     assert_int_equal(Agent2Type("InvalidAgentType"), cf_noagent);
 }
 
+static void str_to_service_policy(void **state)
+{
+    assert_int_equal(Str2ServicePolicy("start"), cfsrv_start);
+    assert_int_equal(Str2ServicePolicy("restart"), cfsrv_restart);
+}
+
 int main()
 {
     const UnitTest tests[] = {
         unit_test(test_null_agent_type_to_string),
-        unit_test(test_invalid_agent_type_to_string)
+        unit_test(test_invalid_agent_type_to_string),
+        unit_test(str_to_service_policy)
     };
 
     return run_tests(tests);

@@ -1121,7 +1121,7 @@ enum cf_srv_policy Str2ServicePolicy(char *string)
     static char *text[5] = { "start", "stop", "disable", "restart", NULL };
     int i;
 
-    for (i = 0; i < 3; i++)
+    for (i = 0; i < 4; i++)
     {
         if (string && (strcmp(text[i], string) == 0))
         {

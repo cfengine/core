@@ -59,5 +59,5 @@ int IsAbsoluteFileName(const char *f);
 bool IsFileOutsideDefaultRepository(const char *f);
 int RootDirLength(char *f);
 const char *GetSoftwareCacheFilename(char *buffer);
-
+int StringInArray(char **array, char *string);
 #endif

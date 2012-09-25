@@ -28,6 +28,7 @@
 #include "manual.h"
 #include "files_names.h"
 #include "sort.h"
+#include "scope.h"
 
 static char *MANUAL_DIRECTORY;
 

@@ -11,7 +11,7 @@ classes:
 
 vars:
   "cwd" string => execresult("/bin/pwd", "noshell");
-  "cmds" slist => { "sort", "touch", "grep", "gzip", "hexdump", "od", "diff", "rm" };
+  "cmds" slist => { "sort", "touch", "grep", "gzip", "hexdump", "od", "diff", "rm", "true", "false" };
 
   "$(cmds)"  string => "/bin/$(cmds)",
       ifvarclass => "bin_$(cmds)";

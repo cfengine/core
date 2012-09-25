@@ -40,8 +40,8 @@ vars:
 bundle agent check
 {
 vars:
-	"zero" string => "/bin/grep -q root /etc/passwd";
-	"one" string => "/bin/grep -q gluequaggaunlikely /etc/passwd";
+	"zero" string => "$(G.grep) -q root /etc/passwd";
+	"one" string => "$(G.grep) -q gluequaggaunlikely /etc/passwd";
 	"nxe" string => "/xbin/nosuchprogramexists";
 
 classes:

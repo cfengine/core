@@ -30,6 +30,7 @@
 #include "mod_access.h"
 #include "item_lib.h"
 #include "reporting.h"
+#include <assert.h>
 
 static int IsSpace(char *remainder);
 
@@ -1156,6 +1157,54 @@ char *Dtype2Str(enum cfdatatype dtype)
     default:
         return "D?";
     }
+}
+
+
+const char *DataTypeShortToType(char *short_type)
+{
+    assert(short_type);
+
+    if(strcmp(short_type, "s") == 0)
+    {
+        return "string";
+    }
+
+    if(strcmp(short_type, "i") == 0)
+    {
+        return "int";
+    }
+
+    if(strcmp(short_type, "r") == 0)
+    {
+        return "real";
+    }
+
+    if(strcmp(short_type, "m") == 0)
+    {
+        return "menu";
+    }
+
+    if(strcmp(short_type, "sl") == 0)
+    {
+        return "string list";
+    }
+
+    if(strcmp(short_type, "il") == 0)
+    {
+        return "int list";
+    }
+
+    if(strcmp(short_type, "rl") == 0)
+    {
+        return "real list";
+    }
+
+    if(strcmp(short_type, "ml") == 0)
+    {
+        return "menu list";
+    }
+
+    return "unknown type";
 }
 
 /*********************************************************************/

@@ -35,6 +35,7 @@
 #include "mod_access.h"
 #include "item_lib.h"
 #include "sort.h"
+#include "scope.h"
 
 extern char BUILD_DIR[CF_BUFSIZE];
 

@@ -183,10 +183,7 @@ int SelectLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp)
         PrependAlphaList(&leaf_attr, "exec_program");
     }
 
-    if ((result = EvalFileResult(attr.select.result, &leaf_attr)))
-    {
-        //NewClassesFromString(fp->defines);
-    }
+    result = EvalFileResult(attr.select.result, &leaf_attr);
 
     CfDebug("Select result \"%s\"on %s was %d\n", attr.select.result, path, result);
 

@@ -34,7 +34,7 @@
    <term> ::= <token>
               <var-ref>
 
-   <token> ::= [a-zA-Z0-9_]+
+   <token> ::= [a-zA-Z0-9_:]+
 
    <var-ref> ::= $( <qname> )
                  ${ <qname> }

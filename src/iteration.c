@@ -25,6 +25,8 @@
 
 #include "cf3.defs.h"
 
+#include "scope.h"
+
 static void DeleteReferenceRlist(Rlist *list);
 
 /*****************************************************************************/

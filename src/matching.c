@@ -30,6 +30,7 @@
 #include "promises.h"
 #include "item_lib.h"
 #include "conversion.h"
+#include "scope.h"
 
 #ifdef HAVE_PCRE_H
 # include <pcre.h>
@@ -404,7 +405,7 @@ int IsRegexItemIn(Item *list, char *regex)
 
     for (ptr = list; ptr != NULL; ptr = ptr->next)
     {
-        if (ptr->classes && IsExcluded(ptr->classes))
+        if (ptr->classes && IsExcluded(ptr->classes, NULL)) // This NULL might be wrong
         {
             continue;
         }

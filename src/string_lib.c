@@ -857,7 +857,7 @@ void FreeStringArray(char **strs)
 }
 
 
-char *EscapeCharCopy(char *str, char to_escape, char escape_with)
+char *EscapeCharCopy(const char *str, char to_escape, char escape_with)
 /*
  * Escapes the 'to_escape'-chars found in str, by prefixing them with 'escape_with'.
  * Returns newly allocated string.
@@ -870,7 +870,7 @@ char *EscapeCharCopy(char *str, char to_escape, char escape_with)
 
     char *out = xcalloc(1, out_size);
 
-    char *in_pos = str;
+    const char *in_pos = str;
     char *out_pos = out;
 
     for(; *in_pos != '\0'; in_pos++, out_pos++)

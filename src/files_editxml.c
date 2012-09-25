@@ -43,6 +43,7 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "expand.h"
+#include "scope.h"
 
 #ifdef HAVE_PCRE_H
 # include <pcre.h>
@@ -237,18 +238,13 @@ static void KeepEditXmlPromise(Promise *pp)
 {
     char *sp = NULL;
 
-    if (!IsDefinedClass(pp->classes))
+    if (!IsDefinedClass(pp->classes, pp->namespace))
     {
         CfOut(cf_verbose, "", "\n");
         CfOut(cf_verbose, "", "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . \n");
         CfOut(cf_verbose, "", "   Skipping whole next edit promise, as context %s is not relevant\n", pp->classes);
         CfOut(cf_verbose, "", "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . \n");
         return;
-    }
-
-    if (pp->done)
-    {
-//   return;
     }
 
     if (VarClassExcluded(pp, &sp))

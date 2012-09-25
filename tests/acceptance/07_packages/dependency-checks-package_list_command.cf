@@ -71,10 +71,10 @@ body package_method mock_no_list_command_package_version_regex
 #  package_multiline_start => 
 
 
-  package_add_command => "/bin/false";
-  package_update_command => "/bin/false";
-  package_delete_command => "/bin/false";
-  package_verify_command => "/bin/false";
+  package_add_command => "$(G.false)";
+  package_update_command => "$(G.false)";
+  package_delete_command => "$(G.false)";
+  package_verify_command => "$(G.false)";
 }
 
 body package_method mock_no_list_command_package_name_regex
@@ -95,10 +95,10 @@ body package_method mock_no_list_command_package_name_regex
 #  package_multiline_start => 
 
 
-  package_add_command => "/bin/false";
-  package_update_command => "/bin/false";
-  package_delete_command => "/bin/false";
-  package_verify_command => "/bin/false";
+  package_add_command => "$(G.false)";
+  package_update_command => "$(G.false)";
+  package_delete_command => "$(G.false)";
+  package_verify_command => "$(G.false)";
 }
 
 body package_method mock_no_list_command_package_arch_regex
@@ -119,10 +119,10 @@ body package_method mock_no_list_command_package_arch_regex
 #  package_multiline_start => 
 
 
-  package_add_command => "/bin/false";
-  package_update_command => "/bin/false";
-  package_delete_command => "/bin/false";
-  package_verify_command => "/bin/false";
+  package_add_command => "$(G.false)";
+  package_update_command => "$(G.false)";
+  package_delete_command => "$(G.false)";
+  package_verify_command => "$(G.false)";
 }
 
 body package_method mock_no_list_command_package_installed_regex
@@ -143,10 +143,10 @@ body package_method mock_no_list_command_package_installed_regex
 #  package_multiline_start => 
 
 
-  package_add_command => "/bin/false";
-  package_update_command => "/bin/false";
-  package_delete_command => "/bin/false";
-  package_verify_command => "/bin/false";
+  package_add_command => "$(G.false)";
+  package_update_command => "$(G.false)";
+  package_delete_command => "$(G.false)";
+  package_verify_command => "$(G.false)";
 }
 
 body classes test_set_class(ok_class,notok_class)

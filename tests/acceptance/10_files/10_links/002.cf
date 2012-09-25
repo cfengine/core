@@ -1,0 +1,58 @@
+#######################################################
+#
+# Check that action and link_from bodies are accessible from outside
+# the current namespace.
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub", "002-namespaced_links.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+}
+
+#######################################################
+
+bundle agent test
+{
+  methods:
+      "run" usebundle => testing_links:namespaced_test();
+}
+
+body action warn_only
+{
+action_policy => "warn";
+}
+
+body link_from ln_s(x)
+{
+link_type => "symlink";
+source => "$(x)";
+when_no_source => "force";
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+  "subdir_created" expression => fileexists("$(G.testdir)/subdir");
+
+reports:
+!subdir_created::
+  "$(this.promise_filename) Pass";
+
+subdir_created::
+  "$(this.promise_filename) Fail";
+}
+

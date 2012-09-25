@@ -29,6 +29,12 @@
 #include "lastseen.h"
 #include "dir.h"
 #include "reporting.h"
+#include "scope.h"
+
+#ifdef HAVE_NOVA
+#include "license.h"
+#endif
+
 
 int SHOWHOSTS = false;
 bool REMOVEKEYS = false;
@@ -40,8 +46,11 @@ static GenericAgentConfig CheckOpts(int argc, char **argv);
 
 static void ShowLastSeenHosts(void);
 static int RemoveKeys(const char *host);
-static bool InstallLicense(char *path_source);
 static void KeepKeyPromises(void);
+
+#ifndef HAVE_NOVA
+bool LicenseInstall(char *path_source);
+#endif
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -99,7 +108,7 @@ int main(int argc, char *argv[])
 
     if(LICENSE_INSTALL)
     {
-        bool success = InstallLicense(LICENSE_SOURCE);
+        bool success = LicenseInstall(LICENSE_SOURCE);
         return success ? 0 : 1;
     }
 
@@ -308,30 +317,6 @@ static int RemoveKeys(const char *host)
 }
 
 
-static bool InstallLicense(char *path_source)
-{
-    struct stat sb;
-
-    if(cfstat(path_source, &sb) == -1)
-    {
-        CfOut(cf_error, "cfstat", "!! Can not stat input license file %s", path_source);
-        return false;
-    }
-
-    char path_destination[MAX_FILENAME];
-    snprintf(path_destination, sizeof(path_destination), "%s/inputs/license.dat", CFWORKDIR);
-    MapName(path_destination);
-
-    if(cfstat(path_destination, &sb) == 0)
-    {
-        CfOut(cf_error, "", "!! A license file is already installed in %s -- please move it out of the way and try again", path_destination);
-        return false;
-    }
-
-    return CopyRegularFileDisk(path_source, path_destination, false);
-}
-
-
 static void KeepKeyPromises(void)
 {
     unsigned long err;
@@ -431,3 +416,13 @@ static void KeepKeyPromises(void)
     RAND_write_file(vbuff);
     cf_chmod(vbuff, 0644);
 }
+
+
+#ifndef HAVE_NOVA
+bool LicenseInstall(char *path_source)
+{
+    CfOut(cf_error, "", "!! License installation only applies to CFEngine Enterprise");
+
+    return false;
+}
+#endif  /* HAVE_NOVA */

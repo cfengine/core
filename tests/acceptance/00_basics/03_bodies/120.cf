@@ -77,7 +77,7 @@ failed_returncodes => { "1", "2" };
 bundle agent test
 {
 commands:
-    "/bin/grep linenotfound $(G.testfile)"
+    "$(G.grep) linenotfound $(G.testfile)"
             classes => all_classes;
 }
 

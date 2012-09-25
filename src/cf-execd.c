@@ -33,6 +33,7 @@
 #include "item_lib.h"
 #include "conversion.h"
 #include "reporting.h"
+#include "scope.h"
 
 #define CF_EXEC_IFELAPSED 0
 #define CF_EXEC_EXPIREAFTER 1
@@ -174,7 +175,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
             break;
 
         case 'd':
-            NewClass("opt_debug");
+            HardClass("opt_debug");
             DEBUG = true;
             break;
 
@@ -202,7 +203,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
         case 'n':
             DONTDO = true;
             IGNORELOCK = true;
-            NewClass("opt_dry_run");
+            HardClass("opt_dry_run");
             break;
 
         case 'L':
@@ -296,7 +297,7 @@ static void KeepPromises(Policy *policy)
 {
     for (Constraint *cp = ControlBodyConstraints(policy, cf_executor); cp != NULL; cp = cp->next)
     {
-        if (IsExcluded(cp->classes))
+    if (IsExcluded(cp->classes, NULL))
         {
             continue;
         }
@@ -669,6 +670,8 @@ static bool ScheduleRun(Policy **policy, const ReportContext *report_context)
 
         DeleteAlphaList(&VHEAP);
         InitAlphaList(&VHEAP);
+        DeleteAlphaList(&VHARDHEAP);
+        InitAlphaList(&VHARDHEAP);
         DeleteAlphaList(&VADDCLASSES);
         InitAlphaList(&VADDCLASSES);
 
@@ -708,7 +711,7 @@ static bool ScheduleRun(Policy **policy, const ReportContext *report_context)
         BuiltinClasses();
         OSClasses();
 
-        NewClass(CF_AGENTTYPES[THIS_AGENT_TYPE]);
+        HardClass(CF_AGENTTYPES[THIS_AGENT_TYPE]);
 
         SetReferenceTime(true);
 
@@ -750,7 +753,7 @@ static bool ScheduleRun(Policy **policy, const ReportContext *report_context)
     {
         CfOut(cf_verbose, "", "Checking schedule %s...\n", ip->name);
 
-        if (IsDefinedClass(ip->name))
+        if (IsDefinedClass(ip->name, NULL))
         {
             CfOut(cf_verbose, "", "Waking up the agent at %s ~ %s \n", cf_ctime(&CFSTARTTIME), ip->name);
             return true;

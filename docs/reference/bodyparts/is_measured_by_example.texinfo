@@ -1,9 +1,11 @@
 
-@i{History}: Was introduced in 3.5.0a1.ce30517, Enterprise 2.3.0.a1.ed612a0 (2012)
-
 
 @verbatim
+things:
 
-Fill me in (./bodyparts/is_measured_by_example.texinfo)
-""
+ service_measurements::
+
+  "login services" is_measured_by => { "ssh_in" };
+
 @end verbatim
+

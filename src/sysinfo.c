@@ -35,7 +35,6 @@
 # include <zone.h>
 #endif
 
-static void CreateClassesFromCanonification(char *canonified);
 void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname, char *uqname, char *domain);
 
 #ifdef LINUX
@@ -713,13 +712,13 @@ void BuiltinClasses(void)
     HardClass("any");            /* This is a reserved word / wildcard */
 
     snprintf(vbuff, CF_BUFSIZE, "cfengine_%s", CanonifyName(Version()));
-    CreateClassesFromCanonification(vbuff);
+    CreateHardClassesFromCanonification(vbuff);
 
 }
 
 /*******************************************************************/
 
-static void CreateClassesFromCanonification(char *canonified)
+void CreateHardClassesFromCanonification(const char *canonified)
 {
     char buf[CF_MAXVARSIZE];
 

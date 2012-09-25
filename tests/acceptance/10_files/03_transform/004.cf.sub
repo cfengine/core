@@ -7,5 +7,5 @@ bundle agent main
 {
 files:
   "/dev/null"
-    transformer => "/bin/true $(this.promiser)";
+    transformer => "$(G.true) $(this.promiser)";
 }

@@ -9,6 +9,6 @@ body package_method simplepkg(abug)
   package_list_version_regex => ".*";
   package_list_arch_regex => ".*";
 
-  package_add_command => "/bin/false";
-  package_delete_command => "/bin/false";
+  package_add_command => "$(G.false)";
+  package_delete_command => "$(G.false)";
 }

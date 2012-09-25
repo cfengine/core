@@ -60,10 +60,10 @@ body package_method mock_no_patch_command_patch_arch_regex
   package_list_version_regex => "^[^-]+-([^-]+)";
   package_list_arch_regex => "^[^-]+-[^-]+-(.*)";
 
-  package_add_command => "/bin/false";
-  package_update_command => "/bin/false";
-  package_delete_command => "/bin/false";
-  package_verify_command => "/bin/false";
+  package_add_command => "$(G.false)";
+  package_update_command => "$(G.false)";
+  package_delete_command => "$(G.false)";
+  package_verify_command => "$(G.false)";
   
   package_patch_arch_regex => "";
 }
@@ -82,10 +82,10 @@ body package_method mock_no_patch_command_patch_name_regex
   package_list_version_regex => "^[^-]+-([^-]+)";
   package_list_arch_regex => "^[^-]+-[^-]+-(.*)";
 
-  package_add_command => "/bin/false";
-  package_update_command => "/bin/false";
-  package_delete_command => "/bin/false";
-  package_verify_command => "/bin/false";
+  package_add_command => "$(G.false)";
+  package_update_command => "$(G.false)";
+  package_delete_command => "$(G.false)";
+  package_verify_command => "$(G.false)";
   
   package_patch_name_regex => "";
 }
@@ -104,10 +104,10 @@ body package_method mock_no_patch_command_patch_version_regex
   package_list_version_regex => "^[^-]+-([^-]+)";
   package_list_arch_regex => "^[^-]+-[^-]+-(.*)";
 
-  package_add_command => "/bin/false";
-  package_update_command => "/bin/false";
-  package_delete_command => "/bin/false";
-  package_verify_command => "/bin/false";
+  package_add_command => "$(G.false)";
+  package_update_command => "$(G.false)";
+  package_delete_command => "$(G.false)";
+  package_verify_command => "$(G.false)";
   
   package_patch_version_regex => "";
 }

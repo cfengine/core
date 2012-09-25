@@ -44,7 +44,7 @@ ExpectedClasses expected_classes[] =
     {"laptop.intra"},
 };
 
-void NewClass(const char *classname)
+void HardClass(const char *classname)
 {
     int i;
 

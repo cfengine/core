@@ -2088,23 +2088,3 @@ static bool XmlXPathConvergent(const char* xpath, Attributes a, Promise *pp)
 
     return (!ContainsRegex(xpath, regexp));
 }
-
-/*********************************************************************/
-
-static bool ContainsRegex(const char* rawstring, const char* regex)
-{
-    int ovector[OVECCOUNT], rc;
-    const char *errorstr;
-    int erroffset;
-
-    pcre *rx = pcre_compile(regex, 0, &errorstr, &erroffset, NULL);
-
-    if ((rc = pcre_exec(rx, NULL, rawstring, strlen(rawstring), 0, 0, ovector, OVECCOUNT)) >= 0)
-    {
-        pcre_free(rx);
-        return true;
-    }
-
-    pcre_free(rx);
-    return false;
-}

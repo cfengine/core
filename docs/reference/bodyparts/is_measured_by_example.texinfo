@@ -1,0 +1,11 @@
+
+
+@verbatim
+things:
+
+ service_measurements::
+
+  "login services" is_measured_by => { "ssh_in" };
+
+@end verbatim
+

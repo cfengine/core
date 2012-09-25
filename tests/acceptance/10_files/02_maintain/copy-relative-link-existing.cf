@@ -18,11 +18,11 @@ nova_edition::
 bundle agent init
 {
 commands:
-  "/bin/mkdir -p $(G.testdir)";
-  "/bin/touch $(G.testdir)/dest";
-  "/bin/ln -s dest link",
+  "$(G.mkdir) -p $(G.testdir)";
+  "$(G.touch) $(G.testdir)/dest";
+  "$(G.ln) -s dest link",
     contain => in_dir("$(G.testdir)");
-  "/bin/ln -s ./dest link-currdir",
+  "$(G.ln) -s ./dest link-currdir",
     contain => in_dir("$(G.testdir)");
 }
 

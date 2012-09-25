@@ -123,6 +123,7 @@ int main(int argc, char *argv[])
     KeepPromises(policy, config, report_context);
     CloseReports("agent", report_context);
     NoteClassUsage(VHEAP, true);
+    NoteClassUsage(VHARDHEAP, true);
 #ifdef HAVE_NOVA
     Nova_NoteVarUsageDB();
     Nova_TrackExecution();
@@ -179,7 +180,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
             break;
 
         case 'd':
-            NewClass("opt_debug");
+            HardClass("opt_debug");
             DEBUG = true;
             break;
 
@@ -187,7 +188,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
             BOOTSTRAP = true;
             MINUSF = true;
             IGNORELOCK = true;
-            NewClass("bootstrap_mode");
+            HardClass("bootstrap_mode");
             break;
 
         case 's':
@@ -253,7 +254,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
         case 'n':
             DONTDO = true;
             IGNORELOCK = true;
-            NewClass("opt_dry_run");
+            HardClass("opt_dry_run");
             break;
 
         case 'V':
@@ -373,7 +374,7 @@ void KeepControlPromises(Policy *policy)
 
     for (Constraint *cp = ControlBodyConstraints(policy, cf_agent); cp != NULL; cp = cp->next)
     {
-        if (IsExcluded(cp->classes))
+        if (IsExcluded(cp->classes, NULL))
         {
             continue;
         }
@@ -487,7 +488,7 @@ void KeepControlPromises(Policy *policy)
             for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
             {
                 CfOut(cf_verbose, "", " -> ... %s\n", ScalarValue(rp));
-                NewClass(rp->item);
+                NewClass(rp->item, NULL);
             }
 
             continue;
@@ -994,7 +995,7 @@ static void KeepAgentPromise(Promise *pp, const ReportContext *report_context)
     char *sp = NULL;
     struct timespec start = BeginMeasure();
 
-    if (!IsDefinedClass(pp->classes))
+    if (!IsDefinedClass(pp->classes, pp->namespace))
     {
         CfOut(cf_verbose, "", "\n");
         CfOut(cf_verbose, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");

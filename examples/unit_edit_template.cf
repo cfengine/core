@@ -1,0 +1,21 @@
+
+body common control
+{
+bundlesequence => { "main" };
+}
+
+bundle agent main
+{
+vars:
+
+   "here"  string => "/home/a10004/LapTop/cfengine/core/examples";
+
+   "list" slist => { "one", "two", "three" };
+
+files:
+
+   "/tmp/output"
+
+             create => "true",
+      edit_template => "$(here)/input.edittemplate";
+}

@@ -498,9 +498,13 @@ void CheckFileChanges(Policy **policy, GenericAgentConfig config, const ReportCo
 
             /* Free & reload -- lock this to avoid access errors during reload */
 
-            DeleteAlphaList(&VHEAP);
             DeleteItemList(VNEGHEAP);
+            
+            DeleteAlphaList(&VHEAP);
             InitAlphaList(&VHEAP);
+            DeleteAlphaList(&VHARDHEAP);
+            InitAlphaList(&VHARDHEAP);
+            
             DeleteAlphaList(&VADDCLASSES);
             InitAlphaList(&VADDCLASSES);
 
@@ -562,7 +566,7 @@ void CheckFileChanges(Policy **policy, GenericAgentConfig config, const ReportCo
             BuiltinClasses();
             OSClasses();
 
-            NewClass(CF_AGENTTYPES[THIS_AGENT_TYPE]);
+            HardClass(CF_AGENTTYPES[THIS_AGENT_TYPE]);
 
             SetReferenceTime(true);
             *policy = ReadPromises(cf_server, CF_SERVERC, config, report_context);

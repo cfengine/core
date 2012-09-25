@@ -1027,7 +1027,7 @@ static int MatchClasses(ServerConnectionState *conn)
         {
             CfOut(cf_verbose, "", "Checking whether class %s can be identified as me...\n", ip->name);
 
-            if (IsDefinedClass(ip->name))
+            if (IsDefinedClass(ip->name, NULL))
             {
                 CfDebug("Class %s matched, accepting...\n", ip->name);
                 DeleteItemList(classlist);

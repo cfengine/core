@@ -154,7 +154,7 @@ category   [a-zA-Z_]+:
                               yyerror("identifier too long");
                           }
                           strncpy(P.currentid, yytext, CF_MAXVARSIZE);
-                          return ID;
+                          return IDSYNTAX;
                       }
 
 
@@ -167,7 +167,7 @@ category   [a-zA-Z_]+:
                               yyerror("qualified identifier too long");
                           }
                           strncpy(P.currentid, yytext, CF_MAXVARSIZE);
-                          return ID;
+                          return IDSYNTAX;
                       }
 
 

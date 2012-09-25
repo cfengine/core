@@ -48,7 +48,7 @@ body delete init_delete
 
 body link_from init_link
 {
-        source => "/bin/true";
+        source => "$(G.true)";
 }
 
 #######################################################

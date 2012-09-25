@@ -51,7 +51,7 @@ files:
 
 body file_select test_hunt(prefix)
 {
-exec_program => "$(prefix)/bin/grep $(init.find_this) $(this.promiser)";
+exec_program => "$(G.grep) $(init.find_this) $(this.promiser)";
 file_result => "exec_program";
 }
 

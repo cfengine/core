@@ -131,7 +131,7 @@ cscope.*
 
 *~
 \#*#
-src/.dir-locals.el
+.dir-locals.el
 
 # eclipse
 

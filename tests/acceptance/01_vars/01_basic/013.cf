@@ -31,7 +31,7 @@ vars:
      classes => setclasses("nonexisting_t", "nonexisting_f");
 
   "bar"
-     string => execresult("/bin/true", "noshell"),
+     string => execresult("$(G.true)", "noshell"),
      classes => setclasses("true_t", "true_f");
 }
 

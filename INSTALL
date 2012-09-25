@@ -72,7 +72,7 @@ From tarball:
 $ ./configure [configure options]
 $ make [-jN]
 
-From Subversion checkout:
+From git checkout:
 
 $ ./autogen.sh [configure options]
 $ make [-jN]

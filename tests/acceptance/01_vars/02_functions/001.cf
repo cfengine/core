@@ -29,6 +29,7 @@ vars:
     any::
         "uid_root" int => getuid("root");
         "uid_daemon" int => getuid("daemon");
+    !darwin::
         "uid_bin" int => getuid("bin");
 
     (linux.!SuSE.!redhat)|solaris::
@@ -43,8 +44,11 @@ vars:
         "num_root" int => "0";
         "num_daemon" int => "1";
         "num_bin" int => "3";
+    darwin::
+        "num_root" int => "0";
+        "num_daemon" int => "1";
 
-    !freebsd.!linux.!solaris::
+    !freebsd.!linux.!solaris.!darwin::
         "num_root" string => "fixme";
         "num_daemon" string => "fixme";
         "num_bin" string => "fixme";
@@ -56,10 +60,16 @@ vars:
 bundle agent check
 {
 classes:
+    darwin::
+        "ok_bin" expression => "any";
+    !darwin::
+        "ok_bin" expression => strcmp("$(test.uid_bin)", "$(test.num_bin)");
+
+    any::
         "ok" and => {
                     strcmp("$(test.uid_root)", "$(test.num_root)"),
                     strcmp("$(test.uid_daemon)", "$(test.num_daemon)"),
-                    strcmp("$(test.uid_bin)", "$(test.num_bin)"),
+                    "ok_bin"
                     };
 
 reports:

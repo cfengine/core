@@ -29,29 +29,31 @@ vars:
   linux|freebsd|solaris::
     "gid_daemon" int => getgid("daemon");
     "gid_sys" int => getgid("sys");
-  !linux.!freebsd.!solaris::
+  darwin::
+    "gid_daemon" int => getgid("daemon");
+  !linux.!freebsd.!solaris.!darwin::
     "gid_daemon" string => "fixme";
     "gid_sys" string => "fixme";
 
   linux|solaris::
     "gid_0" int => getgid("root");
-  freebsd::
+  freebsd|darwin::
     "gid_0" int => getgid("wheel");
-  !linux.!freebsd.!solaris::
+  !linux.!freebsd.!solaris.!darwin::
     "gid_0" string => "fixme";
 
   SuSE|redhat::
     "num_daemon" int => "2";
-  (linux.!SuSE.!redhat)|freebsd::
+  (linux.!SuSE.!redhat)|freebsd|darwin::
     "num_daemon" int => "1";
   solaris::
     "num_daemon" int => "12";
-  !linux.!freebsd.!solaris::
+  !linux.!freebsd.!solaris.!darwin::
     "num_daemon" string => "fixme";
 
   linux|freebsd|solaris::
     "num_sys" int => "3";
-  !linux.!freebsd.!solaris::
+  !linux.!freebsd.!solaris.!darwin::
     "num_sys" string => "fixme";
 }
 
@@ -60,10 +62,16 @@ vars:
 bundle agent check
 {
 classes:
+    darwin::
+        "ok_sys" expression => "any";
+    !darwin::
+        "ok_sys" expression => strcmp("$(test.gid_sys)", "$(test.num_sys)");
+
+    any::
         "ok" and => {
                     strcmp("$(test.gid_0)", "0"),
                     strcmp("$(test.gid_daemon)", "$(test.num_daemon)"),
-                    strcmp("$(test.gid_sys)", "$(test.num_sys)"),
+                    "ok_sys"
                     };
 
 reports:

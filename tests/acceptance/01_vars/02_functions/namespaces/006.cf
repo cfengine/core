@@ -1,0 +1,39 @@
+# Check that getindices() works correctly within and across namespaces
+
+# 004: getindices() with constant argument, from non-default namespace to the same namespace.
+
+body common control
+{
+      inputs => { "../../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle common g
+{
+  vars:
+      "array[key]" string => "string";
+}
+
+bundle agent init
+{
+  vars:
+}
+
+bundle agent test
+{
+  methods:
+      "any" usebundle => test_default_namespace;
+}
+
+bundle agent test_default_namespace
+{
+  vars:
+      "repo_ids6" slist => getindices("g.array");
+}
+
+bundle agent check
+{
+  methods:
+      "check"  usebundle => default_check_strcmp("$(test_default_namespace.repo_ids6)", "key", "$(this.promise_filename)", "no");
+}

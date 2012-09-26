@@ -1,0 +1,36 @@
+# Test that variables can be passed across bundles and namespaces
+
+body common control
+{
+  inputs => { "../../default.cf.sub", "108.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle agent init
+{
+vars:
+  "dummy" string => "dummy";
+}
+
+bundle agent test
+{
+  methods:
+      "namespaced" usebundle => ns108:pass($(init.dummy));
+}
+
+bundle agent check
+{
+classes:
+  "ok" expression => strcmp("$(init.dummy)", "$(ns108:pass.passed_dummy)");
+
+reports:
+  DEBUG::
+    "We passed '$(init.dummy)' to ns108:pass() and it recorded '$(ns108:pass.passed_dummy)'";
+  ok::
+    "$(this.promise_filename) Pass";
+  !ok::
+    "$(this.promise_filename) FAIL";
+}

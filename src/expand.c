@@ -1194,7 +1194,25 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
     a.classes = GetClassDefinitionConstraints(pp);
 
     enum cfdatatype existing_var = GetVariable(scope, pp->promiser, &retval);
-    
+
+    char qualified_scope[CF_MAXVARSIZE];
+
+    if (strcmp(pp->namespace, "default") == 0)
+       {
+       strcpy(qualified_scope, scope);
+       }
+    else
+       {
+       if (strchr(scope, ':') == NULL)
+          {
+          snprintf(qualified_scope, CF_MAXVARSIZE, "%s:%s", pp->namespace, scope);
+          }
+       else
+          {
+          strcpy(qualified_scope, scope);
+          }
+       }
+
     if (rval.item != NULL)
     {
         FnCall *fp = (FnCall *) rval.item;
@@ -1249,7 +1267,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
         {
             /* See if the variable needs recursively expanding again */
 
-            Rval returnval = EvaluateFinalRval(scope, rval, true, pp);
+            Rval returnval = EvaluateFinalRval(qualified_scope, rval, true, pp);
 
             DeleteRvalItem(rval);
 
@@ -1261,7 +1279,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
         {
             if (ok_redefine)    /* only on second iteration, else we ignore broken promises */
             {
-                DeleteVariable(scope, pp->promiser);
+                DeleteVariable(qualified_scope, pp->promiser);
             }
             else if ((THIS_AGENT_TYPE == cf_common) && (CompareRval(retval, rval) == false))
             {
@@ -1313,10 +1331,10 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
             }
         }
 
-        if (!AddVariableHash(scope, pp->promiser, rval, Typename2Datatype(cp->lval),
+        if (!AddVariableHash(qualified_scope, pp->promiser, rval, Typename2Datatype(cp->lval),
                              cp->audit->filename, cp->offset.line))
         {
-            CfOut(cf_verbose, "", "Unable to converge %s.%s value (possibly empty or infinite regression)\n", scope,
+            CfOut(cf_verbose, "", "Unable to converge %s.%s value (possibly empty or infinite regression)\n", qualified_scope,
                   pp->promiser);
             PromiseRef(cf_verbose, pp);
             cfPS(cf_noreport, CF_FAIL, "", pp, a, " !! Couldn't add variable %s", pp->promiser);

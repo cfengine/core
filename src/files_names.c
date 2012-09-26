@@ -1055,3 +1055,20 @@ const char *GetSoftwareCacheFilename(char *buffer)
     MapName(buffer);
     return buffer;
 }
+
+/*******************************************************************/
+
+int StringInArray(char **array, char *string)
+{
+    for (int i = 0; array[i] != NULL; i++)
+    {
+        if (strcmp(string, array[i]) == 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+

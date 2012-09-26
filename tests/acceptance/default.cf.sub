@@ -11,7 +11,7 @@ classes:
 
 vars:
   "cwd" string => execresult("/bin/pwd", "noshell");
-  "cmds" slist => { "sort", "touch", "grep", "gzip", "hexdump", "od", "diff", "rm", "true", "false" };
+  "cmds" slist => { "sort", "touch", "grep", "gzip", "hexdump", "od", "diff", "rm", "true", "false", "mkdir", "ln" };
 
   "$(cmds)"  string => "/bin/$(cmds)",
       ifvarclass => "bin_$(cmds)";
@@ -110,9 +110,9 @@ vars:
         "file2h" string => execresult("$(G.od) -c $(file2)", "useshell");
 
     DEBUG.!no_difference.has_unified_diff::
-        "diffu" string => execresult("$(G.diff) -u $(file2) $(file1) 2>/dev/null", "noshell");
+        "diffu" string => execresult("$(G.diff) -u $(file2) $(file1) 2>/dev/null", "useshell");
     DEBUG.!no_difference.!has_unified_diff::
-        "diffu" string => execresult("$(G.diff) -c $(file2) $(file1) 2>/dev/null", "noshell");
+        "diffu" string => execresult("$(G.diff) -c $(file2) $(file1) 2>/dev/null", "useshell");
 
 classes:
     "has_unified_diff" expression => returnszero(

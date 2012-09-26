@@ -446,12 +446,12 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
         if ((vp = GetConstraintValue("edit_line", pp, CF_FNCALL)))
         {
             fp = (FnCall *) vp;
-            strcat(edit_bundle_name,fp->name);
+            strcpy(edit_bundle_name, fp->name);
             params = fp->args;
         }
         else if ((vp = GetConstraintValue("edit_line", pp, CF_SCALAR)))
         {
-            strcat(edit_bundle_name,(char *) vp);
+            strcpy(edit_bundle_name, (char *) vp);
             params = NULL;
         }
         else
@@ -495,12 +495,12 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
         if ((vp = GetConstraintValue("edit_xml", pp, CF_FNCALL)))
         {
             fp = (FnCall *) vp;
-            strcat(edit_bundle_name,fp->name);
+            strcpy(edit_bundle_name, fp->name);
             params = fp->args;
         }
         else if ((vp = GetConstraintValue("edit_xml", pp, CF_SCALAR)))
         {
-            strcat(edit_bundle_name,(char *) vp);
+            strcpy(edit_bundle_name, (char *) vp);
             params = NULL;
         }
         else

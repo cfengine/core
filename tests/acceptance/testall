@@ -49,6 +49,12 @@ if [ -f /usr/xpg4/bin/grep ]; then
   export PATH
 fi
 
+#
+# Unset environment variables which might break runinng acceptance tests
+#
+GREP_OPTIONS=
+export GREP_OPTIONS
+
 LOG=test.log
 SUMMARY=summary.log
 XML=test.xml

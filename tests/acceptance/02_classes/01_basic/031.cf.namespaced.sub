@@ -1,0 +1,22 @@
+body file control
+{
+  namespace => "test_namespace";
+}
+
+bundle agent classchecker
+{
+  classes:
+      "localclass1" and => { "default:GLOBALCLASS" };
+      "localclass2" or => { "default:GLOBALCLASS" };
+      "localclass3" and => { "default:$(classname)" };
+
+  vars:
+      "classname" string => "GLOBALCLASS";
+
+    localclass1::
+      "var1" string => "data1";
+    localclass2::
+      "var2" string => "data2";
+    localclass3::
+      "var3" string => "data3";
+}

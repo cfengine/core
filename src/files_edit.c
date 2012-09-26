@@ -57,7 +57,17 @@ EditContext *NewEditContext(char *filename, Attributes a, Promise *pp)
 
     if (a.haveeditxml)
     {
-    // Fill me in
+#ifdef HAVE_LIBXML2
+        if (!LoadFileAsXmlDoc(&(ec->xmldoc), filename, a, pp))
+        {
+            free(ec);
+            return NULL;
+        }
+#else
+        cfPS(cf_verbose, CF_INTERPT, "", pp, a, " !! Cannot edit xml files without LIBXML2\n");
+        free(ec);
+        return NULL;
+#endif
     }
 
     if (a.edits.empty_before_use)
@@ -106,9 +116,23 @@ void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportC
 
         if (a.haveeditxml)
         {
-        // Fill me in
+#ifdef HAVE_LIBXML2
+            if (XmlCompareToFile(ec->xmldoc, ec->filename, a, pp))
+            {
+                if (ec)
+                {
+                    cfPS(cf_verbose, CF_NOP, "", pp, a, " -> No edit changes to xml file %s need saving", ec->filename);
+                }
+            }
+            else
+            {
+                SaveXmlDocAsFile(ec->xmldoc, ec->filename, a, pp, report_context);
+            }
+            xmlFreeDoc(ec->xmldoc);
+#else
+            cfPS(cf_verbose, CF_INTERPT, "", pp, a, " !! Cannot edit xml files without LIBXML2\n");
+#endif
         }
-        
     }
     else
     {
@@ -207,15 +231,59 @@ int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, Promise
     return (true);
 }
 
+/***************************************************************************/
+
+#ifdef HAVE_LIBXML2
+int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, Attributes a, Promise *pp)
+{
+    struct stat statbuf;
+
+    if (cfstat(file, &statbuf) == -1)
+    {
+        cfPS(cf_error, CF_FAIL, "stat", pp, a, " ** Information: the proposed file \"%s\" could not be loaded", file);
+        return false;
+    }
+
+    if (a.edits.maxfilesize != 0 && statbuf.st_size > a.edits.maxfilesize)
+    {
+        CfOut(cf_inform, "", " !! File %s is bigger than the limit edit.max_file_size = %jd > %d bytes\n", file,
+              (intmax_t) statbuf.st_size, a.edits.maxfilesize);
+        return false;
+    }
+
+    if (!S_ISREG(statbuf.st_mode))
+    {
+        cfPS(cf_inform, CF_INTERPT, "", pp, a, "%s is not a plain file\n", file);
+        return false;
+    }
+
+    if (statbuf.st_size == 0)
+    {
+        if ((*doc = xmlNewDoc(BAD_CAST "1.0")) == NULL)
+        {
+            cfPS(cf_inform, CF_INTERPT, "xmlParseFile", pp, a, "Document %s not parsed successfully\n", file);
+            return false;
+        }
+    }
+    else if ((*doc = xmlParseFile(file)) == NULL)
+    {
+        cfPS(cf_inform, CF_INTERPT, "xmlParseFile", pp, a, "Document %s not parsed successfully\n", file);
+        return false;
+    }
+
+    return true;
+}
+#endif
+
 /*********************************************************************/
 
-int SaveItemListAsFile(Item *liststart, const char *file, Attributes a, Promise *pp,
+typedef bool (*SaveCallbackFn)(const char *dest_filename, const char *orig_filename, void *param, Attributes a, Promise *pp);
+
+int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attributes a, Promise *pp,
                        const ReportContext *report_context)
 {
-    Item *ip;
     struct stat statbuf;
     char new[CF_BUFSIZE], backup[CF_BUFSIZE];
-    FILE *fp;
     mode_t mask;
     char stamp[CF_BUFSIZE];
     time_t stamp_now;
@@ -255,24 +323,10 @@ int SaveItemListAsFile(Item *liststart, const char *file, Attributes a, Promise 
     strcat(new, ".cf-after-edit");
     unlink(new);                /* Just in case of races */
 
-    if ((fp = fopen(new, "w")) == NULL)
+    if ((*callback)(new, file, param, a, pp) == false)
     {
-        cfPS(cf_error, CF_FAIL, "fopen", pp, a, "Couldn't write file %s after editing\n", new);
         return false;
     }
-
-    for (ip = liststart; ip != NULL; ip = ip->next)
-    {
-        fprintf(fp, "%s\n", ip->name);
-    }
-
-    if (fclose(fp) == -1)
-    {
-        cfPS(cf_error, CF_FAIL, "fclose", pp, a, "Unable to close file while writing");
-        return false;
-    }
-
-    cfPS(cf_inform, CF_CHG, "", pp, a, " -> Edited file %s \n", file);
 
     if (cf_rename(file, backup) == -1)
     {
@@ -294,6 +348,7 @@ int SaveItemListAsFile(Item *liststart, const char *file, Attributes a, Promise 
             unlink(backup);
         }
     }
+
     else
     {
         unlink(backup);
@@ -321,6 +376,72 @@ int SaveItemListAsFile(Item *liststart, const char *file, Attributes a, Promise 
 
     return true;
 }
+
+/*********************************************************************/
+
+bool SaveItemListCallback(const char *dest_filename, const char *orig_filename, void *param, Attributes a, Promise *pp)
+{
+    Item *liststart = param, *ip;
+    FILE *fp;
+
+    //saving list to file
+    if ((fp = fopen(dest_filename, "w")) == NULL)
+    {
+        cfPS(cf_error, CF_FAIL, "fopen", pp, a, "Couldn't write file %s after editing\n", dest_filename);
+        return false;
+    }
+
+    for (ip = liststart; ip != NULL; ip = ip->next)
+    {
+        fprintf(fp, "%s\n", ip->name);
+    }
+
+    if (fclose(fp) == -1)
+    {
+        cfPS(cf_error, CF_FAIL, "fclose", pp, a, "Unable to close file while writing");
+        return false;
+    }
+
+    cfPS(cf_inform, CF_CHG, "", pp, a, " -> Edited file %s \n", orig_filename);
+    return true;
+}
+
+/*********************************************************************/
+
+int SaveItemListAsFile(Item *liststart, const char *file, Attributes a, Promise *pp,
+                       const ReportContext *report_context)
+{
+    return SaveAsFile(&SaveItemListCallback, liststart, file, a, pp, report_context);
+}
+
+/*********************************************************************/
+
+#ifdef HAVE_LIBXML2
+bool SaveXmlCallback(const char *dest_filename, const char *orig_filename, void *param, Attributes a, Promise *pp)
+{
+    xmlDocPtr doc = param;
+
+    //saving xml to file
+    if (xmlSaveFile(dest_filename, doc) == -1)
+    {
+        cfPS(cf_error, CF_FAIL, "xmlSaveFile", pp, a, "Failed to write xml document to file %s after editing\n", dest_filename);
+        return false;
+    }
+
+    cfPS(cf_inform, CF_CHG, "", pp, a, " -> Edited xml file %s \n", orig_filename);
+    return true;
+}
+#endif
+
+/*********************************************************************/
+
+#ifdef HAVE_LIBXML2
+int SaveXmlDocAsFile(xmlDocPtr doc, const char *file, Attributes a, Promise *pp,
+                       const ReportContext *report_context)
+{
+    return SaveAsFile(&SaveXmlCallback, doc, file, a, pp, report_context);
+}
+#endif
 
 /*********************************************************************/
 

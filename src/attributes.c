@@ -1323,6 +1323,8 @@ Attributes GetInsertionAttributes(const Promise *pp)
     attr.haveregion = GetBooleanConstraint("select_region", pp);
     attr.region = GetRegionConstraints(pp);
 
+    attr.xml = GetXmlConstraints(pp);
+
     attr.havetrans = GetBooleanConstraint(CF_TRANSACTION, pp);
     attr.transaction = GetTransactionConstraints(pp);
 
@@ -1372,6 +1374,8 @@ Attributes GetDeletionAttributes(const Promise *pp)
     attr.haveregion = GetBooleanConstraint("select_region", pp);
     attr.region = GetRegionConstraints(pp);
 
+    attr.xml = GetXmlConstraints(pp);
+
     attr.havetrans = GetBooleanConstraint(CF_TRANSACTION, pp);
     attr.transaction = GetTransactionConstraints(pp);
 
@@ -1420,6 +1424,8 @@ Attributes GetReplaceAttributes(const Promise *pp)
     attr.haveregion = GetBooleanConstraint("select_region", pp);
     attr.region = GetRegionConstraints(pp);
 
+    attr.xml = GetXmlConstraints(pp);
+
     attr.havetrans = GetBooleanConstraint(CF_TRANSACTION, pp);
     attr.transaction = GetTransactionConstraints(pp);
 
@@ -1427,6 +1433,18 @@ Attributes GetReplaceAttributes(const Promise *pp)
     attr.classes = GetClassDefinitionConstraints(pp);
 
     return attr;
+}
+
+/*******************************************************************/
+
+EditXml GetXmlConstraints(const Promise *pp)
+{
+    EditXml x;
+
+    x.haveselectxpathregion = ((x.select_xpath_region = GetConstraintValue("select_xpath_region", pp, CF_SCALAR)) != NULL);
+    x.haveattributevalue = ((x.attribute_value = GetConstraintValue("attribute_value", pp, CF_SCALAR)) != NULL);
+
+    return x;
 }
 
 /*******************************************************************/

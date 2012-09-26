@@ -88,6 +88,7 @@ static void VerifyAttributeSet(Promise *pp);
 static void VerifyTextDeletions(Promise *pp);
 static void VerifyTextSet(Promise *pp);
 static void VerifyTextInsertions(Promise *pp);
+#ifdef HAVE_LIBXML2
 static bool XmlSelectNode(char *xpath, xmlDocPtr doc, xmlNodePtr *docnode, Attributes a, Promise *pp);
 static bool DeleteTreeInNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
 static bool InsertTreeInFile(char *root, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
@@ -126,6 +127,7 @@ xmlChar *CharToXmlChar(char* c);
 static bool ContainsRegex(const char* rawstring, const char* regex);
 static int XmlAttributeCount(xmlNodePtr node, Attributes a, Promise *pp);
 static bool XmlXPathConvergent(const char* xpath, Attributes a, Promise *pp);
+#endif
 
 /*****************************************************************************/
 /* Level                                                                     */
@@ -271,6 +273,8 @@ static void KeepEditXmlPromise(Promise *pp)
         xmlInitParser();
         VerifyTreeDeletions(pp);
         xmlCleanupParser();
+#else
+        CfOut(cf_verbose, "", " !! Cannot edit xml files without LIBXML2\n");
 #endif
         return;
     }
@@ -281,6 +285,8 @@ static void KeepEditXmlPromise(Promise *pp)
         xmlInitParser();
         VerifyTreeInsertions(pp);
         xmlCleanupParser();
+#else
+        CfOut(cf_verbose, "", " !! Cannot edit xml files without LIBXML2\n");
 #endif
         return;
     }
@@ -291,6 +297,8 @@ static void KeepEditXmlPromise(Promise *pp)
         xmlInitParser();
         VerifyAttributeDeletions(pp);
         xmlCleanupParser();
+#else
+        CfOut(cf_verbose, "", " !! Cannot edit xml files without LIBXML2\n");
 #endif
         return;
     }
@@ -301,6 +309,8 @@ static void KeepEditXmlPromise(Promise *pp)
         xmlInitParser();
         VerifyAttributeSet(pp);
         xmlCleanupParser();
+#else
+        CfOut(cf_verbose, "", " !! Cannot edit xml files without LIBXML2\n");
 #endif
         return;
     }
@@ -311,6 +321,8 @@ static void KeepEditXmlPromise(Promise *pp)
         xmlInitParser();
         VerifyTextDeletions(pp);
         xmlCleanupParser();
+#else
+        CfOut(cf_verbose, "", " !! Cannot edit xml files without LIBXML2\n");
 #endif
         return;
     }
@@ -321,6 +333,8 @@ static void KeepEditXmlPromise(Promise *pp)
         xmlInitParser();
         VerifyTextSet(pp);
         xmlCleanupParser();
+#else
+        CfOut(cf_verbose, "", " !! Cannot edit xml files without LIBXML2\n");
 #endif
         return;
     }
@@ -331,6 +345,8 @@ static void KeepEditXmlPromise(Promise *pp)
         xmlInitParser();
         VerifyTextInsertions(pp);
         xmlCleanupParser();
+#else
+        CfOut(cf_verbose, "", " !! Cannot edit xml files without LIBXML2\n");
 #endif
         return;
     }
@@ -348,6 +364,7 @@ static void KeepEditXmlPromise(Promise *pp)
 
 static void VerifyTreeDeletions(Promise *pp)
 {
+#ifdef HAVE_LIBXML2
     xmlDocPtr doc;
     xmlNodePtr docnode;
 
@@ -390,12 +407,16 @@ static void VerifyTreeDeletions(Promise *pp)
     }
 
     YieldCurrentLock(thislock);
+#else
+        CfOut(cf_verbose, "", " !! Cannot edit xml files without LIBXML2\n");
+#endif
 }
 
 /***************************************************************************/
 
 static void VerifyTreeInsertions(Promise *pp)
 {
+#ifdef HAVE_LIBXML2
     xmlDocPtr doc;
     xmlNodePtr docnode;
 
@@ -447,12 +468,16 @@ static void VerifyTreeInsertions(Promise *pp)
     }
 
     YieldCurrentLock(thislock);
+#else
+        CfOut(cf_verbose, "", " !! Cannot edit xml files without LIBXML2\n");
+#endif
 }
 
 /***************************************************************************/
 
 static void VerifyAttributeDeletions(Promise *pp)
 {
+#ifdef HAVE_LIBXML2
     xmlDocPtr doc = pp->edcontext->xmldoc;
     xmlNodePtr docnode;
 
@@ -495,12 +520,16 @@ static void VerifyAttributeDeletions(Promise *pp)
     }
 
     YieldCurrentLock(thislock);
+#else
+        CfOut(cf_verbose, "", " !! Cannot edit xml files without LIBXML2\n");
+#endif
 }
 
 /***************************************************************************/
 
 static void VerifyAttributeSet(Promise *pp)
 {
+#ifdef HAVE_LIBXML2
     xmlDocPtr doc = pp->edcontext->xmldoc;
     xmlNodePtr docnode;
 
@@ -543,12 +572,16 @@ static void VerifyAttributeSet(Promise *pp)
     }
 
     YieldCurrentLock(thislock);
+#else
+        CfOut(cf_verbose, "", " !! Cannot edit xml files without LIBXML2\n");
+#endif
 }
 
 /***************************************************************************/
 
 static void VerifyTextDeletions(Promise *pp)
 {
+#ifdef HAVE_LIBXML2
     xmlDocPtr doc = NULL;
     xmlNodePtr docnode = NULL;
 
@@ -591,12 +624,16 @@ static void VerifyTextDeletions(Promise *pp)
     }
 
     YieldCurrentLock(thislock);
+#else
+        CfOut(cf_verbose, "", " !! Cannot edit xml files without LIBXML2\n");
+#endif
 }
 
 /***************************************************************************/
 
 static void VerifyTextSet(Promise *pp)
 {
+#ifdef HAVE_LIBXML2
     xmlDocPtr doc = NULL;
     xmlNodePtr docnode = NULL;
 
@@ -639,12 +676,16 @@ static void VerifyTextSet(Promise *pp)
     }
 
     YieldCurrentLock(thislock);
+#else
+        CfOut(cf_verbose, "", " !! Cannot edit xml files without LIBXML2\n");
+#endif
 }
 
 /***************************************************************************/
 
 static void VerifyTextInsertions(Promise *pp)
 {
+#ifdef HAVE_LIBXML2
     xmlDocPtr doc = NULL;
     xmlNodePtr docnode = NULL;
 
@@ -687,7 +728,14 @@ static void VerifyTextInsertions(Promise *pp)
     }
 
     YieldCurrentLock(thislock);
+#else
+        CfOut(cf_verbose, "", " !! Cannot edit xml files without LIBXML2\n");
+#endif
 }
+
+/***************************************************************************/
+
+#ifdef HAVE_LIBXML2
 
 /***************************************************************************/
 
@@ -2072,7 +2120,10 @@ static int XmlAttributeCount(xmlNodePtr node, Attributes a, Promise *pp)
 static bool XmlXPathConvergent(const char* xpath, Attributes a, Promise *pp)
 /*verify that xpath does not specify position wrt sibling-axis (such as):[#] [last()] [position()] following-sibling:: preceding-sibling:: */
 {
-    const char *regexp = "\\[\\s*([^\\[\\]]*\\s*(\\||(or)|(and)))?\\s*"     // [ (stuff) (|/or/and)
+    char regexp[CF_BUFSIZE] = {'\0'};
+
+    //check in predicate
+    strcpy (regexp, "\\[\\s*([^\\[\\]]*\\s*(\\||(or)|(and)))?\\s*"     // [ (stuff) (|/or/and)
         // position() (=/!=/</<=/>/>=)
         "((position)\\s*\\(\\s*\\)\\s*((=)|(!=)|(<)|(<=)|(>)|(>=))\\s*)?\\s*"
         // (number) | (number) (+/-/*/div/mod) (number) | last() | last() (+/-/*/div/mod) (number)
@@ -2080,7 +2131,16 @@ static bool XmlXPathConvergent(const char* xpath, Attributes a, Promise *pp)
         // (|/or/and) (stuff) ]
         "((\\||(or)|(and))[^\\[\\]]*)?\\]"
         // following:: preceding:: following-sibling:: preceding-sibling::
-        "|((following)|(preceding))(-sibling)?\\s*(::)";
+        "|((following)|(preceding))(-sibling)?\\s*(::)");
 
-    return (!ContainsRegex(xpath, regexp));
+    if (ContainsRegex(xpath, regexp))
+    {
+        return false;
+    }
+
+    return true;
 }
+
+/*********************************************************************/
+
+#endif

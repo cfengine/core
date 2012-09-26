@@ -233,6 +233,7 @@ int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, Promise
 
 /***************************************************************************/
 
+#ifdef HAVE_LIBXML2
 int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, Attributes a, Promise *pp)
 {
     struct stat statbuf;
@@ -272,6 +273,7 @@ int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, Attributes a, Promise *pp
 
     return true;
 }
+#endif
 
 /*********************************************************************/
 
@@ -414,6 +416,7 @@ int SaveItemListAsFile(Item *liststart, const char *file, Attributes a, Promise 
 
 /*********************************************************************/
 
+#ifdef HAVE_LIBXML2
 bool SaveXmlCallback(const char *dest_filename, const char *orig_filename, void *param, Attributes a, Promise *pp)
 {
     xmlDocPtr doc = param;
@@ -428,14 +431,17 @@ bool SaveXmlCallback(const char *dest_filename, const char *orig_filename, void 
     cfPS(cf_inform, CF_CHG, "", pp, a, " -> Edited xml file %s \n", orig_filename);
     return true;
 }
+#endif
 
 /*********************************************************************/
 
+#ifdef HAVE_LIBXML2
 int SaveXmlDocAsFile(xmlDocPtr doc, const char *file, Attributes a, Promise *pp,
                        const ReportContext *report_context)
 {
     return SaveAsFile(&SaveXmlCallback, doc, file, a, pp, report_context);
 }
+#endif
 
 /*********************************************************************/
 

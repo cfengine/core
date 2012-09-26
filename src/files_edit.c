@@ -57,16 +57,17 @@ EditContext *NewEditContext(char *filename, Attributes a, Promise *pp)
 
     if (a.haveeditxml)
     {
-#ifndef HAVE_LIBXML2
-        free(ec);
-        return NULL;
-#endif
-
+#ifdef HAVE_LIBXML2
         if (!LoadFileAsXmlDoc(&(ec->xmldoc), filename, a, pp))
         {
             free(ec);
             return NULL;
         }
+#else
+        cfPS(cf_verbose, CF_INTERPT, "", pp, a, " !! Cannot edit xml files without LIBXML2\n");
+        free(ec);
+        return NULL;
+#endif
     }
 
     if (a.edits.empty_before_use)
@@ -120,7 +121,7 @@ void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportC
             {
                 if (ec)
                 {
-                    cfPS(cf_verbose, CF_NOP, "", pp, a, " -> No edit changes to file %s need saving", ec->filename);
+                    cfPS(cf_verbose, CF_NOP, "", pp, a, " -> No edit changes to xml file %s need saving", ec->filename);
                 }
             }
             else
@@ -128,6 +129,8 @@ void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportC
                 SaveXmlDocAsFile(ec->xmldoc, ec->filename, a, pp, report_context);
             }
             xmlFreeDoc(ec->xmldoc);
+#else
+            cfPS(cf_verbose, CF_INTERPT, "", pp, a, " !! Cannot edit xml files without LIBXML2\n");
 #endif
         }
     }
@@ -343,6 +346,7 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
             unlink(backup);
         }
     }
+
     else
     {
         unlink(backup);
@@ -359,8 +363,6 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
     cf_chmod(file, statbuf.st_mode);    /* Restore file permissions etc */
     chown(file, statbuf.st_uid, statbuf.st_gid);
     umask(mask);
-
-    return true;
 
 #ifdef WITH_SELINUX
     if (selinux_enabled)

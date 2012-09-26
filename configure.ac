@@ -740,7 +740,6 @@ case "$target_os" in
 
    darwin*)
         AC_DEFINE(DARWIN, [], [Darwin build])
-        LDFLAGS="-Xlinker -m $LDFLAGS"
         ;;
 
    *)

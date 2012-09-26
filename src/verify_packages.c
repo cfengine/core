@@ -31,6 +31,7 @@
 #include "vars.h"
 #include "conversion.h"
 #include "expand.h"
+#include "scope.h"
 
 static void VerifyPromisedPatch(Attributes a, Promise *pp);
 static int ExecuteSchedule(PackageManager *schedule, enum package_actions action);

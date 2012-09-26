@@ -230,7 +230,7 @@ static void VerifyEnvironments(Attributes a, Promise *pp)
 
     CfOut(cf_verbose, "", " -> Selecting environment type \"%s\" -> \"%s\"", a.env.type, hyper_uri);
 
-    if (!IsDefinedClass(a.env.host))
+    if (!IsDefinedClass(a.env.host, NULL))
     {
         switch (a.env.state)
         {

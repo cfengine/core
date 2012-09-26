@@ -1,5 +1,6 @@
 body common control
 {
+  inputs => { "../../default.cf.sub" };
   bundlesequence => { "main" };
 }
 
@@ -7,5 +8,5 @@ bundle agent main
 {
 files:
   "/dev/null"
-    transformer => "/bin/true $(this.promiser)";
+    transformer => "$(G.true) $(this.promiser)";
 }

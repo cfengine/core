@@ -62,7 +62,7 @@ cancel_notkept => { "cancel_notkept" };
 bundle agent test
 {
 commands:
-    "/bin/grep BEGIN $(G.testfile)"
+    "$(G.grep) BEGIN $(G.testfile)"
     	classes => all_classes;
 }
 

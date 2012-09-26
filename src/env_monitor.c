@@ -34,6 +34,7 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "expand.h"
+#include "scope.h"
 
 #include <math.h>
 
@@ -776,7 +777,7 @@ static void UpdateDistributions(char *timekey, Averages *av)
    std-deviation for the current time.
 */
 
-    if (IsDefinedClass("Min40_45"))
+    if (IsDefinedClass("Min40_45", NULL))
     {
         day = Day2Number(timekey);
 
@@ -1138,7 +1139,7 @@ static void KeepMonitorPromise(Promise *pp)
 {
     char *sp = NULL;
 
-    if (!IsDefinedClass(pp->classes))
+    if (!IsDefinedClass(pp->classes, pp->namespace))
     {
         CfOut(cf_verbose, "", "\n");
         CfOut(cf_verbose, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");

@@ -116,7 +116,7 @@ AC_ARG_ENABLE([fhs],
 #
 
 AS_IF([test x"$enable_fhs" = xyes], [
-  projlibdir='${libexecdir}/cfengine'
+  projlibdir='${libdir}/cfengine'
   projdatadir='${exec_prefix}/share/cfengine'
   projdocdir='${exec_prefix}/share/doc/cfengine'
   WORKDIR='${localstatedir}/lib/cfengine'
@@ -509,6 +509,11 @@ AC_CHECK_FUNCS(getnetgrent)
 
 AC_CHECK_DECLS(setnetgrent, [], [], [[#include <netdb.h>]])
 AC_CHECK_FUNCS(setnetgrent)
+AC_COMPILE_IFELSE(AC_LANG_PROGRAM([[#include <netdb.h>]],
+                                   [extern int setnetgrent(const char *)]),
+  [AC_DEFINE([SETNETGRENT_RETURNS_INT], 1, [Whether setnetgrent returns int])],
+  [AC_DEFINE([SETNETGRENT_RETURNS_INT], 0, [Whether setnetgrent returns int])])
+
 
 AC_CHECK_DECLS(endnetgrent, [], [], [[#include <netdb.h>]])
 AC_CHECK_FUNCS(endnetgrent)

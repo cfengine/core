@@ -112,21 +112,7 @@ char *GenTimeKey(time_t now)
 
 int GetTimeSlot(time_t here_and_now)
 {
-    time_t now;
-    int slot = 0;
-    char timekey[CF_MAXVARSIZE];
-
-    strcpy(timekey, GenTimeKey(here_and_now));
-
-    for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING + SECONDS_PER_WEEK; now += CF_MEASURE_INTERVAL, slot++)
-    {
-        if (strcmp(timekey, GenTimeKey(now)) == 0)
-        {
-            return slot;
-        }
-    }
-
-    return -1;
+    return ((here_and_now - (4 * 24 * 60 * 60)) % SECONDS_PER_WEEK) / (long)CF_MEASURE_INTERVAL;
 }
 
 /*****************************************************************************/

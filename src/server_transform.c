@@ -35,6 +35,7 @@
 #include "reporting.h"
 #include "expand.h"
 #include "transaction.h"
+#include "scope.h"
 
 static void KeepContextBundles(Policy *policy, const ReportContext *report_context);
 static void KeepServerPromise(Promise *pp);
@@ -216,7 +217,7 @@ void KeepControlPromises(Policy *policy)
 
     for (cp = ControlBodyConstraints(policy, cf_server); cp != NULL; cp = cp->next)
     {
-        if (IsExcluded(cp->classes))
+        if (IsExcluded(cp->classes, NULL))
         {
             continue;
         }
@@ -524,7 +525,7 @@ static void KeepServerPromise(Promise *pp)
 {
     char *sp = NULL;
 
-    if (!IsDefinedClass(pp->classes))
+    if (!IsDefinedClass(pp->classes, pp->namespace))
     {
         CfOut(cf_verbose, "", "Skipping whole promise, as context is %s\n", pp->classes);
         return;
@@ -615,7 +616,7 @@ void KeepFileAccessPromise(Promise *pp)
 
     for (cp = pp->conlist; cp != NULL; cp = cp->next)
     {
-        if (!IsDefinedClass(cp->classes))
+        if (!IsDefinedClass(cp->classes, pp->namespace))
         {
             continue;
         }
@@ -728,7 +729,7 @@ void KeepLiteralAccessPromise(Promise *pp, char *type)
     
     for (cp = pp->conlist; cp != NULL; cp = cp->next)
     {
-        if (!IsDefinedClass(cp->classes))
+        if (!IsDefinedClass(cp->classes, pp->namespace))
         {
             continue;
         }
@@ -805,7 +806,7 @@ void KeepQueryAccessPromise(Promise *pp, char *type)
 
     for (cp = pp->conlist; cp != NULL; cp = cp->next)
     {
-        if (!IsDefinedClass(cp->classes))
+        if (!IsDefinedClass(cp->classes, pp->namespace))
         {
             continue;
         }
@@ -869,7 +870,7 @@ static void KeepServerRolePromise(Promise *pp)
 
     for (cp = pp->conlist; cp != NULL; cp = cp->next)
     {
-        if (!IsDefinedClass(cp->classes))
+        if (!IsDefinedClass(cp->classes, pp->namespace))
         {
             continue;
         }

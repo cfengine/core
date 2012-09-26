@@ -50,7 +50,8 @@ check_PROGRAMS = \
 	sort_test \
 	file_name_test \
 	logging_test \
-	granules_test
+	granules_test \
+	scope_test
 
 TESTS = $(check_PROGRAMS)
 

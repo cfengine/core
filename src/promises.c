@@ -30,6 +30,7 @@
 #include "syntax.h"
 #include "expand.h"
 #include "files_names.h"
+#include "scope.h"
 
 #define PACK_UPIFELAPSED_SALT "packageuplist"
 

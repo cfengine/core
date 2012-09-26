@@ -268,7 +268,7 @@ static void VerifyExec(Attributes a, Promise *pp)
 
                 if (a.module)
                 {
-                    ModuleProtocol(execstr, line, !a.contain.nooutput);
+                    ModuleProtocol(execstr, line, !a.contain.nooutput, pp->namespace);
                 }
                 else if (!a.contain.nooutput && NonEmptyLine(line))
                 {

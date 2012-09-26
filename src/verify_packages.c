@@ -1926,18 +1926,26 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
 
         if (installed)
         {
-            CfOut(cf_verbose, "", "Checking if latest available version is newer than installed...");
-            if (IsNewerThanInstalled(name, largestVerAvail, arch, instVer, instArch, a))
-            {
-                CfOut(cf_verbose, "",
-                      "Installed package (%s,%s,%s) is older than latest available (%s,%s,%s) - updating", name,
-                      instVer, instArch, name, largestVerAvail, arch);
-            }
-            else
-            {
-                CfOut(cf_verbose, "", "Installed package is up to date, not updating");
-                break;
-            }
+         /* HvB not matched then install package */
+         if (matched)
+           {
+           CfOut(cf_verbose, "", "Checking if latest available version is newer than installed...");
+
+           if (IsNewerThanInstalled(name, largestVerAvail, arch, instVer, instArch, a))
+              {
+              CfOut(cf_verbose, "", "Installed package (%s,%s,%s) is older than latest available (%s,%s,%s) - updating", name, instVer, instArch, name, largestVerAvail, arch);
+              }
+           else
+              {
+              CfOut(cf_verbose, "", "Installed package is up to date, not updating");
+              break;
+              }
+           }
+        else
+           {
+           CfOut(cf_verbose, "", "Installed package %s is older then requested %s) - updating", name, largestVerAvail);
+           }
+
         }
 
         if ((matched && package_select_in_range && !no_version_specified) || installed)

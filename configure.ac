@@ -53,7 +53,7 @@ AC_ARG_WITH([pthreads],
     [AS_HELP_STRING([--with-pthreads[[=PATH]]],
                     [Specify path to pthreads, if not the part of operating system])])
 
-if test "x$with_pthreads" != "xyes" && test "x$with_pthreads" != "xno"; then
+if test "x$with_pthreads" != x && test "x$with_pthreads" != "xyes" && test "x$with_pthreads" != "xno"; then
    LIBS="$LIBS -L$with_pthreads/lib"
    CFLAGS="$CFLAGS -I$with_pthreads/include"
 fi
@@ -536,8 +536,8 @@ AC_CHECK_FUNCS(getnetgrent)
 
 AC_CHECK_DECLS(setnetgrent, [], [], [[#include <netdb.h>]])
 AC_CHECK_FUNCS(setnetgrent)
-AC_COMPILE_IFELSE(AC_LANG_PROGRAM([[#include <netdb.h>]],
-                                   [extern int setnetgrent(const char *)]),
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <netdb.h>]],
+                                   [[extern int setnetgrent(const char *)]])],
   [AC_DEFINE([SETNETGRENT_RETURNS_INT], 1, [Whether setnetgrent returns int])],
   [AC_DEFINE([SETNETGRENT_RETURNS_INT], 0, [Whether setnetgrent returns int])])
 
@@ -740,7 +740,6 @@ case "$target_os" in
 
    darwin*)
         AC_DEFINE(DARWIN, [], [Darwin build])
-        LDFLAGS="-Xlinker -m $LDFLAGS"
         ;;
 
    *)

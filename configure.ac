@@ -758,6 +758,7 @@ esac
 AM_CONDITIONAL([LINUX], [test -n "`echo ${target_os} | grep linux`"])
 AM_CONDITIONAL([SOLARIS], [test -n "`(echo ${target_os} | egrep 'solaris|sunos')`"])
 AM_CONDITIONAL([NT], [test -n "`(echo ${target_os} | egrep 'mingw|cygwin')`"])
+AM_CONDITIONAL([CYGWIN], [test -n "`(echo ${target_os} | egrep 'cygwin')`"])
 AM_CONDITIONAL([AIX], [test -n "`(echo ${target_os} | grep aix)`"])
 AM_CONDITIONAL([HPUX], [test -n "`(echo ${target_os} | egrep 'hpux|hp-ux')`"])
 AM_CONDITIONAL([FREEBSD], [test -n "`(echo ${target_os} | grep freebsd)`"])

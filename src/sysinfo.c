@@ -878,7 +878,7 @@ void OSClasses(void)
 
 #ifdef CFCYG
 
-    for (sp = VSYSNAME.sysname; *sp != '\0'; sp++)
+    for (char *sp = VSYSNAME.sysname; *sp != '\0'; sp++)
     {
         if (*sp == '-')
         {

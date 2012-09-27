@@ -74,6 +74,40 @@ static const char *HINTS[15] =
 
 /*******************************************************************/
 
+static void KeepHardClasses()
+{
+    char *name = xcalloc(1024,sizeof(char));
+
+    if (name != NULL)
+    {
+        snprintf(name, 1024, "%s%cpolicy_serverd.dat", CFWORKDIR, FILE_SEPARATOR);
+
+        FILE *fp = fopen(name, "r");
+
+        if (fp != NULL)
+        {
+            snprintf(name, 1024, "%s/state/am_policy_hub", CFWORKDIR);
+            MapName(name);
+
+            struct stat sb;
+
+            if (stat(name, &sb) != -1)
+            {
+                HardClass("am_policy_hub");
+            }
+        }
+
+        free(name);
+    }
+
+#if defined HAVE_NOVA
+    HardClass("nova_edition");
+    HardClass("enterprise_edition");
+#else
+    HardClass("community_edition");
+#endif
+}
+
 GenericAgentConfig CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
@@ -565,6 +599,7 @@ void CheckFileChanges(Policy **policy, GenericAgentConfig config, const ReportCo
             Get3Environment();
             BuiltinClasses();
             OSClasses();
+            KeepHardClasses();
 
             HardClass(CF_AGENTTYPES[THIS_AGENT_TYPE]);
 

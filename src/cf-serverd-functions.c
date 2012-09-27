@@ -76,17 +76,16 @@ static const char *HINTS[15] =
 
 static void KeepHardClasses()
 {
-    char *name = xcalloc(1024,sizeof(char));
-
+    char name[CF_BUFSIZE];
     if (name != NULL)
     {
-        snprintf(name, 1024, "%s%cpolicy_serverd.dat", CFWORKDIR, FILE_SEPARATOR);
+        snprintf(name, sizeof(name), "%s%cpolicy_serverd.dat", CFWORKDIR, FILE_SEPARATOR);
 
         FILE *fp = fopen(name, "r");
 
         if (fp != NULL)
         {
-            snprintf(name, 1024, "%s/state/am_policy_hub", CFWORKDIR);
+            snprintf(name, sizeof(name), "%s/state/am_policy_hub", CFWORKDIR);
             MapName(name);
 
             struct stat sb;
@@ -96,8 +95,6 @@ static void KeepHardClasses()
                 HardClass("am_policy_hub");
             }
         }
-
-        free(name);
     }
 
 #if defined HAVE_NOVA

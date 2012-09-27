@@ -357,6 +357,7 @@ const SubTypeSyntax CF_FILES_SUBTYPES[] =
     {"edit_line", "replace_patterns", CF_REPLACE_BODIES},
 
     {"edit_xml", "*", CF_COMMON_XMLBODIES},
+    {"edit_xml", "build_xpath", CF_INSERTTAGS_BODIES},
     {"edit_xml", "delete_tree", CF_DELETETAGS_BODIES},
     {"edit_xml", "insert_tree", CF_INSERTTAGS_BODIES},
     {"edit_xml", "delete_attribute", CF_DELETEATTRIBUTES_BODIES},

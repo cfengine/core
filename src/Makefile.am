@@ -157,6 +157,10 @@ if !NT
 libpromises_la_SOURCES += \
         unix_dir.c
 endif
+if CYGWIN
+libpromises_la_SOURCES += \
+        unix_dir.c
+endif
 
 BUILT_SOURCES = cf3parse.h
 

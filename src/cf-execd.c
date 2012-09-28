@@ -82,7 +82,7 @@ static const char *ID = "The executor daemon is a scheduler and wrapper for\n"
     "agent and can email it to a specified address. It can\n"
     "splay the start time of executions across the network\n" "and work as a class-based clock for scheduling.";
 
-static const struct option OPTIONS[15] =
+static const struct option OPTIONS[] =
 {
     {"help", no_argument, 0, 'h'},
     {"debug", no_argument, 0, 'd'},
@@ -101,7 +101,7 @@ static const struct option OPTIONS[15] =
     {NULL, 0, 0, '\0'}
 };
 
-static const char *HINTS[15] =
+static const char *HINTS[sizeof(OPTIONS)/sizeof(OPTIONS[0])] =
 {
     "Print the help message",
     "Enable debugging output",

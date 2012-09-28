@@ -82,7 +82,7 @@ body depth_search test_recurse
 bundle agent check
 {
 vars:
-        "count" string => execresult("/usr/bin/wc $(test.counter)", "noshell");
+        "count" string => execresult("$(G.wc) $(test.counter)", "noshell");
 
 classes:
         "ok" expression => regcmp("\s*3\s.*", "$(count)");

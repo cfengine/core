@@ -56,15 +56,8 @@ mode => "$(test.mode)";
 # create a file as you, and then change owners.  This test file will be created
 # by root, but then changed to sys - and thus the promise to be owned by sys
 # is kept.
-linux::
-    owners => { "3", "daemon" };
-    groups => { "sys", "daemon" };
-freebsd::
-    owners => { "bin", "root" };
-    groups => { "sys", "wheel" };
-!(linux|freebsd)::
-    owners => { "undefined-please-fix" };
-    groups => { "undefined-please-fix" };
+    owners => { "3", "1" };
+    groups => { "3", "1" };
 }
 
 #######################################################

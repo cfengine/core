@@ -96,6 +96,7 @@ static const struct option OPTIONS[] =
     {"inform", no_argument, 0, 'I'},
     {"diagnostic", no_argument, 0, 'x'},
     {"no-fork", no_argument, 0, 'F'},
+    {"once", no_argument, 0, 'O'},
     {"no-winsrv", no_argument, 0, 'W'},
     {"ld-library-path", required_argument, 0, 'L'},
     {NULL, 0, 0, '\0'}
@@ -115,6 +116,7 @@ static const char *HINTS[sizeof(OPTIONS)/sizeof(OPTIONS[0])] =
     "Print basic information about changes made to the system, i.e. promises repaired",
     "Activate internal diagnostics (developers only)",
     "Run as a foreground processes (do not fork)",
+    "Run once and then exit",
     "Do not run as a service on windows - use this when running from a command shell (Cfengine Nova only)",
     "Set the internal value of LD_LIBRARY_PATH for child processes",
     NULL
@@ -159,7 +161,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
     char ld_library_path[CF_BUFSIZE];
     GenericAgentConfig config = GenericAgentDefaultConfig(cf_executor);
 
-    while ((c = getopt_long(argc, argv, "dvnKIf:D:N:VxL:hFV1gMW", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvnKIf:D:N:VxL:hFOV1gMW", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -218,8 +220,11 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
             break;
 
         case 'F':
-            ONCE = true;
             NO_FORK = true;
+            break;
+
+        case 'O':
+            ONCE = true;
             break;
 
         case 'V':

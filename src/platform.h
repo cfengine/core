@@ -381,11 +381,15 @@ int getnetgrent(char **host, char **user, char **domain);
 #endif
 
 #if !HAVE_DECL_SETNETGRENT
+# ifndef DARWIN // netdb.h on Mac defines setnetgrend as void
 int setnetgrent(const char *netgroup);
+# endif
 #endif
 
 #if !HAVE_DECL_ENDNETGRENT
+# ifndef DARWIN // netdb.h on Mac defines endnetgrend as void
 int endnetgrent(void);
+# endif
 #endif
 
 #ifndef HAVE_UNAME

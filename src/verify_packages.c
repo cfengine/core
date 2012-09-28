@@ -334,15 +334,6 @@ static int PackageSanityCheck(Attributes a, Promise *pp)
             return false;
         }
     }
-    if (!a.packages.package_list_update_command)
-    {
-        if (a.packages.package_list_update_ifelapsed != CF_NOINT)
-        {
-            cfPS(cf_verbose, CF_FAIL, "", pp, a,
-                 "!! Dependency conflict: package_list_update is not used, but package_list_update_ifelapsed is defined.");
-            return false;
-        }
-    }
     if (!a.packages.package_patch_command)
     {
         if (a.packages.package_patch_arch_regex)

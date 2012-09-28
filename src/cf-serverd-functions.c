@@ -79,7 +79,7 @@ static void KeepHardClasses()
     char name[CF_BUFSIZE];
     if (name != NULL)
     {
-        snprintf(name, sizeof(name), "%s%cpolicy_serverd.dat", CFWORKDIR, FILE_SEPARATOR);
+        snprintf(name, sizeof(name), "%s%cpolicy_server.dat", CFWORKDIR, FILE_SEPARATOR);
 
         FILE *fp = fopen(name, "r");
 

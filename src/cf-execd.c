@@ -45,13 +45,6 @@ static int WINSERVICE = true;
 static Item *SCHEDULE;
 static int SPLAYTIME = 0;
 
-static char EXECCOMMAND[CF_BUFSIZE];
-
-static char VMAILSERVER[CF_BUFSIZE];
-static char MAILFROM[CF_BUFSIZE];
-static char MAILTO[CF_BUFSIZE];
-static int MAXLINES = 30;
-
 #if defined(HAVE_PTHREAD)
 static pthread_attr_t threads_attrs;
 #endif
@@ -60,15 +53,15 @@ static pthread_attr_t threads_attrs;
 
 static GenericAgentConfig CheckOpts(int argc, char **argv);
 static void ThisAgentInit(void);
-static bool ScheduleRun(Policy **policy, const ReportContext *report_context);
+static bool ScheduleRun(Policy **policy, ExecConfig *exec_config, const ReportContext *report_context);
 static void Apoptosis(void);
 
 #if defined(HAVE_PTHREAD)
 static bool LocalExecInThread(const ExecConfig *config);
 #endif
 
-void StartServer(Policy *policy, const ReportContext *report_context);
-static void KeepPromises(Policy *policy);
+void StartServer(Policy *policy, ExecConfig *config, const ReportContext *report_context);
+static void KeepPromises(Policy *policy, ExecConfig *config);
 
 static ExecConfig *CopyExecConfig(const ExecConfig *config);
 static void DestroyExecConfig(ExecConfig *config);
@@ -82,7 +75,7 @@ static const char *ID = "The executor daemon is a scheduler and wrapper for\n"
     "agent and can email it to a specified address. It can\n"
     "splay the start time of executions across the network\n" "and work as a class-based clock for scheduling.";
 
-static const struct option OPTIONS[15] =
+static const struct option OPTIONS[] =
 {
     {"help", no_argument, 0, 'h'},
     {"debug", no_argument, 0, 'd'},
@@ -96,12 +89,13 @@ static const struct option OPTIONS[15] =
     {"inform", no_argument, 0, 'I'},
     {"diagnostic", no_argument, 0, 'x'},
     {"no-fork", no_argument, 0, 'F'},
+    {"once", no_argument, 0, 'O'},
     {"no-winsrv", no_argument, 0, 'W'},
     {"ld-library-path", required_argument, 0, 'L'},
     {NULL, 0, 0, '\0'}
 };
 
-static const char *HINTS[15] =
+static const char *HINTS[sizeof(OPTIONS)/sizeof(OPTIONS[0])] =
 {
     "Print the help message",
     "Enable debugging output",
@@ -115,6 +109,7 @@ static const char *HINTS[15] =
     "Print basic information about changes made to the system, i.e. promises repaired",
     "Activate internal diagnostics (developers only)",
     "Run as a foreground processes (do not fork)",
+    "Run once and then exit",
     "Do not run as a service on windows - use this when running from a command shell (Cfengine Nova only)",
     "Set the internal value of LD_LIBRARY_PATH for child processes",
     NULL
@@ -129,7 +124,19 @@ int main(int argc, char *argv[])
     ReportContext *report_context = OpenReports("executor");
     Policy *policy = GenericInitialize("executor", config, report_context);
     ThisAgentInit();
-    KeepPromises(policy);
+
+    ExecConfig exec_config = {
+        .scheduled_run = !ONCE,
+        .exec_command = SafeStringDuplicate(""),
+        .mail_server = SafeStringDuplicate(""),
+        .mail_from_address = SafeStringDuplicate(""),
+        .mail_to_address = SafeStringDuplicate(""),
+        .mail_max_lines = 30,
+        .fq_name = VFQNAME,
+        .ip_address = VIPADDRESS,
+    };
+
+    KeepPromises(policy, &exec_config);
 
 #ifdef MINGW
     if (WINSERVICE)
@@ -139,7 +146,7 @@ int main(int argc, char *argv[])
     else
 #endif /* MINGW */
     {
-        StartServer(policy, report_context);
+        StartServer(policy, &exec_config, report_context);
     }
 
     ReportContextDestroy(report_context);
@@ -159,7 +166,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
     char ld_library_path[CF_BUFSIZE];
     GenericAgentConfig config = GenericAgentDefaultConfig(cf_executor);
 
-    while ((c = getopt_long(argc, argv, "dvnKIf:D:N:VxL:hFV1gMW", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvnKIf:D:N:VxL:hFOV1gMW", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -218,8 +225,11 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
             break;
 
         case 'F':
-            ONCE = true;
             NO_FORK = true;
+            break;
+
+        case 'O':
+            ONCE = true;
             break;
 
         case 'V':
@@ -258,10 +268,6 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
 static void ThisAgentInit(void)
 {
     umask(077);
-    MAILTO[0] = '\0';
-    MAILFROM[0] = '\0';
-    VMAILSERVER[0] = '\0';
-    EXECCOMMAND[0] = '\0';
 
     if (SCHEDULE == NULL)
     {
@@ -293,7 +299,7 @@ static double GetSplay(void)
 
 /*****************************************************************************/
 
-static void KeepPromises(Policy *policy)
+static void KeepPromises(Policy *policy, ExecConfig *config)
 {
     for (Constraint *cp = ControlBodyConstraints(policy, cf_executor); cp != NULL; cp = cp->next)
     {
@@ -311,26 +317,30 @@ static void KeepPromises(Policy *policy)
 
         if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_mailfrom].lval) == 0)
         {
-            strcpy(MAILFROM, retval.item);
-            CfDebug("mailfrom = %s\n", MAILFROM);
+            free(config->mail_from_address);
+            config->mail_from_address = SafeStringDuplicate(retval.item);
+            CfDebug("mailfrom = %s\n", config->mail_from_address);
         }
 
         if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_mailto].lval) == 0)
         {
-            strcpy(MAILTO, retval.item);
-            CfDebug("mailto = %s\n", MAILTO);
+            free(config->mail_to_address);
+            config->mail_to_address = SafeStringDuplicate(retval.item);
+            CfDebug("mailto = %s\n", config->mail_to_address);
         }
 
         if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_smtpserver].lval) == 0)
         {
-            strcpy(VMAILSERVER, retval.item);
-            CfDebug("smtpserver = %s\n", VMAILSERVER);
+            free(config->mail_server);
+            config->mail_server = SafeStringDuplicate(retval.item);
+            CfDebug("smtpserver = %s\n", config->mail_server);
         }
 
         if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_execcommand].lval) == 0)
         {
-            strcpy(EXECCOMMAND, retval.item);
-            CfDebug("exec_command = %s\n", EXECCOMMAND);
+            free(config->exec_command);
+            config->exec_command = SafeStringDuplicate(retval.item);
+            CfDebug("exec_command = %s\n", config->exec_command);
         }
 
         if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_executorfacility].lval) == 0)
@@ -341,8 +351,8 @@ static void KeepPromises(Policy *policy)
 
         if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_mailmaxlines].lval) == 0)
         {
-            MAXLINES = Str2Int(retval.item);
-            CfDebug("maxlines = %d\n", MAXLINES);
+            config->mail_max_lines = Str2Int(retval.item);
+            CfDebug("maxlines = %d\n", config->mail_max_lines);
         }
 
         if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_splaytime].lval) == 0)
@@ -374,7 +384,7 @@ static void KeepPromises(Policy *policy)
 /*****************************************************************************/
 
 /* Might be called back from NovaWin_StartExecService */
-void StartServer(Policy *policy, const ReportContext *report_context)
+void StartServer(Policy *policy, ExecConfig *config, const ReportContext *report_context)
 {
 #if !defined(__MINGW32__)
     time_t now = time(NULL);
@@ -456,39 +466,28 @@ void StartServer(Policy *policy, const ReportContext *report_context)
 
     umask(077);
 
-    ExecConfig config = {
-        .scheduled_run = !ONCE,
-        .exec_command = EXECCOMMAND,
-        .mail_server = VMAILSERVER,
-        .mail_from_address = MAILFROM,
-        .mail_to_address = MAILTO,
-        .mail_max_lines = MAXLINES,
-        .fq_name = VFQNAME,
-        .ip_address = VIPADDRESS,
-    };
-
     if (ONCE)
     {
         CfOut(cf_verbose, "", "Sleeping for splaytime %d seconds\n\n", SPLAYTIME);
         sleep(SPLAYTIME);
-        LocalExec(&config);
+        LocalExec(config);
         CloseLog();
     }
     else
     {
         while (true)
         {
-            if (ScheduleRun(&policy, report_context))
+            if (ScheduleRun(&policy, config, report_context))
             {
                 CfOut(cf_verbose, "", "Sleeping for splaytime %d seconds\n\n", SPLAYTIME);
                 sleep(SPLAYTIME);
 
 #if defined(HAVE_PTHREAD)
-                if (!LocalExecInThread(&config))
+                if (!LocalExecInThread(config))
                 {
                     CfOut(cf_inform, "", "Unable to run agent in thread, falling back to blocking execution");
 #endif
-                    LocalExec(&config);
+                    LocalExec(config);
 #if defined(HAVE_PTHREAD)
                 }
 #endif
@@ -643,7 +642,7 @@ static Reload CheckNewPromises(const ReportContext *report_context)
     return RELOAD_ENVIRONMENT;
 }
 
-static bool ScheduleRun(Policy **policy, const ReportContext *report_context)
+static bool ScheduleRun(Policy **policy, ExecConfig *exec_config, const ReportContext *report_context)
 {
     Item *ip;
 
@@ -720,7 +719,7 @@ static bool ScheduleRun(Policy **policy, const ReportContext *report_context)
         };
 
         *policy = ReadPromises(cf_executor, CF_EXECC, config, report_context);
-        KeepPromises(*policy);
+        KeepPromises(*policy, exec_config);
     }
     else
     {

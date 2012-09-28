@@ -18,22 +18,33 @@ bundle agent test
 {
 files:
   "$(G.testfile)"
-   edit_line => append_nonsense,
-        edit_defaults => rotate;
+     edit_line => append_nonsense,
+     edit_defaults => rotate;
 }
 
 body edit_defaults rotate
 {
-        edit_backup => "rotate";
-        rotate => "4";
-        max_file_size => "300000";
+  edit_backup => "rotate";
+  rotate => "4";
+  max_file_size => "300000";
 }
 
 bundle edit_line append_nonsense
 {
 vars:
-  "ns" string => execresult("/bin/date +%N", "noshell");
+  useless0::
+    "contents" string => "0";
+  useless1::
+    "contents" string => "1";
+  useless2::
+    "contents" string => "2";
+  useless3::
+    "contents" string => "3";
+  useless4::
+    "contents" string => "4";
+
 insert_lines:
-        "$(ns)";
+  any::
+    "$(contents)";
 }
 

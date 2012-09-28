@@ -29,7 +29,7 @@ bundle agent test
 vars:
   "cmd" string => "$(sys.cf_agent) -Kf $(this.promise_filename).sub";
 commands:
-  "$(cmd)";
+  "$(cmd) -D useless0";
   "$(cmd) -D useless1";
   "$(cmd) -D useless2";
   "$(cmd) -D useless3";

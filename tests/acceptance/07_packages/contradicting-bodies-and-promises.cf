@@ -58,7 +58,7 @@ body package_method mock_overlapping_version_regex
   package_name_regex => "^([^-]+)";
   package_version_regex => "^[^-]+-([^-]+)";
 
-  package_list_command => "/usr/bin/printf 'bash-1.0-amd64'";
+  package_list_command => "$(G.printf) 'bash-1.0-amd64'";
   package_installed_regex => ".*";
   package_list_name_regex => "^([^-]+)";
   package_list_version_regex => "^[^-]+-([^-]+)";
@@ -77,7 +77,7 @@ body package_method mock_no_name_regex_but_arch_regex
   package_arch_regex => ".*";
   # but no package_name_regex!
 
-  package_list_command => "/usr/bin/printf 'bash-1.0-amd64'";
+  package_list_command => "$(G.printf) 'bash-1.0-amd64'";
   package_installed_regex => ".*";
   package_list_name_regex => "^([^-]+)";
   package_list_version_regex => "^[^-]+-([^-]+)";
@@ -96,7 +96,7 @@ body package_method mock_no_name_regex_but_version_regex
   package_version_regex => ".*";
   # but no package_name_regex!
 
-  package_list_command => "/usr/bin/printf 'bash-1.0-amd64'";
+  package_list_command => "$(G.printf) 'bash-1.0-amd64'";
   package_installed_regex => ".*";
   package_list_name_regex => "^([^-]+)";
   package_list_version_regex => "^[^-]+-([^-]+)";
@@ -116,7 +116,7 @@ body package_method mock
   package_version_regex => "^[^-]+-([^-]+)";
   package_arch_regex => "^[^-]+-[^-]+-(.*)";
 
-  package_list_command => "/usr/bin/printf 'bash-1.0-amd64'";
+  package_list_command => "$(G.printf) 'bash-1.0-amd64'";
   package_installed_regex => ".*";
   package_list_name_regex => "^([^-]+)";
   package_list_version_regex => "^[^-]+-([^-]+)";

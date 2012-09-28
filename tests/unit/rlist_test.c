@@ -120,10 +120,12 @@ static void test_last(void **state)
     DeleteRlist(l);
 }
 
-static bool is_even(void *item)
+static bool is_even(void *item, void *data)
 {
+    int *d = data;
+
     int *i = item;
-    return *i % 2 == 0;
+    return *i % 2 == *d;
 }
 
 static void test_filter(void **state)
@@ -136,7 +138,8 @@ static void test_filter(void **state)
     }
 
     assert_int_equal(10, RlistLen(list));
-    RlistFilter(&list, is_even, free);
+    int mod_by = 0;
+    RlistFilter(&list, is_even, &mod_by, free);
     assert_int_equal(5, RlistLen(list));
 
     int i = 0;
@@ -164,7 +167,8 @@ static void test_filter_everything(void **state)
     }
 
     assert_int_equal(5, RlistLen(list));
-    RlistFilter(&list, is_even, free);
+    int mod_by = 0;
+    RlistFilter(&list, is_even, &mod_by, free);
     assert_int_equal(0, RlistLen(list));
 
     assert_true(list == NULL);

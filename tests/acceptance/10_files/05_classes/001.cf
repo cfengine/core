@@ -83,16 +83,14 @@ repair_timeout   => { "fail" };
 
 bundle agent check
 {
-classes:
-        "no_difference" expression => returnszero(
-            "/usr/bin/diff -q $(G.testfile).actual $(G.testfile).expected",
-            "noshell");
-        "ok" and => { "pass", "!fail", "no_difference" };
+methods:
+   pass.!fail::
+     "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                           "$(G.testfile).expected",
+                                           "$(this.promise_filename)");
 
 reports:
-    ok::
-        "$(this.promise_filename) Pass";
-    !ok::
+    !pass|fail::
         "$(this.promise_filename) FAIL";
 }
 

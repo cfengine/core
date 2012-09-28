@@ -1,0 +1,6 @@
+@verbatim
+body select_xpath_region example(s)
+{
+select_xpath_region => "$(s)";
+}
+@end verbatim

@@ -37,7 +37,14 @@
 	- methods return values, initial implementation
 
 	- New format for cf-key -s, includes timestamp of last connection
-	
+
+	Changed functionality:
+
+	- cf-execd -F switch no longer implies 'run once'. New -O/--once
+	  option is added to achieve this behaviour. This makes cf-execd
+	  easier to run from systemd, launchd and other supervision
+	  systems.
+
 	Misc:
 
 	- Support for the following outdated platforms and corresponding

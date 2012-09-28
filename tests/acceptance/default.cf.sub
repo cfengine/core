@@ -10,8 +10,9 @@ classes:
   "temp_declared" not => strcmp(getenv("TEMP", "65536"), "");
 
 vars:
-  "cwd" string => execresult("/bin/pwd", "noshell");
-  "cmds" slist => { "sort", "touch", "grep", "gzip", "hexdump", "od", "diff", "rm", "true", "false", "mkdir", "ln" };
+  "cwd" string => execresult("/bin/pwd 2>/dev/null || /usr/bin/pwd", "useshell");
+  "cmds" slist => { "sort", "touch", "grep", "gzip", "hexdump", "od", "diff", "rm", "true", "false", "mkdir", "ln", "pwd", "wc", "printf" };
+
 
   "$(cmds)"  string => "/bin/$(cmds)",
       ifvarclass => "bin_$(cmds)";

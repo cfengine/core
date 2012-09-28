@@ -82,7 +82,7 @@ static const char *ID = "The executor daemon is a scheduler and wrapper for\n"
     "agent and can email it to a specified address. It can\n"
     "splay the start time of executions across the network\n" "and work as a class-based clock for scheduling.";
 
-static const struct option OPTIONS[15] =
+static const struct option OPTIONS[16] =
 {
     {"help", no_argument, 0, 'h'},
     {"debug", no_argument, 0, 'd'},
@@ -96,12 +96,13 @@ static const struct option OPTIONS[15] =
     {"inform", no_argument, 0, 'I'},
     {"diagnostic", no_argument, 0, 'x'},
     {"no-fork", no_argument, 0, 'F'},
+    {"launchd-compatible", no_argument, 0, 'X'},
     {"no-winsrv", no_argument, 0, 'W'},
     {"ld-library-path", required_argument, 0, 'L'},
     {NULL, 0, 0, '\0'}
 };
 
-static const char *HINTS[15] =
+static const char *HINTS[16] =
 {
     "Print the help message",
     "Enable debugging output",
@@ -115,6 +116,7 @@ static const char *HINTS[15] =
     "Print basic information about changes made to the system, i.e. promises repaired",
     "Activate internal diagnostics (developers only)",
     "Run as a foreground processes (do not fork)",
+    "Compatible with launchd daemon on OS X (stay in foreground)",
     "Do not run as a service on windows - use this when running from a command shell (Cfengine Nova only)",
     "Set the internal value of LD_LIBRARY_PATH for child processes",
     NULL
@@ -159,7 +161,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
     char ld_library_path[CF_BUFSIZE];
     GenericAgentConfig config = GenericAgentDefaultConfig(cf_executor);
 
-    while ((c = getopt_long(argc, argv, "dvnKIf:D:N:VxL:hFV1gMW", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvnKIf:D:N:VxL:hFV1gMXW", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -219,6 +221,10 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
 
         case 'F':
             ONCE = true;
+            NO_FORK = true;
+            break;
+
+        case 'X':
             NO_FORK = true;
             break;
 

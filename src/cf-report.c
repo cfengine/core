@@ -2491,6 +2491,10 @@ static void WriteHistograms()
     for (position = 0; position < CF_GRAINS; position++)
     {
         fscanf(fp, "%d ", &position);
+        if (position < 0 || position >= CF_GRAINS)
+        {
+            FatalError("Invalid position detected in histogram data: %d", position);
+        }
 
         for (i = 0; i < CF_OBSERVABLES; i++)
         {

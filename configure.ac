@@ -399,6 +399,7 @@ AC_CHECK_HEADERS(winsock2.h)
 AC_CHECK_HEADERS(zone.h)
 AC_CHECK_HEADERS(sys/uio.h)
 AC_CHECK_HEADERS(sys/types.h)
+AC_CHECK_HEADERS(sys/mpctl.h)	dnl mpctl() is needed for HP-UX $(sys.cpus)
 AC_CHECK_HEADERS(sys/jail.h, [], [], [AC_INCLUDES_DEFAULT
 #ifdef HAVE_SYS_PARAM_H
 # include <sys/param.h>
@@ -552,6 +553,12 @@ AC_CHECK_FUNCS(mkfifo statfs statvfs door)
 AC_CHECK_FUNCS(sysinfo setsid sysconf)
 AC_CHECK_FUNCS(getzoneid getzonenamebyid)
 AC_CHECK_FUNCS(fpathconf)
+# mpctl() to implement $(sys.cpus) processor count on HP-UX - Mantis #1069
+AC_CHECK_FUNCS(mpctl, [], [], [[
+#ifdef HAVE_SYS_MPCTL_H
+#include <sys/mpctl.h>
+#endif
++]])
 
 HW_FUNC_VSNPRINTF
 HW_FUNC_SNPRINTF

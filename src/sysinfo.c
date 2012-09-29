@@ -35,6 +35,11 @@
 # include <zone.h>
 #endif
 
+// HP-UX mpctl() for $(sys.cpus) on HP-UX - Mantis #1069
+#ifdef HAVE_SYS_MPCTL_H
+# include <sys/mpctl.h>
+#endif
+
 void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname, char *uqname, char *domain);
 
 #ifdef LINUX
@@ -2099,13 +2104,15 @@ const char *GetWorkDir(void)
 
 static void GetCPUInfo()
 {
-    FILE *fp;
     char buf[CF_BUFSIZE];
     int count = 0;
 
+#ifdef LINUX
+    FILE *fp;
+
     if ((fp = fopen("/proc/stat", "r")) == NULL)
     {
-        CfOut(cf_verbose, "", "Unable to find proc/cpu data\n");
+        CfOut(cf_verbose, "", "Unable to read /proc/stat cpu data\n");
         return;
     }
 
@@ -2122,6 +2129,18 @@ static void GetCPUInfo()
 
     fclose(fp);
     count--;
+#endif /* LINUX */
+
+#ifdef HAVE_MPCTL
+// Itanium processors have Intel Hyper-Threading virtual-core capability,
+// and the MPC_GETNUMCORES_SYS operation counts each HT virtual core,
+// which is equivalent to what the /proc/stat scan delivers for Linux.
+#ifdef MPC_GETNUMCORES_SYS
+    count = mpctl(MPC_GETNUMCORES_SYS, 0, 0);	// Itanium HTT core count
+#else
+    count = mpctl(MPC_GETNUMSPUS_SYS, 0, 0);	// PA-RISC processor count
+#endif
+#endif /* HAVE_MPCTL */
 
     if (count < 1)
     {

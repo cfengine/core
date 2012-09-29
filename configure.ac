@@ -399,6 +399,7 @@ AC_CHECK_HEADERS(winsock2.h)
 AC_CHECK_HEADERS(zone.h)
 AC_CHECK_HEADERS(sys/uio.h)
 AC_CHECK_HEADERS(sys/types.h)
+AC_CHECK_HEADERS(sys/mpctl.h)	dnl For HP-UX $(sys.cpus) - Mantis #1069
 AC_CHECK_HEADERS(sys/jail.h, [], [], [AC_INCLUDES_DEFAULT
 #ifdef HAVE_SYS_PARAM_H
 # include <sys/param.h>

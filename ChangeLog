@@ -2,12 +2,24 @@
 
 	New features:
 
+	- XML editing capabilities. See the documentation for edit_xml
+	  body. Note the new dependency: libxml2.
+
 	- Implement inheritance of local classes by bundles called using
 	  "usebundle". By default classes are not inherited. See the
 	  examples/unit_inherit.cf for an example.
 
+	- Moved from Nova/Enterirpse:
+	  - POSIX ACL support,
+	  - "outputs" promise type,
+	  - remote syslog support.
+
 	- packages_default_arch_command hook in packages promises, to
 	  specify default architecture of the packages on the system.
+
+	- packages_version_less_command / packages_version_equal_command hooks
+	  in packages promises, to specify external command for native package
+	  manager versions comparison
 
 	- Running in Solaris zone is now detected and classes "zone" and
 	  "zone_<name>" are created in this case.
@@ -15,13 +27,6 @@
 	- VirtualBox support added to guest_environment promises.
 
 	- guest_environment promises are supported under OS X.
-
-	- Moved from Nova/Enterirpse:
-	  - POSIX ACL support,
-	  - "outputs" promise type,
-	  - remote syslog support.
-
-	- Changed some port numbers to replace old services with imap(s)
 
 	- The "depends_on" attribute is now active, for the partal ordering
 	  of promises. If a promise depends on another (referred by handle)
@@ -107,6 +112,10 @@
           C = Content Changed
           S = Stats changed
           R = File removed
+
+	- Acceptance test suite passes on Mac OS X.
+
+	- Changed some port numbers to replace old services with imap(s)
 
 	Bugfixes:
 

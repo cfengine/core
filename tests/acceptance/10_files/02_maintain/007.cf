@@ -58,15 +58,8 @@ files:
 
 body perms test_og
 {
-linux::
-    owners => { "3" }; # Can't assume sys = 3
-    groups => { "sys" };
-freebsd::
-    owners => { "bin" };
-    groups => { "sys" };
-!(linux|freebsd)::
-    owners => { "undefined-please-fix" };
-    groups => { "undefined-please-fix" };
+    owners => { "3" };
+    groups => { "3" };
 }
 
 body copy_from test_copy

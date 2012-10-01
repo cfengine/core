@@ -33,6 +33,13 @@
 #include "expand.h"
 #include "scope.h"
 
+typedef enum
+{
+    VERCMP_ERROR = -1,
+    VERCMP_NO_MATCH = 0,
+    VERCMP_MATCH = 1
+} VersionCmpResult;
+
 static void VerifyPromisedPatch(Attributes a, Promise *pp);
 static int ExecuteSchedule(PackageManager *schedule, enum package_actions action);
 static int ExecutePatch(PackageManager *schedule, enum package_actions action);
@@ -42,8 +49,8 @@ static bool PackageListInstalledFromCommand(PackageItem **installed_list, const 
 int ComparePackages(const char *n, const char *v, const char *a, PackageItem * pi, enum version_cmp cmp);
 static void VerifyPromisedPackage(Attributes a, Promise *pp);
 static void DeletePackageItems(PackageItem * pi);
-static int PackageMatch(const char *n, const char *v, const char *a, Attributes attr, Promise *pp);
-static int PatchMatch(const char *n, const char *v, const char *a, Attributes attr, Promise *pp);
+static VersionCmpResult PackageMatch(const char *n, const char *v, const char *a, Attributes attr, Promise *pp);
+static VersionCmpResult PatchMatch(const char *n, const char *v, const char *a, Attributes attr, Promise *pp);
 static void ParsePackageVersion(char *version, Rlist **num, Rlist **sep);
 static void SchedulePackageOp(const char *name, const char *version, const char *arch, int installed, int matched,
                               int novers, Attributes a, Promise *pp);
@@ -331,15 +338,6 @@ static int PackageSanityCheck(Attributes a, Promise *pp)
         {
             cfPS(cf_verbose, CF_FAIL, "", pp, a,
                  "!! Dependency conflict: package_list_command is not used, but package_version_regex is defined.");
-            return false;
-        }
-    }
-    if (!a.packages.package_list_update_command)
-    {
-        if (a.packages.package_list_update_ifelapsed != CF_NOINT)
-        {
-            cfPS(cf_verbose, CF_FAIL, "", pp, a,
-                 "!! Dependency conflict: package_list_update is not used, but package_list_update_ifelapsed is defined.");
             return false;
         }
     }
@@ -726,6 +724,12 @@ static void VerifyPromisedPackage(Attributes a, Promise *pp)
             installed = PackageMatch(name, "*", arch, a, pp);
             matches = PackageMatch(name, version, arch, a, pp);
 
+            if (installed == VERCMP_ERROR || matches == VERCMP_ERROR)
+            {
+                cfPS(cf_error, CF_FAIL, "", pp, a, "Failure trying to compare package versions");
+                return;
+            }
+
             if (VersionCheckSchedulePackage(a, pp, matches, installed))
             {
                 SchedulePackageOp(name, version, arch, installed, matches, no_version, a, pp);
@@ -742,6 +746,12 @@ static void VerifyPromisedPackage(Attributes a, Promise *pp)
 
                 installed = PackageMatch(name, "*", arch, a, pp);
                 matches = PackageMatch(name, version, arch, a, pp);
+
+                if (installed == VERCMP_ERROR || matches == VERCMP_ERROR)
+                {
+                    cfPS(cf_error, CF_FAIL, "", pp, a, "Failure trying to compare package versions");
+                    return;
+                }
 
                 if (VersionCheckSchedulePackage(a, pp, matches, installed))
                 {
@@ -772,6 +782,12 @@ static void VerifyPromisedPackage(Attributes a, Promise *pp)
         installed = PackageMatch(name, "*", arch, a, pp);
         matches = PackageMatch(name, version, arch, a, pp);
 
+        if (installed == VERCMP_ERROR || matches == VERCMP_ERROR)
+        {
+            cfPS(cf_error, CF_FAIL, "", pp, a, "Failure trying to compare package versions");
+            return;
+        }
+
         if (VersionCheckSchedulePackage(a, pp, matches, installed))
         {
             SchedulePackageOp(name, version, arch, installed, matches, no_version, a, pp);
@@ -790,6 +806,12 @@ static void VerifyPromisedPackage(Attributes a, Promise *pp)
             installed = PackageMatch(name, "*", arch, a, pp);
             matches = PackageMatch(name, version, arch, a, pp);
 
+            if (installed == VERCMP_ERROR || matches == VERCMP_ERROR)
+            {
+                cfPS(cf_error, CF_FAIL, "", pp, a, "Failure trying to compare package versions");
+                return;
+            }
+
             SchedulePackageOp(name, version, arch, installed, matches, no_version, a, pp);
         }
         else
@@ -802,6 +824,12 @@ static void VerifyPromisedPackage(Attributes a, Promise *pp)
                 strncpy(arch, rp->item, CF_MAXVARSIZE - 1);
                 installed = PackageMatch(name, "*", arch, a, pp);
                 matches = PackageMatch(name, version, arch, a, pp);
+
+                if (installed == VERCMP_ERROR || matches == VERCMP_ERROR)
+                {
+                    cfPS(cf_error, CF_FAIL, "", pp, a, "Failure trying to compare package versions");
+                    return;
+                }
 
                 SchedulePackageOp(name, version, arch, installed, matches, no_version, a, pp);
             }
@@ -829,8 +857,17 @@ static void VerifyPromisedPatch(Attributes a, Promise *pp)
             strncpy(name, pp->promiser, CF_MAXVARSIZE - 1);
             strncpy(version, a.packages.package_version, CF_MAXVARSIZE - 1);
             strncpy(arch, rp->item, CF_MAXVARSIZE - 1);
-            installed += PatchMatch(name, "*", "*", a, pp);
-            matches += PatchMatch(name, version, arch, a, pp);
+            VersionCmpResult installed1 = PatchMatch(name, "*", "*", a, pp);
+            VersionCmpResult matches1 = PatchMatch(name, version, arch, a, pp);
+
+            if (installed1 == VERCMP_ERROR || matches1 == VERCMP_ERROR)
+            {
+                cfPS(cf_error, CF_FAIL, "", pp, a, "Failure trying to compare package versions");
+                return;
+            }
+
+            installed += installed1;
+            matches += matches1;
         }
 
         if (a.packages.package_architectures == NULL)
@@ -840,6 +877,12 @@ static void VerifyPromisedPatch(Attributes a, Promise *pp)
             strncpy(arch, "*", CF_MAXVARSIZE - 1);
             installed = PatchMatch(name, "*", "*", a, pp);
             matches = PatchMatch(name, version, arch, a, pp);
+
+            if (installed == VERCMP_ERROR || matches == VERCMP_ERROR)
+            {
+                cfPS(cf_error, CF_FAIL, "", pp, a, "Failure trying to compare package versions");
+                return;
+            }
         }
     }
     else if (a.packages.package_version_regex)
@@ -850,6 +893,12 @@ static void VerifyPromisedPatch(Attributes a, Promise *pp)
         strncpy(arch, ExtractFirstReference(a.packages.package_arch_regex, package), CF_MAXVARSIZE - 1);
         installed = PatchMatch(name, "*", "*", a, pp);
         matches = PatchMatch(name, version, arch, a, pp);
+
+        if (installed == VERCMP_ERROR || matches == VERCMP_ERROR)
+        {
+            cfPS(cf_error, CF_FAIL, "", pp, a, "Failure trying to compare package versions");
+            return;
+        }
     }
     else
     {
@@ -860,8 +909,17 @@ static void VerifyPromisedPatch(Attributes a, Promise *pp)
             strncpy(name, pp->promiser, CF_MAXVARSIZE - 1);
             strncpy(version, "*", CF_MAXVARSIZE - 1);
             strncpy(arch, rp->item, CF_MAXVARSIZE - 1);
-            installed += PatchMatch(name, "*", "*", a, pp);
-            matches += PatchMatch(name, version, arch, a, pp);
+            VersionCmpResult installed1 = PatchMatch(name, "*", "*", a, pp);
+            VersionCmpResult matches1 = PatchMatch(name, version, arch, a, pp);
+
+            if (installed1 == VERCMP_ERROR || matches1 == VERCMP_ERROR)
+            {
+                cfPS(cf_error, CF_FAIL, "", pp, a, "Failure trying to compare package versions");
+                return;
+            }
+
+            installed += installed1;
+            matches += matches1;
         }
 
         if (a.packages.package_architectures == NULL)
@@ -871,6 +929,12 @@ static void VerifyPromisedPatch(Attributes a, Promise *pp)
             strncpy(arch, "*", CF_MAXVARSIZE - 1);
             installed = PatchMatch(name, "*", "*", a, pp);
             matches = PatchMatch(name, version, arch, a, pp);
+
+            if (installed == VERCMP_ERROR || matches == VERCMP_ERROR)
+            {
+                cfPS(cf_error, CF_FAIL, "", pp, a, "Failure trying to compare package versions");
+                return;
+            }
         }
     }
 
@@ -1611,9 +1675,9 @@ static void DeletePackageItems(PackageItem * pi)
 
 /*****************************************************************************/
 
-static int PackageMatch(const char *n, const char *v, const char *a, Attributes attr, Promise *pp)
+static VersionCmpResult PackageMatch(const char *n, const char *v, const char *a, Attributes attr, Promise *pp)
 /*
- * Returns true if any installed packages match (n,v,a), false otherwise.
+ * Returns VERCMP_MATCH if any installed packages match (n,v,a), VERCMP_NO_MATCH otherwise, VERCMP_ERROR on error.
  */
 {
     PackageManager *mp = NULL;
@@ -1631,19 +1695,21 @@ static int PackageMatch(const char *n, const char *v, const char *a, Attributes 
 
     for (pi = mp->pack_list; pi != NULL; pi = pi->next)
     {
-        if (ComparePackages(n, v, a, pi, attr.packages.package_select))
+        VersionCmpResult res = ComparePackages(n, v, a, pi, attr.packages.package_select);
+
+        if (res != VERCMP_NO_MATCH)
         {
-            return true;
+            return res;
         }
     }
 
     CfOut(cf_verbose, "", "No installed packages matched (%s,%s,%s)\n", n, v, a);
-    return false;
+    return VERCMP_NO_MATCH;
 }
 
 /*****************************************************************************/
 
-static int PatchMatch(const char *n, const char *v, const char *a, Attributes attr, Promise *pp)
+static VersionCmpResult PatchMatch(const char *n, const char *v, const char *a, Attributes attr, Promise *pp)
 {
     PackageManager *mp = NULL;
     PackageItem *pi;
@@ -1662,16 +1728,20 @@ static int PatchMatch(const char *n, const char *v, const char *a, Attributes at
     {
         if (FullTextMatch(n, pi->name)) /* Check regexes */
         {
-            return true;
+            return VERCMP_MATCH;
         }
-        else if (ComparePackages(n, v, a, pi, attr.packages.package_select))
+        else
         {
-            return true;
+            VersionCmpResult res = ComparePackages(n, v, a, pi, attr.packages.package_select);
+            if (res != VERCMP_NO_MATCH)
+            {
+                return res;
+            }
         }
     }
 
     CfOut(cf_verbose, "", " !! Unsatisfied constraints in promise (%s,%s,%s)\n", n, v, a);
-    return false;
+    return VERCMP_NO_MATCH;
 }
 
 /*****************************************************************************/

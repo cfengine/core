@@ -107,10 +107,10 @@ static bool SanityCheckXPathBuild(Attributes a, Promise *pp);
 static bool SanityCheckTreeDeletions(Attributes a, Promise *pp);
 static bool SanityCheckTreeInsertions(Attributes a, Promise *pp);
 static bool SanityCheckAttributeDeletions(Attributes a, Promise *pp);
-static bool SanityCheckAttributeSet(Attributes a);
+static bool SanityCheckAttributeSet(Attributes a, Promise *pp);
 static bool SanityCheckTextDeletions(Attributes a, Promise *pp);
-static bool SanityCheckTextSet(Attributes a);
-static bool SanityCheckTextInsertions(Attributes a);
+static bool SanityCheckTextSet(Attributes a, Promise *pp);
+static bool SanityCheckTextInsertions(Attributes a, Promise *pp);
 
 static bool XmlDocsEqualContent(xmlDocPtr doc1, xmlDocPtr doc2, int warnings, Attributes a, Promise *pp);
 static bool XmlDocsEqualMem(xmlDocPtr doc1, xmlDocPtr doc2, int warnings, Attributes a, Promise *pp);
@@ -635,7 +635,7 @@ static void VerifyAttributeSet(Promise *pp)
     a = GetInsertionAttributes(pp);
     a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
 
-    if (!SanityCheckAttributeSet(a))
+    if (!SanityCheckAttributeSet(a, pp))
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
              " !! The promised attribute set (%s) breaks its own promises", pp->promiser);
@@ -739,7 +739,7 @@ static void VerifyTextSet(Promise *pp)
     a = GetInsertionAttributes(pp);
     a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
 
-    if (!SanityCheckTextSet(a))
+    if (!SanityCheckTextSet(a, pp))
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
              " !! The promised text set (%s) breaks its own promises", pp->promiser);
@@ -791,7 +791,7 @@ static void VerifyTextInsertions(Promise *pp)
     a = GetInsertionAttributes(pp);
     a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
 
-    if (!SanityCheckTextInsertions(a))
+    if (!SanityCheckTextInsertions(a, pp))
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
              " !! The promised text insertion (%s) breaks its own promises", pp->promiser);
@@ -954,7 +954,9 @@ static bool BuildXPathInFile(char *rawxpath, xmlDocPtr doc, Attributes a, Promis
         return false;
     }
 
-
+    //insert the content into new xml document, beginning from root node
+    CfOut(cf_inform, "", " -> Building xpath \"%s\" in %s", pp->promiser,
+          pp->this_server);
     if (xmlDocSetRootElement(doc, docnode) != NULL)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
@@ -983,6 +985,7 @@ static bool BuildXPathInNode(char *rawxpath, xmlDocPtr doc, Attributes a, Promis
 {
     xmlNodePtr docnode = NULL,  head = NULL, tail = NULL;
 
+    //build xpath from tail while locating insertion region
     while (rawxpath && (!XmlSelectNode(rawxpath, doc, &docnode, a, pp)))
     {
         if (XPathHasTail (rawxpath, a, pp))
@@ -1004,11 +1007,15 @@ static bool BuildXPathInNode(char *rawxpath, xmlDocPtr doc, Attributes a, Promis
         tail = head;
     }
 
+    //insert the new tree into selected region in xml document
+    CfOut(cf_inform, "", " -> Building xpath \"%s\" in %s", pp->promiser,
+          pp->this_server);
     if (docnode != NULL)
     {
         xmlAddChild(docnode, tail);
     }
 
+    //insert the new tree into root, in the case where unique node was not found, in xml document
     else
     {
         docnode = xmlDocGetRootElement(doc);
@@ -1553,6 +1560,11 @@ static bool SanityCheckTreeDeletions(Attributes a, Promise *pp)
         return false;
     }
 
+    if (!XPathVerifyConvergence(a.xml.select_xpath_region, a, pp))
+    {
+        return false;
+    }
+
     return true;
 }
 
@@ -1573,6 +1585,11 @@ static bool SanityCheckTreeInsertions(Attributes a, Promise *pp)
         return false;
     }
 
+    if (a.xml.haveselectxpathregion && !XPathVerifyConvergence(a.xml.select_xpath_region, a, pp))
+    {
+        return false;
+    }
+
     return true;
 }
 
@@ -1587,12 +1604,17 @@ static bool SanityCheckAttributeDeletions(Attributes a, Promise *pp)
         return false;
     }
 
+    if (!XPathVerifyConvergence(a.xml.select_xpath_region, a, pp))
+    {
+        return false;
+    }
+
     return true;
 }
 
 /***************************************************************************/
 
-static bool SanityCheckAttributeSet(Attributes a)
+static bool SanityCheckAttributeSet(Attributes a, Promise *pp)
 {
     if (!(a.xml.haveselectxpath))
     {
@@ -1600,6 +1622,12 @@ static bool SanityCheckAttributeSet(Attributes a)
               " !! Attribute insertion requires select_xpath to be specified");
         return false;
     }
+
+    if (!XPathVerifyConvergence(a.xml.select_xpath_region, a, pp))
+    {
+        return false;
+    }
+
     return true;
 }
 
@@ -1613,12 +1641,18 @@ static bool SanityCheckTextDeletions(Attributes a, Promise *pp)
               " !! Tree insertion requires select_xpath to be specified");
         return false;
     }
+
+    if (!XPathVerifyConvergence(a.xml.select_xpath_region, a, pp))
+    {
+        return false;
+    }
+
     return true;
 }
 
 /***************************************************************************/
 
-static bool SanityCheckTextSet(Attributes a)
+static bool SanityCheckTextSet(Attributes a, Promise *pp)
 {
     if (!(a.xml.haveselectxpath))
     {
@@ -1626,12 +1660,18 @@ static bool SanityCheckTextSet(Attributes a)
               " !! Tree insertion requires select_xpath to be specified");
         return false;
     }
+
+    if (!XPathVerifyConvergence(a.xml.select_xpath_region, a, pp))
+    {
+        return false;
+    }
+
     return true;
 }
 
 /***************************************************************************/
 
-static bool SanityCheckTextInsertions(Attributes a)
+static bool SanityCheckTextInsertions(Attributes a, Promise *pp)
 {
     if (!(a.xml.haveselectxpath))
     {
@@ -1639,6 +1679,12 @@ static bool SanityCheckTextInsertions(Attributes a)
               " !! Tree insertion requires select_xpath to be specified");
         return false;
     }
+
+    if (!XPathVerifyConvergence(a.xml.select_xpath_region, a, pp))
+    {
+        return false;
+    }
+
     return true;
 }
 
@@ -2587,6 +2633,8 @@ static bool XPathVerifyBuildSyntax(const char* xpath, Attributes a, Promise *pp)
     //check for convergence
     if (!XPathVerifyConvergence(xpath, a, pp))
     {
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! Promiser expression (%s) is not convergent", xpath);
         return false;
     }
 
@@ -2599,7 +2647,7 @@ static bool XPathVerifyBuildSyntax(const char* xpath, Attributes a, Promise *pp)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
              " !! Promiser expression (%s), \ncontains syntax that is not supported for xpath_build. "
-             "Please refer to users manual for supported syntax specifications.", pp->promiser);
+             "Please refer to users manual for supported syntax specifications.", xpath);
         return false;
     }
 #else

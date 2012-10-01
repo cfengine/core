@@ -5,7 +5,8 @@ affected by the list of promises whose handles are specified.
 
 It has the effect of partially ordering promises.
 
-As of version 3.4.0, promise this feature is active and may be
+As of version 3.4.0, promise this feature can be made active by using
+the body agent control setting, @xref{dependency_checking in agent}, and may be
 considered a short-hand for setting classes. If one promise depends on
 a list of others, it will not be verified unless the dependent
 promises have already been verified and kept: i.e. as long as the

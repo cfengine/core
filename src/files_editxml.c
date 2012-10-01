@@ -128,26 +128,32 @@ xmlChar* XmlVerifyTextInNodeSubstring(const xmlChar *text, xmlNodePtr node, Attr
 xmlNodePtr XmlVerifyNodeInNodeExact(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
 xmlNodePtr XmlVerifyNodeInNodeSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
 
-xmlChar *CharToXmlChar(char* c);
-static bool ContainsRegex(const char* rawstring, const char* regex);
-static int XmlAttributeCount(xmlNodePtr node, Attributes a, Promise *pp);
-static bool XmlXPathConvergent(const char* xpath, Attributes a, Promise *pp);
-
-xmlNodePtr XPathHeadExtractNode(char *tail, Attributes a, Promise *pp);
-xmlNodePtr XPathTailExtractNode(char *tail, Attributes a, Promise *pp);
-xmlNodePtr XPathSegmentExtractNode(char *head, Attributes a, Promise *pp);
+//xpath build functionality
 xmlNodePtr PredicateExtractNode(char *predicate, Attributes a, Promise *pp);
+char* PredicateRemoveHead(char *xpath, Attributes a, Promise *pp);
+
+xmlNodePtr XPathHeadExtractNode(char *xpath, Attributes a, Promise *pp);
+xmlNodePtr XPathTailExtractNode(char *xpath, Attributes a, Promise *pp);
+xmlNodePtr XPathSegmentExtractNode(char *segment, Attributes a, Promise *pp);
 char* XPathGetTail(char *xpath, Attributes a, Promise *pp);
 char* XPathRemoveHead(char *xpath, Attributes a, Promise *pp);
 char* XPathRemoveTail(char *xpath, Attributes a, Promise *pp);
-char* PredicateRemoveHead(char *xpath, Attributes a, Promise *pp);
-static bool XPathHeadContainsValidName(char *head, Attributes a, Promise *pp);
-static bool XPathHeadContainsValidPredicate(char *head, Attributes a, Promise *pp);
-static bool PredicateHeadContainsValidNode(char *head, Attributes a, Promise *pp);
-static bool PredicateHeadContainsValidAttribute(char *head, Attributes a, Promise *pp);
+
+//verification using PCRE - ContainsRegex
+static bool PredicateHasTail(char *predicate, Attributes a, Promise *pp);
+static bool PredicateHeadContainsAttribute(char *predicate, Attributes a, Promise *pp);
+static bool PredicateHeadContainsNode(char *predicate, Attributes a, Promise *pp);
 static bool XPathHasTail(char *head, Attributes a, Promise *pp);
-static bool PredicateHasTail(char *head, Attributes a, Promise *pp);
+static bool XPathHeadContainsNode(char *head, Attributes a, Promise *pp);
+static bool XPathHeadContainsPredicate(char *head, Attributes a, Promise *pp);
 static bool XPathVerifyBuildSyntax(const char* xpath, Attributes a, Promise *pp);
+static bool XPathVerifyConvergence(const char* xpath, Attributes a, Promise *pp);
+
+//helper functions
+xmlChar *CharToXmlChar(char* c);
+static bool ContainsRegex(const char* rawstring, const char* regex);
+static int XmlAttributeCount(xmlNodePtr node, Attributes a, Promise *pp);
+
 #endif
 
 /*****************************************************************************/
@@ -847,7 +853,7 @@ static bool XmlSelectNode(char *rawxpath, xmlDocPtr doc, xmlNodePtr *docnode, At
 
     *docnode = NULL;
 
-    if (!XmlXPathConvergent(rawxpath, a, pp))
+    if (!XPathVerifyConvergence(rawxpath, a, pp))
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
              " !! select_xpath_region expression (%s) is not convergent", a.xml.select_xpath_region);
@@ -2263,83 +2269,41 @@ xmlNodePtr XmlVerifyNodeInNodeSubset(xmlNodePtr node1, xmlNodePtr node2, Attribu
 
 /*********************************************************************/
 
-xmlChar *CharToXmlChar(char* c)
+xmlNodePtr PredicateExtractNode(char *predicate, Attributes a, Promise *pp)
 {
-    return BAD_CAST c;
+    xmlNodePtr node = NULL;
+    xmlChar *name = NULL;
+    xmlChar *value = NULL;
+    char *tok, *rawname, *rawvalue, copypred[CF_BUFSIZE];
+
+    strcpy(copypred, predicate);
+    tok = strtok(copypred, "| =");
+    rawname = tok;
+    tok = strtok(NULL, " =");
+    rawvalue = tok;
+    name = CharToXmlChar(rawname);
+    value = CharToXmlChar(rawvalue);
+    node = xmlNewNode(NULL, name);
+    xmlNodeSetContent(node, value);
+
+    return node;
 }
 
 /*********************************************************************/
 
-static bool ContainsRegex(const char* rawstring, const char* regex)
+char* PredicateRemoveHead(char *predicate, Attributes a, Promise *pp)
 {
-    int ovector[OVECCOUNT], rc;
-    const char *errorstr;
-    int erroffset;
-
-    pcre *rx = pcre_compile(regex, 0, &errorstr, &erroffset, NULL);
-
-    if ((rc = pcre_exec(rx, NULL, rawstring, strlen(rawstring), 0, 0, ovector, OVECCOUNT)) >= 0)
+    if (!PredicateHasTail(predicate, a, pp))
     {
-        pcre_free(rx);
-        return true;
+        predicate = NULL;
     }
 
-    pcre_free(rx);
-    return false;
-}
-
-/*********************************************************************/
-
-static int XmlAttributeCount(xmlNodePtr node, Attributes a, Promise *pp)
-{
-    xmlNodePtr copynode;
-    xmlAttrPtr attr;
-    int count = 0;
-
-    if (!node)
+    else
     {
-        return count;
+        predicate =  strchr(predicate+1, '|');
     }
 
-    copynode = xmlCopyNode(node, 1);
-
-    attr = copynode->properties;
-
-    while (attr)
-    {
-        count++;
-        attr = attr->next;
-    }
-
-    xmlFree(copynode);
-
-    return count;
-}
-
-/*********************************************************************/
-
-static bool XmlXPathConvergent(const char* xpath, Attributes a, Promise *pp)
-/*verify that xpath does not specify position wrt sibling-axis (such as):[#] [last()] [position()] following-sibling:: preceding-sibling:: */
-{
-    char regexp[CF_BUFSIZE] = {'\0'};
-
-    //check in predicate
-    strcpy (regexp, "\\[\\s*([^\\[\\]]*\\s*(\\||(or)|(and)))?\\s*"     // [ (stuff) (|/or/and)
-        // position() (=/!=/</<=/>/>=)
-        "((position)\\s*\\(\\s*\\)\\s*((=)|(!=)|(<)|(<=)|(>)|(>=))\\s*)?\\s*"
-        // (number) | (number) (+/-/*/div/mod) (number) | last() | last() (+/-/*/div/mod) (number)
-        "(((\\d+)\\s*|((last)\\s*\\(\\s*\\)\\s*))(((\\+)|(-)|(\\*)|(div)|(mod))\\s*(\\d+)\\s*)*)\\s*"
-        // (|/or/and) (stuff) ]
-        "((\\||(or)|(and))[^\\[\\]]*)?\\]"
-        // following:: preceding:: following-sibling:: preceding-sibling::
-        "|((following)|(preceding))(-sibling)?\\s*(::)");
-
-    if (ContainsRegex(xpath, regexp))
-    {
-        return false;
-    }
-
-    return true;
+    return predicate;
 }
 
 /*********************************************************************/
@@ -2390,13 +2354,10 @@ xmlNodePtr XPathSegmentExtractNode(char *segment, Attributes a, Promise *pp)
     strcpy(copyseg, segment);
 
     //extract name and predicate substrings from segment
-    if (XPathHeadContainsValidName(segment, a, pp))
+    if (XPathHeadContainsNode(segment, a, pp))
     {
         tok = strtok(copyseg, " []");
         rawname = tok;
-
-        //check for :: syntax
-
 
         name = CharToXmlChar(rawname);
         node = xmlNewNode(NULL, name);
@@ -2404,20 +2365,20 @@ xmlNodePtr XPathSegmentExtractNode(char *segment, Attributes a, Promise *pp)
     }
 
     //extract attributes and nodes from predicate
-    if (hasname && XPathHeadContainsValidPredicate(segment, a, pp))
+    if (hasname && XPathHeadContainsPredicate(segment, a, pp))
     {
         tok = strtok(NULL, "[]");
         predicate = tok;
         strcpy(copypred, predicate);
         while (predicate)
         {
-            if (PredicateHeadContainsValidNode(predicate, a, pp))
+            if (PredicateHeadContainsNode(predicate, a, pp))
             {
                 prednode = PredicateExtractNode(predicate, a, pp);
                 xmlAddChild(node, prednode);
             }
 
-            else if (PredicateHeadContainsValidAttribute(predicate, a, pp))
+            else if (PredicateHeadContainsAttribute(predicate, a, pp))
             {
                 strcpy(copypred, predicate);
                 tok = strtok(copypred, "| @\"\'=");
@@ -2440,28 +2401,6 @@ xmlNodePtr XPathSegmentExtractNode(char *segment, Attributes a, Promise *pp)
             }
         }
     }
-    return node;
-}
-
-/*********************************************************************/
-
-xmlNodePtr PredicateExtractNode(char *predicate, Attributes a, Promise *pp)
-{
-    xmlNodePtr node = NULL;
-    xmlChar *name = NULL;
-    xmlChar *value = NULL;
-    char *tok, *rawname, *rawvalue, copypred[CF_BUFSIZE];
-
-    strcpy(copypred, predicate);
-    tok = strtok(copypred, "| =");
-    rawname = tok;
-    tok = strtok(NULL, " =");
-    rawvalue = tok;
-    name = CharToXmlChar(rawname);
-    value = CharToXmlChar(rawvalue);
-    node = xmlNewNode(NULL, name);
-    xmlNodeSetContent(node, value);
-
     return node;
 }
 
@@ -2530,59 +2469,30 @@ char* XPathRemoveTail(char *xpath, Attributes a, Promise *pp)
 
 /*********************************************************************/
 
-char* PredicateRemoveHead(char *predicate, Attributes a, Promise *pp)
+static bool PredicateHasTail(char *predicate, Attributes a, Promise *pp)
 {
-    if (!PredicateHasTail(predicate, a, pp))
-    {
-        predicate = NULL;
-    }
+    const char *regexp = "(^|\\n)\\s*\\[?\\s*@?\\s*\\w+\\s*=\\s*(\"|\')?\\w+(\"|\')?\\s*\\|";
 
-    else
-    {
-        predicate =  strchr(predicate+1, '|');
-    }
-
-    return predicate;
+    return (ContainsRegex(predicate, regexp));
 }
 
 /*********************************************************************/
 
-static bool XPathHeadContainsValidName(char *head, Attributes a, Promise *pp)
-{
-    const char *regexp = "(^|\\n)(\\/)?(\\w)+((\\s*::\\s*)?(\\w)+)*";
-
-    return (ContainsRegex(head, regexp));
-}
-
-/*********************************************************************/
-
-static bool XPathHeadContainsValidPredicate(char *head, Attributes a, Promise *pp)
-{
-    const char *regexp = "(^|\\n)\\s*\\/?\\s*\\w+(\\s*::\\s*\\w+)*\\s*\\"       // name
-        // [ name='value' | @name = "value" | name = value]
-        "[\\s*@?\\s*\\w+\\s*=\\s*(\"|\')?\\w+(\"|\')?\\s*(\\s*\\|\\s*)?(\\s*@?\\s*\\w+\\s*=\\s*(\"|\')?\\w+(\"|\')?\\s*)*\\]";
-
-    return (ContainsRegex(head, regexp));
-}
-
-/*********************************************************************/
-
-static bool PredicateHeadContainsValidNode(char *head, Attributes a, Promise *pp)
-{
-    const char *regexp = "(^|\\n)\\s*\\[?\\|?(\\s*\\w+\\s*=\\s*(\"|\')?\\w+(\"|\')?)(\\s*(\\||\\]))?";  // i.e. name='value' or name = value or name ="value"
-
-    return (ContainsRegex(head, regexp));
-}
-
-/*********************************************************************/
-
-static bool PredicateHeadContainsValidAttribute(char *head, Attributes a, Promise *pp)
+static bool PredicateHeadContainsAttribute(char *predicate, Attributes a, Promise *pp)
 {
     const char *regexp = "(^|\\n)\\s*\\[?\\|?(\\s*@\\s*\\w+\\s*=\\s*(\"|\')?\\w+(\"|\')?)(\\s*(\\||\\]))?"; // i.e. @name='value' or @name = value or @name ="value"
 
-    return (ContainsRegex(head, regexp));
+    return (ContainsRegex(predicate, regexp));
 }
 
+/*********************************************************************/
+
+static bool PredicateHeadContainsNode(char *predicate, Attributes a, Promise *pp)
+{
+    const char *regexp = "(^|\\n)\\s*\\[?\\|?(\\s*\\w+\\s*=\\s*(\"|\')?\\w+(\"|\')?)(\\s*(\\||\\]))?";  // i.e. name='value' or name = value or name ="value"
+
+    return (ContainsRegex(predicate, regexp));
+}
 
 /*********************************************************************/
 
@@ -2595,9 +2505,20 @@ static bool XPathHasTail(char *head, Attributes a, Promise *pp)
 
 /*********************************************************************/
 
-static bool PredicateHasTail(char *head, Attributes a, Promise *pp)
+static bool XPathHeadContainsNode(char *head, Attributes a, Promise *pp)
 {
-    const char *regexp = "(^|\\n)\\s*\\[?\\s*@?\\s*\\w+\\s*=\\s*(\"|\')?\\w+(\"|\')?\\s*\\|";
+    const char *regexp = "(^|\\n)(\\/)?(\\w)+((\\s*::\\s*)?(\\w)+)*";
+
+    return (ContainsRegex(head, regexp));
+}
+
+/*********************************************************************/
+
+static bool XPathHeadContainsPredicate(char *head, Attributes a, Promise *pp)
+{
+    const char *regexp = "(^|\\n)\\s*\\/?\\s*\\w+(\\s*::\\s*\\w+)*\\s*\\"       // name
+        // [ name='value' | @name = "value" | name = value]
+        "[\\s*@?\\s*\\w+\\s*=\\s*(\"|\')?\\w+(\"|\')?\\s*(\\s*\\|\\s*)?(\\s*@?\\s*\\w+\\s*=\\s*(\"|\')?\\w+(\"|\')?\\s*)*\\]";
 
     return (ContainsRegex(head, regexp));
 }
@@ -2607,6 +2528,42 @@ static bool PredicateHasTail(char *head, Attributes a, Promise *pp)
 static bool XPathVerifyBuildSyntax(const char* xpath, Attributes a, Promise *pp)
 /*verify that xpath does not specify position wrt sibling-axis (such as):[#] [last()] [position()] following-sibling:: preceding-sibling:: */
 {
+#ifdef HAVE_PCRE_H
+    char regexp[CF_BUFSIZE] = {'\0'};
+
+    //check for convergence
+    if (!XPathVerifyConvergence(xpath, a, pp))
+    {
+        return false;
+    }
+
+    // /name[ name = value | @name='value'| . . . | @name = "value" ]/. . .
+    strcpy (regexp, "^(\\/(( |\\t)*\\w+( |\\t)*)"
+    "(\\[( |\\t)*@?\\w+( |\\t)*=( |\\t)*(\'|\")?\\w+(\'|\")?( |\\t)*"
+    "(\\|( |\\t)*@?\\w+( |\\t)*=( |\\t)*(\'|\")?\\w+(\'|\")?( |\\t)*)*\\])?)*$");
+
+    if (!ContainsRegex(xpath, regexp))
+    {
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! Promiser expression (%s), \ncontains syntax that is not supported for xpath_build. "
+             "Please refer to users manual for supported syntax specifications.", pp->promiser);
+        return false;
+    }
+#else
+    CfOut(cf_verbose, "", " !! Cannot verify build syntax without PCRE\n");
+    return false;
+#endif
+
+    return true;
+
+}
+
+/*********************************************************************/
+
+static bool XPathVerifyConvergence(const char* xpath, Attributes a, Promise *pp)
+/*verify that xpath does not specify position wrt sibling-axis (such as):[#] [last()] [position()] following-sibling:: preceding-sibling:: */
+{
+#ifdef HAVE_PCRE_H
     char regexp[CF_BUFSIZE] = {'\0'};
 
     //check in predicate
@@ -2622,13 +2579,74 @@ static bool XPathVerifyBuildSyntax(const char* xpath, Attributes a, Promise *pp)
 
     if (ContainsRegex(xpath, regexp))
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! Promiser expression (%s) specifying position wrt sibling-axis, is not convergent", pp->promiser);
         return false;
     }
 
-    return true;
+#else
+    CfOut(cf_verbose, "", " !! Cannot verify xpath expressions without PCRE\n");
+    return false;
+#endif
 
+    return true;
+}
+
+/*********************************************************************/
+
+xmlChar *CharToXmlChar(char* c)
+{
+    return BAD_CAST c;
+}
+
+/*********************************************************************/
+
+static bool ContainsRegex(const char* rawstring, const char* regex)
+{
+    int ovector[OVECCOUNT], rc;
+    const char *errorstr;
+    int erroffset;
+
+#ifdef HAVE_PCRE_H
+    pcre *rx = pcre_compile(regex, 0, &errorstr, &erroffset, NULL);
+
+    if ((rc = pcre_exec(rx, NULL, rawstring, strlen(rawstring), 0, 0, ovector, OVECCOUNT)) >= 0)
+    {
+        pcre_free(rx);
+        return true;
+    }
+
+    pcre_free(rx);
+#else
+        CfOut(cf_verbose, "", " !! Cannot verify xpath expressions without PCRE\n");
+#endif
+    return false;
+}
+
+/*********************************************************************/
+
+static int XmlAttributeCount(xmlNodePtr node, Attributes a, Promise *pp)
+{
+    xmlNodePtr copynode;
+    xmlAttrPtr attr;
+    int count = 0;
+
+    if (!node)
+    {
+        return count;
+    }
+
+    copynode = xmlCopyNode(node, 1);
+
+    attr = copynode->properties;
+
+    while (attr)
+    {
+        count++;
+        attr = attr->next;
+    }
+
+    xmlFree(copynode);
+
+    return count;
 }
 
 /*********************************************************************/

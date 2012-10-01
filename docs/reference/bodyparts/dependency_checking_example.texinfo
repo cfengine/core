@@ -1,0 +1,10 @@
+
+
+@verbatim
+
+body agent control
+{
+dependency_checking => "true";
+}
+
+@end verbatim

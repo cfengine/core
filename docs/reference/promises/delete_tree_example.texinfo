@@ -1,4 +1,6 @@
+
 @verbatim
+
 bundle edit_xml example
   {
   delete_tree:
@@ -6,4 +8,5 @@ bundle edit_xml example
 
     select_xpath_region => "/Server/Service/Engine";
   }
+
 @end verbatim

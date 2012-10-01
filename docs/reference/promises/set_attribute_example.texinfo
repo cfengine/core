@@ -1,4 +1,6 @@
+
 @verbatim
+
 bundle edit_xml example
   {
   set_attribute:
@@ -7,4 +9,5 @@ bundle edit_xml example
     attribute_value => "cfe_host",
     select_xpath_region => "/Server/Service/Engine/Host";
   }
+
 @end verbatim

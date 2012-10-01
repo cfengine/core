@@ -1,3 +1,4 @@
+
 This promise is part of the xml-editing model. It assures that a
 balanced xml tree, described by the given xpath, will be present
 within the xml file. If the document is empty, the default promise is to

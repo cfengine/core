@@ -1,0 +1,17 @@
+@i{History}: Was introduced in 3.4.0 (2012)
+
+This attribute allows to override built-in CFEngine algorithm for
+version comparison by calling an external command to check whether the
+passed versions are the same. Some package managers consider textually
+different versions to be the same (e.g. optional epoch component, so
+0:1.0-1 and 1.0-1 versions are the same), and rules for comparing vary
+from package manager to package manager, so override is necessary.
+
+Variables @code{v1} and @code{v2} are substituted with the versions to
+be compared. Command should return code 0 if versions are equal and
+non-zero otherwise.
+
+Note that if package_version_equal_command is not specified, but
+package_version_less_command is, then equality will be tested by
+issuing less comparison twice (v1 equals to v2 if v1 is not less than
+v2, and v2 is not less than v1).

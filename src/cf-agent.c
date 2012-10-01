@@ -591,6 +591,14 @@ void KeepControlPromises(Policy *policy)
             continue;
         }
 
+        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_dependency_check].lval) == 0)
+        {
+            CFA_DEPEND_CHECK = GetBoolean(retval.item);
+            CfOut(cf_verbose, "", "SET dependency_check = %d\n", CFA_DEPEND_CHECK);
+            continue;
+        }
+        
+
         if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_inform].lval) == 0)
         {
             INFORM = GetBoolean(retval.item);
@@ -1021,7 +1029,7 @@ static void KeepAgentPromise(Promise *pp, const ReportContext *report_context)
     }
 
 
-    if (MissingDependencies(pp))
+    if (CFA_DEPEND_CHECK && MissingDependencies(pp))
     {
         return;
     }

@@ -156,6 +156,7 @@ extern Rlist *CF_STCK;
 extern int EDIT_MODEL;
 extern int CF_STCKFRAME;
 extern int CFA_BACKGROUND;
+extern int CFA_DEPEND_CHECK;
 extern int CFA_BACKGROUND_LIMIT;
 extern int AM_BACKGROUND_PROCESS;
 extern int CF_PERSISTENCE;

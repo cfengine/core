@@ -762,6 +762,7 @@ enum cfacontrol
     cfa_checksum_alert_time,
     cfa_defaultcopytype,
     cfa_dryrun,
+    cfa_dependency_check,
     cfa_editbinaryfilesize,
     cfa_editfilesize,
     cfa_environment,

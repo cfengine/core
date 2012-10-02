@@ -2517,7 +2517,7 @@ char* XPathRemoveTail(char *xpath, Attributes a, Promise *pp)
 
 static bool PredicateHasTail(char *predicate, Attributes a, Promise *pp)
 {
-    const char *regexp = "^\\s*\\[?\\s*@?\\s*(\\w|-)+\\s*=\\s*(\"|\')?(\\w|-)+(\"|\')?\\s*\\|";
+    const char *regexp = "^\\s*\\[?\\s*@?\\s*(\\w|-|\\.)+\\s*=\\s*(\"|\')?(\\w|-|\\.)+(\"|\')?\\s*\\|";
 
     return (ContainsRegex(predicate, regexp));
 }
@@ -2526,7 +2526,7 @@ static bool PredicateHasTail(char *predicate, Attributes a, Promise *pp)
 
 static bool PredicateHeadContainsAttribute(char *predicate, Attributes a, Promise *pp)
 {
-    const char *regexp = "^\\s*\\[?\\|?(\\s*@\\s*(\\w|-)+\\s*=\\s*(\"|\')?(\\w|-)+(\"|\')?)(\\s*(\\||\\]))?"; // i.e. @name='value' or @name = value or @name ="value"
+    const char *regexp = "^\\s*\\[?\\|?(\\s*@\\s*(\\w|-|\\.)+\\s*=\\s*(\"|\')?(\\w|-|\\.)+(\"|\')?)(\\s*(\\||\\]))?"; // i.e. @name='value' or @name = value or @name ="value"
 
     return (ContainsRegex(predicate, regexp));
 }
@@ -2535,7 +2535,7 @@ static bool PredicateHeadContainsAttribute(char *predicate, Attributes a, Promis
 
 static bool PredicateHeadContainsNode(char *predicate, Attributes a, Promise *pp)
 {
-    const char *regexp = "^\\s*\\[?\\|?(\\s*(\\w|-)+\\s*=\\s*(\"|\')?(\\w|-)+(\"|\')?)(\\s*(\\||\\]))?";  // i.e. name='value' or name = value or name ="value"
+    const char *regexp = "^\\s*\\[?\\|?(\\s*(\\w|-|\\.)+\\s*=\\s*(\"|\')?(\\w|-|\\.)+(\"|\')?)(\\s*(\\||\\]))?";  // i.e. name='value' or name = value or name ="value"
 
     return (ContainsRegex(predicate, regexp));
 }
@@ -2544,7 +2544,7 @@ static bool PredicateHeadContainsNode(char *predicate, Attributes a, Promise *pp
 
 static bool XPathHasTail(char *head, Attributes a, Promise *pp)
 {
-    const char *regexp = "^\\s*\\/?\\s*(\\w|-)+(\\s*::\\s*(\\w|-)+\\s*)*\\s*(\\[[^\\[\\]\\/]*\\])?\\s*\\/";
+    const char *regexp = "^\\s*\\/?\\s*(\\w|-|\\.)+(\\s*::\\s*(\\w|-|\\.)+\\s*)*\\s*(\\[[^\\[\\]\\/]*\\])?\\s*\\/";
 
     return (ContainsRegex(head, regexp));
 }
@@ -2553,7 +2553,7 @@ static bool XPathHasTail(char *head, Attributes a, Promise *pp)
 
 static bool XPathHeadContainsNode(char *head, Attributes a, Promise *pp)
 {
-    const char *regexp = "^(\\/)?(\\w)+((\\s*::\\s*)?(\\w)+)*";
+    const char *regexp = "^(\\/)?(\\w|-|\\.)+((\\s*::\\s*)?(\\w|-|\\.)+)*";
 
     return (ContainsRegex(head, regexp));
 }
@@ -2562,9 +2562,9 @@ static bool XPathHeadContainsNode(char *head, Attributes a, Promise *pp)
 
 static bool XPathHeadContainsPredicate(char *head, Attributes a, Promise *pp)
 {
-    const char *regexp = "^\\s*\\/?\\s*(\\w|-)+(\\s*::\\s*(\\w|-)+)*\\s*\\"       // name
+    const char *regexp = "^\\s*\\/?\\s*(\\w|-|\\.)+(\\s*::\\s*(\\w|-|\\.)+)*\\s*\\"       // name
         // [ name='value' | @name = "value" | name = value]
-        "[\\s*@?\\s*(\\w|-)+\\s*=\\s*(\"|\')?(\\w|-)+(\"|\')?\\s*(\\s*\\|\\s*)?(\\s*@?\\s*(\\w|-)+\\s*=\\s*(\"|\')?(\\w|-)+(\"|\')?\\s*)*\\]";
+        "[\\s*@?\\s*(\\w|-|\\.)+\\s*=\\s*(\"|\')?(\\w|-|\\.)+(\"|\')?\\s*(\\s*\\|\\s*)?(\\s*@?\\s*(\\w|-|\\.)+\\s*=\\s*(\"|\')?(\\w|-|\\.)+(\"|\')?\\s*)*\\]";
 
     return (ContainsRegex(head, regexp));
 }
@@ -2586,9 +2586,9 @@ static bool XPathVerifyBuildSyntax(const char* xpath, Attributes a, Promise *pp)
     }
 
     // /name[ name = value | @name='value'| . . . | @name = "value" ]/. . .
-    strcpy (regexp, "^(\\/(( |\\t)*(\\w|-)+( |\\t)*)"
-    "(\\[( |\\t)*@?(\\w|-)+( |\\t)*=( |\\t)*(\'|\")?(\\w|-)+(\'|\")?( |\\t)*"
-    "(\\|( |\\t)*@?(\\w|-)+( |\\t)*=( |\\t)*(\'|\")?(\\w|-)+(\'|\")?( |\\t)*)*\\])?)*$");
+    strcpy (regexp, "^(\\/(( |\\t)*(\\w|-|\\.)+( |\\t)*)"
+    "(\\[( |\\t)*@?(\\w|-|\\.)+( |\\t)*=( |\\t)*(\'|\")?(\\w|-|\\.)+(\'|\")?( |\\t)*"
+    "(\\|( |\\t)*@?(\\w|-|\\.)+( |\\t)*=( |\\t)*(\'|\")?(\\w|-|\\.)+(\'|\")?( |\\t)*)*\\])?)*$");
 
     if (!ContainsRegex(xpath, regexp))
     {

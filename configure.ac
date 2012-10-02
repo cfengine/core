@@ -996,6 +996,7 @@ dnl ######################################################################
 AC_CONFIG_FILES([Makefile
 	pub/Makefile
 	src/Makefile
+	ext/Makefile
 	docs/Makefile
 	docs/guides/Makefile
 	docs/manpages/Makefile

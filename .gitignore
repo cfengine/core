@@ -74,6 +74,7 @@ src/cf-serverd
 src/cf-serverd.exe
 src/cf-gendoc
 src/cf-gendoc.exe
+ext/rpmvercmp
 
 # autogen
 

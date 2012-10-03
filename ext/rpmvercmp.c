@@ -24,6 +24,7 @@ marc@redhat.com and ewt@redhat.com.
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <sys/types.h>
 
 static inline int rstreq(const char *s1, const char *s2)
 {

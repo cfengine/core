@@ -1,0 +1,20 @@
+body file control
+{
+  namespace => "test_namespace";
+}
+
+bundle agent classchecker
+{
+  classes:
+      "noedit_$(cindex[$(key)])" expression => strcmp("x","dontchange");
+
+  vars:
+      "key" string => "1 2 3";
+      "cindex[$(key)]" string => canonify("$(key)");
+
+      "var1" string => "data1",
+      ifvarclass => "noedit_$(cindex[$(key)])";
+
+      "var1" string => "data1",
+      ifvarclass => "!noedit_$(cindex[$(key)])";
+}

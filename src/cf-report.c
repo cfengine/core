@@ -2490,7 +2490,12 @@ static void WriteHistograms()
 
     for (position = 0; position < CF_GRAINS; position++)
     {
-        fscanf(fp, "%d ", &position);
+        int position_read;
+        fscanf(fp, "%d ", &position_read);
+        if (position != position_read)
+        {
+            FatalError("Malformed data found in %s/state/historgrams, line %d", CFWORKDIR, position + 1);
+        }
 
         for (i = 0; i < CF_OBSERVABLES; i++)
         {

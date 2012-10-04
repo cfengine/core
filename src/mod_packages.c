@@ -71,6 +71,8 @@ static const BodySyntax CF_PKGMETHOD_BODY[] =
      "Regular expression which matches the start of a new package in multiline output"},
     {"package_commands_useshell", cf_opts, CF_BOOL,
      "Whether to use shell for commands in this body", "true"},
+    {"package_version_less_command", cf_str, CF_PATHRANGE, "Command to check whether first supplied package version is less than second one"},
+    {"package_version_equal_command", cf_str, CF_PATHRANGE, "Command to check whether first supplied package version is equal to second one"},
     {NULL, cf_notype, NULL, NULL}
 };
 

@@ -1,0 +1,7 @@
+@verbatim
+body package_method deb
+{
+...
+package_version_equal_command => "dpkg --compare-versions ${v1} eq ${v2}";
+}
+@end verbatim

@@ -1142,6 +1142,10 @@ Packages GetPackageConstraints(const Promise *pp)
     p.package_delete_convention = (char *) GetConstraintValue("package_delete_convention", pp, CF_SCALAR);
 
     p.package_multiline_start = (char *) GetConstraintValue("package_multiline_start", pp, CF_SCALAR);
+
+    p.package_version_equal_command = GetConstraintValue("package_version_equal_command", pp, CF_SCALAR);
+    p.package_version_less_command = GetConstraintValue("package_version_less_command", pp, CF_SCALAR);
+
     return p;
 }
 

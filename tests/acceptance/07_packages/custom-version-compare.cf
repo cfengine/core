@@ -1,0 +1,105 @@
+#######################################################
+# Test custom version comparator
+#######################################################
+
+body common control
+{
+  inputs => { "../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+  "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+packages:
+  # Test that overriding 'equal' works. Installed is 01, requested is 1. Overridden eq compares numeric values.
+  "bash-1-amd64"
+    package_policy => "addupdate",
+    package_method => mock_zeroone_installed,
+    classes => test_set_class("custom_eq_succ", "custom_eq_fail");
+
+  "bash-2-amd64"
+    package_policy => "addupdate",
+    package_method => mock_zeroone_installed_can_install,
+    classes => test_set_class("custom_eq_2_succ", "custom_eq_2_fail");
+}
+
+body package_method mock_zeroone_installed
+{
+  package_changes => "individual";
+
+  package_name_regex => "^([^-]+)";
+  package_version_regex => "^[^-]+-([^-]+)";
+  package_arch_regex => "^[^-]+-[^-]+-(.*)";
+
+  package_list_command => "$(G.printf) 'bash-01-amd64'";
+  package_installed_regex => ".*";
+  package_list_name_regex => "^([^-]+)";
+  package_list_version_regex => "^[^-]+-([^-]+)";
+  package_list_arch_regex => "^[^-]+-[^-]+-(.*)";
+
+  package_add_command => "$(G.false)";
+  package_update_command => "$(G.false)";
+  package_delete_command => "$(G.false)";
+  package_verify_command => "$(G.false)";
+
+  package_version_less_command => "test $(v1) -lt $(v2)";
+  package_version_equal_command => "test $(v1) -eq $(v2)";
+}
+
+body package_method mock_zeroone_installed_can_install
+{
+  package_changes => "individual";
+
+  package_name_regex => "^([^-]+)";
+  package_version_regex => "^[^-]+-([^-]+)";
+  package_arch_regex => "^[^-]+-[^-]+-(.*)";
+
+  package_list_command => "$(G.printf) 'bash-01-amd64'";
+  package_installed_regex => ".*";
+  package_list_name_regex => "^([^-]+)";
+  package_list_version_regex => "^[^-]+-([^-]+)";
+  package_list_arch_regex => "^[^-]+-[^-]+-(.*)";
+
+  package_add_command => "$(G.false)";
+  package_update_command => "$(G.true)";
+  package_delete_command => "$(G.false)";
+  package_verify_command => "$(G.false)";
+
+  package_version_less_command => "test $(v1) -lt $(v2)";
+  package_version_equal_command => "test $(v1) -eq $(v2)";
+}
+
+body classes test_set_class(ok_class,notok_class)
+{
+promise_kept => { "$(ok_class)" };
+promise_repaired => { "$(ok_class)" };
+repair_failed => { "$(notok_class)" };
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+  "ok" and => { "custom_eq_succ", "!custom_eq_fail",
+                "custom_eq_2_succ", "!custom_eq_2_fail" };
+
+reports:
+  ok::
+    "$(this.promise_filename) Pass";
+  !ok::
+    "$(this.promise_filename) FAIL";
+}

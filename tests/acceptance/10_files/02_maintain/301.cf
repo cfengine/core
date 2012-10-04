@@ -33,8 +33,8 @@ files:
 body perms init_mog
 {
 mode => "751";
-owners => { "bin" };
-groups => { "bin" };
+owners => { "0" };
+groups => { "0" };
 }
 
 body copy_from init_copy(fn)

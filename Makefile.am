@@ -4,7 +4,7 @@ MAKEFLAGS = $(if $(filter-out 0,$(V)),,--no-print-directory --quiet)
 
 LCOV_FLAGS = $(if $(filter-out 0,$(V)),,-q)
 
-SUBDIRS = pub $(NOVA_SUBDIR) src docs examples masterfiles tests $(ENTERPRISE_API_SUBDIR) $(CFMOD_SUBDIR) $(NOVA_DOC_SUBDIR)
+SUBDIRS = pub $(NOVA_SUBDIR) src ext docs examples masterfiles tests $(ENTERPRISE_API_SUBDIR) $(CFMOD_SUBDIR) $(NOVA_DOC_SUBDIR)
 
 DIST_SUBDIRS = pub src docs examples masterfiles tests
 

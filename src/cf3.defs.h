@@ -2075,6 +2075,9 @@ typedef struct
 
     char *package_multiline_start;
 
+    char *package_version_less_command;
+    char *package_version_equal_command;
+
     int package_noverify_returncode;
 } Packages;
 

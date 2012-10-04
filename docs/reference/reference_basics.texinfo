@@ -1994,7 +1994,8 @@ namespace => "myspace";
 @end verbatim
 
 To distinguish the bundle @code{mymethod} in the default namespace
-from one in another namespace, you can prefix the 
+from one in another namespace, you prefix the bundle name with the
+namespace, separated by a colon.
 @verbatim
 methods:
 
@@ -2005,7 +2006,7 @@ methods:
 @end verbatim
 
 To distinguish a body from one in another namespace, you can prefix
-the
+the body name with the namespace, separated by a colon.
 @verbatim
 files:
 
@@ -2016,7 +2017,7 @@ files:
 
 @end verbatim
 
-The namespace that is default, i.e. that which is implied by not making any namespace
+The default namespace, i.e. that which is implied by not making any namespace
 declarations, can be accessed or referred to by prefixing with the default string
 
 @verbatim

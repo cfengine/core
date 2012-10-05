@@ -5,6 +5,23 @@
 #include <setjmp.h>
 #include <cmockery.h>
 
+static void tests_setup(void)
+{
+    snprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/persistent_lock_test.XXXXXX");
+    mkdtemp(CFWORKDIR);
+
+    char buf[CF_BUFSIZE];
+    snprintf(buf, CF_BUFSIZE, "%s/state", CFWORKDIR);
+    mkdir(buf, 0755);
+}
+
+static void tests_teardown(void)
+{
+    char cmd[CF_BUFSIZE];
+    snprintf(cmd, CF_BUFSIZE, "rm -rf '%s'", CFWORKDIR);
+    system(cmd);
+}
+
 static void test_lock_acquire_by_id(void **state)
 {
     bool result;
@@ -50,10 +67,7 @@ static void test_lock_invalidate(void **state)
 
 int main()
 {
-    strlcpy(CFWORKDIR, "/tmp", sizeof(CFWORKDIR));
-    cf_mkdir("/tmp/state", 0755);
-    unlink("/tmp/state/cf_lock.tcdb");
-    unlink("/tmp/state/cf_lock.qdbm");
+    tests_setup();
 
     const UnitTest tests[] =
       {
@@ -61,5 +75,9 @@ int main()
         unit_test(test_lock_invalidate),
       };
     
-    return run_tests(tests);
+    int ret = run_tests(tests);
+
+    tests_teardown();
+
+    return ret;
 }

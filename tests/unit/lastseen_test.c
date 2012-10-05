@@ -6,21 +6,29 @@
 #include <setjmp.h>
 #include <cmockery.h>
 
-char CFWORKDIR[CF_BUFSIZE] = "/tmp";
+char CFWORKDIR[CF_BUFSIZE];
 
 void UpdateLastSawHost(const char *hostkey, const char *address,
                        bool incoming, time_t timestamp);
 
-static void setup(void)
+static void tests_setup(void)
 {
-    unlink("/tmp/cf_lastseen.tcdb");
-    unlink("/tmp/cf_lastseen.qdbm");
+    snprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/lastseen_test.XXXXXX");
+    mkdtemp(CFWORKDIR);
 }
 
-static void teardown(void)
+static void setup(void)
 {
-    unlink("/tmp/cf_lastseen.tcdb");
-    unlink("/tmp/cf_lastseen.qdbm");
+    char cmd[CF_BUFSIZE];
+    snprintf(cmd, CF_BUFSIZE, "rm -rf '%s'/*", CFWORKDIR);
+    system(cmd);
+}
+
+static void tests_teardown(void)
+{
+    char cmd[CF_BUFSIZE];
+    snprintf(cmd, CF_BUFSIZE, "rm -rf '%s'", CFWORKDIR);
+    system(cmd);
 }
 
 static void test_newentry(void **context)
@@ -149,6 +157,8 @@ static void test_remove(void **context)
 
 int main()
 {
+    tests_setup();
+
     const UnitTest tests[] =
         {
             unit_test(test_newentry),
@@ -161,7 +171,7 @@ int main()
 
     int ret = run_tests(tests);
 
-    teardown();
+    tests_teardown();
 
     return ret;
 }

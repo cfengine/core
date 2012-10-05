@@ -24,7 +24,7 @@
 
 
 int DEBUG = false;  // wether or not to get output from CfDebug()
-char CFWORKDIR[CF_BUFSIZE] = "/tmp";
+char CFWORKDIR[CF_BUFSIZE];
 
 static bool CoinFlip(void);
 static void WriteReadWriteData(CF_DB *db);
@@ -209,8 +209,8 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    unlink("/tmp/cf_classes.qdbm");
-    unlink("/tmp/cf_classes.tcdb");
+    snprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/db_load.XXXXXX");
+    mkdtemp(CFWORKDIR);
 
     int numthreads = atoi(argv[1]);
 
@@ -242,6 +242,10 @@ int main(int argc, char **argv)
     int failures = WriteReturnValues(retvals, tids, numthreads);
 
     CloseAllDB();
+
+    char cmd[CF_BUFSIZE];
+    snprintf(cmd, CF_BUFSIZE, "rm -rf '%s'", CFWORKDIR);
+    system(cmd);
 
     exit(failures);
 }

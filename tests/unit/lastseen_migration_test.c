@@ -14,15 +14,22 @@ typedef struct
     double var;
 } KeyHostSeen0;
 
-char CFWORKDIR[CF_BUFSIZE] = "/tmp";
+char CFWORKDIR[CF_BUFSIZE];
+
+void tests_setup(void)
+{
+    snprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/lastseen_migration_test.XXXXXX");
+    mkdtemp(CFWORKDIR);
+}
 
 /*
  * Provides empty lastseen DB
  */
 static DBHandle *setup(bool clean)
 {
-    unlink("/tmp/cf_lastseen.tcdb");
-    unlink("/tmp/cf_lastseen.qdbm");
+    char cmd[CF_BUFSIZE];
+    snprintf(cmd, CF_BUFSIZE, "rm -rf '%s'/*", CFWORKDIR);
+    system(cmd);
 
     DBHandle *db;
     OpenDB(&db, dbid_lastseen);
@@ -56,10 +63,11 @@ static DBHandle *setup(bool clean)
     return db;
 }
 
-static void teardown(void)
+static void tests_teardown(void)
 {
-    unlink("/tmp/cf_lastseen.tcdb");
-    unlink("/tmp/cf_lastseen.qdbm");
+    char cmd[CF_BUFSIZE];
+    snprintf(cmd, CF_BUFSIZE, "rm -rf '%s'", CFWORKDIR);
+    system(cmd);
 }
 
 static void test_no_migration(void **context)
@@ -208,6 +216,8 @@ void test_ignore_wrong_sized(void **context)
 
 int main()
 {
+    tests_setup();
+
     const UnitTest tests[] =
         {
             unit_test(test_no_migration),
@@ -219,7 +229,7 @@ int main()
 
     int ret = run_tests(tests);
 
-    teardown();
+    tests_teardown();
 
     return ret;
 }

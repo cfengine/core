@@ -4,14 +4,24 @@
 #include <setjmp.h>
 #include <cmockery.h>
 
-char CFWORKDIR[CF_BUFSIZE] = "/tmp";
+char CFWORKDIR[CF_BUFSIZE];
+
+void tests_setup(void)
+{
+    snprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/db_test.XXXXXX");
+    mkdtemp(CFWORKDIR);
+}
+
+void tests_teardown(void)
+{
+    char cmd[CF_BUFSIZE];
+    snprintf(cmd, CF_BUFSIZE, "rm -rf '%s'", CFWORKDIR);
+    system(cmd);
+}
 
 void test_iter_modify_entry(void **state)
 {
     /* Test that deleting entry under cursor does not interrupt iteration */
-
-    unlink("/tmp/cf_classes.qdbm");
-    unlink("/tmp/cf_classes.tcdb");
 
     CF_DB *db;
     assert_int_equal(OpenDB(&db, dbid_classes), true);
@@ -44,9 +54,6 @@ void test_iter_modify_entry(void **state)
 void test_iter_delete_entry(void **state)
 {
     /* Test that deleting entry under cursor does not interrupt iteration */
-
-    unlink("/tmp/cf_classes.qdbm");
-    unlink("/tmp/cf_classes.tcdb");
 
     CF_DB *db;
     assert_int_equal(OpenDB(&db, dbid_classes), true);
@@ -89,11 +96,13 @@ void test_recreate(void **state)
 {
     /* Test that recreating database works properly */
 
-    unlink("/tmp/cf_classes.tcdb");
-    unlink("/tmp/cf_classes.qdbm");
+    char tcdb_db[CF_BUFSIZE];
+    snprintf(tcdb_db, CF_BUFSIZE, "%s/cf_classes.tcdb", CFWORKDIR);
+    CreateGarbage(tcdb_db);
 
-    CreateGarbage("/tmp/cf_classes.tcdb");
-    CreateGarbage("/tmp/cf_classes.qdbm");
+    char qdbm_db[CF_BUFSIZE];
+    snprintf(qdbm_db, CF_BUFSIZE, "%s/cf_classes.qdbm", CFWORKDIR);
+    CreateGarbage(qdbm_db);
 
     CF_DB *db;
     assert_int_equal(OpenDB(&db, dbid_classes), true);
@@ -102,6 +111,8 @@ void test_recreate(void **state)
 
 int main()
 {
+    tests_setup();
+
     const UnitTest tests[] =
         {
             unit_test(test_iter_modify_entry),
@@ -109,7 +120,10 @@ int main()
             unit_test(test_recreate),
         };
 
-    return run_tests(tests);
+    int ret = run_tests(tests);
+
+    tests_teardown();
+    return ret;
 }
 
 /* STUBS */

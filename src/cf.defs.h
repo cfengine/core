@@ -426,6 +426,13 @@ int rpl_asprintf(char **, const char *, ...);
 # define isfinite(x) finite(x)
 #endif
 
+#if !HAVE_DECL_STRRSTR
+char *strrstr(const char *haystack, const char *needle);
+#endif
+#if !HAVE_DECL_MKDTEMP
+char *mkdtemp(char *template);
+#endif
+
 /*******************************************************************/
 /* Preprocessor tricks                                             */
 /*******************************************************************/

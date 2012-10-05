@@ -7,10 +7,29 @@
 #include <cmockery.h>
 #include <stdarg.h>
 
-#define FILE_NAME "/tmp/cfengine_file_test"
 #define FILE_CONTENTS "8aysd9a8ydhsdkjnaldn12lk\njndl1jndljewnbfdhwjebfkjhbnkjdn1lkdjn1lkjn38aysd9a8ydhsdkjnaldn12lkjndl1jndljewnbfdhwjebfkjhbnkjdn1lkdjn1lkjn38aysd9a8ydhsdkjnaldn12lkjndl1jndljewnbfdhwjebfkjhbnkjdn1lkdjn1lkjn38aysd9a8ydhsdkjnaldn12lkjndl1jndljewnbfdhwjebfkjhbnkjdn1lkdjn1lkjn38aysd9a8ydhsdkjnaldn12lkjndl1jndljew\nnbfdhwjebfkjhbnkjdn1lkdjn1lkjn38aysd9a8ydhsdkjnaldn12lkjndl1jndljewnbfdhwjebfkjhbnkjdn1lkdjn1l\rkjn38aysd9a8ydhsdkjnaldn12lkjndl1jndljewnbfdhwjebfkjhbnkjdn1lkdjn1\r\nlkjn38aysd9a8ydhsdkjnaldn12lkjndl1jndljewnbfdhwjebfkjhbnkjdn1lkdjn1lkjn38aysd9a8ydhsdkjnaldn12lkjndl1jndljewnbfdhwjebfkjhbnkjdn1lkdjn1lkjn3"
 #define FILE_SIZE (sizeof(FILE_CONTENTS) - 1)
-#define FILE_NAME_EMPTY "/tmp/cfengine_file_test_empty"
+
+char CFWORKDIR[CF_BUFSIZE];
+
+char FILE_NAME[CF_BUFSIZE];
+char FILE_NAME_EMPTY[CF_BUFSIZE];
+
+static void tests_setup(void)
+{
+    snprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/files_lib_test.XXXXXX");
+    mkdtemp(CFWORKDIR);
+
+    snprintf(FILE_NAME, CF_BUFSIZE, "%s/cfengine_file_test", CFWORKDIR);
+    snprintf(FILE_NAME_EMPTY, CF_BUFSIZE, "%s/cfengine_file_test_empty", CFWORKDIR);
+}
+
+static void tests_teardown(void)
+{
+    char cmd[CF_BUFSIZE];
+    snprintf(cmd, CF_BUFSIZE, "rm -rf '%s'", CFWORKDIR);
+    system(cmd);
+}
 
 void test_file_write(void **p)
 {
@@ -88,6 +107,8 @@ void test_file_read_invalid(void **p)
 
 int main()
 {
+    tests_setup();
+
     const UnitTest tests[] =
         {
             unit_test(test_file_write),
@@ -97,5 +118,9 @@ int main()
             unit_test(test_file_read_invalid),
         };
 
-    return run_tests(tests);
+    int ret = run_tests(tests);
+
+    tests_teardown();
+
+    return ret;
 }

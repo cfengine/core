@@ -6,7 +6,7 @@ LCOV_FLAGS = $(if $(filter-out 0,$(V)),,-q)
 
 SUBDIRS = pub $(NOVA_SUBDIR) src ext docs examples masterfiles tests $(ENTERPRISE_API_SUBDIR) $(CFMOD_SUBDIR) $(NOVA_DOC_SUBDIR)
 
-DIST_SUBDIRS = pub src docs examples masterfiles tests
+DIST_SUBDIRS = pub src ext docs examples masterfiles tests
 
 # Set explicitly to avoid picking up {nova}/*.m4
 

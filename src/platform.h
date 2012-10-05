@@ -454,7 +454,12 @@ struct tm *gmtime_r(const time_t *timep, struct tm *result);
 #if !HAVE_DECL_LOCALTIME_R
 struct tm *localtime_r(const time_t *timep, struct tm *result);
 #endif
-
+#if !HAVE_DECL_MKDTEMP
+char *mkdtemp(char *template);
+#endif
+#if !HAVE_DECL_STRRSTR
+char *strrstr(const char *haystack, const char *needle);
+#endif
 
 #ifndef NGROUPS
 # define NGROUPS 20

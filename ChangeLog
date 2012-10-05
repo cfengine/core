@@ -1,3 +1,15 @@
+3.3.8   (Bugfix and Stability release)
+
+	Versions 3.3.6, 3.3.7 were internal and weren't released.
+
+	Bugfixes:
+
+	- Propery set sys.domain variable if hostname is fully-qualified.
+	- Fixed several small memory leaks.
+	- Make network timeout for network reads configurable. Previously
+	  it was hardcoded to be 30 seconds, which was not enough for
+	  cf-runagent invoking cf-agent on big policies (Mantis #1028).
+
 3.3.5   (Bugfix and Stability release)
 
 	Bugfixes:

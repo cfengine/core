@@ -367,7 +367,7 @@ GidList *MakeGidList(char *gidnames);
 void AddSimpleUidItem(UidList ** uidlist, uid_t uid, char *uidname);
 void AddSimpleGidItem(GidList ** gidlist, gid_t gid, char *gidname);
 #endif /* NOT MINGW */
-void LogHashChange(char *file, FileState status, char *msg);
+void LogHashChange(char *file, FileState status, char *msg, Promise *pp);
 
 /* files_properties.c */
 

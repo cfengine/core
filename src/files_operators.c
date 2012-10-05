@@ -1122,7 +1122,7 @@ void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp, const ReportC
     if (changed)
     {
         NewPersistentContext("checksum_alerts", CF_PERSISTENCE, cfpreserve);
-        LogHashChange(file, cf_file_content_changed, "Content changed");
+        LogHashChange(file, cf_file_content_changed, "Content changed", pp);
     }
 
     if (attr.change.report_diffs)
@@ -1211,7 +1211,7 @@ void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp
         snprintf(msg_temp, sizeof(msg_temp), "Permission: %jo -> %jo",
                  (uintmax_t)cmpsb.st_mode, (uintmax_t)sb->st_mode);
 
-        LogHashChange(file, cf_file_stats_changed, msg_temp);
+        LogHashChange(file, cf_file_stats_changed, msg_temp, pp);
     }
 
     if (cmpsb.st_uid != sb->st_uid)
@@ -1224,7 +1224,7 @@ void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp
         snprintf(msg_temp, sizeof(msg_temp), "Owner: %jd -> %jd",
                  (uintmax_t)cmpsb.st_uid, (uintmax_t)sb->st_uid);
 
-        LogHashChange(file, cf_file_stats_changed, msg_temp);
+        LogHashChange(file, cf_file_stats_changed, msg_temp, pp);
     }
 
     if (cmpsb.st_gid != sb->st_gid)
@@ -1237,7 +1237,7 @@ void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp
         snprintf(msg_temp, sizeof(msg_temp), "Group: %jd -> %jd",
                  (uintmax_t)cmpsb.st_gid, (uintmax_t)sb->st_gid);
 
-        LogHashChange(file, cf_file_stats_changed, msg_temp);
+        LogHashChange(file, cf_file_stats_changed, msg_temp, pp);
     }
 
     if (cmpsb.st_dev != sb->st_dev)
@@ -1632,7 +1632,7 @@ static char FileStateToChar(FileState status)
     }
 }
 /*********************************************************************/
-void LogHashChange(char *file, FileState status, char *msg)
+void LogHashChange(char *file, FileState status, char *msg, Promise *pp)
 {
     FILE *fp;
     char fname[CF_BUFSIZE];
@@ -1670,7 +1670,9 @@ void LogHashChange(char *file, FileState status, char *msg)
         return;
     }
 
-    fprintf(fp, "%ld,%s,%c,%s\n", (long) now, file, FileStateToChar(status), msg);
+    const char *handle = PromiseID(pp);
+
+    fprintf(fp, "%ld,%s,%s,%c,%s\n", (long) now, handle, file, FileStateToChar(status), msg);
     fclose(fp);
 
     cf_chmod(fname, perm);

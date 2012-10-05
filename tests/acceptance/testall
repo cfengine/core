@@ -38,6 +38,38 @@ SKIPPED_TESTS=0
 
 [ x"$GREP" == x ] && GREP=`which grep`
 
+#
+# Many older platforms don't support date +%s, so check for compatibility
+# and find Perl for the unix_seconds() routine below. (Mantis #1254)
+#
+HAVE_DATE_PCT_S=
+if [ x`date +%s 2>/dev/null` != x'%s'  -a  $? -eq 0 ] ; then
+  HAVE_DATE_PCT_S=1
+fi
+PERL=`which perl 2>/dev/null`
+
+#
+# Obtain UNIX time(), using date +%s, Perl, or POSIX-compatible approach.
+#
+unix_seconds() {
+  if [ "$HAVE_DATE_PCT_S" ]; then
+    date +%s
+    return 0
+  fi
+
+  if [ "$PERL" ]; then
+    $PERL -e 'print time() . "\n"' 2>/dev/null
+    if [ $? -eq 0 ] ; then
+      return 0
+    fi
+  fi
+
+  # Last resort if Perl fails - the extended cpio interchange format has
+  # the file modification timestamp in columns 48-59, in octal.
+  : > $BASE_WORKDIR/x
+  echo "ibase=8;$(pax -wx cpio $BASE_WORKDIR/$$.seconds | cut -c 48-59)" | bc 2>/dev/null
+  rm $BASE_WORKDIR/x
+}
 
 curdir() {
   case $(dirname "$0") in
@@ -252,7 +284,7 @@ else
 fi
 
 TESTS_COUNT=$(echo $TESTS | wc -w)
-START_TIME=$(date +%s)
+START_TIME=$(unix_seconds)
 
 ( echo ======================================================================
   echo Testsuite started at $(date "+%F %T")
@@ -269,7 +301,7 @@ for test in $TESTS; do
   fi
 done
 
-END_TIME=$(date +%s)
+END_TIME=$(unix_seconds)
 
 ( echo
   echo ======================================================================

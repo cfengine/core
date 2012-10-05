@@ -18,6 +18,7 @@ dnl
 dnl The version in the next line is the only one to set
 dnl
 
+_AM_SET_OPTION([tar-ustar])
 AM_INIT_AUTOMAKE(cfengine, 3.3.8.revision)
 AM_MAINTAINER_MODE([enable])
 

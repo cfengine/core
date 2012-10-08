@@ -300,4 +300,6 @@ void JsonObjectRemoveKey(JsonElement *object, const char *key);
   */
 JsonElement *JsonObjectDetachKey(JsonElement *object, const char *key);
 
+JsonElement *JsonAt(const JsonElement *container, size_t index);
+
 #endif

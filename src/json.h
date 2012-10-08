@@ -130,6 +130,7 @@ JsonPrimitiveType JsonGetPrimitiveType(const JsonElement *primitive);
 const char *JsonPrimitiveGetAsString(const JsonElement *primitive);
 bool JsonPrimitiveGetAsBool(const JsonElement *primitive);
 long JsonPrimitiveGetAsInteger(const JsonElement *primitive);
+double JsonPrimitiveGetAsReal(const JsonElement *primitive);
 const char *JsonGetPropertyAsString(const JsonElement *element);
 
 /**

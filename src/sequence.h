@@ -125,4 +125,9 @@ void SequenceSoftRemoveRange(Sequence *seq, size_t start, size_t end);
   */
 void SequenceSoftRemove(Sequence *seq, size_t index);
 
+/**
+  @brief Reverses the order of the sequence
+  */
+void SequenceReverse(Sequence *seq);
+
 #endif

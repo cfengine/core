@@ -262,6 +262,8 @@ void JsonArrayAppendObject(JsonElement *array, JsonElement *object);
   */
 void JsonArrayRemoveRange(JsonElement *array, size_t start, size_t end);
 
+void JsonContainerReverse(JsonElement *array);
+
 /**
   @brief Get a string value from an array
   @param array [in] The JSON array parent

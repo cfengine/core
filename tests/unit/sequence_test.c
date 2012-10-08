@@ -44,7 +44,7 @@ static void test_append(void **state)
     SequenceDestroy(seq);
 }
 
-static int CompareNumbers(const void *a, const void *b)
+static int CompareNumbers(const void *a, const void *b, void *_user_data)
 {
     return *(size_t *) a - *(size_t *) b;
 }
@@ -103,7 +103,7 @@ static void test_sort(void **state)
     SequenceAppend(seq, &one);
     SequenceAppend(seq, &four);
 
-    SequenceSort(seq, CompareNumbers);
+    SequenceSort(seq, CompareNumbers, NULL);
 
     assert_int_equal(seq->data[0], &one);
     assert_int_equal(seq->data[1], &two);

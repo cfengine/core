@@ -573,7 +573,7 @@ JsonElement *JsonObjectGetAsArray(JsonElement *object, const char *key)
     return NULL;
 }
 
-const JsonElement *JsonObjectGet(const JsonElement *object, const char *key)
+JsonElement *JsonObjectGet(JsonElement *object, const char *key)
 {
     assert(object);
     assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);

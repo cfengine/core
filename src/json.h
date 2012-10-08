@@ -165,7 +165,7 @@ void JsonObjectAppendObject(JsonElement *object, const char *key, JsonElement *c
 const char *JsonObjectGetAsString(JsonElement *object, const char *key);
 JsonElement *JsonObjectGetAsObject(JsonElement *object, const char *key);
 JsonElement *JsonObjectGetAsArray(JsonElement *object, const char *key);
-const JsonElement *JsonObjectGet(const JsonElement *object, const char *key);
+JsonElement *JsonObjectGet(JsonElement *object, const char *key);
 
 /**
   @brief Append a string to an array.

@@ -281,6 +281,15 @@ long JsonPrimitiveGetAsInteger(const JsonElement *primitive)
     return StringToLong(primitive->primitive.value);
 }
 
+double JsonPrimitiveGetAsReal(const JsonElement *primitive)
+{
+    assert(primitive);
+    assert(primitive->type == JSON_ELEMENT_TYPE_PRIMITIVE);
+    assert(primitive->primitive.type == JSON_PRIMITIVE_TYPE_REAL);
+
+    return StringToDouble(primitive->primitive.value);
+}
+
 const char *JsonGetPropertyAsString(const JsonElement *element)
 {
     assert(element);

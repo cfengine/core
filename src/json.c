@@ -297,6 +297,14 @@ const char *JsonGetPropertyAsString(const JsonElement *element)
     return element->propertyName;
 }
 
+void JsonSort(JsonElement *container, JsonComparator *Compare, void *user_data)
+{
+    assert(container);
+    assert(container->type == JSON_ELEMENT_TYPE_CONTAINER);
+
+    SequenceSort(container->container.children, (SequenceItemComparator)Compare, user_data);
+}
+
 JsonElement *JsonAt(const JsonElement *container, size_t index)
 {
     assert(container);
@@ -445,7 +453,7 @@ void JsonObjectAppendObject(JsonElement *object, const char *key, JsonElement *c
     SequenceAppend(object->container.children, childObject);
 }
 
-static int JsonElementHasProperty(const void *propertyName, const void *jsonElement)
+static int JsonElementHasProperty(const void *propertyName, const void *jsonElement, void *_user_data)
 {
     assert(propertyName);
 
@@ -460,7 +468,7 @@ static int JsonElementHasProperty(const void *propertyName, const void *jsonElem
     return -1;
 }
 
-static int CompareKeyToPropertyName(const void *a, const void *b)
+static int CompareKeyToPropertyName(const void *a, const void *b, void *_user_data)
 {
     return StringSafeCompare((char*)a, ((JsonElement*)b)->propertyName);
 }

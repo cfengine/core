@@ -297,6 +297,15 @@ const char *JsonGetPropertyAsString(const JsonElement *element)
     return element->propertyName;
 }
 
+JsonElement *JsonAt(const JsonElement *container, size_t index)
+{
+    assert(container);
+    assert(container->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(index < JsonElementLength(container));
+
+    return container->container.children->data[index];
+}
+
 // *******************************************************************************************
 // JsonObject Functions
 // *******************************************************************************************

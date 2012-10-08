@@ -213,3 +213,11 @@ void SequenceSoftRemove(Sequence *seq, size_t index)
     SequenceSoftRemoveRange(seq, index, index);
 }
 
+void SequenceReverse(Sequence *seq)
+{
+    for (size_t i = 0; i < (seq->length / 2); i++)
+    {
+        Swap(&seq->data[i], &seq->data[seq->length - 1 - i]);
+    }
+}
+

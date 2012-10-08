@@ -718,6 +718,15 @@ JsonElement *JsonArrayGetAsObject(JsonElement *array, size_t index)
     return NULL;
 }
 
+void JsonContainerReverse(JsonElement *array)
+{
+    assert(array);
+    assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
+
+    SequenceReverse(array->container.children);
+}
+
 // *******************************************************************************************
 // Primitive Functions
 // *******************************************************************************************

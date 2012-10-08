@@ -204,6 +204,14 @@ void JsonArrayAppendArray(JsonElement *array, JsonElement *child_array);
   */
 void JsonArrayAppendObject(JsonElement *array, JsonElement *object);
 void JsonArrayRemoveRange(JsonElement *array, size_t start, size_t end);
+void JsonContainerReverse(JsonElement *array);
+
+/**
+  @brief Get a string value from an array
+  @param array [in] The JSON array parent
+  @param index [in] Position of the value to get
+  @returns A pointer to the string value, or NULL if non-existant.
+  */
 const char *JsonArrayGetAsString(JsonElement *array, size_t index);
 JsonElement *JsonArrayGetAsObject(JsonElement *array, size_t index);
 

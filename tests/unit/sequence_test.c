@@ -44,7 +44,7 @@ static void test_append(void **state)
     SequenceDestroy(seq);
 }
 
-static int CompareNumbers(const void *a, const void *b)
+static int CompareNumbers(const void *a, const void *b, void *_user_data)
 {
     return *(size_t *) a - *(size_t *) b;
 }
@@ -103,7 +103,7 @@ static void test_sort(void **state)
     SequenceAppend(seq, &one);
     SequenceAppend(seq, &four);
 
-    SequenceSort(seq, CompareNumbers);
+    SequenceSort(seq, CompareNumbers, NULL);
 
     assert_int_equal(seq->data[0], &one);
     assert_int_equal(seq->data[1], &two);
@@ -171,6 +171,28 @@ static void test_remove(void **state)
     SequenceDestroy(seq);
 }
 
+static void test_reverse(void **state)
+{
+    {
+        Sequence *seq = SequenceCreateRange(2, 0, 1);
+        assert_int_equal(0, *(size_t *)seq->data[0]);
+        assert_int_equal(1, *(size_t *)seq->data[1]);
+        SequenceReverse(seq);
+        assert_int_equal(1, *(size_t *)seq->data[0]);
+        assert_int_equal(0, *(size_t *)seq->data[1]);
+        SequenceDestroy(seq);
+    }
+
+    {
+        Sequence *seq = SequenceCreateRange(3, 0, 2);
+        SequenceReverse(seq);
+        assert_int_equal(2, *(size_t *)seq->data[0]);
+        assert_int_equal(1, *(size_t *)seq->data[1]);
+        assert_int_equal(0, *(size_t *)seq->data[2]);
+        SequenceDestroy(seq);
+    }
+}
+
 int main()
 {
     const UnitTest tests[] =
@@ -181,7 +203,8 @@ int main()
         unit_test(test_index_of),
         unit_test(test_sort),
         unit_test(test_remove_range),
-        unit_test(test_remove)
+        unit_test(test_remove),
+        unit_test(test_reverse)
     };
 
     return run_tests(tests);

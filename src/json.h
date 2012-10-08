@@ -300,6 +300,9 @@ void JsonObjectRemoveKey(JsonElement *object, const char *key);
   */
 JsonElement *JsonObjectDetachKey(JsonElement *object, const char *key);
 
+typedef int JsonComparator(const JsonElement *, const JsonElement *, void *user_data);
+
+void JsonSort(JsonElement *container, JsonComparator *Compare, void *user_data);
 JsonElement *JsonAt(const JsonElement *container, size_t index);
 
 #endif

@@ -646,6 +646,11 @@ struct timespec
 # define FD_CLOEXEC 0
 #endif
 
+/* kill(2) on OS X returns ETIMEDOUT instead of ESRCH */
+#ifndef ETIMEDOUT
+# define ETIMEDOUT ESRCH
+#endif
+
 /********************************************************************/
 /* *BSD chflags stuff -                                             */
 /********************************************************************/

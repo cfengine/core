@@ -247,7 +247,7 @@ CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promi
 
                     err = GracefulTerminate(pid);
 
-                    if (err || errno == ESRCH)
+                    if (err || errno == ESRCH || errno == ETIMEDOUT)
                     {
                         LogLockCompletion(cflog, pid, "Lock expired, process killed", cc_operator, cc_operand);
                         unlink(cflock);

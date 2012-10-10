@@ -32,6 +32,7 @@
 #include "dir.h"
 #include "dbm_api.h"
 #include "files_names.h"
+#include "files_interfaces.h"
 #include "vars.h"
 #include "item_lib.h"
 #include "conversion.h"

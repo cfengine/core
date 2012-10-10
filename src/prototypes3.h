@@ -327,18 +327,6 @@ char *SkipHashType(char *hash);
 const char *FileHashName(enum cfhashes id);
 void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhashes type);
 
-/* files_interfaces.c */
-
-void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes attr, Promise *pp, const ReportContext *report_context);
-void VerifyCopy(char *source, char *destination, Attributes attr, Promise *pp, const ReportContext *report_context);
-void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attributes attr, Promise *pp, const ReportContext *report_context);
-int cfstat(const char *path, struct stat *buf);
-int cf_stat(char *file, struct stat *buf, Attributes attr, Promise *pp);
-int cf_lstat(char *file, struct stat *buf, Attributes attr, Promise *pp);
-int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dstat, Attributes attr, Promise *pp, const ReportContext *report_context);
-int CfReadLine(char *buff, int size, FILE *fp);
-int cf_readlink(char *sourcefile, char *linkbuf, int buffsize, Attributes attr, Promise *pp);
-
 /* files_operators.c */
 
 int VerifyFileLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp, const ReportContext *report_context);

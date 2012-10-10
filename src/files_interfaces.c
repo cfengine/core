@@ -23,7 +23,7 @@
 
 */
 
-#include "cf3.defs.h"
+#include "files_interfaces.h"
 
 #include "env_context.h"
 #include "promises.h"

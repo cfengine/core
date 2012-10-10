@@ -52,7 +52,8 @@ check_PROGRAMS = \
 	logging_test \
 	granules_test \
 	scope_test \
-	conversion_test
+	conversion_test \
+	files_interfaces_test
 
 TESTS = $(check_PROGRAMS)
 

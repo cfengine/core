@@ -26,6 +26,7 @@
 
 #include "sysinfo.h"
 #include "files_names.h"
+#include "files_interfaces.h"
 #include "monitoring.h"
 #include "item_lib.h"
 

@@ -465,7 +465,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
         {
             method_deref = strchr(edit_bundle_name,':') + 1;
         }
-        else if (strchr(edit_bundle_name, ':') == NULL)
+        else if (strchr(edit_bundle_name, ':') == NULL && strcmp(pp->namespace, "default") != 0)
         {
             snprintf(qualified_edit, CF_BUFSIZE, "%s:%s", pp->namespace, edit_bundle_name);
             method_deref = qualified_edit;

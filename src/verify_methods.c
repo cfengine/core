@@ -53,7 +53,7 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
     Bundle *bp;
     void *vp;
     FnCall *fp;
-    char method_name[CF_EXPANDSIZE],*method_deref;
+    char method_name[CF_EXPANDSIZE], qualified_method[CF_BUFSIZE], *method_deref;
     Rlist *params = NULL;
     int retval = false;
     CfLock thislock;
@@ -90,15 +90,18 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
     PromiseBanner(pp);
 
     if (strncmp(method_name,"default:",strlen("default:")) == 0)
-       {
-           method_deref = strchr(method_name,':') + 1;
-       }
+    {
+        method_deref = strchr(method_name,':') + 1;
+    }
+    else if (strchr(method_name, ':') == NULL)
+    {
+        snprintf(qualified_method, CF_BUFSIZE, "%s:%s", pp->namespace, method_name);
+        method_deref = qualified_method;
+    }
     else
-       {
-           // Transform syntactic . into internal : representation
-           method_deref = method_name;
-       }
-
+    {
+         method_deref = method_name;
+    }
     
     if ((bp = GetBundle(PolicyFromPromise(pp), method_deref, "agent")))
     {

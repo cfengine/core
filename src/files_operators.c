@@ -417,7 +417,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
     Bundle *bp;
     void *vp;
     FnCall *fp;
-    char edit_bundle_name[CF_BUFSIZE], lockname[CF_BUFSIZE], *method_deref;
+    char edit_bundle_name[CF_BUFSIZE], lockname[CF_BUFSIZE], qualified_edit[CF_BUFSIZE], *method_deref;
     Rlist *params = { 0 };
     int retval = false;
     CfLock thislock;
@@ -454,7 +454,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
         {
             strcpy(edit_bundle_name, (char *) vp);
             params = NULL;
-        }
+        }             
         else
         {
             FinishEditContext(pp->edcontext, a, pp, report_context);
@@ -463,13 +463,18 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
         }
 
         if (strncmp(edit_bundle_name,"default:",strlen("default:")) == 0)
-           {
-           method_deref = strchr(edit_bundle_name,':') + 1;
-           }
-        else
-           {
-           method_deref = edit_bundle_name;
-           }        
+        {
+            method_deref = strchr(edit_bundle_name,':') + 1;
+        }
+        else if (strchr(edit_bundle_name, ':') == NULL)
+        {
+            snprintf(qualified_edit, CF_BUFSIZE, "%s:%s", pp->namespace, edit_bundle_name);
+            method_deref = qualified_edit;
+        }
+        else            
+        {
+            method_deref = edit_bundle_name;
+        }        
 
         CfOut(cf_verbose, "", " -> Handling file edits in edit_line bundle %s\n", method_deref);
 
@@ -488,6 +493,10 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
             PopPrivateClassContext();
             DeleteScope(bp->name);
         }
+        else
+           {
+           printf("DIDN*T FIND %s ... %s \n", method_deref, edit_bundle_name);
+           }
     }
 
 

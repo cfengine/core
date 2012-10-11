@@ -44,6 +44,7 @@
 #include "reporting.h"
 #include "expand.h"
 #include "scope.h"
+#include "files_interfaces.h"
 
 #ifdef HAVE_PCRE_H
 # include <pcre.h>

@@ -1,0 +1,6 @@
+
+@i{History}: Was introduced in 3.4.0, Enterprise 3.0.0 (2012)
+
+
+If set to true, this make the @code{depends_on} promise
+constraint active, @xref{depends_on in *}.

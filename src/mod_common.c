@@ -182,6 +182,7 @@ const BodySyntax CFA_CONTROLBODY[] =
     {"childlibpath", cf_str, ".*", "LD_LIBRARY_PATH for child processes"},
     {"checksum_alert_time", cf_int, "0,60", "The persistence time for the checksum_alert class", "10 mins"},
     {"defaultcopytype", cf_opts, "mtime,atime,ctime,digest,hash,binary", "ctime or mtime differ"},
+    {"dependency_checking", cf_opts, CF_BOOL, "Whether or not the depends_on promise constraint actively orders dependencies or not", "false"},
     {"dryrun", cf_opts, CF_BOOL, "All talk and no action mode", "false"},
     {"editbinaryfilesize", cf_int, CF_VALRANGE, "Integer limit on maximum binary file size to be edited", "100000"},
     {"editfilesize", cf_int, CF_VALRANGE, "Integer limit on maximum text file size to be edited", "100000"},

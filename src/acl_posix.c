@@ -982,7 +982,7 @@ static int ParseModePosixLinux(char *mode, acl_permset_t perms)
 
             if (acl_clear_perms(perms) != 0)
             {
-                CfOut(cf_error, "acl_clear_perms", "");
+                CfOut(cf_error, "acl_clear_perms", "Unable to clear ACL permissions");
                 return false;
             }
         }

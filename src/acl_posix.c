@@ -139,7 +139,6 @@ static int CheckPosixLinuxACEs(Rlist *aces, enum cf_acl_method method, char *fil
     char *cf_ace;
     int retv;
     int has_mask;
-    int result;
     Rlist *rp;
     char *acl_type_str;
 
@@ -147,7 +146,6 @@ static int CheckPosixLinuxACEs(Rlist *aces, enum cf_acl_method method, char *fil
     acl_existing = NULL;
     acl_tmp = NULL;
     has_mask = false;
-    result = false;
 
     acl_type_str = acl_type == ACL_TYPE_ACCESS ? "Access" : "Default";
 

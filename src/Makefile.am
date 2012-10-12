@@ -38,7 +38,6 @@ libpromises_la_SOURCES = \
         cf3.defs.h \
         cf3.extern.h \
         cf3globals.c \
-        cf_sql.c \
         cfstream.c \
         chflags.c \
         classes.c \
@@ -65,9 +64,7 @@ libpromises_la_SOURCES = \
         exec_tools.c \
         expand.c expand.h \
         files_copy.c \
-        files_edit.c \
         files_editline.c \
-        files_editxml.c \
         files_hashes.c \
         files_interfaces.c files_interfaces.h \
         files_lib.c files_lib.h \
@@ -191,6 +188,7 @@ endif
 
 cf_agent_SOURCES = \
         cf-agent.c \
+        cf_sql.c \
         verify_files.c \
         verify_storage.c \
         verify_exec.c \
@@ -200,7 +198,11 @@ cf_agent_SOURCES = \
         verify_outputs.c \
         verify_services.c \
         verify_environments.c verify_environments.h \
+        files_edit.c \
+        files_editxml.c \
         agentdiagnostic.c
+
+cf_agent_LDADD = libpromises.la $(LIBXML2_LDFLAGS) $(LIBXML2_LIBS) $(LIBVIRT_LDFLAGS) $(LIBVIRT_LIBS) $(POSTGRESQL_LDFLAGS) $(POSTGRESQL_LIBS) $(MYSQL_LDFLAGS) $(MYSQL_LIBS)
 
 cf_gendoc_SOURCES = \
 	cf-gendoc.c \

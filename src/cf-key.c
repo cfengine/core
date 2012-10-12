@@ -30,6 +30,7 @@
 #include "dir.h"
 #include "reporting.h"
 #include "scope.h"
+#include "files_interfaces.h"
 
 #ifdef HAVE_NOVA
 #include "license.h"

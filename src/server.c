@@ -35,6 +35,7 @@
 #include "item_lib.h"
 #include "crypto.h"
 #include "files_names.h"
+#include "files_interfaces.h"
 #include "env_context.h"
 #include "lastseen.h"
 #include "dir.h"

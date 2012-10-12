@@ -32,6 +32,7 @@
 #include "dir.h"
 #include "dbm_api.h"
 #include "files_names.h"
+#include "files_interfaces.h"
 #include "vars.h"
 #include "item_lib.h"
 #include "conversion.h"
@@ -416,7 +417,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
     Bundle *bp;
     void *vp;
     FnCall *fp;
-    char edit_bundle_name[CF_BUFSIZE], lockname[CF_BUFSIZE], *method_deref;
+    char edit_bundle_name[CF_BUFSIZE], lockname[CF_BUFSIZE], qualified_edit[CF_BUFSIZE], *method_deref;
     Rlist *params = { 0 };
     int retval = false;
     CfLock thislock;
@@ -453,7 +454,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
         {
             strcpy(edit_bundle_name, (char *) vp);
             params = NULL;
-        }
+        }             
         else
         {
             FinishEditContext(pp->edcontext, a, pp, report_context);
@@ -462,13 +463,18 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
         }
 
         if (strncmp(edit_bundle_name,"default:",strlen("default:")) == 0)
-           {
-           method_deref = strchr(edit_bundle_name,':') + 1;
-           }
-        else
-           {
-           method_deref = edit_bundle_name;
-           }        
+        {
+            method_deref = strchr(edit_bundle_name,':') + 1;
+        }
+        else if (strchr(edit_bundle_name, ':') == NULL && strcmp(pp->namespace, "default") != 0)
+        {
+            snprintf(qualified_edit, CF_BUFSIZE, "%s:%s", pp->namespace, edit_bundle_name);
+            method_deref = qualified_edit;
+        }
+        else            
+        {
+            method_deref = edit_bundle_name;
+        }        
 
         CfOut(cf_verbose, "", " -> Handling file edits in edit_line bundle %s\n", method_deref);
 
@@ -487,6 +493,10 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
             PopPrivateClassContext();
             DeleteScope(bp->name);
         }
+        else
+           {
+           printf("DIDN*T FIND %s ... %s \n", method_deref, edit_bundle_name);
+           }
     }
 
 
@@ -1122,7 +1132,7 @@ void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp, const ReportC
     if (changed)
     {
         NewPersistentContext("checksum_alerts", CF_PERSISTENCE, cfpreserve);
-        LogHashChange(file, cf_file_content_changed, "Content changed");
+        LogHashChange(file, cf_file_content_changed, "Content changed", pp);
     }
 
     if (attr.change.report_diffs)
@@ -1211,7 +1221,7 @@ void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp
         snprintf(msg_temp, sizeof(msg_temp), "Permission: %jo -> %jo",
                  (uintmax_t)cmpsb.st_mode, (uintmax_t)sb->st_mode);
 
-        LogHashChange(file, cf_file_stats_changed, msg_temp);
+        LogHashChange(file, cf_file_stats_changed, msg_temp, pp);
     }
 
     if (cmpsb.st_uid != sb->st_uid)
@@ -1224,7 +1234,7 @@ void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp
         snprintf(msg_temp, sizeof(msg_temp), "Owner: %jd -> %jd",
                  (uintmax_t)cmpsb.st_uid, (uintmax_t)sb->st_uid);
 
-        LogHashChange(file, cf_file_stats_changed, msg_temp);
+        LogHashChange(file, cf_file_stats_changed, msg_temp, pp);
     }
 
     if (cmpsb.st_gid != sb->st_gid)
@@ -1237,7 +1247,7 @@ void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp
         snprintf(msg_temp, sizeof(msg_temp), "Group: %jd -> %jd",
                  (uintmax_t)cmpsb.st_gid, (uintmax_t)sb->st_gid);
 
-        LogHashChange(file, cf_file_stats_changed, msg_temp);
+        LogHashChange(file, cf_file_stats_changed, msg_temp, pp);
     }
 
     if (cmpsb.st_dev != sb->st_dev)
@@ -1632,7 +1642,7 @@ static char FileStateToChar(FileState status)
     }
 }
 /*********************************************************************/
-void LogHashChange(char *file, FileState status, char *msg)
+void LogHashChange(char *file, FileState status, char *msg, Promise *pp)
 {
     FILE *fp;
     char fname[CF_BUFSIZE];
@@ -1670,7 +1680,9 @@ void LogHashChange(char *file, FileState status, char *msg)
         return;
     }
 
-    fprintf(fp, "%ld,%s,%c,%s\n", (long) now, file, FileStateToChar(status), msg);
+    const char *handle = PromiseID(pp);
+
+    fprintf(fp, "%ld,%s,%s,%c,%s\n", (long) now, handle, file, FileStateToChar(status), msg);
     fclose(fp);
 
     cf_chmod(fname, perm);

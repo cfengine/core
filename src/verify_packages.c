@@ -28,6 +28,7 @@
 #include "promises.h"
 #include "dir.h"
 #include "files_names.h"
+#include "files_interfaces.h"
 #include "vars.h"
 #include "conversion.h"
 #include "expand.h"

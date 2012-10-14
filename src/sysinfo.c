@@ -590,13 +590,23 @@ void GetNameInfo3()
 
     zid = getzoneid();
     getzonenamebyid(zid, zone, ZONENAME_MAX);
-    CfOut(cf_verbose, "", " -> Cfengine seems to be running inside a solaris zone of name \"%s\"", zone);
 
     NewScalar("sys", "zone", zone, cf_str);
     snprintf(vbuff, CF_BUFSIZE - 1, "zone_%s", zone);
     HardClass(vbuff);
+
+    if (strcmp(zone, "global") == 0)
+    {
+        CfOut(cf_verbose, "", " -> Cfengine seems to be running inside a global solaris zone of name \"%s\"", zone);
+    }
+    else
+    {
+        CfOut(cf_verbose, "", " -> Cfengine seems to be running inside a local solaris zone of name \"%s\"", zone);
+    }
 #endif
 }
+
+/*******************************************************************/
 
 void Get3Environment()
 {
@@ -973,6 +983,14 @@ void OSClasses(void)
     SetFlavour("android");
 #endif
 
+#ifdef SOLARIS
+    if (FullTextMatch("joyent.*", VSYSNAME.version))
+    {
+        HardClass("smartos");
+        HardClass("smartmachine");
+    }
+#endif
+    
     /* FIXME: this variable needs redhat/SuSE/debian classes to be defined and
      * hence can't be initialized earlier */
 

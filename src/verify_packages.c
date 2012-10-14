@@ -380,7 +380,7 @@ static int PackageSanityCheck(Attributes a, Promise *pp)
                  "!! Dependency conflict: package_verify_command is not used, but package_noverify_regex is defined.");
             return false;
         }
-        if (a.packages.package_noverify_returncode)
+        if (a.packages.package_noverify_returncode != CF_NOINT)
         {
             cfPS(cf_verbose, CF_FAIL, "", pp, a,
                  "!! Dependency conflict: package_verify_command is not used, but package_noverify_returncode is defined.");
@@ -1377,6 +1377,8 @@ static PackageManager *NewPackageManager(PackageManager **lists, char *mgr, enum
 {
     PackageManager *np;
 
+    CfOut(cf_verbose, "", " -> Looking for a package manager called %s", mgr);
+
     if (mgr == NULL || strlen(mgr) == 0)
     {
         CfOut(cf_error, "", " !! Attempted to create a package manager with no name");
@@ -1441,11 +1443,11 @@ static PackageItem *GetCachedPackageList(PackageManager *manager, const char *de
     if (now - sb.st_mtime < horizon * 60)
     {
         CfOut(cf_verbose, "",
-              " -> Cache file exists and is sufficiently fresh according to (package_list_update_ifelapsed)");
+              " -> Cache file \"%s\" exists and is sufficiently fresh according to (package_list_update_ifelapsed)", name);
     }
     else
     {
-        CfOut(cf_verbose, "", " -> Cache file exists, but it is out of date (package_list_update_ifelapsed)");
+    CfOut(cf_verbose, "", " -> Cache file \"%s\" exists, but it is out of date (package_list_update_ifelapsed)", name);
         return NULL;
     }
 

@@ -380,7 +380,7 @@ static int PackageSanityCheck(Attributes a, Promise *pp)
                  "!! Dependency conflict: package_verify_command is not used, but package_noverify_regex is defined.");
             return false;
         }
-        if (a.packages.package_noverify_returncode)
+        if (a.packages.package_noverify_returncode != CF_NOINT)
         {
             cfPS(cf_verbose, CF_FAIL, "", pp, a,
                  "!! Dependency conflict: package_verify_command is not used, but package_noverify_returncode is defined.");

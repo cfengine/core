@@ -945,14 +945,21 @@ int cf_readlink(char *sourcefile, char *linkbuf, int buffsize, Attributes attr, 
 
 /*********************************************************************/
 
-int CfReadLine(char *buff, int size, FILE *fp)
+int CfReadLine(char *buff, size_t size, FILE *fp)
 {
     char ch;
 
     buff[0] = '\0';
     buff[size - 1] = '\0';      /* mark end of buffer */
 
-    if (fgets(buff, size, fp) == NULL)
+    //error checking
+    if (!fp || ferror(fp))
+    {
+        CfOut(cf_error, "", " !! NULL or corrupt inputs to CfReadLine");
+        return false;
+    }
+
+    if (getline(&buff, &size, fp) == -1)
     {
         *buff = '\0';           /* EOF */
         return false;

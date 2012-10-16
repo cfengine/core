@@ -169,7 +169,13 @@ void ShowContext(const ReportContext *report_context)
 
         Writer *writer = FileWriter(stdout);
 
-        WriterWriteF(writer, "%s>  -> Defined classes = { ", VPREFIX);
+        WriterWriteF(writer, "%s>  -> Hard classes = { ", VPREFIX);
+
+        ListAlphaList(writer, VHARDHEAP, ' ');
+
+        WriterWriteF(writer, "}\n");
+
+        WriterWriteF(writer, "%s>  -> Additional classes = { ", VPREFIX);
 
         ListAlphaList(writer, VHEAP, ' ');
 

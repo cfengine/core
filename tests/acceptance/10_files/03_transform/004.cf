@@ -34,8 +34,8 @@ vars:
 bundle agent check
 {
 classes:
-  "prefixed" expression => regcmp(".*(\n|^)I: Transforming:.*(\n|$).*", $(test.out));
-  "unprefixed" expression => regcmp(".*(\n|^)Transforming:.*(\n|$).*", $(test.out));
+  "prefixed" expression => regcmp(".*(\n|^)I: Transforming:.*(\n|$).*", "$(test.out)");
+  "unprefixed" expression => regcmp(".*(\n|^)Transforming:.*(\n|$).*", "$(test.out)");
 
   "ok" and => { "prefixed", "!unprefixed" };
 

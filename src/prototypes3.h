@@ -275,7 +275,6 @@ int FSWrite(char *new, int dd, char *buf, int towrite, int *last_write_made_hole
 
 EditContext *NewEditContext(char *filename, Attributes a, Promise *pp);
 void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportContext *report_context);
-int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, Promise *pp);
 int SaveItemListAsFile(Item *liststart, const char *file, Attributes a, Promise *pp, const ReportContext *report_context);
 #ifdef HAVE_LIBXML2
 int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, Attributes a, Promise *pp);
@@ -356,6 +355,12 @@ void AddSimpleUidItem(UidList ** uidlist, uid_t uid, char *uidname);
 void AddSimpleGidItem(GidList ** gidlist, gid_t gid, char *gidname);
 #endif /* NOT MINGW */
 void LogHashChange(char *file, FileState status, char *msg, Promise *pp);
+
+typedef bool (*SaveCallbackFn)(const char *dest_filename, const char *orig_filename, void *param, Attributes a, Promise *pp);
+int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attributes a, Promise *pp,
+               const ReportContext *report_context);
+
+int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, Promise *pp);
 
 /* files_properties.c */
 

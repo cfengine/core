@@ -181,6 +181,34 @@ static void test_show_array_empty(void **state)
     JsonElementDestroy(array);
 }
 
+static void test_show_object_nan(void **state)
+{
+    JsonElement *obj = JsonObjectCreate(1);
+    JsonObjectAppendReal(obj, "a", sqrt(-1));
+
+    Writer *writer = StringWriter();
+
+    JsonElementPrint(writer, obj, 0);
+
+    assert_string_equal("{\n  \"a\": 0.0000\n}", StringWriterData(writer));
+
+    JsonElementDestroy(obj);
+}
+
+static void test_show_object_infinity(void **state)
+{
+    JsonElement *obj = JsonObjectCreate(1);
+    JsonObjectAppendReal(obj, "a", INFINITY);
+
+    Writer *writer = StringWriter();
+
+    JsonElementPrint(writer, obj, 0);
+
+    assert_string_equal("{\n  \"a\": 0.0000\n}", StringWriterData(writer));
+
+    JsonElementDestroy(obj);
+}
+
 static void test_object_get_string(void **state)
 {
     JsonElement *obj = JsonObjectCreate(10);
@@ -352,6 +380,8 @@ int main()
         unit_test(test_show_object_numeric),
         unit_test(test_show_object_compound),
         unit_test(test_show_object_array),
+        unit_test(test_show_object_nan),
+        unit_test(test_show_object_infinity),
         unit_test(test_show_array),
         unit_test(test_show_array_object),
         unit_test(test_show_array_empty),

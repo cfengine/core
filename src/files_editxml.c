@@ -93,8 +93,8 @@ static void VerifyTextSet(Promise *pp);
 static void VerifyTextInsertions(Promise *pp);
 #ifdef HAVE_LIBXML2
 static bool XmlSelectNode(char *xpath, xmlDocPtr doc, xmlNodePtr *docnode, Attributes a, Promise *pp);
-static bool BuildXPathInFile(char *xpath, xmlDocPtr doc, Attributes a, Promise *pp);
-static bool BuildXPathInNode(char *xpath, xmlDocPtr doc, Attributes a, Promise *pp);
+static bool BuildXPathInFile(char xpath[CF_BUFSIZE], xmlDocPtr doc, Attributes a, Promise *pp);
+static bool BuildXPathInNode(char xpath[CF_BUFSIZE], xmlDocPtr doc, Attributes a, Promise *pp);
 static bool DeleteTreeInNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
 static bool InsertTreeInFile(char *root, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
 static bool InsertTreeInNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
@@ -130,15 +130,15 @@ xmlNodePtr XmlVerifyNodeInNodeExact(xmlNodePtr node1, xmlNodePtr node2, Attribut
 xmlNodePtr XmlVerifyNodeInNodeSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
 
 //xpath build functionality
-xmlNodePtr PredicateExtractNode(char *predicate, Attributes a, Promise *pp);
-char* PredicateRemoveHead(char *xpath, Attributes a, Promise *pp);
+xmlNodePtr PredicateExtractNode(char predicate[CF_BUFSIZE], Attributes a, Promise *pp);
+static bool PredicateRemoveHead(char xpath[CF_BUFSIZE], Attributes a, Promise *pp);
 
-xmlNodePtr XPathHeadExtractNode(char *xpath, Attributes a, Promise *pp);
-xmlNodePtr XPathTailExtractNode(char *xpath, Attributes a, Promise *pp);
-xmlNodePtr XPathSegmentExtractNode(char *segment, Attributes a, Promise *pp);
-char* XPathGetTail(char *xpath, Attributes a, Promise *pp);
-char* XPathRemoveHead(char *xpath, Attributes a, Promise *pp);
-char* XPathRemoveTail(char *xpath, Attributes a, Promise *pp);
+xmlNodePtr XPathHeadExtractNode(char xpath[CF_BUFSIZE], Attributes a, Promise *pp);
+xmlNodePtr XPathTailExtractNode(char xpath[CF_BUFSIZE], Attributes a, Promise *pp);
+xmlNodePtr XPathSegmentExtractNode(char segment[CF_BUFSIZE], Attributes a, Promise *pp);
+char* XPathGetTail(char xpath[CF_BUFSIZE], Attributes a, Promise *pp);
+static bool XPathRemoveHead(char xpath[CF_BUFSIZE], Attributes a, Promise *pp);
+static bool XPathRemoveTail(char xpath[CF_BUFSIZE], Attributes a, Promise *pp);
 
 //verification using PCRE - ContainsRegex
 static bool PredicateHasTail(char *predicate, Attributes a, Promise *pp);
@@ -151,7 +151,7 @@ static bool XPathVerifyBuildSyntax(const char* xpath, Attributes a, Promise *pp)
 static bool XPathVerifyConvergence(const char* xpath, Attributes a, Promise *pp);
 
 //helper functions
-xmlChar *CharToXmlChar(char* c);
+xmlChar *CharToXmlChar(char c[CF_BUFSIZE]);
 static bool ContainsRegex(const char* rawstring, const char* regex);
 static int XmlAttributeCount(xmlNodePtr node, Attributes a, Promise *pp);
 
@@ -926,11 +926,12 @@ static bool XmlSelectNode(char *rawxpath, xmlDocPtr doc, xmlNodePtr *docnode, At
 
 /***************************************************************************/
 
-static bool BuildXPathInFile(char *rawxpath, xmlDocPtr doc, Attributes a, Promise *pp)
+static bool BuildXPathInFile(char rawxpath[CF_BUFSIZE], xmlDocPtr doc, Attributes a, Promise *pp)
 {
     xmlNodePtr docnode = NULL, head = NULL;
+    char copyxpath[CF_BUFSIZE] = { 0 };
 
-    //verify that xpath contains only nodes, text, and attributes
+    strcpy(copyxpath, rawxpath);
 
     if (xmlDocGetRootElement(doc))
     {
@@ -941,7 +942,7 @@ static bool BuildXPathInFile(char *rawxpath, xmlDocPtr doc, Attributes a, Promis
     }
 
     //set rootnode
-    if ((docnode = XPathHeadExtractNode(rawxpath, a, pp)) == NULL)
+    if ((docnode = XPathHeadExtractNode(copyxpath, a, pp)) == NULL)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a, " !! Unable to extract node from xpath (%s) in server %s",
              pp->promiser, pp->this_server);
@@ -965,14 +966,14 @@ static bool BuildXPathInFile(char *rawxpath, xmlDocPtr doc, Attributes a, Promis
         return false;
     }
 
-    rawxpath = XPathRemoveHead(rawxpath, a, pp);
+    XPathRemoveHead(copyxpath, a, pp);
 
     //extract and insert nodes from tail
-    while (rawxpath && ((head = XPathHeadExtractNode(rawxpath, a, pp)) != NULL))
+    while ((strlen(copyxpath) > 0) && ((head = XPathHeadExtractNode(copyxpath, a, pp)) != NULL))
     {
         xmlAddChild(docnode, head);
         docnode = head;
-        rawxpath = XPathRemoveHead(rawxpath, a, pp);
+        XPathRemoveHead(copyxpath, a, pp);
     }
 
     return true;
@@ -981,23 +982,26 @@ static bool BuildXPathInFile(char *rawxpath, xmlDocPtr doc, Attributes a, Promis
 
 /***************************************************************************/
 
-static bool BuildXPathInNode(char *rawxpath, xmlDocPtr doc, Attributes a, Promise *pp)
+static bool BuildXPathInNode(char rawxpath[CF_BUFSIZE], xmlDocPtr doc, Attributes a, Promise *pp)
 {
     xmlNodePtr docnode = NULL,  head = NULL, tail = NULL;
+    char copyxpath[CF_BUFSIZE] = { 0 };
+
+    strcpy(copyxpath, rawxpath);
 
     //build xpath from tail while locating insertion region
-    while (rawxpath && (!XmlSelectNode(rawxpath, doc, &docnode, a, pp)))
+    while ((strlen(copyxpath) > 0) && (!XmlSelectNode(copyxpath, doc, &docnode, a, pp)))
     {
-        if (XPathHasTail (rawxpath, a, pp))
+        if (XPathHasTail (copyxpath, a, pp))
         {
-            head = XPathTailExtractNode(rawxpath, a, pp);
-            rawxpath = XPathRemoveTail(rawxpath, a, pp);
+            head = XPathTailExtractNode(copyxpath, a, pp);
+            XPathRemoveTail(copyxpath, a, pp);
         }
 
         else
         {
-            head = XPathHeadExtractNode(rawxpath, a, pp);
-            rawxpath = XPathRemoveHead(rawxpath, a, pp);
+            head = XPathHeadExtractNode(copyxpath, a, pp);
+            XPathRemoveHead(copyxpath, a, pp);
         }
 
         if (head && tail)
@@ -2316,18 +2320,18 @@ xmlNodePtr XmlVerifyNodeInNodeSubset(xmlNodePtr node1, xmlNodePtr node2, Attribu
 
 /*********************************************************************/
 
-xmlNodePtr PredicateExtractNode(char *predicate, Attributes a, Promise *pp)
+xmlNodePtr PredicateExtractNode(char predicate[CF_BUFSIZE], Attributes a, Promise *pp)
 {
     xmlNodePtr node = NULL;
     xmlChar *name = NULL;
     xmlChar *value = NULL;
-    char *tok, *rawname, *rawvalue, copypred[CF_BUFSIZE];
+    char copypred[CF_BUFSIZE] = { 0 }, rawname[CF_BUFSIZE] = { 0 }, rawvalue[CF_BUFSIZE] = { 0 }, *tok;
 
     strcpy(copypred, predicate);
     tok = strtok(copypred, "| =");
-    rawname = tok;
+    strcpy(rawname, tok);
     tok = strtok(NULL, " =");
-    rawvalue = tok;
+    strcpy(rawvalue, tok);
     name = CharToXmlChar(rawname);
     value = CharToXmlChar(rawvalue);
     node = xmlNewNode(NULL, name);
@@ -2338,30 +2342,35 @@ xmlNodePtr PredicateExtractNode(char *predicate, Attributes a, Promise *pp)
 
 /*********************************************************************/
 
-char* PredicateRemoveHead(char *predicate, Attributes a, Promise *pp)
+static bool PredicateRemoveHead(char predicate[CF_BUFSIZE], Attributes a, Promise *pp)
 {
-    if (!PredicateHasTail(predicate, a, pp))
+    char copypred[CF_BUFSIZE] = { 0 }, *tail = NULL;
+
+    strcpy(copypred, predicate);
+    memset(predicate, 0, sizeof(char)*CF_BUFSIZE);
+
+    if (PredicateHasTail(copypred, a, pp))
     {
-        predicate = NULL;
+        tail =  strchr(copypred+1, '|');
+        strcpy(predicate, tail);
     }
 
-    else
-    {
-        predicate =  strchr(predicate+1, '|');
-    }
-
-    return predicate;
+    return true;
 }
 
 /*********************************************************************/
 
-xmlNodePtr XPathHeadExtractNode(char *xpath, Attributes a, Promise *pp)
+xmlNodePtr XPathHeadExtractNode(char xpath[CF_BUFSIZE], Attributes a, Promise *pp)
 {
     xmlNodePtr node = NULL;
-    char *head = NULL, copyxpath[CF_BUFSIZE];
+    char copyxpath[CF_BUFSIZE] = {0}, head[CF_BUFSIZE] = {0}, *tok = NULL;
+
     strcpy(copyxpath, xpath);
+
     //extract head substring from xpath
-    head = strtok(copyxpath, "/");
+    tok = strtok(copyxpath, "/");
+    strcpy(head, tok);
+
     if ((node = XPathSegmentExtractNode(head, a, pp)) == NULL)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a, "   !! Could not extract node: %s", head);
@@ -2372,15 +2381,16 @@ xmlNodePtr XPathHeadExtractNode(char *xpath, Attributes a, Promise *pp)
 
 /*********************************************************************/
 
-xmlNodePtr XPathTailExtractNode(char *xpath, Attributes a, Promise *pp)
+xmlNodePtr XPathTailExtractNode(char xpath[CF_BUFSIZE], Attributes a, Promise *pp)
 {
     xmlNodePtr node = NULL;
-    char *tail = NULL, copyxpath[CF_BUFSIZE];
+    char copyxpath[CF_BUFSIZE] = {0}, tail[CF_BUFSIZE] = {0}, *tok = NULL;
+
     strcpy(copyxpath, xpath);
 
     //extract tail substring from xpath
-    tail =  XPathGetTail(copyxpath, a, pp);
-    cfPS(cf_verbose, CF_INTERPT, "", pp, a, "   !! tail: %s", tail);
+    tok =  XPathGetTail(copyxpath, a, pp);
+    strcpy(tail, tok);
 
     if ((node = XPathSegmentExtractNode(tail, a, pp)) == NULL)
     {
@@ -2392,20 +2402,21 @@ xmlNodePtr XPathTailExtractNode(char *xpath, Attributes a, Promise *pp)
 
 /*********************************************************************/
 
-xmlNodePtr XPathSegmentExtractNode(char *segment, Attributes a, Promise *pp)
+xmlNodePtr XPathSegmentExtractNode(char segment[CF_BUFSIZE], Attributes a, Promise *pp)
 {
     xmlNodePtr node = NULL, prednode = NULL;
-    xmlChar *name;
-    char *tok, *rawname, *rawvalue, *predicate, *attrname, *attrvalue, copyseg[CF_BUFSIZE], copypred[CF_BUFSIZE];
+    xmlChar *name = NULL, *attrname = NULL, *attrvalue = NULL;
+    char copyseg[CF_BUFSIZE] = { 0 }, predicate[CF_BUFSIZE] = { 0 }, copypred[CF_BUFSIZE] = { 0 },
+    rawname[CF_BUFSIZE] = { 0 }, rawvalue[CF_BUFSIZE] = { 0 }, *tok;
     int hasname = false;
+
     strcpy(copyseg, segment);
 
     //extract name and predicate substrings from segment
     if (XPathHeadContainsNode(segment, a, pp))
     {
         tok = strtok(copyseg, " []");
-        rawname = tok;
-
+        strcpy(rawname, tok);
         name = CharToXmlChar(rawname);
         node = xmlNewNode(NULL, name);
         hasname = true;
@@ -2415,9 +2426,9 @@ xmlNodePtr XPathSegmentExtractNode(char *segment, Attributes a, Promise *pp)
     if (hasname && XPathHeadContainsPredicate(segment, a, pp))
     {
         tok = strtok(NULL, "[]");
-        predicate = tok;
-        strcpy(copypred, predicate);
-        while (predicate)
+        strcpy(predicate, tok);
+
+        while (strlen(predicate) > 0)
         {
             if (PredicateHeadContainsNode(predicate, a, pp))
             {
@@ -2429,22 +2440,21 @@ xmlNodePtr XPathSegmentExtractNode(char *segment, Attributes a, Promise *pp)
             {
                 strcpy(copypred, predicate);
                 tok = strtok(copypred, "| @\"\'=");
-                rawname = tok;
+                strcpy(rawname, tok);
                 attrname = CharToXmlChar(rawname);
                 tok = strtok(NULL, "| @\"\'=");
-                rawvalue = tok;
+                strcpy(rawvalue, tok);
                 attrvalue = CharToXmlChar(rawvalue);
                 xmlNewProp(node, attrname, attrvalue);
             }
 
             if (PredicateHasTail(predicate, a, pp))
             {
-                predicate = PredicateRemoveHead(predicate, a, pp);
+                PredicateRemoveHead(predicate, a, pp);
             }
-
             else
             {
-                predicate = NULL;
+                memset(predicate, 0, sizeof(char)*CF_BUFSIZE);
             }
         }
     }
@@ -2453,23 +2463,21 @@ xmlNodePtr XPathSegmentExtractNode(char *segment, Attributes a, Promise *pp)
 
 /*********************************************************************/
 
-char* XPathGetTail(char *xpath, Attributes a, Promise *pp)
+char* XPathGetTail(char xpath[CF_BUFSIZE], Attributes a, Promise *pp)
 {
-    char *tok, copyxpath[CF_BUFSIZE];
+    char copyxpath[CF_BUFSIZE] = { 0 }, tmpstr[CF_BUFSIZE] = {0}, *tok = NULL;
 
-    if (!XPathHasTail(xpath, a, pp))
-    {
-        xpath = NULL;
-    }
+    strcpy(copyxpath, xpath);
+    memset(xpath, 0, sizeof(char)*CF_BUFSIZE);
 
-    else
+    if (XPathHasTail(copyxpath, a, pp))
     {
-        strcpy(copyxpath, xpath);
         tok = strtok(copyxpath, "/");
         while((tok = strtok(NULL, "/")) != NULL)
         {
-            xpath = tok;
+            strcpy(tmpstr, tok);
         }
+        strcpy(xpath, tmpstr);
     }
 
     return xpath;
@@ -2477,41 +2485,41 @@ char* XPathGetTail(char *xpath, Attributes a, Promise *pp)
 
 /*********************************************************************/
 
-char* XPathRemoveHead(char *xpath, Attributes a, Promise *pp)
+static bool XPathRemoveHead(char xpath[CF_BUFSIZE], Attributes a, Promise *pp)
 {
-    if (!XPathHasTail(xpath, a, pp))
+    char copyxpath[CF_BUFSIZE] = { 0 }, *tail = NULL;
+
+    strcpy(copyxpath, xpath);
+    memset(xpath, 0, sizeof(char)*CF_BUFSIZE);
+
+    if (XPathHasTail(copyxpath, a, pp))
     {
-        xpath = NULL;
+        tail =  strchr(copyxpath+1, '/');
+        strcpy(xpath, tail);
     }
 
-    else
-    {
-        xpath =  strchr(xpath+1, '/');
-    }
-
-    return xpath;
+    return true;
 }
 
 /*********************************************************************/
 
-char* XPathRemoveTail(char *xpath, Attributes a, Promise *pp)
+static bool XPathRemoveTail(char xpath[CF_BUFSIZE], Attributes a, Promise *pp)
 {
-    char *tail;
+    char copyxpath[CF_BUFSIZE] = { 0 }, *tail = NULL;
     int len = 0;
 
-    if (!XPathHasTail(xpath, a, pp))
+    strcpy(copyxpath, xpath);
+    memset(xpath, 0, sizeof(char)*CF_BUFSIZE);
+
+    if (XPathHasTail(copyxpath, a, pp))
     {
-        xpath = NULL;
+        tail = strrchr(copyxpath, '/');
+        len = tail-copyxpath;
+        copyxpath[len] = '\0';
+        strcpy(xpath, copyxpath);
     }
 
-    else
-    {
-        tail = strrchr(xpath, '/');
-        len = tail-xpath;
-        xpath[len] = '\0';
-    }
-
-    return xpath;
+    return true;
 }
 
 /*********************************************************************/
@@ -2641,7 +2649,7 @@ static bool XPathVerifyConvergence(const char* xpath, Attributes a, Promise *pp)
 
 /*********************************************************************/
 
-xmlChar *CharToXmlChar(char* c)
+xmlChar *CharToXmlChar(char c[CF_BUFSIZE])
 {
     return BAD_CAST c;
 }

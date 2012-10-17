@@ -2204,6 +2204,13 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     ThreadLock(cft_system);
 
     counter_challenge = BN_new();
+    if (counter_challenge == NULL)
+    {
+        CfOut(cf_error, "", "Cannot allocate BIGNUM structure for counter challenge\n");
+        RSA_free(newkey);
+        return false;
+    }
+
     BN_rand(counter_challenge, CF_NONCELEN, 0, 0);
     nonce_len = BN_bn2mpi(counter_challenge, in);
 

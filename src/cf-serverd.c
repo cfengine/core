@@ -85,6 +85,7 @@ static int cfscanf(char *in, int len1, int len2, char *out1, char *out2, char *o
 static int AuthenticationDialogue(ServerConnectionState *conn, char *buffer, int buffersize);
 static int SafeOpen(char *filename);
 static int OptionFound(char *args, char *pos, char *word);
+static void KeepHardClasses();
 
 #if !defined(HAVE_GETADDRINFO)
 static in_addr_t GetInetAddr(char *host);
@@ -835,6 +836,7 @@ static void CheckFileChanges(GenericAgentConfig config)
             Get3Environment();
             BuiltinClasses();
             OSClasses();
+            KeepHardClasses();
 
             NewClass(THIS_AGENT);
 
@@ -3893,6 +3895,40 @@ static int cfscanf(char *in, int len1, int len2, char *out1, char *out2, char *o
 
 /***************************************************************/
 
+static void KeepHardClasses()
+{
+    char *name = xcalloc(1024,sizeof(char));
+
+    if (name != NULL)
+    {
+        snprintf(name, 1024, "%s%cpolicy_server.dat", CFWORKDIR, FILE_SEPARATOR);
+
+        FILE *fp = fopen(name, "r");
+
+        if (fp != NULL)
+        {
+            snprintf(name, 1024, "%s/state/am_policy_hub", CFWORKDIR);
+            MapName(name);
+
+            struct stat sb;
+
+            if (stat(name, &sb) != -1)
+            {
+                NewClass("am_policy_hub");
+            }
+        }
+        free(name);
+    }
+
+#if defined HAVE_NOVA
+    NewClass("nova_edition");
+#else
+    NewClass("community_edition");
+#endif
+}
+
+/***************************************************************/
+
 #if !defined(HAVE_GETADDRINFO)
 static in_addr_t GetInetAddr(char *host)
 {
@@ -3923,4 +3959,5 @@ static in_addr_t GetInetAddr(char *host)
 
     return (addr.s_addr);
 }
+
 #endif

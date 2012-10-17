@@ -69,7 +69,7 @@ void SequenceDestroy(Sequence *seq);
   @retval 0 if the arguments are equal
   @retval 1 if the first argument is bigger than the second
   */
-typedef int (*SequenceItemComparator) (const void *, const void *);
+typedef int (*SequenceItemComparator) (const void *, const void *, void *user_data);
 
 /**
   @brief Append a new item to the Sequence
@@ -85,7 +85,12 @@ void SequenceAppend(Sequence *seq, void *item);
   @param compare [in] Comparator function to use. An item matches if the function returns 0.
   @returns A pointer to the found item, or NULL if not found.
   */
-void *SequenceLookup(Sequence *seq, const void *key, SequenceItemComparator compare);
+void *SequenceLookup(Sequence *seq, const void *key, SequenceItemComparator Compare);
+
+/**
+  @brief Linearly searches through the sequence and returns the index of the first matching object, or -1 if it doesn't exist.
+  */
+ssize_t SequenceIndexOf(Sequence *seq, const void *key, SequenceItemComparator Compare);
 
 /**
   @brief Remove an inclusive range of items in the Sequence. A single item may be removed by specifiying start = end.
@@ -96,9 +101,33 @@ void *SequenceLookup(Sequence *seq, const void *key, SequenceItemComparator comp
 void SequenceRemoveRange(Sequence *seq, size_t start, size_t end);
 
 /**
+  @brief Remove a single item in the sequence
+  */
+void SequenceRemove(Sequence *seq, size_t index);
+
+/**
   @brief Sort a Sequence according to the given item comparator function
   @param compare [in] The comparator function used for sorting.
+  @param user_data [in] Pointer passed to the comparator function
   */
-void SequenceSort(Sequence *seq, SequenceItemComparator compare);
+void SequenceSort(Sequence *seq, SequenceItemComparator compare, void *user_data);
+
+/**
+  @brief Remove an inclusive range of item handles in the Sequence. A single item may be removed by specifiying start = end.
+  @param seq [in] The Sequence to remove from.
+  @param start [in] Index of the first element to remove
+  @param end [in] Index of the last element to remove.
+ */
+void SequenceSoftRemoveRange(Sequence *seq, size_t start, size_t end);
+
+/**
+  @brief Remove a single item handle from the sequence
+  */
+void SequenceSoftRemove(Sequence *seq, size_t index);
+
+/**
+  @brief Reverses the order of the sequence
+  */
+void SequenceReverse(Sequence *seq);
 
 #endif

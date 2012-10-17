@@ -250,6 +250,12 @@ void JsonObjectAppendReal(JsonElement *object, const char *key, double value)
     assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
     assert(key);
 
+    if (isnan(value) || !isfinite(value))
+    {
+        CfDebug("Attempted to add NaN or inifinite value to JSON");
+        value = 0.0;
+    }
+
     char *buffer = xcalloc(32, sizeof(char));
 
     snprintf(buffer, 32, "%.4f", value);

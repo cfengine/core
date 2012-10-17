@@ -747,6 +747,12 @@ JsonElement *JsonIntegerCreate(int value)
 
 JsonElement *JsonRealCreate(double value)
 {
+    if (isnan(value) || !isfinite(value))
+    {
+        CfDebug("Attempted to add NaN or inifinite value to JSON");
+        value = 0.0;
+    }
+
     char *buffer = xcalloc(32, sizeof(char));
     snprintf(buffer, 32, "%.4f", value);
 

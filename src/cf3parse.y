@@ -44,7 +44,7 @@ static bool INSTALL_SKIP = false;
 
 %}
 
-%token IDSYNTAX BLOCKID QSTRING CLASS CATEGORY BUNDLE BODY ASSIGN ARROW NAKEDVAR
+%token IDSYNTAX BLOCKID QSTRING CLASS CATEGORY BUNDLE BODY ASSIGN ARROW NAKEDVAR MAIN
 
 %%
 
@@ -60,8 +60,11 @@ blocks:                block
 
 block:                 bundle typeid blockid bundlebody
                      | bundle typeid blockid usearglist bundlebody
-                     | body typeid blockid bodybody
-                     | body typeid blockid usearglist bodybody;
+                     | bundle typeid blockid usearglist ':' bundlebody
+                     | body typeid blockid '{' bodybody '}'
+                     | body typeid blockid usearglist '{' bodybody '}'
+                     | body typeid blockid usearglist ':' bodybody
+                     | main bodybody;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -118,8 +121,24 @@ usearglist:            '('
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+main:                   MAIN
+                        {
+                           DebugBanner("Main aka 'Body Common Control' Body");
+                           P.block = "body";
+                           strncpy(P.blockid,"control",CF_MAXVARSIZE);
+                           strncpy(P.blocktype,"common",CF_MAXVARSIZE);
+                           DeleteRlist(P.currentRlist);
+                           P.currentRlist = NULL;
+                           P.currentstring = NULL;
+                           DeleteRlist(P.useargs);
+                           P.useargs = NULL;
+                        }
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 aitems:                aitem
-                     | aitems ',' aitem
+                     | aitem ',' aitems
                      |;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -131,7 +150,7 @@ aitem:                 IDSYNTAX  /* recipient of argument is never a literal */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-bundlebody:            '{'
+bundlebody:            
                        {
                            if (RelevantBundle(CF_AGENTTYPES[THIS_AGENT_TYPE], P.blocktype))
                            {
@@ -160,7 +179,7 @@ bundlebody:            '{'
                        }
 
                        statements
-                       '}'
+                       
                        {
                            INSTALL_SKIP = false;
                            P.offsets.last_id = -1;
@@ -177,6 +196,7 @@ bundlebody:            '{'
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 statements:            statement
+                     | '{' statements statement '}'
                      | statements statement;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -186,7 +206,7 @@ statement:             category
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-bodybody:              '{'
+bodybody:              
                        {
                            P.currentbody = AppendBody(P.policy, P.blockid, P.blocktype, P.useargs, P.filename);
                            if (P.currentbody)
@@ -203,8 +223,6 @@ bodybody:              '{'
                        }
 
                        bodyattribs
-
-                       '}'
                        {
                            P.offsets.last_id = -1;
                            P.offsets.last_string = -1;
@@ -228,8 +246,11 @@ bodyattrib:            class
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-selections:            selection                 /* BODY ONLY */
-                     | selections selection;
+selections:             selection                 /* BODY ONLY */
+                     |  selection ';'
+                     |  selections selection ';'
+                     |  selections selection;
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -303,7 +324,7 @@ selection:             id                         /* BODY ONLY */
 
                            P.rval = (Rval) { NULL, '\0' };
                        }
-                       ';' ;
+                       ;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -365,7 +386,7 @@ promise:               promiser                    /* BUNDLE ONLY */
                            }
                        }
 
-                       constraints ';'
+                       constraints_container
                        {
                            CfDebug("End implicit promise %s\n\n",P.promiser);
                            strcpy(P.currentid,"");
@@ -402,7 +423,7 @@ promise:               promiser                    /* BUNDLE ONLY */
                            }
                        }
 
-                       constraints ';'
+                       constraints_container
                        {
                            CfDebug("End full promise with promisee %s\n\n",P.promiser);
 
@@ -421,6 +442,14 @@ promise:               promiser                    /* BUNDLE ONLY */
                            /* reset argptrs etc*/
                        }
                        ;
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+constraints_container: constraints ';'
+                     | ':' '{' constraints '}'
+                     ;
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -477,6 +506,9 @@ class:                 CLASS
 
 id:                    IDSYNTAX
                        {
+                           /* Rename promises to bundlesequence */
+                           if(strcmp(P.currentid, "promises") == 0)
+                              strncpy(P.currentid,"bundlesequence",CF_MAXVARSIZE);
                            strncpy(P.lval,P.currentid,CF_MAXVARSIZE);
                            DeleteRlist(P.currentRlist);
                            P.currentRlist = NULL;
@@ -539,16 +571,17 @@ rval:                  IDSYNTAX
 
 list:                  '{'
                        litems
-                       '}';
+                       '}'
+                     | litems_s;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-litems:                litems_int
-                     | litems_int ',';
+litems:                litem
+                     | litem ',' litems
+                     |;
 
-litems_int:            litem
-                     | litems_int ',' litem;
-
+litems_s:             litems_s '- ' litem 
+                     |;
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 litem:                 IDSYNTAX

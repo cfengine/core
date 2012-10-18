@@ -72,7 +72,7 @@ newline    ([\n]|[\xd][\xa])
 
 comment    #[^\n]*
 
-promises   bundle|proms
+promises   bundle
 
 body       body|attr
 

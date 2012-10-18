@@ -511,10 +511,7 @@ class:                 CLASS
 
 id:                    IDSYNTAX
                        {
-                           /* Rename promises to bundlesequence */
                            strncpy(P.lval,P.currentid,CF_MAXVARSIZE);
-                           if(strcmp(P.currentid, "promises") == 0)
-                              strncpy(P.lval, "bundlesequence",CF_MAXVARSIZE);
                            DeleteRlist(P.currentRlist);
                            P.currentRlist = NULL;
                            CfDebug("Recorded LVAL %s\n",P.lval);

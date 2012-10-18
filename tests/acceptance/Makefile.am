@@ -1,6 +1,4 @@
-AM_CFLAGS = $(NOVA_CFLAGS) $(GCC_CFLAG)
-INCLUDES = -I$(top_srcdir)/src
-
+AM_CFLAGS = $(NOVA_CFLAGS) $(GCC_CFLAG) -I$(top_srcdir)/src
 
 noinst_PROGRAMS = mock-package-manager
 

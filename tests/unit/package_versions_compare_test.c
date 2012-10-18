@@ -4,7 +4,15 @@
 #include <cmockery.h>
 #include <stdarg.h>
 
-int ComparePackages(const char *n, const char *v, const char *a, PackageItem * pi, enum version_cmp cmp);
+
+typedef enum
+{
+    VERCMP_ERROR = -1,
+    VERCMP_NO_MATCH = 0,
+    VERCMP_MATCH = 1
+} VersionCmpResult;
+
+VersionCmpResult ComparePackages(const char *n, const char *v, const char *a, PackageItem * pi, Attributes attr, Promise *pp);
 
 void test_different_name(void **context)
 {
@@ -13,8 +21,13 @@ void test_different_name(void **context)
         .version = "1",
         .arch = "arch"
     };
+    Attributes attr = {
+        .packages = {
+            .package_select = cfa_eq
+        }
+    };
 
-    assert_int_equal(ComparePackages("pkgtwo", "1", "arch", &pi, cfa_eq), false);
+    assert_int_equal(ComparePackages("pkgtwo", "1", "arch", &pi, attr, NULL), false);
 }
 
 void test_wildcard_arch(void **context)
@@ -24,8 +37,13 @@ void test_wildcard_arch(void **context)
         .version = "1",
         .arch = "arch"
     };
+    Attributes attr = {
+        .packages = {
+            .package_select = cfa_eq
+        }
+    };
 
-    assert_int_equal(ComparePackages("foobar", "1", "*", &pi, cfa_eq), true);
+    assert_int_equal(ComparePackages("foobar", "1", "*", &pi, attr, NULL), true);
 }
 
 void test_non_matching_arch(void **context)
@@ -35,8 +53,13 @@ void test_non_matching_arch(void **context)
         .version = "1",
         .arch = "s390x"
     };
+    Attributes attr = {
+        .packages = {
+            .package_select = cfa_eq
+        }
+    };
 
-    assert_int_equal(ComparePackages("foobar", "1", "s390", &pi, cfa_eq), false);
+    assert_int_equal(ComparePackages("foobar", "1", "s390", &pi, attr, NULL), false);
 }
 
 bool DoCompare(const char *lhs, const char *rhs, enum version_cmp cmp)
@@ -46,8 +69,13 @@ bool DoCompare(const char *lhs, const char *rhs, enum version_cmp cmp)
         .version = (char*)lhs,
         .arch = "somearch"
     };
+    Attributes a = {
+        .packages = {
+            .package_select = cmp,
+        }
+    };
 
-    return ComparePackages("foobar", rhs, "somearch", &pi, cmp);
+    return ComparePackages("foobar", rhs, "somearch", &pi, a, NULL);
 }
 
 void test_wildcard_version(void **context)

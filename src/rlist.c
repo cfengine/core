@@ -1221,7 +1221,7 @@ void RvalPrint(Writer *writer, Rval rval)
     }
 }
 
-void RlistFilter(Rlist **list, _Bool (*KeepPredicate)(void *), void (*DestroyItem)(void *))
+void RlistFilter(Rlist **list, bool (*KeepPredicate)(void *, void *), void *predicate_user_data, void (*DestroyItem)(void *))
 {
     assert(KeepPredicate);
 
@@ -1230,7 +1230,7 @@ void RlistFilter(Rlist **list, _Bool (*KeepPredicate)(void *), void (*DestroyIte
 
     for (Rlist *rp = start; rp;)
     {
-        if (!KeepPredicate(rp->item))
+        if (!KeepPredicate(rp->item, predicate_user_data))
         {
             if (prev)
             {

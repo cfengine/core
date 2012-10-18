@@ -56,6 +56,7 @@ DefineClasses GetClassDefinitionConstraints(const Promise *pp);
 EditColumn GetColumnConstraints(const Promise *pp);
 EditDefaults GetEditDefaults(const Promise *pp);
 EditLocation GetLocationAttributes(const Promise *pp);
+EditXml GetXmlConstraints(const Promise *pp);
 EditRegion GetRegionConstraints(const Promise *pp);
 EditReplace GetReplaceConstraints(const Promise *pp);
 Environments GetEnvironmentsConstraints(const Promise *pp);

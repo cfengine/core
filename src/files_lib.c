@@ -22,12 +22,13 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include "files_lib.h"
+
+#include "files_interfaces.h"
+#include "item_lib.h"
 
 #include <assert.h>
 
-#include "files_lib.h"
-#include "item_lib.h"
 
 static Item *NextItem(Item *ip);
 static int ItemListsEqual(Item *list1, Item *list2, int report, Attributes a, Promise *pp);

@@ -1142,6 +1142,10 @@ Packages GetPackageConstraints(const Promise *pp)
     p.package_delete_convention = (char *) GetConstraintValue("package_delete_convention", pp, CF_SCALAR);
 
     p.package_multiline_start = (char *) GetConstraintValue("package_multiline_start", pp, CF_SCALAR);
+
+    p.package_version_equal_command = GetConstraintValue("package_version_equal_command", pp, CF_SCALAR);
+    p.package_version_less_command = GetConstraintValue("package_version_less_command", pp, CF_SCALAR);
+
     return p;
 }
 
@@ -1323,6 +1327,8 @@ Attributes GetInsertionAttributes(const Promise *pp)
     attr.haveregion = GetBooleanConstraint("select_region", pp);
     attr.region = GetRegionConstraints(pp);
 
+    attr.xml = GetXmlConstraints(pp);
+
     attr.havetrans = GetBooleanConstraint(CF_TRANSACTION, pp);
     attr.transaction = GetTransactionConstraints(pp);
 
@@ -1372,6 +1378,8 @@ Attributes GetDeletionAttributes(const Promise *pp)
     attr.haveregion = GetBooleanConstraint("select_region", pp);
     attr.region = GetRegionConstraints(pp);
 
+    attr.xml = GetXmlConstraints(pp);
+
     attr.havetrans = GetBooleanConstraint(CF_TRANSACTION, pp);
     attr.transaction = GetTransactionConstraints(pp);
 
@@ -1420,6 +1428,8 @@ Attributes GetReplaceAttributes(const Promise *pp)
     attr.haveregion = GetBooleanConstraint("select_region", pp);
     attr.region = GetRegionConstraints(pp);
 
+    attr.xml = GetXmlConstraints(pp);
+
     attr.havetrans = GetBooleanConstraint(CF_TRANSACTION, pp);
     attr.transaction = GetTransactionConstraints(pp);
 
@@ -1427,6 +1437,18 @@ Attributes GetReplaceAttributes(const Promise *pp)
     attr.classes = GetClassDefinitionConstraints(pp);
 
     return attr;
+}
+
+/*******************************************************************/
+
+EditXml GetXmlConstraints(const Promise *pp)
+{
+    EditXml x;
+
+    x.haveselectxpathregion = ((x.select_xpath_region = GetConstraintValue("select_xpath_region", pp, CF_SCALAR)) != NULL);
+    x.haveattributevalue = ((x.attribute_value = GetConstraintValue("attribute_value", pp, CF_SCALAR)) != NULL);
+
+    return x;
 }
 
 /*******************************************************************/

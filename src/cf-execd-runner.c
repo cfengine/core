@@ -26,6 +26,7 @@
 #include "cf-execd-runner.h"
 
 #include "files_names.h"
+#include "files_interfaces.h"
 
 /*******************************************************************/
 

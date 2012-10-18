@@ -1718,13 +1718,13 @@ int MissingDependencies(const Promise *pp)
     
     for (rp = deps; rp != NULL; rp = rp->next)
        {
-       if (strchr(rp->item, '.'))
+       if (strchr(rp->item, ':'))
           {
           d = (char *)rp->item;
           }
        else
           {
-          snprintf(name, CF_BUFSIZE, "%s.%s", pp->namespace, (char *)rp->item);
+          snprintf(name, CF_BUFSIZE, "%s:%s", pp->namespace, (char *)rp->item);
           d = name;
           }
 

@@ -53,7 +53,7 @@ AC_ARG_WITH([pthreads],
     [AS_HELP_STRING([--with-pthreads[[=PATH]]],
                     [Specify path to pthreads, if not the part of operating system])])
 
-if test "x$with_pthreads" != "xyes" && test "x$with_pthreads" != "xno"; then
+if test "x$with_pthreads" != x && test "x$with_pthreads" != "xyes" && test "x$with_pthreads" != "xno"; then
    LIBS="$LIBS -L$with_pthreads/lib"
    CFLAGS="$CFLAGS -I$with_pthreads/include"
 fi
@@ -337,6 +337,33 @@ if test "x$with_libacl" != xno; then
     AC_CHECK_LIB(acl, acl_init, [], [if test "x$with_libacl" != xcheck; then AC_MSG_ERROR(Cannot find libacl library); fi])
     AC_CHECK_HEADERS([acl.h sys/acl.h acl/libacl.h], [], [if test "x$with_libacl" != xcheck; then AC_MSG_ERROR(Cannot find libacl library headers); fi])
   ])
+ fi
+
+dnl libxml2
+
+AC_ARG_WITH([libxml2],
+    [AS_HELP_STRING([--with-libxml2[[=PATH]]],
+                    [Specify libxml2 path])], [], [with_libxml2=check])
+
+if test "x$with_libxml2" != xno; then
+
+   if test "x$with_libxml2" != xyes && test "x$with_libxml2" != xcheck; then
+      XML2_CONFIG=$with_libxml2/bin/xml2-config
+   else
+      XML2_CONFIG=xml2-config
+   fi
+
+   # xml2-config is only for native builds
+   if test "x$cross_compiling" = "xno"; then
+      if test x`which $XML2_CONFIG` != x ; then
+         CPPFLAGS="$CPPFLAGS `$XML2_CONFIG --cflags`"
+      fi
+   fi
+
+    CF3_WITH_LIBRARY(libxml2, [
+      AC_CHECK_LIB(xml2, xmlXPathNewContext, [], [if test "x$with_libxml2" != xcheck; then AC_MSG_ERROR(Cannot find libxml2); fi])
+      AC_CHECK_HEADERS([libxml/xmlwriter.h], [break], [if test "x$with_libxml2" != xcheck; then AC_MSG_ERROR(Cannot find libxml2); fi])
+    ])
 fi
 
 dnl
@@ -509,14 +536,20 @@ AC_CHECK_FUNCS(getnetgrent)
 
 AC_CHECK_DECLS(setnetgrent, [], [], [[#include <netdb.h>]])
 AC_CHECK_FUNCS(setnetgrent)
-AC_COMPILE_IFELSE(AC_LANG_PROGRAM([[#include <netdb.h>]],
-                                   [extern int setnetgrent(const char *)]),
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <netdb.h>]],
+                                   [[extern int setnetgrent(const char *)]])],
   [AC_DEFINE([SETNETGRENT_RETURNS_INT], 1, [Whether setnetgrent returns int])],
   [AC_DEFINE([SETNETGRENT_RETURNS_INT], 0, [Whether setnetgrent returns int])])
 
 
 AC_CHECK_DECLS(endnetgrent, [], [], [[#include <netdb.h>]])
 AC_CHECK_FUNCS(endnetgrent)
+
+AC_CHECK_DECLS(mkdtemp)
+AC_CHECK_FUNCS(mkdtemp)
+
+AC_CHECK_DECLS(strrstr)
+AC_CHECK_FUNCS(strrstr)
 
 AC_CHECK_FUNCS(waitpid seteuid setegid setreuid setregid)
 AC_CHECK_FUNCS(uname gethostname chflags)
@@ -626,10 +659,10 @@ dnl ######################################################################
 dnl Collect all the options
 dnl ######################################################################
 
-CPPFLAGS="$CPPFLAGS $POSTGRESQL_CPPFLAGS $MYSQL_CPPFLAGS $TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $MONGO_CPPFLAGS $LDAP_CPPFLAGS $LIBVIRT_CPPFLAGS $SQLITE3_CPPFLAGS $LIBACL_CPPFLAGS"
-CFLAGS="$CFLAGS $POSTGRESQL_CFLAGS $MYSQL_CFLAGS $TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $MONGO_CFLAGS $LDAP_CFLAGS $LIBVIRT_CFLAGS $SQLITE3_CFLAGS $LIBACL_CFLAGS"
-LDFLAGS="$LDFLAGS $POSTGRESQL_LDFLAGS $MYSQL_LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $MONGO_LDFLAGS $LDAP_LDFLAGS $LIBVIRT_LDFLAGS $SQLITE3_LDFLAGS $LIBACL_LDFLAGS"
-LIBS="$LIBS $POSTGRESQL_LIBS $MYSQL_LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $MONGO_LIBS $LDAP_LIBS $LIBVIRT_LIBS $SQLITE3_LIBS $LIBACL_LIBS"
+CPPFLAGS="$CPPFLAGS $POSTGRESQL_CPPFLAGS $MYSQL_CPPFLAGS $TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $MONGO_CPPFLAGS $LDAP_CPPFLAGS $LIBVIRT_CPPFLAGS $SQLITE3_CPPFLAGS $LIBACL_CPPFLAGS $LIBXML2_CPPFLAGS"
+CFLAGS="$CFLAGS $POSTGRESQL_CFLAGS $MYSQL_CFLAGS $TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $MONGO_CFLAGS $LDAP_CFLAGS $LIBVIRT_CFLAGS $SQLITE3_CFLAGS $LIBACL_CFLAGS $LIBXML2_CFLAGS"
+LDFLAGS="$LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $MONGO_LDFLAGS $LDAP_LDFLAGS $SQLITE3_LDFLAGS $LIBACL_LDFLAGS"
+LIBS="$LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $MONGO_LIBS $LDAP_LIBS $SQLITE3_LIBS $LIBACL_LIBS"
 
 dnl ######################################################################
 dnl OS specific stuff
@@ -713,7 +746,6 @@ case "$target_os" in
 
    darwin*)
         AC_DEFINE(DARWIN, [], [Darwin build])
-        LDFLAGS="-Xlinker -m $LDFLAGS"
         ;;
 
    *)
@@ -949,6 +981,12 @@ else
   AC_MSG_RESULT([-> libacl: disabled])
 fi
 
+if test "x$ac_cv_lib_xml2_xmlXPathNewContext" = xyes; then
+  AC_MSG_RESULT([-> libxml2: $LIBXML2_PATH])
+else
+  AC_MSG_RESULT([-> libxml2: disabled])
+fi
+
 m4_indir(incstart[]incend, [nova/config.m4])
 
 AC_MSG_RESULT([-> Workdir: $WORKDIR])
@@ -964,6 +1002,7 @@ dnl ######################################################################
 AC_CONFIG_FILES([Makefile
 	pub/Makefile
 	src/Makefile
+	ext/Makefile
 	docs/Makefile
 	docs/guides/Makefile
 	docs/manpages/Makefile

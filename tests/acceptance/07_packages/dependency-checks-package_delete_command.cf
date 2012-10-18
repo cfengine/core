@@ -40,7 +40,7 @@ body package_method mock_no_delete_command_delete_convention
   package_version_regex => "^[^-]+-([^-]+)";
   package_arch_regex => "^[^-]+-[^-]+-(.*)";
 
-  package_list_command => "/usr/bin/printf 'bash-1.0-amd64'";
+  package_list_command => "$(G.printf) 'bash-1.0-amd64'";
   package_installed_regex => ".*";
   package_list_name_regex => "^([^-]+)";
   package_list_version_regex => "^[^-]+-([^-]+)";

@@ -75,9 +75,9 @@ body package_method mock
 {
 package_changes => "individual";
 
-package_default_arch_command => "/usr/bin/printf 'setun'";
+package_default_arch_command => "$(G.printf) 'setun'";
 
-package_list_command => "/usr/bin/printf 'foobar-1-besm6'";
+package_list_command => "$(G.printf) 'foobar-1-besm6'";
 package_list_name_regex => "^([^-]+)";
 package_list_version_regex => "^[^-]+-([^-]+)";
 package_list_arch_regex => "^[^-]+-[^-]+-([\S]+)";

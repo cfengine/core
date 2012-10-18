@@ -97,6 +97,6 @@ void RlistPrint(Writer *writer, const Rlist *list);
 
 Rlist *RlistAt(Rlist *start, size_t index);
 Rlist *RlistLast(Rlist *start);
-void RlistFilter(Rlist **list, bool (*KeepPredicate)(void *item), void (*DestroyItem)(void *item));
+void RlistFilter(Rlist **list, bool (*KeepPredicate)(void *item, void *predicate_data), void *predicate_user_data, void (*DestroyItem)(void *item));
 
 #endif

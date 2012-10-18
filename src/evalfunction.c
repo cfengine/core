@@ -30,6 +30,7 @@
 #include "dbm_api.h"
 #include "lastseen.h"
 #include "files_names.h"
+#include "files_interfaces.h"
 #include "vars.h"
 #include "addr_lib.h"
 #include "syntax.h"

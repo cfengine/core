@@ -275,8 +275,13 @@ int FSWrite(char *new, int dd, char *buf, int towrite, int *last_write_made_hole
 
 EditContext *NewEditContext(char *filename, Attributes a, Promise *pp);
 void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportContext *report_context);
-int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, Promise *pp);
 int SaveItemListAsFile(Item *liststart, const char *file, Attributes a, Promise *pp, const ReportContext *report_context);
+#ifdef HAVE_LIBXML2
+int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, Attributes a, Promise *pp);
+int SaveXmlDocAsFile(xmlDocPtr doc, const char *file, Attributes a, Promise *pp, const ReportContext *report_context);
+#endif
+int BeginSaveAsFile(const char *file, char *new, char *backup, struct stat *statbuf, Attributes a, Promise *pp);
+int FinishSaveAsFile(const char *file, char *new, char *backup, struct stat *statbuf, Attributes a, Promise *pp, const ReportContext *report_context);
 int AppendIfNoSuchLine(char *filename, char *line);
 
 /* files_editline.c */
@@ -284,11 +289,13 @@ int AppendIfNoSuchLine(char *filename, char *line);
 int ScheduleEditLineOperations(char *filename, Bundle *bp, Attributes a, Promise *pp, const ReportContext *report_context);
 Bundle *MakeTemporaryBundleFromTemplate(Attributes a,Promise *pp);
 
-/* files_editxmlx.c */
+/* files_editxml.c */
 
 int ScheduleEditXmlOperations(char *filename, Bundle *bp, Attributes a, Promise *parentp,
                               const ReportContext *report_context);
-
+#ifdef HAVE_LIBXML2
+int XmlCompareToFile(xmlDocPtr doc, char *file, Attributes a, Promise *pp);
+#endif
 
 /* files_links.c */
 
@@ -319,18 +326,6 @@ char *SkipHashType(char *hash);
 const char *FileHashName(enum cfhashes id);
 void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhashes type);
 
-/* files_interfaces.c */
-
-void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes attr, Promise *pp, const ReportContext *report_context);
-void VerifyCopy(char *source, char *destination, Attributes attr, Promise *pp, const ReportContext *report_context);
-void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attributes attr, Promise *pp, const ReportContext *report_context);
-int cfstat(const char *path, struct stat *buf);
-int cf_stat(char *file, struct stat *buf, Attributes attr, Promise *pp);
-int cf_lstat(char *file, struct stat *buf, Attributes attr, Promise *pp);
-int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dstat, Attributes attr, Promise *pp, const ReportContext *report_context);
-int CfReadLine(char *buff, int size, FILE *fp);
-int cf_readlink(char *sourcefile, char *linkbuf, int buffsize, Attributes attr, Promise *pp);
-
 /* files_operators.c */
 
 int VerifyFileLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp, const ReportContext *report_context);
@@ -359,7 +354,13 @@ GidList *MakeGidList(char *gidnames);
 void AddSimpleUidItem(UidList ** uidlist, uid_t uid, char *uidname);
 void AddSimpleGidItem(GidList ** gidlist, gid_t gid, char *gidname);
 #endif /* NOT MINGW */
-void LogHashChange(char *file, FileState status, char *msg);
+void LogHashChange(char *file, FileState status, char *msg, Promise *pp);
+
+typedef bool (*SaveCallbackFn)(const char *dest_filename, const char *orig_filename, void *param, Attributes a, Promise *pp);
+int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attributes a, Promise *pp,
+               const ReportContext *report_context);
+
+int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, Promise *pp);
 
 /* files_properties.c */
 

@@ -51,15 +51,8 @@ files:
 body perms test_perms
 {
 mode => "$(test.mode)";
-linux::
-    owners => { "3" };  # sys is not necessarily 3 on all linux
-    groups => { "sys" };
-freebsd::
-    owners => { "bin" };
-    groups => { "sys" };
-!(linux|freebsd)::
-    owners => { "undefined-please-fix" };
-    groups => { "undefined-please-fix" };
+    owners => { "3" };
+    groups => { "3" };
 }
 
 #######################################################

@@ -29,6 +29,11 @@
 #include "rlist.h"
 #include "compiler.h"
 
+#ifdef HAVE_LIBXML2
+#include <libxml/parser.h>
+#include <libxml/xpathInternals.h>
+#endif
+
 /*******************************************************************/
 /* Preprocessor tricks                                             */
 /*******************************************************************/
@@ -1131,6 +1136,10 @@ typedef struct
     Item *file_classes;
     int num_edits;
     int empty_first;
+#ifdef HAVE_LIBXML2
+    xmlDocPtr xmldoc;
+#endif
+
 } EditContext;
 
 /*************************************************************************/
@@ -1945,6 +1954,14 @@ typedef struct
 
 typedef struct
 {
+    char *select_xpath_region;
+    char *attribute_value;
+    int haveselectxpathregion;
+    int haveattributevalue;
+} EditXml;
+
+typedef struct
+{
     char *line_matching;
     enum cfeditorder before_after;
     char *first_last;
@@ -2057,6 +2074,9 @@ typedef struct
     bool package_commands_useshell;
 
     char *package_multiline_start;
+
+    char *package_version_less_command;
+    char *package_version_equal_command;
 
     int package_noverify_returncode;
 } Packages;
@@ -2280,6 +2300,7 @@ typedef struct
     EditLocation location;
     EditColumn column;
     EditReplace replace;
+    EditXml xml;
     int haveregion;
     int havelocation;
     int havecolumn;

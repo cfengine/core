@@ -23,9 +23,11 @@
 */
 
 #include "cf3.defs.h"
+
 #include "monitoring.h"
 #include "item_lib.h"
 #include "files_names.h"
+#include "files_interfaces.h"
 
 /* Globals */
 

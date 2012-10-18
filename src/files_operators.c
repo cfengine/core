@@ -32,6 +32,7 @@
 #include "dir.h"
 #include "dbm_api.h"
 #include "files_names.h"
+#include "files_interfaces.h"
 #include "vars.h"
 #include "item_lib.h"
 #include "conversion.h"
@@ -409,158 +410,6 @@ int ScheduleLinkOperation(char *destination, char *source, Attributes attr, Prom
     return true;
 }
 
-/*****************************************************************************/
-
-int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const ReportContext *report_context)
-{
-    Bundle *bp;
-    void *vp;
-    FnCall *fp;
-    char edit_bundle_name[CF_BUFSIZE], lockname[CF_BUFSIZE], *method_deref;
-    Rlist *params = { 0 };
-    int retval = false;
-    CfLock thislock;
-
-    snprintf(lockname, CF_BUFSIZE - 1, "fileedit-%s", filename);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a, pp, false);
-
-    if (thislock.lock == NULL)
-    {
-        return false;
-    }
-
-    pp->edcontext = NewEditContext(filename, a, pp);
-
-    if (pp->edcontext == NULL)
-    {
-        cfPS(cf_error, CF_FAIL, "", pp, a, "File %s was marked for editing but could not be opened\n", filename);
-        FinishEditContext(pp->edcontext, a, pp, report_context);
-        YieldCurrentLock(thislock);
-        return false;
-    }
-
-    Policy *policy = PolicyFromPromise(pp);
-
-    if (a.haveeditline)
-    {
-        if ((vp = GetConstraintValue("edit_line", pp, CF_FNCALL)))
-        {
-            fp = (FnCall *) vp;
-            strcat(edit_bundle_name,fp->name);
-            params = fp->args;
-        }
-        else if ((vp = GetConstraintValue("edit_line", pp, CF_SCALAR)))
-        {
-            strcat(edit_bundle_name,(char *) vp);
-            params = NULL;
-        }
-        else
-        {
-            FinishEditContext(pp->edcontext, a, pp, report_context);
-            YieldCurrentLock(thislock);
-            return false;
-        }
-
-        if (strncmp(edit_bundle_name,"default:",strlen("default:")) == 0)
-           {
-           method_deref = strchr(edit_bundle_name,':') + 1;
-           }
-        else
-           {
-           method_deref = edit_bundle_name;
-           }        
-
-        CfOut(cf_verbose, "", " -> Handling file edits in edit_line bundle %s\n", method_deref);
-
-        // add current filename to context - already there?
-        if ((bp = GetBundle(policy, method_deref, "edit_line")))
-        {
-            BannerSubBundle(bp, params);
-
-            DeleteScope(bp->name);
-            NewScope(bp->name);
-            HashVariables(policy, bp->name, report_context);
-
-            AugmentScope(bp->name, bp->namespace, bp->args, params);
-            PushPrivateClassContext(a.edits.inherit);
-            retval = ScheduleEditLineOperations(filename, bp, a, pp, report_context);
-            PopPrivateClassContext();
-            DeleteScope(bp->name);
-        }
-    }
-
-
-    if (a.haveeditxml)
-    {
-        if ((vp = GetConstraintValue("edit_xml", pp, CF_FNCALL)))
-        {
-            fp = (FnCall *) vp;
-            strcat(edit_bundle_name,fp->name);
-            params = fp->args;
-        }
-        else if ((vp = GetConstraintValue("edit_xml", pp, CF_SCALAR)))
-        {
-            strcat(edit_bundle_name,(char *) vp);
-            params = NULL;
-        }
-        else
-        {
-            FinishEditContext(pp->edcontext, a, pp, report_context);
-            YieldCurrentLock(thislock);
-            return false;
-        }
-
-        if (strncmp(edit_bundle_name,"default:",strlen("default:")) == 0)
-           {
-           method_deref = strchr(edit_bundle_name,':') + 1;
-           }
-        else
-           {
-           method_deref = edit_bundle_name;
-           }
-        
-        CfOut(cf_verbose, "", " -> Handling file edits in edit_xml bundle %s\n", method_deref);
-
-        if ((bp = GetBundle(policy, method_deref, "edit_xml")))
-        {
-            BannerSubBundle(bp, params);
-
-            DeleteScope(bp->name);
-            NewScope(bp->name);
-            HashVariables(policy, bp->name, report_context);
-
-            AugmentScope(bp->name, bp->namespace, bp->args, params);
-            PushPrivateClassContext(a.edits.inherit);
-            retval = ScheduleEditXmlOperations(filename, bp, a, pp, report_context);
-            PopPrivateClassContext();
-            DeleteScope(bp->name);
-        }
-    }
-
-    
-    if (a.template)
-    {
-        if ((bp = MakeTemporaryBundleFromTemplate(a,pp)))
-        {
-            BannerSubBundle(bp,params);
-            a.haveeditline = true;
-
-            DeleteScope(bp->name);
-            NewScope(bp->name);
-            HashVariables(policy, bp->name, report_context);
-
-            PushPrivateClassContext(a.edits.inherit);
-            retval = ScheduleEditLineOperations(filename, bp, a, pp, report_context);
-            PopPrivateClassContext();
-            DeleteScope(bp->name);
-        }
-        // FIXME: why it crashes? DeleteBundles(bp);
-    }
-
-    FinishEditContext(pp->edcontext, a, pp, report_context);
-    YieldCurrentLock(thislock);
-    return retval;
-}
 
 /*****************************************************************************/
 /* Level                                                                     */
@@ -1122,7 +971,7 @@ void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp, const ReportC
     if (changed)
     {
         NewPersistentContext("checksum_alerts", CF_PERSISTENCE, cfpreserve);
-        LogHashChange(file, cf_file_content_changed, "Content changed");
+        LogHashChange(file, cf_file_content_changed, "Content changed", pp);
     }
 
     if (attr.change.report_diffs)
@@ -1211,7 +1060,7 @@ void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp
         snprintf(msg_temp, sizeof(msg_temp), "Permission: %jo -> %jo",
                  (uintmax_t)cmpsb.st_mode, (uintmax_t)sb->st_mode);
 
-        LogHashChange(file, cf_file_stats_changed, msg_temp);
+        LogHashChange(file, cf_file_stats_changed, msg_temp, pp);
     }
 
     if (cmpsb.st_uid != sb->st_uid)
@@ -1224,7 +1073,7 @@ void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp
         snprintf(msg_temp, sizeof(msg_temp), "Owner: %jd -> %jd",
                  (uintmax_t)cmpsb.st_uid, (uintmax_t)sb->st_uid);
 
-        LogHashChange(file, cf_file_stats_changed, msg_temp);
+        LogHashChange(file, cf_file_stats_changed, msg_temp, pp);
     }
 
     if (cmpsb.st_gid != sb->st_gid)
@@ -1237,7 +1086,7 @@ void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp
         snprintf(msg_temp, sizeof(msg_temp), "Group: %jd -> %jd",
                  (uintmax_t)cmpsb.st_gid, (uintmax_t)sb->st_gid);
 
-        LogHashChange(file, cf_file_stats_changed, msg_temp);
+        LogHashChange(file, cf_file_stats_changed, msg_temp, pp);
     }
 
     if (cmpsb.st_dev != sb->st_dev)
@@ -1632,7 +1481,7 @@ static char FileStateToChar(FileState status)
     }
 }
 /*********************************************************************/
-void LogHashChange(char *file, FileState status, char *msg)
+void LogHashChange(char *file, FileState status, char *msg, Promise *pp)
 {
     FILE *fp;
     char fname[CF_BUFSIZE];
@@ -1670,7 +1519,9 @@ void LogHashChange(char *file, FileState status, char *msg)
         return;
     }
 
-    fprintf(fp, "%ld,%s,%c,%s\n", (long) now, file, FileStateToChar(status), msg);
+    const char *handle = PromiseID(pp);
+
+    fprintf(fp, "%ld,%s,%s,%c,%s\n", (long) now, handle, file, FileStateToChar(status), msg);
     fclose(fp);
 
     cf_chmod(fname, perm);
@@ -1815,7 +1666,15 @@ static void DeleteDirectoryTree(char *path, Promise *pp, const ReportContext *re
     ConstraintAppendToPromise(&promise, "file_select", (Rval) {"true", CF_SCALAR}, "any", false);
     ConstraintAppendToPromise(&promise, "mtime", (Rval) {s, CF_SCALAR}, "any", false);
     ConstraintAppendToPromise(&promise, "file_result", (Rval) {"mtime", CF_SCALAR}, "any", false);
-    VerifyFilePromise(promise.promiser, &promise, report_context);
+
+    struct stat sb;
+    lstat(path, &sb);
+
+    Attributes a = GetFilesAttributes(&promise);
+    SetSearchDevice(&sb, &promise);
+
+    DepthSearch(promise.promiser, &sb, 0, a, &promise, report_context);
+
     rmdir(path);
 }
 
@@ -2544,3 +2403,215 @@ void AddSimpleGidItem(GidList ** gidlist, gid_t gid, char *gidname)
 }
 
 #endif /* NOT MINGW */
+
+/*********************************************************************/
+
+int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attributes a, Promise *pp,
+                       const ReportContext *report_context)
+{
+    struct stat statbuf;
+    char new[CF_BUFSIZE], backup[CF_BUFSIZE];
+    mode_t mask;
+    char stamp[CF_BUFSIZE];
+    time_t stamp_now;
+
+#ifdef WITH_SELINUX
+    int selinux_enabled = 0;
+    security_context_t scontext = NULL;
+
+    selinux_enabled = (is_selinux_enabled() > 0);
+
+    if (selinux_enabled)
+    {
+        /* get current security context */
+        getfilecon(file, &scontext);
+    }
+#endif
+
+    stamp_now = time((time_t *) NULL);
+
+    if (cfstat(file, &statbuf) == -1)
+    {
+        cfPS(cf_error, CF_FAIL, "stat", pp, a, " !! Can no longer access file %s, which needed editing!\n", file);
+        return false;
+    }
+
+    strcpy(backup, file);
+
+    if (a.edits.backup == cfa_timestamp)
+    {
+        snprintf(stamp, CF_BUFSIZE, "_%jd_%s", (intmax_t) CFSTARTTIME, CanonifyName(cf_ctime(&stamp_now)));
+        strcat(backup, stamp);
+    }
+
+    strcat(backup, ".cf-before-edit");
+
+    strcpy(new, file);
+    strcat(new, ".cf-after-edit");
+    unlink(new);                /* Just in case of races */
+
+    if ((*callback)(new, file, param, a, pp) == false)
+    {
+        return false;
+    }
+
+    if (cf_rename(file, backup) == -1)
+    {
+        cfPS(cf_error, CF_FAIL, "cf_rename", pp, a,
+             " !! Can't rename %s to %s - so promised edits could not be moved into place\n", file, backup);
+        return false;
+    }
+
+    if (a.edits.backup == cfa_rotate)
+    {
+        RotateFiles(backup, a.edits.rotate);
+        unlink(backup);
+    }
+
+    if (a.edits.backup != cfa_nobackup)
+    {
+        if (ArchiveToRepository(backup, a, pp, report_context))
+        {
+            unlink(backup);
+        }
+    }
+
+    else
+    {
+        unlink(backup);
+    }
+
+    if (cf_rename(new, file) == -1)
+    {
+        cfPS(cf_error, CF_FAIL, "cf_rename", pp, a,
+             " !! Can't rename %s to %s - so promised edits could not be moved into place\n", new, file);
+        return false;
+    }
+
+    mask = umask(0);
+    cf_chmod(file, statbuf.st_mode);    /* Restore file permissions etc */
+    chown(file, statbuf.st_uid, statbuf.st_gid);
+    umask(mask);
+
+#ifdef WITH_SELINUX
+    if (selinux_enabled)
+    {
+        /* restore file context */
+        setfilecon(file, scontext);
+    }
+#endif
+
+    return true;
+}
+
+/*********************************************************************/
+
+bool SaveItemListCallback(const char *dest_filename, const char *orig_filename, void *param, Attributes a, Promise *pp)
+{
+    Item *liststart = param, *ip;
+    FILE *fp;
+
+    //saving list to file
+    if ((fp = fopen(dest_filename, "w")) == NULL)
+    {
+        cfPS(cf_error, CF_FAIL, "fopen", pp, a, "Couldn't write file %s after editing\n", dest_filename);
+        return false;
+    }
+
+    for (ip = liststart; ip != NULL; ip = ip->next)
+    {
+        fprintf(fp, "%s\n", ip->name);
+    }
+
+    if (fclose(fp) == -1)
+    {
+        cfPS(cf_error, CF_FAIL, "fclose", pp, a, "Unable to close file while writing");
+        return false;
+    }
+
+    cfPS(cf_inform, CF_CHG, "", pp, a, " -> Edited file %s \n", orig_filename);
+    return true;
+}
+
+/*********************************************************************/
+
+int SaveItemListAsFile(Item *liststart, const char *file, Attributes a, Promise *pp,
+                       const ReportContext *report_context)
+{
+    return SaveAsFile(&SaveItemListCallback, liststart, file, a, pp, report_context);
+}
+
+/*********************************************************************/
+
+int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, Promise *pp)
+{
+    FILE *fp;
+    struct stat statbuf;
+    char line[CF_BUFSIZE], concat[CF_BUFSIZE];
+    int join = false;
+
+    if (cfstat(file, &statbuf) == -1)
+    {
+        CfOut(cf_verbose, "stat", " ** Information: the proposed file \"%s\" could not be loaded", file);
+        return false;
+    }
+
+    if (a.edits.maxfilesize != 0 && statbuf.st_size > a.edits.maxfilesize)
+    {
+        CfOut(cf_inform, "", " !! File %s is bigger than the limit edit.max_file_size = %jd > %d bytes\n", file,
+              (intmax_t) statbuf.st_size, a.edits.maxfilesize);
+        return (false);
+    }
+
+    if (!S_ISREG(statbuf.st_mode))
+    {
+        cfPS(cf_inform, CF_INTERPT, "", pp, a, "%s is not a plain file\n", file);
+        return false;
+    }
+
+    if ((fp = fopen(file, "r")) == NULL)
+    {
+        cfPS(cf_inform, CF_INTERPT, "fopen", pp, a, "Couldn't read file %s for editing\n", file);
+        return false;
+    }
+
+    memset(line, 0, CF_BUFSIZE);
+    memset(concat, 0, CF_BUFSIZE);
+
+    while (!feof(fp))
+    {
+        CfReadLine(line, CF_BUFSIZE - 1, fp);
+
+        if (a.edits.joinlines && *(line + strlen(line) - 1) == '\\')
+        {
+            join = true;
+        }
+        else
+        {
+            join = false;
+        }
+
+        if (join)
+        {
+            *(line + strlen(line) - 1) = '\0';
+            JoinSuffix(concat, line);
+        }
+        else
+        {
+            JoinSuffix(concat, line);
+
+            if (!feof(fp) || (strlen(concat) != 0))
+            {
+                AppendItem(liststart, concat, NULL);
+            }
+
+            concat[0] = '\0';
+            join = false;
+        }
+
+        line[0] = '\0';
+    }
+
+    fclose(fp);
+    return (true);
+}

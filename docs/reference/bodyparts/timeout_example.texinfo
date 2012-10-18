@@ -1,7 +1,7 @@
 
 @verbatim
 
-body agent control
+body runagent control
 {
 timeout => "10";
 }

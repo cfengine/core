@@ -1,0 +1,7 @@
+@verbatim
+
+body attribute_value example(s)
+{
+attribute_value => "$(s)";
+}
+@end verbatim

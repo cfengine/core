@@ -40,7 +40,7 @@ vars:
     "test6_idx" slist => getindices("test6");
 
     # This shows that the nulls are really there in the file
-    "od_file" string => execresult("/usr/bin/od -c $(G.testfile)", "noshell");
+    "od_file" string => execresult("$(G.od) -c $(G.testfile)", "noshell");
 
 reports:
     cfengine_3::

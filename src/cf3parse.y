@@ -58,13 +58,14 @@ blocks:                block
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-block:                 bundle typeid blockid bundlebody
+block:                 main bodybody; 
+                     | bundle typeid blockid bundlebody
                      | bundle typeid blockid usearglist bundlebody
                      | bundle typeid blockid usearglist ':' bundlebody
                      | body typeid blockid '{' bodybody '}'
                      | body typeid blockid usearglist '{' bodybody '}'
                      | body typeid blockid usearglist ':' bodybody
-                     | main bodybody;
+                     ;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -124,14 +125,18 @@ usearglist:            '('
 main:                   MAIN
                         {
                            DebugBanner("Main aka 'Body Common Control' Body");
+                           // From body
                            P.block = "body";
-                           strncpy(P.blockid,"control",CF_MAXVARSIZE);
-                           strncpy(P.blocktype,"common",CF_MAXVARSIZE);
                            DeleteRlist(P.currentRlist);
                            P.currentRlist = NULL;
                            P.currentstring = NULL;
+                           // from type
+                           strncpy(P.blocktype,"common",CF_MAXVARSIZE);
                            DeleteRlist(P.useargs);
                            P.useargs = NULL;
+                           // from id
+                           strncpy(P.blockid,"control",CF_MAXVARSIZE);
+                           P.offsets.last_block_id = P.offsets.last_id;
                         }
 
 
@@ -507,9 +512,9 @@ class:                 CLASS
 id:                    IDSYNTAX
                        {
                            /* Rename promises to bundlesequence */
-                           if(strcmp(P.currentid, "promises") == 0)
-                              strncpy(P.currentid,"bundlesequence",CF_MAXVARSIZE);
                            strncpy(P.lval,P.currentid,CF_MAXVARSIZE);
+                           if(strcmp(P.currentid, "promises") == 0)
+                              strncpy(P.lval, "bundlesequence",CF_MAXVARSIZE);
                            DeleteRlist(P.currentRlist);
                            P.currentRlist = NULL;
                            CfDebug("Recorded LVAL %s\n",P.lval);

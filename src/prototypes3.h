@@ -684,6 +684,8 @@ int ReceiveTransaction(int sd, char *buffer, int *more);
 int RecvSocketStream(int sd, char *buffer, int toget, int nothing);
 int SendSocketStream(int sd, char *buffer, int toget, int flags);
 
+int SetReceiveTimeout(int sd, const struct timeval *timeout);
+
 /* nfs.c */
 
 #ifndef MINGW

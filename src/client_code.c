@@ -1447,9 +1447,6 @@ static int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockadd
     int res;
     long arg;
     struct sockaddr_in emptyCin = { 0 };
-# ifdef LINUX
-    struct timeval tvRecv = { 0 };
-# endif
 
     if (!cinp)
     {
@@ -1506,25 +1503,10 @@ static int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockadd
         CfOut(cf_error, "", "!! Could not set socket to blocking mode");
     }
 
-    /*
-     * NB: recv() timeout is not portable.  struct timeval is very
-     *     unstable - interpreted differently on different
-     *     platforms. E.g. setting tv_sec to 50 (and tv_usec to 0)
-     *     results in a timeout of 0.5 seconds on Windows, but 50
-     *     seconds on Linux. Thus it must be tested thoroughly on
-     *     the affected platforms. */
-
-# ifdef LINUX
-
-    tvRecv.tv_sec = tvp->tv_sec;
-    tvRecv.tv_usec = 0;
-
-    if (setsockopt(conn->sd, SOL_SOCKET, SO_RCVTIMEO, (char *) &tvRecv, sizeof(tvRecv)))
+    if (SetReceiveTimeout(conn->sd, tvp) == -1)
     {
-        CfOut(cf_error, "setsockopt", "!! Couldn't set socket timeout");
+        CfOut(cf_error, "setsockopt", "!! Could not set socket timeout");
     }
-
-# endif
 
     return true;
 }

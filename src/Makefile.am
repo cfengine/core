@@ -147,6 +147,7 @@ libpromises_la_SOURCES = \
         transaction.c transaction.h \
         unix.c \
         vars.c vars.h \
+        vercmp_internal.c vercmp_internal.h \
         verify_packages.c \
         verify_processes.c \
         verify_reports.c \

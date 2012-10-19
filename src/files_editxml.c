@@ -1144,6 +1144,7 @@ static bool SetAttributeInNode(char *rawname, char *rawvalue, xmlDocPtr doc, xml
 
 static bool DeleteTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
 {
+    xmlNodePtr elemnode, copynode;
     xmlChar *text = NULL;
 
     if ((text = CharToXmlChar(rawtext)) == NULL)
@@ -1174,7 +1175,24 @@ static bool DeleteTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, A
     CfOut(cf_inform, "", " -> Deleting text \"%s\" in %s", pp->promiser,
           pp->this_server);
 
-    xmlNodeSetContent(docnode, "");
+    //node contains text
+    if (xmlNodeIsText(docnode->children))
+    {
+        xmlNodeSetContent(docnode->children, "");
+    }
+
+    //node does not contain text
+    else
+    {
+        //remove and set aside the elements in the node
+        elemnode = xmlFirstElementChild(docnode);
+        copynode = xmlDocCopyNodeList(doc, elemnode);
+
+        xmlNodeSetContent(docnode, "");
+
+        //re-insert elements after the inserted text
+        xmlAddChildList(docnode, copynode);
+    }
 
     //verify text no longer exists inside docnode
     if (XmlVerifyTextInNodeSubstring(text, docnode, a, pp) != NULL)
@@ -1192,6 +1210,7 @@ static bool DeleteTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, A
 
 static bool SetTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
 {
+    xmlNodePtr elemnode, copynode;
     xmlChar *text = NULL;
 
     if ((text = CharToXmlChar(rawtext)) == NULL)
@@ -1221,7 +1240,24 @@ static bool SetTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attr
     CfOut(cf_inform, "", " -> Setting text \"%s\" in %s", pp->promiser,
           pp->this_server);
 
-    xmlNodeSetContent(docnode, text);
+    //node already contains text
+    if (xmlNodeIsText(docnode->children))
+    {
+        xmlNodeSetContent(docnode->children, text);
+    }
+
+    //node does not contain text
+    else
+    {
+        //remove and set aside the elements in the node
+        elemnode = xmlFirstElementChild(docnode);
+        copynode = xmlDocCopyNodeList(doc, elemnode);
+
+        xmlNodeSetContent(docnode, text);
+
+        //re-insert elements after the inserted text
+        xmlAddChildList(docnode, copynode);
+    }
 
     //verify text was inserted
     if (XmlVerifyTextInNodeExact(text, docnode, a, pp) == NULL)
@@ -1239,6 +1275,7 @@ static bool SetTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attr
 
 static bool InsertTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
 {
+    xmlNodePtr elemnode, copynode;
     xmlChar *text = NULL;
 
     if ((text = CharToXmlChar(rawtext)) == NULL)
@@ -1268,7 +1305,25 @@ static bool InsertTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, A
     CfOut(cf_inform, "", " -> Inserting text \"%s\" in %s", pp->promiser,
           pp->this_server);
 
-    xmlNodeAddContent(docnode, text);
+    //node already contains text
+    if (xmlNodeIsText(docnode->children))
+    {
+        xmlNodeAddContent(docnode->children, text);
+    }
+
+    //node does not contain text
+    else
+    {
+        //remove and set aside the elements in the node
+        elemnode = xmlFirstElementChild(docnode);
+        copynode = xmlDocCopyNodeList(doc, elemnode);
+
+        xmlNodeSetContent(docnode, "");
+        xmlNodeAddContent(docnode, text);
+
+        //re-insert elements after the inserted text
+        xmlAddChildList(docnode, copynode);
+    }
 
     //verify text was inserted
     if (XmlVerifyTextInNodeSubstring(text, docnode, a, pp) == NULL)

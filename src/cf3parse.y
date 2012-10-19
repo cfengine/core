@@ -512,6 +512,9 @@ class:                 CLASS
 id:                    IDSYNTAX
                        {
                            strncpy(P.lval,P.currentid,CF_MAXVARSIZE);
+                           /* Allow bundles as a synonym to bundlesequence */
+                           if(strcmp(P.currentid, "bundles") == 0)
+                              strncpy(P.lval, "bundlesequence",CF_MAXVARSIZE);
                            DeleteRlist(P.currentRlist);
                            P.currentRlist = NULL;
                            CfDebug("Recorded LVAL %s\n",P.lval);

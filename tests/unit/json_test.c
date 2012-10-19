@@ -1,6 +1,8 @@
 #include "test.h"
 #include "json.h"
 
+#include <float.h>
+
 static const char *OBJECT_ARRAY = "{\n" "  \"first\": [\n" "    \"one\",\n" "    \"two\"\n" "  ]\n" "}";
 
 static const char *OBJECT_COMPOUND = "{\n"
@@ -252,6 +254,38 @@ static void test_show_array_empty(void **state)
     char *output = StringWriterClose(writer);
 
     assert_string_equal("[]", output);
+
+    JsonElementDestroy(array);
+    free(output);
+}
+
+static void test_show_array_nan(void **state)
+{
+    JsonElement *array = JsonArrayCreate(10);
+    JsonArrayAppendReal(array, sqrt(-1));
+
+    Writer *writer = StringWriter();
+
+    JsonElementPrint(writer, array, 0);
+    char *output = StringWriterClose(writer);
+
+    assert_string_equal("[\n  0.0000\n]", output);
+
+    JsonElementDestroy(array);
+    free(output);
+}
+
+static void test_show_array_infinity(void **state)
+{
+    JsonElement *array = JsonArrayCreate(10);
+    JsonArrayAppendReal(array, INFINITY);
+
+    Writer *writer = StringWriter();
+
+    JsonElementPrint(writer, array, 0);
+    char *output = StringWriterClose(writer);
+
+    assert_string_equal("[\n  0.0000\n]", output);
 
     JsonElementDestroy(array);
     free(output);
@@ -818,6 +852,8 @@ int main()
         unit_test(test_show_array_numeric),
         unit_test(test_show_array_object),
         unit_test(test_show_array_empty),
+        unit_test(test_show_array_nan),
+        unit_test(test_show_array_infinity),
         unit_test(test_object_get_string),
         unit_test(test_object_get_array),
         unit_test(test_object_iterator),

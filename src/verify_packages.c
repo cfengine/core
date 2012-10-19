@@ -703,14 +703,26 @@ static int VersionCheckSchedulePackage(Attributes a, Promise *pp, int matches, i
 
 /*****************************************************************************/
 
+static void CheckPackageState(Attributes a, Promise *pp, const char *name, const char *version, const char *arch, bool no_version)
+{
+    VersionCmpResult installed = PackageMatch(name, "*", arch, a, pp);
+    VersionCmpResult matches = PackageMatch(name, version, arch, a, pp);
+
+    if (installed == VERCMP_ERROR || matches == VERCMP_ERROR)
+    {
+        cfPS(cf_error, CF_FAIL, "", pp, a, "Failure trying to compare package versions");
+        return;
+    }
+
+    if (VersionCheckSchedulePackage(a, pp, matches, installed))
+    {
+        SchedulePackageOp(name, version, arch, installed, matches, no_version, a, pp);
+    }
+}
+
 static void VerifyPromisedPackage(Attributes a, Promise *pp)
 {
-    char version[CF_MAXVARSIZE];
-    char name[CF_MAXVARSIZE];
-    char arch[CF_MAXVARSIZE];
-    char *package = pp->promiser;
-    int matches = 0, installed = 0, no_version = false;
-    Rlist *rp;
+    const char *package = pp->promiser;
 
     if (a.packages.package_version)
     {
@@ -719,45 +731,14 @@ static void VerifyPromisedPackage(Attributes a, Promise *pp)
 
         if (a.packages.package_architectures == NULL)
         {
-            strncpy(name, pp->promiser, CF_MAXVARSIZE - 1);
-            strncpy(version, a.packages.package_version, CF_MAXVARSIZE - 1);
-            strncpy(arch, "*", CF_MAXVARSIZE - 1);
-            installed = PackageMatch(name, "*", arch, a, pp);
-            matches = PackageMatch(name, version, arch, a, pp);
-
-            if (installed == VERCMP_ERROR || matches == VERCMP_ERROR)
-            {
-                cfPS(cf_error, CF_FAIL, "", pp, a, "Failure trying to compare package versions");
-                return;
-            }
-
-            if (VersionCheckSchedulePackage(a, pp, matches, installed))
-            {
-                SchedulePackageOp(name, version, arch, installed, matches, no_version, a, pp);
-            }
+            CheckPackageState(a, pp, package, a.packages.package_version, "*", false);
         }
         else
         {
-            for (rp = a.packages.package_architectures; rp != NULL; rp = rp->next)
+            for (Rlist *rp = a.packages.package_architectures; rp != NULL; rp = rp->next)
             {
                 CfOut(cf_verbose, "", " ... trying listed arch %s\n", ScalarValue(rp));
-                strncpy(name, pp->promiser, CF_MAXVARSIZE - 1);
-                strncpy(version, a.packages.package_version, CF_MAXVARSIZE - 1);
-                strncpy(arch, rp->item, CF_MAXVARSIZE - 1);
-
-                installed = PackageMatch(name, "*", arch, a, pp);
-                matches = PackageMatch(name, version, arch, a, pp);
-
-                if (installed == VERCMP_ERROR || matches == VERCMP_ERROR)
-                {
-                    cfPS(cf_error, CF_FAIL, "", pp, a, "Failure trying to compare package versions");
-                    return;
-                }
-
-                if (VersionCheckSchedulePackage(a, pp, matches, installed))
-                {
-                    SchedulePackageOp(name, version, arch, installed, matches, no_version, a, pp);
-                }
+                CheckPackageState(a, pp, package, a.packages.package_version, ScalarValue(rp), false);
             }
         }
     }
@@ -766,6 +747,9 @@ static void VerifyPromisedPackage(Attributes a, Promise *pp)
         /* The name, version and arch are to be extracted from the promiser */
         CfOut(cf_verbose, "", " -> Package version specified implicitly in promiser's name");
 
+        char version[CF_MAXVARSIZE];
+        char name[CF_MAXVARSIZE];
+        char arch[CF_MAXVARSIZE];
         strlcpy(version, ExtractFirstReference(a.packages.package_version_regex, package), CF_MAXVARSIZE);
         strlcpy(name, ExtractFirstReference(a.packages.package_name_regex, package), CF_MAXVARSIZE);
         strlcpy(arch, ExtractFirstReference(a.packages.package_arch_regex, package), CF_MAXVARSIZE);
@@ -780,59 +764,22 @@ static void VerifyPromisedPackage(Attributes a, Promise *pp)
             strcpy(arch, "*");
         }
 
-        installed = PackageMatch(name, "*", arch, a, pp);
-        matches = PackageMatch(name, version, arch, a, pp);
-
-        if (installed == VERCMP_ERROR || matches == VERCMP_ERROR)
-        {
-            cfPS(cf_error, CF_FAIL, "", pp, a, "Failure trying to compare package versions");
-            return;
-        }
-
-        if (VersionCheckSchedulePackage(a, pp, matches, installed))
-        {
-            SchedulePackageOp(name, version, arch, installed, matches, no_version, a, pp);
-        }
+        CheckPackageState(a, pp, name, version, arch, false);
     }
     else
     {
-        no_version = true;
         CfOut(cf_verbose, "", " -> Package version was not specified");
 
         if (a.packages.package_architectures == NULL)
         {
-            strncpy(name, pp->promiser, CF_MAXVARSIZE - 1);
-            strncpy(version, "*", CF_MAXVARSIZE - 1);
-            strncpy(arch, "*", CF_MAXVARSIZE - 1);
-            installed = PackageMatch(name, "*", arch, a, pp);
-            matches = PackageMatch(name, version, arch, a, pp);
-
-            if (installed == VERCMP_ERROR || matches == VERCMP_ERROR)
-            {
-                cfPS(cf_error, CF_FAIL, "", pp, a, "Failure trying to compare package versions");
-                return;
-            }
-
-            SchedulePackageOp(name, version, arch, installed, matches, no_version, a, pp);
+            CheckPackageState(a, pp, package, "*", "*", true);
         }
         else
         {
-            for (rp = a.packages.package_architectures; rp != NULL; rp = rp->next)
+            for (Rlist *rp = a.packages.package_architectures; rp != NULL; rp = rp->next)
             {
                 CfOut(cf_verbose, "", " ... trying listed arch %s\n", ScalarValue(rp));
-                strncpy(name, pp->promiser, CF_MAXVARSIZE - 1);
-                strncpy(version, "*", CF_MAXVARSIZE - 1);
-                strncpy(arch, rp->item, CF_MAXVARSIZE - 1);
-                installed = PackageMatch(name, "*", arch, a, pp);
-                matches = PackageMatch(name, version, arch, a, pp);
-
-                if (installed == VERCMP_ERROR || matches == VERCMP_ERROR)
-                {
-                    cfPS(cf_error, CF_FAIL, "", pp, a, "Failure trying to compare package versions");
-                    return;
-                }
-
-                SchedulePackageOp(name, version, arch, installed, matches, no_version, a, pp);
+                CheckPackageState(a, pp, package, "*", rp->item, true);
             }
         }
     }

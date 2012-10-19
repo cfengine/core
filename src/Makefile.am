@@ -203,7 +203,15 @@ cf_agent_SOURCES = \
         verify_packages.c \
         agentdiagnostic.c
 
-cf_agent_LDADD = libpromises.la $(LIBXML2_LDFLAGS) $(LIBXML2_LIBS) $(LIBVIRT_LDFLAGS) $(LIBVIRT_LIBS) $(POSTGRESQL_LDFLAGS) $(POSTGRESQL_LIBS) $(MYSQL_LDFLAGS) $(MYSQL_LIBS)
+cf_agent_LDADD =
+if HAVE_NOVA
+cf_agent_LDADD += ../nova/src/libcfagent.la
+endif
+cf_agent_LDADD += libpromises.la \
+	$(LIBXML2_LDFLAGS) $(LIBXML2_LIBS) \
+	$(LIBVIRT_LDFLAGS) $(LIBVIRT_LIBS) \
+	$(POSTGRESQL_LDFLAGS) $(POSTGRESQL_LIBS) \
+	$(MYSQL_LDFLAGS) $(MYSQL_LIBS)
 
 cf_gendoc_SOURCES = \
 	cf-gendoc.c \

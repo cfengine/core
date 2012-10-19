@@ -88,6 +88,8 @@ assign     =>|=:
 
 arrow      ->
 
+doubledash  \-\-
+
 
 /*
  * Three types of quoted strings:
@@ -187,6 +189,11 @@ category   [a-zA-Z_]+:
 {assign}              {
                           P.line_pos += strlen(yytext);
                           return ASSIGN;
+                      }
+
+{doubledash}         {
+                          P.line_pos += strlen(yytext);
+                          return DOUBLEDASH;
                       }
 
 {arrow}               {

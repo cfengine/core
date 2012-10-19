@@ -44,7 +44,7 @@ static bool INSTALL_SKIP = false;
 
 %}
 
-%token IDSYNTAX BLOCKID QSTRING CLASS CATEGORY BUNDLE BODY ASSIGN ARROW NAKEDVAR MAIN
+%token IDSYNTAX BLOCKID QSTRING CLASS CATEGORY BUNDLE BODY ASSIGN ARROW NAKEDVAR MAIN DOUBLEDASH
 
 %%
 
@@ -452,7 +452,7 @@ promise:               promiser                    /* BUNDLE ONLY */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 constraints_container: constraints ';'
-                     | ':' '{' constraints '}'
+                     | ':' constraints
                      ;
 
 
@@ -460,6 +460,7 @@ constraints_container: constraints ';'
 
 constraints:           constraint               /* BUNDLE ONLY */
                      | constraints ',' constraint
+                     | constraints DOUBLEDASH constraint
                      |;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -636,6 +637,12 @@ functionid:            IDSYNTAX
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 promiser:              QSTRING
+                       {
+                           P.promiser = P.currentstring;
+                           P.currentstring = NULL;
+                           CfDebug("Promising object name \'%s\'\n",P.promiser);
+                       }
+                       | '^' QSTRING
                        {
                            P.promiser = P.currentstring;
                            P.currentstring = NULL;

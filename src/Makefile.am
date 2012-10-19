@@ -147,8 +147,6 @@ libpromises_la_SOURCES = \
         transaction.c transaction.h \
         unix.c \
         vars.c vars.h \
-        vercmp_internal.c vercmp_internal.h \
-        verify_packages.c \
         verify_processes.c \
         verify_reports.c \
         writer.c writer.h \
@@ -201,6 +199,8 @@ cf_agent_SOURCES = \
         verify_environments.c verify_environments.h \
         files_edit.c \
         files_editxml.c \
+        vercmp_internal.c vercmp_internal.h \
+        verify_packages.c \
         agentdiagnostic.c
 
 cf_agent_LDADD = libpromises.la $(LIBXML2_LDFLAGS) $(LIBXML2_LIBS) $(LIBVIRT_LDFLAGS) $(LIBVIRT_LIBS) $(POSTGRESQL_LDFLAGS) $(POSTGRESQL_LIBS) $(MYSQL_LDFLAGS) $(MYSQL_LIBS)

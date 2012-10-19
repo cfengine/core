@@ -83,7 +83,7 @@ char *EDITXMLTYPESEQUENCE[] =
 
 static void EditXmlClassBanner(enum editxmltypesequence type);
 static void KeepEditXmlPromise(Promise *pp);
-static void VerifyXPathBuild(Promise *pp);
+static bool VerifyXPathBuild(Promise *pp);
 static void VerifyTreeDeletions(Promise *pp);
 static void VerifyTreeInsertions(Promise *pp);
 static void VerifyAttributeDeletions(Promise *pp);
@@ -402,56 +402,68 @@ static void KeepEditXmlPromise(Promise *pp)
 /* Level                                                                   */
 /***************************************************************************/
 
-static void VerifyXPathBuild(Promise *pp)
+static bool VerifyXPathBuild(Promise *pp)
 {
 #ifdef HAVE_LIBXML2
     xmlDocPtr doc;
     Attributes a = { {0} };
     CfLock thislock;
-    char lockname[CF_BUFSIZE];
+    char lockname[CF_BUFSIZE], rawxpath[CF_BUFSIZE] = { 0 };
 
     a = GetInsertionAttributes(pp);
     a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
 
+    if (a.xml.havebuildxpath)
+    {
+        strcpy(rawxpath, a.xml.build_xpath);
+    }
+
+    else
+    {
+        strcpy(rawxpath, pp->promiser);
+    }
+
     if (!SanityCheckXPathBuild(a, pp))
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised xpath insertion (%s) breaks its own promises", pp->promiser);
-        return;
+             " !! The promised xpath build (%s) breaks its own promises", rawxpath);
+        return false;
     }
 
     if ((doc = pp->edcontext->xmldoc) == NULL)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a, " !! Unable to load xml document");
-        return;
+        return false;
     }
 
-    snprintf(lockname, CF_BUFSIZE - 1, "insertxpath-%s-%s", pp->promiser, pp->this_server);
+    snprintf(lockname, CF_BUFSIZE - 1, "buildxpath-%s-%s", pp->promiser, pp->this_server);
     thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a, pp, true);
 
     if (thislock.lock == NULL)
     {
-        return;
+        return false;
     }
 
     //build xpath in an empty file
     if (!xmlDocGetRootElement(doc))
     {
-        if (BuildXPathInFile(pp->promiser, doc, a, pp))
+        if (BuildXPathInFile(rawxpath, doc, a, pp))
         {
             (pp->edcontext->num_edits)++;
         }
     }
 
     //build xpath in a nonempty file
-    else if (BuildXPathInNode(pp->promiser, doc, a, pp))
+    else if (BuildXPathInNode(rawxpath, doc, a, pp))
     {
         (pp->edcontext->num_edits)++;
     }
 
     YieldCurrentLock(thislock);
+    return true;
 #else
-        CfOut(cf_verbose, "", " !! Cannot edit xml files without LIBXML2\n");
+    CfOut(cf_verbose, "", " !! Cannot edit xml files without LIBXML2\n");
+    return false;
 #endif
 }
 
@@ -474,6 +486,11 @@ static void VerifyTreeDeletions(Promise *pp)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
              " !! The promised tree deletion (%s) is inconsistent", pp->promiser);
+        return;
+    }
+
+    if (a.xml.havebuildxpath && !VerifyXPathBuild(pp))
+    {
         return;
     }
 
@@ -526,6 +543,11 @@ static void VerifyTreeInsertions(Promise *pp)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
              " !! The promised tree insertion (%s) breaks its own promises", pp->promiser);
+        return;
+    }
+
+    if (a.xml.havebuildxpath && !VerifyXPathBuild(pp))
+    {
         return;
     }
 
@@ -590,6 +612,11 @@ static void VerifyAttributeDeletions(Promise *pp)
         return;
     }
 
+    if (a.xml.havebuildxpath && !VerifyXPathBuild(pp))
+    {
+        return;
+    }
+
     if (doc == NULL)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a, " !! Unable to load xml document");
@@ -639,6 +666,11 @@ static void VerifyAttributeSet(Promise *pp)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
              " !! The promised attribute set (%s) breaks its own promises", pp->promiser);
+        return;
+    }
+
+    if (a.xml.havebuildxpath && !VerifyXPathBuild(pp))
+    {
         return;
     }
 
@@ -694,6 +726,11 @@ static void VerifyTextDeletions(Promise *pp)
         return;
     }
 
+    if (a.xml.havebuildxpath && !VerifyXPathBuild(pp))
+    {
+        return;
+    }
+
     if ((doc = pp->edcontext->xmldoc) == NULL)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a, " !! Unable to load xml document");
@@ -746,6 +783,11 @@ static void VerifyTextSet(Promise *pp)
         return;
     }
 
+    if (a.xml.havebuildxpath && !VerifyXPathBuild(pp))
+    {
+        return;
+    }
+
     if ((doc = pp->edcontext->xmldoc) == NULL)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a, " !! Unable to load xml document");
@@ -795,6 +837,11 @@ static void VerifyTextInsertions(Promise *pp)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
              " !! The promised text insertion (%s) breaks its own promises", pp->promiser);
+        return;
+    }
+
+    if (a.xml.havebuildxpath && !VerifyXPathBuild(pp))
+    {
         return;
     }
 
@@ -945,7 +992,7 @@ static bool BuildXPathInFile(char rawxpath[CF_BUFSIZE], xmlDocPtr doc, Attribute
     if ((docnode = XPathHeadExtractNode(copyxpath, a, pp)) == NULL)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a, " !! Unable to extract node from xpath (%s) in server %s",
-             pp->promiser, pp->this_server);
+             rawxpath, pp->this_server);
         return false;
     }
 
@@ -956,13 +1003,13 @@ static bool BuildXPathInFile(char rawxpath[CF_BUFSIZE], xmlDocPtr doc, Attribute
     }
 
     //insert the content into new xml document, beginning from root node
-    CfOut(cf_inform, "", " -> Building xpath \"%s\" in %s", pp->promiser,
+    CfOut(cf_inform, "", " -> Building xpath \"%s\" in %s", rawxpath,
           pp->this_server);
     if (xmlDocSetRootElement(doc, docnode) != NULL)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised tree (%s) was not inserted successfully in %s",
-             pp->promiser, pp->this_server);
+             " !! The promised xpath (%s) was not built successfully in %s",
+             rawxpath, pp->this_server);
         return false;
     }
 
@@ -977,7 +1024,6 @@ static bool BuildXPathInFile(char rawxpath[CF_BUFSIZE], xmlDocPtr doc, Attribute
     }
 
     return true;
-
 }
 
 /***************************************************************************/
@@ -1011,8 +1057,8 @@ static bool BuildXPathInNode(char rawxpath[CF_BUFSIZE], xmlDocPtr doc, Attribute
         tail = head;
     }
 
-    //insert the new tree into selected region in xml document
-    CfOut(cf_inform, "", " -> Building xpath \"%s\" in %s", pp->promiser,
+    //insert the new tree into selected node in xml document
+    CfOut(cf_inform, "", " -> Building xpath \"%s\" in %s", rawxpath,
           pp->this_server);
     if (docnode != NULL)
     {
@@ -1538,14 +1584,31 @@ static bool InsertTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, A
 
 static bool SanityCheckXPathBuild(Attributes a, Promise *pp)
 {
-    if (a.xml.haveselectxpathregion)
+    char rawxpath[CF_BUFSIZE] = { 0 };
+
+    if (a.xml.havebuildxpath)
     {
-        CfOut(cf_error, "",
-              " !! XPath build does not require select_xpath_region to be specified");
+        strcpy(rawxpath, a.xml.build_xpath);
+    }
+
+    else
+    {
+        strcpy(rawxpath, pp->promiser);
+    }
+
+    if ((strcmp("build_xpath", pp->agentsubtype) == 0) && (a.xml.havebuildxpath))
+    {
+        CfOut(cf_error, "", " !! Attribute: build_xpath is not allowed within bundle: build_xpath");
         return false;
     }
 
-    if (!XPathVerifyBuildSyntax(pp->promiser, a, pp))
+    if (a.xml.haveselectxpathregion && !a.xml.havebuildxpath)
+    {
+        CfOut(cf_error, "", " !! XPath build does not require select_xpath_region to be specified");
+        return false;
+    }
+
+    if (!XPathVerifyBuildSyntax(rawxpath, a, pp))
     {
         return false;
     }
@@ -1576,13 +1639,13 @@ static bool SanityCheckTreeDeletions(Attributes a, Promise *pp)
 
 static bool SanityCheckTreeInsertions(Attributes a, Promise *pp)
 {
-    if ((a.xml.haveselectxpath && !xmlDocGetRootElement(pp->edcontext->xmldoc)))
+    if ((a.xml.haveselectxpath && !a.xml.havebuildxpath && !xmlDocGetRootElement(pp->edcontext->xmldoc)))
     {
         CfOut(cf_error, "",
               " !! Tree insertion into an empty file, using select_xpath, does not make sense");
         return false;
     }
-    else if ((!a.xml.haveselectxpath &&  xmlDocGetRootElement(pp->edcontext->xmldoc)))
+    else if ((!a.xml.haveselectxpath &&  (a.xml.havebuildxpath || xmlDocGetRootElement(pp->edcontext->xmldoc))))
     {
         CfOut(cf_error, "Tree insertion requires select_xpath to be specified, unless inserting into an empty file",
               " !! ");

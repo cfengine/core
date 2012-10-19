@@ -1445,6 +1445,7 @@ EditXml GetXmlConstraints(const Promise *pp)
 {
     EditXml x;
 
+    x.havebuildxpath = ((x.build_xpath = GetConstraintValue("build_xpath", pp, CF_SCALAR)) != NULL);
     x.haveselectxpath = ((x.select_xpath = GetConstraintValue("select_xpath", pp, CF_SCALAR)) != NULL);
     x.haveattributevalue = ((x.attribute_value = GetConstraintValue("attribute_value", pp, CF_SCALAR)) != NULL);
 

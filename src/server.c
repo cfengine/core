@@ -370,6 +370,12 @@ static void *HandleConnection(ServerConnectionState *conn)
 
     DisableSendDelays(conn->sd_reply);
 
+    struct timeval tv = {
+        .tv_sec = CONNTIMEOUT,
+    };
+
+    SetReceiveTimeout(conn->sd_reply, &tv);
+
     while (BusyWithConnection(conn))
     {
     }
@@ -2749,7 +2755,7 @@ static void CompareLocalHash(ServerConnectionState *conn, char *sendbuffer, char
 
 /* TODO - when safe change this proto string to sha2 */
 
-    sscanf(recvbuffer, "MD5 %255[^\n]", rfilename);
+    sscanf(recvbuffer, "MD5 %[^\n]", rfilename);
 
     sp = recvbuffer + strlen(recvbuffer) + CF_SMALL_OFFSET;
 

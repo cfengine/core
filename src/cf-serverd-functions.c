@@ -550,6 +550,12 @@ void CheckFileChanges(Policy **policy, GenericAgentConfig config, const ReportCo
 
             DeleteAuthList(VADMIT);
             DeleteAuthList(VDENY);
+
+            DeleteAuthList(VARADMIT);
+            DeleteAuthList(VARDENY);
+
+            DeleteAuthList(ROLES);
+
             //DeleteRlist(VINPUTLIST); This is just a pointer, cannot free it
 
             DeleteAllScope();
@@ -559,6 +565,11 @@ void CheckFileChanges(Policy **policy, GenericAgentConfig config, const ReportCo
 
             VADMIT = VADMITTOP = NULL;
             VDENY = VDENYTOP = NULL;
+
+            VARADMIT = VARADMITTOP = NULL;
+            VARDENY = VARDENYTOP = NULL;
+
+            ROLES = ROLESTOP = NULL;
 
             VNEGHEAP = NULL;
             SV.trustkeylist = NULL;

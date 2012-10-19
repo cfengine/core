@@ -35,6 +35,7 @@
 #include "reporting.h"
 #include "expand.h"
 #include "scope.h"
+#include "sysinfo.h"
 
 #include <math.h>
 
@@ -1129,6 +1130,16 @@ static void GatherPromisedMeasures(const Policy *policy, const ReportContext *re
     }
 
     DeleteAllScope();
+    NewScope("const");
+    NewScope("control_monitor");
+    NewScope("control_common");
+    NewScope("mon");
+    NewScope("sys");
+    GetNameInfo3();
+    GetInterfacesInfo(cf_monitor);
+    Get3Environment();
+    OSClasses();
+    BuiltinClasses();
 }
 
 /*********************************************************************/

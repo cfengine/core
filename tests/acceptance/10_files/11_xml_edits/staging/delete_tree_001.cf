@@ -95,7 +95,7 @@ bundle edit_xml test_delete(str)
 {
 delete_tree:
         "$(str)"
-        select_xpath_region => "/Potatoes/Potato[@name='OnePotato']";
+        select_xpath => "/Potatoes/Potato[@name='OnePotato']";
 }
 
 #######################################################

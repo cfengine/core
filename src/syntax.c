@@ -33,6 +33,8 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "expand.h"
+#include "levenshtein.c"
+#include <stdlib.h>
 
 #include <assert.h>
 
@@ -46,6 +48,7 @@ static void CheckParseIntRange(const char *lval, const char *s, const char *rang
 static void CheckParseOpts(const char *lv, const char *s, const char *range);
 static void CheckFnCallType(const char *lval, const char *s, enum cfdatatype dtype, const char *range);
 
+char * searchValue;
 
 /*********************************************************/
 
@@ -318,8 +321,25 @@ int LvalWantsBody(char *stype, char *lval)
 }
 
 /******************************************************************************************/
+void CheckSelection(char *type, char *name, char *lval, Rval rval) {
+    CheckSelectionP(type, name, lval, rval, NULL);
+}
 
-void CheckSelection(char *type, char *name, char *lval, Rval rval)
+struct worddist {
+    char    word[CF_BUFSIZE];
+    int     dist;
+};
+
+int compar ( const void * va, const void * vb ) {
+        struct worddist * a = (struct worddist *) va;
+        struct worddist * b = (struct worddist *) vb;
+        if(a->dist == NULL) a->dist = levenshtein((char *)a->word, strlen((char *)a->word), searchValue, strlen(searchValue));
+        if(b->dist == NULL) b->dist = levenshtein((char *)b->word, strlen((char *)b->word), searchValue, strlen(searchValue));
+        if (a->dist < b->dist) return -1;
+        return 1;
+    }
+
+void CheckSelectionP(char *type, char *name, char *lval, Rval rval, int *pos)
 {
     int lmatch = false;
     int i, j, k, l;
@@ -430,7 +450,31 @@ void CheckSelection(char *type, char *name, char *lval, Rval rval)
 
     if (!lmatch)
     {
-        snprintf(output, CF_BUFSIZE, "Constraint lvalue \"%s\" is not allowed in \'%s\' constraint body", lval, type);
+        if(pos != NULL) *pos = 0;
+        snprintf(output, CF_BUFSIZE, "Promise contraint \"%s\" is not allowed in body of type: \'%s\'", lval, type);
+        
+        
+        
+        int matching_list_size = 30;
+        int current_matching_list_i = 0;
+
+        struct worddist matching_list[matching_list_size];
+        
+        for (i = 0; CF_ALL_BODIES[i].subtype != NULL; i++)
+            if(strcmp(CF_ALL_BODIES[i].subtype, name)==0)
+                for (l = 0; CF_ALL_BODIES[i].bs[l].lval != NULL; l++)
+                    if (current_matching_list_i < matching_list_size)
+                        strcpy(matching_list[current_matching_list_i++].word, CF_ALL_BODIES[i].bs[l].lval);
+        
+        if (current_matching_list_i > 0) {
+            searchValue = lval;
+            qsort(matching_list, current_matching_list_i, sizeof(struct worddist), compar);
+            sprintf(output + strlen(output), "\n Possible matches: \n");
+            if (current_matching_list_i > 5) current_matching_list_i = 5;
+            for(i = 0; i < current_matching_list_i; i++) {
+                sprintf(output + strlen(output), "* %s\n", matching_list[i].word);
+            }
+        }
         ReportError(output);
     }
 }

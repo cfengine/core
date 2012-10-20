@@ -237,7 +237,8 @@ selection:             id                         /* BODY ONLY */
                        ASSIGN
                        rval
                        {
-                           CheckSelection(P.blocktype,P.blockid,P.lval,P.rval);
+                           CheckSelectionP(P.blocktype,P.blockid,P.lval,P.rval, &P.line_pos);
+                        
 
                            if (!INSTALL_SKIP)
                            {
@@ -677,58 +678,4 @@ gaitem:                IDSYNTAX
 
 /*****************************************************************/
 
-void yyerror(const char *s)
-{
-    char *sp = yytext;
-
-    if (sp == NULL)
-    {
-        if (USE_GCC_BRIEF_FORMAT)
-        {
-            fprintf(stderr, "%s:%d:%d: error: %s\n", P.filename, P.line_no, P.line_pos, s);
-        }
-        else
-        {
-            fprintf(stderr, "%s> %s:%d,%d: %s, near token \'NULL\'\n", VPREFIX, P.filename, P.line_no, P.line_pos, s);
-        }
-    }
-    else if (*sp == '\"' && strlen(sp) > 1)
-    {
-        sp++;
-    }
-
-    if (USE_GCC_BRIEF_FORMAT)
-    {
-        fprintf(stderr, "%s:%d:%d: error: %s, near token \'%.20s\'\n", P.filename, P.line_no, P.line_pos, s, sp);
-    }
-    else
-    {
-        fprintf(stderr, "%s> %s:%d,%d: %s, near token \'%.20s\'\n", VPREFIX, P.filename, P.line_no, P.line_pos, s, sp);
-    }
-
-    ERRORCOUNT++;
-
-    if (ERRORCOUNT > 10)
-    {
-        FatalError("Too many errors");
-    }
-}
-
-static void fatal_yyerror(const char *s)
-{
-    char *sp = yytext;
-    /* Skip quotation mark */
-    if (sp && *sp == '\"' && sp[1])
-    {
-        sp++;
-    }
-
-    FatalError("%s: %d,%d: Fatal error during parsing: %s, near token \'%.20s\'\n", P.filename, P.line_no, P.line_pos, s, sp ? sp : "NULL");
-}
-
-static void DebugBanner(const char *s)
-{
-    CfDebug("----------------------------------------------------------------\n");
-    CfDebug("  %s                                                            \n", s);
-    CfDebug("----------------------------------------------------------------\n");
-}
+#include "parseerror.c"

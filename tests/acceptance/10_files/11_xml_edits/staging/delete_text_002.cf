@@ -22,11 +22,11 @@ vars:
 
         "actual" string =>
 "<?xml version=\"1.0\"?>
-<Server><Service><Engine><OneFish type=\"clownfish\">Nemo<TwoFish><RedFish><BlueFish/></RedFish></TwoFish></OneFish></Engine></Service></Server>";
+<Server><Service><Engine><OneFish type=\"clownfish\">Nemo</OneFish></Engine></Service></Server>";
 
         "expected" string =>
 "<?xml version=\"1.0\"?>
-<Server><Service><Engine><OneFish type=\"clownfish\"></OneFish></Engine></Service></Server>";
+<Server><Service><Engine><OneFish type=\"clownfish\"><TwoFish><RedFish><BlueFish/></RedFish></TwoFish></OneFish></Engine></Service></Server>";
 
 files:
         "$(G.testfile).$(states)"
@@ -63,7 +63,7 @@ bundle edit_xml test_delete(str)
 delete_text:
         "$(str)"
         build_xpath => "/Server/Service/Engine/OneFish[@type=\'clownfish\']/TwoFish/RedFish/BlueFish",
-        select_xpath_region => "/Server/Service/Engine/OneFish[@type=\'clownfish\']";
+        select_xpath => "/Server/Service/Engine/OneFish[@type=\'clownfish\']";
 }
 
 #######################################################

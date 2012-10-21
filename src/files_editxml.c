@@ -500,7 +500,7 @@ static void VerifyTreeDeletions(Promise *pp)
         return;
     }
 
-    if (!XmlSelectNode(a.xml.select_xpath_region, doc, &docnode, a, pp))
+    if (!XmlSelectNode(a.xml.select_xpath, doc, &docnode, a, pp))
     {
         return;
     }
@@ -558,7 +558,7 @@ static void VerifyTreeInsertions(Promise *pp)
     }
 
     //if file is not empty: select an edit node, for tree insertion
-    if (a.xml.haveselectxpathregion && !XmlSelectNode(a.xml.select_xpath_region, doc, &docnode, a, pp))
+    if (a.xml.haveselectxpath && !XmlSelectNode(a.xml.select_xpath, doc, &docnode, a, pp))
     {
         return;
     }
@@ -572,7 +572,7 @@ static void VerifyTreeInsertions(Promise *pp)
     }
 
     //insert tree into empty file or selected node
-    if (!a.xml.haveselectxpathregion && !xmlDocGetRootElement(doc))
+    if (!a.xml.haveselectxpath && !xmlDocGetRootElement(doc))
     {
         if (InsertTreeInFile(pp->promiser, doc, docnode, a, pp))
         {
@@ -623,7 +623,7 @@ static void VerifyAttributeDeletions(Promise *pp)
         return;
     }
 
-    if (!XmlSelectNode(a.xml.select_xpath_region, doc, &docnode, a, pp))
+    if (!XmlSelectNode(a.xml.select_xpath, doc, &docnode, a, pp))
     {
         return;
     }
@@ -680,7 +680,7 @@ static void VerifyAttributeSet(Promise *pp)
         return;
     }
 
-    if (!XmlSelectNode(a.xml.select_xpath_region, doc, &docnode, a, pp))
+    if (!XmlSelectNode(a.xml.select_xpath, doc, &docnode, a, pp))
     {
         return;
     }
@@ -737,7 +737,7 @@ static void VerifyTextDeletions(Promise *pp)
         return;
     }
 
-    if (!XmlSelectNode(a.xml.select_xpath_region, doc, &docnode, a, pp))
+    if (!XmlSelectNode(a.xml.select_xpath, doc, &docnode, a, pp))
     {
         return;
     }
@@ -794,7 +794,7 @@ static void VerifyTextSet(Promise *pp)
         return;
     }
 
-    if (!XmlSelectNode(a.xml.select_xpath_region, doc, &docnode, a, pp))
+    if (!XmlSelectNode(a.xml.select_xpath, doc, &docnode, a, pp))
     {
         return;
     }
@@ -851,7 +851,7 @@ static void VerifyTextInsertions(Promise *pp)
         return;
     }
 
-    if (!XmlSelectNode(a.xml.select_xpath_region, doc, &docnode, a, pp))
+    if (!XmlSelectNode(a.xml.select_xpath, doc, &docnode, a, pp))
     {
         return;
     }
@@ -904,7 +904,7 @@ static bool XmlSelectNode(char *rawxpath, xmlDocPtr doc, xmlNodePtr *docnode, At
     if (!XPathVerifyConvergence(rawxpath, a, pp))
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! select_xpath_region expression (%s) is not convergent", a.xml.select_xpath_region);
+             " !! select_xpath expression (%s) is not convergent", a.xml.select_xpath);
         return false;
     }
 
@@ -937,7 +937,7 @@ static bool XmlSelectNode(char *rawxpath, xmlDocPtr doc, xmlNodePtr *docnode, At
     if (size > 1)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! Current select_xpath_region expression \"%s\" returns (%d) edit nodes, please modify to select a unique edit node",
+             " !! Current select_xpath expression \"%s\" returns (%d) edit nodes, please modify to select a unique edit node",
              xpathExpr, size);
         valid = false;
     }
@@ -1035,7 +1035,7 @@ static bool BuildXPathInNode(char rawxpath[CF_BUFSIZE], xmlDocPtr doc, Attribute
 
     strcpy(copyxpath, rawxpath);
 
-    //build xpath from tail while locating insertion region
+    //build xpath from tail while locating insertion node
     while ((strlen(copyxpath) > 0) && (!XmlSelectNode(copyxpath, doc, &docnode, a, pp)))
     {
         if (XPathHasTail (copyxpath, a, pp))
@@ -1389,6 +1389,7 @@ static bool SetAttributeInNode(char *rawname, char *rawvalue, xmlDocPtr doc, xml
 
 static bool DeleteTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
 {
+    xmlNodePtr elemnode, copynode;
     xmlChar *text = NULL;
 
     if ((text = CharToXmlChar(rawtext)) == NULL)
@@ -1419,7 +1420,24 @@ static bool DeleteTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, A
     CfOut(cf_inform, "", " -> Deleting text \"%s\" in %s", pp->promiser,
           pp->this_server);
 
-    xmlNodeSetContent(docnode, "");
+    //node contains text
+    if (xmlNodeIsText(docnode->children))
+    {
+        xmlNodeSetContent(docnode->children, "");
+    }
+
+    //node does not contain text
+    else
+    {
+        //remove and set aside the elements in the node
+        elemnode = xmlFirstElementChild(docnode);
+        copynode = xmlDocCopyNodeList(doc, elemnode);
+
+        xmlNodeSetContent(docnode, "");
+
+        //re-insert elements after the inserted text
+        xmlAddChildList(docnode, copynode);
+    }
 
     //verify text no longer exists inside docnode
     if (XmlVerifyTextInNodeSubstring(text, docnode, a, pp) != NULL)
@@ -1437,6 +1455,7 @@ static bool DeleteTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, A
 
 static bool SetTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
 {
+    xmlNodePtr elemnode, copynode;
     xmlChar *text = NULL;
 
     if ((text = CharToXmlChar(rawtext)) == NULL)
@@ -1466,7 +1485,24 @@ static bool SetTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attr
     CfOut(cf_inform, "", " -> Setting text \"%s\" in %s", pp->promiser,
           pp->this_server);
 
-    xmlNodeSetContent(docnode, text);
+    //node already contains text
+    if (xmlNodeIsText(docnode->children))
+    {
+        xmlNodeSetContent(docnode->children, text);
+    }
+
+    //node does not contain text
+    else
+    {
+        //remove and set aside the elements in the node
+        elemnode = xmlFirstElementChild(docnode);
+        copynode = xmlDocCopyNodeList(doc, elemnode);
+
+        xmlNodeSetContent(docnode, text);
+
+        //re-insert elements after the inserted text
+        xmlAddChildList(docnode, copynode);
+    }
 
     //verify text was inserted
     if (XmlVerifyTextInNodeExact(text, docnode, a, pp) == NULL)
@@ -1484,6 +1520,7 @@ static bool SetTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attr
 
 static bool InsertTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
 {
+    xmlNodePtr elemnode, copynode;
     xmlChar *text = NULL;
 
     if ((text = CharToXmlChar(rawtext)) == NULL)
@@ -1513,7 +1550,25 @@ static bool InsertTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, A
     CfOut(cf_inform, "", " -> Inserting text \"%s\" in %s", pp->promiser,
           pp->this_server);
 
-    xmlNodeAddContent(docnode, text);
+    //node already contains text
+    if (xmlNodeIsText(docnode->children))
+    {
+        xmlNodeAddContent(docnode->children, text);
+    }
+
+    //node does not contain text
+    else
+    {
+        //remove and set aside the elements in the node
+        elemnode = xmlFirstElementChild(docnode);
+        copynode = xmlDocCopyNodeList(doc, elemnode);
+
+        xmlNodeSetContent(docnode, "");
+        xmlNodeAddContent(docnode, text);
+
+        //re-insert elements after the inserted text
+        xmlAddChildList(docnode, copynode);
+    }
 
     //verify text was inserted
     if (XmlVerifyTextInNodeSubstring(text, docnode, a, pp) == NULL)
@@ -1549,9 +1604,9 @@ static bool SanityCheckXPathBuild(Attributes a, Promise *pp)
         return false;
     }
 
-    if (a.xml.haveselectxpathregion && !a.xml.havebuildxpath)
+    if (a.xml.haveselectxpath && !a.xml.havebuildxpath)
     {
-        CfOut(cf_error, "", " !! XPath build does not require select_xpath_region to be specified");
+        CfOut(cf_error, "", " !! XPath build does not require select_xpath to be specified");
         return false;
     }
 
@@ -1567,14 +1622,14 @@ static bool SanityCheckXPathBuild(Attributes a, Promise *pp)
 
 static bool SanityCheckTreeDeletions(Attributes a, Promise *pp)
 {
-    if (!a.xml.haveselectxpathregion)
+    if (!a.xml.haveselectxpath)
     {
         CfOut(cf_error, "",
-              " !! Tree deletion requires select_xpath_region to be specified");
+              " !! Tree deletion requires select_xpath to be specified");
         return false;
     }
 
-    if (!XPathVerifyConvergence(a.xml.select_xpath_region, a, pp))
+    if (!XPathVerifyConvergence(a.xml.select_xpath, a, pp))
     {
         return false;
     }
@@ -1586,21 +1641,21 @@ static bool SanityCheckTreeDeletions(Attributes a, Promise *pp)
 
 static bool SanityCheckTreeInsertions(Attributes a, Promise *pp)
 {
-    if ((a.xml.haveselectxpathregion && !a.xml.havebuildxpath && !xmlDocGetRootElement(pp->edcontext->xmldoc)))
+    if ((a.xml.haveselectxpath && !a.xml.havebuildxpath && !xmlDocGetRootElement(pp->edcontext->xmldoc)))
     {
         CfOut(cf_error, "",
-              " !! Tree insertion into an empty file, using select_xpath_region, does not make sense");
+              " !! Tree insertion into an empty file, using select_xpath, does not make sense");
         return false;
     }
 
-    else if ((!a.xml.haveselectxpathregion &&  (a.xml.havebuildxpath || xmlDocGetRootElement(pp->edcontext->xmldoc))))
+    else if ((!a.xml.haveselectxpath &&  (a.xml.havebuildxpath || xmlDocGetRootElement(pp->edcontext->xmldoc))))
     {
-        CfOut(cf_error, "Tree insertion requires select_xpath_region to be specified, unless inserting into an empty file",
+        CfOut(cf_error, "Tree insertion requires select_xpath to be specified, unless inserting into an empty file",
               " !! ");
         return false;
     }
 
-    if (a.xml.haveselectxpathregion && !XPathVerifyConvergence(a.xml.select_xpath_region, a, pp))
+    if (a.xml.haveselectxpath && !XPathVerifyConvergence(a.xml.select_xpath, a, pp))
     {
         return false;
     }
@@ -1612,14 +1667,14 @@ static bool SanityCheckTreeInsertions(Attributes a, Promise *pp)
 
 static bool SanityCheckAttributeDeletions(Attributes a, Promise *pp)
 {
-    if (!(a.xml.haveselectxpathregion))
+    if (!(a.xml.haveselectxpath))
     {
         CfOut(cf_error, "",
-              " !! Attribute deletion requires select_xpath_region to be specified");
+              " !! Attribute deletion requires select_xpath to be specified");
         return false;
     }
 
-    if (!XPathVerifyConvergence(a.xml.select_xpath_region, a, pp))
+    if (!XPathVerifyConvergence(a.xml.select_xpath, a, pp))
     {
         return false;
     }
@@ -1631,14 +1686,14 @@ static bool SanityCheckAttributeDeletions(Attributes a, Promise *pp)
 
 static bool SanityCheckAttributeSet(Attributes a, Promise *pp)
 {
-    if (!(a.xml.haveselectxpathregion))
+    if (!(a.xml.haveselectxpath))
     {
         CfOut(cf_error, "",
-              " !! Attribute insertion requires select_xpath_region to be specified");
+              " !! Attribute insertion requires select_xpath to be specified");
         return false;
     }
 
-    if (!XPathVerifyConvergence(a.xml.select_xpath_region, a, pp))
+    if (!XPathVerifyConvergence(a.xml.select_xpath, a, pp))
     {
         return false;
     }
@@ -1650,14 +1705,14 @@ static bool SanityCheckAttributeSet(Attributes a, Promise *pp)
 
 static bool SanityCheckTextDeletions(Attributes a, Promise *pp)
 {
-    if (!(a.xml.haveselectxpathregion))
+    if (!(a.xml.haveselectxpath))
     {
         CfOut(cf_error, "",
-              " !! Tree insertion requires select_xpath_region to be specified");
+              " !! Tree insertion requires select_xpath to be specified");
         return false;
     }
 
-    if (!XPathVerifyConvergence(a.xml.select_xpath_region, a, pp))
+    if (!XPathVerifyConvergence(a.xml.select_xpath, a, pp))
     {
         return false;
     }
@@ -1669,14 +1724,14 @@ static bool SanityCheckTextDeletions(Attributes a, Promise *pp)
 
 static bool SanityCheckTextSet(Attributes a, Promise *pp)
 {
-    if (!(a.xml.haveselectxpathregion))
+    if (!(a.xml.haveselectxpath))
     {
         CfOut(cf_error, "",
-              " !! Tree insertion requires select_xpath_region to be specified");
+              " !! Tree insertion requires select_xpath to be specified");
         return false;
     }
 
-    if (!XPathVerifyConvergence(a.xml.select_xpath_region, a, pp))
+    if (!XPathVerifyConvergence(a.xml.select_xpath, a, pp))
     {
         return false;
     }
@@ -1688,14 +1743,14 @@ static bool SanityCheckTextSet(Attributes a, Promise *pp)
 
 static bool SanityCheckTextInsertions(Attributes a, Promise *pp)
 {
-    if (!(a.xml.haveselectxpathregion))
+    if (!(a.xml.haveselectxpath))
     {
         CfOut(cf_error, "",
-              " !! Tree insertion requires select_xpath_region to be specified");
+              " !! Tree insertion requires select_xpath to be specified");
         return false;
     }
 
-    if (!XPathVerifyConvergence(a.xml.select_xpath_region, a, pp))
+    if (!XPathVerifyConvergence(a.xml.select_xpath, a, pp))
     {
         return false;
     }

@@ -78,7 +78,7 @@ bundle edit_xml test_create(str)
 insert_tree:
         "$(str)"
         build_xpath => "/Server/Service/Engine/OneFish/TwoFish/RedFish/BlueFish",
-        select_xpath_region => "/Server/Service/Engine";
+        select_xpath => "/Server/Service/Engine";
 }
 
 #######################################################

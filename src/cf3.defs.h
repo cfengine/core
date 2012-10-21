@@ -1955,10 +1955,10 @@ typedef struct
 typedef struct
 {
     char *build_xpath;
-    char *select_xpath_region;
+    char *select_xpath;
     char *attribute_value;
     int havebuildxpath;
-    int haveselectxpathregion;
+    int haveselectxpath;
     int haveattributevalue;
 } EditXml;
 

@@ -4,9 +4,9 @@
 bundle edit_xml example
   {
   delete_text:
-    "text content to match, as a substring, of text to be deleted from edit region"
+    "text content to match, as a substring, of text to be deleted from selected node"
 
-    select_xpath_region => "/Server/Service/Engine/Host/Alias";
+    select_xpath => "/Server/Service/Engine/Host/Alias";
   }
 
 @end verbatim

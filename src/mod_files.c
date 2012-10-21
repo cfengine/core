@@ -315,7 +315,7 @@ static const BodySyntax CF_FILES_BODIES[] =
 const BodySyntax CF_COMMON_XMLBODIES[] =
 {
     {"build_xpath", cf_str, "", "Build an XPath within the XML file"},
-    {"select_xpath_region", cf_str, "", "Select the XPath region in the XML file to edit"},
+    {"select_xpath", cf_str, "", "Select the XPath region in the XML file to edit"},
     {NULL, cf_notype, NULL, NULL}
 };
 

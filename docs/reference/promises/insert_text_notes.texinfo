@@ -1,4 +1,4 @@
 
-Note that typically, only a single value string, within a single edit
-region, is inserted in each @code{insert_text} promise (you may of course
+Note that typically, only a single value string, within a single selected
+node, is inserted in each @code{insert_text} promise (you may of course
 have multiple promises that each insert a value string).

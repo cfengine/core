@@ -1,8 +1,8 @@
 
 This promise is part of the xml-editing model. It assures that a
 balanced xml tree, containing the matching subtree, will be present
-in the specified region within the xml file. If the subtree is not
+in the specified node within the xml file. If the subtree is not
 found, the default promise is to insert the tree into the specified
-region. The specified region is determined by body-attributes. The
+node. The specified node is determined by body-attributes. The
 promise object referred to is a literal string representation of a
 balanced xml tree.

@@ -22,11 +22,11 @@ vars:
 
         "actual" string =>
 "<?xml version=\"1.0\"?>
-<Server><Service><Engine></Engine></Service></Server>";
+<Server><Service><Engine><OneFish><TwoFish type=\"clownfish\">Marlin</TwoFish></OneFish></Engine></Service></Server>";
 
         "expected" string =>
 "<?xml version=\"1.0\"?>
-<Server><Service><Engine><OneFish type=\"clownfish\"><TwoFish><RedFish><BlueFish/></RedFish></TwoFish></OneFish></Engine></Service></Server>";
+<Server><Service><Engine><OneFish><TwoFish type=\"clownfish\">MarlinNemo<RedFish><BlueFish/></RedFish></TwoFish></OneFish></Engine></Service></Server>";
 
 files:
         "$(G.testfile).$(states)"
@@ -50,21 +50,20 @@ body edit_defaults init_empty
 bundle agent test
 {
 vars:
-      "attribute_name" string => "type";
+      "text" string => "Nemo";
 
 files:
         "$(G.testfile).actual"
             create => "true",
-            edit_xml => test_insert("$(test.attribute_name)");
+            edit_xml => test_insert("$(test.text)");
 }
 
 bundle edit_xml test_insert(str)
 {
-set_attribute:
+insert_text:
         "$(str)"
-        build_xpath => "/Server/Service/Engine/OneFish/TwoFish/RedFish/BlueFish",
-        select_xpath_region => "/Server/Service/Engine/OneFish",
-        attribute_value => "clownfish";
+        build_xpath => "/Server/Service/Engine/OneFish/TwoFish[@type=\'clownfish\']/RedFish/BlueFish",
+        select_xpath => "/Server/Service/Engine/OneFish/TwoFish[@type=\'clownfish\']";
 }
 
 #######################################################

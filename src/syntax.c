@@ -451,30 +451,31 @@ void CheckSelectionP(char *type, char *name, char *lval, Rval rval, int *pos)
     if (!lmatch)
     {
         if(pos != NULL) *pos = 0;
-        snprintf(output, CF_BUFSIZE, "Promise contraint \"%s\" is not allowed in body of type: \'%s\'", lval, type);
+        snprintf(output, CF_BUFSIZE, "Promise constraint \"%s\" is not allowed in body of type: \'%s\'", lval, type);
         
-        
-        
-        int matching_list_size = 30;
-        int current_matching_list_i = 0;
-
-        struct worddist matching_list[matching_list_size];
-        
-        for (i = 0; CF_ALL_BODIES[i].subtype != NULL; i++)
-            if(strcmp(CF_ALL_BODIES[i].subtype, name)==0)
-                for (l = 0; CF_ALL_BODIES[i].bs[l].lval != NULL; l++)
-                    if (current_matching_list_i < matching_list_size)
-                        strcpy(matching_list[current_matching_list_i++].word, CF_ALL_BODIES[i].bs[l].lval);
-        
-        if (current_matching_list_i > 0) {
-            searchValue = lval;
-            qsort(matching_list, current_matching_list_i, sizeof(struct worddist), compar);
-            sprintf(output + strlen(output), "\n Possible matches: \n");
-            if (current_matching_list_i > 5) current_matching_list_i = 5;
-            for(i = 0; i < current_matching_list_i; i++) {
-                sprintf(output + strlen(output), "* %s\n", matching_list[i].word);
+        if (!USE_GCC_BRIEF_FORMAT) {
+            // Look for spelling errors and print them
+            int matching_list_size = 30;
+            int current_matching_list_i = 0;
+            struct worddist matching_list[matching_list_size];
+            
+            for (i = 0; CF_ALL_BODIES[i].subtype != NULL; i++)
+                if(strcmp(CF_ALL_BODIES[i].subtype, name)==0)
+                    for (l = 0; CF_ALL_BODIES[i].bs[l].lval != NULL; l++)
+                        if (current_matching_list_i < matching_list_size)
+                            strcpy(matching_list[current_matching_list_i++].word, CF_ALL_BODIES[i].bs[l].lval);
+            
+            if (current_matching_list_i > 0) {
+                searchValue = lval;
+                qsort(matching_list, current_matching_list_i, sizeof(struct worddist), compar);
+                sprintf(output + strlen(output), "\n Possible matches: \n");
+                if (current_matching_list_i > 5) current_matching_list_i = 5;
+                for(i = 0; i < current_matching_list_i; i++) {
+                    sprintf(output + strlen(output), "* %s\n", matching_list[i].word);
+                }
             }
         }
+        
         ReportError(output);
     }
 }

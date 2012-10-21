@@ -1,4 +1,4 @@
-/* Better error parsing
+/* Better error par sing
 
 Some reading material
 http://www.cs.nmsu.edu/~pfeiffer/classes/370/notes/yaccerrorhandling/index.php?currentsem=s10
@@ -21,7 +21,7 @@ P.line_pos      <- The column in the line
 void yyerror(const char *s)
 {
     char *sp = yytext;
-    
+    bool notoken = (sp == NULL);
     
     if (sp && *sp == '\"' && sp[1])
     {
@@ -32,8 +32,14 @@ void yyerror(const char *s)
     
     int NEWLINE_CHAR = 10;
     
-
-    if (ERRORCOUNT == 0) {
+    if (USE_GCC_BRIEF_FORMAT)
+    {
+        if (notoken)
+            fprintf(stderr, "%s:%d:%d: error: %s\n", P.filename, P.line_no, P.line_pos, s);
+        else
+            fprintf(stderr, "%s:%d:%d: error: %s, near token \'%.20s\'\n", P.filename, P.line_no, P.line_pos, s, sp);
+    }
+    else if (ERRORCOUNT == 0) {
         fprintf(stderr, "\n## Errors ##\n");
         fprintf(stderr, "\n In file: %s \n Line #%d Col #%d \n %s \n", P.filename, P.line_no, P.line_pos, s);
         
@@ -58,11 +64,11 @@ void yyerror(const char *s)
                 fprintf(stderr, "%c", current_char);
         }
         fclose(errorfile);
-        fprintf(stderr, "\nOnly showing first error. See more with -g.\n");
     }
 
     ERRORCOUNT++;
 
+    if (ERRORCOUNT == 2) fprintf(stderr, "\nOnly showing first error. See more with -g.\n");
     if (ERRORCOUNT > 10)
     {
         FatalError("Stopped parsing after 10 errors");

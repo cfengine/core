@@ -36,12 +36,12 @@ typedef struct CsvWriter_ CsvWriter;
 
 CsvWriter *CsvWriterOpen(Writer *w);
 
-void CsvWriterField(CsvWriter * csvw, const char *str);
-void CsvWriterFieldF(CsvWriter * csvw, const char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);
+void CsvWriterField(CsvWriter *csvw, const char *str);
+void CsvWriterFieldF(CsvWriter *csvw, const char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);
 
-void CsvWriterNewRecord(CsvWriter * csvw);
+void CsvWriterNewRecord(CsvWriter *csvw);
 
 /* Does not close underlying Writer, but flushes all pending data */
-void CsvWriterClose(CsvWriter * csvw);
+void CsvWriterClose(CsvWriter *csvw);
 
 #endif

@@ -47,7 +47,7 @@ static int ExecutePatch(PackageManager *schedule, enum package_actions action);
 static int PackageSanityCheck(Attributes a, Promise *pp);
 static int VerifyInstalledPackages(PackageManager **alllists, const char *default_arch, Attributes a, Promise *pp);
 static bool PackageListInstalledFromCommand(PackageItem **installed_list, const char *default_arch, Attributes a, Promise *pp);
-VersionCmpResult ComparePackages(const char *n, const char *v, const char *arch, PackageItem * pi, Attributes a, Promise *pp);
+static VersionCmpResult ComparePackages(const char *n, const char *v, const char *arch, PackageItem * pi, Attributes a, Promise *pp);
 static void VerifyPromisedPackage(Attributes a, Promise *pp);
 static void DeletePackageItems(PackageItem * pi);
 static VersionCmpResult PackageMatch(const char *n, const char *v, const char *a, Attributes attr, Promise *pp);
@@ -2591,7 +2591,7 @@ static VersionCmpResult ComparePackageVersionsCmd(const char *v1, const char *v2
     }
 }
 
-VersionCmpResult ComparePackages(const char *n, const char *v, const char *arch, PackageItem * pi, Attributes a, Promise *pp)
+static VersionCmpResult ComparePackages(const char *n, const char *v, const char *arch, PackageItem * pi, Attributes a, Promise *pp)
 {
     CfDebug("Compare (%s,%s,%s) and (%s,%s,%s)\n", n, v, arch, pi->name, pi->version, pi->arch);
 

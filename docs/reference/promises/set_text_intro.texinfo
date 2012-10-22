@@ -1,7 +1,7 @@
 This promise is part of the xml-editing model. It assures
 that a matching value string will be present in the specified
-region within the xml file. If the existing value string does
+node within the xml file. If the existing value string does
 not exactly match, the default promise is to replace the
-existing value string, within the specified region. The
-specified region is determined by body-attributes. The promise
+existing value string, within the specified node. The
+specified node is determined by body-attributes. The promise
 object referred to is a literal string of text.

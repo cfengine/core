@@ -4,6 +4,6 @@ bundle edit_xml example
   delete_attribute:
     "name"
 
-    select_xpath_region => "/Server/Service/Engine/Host";
+    select_xpath => "/Server/Service/Engine/Host";
   }
 @end verbatim

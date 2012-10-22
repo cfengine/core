@@ -53,9 +53,7 @@
 
 extern AgentConnection *COMS;
 
-
-static void DeleteDirectoryTree(char *path, Promise *pp, const ReportContext *report_context);
-
+static bool DeleteDirectoryTree(const char *path);
 
 /*****************************************************************************/
 
@@ -537,7 +535,7 @@ int MakeParentDirectory(char *parentandchild, int force, const ReportContext *re
                 {
                     if (S_ISDIR(sbuf.st_mode))
                     {
-                        DeleteDirectoryTree(currentpath, NULL, report_context);
+                        DeleteDirectoryTree(currentpath);
                     }
                     else
                     {
@@ -810,63 +808,64 @@ void RotateFiles(char *name, int number)
 /* Level                                                           */
 /*******************************************************************/
 
-static void DeleteDirectoryTree(char *path, Promise *pp, const ReportContext *report_context)
+static bool DeleteDirectoryTreeInternal(const char *basepath, const char *path)
 {
-    Promise promise = { 0 };
-    char s[CF_MAXVARSIZE];
-    time_t now = time(NULL);
+    Dir *dirh = OpenDirLocal(path);
+    const struct dirent *dirp;
+    bool failed = false;
 
-// Check that tree is a directory
-
-    promise.promiser = path;
-    promise.promisee = (Rval) {NULL, CF_NOPROMISEE};
-    promise.classes = "any";
-
-    if (pp != NULL)
+    if (dirh == NULL)
     {
-        promise.bundletype = pp->bundletype;
-        promise.offset.line = pp->offset.line;
-        promise.bundle = xstrdup(pp->bundle);
-        promise.ref = pp->ref;
-    }
-    else
-    {
-        promise.bundletype = "agent";
-        promise.offset.line = 0;
-        promise.bundle = "embedded";
-        promise.ref = "Embedded deletion of direction";
+        CfOut(cf_inform, "opendir",
+              "Unable to open directory %s during purge of directory tree %s",
+              path, basepath);
+        return false;
     }
 
-    promise.audit = AUDITPTR;
-    promise.agentsubtype = "files";
-    promise.done = false;
-    promise.next = NULL;
-    promise.donep = false;
+    for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
+    {
+        if (!strcmp(dirp->d_name, ".") || !strcmp(dirp->d_name, ".."))
+        {
+            continue;
+        }
 
-    promise.conlist = NULL;
+        char subpath[CF_BUFSIZE];
+        snprintf(subpath, CF_BUFSIZE, "%s" FILE_SEPARATOR_STR "%s", path, dirp->d_name);
 
-    snprintf(s, CF_MAXVARSIZE, "0,%ld", (long) now);
+        struct stat lsb;
+        if (lstat(subpath, &lsb) == -1)
+        {
+            CfOut(cf_verbose, "lstat",
+                  "Unable to stat file %s during purge of directory tree %s", path, basepath);
+            failed = true;
+        }
+        else
+        {
+            if (S_ISDIR(lsb.st_mode))
+            {
+                if (!DeleteDirectoryTreeInternal(basepath, subpath))
+                {
+                    failed = true;
+                }
+            }
 
-    ConstraintAppendToPromise(&promise, "action", (Rval) {"true", CF_SCALAR}, "any", false);
-    ConstraintAppendToPromise(&promise, "ifelapsed", (Rval) {"0", CF_SCALAR}, "any", false);
-    ConstraintAppendToPromise(&promise, "delete", (Rval) {"true", CF_SCALAR}, "any", false);
-    ConstraintAppendToPromise(&promise, "dirlinks", (Rval) {"delete", CF_SCALAR}, "any", false);
-    ConstraintAppendToPromise(&promise, "rmdirs", (Rval) {"true", CF_SCALAR}, "any", false);
-    ConstraintAppendToPromise(&promise, "depth_search", (Rval) {"true", CF_SCALAR}, "any", false);
-    ConstraintAppendToPromise(&promise, "depth", (Rval) {"inf", CF_SCALAR}, "any", false);
-    ConstraintAppendToPromise(&promise, "file_select", (Rval) {"true", CF_SCALAR}, "any", false);
-    ConstraintAppendToPromise(&promise, "mtime", (Rval) {s, CF_SCALAR}, "any", false);
-    ConstraintAppendToPromise(&promise, "file_result", (Rval) {"mtime", CF_SCALAR}, "any", false);
+            if (unlink(subpath) == 1)
+            {
+                CfOut(cf_verbose, "unlink",
+                      "Unable to remove file %s during purge of directory tree %s",
+                      subpath, basepath);
+                failed = true;
+            }
+        }
+    }
 
-    struct stat sb;
-    lstat(path, &sb);
+    CloseDir(dirh);
+    return failed;
+}
 
-    Attributes a = GetFilesAttributes(&promise);
-    SetSearchDevice(&sb, &promise);
-
-    DepthSearch(promise.promiser, &sb, 0, a, &promise, report_context);
-
-    rmdir(path);
+static bool DeleteDirectoryTree(const char *path)
+{
+    return DeleteDirectoryTreeInternal(path, path);
 }
 
 #ifndef MINGW

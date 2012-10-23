@@ -878,7 +878,7 @@ static bool InsertTreeInFile(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, A
     }
 
     //insert the content into new xml document
-    CfOut(cf_inform, "", " -> Inserting tree \"%s\" in %s", pp->promiser,
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Inserting tree \"%s\" in %s", pp->promiser,
           pp->this_server);
     if (xmlDocSetRootElement(doc, treenode) != NULL)
     {
@@ -942,7 +942,7 @@ static bool DeleteTreeInNode(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, A
     }
 
     //remove the subtree from xml document
-    CfOut(cf_inform, "", " -> Deleting tree \"%s\" in %s", pp->promiser,
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Deleting tree \"%s\" in %s", pp->promiser,
           pp->this_server);
     xmlUnlinkNode(deletetree);
     xmlFreeNode(deletetree);
@@ -1005,7 +1005,7 @@ static bool InsertTreeInNode(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, A
     }
 
     //insert the subtree into xml document
-    CfOut(cf_inform, "", " -> Inserting tree \"%s\" in %s", pp->promiser,
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Inserting tree \"%s\" in %s", pp->promiser,
           pp->this_server);
     if (!xmlAddChild(docnode, treenode))
     {
@@ -1059,7 +1059,8 @@ static bool DeleteAttributeInNode(char *rawname, xmlDocPtr doc, xmlNodePtr docno
     }
 
     //delete attribute from docnode
-    CfOut(cf_inform, "", " -> Deleting attribute \"%s\" in %s", pp->promiser, pp->this_server);
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Deleting attribute \"%s\" in %s", pp->promiser,
+          pp->this_server);
     if ((xmlRemoveProp(attr)) == -1)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
@@ -1118,13 +1119,13 @@ static bool SetAttributeInNode(char *rawname, char *rawvalue, xmlDocPtr doc, xml
         return true;
     }
 
-    //insert attribute into docnode
-    CfOut(cf_inform, "", " -> Inserting attribute \"%s\" in %s", pp->promiser,
+    //set attribute in docnode
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Setting attribute \"%s\" in %s", pp->promiser,
           pp->this_server);
     if ((attr = xmlNewProp(docnode, name, value)) == NULL)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! Attribute was not successfully inserted into xml document");
+             " !! Attribute was not successfully set in xml document");
         return false;
     }
 
@@ -1132,7 +1133,7 @@ static bool SetAttributeInNode(char *rawname, char *rawvalue, xmlDocPtr doc, xml
     if ((attr = XmlVerifyAttributeInNode(name, value, docnode, a, pp)) == NULL)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised attribute (%s) with value (%s) was not inserted in %s",
+             " !! The promised attribute (%s) with value (%s) was not set in %s",
              pp->promiser, a.xml.attribute_value, pp->this_server);
         return false;
     }
@@ -1172,7 +1173,7 @@ static bool DeleteTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, A
     }
 
     //delete text from docnode
-    CfOut(cf_inform, "", " -> Deleting text \"%s\" in %s", pp->promiser,
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Deleting text \"%s\" in %s", pp->promiser,
           pp->this_server);
 
     //node contains text
@@ -1237,7 +1238,7 @@ static bool SetTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attr
     }
 
     //set text in docnode
-    CfOut(cf_inform, "", " -> Setting text \"%s\" in %s", pp->promiser,
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Setting text \"%s\" in %s", pp->promiser,
           pp->this_server);
 
     //node already contains text
@@ -1263,7 +1264,7 @@ static bool SetTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attr
     if (XmlVerifyTextInNodeExact(text, docnode, a, pp) == NULL)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised text (%s) was not inserted successfully in %s",
+             " !! The promised text (%s) was not set successfully in %s",
              pp->promiser, pp->this_server);
         return false;
     }
@@ -1302,7 +1303,7 @@ static bool InsertTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, A
     }
 
     //insert text into docnode
-    CfOut(cf_inform, "", " -> Inserting text \"%s\" in %s", pp->promiser,
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Inserting text \"%s\" in %s", pp->promiser,
           pp->this_server);
 
     //node already contains text

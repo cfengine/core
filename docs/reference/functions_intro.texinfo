@@ -52,6 +52,7 @@ or type that the function returns or processes as inputs.
 @tab @ref{Function getusers, ,getusers}
 @tab @ref{Function grep, ,grep}
 @tab @ref{Function ldaplist, ,ldaplist}
+@tab @ref{Function maplist, ,maplist}
 @tab @ref{Function peerleaders, ,peerleaders}
 @item @ref{Function peers, ,peers}
 @tab @ref{Function readintlist, ,readintlist}

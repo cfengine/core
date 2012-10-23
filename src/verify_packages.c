@@ -1181,7 +1181,7 @@ VersionCmpResult ComparePackages(const char *n, const char *v, const char *arch,
         return VERCMP_MATCH;
     }
 
-    return CompareVersions(v, pi->version, a, pp);
+    return CompareVersions(pi->version, v, a, pp);
 
 }
 

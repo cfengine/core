@@ -96,7 +96,7 @@ static VersionCmpResult CompareVersionsLess(const char *v1, const char *v2, Attr
     }
     else
     {
-        return ComparePackageVersionsInternal(v1, v2, cfa_lt) ? VERCMP_MATCH : VERCMP_NO_MATCH;
+        return ComparePackageVersionsInternal(v1, v2, cfa_gt) ? VERCMP_MATCH : VERCMP_NO_MATCH;
     }
 }
 

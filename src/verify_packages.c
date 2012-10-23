@@ -2253,7 +2253,7 @@ static int IsNewerThanInstalled(const char *n, const char *v, const char *a, cha
 
     for (pi = mp->pack_list; pi != NULL; pi = pi->next)
     {
-        if ((strcmp(n, pi->name) == 0) && (strcmp(a, pi->arch) == 0))
+        if ((strcmp(n, pi->name) == 0) && (strcmp(a, "*") == 0 || strcmp(a, pi->arch) == 0))
         {
             CfOut(cf_verbose, "", "Found installed package (%s,%s,%s)", pi->name, pi->version, pi->arch);
 
@@ -2608,7 +2608,7 @@ static VersionCmpResult ComparePackageVersionsLess(const char *v1, const char *v
     }
     else
     {
-        return ComparePackageVersionsInternal(v1, v2, cfa_lt);
+        return ComparePackageVersionsInternal(v1, v2, cfa_gt);
     }
 }
 
@@ -2671,7 +2671,7 @@ VersionCmpResult ComparePackages(const char *n, const char *v, const char *arch,
 
     if (a.packages.package_version_less_command)
     {
-        return ComparePackageVersionsCmd(v, pi->version, a, pp);
+        return ComparePackageVersionsCmd(pi->version, v, a, pp);
     }
     else
     {

@@ -22,9 +22,24 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_VERCMP_INTERNAL_H
-#define CFENGINE_VERCMP_INTERNAL_H
+#ifndef CFENGINE_VERCMP_H
+#define CFENGINE_VERCMP_H
 
-bool ComparePackageVersionsInternal(const char *v1, const char *v2, enum version_cmp cmp);
+typedef enum
+{
+    VERCMP_ERROR = -1,
+    VERCMP_NO_MATCH = 0,
+    VERCMP_MATCH = 1
+} VersionCmpResult;
+
+/*
+ * a, pp are used for
+ *  a.packages.package_select
+ *  a.packages.package_version_less_command
+ *  a.packages.package_version_equal_command
+ *  a.packages.package_commands_useshell
+ *  cfPS
+ */
+VersionCmpResult CompareVersions(const char *v1, const char *v2, Attributes a, Promise *pp);
 
 #endif

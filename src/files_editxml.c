@@ -1003,7 +1003,7 @@ static bool BuildXPathInFile(char rawxpath[CF_BUFSIZE], xmlDocPtr doc, Attribute
     }
 
     //insert the content into new xml document, beginning from root node
-    CfOut(cf_inform, "", " -> Building xpath \"%s\" in %s", rawxpath,
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Building xpath \"%s\" in %s", rawxpath,
           pp->this_server);
     if (xmlDocSetRootElement(doc, docnode) != NULL)
     {
@@ -1058,7 +1058,7 @@ static bool BuildXPathInNode(char rawxpath[CF_BUFSIZE], xmlDocPtr doc, Attribute
     }
 
     //insert the new tree into selected node in xml document
-    CfOut(cf_inform, "", " -> Building xpath \"%s\" in %s", rawxpath,
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Building xpath \"%s\" in %s", rawxpath,
           pp->this_server);
     if (docnode != NULL)
     {
@@ -1123,7 +1123,7 @@ static bool InsertTreeInFile(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, A
     }
 
     //insert the content into new xml document
-    CfOut(cf_inform, "", " -> Inserting tree \"%s\" in %s", pp->promiser,
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Inserting tree \"%s\" in %s", pp->promiser,
           pp->this_server);
     if (xmlDocSetRootElement(doc, treenode) != NULL)
     {
@@ -1187,7 +1187,7 @@ static bool DeleteTreeInNode(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, A
     }
 
     //remove the subtree from xml document
-    CfOut(cf_inform, "", " -> Deleting tree \"%s\" in %s", pp->promiser,
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Deleting tree \"%s\" in %s", pp->promiser,
           pp->this_server);
     xmlUnlinkNode(deletetree);
     xmlFreeNode(deletetree);
@@ -1250,7 +1250,7 @@ static bool InsertTreeInNode(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, A
     }
 
     //insert the subtree into xml document
-    CfOut(cf_inform, "", " -> Inserting tree \"%s\" in %s", pp->promiser,
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Inserting tree \"%s\" in %s", pp->promiser,
           pp->this_server);
     if (!xmlAddChild(docnode, treenode))
     {
@@ -1304,7 +1304,8 @@ static bool DeleteAttributeInNode(char *rawname, xmlDocPtr doc, xmlNodePtr docno
     }
 
     //delete attribute from docnode
-    CfOut(cf_inform, "", " -> Deleting attribute \"%s\" in %s", pp->promiser, pp->this_server);
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Deleting attribute \"%s\" in %s", pp->promiser,
+          pp->this_server);
     if ((xmlRemoveProp(attr)) == -1)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
@@ -1364,7 +1365,7 @@ static bool SetAttributeInNode(char *rawname, char *rawvalue, xmlDocPtr doc, xml
     }
 
     //insert attribute into docnode
-    CfOut(cf_inform, "", " -> Inserting attribute \"%s\" in %s", pp->promiser,
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Inserting attribute \"%s\" in %s", pp->promiser,
           pp->this_server);
     if ((attr = xmlNewProp(docnode, name, value)) == NULL)
     {
@@ -1417,7 +1418,7 @@ static bool DeleteTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, A
     }
 
     //delete text from docnode
-    CfOut(cf_inform, "", " -> Deleting text \"%s\" in %s", pp->promiser,
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Deleting text \"%s\" in %s", pp->promiser,
           pp->this_server);
 
     //node contains text
@@ -1482,7 +1483,7 @@ static bool SetTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attr
     }
 
     //set text in docnode
-    CfOut(cf_inform, "", " -> Setting text \"%s\" in %s", pp->promiser,
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Setting text \"%s\" in %s", pp->promiser,
           pp->this_server);
 
     //node already contains text
@@ -1547,7 +1548,7 @@ static bool InsertTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, A
     }
 
     //insert text into docnode
-    CfOut(cf_inform, "", " -> Inserting text \"%s\" in %s", pp->promiser,
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Inserting text \"%s\" in %s", pp->promiser,
           pp->this_server);
 
     //node already contains text

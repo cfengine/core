@@ -863,9 +863,8 @@ static bool InsertTreeInFile(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, A
     //verify treenode does not already exist inside docnode
     if ((rootnode = xmlDocGetRootElement(doc)) != NULL)
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised xmldoc (%s) already exists and contains a root element %s",
-             pp->promiser, pp->this_server);
+        cfPS(cf_verbose, CF_NOP, "", pp, a, " !! The promised xmldoc exists and contains a root element (promise kept)",
+             pp->this_server);
         return false;
     }
 
@@ -927,8 +926,7 @@ static bool DeleteTreeInNode(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, A
     //verify treenode exists inside docnode
     if ((deletetree = XmlVerifyNodeInNodeSubset(treenode, docnode, a, pp)) == NULL)
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised tree to be deleted(%s) does not exists in %s",
+        cfPS(cf_verbose, CF_NOP, "", pp, a, " !! The promised tree to be deleted: \n\n(%s) \n\ndoes not exists in %s (promise kept)",
              pp->promiser, pp->this_server);
         return false;
     }
@@ -991,7 +989,7 @@ static bool InsertTreeInNode(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, A
     //verify treenode does not already exist inside docnode
     if (XmlVerifyNodeInNodeSubset(treenode, docnode, a, pp))
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, a, " !! The promised tree (%s) already exists in %s",
+        cfPS(cf_verbose, CF_NOP, "", pp, a, " !! The promised tree to be inserted: \n\n(%s) \n\nexists in %s (promise kept)",
              pp->promiser, pp->this_server);
         return false;
     }
@@ -1037,15 +1035,15 @@ static bool DeleteAttributeInNode(char *rawname, xmlDocPtr doc, xmlNodePtr docno
     if ((name = CharToXmlChar(rawname)) == NULL)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! Attribute name to be inserted was not successfully loaded into an xml buffer");
+             " !! Name of attribute to be deleted was not successfully loaded into an xml buffer");
         return false;
     }
 
     //verify attribute exists inside docnode
     if ((attr = xmlHasProp(docnode, name)) == NULL)
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised attribute to be deleted (%s) was not found in edit node in %s",
+        cfPS(cf_verbose, CF_NOP, "", pp, a,
+             " !! The promised attribute to be deleted (%s) does not exists in %s (promise kept)",
              pp->promiser, pp->this_server);
         return false;
     }
@@ -1091,22 +1089,22 @@ static bool SetAttributeInNode(char *rawname, char *rawvalue, xmlDocPtr doc, xml
     if ((name = CharToXmlChar(rawname)) == NULL)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! Attribute name to be inserted was not successfully loaded into an xml buffer");
+             " !! Name of attribute to be set was not successfully loaded into an xml buffer");
         return false;
     }
 
     if ((value = CharToXmlChar(rawvalue)) == NULL)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! Attribute value to be inserted was not successfully loaded into an xml buffer");
+             " !! Value of attribute to be set was not successfully loaded into an xml buffer");
         return false;
     }
 
     //verify attribute does not already exist inside docnode
     if ((attr = XmlVerifyAttributeInNode(name, value, docnode, a, pp)) != NULL)
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised attribute (%s) with value (%s) already exists in %s",
+        cfPS(cf_verbose, CF_NOP, "", pp, a,
+             " !! The promised attribute to be set (%s) with value (%s) exists in %s (promise kept)",
              pp->promiser, a.xml.attribute_value, pp->this_server);
         return false;
     }
@@ -1114,7 +1112,7 @@ static bool SetAttributeInNode(char *rawname, char *rawvalue, xmlDocPtr doc, xml
     if (a.transaction.action == cfa_warn)
     {
         cfPS(cf_error, CF_WARN, "", pp, a,
-             " -> Need to insert the promised attribute \"%s\" to %s - but only a warning was promised",
+             " -> Need to set the promised attribute \"%s\" to %s - but only a warning was promised",
              pp->promiser, pp->this_server);
         return true;
     }
@@ -1151,15 +1149,15 @@ static bool DeleteTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, A
     if ((text = CharToXmlChar(rawtext)) == NULL)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! Attribute name to be inserted was not successfully loaded into an xml buffer");
+             " !! Text to be deleted was not successfully loaded into an xml buffer");
         return false;
     }
 
     //verify text exists inside docnode
     if (XmlVerifyTextInNodeSubstring(text, docnode, a, pp) == NULL)
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised text to be deleted (%s) does not exist in %s",
+        cfPS(cf_verbose, CF_NOP, "", pp, a,
+             " !! The promised text to be deleted (%s) does not exist in %s (promise kept)",
              pp->promiser, pp->this_server);
         return false;
     }
@@ -1167,7 +1165,7 @@ static bool DeleteTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, A
     if (a.transaction.action == cfa_warn)
     {
         cfPS(cf_error, CF_WARN, "", pp, a,
-             " -> Need to insert the promised text \"%s\" to %s - but only a warning was promised",
+             " -> Need to delete the promised text \"%s\" to %s - but only a warning was promised",
              pp->promiser, pp->this_server);
         return true;
     }
@@ -1217,15 +1215,16 @@ static bool SetTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attr
     if ((text = CharToXmlChar(rawtext)) == NULL)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! Attribute name to be inserted was not successfully loaded into an xml buffer");
+             " !! Text to be set was not successfully loaded into an xml buffer");
         return false;
     }
 
     //verify text does not exist inside docnode
     if (XmlVerifyTextInNodeExact(text, docnode, a, pp) != NULL)
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised text (%s) already exists in %s", pp->promiser, pp->this_server);
+        cfPS(cf_verbose, CF_NOP, "", pp, a,
+             " !! The promised text to be set (%s) exists in %s (promise kept)",
+             pp->promiser, pp->this_server);
         return false;
     }
 
@@ -1282,15 +1281,16 @@ static bool InsertTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, A
     if ((text = CharToXmlChar(rawtext)) == NULL)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! Attribute name to be inserted was not successfully loaded into an xml buffer");
+             " !! Text to be inserted was not successfully loaded into an xml buffer");
         return false;
     }
 
     //verify text does not exist inside docnode
     if (XmlVerifyTextInNodeSubstring(text, docnode, a, pp) != NULL)
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised text (%s) already exists in %s", pp->promiser, pp->this_server);
+        cfPS(cf_verbose, CF_NOP, "", pp, a,
+             " !! The promised text to be inserted (%s) exists in %s (promise kept)",
+             pp->promiser, pp->this_server);
         return false;
     }
 

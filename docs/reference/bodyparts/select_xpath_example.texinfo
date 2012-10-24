@@ -1,0 +1,6 @@
+@verbatim
+body select_xpath example(s)
+{
+select_xpath => "$(s)";
+}
+@end verbatim

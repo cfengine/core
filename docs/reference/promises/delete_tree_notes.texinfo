@@ -1,3 +1,3 @@
-Note that typically, only a single tree, within a single edit region,
+Note that typically, only a single tree, within a single specified node,
 is deleted in each @code{delete_tree} promise (you may of course have
 multiple promises that each delete a tree).

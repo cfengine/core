@@ -1179,7 +1179,6 @@ static bool DeleteTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, A
     {
         xmlNodeSetContent(docnode->children, "");
     }
-
     //node does not contain text
     else
     {
@@ -1245,7 +1244,6 @@ static bool SetTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attr
     {
         xmlNodeSetContent(docnode->children, text);
     }
-
     //node does not contain text
     else
     {
@@ -1311,7 +1309,7 @@ static bool InsertTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, A
     {
         xmlNodeAddContent(docnode->children, text);
     }
-
+    //node does not contain text
     else
     {
         //remove and set aside the elements in the node
@@ -1361,7 +1359,6 @@ static bool SanityCheckTreeInsertions(Attributes a, Promise *pp)
               " !! Tree insertion into an empty file, using select_xpath, does not make sense");
         return false;
     }
-
     else if ((!a.xml.haveselectxpath &&  xmlDocGetRootElement(pp->edcontext->xmldoc)))
     {
         CfOut(cf_error, "Tree insertion requires select_xpath to be specified, unless inserting into an empty file",

@@ -63,7 +63,7 @@ bundle edit_xml test_insert(str)
 set_attribute:
         "$(str)"
         build_xpath => "/Server/Service/Engine/OneFish/TwoFish/RedFish/BlueFish",
-        select_xpath_region => "/Server/Service/Engine/OneFish",
+        select_xpath => "/Server/Service/Engine/OneFish",
         attribute_value => "clownfish";
 }
 

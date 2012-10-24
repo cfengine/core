@@ -63,7 +63,7 @@ bundle edit_xml test_insert(str)
 insert_text:
         "$(str)"
         build_xpath => "/Server/Service/Engine/OneFish/TwoFish[@type=\'clownfish\']/RedFish/BlueFish",
-        select_xpath_region => "/Server/Service/Engine/OneFish/TwoFish[@type=\'clownfish\']";
+        select_xpath => "/Server/Service/Engine/OneFish/TwoFish[@type=\'clownfish\']";
 }
 
 #######################################################

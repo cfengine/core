@@ -1,4 +1,4 @@
-/* Better error par sing
+/* Better error parsing
 
 Some reading material
 http://www.cs.nmsu.edu/~pfeiffer/classes/370/notes/yaccerrorhandling/index.php?currentsem=s10
@@ -30,8 +30,6 @@ void yyerror(const char *s)
     
     if(P.line_pos == 0) P.line_pos = 2; // For highlighting.
     
-    int NEWLINE_CHAR = 10;
-    
     if (USE_GCC_BRIEF_FORMAT)
     {
         if (notoken)
@@ -46,15 +44,15 @@ void yyerror(const char *s)
         // Get length of error token
         int error_length = strlen(sp ? sp : "N");
         // Get Context
-        FILE * errorfile =  fopen( P.filename, "r" );
+        FILE* errorfile =  fopen( P.filename, "r" );
         int current_line = 0;
-        int current_col  = 0;
+        int current_col = 0;
         int current_char = 0;
         while (current_line < P.line_no+1) {
             current_char = getc( errorfile );
             current_col++;
             
-            if (current_char == NEWLINE_CHAR) {current_line++; current_col = 0;}
+            if (current_char == (int) '\n') {current_line++; current_col = 0;}
             
             // The printing
             if (current_line == P.line_no-1 && current_col == P.line_pos-1) fprintf(stderr, "%s", "\033[;41m");
@@ -68,7 +66,10 @@ void yyerror(const char *s)
 
     ERRORCOUNT++;
 
-    if (ERRORCOUNT == 2) fprintf(stderr, "\nOnly showing first error. See more with -g.\n");
+    if (ERRORCOUNT == 2)
+    {
+        fprintf(stderr, "\nOnly showing first error. See more with -g.\n");
+    }
     if (ERRORCOUNT > 10)
     {
         FatalError("Stopped parsing after 10 errors");

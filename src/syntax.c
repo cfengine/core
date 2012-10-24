@@ -475,7 +475,6 @@ void CheckSelectionP(char *type, char *name, char *lval, Rval rval, int *pos)
                 }
             }
         }
-        
         ReportError(output);
     }
 }

@@ -1,10 +1,9 @@
 #include <stdio.h>
 #include <string.h>
 
-static int levenshtein (const char * word1,
-                     int len1,
-                     const char * word2,
-                     int len2)
+# From http://www.lemoda.net/c/levenshtein/index.html
+
+static int levenshtein (const char * word1, int len1, const char * word2, int len2)
 {
     int matrix[len1 + 1][len2 + 1];
     int i;

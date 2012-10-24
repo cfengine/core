@@ -2443,9 +2443,9 @@ xmlNodePtr PredicateExtractNode(char predicate[CF_BUFSIZE], Attributes a, Promis
     char copypred[CF_BUFSIZE] = { 0 }, rawname[CF_BUFSIZE] = { 0 }, rawvalue[CF_BUFSIZE] = { 0 }, *tok;
 
     strcpy(copypred, predicate);
-    tok = strtok(copypred, "| =");
+    tok = strtok(copypred, "| \"\'=");
     strcpy(rawname, tok);
-    tok = strtok(NULL, " =");
+    tok = strtok(NULL, " \"\'=");
     strcpy(rawvalue, tok);
     name = CharToXmlChar(rawname);
     value = CharToXmlChar(rawvalue);
@@ -2550,7 +2550,6 @@ xmlNodePtr XPathSegmentExtractNode(char segment[CF_BUFSIZE], Attributes a, Promi
                 prednode = PredicateExtractNode(predicate, a, pp);
                 xmlAddChild(node, prednode);
             }
-
             else if (PredicateHeadContainsAttribute(predicate, a, pp))
             {
                 strcpy(copypred, predicate);

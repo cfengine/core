@@ -863,7 +863,7 @@ static bool InsertTreeInFile(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, A
     //verify treenode does not already exist inside docnode
     if ((rootnode = xmlDocGetRootElement(doc)) != NULL)
     {
-        cfPS(cf_verbose, CF_NOP, "", pp, a, " !! The promised xmldoc exists and contains a root element (promise kept)",
+        cfPS(cf_verbose, CF_NOP, "", pp, a, " !! The promised xmldoc exists and contains a root element in %s (promise kept)",
              pp->this_server);
         return false;
     }

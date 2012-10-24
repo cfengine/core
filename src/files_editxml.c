@@ -1035,7 +1035,7 @@ static bool BuildXPathInNode(char rawxpath[CF_BUFSIZE], xmlDocPtr doc, Attribute
 
     strcpy(copyxpath, rawxpath);
 
-    //build xpath from tail while locating insertion region
+    //build xpath from tail while locating insertion node
     while ((strlen(copyxpath) > 0) && (!XmlSelectNode(copyxpath, doc, &docnode, a, pp)))
     {
         if (XPathHasTail (copyxpath, a, pp))
@@ -1602,9 +1602,9 @@ static bool SanityCheckXPathBuild(Attributes a, Promise *pp)
         return false;
     }
 
-    if (a.xml.haveselectxpathregion && !a.xml.havebuildxpath)
+    if (a.xml.haveselectxpath && !a.xml.havebuildxpath)
     {
-        CfOut(cf_error, "", " !! XPath build does not require select_xpath_region to be specified");
+        CfOut(cf_error, "", " !! XPath build does not require select_xpath to be specified");
         return false;
     }
 
@@ -1627,7 +1627,7 @@ static bool SanityCheckTreeDeletions(Attributes a, Promise *pp)
         return false;
     }
 
-    if (!XPathVerifyConvergence(a.xml.select_xpath_region, a, pp))
+    if (!XPathVerifyConvergence(a.xml.select_xpath, a, pp))
     {
         return false;
     }
@@ -1652,7 +1652,7 @@ static bool SanityCheckTreeInsertions(Attributes a, Promise *pp)
         return false;
     }
 
-    if (a.xml.haveselectxpathregion && !XPathVerifyConvergence(a.xml.select_xpath_region, a, pp))
+    if (a.xml.haveselectxpath && !XPathVerifyConvergence(a.xml.select_xpath, a, pp))
     {
         return false;
     }
@@ -1671,7 +1671,7 @@ static bool SanityCheckAttributeDeletions(Attributes a, Promise *pp)
         return false;
     }
 
-    if (!XPathVerifyConvergence(a.xml.select_xpath_region, a, pp))
+    if (!XPathVerifyConvergence(a.xml.select_xpath, a, pp))
     {
         return false;
     }
@@ -1690,7 +1690,7 @@ static bool SanityCheckAttributeSet(Attributes a, Promise *pp)
         return false;
     }
 
-    if (!XPathVerifyConvergence(a.xml.select_xpath_region, a, pp))
+    if (!XPathVerifyConvergence(a.xml.select_xpath, a, pp))
     {
         return false;
     }
@@ -1709,7 +1709,7 @@ static bool SanityCheckTextDeletions(Attributes a, Promise *pp)
         return false;
     }
 
-    if (!XPathVerifyConvergence(a.xml.select_xpath_region, a, pp))
+    if (!XPathVerifyConvergence(a.xml.select_xpath, a, pp))
     {
         return false;
     }
@@ -1728,7 +1728,7 @@ static bool SanityCheckTextSet(Attributes a, Promise *pp)
         return false;
     }
 
-    if (!XPathVerifyConvergence(a.xml.select_xpath_region, a, pp))
+    if (!XPathVerifyConvergence(a.xml.select_xpath, a, pp))
     {
         return false;
     }
@@ -1747,7 +1747,7 @@ static bool SanityCheckTextInsertions(Attributes a, Promise *pp)
         return false;
     }
 
-    if (!XPathVerifyConvergence(a.xml.select_xpath_region, a, pp))
+    if (!XPathVerifyConvergence(a.xml.select_xpath, a, pp))
     {
         return false;
     }

@@ -212,6 +212,12 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
 /* Generate a random challenge to authenticate the server */
 
     nonce_challenge = BN_new();
+    if (nonce_challenge == NULL)
+    {
+        CfOut(cf_error, "", "Cannot allocate BIGNUM structure for server challenge\n");
+        return false;
+    }
+
     BN_rand(nonce_challenge, CF_NONCELEN, 0, 0);
     nonce_len = BN_bn2mpi(nonce_challenge, in);
 

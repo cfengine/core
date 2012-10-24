@@ -314,7 +314,8 @@ static const BodySyntax CF_FILES_BODIES[] =
 // edit_xml body syntax
 const BodySyntax CF_COMMON_XMLBODIES[] =
 {
-    {"select_xpath_region", cf_str, "", "Select the XPath region in the XML file to edit"},
+    {"build_xpath", cf_str, "", "Build an XPath within the XML file"},
+    {"select_xpath", cf_str, "", "Select the XPath region in the XML file to edit"},
     {NULL, cf_notype, NULL, NULL}
 };
 
@@ -357,6 +358,7 @@ const SubTypeSyntax CF_FILES_SUBTYPES[] =
     {"edit_line", "replace_patterns", CF_REPLACE_BODIES},
 
     {"edit_xml", "*", CF_COMMON_XMLBODIES},
+    {"edit_xml", "build_xpath", CF_INSERTTAGS_BODIES},
     {"edit_xml", "delete_tree", CF_DELETETAGS_BODIES},
     {"edit_xml", "insert_tree", CF_INSERTTAGS_BODIES},
     {"edit_xml", "delete_attribute", CF_DELETEATTRIBUTES_BODIES},

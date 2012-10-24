@@ -69,6 +69,7 @@ char *EDITXMLTYPESEQUENCE[] =
 {
     "vars",
     "classes",
+    "build_xpath",
     "delete_tree",
     "insert_tree",
     "delete_attribute",
@@ -82,6 +83,7 @@ char *EDITXMLTYPESEQUENCE[] =
 
 static void EditXmlClassBanner(enum editxmltypesequence type);
 static void KeepEditXmlPromise(Promise *pp);
+static bool VerifyXPathBuild(Promise *pp);
 static void VerifyTreeDeletions(Promise *pp);
 static void VerifyTreeInsertions(Promise *pp);
 static void VerifyAttributeDeletions(Promise *pp);
@@ -91,6 +93,8 @@ static void VerifyTextSet(Promise *pp);
 static void VerifyTextInsertions(Promise *pp);
 #ifdef HAVE_LIBXML2
 static bool XmlSelectNode(char *xpath, xmlDocPtr doc, xmlNodePtr *docnode, Attributes a, Promise *pp);
+static bool BuildXPathInFile(char xpath[CF_BUFSIZE], xmlDocPtr doc, Attributes a, Promise *pp);
+static bool BuildXPathInNode(char xpath[CF_BUFSIZE], xmlDocPtr doc, Attributes a, Promise *pp);
 static bool DeleteTreeInNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
 static bool InsertTreeInFile(char *root, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
 static bool InsertTreeInNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
@@ -99,13 +103,14 @@ static bool SetAttributeInNode(char *attrname, char *attrvalue, xmlDocPtr doc, x
 static bool DeleteTextInNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
 static bool SetTextInNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
 static bool InsertTextInNode(char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp);
+static bool SanityCheckXPathBuild(Attributes a, Promise *pp);
 static bool SanityCheckTreeDeletions(Attributes a, Promise *pp);
 static bool SanityCheckTreeInsertions(Attributes a, Promise *pp);
 static bool SanityCheckAttributeDeletions(Attributes a, Promise *pp);
-static bool SanityCheckAttributeSet(Attributes a);
+static bool SanityCheckAttributeSet(Attributes a, Promise *pp);
 static bool SanityCheckTextDeletions(Attributes a, Promise *pp);
-static bool SanityCheckTextSet(Attributes a);
-static bool SanityCheckTextInsertions(Attributes a);
+static bool SanityCheckTextSet(Attributes a, Promise *pp);
+static bool SanityCheckTextInsertions(Attributes a, Promise *pp);
 
 static bool XmlDocsEqualContent(xmlDocPtr doc1, xmlDocPtr doc2, int warnings, Attributes a, Promise *pp);
 static bool XmlDocsEqualMem(xmlDocPtr doc1, xmlDocPtr doc2, int warnings, Attributes a, Promise *pp);
@@ -124,10 +129,32 @@ xmlChar* XmlVerifyTextInNodeSubstring(const xmlChar *text, xmlNodePtr node, Attr
 xmlNodePtr XmlVerifyNodeInNodeExact(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
 xmlNodePtr XmlVerifyNodeInNodeSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
 
-xmlChar *CharToXmlChar(char* c);
+//xpath build functionality
+xmlNodePtr PredicateExtractNode(char predicate[CF_BUFSIZE], Attributes a, Promise *pp);
+static bool PredicateRemoveHead(char xpath[CF_BUFSIZE], Attributes a, Promise *pp);
+
+xmlNodePtr XPathHeadExtractNode(char xpath[CF_BUFSIZE], Attributes a, Promise *pp);
+xmlNodePtr XPathTailExtractNode(char xpath[CF_BUFSIZE], Attributes a, Promise *pp);
+xmlNodePtr XPathSegmentExtractNode(char segment[CF_BUFSIZE], Attributes a, Promise *pp);
+char* XPathGetTail(char xpath[CF_BUFSIZE], Attributes a, Promise *pp);
+static bool XPathRemoveHead(char xpath[CF_BUFSIZE], Attributes a, Promise *pp);
+static bool XPathRemoveTail(char xpath[CF_BUFSIZE], Attributes a, Promise *pp);
+
+//verification using PCRE - ContainsRegex
+static bool PredicateHasTail(char *predicate, Attributes a, Promise *pp);
+static bool PredicateHeadContainsAttribute(char *predicate, Attributes a, Promise *pp);
+static bool PredicateHeadContainsNode(char *predicate, Attributes a, Promise *pp);
+static bool XPathHasTail(char *head, Attributes a, Promise *pp);
+static bool XPathHeadContainsNode(char *head, Attributes a, Promise *pp);
+static bool XPathHeadContainsPredicate(char *head, Attributes a, Promise *pp);
+static bool XPathVerifyBuildSyntax(const char* xpath, Attributes a, Promise *pp);
+static bool XPathVerifyConvergence(const char* xpath, Attributes a, Promise *pp);
+
+//helper functions
+xmlChar *CharToXmlChar(char c[CF_BUFSIZE]);
 static bool ContainsRegex(const char* rawstring, const char* regex);
 static int XmlAttributeCount(xmlNodePtr node, Attributes a, Promise *pp);
-static bool XmlXPathConvergent(const char* xpath, Attributes a, Promise *pp);
+
 #endif
 
 /*****************************************************************************/
@@ -268,6 +295,18 @@ static void KeepEditXmlPromise(Promise *pp)
         return;
     }
 
+    if (strcmp("build_xpath", pp->agentsubtype) == 0)
+    {
+#ifdef HAVE_LIBXML2
+        xmlInitParser();
+        VerifyXPathBuild(pp);
+        xmlCleanupParser();
+#else
+        CfOut(cf_verbose, "", " !! Cannot edit xml files without LIBXML2\n");
+#endif
+        return;
+    }
+
     if (strcmp("delete_tree", pp->agentsubtype) == 0)
     {
 #ifdef HAVE_LIBXML2
@@ -363,6 +402,73 @@ static void KeepEditXmlPromise(Promise *pp)
 /* Level                                                                   */
 /***************************************************************************/
 
+static bool VerifyXPathBuild(Promise *pp)
+{
+#ifdef HAVE_LIBXML2
+    xmlDocPtr doc;
+    Attributes a = { {0} };
+    CfLock thislock;
+    char lockname[CF_BUFSIZE], rawxpath[CF_BUFSIZE] = { 0 };
+
+    a = GetInsertionAttributes(pp);
+    a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
+
+    if (a.xml.havebuildxpath)
+    {
+        strcpy(rawxpath, a.xml.build_xpath);
+    }
+
+    else
+    {
+        strcpy(rawxpath, pp->promiser);
+    }
+
+    if (!SanityCheckXPathBuild(a, pp))
+    {
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! The promised xpath build (%s) breaks its own promises", rawxpath);
+        return false;
+    }
+
+    if ((doc = pp->edcontext->xmldoc) == NULL)
+    {
+        cfPS(cf_verbose, CF_INTERPT, "", pp, a, " !! Unable to load xml document");
+        return false;
+    }
+
+    snprintf(lockname, CF_BUFSIZE - 1, "buildxpath-%s-%s", pp->promiser, pp->this_server);
+    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a, pp, true);
+
+    if (thislock.lock == NULL)
+    {
+        return false;
+    }
+
+    //build xpath in an empty file
+    if (!xmlDocGetRootElement(doc))
+    {
+        if (BuildXPathInFile(rawxpath, doc, a, pp))
+        {
+            (pp->edcontext->num_edits)++;
+        }
+    }
+
+    //build xpath in a nonempty file
+    else if (BuildXPathInNode(rawxpath, doc, a, pp))
+    {
+        (pp->edcontext->num_edits)++;
+    }
+
+    YieldCurrentLock(thislock);
+    return true;
+#else
+    CfOut(cf_verbose, "", " !! Cannot edit xml files without LIBXML2\n");
+    return false;
+#endif
+}
+
+/***************************************************************************/
+
 static void VerifyTreeDeletions(Promise *pp)
 {
 #ifdef HAVE_LIBXML2
@@ -383,13 +489,18 @@ static void VerifyTreeDeletions(Promise *pp)
         return;
     }
 
+    if (a.xml.havebuildxpath && !VerifyXPathBuild(pp))
+    {
+        return;
+    }
+
     if ((doc = pp->edcontext->xmldoc) == NULL)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a, " !! Unable to load xml document");
         return;
     }
 
-    if (!XmlSelectNode(a.xml.select_xpath_region, doc, &docnode, a, pp))
+    if (!XmlSelectNode(a.xml.select_xpath, doc, &docnode, a, pp))
     {
         return;
     }
@@ -435,6 +546,11 @@ static void VerifyTreeInsertions(Promise *pp)
         return;
     }
 
+    if (a.xml.havebuildxpath && !VerifyXPathBuild(pp))
+    {
+        return;
+    }
+
     if ((doc = pp->edcontext->xmldoc) == NULL)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a, " !! Unable to load xml document");
@@ -442,7 +558,7 @@ static void VerifyTreeInsertions(Promise *pp)
     }
 
     //if file is not empty: select an edit node, for tree insertion
-    if (a.xml.haveselectxpathregion && !XmlSelectNode(a.xml.select_xpath_region, doc, &docnode, a, pp))
+    if (a.xml.haveselectxpath && !XmlSelectNode(a.xml.select_xpath, doc, &docnode, a, pp))
     {
         return;
     }
@@ -456,7 +572,7 @@ static void VerifyTreeInsertions(Promise *pp)
     }
 
     //insert tree into empty file or selected node
-    if (!a.xml.haveselectxpathregion && !xmlDocGetRootElement(doc))
+    if (!a.xml.haveselectxpath && !xmlDocGetRootElement(doc))
     {
         if (InsertTreeInFile(pp->promiser, doc, docnode, a, pp))
         {
@@ -496,13 +612,18 @@ static void VerifyAttributeDeletions(Promise *pp)
         return;
     }
 
+    if (a.xml.havebuildxpath && !VerifyXPathBuild(pp))
+    {
+        return;
+    }
+
     if (doc == NULL)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a, " !! Unable to load xml document");
         return;
     }
 
-    if (!XmlSelectNode(a.xml.select_xpath_region, doc, &docnode, a, pp))
+    if (!XmlSelectNode(a.xml.select_xpath, doc, &docnode, a, pp))
     {
         return;
     }
@@ -541,10 +662,15 @@ static void VerifyAttributeSet(Promise *pp)
     a = GetInsertionAttributes(pp);
     a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
 
-    if (!SanityCheckAttributeSet(a))
+    if (!SanityCheckAttributeSet(a, pp))
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
              " !! The promised attribute set (%s) breaks its own promises", pp->promiser);
+        return;
+    }
+
+    if (a.xml.havebuildxpath && !VerifyXPathBuild(pp))
+    {
         return;
     }
 
@@ -554,7 +680,7 @@ static void VerifyAttributeSet(Promise *pp)
         return;
     }
 
-    if (!XmlSelectNode(a.xml.select_xpath_region, doc, &docnode, a, pp))
+    if (!XmlSelectNode(a.xml.select_xpath, doc, &docnode, a, pp))
     {
         return;
     }
@@ -600,13 +726,18 @@ static void VerifyTextDeletions(Promise *pp)
         return;
     }
 
+    if (a.xml.havebuildxpath && !VerifyXPathBuild(pp))
+    {
+        return;
+    }
+
     if ((doc = pp->edcontext->xmldoc) == NULL)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a, " !! Unable to load xml document");
         return;
     }
 
-    if (!XmlSelectNode(a.xml.select_xpath_region, doc, &docnode, a, pp))
+    if (!XmlSelectNode(a.xml.select_xpath, doc, &docnode, a, pp))
     {
         return;
     }
@@ -645,10 +776,15 @@ static void VerifyTextSet(Promise *pp)
     a = GetInsertionAttributes(pp);
     a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
 
-    if (!SanityCheckTextSet(a))
+    if (!SanityCheckTextSet(a, pp))
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
              " !! The promised text set (%s) breaks its own promises", pp->promiser);
+        return;
+    }
+
+    if (a.xml.havebuildxpath && !VerifyXPathBuild(pp))
+    {
         return;
     }
 
@@ -658,7 +794,7 @@ static void VerifyTextSet(Promise *pp)
         return;
     }
 
-    if (!XmlSelectNode(a.xml.select_xpath_region, doc, &docnode, a, pp))
+    if (!XmlSelectNode(a.xml.select_xpath, doc, &docnode, a, pp))
     {
         return;
     }
@@ -697,10 +833,15 @@ static void VerifyTextInsertions(Promise *pp)
     a = GetInsertionAttributes(pp);
     a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
 
-    if (!SanityCheckTextInsertions(a))
+    if (!SanityCheckTextInsertions(a, pp))
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
              " !! The promised text insertion (%s) breaks its own promises", pp->promiser);
+        return;
+    }
+
+    if (a.xml.havebuildxpath && !VerifyXPathBuild(pp))
+    {
         return;
     }
 
@@ -710,7 +851,7 @@ static void VerifyTextInsertions(Promise *pp)
         return;
     }
 
-    if (!XmlSelectNode(a.xml.select_xpath_region, doc, &docnode, a, pp))
+    if (!XmlSelectNode(a.xml.select_xpath, doc, &docnode, a, pp))
     {
         return;
     }
@@ -760,10 +901,10 @@ static bool XmlSelectNode(char *rawxpath, xmlDocPtr doc, xmlNodePtr *docnode, At
 
     *docnode = NULL;
 
-    if (!XmlXPathConvergent(rawxpath, a, pp))
+    if (!XPathVerifyConvergence(rawxpath, a, pp))
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! select_xpath_region expression (%s) is not convergent", a.xml.select_xpath_region);
+             " !! select_xpath expression (%s) is not convergent", a.xml.select_xpath);
         return false;
     }
 
@@ -796,7 +937,7 @@ static bool XmlSelectNode(char *rawxpath, xmlDocPtr doc, xmlNodePtr *docnode, At
     if (size > 1)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! Current select_xpath_region expression \"%s\" returns (%d) edit nodes, please modify to select a unique edit node",
+             " !! Current select_xpath expression \"%s\" returns (%d) edit nodes, please modify to select a unique edit node",
              xpathExpr, size);
         valid = false;
     }
@@ -828,6 +969,110 @@ static bool XmlSelectNode(char *rawxpath, xmlDocPtr doc, xmlNodePtr *docnode, At
     xmlXPathFreeObject(xpathObj);
 
     return valid;
+}
+
+/***************************************************************************/
+
+static bool BuildXPathInFile(char rawxpath[CF_BUFSIZE], xmlDocPtr doc, Attributes a, Promise *pp)
+{
+    xmlNodePtr docnode = NULL, head = NULL;
+    char copyxpath[CF_BUFSIZE] = { 0 };
+
+    strcpy(copyxpath, rawxpath);
+
+    if (xmlDocGetRootElement(doc))
+    {
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! The promised xmldoc (%s) already exists and contains a root element %s",
+             pp->promiser, pp->this_server);
+        return false;
+    }
+
+    //set rootnode
+    if ((docnode = XPathHeadExtractNode(copyxpath, a, pp)) == NULL)
+    {
+        cfPS(cf_error, CF_INTERPT, "", pp, a, " !! Unable to extract node from xpath (%s) in server %s",
+             rawxpath, pp->this_server);
+        return false;
+    }
+
+    if (docnode == NULL || (docnode->name) == NULL)
+    {
+        cfPS(cf_verbose, CF_INTERPT, "", pp, a, " !! The extracted node to be inserted is empty");
+        return false;
+    }
+
+    //insert the content into new xml document, beginning from root node
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Building xpath \"%s\" in %s", rawxpath,
+          pp->this_server);
+    if (xmlDocSetRootElement(doc, docnode) != NULL)
+    {
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! The promised xpath (%s) was not built successfully in %s",
+             rawxpath, pp->this_server);
+        return false;
+    }
+
+    XPathRemoveHead(copyxpath, a, pp);
+
+    //extract and insert nodes from tail
+    while ((strlen(copyxpath) > 0) && ((head = XPathHeadExtractNode(copyxpath, a, pp)) != NULL))
+    {
+        xmlAddChild(docnode, head);
+        docnode = head;
+        XPathRemoveHead(copyxpath, a, pp);
+    }
+
+    return true;
+}
+
+/***************************************************************************/
+
+static bool BuildXPathInNode(char rawxpath[CF_BUFSIZE], xmlDocPtr doc, Attributes a, Promise *pp)
+{
+    xmlNodePtr docnode = NULL,  head = NULL, tail = NULL;
+    char copyxpath[CF_BUFSIZE] = { 0 };
+
+    strcpy(copyxpath, rawxpath);
+
+    //build xpath from tail while locating insertion node
+    while ((strlen(copyxpath) > 0) && (!XmlSelectNode(copyxpath, doc, &docnode, a, pp)))
+    {
+        if (XPathHasTail (copyxpath, a, pp))
+        {
+            head = XPathTailExtractNode(copyxpath, a, pp);
+            XPathRemoveTail(copyxpath, a, pp);
+        }
+
+        else
+        {
+            head = XPathHeadExtractNode(copyxpath, a, pp);
+            XPathRemoveHead(copyxpath, a, pp);
+        }
+
+        if (head && tail)
+        {
+            xmlAddChild(head, tail);
+        }
+        tail = head;
+    }
+
+    //insert the new tree into selected node in xml document
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Building xpath \"%s\" in %s", rawxpath,
+          pp->this_server);
+    if (docnode != NULL)
+    {
+        xmlAddChild(docnode, tail);
+    }
+
+    //insert the new tree into root, in the case where unique node was not found, in xml document
+    else
+    {
+        docnode = xmlDocGetRootElement(doc);
+        xmlAddChild(docnode, tail);
+    }
+
+    return true;
 }
 
 /***************************************************************************/
@@ -878,7 +1123,7 @@ static bool InsertTreeInFile(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, A
     }
 
     //insert the content into new xml document
-    CfOut(cf_inform, "", " -> Inserting tree \"%s\" in %s", pp->promiser,
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Inserting tree \"%s\" in %s", pp->promiser,
           pp->this_server);
     if (xmlDocSetRootElement(doc, treenode) != NULL)
     {
@@ -942,7 +1187,7 @@ static bool DeleteTreeInNode(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, A
     }
 
     //remove the subtree from xml document
-    CfOut(cf_inform, "", " -> Deleting tree \"%s\" in %s", pp->promiser,
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Deleting tree \"%s\" in %s", pp->promiser,
           pp->this_server);
     xmlUnlinkNode(deletetree);
     xmlFreeNode(deletetree);
@@ -1005,7 +1250,7 @@ static bool InsertTreeInNode(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, A
     }
 
     //insert the subtree into xml document
-    CfOut(cf_inform, "", " -> Inserting tree \"%s\" in %s", pp->promiser,
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Inserting tree \"%s\" in %s", pp->promiser,
           pp->this_server);
     if (!xmlAddChild(docnode, treenode))
     {
@@ -1059,7 +1304,8 @@ static bool DeleteAttributeInNode(char *rawname, xmlDocPtr doc, xmlNodePtr docno
     }
 
     //delete attribute from docnode
-    CfOut(cf_inform, "", " -> Deleting attribute \"%s\" in %s", pp->promiser, pp->this_server);
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Deleting attribute \"%s\" in %s", pp->promiser,
+          pp->this_server);
     if ((xmlRemoveProp(attr)) == -1)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
@@ -1119,7 +1365,7 @@ static bool SetAttributeInNode(char *rawname, char *rawvalue, xmlDocPtr doc, xml
     }
 
     //insert attribute into docnode
-    CfOut(cf_inform, "", " -> Inserting attribute \"%s\" in %s", pp->promiser,
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Inserting attribute \"%s\" in %s", pp->promiser,
           pp->this_server);
     if ((attr = xmlNewProp(docnode, name, value)) == NULL)
     {
@@ -1144,6 +1390,7 @@ static bool SetAttributeInNode(char *rawname, char *rawvalue, xmlDocPtr doc, xml
 
 static bool DeleteTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
 {
+    xmlNodePtr elemnode, copynode;
     xmlChar *text = NULL;
 
     if ((text = CharToXmlChar(rawtext)) == NULL)
@@ -1171,10 +1418,27 @@ static bool DeleteTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, A
     }
 
     //delete text from docnode
-    CfOut(cf_inform, "", " -> Deleting text \"%s\" in %s", pp->promiser,
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Deleting text \"%s\" in %s", pp->promiser,
           pp->this_server);
 
-    xmlNodeSetContent(docnode, "");
+    //node contains text
+    if (xmlNodeIsText(docnode->children))
+    {
+        xmlNodeSetContent(docnode->children, "");
+    }
+
+    //node does not contain text
+    else
+    {
+        //remove and set aside the elements in the node
+        elemnode = xmlFirstElementChild(docnode);
+        copynode = xmlDocCopyNodeList(doc, elemnode);
+
+        xmlNodeSetContent(docnode, "");
+
+        //re-insert elements after the inserted text
+        xmlAddChildList(docnode, copynode);
+    }
 
     //verify text no longer exists inside docnode
     if (XmlVerifyTextInNodeSubstring(text, docnode, a, pp) != NULL)
@@ -1192,6 +1456,7 @@ static bool DeleteTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, A
 
 static bool SetTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
 {
+    xmlNodePtr elemnode, copynode;
     xmlChar *text = NULL;
 
     if ((text = CharToXmlChar(rawtext)) == NULL)
@@ -1218,10 +1483,27 @@ static bool SetTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attr
     }
 
     //set text in docnode
-    CfOut(cf_inform, "", " -> Setting text \"%s\" in %s", pp->promiser,
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Setting text \"%s\" in %s", pp->promiser,
           pp->this_server);
 
-    xmlNodeSetContent(docnode, text);
+    //node already contains text
+    if (xmlNodeIsText(docnode->children))
+    {
+        xmlNodeSetContent(docnode->children, text);
+    }
+
+    //node does not contain text
+    else
+    {
+        //remove and set aside the elements in the node
+        elemnode = xmlFirstElementChild(docnode);
+        copynode = xmlDocCopyNodeList(doc, elemnode);
+
+        xmlNodeSetContent(docnode, text);
+
+        //re-insert elements after the inserted text
+        xmlAddChildList(docnode, copynode);
+    }
 
     //verify text was inserted
     if (XmlVerifyTextInNodeExact(text, docnode, a, pp) == NULL)
@@ -1239,6 +1521,7 @@ static bool SetTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attr
 
 static bool InsertTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp)
 {
+    xmlNodePtr elemnode, copynode;
     xmlChar *text = NULL;
 
     if ((text = CharToXmlChar(rawtext)) == NULL)
@@ -1265,10 +1548,28 @@ static bool InsertTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, A
     }
 
     //insert text into docnode
-    CfOut(cf_inform, "", " -> Inserting text \"%s\" in %s", pp->promiser,
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Inserting text \"%s\" in %s", pp->promiser,
           pp->this_server);
 
-    xmlNodeAddContent(docnode, text);
+    //node already contains text
+    if (xmlNodeIsText(docnode->children))
+    {
+        xmlNodeAddContent(docnode->children, text);
+    }
+
+    //node does not contain text
+    else
+    {
+        //remove and set aside the elements in the node
+        elemnode = xmlFirstElementChild(docnode);
+        copynode = xmlDocCopyNodeList(doc, elemnode);
+
+        xmlNodeSetContent(docnode, "");
+        xmlNodeAddContent(docnode, text);
+
+        //re-insert elements after the inserted text
+        xmlAddChildList(docnode, copynode);
+    }
 
     //verify text was inserted
     if (XmlVerifyTextInNodeSubstring(text, docnode, a, pp) == NULL)
@@ -1284,12 +1585,53 @@ static bool InsertTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, A
 
 /***************************************************************************/
 
+static bool SanityCheckXPathBuild(Attributes a, Promise *pp)
+{
+    char rawxpath[CF_BUFSIZE] = { 0 };
+
+    if (a.xml.havebuildxpath)
+    {
+        strcpy(rawxpath, a.xml.build_xpath);
+    }
+
+    else
+    {
+        strcpy(rawxpath, pp->promiser);
+    }
+
+    if ((strcmp("build_xpath", pp->agentsubtype) == 0) && (a.xml.havebuildxpath))
+    {
+        CfOut(cf_error, "", " !! Attribute: build_xpath is not allowed within bundle: build_xpath");
+        return false;
+    }
+
+    if (a.xml.haveselectxpath && !a.xml.havebuildxpath)
+    {
+        CfOut(cf_error, "", " !! XPath build does not require select_xpath to be specified");
+        return false;
+    }
+
+    if (!XPathVerifyBuildSyntax(rawxpath, a, pp))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+/***************************************************************************/
+
 static bool SanityCheckTreeDeletions(Attributes a, Promise *pp)
 {
-    if (!a.xml.haveselectxpathregion)
+    if (!a.xml.haveselectxpath)
     {
         CfOut(cf_error, "",
-              " !! Tree deletion requires select_xpath_region to be specified");
+              " !! Tree deletion requires select_xpath to be specified");
+        return false;
+    }
+
+    if (!XPathVerifyConvergence(a.xml.select_xpath, a, pp))
+    {
         return false;
     }
 
@@ -1300,17 +1642,22 @@ static bool SanityCheckTreeDeletions(Attributes a, Promise *pp)
 
 static bool SanityCheckTreeInsertions(Attributes a, Promise *pp)
 {
-    if ((a.xml.haveselectxpathregion && !xmlDocGetRootElement(pp->edcontext->xmldoc)))
+    if ((a.xml.haveselectxpath && !a.xml.havebuildxpath && !xmlDocGetRootElement(pp->edcontext->xmldoc)))
     {
         CfOut(cf_error, "",
-              " !! Tree insertion into an empty file, using select_xpath_region, does not make sense");
+              " !! Tree insertion into an empty file, using select_xpath, does not make sense");
         return false;
     }
 
-    else if ((!a.xml.haveselectxpathregion &&  xmlDocGetRootElement(pp->edcontext->xmldoc)))
+    else if ((!a.xml.haveselectxpath &&  (a.xml.havebuildxpath || xmlDocGetRootElement(pp->edcontext->xmldoc))))
     {
-        CfOut(cf_error, "Tree insertion requires select_xpath_region to be specified, unless inserting into an empty file",
+        CfOut(cf_error, "Tree insertion requires select_xpath to be specified, unless inserting into an empty file",
               " !! ");
+        return false;
+    }
+
+    if (a.xml.haveselectxpath && !XPathVerifyConvergence(a.xml.select_xpath, a, pp))
+    {
         return false;
     }
 
@@ -1321,10 +1668,15 @@ static bool SanityCheckTreeInsertions(Attributes a, Promise *pp)
 
 static bool SanityCheckAttributeDeletions(Attributes a, Promise *pp)
 {
-    if (!(a.xml.haveselectxpathregion))
+    if (!(a.xml.haveselectxpath))
     {
         CfOut(cf_error, "",
-              " !! Attribute deletion requires select_xpath_region to be specified");
+              " !! Attribute deletion requires select_xpath to be specified");
+        return false;
+    }
+
+    if (!XPathVerifyConvergence(a.xml.select_xpath, a, pp))
+    {
         return false;
     }
 
@@ -1333,14 +1685,20 @@ static bool SanityCheckAttributeDeletions(Attributes a, Promise *pp)
 
 /***************************************************************************/
 
-static bool SanityCheckAttributeSet(Attributes a)
+static bool SanityCheckAttributeSet(Attributes a, Promise *pp)
 {
-    if (!(a.xml.haveselectxpathregion))
+    if (!(a.xml.haveselectxpath))
     {
         CfOut(cf_error, "",
-              " !! Attribute insertion requires select_xpath_region to be specified");
+              " !! Attribute insertion requires select_xpath to be specified");
         return false;
     }
+
+    if (!XPathVerifyConvergence(a.xml.select_xpath, a, pp))
+    {
+        return false;
+    }
+
     return true;
 }
 
@@ -1348,38 +1706,56 @@ static bool SanityCheckAttributeSet(Attributes a)
 
 static bool SanityCheckTextDeletions(Attributes a, Promise *pp)
 {
-    if (!(a.xml.haveselectxpathregion))
+    if (!(a.xml.haveselectxpath))
     {
         CfOut(cf_error, "",
-              " !! Tree insertion requires select_xpath_region to be specified");
+              " !! Tree insertion requires select_xpath to be specified");
         return false;
     }
+
+    if (!XPathVerifyConvergence(a.xml.select_xpath, a, pp))
+    {
+        return false;
+    }
+
     return true;
 }
 
 /***************************************************************************/
 
-static bool SanityCheckTextSet(Attributes a)
+static bool SanityCheckTextSet(Attributes a, Promise *pp)
 {
-    if (!(a.xml.haveselectxpathregion))
+    if (!(a.xml.haveselectxpath))
     {
         CfOut(cf_error, "",
-              " !! Tree insertion requires select_xpath_region to be specified");
+              " !! Tree insertion requires select_xpath to be specified");
         return false;
     }
+
+    if (!XPathVerifyConvergence(a.xml.select_xpath, a, pp))
+    {
+        return false;
+    }
+
     return true;
 }
 
 /***************************************************************************/
 
-static bool SanityCheckTextInsertions(Attributes a)
+static bool SanityCheckTextInsertions(Attributes a, Promise *pp)
 {
-    if (!(a.xml.haveselectxpathregion))
+    if (!(a.xml.haveselectxpath))
     {
         CfOut(cf_error, "",
-              " !! Tree insertion requires select_xpath_region to be specified");
+              " !! Tree insertion requires select_xpath to be specified");
         return false;
     }
+
+    if (!XPathVerifyConvergence(a.xml.select_xpath, a, pp))
+    {
+        return false;
+    }
+
     return true;
 }
 
@@ -2063,7 +2439,336 @@ xmlNodePtr XmlVerifyNodeInNodeSubset(xmlNodePtr node1, xmlNodePtr node2, Attribu
 
 /*********************************************************************/
 
-xmlChar *CharToXmlChar(char* c)
+xmlNodePtr PredicateExtractNode(char predicate[CF_BUFSIZE], Attributes a, Promise *pp)
+{
+    xmlNodePtr node = NULL;
+    xmlChar *name = NULL;
+    xmlChar *value = NULL;
+    char copypred[CF_BUFSIZE] = { 0 }, rawname[CF_BUFSIZE] = { 0 }, rawvalue[CF_BUFSIZE] = { 0 }, *tok;
+
+    strcpy(copypred, predicate);
+    tok = strtok(copypred, "| =");
+    strcpy(rawname, tok);
+    tok = strtok(NULL, " =");
+    strcpy(rawvalue, tok);
+    name = CharToXmlChar(rawname);
+    value = CharToXmlChar(rawvalue);
+    node = xmlNewNode(NULL, name);
+    xmlNodeSetContent(node, value);
+
+    return node;
+}
+
+/*********************************************************************/
+
+static bool PredicateRemoveHead(char predicate[CF_BUFSIZE], Attributes a, Promise *pp)
+{
+    char copypred[CF_BUFSIZE] = { 0 }, *tail = NULL;
+
+    strcpy(copypred, predicate);
+    memset(predicate, 0, sizeof(char)*CF_BUFSIZE);
+
+    if (PredicateHasTail(copypred, a, pp))
+    {
+        tail =  strchr(copypred+1, '|');
+        strcpy(predicate, tail);
+    }
+
+    return true;
+}
+
+/*********************************************************************/
+
+xmlNodePtr XPathHeadExtractNode(char xpath[CF_BUFSIZE], Attributes a, Promise *pp)
+{
+    xmlNodePtr node = NULL;
+    char copyxpath[CF_BUFSIZE] = {0}, head[CF_BUFSIZE] = {0}, *tok = NULL;
+
+    strcpy(copyxpath, xpath);
+
+    //extract head substring from xpath
+    tok = strtok(copyxpath, "/");
+    strcpy(head, tok);
+
+    if ((node = XPathSegmentExtractNode(head, a, pp)) == NULL)
+    {
+        cfPS(cf_verbose, CF_INTERPT, "", pp, a, "   !! Could not extract node: %s", head);
+    }
+
+    return node;
+}
+
+/*********************************************************************/
+
+xmlNodePtr XPathTailExtractNode(char xpath[CF_BUFSIZE], Attributes a, Promise *pp)
+{
+    xmlNodePtr node = NULL;
+    char copyxpath[CF_BUFSIZE] = {0}, tail[CF_BUFSIZE] = {0}, *tok = NULL;
+
+    strcpy(copyxpath, xpath);
+
+    //extract tail substring from xpath
+    tok =  XPathGetTail(copyxpath, a, pp);
+    strcpy(tail, tok);
+
+    if ((node = XPathSegmentExtractNode(tail, a, pp)) == NULL)
+    {
+        cfPS(cf_verbose, CF_INTERPT, "", pp, a, "   !! Could not extract node: %s", tail);
+    }
+
+    return node;
+}
+
+/*********************************************************************/
+
+xmlNodePtr XPathSegmentExtractNode(char segment[CF_BUFSIZE], Attributes a, Promise *pp)
+{
+    xmlNodePtr node = NULL, prednode = NULL;
+    xmlChar *name = NULL, *attrname = NULL, *attrvalue = NULL;
+    char copyseg[CF_BUFSIZE] = { 0 }, predicate[CF_BUFSIZE] = { 0 }, copypred[CF_BUFSIZE] = { 0 },
+    rawname[CF_BUFSIZE] = { 0 }, rawvalue[CF_BUFSIZE] = { 0 }, *tok;
+    int hasname = false;
+
+    strcpy(copyseg, segment);
+
+    //extract name and predicate substrings from segment
+    if (XPathHeadContainsNode(segment, a, pp))
+    {
+        tok = strtok(copyseg, " []");
+        strcpy(rawname, tok);
+        name = CharToXmlChar(rawname);
+        node = xmlNewNode(NULL, name);
+        hasname = true;
+    }
+
+    //extract attributes and nodes from predicate
+    if (hasname && XPathHeadContainsPredicate(segment, a, pp))
+    {
+        tok = strtok(NULL, "[]");
+        strcpy(predicate, tok);
+
+        while (strlen(predicate) > 0)
+        {
+            if (PredicateHeadContainsNode(predicate, a, pp))
+            {
+                prednode = PredicateExtractNode(predicate, a, pp);
+                xmlAddChild(node, prednode);
+            }
+
+            else if (PredicateHeadContainsAttribute(predicate, a, pp))
+            {
+                strcpy(copypred, predicate);
+                tok = strtok(copypred, "| @\"\'=");
+                strcpy(rawname, tok);
+                attrname = CharToXmlChar(rawname);
+                tok = strtok(NULL, "| @\"\'=");
+                strcpy(rawvalue, tok);
+                attrvalue = CharToXmlChar(rawvalue);
+                xmlNewProp(node, attrname, attrvalue);
+            }
+
+            if (PredicateHasTail(predicate, a, pp))
+            {
+                PredicateRemoveHead(predicate, a, pp);
+            }
+            else
+            {
+                memset(predicate, 0, sizeof(char)*CF_BUFSIZE);
+            }
+        }
+    }
+    return node;
+}
+
+/*********************************************************************/
+
+char* XPathGetTail(char xpath[CF_BUFSIZE], Attributes a, Promise *pp)
+{
+    char copyxpath[CF_BUFSIZE] = { 0 }, tmpstr[CF_BUFSIZE] = {0}, *tok = NULL;
+
+    strcpy(copyxpath, xpath);
+    memset(xpath, 0, sizeof(char)*CF_BUFSIZE);
+
+    if (XPathHasTail(copyxpath, a, pp))
+    {
+        tok = strtok(copyxpath, "/");
+        while((tok = strtok(NULL, "/")) != NULL)
+        {
+            strcpy(tmpstr, tok);
+        }
+        strcpy(xpath, tmpstr);
+    }
+
+    return xpath;
+}
+
+/*********************************************************************/
+
+static bool XPathRemoveHead(char xpath[CF_BUFSIZE], Attributes a, Promise *pp)
+{
+    char copyxpath[CF_BUFSIZE] = { 0 }, *tail = NULL;
+
+    strcpy(copyxpath, xpath);
+    memset(xpath, 0, sizeof(char)*CF_BUFSIZE);
+
+    if (XPathHasTail(copyxpath, a, pp))
+    {
+        tail =  strchr(copyxpath+1, '/');
+        strcpy(xpath, tail);
+    }
+
+    return true;
+}
+
+/*********************************************************************/
+
+static bool XPathRemoveTail(char xpath[CF_BUFSIZE], Attributes a, Promise *pp)
+{
+    char copyxpath[CF_BUFSIZE] = { 0 }, *tail = NULL;
+    int len = 0;
+
+    strcpy(copyxpath, xpath);
+    memset(xpath, 0, sizeof(char)*CF_BUFSIZE);
+
+    if (XPathHasTail(copyxpath, a, pp))
+    {
+        tail = strrchr(copyxpath, '/');
+        len = tail-copyxpath;
+        copyxpath[len] = '\0';
+        strcpy(xpath, copyxpath);
+    }
+
+    return true;
+}
+
+/*********************************************************************/
+
+static bool PredicateHasTail(char *predicate, Attributes a, Promise *pp)
+{
+    const char *regexp = "^\\s*\\[?\\s*@?\\s*(\\w|-|\\.)+\\s*=\\s*(\"|\')?(\\w|-|\\.)+(\"|\')?\\s*\\|";
+
+    return (ContainsRegex(predicate, regexp));
+}
+
+/*********************************************************************/
+
+static bool PredicateHeadContainsAttribute(char *predicate, Attributes a, Promise *pp)
+{
+    const char *regexp = "^\\s*\\[?\\|?(\\s*@\\s*(\\w|-|\\.)+\\s*=\\s*(\"|\')?(\\w|-|\\.)+(\"|\')?)(\\s*(\\||\\]))?"; // i.e. @name='value' or @name = value or @name ="value"
+
+    return (ContainsRegex(predicate, regexp));
+}
+
+/*********************************************************************/
+
+static bool PredicateHeadContainsNode(char *predicate, Attributes a, Promise *pp)
+{
+    const char *regexp = "^\\s*\\[?\\|?(\\s*(\\w|-|\\.)+\\s*=\\s*(\"|\')?(\\w|-|\\.)+(\"|\')?)(\\s*(\\||\\]))?";  // i.e. name='value' or name = value or name ="value"
+
+    return (ContainsRegex(predicate, regexp));
+}
+
+/*********************************************************************/
+
+static bool XPathHasTail(char *head, Attributes a, Promise *pp)
+{
+    const char *regexp = "^\\s*\\/?\\s*(\\w|-|\\.)+(\\s*::\\s*(\\w|-|\\.)+\\s*)*\\s*(\\[[^\\[\\]\\/]*\\])?\\s*\\/";
+
+    return (ContainsRegex(head, regexp));
+}
+
+/*********************************************************************/
+
+static bool XPathHeadContainsNode(char *head, Attributes a, Promise *pp)
+{
+    const char *regexp = "^(\\/)?(\\w|-|\\.)+((\\s*::\\s*)?(\\w|-|\\.)+)*";
+
+    return (ContainsRegex(head, regexp));
+}
+
+/*********************************************************************/
+
+static bool XPathHeadContainsPredicate(char *head, Attributes a, Promise *pp)
+{
+    const char *regexp = "^\\s*\\/?\\s*(\\w|-|\\.)+(\\s*::\\s*(\\w|-|\\.)+)*\\s*\\"       // name
+        // [ name='value' | @name = "value" | name = value]
+        "[\\s*@?\\s*(\\w|-|\\.)+\\s*=\\s*(\"|\')?(\\w|-|\\.)+(\"|\')?\\s*(\\s*\\|\\s*)?(\\s*@?\\s*(\\w|-|\\.)+\\s*=\\s*(\"|\')?(\\w|-|\\.)+(\"|\')?\\s*)*\\]";
+
+    return (ContainsRegex(head, regexp));
+}
+
+/*********************************************************************/
+
+static bool XPathVerifyBuildSyntax(const char* xpath, Attributes a, Promise *pp)
+/*verify that xpath does not specify position wrt sibling-axis (such as):[#] [last()] [position()] following-sibling:: preceding-sibling:: */
+{
+#ifdef HAVE_PCRE_H
+    char regexp[CF_BUFSIZE] = {'\0'};
+
+    //check for convergence
+    if (!XPathVerifyConvergence(xpath, a, pp))
+    {
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! Promiser expression (%s) is not convergent", xpath);
+        return false;
+    }
+
+    // /name[ name = value | @name='value'| . . . | @name = "value" ]/. . .
+    strcpy (regexp, "^(\\/(( |\\t)*(\\w|-|\\.)+( |\\t)*)"
+    "(\\[( |\\t)*@?(\\w|-|\\.)+( |\\t)*=( |\\t)*(\'|\")?(\\w|-|\\.)+(\'|\")?( |\\t)*"
+    "(\\|( |\\t)*@?(\\w|-|\\.)+( |\\t)*=( |\\t)*(\'|\")?(\\w|-|\\.)+(\'|\")?( |\\t)*)*\\])?)*$");
+
+    if (!ContainsRegex(xpath, regexp))
+    {
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! Promiser expression (%s), \ncontains syntax that is not supported for xpath_build. "
+             "Please refer to users manual for supported syntax specifications.", xpath);
+        return false;
+    }
+#else
+    CfOut(cf_verbose, "", " !! Cannot verify build syntax without PCRE\n");
+    return false;
+#endif
+
+    return true;
+
+}
+
+/*********************************************************************/
+
+static bool XPathVerifyConvergence(const char* xpath, Attributes a, Promise *pp)
+/*verify that xpath does not specify position wrt sibling-axis (such as):[#] [last()] [position()] following-sibling:: preceding-sibling:: */
+{
+#ifdef HAVE_PCRE_H
+    char regexp[CF_BUFSIZE] = {'\0'};
+
+    //check in predicate
+    strcpy (regexp, "\\[\\s*([^\\[\\]]*\\s*(\\||(or)|(and)))?\\s*"     // [ (stuff) (|/or/and)
+        // position() (=/!=/</<=/>/>=)
+        "((position)\\s*\\(\\s*\\)\\s*((=)|(!=)|(<)|(<=)|(>)|(>=))\\s*)?\\s*"
+        // (number) | (number) (+/-/*/div/mod) (number) | last() | last() (+/-/*/div/mod) (number)
+        "(((\\d+)\\s*|((last)\\s*\\(\\s*\\)\\s*))(((\\+)|(-)|(\\*)|(div)|(mod))\\s*(\\d+)\\s*)*)\\s*"
+        // (|/or/and) (stuff) ]
+        "((\\||(or)|(and))[^\\[\\]]*)?\\]"
+        // following:: preceding:: following-sibling:: preceding-sibling::
+        "|((following)|(preceding))(-sibling)?\\s*(::)");
+
+    if (ContainsRegex(xpath, regexp))
+    {
+        return false;
+    }
+
+#else
+    CfOut(cf_verbose, "", " !! Cannot verify xpath expressions without PCRE\n");
+    return false;
+#endif
+
+    return true;
+}
+
+/*********************************************************************/
+
+xmlChar *CharToXmlChar(char c[CF_BUFSIZE])
 {
     return BAD_CAST c;
 }
@@ -2076,6 +2781,7 @@ static bool ContainsRegex(const char* rawstring, const char* regex)
     const char *errorstr;
     int erroffset;
 
+#ifdef HAVE_PCRE_H
     pcre *rx = pcre_compile(regex, 0, &errorstr, &erroffset, NULL);
 
     if ((rc = pcre_exec(rx, NULL, rawstring, strlen(rawstring), 0, 0, ovector, OVECCOUNT)) >= 0)
@@ -2085,6 +2791,9 @@ static bool ContainsRegex(const char* rawstring, const char* regex)
     }
 
     pcre_free(rx);
+#else
+        CfOut(cf_verbose, "", " !! Cannot verify xpath expressions without PCRE\n");
+#endif
     return false;
 }
 
@@ -2114,32 +2823,6 @@ static int XmlAttributeCount(xmlNodePtr node, Attributes a, Promise *pp)
     xmlFree(copynode);
 
     return count;
-}
-
-/*********************************************************************/
-
-static bool XmlXPathConvergent(const char* xpath, Attributes a, Promise *pp)
-/*verify that xpath does not specify position wrt sibling-axis (such as):[#] [last()] [position()] following-sibling:: preceding-sibling:: */
-{
-    char regexp[CF_BUFSIZE] = {'\0'};
-
-    //check in predicate
-    strcpy (regexp, "\\[\\s*([^\\[\\]]*\\s*(\\||(or)|(and)))?\\s*"     // [ (stuff) (|/or/and)
-        // position() (=/!=/</<=/>/>=)
-        "((position)\\s*\\(\\s*\\)\\s*((=)|(!=)|(<)|(<=)|(>)|(>=))\\s*)?\\s*"
-        // (number) | (number) (+/-/*/div/mod) (number) | last() | last() (+/-/*/div/mod) (number)
-        "(((\\d+)\\s*|((last)\\s*\\(\\s*\\)\\s*))(((\\+)|(-)|(\\*)|(div)|(mod))\\s*(\\d+)\\s*)*)\\s*"
-        // (|/or/and) (stuff) ]
-        "((\\||(or)|(and))[^\\[\\]]*)?\\]"
-        // following:: preceding:: following-sibling:: preceding-sibling::
-        "|((following)|(preceding))(-sibling)?\\s*(::)");
-
-    if (ContainsRegex(xpath, regexp))
-    {
-        return false;
-    }
-
-    return true;
 }
 
 /*********************************************************************/

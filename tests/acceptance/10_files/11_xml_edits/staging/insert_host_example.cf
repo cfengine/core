@@ -131,7 +131,7 @@ bundle edit_xml test_insert(str)
 {
 insert_tree:
         "$(str)"
-        select_xpath_region => "/Server/Service/Engine";
+        select_xpath => "/Server/Service/Engine";
 }
 
 #######################################################

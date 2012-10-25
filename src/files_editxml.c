@@ -417,7 +417,6 @@ static bool VerifyXPathBuild(Promise *pp)
     {
         strcpy(rawxpath, a.xml.build_xpath);
     }
-
     else
     {
         strcpy(rawxpath, pp->promiser);
@@ -452,7 +451,6 @@ static bool VerifyXPathBuild(Promise *pp)
             (pp->edcontext->num_edits)++;
         }
     }
-
     //build xpath in a nonempty file
     else if (BuildXPathInNode(rawxpath, doc, a, pp))
     {
@@ -1043,7 +1041,6 @@ static bool BuildXPathInNode(char rawxpath[CF_BUFSIZE], xmlDocPtr doc, Attribute
             head = XPathTailExtractNode(copyxpath, a, pp);
             XPathRemoveTail(copyxpath, a, pp);
         }
-
         else
         {
             head = XPathHeadExtractNode(copyxpath, a, pp);
@@ -1064,7 +1061,6 @@ static bool BuildXPathInNode(char rawxpath[CF_BUFSIZE], xmlDocPtr doc, Attribute
     {
         xmlAddChild(docnode, tail);
     }
-
     //insert the new tree into root, in the case where unique node was not found, in xml document
     else
     {
@@ -1590,7 +1586,6 @@ static bool SanityCheckXPathBuild(Attributes a, Promise *pp)
     {
         strcpy(rawxpath, a.xml.build_xpath);
     }
-
     else
     {
         strcpy(rawxpath, pp->promiser);
@@ -2587,7 +2582,7 @@ char* XPathGetTail(char xpath[CF_BUFSIZE], Attributes a, Promise *pp)
     if (XPathHasTail(copyxpath, a, pp))
     {
         tok = strtok(copyxpath, "/");
-        while((tok = strtok(NULL, "/")) != NULL)
+        while ((tok = strtok(NULL, "/")) != NULL)
         {
             strcpy(tmpstr, tok);
         }

@@ -478,7 +478,7 @@ void PromiseLog(char *s)
         return;
     }
 
-    fprintf(fout, "%ld,%ld: %s\n", CFSTARTTIME, now, s);
+    fprintf(fout, "%jd,%jd: %s\n", (intmax_t) CFSTARTTIME, (intmax_t) now, s);
     fclose(fout);
 }
 

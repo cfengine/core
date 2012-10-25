@@ -1,3 +1,12 @@
+3.3.9   (Bugfix and Stability release)
+
+	Bugfixes:
+
+	- Do not lose hard classes in cf-serverd during policy reload
+	  (Mantis #1218).
+	- Implement recieve network timeout in cf-serverd. Prevents
+	  overloading cf-serverd with stale connections.
+
 3.3.8   (Bugfix and Stability release)
 
 	Versions 3.3.6, 3.3.7 were internal and weren't released.

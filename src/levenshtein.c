@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
-# From http://www.lemoda.net/c/levenshtein/index.html
+/* From http://www.lemoda.net/c/levenshtein/index.html */
 
 static int levenshtein (const char * word1, int len1, const char * word2, int len2)
 {

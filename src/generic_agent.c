@@ -264,7 +264,6 @@ void GenericDeInitialize()
 
     CloseNetwork();
     CloseLog();
-    CloseAllDB();
 }
 
 /*****************************************************************************/

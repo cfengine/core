@@ -63,6 +63,8 @@ static pthread_mutex_t db_handles_lock = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP
 
 static DBHandle db_handles[dbid_max] = { { 0 } };
 
+static pthread_once_t db_shutdown_once = PTHREAD_ONCE_INIT;
+
 /******************************************************************************/
 
 static const char *DB_PATHS[] = {
@@ -125,8 +127,55 @@ static DBHandle *DBHandleGet(int id)
     return &db_handles[id];
 }
 
+/* Closes all open DB handles */
+static void CloseAllDB(void)
+{
+    pthread_mutex_lock(&db_handles_lock);
+
+    for (int i = 0; i < dbid_max; ++i)
+    {
+        if (db_handles[i].refcount != 0)
+        {
+            DBPrivCloseDB(db_handles[i].priv);
+        }
+
+        /*
+         * CloseAllDB is called just before exit(3), but clean up
+         * nevertheless.
+         */
+        db_handles[i].refcount = 0;
+
+        if (db_handles[i].filename)
+        {
+            free(db_handles[i].filename);
+            db_handles[i].filename = NULL;
+
+            int ret = pthread_mutex_destroy(&db_handles[i].lock);
+            if (ret != 0)
+            {
+                errno = ret;
+                CfOut(cf_error, "pthread_mutex_destroy",
+                      "Unable to close database %s", DB_PATHS[i]);
+            }
+        }
+    }
+
+    pthread_mutex_unlock(&db_handles_lock);
+}
+
+static void RegisterShutdownHandler(void)
+{
+    if (atexit(&CloseAllDB) != 0)
+    {
+        CfOut(cf_error, "atexit", "Unable to register cleanup handler for databases,"
+              "expect corrupted databases!");
+    }
+}
+
 bool OpenDB(DBHandle **dbp, dbid id)
 {
+    pthread_once(&db_shutdown_once, RegisterShutdownHandler);
+
     DBHandle *handle = DBHandleGet(id);
 
     pthread_mutex_lock(&handle->lock);
@@ -180,42 +229,6 @@ void CloseDB(DBHandle *handle)
     }
 
     pthread_mutex_unlock(&handle->lock);
-}
-
-/* Closes all open DB handles */
-void CloseAllDB(void)
-{
-    pthread_mutex_lock(&db_handles_lock);
-
-    for (int i = 0; i < dbid_max; ++i)
-    {
-        if (db_handles[i].refcount != 0)
-        {
-            DBPrivCloseDB(db_handles[i].priv);
-        }
-
-        /*
-         * CloseAllDB is called just before exit(3), but clean up
-         * nevertheless.
-         */
-        db_handles[i].refcount = 0;
-
-        if (db_handles[i].filename)
-        {
-            free(db_handles[i].filename);
-            db_handles[i].filename = NULL;
-
-            int ret = pthread_mutex_destroy(&db_handles[i].lock);
-            if (ret != 0)
-            {
-                errno = ret;
-                CfOut(cf_error, "pthread_mutex_destroy",
-                      "Unable to close database %s", DB_PATHS[i]);
-            }
-        }
-    }
-
-    pthread_mutex_unlock(&db_handles_lock);
 }
 
 /*****************************************************************************/

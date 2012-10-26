@@ -260,9 +260,6 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig config, const ReportC
 
 void GenericDeInitialize()
 {
-    CfDebug("GenericDeInitialize()\n");
-
-    CloseNetwork();
 }
 
 /*****************************************************************************/

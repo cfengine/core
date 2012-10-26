@@ -815,7 +815,7 @@ void PurgeLocks()
 
         if (now - entry.time > (time_t) CF_LOCKHORIZON)
         {
-            CfOut(cf_verbose, "", " --> Purging lock (%ld) %s", now - entry.time, key);
+            CfOut(cf_verbose, "", " --> Purging lock (%jd) %s", (intmax_t)(now - entry.time), key);
             DBCursorDeleteEntry(dbcp);
         }
     }

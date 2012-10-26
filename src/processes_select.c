@@ -224,14 +224,14 @@ static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min,
 
         if (min <= value && value <= max)
         {
-            CfOut(cf_verbose, "", "Selection filter matched counter range %s/%s = %s in [%ld,%ld] (= %ld secs)\n",
-                  name1, name2, line[i], min, max, value);
+            CfOut(cf_verbose, "", "Selection filter matched counter range %s/%s = %s in [%jd,%jd] (= %jd secs)\n",
+                  name1, name2, line[i], (intmax_t)min, (intmax_t)max, (intmax_t)value);
             return true;
         }
         else
         {
-            CfDebug("Selection filter REJECTED counter range %s/%s = %s in [%ld,%ld] (= %ld secs)\n", name1, name2,
-                    line[i], min, max, value);
+            CfDebug("Selection filter REJECTED counter range %s/%s = %s in [%jd,%jd] (= %jd secs)\n", name1, name2,
+                    line[i], (intmax_t)min, (intmax_t)max, (intmax_t)value);
             return false;
         }
     }
@@ -264,8 +264,8 @@ static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, tim
 
         if (min <= value && value <= max)
         {
-            CfOut(cf_verbose, "", "Selection filter matched absolute %s/%s = %s in [%ld,%ld]\n", name1, name2, line[i],
-                  min, max);
+            CfOut(cf_verbose, "", "Selection filter matched absolute %s/%s = %s in [%jd,%jd]\n", name1, name2, line[i],
+                  (intmax_t)min, (intmax_t)max);
             return true;
         }
         else

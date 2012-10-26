@@ -263,7 +263,6 @@ void GenericDeInitialize()
     CfDebug("GenericDeInitialize()\n");
 
     CloseNetwork();
-    CloseLog();
 }
 
 /*****************************************************************************/

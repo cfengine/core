@@ -515,6 +515,8 @@ int ReceiveTransaction(int sd, char *buffer, int *more);
 int RecvSocketStream(int sd, char *buffer, int toget, int nothing);
 int SendSocketStream(int sd, char *buffer, int toget, int flags);
 
+int SetReceiveTimeout(int sd, const struct timeval *timeout);
+
 /* nfs.c */
 
 #ifndef MINGW
@@ -546,7 +548,6 @@ int cf_chmod(const char *path, mode_t mode);
 int cf_rename(const char *oldpath, const char *newpath);
 void OpenNetwork(void);
 void CloseNetwork(void);
-void CloseWmi(void);
 int LinkOrCopy(const char *from, const char *to, int sym);
 int ExclusiveLockFile(int fd);
 int ExclusiveUnlockFile(int fd);

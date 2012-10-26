@@ -22,26 +22,24 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_CSV_WRITER_H
-#define CFENGINE_CSV_WRITER_H
+#ifndef CFENGINE_VERCMP_H
+#define CFENGINE_VERCMP_H
+
+typedef enum
+{
+    VERCMP_ERROR = -1,
+    VERCMP_NO_MATCH = 0,
+    VERCMP_MATCH = 1
+} VersionCmpResult;
 
 /*
- * This writer implements CSV as in RFC 4180
+ * a, pp are used for
+ *  a.packages.package_select
+ *  a.packages.package_version_less_command
+ *  a.packages.package_version_equal_command
+ *  a.packages.package_commands_useshell
+ *  cfPS
  */
-
-#include "cf3.defs.h"
-#include "writer.h"
-
-typedef struct CsvWriter_ CsvWriter;
-
-CsvWriter *CsvWriterOpen(Writer *w);
-
-void CsvWriterField(CsvWriter *csvw, const char *str);
-void CsvWriterFieldF(CsvWriter *csvw, const char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);
-
-void CsvWriterNewRecord(CsvWriter *csvw);
-
-/* Does not close underlying Writer, but flushes all pending data */
-void CsvWriterClose(CsvWriter *csvw);
+VersionCmpResult CompareVersions(const char *v1, const char *v2, Attributes a, Promise *pp);
 
 #endif

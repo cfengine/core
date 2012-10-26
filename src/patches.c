@@ -459,17 +459,6 @@ void CloseNetwork()
 
 /*******************************************************************/
 
-void CloseWmi()
-{
-#ifdef MINGW
-    NovaWin_WmiDeInitialize();
-#else
-/* no WMI on Unix */
-#endif
-}
-
-/*******************************************************************/
-
 #ifdef MINGW                    // FIXME: Timeouts ignored on windows for now...
 unsigned int alarm(unsigned int seconds)
 {

@@ -445,7 +445,7 @@ void NewClass(const char *oclass, const char *namespace)
     {
         if (IsDefinedClass(ip->name, namespace))
         {
-            CfOut(cf_error, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", class, THIS_BUNDLE);
+            CfOut(cf_error, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", ip->name, THIS_BUNDLE);
             exit(1);
         }
     }
@@ -531,7 +531,7 @@ void HardClass(const char *oclass)
     {
         if (IsDefinedClass(ip->name, NULL))
         {
-            CfOut(cf_error, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", class, THIS_BUNDLE);
+            CfOut(cf_error, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", ip->name, THIS_BUNDLE);
             exit(1);
         }
     }

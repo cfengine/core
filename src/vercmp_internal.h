@@ -22,26 +22,9 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_CSV_WRITER_H
-#define CFENGINE_CSV_WRITER_H
+#ifndef CFENGINE_VERCMP_INTERNAL_H
+#define CFENGINE_VERCMP_INTERNAL_H
 
-/*
- * This writer implements CSV as in RFC 4180
- */
-
-#include "cf3.defs.h"
-#include "writer.h"
-
-typedef struct CsvWriter_ CsvWriter;
-
-CsvWriter *CsvWriterOpen(Writer *w);
-
-void CsvWriterField(CsvWriter *csvw, const char *str);
-void CsvWriterFieldF(CsvWriter *csvw, const char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);
-
-void CsvWriterNewRecord(CsvWriter *csvw);
-
-/* Does not close underlying Writer, but flushes all pending data */
-void CsvWriterClose(CsvWriter *csvw);
+bool ComparePackageVersionsInternal(const char *v1, const char *v2, enum version_cmp cmp);
 
 #endif

@@ -105,7 +105,7 @@ dbm_migration_bundles_test_LDADD = libdb.la
 
 CLEANFILES = *.gcno *.gcda
 
-package_versions_compare_test_SOURCES = package_versions_compare_test.c ../../src/verify_packages.c
+package_versions_compare_test_SOURCES = package_versions_compare_test.c ../../src/verify_packages.c ../../src/vercmp.c ../../src/vercmp_internal.c
 
 sort_test_SOURCES = sort_test.c ../../src/sort.c
 sort_test_LDADD = libtest.la

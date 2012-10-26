@@ -262,7 +262,6 @@ void GenericDeInitialize()
 {
     CfDebug("GenericDeInitialize()\n");
 
-    CloseWmi();
     CloseNetwork();
     CloseLog();
     CloseAllDB();

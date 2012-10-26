@@ -370,6 +370,12 @@ static void *HandleConnection(ServerConnectionState *conn)
 
     DisableSendDelays(conn->sd_reply);
 
+    struct timeval tv = {
+        .tv_sec = CONNTIMEOUT,
+    };
+
+    SetReceiveTimeout(conn->sd_reply, &tv);
+
     while (BusyWithConnection(conn))
     {
     }
@@ -2204,6 +2210,13 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     ThreadLock(cft_system);
 
     counter_challenge = BN_new();
+    if (counter_challenge == NULL)
+    {
+        CfOut(cf_error, "", "Cannot allocate BIGNUM structure for counter challenge\n");
+        RSA_free(newkey);
+        return false;
+    }
+
     BN_rand(counter_challenge, CF_NONCELEN, 0, 0);
     nonce_len = BN_bn2mpi(counter_challenge, in);
 
@@ -2749,7 +2762,7 @@ static void CompareLocalHash(ServerConnectionState *conn, char *sendbuffer, char
 
 /* TODO - when safe change this proto string to sha2 */
 
-    sscanf(recvbuffer, "MD5 %255[^\n]", rfilename);
+    sscanf(recvbuffer, "MD5 %[^\n]", rfilename);
 
     sp = recvbuffer + strlen(recvbuffer) + CF_SMALL_OFFSET;
 

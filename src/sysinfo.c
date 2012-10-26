@@ -36,6 +36,11 @@
 # include <zone.h>
 #endif
 
+// HP-UX mpctl() for $(sys.cpus) on HP-UX - Mantis #1069
+#ifdef HAVE_SYS_MPCTL_H
+# include <sys/mpctl.h>
+#endif
+
 void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname, char *uqname, char *domain);
 
 #ifdef LINUX
@@ -888,7 +893,7 @@ void OSClasses(void)
 
 #ifdef CFCYG
 
-    for (sp = VSYSNAME.sysname; *sp != '\0'; sp++)
+    for (char *sp = VSYSNAME.sysname; *sp != '\0'; sp++)
     {
         if (*sp == '-')
         {
@@ -2118,13 +2123,15 @@ const char *GetWorkDir(void)
 
 static void GetCPUInfo()
 {
-    FILE *fp;
     char buf[CF_BUFSIZE];
     int count = 0;
 
+#ifdef LINUX
+    FILE *fp;
+
     if ((fp = fopen("/proc/stat", "r")) == NULL)
     {
-        CfOut(cf_verbose, "", "Unable to find proc/cpu data\n");
+        CfOut(cf_verbose, "", "Unable to read /proc/stat cpu data\n");
         return;
     }
 
@@ -2141,6 +2148,29 @@ static void GetCPUInfo()
 
     fclose(fp);
     count--;
+#endif /* LINUX */
+
+#ifdef HAVE_SYS_MPCTL_H
+// Itanium processors have Intel Hyper-Threading virtual-core capability,
+// and the MPC_GETNUMCORES_SYS operation counts each HT virtual core,
+// which is equivalent to what the /proc/stat scan delivers for Linux.
+//
+// A build on 11i v3 PA would have the GETNUMCORES define, but if run on an
+// 11i v1 system it would fail since that OS release has only GETNUMSPUS.
+// So in the presence of GETNUMCORES, we check for an invalid arg error
+// and fall back to GETNUMSPUS if necessary. An 11i v1 build would work
+// normally on 11i v3, because on PA-RISC cores == spus since there's no
+// HT on PA-RISC, and 11i v1 only runs on PA-RISC.
+#ifdef MPC_GETNUMCORES_SYS
+    if ((count = mpctl(MPC_GETNUMCORES_SYS, 0, 0)) == -1) {
+        if (errno == EINVAL) {
+            count = mpctl(MPC_GETNUMSPUS_SYS, 0, 0);
+        }
+    }
+#else
+    count = mpctl(MPC_GETNUMSPUS_SYS, 0, 0);	// PA-RISC processor count
+#endif
+#endif /* HAVE_SYS_MPCTL_H */
 
     if (count < 1)
     {

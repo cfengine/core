@@ -28,6 +28,7 @@
 #include "env_context.h"
 #include "dbm_api.h"
 #include "files_names.h"
+#include "atexit.h"
 
 #define CF_VALUE_LOG      "cf_value.log"
 
@@ -56,10 +57,7 @@ static pthread_once_t end_audit_once = PTHREAD_ONCE_INIT;
 
 static void RegisterEndAudit(void)
 {
-    if (atexit(&EndAudit) != 0)
-    {
-        CfOut(cf_error, "atexit", "Unable to register audit summary handler. Expect audit history to be incomplete.");
-    }
+    RegisterAtExitFunction(&EndAudit);
 }
 
 void BeginAudit()

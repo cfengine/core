@@ -41,6 +41,7 @@
 #include "expand.h"
 #include "transaction.h"
 #include "scope.h"
+#include "atexit.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"
@@ -1869,10 +1870,7 @@ static void CleanPidFile(void)
 
 static void RegisterPidCleanup(void)
 {
-    if (atexit(&CleanPidFile) != 0)
-    {
-        CfOut(cf_error, "atexit", "Unable to register pid file cleanup function, expect stale .pid files to be left after process termination");
-    }
+    RegisterAtExitFunction(&CleanPidFile);
 }
 
 

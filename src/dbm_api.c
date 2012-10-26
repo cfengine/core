@@ -29,6 +29,7 @@
 #include "dbm_priv.h"
 #include "dbm_lib.h"
 #include "dbm_migration.h"
+#include "atexit.h"
 
 #include <assert.h>
 
@@ -165,11 +166,7 @@ static void CloseAllDB(void)
 
 static void RegisterShutdownHandler(void)
 {
-    if (atexit(&CloseAllDB) != 0)
-    {
-        CfOut(cf_error, "atexit", "Unable to register cleanup handler for databases,"
-              "expect corrupted databases!");
-    }
+    RegisterAtExitFunction(&CloseAllDB);
 }
 
 bool OpenDB(DBHandle **dbp, dbid id)

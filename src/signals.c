@@ -55,7 +55,6 @@ void HandleSignals(int signum)
     if (signum == SIGTERM || signum == SIGINT || signum == SIGHUP || signum == SIGSEGV || signum == SIGKILL
         || signum == SIGPIPE)
     {
-        SelfTerminatePrelude();
         exit(0);
     }
     else if (signum == SIGUSR1)
@@ -69,17 +68,4 @@ void HandleSignals(int signum)
 
 /* Reset the signal handler */
     signal(signum, HandleSignals);
-}
-
-/*****************************************************************************/
-
-void SelfTerminatePrelude(void)
-{
-    CfLock best_guess;
-
-    CfOut(cf_verbose, "", "Trying to remove lock - try %s", CFLOCK);
-    best_guess.lock = xstrdup(CFLOCK);
-    best_guess.last = xstrdup(CFLAST);
-    best_guess.log = xstrdup(CFLOG);
-    YieldCurrentLock(best_guess);
 }

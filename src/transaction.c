@@ -33,8 +33,11 @@
 #include "files_interfaces.h"
 #include "item_lib.h"
 #include "expand.h"
+#include "atexit.h"
 
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
+
+static pthread_once_t lock_cleanup_once = PTHREAD_ONCE_INIT;
 
 static void WaitForCriticalSection(void);
 static void ReleaseCriticalSection(void);
@@ -94,6 +97,23 @@ void SummarizeTransaction(Attributes attr, const Promise *pp, const char *lognam
 
 /*****************************************************************************/
 
+static void LocksCleanup(void)
+{
+    if (strlen(CFLOCK) > 0)
+    {
+        CfLock best_guess;
+        best_guess.lock = xstrdup(CFLOCK);
+        best_guess.last = xstrdup(CFLAST);
+        best_guess.log = xstrdup(CFLOG);
+        YieldCurrentLock(best_guess);
+    }
+}
+
+static void RegisterLockCleanup(void)
+{
+    RegisterAtExitFunction(&LocksCleanup);
+}
+
 CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promise *pp, int ignoreProcesses)
 {
     unsigned int pid;
@@ -104,6 +124,9 @@ CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promi
     char str_digest[CF_BUFSIZE];
     CfLock this;
     unsigned char digest[EVP_MAX_MD_SIZE + 1];
+
+    /* Register a cleanup handler */
+    pthread_once(&lock_cleanup_once, &RegisterLockCleanup);
 
     this.last = (char *) CF_UNDEFINED;
     this.lock = (char *) CF_UNDEFINED;
@@ -320,6 +343,13 @@ void YieldCurrentLock(CfLock this)
         free(this.log);
         return;
     }
+
+    /* This lock has ben yield'ed, don't try to yield it again in case process
+     * is terminated abnormally.
+     */
+    strcpy(CFLOCK, "");
+    strcpy(CFLAST, "");
+    strcpy(CFLOG, "");
 
     LogLockCompletion(this.log, getpid(), "Lock removed normally ", this.lock, "");
 

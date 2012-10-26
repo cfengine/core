@@ -508,8 +508,6 @@ void PromiseLog(char *s)
 
 void FatalError(char *s, ...)
 {
-    CfLock best_guess;
-
     if (s)
     {
         va_list ap;
@@ -520,15 +518,6 @@ void FatalError(char *s, ...)
         va_end(ap);
         CfOut(cf_error, "", "Fatal CFEngine error: %s", buf);
     }
-
-    if (strlen(CFLOCK) > 0)
-    {
-        best_guess.lock = xstrdup(CFLOCK);
-        best_guess.last = xstrdup(CFLAST);
-        best_guess.log = xstrdup(CFLOG);
-        YieldCurrentLock(best_guess);
-    }
-
 
     exit(1);
 }

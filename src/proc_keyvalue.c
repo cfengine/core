@@ -35,7 +35,13 @@ bool KeyNumericParserCallback(const char *field, const char *value, void *param)
     KeyNumericParserInfo *info = param;
     long long numeric_value;
 
-    if (sscanf(value, "%llu", &numeric_value) != 1)
+    if (sscanf(value,
+#if defined(__MINGW32__)
+               "%I64u",
+#else
+               "%llu",
+#endif
+               &numeric_value) != 1)
     {
         /* Malformed file */
         return false;

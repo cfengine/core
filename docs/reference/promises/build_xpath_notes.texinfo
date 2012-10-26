@@ -1,0 +1,7 @@
+
+Note that typically, only a single XPath is built in each @code{build_xpath}
+promise (you may of course have multiple promises that each build an XPath).
+Also, please note that the supported syntax used in building an XPath is
+currently limited to a simple and compact format, as shown in the above
+example. The XPath must begin with '/', as it is verified and built using
+an absolute path, from the root node of the document.

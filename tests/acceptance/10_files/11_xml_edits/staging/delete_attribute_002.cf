@@ -1,0 +1,78 @@
+######################################################################
+#
+# File editing edit_xml
+#
+######################################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+        "states" slist => { "actual", "expected" };
+
+        "actual" string =>
+"<?xml version=\"1.0\"?>
+<Server><Service><Engine><OneFish type=\"clownfish\">Nemo</OneFish></Engine></Service></Server>";
+
+        "expected" string =>
+"<?xml version=\"1.0\"?>
+<Server><Service><Engine><OneFish>Nemo<TwoFish><RedFish><BlueFish/></RedFish></TwoFish></OneFish></Engine></Service></Server>";
+
+files:
+        "$(G.testfile).$(states)"
+            create => "true",
+            edit_line => init_insert("$(init.$(states))"),
+            edit_defaults => init_empty;
+}
+
+bundle edit_line init_insert(str)
+{
+insert_lines:
+        "$(str)";
+}
+
+body edit_defaults init_empty
+{
+        empty_file_before_editing => "true";
+}
+
+#######################################################
+bundle agent test
+{
+vars:
+      "attribute_name" string => "type";
+
+files:
+        "$(G.testfile).actual"
+            create => "true",
+            edit_xml => test_delete("$(test.attribute_name)");
+}
+
+bundle edit_xml test_delete(str)
+{
+delete_attribute:
+        "$(str)"
+        build_xpath => "/Server/Service/Engine/OneFish/TwoFish/RedFish/BlueFish",
+        select_xpath => "/Server/Service/Engine/OneFish";
+}
+
+#######################################################
+
+bundle agent check
+{
+methods:
+        "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                              "$(G.testfile).expected",
+                                              "$(this.promise_filename)");
+}
+

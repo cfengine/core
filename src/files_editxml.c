@@ -952,8 +952,7 @@ static bool BuildXPathInFile(char rawxpath[CF_BUFSIZE], xmlDocPtr doc, Attribute
     }
 
     //insert the content into new XML document, beginning from root node
-    CfOut(cf_inform, "", " -> Building XPath \"%s\" in %s", rawxpath,
-          pp->this_server);
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Building XPath \"%s\" in %s", rawxpath, pp->this_server);
     if (xmlDocSetRootElement(doc, docnode) != NULL)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
@@ -1006,8 +1005,7 @@ static bool BuildXPathInNode(char rawxpath[CF_BUFSIZE], xmlDocPtr doc, Attribute
     }
 
     //insert the new tree into selected node in XML document
-    CfOut(cf_inform, "", " -> Building XPath \"%s\" in %s", rawxpath,
-          pp->this_server);
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Building XPath \"%s\" in %s", rawxpath, pp->this_server);
     if (docnode != NULL)
     {
         xmlAddChild(docnode, tail);

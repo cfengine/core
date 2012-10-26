@@ -436,7 +436,7 @@ rval_bundle_statement:      rval_type
                                 
                                 if (!INSTALL_SKIP)
                                 {
-                                   HvBDebug("\tAdd Constraint to promiser: %s\n", P.promiser);
+                                   HvBDebug("\tAdd Constraint to promiser: %s\n\n", P.promiser);
                                    Constraint *cp = NULL;
                                    SubTypeSyntax ss = SubTypeSyntaxLookup(P.blocktype,P.currenttype);
                                    CheckConstraint(P.currenttype, CurrentNameSpace(P.policy), P.blockid, P.lval, P.rval, ss);
@@ -593,7 +593,7 @@ selection:             id
 
                                if (P.currentclasses == NULL)
                                {
-                                   HvBDebug("\tAdd Constraint to body: %s\n", P.blockid);
+                                   HvBDebug("\tAdd Constraint to body: %s\n\n", P.blockid);
                                    cp = ConstraintAppendToBody(P.currentbody, P.lval, P.rval, "any", P.references_body);
                                }
                                else
@@ -671,13 +671,16 @@ class:                 CLASS
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-id:                    IDSYNTAX
+id:                    id_types
                        {
                            strncpy(P.lval, yytext, CF_MAXVARSIZE);
                            DeleteRlist(P.currentRlist);
                            P.currentRlist = NULL;
                            HvBDebug("\tP:%s:%s:%s:%s lval for '%s'\n", P.block, P.blocktype, P.blockid, P.currenttype, P.lval);
                        };
+
+id_types:             IDSYNTAX
+                    | EDITLINE  
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -742,6 +745,13 @@ rval_type:            /*  These token can never be RVAL HvB
                            P.rval = (Rval) { P.currentfncall[P.arg_nesting+1], CF_FNCALL };
                            P.references_body = false;
                        }
+                     | usefunction_noargs
+                       {
+                           HvBDebug("\tP:%s:%s:%s:%s usefunction  with no args RVAL '%s'\n", 
+                               P.block, P.blocktype, P.blockid, P.currenttype, P.currentstring);
+                           P.rval = (Rval) { P.currentfncall[P.arg_nesting+1], CF_FNCALL };
+                           P.references_body = false;
+                       }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -789,6 +799,7 @@ litem:                 IDSYNTAX
                            DeleteFnCall(P.currentfncall[P.arg_nesting+1]);
                        }
 
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 functionid:            IDSYNTAX
@@ -835,13 +846,9 @@ promiser:              QSTRING
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-usefunction:           functionid givearglist
+usefunction_noargs:    functionid
                        {
-                           HvBDebug("\tP: Finished with function call, now at level %d\n",P.arg_nesting);
-                       }
-                       | functionid
-                       {
-                           HvBDebug("\tP: Finished with function call, now at level %d\n",P.arg_nesting);
+                           HvBDebug("\tP: Finished with function call %s, now at level %d\n", P.currentid, P.arg_nesting);
                            P.currentfnid[++P.arg_nesting] = xstrdup(P.currentid);
                            P.currentfncall[P.arg_nesting] = NewFnCall(P.currentfnid[P.arg_nesting],P.giveargs[P.arg_nesting]);
                            P.giveargs[P.arg_nesting] = NULL;
@@ -849,6 +856,12 @@ usefunction:           functionid givearglist
                            free(P.currentfnid[P.arg_nesting]);
                            P.currentfnid[P.arg_nesting] = NULL;
                            P.arg_nesting--;
+                       }
+
+usefunction:           functionid givearglist
+                       {
+                           /* Careful about recursion */
+                           HvBDebug("\tP: Finished with function call, now at level %d\n",P.arg_nesting);
                        }
                        | error
                          {
@@ -863,6 +876,7 @@ givearglist:           '('
                            {
                                fatal_yyerror("Nesting of functions is deeper than recommended");
                            }
+                           HvBDebug("\tP: Start FnCall %s args level %d\n",P.currentid, P.arg_nesting);
                            P.currentfnid[P.arg_nesting] = xstrdup(P.currentid);
                            HvBDebug("\tP: Start FnCall %s args level %d\n",P.currentfnid[P.arg_nesting],P.arg_nesting);
                        }
@@ -878,6 +892,7 @@ givearglist:           '('
                            free(P.currentfnid[P.arg_nesting]);
                            P.currentfnid[P.arg_nesting] = NULL;
                            P.arg_nesting--;
+                           HvBDebug("\tP: End args level %d\n",P.arg_nesting);
                        }
 
 
@@ -917,7 +932,7 @@ gaitem:                IDSYNTAX
                      | usefunction
                        {
                            /* Careful about recursion */
-                           HvBDebug("\tFnCall new function: %s\n");
+                           HvBDebug("\tFnCall new function\n");
                            AppendRlist(&P.giveargs[P.arg_nesting],(void *)P.currentfncall[P.arg_nesting+1],CF_FNCALL);
                            DeleteRvalItem((Rval) { P.currentfncall[P.arg_nesting+1], CF_FNCALL });
                        }

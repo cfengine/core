@@ -531,7 +531,6 @@ void FatalError(char *s, ...)
         YieldCurrentLock(best_guess);
     }
 
-    unlink(PIDFILE);
 
     exit(1);
 }

@@ -48,6 +48,10 @@
 #include "reporting.h"
 #endif
 
+static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT;
+
+static char PIDFILE[CF_BUFSIZE];
+
 extern char *CFH[][2];
 
 static void VerifyPromises(Policy *policy, Rlist *bundlesequence, const ReportContext *report_context);
@@ -1852,9 +1856,31 @@ const char *NameVersion(void)
 
 /********************************************************************/
 
+static void CleanPidFile(void)
+{
+    if (unlink(PIDFILE) != 0)
+    {
+        if (errno != ENOENT)
+        {
+            CfOut(cf_error, "unlink", "Unable to remove pid file");
+        }
+    }
+}
+
+static void RegisterPidCleanup(void)
+{
+    if (atexit(&CleanPidFile) != 0)
+    {
+        CfOut(cf_error, "atexit", "Unable to register pid file cleanup function, expect stale .pid files to be left after process termination");
+    }
+}
+
+
 void WritePID(char *filename)
 {
     FILE *fp;
+
+    pthread_once(&pid_cleanup_once, RegisterPidCleanup);
 
     snprintf(PIDFILE, CF_BUFSIZE - 1, "%s%c%s", CFWORKDIR, FILE_SEPARATOR, filename);
 

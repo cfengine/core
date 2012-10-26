@@ -82,5 +82,4 @@ void SelfTerminatePrelude(void)
     best_guess.last = xstrdup(CFLAST);
     best_guess.log = xstrdup(CFLOG);
     YieldCurrentLock(best_guess);
-    unlink(PIDFILE);
 }

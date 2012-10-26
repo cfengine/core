@@ -535,7 +535,7 @@ FilePerms GetPermissionConstraints(const Promise *pp)
     }
 
 #ifdef MINGW
-    p.owners = NovaWin_Rlist2SidList((Rlist *) GetConstraintValue("owners", pp, CF_LIST), pp);
+    p.owners = NovaWin_Rlist2SidList((Rlist *) GetConstraintValue("owners", pp, CF_LIST));
 #else /* NOT MINGW */
     p.owners = Rlist2UidList((Rlist *) GetConstraintValue("owners", pp, CF_LIST), pp);
     p.groups = Rlist2GidList((Rlist *) GetConstraintValue("groups", pp, CF_LIST), pp);

@@ -924,7 +924,7 @@ bool ReportHost(const char *hostkey, const char *address, bool incoming,
 
     struct tm tm;
     char text_date[CF_BUFSIZE];
-    strftime(text_date, CF_BUFSIZE, "%a %b %d %R", localtime_r(&quality->lastseen, &tm));
+    strftime(text_date, CF_BUFSIZE, "%a %b %d %H:%M", localtime_r(&quality->lastseen, &tm));
 
     CfOut(cf_verbose, "", " -> Reporting on %s", address);
 

@@ -23,6 +23,7 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
+
 */
 
 #include "cf3.defs.h"
@@ -45,7 +46,7 @@ extern int yylineno;
 static void DebugBanner(const char *s);
 static void fatal_yyerror(const char *s);
 
-/* HvB */
+/* HvB function */
 static void yyerror_hvb(const char *s);
 
 static bool INSTALL_SKIP = false;
@@ -53,7 +54,7 @@ static bool INSTALL_SKIP = false;
 #define YYMALLOC xmalloc
 
 /*
- * HvB
+ * HvB lexer vars
 */
 extern char cf_linebuf[8192];
 extern int  cf_tokenpos;

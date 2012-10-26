@@ -493,9 +493,6 @@ blockid:               BLOCK_IDSYNTAX
 */
 body:              body_syntax
                    {
-                    printf("type %s\n", P.block);
-                    printf("\t body id  = %s\n", P.blockid);
-                    printf("\t body type = %s\n", P.blocktype);
                     /*
                     printf("\t body %s %s %s\n", $<text>4, $<text>3, $<text>2 );
                     */
@@ -749,8 +746,14 @@ rval_type:            /*  These token can never be RVAL HvB
                        {
                            HvBDebug("\tP:%s:%s:%s:%s usefunction  with no args RVAL '%s'\n", 
                                P.block, P.blocktype, P.blockid, P.currenttype, P.currentstring);
+                               /*
                            P.rval = (Rval) { P.currentfncall[P.arg_nesting+1], CF_FNCALL };
                            P.references_body = false;
+                              */
+                           P.rval = (Rval) { xstrdup(P.currentid), CF_SCALAR };
+                           P.references_body = true;
+                           HvBDebug("\tP:%s:%s:%s:%s id RVAL '%s'\n", 
+                               P.block, P.blocktype, P.blockid, P.currenttype, P.currentstring);
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -776,7 +779,7 @@ litem:                 IDSYNTAX
                            AppendRlist((Rlist **)&P.currentRlist,P.currentid,CF_SCALAR);
                        }
 
-                     | QSTRING
+                    |  QSTRING
                        {
                            HvBDebug("\tP:%s:%s:%s added qstring item = %s\n", P.block,P.blocktype,P.blockid,  yytext);
                            AppendRlist((Rlist **)&P.currentRlist,(void *)P.currentstring,CF_SCALAR);
@@ -792,12 +795,20 @@ litem:                 IDSYNTAX
                            P.currentstring = NULL;
                        }
 
+/* never used for bidy
                      | usefunction
                        {
                            HvBDebug("\tP: Install function call as list item from level %d\n",P.arg_nesting+1);
                            AppendRlist((Rlist **)&P.currentRlist,(void *)P.currentfncall[P.arg_nesting+1],CF_FNCALL);
                            DeleteFnCall(P.currentfncall[P.arg_nesting+1]);
                        }
+                     | usefunction_noargs
+                       {
+                           HvBDebug("\tP: Install function call with no args as list item from level %d\n",P.arg_nesting+1);
+                           AppendRlist((Rlist **)&P.currentRlist,(void *)P.currentfncall[P.arg_nesting+1],CF_FNCALL);
+                           DeleteFnCall(P.currentfncall[P.arg_nesting+1]);
+                       }
+*/
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -849,6 +860,7 @@ promiser:              QSTRING
 usefunction_noargs:    functionid
                        {
                            HvBDebug("\tP: Finished with function call %s, now at level %d\n", P.currentid, P.arg_nesting);
+                           /*
                            P.currentfnid[++P.arg_nesting] = xstrdup(P.currentid);
                            P.currentfncall[P.arg_nesting] = NewFnCall(P.currentfnid[P.arg_nesting],P.giveargs[P.arg_nesting]);
                            P.giveargs[P.arg_nesting] = NULL;
@@ -856,6 +868,7 @@ usefunction_noargs:    functionid
                            free(P.currentfnid[P.arg_nesting]);
                            P.currentfnid[P.arg_nesting] = NULL;
                            P.arg_nesting--;
+                           */
                        }
 
 usefunction:           functionid givearglist

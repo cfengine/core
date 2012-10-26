@@ -35,7 +35,7 @@ static pthread_once_t register_atexit_once = PTHREAD_ONCE_INIT;
 static pthread_mutex_t atexit_functions_mutex = PTHREAD_MUTEX_INITIALIZER;
 static AtExitList *atexit_functions;
 
-/* To be called only by Windows service implementation */
+/* To be called externally only by Windows service implementation */
 
 void CallAtExitFunctions(void)
 {

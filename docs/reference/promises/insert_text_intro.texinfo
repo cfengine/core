@@ -1,6 +1,7 @@
-This promise is part of the xml-editing model. It assures that a
+
+This promise is part of the XML-editing model. It assures that a
 value string, containing the matching substring, will be present
-in the specified node within the xml file. If the substring is not
+in the specified node within the XML file. If the substring is not
 found, the default promise is to append the substring at the end of
 the existing value string, within the specified node. The specified
 node is determined by body-attributes. The promise object referred

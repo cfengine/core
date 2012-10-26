@@ -1,0 +1,76 @@
+######################################################################
+#
+# File editing edit_xml - example for building an XPath in a node in a non-empty file
+#
+######################################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+        "states" slist => { "actual", "expected" };
+
+        "actual" string =>
+"<?xml version=\"1.0\"?>
+<Server><Service><Engine></Engine></Service></Server>";
+
+        "expected" string =>
+"<?xml version=\"1.0\"?>
+<Server><Service><Engine><Host name=\"cfe_host\"><Alias>cfe_alias</Alias></Host></Engine></Service></Server>";
+
+files:
+        "$(G.testfile).$(states)"
+            create => "true",
+            edit_line => init_insert("$(init.$(states))"),
+            edit_defaults => init_empty;
+}
+
+bundle edit_line init_insert(str)
+{
+insert_lines:
+        "$(str)";
+}
+
+body edit_defaults init_empty
+{
+        empty_file_before_editing => "true";
+}
+
+#######################################################
+bundle agent test
+{
+vars:
+      "xpath" string =>
+"/Server/Service/Engine/Host[ Alias = cfe_alias | @name=\"cfe_host\" ]";
+
+files:
+        "$(G.testfile).actual"
+            create => "true",
+            edit_xml => test_build("$(test.xpath)");
+}
+
+bundle edit_xml test_build(str)
+{
+build_xpath:
+        "$(str)";
+}
+
+#######################################################
+
+bundle agent check
+{
+methods:
+        "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                              "$(G.testfile).expected",
+                                              "$(this.promise_filename)");
+}

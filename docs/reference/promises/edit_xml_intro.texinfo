@@ -1,3 +1,4 @@
+
 The use of XML documents in systems configuration is widespread. XML documents
 represent data that is complex and can be structured in various ways. The XML
 based editing offers a powerful environment for editing hierarchical and

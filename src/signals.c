@@ -88,6 +88,4 @@ void SelfTerminatePrelude(void)
     {
         EndAudit();
     }
-
-    GenericDeInitialize();
 }

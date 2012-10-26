@@ -94,7 +94,6 @@ int main(int argc, char *argv[])
     GenericInitialize("common", config, report_context);
     ThisAgentInit();
     AnalyzePromiseConflicts();
-    GenericDeInitialize();
     CloseReports("commmon", report_context);
 
     if (ERRORCOUNT > 0)

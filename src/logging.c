@@ -525,7 +525,6 @@ void FatalError(char *s, ...)
         EndAudit();
     }
 
-    GenericDeInitialize();
     exit(1);
 }
 

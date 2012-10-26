@@ -136,8 +136,6 @@ int main(int argc, char *argv[])
         ret = 1;
     }
 
-    GenericDeInitialize();
-
     return ret;
 }
 

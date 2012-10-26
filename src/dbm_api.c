@@ -23,14 +23,14 @@
   included file COSL.txt.
 */
 
-#include <assert.h>
-
 #include "cf3.defs.h"
 
 #include "dbm_api.h"
 #include "dbm_priv.h"
 #include "dbm_lib.h"
 #include "dbm_migration.h"
+
+#include <assert.h>
 
 /******************************************************************************/
 

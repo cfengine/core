@@ -36,6 +36,11 @@
 #include "parser_state.h"
 #include "files_names.h"
 
+char cf_linebuf[8192];
+int  cf_tokenpos;
+int  cf_lineno;
+int  cf_block_open=0;
+
 /* yyinput/input are generated and unused */
 
 #if defined(__GNUC__)
@@ -49,6 +54,9 @@
 #undef realloc
 #define malloc xmalloc
 #define realloc xrealloc
+
+#define HvBDebug printf
+
 
 int yywrap(void)
 {
@@ -76,6 +84,9 @@ promises   bundle
 
 body       body
 
+block_open  [{]
+block_close [}]
+
 nakedvar   [$@][(][a-zA-Z0-9_\[\]\200-\377.:]+[)]|[$@][{][a-zA-Z0-9_\[\]\200-\377.:]+[}]
 
 id         [a-zA-Z0-9_\200-\377]+
@@ -85,6 +96,9 @@ blockid    [a-zA-Z0-9_\200-\377]+[:][a-zA-Z0-9_\200-\377]+
 assign     =>
 
 arrow      ->
+
+string     string
+
 
 /*
  * Three types of quoted strings:
@@ -112,17 +126,47 @@ qstring    \"((\\(.|\n))|[^"\\])*\"|\'((\\(.|\n))|[^'\\])*\'|`[^`]*`
 
 class      [.|&!()a-zA-Z0-9_\200-\377:]+::
 
-category   [a-zA-Z_]+:
+/*
+ * declare a token for each catogory
+*/
+vars_category       vars:
+classes_category    classes:
+interfaces_category interfaces:
+processes_category  processes:
+storage_category    storage:
+packages_storage    packages:
+commands_category   commands:
+methods_category    methods:
+files_category      files:
+databases_category   databases:
+services_category   services:
+reports_category    reports:
+field_edits_category field_edits:
+insert_lines_category insert_lines:
+replace_patterns_category  replace_patterns:
+delete_lines_category  delete_lines:
 
 %%
 
-{newline}             {
+{newline}.*                   {
+                          /*
+                          * Read Entire line and push
+                          * it back to analyse it
+                          */
+                          cf_tokenpos = 0;
+                          cf_lineno++;
+                          strcpy(cf_linebuf, yytext+1);
+                          HvBDebug("L:- %s\n", cf_linebuf);
+
                           P.line_no++;
                           P.line_pos = 0;
+
+                          yyless(1);
                       }
 
 {promises}            {
-                          /* Note this has to come before "id" since it is a subset of id */
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:bundle %d\n", cf_tokenpos);
 
                           if (P.currentclasses != NULL)
                           {
@@ -130,11 +174,102 @@ category   [a-zA-Z_]+:
                               P.currentclasses = NULL;
                           }
                           P.line_pos += strlen(yytext);
+
                           return BUNDLE;
                       }
 
+common                {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:common %d\n", cf_tokenpos);
+                          return COMMON;
+                      }
+
+agent                {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:agent %d\n", cf_tokenpos);
+                          return AGENT;
+                     }
+
+edit_line            {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("L\t:edit_line %d\n", cf_tokenpos);
+                          return EDITLINE;
+                     }
+
+
+and                  {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:and %d\n", cf_tokenpos);
+                          return AND;
+                     }
+
+dist           {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:dist %d\n", cf_tokenpos);
+                          return DIST;
+                     }
+
+expression           {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:expression %d\n", cf_tokenpos);
+                          return EXPRESSION;
+                     }
+
+or                   {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:or %d\n", cf_tokenpos);
+                          return OR;
+                     }
+
+xor                  {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:xor %d\n", cf_tokenpos);
+                          return XOR;
+                     }
+
+not                  {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:not %d\n", cf_tokenpos);
+                          return NOT;
+                     }
+
+
+string               {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:string %d\n", cf_tokenpos);
+                          return STRING;
+                     }
+
+slist               {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:slist %d\n", cf_tokenpos);
+                          return SLIST;
+                     }
+
+usebundle               {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:usebundle %d\n", cf_tokenpos);
+                          return USEBUNDLE;
+                     }
+
+
+{block_open}         {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:{ %d\n", cf_tokenpos);
+                          cf_block_open++;
+                          return BLOCK_OPEN;
+                     }
+
+{block_close}        {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:} %d\n", cf_tokenpos);
+                          --cf_block_open;
+                          return BLOCK_CLOSE;
+                     }
+
+
 {body}                {
-                          /* Note this has to come before "id" since it is a subset of id */
+                          cf_tokenpos += yyleng;
 
                           if (P.currentclasses != NULL)
                           {
@@ -142,10 +277,13 @@ category   [a-zA-Z_]+:
                               P.currentclasses = NULL;
                           }
                           P.line_pos += strlen(yytext);
+                          HvBDebug("\tL:body %d\n", cf_tokenpos);
                           return BODY;
                       }
 
 {id}                  {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:idsyntax: %s\n", yytext);
                           size_t token_length = strlen(yytext);
                           P.offsets.last_id = P.offsets.current - token_length;
                           P.line_pos += token_length;
@@ -154,11 +292,16 @@ category   [a-zA-Z_]+:
                               yyerror("identifier too long");
                           }
                           strncpy(P.currentid, yytext, CF_MAXVARSIZE);
+                          /*
+                          strcpy(yylval.text, yytext);
+                          */
                           return IDSYNTAX;
                       }
 
 
 {blockid}             {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:block_idsyntax: %s\n", yytext);
                           size_t token_length = strlen(yytext);
                           P.offsets.last_id = P.offsets.current - token_length;
                           P.line_pos += token_length;
@@ -167,21 +310,29 @@ category   [a-zA-Z_]+:
                               yyerror("qualified identifier too long");
                           }
                           strncpy(P.currentid, yytext, CF_MAXVARSIZE);
-                          return IDSYNTAX;
+                          /*
+                          strcpy(yylval.text, yytext);
+                          */
+                          return BLOCK_IDSYNTAX;
                       }
 
 
 {assign}              {
+                          cf_tokenpos += yyleng;
                           P.line_pos += strlen(yytext);
+                          HvBDebug("\tL:ASSIGN %d\n", cf_tokenpos);
                           return ASSIGN;
                       }
 
 {arrow}               {
+                          cf_tokenpos += yyleng;
                           P.line_pos += strlen(yytext);
+                          HvBDebug("\tL:ARROW %d\n", cf_tokenpos);
                           return ARROW;
                       }
 
 {class}               {
+                          cf_tokenpos += yyleng;
                           P.line_pos += strlen(yytext);
 
                           if (P.currentclasses != NULL)
@@ -195,23 +346,96 @@ category   [a-zA-Z_]+:
                           return CLASS;
                       }
 
-{category}            {
-                          size_t token_size = strlen(yytext);
-                          P.line_pos += token_size;
-                          P.offsets.last_subtype_id = P.offsets.current - token_size;
-                          yytext[token_size - 1] = '\0';
-                          strncpy(P.currenttype, yytext, CF_MAXVARSIZE);
-
-                          if (P.currentclasses != NULL)
-                          {
-                              free(P.currentclasses);
-                              P.currentclasses = NULL;
-                          }
-
-                          return CATEGORY;
+{vars_category}       { 
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:category:%s\n", yytext);
+                          strncpy(P.currenttype, "vars", CF_MAXVARSIZE);
+                          return VARS_CATEGORY;
+                      }
+{classes_category}    {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:category:%s\n", yytext);
+                          return CLASSES_CATEGORY;
+                      }
+{interfaces_category} {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:category:%s\n", yytext);
+                          return INTERFACES_CATEGORY;
+                      }
+{processes_category}  {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:category:%s\n", yytext);
+                          return PROCESSES_CATEGORY;
+                      }
+{storage_category}    { 
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:category:%s\n", yytext);
+                          return STORAGE_CATEGORY;
+                      }
+{packages_storage}    {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:category:%s\n", yytext);
+                          return PACKAGES_CATEGORY;
+                      }
+{commands_category}   {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:category:%s\n", yytext);
+                          strncpy(P.currenttype, "commands", CF_MAXVARSIZE);
+                          return COMMANDS_CATEGORY;
+                      }
+{methods_category}    {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:category:%s\n", yytext);
+                          return METHODS_CATEGORY;
+                      }
+{files_category}      {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:category:%s\n", yytext);
+                          return FILES_CATEGORY;
+                      }
+{databases_category}  {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:category:%s\n", yytext);
+                          return DATABASES_CATEGORY;
+                      }
+{services_category}   {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:category:%s\n", yytext);
+                          return SERVICES_CATEGORY;
+                      }
+{reports_category}    { 
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:category:%s\n", yytext);
+                          return REPORTS_CATEGORY;
                       }
 
+{field_edits_category}    { 
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:category:%s\n", yytext);
+                          return EDIT_FIELD_EDITS_CATEGORY;
+                 }
+
+{insert_lines_category}   { 
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:category:%s\n", yytext);
+                          return EDIT_INSERT_LINES_CATEGORY;
+                 }
+
+{replace_patterns_category}   { 
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:category:%s\n", yytext);
+                          return EDIT_REPLACE_PATTERNS_CATEGORY;
+                     }
+
+{delete_lines_category}   { 
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:category:%s\n", yytext);
+                          return EDIT_DELETE_LINES_CATEGORY;
+                 }
+
+
 {qstring}             {
+                          cf_tokenpos += yyleng;
                           char *tmp = NULL;
                           int less = 0;
                           size_t token_length = strlen(yytext);
@@ -248,11 +472,13 @@ category   [a-zA-Z_]+:
                           }
 
                           free(tmp);
+                          HvBDebug("\tL:QuoteString:%s\n", P.currentstring);
                           return QSTRING;
                       }
 
 
 {nakedvar}            {
+                          cf_tokenpos += yyleng;
                           P.line_pos += strlen(yytext);
                           P.currentstring = xstrdup(yytext);
                           return NAKEDVAR;
@@ -260,6 +486,7 @@ category   [a-zA-Z_]+:
 
 
 {space}+              {
+                          cf_tokenpos += yyleng;
                           P.line_pos += strlen(yytext);
                       }
 
@@ -272,8 +499,6 @@ category   [a-zA-Z_]+:
                           return yytext[0];
                       }
 
-
 %%
-
 
 /* EOF */

@@ -344,11 +344,6 @@ static void KeepPromises(Policy *policy, GenericAgentConfig config, const Report
     KeepControlPromises(policy);
     KeepPromiseBundles(policy, config.bundlesequence, report_context);
 
-    if (THIS_AGENT_TYPE == cf_agent)
-    {
-        EndAudit();
-    }
-
 // TOPICS counts the number of currently defined promises
 // OCCUR counts the number of objects touched while verifying config
 

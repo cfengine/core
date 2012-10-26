@@ -32,6 +32,7 @@
 #define CF_VALUE_LOG      "cf_value.log"
 
 static void ExtractOperationLock(char *op);
+static void EndAudit(void);
 
 static const char *NO_STATUS_TYPES[] = { "vars", "classes", NULL };
 static const char *NO_LOG_TYPES[] =
@@ -51,8 +52,20 @@ static CF_DB *AUDITDBP;
 
 /*****************************************************************************/
 
+static pthread_once_t end_audit_once = PTHREAD_ONCE_INIT;
+
+static void RegisterEndAudit(void)
+{
+    if (atexit(&EndAudit) != 0)
+    {
+        CfOut(cf_error, "atexit", "Unable to register audit summary handler. Expect audit history to be incomplete.");
+    }
+}
+
 void BeginAudit()
 {
+    pthread_once(&end_audit_once, &RegisterEndAudit);
+
     Promise dummyp = { 0 };
     Attributes dummyattr = { {0} };
 
@@ -64,7 +77,7 @@ void BeginAudit()
 
 /*****************************************************************************/
 
-void EndAudit()
+void EndAudit(void)
 {
     char *sp, string[CF_BUFSIZE];
     Rval retval;
@@ -519,11 +532,6 @@ void FatalError(char *s, ...)
     }
 
     unlink(PIDFILE);
-
-    if (THIS_AGENT_TYPE == cf_agent)
-    {
-        EndAudit();
-    }
 
     exit(1);
 }

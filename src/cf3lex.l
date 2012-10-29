@@ -78,7 +78,7 @@ space      [ \t]+
 
 newline    ([\n]|[\xd][\xa])
 
-comment    #[^\n]*
+skip_lines    #[^\n]*
 
 promises   bundle
 
@@ -96,9 +96,6 @@ blockid    [a-zA-Z0-9_\200-\377]+[:][a-zA-Z0-9_\200-\377]+
 assign     =>
 
 arrow      ->
-
-string     string
-
 
 /*
  * Three types of quoted strings:
@@ -129,22 +126,43 @@ class      [.|&!()a-zA-Z0-9_\200-\377:]+::
 /*
  * declare a token for each catogory
 */
-vars_category       vars:
-classes_category    classes:
-interfaces_category interfaces:
-processes_category  processes:
-storage_category    storage:
-packages_storage    packages:
-commands_category   commands:
-methods_category    methods:
-files_category      files:
-databases_category   databases:
-services_category   services:
-reports_category    reports:
-field_edits_category field_edits:
-insert_lines_category insert_lines:
+vars_category              vars:
+classes_category           classes:
+interfaces_category        interfaces:
+processes_category         processes:
+storage_category           storage:
+packages_storage           packages:
+commands_category          commands:
+methods_category           methods:
+files_category             files:
+databases_category         databases:
+services_category          services:
+reports_category           reports:
+field_edits_category       field_edits:
+insert_lines_category      insert_lines:
 replace_patterns_category  replace_patterns:
-delete_lines_category  delete_lines:
+delete_lines_category      delete_lines:
+
+/*
+ * common types
+*/
+comment                    comment
+depends_on                 depends_on
+handle                     handle
+ifvarclass                 ifvarclass
+meta                       meta
+
+/*
+ * var types
+*/
+
+string                     string
+int                        int
+real                       real
+slist                      slist
+ilist                      ilist
+rlist                      rlist
+policy                     policy
 
 %%
 
@@ -180,73 +198,132 @@ delete_lines_category  delete_lines:
 
 common                {
                           cf_tokenpos += yyleng;
-                          HvBDebug("\tL:common %d\n", cf_tokenpos);
+                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
                           return COMMON;
                       }
 
 agent                {
                           cf_tokenpos += yyleng;
-                          HvBDebug("\tL:agent %d\n", cf_tokenpos);
+                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
                           return AGENT;
                      }
 
 edit_line            {
                           cf_tokenpos += yyleng;
-                          HvBDebug("L\t:edit_line %d\n", cf_tokenpos);
+                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
                           return EDITLINE;
                      }
 
 
 and                  {
                           cf_tokenpos += yyleng;
-                          HvBDebug("\tL:and %d\n", cf_tokenpos);
+                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
                           return AND;
                      }
 
 dist           {
                           cf_tokenpos += yyleng;
-                          HvBDebug("\tL:dist %d\n", cf_tokenpos);
+                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
                           return DIST;
                      }
 
 expression           {
                           cf_tokenpos += yyleng;
-                          HvBDebug("\tL:expression %d\n", cf_tokenpos);
+                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
                           return EXPRESSION;
                      }
 
 or                   {
                           cf_tokenpos += yyleng;
-                          HvBDebug("\tL:or %d\n", cf_tokenpos);
+                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
                           return OR;
                      }
 
 xor                  {
                           cf_tokenpos += yyleng;
-                          HvBDebug("\tL:xor %d\n", cf_tokenpos);
+                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
                           return XOR;
                      }
 
 not                  {
                           cf_tokenpos += yyleng;
-                          HvBDebug("\tL:not %d\n", cf_tokenpos);
+                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
                           return NOT;
                      }
 
-
-string               {
+{comment}            {
                           cf_tokenpos += yyleng;
-                          HvBDebug("\tL:string %d\n", cf_tokenpos);
+                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
+                          return COMMENT;
+                     }
+
+{depends_on}         {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
+                          return DEPENDS_ON;
+                     }
+
+{handle}             {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
+                          return HANDLE;
+                     }
+
+{ifvarclass}         {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
+                          return IFVARCLASS;
+                     }
+
+{meta}               {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
+                          return META;
+                     }
+
+{string}             {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
                           return STRING;
                      }
 
-slist               {
+{int}                {
                           cf_tokenpos += yyleng;
-                          HvBDebug("\tL:slist %d\n", cf_tokenpos);
+                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
+                          return INT;
+                     }
+
+{real}              {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
+                          return REAL;
+                     }
+
+{slist}              {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
                           return SLIST;
                      }
 
-usebundle               {
+{ilist}              {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
+                          return ILIST;
+                     }
+
+{rlist}              {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
+                          return RLIST;
+                     }
+
+{policy}             {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
+                          return POLICY;
+                     }
+     
+usebundle            {
                           cf_tokenpos += yyleng;
                           HvBDebug("\tL:usebundle %d\n", cf_tokenpos);
                           return USEBUNDLE;
@@ -490,7 +567,7 @@ usebundle               {
                           P.line_pos += strlen(yytext);
                       }
 
-{comment}             {
+{skip_lines}          {
                       }
 
 

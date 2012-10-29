@@ -48,6 +48,9 @@ static void fatal_yyerror(const char *s);
 
 /* HvB function */
 static void yyerror_hvb(const char *s);
+static bool CATEGORY_TYPE_CHECK = false;
+
+/* end HvB */ 
 
 static bool INSTALL_SKIP = false;
 
@@ -83,11 +86,16 @@ extern int  cf_block_open;
 %token PROCESSES_CATEGORY STORAGE_CATEGORY PACKAGES_CATEGORY 
 %token COMMANDS_CATEGORY METHODS_CATEGORY FILES_CATEGORY
 %token DATABASES_CATEGORY SERVICES_CATEGORY REPORTS_CATEGORY
-%token STRING SLIST 
-%token AND DIST EXPRESSION OR XOR NOT
 %token EDIT_FIELD_EDITS_CATEGORY EDIT_INSERT_LINES_CATEGORY EDIT_REPLACE_PATTERNS_CATEGORY 
 %token EDIT_DELETE_LINES_CATEGORY
 %token USEBUNDLE
+
+%token COMMENT DEPENDS_ON HANDLE IFVARCLASS META
+
+%token STRING INT REAL SLIST ILIST RLIST POLICY 
+
+%token AND DIST EXPRESSION OR XOR NOT
+
 
 %token  BLOCK_IDSYNTAX
 %token  IDSYNTAX
@@ -104,13 +112,6 @@ blocks:                block
                      | blocks block;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-/*
-block:                 bundle typeid blockid bundlebody
-                     | bundle typeid blockid usearglist bundlebody
-                     | body typeid blockid bodybody
-                     | body typeid blockid usearglist bodybody;
-*/
 
 block:                 bundles
                      | bodies
@@ -152,7 +153,7 @@ bundle_type:        bundle_values
 
                        }
 
-bundle_values:           COMMON
+bundle_values:         COMMON
                      | AGENT
                      | EDITLINE
                      /*
@@ -165,10 +166,10 @@ bundle_values:           COMMON
                       */
 
 bundle_id:           bundle_id_syntax
-                   {
-                     strncpy(P.blockid,yytext,CF_MAXVARSIZE);
-                     HvBDebug("\tP:bundle:%s:%s\n", P.blocktype, P.blockid);
-                   }
+                     {
+                         strncpy(P.blockid,yytext,CF_MAXVARSIZE);
+                         HvBDebug("\tP:bundle:%s:%s\n", P.blocktype, P.blockid);
+                     }
 
 bundle_id_syntax:    typeid
                    | blockid
@@ -229,7 +230,7 @@ bundle_body:         BLOCK_OPEN
                         }
                      }
 
-bundle_statements:   bundle_statement
+bundle_statements:    bundle_statement
                     | bundle_statements bundle_statement 
 
 bundle_statement:   categories
@@ -240,171 +241,138 @@ bundle_statement:   categories
 categories:         category
                   | categories category
 
-category:           category_types 
+category:           category_type
+                    {
+                       /* 
+                        reset check for category
+                       */
+                       CATEGORY_TYPE_CHECK = false;
 
-category_types:     category_syntaxes
-                  | category_type_syntaxes
-
-
-category_syntaxes:        category_syntax 
-                          {
-                             size_t token_size = strlen(yytext);
-                             P.line_pos += token_size;
-                             P.offsets.last_subtype_id = P.offsets.current - token_size;
-                             yytext[token_size - 1] = '\0'; 
-                             HvBDebug("\tP:%s:%s:%s category_syntax = %s\n", P.block, P.blocktype, P.blockid, yytext); 
-                             strncpy(P.currenttype, yytext, CF_MAXVARSIZE);
-
-                             if (!INSTALL_SKIP)
-                             {
-                                 HvBDebug("\tP: inside bundle\n");
-                                 P.currentstype = AppendSubType(P.currentbundle,P.currenttype); 
-                                 P.currentstype->offset.line = P.line_no;
-                                 P.currentstype->offset.start = P.offsets.last_subtype_id;
-                             }
-                             else
-                             {
-                                P.currentstype = NULL;
-                             }
-
-                             if (P.currentclasses != NULL)
-                             {
-                                free(P.currentclasses);
-                                P.currentclasses = NULL;
-                             }
-                          }
-                          classpromises
-
-category_syntax:          COMMANDS_CATEGORY
-                        | REPORTS_CATEGORY
-                        | INTERFACES_CATEGORY
-                        | PROCESSES_CATEGORY 
-                        | PACKAGES_CATEGORY
-                        | FILES_CATEGORY
-                        | DATABASES_CATEGORY
-                        | EDIT_DELETE_LINES_CATEGORY
-                        | EDIT_REPLACE_PATTERNS_CATEGORY
-                        | EDIT_INSERT_LINES_CATEGORY
-                        | EDIT_FIELD_EDITS_CATEGORY
-
-
-classpromises:         classpromise                  
-                     | classpromises classpromise
-
-classpromise:          class
-                     | promises
-
-
-promises:              promise              
-                     | promises promise
-
-
-promise:               promiser ';'
-                     | promiser constraints ';'
-                     | error
-                     {
-                        yyerror_hvb("expected assignment or ';' \n");
-                        exit(1);
-                     }
-
-/************** 
-   categories that use type syntax check 
-***************/
-
-category_type_syntaxes:   category_type_syntax  
-                          {
-                             size_t token_size = strlen(yytext);
-                             P.line_pos += token_size;
-                             P.offsets.last_subtype_id = P.offsets.current - token_size;
-                             yytext[token_size - 1] = '\0'; 
-                             HvBDebug("\tP:%s:%s:%s category_type_syntax = %s\n", P.block, P.blocktype, P.blockid, yytext); 
-                             strncpy(P.currenttype, yytext, CF_MAXVARSIZE);
-
-                             if (!INSTALL_SKIP)
-                             {
-                                 HvBDebug("\tP: inside bundle\n");
-                                 P.currentstype = AppendSubType(P.currentbundle,P.currenttype); 
-                                 P.currentstype->offset.line = P.line_no;
-                                 P.currentstype->offset.start = P.offsets.last_subtype_id;
-                             }
-                             else
-                             {
-                                P.currentstype = NULL;
-                             }
-
-                             if (P.currentclasses != NULL)
-                             {
-                                free(P.currentclasses);
-                                P.currentclasses = NULL;
-                             }
-                          }
-                          type_classpromises
-
-category_type_syntax:     VARS_CATEGORY
-                        | CLASSES_CATEGORY
-                        | METHODS_CATEGORY
-                        | SERVICES_CATEGORY
-
-type_classpromises:    type_classpromise
-                     | type_classpromises type_classpromise
-
-type_classpromise:    class
-                    | type_promises
-
-                    
-
-type_promises:         type_promise ';'
-                     | type_promises type_promise ';'
-                     | type_promise error
+                       size_t token_size = strlen(yytext);
+                       P.line_pos += token_size;
+                       P.offsets.last_subtype_id = P.offsets.current - token_size;
+                       yytext[token_size - 1] = '\0'; 
+                       HvBDebug("\tP:%s:%s:%s category_syntax = %s\n", P.block, P.blocktype, P.blockid, yytext); 
+                       strncpy(P.currenttype, yytext, CF_MAXVARSIZE); 
+                       
+                       if (!INSTALL_SKIP)
                        {
-                         yyerror_hvb("promise did  not end with ';'\n");
+                          HvBDebug("\tP: inside bundle\n");
+                          P.currentstype = AppendSubType(P.currentbundle,P.currenttype); 
+                          P.currentstype->offset.line = P.line_no;
+                          P.currentstype->offset.start = P.offsets.last_subtype_id;
                        }
+                       else
+                       {
+                           P.currentstype = NULL;
+                       } 
+                       
+                       if (P.currentclasses != NULL)
+                       {
+                          free(P.currentclasses);
+                          P.currentclasses = NULL;
+                       }
+                     }
+                     category_statements
 
-type_promise:           type_required
-                      | type_required ',' constraints
-                      | type_required error
+category_statements:   class_or_promise
+                     | category_statements class_or_promise
+                         
+
+class_or_promise:        class
+                       | promise ';'
+                       | error
+                         {
+                             yyerror_hvb("expected ';' \n");
+                         }
+
+
+promise:                 promiser
+                       | promiser constraints
+                       | promiser constraint error
+                         {
+                             yyerror_hvb("expected ',' \n");
+                         }
+
+
+category_type:           category_ids     
+                       | category_require_promise_type { CATEGORY_TYPE_CHECK = true; }
+
+
+category_ids:                    COMMANDS_CATEGORY
+                               | REPORTS_CATEGORY
+                               | INTERFACES_CATEGORY
+                               | PROCESSES_CATEGORY 
+                               | PACKAGES_CATEGORY
+                               | FILES_CATEGORY
+                               | DATABASES_CATEGORY
+                               | EDIT_DELETE_LINES_CATEGORY
+                               | EDIT_REPLACE_PATTERNS_CATEGORY
+                               | EDIT_INSERT_LINES_CATEGORY
+                               | EDIT_FIELD_EDITS_CATEGORY
+
+category_require_promise_type:   VARS_CATEGORY  
+                               | CLASSES_CATEGORY
+                               | METHODS_CATEGORY
+                               | SERVICES_CATEGORY
+
+
+
+constraints:          constraint  
+                    | constraints ',' constraint
+                    |;
+
+constraint:           promiser_type         
                       {
-                          yyerror_hvb("Maybe a forgotten ','\n");
-                      }
-
-type_required:        promiser 
-                      promiser_type 
-                      {
-                           strncpy(P.lval, yytext, CF_MAXVARSIZE);
-
-                           HvBDebug("\tP:%s:%s:%s:%s promiser type for LVAL '%s'\n", 
+                          strncpy(P.lval, yytext, CF_MAXVARSIZE); 
+                          HvBDebug("\tP:%s:%s:%s:%s promiser type for LVAL '%s'\n",
                               P.block, P.blocktype, P.blockid, P.currenttype, P.lval);
 
-                           DeleteRlist(P.currentRlist);
-                           P.currentRlist = NULL;
-                      }
+                          DeleteRlist(P.currentRlist);
+                          P.currentRlist = NULL;
 
-                      ASSIGN 
+                      }
+                      ASSIGN
                       {
-                           HvBDebug("\tP:ASSIGN\n");
+                        HvBDebug("\tP:ASSIGN\n");
+                      }
+                      rval_bundle_statement
+                    | error
+                      {
+                        yyerror_hvb("promise line statement error\n");
                       }
 
-                      rval_bundle_statement  
-                    | error
-                    {
-                        HvBDebug("\tP: promise required type  parsed\n\n");
-                    }
-                    {
-                        yyerror_hvb("Expected \"promiser\" type => args ...\n");
-                    }
+promiser_type:       promiser_type_def
+                   | id_type 
+                     {
+                        if ( CATEGORY_TYPE_CHECK )
+                        {
+                           printf("%s is not allowed as promise tyoe for category %s\n", yytext, P.currenttype);
+                           yyerror_hvb("promise statement error\n");
+                           
+                        }
+                     }
 
-promiser_type:       var_type
+promiser_type_def:   var_type
                    | class_type
-                   /*
-                   | error
-                    {
-                        HvBDebug("P: %s promises type error: %d\n", yytext, cf_block_open);
-                        yyerror_hvb(yytext);
-                    }
-                    */
+                   | common_type
+
+
+
+common_type:          COMMENT
+                    | DEPENDS_ON
+                    | HANDLE
+                    | IFVARCLASS
+                    | META
+
 
 var_type:             STRING 
                     | SLIST
+                    | INT 
+                    | REAL 
+                    | ILIST 
+                    | RLIST 
+                    | POLICY 
 
 class_type:           AND
                     | EXPRESSION
@@ -415,21 +383,11 @@ class_type:           AND
 
 methods_tyoe:         USEBUNDLE
 
-constraints:          constraint  
-                    | constraints ',' constraint
-                    |;
+id_type:              id
 
 
-constraint:         id         
-                    ASSIGN
-                    {
-                       HvBDebug("\tP:ASSIGN\n");
-                    }
-                    rval_bundle_statement
-
-
-rval_bundle_statement:      rval_type
-                            {
+rval_bundle_statement:   rval_type
+                         {
                                 /*
                                 HvBDebug("\tP:%s:%s:%s:%s for rval '%s'\n", P.block, P.blocktype, P.blockid, P.currenttype, yytext); 
                                 */
@@ -529,10 +487,13 @@ body_id:           body_id_syntax
                      strncpy(P.blockid, yytext, CF_MAXVARSIZE);
                    }
 
-body_id_syntax:     typeid
+body_id_syntax:      typeid
                    | blockid
- 
-                    
+                   | promiser_type_def   /* we have no reserved keywords in cf3 */
+                   | error
+                     {
+                        yyerror_hvb("Invalid body id indentifier");
+                     }
  
 body_body:          BLOCK_OPEN
                        {
@@ -822,6 +783,13 @@ functionid:            IDSYNTAX
                        {
                            HvBDebug("\tP:%s:%s:%s:%s  Found qualified function identifier '%s'\n", 
                               P.block, P.blocktype, P.blockid, P.currenttype, P.currentid);
+                       } 
+                     | promiser_type_def   /* we have no reserved eywords in cf3 */
+
+                       {
+                           strncpy(P.currentid,yytext,CF_MAXVARSIZE);
+                           HvBDebug("\tP:%s:%s:%s:%s Found function identifier (cf3 keyword)'%s'\n", 
+                              P.block, P.blocktype, P.blockid, P.currenttype, P.currentid);
                        }
                      | NAKEDVAR
                        {
@@ -829,7 +797,12 @@ functionid:            IDSYNTAX
                            free(P.currentstring);
                            P.currentstring = NULL;
                            HvBDebug("P: Found variable in place of a function identifier %s\n",P.currentid);
-                       };
+                       }
+                     | error
+                       {
+                          yyerror_hvb("Not a valid function indentifier\n");
+                       }
+                       
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -964,11 +937,15 @@ aitems:                aitem
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-aitem:                 IDSYNTAX  /* recipient of argument is never a literal */
+aitem:                 aitem_type  /* recipient of argument is never a literal */
                        {
                            HvBDebug("P:%s:%s:%s added arg = %s\n", P.block,P.blocktype,P.blockid,  yytext);
                            AppendRlist(&(P.useargs),yytext,CF_SCALAR);
                        };
+
+aitem_type:            IDSYNTAX
+                     | promiser_type_def  /* these ids can be used as name for function args */
+       
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -1063,8 +1040,10 @@ static void yyerror_hvb(const char *s)
      *    ConfigFile = klaar/bas
      *             ^invalid pathname
     */
-    fprintf(stderr, "error: %s", s);
-    fprintf(stderr, "filename: %s line %d: %s:\n%s\n", P.filename, cf_lineno, yytext, cf_linebuf);
+    fprintf(stderr, "filename: %s line %d: token:%s\n", P.filename, cf_lineno, yytext);
+    fprintf(stderr, "error: %s\n", s);
+
+    fprintf(stderr, "\n%s\n", cf_linebuf);
     fprintf(stderr, "%*s error\n", 2 + cf_tokenpos, "^");
 
     exit(1);

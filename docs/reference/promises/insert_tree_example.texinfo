@@ -1,4 +1,6 @@
+
 @verbatim
+
 bundle edit_xml example
   {
   insert_tree:
@@ -6,4 +8,5 @@ bundle edit_xml example
 
     select_xpath => "/Server/Service/Engine";
   }
+
 @end verbatim

@@ -437,28 +437,6 @@ int cf_rename(const char *oldpath, const char *newpath)
 
 /*******************************************************************/
 
-void OpenNetwork()
-{
-#ifdef MINGW
-    NovaWin_OpenNetwork();
-#else
-/* no network init on Unix */
-#endif
-}
-
-/*******************************************************************/
-
-void CloseNetwork()
-{
-#ifdef MINGW
-    NovaWin_CloseNetwork();
-#else
-/* no network close on Unix */
-#endif
-}
-
-/*******************************************************************/
-
 #ifdef MINGW                    // FIXME: Timeouts ignored on windows for now...
 unsigned int alarm(unsigned int seconds)
 {

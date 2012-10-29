@@ -535,7 +535,7 @@ FilePerms GetPermissionConstraints(const Promise *pp)
     }
 
 #ifdef MINGW
-    p.owners = NovaWin_Rlist2SidList((Rlist *) GetConstraintValue("owners", pp, CF_LIST), pp);
+    p.owners = NovaWin_Rlist2SidList((Rlist *) GetConstraintValue("owners", pp, CF_LIST));
 #else /* NOT MINGW */
     p.owners = Rlist2UidList((Rlist *) GetConstraintValue("owners", pp, CF_LIST), pp);
     p.groups = Rlist2GidList((Rlist *) GetConstraintValue("groups", pp, CF_LIST), pp);
@@ -1445,6 +1445,7 @@ EditXml GetXmlConstraints(const Promise *pp)
 {
     EditXml x;
 
+    x.havebuildxpath = ((x.build_xpath = GetConstraintValue("build_xpath", pp, CF_SCALAR)) != NULL);
     x.haveselectxpath = ((x.select_xpath = GetConstraintValue("select_xpath", pp, CF_SCALAR)) != NULL);
     x.haveattributevalue = ((x.attribute_value = GetConstraintValue("attribute_value", pp, CF_SCALAR)) != NULL);
 

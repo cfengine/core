@@ -136,8 +136,6 @@ int main(int argc, char *argv[])
         ret = 1;
     }
 
-    GenericDeInitialize();
-
     return ret;
 }
 
@@ -345,11 +343,6 @@ static void KeepPromises(Policy *policy, GenericAgentConfig config, const Report
 
     KeepControlPromises(policy);
     KeepPromiseBundles(policy, config.bundlesequence, report_context);
-
-    if (THIS_AGENT_TYPE == cf_agent)
-    {
-        EndAudit();
-    }
 
 // TOPICS counts the number of currently defined promises
 // OCCUR counts the number of objects touched while verifying config
@@ -1200,8 +1193,6 @@ static int NewTypeContext(enum typesequence type)
 
 static void DeleteTypeContext(Policy *policy, enum typesequence type, const ReportContext *report_context)
 {
-    Attributes a = { {0} };
-
     switch (type)
     {
     case kp_classes:
@@ -1222,6 +1213,8 @@ static void DeleteTypeContext(Policy *policy, enum typesequence type, const Repo
 
     case kp_storage:
 #ifndef MINGW
+    {
+        Attributes a = { {0} };
         CfOut(cf_verbose, "", " -> Number of changes observed in %s is %d\n", VFSTAB[VSYSTEMHARDCLASS], FSTAB_EDITS);
 
         if (FSTAB_EDITS && FSTABLIST && !DONTDO)
@@ -1240,6 +1233,7 @@ static void DeleteTypeContext(Policy *policy, enum typesequence type, const Repo
             CfOut(cf_verbose, "", " -> Mounting all filesystems\n");
             MountAll();
         }
+    }
 #endif /* NOT MINGW */
         break;
 
@@ -1307,7 +1301,6 @@ static void ClassBanner(enum typesequence type)
 
 static void ParallelFindAndVerifyFilesPromises(Promise *pp, const ReportContext *report_context)
 {
-    pid_t child = 1;
     int background = GetBooleanConstraint("background", pp);
 
 #ifdef MINGW
@@ -1320,6 +1313,8 @@ static void ParallelFindAndVerifyFilesPromises(Promise *pp, const ReportContext 
     FindAndVerifyFilesPromises(pp, report_context);
 
 #else /* NOT MINGW */
+
+    pid_t child = 1;
 
     if (background && (CFA_BACKGROUND < CFA_BACKGROUND_LIMIT))
     {

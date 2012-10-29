@@ -271,7 +271,6 @@ void StartServer(Policy *policy, GenericAgentConfig config, const ReportContext 
 
     if ((!NO_FORK) && (fork() != 0))
     {
-        GenericDeInitialize();
         exit(0);
     }
 

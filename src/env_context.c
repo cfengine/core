@@ -1276,8 +1276,8 @@ void NewPersistentContext(char *name, unsigned int ttl_minutes, enum statepolicy
         {
             if (now < state.expires)
             {
-                CfOut(cf_verbose, "", " -> Persisent state %s is already in a preserved state --  %ld minutes to go\n",
-                      name, (state.expires - now) / 60);
+                CfOut(cf_verbose, "", " -> Persisent state %s is already in a preserved state --  %jd minutes to go\n",
+                      name, (intmax_t)((state.expires - now) / 60));
                 CloseDB(dbp);
                 return;
             }
@@ -1356,7 +1356,7 @@ void LoadPersistentContext()
         }
         else
         {
-            CfOut(cf_verbose, "", " Persistent class %s for %ld more minutes\n", key, (q.expires - now) / 60);
+            CfOut(cf_verbose, "", " Persistent class %s for %jd more minutes\n", key, (intmax_t)((q.expires - now) / 60));
             CfOut(cf_verbose, "", " Adding persistent class %s to heap\n", key);
             NewClass(key, NULL);
         }

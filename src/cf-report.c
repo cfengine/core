@@ -306,7 +306,6 @@ int main(int argc, char *argv[])
     ThisAgentInit();
     KeepReportsControlPromises(policy);
     KeepReportsPromises();
-    GenericDeInitialize();
     ReportContextDestroy(report_context);
     return 0;
 }
@@ -551,7 +550,6 @@ static void ThisAgentInit(void)
     if (!NULL_OR_EMPTY(REMOVEHOSTS))
     {
         RemoveHostSeen(REMOVEHOSTS);
-        GenericDeInitialize();
         exit(0);
     }
 
@@ -560,12 +558,10 @@ static void ThisAgentInit(void)
     {
         if (Nova_ExportReports(NOVA_EXPORT_TYPE))
         {
-            GenericDeInitialize();
             exit(0);
         }
         else
         {
-            GenericDeInitialize();
             exit(1);
         }
     }
@@ -928,7 +924,7 @@ bool ReportHost(const char *hostkey, const char *address, bool incoming,
 
     struct tm tm;
     char text_date[CF_BUFSIZE];
-    strftime(text_date, CF_BUFSIZE, "%a %b %d %R", localtime_r(&quality->lastseen, &tm));
+    strftime(text_date, CF_BUFSIZE, "%a %b %d %H:%M", localtime_r(&quality->lastseen, &tm));
 
     CfOut(cf_verbose, "", " -> Reporting on %s", address);
 

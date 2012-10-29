@@ -32,7 +32,9 @@
 
 #define CF_MAXLINKLEVEL 4
 
+#if !defined(__MINGW32__)
 static int MakeLink(char *from, char *to, Attributes attr, Promise *pp);
+#endif
 static char *AbsLinkPath(char *from, char *relto);
 
 /*****************************************************************************/

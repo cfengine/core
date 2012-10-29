@@ -23,14 +23,15 @@
   included file COSL.txt.
 */
 
-#include <assert.h>
-
 #include "cf3.defs.h"
 
 #include "dbm_api.h"
 #include "dbm_priv.h"
 #include "dbm_lib.h"
 #include "dbm_migration.h"
+#include "atexit.h"
+
+#include <assert.h>
 
 /******************************************************************************/
 
@@ -62,6 +63,8 @@ struct DBCursor_
 static pthread_mutex_t db_handles_lock = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
 
 static DBHandle db_handles[dbid_max] = { { 0 } };
+
+static pthread_once_t db_shutdown_once = PTHREAD_ONCE_INIT;
 
 /******************************************************************************/
 
@@ -125,8 +128,51 @@ static DBHandle *DBHandleGet(int id)
     return &db_handles[id];
 }
 
+/* Closes all open DB handles */
+static void CloseAllDB(void)
+{
+    pthread_mutex_lock(&db_handles_lock);
+
+    for (int i = 0; i < dbid_max; ++i)
+    {
+        if (db_handles[i].refcount != 0)
+        {
+            DBPrivCloseDB(db_handles[i].priv);
+        }
+
+        /*
+         * CloseAllDB is called just before exit(3), but clean up
+         * nevertheless.
+         */
+        db_handles[i].refcount = 0;
+
+        if (db_handles[i].filename)
+        {
+            free(db_handles[i].filename);
+            db_handles[i].filename = NULL;
+
+            int ret = pthread_mutex_destroy(&db_handles[i].lock);
+            if (ret != 0)
+            {
+                errno = ret;
+                CfOut(cf_error, "pthread_mutex_destroy",
+                      "Unable to close database %s", DB_PATHS[i]);
+            }
+        }
+    }
+
+    pthread_mutex_unlock(&db_handles_lock);
+}
+
+static void RegisterShutdownHandler(void)
+{
+    RegisterAtExitFunction(&CloseAllDB);
+}
+
 bool OpenDB(DBHandle **dbp, dbid id)
 {
+    pthread_once(&db_shutdown_once, RegisterShutdownHandler);
+
     DBHandle *handle = DBHandleGet(id);
 
     pthread_mutex_lock(&handle->lock);
@@ -180,42 +226,6 @@ void CloseDB(DBHandle *handle)
     }
 
     pthread_mutex_unlock(&handle->lock);
-}
-
-/* Closes all open DB handles */
-void CloseAllDB(void)
-{
-    pthread_mutex_lock(&db_handles_lock);
-
-    for (int i = 0; i < dbid_max; ++i)
-    {
-        if (db_handles[i].refcount != 0)
-        {
-            DBPrivCloseDB(db_handles[i].priv);
-        }
-
-        /*
-         * CloseAllDB is called just before exit(3), but clean up
-         * nevertheless.
-         */
-        db_handles[i].refcount = 0;
-
-        if (db_handles[i].filename)
-        {
-            free(db_handles[i].filename);
-            db_handles[i].filename = NULL;
-
-            int ret = pthread_mutex_destroy(&db_handles[i].lock);
-            if (ret != 0)
-            {
-                errno = ret;
-                CfOut(cf_error, "pthread_mutex_destroy",
-                      "Unable to close database %s", DB_PATHS[i]);
-            }
-        }
-    }
-
-    pthread_mutex_unlock(&db_handles_lock);
 }
 
 /*****************************************************************************/

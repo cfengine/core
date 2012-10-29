@@ -33,8 +33,10 @@ static void FindStoragePromiserObjects(Promise *pp, const ReportContext *report_
 static int VerifyFileSystem(char *name, Attributes a, Promise *pp);
 static int VerifyFreeSpace(char *file, Attributes a, Promise *pp);
 static void VolumeScanArrivals(char *file, Attributes a, Promise *pp);
+#if !defined(__MINGW32__)
 static int FileSystemMountedCorrectly(Rlist *list, char *name, char *options, Attributes a, Promise *pp);
 static int IsForeignFileSystem(struct stat *childstat, char *dir);
+#endif
 
 #ifndef MINGW
 static int VerifyMountPromise(char *file, Attributes a, Promise *pp, const ReportContext *report_context);
@@ -304,6 +306,11 @@ static void VolumeScanArrivals(char *file, Attributes a, Promise *pp)
 
 /*******************************************************************/
 
+/*********************************************************************/
+/*  Unix-specific implementations                                    */
+/*********************************************************************/
+
+#if !defined(__MINGW32__)
 static int FileSystemMountedCorrectly(Rlist *list, char *name, char *options, Attributes a, Promise *pp)
 {
     Rlist *rp;
@@ -405,12 +412,6 @@ static int IsForeignFileSystem(struct stat *childstat, char *dir)
     CfDebug("NotMountedFileSystem\n");
     return (false);
 }
-
-/*********************************************************************/
-/*  Unix-specific implementations                                    */
-/*********************************************************************/
-
-#ifndef MINGW
 
 static int VerifyMountPromise(char *name, Attributes a, Promise *pp, const ReportContext *report_context)
 {

@@ -31,6 +31,7 @@ libpromises_la_SOURCES = \
         args.c \
         array_map.c array_map_priv.h \
         assoc.c assoc.h \
+        atexit.c atexit.h \
         attributes.c attributes.h \
         bool.h \
         bootstrap.c \

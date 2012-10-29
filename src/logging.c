@@ -28,10 +28,12 @@
 #include "env_context.h"
 #include "dbm_api.h"
 #include "files_names.h"
+#include "atexit.h"
 
 #define CF_VALUE_LOG      "cf_value.log"
 
 static void ExtractOperationLock(char *op);
+static void EndAudit(void);
 
 static const char *NO_STATUS_TYPES[] = { "vars", "classes", NULL };
 static const char *NO_LOG_TYPES[] =
@@ -51,8 +53,17 @@ static CF_DB *AUDITDBP;
 
 /*****************************************************************************/
 
+static pthread_once_t end_audit_once = PTHREAD_ONCE_INIT;
+
+static void RegisterEndAudit(void)
+{
+    RegisterAtExitFunction(&EndAudit);
+}
+
 void BeginAudit()
 {
+    pthread_once(&end_audit_once, &RegisterEndAudit);
+
     Promise dummyp = { 0 };
     Attributes dummyattr = { {0} };
 
@@ -64,7 +75,7 @@ void BeginAudit()
 
 /*****************************************************************************/
 
-void EndAudit()
+void EndAudit(void)
 {
     char *sp, string[CF_BUFSIZE];
     Rval retval;
@@ -489,7 +500,7 @@ void PromiseLog(char *s)
         return;
     }
 
-    fprintf(fout, "%jd,%jd: %s\n", (intmax_t) CFSTARTTIME, (intmax_t) now, s);
+    fprintf(fout, "%jd,%jd: %s\n", (intmax_t)CFSTARTTIME, (intmax_t)now, s);
     fclose(fout);
 }
 
@@ -497,8 +508,6 @@ void PromiseLog(char *s)
 
 void FatalError(char *s, ...)
 {
-    CfLock best_guess;
-
     if (s)
     {
         va_list ap;
@@ -510,22 +519,6 @@ void FatalError(char *s, ...)
         CfOut(cf_error, "", "Fatal CFEngine error: %s", buf);
     }
 
-    if (strlen(CFLOCK) > 0)
-    {
-        best_guess.lock = xstrdup(CFLOCK);
-        best_guess.last = xstrdup(CFLAST);
-        best_guess.log = xstrdup(CFLOG);
-        YieldCurrentLock(best_guess);
-    }
-
-    unlink(PIDFILE);
-
-    if (THIS_AGENT_TYPE == cf_agent)
-    {
-        EndAudit();
-    }
-
-    GenericDeInitialize();
     exit(1);
 }
 

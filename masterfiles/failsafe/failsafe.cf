@@ -148,17 +148,9 @@ bundle agent update
    "$(sys.workdir)/lib"
            comment => "Make sure cfengine libraries have right file permissions",
             handle => "update_files_sys_workdir_lib",
-             perms => u_m("644"),
+             perms => u_shared_lib_perms,
       depth_search => u_recurse_basedir("inf"),
             action => u_immediate;
-
-   "$(sys.workdir)/lib"
-           comment => "Make sure cfengine libraries have right file permissions for only HP-UX",
-            handle => "update_files_sys_workdir_lib_hpux",
-             perms => u_m("755"),
-      depth_search => u_recurse_basedir("inf"),
-            action => u_immediate,
-        ifvarclass => "hpux";
 
    "/usr/local/sbin"
            comment => "Ensure cfengine binaries were copied to /usr/local/sbin",
@@ -186,6 +178,16 @@ bundle agent update
 body perms u_m(p)
 {
  mode  => "$(p)";
+}
+
+#########################################################
+
+body perms u_shared_lib_perms
+{
+ !hpux::
+   mode => "0644";
+ hpux::
+   mode => "0755";  # Mantis 1114, Redmine 1179
 }
 
 #########################################################

@@ -164,6 +164,20 @@ ilist                      ilist
 rlist                      rlist
 policy                     policy
 
+/*
+ * class types
+*/
+
+and                        and
+dist                       dist
+expression                 expression
+or                         or
+persistence                persistence
+not                        not
+select_class               select_class
+xor                        xor
+
+
 %%
 
 {newline}.*                   {
@@ -214,41 +228,52 @@ edit_line            {
                           return EDITLINE;
                      }
 
-
-and                  {
+{and}                {
                           cf_tokenpos += yyleng;
                           HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
                           return AND;
                      }
 
-dist           {
+{dist}               {
                           cf_tokenpos += yyleng;
                           HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
                           return DIST;
                      }
 
-expression           {
+{expression}         {
                           cf_tokenpos += yyleng;
                           HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
                           return EXPRESSION;
                      }
 
-or                   {
+{or}                 {
                           cf_tokenpos += yyleng;
                           HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
                           return OR;
                      }
 
-xor                  {
+{persistence}                 {
                           cf_tokenpos += yyleng;
                           HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
-                          return XOR;
+                          return OR;
                      }
 
-not                  {
+{not}                {
                           cf_tokenpos += yyleng;
                           HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
                           return NOT;
+                     }
+
+{select_class}                {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
+                          return SELECT_CLASS;
+                     }
+
+{xor}                {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
+                          return XOR;
                      }
 
 {comment}            {

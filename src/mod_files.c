@@ -95,7 +95,7 @@ static const BodySyntax CF_INSERTSELECT_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-static const BodySyntax CF_INSERTLINES_BODIES[] =
+const BodySyntax CF_INSERTLINES_BODIES[] =
 {
     {"expand_scalars", cf_opts, CF_BOOL, "Expand any unexpanded variables", "false"},
     {"insert_type", cf_opts, "literal,string,file,file_preserve_block,preserve_block", "Type of object the promiser string refers to",
@@ -107,20 +107,20 @@ static const BodySyntax CF_INSERTLINES_BODIES[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-static const BodySyntax CF_DELETELINES_BODIES[] =
+const BodySyntax CF_DELETELINES_BODIES[] =
 {
     {"delete_select", cf_body, CF_DELETESELECT_BODY, "Delete only if lines pass filter criteria"},
     {"not_matching", cf_opts, CF_BOOL, "true/false negate match criterion", "false"},
     {NULL, cf_notype, NULL, NULL}
 };
 
-static const BodySyntax CF_COLUMN_BODIES[] =
+const BodySyntax CF_COLUMN_BODIES[] =
 {
     {"edit_field", cf_body, CF_EDITCOL_BODY, "Edit line-based file as matrix of fields"},
     {NULL, cf_notype, NULL, NULL}
 };
 
-static const BodySyntax CF_REPLACE_BODIES[] =
+const BodySyntax CF_REPLACE_BODIES[] =
 {
     {"replace_with", cf_body, CF_REPLACEWITH_BODY, "Search-replace pattern"},
     {NULL, cf_notype, NULL, NULL}
@@ -286,7 +286,7 @@ static const BodySyntax CF_COPYFROM_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-static const BodySyntax CF_FILES_BODIES[] =
+const BodySyntax CF_FILES_BODIES[] =
 {
     {"acl", cf_body, CF_ACL_BODY, "Criteria for access control lists on file"},
     {"changes", cf_body, CF_CHANGEMGT_BODY, "Criteria for change management"},

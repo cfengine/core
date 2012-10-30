@@ -33,7 +33,7 @@ static const BodySyntax CF_TCPIP_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-static const BodySyntax CF_INTERFACES_BODIES[] =
+const BodySyntax CF_INTERFACES_BODIES[] =
 {
     {"tcp_ip", cf_body, CF_TCPIP_BODY, "Interface tcp/ip properties"},
     {NULL, cf_notype, NULL, NULL}

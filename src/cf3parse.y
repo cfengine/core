@@ -48,7 +48,7 @@ static void fatal_yyerror(const char *s);
 
 /* HvB function */
 static void yyerror_hvb(const char *s);
-static bool CATEGORY_TYPE_CHECK = false;
+static BodySyntax *current_body_p = NULL;
 
 /* end HvB */ 
 
@@ -297,35 +297,63 @@ promise:                 promiser
                          }
 
 
-category_type:           category_ids      { CATEGORY_TYPE_CHECK = false; }
-                       | category_require_promise_type { CATEGORY_TYPE_CHECK = true; }
+category_type:           REPORTS_CATEGORY 
+                            { current_body_p = (BodySyntax *)CF_REPORT_BODIES; }
 
+                       | INTERFACES_CATEGORY          
+                            { current_body_p = (BodySyntax *)CF_INTERFACES_BODIES; }
 
-category_ids:                    COMMANDS_CATEGORY
-                               | REPORTS_CATEGORY
-                               | INTERFACES_CATEGORY
-                               | PROCESSES_CATEGORY 
-                               | PACKAGES_CATEGORY
-                               | FILES_CATEGORY
-                               | DATABASES_CATEGORY
-                               | EDIT_DELETE_LINES_CATEGORY
-                               | EDIT_REPLACE_PATTERNS_CATEGORY
-                               | EDIT_INSERT_LINES_CATEGORY
-                               | EDIT_FIELD_EDITS_CATEGORY
+                       | PROCESSES_CATEGORY  
+                            { current_body_p = (BodySyntax *)CF_PROCESS_BODIES; } 
 
-category_require_promise_type:   VARS_CATEGORY  
-                               | CLASSES_CATEGORY
-                               | METHODS_CATEGORY
-                               | SERVICES_CATEGORY
+                       | PACKAGES_CATEGORY   
+                            { current_body_p = (BodySyntax *)CF_PACKAGES_BODIES; }
 
+                       | FILES_CATEGORY      
+                            { current_body_p = (BodySyntax *)CF_FILES_BODIES; }
 
+                       | DATABASES_CATEGORY            
+                            { current_body_p = (BodySyntax *)CF_DATABASES_BODIES; }
+
+                       | EDIT_DELETE_LINES_CATEGORY
+
+                            { current_body_p = (BodySyntax *)CF_DELETELINES_BODIES; }
+
+                       | EDIT_REPLACE_PATTERNS_CATEGORY
+                            { current_body_p = (BodySyntax *)CF_REPLACE_BODIES; }
+
+                       | EDIT_INSERT_LINES_CATEGORY
+                            { current_body_p = (BodySyntax *)CF_INSERTLINES_BODIES; }
+
+                       | EDIT_FIELD_EDITS_CATEGORY
+                            { current_body_p = (BodySyntax *)CF_COLUMN_BODIES; }
+
+                       | VARS_CATEGORY     
+                            {  current_body_p = (BodySyntax *)CF_VARBODY; }
+
+                       | COMMANDS_CATEGORY 
+                            { current_body_p = (BodySyntax *)CF_EXEC_BODIES; }
+
+                       | CLASSES_CATEGORY  
+                            { current_body_p = (BodySyntax *)CF_CLASSBODY; }
+
+                       | METHODS_CATEGORY
+                            { current_body_p = (BodySyntax *)CF_METHOD_BODIES; }
+
+                       | SERVICES_CATEGORY
+                            { current_body_p = (BodySyntax *)CF_SERVICES_BODIES; }
+                       | error
+                         {
+                            yyerror_hvb("Unknown category");   
+                         }
 
 constraints:          constraint  
                     | constraints ',' constraint
                     |;
 
 constraint:           promiser_type         
-                      {
+                      { 
+
                           strncpy(P.lval, yytext, CF_MAXVARSIZE); 
                           HvBDebug("\tP:%s:%s:%s:%s promiser type for LVAL '%s'\n",
                               P.block, P.blocktype, P.blockid, P.currenttype, P.lval);
@@ -345,23 +373,61 @@ constraint:           promiser_type
                       }
 
 promiser_type:       promiser_type_def
-                   | id_type 
+                   | promiser_id 
                      {
-                        printf("Id = %s, check = %d\n", yytext, CATEGORY_TYPE_CHECK);
-                        if ( CATEGORY_TYPE_CHECK )
+                        if ( current_body_p != NULL )
                         {
-                           printf("%s is not allowed as promise tyoe for category %s\n", yytext, P.currenttype);
-                           yyerror_hvb("promise statement error\n");
-                           
-                        }
-                     }
+                           bool       found = false;
+                           BodySyntax *tmp_p;
 
-promiser_type_def:   var_type { printf("debug CF_VARBODY[%s] = %s\n", yytext, CF_VARBODY[0].lval); }
-                   | class_type
-                   | methods_type
-                   | common_type
+                           tmp_p = current_body_p;
+                           while ( tmp_p->lval != NULL )
+                           {
+                              if (strcmp(yytext, tmp_p->lval) == 0)
+                              {
+                                 found = true; 
+                                 break;
+                              }
+                              else
+                              {
+                                 tmp_p++;
+                              }
+                           }
 
+                           /*
+                            * all categories support this type so search again
+                           */
+                           if (!found)
+                           {
+                              tmp_p = (BodySyntax *)CF_COMMON_BODIES;
+                              while ( tmp_p->lval != NULL )
+                              {
+                                 if (strcmp(yytext, tmp_p->lval) == 0)
+                                 {
+                                    found = true;
+                                    break;
+                                 }
+                                 else
+                                 {
+                                    tmp_p++;
+                                 }
+                              }
+                            }
 
+                            /* 
+                             * give an error message
+                            */ 
+                            if ( !found )
+                            {
+                               printf("'%s' is not allowed as promise tyoe for category: '%s'\n", 
+                                             yytext, P.currenttype);
+                               yyerror_hvb("invalid promise type");
+                            }
+
+                         }
+                       }
+
+promiser_type_def:   common_type
 
 
 common_type:          COMMENT
@@ -370,25 +436,7 @@ common_type:          COMMENT
                     | IFVARCLASS
                     | META
 
-
-var_type:             STRING 
-                    | SLIST
-                    | INT 
-                    | REAL 
-                    | ILIST 
-                    | RLIST 
-                    | POLICY 
-
-class_type:           AND
-                    | EXPRESSION
-                    | DIST
-                    | OR
-                    | XOR
-                    | NOT
-
-methods_type:         USEBUNDLE
-
-id_type:              id
+promiser_id:          id
 
 
 rval_bundle_statement:   rval_type

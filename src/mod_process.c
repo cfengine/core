@@ -54,7 +54,7 @@ static const BodySyntax CF_PROCFILTER_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-static const BodySyntax CF_PROCESS_BODIES[] =
+const BodySyntax CF_PROCESS_BODIES[] =
 {
     {"process_count", cf_body, CF_MATCHCLASS_BODY,
      "Criteria for constraining the number of processes matching other criteria"},

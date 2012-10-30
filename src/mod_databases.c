@@ -36,7 +36,7 @@ static const BodySyntax CF_SQLSERVER_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-static const BodySyntax CF_DATABASES_BODIES[] =
+const BodySyntax CF_DATABASES_BODIES[] =
 {
     {"database_server", cf_body, CF_SQLSERVER_BODY, "Credentials for connecting to a local/remote database server"},
     {"database_type", cf_opts, "sql,ms_registry", "The type of database that is to be manipulated", "none"},

@@ -1,5 +1,5 @@
 
-@i{History}: Was introduced in 3.3.0, Nova 2.2.0, Constellation 1.0.0 (2011)
+@i{History}: Was introduced in 3.3.0, Nova 2.2.0 (2011)
 
 
 This is a list variable containing a list of all known MAC addresses for

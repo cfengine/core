@@ -1,4 +1,4 @@
 
-@i{History}: Was introduced in version 3.2.0, Nova 2.1.0, Constellation 1.0.0 (2011)
+@i{History}: Was introduced in version 3.2.0, Nova 2.1.0 (2011)
 
 The complement of `is_caused_by' for convenience.

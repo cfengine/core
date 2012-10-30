@@ -1,5 +1,5 @@
 
-@i{History}: Was introduced in version 3.1.5, Nova 2.1 Constellation 1.0 (2011)
+@i{History}: Was introduced in version 3.1.5, Nova 2.1 (2011)
 
 Goal categories are the parent classes used when searching for goals in the knowledge map.
 This is mostly for internal use in the Knowledge Map, but is a generic part of policy

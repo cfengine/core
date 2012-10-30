@@ -1,5 +1,5 @@
 
-@i{History}: Was introduced in version 3.1.0, Constellation 1.0.0 (2010)
+@i{History}: Was introduced in version 3.1.0 (2010)
 
 A general regular expression may be used to match suitable alternatives, so as to make the
 promise unique.

@@ -1,5 +1,5 @@
 
-@i{History}: Was introduced in version 3.2.0, Nova 2.1.0, Constellation 1.0.0 (2011)
+@i{History}: Was introduced in version 3.2.0, Nova 2.1.0 (2011)
 
 Defines the location for parallelized output to be saved when running @code{cf-runagent}
 in parallel mode.

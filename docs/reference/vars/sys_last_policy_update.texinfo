@@ -1,5 +1,5 @@
 
-@i{History}: Was introduced in 3.4.0, Nova 2.2.0, Constellation 1.0.0 (2012)
+@i{History}: Was introduced in 3.4.0, Nova 2.2.0 (2012)
 
 
 A scalar string variable containing the date stamp of the last time the agent's

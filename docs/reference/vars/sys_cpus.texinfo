@@ -1,5 +1,5 @@
 
-@i{History}: Was introduced in 3.3.0, Nova 2.2.0, Constellation 1.0.0 (2012)
+@i{History}: Was introduced in 3.3.0, Nova 2.2.0 (2012)
 
 A variable containing the number of CPU cores detected on local host, where possible.
 This is currently only guaranteed on Linux 2.6 kernels.

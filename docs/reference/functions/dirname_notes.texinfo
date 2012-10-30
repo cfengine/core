@@ -1,4 +1,4 @@
-@i{History}: Was introduced in 3.3.0, Nova 2.2.0, Constellation 1.0.0 (2011)
+@i{History}: Was introduced in 3.3.0, Nova 2.2.0 (2011)
 
 This function returns directory name for the argument. If directory
 name is provided, name of parent directory is returned.

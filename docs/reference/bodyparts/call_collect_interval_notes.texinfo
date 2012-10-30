@@ -1,5 +1,5 @@
 
-@i{History}: Was introduced in 3.4.0, Nova 2.3.0 (2012)
+@i{History}: Was introduced in 3.4.0, Nova 3.0.0 (2012)
 
 If option time is set, it causes the server daemon to peer with a policy
 hub by attempting a connection at regular intervals of the value of the

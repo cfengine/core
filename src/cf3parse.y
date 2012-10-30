@@ -246,7 +246,6 @@ category:           category_type
                        /* 
                         reset check for category
                        */
-                       CATEGORY_TYPE_CHECK = false;
 
                        size_t token_size = strlen(yytext);
                        P.line_pos += token_size;
@@ -275,8 +274,11 @@ category:           category_type
                      }
                      category_statements
 
+
+
 category_statements:   class_or_promise
                      | category_statements class_or_promise
+                     | ;
                          
 
 class_or_promise:        class
@@ -295,7 +297,7 @@ promise:                 promiser
                          }
 
 
-category_type:           category_ids     
+category_type:           category_ids      { CATEGORY_TYPE_CHECK = false; }
                        | category_require_promise_type { CATEGORY_TYPE_CHECK = true; }
 
 
@@ -345,6 +347,7 @@ constraint:           promiser_type
 promiser_type:       promiser_type_def
                    | id_type 
                      {
+                        printf("Id = %s, check = %d\n", yytext, CATEGORY_TYPE_CHECK);
                         if ( CATEGORY_TYPE_CHECK )
                         {
                            printf("%s is not allowed as promise tyoe for category %s\n", yytext, P.currenttype);
@@ -353,9 +356,11 @@ promiser_type:       promiser_type_def
                         }
                      }
 
-promiser_type_def:   var_type
+promiser_type_def:   var_type { printf("debug CF_VARBODY[%s] = %s\n", yytext, CF_VARBODY[0].lval); }
                    | class_type
+                   | methods_type
                    | common_type
+
 
 
 
@@ -381,7 +386,7 @@ class_type:           AND
                     | XOR
                     | NOT
 
-methods_tyoe:         USEBUNDLE
+methods_type:         USEBUNDLE
 
 id_type:              id
 
@@ -756,7 +761,6 @@ litem:                 IDSYNTAX
                            P.currentstring = NULL;
                        }
 
-/* never used for bidy
                      | usefunction
                        {
                            HvBDebug("\tP: Install function call as list item from level %d\n",P.arg_nesting+1);
@@ -769,7 +773,6 @@ litem:                 IDSYNTAX
                            AppendRlist((Rlist **)&P.currentRlist,(void *)P.currentfncall[P.arg_nesting+1],CF_FNCALL);
                            DeleteFnCall(P.currentfncall[P.arg_nesting+1]);
                        }
-*/
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -1040,7 +1043,7 @@ static void yyerror_hvb(const char *s)
      *    ConfigFile = klaar/bas
      *             ^invalid pathname
     */
-    fprintf(stderr, "filename: %s line %d: token:%s\n", P.filename, cf_lineno, yytext);
+    fprintf(stderr, "filename: %s line %d: token:%s\n", P.filename, P.line_no, yytext);
     fprintf(stderr, "error: %s\n", s);
 
     fprintf(stderr, "\n%s\n", cf_linebuf);

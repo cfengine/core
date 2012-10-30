@@ -1,5 +1,5 @@
 
-@i{History}: Was introduced in version 3.1.5, Nova 2.1.0 Constellation 1.0 (2011)
+@i{History}: Was introduced in version 3.1.5, Nova 2.1.0 (2011)
 
 This feature is somewhat like the @code{splayclass} function, but instead of selecting
 a class for a moment in time, it always chooses one class in the list -- the same class each

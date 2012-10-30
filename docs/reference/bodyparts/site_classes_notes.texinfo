@@ -1,5 +1,5 @@
 
-@i{History}: Was introduced in version 3.2.0, Nova 2.1.0, Constellation 1.0.0 (2011)
+@i{History}: Was introduced in version 3.2.0, Nova 2.1.0 (2011)
 
 This list is used to match against topics when connecting inferences about host locations in the knowledge
 map. Normally any CFEngine classes promise whose name is defined as a thing or topic under class @code{locations::}

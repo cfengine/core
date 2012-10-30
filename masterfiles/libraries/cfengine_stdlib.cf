@@ -1637,7 +1637,7 @@ package_changes => "individual";
 package_list_command => "/bin/rpm -qa --queryformat \"i | repos | %{name} | %{version}-%{release} | %{arch}\n\"";
 
 # set it to "0" to avoid caching of list during upgrade
-
+package_list_update_command => "/usr/bin/yum --quiet check-update";
 package_list_update_ifelapsed => "240";
 
 package_list_name_regex    => "[^|]+\|[^|]+\|\s+([^\s|]+).*";
@@ -1722,8 +1722,8 @@ package_delete_command => "\"$(sys.winsysdir)\msiexec.exe\" /qn /x";
 body package_method yum
 {
 package_changes => "bulk";
-package_list_command => "/usr/bin/yum list installed";
-package_patch_list_command => "/usr/bin/yum check-update";
+package_list_command => "/usr/bin/yum --quiet list installed";
+package_patch_list_command => "/usr/bin/yum --quiet check-update";
 
 # Remember to escape special characters like |
 
@@ -1735,6 +1735,7 @@ package_installed_regex => ".*(installed|\s+@).*";
 package_name_convention => "$(name).$(arch)";
 
 # set it to "0" to avoid caching of list during upgrade
+package_list_update_command => "/usr/bin/yum --quiet check-update";
 package_list_update_ifelapsed => "240";
 
 package_patch_installed_regex => "^\s.*";
@@ -1765,7 +1766,7 @@ body package_method yum_rpm
 {
   package_changes => "bulk";
   package_list_command => "/bin/rpm -qa --qf '%{name} %{version}-%{release} %{arch}\n'";
-  package_patch_list_command => "/usr/bin/yum check-update";
+  package_patch_list_command => "/usr/bin/yum --quiet check-update";
 
   package_list_name_regex    => "^(\S+?)\s\S+?\s\S+$";
   package_list_version_regex => "^\S+?\s(\S+?)\s\S+$";
@@ -1775,6 +1776,7 @@ body package_method yum_rpm
   package_name_convention => "$(name)";
 
   # set it to "0" to avoid caching of list during upgrade
+  package_list_update_command => "/usr/bin/yum --quiet check-update";
   package_list_update_ifelapsed => "240";
 
   package_patch_installed_regex => "^\s.*";
@@ -1823,7 +1825,11 @@ body package_method rpm_filebased(path)
   # The above is a change from Tron's yum_rpm body. When package_file_repositories is in play,
   # package_name_convention has to match the file name, not the package name, per the
   # CFEngine 3 Reference Manual
-  
+ 
+  # set it to "0" to avoid caching of list during upgrade
+  package_list_update_command => "/usr/bin/yum --quiet check-update";
+  package_list_update_ifelapsed => "240";
+
   # The rest is unchanged from Trond's yum_rpm body
   package_changes => "bulk";
   package_list_command => "/bin/rpm -qa --qf '%{name} %{version}-%{release} %{arch}\n'";
@@ -1986,13 +1992,13 @@ SuSE::
 redhat::
  package_changes => "bulk";
  package_list_command => "/bin/rpm -qa --qf '%{name} %{version}-%{release} %{arch}\n'";
- package_patch_list_command => "/usr/bin/yum check-update";
+ package_patch_list_command => "/usr/bin/yum --quiet check-update";
  package_list_name_regex    => "^(\S+?)\s\S+?\s\S+$";
  package_list_version_regex => "^\S+?\s(\S+?)\s\S+$";
  package_list_arch_regex    => "^\S+?\s\S+?\s(\S+)$";
  package_installed_regex => ".*";
  package_name_convention => "$(name)";
-
+ package_list_update_command => "/usr/bin/yum --quiet check-update";
  package_list_update_ifelapsed => "0";     # sometimes, caching is pretty disturbing
  package_patch_installed_regex => "^\s.*";
  package_patch_name_regex    => "([^.]+).*";

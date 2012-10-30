@@ -1,5 +1,5 @@
 
-@i{History}: Was introduced in version 3.1.5, Nova 2.1.0, Constellation 1.0.0 (2011)
+@i{History}: Was introduced in version 3.1.5, Nova 2.1.0 (2011)
 
 This function mirrors the exact behaviour of @code{readrealarray()},
 but reads data from a variable instead of a file @pxref{Function readrealarray}.

@@ -1,5 +1,5 @@
 
-@i{History}: Was introduced in version 3.2, Nova 2.1, Constellation 1.0 (2011)
+@i{History}: Was introduced in version 3.2, Nova 2.1 (2011)
 
 Things are a special subset of topics that behave like objects in the
 world.  We have separated out things from more abstract topics to make

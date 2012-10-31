@@ -76,7 +76,7 @@ static const BodySyntax CF_PKGMETHOD_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-const BodySyntax CF_PACKAGES_BODIES[] =
+static const BodySyntax CF_PACKAGES_BODIES[] =
 {
     {"package_architectures", cf_slist, "", "Select the architecture for package selection"},
     {"package_method", cf_body, CF_PKGMETHOD_BODY, "Criteria for installation and verification"},

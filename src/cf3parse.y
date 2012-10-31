@@ -46,9 +46,11 @@ extern int yylineno;
 static void DebugBanner(const char *s);
 static void fatal_yyerror(const char *s);
 
-/* HvB function */
+/* HvB additions */
+#include "mod_files.h"
 static void yyerror_hvb(const char *s);
-static BodySyntax *current_body_p = NULL;
+static BodySyntax *extra_bodysyntax_p = NULL;
+static char error_txt[CF_MAXVARSIZE];
 
 /* end HvB */ 
 
@@ -87,15 +89,7 @@ extern int  cf_block_open;
 %token COMMANDS_CATEGORY METHODS_CATEGORY FILES_CATEGORY
 %token DATABASES_CATEGORY SERVICES_CATEGORY REPORTS_CATEGORY
 %token EDIT_FIELD_EDITS_CATEGORY EDIT_INSERT_LINES_CATEGORY EDIT_REPLACE_PATTERNS_CATEGORY 
-%token EDIT_DELETE_LINES_CATEGORY
-%token USEBUNDLE
-
-%token COMMENT DEPENDS_ON HANDLE IFVARCLASS META
-
-%token STRING INT REAL SLIST ILIST RLIST POLICY 
-
-%token AND DIST EXPRESSION OR XOR NOT SELECT_CLASS
-
+%token EDIT_DELETE_LINES_CATEGORY UNKNOWN_CATEGORY
 
 %token  BLOCK_IDSYNTAX
 %token  IDSYNTAX
@@ -133,7 +127,7 @@ bundle_syntax:         BUNDLE bundle_type bundle_id bundle_body
                        };
                        | error
                        {
-                          yyerror_hvb(yytext);
+                          yyerror_hvb("bundle type is not valid\n");
                           exit(1);
                        }
 
@@ -156,14 +150,10 @@ bundle_type:        bundle_values
 bundle_values:         COMMON
                      | AGENT
                      | EDITLINE
-                     /*
                      | error
                        {
-                          HvBDebug("P: Unknown bundle type: %s\n", yytext);
-                          yyerror_hvb(yytext);
-                          exit(1);
+                          yyerror_hvb("Unknown bundle type");
                        }
-                      */
 
 bundle_id:           bundle_id_syntax
                      {
@@ -247,12 +237,25 @@ category:           category_type
                         reset check for category
                        */
 
-                       size_t token_size = strlen(yytext);
+                       SubTypeSyntax ss;
+                       size_t        token_size = strlen(yytext);
+
                        P.line_pos += token_size;
                        P.offsets.last_subtype_id = P.offsets.current - token_size;
                        yytext[token_size - 1] = '\0'; 
                        HvBDebug("\tP:%s:%s:%s category_syntax = %s\n", P.block, P.blocktype, P.blockid, yytext); 
                        strncpy(P.currenttype, yytext, CF_MAXVARSIZE); 
+
+                       /*
+                        * Is the valid category for agent
+                       */
+                       ss = SubTypeSyntaxLookup(P.blocktype, P.currenttype);
+                       if ( ss.bundle_type == NULL )
+                       {
+                          sprintf(error_txt, "Category: '%s' is not a valid type for bundle type: '%s", 
+                                    P.currenttype, P.blocktype);
+                          yyerror_hvb(error_txt);
+                       }
                        
                        if (!INSTALL_SKIP)
                        {
@@ -285,7 +288,7 @@ class_or_promise:        class
                        | promise ';'
                        | error
                          {
-                             yyerror_hvb("expected ';' \n");
+                             yyerror_hvb("check previous statement, expected ';'\n");
                          }
 
 
@@ -293,59 +296,61 @@ promise:                 promiser
                        | promiser constraints
                        | promiser constraint error
                          {
-                             yyerror_hvb("expected ',' \n");
+                             yyerror_hvb("check previous statement, expected ',' \n");
                          }
 
 
 category_type:           REPORTS_CATEGORY 
-                            { current_body_p = (BodySyntax *)CF_REPORT_BODIES; }
+                            { extra_bodysyntax_p = NULL; }
 
                        | INTERFACES_CATEGORY          
-                            { current_body_p = (BodySyntax *)CF_INTERFACES_BODIES; }
+                            { extra_bodysyntax_p = NULL; }
 
                        | PROCESSES_CATEGORY  
-                            { current_body_p = (BodySyntax *)CF_PROCESS_BODIES; } 
+                            { extra_bodysyntax_p = NULL; } 
 
                        | PACKAGES_CATEGORY   
-                            { current_body_p = (BodySyntax *)CF_PACKAGES_BODIES; }
-
-                       | FILES_CATEGORY      
-                            { current_body_p = (BodySyntax *)CF_FILES_BODIES; }
+                            { extra_bodysyntax_p = NULL; }
 
                        | DATABASES_CATEGORY            
-                            { current_body_p = (BodySyntax *)CF_DATABASES_BODIES; }
+                            { extra_bodysyntax_p = NULL; }
+
+                       | VARS_CATEGORY     
+                            {  extra_bodysyntax_p = NULL; }
+
+                       | COMMANDS_CATEGORY 
+                            { extra_bodysyntax_p = NULL; }
+
+                       | CLASSES_CATEGORY  
+                            { extra_bodysyntax_p = NULL; }
+
+                       | METHODS_CATEGORY
+                            { extra_bodysyntax_p = NULL; }
+
+                       | SERVICES_CATEGORY
+                            { extra_bodysyntax_p = NULL; }
+
+                       | FILES_CATEGORY      
+                            { extra_bodysyntax_p = NULL; }
 
                        | EDIT_DELETE_LINES_CATEGORY
 
-                            { current_body_p = (BodySyntax *)CF_DELETELINES_BODIES; }
+                            { extra_bodysyntax_p = (BodySyntax *)CF_COMMON_EDITBODIES; }
 
                        | EDIT_REPLACE_PATTERNS_CATEGORY
-                            { current_body_p = (BodySyntax *)CF_REPLACE_BODIES; }
+                            { extra_bodysyntax_p = (BodySyntax *)CF_COMMON_EDITBODIES; }
 
                        | EDIT_INSERT_LINES_CATEGORY
-                            { current_body_p = (BodySyntax *)CF_INSERTLINES_BODIES; }
+                            { extra_bodysyntax_p = (BodySyntax *)CF_COMMON_EDITBODIES; }
 
                        | EDIT_FIELD_EDITS_CATEGORY
-                            { current_body_p = (BodySyntax *)CF_COLUMN_BODIES; }
-
-                       | VARS_CATEGORY     
-                            {  current_body_p = (BodySyntax *)CF_VARBODY; }
-
-                       | COMMANDS_CATEGORY 
-                            { current_body_p = (BodySyntax *)CF_EXEC_BODIES; }
-
-                       | CLASSES_CATEGORY  
-                            { current_body_p = (BodySyntax *)CF_CLASSBODY; }
-
-                       | METHODS_CATEGORY
-                            { current_body_p = (BodySyntax *)CF_METHOD_BODIES; }
-
-                       | SERVICES_CATEGORY
-                            { current_body_p = (BodySyntax *)CF_SERVICES_BODIES; }
-                       | error
+                            { extra_bodysyntax_p = (BodySyntax *)CF_COMMON_EDITBODIES; }
+                       | UNKNOWN_CATEGORY
                          {
-                            yyerror_hvb("Unknown category");   
+                            sprintf(error_txt,"'%s' is not a valid category for bundle '%s'", yytext, P.blocktype);
+                            yyerror_hvb(error_txt);
                          }
+
 
 constraints:          constraint  
                     | constraints ',' constraint
@@ -372,69 +377,96 @@ constraint:           promiser_type
                         yyerror_hvb("promise line statement error\n");
                       }
 
-promiser_type:       promiser_type_def
-                   | promiser_id 
+promiser_type:       promiser_id 
                      {
-                        if ( current_body_p != NULL )
-                        {
-                           bool       found = false;
-                           BodySyntax *tmp_p;
 
-                           tmp_p = current_body_p;
-                           while ( tmp_p->lval != NULL )
-                           {
-                              if (strcmp(yytext, tmp_p->lval) == 0)
-                              {
-                                 found = true; 
-                                 break;
-                              }
-                              else
-                              {
-                                 tmp_p++;
-                              }
-                           }
+                        SubTypeSyntax ss;
+                        BodySyntax *valid_types_p;
+                        BodySyntax *tmp_p;
+                        bool       found = false;
+
+
+                        ss = SubTypeSyntaxLookup(P.blocktype, P.currenttype);
+                        printf("HvB = %s %s\n", ss.bundle_type, ss.subtype);
+                        valid_types_p = ss.bs;
+
+                        while ( valid_types_p->lval != NULL )
+                        {
 
                            /*
-                            * all categories support this type so search again
+                            * printf("Hvb keyword = %s\n", valid_types_p->lval);
                            */
-                           if (!found)
+                           if (strcmp(yytext, valid_types_p->lval) == 0)
                            {
-                              tmp_p = (BodySyntax *)CF_COMMON_BODIES;
+                              found = true; 
+                              break; 
+                           }
+                           else
+                           {
+                              valid_types_p++;
+                           }
+
+                        }
+
+
+                        /*
+                         * some bundle type have a common settings for bs
+                         * eg: edit_line, edit_xml
+                        */
+                        if (!found)
+                        {
+                           if ( extra_bodysyntax_p != NULL )
+                           {
+                              BodySyntax *tmp_p;
+
+                              tmp_p = extra_bodysyntax_p;
                               while ( tmp_p->lval != NULL )
                               {
                                  if (strcmp(yytext, tmp_p->lval) == 0)
                                  {
-                                    found = true;
+                                    found = true; 
                                     break;
                                  }
                                  else
                                  {
                                     tmp_p++;
                                  }
-                              }
-                            }
-
-                            /* 
-                             * give an error message
-                            */ 
-                            if ( !found )
-                            {
-                               printf("'%s' is not allowed as promise tyoe for category: '%s'\n", 
-                                             yytext, P.currenttype);
-                               yyerror_hvb("invalid promise type");
-                            }
-
+                             }
+                           }
                          }
+
+
+                         /*
+                          * all categories support this type so search again
+                         */
+                         if (!found)
+                         {
+                            tmp_p = (BodySyntax *)CF_COMMON_BODIES;
+                            while ( tmp_p->lval != NULL )
+                            {
+                               if (strcmp(yytext, tmp_p->lval) == 0)
+                               {
+                                  found = true;
+                                  break;
+                               }
+                               else
+                               {
+                                  tmp_p++;
+                               }
+                            }
+                          }
+
+                          /* 
+                           * print an error message
+                          */ 
+                          if ( !found )
+                          {
+                             sprintf(error_txt, "'%s' is not allowed as promise type for category: '%s'", 
+                                           yytext, P.currenttype);
+                             yyerror_hvb(error_txt);
+                          }
+
                        }
-
-promiser_type_def:   common_type
-
-
-common_type:          COMMENT
-                    | DEPENDS_ON
-                    | HANDLE
-                    | IFVARCLASS
-                    | META
 
 promiser_id:          id
 
@@ -542,7 +574,6 @@ body_id:           body_id_syntax
 
 body_id_syntax:      typeid
                    | blockid
-                   | promiser_type_def   /* we have no reserved keywords in cf3 */
                    | error
                      {
                         yyerror_hvb("Invalid body id indentifier");
@@ -835,13 +866,6 @@ functionid:            IDSYNTAX
                            HvBDebug("\tP:%s:%s:%s:%s  Found qualified function identifier '%s'\n", 
                               P.block, P.blocktype, P.blockid, P.currenttype, P.currentid);
                        } 
-                     | promiser_type_def   /* we have no reserved eywords in cf3 */
-
-                       {
-                           strncpy(P.currentid,yytext,CF_MAXVARSIZE);
-                           HvBDebug("\tP:%s:%s:%s:%s Found function identifier (cf3 keyword)'%s'\n", 
-                              P.block, P.blocktype, P.blockid, P.currenttype, P.currentid);
-                       }
                      | NAKEDVAR
                        {
                            strncpy(P.currentid,P.currentstring,CF_MAXVARSIZE); // Make a var look like an ID
@@ -995,7 +1019,6 @@ aitem:                 aitem_type  /* recipient of argument is never a literal *
                        };
 
 aitem_type:            IDSYNTAX
-                     | promiser_type_def  /* these ids can be used as name for function args */
        
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

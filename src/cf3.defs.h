@@ -2369,26 +2369,6 @@ extern const BodySyntax CF_CLASSBODY[];
 extern const BodySyntax CFA_CONTROLBODY[];
 extern const BodySyntax CFEX_CONTROLBODY[];
 
-/* 
- * HvB For the parser
- */
-extern const BodySyntax CF_EXEC_BODIES[];
-extern const BodySyntax CF_REPORT_BODIES[]; 
-extern const BodySyntax CF_INTERFACES_BODIES[]; 
-extern const BodySyntax CF_PROCESS_BODIES[]; 
-extern const BodySyntax CF_PACKAGES_BODIES[]; 
-extern const BodySyntax CF_DATABASES_BODIES[];
-extern const BodySyntax CF_METHOD_BODIES[];
-extern const BodySyntax CF_SERVICES_BODIES[];
-
-extern const BodySyntax CF_FILES_BODIES[];
-extern const BodySyntax CF_DELETELINES_BODIES[];
-extern const BodySyntax CF_REPLACE_BODIES[];
-extern const BodySyntax CF_INSERTLINES_BODIES[];
-extern const BodySyntax CF_COLUMN_BODIES[];
-
-
-
 #ifdef HAVE_NOVA
 # include <cf.nova.h>
 #endif

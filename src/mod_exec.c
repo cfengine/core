@@ -39,10 +39,7 @@ static const BodySyntax CF_EXECCONTAIN_BODY[] =
     {NULL, cf_notype, NULL, NULL}
 };
 
-/* HvB
 static const BodySyntax CF_EXEC_BODIES[] =
-*/
-const BodySyntax CF_EXEC_BODIES[] =
 {
     {"args", cf_str, "", "Alternative string of arguments for the command (concatenated with promiser string)"},
     {"contain", cf_body, CF_EXECCONTAIN_BODY, "Containment options for the execution process"},

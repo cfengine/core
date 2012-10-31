@@ -144,165 +144,9 @@ replace_patterns_category  replace_patterns:
 delete_lines_category      delete_lines:
 
 /*
- * common types
-comment                    comment
-depends_on                 depends_on
-handle                     handle
-ifvarclass                 ifvarclass
-meta                       meta
-
-{comment}            {
-                          cf_tokenpos += yyleng;
-                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
-                          return COMMENT;
-                     }
-
-{depends_on}         {
-                          cf_tokenpos += yyleng;
-                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
-                          return DEPENDS_ON;
-                     }
-
-{handle}             {
-                          cf_tokenpos += yyleng;
-                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
-                          return HANDLE;
-                     }
-
-{ifvarclass}         {
-                          cf_tokenpos += yyleng;
-                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
-                          return IFVARCLASS;
-                     }
-
-{meta}               {
-                          cf_tokenpos += yyleng;
-                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
-                          return META;
-                     }
-
-     
-usebundle            {
-                          cf_tokenpos += yyleng;
-                          HvBDebug("\tL:usebundle %d\n", cf_tokenpos);
-                          return USEBUNDLE;
-                     }
+ * catch all unknown categories
 */
-
-/*
- * var types
-
-string                     string
-int                        int
-real                       real
-slist                      slist
-ilist                      ilist
-rlist                      rlist
-policy                     policy
-
-{string}             {
-                          cf_tokenpos += yyleng;
-                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
-                          return STRING;
-                     }
-
-{int}                {
-                          cf_tokenpos += yyleng;
-                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
-                          return INT;
-                     }
-
-{real}              {
-                          cf_tokenpos += yyleng;
-                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
-                          return REAL;
-                     }
-
-{slist}              {
-                          cf_tokenpos += yyleng;
-                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
-                          return SLIST;
-                     }
-
-{ilist}              {
-                          cf_tokenpos += yyleng;
-                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
-                          return ILIST;
-                     }
-
-{rlist}              {
-                          cf_tokenpos += yyleng;
-                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
-                          return RLIST;
-                     }
-
-{policy}             {
-                          cf_tokenpos += yyleng;
-                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
-                          return POLICY;
-                     }
-*/
-
-/*
- * class types
-
-and                        and
-dist                       dist
-expression                 expression
-or                         or
-persistence                persistence
-not                        not
-select_class               select_class
-xor                        xor
-
-{and}                {
-                          cf_tokenpos += yyleng;
-                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
-                          return AND;
-                     }
-
-{dist}               {
-                          cf_tokenpos += yyleng;
-                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
-                          return DIST;
-                     }
-
-{expression}         {
-                          cf_tokenpos += yyleng;
-                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
-                          return EXPRESSION;
-                     }
-
-{or}                 {
-                          cf_tokenpos += yyleng;
-                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
-                          return OR;
-                     }
-
-{persistence}                 {
-                          cf_tokenpos += yyleng;
-                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
-                          return OR;
-                     }
-
-{not}                {
-                          cf_tokenpos += yyleng;
-                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
-                          return NOT;
-                     }
-
-{select_class}                {
-                          cf_tokenpos += yyleng;
-                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
-                          return SELECT_CLASS;
-                     }
-
-{xor}                {
-                          cf_tokenpos += yyleng;
-                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
-                          return XOR;
-                     }
-*/
+category_unknown           [a-zA-Z_]+:
 
 
 %%
@@ -533,10 +377,23 @@ edit_line            {
                      }
 
 {delete_lines_category}   { 
-                          cf_tokenpos += yyleng;
-                          HvBDebug("\tL:category:%s\n", yytext);
-                          return EDIT_DELETE_LINES_CATEGORY;
-                 }
+                              cf_tokenpos += yyleng;
+                              HvBDebug("\tL:category:%s\n", yytext);
+                              return EDIT_DELETE_LINES_CATEGORY;
+                          }
+
+{delete_lines_category}   { 
+                              cf_tokenpos += yyleng;
+                              HvBDebug("\tL:category:%s\n", yytext);
+                              return EDIT_DELETE_LINES_CATEGORY;
+                          }
+
+{category_unknown}        {
+                              cf_tokenpos += yyleng;
+                              HvBDebug("\tL:unknown category:%s\n", yytext);
+                              return UNKNOWN_CATEGORY;
+                          }
+
 
 
 {qstring}             {

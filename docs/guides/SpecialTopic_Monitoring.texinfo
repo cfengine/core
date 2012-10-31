@@ -249,8 +249,7 @@ well documented, since the process requires special knowledge of some
 less-well known Open Source tools (see Reference Manual, reporter
 control promises).
 
-However, in the commercial editions of CFEngine: Nova and
-Constellation, much effort has been put into making the centralized
+However, in the commercial edition of CFEngine (Nova/Enterprise), much effort has been put into making the centralized
 collection and visualization of these data straightforward and
 powerful so that all of the learned information about a network
 may be seen and analysed from a single location.

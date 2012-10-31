@@ -3394,7 +3394,7 @@ reference them using the command:
 @verbatim
 # cf-promises -r
 @end verbatim
-Normally, the default policy in Nova or Constellation will perform this
+Normally, the default policy in Nova/Enterprise will perform this
 command each time the policy is changed.
 
 @node cf-know,  , Analyzing and indexing the policy, Example of topics promises

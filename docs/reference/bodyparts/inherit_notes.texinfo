@@ -1,4 +1,5 @@
-@i{History}: Was introduced in 3.4.0, Nova 3.0.0 (2012)
+
+@i{History}: Was introduced in 3.4.0, Enterprise 3.0.0 (2012)
 
 @noindent @b{Default value}: false
 

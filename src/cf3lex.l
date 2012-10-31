@@ -138,11 +138,19 @@ files_category             files:
 databases_category         databases:
 services_category          services:
 reports_category           reports:
+
 field_edits_category       field_edits:
 insert_lines_category      insert_lines:
 replace_patterns_category  replace_patterns:
 delete_lines_category      delete_lines:
 
+delete_tree_category       delete_tree:
+insert_tree_category       insert_tree:
+delete_attribute_category  delete_attribute:
+set_attribute_category     set_attribute:
+delete_text_category       delete_text:
+set_text_category          set_text:
+insert_text_category       insert_text:
 /*
  * catch all unknown categories
 */
@@ -199,8 +207,11 @@ edit_line            {
                           return EDITLINE;
                      }
 
-
-
+edit_xml             {
+                          cf_tokenpos += yyleng;
+                          HvBDebug("\tL:%s %d\n", yytext, cf_tokenpos);
+                          return EDITXML;
+                     }
 
 {block_open}         {
                           cf_tokenpos += yyleng;
@@ -358,35 +369,26 @@ edit_line            {
                           return REPORTS_CATEGORY;
                       }
 
-{field_edits_category}    { 
-                          cf_tokenpos += yyleng;
-                          HvBDebug("\tL:category:%s\n", yytext);
-                          return EDIT_FIELD_EDITS_CATEGORY;
-                 }
+{field_edits_category} | 
+{insert_lines_category} |
+{replace_patterns_category} |
+{delete_lines_category}  { 
+                             cf_tokenpos += yyleng;
+                             HvBDebug("\tL:category:%s\n", yytext);
+                             return EDITLINE_CATEGORY;
+                         }
 
-{insert_lines_category}   { 
-                          cf_tokenpos += yyleng;
-                          HvBDebug("\tL:category:%s\n", yytext);
-                          return EDIT_INSERT_LINES_CATEGORY;
-                 }
-
-{replace_patterns_category}   { 
-                          cf_tokenpos += yyleng;
-                          HvBDebug("\tL:category:%s\n", yytext);
-                          return EDIT_REPLACE_PATTERNS_CATEGORY;
-                     }
-
-{delete_lines_category}   { 
-                              cf_tokenpos += yyleng;
-                              HvBDebug("\tL:category:%s\n", yytext);
-                              return EDIT_DELETE_LINES_CATEGORY;
-                          }
-
-{delete_lines_category}   { 
-                              cf_tokenpos += yyleng;
-                              HvBDebug("\tL:category:%s\n", yytext);
-                              return EDIT_DELETE_LINES_CATEGORY;
-                          }
+{delete_tree_category} |
+{insert_tree_category} |
+{delete_attribute_category} |
+{set_attribute_category} |
+{delete_text_category} |
+{set_text_category} | 
+{insert_text_category} {
+                        cf_tokenpos += yyleng;
+                        HvBDebug("\tL:category:%s\n", yytext);
+                        return EDITXML_CATEGORY;
+}
 
 {category_unknown}        {
                               cf_tokenpos += yyleng;

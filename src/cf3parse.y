@@ -82,14 +82,14 @@ extern int  cf_block_open;
 /*
  HVB
 */
-%token COMMON AGENT EDITLINE 
+%token COMMON AGENT EDITLINE  EDITXML
 %token BLOCK_OPEN BLOCK_CLOSE 
 %token VARS_CATEGORY CLASSES_CATEGORY INTERFACES_CATEGORY 
 %token PROCESSES_CATEGORY STORAGE_CATEGORY PACKAGES_CATEGORY 
 %token COMMANDS_CATEGORY METHODS_CATEGORY FILES_CATEGORY
 %token DATABASES_CATEGORY SERVICES_CATEGORY REPORTS_CATEGORY
-%token EDIT_FIELD_EDITS_CATEGORY EDIT_INSERT_LINES_CATEGORY EDIT_REPLACE_PATTERNS_CATEGORY 
-%token EDIT_DELETE_LINES_CATEGORY UNKNOWN_CATEGORY
+%token EDITLINE_FIELD_EDITS_CATEGORY EDITLINE_INSERT_LINES_CATEGORY EDITLINE_REPLACE_PATTERNS_CATEGORY 
+%token EDITLINE_DELETE_LINES_CATEGORY EDITLINE_CATEGORY EDITXML_CATEGORY UNKNOWN_CATEGORY
 
 %token  BLOCK_IDSYNTAX
 %token  IDSYNTAX
@@ -150,6 +150,7 @@ bundle_type:        bundle_values
 bundle_values:         COMMON
                      | AGENT
                      | EDITLINE
+                     | EDITXML
                      | error
                        {
                           yyerror_hvb("Unknown bundle type");
@@ -333,18 +334,13 @@ category_type:           REPORTS_CATEGORY
                        | FILES_CATEGORY      
                             { extra_bodysyntax_p = NULL; }
 
-                       | EDIT_DELETE_LINES_CATEGORY
+                       | EDITLINE_CATEGORY
 
                             { extra_bodysyntax_p = (BodySyntax *)CF_COMMON_EDITBODIES; }
 
-                       | EDIT_REPLACE_PATTERNS_CATEGORY
-                            { extra_bodysyntax_p = (BodySyntax *)CF_COMMON_EDITBODIES; }
+                       | EDITXML_CATEGORY
+                            { extra_bodysyntax_p = (BodySyntax *)CF_COMMON_XMLBODIES; }
 
-                       | EDIT_INSERT_LINES_CATEGORY
-                            { extra_bodysyntax_p = (BodySyntax *)CF_COMMON_EDITBODIES; }
-
-                       | EDIT_FIELD_EDITS_CATEGORY
-                            { extra_bodysyntax_p = (BodySyntax *)CF_COMMON_EDITBODIES; }
                        | UNKNOWN_CATEGORY
                          {
                             sprintf(error_txt,"'%s' is not a valid category for bundle '%s'", yytext, P.blocktype);
@@ -389,13 +385,14 @@ promiser_type:       promiser_id
                         ss = SubTypeSyntaxLookup(P.blocktype, P.currenttype);
                         printf("HvB = %s %s\n", ss.bundle_type, ss.subtype);
                         valid_types_p = ss.bs;
+                        printf("HvB = %s\n", valid_types_p->lval);
 
                         while ( valid_types_p->lval != NULL )
                         {
 
                            /*
-                            * printf("Hvb keyword = %s\n", valid_types_p->lval);
                            */
+                             printf("Hvb keyword = %s\n", valid_types_p->lval);
                            if (strcmp(yytext, valid_types_p->lval) == 0)
                            {
                               found = true; 

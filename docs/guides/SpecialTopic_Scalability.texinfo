@@ -191,27 +191,21 @@ CFEngine's asynchronous promise model makes the impact of resource sharing less 
 @section A product strategy for scaling
 @sp 1
 
-As our product names suggest, CFEngine's scaling behaviour follows an
-`astronomical' hierarchy of scales. Our product range 
-@itemize
-@item Nova
-@item Constellation
-@c @item Galaxy. 
-@end itemize
-@noindent have been chosen to model different issues of
+CFEngine's scaling behaviour follows an
+`astronomical' hierarchy of scales. Our product range have been chosen to model different issues of
 scale that occur in systems as they grow from tens to tens of
 thousands of machines. As indicated above, dealing with scale is not
 just about machine capacity, but also about knowledge management and
 comprehension.
 
-A @i{Nova} installation is designed around a single star
+An @i{Enterprise} installation is designed around a single star
 configuration (like a solar system) in which the hub machine is the
 star and the managed entities are the planets.  Special planets can
 have their own satellites (customized environments within the single
 point of control), so this model does not imply complete uniformity.
 
-A @i{Constellation} is designed around multiple star
-configurations and is designed for cases where it is desirable to
+Future releases will be designed around multiple star
+configurations and for cases where it is desirable to
 maintain several points of control or independently managed
 entities. This is also called a federation of star networks. The
 reason for choosing this kind of architecture may or may not have to
@@ -219,10 +213,12 @@ do with service capacity (i.e. for coping with a large number
 of systems): sometimes knowledge management and
 responsibilities scale better with federation.
 
+@ignore 
 @sp 1
 @center @image{nova_const,14cm}
 @center From a Nova star network to a Constellation of star networks.
 @sp 1
+@end ignore
 
 @node A user strategy for scaling, Unexpected risks of scaling, A product strategy for scaling, Principles of scalability
 @section A user strategy for scaling
@@ -723,7 +719,7 @@ Use the knowledge map to:
 @node System Tuning and Hub Optimization,  , Copernicus Knowledge Map, Scalable policy strategy
 @section System Tuning and Hub Optimization
 
-CFEngine uses MongoDB as its repository of information for each Nova and Constellation hub.
+CFEngine uses MongoDB as its repository of information for each Nova/Enterprise hub.
 The performance of a hub depends on the combination of hardware and software. The CFEngine
 hub falls under the category or role of database server, and this requires fairly specific
 optimizations. For example, NUMA architecture processing is known to lead to severe
@@ -1335,7 +1331,7 @@ in the @file{/var/cfengine/policy_server.dat} resource.
 @subsection Redundant reporting hubs and recovery
 
 A CFEngine reporting hub is a host that aggregates reports from all
-managed hosts in a Nova starburst cluster. The purpose of aggregating
+managed hosts in a Nova/Enterprise cluster. The purpose of aggregating
 reports is to have all the information in one place for searching,
 calibrating and comparing. The loss of a hub is an inconvenience
 rather than a problem, as the function of a hub is to make access to
@@ -1349,8 +1345,7 @@ users.
 and increased overhead.
 @item If a hub serves so many computers that updating the reports becomes a burden,
 then you have probably already passed the point at which it makes sense to divide up
-your management into multiple hubs. CFEngine Constellation can provide a total viewpoint
-in a scenario with multiple hubs.
+your management into multiple hubs.
 @end itemize
 Dividing hosts into multiple hubs should be a decision based on the absence of
 the `need to know' for all hosts. By splitting the aggregation up into multiple

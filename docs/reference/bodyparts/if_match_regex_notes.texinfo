@@ -1,5 +1,5 @@
 
-@i{History}: Was introduced in 3.4.0, Nova 3.0.0 (2012)
+@i{History}: Was introduced in 3.4.0, Enterprise 3.0.0 (2012)
 
 If a parameter or variable is already defined in the current context and
 the value matches this regular expression, it will be deemed invalid and

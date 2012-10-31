@@ -938,8 +938,7 @@ static int ParseModePosixLinux(char *mode, acl_permset_t perms)
     int retv;
     int more_entries;
     acl_perm_t perm;
-    enum
-    { add, del } op;
+    enum { add, del } op;
 
     op = add;
 

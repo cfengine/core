@@ -49,6 +49,7 @@ static void fatal_yyerror(const char *s);
 /* HvB additions */
 #include "mod_files.h"
 static void yyerror_hvb(const char *s);
+static bool BodyTypeSyntaxLookup(const char *, const char *, char *);
 static BodySyntax *extra_bodysyntax_p = NULL;
 static char error_txt[CF_MAXVARSIZE];
 
@@ -383,16 +384,14 @@ promiser_type:       promiser_id
 
 
                         ss = SubTypeSyntaxLookup(P.blocktype, P.currenttype);
-                        printf("HvB = %s %s\n", ss.bundle_type, ss.subtype);
                         valid_types_p = ss.bs;
-                        printf("HvB = %s\n", valid_types_p->lval);
 
                         while ( valid_types_p->lval != NULL )
                         {
 
                            /*
-                           */
                              printf("Hvb keyword = %s\n", valid_types_p->lval);
+                           */
                            if (strcmp(yytext, valid_types_p->lval) == 0)
                            {
                               found = true; 
@@ -577,7 +576,7 @@ body_id_syntax:      typeid
                      }
  
 body_body:          BLOCK_OPEN
-                       {
+                    {
                            HvBDebug("\tP: Body Block open\n");
                            P.currentbody = AppendBody(P.policy, P.blockid, P.blocktype, P.useargs, P.filename);
                            if (P.currentbody)
@@ -590,34 +589,34 @@ body_body:          BLOCK_OPEN
                            P.useargs = NULL;
 
                            strcpy(P.currentid,"");
-                       }
+                     }
 
-                       bodyattribs
+                     body_statements
 
-                       BLOCK_CLOSE 
-                       {
-                           P.offsets.last_id = -1;
-                           P.offsets.last_string = -1;
-                           P.offsets.last_class_id = -1;
-                           if (P.currentbody)
-                           {
-                               P.currentbody->offset.end = P.offsets.current;
-                           }
-                           HvBDebug("P: End  body block\n");
-                       };
-
-
-bodyattribs:           bodyattrib               
-                     | bodyattribs bodyattrib;
+                     BLOCK_CLOSE 
+                     {
+                         P.offsets.last_id = -1;
+                         P.offsets.last_string = -1;
+                         P.offsets.last_class_id = -1;
+                         if (P.currentbody)
+                         {
+                             P.currentbody->offset.end = P.offsets.current;
+                         }
+                         HvBDebug("P: End  body block\n");
+                     }
 
 
-bodyattrib:            class
+body_statements:       body_statement               
+                     | body_statements body_statements;
+
+
+body_statement:      class
                      | selections;
 
 selections:            selection          
                      | selections selection;
 
-selection:             id         
+selection:             selection_id { printf("yesy\n"); }
                        ASSIGN
                        {
                            HvBDebug("\tP:ASSIGN\n");
@@ -696,6 +695,15 @@ selection:             id
                        ';'
 
 
+selection_id:          id
+                       {
+                           if ( !BodyTypeSyntaxLookup(P.blocktype, P.blockid, yytext) )
+                           {
+                              sprintf(error_txt,"%s is invalid for 'body %s %s'", 
+                                      yytext, P.blocktype, P.blockid);
+                               yyerror_hvb(error_txt);
+                           }
+                       }
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -1021,6 +1029,171 @@ aitem_type:            IDSYNTAX
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 %%
+
+/*****************************************************************/
+
+static bool BodyTypeSyntaxLookup(const char *body_type, const char *block_id, char *name)
+{
+   SubTypeSyntax *ss;
+   BodySyntax    *bs, *bs2;
+   int           i,j,l,k;
+
+
+/*
+   printf("HvB %s %s %s\n", body_type, block_id, name);
+*/
+
+   if ( strcmp(block_id, "control") == 0 )
+   {
+      if ( strcmp(body_type, "common") == 0 )
+      {
+         bs = (BodySyntax *)CFG_CONTROLBODY;
+      }
+      else if ( strcmp(body_type, "agent") == 0 )
+      {
+         bs = (BodySyntax *)CFA_CONTROLBODY;
+      }
+      else if ( strcmp(body_type, "executor") == 0 )
+      {
+         bs = (BodySyntax *)CFEX_CONTROLBODY;
+      }
+      else if ( strcmp(body_type, "server") == 0 )
+      {
+         bs = (BodySyntax *)CFS_CONTROLBODY;
+      }
+      else
+      {
+         bs = NULL;
+      }
+
+      for ( i=0; bs[i].lval != NULL; i++)
+      {   
+          if ( strcmp(bs[i].lval, name) == 0 )
+          {
+             return true;
+          }
+      }
+      if ( bs != NULL )
+      {
+         return false;
+      }
+    }
+
+/* debug purpose
+   for (i = 0; i < CF3_MODULES; i++)
+   {
+       if ((ss = (SubTypeSyntax *)CF_ALL_SUBTYPES[i]) == NULL)
+       {
+           continue;
+       }
+       for (j = 0; ss[j].subtype != NULL; j++)
+       {
+           printf("Examining subtype %s\n", ss[j].subtype);
+           printf("\t bundle_type %s\n", ss[j].bundle_type);
+           
+           if ((bs = (BodySyntax *)ss[j].bs) == NULL)
+           {
+               continue;
+           }
+
+          for (l = 0; bs[l].range != NULL; l++)
+          {
+              printf("\tbs[l].lval  %s\n", bs[l].lval);
+              printf("\tbs[l].dtype %d\n", bs[l].dtype );
+
+              bs2 = (BodySyntax *) (bs[l].range);
+
+              if ( bs2 == NULL)
+                  continue;
+
+              if ( bs[l].dtype != cf_body )
+                  continue;
+
+              printf("\t\tbs2[0].description = %s\n", bs2[0].description);
+
+              printf("\t\tbs[k]\n");
+              for (k = 0; bs2[k].lval != NULL; k++)
+              {  
+                  printf("\t\tbs2[k].lval = %s\n", bs2[k].lval);
+              }
+
+          }
+        }
+          exit(1);
+   }
+*/
+
+  
+   for (i = 0; i < CF3_MODULES; i++)
+   {
+   /*
+       printf("Trying function module %d for matching lval %s\n", i, name);
+   */
+
+       if ((ss = (SubTypeSyntax *)CF_ALL_SUBTYPES[i]) == NULL)
+       {
+           continue;
+       }
+
+       for (j = 0; ss[j].subtype != NULL; j++)
+       {
+       /*
+           printf("Examining subtype %s\n", ss[j].subtype);
+           printf("\t bundle_type %s\n", ss[j].bundle_type);
+       */
+           
+           if ((bs = (BodySyntax *)ss[j].bs) == NULL)
+           {
+               continue;
+           }
+
+          for (l = 0; bs[l].range != NULL; l++)
+          {
+              /*
+              printf("\tbs[l].lval  %s\n", bs[l].lval);
+              printf("\tbs[l].dtype %d\n", bs[l].dtype );
+              */
+
+              if ( (bs[l].dtype == cf_body)) 
+              {
+
+/*
+                 if (bs2 == NULL || bs2 == (void *) CF_BUNDLE)
+ */
+                 bs2 = (const BodySyntax *) (bs[l].range);
+
+                 if (bs2 == NULL ) 
+                 {
+                    continue;
+                 }
+
+                 if ( (strcmp(body_type, bs[l].lval) == 0) || (strcmp("action", bs[l].lval) == 0) )
+                 {
+                 /*
+                     printf("We found a type match for %s:%s\n", P.blocktype, bs[l].lval);
+                 */
+
+                     for (k = 0; bs2[k].dtype != cf_notype; k++)
+                     {  
+                         if (strcmp(bs2[k].lval, name) == 0 )
+                         { 
+                             /*
+                             printf("We found a match for %s:%s\n", bs2[k].lval, name);
+                             */
+                             return true;
+                         }
+                      }
+                   /*
+                   return false;
+                   */
+
+                   }
+                } 
+            } /* end for l */
+          } /* end for j */
+     } /* end for i */
+     return false;
+}
 
 /*****************************************************************/
 

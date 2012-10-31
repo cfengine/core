@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#ifndef CFENIGNE_LOGIC_EXPRESSIONS_H
+#ifndef CFENGINE_LOGIC_EXPRESSIONS_H
 #define CFENGINE_LOGIC_EXPRESSIONS_H
 
 # include "bool.h"

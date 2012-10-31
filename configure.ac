@@ -521,6 +521,9 @@ AC_REPLACE_FUNCS(strcasecmp)
 AC_CHECK_DECLS(strncasecmp)
 AC_REPLACE_FUNCS(strncasecmp)
 
+AC_CHECK_DECLS(strsep)
+AC_REPLACE_FUNCS(strsep)
+
 AC_CHECK_DECLS(strsignal)
 AC_REPLACE_FUNCS(strsignal)
 

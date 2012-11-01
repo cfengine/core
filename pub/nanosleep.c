@@ -38,6 +38,14 @@
 # include <time.h>
 # include <windows.h>
 
+#if !defined(HAVE_STRUCT_TIMESPEC)
+struct timespec
+{
+    time_t tv_sec;
+    long tv_nsec;
+};
+#endif
+
 int nanosleep(const struct timespec *rqtp, struct timespec *rmtp);
 
 int nanosleep(const struct timespec *rqtp, struct timespec *rmtp)

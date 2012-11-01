@@ -12,4 +12,4 @@ promises have already been verified and kept: i.e. as long as the
 dependent promises are either kept or repaired the dependee can be
 verified.
 
-Handles in other namespaces may be referred to by @var{namespace.handle}.
+Handles in other namespaces may be referred to by @var{namespace:handle}.

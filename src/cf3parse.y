@@ -34,9 +34,11 @@
 // FIX: remove
 #include "syntax.h"
 
-#define HvBDebug printf
+#define ParserDebug if (DEBUG) printf
+
 /*
-#define HvBDebug 
+#define ParserDebug printf
+#define ParserDebug 
 */
 
 extern char *yytext;
@@ -48,7 +50,6 @@ static void fatal_yyerror(const char *s);
 
 /* HvB additions */
 #include "mod_files.h"
-static void yyerror_hvb(const char *s);
 static bool BodyTypeSyntaxLookup(const char *, const char *, char *);
 static BodySyntax *extra_bodysyntax_p = NULL;
 static char error_txt[CF_MAXVARSIZE];
@@ -123,12 +124,9 @@ bundle:                bundle_syntax
 
 bundle_syntax:         BUNDLE bundle_type bundle_id bundle_body
                      | BUNDLE bundle_type bundle_id usearglist bundle_body
+                     | error
                        {
-                         printf("Parsed a bundle\n");
-                       };
-                       | error
-                       {
-                          yyerror_hvb("bundle type is not valid\n");
+                          yyerror("bundle type is not valid\n");
                           exit(1);
                        }
 
@@ -138,7 +136,7 @@ bundle_type:        bundle_values
                           strncpy(P.blocktype, yytext, CF_MAXVARSIZE);
 
                           DebugBanner("Bundle");
-                          HvBDebug("P:bundle:%s\n", P.blocktype);
+                          ParserDebug("P:bundle:%s\n", P.blocktype);
 
                           P.rval = (Rval) { NULL, '\0' };
                           DeleteRlist(P.currentRlist);
@@ -154,13 +152,13 @@ bundle_values:         COMMON
                      | EDITXML
                      | error
                        {
-                          yyerror_hvb("Unknown bundle type");
+                          yyerror("Unknown bundle type");
                        }
 
 bundle_id:           bundle_id_syntax
                      {
                          strncpy(P.blockid,yytext,CF_MAXVARSIZE);
-                         HvBDebug("\tP:bundle:%s:%s\n", P.blocktype, P.blockid);
+                         ParserDebug("\tP:bundle:%s:%s\n", P.blocktype, P.blockid);
                      }
 
 bundle_id_syntax:    typeid
@@ -170,7 +168,7 @@ bundle_id_syntax:    typeid
 bundle_body:         BLOCK_OPEN 
                      {
 
-                        HvBDebug("\tP:Bundle Block open\n");
+                        ParserDebug("\tP:Bundle Block open\n");
 
                         /*
                          * This irrelevant because we know we have parsed the right cfengie
@@ -178,12 +176,12 @@ bundle_body:         BLOCK_OPEN
                
                         if (RelevantBundle(CF_AGENTTYPES[THIS_AGENT_TYPE], P.blocktype))
                         {
-                            HvBDebug("We a compiling everything here\n");
+                            ParserDebug("We a compiling everything here\n");
                             INSTALL_SKIP = false;
                         }
                         else if (strcmp(CF_AGENTTYPES[THIS_AGENT_TYPE], P.blocktype) != 0)
                         {
-                               HvBDebug("This is for a different agent\n");
+                               ParserDebug("This is for a different agent\n");
                                INSTALL_SKP = true;
                         }
 
@@ -210,7 +208,7 @@ bundle_body:         BLOCK_OPEN
 
                      BLOCK_CLOSE
                      {
-                        HvBDebug("P:Bundle Block close\n");
+                        ParserDebug("P:Bundle Block close\n");
                         INSTALL_SKIP = false;
                         P.offsets.last_id = -1;
                         P.offsets.last_string = -1;
@@ -227,7 +225,7 @@ bundle_statements:    bundle_statement
 
 bundle_statement:   categories
                     {
-                        HvBDebug("\tP: Ending bundle categories \n");
+                        ParserDebug("\tP: Ending bundle categories \n");
                     }
 
 categories:         category
@@ -242,10 +240,9 @@ category:           category_type
                        SubTypeSyntax ss;
                        size_t        token_size = strlen(yytext);
 
-                       P.line_pos += token_size;
                        P.offsets.last_subtype_id = P.offsets.current - token_size;
                        yytext[token_size - 1] = '\0'; 
-                       HvBDebug("\tP:%s:%s:%s category_syntax = %s\n", P.block, P.blocktype, P.blockid, yytext); 
+                       ParserDebug("\tP:%s:%s:%s category_syntax = %s\n", P.block, P.blocktype, P.blockid, yytext); 
                        strncpy(P.currenttype, yytext, CF_MAXVARSIZE); 
 
                        /*
@@ -256,12 +253,12 @@ category:           category_type
                        {
                           sprintf(error_txt, "Category: '%s' is not a valid type for bundle type: '%s", 
                                     P.currenttype, P.blocktype);
-                          yyerror_hvb(error_txt);
+                          yyerror(error_txt);
                        }
                        
                        if (!INSTALL_SKIP)
                        {
-                          HvBDebug("\tP: inside bundle\n");
+                          ParserDebug("\tP: inside bundle\n");
                           P.currentstype = AppendSubType(P.currentbundle,P.currenttype); 
                           P.currentstype->offset.line = P.line_no;
                           P.currentstype->offset.start = P.offsets.last_subtype_id;
@@ -290,7 +287,7 @@ class_or_promise:        class
                        | promise ';'
                        | error
                          {
-                             yyerror_hvb("check previous statement, expected ';'\n");
+                             yyerror("check previous statement, expected ';'\n");
                          }
 
 
@@ -298,7 +295,7 @@ promise:                 promiser
                        | promiser constraints
                        | promiser constraint error
                          {
-                             yyerror_hvb("check previous statement, expected ',' \n");
+                             yyerror("check previous statement, expected ',' \n");
                          }
 
 
@@ -345,7 +342,7 @@ category_type:           REPORTS_CATEGORY
                        | UNKNOWN_CATEGORY
                          {
                             sprintf(error_txt,"'%s' is not a valid category for bundle '%s'", yytext, P.blocktype);
-                            yyerror_hvb(error_txt);
+                            yyerror(error_txt);
                          }
 
 
@@ -357,7 +354,7 @@ constraint:           promiser_type
                       { 
 
                           strncpy(P.lval, yytext, CF_MAXVARSIZE); 
-                          HvBDebug("\tP:%s:%s:%s:%s promiser type for LVAL '%s'\n",
+                          ParserDebug("\tP:%s:%s:%s:%s promiser type for LVAL '%s'\n",
                               P.block, P.blocktype, P.blockid, P.currenttype, P.lval);
 
                           DeleteRlist(P.currentRlist);
@@ -366,12 +363,12 @@ constraint:           promiser_type
                       }
                       ASSIGN
                       {
-                        HvBDebug("\tP:ASSIGN\n");
+                        ParserDebug("\tP:ASSIGN\n");
                       }
                       rval_bundle_statement
                     | error
                       {
-                        yyerror_hvb("promise line statement error\n");
+                        yyerror("promise line statement error\n");
                       }
 
 promiser_type:       promiser_id 
@@ -384,7 +381,7 @@ promiser_type:       promiser_id
 
 
                         ss = SubTypeSyntaxLookup(P.blocktype, P.currenttype);
-                        valid_types_p = ss.bs;
+                        valid_types_p = (BodySyntax *)ss.bs;
 
                         while ( valid_types_p->lval != NULL )
                         {
@@ -459,7 +456,7 @@ promiser_type:       promiser_id
                           {
                              sprintf(error_txt, "'%s' is not allowed as promise type for category: '%s'", 
                                            yytext, P.currenttype);
-                             yyerror_hvb(error_txt);
+                             yyerror(error_txt);
                           }
 
                        }
@@ -470,12 +467,12 @@ promiser_id:          id
 rval_bundle_statement:   rval_type
                          {
                                 /*
-                                HvBDebug("\tP:%s:%s:%s:%s for rval '%s'\n", P.block, P.blocktype, P.blockid, P.currenttype, yytext); 
+                                ParserDebug("\tP:%s:%s:%s:%s for rval '%s'\n", P.block, P.blocktype, P.blockid, P.currenttype, yytext); 
                                 */
                                 
                                 if (!INSTALL_SKIP)
                                 {
-                                   HvBDebug("\tAdd Constraint to promiser: %s\n\n", P.promiser);
+                                   ParserDebug("\tAdd Constraint to promiser: %s\n\n", P.promiser);
                                    Constraint *cp = NULL;
                                    SubTypeSyntax ss = SubTypeSyntaxLookup(P.blocktype,P.currenttype);
                                    CheckConstraint(P.currenttype, CurrentNameSpace(P.policy), P.blockid, P.lval, P.rval, ss);
@@ -511,7 +508,7 @@ rval_bundle_statement:   rval_type
 typeid:                IDSYNTAX
                        {
                            /*
-                           HvBDebug("\tP:%s:%s:%s \n",P.block, P.blocktype, P.blockid);
+                           ParserDebug("\tP:%s:%s:%s \n",P.block, P.blocktype, P.blockid);
                            */
                            DeleteRlist(P.useargs);
                            P.useargs = NULL;
@@ -522,7 +519,7 @@ typeid:                IDSYNTAX
 blockid:               BLOCK_IDSYNTAX 
                        {
                            P.offsets.last_block_id = P.offsets.last_id;
-                           HvBDebug("P:%s:%s:%s blockid\n",P.block,P.blocktype,P.blockid);
+                           ParserDebug("P:%s:%s:%s blockid\n",P.block,P.blocktype,P.blockid);
                        };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -552,7 +549,7 @@ body_type:         body_type_values
                            strncpy(P.blocktype, yytext, CF_MAXVARSIZE);
                            strcpy(P.blockid, "");
 
-                           HvBDebug("P:%s body blocktype = %s \n\n", P.block, P.blocktype);
+                           ParserDebug("P:%s body blocktype = %s \n\n", P.block, P.blocktype);
 
 
                     }
@@ -564,7 +561,7 @@ body_type_values:     COMMON
 
 body_id:           body_id_syntax
                    {
-                     HvBDebug("\tP:%s:%s body blockid: %s\n", P.block, P.blocktype, yytext);
+                     ParserDebug("\tP:%s:%s body blockid: %s\n", P.block, P.blocktype, yytext);
                      strncpy(P.blockid, yytext, CF_MAXVARSIZE);
                    }
 
@@ -572,12 +569,12 @@ body_id_syntax:      typeid
                    | blockid
                    | error
                      {
-                        yyerror_hvb("Invalid body id indentifier");
+                        yyerror("Invalid body id indentifier");
                      }
  
 body_body:          BLOCK_OPEN
                     {
-                           HvBDebug("\tP: Body Block open\n");
+                           ParserDebug("\tP: Body Block open\n");
                            P.currentbody = AppendBody(P.policy, P.blockid, P.blocktype, P.useargs, P.filename);
                            if (P.currentbody)
                            {
@@ -602,7 +599,7 @@ body_body:          BLOCK_OPEN
                          {
                              P.currentbody->offset.end = P.offsets.current;
                          }
-                         HvBDebug("P: End  body block\n");
+                         ParserDebug("P: End  body block\n");
                      }
 
 
@@ -616,10 +613,10 @@ body_statement:      class
 selections:            selection          
                      | selections selection;
 
-selection:             selection_id { printf("yesy\n"); }
+selection:             selection_id
                        ASSIGN
                        {
-                           HvBDebug("\tP:ASSIGN\n");
+                           ParserDebug("\tP:ASSIGN\n");
                        }
                        rval_type
                        {
@@ -631,12 +628,12 @@ selection:             selection_id { printf("yesy\n"); }
 
                                if (P.currentclasses == NULL)
                                {
-                                   HvBDebug("\tAdd Constraint to body: %s\n\n", P.blockid);
+                                   ParserDebug("\tAdd Constraint to body: %s\n\n", P.blockid);
                                    cp = ConstraintAppendToBody(P.currentbody, P.lval, P.rval, "any", P.references_body);
                                }
                                else
                                {
-                                   HvBDebug("\tAdd Constraint to body: %s for class %s\n", P.blockid, P.currentclasses);
+                                   ParserDebug("\tAdd Constraint to body: %s for class %s\n", P.blockid, P.currentclasses);
                                    cp = ConstraintAppendToBody(P.currentbody,P.lval,P.rval,P.currentclasses,P.references_body);
                                }
 
@@ -701,7 +698,7 @@ selection_id:          id
                            {
                               sprintf(error_txt,"%s is invalid for 'body %s %s'", 
                                       yytext, P.blocktype, P.blockid);
-                               yyerror_hvb(error_txt);
+                               yyerror(error_txt);
                            }
                        }
 
@@ -713,7 +710,7 @@ selection_id:          id
 class:                 CLASS
                        {
                            P.offsets.last_class_id = P.offsets.current - strlen(P.currentclasses) - 2;
-                           HvBDebug("\tP:%s New class contexts\n", P.currentclasses);
+                           ParserDebug("\tP:%s New class contexts\n", P.currentclasses);
                        };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -723,7 +720,7 @@ id:                    id_types
                            strncpy(P.lval, yytext, CF_MAXVARSIZE);
                            DeleteRlist(P.currentRlist);
                            P.currentRlist = NULL;
-                           HvBDebug("\tP:%s:%s:%s:%s lval for '%s'\n", P.block, P.blocktype, P.blockid, P.currenttype, P.lval);
+                           ParserDebug("\tP:%s:%s:%s:%s lval for '%s'\n", P.block, P.blocktype, P.blockid, P.currenttype, P.lval);
                        };
 
 id_types:             IDSYNTAX
@@ -738,20 +735,20 @@ rval_type:            /*  These token can never be RVAL HvB
                        {
                            P.rval = (Rval) { xstrdup(P.currentid), CF_SCALAR };
                            P.references_body = true;
-                           HvBDebug("\tP:%s:%s:%s:%s id RVAL '%s'\n", 
+                           ParserDebug("\tP:%s:%s:%s:%s id RVAL '%s'\n", 
                                P.block, P.blocktype, P.blockid, P.currenttype, P.currentstring);
                        }
                      | BLOCKID
                        {
                            P.rval = (Rval) { xstrdup(P.currentid), CF_SCALAR };
                            P.references_body = true;
-                           HvBDebug("\tP:%s:%s:%s:%s blockid RVAL '%s'\n", 
+                           ParserDebug("\tP:%s:%s:%s:%s blockid RVAL '%s'\n", 
                               P.block, P.blocktype, P.blockid, P.currenttype, P.currentstring);
                        }
                        */
                      QSTRING
                        {
-                           HvBDebug("\tP:%s:%s:%s:%s scalar RVAL '%s'\n",  
+                           ParserDebug("\tP:%s:%s:%s:%s scalar RVAL '%s'\n",  
                                P.block, P.blocktype, P.blockid, P.currenttype, P.currentstring);
 
                            P.rval = (Rval) { P.currentstring, CF_SCALAR };
@@ -770,7 +767,7 @@ rval_type:            /*  These token can never be RVAL HvB
                      | NAKEDVAR
                        {
                            P.rval = (Rval) { P.currentstring, CF_SCALAR };
-                           HvBDebug("\tP:%s:%s:%s:%s scalarvariable RVAL '%s'\n", 
+                           ParserDebug("\tP:%s:%s:%s:%s scalarvariable RVAL '%s'\n", 
                                P.block, P.blocktype, P.blockid, P.currenttype, P.currentstring);
 
                            P.currentstring = NULL;
@@ -779,7 +776,7 @@ rval_type:            /*  These token can never be RVAL HvB
                      | list
                        {
                            P.rval = (Rval) { CopyRlist(P.currentRlist), CF_LIST };
-                           HvBDebug("\tP:%s:%s:%s:%s list  RVAL\n", 
+                           ParserDebug("\tP:%s:%s:%s:%s list  RVAL\n", 
                                P.block, P.blocktype, P.blockid, P.currenttype);
                            DeleteRlist(P.currentRlist);
                            P.currentRlist = NULL;
@@ -787,14 +784,14 @@ rval_type:            /*  These token can never be RVAL HvB
                        }
                      | usefunction
                        {
-                           HvBDebug("\tP:%s:%s:%s:%s usefunction  RVAL '%s'\n", 
+                           ParserDebug("\tP:%s:%s:%s:%s usefunction  RVAL '%s'\n", 
                                P.block, P.blocktype, P.blockid, P.currenttype, P.currentstring);
                            P.rval = (Rval) { P.currentfncall[P.arg_nesting+1], CF_FNCALL };
                            P.references_body = false;
                        }
                      | usefunction_noargs
                        {
-                           HvBDebug("\tP:%s:%s:%s:%s usefunction  with no args RVAL '%s'\n", 
+                           ParserDebug("\tP:%s:%s:%s:%s usefunction  with no args RVAL '%s'\n", 
                                P.block, P.blocktype, P.blockid, P.currenttype, P.currentstring);
                                /*
                            P.rval = (Rval) { P.currentfncall[P.arg_nesting+1], CF_FNCALL };
@@ -802,15 +799,15 @@ rval_type:            /*  These token can never be RVAL HvB
                               */
                            P.rval = (Rval) { xstrdup(P.currentid), CF_SCALAR };
                            P.references_body = true;
-                           HvBDebug("\tP:%s:%s:%s:%s id RVAL '%s'\n", 
+                           ParserDebug("\tP:%s:%s:%s:%s id RVAL '%s'\n", 
                                P.block, P.blocktype, P.blockid, P.currenttype, P.currentstring);
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-list:                  BLOCK_OPEN { printf("\tP:list open\n") ; }
+list:                  BLOCK_OPEN 
                        litems
-                       BLOCK_CLOSE { printf("\tP:list closed\n"); }
+                       BLOCK_CLOSE 
                        ; 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -825,13 +822,13 @@ litems_int:            litem
 
 litem:                 IDSYNTAX
                        {
-                           HvBDebug("\tP:%s:%s:%s added idsyntax item = %s\n", P.block,P.blocktype,P.blockid,  yytext);
+                           ParserDebug("\tP:%s:%s:%s added idsyntax item = %s\n", P.block,P.blocktype,P.blockid,  yytext);
                            AppendRlist((Rlist **)&P.currentRlist,P.currentid,CF_SCALAR);
                        }
 
                     |  QSTRING
                        {
-                           HvBDebug("\tP:%s:%s:%s added qstring item = %s\n", P.block,P.blocktype,P.blockid,  yytext);
+                           ParserDebug("\tP:%s:%s:%s added qstring item = %s\n", P.block,P.blocktype,P.blockid,  yytext);
                            AppendRlist((Rlist **)&P.currentRlist,(void *)P.currentstring,CF_SCALAR);
                            free(P.currentstring);
                            P.currentstring = NULL;
@@ -839,7 +836,7 @@ litem:                 IDSYNTAX
 
                      | NAKEDVAR
                        {
-                           HvBDebug("\tP:%s:%s:%s added nakedvart item\n", P.block,P.blocktype,P.blockid);
+                           ParserDebug("\tP:%s:%s:%s added nakedvart item\n", P.block,P.blocktype,P.blockid);
                            AppendRlist((Rlist **)&P.currentRlist,(void *)P.currentstring,CF_SCALAR);
                            free(P.currentstring);
                            P.currentstring = NULL;
@@ -847,13 +844,13 @@ litem:                 IDSYNTAX
 
                      | usefunction
                        {
-                           HvBDebug("\tP: Install function call as list item from level %d\n",P.arg_nesting+1);
+                           ParserDebug("\tP: Install function call as list item from level %d\n",P.arg_nesting+1);
                            AppendRlist((Rlist **)&P.currentRlist,(void *)P.currentfncall[P.arg_nesting+1],CF_FNCALL);
                            DeleteFnCall(P.currentfncall[P.arg_nesting+1]);
                        }
                      | usefunction_noargs
                        {
-                           HvBDebug("\tP: Install function call with no args as list item from level %d\n",P.arg_nesting+1);
+                           ParserDebug("\tP: Install function call with no args as list item from level %d\n",P.arg_nesting+1);
                            AppendRlist((Rlist **)&P.currentRlist,(void *)P.currentfncall[P.arg_nesting+1],CF_FNCALL);
                            DeleteFnCall(P.currentfncall[P.arg_nesting+1]);
                        }
@@ -863,12 +860,12 @@ litem:                 IDSYNTAX
 
 functionid:            IDSYNTAX
                        {
-                           HvBDebug("\tP:%s:%s:%s:%s Found function identifier '%s'\n", 
+                           ParserDebug("\tP:%s:%s:%s:%s Found function identifier '%s'\n", 
                               P.block, P.blocktype, P.blockid, P.currenttype, P.currentid);
                        }
                      | BLOCK_IDSYNTAX
                        {
-                           HvBDebug("\tP:%s:%s:%s:%s  Found qualified function identifier '%s'\n", 
+                           ParserDebug("\tP:%s:%s:%s:%s  Found qualified function identifier '%s'\n", 
                               P.block, P.blocktype, P.blockid, P.currenttype, P.currentid);
                        } 
                      | NAKEDVAR
@@ -876,11 +873,11 @@ functionid:            IDSYNTAX
                            strncpy(P.currentid,P.currentstring,CF_MAXVARSIZE); // Make a var look like an ID
                            free(P.currentstring);
                            P.currentstring = NULL;
-                           HvBDebug("P: Found variable in place of a function identifier %s\n",P.currentid);
+                           ParserDebug("P: Found variable in place of a function identifier %s\n",P.currentid);
                        }
                      | error
                        {
-                          yyerror_hvb("Not a valid function indentifier\n");
+                          yyerror("Not a valid function indentifier\n");
                        }
                        
 
@@ -891,7 +888,7 @@ promiser:              QSTRING
                            P.promiser = P.currentstring;
                            P.currentstring = NULL;
 
-                           HvBDebug("\tP:%s:%s:%s:%s:%s Promising object name \'%s\'\n", P.block, P.blocktype, P.blockid, P.currenttype, P.currentclasses, P.promiser);
+                           ParserDebug("\tP:%s:%s:%s:%s:%s Promising object name \'%s\'\n", P.block, P.blocktype, P.blockid, P.currenttype, P.currentclasses, P.promiser);
                             
 
                            P.currentpromise = AppendPromise(
@@ -912,7 +909,7 @@ promiser:              QSTRING
 
 usefunction_noargs:    functionid
                        {
-                           HvBDebug("\tP: Finished with function call %s, now at level %d\n", P.currentid, P.arg_nesting);
+                           ParserDebug("\tP: Finished with function call %s, now at level %d\n", P.currentid, P.arg_nesting);
                            /*
                            P.currentfnid[++P.arg_nesting] = xstrdup(P.currentid);
                            P.currentfncall[P.arg_nesting] = NewFnCall(P.currentfnid[P.arg_nesting],P.giveargs[P.arg_nesting]);
@@ -927,11 +924,11 @@ usefunction_noargs:    functionid
 usefunction:           functionid givearglist
                        {
                            /* Careful about recursion */
-                           HvBDebug("\tP: Finished with function call, now at level %d\n",P.arg_nesting);
+                           ParserDebug("\tP: Finished with function call, now at level %d\n",P.arg_nesting);
                        }
                        | error
                          {
-                            yyerror_hvb("Error in function definition ");
+                            yyerror("Error in function definition ");
                          }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -942,23 +939,23 @@ givearglist:           '('
                            {
                                fatal_yyerror("Nesting of functions is deeper than recommended");
                            }
-                           HvBDebug("\tP: Start FnCall %s args level %d\n",P.currentid, P.arg_nesting);
+                           ParserDebug("\tP: Start FnCall %s args level %d\n",P.currentid, P.arg_nesting);
                            P.currentfnid[P.arg_nesting] = xstrdup(P.currentid);
-                           HvBDebug("\tP: Start FnCall %s args level %d\n",P.currentfnid[P.arg_nesting],P.arg_nesting);
+                           ParserDebug("\tP: Start FnCall %s args level %d\n",P.currentfnid[P.arg_nesting],P.arg_nesting);
                        }
 
                        gaitems
 
                        ')'
                        {
-                           HvBDebug("\tP: End args level %d\n",P.arg_nesting);
+                           ParserDebug("\tP: End args level %d\n",P.arg_nesting);
                            P.currentfncall[P.arg_nesting] = NewFnCall(P.currentfnid[P.arg_nesting],P.giveargs[P.arg_nesting]);
                            P.giveargs[P.arg_nesting] = NULL;
                            strcpy(P.currentid,"");
                            free(P.currentfnid[P.arg_nesting]);
                            P.currentfnid[P.arg_nesting] = NULL;
                            P.arg_nesting--;
-                           HvBDebug("\tP: End args level %d\n",P.arg_nesting);
+                           ParserDebug("\tP: End args level %d\n",P.arg_nesting);
                        }
 
 
@@ -973,14 +970,14 @@ gaitems:               gaitem
 gaitem:                IDSYNTAX
                        {
                            /* currently inside a use function */
-                           HvBDebug("\tFnCall arg: %s\n", P.currentid);
+                           ParserDebug("\tFnCall arg: %s\n", P.currentid);
                            AppendRlist(&P.giveargs[P.arg_nesting],P.currentid,CF_SCALAR);
                        }
 
                      | QSTRING
                        {
                            /* currently inside a use function */
-                           HvBDebug("\tFnCall arg: %s\n", P.currentstring);
+                           ParserDebug("\tFnCall arg: %s\n", P.currentstring);
                            AppendRlist(&P.giveargs[P.arg_nesting],P.currentstring,CF_SCALAR);
                            free(P.currentstring);
                            P.currentstring = NULL;
@@ -989,7 +986,7 @@ gaitem:                IDSYNTAX
                      | NAKEDVAR
                        {
                            /* currently inside a use function */
-                           HvBDebug("\tFnCall arg: %s\n", P.currentstring);
+                           ParserDebug("\tFnCall arg: %s\n", P.currentstring);
                            AppendRlist(&P.giveargs[P.arg_nesting],P.currentstring,CF_SCALAR);
                            free(P.currentstring);
                            P.currentstring = NULL;
@@ -998,7 +995,7 @@ gaitem:                IDSYNTAX
                      | usefunction
                        {
                            /* Careful about recursion */
-                           HvBDebug("\tFnCall new function\n");
+                           ParserDebug("\tFnCall new function\n");
                            AppendRlist(&P.giveargs[P.arg_nesting],(void *)P.currentfncall[P.arg_nesting+1],CF_FNCALL);
                            DeleteRvalItem((Rval) { P.currentfncall[P.arg_nesting+1], CF_FNCALL });
                        }
@@ -1019,7 +1016,7 @@ aitems:                aitem
 
 aitem:                 aitem_type  /* recipient of argument is never a literal */
                        {
-                           HvBDebug("P:%s:%s:%s added arg = %s\n", P.block,P.blocktype,P.blockid,  yytext);
+                           ParserDebug("P:%s:%s:%s added arg = %s\n", P.block,P.blocktype,P.blockid,  yytext);
                            AppendRlist(&(P.useargs),yytext,CF_SCALAR);
                        };
 
@@ -1160,7 +1157,7 @@ static bool BodyTypeSyntaxLookup(const char *body_type, const char *block_id, ch
 /*
                  if (bs2 == NULL || bs2 == (void *) CF_BUNDLE)
  */
-                 bs2 = (const BodySyntax *) (bs[l].range);
+                 bs2 = (BodySyntax *) (bs[l].range);
 
                  if (bs2 == NULL ) 
                  {
@@ -1197,10 +1194,10 @@ static bool BodyTypeSyntaxLookup(const char *body_type, const char *block_id, ch
 
 /*****************************************************************/
 
+/*
 void yyerror(const char *s)
 {
 
-/*
     char *sp = yytext;
 
     if (sp == NULL)
@@ -1234,9 +1231,9 @@ void yyerror(const char *s)
     {
         FatalError("Too many errors");
     }
-    yyerror_hvb(s);
-    */
+    yyerror(s);
 }
+    */
 
 static void fatal_yyerror(const char *s)
 {
@@ -1252,12 +1249,12 @@ static void fatal_yyerror(const char *s)
 
 static void DebugBanner(const char *s)
 {
-    HvBDebug("----------------------------------------------------------------\n");
-    HvBDebug("  %s                                                            \n", s);
-    HvBDebug("----------------------------------------------------------------\n");
+    ParserDebug("----------------------------------------------------------------\n");
+    ParserDebug("  %s                                                            \n", s);
+    ParserDebug("----------------------------------------------------------------\n");
 }
 
-static void yyerror_hvb(const char *s)
+void yyerror(const char *s)
 {
     int i;
 
@@ -1265,14 +1262,16 @@ static void yyerror_hvb(const char *s)
      * change tabs into spaces
     */
     for ( i = 0; i < strlen(cf_linebuf); i++ )
-    if ( cf_linebuf[i] == '\t' )
-        cf_linebuf[i] = ' ';
+    {
+        if ( cf_linebuf[i] == '\t' )
+           cf_linebuf[i] = ' ';
+    }
 
     /*
      * Substracts the last token length else we point to the wrong token
      * in the line.
     */
-    i = yyleng;
+    i = (int)yyleng;
     cf_tokenpos -= i;
     /*
     printf("hvb cf_tokenpos = %d, %d\n", cf_tokenpos, i);
@@ -1284,11 +1283,14 @@ static void yyerror_hvb(const char *s)
      *    ConfigFile = klaar/bas
      *             ^invalid pathname
     */
-    fprintf(stderr, "filename: %s line %d: token:%s\n", P.filename, P.line_no, yytext);
+    fprintf(stderr, "\nfilename: %s line %d: token:%s\n", P.filename, P.line_no, yytext);
     fprintf(stderr, "error: %s\n", s);
 
     fprintf(stderr, "\n%s\n", cf_linebuf);
     fprintf(stderr, "%*s error\n", 2 + cf_tokenpos, "^");
+    /*
+    fprintf(stderr, "%*s error\n", 2 + P.line_pos, "^");
+    */
 
     exit(1);
 }

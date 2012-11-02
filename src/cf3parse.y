@@ -158,7 +158,7 @@ bundle_values:         COMMON
                      | EDITXML
                      | error 
                        {
-                          parse_error("Unknown bundle type");
+                          parse_error("Unknown bundle type\n");
                        }
 
 bundle_id:           bundle_id_syntax
@@ -169,7 +169,7 @@ bundle_id:           bundle_id_syntax
                      }
                      | error
                        {
-                          parse_error("Bundle id is not valid");
+                          parse_error("Bundle id is not valid\n");
                        }
 
 bundle_id_syntax:    typeid
@@ -232,7 +232,7 @@ bundle_body:         BLOCK_OPEN
                      }
                      | error
                        {
-                          parse_error("Bundle body error, expected '{'");
+                          parse_error("Bundle body error, expected '{'\n");
                        }
 
 bundle_statements:    bundle_statement
@@ -266,7 +266,7 @@ category:           category_type
                        ss = SubTypeSyntaxLookup(P.blocktype, P.currenttype);
                        if ( ss.bundle_type == NULL )
                        {
-                          sprintf(error_txt, "Category: '%s' is not a valid type for bundle type: '%s", 
+                          sprintf(error_txt, "Category: '%s' is not a valid type for bundle type: '%s'\n", 
                                     P.currenttype, P.blocktype);
                           parse_error(error_txt);
                        }
@@ -364,8 +364,7 @@ category_type:           REPORTS_CATEGORY
                        | UNKNOWN_CATEGORY
                          {
                             
-                            printf("'%s' is not a valid category for bundle '%s'", yytext, P.blocktype);
-                            sprintf(error_txt,"'%s' is not a valid category for bundle '%s'", yytext, P.blocktype);
+                            sprintf(error_txt,"'%s' is not a valid category for bundle '%s'\n", yytext, P.blocktype);
                             parse_error(error_txt);
                          }
 
@@ -478,7 +477,7 @@ promiser_type:       promiser_id
                           */ 
                           if ( !found )
                           {
-                             sprintf(error_txt, "'%s' is not allowed as promise type for category: '%s'", 
+                             sprintf(error_txt, "'%s' is not allowed as promise type for category: '%s'\n", 
                                            yytext, P.currenttype);
                              parse_error(error_txt);
                           }
@@ -594,10 +593,7 @@ body_id_syntax:      typeid
                    | blockid
                    | error
                      {
-                        parse_error("Invalid body id indentifier");
-                        /*
-                        parse_error("Invalid body id indentifier");
-                        */
+                        parse_error("Invalid body id indentifier\n");
                      }
  
 body_body:          BLOCK_OPEN
@@ -685,7 +681,7 @@ selection:             selection_id
                                {
                                    if (P.rval.rtype != CF_SCALAR)
                                    {
-                                       parse_error("namespace must be a constant scalar string");
+                                       parse_error("namespace must be a constant scalar string\n");
                                    }
                                    else
                                    {
@@ -708,12 +704,12 @@ selection:             selection_id
                                            }
                                            else
                                            {
-                                               parse_error("inputs promise must have a list as rvalue");
+                                               parse_error("inputs promise must have a list as rvalue\n");
                                            }
                                        }
                                        else
                                        {
-                                           parse_error("Redefinition of input list (broken promise)");
+                                           parse_error("Redefinition of input list (broken promise)\n");
                                        }
                                    }
                                }
@@ -723,7 +719,6 @@ selection:             selection_id
                         }
                      | error
                        {
-                           printf("check previous statement, expected ';'\n");
                            parse_error("check previous statement, expected ';'\n");
                        }
 
@@ -733,7 +728,7 @@ selection_id:          id
                        {
                            if ( !BodyTypeSyntaxLookup(P.blocktype, P.blockid, yytext) )
                            {
-                              sprintf(error_txt,"%s is invalid for 'body %s %s'", 
+                              sprintf(error_txt,"%s is invalid for 'body %s %s'\n", 
                                       yytext, P.blocktype, P.blockid);
                                parse_error(error_txt);
                            }
@@ -797,7 +792,7 @@ rval_type:            /*  These token can never be RVAL HvB
                            {
                                if (LvalWantsBody(P.currentpromise->agentsubtype,P.lval))
                                {
-                                   parse_error("An rvalue is quoted, but we expect an unquoted body identifier");
+                                   parse_error("An rvalue is quoted, but we expect an unquoted body identifier\n");
                                }
                            }
                        }
@@ -908,7 +903,7 @@ litem:                 IDSYNTAX
                        }
                      | error 
                        {
-                          parse_error("Not a valid list item");
+                          parse_error("Not a valid list item\n");
                        }
 
 
@@ -984,7 +979,7 @@ usefunction:           functionid givearglist
                        }
                        | error
                          {
-                            parse_error("Error in function definition ");
+                            parse_error("Error in function definition\n");
                          }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

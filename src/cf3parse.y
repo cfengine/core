@@ -84,7 +84,7 @@ extern int  cf_block_open;
 /*
  HVB
 */
-%token COMMON AGENT EDITLINE  EDITXML
+%token COMMON AGENT SERVER EDITLINE  EDITXML
 %token BLOCK_OPEN BLOCK_CLOSE 
 %token VARS_CATEGORY CLASSES_CATEGORY INTERFACES_CATEGORY 
 %token PROCESSES_CATEGORY STORAGE_CATEGORY PACKAGES_CATEGORY 
@@ -92,6 +92,7 @@ extern int  cf_block_open;
 %token DATABASES_CATEGORY SERVICES_CATEGORY REPORTS_CATEGORY
 %token EDITLINE_FIELD_EDITS_CATEGORY EDITLINE_INSERT_LINES_CATEGORY EDITLINE_REPLACE_PATTERNS_CATEGORY 
 %token EDITLINE_DELETE_LINES_CATEGORY EDITLINE_CATEGORY EDITXML_CATEGORY UNKNOWN_CATEGORY
+%token SERVER_CATEGORY
 
 %token  BLOCK_IDSYNTAX
 %token  IDSYNTAX
@@ -131,23 +132,27 @@ bundle_syntax:         BUNDLE bundle_type bundle_id bundle_body
                        }
 
 bundle_type:        bundle_values
-                       {
-                          P.block = "bundle";
-                          strncpy(P.blocktype, yytext, CF_MAXVARSIZE);
+                    {
+                       P.block = "bundle";
+                       strncpy(P.blocktype, yytext, CF_MAXVARSIZE);
 
-                          DebugBanner("Bundle");
-                          ParserDebug("P:bundle:%s\n", P.blocktype);
+                       DebugBanner("Bundle");
+                       ParserDebug("P:bundle:%s\n", P.blocktype);
 
-                          P.rval = (Rval) { NULL, '\0' };
-                          DeleteRlist(P.currentRlist);
-                          P.currentRlist = NULL;
-                          P.currentstring = NULL;
-                          strcpy(P.blockid,"");
+                       P.rval = (Rval) { NULL, '\0' };
+                       DeleteRlist(P.currentRlist);
+                       P.currentRlist = NULL;
+                       P.currentstring = NULL;
+                       strcpy(P.blockid,"");
 
-                       }
+                       DeleteRlist(P.useargs);
+                       P.useargs = NULL;
+
+                    }
 
 bundle_values:         COMMON
                      | AGENT
+                     | SERVER
                      | EDITLINE
                      | EDITXML
                      | error
@@ -158,6 +163,7 @@ bundle_values:         COMMON
 bundle_id:           bundle_id_syntax
                      {
                          strncpy(P.blockid,yytext,CF_MAXVARSIZE);
+                         P.offsets.last_block_id = P.offsets.last_id;
                          ParserDebug("\tP:bundle:%s:%s\n", P.blocktype, P.blockid);
                      }
 
@@ -198,7 +204,7 @@ bundle_body:         BLOCK_OPEN
                         {
                            P.currentbundle = NULL;
                         }
-                        
+
                         DeleteRlist(P.useargs);
                         P.useargs = NULL;
 
@@ -329,7 +335,13 @@ category_type:           REPORTS_CATEGORY
                        | SERVICES_CATEGORY
                             { extra_bodysyntax_p = NULL; }
 
+                       | STORAGE_CATEGORY
+                            { extra_bodysyntax_p = NULL; }
+
                        | FILES_CATEGORY      
+                            { extra_bodysyntax_p = NULL; }
+
+                       | SERVER_CATEGORY
                             { extra_bodysyntax_p = NULL; }
 
                        | EDITLINE_CATEGORY
@@ -339,8 +351,11 @@ category_type:           REPORTS_CATEGORY
                        | EDITXML_CATEGORY
                             { extra_bodysyntax_p = (BodySyntax *)CF_COMMON_XMLBODIES; }
 
+
                        | UNKNOWN_CATEGORY
                          {
+                            
+                            printf("'%s' is not a valid category for bundle '%s'", yytext, P.blocktype);
                             sprintf(error_txt,"'%s' is not a valid category for bundle '%s'", yytext, P.blocktype);
                             yyerror(error_txt);
                          }
@@ -507,11 +522,11 @@ rval_bundle_statement:   rval_type
 
 typeid:                IDSYNTAX
                        {
+                           ParserDebug("\tP:%s:%s:%s id \n",P.block, P.blocktype, P.blockid);
                            /*
-                           ParserDebug("\tP:%s:%s:%s \n",P.block, P.blocktype, P.blockid);
-                           */
                            DeleteRlist(P.useargs);
                            P.useargs = NULL;
+                           */
                        };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -556,6 +571,7 @@ body_type:         body_type_values
 
 body_type_values:     COMMON 
                     | AGENT
+                    | SERVER
                     | EDITLINE
                     | typeid
 
@@ -941,7 +957,6 @@ givearglist:           '('
                            }
                            ParserDebug("\tP: Start FnCall %s args level %d\n",P.currentid, P.arg_nesting);
                            P.currentfnid[P.arg_nesting] = xstrdup(P.currentid);
-                           ParserDebug("\tP: Start FnCall %s args level %d\n",P.currentfnid[P.arg_nesting],P.arg_nesting);
                        }
 
                        gaitems
@@ -970,14 +985,14 @@ gaitems:               gaitem
 gaitem:                IDSYNTAX
                        {
                            /* currently inside a use function */
-                           ParserDebug("\tFnCall arg: %s\n", P.currentid);
+                           ParserDebug("\tP:FnCall idsyntax arg: %s\n", P.currentid);
                            AppendRlist(&P.giveargs[P.arg_nesting],P.currentid,CF_SCALAR);
                        }
 
                      | QSTRING
                        {
                            /* currently inside a use function */
-                           ParserDebug("\tFnCall arg: %s\n", P.currentstring);
+                           ParserDebug("\tP:FnCall qstring arg: %s\n", P.currentstring);
                            AppendRlist(&P.giveargs[P.arg_nesting],P.currentstring,CF_SCALAR);
                            free(P.currentstring);
                            P.currentstring = NULL;
@@ -986,7 +1001,7 @@ gaitem:                IDSYNTAX
                      | NAKEDVAR
                        {
                            /* currently inside a use function */
-                           ParserDebug("\tFnCall arg: %s\n", P.currentstring);
+                           ParserDebug("\tP:FnCall nakedvar arg: %s\n", P.currentstring);
                            AppendRlist(&P.giveargs[P.arg_nesting],P.currentstring,CF_SCALAR);
                            free(P.currentstring);
                            P.currentstring = NULL;
@@ -995,16 +1010,22 @@ gaitem:                IDSYNTAX
                      | usefunction
                        {
                            /* Careful about recursion */
-                           ParserDebug("\tFnCall new function\n");
+                           ParserDebug("\tP:FnCall new function\n");
                            AppendRlist(&P.giveargs[P.arg_nesting],(void *)P.currentfncall[P.arg_nesting+1],CF_FNCALL);
                            DeleteRvalItem((Rval) { P.currentfncall[P.arg_nesting+1], CF_FNCALL });
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-usearglist:            '('
+usearglist:            '(' 
+                        { 
+                           ParserDebug("P:%s:%s:%s begin agent args\n", P.block,P.blocktype,P.blockid);
+                        }
                        aitems
-                       ')';
+                       ')'
+                       {
+                           ParserDebug("P:%s:%s:%s end agent args\n", P.block,P.blocktype,P.blockid);
+                       }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -1016,11 +1037,20 @@ aitems:                aitem
 
 aitem:                 aitem_type  /* recipient of argument is never a literal */
                        {
-                           ParserDebug("P:%s:%s:%s added arg = %s\n", P.block,P.blocktype,P.blockid,  yytext);
+                           ParserDebug("P:%s:%s:%s added bundle arg = %s\n", P.block,P.blocktype,P.blockid,  yytext);
+                           /* strncpy(P.currentid, yytext, CF_MAXVARSIZE); */
                            AppendRlist(&(P.useargs),yytext,CF_SCALAR);
+                           free(P.currentstring);
+                           P.currentstring = NULL;
                        };
 
 aitem_type:            IDSYNTAX
+                     | COMMON 
+                     | AGENT
+                     | SERVER
+                     | EDITLINE
+                     | EDITXML
+                     | typeid
        
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -1058,20 +1088,29 @@ static bool BodyTypeSyntaxLookup(const char *body_type, const char *block_id, ch
       {
          bs = (BodySyntax *)CFS_CONTROLBODY;
       }
+      else if ( strcmp(body_type, "monitor") == 0 )
+      {
+         bs = (BodySyntax *)CFM_CONTROLBODY;
+      }
+      else if ( strcmp(body_type, "reporter") == 0 )
+      {
+         bs = (BodySyntax *)CFRE_CONTROLBODY;
+      }
       else
       {
          bs = NULL;
       }
 
-      for ( i=0; bs[i].lval != NULL; i++)
-      {   
-          if ( strcmp(bs[i].lval, name) == 0 )
-          {
-             return true;
-          }
-      }
       if ( bs != NULL )
       {
+
+         for ( i=0; bs[i].lval != NULL; i++)
+         {   
+             if ( strcmp(bs[i].lval, name) == 0 )
+             {
+                 return true;
+             }
+         }
          return false;
       }
     }

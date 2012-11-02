@@ -2370,9 +2370,11 @@ extern const BodySyntax CFA_CONTROLBODY[];
 extern const BodySyntax CFEX_CONTROLBODY[];
 
 /*
- * HVB
+ * HvB
 */
 extern const BodySyntax CFS_CONTROLBODY[];
+extern const BodySyntax CFM_CONTROLBODY[];
+extern const BodySyntax CFRE_CONTROLBODY[];
 
 #ifdef HAVE_NOVA
 # include <cf.nova.h>

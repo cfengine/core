@@ -144,6 +144,9 @@ insert_lines_category      insert_lines:
 replace_patterns_category  replace_patterns:
 delete_lines_category      delete_lines:
 
+roles_category             roles:
+access_category            access: 
+
 delete_tree_category       delete_tree:
 insert_tree_category       insert_tree:
 delete_attribute_category  delete_attribute:
@@ -201,6 +204,13 @@ agent                {
                           P.line_pos += yyleng;
                           ParserDebug("\tL:%s %d\n", yytext, cf_tokenpos);
                           return AGENT;
+                     }
+
+server               {
+                          cf_tokenpos += yyleng;
+                          P.line_pos += yyleng;
+                          ParserDebug("\tL:%s %d\n", yytext, cf_tokenpos);
+                          return SERVER;
                      }
 
 edit_line            {
@@ -406,6 +416,14 @@ edit_xml             {
                            P.line_pos += yyleng;
                            ParserDebug("\tL:category:%s\n", yytext);
                            return EDITXML_CATEGORY;
+                       }
+
+{roles_category}  |
+{access_category}      {
+                           cf_tokenpos += yyleng;
+                           P.line_pos += yyleng;
+                           ParserDebug("\tL:category:%s\n", yytext);
+                           return SERVER_CATEGORY;
                        }
 
 {category_unknown}    {

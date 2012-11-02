@@ -190,7 +190,7 @@ enum cfmeasurepolicy MeasurePolicy2Value(char *s)
 
     for (i = 0; names[i] != NULL; i++)
     {
-        if (s && strcmp(s, names[i]) == 0)
+        if (s && (strcmp(s, names[i]) == 0))
         {
             return (enum cfmeasurepolicy) i;
         }
@@ -217,7 +217,7 @@ enum cfhypervisors Str2Hypervisors(char *s)
 
     for (i = 0; names[i] != NULL; i++)
     {
-        if (s && strcmp(s, names[i]) == 0)
+        if (s && (strcmp(s, names[i]) == 0))
         {
             return (enum cfhypervisors) i;
         }
@@ -240,7 +240,7 @@ enum cfenvironment_state Str2EnvState(char *s)
 
     for (i = 0; names[i] != NULL; i++)
     {
-        if (s && strcmp(s, names[i]) == 0)
+        if (s && (strcmp(s, names[i]) == 0))
         {
             return (enum cfenvironment_state) i;
         }
@@ -260,7 +260,7 @@ enum insert_match String2InsertMatch(char *s)
 
     for (i = 0; names[i] != NULL; i++)
     {
-        if (s && strcmp(s, names[i]) == 0)
+        if (s && (strcmp(s, names[i]) == 0))
         {
             return i;
         }
@@ -281,7 +281,7 @@ int SyslogPriority2Int(char *s)
 
     for (i = 0; types[i] != NULL; i++)
     {
-        if (s && strcmp(s, types[i]) == 0)
+        if (s && (strcmp(s, types[i]) == 0))
         {
             return i;
         }
@@ -299,7 +299,7 @@ enum cfdbtype Str2dbType(char *s)
 
     for (i = 0; types[i] != NULL; i++)
     {
-        if (s && strcmp(s, types[i]) == 0)
+        if (s && (strcmp(s, types[i]) == 0))
         {
             return (enum cfdbtype) i;
         }
@@ -317,7 +317,7 @@ enum package_actions Str2PackageAction(char *s)
 
     for (i = 0; types[i] != NULL; i++)
     {
-        if (s && strcmp(s, types[i]) == 0)
+        if (s && (strcmp(s, types[i]) == 0))
         {
             return (enum package_actions) i;
         }
@@ -335,7 +335,7 @@ enum version_cmp Str2PackageSelect(char *s)
 
     for (i = 0; types[i] != NULL; i++)
     {
-        if (s && strcmp(s, types[i]) == 0)
+        if (s && (strcmp(s, types[i]) == 0))
         {
             return (enum version_cmp) i;
         }
@@ -353,7 +353,7 @@ enum action_policy Str2ActionPolicy(char *s)
 
     for (i = 0; types[i] != NULL; i++)
     {
-        if (s && strcmp(s, types[i]) == 0)
+        if (s && (strcmp(s, types[i]) == 0))
         {
             return (enum action_policy) i;
         }
@@ -449,7 +449,7 @@ enum cfreport String2ReportLevel(char *s)
 
     for (i = 0; types[i] != NULL; i++)
     {
-        if (s && strcmp(s, types[i]) == 0)
+        if (s && (strcmp(s, types[i]) == 0))
         {
             return (enum cfreport) i;
         }
@@ -466,7 +466,7 @@ enum cfhashes String2HashType(char *typestr)
 
     for (i = 0; CF_DIGEST_TYPES[i][0] != NULL; i++)
     {
-        if (typestr && strcmp(typestr, CF_DIGEST_TYPES[i][0]) == 0)
+        if (typestr && (strcmp(typestr, CF_DIGEST_TYPES[i][0]) == 0))
         {
             return (enum cfhashes) i;
         }
@@ -484,7 +484,7 @@ enum cflinktype String2LinkType(char *s)
 
     for (i = 0; types[i] != NULL; i++)
     {
-        if (s && strcmp(s, types[i]) == 0)
+        if (s && (strcmp(s, types[i]) == 0))
         {
             return (enum cflinktype) i;
         }
@@ -502,7 +502,7 @@ enum cfcomparison String2Comparison(char *s)
 
     for (i = 0; types[i] != NULL; i++)
     {
-        if (s && strcmp(s, types[i]) == 0)
+        if (s && (strcmp(s, types[i]) == 0))
         {
             return (enum cfcomparison) i;
         }
@@ -520,7 +520,7 @@ enum representations String2Representation(char *s)
 
     for (i = 0; types[i] != NULL; i++)
     {
-        if (s && strcmp(s, types[i]) == 0)
+        if (s && (strcmp(s, types[i]) == 0))
         {
             return (enum representations) i;
         }
@@ -537,7 +537,7 @@ enum cfsbundle Type2Cfs(char *name)
 
     for (i = 0; i < (int) cfs_nobtype; i++)
     {
-        if (name && strcmp(CF_REMACCESS_SUBTYPES[i].subtype, name) == 0)
+        if (name && (strcmp(CF_REMACCESS_SUBTYPES[i].subtype, name) == 0))
         {
             break;
         }
@@ -557,7 +557,7 @@ enum cfdatatype Typename2Datatype(char *name)
 
     for (i = 0; i < (int) cf_notype; i++)
     {
-        if (name && strcmp(CF_DATATYPES[i], name) == 0)
+        if (name && (strcmp(CF_DATATYPES[i], name) == 0))
         {
             break;
         }
@@ -577,7 +577,7 @@ enum cfagenttype Agent2Type(char *name)
 
     for (i = 0; i < (int) cf_noagent; i++)
     {
-        if (name && strcmp(CF_AGENTTYPES[i], name) == 0)
+        if (name && (strcmp(CF_AGENTTYPES[i], name) == 0))
         {
             break;
         }
@@ -594,7 +594,7 @@ enum cfdatatype GetControlDatatype(const char *varname, const BodySyntax *bp)
 
     for (i = 0; bp[i].range != NULL; i++)
     {
-        if (varname && strcmp(bp[i].lval, varname) == 0)
+        if (varname && (strcmp(bp[i].lval, varname) == 0))
         {
             return bp[i].dtype;
         }
@@ -661,7 +661,7 @@ long Str2Int(const char *s)
 
 // Test whether remainder is space only
 
-    if (a == CF_NOINT || !IsSpace(remainder))
+    if ((a == CF_NOINT) || (!IsSpace(remainder)))
     {
         if (THIS_AGENT_TYPE == cf_common)
         {
@@ -696,7 +696,7 @@ long Str2Int(const char *s)
             a = 1024 * 1024 * 1024 * a;
             break;
         case '%':
-            if (a < 0 || a > 100)
+            if ((a < 0) || (a > 100))
             {
                 CfOut(cf_error, "", "Percentage out of range (%ld)", a);
                 return CF_NOINT;
@@ -968,7 +968,7 @@ double Str2Double(const char *s)
 
     sscanf(s, "%lf%c%s", &a, &c, remainder);
 
-    if (a == CF_NODOUBLE || !IsSpace(remainder))
+    if ((a == CF_NODOUBLE) || (!IsSpace(remainder)))
     {
         snprintf(output, CF_BUFSIZE, "Error reading assumed real value %s (anomalous remainder %s)\n", s, remainder);
         ReportError(output);
@@ -996,7 +996,7 @@ double Str2Double(const char *s)
             a = 1024 * 1024 * 1024 * a;
             break;
         case '%':
-            if (a < 0 || a > 100)
+            if ((a < 0) || (a > 100))
             {
                 CfOut(cf_error, "", "Percentage out of range (%.2lf)", a);
                 return CF_NOINT;
@@ -1050,7 +1050,7 @@ void IntRange2Int(char *intrange, long *min, long *max, const Promise *pp)
 
     DeleteItemList(split);
 
-    if (lmin == CF_HIGHINIT || lmax == CF_LOWINIT)
+    if ((lmin == CF_HIGHINIT) || (lmax == CF_LOWINIT))
     {
         PromiseRef(cf_error, pp);
         FatalError("Could not make sense of integer range [%s]", intrange);
@@ -1295,7 +1295,7 @@ void CommPrefix(char *execstr, char *comm)
 {
     char *sp;
 
-    for (sp = execstr; *sp != ' ' && *sp != '\0'; sp++)
+    for (sp = execstr; (*sp != ' ') && (*sp != '\0'); sp++)
     {
     }
 

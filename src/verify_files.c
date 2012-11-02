@@ -57,7 +57,7 @@ void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *p
 
 /* Do a search for promiser objects matching wildpath */
 
-    if (!IsPathRegex(wildpath) || (pathtype && (strcmp(pathtype, "literal") == 0)))
+    if ((!IsPathRegex(wildpath)) || (pathtype && (strcmp(pathtype, "literal") == 0)))
     {
         CfOut(cf_verbose, "", " -> Using literal pathtype for %s\n", wildpath);
         (*fnptr) (wildpath, pp, report_context);
@@ -73,7 +73,7 @@ void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *p
 
     for (ip = path; ip != NULL; ip = ip->next)
     {
-        if (ip->name == NULL || strlen(ip->name) == 0)
+        if ((ip->name == NULL) || (strlen(ip->name) == 0))
         {
             continue;
         }
@@ -104,7 +104,7 @@ void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *p
 
         if (cfstat(pbuffer, &statbuf) != -1)
         {
-            if (S_ISDIR(statbuf.st_mode) && statbuf.st_uid != agentuid && statbuf.st_uid != 0)
+            if ((S_ISDIR(statbuf.st_mode)) && ((statbuf.st_uid) != agentuid) && ((statbuf.st_uid) != 0))
             {
                 CfOut(cf_inform, "",
                       "Directory %s in search path %s is controlled by another user (uid %ju) - trusting its content is potentially risky (possible race)\n",
@@ -145,7 +145,7 @@ void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *p
                     continue;
                 }
 
-                if (!lastnode && !S_ISDIR(statbuf.st_mode))
+                if ((!lastnode) && (!S_ISDIR(statbuf.st_mode)))
                 {
                     CfDebug("Skipping non-directory %s\n", dirp->d_name);
                     continue;
@@ -174,7 +174,7 @@ void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *p
 
                 /* The next level might still contain regexs, so go again as long as expansion is not nullpotent */
 
-                if (!lastnode && (strcmp(nextbuffer, wildpath) != 0))
+                if ((!lastnode) && (strcmp(nextbuffer, wildpath) != 0))
                 {
                     LocateFilePromiserGroup(nextbuffer, pp, fnptr, report_context);
                 }
@@ -254,7 +254,7 @@ void VerifyFilePromise(char *path, Promise *pp, const ReportContext *report_cont
 
     if (lstat(path, &oslb) == -1)       /* Careful if the object is a link */
     {
-        if (a.create || a.touch)
+        if ((a.create) || (a.touch))
         {
             if (!CfCreateFile(path, pp, a, report_context))
             {
@@ -272,14 +272,14 @@ void VerifyFilePromise(char *path, Promise *pp, const ReportContext *report_cont
     }
     else
     {
-        if (a.create || a.touch)
+        if ((a.create) || (a.touch))
         {
             cfPS(cf_verbose, CF_NOP, "", pp, a, " -> File \"%s\" exists as promised", path);
         }
         exists = true;
     }
 
-    if (a.havedelete && !exists)
+    if ((a.havedelete) && (!exists))
     {
         cfPS(cf_verbose, CF_NOP, "", pp, a, " -> File \"%s\" does not exist as promised", path);
     }
@@ -302,7 +302,7 @@ void VerifyFilePromise(char *path, Promise *pp, const ReportContext *report_cont
         chdir(basedir);
     }
 
-    if (exists && !VerifyFileLeaf(path, &oslb, a, pp, report_context))
+    if (exists && (!VerifyFileLeaf(path, &oslb, a, pp, report_context)))
     {
         if (!S_ISDIR(oslb.st_mode))
         {
@@ -314,7 +314,7 @@ void VerifyFilePromise(char *path, Promise *pp, const ReportContext *report_cont
 
     if (cfstat(path, &osb) == -1)
     {
-        if (a.create || a.touch)
+        if ((a.create) || (a.touch))
         {
             if (!CfCreateFile(path, pp, a, report_context))
             {
@@ -367,7 +367,7 @@ void VerifyFilePromise(char *path, Promise *pp, const ReportContext *report_cont
 
 /* Phase 1 - */
 
-    if (exists && (a.havedelete || a.haverename || a.haveperms || a.havechange || a.transformer))
+    if (exists && ((a.havedelete) || (a.haverename) || (a.haveperms) || (a.havechange) || (a.transformer)))
     {
         lstat(path, &oslb);     /* if doesn't exist have to stat again anyway */
 
@@ -399,7 +399,7 @@ void VerifyFilePromise(char *path, Promise *pp, const ReportContext *report_cont
             }
         }
 
-        if (a.change.report_changes == cfa_contentchange || a.change.report_changes == cfa_allchanges)
+        if (((a.change.report_changes) == cfa_contentchange) || ((a.change.report_changes) == cfa_allchanges))
         {
             if (a.havedepthsearch)
             {
@@ -421,7 +421,7 @@ void VerifyFilePromise(char *path, Promise *pp, const ReportContext *report_cont
 
 /* Phase 2b link after copy in case need file first */
 
-    if (a.havelink && a.link.link_children)
+    if ((a.havelink) && (a.link.link_children))
     {
         ScheduleLinkChildrenOperation(path, a.link.source, 1, a, pp, report_context);
     }
@@ -439,7 +439,7 @@ void VerifyFilePromise(char *path, Promise *pp, const ReportContext *report_cont
 
 // Once more in case a file has been created as a result of editing or copying
 
-    if (cfstat(path, &osb) != -1 && S_ISREG(osb.st_mode))
+    if ((cfstat(path, &osb) != -1) && (S_ISREG(osb.st_mode)))
     {
         VerifyFileLeaf(path, &osb, a, pp, report_context);
     }
@@ -504,7 +504,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
         {
             method_deref = strchr(edit_bundle_name,':') + 1;
         }
-        else if (strchr(edit_bundle_name, ':') == NULL && strcmp(pp->namespace, "default") != 0)
+        else if ((strchr(edit_bundle_name, ':') == NULL) && (strcmp(pp->namespace, "default") != 0))
         {
             snprintf(qualified_edit, CF_BUFSIZE, "%s:%s", pp->namespace, edit_bundle_name);
             method_deref = qualified_edit;
@@ -617,7 +617,7 @@ void *FindAndVerifyFilesPromises(Promise *pp, const ReportContext *report_contex
     PromiseBanner(pp);
     FindFilePromiserObjects(pp, report_context);
 
-    if (AM_BACKGROUND_PROCESS && !pp->done)
+    if (AM_BACKGROUND_PROCESS && (!pp->done))
     {
         CfOut(cf_verbose, "", "Exiting backgrounded promise");
         PromiseRef(cf_verbose, pp);
@@ -632,7 +632,7 @@ void *FindAndVerifyFilesPromises(Promise *pp, const ReportContext *report_contex
 static void FindFilePromiserObjects(Promise *pp, const ReportContext *report_context)
 {
     char *val = GetConstraintValue("pathtype", pp, CF_SCALAR);
-    int literal = GetBooleanConstraint("copy_from", pp) || ((val != NULL) && (strcmp(val, "literal") == 0));
+    int literal = (GetBooleanConstraint("copy_from", pp)) || ((val != NULL) && (strcmp(val, "literal") == 0));
 
 /* Check if we are searching over a regular expression */
 

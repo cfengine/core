@@ -121,7 +121,7 @@ int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp)
 
     for (sp = nodename; *sp != '\0'; sp++)      /* Check for files like ".. ." */
     {
-        if ((*sp != '.') && !isspace((int)*sp))
+        if ((*sp != '.') && (!isspace((int)*sp)))
         {
             return true;
         }
@@ -133,7 +133,7 @@ int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp)
         return true;
     }
 
-    if (statbuf.st_size == 0 && !(VERBOSE || INFORM))   /* No sense in warning about empty files */
+    if ((statbuf.st_size == 0) && (!(VERBOSE || INFORM)))   /* No sense in warning about empty files */
     {
         return false;
     }

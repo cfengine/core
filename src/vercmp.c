@@ -46,7 +46,7 @@ static VersionCmpResult InvertResult(VersionCmpResult result)
 
 static VersionCmpResult AndResults(VersionCmpResult lhs, VersionCmpResult rhs)
 {
-    if (lhs == VERCMP_ERROR || rhs == VERCMP_ERROR)
+    if ((lhs == VERCMP_ERROR) || (rhs == VERCMP_ERROR))
     {
         return VERCMP_ERROR;
     }

@@ -128,7 +128,7 @@ int CompareToFile(Item *liststart, char *file, Attributes a, Promise *pp)
         return false;
     }
 
-    if (liststart == NULL && statbuf.st_size == 0)
+    if ((liststart == NULL) && (statbuf.st_size == 0))
     {
         return true;
     }
@@ -175,7 +175,7 @@ static int ItemListsEqual(Item *list1, Item *list2, int warnings, Attributes a, 
         {
             if (warnings)
             {
-                if (ip1 == list1 || ip2 == list2)
+                if ((ip1 == list1) || (ip2 == list2))
                 {
                     cfPS(cf_error, CF_WARN, "", pp, a,
                          " ! File content wants to change from from/to full/empty but only a warning promised");

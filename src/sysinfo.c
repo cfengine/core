@@ -166,7 +166,7 @@ void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname
         strlcpy(fqname, nodename, CF_BUFSIZE);
     }
 
-    if (strncmp(nodename, fqname, strlen(nodename)) == 0 && fqname[strlen(nodename)] == '.')
+    if ((strncmp(nodename, fqname, strlen(nodename)) == 0) && (fqname[strlen(nodename)] == '.'))
     {
         /* If hostname is not qualified */
         strcpy(domain, fqname + strlen(nodename) + 1);
@@ -396,7 +396,7 @@ void GetNameInfo3()
     {
         snprintf(shortname, CF_MAXVARSIZE - 1, "%s", CanonifyName(components[i]));
 
-        if (VSYSTEMHARDCLASS == mingw || VSYSTEMHARDCLASS == cfnt)
+        if ((VSYSTEMHARDCLASS == mingw) || (VSYSTEMHARDCLASS == cfnt))
         {
             // twin has own dir, and is named agent
             if (i == 0)
@@ -431,7 +431,7 @@ void GetNameInfo3()
     {
         snprintf(shortname, CF_MAXVARSIZE - 1, "%s", CanonifyName(components[0]));
 
-        if (VSYSTEMHARDCLASS == mingw || VSYSTEMHARDCLASS == cfnt)
+        if ((VSYSTEMHARDCLASS == mingw) || (VSYSTEMHARDCLASS == cfnt))
         {
             snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin%c%s.exe", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR,
                      components[1]);

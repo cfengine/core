@@ -52,8 +52,8 @@ void HandleSignals(int signum)
     CfOut(cf_error, "", "This sub-task started really at %s\n", cf_ctime(&CFINITSTARTTIME));
     fflush(stdout);
 
-    if (signum == SIGTERM || signum == SIGINT || signum == SIGHUP || signum == SIGSEGV || signum == SIGKILL
-        || signum == SIGPIPE)
+    if ((signum == SIGTERM) || (signum == SIGINT) || (signum == SIGHUP) || (signum == SIGSEGV) || (signum == SIGKILL)
+        || (signum == SIGPIPE))
     {
         exit(0);
     }

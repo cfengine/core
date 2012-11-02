@@ -47,7 +47,7 @@ bool ComparePackageVersionsInternal(const char *v1, const char *v2, enum version
 
     CfOut(cf_verbose, "", " -> Check for compatible versioning model in (%s,%s)\n", v1, v2);
 
-    for (rp_pr = separators_pr, rp_in = separators_in; rp_pr != NULL && rp_in != NULL;
+    for (rp_pr = separators_pr, rp_in = separators_in; (rp_pr != NULL) && (rp_in != NULL);
          rp_pr = rp_pr->next, rp_in = rp_in->next)
     {
         if (strcmp(rp_pr->item, rp_in->item) != 0)
@@ -56,7 +56,7 @@ bool ComparePackageVersionsInternal(const char *v1, const char *v2, enum version
             break;
         }
 
-        if (rp_pr->next == NULL && rp_in->next == NULL)
+        if ((rp_pr->next == NULL) && (rp_in->next == NULL))
         {
             result = true;
             break;
@@ -76,7 +76,7 @@ bool ComparePackageVersionsInternal(const char *v1, const char *v2, enum version
 
     if (result)
     {
-        for (rp_pr = numbers_pr, rp_in = numbers_in; rp_pr != NULL && rp_in != NULL;
+        for (rp_pr = numbers_pr, rp_in = numbers_in; (rp_pr != NULL) && (rp_in != NULL);
              rp_pr = rp_pr->next, rp_in = rp_in->next)
         {
             cmp_result = strcmp(rp_pr->item, rp_in->item);
@@ -150,14 +150,14 @@ bool ComparePackageVersionsInternal(const char *v1, const char *v2, enum version
 
         if (rp_pr != NULL)
         {
-            if (cmp == cfa_lt || cmp == cfa_le)
+            if ((cmp == cfa_lt) || (cmp == cfa_le))
             {
                 version_matched = true;
             }
         }
         if (rp_in != NULL)
         {
-            if (cmp == cfa_gt || cmp == cfa_ge)
+            if ((cmp == cfa_gt) || (cmp == cfa_ge))
             {
                 version_matched = true;
             }

@@ -41,7 +41,7 @@ void CfHtmlHeader(Writer *writer, char *title, char *css, char *webdriver, char 
             "    <link rel=\"stylesheet\" href=\"hand_%s\" type=\"text/css\" media=\"handheld\" />\n"
             "  </head>\n" "  <body>\n", title, css, css);
 
-    if (header && strlen(header) > 0)
+    if (header && (strlen(header) > 0))
     {
         if (strlen(LICENSE_COMPANY) > 0)
         {

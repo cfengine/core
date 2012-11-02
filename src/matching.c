@@ -110,7 +110,7 @@ static int RegExMatchFullString(pcre *rx, const char *teststring)
 
     if (RegExMatchSubString(rx, teststring, &match_start, &match_len))
     {
-        return match_start == 0 && match_len == strlen(teststring);
+        return (match_start == 0) && (match_len == strlen(teststring));
     }
     else
     {
@@ -197,7 +197,7 @@ char *ExtractFirstReference(const char *regexp, const char *teststring)
 
     pcre *rx;
 
-    if (regexp == NULL || teststring == NULL)
+    if ((regexp == NULL) || (teststring == NULL))
     {
         return nothing;
     }
@@ -271,7 +271,7 @@ int IsRegex(char *str)
             special = r_literal;
             continue;
         }
-        else if (bracket && *sp != ']')
+        else if (bracket && (*sp != ']'))
         {
             if (*sp == '[')
             {
@@ -335,7 +335,7 @@ int IsRegex(char *str)
 
     }
 
-    if (bracket != 0 || paren != 0 || special == r_literal)
+    if ((bracket != 0) || (paren != 0) || (special == r_literal))
     {
         return false;
     }
@@ -380,7 +380,7 @@ int IsPathRegex(char *str)
                 break;
             default:
 
-                if (*sp == FILE_SEPARATOR && (r || s))
+                if ((*sp == FILE_SEPARATOR) && (r || s))
                 {
                     CfOut(cf_error, "",
                           "Path regular expression %s seems to use expressions containing the directory symbol %c", str,
@@ -405,7 +405,7 @@ int IsRegexItemIn(Item *list, char *regex)
 
     for (ptr = list; ptr != NULL; ptr = ptr->next)
     {
-        if (ptr->classes && IsExcluded(ptr->classes, NULL)) // This NULL might be wrong
+        if ((ptr->classes) && (IsExcluded(ptr->classes, NULL))) // This NULL might be wrong
         {
             continue;
         }
@@ -419,7 +419,7 @@ int IsRegexItemIn(Item *list, char *regex)
 
         /* Make it commutative */
 
-        if (FullTextMatch(regex, ptr->name) || FullTextMatch(ptr->name, regex))
+        if ((FullTextMatch(regex, ptr->name)) || (FullTextMatch(ptr->name, regex)))
         {
             CfDebug("IsRegexItem(%s,%s)\n", regex, ptr->name);
             return (true);
@@ -465,7 +465,7 @@ int MatchPolicy(char *camel, char *haystack, Attributes a, Promise *pp)
 
             if (opt == cf_exact_match)
             {
-                if (rp->next != NULL || rp != a.insert_match)
+                if ((rp->next != NULL) || (rp != a.insert_match))
                 {
                     CfOut(cf_error, "", " !! Multiple policies conflict with \"exact_match\", using exact match");
                     PromiseRef(cf_error, pp);
@@ -492,13 +492,13 @@ int MatchPolicy(char *camel, char *haystack, Attributes a, Promise *pp)
                 {
                 }
 
-                for (lastchar = final + strlen(final) - 1; lastchar > firstchar && isspace((int)*lastchar); lastchar--)
+                for (lastchar = final + strlen(final) - 1; (lastchar > firstchar) && (isspace((int)*lastchar)); lastchar--)
                 {
                 }
 
                 for (sp = final, spto = work; *sp != '\0'; sp++)
                 {
-                    if (sp > firstchar && sp < lastchar)
+                    if ((sp > firstchar) && (sp < lastchar))
                     {
                         if (isspace((int)*sp))
                         {
@@ -545,7 +545,7 @@ int MatchPolicy(char *camel, char *haystack, Attributes a, Promise *pp)
                 }
             }
 
-            ok = ok || FullTextMatch(final, haystack);
+            ok = ok || (FullTextMatch(final, haystack));
         }
 
         if (!ok)                // All lines in region need to match to avoid insertions
@@ -630,7 +630,7 @@ void EscapeSpecialChars(char *str, char *strEsc, int strEscSz, char *noEscSeq, c
         if (strchr(noEscList,*sp))
         {
         }        
-        else if (*sp != '\0' && !isalnum((int)*sp))
+        else if ((*sp != '\0') && (!isalnum((int)*sp)))
         {
             strEsc[strEscPos++] = '\\';
         }

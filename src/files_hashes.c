@@ -198,7 +198,7 @@ int CompareFileHashes(char *file1, char *file2, struct stat *sstat, struct stat 
         return true;
     }
 
-    if (attr.copy.servers == NULL || strcmp(attr.copy.servers->item, "localhost") == 0)
+    if ((attr.copy.servers == NULL) || (strcmp(attr.copy.servers->item, "localhost") == 0))
     {
         HashFile(file1, digest1, CF_DEFAULT_DIGEST);
         HashFile(file2, digest2, CF_DEFAULT_DIGEST);
@@ -235,7 +235,7 @@ int CompareBinaryFiles(char *file1, char *file2, struct stat *sstat, struct stat
         return true;
     }
 
-    if (attr.copy.servers == NULL || strcmp(attr.copy.servers->item, "localhost") == 0)
+    if ((attr.copy.servers == NULL) || (strcmp(attr.copy.servers->item, "localhost") == 0))
     {
         fd1 = open(file1, O_RDONLY | O_BINARY, 0400);
         fd2 = open(file2, O_RDONLY | O_BINARY, 0400);

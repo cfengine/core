@@ -728,7 +728,7 @@ selection_id:          id
                        {
                            if ( !BodyTypeSyntaxLookup(P.blocktype, P.blockid, yytext) )
                            {
-                              sprintf(error_txt,"%s is invalid for 'body %s %s'\n", 
+                              sprintf(error_txt,"%s is invalid in 'body %s %s'\n", 
                                       yytext, P.blocktype, P.blockid);
                                parse_error(error_txt);
                            }

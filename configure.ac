@@ -421,9 +421,6 @@ AC_TYPE_SIZE_T
 AC_TYPE_UID_T
 AC_TYPE_PID_T
 AC_CHECK_TYPES(clockid_t)
-AC_CHECK_TYPES(struct timespec, [], [], [[
-#include <time.h>
-]])
 AC_CHECK_TYPES(socklen_t, [], [], [[
 #ifdef HAVE_SYS_TYPES_H
 # include <sys/types.h>

@@ -33,16 +33,8 @@
 typedef int clockid_t;
 #endif
 
-#if !defined(HAVE_DECL_CLOCK_GETTIME)
+#if !HAVE_DECL_CLOCK_GETTIME
 int clock_gettime(clockid_t clock_id, struct timespec *tp);
-#endif
-
-#if !defined(HAVE_STRUCT_TIMESPEC)
-struct timespec
-{
-    time_t tv_sec;
-    long tv_nsec;
-};
 #endif
 
 int clock_gettime(clockid_t clock_id, struct timespec *tp)

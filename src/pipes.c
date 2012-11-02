@@ -35,7 +35,7 @@ int VerifyCommandRetcode(int retcode, int fallback, Attributes a, Promise *pp)
     int result = true;
     int matched = false;
 
-    if (a.classes.retcode_kept || a.classes.retcode_repaired || a.classes.retcode_failed)
+    if ((a.classes.retcode_kept) || (a.classes.retcode_repaired) || (a.classes.retcode_failed))
     {
 
         snprintf(retcodeStr, sizeof(retcodeStr), "%d", retcode);
@@ -113,7 +113,7 @@ FILE *cf_popen(const char *command, char *type)
 
     CfDebug("cf_popen(%s)\n", command);
 
-    if ((*type != 'r' && *type != 'w') || (type[1] != '\0'))
+    if (((*type != 'r') && (*type != 'w')) || (type[1] != '\0'))
     {
         errno = EINVAL;
         return NULL;
@@ -248,7 +248,7 @@ FILE *cf_popensetuid(const char *command, char *type, uid_t uid, gid_t gid, char
 
     CfDebug("cf_popensetuid(%s,%s,%ju,%ju)\n", command, type, (uintmax_t)uid, (uintmax_t)gid);
 
-    if ((*type != 'r' && *type != 'w') || (type[1] != '\0'))
+    if (((*type != 'r') && (*type != 'w')) || (type[1] != '\0'))
     {
         errno = EINVAL;
         return NULL;
@@ -319,7 +319,7 @@ FILE *cf_popensetuid(const char *command, char *type, uid_t uid, gid_t gid, char
 
         argv = ArgSplitCommand(command);
 
-        if (chrootv && strlen(chrootv) != 0)
+        if (chrootv && (strlen(chrootv) != 0))
         {
             if (chroot(chrootv) == -1)
             {
@@ -329,7 +329,7 @@ FILE *cf_popensetuid(const char *command, char *type, uid_t uid, gid_t gid, char
             }
         }
 
-        if (chdirv && strlen(chdirv) != 0)
+        if (chdirv && (strlen(chdirv) != 0))
         {
             if (chdir(chdirv) == -1)
             {
@@ -408,7 +408,7 @@ FILE *cf_popen_sh(const char *command, char *type)
 
     CfDebug("cf_popen_sh(%s)\n", command);
 
-    if ((*type != 'r' && *type != 'w') || (type[1] != '\0'))
+    if (((*type != 'r') && (*type != 'w')) || (type[1] != '\0'))
     {
         errno = EINVAL;
         return NULL;
@@ -535,7 +535,7 @@ FILE *cf_popen_shsetuid(const char *command, char *type, uid_t uid, gid_t gid, c
 
     CfDebug("cf_popen_shsetuid(%s,%s,%ju,%ju)\n", command, type, (uintmax_t)uid, (uintmax_t)gid);
 
-    if ((*type != 'r' && *type != 'w') || (type[1] != '\0'))
+    if (((*type != 'r') && (*type != 'w')) || (type[1] != '\0'))
     {
         errno = EINVAL;
         return NULL;
@@ -604,7 +604,7 @@ FILE *cf_popen_shsetuid(const char *command, char *type, uid_t uid, gid_t gid, c
             }
         }
 
-        if (chrootv && strlen(chrootv) != 0)
+        if (chrootv && (strlen(chrootv) != 0))
         {
             if (chroot(chrootv) == -1)
             {
@@ -613,7 +613,7 @@ FILE *cf_popen_shsetuid(const char *command, char *type, uid_t uid, gid_t gid, c
             }
         }
 
-        if (chdirv && strlen(chdirv) != 0)
+        if (chdirv && (strlen(chdirv) != 0))
         {
             if (chdir(chdirv) == -1)
             {

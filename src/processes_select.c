@@ -170,7 +170,7 @@ static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char
     int i;
     long value;
 
-    if (min == CF_NOINT || max == CF_NOINT)
+    if ((min == CF_NOINT) || (max == CF_NOINT))
     {
         return false;
     }
@@ -186,7 +186,7 @@ static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char
             return false;
         }
 
-        if (min <= value && value <= max)
+        if ((min <= value) && (value <= max))
         {
             return true;
         }
@@ -206,7 +206,7 @@ static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min,
     int i;
     time_t value;
 
-    if (min == CF_NOINT || max == CF_NOINT)
+    if ((min == CF_NOINT) || (max == CF_NOINT))
     {
         return false;
     }
@@ -222,7 +222,7 @@ static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min,
             return false;
         }
 
-        if (min <= value && value <= max)
+        if ((min <= value) && (value <= max))
         {
             CfOut(cf_verbose, "", "Selection filter matched counter range %s/%s = %s in [%jd,%jd] (= %jd secs)\n",
                   name1, name2, line[i], (intmax_t)min, (intmax_t)max, (intmax_t)value);
@@ -246,7 +246,7 @@ static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, tim
     int i;
     time_t value;
 
-    if (min == CF_NOINT || max == CF_NOINT)
+    if ((min == CF_NOINT) || (max == CF_NOINT))
     {
         return false;
     }
@@ -262,7 +262,7 @@ static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, tim
             return false;
         }
 
-        if (min <= value && value <= max)
+        if ((min <= value) && (value <= max))
         {
             CfOut(cf_verbose, "", "Selection filter matched absolute %s/%s = %s in [%jd,%jd]\n", name1, name2, line[i],
                   (intmax_t)min, (intmax_t)max);
@@ -316,7 +316,7 @@ static int SplitProcLine(char *proc, char **names, int *start, int *end, char **
 
     CfDebug("SplitProcLine(%s)\n", proc);
 
-    if (proc == NULL || strlen(proc) == 0)
+    if ((proc == NULL) || (strlen(proc) == 0))
     {
         return false;
     }
@@ -327,14 +327,14 @@ static int SplitProcLine(char *proc, char **names, int *start, int *end, char **
 
     sp = proc;
 
-    for (i = 0; i < CF_PROCCOLS && names[i] != NULL; i++)
+    for (i = 0; (i < CF_PROCCOLS) && (names[i] != NULL); i++)
     {
         while (*sp == ' ')
         {
             sp++;
         }
 
-        if (strcmp(names[i], "CMD") == 0 || strcmp(names[i], "COMMAND") == 0)
+        if ((strcmp(names[i], "CMD") == 0) || (strcmp(names[i], "COMMAND") == 0))
         {
             sscanf(sp, "%127[^\n]", cols1[i]);
             sp += strlen(cols1[i]);
@@ -346,7 +346,7 @@ static int SplitProcLine(char *proc, char **names, int *start, int *end, char **
         }
 
         // Some ps stimes may contain spaces, e.g. "Jan 25"
-        if (strcmp(names[i], "STIME") == 0 && strlen(cols1[i]) == 3)
+        if ((strcmp(names[i], "STIME") == 0) && (strlen(cols1[i]) == 3))
         {
             char s[CF_SMALLBUF] = { 0 };
             sscanf(sp, "%127s", s);
@@ -358,10 +358,10 @@ static int SplitProcLine(char *proc, char **names, int *start, int *end, char **
 
 // Now try looking at columne alignment
 
-    for (i = 0; i < CF_PROCCOLS && names[i] != NULL; i++)
+    for (i = 0; (i < CF_PROCCOLS) && (names[i] != NULL); i++)
     {
         // Start from the header/column tab marker and count backwards until we find 0 or space
-        for (s = start[i]; (s >= 0) && !isspace((int) *(proc + s)); s--)
+        for (s = start[i]; (s >= 0) && (!isspace((int) *(proc + s))); s--)
         {
         }
 
@@ -376,13 +376,13 @@ static int SplitProcLine(char *proc, char **names, int *start, int *end, char **
             s++;
         }
 
-        if (strcmp(names[i], "CMD") == 0 || strcmp(names[i], "COMMAND") == 0)
+        if ((strcmp(names[i], "CMD") == 0) || (strcmp(names[i], "COMMAND") == 0))
         {
             e = strlen(proc);
         }
         else
         {
-            for (e = end[i]; (e <= end[i] + 10) && !isspace((int) *(proc + e)); e++)
+            for (e = end[i]; (e <= end[i] + 10) && (!isspace((int) *(proc + e))); e++)
             {
             }
 

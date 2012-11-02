@@ -457,7 +457,7 @@ static void KeepContextBundles(Policy *policy, const ReportContext *report_conte
 
             for (sp = bp->subtypes; sp != NULL; sp = sp->next)  /* get schedule */
             {
-                if (strcmp(sp->name, "vars") != 0 && strcmp(sp->name, "classes") != 0)
+                if ((strcmp(sp->name, "vars") != 0) && (strcmp(sp->name, "classes") != 0))
                 {
                     continue;
                 }
@@ -499,7 +499,7 @@ static void KeepPromiseBundles(Policy *policy, const ReportContext *report_conte
 
             for (sp = bp->subtypes; sp != NULL; sp = sp->next)  /* get schedule */
             {
-                if (strcmp(sp->name, "access") != 0 && strcmp(sp->name, "roles") != 0)
+                if ((strcmp(sp->name, "access") != 0) && (strcmp(sp->name, "roles") != 0))
                 {
                     continue;
                 }
@@ -549,25 +549,25 @@ static void KeepServerPromise(Promise *pp)
 
     sp = (char *) GetConstraintValue("resource_type", pp, CF_SCALAR);
 
-    if (strcmp(pp->agentsubtype, "access") == 0 && sp && strcmp(sp, "literal") == 0)
+    if ((strcmp(pp->agentsubtype, "access") == 0) && sp && (strcmp(sp, "literal") == 0))
     {
         KeepLiteralAccessPromise(pp, "literal");
         return;
     }
 
-    if (strcmp(pp->agentsubtype, "access") == 0 && sp && strcmp(sp, "variable") == 0)
+    if ((strcmp(pp->agentsubtype, "access") == 0) && sp && (strcmp(sp, "variable") == 0))
     {
         KeepLiteralAccessPromise(pp, "variable");
         return;
     }
     
-    if (strcmp(pp->agentsubtype, "access") == 0 && sp && strcmp(sp, "query") == 0)
+    if ((strcmp(pp->agentsubtype, "access") == 0) && sp && (strcmp(sp, "query") == 0))
     {
         KeepQueryAccessPromise(pp, "query");
         return;
     }
 
-    if (strcmp(pp->agentsubtype, "access") == 0 && sp && strcmp(sp, "context") == 0)
+    if ((strcmp(pp->agentsubtype, "access") == 0) && sp && (strcmp(sp, "context") == 0))
     {
         KeepLiteralAccessPromise(pp, "context");
         return;
@@ -672,7 +672,7 @@ void KeepLiteralAccessPromise(Promise *pp, char *type)
     Auth *ap = NULL, *dp = NULL;
     char *handle = GetConstraintValue("handle", pp, CF_SCALAR);
 
-    if (handle == NULL && strcmp(type,"literal") == 0)
+    if ((handle == NULL) && (strcmp(type,"literal") == 0))
     {
         CfOut(cf_error, "", "Access to literal server data requires you to define a promise handle for reference");
         return;
@@ -895,7 +895,7 @@ static void KeepServerRolePromise(Promise *pp)
 
         default:
 
-            if (strcmp(cp->lval, "comment") == 0 || strcmp(cp->lval, "handle") == 0)
+            if ((strcmp(cp->lval, "comment") == 0) || (strcmp(cp->lval, "handle") == 0))
             {
             }
             else

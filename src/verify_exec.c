@@ -53,7 +53,7 @@ void VerifyExecPromise(Promise *pp)
 
 static int ExecSanityChecks(Attributes a, Promise *pp)
 {
-    if (a.contain.nooutput && a.contain.preview)
+    if ((a.contain.nooutput) && (a.contain.preview))
     {
         CfOut(cf_error, "", "no_output and preview are mutually exclusive (broken promise)");
         PromiseRef(cf_error, pp);
@@ -173,7 +173,7 @@ static void VerifyExec(Attributes a, Promise *pp)
 
     BeginMeasure();
 
-    if (DONTDO && !a.contain.preview)
+    if (DONTDO && (!a.contain.preview))
     {
         CfOut(cf_error, "", "-> Would execute script %s\n", execstr);
     }
@@ -200,7 +200,7 @@ static void VerifyExec(Attributes a, Promise *pp)
             outsourced = false;
         }
 
-        if (outsourced || !a.transaction.background)    // work done here: either by child or non-background parent
+        if (outsourced || (!a.transaction.background))    // work done here: either by child or non-background parent
         {
             if (a.contain.timeout != CF_NOINT)
             {
@@ -271,7 +271,7 @@ static void VerifyExec(Attributes a, Promise *pp)
                 {
                     ModuleProtocol(execstr, line, !a.contain.nooutput, pp->namespace);
                 }
-                else if (!a.contain.nooutput && NonEmptyLine(line))
+                else if ((!a.contain.nooutput) && (NonEmptyLine(line)))
                 {
                     lineOutLen = strlen(comm) + strlen(line) + 12;
 
@@ -332,7 +332,7 @@ static void VerifyExec(Attributes a, Promise *pp)
         snprintf(eventname, CF_BUFSIZE - 1, "Exec(%s)", execstr);
 
 #ifndef MINGW
-        if (a.transaction.background && outsourced)
+        if ((a.transaction.background) && outsourced)
         {
             CfOut(cf_verbose, "", " -> Backgrounded command (%s) is done - exiting\n", execstr);
             exit(0);

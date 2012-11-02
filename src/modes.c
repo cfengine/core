@@ -172,7 +172,7 @@ int ParseModeString(const char *modestring, mode_t *plusmask, mode_t *minusmask)
                 return false;
             }
 
-            while (isdigit((int) *sp) && (*sp != '\0'))
+            while ((isdigit((int) *sp)) && (*sp != '\0'))
             {
                 sp++;
             }
@@ -185,7 +185,7 @@ int ParseModeString(const char *modestring, mode_t *plusmask, mode_t *minusmask)
                 return false;
             }
 
-            if (found_sort != unknown && found_sort != sort)
+            if ((found_sort != unknown) && (found_sort != sort))
             {
                 CfOut(cf_inform, "", "Symbolic and numeric form for modes mixed");
             }
@@ -200,9 +200,9 @@ int ParseModeString(const char *modestring, mode_t *plusmask, mode_t *minusmask)
             break;
 
         case '\0':
-            if (state == who || value == 0)
+            if ((state == who) || (value == 0))
             {
-                if (strcmp(modestring, "0000") != 0 && strcmp(modestring, "000") != 0)
+                if ((strcmp(modestring, "0000") != 0) && (strcmp(modestring, "000") != 0))
                 {
                     CfOut(cf_error, "", "mode string is incomplete");
                     return false;
@@ -214,7 +214,7 @@ int ParseModeString(const char *modestring, mode_t *plusmask, mode_t *minusmask)
                 return false;
             }
 
-            if (found_sort != unknown && found_sort != sort)
+            if ((found_sort != unknown) && (found_sort != sort))
             {
                 CfOut(cf_inform, "", "Symbolic and numeric form for modes mixed");
             }

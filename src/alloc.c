@@ -27,7 +27,7 @@
 
 static void *CheckResult(void *ptr, const char *fn, bool check_result)
 {
-    if (ptr == NULL && check_result)
+    if ((ptr == NULL) && (check_result))
     {
         fputs(fn, stderr);
         fputs(": Unable to allocate memory\n", stderr);
@@ -43,7 +43,7 @@ void *xmalloc(size_t size)
 
 void *xcalloc(size_t nmemb, size_t size)
 {
-    return CheckResult(calloc(nmemb, size), "xcalloc", nmemb != 0 && size != 0);
+    return CheckResult(calloc(nmemb, size), "xcalloc", (nmemb != 0) && (size != 0));
 }
 
 void *xrealloc(void *ptr, size_t size)

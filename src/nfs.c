@@ -151,7 +151,7 @@ int LoadMountInfo(Rlist **list)
 
         sscanf(vbuff, "%s%s%s", buf1, buf2, buf3);
 
-        if (vbuff[0] == '\0' || vbuff[0] == '\n')
+        if ((vbuff[0] == '\0') || (vbuff[0] == '\n'))
         {
             break;
         }
@@ -167,12 +167,12 @@ int LoadMountInfo(Rlist **list)
             CfOut(cf_error, "", "Use the -n option to run safely.");
         }
 
-        if (strstr(vbuff, "retrying") || strstr(vbuff, "denied") || strstr(vbuff, "backgrounding"))
+        if ((strstr(vbuff, "retrying")) || (strstr(vbuff, "denied")) || (strstr(vbuff, "backgrounding")))
         {
             continue;
         }
 
-        if (strstr(vbuff, "exceeded") || strstr(vbuff, "busy"))
+        if ((strstr(vbuff, "exceeded")) || (strstr(vbuff, "busy")))
         {
             continue;
         }
@@ -561,7 +561,7 @@ int VerifyMount(char *name, Attributes a, Promise *pp)
 
         CfReadLine(line, CF_BUFSIZE, pfp);
 
-        if (strstr(line, "busy") || strstr(line, "Busy"))
+        if ((strstr(line, "busy")) || (strstr(line, "Busy")))
         {
             cfPS(cf_inform, CF_INTERPT, "", pp, a, " !! The device under %s cannot be mounted\n", mountpt);
             cf_pclose(pfp);
@@ -597,7 +597,7 @@ int VerifyUnmount(char *name, Attributes a, Promise *pp)
 
         CfReadLine(line, CF_BUFSIZE, pfp);
 
-        if (strstr(line, "busy") || strstr(line, "Busy"))
+        if ((strstr(line, "busy")) || (strstr(line, "Busy")))
         {
             cfPS(cf_inform, CF_INTERPT, "", pp, a, " !! The device under %s cannot be unmounted\n", mountpt);
             cf_pclose(pfp);
@@ -693,7 +693,7 @@ void MountAll()
             break;
         }
 
-        if (strstr(line, "already mounted") || strstr(line, "exceeded") || strstr(line, "determined"))
+        if ((strstr(line, "already mounted")) || (strstr(line, "exceeded")) || (strstr(line, "determined")))
         {
             continue;
         }
@@ -703,13 +703,13 @@ void MountAll()
             continue;
         }
 
-        if (strstr(line, "denied") || strstr(line, "RPC"))
+        if ((strstr(line, "denied")) || (strstr(line, "RPC")))
         {
             CfOut(cf_error, "", "There was a mount error, trying to mount one of the filesystems on this host.\n");
             break;
         }
 
-        if (strstr(line, "trying") && !strstr(line, "NFS version 2") && !strstr(line, "vers 3"))
+        if ((strstr(line, "trying")) && (!strstr(line, "NFS version 2")) && (!strstr(line, "vers 3")))
         {
             CfOut(cf_error, "", "Attempting abort because mount went into a retry loop.\n");
             break;

@@ -401,6 +401,25 @@ static void test_parse_object_simple(void **state)
     JsonElementDestroy(obj);
 }
 
+static void test_parse_object_escaped(void **state)
+{
+    const char *escaped_string = "\\\"/var/cfenigne/bin/cf-know\\\" ";
+    const char *key = "json_element_key";
+
+    Writer *writer = StringWriter();
+    WriterWriteF(writer, "{ \"%s\" : \"%s\" }", key, escaped_string);
+
+    const char *json_string = StringWriterData(writer);
+
+    JsonElement *obj = JsonParse(&json_string);
+
+    assert_int_not_equal(obj, NULL);
+    assert_string_equal(JsonObjectGetAsString(obj, key), escaped_string);
+
+    WriterClose(writer);
+    JsonElementDestroy(obj);
+}
+
 static void test_parse_array_simple(void **state)
 {
     const char *data = ARRAY_SIMPLE;
@@ -878,7 +897,8 @@ int main()
         unit_test(test_parse_array_nested_garbage),
         unit_test(test_array_remove_range),
         unit_test(test_remove_key_from_object),
-        unit_test(test_detach_key_from_object)
+        unit_test(test_detach_key_from_object),
+        unit_test(test_parse_object_escaped)
     };
 
     return run_tests(tests);

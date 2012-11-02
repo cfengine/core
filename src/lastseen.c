@@ -224,7 +224,8 @@ static bool Address2HostkeyInDB(DBHandle *db, const char *address, char *result)
 
 bool Address2Hostkey(const char *address, char *result)
 {
-    if (strcmp(address, "127.0.0.1") == 0 || strcmp(address, "::1") == 0 || strcmp(address, VIPADDRESS) == 0)
+    result[0] = '\0';
+    if ((strcmp(address, "127.0.0.1") == 0) || (strcmp(address, "::1") == 0) || (strcmp(address, VIPADDRESS) == 0))
     {
         if (PUBKEY)
         {

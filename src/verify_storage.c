@@ -237,7 +237,6 @@ static int VerifyFileSystem(char *name, Attributes a, Promise *pp)
 static int VerifyFreeSpace(char *file, Attributes a, Promise *pp)
 {
     struct stat statbuf;
-    long kilobytes;
 
 #ifdef MINGW
     if (!a.volume.check_foreign)
@@ -263,31 +262,28 @@ static int VerifyFreeSpace(char *file, Attributes a, Promise *pp)
     }
 #endif /* NOT MINGW */
 
-    kilobytes = a.volume.freespace;
-
-    if (kilobytes < 0)
+    if (a.volume.freespace < 0)
     {
-        int free = (int) GetDiskUsage(file, cfpercent);
+        int threshold_percentage = -a.volume.freespace;
+        int free_percentage = GetDiskUsage(file, cfpercent);
 
-        kilobytes = -1 * kilobytes;
-
-        if (free < (int) kilobytes)
+        if (free_percentage < threshold_percentage)
         {
             cfPS(cf_error, CF_FAIL, "", pp, a,
-                 " !! Free disk space is under %ld%% for volume containing %s (%d%% free)\n", kilobytes, file, free);
+                 " !! Free disk space is under %d%% for volume containing %s (%d%% free)\n",
+                 threshold_percentage, file, free_percentage);
             return false;
         }
     }
     else
     {
-        off_t free = GetDiskUsage(file, cfabs);
+        off_t threshold = a.volume.freespace;
+        off_t free_bytes = GetDiskUsage(file, cfabs);
 
-        kilobytes = kilobytes / 1024;
-
-        if (free < kilobytes)
+        if (free_bytes < threshold)
         {
-            cfPS(cf_error, CF_FAIL, "", pp, a, " !! Disk space under %ld kB for volume containing %s (%lld kB free)\n",
-                 kilobytes, file, (long long) free);
+            cfPS(cf_error, CF_FAIL, "", pp, a, " !! Disk space under %jd kB for volume containing %s (%jd kB free)\n",
+                 (intmax_t) (threshold / 1024), file, (intmax_t) (free_bytes / 1024));
             return false;
         }
     }

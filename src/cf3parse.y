@@ -51,6 +51,7 @@ static void fatal_yyerror(const char *s);
 /* HvB additions */
 #include "mod_files.h"
 static bool BodyTypeSyntaxLookup(const char *, const char *, char *);
+static void parse_error(const char *s);
 static BodySyntax *extra_bodysyntax_p = NULL;
 static char error_txt[CF_MAXVARSIZE];
 
@@ -123,13 +124,13 @@ bodies:               body
 
 bundle:                bundle_syntax
 
-bundle_syntax:         BUNDLE bundle_type bundle_id bundle_body
+bundle_syntax:         BUNDLE bundle_type bundle_id bundle_body 
                      | BUNDLE bundle_type bundle_id usearglist bundle_body
                      | error
                        {
-                          yyerror("bundle type is not valid\n");
-                          exit(1);
+                          parse_error("Error in bundle definition\n");
                        }
+                          
 
 bundle_type:        bundle_values
                     {
@@ -148,16 +149,16 @@ bundle_type:        bundle_values
                        DeleteRlist(P.useargs);
                        P.useargs = NULL;
 
-                    }
+                    };
 
 bundle_values:         COMMON
                      | AGENT
                      | SERVER
                      | EDITLINE
                      | EDITXML
-                     | error
+                     | error 
                        {
-                          yyerror("Unknown bundle type");
+                          parse_error("Unknown bundle type");
                        }
 
 bundle_id:           bundle_id_syntax
@@ -166,6 +167,10 @@ bundle_id:           bundle_id_syntax
                          P.offsets.last_block_id = P.offsets.last_id;
                          ParserDebug("\tP:bundle:%s:%s\n", P.blocktype, P.blockid);
                      }
+                     | error
+                       {
+                          parse_error("Bundle id is not valid");
+                       }
 
 bundle_id_syntax:    typeid
                    | blockid
@@ -225,6 +230,10 @@ bundle_body:         BLOCK_OPEN
                             P.currentbundle->offset.end = P.offsets.current;
                         }
                      }
+                     | error
+                       {
+                          parse_error("Bundle body error, expected '{'");
+                       }
 
 bundle_statements:    bundle_statement
                     | bundle_statements bundle_statement 
@@ -259,7 +268,7 @@ category:           category_type
                        {
                           sprintf(error_txt, "Category: '%s' is not a valid type for bundle type: '%s", 
                                     P.currenttype, P.blocktype);
-                          yyerror(error_txt);
+                          parse_error(error_txt);
                        }
                        
                        if (!INSTALL_SKIP)
@@ -293,7 +302,7 @@ class_or_promise:        class
                        | promise ';'
                        | error
                          {
-                             yyerror("check previous statement, expected ';'\n");
+                             parse_error("check previous statement, expected ';'\n");
                          }
 
 
@@ -301,7 +310,7 @@ promise:                 promiser
                        | promiser constraints
                        | promiser constraint error
                          {
-                             yyerror("check previous statement, expected ',' \n");
+                             parse_error("check previous statement, expected ',' \n");
                          }
 
 
@@ -357,7 +366,7 @@ category_type:           REPORTS_CATEGORY
                             
                             printf("'%s' is not a valid category for bundle '%s'", yytext, P.blocktype);
                             sprintf(error_txt,"'%s' is not a valid category for bundle '%s'", yytext, P.blocktype);
-                            yyerror(error_txt);
+                            parse_error(error_txt);
                          }
 
 
@@ -383,7 +392,7 @@ constraint:           promiser_type
                       rval_bundle_statement
                     | error
                       {
-                        yyerror("promise line statement error\n");
+                        parse_error("promise line statement error\n");
                       }
 
 promiser_type:       promiser_id 
@@ -471,7 +480,7 @@ promiser_type:       promiser_id
                           {
                              sprintf(error_txt, "'%s' is not allowed as promise type for category: '%s'", 
                                            yytext, P.currenttype);
-                             yyerror(error_txt);
+                             parse_error(error_txt);
                           }
 
                        }
@@ -585,7 +594,10 @@ body_id_syntax:      typeid
                    | blockid
                    | error
                      {
-                        yyerror("Invalid body id indentifier");
+                        parse_error("Invalid body id indentifier");
+                        /*
+                        parse_error("Invalid body id indentifier");
+                        */
                      }
  
 body_body:          BLOCK_OPEN
@@ -619,15 +631,19 @@ body_body:          BLOCK_OPEN
                      }
 
 
-body_statements:       body_statement               
-                     | body_statements body_statements;
+body_statements:       body_statement
+                     | body_statements body_statement
+                     | error
+                       {
+                           parse_error("check previous statement, expected ';'\n");
+                       }
 
-
-body_statement:      class
-                     | selections;
-
-selections:            selection          
-                     | selections selection;
+body_statement:        class
+                     | selection ';'
+                     | selection error
+                       {
+                          parse_error("check previous statement, expected ';'\n");
+                       }
 
 selection:             selection_id
                        ASSIGN
@@ -669,7 +685,7 @@ selection:             selection_id
                                {
                                    if (P.rval.rtype != CF_SCALAR)
                                    {
-                                       yyerror("namespace must be a constant scalar string");
+                                       parse_error("namespace must be a constant scalar string");
                                    }
                                    else
                                    {
@@ -692,12 +708,12 @@ selection:             selection_id
                                            }
                                            else
                                            {
-                                               yyerror("inputs promise must have a list as rvalue");
+                                               parse_error("inputs promise must have a list as rvalue");
                                            }
                                        }
                                        else
                                        {
-                                           yyerror("Redefinition of input list (broken promise)");
+                                           parse_error("Redefinition of input list (broken promise)");
                                        }
                                    }
                                }
@@ -705,7 +721,12 @@ selection:             selection_id
 
                            P.rval = (Rval) { NULL, '\0' };
                         }
-                       ';'
+                     | error
+                       {
+                           printf("check previous statement, expected ';'\n");
+                           parse_error("check previous statement, expected ';'\n");
+                       }
+
 
 
 selection_id:          id
@@ -714,7 +735,7 @@ selection_id:          id
                            {
                               sprintf(error_txt,"%s is invalid for 'body %s %s'", 
                                       yytext, P.blocktype, P.blockid);
-                               yyerror(error_txt);
+                               parse_error(error_txt);
                            }
                        }
 
@@ -776,7 +797,7 @@ rval_type:            /*  These token can never be RVAL HvB
                            {
                                if (LvalWantsBody(P.currentpromise->agentsubtype,P.lval))
                                {
-                                   yyerror("An rvalue is quoted, but we expect an unquoted body identifier");
+                                   parse_error("An rvalue is quoted, but we expect an unquoted body identifier");
                                }
                            }
                        }
@@ -818,21 +839,36 @@ rval_type:            /*  These token can never be RVAL HvB
                            ParserDebug("\tP:%s:%s:%s:%s id RVAL '%s'\n", 
                                P.block, P.blocktype, P.blockid, P.currenttype, P.currentstring);
                        }
+                     | error
+                       {
+                       parse_error("basje\n"); 
+                       }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-list:                  BLOCK_OPEN 
-                       litems
-                       BLOCK_CLOSE 
-                       ; 
+list:                  BLOCK_OPEN litems BLOCK_CLOSE 
+                     | BLOCK_OPEN litems error
+                       {
+                           parse_error("expected a '}' \n"); 
+                       }
+                     | BLOCK_OPEN error
+                       {
+                       {
+                           parse_error("error in list definitions\n"); 
+                       }
+                       }
+
+
+                       
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 litems:                litems_int
-                     | litems_int ',';
+                     | litems_int ','
+
 
 litems_int:            litem
-                     | litems_int ',' litem;
+                     | litems_int ',' litem
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -870,6 +906,10 @@ litem:                 IDSYNTAX
                            AppendRlist((Rlist **)&P.currentRlist,(void *)P.currentfncall[P.arg_nesting+1],CF_FNCALL);
                            DeleteFnCall(P.currentfncall[P.arg_nesting+1]);
                        }
+                     | error 
+                       {
+                          parse_error("Not a valid list item");
+                       }
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -893,7 +933,7 @@ functionid:            IDSYNTAX
                        }
                      | error
                        {
-                          yyerror("Not a valid function indentifier\n");
+                          parse_error("Not a valid function indentifier\n");
                        }
                        
 
@@ -944,7 +984,7 @@ usefunction:           functionid givearglist
                        }
                        | error
                          {
-                            yyerror("Error in function definition ");
+                            parse_error("Error in function definition ");
                          }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -1045,13 +1085,14 @@ aitem:                 aitem_type  /* recipient of argument is never a literal *
                        };
 
 aitem_type:            IDSYNTAX
+                       {
+                           ParserDebug("\tP:%s:%s:%s id \n",P.block, P.blocktype, P.blockid);
+                       }
                      | COMMON 
                      | AGENT
                      | SERVER
                      | EDITLINE
                      | EDITXML
-                     | typeid
-       
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -1293,7 +1334,7 @@ static void DebugBanner(const char *s)
     ParserDebug("----------------------------------------------------------------\n");
 }
 
-void yyerror(const char *s)
+void parse_error(const char *s)
 {
     int i;
 
@@ -1312,24 +1353,24 @@ void yyerror(const char *s)
     */
     i = (int)yyleng;
     cf_tokenpos -= i;
-    /*
-    printf("hvb cf_tokenpos = %d, %d\n", cf_tokenpos, i);
-    */
 
     /*
+    fprintf(stderr, "error: %s\n", s);
      * Display the error message in the following format
      *  line 2 : syntax error
      *    ConfigFile = klaar/bas
      *             ^invalid pathname
     */
-    fprintf(stderr, "\nfilename: %s line %d: token:%s\n", P.filename, P.line_no, yytext);
-    fprintf(stderr, "error: %s\n", s);
+    fprintf(stderr, "\nfilename: %s line %d: token: '%s'\n", P.filename, P.line_no, yytext);
 
     fprintf(stderr, "\n%s\n", cf_linebuf);
     fprintf(stderr, "%*s error\n", 2 + cf_tokenpos, "^");
-    /*
-    fprintf(stderr, "%*s error\n", 2 + P.line_pos, "^");
-    */
+
+    fprintf(stderr, "error: %s\n", s);
 
     exit(1);
+}
+
+void yyerror(const char *s)
+{
 }

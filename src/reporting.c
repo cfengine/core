@@ -970,7 +970,7 @@ static void ShowPromiseTypesFor(const char *s)
 
         for (j = 0; st[j].bundle_type != NULL; j++)
         {
-            if (strcmp(s, st[j].bundle_type) == 0 || strcmp("*", st[j].bundle_type) == 0)
+            if ((strcmp(s, st[j].bundle_type) == 0) || (strcmp("*", st[j].bundle_type) == 0))
             {
                 printf("<h4>PROMISE TYPE %s</h4>\n", st[j].subtype);
                 ShowBodyParts(st[j].bs);

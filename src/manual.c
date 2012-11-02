@@ -113,8 +113,8 @@ void TexinfoManual(const char *source_dir, const char *output_file)
     {
         st = (CF_ALL_SUBTYPES[i]);
 
-        if (st == CF_COMMON_SUBTYPES || st == CF_EXEC_SUBTYPES || st == CF_REMACCESS_SUBTYPES
-            || st == CF_KNOWLEDGE_SUBTYPES || st == CF_MEASUREMENT_SUBTYPES)
+        if ((st == CF_COMMON_SUBTYPES) || (st == CF_EXEC_SUBTYPES) || (st == CF_REMACCESS_SUBTYPES)
+            || (st == CF_KNOWLEDGE_SUBTYPES) || (st == CF_MEASUREMENT_SUBTYPES))
 
         {
             CfOut(cf_verbose, "", "Dealing with chapter / bundle type %s\n", st->bundle_type);
@@ -388,13 +388,13 @@ static void TexinfoPromiseTypesFor(const char *source_dir, FILE *fout, const Sub
     {
         CfOut(cf_verbose, "", " - Dealing with promise type %s\n", st[j].subtype);
 
-        if (strcmp("*", st[j].subtype) == 0 && strcmp("*", st[j].bundle_type) == 0)
+        if ((strcmp("*", st[j].subtype) == 0) && (strcmp("*", st[j].bundle_type) == 0))
         {
             fprintf(fout, "\n\n@node Miscellaneous in common promises\n@section @code{%s} promises\n\n", 
                     st[j].subtype);
             snprintf(filename, CF_BUFSIZE - 1, "promise_common_intro.texinfo");
         }
-        else if (strcmp("*", st[j].subtype) == 0 && (strcmp("edit_line", st[j].bundle_type) == 0 || strcmp("edit_xml", st[j].bundle_type) == 0))
+        else if ((strcmp("*", st[j].subtype) == 0) && ((strcmp("edit_line", st[j].bundle_type) == 0) || (strcmp("edit_xml", st[j].bundle_type) == 0)))
         {
             fprintf(fout, "\n\n@node Miscellaneous in %s promises\n@section Miscelleneous in @code{%s} promises\n\n", st[j].bundle_type, st[j].bundle_type);
             snprintf(filename, CF_BUFSIZE - 1, "promises/%s_intro.texinfo", st[j].bundle_type);
@@ -594,7 +594,7 @@ static void TexinfoShowRange(FILE *fout, char *s, enum cfdatatype type)
         return;
     }
 
-    if (type == cf_opts || type == cf_olist)
+    if ((type == cf_opts) || (type == cf_olist))
     {
         list = SplitStringAsRList(s, ',');
         fprintf(fout, "@noindent @b{Allowed input range}: @*\n@example");
@@ -732,7 +732,7 @@ char *ReadTexinfoFileF(const char *source_dir, const char *fmt, ...)
     buffer[file_size] = '\0';
     int cnt = fread(buffer, sizeof(char), file_size, fp);
 
-    if (ferror(fp) || cnt != file_size)
+    if ((ferror(fp)) || (cnt != file_size))
     {
         CfOut(cf_inform, "fread", "Could not read manual source %s\n", filename);
         free(buffer);

@@ -54,7 +54,7 @@ static bool WriteLockData(CF_DB *dbp, char *lock_id, LockData *lock_data);
 
 void SummarizeTransaction(Attributes attr, const Promise *pp, const char *logname)
 {
-    if (logname && attr.transaction.log_string)
+    if (logname && (attr.transaction.log_string))
     {
         char buffer[CF_EXPANDSIZE];
 
@@ -88,7 +88,7 @@ void SummarizeTransaction(Attributes attr, const Promise *pp, const char *lognam
     }
     else if (attr.transaction.log_failed)
     {
-        if (logname && strcmp(logname, attr.transaction.log_failed) == 0)
+        if (logname && (strcmp(logname, attr.transaction.log_failed) == 0))
         {
             cfPS(cf_log, CF_NOP, "", pp, attr, "%s", attr.transaction.log_string);
         }
@@ -271,7 +271,7 @@ CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promi
 
                     err = GracefulTerminate(pid);
 
-                    if (err || errno == ESRCH || errno == ETIMEDOUT)
+                    if (err || (errno == ESRCH) || (errno == ETIMEDOUT))
                     {
                         LogLockCompletion(cflog, pid, "Lock expired, process killed", cc_operator, cc_operand);
                         unlink(cflock);
@@ -904,7 +904,7 @@ int ShiftChange(void)
 
 bool EnforcePromise(enum cfopaction action)
 {
-    return (!DONTDO && action != cfa_warn);
+    return ((!DONTDO) && (action != cfa_warn));
 }
 
 static char SYSLOG_HOST[CF_BUFSIZE] = "localhost";

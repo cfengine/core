@@ -93,7 +93,7 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
     {
         method_deref = strchr(method_name,':') + 1;
     }
-    else if (strchr(method_name, ':') == NULL && strcmp(pp->namespace, "default") != 0)
+    else if ((strchr(method_name, ':') == NULL) && (strcmp(pp->namespace, "default") != 0))
     {
         snprintf(qualified_method, CF_BUFSIZE, "%s:%s", pp->namespace, method_name);
         method_deref = qualified_method;
@@ -156,7 +156,7 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
             CfOut(cf_error, "",
                   " !! A variable seems to have been used for the name of the method. In this case, the promiser also needs to contain the unique name of the method");
         }
-        if (bp && bp->name)
+        if (bp && (bp->name))
         {
             cfPS(cf_error, CF_FAIL, "", pp, a, " !! Method \"%s\" was used but was not defined!\n", bp->name);
         }

@@ -32,7 +32,7 @@
 
 Dir *OpenDirForPromise(const char *dirname, Attributes attr, Promise *pp)
 {
-    if (attr.copy.servers == NULL || strcmp(attr.copy.servers->item, "localhost") == 0)
+    if ((attr.copy.servers == NULL) || (strcmp(attr.copy.servers->item, "localhost") == 0))
     {
         return OpenDirLocal(dirname);
     }

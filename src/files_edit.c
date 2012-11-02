@@ -90,15 +90,15 @@ void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportC
 
     EDIT_MODEL = false;
 
-    if (DONTDO || a.transaction.action == cfa_warn)
+    if (DONTDO || (a.transaction.action == cfa_warn))
     {
-        if (ec && !CompareToFile(ec->file_start, ec->filename, a, pp) && ec->num_edits > 0)
+        if (ec && (!CompareToFile(ec->file_start, ec->filename, a, pp)) && (ec->num_edits > 0))
         {
             cfPS(cf_error, CF_WARN, "", pp, a, " -> Should edit file %s but only a warning promised", ec->filename);
         }
         return;
     }
-    else if (ec && ec->num_edits > 0)
+    else if (ec && (ec->num_edits > 0))
     {
         if (a.haveeditline)
         {

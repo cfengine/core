@@ -63,7 +63,7 @@ Attributes GetFilesAttributes(const Promise *pp)
     attr.template = (char *)GetConstraintValue("edit_template", pp, CF_SCALAR);
     attr.haveeditline = GetBundleConstraint("edit_line", pp);
     attr.haveeditxml = GetBundleConstraint("edit_xml", pp);
-    attr.haveedit = attr.haveeditline || attr.haveeditxml || attr.template;
+    attr.haveedit = (attr.haveeditline) || (attr.haveeditxml) || (attr.template);
 
 /* Files, specialist */
 
@@ -106,9 +106,9 @@ Attributes GetFilesAttributes(const Promise *pp)
         ShowAttributes(attr);
     }
 
-    if (attr.haverename || attr.havedelete || attr.haveperms || attr.havechange ||
-        attr.havecopy || attr.havelink || attr.haveedit || attr.create || attr.touch ||
-        attr.transformer || attr.acl.acl_entries)
+    if ((attr.haverename) || (attr.havedelete) || (attr.haveperms) || (attr.havechange) ||
+        (attr.havecopy) || (attr.havelink) || (attr.haveedit) || (attr.create) || (attr.touch) ||
+        (attr.transformer) || (attr.acl.acl_entries))
     {
     }
     else
@@ -119,9 +119,9 @@ Attributes GetFilesAttributes(const Promise *pp)
         }
     }
 
-    if ((THIS_AGENT_TYPE == cf_common) && attr.create && attr.havecopy)
+    if ((THIS_AGENT_TYPE == cf_common) && (attr.create) && (attr.havecopy))
     {
-        if (attr.copy.compare != cfa_checksum && attr.copy.compare != cfa_hash)
+        if (((attr.copy.compare) != (cfa_checksum)) && ((attr.copy.compare) != cfa_hash))
         {
             CfOut(cf_error, "",
                   " !! Promise constraint conflicts - %s file will never be copied as created file is always newer",
@@ -136,7 +136,7 @@ Attributes GetFilesAttributes(const Promise *pp)
         }
     }
 
-    if ((THIS_AGENT_TYPE == cf_common) && attr.create && attr.havelink)
+    if ((THIS_AGENT_TYPE == cf_common) && (attr.create) && (attr.havelink))
     {
         CfOut(cf_error, "", " !! Promise constraint conflicts - %s cannot be created and linked at the same time",
               pp->promiser);
@@ -528,7 +528,7 @@ FilePerms GetPermissionConstraints(const Promise *pp)
     p.plus_flags = 0;
     p.minus_flags = 0;
 
-    if (list && !ParseFlagString(list, &p.plus_flags, &p.minus_flags))
+    if (list && (!ParseFlagString(list, &p.plus_flags, &p.minus_flags)))
     {
         CfOut(cf_error, "", "Problem validating a BSD flag string");
         PromiseRef(cf_error, pp);
@@ -596,7 +596,7 @@ FileSelect GetSelectConstraints(const Promise *pp)
         PromiseRef(cf_error, pp);
     }
 
-    if (s.name || s.path || s.filetypes || s.issymlinkto || s.perms || s.bsdflags)
+    if ((s.name) || (s.path) || (s.filetypes) || (s.issymlinkto) || (s.perms) || (s.bsdflags))
     {
         entries = true;
     }
@@ -636,7 +636,7 @@ FileSelect GetSelectConstraints(const Promise *pp)
     s.exec_regex = (char *) GetConstraintValue("exec_regex", pp, CF_SCALAR);
     s.exec_program = (char *) GetConstraintValue("exec_program", pp, CF_SCALAR);
 
-    if (s.owners || s.min_size || s.exec_regex || s.exec_program)
+    if ((s.owners) || (s.min_size) || (s.exec_regex) || (s.exec_program))
     {
         entries = true;
     }
@@ -750,7 +750,7 @@ DefineClasses GetClassDefinitionConstraints(const Promise *pp)
 
     pt = GetConstraintValue("timer_policy", pp, CF_SCALAR);
 
-    if (pt && strncmp(pt, "abs", 3) == 0)
+    if (pt && (strncmp(pt, "abs", 3) == 0))
     {
         c.timer = cfpreserve;
     }
@@ -771,7 +771,7 @@ FileDelete GetDeleteConstraints(const Promise *pp)
 
     value = (char *) GetConstraintValue("dirlinks", pp, CF_SCALAR);
 
-    if (value && strcmp(value, "keep") == 0)
+    if (value && (strcmp(value, "keep") == 0))
     {
         f.dirlinks = cfa_linkkeep;
     }
@@ -816,7 +816,7 @@ FileChange GetChangeMgtConstraints(const Promise *pp)
 
     value = (char *) GetConstraintValue("hash", pp, CF_SCALAR);
 
-    if (value && strcmp(value, "best") == 0)
+    if (value && (strcmp(value, "best") == 0))
     {
 #ifdef HAVE_NOVA
         c.hash = cf_sha512;
@@ -824,23 +824,23 @@ FileChange GetChangeMgtConstraints(const Promise *pp)
         c.hash = cf_besthash;
 #endif
     }
-    else if (value && strcmp(value, "md5") == 0)
+    else if (value && (strcmp(value, "md5") == 0))
     {
         c.hash = cf_md5;
     }
-    else if (value && strcmp(value, "sha1") == 0)
+    else if (value && (strcmp(value, "sha1") == 0))
     {
         c.hash = cf_sha1;
     }
-    else if (value && strcmp(value, "sha256") == 0)
+    else if (value && (strcmp(value, "sha256") == 0))
     {
         c.hash = cf_sha256;
     }
-    else if (value && strcmp(value, "sha384") == 0)
+    else if (value && (strcmp(value, "sha384") == 0))
     {
         c.hash = cf_sha384;
     }
-    else if (value && strcmp(value, "sha512") == 0)
+    else if (value && (strcmp(value, "sha512") == 0))
     {
         c.hash = cf_sha512;
     }
@@ -849,7 +849,7 @@ FileChange GetChangeMgtConstraints(const Promise *pp)
         c.hash = CF_DEFAULT_DIGEST;
     }
 
-    if (FIPS_MODE && c.hash == cf_md5)
+    if (FIPS_MODE && (c.hash == cf_md5))
     {
         CfOut(cf_error, "", " !! FIPS mode is enabled, and md5 is not an approved algorithm");
         PromiseRef(cf_error, pp);
@@ -857,15 +857,15 @@ FileChange GetChangeMgtConstraints(const Promise *pp)
 
     value = (char *) GetConstraintValue("report_changes", pp, CF_SCALAR);
 
-    if (value && strcmp(value, "content") == 0)
+    if (value && (strcmp(value, "content") == 0))
     {
         c.report_changes = cfa_contentchange;
     }
-    else if (value && strcmp(value, "stats") == 0)
+    else if (value && (strcmp(value, "stats") == 0))
     {
         c.report_changes = cfa_statschange;
     }
-    else if (value && strcmp(value, "all") == 0)
+    else if (value && (strcmp(value, "all") == 0))
     {
         c.report_changes = cfa_allchanges;
     }
@@ -917,11 +917,11 @@ FileCopy GetCopyConstraints(const Promise *pp)
 
     value = (char *) GetConstraintValue("copy_backup", pp, CF_SCALAR);
 
-    if (value && strcmp(value, "false") == 0)
+    if (value && (strcmp(value, "false") == 0))
     {
         f.backup = cfa_nobackup;
     }
-    else if (value && strcmp(value, "timestamp") == 0)
+    else if (value && (strcmp(value, "timestamp") == 0))
     {
         f.backup = cfa_timestamp;
     }
@@ -967,11 +967,11 @@ FileLink GetLinkConstraints(const Promise *pp)
 
     value = (char *) GetConstraintValue("when_no_source", pp, CF_SCALAR);
 
-    if (value && strcmp(value, "force") == 0)
+    if (value && (strcmp(value, "force") == 0))
     {
         f.when_no_file = cfa_force;
     }
-    else if (value && strcmp(value, "delete") == 0)
+    else if (value && (strcmp(value, "delete") == 0))
     {
         f.when_no_file = cfa_delete;
     }
@@ -982,7 +982,7 @@ FileLink GetLinkConstraints(const Promise *pp)
 
     value = (char *) GetConstraintValue("when_linking_children", pp, CF_SCALAR);
 
-    if (value && strcmp(value, "override_file") == 0)
+    if (value && (strcmp(value, "override_file") == 0))
     {
         f.when_linking_children = cfa_override;
     }
@@ -1005,22 +1005,22 @@ EditDefaults GetEditDefaults(const Promise *pp)
 
     e.maxfilesize = GetIntConstraint("max_file_size", pp);
 
-    if (e.maxfilesize == CF_NOINT || e.maxfilesize == 0)
+    if ((e.maxfilesize == CF_NOINT) || (e.maxfilesize == 0))
     {
         e.maxfilesize = EDITFILESIZE;
     }
 
     value = (char *) GetConstraintValue("edit_backup", pp, CF_SCALAR);
 
-    if (value && strcmp(value, "false") == 0)
+    if (value && (strcmp(value, "false") == 0))
     {
         e.backup = cfa_nobackup;
     }
-    else if (value && strcmp(value, "timestamp") == 0)
+    else if (value && (strcmp(value, "timestamp") == 0))
     {
         e.backup = cfa_timestamp;
     }
-    else if (value && strcmp(value, "rotate") == 0)
+    else if (value && (strcmp(value, "rotate") == 0))
     {
         e.backup = cfa_rotate;
         e.rotate = GetIntConstraint("rotate", pp);
@@ -1232,7 +1232,7 @@ ProcessSelect GetProcessFilterConstraints(const Promise *pp)
 
     IntRange2Int(value, &p.min_thread, &p.max_thread, pp);
 
-    if (p.owner || p.status || p.command || p.tty)
+    if ((p.owner) || (p.status) || (p.command) || (p.tty))
     {
         entries = true;
     }
@@ -1349,7 +1349,7 @@ EditLocation GetLocationAttributes(const Promise *pp)
 
     value = GetConstraintValue("before_after", pp, CF_SCALAR);
 
-    if (value && strcmp(value, "before") == 0)
+    if (value && (strcmp(value, "before") == 0))
     {
         e.before_after = cfe_before;
     }
@@ -1487,7 +1487,7 @@ EditColumn GetColumnConstraints(const Promise *pp)
     c.column_separator = GetConstraintValue("field_separator", pp, CF_SCALAR);
     c.select_column = GetIntConstraint("select_field", pp);
 
-    if (c.select_column != CF_NOINT && GetBooleanConstraint("start_fields_from_zero", pp))
+    if (((c.select_column) != CF_NOINT) && (GetBooleanConstraint("start_fields_from_zero", pp)))
     {
         c.select_column++;
     }
@@ -1617,7 +1617,7 @@ Report GetReportConstraints(const Promise *pp)
 
     r.to_file = GetConstraintValue("report_to_file", pp, CF_SCALAR);
 
-    if (r.result && (r.haveprintfile || r.filename || r.showstate || r.to_file || r.lastseen))
+    if ((r.result) && ((r.haveprintfile) || (r.filename) || (r.showstate) || (r.to_file) || (r.lastseen)))
     {
         CfOut(cf_error, "", " !! bundle_return_value promise for \"%s\" in bundle \"%s\" with too many constraints (ignored)", pp->promiser, pp->bundle);
     }
@@ -1706,7 +1706,7 @@ Database GetDatabaseConstraints(const Promise *pp)
     value = GetConstraintValue("db_server_type", pp, CF_SCALAR);
     d.db_server_type = Str2dbType(value);
 
-    if (value && d.db_server_type == cfd_notype)
+    if (value && ((d.db_server_type) == cfd_notype))
     {
         CfOut(cf_error, "", "Unsupported database type \"%s\" in databases promise", value);
         PromiseRef(cf_error, pp);

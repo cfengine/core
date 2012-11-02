@@ -35,7 +35,7 @@
 static bool LastRecvTimedOut(void)
 {
 #ifndef MINGW
-	if (errno == EAGAIN || errno == EWOULDBLOCK)
+	if ((errno == EAGAIN) || (errno == EWOULDBLOCK))
 	{
 		return true;
 	}
@@ -151,12 +151,12 @@ int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget, int nothing)
     {
         got = recv(sd, buffer + already, toget - already, 0);
 
-        if (got == -1 && errno == EINTR)
+        if ((got == -1) && (errno == EINTR))
         {
             continue;
         }
 
-        if (got == -1 && LastRecvTimedOut())
+        if ((got == -1) && (LastRecvTimedOut()))
         {
             CfOut(cf_error, "recv", "!! Timeout - remote end did not respond with the expected amount of data (received=%d, expecting=%d)",
                   already, toget);
@@ -194,7 +194,7 @@ int SendSocketStream(int sd, char buffer[CF_BUFSIZE], int tosend, int flags)
 
         sent = send(sd, buffer + already, tosend - already, flags);
 
-        if (sent == -1 && errno == EINTR)
+        if ((sent == -1) && (errno == EINTR))
         {
             continue;
         }

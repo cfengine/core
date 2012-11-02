@@ -55,7 +55,7 @@ char VerifyLink(char *destination, char *source, Attributes attr, Promise *pp,
 
     memset(to, 0, CF_BUFSIZE);
 
-    if (!IsAbsoluteFileName(source) && (*source != '.'))        /* links without a directory reference */
+    if ((!IsAbsoluteFileName(source)) && (*source != '.'))        /* links without a directory reference */
     {
         snprintf(to, CF_BUFSIZE - 1, "./%s", source);
     }
@@ -83,14 +83,14 @@ char VerifyLink(char *destination, char *source, Attributes attr, Promise *pp,
         source_file_exists = false;
     }
 
-    if (!source_file_exists && (attr.link.when_no_file != cfa_force) && (attr.link.when_no_file != cfa_delete))
+    if ((!source_file_exists) && (attr.link.when_no_file != cfa_force) && (attr.link.when_no_file != cfa_delete))
     {
         CfOut(cf_inform, "", "Source %s for linking is absent", absto);
         cfPS(cf_verbose, CF_FAIL, "", pp, attr, " !! Unable to create link %s -> %s, no source", destination, to);
         return CF_WARN;
     }
 
-    if (!source_file_exists && attr.link.when_no_file == cfa_delete)
+    if ((!source_file_exists) && (attr.link.when_no_file == cfa_delete))
     {
         KillGhostLink(destination, attr, pp);
         return CF_CHG;
@@ -122,7 +122,7 @@ char VerifyLink(char *destination, char *source, Attributes attr, Promise *pp,
     {
         int ok = false;
 
-        if (attr.link.link_type == cfa_symlink && strcmp(linkbuf, to) != 0 && strcmp(linkbuf, source) != 0)
+        if ((attr.link.link_type == cfa_symlink) && (strcmp(linkbuf, to) != 0) && (strcmp(linkbuf, source) != 0))
         {
             ok = true;
         }
@@ -258,7 +258,7 @@ char VerifyRelativeLink(char *destination, char *source, Attributes attr, Promis
         commonfrom++;
     }
 
-    while (!(IsAbsoluteFileName(commonto) && IsAbsoluteFileName(commonfrom)))
+    while (!((IsAbsoluteFileName(commonto)) && (IsAbsoluteFileName(commonfrom))))
     {
         commonto--;
         commonfrom--;
@@ -307,7 +307,7 @@ char VerifyHardLink(char *destination, char *source, Attributes attr, Promise *p
 
     memset(to, 0, CF_BUFSIZE);
 
-    if (!IsAbsoluteFileName(source) && (*source != '.'))        /* links without a directory reference */
+    if ((!IsAbsoluteFileName(source)) && (*source != '.'))        /* links without a directory reference */
     {
         snprintf(to, CF_BUFSIZE - 1, ".%c%s", FILE_SEPARATOR, source);
     }
@@ -351,12 +351,12 @@ char VerifyHardLink(char *destination, char *source, Attributes attr, Promise *p
     /* the files could be on different devices, but unix doesn't */
     /* allow this behaviour so the tests below are theoretical... */
 
-    if (dsb.st_ino != ssb.st_ino && dsb.st_dev != ssb.st_dev)
+    if ((dsb.st_ino != ssb.st_ino) && (dsb.st_dev != ssb.st_dev))
     {
         CfOut(cf_verbose, "", " !! If this is POSIX, unable to determine if %s is hard link is correct\n", destination);
         CfOut(cf_verbose, "", " !! since it points to a different filesystem!\n");
 
-        if (dsb.st_mode == ssb.st_mode && dsb.st_size == ssb.st_size)
+        if ((dsb.st_mode == ssb.st_mode) && (dsb.st_size == ssb.st_size))
         {
             cfPS(cf_verbose, CF_NOP, "", pp, attr, "Hard link (%s->%s) on different device APPEARS okay\n", destination,
                  to);
@@ -364,7 +364,7 @@ char VerifyHardLink(char *destination, char *source, Attributes attr, Promise *p
         }
     }
 
-    if (dsb.st_ino == ssb.st_ino && dsb.st_dev == ssb.st_dev)
+    if ((dsb.st_ino == ssb.st_ino) && (dsb.st_dev == ssb.st_dev))
     {
         cfPS(cf_verbose, CF_NOP, "", pp, attr, " -> Hard link (%s->%s) exists and is okay\n", destination, to);
         return CF_NOP;
@@ -423,7 +423,7 @@ int KillGhostLink(char *name, Attributes attr, Promise *pp)
 
     if (cfstat(tmp, &statbuf) == -1)    /* link points nowhere */
     {
-        if (attr.link.when_no_file == cfa_delete || attr.recursion.rmdeadlinks)
+        if ((attr.link.when_no_file == cfa_delete) || (attr.recursion.rmdeadlinks))
         {
             CfOut(cf_verbose, "", " !! %s is a link which points to %s, but that file doesn't seem to exist\n", name,
                   linkbuf);
@@ -447,7 +447,7 @@ int KillGhostLink(char *name, Attributes attr, Promise *pp)
 #if !defined(__MINGW32__)
 static int MakeLink(char *from, char *to, Attributes attr, Promise *pp)
 {
-    if (DONTDO || attr.transaction.action == cfa_warn)
+    if (DONTDO || (attr.transaction.action == cfa_warn))
     {
         CfOut(cf_error, "", " !! Need to link files %s -> %s\n", from, to);
         return false;
@@ -598,7 +598,7 @@ int ExpandLinks(char *dest, char *from, int level)      /* recursive */
                         return true;
                     }
 
-                    if (!lastnode && !ExpandLinks(buff, dest, level + 1))
+                    if ((!lastnode) && (!ExpandLinks(buff, dest, level + 1)))
                     {
                         return false;
                     }
@@ -618,7 +618,7 @@ int ExpandLinks(char *dest, char *from, int level)      /* recursive */
 
                     memset(buff, 0, CF_BUFSIZE);
 
-                    if (!lastnode && !ExpandLinks(buff, dest, level + 1))
+                    if ((!lastnode) && (!ExpandLinks(buff, dest, level + 1)))
                     {
                         return false;
                     }

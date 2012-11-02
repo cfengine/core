@@ -86,7 +86,7 @@ Rlist *NewIterationContext(const char *scopeid, Rlist *namelist)
             OrthogAppendRlist(&deref_listoflists, new, CF_LIST);
             rp->state_ptr = new->rval.item;
 
-            while (rp->state_ptr && strcmp(rp->state_ptr->item, CF_NULL_VALUE) == 0)
+            while ((rp->state_ptr) && (strcmp(rp->state_ptr->item, CF_NULL_VALUE) == 0))
             {
                 if (rp->state_ptr)
                 {
@@ -172,7 +172,7 @@ static int IncrementIterationContextInternal(Rlist *iterator, int level)
 
         CfDebug(" <- Incrementing wheel (%s) to \"%s\"\n", cp->lval, (char *) iterator->state_ptr->item);
 
-        while (iterator->state_ptr && strcmp(iterator->state_ptr->item, CF_NULL_VALUE) == 0)
+        while ((iterator->state_ptr) && (strcmp(iterator->state_ptr->item, CF_NULL_VALUE) == 0))
         {
             if (IncrementIterationContextInternal(iterator->next, level + 1))
             {
@@ -224,7 +224,7 @@ int EndOfIteration(Rlist *iterator)
             continue;
         }
 
-        if (state && state->next != NULL)
+        if (state && (state->next != NULL))
         {
             return false;
         }
@@ -250,7 +250,7 @@ int NullIterators(Rlist *iterator)
     {
         state = rp->state_ptr;
 
-        if (state && strcmp(state->item, CF_NULL_VALUE) == 0)
+        if (state && (strcmp(state->item, CF_NULL_VALUE) == 0))
         {
             return true;
         }

@@ -83,14 +83,14 @@ void VerifyStoragePromise(char *path, Promise *pp, const ReportContext *report_c
 
     if (a.mount.unmount)
     {
-        if (a.mount.mount_source || a.mount.mount_server)
+        if ((a.mount.mount_source) || (a.mount.mount_server))
         {
             CfOut(cf_verbose, "", " !! An unmount promise indicates a mount-source information - probably in error\n");
         }
     }
     else if (a.havemount)
     {
-        if (a.mount.mount_source == NULL || a.mount.mount_server == NULL)
+        if ((a.mount.mount_source == NULL) || (a.mount.mount_server == NULL))
         {
             CfOut(cf_error, "", " !! Insufficient specification in mount promise - need source and server\n");
             return;
@@ -107,7 +107,7 @@ void VerifyStoragePromise(char *path, Promise *pp, const ReportContext *report_c
 /* Do mounts first */
 
 #ifndef MINGW
-    if (!MOUNTEDFSLIST && !LoadMountInfo(&MOUNTEDFSLIST))
+    if ((!MOUNTEDFSLIST) && (!LoadMountInfo(&MOUNTEDFSLIST)))
     {
         CfOut(cf_error, "", "Couldn't obtain a list of mounted filesystems - aborting\n");
         YieldCurrentLock(thislock);
@@ -334,7 +334,7 @@ static int FileSystemMountedCorrectly(Rlist *list, char *name, char *options, At
 
             found = true;
 
-            if (a.mount.mount_source && (strcmp(mp->source, a.mount.mount_source) != 0))
+            if ((a.mount.mount_source) && (strcmp(mp->source, a.mount.mount_source) != 0))
             {
                 CfOut(cf_inform, "", "A different file system (%s:%s) is mounted on %s than what is promised\n",
                       mp->host, mp->source, name);
@@ -401,7 +401,7 @@ static int IsForeignFileSystem(struct stat *childstat, char *dir)
 
             if (!strcmp(entry->mounton, dir))
             {
-                if (entry->options && strstr(entry->options, "nfs"))
+                if ((entry->options) && (strstr(entry->options, "nfs")))
                 {
                     return (true);
                 }

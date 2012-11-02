@@ -173,7 +173,7 @@ void MonNetworkGatherData(double *cf_this)
             break;
         }
 
-        if (!(strstr(vbuff, ":") || strstr(vbuff, ".")))
+        if (!((strstr(vbuff, ":")) || (strstr(vbuff, "."))))
         {
             continue;
         }
@@ -182,25 +182,25 @@ void MonNetworkGatherData(double *cf_this)
 
         // If this is old style, we look for chapter headings, e.g. "TCP: IPv4"
 
-        if (strncmp(vbuff,"UDP:",4) == 0 && strstr(vbuff+4,"6"))
+        if ((strncmp(vbuff,"UDP:",4) == 0) && (strstr(vbuff+4,"6")))
         {
             packet = cfn_udp6;
             type = cfn_old;
             continue;
         }
-        else if (strncmp(vbuff,"TCP:",4) == 0 && strstr(vbuff+4,"6"))       
+        else if ((strncmp(vbuff,"TCP:",4) == 0) && (strstr(vbuff+4,"6")))
         {
             packet = cfn_tcp6;
             type = cfn_old;
             continue;
         }
-        else if (strncmp(vbuff,"UDP:",4) == 0 && strstr(vbuff+4,"4"))
+        else if ((strncmp(vbuff,"UDP:",4) == 0) && (strstr(vbuff+4,"4")))
         {
             packet = cfn_udp4;
             type = cfn_old;
             continue;
         }
-        else if (strncmp(vbuff,"TCP:",4) == 0 && strstr(vbuff+4,"4"))
+        else if ((strncmp(vbuff,"TCP:",4) == 0) && (strstr(vbuff+4,"4")))
         {
             packet = cfn_tcp4;
             type = cfn_old;
@@ -288,7 +288,7 @@ void MonNetworkGatherData(double *cf_this)
 
         // Now look at outgoing
         
-        for (sp = remote + strlen(remote) - 1; (sp >= remote) && isdigit((int) *sp); sp--)
+        for (sp = remote + strlen(remote) - 1; (sp >= remote) && (isdigit((int) *sp)); sp--)
         {
         }
 

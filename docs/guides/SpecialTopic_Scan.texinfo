@@ -100,7 +100,7 @@ using the Mission Portal.
 * File change detection and tripwires::  
 * Example change management::   
 * file_change.log::             
-* File change reports in Nova and Constellation::  
+* File change reports in Nova/Enterprise::  
 * Tamperproof data::            
 * Change detection bundle summary::  
 * Reversion of file changes from a trusted source::  
@@ -331,7 +331,7 @@ update_hashes  => "yes";
 @end verbatim
 
 
-@node file_change.log, File change reports in Nova and Constellation, Example change management, File scanning
+@node file_change.log, File change reports in Nova/Enterprise, Example change management, File scanning
 @section file_change.log
 
 The file file_hash_event_history contains a separate text log of file
@@ -347,8 +347,8 @@ The first column is a time stamp. If you are using one of the commercial version
 of CFEngine, you can see a more user friendly report for the entire enterprise or
 for a single host in the next section.
 
-@node File change reports in Nova and Constellation, Tamperproof data, file_change.log, File scanning
-@section File change reports in Nova and Constellation
+@node File change reports in Nova/Enterprise, Tamperproof data, file_change.log, File scanning
+@section File change reports in Nova/Enterprise
 
 In the commercially supported editions of CFEngine, users have access
 to a number of reports about file changes. A report of file changes and the
@@ -369,7 +369,7 @@ In that case, you will see a change report:
 
 
 
-@node Tamperproof data, Change detection bundle summary, File change reports in Nova and Constellation, File scanning
+@node Tamperproof data, Change detection bundle summary, File change reports in Nova/Enterprise, File scanning
 @section Tamperproof data
 
 Message digests are supposed to be unbreakable, tamperproof

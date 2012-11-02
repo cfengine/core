@@ -1699,7 +1699,7 @@ void MarkPromiseHandleDone(const Promise *pp)
        return;
     }
     
-    snprintf(name, CF_BUFSIZE, "%s.%s", pp->namespace, handle);    
+    snprintf(name, CF_BUFSIZE, "%s:%s", pp->namespace, handle);
     IdempPrependAlphaList(&VHANDLES, name);
 
 }

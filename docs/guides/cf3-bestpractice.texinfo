@@ -110,7 +110,7 @@ This also makes updating more efficient, as fewer objects need to be
 checked.
 
 @cartouche
-The Nova/Constellation Knowledge base allows you to search for
+The Enterprise Knowledge base allows you to search for
 promises, but everything will make more sense if promises are found in
 an intuitive place.
 @end cartouche

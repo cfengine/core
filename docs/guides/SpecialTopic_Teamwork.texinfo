@@ -200,8 +200,8 @@ of certain types about certain objects on certain hosts.
 CFEngine Community Edition has @code{roles} promises, which offer a
 partial solution, but it does not address the core issue which is that
 collaboration in change requires freedom to act, not restriction.
-Delegation therefore requires trust. CFEngine Nova and Constellation
-have `hubs' which can be coordinate large numbers of
+Delegation therefore requires trust. CFEngine Nova/Enterprise
+has `hubs' which can be coordinate large numbers of
 hosts. Coordination can also be pre-arranged as policy, so that
 everyone has their own copy of the script. This is how an orchestra
 scales, for instance.

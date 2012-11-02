@@ -348,8 +348,7 @@ In general, we recommend a small amount of professional services to
 help set up such a system, as there are several details that need to
 be taken into account.
 
-The CFEngine star-network `hub', used in CFE Nova and CFE
-Constellation is the report aggregator for the CFEngine software.
+The CFEngine star-network `hub' is the report aggregator for the CFEngine commercial edition (Nova/Enterprise).
 CFEngine commercial editions support multiple hubs for redundancy
 during reporting.  By making a cluster of three (or more) hubs, you
 can ensure that reports will always be available and up to date, at
@@ -368,7 +367,7 @@ for the CFEngine user to employ.
 @sp 1
 @itemize
 
-@item Install each of the three systems with the Nova/Constellation extension package for
+@item Install each of the three systems with the Nova extension package for
 policy hubs.
 
 @item The MongoDB backend needs to be set up specially before standard bootstrapping
@@ -576,7 +575,7 @@ The Nova starburst hub configuration supports the following properties:
 @node Variables and classes for hubs,  , Features of hub/policy server redundancy, Redundant hub architecture
 @unnumberedsubsec Variables and classes for hubs
 
-CFEngine Nova and Constellation support special classes to help write policy
+CFEngine Nova/Enterprise supports special classes to help write policy
 for managing the hub infrastructure.
 @verbatim
 
@@ -593,7 +592,7 @@ hubs}, and points to that host currently voted into the role of hub master.
 @cartouche
 Setting up redundant hubs might be best done with some professional
 service assistance. Although it is quite simple, it changes the
-bootstrapping procedure in the beginning of a Nova or Constellation
+bootstrapping procedure in the beginning of a Nova/Enterprise
 deployment.
 @end cartouche
 

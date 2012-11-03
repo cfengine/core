@@ -2527,9 +2527,10 @@ static int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilena
 
 static void CfGetFile(ServerFileGetState *args)
 {
-    int sd, fd, n_read, total = 0, sendlen = 0, count = 0;
+    int sd, fd, div = 3;
     char sendbuffer[CF_BUFSIZE + 256], filename[CF_BUFSIZE];
     struct stat sb;
+    off_t n_read, total = 0, sendlen = 0, count = 0;
     int blocksize = 2048;
 
     sd = (args->connect)->sd_reply;
@@ -2559,6 +2560,9 @@ static void CfGetFile(ServerFileGetState *args)
     }
     else
     {
+        if (sb.st_size > 10485760L) /* File larger than 10 MB, checks every 64kB */
+            div = 32;
+
         while (true)
         {
             memset(sendbuffer, 0, CF_BUFSIZE);
@@ -2577,13 +2581,17 @@ static void CfGetFile(ServerFileGetState *args)
             }
             else
             {
-                int savedlen = sb.st_size;
+                off_t savedlen = sb.st_size;
 
                 /* check the file is not changing at source */
 
-                if (count++ % 3 == 0)   /* Don't do this too often */
+                if (count++ % div == 0)   /* Don't do this too often */
                 {
-                    stat(filename, &sb);
+                    if (stat(filename, &sb)) {
+                        CfOut(cf_error, "send", "Cannot stat file %s: (errno=%d) %s",
+                              filename, errno, strerror(errno));
+                        break;
+                    }
                 }
 
                 if (sb.st_size != savedlen)
@@ -2595,7 +2603,7 @@ static void CfGetFile(ServerFileGetState *args)
                         CfOut(cf_verbose, "send", "Send failed in GetFile");
                     }
 
-                    CfDebug("Aborting transfer after %d: file is changing rapidly at source.\n", total);
+                    CfDebug("Aborting transfer after %zd: file is changing rapidly at source.\n", total);
                     break;
                 }
 
@@ -2631,7 +2639,7 @@ static void CfEncryptGetFile(ServerFileGetState *args)
    exact number of bytes transmitted, which might change during
    encryption, hence we need to handle this with transactions */
 {
-    int sd, fd, n_read, total = 0, cipherlen, count = 0, finlen, cnt = 0;
+    int sd, fd, n_read, cipherlen, finlen, div = 3;
     char sendbuffer[CF_BUFSIZE + 256], out[CF_BUFSIZE], filename[CF_BUFSIZE];
     unsigned char iv[32] =
         { 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8 };
@@ -2639,7 +2647,7 @@ static void CfEncryptGetFile(ServerFileGetState *args)
     EVP_CIPHER_CTX ctx;
     char *key, enctype;
     struct stat sb;
-    int savedlen;
+    off_t savedlen, total = 0, count = 0;
 
     sd = (args->connect)->sd_reply;
     key = (args->connect)->session_key;
@@ -2668,6 +2676,8 @@ static void CfEncryptGetFile(ServerFileGetState *args)
     }
     else
     {
+        if (sb.st_size > 10485760L) /* File larger than 10 MB, checks every 64kB */
+            div = 32;
         while (true)
         {
             memset(sendbuffer, 0, CF_BUFSIZE);
@@ -2680,10 +2690,15 @@ static void CfEncryptGetFile(ServerFileGetState *args)
 
             savedlen = sb.st_size;
 
-            if (count++ % 3 == 0)       /* Don't do this too often */
+            if (count++ % div == 0)       /* Don't do this too often */
             {
                 CfDebug("Restatting %s - size %d\n", filename, n_read);
-                stat(filename, &sb);
+                if (stat(filename, &sb))
+                {
+                    CfOut(cf_error, "send", "Cannot stat file %s: (errno=%d) %s",
+                            filename, errno, strerror(errno));
+                    break;
+                }
             }
 
             if (sb.st_size != savedlen)
@@ -2714,8 +2729,6 @@ static void CfEncryptGetFile(ServerFileGetState *args)
                     return;
                 }
             }
-
-            cnt++;
 
             if (total >= savedlen)
             {

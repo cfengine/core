@@ -631,6 +631,15 @@ AC_CHECK_MEMBERS([struct ifreq.ifr_hwaddr],,, [
 #include <sys/ioctl.h>
 #include <net/if.h>])
    
+dnl ######################################################################
+dnl Requirements for GetUptimeMinutes() to set $(sys.uptime)
+dnl ######################################################################
+dnl Linux sysinfo() call
+AC_CHECK_MEMBERS([struct sysinfo.uptime], , , [#include <sys/sysinfo.h>])
+
+dnl BSD uses sys/sysctl.h, Solaris uses kstat.h for boot-time information
+AC_CHECK_HEADERS(sys/sysctl.h kstat.h)
+
 dnl #######################################################################
 dnl Newer BSD systems don't have a compatible rtentry - use ortentry
 dnl #######################################################################

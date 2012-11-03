@@ -41,6 +41,59 @@
 # include <sys/mpctl.h>
 #endif
 
+/*****************************************************/
+// Uptime calculation settings for GetUptimeMinutes() - Mantis #1134
+// HP-UX: pstat_getproc(2) on init (pid 1)
+#ifdef HPuUX
+#define _PSTAT64
+#include <sys/param.h>
+#include <sys/pstat.h>
+#define BOOT_TIME_WITH_PSTAT_GETPROC
+#endif
+
+// Solaris: kstat() for kernel statistics
+// See http://dsc.sun.com/solaris/articles/kstatc.html
+// BSD also has a kstat.h (albeit in sys), so check SOLARIS just to be paranoid
+#if defined(SOLARIS) && defined(HAVE_KSTAT_H)
+#include <kstat.h>
+#define BOOT_TIME_WITH_KSTAT
+#endif
+
+// BSD: sysctl(3) to get kern.boottime, CPU count, etc.
+// See http://www.unix.com/man-page/FreeBSD/3/sysctl/
+// Linux also has sys/sysctl.h, so we check KERN_BOOTTIME to make sure it's BSD
+#ifdef HAVE_SYS_SYSCTL_H
+#include <sys/param.h>
+#include <sys/sysctl.h>
+#ifdef KERN_BOOTTIME 
+#define BOOT_TIME_WITH_SYSCTL
+#endif
+#endif
+
+// GNU/Linux: struct sysinfo.uptime
+#ifdef HAVE_STRUCT_SYSINFO_UPTIME
+#include <sys/sysinfo.h>
+#define BOOT_TIME_WITH_SYSINFO
+#endif
+
+// For anything else except Windows, try {stat("/proc/1")}.st_ctime
+#if !defined(MINGW) && !defined(NT)
+#define BOOT_TIME_WITH_PROCFS
+#endif
+
+#if defined(BOOT_TIME_WITH_SYSINFO) || defined(BOOT_TIME_WITH_SYSCTL) || \
+    defined(BOOT_TIME_WITH_KSTAT) || defined(BOOT_TIME_WITH_PSTAT_GETPROC) || \
+    defined(BOOT_TIME_WITH_PROCFS)
+#define CF_SYS_UPTIME_IMPLEMENTED
+static time_t GetBootTimeFromUptimeCommand(time_t); // Last resort
+#ifdef HAVE_PCRE_H
+# include <pcre.h>
+#endif
+#endif
+static int GetUptimeMinutes(time_t);
+
+/*****************************************************/
+
 void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname, char *uqname, char *domain);
 
 #ifdef LINUX
@@ -334,6 +387,8 @@ void GetNameInfo3()
         i = 0;
     }
 
+    snprintf(workbuf, CF_BUFSIZE, "%s", CLASSTEXT[i]);
+
 /*
  * solarisx86 is a historically defined class for Solaris on x86. We have to
  * define it manually now.
@@ -347,26 +402,42 @@ void GetNameInfo3()
 
     DetectDomainName(VSYSNAME.nodename);
 
+    CfOut(cf_verbose, "",
+        "%s\n"
+        "------------------------------------------------------------------------\n\n"
+        "Host name is: %s\n"
+        "Operating System Type is %s\n"
+        "Operating System Release is %s\n"
+        "Architecture = %s\n\n\n"
+        "Using internal soft-class %s for host %s\n\n",
+            NameVersion(), VSYSNAME.nodename, VSYSNAME.sysname,
+            VSYSNAME.release, VSYSNAME.machine, workbuf, VSYSNAME.nodename);
+
     if ((tloc = time((time_t *) NULL)) == -1)
     {
-        printf("Couldn't read system clock\n");
+        CfOut(cf_error, "time", "!! can't read system clock\n");
     }
-
-    snprintf(workbuf, CF_BUFSIZE, "%s", CLASSTEXT[i]);
-
-    CfOut(cf_verbose, "", "%s", NameVersion());
-
-    CfOut(cf_verbose, "", "------------------------------------------------------------------------\n\n");
-    CfOut(cf_verbose, "", "Host name is: %s\n", VSYSNAME.nodename);
-    CfOut(cf_verbose, "", "Operating System Type is %s\n", VSYSNAME.sysname);
-    CfOut(cf_verbose, "", "Operating System Release is %s\n", VSYSNAME.release);
-    CfOut(cf_verbose, "", "Architecture = %s\n\n\n", VSYSNAME.machine);
-    CfOut(cf_verbose, "", "Using internal soft-class %s for host %s\n\n", workbuf, VSYSNAME.nodename);
-    CfOut(cf_verbose, "", "The time is now %s\n\n", cf_ctime(&tloc));
-    CfOut(cf_verbose, "", "------------------------------------------------------------------------\n\n");
+    else
+    {
+        snprintf(workbuf, CF_MAXVARSIZE, "%d", tloc);
+        NewScalar("sys", "systime", workbuf, cf_int);
+        snprintf(workbuf, CF_MAXVARSIZE, "%d", tloc / 86400);
+        NewScalar("sys", "sysday", workbuf, cf_int);
+        i = GetUptimeMinutes(tloc);
+        if (i != -1)
+        {
+            snprintf(workbuf, CF_MAXVARSIZE, "%d", i);
+            NewScalar("sys", "uptime", workbuf, cf_int);
+        }
+    }
 
     snprintf(workbuf, CF_MAXVARSIZE, "%s", cf_ctime(&tloc));
     Chop(workbuf);
+
+    CfOut(cf_verbose, "",
+        "The time is now %s\n\n"
+        "------------------------------------------------------------------------\n\n",
+            workbuf);
 
     NewScalar("sys", "date", workbuf, cf_str);
     NewScalar("sys", "cdate", CanonifyName(workbuf), cf_str);
@@ -2195,3 +2266,173 @@ static void GetCPUInfo()
     }
 
 }
+
+/******************************************************************/
+
+static int GetUptimeMinutes(time_t now)
+// Return the number of minutes the system has been online given the current
+// time() as an argument, or return -1 if unavailable or unimplemented.
+{
+#ifdef CF_SYS_UPTIME_IMPLEMENTED
+    time_t boot_time = 0;
+#endif
+
+#if defined(BOOT_TIME_WITH_SYSINFO)         // Most GNU, Linux platforms
+    struct sysinfo s;
+
+    if (sysinfo(&s) == 0) 
+    {
+       // Don't return yet, sanity checking below
+       boot_time = now - s.uptime;
+    }
+
+#elif defined(BOOT_TIME_WITH_KSTAT)         // Solaris platform
+#define NANOSECONDS_PER_SECOND 1000000000
+    kstat_ctl_t *kc;
+    kstat_t *kp;
+
+    if(kc = kstat_open())
+    {
+        if(kp = kstat_lookup(kc, "unix", 0, "system_misc"))
+        {
+            boot_time = (time_t)(kp->ks_crtime / NANOSECONDS_PER_SECOND);
+        }
+        kstat_close(kc);
+    }
+
+#elif defined(BOOT_TIME_WITH_PSTAT_GETPROC) // HP-UX platform only
+    struct pst_status p;
+
+    if (pstat_getproc(&p, sizeof(p), 0, 1) == 1)
+    {
+        boot_time = (time_t)p.pst_start;
+    }
+
+#elif defined(BOOT_TIME_WITH_SYSCTL)        // BSD-derived platforms
+    int mib[2] = { CTL_KERN, KERN_BOOTTIME };
+    struct timeval boot;
+    size_t len;
+
+    len = sizeof(boot);
+    if (sysctl(mib, 2, &boot, &len, NULL, 0) == 0)
+    {
+        boot_time = boot.tv_sec;
+    }
+
+#elif defined(BOOT_TIME_WITH_PROCFS)        // Second-to-last resort: procfs
+    struct stat p;
+
+    if (stat("/proc/1", &p) == 0)
+    {
+        boot_time = p.st_ctime;
+    }
+
+#endif
+
+#ifdef CF_SYS_UPTIME_IMPLEMENTED
+    if(errno)
+    {
+        CfOut(cf_error, "", "!! boot time discovery error: %s\n", strerror(errno));
+    }
+
+    if(boot_time > now || boot_time <= 0)
+    {
+        CfDebug("invalid boot time found; trying uptime command\n");
+        boot_time = GetBootTimeFromUptimeCommand(now);
+    }
+
+    return(boot_time > 0 ? ((now - boot_time) / SECONDS_PER_MINUTE) : -1);
+#else
+// Native NT build: MINGW; NT build: NT
+// Maybe use "ULONGLONG WINAPI GetTickCount()" on Windows?
+    CfOut(cf_verbose, "", "!! $(sys.uptime) is not implemented on this platform\n");
+    return(-1);
+#endif
+}
+
+/******************************************************************/
+
+#ifdef CF_SYS_UPTIME_IMPLEMENTED
+// Last resort: parse the output of the uptime command with a PCRE regexp
+// and convert the uptime to boot time using "now" argument.
+//
+// The regexp needs to match all variants of the uptime command's output.
+// Solaris 8:     10:45am up 109 day(s), 19:56, 1 user, load average: 
+// HP-UX 11.11:   9:24am  up 1 min,  1 user,  load average:
+//                8:23am  up 23 hrs,  0 users,  load average:
+//                9:33am  up 2 days, 10 mins,  0 users,  load average:
+//                11:23am  up 2 days, 2 hrs,  0 users,  load average:
+// Red Hat Linux: 10:51:23 up 5 days, 19:54, 1 user, load average: 
+//
+// UPTIME_BACKREFS must be set to this regexp's maximum backreference
+// index number (i.e., the count of left-parentheses):
+#define UPTIME_REGEXP " up (\\d+ day[^,]*,|) *(\\d+( ho?u?r|:(\\d+))|(\\d+) min)"
+#define UPTIME_BACKREFS 5
+#define UPTIME_OVECTOR ((UPTIME_BACKREFS + 1) * 3)
+
+static time_t GetBootTimeFromUptimeCommand(time_t now)
+{
+    FILE *uptimecmd;
+    pcre *rx;
+    int ovector[UPTIME_OVECTOR], i, seconds;
+    char uptime_output[CF_SMALLBUF] = { '\0' }, *backref;
+    const char *uptimepath = "/usr/bin/uptime";
+    time_t uptime = 0;
+    
+    rx = pcre_compile(UPTIME_REGEXP, PCRE_FIRSTLINE, NULL, NULL, NULL);
+    if (rx == NULL)
+    {
+        CfDebug("failed to compile regexp to parse uptime command\n"); 
+        return(-1);
+    }
+
+    // Try "/usr/bin/uptime" first, then "/bin/uptime"
+    uptimecmd = cf_popen(uptimepath, "r");
+    uptimecmd = uptimecmd ? uptimecmd : cf_popen((uptimepath + 4), "r");
+    if (uptimecmd)
+    {
+        CfReadLine(uptime_output, CF_SMALLBUF, uptimecmd);
+        cf_pclose(uptimecmd);
+    }
+    else
+    {
+        CfOut(cf_error, "cf_popen", "!! uptime failed: %s\n", strerror(errno));
+    }
+
+    i = strlen(uptime_output);
+    if ((i != 0) && (pcre_exec(rx, NULL, (const char *)uptime_output, i, 0, 0, ovector, UPTIME_OVECTOR) > 1))
+    {
+        for (i = 1; i <= UPTIME_BACKREFS ; i++)
+        {
+            if (ovector[i * 2 + 1] - ovector[i * 2] == 0) // strlen(backref)
+            {
+                continue;
+            }
+            backref = uptime_output + ovector[i * 2];
+            // atoi() ignores non-digits, so no need to null-terminate backref
+            switch(i)
+            {
+                case 1: // Day
+                    seconds = SECONDS_PER_DAY;
+                    break;
+                case 2: // Hour
+                    seconds = SECONDS_PER_HOUR;
+                    break;
+                case 4: // Minute
+                case 5:
+                    seconds = SECONDS_PER_MINUTE;
+                    break;
+                default:
+                    seconds = 0;
+             }
+             uptime += atoi(backref) * seconds;
+        }
+    }
+    else
+    {
+        CfOut(cf_error, "pcre_exec", "uptime PCRE match failed: regexp: '%s', uptime: '%s'\n", UPTIME_REGEXP, uptime_output);
+    }
+    pcre_free(rx);
+    return(uptime ? (now - uptime) : -1);
+}
+#endif

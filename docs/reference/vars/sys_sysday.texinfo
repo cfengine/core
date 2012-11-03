@@ -1,0 +1,14 @@
+
+A variable containing the time since the UNIX Epoch (00:00:00 UTC, January 1,
+1970), measured in days. It is equivalent to @code{sys.systime} divided by the
+number of seconds in a day, expressed as an integer. No time zone conversion
+is performed, the direct result of the time() system call is used. This value
+is most commonly used in the /etc/shadow file.
+
+@verbatim
+
+# sysday = 15656
+
+Corresponds to Monday, November 12, 2012.
+
+@end verbatim

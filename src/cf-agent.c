@@ -1341,6 +1341,7 @@ static void ParallelFindAndVerifyFilesPromises(Promise *pp, const ReportContext 
     {
         CfOut(cf_verbose, "",
               " !> Promised parallel execution promised but exceeded the max number of promised background tasks, so serializing");
+        background = 0;
     }
 
     if (child == 0 || !background)

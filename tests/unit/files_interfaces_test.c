@@ -114,7 +114,6 @@ int main()
         unit_test(test_cfreadline_valid),
         unit_test(test_cfreadline_corrupted),
         unit_test(test_cfreadline_empty),
-        unit_test(test_cfreadline_null),
     };
 
     PRINT_TEST_BANNER();

@@ -1,5 +1,5 @@
 masterfilesdir = $(projdatadir)/CoreBase
-dist_masterfiles_DATA = $(srcdir)/promises.cf $(srcdir)/def.cf
+dist_masterfiles_DATA = $(srcdir)/promises.cf $(srcdir)/def.cf $(srcdir)/cf-sketch-runfile.cf
 
 failsafedir = $(masterfilesdir)/failsafe
 dist_failsafe_DATA = $(srcdir)/failsafe/failsafe.cf

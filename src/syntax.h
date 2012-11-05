@@ -33,6 +33,7 @@ int LvalWantsBody(char *stype, char *lval);
 int CheckParseVariableName(char *name);
 void CheckConstraint(char *type, char *ns, char *name, char *lval, Rval rval, SubTypeSyntax ss);
 void CheckSelection(char *type, char *name, char *lval, Rval rval);
+void CheckSelectionP(char *type, char *name, char *lval, Rval rval, int *pos);
 void CheckConstraintTypeMatch(const char *lval, Rval rval, enum cfdatatype dt, const char *range, int level);
 int CheckParseClass(const char *lv, const char *s, const char *range);
 enum cfdatatype StringDataType(const char *scopeid, const char *string);
@@ -49,5 +50,7 @@ void PolicyPrintAsJson(Writer *writer, const char *filename, Bundle *bundles, Bo
 /* print language elements using official formatting */
 void BodyPrettyPrint(Writer *writer, Body *body);
 void BundlePrettyPrint(Writer *writer, Bundle *bundle);
+
+struct worddist;
 
 #endif

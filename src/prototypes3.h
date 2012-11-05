@@ -477,7 +477,6 @@ bool HostKeyAddressUnknown(const char *value);
 /* logging.c */
 
 void BeginAudit(void);
-void EndAudit(void);
 void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, char *error);
 void PromiseLog(char *s);
 void FatalError(char *s, ...) FUNC_ATTR_NORETURN FUNC_ATTR_PRINTF(1, 2);
@@ -515,6 +514,8 @@ int ReceiveTransaction(int sd, char *buffer, int *more);
 int RecvSocketStream(int sd, char *buffer, int toget, int nothing);
 int SendSocketStream(int sd, char *buffer, int toget, int flags);
 
+int SetReceiveTimeout(int sd, const struct timeval *timeout);
+
 /* nfs.c */
 
 #ifndef MINGW
@@ -544,9 +545,15 @@ int cf_closesocket(int sd);
 int cf_mkdir(const char *path, mode_t mode);
 int cf_chmod(const char *path, mode_t mode);
 int cf_rename(const char *oldpath, const char *newpath);
+
+#if !defined(__MINGW32__)
+#define OpenNetwork() /* noop */
+#define CloseNetwork() /* noop */
+#else
 void OpenNetwork(void);
 void CloseNetwork(void);
-void CloseWmi(void);
+#endif
+
 int LinkOrCopy(const char *from, const char *to, int sym);
 int ExclusiveLockFile(int fd);
 int ExclusiveUnlockFile(int fd);
@@ -598,7 +605,6 @@ void Summarize(void);
 /* signals.c */
 
 void HandleSignals(int signum);
-void SelfTerminatePrelude(void);
 
 /* string_lib.c */
 

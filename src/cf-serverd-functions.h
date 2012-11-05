@@ -22,8 +22,8 @@
   included file COSL.txt.
 */
 
-#ifndef CFSERVERDFUNCTIONS_H
-#define CFSERVERDFUNCTIONS_H
+#ifndef CFENGINE_CF_SERVERD_FUNCTIONS_H
+#define CFENGINE_CF_SERVERD_FUNCTIONS_H
 
 #include "generic_agent.h"
 #include "server.h"

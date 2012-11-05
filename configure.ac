@@ -399,6 +399,7 @@ AC_CHECK_HEADERS(winsock2.h)
 AC_CHECK_HEADERS(zone.h)
 AC_CHECK_HEADERS(sys/uio.h)
 AC_CHECK_HEADERS(sys/types.h)
+AC_CHECK_HEADERS(sys/mpctl.h)	dnl For HP-UX $(sys.cpus) - Mantis #1069
 AC_CHECK_HEADERS(sys/jail.h, [], [], [AC_INCLUDES_DEFAULT
 #ifdef HAVE_SYS_PARAM_H
 # include <sys/param.h>
@@ -519,6 +520,9 @@ AC_REPLACE_FUNCS(strcasecmp)
 
 AC_CHECK_DECLS(strncasecmp)
 AC_REPLACE_FUNCS(strncasecmp)
+
+AC_CHECK_DECLS(strsep)
+AC_REPLACE_FUNCS(strsep)
 
 AC_CHECK_DECLS(strsignal)
 AC_REPLACE_FUNCS(strsignal)
@@ -764,6 +768,7 @@ esac
 AM_CONDITIONAL([LINUX], [test -n "`echo ${target_os} | grep linux`"])
 AM_CONDITIONAL([SOLARIS], [test -n "`(echo ${target_os} | egrep 'solaris|sunos')`"])
 AM_CONDITIONAL([NT], [test -n "`(echo ${target_os} | egrep 'mingw|cygwin')`"])
+AM_CONDITIONAL([CYGWIN], [test -n "`(echo ${target_os} | egrep 'cygwin')`"])
 AM_CONDITIONAL([AIX], [test -n "`(echo ${target_os} | grep aix)`"])
 AM_CONDITIONAL([HPUX], [test -n "`(echo ${target_os} | egrep 'hpux|hp-ux')`"])
 AM_CONDITIONAL([FREEBSD], [test -n "`(echo ${target_os} | grep freebsd)`"])

@@ -1,0 +1,58 @@
+# Tests that package upgrade works properly with "more than" version
+
+body common control
+{
+  inputs => { "../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle agent init
+{
+vars:
+  "dummy" string => "dummy";
+}
+
+body package_method yum_rpm
+{
+  package_changes => "individual";
+  package_list_command => "$(G.printf) 'which 1 i386'";
+
+  package_list_name_regex    => "^(\S+?)\s\S+?\s\S+$";
+  package_list_version_regex => "^\S+?\s(\S+?)\s\S+$";
+  package_list_arch_regex    => "^\S+?\s\S+?\s(\S+)$";
+
+  package_installed_regex => ".*";
+
+  package_add_command    => "$(G.false)";
+  package_update_command => "$(G.true)";
+  package_delete_command => "$(G.false)";
+}
+
+body classes ifrepaired(repaired_class)
+{
+promise_repaired => { "$(repaired_class)" };
+}
+
+bundle agent test
+{
+packages:
+   "which" 
+    package_policy => "addupdate",
+    package_select => ">",
+    package_version => "2",
+    package_method => yum_rpm,
+    classes => ifrepaired("whichrepaired");  
+}
+
+bundle agent check
+{
+reports:
+  whichrepaired::
+    "$(this.promise_filename) Pass";
+  !whichrepaired::
+    "$(this.promise_filename) FAIL";
+}

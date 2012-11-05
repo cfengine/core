@@ -13,8 +13,18 @@ fi
 # ...@image{filename,...,...,..}... -> filename.png
 # ...@image{filename,...,...,..,extension}... -> filename.extension
 
-sed -n \
- -e 's/^@c .*//' \
- -e 's/^.*@image{\([^,]*\),[^,]*,[^,]*,[^,]*,\([^,}]*\)}.*$/\1.\2/p' \
- -e 's/^.*@image{\([^,]*\)[^}]*}.*$/\1.png/p' \
- "$@"
+for f in "$@"; do
+  d=$(dirname "$f")
+  images=$(sed -n \
+    -e 's%^@c .*%%' \
+    -e 's%^.*@image{\([^,]*\),[^,]*,[^,]*,[^,]*,\([^,}]*\)}.*$%'"$d"'/\1.\2%p' \
+    -e 's%^.*@image{\([^,]*\)[^}]*}.*$%'"$d"'/\1.png%p' \
+   "$f")
+   for image in $images; do
+     if [ -f $(basename "$image") ]; then
+       printf "%s\n" $(basename "$image")
+     else
+       printf "%s\n" "$image"
+     fi
+   done
+done

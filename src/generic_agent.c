@@ -41,12 +41,17 @@
 #include "expand.h"
 #include "transaction.h"
 #include "scope.h"
+#include "atexit.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"
 #else
 #include "reporting.h"
 #endif
+
+static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT;
+
+static char PIDFILE[CF_BUFSIZE];
 
 extern char *CFH[][2];
 
@@ -254,18 +259,6 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig config, const ReportC
     XML = 0;
 
     return policy;
-}
-
-/*****************************************************************************/
-
-void GenericDeInitialize()
-{
-    CfDebug("GenericDeInitialize()\n");
-
-    CloseWmi();
-    CloseNetwork();
-    CloseLog();
-    CloseAllDB();
 }
 
 /*****************************************************************************/
@@ -1864,9 +1857,28 @@ const char *NameVersion(void)
 
 /********************************************************************/
 
+static void CleanPidFile(void)
+{
+    if (unlink(PIDFILE) != 0)
+    {
+        if (errno != ENOENT)
+        {
+            CfOut(cf_error, "unlink", "Unable to remove pid file");
+        }
+    }
+}
+
+static void RegisterPidCleanup(void)
+{
+    RegisterAtExitFunction(&CleanPidFile);
+}
+
+
 void WritePID(char *filename)
 {
     FILE *fp;
+
+    pthread_once(&pid_cleanup_once, RegisterPidCleanup);
 
     snprintf(PIDFILE, CF_BUFSIZE - 1, "%s%c%s", CFWORKDIR, FILE_SEPARATOR, filename);
 

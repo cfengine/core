@@ -33,8 +33,11 @@
 #include "files_interfaces.h"
 #include "item_lib.h"
 #include "expand.h"
+#include "atexit.h"
 
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
+
+static pthread_once_t lock_cleanup_once = PTHREAD_ONCE_INIT;
 
 static void WaitForCriticalSection(void);
 static void ReleaseCriticalSection(void);
@@ -51,7 +54,7 @@ static bool WriteLockData(CF_DB *dbp, char *lock_id, LockData *lock_data);
 
 void SummarizeTransaction(Attributes attr, const Promise *pp, const char *logname)
 {
-    if (logname && attr.transaction.log_string)
+    if (logname && (attr.transaction.log_string))
     {
         char buffer[CF_EXPANDSIZE];
 
@@ -85,7 +88,7 @@ void SummarizeTransaction(Attributes attr, const Promise *pp, const char *lognam
     }
     else if (attr.transaction.log_failed)
     {
-        if (logname && strcmp(logname, attr.transaction.log_failed) == 0)
+        if (logname && (strcmp(logname, attr.transaction.log_failed) == 0))
         {
             cfPS(cf_log, CF_NOP, "", pp, attr, "%s", attr.transaction.log_string);
         }
@@ -93,6 +96,23 @@ void SummarizeTransaction(Attributes attr, const Promise *pp, const char *lognam
 }
 
 /*****************************************************************************/
+
+static void LocksCleanup(void)
+{
+    if (strlen(CFLOCK) > 0)
+    {
+        CfLock best_guess;
+        best_guess.lock = xstrdup(CFLOCK);
+        best_guess.last = xstrdup(CFLAST);
+        best_guess.log = xstrdup(CFLOG);
+        YieldCurrentLock(best_guess);
+    }
+}
+
+static void RegisterLockCleanup(void)
+{
+    RegisterAtExitFunction(&LocksCleanup);
+}
 
 CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promise *pp, int ignoreProcesses)
 {
@@ -104,6 +124,9 @@ CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promi
     char str_digest[CF_BUFSIZE];
     CfLock this;
     unsigned char digest[EVP_MAX_MD_SIZE + 1];
+
+    /* Register a cleanup handler */
+    pthread_once(&lock_cleanup_once, &RegisterLockCleanup);
 
     this.last = (char *) CF_UNDEFINED;
     this.lock = (char *) CF_UNDEFINED;
@@ -248,7 +271,7 @@ CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promi
 
                     err = GracefulTerminate(pid);
 
-                    if (err || errno == ESRCH || errno == ETIMEDOUT)
+                    if (err || (errno == ESRCH) || (errno == ETIMEDOUT))
                     {
                         LogLockCompletion(cflog, pid, "Lock expired, process killed", cc_operator, cc_operand);
                         unlink(cflock);
@@ -320,6 +343,13 @@ void YieldCurrentLock(CfLock this)
         free(this.log);
         return;
     }
+
+    /* This lock has ben yield'ed, don't try to yield it again in case process
+     * is terminated abnormally.
+     */
+    strcpy(CFLOCK, "");
+    strcpy(CFLAST, "");
+    strcpy(CFLOG, "");
 
     LogLockCompletion(this.log, getpid(), "Lock removed normally ", this.lock, "");
 
@@ -815,7 +845,7 @@ void PurgeLocks()
 
         if (now - entry.time > (time_t) CF_LOCKHORIZON)
         {
-            CfOut(cf_verbose, "", " --> Purging lock (%ld) %s", now - entry.time, key);
+            CfOut(cf_verbose, "", " --> Purging lock (%jd) %s", (intmax_t)(now - entry.time), key);
             DBCursorDeleteEntry(dbcp);
         }
     }
@@ -874,7 +904,7 @@ int ShiftChange(void)
 
 bool EnforcePromise(enum cfopaction action)
 {
-    return (!DONTDO && action != cfa_warn);
+    return ((!DONTDO) && (action != cfa_warn));
 }
 
 static char SYSLOG_HOST[CF_BUFSIZE] = "localhost";

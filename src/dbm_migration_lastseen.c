@@ -67,11 +67,11 @@ static bool LastseenMigrationVersion0(DBHandle *db)
         }
 
         /* Only look for old [+-]kH -> IP<QPoint> entries */
-        if (key[0] != '+' && key[0] != '-')
+        if ((key[0] != '+') && (key[0] != '-'))
         {
             /* Warn about completely unexpected keys */
 
-            if (key[0] != 'q' && key[0] != 'k' && key[0] != 'a')
+            if ((key[0] != 'q') && (key[0] != 'k') && (key[0] != 'a'))
             {
                 CfOut(cf_inform, "", "LastseenMigrationVersion0: Malformed key found: %s", key);
             }
@@ -124,10 +124,10 @@ static bool LastseenMigrationVersion0(DBHandle *db)
            Ignore malformed connection quality data
         */
 
-        if (!isfinite(old_data_q.q)
-            || old_data_q.q < 0
-            || !isfinite(old_data_q.expect)
-            || !isfinite(old_data_q.var))
+        if ((!isfinite(old_data_q.q))
+            || (old_data_q.q < 0)
+            || (!isfinite(old_data_q.expect))
+            || (!isfinite(old_data_q.var)))
         {
             CfOut(cf_inform, "", "Ignoring malformed connection quality data for %s", key);
             DBCursorDeleteEntry(cursor);
@@ -171,7 +171,7 @@ static bool LastseenMigrationVersion0(DBHandle *db)
         errors = true;
     }
 
-    if (!errors && !WriteDB(db, "version", "1", sizeof("1")))
+    if ((!errors) && (!WriteDB(db, "version", "1", sizeof("1"))))
     {
         errors = true;
     }

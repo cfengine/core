@@ -223,6 +223,10 @@ size_t strlcpy(char *destination, const char *source, size_t size);
 size_t strlcat(char *destination, const char *source, size_t size);
 #endif
 
+#if !HAVE_DECL_STRSEP
+char *strsep(char **stringp, const char *delim);
+#endif
+
 #ifdef DARWIN
 # include <sys/malloc.h>
 # include <sys/paths.h>

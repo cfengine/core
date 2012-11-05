@@ -76,7 +76,7 @@ bundle edit_xml test_delete_attribute(str)
 {
 delete_attribute:
         "$(str)"
-        select_xpath_region => "/Potatoes/Potato[@topping=\'brocolli\']";
+        select_xpath => "/Potatoes/Potato[@topping=\'brocolli\']";
 }
 
 #######################################################

@@ -159,7 +159,7 @@ void ServerEntryPoint(int sd_reply, char *ipaddr, ServerAccess sv)
     
     CfOut(cf_verbose, "", "Obtained IP address of %s on socket %d from accept\n", ipaddr, sd_reply);
     
-    if (sv.nonattackerlist && !IsMatchItemIn(sv.nonattackerlist, MapAddress(ipaddr)))
+    if ((sv.nonattackerlist) && (!IsMatchItemIn(sv.nonattackerlist, MapAddress(ipaddr))))
     {
         CfOut(cf_error, "", "Not allowing connection from non-authorized IP %s\n", ipaddr);
         cf_closesocket(sd_reply);
@@ -370,6 +370,12 @@ static void *HandleConnection(ServerConnectionState *conn)
 
     DisableSendDelays(conn->sd_reply);
 
+    struct timeval tv = {
+        .tv_sec = CONNTIMEOUT,
+    };
+
+    SetReceiveTimeout(conn->sd_reply, &tv);
+
     while (BusyWithConnection(conn))
     {
     }
@@ -516,7 +522,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
         memset(filename, 0, CF_BUFSIZE);
         sscanf(recvbuffer, "GET %d %[^\n]", &(get_args.buf_size), filename);
 
-        if (get_args.buf_size < 0 || get_args.buf_size > CF_BUFSIZE)
+        if ((get_args.buf_size < 0) || (get_args.buf_size > CF_BUFSIZE))
         {
             CfOut(cf_inform, "", "GET buffer out of bounds\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -576,7 +582,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
             return true;
         }
 
-        if (get_args.buf_size < 0 || get_args.buf_size > 8192)
+        if ((get_args.buf_size < 0) || (get_args.buf_size > 8192))
         {
             CfOut(cf_inform, "", "SGET bounding error\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -620,7 +626,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
         memset(buffer, 0, CF_BUFSIZE);
         sscanf(recvbuffer, "SOPENDIR %u", &len);
 
-        if (len >= sizeof(out) || received != len + CF_PROTO_OFFSET)
+        if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
         {
             CfOut(cf_verbose, "", "Protocol error OPENDIR: %d\n", len);
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -692,7 +698,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
         memset(buffer, 0, CF_BUFSIZE);
         sscanf(recvbuffer, "SSYNCH %u", &len);
 
-        if (len >= sizeof(out) || received != len + CF_PROTO_OFFSET)
+        if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
         {
             CfOut(cf_verbose, "", "Protocol error SSYNCH: %d\n", len);
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -739,7 +745,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
 
         trem = (time_t) time_no_see;
 
-        if (time_no_see == 0 || filename[0] == '\0')
+        if ((time_no_see == 0) || (filename[0] == '\0'))
         {
             break;
         }
@@ -780,7 +786,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
 
         sscanf(recvbuffer, "SMD5 %u", &len);
 
-        if (len >= sizeof(out) || received != len + CF_PROTO_OFFSET)
+        if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
         {
             CfOut(cf_inform, "", "Decryption error\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -815,7 +821,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
 
         sscanf(recvbuffer, "SVAR %u", &len);
 
-        if (len >= sizeof(out) || received != len + CF_PROTO_OFFSET)
+        if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
         {
             CfOut(cf_inform, "", "Decrypt error SVAR\n");
             RefuseAccess(conn, sendbuffer, 0, "decrypt error SVAR");
@@ -858,7 +864,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
 
         sscanf(recvbuffer, "SCONTEXT %u", &len);
 
-        if (len >= sizeof(out) || received != len + CF_PROTO_OFFSET)
+        if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
         {
             CfOut(cf_inform, "", "Decrypt error SCONTEXT, len,received = %d,%d\n", len, received);
             RefuseAccess(conn, sendbuffer, 0, "decrypt error SCONTEXT");
@@ -901,7 +907,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
 
         sscanf(recvbuffer, "SQUERY %u", &len);
 
-        if (len >= sizeof(out) || received != len + CF_PROTO_OFFSET)
+        if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
         {
             CfOut(cf_inform, "", "Decrypt error SQUERY\n");
             RefuseAccess(conn, sendbuffer, 0, "decrypt error SQUERY");
@@ -943,7 +949,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
 
         sscanf(recvbuffer, "SCALLBACK %u", &len);
 
-        if (len >= sizeof(out) || received != len + CF_PROTO_OFFSET)
+        if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
         {
             CfOut(cf_inform, "", "Decrypt error CALL_ME_BACK\n");
             RefuseAccess(conn, sendbuffer, 0, "decrypt error CALL_ME_BACK");
@@ -1083,14 +1089,14 @@ static void DoExec(ServerConnectionState *conn, char *sendbuffer, char *args)
 
     for (sp = args; *sp != '\0'; sp++)  /* Blank out -K -f */
     {
-        if (*sp == ';' || *sp == '&' || *sp == '|')
+        if ((*sp == ';') || (*sp == '&') || (*sp == '|'))
         {
             sprintf(sendbuffer, "You are not authorized to activate these classes/roles on host %s\n", VFQNAME);
             SendTransaction(conn->sd_reply, sendbuffer, 0, CF_DONE);
             return;
         }
 
-        if (OptionFound(args, sp, "-K") || OptionFound(args, sp, "-f"))
+        if ((OptionFound(args, sp, "-K")) || (OptionFound(args, sp, "-f")))
         {
             *sp = ' ';
             *(sp + 1) = ' ';
@@ -1109,7 +1115,7 @@ static void DoExec(ServerConnectionState *conn, char *sendbuffer, char *args)
                 *(sp + i) = ' ';
             }
         }
-        else if (OptionFound(args, sp, "--define") || OptionFound(args, sp, "-D"))
+        else if ((OptionFound(args, sp, "--define")) || (OptionFound(args, sp, "-D")))
         {
             CfOut(cf_verbose, "", "Attempt to activate a predefined role..\n");
 
@@ -1255,7 +1261,7 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
    on trust. Once we have a positive key ID, the IP address is irrelevant fr authentication...
    We can save a lot of time by not looking this up ... */
 
-    if ((conn->trust == false) || IsMatchItemIn(SV.skipverify, MapAddress(conn->ipaddr)))
+    if ((conn->trust == false) || (IsMatchItemIn(SV.skipverify, MapAddress(conn->ipaddr))))
     {
         CfOut(cf_verbose, "", "Allowing %s to connect without (re)checking ID\n", ip_assert);
         CfOut(cf_verbose, "", "Non-verified Host ID is %s (Using skipverify)\n", dns_assert);
@@ -1572,8 +1578,8 @@ static int AccessControl(const char *req_path, ServerConnectionState *conn, int 
         strncpy(transpath, ap->path, CF_BUFSIZE - 1);
         MapName(transpath);
 
-        if ((strlen(transrequest) > strlen(transpath)) && strncmp(transpath, transrequest, strlen(transpath)) == 0
-            && transrequest[strlen(transpath)] == FILE_SEPARATOR)
+        if ((strlen(transrequest) > strlen(transpath)) && (strncmp(transpath, transrequest, strlen(transpath)) == 0)
+            && (transrequest[strlen(transpath)] == FILE_SEPARATOR))
         {
             res = true;         /* Substring means must be a / to link, else just a substring og filename */
         }
@@ -1602,7 +1608,7 @@ static int AccessControl(const char *req_path, ServerConnectionState *conn, int 
                 continue;
             }
 
-            if (!encrypt && (ap->encrypt == true))
+            if ((!encrypt) && (ap->encrypt == true))
             {
                 CfOut(cf_error, "", "File %s requires encrypt connection...will not serve\n", transpath);
                 access = false;
@@ -1611,14 +1617,14 @@ static int AccessControl(const char *req_path, ServerConnectionState *conn, int 
             {
                 CfDebug("Checking whether to map root privileges..\n");
 
-                if (IsMatchItemIn(ap->maproot, MapAddress(conn->ipaddr)) || IsRegexItemIn(ap->maproot, conn->hostname))
+                if ((IsMatchItemIn(ap->maproot, MapAddress(conn->ipaddr))) || (IsRegexItemIn(ap->maproot, conn->hostname)))
                 {
                     conn->maproot = true;
                     CfOut(cf_verbose, "", "Mapping root privileges to access non-root files\n");
                 }
 
-                if (IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr))
-                    || IsRegexItemIn(ap->accesslist, conn->hostname))
+                if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
+                    || (IsRegexItemIn(ap->accesslist, conn->hostname)))
                 {
                     access = true;
                     CfDebug("Access privileges - match found\n");
@@ -1707,7 +1713,7 @@ static int LiteralAccessControl(char *in, ServerConnectionState *conn, int encry
         {
             CfOut(cf_verbose, "", "Found a matching rule in access list (%s in %s)\n", name, ap->path);
 
-            if (!ap->literal && !ap->variable)
+            if ((!ap->literal) && (!ap->variable))
             {
                 CfOut(cf_error, "",
                       "Variable/query \"%s\" requires a literal server item...cannot set variable directly by path\n",
@@ -1716,7 +1722,7 @@ static int LiteralAccessControl(char *in, ServerConnectionState *conn, int encry
                 break;
             }
 
-            if (!encrypt && (ap->encrypt == true))
+            if ((!encrypt) && (ap->encrypt == true))
             {
                 CfOut(cf_error, "", "Variable %s requires encrypt connection...will not serve\n", name);
                 access = false;
@@ -1726,7 +1732,7 @@ static int LiteralAccessControl(char *in, ServerConnectionState *conn, int encry
             {
                 CfDebug("Checking whether to map root privileges..\n");
 
-                if (IsMatchItemIn(ap->maproot, MapAddress(conn->ipaddr)) || IsRegexItemIn(ap->maproot, conn->hostname))
+                if ((IsMatchItemIn(ap->maproot, MapAddress(conn->ipaddr))) || (IsRegexItemIn(ap->maproot, conn->hostname)))
                 {
                     conn->maproot = true;
                     CfOut(cf_verbose, "", "Mapping root privileges\n");
@@ -1736,8 +1742,8 @@ static int LiteralAccessControl(char *in, ServerConnectionState *conn, int encry
                     CfOut(cf_verbose, "", "No root privileges granted\n");
                 }
 
-                if (IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr))
-                    || IsRegexItemIn(ap->accesslist, conn->hostname))
+                if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
+                    || (IsRegexItemIn(ap->accesslist, conn->hostname)))
                 {
                     access = true;
                     CfDebug("Access privileges - match found\n");
@@ -1750,8 +1756,8 @@ static int LiteralAccessControl(char *in, ServerConnectionState *conn, int encry
     {
         if (strcmp(ap->path, name) == 0)
         {
-            if (IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr))
-                || IsRegexItemIn(ap->accesslist, conn->hostname))
+            if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
+                || (IsRegexItemIn(ap->accesslist, conn->hostname)))
             {
                 access = false;
                 CfOut(cf_verbose, "", "Host %s explicitly denied access to %s\n", conn->hostname, name);
@@ -1863,7 +1869,7 @@ static Item *ContextAccessControl(char *in, ServerConnectionState *conn, int enc
                     continue;
                 }
 
-                if (!encrypt && (ap->encrypt == true))
+                if ((!encrypt) && (ap->encrypt == true))
                 {
                     CfOut(cf_error, "", "Context %s requires encrypt connection...will not serve\n", ip->name);
                     access = false;
@@ -1873,8 +1879,8 @@ static Item *ContextAccessControl(char *in, ServerConnectionState *conn, int enc
                 {
                     CfDebug("Checking whether to map root privileges..\n");
 
-                    if (IsMatchItemIn(ap->maproot, MapAddress(conn->ipaddr))
-                        || IsRegexItemIn(ap->maproot, conn->hostname))
+                    if ((IsMatchItemIn(ap->maproot, MapAddress(conn->ipaddr)))
+                        || (IsRegexItemIn(ap->maproot, conn->hostname)))
                     {
                         conn->maproot = true;
                         CfOut(cf_verbose, "", "Mapping root privileges\n");
@@ -1884,8 +1890,8 @@ static Item *ContextAccessControl(char *in, ServerConnectionState *conn, int enc
                         CfOut(cf_verbose, "", "No root privileges granted\n");
                     }
 
-                    if (IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr))
-                        || IsRegexItemIn(ap->accesslist, conn->hostname))
+                    if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
+                        || (IsRegexItemIn(ap->accesslist, conn->hostname)))
                     {
                         access = true;
                         CfDebug("Access privileges - match found\n");
@@ -1898,8 +1904,8 @@ static Item *ContextAccessControl(char *in, ServerConnectionState *conn, int enc
         {
             if (strcmp(ap->path, ip->name) == 0)
             {
-                if (IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr))
-                    || IsRegexItemIn(ap->accesslist, conn->hostname))
+                if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
+                    || (IsRegexItemIn(ap->accesslist, conn->hostname)))
                 {
                     access = false;
                     CfOut(cf_verbose, "", "Host %s explicitly denied access to context %s\n", conn->hostname, ip->name);
@@ -1971,10 +1977,11 @@ static int AuthorizeRoles(ServerConnectionState *conn, char *args)
             if (FullTextMatch(ap->path, rp->item))
             {
                 /* We have a pattern covering this class - so are we allowed to activate it? */
-                if (IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)) ||
-                    IsRegexItemIn(ap->accesslist, conn->hostname) ||
-                    IsRegexItemIn(ap->accesslist, userid1) ||
-                    IsRegexItemIn(ap->accesslist, userid2) || IsRegexItemIn(ap->accesslist, conn->username))
+                if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr))) ||
+                    (IsRegexItemIn(ap->accesslist, conn->hostname)) ||
+                    (IsRegexItemIn(ap->accesslist, userid1)) ||
+                    (IsRegexItemIn(ap->accesslist, userid2)) ||
+                    (IsRegexItemIn(ap->accesslist, conn->username)))
                 {
                     CfOut(cf_verbose, "", "Attempt to define role/class %s is permitted", ScalarValue(rp));
                     permitted = true;
@@ -2018,7 +2025,7 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     int digestLen = 0;
     enum cfhashes digestType;
 
-    if (PRIVKEY == NULL || PUBKEY == NULL)
+    if ((PRIVKEY == NULL) || (PUBKEY == NULL))
     {
         CfOut(cf_error, "", "No public/private key pair exists, create one with cf-key\n");
         return false;
@@ -2042,7 +2049,7 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
     sscanf(recvbuffer, "%s %c %u %u %c", sauth, &iscrypt, &crypt_len, &nonce_len, &enterprise_field);
 
-    if (crypt_len == 0 || nonce_len == 0 || strlen(sauth) == 0)
+    if ((crypt_len == 0) || (nonce_len == 0) || (strlen(sauth) == 0))
     {
         CfOut(cf_inform, "", "Protocol format error in authentation from IP %s\n", conn->hostname);
         return false;
@@ -2204,6 +2211,13 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     ThreadLock(cft_system);
 
     counter_challenge = BN_new();
+    if (counter_challenge == NULL)
+    {
+        CfOut(cf_error, "", "Cannot allocate BIGNUM structure for counter challenge\n");
+        RSA_free(newkey);
+        return false;
+    }
+
     BN_rand(counter_challenge, CF_NONCELEN, 0, 0);
     nonce_len = BN_bn2mpi(counter_challenge, in);
 
@@ -2402,7 +2416,7 @@ static int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilena
     }
 #endif /* NOT MINGW */
 
-    if (!islink && (cfstat(filename, &statbuf) == -1))
+    if ((!islink) && (cfstat(filename, &statbuf) == -1))
     {
         CfOut(cf_verbose, "stat", "BAD: unable to stat file %s\n", filename);
         SendTransaction(conn->sd_reply, sendbuffer, 0, CF_DONE);
@@ -2749,7 +2763,7 @@ static void CompareLocalHash(ServerConnectionState *conn, char *sendbuffer, char
 
 /* TODO - when safe change this proto string to sha2 */
 
-    sscanf(recvbuffer, "MD5 %255[^\n]", rfilename);
+    sscanf(recvbuffer, "MD5 %[^\n]", rfilename);
 
     sp = recvbuffer + strlen(recvbuffer) + CF_SMALL_OFFSET;
 
@@ -2764,7 +2778,7 @@ static void CompareLocalHash(ServerConnectionState *conn, char *sendbuffer, char
 
     HashFile(filename, digest2, CF_DEFAULT_DIGEST);
 
-    if (HashesMatch(digest1, digest2, CF_DEFAULT_DIGEST) || HashesMatch(digest1, digest2, cf_md5))
+    if ((HashesMatch(digest1, digest2, CF_DEFAULT_DIGEST)) || (HashesMatch(digest1, digest2, cf_md5)))
     {
         sprintf(sendbuffer, "%s", CFD_FALSE);
         CfDebug("Hashes matched ok\n");
@@ -3035,7 +3049,7 @@ static int OptionFound(char *args, char *pos, char *word)
 
 /* Single options do not have to have spaces between */
 
-    if (strlen(word) == 2 && strncmp(pos, word, 2) == 0)
+    if ((strlen(word) == 2) && (strncmp(pos, word, 2) == 0))
     {
         return true;
     }
@@ -3051,7 +3065,7 @@ static int OptionFound(char *args, char *pos, char *word)
     {
         return true;
     }
-    else if (*(pos - 1) == ' ' && (pos[len] == ' ' || pos[len] == '\0'))
+    else if ((*(pos - 1) == ' ') && ((pos[len] == ' ') || (pos[len] == '\0')))
     {
         return true;
     }
@@ -3161,7 +3175,7 @@ static int TransferRights(char *filename, int sd, ServerFileGetState *args, char
 
     uid_t uid = (args->connect)->uid;
 
-    if (uid != 0 && !args->connect->maproot)    /* should remote root be local root */
+    if ((uid != 0) && (!args->connect->maproot))    /* should remote root be local root */
     {
         if (sb->st_uid == uid)
         {
@@ -3258,7 +3272,7 @@ static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
 
 /* Finally, if we're still here, we should consider trusting a new key ... */
 
-    if ((SV.trustkeylist != NULL) && IsMatchItemIn(SV.trustkeylist, MapAddress(conn->ipaddr)))
+    if ((SV.trustkeylist != NULL) && (IsMatchItemIn(SV.trustkeylist, MapAddress(conn->ipaddr))))
     {
         CfOut(cf_verbose, "", "Host %s/%s was found in the list of hosts to trust\n", conn->hostname, conn->ipaddr);
         conn->trust = true;

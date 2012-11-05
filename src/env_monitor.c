@@ -35,6 +35,7 @@
 #include "reporting.h"
 #include "expand.h"
 #include "scope.h"
+#include "sysinfo.h"
 
 #include <math.h>
 
@@ -453,7 +454,7 @@ static void LeapDetection(void)
     {
         /* First do some anomaly rejection. Sudden jumps must be numerical errors. */
 
-        if (LDT_BUF[i][last_pos] > 0 && CF_THIS[i] / LDT_BUF[i][last_pos] > 1000)
+        if ((LDT_BUF[i][last_pos] > 0) && ((CF_THIS[i] / LDT_BUF[i][last_pos]) > 1000))
         {
             CF_THIS[i] = LDT_BUF[i][last_pos];
         }
@@ -786,7 +787,7 @@ static void UpdateDistributions(char *timekey, Averages *av)
             position =
                 CF_GRAINS / 2 + (int) (0.5 + (CF_THIS[i] - av->Q[i].expect) * CF_GRAINS / (4 * sqrt((av->Q[i].var))));
 
-            if (0 <= position && position < CF_GRAINS)
+            if ((0 <= position) && (position < CF_GRAINS))
             {
                 HISTOGRAM[i][day][position]++;
             }
@@ -831,7 +832,7 @@ static double WAverage(double anew, double aold, double age)
 
 /* First do some database corruption self-healing */
 
-    if (aold > cf_sane_monitor_limit && anew > cf_sane_monitor_limit)
+    if ((aold > cf_sane_monitor_limit) && (anew > cf_sane_monitor_limit))
     {
         return 0;
     }
@@ -848,7 +849,7 @@ static double WAverage(double anew, double aold, double age)
 
 /* Now look at the self-learning */
 
-    if (FORGETRATE > 0.9 || FORGETRATE < 0.1)
+    if ((FORGETRATE > 0.9) || (FORGETRATE < 0.1))
     {
         FORGETRATE = 0.6;
     }
@@ -864,7 +865,7 @@ static double WAverage(double anew, double aold, double age)
         wold = FORGETRATE;
     }
 
-    if (aold == 0 && anew == 0)
+    if ((aold == 0) && (anew == 0))
     {
         return 0;
     }
@@ -906,7 +907,7 @@ static double SetClasses(char *name, double variable, double av_expect, double a
 
     CfDebug(" delta = %lf,sigma = %lf, lsigma = %lf, sig = %lf\n", delta, sigma, lsigma, sig);
 
-    if (sigma == 0.0 || lsigma == 0.0)
+    if ((sigma == 0.0) || (lsigma == 0.0))
     {
         CfDebug(" No sigma variation .. can't measure class\n");
 
@@ -1129,6 +1130,16 @@ static void GatherPromisedMeasures(const Policy *policy, const ReportContext *re
     }
 
     DeleteAllScope();
+    NewScope("const");
+    NewScope("control_monitor");
+    NewScope("control_common");
+    NewScope("mon");
+    NewScope("sys");
+    GetNameInfo3();
+    GetInterfacesInfo(cf_monitor);
+    Get3Environment();
+    OSClasses();
+    BuiltinClasses();
 }
 
 /*********************************************************************/

@@ -127,7 +127,7 @@ void LoadSecretKeys()
     CfOut(cf_verbose, "", " -> Loaded public key %s\n", CFPUBKEYFILE);
     fclose(fp);
 
-    if (BN_num_bits(PUBKEY->e) < 2 || !BN_is_odd(PUBKEY->e))
+    if ((BN_num_bits(PUBKEY->e) < 2) || (!BN_is_odd(PUBKEY->e)))
     {
         FatalError("RSA Exponent too small or not odd");
     }
@@ -159,7 +159,7 @@ void LoadSecretKeys()
 
 // need to use cf_stat
 
-    if (stat(name, &sb) == -1 && stat(guard, &sb) != -1)
+    if ((stat(name, &sb) == -1) && (stat(guard, &sb) != -1))
         // copy localhost.pub to root-HASH.pub on policy server
     {
         LastSaw(POLICY_SERVER, digest, cf_connect);
@@ -250,7 +250,7 @@ RSA *HavePublicKey(char *username, char *ipaddress, char *digest)
 
     fclose(fp);
 
-    if (BN_num_bits(newkey->e) < 2 || !BN_is_odd(newkey->e))
+    if ((BN_num_bits(newkey->e) < 2) || (!BN_is_odd(newkey->e)))
     {
         FatalError("RSA Exponent too small or not odd");
     }

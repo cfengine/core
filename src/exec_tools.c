@@ -218,7 +218,7 @@ char **ArgSplitCommand(const char *comm)
         {
             arg = xstrndup(s, end - s);
             s = end;
-            if (*s == '"' || *s == '\'' || *s == '`')   /* Skip second delimeter */
+            if ((*s == '"') || (*s == '\'') || (*s == '`'))   /* Skip second delimeter */
                 s++;
         }
 

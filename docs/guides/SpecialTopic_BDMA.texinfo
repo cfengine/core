@@ -248,11 +248,7 @@ reports from all systems.
 
 The reports CFEngine provides are meant to offer simple summaries of
 the kind of information administrators need about their environment,
-avoiding unnecessary detail@footnote{Reporting intelligence is a major
-area of development in CFEngine, and the next commercial edition CFEngine Constellation
-will include a generic query-able semantic web of the integrated system, with
-correlation analyses and more. The capabilities for reporting grow exponentially
-as one progresses from Community Edition to Nova to Constellation.}.
+avoiding unnecessary detail.
 
 @table @emph
 @item Available patches report   

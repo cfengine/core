@@ -200,6 +200,13 @@ int WriteReturnValues(int retvals[MAX_THREADS], pthread_t tids[MAX_THREADS], int
     return failures;
 }
 
+static void Cleanup(void)
+{
+    char cmd[CF_BUFSIZE];
+    snprintf(cmd, CF_BUFSIZE, "rm -rf '%s'", CFWORKDIR);
+    system(cmd);
+}
+
 int main(int argc, char **argv)
 {
     if (argc != 2)
@@ -207,6 +214,9 @@ int main(int argc, char **argv)
         fprintf(stderr, "Usage: db_load <num_threads>\n");
         exit(1);
     }
+
+    /* To clean up after databases are closed */
+    atexit(&Cleanup);
 
     snprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/db_load.XXXXXX");
     mkdtemp(CFWORKDIR);
@@ -239,12 +249,6 @@ int main(int argc, char **argv)
     int retvals[MAX_THREADS];
 
     int failures = WriteReturnValues(retvals, tids, numthreads);
-
-    CloseAllDB();
-
-    char cmd[CF_BUFSIZE];
-    snprintf(cmd, CF_BUFSIZE, "rm -rf '%s'", CFWORKDIR);
-    system(cmd);
 
     exit(failures);
 }

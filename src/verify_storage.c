@@ -33,8 +33,10 @@ static void FindStoragePromiserObjects(Promise *pp, const ReportContext *report_
 static int VerifyFileSystem(char *name, Attributes a, Promise *pp);
 static int VerifyFreeSpace(char *file, Attributes a, Promise *pp);
 static void VolumeScanArrivals(char *file, Attributes a, Promise *pp);
+#if !defined(__MINGW32__)
 static int FileSystemMountedCorrectly(Rlist *list, char *name, char *options, Attributes a, Promise *pp);
 static int IsForeignFileSystem(struct stat *childstat, char *dir);
+#endif
 
 #ifndef MINGW
 static int VerifyMountPromise(char *file, Attributes a, Promise *pp, const ReportContext *report_context);
@@ -81,14 +83,14 @@ void VerifyStoragePromise(char *path, Promise *pp, const ReportContext *report_c
 
     if (a.mount.unmount)
     {
-        if (a.mount.mount_source || a.mount.mount_server)
+        if ((a.mount.mount_source) || (a.mount.mount_server))
         {
             CfOut(cf_verbose, "", " !! An unmount promise indicates a mount-source information - probably in error\n");
         }
     }
     else if (a.havemount)
     {
-        if (a.mount.mount_source == NULL || a.mount.mount_server == NULL)
+        if ((a.mount.mount_source == NULL) || (a.mount.mount_server == NULL))
         {
             CfOut(cf_error, "", " !! Insufficient specification in mount promise - need source and server\n");
             return;
@@ -105,7 +107,7 @@ void VerifyStoragePromise(char *path, Promise *pp, const ReportContext *report_c
 /* Do mounts first */
 
 #ifndef MINGW
-    if (!MOUNTEDFSLIST && !LoadMountInfo(&MOUNTEDFSLIST))
+    if ((!MOUNTEDFSLIST) && (!LoadMountInfo(&MOUNTEDFSLIST)))
     {
         CfOut(cf_error, "", "Couldn't obtain a list of mounted filesystems - aborting\n");
         YieldCurrentLock(thislock);
@@ -237,7 +239,6 @@ static int VerifyFileSystem(char *name, Attributes a, Promise *pp)
 static int VerifyFreeSpace(char *file, Attributes a, Promise *pp)
 {
     struct stat statbuf;
-    long kilobytes;
 
 #ifdef MINGW
     if (!a.volume.check_foreign)
@@ -263,31 +264,28 @@ static int VerifyFreeSpace(char *file, Attributes a, Promise *pp)
     }
 #endif /* NOT MINGW */
 
-    kilobytes = a.volume.freespace;
-
-    if (kilobytes < 0)
+    if (a.volume.freespace < 0)
     {
-        int free = (int) GetDiskUsage(file, cfpercent);
+        int threshold_percentage = -a.volume.freespace;
+        int free_percentage = GetDiskUsage(file, cfpercent);
 
-        kilobytes = -1 * kilobytes;
-
-        if (free < (int) kilobytes)
+        if (free_percentage < threshold_percentage)
         {
             cfPS(cf_error, CF_FAIL, "", pp, a,
-                 " !! Free disk space is under %ld%% for volume containing %s (%d%% free)\n", kilobytes, file, free);
+                 " !! Free disk space is under %d%% for volume containing %s (%d%% free)\n",
+                 threshold_percentage, file, free_percentage);
             return false;
         }
     }
     else
     {
-        off_t free = GetDiskUsage(file, cfabs);
+        off_t threshold = a.volume.freespace;
+        off_t free_bytes = GetDiskUsage(file, cfabs);
 
-        kilobytes = kilobytes / 1024;
-
-        if (free < kilobytes)
+        if (free_bytes < threshold)
         {
-            cfPS(cf_error, CF_FAIL, "", pp, a, " !! Disk space under %ld kB for volume containing %s (%lld kB free)\n",
-                 kilobytes, file, (long long) free);
+            cfPS(cf_error, CF_FAIL, "", pp, a, " !! Disk space under %jd kB for volume containing %s (%jd kB free)\n",
+                 (intmax_t) (threshold / 1024), file, (intmax_t) (free_bytes / 1024));
             return false;
         }
     }
@@ -304,6 +302,11 @@ static void VolumeScanArrivals(char *file, Attributes a, Promise *pp)
 
 /*******************************************************************/
 
+/*********************************************************************/
+/*  Unix-specific implementations                                    */
+/*********************************************************************/
+
+#if !defined(__MINGW32__)
 static int FileSystemMountedCorrectly(Rlist *list, char *name, char *options, Attributes a, Promise *pp)
 {
     Rlist *rp;
@@ -327,7 +330,7 @@ static int FileSystemMountedCorrectly(Rlist *list, char *name, char *options, At
 
             found = true;
 
-            if (a.mount.mount_source && (strcmp(mp->source, a.mount.mount_source) != 0))
+            if ((a.mount.mount_source) && (strcmp(mp->source, a.mount.mount_source) != 0))
             {
                 CfOut(cf_inform, "", "A different file system (%s:%s) is mounted on %s than what is promised\n",
                       mp->host, mp->source, name);
@@ -394,7 +397,7 @@ static int IsForeignFileSystem(struct stat *childstat, char *dir)
 
             if (!strcmp(entry->mounton, dir))
             {
-                if (entry->options && strstr(entry->options, "nfs"))
+                if ((entry->options) && (strstr(entry->options, "nfs")))
                 {
                     return (true);
                 }
@@ -405,12 +408,6 @@ static int IsForeignFileSystem(struct stat *childstat, char *dir)
     CfDebug("NotMountedFileSystem\n");
     return (false);
 }
-
-/*********************************************************************/
-/*  Unix-specific implementations                                    */
-/*********************************************************************/
-
-#ifndef MINGW
 
 static int VerifyMountPromise(char *name, Attributes a, Promise *pp, const ReportContext *report_context)
 {

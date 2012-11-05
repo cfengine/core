@@ -119,7 +119,7 @@ GenericAgentConfig CheckOpts(int argc, char **argv)
         {
         case 'f':
 
-            if (optarg && strlen(optarg) < 5)
+            if (optarg && (strlen(optarg) < 5))
             {
                 FatalError(" -f used but argument \"%s\" incorrect", optarg);
             }
@@ -271,7 +271,6 @@ void StartServer(Policy *policy, GenericAgentConfig config, const ReportContext 
 
     if ((!NO_FORK) && (fork() != 0))
     {
-        GenericDeInitialize();
         exit(0);
     }
 
@@ -550,6 +549,12 @@ void CheckFileChanges(Policy **policy, GenericAgentConfig config, const ReportCo
 
             DeleteAuthList(VADMIT);
             DeleteAuthList(VDENY);
+
+            DeleteAuthList(VARADMIT);
+            DeleteAuthList(VARDENY);
+
+            DeleteAuthList(ROLES);
+
             //DeleteRlist(VINPUTLIST); This is just a pointer, cannot free it
 
             DeleteAllScope();
@@ -559,6 +564,11 @@ void CheckFileChanges(Policy **policy, GenericAgentConfig config, const ReportCo
 
             VADMIT = VADMITTOP = NULL;
             VDENY = VDENYTOP = NULL;
+
+            VARADMIT = VARADMITTOP = NULL;
+            VARDENY = VARDENYTOP = NULL;
+
+            ROLES = ROLESTOP = NULL;
 
             VNEGHEAP = NULL;
             SV.trustkeylist = NULL;

@@ -959,7 +959,7 @@ int CfReadLine(char *buff, size_t size, FILE *fp)
         return false;
     }
 
-    if (getline(&buff, &size, fp) == -1)
+	if (fgets(buff, size, fp) == NULL)
     {
         *buff = '\0';           /* EOF */
         return false;

@@ -956,7 +956,7 @@ int CfReadLine(char *buff, size_t size, FILE *fp)
     if (!fp || ferror(fp))
     {
         CfOut(cf_error, "", " !! NULL or corrupt inputs to CfReadLine");
-        return false;
+        FatalError ("CfReadLine");
     }
 
 	if (fgets(buff, size, fp) == NULL)

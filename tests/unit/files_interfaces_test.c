@@ -105,22 +105,6 @@ static void test_cfreadline_empty(void **state)
     }
 }
 
-static void test_cfreadline_null(void **state)
-{
-    int read = 0;
-    char output[CF_BUFSIZE] = { 0 };
-    FILE *fin = NULL;
-
-    //test with NULL file pointer
-    read = CfReadLine(output, CF_BUFSIZE - 1, fin);
-    assert_int_equal(read, false);
-
-    if (fin)
-    {
-        fclose(fin);
-    }
-}
-
 int main()
 {
     tests_setup();

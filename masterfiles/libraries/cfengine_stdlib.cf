@@ -2067,23 +2067,6 @@ SuSE::
  package_patch_command => "/usr/bin/zypper --non-interactive patch$"; # $ means no args
  package_verify_command => "/usr/bin/zypper --non-interactive verify$";
 
-# package_changes => "bulk";
-# package_list_command => "/usr/bin/zypper packages";
-# package_patch_list_command => "/usr/bin/zypper patches";
-# package_installed_regex => "i.*";
-# package_list_name_regex    => "[^|]+\|[^|]+\|\s+([^\s]+).*";
-# package_list_version_regex => "[^|]+\|[^|]+\|[^|]+\|\s+([^\s]+).*";
-# package_list_arch_regex    => "[^|]+\|[^|]+\|[^|]+\|[^|]+\|\s+([^\s]+).*";
-# package_patch_installed_regex => ".*Installed.*|.*Not Applicable.*";
-# package_patch_name_regex    => "[^|]+\|\s+([^\s]+).*";
-# package_patch_version_regex => "[^|]+\|[^|]+\|\s+([^\s]+).*";
-# package_name_convention => "$(name)";
-# package_add_command => "/usr/bin/zypper --non-interactive install";
-# package_delete_command => "/usr/bin/zypper --non-interactive remove --force-resolution";
-# package_update_command => "/usr/bin/zypper --non-interactive update";
-# package_patch_command => "/usr/bin/zypper --non-interactive patch$"; # $ means no args
-# package_verify_command => "/usr/bin/zypper --non-interactive verify$";
-
 redhat::
  package_changes => "bulk";
  package_list_command => "/bin/rpm -qa --qf '%{name} %{version}-%{release} %{arch}\n'";
@@ -2835,4 +2818,95 @@ body action sample_rate(x)
 {
 ifelapsed => "$(x)";
 expireafter => "10";
+}
+
+
+bundle common paths
+{
+  vars:
+
+      #
+      # Common full pathname of commands for OS
+      #
+    aix::
+
+      "awk"      string => "/usr/bin/awk";
+      "crontabs" string => "/var/spool/cron/crontabs";
+      "df"       string => "/usr/bin/df";
+      "dig"      string => "/usr/bin/dig";
+      "egrep"    string => "/usr/bin/egrep";
+      "grep"     string => "/usr/bin/grep";
+      "ls"       string => "/usr/bin/ls";
+      "netstat"  string => "/usr/bin/netstat";
+      "cksum"    string => "/usr/bin/cksum";
+      "sort"     string => "/usr/bin/sort";
+      "find"     string => "/usr/bin/find";
+      "cat"      string => "/bin/cat";
+      "sed"      string => "/usr/bin/sed";
+      "diff"     string => "/usr/bin/diff";
+      "cut"      string => "/usr/bin/cut";
+      "printf"   string => "/usr/bin/printf";
+      "tr"       string => "/usr/bin/tr";
+      "echo"     string => "/usr/bin/echo";
+      "bc"       string => "/usr/bin/bc";
+      "dc"       string => "/usr/bin/dc";
+
+    solaris::
+
+      "awk"      string => "/usr/bin/awk";
+      "crontabs" string => "/var/spool/cron/crontabs";
+      "df"       string => "/usr/bin/df";
+      "dig"      string => "/usr/sbin/dig";
+      "egrep"    string => "/usr/bin/egrep";
+      "grep"     string => "/usr/bin/grep";
+      "ls"       string => "/usr/bin/ls";
+      "netstat"  string => "/usr/bin/netstat";
+      "cksum"    string => "/usr/bin/cksum";
+      "sort"     string => "/usr/bin/sort";
+      "find"     string => "/usr/bin/find";
+      "cat"      string => "/usr/bin/cat";
+      "sed"      string => "/usr/bin/sed";
+      "diff"     string => "/usr/bin/diff";
+      "cut"      string => "/usr/bin/cut";
+      "printf"   string => "/usr/bin/printf";
+      "tr"       string => "/usr/bin/tr";
+      "echo"     string => "/usr/bin/echo";
+      "bc"       string => "/usr/bin/bc";
+      "dc"       string => "/usr/bin/dc";
+
+      #
+      "svcs"     string => "/usr/bin/svcs";
+      "svcadm"   string => "/usr/sbin/svcadm";
+
+    redhat::
+
+      "awk"      string => "/bin/awk";
+      "crontabs" string => "/var/spool/cron";
+      "df"       string => "/bin/df";
+      "dig"      string => "/usr/bin/dig";
+      "egrep"    string => "/bin/egrep";
+      "grep"     string => "/bin/grep";
+      "ls"       string => "/bin/ls";
+      "netstat"  string => "/bin/netstat";
+      "cksum"    string => "/usr/bin/cksum";
+      "sort"     string => "/bin/sort";
+      "find"     string => "/usr/bin/find";
+      "cat"      string => "/bin/cat";
+      "sed"      string => "/bin/sed";
+      "diff"     string => "/usr/bin/diff";
+      "cut"      string => "/bin/cut";
+      "printf"   string => "/usr/bin/printf";
+      "tr"       string => "/usr/bin/tr";
+      "echo"     string => "/bin/echo";
+      "bc"       string => "/usr/bin/bc";
+      "dc"       string => "/usr/bin/dc";
+
+      #
+      "svc"      string => "/sbin/service";
+      "useradd"  string => "/usr/sbin/useradd";
+      "groupadd" string => "/usr/sbin/groupadd";
+
+    all::
+      "ping" string => "/usr/bin/ping";
+
 }

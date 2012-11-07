@@ -33,7 +33,7 @@ main(int argc, char *argv[])
 
 if ((fin = fopen(argv[1],"r")) == NULL)
    {
-   printf("Could not open the cfengine_stdlib.cf file\n");
+   printf("Could not open the %s file\n", argv[1]);
    return;
    }
 
@@ -59,12 +59,6 @@ while(!feof(fin))
          {
          fclose(fout);
          fout = NULL;
-         }
-      else
-         {
-         control[0] = '\0';
-         data[0] = '\0';
-         type[0] = '\0';
          }
 
       snprintf(name,1024,"%s_%s_%s.tmp",type,data,control);

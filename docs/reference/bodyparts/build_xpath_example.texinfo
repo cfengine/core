@@ -1,0 +1,9 @@
+
+@verbatim
+
+body build_xpath example(s)
+  {
+  build_xpath => "$(s)";
+  }
+
+@end verbatim

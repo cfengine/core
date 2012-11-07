@@ -61,7 +61,7 @@ static bool LocalExecInThread(const ExecConfig *config);
 #endif
 
 void StartServer(Policy *policy, ExecConfig *config, const ReportContext *report_context);
-static void KeepPromises(Policy *policy, ExecConfig *config);
+void KeepPromises(Policy *policy, ExecConfig *config);
 
 static ExecConfig *CopyExecConfig(const ExecConfig *config);
 static void DestroyExecConfig(ExecConfig *config);
@@ -298,8 +298,9 @@ static double GetSplay(void)
 }
 
 /*****************************************************************************/
+/* Might be called back from NovaWin_StartExecService */
 
-static void KeepPromises(Policy *policy, ExecConfig *config)
+void KeepPromises(Policy *policy, ExecConfig *config)
 {
     for (Constraint *cp = ControlBodyConstraints(policy, cf_executor); cp != NULL; cp = cp->next)
     {

@@ -42,6 +42,7 @@ ylwrap
 docs/doxygen
 docs/guides/*.html
 docs/guides/*.pdf
+docs/guides/*.tmp
 docs/guides/cf3-solutions.texinfo
 docs/manpages/*.8
 docs/reference/cf3-Reference.html
@@ -49,6 +50,8 @@ docs/reference/cf3-Reference.pdf
 docs/reference/cf3-Reference.texinfo
 docs/tools/build-solutions-guide
 docs/tools/build-solutions-guide.exe
+docs/tools/build-stdlib
+docs/tools/build-stdlib.exe
 
 # binaries
 

@@ -412,6 +412,16 @@ void TryCollectCall(void)
     CfOut(cf_verbose, "", " !! Collect calling is only supported in CFEngine Enterprise");
 }
 
+int SetServerListenState(size_t queue_size)
+{
+    if (!SERVER_LISTEN)
+    {
+        CfOut(cf_verbose, "", " !! Disable listening on port is only supported in CFEngine Enterprise");
+    }
+
+    return InitServer(queue_size);
+}
+
 int ReceiveCollectCall(struct ServerConnectionState *conn, char *sendbuffer)
 {
     CfOut(cf_verbose, "", "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");

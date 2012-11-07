@@ -25,7 +25,9 @@
 */
 
 #include "cf3.defs.h"
+
 #include "dbm_api.h"
+#include "files_interfaces.h"
 
 static int ReadHash(CF_DB *dbp, enum cfhashes type, char *name, unsigned char digest[EVP_MAX_MD_SIZE + 1]);
 static int WriteHash(CF_DB *dbp, enum cfhashes type, char *name, unsigned char digest[EVP_MAX_MD_SIZE + 1]);
@@ -174,7 +176,7 @@ int FileHashChanged(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], i
         CfDebug("Storing checksum for %s in database %s\n", filename, HashPrint(type, digest));
         WriteHash(dbp, type, filename, digest);
 
-        LogHashChange(filename, cf_file_new, "New file found");
+        LogHashChange(filename, cf_file_new, "New file found", pp);
 
         CloseDB(dbp);
         return false;
@@ -196,7 +198,7 @@ int CompareFileHashes(char *file1, char *file2, struct stat *sstat, struct stat 
         return true;
     }
 
-    if (attr.copy.servers == NULL || strcmp(attr.copy.servers->item, "localhost") == 0)
+    if ((attr.copy.servers == NULL) || (strcmp(attr.copy.servers->item, "localhost") == 0))
     {
         HashFile(file1, digest1, CF_DEFAULT_DIGEST);
         HashFile(file2, digest2, CF_DEFAULT_DIGEST);
@@ -233,7 +235,7 @@ int CompareBinaryFiles(char *file1, char *file2, struct stat *sstat, struct stat
         return true;
     }
 
-    if (attr.copy.servers == NULL || strcmp(attr.copy.servers->item, "localhost") == 0)
+    if ((attr.copy.servers == NULL) || (strcmp(attr.copy.servers->item, "localhost") == 0))
     {
         fd1 = open(file1, O_RDONLY | O_BINARY, 0400);
         fd2 = open(file2, O_RDONLY | O_BINARY, 0400);
@@ -519,7 +521,7 @@ void PurgeHashes(char *path, Attributes attr, Promise *pp)
                 cfPS(cf_error, CF_WARN, "", pp, attr, "ALERT: File %s no longer exists!", obj);
             }
 
-            LogHashChange(obj, cf_file_removed, "File removed");
+            LogHashChange(obj, cf_file_removed, "File removed", pp);
         }
 
         memset(&key, 0, sizeof(key));

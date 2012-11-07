@@ -119,7 +119,7 @@ usearglist:            '('
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 aitems:                aitem
-                     | aitem ',' aitems
+                     | aitems ',' aitem
                      |;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -543,9 +543,11 @@ list:                  '{'
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-litems:                litem
-                     | litem ',' litems
-                     |;
+litems:                litems_int
+                     | litems_int ',';
+
+litems_int:            litem
+                     | litems_int ',' litem;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 

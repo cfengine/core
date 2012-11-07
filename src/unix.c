@@ -28,6 +28,7 @@
 #include "env_context.h"
 #include "vars.h"
 #include "files_names.h"
+#include "files_interfaces.h"
 #include "item_lib.h"
 #include "conversion.h"
 
@@ -145,7 +146,7 @@ int IsExecutable(const char *file)
         return false;
     }
 
-    if (getuid() == sb.st_uid || getuid() == 0)
+    if ((getuid() == sb.st_uid) || (getuid() == 0))
     {
         if (sb.st_mode & 0100)
         {
@@ -301,7 +302,7 @@ int DoAllSignals(Item *siglist, Attributes a, Promise *pp)
 
             if (!DONTDO)
             {
-                if (signal == SIGKILL || signal == SIGTERM)
+                if ((signal == SIGKILL) || (signal == SIGTERM))
                 {
                     killed = true;
                 }
@@ -430,7 +431,7 @@ int LoadProcessTable(Item **procdata)
         memset(vbuff, 0, CF_BUFSIZE);
         CfReadLine(vbuff, CF_BUFSIZE, prp);
 
-        for (sp = vbuff + strlen(vbuff) - 1; sp > vbuff && isspace((int)*sp); sp--)
+        for (sp = vbuff + strlen(vbuff) - 1; (sp > vbuff) && (isspace((int)*sp)); sp--)
         {
             *sp = '\0';
         }
@@ -539,7 +540,7 @@ static void GetMacAddress(enum cfagenttype ag, int fd, struct ifreq *ifr, struct
 {
     char name[CF_MAXVARSIZE];
 
-    if (ag != cf_know && ag != cf_gendoc)
+    if ((ag != cf_know) && (ag != cf_gendoc))
     {
         snprintf(name, CF_MAXVARSIZE, "hardware_mac[%s]", ifp->ifr_name);
     }
@@ -611,7 +612,7 @@ void GetInterfacesInfo(enum cfagenttype ag)
 # ifdef SIOCGIFCONF
     if (ioctl(fd, SIOCGIFCONF, &list) == -1 || (list.ifc_len < (sizeof(struct ifreq))))
 # else
-    if (ioctl(fd, OSIOCGIFCONF, &list) == -1 || (list.ifc_len < (sizeof(struct ifreq))))
+    if ((ioctl(fd, OSIOCGIFCONF, &list) == -1) || (list.ifc_len < (sizeof(struct ifreq))))
 # endif
     {
         CfOut(cf_error, "ioctl", "Couldn't get interfaces - old kernel? Try setting CF_IFREQ to 1024");
@@ -629,7 +630,7 @@ void GetInterfacesInfo(enum cfagenttype ag)
             continue;
         }
 
-        if (ifp->ifr_name == NULL || strlen(ifp->ifr_name) == 0)
+        if ((ifp->ifr_name == NULL) || (strlen(ifp->ifr_name) == 0))
         {
             continue;
         }
@@ -690,7 +691,7 @@ void GetInterfacesInfo(enum cfagenttype ag)
                 continue;
             }
 
-            if ((ifr.ifr_flags & IFF_UP) && !(ifr.ifr_flags & IFF_LOOPBACK))
+            if ((ifr.ifr_flags & IFF_UP) && (!(ifr.ifr_flags & IFF_LOOPBACK)))
             {
                 sin = (struct sockaddr_in *) &ifp->ifr_addr;
 
@@ -787,7 +788,7 @@ void GetInterfacesInfo(enum cfagenttype ag)
 
                 strcpy(ip, inet_ntoa(sin->sin_addr));
 
-                if (ag != cf_know && ag != cf_gendoc)
+                if ((ag != cf_know) && (ag != cf_gendoc))
                 {
                     snprintf(name, CF_MAXVARSIZE - 1, "ipv4[%s]", CanonifyName(ifp->ifr_name));
                 }
@@ -806,7 +807,7 @@ void GetInterfacesInfo(enum cfagenttype ag)
                     {
                         *sp = '\0';
 
-                        if (ag != cf_know && ag != cf_gendoc)
+                        if ((ag != cf_know) && (ag != cf_gendoc))
                         {
                             snprintf(name, CF_MAXVARSIZE - 1, "ipv4_%d[%s]", i--, CanonifyName(ifp->ifr_name));
                         }
@@ -918,7 +919,7 @@ static void FindV6InterfacesInfo(void)
                     }
                 }
 
-                if (IsIPV6Address(ip->name) && (strcmp(ip->name, "::1") != 0))
+                if ((IsIPV6Address(ip->name)) && ((strcmp(ip->name, "::1") != 0)))
                 {
                     CfOut(cf_verbose, "", "Found IPv6 address %s\n", ip->name);
                     AppendItem(&IPADDRESSES, ip->name, "");

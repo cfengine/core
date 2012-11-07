@@ -27,6 +27,8 @@
 
 #include "env_context.h"
 #include "files_names.h"
+#include "files_interfaces.h"
+#include "promises.h"
 
 static int SelectTypeMatch(struct stat *lstatptr, Rlist *crit);
 static int SelectOwnerMatch(char *path, struct stat *lstatptr, Rlist *crit);
@@ -111,7 +113,7 @@ int SelectLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp)
         PrependAlphaList(&leaf_attr, "file_types");
     }
 
-    if (attr.select.owners && SelectOwnerMatch(path, sb, attr.select.owners))
+    if ((attr.select.owners) && (SelectOwnerMatch(path, sb, attr.select.owners)))
     {
         PrependAlphaList(&leaf_attr, "owner");
     }
@@ -125,7 +127,7 @@ int SelectLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp)
     PrependAlphaList(&leaf_attr, "group");
 
 #else /* NOT MINGW */
-    if (attr.select.groups && SelectGroupMatch(sb, attr.select.groups))
+    if ((attr.select.groups) && (SelectGroupMatch(sb, attr.select.groups)))
     {
         PrependAlphaList(&leaf_attr, "group");
     }
@@ -168,17 +170,17 @@ int SelectLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp)
         PrependAlphaList(&leaf_attr, "mtime");
     }
 
-    if (attr.select.issymlinkto && SelectIsSymLinkTo(path, attr.select.issymlinkto))
+    if ((attr.select.issymlinkto) && (SelectIsSymLinkTo(path, attr.select.issymlinkto)))
     {
         PrependAlphaList(&leaf_attr, "issymlinkto");
     }
 
-    if (attr.select.exec_regex && SelectExecRegexMatch(path, attr.select.exec_regex, attr.select.exec_program))
+    if ((attr.select.exec_regex) && (SelectExecRegexMatch(path, attr.select.exec_regex, attr.select.exec_program)))
     {
         PrependAlphaList(&leaf_attr, "exec_regex");
     }
 
-    if (attr.select.exec_program && SelectExecProgram(path, attr.select.exec_program))
+    if ((attr.select.exec_program) && (SelectExecProgram(path, attr.select.exec_program)))
     {
         PrependAlphaList(&leaf_attr, "exec_program");
     }
@@ -198,7 +200,7 @@ int SelectLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp)
 
 static int SelectSizeMatch(size_t size, size_t min, size_t max)
 {
-    if (size <= max && size >= min)
+    if ((size <= max) && (size >= min))
     {
         return true;
     }
@@ -308,7 +310,7 @@ static int SelectOwnerMatch(char *path, struct stat *lstatptr, Rlist *crit)
             return true;
         }
 
-        if (gotOwner && FullTextMatch((char *) rp->item, ownerName))
+        if (gotOwner && (FullTextMatch((char *) rp->item, ownerName)))
         {
             CfDebug(" - ? Select owner match\n");
             DeleteAlphaList(&leafattrib);
@@ -561,7 +563,7 @@ static int SelectGroupMatch(struct stat *lstatptr, Rlist *crit)
             return true;
         }
 
-        if (gr && FullTextMatch((char *) rp->item, gr->gr_name))
+        if (gr && (FullTextMatch((char *) rp->item, gr->gr_name)))
         {
             CfDebug(" - ? Select owner match\n");
             DeleteAlphaList(&leafattrib);

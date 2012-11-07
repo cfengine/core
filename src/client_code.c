@@ -416,7 +416,7 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, Attributes attr
         cfst.cf_filename = xstrdup(file);
         cfst.cf_server = xstrdup(pp->this_server);
 
-        if ((cfst.cf_filename == NULL) || (cfst.cf_server) == NULL)
+        if ((cfst.cf_filename == NULL) || (cfst.cf_server == NULL))
         {
             FatalError("Memory allocation in cf_rstat");
         }
@@ -768,7 +768,7 @@ int CopyRegularFileNet(char *source, char *new, off_t size, Attributes attr, Pro
 
         /* If the first thing we get is an error message, break. */
 
-        if (n_read_total == 0 && strncmp(buf, CF_FAILEDSTR, strlen(CF_FAILEDSTR)) == 0)
+        if ((n_read_total == 0) && (strncmp(buf, CF_FAILEDSTR, strlen(CF_FAILEDSTR)) == 0))
         {
             cfPS(cf_inform, CF_INTERPT, "", pp, attr, "Network access to %s:%s denied\n", pp->this_server, source);
             close(dd);
@@ -790,7 +790,7 @@ int CopyRegularFileNet(char *source, char *new, off_t size, Attributes attr, Pro
 
         sscanf(buf, "t %d", &value);
 
-        if ((value > 0) && strncmp(buf + CF_INBAND_OFFSET, "BAD: ", 5) == 0)
+        if ((value > 0) && (strncmp(buf + CF_INBAND_OFFSET, "BAD: ", 5) == 0))
         {
             cfPS(cf_inform, CF_INTERPT, "", pp, attr, "Network access to cleartext %s:%s denied\n", pp->this_server,
                  source);
@@ -826,7 +826,7 @@ int CopyRegularFileNet(char *source, char *new, off_t size, Attributes attr, Pro
 
     if (last_write_made_hole)
     {
-        if (FullWrite(dd, "", 1) < 0 || ftruncate(dd, n_read_total) < 0)
+        if ((FullWrite(dd, "", 1) < 0) || (ftruncate(dd, n_read_total) < 0))
         {
             cfPS(cf_error, CF_FAIL, "", pp, attr, "FullWrite or ftruncate error in CopyReg, source %s\n", source);
             free(buf);
@@ -916,7 +916,7 @@ int EncryptCopyRegularFileNet(char *source, char *new, off_t size, Attributes at
 
         /* If the first thing we get is an error message, break. */
 
-        if (n_read_total == 0 && strncmp(buf + CF_INBAND_OFFSET, CF_FAILEDSTR, strlen(CF_FAILEDSTR)) == 0)
+        if ((n_read_total == 0) && (strncmp(buf + CF_INBAND_OFFSET, CF_FAILEDSTR, strlen(CF_FAILEDSTR)) == 0))
         {
             cfPS(cf_inform, CF_INTERPT, "", pp, attr, "Network access to %s:%s denied\n", pp->this_server, source);
             close(dd);
@@ -973,7 +973,7 @@ int EncryptCopyRegularFileNet(char *source, char *new, off_t size, Attributes at
 
     if (last_write_made_hole)
     {
-        if (FullWrite(dd, "", 1) < 0 || ftruncate(dd, n_read_total) < 0)
+        if ((FullWrite(dd, "", 1) < 0) || (ftruncate(dd, n_read_total) < 0))
         {
             cfPS(cf_error, CF_FAIL, "", pp, attr, "FullWrite or ftruncate error in CopyReg, source %s\n", source);
             free(buf);
@@ -1014,7 +1014,7 @@ int ServerConnect(AgentConnection *conn, char *host, Attributes attr, Promise *p
 
     CfOut(cf_verbose, "", "Set cfengine port number to %s = %u\n", strport, (int) ntohs(shortport));
 
-    if (attr.copy.timeout == (short) CF_NOINT || attr.copy.timeout <= 0)
+    if ((attr.copy.timeout == (short) CF_NOINT) || (attr.copy.timeout <= 0))
     {
         tv.tv_sec = CONNTIMEOUT;
     }
@@ -1242,7 +1242,7 @@ static AgentConnection *GetIdleConnectionToServer(const char *server)
             return NULL;
         }
 
-        if ((strcmp(ipname, svp->server) == 0) && svp->conn && svp->conn->sd > 0)
+        if ((strcmp(ipname, svp->server) == 0) && (svp->conn) && (svp->conn->sd > 0))
         {
             CfOut(cf_verbose, "", "Connection to %s is already open and ready...\n", ipname);
             svp->busy = true;
@@ -1466,9 +1466,6 @@ static int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockadd
     int res;
     long arg;
     struct sockaddr_in emptyCin = { 0 };
-# ifdef LINUX
-    struct timeval tvRecv = { 0 };
-# endif
 
     if (!cinp)
     {
@@ -1505,7 +1502,7 @@ static int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockadd
                 return false;
             }
 
-            if (valopt || res <= 0)
+            if (valopt || (res <= 0))
             {
                 CfOut(cf_inform, "connect", " !! Error connecting to server (timeout)");
                 return false;
@@ -1525,25 +1522,10 @@ static int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockadd
         CfOut(cf_error, "", "!! Could not set socket to blocking mode");
     }
 
-    /*
-     * NB: recv() timeout is not portable.  struct timeval is very
-     *     unstable - interpreted differently on different
-     *     platforms. E.g. setting tv_sec to 50 (and tv_usec to 0)
-     *     results in a timeout of 0.5 seconds on Windows, but 50
-     *     seconds on Linux. Thus it must be tested thoroughly on
-     *     the affected platforms. */
-
-# ifdef LINUX
-
-    tvRecv.tv_sec = tvp->tv_sec;
-    tvRecv.tv_usec = 0;
-
-    if (setsockopt(conn->sd, SOL_SOCKET, SO_RCVTIMEO, (char *) &tvRecv, sizeof(tvRecv)))
+    if (SetReceiveTimeout(conn->sd, tvp) == -1)
     {
-        CfOut(cf_error, "setsockopt", "!! Couldn't set socket timeout");
+        CfOut(cf_error, "setsockopt", "!! Could not set socket timeout");
     }
-
-# endif
 
     return true;
 }

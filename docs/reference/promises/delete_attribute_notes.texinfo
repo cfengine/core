@@ -1,3 +1,4 @@
-Note that typically, only a single attribute, within a single edit region,
+
+Note that typically, only a single attribute, within a single specified node,
 is deleted in each @code{delete_attribute} promise (you may of course
 have multiple promises that each delete an attribute).

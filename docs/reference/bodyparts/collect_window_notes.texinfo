@@ -1,4 +1,4 @@
 
-@i{History}: Was introduced in 3.4.0, Nova 2.3.0 (2012)
+@i{History}: Was introduced in 3.4.0, Enterprise 3.0.0 (2012)
 
 The time is measured in seconds, default value 10s.

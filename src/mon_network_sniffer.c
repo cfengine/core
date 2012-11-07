@@ -26,6 +26,7 @@
 
 #include "sysinfo.h"
 #include "files_names.h"
+#include "files_interfaces.h"
 #include "monitoring.h"
 #include "item_lib.h"
 
@@ -196,7 +197,7 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
    IP (tos 0x0, ttl 64, id 0, offset 0, flags [DF], proto ICMP (1), length 84) 192.168.1.103 > 128.39.89.10: ICMP echo request, id 48474, seq 2, length 64
 */
 
-    for (arr = strstr(arrival, "length"); arr != NULL && *arr != ')'; arr++)
+    for (arr = strstr(arrival, "length"); (arr != NULL) && (*arr != ')'); arr++)
     {
     }
 
@@ -209,7 +210,7 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
         arr++;
     }
 
-    if (strstr(arrival, "proto TCP") || strstr(arrival, "ack"))
+    if ((strstr(arrival, "proto TCP")) || (strstr(arrival, "ack")))
     {
         sscanf(arr, "%s %*c %s %c ", src, dest, &flag);
         DePort(src);

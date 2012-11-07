@@ -306,7 +306,6 @@ int main(int argc, char *argv[])
     ThisAgentInit();
     KeepReportsControlPromises(policy);
     KeepReportsPromises();
-    GenericDeInitialize();
     ReportContextDestroy(report_context);
     return 0;
 }
@@ -551,7 +550,6 @@ static void ThisAgentInit(void)
     if (!NULL_OR_EMPTY(REMOVEHOSTS))
     {
         RemoveHostSeen(REMOVEHOSTS);
-        GenericDeInitialize();
         exit(0);
     }
 
@@ -560,12 +558,10 @@ static void ThisAgentInit(void)
     {
         if (Nova_ExportReports(NOVA_EXPORT_TYPE))
         {
-            GenericDeInitialize();
             exit(0);
         }
         else
         {
-            GenericDeInitialize();
             exit(1);
         }
     }
@@ -762,7 +758,7 @@ static void KeepReportsPromises()
             all = true;
         }
 
-        if (all || strcmp("last_seen", rp->item) == 0)
+        if (all || (strcmp("last_seen", rp->item) == 0))
         {
             CfOut(cf_verbose, "", " -> Creating last-seen report...\n");
             ShowLastSeen();
@@ -786,7 +782,7 @@ static void KeepReportsPromises()
             ShowChecksums();
         }
 
-        if (all || strcmp("performance", rp->item) == 0)
+        if (all || (strcmp("performance", rp->item) == 0))
         {
             CfOut(cf_verbose, "", " -> Creating performance report...\n");
             ShowPerformance();
@@ -798,25 +794,25 @@ static void KeepReportsPromises()
             ShowCurrentAudit();
         }
 
-        if (all || strcmp("classes", rp->item) == 0)
+        if (all || (strcmp("classes", rp->item) == 0))
         {
             CfOut(cf_verbose, "", " -> Creating classes report...\n");
             ShowClasses();
         }
 
-        if (all || strcmp("monitor_now", rp->item) == 0)
+        if (all || (strcmp("monitor_now", rp->item) == 0))
         {
             CfOut(cf_verbose, "", " -> Creating monitor recent-history report...\n");
             MagnifyNow();
         }
 
-        if (all || strcmp("monitor_summary", rp->item) == 0)
+        if (all || (strcmp("monitor_summary", rp->item) == 0))
         {
             CfOut(cf_verbose, "", " -> Creating monitor history summary...\n");
             SummarizeAverages();
         }
 
-        if (all || strcmp("monitor_history", rp->item) == 0)
+        if (all || (strcmp("monitor_history", rp->item) == 0))
         {
             CfOut(cf_verbose, "", " -> Creating monitor full history report...\n");
             WriteGraphFiles();
@@ -824,7 +820,7 @@ static void KeepReportsPromises()
             LongHaul(CFSTARTTIME);
         }
 
-        if (all || strcmp("compliance", rp->item) == 0)
+        if (all || (strcmp("compliance", rp->item) == 0))
         {
             CfOut(cf_verbose, "", " -> Creating compliance summary (Cfengine Nova and above)...\n");
             SummarizeCompliance(XML, HTML, CSV, EMBEDDED, STYLESHEET, BANNER, FOOTER, WEBDRIVER);
@@ -836,37 +832,37 @@ static void KeepReportsPromises()
             SummarizePromiseNotKept(XML, HTML, CSV, EMBEDDED, STYLESHEET, BANNER, FOOTER, WEBDRIVER);
         }
 
-        if (all || strcmp("file_changes", rp->item) == 0)
+        if (all || (strcmp("file_changes", rp->item) == 0))
         {
             CfOut(cf_verbose, "", " -> Creating file change summary (Cfengine Nova and above)...\n");
             SummarizeFileChanges(XML, HTML, CSV, EMBEDDED, STYLESHEET, BANNER, FOOTER, WEBDRIVER);
         }
 
-        if (all || strcmp("installed_software", rp->item) == 0)
+        if (all || (strcmp("installed_software", rp->item) == 0))
         {
             CfOut(cf_verbose, "", " -> Creating software version summary (Cfengine Nova and above)...\n");
             SummarizeSoftware(XML, HTML, CSV, EMBEDDED, STYLESHEET, BANNER, FOOTER, WEBDRIVER);
         }
 
-        if (all || strcmp("software_patches", rp->item) == 0)
+        if (all || (strcmp("software_patches", rp->item) == 0))
         {
             CfOut(cf_verbose, "", " -> Creating software update version summary (Cfengine Nova and above)...\n");
             SummarizeUpdates(XML, HTML, CSV, EMBEDDED, STYLESHEET, BANNER, FOOTER, WEBDRIVER);
         }
 
-        if (all || strcmp("setuid", rp->item) == 0)
+        if (all || (strcmp("setuid", rp->item) == 0))
         {
             CfOut(cf_verbose, "", " -> Creating setuid report (Cfengine Nova and above)...\n");
             SummarizeSetuid(XML, HTML, CSV, EMBEDDED, STYLESHEET, BANNER, FOOTER, WEBDRIVER);
         }
 
-        if (all || strcmp("variables", rp->item) == 0)
+        if (all || (strcmp("variables", rp->item) == 0))
         {
             CfOut(cf_verbose, "", " -> Creating variables report (Cfengine Nova and above)...\n");
             SummarizeVariables(XML, HTML, CSV, EMBEDDED, STYLESHEET, BANNER, FOOTER, WEBDRIVER);
         }
 
-        if (all || strcmp("value", rp->item) == 0)
+        if (all || (strcmp("value", rp->item) == 0))
         {
             CfOut(cf_verbose, "", " -> Creating value report (Cfengine Nova and above)...\n");
             SummarizeValue(XML, HTML, CSV, EMBEDDED, STYLESHEET, BANNER, FOOTER, WEBDRIVER);
@@ -928,7 +924,7 @@ bool ReportHost(const char *hostkey, const char *address, bool incoming,
 
     struct tm tm;
     char text_date[CF_BUFSIZE];
-    strftime(text_date, CF_BUFSIZE, "%a %b %d %R", localtime_r(&quality->lastseen, &tm));
+    strftime(text_date, CF_BUFSIZE, "%a %b %d %H:%M", localtime_r(&quality->lastseen, &tm));
 
     CfOut(cf_verbose, "", " -> Reporting on %s", address);
 
@@ -1019,7 +1015,7 @@ static void ShowLastSeen()
     }
     assert(writer);
 
-    if (HTML && !EMBEDDED)
+    if (HTML && (!EMBEDDED))
     {
         time_t tid = time(NULL);
         snprintf(name, CF_BUFSIZE, "Peers as last seen by %s", VFQNAME);
@@ -1039,7 +1035,7 @@ static void ShowLastSeen()
         return;
     }
 
-    if (HTML && !EMBEDDED)
+    if (HTML && (!EMBEDDED))
     {
         WriterWriteF(writer, "</table></div>\n");
         CfHtmlFooter(writer, FOOTER);
@@ -1116,7 +1112,7 @@ static void ShowPerformance()
     memset(&value, 0, sizeof(value));
     memset(&entry, 0, sizeof(entry));
 
-    if (HTML && !EMBEDDED)
+    if (HTML && (!EMBEDDED))
     {
         snprintf(name, CF_BUFSIZE, "Promises last kept by %s", VFQNAME);
         CfHtmlHeader(writer, name, STYLESHEET, WEBDRIVER, BANNER);
@@ -1161,7 +1157,7 @@ static void ShowPerformance()
 
                 CfOut(cf_inform, "", "Deleting expired entry for %s\n", eventname);
 
-                if (measure < 0 || average < 0 || measure > 4 * SECONDS_PER_WEEK)
+                if ((measure < 0) || (average < 0) || (measure > (4 * SECONDS_PER_WEEK)))
                 {
                     DBCursorDeleteEntry(dbcp);
                 }
@@ -1211,7 +1207,7 @@ static void ShowPerformance()
         }
     }
 
-    if (HTML && !EMBEDDED)
+    if (HTML && (!EMBEDDED))
     {
         WriterWriteF(writer, "</table>");
         WriterWriteF(writer, "</div>\n");
@@ -1292,7 +1288,7 @@ static void ShowClasses()
 
     memset(&entry, 0, sizeof(entry));
 
-    if (HTML && !EMBEDDED)
+    if (HTML && (!EMBEDDED))
     {
         time_t now = time(NULL);
 
@@ -1413,7 +1409,7 @@ static void ShowClasses()
         }
     }
 
-    if (HTML && !EMBEDDED)
+    if (HTML && (!EMBEDDED))
     {
         WriterWriteF(writer, "</table>");
         WriterWriteF(writer, "<h4>All classes</h4>\n");
@@ -1429,10 +1425,10 @@ static void ShowClasses()
             continue;
         }
 
-        if (strncmp(ip->name, "Min", 3) == 0 || strncmp(ip->name, "Hr", 2) == 0 || strncmp(ip->name, "Q", 1) == 0
-            || strncmp(ip->name, "Yr", 1) == 0 || strncmp(ip->name, "Day", 1) == 0
-            || strncmp(ip->name, "Morning", 1) == 0 || strncmp(ip->name, "Afternoon", 1) == 0
-            || strncmp(ip->name, "Evening", 1) == 0 || strncmp(ip->name, "Night", 1) == 0)
+        if ((strncmp(ip->name, "Min", 3) == 0) || (strncmp(ip->name, "Hr", 2) == 0) || (strncmp(ip->name, "Q", 1) == 0)
+            || (strncmp(ip->name, "Yr", 1) == 0) || (strncmp(ip->name, "Day", 1) == 0)
+            || (strncmp(ip->name, "Morning", 1) == 0) || (strncmp(ip->name, "Afternoon", 1) == 0)
+            || (strncmp(ip->name, "Evening", 1) == 0) || (strncmp(ip->name, "Night", 1) == 0))
         {
             continue;
         }
@@ -1461,7 +1457,7 @@ static void ShowClasses()
         }
     }
 
-    if (HTML && !EMBEDDED)
+    if (HTML && (!EMBEDDED))
     {
         WriterWriteF(writer, "</table>");
         WriterWriteF(writer, "</div>\n");
@@ -1525,7 +1521,7 @@ static void ShowChecksums()
     }
     assert(writer);
 
-    if (HTML && !EMBEDDED)
+    if (HTML && (!EMBEDDED))
     {
         CfHtmlHeader(writer, "File hashes", STYLESHEET, WEBDRIVER, BANNER);
         WriterWriteF(writer, "<div id=\"reporttext\">\n");
@@ -1591,7 +1587,7 @@ static void ShowChecksums()
         memset(&value, 0, sizeof(value));
     }
 
-    if (HTML && !EMBEDDED)
+    if (HTML && (!EMBEDDED))
     {
         WriterWriteF(writer, "</table>");
         WriterWriteF(writer, "</div>\n");
@@ -1666,7 +1662,7 @@ static void ShowLocks(int active)
     }
     assert(writer);
 
-    if (HTML && !EMBEDDED)
+    if (HTML && (!EMBEDDED))
     {
         time_t now = time(NULL);
 
@@ -1757,7 +1753,7 @@ static void ShowLocks(int active)
         }
     }
 
-    if (HTML && !EMBEDDED)
+    if (HTML && (!EMBEDDED))
     {
         WriterWriteF(writer, "</table>");
         WriterWriteF(writer, "</div>\n");
@@ -1834,7 +1830,7 @@ static void ShowCurrentAudit()
     }
     assert(writer);
 
-    if (HTML && !EMBEDDED)
+    if (HTML && (!EMBEDDED))
     {
         time_t now = time(NULL);
 
@@ -1973,7 +1969,7 @@ static void ShowCurrentAudit()
         }
     }
 
-    if (HTML && !EMBEDDED)
+    if (HTML && (!EMBEDDED))
     {
         WriterWriteF(writer, "</table>");
         CfHtmlFooter(writer, FOOTER);
@@ -2005,7 +2001,7 @@ static char *Format(char *s, int width)
         buffer[i] = '\0';
         count++;
 
-        if ((count > width - 5) && ispunct((int)*sp))
+        if ((count > (width - 5)) && (ispunct((int)*sp)))
         {
             strcat(buffer, "<br>");
             i += strlen("<br>");
@@ -2177,7 +2173,7 @@ static void SummarizeAverages()
     }
     assert(writer);
 
-    if (HTML && !EMBEDDED)
+    if (HTML && (!EMBEDDED))
     {
         snprintf(name, CF_BUFSIZE, "Monitor summary for %s", VFQNAME);
         CfHtmlHeader(writer, name, STYLESHEET, WEBDRIVER, BANNER);
@@ -2238,7 +2234,7 @@ static void SummarizeAverages()
 
     CloseDB(dbp);
 
-    if (HTML && !EMBEDDED)
+    if (HTML && (!EMBEDDED))
     {
         WriterWriteF(writer, "</table>");
         CfHtmlFooter(writer, FOOTER);

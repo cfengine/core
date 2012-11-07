@@ -26,6 +26,7 @@
 #include "cf-execd-runner.h"
 
 #include "files_names.h"
+#include "files_interfaces.h"
 
 /*******************************************************************/
 
@@ -91,7 +92,7 @@ static bool TwinExists(void)
     snprintf(twinfilename, CF_BUFSIZE, "%s/%s", CFWORKDIR, TwinFilename());
     MapName(twinfilename);
 
-    return stat(twinfilename, &sb) == 0 && IsExecutable(twinfilename);
+    return (stat(twinfilename, &sb) == 0) && (IsExecutable(twinfilename));
 }
 
 /* Buffer has to be at least CF_BUFSIZE bytes long */
@@ -182,7 +183,7 @@ void LocalExec(const ExecConfig *config)
 
     CfOut(cf_verbose, "", " -> Command is executing...%s\n", esc_command);
 
-    while (!feof(pp) && CfReadLine(line, CF_BUFSIZE, pp))
+    while ((!feof(pp)) && (CfReadLine(line, CF_BUFSIZE, pp)))
     {
         if (ferror(pp))
         {
@@ -626,7 +627,7 @@ static int Dialogue(int sd, char *s)
 
         CfDebug("%c", ch);
 
-        if (ch == '\n' || ch == '\0')
+        if ((ch == '\n') || (ch == '\0'))
         {
             charpos = 0;
 

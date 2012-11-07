@@ -27,6 +27,7 @@
 
 #include "dir.h"
 #include "files_names.h"
+#include "files_interfaces.h"
 
 #define CF_RECURSION_LIMIT 100
 
@@ -121,9 +122,9 @@ int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promis
 
         /* See if we are supposed to treat links to dirs as dirs and descend */
 
-        if (attr.recursion.travlinks && S_ISLNK(lsb.st_mode))
+        if ((attr.recursion.travlinks) && (S_ISLNK(lsb.st_mode)))
         {
-            if (lsb.st_uid != 0 && lsb.st_uid != getuid())
+            if ((lsb.st_uid != 0) && (lsb.st_uid != getuid()))
             {
                 CfOut(cf_inform, "",
                       "File %s is an untrusted link: cfengine will not follow it with a destructive operation", path);
@@ -139,7 +140,7 @@ int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promis
             }
         }
 
-        if (attr.recursion.xdev && DeviceBoundary(&lsb, pp))
+        if ((attr.recursion.xdev) && (DeviceBoundary(&lsb, pp)))
         {
             CfOut(cf_verbose, "", "Skipping %s on different device - use xdev option to change this\n", path);
             continue;
@@ -152,7 +153,7 @@ int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promis
                 continue;
             }
 
-            if (attr.recursion.depth > 1 && rlevel <= attr.recursion.depth)
+            if ((attr.recursion.depth > 1) && (rlevel <= attr.recursion.depth))
             {
                 CfOut(cf_verbose, "", " ->>  Entering %s (%d)\n", path, rlevel);
                 goback = DepthSearch(path, &lsb, rlevel + 1, attr, pp, report_context);
@@ -198,7 +199,7 @@ static int PushDirState(char *name, struct stat *sb)
 
 static void PopDirState(int goback, char *name, struct stat *sb, Recursion r)
 {
-    if (goback && r.travlinks)
+    if (goback && (r.travlinks))
     {
         if (chdir(name) == -1)
         {
@@ -226,7 +227,7 @@ int SkipDirLinks(char *path, const char *lastnode, Recursion r)
 
     if (r.exclude_dirs)
     {
-        if (MatchRlistItem(r.exclude_dirs, path) || MatchRlistItem(r.exclude_dirs, lastnode))
+        if ((MatchRlistItem(r.exclude_dirs, path)) || (MatchRlistItem(r.exclude_dirs, lastnode)))
         {
             CfOut(cf_verbose, "", "Skipping matched excluded directory %s\n", path);
             return true;
@@ -235,7 +236,7 @@ int SkipDirLinks(char *path, const char *lastnode, Recursion r)
 
     if (r.include_dirs)
     {
-        if (!(MatchRlistItem(r.include_dirs, path) || MatchRlistItem(r.include_dirs, lastnode)))
+        if (!((MatchRlistItem(r.include_dirs, path)) || (MatchRlistItem(r.include_dirs, lastnode))))
         {
             CfOut(cf_verbose, "", "Skipping matched non-included directory %s\n", path);
             return true;

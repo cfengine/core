@@ -41,7 +41,7 @@ int RelevantBundle(const char *agent, const char *blocktype)
 {
     Item *ip;
 
-    if (strcmp(agent, CF_AGENTTYPES[cf_common]) == 0 || strcmp(CF_COMMONC, blocktype) == 0)
+    if ((strcmp(agent, CF_AGENTTYPES[cf_common]) == 0) || (strcmp(CF_COMMONC, blocktype) == 0))
     {
         return true;
     }
@@ -235,9 +235,9 @@ Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *class
         spe = xstrdup("any");
     }
 
-    if (strcmp(type->name, "classes") == 0 || strcmp(type->name, "vars") == 0)
+    if ((strcmp(type->name, "classes") == 0) || (strcmp(type->name, "vars") == 0))
     {
-        if (isdigit((int)*promiser) && Str2Int(promiser) != CF_NOINT)
+        if ((isdigit((int)*promiser)) && (Str2Int(promiser) != CF_NOINT))
         {
             yyerror("Variable or class identifier is purely numerical, which is not allowed");
         }

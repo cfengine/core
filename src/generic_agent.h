@@ -36,7 +36,6 @@ typedef struct
 } GenericAgentConfig;
 
 Policy *GenericInitialize(char *agents, GenericAgentConfig config, const ReportContext *report_context);
-void GenericDeInitialize(void);
 void InitializeGA(const ReportContext *report_context);
 void Syntax(const char *comp, const struct option options[], const char *hints[], const char *id);
 void ManPage(const char *component, const struct option options[], const char *hints[], const char *id);

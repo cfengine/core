@@ -30,6 +30,7 @@
 #include "dbm_api.h"
 #include "lastseen.h"
 #include "files_names.h"
+#include "files_interfaces.h"
 #include "vars.h"
 #include "addr_lib.h"
 #include "syntax.h"
@@ -792,44 +793,25 @@ static FnCallResult FnCallUseModule(FnCall *fp, Rlist *finalargs)
 
 static FnCallResult FnCallSplayClass(FnCall *fp, Rlist *finalargs)
 {
-    char buffer[CF_BUFSIZE], class[CF_MAXVARSIZE], hrs[CF_MAXVARSIZE];
-    int hash, box, hours;
-    double period;
+    char buffer[CF_BUFSIZE], class[CF_MAXVARSIZE];
 
-    buffer[0] = '\0';
-
-/* begin fn specific content */
-
-    char *splay = ScalarValue(finalargs);
     enum cfinterval policy = Str2Interval(ScalarValue(finalargs->next));
 
-    switch (policy)
+    if (policy == cfa_hourly)
     {
-    default:
-    case cfa_daily:
-        period = 12.0 * 23.0;   // 0-23
-        break;
-
-    case cfa_hourly:
-        period = 11.0;          // 0-11
-        break;
-    }
-
-    hash = (double) GetHash(splay);
-    box = (int) (0.5 + period * hash / (double) CF_HASHTABLESIZE);
-
-    hours = box / 12;
-
-    if (hours == 0)
-    {
-        strcpy(hrs, "any");
+        /* 12 5-minute slots in hour */
+        int slot = GetHash(ScalarValue(finalargs)) * 12 / CF_HASHTABLESIZE;
+        snprintf(class, CF_MAXVARSIZE, "Min%02d_%02d", slot * 5, ((slot + 1) * 5) % 60);
     }
     else
     {
-        snprintf(hrs, CF_MAXVARSIZE - 1, "Hr%02d", hours);
-    }
+        /* 12*24 5-minute slots in day */
+        int dayslot = GetHash(ScalarValue(finalargs)) * 12 * 24 / CF_HASHTABLESIZE;
+        int hour = dayslot / 12;
+        int slot = dayslot % 12;
 
-    snprintf(class, CF_MAXVARSIZE, "Min%02d_%02d.%s", (box * 5) % 60, (box + 1) * 5 % 60, hrs);
+        snprintf(class, CF_MAXVARSIZE, "Min%02d_%02d.Hr%02d", slot * 5, ((slot + 1) * 5) % 60, hour);
+    }
 
     if (IsDefinedClass(class, fp->namespace))
     {

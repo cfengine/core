@@ -41,7 +41,6 @@ extern char CONTEXTID[];
 extern char PADCHAR;
 extern Item *IPADDRESSES;
 
-extern char PIDFILE[CF_BUFSIZE];
 extern char STR_CFENGINEPORT[16];
 extern unsigned short SHORT_CFENGINEPORT;
 extern time_t CONNTIMEOUT;

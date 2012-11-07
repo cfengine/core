@@ -1,5 +1,5 @@
 
-@i{History}: Was introduced in 3.4.0, Nova 2.3.0 (2012)
+@i{History}: Was introduced in 3.4.0, Enterprise 3.0.0 (2012)
 
 This command allows CFEngine to detect default architecture of
 packages managed by package manager. As an example, multiarch-enabled

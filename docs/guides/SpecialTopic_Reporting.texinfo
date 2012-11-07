@@ -168,7 +168,7 @@ software version include:
 @itemize
 @item @b{Community Edition:} Basic output to file or logs may be customized on a per-promise basis. Users can design their own log and report formats, but data processing and extraction from CFEngine's embedded databases must be scripted by the user.
 
-@item @b{Nova:} In addition to community features, Nova provides automated extraction of
+@item @b{Nova:} In addition to community features, Nova/Enterprise provides automated extraction of
 data from CFEngine's self-learning agents, and the generation of a
 standard set of reports in text, HTML or XML formats. Nova summarizes
 distributed data and provides simple compression and aggregation of
@@ -176,11 +176,13 @@ these summaries. Finally summaries are tied into a knowledge map or
 semantic index for browsing by IT operations. Command line tools in
 @code{cf-report} are also available for Nova users to browse network-wide data.
 
+@ignore
 @item @b{Constellation:} In addition to Nova features, Constellation performs
 additional data extraction from the collected reports. It analyses correlations
 and provides reverse look up of system attributes based on searchable expressions.
 At this level, CFEngine exceeds other industry CMDB solutions in both reporting
 and configuration.
+@end ignore
 
 @end itemize
 

@@ -27,6 +27,7 @@
 
 #include "env_context.h"
 #include "files_names.h"
+#include "files_interfaces.h"
 #include "item_lib.h"
 
 /*****************************************************************************/
@@ -89,15 +90,15 @@ void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportC
 
     EDIT_MODEL = false;
 
-    if (DONTDO || a.transaction.action == cfa_warn)
+    if (DONTDO || (a.transaction.action == cfa_warn))
     {
-        if (ec && !CompareToFile(ec->file_start, ec->filename, a, pp) && ec->num_edits > 0)
+        if (ec && (!CompareToFile(ec->file_start, ec->filename, a, pp)) && (ec->num_edits > 0))
         {
             cfPS(cf_error, CF_WARN, "", pp, a, " -> Should edit file %s but only a warning promised", ec->filename);
         }
         return;
     }
-    else if (ec && ec->num_edits > 0)
+    else if (ec && (ec->num_edits > 0))
     {
         if (a.haveeditline)
         {
@@ -158,79 +159,6 @@ void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportC
 /* Level                                                             */
 /*********************************************************************/
 
-int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, Promise *pp)
-{
-    FILE *fp;
-    struct stat statbuf;
-    char line[CF_BUFSIZE], concat[CF_BUFSIZE];
-    int join = false;
-
-    if (cfstat(file, &statbuf) == -1)
-    {
-        CfOut(cf_verbose, "stat", " ** Information: the proposed file \"%s\" could not be loaded", file);
-        return false;
-    }
-
-    if (a.edits.maxfilesize != 0 && statbuf.st_size > a.edits.maxfilesize)
-    {
-        CfOut(cf_inform, "", " !! File %s is bigger than the limit edit.max_file_size = %jd > %d bytes\n", file,
-              (intmax_t) statbuf.st_size, a.edits.maxfilesize);
-        return (false);
-    }
-
-    if (!S_ISREG(statbuf.st_mode))
-    {
-        cfPS(cf_inform, CF_INTERPT, "", pp, a, "%s is not a plain file\n", file);
-        return false;
-    }
-
-    if ((fp = fopen(file, "r")) == NULL)
-    {
-        cfPS(cf_inform, CF_INTERPT, "fopen", pp, a, "Couldn't read file %s for editing\n", file);
-        return false;
-    }
-
-    memset(line, 0, CF_BUFSIZE);
-    memset(concat, 0, CF_BUFSIZE);
-
-    while (!feof(fp))
-    {
-        CfReadLine(line, CF_BUFSIZE - 1, fp);
-
-        if (a.edits.joinlines && *(line + strlen(line) - 1) == '\\')
-        {
-            join = true;
-        }
-        else
-        {
-            join = false;
-        }
-
-        if (join)
-        {
-            *(line + strlen(line) - 1) = '\0';
-            JoinSuffix(concat, line);
-        }
-        else
-        {
-            JoinSuffix(concat, line);
-
-            if (!feof(fp) || (strlen(concat) != 0))
-            {
-                AppendItem(liststart, concat, NULL);
-            }
-
-            concat[0] = '\0';
-            join = false;
-        }
-
-        line[0] = '\0';
-    }
-
-    fclose(fp);
-    return (true);
-}
-
 /***************************************************************************/
 
 #ifdef HAVE_LIBXML2
@@ -275,144 +203,6 @@ int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, Attributes a, Promise *pp
 }
 #endif
 
-/*********************************************************************/
-
-typedef bool (*SaveCallbackFn)(const char *dest_filename, const char *orig_filename, void *param, Attributes a, Promise *pp);
-
-int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attributes a, Promise *pp,
-                       const ReportContext *report_context)
-{
-    struct stat statbuf;
-    char new[CF_BUFSIZE], backup[CF_BUFSIZE];
-    mode_t mask;
-    char stamp[CF_BUFSIZE];
-    time_t stamp_now;
-
-#ifdef WITH_SELINUX
-    int selinux_enabled = 0;
-    security_context_t scontext = NULL;
-
-    selinux_enabled = (is_selinux_enabled() > 0);
-
-    if (selinux_enabled)
-    {
-        /* get current security context */
-        getfilecon(file, &scontext);
-    }
-#endif
-
-    stamp_now = time((time_t *) NULL);
-
-    if (cfstat(file, &statbuf) == -1)
-    {
-        cfPS(cf_error, CF_FAIL, "stat", pp, a, " !! Can no longer access file %s, which needed editing!\n", file);
-        return false;
-    }
-
-    strcpy(backup, file);
-
-    if (a.edits.backup == cfa_timestamp)
-    {
-        snprintf(stamp, CF_BUFSIZE, "_%jd_%s", (intmax_t) CFSTARTTIME, CanonifyName(cf_ctime(&stamp_now)));
-        strcat(backup, stamp);
-    }
-
-    strcat(backup, ".cf-before-edit");
-
-    strcpy(new, file);
-    strcat(new, ".cf-after-edit");
-    unlink(new);                /* Just in case of races */
-
-    if ((*callback)(new, file, param, a, pp) == false)
-    {
-        return false;
-    }
-
-    if (cf_rename(file, backup) == -1)
-    {
-        cfPS(cf_error, CF_FAIL, "cf_rename", pp, a,
-             " !! Can't rename %s to %s - so promised edits could not be moved into place\n", file, backup);
-        return false;
-    }
-
-    if (a.edits.backup == cfa_rotate)
-    {
-        RotateFiles(backup, a.edits.rotate);
-        unlink(backup);
-    }
-
-    if (a.edits.backup != cfa_nobackup)
-    {
-        if (ArchiveToRepository(backup, a, pp, report_context))
-        {
-            unlink(backup);
-        }
-    }
-
-    else
-    {
-        unlink(backup);
-    }
-
-    if (cf_rename(new, file) == -1)
-    {
-        cfPS(cf_error, CF_FAIL, "cf_rename", pp, a,
-             " !! Can't rename %s to %s - so promised edits could not be moved into place\n", new, file);
-        return false;
-    }
-
-    mask = umask(0);
-    cf_chmod(file, statbuf.st_mode);    /* Restore file permissions etc */
-    chown(file, statbuf.st_uid, statbuf.st_gid);
-    umask(mask);
-
-#ifdef WITH_SELINUX
-    if (selinux_enabled)
-    {
-        /* restore file context */
-        setfilecon(file, scontext);
-    }
-#endif
-
-    return true;
-}
-
-/*********************************************************************/
-
-bool SaveItemListCallback(const char *dest_filename, const char *orig_filename, void *param, Attributes a, Promise *pp)
-{
-    Item *liststart = param, *ip;
-    FILE *fp;
-
-    //saving list to file
-    if ((fp = fopen(dest_filename, "w")) == NULL)
-    {
-        cfPS(cf_error, CF_FAIL, "fopen", pp, a, "Couldn't write file %s after editing\n", dest_filename);
-        return false;
-    }
-
-    for (ip = liststart; ip != NULL; ip = ip->next)
-    {
-        fprintf(fp, "%s\n", ip->name);
-    }
-
-    if (fclose(fp) == -1)
-    {
-        cfPS(cf_error, CF_FAIL, "fclose", pp, a, "Unable to close file while writing");
-        return false;
-    }
-
-    cfPS(cf_inform, CF_CHG, "", pp, a, " -> Edited file %s \n", orig_filename);
-    return true;
-}
-
-/*********************************************************************/
-
-int SaveItemListAsFile(Item *liststart, const char *file, Attributes a, Promise *pp,
-                       const ReportContext *report_context)
-{
-    return SaveAsFile(&SaveItemListCallback, liststart, file, a, pp, report_context);
-}
 
 /*********************************************************************/
 

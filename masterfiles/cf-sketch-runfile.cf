@@ -1,0 +1,16 @@
+bundle common cfsketch_g
+{
+  reports:
+    veryverbose::
+      "cfsketch_g common bundle for Design Center enabled";
+}
+
+bundle agent cfsketch_run
+{
+  methods:
+      "cfsketch_g" usebundle => "cfsketch_g";
+
+  reports:
+    veryverbose::
+      "cf-sketch hook mechanism for Design Center enabled";
+}

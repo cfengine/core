@@ -26,6 +26,7 @@
 #include "cf3.defs.h"
 
 #include "files_names.h"
+#include "files_interfaces.h"
 #include "item_lib.h"
 
 static Item *SUSPICIOUSLIST = NULL;
@@ -120,7 +121,7 @@ int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp)
 
     for (sp = nodename; *sp != '\0'; sp++)      /* Check for files like ".. ." */
     {
-        if ((*sp != '.') && !isspace((int)*sp))
+        if ((*sp != '.') && (!isspace((int)*sp)))
         {
             return true;
         }
@@ -132,7 +133,7 @@ int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp)
         return true;
     }
 
-    if (statbuf.st_size == 0 && !(VERBOSE || INFORM))   /* No sense in warning about empty files */
+    if ((statbuf.st_size == 0) && (!(VERBOSE || INFORM)))   /* No sense in warning about empty files */
     {
         return false;
     }

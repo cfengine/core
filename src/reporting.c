@@ -169,7 +169,13 @@ void ShowContext(const ReportContext *report_context)
 
         Writer *writer = FileWriter(stdout);
 
-        WriterWriteF(writer, "%s>  -> Defined classes = { ", VPREFIX);
+        WriterWriteF(writer, "%s>  -> Hard classes = { ", VPREFIX);
+
+        ListAlphaList(writer, VHARDHEAP, ' ');
+
+        WriterWriteF(writer, "}\n");
+
+        WriterWriteF(writer, "%s>  -> Additional classes = { ", VPREFIX);
 
         ListAlphaList(writer, VHEAP, ' ');
 
@@ -964,7 +970,7 @@ static void ShowPromiseTypesFor(const char *s)
 
         for (j = 0; st[j].bundle_type != NULL; j++)
         {
-            if (strcmp(s, st[j].bundle_type) == 0 || strcmp("*", st[j].bundle_type) == 0)
+            if ((strcmp(s, st[j].bundle_type) == 0) || (strcmp("*", st[j].bundle_type) == 0))
             {
                 printf("<h4>PROMISE TYPE %s</h4>\n", st[j].subtype);
                 ShowBodyParts(st[j].bs);

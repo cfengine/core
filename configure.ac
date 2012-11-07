@@ -25,7 +25,7 @@ dnl The version in the next line is the only one to set
 dnl
 
 _AM_SET_OPTION([tar-ustar])
-AM_INIT_AUTOMAKE(cfengine, 3.4.0b2.revision)
+AM_INIT_AUTOMAKE(cfengine, 3.5.0a1.revision)
 AM_MAINTAINER_MODE([enable])
 
 AC_DEFINE(BUILD_YEAR, esyscmd([date +%Y | tr -d '\n']), "Software build year")
@@ -399,6 +399,7 @@ AC_CHECK_HEADERS(winsock2.h)
 AC_CHECK_HEADERS(zone.h)
 AC_CHECK_HEADERS(sys/uio.h)
 AC_CHECK_HEADERS(sys/types.h)
+AC_CHECK_HEADERS(sys/mpctl.h)	dnl For HP-UX $(sys.cpus) - Mantis #1069
 AC_CHECK_HEADERS(sys/jail.h, [], [], [AC_INCLUDES_DEFAULT
 #ifdef HAVE_SYS_PARAM_H
 # include <sys/param.h>
@@ -520,6 +521,9 @@ AC_REPLACE_FUNCS(strcasecmp)
 AC_CHECK_DECLS(strncasecmp)
 AC_REPLACE_FUNCS(strncasecmp)
 
+AC_CHECK_DECLS(strsep)
+AC_REPLACE_FUNCS(strsep)
+
 AC_CHECK_DECLS(strsignal)
 AC_REPLACE_FUNCS(strsignal)
 
@@ -544,6 +548,12 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <netdb.h>]],
 
 AC_CHECK_DECLS(endnetgrent, [], [], [[#include <netdb.h>]])
 AC_CHECK_FUNCS(endnetgrent)
+
+AC_CHECK_DECLS(mkdtemp)
+AC_CHECK_FUNCS(mkdtemp)
+
+AC_CHECK_DECLS(strrstr)
+AC_CHECK_FUNCS(strrstr)
 
 AC_CHECK_FUNCS(waitpid seteuid setegid setreuid setregid)
 AC_CHECK_FUNCS(uname gethostname chflags)
@@ -655,8 +665,8 @@ dnl ######################################################################
 
 CPPFLAGS="$CPPFLAGS $POSTGRESQL_CPPFLAGS $MYSQL_CPPFLAGS $TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $MONGO_CPPFLAGS $LDAP_CPPFLAGS $LIBVIRT_CPPFLAGS $SQLITE3_CPPFLAGS $LIBACL_CPPFLAGS $LIBXML2_CPPFLAGS"
 CFLAGS="$CFLAGS $POSTGRESQL_CFLAGS $MYSQL_CFLAGS $TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $MONGO_CFLAGS $LDAP_CFLAGS $LIBVIRT_CFLAGS $SQLITE3_CFLAGS $LIBACL_CFLAGS $LIBXML2_CFLAGS"
-LDFLAGS="$LDFLAGS $POSTGRESQL_LDFLAGS $MYSQL_LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $MONGO_LDFLAGS $LDAP_LDFLAGS $LIBVIRT_LDFLAGS $SQLITE3_LDFLAGS $LIBACL_LDFLAGS $LIBXML2_LDFLAGS"
-LIBS="$LIBS $POSTGRESQL_LIBS $MYSQL_LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $MONGO_LIBS $LDAP_LIBS $LIBVIRT_LIBS $SQLITE3_LIBS $LIBACL_LIBS $LIBXML2_LIBS"
+LDFLAGS="$LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $MONGO_LDFLAGS $LDAP_LDFLAGS $SQLITE3_LDFLAGS $LIBACL_LDFLAGS"
+LIBS="$LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $MONGO_LIBS $LDAP_LIBS $SQLITE3_LIBS $LIBACL_LIBS"
 
 dnl ######################################################################
 dnl OS specific stuff
@@ -758,6 +768,7 @@ esac
 AM_CONDITIONAL([LINUX], [test -n "`echo ${target_os} | grep linux`"])
 AM_CONDITIONAL([SOLARIS], [test -n "`(echo ${target_os} | egrep 'solaris|sunos')`"])
 AM_CONDITIONAL([NT], [test -n "`(echo ${target_os} | egrep 'mingw|cygwin')`"])
+AM_CONDITIONAL([CYGWIN], [test -n "`(echo ${target_os} | egrep 'cygwin')`"])
 AM_CONDITIONAL([AIX], [test -n "`(echo ${target_os} | grep aix)`"])
 AM_CONDITIONAL([HPUX], [test -n "`(echo ${target_os} | egrep 'hpux|hp-ux')`"])
 AM_CONDITIONAL([FREEBSD], [test -n "`(echo ${target_os} | grep freebsd)`"])

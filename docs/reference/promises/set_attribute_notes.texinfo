@@ -1,3 +1,4 @@
-Note that typically, only a single attribute, within a single edit
-region is set in each @code{set_attribute} promise (you may of course
+
+Note that typically, only a single attribute, within a single selected
+node is set in each @code{set_attribute} promise (you may of course
 have multiple promises that each set an attribute).

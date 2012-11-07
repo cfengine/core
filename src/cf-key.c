@@ -30,6 +30,7 @@
 #include "dir.h"
 #include "reporting.h"
 #include "scope.h"
+#include "files_interfaces.h"
 
 #ifdef HAVE_NOVA
 #include "license.h"
@@ -250,7 +251,7 @@ static int RemovePublicKey(const char *id)
     {
         char *c = strstr(dirp->d_name, suffix);
 
-        if (c && c[strlen(suffix)] == '\0')     /* dirp->d_name ends with suffix */
+        if (c && (c[strlen(suffix)] == '\0'))     /* dirp->d_name ends with suffix */
         {
             char keyfilename[CF_BUFSIZE];
 
@@ -297,7 +298,7 @@ static int RemoveKeys(const char *host)
     int removed_by_ip = RemovePublicKey(ip);
     int removed_by_digest = RemovePublicKey(digest);
 
-    if (removed_by_ip == -1 || removed_by_digest == -1)
+    if ((removed_by_ip == -1) || (removed_by_digest == -1))
     {
         CfOut(cf_error, "", "Unable to remove keys for the host %s",
               remove_keys_host);

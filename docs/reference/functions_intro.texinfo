@@ -52,12 +52,13 @@ or type that the function returns or processes as inputs.
 @tab @ref{Function getusers, ,getusers}
 @tab @ref{Function grep, ,grep}
 @tab @ref{Function ldaplist, ,ldaplist}
-@tab @ref{Function peerleaders, ,peerleaders}
-@item @ref{Function peers, ,peers}
+@tab @ref{Function maplist, ,maplist}
+@item @ref{Function peerleaders, ,peerleaders}
+@tab @ref{Function peers, ,peers}
 @tab @ref{Function readintlist, ,readintlist}
 @tab @ref{Function readreallist, ,readreallist}
 @tab @ref{Function readstringlist, ,readstringlist}
-@tab @ref{Function splitstring, ,splitstring}
+@item @ref{Function splitstring, ,splitstring}
 @end multitable
 
 @unnumberedsubsubsec Functions which return int

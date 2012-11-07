@@ -27,6 +27,7 @@
 
 #include "dbm_api.h"
 #include "files_names.h"
+#include "files_interfaces.h"
 #include "item_lib.h"
 #include "vars.h"
 #include "sort.h"
@@ -132,7 +133,7 @@ static void PrintFile(Attributes a, Promise *pp)
         return;
     }
 
-    while (!feof(fp) && (lines < a.report.numlines))
+    while ((!feof(fp)) && (lines < a.report.numlines))
     {
         buffer[0] = '\0';
         fgets(buffer, CF_BUFSIZE, fp);
@@ -183,7 +184,7 @@ static void ShowState(char *type)
 
                 if (IsSocketType(type))
                 {
-                    if (strncmp(type, "incoming", 8) == 0 || strncmp(type, "outgoing", 8) == 0)
+                    if ((strncmp(type, "incoming", 8) == 0) || (strncmp(type, "outgoing", 8) == 0))
                     {
                         if (strncmp(buffer, "tcp", 3) == 0)
                         {
@@ -249,7 +250,7 @@ static void ShowState(char *type)
         CfOut(cf_error, "", "\n");
         CfOut(cf_error, "", "R: The peak measured state was q = %d:\n", conns);
 
-        if (IsSocketType(type) || IsTCPType(type))
+        if ((IsSocketType(type)) || (IsTCPType(type)))
         {
             for (ip = addresses; ip != NULL; ip = ip->next)
             {
@@ -258,7 +259,7 @@ static void ShowState(char *type)
                 buffer[0] = '\0';
                 sscanf(ip->name, "%s", buffer);
 
-                if (!IsIPV4Address(buffer) && !IsIPV6Address(buffer))
+                if ((!IsIPV4Address(buffer)) && (!IsIPV6Address(buffer)))
                 {
                     CfOut(cf_verbose, "", "Rejecting address %s\n", ip->name);
                     continue;

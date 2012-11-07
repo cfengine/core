@@ -75,7 +75,7 @@ static void *Sort(void *list, LessFn less, GetNextElementFn next, PutNextElement
             qsize = insize;
 
             /* now we have two lists; merge them */
-            while (psize > 0 || (qsize > 0 && q))
+            while ((psize > 0) || ((qsize > 0) && q))
             {
                 /* decide whether next element of merge comes from p or q */
                 if (psize == 0)
@@ -85,7 +85,7 @@ static void *Sort(void *list, LessFn less, GetNextElementFn next, PutNextElement
                     q = next(q);
                     qsize--;
                 }
-                else if (qsize == 0 || !q)
+                else if ((qsize == 0) || (!q))
                 {
                     /* q is empty; e must come from p. */
                     e = p;

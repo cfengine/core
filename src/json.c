@@ -281,11 +281,37 @@ long JsonPrimitiveGetAsInteger(const JsonElement *primitive)
     return StringToLong(primitive->primitive.value);
 }
 
+double JsonPrimitiveGetAsReal(const JsonElement *primitive)
+{
+    assert(primitive);
+    assert(primitive->type == JSON_ELEMENT_TYPE_PRIMITIVE);
+    assert(primitive->primitive.type == JSON_PRIMITIVE_TYPE_REAL);
+
+    return StringToDouble(primitive->primitive.value);
+}
+
 const char *JsonGetPropertyAsString(const JsonElement *element)
 {
     assert(element);
 
     return element->propertyName;
+}
+
+void JsonSort(JsonElement *container, JsonComparator *Compare, void *user_data)
+{
+    assert(container);
+    assert(container->type == JSON_ELEMENT_TYPE_CONTAINER);
+
+    SequenceSort(container->container.children, (SequenceItemComparator)Compare, user_data);
+}
+
+JsonElement *JsonAt(const JsonElement *container, size_t index)
+{
+    assert(container);
+    assert(container->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(index < JsonElementLength(container));
+
+    return container->container.children->data[index];
 }
 
 // *******************************************************************************************
@@ -427,7 +453,7 @@ void JsonObjectAppendObject(JsonElement *object, const char *key, JsonElement *c
     SequenceAppend(object->container.children, childObject);
 }
 
-static int JsonElementHasProperty(const void *propertyName, const void *jsonElement)
+static int JsonElementHasProperty(const void *propertyName, const void *jsonElement, void *_user_data)
 {
     assert(propertyName);
 
@@ -442,7 +468,7 @@ static int JsonElementHasProperty(const void *propertyName, const void *jsonElem
     return -1;
 }
 
-static int CompareKeyToPropertyName(const void *a, const void *b)
+static int CompareKeyToPropertyName(const void *a, const void *b, void *_user_data)
 {
     return StringSafeCompare((char*)a, ((JsonElement*)b)->propertyName);
 }
@@ -547,7 +573,7 @@ JsonElement *JsonObjectGetAsArray(JsonElement *object, const char *key)
     return NULL;
 }
 
-const JsonElement *JsonObjectGet(const JsonElement *object, const char *key)
+JsonElement *JsonObjectGet(JsonElement *object, const char *key)
 {
     assert(object);
     assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
@@ -692,6 +718,15 @@ JsonElement *JsonArrayGetAsObject(JsonElement *array, size_t index)
     return NULL;
 }
 
+void JsonContainerReverse(JsonElement *array)
+{
+    assert(array);
+    assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
+
+    SequenceReverse(array->container.children);
+}
+
 // *******************************************************************************************
 // Primitive Functions
 // *******************************************************************************************
@@ -712,6 +747,12 @@ JsonElement *JsonIntegerCreate(int value)
 
 JsonElement *JsonRealCreate(double value)
 {
+    if (isnan(value) || !isfinite(value))
+    {
+        CfDebug("Attempted to add NaN or inifinite value to JSON");
+        value = 0.0;
+    }
+
     char *buffer = xcalloc(32, sizeof(char));
     snprintf(buffer, 32, "%.4f", value);
 
@@ -947,9 +988,22 @@ static char *JsonParseAsString(const char **data)
 
     for (*data = *data + 1; **data != '\0'; *data = *data + 1)
     {
-        if (**data == '"')
+        if (**data == '"' && *(*data - 1) != '\\')
         {
             return StringWriterClose(writer);
+        }
+
+        /* unescaping input strings */
+        if (**data == '\\' &&
+                (*(*data + 1) == '\"' ||
+                 *(*data + 1) == '\\' ||
+                 *(*data + 1) == '\b' ||
+                 *(*data + 1) == '\f' ||
+                 *(*data + 1) == '\n' ||
+                 *(*data + 1) == '\r' ||
+                 *(*data + 1) == '\t'))
+        {
+            continue;
         }
 
         WriterWriteChar(writer, **data);

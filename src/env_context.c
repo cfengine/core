@@ -445,7 +445,7 @@ void NewClass(const char *oclass, const char *namespace)
     {
         if (IsDefinedClass(ip->name, namespace))
         {
-            CfOut(cf_error, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", class, THIS_BUNDLE);
+            CfOut(cf_error, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", ip->name, THIS_BUNDLE);
             exit(1);
         }
     }
@@ -531,7 +531,7 @@ void HardClass(const char *oclass)
     {
         if (IsDefinedClass(ip->name, NULL))
         {
-            CfOut(cf_error, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", class, THIS_BUNDLE);
+            CfOut(cf_error, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", ip->name, THIS_BUNDLE);
             exit(1);
         }
     }
@@ -1276,8 +1276,8 @@ void NewPersistentContext(char *name, unsigned int ttl_minutes, enum statepolicy
         {
             if (now < state.expires)
             {
-                CfOut(cf_verbose, "", " -> Persisent state %s is already in a preserved state --  %ld minutes to go\n",
-                      name, (state.expires - now) / 60);
+                CfOut(cf_verbose, "", " -> Persisent state %s is already in a preserved state --  %jd minutes to go\n",
+                      name, (intmax_t)((state.expires - now) / 60));
                 CloseDB(dbp);
                 return;
             }
@@ -1356,7 +1356,7 @@ void LoadPersistentContext()
         }
         else
         {
-            CfOut(cf_verbose, "", " Persistent class %s for %ld more minutes\n", key, (q.expires - now) / 60);
+            CfOut(cf_verbose, "", " Persistent class %s for %jd more minutes\n", key, (intmax_t)((q.expires - now) / 60));
             CfOut(cf_verbose, "", " Adding persistent class %s to heap\n", key);
             NewClass(key, NULL);
         }
@@ -1699,7 +1699,7 @@ void MarkPromiseHandleDone(const Promise *pp)
        return;
     }
     
-    snprintf(name, CF_BUFSIZE, "%s.%s", pp->namespace, handle);    
+    snprintf(name, CF_BUFSIZE, "%s:%s", pp->namespace, handle);
     IdempPrependAlphaList(&VHANDLES, name);
 
 }
@@ -1718,13 +1718,13 @@ int MissingDependencies(const Promise *pp)
     
     for (rp = deps; rp != NULL; rp = rp->next)
        {
-       if (strchr(rp->item, '.'))
+       if (strchr(rp->item, ':'))
           {
           d = (char *)rp->item;
           }
        else
           {
-          snprintf(name, CF_BUFSIZE, "%s.%s", pp->namespace, (char *)rp->item);
+          snprintf(name, CF_BUFSIZE, "%s:%s", pp->namespace, (char *)rp->item);
           d = name;
           }
 

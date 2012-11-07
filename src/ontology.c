@@ -84,7 +84,7 @@ Topic *GetTopic(Topic *list, char *topic_name)
         }
         else
         {
-            if ((strcmp(name, tp->topic_name)) == 0 && (strcmp(context, tp->topic_context) == 0))
+            if (((strcmp(name, tp->topic_name)) == 0) && (strcmp(context, tp->topic_context) == 0))
             {
                 return tp;
             }

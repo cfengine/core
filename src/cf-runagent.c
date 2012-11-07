@@ -358,7 +358,7 @@ static int HailServer(char *host, Attributes a, Promise *pp)
     AgentConnection *conn;
     char sendbuffer[CF_BUFSIZE], recvbuffer[CF_BUFSIZE], peer[CF_MAXVARSIZE], ipv4[CF_MAXVARSIZE],
         digest[CF_MAXVARSIZE], user[CF_SMALLBUF];
-    long gotkey;
+    bool gotkey;
     char reply[8];
 
     a.copy.portnumber = (short) ParseHostname(host, peer);
@@ -371,11 +371,11 @@ static int HailServer(char *host, Attributes a, Promise *pp)
     {
         CfOut(cf_verbose, "", " -> Using interactive key trust...\n");
 
-        gotkey = (long) HavePublicKey(user, peer, digest);
+        gotkey = HavePublicKey(user, peer, digest) != NULL;
 
         if (!gotkey)
         {
-            gotkey = (long) HavePublicKey(user, ipv4, digest);
+            gotkey = HavePublicKey(user, ipv4, digest) != NULL;
         }
 
         if (!gotkey)

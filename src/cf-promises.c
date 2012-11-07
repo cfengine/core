@@ -94,7 +94,6 @@ int main(int argc, char *argv[])
     GenericInitialize("common", config, report_context);
     ThisAgentInit();
     AnalyzePromiseConflicts();
-    GenericDeInitialize();
     CloseReports("commmon", report_context);
 
     if (ERRORCOUNT > 0)
@@ -126,7 +125,7 @@ GenericAgentConfig CheckOpts(int argc, char **argv)
         {
         case 'f':
 
-            if (optarg && strlen(optarg) < 5)
+            if (optarg && (strlen(optarg) < 5))
             {
                 FatalError(" -f used but argument \"%s\" incorrect", optarg);
             }

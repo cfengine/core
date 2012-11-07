@@ -29,6 +29,7 @@
 #include "env_context.h"
 #include "files_names.h"
 #include "vars.h"
+#include "files_interfaces.h"
 
 /*
 
@@ -181,11 +182,11 @@ void SetPolicyServer(char *name)
 
     // update file if different and we know what to put there
 
-    if (NULL_OR_EMPTY(name) && !NULL_OR_EMPTY(fileContents))
+    if ((NULL_OR_EMPTY(name)) && (!NULL_OR_EMPTY(fileContents)))
     {
         snprintf(name, CF_MAXVARSIZE, "%s", fileContents);
     }
-    else if (!NULL_OR_EMPTY(name) && strcmp(name, fileContents) != 0)
+    else if ((!NULL_OR_EMPTY(name)) && (strcmp(name, fileContents) != 0))
     {
         if ((fout = fopen(file, "w")) == NULL)
         {
@@ -243,13 +244,13 @@ void CreateFailSafe(char *name)
     fprintf(fout,
             "body common control\n"
             "{\n"
-            "bundlesequence => { \"update\" };\n"
+            "bundlesequence => { \"cfe_internal_update\" };\n"
             "}\n\n"
             "body agent control\n"
             "{\n"
             "skipidentify => \"true\";\n"
             "}\n\n"
-            "bundle agent update\n"
+            "bundle agent cfe_internal_update\n"
             "{\n"
             "classes:\n"
             "  \"have_ppkeys\" expression => fileexists(\"$(sys.workdir)/ppkeys/localhost.pub\"),\n"

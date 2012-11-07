@@ -10,8 +10,8 @@ void UpdateLastSawHost(const char *hostkey, const char *address,
 
 int main()
 {
-    unlink("/tmp/cf_lastseen.tcdb");
-    unlink("/tmp/cf_lastseen.qdbm");
+    snprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/lastseen_migration_test.XXXXXX");
+    mkdtemp(CFWORKDIR);
 
     for (int i = 0; i < 1000000; ++i)
     {
@@ -29,6 +29,12 @@ int main()
         UpdateLastSawHost(hostkey, ip, false, i);
         UpdateLastSawHost(hostkey, ip, true, 2000000 - i);
     }
+
+    char cmd[CF_BUFSIZE];
+    snprintf(cmd, CF_BUFSIZE, "rm -rf '%s'", CFWORKDIR);
+    system(cmd);
+
+    return 0;
 }
 
 /* STUBS */

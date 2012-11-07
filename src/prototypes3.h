@@ -275,7 +275,6 @@ int FSWrite(char *new, int dd, char *buf, int towrite, int *last_write_made_hole
 
 EditContext *NewEditContext(char *filename, Attributes a, Promise *pp);
 void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportContext *report_context);
-int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, Promise *pp);
 int SaveItemListAsFile(Item *liststart, const char *file, Attributes a, Promise *pp, const ReportContext *report_context);
 #ifdef HAVE_LIBXML2
 int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, Attributes a, Promise *pp);
@@ -327,18 +326,6 @@ char *SkipHashType(char *hash);
 const char *FileHashName(enum cfhashes id);
 void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhashes type);
 
-/* files_interfaces.c */
-
-void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes attr, Promise *pp, const ReportContext *report_context);
-void VerifyCopy(char *source, char *destination, Attributes attr, Promise *pp, const ReportContext *report_context);
-void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attributes attr, Promise *pp, const ReportContext *report_context);
-int cfstat(const char *path, struct stat *buf);
-int cf_stat(char *file, struct stat *buf, Attributes attr, Promise *pp);
-int cf_lstat(char *file, struct stat *buf, Attributes attr, Promise *pp);
-int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dstat, Attributes attr, Promise *pp, const ReportContext *report_context);
-int CfReadLine(char *buff, int size, FILE *fp);
-int cf_readlink(char *sourcefile, char *linkbuf, int buffsize, Attributes attr, Promise *pp);
-
 /* files_operators.c */
 
 int VerifyFileLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp, const ReportContext *report_context);
@@ -367,7 +354,13 @@ GidList *MakeGidList(char *gidnames);
 void AddSimpleUidItem(UidList ** uidlist, uid_t uid, char *uidname);
 void AddSimpleGidItem(GidList ** gidlist, gid_t gid, char *gidname);
 #endif /* NOT MINGW */
-void LogHashChange(char *file, FileState status, char *msg);
+void LogHashChange(char *file, FileState status, char *msg, Promise *pp);
+
+typedef bool (*SaveCallbackFn)(const char *dest_filename, const char *orig_filename, void *param, Attributes a, Promise *pp);
+int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attributes a, Promise *pp,
+               const ReportContext *report_context);
+
+int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, Promise *pp);
 
 /* files_properties.c */
 
@@ -484,7 +477,6 @@ bool HostKeyAddressUnknown(const char *value);
 /* logging.c */
 
 void BeginAudit(void);
-void EndAudit(void);
 void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, char *error);
 void PromiseLog(char *s);
 void FatalError(char *s, ...) FUNC_ATTR_NORETURN FUNC_ATTR_PRINTF(1, 2);
@@ -522,6 +514,8 @@ int ReceiveTransaction(int sd, char *buffer, int *more);
 int RecvSocketStream(int sd, char *buffer, int toget, int nothing);
 int SendSocketStream(int sd, char *buffer, int toget, int flags);
 
+int SetReceiveTimeout(int sd, const struct timeval *timeout);
+
 /* nfs.c */
 
 #ifndef MINGW
@@ -551,9 +545,15 @@ int cf_closesocket(int sd);
 int cf_mkdir(const char *path, mode_t mode);
 int cf_chmod(const char *path, mode_t mode);
 int cf_rename(const char *oldpath, const char *newpath);
+
+#if !defined(__MINGW32__)
+#define OpenNetwork() /* noop */
+#define CloseNetwork() /* noop */
+#else
 void OpenNetwork(void);
 void CloseNetwork(void);
-void CloseWmi(void);
+#endif
+
 int LinkOrCopy(const char *from, const char *to, int sym);
 int ExclusiveLockFile(int fd);
 int ExclusiveUnlockFile(int fd);
@@ -605,7 +605,6 @@ void Summarize(void);
 /* signals.c */
 
 void HandleSignals(int signum);
-void SelfTerminatePrelude(void);
 
 /* string_lib.c */
 

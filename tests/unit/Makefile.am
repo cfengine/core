@@ -14,7 +14,7 @@ libstr_la_LIBADD = libtest.la
 
 
 check_LTLIBRARIES += libdb.la
-libdb_la_SOURCES = ../../src/dbm_api.c ../../src/dbm_quick.c ../../src/dbm_tokyocab.c ../../src/dbm_lib.c ../../src/patches.c ../../src/dbm_migration.c ../../src/dbm_migration_lastseen.c ../../src/dbm_migration_bundles.c
+libdb_la_SOURCES = ../../src/dbm_api.c ../../src/dbm_quick.c ../../src/dbm_tokyocab.c ../../src/dbm_lib.c ../../src/patches.c ../../src/dbm_migration.c ../../src/dbm_migration_lastseen.c ../../src/dbm_migration_bundles.c ../../src/atexit.c
 libdb_la_LIBADD = libstr.la
 
 check_PROGRAMS = \
@@ -52,9 +52,15 @@ check_PROGRAMS = \
 	logging_test \
 	granules_test \
 	scope_test \
-	conversion_test
+	conversion_test \
+	files_interfaces_test
 
 TESTS = $(check_PROGRAMS)
+
+#
+# OS X uses real system calls instead of our stubs unless this option is used
+#
+TESTS_ENVIRONMENT = DYLD_FORCE_FLAT_NAMESPACE=yes
 
 csv_writer_test_SOURCES = csv_writer_test.c ../../src/csv_writer.c
 csv_writer_test_LDADD = libtest.la libstr.la
@@ -99,7 +105,7 @@ dbm_migration_bundles_test_LDADD = libdb.la
 
 CLEANFILES = *.gcno *.gcda
 
-package_versions_compare_test_SOURCES = package_versions_compare_test.c ../../src/verify_packages.c
+package_versions_compare_test_SOURCES = package_versions_compare_test.c ../../src/verify_packages.c ../../src/vercmp.c ../../src/vercmp_internal.c
 
 sort_test_SOURCES = sort_test.c ../../src/sort.c
 sort_test_LDADD = libtest.la

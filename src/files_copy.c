@@ -26,6 +26,7 @@
 #include "cf3.defs.h"
 
 #include "files_names.h"
+#include "files_interfaces.h"
 
 /*****************************************************************************/
 
@@ -40,7 +41,7 @@ void *CopyFileSources(char *destination, Attributes attr, Promise *pp, const Rep
 
     CfDebug("CopyFileSources(%s,%s)", source, destination);
 
-    if (pp->conn != NULL && !pp->conn->authenticated)
+    if ((pp->conn != NULL) && (!pp->conn->authenticated))
     {
         cfPS(cf_verbose, CF_FAIL, "", pp, attr, "No authenticated source %s in files.copyfrom promise\n", source);
         return NULL;
@@ -134,7 +135,7 @@ bool CopyRegularFileDiskReport(char *source, char *destination, Attributes attr,
 {
     bool make_holes = false;
 
-    if(pp && pp->makeholes)
+    if(pp && (pp->makeholes))
     {
         make_holes = true;
     }
@@ -269,7 +270,7 @@ bool CopyRegularFileDisk(char *source, char *destination, bool make_holes)
     {
         /* Write a null character and truncate it again.  */
 
-        if (FullWrite(dd, "", 1) < 0 || ftruncate(dd, n_read_total) < 0)
+        if ((FullWrite(dd, "", 1) < 0) || (ftruncate(dd, n_read_total) < 0))
         {
             CfOut(cf_error, "write", "cfengine: full_write or ftruncate error in CopyReg\n");
             free(buf);
@@ -297,7 +298,7 @@ int FSWrite(char *new, int dd, char *buf, int towrite, int *last_write_made_hole
 
     intp = 0;
 
-    if (pp && pp->makeholes)
+    if (pp && (pp->makeholes))
     {
         buf[n_read] = 1;        /* Sentinel to stop loop.  */
 

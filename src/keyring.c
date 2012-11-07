@@ -35,7 +35,7 @@ bool HostKeyAddressUnknown(const char *value)
 
 // Is there some other non-ip string left over?
 
-    if (!(strchr(value, '.') || strchr(value, ':')))
+    if (!((strchr(value, '.')) || (strchr(value, ':'))))
     {
         return false;
     }

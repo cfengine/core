@@ -363,7 +363,7 @@ char *cf_strtimestamp_utc(const time_t time, char *buf)
 static char *cf_format_strtimestamp(struct tm *tm, char *buf)
 {
     /* Security checks */
-    if (tm->tm_year < -2899 || tm->tm_year > 8099)
+    if ((tm->tm_year < -2899) || (tm->tm_year > 8099))
     {
         CfOut(cf_error, "", "Unable to format timestamp: passed year is out of range: %d", tm->tm_year + 1900);
         return NULL;
@@ -432,39 +432,6 @@ int cf_rename(const char *oldpath, const char *newpath)
     return NovaWin_rename(oldpath, newpath);
 #else
     return rename(oldpath, newpath);
-#endif
-}
-
-/*******************************************************************/
-
-void OpenNetwork()
-{
-#ifdef MINGW
-    NovaWin_OpenNetwork();
-#else
-/* no network init on Unix */
-#endif
-}
-
-/*******************************************************************/
-
-void CloseNetwork()
-{
-#ifdef MINGW
-    NovaWin_CloseNetwork();
-#else
-/* no network close on Unix */
-#endif
-}
-
-/*******************************************************************/
-
-void CloseWmi()
-{
-#ifdef MINGW
-    NovaWin_WmiDeInitialize();
-#else
-/* no WMI on Unix */
 #endif
 }
 

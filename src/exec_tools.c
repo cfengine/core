@@ -26,6 +26,7 @@
 #include "cf3.defs.h"
 
 #include "files_names.h"
+#include "files_interfaces.h"
 
 /********************************************************************/
 
@@ -217,7 +218,7 @@ char **ArgSplitCommand(const char *comm)
         {
             arg = xstrndup(s, end - s);
             s = end;
-            if (*s == '"' || *s == '\'' || *s == '`')   /* Skip second delimeter */
+            if ((*s == '"') || (*s == '\'') || (*s == '`'))   /* Skip second delimeter */
                 s++;
         }
 

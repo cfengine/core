@@ -72,14 +72,33 @@ Writer *StringWriter(void)
 
 /*********************************************************************/
 
+static void StringWriterReallocate(Writer *writer, size_t extra_length)
+{
+    writer->string.allocated = MAX(writer->string.allocated * 2, writer->string.len + extra_length + 1);
+    writer->string.data = xrealloc(writer->string.data, writer->string.allocated);
+}
+
+static size_t StringWriterWriteChar(Writer *writer, char c)
+{
+    if (writer->string.len + 2 > writer->string.allocated)
+    {
+        StringWriterReallocate(writer, 2);
+    }
+
+    writer->string.data[writer->string.len] = c;
+    writer->string.data[writer->string.len + 1] = '\0';
+    writer->string.len++;
+
+    return 1;
+}
+
 static size_t StringWriterWriteLen(Writer *writer, const char *str, size_t len_)
 {
     size_t len = MIN(strlen(str), len_);
 
     if (writer->string.len + len + 1 > writer->string.allocated)
     {
-        writer->string.allocated = MAX(writer->string.allocated * 2, writer->string.len + len + 1);
-        writer->string.data = xrealloc(writer->string.data, writer->string.allocated);
+        StringWriterReallocate(writer, len);
     }
 
     strlcpy(writer->string.data + writer->string.len, str, len + 1);
@@ -162,8 +181,15 @@ size_t WriterWrite(Writer *writer, const char *str)
 
 size_t WriterWriteChar(Writer *writer, char c)
 {
-    char s[2] = { c, '\0' };
-    return WriterWrite(writer, s);
+    if (writer->type == WT_STRING)
+    {
+        return StringWriterWriteChar(writer, c);
+    }
+    else
+    {
+        char s[2] = { c, '\0' };
+        return FileWriterWriteLen(writer, s, 1);
+    }
 }
 
 /*********************************************************************/

@@ -1,6 +1,8 @@
 #include "test.h"
 #include "json.h"
 
+#include <float.h>
+
 static const char *OBJECT_ARRAY = "{\n" "  \"first\": [\n" "    \"one\",\n" "    \"two\"\n" "  ]\n" "}";
 
 static const char *OBJECT_COMPOUND = "{\n"
@@ -257,6 +259,38 @@ static void test_show_array_empty(void **state)
     free(output);
 }
 
+static void test_show_array_nan(void **state)
+{
+    JsonElement *array = JsonArrayCreate(10);
+    JsonArrayAppendReal(array, sqrt(-1));
+
+    Writer *writer = StringWriter();
+
+    JsonElementPrint(writer, array, 0);
+    char *output = StringWriterClose(writer);
+
+    assert_string_equal("[\n  0.0000\n]", output);
+
+    JsonElementDestroy(array);
+    free(output);
+}
+
+static void test_show_array_infinity(void **state)
+{
+    JsonElement *array = JsonArrayCreate(10);
+    JsonArrayAppendReal(array, INFINITY);
+
+    Writer *writer = StringWriter();
+
+    JsonElementPrint(writer, array, 0);
+    char *output = StringWriterClose(writer);
+
+    assert_string_equal("[\n  0.0000\n]", output);
+
+    JsonElementDestroy(array);
+    free(output);
+}
+
 static void test_object_get_string(void **state)
 {
     JsonElement *obj = JsonObjectCreate(10);
@@ -364,6 +398,25 @@ static void test_parse_object_simple(void **state)
     assert_string_equal(JsonObjectGetAsString(obj, "first"), "one");
     assert_int_equal(JsonObjectGetAsString(obj, "third"), NULL);
 
+    JsonElementDestroy(obj);
+}
+
+static void test_parse_object_escaped(void **state)
+{
+    const char *escaped_string = "\\\"/var/cfenigne/bin/cf-know\\\" ";
+    const char *key = "json_element_key";
+
+    Writer *writer = StringWriter();
+    WriterWriteF(writer, "{ \"%s\" : \"%s\" }", key, escaped_string);
+
+    const char *json_string = StringWriterData(writer);
+
+    JsonElement *obj = JsonParse(&json_string);
+
+    assert_int_not_equal(obj, NULL);
+    assert_string_equal(JsonObjectGetAsString(obj, key), escaped_string);
+
+    WriterClose(writer);
     JsonElementDestroy(obj);
 }
 
@@ -818,6 +871,8 @@ int main()
         unit_test(test_show_array_numeric),
         unit_test(test_show_array_object),
         unit_test(test_show_array_empty),
+        unit_test(test_show_array_nan),
+        unit_test(test_show_array_infinity),
         unit_test(test_object_get_string),
         unit_test(test_object_get_array),
         unit_test(test_object_iterator),
@@ -842,7 +897,8 @@ int main()
         unit_test(test_parse_array_nested_garbage),
         unit_test(test_array_remove_range),
         unit_test(test_remove_key_from_object),
-        unit_test(test_detach_key_from_object)
+        unit_test(test_detach_key_from_object),
+        unit_test(test_parse_object_escaped)
     };
 
     return run_tests(tests);

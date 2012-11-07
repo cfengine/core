@@ -26,6 +26,7 @@
 #include "cf3.defs.h"
 
 #include "files_names.h"
+#include "files_interfaces.h"
 #include "item_lib.h"
 
 /*********************************************************************/
@@ -52,7 +53,7 @@ void SetRepositoryChar(char c)
 
 bool GetRepositoryPath(const char *file, Attributes attr, char *destination)
 {
-    if (attr.repository == NULL && VREPOSITORY == NULL)
+    if ((attr.repository == NULL) && (VREPOSITORY == NULL))
     {
         return false;
     }

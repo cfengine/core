@@ -47,6 +47,7 @@ extern const BodySyntax CFS_CONTROLBODY[];
 extern const BodySyntax CF_REMROLE_BODIES[];
 extern int COLLECT_INTERVAL;
 extern int COLLECT_WINDOW;
+extern bool SERVER_LISTEN;
 
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
@@ -267,6 +268,14 @@ void KeepControlPromises(Policy *policy)
         {
             COLLECT_INTERVAL = (int) 60 * Str2Int(retval.item);
             CfOut(cf_verbose, "", "SET call_collect_interval = %d (seconds)\n", COLLECT_INTERVAL);
+            continue;
+        }
+
+        if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_listen].lval) == 0)
+        {
+            SERVER_LISTEN = GetBoolean(retval.item);
+            CfOut(cf_verbose, "", "SET server listen = %s \n",
+                  (SERVER_LISTEN)? "true":"false");
             continue;
         }
 

@@ -237,7 +237,8 @@ insert_lines:
 
 ##
 
-bundle edit_line manage_variable_values_ini(tab, sectionName) {
+bundle edit_line manage_variable_values_ini(tab, sectionName)
+
  # Sets the RHS of configuration items in the file of the form
  # LHS=RHS
  # If the line is commented out with #, it gets uncommented first.
@@ -268,6 +269,7 @@ bundle edit_line manage_variable_values_ini(tab, sectionName) {
  #         comment     => "Set the variale values only in the specified ini region";
  # 
 
+{
     vars:
         "index" slist => getindices("$(tab)[$(sectionName)]");
 
@@ -311,7 +313,8 @@ bundle edit_line manage_variable_values_ini(tab, sectionName) {
 
 ##
 
-bundle edit_line set_variable_values_ini(tab, sectionName) {
+bundle edit_line set_variable_values_ini(tab, sectionName)
+
  # Sets the RHS of configuration items in the file of the form
  # LHS=RHS
  # If the line is commented out with #, it gets uncommented first.
@@ -341,6 +344,7 @@ bundle edit_line set_variable_values_ini(tab, sectionName) {
  #         comment     => "Set the variale values only in the specified ini region";
  # 
 
+{
     vars:
         "index" slist => getindices("$(tab)[$(sectionName)]");
 

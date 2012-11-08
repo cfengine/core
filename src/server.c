@@ -57,6 +57,7 @@ int LOGCONNS = false;
 int LOGENCRYPT = false;
 int COLLECT_INTERVAL = 0;
 int COLLECT_WINDOW = 10;
+bool SERVER_LISTEN = true;
 
 Auth *ROLES = NULL;
 Auth *ROLESTOP = NULL;

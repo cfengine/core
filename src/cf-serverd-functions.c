@@ -209,7 +209,7 @@ void ThisAgentInit(void)
 
 void StartServer(Policy *policy, GenericAgentConfig config, const ReportContext *report_context)
 {
-    int sd, sd_reply;
+    int sd = -1, sd_reply;
     fd_set rset;
     struct timeval timeout;
     int ret_val;
@@ -228,12 +228,6 @@ void StartServer(Policy *policy, GenericAgentConfig config, const ReportContext 
 
     memset(&dummyattr, 0, sizeof(dummyattr));
 
-    if ((sd = OpenReceiverChannel()) == -1)
-    {
-        CfOut(cf_error, "", "Unable to start server");
-        exit(1);
-    }
-
     signal(SIGINT, HandleSignals);
     signal(SIGTERM, HandleSignals);
     signal(SIGHUP, SIG_IGN);
@@ -241,11 +235,7 @@ void StartServer(Policy *policy, GenericAgentConfig config, const ReportContext 
     signal(SIGUSR1, HandleSignals);
     signal(SIGUSR2, HandleSignals);
 
-    if (listen(sd, QUEUESIZE) == -1)
-    {
-        CfOut(cf_error, "listen", "listen failed");
-        exit(1);
-    }
+    sd = SetServerListenState(QUEUESIZE);
 
     dummyattr.transaction.ifelapsed = 0;
     dummyattr.transaction.expireafter = 1;
@@ -258,7 +248,11 @@ void StartServer(Policy *policy, GenericAgentConfig config, const ReportContext 
     }
 
     CfOut(cf_inform, "", "cf-serverd starting %.24s\n", cf_ctime(&starttime));
-    CfOut(cf_verbose, "", "Listening for connections ...\n");
+
+    if (sd != -1)
+    {
+        CfOut(cf_verbose, "", "Listening for connections ...\n");
+    }
 
 #ifdef MINGW
 
@@ -313,47 +307,51 @@ void StartServer(Policy *policy, GenericAgentConfig config, const ReportContext 
             continue;
         }
 
-        // Look for normal incoming service requests
-
-        FD_ZERO(&rset);
-        FD_SET(sd, &rset);
-
-        timeout.tv_sec = 10;    /* Set a 10 second timeout for select */
-        timeout.tv_usec = 0;
-
-        CfDebug(" -> Waiting at incoming select...\n");
-
-        ret_val = select((sd + 1), &rset, NULL, NULL, &timeout);
-
-        if (ret_val == -1)      /* Error received from call to select */
+        /* check if listening is working */
+        if (sd != -1)
         {
-            if (errno == EINTR)
+            // Look for normal incoming service requests
+
+            FD_ZERO(&rset);
+            FD_SET(sd, &rset);
+
+            timeout.tv_sec = 10;    /* Set a 10 second timeout for select */
+            timeout.tv_usec = 0;
+
+            CfDebug(" -> Waiting at incoming select...\n");
+
+            ret_val = select((sd + 1), &rset, NULL, NULL, &timeout);
+
+            if (ret_val == -1)      /* Error received from call to select */
+            {
+                if (errno == EINTR)
+                {
+                    continue;
+                }
+                else
+                {
+                    CfOut(cf_error, "select", "select failed");
+                    exit(1);
+                }
+            }
+            else if (!ret_val) /* No data waiting, we must have timed out! */
             {
                 continue;
             }
-            else
+
+            CfOut(cf_verbose, "", " -> Accepting a connection\n");
+
+            if ((sd_reply = accept(sd, (struct sockaddr *) &cin, &addrlen)) != -1)
             {
-                CfOut(cf_error, "select", "select failed");
-                exit(1);
+                char ipaddr[CF_MAXVARSIZE];
+
+                memset(ipaddr, 0, CF_MAXVARSIZE);
+                ThreadLock(cft_getaddr);
+                snprintf(ipaddr, CF_MAXVARSIZE - 1, "%s", sockaddr_ntop((struct sockaddr *) &cin));
+                ThreadUnlock(cft_getaddr);
+
+                ServerEntryPoint(sd_reply, ipaddr, SV);
             }
-        }
-        else if (!ret_val)      /* No data waiting, we must have timed out! */
-        {
-            continue;
-        }
-
-        CfOut(cf_verbose, "", " -> Accepting a connection\n");
-
-        if ((sd_reply = accept(sd, (struct sockaddr *) &cin, &addrlen)) != -1)
-        {
-            char ipaddr[CF_MAXVARSIZE];
-
-            memset(ipaddr, 0, CF_MAXVARSIZE);
-            ThreadLock(cft_getaddr);
-            snprintf(ipaddr, CF_MAXVARSIZE - 1, "%s", sockaddr_ntop((struct sockaddr *) &cin));
-            ThreadUnlock(cft_getaddr);
-
-            ServerEntryPoint(sd_reply, ipaddr, SV);
         }
     }
 
@@ -363,6 +361,25 @@ void StartServer(Policy *policy, GenericAgentConfig config, const ReportContext 
 /*********************************************************************/
 /* Level 2                                                           */
 /*********************************************************************/
+
+int InitServer(size_t queue_size)
+{
+    int sd = -1;
+
+    if ((sd = OpenReceiverChannel()) == -1)
+    {
+        CfOut(cf_error, "", "Unable to start server");
+        exit(1);
+    }
+
+    if (listen(sd, queue_size) == -1)
+    {
+        CfOut(cf_error, "listen", "listen failed");
+        exit(1);
+    }
+
+    return sd;
+}
 
 int OpenReceiverChannel(void)
 {

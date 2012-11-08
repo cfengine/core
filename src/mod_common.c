@@ -253,6 +253,7 @@ const BodySyntax CFS_CONTROLBODY[] =
     {"serverfacility", cf_opts, CF_FACILITY, "Menu option for syslog facility level", "LOG_USER"},
     {"skipverify", cf_slist, "", "List of IPs or hostnames for which we expect no DNS binding and cannot verify"},
     {"trustkeysfrom", cf_slist, "", "List of IPs from whom we accept public keys on trust"},
+    {"listen", cf_opts, CF_BOOL, "true/false enable server deamon to listen on defined port", "true"},
     {NULL, cf_notype, NULL, NULL}
 };
 

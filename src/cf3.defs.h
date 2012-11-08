@@ -860,6 +860,7 @@ enum cfscontrol
     cfs_serverfacility,
     cfs_skipverify,
     cfs_trustkeysfrom,
+    cfs_listen,
     cfs_notype,
 };
 

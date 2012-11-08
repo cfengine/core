@@ -229,7 +229,8 @@ cf_serverd_SOURCES = \
         cf-serverd-functions.c \
         cf-serverd-functions.h \
         server.c server.h \
-        server_transform.c
+        server_transform.c \
+        enterprise_stubs_serverd.c
 
 cf_serverd_LDADD =
 if HAVE_NOVA

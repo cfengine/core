@@ -2499,9 +2499,9 @@ static int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilena
             cfst.cf_type, (uintmax_t)cfst.cf_mode, (uintmax_t)cfst.cf_lmode, (intmax_t)cfst.cf_uid, (intmax_t)cfst.cf_gid, (long) cfst.cf_size,
             (intmax_t) cfst.cf_atime, (intmax_t) cfst.cf_mtime);
 
-    snprintf(sendbuffer, CF_BUFSIZE, "OK: %d %ju %ju %ju %ju %ld %jd %jd %jd %d %d %d %jd",
+    snprintf(sendbuffer, CF_BUFSIZE, "OK: %d %ju %ju %ju %ju %lld %jd %jd %jd %d %d %d %jd",
              cfst.cf_type, (uintmax_t)cfst.cf_mode, (uintmax_t)cfst.cf_lmode,
-             (uintmax_t)cfst.cf_uid, (uintmax_t)cfst.cf_gid, (long) cfst.cf_size,
+             (uintmax_t)cfst.cf_uid, (uintmax_t)cfst.cf_gid, (long long int)cfst.cf_size,
              (intmax_t) cfst.cf_atime, (intmax_t) cfst.cf_mtime, (intmax_t) cfst.cf_ctime,
              cfst.cf_makeholes, cfst.cf_ino, cfst.cf_nlink, (intmax_t) cfst.cf_dev);
 
@@ -2603,7 +2603,7 @@ static void CfGetFile(ServerFileGetState *args)
                         CfOut(cf_verbose, "send", "Send failed in GetFile");
                     }
 
-                    CfDebug("Aborting transfer after %zd: file is changing rapidly at source.\n", total);
+                    CfDebug("Aborting transfer after %jd: file is changing rapidly at source.\n", total);
                     break;
                 }
 

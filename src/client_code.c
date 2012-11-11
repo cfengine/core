@@ -341,29 +341,26 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, Attributes attr
 
     if (OKProtoReply(recvbuffer))
     {
-        long d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12 = 0, d13 = 0;
+        int d_ft;
+        long long int d_dev, d_off;
 
-        sscanf(recvbuffer, "OK: %1ld %5ld %14ld %14ld %14ld %14ld %14ld %14ld %14ld %14ld %14ld %14ld %14ld",
-               &d1, &d2, &d3, &d4, &d5, &d6, &d7, &d8, &d9, &d10, &d11, &d12, &d13);
+        if ((ret = sscanf(recvbuffer, "OK: %1d %5u %12u %12u %12u %16lld %14ld %14ld %14ld %1hhd %12d %12d %16lld",
+               &d_ft, &cfst.cf_mode, &cfst.cf_lmode, &cfst.cf_uid, &cfst.cf_gid, 
+               &d_off, &cfst.cf_atime, &cfst.cf_mtime, &cfst.cf_ctime, &cfst.cf_makeholes,
+               &cfst.cf_ino, &cfst.cf_nlink, &d_dev)) < 13)
+        {
+            CfOut(cf_error, "", "Cannot read SYNCH reply from %s: only %d/13 items parsed", conn->remoteip, ret );
+            return -1;
+        }
 
-        cfst.cf_type = (enum cf_filetype) d1;
-        cfst.cf_mode = (mode_t) d2;
-        cfst.cf_lmode = (mode_t) d3;
-        cfst.cf_uid = (uid_t) d4;
-        cfst.cf_gid = (gid_t) d5;
-        cfst.cf_size = (off_t) d6;
-        cfst.cf_atime = (time_t) d7;
-        cfst.cf_mtime = (time_t) d8;
-        cfst.cf_ctime = (time_t) d9;
-        cfst.cf_makeholes = (char) d10;
-        pp->makeholes = (char) d10;
-        cfst.cf_ino = d11;
-        cfst.cf_nlink = d12;
-        cfst.cf_dev = d13;
+        cfst.cf_type = (enum cf_filetype) d_ft;
+        cfst.cf_size = (off_t) d_off;
+        pp->makeholes = cfst.cf_makeholes;
+        cfst.cf_dev = (dev_t) d_dev;
 
         /* Use %?d here to avoid memory overflow attacks */
 
-        CfDebug("Mode = %ld,%ld\n", d2, d3);
+        CfDebug("Mode = %u, %u\n", cfst.cf_mode, cfst.cf_lmode);
 
         CfDebug
             ("OK: type=%d\n mode=%jo\n lmode=%jo\n uid=%ju\n gid=%ju\n size=%ld\n atime=%jd\n mtime=%jd ino=%d nlnk=%d, dev=%jd\n",
@@ -692,7 +689,7 @@ int CopyRegularFileNet(char *source, char *new, off_t size, Attributes attr, Pro
     int last_write_made_hole = 0, done = false, tosend, value;
     char *buf, workbuf[CF_BUFSIZE], cfchangedstr[265];
 
-    long n_read_total = 0;
+    off_t n_read_total = 0;
     EVP_CIPHER_CTX ctx;
     AgentConnection *conn = pp->conn;
 
@@ -739,7 +736,7 @@ int CopyRegularFileNet(char *source, char *new, off_t size, Attributes attr, Pro
 
     while (!done)
     {
-        if ((size - n_read_total) / buf_size > 0)
+        if ((size - n_read_total) > buf_size)
         {
             toget = towrite = buf_size;
         }
@@ -813,7 +810,7 @@ int CopyRegularFileNet(char *source, char *new, off_t size, Attributes attr, Pro
 
         n_read_total += towrite;        /* n_read; */
 
-        if (n_read_total >= (long) size)        /* Handle EOF without closing socket */
+        if (n_read_total >= size)        /* Handle EOF without closing socket */
         {
             done = true;
         }
@@ -944,6 +941,7 @@ int EncryptCopyRegularFileNet(char *source, char *new, off_t size, Attributes at
 
         if (!EVP_DecryptFinal_ex(&ctx, workbuf + plainlen, &finlen))
         {
+            // *-*
             CfDebug("Final decrypt failed\n");
             close(dd);
             free(buf);

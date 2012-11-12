@@ -471,10 +471,6 @@ void DeleteBodies(Body *bp);
 
 void VerifyInterfacePromise(char *vifdev, char *vaddress, char *vnetmask, char *vbroadcast);
 
-/* keyring.c */
-
-bool HostKeyAddressUnknown(const char *value);
-
 /* logging.c */
 
 void BeginAudit(void);

@@ -31,6 +31,7 @@
 #include "reporting.h"
 #include "scope.h"
 #include "files_interfaces.h"
+#include "keyring.h"
 
 #ifdef HAVE_NOVA
 #include "license.h"
@@ -216,74 +217,6 @@ static void ShowLastSeenHosts()
     printf("Total Entries: %d\n", count);
 }
 
-/*
- * Returns:
- *  amount of keys removed
- *  -1 if there was an error
- */
-static int RemovePublicKey(const char *id)
-{
-    Dir *dirh = NULL;
-    int removed = 0;
-    char keysdir[CF_BUFSIZE];
-    const struct dirent *dirp;
-    char suffix[CF_BUFSIZE];
-
-    snprintf(keysdir, CF_BUFSIZE, "%s/ppkeys", CFWORKDIR);
-    MapName(keysdir);
-
-    if ((dirh = OpenDirLocal(keysdir)) == NULL)
-    {
-        if (errno == ENOENT)
-        {
-            return 0;
-        }
-        else
-        {
-            CfOut(cf_error, "opendir", "Unable to open keys directory");
-            return -1;
-        }
-    }
-
-    snprintf(suffix, CF_BUFSIZE, "-%s.pub", id);
-
-    while ((dirp = ReadDir(dirh)) != NULL)
-    {
-        char *c = strstr(dirp->d_name, suffix);
-
-        if (c && (c[strlen(suffix)] == '\0'))     /* dirp->d_name ends with suffix */
-        {
-            char keyfilename[CF_BUFSIZE];
-
-            snprintf(keyfilename, CF_BUFSIZE, "%s/%s", keysdir, dirp->d_name);
-            MapName(keyfilename);
-
-            if (unlink(keyfilename) < 0)
-            {
-                if (errno != ENOENT)
-                {
-                    CfOut(cf_error, "unlink", "Unable to remove key file %s", dirp->d_name);
-                    CloseDir(dirh);
-                    return -1;
-                }
-            }
-            else
-            {
-                removed++;
-            }
-        }
-    }
-
-    if (errno)
-    {
-        CfOut(cf_error, "ReadDir", "Unable to enumerate files in keys directory");
-        CloseDir(dirh);
-        return -1;
-    }
-
-    CloseDir(dirh);
-    return removed;
-}
 
 static int RemoveKeys(const char *host)
 {

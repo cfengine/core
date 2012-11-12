@@ -200,7 +200,7 @@ void cfPS(enum cfreport level, char status, char *errstr, const Promise *pp, Att
             AppendItem(&mess, output, NULL);
         }
 
-        if (pp && pp->audit)
+        if (pp && (pp->audit))
         {
             snprintf(output, CF_BUFSIZE - 1, "I: Made in version \'%s\' of \'%s\' near line %zu",
                      v, pp->audit->filename, pp->offset.line);
@@ -245,7 +245,7 @@ void cfPS(enum cfreport level, char status, char *errstr, const Promise *pp, Att
     {
     case cf_inform:
 
-        if (INFORM || verbose || DEBUG || attr.transaction.report_level == cf_inform)
+        if (INFORM || verbose || DEBUG || (attr.transaction.report_level == cf_inform))
         {
             LogList(stdout, mess, verbose);
         }
@@ -407,7 +407,7 @@ static void MakeLog(Item *mess, enum cfreport level)
 {
     Item *ip;
 
-    if (!IsPrivileged() || DONTDO)
+    if ((!IsPrivileged()) || DONTDO)
     {
         return;
     }

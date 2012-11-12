@@ -25,13 +25,14 @@
 #include "cf3.defs.h"
 #include "atexit.h"
 
+#if defined(__MINGW32__)
+
 typedef struct AtExitList
 {
     AtExitFn fn;
     struct AtExitList *next;
 } AtExitList;
 
-static pthread_once_t register_atexit_once = PTHREAD_ONCE_INIT;
 static pthread_mutex_t atexit_functions_mutex = PTHREAD_MUTEX_INITIALIZER;
 static AtExitList *atexit_functions;
 
@@ -55,15 +56,11 @@ void CallAtExitFunctions(void)
     pthread_mutex_unlock(&atexit_functions_mutex);
 }
 
-static void RegisterAtExitHandler(void)
-{
-    atexit(&CallAtExitFunctions);
-}
+#endif
 
 void RegisterAtExitFunction(AtExitFn fn)
 {
-    pthread_once(&register_atexit_once, &RegisterAtExitHandler);
-
+#if defined(__MINGW32__)
     pthread_mutex_lock(&atexit_functions_mutex);
 
     AtExitList *p = xmalloc(sizeof(AtExitList));
@@ -73,4 +70,7 @@ void RegisterAtExitFunction(AtExitFn fn)
     atexit_functions = p;
 
     pthread_mutex_unlock(&atexit_functions_mutex);
+#endif
+
+    atexit(fn);
 }

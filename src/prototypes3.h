@@ -238,6 +238,7 @@ bool CFDB_HostsWithClass(Rlist **return_list, char *class_name, char *return_for
 
 void SyntaxCompletion(char *s);
 void TryCollectCall(void);
+int SetServerListenState(size_t queue_size);
 
 struct ServerConnectionState;
 
@@ -469,10 +470,6 @@ void DeleteBodies(Body *bp);
 /* interfaces.c */
 
 void VerifyInterfacePromise(char *vifdev, char *vaddress, char *vnetmask, char *vbroadcast);
-
-/* keyring.c */
-
-bool HostKeyAddressUnknown(const char *value);
 
 /* logging.c */
 

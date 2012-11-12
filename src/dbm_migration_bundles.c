@@ -72,7 +72,7 @@ static bool BundlesMigrationVersion0(DBHandle *db)
         errors = true;
     }
 
-    if (!errors && !WriteDB(db, "version", "1", sizeof("1")))
+    if ((!errors) && (!WriteDB(db, "version", "1", sizeof("1"))))
     {
         errors = true;
     }

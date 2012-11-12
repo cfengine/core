@@ -13,6 +13,9 @@ body common control
                  # Common bundles first for best practice 
                     "def",
 
+                 # Design Center
+                    "cfsketch_run",
+
                  # Agent buddles from here
                     "main",
 
@@ -33,6 +36,10 @@ body common control
 
          # COPBL/Custom libraries
             "libraries/cfengine_stdlib.cf",
+
+         # Design Center
+             # MARKER FOR CF-SKETCH INPUT INSERTION
+             "cf-sketch-runfile.cf",
 
          # User services from here
             "services/init_msg.cf",

@@ -52,7 +52,7 @@ char ToLower(char ch)
 
 char ToUpper(char ch)
 {
-    if (isdigit((int) ch) || ispunct((int) ch))
+    if ((isdigit((int) ch)) || (ispunct((int) ch)))
     {
         return (ch);
     }
@@ -153,7 +153,7 @@ int StringSafeCompare(const char *a, const char *b)
         return 0;
     }
 
-    if (a == NULL || b == NULL)
+    if ((a == NULL) || (b == NULL))
     {
         return -1;
     }
@@ -168,7 +168,7 @@ bool StringSafeEqual(const char *a, const char *b)
         return true;
     }
 
-    if (a == NULL || b == NULL)
+    if ((a == NULL) || (b == NULL))
     {
         return false;
     }
@@ -229,12 +229,12 @@ int GetStringListElement(char *strList, int index, char *outBuf, int outBufSz)
 
     for (sp = strList; *sp != '\0'; sp++)
     {
-        if ((sp[0] == '{' || sp[0] == ',') && sp[1] == '\'')
+        if (((sp[0] == '{') || (sp[0] == ',')) && (sp[1] == '\''))
         {
             elStart = sp + 2;
         }
 
-        else if ((sp[0] == '\'') && (sp[1] == ',' || sp[1] == '}'))
+        else if ((sp[0] == '\'') && ((sp[1] == ',') || (sp[1] == '}')))
         {
             elEnd = sp;
 
@@ -267,7 +267,7 @@ char *SearchAndReplace(const char *source, const char *search, const char *repla
 {
     const char *source_ptr = source;
 
-    if (source == NULL || search == NULL || replace == NULL)
+    if ((source == NULL) || (search == NULL) || (replace == NULL))
     {
         FatalError("Programming error: NULL argument is passed to SearchAndReplace");
     }
@@ -512,7 +512,7 @@ bool StringMatchFull(const char *regex, const char *str)
 
     if (StringMatchInternal(regex, str, &start, &end))
     {
-        return start == 0 && end == strlen(str);
+        return (start == 0) && (end == strlen(str));
     }
     else
     {
@@ -619,7 +619,7 @@ int SubStrnCopyChr(char *to, const char *from, int len, char sep)
         return 0;
     }
 
-    if (from && strlen(from) == 0)
+    if (from && (strlen(from) == 0))
     {
         return 0;
     }
@@ -631,7 +631,7 @@ int SubStrnCopyChr(char *to, const char *from, int len, char sep)
             break;
         }
 
-        if (*sp == '\\' && *(sp + 1) == sep)
+        if ((*sp == '\\') && (*(sp + 1) == sep))
         {
             *sto++ = *++sp;
         }
@@ -659,14 +659,14 @@ int CountChar(const char *string, char sep)
         return 0;
     }
 
-    if (string && strlen(string) == 0)
+    if (string && (strlen(string) == 0))
     {
         return 0;
     }
 
     for (const char *sp = string; *sp != '\0'; sp++)
     {
-        if (*sp == '\\' && *(sp + 1) == sep)
+        if ((*sp == '\\') && (*(sp + 1) == sep))
         {
             ++sp;
         }

@@ -988,9 +988,22 @@ static char *JsonParseAsString(const char **data)
 
     for (*data = *data + 1; **data != '\0'; *data = *data + 1)
     {
-        if (**data == '"')
+        if (**data == '"' && *(*data - 1) != '\\')
         {
             return StringWriterClose(writer);
+        }
+
+        /* unescaping input strings */
+        if (**data == '\\' &&
+                (*(*data + 1) == '\"' ||
+                 *(*data + 1) == '\\' ||
+                 *(*data + 1) == '\b' ||
+                 *(*data + 1) == '\f' ||
+                 *(*data + 1) == '\n' ||
+                 *(*data + 1) == '\r' ||
+                 *(*data + 1) == '\t'))
+        {
+            continue;
         }
 
         WriterWriteChar(writer, **data);

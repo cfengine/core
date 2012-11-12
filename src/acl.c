@@ -206,7 +206,7 @@ static void SetACLDefaults(char *path, Acl *acl)
 
 // default on directories: acl_directory_inherit => parent
 
-    if (acl->acl_directory_inherit == cfacl_noinherit && IsDir(path))
+    if ((acl->acl_directory_inherit == cfacl_noinherit) && (IsDir(path)))
     {
         acl->acl_directory_inherit = cfacl_nochange;
     }
@@ -372,7 +372,7 @@ static int CheckModeSyntax(char **mode_p, char *valid_ops, char *valid_nperms, P
 
 // mode is allowed to be empty
 
-    if (*mode == '\0' || *mode == ':')
+    if ((*mode == '\0') || (*mode == ':'))
     {
         return true;
     }
@@ -402,7 +402,7 @@ static int CheckModeSyntax(char **mode_p, char *valid_ops, char *valid_nperms, P
             }
         }
 
-        if (*mode == '\0' || *mode == ':')      // end of mode-string
+        if ((*mode == '\0') || (*mode == ':'))      // end of mode-string
         {
             valid = true;
             break;

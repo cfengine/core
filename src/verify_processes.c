@@ -55,11 +55,11 @@ static int ProcessSanityChecks(Attributes a, Promise *pp)
 {
     int promised_zero, ret = true;
 
-    promised_zero = (a.process_count.min_range == 0 && a.process_count.max_range == 0);
+    promised_zero = ((a.process_count.min_range == 0) && (a.process_count.max_range == 0));
 
     if (a.restart_class)
     {
-        if (IsStringIn(a.signals, "term") || IsStringIn(a.signals, "kill"))
+        if ((IsStringIn(a.signals, "term")) || (IsStringIn(a.signals, "kill")))
         {
             CfOut(cf_inform, "", " -> (warning) Promise %s kills then restarts - never strictly converges",
                   pp->promiser);
@@ -75,7 +75,7 @@ static int ProcessSanityChecks(Attributes a, Promise *pp)
         }
     }
 
-    if (promised_zero && a.restart_class)
+    if (promised_zero && (a.restart_class))
     {
         CfOut(cf_error, "", "Promise constraint conflicts - %s processes cannot have zero count if restarted",
               pp->promiser);
@@ -83,7 +83,7 @@ static int ProcessSanityChecks(Attributes a, Promise *pp)
         ret = false;
     }
 
-    if (a.haveselect && !a.process_select.process_result)
+    if ((a.haveselect) && (!a.process_select.process_result))
     {
         CfOut(cf_error, "", " !! Process select constraint body promised no result (check body definition)");
         PromiseRef(cf_error, pp);
@@ -138,7 +138,7 @@ static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp)
 
     if (a.process_count.min_range != CF_NOINT)  /* if a range is specified */
     {
-        if (matches < a.process_count.min_range || matches > a.process_count.max_range)
+        if ((matches < a.process_count.min_range) || (matches > a.process_count.max_range))
         {
             cfPS(cf_error, CF_CHG, "", pp, a, " !! Process count for \'%s\' was out of promised range (%d found)\n", pp->promiser, matches);
             AddEphemeralClasses(a.process_count.out_of_range_define, pp->namespace);
@@ -172,7 +172,7 @@ static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp)
 
 /* signal/kill promises for existing matches */
 
-    if (do_signals && matches > 0)
+    if (do_signals && (matches > 0))
     {
         if (a.process_stop != NULL)
         {
@@ -203,7 +203,7 @@ static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp)
 
 /* delegated promise to restart killed or non-existent entries */
 
-    need_to_restart = (a.restart_class != NULL) && (killed || matches == 0);
+    need_to_restart = (a.restart_class != NULL) && (killed || (matches == 0));
 
     DeleteItemList(killlist);
 
@@ -275,7 +275,7 @@ static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, Promise
 
             if (pid == 1)
             {
-                if ((RlistLen(a.signals) == 1) && IsStringIn(a.signals, "hup"))
+                if ((RlistLen(a.signals) == 1) && (IsStringIn(a.signals, "hup")))
                 {
                     CfOut(cf_verbose, "", "(Okay to send only HUP to init)\n");
                 }
@@ -285,23 +285,23 @@ static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, Promise
                 }
             }
 
-            if (pid < 4 && a.signals)
+            if ((pid < 4) && (a.signals))
             {
                 CfOut(cf_verbose, "", "Will not signal or restart processes 0,1,2,3 (occurred while looking for %s)\n",
                       pp->promiser);
                 continue;
             }
 
-            promised_zero = a.process_count.min_range == 0 && a.process_count.max_range == 0;
+            promised_zero = (a.process_count.min_range == 0) && (a.process_count.max_range == 0);
 
-            if (a.transaction.action == cfa_warn && promised_zero)
+            if ((a.transaction.action == cfa_warn) && promised_zero)
             {
                 CfOut(cf_error, "", "Process alert: %s\n", procdata->name);     /* legend */
                 CfOut(cf_error, "", "Process alert: %s\n", ip->name);
                 continue;
             }
 
-            if (pid == cfengine_pid && a.signals)
+            if ((pid == cfengine_pid) && (a.signals))
             {
                 CfOut(cf_verbose, "", " !! cf-agent will not signal itself!\n");
                 continue;

@@ -45,6 +45,7 @@ void ThisAgentInit(void);
 GenericAgentConfig CheckOpts(int argc, char **argv);
 int OpenReceiverChannel(void);
 void CheckFileChanges(Policy **policy, GenericAgentConfig config, const ReportContext *report_context);
+int InitServer(size_t queue_size);
 
 #if !defined(HAVE_GETADDRINFO)
 in_addr_t GetInetAddr(char *host);

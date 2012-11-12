@@ -172,7 +172,7 @@ void NoteClassUsage(AlphaList baselist, int purge)
 
     for (ip = AlphaListIteratorNext(&it); ip != NULL; ip = AlphaListIteratorNext(&it))
     {
-        if (IGNORECLASS(ip->name))
+        if ((IGNORECLASS(ip->name)))
         {
             CfDebug("Ignoring class %s (not packing)", ip->name);
             continue;

@@ -125,7 +125,7 @@ Item *ReturnItemInClass(Item *list, char *item, char *classes)
 
     for (ptr = list; ptr != NULL; ptr = ptr->next)
     {
-        if (strcmp(ptr->name, item) == 0 && strcmp(ptr->classes, classes) == 0)
+        if ((strcmp(ptr->name, item) == 0) && (strcmp(ptr->classes, classes) == 0))
         {
             return ptr;
         }
@@ -225,7 +225,7 @@ int IsItemInRegion(char *item, Item *begin_ptr, Item *end_ptr, Attributes a, Pro
 {
     Item *ip;
 
-    for (ip = begin_ptr; (ip != end_ptr && ip != NULL); ip = ip->next)
+    for (ip = begin_ptr; ((ip != end_ptr) && (ip != NULL)); ip = ip->next)
     {
         if (MatchPolicy(item, ip->name, a, pp))
         {
@@ -460,9 +460,9 @@ int SelectItemMatching(Item *start, char *regex, Item *begin_ptr, Item *end_ptr,
         }
     }
 
-    if (*match != CF_UNDEFINED_ITEM && *prev == CF_UNDEFINED_ITEM)
+    if ((*match != CF_UNDEFINED_ITEM) && (*prev == CF_UNDEFINED_ITEM))
     {
-        for (ip = start; ip != NULL && ip != *match; ip = ip->next)
+        for (ip = start; (ip != NULL) && (ip != *match); ip = ip->next)
         {
             *prev = ip;
         }
@@ -600,7 +600,7 @@ void InsertAfter(Item **filestart, Item *ptr, char *string)
 {
     Item *ip;
 
-    if (*filestart == NULL || ptr == CF_UNDEFINED_ITEM)
+    if ((*filestart == NULL) || (ptr == CF_UNDEFINED_ITEM))
     {
         AppendItem(filestart, string, NULL);
         return;
@@ -633,7 +633,7 @@ int NeighbourItemMatches(Item *file_start, Item *location, char *string, enum cf
     {
         if (pos == cfe_before)
         {
-            if (ip->next && ip->next == location)
+            if ((ip->next) && (ip->next == location))
             {
                 if (MatchPolicy(string, ip->name, a, pp))
                 {
@@ -650,7 +650,7 @@ int NeighbourItemMatches(Item *file_start, Item *location, char *string, enum cf
         {
             if (ip == location)
             {
-                if (ip->next && MatchPolicy(string, ip->next->name, a, pp))
+                if ((ip->next) && (MatchPolicy(string, ip->next->name, a, pp)))
                 {
                     return true;
                 }
@@ -903,7 +903,7 @@ void DeleteItem(Item **liststart, Item *item)
         }
         else
         {
-            for (ip = *liststart; ip != NULL && ip->next != item && ip->next != NULL; ip = ip->next)
+            for (ip = *liststart; (ip != NULL) && (ip->next != item) && (ip->next != NULL); ip = ip->next)
             {
             }
 

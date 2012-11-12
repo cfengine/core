@@ -87,7 +87,7 @@ libpromises_la_SOURCES = \
         item_lib.c item_lib.h \
         iteration.c \
         json.c json.h \
-        keyring.c \
+        keyring.c keyring.h\
         lastseen.c lastseen.h \
         logging.c \
         logic_expressions.c logic_expressions.h \
@@ -229,7 +229,8 @@ cf_serverd_SOURCES = \
         cf-serverd-functions.c \
         cf-serverd-functions.h \
         server.c server.h \
-        server_transform.c
+        server_transform.c \
+        enterprise_stubs_serverd.c
 
 cf_serverd_LDADD =
 if HAVE_NOVA

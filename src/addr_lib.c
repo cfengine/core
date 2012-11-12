@@ -162,7 +162,7 @@ int FuzzySetMatch(char *s1, char *s2)
                     sscanf(buffer1, "%ld-%ld", &from, &to);
                     sscanf(buffer2, "%ld", &cmp);
 
-                    if (from < 0 || to < 0)
+                    if ((from < 0) || (to < 0))
                     {
                         CfDebug("Couldn't read range\n");
                         return -1;
@@ -325,7 +325,7 @@ int FuzzyHostMatch(char *arg0, char *arg1, char *refhost)
 
     sscanf(arg1, "%ld-%ld", &start, &end);
 
-    if (cmp < start || cmp > end)
+    if ((cmp < start) || (cmp > end))
     {
         return 1;
     }
@@ -461,7 +461,7 @@ int FuzzyMatchParse(char *s)
             {
                 sscanf(buffer1, "%ld-%ld", &from, &to);
 
-                if (from < 0 || to < 0)
+                if ((from < 0) || (to < 0))
                 {
                     CfOut(cf_error, "", "Error in IP range - looks like address, or bad hostname");
                     return false;

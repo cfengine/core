@@ -332,11 +332,11 @@ void AddSlash(char *str)
         }
     }
 
-    if (f && !b)
+    if (f && (!b))
     {
         sep = "/";
     }
-    else if (b && !f)
+    else if (b && (!f))
     {
         sep = "\\";
     }
@@ -493,7 +493,7 @@ void CanonifyNameInPlace(char *s)
 {
     for (; *s != '\0'; s++)
     {
-        if (!isalnum((int)*s) || *s == '.')
+        if ((!isalnum((int)*s)) || (*s == '.'))
         {
             *s = '_';
         }
@@ -551,7 +551,7 @@ int CompareCSVName(const char *s1, const char *s2)
     const char *sp1, *sp2;
     char ch1, ch2;
 
-    for (sp1 = s1, sp2 = s2; *sp1 != '\0' || *sp2 != '\0'; sp1++, sp2++)
+    for (sp1 = s1, sp2 = s2; (*sp1 != '\0') || (*sp2 != '\0'); sp1++, sp2++)
     {
         ch1 = (*sp1 == ',') ? '_' : *sp1;
         ch2 = (*sp2 == ',') ? '_' : *sp2;
@@ -658,7 +658,7 @@ void Chop(char *str)            /* remove trailing spaces */
         return;
     }
 
-    for (i = strlen(str) - 1; i >= 0 && isspace((int) str[i]); i--)
+    for (i = strlen(str) - 1; (i >= 0) && (isspace((int) str[i])); i--)
     {
         str[i] = '\0';
     }
@@ -676,7 +676,7 @@ void StripTrailingNewline(char *str)
         return;
     }
 
-    for (; c >= str && (*c == '\0' || *c == '\n'); --c)
+    for (; (c >= str) && ((*c == '\0') || (*c == '\n')); --c)
     {
         *c = '\0';
     }
@@ -705,7 +705,7 @@ int CompressPath(char *dest, char *src)
             continue;
         }
 
-        for (nodelen = 0; sp[nodelen] != '\0' && !IsFileSep(sp[nodelen]); nodelen++)
+        for (nodelen = 0; (sp[nodelen] != '\0') && (!IsFileSep(sp[nodelen])); nodelen++)
         {
             if (nodelen > CF_MAXLINKSIZE)
             {
@@ -754,7 +754,7 @@ char *ScanPastChars(char *scanpast, char *input)
 {
     char *pos = input;
 
-    while (*pos != '\0' && strchr(scanpast, *pos))
+    while ((*pos != '\0') && (strchr(scanpast, *pos)))
     {
         pos++;
     }
@@ -793,7 +793,7 @@ int IsAbsoluteFileName(const char *f)
 
 bool IsFileOutsideDefaultRepository(const char *f)
 {
-    return (*f == '.') || IsAbsoluteFileName(f);
+    return (*f == '.') || (IsAbsoluteFileName(f));
 }
 
 /*******************************************************************/

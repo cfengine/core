@@ -63,7 +63,7 @@ int IdentifyAgent(int sd, char *localip, int family)
     memset(sendbuff, 0, CF_BUFSIZE);
     memset(dnsname, 0, CF_BUFSIZE);
 
-    if (!SKIPIDENTIFY && (strcmp(VDOMAIN, CF_START_DOMAIN) == 0))
+    if ((!SKIPIDENTIFY) && (strcmp(VDOMAIN, CF_START_DOMAIN) == 0))
     {
         CfOut(cf_error, "", "Undefined domain name");
         return false;
@@ -156,7 +156,7 @@ int IdentifyAgent(int sd, char *localip, int family)
 
 /* Some resolvers will not return FQNAME and missing PTR will give numerical result */
 
-    if ((strlen(VDOMAIN) > 0) && !IsIPV6Address(dnsname) && !strchr(dnsname, '.'))
+    if ((strlen(VDOMAIN) > 0) && (!IsIPV6Address(dnsname)) && (!strchr(dnsname, '.')))
     {
         CfDebug("Appending domain %s to %s\n", VDOMAIN, dnsname);
         strcat(dnsname, ".");
@@ -200,7 +200,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
     char enterprise_field = 'c';
     RSA *server_pubkey = NULL;
 
-    if (PUBKEY == NULL || PRIVKEY == NULL)
+    if ((PUBKEY == NULL) || (PRIVKEY == NULL))
     {
         CfOut(cf_error, "", "No public/private key pair found\n");
         return false;
@@ -324,7 +324,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
         return false;
     }
 
-    if (HashesMatch(digest, in, CF_DEFAULT_DIGEST) || HashesMatch(digest, in, cf_md5))  // Legacy
+    if ((HashesMatch(digest, in, CF_DEFAULT_DIGEST)) || (HashesMatch(digest, in, cf_md5)))  // Legacy
     {
         if (implicitly_trust_server == false)        /* challenge reply was correct */
         {

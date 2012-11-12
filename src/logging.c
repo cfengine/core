@@ -148,7 +148,7 @@ void EndAudit(void)
  */
 static bool IsPromiseValuableForStatus(const Promise *pp)
 {
-    return pp && pp->agentsubtype != NULL && !IsStrIn(pp->agentsubtype, NO_STATUS_TYPES);
+    return pp && (pp->agentsubtype != NULL) && (!IsStrIn(pp->agentsubtype, NO_STATUS_TYPES));
 }
 
 /*****************************************************************************/
@@ -160,7 +160,7 @@ static bool IsPromiseValuableForStatus(const Promise *pp)
 
 static bool IsPromiseValuableForLogging(const Promise *pp)
 {
-    return pp && pp->agentsubtype != NULL && !IsStrIn(pp->agentsubtype, NO_LOG_TYPES);
+    return pp && (pp->agentsubtype != NULL) && (!IsStrIn(pp->agentsubtype, NO_LOG_TYPES));
 }
 
 /*****************************************************************************/
@@ -337,7 +337,7 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, c
         break;
     }
 
-    if (!(attr.transaction.audit || AUDIT))
+    if (!((attr.transaction.audit) || AUDIT))
     {
         return;
     }
@@ -347,7 +347,7 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, c
         return;
     }
 
-    if (AUDITDBP == NULL || THIS_AGENT_TYPE != cf_agent)
+    if ((AUDITDBP == NULL) || (THIS_AGENT_TYPE != cf_agent))
     {
         CloseDB(AUDITDBP);
         return;
@@ -383,7 +383,7 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, c
         strncpy(newaudit.comment, str, CF_AUDIT_COMMENT - 1);
         strncpy(newaudit.filename, ap->filename, CF_AUDIT_COMMENT - 1);
 
-        if (ap->version == NULL || strlen(ap->version) == 0)
+        if ((ap->version == NULL) || (strlen(ap->version) == 0))
         {
             CfDebug("Promised in %s bundle %s (unamed version last edited at %s) at/before line %d\n",
                     ap->filename, pp->bundle, ap->date, lineno);
@@ -410,7 +410,7 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, c
 
     newaudit.status = status;
 
-    if (AUDITDBP && (attr.transaction.audit || AUDIT))
+    if (AUDITDBP && ((attr.transaction.audit) || AUDIT))
     {
         WriteDB(AUDITDBP, key, &newaudit, sizeof(newaudit));
     }
@@ -486,7 +486,7 @@ void PromiseLog(char *s)
     time_t now = time(NULL);
     FILE *fout;
 
-    if (s == NULL || strlen(s) == 0)
+    if ((s == NULL) || (strlen(s) == 0))
     {
         return;
     }

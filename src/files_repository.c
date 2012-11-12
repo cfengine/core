@@ -53,7 +53,7 @@ void SetRepositoryChar(char c)
 
 bool GetRepositoryPath(const char *file, Attributes attr, char *destination)
 {
-    if (attr.repository == NULL && VREPOSITORY == NULL)
+    if ((attr.repository == NULL) && (VREPOSITORY == NULL))
     {
         return false;
     }

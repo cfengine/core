@@ -266,7 +266,7 @@ category:           category_type
                        ss = SubTypeSyntaxLookup(P.blocktype, P.currenttype);
                        if ( ss.bundle_type == NULL )
                        {
-                          sprintf(error_txt, "Category: '%s' is not a valid type for bundle type: '%s'\n", 
+                          sprintf(error_txt, "Promise: '%s' is not a valid type for bundle type: '%s'\n",
                                     P.currenttype, P.blocktype);
                           parse_error(error_txt);
                        }
@@ -364,7 +364,7 @@ category_type:           REPORTS_CATEGORY
                        | UNKNOWN_CATEGORY
                          {
                             
-                            sprintf(error_txt,"'%s' is not a valid category for bundle '%s'\n", yytext, P.blocktype);
+                            sprintf(error_txt,"'%s' is not a valid promise type for bundle '%s'\n", yytext, P.blocktype);
                             parse_error(error_txt);
                          }
 
@@ -409,9 +409,6 @@ promiser_type:       promiser_id
                         while ( valid_types_p->lval != NULL )
                         {
 
-                           /*
-                             printf("Hvb keyword = %s\n", valid_types_p->lval);
-                           */
                            if (strcmp(yytext, valid_types_p->lval) == 0)
                            {
                               found = true; 
@@ -477,7 +474,7 @@ promiser_type:       promiser_id
                           */ 
                           if ( !found )
                           {
-                             sprintf(error_txt, "'%s' is not allowed as promise type for category: '%s'\n", 
+                             sprintf(error_txt, "'%s' is not allowed as promise attribute for promise type: '%s'\n", 
                                            yytext, P.currenttype);
                              parse_error(error_txt);
                           }
@@ -836,7 +833,7 @@ rval_type:            /*  These token can never be RVAL HvB
                        }
                      | error
                        {
-                       parse_error("basje\n"); 
+                       parse_error("invalid\n"); 
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

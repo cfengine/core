@@ -39,6 +39,7 @@
 #include "reporting.h"
 #include "expand.h"
 #include "scope.h"
+#include "keyring.h"
 
 #include <libgen.h>
 

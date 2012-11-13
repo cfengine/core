@@ -7,7 +7,7 @@ body server control
   listening_host_context::
     listen => "true";
 
-  !listening_hosts_context::
+  !listening_host_context::
     listen => "false";
 }
 

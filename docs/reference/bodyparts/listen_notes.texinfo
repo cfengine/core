@@ -1,7 +1,5 @@
 
-@i{History}: Was introduced in 3.5.0a1.3782d9c64f515d1ee1fffe0cf10035af3d6581fb, Enterprise 3.1.0a1.601ca4c1c6f36253f3f126285e23cca1f2ca2ab2 (2012)
-
-In a standard setup the CFEngine server daemon @code{cf-serverd} listens on port 5308 (the port number can be changed through policy). This attribute allows to disable @code{cf-serverd} from listening on the defined port. 
+@i{History}: Was introduced in 3.4.0, Enterprise 3.0 (2012)
 
 This attribute allows to disable @code{cf-serverd} from listening on any port. Should be used in conjunction with @code{call_collect_interval}.
 

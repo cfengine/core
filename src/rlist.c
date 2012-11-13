@@ -697,19 +697,19 @@ int PrintRlist(char *buffer, int bufsize, Rlist *list)
     {
         if (!JoinSilent(buffer, "'", bufsize))
         {
-            EndJoin(buffer, "...TRUNCATED'}", bufsize);
+            EndJoin(buffer, "'}", bufsize);
             return false;
         }
 
         if (!PrintRval(buffer, bufsize, (Rval) {rp->item, rp->type}))
         {
-            EndJoin(buffer, "...TRUNCATED'}", bufsize);
+            EndJoin(buffer, "'}", bufsize);
             return false;
         }
 
         if (!JoinSilent(buffer, "'", bufsize))
         {
-            EndJoin(buffer, "...TRUNCATED'}", bufsize);
+            EndJoin(buffer, "'}", bufsize);
             return false;
         }
 
@@ -717,7 +717,7 @@ int PrintRlist(char *buffer, int bufsize, Rlist *list)
         {
             if (!JoinSilent(buffer, ",", bufsize))
             {
-                EndJoin(buffer, "...TRUNCATED}", bufsize);
+                EndJoin(buffer, "}", bufsize);
                 return false;
             }
         }

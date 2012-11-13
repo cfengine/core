@@ -41,19 +41,19 @@ int PrintItemList(char *buffer, int bufsize, Item *list)
     {
         if (!JoinSilent(buffer, "'", bufsize))
         {
-            EndJoin(buffer, "...TRUNCATED'}", bufsize);
+            EndJoin(buffer, "'}", bufsize);
             return false;
         }
 
         if (!Join(buffer,ip->name,bufsize))
         {
-            EndJoin(buffer, "...TRUNCATED'}", bufsize);
+            EndJoin(buffer, "'}", bufsize);
             return false;
         }
 
         if (!JoinSilent(buffer, "'", bufsize))
         {
-            EndJoin(buffer, "...TRUNCATED'}", bufsize);
+            EndJoin(buffer, "'}", bufsize);
             return false;
         }
 
@@ -61,7 +61,7 @@ int PrintItemList(char *buffer, int bufsize, Item *list)
         {
             if (!JoinSilent(buffer, ",", bufsize))
             {
-                EndJoin(buffer, "...TRUNCATED}", bufsize);
+                EndJoin(buffer, "}", bufsize);
                 return false;
             }
         }

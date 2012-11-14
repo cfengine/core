@@ -181,6 +181,7 @@ typedef struct
 
 typedef struct
 {
+    time_t last_seen;
     QPoint Q[CF_OBSERVABLES];
 } Averages;
 

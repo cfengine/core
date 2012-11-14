@@ -207,7 +207,7 @@ void ThisAgentInit(void)
 
 /*******************************************************************/
 
-void StartServer(Policy *policy, GenericAgentConfig config, const ReportContext *report_context)
+void StartServer(Policy *policy, GenericAgentConfig config)
 {
     int sd = -1, sd_reply;
     fd_set rset;
@@ -217,6 +217,7 @@ void StartServer(Policy *policy, GenericAgentConfig config, const ReportContext 
     Attributes dummyattr = { {0} };
     CfLock thislock;
     time_t starttime = time(NULL), last_collect = 0;
+    ReportContext *report_context = NULL;
 
 #if defined(HAVE_GETADDRINFO)
     socklen_t addrlen = sizeof(struct sockaddr_in6);
@@ -294,7 +295,10 @@ void StartServer(Policy *policy, GenericAgentConfig config, const ReportContext 
         {
             if (ACTIVE_THREADS == 0)
             {
+                report_context = OpenReports("server");
                 CheckFileChanges(&policy, config, report_context);
+                ReportContextDestroy(report_context);
+                report_context = NULL;
             }
             ThreadUnlock(cft_server_children);
         }

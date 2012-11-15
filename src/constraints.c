@@ -31,6 +31,7 @@
 #include "item_lib.h"
 #include "files_names.h"
 #include "conversion.h"
+#include "reporting.h"
 
 static PromiseIdent *PromiseIdExists(char *namespace, char *handle);
 static void DeleteAllPromiseIdsRecurse(PromiseIdent *key);
@@ -384,6 +385,27 @@ double GetRealConstraint(const char *lval, const Promise *pp)
 }
 
 /*****************************************************************************/
+
+static mode_t Str2Mode(const char *s)
+{
+    int a = CF_UNDEFINED;
+    char output[CF_BUFSIZE];
+
+    if (s == NULL)
+    {
+        return 0;
+    }
+
+    sscanf(s, "%o", &a);
+
+    if (a == CF_UNDEFINED)
+    {
+        snprintf(output, CF_BUFSIZE, "Error reading assumed octal value %s\n", s);
+        ReportError(output);
+    }
+
+    return (mode_t) a;
+}
 
 mode_t GetOctalConstraint(const char *lval, const Promise *pp)
 {

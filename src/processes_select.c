@@ -27,6 +27,7 @@
 #include "env_context.h"
 #include "files_names.h"
 #include "conversion.h"
+#include "reporting.h"
 
 static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char **names, char **line);
 static int SelectProcRegexMatch(char *name1, char *name2, char *regex, char **colNames, char **line);
@@ -200,6 +201,36 @@ static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char
 }
 
 /***************************************************************************/
+
+static long TimeCounter2Int(const char *s)
+{
+    long d = 0, h = 0, m = 0;
+    char output[CF_BUFSIZE];
+
+    if (s == NULL)
+    {
+        return CF_NOINT;
+    }
+
+    if (strchr(s, '-'))
+    {
+        if (sscanf(s, "%ld-%ld:%ld", &d, &h, &m) != 3)
+        {
+            snprintf(output, CF_BUFSIZE, "Unable to parse TIME 'ps' field, expected dd-hh:mm, got '%s'", s);
+            ReportError(output);
+        }
+    }
+    else
+    {
+        if (sscanf(s, "%ld:%ld", &h, &m) != 2)
+        {
+            snprintf(output, CF_BUFSIZE, "Unable to parse TIME 'ps' field, expected hH:mm, got '%s'", s);
+            ReportError(output);
+        }
+    }
+
+    return 60 * (m + 60 * (h + 24 * d));
+}
 
 static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line)
 {

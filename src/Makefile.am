@@ -79,7 +79,7 @@ libpromises_la_SOURCES = \
         full_write.c \
         generic_agent.c generic_agent.h \
         granules.c granules.h \
-        hashes.c \
+        hashes.c hashes.h \
         hash_map.c hash_map_priv.h \
         html.c \
         install.c \

@@ -37,6 +37,7 @@
 #include "reporting.h"
 #include "expand.h"
 #include "matching.h"
+#include "hashes.h"
 
 /*****************************************************************************/
 

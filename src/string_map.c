@@ -22,9 +22,9 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
-
 #include "string_map.h"
+
+#include "hashes.h"
 
 TYPED_MAP_DEFINE(String, char *, char *,
                  (MapHashFn)&OatHash,

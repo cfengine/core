@@ -27,6 +27,7 @@
 
 #include "vars.h"
 #include "expand.h"
+#include "hashes.h"
 
 #include <assert.h>
 

@@ -41,6 +41,7 @@
 #include "scope.h"
 #include "keyring.h"
 #include "matching.h"
+#include "hashes.h"
 
 #include <libgen.h>
 

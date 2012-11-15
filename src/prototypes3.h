@@ -479,10 +479,6 @@ void KeepControlPromises(Policy *policy);
 Auth *GetAuthPath(char *path, Auth *list);
 void Summarize(void);
 
-/* show.c */
-
-#include "show.h"
-
 /* signals.c */
 
 void HandleSignals(int signum);

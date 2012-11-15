@@ -28,6 +28,8 @@
 
 #include "cf3.defs.h"
 
+#include "alphalist.h"
+
 struct timespec BeginMeasure(void);
 void EndMeasure(char *eventname, struct timespec start);
 void EndMeasurePromise(struct timespec start, Promise *pp);

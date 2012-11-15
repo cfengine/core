@@ -22,7 +22,8 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include "alphalist.h"
+
 #include "item_lib.h"
 #include "matching.h"
 

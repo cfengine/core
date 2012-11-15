@@ -25,6 +25,8 @@
 #ifndef CFENGINE_ALPHALIST_H
 #define CFENGINE_ALPHALIST_H
 
+#include "cf3.defs.h"
+
 // Indexed itemlist
 typedef struct
 {

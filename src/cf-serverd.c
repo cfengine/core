@@ -3925,6 +3925,7 @@ static void KeepHardClasses()
 
         if (fp != NULL)
         {
+            fclose(fp);
             snprintf(name, 1024, "%s/state/am_policy_hub", CFWORKDIR);
             MapName(name);
 

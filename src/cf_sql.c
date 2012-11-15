@@ -40,28 +40,6 @@
 /* Cfengine connectors for sql databases. Note that there are significant
    differences in db admin functions in the various implementations. e.g.
    sybase/mysql "use database, create database" not in postgres.
-
-CfConnectDB(&cfdb,SQL_TYPE,SQL_SERVER,SQL_OWNER,SQL_PASSWD,SQL_DATABASE);
-
-if (!cfdb.connected)
-   {
-   printf("Could not open sqldb\n");
-   return;
-   }
-
-CfNewQueryDB(&cfdb,"SELECT * from topics");
-
-while(CfFetchRow(&cfdb))
-   {
-   for (i = 0; i < cfdb.maxcolumns; i++)
-      {
-      printf("Row %d: %s\n",i,CfFetchColumn(&cfdb,i));
-      }
-   }
-
-CfDeleteQuery(&cfdb);
-
-CfCloseDB(&cfdb);
 */
 
 /*****************************************************************************/

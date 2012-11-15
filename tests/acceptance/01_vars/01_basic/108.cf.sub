@@ -1,0 +1,15 @@
+body file control
+{
+  namespace => "ns108";
+}
+
+bundle agent pass(given_dummy)
+{
+  vars:
+      "passed_dummy" string => "$(given_dummy)";
+
+  reports:
+    DEBUG::
+      "ns108:pass: given_dummy = '$(given_dummy)'";
+      "ns108:pass: passed_dummy = '$(passed_dummy)'";
+}

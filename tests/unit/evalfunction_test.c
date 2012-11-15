@@ -3,15 +3,27 @@
 
 static bool netgroup_more = false;
 
-int setnetgrent(const char *netgroup)
+#if SETNETGRENT_RETURNS_INT
+int
+#else
+void
+#endif
+setnetgrent(const char *netgroup)
 {
     if (strcmp(netgroup, "valid_netgroup") == 0)
     {
         netgroup_more = true;
+#if SETNETGRENT_RETURNS_INT
         return 1;
+#else
+        return;
+#endif
     }
     netgroup_more = false;
+
+#if SETNETGRENT_RETURNS_INT
     return 0;
+#endif
 }
 
 int getnetgrent(char **hostp, char **userp, char **domainp)

@@ -29,9 +29,19 @@
 #include "lastseen.h"
 #include "dir.h"
 #include "reporting.h"
+#include "scope.h"
+#include "files_interfaces.h"
+#include "keyring.h"
+
+#ifdef HAVE_NOVA
+#include "license.h"
+#endif
+
 
 int SHOWHOSTS = false;
 bool REMOVEKEYS = false;
+bool LICENSE_INSTALL = false;
+char LICENSE_SOURCE[MAX_FILENAME];
 const char *remove_keys_host;
 
 static GenericAgentConfig CheckOpts(int argc, char **argv);
@@ -40,11 +50,15 @@ static void ShowLastSeenHosts(void);
 static int RemoveKeys(const char *host);
 static void KeepKeyPromises(void);
 
+#ifndef HAVE_NOVA
+bool LicenseInstall(char *path_source);
+#endif
+
 /*******************************************************************/
 /* Command line options                                            */
 /*******************************************************************/
 
-static const char *ID = "The cfengine's generator makes key pairs for remote authentication.\n";
+static const char *ID = "The CFEngine key generator makes key pairs for remote authentication.\n";
 
 static const struct option OPTIONS[17] =
 {
@@ -55,6 +69,7 @@ static const struct option OPTIONS[17] =
     {"output-file", required_argument, 0, 'f'},
     {"show-hosts", no_argument, 0, 's'},
     {"remove-keys", required_argument, 0, 'r'},
+    {"install-license", required_argument, 0, 'l'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -67,6 +82,7 @@ static const char *HINTS[17] =
     "Specify an alternative output file than the default (localhost)",
     "Show lastseen hostnames and IP addresses",
     "Remove keys for specified hostname/IP",
+    "Install license without boostrapping (CFEngine Enterprise only)",
     NULL
 };
 
@@ -92,6 +108,12 @@ int main(int argc, char *argv[])
         return RemoveKeys(remove_keys_host);
     }
 
+    if(LICENSE_INSTALL)
+    {
+        bool success = LicenseInstall(LICENSE_SOURCE);
+        return success ? 0 : 1;
+    }
+
     KeepKeyPromises();
 
     ReportContextDestroy(report_context);
@@ -109,7 +131,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig config = GenericAgentDefaultConfig(cf_keygen);
 
-    while ((c = getopt_long(argc, argv, "dvf:VMsr:h", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvf:VMsr:hl:", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -139,16 +161,21 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
             remove_keys_host = optarg;
             break;
 
+        case 'l':
+            LICENSE_INSTALL = true;
+            strlcpy(LICENSE_SOURCE, optarg, sizeof(LICENSE_SOURCE));
+            break;
+
         case 'h':
-            Syntax("cf-key - cfengine's key generator", OPTIONS, HINTS, ID);
+            Syntax("cf-key - CFEngine's key generator", OPTIONS, HINTS, ID);
             exit(0);
 
         case 'M':
-            ManPage("cf-key - cfengine's key generator", OPTIONS, HINTS, ID);
+            ManPage("cf-key - CFEngine's key generator", OPTIONS, HINTS, ID);
             exit(0);
 
         default:
-            Syntax("cf-key - cfengine's key generator", OPTIONS, HINTS, ID);
+            Syntax("cf-key - CFEngine's key generator", OPTIONS, HINTS, ID);
             exit(1);
 
         }
@@ -163,13 +190,14 @@ static bool ShowHost(const char *hostkey, const char *address, bool incoming,
                      const KeyHostSeen *quality, void *ctx)
 {
     int *count = ctx;
+    char timebuf[26];
 
     char hostname[CF_BUFSIZE];
     strlcpy(hostname, IPString2Hostname(address), CF_BUFSIZE);
 
     (*count)++;
-    printf("%-9.9s %17.17s %-25.25s %s\n", incoming ? "Incoming" : "Outgoing",
-           address, hostname, hostkey);
+    printf("%-10.10s %-17.17s %-25.25s %-26.26s %-s\n", incoming ? "Incoming" : "Outgoing",
+           address, hostname, cf_strtimestamp_local(quality->lastseen, timebuf), hostkey);
 
     return true;
 }
@@ -178,7 +206,7 @@ static void ShowLastSeenHosts()
 {
     int count = 0;
 
-    printf("%9.9s %17.17s %-25.25s %15.15s\n", "Direction", "IP", "Name", "Key");
+    printf("%-10.10s %-17.17s %-25.25s %-26.26s %-s\n", "Direction", "IP", "Name", "Last connection", "Key");
 
     if (!ScanLastSeenQuality(ShowHost, &count))
     {
@@ -187,75 +215,6 @@ static void ShowLastSeenHosts()
     }
 
     printf("Total Entries: %d\n", count);
-}
-
-/*
- * Returns:
- *  amount of keys removed
- *  -1 if there was an error
- */
-static int RemovePublicKey(const char *id)
-{
-    Dir *dirh = NULL;
-    int removed = 0;
-    char keysdir[CF_BUFSIZE];
-    const struct dirent *dirp;
-    char suffix[CF_BUFSIZE];
-
-    snprintf(keysdir, CF_BUFSIZE, "%s/ppkeys", CFWORKDIR);
-    MapName(keysdir);
-
-    if ((dirh = OpenDirLocal(keysdir)) == NULL)
-    {
-        if (errno == ENOENT)
-        {
-            return 0;
-        }
-        else
-        {
-            CfOut(cf_error, "opendir", "Unable to open keys directory");
-            return -1;
-        }
-    }
-
-    snprintf(suffix, CF_BUFSIZE, "-%s.pub", id);
-
-    while ((dirp = ReadDir(dirh)) != NULL)
-    {
-        char *c = strstr(dirp->d_name, suffix);
-
-        if (c && c[strlen(suffix)] == '\0')     /* dirp->d_name ends with suffix */
-        {
-            char keyfilename[CF_BUFSIZE];
-
-            snprintf(keyfilename, CF_BUFSIZE, "%s/%s", keysdir, dirp->d_name);
-            MapName(keyfilename);
-
-            if (unlink(keyfilename) < 0)
-            {
-                if (errno != ENOENT)
-                {
-                    CfOut(cf_error, "unlink", "Unable to remove key file %s", dirp->d_name);
-                    CloseDir(dirh);
-                    return -1;
-                }
-            }
-            else
-            {
-                removed++;
-            }
-        }
-    }
-
-    if (errno)
-    {
-        CfOut(cf_error, "ReadDir", "Unable to enumerate files in keys directory");
-        CloseDir(dirh);
-        return -1;
-    }
-
-    CloseDir(dirh);
-    return removed;
 }
 
 static int RemoveKeys(const char *host)
@@ -289,6 +248,7 @@ static int RemoveKeys(const char *host)
         return 0;
     }
 }
+
 
 static void KeepKeyPromises(void)
 {
@@ -389,3 +349,13 @@ static void KeepKeyPromises(void)
     RAND_write_file(vbuff);
     cf_chmod(vbuff, 0644);
 }
+
+
+#ifndef HAVE_NOVA
+bool LicenseInstall(char *path_source)
+{
+    CfOut(cf_error, "", "!! License installation only applies to CFEngine Enterprise");
+
+    return false;
+}
+#endif  /* HAVE_NOVA */

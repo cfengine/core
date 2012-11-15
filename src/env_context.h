@@ -35,6 +35,7 @@
   Classes are added to the global heap using NewClass().
   */
 extern AlphaList VHEAP;
+extern AlphaList VHARDHEAP;
 
 /**
   Negated classes
@@ -56,8 +57,8 @@ extern Item *ABORTBUNDLEHEAP;
 
 /* - Parsing/evaluating expressions - */
 void ValidateClassSyntax(const char *str);
-bool IsDefinedClass(const char *class);
-bool IsExcluded(const char *exception);
+bool IsDefinedClass(const char *class, const char *ns);
+bool IsExcluded(const char *exception, const char *ns);
 
 bool EvalProcessResult(const char *process_result, AlphaList *proc_attr);
 bool EvalFileResult(const char *file_result, AlphaList *leaf_attr);
@@ -73,11 +74,12 @@ void DeleteEntireHeap(void);
 void NewPersistentContext(char *name, unsigned int ttl_minutes, enum statepolicy policy);
 void DeletePersistentContext(const char *name);
 void LoadPersistentContext(void);
-void AddEphemeralClasses(const Rlist *classlist);
-void NewClass(const char *oclass);      /* Copies oclass */
-void NewBundleClass(const char *oclass, const char *bundle);
+void AddEphemeralClasses(const Rlist *classlist, const char *ns);
+void HardClass(const char *oclass);
+void NewClass(const char *oclass, const char *namespace);      /* Copies oclass */
+void NewBundleClass(const char *oclass, const char *bundle, const char *namespace);
 Rlist *SplitContextExpression(const char *context, Promise *pp);
-void DeleteClass(const char *oclass);
+void DeleteClass(const char *oclass, const char *namespace);
 int VarClassExcluded(Promise *pp, char **classes);
 void NewClassesFromString(const char *classlist);
 void NegateClassesFromString(const char *classlist);
@@ -88,5 +90,7 @@ void SaveClassEnvironment(void);
 void DeleteAllClasses(const Rlist *list);
 void AddAllClasses(const Rlist *list, int persist, enum statepolicy policy);
 void ListAlphaList(Writer *writer, AlphaList al, char sep);
+void MarkPromiseHandleDone(const Promise *pp);
+int MissingDependencies(const Promise *pp);
 
 #endif

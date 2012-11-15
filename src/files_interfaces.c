@@ -23,7 +23,7 @@
 
 */
 
-#include "cf3.defs.h"
+#include "files_interfaces.h"
 
 #include "env_context.h"
 #include "promises.h"
@@ -37,9 +37,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat sourcestatb
 static int CompareForFileCopy(char *sourcefile, char *destfile, struct stat *ssb, struct stat *dsb, Attributes attr,
                               Promise *pp);
 static void RegisterAHardLink(int i, char *value, Attributes attr, Promise *pp);
-static void FileAutoDefine(char *destfile);
-static void LoadSetuid(Attributes a, Promise *pp);
-static void SaveSetuid(Attributes a, Promise *pp, const ReportContext *report_context);
+static void FileAutoDefine(char *destfile, const char *namespace);
 
 /*****************************************************************************/
 
@@ -262,230 +260,6 @@ void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes attr, 
 /*******************************************************************/
 /* Level                                                           */
 /*******************************************************************/
-
-void VerifyFilePromise(char *path, Promise *pp, const ReportContext *report_context)
-{
-    struct stat osb, oslb, dsb;
-    Attributes a = { {0} };
-    CfLock thislock;
-    int exists, rlevel = 0;
-
-    a = GetFilesAttributes(pp);
-
-    if (!FileSanityChecks(path, a, pp))
-    {
-        return;
-    }
-
-    DeleteScalar("this", "promiser");
-    NewScalar("this", "promiser", path, cf_str); 
-    
-    thislock = AcquireLock(path, VUQNAME, CFSTARTTIME, a, pp, false);
-
-    if (thislock.lock == NULL)
-    {
-        return;
-    }
-
-    CF_OCCUR++;
-
-    LoadSetuid(a, pp);
-
-    if (lstat(path, &oslb) == -1)       /* Careful if the object is a link */
-    {
-        if (a.create || a.touch)
-        {
-            if (!CfCreateFile(path, pp, a, report_context))
-            {
-                SaveSetuid(a, pp, report_context);
-                YieldCurrentLock(thislock);
-                return;
-            }
-            else
-            {
-                exists = (lstat(path, &oslb) != -1);
-            }
-        }
-
-        exists = false;
-    }
-    else
-    {
-        if (a.create || a.touch)
-        {
-            cfPS(cf_verbose, CF_NOP, "", pp, a, " -> File \"%s\" exists as promised", path);
-        }
-        exists = true;
-    }
-
-    if (a.havedelete && !exists)
-    {
-        cfPS(cf_verbose, CF_NOP, "", pp, a, " -> File \"%s\" does not exist as promised", path);
-    }
-
-    if (!a.havedepthsearch)     /* if the search is trivial, make sure that we are in the parent dir of the leaf */
-    {
-        char basedir[CF_BUFSIZE];
-
-        CfDebug(" -> Direct file reference %s, no search implied\n", path);
-        snprintf(basedir, sizeof(basedir), "%s", path);
-
-        if (strcmp(ReadLastNode(basedir), ".") == 0)
-        {
-            // Handle /.  notation for deletion of directories
-            ChopLastNode(basedir);
-            ChopLastNode(path);
-        }
-
-        ChopLastNode(basedir);
-        chdir(basedir);
-    }
-
-    if (exists && !VerifyFileLeaf(path, &oslb, a, pp, report_context))
-    {
-        if (!S_ISDIR(oslb.st_mode))
-        {
-            SaveSetuid(a, pp, report_context);
-            YieldCurrentLock(thislock);
-            return;
-        }
-    }
-
-    if (cfstat(path, &osb) == -1)
-    {
-        if (a.create || a.touch)
-        {
-            if (!CfCreateFile(path, pp, a, report_context))
-            {
-                SaveSetuid(a, pp, report_context);
-                YieldCurrentLock(thislock);
-                return;
-            }
-            else
-            {
-                exists = true;
-            }
-        }
-        else
-        {
-            exists = false;
-        }
-    }
-    else
-    {
-        if (!S_ISDIR(osb.st_mode))
-        {
-            if (a.havedepthsearch)
-            {
-                CfOut(cf_inform, "",
-                      "Warning: depth_search (recursion) is promised for a base object %s that is not a directory",
-                      path);
-                SaveSetuid(a, pp, report_context);
-                YieldCurrentLock(thislock);
-                return;
-            }
-        }
-
-        exists = true;
-    }
-
-    if (a.link.link_children)
-    {
-        if (cfstat(a.link.source, &dsb) != -1)
-        {
-            if (!S_ISDIR(dsb.st_mode))
-            {
-                CfOut(cf_error, "", "Cannot promise to link the children of %s as it is not a directory!",
-                      a.link.source);
-                SaveSetuid(a, pp, report_context);
-                YieldCurrentLock(thislock);
-                return;
-            }
-        }
-    }
-
-/* Phase 1 - */
-
-    if (exists && (a.havedelete || a.haverename || a.haveperms || a.havechange || a.transformer))
-    {
-        lstat(path, &oslb);     /* if doesn't exist have to stat again anyway */
-
-        if (a.havedepthsearch)
-        {
-            SetSearchDevice(&oslb, pp);
-        }
-
-        DepthSearch(path, &oslb, rlevel, a, pp, report_context);
-
-        /* normally searches do not include the base directory */
-
-        if (a.recursion.include_basedir)
-        {
-            int save_search = a.havedepthsearch;
-
-            /* Handle this node specially */
-
-            a.havedepthsearch = false;
-            DepthSearch(path, &oslb, rlevel, a, pp, report_context);
-            a.havedepthsearch = save_search;
-        }
-        else
-        {
-            /* unless child nodes were repaired, set a promise kept class */
-            if (!IsDefinedClass("repaired"))
-            {
-                cfPS(cf_verbose, CF_NOP, "", pp, a, " -> Basedir \"%s\" not promising anything", path);
-            }
-        }
-
-        if (a.change.report_changes == cfa_contentchange || a.change.report_changes == cfa_allchanges)
-        {
-            if (a.havedepthsearch)
-            {
-                PurgeHashes(NULL, a, pp);
-            }
-            else
-            {
-                PurgeHashes(path, a, pp);
-            }
-        }
-    }
-
-/* Phase 2a - copying is potentially threadable if no followup actions */
-
-    if (a.havecopy)
-    {
-        ScheduleCopyOperation(path, a, pp, report_context);
-    }
-
-/* Phase 2b link after copy in case need file first */
-
-    if (a.havelink && a.link.link_children)
-    {
-        ScheduleLinkChildrenOperation(path, a.link.source, 1, a, pp, report_context);
-    }
-    else if (a.havelink)
-    {
-        ScheduleLinkOperation(path, a.link.source, a, pp, report_context);
-    }
-
-/* Phase 3 - content editing */
-
-    if (a.haveedit)
-    {
-        ScheduleEditOperation(path, a, pp, report_context);
-    }
-
-// Once more in case a file has been created as a result of editing or copying
-
-    if (cfstat(path, &osb) != -1 && S_ISREG(osb.st_mode))
-    {
-        VerifyFileLeaf(path, &osb, a, pp, report_context);
-    }
-
-    SaveSetuid(a, pp, report_context);
-    YieldCurrentLock(thislock);
-}
 
 /*********************************************************************/
 
@@ -908,7 +682,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
 
                 if (MatchRlistItem(AUTO_DEFINE_LIST, destfile))
                 {
-                    FileAutoDefine(destfile);
+                    FileAutoDefine(destfile, pp->namespace);
                 }
             }
             else
@@ -1024,7 +798,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
 
                 if (MatchRlistItem(AUTO_DEFINE_LIST, destfile))
                 {
-                    FileAutoDefine(destfile);
+                    FileAutoDefine(destfile, pp->namespace);
                 }
 
                 if (CopyRegularFile(sourcefile, destfile, ssb, dsb, attr, pp, report_context))
@@ -1340,49 +1114,6 @@ int FileSanityChecks(char *path, Attributes a, Promise *pp)
 }
 
 /*********************************************************************/
-
-static void LoadSetuid(Attributes a, Promise *pp)
-{
-    Attributes b = { {0} };
-    char filename[CF_BUFSIZE];
-
-    b = a;
-    b.edits.backup = cfa_nobackup;
-    b.edits.maxfilesize = 1000000;
-
-    snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", CFWORKDIR, VSYSNAME.nodename);
-    MapName(filename);
-
-    if (!LoadFileAsItemList(&VSETUIDLIST, filename, b, pp))
-    {
-        CfOut(cf_verbose, "", "Did not find any previous setuid log %s, creating a new one", filename);
-    }
-}
-
-/*********************************************************************/
-
-static void SaveSetuid(Attributes a, Promise *pp, const ReportContext *report_context)
-{
-    Attributes b = { {0} };
-    char filename[CF_BUFSIZE];
-
-    b = a;
-    b.edits.backup = cfa_nobackup;
-    b.edits.maxfilesize = 1000000;
-
-    snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", CFWORKDIR, VSYSNAME.nodename);
-    MapName(filename);
-
-    PurgeItemList(&VSETUIDLIST, "SETUID/SETGID");
-
-    if (!CompareToFile(VSETUIDLIST, filename, a, pp))
-    {
-        SaveItemListAsFile(VSETUIDLIST, filename, b, pp, report_context);
-    }
-
-    DeleteItemList(VSETUIDLIST);
-    VSETUIDLIST = NULL;
-}
 
 /*********************************************************************/
 /* Level 4                                                           */
@@ -1733,7 +1464,7 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
     }
     else
     {
-        if (!CopyRegularFileDisk(source, new, attr, pp))
+        if (!CopyRegularFileDiskReport(source, new, attr, pp))
         {
             return false;
         }
@@ -1990,12 +1721,12 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
 
 /*********************************************************************/
 
-static void FileAutoDefine(char *destfile)
+static void FileAutoDefine(char *destfile, const char *namespace)
 {
     char class[CF_MAXVARSIZE];
 
     snprintf(class, CF_MAXVARSIZE, "auto_%s", CanonifyName(destfile));
-    NewClass(class);
+    NewClass(class,  namespace);
     CfOut(cf_inform, "", "Auto defining class %s\n", class);
 }
 

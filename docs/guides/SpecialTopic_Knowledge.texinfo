@@ -194,7 +194,7 @@ Maps guide us to where we need to get to from where we are (even when we don't
 fully understand where we are). A map places us in the context or a larger
 picture and helps us to find our way.
 The Knowledge map is a part of the CFEngine Mission Portal,
-which in turn is provided with CFEngine Nova and Constellation Editions.
+which in turn is provided with CFEngine Enterprise Edition.
 Significant instrumentation of the software, user process and policy analysis
 are provided in these editions in order to make Knowledge mining as transparent
 to the user as possible.
@@ -473,7 +473,7 @@ semantic index could help us to see immediate relationships between
 system issues. The next question is: what about connections that are less 
 immediate or obvious?
 
-In CFEngine Constellation you can ask the agent to brainstorm for you
+In future releases you will be able to ask the agent to brainstorm for you
 about topics, telling any stories is knows about topics. A story is a
 simply a path through the web of connected information that follows
 some kind of connectness. Most interesting stories have a thread of
@@ -489,8 +489,8 @@ Most CFEngine stories relate to policy, and they are generated automatically
 by the knowledge engine, so you will not get any stories until you have
 something interesting in your policy.
 
-Stories can be used from the command-line, or as a tab within the 
-Constellation Mission Portal. The command line is useful for interactive
+Stories will be usable from the command-line, or as a tab within the 
+Mission Portal. The command line is useful for interactive
 thinking:
 
 A story can be quite simple:
@@ -629,7 +629,7 @@ additional concepts into the file @file{company_knowledge.cf}, on the policy ser
 
 @unnumberedsec Documenting goals
 
-Business goals are shown in the service catalogue in the Mission Portal of CFEngine Nova and Constellation
+Business goals are shown in the Goals app (and service catalogue) in the Mission Portal of CFEngine Enterprise
 for each hub. To document the fact that a promise or bundle contributes to a business goal,
 you must do two things:
 

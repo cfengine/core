@@ -44,7 +44,7 @@ static bool INSTALL_SKIP = false;
 
 %}
 
-%token ID BLOCKID QSTRING CLASS CATEGORY BUNDLE BODY ASSIGN ARROW NAKEDVAR
+%token IDSYNTAX BLOCKID QSTRING CLASS CATEGORY BUNDLE BODY ASSIGN ARROW NAKEDVAR
 
 %%
 
@@ -92,7 +92,7 @@ body:                  BODY
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-typeid:                ID
+typeid:                IDSYNTAX
                        {
                            strncpy(P.blocktype,P.currentid,CF_MAXVARSIZE);
                            CfDebug("Found block type %s for %s\n",P.blocktype,P.block);
@@ -103,7 +103,7 @@ typeid:                ID
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-blockid:               ID
+blockid:               IDSYNTAX
                        {
                            strncpy(P.blockid,P.currentid,CF_MAXVARSIZE);
                            P.offsets.last_block_id = P.offsets.last_id;
@@ -119,12 +119,12 @@ usearglist:            '('
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 aitems:                aitem
-                     | aitem ',' aitems
+                     | aitems ',' aitem
                      |;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-aitem:                 ID  /* recipient of argument is never a literal */
+aitem:                 IDSYNTAX  /* recipient of argument is never a literal */
                        {
                            AppendRlist(&(P.useargs),P.currentid,CF_SCALAR);
                        };
@@ -280,7 +280,7 @@ selection:             id                         /* BODY ONLY */
                            {
                                if (strcmp(P.lval,"inputs") == 0)
                                {
-                                   if (IsDefinedClass(P.currentclasses))
+                                   if (IsDefinedClass(P.currentclasses, CurrentNameSpace(P.policy)))
                                    {
                                        if (VINPUTLIST == NULL)
                                        {
@@ -475,7 +475,7 @@ class:                 CLASS
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-id:                    ID
+id:                    IDSYNTAX
                        {
                            strncpy(P.lval,P.currentid,CF_MAXVARSIZE);
                            DeleteRlist(P.currentRlist);
@@ -486,7 +486,7 @@ id:                    ID
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-rval:                  ID
+rval:                  IDSYNTAX
                        {
                            P.rval = (Rval) { xstrdup(P.currentid), CF_SCALAR };
                            P.references_body = true;
@@ -543,13 +543,15 @@ list:                  '{'
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-litems:                litem
-                     | litem ',' litems
-                     |;
+litems:                litems_int
+                     | litems_int ',';
+
+litems_int:            litem
+                     | litems_int ',' litem;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-litem:                 ID
+litem:                 IDSYNTAX
                        {
                            AppendRlist((Rlist **)&P.currentRlist,P.currentid,CF_SCALAR);
                        }
@@ -577,7 +579,7 @@ litem:                 ID
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-functionid:            ID
+functionid:            IDSYNTAX
                        {
                            CfDebug("Found function identifier %s\n",P.currentid);
                        }
@@ -642,7 +644,7 @@ gaitems:               gaitem
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-gaitem:                ID
+gaitem:                IDSYNTAX
                        {
                            /* currently inside a use function */
                            AppendRlist(&P.giveargs[P.arg_nesting],P.currentid,CF_SCALAR);

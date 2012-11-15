@@ -2,12 +2,24 @@
 
 	New features:
 
+	- XML editing capabilities. See the documentation for edit_xml
+	  body. Note the new dependency: libxml2.
+
 	- Implement inheritance of local classes by bundles called using
 	  "usebundle". By default classes are not inherited. See the
 	  examples/unit_inherit.cf for an example.
 
+	- Moved from Nova/Enterirpse:
+	  - POSIX ACL support,
+	  - "outputs" promise type,
+	  - remote syslog support.
+
 	- packages_default_arch_command hook in packages promises, to
 	  specify default architecture of the packages on the system.
+
+	- packages_version_less_command / packages_version_equal_command hooks
+	  in packages promises, to specify external command for native package
+	  manager versions comparison
 
 	- Running in Solaris zone is now detected and classes "zone" and
 	  "zone_<name>" are created in this case.
@@ -16,12 +28,27 @@
 
 	- guest_environment promises are supported under OS X.
 
-	- Moved from Nova/Enterirpse:
-	  - POSIX ACL support,
-	  - "outputs" promise type,
-	  - remote syslog support.
+	- The "depends_on" attribute is now active, for the partal ordering
+	  of promises. If a promise depends on another (referred by handle)
+	  it will only be considered if the depends_on list is either kept
+	  or repaired already.
 
-	- Changed some port numbers to replace old services with imap(s)
+	  ** WARNING: When upgrading, make sure that any existing use
+	              of depends_on does not make some promises being
+	              unintentionally ignored. This can happen if you are
+	              currently refering to non-existant or never-run handles
+	              in depends_on attributes.
+
+	- methods return values, initial implementation
+
+	- New format for cf-key -s, includes timestamp of last connection
+
+	Changed functionality:
+
+	- cf-execd -F switch no longer implies 'run once'. New -O/--once
+	  option is added to achieve this behaviour. This makes cf-execd
+	  easier to run from systemd, launchd and other supervision
+	  systems.
 
 	Misc:
 
@@ -86,6 +113,10 @@
           S = Stats changed
           R = File removed
 
+	- Acceptance test suite passes on Mac OS X.
+
+	- Changed some port numbers to replace old services with imap(s)
+
 	Bugfixes:
 
 	- Compatibility fixes for AIX, HP-UX, Solaris (Mantis #1185, Mantis #1177, Mantis #1109).
@@ -99,7 +130,6 @@
 	- Fixes for namespaces that would not support metadata and variable expansion
 	- Point-to-point network interfaces are detected and reported by CFEngine (Mantis #1246)
 	- Partial non-GNU userspace support in acceptance testsuite (Mantis #1255)
-	- Robustify against wrongly-sized entires in embedded databases.
 
 	In alpha 1:
 

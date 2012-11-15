@@ -35,12 +35,11 @@ static const BodySyntax CF_PRINTFILE_BODY[] =
 const const BodySyntax CF_REPORT_BODIES[] =
 {
     {"friend_pattern", cf_str, "", "Regular expression to keep selected hosts from the friends report list"},
-    {"intermittency", cf_real, "0,1", "Real number threshold [0,1] of intermittency about current peers, report above",
-     "false"},
-    {"lastseen", cf_int, CF_VALRANGE,
-     "Integer time threshold in hours since current peers were last seen, report absence"},
+    {"intermittency", cf_real, "0,1", "Real number threshold [0,1] of intermittency about current peers, report above", "false"},
+    {"lastseen", cf_int, CF_VALRANGE, "Integer time threshold in hours since current peers were last seen, report absence"},
     {"printfile", cf_body, CF_PRINTFILE_BODY, "Quote part of a file to standard output"},
     {"report_to_file", cf_str, CF_ABSPATHRANGE, "The path and filename to which output should be appended"},
+    {"bundle_return_value_index", cf_str, CF_IDRANGE, "The promiser is to be interpreted as a literal value that the caller can accept as a result for this bundle, i.e. a return value with array index defined by this attribute."},    
     {"showstate", cf_slist, "", "List of services about which status reports should be reported to standard output"},
     {NULL, cf_notype, NULL}
 };

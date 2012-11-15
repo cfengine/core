@@ -31,6 +31,7 @@
 #include "promises.h"
 #include "files_lib.h"
 #include "files_names.h"
+#include "files_interfaces.h"
 #include "parser.h"
 #include "dbm_api.h"
 #include "crypto.h"
@@ -39,6 +40,7 @@
 #include "conversion.h"
 #include "expand.h"
 #include "transaction.h"
+#include "scope.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"
@@ -92,7 +94,7 @@ void CheckLicenses(void)
 
     if (stat(name, &sb) != -1)
     {
-        NewClass("am_policy_hub");
+        HardClass("am_policy_hub");
         CfOut(cf_verbose, "", " -> Additional class defined: am_policy_hub");
     }
 }
@@ -122,7 +124,7 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig config, const ReportC
     SanitizeEnvironment();
 
     THIS_AGENT_TYPE = ag;
-    NewClass(CF_AGENTTYPES[THIS_AGENT_TYPE]);
+    HardClass(CF_AGENTTYPES[THIS_AGENT_TYPE]);
 
 // need scope sys to set vars in expiry function
     SetNewScope("sys");
@@ -228,7 +230,7 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig config, const ReportC
         else
         {
             CfOut(cf_error, "",
-                  "cf-agent was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
+                  "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
             SetInputFile("failsafe.cf");
             policy = ReadPromises(ag, agents, config, report_context);
         }
@@ -487,30 +489,30 @@ void InitializeGA(const ReportContext *report_context)
     SHORT_CFENGINEPORT = htons((unsigned short) 5308);
     snprintf(STR_CFENGINEPORT, 15, "5308");
 
-    NewClass("any");
+    HardClass("any");
 
 #if defined HAVE_NOVA
-    NewClass("nova_edition");
-    NewClass("enterprise_edition");
+    HardClass("nova_edition");
+    HardClass("enterprise_edition");
 #else
-    NewClass("community_edition");
+    HardClass("community_edition");
 #endif
 
     strcpy(VPREFIX, GetConsolePrefix());
 
     if (VERBOSE)
     {
-        NewClass("verbose_mode");
+        HardClass("verbose_mode");
     }
 
     if (INFORM)
     {
-        NewClass("inform_mode");
+        HardClass("inform_mode");
     }
 
     if (DEBUG)
     {
-        NewClass("debug_mode");
+        HardClass("debug_mode");
     }
 
     CfOut(cf_verbose, "", "CFEngine - autonomous configuration engine - commence self-diagnostic prelude\n");
@@ -1463,12 +1465,12 @@ static void VerifyPromises(Policy *policy, Rlist *bundlesequence,
 
     for (rp = BODYPARTS; rp != NULL; rp = rp->next)
     {
-    char namespace[CF_BUFSIZE],name[CF_BUFSIZE];
-    char fqname[CF_BUFSIZE];
+        char namespace[CF_BUFSIZE],name[CF_BUFSIZE];
+        char fqname[CF_BUFSIZE];
 
-    // This is a bit messy because tracking the namespace is not natural with the existing structures here
-    
-        sscanf((char *)rp->item,"%[^.].%s",namespace,name); 
+        // This is a bit messy because tracking the namespace is not natural with the existing structures here
+
+        sscanf((char *)rp->item,"%[^:]:%s",namespace,name); 
 
         if (strcmp(namespace,"default") == 0)
         {
@@ -1496,8 +1498,7 @@ static void VerifyPromises(Policy *policy, Rlist *bundlesequence,
 
             if (!IGNORE_MISSING_BUNDLES && !IsCf3VarString(rp->item) && !IsBundle(policy->bundles, (char *) rp->item))
             {
-                CfOut(cf_error, "", "Undeclared promise bundle \"%s()\" was referenced in a promise\n",
-                      (char *) rp->item);
+                CfOut(cf_error, "", "Undeclared promise bundle \"%s()\" was referenced in a promise\n", (char *) rp->item);
                 ERRORCOUNT++;
             }
             break;
@@ -1625,7 +1626,7 @@ static void CheckControlPromises(char *scope, char *agent, Constraint *controlli
 
     for (cp = controllist; cp != NULL; cp = cp->next)
     {
-        if (IsExcluded(cp->classes))
+        if (IsExcluded(cp->classes, NULL))
         {
             continue;
         }
@@ -1661,8 +1662,8 @@ static void CheckControlPromises(char *scope, char *agent, Constraint *controlli
             snprintf(VFQNAME, CF_MAXVARSIZE, "%s.%s", VUQNAME, VDOMAIN);
             NewScalar("sys", "fqhost", VFQNAME, cf_str);
             NewScalar("sys", "domain", VDOMAIN, cf_str);
-            DeleteClass("undefined_domain");
-            NewClass(VDOMAIN);
+            DeleteClass("undefined_domain", NULL);
+            HardClass(VDOMAIN);
         }
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[cfg_ignore_missing_inputs].lval) == 0)

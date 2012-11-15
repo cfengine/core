@@ -26,6 +26,7 @@
 #include "cf3.defs.h"
 
 #include "files_names.h"
+#include "files_interfaces.h"
 #include "item_lib.h"
 
 /*********************************************************************/
@@ -131,15 +132,9 @@ int ArchiveToRepository(char *file, Attributes attr, Promise *pp, const ReportCo
 
     cfstat(destination, &dsb);
 
-    attr.copy.servers = NULL;
-    attr.copy.backup = cfa_repos_store; // cfa_nobackup;
-    attr.copy.stealth = false;
-    attr.copy.verify = false;
-    attr.copy.preserve = false;
-
     CheckForFileHoles(&sb, pp);
 
-    if (CopyRegularFileDisk(file, destination, attr, pp))
+    if (CopyRegularFileDisk(file, destination, pp->makeholes))
     {
         CfOut(cf_inform, "", "Moved %s to repository location %s\n", file, destination);
         return true;

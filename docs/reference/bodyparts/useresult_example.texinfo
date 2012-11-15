@@ -1,0 +1,41 @@
+
+@verbatim
+
+body common control
+{
+bundlesequence => { "test" };
+}
+
+
+bundle agent test
+{
+methods:
+
+   "any" usebundle => child,
+    useresult => "my_return_var";
+
+
+reports:
+
+  cfengine_3::
+
+    "My return was: \"$(my_return_var[1])\" and \"$(my_return_var[2])\""; 
+    
+}
+
+bundle agent child
+{
+reports:
+
+ cfengine_3::
+
+   # Map these indices into the useresult namespace
+
+   "this is a return value"  
+      bundle_return_value_index => "1";
+
+   "this is another return value"  
+      bundle_return_value_index => "2";
+
+}
+@end verbatim

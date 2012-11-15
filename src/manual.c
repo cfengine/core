@@ -35,6 +35,8 @@
 #include "mod_access.h"
 #include "item_lib.h"
 #include "sort.h"
+#include "scope.h"
+#include "files_interfaces.h"
 
 extern char BUILD_DIR[CF_BUFSIZE];
 
@@ -675,7 +677,7 @@ static bool GenerateStub(const char *filename)
     }
 
 #ifdef HAVE_NOVA
-    fprintf(fp, "\n@i{History}: Was introduced in %s, Nova %s (%d)\n\n", Version(), Nova_Version(), BUILD_YEAR);
+    fprintf(fp, "\n@i{History}: Was introduced in %s, Enterprise %s (%d)\n\n", Version(), Nova_Version(), BUILD_YEAR);
 #else
     fprintf(fp, "\n@i{History}: Was introduced in %s (%d)\n\n", Version(), BUILD_YEAR);
 #endif

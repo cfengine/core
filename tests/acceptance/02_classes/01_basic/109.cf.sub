@@ -1,0 +1,29 @@
+body file control
+{
+  namespace => "ns109";
+}
+
+bundle agent pass()
+{
+  classes:
+      "shred" expression => "default:shared_class";
+
+  vars:
+      "shared_dependent" string => "works",
+      ifvarclass => "default:shared_class";
+
+    shred::
+      "forced_dependent" string => "works";
+
+  reports:
+    DEBUG::
+      "Does the shared class work in a variable? Is '$(shared_dependent)' == 'works'?";
+
+      "Does the shared class work explicitly? Is '$(forced_dependent)' == 'works'?";
+
+      "The shared class claims to work."
+      ifvarclass => "$(class_needed)";
+
+      "The shared class does not work"
+      ifvarclass => "!$(class_needed)";
+}

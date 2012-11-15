@@ -179,6 +179,21 @@ struct utsname
 #ifdef SOLARIS
 # include <sys/statvfs.h>
 # undef nfstype
+
+#ifndef timersub
+# define timersub(a, b, result)                             \
+    do                                                      \
+    {                                                       \
+           (result)->tv_sec = (a)->tv_sec - (b)->tv_sec;    \
+           (result)->tv_usec = (a)->tv_usec - (b)->tv_usec; \
+           if ((result)->tv_usec < 0)                       \
+           {                                                \
+               --(result)->tv_sec;                          \
+               (result)->tv_usec += 1000000;                \
+           }                                                \
+    } while (0)
+#endif
+
 #endif
 
 #if !HAVE_DECL_DIRFD
@@ -206,6 +221,10 @@ size_t strlcpy(char *destination, const char *source, size_t size);
 
 #if !HAVE_DECL_STRLCAT
 size_t strlcat(char *destination, const char *source, size_t size);
+#endif
+
+#if !HAVE_DECL_STRSEP
+char *strsep(char **stringp, const char *delim);
 #endif
 
 #ifdef DARWIN
@@ -439,7 +458,12 @@ struct tm *gmtime_r(const time_t *timep, struct tm *result);
 #if !HAVE_DECL_LOCALTIME_R
 struct tm *localtime_r(const time_t *timep, struct tm *result);
 #endif
-
+#if !HAVE_DECL_MKDTEMP
+char *mkdtemp(char *template);
+#endif
+#if !HAVE_DECL_STRRSTR
+char *strrstr(const char *haystack, const char *needle);
+#endif
 
 #ifndef NGROUPS
 # define NGROUPS 20
@@ -624,6 +648,11 @@ struct timespec
 /* Too bad we don't have FD_CLOEXEC -- but we can fake it */
 #ifndef FD_CLOEXEC
 # define FD_CLOEXEC 0
+#endif
+
+/* kill(2) on OS X returns ETIMEDOUT instead of ESRCH */
+#ifndef ETIMEDOUT
+# define ETIMEDOUT ESRCH
 #endif
 
 /********************************************************************/

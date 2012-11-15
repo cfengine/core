@@ -154,6 +154,7 @@ const Sock ECGSOCKS[ATTR] =     /* extended to map old to new using enum */
     {"27017", "mongo", ob_mongo_in, ob_mongo_out},
     {"3306", "mysql", ob_mysql_in, ob_mysql_out},
     {"5432", "postgresql", ob_postgresql_in, ob_postgresql_out},
+    {"631", "ipp", ob_ipp_in, ob_ipp_out},
 };
 
 const char *TCPNAMES[CF_NETATTR] =
@@ -239,8 +240,8 @@ const char *OBS[CF_OBSERVABLES][2] =
     {"mysql_out", "MySQL database client sessions (out)"},
     {"postgres_in", "PostgreSQL database service sessions (in)"},
     {"postgres_out", "PostgreSQL database client sessions (out)"},
-    {"spare", "unused"},
-    {"spare", "unused"},
+    {"ipp_in", "Internet Printer Protocol (in)"},
+    {"ipp_out", "Internet Printer Protocol (out)"},
     {"spare", "unused"},
     {"spare", "unused"},
     {"spare", "unused"},
@@ -270,3 +271,27 @@ const char *OBS[CF_OBSERVABLES][2] =
     {"spare", "unused"},
     {"spare", "unused"},
 };
+
+/*****************************************************************/
+
+char *AGENT_TYPESEQUENCE[] =
+{
+    "meta",
+    "vars",
+    "defaults",
+    "classes",                  /* Maelstrom order 2 */
+    "outputs",
+    "interfaces",
+    "files",
+    "packages",
+    "guest_environments",
+    "methods",
+    "processes",
+    "services",
+    "commands",
+    "storage",
+    "databases",
+    "reports",
+    NULL
+};
+

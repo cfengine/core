@@ -40,10 +40,10 @@ files:
     edit_line => init_insert("$(expected1qaz)");
   "$(G.testfile).expected2qaz" 
     touch => "true",
-    edit_line => init_insert("($expected1qaz)");
- "$(G.testfile).epxected3qaz"
+    edit_line => init_insert("$(expected1qaz)");
+ "$(G.testfile).expected3qaz"
     touch => "true",
-    edit_line => init_insert("($expected1qaz)");
+    edit_line => init_insert("$(expected1qaz)");
 }
 
 bundle edit_line init_insert(str)

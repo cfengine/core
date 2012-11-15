@@ -28,6 +28,10 @@ bundle agent update
                        comment => "Directory containing Cfengine policies",
                         handle => "update_vars_inputs_dir";
 
+   "modules_dir"        string => translatepath("$(sys.workdir)/modules"),
+                       comment => "Directory containing CFEngine modules",
+                        handle => "update_vars_modules_dir";
+
    "ppkeys_file"        string => translatepath("$(sys.workdir)/ppkeys/localhost.pub"),
                        comment => "Path to public key file",
                         handle => "update_vars_ppkeys_file";
@@ -108,10 +112,18 @@ bundle agent update
 
    "$(inputs_dir)/cf_promises_validated"
         comment => "Check whether a validation stamp is available for a new policy update to reduce the distributed load",
-         handle => "check_valid_update",
+         handle => "update_files_check_valid_update",
       copy_from => u_rcp("$(master_location)/cf_promises_validated","$(sys.policy_hub)"),
          action => u_immediate,
         classes => u_if_repaired("validated_updates_ready");
+
+   "$(modules_dir)"
+           comment => "Always update modules files on client side",
+            handle => "update_files_update_modules",
+         copy_from => u_rcp("$(modules_dir)","$(sys.policy_hub)"),
+      depth_search => u_recurse("inf"),
+             perms => u_m("755"),
+            action => u_immediate;
 
   am_policy_hub|validated_updates_ready::  # policy hub should always put masterfiles in inputs in order to check new policy
 
@@ -121,7 +133,6 @@ bundle agent update
          copy_from => u_rcp("$(master_location)","$(sys.policy_hub)"),
       depth_search => u_recurse("inf"),
       file_select  => u_input_files,
-        depends_on => { "check_valid_update" },
             action => u_immediate,
            classes => u_if_repaired("update_report");
 
@@ -137,17 +148,9 @@ bundle agent update
    "$(sys.workdir)/lib"
            comment => "Make sure cfengine libraries have right file permissions",
             handle => "update_files_sys_workdir_lib",
-             perms => u_m("644"),
+             perms => u_shared_lib_perms,
       depth_search => u_recurse_basedir("inf"),
             action => u_immediate;
-
-   "$(sys.workdir)/lib"
-           comment => "Make sure cfengine libraries have right file permissions for only HP-UX",
-            handle => "update_files_sys_workdir_lib_hpux",
-             perms => u_m("755"),
-      depth_search => u_recurse_basedir("inf"),
-            action => u_immediate,
-        ifvarclass => "hpux";
 
    "/usr/local/sbin"
            comment => "Ensure cfengine binaries were copied to /usr/local/sbin",
@@ -175,6 +178,16 @@ bundle agent update
 body perms u_m(p)
 {
  mode  => "$(p)";
+}
+
+#########################################################
+
+body perms u_shared_lib_perms
+{
+ !hpux::
+   mode => "0644";
+ hpux::
+   mode => "0755";  # Mantis 1114, Redmine 1179
 }
 
 #########################################################

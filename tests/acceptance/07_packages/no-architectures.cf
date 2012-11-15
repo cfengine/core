@@ -53,16 +53,16 @@ body package_method mock
 {
 package_changes => "individual";
 
-package_list_command => "/usr/bin/printf 'foobar-1'";
+package_list_command => "$(G.printf) 'foobar-1'";
 package_list_name_regex => "^([^-]+)";
 package_list_version_regex => "^[^-]+-([\S+])";
 
 package_installed_regex => ".*";
 
-package_add_command => "/bin/false";
-package_update_command => "/bin/false";
-package_delete_command => "/bin/false";
-package_verify_command => "/bin/false";
+package_add_command => "$(G.false)";
+package_update_command => "$(G.false)";
+package_delete_command => "$(G.false)";
+package_verify_command => "$(G.false)";
 }
 
 body classes kept(classname)

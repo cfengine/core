@@ -1,0 +1,32 @@
+
+body common control
+{
+bundlesequence => { "xxx:globalclass", "main" };
+inputs => { "unit_namespace_class1.cf" };
+}
+
+
+bundle agent main
+{
+classes:
+
+ cfengine_3::
+
+  "local_default" expression => "any";
+
+methods:
+
+  "namespace demo" usebundle => xxx:localclass;
+
+reports:
+
+  local_default:: "Got locally set class in default namespace";
+
+  xxx:xclass_local:: "Got remote set local class in xxx namespace (impossible)";
+
+  xxx:xclass_global:: "Got remote set global class in xxx namespace";
+
+  not_a_defined_class:: "test";
+
+  cfengine_3::  "Hard classes work everywhere - here too";
+}

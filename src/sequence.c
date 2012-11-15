@@ -61,15 +61,16 @@ static void DestroyRange(Sequence *seq, size_t start, size_t end)
 
 void SequenceDestroy(Sequence *seq)
 {
-    assert(seq && "Attempted to destroy a null sequence");
-
-    if (seq->length > 0)
+    if (seq)
     {
-        DestroyRange(seq, 0, seq->length - 1);
-    }
+        if (seq->length > 0)
+        {
+            DestroyRange(seq, 0, seq->length - 1);
+        }
 
-    free(seq->data);
-    free(seq);
+        free(seq->data);
+        free(seq);
+    }
 }
 
 static void ExpandIfNeccessary(Sequence *seq)
@@ -119,7 +120,7 @@ void *SequenceLookup(Sequence *seq, const void *key, SequenceItemComparator Comp
 {
     for (size_t i = 0; i < seq->length; i++)
     {
-        if (Compare(key, seq->data[i]) == 0)
+        if (Compare(key, seq->data[i], NULL) == 0)
         {
             return seq->data[i];
         }
@@ -132,7 +133,7 @@ ssize_t SequenceIndexOf(Sequence *seq, const void *key, SequenceItemComparator C
 {
     for (size_t i = 0; i < seq->length; i++)
     {
-        if (Compare(key, seq->data[i]) == 0)
+        if (Compare(key, seq->data[i], NULL) == 0)
         {
             return i;
         }
@@ -150,7 +151,7 @@ static void Swap(void **l, void **r)
 }
 
 // adopted from http://rosettacode.org/wiki/Sorting_algorithms/Quicksort#C
-static void QuickSortRecursive(void **data, int n, SequenceItemComparator Compare, size_t maxterm)
+static void QuickSortRecursive(void **data, int n, SequenceItemComparator Compare, void *user_data, size_t maxterm)
 {
     assert(maxterm < 1000);
 
@@ -165,11 +166,11 @@ static void QuickSortRecursive(void **data, int n, SequenceItemComparator Compar
 
     while (l <= r)
     {
-        while (Compare(*l, pivot) < 0)
+        while (Compare(*l, pivot, user_data) < 0)
         {
             ++l;
         }
-        while (Compare(*r, pivot) > 0)
+        while (Compare(*r, pivot, user_data) > 0)
         {
             --r;
         }
@@ -181,13 +182,13 @@ static void QuickSortRecursive(void **data, int n, SequenceItemComparator Compar
         }
     }
 
-    QuickSortRecursive(data, r - data + 1, Compare, maxterm + 1);
-    QuickSortRecursive(l, data + n - l, Compare, maxterm + 1);
+    QuickSortRecursive(data, r - data + 1, Compare, user_data, maxterm + 1);
+    QuickSortRecursive(l, data + n - l, Compare, user_data, maxterm + 1);
 }
 
-void SequenceSort(Sequence *seq, SequenceItemComparator Compare)
+void SequenceSort(Sequence *seq, SequenceItemComparator Compare, void *user_data)
 {
-    QuickSortRecursive(seq->data, seq->length, Compare, 0);
+    QuickSortRecursive(seq->data, seq->length, Compare, user_data, 0);
 }
 
 void SequenceSoftRemoveRange(Sequence *seq, size_t start, size_t end)
@@ -210,5 +211,13 @@ void SequenceSoftRemoveRange(Sequence *seq, size_t start, size_t end)
 void SequenceSoftRemove(Sequence *seq, size_t index)
 {
     SequenceSoftRemoveRange(seq, index, index);
+}
+
+void SequenceReverse(Sequence *seq)
+{
+    for (size_t i = 0; i < (seq->length / 2); i++)
+    {
+        Swap(&seq->data[i], &seq->data[seq->length - 1 - i]);
+    }
 }
 

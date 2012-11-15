@@ -1,9 +1,15 @@
 
-This is a list of promise handles for whom this promise is a promisee. In other words,
-we acknowledge that this promise will be affected by the list of promises whose handles
-are specified. 
+This is a list of promise handles for whom this promise is a
+promisee. In other words, we acknowledge that this promise will be
+affected by the list of promises whose handles are specified.
 
-This option is only used only for documentation currently. In
-commercial versions of CFEngine, using this attribute leads to
-automatic documentation about policy relationships for the purpose of
-Knowledge Management.
+It has the effect of partially ordering promises.
+
+As of version 3.4.0, promise this feature is active and may be
+considered a short-hand for setting classes. If one promise depends on
+a list of others, it will not be verified unless the dependent
+promises have already been verified and kept: i.e. as long as the
+dependent promises are either kept or repaired the dependee can be
+verified.
+
+Handles in other namespaces may be referred to by @var{namespace:handle}.

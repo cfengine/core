@@ -234,7 +234,7 @@ const BodySyntax CFS_CONTROLBODY[] =
     {"allowusers", cf_slist, "", "List of usernames who may execute requests from this server"},
     {"auditing", cf_opts, CF_BOOL, "true/false activate auditing of server connections", "false"},
     {"bindtointerface", cf_str, "", "IP of the interface to which the server should bind on multi-homed hosts"},
-    {"cfruncommand", cf_str, CF_ABSPATHRANGE, "Path to the cf-agent command or cf-execd wrapper for remote execution"},
+    {"cfruncommand", cf_str, CF_PATHRANGE, "Path to the cf-agent command or cf-execd wrapper for remote execution"},
     {"call_collect_interval", cf_int, CF_VALRANGE, "The interval in minutes in between collect calls to the policy hub offering a tunnel for report collection (Enterprise)"},
     {"collect_window", cf_int, CF_VALRANGE, "A time in seconds that a collect-call tunnel remains open to a hub to attempt a report transfer before it is closed (Enterprise)"},
     {"denybadclocks", cf_opts, CF_BOOL, "true/false accept connections from hosts with clocks that are out of sync",
@@ -253,6 +253,7 @@ const BodySyntax CFS_CONTROLBODY[] =
     {"serverfacility", cf_opts, CF_FACILITY, "Menu option for syslog facility level", "LOG_USER"},
     {"skipverify", cf_slist, "", "List of IPs or hostnames for which we expect no DNS binding and cannot verify"},
     {"trustkeysfrom", cf_slist, "", "List of IPs from whom we accept public keys on trust"},
+    {"listen", cf_opts, CF_BOOL, "true/false enable server deamon to listen on defined port", "true"},
     {NULL, cf_notype, NULL, NULL}
 };
 

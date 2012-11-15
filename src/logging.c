@@ -1,4 +1,4 @@
-/* 
+/*
 
    Copyright (C) Cfengine AS
 
@@ -66,7 +66,6 @@ void BeginAudit()
 
 void EndAudit()
 {
-    double total;
     char *sp, string[CF_BUFSIZE];
     Rval retval;
     Promise dummyp = { 0 };
@@ -98,7 +97,7 @@ void EndAudit()
         fclose(fout);
     }
 
-    total = (double) (PR_KEPT + PR_NOTKEPT + PR_REPAIRED) / 100.0;
+    double total = (double) (PR_KEPT + PR_NOTKEPT + PR_REPAIRED) / 100.0;
 
     if (GetVariable("control_common", "version", &retval) != cf_notype)
     {
@@ -117,13 +116,7 @@ void EndAudit()
     }
     else
     {
-        snprintf(string, CF_BUFSIZE,
-                 "Outcome of version %s (" CF_AGENTC "-%d): Promises observed to be kept %.0f%%, Promises repaired %.0f%%, Promises not repaired %.0f\%%",
-                 sp, CFA_BACKGROUND, (double) PR_KEPT / total, (double) PR_REPAIRED / total,
-                 (double) PR_NOTKEPT / total);
-
-        CfOut(cf_verbose, "", "%s", string);
-        PromiseLog(string);
+        LogTotalCompliance(sp);
     }
 
     if (strlen(string) > 0)
@@ -183,10 +176,15 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, c
             {
                 PR_REPAIRED++;
                 VAL_REPAIRED += attr.transaction.value_repaired;
+
+#ifdef HAVE_NOVA
+                EnterpriseTrackTotalCompliance(pp, 'r');
+#endif
             }
         }
 
         AddAllClasses(attr.classes.change, attr.classes.persist, attr.classes.timer);
+        MarkPromiseHandleDone(pp);
         DeleteAllClasses(attr.classes.del_change);
 
         if (IsPromiseValuableForLogging(pp))
@@ -202,6 +200,10 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, c
         {
             PR_NOTKEPT++;
             VAL_NOTKEPT += attr.transaction.value_notkept;
+
+#ifdef HAVE_NOVA
+            EnterpriseTrackTotalCompliance(pp, 'n');
+#endif
         }
 
         if (IsPromiseValuableForLogging(pp))
@@ -216,6 +218,10 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, c
         {
             PR_NOTKEPT++;
             VAL_NOTKEPT += attr.transaction.value_notkept;
+
+#ifdef HAVE_NOVA
+            EnterpriseTrackTotalCompliance(pp, 'n');
+#endif
         }
 
         AddAllClasses(attr.classes.timeout, attr.classes.persist, attr.classes.timer);
@@ -234,6 +240,10 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, c
         {
             PR_NOTKEPT++;
             VAL_NOTKEPT += attr.transaction.value_notkept;
+
+#ifdef HAVE_NOVA
+            EnterpriseTrackTotalCompliance(pp, 'n');
+#endif
         }
 
         AddAllClasses(attr.classes.failure, attr.classes.persist, attr.classes.timer);
@@ -252,6 +262,10 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, c
         {
             PR_NOTKEPT++;
             VAL_NOTKEPT += attr.transaction.value_notkept;
+
+#ifdef HAVE_NOVA
+            EnterpriseTrackTotalCompliance(pp, 'n');
+#endif
         }
 
         AddAllClasses(attr.classes.denied, attr.classes.persist, attr.classes.timer);
@@ -270,6 +284,10 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, c
         {
             PR_NOTKEPT++;
             VAL_NOTKEPT += attr.transaction.value_notkept;
+
+#ifdef HAVE_NOVA
+            EnterpriseTrackTotalCompliance(pp, 'n');
+#endif
         }
 
         AddAllClasses(attr.classes.interrupt, attr.classes.persist, attr.classes.timer);
@@ -298,8 +316,13 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, c
         {
             PR_KEPT++;
             VAL_KEPT += attr.transaction.value_kept;
+
+#ifdef HAVE_NOVA
+            EnterpriseTrackTotalCompliance(pp, 'c');
+#endif
         }
 
+        MarkPromiseHandleDone(pp);
         break;
     }
 
@@ -466,7 +489,7 @@ void PromiseLog(char *s)
         return;
     }
 
-    fprintf(fout, "%ld,%ld: %s\n", CFSTARTTIME, now, s);
+    fprintf(fout, "%jd,%jd: %s\n", (intmax_t) CFSTARTTIME, (intmax_t) now, s);
     fclose(fout);
 }
 
@@ -550,3 +573,4 @@ void AuditStatusMessage(Writer *writer, char status)
     }
 
 }
+

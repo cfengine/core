@@ -36,7 +36,7 @@ bool IsInterfaceAddress(const char *adr);
 void DetectDomainName(const char *orig_nodename);
 const char *GetWorkDir(void);
 
-void CreateClassesFromCanonification(char *canonified);
+void CreateHardClassesFromCanonification(const char *canonified);
 
 // FIX: win_proc.c?
 int GetCurrentUserName(char *userName, int userNameLen);

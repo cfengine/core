@@ -34,6 +34,7 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "expand.h"
+#include "scope.h"
 
 #include <math.h>
 
@@ -546,9 +547,7 @@ static void ArmClasses(Averages av, char *timekey)
         char desc[CF_BUFSIZE];
 
         GetObservable(i, name, desc);
-        sigma =
-            SetClasses(name, CF_THIS[i], av.Q[i].expect, av.Q[i].var, LOCALAV.Q[i].expect, LOCALAV.Q[i].var, &classlist,
-                       timekey);
+        sigma = SetClasses(name, CF_THIS[i], av.Q[i].expect, av.Q[i].var, LOCALAV.Q[i].expect, LOCALAV.Q[i].var, &classlist, timekey);
         SetVariable(name, CF_THIS[i], av.Q[i].expect, sigma, &classlist);
 
         /* LDT */
@@ -778,7 +777,7 @@ static void UpdateDistributions(char *timekey, Averages *av)
    std-deviation for the current time.
 */
 
-    if (IsDefinedClass("Min40_45"))
+    if (IsDefinedClass("Min40_45", NULL))
     {
         day = Day2Number(timekey);
 
@@ -1016,7 +1015,7 @@ static void SetVariable(char *name, double value, double average, double stddev,
 {
     char var[CF_BUFSIZE];
 
-    snprintf(var, CF_MAXVARSIZE, "value_%s=%.0lf", name, value);
+    snprintf(var, CF_MAXVARSIZE, "value_%s=%.2lf", name, value);
     AppendItem(classlist, var, "");
 
     snprintf(var, CF_MAXVARSIZE, "av_%s=%.2lf", name, average);
@@ -1140,7 +1139,7 @@ static void KeepMonitorPromise(Promise *pp)
 {
     char *sp = NULL;
 
-    if (!IsDefinedClass(pp->classes))
+    if (!IsDefinedClass(pp->classes, pp->namespace))
     {
         CfOut(cf_verbose, "", "\n");
         CfOut(cf_verbose, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");

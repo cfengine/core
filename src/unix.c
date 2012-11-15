@@ -28,6 +28,7 @@
 #include "env_context.h"
 #include "vars.h"
 #include "files_names.h"
+#include "files_interfaces.h"
 #include "item_lib.h"
 #include "conversion.h"
 
@@ -565,10 +566,10 @@ static void GetMacAddress(enum cfagenttype ag, int fd, struct ifreq *ifr, struct
     AppendRlist(interfaces, ifp->ifr_name, CF_SCALAR);
 
     snprintf(name, CF_MAXVARSIZE, "mac_%s", CanonifyName(hw_mac));
-    NewClass(name);
+    HardClass(name);
 # else
     NewScalar("sys", name, "mac_unknown", cf_str);
-    NewClass("mac_unknown");
+    HardClass("mac_unknown");
 # endif
 }
 
@@ -678,7 +679,7 @@ void GetInterfacesInfo(enum cfagenttype ag)
 
         snprintf(workbuf, CF_BUFSIZE, "net_iface_%s", CanonifyName(ifp->ifr_name));
 
-        NewClass(workbuf);
+        HardClass(workbuf);
 
         if (ifp->ifr_addr.sa_family == AF_INET)
         {
@@ -687,8 +688,6 @@ void GetInterfacesInfo(enum cfagenttype ag)
             if (ioctl(fd, SIOCGIFFLAGS, &ifr) == -1)
             {
                 CfOut(cf_error, "ioctl", "No such network device");
-                //close(fd);
-                //return;
                 continue;
             }
 
@@ -703,7 +702,7 @@ void GetInterfacesInfo(enum cfagenttype ag)
                 }
 
                 CfDebug("Adding hostip %s..\n", inet_ntoa(sin->sin_addr));
-                NewClass(inet_ntoa(sin->sin_addr));
+                HardClass(inet_ntoa(sin->sin_addr));
 
                 if ((hp =
                      gethostbyaddr((char *) &(sin->sin_addr.s_addr), sizeof(sin->sin_addr.s_addr), AF_INET)) == NULL)
@@ -715,14 +714,14 @@ void GetInterfacesInfo(enum cfagenttype ag)
                     if (hp->h_name != NULL)
                     {
                         CfDebug("Adding hostname %s..\n", hp->h_name);
-                        NewClass(hp->h_name);
+                        HardClass(hp->h_name);
 
                         if (hp->h_aliases != NULL)
                         {
                             for (i = 0; hp->h_aliases[i] != NULL; i++)
                             {
                                 CfOut(cf_verbose, "", "Adding alias %s..\n", hp->h_aliases[i]);
-                                NewClass(hp->h_aliases[i]);
+                                HardClass(hp->h_aliases[i]);
                             }
                         }
                     }
@@ -742,7 +741,7 @@ void GetInterfacesInfo(enum cfagenttype ag)
                         if (*sp == '.')
                         {
                             *sp = '\0';
-                            NewClass(ip);
+                            HardClass(ip);
                         }
                     }
 
@@ -758,14 +757,12 @@ void GetInterfacesInfo(enum cfagenttype ag)
                             NewScalar("sys", name, ip, cf_str);
                         }
                     }
-                    //close(fd);
-                    //return;
                     continue;
                 }
 
                 strncpy(ip, "ipv4_", CF_MAXVARSIZE);
                 strncat(ip, inet_ntoa(sin->sin_addr), CF_MAXVARSIZE - 6);
-                NewClass(ip);
+                HardClass(ip);
 
                 if (!ipdefault)
                 {
@@ -783,7 +780,7 @@ void GetInterfacesInfo(enum cfagenttype ag)
                     if (*sp == '.')
                     {
                         *sp = '\0';
-                        NewClass(ip);
+                        HardClass(ip);
                     }
                 }
 
@@ -926,7 +923,7 @@ static void FindV6InterfacesInfo(void)
                 {
                     CfOut(cf_verbose, "", "Found IPv6 address %s\n", ip->name);
                     AppendItem(&IPADDRESSES, ip->name, "");
-                    NewClass(ip->name);
+                    HardClass(ip->name);
                 }
             }
 

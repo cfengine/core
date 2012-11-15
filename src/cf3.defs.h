@@ -29,6 +29,11 @@
 #include "rlist.h"
 #include "compiler.h"
 
+#ifdef HAVE_LIBXML2
+#include <libxml/parser.h>
+#include <libxml/xpathInternals.h>
+#endif
+
 /*******************************************************************/
 /* Preprocessor tricks                                             */
 /*******************************************************************/
@@ -85,7 +90,10 @@
 #define CF_INDEX_OFFSET  CF_INDEX_FIELD_LEN+1
 
 #define MAXIP4CHARLEN 16
+#define MAX_MONTH_NAME 9
 
+#define MAX_DIGEST_BYTES (512 / 8)  /* SHA-512 */
+#define MAX_DIGEST_HEX (MAX_DIGEST_BYTES * 2)
 
 #define CF_EDIT_IFELAPSED 3     /* NOTE: If doing copy template then edit working copy,
                                    the edit ifelapsed must not be higher than
@@ -152,7 +160,7 @@
 #define CF_START_DOMAIN "undefined.domain"
 
 #define CF_GRAINS   64
-#define ATTR        19
+#define ATTR        20
 #define CF_NETATTR   7          /* icmp udp dns tcpsyn tcpfin tcpack */
 #define CF_MEASURE_INTERVAL (5.0*60.0)
 #define CF_SHIFT_INTERVAL (6*3600)
@@ -418,6 +426,8 @@ enum observables
     ob_mysql_out,
     ob_postgresql_in,
     ob_postgresql_out,
+    ob_ipp_in,
+    ob_ipp_out,
     ob_spare
 };
 
@@ -690,6 +700,27 @@ enum cfagenttype
     cf_noagent
 };
 
+enum typesequence
+{
+    kp_meta,
+    kp_vars,
+    kp_defaults,
+    kp_classes,
+    kp_outputs,
+    kp_interfaces,
+    kp_files,
+    kp_packages,
+    kp_environments,
+    kp_methods,
+    kp_processes,
+    kp_services,
+    kp_commands,
+    kp_storage,
+    kp_databases,
+    kp_reports,
+    kp_none
+};
+
 /*************************************************************************/
 
 enum cfgcontrol
@@ -829,6 +860,7 @@ enum cfscontrol
     cfs_serverfacility,
     cfs_skipverify,
     cfs_trustkeysfrom,
+    cfs_listen,
     cfs_notype,
 };
 
@@ -951,8 +983,8 @@ enum cfeditorder
 
 #define CF_MODERANGE   "[0-7augorwxst,+-]+"
 #define CF_BSDFLAGRANGE "[+-]*[(arch|archived|nodump|opaque|sappnd|sappend|schg|schange|simmutable|sunlnk|sunlink|uappnd|uappend|uchg|uchange|uimmutable|uunlnk|uunlink)]+"
-#define CF_CLASSRANGE  "[a-zA-Z0-9_!&@@$|.()\\[\\]{}]+"
-#define CF_IDRANGE     "[a-zA-Z0-9_$(){}\\[\\].]+"
+#define CF_CLASSRANGE  "[a-zA-Z0-9_!&@@$|.()\\[\\]{}:]+"
+#define CF_IDRANGE     "[a-zA-Z0-9_$(){}\\[\\].:]+"
 #define CF_USERRANGE   "[a-zA-Z0-9_$.-]+"
 #define CF_IPRANGE     "[a-zA-Z0-9_$(){}.:-]+"
 #define CF_FNCALLRANGE "[a-zA-Z0-9_(){}.$@]+"
@@ -1105,6 +1137,10 @@ typedef struct
     Item *file_classes;
     int num_edits;
     int empty_first;
+#ifdef HAVE_LIBXML2
+    xmlDocPtr xmldoc;
+#endif
+
 } EditContext;
 
 /*************************************************************************/
@@ -1173,6 +1209,7 @@ struct FnCall_
 {
     char *name;
     Rlist *args;
+    char *namespace;
 };
 
 /*******************************************************************/
@@ -1918,6 +1955,14 @@ typedef struct
 
 typedef struct
 {
+    char *select_xpath_region;
+    char *attribute_value;
+    int haveselectxpathregion;
+    int haveattributevalue;
+} EditXml;
+
+typedef struct
+{
     char *line_matching;
     enum cfeditorder before_after;
     char *first_last;
@@ -1976,6 +2021,7 @@ typedef struct
     int haveprintfile;
     int havelastseen;
     int lastseen;
+    char *result;
     double intermittency;
     char *friend_pattern;
     char *filename;
@@ -2029,6 +2075,9 @@ typedef struct
     bool package_commands_useshell;
 
     char *package_multiline_start;
+
+    char *package_version_less_command;
+    char *package_version_equal_command;
 
     int package_noverify_returncode;
 } Packages;
@@ -2153,6 +2202,12 @@ enum cf_meter
     meter_other_day,
     meter_comms_hour,
     meter_anomalies_day,
+    meter_compliance_week_user,
+    meter_compliance_week_internal,
+    meter_compliance_day_user,
+    meter_compliance_day_internal,
+    meter_compliance_hour_user,
+    meter_compliance_hour_internal,
     meter_endmark
 };
 
@@ -2246,6 +2301,7 @@ typedef struct
     EditLocation location;
     EditColumn column;
     EditReplace replace;
+    EditXml xml;
     int haveregion;
     int havelocation;
     int havecolumn;

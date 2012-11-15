@@ -587,7 +587,7 @@ static void KeepReportsControlPromises(Policy *policy)
 
     for (cp = ControlBodyConstraints(policy, cf_report); cp != NULL; cp = cp->next)
     {
-        if (IsExcluded(cp->classes))
+        if (IsExcluded(cp->classes, NULL))
         {
             continue;
         }
@@ -1842,7 +1842,6 @@ static void ShowCurrentAudit()
         CfHtmlHeader(writer, name, STYLESHEET, WEBDRIVER, BANNER);
 
         WriterWriteF(writer, "<table class=border cellpadding=5>\n");
-        /* fprintf(fout,"<th> t-index </th>"); */
         WriterWriteF(writer, "<th> Scan convergence </th>");
         WriterWriteF(writer, "<th> Observed </th>");
         WriterWriteF(writer, "<th> Promise made </th>");
@@ -1883,7 +1882,6 @@ static void ShowCurrentAudit()
             else if (HTML)
             {
                 WriterWriteF(writer, "%s", CFRH[cfx_entry][cfb]);
-                /* fprintf(fout,"%s %s %s",CFRH[cfx_index][cfb],operation,CFRH[cfx_index][cfe]); */
                 WriterWriteF(writer, "%s %s, ", CFRH[cfx_event][cfb], Format(entry.operator, 40));
                 AuditStatusMessage(writer, entry.status);
                 WriterWriteF(writer, "%s", CFRH[cfx_event][cfe]);
@@ -2492,7 +2490,12 @@ static void WriteHistograms()
 
     for (position = 0; position < CF_GRAINS; position++)
     {
-        fscanf(fp, "%d ", &position);
+        int position_read;
+        fscanf(fp, "%d ", &position_read);
+        if (position != position_read)
+        {
+            FatalError("Malformed data found in %s/state/historgrams, line %d", CFWORKDIR, position + 1);
+        }
 
         for (i = 0; i < CF_OBSERVABLES; i++)
         {

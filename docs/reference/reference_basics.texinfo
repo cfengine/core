@@ -14,8 +14,7 @@ exist as both free open source and commercial enterprise versions:
 
 @itemize
 @item @b{Community Edition} - a free and gratis core of the software (available now).
-@item @b{Nova} - a commercial enhanced version for basic enterprise needs (available now).
-@item @b{Constellation} - a commercial enhancement for larger enterprises (coming 2012).
+@item @b{Enterprise} - a commercial enhanced version for basic enterprise needs (available now; previously known as Nova).
 @end itemize
 
 This document is valid for @b{all versions} of CFEngine.  Whenever a feature is only
@@ -1994,29 +1993,30 @@ namespace => "myspace";
 @end verbatim
 
 To distinguish the bundle @code{mymethod} in the default namespace
-from one in another namespace, you can prefix the 
+from one in another namespace, you prefix the bundle name with the
+namespace, separated by a colon.
 @verbatim
 methods:
 
-  "namespace demo" usebundle => myspace.mymethod("arg1");
+  "namespace demo" usebundle => myspace:mymethod("arg1");
 
   "namespace demo" usebundle => mymethod("arg1","arg2");
 
 @end verbatim
 
-To distinguish a body
-from one in another namespace, you can prefix the 
+To distinguish a body from one in another namespace, you can prefix
+the body name with the namespace, separated by a colon.
 @verbatim
 files:
 
    "/file"
 
        create => "true",
-        perms => name1.settings;
+        perms => name1:settings;
 
 @end verbatim
 
-The namespace that is default, i.e. that which is implied by not making any namespace
+The default namespace, i.e. that which is implied by not making any namespace
 declarations, can be accessed or referred to by prefixing with the default string
 
 @verbatim
@@ -2025,7 +2025,7 @@ files:
    "/file"
 
        create => "true",
-        perms => default.settings;
+        perms => default:settings;
 
 @end verbatim
 @noindent For example, this can be used to refer to standard library objects from

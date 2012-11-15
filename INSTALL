@@ -72,7 +72,7 @@ From tarball:
 $ ./configure [configure options]
 $ make [-jN]
 
-From Subversion checkout:
+From git checkout:
 
 $ ./autogen.sh [configure options]
 $ make [-jN]
@@ -94,6 +94,10 @@ CFEngine might be installed in two configurations:
    mounted due to NFS breakage).
 
 * FHS file layout, enabled by --enable-fhs. This layout follows FHS 2.3.
+
+After the build process has completed (see BUILD INSTRUCTIONS above), type:
+
+$ make install
 
 RUNNING TESTSUITE
 -----------------

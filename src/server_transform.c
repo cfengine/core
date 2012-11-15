@@ -35,6 +35,7 @@
 #include "reporting.h"
 #include "expand.h"
 #include "transaction.h"
+#include "scope.h"
 
 static void KeepContextBundles(Policy *policy, const ReportContext *report_context);
 static void KeepServerPromise(Promise *pp);
@@ -46,6 +47,7 @@ extern const BodySyntax CFS_CONTROLBODY[];
 extern const BodySyntax CF_REMROLE_BODIES[];
 extern int COLLECT_INTERVAL;
 extern int COLLECT_WINDOW;
+extern bool SERVER_LISTEN;
 
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
@@ -216,7 +218,7 @@ void KeepControlPromises(Policy *policy)
 
     for (cp = ControlBodyConstraints(policy, cf_server); cp != NULL; cp = cp->next)
     {
-        if (IsExcluded(cp->classes))
+        if (IsExcluded(cp->classes, NULL))
         {
             continue;
         }
@@ -266,6 +268,14 @@ void KeepControlPromises(Policy *policy)
         {
             COLLECT_INTERVAL = (int) 60 * Str2Int(retval.item);
             CfOut(cf_verbose, "", "SET call_collect_interval = %d (seconds)\n", COLLECT_INTERVAL);
+            continue;
+        }
+
+        if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_listen].lval) == 0)
+        {
+            SERVER_LISTEN = GetBoolean(retval.item);
+            CfOut(cf_verbose, "", "SET server listen = %s \n",
+                  (SERVER_LISTEN)? "true":"false");
             continue;
         }
 
@@ -463,7 +473,7 @@ static void KeepContextBundles(Policy *policy, const ReportContext *report_conte
 
                 BannerSubType(scope, sp->name, 0);
                 SetScope(scope);
-                AugmentScope(scope, NULL, NULL);
+                AugmentScope(scope, bp->namespace, NULL, NULL);
 
                 for (pp = sp->promiselist; pp != NULL; pp = pp->next)
                 {
@@ -505,7 +515,7 @@ static void KeepPromiseBundles(Policy *policy, const ReportContext *report_conte
 
                 BannerSubType(scope, sp->name, 0);
                 SetScope(scope);
-                AugmentScope(scope, NULL, NULL);
+                AugmentScope(scope, bp->namespace, NULL, NULL);
 
                 for (pp = sp->promiselist; pp != NULL; pp = pp->next)
                 {
@@ -524,7 +534,7 @@ static void KeepServerPromise(Promise *pp)
 {
     char *sp = NULL;
 
-    if (!IsDefinedClass(pp->classes))
+    if (!IsDefinedClass(pp->classes, pp->namespace))
     {
         CfOut(cf_verbose, "", "Skipping whole promise, as context is %s\n", pp->classes);
         return;
@@ -615,7 +625,7 @@ void KeepFileAccessPromise(Promise *pp)
 
     for (cp = pp->conlist; cp != NULL; cp = cp->next)
     {
-        if (!IsDefinedClass(cp->classes))
+        if (!IsDefinedClass(cp->classes, pp->namespace))
         {
             continue;
         }
@@ -728,7 +738,7 @@ void KeepLiteralAccessPromise(Promise *pp, char *type)
     
     for (cp = pp->conlist; cp != NULL; cp = cp->next)
     {
-        if (!IsDefinedClass(cp->classes))
+        if (!IsDefinedClass(cp->classes, pp->namespace))
         {
             continue;
         }
@@ -805,7 +815,7 @@ void KeepQueryAccessPromise(Promise *pp, char *type)
 
     for (cp = pp->conlist; cp != NULL; cp = cp->next)
     {
-        if (!IsDefinedClass(cp->classes))
+        if (!IsDefinedClass(cp->classes, pp->namespace))
         {
             continue;
         }
@@ -869,7 +879,7 @@ static void KeepServerRolePromise(Promise *pp)
 
     for (cp = pp->conlist; cp != NULL; cp = cp->next)
     {
-        if (!IsDefinedClass(cp->classes))
+        if (!IsDefinedClass(cp->classes, pp->namespace))
         {
             continue;
         }

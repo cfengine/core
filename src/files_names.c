@@ -31,190 +31,8 @@
 #include "dir.h"
 #include "item_lib.h"
 #include "assert.h"
+#include "files_interfaces.h"
 
-/*****************************************************************************/
-
-void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *path, Promise *ptr, const ReportContext *report_context),
-                             const ReportContext *report_context)
-{
-    Item *path, *ip, *remainder = NULL;
-    char pbuffer[CF_BUFSIZE];
-    struct stat statbuf;
-    int count = 0, lastnode = false, expandregex = false;
-    uid_t agentuid = getuid();
-    int create = GetBooleanConstraint("create", pp);
-    char *pathtype = GetConstraintValue("pathtype", pp, CF_SCALAR);
-
-    CfDebug("LocateFilePromiserGroup(%s)\n", wildpath);
-
-/* Do a search for promiser objects matching wildpath */
-
-    if (!IsPathRegex(wildpath) || (pathtype && (strcmp(pathtype, "literal") == 0)))
-    {
-        CfOut(cf_verbose, "", " -> Using literal pathtype for %s\n", wildpath);
-        (*fnptr) (wildpath, pp, report_context);
-        return;
-    }
-    else
-    {
-        CfOut(cf_verbose, "", " -> Using regex pathtype for %s (see pathtype)\n", wildpath);
-    }
-
-    pbuffer[0] = '\0';
-    path = SplitString(wildpath, '/');  // require forward slash in regex on all platforms
-
-    for (ip = path; ip != NULL; ip = ip->next)
-    {
-        if (ip->name == NULL || strlen(ip->name) == 0)
-        {
-            continue;
-        }
-
-        if (ip->next == NULL)
-        {
-            lastnode = true;
-        }
-
-        /* No need to chdir as in recursive descent, since we know about the path here */
-
-        if (IsRegex(ip->name))
-        {
-            remainder = ip->next;
-            expandregex = true;
-            break;
-        }
-        else
-        {
-            expandregex = false;
-        }
-
-        if (!JoinPath(pbuffer, ip->name))
-        {
-            CfOut(cf_error, "", "Buffer has limited size in LocateFilePromiserGroup\n");
-            return;
-        }
-
-        if (cfstat(pbuffer, &statbuf) != -1)
-        {
-            if (S_ISDIR(statbuf.st_mode) && statbuf.st_uid != agentuid && statbuf.st_uid != 0)
-            {
-                CfOut(cf_inform, "",
-                      "Directory %s in search path %s is controlled by another user (uid %ju) - trusting its content is potentially risky (possible race)\n",
-                      pbuffer, wildpath, (uintmax_t)statbuf.st_uid);
-                PromiseRef(cf_inform, pp);
-            }
-        }
-    }
-
-    if (expandregex)            /* Expand one regex link and hand down */
-    {
-        char nextbuffer[CF_BUFSIZE], nextbufferOrig[CF_BUFSIZE], regex[CF_BUFSIZE];
-        const struct dirent *dirp;
-        Dir *dirh;
-        Attributes dummyattr = { {0} };
-
-        memset(&dummyattr, 0, sizeof(dummyattr));
-        memset(regex, 0, CF_BUFSIZE);
-
-        strncpy(regex, ip->name, CF_BUFSIZE - 1);
-
-        if ((dirh = OpenDirLocal(pbuffer)) == NULL)
-        {
-            // Could be a dummy directory to be created so this is not an error.
-            CfOut(cf_verbose, "", " -> Using best-effort expanded (but non-existent) file base path %s\n", wildpath);
-            (*fnptr) (wildpath, pp, report_context);
-            DeleteItemList(path);
-            return;
-        }
-        else
-        {
-            count = 0;
-
-            for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
-            {
-                if (!ConsiderFile(dirp->d_name, pbuffer, dummyattr, pp))
-                {
-                    continue;
-                }
-
-                if (!lastnode && !S_ISDIR(statbuf.st_mode))
-                {
-                    CfDebug("Skipping non-directory %s\n", dirp->d_name);
-                    continue;
-                }
-
-                if (FullTextMatch(regex, dirp->d_name))
-                {
-                    CfDebug("Link %s matched regex %s\n", dirp->d_name, regex);
-                }
-                else
-                {
-                    continue;
-                }
-
-                count++;
-
-                strncpy(nextbuffer, pbuffer, CF_BUFSIZE - 1);
-                AddSlash(nextbuffer);
-                strcat(nextbuffer, dirp->d_name);
-
-                for (ip = remainder; ip != NULL; ip = ip->next)
-                {
-                    AddSlash(nextbuffer);
-                    strcat(nextbuffer, ip->name);
-                }
-
-                /* The next level might still contain regexs, so go again as long as expansion is not nullpotent */
-
-                if (!lastnode && (strcmp(nextbuffer, wildpath) != 0))
-                {
-                    LocateFilePromiserGroup(nextbuffer, pp, fnptr, report_context);
-                }
-                else
-                {
-                    Promise *pcopy;
-
-                    CfOut(cf_verbose, "", " -> Using expanded file base path %s\n", nextbuffer);
-
-                    /* Now need to recompute any back references to get the complete path */
-
-                    snprintf(nextbufferOrig, sizeof(nextbufferOrig), "%s", nextbuffer);
-                    MapNameForward(nextbuffer);
-
-                    if (!FullTextMatch(pp->promiser, nextbuffer))
-                    {
-                        CfDebug("Error recomputing references for \"%s\" in: %s", pp->promiser, nextbuffer);
-                    }
-
-                    /* If there were back references there could still be match.x vars to expand */
-
-                    pcopy = ExpandDeRefPromise(CONTEXTID, pp);
-                    (*fnptr) (nextbufferOrig, pcopy, report_context);
-                    DeletePromise(pcopy);
-                }
-            }
-
-            CloseDir(dirh);
-        }
-    }
-    else
-    {
-        CfOut(cf_verbose, "", " -> Using file base path %s\n", pbuffer);
-        (*fnptr) (pbuffer, pp, report_context);
-    }
-
-    if (count == 0)
-    {
-        CfOut(cf_verbose, "", "No promiser file objects matched as regular expression %s\n", wildpath);
-
-        if (create)
-        {
-            VerifyFilePromise(pp->promiser, pp, report_context);
-        }
-    }
-
-    DeleteItemList(path);
-}
 
 /*********************************************************************/
 
@@ -237,8 +55,6 @@ int IsNewerFileTree(char *dir, time_t reftime)
 
     if (S_ISDIR(sb.st_mode))
     {
-        //CfOut(cf_verbose,""," ?? Looking at %s (%ld)",dir,sb.st_mtime-reftime);      
-
         if (sb.st_mtime > reftime)
         {
             CfOut(cf_verbose, "", " >> Detected change in %s", dir);
@@ -408,6 +224,9 @@ int JoinSilent(char *path, const char *leaf, int bufsize)
 
     if ((strlen(path) + len) > (bufsize - CF_BUFFERMARGIN))
     {
+        strncat(path, leaf, (bufsize - CF_BUFFERMARGIN));
+        EndJoin(path, "...TRUNCATED", bufsize);
+
         return false;
     }
 
@@ -1057,3 +876,20 @@ const char *GetSoftwareCacheFilename(char *buffer)
     MapName(buffer);
     return buffer;
 }
+
+/*******************************************************************/
+
+int StringInArray(char **array, char *string)
+{
+    for (int i = 0; array[i] != NULL; i++)
+    {
+        if (strcmp(string, array[i]) == 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+

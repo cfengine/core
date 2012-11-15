@@ -30,11 +30,13 @@
 #include "verify_environments.h"
 #include "addr_lib.h"
 #include "files_names.h"
+#include "files_interfaces.h"
 #include "item_lib.h"
 #include "vars.h"
 #include "conversion.h"
 #include "expand.h"
 #include "transaction.h"
+#include "scope.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"
@@ -49,48 +51,6 @@ extern int PR_NOTKEPT;
 /*******************************************************************/
 /* Agent specific variables                                        */
 /*******************************************************************/
-
-enum typesequence
-{
-    kp_meta,
-    kp_vars,
-    kp_defaults,
-    kp_classes,
-    kp_outputs,
-    kp_interfaces,
-    kp_files,
-    kp_packages,
-    kp_environments,
-    kp_methods,
-    kp_processes,
-    kp_services,
-    kp_commands,
-    kp_storage,
-    kp_databases,
-    kp_reports,
-    kp_none
-};
-
-char *TYPESEQUENCE[] =
-{
-    "meta",
-    "vars",
-    "defaults",
-    "classes",                  /* Maelstrom order 2 */
-    "outputs",
-    "interfaces",
-    "files",
-    "packages",
-    "guest_environments",
-    "methods",
-    "processes",
-    "services",
-    "commands",
-    "storage",
-    "databases",
-    "reports",
-    NULL
-};
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);
@@ -164,6 +124,7 @@ int main(int argc, char *argv[])
     KeepPromises(policy, config, report_context);
     CloseReports("agent", report_context);
     NoteClassUsage(VHEAP, true);
+    NoteClassUsage(VHARDHEAP, true);
 #ifdef HAVE_NOVA
     Nova_NoteVarUsageDB();
     Nova_TrackExecution();
@@ -220,7 +181,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
             break;
 
         case 'd':
-            NewClass("opt_debug");
+            HardClass("opt_debug");
             DEBUG = true;
             break;
 
@@ -228,7 +189,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
             BOOTSTRAP = true;
             MINUSF = true;
             IGNORELOCK = true;
-            NewClass("bootstrap_mode");
+            HardClass("bootstrap_mode");
             break;
 
         case 's':
@@ -294,7 +255,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
         case 'n':
             DONTDO = true;
             IGNORELOCK = true;
-            NewClass("opt_dry_run");
+            HardClass("opt_dry_run");
             break;
 
         case 'V':
@@ -414,7 +375,7 @@ void KeepControlPromises(Policy *policy)
 
     for (Constraint *cp = ControlBodyConstraints(policy, cf_agent); cp != NULL; cp = cp->next)
     {
-        if (IsExcluded(cp->classes))
+        if (IsExcluded(cp->classes, NULL))
         {
             continue;
         }
@@ -528,7 +489,7 @@ void KeepControlPromises(Policy *policy)
             for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
             {
                 CfOut(cf_verbose, "", " -> ... %s\n", ScalarValue(rp));
-                NewClass(rp->item);
+                NewClass(rp->item, NULL);
             }
 
             continue;
@@ -887,7 +848,7 @@ static void KeepPromiseBundles(Policy *policy, Rlist *bundlesequence, const Repo
             NewScope(namespace);
 
             SetBundleOutputs(bp->name);
-            AugmentScope(bp->name, bp->args, params);
+            AugmentScope(bp->name, bp->namespace, bp->args, params);
             BannerBundle(bp, params);
             THIS_BUNDLE = bp->name;
             DeletePrivateClassContext();        // Each time we change bundle
@@ -920,11 +881,11 @@ int ScheduleAgentOperations(Bundle *bp, const ReportContext *report_context)
 
     for (pass = 1; pass < CF_DONEPASSES; pass++)
     {
-        for (type = 0; TYPESEQUENCE[type] != NULL; type++)
+        for (type = 0; AGENT_TYPESEQUENCE[type] != NULL; type++)
         {
             ClassBanner(type);
 
-            if ((sp = GetSubTypeForBundle(TYPESEQUENCE[type], bp)) == NULL)
+            if ((sp = GetSubTypeForBundle(AGENT_TYPESEQUENCE[type], bp)) == NULL)
             {
                 continue;
             }
@@ -1035,7 +996,7 @@ static void KeepAgentPromise(Promise *pp, const ReportContext *report_context)
     char *sp = NULL;
     struct timespec start = BeginMeasure();
 
-    if (!IsDefinedClass(pp->classes))
+    if (!IsDefinedClass(pp->classes, pp->namespace))
     {
         CfOut(cf_verbose, "", "\n");
         CfOut(cf_verbose, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
@@ -1060,6 +1021,12 @@ static void KeepAgentPromise(Promise *pp, const ReportContext *report_context)
         return;
     }
 
+
+    if (MissingDependencies(pp))
+    {
+        return;
+    }
+    
 // Record promises examined for efficiency calc
 
     if (strcmp("meta", pp->agentsubtype) == 0)

@@ -30,6 +30,7 @@
 #include "mod_access.h"
 #include "item_lib.h"
 #include "reporting.h"
+#include <assert.h>
 
 static int IsSpace(char *remainder);
 
@@ -574,7 +575,7 @@ enum cfagenttype Agent2Type(char *name)
 
     CfDebug("Agent2Type(%s)\n", name);
 
-    for (i = 0; i < (int) cf_notype; i++)
+    for (i = 0; i < (int) cf_noagent; i++)
     {
         if (name && strcmp(CF_AGENTTYPES[i], name) == 0)
         {
@@ -1120,7 +1121,7 @@ enum cf_srv_policy Str2ServicePolicy(char *string)
     static char *text[5] = { "start", "stop", "disable", "restart", NULL };
     int i;
 
-    for (i = 0; i < 3; i++)
+    for (i = 0; i < 4; i++)
     {
         if (string && (strcmp(text[i], string) == 0))
         {
@@ -1130,8 +1131,6 @@ enum cf_srv_policy Str2ServicePolicy(char *string)
 
     return cfsrv_start;
 }
-
-/*********************************************************************/
 
 /*********************************************************************/
 
@@ -1160,13 +1159,61 @@ char *Dtype2Str(enum cfdatatype dtype)
     }
 }
 
+
+const char *DataTypeShortToType(char *short_type)
+{
+    assert(short_type);
+
+    if(strcmp(short_type, "s") == 0)
+    {
+        return "string";
+    }
+
+    if(strcmp(short_type, "i") == 0)
+    {
+        return "int";
+    }
+
+    if(strcmp(short_type, "r") == 0)
+    {
+        return "real";
+    }
+
+    if(strcmp(short_type, "m") == 0)
+    {
+        return "menu";
+    }
+
+    if(strcmp(short_type, "sl") == 0)
+    {
+        return "string list";
+    }
+
+    if(strcmp(short_type, "il") == 0)
+    {
+        return "int list";
+    }
+
+    if(strcmp(short_type, "rl") == 0)
+    {
+        return "real list";
+    }
+
+    if(strcmp(short_type, "ml") == 0)
+    {
+        return "menu list";
+    }
+
+    return "unknown type";
+}
+
 /*********************************************************************/
 /* Level                                                             */
 /*********************************************************************/
 
 int Month2Int(char *string)
 {
-    return MonthLen2Int(string, 10);    // no month names longer than 10 chars
+    return MonthLen2Int(string, MAX_MONTH_NAME);
 }
 
 /*************************************************************/

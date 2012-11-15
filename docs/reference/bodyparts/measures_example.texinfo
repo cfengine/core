@@ -1,0 +1,10 @@
+
+@verbatim
+things:
+
+ service_measurements::
+
+  "ssh_in"     measures => { "services::login services" },
+               measures => { "ssh" };
+
+@end verbatim

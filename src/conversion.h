@@ -49,6 +49,7 @@ enum cf_acl_type Str2AclType(char *string);
 enum cf_acl_inherit Str2AclInherit(char *string);
 enum cf_srv_policy Str2ServicePolicy(char *string);
 char *Dtype2Str(enum cfdatatype dtype);
+const char *DataTypeShortToType(char *short_type);
 char *Item2String(Item *ip);
 int IsRealNumber(char *s);
 enum cfd_menu String2Menu(const char *s);
@@ -62,6 +63,8 @@ int Nova_YearSlot(const char *day, const char *month, const char *lifecycle);
 int Nova_LaterThan(const char *bigger, const char *smaller);
 bool BundleQualifiedNameSplit(const char *qualified_bundle_name, char namespace_out[CF_MAXVARSIZE], char bundle_name_out[CF_MAXVARSIZE]);
 
+/* Timestamp-functions are not standardised across SQL databases - provide a standard layer for simple functions */
+char *SqlVariableExpand(const char *query);
 #endif
 
 #endif

@@ -124,7 +124,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
             break;
 
         case 'd':
-            NewClass("opt_debug");
+            HardClass("opt_debug");
             DEBUG = true;
             NO_FORK = true;
             break;
@@ -189,7 +189,7 @@ static void KeepPromises(Policy *policy, const ReportContext *report_context)
 
     for (cp = ControlBodyConstraints(policy, cf_monitor); cp != NULL; cp = cp->next)
     {
-        if (IsExcluded(cp->classes))
+        if (IsExcluded(cp->classes, NULL))
         {
             continue;
         }

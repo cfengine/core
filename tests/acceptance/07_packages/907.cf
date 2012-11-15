@@ -41,10 +41,10 @@ body package_method mock
   package_list_arch_regex => "[^:]\w+$";
   package_installed_regex => "^[^:]*";
 
-  package_add_command => "/bin/true";
-  package_update_command => "/bin/true";
-  package_delete_command => "/bin/true";
-  package_verify_command => "/bin/true";
+  package_add_command => "$(G.true)";
+  package_update_command => "$(G.true)";
+  package_delete_command => "$(G.true)";
+  package_verify_command => "$(G.true)";
 }
 
 #######################################################

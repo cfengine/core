@@ -18,12 +18,12 @@
 @c ***********************************************************************
 @c %** start of header
 @setfilename st-windows.info
-@settitle Windows Management with CFEngine Nova
+@settitle Windows Management with CFEngine Enterprise
 @setchapternewpage odd
 @c %** end of header
 
 @titlepage
-@title Windows Management with CFEngine Nova
+@title Windows Management with CFEngine Enterprise
 @subtitle A CFEngine Special Topics Handbook
 @author CFEngine AS
 
@@ -32,19 +32,19 @@
 
 @cartouche
 @quotation
-CFEngine Nova is a cross-platform and versatile tool that unifies the
+CFEngine Enterprise is a cross-platform and versatile tool that unifies the
 desired state management on all major operating systems.
 
 However, some operating systems are designed fundamentally different
 than others, requiring special CFEngine language features when being
-described. In this document, we highlight the Nova extensions provided
+described. In this document, we highlight the CFE Enterprise extensions provided
 to the Windows platform.
 
 @end quotation
 @end cartouche
 
 @vskip 0pt plus 1filll
-Copyright @copyright{} 2011 CFEngine AS
+Copyright @copyright{} 2012 CFEngine AS
 
 @end titlepage
 
@@ -65,7 +65,7 @@ Copyright @copyright{} 2011 CFEngine AS
 
 @ifnottex
 @node  Top, , (dir), (dir)
-@top Windows Managment with CFEngine Nova
+@top Windows Managment with CFEngine Enterprise
 @end ifnottex
 
 @iftex
@@ -79,7 +79,7 @@ Copyright @copyright{} 2011 CFEngine AS
 * Windows registry management::  
 * Windows service management::  
 * File and folder permissions::  
-* Windows-aware features in CFE Nova::  
+* Windows-aware features in CFE Enterprise::  
 * Windows special variables::   
 * Windows hard classes::        
 * Notes on windows policies::   
@@ -106,7 +106,7 @@ Copyright @copyright{} 2011 CFEngine AS
 @unnumberedsec System requirements
 @sp 1
 
-CFEngine Nova, being so lightweight, works equally well on Windows
+CFEngine Enterprise, being so lightweight, works equally well on Windows
 clients as on Windows servers. Both native 32-bit/x86 (package name
 @code{i686}) and 64-bit/x64 (package name @code{x86_64}) packages are
 available to customers. It is important that you select the
@@ -116,11 +116,11 @@ Of Windows client operating systems, anything from Windows XP SP2 and
 newer is supported. On the server side, Windows Server 2003 and newer
 is supported.
 
-CFEngine Nova communicates bi-directionally on port @code{5308}, so
+CFEngine Enterprise communicates bi-directionally on port @code{5308}, so
 make sure that this port is open for outgoing and incoming @code{TCP}
 connections.
 
-All software dependencies are bundled with the CFEngine Nova
+All software dependencies are bundled with the CFEngine Enterprise
 package. The total disk consumption is about 70 @code{MB}, and the
 memory usage is less than 30 @code{MB}.
 
@@ -129,7 +129,7 @@ memory usage is less than 30 @code{MB}.
 @sp 1
 
 The installation and set-up procedure on Windows is not different than
-that for other operating systems Nova runs on, so the Nova getting
+that for other operating systems CFE Enterprise runs on, so the CFE Enterprise getting
 started document available at @url{http://software.cfengine.com}
 applies to the Windows version as well.
 
@@ -142,11 +142,20 @@ Prompt} in Administrative mode and run @samp{msiexec -i
 cfengine-nova-VERSION-ARCH.msi} (replace @code{VERSION} and
 @code{ARCH} appropriately).
 
-Note that you need a policy hub to bootstrap to in order for
-the license to get downloaded and verified. This is required even if
-you just want to run some tests on the local machine manually. The
-policy hub needs to run a flavour of Linux, as noted in the Nova
-getting started document. Find the hostname or IP address of the hub, here we assume the address is '123.456.789.123' (do not bootstrap with a localhost address):
+If you are just going to test your policies on a Windows host, it is
+more efficient to not bootstrap to a policy server, but run the
+policies locally just after you create them. You can install the license
+with the @code{cf-key -l} command -- you will need to copy over the
+licensed public key as advised by @code{cf-key -l}.@footnote{Avaliable
+in CFEngine Enterprise 3.0 and beyond. Run @code{cf-key -l
+C:\path\to\license.dat} and follow the instructions.}
+
+Eventually, when you are done testing and want to bootstrap a Windows
+host to a policy server, please run the following command (against a
+Linux-based policy server, as advised in the CFE Enterprise getting
+started document). If we assume the policy server's IP address is
+'123.456.789.123', you need to run the following command to bootstrap
+the Windows host.
 
 @verbatim
    C:\Program Files\Cfengine\bin\cf-agent.exe --bootstrap --policy-server 123.456.789.123
@@ -155,13 +164,6 @@ getting started document. Find the hostname or IP address of the hub, here we as
 
 @node  Testing policies locally, Windows registry management, Installation, Top
 @unnumberedsec Testing policies locally
-
-After correctly bootstrapping, however, you can stop the CFEngine Nova
-service (the @code{cf-execd} process), and kill @code{cf-serverd} and
-@code{cf-monitord} to create an off-line test environment. You can
-also delete everything under @code{Cfengine\inputs} except
-@code{license.dat} and @code{cfengine_stdlib.cf} to test local
-policies manually.
 
 Create a new text file @code{Cfengine\inputs\promises.cf} and input
 the following text using your favourite text editor.
@@ -201,7 +203,7 @@ of the @code{test} bundle only.
 @node  Windows registry management, Windows service management, Testing policies locally, Top
 @unnumberedsec Windows registry management
 
-CFEngine Nova supports fine-grained management of the Windows
+CFEngine Enterprise supports fine-grained management of the Windows
 registry. These promises are encapsulated under the @code{databases:}
 promise type. 
 
@@ -264,7 +266,7 @@ Now, if you create @samp{value1} and @samp{value2} in the key above,
 @center @image{winreg-delete,13cm,,Windows registry delete output,png}
 
 
-At the time of writing, Nova supports the @code{REG_DWORD} (double
+At the time of writing, CFE Enterprise supports the @code{REG_DWORD} (double
 word), @code{REG_SZ} (string) and @code{REG_EXPAND_SZ} (expandable
 string) data types, as given in the middle field of the
 @code{database_rows} list elements. See the
@@ -281,21 +283,21 @@ reference manual}.
 @node  Windows service management, File and folder permissions, Windows registry management, Top
 @unnumberedsec Windows service management
 
-CFEngine Nova can maintain complete control of the state of all
+CFEngine Enterprise can maintain complete control of the state of all
 Windows services. For example, services prone to security issues or
 errors can easily be given a disabled state.
 
 @center @image{winservice-disabled_policy,8cm,,Disabled Windows service,png}
 
 A service can also be given a running state, in which case CFEngine
-Nova ensures that it is running, and starts it if it is not, with
+Enterprise ensures that it is running, and starts it if it is not, with
 parameters if desired. More advanced policy options are also
 available, including support for starting and stopping dependencies,
 and configuring when the services should be started (e.g. only when
 they are being used).
 
 Note that the name of a service in Windows may be different from its
-``Display name''. CFEngine Nova policies use the name, not the display
+``Display name''. CFEngine Enterprise policies use the name, not the display
 name, due to the need of uniqueness.
 
 @center @image{winservice-properties_name,7cm,,Windows service name and Display name,png}
@@ -328,13 +330,13 @@ Windows hosts, and that Remote registry is disabled on all Windows
 2008 servers.
 
 
-@node  File and folder permissions, Windows-aware features in CFE Nova, Windows service management, Top
+@node  File and folder permissions, Windows-aware features in CFE Enterprise, Windows service management, Top
 @unnumberedsec File and folder permissions
 
-CFEngine Nova can ensure the permissions or Access Control Lists
+CFEngine Enterprise can ensure the permissions or Access Control Lists
 (@code{ACLs}) of your Windows systems are correctly set. Windows
 @code{ACLs} are a complex topic by itself, with support for more than
-ten different permission bits and inheritance. Nova supports all of
+ten different permission bits and inheritance. CFE Enterprise supports all of
 this, but we will just cover the basics in this document.
 
 The following policy will ensure strict permissions on a directory
@@ -366,16 +368,16 @@ windows::
 
 The @uref{http://cfengine.com/manuals/cf3-Reference.html#acl-in-files,
 CFEngine reference manual} contains a description of all the available
-@code{ACL} options. Also refer to the the CFEngine Nova Owner's manual
+@code{ACL} options. Also refer to the the CFEngine Enterprise Owner's manual
 for a more in-depth discussion of the @code{ACL} options available.
 
-@node  Windows-aware features in CFE Nova, Windows special variables, File and folder permissions, Top
-@unnumberedsec Windows-aware features in CFE Nova
+@node  Windows-aware features in CFE Enterprise, Windows special variables, File and folder permissions, Top
+@unnumberedsec Windows-aware features in CFE Enterprise
 
-CFEngine Nova integrates with the Windows operating system in multiple
+CFEngine Enterprise integrates with the Windows operating system in multiple
 ways.
 
-The CFEngine scheduler in Nova (@code{cf-execd}) runs as a Windows
+The CFEngine scheduler in CFE Enterprise (@code{cf-execd}) runs as a Windows
 service. This means it runs in the background and starts with Windows,
 before any user logs in. It can be configured, started and stopped
 from the ``Services'' listing in Windows, just like any other Windows
@@ -384,8 +386,8 @@ service.
 Event logs are the Windows counterpart to syslog from Unix. The main
 difference is that event logs aim to group similar log messages,
 giving each group an event id. The following event ids are defined in
-CFEngine Nova, allowing categorisation of the log message based on its
-type. The Nova event logs can be found under the ``System'' logs.
+CFEngine Enterprise, allowing categorisation of the log message based on its
+type. The CFE Enterprise event logs can be found under the ``System'' logs.
 
 @multitable @columnfractions .4 .2 .2
 @headitem Description @tab Event ID @tab Type
@@ -425,10 +427,10 @@ files:
 
 @end verbatim
 
-@node  Windows special variables, Windows hard classes, Windows-aware features in CFE Nova, Top
+@node  Windows special variables, Windows hard classes, Windows-aware features in CFE Enterprise, Top
 @unnumberedsec Windows special variables
 Three new special variables have been added to the Windows version of
-CFEngine Nova.
+CFEngine Enterprise.
 
 @itemize
 
@@ -450,7 +452,7 @@ different on Windows versions in distinct languages.
 
 @node  Windows hard classes, Notes on windows policies, Windows special variables, Top
 @unnumberedsec Windows hard classes
-The Windows version of CFEngine Nova defines hard classes to pinpoint
+The Windows version of CFEngine Enterprise defines hard classes to pinpoint
 the exact version of Windows that it is running on, the service pack
 version and if it's a server or workstation.
 
@@ -533,7 +535,7 @@ ignored. For example, the @code{getgid()} function does not return
 anything on Windows. The
 @uref{http://cfengine.com/manuals/cf3-Reference.html,CFEngine
 reference manual} documents exactly which promises are ignored and
-not.  Also, @code{cf-agent.exe} from CFEngine Nova prints warning messages
+not.  Also, @code{cf-agent.exe} from CFEngine Enterprise prints warning messages
 on ignored attributes when run in verbose mode (@code{cf-agent.exe -Kv}).
 
 

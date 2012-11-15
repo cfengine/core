@@ -77,7 +77,7 @@ failed_returncodes => { "2" };
 bundle agent test
 {
 commands:
-    "/bin/grep BEGIN $(G.testfile)"
+    "$(G.grep) BEGIN $(G.testfile)"
             classes => all_classes;
 }
 

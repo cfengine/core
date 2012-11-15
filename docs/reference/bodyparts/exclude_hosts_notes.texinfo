@@ -1,5 +1,5 @@
 
-@i{History}: Was introduced in 3.3.0, Nova 2.1.1, Constellation 1.0.0 (2011)
+@i{History}: Was introduced in 3.3.0, Nova 2.1.1 (2011)
 
 In commercial CFEngine editions, this list of IP addresses will not be
 queried for reports by @code{cf-hub}, even though they are in the

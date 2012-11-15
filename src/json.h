@@ -130,6 +130,7 @@ JsonPrimitiveType JsonGetPrimitiveType(const JsonElement *primitive);
 const char *JsonPrimitiveGetAsString(const JsonElement *primitive);
 bool JsonPrimitiveGetAsBool(const JsonElement *primitive);
 long JsonPrimitiveGetAsInteger(const JsonElement *primitive);
+double JsonPrimitiveGetAsReal(const JsonElement *primitive);
 const char *JsonGetPropertyAsString(const JsonElement *element);
 
 /**
@@ -213,6 +214,8 @@ JsonElement *JsonObjectGetAsObject(JsonElement *object, const char *key);
   */
 JsonElement *JsonObjectGetAsArray(JsonElement *object, const char *key);
 
+JsonElement *JsonObjectGet(JsonElement *object, const char *key);
+
 /**
   @brief Append a string to an array.
   @param array [in] The JSON array parent.
@@ -259,6 +262,8 @@ void JsonArrayAppendObject(JsonElement *array, JsonElement *object);
   */
 void JsonArrayRemoveRange(JsonElement *array, size_t start, size_t end);
 
+void JsonContainerReverse(JsonElement *array);
+
 /**
   @brief Get a string value from an array
   @param array [in] The JSON array parent
@@ -296,5 +301,10 @@ void JsonObjectRemoveKey(JsonElement *object, const char *key);
   @param property name to be detached
   */
 JsonElement *JsonObjectDetachKey(JsonElement *object, const char *key);
+
+typedef int JsonComparator(const JsonElement *, const JsonElement *, void *user_data);
+
+void JsonSort(JsonElement *container, JsonComparator *Compare, void *user_data);
+JsonElement *JsonAt(const JsonElement *container, size_t index);
 
 #endif

@@ -30,8 +30,8 @@ bundle agent main
 {
 classes:
 
-    "testclass1" expression => returnszero("/bin/true","noshell");
-    "testclass2" expression => returnszero("/bin/false","noshell");
+    "testclass1" expression => returnszero("$(G.true)","noshell");
+    "testclass2" expression => returnszero("$(G.false)","noshell");
 
 reports:
     testclass1::

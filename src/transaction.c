@@ -30,6 +30,7 @@
 #include "transaction.h"
 #include "dbm_api.h"
 #include "files_names.h"
+#include "files_interfaces.h"
 #include "item_lib.h"
 #include "expand.h"
 
@@ -247,7 +248,7 @@ CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promi
 
                     err = GracefulTerminate(pid);
 
-                    if (err || errno == ESRCH)
+                    if (err || errno == ESRCH || errno == ETIMEDOUT)
                     {
                         LogLockCompletion(cflog, pid, "Lock expired, process killed", cc_operator, cc_operand);
                         unlink(cflock);
@@ -859,7 +860,7 @@ static void ReleaseCriticalSection()
 
 int ShiftChange(void)
 {
-    if (IsDefinedClass("(Hr00|Hr06|Hr12|Hr18).Min00_05"))
+    if (IsDefinedClass("(Hr00|Hr06|Hr12|Hr18).Min00_05", NULL))
     {
         return true;
     }

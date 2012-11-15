@@ -23,8 +23,11 @@
 */
 
 #include "cf3.defs.h"
+
 #include "monitoring.h"
 #include "item_lib.h"
+#include "files_names.h"
+#include "files_interfaces.h"
 
 /* Globals */
 
@@ -336,7 +339,7 @@ void MonNetworkGatherData(double *cf_this)
             }
         }
 
-        SetNetworkEntropyClasses(ECGSOCKS[i].name, "in", in[i]);
+        SetNetworkEntropyClasses(CanonifyName(ECGSOCKS[i].name), "in", in[i]);
         RawSaveItemList(in[i], vbuff);
         DeleteItemList(in[i]);
         CfDebug("Saved in netstat data in %s\n", vbuff);
@@ -360,7 +363,7 @@ void MonNetworkGatherData(double *cf_this)
             }
         }
 
-        SetNetworkEntropyClasses(ECGSOCKS[i].name, "out", out[i]);
+        SetNetworkEntropyClasses(CanonifyName(ECGSOCKS[i].name), "out", out[i]);
         RawSaveItemList(out[i], vbuff);
         CfDebug("Saved out netstat data in %s\n", vbuff);
         DeleteItemList(out[i]);

@@ -35,7 +35,7 @@ bundle agent check
 {
 classes:
         "ok" xor => {
-                    isdir("/etc"),
+                    isdir("/"),
                     isdir("/etc/passwd"),
                     };
 

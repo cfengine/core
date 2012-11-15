@@ -35,6 +35,7 @@
 #include "item_lib.h"
 #include "crypto.h"
 #include "files_names.h"
+#include "files_interfaces.h"
 #include "env_context.h"
 #include "lastseen.h"
 #include "dir.h"
@@ -56,6 +57,7 @@ int LOGCONNS = false;
 int LOGENCRYPT = false;
 int COLLECT_INTERVAL = 0;
 int COLLECT_WINDOW = 10;
+bool SERVER_LISTEN = true;
 
 Auth *ROLES = NULL;
 Auth *ROLESTOP = NULL;
@@ -368,6 +370,12 @@ static void *HandleConnection(ServerConnectionState *conn)
     TRIES = 0;                  /* As long as there is activity, we're not stuck */
 
     DisableSendDelays(conn->sd_reply);
+
+    struct timeval tv = {
+        .tv_sec = CONNTIMEOUT,
+    };
+
+    SetReceiveTimeout(conn->sd_reply, &tv);
 
     while (BusyWithConnection(conn))
     {
@@ -1027,7 +1035,7 @@ static int MatchClasses(ServerConnectionState *conn)
         {
             CfOut(cf_verbose, "", "Checking whether class %s can be identified as me...\n", ip->name);
 
-            if (IsDefinedClass(ip->name))
+            if (IsDefinedClass(ip->name, NULL))
             {
                 CfDebug("Class %s matched, accepting...\n", ip->name);
                 DeleteItemList(classlist);
@@ -1659,7 +1667,6 @@ static int AccessControl(const char *req_path, ServerConnectionState *conn, int 
     {
         CfOut(cf_verbose, "", "Cannot map root access without RSA authentication");
         conn->maproot = false;  /* only public files accessible */
-        /* return false; */
     }
 
     return access;
@@ -1779,7 +1786,6 @@ static int LiteralAccessControl(char *in, ServerConnectionState *conn, int encry
     {
         CfOut(cf_verbose, "", "Cannot map root access without RSA authentication");
         conn->maproot = false;  /* only public files accessible */
-        /* return false; */
     }
 
     return access;
@@ -2333,7 +2339,6 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
     ThreadUnlock(cft_system);
 
-//DebugBinOut(conn->session_key,session_size,"Session key received");
 
     BN_free(counter_challenge);
     free(out);
@@ -2712,7 +2717,6 @@ static void CfEncryptGetFile(ServerFileGetState *args)
 
             cnt++;
 
-            //if (n_read < blocksize) // Last transaction
             if (total >= savedlen)
             {
                 if (SendTransaction(sd, out, cipherlen + finlen, CF_DONE) == -1)
@@ -2752,7 +2756,7 @@ static void CompareLocalHash(ServerConnectionState *conn, char *sendbuffer, char
 
 /* TODO - when safe change this proto string to sha2 */
 
-    sscanf(recvbuffer, "MD5 %255[^\n]", rfilename);
+    sscanf(recvbuffer, "MD5 %[^\n]", rfilename);
 
     sp = recvbuffer + strlen(recvbuffer) + CF_SMALL_OFFSET;
 

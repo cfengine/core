@@ -7,5 +7,5 @@ partial identity for optional performance scanning of promises of the form:
 @var{ID:promise-type:promiser}.
 @end example
 
-These can be seen identifying  using @code{cf-reports}, e.g. in the
+These can be seen identifying  using @code{cf-report}, e.g. in the
 generated file @file{performance.html}.

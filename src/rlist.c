@@ -1,4 +1,4 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
@@ -682,19 +682,19 @@ int PrintRlist(char *buffer, int bufsize, Rlist *list)
     {
         if (!JoinSilent(buffer, "'", bufsize))
         {
-            EndJoin(buffer, "...TRUNCATED'}", bufsize);
+            EndJoin(buffer, "'}", bufsize);
             return false;
         }
 
         if (!PrintRval(buffer, bufsize, (Rval) {rp->item, rp->type}))
         {
-            EndJoin(buffer, "...TRUNCATED'}", bufsize);
+            EndJoin(buffer, "'}", bufsize);
             return false;
         }
 
         if (!JoinSilent(buffer, "'", bufsize))
         {
-            EndJoin(buffer, "...TRUNCATED'}", bufsize);
+            EndJoin(buffer, "'}", bufsize);
             return false;
         }
 
@@ -702,7 +702,7 @@ int PrintRlist(char *buffer, int bufsize, Rlist *list)
         {
             if (!JoinSilent(buffer, ",", bufsize))
             {
-                EndJoin(buffer, "...TRUNCATED}", bufsize);
+                EndJoin(buffer, "}", bufsize);
                 return false;
             }
         }
@@ -1218,5 +1218,44 @@ void RvalPrint(Writer *writer, Rval rval)
     case CF_NOPROMISEE:
         WriterWrite(writer, "(no-one)");
         break;
+    }
+}
+
+void RlistFilter(Rlist **list, bool (*KeepPredicate)(void *, void *), void *predicate_user_data, void (*DestroyItem)(void *))
+{
+    assert(KeepPredicate);
+
+    Rlist *start = *list;
+    Rlist *prev = NULL;
+
+    for (Rlist *rp = start; rp;)
+    {
+        if (!KeepPredicate(rp->item, predicate_user_data))
+        {
+            if (prev)
+            {
+                prev->next = rp->next;
+            }
+            else
+            {
+                *list = rp->next;
+            }
+
+            if (DestroyItem)
+            {
+                DestroyItem(rp->item);
+                rp->item = NULL;
+            }
+
+            Rlist *next = rp->next;
+            rp->next = NULL;
+            DeleteRlist(rp);
+            rp = next;
+        }
+        else
+        {
+            prev = rp;
+            rp = rp->next;
+        }
     }
 }

@@ -32,7 +32,7 @@
 #include "files_names.h"
 #include "conversion.h"
 
-static PromiseIdent *PromiseIdExists(char *handle);
+static PromiseIdent *PromiseIdExists(char *namespace, char *handle);
 static void DeleteAllPromiseIdsRecurse(PromiseIdent *key);
 static int VerifyConstraintName(const char *lval);
 static void PostCheckConstraint(const char *type, const char *bundle, const char *lval, Rval rval);
@@ -176,7 +176,7 @@ int GetBooleanConstraint(const char *lval, const Promise *pp)
     {
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(cp->classes))
+            if (IsDefinedClass(cp->classes, pp->namespace))
             {
                 if (retval != CF_UNDEFINED)
                 {
@@ -228,7 +228,7 @@ int GetRawBooleanConstraint(const char *lval, const Constraint *list)
     {
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(cp->classes))
+            if (IsDefinedClass(cp->classes, NULL))
             {
                 if (retval != CF_UNDEFINED)
                 {
@@ -278,7 +278,7 @@ int GetBundleConstraint(const char *lval, const Promise *pp)
     {
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(cp->classes))
+            if (IsDefinedClass(cp->classes, pp->namespace))
             {
                 if (retval != CF_UNDEFINED)
                 {
@@ -318,7 +318,7 @@ int GetIntConstraint(const char *lval, const Promise *pp)
     {
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(cp->classes))
+            if (IsDefinedClass(cp->classes, pp->namespace))
             {
                 if (retval != CF_NOINT)
                 {
@@ -357,7 +357,7 @@ double GetRealConstraint(const char *lval, const Promise *pp)
     {
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(cp->classes))
+            if (IsDefinedClass(cp->classes, pp->namespace))
             {
                 if (retval != CF_NODOUBLE)
                 {
@@ -396,7 +396,7 @@ mode_t GetOctalConstraint(const char *lval, const Promise *pp)
     {
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(cp->classes))
+            if (IsDefinedClass(cp->classes, pp->namespace))
             {
                 if (retval != 077)
                 {
@@ -441,7 +441,7 @@ uid_t GetUidConstraint(const char *lval, const Promise *pp)
     {
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(cp->classes))
+            if (IsDefinedClass(cp->classes, pp->namespace))
             {
                 if (retval != CF_UNDEFINED)
                 {
@@ -488,7 +488,7 @@ gid_t GetGidConstraint(char *lval, const Promise *pp)
     {
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(cp->classes))
+            if (IsDefinedClass(cp->classes, pp->namespace))
             {
                 if (retval != CF_UNDEFINED)
                 {
@@ -529,7 +529,7 @@ Rlist *GetListConstraint(const char *lval, const Promise *pp)
     {
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(cp->classes))
+            if (IsDefinedClass(cp->classes, pp->namespace))
             {
                 if (retval != NULL)
                 {
@@ -550,6 +550,7 @@ Rlist *GetListConstraint(const char *lval, const Promise *pp)
             }
 
             retval = (Rlist *) cp->rval.item;
+            break;
         }
     }
 
@@ -558,11 +559,11 @@ Rlist *GetListConstraint(const char *lval, const Promise *pp)
 
 /*****************************************************************************/
 
-Constraint *GetConstraint(const Promise *promise, const char *lval)
+Constraint *GetConstraint(const Promise *pp, const char *lval)
 {
     Constraint *cp = NULL, *retval = NULL;
 
-    if (promise == NULL)
+    if (pp == NULL)
     {
         return NULL;
     }
@@ -572,16 +573,16 @@ Constraint *GetConstraint(const Promise *promise, const char *lval)
         CfOut(cf_error, "", " !! Self-diagnostic: Constraint type \"%s\" is not a registered type\n", lval);
     }
 
-    for (cp = promise->conlist; cp != NULL; cp = cp->next)
+    for (cp = pp->conlist; cp != NULL; cp = cp->next)
     {
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(cp->classes))
+            if (IsDefinedClass(cp->classes, pp->namespace))
             {
                 if (retval != NULL)
                 {
                     CfOut(cf_error, "", " !! Inconsistent \"%s\" constraints break this promise\n", lval);
-                    PromiseRef(cf_error, promise);
+                    PromiseRef(cf_error, pp);
                 }
 
                 retval = cp;
@@ -595,9 +596,9 @@ Constraint *GetConstraint(const Promise *promise, const char *lval)
 
 /*****************************************************************************/
 
-void *GetConstraintValue(const char *lval, const Promise *promise, char rtype)
+void *GetConstraintValue(const char *lval, const Promise *pp, char rtype)
 {
-    const Constraint *constraint = GetConstraint(promise, lval);
+    const Constraint *constraint = GetConstraint(pp, lval);
 
     if (constraint && constraint->rval.rtype == rtype)
     {
@@ -644,7 +645,7 @@ void ReCheckAllConstraints(Promise *pp)
         NewPromiser(pp);
     }
 
-    if (!IsDefinedClass(pp->classes))
+    if (!IsDefinedClass(pp->classes, pp->namespace))
     {
         return;
     }
@@ -662,7 +663,7 @@ void ReCheckAllConstraints(Promise *pp)
             return;
         }
 
-        if ((prid = PromiseIdExists(handle)))
+        if ((prid = PromiseIdExists(pp->namespace, handle)))
         {
             if ((strcmp(prid->filename, pp->audit->filename) != 0) || (prid->line_number != pp->offset.line))
             {
@@ -887,9 +888,10 @@ static int VerifyConstraintName(const char *lval)
 PromiseIdent *NewPromiseId(char *handle, Promise *pp)
 {
     PromiseIdent *ptr;
-
+    char name[CF_BUFSIZE];
     ptr = xmalloc(sizeof(PromiseIdent));
 
+    snprintf(name, CF_BUFSIZE, "%s.%s", pp->namespace, handle);
     ptr->filename = xstrdup(pp->audit->filename);
     ptr->line_number = pp->offset.line;
     ptr->handle = xstrdup(handle);
@@ -933,13 +935,16 @@ void DeleteAllPromiseIds(void)
 
 /*****************************************************************************/
 
-static PromiseIdent *PromiseIdExists(char *handle)
+static PromiseIdent *PromiseIdExists(char *namespace, char *handle)
 {
     PromiseIdent *key;
+    char name[CF_BUFSIZE];
 
+    snprintf(name, CF_BUFSIZE, "%s.%s", namespace, handle);
+    
     for (key = PROMISE_ID_LIST; key != NULL; key = key->next)
     {
-        if (strcmp(handle, key->handle) == 0)
+        if (strcmp(name, key->handle) == 0)
         {
             return key;
         }

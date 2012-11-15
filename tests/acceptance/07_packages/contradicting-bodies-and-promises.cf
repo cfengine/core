@@ -58,16 +58,16 @@ body package_method mock_overlapping_version_regex
   package_name_regex => "^([^-]+)";
   package_version_regex => "^[^-]+-([^-]+)";
 
-  package_list_command => "/usr/bin/printf 'bash-1.0-amd64'";
+  package_list_command => "$(G.printf) 'bash-1.0-amd64'";
   package_installed_regex => ".*";
   package_list_name_regex => "^([^-]+)";
   package_list_version_regex => "^[^-]+-([^-]+)";
   package_list_arch_regex => "^[^-]+-[^-]+-(.*)";
 
-  package_add_command => "/bin/true $(this.name)-$(this.version):$(this.arch)";
-  package_update_command => "/bin/true";
-  package_delete_command => "/bin/true";
-  package_verify_command => "/bin/true";
+  package_add_command => "$(G.true) $(this.name)-$(this.version):$(this.arch)";
+  package_update_command => "$(G.true)";
+  package_delete_command => "$(G.true)";
+  package_verify_command => "$(G.true)";
 }
 
 body package_method mock_no_name_regex_but_arch_regex
@@ -77,16 +77,16 @@ body package_method mock_no_name_regex_but_arch_regex
   package_arch_regex => ".*";
   # but no package_name_regex!
 
-  package_list_command => "/usr/bin/printf 'bash-1.0-amd64'";
+  package_list_command => "$(G.printf) 'bash-1.0-amd64'";
   package_installed_regex => ".*";
   package_list_name_regex => "^([^-]+)";
   package_list_version_regex => "^[^-]+-([^-]+)";
   package_list_arch_regex => "^[^-]+-[^-]+-(.*)";
 
-  package_add_command => "/bin/false";
-  package_update_command => "/bin/false";
-  package_delete_command => "/bin/false";
-  package_verify_command => "/bin/false";
+  package_add_command => "$(G.false)";
+  package_update_command => "$(G.false)";
+  package_delete_command => "$(G.false)";
+  package_verify_command => "$(G.false)";
 }
 
 body package_method mock_no_name_regex_but_version_regex
@@ -96,16 +96,16 @@ body package_method mock_no_name_regex_but_version_regex
   package_version_regex => ".*";
   # but no package_name_regex!
 
-  package_list_command => "/usr/bin/printf 'bash-1.0-amd64'";
+  package_list_command => "$(G.printf) 'bash-1.0-amd64'";
   package_installed_regex => ".*";
   package_list_name_regex => "^([^-]+)";
   package_list_version_regex => "^[^-]+-([^-]+)";
   package_list_arch_regex => "^[^-]+-[^-]+-(.*)";
 
-  package_add_command => "/bin/false";
-  package_update_command => "/bin/false";
-  package_delete_command => "/bin/false";
-  package_verify_command => "/bin/false";
+  package_add_command => "$(G.false)";
+  package_update_command => "$(G.false)";
+  package_delete_command => "$(G.false)";
+  package_verify_command => "$(G.false)";
 }
 
 body package_method mock
@@ -116,16 +116,16 @@ body package_method mock
   package_version_regex => "^[^-]+-([^-]+)";
   package_arch_regex => "^[^-]+-[^-]+-(.*)";
 
-  package_list_command => "/usr/bin/printf 'bash-1.0-amd64'";
+  package_list_command => "$(G.printf) 'bash-1.0-amd64'";
   package_installed_regex => ".*";
   package_list_name_regex => "^([^-]+)";
   package_list_version_regex => "^[^-]+-([^-]+)";
   package_list_arch_regex => "^[^-]+-[^-]+-(.*)";
 
-  package_add_command => "/bin/false";
-  package_update_command => "/bin/false";
-  package_delete_command => "/bin/false";
-  package_verify_command => "/bin/false";
+  package_add_command => "$(G.false)";
+  package_update_command => "$(G.false)";
+  package_delete_command => "$(G.false)";
+  package_verify_command => "$(G.false)";
 }
 
 body classes test_set_class(ok_class,notok_class)

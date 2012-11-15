@@ -30,7 +30,10 @@
 #include "vars.h"
 #include "expand.h"
 #include "files_names.h"
+#include "scope.h"
 
+static void GetReturnValue(char *scope, Promise *pp);
+    
 /*****************************************************************************/
 
 void VerifyMethodsPromise(Promise *pp, const ReportContext *report_context)
@@ -50,7 +53,7 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
     Bundle *bp;
     void *vp;
     FnCall *fp;
-    char method_name[CF_EXPANDSIZE],*method_deref;
+    char method_name[CF_EXPANDSIZE], qualified_method[CF_BUFSIZE], *method_deref;
     Rlist *params = NULL;
     int retval = false;
     CfLock thislock;
@@ -86,17 +89,20 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
 
     PromiseBanner(pp);
 
-    if (strncmp(method_name,"default.",strlen("default.")) == 0)
-       {
-       method_deref = strchr(method_name,'.') + 1;
-       }
+    if (strncmp(method_name,"default:",strlen("default:")) == 0)
+    {
+        method_deref = strchr(method_name,':') + 1;
+    }
+    else if (strchr(method_name, ':') == NULL && strcmp(pp->namespace, "default") != 0)
+    {
+        snprintf(qualified_method, CF_BUFSIZE, "%s:%s", pp->namespace, method_name);
+        method_deref = qualified_method;
+    }
     else
-       {
-           // Transform syntactic . into internal : representation
-           TransformNameInPlace(method_name, '.', ':');
-           method_deref = method_name;
-       }
-
+    {
+         method_deref = method_name;
+    }
+    
     if ((bp = GetBundle(PolicyFromPromise(pp), method_deref, "agent")))
     {
         const char *bp_stack = THIS_BUNDLE;
@@ -112,13 +118,14 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
         NewScope(namespace);
         SetBundleOutputs(bp->name);
 
-        AugmentScope(bp->name, bp->args, params);
+        AugmentScope(method_deref, pp->namespace, bp->args, params);
 
         THIS_BUNDLE = bp->name;
         PushPrivateClassContext(a.inherit);
 
         retval = ScheduleAgentOperations(bp, report_context);
 
+        GetReturnValue(bp->name, pp);
         ResetBundleOutputs(bp->name);
 
         PopPrivateClassContext();
@@ -160,6 +167,66 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
         }
     }
 
+    
     YieldCurrentLock(thislock);
     return retval;
 }
+
+/***********************************************************************/
+
+static void GetReturnValue(char *scope, Promise *pp)
+{
+    char *result = GetConstraintValue("useresult", pp, CF_SCALAR);
+
+    if (result)
+    {
+        HashIterator i;
+        CfAssoc *assoc;
+        char newname[CF_BUFSIZE];                 
+        Scope *ptr;
+        char index[CF_MAXVARSIZE], match[CF_MAXVARSIZE];    
+
+        if ((ptr = GetScope(scope)) == NULL)
+        {
+            CfOut(cf_inform, "", " !! useresult was specified but the method returned no data");
+            return;
+        }
+    
+        i = HashIteratorInit(ptr->hashtable);
+    
+        while ((assoc = HashIteratorNext(&i)))
+        {
+            snprintf(match, CF_MAXVARSIZE - 1, "last-result[");
+
+            if (strncmp(match, assoc->lval, strlen(match)) == 0)
+            {
+                char *sp;
+          
+                index[0] = '\0';
+                sscanf(assoc->lval + strlen(match), "%127[^\n]", index);
+                if ((sp = strchr(index, ']')))
+                {
+                    *sp = '\0';
+                }
+                else
+                {
+                    index[strlen(index) - 1] = '\0';
+                }
+          
+                if (strlen(index) > 0)
+                {
+                    snprintf(newname, CF_BUFSIZE, "%s[%s]", result, index);
+                }
+                else
+                {
+                    snprintf(newname, CF_BUFSIZE, "%s", result);
+                }
+
+                NewScalar(pp->bundle, newname, assoc->rval.item, cf_str);           
+            }
+        }
+        
+    }
+    
+}
+

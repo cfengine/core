@@ -12,9 +12,9 @@ nova_edition::
 bundle agent init
 {
 commands:
-  "/bin/mkdir -p $(G.testdir)/a";
-  "/usr/bin/touch $(G.testdir)/a/dest";
-  "/bin/ln -s dest $(G.testdir)/a/link";
+  "$(G.mkdir) -p $(G.testdir)/a";
+  "$(G.touch) $(G.testdir)/a/dest";
+  "$(G.ln) -s dest $(G.testdir)/a/link";
 }
 
 bundle agent test

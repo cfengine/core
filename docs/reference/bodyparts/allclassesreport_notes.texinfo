@@ -1,8 +1,10 @@
+
+@i{History}: Was introduced in 3.2.0, Nova 2.1.0 (2011)
+
+
 This option determines whether state/allclasses.txt file is written to
 disk during agent execution. This functionality is retained only for
 CFEngine 2 compatibility as more convenient facilities exist in
 CFEngine 3 language to achieve similar results.
 
 This option is turned off by default.
-
-@i{History}: Was introduced in 3.2.0, Nova 2.1.0, Constellation 1.0.0 (2011)

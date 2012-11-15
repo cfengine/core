@@ -49,12 +49,23 @@ check_PROGRAMS = \
 	policy_test \
 	sort_test \
 	file_name_test \
-	logging_test
+	logging_test \
+	granules_test \
+	scope_test \
+	conversion_test \
+	files_interfaces_test
 
 TESTS = $(check_PROGRAMS)
 
+#
+# OS X uses real system calls instead of our stubs unless this option is used
+#
+TESTS_ENVIRONMENT = DYLD_FORCE_FLAT_NAMESPACE=yes
+
 csv_writer_test_SOURCES = csv_writer_test.c ../../src/csv_writer.c
 csv_writer_test_LDADD = libtest.la libstr.la
+
+conversion_test_SOURCES = conversion_test.c ../../src/conversion.c
 
 rlist_test_SOURCES = rlist_test.c \
 	../../src/rlist.c

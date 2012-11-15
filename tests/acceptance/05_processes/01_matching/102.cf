@@ -24,7 +24,7 @@ vars:
 bundle agent test
 {
 processes:
-	"agent$"
+	"cf-agent$"
 	    process_count => test_no_such;
 }
 

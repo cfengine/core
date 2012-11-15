@@ -46,7 +46,9 @@ static int IsBracketed(const char *s);
 
 /*****************************************************************************/
 
+AlphaList VHANDLES;
 AlphaList VHEAP;
+AlphaList VHARDHEAP;
 AlphaList VADDCLASSES;
 Item *VNEGHEAP = NULL;
 Item *ABORTBUNDLEHEAP = NULL;
@@ -78,7 +80,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
         CfOut(cf_error, "", " !! EvalClassExpression internal diagnostic discovered an ill-formed condition");
     }
 
-    if (!IsDefinedClass(pp->classes))
+    if (!IsDefinedClass(pp->classes, pp->namespace))
     {
         return false;
     }
@@ -88,7 +90,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
         return false;
     }
 
-    if (IsDefinedClass(pp->promiser))
+    if (IsDefinedClass(pp->promiser, pp->namespace))
     {
         if (GetIntConstraint("persistence", pp) == 0)
         {
@@ -134,7 +136,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
             return false;
         }
 
-        if (IsDefinedClass((char *) cp->rval.item))
+        if (IsDefinedClass((char *) cp->rval.item, pp->namespace))
         {
             return true;
         }
@@ -151,7 +153,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
             return false;
         }
 
-        if (IsDefinedClass((char *) cp->rval.item))
+        if (IsDefinedClass((char *) cp->rval.item, pp->namespace))
         {
             return false;
         }
@@ -191,7 +193,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
         {
             if (i == n)
             {
-                NewClass(rp->item);
+                NewClass(rp->item, pp->namespace);
                 return true;
             }
         }
@@ -242,7 +244,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
             return false;
         }
 
-        result = IsDefinedClass((char *) (rp->item));
+        result = IsDefinedClass((char *) (rp->item), pp->namespace);
 
         result_and = result_and && result;
         result_or = result_or || result;
@@ -260,11 +262,11 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
 
                 if (strcmp(pp->bundletype, "common") == 0)
                 {
-                    NewClass(buffer);
+                    NewClass(buffer, pp->namespace);
                 }
                 else
                 {
-                    NewBundleClass(buffer, pp->bundle);
+                    NewBundleClass(buffer, pp->bundle, pp->namespace);
                 }
 
                 CfDebug(" ?? \'Strategy\' distribution class interval -> %s\n", buffer);
@@ -339,12 +341,12 @@ void KeepClassContextPromise(Promise *pp)
                     CfOut(cf_verbose, "", " ?> defining explicit persistent class %s (%d mins)\n", pp->promiser,
                           a.context.persistent);
                     NewPersistentContext(pp->promiser, a.context.persistent, cfreset);
-                    NewClass(pp->promiser);
+                    NewClass(pp->promiser, pp->namespace);
                 }
                 else
                 {
                     CfOut(cf_verbose, "", " ?> defining explicit global class %s\n", pp->promiser);
-                    NewClass(pp->promiser);
+                    NewClass(pp->promiser, pp->namespace);
                 }
             }
         }
@@ -375,12 +377,12 @@ void KeepClassContextPromise(Promise *pp)
                     CfOut(cf_verbose, "",
                           " ?> Warning: persistent classes are global in scope even in agent bundles\n");
                     NewPersistentContext(pp->promiser, a.context.persistent, cfreset);
-                    NewClass(pp->promiser);
+                    NewClass(pp->promiser, pp->namespace);
                 }
                 else
                 {
                     CfOut(cf_verbose, "", " ?> defining explicit local bundle class %s\n", pp->promiser);
-                    NewBundleClass(pp->promiser, pp->bundle);
+                    NewBundleClass(pp->promiser, pp->bundle, pp->namespace);
                 }
             }
         }
@@ -394,15 +396,25 @@ void KeepClassContextPromise(Promise *pp)
 
 /*******************************************************************/
 
-void NewClass(const char *oclass)
+void NewClass(const char *oclass, const char *namespace)
 {
     Item *ip;
     char class[CF_MAXVARSIZE];
+    char canonclass[CF_MAXVARSIZE];
 
-    strncpy(class, oclass, CF_MAXVARSIZE);
-    Chop(class);
-    CanonifyNameInPlace(class);
-
+    strcpy(canonclass, oclass);
+    Chop(canonclass);
+    CanonifyNameInPlace(canonclass);
+    
+    if (namespace && strcmp(namespace, "default") != 0)
+       {
+       snprintf(class, CF_MAXVARSIZE, "%s:%s", namespace, canonclass);
+       }
+    else
+       {
+       strncpy(class, canonclass, CF_MAXVARSIZE);
+       }
+    
     CfDebug("NewClass(%s)\n", class);
 
     if (strlen(class) == 0)
@@ -431,7 +443,7 @@ void NewClass(const char *oclass)
 
     for (ip = ABORTHEAP; ip != NULL; ip = ip->next)
     {
-        if (IsDefinedClass(ip->name))
+        if (IsDefinedClass(ip->name, namespace))
         {
             CfOut(cf_error, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", class, THIS_BUNDLE);
             exit(1);
@@ -442,7 +454,7 @@ void NewClass(const char *oclass)
     {
         for (ip = ABORTBUNDLEHEAP; ip != NULL; ip = ip->next)
         {
-            if (IsDefinedClass(ip->name))
+            if (IsDefinedClass(ip->name, namespace))
             {
                 CfOut(cf_error, "", " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, class);
                 ABORTBUNDLE = true;
@@ -454,21 +466,106 @@ void NewClass(const char *oclass)
 
 /*********************************************************************/
 
-void DeleteClass(const char *class)
+void DeleteClass(const char *oclass, const char *namespace)
 {
+    char class[CF_MAXVARSIZE];
+ 
+    if (strchr(oclass, ':'))
+    {
+        strncpy(class, oclass, CF_MAXVARSIZE);
+    }
+    else
+    {
+        if (namespace && strcmp(namespace, "default") != 0)
+        {
+            snprintf(class, CF_MAXVARSIZE, "%s:%s", namespace, oclass);
+        }
+        else
+        {
+            strncpy(class, oclass, CF_MAXVARSIZE);
+        }
+    }
+
     DeleteFromAlphaList(&VHEAP, class);
     DeleteFromAlphaList(&VADDCLASSES, class);
 }
 
 /*******************************************************************/
 
-void NewBundleClass(const char *class, const char *bundle)
+void HardClass(const char *oclass)
+{
+    Item *ip;
+    char class[CF_MAXVARSIZE];
+
+    strcpy(class, oclass);    
+    Chop(class);
+    CanonifyNameInPlace(class);
+
+    CfDebug("HardClass(%s)\n", class);
+
+    if (strlen(class) == 0)
+    {
+        return;
+    }
+
+    if (IsRegexItemIn(ABORTBUNDLEHEAP, class))
+    {
+        CfOut(cf_error, "", "Bundle aborted on defined class \"%s\"\n", class);
+        ABORTBUNDLE = true;
+    }
+
+    if (IsRegexItemIn(ABORTHEAP, class))
+    {
+        CfOut(cf_error, "", "cf-agent aborted on defined class \"%s\"\n", class);
+        exit(1);
+    }
+
+    if (InAlphaList(&VHARDHEAP, class))
+    {
+        return;
+    }
+
+    PrependAlphaList(&VHARDHEAP, class);
+
+    for (ip = ABORTHEAP; ip != NULL; ip = ip->next)
+    {
+        if (IsDefinedClass(ip->name, NULL))
+        {
+            CfOut(cf_error, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", class, THIS_BUNDLE);
+            exit(1);
+        }
+    }
+
+    if (!ABORTBUNDLE)
+    {
+        for (ip = ABORTBUNDLEHEAP; ip != NULL; ip = ip->next)
+        {
+            if (IsDefinedClass(ip->name, NULL))
+            {
+                CfOut(cf_error, "", " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, class);
+                ABORTBUNDLE = true;
+                break;
+            }
+        }
+    }
+}
+
+/*******************************************************************/
+
+void NewBundleClass(const char *class, const char *bundle, const char *namespace)
 {
     char copy[CF_BUFSIZE];
     Item *ip;
 
-    memset(copy, 0, CF_BUFSIZE);
-    strncpy(copy, class, CF_MAXVARSIZE);
+    if (namespace && strcmp(namespace, "default") != 0)
+    {
+        snprintf(copy, CF_MAXVARSIZE, "%s:%s", namespace, class);
+    }
+    else
+    {
+        strncpy(copy, class, CF_MAXVARSIZE);
+    }
+
     Chop(copy);
 
     if (strlen(copy) == 0)
@@ -477,7 +574,7 @@ void NewBundleClass(const char *class, const char *bundle)
     }
 
     CfDebug("NewBundleClass(%s)\n", copy);
-
+    
     if (IsRegexItemIn(ABORTBUNDLEHEAP, copy))
     {
         CfOut(cf_error, "", "Bundle %s aborted on defined class \"%s\"\n", bundle, copy);
@@ -492,9 +589,7 @@ void NewBundleClass(const char *class, const char *bundle)
 
     if (InAlphaList(&VHEAP, copy))
     {
-        CfOut(cf_error, "",
-              "WARNING - private class \"%s\" in bundle \"%s\" shadows a global class - you should choose a different name to avoid conflicts",
-              copy, bundle);
+        CfOut(cf_error, "", "WARNING - private class \"%s\" in bundle \"%s\" shadows a global class - you should choose a different name to avoid conflicts", copy, bundle);
     }
 
     if (InAlphaList(&VADDCLASSES, copy))
@@ -506,7 +601,7 @@ void NewBundleClass(const char *class, const char *bundle)
 
     for (ip = ABORTHEAP; ip != NULL; ip = ip->next)
     {
-        if (IsDefinedClass(ip->name))
+        if (IsDefinedClass(ip->name, namespace))
         {
             CfOut(cf_error, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", copy, bundle);
             exit(1);
@@ -517,7 +612,7 @@ void NewBundleClass(const char *class, const char *bundle)
     {
         for (ip = ABORTBUNDLEHEAP; ip != NULL; ip = ip->next)
         {
-            if (IsDefinedClass(ip->name))
+            if (IsDefinedClass(ip->name, namespace))
             {
                 CfOut(cf_error, "", " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, class);
                 ABORTBUNDLE = true;
@@ -952,21 +1047,52 @@ static bool ValidClassName(const char *str)
 
 /**********************************************************************/
 
-static ExpressionValue EvalTokenAsClass(const char *classname, void *param)
+static ExpressionValue EvalTokenAsClass(const char *classname, void *namespace)
 {
-    if (IsItemIn(VNEGHEAP, classname))
+    char qualified_class[CF_MAXVARSIZE];
+
+    if (strcmp(classname, "any") == 0)
+       {
+       return true;       
+       }
+    
+    if (strchr(classname, ':'))
+    {
+        if (strncmp(classname, "default:", strlen("default:")) == 0)
+        {
+            snprintf(qualified_class, CF_MAXVARSIZE, "%s", classname + strlen("default:"));
+        }
+        else
+        {
+            snprintf(qualified_class, CF_MAXVARSIZE, "%s", classname);
+        }
+    }
+    else if (namespace != NULL && strcmp(namespace, "default") != 0)
+    {
+        snprintf(qualified_class, CF_MAXVARSIZE, "%s:%s", (char *)namespace, (char *)classname);
+    }
+    else
+    {
+        snprintf(qualified_class, CF_MAXVARSIZE, "%s", classname);
+    }
+
+    if (IsItemIn(VNEGHEAP, qualified_class))
     {
         return false;
     }
-    if (IsItemIn(VDELCLASSES, classname))
+    if (IsItemIn(VDELCLASSES, qualified_class))
     {
         return false;
     }
-    if (InAlphaList(&VHEAP, classname))
+    if (InAlphaList(&VHARDHEAP, (char *)classname))  // Hard classes are always unqualified
     {
         return true;
     }
-    if (InAlphaList(&VADDCLASSES, classname))
+    if (InAlphaList(&VHEAP, qualified_class))
+    {
+        return true;
+    }
+    if (InAlphaList(&VADDCLASSES, qualified_class))
     {
         return true;
     }
@@ -987,7 +1113,7 @@ static char *EvalVarRef(const char *varname, void *param)
 
 /**********************************************************************/
 
-bool IsDefinedClass(const char *class)
+bool IsDefinedClass(const char *class, const char *namespace)
 {
     ParseResult res;
 
@@ -1010,7 +1136,7 @@ bool IsDefinedClass(const char *class)
     {
         ExpressionValue r = EvalExpression(res.result,
                                            &EvalTokenAsClass, &EvalVarRef,
-                                           NULL);
+                                           (void *)namespace);
 
         FreeExpression(res.result);
 
@@ -1023,9 +1149,9 @@ bool IsDefinedClass(const char *class)
 
 /**********************************************************************/
 
-bool IsExcluded(const char *exception)
+bool IsExcluded(const char *exception, const char *namespace)
 {
-    return !IsDefinedClass(exception);
+    return !IsDefinedClass(exception, namespace);
 }
 
 /**********************************************************************/
@@ -1232,7 +1358,7 @@ void LoadPersistentContext()
         {
             CfOut(cf_verbose, "", " Persistent class %s for %ld more minutes\n", key, (q.expires - now) / 60);
             CfOut(cf_verbose, "", " Adding persistent class %s to heap\n", key);
-            NewClass(key);
+            NewClass(key, NULL);
         }
     }
 
@@ -1244,13 +1370,13 @@ void LoadPersistentContext()
 
 /*****************************************************************************/
 
-void AddEphemeralClasses(const Rlist *classlist)
+void AddEphemeralClasses(const Rlist *classlist, const char *namespace)
 {
     for (const Rlist *rp = classlist; rp != NULL; rp = rp->next)
     {
         if (!InAlphaList(&VHEAP, rp->item))
         {
-            NewClass(rp->item);
+            NewClass(rp->item, namespace);
         }
     }
 }
@@ -1282,7 +1408,7 @@ void NewClassesFromString(const char *classlist)
             FatalError("cfengine: You cannot use -D to define a reserved class!");
         }
 
-        NewClass(currentitem);
+        NewClass(currentitem, NULL);
     }
 }
 
@@ -1327,48 +1453,9 @@ bool IsSoftClass(const char *sp)
 /*********************************************************************/
 
 bool IsHardClass(const char *sp)
-// FIXME: this is very ad-hoc and incorrect
+
 {
-    int i;
-
-    char *names[] =
-{
-        "any", "agent", "SuSE", "suse", "fedora", "redhat", "ubuntu", "windows", "lsb_compliant", "localhost",
-        "32_bit", "64_bit",
-        NULL
-    };
-
-    char *prefixes[] =
-{
-        "cfengine_", "ipv4",
-        NULL
-    };
-
-    for (i = 1; i < HARD_CLASSES_MAX; i++)
-    {
-        if (strcmp(CLASSTEXT[i], sp) == 0)
-        {
-            return true;
-        }
-    }
-
-    for (i = 0; names[i] != NULL; i++)
-    {
-        if (strcmp(names[i], sp) == 0)
-        {
-            return true;
-        }
-    }
-
-    for (i = 0; prefixes[i] != NULL; i++)
-    {
-        if (strncmp(prefixes[i], sp, strlen(prefixes[i])) == 0)
-        {
-            return true;
-        }
-    }
-
-    return IsTimeClass(sp);
+    return InAlphaList(&VHARDHEAP, sp);
 }
 
 /***************************************************************************/
@@ -1468,7 +1555,7 @@ int VarClassExcluded(Promise *pp, char **classes)
         return true;
     }
 
-    if (*classes && IsDefinedClass(*classes))
+    if (*classes && IsDefinedClass(*classes, pp->namespace))
     {
         return false;
     }
@@ -1594,3 +1681,64 @@ void AddAbortClass(const char *name, const char *classes)
         AppendItem(&ABORTHEAP, name, classes);
     }
 }
+
+/*****************************************************************************/
+
+void MarkPromiseHandleDone(const Promise *pp)
+{
+    if (pp == NULL)
+    {
+        return;
+    }
+
+    char name[CF_BUFSIZE];
+    char *handle = GetConstraintValue("handle", pp, CF_SCALAR);
+
+    if (handle == NULL)
+    {
+       return;
+    }
+    
+    snprintf(name, CF_BUFSIZE, "%s:%s", pp->namespace, handle);
+    IdempPrependAlphaList(&VHANDLES, name);
+
+}
+
+/*****************************************************************************/
+
+int MissingDependencies(const Promise *pp)
+{
+    if (pp == NULL)
+    {
+        return false;
+    }
+
+    char name[CF_BUFSIZE], *d;
+    Rlist *rp, *deps = GetListConstraint("depends_on", pp);
+    
+    for (rp = deps; rp != NULL; rp = rp->next)
+       {
+       if (strchr(rp->item, ':'))
+          {
+          d = (char *)rp->item;
+          }
+       else
+          {
+          snprintf(name, CF_BUFSIZE, "%s:%s", pp->namespace, (char *)rp->item);
+          d = name;
+          }
+
+       if (!InAlphaList(&VHANDLES, d))
+          {
+          CfOut(cf_verbose, "", "\n");
+          CfOut(cf_verbose, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+          CfOut(cf_verbose, "", "Skipping whole next promise (%s), as promise dependency %s has not yet been kept\n", pp->promiser, d);
+          CfOut(cf_verbose, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+
+          return true;
+          }
+       }
+
+    return false;
+}
+

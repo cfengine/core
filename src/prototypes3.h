@@ -327,42 +327,6 @@ char *SkipHashType(char *hash);
 const char *FileHashName(enum cfhashes id);
 void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhashes type);
 
-/* files_operators.c */
-
-int VerifyFileLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp, const ReportContext *report_context);
-int CfCreateFile(char *file, Promise *pp, Attributes attr, const ReportContext *report_context);
-FILE *CreateEmptyStream(void);
-int ScheduleCopyOperation(char *destination, Attributes attr, Promise *pp, const ReportContext *report_context);
-int ScheduleLinkChildrenOperation(char *destination, char *source, int rec, Attributes attr, Promise *pp, const ReportContext *report_context);
-int ScheduleLinkOperation(char *destination, char *source, Attributes attr, Promise *pp, const ReportContext *report_context);
-int ScheduleEditOperation(char *filename, Attributes attr, Promise *pp, const ReportContext *report_context);
-FileCopy *NewFileCopy(Promise *pp);
-void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promise *pp, const ReportContext *report_context);
-void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp, const ReportContext *report_context);
-int VerifyOwner(char *file, Promise *pp, Attributes attr, struct stat *statbuf);
-void VerifyCopiedFileAttributes(char *file, struct stat *dstat, struct stat *sstat, Attributes attr, Promise *pp, const ReportContext *report_context);
-int MoveObstruction(char *from, Attributes attr, Promise *pp, const ReportContext *report_context);
-void TouchFile(char *path, struct stat *sb, Attributes attr, Promise *pp);
-int MakeParentDirectory(char *parentandchild, int force, const ReportContext *report_context);
-int MakeParentDirectory2(char *parentandchild, int force, const ReportContext *report_context, bool enforce_promise);
-void RotateFiles(char *name, int number);
-void CreateEmptyFile(char *name);
-void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp);
-
-#ifndef MINGW
-UidList *MakeUidList(char *uidnames);
-GidList *MakeGidList(char *gidnames);
-void AddSimpleUidItem(UidList ** uidlist, uid_t uid, char *uidname);
-void AddSimpleGidItem(GidList ** gidlist, gid_t gid, char *gidname);
-#endif /* NOT MINGW */
-void LogHashChange(char *file, FileState status, char *msg, Promise *pp);
-
-typedef bool (*SaveCallbackFn)(const char *dest_filename, const char *orig_filename, void *param, Attributes a, Promise *pp);
-int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attributes a, Promise *pp,
-               const ReportContext *report_context);
-
-int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, Promise *pp);
-
 /* files_properties.c */
 
 void AddFilenameToListOfSuspicious(const char *filename);

@@ -28,6 +28,7 @@
 #include "dir.h"
 #include "conversion.h"
 #include "files_interfaces.h"
+#include "files_operators.h"
 
 static void FindStoragePromiserObjects(Promise *pp, const ReportContext *report_context);
 static int VerifyFileSystem(char *name, Attributes a, Promise *pp);

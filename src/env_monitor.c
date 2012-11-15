@@ -36,6 +36,7 @@
 #include "expand.h"
 #include "scope.h"
 #include "sysinfo.h"
+#include "files_operators.h"
 
 #include <math.h>
 

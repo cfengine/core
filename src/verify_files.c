@@ -34,6 +34,7 @@
 #include "files_names.h"
 #include "files_interfaces.h"
 #include "files_lib.h"
+#include "files_operators.h"
 #include "item_lib.h"
 
 static void LoadSetuid(Attributes a, Promise *pp);

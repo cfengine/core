@@ -20,41 +20,32 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
+
 */
 
-#ifndef CFENGINE_ALPHALIST_H
-#define CFENGINE_ALPHALIST_H
+#ifndef CFENGINE_UNIX_H
+#define CFENGINE_UNIX_H
 
 #include "cf3.defs.h"
 
-void InitAlphaList(AlphaList *al);
-int InAlphaList(AlphaList *al, const char *string);
-int MatchInAlphaList(AlphaList *al, char *string);
-void PrependAlphaList(AlphaList *al, const char *string);
-void IdempPrependAlphaList(AlphaList *al, const char *string);
-void DeleteAlphaList(AlphaList *al);
-AlphaList *CopyAlphaListPointers(AlphaList *al, AlphaList *ap);
-AlphaList *DupAlphaListPointers(AlphaList *ap, AlphaList *al);
-void DeleteFromAlphaList(AlphaList *al, const char *string);
-
 /*
-AlphaListIterator i = AlphaListIteratorInit(&al);
-Item *item;
-while ((item = AlphaListIteratorNext(&i)))
-   {
-   // do something with item;
-   }
-// No cleanup is required
-*/
+ * Do not modify returned Rval, its contents may be constant and statically
+ * allocated.
+ */
+enum cfdatatype GetVariable(const char *scope, const char *lval, Rval *returnv);
 
-typedef struct
-{
-    AlphaList *al;
-    int pos;
-    Item *curitem;
-} AlphaListIterator;
-
-AlphaListIterator AlphaListIteratorInit(AlphaList *al);
-const Item *AlphaListIteratorNext(AlphaListIterator *iterator);
+void DeleteVariable(const char *scope, const char *id);
+bool StringContainsVar(const char *s, const char *v);
+int DefinedVariable(char *name);
+int IsCf3VarString(const char *str);
+int BooleanControl(const char *scope, const char *name);
+const char *ExtractInnerCf3VarString(const char *str, char *substr);
+const char *ExtractOuterCf3VarString(const char *str, char *substr);
+int UnresolvedVariables(CfAssoc *ap, char rtype);
+int UnresolvedArgs(Rlist *args);
+int IsQualifiedVariable(char *var);
+int IsCfList(char *type);
+int AddVariableHash(const char *scope, const char *lval, Rval rval, enum cfdatatype dtype, const char *fname, int no);
+void DeRefListsInHashtable(char *scope, Rlist *list, Rlist *reflist);
 
 #endif

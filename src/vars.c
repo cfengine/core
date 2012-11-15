@@ -32,6 +32,7 @@
 #include "scope.h"
 #include "matching.h"
 #include "hashes.h"
+#include "unix.h"
 
 static int IsCf3Scalar(char *str);
 static int CompareVariableValue(Rval rval, CfAssoc *ap);

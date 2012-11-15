@@ -39,6 +39,7 @@
 #include "scope.h"
 #include "matching.h"
 #include "instrumentation.h"
+#include "unix.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"

@@ -43,6 +43,7 @@
 #include "transaction.h"
 #include "scope.h"
 #include "atexit.h"
+#include "unix.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"

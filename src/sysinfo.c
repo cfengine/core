@@ -32,6 +32,7 @@
 #include "vars.h"
 #include "item_lib.h"
 #include "matching.h"
+#include "unix.h"
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>

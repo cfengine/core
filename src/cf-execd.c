@@ -35,6 +35,7 @@
 #include "reporting.h"
 #include "scope.h"
 #include "hashes.h"
+#include "unix.h"
 
 #define CF_EXEC_IFELAPSED 0
 #define CF_EXEC_EXPIREAFTER 1

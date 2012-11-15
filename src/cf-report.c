@@ -37,6 +37,7 @@
 #include "syntax.h"
 #include "item_lib.h"
 #include "conversion.h"
+#include "unix.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"

@@ -302,6 +302,12 @@ struct Stat_
 
 typedef struct Item_ Item;
 
+// Indexed itemlist
+typedef struct
+{
+    Item *list[CF_ALPHABETSIZE];
+} AlphaList;
+
 /*******************************************************************/
 
 enum cfsizes

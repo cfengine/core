@@ -42,6 +42,7 @@
 #include "keyring.h"
 #include "matching.h"
 #include "hashes.h"
+#include "unix.h"
 
 #include <libgen.h>
 

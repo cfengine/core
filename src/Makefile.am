@@ -146,7 +146,7 @@ libpromises_la_SOURCES = \
         sysinfo.c sysinfo.h \
         timeout.c \
         transaction.c transaction.h \
-        unix.c \
+        unix.c unix.h \
         vars.c vars.h \
         verify_processes.c \
         verify_reports.c \

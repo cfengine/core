@@ -29,6 +29,7 @@
 #include "conversion.h"
 #include "expand.h"
 #include "matching.h"
+#include "unix.h"
 
 #include <assert.h>
 

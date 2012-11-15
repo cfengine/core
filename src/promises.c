@@ -31,6 +31,7 @@
 #include "expand.h"
 #include "files_names.h"
 #include "scope.h"
+#include "unix.h"
 
 #define PACK_UPIFELAPSED_SALT "packageuplist"
 

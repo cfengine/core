@@ -32,6 +32,7 @@
 #include "files_names.h"
 #include "scope.h"
 #include "hashes.h"
+#include "unix.h"
 
 static void GetReturnValue(char *scope, Promise *pp);
     

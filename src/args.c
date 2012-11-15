@@ -29,6 +29,7 @@
 #include "syntax.h"
 #include "reporting.h"
 #include "expand.h"
+#include "unix.h"
 
 /******************************************************************/
 /* Argument propagation                                           */

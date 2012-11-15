@@ -33,6 +33,7 @@
 #include "sort.h"
 #include "writer.h"
 #include "hashes.h"
+#include "unix.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"

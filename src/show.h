@@ -25,6 +25,8 @@
 #ifndef CFENGINE_SHOW_H
 #define CFENGINE_SHOW_H
 
+#include "alphalist.h"
+
 void ShowAlphaList(const AlphaList *al);
 void ShowAssoc(CfAssoc *cp);
 

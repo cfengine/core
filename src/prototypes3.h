@@ -53,10 +53,6 @@ int ScheduleAgentOperations(Bundle *bp, const ReportContext *report_context);
 
 void AgentDiagnostic(void);
 
-/* alphalist.c */
-
-#include "alphalist.h"
-
 /* args.c */
 
 int MapBodyArgs(const char *scopeid, Rlist *give, const Rlist *take);

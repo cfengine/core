@@ -37,6 +37,7 @@
 #include "transaction.h"
 #include "scope.h"
 #include "unix.h"
+#include "attributes.h"
 
 static void KeepContextBundles(Policy *policy, const ReportContext *report_context);
 static void KeepServerPromise(Promise *pp);

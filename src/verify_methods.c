@@ -33,6 +33,7 @@
 #include "scope.h"
 #include "hashes.h"
 #include "unix.h"
+#include "attributes.h"
 
 static void GetReturnValue(char *scope, Promise *pp);
     

@@ -32,6 +32,7 @@
 #include "vars.h"
 #include "sort.h"
 #include "vars.h"
+#include "attributes.h"
 
 static void ShowState(char *type);
 static void PrintFile(Attributes a, Promise *pp);

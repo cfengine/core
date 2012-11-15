@@ -56,10 +56,6 @@ Rlist *NewExpArgs(const FnCall *fp, const Promise *pp);
 void ArgTemplate(FnCall *fp, const FnCallArg *argtemplate, Rlist *finalargs);
 void DeleteExpArgs(Rlist *args);
 
-/* attributes.c */
-
-#include "attributes.h"
-
 /* bootstrap.c */
 
 void CheckAutoBootstrap(void);

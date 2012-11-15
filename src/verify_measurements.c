@@ -27,6 +27,7 @@
 
 #include "promises.h"
 #include "files_names.h"
+#include "attributes.h"
 
 static int CheckMeasureSanity(Attributes a, Promise *pp);
 

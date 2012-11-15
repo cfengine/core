@@ -40,6 +40,7 @@
 #include "matching.h"
 #include "instrumentation.h"
 #include "unix.h"
+#include "attributes.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"

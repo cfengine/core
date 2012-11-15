@@ -38,6 +38,7 @@
 #include "expand.h"
 #include "matching.h"
 #include "hashes.h"
+#include "attributes.h"
 
 /*****************************************************************************/
 

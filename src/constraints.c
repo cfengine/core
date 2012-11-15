@@ -32,6 +32,7 @@
 #include "files_names.h"
 #include "conversion.h"
 #include "reporting.h"
+#include "attributes.h"
 
 static PromiseIdent *PromiseIdExists(char *namespace, char *handle);
 static void DeleteAllPromiseIdsRecurse(PromiseIdent *key);

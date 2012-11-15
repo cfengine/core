@@ -31,6 +31,7 @@
 #include "vars.h"
 #include "conversion.h"
 #include "instrumentation.h"
+#include "attributes.h"
 
 static int ExecSanityChecks(Attributes a, Promise *pp);
 static void PreviewProtocolLine(char *line, char *comm);

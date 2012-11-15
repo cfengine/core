@@ -39,6 +39,7 @@
 #include "expand.h"
 #include "scope.h"
 #include "matching.h"
+#include "attributes.h"
 
 #include <assert.h>
 

@@ -28,6 +28,7 @@
 #include "promises.h"
 #include "files_names.h"
 #include "conversion.h"
+#include "attributes.h"
 
 static int CheckDatabaseSanity(Attributes a, Promise *pp);
 static void VerifySQLPromise(Attributes a, Promise *pp);

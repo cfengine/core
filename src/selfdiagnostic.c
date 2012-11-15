@@ -33,6 +33,7 @@
 #include "expand.h"
 #include "scope.h"
 #include "hashes.h"
+#include "attributes.h"
 
 static void TestRegularExpressions(void);
 static void TestAgentPromises(void);

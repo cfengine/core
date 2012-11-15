@@ -27,6 +27,7 @@
 #include "constraints.h"
 #include "promises.h"
 #include "vars.h"
+#include "attributes.h"
 
 static int ServicesSanityChecks(Attributes a, Promise *pp);
 static void SetServiceDefaults(Attributes *a);

@@ -415,13 +415,6 @@ int IncrementIterationContext(Rlist *iterators);
 int EndOfIteration(Rlist *iterator);
 int NullIterators(Rlist *iterator);
 
-/* instrumentation.c */
-
-struct timespec BeginMeasure(void);
-void EndMeasure(char *eventname, struct timespec start);
-void EndMeasurePromise(struct timespec start, Promise *pp);
-void NoteClassUsage(AlphaList list, int purge);
-
 /* install.c */
 int RelevantBundle(const char *agent, const char *blocktype);
 Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *args, const char *source_path);

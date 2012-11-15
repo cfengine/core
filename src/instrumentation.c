@@ -23,7 +23,7 @@
 
 */
 
-#include "cf3.defs.h"
+#include "instrumentation.h"
 
 #include "constraints.h"
 #include "dbm_api.h"

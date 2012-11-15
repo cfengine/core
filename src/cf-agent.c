@@ -38,6 +38,7 @@
 #include "transaction.h"
 #include "scope.h"
 #include "matching.h"
+#include "instrumentation.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"

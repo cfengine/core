@@ -3,6 +3,8 @@
 
 #include "cf3.defs.h"
 
+#include "assoc.h"
+
 /* - specific hashes - */
 
 int RefHash(char *name);

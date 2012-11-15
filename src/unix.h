@@ -28,6 +28,8 @@
 
 #include "cf3.defs.h"
 
+#include "assoc.h"
+
 /*
  * Do not modify returned Rval, its contents may be constant and statically
  * allocated.

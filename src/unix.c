@@ -31,6 +31,7 @@
 #include "files_interfaces.h"
 #include "item_lib.h"
 #include "conversion.h"
+#include "matching.h"
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>

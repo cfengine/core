@@ -93,7 +93,7 @@ libpromises_la_SOURCES = \
         logic_expressions.c logic_expressions.h \
         map.c map.h \
         map_common.h \
-        matching.c \
+        matching.c matching.h \
         misc_lib.c misc_lib.h \
         mod_access.c mod_access.h \
         mod_common.c \

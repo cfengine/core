@@ -30,6 +30,7 @@
 #include "reporting.h"
 #include "expand.h"
 #include "scope.h"
+#include "matching.h"
 
 static int IsCf3Scalar(char *str);
 static int CompareVariableValue(Rval rval, CfAssoc *ap);

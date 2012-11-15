@@ -34,6 +34,7 @@
 #include "expand.h"
 #include "scope.h"
 #include "vercmp.h"
+#include "matching.h"
 
 /** Entry points from VerifyPackagesPromise **/
 

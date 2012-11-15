@@ -40,6 +40,7 @@
 #include "expand.h"
 #include "scope.h"
 #include "keyring.h"
+#include "matching.h"
 
 #include <libgen.h>
 

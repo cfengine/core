@@ -30,6 +30,7 @@
 #include "files_operators.h"
 #include "item_lib.h"
 #include "conversion.h"
+#include "matching.h"
 
 /* seconds */
 #define RPCTIMEOUT 60

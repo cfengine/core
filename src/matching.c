@@ -23,7 +23,7 @@
 
 */
 
-#include "cf3.defs.h"
+#include "matching.h"
 
 #include "env_context.h"
 #include "vars.h"

@@ -38,6 +38,7 @@
 #include "conversion.h"
 #include "expand.h"
 #include "scope.h"
+#include "matching.h"
 
 #include <assert.h>
 

@@ -40,6 +40,7 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "scope.h"
+#include "matching.h"
 
 static void MapIteratorsFromScalar(const char *scope, Rlist **los, Rlist **lol, char *string, int level, const Promise *pp);
 static int Epimenides(const char *var, Rval rval, int level);

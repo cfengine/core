@@ -40,6 +40,7 @@
 #include "lastseen.h"
 #include "dir.h"
 #include "conversion.h"
+#include "matching.h"
 
 //******************************************************************
 // GLOBAL STATE

@@ -41,10 +41,6 @@ int yylex(void);
 void yyerror(const char *s);
 int yyparse(void);
 
-/* alloc.c */
-
-#include "alloc.h"
-
 /* agent.c */
 
 int ScheduleAgentOperations(Bundle *bp, const ReportContext *report_context);

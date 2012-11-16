@@ -88,6 +88,10 @@ struct utsname
 # include <stdint.h>
 #endif
 
+#ifdef HAVE_INTTYPES_H
+# include <inttypes.h>
+#endif
+
 #ifdef HAVE_SYS_SYSTEMINFO_H
 # include <sys/systeminfo.h>
 #endif

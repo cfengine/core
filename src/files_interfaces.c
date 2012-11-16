@@ -36,6 +36,7 @@
 #include "vars.h"
 #include "matching.h"
 #include "cfstream.h"
+#include "client_code.h"
 
 static void PurgeLocalFiles(Item *filelist, char *directory, Attributes attr, Promise *pp, const ReportContext *report_context);
 static void CfCopyFile(char *sourcefile, char *destfile, struct stat sourcestatbuf, Attributes attr, Promise *pp, const ReportContext *report_context);

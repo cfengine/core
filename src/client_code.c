@@ -24,7 +24,7 @@
 
 */
 
-#include "cf3.defs.h"
+#include "client_code.h"
 
 #include "sysinfo.h"
 #include "dir.h"

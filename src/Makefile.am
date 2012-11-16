@@ -42,7 +42,7 @@ libpromises_la_SOURCES = \
         cfstream.c cfstream.h \
         chflags.c \
         classes.c \
-        client_code.c \
+        client_code.c client_code.h \
         client_protocol.c client_protocol.h \
         communication.c \
         comparray.c \

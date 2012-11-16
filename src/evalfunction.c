@@ -47,6 +47,7 @@
 #include "cfstream.h"
 #include "string_lib.h"
 #include "args.h"
+#include "client_code.h"
 
 #include <libgen.h>
 

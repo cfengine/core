@@ -65,20 +65,6 @@ char **CfFetchRow(CfdbConn *cfdb);
 char *CfFetchColumn(CfdbConn *cfdb, int col);
 void CfDeleteQuery(CfdbConn *cfdb);
 
-/* client_code.c */
-
-void DetermineCfenginePort(void);
-AgentConnection *NewServerConnection(Attributes attr, Promise *pp);
-AgentConnection *ServerConnection(char *server, Attributes attr, Promise *pp);
-void DisconnectServer(AgentConnection *conn);
-int cf_remote_stat(char *file, struct stat *buf, char *stattype, Attributes attr, Promise *pp);
-void DeleteClientCache(Attributes attr, Promise *pp);
-int CompareHashNet(char *file1, char *file2, Attributes attr, Promise *pp);
-int CopyRegularFileNet(char *source, char *new, off_t size, Attributes attr, Promise *pp);
-int EncryptCopyRegularFileNet(char *source, char *new, off_t size, Attributes attr, Promise *pp);
-int ServerConnect(AgentConnection *conn, char *host, Attributes attr, Promise *pp);
-void DestroyServerConnection(AgentConnection *conn);
-
 /* Mark connection as free */
 void ServerNotBusy(AgentConnection *conn);
 

@@ -43,6 +43,7 @@
 #include "matching.h"
 #include "attributes.h"
 #include "cfstream.h"
+#include "client_code.h"
 
 #include <assert.h>
 

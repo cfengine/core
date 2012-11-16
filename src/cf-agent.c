@@ -43,6 +43,7 @@
 #include "unix.h"
 #include "attributes.h"
 #include "cfstream.h"
+#include "communication.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"

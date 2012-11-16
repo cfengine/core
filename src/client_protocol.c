@@ -25,6 +25,7 @@
 #include "cf3.defs.h"
 #include "client_protocol.h"
 
+#include "communication.h"
 #include "sysinfo.h"
 #include "promises.h"
 #include "lastseen.h"

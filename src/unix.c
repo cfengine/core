@@ -33,6 +33,7 @@
 #include "conversion.h"
 #include "matching.h"
 #include "cfstream.h"
+#include "communication.h"
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>

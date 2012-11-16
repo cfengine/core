@@ -26,6 +26,7 @@
 
 #include "client_code.h"
 
+#include "communication.h"
 #include "sysinfo.h"
 #include "dir.h"
 #include "dir_priv.h"

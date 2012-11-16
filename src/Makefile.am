@@ -44,7 +44,7 @@ libpromises_la_SOURCES = \
         classes.c \
         client_code.c client_code.h \
         client_protocol.c client_protocol.h \
-        communication.c \
+        communication.c communication.h \
         comparray.c \
         compiler.h \
         config.h \

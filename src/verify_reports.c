@@ -34,6 +34,7 @@
 #include "vars.h"
 #include "attributes.h"
 #include "cfstream.h"
+#include "communication.h"
 
 static void ShowState(char *type);
 static void PrintFile(Attributes a, Promise *pp);

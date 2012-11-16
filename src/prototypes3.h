@@ -81,18 +81,6 @@ void SetSkipIdentify(bool enabled);
 
 int ParseFlagString(Rlist *flags, u_long *plusmask, u_long *minusmask);
 
-/* communication.c */
-
-AgentConnection *NewAgentConn(void);
-void DeleteAgentConn(AgentConnection *ap);
-void DePort(char *address);
-int IsIPV6Address(char *name);
-int IsIPV4Address(char *name);
-const char *Hostname2IPString(const char *hostname);
-char *IPString2Hostname(const char *ipaddress);
-int GetMyHostInfo(char nameBuf[MAXHOSTNAMELEN], char ipBuf[MAXIP4CHARLEN]);
-unsigned short SocketFamily(int sd);
-
 /* comparray.c */
 
 int FixCompressedArrayValue(int i, char *value, CompressedArray **start);

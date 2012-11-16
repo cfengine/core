@@ -40,6 +40,7 @@
 #include "conversion.h"
 #include "unix.h"
 #include "cfstream.h"
+#include "communication.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"

@@ -23,7 +23,7 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include "communication.h"
 
 #include "cfstream.h"
 

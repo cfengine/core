@@ -285,10 +285,6 @@ int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp)
 void SetSearchDevice(struct stat *sb, Promise *pp);
 int DeviceBoundary(struct stat *sb, Promise *pp);
 
-/* files_repository.c */
-
-#include "files_repository.h"
-
 /* files_select.c */
 
 int SelectLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp);

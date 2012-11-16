@@ -216,8 +216,6 @@ struct ServerConnectionState;
 
 int ReceiveCollectCall(struct ServerConnectionState *conn, char *sendbuffer);
 
-#include "env_monitor.h"
-
 /* evalfunction.c */
 
 FnCallResult CallFunction(const FnCallType *function, FnCall *fp, Rlist *finalargs);

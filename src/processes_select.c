@@ -262,7 +262,7 @@ static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min,
         }
         else
         {
-            CfDebug("Selection filter REJECTED counter range %s/%s = %s in [%jd,%jd] (= %jd secs)\n", name1, name2,
+            CfDebug("Selection filter REJECTED counter range %s/%s = %s in [%" PRIdMAX ",%" PRIdMAX "] (= %" PRIdMAX " secs)\n", name1, name2,
                     line[i], (intmax_t)min, (intmax_t)max, (intmax_t)value);
             return false;
         }

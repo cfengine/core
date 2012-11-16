@@ -366,7 +366,7 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, Attributes attr
         CfDebug("Mode = %ld,%ld\n", d2, d3);
 
         CfDebug
-            ("OK: type=%d\n mode=%jo\n lmode=%jo\n uid=%ju\n gid=%ju\n size=%ld\n atime=%jd\n mtime=%jd ino=%d nlnk=%d, dev=%jd\n",
+            ("OK: type=%d\n mode=%" PRIoMAX "\n lmode=%" PRIoMAX "\n uid=%" PRIuMAX "\n gid=%" PRIuMAX "\n size=%ld\n atime=%" PRIdMAX "\n mtime=%" PRIdMAX " ino=%d nlnk=%d, dev=%" PRIdMAX "\n",
              cfst.cf_type, (uintmax_t)cfst.cf_mode, (uintmax_t)cfst.cf_lmode, (uintmax_t)cfst.cf_uid, (uintmax_t)cfst.cf_gid, (long) cfst.cf_size,
              (intmax_t) cfst.cf_atime, (intmax_t) cfst.cf_mtime, cfst.cf_ino, cfst.cf_nlink, (intmax_t) cfst.cf_dev);
 

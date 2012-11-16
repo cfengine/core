@@ -23,7 +23,7 @@
 
 */
 
-#include "cf3.defs.h"
+#include "fncall.h"
 
 #include "env_context.h"
 #include "files_names.h"

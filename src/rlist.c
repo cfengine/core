@@ -31,6 +31,7 @@
 #include "matching.h"
 #include "unix.h"
 #include "cfstream.h"
+#include "fncall.h"
 
 #include <assert.h>
 

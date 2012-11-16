@@ -35,6 +35,7 @@
 #include "expand.h"
 #include "matching.h"
 #include "unix.h"
+#include "fncall.h"
 
 #include <assert.h>
 

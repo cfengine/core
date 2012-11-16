@@ -31,6 +31,7 @@
 #include "expand.h"
 #include "unix.h"
 #include "cfstream.h"
+#include "fncall.h"
 
 /******************************************************************/
 /* Argument propagation                                           */

@@ -290,8 +290,6 @@ int DeviceBoundary(struct stat *sb, Promise *pp);
 int SelectLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp);
 int GetOwnerName(char *path, struct stat *lstatptr, char *owner, int ownerSz);
 
-#include "fncall.h"
-
 /* full_write.c */
 
 int FullWrite(int desc, const char *ptr, size_t len);

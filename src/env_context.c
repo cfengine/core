@@ -40,6 +40,7 @@
 #include "hashes.h"
 #include "attributes.h"
 #include "cfstream.h"
+#include "fncall.h"
 
 /*****************************************************************************/
 

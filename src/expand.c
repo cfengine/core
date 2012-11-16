@@ -44,6 +44,7 @@
 #include "unix.h"
 #include "attributes.h"
 #include "cfstream.h"
+#include "fncall.h"
 
 static void MapIteratorsFromScalar(const char *scope, Rlist **los, Rlist **lol, char *string, int level, const Promise *pp);
 static int Epimenides(const char *var, Rval rval, int level);

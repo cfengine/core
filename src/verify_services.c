@@ -29,6 +29,7 @@
 #include "vars.h"
 #include "attributes.h"
 #include "cfstream.h"
+#include "fncall.h"
 
 static int ServicesSanityChecks(Attributes a, Promise *pp);
 static void SetServiceDefaults(Attributes *a);

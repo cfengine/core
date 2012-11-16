@@ -1585,6 +1585,7 @@ void SaveClassEnvironment()
 
         Writer *writer = FileWriter(fp);
 
+        ListAlphaList(writer, VHARDHEAP, '\n');
         ListAlphaList(writer, VHEAP, '\n');
         ListAlphaList(writer, VADDCLASSES, '\n');
 

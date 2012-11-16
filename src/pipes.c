@@ -23,7 +23,7 @@
 
 */
 
-#include "cf3.defs.h"
+#include "pipes.h"
 
 #include "cfstream.h"
 

@@ -49,6 +49,7 @@
 #include "args.h"
 #include "client_code.h"
 #include "communication.h"
+#include "pipes.h"
 
 #include <libgen.h>
 

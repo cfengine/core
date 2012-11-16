@@ -36,6 +36,7 @@
 #include "matching.h"
 #include "cfstream.h"
 #include "string_lib.h"
+#include "pipes.h"
 
 //******************************************************************
 // GLOBAL STATE

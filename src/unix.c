@@ -34,6 +34,7 @@
 #include "matching.h"
 #include "cfstream.h"
 #include "communication.h"
+#include "pipes.h"
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>

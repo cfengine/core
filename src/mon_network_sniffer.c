@@ -31,6 +31,7 @@
 #include "item_lib.h"
 #include "cfstream.h"
 #include "communication.h"
+#include "pipes.h"
 
 /* Constants */
 

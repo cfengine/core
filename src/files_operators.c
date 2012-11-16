@@ -44,6 +44,7 @@
 #include "attributes.h"
 #include "cfstream.h"
 #include "client_code.h"
+#include "pipes.h"
 
 #include <assert.h>
 

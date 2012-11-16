@@ -120,7 +120,7 @@ libpromises_la_SOURCES = \
         parser.c parser.h \
         parser_state.h \
         patches.c \
-        pipes.c \
+        pipes.c pipes.h \
         platform.h \
         proc_keyvalue.c proc_keyvalue.h \
         processes_select.c \

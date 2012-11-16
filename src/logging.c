@@ -489,7 +489,7 @@ void PromiseLog(char *s)
         return;
     }
 
-    fprintf(fout, "%jd,%jd: %s\n", (intmax_t) CFSTARTTIME, (intmax_t) now, s);
+    fprintf(fout, "%" PRIdMAX ",%" PRIdMAX ": %s\n", (intmax_t)CFSTARTTIME, (intmax_t)now, s);
     fclose(fout);
 }
 

@@ -219,7 +219,7 @@ int ParseModeString(const char *modestring, mode_t *plusmask, mode_t *minusmask)
                 CfOut(cf_inform, "", "Symbolic and numeric form for modes mixed");
             }
 
-            CfDebug("[PLUS=%jo][MINUS=%jo]\n", (uintmax_t)*plusmask, (uintmax_t)*minusmask);
+            CfDebug("[PLUS=%" PRIoMAX "][MINUS=%" PRIoMAX "]\n", (uintmax_t)*plusmask, (uintmax_t)*minusmask);
             return true;
 
         default:

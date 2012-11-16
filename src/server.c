@@ -2495,7 +2495,7 @@ static int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilena
 
     /* send as plain text */
 
-    CfDebug("OK: type=%d\n mode=%jo\n lmode=%jo\n uid=%ju\n gid=%ju\n size=%ld\n atime=%jd\n mtime=%jd\n",
+    CfDebug("OK: type=%d\n mode=%" PRIoMAX "\n lmode=%" PRIoMAX "\n uid=%" PRIuMAX "\n gid=%" PRIuMAX "\n size=%ld\n atime=%" PRIdMAX "\n mtime=%" PRIdMAX "\n",
             cfst.cf_type, (uintmax_t)cfst.cf_mode, (uintmax_t)cfst.cf_lmode, (intmax_t)cfst.cf_uid, (intmax_t)cfst.cf_gid, (long) cfst.cf_size,
             (intmax_t) cfst.cf_atime, (intmax_t) cfst.cf_mtime);
 
@@ -2538,7 +2538,7 @@ static void CfGetFile(ServerFileGetState *args)
 
     cfstat(filename, &sb);
 
-    CfDebug("CfGetFile(%s on sd=%d), size=%jd\n", filename, sd, (intmax_t) sb.st_size);
+    CfDebug("CfGetFile(%s on sd=%d), size=%" PRIdMAX "\n", filename, sd, (intmax_t) sb.st_size);
 
 /* Now check to see if we have remote permission */
 
@@ -2649,7 +2649,7 @@ static void CfEncryptGetFile(ServerFileGetState *args)
 
     cfstat(filename, &sb);
 
-    CfDebug("CfEncryptGetFile(%s on sd=%d), size=%jd\n", filename, sd, (intmax_t) sb.st_size);
+    CfDebug("CfEncryptGetFile(%s on sd=%d), size=%" PRIdMAX "\n", filename, sd, (intmax_t) sb.st_size);
 
 /* Now check to see if we have remote permission */
 

@@ -441,7 +441,7 @@ int MoveObstruction(char *from, Attributes attr, Promise *pp, const ReportContex
 
             if (attr.copy.backup == cfa_timestamp || attr.edits.backup == cfa_timestamp)
             {
-                sprintf(stamp, "_%jd_%s", (intmax_t) CFSTARTTIME, CanonifyName(cf_ctime(&now_stamp)));
+                snprintf(stamp, CF_BUFSIZE, "_%jd_%s", (intmax_t) CFSTARTTIME, CanonifyName(cf_ctime(&now_stamp)));
                 strcat(saved, stamp);
             }
 
@@ -475,7 +475,7 @@ int MoveObstruction(char *from, Attributes attr, Promise *pp, const ReportContex
             saved[0] = '\0';
             strcpy(saved, from);
 
-            sprintf(stamp, "_%jd_%s", (intmax_t) CFSTARTTIME, CanonifyName(cf_ctime(&now_stamp)));
+            snprintf(stamp, CF_BUFSIZE, "_%jd_%s", (intmax_t) CFSTARTTIME, CanonifyName(cf_ctime(&now_stamp)));
             strcat(saved, stamp);
             strcat(saved, CF_SAVED);
             strcat(saved, ".dir");
@@ -1380,7 +1380,7 @@ int MakeParentDirectory(char *parentandchild, int force, const ReportContext *re
             }
             else if (cfstat(currentpath, &statbuf) == -1)
             {
-                CfDebug("cfengine: Making directory %s, mode %jo\n", currentpath, (uintmax_t)DEFAULTMODE);
+                CfDebug("cfengine: Making directory %s, mode %" PRIoMAX "\n", currentpath, (uintmax_t)DEFAULTMODE);
 
                 if (!DONTDO)
                 {
@@ -1781,7 +1781,7 @@ int VerifyOwner(char *file, Promise *pp, Attributes attr, struct stat *sb)
     uid_t uid = CF_SAME_OWNER;
     gid_t gid = CF_SAME_GROUP;
 
-    CfDebug("VerifyOwner: %jd\n", (uintmax_t) sb->st_uid);
+    CfDebug("VerifyOwner: %" PRIdMAX "\n", (uintmax_t) sb->st_uid);
 
     for (ulp = attr.perms.owners; ulp != NULL; ulp = ulp->next)
     {
@@ -1855,12 +1855,12 @@ int VerifyOwner(char *file, Promise *pp, Attributes attr, struct stat *sb)
             {
                 if (uid != CF_SAME_OWNER)
                 {
-                    CfDebug("(Change owner to uid %ju if possible)\n", (uintmax_t)uid);
+                    CfDebug("(Change owner to uid %" PRIuMAX " if possible)\n", (uintmax_t)uid);
                 }
 
                 if (gid != CF_SAME_GROUP)
                 {
-                    CfDebug("Change group to gid %ju if possible)\n", (uintmax_t)gid);
+                    CfDebug("Change group to gid %" PRIuMAX " if possible)\n", (uintmax_t)gid);
                 }
             }
 
@@ -2109,7 +2109,7 @@ void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promi
         newperm |= attr.perms.plus;
         newperm &= ~(attr.perms.minus);
 
-        CfDebug("VerifyFileAttributes(%s -> %jo)\n", file, (uintmax_t)newperm);
+        CfDebug("VerifyFileAttributes(%s -> %" PRIoMAX ")\n", file, (uintmax_t)newperm);
 
         /* directories must have x set if r set, regardless  */
 
@@ -2181,12 +2181,12 @@ void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promi
 
     if ((newperm & 07777) == (dstat->st_mode & 07777))  /* file okay */
     {
-        CfDebug("File okay, newperm = %jo, stat = %jo\n", (uintmax_t)(newperm & 07777), (uintmax_t)(dstat->st_mode & 07777));
+        CfDebug("File okay, newperm = %" PRIoMAX ", stat = %" PRIoMAX "\n", (uintmax_t)(newperm & 07777), (uintmax_t)(dstat->st_mode & 07777));
         cfPS(cf_verbose, CF_NOP, "", pp, attr, " -> File permissions on %s as promised\n", file);
     }
     else
     {
-        CfDebug("Trying to fix mode...newperm = %jo, stat = %jo\n", (uintmax_t)(newperm & 07777), (uintmax_t)(dstat->st_mode & 07777));
+        CfDebug("Trying to fix mode...newperm = %" PRIoMAX ", stat = %" PRIoMAX "\n", (uintmax_t)(newperm & 07777), (uintmax_t)(dstat->st_mode & 07777));
 
         switch (attr.transaction.action)
         {
@@ -2292,7 +2292,7 @@ void VerifyCopiedFileAttributes(char *file, struct stat *dstat, struct stat *sst
 
 // If we get here, there is both a src and dest file
 
-    CfDebug("VerifyCopiedFile(%s,+%jo,-%jo)\n", file, (uintmax_t)attr.perms.plus, (uintmax_t)attr.perms.minus);
+    CfDebug("VerifyCopiedFile(%s,+%" PRIoMAX ",-%" PRIoMAX ")\n", file, (uintmax_t)attr.perms.plus, (uintmax_t)attr.perms.minus);
 
     save_uid = (attr.perms.owners)->uid;
     save_gid = (attr.perms.groups)->gid;

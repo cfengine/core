@@ -29,6 +29,7 @@
 #include "files_names.h"
 #include "conversion.h"
 #include "attributes.h"
+#include "cfstream.h"
 
 static int CheckDatabaseSanity(Attributes a, Promise *pp);
 static void VerifySQLPromise(Attributes a, Promise *pp);

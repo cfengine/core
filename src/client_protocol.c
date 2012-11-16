@@ -29,6 +29,7 @@
 #include "promises.h"
 #include "lastseen.h"
 #include "crypto.h"
+#include "cfstream.h"
 
 static void SetSessionKey(AgentConnection *conn);
 

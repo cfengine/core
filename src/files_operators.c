@@ -40,6 +40,7 @@
 #include "scope.h"
 #include "matching.h"
 #include "attributes.h"
+#include "cfstream.h"
 
 #include <assert.h>
 

@@ -31,6 +31,7 @@
 /* ExpandScalar */
 #include "expand.h"
 #include "vars.h"
+#include "cfstream.h"
 
 static VersionCmpResult InvertResult(VersionCmpResult result)
 {

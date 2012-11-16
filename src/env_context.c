@@ -39,6 +39,7 @@
 #include "matching.h"
 #include "hashes.h"
 #include "attributes.h"
+#include "cfstream.h"
 
 /*****************************************************************************/
 

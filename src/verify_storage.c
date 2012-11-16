@@ -30,6 +30,7 @@
 #include "files_interfaces.h"
 #include "files_operators.h"
 #include "attributes.h"
+#include "cfstream.h"
 
 static void FindStoragePromiserObjects(Promise *pp, const ReportContext *report_context);
 static int VerifyFileSystem(char *name, Attributes a, Promise *pp);

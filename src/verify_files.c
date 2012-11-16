@@ -38,6 +38,7 @@
 #include "item_lib.h"
 #include "matching.h"
 #include "attributes.h"
+#include "cfstream.h"
 
 static void LoadSetuid(Attributes a, Promise *pp);
 static void SaveSetuid(Attributes a, Promise *pp, const ReportContext *report_context);

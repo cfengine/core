@@ -41,6 +41,7 @@
 #include "instrumentation.h"
 #include "unix.h"
 #include "attributes.h"
+#include "cfstream.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"

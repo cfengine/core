@@ -28,6 +28,7 @@
 #include "promises.h"
 #include "files_names.h"
 #include "attributes.h"
+#include "cfstream.h"
 
 static int CheckMeasureSanity(Attributes a, Promise *pp);
 

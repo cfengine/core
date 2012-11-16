@@ -31,6 +31,7 @@
 #include "conversion.h"
 #include "matching.h"
 #include "attributes.h"
+#include "cfstream.h"
 
 static int ProcessSanityChecks(Attributes a, Promise *pp);
 static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp);

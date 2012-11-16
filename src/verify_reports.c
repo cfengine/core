@@ -33,6 +33,7 @@
 #include "sort.h"
 #include "vars.h"
 #include "attributes.h"
+#include "cfstream.h"
 
 static void ShowState(char *type);
 static void PrintFile(Attributes a, Promise *pp);

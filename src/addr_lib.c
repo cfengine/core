@@ -24,6 +24,8 @@
 
 #include "cf3.defs.h"
 
+#include "cfstream.h"
+
 #define CF_ADDRSIZE 128
 
 /* Match two IP strings - with : or . in hex or decimal

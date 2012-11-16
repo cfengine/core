@@ -28,6 +28,7 @@
 #include "env_context.h"
 #include "conversion.h"
 #include "reporting.h"
+#include "cfstream.h"
 
 /*******************************************************************/
 

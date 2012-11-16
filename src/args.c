@@ -30,6 +30,7 @@
 #include "reporting.h"
 #include "expand.h"
 #include "unix.h"
+#include "cfstream.h"
 
 /******************************************************************/
 /* Argument propagation                                           */

@@ -28,6 +28,7 @@
 #include "files_names.h"
 #include "files_interfaces.h"
 #include "item_lib.h"
+#include "cfstream.h"
 
 static Item *SUSPICIOUSLIST = NULL;
 

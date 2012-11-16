@@ -36,6 +36,7 @@
 #include "scope.h"
 #include "hashes.h"
 #include "unix.h"
+#include "cfstream.h"
 
 #define CF_EXEC_IFELAPSED 0
 #define CF_EXEC_EXPIREAFTER 1

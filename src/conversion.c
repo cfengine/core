@@ -31,6 +31,8 @@
 #include "item_lib.h"
 #include "reporting.h"
 #include "files_operators.h"
+#include "cfstream.h"
+
 #include <assert.h>
 
 static int IsSpace(char *remainder);

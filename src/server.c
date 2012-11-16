@@ -41,6 +41,7 @@
 #include "dir.h"
 #include "conversion.h"
 #include "matching.h"
+#include "cfstream.h"
 
 //******************************************************************
 // GLOBAL STATE

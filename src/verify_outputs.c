@@ -28,6 +28,7 @@
 #include "item_lib.h"
 #include "conversion.h"
 #include "attributes.h"
+#include "cfstream.h"
 
 static Item *HANDLE_OUTPUTS = NULL;
 static Item *BUNDLE_OUTPUTS = NULL;

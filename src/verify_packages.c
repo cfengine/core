@@ -36,6 +36,7 @@
 #include "vercmp.h"
 #include "matching.h"
 #include "attributes.h"
+#include "cfstream.h"
 
 /** Entry points from VerifyPackagesPromise **/
 

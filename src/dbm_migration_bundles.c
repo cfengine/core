@@ -24,6 +24,8 @@
 
 #include "dbm_migration.h"
 
+#include "cfstream.h"
+
 static bool BundlesMigrationVersion0(DBHandle *db)
 {
     bool errors = false;

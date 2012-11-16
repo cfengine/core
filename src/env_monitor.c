@@ -37,6 +37,7 @@
 #include "scope.h"
 #include "sysinfo.h"
 #include "files_operators.h"
+#include "cfstream.h"
 
 #include <math.h>
 

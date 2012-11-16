@@ -27,6 +27,7 @@
 
 #include "scope.h"
 #include "unix.h"
+#include "cfstream.h"
 
 static void DeleteReferenceRlist(Rlist *list);
 

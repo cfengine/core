@@ -62,18 +62,6 @@ void CheckAutoBootstrap(void);
 void SetPolicyServer(char *name);
 void CreateFailSafe(char *name);
 
-/* cfstream.c */
-
-void CfFOut(char *filename, enum cfreport level, char *errstr, char *fmt, ...) FUNC_ATTR_PRINTF(4, 5);
-
-void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...) FUNC_ATTR_PRINTF(3, 4);
-
-void cfPS(enum cfreport level, char status, char *errstr, const Promise *pp, Attributes attr, char *fmt, ...) FUNC_ATTR_PRINTF(6, 7);
-
-void CfFile(FILE *fp, char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);
-
-const char *GetErrorStr(void);
-
 /* cf_sql.c */
 
 int CfConnectDB(CfdbConn *cfdb, enum cfdbtype dbtype, char *remotehost, char *dbuser, char *passwd, char *db);

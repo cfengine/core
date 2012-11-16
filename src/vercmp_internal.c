@@ -23,8 +23,10 @@
 */
 
 #include "cf3.defs.h"
+
 #include "files_names.h"
 #include "vercmp_internal.h"
+#include "cfstream.h"
 
 static void ParsePackageVersion(char *version, Rlist **num, Rlist **sep);
 

@@ -33,6 +33,7 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "attributes.h"
+#include "cfstream.h"
 
 static PromiseIdent *PromiseIdExists(char *namespace, char *handle);
 static void DeleteAllPromiseIdsRecurse(PromiseIdent *key);

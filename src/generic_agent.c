@@ -44,6 +44,7 @@
 #include "scope.h"
 #include "atexit.h"
 #include "unix.h"
+#include "cfstream.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"

@@ -30,6 +30,7 @@
 #include "files_interfaces.h"
 #include "promises.h"
 #include "matching.h"
+#include "cfstream.h"
 
 static int SelectTypeMatch(struct stat *lstatptr, Rlist *crit);
 static int SelectOwnerMatch(char *path, struct stat *lstatptr, Rlist *crit);

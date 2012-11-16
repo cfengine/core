@@ -25,6 +25,8 @@
 
 #include "cf3.defs.h"
 
+#include "cfstream.h"
+
 #ifndef MINGW
 static int CfSetuid(uid_t uid, gid_t gid);
 #endif

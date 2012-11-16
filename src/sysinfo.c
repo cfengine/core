@@ -33,6 +33,7 @@
 #include "item_lib.h"
 #include "matching.h"
 #include "unix.h"
+#include "cfstream.h"
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>

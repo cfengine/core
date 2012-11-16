@@ -29,6 +29,7 @@
 #include "files_interfaces.h"
 #include "monitoring.h"
 #include "item_lib.h"
+#include "cfstream.h"
 
 /* Constants */
 

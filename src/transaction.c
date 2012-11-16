@@ -35,6 +35,7 @@
 #include "item_lib.h"
 #include "expand.h"
 #include "atexit.h"
+#include "cfstream.h"
 
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
 

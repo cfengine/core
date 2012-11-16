@@ -23,8 +23,10 @@
 */
 
 #include "cf3.defs.h"
+
 #include "lastseen.h"
 #include "conversion.h"
+#include "cfstream.h"
 
 void UpdateLastSawHost(const char *hostkey, const char *address,
                        bool incoming, time_t timestamp);

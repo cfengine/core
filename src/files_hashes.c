@@ -29,6 +29,7 @@
 #include "dbm_api.h"
 #include "files_interfaces.h"
 #include "files_operators.h"
+#include "cfstream.h"
 
 static int ReadHash(CF_DB *dbp, enum cfhashes type, char *name, unsigned char digest[EVP_MAX_MD_SIZE + 1]);
 static int WriteHash(CF_DB *dbp, enum cfhashes type, char *name, unsigned char digest[EVP_MAX_MD_SIZE + 1]);

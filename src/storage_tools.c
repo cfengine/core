@@ -25,6 +25,8 @@
 
 #include "cf3.defs.h"
 
+#include "cfstream.h"
+
 #ifdef HAVE_SYS_STATFS_H
 # include <sys/statfs.h>
 #endif

@@ -43,6 +43,7 @@
 #include "matching.h"
 #include "hashes.h"
 #include "unix.h"
+#include "cfstream.h"
 
 #include <libgen.h>
 

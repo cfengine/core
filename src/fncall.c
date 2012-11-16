@@ -29,6 +29,7 @@
 #include "files_names.h"
 #include "expand.h"
 #include "unix.h"
+#include "cfstream.h"
 
 #include <assert.h>
 

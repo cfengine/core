@@ -25,6 +25,7 @@
 #include "cf-serverd-functions.h"
 
 #include "scope.h"
+#include "cfstream.h"
 
 static const size_t QUEUESIZE = 50;
 int NO_FORK = false;

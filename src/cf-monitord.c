@@ -30,6 +30,7 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "unix.h"
+#include "cfstream.h"
 
 /*****************************************************************************/
 

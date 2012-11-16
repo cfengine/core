@@ -24,14 +24,6 @@
 
 */
 
-/*******************************************************************/
-/*                                                                 */
-/* File copying                                                    */
-/*                                                                 */
-/* client part for remote copying                                  */
-/*                                                                 */
-/*******************************************************************/
-
 #include "cf3.defs.h"
 
 #include "sysinfo.h"
@@ -39,6 +31,7 @@
 #include "dir_priv.h"
 #include "client_protocol.h"
 #include "crypto.h"
+#include "cfstream.h"
 
 typedef struct
 {

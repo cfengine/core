@@ -20,53 +20,18 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
+
 */
+
+#ifndef CFENGINE_STREAM_H
+#define CFENGINE_STREAM_H
 
 #include "cf3.defs.h"
 
-#include "monitoring.h"
-#include "cfstream.h"
-
-#ifdef HAVE_SYS_LOADAVG_H
-# include <sys/loadavg.h>
-#else
-# define LOADAVG_5MIN    1
-#endif
-
-/* Implementation */
-
-#ifdef HAVE_GETLOADAVG
-
-void MonLoadGatherData(double *cf_this)
-{
-    double load[LOADAVG_5MIN], sum = 0.0;
-    int i, n;
-
-    CfDebug("GatherLoadData\n\n");
-
-    if ((n = getloadavg(load, LOADAVG_5MIN)) == -1)
-    {
-        cf_this[ob_loadavg] = 0.0;
-    }
-
-    for (i = 0; i < n; ++i)
-    {
-        sum += load[i];
-    }
-
-    sum /= (double) n;
-
-/* Scale load average by 100 to make it visible */
-
-    cf_this[ob_loadavg] = sum;
-    CfOut(cf_verbose, "", "Load Average = %.2lf\n", cf_this[ob_loadavg]);
-}
-
-#else
-
-void MonLoadGatherData(double *cf_this)
-{
-    CfDebug("Average load data is not available.\n");
-}
+void CfFOut(char *filename, enum cfreport level, char *errstr, char *fmt, ...) FUNC_ATTR_PRINTF(4, 5);
+void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...) FUNC_ATTR_PRINTF(3, 4);
+void cfPS(enum cfreport level, char status, char *errstr, const Promise *pp, Attributes attr, char *fmt, ...) FUNC_ATTR_PRINTF(6, 7);
+void CfFile(FILE *fp, char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);
+const char *GetErrorStr(void);
 
 #endif

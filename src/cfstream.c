@@ -23,7 +23,7 @@
 
 */
 
-#include "cf3.defs.h"
+#include "cfstream.h"
 
 #include "files_names.h"
 #include "constraints.h"

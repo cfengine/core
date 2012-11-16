@@ -24,7 +24,9 @@
 */
 
 #include "cf3.defs.h"
+
 #include "dbm_lib.h"
+#include "cfstream.h"
 
 int DBPathLock(const char *filename)
 {

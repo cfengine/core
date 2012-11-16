@@ -29,6 +29,7 @@
 #include "files_names.h"
 #include "files_interfaces.h"
 #include "files_operators.h"
+#include "cfstream.h"
 
 /* Globals */
 

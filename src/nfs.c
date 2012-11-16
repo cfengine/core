@@ -31,6 +31,7 @@
 #include "item_lib.h"
 #include "conversion.h"
 #include "matching.h"
+#include "cfstream.h"
 
 /* seconds */
 #define RPCTIMEOUT 60

@@ -32,6 +32,7 @@
 #include "conversion.h"
 #include "instrumentation.h"
 #include "attributes.h"
+#include "cfstream.h"
 
 static int ExecSanityChecks(Attributes a, Promise *pp);
 static void PreviewProtocolLine(char *line, char *comm);

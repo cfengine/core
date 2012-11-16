@@ -30,6 +30,7 @@
 #include "files_interfaces.h"
 #include "files_operators.h"
 #include "item_lib.h"
+#include "cfstream.h"
 
 /*****************************************************************************/
 

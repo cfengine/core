@@ -30,6 +30,7 @@
 #include "files_names.h"
 #include "atexit.h"
 #include "unix.h"
+#include "cfstream.h"
 
 #define CF_VALUE_LOG      "cf_value.log"
 

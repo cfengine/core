@@ -38,6 +38,7 @@
 #include "scope.h"
 #include "files_interfaces.h"
 #include "hashes.h"
+#include "cfstream.h"
 
 extern char BUILD_DIR[CF_BUFSIZE];
 

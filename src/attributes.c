@@ -27,6 +27,7 @@
 #include "promises.h"
 #include "constraints.h"
 #include "conversion.h"
+#include "cfstream.h"
 
 static void ShowAttributes(Attributes a);
 

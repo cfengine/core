@@ -2,6 +2,28 @@
 
 	New features:
 
+	- Added rpmvercmp utility to compare versions of RPM packages for
+	  accurate sorting of RPM packages for packages promises.
+
+	- Implement network timeout on server side to avoid keeping stale
+	  connections for hours.
+
+	Bugfixes:
+
+	- cfruncommand for cf-execd is an arbitrary shell command now (Mantis #1268).
+	- Fixed broken "daily" splayclasses (Mantis #1307).
+	- Allow filenames up to 4096 bytes in network transfers (Redmine #1199).
+	- Fix stale state preserved during cf-serverd reload (Redmine #1487).
+	- Free disk space calculation is fixed (Mantis #1120).
+	- Numerous portability bugfixes (especially OpenBSD, Solaris, AIX-related).
+
+	Full list of issues fixed is available on
+	https://cfengine.com/dev/projects/core/versions/34
+
+	In alpha 2:
+
+	New features:
+
 	- XML editing capabilities. See the documentation for edit_xml
 	  body. Note the new dependency: libxml2.
 

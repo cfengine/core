@@ -37,6 +37,7 @@
 #include "matching.h"
 #include "attributes.h"
 #include "cfstream.h"
+#include "string_lib.h"
 
 /** Entry points from VerifyPackagesPromise **/
 

@@ -30,6 +30,7 @@
 #include "files_names.h"
 #include "item_lib.h"
 #include "cfstream.h"
+#include "string_lib.h"
 
 #include <math.h>
 

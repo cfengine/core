@@ -25,6 +25,7 @@
 #include "string_map.h"
 
 #include "hashes.h"
+#include "string_lib.h"
 
 TYPED_MAP_DEFINE(String, char *, char *,
                  (MapHashFn)&OatHash,

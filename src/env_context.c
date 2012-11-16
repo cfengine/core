@@ -41,6 +41,7 @@
 #include "attributes.h"
 #include "cfstream.h"
 #include "fncall.h"
+#include "string_lib.h"
 
 /*****************************************************************************/
 

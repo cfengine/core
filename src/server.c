@@ -35,6 +35,7 @@
 #include "conversion.h"
 #include "matching.h"
 #include "cfstream.h"
+#include "string_lib.h"
 
 //******************************************************************
 // GLOBAL STATE

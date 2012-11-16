@@ -436,10 +436,6 @@ void Summarize(void);
 
 void HandleSignals(int signum);
 
-/* string_lib.c */
-
-#include "string_lib.h"
-
 /* sockaddr.c */
 
 /* Not thread-safe */

@@ -27,6 +27,7 @@
 
 #include "constraints.h"
 #include "syntax.h"
+#include "string_lib.h"
 
 #include <assert.h>
 

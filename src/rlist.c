@@ -32,6 +32,7 @@
 #include "unix.h"
 #include "cfstream.h"
 #include "fncall.h"
+#include "string_lib.h"
 
 #include <assert.h>
 

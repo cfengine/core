@@ -40,6 +40,7 @@
 #include "attributes.h"
 #include "cfstream.h"
 #include "communication.h"
+#include "string_lib.h"
 
 static void KeepContextBundles(Policy *policy, const ReportContext *report_context);
 static void KeepServerPromise(Promise *pp);

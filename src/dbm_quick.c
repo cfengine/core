@@ -32,6 +32,7 @@
 #include "dbm_api.h"
 #include "dbm_priv.h"
 #include "dbm_lib.h"
+#include "cfstream.h"
 
 #ifdef QDB
 # include <depot.h>

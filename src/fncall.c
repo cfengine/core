@@ -30,6 +30,7 @@
 #include "expand.h"
 #include "unix.h"
 #include "cfstream.h"
+#include "args.h"
 
 #include <assert.h>
 

@@ -49,13 +49,6 @@ int ScheduleAgentOperations(Bundle *bp, const ReportContext *report_context);
 
 void AgentDiagnostic(void);
 
-/* args.c */
-
-int MapBodyArgs(const char *scopeid, Rlist *give, const Rlist *take);
-Rlist *NewExpArgs(const FnCall *fp, const Promise *pp);
-void ArgTemplate(FnCall *fp, const FnCallArg *argtemplate, Rlist *finalargs);
-void DeleteExpArgs(Rlist *args);
-
 /* bootstrap.c */
 
 void CheckAutoBootstrap(void);

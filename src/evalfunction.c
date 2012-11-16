@@ -46,6 +46,7 @@
 #include "unix.h"
 #include "cfstream.h"
 #include "string_lib.h"
+#include "args.h"
 
 #include <libgen.h>
 

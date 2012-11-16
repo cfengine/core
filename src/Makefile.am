@@ -28,7 +28,7 @@ libpromises_la_SOURCES = \
         alphalist.c alphalist.h \
         acl.c acl.h \
         acl_posix.c acl_posix.h \
-        args.c \
+        args.c args.h \
         array_map.c array_map_priv.h \
         assoc.c assoc.h \
         atexit.c atexit.h \

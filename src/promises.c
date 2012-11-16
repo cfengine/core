@@ -34,6 +34,7 @@
 #include "scope.h"
 #include "unix.h"
 #include "cfstream.h"
+#include "args.h"
 
 #define PACK_UPIFELAPSED_SALT "packageuplist"
 

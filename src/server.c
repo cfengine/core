@@ -22,20 +22,13 @@
   included file COSL.txt.
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: server.c                                                            */
-/*                                                                           */
-/* Created: Sat Jun 30 18:37:58 2012                                         */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "server.h"
 
 #include "item_lib.h"
 #include "crypto.h"
 #include "files_names.h"
 #include "files_interfaces.h"
+#include "files_hashes.h"
 #include "env_context.h"
 #include "lastseen.h"
 #include "dir.h"

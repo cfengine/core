@@ -35,6 +35,7 @@
 #include "files_interfaces.h"
 #include "files_lib.h"
 #include "files_operators.h"
+#include "files_hashes.h"
 #include "item_lib.h"
 #include "matching.h"
 #include "attributes.h"

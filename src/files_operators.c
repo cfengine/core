@@ -33,6 +33,7 @@
 #include "dbm_api.h"
 #include "files_names.h"
 #include "files_interfaces.h"
+#include "files_hashes.h"
 #include "vars.h"
 #include "item_lib.h"
 #include "conversion.h"

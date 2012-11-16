@@ -66,7 +66,7 @@ libpromises_la_SOURCES = \
         expand.c expand.h \
         files_copy.c \
         files_editline.c \
-        files_hashes.c \
+        files_hashes.c files_hashes.h \
         files_interfaces.c files_interfaces.h \
         files_lib.c files_lib.h \
         files_links.c \

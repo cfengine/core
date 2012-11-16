@@ -24,7 +24,7 @@
 
 */
 
-#include "cf3.defs.h"
+#include "files_hashes.h"
 
 #include "dbm_api.h"
 #include "files_interfaces.h"

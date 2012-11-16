@@ -30,6 +30,7 @@
 #include "syntax.h"
 #include "expand.h"
 #include "files_names.h"
+#include "files_hashes.h"
 #include "scope.h"
 #include "unix.h"
 #include "cfstream.h"

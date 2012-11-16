@@ -30,6 +30,7 @@
 #include "lastseen.h"
 #include "crypto.h"
 #include "cfstream.h"
+#include "files_hashes.h"
 
 static void SetSessionKey(AgentConnection *conn);
 

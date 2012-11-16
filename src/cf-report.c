@@ -32,6 +32,7 @@
 #include "lastseen.h"
 #include "granules.h"
 #include "files_names.h"
+#include "files_hashes.h"
 #include "constraints.h"
 #include "policy.h"
 #include "syntax.h"

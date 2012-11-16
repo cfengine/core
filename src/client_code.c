@@ -32,6 +32,7 @@
 #include "client_protocol.h"
 #include "crypto.h"
 #include "cfstream.h"
+#include "files_hashes.h"
 
 typedef struct
 {

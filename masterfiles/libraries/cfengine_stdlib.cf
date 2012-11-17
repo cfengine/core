@@ -1761,7 +1761,7 @@ package_list_version_regex => "[^\s]\s+([^\s]+).*";
 package_list_arch_regex    => "[^.]+\.([^\s]+).*";
 
 package_installed_regex => ".*(installed|\s+@).*";
-package_name_convention => "$(name).$(arch)";
+package_name_convention => "$(name)-$(version).$(arch)";
 
 # set it to "0" to avoid caching of list during upgrade
 package_list_update_command => "/usr/bin/yum --quiet check-update";

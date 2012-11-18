@@ -45,6 +45,7 @@
 #include "attributes.h"
 #include "cfstream.h"
 #include "fncall.h"
+#include "args.h"
 
 static void MapIteratorsFromScalar(const char *scope, Rlist **los, Rlist **lol, char *string, int level, const Promise *pp);
 static int Epimenides(const char *var, Rval rval, int level);
@@ -53,7 +54,8 @@ static int CompareRlist(Rlist *list1, Rlist *list2);
 static int CompareRval(Rval rval1, Rval rval2);
 static void SetAnyMissingDefaults(Promise *pp);
 static void CopyLocalizedIteratorsToThisScope(const char *scope, const Rlist *listvars);
-
+static void CheckRecursion(const ReportContext *report_context, Promise *pp);
+static void ParseServices(const ReportContext *report_context, Promise *pp);
 /*
 
 Expanding variables is easy -- expanding lists automagically requires
@@ -725,6 +727,7 @@ void ExpandPromiseAndDo(enum cfagenttype agent, const char *scopeid, Promise *pp
         case cf_common:
             ShowPromise(report_context, REPORT_OUTPUT_TYPE_TEXT, pexp, 6);
             ShowPromise(report_context, REPORT_OUTPUT_TYPE_HTML, pexp, 6);
+            CheckRecursion(report_context, pexp);
             ReCheckAllConstraints(pexp);
             break;
 
@@ -1502,4 +1505,159 @@ static int CompareRlist(Rlist *list1, Rlist *list2)
     }
 
     return true;
+}
+
+/*******************************************************************/
+
+static void CheckRecursion(const ReportContext *report_context, Promise *pp)
+
+{
+    Constraint *cp;
+    char *type;
+    char *scope;
+    Bundle *bp;
+    FnCall *fp;
+    SubType *sbp;
+    Promise *ppsub;
+
+    // Check for recursion of bundles so that knowledge map will reflect these cases
+
+    if (strcmp("services", pp->agentsubtype) == 0)
+       {
+       ParseServices(report_context, pp);
+       }
+
+    for (cp = pp->conlist; cp != NULL; cp = cp->next)
+    {        
+        if (strcmp("usebundle", cp->lval) == 0)
+        {
+            type = "agent";
+        }
+        else  if (strcmp("edit_line", cp->lval) == 0 || strcmp("edit_xml", cp->lval) == 0)
+        {
+            type = cp->lval;
+        }
+        else
+        {
+            continue;
+        }
+
+        switch (cp->rval.rtype)
+        {
+           case CF_SCALAR:
+               scope = (char *)cp->rval.item;
+               break;
+
+           case CF_FNCALL:
+               fp = (FnCall *)cp->rval.item;
+               scope = fp->name;
+               break;
+
+           default:
+               continue;
+        }
+
+       if ((bp = GetBundle(PolicyFromPromise(pp), scope, type)))
+       {
+           for (sbp = bp->subtypes; sbp != NULL; sbp = sbp->next)
+           {
+               for (ppsub = sbp->promiselist; ppsub != NULL; ppsub = ppsub->next)
+               {
+                   ExpandPromise(cf_common, scope, ppsub, NULL, report_context);
+               }
+           }
+       }
+    }
+}
+
+/*****************************************************************************/
+
+static void ParseServices(const ReportContext *report_context, Promise *pp)
+{
+    FnCall *default_bundle = NULL;
+    Rlist *args = NULL;
+    Attributes a = { {0} };
+
+    a = GetServicesAttributes(pp);
+
+    // Need to set up the default service pack to eliminate syntax, analogous to verify_services.c
+
+    if (GetConstraintValue("service_bundle", pp, CF_SCALAR) == NULL)
+    {
+        switch (a.service.service_policy)
+        {
+        case cfsrv_start:
+            AppendRlist(&args, pp->promiser, CF_SCALAR);
+            AppendRlist(&args, "start", CF_SCALAR);
+            break;
+
+        case cfsrv_restart:
+            AppendRlist(&args, pp->promiser, CF_SCALAR);
+            AppendRlist(&args, "restart", CF_SCALAR);
+            break;
+
+        case cfsrv_reload:
+            AppendRlist(&args, pp->promiser, CF_SCALAR);
+            AppendRlist(&args, "restart", CF_SCALAR);
+            break;
+
+        case cfsrv_stop:
+        case cfsrv_disable:
+        default:
+            AppendRlist(&args, pp->promiser, CF_SCALAR);
+            AppendRlist(&args, "stop", CF_SCALAR);
+            break;
+
+        }
+
+        default_bundle = NewFnCall("standard_services", args);
+
+        ConstraintAppendToPromise(pp, "service_bundle", (Rval) {default_bundle, CF_FNCALL}, "any", false);
+        a.havebundle = true;
+    }
+
+// Set $(this.service_policy) for flexible bundle adaptation
+
+    switch (a.service.service_policy)
+    {
+    case cfsrv_start:
+        NewScalar("this", "service_policy", "start", cf_str);
+        break;
+
+    case cfsrv_restart:
+        NewScalar("this", "service_policy", "restart", cf_str);
+        break;
+
+    case cfsrv_reload:
+        NewScalar("this", "service_policy", "reload", cf_str);
+        break;
+        
+    case cfsrv_stop:
+    case cfsrv_disable:
+    default:
+        NewScalar("this", "service_policy", "stop", cf_str);
+        break;
+    }
+
+    if (default_bundle && GetBundle(PolicyFromPromise(pp), default_bundle->name, "agent") == NULL)
+    {
+        return;
+    }
+
+    SubType *sbp;
+    Promise *ppsub;
+    Bundle *bp;
+
+    if ((bp = GetBundle(PolicyFromPromise(pp), default_bundle->name, "agent")))
+       {
+       MapBodyArgs(bp->name, args, bp->args);
+           
+       for (sbp = bp->subtypes; sbp != NULL; sbp = sbp->next)
+          {
+          for (ppsub = sbp->promiselist; ppsub != NULL; ppsub = ppsub->next)
+             {
+             ExpandPromise(cf_common, bp->name, ppsub, NULL, report_context);
+             }
+          }
+       }
 }

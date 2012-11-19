@@ -22,11 +22,12 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include "attributes.h"
 
 #include "promises.h"
 #include "constraints.h"
 #include "conversion.h"
+#include "cfstream.h"
 
 static void ShowAttributes(Attributes a);
 

@@ -29,6 +29,9 @@
 #include "dbm_api.h"
 #include "files_names.h"
 #include "atexit.h"
+#include "unix.h"
+#include "cfstream.h"
+#include "string_lib.h"
 
 #define CF_VALUE_LOG      "cf_value.log"
 
@@ -500,7 +503,7 @@ void PromiseLog(char *s)
         return;
     }
 
-    fprintf(fout, "%jd,%jd: %s\n", (intmax_t)CFSTARTTIME, (intmax_t)now, s);
+    fprintf(fout, "%" PRIdMAX ",%" PRIdMAX ": %s\n", (intmax_t)CFSTARTTIME, (intmax_t)now, s);
     fclose(fout);
 }
 

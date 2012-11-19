@@ -26,6 +26,7 @@
 
 #include "monitoring.h"
 #include "files_interfaces.h"
+#include "cfstream.h"
 
 /* Globals */
 

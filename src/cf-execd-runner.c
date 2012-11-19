@@ -27,6 +27,9 @@
 
 #include "files_names.h"
 #include "files_interfaces.h"
+#include "cfstream.h"
+#include "string_lib.h"
+#include "pipes.h"
 
 /*******************************************************************/
 

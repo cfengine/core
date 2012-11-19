@@ -23,7 +23,7 @@
 
 */
 
-#include "cf3.defs.h"
+#include "unix.h"
 
 #include "env_context.h"
 #include "vars.h"
@@ -31,6 +31,10 @@
 #include "files_interfaces.h"
 #include "item_lib.h"
 #include "conversion.h"
+#include "matching.h"
+#include "cfstream.h"
+#include "communication.h"
+#include "pipes.h"
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>

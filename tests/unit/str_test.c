@@ -1,4 +1,6 @@
 #include "cf3.defs.h"
+#include "string_lib.h"
+
 #include "conversion.h"
 
 #include <setjmp.h>

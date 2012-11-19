@@ -28,6 +28,11 @@
 #include "files_names.h"
 #include "conversion.h"
 #include "expand.h"
+#include "matching.h"
+#include "unix.h"
+#include "cfstream.h"
+#include "fncall.h"
+#include "string_lib.h"
 
 #include <assert.h>
 

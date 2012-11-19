@@ -36,6 +36,12 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "expand.h"
+#include "matching.h"
+#include "hashes.h"
+#include "attributes.h"
+#include "cfstream.h"
+#include "fncall.h"
+#include "string_lib.h"
 
 /*****************************************************************************/
 
@@ -1583,6 +1589,7 @@ void SaveClassEnvironment()
 
         Writer *writer = FileWriter(fp);
 
+        ListAlphaList(writer, VHARDHEAP, '\n');
         ListAlphaList(writer, VHEAP, '\n');
         ListAlphaList(writer, VADDCLASSES, '\n');
 

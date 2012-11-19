@@ -33,6 +33,8 @@
 
 #include "cf3.defs.h"
 
+#include "cfstream.h"
+
 static char *cf_format_strtimestamp(struct tm *tm, char *buf);
 
 /*********************************************************/

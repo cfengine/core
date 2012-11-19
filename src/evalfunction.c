@@ -31,6 +31,7 @@
 #include "lastseen.h"
 #include "files_names.h"
 #include "files_interfaces.h"
+#include "files_hashes.h"
 #include "vars.h"
 #include "addr_lib.h"
 #include "syntax.h"
@@ -40,6 +41,15 @@
 #include "expand.h"
 #include "scope.h"
 #include "keyring.h"
+#include "matching.h"
+#include "hashes.h"
+#include "unix.h"
+#include "cfstream.h"
+#include "string_lib.h"
+#include "args.h"
+#include "client_code.h"
+#include "communication.h"
+#include "pipes.h"
 
 #include <libgen.h>
 

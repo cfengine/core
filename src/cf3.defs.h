@@ -181,6 +181,7 @@ typedef struct
 
 typedef struct
 {
+    time_t last_seen;
     QPoint Q[CF_OBSERVABLES];
 } Averages;
 
@@ -300,6 +301,12 @@ struct Stat_
 /*******************************************************************/
 
 typedef struct Item_ Item;
+
+// Indexed itemlist
+typedef struct
+{
+    Item *list[CF_ALPHABETSIZE];
+} AlphaList;
 
 /*******************************************************************/
 
@@ -2356,6 +2363,7 @@ extern double METER_REPAIRED[meter_endmark];
 
 #include "dbm_api.h"
 #include "prototypes3.h"
+#include "alloc.h"
 #include "cf3.extern.h"
 
 extern const BodySyntax CF_COMMON_BODIES[];

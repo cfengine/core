@@ -33,6 +33,10 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "expand.h"
+#include "matching.h"
+#include "unix.h"
+#include "fncall.h"
+#include "string_lib.h"
 
 #include <assert.h>
 

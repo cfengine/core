@@ -26,6 +26,8 @@
 
 #include "cf-serverd-functions.h"
 
+#include "cfstream.h"
+
 #if !defined(HAVE_NOVA)
 
 int SetServerListenState(size_t queue_size)

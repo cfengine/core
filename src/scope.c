@@ -27,6 +27,10 @@
 
 #include "vars.h"
 #include "expand.h"
+#include "hashes.h"
+#include "unix.h"
+#include "cfstream.h"
+#include "fncall.h"
 
 #include <assert.h>
 

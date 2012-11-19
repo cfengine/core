@@ -34,6 +34,10 @@
 #include "constraints.h"
 #include "conversion.h"
 #include "reporting.h"
+#include "unix.h"
+#include "cfstream.h"
+#include "client_code.h"
+#include "communication.h"
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);

@@ -29,6 +29,7 @@
 #include "files_names.h"
 #include "sort.h"
 #include "scope.h"
+#include "hashes.h"
 
 static char *MANUAL_DIRECTORY;
 

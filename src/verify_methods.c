@@ -31,6 +31,10 @@
 #include "expand.h"
 #include "files_names.h"
 #include "scope.h"
+#include "hashes.h"
+#include "unix.h"
+#include "attributes.h"
+#include "cfstream.h"
 
 static void GetReturnValue(char *scope, Promise *pp);
     

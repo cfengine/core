@@ -45,6 +45,8 @@
 #include "expand.h"
 #include "scope.h"
 #include "files_interfaces.h"
+#include "attributes.h"
+#include "cfstream.h"
 
 #ifdef HAVE_PCRE_H
 # include <pcre.h>

@@ -35,6 +35,7 @@
 #include "env_context.h"
 #include "parser_state.h"
 #include "files_names.h"
+#include "unix.h"
 
 char cf_linebuf[8192];
 int  cf_tokenpos;

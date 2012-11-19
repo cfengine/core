@@ -41,10 +41,6 @@ int yylex(void);
 void yyerror(const char *s);
 int yyparse(void);
 
-/* alloc.c */
-
-#include "alloc.h"
-
 /* agent.c */
 
 int ScheduleAgentOperations(Bundle *bp, const ReportContext *report_context);
@@ -53,42 +49,11 @@ int ScheduleAgentOperations(Bundle *bp, const ReportContext *report_context);
 
 void AgentDiagnostic(void);
 
-/* alphalist.c */
-
-#include "alphalist.h"
-
-/* args.c */
-
-int MapBodyArgs(const char *scopeid, Rlist *give, const Rlist *take);
-Rlist *NewExpArgs(const FnCall *fp, const Promise *pp);
-void ArgTemplate(FnCall *fp, const FnCallArg *argtemplate, Rlist *finalargs);
-void DeleteExpArgs(Rlist *args);
-
-/* assoc.c */
-
-#include "assoc.h"
-
-/* attributes.c */
-
-#include "attributes.h"
-
 /* bootstrap.c */
 
 void CheckAutoBootstrap(void);
 void SetPolicyServer(char *name);
 void CreateFailSafe(char *name);
-
-/* cfstream.c */
-
-void CfFOut(char *filename, enum cfreport level, char *errstr, char *fmt, ...) FUNC_ATTR_PRINTF(4, 5);
-
-void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...) FUNC_ATTR_PRINTF(3, 4);
-
-void cfPS(enum cfreport level, char status, char *errstr, const Promise *pp, Attributes attr, char *fmt, ...) FUNC_ATTR_PRINTF(6, 7);
-
-void CfFile(FILE *fp, char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);
-
-const char *GetErrorStr(void);
 
 /* cf_sql.c */
 
@@ -99,20 +64,6 @@ void CfNewQueryDB(CfdbConn *cfdb, char *query);
 char **CfFetchRow(CfdbConn *cfdb);
 char *CfFetchColumn(CfdbConn *cfdb, int col);
 void CfDeleteQuery(CfdbConn *cfdb);
-
-/* client_code.c */
-
-void DetermineCfenginePort(void);
-AgentConnection *NewServerConnection(Attributes attr, Promise *pp);
-AgentConnection *ServerConnection(char *server, Attributes attr, Promise *pp);
-void DisconnectServer(AgentConnection *conn);
-int cf_remote_stat(char *file, struct stat *buf, char *stattype, Attributes attr, Promise *pp);
-void DeleteClientCache(Attributes attr, Promise *pp);
-int CompareHashNet(char *file1, char *file2, Attributes attr, Promise *pp);
-int CopyRegularFileNet(char *source, char *new, off_t size, Attributes attr, Promise *pp);
-int EncryptCopyRegularFileNet(char *source, char *new, off_t size, Attributes attr, Promise *pp);
-int ServerConnect(AgentConnection *conn, char *host, Attributes attr, Promise *pp);
-void DestroyServerConnection(AgentConnection *conn);
 
 /* Mark connection as free */
 void ServerNotBusy(AgentConnection *conn);
@@ -130,31 +81,12 @@ void SetSkipIdentify(bool enabled);
 
 int ParseFlagString(Rlist *flags, u_long *plusmask, u_long *minusmask);
 
-/* communication.c */
-
-AgentConnection *NewAgentConn(void);
-void DeleteAgentConn(AgentConnection *ap);
-void DePort(char *address);
-int IsIPV6Address(char *name);
-int IsIPV4Address(char *name);
-const char *Hostname2IPString(const char *hostname);
-char *IPString2Hostname(const char *ipaddress);
-int GetMyHostInfo(char nameBuf[MAXHOSTNAMELEN], char ipBuf[MAXIP4CHARLEN]);
-unsigned short SocketFamily(int sd);
-
 /* comparray.c */
 
 int FixCompressedArrayValue(int i, char *value, CompressedArray **start);
 void DeleteCompressedArray(CompressedArray *start);
 int CompressedArrayElementExists(CompressedArray *start, int key);
 char *CompressedArrayValue(CompressedArray *start, int key);
-
-#ifndef MINGW
-UidList *Rlist2UidList(Rlist *uidnames, const Promise *pp);
-GidList *Rlist2GidList(Rlist *gidnames, const Promise *pp);
-uid_t Str2Uid(char *uidbuff, char *copy, const Promise *pp);
-gid_t Str2Gid(char *gidbuff, char *copy, const Promise *pp);
-#endif /* NOT MINGW */
 
 /* dtypes.c */
 
@@ -244,8 +176,6 @@ struct ServerConnectionState;
 
 int ReceiveCollectCall(struct ServerConnectionState *conn, char *sendbuffer);
 
-#include "env_monitor.h"
-
 /* evalfunction.c */
 
 FnCallResult CallFunction(const FnCallType *function, FnCall *fp, Rlist *finalargs);
@@ -308,61 +238,6 @@ int KillGhostLink(char *name, Attributes attr, Promise *pp);
 int MakeHardLink(char *from, char *to, Attributes attr, Promise *pp);
 int ExpandLinks(char *dest, char *from, int level);
 
-/* files_hashes.c */
-
-int FileHashChanged(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], int warnlevel, enum cfhashes type,
-                    Attributes attr, Promise *pp);
-void PurgeHashes(char *file, Attributes attr, Promise *pp);
-void DeleteHash(CF_DB *dbp, enum cfhashes type, char *name);
-ChecksumValue *NewHashValue(unsigned char digest[EVP_MAX_MD_SIZE + 1]);
-int CompareFileHashes(char *file1, char *file2, struct stat *sstat, struct stat *dstat, Attributes attr, Promise *pp);
-int CompareBinaryFiles(char *file1, char *file2, struct stat *sstat, struct stat *dstat, Attributes attr, Promise *pp);
-void HashFile(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhashes type);
-void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhashes type);
-int HashesMatch(unsigned char digest1[EVP_MAX_MD_SIZE + 1], unsigned char digest2[EVP_MAX_MD_SIZE + 1],
-                enum cfhashes type);
-char *HashPrint(enum cfhashes type, unsigned char digest[EVP_MAX_MD_SIZE + 1]);
-char *HashPrintSafe(enum cfhashes type, unsigned char digest[EVP_MAX_MD_SIZE + 1], char buffer[EVP_MAX_MD_SIZE * 4]);
-char *SkipHashType(char *hash);
-const char *FileHashName(enum cfhashes id);
-void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhashes type);
-
-/* files_operators.c */
-
-int VerifyFileLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp, const ReportContext *report_context);
-int CfCreateFile(char *file, Promise *pp, Attributes attr, const ReportContext *report_context);
-FILE *CreateEmptyStream(void);
-int ScheduleCopyOperation(char *destination, Attributes attr, Promise *pp, const ReportContext *report_context);
-int ScheduleLinkChildrenOperation(char *destination, char *source, int rec, Attributes attr, Promise *pp, const ReportContext *report_context);
-int ScheduleLinkOperation(char *destination, char *source, Attributes attr, Promise *pp, const ReportContext *report_context);
-int ScheduleEditOperation(char *filename, Attributes attr, Promise *pp, const ReportContext *report_context);
-FileCopy *NewFileCopy(Promise *pp);
-void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promise *pp, const ReportContext *report_context);
-void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp, const ReportContext *report_context);
-int VerifyOwner(char *file, Promise *pp, Attributes attr, struct stat *statbuf);
-void VerifyCopiedFileAttributes(char *file, struct stat *dstat, struct stat *sstat, Attributes attr, Promise *pp, const ReportContext *report_context);
-int MoveObstruction(char *from, Attributes attr, Promise *pp, const ReportContext *report_context);
-void TouchFile(char *path, struct stat *sb, Attributes attr, Promise *pp);
-int MakeParentDirectory(char *parentandchild, int force, const ReportContext *report_context);
-int MakeParentDirectory2(char *parentandchild, int force, const ReportContext *report_context, bool enforce_promise);
-void RotateFiles(char *name, int number);
-void CreateEmptyFile(char *name);
-void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp);
-
-#ifndef MINGW
-UidList *MakeUidList(char *uidnames);
-GidList *MakeGidList(char *gidnames);
-void AddSimpleUidItem(UidList ** uidlist, uid_t uid, char *uidname);
-void AddSimpleGidItem(GidList ** gidlist, gid_t gid, char *gidname);
-#endif /* NOT MINGW */
-void LogHashChange(char *file, FileState status, char *msg, Promise *pp);
-
-typedef bool (*SaveCallbackFn)(const char *dest_filename, const char *orig_filename, void *param, Attributes a, Promise *pp);
-int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attributes a, Promise *pp,
-               const ReportContext *report_context);
-
-int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, Promise *pp);
-
 /* files_properties.c */
 
 void AddFilenameToListOfSuspicious(const char *filename);
@@ -370,71 +245,16 @@ int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp)
 void SetSearchDevice(struct stat *sb, Promise *pp);
 int DeviceBoundary(struct stat *sb, Promise *pp);
 
-/* files_repository.c */
-
-#include "files_repository.h"
-
 /* files_select.c */
 
 int SelectLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp);
 int GetOwnerName(char *path, struct stat *lstatptr, char *owner, int ownerSz);
-
-#include "fncall.h"
 
 /* full_write.c */
 
 int FullWrite(int desc, const char *ptr, size_t len);
 
 #include "generic_agent.h"
-
-/* hashes.c */
-
-/* - specific hashes - */
-
-int RefHash(char *name);
-int ElfHash(char *key);
-int OatHash(const char *key);
-int GetHash(const char *name);
-
-/* - hashtable operations - */
-
-AssocHashTable *HashInit(void);
-
-/* Insert element if it does not exist in hash table. Returns false if element
-   already exists in table or if table is full. */
-bool HashInsertElement(AssocHashTable *hashtable, const char *element, Rval rval, enum cfdatatype dtype);
-
-/* Deletes element from hashtable, returning whether element was found */
-bool HashDeleteElement(AssocHashTable *hashtable, const char *element);
-
-/* Looks up element in hashtable, returns NULL if not found */
-CfAssoc *HashLookupElement(AssocHashTable *hashtable, const char *element);
-
-/* Copies all elements of old hash table to new one. */
-void HashCopy(AssocHashTable *newhash, AssocHashTable *oldhash);
-
-/* Clear whole hash table */
-void HashClear(AssocHashTable *hashtable);
-
-/* Destroy hash table */
-void HashFree(AssocHashTable *hashtable);
-
-/* HashToList */
-void HashToList(Scope *sp, Rlist **list);
-
-/* - hashtable iterator - */
-
-/*
-HashIterator i = HashIteratorInit(hashtable);
-CfAssoc *assoc;
-while ((assoc = HashIteratorNext(&i)))
-   {
-   // do something with assoc;
-   }
-// No cleanup is required
-*/
-HashIterator HashIteratorInit(AssocHashTable *hashtable);
-CfAssoc *HashIteratorNext(HashIterator *iterator);
 
 /* html.c */
 
@@ -450,13 +270,6 @@ void DeleteIterationContext(Rlist *lol);
 int IncrementIterationContext(Rlist *iterators);
 int EndOfIteration(Rlist *iterator);
 int NullIterators(Rlist *iterator);
-
-/* instrumentation.c */
-
-struct timespec BeginMeasure(void);
-void EndMeasure(char *eventname, struct timespec start);
-void EndMeasurePromise(struct timespec start, Promise *pp);
-void NoteClassUsage(AlphaList list, int purge);
 
 /* install.c */
 int RelevantBundle(const char *agent, const char *blocktype);
@@ -483,22 +296,6 @@ void AuditStatusMessage(Writer *writer, char status);
 /* manual.c */
 
 void TexinfoManual(const char *source_dir, const char *output_file);
-
-/* matching.c */
-
-bool ValidateRegEx(const char *regex);
-int FullTextMatch(const char *regptr, const char *cmpptr);
-char *ExtractFirstReference(const char *regexp, const char *teststring);        /* Not thread-safe */
-int BlockTextMatch(const char *regexp, const char *teststring, int *s, int *e);
-int IsRegexItemIn(Item *list, char *regex);
-int IsPathRegex(char *str);
-int IsRegex(char *str);
-int MatchRlistItem(Rlist *listofregex, const char *teststring);
-void EscapeRegexChars(char *str, char *strEsc, int strEscSz);
-void EscapeSpecialChars(char *str, char *strEsc, int strEscSz, char *noEscseq, char *noEsclist);
-char *EscapeChar(char *str, int strSz, char esc);
-void AnchorRegex(const char *regex, char *out, int outSz);
-int MatchPolicy(char *needle, char *haystack, Attributes a, Promise *pp);
 
 /* modes.c */
 
@@ -555,20 +352,6 @@ int LinkOrCopy(const char *from, const char *to, int sym);
 int ExclusiveLockFile(int fd);
 int ExclusiveUnlockFile(int fd);
 
-/* pipes.c */
-
-FILE *cf_popen(const char *command, char *type);
-FILE *cf_popensetuid(const char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background);
-FILE *cf_popen_sh(const char *command, char *type);
-FILE *cf_popen_shsetuid(const char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background);
-int cf_pclose(FILE *pp);
-int cf_pclose_def(FILE *pfp, Attributes a, Promise *pp);
-int VerifyCommandRetcode(int retcode, int fallback, Attributes a, Promise *pp);
-
-#ifndef MINGW
-int cf_pwait(pid_t pid);
-#endif /* NOT MINGW */
-
 /* processes_select.c */
 
 int SelectProcess(char *procentry, char **names, int *start, int *end, Attributes a, Promise *pp);
@@ -595,17 +378,9 @@ void KeepControlPromises(Policy *policy);
 Auth *GetAuthPath(char *path, Auth *list);
 void Summarize(void);
 
-/* show.c */
-
-#include "show.h"
-
 /* signals.c */
 
 void HandleSignals(int signum);
-
-/* string_lib.c */
-
-#include "string_lib.h"
 
 /* sockaddr.c */
 
@@ -648,28 +423,6 @@ void SetTimeOut(int timeout);
 void TimeOut(void);
 void SetReferenceTime(int setclasses);
 void SetStartTime(void);
-
-/* unix.c */
-
-/*
- * Do not modify returned Rval, its contents may be constant and statically
- * allocated.
- */
-enum cfdatatype GetVariable(const char *scope, const char *lval, Rval *returnv);
-
-void DeleteVariable(const char *scope, const char *id);
-bool StringContainsVar(const char *s, const char *v);
-int DefinedVariable(char *name);
-int IsCf3VarString(const char *str);
-int BooleanControl(const char *scope, const char *name);
-const char *ExtractInnerCf3VarString(const char *str, char *substr);
-const char *ExtractOuterCf3VarString(const char *str, char *substr);
-int UnresolvedVariables(CfAssoc *ap, char rtype);
-int UnresolvedArgs(Rlist *args);
-int IsQualifiedVariable(char *var);
-int IsCfList(char *type);
-int AddVariableHash(const char *scope, const char *lval, Rval rval, enum cfdatatype dtype, const char *fname, int no);
-void DeRefListsInHashtable(char *scope, Rlist *list, Rlist *reflist);
 
 /* verify_databases.c */
 

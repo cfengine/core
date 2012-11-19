@@ -30,6 +30,9 @@
 #include "mod_access.h"
 #include "item_lib.h"
 #include "reporting.h"
+#include "files_operators.h"
+#include "cfstream.h"
+
 #include <assert.h>
 
 static int IsSpace(char *remainder);
@@ -721,38 +724,6 @@ long Str2Int(const char *s)
 
 /****************************************************************************/
 
-long TimeCounter2Int(const char *s)
-{
-    long d = 0, h = 0, m = 0;
-    char output[CF_BUFSIZE];
-
-    if (s == NULL)
-    {
-        return CF_NOINT;
-    }
-
-    if (strchr(s, '-'))
-    {
-        if (sscanf(s, "%ld-%ld:%ld", &d, &h, &m) != 3)
-        {
-            snprintf(output, CF_BUFSIZE, "Unable to parse TIME 'ps' field, expected dd-hh:mm, got '%s'", s);
-            ReportError(output);
-        }
-    }
-    else
-    {
-        if (sscanf(s, "%ld:%ld", &h, &m) != 2)
-        {
-            snprintf(output, CF_BUFSIZE, "Unable to parse TIME 'ps' field, expected hH:mm, got '%s'", s);
-            ReportError(output);
-        }
-    }
-
-    return 60 * (m + 60 * (h + 24 * d));
-}
-
-/****************************************************************************/
-
 long TimeAbs2Int(char *s)
 {
     time_t cftime;
@@ -925,29 +896,6 @@ void UtcShiftInterval(time_t t, char *out, int outSz)
     }
 
     snprintf(out, outSz, "%s %02d-%02d", buf, fromHr, toHr);
-}
-
-/****************************************************************************/
-
-mode_t Str2Mode(char *s)
-{
-    int a = CF_UNDEFINED;
-    char output[CF_BUFSIZE];
-
-    if (s == NULL)
-    {
-        return 0;
-    }
-
-    sscanf(s, "%o", &a);
-
-    if (a == CF_UNDEFINED)
-    {
-        snprintf(output, CF_BUFSIZE, "Error reading assumed octal value %s\n", s);
-        ReportError(output);
-    }
-
-    return (mode_t) a;
 }
 
 /****************************************************************************/

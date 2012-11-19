@@ -32,6 +32,8 @@
 #include "files_lib.h"
 #include "files_names.h"
 #include "files_interfaces.h"
+#include "files_operators.h"
+#include "files_hashes.h"
 #include "parser.h"
 #include "dbm_api.h"
 #include "crypto.h"
@@ -42,6 +44,9 @@
 #include "transaction.h"
 #include "scope.h"
 #include "atexit.h"
+#include "unix.h"
+#include "cfstream.h"
+#include "client_code.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"
@@ -1888,7 +1893,7 @@ void WritePID(char *filename)
         return;
     }
 
-    fprintf(fp, "%ju\n", (uintmax_t)getpid());
+    fprintf(fp, "%" PRIuMAX "\n", (uintmax_t)getpid());
 
     fclose(fp);
 }

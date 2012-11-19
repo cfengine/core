@@ -32,6 +32,8 @@
 #include "scope.h"
 #include "files_interfaces.h"
 #include "keyring.h"
+#include "cfstream.h"
+#include "communication.h"
 
 #ifdef HAVE_NOVA
 #include "license.h"

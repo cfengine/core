@@ -28,7 +28,9 @@
 #include "env_context.h"
 #include "files_names.h"
 #include "files_interfaces.h"
+#include "files_operators.h"
 #include "item_lib.h"
+#include "cfstream.h"
 
 /*****************************************************************************/
 

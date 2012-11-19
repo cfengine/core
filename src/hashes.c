@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include "hashes.h"
 
 /*
  * This associative array implementation uses array with linear search up to

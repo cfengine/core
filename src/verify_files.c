@@ -34,7 +34,12 @@
 #include "files_names.h"
 #include "files_interfaces.h"
 #include "files_lib.h"
+#include "files_operators.h"
+#include "files_hashes.h"
 #include "item_lib.h"
+#include "matching.h"
+#include "attributes.h"
+#include "cfstream.h"
 
 static void LoadSetuid(Attributes a, Promise *pp);
 static void SaveSetuid(Attributes a, Promise *pp, const ReportContext *report_context);

@@ -29,8 +29,14 @@
 #include "promises.h"
 #include "dir.h"
 #include "files_names.h"
+#include "files_operators.h"
+#include "files_hashes.h"
+#include "files_repository.h"
 #include "item_lib.h"
 #include "vars.h"
+#include "matching.h"
+#include "cfstream.h"
+#include "client_code.h"
 
 static void PurgeLocalFiles(Item *filelist, char *directory, Attributes attr, Promise *pp, const ReportContext *report_context);
 static void CfCopyFile(char *sourcefile, char *destfile, struct stat sourcestatbuf, Attributes attr, Promise *pp, const ReportContext *report_context);

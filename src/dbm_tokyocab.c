@@ -28,8 +28,10 @@
  */
 
 #include "cf3.defs.h"
+
 #include "dbm_priv.h"
 #include "dbm_lib.h"
+#include "cfstream.h"
 
 #ifdef TCDB
 

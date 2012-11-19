@@ -29,6 +29,8 @@
 #include "promises.h"
 #include "vars.h"
 #include "conversion.h"
+#include "attributes.h"
+#include "cfstream.h"
 
 #ifndef HAVE_LIBVIRT
 

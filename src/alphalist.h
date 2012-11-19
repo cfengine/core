@@ -25,11 +25,7 @@
 #ifndef CFENGINE_ALPHALIST_H
 #define CFENGINE_ALPHALIST_H
 
-// Indexed itemlist
-typedef struct
-{
-    Item *list[CF_ALPHABETSIZE];
-} AlphaList;
+#include "cf3.defs.h"
 
 void InitAlphaList(AlphaList *al);
 int InAlphaList(AlphaList *al, const char *string);

@@ -1,0 +1,98 @@
+\input texinfo-altfont
+\input texinfo-logo
+\input texinfo
+@selectaltfont{cmbright}
+@setlogo{CFEngineFrontPage}
+
+@c *********************************************************************
+@c
+@c  This is a TEXINFO file. It generates both TEX documentation and
+@c  the "on line" documentation "info" files.
+@c
+@c ***********************************************************************
+
+@c %** start of header
+@setfilename CfengineStdLibrary.info
+@settitle Community Open Promise Body Library
+@setchapternewpage odd
+@c %** end of header
+
+@titlepage
+@title Community Open Promise Body Library
+@subtitle A CFEngine Standard
+@author CFEngine AS
+
+@c @smallbook
+
+@fonttextsize 10
+
+@page
+@vskip 0pt plus 1filll
+Copyright @copyright{} 2012 CFEngine AS
+@end titlepage
+@c *************************** File begins here ************************
+@ifinfo
+@dircategory CFEngine Training
+@direntry
+* cfengine Reference:
+                        CFEngine is a language based framework
+                        designed for configuring and maintaining
+                        Unix-like operating systems attached
+                        to a TCP/IP network.
+@end direntry
+@end ifinfo
+@ifnottex
+@node Top, Basic company information and procedures, (dir), (dir)
+@top CFEngine-Open-Promise-Body-Library
+@end ifnottex
+@ifhtml
+@html
+<a href="#Contents">COMPLETE TABLE OF CONTENTS</a>
+<h2>Summary of contents</h2>
+@end html
+@end ifhtml
+@iftex
+@contents
+@end iftex
+@node The Purpose Of This Handbook
+@chapter The Purpose Of This Handbook
+
+@sp 1
+
+CFEngine is built on promises. Promises were chosen as the model for CFEngine's
+configuration language, because they represent an expression of intention.
+
+If you are using custom scripts to manage your systems, you are using
+@i{recipes}. Take a look at any cookbook and you will see that all
+recipes look the same: take flour, eggs, butter, sugar ... and you
+know nothing because you can make a hundred things from these steps.
+If you don't make clear your intention, it is very hard to know what
+the recipe is supposed to be: is it a cake, a waffle, a pastry?
+
+The same is true in system administration. Recipes are not merely
+scripts, they encapsulate knowledge and experience. Their value is
+in communicating @i{desired outcomes} or states.
+
+This library of standard components is like a cookbook that tells you
+only how to make basics well. It gives these basic skills names and
+therefore gives you a common vocabulary -- you will put together these
+basics in creative ways to build your systems.
+
+@sp 2
+
+@cartouche
+
+Please contribute to this guide by helping to develop a repertoire of
+basic skills and names. This collection should be comprehensive but
+parsimonious. Basics are only basics if they are few and carefully
+thought out. This is a work in progress and your experience is welcome.
+
+This library will be moderated by CFEngine, and contributions and discussions
+ca n be made to the help-cfengine@@cfengine.org mailing list.
+
+@end cartouche
+
+
+
+
+

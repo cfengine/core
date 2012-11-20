@@ -1687,6 +1687,7 @@ package_add_command => "/bin/rpm -ivh ";
 package_update_command => "/bin/rpm -Uvh ";
 package_patch_command => "/bin/rpm -Uvh ";
 package_delete_command => "/bin/rpm -e --nodeps";
+package_verify_command => "/bin/rpm -V";
 package_noverify_regex => ".*[^\s].*";
 }
 

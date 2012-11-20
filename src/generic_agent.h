@@ -64,5 +64,4 @@ void SetInputFile(const char *filename);
 
 ReportContext *OpenReports(const char *agents);
 void CloseReports(const char *agents, ReportContext *report_context);
-
 #endif

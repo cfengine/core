@@ -485,7 +485,7 @@ Promise *NewPromise(char *typename, char *promiser)
     pp = xcalloc(1, sizeof(Promise));
 
     pp->audit = AUDITPTR;
-    pp->bundle = xstrdup("internal_bundle");
+    pp->bundle = xstrdup("cfe_internal_bundle_hardcoded");
     pp->namespace = xstrdup("default");
     pp->promiser = xstrdup(promiser);
 
@@ -498,7 +498,9 @@ Promise *NewPromise(char *typename, char *promiser)
     pp->ref_alloc = 'n';
     pp->has_subbundles = false;
 
-    ConstraintAppendToPromise(pp, "handle", (Rval) {xstrdup("internal_promise"), CF_SCALAR}, NULL, false);
+    ConstraintAppendToPromise(pp, "handle",
+                              (Rval) {xstrdup("cfe_internal_promise_hardcoded"),
+                              CF_SCALAR}, NULL, false);
 
     return pp;
 }

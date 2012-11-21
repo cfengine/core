@@ -1,4 +1,4 @@
-3.4.0 (in development)
+3.4.0
 
 	New features:
 
@@ -31,7 +31,7 @@
 	  "usebundle". By default classes are not inherited. See the
 	  examples/unit_inherit.cf for an example.
 
-	- Moved from Nova/Enterirpse:
+	- Moved from Nova/Enterprise:
 	  - POSIX ACL support,
 	  - "outputs" promise type,
 	  - remote syslog support.
@@ -181,7 +181,8 @@
 	- Detect BSD Make and automatically switch to GNU Make during build.
 
 	Full list of issues fixed is available on
-	https://cfengine.com/bugtracker/changelog_page.php
+	https://cfengine.com/bugtracker/changelog_page.php (old bug tracker)
+        and https://cfengine.com/dev/projects/core/versions/34 (new bug tracker)
 
 3.3.4   (Bugfix and Stability release)
 

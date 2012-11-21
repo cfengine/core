@@ -232,6 +232,10 @@ bundle_body:         BLOCK_OPEN
                             P.currentbundle->offset.end = P.offsets.current;
                         }
                      }
+                     | BLOCK_OPEN error
+                       {
+                          parse_error("Bundle body error, expected '}'\n");
+                       }
                      | error
                        {
                           parse_error("Bundle body error, expected '{'\n");
@@ -302,7 +306,7 @@ category_statements:   class_or_promise
 
 class_or_promise:        class
                        | promise ';'
-                       | error
+                       | promise error
                          {
                              parse_error("check previous statement, expected ';'\n");
                          }
@@ -310,10 +314,6 @@ class_or_promise:        class
 
 promise:                 promiser
                        | promiser constraints
-                       | promiser constraint error
-                         {
-                             parse_error("check previous statement, expected ',' \n");
-                         }
 
 
 category_type:           REPORTS_CATEGORY 
@@ -371,8 +371,12 @@ category_type:           REPORTS_CATEGORY
                          }
 
 
-constraints:          constraint  
+constraints:          constraint
                     | constraints ',' constraint
+                    | error
+                         {
+                             parse_error("check previous statement, expected ',' \n");
+                         }
                     |;
 
 constraint:           promiser_type         

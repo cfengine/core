@@ -27,6 +27,10 @@
 	  in packages promises, to specify external command for native package
 	  manager versions comparison
 
+	- agent_expireafter in body executor control allows you to set a
+	  timeout on all cf-agent runs, to enforce a threshold on the
+	  number of concurrent agents
+
 	- Running in Solaris zone is now detected and classes "zone" and
 	  "zone_<name>" are created in this case.
 

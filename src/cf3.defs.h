@@ -812,6 +812,7 @@ enum cfexcontrol
     cfex_schedule,
     cfex_executorfacility,
     cfex_execcommand,
+    cfex_agent_expireafter,
     cfex_notype,
 };
 

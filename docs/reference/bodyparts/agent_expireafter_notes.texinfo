@@ -1,0 +1,19 @@
+@noindent Sets a maximum time on any run of the command in @code{exec_command}.
+If no data is received from the pipe opened to the process created with
+@code{exec_command} after the time has elapsed, the process gets killed.
+
+@noindent Note that if you have long-running jobs, they may get killed
+with this setting. Therefore, you should ensure it is higher than any run of
+@code{cf-agent} that you want to leave alone. Alternatively, you can make
+your jobs output something to STDOUT at least as often as this threshold.
+This will reset the timer.
+
+@noindent The setting will effectively allow you to set a threshold on the
+number of simultaneous agents that are running. For example, if you set it to
+@code{120} and you are using a 5-minute agent schedule, a maximum of
+120 / 5 = 24 agents should be enforced.
+
+@noindent @b{Default value}:@*
+@*
+ 
+The default value is 10080 minutes (one week).

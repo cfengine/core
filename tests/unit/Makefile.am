@@ -54,7 +54,8 @@ check_PROGRAMS = \
 	granules_test \
 	scope_test \
 	conversion_test \
-	files_interfaces_test
+	files_interfaces_test \
+	timeout_test
 
 TESTS = $(check_PROGRAMS)
 

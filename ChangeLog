@@ -106,7 +106,7 @@
           from file_change.log -> file_changes.log (in /var/cfengine/state)
 
           New format for storing file changes introduced:
-          [timestamp,filename,<N/C/S/R>,Message]
+          [timestamp,promise_handle,filename,<N/C/S/R>,Message]
 
           N = New file found
           C = Content Changed

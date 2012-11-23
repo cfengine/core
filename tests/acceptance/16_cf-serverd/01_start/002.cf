@@ -1,0 +1,132 @@
+#######################################################
+#
+# Test cf-serverd related promises - newer destination, no copy
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "1";
+}
+
+#######################################################
+
+bundle agent init
+{
+processes:
+
+   "cf-serverd"  restart_class => "start_me_up";
+
+files:
+
+  "/tmp/sourcefile"
+       create => "true",
+    edit_line => init_src_file;
+
+ # If the destination file is newer the copy should not repair
+
+  "/tmp/destination_file"
+       create => "true",
+    edit_line => init_src_file;
+
+commands:
+
+ # start_me_up::
+
+     "$(G.cwd)/../../src/cf-serverd -f $(G.cwd)/16_cf-serverd/01_start/001.cf";
+}
+
+#######################################################
+
+bundle edit_line init_src_file
+{
+insert_lines:
+   "This is the source file to copy";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+
+  # nothing
+}
+
+#########################################################
+
+body copy_from copy_src_file
+
+{
+source      => "/tmp/sourcefile";
+servers     => { "localhost" };
+compare     => "mtime";
+copy_backup => "false";
+
+#encrypt     => "true";
+#verify      => "true";
+#purge       => "false";
+#type_check  => "true";
+#force_ipv4  => "true";
+#trustkey => "true";
+}
+
+#######################################################
+
+bundle agent check
+{
+files:
+
+    "/tmp/destination_file" copy_from => copy_src_file,
+                              classes => if_repaired("repaired");
+
+processes:
+
+   # Cleanup serverd
+
+   "cf-serverd -f"  signals => { "kill" };
+
+reports:
+
+    !repaired::
+        "$(this.promise_filename) Pass";
+    repaired::
+        "$(this.promise_filename) FAIL";
+}
+
+
+#########################################################
+# Server config
+#########################################################
+
+body server control 
+
+{
+allowconnects         => { "127.0.0.1" , "::1" };
+allowallconnects      => { "127.0.0.1" , "::1" };
+trustkeysfrom         => { "127.0.0.1" , "::1" };
+# allowusers
+}
+
+#########################################################
+
+bundle server access_rules()
+
+{
+access:
+
+  "$(G.cwd)"            admit   => { "127.0.0.1", "::1" };
+  "/tmp/sourcefile"     admit   => { "127.0.0.1", "::1" };
+
+}
+
+#########################################################
+
+body classes if_repaired(x)
+{
+promise_repaired => { "$(x)" };
+}

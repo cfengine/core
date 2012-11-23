@@ -3,4 +3,4 @@
 
 This directive can be given within any file, outside of body and
 bundle definitions, to change the namespace of subsequent bundles and
-bodies, @xref{Name spaces}.
+bodies.

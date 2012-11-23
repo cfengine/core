@@ -2005,14 +2005,13 @@ body package_method freebsd
 
 body package_method alpinelinux
 {
- package_changes => "individual";
+ package_changes => "bulk";
  package_list_command => "/sbin/apk info -v";
  package_list_name_regex    => "([^\s]+)-.*";
  package_list_version_regex => "[^\s]+-([^\s]+).*";
- package_name_regex    => "([^\s]+)-.*";
- package_version_regex => "[^\s]+-([^\s]+).*";
+ package_name_regex    => ".*";
  package_installed_regex => ".*";
- package_name_convention => "$(name)-$(version)";
+ package_name_convention => "$(name)";
  package_add_command => "/sbin/apk add";
  package_delete_command => "/sbin/apk del";
 }
@@ -2174,14 +2173,13 @@ freebsd::
  package_delete_command => "/usr/sbin/pkg_delete";
 
 alpinelinux::
- package_changes => "individual";
+ package_changes => "bulk";
  package_list_command => "/sbin/apk info -v";
  package_list_name_regex    => "([^\s]+)-.*";
  package_list_version_regex => "[^\s]+-([^\s]+).*";
- package_name_regex    => "([^\s]+)-.*";
- package_version_regex => "[^\s]+-([^\s]+).*";
+ package_name_regex    => ".*";
  package_installed_regex => ".*";
- package_name_convention => "$(name)-$(version)";
+ package_name_convention => "$(name)";
  package_add_command => "/sbin/apk add";
  package_delete_command => "/sbin/apk del";
 

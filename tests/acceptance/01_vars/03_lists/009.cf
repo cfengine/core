@@ -1,0 +1,77 @@
+#######################################################
+#
+# Test list iteration over cf_null special blank character, mid list
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+
+        "expected" string => "1
+2
+3";
+
+files:
+        "$(G.testfile).expected"
+            create => "true",
+            edit_line => init_insert("$(expected)"),
+            edit_defaults => init_empty;
+
+}
+
+bundle edit_line init_insert(str)
+{
+insert_lines:
+        "$(str)";
+}
+
+body edit_defaults init_empty
+{
+        empty_file_before_editing => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
+        "$(G.testfile).actual"
+            create => "true",
+            edit_line => test_list_null,
+            edit_defaults => init_empty;
+
+}
+
+bundle edit_line test_list_null
+{
+vars:
+
+   "lines" slist => { "1", "cf_null", "2", "3" };
+
+insert_lines:
+        "$(lines)"
+            whitespace_policy => { "exact_match" };
+}
+
+#######################################################
+
+bundle agent check
+{
+methods:
+        "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                              "$(G.testfile).expected",
+                                              "$(this.promise_filename)");
+}
+

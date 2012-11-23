@@ -113,6 +113,8 @@ void DeleteIterationContext(Rlist *deref)
     }
 }
 
+/*****************************************************************************/
+
 static int IncrementIterationContextInternal(Rlist *iterator, int level)
 {
     Rlist *state;
@@ -136,7 +138,7 @@ static int IncrementIterationContextInternal(Rlist *iterator, int level)
 
 /* Go ahead and increment */
 
-    CfDebug(" -> Incrementing (%s) from \"%s\"\n", cp->lval, (char *) iterator->state_ptr->item);
+    CfDebug(" -> Incrementing (%s - level %d) from \"%s\"\n", cp->lval, level, (char *) iterator->state_ptr->item);
 
     if (state->next == NULL)
     {
@@ -172,18 +174,19 @@ static int IncrementIterationContextInternal(Rlist *iterator, int level)
 
         CfDebug(" <- Incrementing wheel (%s) to \"%s\"\n", cp->lval, (char *) iterator->state_ptr->item);
 
-        while (iterator->state_ptr && strcmp(iterator->state_ptr->item, CF_NULL_VALUE) == 0)
+        while (NullIterators(iterator))
         {
             if (IncrementIterationContextInternal(iterator->next, level + 1))
             {
-                /* Not at end yet, so reset this wheel (next because we always start with cf_null now) */
+                // If we are at the end of this wheel, we need to shift to next wheel
                 iterator->state_ptr = cp->rval.item;
                 iterator->state_ptr = iterator->state_ptr->next;
                 return true;
             }
             else
             {
-                /* Reached last variable wheel - pass up */
+                // Otherwise increment this wheel
+                iterator->state_ptr = iterator->state_ptr->next;
                 break;
             }
         }
@@ -196,6 +199,8 @@ static int IncrementIterationContextInternal(Rlist *iterator, int level)
         return true;
     }
 }
+
+/*****************************************************************************/
 
 int IncrementIterationContext(Rlist *iterator)
 {

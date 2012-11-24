@@ -880,6 +880,31 @@ int cf_pclose_def(FILE *pfp, Attributes a, Promise *pp)
 
 /*******************************************************************/
 
+bool PipeToPid(pid_t *pid, FILE *pp)
+{
+    if (!ThreadLock(cft_count))
+    {
+        printf("could not lock!\n");
+        return false;
+    }
+
+    if (CHILDREN == NULL)       /* popen hasn't been called */
+    {
+        printf("children is NULL!\n");
+        ThreadUnlock(cft_count);
+        return false;
+    }
+
+    int fd = fileno(pp);
+    *pid = CHILDREN[fd];
+
+    ThreadUnlock(cft_count);
+
+    return true;
+}
+
+/*******************************************************************/
+
 static int CfSetuid(uid_t uid, gid_t gid)
 {
     struct passwd *pw;

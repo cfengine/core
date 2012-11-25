@@ -31,6 +31,9 @@
 #include "files_interfaces.h"
 #include "vars.h"
 #include "item_lib.h"
+#include "pipes.h"
+
+#include <inttypes.h>
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>
@@ -419,9 +422,9 @@ void GetNameInfo3()
     }
     else
     {
-        snprintf(workbuf, CF_MAXVARSIZE, "%d", tloc);
+        snprintf(workbuf, CF_MAXVARSIZE, "%jd", tloc);
         NewScalar("sys", "systime", workbuf, cf_int);
-        snprintf(workbuf, CF_MAXVARSIZE, "%d", tloc / 86400);
+        snprintf(workbuf, CF_MAXVARSIZE, "%jd", tloc / SECONDS_PER_DAY);
         NewScalar("sys", "sysday", workbuf, cf_int);
         i = GetUptimeMinutes(tloc);
         if (i != -1)

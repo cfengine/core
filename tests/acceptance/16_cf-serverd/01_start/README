@@ -5,4 +5,4 @@
 005 - mtime server copy, for non-localhost, no connect access, should not copy
 006 - mtime server copy, localhost, no file access promise, should not copy
 007 - digest server copy, localhost, newer destination, should copy
-008 -
+008 - mtime simple copy, localhost with encryption

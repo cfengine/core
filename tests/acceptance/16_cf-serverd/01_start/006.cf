@@ -1,6 +1,6 @@
 #######################################################
 #
-# Test cf-serverd related promises - newer destination, but checksum then, copy required
+# mtime server copy, localhost, no file access promise, should not copy
 #
 #######################################################
 
@@ -15,23 +15,38 @@ nova_edition::
 
 #######################################################
 
+bundle common c
+{
+vars:
+
+  "localhost_open"         string => "9876";
+  "localhost_deny_connect" string => "9877";
+  "lan_open"               string => "9878";
+  "lan_deny_connect"       string => "9879";
+  "localhost_noaccess"     string => "9880";
+}
+
+#######################################################
+
 bundle agent init
 {
-processes:
-
-   "cf-serverd"  restart_class => "start_me_up";
-
 files:
 
-  "/tmp/sourcefile"
+  "/tmp/destination_file"
+      delete => clean;
+
+  "/tmp/source_file"
        create => "true",
-    edit_line => init_src_file;
+    edit_line => init_src_file,
+edit_defaults => empty;
+}
 
-commands:
+#######################################################
 
- # start_me_up::
-
-     "$(G.cwd)/../../src/cf-serverd -f $(G.cwd)/16_cf-serverd/01_start/001.cf";
+body edit_defaults empty
+{
+empty_file_before_editing => "true";
+edit_backup => "false";
 }
 
 #######################################################
@@ -39,16 +54,25 @@ commands:
 bundle edit_line init_src_file
 {
 insert_lines:
-   "This is the source file to copy $(sys.date) - always fresh";
+   "This is the source file to copy $(sys.date) - always fresh";   
+}
+
+#######################################################
+
+body delete clean
+{
+rmdirs => "true";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
+files:
 
-  # nothing
+    "/tmp/destination_file" 
+                  copy_from => copy_src_file,
+                    classes => if_repaired("repaired"); 
 }
 
 #########################################################
@@ -56,10 +80,12 @@ vars:
 body copy_from copy_src_file
 
 {
-source      => "/tmp/sourcefile";
-servers     => { "localhost" };
-compare     => "digest";
+source      => "/tmp/source_file";
+servers     => { "127.0.0.1" };
+compare     => "mtime";
 copy_backup => "false";
+
+portnumber => "$(c.localhost_open)";
 
 #encrypt     => "true";
 #verify      => "true";
@@ -73,54 +99,12 @@ copy_backup => "false";
 
 bundle agent check
 {
-files:
-
-    "/tmp/destination_file" copy_from => copy_src_file,
-                              classes => if_repaired("repaired");
-
-processes:
-
-   # Cleanup serverd
-
-   "cf-serverd -f"  signals => { "kill" };
-
 reports:
 
-    repaired::
-        "$(this.promise_filename) Pass";
     !repaired::
+        "$(this.promise_filename) Pass";
+    repaired::
         "$(this.promise_filename) FAIL";
-}
-
-
-#########################################################
-# Server config
-#########################################################
-
-body server control 
-
-{
-
-# Access denied
-
-denyconnects          => { "127.0.0.1" , "::1" };
-
-#allowconnects         => { "127.0.0.1" , "::1" };
-#allowallconnects      => { "127.0.0.1" , "::1" };
-#trustkeysfrom         => { "127.0.0.1" , "::1" };
-# allowusers
-}
-
-#########################################################
-
-bundle server access_rules()
-
-{
-access:
-
-  "$(G.cwd)"            admit   => { "127.0.0.1", "::1" };
-  "/tmp/sourcefile"     admit   => { "127.0.0.1", "::1" };
-
 }
 
 #########################################################

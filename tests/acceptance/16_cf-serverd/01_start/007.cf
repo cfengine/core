@@ -37,8 +37,16 @@ files:
 
   "/tmp/source_file"
        create => "true",
-    edit_line => init_src_file;
+    edit_line => init_src_file,
+edit_defaults => empty;
+}
 
+#######################################################
+
+body edit_defaults empty
+{
+empty_file_before_editing => "true";
+edit_backup => "false";
 }
 
 #######################################################

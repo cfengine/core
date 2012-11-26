@@ -692,8 +692,8 @@ void ReCheckAllConstraints(Promise *pp)
         {
             if ((strcmp(prid->filename, pp->audit->filename) != 0) || (prid->line_number != pp->offset.line))
             {
-                CfOut(cf_error, "", " !! Duplicate promise handle -- previously used in file %s near line %d",
-                      prid->filename, prid->line_number);
+                CfOut(cf_error, "", " !! Duplicate promise handle '%s' -- previously used in file %s near line %d",
+                      handle, prid->filename, prid->line_number);
                 PromiseRef(cf_error, pp);
             }
         }

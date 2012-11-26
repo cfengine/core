@@ -1,0 +1,8 @@
+001 - mtime simple copy, localhost 
+002 - mtime, newer destination, localhost, should not copy
+003 - mtime server copy, localhost, explicit deny connect access, should not copy
+004 - mtime server copy, for non-localhost, should copy
+005 - mtime server copy, for non-localhost, no connect access, should not copy
+006 - mtime server copy, localhost, no file access promise, should not copy
+007 - digest server copy, localhost, newer destination, should copy
+008 - mtime simple copy, localhost with encryption

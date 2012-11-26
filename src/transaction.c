@@ -112,10 +112,14 @@ static void LocksCleanup(void)
     }
 }
 
+/*****************************************************************************/
+
 static void RegisterLockCleanup(void)
 {
     RegisterAtExitFunction(&LocksCleanup);
 }
+
+/*****************************************************************************/
 
 CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promise *pp, int ignoreProcesses)
 {

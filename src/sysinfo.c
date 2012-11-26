@@ -870,6 +870,7 @@ void OSClasses(void)
     if (cfstat("/etc/Eos-release", &statbuf) != -1)
     {
         EOS_Version();
+        SetFlavour("Eos");
     }
 
     if (cfstat("/etc/issue", &statbuf) != -1)
@@ -1916,20 +1917,22 @@ static int EOS_Version()
 
  // e.g. Arista Networks EOS 4.10.2
  
- if (ReadLine("/etc/EOS-release", buffer, sizeof(buffer)))
+    if (ReadLine("/etc/EOS-release", buffer, sizeof(buffer)))
     {
-    if (strstr(buffer, "EOS"))
-       {
-       char version[CF_MAXVARSIZE], class[CF_MAXVARSIZE];
-       HardClass("eos");
-       HardClass("arista");
-       version[0] = '\0';
-       sscanf("%*s %*s %*s %s", version);
-       CanonifyNameInPlace(version);
-       snprintf(class, CF_MAXVARSIZE, "eos_%s", version);
-       HardClass(class);
-       }
+        if (strstr(buffer, "EOS"))
+        {
+            char version[CF_MAXVARSIZE], class[CF_MAXVARSIZE];
+            HardClass("eos");
+            HardClass("arista");
+            version[0] = '\0';
+            sscanf("%*s %*s %*s %s", version);
+            CanonifyNameInPlace(version);
+            snprintf(class, CF_MAXVARSIZE, "eos_%s", version);
+            HardClass(class);
+        }
     }
+    
+    return 0;
 }
 
 /******************************************************************/
@@ -1940,21 +1943,24 @@ static int MiscOS()
 
  // e.g. BIG-IP 10.1.0 Build 3341.1084
  
- if (ReadLine("/etc/issue", buffer, sizeof(buffer)))
+    if (ReadLine("/etc/issue", buffer, sizeof(buffer)))
     {
-    if (strstr(buffer, "BIG-IP"))
+       if (strstr(buffer, "BIG-IP"))
        {
-       char version[CF_MAXVARSIZE], build[CF_MAXVARSIZE], class[CF_MAXVARSIZE];
-       HardClass("big_ip");
-       sscanf("%*s %s %*s %s", version, build);
-       CanonifyNameInPlace(version);
-       CanonifyNameInPlace(build);
-       snprintf(class, CF_MAXVARSIZE, "big_ip_%s", version);
-       HardClass(class);
-       snprintf(class, CF_MAXVARSIZE, "big_ip_%s_%s", version, build);
-       HardClass(class);
+           char version[CF_MAXVARSIZE], build[CF_MAXVARSIZE], class[CF_MAXVARSIZE];
+           HardClass("big_ip");
+           sscanf("%*s %s %*s %s", version, build);
+           CanonifyNameInPlace(version);
+           CanonifyNameInPlace(build);
+           snprintf(class, CF_MAXVARSIZE, "big_ip_%s", version);
+           HardClass(class);
+           snprintf(class, CF_MAXVARSIZE, "big_ip_%s_%s", version, build);
+           HardClass(class);
+           SetFlavour("BIG-IP");
        }
     }
+    
+    return 0;
 }
 
 /******************************************************************/

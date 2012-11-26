@@ -39,7 +39,7 @@ Scope *GetScope(const char *scope)
 {
     const char *name = scope;
 
-    if (strncmp(scope, "default:", strlen("default:")) == 0)
+    if (strncmp(scope, "default:", strlen("default:")) == 0)  // CF_NS == ':'
        {
        name = scope + strlen("default:");
        }
@@ -147,10 +147,10 @@ void AugmentScope(char *scope, char *namespace, Rlist *lvals, Rlist *rvals)
             
             GetNaked(naked, rpr->item);
 
-            if (IsQualifiedVariable(naked) && strchr(naked, ':') == NULL)
-               {
-               snprintf(qnaked, CF_MAXVARSIZE, "%s:%s", namespace, naked);
-               }
+            if (IsQualifiedVariable(naked) && strchr(naked, CF_NS) == NULL)
+            {
+                snprintf(qnaked, CF_MAXVARSIZE, "%s%c%s", namespace, CF_NS, naked);
+            }
             
             vtype = GetVariable(scope, qnaked, &retval); 
 
@@ -395,7 +395,7 @@ void SplitScopeName(const char *scope, char ns_out[CF_MAXVARSIZE], char bundle_o
 {
     assert(scope);
 
-    char *split_point = strstr(scope, ":");
+    char *split_point = strstr(scope, CF_NS);
     if (split_point)
     {
         strncpy(ns_out, scope, split_point - scope);
@@ -407,13 +407,15 @@ void SplitScopeName(const char *scope, char ns_out[CF_MAXVARSIZE], char bundle_o
     }
 }
 
+/*******************************************************************/
+
 void JoinScopeName(const char *ns, const char *bundle, char scope_out[CF_MAXVARSIZE])
 {
     assert(bundle);
 
     if (ns)
     {
-        snprintf(scope_out, CF_MAXVARSIZE, "%s:%s", ns, bundle);
+        snprintf(scope_out, CF_MAXVARSIZE, "%s%c%s", ns, CF_NS, bundle);
     }
     else
     {

@@ -135,6 +135,7 @@
 
 #define CF_DONE 't'
 #define CF_MORE 'm'
+#define CF_NS ':'   // namespace character separator
 
 /*****************************************************************************/
 

@@ -61,6 +61,8 @@ static int Linux_Mandriva_Version(void);
 static int Linux_Mandriva_Version_Real(char *filename, char *relstring, char *vendor);
 static int VM_Version(void);
 static int Xen_Domain(void);
+static int EOS_Version(void);
+static int MiscOS(void);
 
 #ifdef XEN_CPUID_SUPPORT
 static void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx);
@@ -865,6 +867,16 @@ void OSClasses(void)
         Xen_Domain();
     }
 
+    if (cfstat("/etc/Eos-release", &statbuf) != -1)
+    {
+        EOS_Version();
+    }
+
+    if (cfstat("/etc/issue", &statbuf) != -1)
+    {
+        MiscOS();
+    }
+    
 #ifdef XEN_CPUID_SUPPORT
     else if (Xen_Hv_Check())
     {
@@ -1894,6 +1906,55 @@ static int Linux_Mandriva_Version_Real(char *filename, char *relstring, char *ve
     }
 
     return 0;
+}
+
+/******************************************************************/
+
+static int EOS_Version()
+
+{ char buffer[CF_BUFSIZE];
+
+ // e.g. Arista Networks EOS 4.10.2
+ 
+ if (ReadLine("/etc/EOS-release", buffer, sizeof(buffer)))
+    {
+    if (strstr(buffer, "EOS"))
+       {
+       char version[CF_MAXVARSIZE], class[CF_MAXVARSIZE];
+       HardClass("eos");
+       HardClass("arista");
+       version[0] = '\0';
+       sscanf("%*s %*s %*s %s", version);
+       CanonifyNameInPlace(version);
+       snprintf(class, CF_MAXVARSIZE, "eos_%s", version);
+       HardClass(class);
+       }
+    }
+}
+
+/******************************************************************/
+
+static int MiscOS()
+
+{ char buffer[CF_BUFSIZE];
+
+ // e.g. BIG-IP 10.1.0 Build 3341.1084
+ 
+ if (ReadLine("/etc/issue", buffer, sizeof(buffer)))
+    {
+    if (strstr(buffer, "BIG-IP"))
+       {
+       char version[CF_MAXVARSIZE], build[CF_MAXVARSIZE], class[CF_MAXVARSIZE];
+       HardClass("big_ip");
+       sscanf("%*s %s %*s %s", version, build);
+       CanonifyNameInPlace(version);
+       CanonifyNameInPlace(build);
+       snprintf(class, CF_MAXVARSIZE, "big_ip_%s", version);
+       HardClass(class);
+       snprintf(class, CF_MAXVARSIZE, "big_ip_%s_%s", version, build);
+       HardClass(class);
+       }
+    }
 }
 
 /******************************************************************/

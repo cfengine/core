@@ -26,7 +26,7 @@ vars:
                      "localhost_deny_connect.srv"
                      };
 
-   "cwd" string => "/home/a10004/LapTop/cfengine/core/tests/acceptance";
+    "cwd" string => execresult("/bin/pwd 2>/dev/null || /usr/bin/pwd", "useshell");
 
 commands:
 

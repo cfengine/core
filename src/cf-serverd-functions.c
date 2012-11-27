@@ -214,7 +214,7 @@ void StartServer(Policy *policy, GenericAgentConfig config, const ReportContext 
     fd_set rset;
     struct timeval timeout;
     int ret_val;
-    Promise *pp = NewPromise("server_cfengine", "the server daemon");
+    Promise *pp = NewPromise("server_cfengine", VINPUTFILE);
     Attributes dummyattr = { {0} };
     CfLock thislock;
     time_t starttime = time(NULL), last_collect = 0;

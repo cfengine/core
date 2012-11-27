@@ -1,0 +1,43 @@
+
+body common control
+{
+bundlesequence => { "access_rules" };
+}
+
+#######################################################
+
+bundle common c
+{
+vars:
+
+  "localhost_open"         string => "9876";
+  "localhost_deny_connect" string => "9877";
+  "lan_open"               string => "9878";
+  "lan_deny_connect"       string => "9879";
+  "localhost_noaccess"     string => "9880";
+}
+
+#########################################################
+# Server config
+#########################################################
+
+body server control 
+
+{
+port => "$(c.localhost_open)";
+
+allowconnects         => { "127.0.0.1" , "::1" };
+allowallconnects      => { "127.0.0.1" , "::1" };
+trustkeysfrom         => { "127.0.0.1" , "::1" };
+}
+
+#########################################################
+
+bundle server access_rules()
+
+{
+access:
+
+  "/tmp/source_file"     admit   => { "127.0.0.1", "::1" };
+}
+

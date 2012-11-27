@@ -119,6 +119,8 @@ curdir() {
 
 DEFAGENT=$(dirname $(dirname $(curdir)))/src/cf-agent
 AGENT=${AGENT:-${DEFAGENT}}
+CFKEY=$(dirname $(dirname $(curdir)))/src/cf-key
+CFSERVER=$(dirname $(dirname $(curdir)))/src/cf-serverd
 
 usage() {
   echo "testall [-q] [--gainroot=<command>] [--agent=<agent>] [--no-nova] [--staging] [--no-network] [<test> <test>...]"
@@ -187,6 +189,7 @@ CFENGINE_TEST_OVERRIDE_WORKDIR=$WORKDIR
 TEMP=$WORKDIR/tmp
 export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP
 
+$CFKEY
 $AGENT $VERBOSE -Kf \"$TEST\" -D AUTO,DEBUG 2>&1
 " > $WORKDIR/runtest
     chmod +x $WORKDIR/runtest
@@ -341,6 +344,22 @@ else
   exec 7>/dev/null
 fi
 
+#
+# To do client server testing, we need to start some servers on different ports
+# This cannot be done inside the test framework, or we will lose all the state/ppkeys etc
+#
+
+echo ----------------------------------------------------------------------
+echo Preparing servers for comms testing - this can take a while...
+echo ----------------------------------------------------------------------
+
+SERVER_PREP=$(dirname $(dirname $(curdir)))/tests/acceptance/16_cf-serverd/01_start
+$AGENT -f $SERVER_PREP/prepare_tests.srv
+
+#
+# Now run the tests
+#
+
 TESTS_COUNT=$(echo $TESTS | wc -w)
 START_TIME=$(unix_seconds)
 
@@ -350,6 +369,7 @@ START_TIME=$(unix_seconds)
   echo Total tests: $TESTS_COUNT
   echo
 ) | tee $LOG | tee $SUMMARY >&7
+
 
 ( echo \<\?xml version=\"1.0\" encoding=\"UTF-8\"\?\>
   echo \<testsuite name=\"$(curdir)\"
@@ -394,8 +414,15 @@ END_TIME=$(unix_seconds)
 
   echo \<\/testsuite\> >> $XML
 
+echo ----------------------------------------------------------------------
+echo Cleaning up listening servers
+
+$AGENT -f $SERVER_PREP/cleanup_tests.srv
+echo ----------------------------------------------------------------------
+
 if [ "$FAILED_TESTS" -ne 0 ] || [ "$FAILED_TO_CRASH_TESTS" -ne 0 ]; then
   exit 1
 else
   exit 0
 fi
+

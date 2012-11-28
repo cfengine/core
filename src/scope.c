@@ -399,7 +399,7 @@ void SplitScopeName(const char *scope, char ns_out[CF_MAXVARSIZE], char bundle_o
 {
     assert(scope);
 
-    char *split_point = strstr(scope, CF_NS);
+    char *split_point = strchr(scope, CF_NS);
     if (split_point)
     {
         strncpy(ns_out, scope, split_point - scope);

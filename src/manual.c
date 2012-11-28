@@ -439,14 +439,17 @@ static void TexinfoBodyParts(const char *source_dir, FILE *fout, const BodySynta
         return;
     }
 
-    fprintf(fout, "@menu\n");
-
-    for (i = 0; bs[i].lval != NULL; ++i)
+    if (bs[0].lval != NULL)
     {
-        fprintf(fout, "* %s in %s::\n", bs[i].lval, context);
-    }
+        fprintf(fout, "@menu\n");
 
-    fprintf(fout, "@end menu\n");
+        for (i = 0; bs[i].lval != NULL; ++i)
+        {
+            fprintf(fout, "* %s in %s::\n", bs[i].lval, context);
+        }
+
+        fprintf(fout, "@end menu\n");
+    }
 
     for (i = 0; bs[i].lval != NULL; i++)
     {

@@ -1,12 +1,12 @@
 #######################################################
 #
-# mtime server copy, for non-localhost, no connect access, should not copy
+# mtime server copy, localhost, no file access promise, should not copy
 #
 #######################################################
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
+  inputs => { "../../../default.cf.sub" };
   bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
@@ -54,7 +54,7 @@ edit_backup => "false";
 bundle edit_line init_src_file
 {
 insert_lines:
-   "This is the source file to copy $(sys.date) - always fresh";
+   "This is the source file to copy $(sys.date) - always fresh";   
 }
 
 #######################################################
@@ -81,18 +81,18 @@ body copy_from copy_src_file
 
 {
 source      => "/tmp/source_file";
-servers     => { @(sys.ip_addresses) }; # localhost is always granted
+servers     => { "127.0.0.1" };
 compare     => "mtime";
 copy_backup => "false";
 
-portnumber => "$(c.lan_deny_connect)";
+portnumber => "$(c.localhost_open)";
 
 #encrypt     => "true";
 #verify      => "true";
 #purge       => "false";
 #type_check  => "true";
 #force_ipv4  => "true";
-trustkey => "true";
+#trustkey => "true";
 }
 
 #######################################################
@@ -105,33 +105,6 @@ reports:
         "$(this.promise_filename) Pass";
     repaired::
         "$(this.promise_filename) FAIL";
-}
-
-
-#########################################################
-# Server config
-#########################################################
-
-#body server control 
-
-#{
-# Access denied unless explicitly allowed
-
-#allowconnects         => { @(sys.ip_addresses)  };
-#allowallconnects      => { @(sys.ip_addresses) };
-#trustkeysfrom         => { @(sys.ip_addresses) };
-# allowusers
-#}
-
-#########################################################
-
-bundle server access_rules()
-
-{
-access:
-
-  "/tmp/sourcefile"     admit   => { @(sys.ip_addresses) };
-
 }
 
 #########################################################

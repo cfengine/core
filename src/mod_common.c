@@ -294,6 +294,7 @@ const BodySyntax CFEX_CONTROLBODY[] = /* enum cfexcontrol */
     {"executorfacility", cf_opts, CF_FACILITY, "Menu option for syslog facility level", "LOG_USER"},
     {"exec_command", cf_str, CF_ABSPATHRANGE,
      "The full path and command to the executable run by default (overriding builtin)"},
+    {"agent_expireafter", cf_int, "0,10080", "Maximum agent runtime (in minutes)", "10080"},
     {NULL, cf_notype, NULL, NULL}
 };
 

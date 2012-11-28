@@ -1,12 +1,12 @@
 #######################################################
 #
-# mtime server copy, localhost, explicit deny connect access, should not copy
+# Test cf-serverd related promises, mtime simple copy localhost
 #
 #######################################################
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
+  inputs => { "../../../default.cf.sub" };
   bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
@@ -71,8 +71,7 @@ bundle agent test
 {
 files:
 
-    "/tmp/destination_file" copy_from => copy_src_file,
-                    classes => if_repaired("repaired"); 
+    "/tmp/destination_file" copy_from => copy_src_file;
  
 }
 
@@ -86,7 +85,7 @@ servers     => { "127.0.0.1" };
 compare     => "mtime";
 copy_backup => "false";
 
-portnumber => "$(c.localhost_deny_connect)";
+portnumber => "$(c.localhost_open)";
 
 #encrypt     => "true";
 #verify      => "true";
@@ -100,17 +99,8 @@ trustkey => "true";
 
 bundle agent check
 {
-reports:
+methods:
 
-    !repaired::
-        "$(this.promise_filename) Pass";
-    repaired::
-        "$(this.promise_filename) FAIL";
+  "any" usebundle => default_check_diff("/tmp/source_file","/tmp/destination_file","$(this.promise_filename)");
 }
 
-#######################################################
-
-body classes if_repaired(x)
-{
-promise_repaired => { "$(x)" };
-}

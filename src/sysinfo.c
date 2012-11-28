@@ -2130,8 +2130,13 @@ const char *GetWorkDir(void)
 
 static void GetCPUInfo()
 {
+#if defined(MINGW) || defined(NT)
+    CfOut(cf_verbose, "", "!! cpu count not implemented on Windows platform\n");
+    return;
+#else
     char buf[CF_SMALLBUF] = "1_cpu";
     int count = 0;
+#endif
 
 // http://preview.tinyurl.com/c9l2sh - StackOverflow on cross-platform CPU counting
 #if defined(HAVE_SYSCONF) && defined(_SC_NPROCESSORS_ONLN)
@@ -2149,14 +2154,6 @@ static void GetCPUInfo()
     {
         CfOut(cf_error, "sysctl", "!! failed to get cpu count: %s\n", strerror(errno));
     }
-#endif
-
-#if defined(MINGW) || defined(NT)
-//    // Windows platform?
-//    SYSTEM_INFO sysinfo;
-//
-//    GetSystemInfo(&sysinfo);
-//    count = (int)sysinfo.dwNumberOfProcessors;
 #endif
 
 #ifdef HAVE_SYS_MPCTL_H

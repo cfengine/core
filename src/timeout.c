@@ -185,3 +185,40 @@ static void AddTimeClass(time_t time)
     snprintf(buf, CF_BUFSIZE, "Min%02d_%02d", interval_start, interval_end);
     HardClass(buf);
 }
+
+/*********************************************************************/
+
+bool IsReadReady(int fd, int timeout_sec)
+{
+    fd_set  rset;
+    FD_ZERO(&rset);
+    FD_SET(fd, &rset);
+
+    struct timeval tv = {
+        .tv_sec = timeout_sec,
+        .tv_usec = 0,
+    };
+
+    int ret = select(fd + 1, &rset, NULL, NULL, &tv);
+
+    if(ret < 0)
+    {
+        CfOut(cf_error, "select", "!! IsReadReady: Failed checking for data");
+        return false;
+    }
+
+    if(FD_ISSET(fd, &rset))
+    {
+        return true;
+    }
+
+    if(ret == 0)  // timeout
+    {
+        return false;
+    }
+
+    // can we get here?
+    CfOut(cf_error, "select", "!! IsReadReady: Unknown outcome (ret > 0 but our only fd is not set)");
+
+    return false;
+}

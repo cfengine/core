@@ -66,6 +66,8 @@
 #  define SIZEOF_IFREQ(x) sizeof(struct ifreq)
 # endif
 
+static bool IsProcessRunning(pid_t pid);
+
 static void FindV6InterfacesInfo(void);
 
 static bool IgnoreJailInterface(int ifaceidx, struct sockaddr_in *inaddr);
@@ -100,6 +102,61 @@ int GracefulTerminate(pid_t pid)
     }
 
     return (res == 0);
+}
+
+/*************************************************************/
+
+void ProcessSignalTerminate(pid_t pid)
+{
+    if(!IsProcessRunning(pid))
+    {
+        return;
+    }
+
+
+    if(kill(pid, SIGINT) == -1)
+    {
+        CfOut(cf_error, "kill", "!! Could not send SIGINT to pid %" PRIdMAX , (intmax_t)pid);
+    }
+
+    sleep(1);
+
+
+    if(kill(pid, SIGTERM) == -1)
+    {
+        CfOut(cf_error, "kill", "!! Could not send SIGTERM to pid %" PRIdMAX , (intmax_t)pid);
+    }
+
+    sleep(5);
+
+
+    if(kill(pid, SIGKILL) == -1)
+    {
+        CfOut(cf_error, "kill", "!! Could not send SIGKILL to pid %" PRIdMAX , (intmax_t)pid);
+    }
+
+    sleep(1);
+}
+
+/*************************************************************/
+
+static bool IsProcessRunning(pid_t pid)
+{
+    int res = kill(pid, 0);
+
+    if(res == 0)
+    {
+        return true;
+    }
+
+    if(res == -1 && errno == ESRCH)
+    {
+        return false;
+    }
+
+    CfOut(cf_error, "kill", "!! Failed checking for process existence");
+
+    return false;
 }
 
 /*************************************************************/

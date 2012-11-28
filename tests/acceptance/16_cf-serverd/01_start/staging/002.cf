@@ -1,12 +1,12 @@
 #######################################################
 #
-# Test cf-serverd related promises, mtime simple copy localhost
+# mtime, newer destination, localhost, should not copy
 #
 #######################################################
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
+  inputs => { "../../../default.cf.sub" };
   bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
@@ -32,10 +32,12 @@ bundle agent init
 {
 files:
 
-  "/tmp/destination_file"
-      delete => clean;
-
   "/tmp/source_file"
+       create => "true",
+    edit_line => init_src_file;
+
+  "/tmp/destination_file"
+      comment => "Newer destintion file",
        create => "true",
     edit_line => init_src_file,
 edit_defaults => empty;
@@ -47,13 +49,6 @@ body edit_defaults empty
 {
 empty_file_before_editing => "true";
 edit_backup => "false";
-}
-
-#######################################################
-
-body delete clean
-{
-rmdirs => "true";
 }
 
 #######################################################
@@ -71,8 +66,9 @@ bundle agent test
 {
 files:
 
-    "/tmp/destination_file" copy_from => copy_src_file;
- 
+    "/tmp/destination_file" 
+                  copy_from => copy_src_file,
+                    classes => if_repaired("repaired"); 
 }
 
 #########################################################
@@ -99,8 +95,18 @@ trustkey => "true";
 
 bundle agent check
 {
-methods:
+reports:
 
-  "any" usebundle => default_check_diff("/tmp/source_file","/tmp/destination_file","$(this.promise_filename)");
+    !repaired::
+        "$(this.promise_filename) Pass";
+    repaired::
+        "$(this.promise_filename) FAIL";
+
 }
 
+#######################################################
+
+body classes if_repaired(x)
+{
+promise_repaired => { "$(x)" };
+}

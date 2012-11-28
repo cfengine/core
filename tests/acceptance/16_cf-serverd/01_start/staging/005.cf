@@ -1,12 +1,12 @@
 #######################################################
 #
-# Test cf-serverd related promises, mtime simple copy localhost
+# mtime server copy, for non-localhost, no connect access, should not copy
 #
 #######################################################
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
+  inputs => { "../../../default.cf.sub" };
   bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
@@ -51,13 +51,6 @@ edit_backup => "false";
 
 #######################################################
 
-body delete clean
-{
-rmdirs => "true";
-}
-
-#######################################################
-
 bundle edit_line init_src_file
 {
 insert_lines:
@@ -66,13 +59,20 @@ insert_lines:
 
 #######################################################
 
-bundle agent test 
+body delete clean
+{
+rmdirs => "true";
+}
 
+#######################################################
+
+bundle agent test
 {
 files:
 
-    "/tmp/destination_file" copy_from => copy_src_file;
- 
+    "/tmp/destination_file" 
+                  copy_from => copy_src_file,
+                    classes => if_repaired("repaired"); 
 }
 
 #########################################################
@@ -81,14 +81,13 @@ body copy_from copy_src_file
 
 {
 source      => "/tmp/source_file";
-servers     => { "127.0.0.1" };
+servers     => { @(sys.ip_addresses) }; # localhost is always granted
 compare     => "mtime";
 copy_backup => "false";
 
-portnumber => "$(c.localhost_open)";
+portnumber => "$(c.lan_deny_connect)";
 
-encrypt     => "true";
-
+#encrypt     => "true";
 #verify      => "true";
 #purge       => "false";
 #type_check  => "true";
@@ -100,8 +99,44 @@ trustkey => "true";
 
 bundle agent check
 {
-methods:
+reports:
 
-  "any" usebundle => default_check_diff("/tmp/source_file","/tmp/destination_file","$(this.promise_filename)");
+    !repaired::
+        "$(this.promise_filename) Pass";
+    repaired::
+        "$(this.promise_filename) FAIL";
 }
 
+
+#########################################################
+# Server config
+#########################################################
+
+#body server control 
+
+#{
+# Access denied unless explicitly allowed
+
+#allowconnects         => { @(sys.ip_addresses)  };
+#allowallconnects      => { @(sys.ip_addresses) };
+#trustkeysfrom         => { @(sys.ip_addresses) };
+# allowusers
+#}
+
+#########################################################
+
+bundle server access_rules()
+
+{
+access:
+
+  "/tmp/sourcefile"     admit   => { @(sys.ip_addresses) };
+
+}
+
+#########################################################
+
+body classes if_repaired(x)
+{
+promise_repaired => { "$(x)" };
+}

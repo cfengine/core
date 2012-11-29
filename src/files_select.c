@@ -285,7 +285,7 @@ static int SelectOwnerMatch(char *path, struct stat *lstatptr, Rlist *crit)
 
 #ifndef MINGW                   // no uids on Windows
     char buffer[CF_SMALLBUF];
-    snprintf(buffer, CF_BUFSIZE, "%jd", (uintmax_t) lstatptr->st_uid);
+    snprintf(buffer, CF_SMALLBUF, "%jd", (uintmax_t) lstatptr->st_uid);
     PrependAlphaList(&leafattrib, buffer);
 #endif /* MINGW */
 

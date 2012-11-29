@@ -2372,7 +2372,7 @@ static int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilena
 
     if (strlen(ReadLastNode(filename)) > CF_MAXLINKSIZE)
     {
-        snprintf(sendbuffer, CF_BUFSIZE * 2, "BAD: Filename suspiciously long [%s]\n", filename);
+        snprintf(sendbuffer, CF_BUFSIZE, "BAD: Filename suspiciously long [%s]\n", filename);
         CfOut(cf_error, "", "%s", sendbuffer);
         SendTransaction(conn->sd_reply, sendbuffer, 0, CF_DONE);
         return -1;

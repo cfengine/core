@@ -27,6 +27,10 @@
 #include "cf3.defs.h"
 #include "lastseen.h"
 #include "files_interfaces.h"
+#include "files_hashes.h"
+#include "hashes.h"
+#include "cfstream.h"
+#include "pipes.h"
 
 static void MD5Random(unsigned char digest[EVP_MAX_MD_SIZE + 1]);
 static void RandomSeed(void);

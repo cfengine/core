@@ -29,8 +29,14 @@
 #include "promises.h"
 #include "dir.h"
 #include "files_names.h"
+#include "files_operators.h"
+#include "files_hashes.h"
+#include "files_repository.h"
 #include "item_lib.h"
 #include "vars.h"
+#include "matching.h"
+#include "cfstream.h"
+#include "client_code.h"
 
 static void PurgeLocalFiles(Item *filelist, char *directory, Attributes attr, Promise *pp, const ReportContext *report_context);
 static void CfCopyFile(char *sourcefile, char *destfile, struct stat sourcestatbuf, Attributes attr, Promise *pp, const ReportContext *report_context);
@@ -945,14 +951,21 @@ int cf_readlink(char *sourcefile, char *linkbuf, int buffsize, Attributes attr, 
 
 /*********************************************************************/
 
-int CfReadLine(char *buff, int size, FILE *fp)
+int CfReadLine(char *buff, size_t size, FILE *fp)
 {
     char ch;
 
     buff[0] = '\0';
     buff[size - 1] = '\0';      /* mark end of buffer */
 
-    if (fgets(buff, size, fp) == NULL)
+    //error checking
+    if (!fp || ferror(fp))
+    {
+        CfOut(cf_error, "", " !! NULL or corrupt inputs to CfReadLine");
+        FatalError ("CfReadLine");
+    }
+
+	if (fgets(buff, size, fp) == NULL)
     {
         *buff = '\0';           /* EOF */
         return false;

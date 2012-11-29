@@ -45,6 +45,8 @@
 #include "expand.h"
 #include "scope.h"
 #include "files_interfaces.h"
+#include "attributes.h"
+#include "cfstream.h"
 
 #ifdef HAVE_PCRE_H
 # include <pcre.h>
@@ -112,7 +114,6 @@ static bool SanityCheckTextDeletions(Attributes a, Promise *pp);
 static bool SanityCheckTextSet(Attributes a, Promise *pp);
 static bool SanityCheckTextInsertions(Attributes a, Promise *pp);
 
-static bool XmlDocsEqualContent(xmlDocPtr doc1, xmlDocPtr doc2, int warnings, Attributes a, Promise *pp);
 static bool XmlDocsEqualMem(xmlDocPtr doc1, xmlDocPtr doc2, int warnings, Attributes a, Promise *pp);
 static bool XmlNodesCompare(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
 static bool XmlNodesCompareAttributes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
@@ -1740,42 +1741,6 @@ int XmlCompareToFile(xmlDocPtr doc, char *file, Attributes a, Promise *pp)
     return true;
 }
 
-/*********************************************************************/
-
-static bool XmlDocsEqualContent(xmlDocPtr doc1, xmlDocPtr doc2, int warnings, Attributes a, Promise *pp)
-{
-    xmlNodePtr root1 = NULL;
-    xmlNodePtr root2 = NULL;
-    xmlNodePtr copynode1 = NULL;
-    xmlNodePtr copynode2 = NULL;
-    int equal = true;
-
-    if (!doc1 && !doc2)
-    {
-        return true;
-    }
-
-    if (!doc1 || !doc2)
-    {
-        return false;
-    }
-
-    root1 = xmlDocGetRootElement(doc1);
-    root2 = xmlDocGetRootElement(doc2);
-
-    copynode1 = xmlCopyNode(root1, 1);
-    copynode2 = xmlCopyNode(root2, 1);
-
-    if (!XmlNodesCompare(copynode1, copynode2, a, pp))
-    {
-        equal = false;
-    }
-
-    xmlFree(copynode1);
-    xmlFree(copynode2);
-
-    return equal;
-}
 /*********************************************************************/
 
 static bool XmlDocsEqualMem(xmlDocPtr doc1, xmlDocPtr doc2, int warnings, Attributes a, Promise *pp)

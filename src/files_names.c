@@ -32,7 +32,7 @@
 #include "item_lib.h"
 #include "assert.h"
 #include "files_interfaces.h"
-
+#include "cfstream.h"
 
 /*********************************************************************/
 
@@ -224,6 +224,9 @@ int JoinSilent(char *path, const char *leaf, int bufsize)
 
     if ((strlen(path) + len) > (bufsize - CF_BUFFERMARGIN))
     {
+        strncat(path, leaf, (bufsize - CF_BUFFERMARGIN));
+        EndJoin(path, "...TRUNCATED", bufsize);
+
         return false;
     }
 

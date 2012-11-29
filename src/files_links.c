@@ -28,7 +28,9 @@
 #include "promises.h"
 #include "files_names.h"
 #include "files_interfaces.h"
+#include "files_operators.h"
 #include "transaction.h"
+#include "cfstream.h"
 
 #define CF_MAXLINKLEVEL 4
 

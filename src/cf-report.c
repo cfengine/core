@@ -32,11 +32,15 @@
 #include "lastseen.h"
 #include "granules.h"
 #include "files_names.h"
+#include "files_hashes.h"
 #include "constraints.h"
 #include "policy.h"
 #include "syntax.h"
 #include "item_lib.h"
 #include "conversion.h"
+#include "unix.h"
+#include "cfstream.h"
+#include "communication.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"

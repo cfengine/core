@@ -28,9 +28,7 @@ enum cfsbundle Type2Cfs(char *name);
 enum representations String2Representation(char *s);
 int GetBoolean(const char *val);
 long Str2Int(const char *s);
-long TimeCounter2Int(const char *s);
 long TimeAbs2Int(char *s);
-mode_t Str2Mode(char *s);
 double Str2Double(const char *s);
 void IntRange2Int(char *intrange, long *min, long *max, const Promise *pp);
 int Month2Int(char *string);
@@ -53,6 +51,13 @@ const char *DataTypeShortToType(char *short_type);
 char *Item2String(Item *ip);
 int IsRealNumber(char *s);
 enum cfd_menu String2Menu(const char *s);
+
+#ifndef MINGW
+UidList *Rlist2UidList(Rlist *uidnames, const Promise *pp);
+GidList *Rlist2GidList(Rlist *gidnames, const Promise *pp);
+uid_t Str2Uid(char *uidbuff, char *copy, const Promise *pp);
+gid_t Str2Gid(char *gidbuff, char *copy, const Promise *pp);
+#endif /* NOT MINGW */
 
 #ifdef HAVE_NOVA
 

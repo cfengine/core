@@ -1334,7 +1334,7 @@ configured
 using control parameters described in the next chapter. Try:
 
 @verbatim
-host$ /var/cfengine/bin/cf-reports
+host$ /var/cfengine/bin/cf-report
 host$ ls ~/.cfagent/reports
 host$ mywebbrowser ~/.cfagent/reports/performance.html
 @end verbatim

@@ -27,8 +27,13 @@
 
 #include "files_names.h"
 #include "files_interfaces.h"
+#include "files_operators.h"
 #include "item_lib.h"
 #include "conversion.h"
+#include "matching.h"
+#include "cfstream.h"
+#include "string_lib.h"
+#include "pipes.h"
 
 /* seconds */
 #define RPCTIMEOUT 60

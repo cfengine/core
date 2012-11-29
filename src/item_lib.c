@@ -28,6 +28,7 @@
 #include "files_names.h"
 #include "addr_lib.h"
 #include "item_lib.h"
+#include "matching.h"
 
 /*******************************************************************/
 
@@ -41,19 +42,19 @@ int PrintItemList(char *buffer, int bufsize, Item *list)
     {
         if (!JoinSilent(buffer, "'", bufsize))
         {
-            EndJoin(buffer, "...TRUNCATED'}", bufsize);
+            EndJoin(buffer, "'}", bufsize);
             return false;
         }
 
         if (!Join(buffer,ip->name,bufsize))
         {
-            EndJoin(buffer, "...TRUNCATED'}", bufsize);
+            EndJoin(buffer, "'}", bufsize);
             return false;
         }
 
         if (!JoinSilent(buffer, "'", bufsize))
         {
-            EndJoin(buffer, "...TRUNCATED'}", bufsize);
+            EndJoin(buffer, "'}", bufsize);
             return false;
         }
 
@@ -61,7 +62,7 @@ int PrintItemList(char *buffer, int bufsize, Item *list)
         {
             if (!JoinSilent(buffer, ",", bufsize))
             {
-                EndJoin(buffer, "...TRUNCATED}", bufsize);
+                EndJoin(buffer, "}", bufsize);
                 return false;
             }
         }

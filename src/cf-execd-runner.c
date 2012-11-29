@@ -27,6 +27,10 @@
 
 #include "files_names.h"
 #include "files_interfaces.h"
+#include "cfstream.h"
+#include "string_lib.h"
+#include "pipes.h"
+#include "unix.h"
 
 /*******************************************************************/
 
@@ -183,8 +187,37 @@ void LocalExec(const ExecConfig *config)
 
     CfOut(cf_verbose, "", " -> Command is executing...%s\n", esc_command);
 
-    while ((!feof(pp)) && (CfReadLine(line, CF_BUFSIZE, pp)))
+    while (!feof(pp))
     {
+        if(!IsReadReady(fileno(pp), (config->agent_expireafter * SECONDS_PER_MINUTE)))
+        {
+            char errmsg[CF_MAXVARSIZE];
+            snprintf(errmsg, sizeof(errmsg), "cf-execd: !! Timeout waiting for output from agent (agent_expireafter=%d) - terminating it",
+                     config->agent_expireafter);
+
+            CfOut(cf_error, "", "%s", errmsg);
+            fprintf(fp, "%s\n", errmsg);
+            count++;
+
+            pid_t pid_agent;
+
+            if(PipeToPid(&pid_agent, pp))
+            {
+                ProcessSignalTerminate(pid_agent);
+            }
+            else
+            {
+                CfOut(cf_error, "", "!! Could not get PID of agent");
+            }
+
+            break;
+        }
+
+        if(!CfReadLine(line, CF_BUFSIZE, pp))
+        {
+            break;
+        }
+
         if (ferror(pp))
         {
             fflush(pp);

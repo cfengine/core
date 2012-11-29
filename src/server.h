@@ -61,6 +61,7 @@ void KeepPromises(Policy *policy, const ReportContext *report_context);
 
 void ServerEntryPoint(int sd_reply, char *ipaddr, ServerAccess sv);
 void TryCollectCall(void);
+int SetServerListenState(size_t queue_size);
 void DeleteAuthList(Auth *ap);
 
 
@@ -83,6 +84,7 @@ extern int MAXTRIES;
 extern int LOGCONNS;
 extern int LOGENCRYPT;
 extern int COLLECT_INTERVAL;
+extern bool SERVER_LISTEN;
 
 extern Auth *ROLES;
 extern Auth *ROLESTOP;

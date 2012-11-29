@@ -31,6 +31,10 @@
 #include "item_lib.h"
 #include "files_names.h"
 #include "conversion.h"
+#include "reporting.h"
+#include "attributes.h"
+#include "cfstream.h"
+#include "string_lib.h"
 
 static PromiseIdent *PromiseIdExists(char *namespace, char *handle);
 static void DeleteAllPromiseIdsRecurse(PromiseIdent *key);
@@ -385,6 +389,27 @@ double GetRealConstraint(const char *lval, const Promise *pp)
 
 /*****************************************************************************/
 
+static mode_t Str2Mode(const char *s)
+{
+    int a = CF_UNDEFINED;
+    char output[CF_BUFSIZE];
+
+    if (s == NULL)
+    {
+        return 0;
+    }
+
+    sscanf(s, "%o", &a);
+
+    if (a == CF_UNDEFINED)
+    {
+        snprintf(output, CF_BUFSIZE, "Error reading assumed octal value %s\n", s);
+        ReportError(output);
+    }
+
+    return (mode_t) a;
+}
+
 mode_t GetOctalConstraint(const char *lval, const Promise *pp)
 {
     Constraint *cp;
@@ -667,8 +692,8 @@ void ReCheckAllConstraints(Promise *pp)
         {
             if ((strcmp(prid->filename, pp->audit->filename) != 0) || (prid->line_number != pp->offset.line))
             {
-                CfOut(cf_error, "", " !! Duplicate promise handle -- previously used in file %s near line %d",
-                      prid->filename, prid->line_number);
+                CfOut(cf_error, "", " !! Duplicate promise handle '%s' -- previously used in file %s near line %d",
+                      handle, prid->filename, prid->line_number);
                 PromiseRef(cf_error, pp);
             }
         }
@@ -891,10 +916,10 @@ PromiseIdent *NewPromiseId(char *handle, Promise *pp)
     char name[CF_BUFSIZE];
     ptr = xmalloc(sizeof(PromiseIdent));
 
-    snprintf(name, CF_BUFSIZE, "%s.%s", pp->namespace, handle);
+    snprintf(name, CF_BUFSIZE, "%s%c%s", pp->namespace, CF_NS, handle);
     ptr->filename = xstrdup(pp->audit->filename);
     ptr->line_number = pp->offset.line;
-    ptr->handle = xstrdup(handle);
+    ptr->handle = xstrdup(name);
     ptr->next = PROMISE_ID_LIST;
     PROMISE_ID_LIST = ptr;
     return ptr;
@@ -940,7 +965,7 @@ static PromiseIdent *PromiseIdExists(char *namespace, char *handle)
     PromiseIdent *key;
     char name[CF_BUFSIZE];
 
-    snprintf(name, CF_BUFSIZE, "%s.%s", namespace, handle);
+    snprintf(name, CF_BUFSIZE, "%s%c%s", namespace, CF_NS, handle);
     
     for (key = PROMISE_ID_LIST; key != NULL; key = key->next)
     {

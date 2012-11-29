@@ -31,9 +31,12 @@
 #include "dbm_api.h"
 #include "files_names.h"
 #include "files_interfaces.h"
+#include "files_operators.h"
+#include "files_hashes.h"
 #include "item_lib.h"
 #include "expand.h"
 #include "atexit.h"
+#include "cfstream.h"
 
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
 
@@ -109,10 +112,14 @@ static void LocksCleanup(void)
     }
 }
 
+/*****************************************************************************/
+
 static void RegisterLockCleanup(void)
 {
     RegisterAtExitFunction(&LocksCleanup);
 }
+
+/*****************************************************************************/
 
 CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promise *pp, int ignoreProcesses)
 {

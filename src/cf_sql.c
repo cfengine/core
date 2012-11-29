@@ -25,6 +25,8 @@
 
 #include "cf3.defs.h"
 
+#include "cfstream.h"
+
 #ifdef HAVE_MYSQL_H
 # include <mysql.h>
 #elif defined(HAVE_MYSQL_MYSQL_H)

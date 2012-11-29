@@ -27,6 +27,9 @@
 #include "constraints.h"
 #include "promises.h"
 #include "vars.h"
+#include "attributes.h"
+#include "cfstream.h"
+#include "fncall.h"
 
 static int ServicesSanityChecks(Attributes a, Promise *pp);
 static void SetServiceDefaults(Attributes *a);
@@ -256,3 +259,4 @@ static void DoVerifyServices(Attributes a, Promise *pp, const ReportContext *rep
         VerifyMethod("service_bundle", a, pp, report_context);  // Send list of classes to set privately?
     }
 }
+

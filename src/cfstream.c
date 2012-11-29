@@ -23,11 +23,12 @@
 
 */
 
-#include "cf3.defs.h"
+#include "cfstream.h"
 
 #include "files_names.h"
 #include "constraints.h"
 #include "item_lib.h"
+#include "unix.h"
 
 #include <stdarg.h>
 

@@ -21,6 +21,7 @@ check_PROGRAMS = \
 	alphalist_test \
 	arg_split_test \
 	assoc_test \
+	atexit_test \
 	csv_writer_test \
 	item_test \
 	rlist_test \
@@ -53,7 +54,8 @@ check_PROGRAMS = \
 	granules_test \
 	scope_test \
 	conversion_test \
-	files_interfaces_test
+	files_interfaces_test \
+	timeout_test
 
 TESTS = $(check_PROGRAMS)
 
@@ -61,6 +63,9 @@ TESTS = $(check_PROGRAMS)
 # OS X uses real system calls instead of our stubs unless this option is used
 #
 TESTS_ENVIRONMENT = DYLD_FORCE_FLAT_NAMESPACE=yes
+
+atexit_test_SOURCES = atexit_test.c
+atexit_test_LDADD = libtest.la libdb.la
 
 csv_writer_test_SOURCES = csv_writer_test.c ../../src/csv_writer.c
 csv_writer_test_LDADD = libtest.la libstr.la

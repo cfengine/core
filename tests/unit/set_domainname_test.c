@@ -186,6 +186,11 @@ char *CanonifyName(const char *str)
     fail();
 }
 
+void CanonifyNameInPlace(char *str)
+{
+    fail();
+}
+
 int FullTextMatch(const char *regptr, const char *cmpptr)
 {
     fail();

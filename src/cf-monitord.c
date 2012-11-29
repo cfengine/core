@@ -26,9 +26,12 @@
 #include "monitoring.h"
 
 #include "env_context.h"
+#include "env_monitor.h"
 #include "constraints.h"
 #include "conversion.h"
 #include "reporting.h"
+#include "unix.h"
+#include "cfstream.h"
 
 /*****************************************************************************/
 

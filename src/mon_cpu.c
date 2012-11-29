@@ -23,7 +23,9 @@
 */
 
 #include "cf3.defs.h"
+
 #include "monitoring.h"
+#include "cfstream.h"
 
 #if !defined(MINGW)
 

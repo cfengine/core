@@ -27,6 +27,7 @@
 
 #include "constraints.h"
 #include "syntax.h"
+#include "string_lib.h"
 
 #include <assert.h>
 
@@ -109,7 +110,7 @@ char *BundleQualifiedName(const Bundle *bundle)
     if (bundle->name)
     {
         const char *namespace = bundle->namespace ? bundle->namespace : DEFAULT_NAMESPACE;
-        return StringConcatenate(3, namespace, ".", bundle->name);
+        return StringConcatenate(3, namespace, ":", bundle->name);  // CF_NS == ':'
     }
 
     return NULL;

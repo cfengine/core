@@ -25,10 +25,13 @@
 #include "cf3.defs.h"
 #include "client_protocol.h"
 
+#include "communication.h"
 #include "sysinfo.h"
 #include "promises.h"
 #include "lastseen.h"
 #include "crypto.h"
+#include "cfstream.h"
+#include "files_hashes.h"
 
 static void SetSessionKey(AgentConnection *conn);
 
@@ -202,7 +205,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
 
     if ((PUBKEY == NULL) || (PRIVKEY == NULL))
     {
-        CfOut(cf_error, "", "No public/private key pair found\n");
+        CfOut(cf_error, "", "No public/private key pair found at %s\n", CFPUBKEYFILE);
         return false;
     }
 

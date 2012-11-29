@@ -22,24 +22,21 @@
   included file COSL.txt.
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: server.c                                                            */
-/*                                                                           */
-/* Created: Sat Jun 30 18:37:58 2012                                         */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "server.h"
 
 #include "item_lib.h"
 #include "crypto.h"
 #include "files_names.h"
 #include "files_interfaces.h"
+#include "files_hashes.h"
 #include "env_context.h"
 #include "lastseen.h"
 #include "dir.h"
 #include "conversion.h"
+#include "matching.h"
+#include "cfstream.h"
+#include "string_lib.h"
+#include "pipes.h"
 
 //******************************************************************
 // GLOBAL STATE
@@ -57,6 +54,7 @@ int LOGCONNS = false;
 int LOGENCRYPT = false;
 int COLLECT_INTERVAL = 0;
 int COLLECT_WINDOW = 10;
+bool SERVER_LISTEN = true;
 
 Auth *ROLES = NULL;
 Auth *ROLESTOP = NULL;
@@ -2374,7 +2372,7 @@ static int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilena
 
     if (strlen(ReadLastNode(filename)) > CF_MAXLINKSIZE)
     {
-        snprintf(sendbuffer, CF_BUFSIZE * 2, "BAD: Filename suspiciously long [%s]\n", filename);
+        snprintf(sendbuffer, CF_BUFSIZE, "BAD: Filename suspiciously long [%s]\n", filename);
         CfOut(cf_error, "", "%s", sendbuffer);
         SendTransaction(conn->sd_reply, sendbuffer, 0, CF_DONE);
         return -1;
@@ -2502,7 +2500,7 @@ static int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilena
 
     /* send as plain text */
 
-    CfDebug("OK: type=%d\n mode=%jo\n lmode=%jo\n uid=%ju\n gid=%ju\n size=%ld\n atime=%jd\n mtime=%jd\n",
+    CfDebug("OK: type=%d\n mode=%" PRIoMAX "\n lmode=%" PRIoMAX "\n uid=%" PRIuMAX "\n gid=%" PRIuMAX "\n size=%ld\n atime=%" PRIdMAX "\n mtime=%" PRIdMAX "\n",
             cfst.cf_type, (uintmax_t)cfst.cf_mode, (uintmax_t)cfst.cf_lmode, (intmax_t)cfst.cf_uid, (intmax_t)cfst.cf_gid, (long) cfst.cf_size,
             (intmax_t) cfst.cf_atime, (intmax_t) cfst.cf_mtime);
 
@@ -2545,7 +2543,7 @@ static void CfGetFile(ServerFileGetState *args)
 
     cfstat(filename, &sb);
 
-    CfDebug("CfGetFile(%s on sd=%d), size=%jd\n", filename, sd, (intmax_t) sb.st_size);
+    CfDebug("CfGetFile(%s on sd=%d), size=%" PRIdMAX "\n", filename, sd, (intmax_t) sb.st_size);
 
 /* Now check to see if we have remote permission */
 
@@ -2656,7 +2654,7 @@ static void CfEncryptGetFile(ServerFileGetState *args)
 
     cfstat(filename, &sb);
 
-    CfDebug("CfEncryptGetFile(%s on sd=%d), size=%jd\n", filename, sd, (intmax_t) sb.st_size);
+    CfDebug("CfEncryptGetFile(%s on sd=%d), size=%" PRIdMAX "\n", filename, sd, (intmax_t) sb.st_size);
 
 /* Now check to see if we have remote permission */
 

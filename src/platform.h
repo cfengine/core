@@ -41,6 +41,9 @@
 #ifdef NT
 # define MAX_FILENAME 227
 # define WINVER 0x501
+#if defined(__CYGWIN__)
+# undef FD_SETSIZE
+#endif
 # define FD_SETSIZE 512         // increase select(2) FD limit from 64
 #else
 # define MAX_FILENAME 254
@@ -95,6 +98,10 @@ struct utsname
 
 #ifdef HAVE_STDINT_H
 # include <stdint.h>
+#endif
+
+#ifdef HAVE_INTTYPES_H
+# include <inttypes.h>
 #endif
 
 #ifdef HAVE_SYS_SYSTEMINFO_H

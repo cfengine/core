@@ -1,7 +1,6 @@
-#include "cf3.defs.h"
+#include "test.h"
 
-#include <setjmp.h>
-#include <cmockery.h>
+#include "assoc.h"
 
 static void test_create_destroy(void **state)
 {

@@ -36,6 +36,12 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "expand.h"
+#include "matching.h"
+#include "hashes.h"
+#include "attributes.h"
+#include "cfstream.h"
+#include "fncall.h"
+#include "string_lib.h"
 
 /*****************************************************************************/
 
@@ -763,7 +769,7 @@ static int IsBracketed(const char *s)
             level++;
             if (i > 0 && !strchr(".&|!(", s[i - 1]))
             {
-                CfOut(cf_error, "", " !! Class expression \"%s\" has a missing operator in front of '('", s);
+                CfOut(cf_error, "", " !! Class expression \"%s\" has a missing operator in front of '(' at position %d", s, i);
             }
         }
 
@@ -839,9 +845,9 @@ static int HasBrackets(const char *s, Promise *pp)
         {
             yes++;
             level++;
-            if (i > 0 && !strchr(".&|!(", s[i + 1]))
+            if (i > 0 && !strchr(".&|!(", s[i - 1]))
             {
-                CfOut(cf_error, "", " !! Class expression \"%s\" has a missing operator in front of '('", s);
+                 CfOut(cf_error, "", " !! Class expression \"%s\" has a missing operator in front of '(' at position %d", s, i);
             }
         }
 
@@ -1583,6 +1589,7 @@ void SaveClassEnvironment()
 
         Writer *writer = FileWriter(fp);
 
+        ListAlphaList(writer, VHARDHEAP, '\n');
         ListAlphaList(writer, VHEAP, '\n');
         ListAlphaList(writer, VADDCLASSES, '\n');
 

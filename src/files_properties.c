@@ -28,6 +28,7 @@
 #include "files_names.h"
 #include "files_interfaces.h"
 #include "item_lib.h"
+#include "cfstream.h"
 
 static Item *SUSPICIOUSLIST = NULL;
 
@@ -159,7 +160,7 @@ int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp)
 
 void SetSearchDevice(struct stat *sb, Promise *pp)
 {
-    CfDebug("Registering root device as %jd\n", (intmax_t) sb->st_dev);
+    CfDebug("Registering root device as %" PRIdMAX "\n", (intmax_t) sb->st_dev);
     pp->rootdevice = sb->st_dev;
 }
 

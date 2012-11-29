@@ -22,8 +22,10 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include "alphalist.h"
+
 #include "item_lib.h"
+#include "matching.h"
 
 /*****************************************************************************/
 /* This library creates a simple indexed array of lists for optimization of

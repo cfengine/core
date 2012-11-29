@@ -2,6 +2,8 @@
 #include "dbm_api.h"
 #include "lastseen.h"
 
+#include "alphalist.h"
+
 char CFWORKDIR[CF_BUFSIZE] = "/tmp";
 
 

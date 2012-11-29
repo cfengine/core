@@ -28,6 +28,8 @@
 #include "dir.h"
 #include "item_lib.h"
 #include "files_interfaces.h"
+#include "cfstream.h"
+#include "pipes.h"
 
 /* Globals */
 

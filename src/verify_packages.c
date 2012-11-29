@@ -34,6 +34,11 @@
 #include "expand.h"
 #include "scope.h"
 #include "vercmp.h"
+#include "matching.h"
+#include "attributes.h"
+#include "cfstream.h"
+#include "string_lib.h"
+#include "pipes.h"
 
 /** Entry points from VerifyPackagesPromise **/
 

@@ -135,6 +135,7 @@
 
 #define CF_DONE 't'
 #define CF_MORE 'm'
+#define CF_NS ':'   // namespace character separator
 
 /*****************************************************************************/
 
@@ -181,6 +182,7 @@ typedef struct
 
 typedef struct
 {
+    time_t last_seen;
     QPoint Q[CF_OBSERVABLES];
 } Averages;
 
@@ -300,6 +302,12 @@ struct Stat_
 /*******************************************************************/
 
 typedef struct Item_ Item;
+
+// Indexed itemlist
+typedef struct
+{
+    Item *list[CF_ALPHABETSIZE];
+} AlphaList;
 
 /*******************************************************************/
 
@@ -805,6 +813,7 @@ enum cfexcontrol
     cfex_schedule,
     cfex_executorfacility,
     cfex_execcommand,
+    cfex_agent_expireafter,
     cfex_notype,
 };
 
@@ -860,6 +869,7 @@ enum cfscontrol
     cfs_serverfacility,
     cfs_skipverify,
     cfs_trustkeysfrom,
+    cfs_listen,
     cfs_notype,
 };
 
@@ -2355,6 +2365,7 @@ extern double METER_REPAIRED[meter_endmark];
 
 #include "dbm_api.h"
 #include "prototypes3.h"
+#include "alloc.h"
 #include "cf3.extern.h"
 
 extern const BodySyntax CF_COMMON_BODIES[];

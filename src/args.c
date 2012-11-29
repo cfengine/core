@@ -23,12 +23,15 @@
 
 */
 
-#include "cf3.defs.h"
+#include "args.h"
 
 #include "promises.h"
 #include "syntax.h"
 #include "reporting.h"
 #include "expand.h"
+#include "unix.h"
+#include "cfstream.h"
+#include "fncall.h"
 
 /******************************************************************/
 /* Argument propagation                                           */

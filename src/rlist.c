@@ -28,6 +28,11 @@
 #include "files_names.h"
 #include "conversion.h"
 #include "expand.h"
+#include "matching.h"
+#include "unix.h"
+#include "cfstream.h"
+#include "fncall.h"
+#include "string_lib.h"
 
 #include <assert.h>
 
@@ -682,19 +687,19 @@ int PrintRlist(char *buffer, int bufsize, Rlist *list)
     {
         if (!JoinSilent(buffer, "'", bufsize))
         {
-            EndJoin(buffer, "...TRUNCATED'}", bufsize);
+            EndJoin(buffer, "'}", bufsize);
             return false;
         }
 
         if (!PrintRval(buffer, bufsize, (Rval) {rp->item, rp->type}))
         {
-            EndJoin(buffer, "...TRUNCATED'}", bufsize);
+            EndJoin(buffer, "'}", bufsize);
             return false;
         }
 
         if (!JoinSilent(buffer, "'", bufsize))
         {
-            EndJoin(buffer, "...TRUNCATED'}", bufsize);
+            EndJoin(buffer, "'}", bufsize);
             return false;
         }
 
@@ -702,7 +707,7 @@ int PrintRlist(char *buffer, int bufsize, Rlist *list)
         {
             if (!JoinSilent(buffer, ",", bufsize))
             {
-                EndJoin(buffer, "...TRUNCATED}", bufsize);
+                EndJoin(buffer, "}", bufsize);
                 return false;
             }
         }

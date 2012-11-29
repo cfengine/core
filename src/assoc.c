@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include "assoc.h"
 
 /*******************************************************************/
 

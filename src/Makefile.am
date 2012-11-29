@@ -28,7 +28,7 @@ libpromises_la_SOURCES = \
         alphalist.c alphalist.h \
         acl.c acl.h \
         acl_posix.c acl_posix.h \
-        args.c \
+        args.c args.h \
         array_map.c array_map_priv.h \
         assoc.c assoc.h \
         atexit.c atexit.h \
@@ -39,12 +39,12 @@ libpromises_la_SOURCES = \
         cf3.defs.h \
         cf3.extern.h \
         cf3globals.c \
-        cfstream.c \
+        cfstream.c cfstream.h \
         chflags.c \
         classes.c \
-        client_code.c \
+        client_code.c client_code.h \
         client_protocol.c client_protocol.h \
-        communication.c \
+        communication.c communication.h \
         comparray.c \
         compiler.h \
         config.h \
@@ -66,12 +66,12 @@ libpromises_la_SOURCES = \
         expand.c expand.h \
         files_copy.c \
         files_editline.c \
-        files_hashes.c \
+        files_hashes.c files_hashes.h \
         files_interfaces.c files_interfaces.h \
         files_lib.c files_lib.h \
         files_links.c \
         files_names.c files_names.h \
-        files_operators.c \
+        files_operators.c files_operators.h \
         files_properties.c \
         files_repository.c files_repository.h \
         files_select.c \
@@ -79,21 +79,21 @@ libpromises_la_SOURCES = \
         full_write.c \
         generic_agent.c generic_agent.h \
         granules.c granules.h \
-        hashes.c \
+        hashes.c hashes.h \
         hash_map.c hash_map_priv.h \
         html.c \
         install.c \
-        instrumentation.c \
+        instrumentation.c instrumentation.h \
         item_lib.c item_lib.h \
         iteration.c \
         json.c json.h \
-        keyring.c \
+        keyring.c keyring.h\
         lastseen.c lastseen.h \
         logging.c \
         logic_expressions.c logic_expressions.h \
         map.c map.h \
         map_common.h \
-        matching.c \
+        matching.c matching.h \
         misc_lib.c misc_lib.h \
         mod_access.c mod_access.h \
         mod_common.c \
@@ -120,7 +120,7 @@ libpromises_la_SOURCES = \
         parser.c parser.h \
         parser_state.h \
         patches.c \
-        pipes.c \
+        pipes.c pipes.h \
         platform.h \
         proc_keyvalue.c proc_keyvalue.h \
         processes_select.c \
@@ -146,7 +146,7 @@ libpromises_la_SOURCES = \
         sysinfo.c sysinfo.h \
         timeout.c \
         transaction.c transaction.h \
-        unix.c \
+        unix.c unix.h \
         vars.c vars.h \
         verify_processes.c \
         verify_reports.c \
@@ -229,7 +229,8 @@ cf_serverd_SOURCES = \
         cf-serverd-functions.c \
         cf-serverd-functions.h \
         server.c server.h \
-        server_transform.c
+        server_transform.c \
+        enterprise_stubs_serverd.c
 
 cf_serverd_LDADD =
 if HAVE_NOVA

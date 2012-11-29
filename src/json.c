@@ -25,6 +25,7 @@
 #include "json.h"
 
 #include "sequence.h"
+#include "string_lib.h"
 
 #include <assert.h>
 

@@ -32,6 +32,8 @@
 #include "files_lib.h"
 #include "files_names.h"
 #include "files_interfaces.h"
+#include "files_operators.h"
+#include "files_hashes.h"
 #include "parser.h"
 #include "dbm_api.h"
 #include "crypto.h"
@@ -42,6 +44,9 @@
 #include "transaction.h"
 #include "scope.h"
 #include "atexit.h"
+#include "unix.h"
+#include "cfstream.h"
+#include "client_code.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"
@@ -1868,11 +1873,14 @@ static void CleanPidFile(void)
     }
 }
 
+/********************************************************************/
+
 static void RegisterPidCleanup(void)
 {
     RegisterAtExitFunction(&CleanPidFile);
 }
 
+/********************************************************************/
 
 void WritePID(char *filename)
 {
@@ -1888,7 +1896,7 @@ void WritePID(char *filename)
         return;
     }
 
-    fprintf(fp, "%ju\n", (uintmax_t)getpid());
+    fprintf(fp, "%" PRIuMAX "\n", (uintmax_t)getpid());
 
     fclose(fp);
 }
@@ -1928,10 +1936,6 @@ void HashVariables(Policy *policy, const char *name, const ReportContext *report
                 CheckCommonClassPromises(sp->promiselist, report_context);
             }
 
-            if (THIS_AGENT_TYPE == cf_common)
-            {
-                CheckBundleParameters(bp->name, bp->args);
-            }
         }
     }
 }
@@ -2033,26 +2037,6 @@ static bool VerifyBundleSequence(const Policy *policy, enum cfagenttype agent, R
 
 /*******************************************************************/
 
-void CheckBundleParameters(char *scope, Rlist *args)
-{
-    Rlist *rp;
-    Rval retval;
-    char *lval;
-
-    for (rp = args; rp != NULL; rp = rp->next)
-    {
-        lval = (char *) rp->item;
-
-        if (GetVariable(scope, lval, &retval) != cf_notype)
-        {
-            CfOut(cf_error, "", "Variable and bundle parameter \"%s\" collide in scope \"%s\"", lval, scope);
-            FatalError("Aborting");
-        }
-    }
-}
-
-/*******************************************************************/
-
 GenericAgentConfig GenericAgentDefaultConfig(enum cfagenttype agent_type)
 {
     GenericAgentConfig config = { 0 };
@@ -2062,3 +2046,4 @@ GenericAgentConfig GenericAgentDefaultConfig(enum cfagenttype agent_type)
 
     return config;
 }
+

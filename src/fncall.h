@@ -25,6 +25,8 @@
 #ifndef CFENGINE_FNCALL_H
 #define CFENGINE_FNCALL_H
 
+#include "cf3.defs.h"
+
 #include "json.h"
 
 int IsBuiltinFnCall(Rval rval);

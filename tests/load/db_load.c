@@ -1,5 +1,8 @@
 #include "cf3.defs.h"
+
 #include "dbm_api.h"
+#include "cfstream.h"
+
 #include <assert.h>
 
 #define MAX_THREADS 10000

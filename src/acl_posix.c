@@ -28,6 +28,7 @@
 #include "acl_posix.h"
 #include "promises.h"
 #include "files_names.h"
+#include "cfstream.h"
 
 #ifdef HAVE_ACL_H
 # include <acl.h>

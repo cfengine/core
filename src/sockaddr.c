@@ -25,6 +25,8 @@
 
 #include "cf3.defs.h"
 
+#include "cfstream.h"
+
 /*****************************************************************************/
 /* TOOLKIT                                                                   */
 /* INET independent address/struct conversion routines                       */

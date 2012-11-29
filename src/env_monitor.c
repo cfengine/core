@@ -36,6 +36,8 @@
 #include "expand.h"
 #include "scope.h"
 #include "sysinfo.h"
+#include "files_operators.h"
+#include "cfstream.h"
 
 #include <math.h>
 
@@ -329,6 +331,7 @@ static Averages EvalAvQ(char *t)
     double last5_vals[CF_OBSERVABLES];
     double This[CF_OBSERVABLES];
     char name[CF_MAXVARSIZE];
+    time_t now = time(NULL);
     int i;
 
     Banner("Evaluating and storing new weekly averages");
@@ -373,6 +376,8 @@ static Averages EvalAvQ(char *t)
                           LOCALAV.Q[i].var);
 
         newvals.Q[i].q = This[i];
+        newvals.last_seen = now;  // Record the freshness of this slot
+        
         LOCALAV.Q[i].q = This[i];
 
         CfDebug("Previous week's %s.q %lf\n", name, lastweek_vals->Q[i].q);

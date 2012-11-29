@@ -25,6 +25,8 @@
 
 #include "cf3.defs.h"
 
+#include "cfstream.h"
+
 static const char *SIGNALS[] =
 {
     [SIGHUP] = "SIGHUP",

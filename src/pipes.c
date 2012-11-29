@@ -23,7 +23,9 @@
 
 */
 
-#include "cf3.defs.h"
+#include "pipes.h"
+
+#include "cfstream.h"
 
 #ifndef MINGW
 static int CfSetuid(uid_t uid, gid_t gid);
@@ -246,7 +248,7 @@ FILE *cf_popensetuid(const char *command, char *type, uid_t uid, gid_t gid, char
     pid_t pid;
     FILE *pp = NULL;
 
-    CfDebug("cf_popensetuid(%s,%s,%ju,%ju)\n", command, type, (uintmax_t)uid, (uintmax_t)gid);
+    CfDebug("cf_popensetuid(%s,%s,%" PRIuMAX ",%" PRIuMAX ")\n", command, type, (uintmax_t)uid, (uintmax_t)gid);
 
     if (((*type != 'r') && (*type != 'w')) || (type[1] != '\0'))
     {
@@ -533,7 +535,7 @@ FILE *cf_popen_shsetuid(const char *command, char *type, uid_t uid, gid_t gid, c
     pid_t pid;
     FILE *pp = NULL;
 
-    CfDebug("cf_popen_shsetuid(%s,%s,%ju,%ju)\n", command, type, (uintmax_t)uid, (uintmax_t)gid);
+    CfDebug("cf_popen_shsetuid(%s,%s,%" PRIuMAX ",%" PRIuMAX ")\n", command, type, (uintmax_t)uid, (uintmax_t)gid);
 
     if (((*type != 'r') && (*type != 'w')) || (type[1] != '\0'))
     {
@@ -680,7 +682,7 @@ int cf_pwait(pid_t pid)
 {
     int status;
 
-    CfDebug("cf_pwait - Waiting for process %jd\n", (intmax_t)pid);
+    CfDebug("cf_pwait - Waiting for process %" PRIdMAX "\n", (intmax_t)pid);
 
 # ifdef HAVE_WAITPID
 
@@ -825,7 +827,7 @@ int cf_pclose_def(FILE *pfp, Attributes a, Promise *pp)
         return -1;
     }
 
-    CfDebug("cf_pclose_def - Waiting for process %jd\n", (intmax_t)pid);
+    CfDebug("cf_pclose_def - Waiting for process %" PRIdMAX "\n", (intmax_t)pid);
 
 # ifdef HAVE_WAITPID
 
@@ -874,6 +876,31 @@ int cf_pclose_def(FILE *pfp, Attributes a, Promise *pp)
 
     return (WEXITSTATUS(status));
 # endif
+}
+
+/*******************************************************************/
+
+bool PipeToPid(pid_t *pid, FILE *pp)
+{
+    if (!ThreadLock(cft_count))
+    {
+        printf("could not lock!\n");
+        return false;
+    }
+
+    if (CHILDREN == NULL)       /* popen hasn't been called */
+    {
+        printf("children is NULL!\n");
+        ThreadUnlock(cft_count);
+        return false;
+    }
+
+    int fd = fileno(pp);
+    *pid = CHILDREN[fd];
+
+    ThreadUnlock(cft_count);
+
+    return true;
 }
 
 /*******************************************************************/

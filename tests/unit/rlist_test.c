@@ -7,6 +7,8 @@
 
 #include "cf3.defs.h"
 
+#include "assoc.h"
+
 /* Stubs */
 
 void FatalError(char *s, ...)

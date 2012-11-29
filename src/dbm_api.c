@@ -30,6 +30,7 @@
 #include "dbm_lib.h"
 #include "dbm_migration.h"
 #include "atexit.h"
+#include "cfstream.h"
 
 #include <assert.h>
 
@@ -171,8 +172,6 @@ static void RegisterShutdownHandler(void)
 
 bool OpenDB(DBHandle **dbp, dbid id)
 {
-    pthread_once(&db_shutdown_once, RegisterShutdownHandler);
-
     DBHandle *handle = DBHandleGet(id);
 
     pthread_mutex_lock(&handle->lock);
@@ -201,6 +200,13 @@ bool OpenDB(DBHandle **dbp, dbid id)
     {
         handle->refcount++;
         *dbp = handle;
+
+        /* Only register shutdown handler if any database was opened
+         * correctly. Otherwise this shutdown caller may be called too early,
+         * and shutdown handler installed by the database library may end up
+         * being called before CloseAllDB function */
+
+        pthread_once(&db_shutdown_once, RegisterShutdownHandler);
     }
     else
     {

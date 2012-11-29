@@ -36,6 +36,11 @@
 #include "expand.h"
 #include "transaction.h"
 #include "scope.h"
+#include "unix.h"
+#include "attributes.h"
+#include "cfstream.h"
+#include "communication.h"
+#include "string_lib.h"
 
 static void KeepContextBundles(Policy *policy, const ReportContext *report_context);
 static void KeepServerPromise(Promise *pp);
@@ -47,6 +52,7 @@ extern const BodySyntax CFS_CONTROLBODY[];
 extern const BodySyntax CF_REMROLE_BODIES[];
 extern int COLLECT_INTERVAL;
 extern int COLLECT_WINDOW;
+extern bool SERVER_LISTEN;
 
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
@@ -267,6 +273,14 @@ void KeepControlPromises(Policy *policy)
         {
             COLLECT_INTERVAL = (int) 60 * Str2Int(retval.item);
             CfOut(cf_verbose, "", "SET call_collect_interval = %d (seconds)\n", COLLECT_INTERVAL);
+            continue;
+        }
+
+        if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_listen].lval) == 0)
+        {
+            SERVER_LISTEN = GetBoolean(retval.item);
+            CfOut(cf_verbose, "", "SET server listen = %s \n",
+                  (SERVER_LISTEN)? "true":"false");
             continue;
         }
 

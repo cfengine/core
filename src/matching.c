@@ -23,7 +23,7 @@
 
 */
 
-#include "cf3.defs.h"
+#include "matching.h"
 
 #include "env_context.h"
 #include "vars.h"
@@ -31,6 +31,7 @@
 #include "item_lib.h"
 #include "conversion.h"
 #include "scope.h"
+#include "cfstream.h"
 
 #ifdef HAVE_PCRE_H
 # include <pcre.h>

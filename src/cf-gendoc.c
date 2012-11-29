@@ -35,6 +35,7 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "expand.h"
+#include "cfstream.h"
 
 static void GenerateManual(void);
 static void GenerateXml(void);

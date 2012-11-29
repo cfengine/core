@@ -30,7 +30,11 @@
 #include "syntax.h"
 #include "expand.h"
 #include "files_names.h"
+#include "files_hashes.h"
 #include "scope.h"
+#include "unix.h"
+#include "cfstream.h"
+#include "args.h"
 
 #define PACK_UPIFELAPSED_SALT "packageuplist"
 
@@ -374,11 +378,11 @@ Body *IsBody(Body *list, const char *namespace, const char *key)
 
     // bp->namespace is where the body belongs, namespace is where we are now
 
-        if (strchr(key,':') || strcmp(namespace,"default") == 0)
+        if (strchr(key, CF_NS) || strcmp(namespace,"default") == 0)
         {
-            if (strncmp(key,"default:",strlen("default:")) == 0)
+            if (strncmp(key,"default:",strlen("default:")) == 0) // CF_NS == ':'
             {
-                strcpy(fqname,strchr(key,':')+1);
+                strcpy(fqname,strchr(key,CF_NS)+1);
             }
             else
             {
@@ -387,7 +391,7 @@ Body *IsBody(Body *list, const char *namespace, const char *key)
         }
         else
         {
-            snprintf(fqname,CF_BUFSIZE-1, "%s:%s",namespace,key);
+            snprintf(fqname,CF_BUFSIZE-1, "%s%c%s", namespace, CF_NS, key);
         }
 
         if (strcmp(bp->name, fqname) == 0)
@@ -410,9 +414,9 @@ Bundle *IsBundle(Bundle *list, const char *key)
     {
         if (strcmp(bp->namespace,"default") == 0)
         {
-            if (strncmp(key,"default:",strlen("default:")) == 0)
+            if (strncmp(key,"default:",strlen("default:")) == 0)  // CF_NS == ':'
             {
-                strcpy(fqname,strchr(key,':')+1);
+                strcpy(fqname,strchr(key, CF_NS)+1);
             }
             else
             {
@@ -425,7 +429,7 @@ Bundle *IsBundle(Bundle *list, const char *key)
         }
         else
         {
-            snprintf(fqname,CF_BUFSIZE-1, "%s:%s",bp->namespace,key);
+            snprintf(fqname,CF_BUFSIZE-1, "%s%c%s", bp->namespace, CF_NS, key);
         }
 
         if (strcmp(bp->name, fqname) == 0)
@@ -481,7 +485,7 @@ Promise *NewPromise(char *typename, char *promiser)
     pp = xcalloc(1, sizeof(Promise));
 
     pp->audit = AUDITPTR;
-    pp->bundle = xstrdup("internal_bundle");
+    pp->bundle = xstrdup("cfe_internal_bundle_hardcoded");
     pp->namespace = xstrdup("default");
     pp->promiser = xstrdup(promiser);
 
@@ -494,7 +498,9 @@ Promise *NewPromise(char *typename, char *promiser)
     pp->ref_alloc = 'n';
     pp->has_subbundles = false;
 
-    ConstraintAppendToPromise(pp, "handle", (Rval) {xstrdup("internal_promise"), CF_SCALAR}, NULL, false);
+    ConstraintAppendToPromise(pp, "handle",
+                              (Rval) {xstrdup("cfe_internal_promise_hardcoded"),
+                              CF_SCALAR}, NULL, false);
 
     return pp;
 }

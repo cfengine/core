@@ -1918,6 +1918,9 @@ void HashVariables(Policy *policy, const char *name, const ReportContext *report
         }
 
         SetNewScope(bp->name);
+        char scope[CF_BUFSIZE];
+        snprintf(scope,CF_BUFSIZE,"%s_meta", bp->name);
+        NewScope(scope);
 
         // TODO: seems sketchy, investigate purpose.
         THIS_BUNDLE = bp->name;

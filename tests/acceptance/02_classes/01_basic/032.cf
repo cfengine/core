@@ -1,0 +1,81 @@
+#
+# Test whether classes defined by promises end up in right namespace
+#
+
+body common control
+{
+      inputs => { "../../default.cf.sub", "031.cf.namespaced.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+    nova_edition::
+      host_licenses_paid => "5";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+  methods:
+      "call" usebundle => xxx:localclass;
+
+reports:
+
+  cfengine::
+        "testing classes" 
+                classes => xxx:always("another_class_global_from_command"); 
+
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "ok" and => { "xxx:a_class_global_from_command", "default:another_class_global_from_command" };
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+
+body file control
+{
+namespace => "xxx"; 
+}
+
+bundle agent localclass
+{
+reports:
+
+  cfengine::
+        "testing classes" 
+                classes => always("a_class_global_from_command"); 
+
+ a_class_global_from_command::
+    "Global class from 'classes' attribute, accessed in the same namespace";
+ default:a_class_global_from_command::
+    "Global class from 'classes' attribute, accessed in the default namespace";
+}
+
+body classes always(x)
+
+# Define a class no matter what the outcome of the promise is
+
+{
+  promise_repaired => { "$(x)" };
+  promise_kept => { "$(x)" };
+  repair_failed => { "$(x)" };
+  repair_denied => { "$(x)" };
+  repair_timeout => { "$(x)" };
+#  persist_time => "1"; 
+}

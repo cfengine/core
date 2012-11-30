@@ -346,7 +346,7 @@ void KeepClassContextPromise(Promise *pp)
                 {
                     CfOut(cf_verbose, "", " ?> defining explicit persistent class %s (%d mins)\n", pp->promiser,
                           a.context.persistent);
-                    NewPersistentContext(pp->promiser, a.context.persistent, cfreset);
+                    NewPersistentContext(pp->promiser, pp->namespace, a.context.persistent, cfreset);
                     NewClass(pp->promiser, pp->namespace);
                 }
                 else
@@ -382,7 +382,7 @@ void KeepClassContextPromise(Promise *pp)
                           a.context.persistent);
                     CfOut(cf_verbose, "",
                           " ?> Warning: persistent classes are global in scope even in agent bundles\n");
-                    NewPersistentContext(pp->promiser, a.context.persistent, cfreset);
+                    NewPersistentContext(pp->promiser, pp->namespace, a.context.persistent, cfreset);
                     NewClass(pp->promiser, pp->namespace);
                 }
                 else
@@ -1264,18 +1264,20 @@ void PopPrivateClassContext()
 
 /*****************************************************************************/
 
-void NewPersistentContext(char *name, unsigned int ttl_minutes, enum statepolicy policy)
+void NewPersistentContext(char *unqualifiedname, char *namespace, unsigned int ttl_minutes, enum statepolicy policy)
 {
     CF_DB *dbp;
     CfState state;
     time_t now = time(NULL);
-
+    char name[CF_BUFSIZE];
 
     if (!OpenDB(&dbp, dbid_state))
     {
         return;
     }
 
+    snprintf(name, CF_BUFSIZE, "%s%c%s", namespace, CF_NS, unqualifiedname);
+    
     if (ReadDB(dbp, name, &state, sizeof(state)))
     {
         if (state.policy == cfpreserve)
@@ -1364,7 +1366,18 @@ void LoadPersistentContext()
         {
             CfOut(cf_verbose, "", " Persistent class %s for %jd more minutes\n", key, (intmax_t)((q.expires - now) / 60));
             CfOut(cf_verbose, "", " Adding persistent class %s to heap\n", key);
-            NewClass(key, NULL);
+            if (strchr(key, CF_NS))
+               {
+               char namespace[CF_MAXVARSIZE], name[CF_MAXVARSIZE];
+               namespace[0] = '\0';
+               name[0] = '\0';
+               sscanf(key, "%[^:]:%[^\n]", namespace, name);
+               NewClass(name, namespace);
+               }
+            else
+               {
+               NewClass(key, NULL);
+               }
         }
     }
 
@@ -1633,7 +1646,7 @@ void DeleteAllClasses(const Rlist *list)
 
 /*****************************************************************************/
 
-void AddAllClasses(const Rlist *list, int persist, enum statepolicy policy)
+void AddAllClasses(char *namespace, const Rlist *list, int persist, enum statepolicy policy)
 {
     if (list == NULL)
     {
@@ -1654,13 +1667,14 @@ void AddAllClasses(const Rlist *list, int persist, enum statepolicy policy)
         if (persist > 0)
         {
             CfOut(cf_verbose, "", " ?> defining persistent promise result class %s\n", classname);
-            NewPersistentContext(CanonifyName(rp->item), persist, policy);
+            NewPersistentContext(CanonifyName(rp->item), namespace, persist, policy);
         }
         else
         {
             CfOut(cf_verbose, "", " ?> defining promise result class %s\n", classname);
         }
-        IdempPrependAlphaList(&VHEAP, classname);
+
+        NewClass(classname, namespace);
     }
 }
 

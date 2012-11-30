@@ -161,6 +161,11 @@ void ShowContext(const ReportContext *report_context)
         VHEAP.list[i] = SortItemListNames(VHEAP.list[i]);
     }
 
+    for (int i = 0; i < CF_ALPHABETSIZE; i++)
+    {
+        VHARDHEAP.list[i] = SortItemListNames(VHARDHEAP.list[i]);
+    }
+    
     if (VERBOSE || DEBUG)
     {
         if (report_context->report_writers[REPORT_OUTPUT_TYPE_TEXT])

@@ -1342,8 +1342,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
         if (!AddVariableHash(qualified_scope, pp->promiser, rval, Typename2Datatype(cp->lval),
                              cp->audit->filename, cp->offset.line))
         {
-            CfOut(cf_verbose, "", "Unable to converge %s.%s value (possibly empty or infinite regression)\n", qualified_scope,
-                  pp->promiser);
+            CfOut(cf_verbose, "", "Unable to converge %s.%s value (possibly empty or infinite regression)\n", qualified_scope, pp->promiser);
             PromiseRef(cf_verbose, pp);
             cfPS(cf_noreport, CF_FAIL, "", pp, a, " !! Couldn't add variable %s", pp->promiser);
         }

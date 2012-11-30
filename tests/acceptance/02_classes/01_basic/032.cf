@@ -1,3 +1,6 @@
+#
+# Test whether classes defined by promises end up in right namespace
+#
 
 body common control
 {
@@ -22,6 +25,13 @@ bundle agent test
 {
   methods:
       "call" usebundle => xxx:localclass;
+
+reports:
+
+  cfengine::
+        "testing classes" 
+                classes => xxx:always("another_class_global_from_command"); 
+
 }
 
 #######################################################
@@ -29,7 +39,7 @@ bundle agent test
 bundle agent check
 {
   classes:
-      "ok" expression => "xxx:a_class_global_from_command";
+      "ok" and => { "xxx:a_class_global_from_command", "default:another_class_global_from_command" };
 
   reports:
     ok::

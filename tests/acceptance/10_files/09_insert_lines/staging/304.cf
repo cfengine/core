@@ -1,0 +1,52 @@
+body common control
+{
+      inputs => { "../../default.cf.sub", "../../../../masterfiles/libraries/cfengine_stdlib.cf", "304.cf.namespaced.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+    nova_edition::
+      host_licenses_paid => "5";
+}
+
+########################################################
+
+bundle agent init
+{
+  vars:
+      "expected" slist => { "var1=value1" };
+
+      "files" slist => { "actual", "expected" };
+
+  files:
+      "$(G.testfile).actual" touch => "true";
+
+      "$(G.testfile).expected"
+      touch => "true",
+      edit_defaults => init_empty,
+      edit_line => init_insert("$(expected)");
+}
+
+bundle edit_line init_insert(str)
+{
+  insert_lines:
+      "$(str)";
+}
+
+body edit_defaults init_empty
+{
+      empty_file_before_editing => "true";
+}
+
+bundle agent test
+{
+  methods:
+      "call" usebundle => cfdc_yumclient:config("$(G.testfile).actual", "2");
+      "call" usebundle => cfdc_yumclient:config("$(G.testfile).actual", "1");
+}
+
+bundle agent check
+{
+  methods:
+      "first" usebundle => default_check_diff("$(G.testfile).actual",
+                                              "$(G.testfile).expected",
+                                              "$(this.promise_filename)");
+}

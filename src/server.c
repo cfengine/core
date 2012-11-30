@@ -1049,6 +1049,13 @@ static int MatchClasses(ServerConnectionState *conn)
                 return true;
             }
 
+            if (MatchInAlphaList(&VHARDHEAP, ip->name))
+            {
+                CfDebug("Class matched regular expression %s, accepting...\n", ip->name);
+                DeleteItemList(classlist);
+                return true;
+            }
+
             if (strncmp(ip->name, CFD_TERMINATOR, strlen(CFD_TERMINATOR)) == 0)
             {
                 CfOut(cf_verbose, "", "No classes matched, rejecting....\n");

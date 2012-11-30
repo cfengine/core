@@ -546,7 +546,7 @@ static FnCallResult FnCallConcat(FnCall *fp, Rlist *finalargs)
 
 static FnCallResult FnCallClassMatch(FnCall *fp, Rlist *finalargs)
 {
-    if (MatchInAlphaList(&VHEAP, ScalarValue(finalargs)) || MatchInAlphaList(&VADDCLASSES, ScalarValue(finalargs)))
+    if (MatchInAlphaList(&VHARDHEAP, ScalarValue(finalargs)) || MatchInAlphaList(&VHEAP, ScalarValue(finalargs)) || MatchInAlphaList(&VADDCLASSES, ScalarValue(finalargs)))
     {
         return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), CF_SCALAR } };
     }
@@ -577,6 +577,14 @@ static FnCallResult FnCallCountClassesMatching(FnCall *fp, Rlist *finalargs)
             }
         }
 
+        for (ip = VHARDHEAP.list[i]; ip != NULL; ip = ip->next)
+        {
+            if (FullTextMatch(string, ip->name))
+            {
+                count++;
+            }
+        }
+
         for (ip = VADDCLASSES.list[i]; ip != NULL; ip = ip->next)
         {
             if (FullTextMatch(string, ip->name))
@@ -590,6 +598,14 @@ static FnCallResult FnCallCountClassesMatching(FnCall *fp, Rlist *finalargs)
         for (i = 0; i < CF_ALPHABETSIZE; i++)
         {
             for (ip = VHEAP.list[i]; ip != NULL; ip = ip->next)
+            {
+                if (FullTextMatch(string, ip->name))
+                {
+                    count++;
+                }
+            }
+
+            for (ip = VHARDHEAP.list[i]; ip != NULL; ip = ip->next)
             {
                 if (FullTextMatch(string, ip->name))
                 {

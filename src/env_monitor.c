@@ -598,7 +598,7 @@ static void ArmClasses(Averages av, char *timekey)
             }
 
             AppendItem(&classlist, buff, "2");
-            NewPersistentContext(buff, CF_PERSISTENCE, cfpreserve);
+            NewPersistentContext(buff, "measurements", CF_PERSISTENCE, cfpreserve);
         }
         else
         {
@@ -947,7 +947,7 @@ static double SetClasses(char *name, double variable, double av_expect, double a
             strcpy(buffer2, buffer);
             strcat(buffer2, "_microanomaly");
             AppendItem(classlist, buffer2, "2");
-            NewPersistentContext(buffer2, CF_PERSISTENCE, cfpreserve);
+            NewPersistentContext(buffer2, "measurements", CF_PERSISTENCE, cfpreserve);
         }
 
         return sig;             /* Granularity makes this silly */
@@ -994,7 +994,7 @@ static double SetClasses(char *name, double variable, double av_expect, double a
             strcpy(buffer2, buffer);
             strcat(buffer2, "_dev2");
             AppendItem(classlist, buffer2, "2");
-            NewPersistentContext(buffer2, CF_PERSISTENCE, cfpreserve);
+            NewPersistentContext(buffer2, "measurements", CF_PERSISTENCE, cfpreserve);
         }
 
         if (dev > 3.0 * sqrt(2.0))
@@ -1002,7 +1002,7 @@ static double SetClasses(char *name, double variable, double av_expect, double a
             strcpy(buffer2, buffer);
             strcat(buffer2, "_anomaly");
             AppendItem(classlist, buffer2, "3");
-            NewPersistentContext(buffer2, CF_PERSISTENCE, cfpreserve);
+            NewPersistentContext(buffer2, "measurements", CF_PERSISTENCE, cfpreserve);
         }
 
         return sig;

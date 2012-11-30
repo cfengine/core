@@ -970,7 +970,7 @@ void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp, const ReportC
 
     if (changed)
     {
-        NewPersistentContext("checksum_alerts", CF_PERSISTENCE, cfpreserve);
+        NewPersistentContext(pp->namespace, "checksum_alerts", CF_PERSISTENCE, cfpreserve);
         LogHashChange(file, cf_file_content_changed, "Content changed", pp);
     }
 

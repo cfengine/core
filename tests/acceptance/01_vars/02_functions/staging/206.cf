@@ -6,7 +6,7 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub", "205-namespaced.cf.sub" };
+  inputs => { "../../default.cf.sub", "206-namespaced.cf.sub" };
   bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::

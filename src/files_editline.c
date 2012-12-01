@@ -279,6 +279,8 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
             DeleteItemList(lines);
             free(promiser);
             lines = NULL;
+
+            strcpy(context, "any"); // reset context for subsequent bare lines
         }
         else
         {

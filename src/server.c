@@ -226,14 +226,14 @@ void PurgeOldConnections(Item **list, time_t now)
     Item *ip;
     int then = 0;
 
-    if (list == NULL)
+    CfDebug("Purging Old Connections...\n");
+
+    if (!ThreadLock(cft_count))
     {
         return;
     }
 
-    CfDebug("Purging Old Connections...\n");
-
-    if (!ThreadLock(cft_count))
+    if (list == NULL)
     {
         return;
     }

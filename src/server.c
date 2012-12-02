@@ -235,14 +235,18 @@ void PurgeOldConnections(Item **list, time_t now)
         return;
     }
 
-    for (ip = *list; ip != NULL; ip = ip->next)
+    Item *next;
+
+    for (ip = *list; ip != NULL; ip = next)
     {
         sscanf(ip->classes, "%d", &then);
 
+        next = ip->next;
+
         if (now > then + 7200)
         {
-            DeleteItem(list, ip);
             CfOut(cf_verbose, "", "Purging IP address %s from connection list\n", ip->name);
+            DeleteItem(list, ip);
         }
     }
 

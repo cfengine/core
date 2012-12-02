@@ -182,12 +182,20 @@ void ServerEntryPoint(int sd_reply, char *ipaddr, ServerAccess sv)
     
     if (!IsMatchItemIn(sv.multiconnlist, MapAddress(ipaddr)))
     {
+        if (!ThreadLock(cft_count))
+        {
+            return;
+        }
+
         if (IsItemIn(sv.connectionlist, MapAddress(ipaddr)))
         {
+            ThreadUnlock(cft_count);
             CfOut(cf_error, "", "Denying repeated connection from \"%s\"\n", ipaddr);
             cf_closesocket(sd_reply);
             return;
         }
+
+        ThreadUnlock(cft_count);
     }
     
     if (sv.logconns)

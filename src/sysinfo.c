@@ -1925,7 +1925,7 @@ static int EOS_Version()
             HardClass("eos");
             HardClass("arista");
             version[0] = '\0';
-            sscanf("%*s %*s %*s %s", version);
+            sscanf(buffer, "%*s %*s %*s %s", version);
             CanonifyNameInPlace(version);
             snprintf(class, CF_MAXVARSIZE, "eos_%s", version);
             HardClass(class);
@@ -1949,7 +1949,7 @@ static int MiscOS()
        {
            char version[CF_MAXVARSIZE], build[CF_MAXVARSIZE], class[CF_MAXVARSIZE];
            HardClass("big_ip");
-           sscanf("%*s %s %*s %s", version, build);
+           sscanf(buffer, "%*s %s %*s %s", version, build);
            CanonifyNameInPlace(version);
            CanonifyNameInPlace(build);
            snprintf(class, CF_MAXVARSIZE, "big_ip_%s", version);

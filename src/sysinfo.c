@@ -1917,7 +1917,7 @@ static int EOS_Version()
 
  // e.g. Arista Networks EOS 4.10.2
  
-    if (ReadLine("/etc/EOS-release", buffer, sizeof(buffer)))
+    if (ReadLine("/etc/Eos-release", buffer, sizeof(buffer)))
     {
         if (strstr(buffer, "EOS"))
         {

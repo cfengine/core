@@ -74,7 +74,7 @@ ExpectedVars expected_vars[] =
     {"domain", "cfengine.com"},
 };
 
-void NewScalar(const char *namespace, const char *varname, const char *value, enum cfdatatype type)
+void NewScalar(const char *namespace, const char *varname, const char *value, AgentType type)
 {
     int i;
 
@@ -231,7 +231,7 @@ char *HashPrint(enum cfhashes type, unsigned char digest[EVP_MAX_MD_SIZE + 1])
     fail();
 }
 
-void Unix_GetInterfaceInfo(enum cfagenttype ag)
+void Unix_GetInterfaceInfo(AgentType ag)
 {
     fail();
 }
@@ -279,7 +279,7 @@ void DeleteRlist(Rlist *list)
 /* Stub out variables */
 
 int DEBUG;
-enum cfagenttype THIS_AGENT_TYPE;
+AgentType THIS_AGENT_TYPE;
 Item *IPADDRESSES;
 struct utsname VSYSNAME;
 enum classes VSYSTEMHARDCLASS;

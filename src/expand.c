@@ -114,7 +114,7 @@ since these cannot be mapped into "this" without some magic.
    
 **********************************************************************/
 
-void ExpandPromise(enum cfagenttype agent, const char *scopeid, Promise *pp, void *fnptr,
+void ExpandPromise(AgentType agent, const char *scopeid, Promise *pp, void *fnptr,
                    const ReportContext *report_context)
 {
     Rlist *listvars = NULL, *scalarvars = NULL;
@@ -636,7 +636,7 @@ int ExpandPrivateScalar(const char *scopeid, const char *string, char buffer[CF_
 
 /*********************************************************************/
 
-void ExpandPromiseAndDo(enum cfagenttype agent, const char *scopeid, Promise *pp, Rlist *scalarvars, Rlist *listvars,
+void ExpandPromiseAndDo(AgentType agent, const char *scopeid, Promise *pp, Rlist *scalarvars, Rlist *listvars,
                         void (*fnptr) (), const ReportContext *report_context)
 {
     Rlist *lol = NULL;
@@ -724,7 +724,7 @@ void ExpandPromiseAndDo(enum cfagenttype agent, const char *scopeid, Promise *pp
 
         switch (agent)
         {
-        case cf_common:
+        case AGENT_TYPE_COMMON:
             ShowPromise(report_context, REPORT_OUTPUT_TYPE_TEXT, pexp, 6);
             ShowPromise(report_context, REPORT_OUTPUT_TYPE_HTML, pexp, 6);
             CheckRecursion(report_context, pexp);
@@ -1289,7 +1289,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
             {
                 DeleteVariable(qualified_scope, pp->promiser);
             }
-            else if ((THIS_AGENT_TYPE == cf_common) && (CompareRval(retval, rval) == false))
+            else if ((THIS_AGENT_TYPE == AGENT_TYPE_COMMON) && (CompareRval(retval, rval) == false))
             {
                 switch (rval.rtype)
                 {
@@ -1562,7 +1562,7 @@ static void CheckRecursion(const ReportContext *report_context, Promise *pp)
            {
                for (ppsub = sbp->promiselist; ppsub != NULL; ppsub = ppsub->next)
                {
-                   ExpandPromise(cf_common, scope, ppsub, NULL, report_context);
+                   ExpandPromise(AGENT_TYPE_COMMON, scope, ppsub, NULL, report_context);
                }
            }
        }
@@ -1655,7 +1655,7 @@ static void ParseServices(const ReportContext *report_context, Promise *pp)
           {
           for (ppsub = sbp->promiselist; ppsub != NULL; ppsub = ppsub->next)
              {
-             ExpandPromise(cf_common, bp->name, ppsub, NULL, report_context);
+             ExpandPromise(AGENT_TYPE_COMMON, bp->name, ppsub, NULL, report_context);
              }
           }
        }

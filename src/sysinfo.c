@@ -689,7 +689,7 @@ void Get3Environment()
         {
             sscanf(class, "%255[^=]=%255[^\n]", name, value);
 
-            if (THIS_AGENT_TYPE != cf_executor)
+            if (THIS_AGENT_TYPE != AGENT_TYPE_EXECUTOR)
             {
                 DeleteVariable("mon", name);
                 NewScalar("mon", name, value, cf_str);

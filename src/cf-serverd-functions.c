@@ -112,7 +112,7 @@ GenericAgentConfig CheckOpts(int argc, char **argv)
     char ld_library_path[CF_BUFSIZE];
     int optindex = 0;
     int c;
-    GenericAgentConfig config = GenericAgentDefaultConfig(cf_server);
+    GenericAgentConfig config = GenericAgentDefaultConfig(AGENT_TYPE_SERVER);
 
     while ((c = getopt_long(argc, argv, "dvIKf:D:N:VSxLFMh", OPTIONS, &optindex)) != EOF)
     {
@@ -540,7 +540,7 @@ void CheckFileChanges(Policy **policy, GenericAgentConfig config, const ReportCo
     {
         CfOut(cf_verbose, "", " -> New promises detected...\n");
 
-        if (CheckPromises(cf_server, report_context))
+        if (CheckPromises(AGENT_TYPE_SERVER, report_context))
         {
             CfOut(cf_inform, "", "Rereading config files %s..\n", VINPUTFILE);
 
@@ -620,7 +620,7 @@ void CheckFileChanges(Policy **policy, GenericAgentConfig config, const ReportCo
             NewScope("mon");
             NewScope("remote_access");
             GetNameInfo3();
-            GetInterfacesInfo(cf_server);
+            GetInterfacesInfo(AGENT_TYPE_SERVER);
             Get3Environment();
             BuiltinClasses();
             OSClasses();
@@ -629,7 +629,7 @@ void CheckFileChanges(Policy **policy, GenericAgentConfig config, const ReportCo
             HardClass(CF_AGENTTYPES[THIS_AGENT_TYPE]);
 
             SetReferenceTime(true);
-            *policy = ReadPromises(cf_server, CF_SERVERC, config, report_context);
+            *policy = ReadPromises(AGENT_TYPE_SERVER, CF_SERVERC, config, report_context);
             KeepPromises(*policy, report_context);
             Summarize();
 

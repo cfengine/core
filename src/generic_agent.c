@@ -75,7 +75,7 @@ static char *InputLocation(char *filename);
 #if !defined(__MINGW32__)
 static void OpenLog(int facility);
 #endif
-static bool VerifyBundleSequence(const Policy *policy, enum cfagenttype agent, Rlist *bundlesequence);
+static bool VerifyBundleSequence(const Policy *policy, AgentType agent, Rlist *bundlesequence);
 
 /*****************************************************************************/
 
@@ -115,7 +115,7 @@ void CheckLicenses(void)
 
 Policy *GenericInitialize(char *agents, GenericAgentConfig config, const ReportContext *report_context)
 {
-    enum cfagenttype ag = Agent2Type(agents);
+    AgentType ag = Agent2Type(agents);
     char vbuff[CF_BUFSIZE];
     int ok = false;
 
@@ -195,7 +195,7 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig config, const ReportC
 
     Policy *policy = NULL;
 
-    if (ag != cf_keygen && ag != cf_gendoc)
+    if (ag != AGENT_TYPE_KEYGEN && ag != AGENT_TYPE_GENDOC)
     {
         if (!MissingInputFile())
         {
@@ -270,7 +270,7 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig config, const ReportC
 /* Level                                                                     */
 /*****************************************************************************/
 
-int CheckPromises(enum cfagenttype ag, const ReportContext *report_context)
+int CheckPromises(AgentType ag, const ReportContext *report_context)
 {
     char cmd[CF_BUFSIZE], cfpromises[CF_MAXVARSIZE];
     char filename[CF_MAXVARSIZE];
@@ -278,7 +278,7 @@ int CheckPromises(enum cfagenttype ag, const ReportContext *report_context)
     int fd;
     bool outsideRepo = false;
 
-    if ((ag != cf_agent) && (ag != cf_executor) && (ag != cf_server))
+    if ((ag != AGENT_TYPE_AGENT) && (ag != AGENT_TYPE_EXECUTOR) && (ag != AGENT_TYPE_SERVER))
     {
         return true;
     }
@@ -376,7 +376,7 @@ int CheckPromises(enum cfagenttype ag, const ReportContext *report_context)
 
 /*****************************************************************************/
 
-Policy *ReadPromises(enum cfagenttype ag, char *agents, GenericAgentConfig config,
+Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig config,
                      const ReportContext *report_context)
 {
     Rval retval;
@@ -385,11 +385,11 @@ Policy *ReadPromises(enum cfagenttype ag, char *agents, GenericAgentConfig confi
 
     switch (ag)
     {
-    case cf_common:
+    case AGENT_TYPE_COMMON:
         check_not_writable_by_others = false;
         break;
 
-    case cf_keygen:
+    case AGENT_TYPE_KEYGEN:
         return NULL;
 
     default:
@@ -443,7 +443,7 @@ Policy *ReadPromises(enum cfagenttype ag, char *agents, GenericAgentConfig confi
 
     WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_HTML], "%s", CFH[cfx_promise][cfe]);
 
-    if (ag != cf_common)
+    if (ag != AGENT_TYPE_COMMON)
     {
         ShowScopedVariables(report_context, REPORT_OUTPUT_TYPE_TEXT);
         ShowScopedVariables(report_context, REPORT_OUTPUT_TYPE_HTML);
@@ -999,7 +999,7 @@ static void Cf3ParseFile(Policy *policy, char *filename, bool check_not_writable
 
 /*******************************************************************/
 
-Constraint *ControlBodyConstraints(const Policy *policy, enum cfagenttype agent)
+Constraint *ControlBodyConstraints(const Policy *policy, AgentType agent)
 {
     for (const Body *body = policy->bodies; body != NULL; body = body->next)
     {
@@ -1388,7 +1388,7 @@ void SetInputFile(const char *name)
 
 void CompilationReport(Policy *policy, char *fname)
 {
-    if (THIS_AGENT_TYPE != cf_common)
+    if (THIS_AGENT_TYPE != AGENT_TYPE_COMMON)
     {
         return;
     }
@@ -1525,7 +1525,7 @@ static void VerifyPromises(Policy *policy, Rlist *bundlesequence,
         {
             for (pp = sp->promiselist; pp != NULL; pp = pp->next)
             {
-                ExpandPromise(cf_common, scope, pp, NULL, report_context);
+                ExpandPromise(AGENT_TYPE_COMMON, scope, pp, NULL, report_context);
             }
         }
     }
@@ -1534,7 +1534,7 @@ static void VerifyPromises(Policy *policy, Rlist *bundlesequence,
     HashControls(policy);
 
     /* Now look once through the sequences bundles themselves */
-    if (VerifyBundleSequence(policy, cf_common, bundlesequence) == false)
+    if (VerifyBundleSequence(policy, AGENT_TYPE_COMMON, bundlesequence) == false)
     {
         FatalError("Errors in promise bundles");
     }
@@ -1591,7 +1591,7 @@ static void CheckCommonClassPromises(Promise *classlist, const ReportContext *re
 
     for (pp = classlist; pp != NULL; pp = pp->next)
     {
-        ExpandPromise(cf_agent, THIS_BUNDLE, pp, KeepClassContextPromise, report_context);
+        ExpandPromise(AGENT_TYPE_AGENT, THIS_BUNDLE, pp, KeepClassContextPromise, report_context);
     }
 }
 
@@ -1967,7 +1967,7 @@ void HashControls(const Policy *policy)
 
 /********************************************************************/
 
-static bool VerifyBundleSequence(const Policy *policy, enum cfagenttype agent, Rlist *bundlesequence)
+static bool VerifyBundleSequence(const Policy *policy, AgentType agent, Rlist *bundlesequence)
 {
     Rlist *rp;
     char *name;
@@ -1975,7 +1975,7 @@ static bool VerifyBundleSequence(const Policy *policy, enum cfagenttype agent, R
     int ok = true;
     FnCall *fp;
 
-    if ((THIS_AGENT_TYPE != cf_agent) && (THIS_AGENT_TYPE != cf_know) && (THIS_AGENT_TYPE != cf_common) && (THIS_AGENT_TYPE != cf_gendoc))
+    if ((THIS_AGENT_TYPE != AGENT_TYPE_AGENT) && (THIS_AGENT_TYPE != AGENT_TYPE_KNOW) && (THIS_AGENT_TYPE != AGENT_TYPE_COMMON) && (THIS_AGENT_TYPE != AGENT_TYPE_GENDOC))
     {
         return true;
     }
@@ -1996,7 +1996,7 @@ static bool VerifyBundleSequence(const Policy *policy, enum cfagenttype agent, R
         FatalError("Promised bundlesequence was not a list");
     }
 
-    if ((agent != cf_agent) && (agent != cf_common))
+    if ((agent != AGENT_TYPE_AGENT) && (agent != AGENT_TYPE_COMMON))
     {
         return true;
     }
@@ -2040,7 +2040,7 @@ static bool VerifyBundleSequence(const Policy *policy, enum cfagenttype agent, R
 
 /*******************************************************************/
 
-GenericAgentConfig GenericAgentDefaultConfig(enum cfagenttype agent_type)
+GenericAgentConfig GenericAgentDefaultConfig(AgentType agent_type)
 {
     GenericAgentConfig config = { 0 };
 

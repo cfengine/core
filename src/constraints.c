@@ -65,7 +65,7 @@ static Constraint *ConstraintNew(const char *lval, Rval rval, const char *classe
     }
 
     // Check class
-    if (THIS_AGENT_TYPE == cf_common)
+    if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
     {
         PostCheckConstraint("none", "none", lval, rval);
     }

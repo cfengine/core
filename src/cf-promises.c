@@ -118,7 +118,7 @@ GenericAgentConfig CheckOpts(int argc, char **argv)
     extern char *optarg;
     int optindex = 0;
     int c;
-    GenericAgentConfig config = GenericAgentDefaultConfig(cf_common);
+    GenericAgentConfig config = GenericAgentDefaultConfig(AGENT_TYPE_COMMON);
 
     while ((c = getopt_long(argc, argv, "advnIf:D:N:VSrxMb:pg:h", OPTIONS, &optindex)) != EOF)
     {

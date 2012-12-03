@@ -220,7 +220,7 @@ int ScheduleEditXmlOperations(char *filename, Bundle *bp, Attributes a, Promise 
                 pp->this_server = filename;
                 pp->donep = &(pp->done);
 
-                ExpandPromise(cf_agent, bp->name, pp, KeepEditXmlPromise, report_context);
+                ExpandPromise(AGENT_TYPE_AGENT, bp->name, pp, KeepEditXmlPromise, report_context);
 
                 if (Abort())
                 {

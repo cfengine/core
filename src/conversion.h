@@ -23,7 +23,7 @@ enum cfcomparison String2Comparison(char *s);
 enum cflinktype String2LinkType(char *s);
 enum cfdatatype Typename2Datatype(char *name);
 enum cfdatatype GetControlDatatype(const char *varname, const BodySyntax *bp);
-enum cfagenttype Agent2Type(char *name);
+AgentType Agent2Type(const char *name);
 enum cfsbundle Type2Cfs(char *name);
 enum representations String2Representation(char *s);
 int GetBoolean(const char *val);

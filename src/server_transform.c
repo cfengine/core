@@ -221,7 +221,7 @@ void KeepControlPromises(Policy *policy)
 
 /* Now expand */
 
-    for (cp = ControlBodyConstraints(policy, cf_server); cp != NULL; cp = cp->next)
+    for (cp = ControlBodyConstraints(policy, AGENT_TYPE_SERVER); cp != NULL; cp = cp->next)
     {
         if (IsExcluded(cp->classes, NULL))
         {
@@ -462,7 +462,7 @@ static void KeepContextBundles(Policy *policy, const ReportContext *report_conte
         scope = bp->name;
         SetNewScope(bp->name);
 
-        if ((strcmp(bp->type, CF_AGENTTYPES[cf_server]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[cf_common]) == 0))
+        if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_SERVER]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
         {
             DeletePrivateClassContext();        // Each time we change bundle
 
@@ -482,7 +482,7 @@ static void KeepContextBundles(Policy *policy, const ReportContext *report_conte
 
                 for (pp = sp->promiselist; pp != NULL; pp = pp->next)
                 {
-                    ExpandPromise(cf_server, scope, pp, KeepServerPromise, report_context);
+                    ExpandPromise(AGENT_TYPE_SERVER, scope, pp, KeepServerPromise, report_context);
                 }
             }
         }
@@ -504,7 +504,7 @@ static void KeepPromiseBundles(Policy *policy, const ReportContext *report_conte
         scope = bp->name;
         SetNewScope(bp->name);
 
-        if ((strcmp(bp->type, CF_AGENTTYPES[cf_server]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[cf_common]) == 0))
+        if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_SERVER]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
         {
             DeletePrivateClassContext();        // Each time we change bundle
 
@@ -524,7 +524,7 @@ static void KeepPromiseBundles(Policy *policy, const ReportContext *report_conte
 
                 for (pp = sp->promiselist; pp != NULL; pp = pp->next)
                 {
-                    ExpandPromise(cf_server, scope, pp, KeepServerPromise, report_context);
+                    ExpandPromise(AGENT_TYPE_SERVER, scope, pp, KeepServerPromise, report_context);
                 }
             }
         }

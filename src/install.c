@@ -42,7 +42,7 @@ int RelevantBundle(const char *agent, const char *blocktype)
 {
     Item *ip;
 
-    if ((strcmp(agent, CF_AGENTTYPES[cf_common]) == 0) || (strcmp(CF_COMMONC, blocktype) == 0))
+    if ((strcmp(agent, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0) || (strcmp(CF_COMMONC, blocktype) == 0))
     {
         return true;
     }
@@ -51,7 +51,7 @@ int RelevantBundle(const char *agent, const char *blocktype)
 
     ip = SplitString("edit_line,edit_xml", ',');
 
-    if (strcmp(agent, CF_AGENTTYPES[cf_agent]) == 0)
+    if (strcmp(agent, CF_AGENTTYPES[AGENT_TYPE_AGENT]) == 0)
     {
         if (IsItemIn(ip, blocktype))
         {

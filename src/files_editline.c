@@ -154,7 +154,7 @@ int ScheduleEditLineOperations(char *filename, Bundle *bp, Attributes a, Promise
                 pp->this_server = filename;
                 pp->donep = &(pp->done);
 
-                ExpandPromise(cf_agent, bp->name, pp, KeepEditLinePromise, report_context);
+                ExpandPromise(AGENT_TYPE_AGENT, bp->name, pp, KeepEditLinePromise, report_context);
 
                 if (Abort())
                 {

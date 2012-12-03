@@ -243,7 +243,7 @@ category   [a-zA-Z_]+:
 
                           P.currentstring = xstrdup(tmp);
 
-                          if (THIS_AGENT_TYPE == cf_common)
+                          if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
                           {
                               IsCf3VarString(tmp);
                           }

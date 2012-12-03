@@ -169,7 +169,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
     int optindex = 0;
     int c;
     char ld_library_path[CF_BUFSIZE];
-    GenericAgentConfig config = GenericAgentDefaultConfig(cf_executor);
+    GenericAgentConfig config = GenericAgentDefaultConfig(AGENT_TYPE_EXECUTOR);
 
     while ((c = getopt_long(argc, argv, "dvnKIf:D:N:VxL:hFOV1gMW", OPTIONS, &optindex)) != EOF)
     {
@@ -307,7 +307,7 @@ static double GetSplay(void)
 
 void KeepPromises(Policy *policy, ExecConfig *config)
 {
-    for (Constraint *cp = ControlBodyConstraints(policy, cf_executor); cp != NULL; cp = cp->next)
+    for (Constraint *cp = ControlBodyConstraints(policy, AGENT_TYPE_EXECUTOR); cp != NULL; cp = cp->next)
     {
     if (IsExcluded(cp->classes, NULL))
         {
@@ -636,7 +636,7 @@ static Reload CheckNewPromises(const ReportContext *report_context)
     {
         CfOut(cf_verbose, "", " -> New promises detected...\n");
 
-        if (CheckPromises(cf_executor, report_context))
+        if (CheckPromises(AGENT_TYPE_EXECUTOR, report_context))
         {
             return RELOAD_FULL;
         }
@@ -717,7 +717,7 @@ static bool ScheduleRun(Policy **policy, ExecConfig *exec_config, const ReportCo
         NewScope("remote_access");
 
         GetNameInfo3();
-        GetInterfacesInfo(cf_executor);
+        GetInterfacesInfo(AGENT_TYPE_EXECUTOR);
         Get3Environment();
         BuiltinClasses();
         OSClasses();
@@ -730,7 +730,7 @@ static bool ScheduleRun(Policy **policy, ExecConfig *exec_config, const ReportCo
             .bundlesequence = NULL
         };
 
-        *policy = ReadPromises(cf_executor, CF_EXECC, config, report_context);
+        *policy = ReadPromises(AGENT_TYPE_EXECUTOR, CF_EXECC, config, report_context);
         KeepPromises(*policy, exec_config);
     }
     else
@@ -753,7 +753,7 @@ static bool ScheduleRun(Policy **policy, ExecConfig *exec_config, const ReportCo
         NewScope("mon");
         NewScope("sys");
 
-        GetInterfacesInfo(cf_executor);
+        GetInterfacesInfo(AGENT_TYPE_EXECUTOR);
         Get3Environment();
         BuiltinClasses();
         OSClasses();

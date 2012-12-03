@@ -61,7 +61,7 @@ int CF_PERSISTENCE = 10;
 
 const char *THIS_BUNDLE = NULL;
 
-enum cfagenttype THIS_AGENT_TYPE;
+AgentType THIS_AGENT_TYPE;
 time_t PROMISETIME = 0;
 
 int LICENSES = 0;

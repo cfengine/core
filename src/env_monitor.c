@@ -1122,13 +1122,13 @@ static void GatherPromisedMeasures(const Policy *policy, const ReportContext *re
         scope = bp->name;
         SetNewScope(bp->name);
 
-        if ((strcmp(bp->type, CF_AGENTTYPES[cf_monitor]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[cf_common]) == 0))
+        if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_MONITOR]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
         {
             for (sp = bp->subtypes; sp != NULL; sp = sp->next)  /* get schedule */
             {
                 for (pp = sp->promiselist; pp != NULL; pp = pp->next)
                 {
-                    ExpandPromise(cf_monitor, scope, pp, KeepMonitorPromise, report_context);
+                    ExpandPromise(AGENT_TYPE_MONITOR, scope, pp, KeepMonitorPromise, report_context);
                 }
             }
         }
@@ -1141,7 +1141,7 @@ static void GatherPromisedMeasures(const Policy *policy, const ReportContext *re
     NewScope("mon");
     NewScope("sys");
     GetNameInfo3();
-    GetInterfacesInfo(cf_monitor);
+    GetInterfacesInfo(AGENT_TYPE_MONITOR);
     Get3Environment();
     OSClasses();
     BuiltinClasses();

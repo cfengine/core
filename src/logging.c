@@ -350,7 +350,7 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, c
         return;
     }
 
-    if ((AUDITDBP == NULL) || (THIS_AGENT_TYPE != cf_agent))
+    if ((AUDITDBP == NULL) || (THIS_AGENT_TYPE != AGENT_TYPE_AGENT))
     {
         CloseDB(AUDITDBP);
         return;

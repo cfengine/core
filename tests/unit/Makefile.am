@@ -53,7 +53,8 @@ check_PROGRAMS = \
 	granules_test \
 	scope_test \
 	conversion_test \
-	files_interfaces_test
+	files_interfaces_test \
+        connection_management_test
 
 TESTS = $(check_PROGRAMS)
 
@@ -109,3 +110,6 @@ package_versions_compare_test_SOURCES = package_versions_compare_test.c ../../sr
 
 sort_test_SOURCES = sort_test.c ../../src/sort.c
 sort_test_LDADD = libtest.la
+
+connection_management_test_SOURCES = connection_management_test.c ../../src/server.c
+connection_management_test_LDADD = ../../src/libpromises.la libtest.la

@@ -80,7 +80,6 @@ char CFRUNCOMMAND[CF_BUFSIZE] = { 0 };
 static const size_t CF_BUFEXT = 128;
 static const int CF_NOSIZE = -1;
 
-static void PurgeOldConnections(Item **list, time_t now);
 static void SpawnConnection(int sd_reply, char *ipaddr);
 static void *HandleConnection(ServerConnectionState *conn);
 static int BusyWithConnection(ServerConnectionState *conn);
@@ -180,12 +179,20 @@ void ServerEntryPoint(int sd_reply, char *ipaddr, ServerAccess sv)
     
     if (!IsMatchItemIn(sv.multiconnlist, MapAddress(ipaddr)))
     {
+        if (!ThreadLock(cft_count))
+        {
+            return;
+        }
+
         if (IsItemIn(sv.connectionlist, MapAddress(ipaddr)))
         {
+            ThreadUnlock(cft_count);
             CfOut(cf_error, "", "Denying repeated connection from \"%s\"\n", ipaddr);
             cf_closesocket(sd_reply);
             return;
         }
+
+        ThreadUnlock(cft_count);
     }
     
     if (sv.logconns)
@@ -217,17 +224,12 @@ void ServerEntryPoint(int sd_reply, char *ipaddr, ServerAccess sv)
 
 /**********************************************************************/
 
-static void PurgeOldConnections(Item **list, time_t now)
+void PurgeOldConnections(Item **list, time_t now)
    /* Some connections might not terminate properly. These should be cleaned
       every couple of hours. That should be enough to prevent spamming. */
 {
     Item *ip;
     int then = 0;
-
-    if (list == NULL)
-    {
-        return;
-    }
 
     CfDebug("Purging Old Connections...\n");
 
@@ -236,14 +238,23 @@ static void PurgeOldConnections(Item **list, time_t now)
         return;
     }
 
-    for (ip = *list; ip != NULL; ip = ip->next)
+    if (list == NULL)
+    {
+        return;
+    }
+
+    Item *next;
+
+    for (ip = *list; ip != NULL; ip = next)
     {
         sscanf(ip->classes, "%d", &then);
 
+        next = ip->next;
+
         if (now > then + 7200)
         {
-            DeleteItem(list, ip);
             CfOut(cf_verbose, "", "Purging IP address %s from connection list\n", ip->name);
+            DeleteItem(list, ip);
         }
     }
 

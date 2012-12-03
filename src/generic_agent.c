@@ -717,6 +717,7 @@ int NewPromiseProposals()
     struct stat sb;
     int result = false;
     char filename[CF_MAXVARSIZE];
+    time_t validated_at;
 
     if (MINUSF)
     {
@@ -731,16 +732,16 @@ int NewPromiseProposals()
 
     if (stat(filename, &sb) != -1)
     {
-        PROMISETIME = sb.st_mtime;
+        validated_at = sb.st_mtime;
     }
     else
     {
-        PROMISETIME = 0;
+        validated_at = 0;
     }
 
 // sanity check
 
-    if (PROMISETIME > time(NULL))
+    if (validated_at > time(NULL))
     {
         CfOut(cf_inform, "",
               "!! Clock seems to have jumped back in time - mtime of %s is newer than current time - touching it",
@@ -751,7 +752,7 @@ int NewPromiseProposals()
             CfOut(cf_error, "utime", "!! Could not touch %s", filename);
         }
 
-        PROMISETIME = 0;
+        validated_at = 0;
         return true;
     }
 
@@ -761,7 +762,7 @@ int NewPromiseProposals()
         return true;
     }
 
-    if (sb.st_mtime > PROMISETIME)
+    if (sb.st_mtime > validated_at || sb.st_mtime > PROMISETIME)
     {
         CfOut(cf_verbose, "", " -> Promises seem to change");
         return true;

@@ -1,0 +1,63 @@
+#######################################################
+#
+# Test getindices() across namespaces, size 5
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../../default.cf.sub", "206-namespaced.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+    "dummy" string => "dummy";
+
+files:
+    "$(G.testfile).expected"
+        create => "true",
+        edit_line => init_insert;
+}
+
+bundle edit_line init_insert
+{
+insert_lines:
+    "alpha";
+    "beta";
+    "gamma's";
+    "delta-delta:delta";
+    "last";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+    "array[alpha]" string => "zero";
+    "array[beta]" string => "two";
+    "array[gamma's]" string => "three's";
+    "array[delta-delta:delta]" string => "four-fore:quatre";
+    "array[last]" string => "last";
+
+  methods:
+      "run" usebundle => testing_arrays:namespaced_test("$(G.testfile).actual",
+                                                        "default:test.array");
+}
+
+#######################################################
+
+bundle agent check
+{
+methods:
+        "any" usebundle => sorted_check_diff("$(G.testfile).actual",
+                                              "$(G.testfile).expected",
+                                              "$(this.promise_filename)");
+}

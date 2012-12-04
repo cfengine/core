@@ -1,0 +1,24 @@
+body file control
+{
+  namespace => "b";
+}
+
+bundle common variables
+{
+  vars:
+      "array2[key]" string => "string2";
+}
+
+bundle agent test_in_namespace(array_name, array_name2)
+{
+  vars:
+      "repo_ids4" slist => getindices("b:variables.array2");
+
+}
+
+bundle agent check_in_namespace(test)
+{
+  methods:
+      "any" usebundle => default:default_check_strcmp("$(b:test_in_namespace.repo_ids4)", "key", "$(test)", "no");
+}
+

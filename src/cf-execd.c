@@ -46,6 +46,7 @@ static char VMAILSERVER[CF_BUFSIZE];
 static char MAILFROM[CF_BUFSIZE];
 static char MAILTO[CF_BUFSIZE];
 static int MAXLINES = 30;
+static int AGENT_EXPIREAFTER = 10080;
 
 #if defined(HAVE_PTHREAD)
 static pthread_attr_t threads_attrs;
@@ -325,6 +326,12 @@ static void KeepPromises(void)
             CfDebug("exec_command = %s\n", EXECCOMMAND);
         }
 
+        if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_agent_expireafter].lval) == 0)
+        {
+            AGENT_EXPIREAFTER = Str2Int(retval.item);
+            CfDebug("agent_expireafter = %d\n", AGENT_EXPIREAFTER);
+        }
+
         if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_executorfacility].lval) == 0)
         {
             SetFacility(retval.item);
@@ -458,6 +465,7 @@ void StartServer(void)
         .mail_max_lines = MAXLINES,
         .fq_name = VFQNAME,
         .ip_address = VIPADDRESS,
+        .agent_expireafter = AGENT_EXPIREAFTER,
     };
 
     if (ONCE)
@@ -771,6 +779,7 @@ ExecConfig *CopyExecConfig(const ExecConfig *config)
     copy->fq_name = xstrdup(config->fq_name);
     copy->ip_address = xstrdup(config->ip_address);
     copy->mail_max_lines = config->mail_max_lines;
+    copy->agent_expireafter = config->agent_expireafter;
 
     return copy;
 }

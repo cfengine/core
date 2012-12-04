@@ -74,7 +74,7 @@ ExpectedVars expected_vars[] =
     {"domain", "cfengine.com"},
 };
 
-void NewScalar(const char *namespace, const char *varname, const char *value, AgentType type)
+void NewScalar(const char *namespace, const char *varname, const char *value, enum cfdatatype type)
 {
     int i;
 

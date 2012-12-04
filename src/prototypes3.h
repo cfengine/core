@@ -644,6 +644,7 @@ void SetTimeOut(int timeout);
 void TimeOut(void);
 void SetReferenceTime(int setclasses);
 void SetStartTime(void);
+bool IsReadReady(int fd, int timeout_sec);
 
 /* unix.c */
 

@@ -54,6 +54,7 @@ check_PROGRAMS = \
 	scope_test \
 	conversion_test \
 	files_interfaces_test \
+        timeout_test \
         connection_management_test
 
 TESTS = $(check_PROGRAMS)

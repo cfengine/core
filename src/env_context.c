@@ -503,7 +503,7 @@ void HardClass(const char *oclass)
     Item *ip;
     char class[CF_MAXVARSIZE];
 
-    strcpy(class, oclass);    
+    strcpy(class, oclass);
     Chop(class);
     CanonifyNameInPlace(class);
 
@@ -554,6 +554,17 @@ void HardClass(const char *oclass)
             }
         }
     }
+}
+
+/*******************************************************************/
+
+void DeleteHardClass(const char *oclass)
+{
+    char class[CF_MAXVARSIZE];
+
+    strncpy(class, oclass, CF_MAXVARSIZE);
+
+    DeleteFromAlphaList(&VHARDHEAP, oclass);
 }
 
 /*******************************************************************/
@@ -1059,7 +1070,7 @@ static ExpressionValue EvalTokenAsClass(const char *classname, void *namespace)
 
     if (strcmp(classname, "any") == 0)
        {
-       return true;       
+       return true;
        }
     
     if (strchr(classname, ':'))

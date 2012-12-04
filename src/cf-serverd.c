@@ -47,7 +47,7 @@ typedef struct
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);
 static int OpenReceiverChannel(void);
-static void PurgeOldConnections(Item **list, time_t now);
+void PurgeOldConnections(Item **list, time_t now);
 static void SpawnConnection(int sd_reply, char *ipaddr);
 static void CheckFileChanges(GenericAgentConfig config);
 static void *HandleConnection(ServerConnectionState *conn);
@@ -664,7 +664,7 @@ static int OpenReceiverChannel()
 /* Level 3                                                           */
 /*********************************************************************/
 
-static void PurgeOldConnections(Item **list, time_t now)
+void PurgeOldConnections(Item **list, time_t now)
    /* Some connections might not terminate properly. These should be cleaned
       every couple of hours. That should be enough to prevent spamming. */
 {
@@ -683,14 +683,18 @@ static void PurgeOldConnections(Item **list, time_t now)
         return;
     }
 
-    for (ip = *list; ip != NULL; ip = ip->next)
+    Item *next;
+
+    for (ip = *list; ip != NULL; ip = next)
     {
         sscanf(ip->classes, "%d", &then);
 
+        next = ip->next;
+
         if (now > then + 7200)
         {
-            DeleteItem(list, ip);
             CfOut(cf_verbose, "", "Purging IP address %s from connection list\n", ip->name);
+            DeleteItem(list, ip);
         }
     }
 

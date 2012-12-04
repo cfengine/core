@@ -648,6 +648,7 @@ void SetStartTime(void);
 bool IsReadReady(int fd, int timeout_sec);
 
 /* unix.c */
+void ProcessSignalTerminate(pid_t pid);
 
 /*
  * Do not modify returned Rval, its contents may be constant and statically

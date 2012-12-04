@@ -558,6 +558,7 @@ FILE *cf_popen_sh(const char *command, char *type);
 FILE *cf_popen_shsetuid(const char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background);
 int cf_pclose(FILE *pp);
 int cf_pclose_def(FILE *pfp, Attributes a, Promise *pp);
+bool PipeToPid(pid_t *pid, FILE *pp);
 int VerifyCommandRetcode(int retcode, int fallback, Attributes a, Promise *pp);
 
 #ifndef MINGW

@@ -325,7 +325,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
     extern char *optarg;
     int optindex = 0;
     int c;
-    GenericAgentConfig config = GenericAgentDefaultConfig(cf_report);
+    GenericAgentConfig config = GenericAgentDefaultConfig(AGENT_TYPE_REPORT);
 
     while ((c = getopt_long(argc, argv, "CghdvVf:st:ar:PXHLMIRSKE:x:i:1:p:k:c:qF:o:", OPTIONS, &optindex)) != EOF)
     {
@@ -585,7 +585,7 @@ static void KeepReportsControlPromises(Policy *policy)
     Rlist *rp;
     Rval retval;
 
-    for (cp = ControlBodyConstraints(policy, cf_report); cp != NULL; cp = cp->next)
+    for (cp = ControlBodyConstraints(policy, AGENT_TYPE_REPORT); cp != NULL; cp = cp->next)
     {
         if (IsExcluded(cp->classes, NULL))
         {

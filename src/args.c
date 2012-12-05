@@ -109,7 +109,7 @@ int MapBodyArgs(const char *scopeid, Rlist *give, const Rlist *take)
             dtg = FunctionReturnType(fp->name);
             FnCallResult res = EvaluateFunctionCall(fp, NULL);
 
-            if (res.status == FNCALL_FAILURE && THIS_AGENT_TYPE != cf_common)
+            if (res.status == FNCALL_FAILURE && THIS_AGENT_TYPE != AGENT_TYPE_COMMON)
             {
                 // Unresolved variables
                 if (VERBOSE)

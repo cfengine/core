@@ -57,7 +57,7 @@ void ForceScalar(char *lval, char *rval)
 {
     Rval retval;
 
-    if (THIS_AGENT_TYPE != cf_agent && THIS_AGENT_TYPE != cf_know)
+    if (THIS_AGENT_TYPE != AGENT_TYPE_AGENT && THIS_AGENT_TYPE != AGENT_TYPE_KNOW)
     {
         return;
     }
@@ -924,7 +924,7 @@ int AddVariableHash(const char *scope, const char *lval, Rval rval, enum cfdatat
 
 // Look for outstanding lists in variable rvals
 
-    if (THIS_AGENT_TYPE == cf_common)
+    if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
     {
         Rlist *listvars = NULL, *scalarvars = NULL;
 

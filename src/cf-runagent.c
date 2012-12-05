@@ -221,7 +221,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
     extern char *optarg;
     int optindex = 0;
     int c;
-    GenericAgentConfig config = GenericAgentDefaultConfig(cf_runagent);
+    GenericAgentConfig config = GenericAgentDefaultConfig(AGENT_TYPE_RUNAGENT);
 
     DEFINECLASSES[0] = '\0';
     SENDCLASSES[0] = '\0';
@@ -502,7 +502,7 @@ void KeepControlPromises(Policy *policy)
 
 /* Keep promised agent behaviour - control bodies */
 
-    for (cp = ControlBodyConstraints(policy, cf_runagent); cp != NULL; cp = cp->next)
+    for (cp = ControlBodyConstraints(policy, AGENT_TYPE_RUNAGENT); cp != NULL; cp = cp->next)
     {
         if (IsExcluded(cp->classes, NULL))
         {

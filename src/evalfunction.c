@@ -556,7 +556,7 @@ static FnCallResult FnCallConcat(FnCall *fp, Rlist *finalargs)
 
 static FnCallResult FnCallClassMatch(FnCall *fp, Rlist *finalargs)
 {
-    if (MatchInAlphaList(&VHEAP, ScalarValue(finalargs)) || MatchInAlphaList(&VADDCLASSES, ScalarValue(finalargs)))
+    if (MatchInAlphaList(&VHARDHEAP, ScalarValue(finalargs)) || MatchInAlphaList(&VHEAP, ScalarValue(finalargs)) || MatchInAlphaList(&VADDCLASSES, ScalarValue(finalargs)))
     {
         return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), CF_SCALAR } };
     }
@@ -587,6 +587,14 @@ static FnCallResult FnCallCountClassesMatching(FnCall *fp, Rlist *finalargs)
             }
         }
 
+        for (ip = VHARDHEAP.list[i]; ip != NULL; ip = ip->next)
+        {
+            if (FullTextMatch(string, ip->name))
+            {
+                count++;
+            }
+        }
+
         for (ip = VADDCLASSES.list[i]; ip != NULL; ip = ip->next)
         {
             if (FullTextMatch(string, ip->name))
@@ -600,6 +608,14 @@ static FnCallResult FnCallCountClassesMatching(FnCall *fp, Rlist *finalargs)
         for (i = 0; i < CF_ALPHABETSIZE; i++)
         {
             for (ip = VHEAP.list[i]; ip != NULL; ip = ip->next)
+            {
+                if (FullTextMatch(string, ip->name))
+                {
+                    count++;
+                }
+            }
+
+            for (ip = VHARDHEAP.list[i]; ip != NULL; ip = ip->next)
             {
                 if (FullTextMatch(string, ip->name))
                 {
@@ -859,7 +875,7 @@ static FnCallResult FnCallReadTcp(FnCall *fp, Rlist *finalargs)
     val = Str2Int(maxbytes);
     portnum = (short) Str2Int(port);
 
-    if (val < 0 || portnum < 0 || THIS_AGENT_TYPE == cf_common)
+    if (val < 0 || portnum < 0 || THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
     {
         return (FnCallResult) { FNCALL_FAILURE };
     }
@@ -1737,7 +1753,7 @@ static FnCallResult FnCallSelectServers(FnCall *fp, Rlist *finalargs)
         val = CF_BUFSIZE - CF_BUFFERMARGIN;
     }
 
-    if (THIS_AGENT_TYPE != cf_agent)
+    if (THIS_AGENT_TYPE != AGENT_TYPE_AGENT)
     {
         snprintf(buffer, CF_MAXVARSIZE - 1, "%d", count);
         return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
@@ -2165,7 +2181,7 @@ static FnCallResult FnCallRemoteScalar(FnCall *fp, Rlist *finalargs)
         server = "127.0.0.1";
     }
 
-    if (THIS_AGENT_TYPE == cf_common)
+    if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
     {
         return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("<remote scalar>"), CF_SCALAR } };
     }
@@ -2202,7 +2218,7 @@ static FnCallResult FnCallHubKnowledge(FnCall *fp, Rlist *finalargs)
 
     char *handle = ScalarValue(finalargs);
 
-    if (THIS_AGENT_TYPE != cf_agent)
+    if (THIS_AGENT_TYPE != AGENT_TYPE_AGENT)
     {
         return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("<inaccessible remote scalar>"), CF_SCALAR } };
     }
@@ -2244,7 +2260,7 @@ static FnCallResult FnCallRemoteClassesMatching(FnCall *fp, Rlist *finalargs)
         server = "127.0.0.1";
     }
 
-    if (THIS_AGENT_TYPE == cf_common)
+    if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
     {
         return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("remote_classes"), CF_SCALAR } };
     }
@@ -3693,7 +3709,7 @@ static void *CfReadFile(char *filename, int maxsize)
 
     if (cfstat(filename, &sb) == -1)
     {
-        if (THIS_AGENT_TYPE == cf_common)
+        if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
         {
             CfDebug("Could not examine file %s in readfile on this system", filename);
         }

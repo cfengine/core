@@ -30,6 +30,8 @@
 
 #include "assoc.h"
 
+void ProcessSignalTerminate(pid_t pid);
+
 /*
  * Do not modify returned Rval, its contents may be constant and statically
  * allocated.

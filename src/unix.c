@@ -66,6 +66,8 @@
 #  define SIZEOF_IFREQ(x) sizeof(struct ifreq)
 # endif
 
+static bool IsProcessRunning(pid_t pid);
+
 static void FindV6InterfacesInfo(void);
 
 static bool IgnoreJailInterface(int ifaceidx, struct sockaddr_in *inaddr);
@@ -100,6 +102,61 @@ int GracefulTerminate(pid_t pid)
     }
 
     return (res == 0);
+}
+
+/*************************************************************/
+
+void ProcessSignalTerminate(pid_t pid)
+{
+    if(!IsProcessRunning(pid))
+    {
+        return;
+    }
+
+
+    if(kill(pid, SIGINT) == -1)
+    {
+        CfOut(cf_error, "kill", "!! Could not send SIGINT to pid %" PRIdMAX , (intmax_t)pid);
+    }
+
+    sleep(1);
+
+
+    if(kill(pid, SIGTERM) == -1)
+    {
+        CfOut(cf_error, "kill", "!! Could not send SIGTERM to pid %" PRIdMAX , (intmax_t)pid);
+    }
+
+    sleep(5);
+
+
+    if(kill(pid, SIGKILL) == -1)
+    {
+        CfOut(cf_error, "kill", "!! Could not send SIGKILL to pid %" PRIdMAX , (intmax_t)pid);
+    }
+
+    sleep(1);
+}
+
+/*************************************************************/
+
+static bool IsProcessRunning(pid_t pid)
+{
+    int res = kill(pid, 0);
+
+    if(res == 0)
+    {
+        return true;
+    }
+
+    if(res == -1 && errno == ESRCH)
+    {
+        return false;
+    }
+
+    CfOut(cf_error, "kill", "!! Failed checking for process existence");
+
+    return false;
 }
 
 /*************************************************************/
@@ -539,12 +596,12 @@ static bool IgnoreJailInterface(int ifaceidx, struct sockaddr_in *inaddr)
 
 /******************************************************************/
 
-static void GetMacAddress(enum cfagenttype ag, int fd, struct ifreq *ifr, struct ifreq *ifp, Rlist **interfaces,
-                               Rlist **hardware)
+static void GetMacAddress(AgentType ag, int fd, struct ifreq *ifr, struct ifreq *ifp, Rlist **interfaces,
+                          Rlist **hardware)
 {
     char name[CF_MAXVARSIZE];
 
-    if ((ag != cf_know) && (ag != cf_gendoc))
+    if ((ag != AGENT_TYPE_KNOW) && (ag != AGENT_TYPE_GENDOC))
     {
         snprintf(name, CF_MAXVARSIZE, "hardware_mac[%s]", ifp->ifr_name);
     }
@@ -579,7 +636,7 @@ static void GetMacAddress(enum cfagenttype ag, int fd, struct ifreq *ifr, struct
 
 /******************************************************************/
 
-void GetInterfacesInfo(enum cfagenttype ag)
+void GetInterfacesInfo(AgentType ag)
 {
     int fd, len, i, j, first_address = false, ipdefault = false;
     struct ifreq ifbuf[CF_IFREQ], ifr, *ifp;
@@ -792,7 +849,7 @@ void GetInterfacesInfo(enum cfagenttype ag)
 
                 strcpy(ip, inet_ntoa(sin->sin_addr));
 
-                if ((ag != cf_know) && (ag != cf_gendoc))
+                if ((ag != AGENT_TYPE_KNOW) && (ag != AGENT_TYPE_GENDOC))
                 {
                     snprintf(name, CF_MAXVARSIZE - 1, "ipv4[%s]", CanonifyName(ifp->ifr_name));
                 }
@@ -811,7 +868,7 @@ void GetInterfacesInfo(enum cfagenttype ag)
                     {
                         *sp = '\0';
 
-                        if ((ag != cf_know) && (ag != cf_gendoc))
+                        if ((ag != AGENT_TYPE_KNOW) && (ag != AGENT_TYPE_GENDOC))
                         {
                             snprintf(name, CF_MAXVARSIZE - 1, "ipv4_%d[%s]", i--, CanonifyName(ifp->ifr_name));
                         }

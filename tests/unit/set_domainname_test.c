@@ -186,6 +186,11 @@ char *CanonifyName(const char *str)
     fail();
 }
 
+void CanonifyNameInPlace(char *str)
+{
+    fail();
+}
+
 int FullTextMatch(const char *regptr, const char *cmpptr)
 {
     fail();
@@ -226,7 +231,7 @@ char *HashPrint(enum cfhashes type, unsigned char digest[EVP_MAX_MD_SIZE + 1])
     fail();
 }
 
-void Unix_GetInterfaceInfo(enum cfagenttype ag)
+void Unix_GetInterfaceInfo(AgentType ag)
 {
     fail();
 }
@@ -274,7 +279,7 @@ void DeleteRlist(Rlist *list)
 /* Stub out variables */
 
 int DEBUG;
-enum cfagenttype THIS_AGENT_TYPE;
+AgentType THIS_AGENT_TYPE;
 Item *IPADDRESSES;
 struct utsname VSYSNAME;
 enum classes VSYSTEMHARDCLASS;

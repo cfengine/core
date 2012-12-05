@@ -197,7 +197,7 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, c
             }
         }
 
-        AddAllClasses(attr.classes.change, attr.classes.persist, attr.classes.timer);
+        AddAllClasses(pp->namespace, attr.classes.change, attr.classes.persist, attr.classes.timer);
         MarkPromiseHandleDone(pp);
         DeleteAllClasses(attr.classes.del_change);
 
@@ -238,7 +238,7 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, c
 #endif
         }
 
-        AddAllClasses(attr.classes.timeout, attr.classes.persist, attr.classes.timer);
+        AddAllClasses(pp->namespace, attr.classes.timeout, attr.classes.persist, attr.classes.timer);
         DeleteAllClasses(attr.classes.del_notkept);
 
         if (IsPromiseValuableForLogging(pp))
@@ -260,7 +260,7 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, c
 #endif
         }
 
-        AddAllClasses(attr.classes.failure, attr.classes.persist, attr.classes.timer);
+        AddAllClasses(pp->namespace, attr.classes.failure, attr.classes.persist, attr.classes.timer);
         DeleteAllClasses(attr.classes.del_notkept);
 
         if (IsPromiseValuableForLogging(pp))
@@ -282,7 +282,7 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, c
 #endif
         }
 
-        AddAllClasses(attr.classes.denied, attr.classes.persist, attr.classes.timer);
+        AddAllClasses(pp->namespace, attr.classes.denied, attr.classes.persist, attr.classes.timer);
         DeleteAllClasses(attr.classes.del_notkept);
 
         if (IsPromiseValuableForLogging(pp))
@@ -304,7 +304,7 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, c
 #endif
         }
 
-        AddAllClasses(attr.classes.interrupt, attr.classes.persist, attr.classes.timer);
+        AddAllClasses(pp->namespace, attr.classes.interrupt, attr.classes.persist, attr.classes.timer);
         DeleteAllClasses(attr.classes.del_notkept);
 
         if (IsPromiseValuableForLogging(pp))
@@ -317,7 +317,7 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, c
     case CF_UNKNOWN:
     case CF_NOP:
 
-        AddAllClasses(attr.classes.kept, attr.classes.persist, attr.classes.timer);
+        AddAllClasses(pp->namespace, attr.classes.kept, attr.classes.persist, attr.classes.timer);
         DeleteAllClasses(attr.classes.del_kept);
 
         if (IsPromiseValuableForLogging(pp))
@@ -350,7 +350,7 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, c
         return;
     }
 
-    if ((AUDITDBP == NULL) || (THIS_AGENT_TYPE != cf_agent))
+    if ((AUDITDBP == NULL) || (THIS_AGENT_TYPE != AGENT_TYPE_AGENT))
     {
         CloseDB(AUDITDBP);
         return;

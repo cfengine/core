@@ -115,7 +115,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
     extern char *optarg;
     int optindex = 0;
     int c;
-    GenericAgentConfig config = GenericAgentDefaultConfig(cf_monitor);
+    GenericAgentConfig config = GenericAgentDefaultConfig(AGENT_TYPE_MONITOR);
 
     while ((c = getopt_long(argc, argv, "dvnIf:VSxHTKMFh", OPTIONS, &optindex)) != EOF)
     {
@@ -190,7 +190,7 @@ static void KeepPromises(Policy *policy, const ReportContext *report_context)
     Constraint *cp;
     Rval retval;
 
-    for (cp = ControlBodyConstraints(policy, cf_monitor); cp != NULL; cp = cp->next)
+    for (cp = ControlBodyConstraints(policy, AGENT_TYPE_MONITOR); cp != NULL; cp = cp->next)
     {
         if (IsExcluded(cp->classes, NULL))
         {

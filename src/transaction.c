@@ -112,10 +112,14 @@ static void LocksCleanup(void)
     }
 }
 
+/*****************************************************************************/
+
 static void RegisterLockCleanup(void)
 {
     RegisterAtExitFunction(&LocksCleanup);
 }
+
+/*****************************************************************************/
 
 CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promise *pp, int ignoreProcesses)
 {
@@ -165,7 +169,7 @@ CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promi
 
 /* As a backup to "done" we need something immune to re-use */
 
-    if (THIS_AGENT_TYPE == cf_agent)
+    if (THIS_AGENT_TYPE == AGENT_TYPE_AGENT)
     {
         if (IsItemIn(DONELIST, str_digest))
         {

@@ -269,7 +269,7 @@ void TestExpandVariables(const ReportContext *report_context)
         MapIteratorsFromRval("diagnostic", &scalarvars, &listvars, cp->rval, NULL);
     }
 
-    ExpandPromiseAndDo(cf_common, "diagnostic", pcopy, scalarvars, listvars, NULL, report_context);
+    ExpandPromiseAndDo(AGENT_TYPE_COMMON, "diagnostic", pcopy, scalarvars, listvars, NULL, report_context);
 /* No cleanup */
 }
 

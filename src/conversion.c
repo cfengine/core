@@ -571,14 +571,14 @@ enum cfdatatype Typename2Datatype(char *name)
 
 /****************************************************************************/
 
-enum cfagenttype Agent2Type(char *name)
+AgentType Agent2Type(const char *name)
 /* convert abstract data type names: int, ilist etc */
 {
     int i;
 
     CfDebug("Agent2Type(%s)\n", name);
 
-    for (i = 0; i < (int) cf_noagent; i++)
+    for (i = 0; i < (int) AGENT_TYPE_NOAGENT; i++)
     {
         if (name && (strcmp(CF_AGENTTYPES[i], name) == 0))
         {
@@ -586,7 +586,7 @@ enum cfagenttype Agent2Type(char *name)
         }
     }
 
-    return (enum cfagenttype) i;
+    return (AgentType) i;
 }
 
 /****************************************************************************/
@@ -666,7 +666,7 @@ long Str2Int(const char *s)
 
     if ((a == CF_NOINT) || (!IsSpace(remainder)))
     {
-        if (THIS_AGENT_TYPE == cf_common)
+        if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
         {
             CfOut(cf_inform, "", " !! Error reading assumed integer value \"%s\" => \"%s\" (found remainder \"%s\")\n",
                   s, "non-value", remainder);

@@ -1,0 +1,16 @@
+body file control
+{
+  namespace => "cfdc_yumclient";
+}
+
+bundle agent config(file, i)
+{
+  vars:
+      "data[var$(i)]" string => "value$(i)";
+
+  files:
+      "$(file)"
+      handle => "ensure_present",
+      edit_defaults => default:init_empty,
+      edit_line => default:set_variable_values("cfdc_yumclient:config.data");
+}

@@ -63,6 +63,7 @@ void ServerEntryPoint(int sd_reply, char *ipaddr, ServerAccess sv);
 void TryCollectCall(void);
 int SetServerListenState(size_t queue_size);
 void DeleteAuthList(Auth *ap);
+void PurgeOldConnections(Item **list, time_t now);
 
 
 AgentConnection *ExtractCallBackChannel(ServerConnectionState *conn);

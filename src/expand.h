@@ -30,8 +30,8 @@
 
 #include "reporting.h"
 
-void ExpandPromise(enum cfagenttype ag, const char *scopeid, Promise *pp, void *fnptr, const ReportContext *report_context);
-void ExpandPromiseAndDo(enum cfagenttype ag, const char *scope, Promise *p, Rlist *scalarvars, Rlist *listvars,
+void ExpandPromise(AgentType ag, const char *scopeid, Promise *pp, void *fnptr, const ReportContext *report_context);
+void ExpandPromiseAndDo(AgentType ag, const char *scope, Promise *p, Rlist *scalarvars, Rlist *listvars,
                         void (*fnptr) (), const ReportContext *report_context);
 Rval ExpandDanglers(const char *scope, Rval rval, const Promise *pp);
 void MapIteratorsFromRval(const char *scope, Rlist **los, Rlist **lol, Rval rval, const Promise *pp);

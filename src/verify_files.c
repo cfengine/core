@@ -505,13 +505,13 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
             return false;
         }
 
-        if (strncmp(edit_bundle_name,"default:",strlen("default:")) == 0)
+        if (strncmp(edit_bundle_name,"default:",strlen("default:")) == 0) // CF_NS == ':'
         {
-            method_deref = strchr(edit_bundle_name,':') + 1;
+            method_deref = strchr(edit_bundle_name, CF_NS) + 1;
         }
-        else if ((strchr(edit_bundle_name, ':') == NULL) && (strcmp(pp->namespace, "default") != 0))
+        else if ((strchr(edit_bundle_name, CF_NS) == NULL) && (strcmp(pp->namespace, "default") != 0))
         {
-            snprintf(qualified_edit, CF_BUFSIZE, "%s:%s", pp->namespace, edit_bundle_name);
+            snprintf(qualified_edit, CF_BUFSIZE, "%s%c%s", pp->namespace, CF_NS, edit_bundle_name);
             method_deref = qualified_edit;
         }
         else            
@@ -563,9 +563,9 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
             return false;
         }
 
-        if (strncmp(edit_bundle_name,"default:",strlen("default:")) == 0)
+        if (strncmp(edit_bundle_name,"default:",strlen("default:")) == 0) // CF_NS == ':'
            {
-           method_deref = strchr(edit_bundle_name,':') + 1;
+           method_deref = strchr(edit_bundle_name, CF_NS) + 1;
            }
         else
            {

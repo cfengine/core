@@ -94,7 +94,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
     extern char *optarg;
     int optindex = 0;
     int c;
-    GenericAgentConfig config = GenericAgentDefaultConfig(cf_gendoc);
+    GenericAgentConfig config = GenericAgentDefaultConfig(AGENT_TYPE_GENDOC);
 
     getcwd(SOURCE_DIR, CF_BUFSIZE);
     snprintf(OUTPUT_FILE, CF_BUFSIZE, "%scf3-Reference.texinfo", SOURCE_DIR);

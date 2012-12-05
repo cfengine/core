@@ -93,13 +93,13 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
 
     PromiseBanner(pp);
 
-    if (strncmp(method_name,"default:",strlen("default:")) == 0)
+    if (strncmp(method_name,"default:",strlen("default:")) == 0) // CF_NS == ':'
     {
-        method_deref = strchr(method_name,':') + 1;
+        method_deref = strchr(method_name, CF_NS) + 1;
     }
-    else if ((strchr(method_name, ':') == NULL) && (strcmp(pp->namespace, "default") != 0))
+    else if ((strchr(method_name, CF_NS) == NULL) && (strcmp(pp->namespace, "default") != 0))
     {
-        snprintf(qualified_method, CF_BUFSIZE, "%s:%s", pp->namespace, method_name);
+        snprintf(qualified_method, CF_BUFSIZE, "%s%c%s", pp->namespace, CF_NS, method_name);
         method_deref = qualified_method;
     }
     else

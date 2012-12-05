@@ -1,0 +1,50 @@
+#######################################################
+#
+# Test cf-serverd related promises - mtime server copy, localhost, no file access promise, should not copy
+#
+#######################################################
+
+body common control
+{
+  bundlesequence  => { "init" };
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "1";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+
+  "servers" slist => {
+                     "lan_deny_connect.srv",
+                     "localhost_noaccess.srv",
+                     "lan_open.srv",
+                     "localhost_open.srv",
+                     "localhost_deny_connect.srv"
+                     };
+
+   "cwd" string => "/home/a10004/LapTop/cfengine/core/tests/acceptance";
+
+processes:
+
+   "$(servers)",
+       signals => { "term", "kill" };
+
+}
+
+#######################################################
+
+body contain devnull
+{
+no_output => "true";
+}
+
+#######################################################
+
+body classes if_repaired(x)
+{
+promise_repaired => { "$(x)" };
+}

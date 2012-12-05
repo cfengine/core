@@ -604,7 +604,7 @@ static void ArmClasses(Averages av, char *timekey)
             }
 
             AppendItem(&classlist, buff, "2");
-            NewPersistentContext(buff, CF_PERSISTENCE, cfpreserve);
+            NewPersistentContext(buff, "measurements", CF_PERSISTENCE, cfpreserve);
         }
         else
         {
@@ -953,7 +953,7 @@ static double SetClasses(char *name, double variable, double av_expect, double a
             strcpy(buffer2, buffer);
             strcat(buffer2, "_microanomaly");
             AppendItem(classlist, buffer2, "2");
-            NewPersistentContext(buffer2, CF_PERSISTENCE, cfpreserve);
+            NewPersistentContext(buffer2, "measurements", CF_PERSISTENCE, cfpreserve);
         }
 
         return sig;             /* Granularity makes this silly */
@@ -1000,7 +1000,7 @@ static double SetClasses(char *name, double variable, double av_expect, double a
             strcpy(buffer2, buffer);
             strcat(buffer2, "_dev2");
             AppendItem(classlist, buffer2, "2");
-            NewPersistentContext(buffer2, CF_PERSISTENCE, cfpreserve);
+            NewPersistentContext(buffer2, "measurements", CF_PERSISTENCE, cfpreserve);
         }
 
         if (dev > 3.0 * sqrt(2.0))
@@ -1008,7 +1008,7 @@ static double SetClasses(char *name, double variable, double av_expect, double a
             strcpy(buffer2, buffer);
             strcat(buffer2, "_anomaly");
             AppendItem(classlist, buffer2, "3");
-            NewPersistentContext(buffer2, CF_PERSISTENCE, cfpreserve);
+            NewPersistentContext(buffer2, "measurements", CF_PERSISTENCE, cfpreserve);
         }
 
         return sig;
@@ -1122,13 +1122,13 @@ static void GatherPromisedMeasures(const Policy *policy, const ReportContext *re
         scope = bp->name;
         SetNewScope(bp->name);
 
-        if ((strcmp(bp->type, CF_AGENTTYPES[cf_monitor]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[cf_common]) == 0))
+        if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_MONITOR]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
         {
             for (sp = bp->subtypes; sp != NULL; sp = sp->next)  /* get schedule */
             {
                 for (pp = sp->promiselist; pp != NULL; pp = pp->next)
                 {
-                    ExpandPromise(cf_monitor, scope, pp, KeepMonitorPromise, report_context);
+                    ExpandPromise(AGENT_TYPE_MONITOR, scope, pp, KeepMonitorPromise, report_context);
                 }
             }
         }
@@ -1141,7 +1141,7 @@ static void GatherPromisedMeasures(const Policy *policy, const ReportContext *re
     NewScope("mon");
     NewScope("sys");
     GetNameInfo3();
-    GetInterfacesInfo(cf_monitor);
+    GetInterfacesInfo(AGENT_TYPE_MONITOR);
     Get3Environment();
     OSClasses();
     BuiltinClasses();

@@ -183,25 +183,25 @@ void CheckConstraint(char *type, char *namespace, char *name, char *lval, Rval r
                     switch (rval.rtype)
                        {
                        case CF_SCALAR:
-                           if (strchr((char *)rval.item,':'))
+                           if (strchr((char *)rval.item, CF_NS))
                            {
                                strcpy(fqname,(char *)rval.item);
                            }
                            else
                            {
-                               snprintf(fqname,CF_BUFSIZE-1,"%s:%s",namespace,(char *)rval.item);
+                               snprintf(fqname,CF_BUFSIZE-1,"%s%c%s", namespace, CF_NS, (char *)rval.item);
                            }
                            break;
                            
                        case CF_FNCALL:
                            fp = (FnCall *) rval.item;
-                           if (strchr(fp->name,':'))
+                           if (strchr(fp->name, CF_NS))
                            {
                                strcpy(fqname,fp->name);
                            }
                            else
                            {                              
-                               snprintf(fqname,CF_BUFSIZE-1,"%s:%s",namespace,fp->name);
+                               snprintf(fqname,CF_BUFSIZE-1,"%s%c%s", namespace, CF_NS, fp->name);
                            }
                            break;
                        }

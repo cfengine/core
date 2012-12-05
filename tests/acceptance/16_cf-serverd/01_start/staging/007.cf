@@ -1,0 +1,106 @@
+#######################################################
+#
+# digest server copy, localhost, newer destination, should copy
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "1";
+}
+
+#######################################################
+
+bundle common c
+{
+vars:
+
+  "localhost_open"         string => "9876";
+  "localhost_deny_connect" string => "9877";
+  "lan_open"               string => "9878";
+  "lan_deny_connect"       string => "9879";
+  "localhost_noaccess"     string => "9880";
+}
+
+#######################################################
+
+bundle agent init
+{
+files:
+
+  "/tmp/destination_file"
+      delete => clean;
+
+  "/tmp/source_file"
+       create => "true",
+    edit_line => init_src_file,
+edit_defaults => empty;
+}
+
+#######################################################
+
+body edit_defaults empty
+{
+empty_file_before_editing => "true";
+edit_backup => "false";
+}
+
+#######################################################
+
+body delete clean
+{
+rmdirs => "true";
+}
+
+#######################################################
+
+bundle edit_line init_src_file
+{
+insert_lines:
+   "This is the source file to copy $(sys.date) - always fresh";
+}
+
+#######################################################
+
+bundle agent test 
+
+{
+files:
+
+    "/tmp/destination_file" copy_from => copy_src_file;
+ 
+}
+
+#########################################################
+
+body copy_from copy_src_file
+
+{
+source      => "/tmp/source_file";
+servers     => { "127.0.0.1" };
+compare     => "digest";
+copy_backup => "false";
+
+portnumber => "$(c.localhost_open)";
+
+#encrypt     => "true";
+#verify      => "true";
+#purge       => "false";
+#type_check  => "true";
+#force_ipv4  => "true";
+trustkey => "true";
+}
+
+#######################################################
+
+bundle agent check
+{
+methods:
+
+  "any" usebundle => default_check_diff("/tmp/source_file","/tmp/destination_file","$(this.promise_filename)");
+}
+

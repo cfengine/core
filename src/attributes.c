@@ -114,13 +114,13 @@ Attributes GetFilesAttributes(const Promise *pp)
     }
     else
     {
-        if (THIS_AGENT_TYPE == cf_common)
+        if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
         {
             cfPS(cf_error, CF_WARN, "", pp, attr, " !! files promise makes no intention about system state");
         }
     }
 
-    if ((THIS_AGENT_TYPE == cf_common) && (attr.create) && (attr.havecopy))
+    if ((THIS_AGENT_TYPE == AGENT_TYPE_COMMON) && (attr.create) && (attr.havecopy))
     {
         if (((attr.copy.compare) != (cfa_checksum)) && ((attr.copy.compare) != cfa_hash))
         {
@@ -137,7 +137,7 @@ Attributes GetFilesAttributes(const Promise *pp)
         }
     }
 
-    if ((THIS_AGENT_TYPE == cf_common) && (attr.create) && (attr.havelink))
+    if ((THIS_AGENT_TYPE == AGENT_TYPE_COMMON) && (attr.create) && (attr.havelink))
     {
         CfOut(cf_error, "", " !! Promise constraint conflicts - %s cannot be created and linked at the same time",
               pp->promiser);

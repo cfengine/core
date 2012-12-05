@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
 {
     GenericAgentConfig config = CheckOpts(argc, argv);
 
-    THIS_AGENT_TYPE = cf_keygen;
+    THIS_AGENT_TYPE = AGENT_TYPE_KEYGEN;
 
     ReportContext *report_context = OpenReports("keygenerator");
     GenericInitialize("keygenerator", config, report_context);
@@ -131,7 +131,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
     extern char *optarg;
     int optindex = 0;
     int c;
-    GenericAgentConfig config = GenericAgentDefaultConfig(cf_keygen);
+    GenericAgentConfig config = GenericAgentDefaultConfig(AGENT_TYPE_KEYGEN);
 
     while ((c = getopt_long(argc, argv, "dvf:VMsr:hl:", OPTIONS, &optindex)) != EOF)
     {

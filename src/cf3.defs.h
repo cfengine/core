@@ -135,6 +135,7 @@
 
 #define CF_DONE 't'
 #define CF_MORE 'm'
+#define CF_NS ':'   // namespace character separator
 
 /*****************************************************************************/
 
@@ -691,21 +692,21 @@ enum cfx_format
 #define CF_HUBC     "hub"
 #define CF_GENDOC   "gendoc"
 
-enum cfagenttype
+typedef enum
 {
-    cf_common,
-    cf_agent,
-    cf_server,
-    cf_monitor,
-    cf_executor,
-    cf_runagent,
-    cf_know,
-    cf_report,
-    cf_keygen,
-    cf_hub,
-    cf_gendoc,
-    cf_noagent
-};
+    AGENT_TYPE_COMMON,
+    AGENT_TYPE_AGENT,
+    AGENT_TYPE_SERVER,
+    AGENT_TYPE_MONITOR,
+    AGENT_TYPE_EXECUTOR,
+    AGENT_TYPE_RUNAGENT,
+    AGENT_TYPE_KNOW,
+    AGENT_TYPE_REPORT,
+    AGENT_TYPE_KEYGEN,
+    AGENT_TYPE_HUB,
+    AGENT_TYPE_GENDOC,
+    AGENT_TYPE_NOAGENT
+} AgentType;
 
 enum typesequence
 {
@@ -812,6 +813,7 @@ enum cfexcontrol
     cfex_schedule,
     cfex_executorfacility,
     cfex_execcommand,
+    cfex_agent_expireafter,
     cfex_notype,
 };
 
@@ -1718,7 +1720,7 @@ typedef struct
 
 typedef struct
 {
-    enum cfagenttype agent;
+    AgentType agent;
     char *scopeid;
     Promise *pp;
     void *fnptr;

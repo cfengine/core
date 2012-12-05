@@ -156,7 +156,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
     char *sp;
     int optindex = 0;
     int c, alpha = false, v6 = false;
-    GenericAgentConfig config = GenericAgentDefaultConfig(cf_agent);
+    GenericAgentConfig config = GenericAgentDefaultConfig(AGENT_TYPE_AGENT);
 
 /* Because of the MacOS linker we have to call this from each agent
    individually before Generic Initialize */
@@ -343,7 +343,7 @@ static void KeepPromises(Policy *policy, GenericAgentConfig config, const Report
 {
  double efficiency, model;
 
-    if (THIS_AGENT_TYPE == cf_agent)
+    if (THIS_AGENT_TYPE == AGENT_TYPE_AGENT)
     {
         BeginAudit();
     }
@@ -373,7 +373,7 @@ void KeepControlPromises(Policy *policy)
     Rval retval;
     Rlist *rp;
 
-    for (Constraint *cp = ControlBodyConstraints(policy, cf_agent); cp != NULL; cp = cp->next)
+    for (Constraint *cp = ControlBodyConstraints(policy, AGENT_TYPE_AGENT); cp != NULL; cp = cp->next)
     {
         if (IsExcluded(cp->classes, NULL))
         {
@@ -907,7 +907,7 @@ int ScheduleAgentOperations(Bundle *bp, const ReportContext *report_context)
                     CF_TOPICS++;
                 }
 
-                ExpandPromise(cf_agent, bp->name, pp, KeepAgentPromise, report_context);
+                ExpandPromise(AGENT_TYPE_AGENT, bp->name, pp, KeepAgentPromise, report_context);
 
                 if (Abort())
                 {

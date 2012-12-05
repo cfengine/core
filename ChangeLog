@@ -173,6 +173,40 @@
 	https://cfengine.com/bugtracker/changelog_page.php (old bug tracker)
 	and https://cfengine.com/dev/projects/core/versions/34 (new bug tracker)
 
+3.3.9   (Bugfix and Stability release)
+
+	Bugfixes:
+
+	- Do not lose hard classes in cf-serverd during policy reload
+	  (Mantis #1218).
+	- Implement recieve network timeout in cf-serverd. Prevents
+	  overloading cf-serverd with stale connections.
+
+3.3.8   (Bugfix and Stability release)
+
+	Versions 3.3.6, 3.3.7 were internal and weren't released.
+
+	Bugfixes:
+
+	- Propery set sys.domain variable if hostname is fully-qualified.
+	- Fixed several small memory leaks.
+	- Make network timeout for network reads configurable. Previously
+	  it was hardcoded to be 30 seconds, which was not enough for
+	  cf-runagent invoking cf-agent on big policies (Mantis #1028).
+
+3.3.5   (Bugfix and Stability release)
+
+	Bugfixes:
+
+	- Fixed cf-execd memory leak on hosts with cf-monitord running.
+	- Robustify against wrongly-sized entires in embedded databases.
+
+	Standard library:
+
+	- Bugfixes from upstream COPBL repository.
+	- standard_services bundle from upstream COPBL repository.
+
+
 3.3.4   (Bugfix and Stability release)
 
 	Evaluation of policies:

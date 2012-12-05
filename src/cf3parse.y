@@ -397,7 +397,7 @@ constraint:           promiser_type
                       rval_bundle_statement
                     | error
                       {
-                        parse_error("promise line statement error\n");
+                        parse_error("Invalid syntax for promise line\n");
                       }
 
 promiser_type:       promiser_id 
@@ -408,7 +408,8 @@ promiser_type:       promiser_id
                         BodySyntax *tmp_p;
                         bool       found = false;
 
-
+    
+                        ParserDebug("\tP:SubTypeSyntaxLookUp\n");
                         ss = SubTypeSyntaxLookup(P.blocktype, P.currenttype);
                         valid_types_p = (BodySyntax *)ss.bs;
 
@@ -488,6 +489,12 @@ promiser_type:       promiser_id
                        }
 
 promiser_id:          id
+                    | error
+                      {
+                        sprintf(error_txt, "'%s' is unknown promise attribute for for promise type: '%s'\n", 
+                                           yytext, P.currenttype);
+                        parse_error(error_txt);
+                      }
 
 
 rval_bundle_statement:   rval_type
@@ -760,6 +767,7 @@ id:                    id_types
 
 id_types:             IDSYNTAX
                     | EDITLINE  
+                    | EDITXML
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

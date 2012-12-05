@@ -49,12 +49,6 @@ int ScheduleAgentOperations(Bundle *bp, const ReportContext *report_context);
 
 void AgentDiagnostic(void);
 
-/* bootstrap.c */
-
-void CheckAutoBootstrap(void);
-void SetPolicyServer(char *name);
-void CreateFailSafe(char *name);
-
 /* cf_sql.c */
 
 int CfConnectDB(CfdbConn *cfdb, enum cfdbtype dbtype, char *remotehost, char *dbuser, char *passwd, char *db);
@@ -103,13 +97,11 @@ int CfSessionKeySize(char c);
 char CfEnterpriseOptions(void);
 const EVP_CIPHER *CfengineCipher(char type);
 void Aggregate(char *stylesheet, char *banner, char *footer, char *webdriver);
-void SetPolicyServer(char *name);
 int IsEnterprise(void);
 void EnterpriseContext(void);
 int EnterpriseExpiry(void);
 const char *GetConsolePrefix(void);
 const char *MailSubject(void);
-void CheckAutoBootstrap(void);
 void RegisterBundleDependence(char *absscope, const Promise *pp);
 void ShowTopicRepresentation(const ReportContext *report_context);
 void PreSanitizePromise(Promise *pp);

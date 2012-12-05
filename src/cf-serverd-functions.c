@@ -24,6 +24,7 @@
 
 #include "cf-serverd-functions.h"
 
+#include "bootstrap.h"
 #include "scope.h"
 #include "cfstream.h"
 

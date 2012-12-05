@@ -24,7 +24,7 @@
 
 */
 
-#include "cf3.defs.h"
+#include "bootstrap.h"
 
 #include "env_context.h"
 #include "files_names.h"
@@ -50,6 +50,8 @@ During commercial bootstrap:
 */
 
 /*****************************************************************************/
+
+static void CreateFailSafe(char *name);
 
 #if defined(__CYGWIN__) || defined(__ANDROID__)
 
@@ -230,7 +232,7 @@ void SetPolicyServer(char *name)
 
 /********************************************************************/
 
-void CreateFailSafe(char *name)
+static void CreateFailSafe(char *name)
 {
     FILE *fout;
 

@@ -34,7 +34,7 @@ libpromises_la_SOURCES = \
         atexit.c atexit.h \
         attributes.c attributes.h \
         bool.h \
-        bootstrap.c \
+        bootstrap.c bootstrap.h \
         cf.events.h \
         cf3.defs.h \
         cf3.extern.h \

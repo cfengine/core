@@ -30,7 +30,6 @@ void PrependFullItem(Item **liststart, const char *itemstring, const char *class
 Item *ReturnItemIn(Item *list, const char *item);
 Item *ReturnItemInClass(Item *list, const char *item, const char *classes);
 Item *ReturnItemAtIndex(Item *list, int index);
-int GetItemIndex(Item *list, const char *item);
 Item *EndOfList(Item *start);
 int IsItemInRegion(const char *item, const Item *begin, const Item *end, Attributes a, const Promise *pp);
 void PrependItemList(Item **liststart, const char *itemstring);

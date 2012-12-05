@@ -155,33 +155,6 @@ Item *ReturnItemAtIndex(Item *list, int index)
 
 /*********************************************************************/
 
-int GetItemIndex(Item *list, const char *item)
-/*
- * Returns index of first occurence of item.
- */
-{
-    int i = 0;
-
-    if ((item == NULL) || (strlen(item) == 0))
-    {
-        return -1;
-    }
-
-    for (const Item *ptr = list; ptr != NULL; ptr = ptr->next)
-    {
-        if (strcmp(ptr->name, item) == 0)
-        {
-            return i;
-        }
-
-        i++;
-    }
-
-    return -1;
-}
-
-/*********************************************************************/
-
 bool IsItemIn(const Item *list, const char *item)
 {
     if ((item == NULL) || (strlen(item) == 0))

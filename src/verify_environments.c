@@ -34,6 +34,47 @@
 
 #ifndef HAVE_LIBVIRT
 
+enum cfhypervisors
+{
+    cfv_virt_xen,
+    cfv_virt_kvm,
+    cfv_virt_esx,
+    cfv_virt_vbox,
+    cfv_virt_test,
+    cfv_virt_xen_net,
+    cfv_virt_kvm_net,
+    cfv_virt_esx_net,
+    cfv_virt_test_net,
+    cfv_zone,
+    cfv_ec2,
+    cfv_eucalyptus,
+    cfv_none
+};
+
+static enum cfhypervisors Str2Hypervisors(char *s)
+{
+    static char *names[] = { "xen", "kvm", "esx", "vbox", "test",
+        "xen_net", "kvm_net", "esx_net", "test_net",
+        "zone", "ec2", "eucalyptus", NULL
+    };
+    int i;
+
+    if (s == NULL)
+    {
+        return cfv_virt_test;
+    }
+
+    for (i = 0; names[i] != NULL; i++)
+    {
+        if (s && (strcmp(s, names[i]) == 0))
+        {
+            return (enum cfhypervisors) i;
+        }
+    }
+
+    return (enum cfhypervisors) i;
+}
+
 void NewEnvironmentsContext(void)
 {
 }

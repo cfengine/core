@@ -2175,23 +2175,6 @@ typedef struct
 
 /*************************************************************************/
 
-enum cfhypervisors
-{
-    cfv_virt_xen,
-    cfv_virt_kvm,
-    cfv_virt_esx,
-    cfv_virt_vbox,
-    cfv_virt_test,
-    cfv_virt_xen_net,
-    cfv_virt_kvm_net,
-    cfv_virt_esx_net,
-    cfv_virt_test_net,
-    cfv_zone,
-    cfv_ec2,
-    cfv_eucalyptus,
-    cfv_none
-};
-
 enum cfenvironment_state
 {
     cfvs_create,

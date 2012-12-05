@@ -328,6 +328,29 @@ static FILE *Unix_cf_popen(char *command, char *type)
 
 /*****************************************************************************/
 
+bool PipeToPid(pid_t *pid, FILE *pp)
+{
+    if (!ThreadLock(cft_count))
+    {
+        return false;
+    }
+
+    if (CHILDREN == NULL)       /* popen hasn't been called */
+    {
+        ThreadUnlock(cft_count);
+        return false;
+    }
+
+    int fd = fileno(pp);
+    *pid = CHILDREN[fd];
+
+    ThreadUnlock(cft_count);
+
+    return true;
+}
+
+/*****************************************************************************/
+
 static FILE *Unix_cf_popensetuid(char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv)
 {
     int i, pd[2];

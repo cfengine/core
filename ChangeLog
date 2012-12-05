@@ -4,21 +4,30 @@
 
         - cf-execd terminates agent processes that are not responsive
           for a configurable amount of time (see agent_expireafter in body
-          executor control), defaulting to 10 minutes
+          executor control), defaulting to 1 week
 
         Bugfixes:
 
-        - fix regression of classmatch() failing with hard classes (#1834)
+        - fix regression of classmatch() failing with hard classes (Redmine #1834)
 
         - create promise-defined and persistent classes in correct
-          namespace (#1836)
+          namespace (Redmine #1836)
 
         - several fixes to namespace support
 
         - fix several crash bugs caused by buffer overflow and race
           conditions in cf-serverd
 
-        - regenerate time classes in cf-execd for each run (#1838)
+        - regenerate time classes in cf-execd for each run (Redmine #1838)
+
+        - edit_xml: fix select_xpath implementation and update documentation
+          NOTE: code that uses select_xpath_region needs to be changed to
+          select_xpath
+
+        - edit_xml: make sure that text-modification functions don't overwrite
+          child nodes
+
+        - edit_xml: improve error logging
 
 3.4.0
 

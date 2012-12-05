@@ -738,29 +738,6 @@ void ReplaceTrailingChar(char *str, char from, char to)
     }
 }
 
-void ReplaceTrailingStr(char *str, char *from, char to)
-/* Replaces any unwanted last chars in str. */
-{
-    int strLen;
-    int fromLen;
-    char *startCmp = NULL;
-
-    strLen = strlen(str);
-    fromLen = strlen(from);
-
-    if (strLen == 0)
-    {
-        return;
-    }
-
-    startCmp = str + strLen - fromLen;
-
-    if (strcmp(startCmp, from) == 0)
-    {
-        memset(startCmp, to, fromLen);
-    }
-}
-
 char **String2StringArray(char *str, char separator)
 /**
  * Parse CSVs into char **.

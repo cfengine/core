@@ -880,23 +880,6 @@ void DeleteItem(Item **liststart, Item *item)
 
 /*********************************************************************/
 
-void DebugListItemList(const Item *liststart)
-{
-    for (const Item *ptr = liststart; ptr != NULL; ptr = ptr->next)
-    {
-        if (ptr->classes)
-        {
-            printf("CFDEBUG: %s::[%s]\n", ptr->classes, ptr->name);
-        }
-        else
-        {
-            printf("CFDEBUG: [%s]\n", ptr->name);
-        }
-    }
-}
-
-/*********************************************************************/
-
 /* DeleteItem* function notes:
  * -They all take an item list and an item specification ("string" argument.)
  * -Some of them treat the item spec as a literal string, while others

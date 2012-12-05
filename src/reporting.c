@@ -42,28 +42,6 @@
 
 #include <assert.h>
 
-char *CFX[][2] =
-{
-    {"<head>", "</head>"},
-    {"<bundle>", "</bundle>"},
-    {"<block>", "</block>"},
-    {"<blockheader>", "</blockheader>"},
-    {"<blockid>", "</blockid>"},
-    {"<blocktype>", "</blocktype>"},
-    {"<args>", "</args>"},
-    {"<promise>", "</promise>"},
-    {"<class>", "</class>"},
-    {"<subtype>", "</subtype>"},
-    {"<object>", "</object>"},
-    {"<lval>", "</lval>"},
-    {"<rval>", "</rval>"},
-    {"<qstring>", "</qstring>"},
-    {"<rlist>", "</rlist>"},
-    {"<function>", "</function>"},
-    {"\n", "\n"},
-    {NULL, NULL}
-};
-
 char *CFH[][2] =
 {
     {"<html><head>\n<link rel=\"stylesheet\" type=\"text/css\" href=\"/cf_enterprise.css\" />\n</head>\n", "</html>"},

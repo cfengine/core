@@ -35,6 +35,7 @@ check_PROGRAMS = \
 	lastseen_migration_test \
 	misc_lib_test \
 	crypto_symmetric_test \
+        timeout_test \
 	package_versions_compare_test
 	persistent_lock_test  \
         thread_test \

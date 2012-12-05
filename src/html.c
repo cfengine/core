@@ -88,10 +88,3 @@ int IsHtmlHeader(char *s)
 
     return false;
 }
-
-/*****************************************************************************/
-
-void CfHtmlTitle(FILE *fp, char *title)
-{
-    fprintf(fp, "<h1>%s</h1>\n", title);
-}

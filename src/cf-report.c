@@ -104,7 +104,7 @@ double AGE;
 
 static Averages MAX, MIN;
 
-char OUTPUTDIR[CF_BUFSIZE], *sp;
+char OUTPUTDIR[CF_BUFSIZE];
 char REMOVEHOSTS[CF_BUFSIZE] = { 0 };
 
 #ifdef HAVE_NOVA

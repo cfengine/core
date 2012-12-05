@@ -1,3 +1,25 @@
+3.4.1   (Bugfix and Stability release)
+
+        New feature/behavior:
+
+        - cf-execd terminates agent processes that are not responsive
+          for a configurable amount of time (see agent_expireafter in body
+          executor control), defaulting to 10 minutes
+
+        Bugfixes:
+
+        - fix regression of classmatch() failing with hard classes (#1834)
+
+        - create promise-defined and persistent classes in correct
+          namespace (#1836)
+
+        - several fixes to namespace support
+
+        - fix several crash bugs caused by buffer overflow and race
+          conditions in cf-serverd
+
+        - regenerate time classes in cf-execd for each run (#1838)
+
 3.4.0
 
 	New features:

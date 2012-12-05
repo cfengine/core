@@ -176,65 +176,6 @@ bool StringSafeEqual(const char *a, const char *b)
     return strcmp(a, b) == 0;
 }
 
-/*******************************************************************/
-
-/** Takes a string-parsed list "{'el1','el2','el3',..}" and writes
- ** "el1" or "el2" etc. based on index (starting on 0) in outBuf.
- ** returns true on success, false otherwise.
- **/
-
-int GetStringListElement(char *strList, int index, char *outBuf, int outBufSz)
-{
-    char *sp, *elStart = strList, *elEnd;
-    int elNum = 0;
-    int minBuf;
-
-    memset(outBuf, 0, outBufSz);
-
-    if (NULL_OR_EMPTY(strList))
-    {
-        return false;
-    }
-
-    if (strList[0] != '{')
-    {
-        return false;
-    }
-
-    for (sp = strList; *sp != '\0'; sp++)
-    {
-        if (((sp[0] == '{') || (sp[0] == ',')) && (sp[1] == '\''))
-        {
-            elStart = sp + 2;
-        }
-
-        else if ((sp[0] == '\'') && ((sp[1] == ',') || (sp[1] == '}')))
-        {
-            elEnd = sp;
-
-            if (elNum == index)
-            {
-                if (elEnd - elStart < outBufSz)
-                {
-                    minBuf = elEnd - elStart;
-                }
-                else
-                {
-                    minBuf = outBufSz - 1;
-                }
-
-                strncpy(outBuf, elStart, minBuf);
-
-                break;
-            }
-
-            elNum++;
-        }
-    }
-
-    return true;
-}
-
 /*********************************************************************/
 
 char *SearchAndReplace(const char *source, const char *search, const char *replace)

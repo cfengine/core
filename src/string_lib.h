@@ -51,8 +51,6 @@ bool StringSafeEqual(const char *a, const char *b);
 char *StringConcatenate(size_t count, const char *first, ...);
 char *StringSubstring(const char *source, size_t source_len, int start, int len);
 
-int GetStringListElement(char *strList, int index, char *outBuf, int outBufSz);
-
 /* Allocates the result */
 char *SearchAndReplace(const char *source, const char *search, const char *replace);
 

@@ -52,7 +52,6 @@ char *StringConcatenate(size_t count, const char *first, ...);
 char *StringSubstring(const char *source, size_t source_len, int start, int len);
 
 int GetStringListElement(char *strList, int index, char *outBuf, int outBufSz);
-int StripListSep(char *strList, char *outBuf, int outBufSz);
 
 /* Allocates the result */
 char *SearchAndReplace(const char *source, const char *search, const char *replace);

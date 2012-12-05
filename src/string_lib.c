@@ -178,32 +178,6 @@ bool StringSafeEqual(const char *a, const char *b)
 
 /*******************************************************************/
 
-int StripListSep(char *strList, char *outBuf, int outBufSz)
-{
-    memset(outBuf, 0, outBufSz);
-
-    if (NULL_OR_EMPTY(strList))
-    {
-        return false;
-    }
-
-    if (strList[0] != '{')
-    {
-        return false;
-    }
-
-    snprintf(outBuf, outBufSz, "%s", strList + 1);
-
-    if (outBuf[strlen(outBuf) - 1] == '}')
-    {
-        outBuf[strlen(outBuf) - 1] = '\0';
-    }
-
-    return true;
-}
-
-/*******************************************************************/
-
 /** Takes a string-parsed list "{'el1','el2','el3',..}" and writes
  ** "el1" or "el2" etc. based on index (starting on 0) in outBuf.
  ** returns true on success, false otherwise.

@@ -27,7 +27,6 @@
 
 #include "alphalist.h"
 
-void ShowAlphaList(const AlphaList *al);
 void ShowAssoc(CfAssoc *cp);
 
 #endif

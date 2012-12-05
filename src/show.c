@@ -29,26 +29,6 @@
 
 /*****************************************************************************/
 
-void ShowAlphaList(const AlphaList *al)
-{
-    for (int i = 0; i < CF_ALPHABETSIZE; i++)
-    {
-        if (al->list[i] != NULL)
-        {
-            printf("%c :", (char) i);
-
-            for (const Item *ip = al->list[i]; ip != NULL; ip = ip->next)
-            {
-                printf(" %s", ip->name);
-            }
-
-            printf("\n");
-        }
-    }
-}
-
-/*****************************************************************************/
-
 void ShowAssoc(CfAssoc *cp)
 {
     printf("ShowAssoc: lval = %s\n", cp->lval);

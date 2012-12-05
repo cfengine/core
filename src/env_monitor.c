@@ -259,7 +259,7 @@ void MonitorStartServer(const Policy *policy, const ReportContext *report_contex
     if ((!NO_FORK) && (fork() != 0))
     {
         CfOut(cf_inform, "", "cf-monitord: starting\n");
-        exit(0);
+        _exit(0);
     }
 
     if (!NO_FORK)

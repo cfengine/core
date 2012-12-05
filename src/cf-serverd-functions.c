@@ -267,7 +267,7 @@ void StartServer(Policy *policy, GenericAgentConfig config, const ReportContext 
 
     if ((!NO_FORK) && (fork() != 0))
     {
-        exit(0);
+        _exit(0);
     }
 
     if (!NO_FORK)

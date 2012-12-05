@@ -38,6 +38,7 @@
 #include "unix.h"
 #include "cfstream.h"
 #include "string_lib.h"
+#include "verify_processes.h"
 
 #define CF_EXEC_IFELAPSED 0
 #define CF_EXEC_EXPIREAFTER 1

@@ -470,15 +470,6 @@ void ExecuteScheduledPackages(void);
 void CleanScheduledPackages(void);
 int PrependPackageItem(PackageItem ** list, const char *name, const char *version, const char *arch, Attributes a, Promise *pp);
 
-/* verify_processes.c */
-
-void VerifyProcessesPromise(Promise *pp);
-void VerifyProcesses(Attributes a, Promise *pp);
-int LoadProcessTable(Item **procdata);
-int DoAllSignals(Item *siglist, Attributes a, Promise *pp);
-int GracefulTerminate(pid_t pid);
-void GetProcessColumnNames(char *proc, char **names, int *start, int *end);
-
 /* verify_services.c */
 
 void VerifyServicesPromise(Promise *pp, const ReportContext *report_context);

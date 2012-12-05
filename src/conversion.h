@@ -4,7 +4,6 @@
 #include "cf3.defs.h"
 
 char *EscapeJson(char *s, char *out, int outSz);
-char *EscapeRegex(char *s, char *out, int outSz);
 char *EscapeQuotes(const char *s, char *out, int outSz);
 char *MapAddress(char *addr);
 enum cfhypervisors Str2Hypervisors(char *s);

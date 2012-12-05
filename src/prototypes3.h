@@ -857,6 +857,7 @@ void Get3Environment(void);
 void BuiltinClasses(void);
 void OSClasses(void);
 int IsInterfaceAddress(char *adr);
+void ProcessSignalTerminate(pid_t pid);
 int GetCurrentUserName(char *userName, int userNameLen);
 
 #ifndef MINGW

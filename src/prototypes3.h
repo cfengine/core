@@ -252,7 +252,6 @@ int FullWrite(int desc, const char *ptr, size_t len);
 
 void CfHtmlHeader(Writer *writer, char *title, char *css, char *webdriver, char *banner);
 void CfHtmlFooter(Writer *writer, char *footer);
-int IsHtmlHeader(char *s);
 
 /* iteration.c */
 

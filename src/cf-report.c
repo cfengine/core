@@ -88,7 +88,6 @@ extern const BodySyntax CFRE_CONTROLBODY[];
 extern BodySyntax CFRP_CONTROLBODY[];
 
 int HTML = false;
-int GRAPH = false;
 int TITLES = false;
 int TIMESTAMPS = false;
 int HIRES = false;

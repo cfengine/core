@@ -1147,19 +1147,6 @@ Rlist *RlistAppendReference(Rlist **start, void *item, char type)
 
 /*******************************************************************/
 
-Rlist *RlistAt(Rlist *start, size_t index)
-{
-    for (Rlist *rp = start; rp != NULL; rp = rp->next)
-    {
-        if (index-- == 0)
-        {
-            return rp;
-        }
-    }
-
-    return NULL;
-}
-
 Rlist *RlistLast(Rlist *start)
 {
     if (start == NULL)

@@ -33,9 +33,9 @@ int main(int argc, char *argv[])
     ThisAgentInit();
     KeepPromises(policy, report_context);
     Summarize();
-
-    StartServer(policy, config, report_context);
-
     ReportContextDestroy(report_context);
+
+    StartServer(policy, config);
+
     return 0;
 }

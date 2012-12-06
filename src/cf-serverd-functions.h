@@ -51,6 +51,6 @@ int InitServer(size_t queue_size);
 in_addr_t GetInetAddr(char *host);
 #endif
 
-void StartServer(Policy *policy, GenericAgentConfig config, const ReportContext *report_context);
+void StartServer(Policy *policy, GenericAgentConfig config);
 
 #endif // CFSERVERDFUNCTIONS_H

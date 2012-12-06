@@ -884,13 +884,11 @@ bool PipeToPid(pid_t *pid, FILE *pp)
 {
     if (!ThreadLock(cft_count))
     {
-        printf("could not lock!\n");
         return false;
     }
 
     if (CHILDREN == NULL)       /* popen hasn't been called */
     {
-        printf("children is NULL!\n");
         ThreadUnlock(cft_count);
         return false;
     }

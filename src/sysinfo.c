@@ -841,6 +841,12 @@ void OSClasses(void)
         SetFlavour("UnitedLinux");
     }
 
+    if (cfstat("/etc/alpine-release", &statbuf) != -1)
+    {
+        CfOut(cf_verbose, "", "This appears to be an AlpineLinux system.\n");
+        SetFlavour("alpinelinux");
+    }
+
     if (cfstat("/etc/gentoo-release", &statbuf) != -1)
     {
         CfOut(cf_verbose, "", "This appears to be a gentoo system.\n");

@@ -65,7 +65,7 @@ void DeleteAlphaList(AlphaList *al)
 
 /*****************************************************************************/
 
-AlphaList *CopyAlphaListPointers(AlphaList *ap, AlphaList *al)
+AlphaList *CopyAlphaListPointers(AlphaList *ap, const AlphaList *al)
 {
     if (ap != NULL)
     {
@@ -99,7 +99,7 @@ AlphaList *DupAlphaListPointers(AlphaList *ap, AlphaList *al)
 
 /*****************************************************************************/
 
-int InAlphaList(AlphaList *al, const char *string)
+int InAlphaList(const AlphaList *al, const char *string)
 {
     int i = (int) *string;
 
@@ -108,7 +108,7 @@ int InAlphaList(AlphaList *al, const char *string)
 
 /*****************************************************************************/
 
-int MatchInAlphaList(AlphaList *al, char *string)
+int MatchInAlphaList(const AlphaList *al, const char *string)
 {
     Item *ip;
     int i = (int) *string;

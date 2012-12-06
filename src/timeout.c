@@ -139,7 +139,7 @@ static void RemoveTimeClass(time_t time)
 
     for( i = 0; i < 7; i++ )
     {
-        HardClass(DAY_TEXT[i]);
+        DeleteHardClass(DAY_TEXT[i]);
     }
 
 /* Day */
@@ -197,7 +197,7 @@ static void RemoveTimeClass(time_t time)
     for( i = 0; i < 60; i += 5 )
     {
         snprintf(buf, CF_BUFSIZE, "Min%02d_%02d", i, (i + 5) % 60);
-        HardClass(buf);
+        DeleteHardClass(buf);
     }
 }
 

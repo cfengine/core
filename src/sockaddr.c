@@ -143,7 +143,7 @@ char *sockaddr_ntop(struct sockaddr *sa)
 
 /*****************************************************************************/
 
-bool sockaddr_pton(int af, void *src, void *genaddr)
+bool sockaddr_pton(int af, const void *src, void *genaddr)
 {
     switch (af)
     {

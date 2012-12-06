@@ -381,7 +381,7 @@ char *sockaddr_ntop(struct sockaddr *sa);
 
 /* Thread-safe. Returns boolean success.
    It's up to caller to provide large enough addr. */
-bool sockaddr_pton(int af, void *src, void *addr);
+bool sockaddr_pton(int af, const void *src, void *addr);
 
 /* storage_tools.c */
 

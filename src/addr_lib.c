@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include "addr_lib.h"
 
 #include "cfstream.h"
 #include "string_lib.h"
@@ -35,7 +35,7 @@
 
    Returns 0 on match. */
 
-int FuzzySetMatch(char *s1, char *s2)
+int FuzzySetMatch(const char *s1, const char *s2)
 {
     short isCIDR = false, isrange = false, isv6 = false, isv4 = false;
     char address[CF_ADDRSIZE];
@@ -141,10 +141,10 @@ int FuzzySetMatch(char *s1, char *s2)
         else
         {
             long i, from = -1, to = -1, cmp = -1;
-            char *sp1, *sp2, buffer1[CF_MAX_IP_LEN], buffer2[CF_MAX_IP_LEN];
+            char buffer1[CF_MAX_IP_LEN], buffer2[CF_MAX_IP_LEN];
 
-            sp1 = s1;
-            sp2 = s2;
+            const char *sp1 = s1;
+            const char *sp2 = s2;
 
             for (i = 0; i < 4; i++)
             {
@@ -233,10 +233,10 @@ int FuzzySetMatch(char *s1, char *s2)
         else
         {
             long i, from = -1, to = -1, cmp = -1;
-            char *sp1, *sp2, buffer1[CF_MAX_IP_LEN], buffer2[CF_MAX_IP_LEN];
+            char buffer1[CF_MAX_IP_LEN], buffer2[CF_MAX_IP_LEN];
 
-            sp1 = s1;
-            sp2 = s2;
+            const char *sp1 = s1;
+            const char *sp2 = s2;
 
             for (i = 0; i < 8; i++)
             {

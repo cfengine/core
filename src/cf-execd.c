@@ -737,6 +737,8 @@ static bool ScheduleRun(Policy **policy, ExecConfig *exec_config, const ReportCo
         InitAlphaList(&VHEAP);
         DeleteAlphaList(&VADDCLASSES);
         InitAlphaList(&VADDCLASSES);
+        DeleteAlphaList(&VHARDHEAP);
+        InitAlphaList(&VHARDHEAP);
 
         DeleteItemList(IPADDRESSES);
         IPADDRESSES = NULL;
@@ -767,6 +769,7 @@ static bool ScheduleRun(Policy **policy, ExecConfig *exec_config, const ReportCo
         }
     }
 
+    CfOut(cf_verbose, "", "Nothing to do at %s\n", cf_ctime(&CFSTARTTIME));
     return false;
 }
 

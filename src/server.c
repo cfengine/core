@@ -2607,7 +2607,11 @@ static void CfGetFile(ServerFileGetState *args)
 
                 if (count++ % 3 == 0)   /* Don't do this too often */
                 {
-                    stat(filename, &sb);
+                    if (stat(filename, &sb)) {
+                        CfOut(cf_error, "send", "Cannot stat file %s: (errno=%d) %s",
+                              filename, errno, strerror(errno));
+                        break;
+                    }
                 }
 
                 if (sb.st_size != savedlen)
@@ -2707,7 +2711,12 @@ static void CfEncryptGetFile(ServerFileGetState *args)
             if (count++ % 3 == 0)       /* Don't do this too often */
             {
                 CfDebug("Restatting %s - size %d\n", filename, n_read);
-                stat(filename, &sb);
+                if (stat(filename, &sb))
+                {
+                    CfOut(cf_error, "send", "Cannot stat file %s: (errno=%d) %s",
+                            filename, errno, strerror(errno));
+                    break;
+                }
             }
 
             if (sb.st_size != savedlen)

@@ -1,3 +1,14 @@
+3.4.2   (Bugfix and Stability release)
+
+       Bugfixes:
+
+       - fix potential segmentation fault when trimming network socket data
+
+       - fix potential segmentation fault when address-lookups in lastseen db failed
+
+       - execute background promise serially when max_children was reached, rather
+         than skipping them
+
 3.4.1   (Bugfix and Stability release)
 
         New feature/behavior:

@@ -25,6 +25,7 @@
 @titlepage
 @title CFEngine Quick Start Guide
 @subtitle A CFEngine Handbook
+@subtitle Updated 9. December 2012 @c also update in ifnottex section below
 @author CFEngine AS
 
 
@@ -57,7 +58,7 @@ Copyright @copyright{} 2011- CFEngine AS
 @end ifinfo
 
 @ifnottex
-
+Updated 9. December 2012
 @node Top, Welcome to CFEngine!, (dir), (dir)
 @top CFEngine Quick Start Guide
 
@@ -99,8 +100,7 @@ host operating systems, network topology or system processes. You
 describe the ideal state of a given system by creating promises
 and the CFEngine agent ensures that the necessary steps are taken to
 achieve this state.  Automation in CFEngine is executed through a
-series of components that run locally on client, server or hub (Nova
-Only) systems.
+series of components that run locally on all managed nodes.
 
 @node CFEngine Components -- What Are they and How Do They Work?, Hubs, CFEngine Automation Overview, Welcome to CFEngine!
 @unnumberedsubsec CFEngine Components -- What Are they and How Do They Work?
@@ -136,8 +136,7 @@ whenever the cf-agent process runs. Perhaps the most important file is
 the default policy file, which is called promises.cf. It is stored
 locally on every host, enabling execution with or without network
 dependencies. If you would like to update a policy, you simply make a
-change to the desired policy file on the policy server or hub (Nova
-Only), then update promises.cf accordingly. Each client Agent will
+change to the desired policy file on the hub/policy server, then update promises.cf accordingly. Each client Agent will
 automatically pull the new version in, then execute the new
 instructions on the next run.
 
@@ -147,7 +146,7 @@ instructions on the next run.
 Once CFEngine is installed on a system, it can function as either a
 standalone client or as a part of a multi-node infrastructure.
 Clients are designed to pull policies from either a CFEngine policy
-server or hub (Nova Only), or, from themselves in the absence of a
+server/hub, or, from themselves in the absence of a
 policy server. If a system is dedicated as a CFEngine policy server or
 hub, it is still a client that will maintain it's own state regardless
 of it's function to the rest of CFEngine infrastructure. In addition,
@@ -162,7 +161,7 @@ Checkpoint:
 @item One or more related promises can be written into a text file known as a policy
 @item The promise.cf file references policy files that each system will run in order to perform local automation, configuration and security tasks
 @item CFEngine maintains a desired system state on networked systems by utilizing client initiated pull technology; changes are never pushed or forced
-@item Networked CFEngine clients will check its policy server or hub (Nova Only) in order pull new policy changes when they are updated
+@item Networked CFEngine clients will check its policy server/hub in order pull new policy changes when they are updated
 @item The cf-agent process verifies the promises.cf file, then applies the policies to ensure that all promises are being kept
 @item The  cf-execd daemon starts cf-agent process on a regular intervals
 @item The cf-serverd runs on a hub or server and allows client systems to retrieve policy changes and files.
@@ -197,32 +196,32 @@ packages are available from @url{http://cfengine.com/inside/myspace}. To
 unpack the binaries (you must install them as root):
 
 @table @i
-@item Nova Installation:  
+@item CFEngine 3 Enterprise Installation:  
 
-@noindent For Nova, you will designate one at least one server as the hub, which should be installed first:
+@noindent For CFEngine 3 Enterprise, you will designate one at least one server as the hub, which should be installed first:
 
 @table @i
 @item RedHat/SuSE   	
 @smallexample
-rpm -ihv cfengine-nova-2.1.x.y.rpm
-rpm -ihv cfengine-nova-expansion.2.1.x.y.rpm
+rpm -ihv cfengine-nova-<version_number>.rpm
+rpm -ihv cfengine-nova-<version_number>.rpm
 @end smallexample
 
 @item Debian/Ubuntu
 @smallexample
-dpkg --install  cfengine-nova-2.1.x.y.deb
-dpkg --install  cfengine-nova-expansion.2.1.x.y.deb
+dpkg --install  cfengine-nova-<version_number>.deb
+dpkg --install  cfengine-nova-expansion.<version_number>.deb
 @end smallexample
 @end table
-To install Nova on non-Hub systems:
+To install CFEngine 3 Enterprise on non-Hub systems:
 @table @i
 @item RedHat/SuSE
 @smallexample
-rpm -ihv cfengine-nova-2.1.x.y.rpm 
+rpm -ihv cfengine-nova-<version_number>.rpm 
 @end smallexample
 @item Debian/Ubuntu
 @smallexample
-dpkg --install  cfengine-nova-2.1.x.y.deb
+dpkg --install  cfengine-nova-<version_number>.deb
 @end smallexample
 @end table
 
@@ -278,7 +277,8 @@ For other UNIX/Linux systems, you may download and compile the source code, whic
 
 
 The CFEngine application is fully contained within the @file{/var/cfengine}
-directory tree. Although you will get to know this file system
+directory tree. For CFEngine 3 Entprise files will also be placed in the operating system
+specific web document root (for instance in /var/www/ on Debian/Ubuntu). Although you will get to know this file system
 intimately as you progress, here is a quick breakdown of the directory
 structure and some of the files and functions associated with each
 subdirectory:
@@ -294,7 +294,7 @@ subdirectory:
 @item	@file{cf-promises}  - Agent: Verifies CFEngine's configuration syntax 
 @item	@file{cf-runagent}  - Agent: Contacts a remote system to run cf-agent
 @item	@file{cf-report}  - Agent: Extracts and presents report data in HTML,XML or graph formats
-@item	@file{cf-know}  - Agent: Builds knowledge maps based on promises and data
+@item	@file{cf-know}  - Agent (CFEngine Enterprise only): Builds knowledge maps based on promises and data
 @end itemize
 
 @item /var/cfengine/masterfiles 
@@ -307,7 +307,7 @@ obtained from @file{/var/cfengine/masterfiles} are then cached in
 this repository.
 
 @item /var/cfengine/inputs 
-	Cached policy repository located on a CFEngine client. The @file{cf-agent} executable  	executes policies from this repository.
+	Cached policy repository located on a CFEngine client. The @file{cf-agent} executable executes policies from this repository.
 
 @item /var/cfengine/outputs  
 	Directory where @file{cf-agent} creates its output files.
@@ -328,7 +328,7 @@ this repository.
 
 
 If you have ever taken a course in programming, then you are probably
-familiar with the Hello World program. For CFEngine3, the Hello
+familiar with the Hello World program. For CFEngine 3, the Hello
 World policy would look like this:
 
 @verbatim
@@ -468,13 +468,6 @@ ownership is the @samp{sys} group.
 @item Open a new terminal window and log on to cfhub. 
 @item Find the hostname or IP address of cfhub, here we will assume the address is 172.16.100.134
 @item Designate cfhub as the policy server by bootstrapping it using its own IP address:
-@cartouche
-Note: There is a bug in Community 3.3.0 where the default policy files are not copied to @code{/var/cfengine/masterfiles}. Workaround consists in manually copying these files before bootstrap:
-@verbatim
-cp /var/cfengine/share/CoreBase/*.cf /var/cfengine/masterfiles/
-@end verbatim
-This will be corrected in a bugfix release coming soon.
-@end cartouche
 
 @smallexample
 root@@cfhub# /var/cfengine/bin/cf-agent --bootstrap --policy-server 172.16.100.134
@@ -521,7 +514,7 @@ version => "Community Promises.cf 1.0.0";
 }
 @end verbatim
        
-Modify this section by adding the new bundle name and input file (in red):
+Modify this section by adding the new bundle name and input file:
 
 @verbatim
 body common control 
@@ -555,9 +548,8 @@ existing environment as illustrated in the image below:
 
 In this example, there are multiple policy distribution servers. Each
 policy server acts as a discrete distribution point for policies that
-are unique to a specific subset of hosts. Additionally, a CFEngine
-Nova Hub acts as a policy distribution point for a number of clients,
-including Windows, Mac and Virtual Machines.  The Nova Hub also allows
+are unique to a specific subset of hosts. Additionally, a CFEngine 3
+Enterprise Hub can act as a policy distribution point for Windows and Macs.  The Enterprise Hub also
 provides a management and reporting Web interface for all of the
 systems that it manages.
 

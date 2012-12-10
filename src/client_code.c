@@ -262,7 +262,6 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, Attributes attr
     char recvbuffer[CF_BUFSIZE];
     char in[CF_BUFSIZE], out[CF_BUFSIZE];
     AgentConnection *conn = pp->conn;
-    Stat cfst;
     int ret, tosend, cipherlen;
     time_t tloc;
 
@@ -336,10 +335,29 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, Attributes attr
 
     if (OKProtoReply(recvbuffer))
     {
-        long d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12 = 0, d13 = 0;
+        Stat cfst;
 
-        sscanf(recvbuffer, "OK: %1ld %5ld %14ld %14ld %14ld %14ld %14ld %14ld %14ld %14ld %14ld %14ld %14ld",
+        // use intmax_t here to provide enough space for large values coming over the protocol
+        intmax_t d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12 = 0, d13 = 0;
+        ret = sscanf(recvbuffer, "OK: "
+               "%1" PRIdMAX     // 01 cfst.cf_type
+               " %5" PRIdMAX    // 02 cfst.cf_mode
+               " %14" PRIdMAX   // 03 cfst.cf_lmode
+               " %14" PRIdMAX   // 04 cfst.cf_uid
+               " %14" PRIdMAX   // 05 cfst.cf_gid
+               " %18" PRIdMAX   // 06 cfst.cf_size
+               " %14" PRIdMAX   // 07 cfst.cf_atime
+               " %14" PRIdMAX   // 08 cfst.cf_mtime
+               " %14" PRIdMAX   // 09 cfst.cf_ctime
+               " %1" PRIdMAX    // 10 cfst.cf_makeholes
+               " %14" PRIdMAX   // 11 cfst.cf_ino
+               " %14" PRIdMAX   // 12 cfst.cf_nlink
+               " %18" PRIdMAX,  // 13 cfst.cf_dev
                &d1, &d2, &d3, &d4, &d5, &d6, &d7, &d8, &d9, &d10, &d11, &d12, &d13);
+        if (ret < 13) {
+            CfOut(cf_error, "", "!! Cannot read SYNCH reply from %s: only %d/13 items parsed", conn->remoteip, ret );
+            return -1;
+        }
 
         cfst.cf_type = (enum cf_filetype) d1;
         cfst.cf_mode = (mode_t) d2;
@@ -354,11 +372,11 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, Attributes attr
         pp->makeholes = (char) d10;
         cfst.cf_ino = d11;
         cfst.cf_nlink = d12;
-        cfst.cf_dev = d13;
+        cfst.cf_dev = (dev_t)d13;
 
         /* Use %?d here to avoid memory overflow attacks */
 
-        CfDebug("Mode = %ld,%ld\n", d2, d3);
+        CfDebug("Mode = %u, %u\n", cfst.cf_mode, cfst.cf_lmode);
 
         CfDebug
             ("OK: type=%d\n mode=%" PRIoMAX "\n lmode=%" PRIoMAX "\n uid=%" PRIuMAX "\n gid=%" PRIuMAX "\n size=%ld\n atime=%" PRIdMAX "\n mtime=%" PRIdMAX " ino=%d nlnk=%d, dev=%" PRIdMAX "\n",
@@ -687,7 +705,7 @@ int CopyRegularFileNet(char *source, char *new, off_t size, Attributes attr, Pro
     int last_write_made_hole = 0, done = false, tosend, value;
     char *buf, workbuf[CF_BUFSIZE], cfchangedstr[265];
 
-    long n_read_total = 0;
+    off_t n_read_total = 0;
     EVP_CIPHER_CTX ctx;
     AgentConnection *conn = pp->conn;
 
@@ -734,7 +752,7 @@ int CopyRegularFileNet(char *source, char *new, off_t size, Attributes attr, Pro
 
     while (!done)
     {
-        if ((size - n_read_total) / buf_size > 0)
+        if ((size - n_read_total) >= buf_size)
         {
             toget = towrite = buf_size;
         }
@@ -808,7 +826,7 @@ int CopyRegularFileNet(char *source, char *new, off_t size, Attributes attr, Pro
 
         n_read_total += towrite;        /* n_read; */
 
-        if (n_read_total >= (long) size)        /* Handle EOF without closing socket */
+        if (n_read_total >= size)        /* Handle EOF without closing socket */
         {
             done = true;
         }

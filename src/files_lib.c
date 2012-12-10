@@ -32,8 +32,8 @@
 #include <assert.h>
 
 
-static Item *NextItem(Item *ip);
-static int ItemListsEqual(Item *list1, Item *list2, int report, Attributes a, Promise *pp);
+static Item *NextItem(const Item *ip);
+static int ItemListsEqual(const Item *list1, const Item *list2, int report, Attributes a, const Promise *pp);
 
 /*********************************************************************/
 
@@ -75,9 +75,8 @@ void PurgeItemList(Item **list, char *name)
 
 /*********************************************************************/
 
-int RawSaveItemList(Item *liststart, char *file)
+int RawSaveItemList(const Item *liststart, const char *file)
 {
-    Item *ip;
     char new[CF_BUFSIZE], backup[CF_BUFSIZE];
     FILE *fp;
 
@@ -95,7 +94,7 @@ int RawSaveItemList(Item *liststart, char *file)
         return false;
     }
 
-    for (ip = liststart; ip != NULL; ip = ip->next)
+    for (const Item *ip = liststart; ip != NULL; ip = ip->next)
     {
         fprintf(fp, "%s\n", ip->name);
     }
@@ -117,7 +116,7 @@ int RawSaveItemList(Item *liststart, char *file)
 
 /*********************************************************************/
 
-int CompareToFile(Item *liststart, char *file, Attributes a, Promise *pp)
+int CompareToFile(const Item *liststart, const char *file, Attributes a, const Promise *pp)
 /* returns true if file on disk is identical to file in memory */
 {
     struct stat statbuf;
@@ -157,14 +156,13 @@ int CompareToFile(Item *liststart, char *file, Attributes a, Promise *pp)
 
 /*********************************************************************/
 
-static int ItemListsEqual(Item *list1, Item *list2, int warnings, Attributes a, Promise *pp)
+static int ItemListsEqual(const Item *list1, const Item *list2, int warnings, Attributes a, const Promise *pp)
 // Some complex logic here to enable warnings of diffs to be given
 {
-    Item *ip1, *ip2;
     int retval = true;
 
-    ip1 = list1;
-    ip2 = list2;
+    const Item *ip1 = list1;
+    const Item *ip2 = list2;
 
     while (true)
     {
@@ -333,7 +331,7 @@ ssize_t FileReadMax(char **output, char *filename, size_t size_max)
 /* helpers                                                           */
 /*********************************************************************/
 
-static Item *NextItem(Item *ip)
+static Item *NextItem(const Item *ip)
 {
     if (ip)
     {

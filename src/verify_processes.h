@@ -22,15 +22,16 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_ADDR_LIB_H
-#define CFENGINE_ADDR_LIB_H
+#ifndef CFENGINE_VERIFY_PROCESSES_H
+#define CFENGINE_VERIFY_PROCESSES_H
 
 #include "cf3.defs.h"
 
-bool IsLoopbackAddress(const char *address);
-int FuzzySetMatch(const char *s1, const char *s2);
-int FuzzyHostParse(char *arg1, char *arg2);
-int FuzzyHostMatch(char *arg0, char *arg1, char *basename);
-int FuzzyMatchParse(char *item);
+void VerifyProcessesPromise(Promise *pp);
+void VerifyProcesses(Attributes a, Promise *pp);
+int LoadProcessTable(Item **procdata);
+int DoAllSignals(Item *siglist, Attributes a, Promise *pp);
+int GracefulTerminate(pid_t pid);
+void GetProcessColumnNames(char *proc, char **names, int *start, int *end);
 
 #endif

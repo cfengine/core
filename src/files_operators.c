@@ -2550,7 +2550,7 @@ int SaveItemListAsFile(Item *liststart, const char *file, Attributes a, Promise 
 
 /*********************************************************************/
 
-int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, Promise *pp)
+int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, const Promise *pp)
 {
     FILE *fp;
     struct stat statbuf;

@@ -28,12 +28,12 @@
 #include "cf3.defs.h"
 
 void InitAlphaList(AlphaList *al);
-int InAlphaList(AlphaList *al, const char *string);
-int MatchInAlphaList(AlphaList *al, char *string);
+int InAlphaList(const AlphaList *al, const char *string);
+int MatchInAlphaList(const AlphaList *al, const char *string);
 void PrependAlphaList(AlphaList *al, const char *string);
 void IdempPrependAlphaList(AlphaList *al, const char *string);
 void DeleteAlphaList(AlphaList *al);
-AlphaList *CopyAlphaListPointers(AlphaList *al, AlphaList *ap);
+AlphaList *CopyAlphaListPointers(AlphaList *al, const AlphaList *ap);
 AlphaList *DupAlphaListPointers(AlphaList *ap, AlphaList *al);
 void DeleteFromAlphaList(AlphaList *al, const char *string);
 

@@ -28,6 +28,7 @@
 #include "env_context.h"
 #include "constraints.h"
 #include "verify_environments.h"
+#include "verify_processes.h"
 #include "addr_lib.h"
 #include "files_names.h"
 #include "files_interfaces.h"
@@ -1343,6 +1344,7 @@ static void ParallelFindAndVerifyFilesPromises(Promise *pp, const ReportContext 
     {
         CfOut(cf_verbose, "",
               " !> Promised parallel execution promised but exceeded the max number of promised background tasks, so serializing");
+        background = 0;
     }
 
     if (child == 0 || !background)

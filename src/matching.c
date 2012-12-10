@@ -432,7 +432,7 @@ int IsRegexItemIn(Item *list, char *regex)
 
 /*********************************************************************/
 
-int MatchPolicy(char *camel, char *haystack, Attributes a, Promise *pp)
+int MatchPolicy(const char *camel, const char *haystack, Attributes a, const Promise *pp)
 {
     Rlist *rp;
     char *sp, *spto, *firstchar, *lastchar;

@@ -49,12 +49,6 @@ int ScheduleAgentOperations(Bundle *bp, const ReportContext *report_context);
 
 void AgentDiagnostic(void);
 
-/* bootstrap.c */
-
-void CheckAutoBootstrap(void);
-void SetPolicyServer(char *name);
-void CreateFailSafe(char *name);
-
 /* cf_sql.c */
 
 int CfConnectDB(CfdbConn *cfdb, enum cfdbtype dbtype, char *remotehost, char *dbuser, char *passwd, char *db);
@@ -103,13 +97,11 @@ int CfSessionKeySize(char c);
 char CfEnterpriseOptions(void);
 const EVP_CIPHER *CfengineCipher(char type);
 void Aggregate(char *stylesheet, char *banner, char *footer, char *webdriver);
-void SetPolicyServer(char *name);
 int IsEnterprise(void);
 void EnterpriseContext(void);
 int EnterpriseExpiry(void);
 const char *GetConsolePrefix(void);
 const char *MailSubject(void);
-void CheckAutoBootstrap(void);
 void RegisterBundleDependence(char *absscope, const Promise *pp);
 void ShowTopicRepresentation(const ReportContext *report_context);
 void PreSanitizePromise(Promise *pp);
@@ -389,7 +381,7 @@ char *sockaddr_ntop(struct sockaddr *sa);
 
 /* Thread-safe. Returns boolean success.
    It's up to caller to provide large enough addr. */
-bool sockaddr_pton(int af, void *src, void *addr);
+bool sockaddr_pton(int af, const void *src, void *addr);
 
 /* storage_tools.c */
 
@@ -469,15 +461,6 @@ void VerifyPackagesPromise(Promise *pp);
 void ExecuteScheduledPackages(void);
 void CleanScheduledPackages(void);
 int PrependPackageItem(PackageItem ** list, const char *name, const char *version, const char *arch, Attributes a, Promise *pp);
-
-/* verify_processes.c */
-
-void VerifyProcessesPromise(Promise *pp);
-void VerifyProcesses(Attributes a, Promise *pp);
-int LoadProcessTable(Item **procdata);
-int DoAllSignals(Item *siglist, Attributes a, Promise *pp);
-int GracefulTerminate(pid_t pid);
-void GetProcessColumnNames(char *proc, char **names, int *start, int *end);
 
 /* verify_services.c */
 

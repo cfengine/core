@@ -25,6 +25,7 @@
 #include "generic_agent.h"
 #include "cf-execd-runner.h"
 
+#include "bootstrap.h"
 #include "sysinfo.h"
 #include "env_context.h"
 #include "constraints.h"
@@ -38,6 +39,7 @@
 #include "unix.h"
 #include "cfstream.h"
 #include "string_lib.h"
+#include "verify_processes.h"
 
 #define CF_EXEC_IFELAPSED 0
 #define CF_EXEC_EXPIREAFTER 1
@@ -458,7 +460,7 @@ void StartServer(Policy *policy, ExecConfig *config, const ReportContext *report
     if ((!NO_FORK) && (fork() != 0))
     {
         CfOut(cf_inform, "", "cf-execd starting %.24s\n", cf_ctime(&now));
-        exit(0);
+        _exit(0);
     }
 
     if (!NO_FORK)
@@ -741,6 +743,8 @@ static bool ScheduleRun(Policy **policy, ExecConfig *exec_config, const ReportCo
         InitAlphaList(&VHEAP);
         DeleteAlphaList(&VADDCLASSES);
         InitAlphaList(&VADDCLASSES);
+        DeleteAlphaList(&VHARDHEAP);
+        InitAlphaList(&VHARDHEAP);
 
         DeleteItemList(IPADDRESSES);
         IPADDRESSES = NULL;
@@ -771,6 +775,7 @@ static bool ScheduleRun(Policy **policy, ExecConfig *exec_config, const ReportCo
         }
     }
 
+    CfOut(cf_verbose, "", "Nothing to do at %s\n", cf_ctime(&CFSTARTTIME));
     return false;
 }
 

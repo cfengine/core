@@ -24,6 +24,7 @@
 
 #include "cf-serverd-functions.h"
 
+#include "bootstrap.h"
 #include "scope.h"
 #include "cfstream.h"
 
@@ -86,6 +87,7 @@ static void KeepHardClasses()
 
         if (fp != NULL)
         {
+            fclose(fp);
             snprintf(name, sizeof(name), "%s/state/am_policy_hub", CFWORKDIR);
             MapName(name);
 
@@ -266,7 +268,7 @@ void StartServer(Policy *policy, GenericAgentConfig config, const ReportContext 
 
     if ((!NO_FORK) && (fork() != 0))
     {
-        exit(0);
+        _exit(0);
     }
 
     if (!NO_FORK)

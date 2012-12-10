@@ -533,7 +533,7 @@ static void ShowPromiseInReportText(const ReportContext *context, const char *ve
 static void ShowPromiseInReportHtml(const ReportContext *context, const char *version, const Promise *pp, int indent)
 {
     assert(context);
-    Writer *writer = context->report_writers[REPORT_OUTPUT_TYPE_TEXT];
+    Writer *writer = context->report_writers[REPORT_OUTPUT_TYPE_HTML];
     assert(writer);
     if (!writer)
     {

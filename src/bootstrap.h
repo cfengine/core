@@ -22,15 +22,12 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_ADDR_LIB_H
-#define CFENGINE_ADDR_LIB_H
+#ifndef CFENGINE_BOOTSTRAP_H
+#define CFENGINE_BOOTSTRAP_H
 
 #include "cf3.defs.h"
 
-bool IsLoopbackAddress(const char *address);
-int FuzzySetMatch(const char *s1, const char *s2);
-int FuzzyHostParse(char *arg1, char *arg2);
-int FuzzyHostMatch(char *arg0, char *arg1, char *basename);
-int FuzzyMatchParse(char *item);
+void CheckAutoBootstrap(void);
+void SetPolicyServer(char *name);
 
 #endif

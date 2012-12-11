@@ -89,6 +89,7 @@ int IdentifyAgent(int sd, char *localip, int family)
 #endif
         default:
             CfOut(cf_error, "", "Software error in IdentifyForVerification, family = %d", family);
+            return false;
         }
 
         if (getsockname(sd, (struct sockaddr *) &myaddr, &len) == -1)

@@ -375,8 +375,8 @@ int GetMyHostInfo(char nameBuf[MAXHOSTNAMELEN], char ipBuf[MAXIP4CHARLEN])
 
 unsigned short SocketFamily(int sd)
 {
-   struct sockaddr sa;
-   socklen_t len;
+   struct sockaddr sa = {0};
+   socklen_t len = sizeof(sa);
    getsockname(sd, &sa, &len);
    return sa.sa_family;
 }

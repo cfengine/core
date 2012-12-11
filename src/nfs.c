@@ -548,15 +548,25 @@ int VerifyMount(char *name, Attributes a, Promise *pp)
 {
     char comm[CF_BUFSIZE], line[CF_BUFSIZE];
     FILE *pfp;
-    char *host, *rmountpt, *mountpt;
+    char *host, *rmountpt, *mountpt, *opts=NULL;
 
     host = a.mount.mount_server;
     rmountpt = a.mount.mount_source;
     mountpt = name;
 
+    /* Check for options required for this mount - i.e., -o ro,rsize, etc. */
+    if (a.mount.mount_options)
+    {
+        opts = Rlist2String(a.mount.mount_options, ",");
+    }
+    else
+    {
+        opts = xstrdup(VMOUNTOPTS[VSYSTEMHARDCLASS]);
+    }
+
     if (!DONTDO)
     {
-        snprintf(comm, CF_BUFSIZE, "%s %s:%s %s", GetArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]), host, rmountpt, mountpt);
+        snprintf(comm, CF_BUFSIZE, "%s -o %s %s:%s %s", GetArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]), opts, host, rmountpt, mountpt);
 
         if ((pfp = cf_popen(comm, "r")) == NULL)
         {
@@ -575,6 +585,9 @@ int VerifyMount(char *name, Attributes a, Promise *pp)
 
         cf_pclose(pfp);
     }
+
+    /* Since opts is either Rlist2String or xstrdup'd, we need to always free it */
+    free(opts);
 
     cfPS(cf_inform, CF_CHG, "", pp, a, " -> Mounting %s to keep promise\n", mountpt);
     return 0;

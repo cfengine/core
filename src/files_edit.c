@@ -65,7 +65,7 @@ EditContext *NewEditContext(char *filename, Attributes a, Promise *pp)
             return NULL;
         }
 #else
-        cfPS(cf_verbose, CF_INTERPT, "", pp, a, " !! Cannot edit xml files without LIBXML2\n");
+        cfPS(cf_error, CF_FAIL, "", pp, a, " !! Cannot edit XML files without LIBXML2\n");
         free(ec);
         return NULL;
 #endif
@@ -131,7 +131,7 @@ void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportC
             }
             xmlFreeDoc(ec->xmldoc);
 #else
-            cfPS(cf_verbose, CF_INTERPT, "", pp, a, " !! Cannot edit xml files without LIBXML2\n");
+            cfPS(cf_error, CF_FAIL, "", pp, a, " !! Cannot edit XML files without LIBXML2\n");
 #endif
         }
     }

@@ -2584,8 +2584,11 @@ static void CfGetFile(ServerFileGetState *args)
     else
     {
         int div = 3;
+
         if (sb.st_size > 10485760L) /* File larger than 10 MB, checks every 64kB */
+        {
             div = 32;
+        }
 
         while (true)
         {
@@ -2611,7 +2614,8 @@ static void CfGetFile(ServerFileGetState *args)
 
                 if (count++ % div == 0)   /* Don't do this too often */
                 {
-                    if (stat(filename, &sb)) {
+                    if (stat(filename, &sb))
+                    {
                         CfOut(cf_error, "send", "Cannot stat file %s: (errno=%d) %s",
                               filename, errno, strerror(errno));
                         break;
@@ -2701,8 +2705,12 @@ static void CfEncryptGetFile(ServerFileGetState *args)
     else
     {
         int div = 3;
+
         if (sb.st_size > 10485760L) /* File larger than 10 MB, checks every 64kB */
+        {
             div = 32;
+        }
+
         while (true)
         {
             memset(sendbuffer, 0, CF_BUFSIZE);

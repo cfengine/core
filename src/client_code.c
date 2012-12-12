@@ -354,7 +354,9 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, Attributes attr
                " %14" PRIdMAX   // 12 cfst.cf_nlink
                " %18" PRIdMAX,  // 13 cfst.cf_dev
                &d1, &d2, &d3, &d4, &d5, &d6, &d7, &d8, &d9, &d10, &d11, &d12, &d13);
-        if (ret < 13) {
+
+        if (ret < 13)
+        {
             CfOut(cf_error, "", "!! Cannot read SYNCH reply from %s: only %d/13 items parsed", conn->remoteip, ret );
             return -1;
         }

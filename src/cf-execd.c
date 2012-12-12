@@ -272,24 +272,32 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
 
 /*****************************************************************************/
 
+static void LoadDefaultSchedule(void)
+{
+    CfDebug("Loading default schedule...\n");
+    DeleteItemList(SCHEDULE);
+    SCHEDULE = NULL;
+    AppendItem(&SCHEDULE, "Min00", NULL);
+    AppendItem(&SCHEDULE, "Min05", NULL);
+    AppendItem(&SCHEDULE, "Min10", NULL);
+    AppendItem(&SCHEDULE, "Min15", NULL);
+    AppendItem(&SCHEDULE, "Min20", NULL);
+    AppendItem(&SCHEDULE, "Min25", NULL);
+    AppendItem(&SCHEDULE, "Min30", NULL);
+    AppendItem(&SCHEDULE, "Min35", NULL);
+    AppendItem(&SCHEDULE, "Min40", NULL);
+    AppendItem(&SCHEDULE, "Min45", NULL);
+    AppendItem(&SCHEDULE, "Min50", NULL);
+    AppendItem(&SCHEDULE, "Min55", NULL);
+}
+
 static void ThisAgentInit(void)
 {
     umask(077);
 
     if (SCHEDULE == NULL)
     {
-        AppendItem(&SCHEDULE, "Min00", NULL);
-        AppendItem(&SCHEDULE, "Min05", NULL);
-        AppendItem(&SCHEDULE, "Min10", NULL);
-        AppendItem(&SCHEDULE, "Min15", NULL);
-        AppendItem(&SCHEDULE, "Min20", NULL);
-        AppendItem(&SCHEDULE, "Min25", NULL);
-        AppendItem(&SCHEDULE, "Min30", NULL);
-        AppendItem(&SCHEDULE, "Min35", NULL);
-        AppendItem(&SCHEDULE, "Min40", NULL);
-        AppendItem(&SCHEDULE, "Min45", NULL);
-        AppendItem(&SCHEDULE, "Min50", NULL);
-        AppendItem(&SCHEDULE, "Min55", NULL);
+        LoadDefaultSchedule();
     }
 }
 
@@ -309,9 +317,11 @@ static double GetSplay(void)
 
 void KeepPromises(Policy *policy, ExecConfig *config)
 {
+    bool schedule_is_specified = false;
+
     for (Constraint *cp = ControlBodyConstraints(policy, AGENT_TYPE_EXECUTOR); cp != NULL; cp = cp->next)
     {
-    if (IsExcluded(cp->classes, NULL))
+        if (IsExcluded(cp->classes, NULL))
         {
             continue;
         }
@@ -378,13 +388,12 @@ void KeepPromises(Policy *policy, ExecConfig *config)
 
         if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_schedule].lval) == 0)
         {
-            Rlist *rp;
-
-            CfDebug("schedule ...\n");
+            CfDebug("Loading user-defined schedule...\n");
             DeleteItemList(SCHEDULE);
             SCHEDULE = NULL;
+            schedule_is_specified = true;
 
-            for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
+            for (const Rlist *rp = retval.item; rp; rp = rp->next)
             {
                 if (!IsItemIn(SCHEDULE, rp->item))
                 {
@@ -392,6 +401,11 @@ void KeepPromises(Policy *policy, ExecConfig *config)
                 }
             }
         }
+    }
+
+    if (!schedule_is_specified)
+    {
+        LoadDefaultSchedule();
     }
 }
 

@@ -181,13 +181,6 @@ int GetCurrentUserName(char *userName, int userNameLen)
 
 /*************************************************************/
 
-const char *GetErrorStr(void)
-{
-    return strerror(errno);
-}
-
-/*************************************************************/
-
 int IsExecutable(const char *file)
 {
     struct stat sb;

@@ -47,6 +47,10 @@ static void LogPromiseResult(char *promiser, char peeType, void *promisee, char 
                              Item *mess);
 #endif
 
+#if !defined(__MINGW32__)
+static const char *GetErrorStr(void);
+#endif
+
 /*****************************************************************************/
 
 /*
@@ -451,4 +455,11 @@ static void LogPromiseResult(char *promiser, char peeType, void *promisee, char 
 {
 }
 
+#endif
+
+#if !defined(__MINGW32__)
+static const char *GetErrorStr(void)
+{
+    return strerror(errno);
+}
 #endif

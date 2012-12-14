@@ -380,7 +380,7 @@ unsigned short SocketFamily(int sd)
 
    if (getsockname(sd, &sa, &len) == -1)
    {
-       CfOut(cf_error, "getsockname", "!! Could not get socket family: %s", GetErrorStr());
+       CfOut(cf_error, "getsockname", "!! Could not get socket family");
    }
 
    return sa.sa_family;

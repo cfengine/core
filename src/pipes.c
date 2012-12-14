@@ -161,6 +161,42 @@ static void SetChildFD(int fd, pid_t pid)
 
 /*****************************************************************************/
 
+static pid_t CreatePipeAndFork(char *type, int *pd)
+{
+    pid_t pid = -1;
+
+    if (((*type != 'r') && (*type != 'w')) || (type[1] != '\0'))
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (!InitChildrenFD())
+    {
+        return -1;
+    }
+
+    if (pipe(pd) < 0)           /* Create a pair of descriptors to this process */
+    {
+        return -1;
+    }
+
+    if ((pid = fork()) == -1)
+    {
+        close(pd[0]);
+        close(pd[1]);
+        return -1;
+    }
+
+    signal(SIGCHLD, SIG_DFL);
+
+    ALARM_PID = (pid != 0 ? pid : -1);
+
+    return pid;
+}
+
+/*****************************************************************************/
+
 FILE *cf_popen(const char *command, char *type)
 {
     int pd[2];
@@ -170,32 +206,10 @@ FILE *cf_popen(const char *command, char *type)
 
     CfDebug("cf_popen(%s)\n", command);
 
-    if (((*type != 'r') && (*type != 'w')) || (type[1] != '\0'))
-    {
-        errno = EINVAL;
+    pid = CreatePipeAndFork(type, pd);
+    if (pid == -1) {
         return NULL;
     }
-
-    if (!InitChildrenFD())
-    {
-        return NULL;
-    }
-
-    if (pipe(pd) < 0)           /* Create a pair of descriptors to this process */
-    {
-        return NULL;
-    }
-
-    if ((pid = fork()) == -1)
-    {
-        close(pd[0]);
-        close(pd[1]);
-        return NULL;
-    }
-
-    signal(SIGCHLD, SIG_DFL);
-
-    ALARM_PID = (pid != 0 ? pid : -1);
 
     if (pid == 0)
     {
@@ -280,31 +294,10 @@ FILE *cf_popensetuid(const char *command, char *type, uid_t uid, gid_t gid, char
 
     CfDebug("cf_popensetuid(%s,%s,%" PRIuMAX ",%" PRIuMAX ")\n", command, type, (uintmax_t)uid, (uintmax_t)gid);
 
-    if (((*type != 'r') && (*type != 'w')) || (type[1] != '\0'))
-    {
-        errno = EINVAL;
+    pid = CreatePipeAndFork(type, pd);
+    if (pid == -1) {
         return NULL;
     }
-
-    if (!InitChildrenFD())
-    {
-        return NULL;
-    }
-
-    if (pipe(pd) < 0)           /* Create a pair of descriptors to this process */
-    {
-        return NULL;
-    }
-
-    if ((pid = fork()) == -1)
-    {
-        close(pd[0]);
-        close(pd[1]);
-        return NULL;
-    }
-
-    signal(SIGCHLD, SIG_DFL);
-    ALARM_PID = (pid != 0 ? pid : -1);
 
     if (pid == 0)
     {
@@ -415,31 +408,10 @@ FILE *cf_popen_sh(const char *command, char *type)
 
     CfDebug("cf_popen_sh(%s)\n", command);
 
-    if (((*type != 'r') && (*type != 'w')) || (type[1] != '\0'))
-    {
-        errno = EINVAL;
+    pid = CreatePipeAndFork(type, pd);
+    if (pid == -1) {
         return NULL;
     }
-
-    if (!InitChildrenFD())
-    {
-        return NULL;
-    }
-
-    if (pipe(pd) < 0)           /* Create a pair of descriptors to this process */
-    {
-        return NULL;
-    }
-
-    if ((pid = fork()) == -1)
-    {
-        close(pd[0]);
-        close(pd[1]);
-        return NULL;
-    }
-
-    signal(SIGCHLD, SIG_DFL);
-    ALARM_PID = (pid != 0 ? pid : -1);
 
     if (pid == 0)
     {
@@ -517,31 +489,10 @@ FILE *cf_popen_shsetuid(const char *command, char *type, uid_t uid, gid_t gid, c
 
     CfDebug("cf_popen_shsetuid(%s,%s,%" PRIuMAX ",%" PRIuMAX ")\n", command, type, (uintmax_t)uid, (uintmax_t)gid);
 
-    if (((*type != 'r') && (*type != 'w')) || (type[1] != '\0'))
-    {
-        errno = EINVAL;
+    pid = CreatePipeAndFork(type, pd);
+    if (pid == -1) {
         return NULL;
     }
-
-    if (!InitChildrenFD())
-    {
-        return NULL;
-    }
-
-    if (pipe(pd) < 0)           /* Create a pair of descriptors to this process */
-    {
-        return NULL;
-    }
-
-    if ((pid = fork()) == -1)
-    {
-        close(pd[0]);
-        close(pd[1]);
-        return NULL;
-    }
-
-    signal(SIGCHLD, SIG_DFL);
-    ALARM_PID = (pid != 0 ? pid : -1);
 
     if (pid == 0)
     {

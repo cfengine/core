@@ -38,6 +38,7 @@
 #include "sysinfo.h"
 #include "files_operators.h"
 #include "cfstream.h"
+#include "signals.h"
 
 #include <math.h>
 
@@ -284,7 +285,7 @@ void MonitorStartServer(const Policy *policy, const ReportContext *report_contex
 
     MonNetworkSnifferOpen();
 
-    while (true)
+    while (!IsPendingTermination())
     {
         GetQ(policy, report_context);
         snprintf(timekey, sizeof(timekey), "%s", GenTimeKey(time(NULL)));

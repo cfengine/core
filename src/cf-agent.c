@@ -130,6 +130,7 @@ int main(int argc, char *argv[])
     ReportContext *report_context = OpenReports("agent");
     Policy *policy = GenericInitialize("agent", config, report_context);
     ThisAgentInit();
+    BeginAudit();
     KeepPromises(policy, config, report_context);
     CloseReports("agent", report_context);
     NoteClassUsage(VHEAP, true);
@@ -144,6 +145,8 @@ int main(int argc, char *argv[])
     {
         ret = 1;
     }
+
+    EndAudit();
 
     return ret;
 }
@@ -314,12 +317,12 @@ static void ThisAgentInit(void)
     setsid();
 #endif
 
-    signal(SIGINT, HandleSignals);
-    signal(SIGTERM, HandleSignals);
+    signal(SIGINT, HandleSignalsForAgent);
+    signal(SIGTERM, HandleSignalsForAgent);
     signal(SIGHUP, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);
-    signal(SIGUSR1, HandleSignals);
-    signal(SIGUSR2, HandleSignals);
+    signal(SIGUSR1, HandleSignalsForAgent);
+    signal(SIGUSR2, HandleSignalsForAgent);
 
     CFA_MAXTHREADS = 30;
     EDITFILESIZE = 100000;
@@ -343,12 +346,7 @@ static void ThisAgentInit(void)
 
 static void KeepPromises(Policy *policy, GenericAgentConfig config, const ReportContext *report_context)
 {
- double efficiency, model;
-
-    if (THIS_AGENT_TYPE == AGENT_TYPE_AGENT)
-    {
-        BeginAudit();
-    }
+    double efficiency, model;
 
     KeepControlPromises(policy);
     KeepPromiseBundles(policy, config.bundlesequence, report_context);

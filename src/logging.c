@@ -36,7 +36,6 @@
 #define CF_VALUE_LOG      "cf_value.log"
 
 static void ExtractOperationLock(char *op);
-static void EndAudit(void);
 
 static const char *NO_STATUS_TYPES[] = { "vars", "classes", NULL };
 static const char *NO_LOG_TYPES[] =
@@ -53,20 +52,12 @@ int PR_REPAIRED;
 int PR_NOTKEPT;
 
 static CF_DB *AUDITDBP;
+static bool END_AUDIT_REQUIRED = false;
 
 /*****************************************************************************/
 
-static pthread_once_t end_audit_once = PTHREAD_ONCE_INIT;
-
-static void RegisterEndAudit(void)
-{
-    RegisterAtExitFunction(&EndAudit);
-}
-
 void BeginAudit()
 {
-    pthread_once(&end_audit_once, &RegisterEndAudit);
-
     Promise dummyp = { 0 };
     Attributes dummyattr = { {0} };
 
@@ -74,12 +65,19 @@ void BeginAudit()
     memset(&dummyattr, 0, sizeof(dummyattr));
 
     ClassAuditLog(&dummyp, dummyattr, "Cfagent starting", CF_NOP, "");
+
+    END_AUDIT_REQUIRED = true;
 }
 
 /*****************************************************************************/
 
 void EndAudit(void)
 {
+    if (!END_AUDIT_REQUIRED)
+    {
+        return;
+    }
+
     char *sp, string[CF_BUFSIZE];
     Rval retval;
     Promise dummyp = { 0 };
@@ -522,6 +520,7 @@ void FatalError(char *s, ...)
         CfOut(cf_error, "", "Fatal CFEngine error: %s", buf);
     }
 
+    EndAudit();
     exit(1);
 }
 

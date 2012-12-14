@@ -32,6 +32,7 @@
 #include "cfstream.h"
 #include "communication.h"
 #include "pipes.h"
+#include "signals.h"
 
 /* Constants */
 
@@ -126,7 +127,7 @@ static void Sniff(long iteration, double *cf_this)
     alarm(SLEEPTIME);
     TCPPAUSE = false;
 
-    while (!feof(TCPPIPE))
+    while (!feof(TCPPIPE) && !IsPendingTermination())
     {
         if (TCPPAUSE)
         {

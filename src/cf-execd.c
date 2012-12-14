@@ -486,12 +486,12 @@ void StartServer(Policy *policy, ExecConfig *config, const ReportContext *report
 #endif /* NOT MINGW */
 
     WritePID("cf-execd.pid");
-    signal(SIGINT, HandleSignals);
-    signal(SIGTERM, HandleSignals);
+    signal(SIGINT, HandleSignalsForDaemon);
+    signal(SIGTERM, HandleSignalsForDaemon);
     signal(SIGHUP, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);
-    signal(SIGUSR1, HandleSignals);
-    signal(SIGUSR2, HandleSignals);
+    signal(SIGUSR1, HandleSignalsForDaemon);
+    signal(SIGUSR2, HandleSignalsForDaemon);
 
     umask(077);
 
@@ -504,7 +504,7 @@ void StartServer(Policy *policy, ExecConfig *config, const ReportContext *report
     }
     else
     {
-        while (true)
+        while (!IsPendingTermination())
         {
             if (ScheduleRun(&policy, config, report_context))
             {
@@ -522,10 +522,7 @@ void StartServer(Policy *policy, ExecConfig *config, const ReportContext *report
 #endif
             }
         }
-    }
 
-    if (!ONCE)
-    {
         YieldCurrentLock(thislock);
     }
 }

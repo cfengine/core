@@ -314,12 +314,12 @@ static void ThisAgentInit(void)
     setsid();
 #endif
 
-    signal(SIGINT, HandleSignals);
-    signal(SIGTERM, HandleSignals);
+    signal(SIGINT, HandleSignalsForAgent);
+    signal(SIGTERM, HandleSignalsForAgent);
     signal(SIGHUP, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);
-    signal(SIGUSR1, HandleSignals);
-    signal(SIGUSR2, HandleSignals);
+    signal(SIGUSR1, HandleSignalsForAgent);
+    signal(SIGUSR2, HandleSignalsForAgent);
 
     CFA_MAXTHREADS = 30;
     EDITFILESIZE = 100000;

@@ -32,8 +32,6 @@
 #include "attributes.h"
 #include "cfstream.h"
 
-#ifndef HAVE_LIBVIRT
-
 enum cfhypervisors
 {
     cfv_virt_xen,
@@ -50,6 +48,8 @@ enum cfhypervisors
     cfv_eucalyptus,
     cfv_none
 };
+
+#ifndef HAVE_LIBVIRT
 
 static enum cfhypervisors Str2Hypervisors(char *s)
 {

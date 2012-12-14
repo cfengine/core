@@ -368,10 +368,6 @@ void KeepControlPromises(Policy *policy);
 Auth *GetAuthPath(char *path, Auth *list);
 void Summarize(void);
 
-/* signals.c */
-
-void HandleSignals(int signum);
-
 /* sockaddr.c */
 
 /* Not thread-safe */

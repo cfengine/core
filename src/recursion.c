@@ -31,6 +31,7 @@
 #include "files_operators.h"
 #include "matching.h"
 #include "cfstream.h"
+#include "signals.h"
 
 #define CF_RECURSION_LIMIT 100
 

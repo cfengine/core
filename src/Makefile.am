@@ -134,7 +134,7 @@ libpromises_la_SOURCES = \
         sequence.c sequence.h \
         set.c set.h \
         show.h \
-        signals.c \
+        signals.c signals.h \
         sockaddr.c \
         sort.c sort.h \
 	statistics.c statistics.h \

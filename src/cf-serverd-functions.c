@@ -27,6 +27,7 @@
 #include "bootstrap.h"
 #include "scope.h"
 #include "cfstream.h"
+#include "signals.h"
 
 static const size_t QUEUESIZE = 50;
 int NO_FORK = false;

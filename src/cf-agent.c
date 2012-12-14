@@ -45,6 +45,7 @@
 #include "attributes.h"
 #include "cfstream.h"
 #include "communication.h"
+#include "signals.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"

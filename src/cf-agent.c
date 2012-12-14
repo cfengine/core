@@ -130,6 +130,7 @@ int main(int argc, char *argv[])
     ReportContext *report_context = OpenReports("agent");
     Policy *policy = GenericInitialize("agent", config, report_context);
     ThisAgentInit();
+    BeginAudit();
     KeepPromises(policy, config, report_context);
     CloseReports("agent", report_context);
     NoteClassUsage(VHEAP, true);
@@ -144,6 +145,8 @@ int main(int argc, char *argv[])
     {
         ret = 1;
     }
+
+    EndAudit();
 
     return ret;
 }
@@ -343,12 +346,7 @@ static void ThisAgentInit(void)
 
 static void KeepPromises(Policy *policy, GenericAgentConfig config, const ReportContext *report_context)
 {
- double efficiency, model;
-
-    if (THIS_AGENT_TYPE == AGENT_TYPE_AGENT)
-    {
-        BeginAudit();
-    }
+    double efficiency, model;
 
     KeepControlPromises(policy);
     KeepPromiseBundles(policy, config.bundlesequence, report_context);

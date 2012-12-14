@@ -49,8 +49,6 @@ enum cfhypervisors
     cfv_none
 };
 
-#ifndef HAVE_LIBVIRT
-
 static enum cfhypervisors Str2Hypervisors(char *s)
 {
     static char *names[] = { "xen", "kvm", "esx", "vbox", "test",
@@ -74,6 +72,8 @@ static enum cfhypervisors Str2Hypervisors(char *s)
 
     return (enum cfhypervisors) i;
 }
+
+#ifndef HAVE_LIBVIRT
 
 void NewEnvironmentsContext(void)
 {

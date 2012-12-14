@@ -358,7 +358,7 @@ static void *HandleConnection(ServerConnectionState *conn)
         if (TRIES++ > MAXTRIES) /* When to say we're hung / apoptosis threshold */
         {
             CfOut(cf_error, "", "Server seems to be paralyzed. DOS attack? Committing apoptosis...");
-            HandleSignals(SIGTERM);
+            FatalError("Terminating");
         }
 
         if (!ThreadUnlock(cft_server_children))

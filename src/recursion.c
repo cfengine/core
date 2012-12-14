@@ -208,7 +208,7 @@ static void PopDirState(int goback, char *name, struct stat *sb, Recursion r)
         if (chdir(name) == -1)
         {
             CfOut(cf_error, "chdir", "Error in backing out of recursive travlink descent securely to %s", name);
-            HandleSignals(SIGTERM);
+            FatalError("Terminating");
         }
 
         CheckLinkSecurity(sb, name);
@@ -218,7 +218,7 @@ static void PopDirState(int goback, char *name, struct stat *sb, Recursion r)
         if (chdir("..") == -1)
         {
             CfOut(cf_error, "chdir", "Error in backing out of recursive descent securely to %s", name);
-            HandleSignals(SIGTERM);
+            FatalError("Terminating");
         }
     }
 }
@@ -269,7 +269,6 @@ static void CheckLinkSecurity(struct stat *sb, char *name)
         CfOut(cf_error, "",
               "SERIOUS SECURITY ALERT: path race exploited in recursion to/from %s. Not safe for agent to continue - aborting",
               name);
-        HandleSignals(SIGTERM);
-        /* Exits */
+        FatalError("Terminating");
     }
 }

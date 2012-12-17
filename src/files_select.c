@@ -369,7 +369,6 @@ static int SelectModeMatch(struct stat *lstatptr, Rlist *list)
 static int SelectBSDMatch(struct stat *lstatptr, Rlist *bsdflags, Promise *pp)
 {
     u_long newflags, plus, minus;
-    Rlist *rp;
 
     if (!ParseFlagString(bsdflags, &plus, &minus))
     {

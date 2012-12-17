@@ -107,8 +107,10 @@ int MAX_FD = 128;               /* Max number of simultaneous pipes */
 static int InitChildrenFD()
 {
     if (!ThreadLock(cft_count))
+    {
         return false;
-
+    }
+        
     if (CHILDREN == NULL)       /* first time */
     {
         CHILDREN = xcalloc(MAX_FD, sizeof(pid_t));
@@ -131,7 +133,7 @@ static void CloseChildrenFD()
             close(i);
         }
     }
-    ThreadLock(cft_count);
+    ThreadUnlock(cft_count);
 }
 
 /*****************************************************************************/
@@ -139,7 +141,6 @@ static void CloseChildrenFD()
 static void SetChildFD(int fd, pid_t pid)
 {
     int new_fd = 0;
-    ThreadLock(cft_count);
 
     if (fd >= MAX_FD)
     {
@@ -148,6 +149,8 @@ static void SetChildFD(int fd, pid_t pid)
                 fd, (intmax_t)pid);
         new_fd = fd + 32;
     }
+
+    ThreadLock(cft_count);
 
     if (new_fd)
     {

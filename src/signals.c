@@ -48,10 +48,14 @@ static const char *SIGNALS[] =
 
 static bool PENDING_TERMINATION = false;
 
+/********************************************************************/
+
 bool IsPendingTermination(void)
 {
     return PENDING_TERMINATION;
 }
+
+/********************************************************************/
 
 void HandleSignalsForAgent(int signum)
 {
@@ -77,6 +81,8 @@ void HandleSignalsForAgent(int signum)
 /* Reset the signal handler */
     signal(signum, HandleSignalsForAgent);
 }
+
+/********************************************************************/
 
 void HandleSignalsForDaemon(int signum)
 {

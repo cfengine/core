@@ -29,9 +29,7 @@
 
 char ToLower(char ch);
 char ToUpper(char ch);
-char *ToUpperStr(const char *str) FUNC_DEPRECATED;
 void ToUpperStrInplace(char *str);
-char *ToLowerStr(const char *str) FUNC_DEPRECATED;
 void ToLowerStrInplace(char *str);
 
 long StringToLong(const char *str);

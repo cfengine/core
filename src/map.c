@@ -188,11 +188,11 @@ void MapClear(Map *map)
 {
     if (IsArrayMap(map))
     {
-        return ArrayMapClear(map->arraymap);
+        ArrayMapClear(map->arraymap);
     }
     else
     {
-        return HashMapClear(map->hashmap);
+        HashMapClear(map->hashmap);
     }
 }
 

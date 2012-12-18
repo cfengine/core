@@ -387,11 +387,12 @@ void ShowPromisesInReport(const ReportContext *context, ReportOutputType type, c
     switch (type)
     {
     case REPORT_OUTPUT_TYPE_HTML:
-        return ShowPromisesInReportHtml(context, bundles, bodies);
+        ShowPromisesInReportHtml(context, bundles, bodies);
 
     default:
     case REPORT_OUTPUT_TYPE_TEXT:
-        return ShowPromisesInReportText(context, bundles, bodies);
+        ShowPromisesInReportText(context, bundles, bodies);
+        break;
     }
 }
 

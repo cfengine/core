@@ -382,28 +382,6 @@ bool sockaddr_pton(int af, const void *src, void *addr);
 
 off_t GetDiskUsage(char *file, enum cfsizes type);
 
-/* transaction.c */
-
-void SummarizeTransaction(Attributes attr, const Promise *pp, const char *logname);
-CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promise *pp, int ignoreProcesses);
-void YieldCurrentLock(CfLock this);
-void GetLockName(char *lockname, char *locktype, char *base, Rlist *params);
-
-#if defined(HAVE_PTHREAD)
-int ThreadLock(pthread_mutex_t *name);
-int ThreadUnlock(pthread_mutex_t *name);
-#else
-# define ThreadLock(name) (1)
-# define ThreadUnlock(name) (1)
-#endif
-
-void PurgeLocks(void);
-int ShiftChange(void);
-
-int WriteLock(char *lock);
-CF_DB *OpenLock(void);
-void CloseLock(CF_DB *dbp);
-
 /* timeout.c */
 
 void SetTimeOut(int timeout);

@@ -31,6 +31,7 @@
 #include "conversion.h"
 #include "attributes.h"
 #include "cfstream.h"
+#include "transaction.h"
 
 #ifdef HAVE_LIBVIRT
 /*****************************************************************************/

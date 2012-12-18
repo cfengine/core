@@ -41,6 +41,7 @@
 #include "string_lib.h"
 #include "verify_processes.h"
 #include "signals.h"
+#include "transaction.h"
 
 #define CF_EXEC_IFELAPSED 0
 #define CF_EXEC_EXPIREAFTER 1

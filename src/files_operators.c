@@ -45,6 +45,7 @@
 #include "cfstream.h"
 #include "client_code.h"
 #include "pipes.h"
+#include "transaction.h"
 
 #include <assert.h>
 

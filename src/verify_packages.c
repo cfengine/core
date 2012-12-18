@@ -39,6 +39,7 @@
 #include "cfstream.h"
 #include "string_lib.h"
 #include "pipes.h"
+#include "transaction.h"
 
 /** Entry points from VerifyPackagesPromise **/
 

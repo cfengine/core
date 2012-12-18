@@ -35,6 +35,7 @@
 #include "unix.h"
 #include "attributes.h"
 #include "cfstream.h"
+#include "transaction.h"
 
 static void GetReturnValue(char *scope, Promise *pp);
     

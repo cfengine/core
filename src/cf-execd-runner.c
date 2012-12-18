@@ -31,6 +31,7 @@
 #include "string_lib.h"
 #include "pipes.h"
 #include "unix.h"
+#include "transaction.h"
 
 /*******************************************************************/
 

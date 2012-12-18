@@ -39,6 +39,7 @@
 #include "files_operators.h"
 #include "cfstream.h"
 #include "signals.h"
+#include "transaction.h"
 
 #include <math.h>
 

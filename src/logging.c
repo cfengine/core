@@ -32,6 +32,7 @@
 #include "unix.h"
 #include "cfstream.h"
 #include "string_lib.h"
+#include "transaction.h"
 
 #define CF_VALUE_LOG      "cf_value.log"
 

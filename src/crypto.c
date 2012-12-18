@@ -31,6 +31,7 @@
 #include "hashes.h"
 #include "cfstream.h"
 #include "pipes.h"
+#include "transaction.h"
 
 static void MD5Random(unsigned char digest[EVP_MAX_MD_SIZE + 1]);
 static void RandomSeed(void);

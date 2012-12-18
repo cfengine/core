@@ -35,6 +35,7 @@
 #include "unix.h"
 #include "cfstream.h"
 #include "args.h"
+#include "transaction.h"
 
 #define PACK_UPIFELAPSED_SALT "packageuplist"
 

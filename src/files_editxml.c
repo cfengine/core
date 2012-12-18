@@ -23,14 +23,6 @@
   included file COSL.txt.
 */
 
-/*****************************************************************************/
-/*                                                                           */
-/* File: files_editxml.c                                                     */
-/*                                                                           */
-/* Created: Thu Aug  9 10:16:53 2012                                         */
-/*                                                                           */
-/*****************************************************************************/
-
 #include "cf3.defs.h"
 
 #include "env_context.h"
@@ -47,6 +39,7 @@
 #include "files_interfaces.h"
 #include "attributes.h"
 #include "cfstream.h"
+#include "transaction.h"
 
 #ifdef HAVE_PCRE_H
 # include <pcre.h>

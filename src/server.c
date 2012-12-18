@@ -38,6 +38,7 @@
 #include "string_lib.h"
 #include "pipes.h"
 #include "signals.h"
+#include "transaction.h"
 
 //******************************************************************
 // GLOBAL STATE

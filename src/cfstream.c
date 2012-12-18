@@ -29,6 +29,7 @@
 #include "constraints.h"
 #include "item_lib.h"
 #include "unix.h"
+#include "transaction.h"
 
 #include <stdarg.h>
 

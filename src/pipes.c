@@ -26,6 +26,7 @@
 #include "pipes.h"
 
 #include "cfstream.h"
+#include "transaction.h"
 
 #ifndef MINGW
 static int CfSetuid(uid_t uid, gid_t gid);

@@ -33,6 +33,7 @@
 #include "cfstream.h"
 #include "fncall.h"
 #include "string_lib.h"
+#include "transaction.h"
 
 #include <assert.h>
 

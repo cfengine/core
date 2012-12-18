@@ -35,6 +35,7 @@
 #include "attributes.h"
 #include "cfstream.h"
 #include "string_lib.h"
+#include "transaction.h"
 
 static PromiseIdent *PromiseIdExists(char *namespace, char *handle);
 static void DeleteAllPromiseIdsRecurse(PromiseIdent *key);

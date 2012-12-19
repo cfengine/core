@@ -31,6 +31,7 @@
 #include "promises.h"
 #include "cfstream.h"
 #include "logging.h"
+#include "string_lib.h"
 
 /*****************************************************************************/
 

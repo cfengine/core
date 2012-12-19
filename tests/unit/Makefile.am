@@ -56,8 +56,7 @@ check_PROGRAMS = \
 	conversion_test \
 	files_interfaces_test \
 	timeout_test \
-	connection_management_test \
-	chop_test
+	connection_management_test
 
 TESTS = $(check_PROGRAMS)
 
@@ -119,6 +118,3 @@ sort_test_LDADD = libtest.la
 
 connection_management_test_SOURCES = connection_management_test.c ../../src/server.c
 connection_management_test_LDADD = ../../src/libpromises.la libtest.la
-
-chop_test_SOURCES = chop_test.c ../../src/files_names.c
-chop_test_LDADD = libtest.la

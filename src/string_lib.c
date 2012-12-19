@@ -26,6 +26,7 @@
 
 #include "logging.h"
 #include "writer.h"
+#include "cfstream.h"
 
 #include <assert.h>
 
@@ -743,4 +744,64 @@ char *EscapeCharCopy(const char *str, char to_escape, char escape_with)
     }
 
     return out;
+}
+
+int StringInArray(char **array, char *string)
+{
+    for (int i = 0; array[i] != NULL; i++)
+    {
+        if (strcmp(string, array[i]) == 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+char *ScanPastChars(char *scanpast, char *input)
+{
+    char *pos = input;
+
+    while ((*pos != '\0') && (strchr(scanpast, *pos)))
+    {
+        pos++;
+    }
+
+    return pos;
+}
+
+void StripTrailingNewline(char *str)
+{
+    char *c = str + strlen(str);
+
+    if (c - str > CF_EXPANDSIZE)
+    {
+        CfOut(cf_error, "", "StripTrailingNewline was called on an overlong string");
+        return;
+    }
+
+    for (; (c >= str) && ((*c == '\0') || (*c == '\n')); --c)
+    {
+        *c = '\0';
+    }
+}
+
+void Chop(char *str)            /* remove trailing spaces */
+{
+    if ((str == NULL) || (strlen(str) == 0))
+    {
+        return;
+    }
+
+    if (strlen(str) > CF_EXPANDSIZE)
+    {
+        CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+        return;
+    }
+
+    for (int i = strlen(str) - 1; (i >= 0) && (isspace((int) str[i])); i--)
+    {
+        str[i] = '\0';
+    }
 }

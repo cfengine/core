@@ -49,6 +49,7 @@
 #include "cfstream.h"
 #include "client_code.h"
 #include "logging.h"
+#include "string_lib.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"

@@ -33,6 +33,7 @@
 #include "communication.h"
 #include "pipes.h"
 #include "signals.h"
+#include "string_lib.h"
 
 /* Constants */
 

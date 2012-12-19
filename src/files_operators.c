@@ -47,6 +47,7 @@
 #include "pipes.h"
 #include "transaction.h"
 #include "logging.h"
+#include "string_lib.h"
 
 #include <assert.h>
 

@@ -33,6 +33,7 @@
 #include "cfstream.h"
 #include "signals.h"
 #include "logging.h"
+#include "string_lib.h"
 
 #define CF_RECURSION_LIMIT 100
 

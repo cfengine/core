@@ -71,4 +71,9 @@ void ReplaceChar(char *in, char *out, int outSz, char from, char to);
 void ReplaceTrailingChar(char *str, char from, char to);
 char *EscapeCharCopy(const char *str, char to_escape, char escape_with);
 
+int StringInArray(char **array, char *string);
+char *ScanPastChars(char *scanpast, char *input);
+void StripTrailingNewline(char *str);
+void Chop(char *str);
+
 #endif

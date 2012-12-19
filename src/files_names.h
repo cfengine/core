@@ -52,12 +52,8 @@ void TransformNameInPlace(char *s, char from, char to);
 char *CanonifyChar(const char *str, char ch);
 const char *ReadLastNode(const char *str);
 int CompressPath(char *dest, char *src);
-void Chop(char *str);
-void StripTrailingNewline(char *str);
-char *ScanPastChars(char *scanpast, char *input);
 int IsAbsoluteFileName(const char *f);
 bool IsFileOutsideDefaultRepository(const char *f);
 int RootDirLength(char *f);
 const char *GetSoftwareCacheFilename(char *buffer);
-int StringInArray(char **array, char *string);
 #endif

@@ -366,6 +366,47 @@ static void test_escape_char_copy(void **state)
     free(out5);
 }
 
+static void test_chop_no_spaces(void **state)
+{
+    char s[] = "abc";
+    Chop(s);
+    assert_string_equal("abc", s);
+}
+
+static void test_chop_single_space(void **state)
+{
+    char s[] = "abc ";
+    Chop(s);
+    assert_string_equal("abc", s);
+}
+
+static void test_chop_two_spaces(void **state)
+{
+    char s[] = "abc  ";
+    Chop(s);
+    assert_string_equal("abc", s);
+}
+
+static void test_chop_empty(void **state)
+{
+    char s[] = "";
+    Chop(s);
+    assert_string_equal("", s);
+}
+
+static void test_chop_empty_single_space(void **state)
+{
+    char s[] = " ";
+    Chop(s);
+    assert_string_equal("", s);
+}
+
+static void test_chop_empty_two_spaces(void **state)
+{
+    char s[] = "  ";
+    Chop(s);
+    assert_string_equal("", s);
+}
 
 int main()
 {
@@ -413,8 +454,14 @@ int main()
 
         unit_test(test_encode_base64),
 
-        unit_test(test_escape_char_copy)
+        unit_test(test_escape_char_copy),
 
+        unit_test(test_chop_no_spaces),
+        unit_test(test_chop_single_space),
+        unit_test(test_chop_two_spaces),
+        unit_test(test_chop_empty),
+        unit_test(test_chop_empty_single_space),
+        unit_test(test_chop_empty_two_spaces),
     };
 
     return run_tests(tests);
@@ -431,6 +478,12 @@ void __ProgrammingError(const char *file, int lineno, const char *format, ...)
 }
 
 void FatalError(char *s, ...)
+{
+    fail();
+    exit(42);
+}
+
+void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
 {
     fail();
     exit(42);

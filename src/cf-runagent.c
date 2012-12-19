@@ -39,6 +39,7 @@
 #include "client_code.h"
 #include "communication.h"
 #include "logging.h"
+#include "string_lib.h"
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);

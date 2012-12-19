@@ -68,11 +68,6 @@ pthread_mutex_t *cft_output;
 char VIPADDRESS[18];
 RSA *PUBKEY;
 
-void Chop(char *str)
-{
-    exit(42);
-}
-
 AlphaListIterator AlphaListIteratorInit(AlphaList *al)
 {
     exit(42);

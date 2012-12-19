@@ -36,6 +36,7 @@
 #include "unix.h"
 #include "cfstream.h"
 #include "logging.h"
+#include "string_lib.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"

@@ -61,7 +61,6 @@ static void ShowLastSeen(void);
 static void ShowClasses(void);
 static void ShowChecksums(void);
 static void ShowLocks(int active);
-static char *Format(char *s, int width);
 
 #ifdef HAVE_QSORT
 static int CompareClasses(const void *a, const void *b);
@@ -1772,33 +1771,6 @@ static void ShowLocks(int active)
 }
 
 /*********************************************************************/
-/* Level 3                                                           */
-/*********************************************************************/
-
-static char *Format(char *s, int width)
-{
-    static char buffer[CF_BUFSIZE];
-    char *sp;
-    int i = 0, count = 0;
-
-    for (sp = s; *sp != '\0'; sp++)
-    {
-        buffer[i++] = *sp;
-        buffer[i] = '\0';
-        count++;
-
-        if ((count > (width - 5)) && (ispunct((int)*sp)))
-        {
-            strcat(buffer, "<br>");
-            i += strlen("<br>");
-            count = 0;
-        }
-    }
-
-    return buffer;
-}
-
-/*************************************************************/
 
 #ifdef HAVE_QSORT
 static int CompareClasses(const void *a, const void *b)

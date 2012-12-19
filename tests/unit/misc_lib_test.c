@@ -1,7 +1,9 @@
+#include <stdlib.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <setjmp.h>
 #include <cmockery.h>
+
 
 #include "misc_lib.h"
 
@@ -28,4 +30,12 @@ int main()
     };
 
     return run_tests(tests);
+}
+
+// STUBS
+
+void __ProgrammingError(const char *file, int lineno, const char *format, ...)
+{
+    fail();
+    exit(42);
 }

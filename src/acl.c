@@ -30,6 +30,7 @@
 #include "files_names.h"
 #include "promises.h"
 #include "cfstream.h"
+#include "logging.h"
 
 /*****************************************************************************/
 

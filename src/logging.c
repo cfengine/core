@@ -356,3 +356,16 @@ void FatalError(char *s, ...)
     EndAudit();
     exit(1);
 }
+
+/************************************************************************/
+
+void __ProgrammingError(const char *file, int lineno, const char *format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+    char *fmt = NULL;
+    xasprintf(&fmt, "%s:%d: %s", file, lineno, format);
+    CfVOut(cf_error, "", fmt, ap);
+    free(fmt);
+    exit(255);
+}

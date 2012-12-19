@@ -1359,8 +1359,6 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
     int rsrcwd;
 
 /* Keep track of if a resrouce fork */
-    char *tmpstr;
-    char *forkpointer;
     int rsrcfork = 0;
 #endif
 
@@ -1427,11 +1425,11 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
 #ifdef DARWIN
     if (strstr(dest, _PATH_RSRCFORKSPEC))
     {
-        char *tempstr = xstrndup(dest, CF_BUFSIZE);
+        char *tmpstr = xstrndup(dest, CF_BUFSIZE);
 
         rsrcfork = 1;
         /* Drop _PATH_RSRCFORKSPEC */
-        forkpointer = strstr(tmpstr, _PATH_RSRCFORKSPEC);
+        char *forkpointer = strstr(tmpstr, _PATH_RSRCFORKSPEC);
         *forkpointer = '\0';
 
         strncpy(new, tmpstr, CF_BUFSIZE);

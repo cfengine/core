@@ -149,8 +149,13 @@ void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    VLog(stdout, level, errstr, fmt, ap);
+    CfVOut(level, errstr, fmt, ap);
     va_end(ap);
+}
+
+void CfVOut(enum cfreport level, const char *errstr, const char *fmt, va_list ap)
+{
+    VLog(stdout, level, errstr, fmt, ap);
 }
 
 /*****************************************************************************/

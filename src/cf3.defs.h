@@ -586,6 +586,8 @@ typedef struct
 #define CF_VARARGS 99
 #define CF_UNKNOWN_IP "location unknown"
 
+#define DEFAULTMODE ((mode_t)0755)
+
 #define CF_MAX_NESTING 10
 #define CF_MAX_REPLACE 20
 #define CF_DONEPASSES  4

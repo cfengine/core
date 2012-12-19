@@ -245,7 +245,5 @@ char BINDINTERFACE[CF_BUFSIZE] = { 0 };
 int MINUSF = false;
 int EXCLAIM = true;
 
-mode_t DEFAULTMODE = (mode_t) 0755;
-
 Item *VSETUIDLIST = NULL;
 enum classes VSYSTEMHARDCLASS;

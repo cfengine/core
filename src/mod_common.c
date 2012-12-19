@@ -174,7 +174,7 @@ const BodySyntax CFA_CONTROLBODY[] =
     {"allclassesreport", cf_opts, CF_BOOL, "Generate allclasses.txt report"},
     {"alwaysvalidate", cf_opts, CF_BOOL,
      "true/false flag to determine whether configurations will always be checked before executing, or only after updates"},
-    {"auditing", cf_opts, CF_BOOL, "true/false flag to activate the cf-agent audit log", "false"},
+    {"auditing", cf_opts, CF_BOOL, "This option is deprecated, does nothing and is kept for backward compatibility", "false"},
     {"binarypaddingchar", cf_str, "", "Character used to pad unequal replacements in binary editing", "space (ASC=32)"},
     {"bindtointerface", cf_str, ".*", "Use this interface for outgoing connections"},
     {"hashupdates", cf_opts, CF_BOOL, "true/false whether stored hashes are updated when change is detected in source",

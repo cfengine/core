@@ -143,7 +143,6 @@ double FORGETRATE = 0.7;
 int IGNORELOCK = false;
 int DONTDO = false;
 int DEBUG = false;
-int AUDIT = false;
 
 char VFQNAME[CF_MAXVARSIZE] = { 0 };
 char VUQNAME[CF_MAXVARSIZE] = { 0 };

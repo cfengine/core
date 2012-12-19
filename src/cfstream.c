@@ -166,7 +166,7 @@ void cfPS(enum cfreport level, char status, char *errstr, const Promise *pp, Att
     va_list ap;
     char buffer[CF_BUFSIZE], output[CF_BUFSIZE], *v, handle[CF_MAXVARSIZE];
     const char *sp;
-    Item *ip, *mess = NULL;
+    Item *mess = NULL;
     int verbose;
     Rval retval;
 

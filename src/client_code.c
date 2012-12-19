@@ -1509,6 +1509,21 @@ static int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockadd
 
             FD_ZERO(&myset);
             FD_SET(conn->sd, &myset);
+#if defined(HPuUX) && defined(__GNUC__)
+#warning A type-punned pointer warning here can be ignored
+// While the "fd_set" type is defined in /usr/include/sys/_fd_macros.h as a
+// struct of an array of <I>longs</I> in accordance with the XPG4 standard's
+// requirements, the macros for the FD operations "pretend it is an array of
+// int32_t's so the binary layout is the same for both Narrow and Wide
+// processes," as described in _fd_macros.h. In the FD_SET, FD_CLR, and
+// FD_ISSET macros at line 101, the result is cast to an "__fd_mask *" type,
+// which is defined as int32_t at _fd_macros.h:82.
+//
+// This conflict between the "long fds_bits[]" array in the XPG4-compliant
+// fd_set structure, and the cast to an int32_t - not long - pointer in the
+// macros, is what causes the type-pun warning. It can be ignored since it is
+// just the HP-UX OS working as designed.
+#endif
 
             /* now wait for connect, but no more than tvp.sec */
             res = select(conn->sd + 1, NULL, &myset, NULL, tvp);

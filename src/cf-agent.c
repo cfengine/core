@@ -497,8 +497,7 @@ void KeepControlPromises(Policy *policy)
 
         if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_auditing].lval) == 0)
         {
-            AUDIT = GetBoolean(retval.item);
-            CfOut(cf_verbose, "", "SET auditing = %d\n", AUDIT);
+            CfOut(cf_verbose, "", "This option does nothing and is retained for compatibility reasons");
             continue;
         }
 

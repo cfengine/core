@@ -329,10 +329,7 @@ void cfPS(enum cfreport level, char status, char *errstr, const Promise *pp, Att
 
     if (pp != NULL)
     {
-        for (ip = mess; ip != NULL; ip = ip->next)
-        {
-            ClassAuditLog(pp, attr, ip->name, status, buffer);
-        }
+        ClassAuditLog(pp, attr, status, buffer);
     }
 
     DeleteItemList(mess);

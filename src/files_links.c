@@ -31,6 +31,7 @@
 #include "files_operators.h"
 #include "transaction.h"
 #include "cfstream.h"
+#include "logging.h"
 
 #define CF_MAXLINKLEVEL 4
 

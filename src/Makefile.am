@@ -89,7 +89,7 @@ libpromises_la_SOURCES = \
         json.c json.h \
         keyring.c keyring.h\
         lastseen.c lastseen.h \
-        logging.c \
+        logging.c logging.h \
         logic_expressions.c logic_expressions.h \
         map.c map.h \
         map_common.h \

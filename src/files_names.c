@@ -33,6 +33,7 @@
 #include "assert.h"
 #include "files_interfaces.h"
 #include "cfstream.h"
+#include "logging.h"
 
 /*********************************************************************/
 

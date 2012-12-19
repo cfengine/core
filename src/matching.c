@@ -32,6 +32,7 @@
 #include "conversion.h"
 #include "scope.h"
 #include "cfstream.h"
+#include "logging.h"
 
 #ifdef HAVE_PCRE_H
 # include <pcre.h>

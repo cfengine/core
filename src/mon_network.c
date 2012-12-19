@@ -31,6 +31,7 @@
 #include "files_operators.h"
 #include "cfstream.h"
 #include "pipes.h"
+#include "logging.h"
 
 /* Globals */
 

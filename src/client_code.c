@@ -35,6 +35,7 @@
 #include "cfstream.h"
 #include "files_hashes.h"
 #include "transaction.h"
+#include "logging.h"
 
 typedef struct
 {

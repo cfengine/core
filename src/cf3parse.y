@@ -31,6 +31,7 @@
 #include "constraints.h"
 #include "env_context.h"
 #include "fncall.h"
+#include "logging.h"
 
 // FIX: remove
 #include "syntax.h"

@@ -35,6 +35,7 @@
 #include "hashes.h"
 #include "unix.h"
 #include "cfstream.h"
+#include "logging.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"

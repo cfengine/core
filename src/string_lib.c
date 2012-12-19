@@ -23,6 +23,8 @@
 */
 
 #include "cf3.defs.h"
+
+#include "logging.h"
 #include "writer.h"
 
 #include <assert.h>

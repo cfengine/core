@@ -38,6 +38,7 @@
 #include "cfstream.h"
 #include "client_code.h"
 #include "communication.h"
+#include "logging.h"
 
 static void ThisAgentInit(void);
 static GenericAgentConfig CheckOpts(int argc, char **argv);

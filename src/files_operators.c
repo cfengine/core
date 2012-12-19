@@ -46,6 +46,7 @@
 #include "client_code.h"
 #include "pipes.h"
 #include "transaction.h"
+#include "logging.h"
 
 #include <assert.h>
 

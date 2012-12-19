@@ -29,6 +29,7 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "cfstream.h"
+#include "logging.h"
 
 /*******************************************************************/
 

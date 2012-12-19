@@ -29,6 +29,7 @@
 #include "cf3.defs.h"
 #include "bool.h"
 #include "logic_expressions.h"
+#include "logging.h"
 
 #include <stdlib.h>
 

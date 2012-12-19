@@ -40,6 +40,7 @@
 #include "string_lib.h"
 #include "pipes.h"
 #include "transaction.h"
+#include "logging.h"
 
 /** Entry points from VerifyPackagesPromise **/
 

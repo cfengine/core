@@ -38,6 +38,7 @@
 #include "atexit.h"
 #include "cfstream.h"
 #include "verify_processes.h"
+#include "logging.h"
 
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
 

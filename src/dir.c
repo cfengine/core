@@ -27,6 +27,7 @@
 #include "dir.h"
 #include "dir_priv.h"
 #include "item_lib.h"
+#include "logging.h"
 
 /*********************************************************************/
 

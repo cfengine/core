@@ -34,6 +34,7 @@
 #include "fncall.h"
 #include "string_lib.h"
 #include "transaction.h"
+#include "logging.h"
 
 #include <assert.h>
 

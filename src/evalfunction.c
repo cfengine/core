@@ -50,6 +50,7 @@
 #include "client_code.h"
 #include "communication.h"
 #include "pipes.h"
+#include "logging.h"
 
 #include <libgen.h>
 

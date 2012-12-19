@@ -36,6 +36,7 @@
 #include "reporting.h"
 #include "expand.h"
 #include "cfstream.h"
+#include "logging.h"
 
 static void GenerateManual(void);
 static void GenerateXml(void);

@@ -41,6 +41,7 @@
 #include "unix.h"
 #include "cfstream.h"
 #include "communication.h"
+#include "logging.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"

@@ -34,6 +34,7 @@
 #include "string_lib.h"
 #include "pipes.h"
 #include "promises.h"
+#include "logging.h"
 
 static int SelectTypeMatch(struct stat *lstatptr, Rlist *crit);
 static int SelectOwnerMatch(char *path, struct stat *lstatptr, Rlist *crit);

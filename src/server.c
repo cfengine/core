@@ -39,6 +39,7 @@
 #include "pipes.h"
 #include "signals.h"
 #include "transaction.h"
+#include "logging.h"
 
 //******************************************************************
 // GLOBAL STATE

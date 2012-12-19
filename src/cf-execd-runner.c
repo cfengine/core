@@ -32,6 +32,7 @@
 #include "pipes.h"
 #include "unix.h"
 #include "transaction.h"
+#include "logging.h"
 
 /*******************************************************************/
 

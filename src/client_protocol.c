@@ -32,6 +32,7 @@
 #include "crypto.h"
 #include "cfstream.h"
 #include "files_hashes.h"
+#include "logging.h"
 
 static void SetSessionKey(AgentConnection *conn);
 

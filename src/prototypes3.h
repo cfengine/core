@@ -274,14 +274,6 @@ void DeleteBodies(Body *bp);
 
 void VerifyInterfacePromise(char *vifdev, char *vaddress, char *vnetmask, char *vbroadcast);
 
-/* logging.c */
-
-void BeginAudit(void);
-void EndAudit(void);
-void ClassAuditLog(const Promise *pp, Attributes attr, char status, char *reason);
-void PromiseLog(char *s);
-void FatalError(char *s, ...) FUNC_ATTR_NORETURN FUNC_ATTR_PRINTF(1, 2);
-
 /* manual.c */
 
 void TexinfoManual(const char *source_dir, const char *output_file);

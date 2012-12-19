@@ -30,6 +30,7 @@
 #include "item_lib.h"
 #include "unix.h"
 #include "transaction.h"
+#include "logging.h"
 
 #include <stdarg.h>
 

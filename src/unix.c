@@ -35,6 +35,7 @@
 #include "cfstream.h"
 #include "communication.h"
 #include "pipes.h"
+#include "logging.h"
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>

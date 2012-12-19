@@ -246,7 +246,7 @@ selection:             id                         /* BODY ONLY */
                            {
                                Constraint *cp = NULL;
 
-                               if (strcmp(P.lval, "ifvarclass") == 0)
+                               if (P.rval.rtype == CF_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
                                {
                                    ValidateClassSyntax(P.rval.item);
                                }
@@ -447,7 +447,7 @@ constraint:            id                        /* BUNDLE ONLY */
                                Constraint *cp = NULL;
                                SubTypeSyntax ss = SubTypeSyntaxLookup(P.blocktype,P.currenttype);
                                CheckConstraint(P.currenttype, CurrentNameSpace(P.policy), P.blockid, P.lval, P.rval, ss);
-                               if (strcmp(P.lval, "ifvarclass") == 0)
+                               if (P.rval.rtype == CF_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
                                {
                                    ValidateClassSyntax(P.rval.item);
                                }

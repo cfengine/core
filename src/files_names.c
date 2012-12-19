@@ -649,8 +649,6 @@ int DeEscapeQuotedString(const char *from, char *to)
 
 void Chop(char *str)            /* remove trailing spaces */
 {
-    int i;
-
     if ((str == NULL) || (strlen(str) == 0))
     {
         return;
@@ -662,7 +660,7 @@ void Chop(char *str)            /* remove trailing spaces */
         return;
     }
 
-    for (i = strlen(str) - 1; (i >= 0) && (isspace((int) str[i])); i--)
+    for (int i = strlen(str) - 1; (i >= 0) && (isspace((int) str[i])); i--)
     {
         str[i] = '\0';
     }

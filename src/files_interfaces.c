@@ -951,10 +951,8 @@ int cf_readlink(char *sourcefile, char *linkbuf, int buffsize, Attributes attr, 
 
 /*********************************************************************/
 
-int CfReadLine(char *buff, size_t size, FILE *fp)
+ssize_t CfReadLine(char *buff, size_t size, FILE *fp)
 {
-    char ch;
-
     buff[0] = '\0';
     buff[size - 1] = '\0';      /* mark end of buffer */
 
@@ -962,13 +960,13 @@ int CfReadLine(char *buff, size_t size, FILE *fp)
     if (!fp || ferror(fp))
     {
         CfOut(cf_error, "", " !! NULL or corrupt inputs to CfReadLine");
-        FatalError ("CfReadLine");
+        return -1;
     }
 
 	if (fgets(buff, size, fp) == NULL)
     {
         *buff = '\0';           /* EOF */
-        return false;
+        return 0;
     }
     else
     {
@@ -978,6 +976,7 @@ int CfReadLine(char *buff, size_t size, FILE *fp)
         {
             /* remove newline */
             *tmp = '\0';
+            return tmp - buff;
         }
         else
         {
@@ -989,17 +988,17 @@ int CfReadLine(char *buff, size_t size, FILE *fp)
                     break;
                 }
 
-                ch = fgetc(fp);
+                char ch = fgetc(fp);
 
                 if (ch == '\n')
                 {
                     break;
                 }
             }
+
+            return size - 1;
         }
     }
-
-    return true;
 }
 
 /*******************************************************************/

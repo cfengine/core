@@ -67,7 +67,10 @@ int GetExecOutput(char *command, char *buffer, int useshell)
             break;
         }
 
-        CfReadLine(line, CF_EXPANDSIZE, pp);
+        if (CfReadLine(line, CF_EXPANDSIZE, pp) == -1)
+        {
+            FatalError("Error in CfReadLine");
+        }
 
         if (ferror(pp))         /* abortable */
         {

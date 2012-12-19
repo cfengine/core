@@ -445,7 +445,10 @@ static int SelectExecRegexMatch(char *filename, char *crit, char *prog)
     while (!feof(pp))
     {
         line[0] = '\0';
-        CfReadLine(line, CF_BUFSIZE, pp);       /* One buffer only */
+        if (CfReadLine(line, CF_BUFSIZE, pp) == -1)       /* One buffer only */
+        {
+            FatalError("Error in CfReadLine");
+        }
 
         if (FullTextMatch(crit, line))
         {

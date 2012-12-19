@@ -141,7 +141,10 @@ int LoadMountInfo(Rlist **list)
             break;
         }
 
-        CfReadLine(vbuff, CF_BUFSIZE, pp);
+        if (CfReadLine(vbuff, CF_BUFSIZE, pp) == -1)
+        {
+            FatalError("Error in CfReadLine");
+        }
 
         if (ferror(pp))         /* abortable */
         {
@@ -495,7 +498,10 @@ int VerifyNotInFstab(char *name, Attributes a, Promise *pp)
 
                 while (!feof(pfp))
                 {
-                    CfReadLine(line, CF_BUFSIZE, pfp);
+                    if (CfReadLine(line, CF_BUFSIZE, pfp) == -1)
+                    {
+                        FatalError("Error in CfReadLine");
+                    }
 
                     if (line[0] == '#')
                     {
@@ -574,7 +580,10 @@ int VerifyMount(char *name, Attributes a, Promise *pp)
             return 0;
         }
 
-        CfReadLine(line, CF_BUFSIZE, pfp);
+        if (CfReadLine(line, CF_BUFSIZE, pfp) == -1)
+        {
+            FatalError("Error in CfReadLine");
+        }
 
         if ((strstr(line, "busy")) || (strstr(line, "Busy")))
         {
@@ -613,7 +622,10 @@ int VerifyUnmount(char *name, Attributes a, Promise *pp)
             return 0;
         }
 
-        CfReadLine(line, CF_BUFSIZE, pfp);
+        if (CfReadLine(line, CF_BUFSIZE, pfp) == -1)
+        {
+            FatalError("Error in CfReadLine");
+        }
 
         if ((strstr(line, "busy")) || (strstr(line, "Busy")))
         {
@@ -703,7 +715,10 @@ void MountAll()
             break;
         }
 
-        CfReadLine(line, CF_BUFSIZE, pp);
+        if (CfReadLine(line, CF_BUFSIZE, pp) == -1)
+        {
+            FatalError("Error in CfReadLine");
+        }
 
         if (ferror(pp))         /* abortable */
         {

@@ -214,6 +214,18 @@ void LocalExec(const ExecConfig *config)
             break;
         }
 
+        {
+            ssize_t num_read = CfReadLine(line, CF_BUFSIZE, pp);
+            if (num_read == -1)
+            {
+                FatalError("Cannot continue on CfReadLine error");
+            }
+            else if (num_read == 0)
+            {
+                break;
+            }
+        }
+
         if(!CfReadLine(line, CF_BUFSIZE, pp))
         {
             break;

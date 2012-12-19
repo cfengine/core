@@ -342,7 +342,10 @@ static void MD5Random(unsigned char digest[EVP_MAX_MD_SIZE + 1])
 
         while (!feof(pp))
         {
-            CfReadLine(buffer, CF_BUFSIZE, pp);
+            if (CfReadLine(buffer, CF_BUFSIZE, pp) == -1)
+            {
+                FatalError("Error in CfReadLine");
+            }
             EVP_DigestUpdate(&context, buffer, CF_BUFSIZE);
         }
     }

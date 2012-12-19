@@ -483,7 +483,10 @@ int LoadProcessTable(Item **procdata)
     while (!feof(prp))
     {
         memset(vbuff, 0, CF_BUFSIZE);
-        CfReadLine(vbuff, CF_BUFSIZE, prp);
+        if (CfReadLine(vbuff, CF_BUFSIZE, prp) == -1)
+        {
+            FatalError("Error in CfReadLine");
+        }
 
         for (sp = vbuff + strlen(vbuff) - 1; (sp > vbuff) && (isspace((int)*sp)); sp--)
         {

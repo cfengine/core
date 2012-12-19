@@ -1188,7 +1188,10 @@ static int TransformFile(char *file, Attributes attr, Promise *pp)
 
         while (!feof(pop))
         {
-            CfReadLine(line, CF_BUFSIZE, pop);
+            if (CfReadLine(line, CF_BUFSIZE, pop) == -1)
+            {
+                FatalError("Error in CfReadLine");
+            }
 
             if (print)
             {
@@ -2588,7 +2591,10 @@ int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, const P
 
     while (!feof(fp))
     {
-        CfReadLine(line, CF_BUFSIZE - 1, fp);
+        if (CfReadLine(line, CF_BUFSIZE - 1, fp) == -1)
+        {
+            FatalError("Error in CfReadLine");
+        }
 
         if (a.edits.joinlines && *(line + strlen(line) - 1) == '\\')
         {

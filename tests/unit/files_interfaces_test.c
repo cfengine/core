@@ -58,7 +58,7 @@ static void test_cfreadline_valid(void **state)
 
     //test with non-empty file and valid file pointer
     read = CfReadLine(output, CF_BUFSIZE - 1, fin);
-    assert_int_equal(read, true);
+    assert_true(read > 0);
     assert_string_equal(output, FILE_LINE);
 
     if (fin)
@@ -78,7 +78,7 @@ static void test_cfreadline_corrupted(void **state)
 
     //test with non-empty file and valid file pointer
     read = CfReadLine(output, CF_BUFSIZE - 1, fin);
-    assert_int_equal(read, true);
+    assert_true(read > 0);
     assert_string_not_equal(output, FILE_LINE);
 
     if (fin)

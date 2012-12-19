@@ -254,13 +254,21 @@ int AppendIfNoSuchLine(char *filename, char *line)
         return false;
     }
 
-    while (CfReadLine(lineBuf, sizeof(lineBuf), fread)) // strips newlines automatically
     {
-        if (strcmp(line, lineBuf) == 0)
+        ssize_t num_read = 0;
+        while ((num_read = CfReadLine(lineBuf, sizeof(lineBuf), fread)) != 0) // strips newlines automatically
         {
-            lineExists = true;
-            result = true;
-            break;
+            if (num_read == -1)
+            {
+                FatalError("Error in CfReadLine");
+            }
+
+            if (strcmp(line, lineBuf) == 0)
+            {
+                lineExists = true;
+                result = true;
+                break;
+            }
         }
     }
 

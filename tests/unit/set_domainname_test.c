@@ -246,7 +246,7 @@ int StrnCmp(char *s1, char *s2, size_t n)
     fail();
 }
 
-int CfReadLine(char *buff, int size, FILE *fp)
+ssize_t CfReadLine(char *buff, int size, FILE *fp)
 {
     fail();
 }

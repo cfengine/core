@@ -252,7 +252,10 @@ static void VerifyExec(Attributes a, Promise *pp)
                     return;
                 }
 
-                CfReadLine(line, CF_BUFSIZE - 1, pfp);
+                if (CfReadLine(line, CF_BUFSIZE - 1, pfp) == -1)
+                {
+                    FatalError("Error in CfReadLine");
+                }
 
                 if (strstr(line, "cfengine-die"))
                 {

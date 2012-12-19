@@ -170,7 +170,10 @@ void MonNetworkGatherData(double *cf_this)
         memset(local, 0, CF_BUFSIZE);
         memset(remote, 0, CF_BUFSIZE);
 
-        CfReadLine(vbuff, CF_BUFSIZE, pp);
+        if (CfReadLine(vbuff, CF_BUFSIZE, pp) == -1)
+        {
+            FatalError("Error in CfReadLine");
+        }
 
         if (strstr(vbuff, "UNIX"))
         {

@@ -245,6 +245,11 @@ selection:             id                         /* BODY ONLY */
                            {
                                Constraint *cp = NULL;
 
+                               if (strcmp(P.lval, "ifvarclass") == 0)
+                               {
+                                   ValidateClassSyntax(P.rval.item);
+                               }
+
                                if (P.currentclasses == NULL)
                                {
                                    cp = ConstraintAppendToBody(P.currentbody, P.lval, P.rval, "any", P.references_body);
@@ -441,6 +446,11 @@ constraint:            id                        /* BUNDLE ONLY */
                                Constraint *cp = NULL;
                                SubTypeSyntax ss = SubTypeSyntaxLookup(P.blocktype,P.currenttype);
                                CheckConstraint(P.currenttype, CurrentNameSpace(P.policy), P.blockid, P.lval, P.rval, ss);
+                               if (strcmp(P.lval, "ifvarclass") == 0)
+                               {
+                                   ValidateClassSyntax(rval.item);
+                               }
+
                                cp = ConstraintAppendToPromise(P.currentpromise, P.lval, P.rval, "any", P.references_body);
                                cp->offset.line = P.line_no;
                                cp->offset.start = P.offsets.last_id;

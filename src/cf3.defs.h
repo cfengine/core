@@ -204,23 +204,6 @@ typedef struct
 # define EXEC_SUFFIX ""
 #endif /* NOT MINGW */
 
-#define CF_AUDIT_COMMENT 128
-#define CF_AUDIT_VERSION 64
-#define CF_AUDIT_DATE    32
-
-/* key includes operation and date */
-typedef struct
-{
-    char operator[CF_AUDIT_COMMENT];
-    char comment[CF_AUDIT_COMMENT];
-    char filename[CF_AUDIT_COMMENT];
-    char bundle[CF_AUDIT_VERSION];      /* not used in cf2 */
-    char version[CF_AUDIT_VERSION];
-    char date[CF_AUDIT_DATE];
-    short line_number;
-    char status;
-} AuditLog;
-
 /*******************************************************************/
 /* Client server defines                                           */
 /*******************************************************************/

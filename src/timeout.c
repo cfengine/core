@@ -193,6 +193,8 @@ static void AddTimeClass(time_t time)
 
 /*********************************************************************/
 
+#ifndef MINGW
+
 bool IsReadReady(int fd, int timeout_sec)
 {
     fd_set  rset;
@@ -227,3 +229,5 @@ bool IsReadReady(int fd, int timeout_sec)
 
     return false;
 }
+
+#endif  /* NOT MINGW */

@@ -412,7 +412,7 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, c
 
     newaudit.status = status;
 
-    if (AUDITDBP && ((attr.transaction.audit) || AUDIT))
+    if (AUDITDBP)
     {
         WriteDB(AUDITDBP, key, &newaudit, sizeof(newaudit));
     }

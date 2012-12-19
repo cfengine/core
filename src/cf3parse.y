@@ -448,7 +448,7 @@ constraint:            id                        /* BUNDLE ONLY */
                                CheckConstraint(P.currenttype, CurrentNameSpace(P.policy), P.blockid, P.lval, P.rval, ss);
                                if (strcmp(P.lval, "ifvarclass") == 0)
                                {
-                                   ValidateClassSyntax(rval.item);
+                                   ValidateClassSyntax(P.rval.item);
                                }
 
                                cp = ConstraintAppendToPromise(P.currentpromise, P.lval, P.rval, "any", P.references_body);

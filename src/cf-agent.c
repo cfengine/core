@@ -451,7 +451,6 @@ void KeepControlPromises(Policy *policy)
                 char name[CF_MAXVARSIZE] = "";
 
                 strncpy(name, rp->item, CF_MAXVARSIZE - 1);
-                CanonifyNameInPlace(name);
 
                 AddAbortClass(name, cp->classes);
             }
@@ -470,7 +469,6 @@ void KeepControlPromises(Policy *policy)
                 char name[CF_MAXVARSIZE] = "";
 
                 strncpy(name, rp->item, CF_MAXVARSIZE - 1);
-                CanonifyNameInPlace(name);
 
                 if (!IsItemIn(ABORTBUNDLEHEAP, name))
                 {

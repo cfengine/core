@@ -117,7 +117,7 @@ static void VLog(FILE *fh, enum cfreport level, const char *errstr, const char *
 
     default:
 
-        FatalError("Report level unknown");
+        ProgrammingError("Report level unknown");
         break;
     }
 

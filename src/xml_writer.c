@@ -35,7 +35,7 @@ void XmlComment(Writer *writer, const char *comment)
 {
     if (writer == NULL)
     {
-        FatalError("Programming error: NULL writer passed to XmlWriter");
+        ProgrammingError("NULL writer passed to XmlWriter");
     }
 
     WriterWrite(writer, "<!-- ");
@@ -72,7 +72,7 @@ void XmlStartTag(Writer *writer, const char *tag_name, int attr_cnt, ...)
 
     if ((writer == NULL) || (tag_name == NULL) || (attr_cnt < 0))
     {
-        FatalError("Programming error: writer, tag_name or attr_cnt in XmlStartTag are wrong");
+        ProgrammingError("writer, tag_name or attr_cnt in XmlStartTag are wrong");
     }
 
     va_start(args, attr_cnt);
@@ -88,7 +88,7 @@ void XmlEndTag(Writer *writer, const char *tag_name)
 {
     if ((writer == NULL) || (tag_name == NULL))
     {
-        FatalError("Programming error: writer or tag_name are missing");
+        ProgrammingError("writer or tag_name are missing");
     }
 
     WriterWriteF(writer, "</%s>\n", tag_name);
@@ -123,7 +123,7 @@ void XmlContent(Writer *writer, const char *value)
 {
     if (writer == NULL)
     {
-        FatalError("Programming error: writer is NULL");
+        ProgrammingError("writer is NULL");
     }
 
     WriteEscaped(writer, value);

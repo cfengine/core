@@ -152,7 +152,7 @@ char *SearchAndReplace(const char *source, const char *search, const char *repla
 
     if ((source == NULL) || (search == NULL) || (replace == NULL))
     {
-        FatalError("Programming error: NULL argument is passed to SearchAndReplace");
+        ProgrammingError("Programming error: NULL argument is passed to SearchAndReplace");
     }
 
     if (strcmp(search, "") == 0)

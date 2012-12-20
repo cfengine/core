@@ -869,8 +869,7 @@ int AddVariableHash(const char *scope, const char *lval, Rval rval, enum cfdatat
     if (lval == NULL || scope == NULL)
     {
         CfOut(cf_error, "", "scope.value = %s.%s", scope, lval);
-        ReportError("Bad variable or scope in a variable assignment");
-        FatalError("Should not happen - forgotten to register a function call in fncall.c?");
+        ProgrammingError("Bad variable or scope in a variable assignment, should not happen - forgotten to register a function call in fncall.c?");
     }
 
     if (rval.item == NULL)
@@ -977,7 +976,7 @@ int AddVariableHash(const char *scope, const char *lval, Rval rval, enum cfdatat
     {
         if (!HashInsertElement(ptr->hashtable, lval, rval, dtype))
         {
-            FatalError("Hash table is full");
+            ProgrammingError("Hash table is full");
         }
     }
 
@@ -1001,7 +1000,7 @@ void DeRefListsInHashtable(char *scope, Rlist *namelist, Rlist *dereflist)
     if ((len = RlistLen(namelist)) != RlistLen(dereflist))
     {
         CfOut(cf_error, "", " !! Name list %d, dereflist %d\n", len, RlistLen(dereflist));
-        FatalError("Software Error DeRefLists... correlated lists not same length");
+        ProgrammingError("Software Error DeRefLists... correlated lists not same length");
     }
 
     if (len == 0)

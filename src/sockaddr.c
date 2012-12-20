@@ -122,7 +122,7 @@ char *sockaddr_ntop(struct sockaddr *sa)
 #endif
     default:
         CfDebug("Address family was %d\n", sa->sa_family);
-        FatalError("Software failure in sockaddr_ntop\n");
+        ProgrammingError("Software failure in sockaddr_ntop\n");
     }
 
     CfDebug("sockaddr_ntop(%s)\n", addrbuf);
@@ -177,6 +177,6 @@ bool sockaddr_pton(int af, const void *src, void *genaddr)
 #endif
     default:
         CfDebug("Address family was %d\n", af);
-        FatalError("Software failure in sockaddr_pton\n");
+        ProgrammingError("Software failure in sockaddr_pton\n");
     }
 }

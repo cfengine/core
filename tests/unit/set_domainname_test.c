@@ -125,6 +125,12 @@ int main()
 
 /* Stub out functions we do not use in test */
 
+void __ProgrammingError(const char *file, int lineno, const char *format, ...)
+{
+    fail();
+    exit(42);
+}
+
 void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
 {
     fail();

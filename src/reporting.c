@@ -796,7 +796,7 @@ static void ShowBodyText(Writer *writer, const Body *body, int indent)
         {
             if (rp->type != CF_SCALAR)
             {
-                FatalError("ShowBody - non-scalar parameter container");
+                ProgrammingError("ShowBody - non-scalar parameter container");
             }
 
             IndentText(writer, indent);
@@ -848,7 +848,7 @@ static void ShowBodyHtml(Writer *writer, const Body *body, int indent)
         {
             if (rp->type != CF_SCALAR)
             {
-                FatalError("ShowBody - non-scalar parameter container");
+                ProgrammingError("ShowBody - non-scalar parameter container");
             }
 
             WriterWriteF(writer, "%s%s%s,\n", CFH[cfx_args][cfb], (char *) rp->item, CFH[cfx_args][cfe]);

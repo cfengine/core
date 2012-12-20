@@ -362,7 +362,7 @@ Rlist *IdempPrependRScalar(Rlist **start, void *item, char type)
 
     if (type != CF_SCALAR)
     {
-        FatalError("Cannot append non-scalars to lists");
+        ProgrammingError("Cannot append non-scalars to lists");
     }
 
     if (!KeyInRlist(*start, (char *) item))
@@ -408,7 +408,7 @@ Rlist *AppendRScalar(Rlist **start, void *item, char type)
 
     if (type != CF_SCALAR)
     {
-        FatalError("Cannot append non-scalars to lists");
+        ProgrammingError("Cannot append non-scalars to lists");
     }
 
     return AppendRlist(start, scalar, type);
@@ -422,7 +422,7 @@ Rlist *PrependRScalar(Rlist **start, void *item, char type)
 
     if (type != CF_SCALAR)
     {
-        FatalError("Cannot append non-scalars to lists");
+        ProgrammingError("Cannot append non-scalars to lists");
     }
 
     return PrependRlist(start, scalar, type);
@@ -1008,7 +1008,7 @@ void PopStack(Rlist **liststart, void **item, size_t size)
 
     if (*liststart == NULL)
     {
-        FatalError("Attempt to pop from empty stack");
+        ProgrammingError("Attempt to pop from empty stack");
     }
 
     *item = rp->item;

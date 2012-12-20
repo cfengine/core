@@ -200,7 +200,7 @@ size_t StringWriterLength(const Writer *writer)
 {
     if (writer->type != WT_STRING)
     {
-        FatalError("Wrong writer type");
+        ProgrammingError("Wrong writer type");
     }
 
     return writer->string.len;
@@ -212,7 +212,7 @@ const char *StringWriterData(const Writer *writer)
 {
     if (writer->type != WT_STRING)
     {
-        FatalError("Wrong writer type");
+        ProgrammingError("Wrong writer type");
     }
 
     return writer->string.data;
@@ -240,7 +240,7 @@ char *StringWriterClose(Writer *writer)
 {
     if (writer->type != WT_STRING)
     {
-        FatalError("Wrong writer type");
+        ProgrammingError("Wrong writer type");
     }
     char *data = writer->string.data;
 
@@ -252,7 +252,7 @@ FILE *FileWriterDetach(Writer *writer)
 {
     if (writer->type != WT_FILE)
     {
-        FatalError("Wrong writer type");
+        ProgrammingError("Wrong writer type");
     }
     FILE *file = writer->file;
     free(writer);

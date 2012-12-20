@@ -292,6 +292,11 @@ static void DBWriteTestData(CF_DB *db)
 
 /* Stub out */
 
+void __ProgrammingError(const char *file, int lineno, const char *format, ...)
+{
+    exit(42);
+}
+
 void CfOut(enum cfreport level, const char *function, const char *fmt, ...)
 {
     va_list ap;

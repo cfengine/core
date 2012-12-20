@@ -677,7 +677,7 @@ char *EscapeChar(char *str, int strSz, char esc)
 
     if (sizeof(strDup) < strSz)
     {
-        FatalError("Too large string passed to EscapeCharInplace()\n");
+        ProgrammingError("Too large string passed to EscapeCharInplace()\n");
     }
 
     snprintf(strDup, sizeof(strDup), "%s", str);

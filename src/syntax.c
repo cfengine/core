@@ -575,7 +575,7 @@ void CheckConstraintTypeMatch(const char *lval, Rval rval, enum cfdatatype dt, c
         break;
 
     default:
-        FatalError("Unknown (unhandled) datatype for lval = %s (CheckConstraintTypeMatch)\n", lval);
+        ProgrammingError("Unknown (unhandled) datatype for lval = %s (CheckConstraintTypeMatch)\n", lval);
         break;
     }
 

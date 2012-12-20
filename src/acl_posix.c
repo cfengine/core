@@ -348,7 +348,7 @@ static int CheckPosixLinuxACEs(Rlist *aces, enum cf_acl_method method, char *fil
             break;
 
         default:
-            FatalError("Cfengine: internal error: illegal file action\n");
+            ProgrammingError("Cfengine: internal error: illegal file action\n");
         }
 
     }
@@ -433,7 +433,7 @@ static int CheckDefaultEqualsAccessACL(char *file_path, Attributes a, Promise *p
             break;
 
         default:
-            FatalError("Cfengine: internal error: illegal file action\n");
+            ProgrammingError("Cfengine: internal error: illegal file action\n");
             result = false;
         }
 
@@ -518,7 +518,7 @@ int CheckDefaultClearACL(char *file_path, Attributes a, Promise *pp)
             break;
 
         default:
-            FatalError("Cfengine: internal error: illegal file action\n");
+            ProgrammingError("Cfengine: internal error: illegal file action\n");
             result = false;
         }
 

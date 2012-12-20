@@ -197,7 +197,7 @@ void AugmentScope(char *scope, char *namespace, Rlist *lvals, Rlist *rvals)
                }
                break;
            default:
-               FatalError("An argument neither a scalar nor a list seemed to appear. Impossible");
+               ProgrammingError("An argument neither a scalar nor a list seemed to appear. Impossible");
            }
 
         }

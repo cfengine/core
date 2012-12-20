@@ -357,7 +357,7 @@ void CopyList(Item **dest, const Item *source)
 {
     if (*dest != NULL)
     {
-        FatalError("CopyList - list not initialized");
+        ProgrammingError("CopyList - list not initialized");
     }
 
     if (source == NULL)
@@ -381,7 +381,7 @@ Item *ConcatLists(Item *list1, Item *list2)
 
     if (list1 == NULL)
     {
-        FatalError("ConcatLists: first argument must have at least one element");
+        ProgrammingError("ConcatLists: first argument must have at least one element");
     }
 
     for (endOfList1 = list1; endOfList1->next != NULL; endOfList1 = endOfList1->next)

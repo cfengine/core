@@ -123,7 +123,7 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
 /* FIXME: may it happen? */
     if ((pp->promisee.item != NULL && pcopy->promisee.item == NULL))
     {
-        FatalError("Unable to copy promise");
+        ProgrammingError("Unable to copy promise");
     }
 
     pcopy->parent_subtype = pp->parent_subtype;
@@ -304,7 +304,7 @@ Promise *ExpandDeRefPromise(const char *scopeid, Promise *pp)
 
     if (pcopy->promiser == NULL)
     {
-        FatalError("ExpandPromise returned NULL");
+        ProgrammingError("ExpandPromise returned NULL");
     }
 
     pcopy->parent_subtype = pp->parent_subtype;

@@ -273,7 +273,7 @@ ExpressionValue EvalExpression(const Expression *expr,
     }
 
     default:
-        FatalError("Unexpected class expression type is found: %d", expr->op);
+        ProgrammingError("Unexpected class expression type is found: %d", expr->op);
     }
 }
 
@@ -300,7 +300,7 @@ void FreeExpression(Expression *e)
         FreeStringExpression(e->val.eval.name);
         break;
     default:
-        FatalError("Unknown logic expression type encountered in" "FreeExpression: %d", e->op);
+        ProgrammingError("Unknown logic expression type encountered in" "FreeExpression: %d", e->op);
     }
     free(e);
 }

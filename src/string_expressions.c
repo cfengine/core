@@ -270,7 +270,7 @@ char *EvalStringExpression(const StringExpression *expr, VarRefEvaluator evalfn,
     case VARREF:
         return EvalVarRef(expr, evalfn, param);
     default:
-        FatalError("Unknown type of string expression" "encountered during evaluation: %d", expr->op);
+        ProgrammingError("Unknown type of string expression" "encountered during evaluation: %d", expr->op);
     }
 }
 
@@ -296,7 +296,7 @@ void FreeStringExpression(StringExpression *expr)
         FreeStringExpression(expr->val.varref.name);
         break;
     default:
-        FatalError("Unknown type of string expression encountered: %d", expr->op);
+        ProgrammingError("Unknown type of string expression encountered: %d", expr->op);
     }
 
     free(expr);

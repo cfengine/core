@@ -44,6 +44,19 @@ bundle agent update
                        comment => "The master cfengine policy directory on the policy host",
                         handle => "update_vars_master_location";
 
+   "agents" slist => {
+                      "cf-agent",
+                      "cf-execd",
+                      "cf-key",
+                      "cf-know",
+                      "cf-promises",
+                      "cf-report",
+                      "cf-runagent",
+                      "cf-serverd",
+                     },
+            comment => "List of CFEngine binaries",
+             handle => "update_vars_agents";
+
 #
 
  classes:
@@ -152,14 +165,16 @@ bundle agent update
       depth_search => u_recurse_basedir("inf"),
             action => u_immediate;
 
-   "/usr/local/sbin"
-           comment => "Ensure cfengine binaries were copied to /usr/local/sbin",
-            handle => "update_files_usr_local_sbin",
-             perms => u_m("755"),
-         copy_from => u_cp_nobck("$(sys.workdir)/bin"),
-       file_select => u_cf3_files,
-      depth_search => u_recurse("1"),
-            action => u_immediate;
+   "/usr/local/sbin/$(agents)"
+                comment => "Create symlinks of CFE binaries in /usr/local/sbin",
+                 handle => "update_files_sbin_$(agents)",
+      move_obstructions => "true",
+              link_from => u_ln_s("$(sys.workdir)/bin/$(agents)");
+
+   "/usr/local/sbin/$(agents).cfsaved"
+      comment => "Remove all .cfsaved file extension",
+       handle => "update_files_remove_$(agent)_cfsaved",
+       delete => u_tidy;
 
   am_policy_hub::
 
@@ -260,3 +275,18 @@ body classes u_if_repaired(x)
 }
 
 #########################################################
+
+body link_from u_ln_s(x)
+{
+link_type => "symlink";
+source => "$(x)";
+when_no_source => "force";
+}
+
+#########################################################
+
+body delete u_tidy
+{
+dirlinks => "delete";
+rmdirs   => "true";
+}

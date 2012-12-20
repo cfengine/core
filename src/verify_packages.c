@@ -2194,14 +2194,6 @@ int FindLargestVersionAvail(char *matchName, char *matchVers, const char *refAny
 
         for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
         {
-#ifdef LINUX
-            if (dirp->d_type != DT_REG && dirp->d_type != DT_LNK)
-            {
-                CfOut(cf_verbose, "", "Skipping \"%s\" (not a file)", dirp->d_name);
-                continue;
-            }
-#endif /* LINUX */
-
             if (FullTextMatch(refAnyVer, dirp->d_name))
             {
                 matchVer = ExtractFirstReference(refAnyVer, dirp->d_name);

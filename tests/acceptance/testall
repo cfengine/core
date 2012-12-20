@@ -122,6 +122,8 @@ AGENT=${AGENT:-${DEFAGENT}}
 CFKEY=$(dirname $(dirname $(curdir)))/src/cf-key
 CFSERVER=$(dirname $(dirname $(curdir)))/src/cf-serverd
 
+ln -sf $(dirname $(dirname $(curdir)))/src/cf-serverd ~/.cfagent/bin
+
 usage() {
   echo "testall [-q] [--gainroot=<command>] [--agent=<agent>] [--no-nova] [--staging] [--no-network] [<test> <test>...]"
   echo

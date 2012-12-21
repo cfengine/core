@@ -4,8 +4,9 @@
 
 	- Do not lose hard classes in cf-serverd during policy reload
 	  (Mantis #1218).
-	- Implement recieve network timeout in cf-serverd. Prevents
+	- Implement receive network timeout in cf-serverd. Prevents
 	  overloading cf-serverd with stale connections.
+        - Fixes to race-conditions and segmentation faults in cf-serverd
 
 3.3.8   (Bugfix and Stability release)
 

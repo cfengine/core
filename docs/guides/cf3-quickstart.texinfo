@@ -198,7 +198,17 @@ unpack the binaries (you must install them as root):
 @table @i
 @item CFEngine 3 Enterprise Installation:  
 
-@noindent For CFEngine 3 Enterprise, you will designate one at least one server as the hub, which should be installed first:
+@noindent For CFEngine 3 Enterprise, you will designate one at least one server as the hub, which should be installed first.
+
+CFEngine 3 Enterprise is provided in three packages (two hub and one client package). These are the three packages (inside the respective hub and client listings found under each platform in the software download page, example for 64 bit rpm packages):
+
+@itemize -
+@item hub/cfengine-nova-3.0.xxx.x86_64.rpm
+@item hub/cfengine-nova-expansion-3.0.xxx.x86_64.rpm
+@item client/cfengine-nova-3.0.xxx.x86_64.rpm 
+@end itemize
+
+The difference between the two cfengine-nova-3.0.xxx packages (for hub and client) is that the agent binaries for the hub are linked to the MongoDB library while the binary for clients are not. Installing a client package on the hub will result in a database connection error, the Mission Portal will not be available and reports will not be collected. Installing the hub package on clients will result in error reports stating that the agent failed to connect to MongoDB (because it is not existent in client packages; danger of filling up error logs), but otherwise functionality will be assured. Please take care to install the correct packages on the corresponding nodes. The expansion package is only installed on the policy hub. You should install and set up the hub first.
 
 @table @i
 @item RedHat/SuSE   	
@@ -213,6 +223,8 @@ dpkg --install  cfengine-nova-<version_number>.deb
 dpkg --install  cfengine-nova-expansion.<version_number>.deb
 @end smallexample
 @end table
+
+@sp 1
 To install CFEngine 3 Enterprise on non-Hub systems:
 @table @i
 @item RedHat/SuSE
@@ -225,6 +237,7 @@ dpkg --install  cfengine-nova-<version_number>.deb
 @end smallexample
 @end table
 
+@sp 1
 @noindent On the hub, a public key has now been created in
 
 @file{/var/cfengine/ppkeys/localhost.pub} 

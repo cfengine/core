@@ -14,7 +14,7 @@ nova_edition::
 }
 
 body agent control {
-  abortbundleclasses => { "quitquit" };
+  abortbundleclasses => { "quitquit", "quitquit.*" };
 }
 
 #######################################################

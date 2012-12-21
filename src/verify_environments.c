@@ -31,29 +31,34 @@
 #include "conversion.h"
 #include "attributes.h"
 #include "cfstream.h"
-
-#ifndef HAVE_LIBVIRT
-
-void NewEnvironmentsContext(void)
-{
-}
-
-void DeleteEnvironmentsContext(void)
-{
-}
-
-void VerifyEnvironmentsPromise(Promise *pp)
-{
-}
-
-#endif
-
-/*****************************************************************************/
+#include "transaction.h"
 
 #ifdef HAVE_LIBVIRT
+/*****************************************************************************/
 
 #include <libvirt/libvirt.h>
 #include <libvirt/virterror.h>
+
+/*****************************************************************************/
+
+enum cfhypervisors
+{
+    cfv_virt_xen,
+    cfv_virt_kvm,
+    cfv_virt_esx,
+    cfv_virt_vbox,
+    cfv_virt_test,
+    cfv_virt_xen_net,
+    cfv_virt_kvm_net,
+    cfv_virt_esx_net,
+    cfv_virt_test_net,
+    cfv_zone,
+    cfv_ec2,
+    cfv_eucalyptus,
+    cfv_none
+};
+
+/*****************************************************************************/
 
 virConnectPtr CFVC[cfv_none];
 
@@ -63,7 +68,6 @@ int CF_RUNNING[CF_MAX_CONCURRENT_ENVIRONMENTS];
 char *CF_SUSPENDED[CF_MAX_CONCURRENT_ENVIRONMENTS];
 
 /*****************************************************************************/
-
 
 static int EnvironmentsSanityChecks(Attributes a, Promise *pp);
 static void VerifyEnvironments(Attributes a, Promise *pp);
@@ -81,6 +85,7 @@ static void ShowRunList(virConnectPtr vc);
 static void ShowDormant(virConnectPtr vc);
 static int CreateVirtNetwork(virConnectPtr vc, char **networks, Attributes a, Promise *pp);
 static int DeleteVirtNetwork(virConnectPtr vc, char **networks, Attributes a, Promise *pp);
+static enum cfhypervisors Str2Hypervisors(char *s);
 
 /*****************************************************************************/
 
@@ -1007,6 +1012,46 @@ static void ShowDormant(virConnectPtr vc)
     {
         CfOut(cf_verbose, "", " ---> Found a suspended, domain environment called \"%s\"\n", CF_SUSPENDED[i]);
     }
+}
+
+/*****************************************************************************/
+
+static enum cfhypervisors Str2Hypervisors(char *s)
+{
+    static char *names[] = { "xen", "kvm", "esx", "vbox", "test",
+        "xen_net", "kvm_net", "esx_net", "test_net",
+        "zone", "ec2", "eucalyptus", NULL
+    };
+    int i;
+
+    if (s == NULL)
+    {
+        return cfv_virt_test;
+    }
+
+    for (i = 0; names[i] != NULL; i++)
+    {
+        if (s && (strcmp(s, names[i]) == 0))
+        {
+            return (enum cfhypervisors) i;
+        }
+    }
+
+    return (enum cfhypervisors) i;
+}
+/*****************************************************************************/
+#else
+
+void NewEnvironmentsContext(void)
+{
+}
+
+void DeleteEnvironmentsContext(void)
+{
+}
+
+void VerifyEnvironmentsPromise(Promise *pp)
+{
 }
 
 #endif

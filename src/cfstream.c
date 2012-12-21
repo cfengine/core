@@ -29,6 +29,9 @@
 #include "constraints.h"
 #include "item_lib.h"
 #include "unix.h"
+#include "transaction.h"
+#include "logging.h"
+#include "string_lib.h"
 
 #include <stdarg.h>
 
@@ -45,6 +48,10 @@ static void FileReport(const Item *mess, bool has_prefix, const char *filename);
 static void MakeLog(Item *mess, enum cfreport level);
 static void LogPromiseResult(char *promiser, char peeType, void *promisee, char status, enum cfreport log_level,
                              Item *mess);
+#endif
+
+#if !defined(__MINGW32__)
+static const char *GetErrorStr(void);
 #endif
 
 /*****************************************************************************/
@@ -143,8 +150,13 @@ void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    VLog(stdout, level, errstr, fmt, ap);
+    CfVOut(level, errstr, fmt, ap);
     va_end(ap);
+}
+
+void CfVOut(enum cfreport level, const char *errstr, const char *fmt, va_list ap)
+{
+    VLog(stdout, level, errstr, fmt, ap);
 }
 
 /*****************************************************************************/
@@ -154,7 +166,7 @@ void cfPS(enum cfreport level, char status, char *errstr, const Promise *pp, Att
     va_list ap;
     char buffer[CF_BUFSIZE], output[CF_BUFSIZE], *v, handle[CF_MAXVARSIZE];
     const char *sp;
-    Item *ip, *mess = NULL;
+    Item *mess = NULL;
     int verbose;
     Rval retval;
 
@@ -324,10 +336,7 @@ void cfPS(enum cfreport level, char status, char *errstr, const Promise *pp, Att
 
     if (pp != NULL)
     {
-        for (ip = mess; ip != NULL; ip = ip->next)
-        {
-            ClassAuditLog(pp, attr, ip->name, status, buffer);
-        }
+        ClassAuditLog(pp, attr, status, buffer);
     }
 
     DeleteItemList(mess);
@@ -451,4 +460,11 @@ static void LogPromiseResult(char *promiser, char peeType, void *promisee, char 
 {
 }
 
+#endif
+
+#if !defined(__MINGW32__)
+static const char *GetErrorStr(void)
+{
+    return strerror(errno);
+}
 #endif

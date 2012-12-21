@@ -35,6 +35,7 @@
 #include "cfstream.h"
 #include "communication.h"
 #include "pipes.h"
+#include "logging.h"
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>
@@ -177,13 +178,6 @@ int GetCurrentUserName(char *userName, int userNameLen)
 
     strncpy(userName, user_ptr->pw_name, userNameLen - 1);
     return true;
-}
-
-/*************************************************************/
-
-const char *GetErrorStr(void)
-{
-    return strerror(errno);
 }
 
 /*************************************************************/
@@ -490,7 +484,10 @@ int LoadProcessTable(Item **procdata)
     while (!feof(prp))
     {
         memset(vbuff, 0, CF_BUFSIZE);
-        CfReadLine(vbuff, CF_BUFSIZE, prp);
+        if (CfReadLine(vbuff, CF_BUFSIZE, prp) == -1)
+        {
+            FatalError("Error in CfReadLine");
+        }
 
         for (sp = vbuff + strlen(vbuff) - 1; (sp > vbuff) && (isspace((int)*sp)); sp--)
         {

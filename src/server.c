@@ -37,6 +37,9 @@
 #include "cfstream.h"
 #include "string_lib.h"
 #include "pipes.h"
+#include "signals.h"
+#include "transaction.h"
+#include "logging.h"
 
 //******************************************************************
 // GLOBAL STATE
@@ -357,7 +360,7 @@ static void *HandleConnection(ServerConnectionState *conn)
         if (TRIES++ > MAXTRIES) /* When to say we're hung / apoptosis threshold */
         {
             CfOut(cf_error, "", "Server seems to be paralyzed. DOS attack? Committing apoptosis...");
-            HandleSignals(SIGTERM);
+            FatalError("Terminating");
         }
 
         if (!ThreadUnlock(cft_server_children))
@@ -1181,7 +1184,10 @@ static void DoExec(ServerConnectionState *conn, char *sendbuffer, char *args)
             break;
         }
 
-        CfReadLine(line, CF_BUFSIZE, pp);
+        if (CfReadLine(line, CF_BUFSIZE, pp) == -1)
+        {
+            FatalError("Error in CfReadLine");
+        }
 
         if (ferror(pp))
         {
@@ -2584,8 +2590,11 @@ static void CfGetFile(ServerFileGetState *args)
     else
     {
         int div = 3;
+
         if (sb.st_size > 10485760L) /* File larger than 10 MB, checks every 64kB */
+        {
             div = 32;
+        }
 
         while (true)
         {
@@ -2611,7 +2620,8 @@ static void CfGetFile(ServerFileGetState *args)
 
                 if (count++ % div == 0)   /* Don't do this too often */
                 {
-                    if (stat(filename, &sb)) {
+                    if (stat(filename, &sb))
+                    {
                         CfOut(cf_error, "send", "Cannot stat file %s: (errno=%d) %s",
                               filename, errno, strerror(errno));
                         break;
@@ -2701,8 +2711,12 @@ static void CfEncryptGetFile(ServerFileGetState *args)
     else
     {
         int div = 3;
+
         if (sb.st_size > 10485760L) /* File larger than 10 MB, checks every 64kB */
+        {
             div = 32;
+        }
+
         while (true)
         {
             memset(sendbuffer, 0, CF_BUFSIZE);

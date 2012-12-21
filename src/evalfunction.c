@@ -50,6 +50,7 @@
 #include "client_code.h"
 #include "communication.h"
 #include "pipes.h"
+#include "logging.h"
 
 #include <libgen.h>
 
@@ -3950,7 +3951,10 @@ static int ExecModule(char *command, const char *namespace)
             break;
         }
 
-        CfReadLine(line, CF_BUFSIZE, pp);
+        if (CfReadLine(line, CF_BUFSIZE, pp) == -1)
+        {
+            FatalError("Error in CfReadLine");
+        }
 
         if (strlen(line) > CF_BUFSIZE - 80)
         {

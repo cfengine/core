@@ -31,6 +31,8 @@
 #include "unix.h"
 #include "cfstream.h"
 #include "fncall.h"
+#include "transaction.h"
+#include "logging.h"
 
 #include <assert.h>
 

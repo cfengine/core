@@ -31,6 +31,7 @@
 #include "attributes.h"
 #include "cfstream.h"
 #include "string_lib.h"
+#include "transaction.h"
 
 static int CheckDatabaseSanity(Attributes a, Promise *pp);
 static void VerifySQLPromise(Attributes a, Promise *pp);

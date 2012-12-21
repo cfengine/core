@@ -42,6 +42,7 @@
 #include "cfstream.h"
 #include "fncall.h"
 #include "string_lib.h"
+#include "logging.h"
 
 /*****************************************************************************/
 

@@ -125,11 +125,6 @@ int main()
 
 /* Stub out functions we do not use in test */
 
-void StripTrailingNewline(char *str)
-{
-    fail();
-}
-
 void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
 {
     fail();
@@ -167,11 +162,6 @@ void DeleteItemList(Item *item)
 }
 
 Item *SplitString(const char *string, char sep)
-{
-    fail();
-}
-
-void Chop(char *str)
 {
     fail();
 }
@@ -246,7 +236,7 @@ int StrnCmp(char *s1, char *s2, size_t n)
     fail();
 }
 
-int CfReadLine(char *buff, int size, FILE *fp)
+ssize_t CfReadLine(char *buff, int size, FILE *fp)
 {
     fail();
 }

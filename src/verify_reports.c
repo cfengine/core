@@ -35,6 +35,8 @@
 #include "attributes.h"
 #include "cfstream.h"
 #include "communication.h"
+#include "transaction.h"
+#include "string_lib.h"
 
 static void ShowState(char *type);
 static void PrintFile(Attributes a, Promise *pp);

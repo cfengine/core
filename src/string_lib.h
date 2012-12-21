@@ -29,9 +29,7 @@
 
 char ToLower(char ch);
 char ToUpper(char ch);
-char *ToUpperStr(const char *str) FUNC_DEPRECATED;
 void ToUpperStrInplace(char *str);
-char *ToLowerStr(const char *str) FUNC_DEPRECATED;
 void ToLowerStrInplace(char *str);
 
 long StringToLong(const char *str);
@@ -50,9 +48,6 @@ bool StringSafeEqual(const char *a, const char *b);
 
 char *StringConcatenate(size_t count, const char *first, ...);
 char *StringSubstring(const char *source, size_t source_len, int start, int len);
-
-int GetStringListElement(char *strList, int index, char *outBuf, int outBufSz);
-int StripListSep(char *strList, char *outBuf, int outBufSz);
 
 /* Allocates the result */
 char *SearchAndReplace(const char *source, const char *search, const char *replace);
@@ -74,7 +69,11 @@ int SubStrnCopyChr(char *to, const char *from, int len, char sep);
 int CountChar(const char *string, char sp);
 void ReplaceChar(char *in, char *out, int outSz, char from, char to);
 void ReplaceTrailingChar(char *str, char from, char to);
-void ReplaceTrailingStr(char *str, char *from, char to);
 char *EscapeCharCopy(const char *str, char to_escape, char escape_with);
+
+int StringInArray(char **array, char *string);
+char *ScanPastChars(char *scanpast, char *input);
+void StripTrailingNewline(char *str);
+void Chop(char *str);
 
 #endif

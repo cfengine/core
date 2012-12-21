@@ -35,34 +35,14 @@
 #include "hashes.h"
 #include "unix.h"
 #include "cfstream.h"
+#include "logging.h"
+#include "string_lib.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"
 #endif
 
 #include <assert.h>
-
-char *CFX[][2] =
-{
-    {"<head>", "</head>"},
-    {"<bundle>", "</bundle>"},
-    {"<block>", "</block>"},
-    {"<blockheader>", "</blockheader>"},
-    {"<blockid>", "</blockid>"},
-    {"<blocktype>", "</blocktype>"},
-    {"<args>", "</args>"},
-    {"<promise>", "</promise>"},
-    {"<class>", "</class>"},
-    {"<subtype>", "</subtype>"},
-    {"<object>", "</object>"},
-    {"<lval>", "</lval>"},
-    {"<rval>", "</rval>"},
-    {"<qstring>", "</qstring>"},
-    {"<rlist>", "</rlist>"},
-    {"<function>", "</function>"},
-    {"\n", "\n"},
-    {NULL, NULL}
-};
 
 char *CFH[][2] =
 {
@@ -390,11 +370,12 @@ void ShowPromisesInReport(const ReportContext *context, ReportOutputType type, c
     switch (type)
     {
     case REPORT_OUTPUT_TYPE_HTML:
-        return ShowPromisesInReportHtml(context, bundles, bodies);
+        ShowPromisesInReportHtml(context, bundles, bodies);
 
     default:
     case REPORT_OUTPUT_TYPE_TEXT:
-        return ShowPromisesInReportText(context, bundles, bodies);
+        ShowPromisesInReportText(context, bundles, bodies);
+        break;
     }
 }
 

@@ -1,12 +1,12 @@
 #######################################################
 #
-# digest server copy, localhost, newer destination, should copy
+# mtime server copy, localhost, no file access promise, should not copy
 #
 #######################################################
 
 body common control
 {
-  inputs => { "../../../default.cf.sub" };
+  inputs => { "../../default.cf.sub" };
   bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
@@ -51,6 +51,14 @@ edit_backup => "false";
 
 #######################################################
 
+bundle edit_line init_src_file
+{
+insert_lines:
+   "This is the source file to copy $(sys.date) - always fresh";   
+}
+
+#######################################################
+
 body delete clean
 {
 rmdirs => "true";
@@ -58,21 +66,13 @@ rmdirs => "true";
 
 #######################################################
 
-bundle edit_line init_src_file
-{
-insert_lines:
-   "This is the source file to copy $(sys.date) - always fresh";
-}
-
-#######################################################
-
-bundle agent test 
-
+bundle agent test
 {
 files:
 
-    "/tmp/destination_file" copy_from => copy_src_file;
- 
+    "/tmp/destination_file" 
+                  copy_from => copy_src_file,
+                    classes => if_repaired("repaired"); 
 }
 
 #########################################################
@@ -82,7 +82,7 @@ body copy_from copy_src_file
 {
 source      => "/tmp/source_file";
 servers     => { "127.0.0.1" };
-compare     => "digest";
+compare     => "mtime";
 copy_backup => "false";
 
 portnumber => "$(c.localhost_open)";
@@ -92,15 +92,24 @@ portnumber => "$(c.localhost_open)";
 #purge       => "false";
 #type_check  => "true";
 #force_ipv4  => "true";
-trustkey => "true";
+#trustkey => "true";
 }
 
 #######################################################
 
 bundle agent check
 {
-methods:
+reports:
 
-  "any" usebundle => default_check_diff("/tmp/source_file","/tmp/destination_file","$(this.promise_filename)");
+    !repaired::
+        "$(this.promise_filename) Pass";
+    repaired::
+        "$(this.promise_filename) FAIL";
 }
 
+#########################################################
+
+body classes if_repaired(x)
+{
+promise_repaired => { "$(x)" };
+}

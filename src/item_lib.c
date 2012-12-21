@@ -29,6 +29,7 @@
 #include "addr_lib.h"
 #include "item_lib.h"
 #include "matching.h"
+#include "logging.h"
 
 /*******************************************************************/
 
@@ -151,33 +152,6 @@ Item *ReturnItemAtIndex(Item *list, int index)
     }
 
     return NULL;
-}
-
-/*********************************************************************/
-
-int GetItemIndex(Item *list, const char *item)
-/*
- * Returns index of first occurence of item.
- */
-{
-    int i = 0;
-
-    if ((item == NULL) || (strlen(item) == 0))
-    {
-        return -1;
-    }
-
-    for (const Item *ptr = list; ptr != NULL; ptr = ptr->next)
-    {
-        if (strcmp(ptr->name, item) == 0)
-        {
-            return i;
-        }
-
-        i++;
-    }
-
-    return -1;
 }
 
 /*********************************************************************/
@@ -902,23 +876,6 @@ void DeleteItem(Item **liststart, Item *item)
         }
 
         free((char *) item);
-    }
-}
-
-/*********************************************************************/
-
-void DebugListItemList(const Item *liststart)
-{
-    for (const Item *ptr = liststart; ptr != NULL; ptr = ptr->next)
-    {
-        if (ptr->classes)
-        {
-            printf("CFDEBUG: %s::[%s]\n", ptr->classes, ptr->name);
-        }
-        else
-        {
-            printf("CFDEBUG: [%s]\n", ptr->name);
-        }
     }
 }
 

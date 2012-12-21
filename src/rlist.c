@@ -33,6 +33,8 @@
 #include "cfstream.h"
 #include "fncall.h"
 #include "string_lib.h"
+#include "transaction.h"
+#include "logging.h"
 
 #include <assert.h>
 
@@ -42,7 +44,7 @@ char *ScalarValue(const Rlist *rlist)
 {
     if (rlist->type != CF_SCALAR)
     {
-        FatalError("Internal error: Rlist value contains type %c instead of expected scalar", rlist->type);
+        ProgrammingError("Internal error: Rlist value contains type %c instead of expected scalar", rlist->type);
     }
 
     return (char *) rlist->item;
@@ -54,7 +56,7 @@ FnCall *FnCallValue(const Rlist *rlist)
 {
     if (rlist->type != CF_FNCALL)
     {
-        FatalError("Internal error: Rlist value contains type %c instead of expected FnCall", rlist->type);
+        ProgrammingError("Internal error: Rlist value contains type %c instead of expected FnCall", rlist->type);
     }
 
     return (FnCall *) rlist->item;
@@ -66,7 +68,7 @@ Rlist *ListValue(const Rlist *rlist)
 {
     if (rlist->type != CF_LIST)
     {
-        FatalError("Internal error: Rlist value contains type %c instead of expected List", rlist->type);
+        ProgrammingError("Internal error: Rlist value contains type %c instead of expected List", rlist->type);
     }
 
     return (Rlist *) rlist->item;
@@ -78,7 +80,7 @@ char *ScalarRvalValue(Rval rval)
 {
     if (rval.rtype != CF_SCALAR)
     {
-        FatalError("Internal error: Rval contains type %c instead of expected scalar", rval.rtype);
+        ProgrammingError("Internal error: Rval contains type %c instead of expected scalar", rval.rtype);
     }
 
     return rval.item;
@@ -90,7 +92,7 @@ FnCall *FnCallRvalValue(Rval rval)
 {
     if (rval.rtype != CF_FNCALL)
     {
-        FatalError("Internal error: Rval contains type %c instead of expected FnCall", rval.rtype);
+        ProgrammingError("Internal error: Rval contains type %c instead of expected FnCall", rval.rtype);
     }
 
     return rval.item;
@@ -102,7 +104,7 @@ Rlist *ListRvalValue(Rval rval)
 {
     if (rval.rtype != CF_LIST)
     {
-        FatalError("Internal error: Rval contain type %c instead of expected List", rval.rtype);
+        ProgrammingError("Internal error: Rval contain type %c instead of expected List", rval.rtype);
     }
 
     return rval.item;
@@ -339,7 +341,7 @@ Rlist *IdempAppendRScalar(Rlist **start, void *item, char type)
 
     if (type != CF_SCALAR)
     {
-        FatalError("Cannot append non-scalars to lists");
+        ProgrammingError("Cannot append non-scalars to lists");
     }
 
     if (!KeyInRlist(*start, (char *) item))
@@ -1146,19 +1148,6 @@ Rlist *RlistAppendReference(Rlist **start, void *item, char type)
 }
 
 /*******************************************************************/
-
-Rlist *RlistAt(Rlist *start, size_t index)
-{
-    for (Rlist *rp = start; rp != NULL; rp = rp->next)
-    {
-        if (index-- == 0)
-        {
-            return rp;
-        }
-    }
-
-    return NULL;
-}
 
 Rlist *RlistLast(Rlist *start)
 {

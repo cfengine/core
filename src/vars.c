@@ -34,6 +34,7 @@
 #include "hashes.h"
 #include "unix.h"
 #include "cfstream.h"
+#include "logging.h"
 
 static int IsCf3Scalar(char *str);
 static int CompareVariableValue(Rval rval, CfAssoc *ap);

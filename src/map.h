@@ -143,7 +143,7 @@ void MapDestroy(Map *map);
                                                                         \
     void Prefix##MapClear(Prefix##Map *map)                             \
     {                                                                   \
-        return MapClear(map->impl);                                     \
+        MapClear(map->impl);                                            \
     }                                                                   \
                                                                         \
     void Prefix##MapDestroy(Prefix##Map *map)                           \

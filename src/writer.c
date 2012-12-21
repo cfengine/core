@@ -24,6 +24,8 @@
 
 #include "writer.h"
 
+#include "logging.h"
+
 typedef enum
 {
     WT_STRING,

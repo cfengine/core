@@ -31,6 +31,7 @@
 #include "matching.h"
 #include "cfstream.h"
 #include "verify_processes.h"
+#include "string_lib.h"
 
 static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char **names, char **line);
 static int SelectProcRegexMatch(char *name1, char *name2, char *regex, char **colNames, char **line);

@@ -25,6 +25,8 @@
 #include "dir.h"
 #include "dir_priv.h"
 
+#include "logging.h"
+
 /*********************************************************************/
 
 static size_t GetNameMax(DIR *dirp);

@@ -31,6 +31,7 @@
 #include "dbm_migration.h"
 #include "atexit.h"
 #include "cfstream.h"
+#include "logging.h"
 
 #include <assert.h>
 

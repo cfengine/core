@@ -45,6 +45,8 @@
 #include "attributes.h"
 #include "cfstream.h"
 #include "communication.h"
+#include "signals.h"
+#include "logging.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"
@@ -129,6 +131,7 @@ int main(int argc, char *argv[])
     ReportContext *report_context = OpenReports("agent");
     Policy *policy = GenericInitialize("agent", config, report_context);
     ThisAgentInit();
+    BeginAudit();
     KeepPromises(policy, config, report_context);
     CloseReports("agent", report_context);
     NoteClassUsage(VHEAP, true);
@@ -143,6 +146,8 @@ int main(int argc, char *argv[])
     {
         ret = 1;
     }
+
+    EndAudit();
 
     return ret;
 }
@@ -313,12 +318,12 @@ static void ThisAgentInit(void)
     setsid();
 #endif
 
-    signal(SIGINT, HandleSignals);
-    signal(SIGTERM, HandleSignals);
+    signal(SIGINT, HandleSignalsForAgent);
+    signal(SIGTERM, HandleSignalsForAgent);
     signal(SIGHUP, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);
-    signal(SIGUSR1, HandleSignals);
-    signal(SIGUSR2, HandleSignals);
+    signal(SIGUSR1, HandleSignalsForAgent);
+    signal(SIGUSR2, HandleSignalsForAgent);
 
     CFA_MAXTHREADS = 30;
     EDITFILESIZE = 100000;
@@ -342,12 +347,7 @@ static void ThisAgentInit(void)
 
 static void KeepPromises(Policy *policy, GenericAgentConfig config, const ReportContext *report_context)
 {
- double efficiency, model;
-
-    if (THIS_AGENT_TYPE == AGENT_TYPE_AGENT)
-    {
-        BeginAudit();
-    }
+    double efficiency, model;
 
     KeepControlPromises(policy);
     KeepPromiseBundles(policy, config.bundlesequence, report_context);
@@ -451,7 +451,6 @@ void KeepControlPromises(Policy *policy)
                 char name[CF_MAXVARSIZE] = "";
 
                 strncpy(name, rp->item, CF_MAXVARSIZE - 1);
-                CanonifyNameInPlace(name);
 
                 AddAbortClass(name, cp->classes);
             }
@@ -470,7 +469,6 @@ void KeepControlPromises(Policy *policy)
                 char name[CF_MAXVARSIZE] = "";
 
                 strncpy(name, rp->item, CF_MAXVARSIZE - 1);
-                CanonifyNameInPlace(name);
 
                 if (!IsItemIn(ABORTBUNDLEHEAP, name))
                 {
@@ -498,8 +496,7 @@ void KeepControlPromises(Policy *policy)
 
         if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_auditing].lval) == 0)
         {
-            AUDIT = GetBoolean(retval.item);
-            CfOut(cf_verbose, "", "SET auditing = %d\n", AUDIT);
+            CfOut(cf_verbose, "", "This option does nothing and is retained for compatibility reasons");
             continue;
         }
 
@@ -629,7 +626,7 @@ void KeepControlPromises(Policy *policy)
             for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
             {
                 AddFilenameToListOfSuspicious(ScalarValue(rp));
-                CfOut(cf_verbose, "", "-> Concidering %s as suspicious file", ScalarValue(rp));
+                CfOut(cf_verbose, "", "-> Considering %s as suspicious file", ScalarValue(rp));
             }
 
             continue;

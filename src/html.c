@@ -67,31 +67,3 @@ void CfHtmlFooter(Writer *writer, char *footer)
 
     WriterWriteF(writer, "</div></body></html>\n");
 }
-
-/*****************************************************************************/
-
-int IsHtmlHeader(char *s)
-{
-    char *str[] = { "<html>", "</html>", "<body>", "</body>",
-        "<title>", "<meta", "<link", "head>",
-        "<div id=\"primary\">", NULL
-    };
-    int i;
-
-    for (i = 0; str[i] != NULL; i++)
-    {
-        if (strstr(s, str[i]))
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-/*****************************************************************************/
-
-void CfHtmlTitle(FILE *fp, char *title)
-{
-    fprintf(fp, "<h1>%s</h1>\n", title);
-}

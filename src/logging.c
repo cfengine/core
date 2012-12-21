@@ -23,7 +23,7 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include "logging.h"
 
 #include "env_context.h"
 #include "dbm_api.h"
@@ -32,11 +32,9 @@
 #include "unix.h"
 #include "cfstream.h"
 #include "string_lib.h"
+#include "transaction.h"
 
 #define CF_VALUE_LOG      "cf_value.log"
-
-static void ExtractOperationLock(char *op);
-static void EndAudit(void);
 
 static const char *NO_STATUS_TYPES[] = { "vars", "classes", NULL };
 static const char *NO_LOG_TYPES[] =
@@ -52,34 +50,24 @@ int PR_KEPT;
 int PR_REPAIRED;
 int PR_NOTKEPT;
 
-static CF_DB *AUDITDBP;
+static bool END_AUDIT_REQUIRED = false;
 
 /*****************************************************************************/
 
-static pthread_once_t end_audit_once = PTHREAD_ONCE_INIT;
-
-static void RegisterEndAudit(void)
-{
-    RegisterAtExitFunction(&EndAudit);
-}
-
 void BeginAudit()
 {
-    pthread_once(&end_audit_once, &RegisterEndAudit);
-
-    Promise dummyp = { 0 };
-    Attributes dummyattr = { {0} };
-
-    memset(&dummyp, 0, sizeof(dummyp));
-    memset(&dummyattr, 0, sizeof(dummyattr));
-
-    ClassAuditLog(&dummyp, dummyattr, "Cfagent starting", CF_NOP, "");
+    END_AUDIT_REQUIRED = true;
 }
 
 /*****************************************************************************/
 
 void EndAudit(void)
 {
+    if (!END_AUDIT_REQUIRED)
+    {
+        return;
+    }
+
     char *sp, string[CF_BUFSIZE];
     Rval retval;
     Promise dummyp = { 0 };
@@ -132,13 +120,6 @@ void EndAudit(void)
     {
         LogTotalCompliance(sp);
     }
-
-    if (strlen(string) > 0)
-    {
-        ClassAuditLog(&dummyp, dummyattr, string, CF_REPORT, "");
-    }
-
-    ClassAuditLog(&dummyp, dummyattr, "Cfagent closing", CF_NOP, "");
 }
 
 /*****************************************************************************/
@@ -168,18 +149,8 @@ static bool IsPromiseValuableForLogging(const Promise *pp)
 
 /*****************************************************************************/
 
-void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, char *reason)
+void ClassAuditLog(const Promise *pp, Attributes attr, char status, char *reason)
 {
-    time_t now = time(NULL);
-    char date[CF_BUFSIZE], lock[CF_BUFSIZE], key[CF_BUFSIZE], operator[CF_BUFSIZE];
-    AuditLog newaudit;
-    Audit *ap = pp->audit;
-    struct timespec t;
-    double keyval;
-    int lineno = pp->offset.line;
-
-    CfDebug("ClassAuditLog(%s)\n", str);
-
     switch (status)
     {
     case CF_CHG:
@@ -339,146 +310,6 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, c
         MarkPromiseHandleDone(pp);
         break;
     }
-
-    if (!((attr.transaction.audit) || AUDIT))
-    {
-        return;
-    }
-
-    if (!OpenDB(&AUDITDBP, dbid_audit))
-    {
-        return;
-    }
-
-    if ((AUDITDBP == NULL) || (THIS_AGENT_TYPE != AGENT_TYPE_AGENT))
-    {
-        CloseDB(AUDITDBP);
-        return;
-    }
-
-    snprintf(date, CF_BUFSIZE, "%s", cf_ctime(&now));
-    Chop(date);
-
-    ExtractOperationLock(lock);
-    snprintf(operator, CF_BUFSIZE - 1, "[%s] op %s", date, lock);
-    strncpy(newaudit.operator, operator, CF_AUDIT_COMMENT - 1);
-
-    if (clock_gettime(CLOCK_REALTIME, &t) == -1)
-    {
-        CfOut(cf_verbose, "clock_gettime", "Clock gettime failure during audit transaction");
-        return;
-    }
-
-// Auditing key needs microsecond precision to separate entries
-
-    keyval = (double) (t.tv_sec) + (double) (t.tv_nsec) / (double) CF_BILLION;
-    snprintf(key, CF_BUFSIZE - 1, "%lf", keyval);
-
-    if (DEBUG)
-    {
-        Writer *writer = FileWriter(stdout);
-        AuditStatusMessage(writer, status);
-        FileWriterDetach(writer);
-    }
-
-    if (ap != NULL)
-    {
-        strncpy(newaudit.comment, str, CF_AUDIT_COMMENT - 1);
-        strncpy(newaudit.filename, ap->filename, CF_AUDIT_COMMENT - 1);
-
-        if ((ap->version == NULL) || (strlen(ap->version) == 0))
-        {
-            CfDebug("Promised in %s bundle %s (unamed version last edited at %s) at/before line %d\n",
-                    ap->filename, pp->bundle, ap->date, lineno);
-            newaudit.version[0] = '\0';
-        }
-        else
-        {
-            CfDebug("Promised in %s bundle %s (version %s last edited at %s) at/before line %d\n", ap->filename,
-                    pp->bundle, ap->version, ap->date, lineno);
-            strncpy(newaudit.version, ap->version, CF_AUDIT_VERSION - 1);
-        }
-
-        strncpy(newaudit.date, ap->date, CF_AUDIT_DATE);
-        newaudit.line_number = lineno;
-    }
-    else
-    {
-        strcpy(newaudit.date, date);
-        strncpy(newaudit.comment, str, CF_AUDIT_COMMENT - 1);
-        strcpy(newaudit.filename, "schedule");
-        strcpy(newaudit.version, "");
-        newaudit.line_number = 0;
-    }
-
-    newaudit.status = status;
-
-    if (AUDITDBP && ((attr.transaction.audit) || AUDIT))
-    {
-        WriteDB(AUDITDBP, key, &newaudit, sizeof(newaudit));
-    }
-
-    CloseDB(AUDITDBP);
-}
-
-/************************************************************************/
-
-static void ExtractOperationLock(char *op)
-{
-    char *sp, lastch = 'x';
-    int i = 0, dots = 0;
-    int offset = strlen("lock...") + strlen(VUQNAME);
-
-/* Use the global copy of the lock from the main serial thread */
-
-    for (sp = CFLOCK + offset; *sp != '\0'; sp++)
-    {
-        switch (*sp)
-        {
-        case '_':
-            if (lastch == '_')
-            {
-                break;
-            }
-            else
-            {
-                op[i] = '/';
-            }
-            break;
-
-        case '.':
-            dots++;
-            op[i] = *sp;
-            break;
-
-        case '0':
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
-            dots = 9;
-            break;
-
-        default:
-            op[i] = *sp;
-            break;
-        }
-
-        lastch = *sp;
-        i++;
-
-        if (dots > 1)
-        {
-            break;
-        }
-    }
-
-    op[i] = '\0';
 }
 
 /************************************************************************/
@@ -522,51 +353,19 @@ void FatalError(char *s, ...)
         CfOut(cf_error, "", "Fatal CFEngine error: %s", buf);
     }
 
+    EndAudit();
     exit(1);
 }
 
-/*****************************************************************************/
+/************************************************************************/
 
-void AuditStatusMessage(Writer *writer, char status)
+void __ProgrammingError(const char *file, int lineno, const char *format, ...)
 {
-    switch (status)             /* Reminder */
-    {
-    case CF_CHG:
-        WriterWriteF(writer, "made a system correction");
-        break;
-
-    case CF_WARN:
-        WriterWriteF(writer, "promise not kept, no action taken");
-        break;
-
-    case CF_TIMEX:
-        WriterWriteF(writer, "timed out");
-        break;
-
-    case CF_FAIL:
-        WriterWriteF(writer, "failed to make a correction");
-        break;
-
-    case CF_DENIED:
-        WriterWriteF(writer, "was denied access to an essential resource");
-        break;
-
-    case CF_INTERPT:
-        WriterWriteF(writer, "was interrupted\n");
-        break;
-
-    case CF_NOP:
-        WriterWriteF(writer, "was applied but performed no required actions");
-        break;
-
-    case CF_UNKNOWN:
-        WriterWriteF(writer, "was applied but status unknown");
-        break;
-
-    case CF_REPORT:
-        WriterWriteF(writer, "report");
-        break;
-    }
-
+    va_list ap;
+    va_start(ap, format);
+    char *fmt = NULL;
+    xasprintf(&fmt, "%s:%d: %s", file, lineno, format);
+    CfVOut(cf_error, "", fmt, ap);
+    free(fmt);
+    exit(255);
 }
-

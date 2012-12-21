@@ -37,6 +37,7 @@
 #include "unix.h"
 #include "fncall.h"
 #include "string_lib.h"
+#include "logging.h"
 
 #include <assert.h>
 

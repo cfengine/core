@@ -27,6 +27,9 @@
 #include "bootstrap.h"
 #include "scope.h"
 #include "cfstream.h"
+#include "signals.h"
+#include "transaction.h"
+#include "logging.h"
 
 static const size_t QUEUESIZE = 50;
 int NO_FORK = false;
@@ -231,12 +234,12 @@ void StartServer(Policy *policy, GenericAgentConfig config, const ReportContext 
 
     memset(&dummyattr, 0, sizeof(dummyattr));
 
-    signal(SIGINT, HandleSignals);
-    signal(SIGTERM, HandleSignals);
+    signal(SIGINT, HandleSignalsForDaemon);
+    signal(SIGTERM, HandleSignalsForDaemon);
     signal(SIGHUP, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);
-    signal(SIGUSR1, HandleSignals);
-    signal(SIGUSR2, HandleSignals);
+    signal(SIGUSR1, HandleSignalsForDaemon);
+    signal(SIGUSR2, HandleSignalsForDaemon);
 
     sd = SetServerListenState(QUEUESIZE);
 
@@ -285,7 +288,7 @@ void StartServer(Policy *policy, GenericAgentConfig config, const ReportContext 
     fcntl(sd, F_SETFD, FD_CLOEXEC);
 #endif
 
-    while (true)
+    while (!IsPendingTermination())
     {
         time_t now = time(NULL);
 
@@ -357,8 +360,6 @@ void StartServer(Policy *policy, GenericAgentConfig config, const ReportContext 
             }
         }
     }
-
-    YieldCurrentLock(thislock); /* We never get here - this is done by a signal handler */
 }
 
 /*********************************************************************/

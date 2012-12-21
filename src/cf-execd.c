@@ -40,6 +40,9 @@
 #include "cfstream.h"
 #include "string_lib.h"
 #include "verify_processes.h"
+#include "signals.h"
+#include "transaction.h"
+#include "logging.h"
 
 #define CF_EXEC_IFELAPSED 0
 #define CF_EXEC_EXPIREAFTER 1
@@ -272,24 +275,32 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
 
 /*****************************************************************************/
 
+static void LoadDefaultSchedule(void)
+{
+    CfDebug("Loading default schedule...\n");
+    DeleteItemList(SCHEDULE);
+    SCHEDULE = NULL;
+    AppendItem(&SCHEDULE, "Min00", NULL);
+    AppendItem(&SCHEDULE, "Min05", NULL);
+    AppendItem(&SCHEDULE, "Min10", NULL);
+    AppendItem(&SCHEDULE, "Min15", NULL);
+    AppendItem(&SCHEDULE, "Min20", NULL);
+    AppendItem(&SCHEDULE, "Min25", NULL);
+    AppendItem(&SCHEDULE, "Min30", NULL);
+    AppendItem(&SCHEDULE, "Min35", NULL);
+    AppendItem(&SCHEDULE, "Min40", NULL);
+    AppendItem(&SCHEDULE, "Min45", NULL);
+    AppendItem(&SCHEDULE, "Min50", NULL);
+    AppendItem(&SCHEDULE, "Min55", NULL);
+}
+
 static void ThisAgentInit(void)
 {
     umask(077);
 
     if (SCHEDULE == NULL)
     {
-        AppendItem(&SCHEDULE, "Min00", NULL);
-        AppendItem(&SCHEDULE, "Min05", NULL);
-        AppendItem(&SCHEDULE, "Min10", NULL);
-        AppendItem(&SCHEDULE, "Min15", NULL);
-        AppendItem(&SCHEDULE, "Min20", NULL);
-        AppendItem(&SCHEDULE, "Min25", NULL);
-        AppendItem(&SCHEDULE, "Min30", NULL);
-        AppendItem(&SCHEDULE, "Min35", NULL);
-        AppendItem(&SCHEDULE, "Min40", NULL);
-        AppendItem(&SCHEDULE, "Min45", NULL);
-        AppendItem(&SCHEDULE, "Min50", NULL);
-        AppendItem(&SCHEDULE, "Min55", NULL);
+        LoadDefaultSchedule();
     }
 }
 
@@ -309,9 +320,11 @@ static double GetSplay(void)
 
 void KeepPromises(Policy *policy, ExecConfig *config)
 {
+    bool schedule_is_specified = false;
+
     for (Constraint *cp = ControlBodyConstraints(policy, AGENT_TYPE_EXECUTOR); cp != NULL; cp = cp->next)
     {
-    if (IsExcluded(cp->classes, NULL))
+        if (IsExcluded(cp->classes, NULL))
         {
             continue;
         }
@@ -378,13 +391,12 @@ void KeepPromises(Policy *policy, ExecConfig *config)
 
         if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_schedule].lval) == 0)
         {
-            Rlist *rp;
-
-            CfDebug("schedule ...\n");
+            CfDebug("Loading user-defined schedule...\n");
             DeleteItemList(SCHEDULE);
             SCHEDULE = NULL;
+            schedule_is_specified = true;
 
-            for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
+            for (const Rlist *rp = retval.item; rp; rp = rp->next)
             {
                 if (!IsItemIn(SCHEDULE, rp->item))
                 {
@@ -392,6 +404,11 @@ void KeepPromises(Policy *policy, ExecConfig *config)
                 }
             }
         }
+    }
+
+    if (!schedule_is_specified)
+    {
+        LoadDefaultSchedule();
     }
 }
 
@@ -471,12 +488,12 @@ void StartServer(Policy *policy, ExecConfig *config, const ReportContext *report
 #endif /* NOT MINGW */
 
     WritePID("cf-execd.pid");
-    signal(SIGINT, HandleSignals);
-    signal(SIGTERM, HandleSignals);
+    signal(SIGINT, HandleSignalsForDaemon);
+    signal(SIGTERM, HandleSignalsForDaemon);
     signal(SIGHUP, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);
-    signal(SIGUSR1, HandleSignals);
-    signal(SIGUSR2, HandleSignals);
+    signal(SIGUSR1, HandleSignalsForDaemon);
+    signal(SIGUSR2, HandleSignalsForDaemon);
 
     umask(077);
 
@@ -489,7 +506,7 @@ void StartServer(Policy *policy, ExecConfig *config, const ReportContext *report
     }
     else
     {
-        while (true)
+        while (!IsPendingTermination())
         {
             if (ScheduleRun(&policy, config, report_context))
             {
@@ -507,10 +524,7 @@ void StartServer(Policy *policy, ExecConfig *config, const ReportContext *report
 #endif
             }
         }
-    }
 
-    if (!ONCE)
-    {
         YieldCurrentLock(thislock);
     }
 }

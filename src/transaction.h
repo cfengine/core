@@ -25,6 +25,8 @@
 #ifndef CFENGINE_TRANSACTION_H
 #define CFENGINE_TRANSACTION_H
 
+#include "cf3.defs.h"
+
 bool AcquireLockByID(char *lock_id, int acquire_after_minutes);
 time_t FindLockTime(char *name);
 bool InvalidateLockTime(char *lock_id);
@@ -35,4 +37,24 @@ void SetSyslogPort(uint16_t port);
 void SetSyslogFacility(int facility);
 void RemoteSysLog(int log_priority, const char *log_string);
 
-#endif  /* NOT CFENGINE_TRANSACTION_H */
+void SummarizeTransaction(Attributes attr, const Promise *pp, const char *logname);
+CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promise *pp, int ignoreProcesses);
+void YieldCurrentLock(CfLock this);
+void GetLockName(char *lockname, char *locktype, char *base, Rlist *params);
+
+#if defined(HAVE_PTHREAD)
+int ThreadLock(pthread_mutex_t *name);
+int ThreadUnlock(pthread_mutex_t *name);
+#else
+# define ThreadLock(name) (1)
+# define ThreadUnlock(name) (1)
+#endif
+
+void PurgeLocks(void);
+int ShiftChange(void);
+
+int WriteLock(char *lock);
+CF_DB *OpenLock(void);
+void CloseLock(CF_DB *dbp);
+
+#endif

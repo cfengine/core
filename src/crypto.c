@@ -31,6 +31,8 @@
 #include "hashes.h"
 #include "cfstream.h"
 #include "pipes.h"
+#include "transaction.h"
+#include "logging.h"
 
 static void MD5Random(unsigned char digest[EVP_MAX_MD_SIZE + 1]);
 static void RandomSeed(void);
@@ -341,7 +343,10 @@ static void MD5Random(unsigned char digest[EVP_MAX_MD_SIZE + 1])
 
         while (!feof(pp))
         {
-            CfReadLine(buffer, CF_BUFSIZE, pp);
+            if (CfReadLine(buffer, CF_BUFSIZE, pp) == -1)
+            {
+                FatalError("Error in CfReadLine");
+            }
             EVP_DigestUpdate(&context, buffer, CF_BUFSIZE);
         }
     }

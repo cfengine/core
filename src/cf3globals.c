@@ -143,7 +143,6 @@ double FORGETRATE = 0.7;
 int IGNORELOCK = false;
 int DONTDO = false;
 int DEBUG = false;
-int AUDIT = false;
 
 char VFQNAME[CF_MAXVARSIZE] = { 0 };
 char VUQNAME[CF_MAXVARSIZE] = { 0 };
@@ -245,8 +244,6 @@ char BINDINTERFACE[CF_BUFSIZE] = { 0 };
 
 int MINUSF = false;
 int EXCLAIM = true;
-
-mode_t DEFAULTMODE = (mode_t) 0755;
 
 Item *VSETUIDLIST = NULL;
 enum classes VSYSTEMHARDCLASS;

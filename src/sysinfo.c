@@ -36,6 +36,7 @@
 #include "unix.h"
 #include "cfstream.h"
 #include "string_lib.h"
+#include "logging.h"
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>

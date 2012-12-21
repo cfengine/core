@@ -1,12 +1,12 @@
 #######################################################
 #
-# Test cf-serverd related promises, mtime simple copy localhost
+# digest server copy, localhost, newer destination, should copy
 #
 #######################################################
 
 body common control
 {
-  inputs => { "../../../default.cf.sub" };
+  inputs => { "../../default.cf.sub" };
   bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 nova_edition::
@@ -82,13 +82,12 @@ body copy_from copy_src_file
 {
 source      => "/tmp/source_file";
 servers     => { "127.0.0.1" };
-compare     => "mtime";
+compare     => "digest";
 copy_backup => "false";
 
 portnumber => "$(c.localhost_open)";
 
-encrypt     => "true";
-
+#encrypt     => "true";
 #verify      => "true";
 #purge       => "false";
 #type_check  => "true";

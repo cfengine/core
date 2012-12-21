@@ -252,8 +252,6 @@ int FullWrite(int desc, const char *ptr, size_t len);
 
 void CfHtmlHeader(Writer *writer, char *title, char *css, char *webdriver, char *banner);
 void CfHtmlFooter(Writer *writer, char *footer);
-void CfHtmlTitle(FILE *fp, char *title);
-int IsHtmlHeader(char *s);
 
 /* iteration.c */
 
@@ -275,15 +273,6 @@ void DeleteBodies(Body *bp);
 /* interfaces.c */
 
 void VerifyInterfacePromise(char *vifdev, char *vaddress, char *vnetmask, char *vbroadcast);
-
-/* logging.c */
-
-void BeginAudit(void);
-void ClassAuditLog(const Promise *pp, Attributes attr, char *str, char status, char *error);
-void PromiseLog(char *s);
-void FatalError(char *s, ...) FUNC_ATTR_NORETURN FUNC_ATTR_PRINTF(1, 2);
-
-void AuditStatusMessage(Writer *writer, char status);
 
 /* manual.c */
 
@@ -370,10 +359,6 @@ void KeepControlPromises(Policy *policy);
 Auth *GetAuthPath(char *path, Auth *list);
 void Summarize(void);
 
-/* signals.c */
-
-void HandleSignals(int signum);
-
 /* sockaddr.c */
 
 /* Not thread-safe */
@@ -386,28 +371,6 @@ bool sockaddr_pton(int af, const void *src, void *addr);
 /* storage_tools.c */
 
 off_t GetDiskUsage(char *file, enum cfsizes type);
-
-/* transaction.c */
-
-void SummarizeTransaction(Attributes attr, const Promise *pp, const char *logname);
-CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promise *pp, int ignoreProcesses);
-void YieldCurrentLock(CfLock this);
-void GetLockName(char *lockname, char *locktype, char *base, Rlist *params);
-
-#if defined(HAVE_PTHREAD)
-int ThreadLock(pthread_mutex_t *name);
-int ThreadUnlock(pthread_mutex_t *name);
-#else
-# define ThreadLock(name) (1)
-# define ThreadUnlock(name) (1)
-#endif
-
-void PurgeLocks(void);
-int ShiftChange(void);
-
-int WriteLock(char *lock);
-CF_DB *OpenLock(void);
-void CloseLock(CF_DB *dbp);
 
 /* timeout.c */
 

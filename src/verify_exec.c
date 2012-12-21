@@ -34,6 +34,8 @@
 #include "attributes.h"
 #include "cfstream.h"
 #include "pipes.h"
+#include "transaction.h"
+#include "logging.h"
 
 static int ExecSanityChecks(Attributes a, Promise *pp);
 static void PreviewProtocolLine(char *line, char *comm);
@@ -251,7 +253,10 @@ static void VerifyExec(Attributes a, Promise *pp)
                     return;
                 }
 
-                CfReadLine(line, CF_BUFSIZE - 1, pfp);
+                if (CfReadLine(line, CF_BUFSIZE - 1, pfp) == -1)
+                {
+                    FatalError("Error in CfReadLine");
+                }
 
                 if (strstr(line, "cfengine-die"))
                 {

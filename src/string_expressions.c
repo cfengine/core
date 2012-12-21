@@ -26,6 +26,7 @@
 
 #include "bool.h"
 #include "string_expressions.h"
+#include "logging.h"
 
 #include <stdlib.h>
 #include <string.h>

@@ -32,6 +32,7 @@
 #include "reporting.h"
 #include "unix.h"
 #include "cfstream.h"
+#include "signals.h"
 
 /*****************************************************************************/
 
@@ -233,12 +234,12 @@ static void ThisAgentInit(void)
     SetReferenceTime(false);
     SetStartTime();
 
-    signal(SIGINT, HandleSignals);
-    signal(SIGTERM, HandleSignals);
+    signal(SIGINT, HandleSignalsForDaemon);
+    signal(SIGTERM, HandleSignalsForDaemon);
     signal(SIGHUP, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);
-    signal(SIGUSR1, HandleSignals);
-    signal(SIGUSR2, HandleSignals);
+    signal(SIGUSR1, HandleSignalsForDaemon);
+    signal(SIGUSR2, HandleSignalsForDaemon);
 
     FORGETRATE = 0.6;
 

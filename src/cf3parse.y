@@ -32,6 +32,7 @@
 #include "constraints.h"
 #include "env_context.h"
 #include "fncall.h"
+#include "logging.h"
 
 // FIX: remove
 #include "syntax.h"
@@ -664,6 +665,11 @@ selection:             selection_id
                            {
                                Constraint *cp = NULL;
 
+                               if (P.rval.rtype == CF_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
+                               {
+                                   ValidateClassSyntax(P.rval.item);
+                               }
+
                                if (P.currentclasses == NULL)
                                {
                                    ParserDebug("\tAdd Constraint to body: %s\n\n", P.blockid);
@@ -747,7 +753,47 @@ selection_id:          id
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-/* Used by body and bundle */
+constraint:            id                        /* BUNDLE ONLY */
+                       ASSIGN
+                       rval
+                       {
+                           if (!INSTALL_SKIP)
+                           {
+                               Constraint *cp = NULL;
+                               SubTypeSyntax ss = SubTypeSyntaxLookup(P.blocktype,P.currenttype);
+                               CheckConstraint(P.currenttype, CurrentNameSpace(P.policy), P.blockid, P.lval, P.rval, ss);
+                               if (P.rval.rtype == CF_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
+                               {
+                                   ValidateClassSyntax(P.rval.item);
+                               }
+
+                               cp = ConstraintAppendToPromise(P.currentpromise, P.lval, P.rval, "any", P.references_body);
+                               cp->offset.line = P.line_no;
+                               cp->offset.start = P.offsets.last_id;
+                               cp->offset.end = P.offsets.current;
+                               cp->offset.context = P.offsets.last_class_id;
+                               P.currentstype->offset.end = P.offsets.current;
+
+                               // Cache whether there are subbundles for later $(this.promiser) logic
+
+                               if (strcmp(P.lval,"usebundle") == 0 || strcmp(P.lval,"edit_line") == 0
+                                   || strcmp(P.lval,"edit_xml") == 0)
+                               {
+                                   P.currentpromise->has_subbundles = true;
+                               }
+
+                               P.rval = (Rval) { NULL, '\0' };
+                               strcpy(P.lval,"no lval");
+                               DeleteRlist(P.currentRlist);
+                               P.currentRlist = NULL;
+                           }
+                           else
+                           {
+                               DeleteRvalItem(P.rval);
+                           }
+                       };
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 class:                 CLASS
                        {

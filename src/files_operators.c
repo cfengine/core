@@ -45,6 +45,9 @@
 #include "cfstream.h"
 #include "client_code.h"
 #include "pipes.h"
+#include "transaction.h"
+#include "logging.h"
+#include "string_lib.h"
 
 #include <assert.h>
 
@@ -1187,7 +1190,10 @@ static int TransformFile(char *file, Attributes attr, Promise *pp)
 
         while (!feof(pop))
         {
-            CfReadLine(line, CF_BUFSIZE, pop);
+            if (CfReadLine(line, CF_BUFSIZE, pop) == -1)
+            {
+                FatalError("Error in CfReadLine");
+            }
 
             if (print)
             {
@@ -2231,20 +2237,24 @@ void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promi
 
     if ((newflags & CHFLAGS_MASK) == (dstat->st_flags & CHFLAGS_MASK))  /* file okay */
     {
-        CfDebug("BSD File okay, flags = %lx, current = %lx\n", (newflags & CHFLAGS_MASK),
-                (dstat->st_flags & CHFLAGS_MASK));
+        CfDebug("BSD File okay, flags = %" PRIxMAX ", current = %" PRIxMAX "\n",
+                (uintmax_t)(newflags & CHFLAGS_MASK),
+                (uintmax_t)(dstat->st_flags & CHFLAGS_MASK));
     }
     else
     {
-        CfDebug("BSD Fixing %s, newflags = %lx, flags = %lx\n", file, (newflags & CHFLAGS_MASK),
-                (dstat->st_flags & CHFLAGS_MASK));
+        CfDebug("BSD Fixing %s, newflags = %" PRIxMAX ", flags = %" PRIxMAX "\n",
+                file, (uintmax_t)(newflags & CHFLAGS_MASK),
+                (uintmax_t)(dstat->st_flags & CHFLAGS_MASK));
 
         switch (attr.transaction.action)
         {
         case cfa_warn:
 
-            cfPS(cf_error, CF_WARN, "", pp, attr, " !! %s has flags %o - [should be %o]\n", file,
-                 dstat->st_mode & CHFLAGS_MASK, newflags & CHFLAGS_MASK);
+            cfPS(cf_error, CF_WARN, "", pp, attr,
+                 " !! %s has flags %jo - [should be %jo]\n",
+                 file, (uintmax_t)(dstat->st_mode & CHFLAGS_MASK),
+                 (uintmax_t)(newflags & CHFLAGS_MASK));
             break;
 
         case cfa_fix:
@@ -2253,14 +2263,15 @@ void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promi
             {
                 if (chflags(file, newflags & CHFLAGS_MASK) == -1)
                 {
-                    cfPS(cf_error, CF_DENIED, "chflags", pp, attr, " !! Failed setting BSD flags %x on %s\n", newflags,
+                    cfPS(cf_error, CF_DENIED, "chflags", pp, attr, " !! Failed setting BSD flags %jx on %s\n", (uintmax_t)newflags,
                          file);
                     break;
                 }
                 else
                 {
-                    cfPS(cf_inform, CF_CHG, "", pp, attr, " -> %s had flags %o, changed it to %o\n", file,
-                         dstat->st_flags & CHFLAGS_MASK, newflags & CHFLAGS_MASK);
+                    cfPS(cf_inform, CF_CHG, "", pp, attr, " -> %s had flags %jo, changed it to %jo\n", file,
+                         (uintmax_t)(dstat->st_flags & CHFLAGS_MASK),
+                         (uintmax_t)(newflags & CHFLAGS_MASK));
                 }
             }
 
@@ -2587,7 +2598,10 @@ int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, const P
 
     while (!feof(fp))
     {
-        CfReadLine(line, CF_BUFSIZE - 1, fp);
+        if (CfReadLine(line, CF_BUFSIZE - 1, fp) == -1)
+        {
+            FatalError("Error in CfReadLine");
+        }
 
         if (a.edits.joinlines && *(line + strlen(line) - 1) == '\\')
         {

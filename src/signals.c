@@ -23,7 +23,7 @@
 
 */
 
-#include "cf3.defs.h"
+#include "signals.h"
 
 #include "cfstream.h"
 
@@ -46,7 +46,18 @@ static const char *SIGNALS[] =
     [SIGSEGV] = "SIGSEGV",
 };
 
-void HandleSignals(int signum)
+static bool PENDING_TERMINATION = false;
+
+/********************************************************************/
+
+bool IsPendingTermination(void)
+{
+    return PENDING_TERMINATION;
+}
+
+/********************************************************************/
+
+void HandleSignalsForAgent(int signum)
 {
     CfOut(cf_error, "", "Received signal %d (%s) while doing [%s]", signum, SIGNALS[signum] ? SIGNALS[signum] : "NOSIG",
           CFLOCK);
@@ -54,8 +65,7 @@ void HandleSignals(int signum)
     CfOut(cf_error, "", "This sub-task started really at %s\n", cf_ctime(&CFINITSTARTTIME));
     fflush(stdout);
 
-    if ((signum == SIGTERM) || (signum == SIGINT) || (signum == SIGHUP) || (signum == SIGSEGV) || (signum == SIGKILL)
-        || (signum == SIGPIPE))
+    if ((signum == SIGTERM) || (signum == SIGINT))
     {
         exit(0);
     }
@@ -69,5 +79,33 @@ void HandleSignals(int signum)
     }
 
 /* Reset the signal handler */
-    signal(signum, HandleSignals);
+    signal(signum, HandleSignalsForAgent);
+}
+
+/********************************************************************/
+
+void HandleSignalsForDaemon(int signum)
+{
+    CfOut(cf_error, "", "Received signal %d (%s) while doing [%s]", signum, SIGNALS[signum] ? SIGNALS[signum] : "NOSIG",
+          CFLOCK);
+    CfOut(cf_error, "", "Logical start time %s ", cf_ctime(&CFSTARTTIME));
+    CfOut(cf_error, "", "This sub-task started really at %s\n", cf_ctime(&CFINITSTARTTIME));
+    fflush(stdout);
+
+    if ((signum == SIGTERM) || (signum == SIGINT) || (signum == SIGHUP) || (signum == SIGSEGV) || (signum == SIGKILL)
+        || (signum == SIGPIPE))
+    {
+        PENDING_TERMINATION = true;
+    }
+    else if (signum == SIGUSR1)
+    {
+        DEBUG = true;
+    }
+    else if (signum == SIGUSR2)
+    {
+        DEBUG = false;
+    }
+
+/* Reset the signal handler */
+    signal(signum, HandleSignalsForDaemon);
 }

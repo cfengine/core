@@ -32,6 +32,7 @@
 #include "reporting.h"
 #include "files_operators.h"
 #include "cfstream.h"
+#include "logging.h"
 
 #include <assert.h>
 
@@ -140,47 +141,6 @@ char *EscapeJson(char *s, char *out, int outSz)
 
 /***************************************************************************/
 
-char *EscapeRegex(char *s, char *out, int outSz)
-{
-    char *spt, *spf;
-    int i = 0;
-
-    memset(out, 0, outSz);
-
-    for (spf = s, spt = out; (i < outSz - 2) && (*spf != '\0'); spf++, spt++, i++)
-    {
-        switch (*spf)
-        {
-        case '\\':
-        case '.':
-        case '|':
-        case '*':
-        case '?':
-        case '+':
-        case '(':
-        case ')':
-        case '{':
-        case '}':
-        case '[':
-        case ']':
-        case '^':
-        case '$':
-            *spt++ = '\\';
-            *spt = *spf;
-            i += 2;
-            break;
-
-        default:
-            *spt = *spf;
-            i++;
-            break;
-        }
-    }
-    return out;
-}
-
-/***************************************************************************/
-
 enum cfmeasurepolicy MeasurePolicy2Value(char *s)
 {
     static char *names[] = { "average", "sum", "first", "last",  NULL };
@@ -205,32 +165,6 @@ enum cfmeasurepolicy MeasurePolicy2Value(char *s)
     
 /***************************************************************************/
     
-enum cfhypervisors Str2Hypervisors(char *s)
-{
-    static char *names[] = { "xen", "kvm", "esx", "vbox", "test",
-        "xen_net", "kvm_net", "esx_net", "test_net",
-        "zone", "ec2", "eucalyptus", NULL
-    };
-    int i;
-
-    if (s == NULL)
-    {
-        return cfv_virt_test;
-    }
-
-    for (i = 0; names[i] != NULL; i++)
-    {
-        if (s && (strcmp(s, names[i]) == 0))
-        {
-            return (enum cfhypervisors) i;
-        }
-    }
-
-    return (enum cfhypervisors) i;
-}
-
-/***************************************************************************/
-
 enum cfenvironment_state Str2EnvState(char *s)
 {
     static char *names[] = { "create", "delete", "running", "suspended", "down", NULL };

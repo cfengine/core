@@ -39,6 +39,8 @@
 #include "matching.h"
 #include "attributes.h"
 #include "cfstream.h"
+#include "transaction.h"
+#include "string_lib.h"
 
 /*****************************************************************************/
 

@@ -41,6 +41,7 @@
 #include "unix.h"
 #include "cfstream.h"
 #include "communication.h"
+#include "logging.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"
@@ -61,8 +62,6 @@ static void ShowLastSeen(void);
 static void ShowClasses(void);
 static void ShowChecksums(void);
 static void ShowLocks(int active);
-static void ShowCurrentAudit(void);
-static char *Format(char *s, int width);
 
 #ifdef HAVE_QSORT
 static int CompareClasses(const void *a, const void *b);
@@ -88,7 +87,6 @@ extern const BodySyntax CFRE_CONTROLBODY[];
 extern BodySyntax CFRP_CONTROLBODY[];
 
 int HTML = false;
-int GRAPH = false;
 int TITLES = false;
 int TIMESTAMPS = false;
 int HIRES = false;
@@ -104,7 +102,7 @@ double AGE;
 
 static Averages MAX, MIN;
 
-char OUTPUTDIR[CF_BUFSIZE], *sp;
+char OUTPUTDIR[CF_BUFSIZE];
 char REMOVEHOSTS[CF_BUFSIZE] = { 0 };
 
 #ifdef HAVE_NOVA
@@ -794,8 +792,7 @@ static void KeepReportsPromises()
 
         if (strcmp("audit", rp->item) == 0)
         {
-            CfOut(cf_verbose, "", " -> Creating audit report...\n");
-            ShowCurrentAudit();
+            CfOut(cf_verbose, "", " -> Audit report is no longer available...\n");
         }
 
         if (all || (strcmp("classes", rp->item) == 0))
@@ -1774,249 +1771,7 @@ static void ShowLocks(int active)
     WriterClose(writer);
 }
 
-/*******************************************************************/
-
-static void ShowCurrentAudit()
-{
-    char operation[CF_BUFSIZE];
-    AuditLog entry;
-    char *key;
-    void *value;
-    CF_DB *dbp;
-    CF_DBC *dbcp;
-    int ksize, vsize;
-
-    if (!OpenDB(&dbp, dbid_audit))
-    {
-        return;
-    }
-
-/* Acquire a cursor for the database. */
-
-    if (!NewDBCursor(dbp, &dbcp))
-    {
-        CfOut(cf_inform, "", " !! Unable to scan last-seen db");
-        CloseDB(dbp);
-        return;
-    }
-
-    memset(&entry, 0, sizeof(entry));
-
-    char name[CF_BUFSIZE];
-
-    if (HTML)
-    {
-        snprintf(name, CF_BUFSIZE, "audit.html");
-    }
-    else if (XML)
-    {
-        snprintf(name, CF_BUFSIZE, "audit.xml");
-    }
-    else if (CSV)
-    {
-        snprintf(name, CF_BUFSIZE, "audit.csv");
-    }
-    else
-    {
-        snprintf(name, CF_BUFSIZE, "audit.txt");
-    }
-
-    Writer *writer = NULL;
-    {
-        FILE *fout = NULL;
-        if ((fout = fopen(name, "w")) == NULL)
-        {
-            CfOut(cf_error, "fopen", "Unable to write to %s/%s\n", OUTPUTDIR, name);
-            CloseDB(dbp);
-            return;
-        }
-        writer = FileWriter(fout);
-    }
-    assert(writer);
-
-    if (HTML && (!EMBEDDED))
-    {
-        time_t now = time(NULL);
-
-        snprintf(name, CF_BUFSIZE, "Audit collected on %s at %s", VFQNAME, cf_ctime(&now));
-        CfHtmlHeader(writer, name, STYLESHEET, WEBDRIVER, BANNER);
-
-        WriterWriteF(writer, "<table class=border cellpadding=5>\n");
-        WriterWriteF(writer, "<th> Scan convergence </th>");
-        WriterWriteF(writer, "<th> Observed </th>");
-        WriterWriteF(writer, "<th> Promise made </th>");
-        WriterWriteF(writer, "<th> Promise originates in </th>");
-        WriterWriteF(writer, "<th> Promise version </th>");
-        WriterWriteF(writer, "<th> line </th>");
-    }
-
-    if (XML)
-    {
-        WriterWriteF(writer, "<?xml version=\"1.0\"?>\n<output>\n");
-    }
-
-    /* Walk through the database and print out the key/data pairs. */
-
-    while (NextDB(dbp, dbcp, &key, &ksize, &value, &vsize))
-    {
-        strncpy(operation, (char *) key, CF_BUFSIZE - 1);
-
-        if (value != NULL)
-        {
-            memcpy(&entry, value, MIN(vsize, sizeof(entry)));
-
-            if (XML)
-            {
-                WriterWriteF(writer, "%s", CFRX[cfx_entry][cfb]);
-                WriterWriteF(writer, "%s %s %s", CFRX[cfx_index][cfb], operation, CFRX[cfx_index][cfe]);
-                WriterWriteF(writer, "%s %s, ", CFRX[cfx_event][cfb], entry.operator);
-                AuditStatusMessage(writer, entry.status);
-                WriterWriteF(writer, "%s", CFRX[cfx_event][cfe]);
-                WriterWriteF(writer, "%s %s %s", CFRX[cfx_q][cfb], entry.comment, CFRX[cfx_q][cfe]);
-                WriterWriteF(writer, "%s %s %s", CFRX[cfx_date][cfb], entry.date, CFRX[cfx_date][cfe]);
-                WriterWriteF(writer, "%s %s %s", CFRX[cfx_av][cfb], entry.filename, CFRX[cfx_av][cfe]);
-                WriterWriteF(writer, "%s %s %s", CFRX[cfx_version][cfb], entry.version, CFRX[cfx_version][cfe]);
-                WriterWriteF(writer, "%s %d %s", CFRX[cfx_ref][cfb], entry.line_number, CFRX[cfx_ref][cfe]);
-                WriterWriteF(writer, "%s", CFRX[cfx_entry][cfe]);
-            }
-            else if (HTML)
-            {
-                WriterWriteF(writer, "%s", CFRH[cfx_entry][cfb]);
-                WriterWriteF(writer, "%s %s, ", CFRH[cfx_event][cfb], Format(entry.operator, 40));
-                AuditStatusMessage(writer, entry.status);
-                WriterWriteF(writer, "%s", CFRH[cfx_event][cfe]);
-                WriterWriteF(writer, "%s %s %s", CFRH[cfx_q][cfb], Format(entry.comment, 40), CFRH[cfx_q][cfe]);
-                WriterWriteF(writer, "%s %s %s", CFRH[cfx_date][cfb], entry.date, CFRH[cfx_date][cfe]);
-                WriterWriteF(writer, "%s %s %s", CFRH[cfx_av][cfb], entry.filename, CFRH[cfx_av][cfe]);
-                WriterWriteF(writer, "%s %s %s", CFRH[cfx_version][cfb], entry.version, CFRH[cfx_version][cfe]);
-                WriterWriteF(writer, "%s %d %s", CFRH[cfx_ref][cfb], entry.line_number, CFRH[cfx_ref][cfe]);
-                WriterWriteF(writer, "%s", CFRH[cfx_entry][cfe]);
-
-                if (strstr(entry.comment, "closing"))
-                {
-                    WriterWriteF(writer, "<th></th>");
-                    WriterWriteF(writer, "<th></th>");
-                    WriterWriteF(writer, "<th></th>");
-                    WriterWriteF(writer, "<th></th>");
-                    WriterWriteF(writer, "<th></th>");
-                    WriterWriteF(writer, "<th></th>");
-                    WriterWriteF(writer, "<th></th>");
-                }
-            }
-            else if (CSV)
-            {
-                WriterWriteF(writer, "%s,", operation);
-                WriterWriteF(writer, "%s,", entry.operator);
-
-                AuditStatusMessage(writer, entry.status); /* Reminder */
-
-                if (strlen(entry.comment) > 0)
-                {
-                    WriterWriteF(writer, ",%s\n", entry.comment);
-                }
-
-                if (strcmp(entry.filename, "Terminal") == 0)
-                {
-                }
-                else
-                {
-                    if (strlen(entry.version) == 0)
-                    {
-                        WriterWriteF(writer, ",%s,,%s,%d\n", entry.filename, entry.date, entry.line_number);
-                    }
-                    else
-                    {
-                        WriterWriteF(writer, ",%s,%s,%s,%d\n", entry.filename, entry.version, entry.date, entry.line_number);
-                    }
-                }
-            }
-            else
-            {
-                WriterWriteF(writer,
-                        ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n");
-                WriterWriteF(writer, "Operation index: \'%s\'\n", operation);
-                WriterWriteF(writer, "Converge \'%s\' ", entry.operator);
-
-                AuditStatusMessage(writer, entry.status); /* Reminder */
-
-                if (strlen(entry.comment) > 0)
-                {
-                    WriterWriteF(writer, "Comment: %s\n", entry.comment);
-                }
-
-                if (strcmp(entry.filename, "Terminal") == 0)
-                {
-                    if (strstr(entry.comment, "closing"))
-                    {
-                        WriterWriteF(writer,
-                                "\n===============================================================================================\n\n");
-                    }
-                }
-                else
-                {
-                    if (strlen(entry.version) == 0)
-                    {
-                        WriterWriteF(writer, "Promised in %s (unamed version last edited at %s) at/before line %d\n",
-                                entry.filename, entry.date, entry.line_number);
-                    }
-                    else
-                    {
-                        WriterWriteF(writer, "Promised in %s (version %s last edited at %s) at/before line %d\n",
-                                entry.filename, entry.version, entry.date, entry.line_number);
-                    }
-                }
-            }
-        }
-        else
-        {
-            continue;
-        }
-    }
-
-    if (HTML && (!EMBEDDED))
-    {
-        WriterWriteF(writer, "</table>");
-        CfHtmlFooter(writer, FOOTER);
-    }
-
-    if (XML)
-    {
-        WriterWriteF(writer, "</output>\n");
-    }
-
-    DeleteDBCursor(dbp, dbcp);
-    CloseDB(dbp);
-    WriterClose(writer);
-}
-
 /*********************************************************************/
-/* Level 3                                                           */
-/*********************************************************************/
-
-static char *Format(char *s, int width)
-{
-    static char buffer[CF_BUFSIZE];
-    char *sp;
-    int i = 0, count = 0;
-
-    for (sp = s; *sp != '\0'; sp++)
-    {
-        buffer[i++] = *sp;
-        buffer[i] = '\0';
-        count++;
-
-        if ((count > (width - 5)) && (ispunct((int)*sp)))
-        {
-            strcat(buffer, "<br>");
-            i += strlen("<br>");
-            count = 0;
-        }
-    }
-
-    return buffer;
-}
-
-/*************************************************************/
 
 #ifdef HAVE_QSORT
 static int CompareClasses(const void *a, const void *b)

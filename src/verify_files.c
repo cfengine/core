@@ -40,6 +40,8 @@
 #include "matching.h"
 #include "attributes.h"
 #include "cfstream.h"
+#include "transaction.h"
+#include "string_lib.h"
 
 static void LoadSetuid(Attributes a, Promise *pp);
 static void SaveSetuid(Attributes a, Promise *pp, const ReportContext *report_context);

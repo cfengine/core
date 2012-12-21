@@ -204,23 +204,6 @@ typedef struct
 # define EXEC_SUFFIX ""
 #endif /* NOT MINGW */
 
-#define CF_AUDIT_COMMENT 128
-#define CF_AUDIT_VERSION 64
-#define CF_AUDIT_DATE    32
-
-/* key includes operation and date */
-typedef struct
-{
-    char operator[CF_AUDIT_COMMENT];
-    char comment[CF_AUDIT_COMMENT];
-    char filename[CF_AUDIT_COMMENT];
-    char bundle[CF_AUDIT_VERSION];      /* not used in cf2 */
-    char version[CF_AUDIT_VERSION];
-    char date[CF_AUDIT_DATE];
-    short line_number;
-    char status;
-} AuditLog;
-
 /*******************************************************************/
 /* Client server defines                                           */
 /*******************************************************************/
@@ -602,6 +585,8 @@ typedef struct
 #define CF_UNDEFINED_ITEM (void *)0x1234
 #define CF_VARARGS 99
 #define CF_UNKNOWN_IP "location unknown"
+
+#define DEFAULTMODE ((mode_t)0755)
 
 #define CF_MAX_NESTING 10
 #define CF_MAX_REPLACE 20
@@ -2174,23 +2159,6 @@ typedef struct
 } Outputs;
 
 /*************************************************************************/
-
-enum cfhypervisors
-{
-    cfv_virt_xen,
-    cfv_virt_kvm,
-    cfv_virt_esx,
-    cfv_virt_vbox,
-    cfv_virt_test,
-    cfv_virt_xen_net,
-    cfv_virt_kvm_net,
-    cfv_virt_esx_net,
-    cfv_virt_test_net,
-    cfv_zone,
-    cfv_ec2,
-    cfv_eucalyptus,
-    cfv_none
-};
 
 enum cfenvironment_state
 {

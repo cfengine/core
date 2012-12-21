@@ -29,6 +29,7 @@
 #include "files_interfaces.h"
 #include "cfstream.h"
 #include "pipes.h"
+#include "logging.h"
 
 /* Prototypes */
 
@@ -81,11 +82,17 @@ static int GatherProcessUsers(Item **userList, int *userListSz, int *numRootProc
         return false;
     }
 
-    CfReadLine(vbuff, CF_BUFSIZE, pp);
+    if (CfReadLine(vbuff, CF_BUFSIZE, pp) == -1)
+    {
+        FatalError("Error in CfReadLine");
+    }
 
     while (!feof(pp))
     {
-        CfReadLine(vbuff, CF_BUFSIZE, pp);
+        if (CfReadLine(vbuff, CF_BUFSIZE, pp) == -1)
+        {
+            FatalError("Error in CfReadLine");
+        }
         sscanf(vbuff, "%s", user);
 
         if (strcmp(user, "USER") == 0)

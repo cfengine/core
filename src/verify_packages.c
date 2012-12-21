@@ -39,6 +39,8 @@
 #include "cfstream.h"
 #include "string_lib.h"
 #include "pipes.h"
+#include "transaction.h"
+#include "logging.h"
 
 /** Entry points from VerifyPackagesPromise **/
 
@@ -388,7 +390,10 @@ static bool PackageListInstalledFromCommand(PackageItem **installed_list, const 
     while (!feof(fin))
     {
         memset(buf, 0, CF_BUFSIZE);
-        CfReadLine(buf, CF_BUFSIZE, fin);
+        if (CfReadLine(buf, CF_BUFSIZE, fin) == -1)
+        {
+            FatalError("Error in CfReadLine");
+        }
         CF_OCCUR++;
 
         if (a.packages.package_multiline_start)
@@ -623,7 +628,10 @@ static int VerifyInstalledPackages(PackageManager **all_mgrs, const char *defaul
         while (!feof(fin))
         {
             memset(vbuff, 0, CF_BUFSIZE);
-            CfReadLine(vbuff, CF_BUFSIZE, fin);
+            if (CfReadLine(vbuff, CF_BUFSIZE, fin) == -1)
+            {
+                FatalError("Error in CfReadLine");
+            }
 
             // assume patch_list_command lists available patches/updates by default
             if ((a.packages.package_patch_installed_regex == NULL)
@@ -696,14 +704,6 @@ int FindLargestVersionAvail(char *matchName, char *matchVers, const char *refAny
 
         for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
         {
-#ifdef LINUX
-            if (dirp->d_type != DT_REG && dirp->d_type != DT_LNK)
-            {
-                CfOut(cf_verbose, "", "Skipping \"%s\" (not a file)", dirp->d_name);
-                continue;
-            }
-#endif /* LINUX */
-
             if (FullTextMatch(refAnyVer, dirp->d_name))
             {
                 matchVer = ExtractFirstReference(refAnyVer, dirp->d_name);
@@ -2128,7 +2128,10 @@ int ExecPackageCommand(char *command, int verify, int setCmdClasses, Attributes 
         }
 
         line[0] = '\0';
-        CfReadLine(line, CF_BUFSIZE - 1, pfp);
+        if (CfReadLine(line, CF_BUFSIZE - 1, pfp) == -1)
+        {
+            FatalError("Error in CfReadLine");
+        }
 
         ReplaceStr(line, lineSafe, sizeof(lineSafe), "%", "%%");
         CfOut(cf_inform, "", "Q:%20.20s ...:%s", cmd, lineSafe);

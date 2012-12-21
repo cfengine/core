@@ -35,6 +35,8 @@
 #include "attributes.h"
 #include "cfstream.h"
 #include "string_lib.h"
+#include "transaction.h"
+#include "logging.h"
 
 static PromiseIdent *PromiseIdExists(char *namespace, char *handle);
 static void DeleteAllPromiseIdsRecurse(PromiseIdent *key);
@@ -50,12 +52,6 @@ static Constraint *ConstraintNew(const char *lval, Rval rval, const char *classe
     {
     case CF_SCALAR:
         CfDebug("   Appending Constraint: %s => %s\n", lval, (const char *) rval.item);
-
-        if (PARSING && strcmp(lval, "ifvarclass") == 0)
-        {
-            ValidateClassSyntax(rval.item);
-        }
-
         break;
     case CF_FNCALL:
         CfDebug("   Appending a function call to rhs\n");

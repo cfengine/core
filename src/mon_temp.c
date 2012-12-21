@@ -30,6 +30,7 @@
 #include "files_interfaces.h"
 #include "cfstream.h"
 #include "pipes.h"
+#include "logging.h"
 
 /* Globals */
 
@@ -187,11 +188,17 @@ static bool GetLMSensors(double *cf_this)
         return false;
     }
 
-    CfReadLine(vbuff, CF_BUFSIZE, pp);
+    if (CfReadLine(vbuff, CF_BUFSIZE, pp) == -1)
+    {
+        FatalError("Error in CfReadLine");
+    }
 
     while (!feof(pp))
     {
-        CfReadLine(vbuff, CF_BUFSIZE, pp);
+        if (CfReadLine(vbuff, CF_BUFSIZE, pp) == -1)
+        {
+            FatalError("Error in CfReadLine");
+        }
 
         if (strstr(vbuff, "Temp") || strstr(vbuff, "temp"))
         {

@@ -33,6 +33,7 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "string_lib.h"
+#include "logging.h"
 
 static void DeleteSubTypes(SubType *tp);
 

@@ -25,6 +25,8 @@
 
 #include "xml_writer.h"
 
+#include "logging.h"
+
 static void WriteEscaped(Writer *writer, const char *source);
 
 /*****************************************************************************/

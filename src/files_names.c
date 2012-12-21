@@ -33,6 +33,8 @@
 #include "assert.h"
 #include "files_interfaces.h"
 #include "cfstream.h"
+#include "logging.h"
+#include "string_lib.h"
 
 /*********************************************************************/
 
@@ -646,47 +648,6 @@ int DeEscapeQuotedString(const char *from, char *to)
 
 /*********************************************************************/
 
-void Chop(char *str)            /* remove trailing spaces */
-{
-    int i;
-
-    if ((str == NULL) || (strlen(str) == 0))
-    {
-        return;
-    }
-
-    if (strlen(str) > CF_EXPANDSIZE)
-    {
-        CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
-        return;
-    }
-
-    for (i = strlen(str) - 1; (i >= 0) && (isspace((int) str[i])); i--)
-    {
-        str[i] = '\0';
-    }
-}
-
-/*********************************************************************/
-
-void StripTrailingNewline(char *str)
-{
-    char *c = str + strlen(str);
-
-    if (c - str > CF_EXPANDSIZE)
-    {
-        CfOut(cf_error, "", "StripTrailingNewline was called on an overlong string");
-        return;
-    }
-
-    for (; (c >= str) && ((*c == '\0') || (*c == '\n')); --c)
-    {
-        *c = '\0';
-    }
-}
-
-/*********************************************************************/
-
 int CompressPath(char *dest, char *src)
 {
     char *sp;
@@ -752,18 +713,6 @@ int CompressPath(char *dest, char *src)
 }
 
 /*********************************************************************/
-
-char *ScanPastChars(char *scanpast, char *input)
-{
-    char *pos = input;
-
-    while ((*pos != '\0') && (strchr(scanpast, *pos)))
-    {
-        pos++;
-    }
-
-    return pos;
-}
 
 int IsAbsoluteFileName(const char *f)
 {
@@ -876,20 +825,3 @@ const char *GetSoftwareCacheFilename(char *buffer)
     MapName(buffer);
     return buffer;
 }
-
-/*******************************************************************/
-
-int StringInArray(char **array, char *string)
-{
-    for (int i = 0; array[i] != NULL; i++)
-    {
-        if (strcmp(string, array[i]) == 0)
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-

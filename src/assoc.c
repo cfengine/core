@@ -38,11 +38,6 @@ CfAssoc *NewAssoc(const char *lval, Rval rval, enum cfdatatype dt)
     ap->rval = CopyRvalItem(rval);
     ap->dtype = dt;
 
-    if (lval == NULL)
-    {
-        FatalError("Bad association in NewAssoc\n");
-    }
-
     return ap;
 }
 
@@ -89,11 +84,6 @@ CfAssoc *AssocNewReference(const char *lval, Rval rval, enum cfdatatype dtype)
     ap->lval = xstrdup(lval);
     ap->rval = rval;
     ap->dtype = dtype;
-
-    if (lval == NULL)
-    {
-        FatalError("Bad association in AssocNewReference\n");
-    }
 
     return ap;
 }

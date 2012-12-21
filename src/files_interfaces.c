@@ -37,6 +37,8 @@
 #include "matching.h"
 #include "cfstream.h"
 #include "client_code.h"
+#include "logging.h"
+#include "string_lib.h"
 
 static void PurgeLocalFiles(Item *filelist, char *directory, Attributes attr, Promise *pp, const ReportContext *report_context);
 static void CfCopyFile(char *sourcefile, char *destfile, struct stat sourcestatbuf, Attributes attr, Promise *pp, const ReportContext *report_context);
@@ -951,10 +953,8 @@ int cf_readlink(char *sourcefile, char *linkbuf, int buffsize, Attributes attr, 
 
 /*********************************************************************/
 
-int CfReadLine(char *buff, size_t size, FILE *fp)
+ssize_t CfReadLine(char *buff, size_t size, FILE *fp)
 {
-    char ch;
-
     buff[0] = '\0';
     buff[size - 1] = '\0';      /* mark end of buffer */
 
@@ -962,13 +962,13 @@ int CfReadLine(char *buff, size_t size, FILE *fp)
     if (!fp || ferror(fp))
     {
         CfOut(cf_error, "", " !! NULL or corrupt inputs to CfReadLine");
-        FatalError ("CfReadLine");
+        return -1;
     }
 
 	if (fgets(buff, size, fp) == NULL)
     {
         *buff = '\0';           /* EOF */
-        return false;
+        return 0;
     }
     else
     {
@@ -978,6 +978,7 @@ int CfReadLine(char *buff, size_t size, FILE *fp)
         {
             /* remove newline */
             *tmp = '\0';
+            return tmp - buff;
         }
         else
         {
@@ -989,17 +990,17 @@ int CfReadLine(char *buff, size_t size, FILE *fp)
                     break;
                 }
 
-                ch = fgetc(fp);
+                char ch = fgetc(fp);
 
                 if (ch == '\n')
                 {
                     break;
                 }
             }
+
+            return size - 1;
         }
     }
-
-    return true;
 }
 
 /*******************************************************************/
@@ -1358,8 +1359,6 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
     int rsrcwd;
 
 /* Keep track of if a resrouce fork */
-    char *tmpstr;
-    char *forkpointer;
     int rsrcfork = 0;
 #endif
 
@@ -1426,11 +1425,11 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
 #ifdef DARWIN
     if (strstr(dest, _PATH_RSRCFORKSPEC))
     {
-        char *tempstr = xstrndup(dest, CF_BUFSIZE);
+        char *tmpstr = xstrndup(dest, CF_BUFSIZE);
 
         rsrcfork = 1;
         /* Drop _PATH_RSRCFORKSPEC */
-        forkpointer = strstr(tmpstr, _PATH_RSRCFORKSPEC);
+        char *forkpointer = strstr(tmpstr, _PATH_RSRCFORKSPEC);
         *forkpointer = '\0';
 
         strncpy(new, tmpstr, CF_BUFSIZE);

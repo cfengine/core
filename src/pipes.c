@@ -26,6 +26,7 @@
 #include "pipes.h"
 
 #include "cfstream.h"
+#include "transaction.h"
 
 #ifndef MINGW
 static int CfSetuid(uid_t uid, gid_t gid);
@@ -104,50 +105,115 @@ int VerifyCommandRetcode(int retcode, int fallback, Attributes a, Promise *pp)
 pid_t *CHILDREN;
 int MAX_FD = 128;               /* Max number of simultaneous pipes */
 
-/*****************************************************************************/
-
-FILE *cf_popen(const char *command, char *type)
+static int InitChildrenFD()
 {
-    int i, pd[2];
-    char **argv;
-    pid_t pid;
-    FILE *pp = NULL;
-
-    CfDebug("cf_popen(%s)\n", command);
-
-    if (((*type != 'r') && (*type != 'w')) || (type[1] != '\0'))
-    {
-        errno = EINVAL;
-        return NULL;
-    }
-
     if (!ThreadLock(cft_count))
     {
-        return NULL;
+        return false;
     }
-
+        
     if (CHILDREN == NULL)       /* first time */
     {
         CHILDREN = xcalloc(MAX_FD, sizeof(pid_t));
     }
 
     ThreadUnlock(cft_count);
+    return true;
+}
+
+/*****************************************************************************/
+
+static void CloseChildrenFD()
+{
+    ThreadLock(cft_count);
+    int i;
+    for (i = 0; i < MAX_FD; i++)
+    {
+        if (CHILDREN[i] > 0)
+        {
+            close(i);
+        }
+    }
+    ThreadUnlock(cft_count);
+}
+
+/*****************************************************************************/
+
+static void SetChildFD(int fd, pid_t pid)
+{
+    int new_fd = 0;
+
+    if (fd >= MAX_FD)
+    {
+        CfOut(cf_error, "",
+                "File descriptor %d of child %jd higher than MAX_FD, check for defunct children",
+                fd, (intmax_t)pid);
+        new_fd = fd + 32;
+    }
+
+    ThreadLock(cft_count);
+
+    if (new_fd)
+    {
+        CHILDREN = xrealloc(CHILDREN, new_fd * sizeof(pid_t));
+        MAX_FD = new_fd;
+    }
+
+    CHILDREN[fd] = pid;
+    ThreadUnlock(cft_count);
+}
+
+/*****************************************************************************/
+
+static pid_t CreatePipeAndFork(char *type, int *pd)
+{
+    pid_t pid = -1;
+
+    if (((*type != 'r') && (*type != 'w')) || (type[1] != '\0'))
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (!InitChildrenFD())
+    {
+        return -1;
+    }
 
     if (pipe(pd) < 0)           /* Create a pair of descriptors to this process */
     {
-        return NULL;
+        return -1;
     }
 
     if ((pid = fork()) == -1)
     {
         close(pd[0]);
         close(pd[1]);
-        return NULL;
+        return -1;
     }
 
     signal(SIGCHLD, SIG_DFL);
 
     ALARM_PID = (pid != 0 ? pid : -1);
+
+    return pid;
+}
+
+/*****************************************************************************/
+
+FILE *cf_popen(const char *command, char *type)
+{
+    int pd[2];
+    char **argv;
+    pid_t pid;
+    FILE *pp = NULL;
+
+    CfDebug("cf_popen(%s)\n", command);
+
+    pid = CreatePipeAndFork(type, pd);
+    if (pid == -1) {
+        return NULL;
+    }
 
     if (pid == 0)
     {
@@ -177,13 +243,7 @@ FILE *cf_popen(const char *command, char *type)
             }
         }
 
-        for (i = 0; i < MAX_FD; i++)
-        {
-            if (CHILDREN[i] > 0)
-            {
-                close(i);
-            }
-        }
+        CloseChildrenFD();
 
         argv = ArgSplitCommand(command);
 
@@ -220,19 +280,7 @@ FILE *cf_popen(const char *command, char *type)
             }
         }
 
-        if (fileno(pp) >= MAX_FD)
-        {
-            CfOut(cf_error, "",
-                  "File descriptor %d of child %jd higher than MAX_FD in cf_popen, check for defunct children",
-                  fileno(pp), (intmax_t)pid);
-        }
-        else
-        {
-            ThreadLock(cft_count);
-            CHILDREN[fileno(pp)] = pid;
-            ThreadUnlock(cft_count);
-        }
-
+        SetChildFD(fileno(pp), pid);
         return pp;
     }
 
@@ -243,45 +291,17 @@ FILE *cf_popen(const char *command, char *type)
 
 FILE *cf_popensetuid(const char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background)
 {
-    int i, pd[2];
+    int pd[2];
     char **argv;
     pid_t pid;
     FILE *pp = NULL;
 
     CfDebug("cf_popensetuid(%s,%s,%" PRIuMAX ",%" PRIuMAX ")\n", command, type, (uintmax_t)uid, (uintmax_t)gid);
 
-    if (((*type != 'r') && (*type != 'w')) || (type[1] != '\0'))
-    {
-        errno = EINVAL;
+    pid = CreatePipeAndFork(type, pd);
+    if (pid == -1) {
         return NULL;
     }
-
-    if (!ThreadLock(cft_count))
-    {
-        return NULL;
-    }
-
-    if (CHILDREN == NULL)       /* first time */
-    {
-        CHILDREN = xcalloc(MAX_FD, sizeof(pid_t));
-    }
-
-    ThreadUnlock(cft_count);
-
-    if (pipe(pd) < 0)           /* Create a pair of descriptors to this process */
-    {
-        return NULL;
-    }
-
-    if ((pid = fork()) == -1)
-    {
-        close(pd[0]);
-        close(pd[1]);
-        return NULL;
-    }
-
-    signal(SIGCHLD, SIG_DFL);
-    ALARM_PID = (pid != 0 ? pid : -1);
 
     if (pid == 0)
     {
@@ -311,13 +331,7 @@ FILE *cf_popensetuid(const char *command, char *type, uid_t uid, gid_t gid, char
             }
         }
 
-        for (i = 0; i < MAX_FD; i++)
-        {
-            if (CHILDREN[i] > 0)
-            {
-                close(i);
-            }
-        }
+        CloseChildrenFD();
 
         argv = ArgSplitCommand(command);
 
@@ -379,19 +393,7 @@ FILE *cf_popensetuid(const char *command, char *type, uid_t uid, gid_t gid, char
             }
         }
 
-        if (fileno(pp) >= MAX_FD)
-        {
-            CfOut(cf_error, "",
-                  "File descriptor %d of child %jd higher than MAX_FD in cf_popensetuid, check for defunct children",
-                  fileno(pp), (intmax_t)pid);
-        }
-        else
-        {
-            ThreadLock(cft_count);
-            CHILDREN[fileno(pp)] = pid;
-            ThreadUnlock(cft_count);
-        }
-
+        SetChildFD(fileno(pp), pid);
         return pp;
     }
 
@@ -404,44 +406,16 @@ FILE *cf_popensetuid(const char *command, char *type, uid_t uid, gid_t gid, char
 
 FILE *cf_popen_sh(const char *command, char *type)
 {
-    int i, pd[2];
+    int pd[2];
     pid_t pid;
     FILE *pp = NULL;
 
     CfDebug("cf_popen_sh(%s)\n", command);
 
-    if (((*type != 'r') && (*type != 'w')) || (type[1] != '\0'))
-    {
-        errno = EINVAL;
+    pid = CreatePipeAndFork(type, pd);
+    if (pid == -1) {
         return NULL;
     }
-
-    if (!ThreadLock(cft_count))
-    {
-        return NULL;
-    }
-
-    if (CHILDREN == NULL)       /* first time */
-    {
-        CHILDREN = xcalloc(MAX_FD, sizeof(pid_t));
-    }
-
-    ThreadUnlock(cft_count);
-
-    if (pipe(pd) < 0)           /* Create a pair of descriptors to this process */
-    {
-        return NULL;
-    }
-
-    if ((pid = fork()) == -1)
-    {
-        close(pd[0]);
-        close(pd[1]);
-        return NULL;
-    }
-
-    signal(SIGCHLD, SIG_DFL);
-    ALARM_PID = (pid != 0 ? pid : -1);
 
     if (pid == 0)
     {
@@ -471,13 +445,7 @@ FILE *cf_popen_sh(const char *command, char *type)
             }
         }
 
-        for (i = 0; i < MAX_FD; i++)
-        {
-            if (CHILDREN[i] > 0)
-            {
-                close(i);
-            }
-        }
+        CloseChildrenFD();
 
         execl(SHELL_PATH, "sh", "-c", command, NULL);
         _exit(1);
@@ -508,19 +476,7 @@ FILE *cf_popen_sh(const char *command, char *type)
             }
         }
 
-        if (fileno(pp) >= MAX_FD)
-        {
-            CfOut(cf_error, "",
-                  "File descriptor %d of child %jd higher than MAX_FD in cf_popen_sh, check for defunct children",
-                  fileno(pp), (intmax_t)pid);
-        }
-        else
-        {
-            ThreadLock(cft_count);
-            CHILDREN[fileno(pp)] = pid;
-            ThreadUnlock(cft_count);
-        }
-
+        SetChildFD(fileno(pp), pid);
         return pp;
     }
 
@@ -531,44 +487,16 @@ FILE *cf_popen_sh(const char *command, char *type)
 
 FILE *cf_popen_shsetuid(const char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background)
 {
-    int i, pd[2];
+    int pd[2];
     pid_t pid;
     FILE *pp = NULL;
 
     CfDebug("cf_popen_shsetuid(%s,%s,%" PRIuMAX ",%" PRIuMAX ")\n", command, type, (uintmax_t)uid, (uintmax_t)gid);
 
-    if (((*type != 'r') && (*type != 'w')) || (type[1] != '\0'))
-    {
-        errno = EINVAL;
+    pid = CreatePipeAndFork(type, pd);
+    if (pid == -1) {
         return NULL;
     }
-
-    if (!ThreadLock(cft_count))
-    {
-        return NULL;
-    }
-
-    if (CHILDREN == NULL)       /* first time */
-    {
-        CHILDREN = xcalloc(MAX_FD, sizeof(pid_t));
-    }
-
-    ThreadUnlock(cft_count);
-
-    if (pipe(pd) < 0)           /* Create a pair of descriptors to this process */
-    {
-        return NULL;
-    }
-
-    if ((pid = fork()) == -1)
-    {
-        close(pd[0]);
-        close(pd[1]);
-        return NULL;
-    }
-
-    signal(SIGCHLD, SIG_DFL);
-    ALARM_PID = (pid != 0 ? pid : -1);
 
     if (pid == 0)
     {
@@ -598,13 +526,7 @@ FILE *cf_popen_shsetuid(const char *command, char *type, uid_t uid, gid_t gid, c
             }
         }
 
-        for (i = 0; i < MAX_FD; i++)
-        {
-            if (CHILDREN[i] > 0)
-            {
-                close(i);
-            }
-        }
+        CloseChildrenFD();
 
         if (chrootv && (strlen(chrootv) != 0))
         {
@@ -658,20 +580,7 @@ FILE *cf_popen_shsetuid(const char *command, char *type, uid_t uid, gid_t gid, c
             }
         }
 
-        if (fileno(pp) >= MAX_FD)
-        {
-            CfOut(cf_error, "",
-                  "File descriptor %d of child %jd higher than MAX_FD in cf_popen_shsetuid, check for defunct children",
-                  fileno(pp), (intmax_t)pid);
-            cf_pwait(pid);
-            return NULL;
-        }
-        else
-        {
-            ThreadLock(cft_count);
-            CHILDREN[fileno(pp)] = pid;
-            ThreadUnlock(cft_count);
-        }
+        SetChildFD(fileno(pp), pid);
         return pp;
     }
 

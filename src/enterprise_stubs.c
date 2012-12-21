@@ -29,6 +29,7 @@
 #include "prototypes3.h"
 #include "syntax.h"
 #include "cfstream.h"
+#include "logging.h"
 
 #if !defined(HAVE_NOVA)
 

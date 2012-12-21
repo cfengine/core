@@ -31,6 +31,7 @@
 #include "files_operators.h"
 #include "attributes.h"
 #include "cfstream.h"
+#include "transaction.h"
 
 static void FindStoragePromiserObjects(Promise *pp, const ReportContext *report_context);
 static int VerifyFileSystem(char *name, Attributes a, Promise *pp);
@@ -86,9 +87,13 @@ void VerifyStoragePromise(char *path, Promise *pp, const ReportContext *report_c
 
     if (a.mount.unmount)
     {
-        if ((a.mount.mount_source) || (a.mount.mount_server))
+        if ((a.mount.mount_source))
         {
-            CfOut(cf_verbose, "", " !! An unmount promise indicates a mount-source information - probably in error\n");
+            CfOut(cf_verbose, "", " !! An unmount promise indicates a mount-source information - probably an error\n");
+        }
+        if ((a.mount.mount_server))
+        {
+            CfOut(cf_verbose, "", " !! An unmount promise indicates a mount-server information - probably an error\n");
         }
     }
     else if (a.havemount)

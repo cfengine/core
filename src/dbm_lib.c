@@ -27,6 +27,7 @@
 
 #include "dbm_lib.h"
 #include "cfstream.h"
+#include "logging.h"
 
 int DBPathLock(const char *filename)
 {

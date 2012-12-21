@@ -30,6 +30,7 @@
 #include "attributes.h"
 #include "cfstream.h"
 #include "fncall.h"
+#include "transaction.h"
 
 static int ServicesSanityChecks(Attributes a, Promise *pp);
 static void SetServiceDefaults(Attributes *a);

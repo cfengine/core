@@ -33,6 +33,8 @@
 #include "cfstream.h"
 #include "string_lib.h"
 #include "pipes.h"
+#include "promises.h"
+#include "logging.h"
 
 static int SelectTypeMatch(struct stat *lstatptr, Rlist *crit);
 static int SelectOwnerMatch(char *path, struct stat *lstatptr, Rlist *crit);
@@ -371,9 +373,7 @@ static int SelectModeMatch(struct stat *lstatptr, Rlist *list)
 #if defined HAVE_CHFLAGS
 static int SelectBSDMatch(struct stat *lstatptr, Rlist *bsdflags, Promise *pp)
 {
-# if defined HAVE_CHFLAGS
     u_long newflags, plus, minus;
-    Rlist *rp;
 
     if (!ParseFlagString(bsdflags, &plus, &minus))
     {
@@ -389,7 +389,6 @@ static int SelectBSDMatch(struct stat *lstatptr, Rlist *bsdflags, Promise *pp)
     {
         return true;
     }
-# endif
 
     return false;
 }
@@ -447,7 +446,10 @@ static int SelectExecRegexMatch(char *filename, char *crit, char *prog)
     while (!feof(pp))
     {
         line[0] = '\0';
-        CfReadLine(line, CF_BUFSIZE, pp);       /* One buffer only */
+        if (CfReadLine(line, CF_BUFSIZE, pp) == -1)       /* One buffer only */
+        {
+            FatalError("Error in CfReadLine");
+        }
 
         if (FullTextMatch(crit, line))
         {

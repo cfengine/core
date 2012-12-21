@@ -68,7 +68,6 @@ extern time_t CFSTARTTIME;
 extern time_t CFINITSTARTTIME;
 
 extern struct utsname VSYSNAME;
-extern mode_t DEFAULTMODE;
 extern char VIPADDRESS[];
 extern char VPREFIX[];
 

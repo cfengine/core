@@ -23,7 +23,10 @@
 */
 
 #include "cf3.defs.h"
+
+#include "logging.h"
 #include "writer.h"
+#include "cfstream.h"
 
 #include <assert.h>
 
@@ -79,47 +82,12 @@ void ToUpperStrInplace(char *str)
 
 /*********************************************************************/
 
-char *ToUpperStr(const char *str)
-{
-    static char buffer[CF_BUFSIZE];
-
-    if (strlen(str) >= CF_BUFSIZE)
-    {
-        FatalError("String too long in ToUpperStr: %s", str);
-    }
-
-    strlcpy(buffer, str, CF_BUFSIZE);
-    ToUpperStrInplace(buffer);
-
-    return buffer;
-}
-
-/*********************************************************************/
-
 void ToLowerStrInplace(char *str)
 {
     for (; *str != '\0'; str++)
     {
         *str = ToLower(*str);
     }
-}
-
-/*********************************************************************/
-
-char *ToLowerStr(const char *str)
-{
-    static char buffer[CF_BUFSIZE];
-
-    if (strlen(str) >= CF_BUFSIZE - 1)
-    {
-        FatalError("String too long in ToLowerStr: %s", str);
-    }
-
-    strlcpy(buffer, str, CF_BUFSIZE);
-
-    ToLowerStrInplace(buffer);
-
-    return buffer;
 }
 
 /*********************************************************************/
@@ -174,91 +142,6 @@ bool StringSafeEqual(const char *a, const char *b)
     }
 
     return strcmp(a, b) == 0;
-}
-
-/*******************************************************************/
-
-int StripListSep(char *strList, char *outBuf, int outBufSz)
-{
-    memset(outBuf, 0, outBufSz);
-
-    if (NULL_OR_EMPTY(strList))
-    {
-        return false;
-    }
-
-    if (strList[0] != '{')
-    {
-        return false;
-    }
-
-    snprintf(outBuf, outBufSz, "%s", strList + 1);
-
-    if (outBuf[strlen(outBuf) - 1] == '}')
-    {
-        outBuf[strlen(outBuf) - 1] = '\0';
-    }
-
-    return true;
-}
-
-/*******************************************************************/
-
-/** Takes a string-parsed list "{'el1','el2','el3',..}" and writes
- ** "el1" or "el2" etc. based on index (starting on 0) in outBuf.
- ** returns true on success, false otherwise.
- **/
-
-int GetStringListElement(char *strList, int index, char *outBuf, int outBufSz)
-{
-    char *sp, *elStart = strList, *elEnd;
-    int elNum = 0;
-    int minBuf;
-
-    memset(outBuf, 0, outBufSz);
-
-    if (NULL_OR_EMPTY(strList))
-    {
-        return false;
-    }
-
-    if (strList[0] != '{')
-    {
-        return false;
-    }
-
-    for (sp = strList; *sp != '\0'; sp++)
-    {
-        if (((sp[0] == '{') || (sp[0] == ',')) && (sp[1] == '\''))
-        {
-            elStart = sp + 2;
-        }
-
-        else if ((sp[0] == '\'') && ((sp[1] == ',') || (sp[1] == '}')))
-        {
-            elEnd = sp;
-
-            if (elNum == index)
-            {
-                if (elEnd - elStart < outBufSz)
-                {
-                    minBuf = elEnd - elStart;
-                }
-                else
-                {
-                    minBuf = outBufSz - 1;
-                }
-
-                strncpy(outBuf, elStart, minBuf);
-
-                break;
-            }
-
-            elNum++;
-        }
-    }
-
-    return true;
 }
 
 /*********************************************************************/
@@ -764,29 +647,6 @@ void ReplaceTrailingChar(char *str, char from, char to)
     }
 }
 
-void ReplaceTrailingStr(char *str, char *from, char to)
-/* Replaces any unwanted last chars in str. */
-{
-    int strLen;
-    int fromLen;
-    char *startCmp = NULL;
-
-    strLen = strlen(str);
-    fromLen = strlen(from);
-
-    if (strLen == 0)
-    {
-        return;
-    }
-
-    startCmp = str + strLen - fromLen;
-
-    if (strcmp(startCmp, from) == 0)
-    {
-        memset(startCmp, to, fromLen);
-    }
-}
-
 char **String2StringArray(char *str, char separator)
 /**
  * Parse CSVs into char **.
@@ -884,4 +744,64 @@ char *EscapeCharCopy(const char *str, char to_escape, char escape_with)
     }
 
     return out;
+}
+
+int StringInArray(char **array, char *string)
+{
+    for (int i = 0; array[i] != NULL; i++)
+    {
+        if (strcmp(string, array[i]) == 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+char *ScanPastChars(char *scanpast, char *input)
+{
+    char *pos = input;
+
+    while ((*pos != '\0') && (strchr(scanpast, *pos)))
+    {
+        pos++;
+    }
+
+    return pos;
+}
+
+void StripTrailingNewline(char *str)
+{
+    char *c = str + strlen(str);
+
+    if (c - str > CF_EXPANDSIZE)
+    {
+        CfOut(cf_error, "", "StripTrailingNewline was called on an overlong string");
+        return;
+    }
+
+    for (; (c >= str) && ((*c == '\0') || (*c == '\n')); --c)
+    {
+        *c = '\0';
+    }
+}
+
+void Chop(char *str)            /* remove trailing spaces */
+{
+    if ((str == NULL) || (strlen(str) == 0))
+    {
+        return;
+    }
+
+    if (strlen(str) > CF_EXPANDSIZE)
+    {
+        CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+        return;
+    }
+
+    for (int i = strlen(str) - 1; (i >= 0) && (isspace((int) str[i])); i--)
+    {
+        str[i] = '\0';
+    }
 }

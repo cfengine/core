@@ -14,7 +14,7 @@ nova_edition::
 }
 
 body agent control {
-  abortclasses => { "quitquit" };
+  abortclasses => { "quitquit", "quitquit.*" };
 }
 
 bundle common g

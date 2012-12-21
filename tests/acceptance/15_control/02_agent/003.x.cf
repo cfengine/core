@@ -1,6 +1,6 @@
 #######################################################
 #
-# Test abortbundleclasses - control case 2, no abort
+# Test abortclasses regexp - should abort in same agent bundle
 #
 #######################################################
 
@@ -14,7 +14,7 @@ nova_edition::
 }
 
 body agent control {
-  abortbundleclasses => { "quitquit", "quitquit.*" };
+  abortclasses => { "quitquit.*" };
 }
 
 #######################################################
@@ -42,12 +42,12 @@ vars:
 
 classes:
         "ok" expression => "any";
-        "quit" expression => "any";        # Validate no submatch
+        "quitquit" expression => "any";
 
 reports:
     ok::
-        "$(this.promise_filename) Pass";
-    !ok::
         "$(this.promise_filename) FAIL";
+    !ok::
+        "$(this.promise_filename) Pass";
 }
 

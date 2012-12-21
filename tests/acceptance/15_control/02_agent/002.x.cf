@@ -1,6 +1,6 @@
 #######################################################
 #
-# Test abortbundleclasses - control case 2, no abort
+# Test abortclasses regexp - should abort in preliminary agent bundle
 #
 #######################################################
 
@@ -14,7 +14,7 @@ nova_edition::
 }
 
 body agent control {
-  abortbundleclasses => { "quitquit", "quitquit.*" };
+  abortclasses => { "quitquit.*" };
 }
 
 #######################################################
@@ -31,6 +31,9 @@ bundle agent test
 {
 vars:
         "dummy" string => "dummy";
+
+classes:
+        "quitquit" expression => "any";
 }
 
 #######################################################
@@ -42,12 +45,11 @@ vars:
 
 classes:
         "ok" expression => "any";
-        "quit" expression => "any";        # Validate no submatch
 
 reports:
     ok::
-        "$(this.promise_filename) Pass";
-    !ok::
         "$(this.promise_filename) FAIL";
+    !ok::
+        "$(this.promise_filename) Pass";
 }
 

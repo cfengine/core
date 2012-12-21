@@ -755,7 +755,7 @@ selection_id:          id
 
 constraint:            id                        /* BUNDLE ONLY */
                        ASSIGN
-                       rval
+                       rval_type
                        {
                            if (!INSTALL_SKIP)
                            {

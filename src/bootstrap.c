@@ -156,11 +156,26 @@ void CheckAutoBootstrap()
         printf
             (" -> The system is now converging. Full initialisation and self-analysis could take up to 30 minutes\n\n");
         creat(name, 0600);
+
+        char execstring[CF_BUFSIZE], buffer[CF_EXPANDSIZE];
+        
+        snprintf(execstring, CF_BUFSIZE, "%s/cf-execd -F", CFWORKDIR);
+        
+        if (GetExecOutput(execstring, buffer, false))
+        {
+            printf(" -> The agent might leave errors/messages for you as email to root@localhost.\n");
+        }
+        else
+        {
+            printf(" !! I was not able to execute %s -- this is not necessarily fatal, but it is unexpected\n", execstring);
+        }
+        
     }
     else
     {
         unlink(name);
     }
+
 }
 
 /********************************************************************/

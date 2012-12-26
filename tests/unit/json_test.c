@@ -903,11 +903,3 @@ int main()
 
     return run_tests(tests);
 }
-
-// STUBS
-
-void __ProgrammingError(const char *file, int lineno, const char *format, ...)
-{
-    fail();
-    exit(42);
-}

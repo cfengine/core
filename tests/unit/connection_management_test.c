@@ -149,12 +149,6 @@ int main()
 
 /* stubs */
 
-void __ProgrammingError(const char *file, int lineno, const char *format, ...)
-{
-    fail();
-    exit(42);
-}
-
 int ReceiveCollectCall(struct ServerConnectionState *conn, char *sendbuffer)
 {
     return false;

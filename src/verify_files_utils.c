@@ -18,6 +18,7 @@
 #include "pipes.h"
 #include "acl.h"
 #include "env_context.h"
+#include "vars.h"
 
 #define CF_RECURSION_LIMIT 100
 

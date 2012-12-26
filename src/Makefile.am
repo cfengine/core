@@ -115,7 +115,6 @@ libpromises_la_SOURCES = \
         mod_storage.c mod_storage.h \
         modes.c \
         net.c \
-        ontology.c ontology.h \
         policy.c policy.h \
         parser.c parser.h \
         parser_state.h \

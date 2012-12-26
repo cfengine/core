@@ -28,7 +28,6 @@
 #include "env_context.h"
 #include "constraints.h"
 #include "files_names.h"
-#include "ontology.h"
 #include "export_xml.h"
 #include "item_lib.h"
 #include "sort.h"

@@ -289,10 +289,6 @@ int SendSocketStream(int sd, char *buffer, int toget, int flags);
 
 int SetReceiveTimeout(int sd, const struct timeval *timeout);
 
-/* ontology.c */
-
-#include "ontology.h"
-
 /* patches.c */
 
 int IsPrivileged(void);

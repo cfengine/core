@@ -37,10 +37,6 @@
 #include "pipes.h"
 #include "logging.h"
 
-#ifdef HAVE_ZONE_H
-# include <zone.h>
-#endif
-
 #ifdef HAVE_SYS_UIO_H
 # include <sys/uio.h>
 #endif

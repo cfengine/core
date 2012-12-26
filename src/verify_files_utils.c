@@ -37,6 +37,7 @@ static void VerifyCopiedFileAttributes(char *file, struct stat *dstat, struct st
 static int cf_stat(char *file, struct stat *buf, Attributes attr, Promise *pp);
 static int cf_readlink(char *sourcefile, char *linkbuf, int buffsize, Attributes attr, Promise *pp);
 static bool CopyRegularFileDiskReport(char *source, char *destination, Attributes attr, Promise *pp);
+static int SkipDirLinks(char *path, const char *lastnode, Recursion r);
 
 #ifndef __MINGW32__
 static void VerifySetUidGid(char *file, struct stat *dstat, mode_t newperm, Promise *pp, Attributes attr);
@@ -2986,4 +2987,29 @@ static bool CopyRegularFileDiskReport(char *source, char *destination, Attribute
     }
 
     return result;
+}
+
+static int SkipDirLinks(char *path, const char *lastnode, Recursion r)
+{
+    CfDebug("SkipDirLinks(%s,%s)\n", path, lastnode);
+
+    if (r.exclude_dirs)
+    {
+        if ((MatchRlistItem(r.exclude_dirs, path)) || (MatchRlistItem(r.exclude_dirs, lastnode)))
+        {
+            CfOut(cf_verbose, "", "Skipping matched excluded directory %s\n", path);
+            return true;
+        }
+    }
+
+    if (r.include_dirs)
+    {
+        if (!((MatchRlistItem(r.include_dirs, path)) || (MatchRlistItem(r.include_dirs, lastnode))))
+        {
+            CfOut(cf_verbose, "", "Skipping matched non-included directory %s\n", path);
+            return true;
+        }
+    }
+
+    return false;
 }

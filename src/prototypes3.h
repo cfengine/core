@@ -320,10 +320,6 @@ int ExclusiveUnlockFile(int fd);
 int SelectProcess(char *procentry, char **names, int *start, int *end, Attributes a, Promise *pp);
 bool IsProcessNameRunning(char *procNameRegex);
 
-/* recursion.c */
-
-int SkipDirLinks(char *path, const char *lastnode, Recursion r);
-
 /* rlist.c */
 #include "rlist.h"
 

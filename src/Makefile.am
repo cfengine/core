@@ -114,7 +114,6 @@ libpromises_la_SOURCES = \
         mod_services.c mod_services.h \
         mod_storage.c mod_storage.h \
         modes.c \
-        monitoring.h \
         net.c \
         nfs.c \
         ontology.c ontology.h \
@@ -244,6 +243,7 @@ cf_serverd_LDADD += libpromises.la
 cf_monitord_SOURCES = \
         verify_measurements.c \
         env_monitor.c env_monitor.h \
+        monitoring.h \
         mon_cpu.c \
         mon_disk.c \
         mon_entropy.c \

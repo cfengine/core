@@ -289,18 +289,6 @@ int SendSocketStream(int sd, char *buffer, int toget, int flags);
 
 int SetReceiveTimeout(int sd, const struct timeval *timeout);
 
-/* nfs.c */
-
-#ifndef MINGW
-int LoadMountInfo(Rlist **list);
-void DeleteMountInfo(Rlist *list);
-int VerifyNotInFstab(char *name, Attributes a, Promise *pp);
-int VerifyInFstab(char *name, Attributes a, Promise *pp);
-int VerifyMount(char *name, Attributes a, Promise *pp);
-int VerifyUnmount(char *name, Attributes a, Promise *pp);
-void MountAll(void);
-#endif /* NOT MINGW */
-
 /* ontology.c */
 
 #include "ontology.h"

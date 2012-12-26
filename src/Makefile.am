@@ -115,7 +115,6 @@ libpromises_la_SOURCES = \
         mod_storage.c mod_storage.h \
         modes.c \
         net.c \
-        nfs.c \
         ontology.c ontology.h \
         policy.c policy.h \
         parser.c parser.h \
@@ -194,6 +193,7 @@ endif
 cf_agent_SOURCES = \
         cf-agent.c \
         cf_sql.c \
+        nfs.c nfs.h \
         verify_files.c \
         verify_files_utils.c \
         verify_storage.c \

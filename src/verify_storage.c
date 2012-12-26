@@ -32,6 +32,7 @@
 #include "attributes.h"
 #include "cfstream.h"
 #include "transaction.h"
+#include "nfs.h"
 
 static void FindStoragePromiserObjects(Promise *pp, const ReportContext *report_context);
 static int VerifyFileSystem(char *name, Attributes a, Promise *pp);

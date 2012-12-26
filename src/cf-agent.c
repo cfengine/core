@@ -47,6 +47,7 @@
 #include "communication.h"
 #include "signals.h"
 #include "logging.h"
+#include "nfs.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"

@@ -28,7 +28,6 @@
 #include "cf3.defs.h"
 
 void VerifyProcessesPromise(Promise *pp);
-void VerifyProcesses(Attributes a, Promise *pp);
 int LoadProcessTable(Item **procdata);
 int DoAllSignals(Item *siglist, Attributes a, Promise *pp);
 int GracefulTerminate(pid_t pid);

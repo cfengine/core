@@ -34,6 +34,7 @@
 #include "cfstream.h"
 #include "transaction.h"
 
+static void VerifyProcesses(Attributes a, Promise *pp);
 static int ProcessSanityChecks(Attributes a, Promise *pp);
 static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp);
 static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, Promise *pp);
@@ -99,7 +100,7 @@ static int ProcessSanityChecks(Attributes a, Promise *pp)
 
 /*****************************************************************************/
 
-void VerifyProcesses(Attributes a, Promise *pp)
+static void VerifyProcesses(Attributes a, Promise *pp)
 {
     CfLock thislock;
     char lockname[CF_BUFSIZE];

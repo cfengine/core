@@ -67,7 +67,6 @@ libpromises_la_SOURCES = \
         exec_tools.c \
         expand.c expand.h \
         files_copy.c \
-        files_editline.c \
         files_hashes.c files_hashes.h \
         files_interfaces.c files_interfaces.h \
         files_lib.c files_lib.h \
@@ -202,6 +201,7 @@ cf_agent_SOURCES = \
         verify_services.c \
         verify_environments.c verify_environments.h \
         files_edit.c \
+        files_editline.c \
         files_editxml.c \
         vercmp_internal.c vercmp_internal.h \
         vercmp.c vercmp.h \

@@ -344,34 +344,6 @@ void cfPS(enum cfreport level, char status, char *errstr, const Promise *pp, Att
 
 /*********************************************************************************/
 
-void CfFile(FILE *fp, char *fmt, ...)
-{
-    va_list ap;
-    char buffer[CF_BUFSIZE];
-
-    if ((fmt == NULL) || (strlen(fmt) == 0))
-    {
-        return;
-    }
-
-    va_start(ap, fmt);
-    vsnprintf(buffer, CF_BUFSIZE - 1, fmt, ap);
-    va_end(ap);
-
-    if (!ThreadLock(cft_output))
-    {
-        return;
-    }
-
-    fprintf(fp, "%s> %s", VPREFIX, buffer);
-
-    ThreadUnlock(cft_output);
-}
-
-/*********************************************************************************/
-/* Level                                                                         */
-/*********************************************************************************/
-
 static void LogList(FILE *fh, const Item *mess, bool has_prefix)
 {
     for (const Item *ip = mess; ip != NULL; ip = ip->next)

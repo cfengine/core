@@ -720,23 +720,23 @@ static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *
 
         if ((sp = strstr(recvbuffer, CFD_TERMINATOR)) != NULL)
         {
-            CfFile(fp, " !!\n\n");
+            fprintf(fp, "%s> !!\n\n", VPREFIX);
             break;
         }
 
         if ((sp = strstr(recvbuffer, "BAD:")) != NULL)
         {
-            CfFile(fp, " !! %s\n", recvbuffer + 4);
+            fprintf(fp, "%s> !! %s\n", VPREFIX, recvbuffer + 4);
             continue;
         }
 
         if (strstr(recvbuffer, "too soon"))
         {
-            CfFile(fp, " !! %s", recvbuffer);
+            fprintf(fp, "%s> !! %s\n", VPREFIX, recvbuffer);
             continue;
         }
 
-        CfFile(fp, " -> %s", recvbuffer);
+        fprintf(fp, "%s> -> %s", VPREFIX, recvbuffer);
     }
 
     DeleteStream(fp);

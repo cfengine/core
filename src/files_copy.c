@@ -32,77 +32,6 @@
 #include "cfstream.h"
 
 /*****************************************************************************/
-
-void *CopyFileSources(char *destination, Attributes attr, Promise *pp, const ReportContext *report_context)
-{
-    char *source = attr.copy.source;
-    char *server = pp->this_server;
-    char vbuff[CF_BUFSIZE];
-    struct stat ssb, dsb;
-    struct timespec start;
-    char eventname[CF_BUFSIZE];
-
-    CfDebug("CopyFileSources(%s,%s)", source, destination);
-
-    if ((pp->conn != NULL) && (!pp->conn->authenticated))
-    {
-        cfPS(cf_verbose, CF_FAIL, "", pp, attr, "No authenticated source %s in files.copyfrom promise\n", source);
-        return NULL;
-    }
-
-    if (cf_stat(attr.copy.source, &ssb, attr, pp) == -1)
-    {
-        cfPS(cf_inform, CF_FAIL, "", pp, attr, "Can't stat %s in files.copyfrom promise\n", source);
-        return NULL;
-    }
-
-    start = BeginMeasure();
-
-    strncpy(vbuff, destination, CF_BUFSIZE - 4);
-
-    if (S_ISDIR(ssb.st_mode))   /* could be depth_search */
-    {
-        AddSlash(vbuff);
-        strcat(vbuff, ".");
-    }
-
-    if (!MakeParentDirectory(vbuff, attr.move_obstructions, report_context))
-    {
-        cfPS(cf_inform, CF_FAIL, "", pp, attr, "Can't make directories for %s in files.copyfrom promise\n", vbuff);
-        return NULL;
-    }
-
-    if (S_ISDIR(ssb.st_mode))   /* could be depth_search */
-    {
-        if (attr.copy.purge)
-        {
-            CfOut(cf_verbose, "", " !! (Destination purging enabled)\n");
-        }
-
-        CfOut(cf_verbose, "", " ->>  Entering %s\n", source);
-        SetSearchDevice(&ssb, pp);
-        SourceSearchAndCopy(source, destination, attr.recursion.depth, attr, pp, report_context);
-
-        if (cfstat(destination, &dsb) != -1)
-        {
-            if (attr.copy.check_root)
-            {
-                VerifyCopiedFileAttributes(destination, &dsb, &ssb, attr, pp, report_context);
-            }
-        }
-    }
-    else
-    {
-        VerifyCopy(source, destination, attr, pp, report_context);
-    }
-
-    snprintf(eventname, CF_BUFSIZE - 1, "Copy(%s:%s > %s)", server, source, destination);
-    EndMeasure(eventname, start);
-
-    return NULL;
-}
-
-/*****************************************************************************/
 /* Local low level                                                           */
 /*****************************************************************************/
 
@@ -129,28 +58,6 @@ void CheckForFileHoles(struct stat *sstat, Promise *pp)
     }
 
     pp->makeholes = 0;
-}
-
-/*********************************************************************/
-
-bool CopyRegularFileDiskReport(char *source, char *destination, Attributes attr, Promise *pp)
-// TODO: return error codes in CopyRegularFileDisk and print them to cfPS here
-{
-    bool make_holes = false;
-
-    if(pp && (pp->makeholes))
-    {
-        make_holes = true;
-    }
-
-    bool result = CopyRegularFileDisk(source, destination, make_holes);
-
-    if(!result)
-    {
-        cfPS(cf_inform, CF_FAIL, "", pp, attr, "Failed copying file %s to %s", source, destination);
-    }
-
-    return result;
 }
 
 /*********************************************************************/

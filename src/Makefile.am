@@ -194,6 +194,7 @@ cf_agent_SOURCES = \
         cf-agent.c \
         cf_sql.c \
         verify_files.c \
+        verify_files_utils.c \
         verify_storage.c \
         verify_exec.c \
         verify_methods.c \

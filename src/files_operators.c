@@ -53,81 +53,9 @@
 
 extern AgentConnection *COMS;
 
-static void TruncateFile(char *name);
 
-#ifdef DARWIN
-static int VerifyFinderType(char *file, struct stat *statbuf, Attributes a, Promise *pp);
-#endif
-static int TransformFile(char *file, Attributes attr, Promise *pp);
-static void VerifyName(char *path, struct stat *sb, Attributes attr, Promise *pp, const ReportContext *report_context);
-static void VerifyDelete(char *path, struct stat *sb, Attributes attr, Promise *pp);
 static void DeleteDirectoryTree(char *path, Promise *pp, const ReportContext *report_context);
 
-#ifndef MINGW
-static void VerifySetUidGid(char *file, struct stat *dstat, mode_t newperm, Promise *pp, Attributes attr);
-#endif
-
-/*****************************************************************************/
-
-int VerifyFileLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp,
-                   const ReportContext *report_context)
-{
-/* Here we can assume that we are in the parent directory of the leaf */
-
-    if (!SelectLeaf(path, sb, attr, pp))
-    {
-        CfDebug("Skipping non-selected file %s\n", path);
-        return false;
-    }
-
-    CfOut(cf_verbose, "", " -> Handling file existence constraints on %s\n", path);
-
-/* We still need to augment the scope of context "this" for commands */
-
-    DeleteScalar("this", "promiser");
-    NewScalar("this", "promiser", path, cf_str);        // Parameters may only be scalars
-
-    if (attr.transformer != NULL)
-    {
-        if (!TransformFile(path, attr, pp))
-        {
-            /* NOP? */
-        }
-    }
-    else
-    {
-        if (attr.haverename)
-        {
-            VerifyName(path, sb, attr, pp, report_context);
-        }
-
-        if (attr.havedelete)
-        {
-            VerifyDelete(path, sb, attr, pp);
-        }
-
-        if (attr.touch)
-        {
-            TouchFile(path, sb, attr, pp);      // intrinsically non-convergent op
-        }
-    }
-
-    if (attr.haveperms || attr.havechange || attr.acl.acl_entries)
-    {
-        if (S_ISDIR(sb->st_mode) && attr.recursion.depth && !attr.recursion.include_basedir &&
-            (strcmp(path, pp->promiser) == 0))
-        {
-            CfOut(cf_verbose, "", " -> Promise to skip base directory %s\n", path);
-        }
-        else
-        {
-            VerifyFileAttributes(path, sb, attr, pp, report_context);
-        }
-    }
-
-    DeleteScalar("this", "promiser");
-    return true;
-}
 
 /*****************************************************************************/
 
@@ -239,186 +167,12 @@ int CfCreateFile(char *file, Promise *pp, Attributes attr,
 
 /*****************************************************************************/
 
-int ScheduleCopyOperation(char *destination, Attributes attr, Promise *pp,
-                          const ReportContext *report_context)
-{
-    AgentConnection *conn = NULL;
-
-    if (!attr.copy.source)
-    {
-        CfOut(cf_verbose, "", " -> Copy file %s check\n", destination);
-    }
-    else
-    {
-        CfOut(cf_verbose, "", " -> Copy file %s from %s check\n", destination, attr.copy.source);
-    }
-
-    if (attr.copy.servers == NULL || strcmp(attr.copy.servers->item, "localhost") == 0)
-    {
-        pp->this_server = xstrdup("localhost");
-    }
-    else
-    {
-        conn = NewServerConnection(attr, pp);
-
-        if (conn == NULL)
-        {
-            cfPS(cf_inform, CF_FAIL, "", pp, attr, " -> No suitable server responded to hail");
-            PromiseRef(cf_inform, pp);
-            return false;
-        }
-    }
-
-    pp->conn = conn;            /* for ease of access */
-    pp->cache = NULL;
-
-    CopyFileSources(destination, attr, pp, report_context);
-
-    if (attr.transaction.background)
-    {
-        DisconnectServer(conn);
-    }
-    else
-    {
-        ServerNotBusy(conn);
-    }
-
-    return true;
-}
 
 /*****************************************************************************/
 
-int ScheduleLinkChildrenOperation(char *destination, char *source, int recurse, Attributes attr, Promise *pp,
-                                  const ReportContext *report_context)
-{
-    Dir *dirh;
-    const struct dirent *dirp;
-    char promiserpath[CF_BUFSIZE], sourcepath[CF_BUFSIZE];
-    struct stat lsb;
-    int ret;
-
-    if ((ret = lstat(destination, &lsb)) != -1)
-    {
-        if (attr.move_obstructions && S_ISLNK(lsb.st_mode))
-        {
-            unlink(destination);
-        }
-        else if (!S_ISDIR(lsb.st_mode))
-        {
-            CfOut(cf_error, "", "Cannot promise to link multiple files to children of %s as it is not a directory!",
-                  destination);
-            return false;
-        }
-    }
-
-    snprintf(promiserpath, CF_BUFSIZE, "%s/.", destination);
-
-    if ((ret == -1 || !S_ISDIR(lsb.st_mode)) && !CfCreateFile(promiserpath, pp, attr, report_context))
-    {
-        CfOut(cf_error, "", "Cannot promise to link multiple files to children of %s as it is not a directory!",
-              destination);
-        return false;
-    }
-
-    if ((dirh = OpenDirLocal(source)) == NULL)
-    {
-        cfPS(cf_error, CF_FAIL, "opendir", pp, attr, "Can't open source of children to link %s\n", attr.link.source);
-        return false;
-    }
-
-    for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
-    {
-        if (!ConsiderFile(dirp->d_name, source, attr, pp))
-        {
-            continue;
-        }
-
-        /* Assemble pathnames */
-
-        strncpy(promiserpath, destination, CF_BUFSIZE - 1);
-        AddSlash(promiserpath);
-
-        if (!JoinPath(promiserpath, dirp->d_name))
-        {
-            cfPS(cf_error, CF_INTERPT, "", pp, attr, "Can't construct filename which verifying child links\n");
-            CloseDir(dirh);
-            return false;
-        }
-
-        strncpy(sourcepath, source, CF_BUFSIZE - 1);
-        AddSlash(sourcepath);
-
-        if (!JoinPath(sourcepath, dirp->d_name))
-        {
-            cfPS(cf_error, CF_INTERPT, "", pp, attr, "Can't construct filename while verifying child links\n");
-            CloseDir(dirh);
-            return false;
-        }
-
-        if ((lstat(promiserpath, &lsb) != -1) && !S_ISLNK(lsb.st_mode) && !S_ISDIR(lsb.st_mode))
-        {
-            if (attr.link.when_linking_children == cfa_override)
-            {
-                attr.move_obstructions = true;
-            }
-            else
-            {
-                CfOut(cf_verbose, "", "Have promised not to disturb %s\'s existing content", promiserpath);
-                continue;
-            }
-        }
-
-        if ((attr.recursion.depth > recurse) && (lstat(sourcepath, &lsb) != -1) && S_ISDIR(lsb.st_mode))
-        {
-            ScheduleLinkChildrenOperation(promiserpath, sourcepath, recurse + 1, attr, pp, report_context);
-        }
-        else
-        {
-            ScheduleLinkOperation(promiserpath, sourcepath, attr, pp, report_context);
-        }
-    }
-
-    CloseDir(dirh);
-    return true;
-}
 
 /*****************************************************************************/
 
-int ScheduleLinkOperation(char *destination, char *source, Attributes attr, Promise *pp,
-                          const ReportContext *report_context)
-{
-    const char *lastnode;
-
-    lastnode = ReadLastNode(destination);
-
-    if (MatchRlistItem(attr.link.copy_patterns, lastnode))
-    {
-        CfOut(cf_verbose, "", " -> Link %s matches copy_patterns\n", destination);
-        VerifyCopy(attr.link.source, destination, attr, pp, report_context);
-        return true;
-    }
-
-    switch (attr.link.link_type)
-    {
-    case cfa_symlink:
-        VerifyLink(destination, source, attr, pp, report_context);
-        break;
-    case cfa_hardlink:
-        VerifyHardLink(destination, source, attr, pp, report_context);
-        break;
-    case cfa_relative:
-        VerifyRelativeLink(destination, source, attr, pp, report_context);
-        break;
-    case cfa_absolute:
-        VerifyAbsoluteLink(destination, source, attr, pp, report_context);
-        break;
-    default:
-        CfOut(cf_error, "", "Unknown link type - should not happen.\n");
-        break;
-    }
-
-    return true;
-}
 
 
 /*****************************************************************************/
@@ -511,484 +265,10 @@ int MoveObstruction(char *from, Attributes attr, Promise *pp, const ReportContex
 
 /*********************************************************************/
 
-#ifdef DARWIN
 
-static int VerifyFinderType(char *file, struct stat *statbuf, Attributes a, Promise *pp)
-{                               /* Code modeled after hfstar's extract.c */
-    typedef struct
-    {
-        long fdType;
-        long fdCreator;
-        short fdFlags;
-        short fdLocationV;
-        short fdLocationH;
-        short fdFldr;
-        short fdIconID;
-        short fdUnused[3];
-        char fdScript;
-        char fdXFlags;
-        short fdComment;
-        long fdPutAway;
-    }
-    FInfo;
-
-    struct attrlist attrs;
-    struct
-    {
-        long ssize;
-        struct timespec created;
-        struct timespec modified;
-        struct timespec changed;
-        struct timespec backup;
-        FInfo fi;
-    }
-    fndrInfo;
-    int retval;
-
-    if (a.perms.findertype == NULL)
-    {
-        return 0;
-    }
-
-    CfDebug("VerifyFinderType of %s for %s\n", file, a.perms.findertype);
-
-    if (strncmp(a.perms.findertype, "*", CF_BUFSIZE) == 0 || strncmp(a.perms.findertype, "", CF_BUFSIZE) == 0)
-    {
-        return 0;
-    }
-
-    attrs.bitmapcount = ATTR_BIT_MAP_COUNT;
-    attrs.reserved = 0;
-    attrs.commonattr = ATTR_CMN_CRTIME | ATTR_CMN_MODTIME | ATTR_CMN_CHGTIME | ATTR_CMN_BKUPTIME | ATTR_CMN_FNDRINFO;
-    attrs.volattr = 0;
-    attrs.dirattr = 0;
-    attrs.fileattr = 0;
-    attrs.forkattr = 0;
-
-    memset(&fndrInfo, 0, sizeof(fndrInfo));
-
-    getattrlist(file, &attrs, &fndrInfo, sizeof(fndrInfo), 0);
-
-    if (fndrInfo.fi.fdType != *(long *) a.perms.findertype)
-    {
-        fndrInfo.fi.fdType = *(long *) a.perms.findertype;
-
-        switch (a.transaction.action)
-        {
-        case cfa_fix:
-
-            if (DONTDO)
-            {
-                CfOut(cf_inform, "", "Promised to set Finder Type code of %s to %s\n", file, a.perms.findertype);
-                return 0;
-            }
-
-            /* setattrlist does not take back in the long ssize */
-            retval = setattrlist(file, &attrs, &fndrInfo.created, 4 * sizeof(struct timespec) + sizeof(FInfo), 0);
-
-            CfDebug("CheckFinderType setattrlist returned %d\n", retval);
-
-            if (retval >= 0)
-            {
-                cfPS(cf_inform, CF_CHG, "", pp, a, "Setting Finder Type code of %s to %s\n", file, a.perms.findertype);
-            }
-            else
-            {
-                cfPS(cf_error, CF_FAIL, "", pp, a, "Setting Finder Type code of %s to %s failed!!\n", file,
-                     a.perms.findertype);
-            }
-
-            return retval;
-
-        case cfa_warn:
-            CfOut(cf_error, "", "Darwin FinderType does not match -- not fixing.\n");
-            return 0;
-
-        default:
-            return 0;
-        }
-    }
-    else
-    {
-        cfPS(cf_verbose, CF_NOP, "", pp, a, "Finder Type code of %s to %s is as promised\n", file, a.perms.findertype);
-        return 0;
-    }
-}
-
-#endif
-
-/*********************************************************************/
-/* Level                                                             */
-/*********************************************************************/
-
-static void VerifyName(char *path, struct stat *sb, Attributes attr, Promise *pp,
-                       const ReportContext *report_context)
-{
-    mode_t newperm;
-    struct stat dsb;
-
-    if (lstat(path, &dsb) == -1)
-    {
-        cfPS(cf_inform, CF_NOP, "", pp, attr, "File object named %s is not there (promise kept)", path);
-        return;
-    }
-    else
-    {
-        if (attr.rename.disable)
-        {
-            CfOut(cf_inform, "", " !! Warning - file object %s exists, contrary to promise\n", path);
-        }
-    }
-
-    if (attr.rename.newname)
-    {
-        if (DONTDO)
-        {
-            CfOut(cf_inform, "", " -> File %s should be renamed to %s to keep promise\n", path, attr.rename.newname);
-            return;
-        }
-        else
-        {
-            if (!FileInRepository(attr.rename.newname))
-            {
-                if (cf_rename(path, attr.rename.newname) == -1)
-                {
-                    cfPS(cf_error, CF_FAIL, "cf_rename", pp, attr, " !! Error occurred while renaming %s\n", path);
-                    return;
-                }
-                else
-                {
-                    cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Renaming file %s to %s\n", path, attr.rename.newname);
-                }
-            }
-            else
-            {
-                cfPS(cf_error, CF_WARN, "", pp, attr,
-                     " !! Rename to same destination twice? Would overwrite saved copy - aborting");
-            }
-        }
-
-        return;
-    }
-
-    if (S_ISLNK(dsb.st_mode))
-    {
-        if (attr.rename.disable)
-        {
-            if (!DONTDO)
-            {
-                if (unlink(path) == -1)
-                {
-                    cfPS(cf_error, CF_FAIL, "unlink", pp, attr, " !! Unable to unlink %s\n", path);
-                }
-                else
-                {
-                    cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Disabling symbolic link %s by deleting it\n", path);
-                }
-            }
-            else
-            {
-                CfOut(cf_inform, "", " * Need to disable link %s to keep promise\n", path);
-            }
-
-            return;
-        }
-    }
-
-/* Normal disable - has priority */
-
-    if (attr.rename.disable)
-    {
-        char newname[CF_BUFSIZE];
-
-        if (attr.transaction.action == cfa_warn)
-        {
-            cfPS(cf_error, CF_WARN, "", pp, attr, " !! %s '%s' should be renamed",
-                 S_ISDIR(sb->st_mode) ? "Directory" : "File", path);
-            return;
-        }
-
-        if (attr.rename.newname && strlen(attr.rename.newname) > 0)
-        {
-            if (IsAbsPath(attr.rename.newname))
-            {
-                strncpy(path, attr.rename.newname, CF_BUFSIZE - 1);
-            }
-            else
-            {
-                strcpy(newname, path);
-                ChopLastNode(newname);
-
-                if (!JoinPath(newname, attr.rename.newname))
-                {
-                    return;
-                }
-            }
-        }
-        else
-        {
-            strcpy(newname, path);
-
-            if (attr.rename.disable_suffix)
-            {
-                if (!JoinSuffix(newname, attr.rename.disable_suffix))
-                {
-                    return;
-                }
-            }
-            else
-            {
-                if (!JoinSuffix(newname, ".cfdisabled"))
-                {
-                    return;
-                }
-            }
-        }
-
-        if ((attr.rename.plus != CF_SAMEMODE) && (attr.rename.minus != CF_SAMEMODE))
-        {
-            newperm = (sb->st_mode & 07777);
-            newperm |= attr.rename.plus;
-            newperm &= ~(attr.rename.minus);
-        }
-        else
-        {
-            newperm = (mode_t) 0600;
-        }
-
-        if (DONTDO)
-        {
-            CfOut(cf_inform, "", " -> File %s should be renamed to %s to keep promise\n", path, newname);
-            return;
-        }
-        else
-        {
-            cf_chmod(path, newperm);
-
-            if (!FileInRepository(newname))
-            {
-                if (cf_rename(path, newname) == -1)
-                {
-                    cfPS(cf_error, CF_FAIL, "cf_rename", pp, attr, "Error occurred while renaming %s\n", path);
-                    return;
-                }
-                else
-                {
-                    cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Disabling/renaming file %s to %s with mode %jo\n", path,
-                         newname, (uintmax_t)newperm);
-                }
-
-                if (ArchiveToRepository(newname, attr, pp, report_context))
-                {
-                    unlink(newname);
-                }
-            }
-            else
-            {
-                cfPS(cf_error, CF_WARN, "", pp, attr,
-                     " !! Disable required twice? Would overwrite saved copy - changing permissions only");
-            }
-        }
-
-        return;
-    }
-
-    if (attr.rename.rotate == 0)
-    {
-        if (attr.transaction.action == cfa_warn)
-        {
-            cfPS(cf_error, CF_WARN, "", pp, attr, " !! File '%s' should be truncated", path);
-        }
-        else if (!DONTDO)
-        {
-            TruncateFile(path);
-            cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Truncating (emptying) %s\n", path);
-        }
-        else
-        {
-            CfOut(cf_error, "", " * File %s needs emptying", path);
-        }
-        return;
-    }
-
-    if (attr.rename.rotate > 0)
-    {
-        if (attr.transaction.action == cfa_warn)
-        {
-            cfPS(cf_error, CF_WARN, "", pp, attr, " !! File '%s' should be rotated", path);
-        }
-        else if (!DONTDO)
-        {
-            RotateFiles(path, attr.rename.rotate);
-            cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Rotating files %s in %d fifo\n", path, attr.rename.rotate);
-        }
-        else
-        {
-            CfOut(cf_error, "", " * File %s needs rotating", path);
-        }
-
-        return;
-    }
-}
 
 /*********************************************************************/
 
-static void VerifyDelete(char *path, struct stat *sb, Attributes attr, Promise *pp)
-{
-    const char *lastnode = ReadLastNode(path);
-    char buf[CF_MAXVARSIZE];
-
-    CfOut(cf_verbose, "", " -> Verifying file deletions for %s\n", path);
-
-    if (DONTDO)
-    {
-        CfOut(cf_inform, "", "Promise requires deletion of file object %s\n", path);
-    }
-    else
-    {
-        switch (attr.transaction.action)
-        {
-        case cfa_warn:
-
-            cfPS(cf_error, CF_WARN, "", pp, attr, " !! %s '%s' should be deleted",
-                 S_ISDIR(sb->st_mode) ? "Directory" : "File", path);
-            break;
-
-        case cfa_fix:
-
-            if (!S_ISDIR(sb->st_mode))
-            {
-                if (unlink(lastnode) == -1)
-                {
-                    cfPS(cf_verbose, CF_FAIL, "unlink", pp, attr, "Couldn't unlink %s tidying\n", path);
-                }
-                else
-                {
-                    cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Deleted file %s\n", path);
-                }
-            }
-            else                // directory
-            {
-                if (!attr.delete.rmdirs)
-                {
-                    CfOut(cf_inform, "unlink", "Keeping directory %s\n", path);
-                    return;
-                }
-
-                if (attr.havedepthsearch && strcmp(path, pp->promiser) == 0)
-                {
-                    /* This is the parent and we cannot delete it from here - must delete separately */
-                    return;
-                }
-
-                // use the full path if we are to delete the current dir
-                if ((strcmp(lastnode, ".") == 0) && strlen(path) > 2)
-                {
-                    snprintf(buf, sizeof(buf), "%s", path);
-                    buf[strlen(path) - 1] = '\0';
-                    buf[strlen(path) - 2] = '\0';
-                }
-                else
-                {
-                    snprintf(buf, sizeof(buf), "%s", lastnode);
-                }
-
-                if (rmdir(buf) == -1)
-                {
-                    cfPS(cf_verbose, CF_FAIL, "rmdir", pp, attr,
-                         " !! Delete directory %s failed (cannot delete node called \"%s\")\n", path, buf);
-                }
-                else
-                {
-                    cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Deleted directory %s\n", path);
-                }
-            }
-
-            break;
-
-        default:
-            FatalError("Cfengine: internal error: illegal file action\n");
-        }
-    }
-}
-
-/*********************************************************************/
-
-void TouchFile(char *path, struct stat *sb, Attributes attr, Promise *pp)
-{
-    if (!DONTDO)
-    {
-        if (utime(path, NULL) != -1)
-        {
-            cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Touched (updated time stamps) %s\n", path);
-        }
-        else
-        {
-            cfPS(cf_inform, CF_FAIL, "utime", pp, attr, "Touch %s failed to update timestamps\n", path);
-        }
-    }
-    else
-    {
-        CfOut(cf_error, "", "Need to touch (update timestamps) %s\n", path);
-    }
-}
-
-/*********************************************************************/
-
-void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp, const ReportContext *report_context)
-{
-    unsigned char digest1[EVP_MAX_MD_SIZE + 1];
-    unsigned char digest2[EVP_MAX_MD_SIZE + 1];
-    int changed = false, one, two;
-
-    if ((attr.change.report_changes != cfa_contentchange) && (attr.change.report_changes != cfa_allchanges))
-    {
-        return;
-    }
-
-    memset(digest1, 0, EVP_MAX_MD_SIZE + 1);
-    memset(digest2, 0, EVP_MAX_MD_SIZE + 1);
-
-    if (attr.change.hash == cf_besthash)
-    {
-        if (!DONTDO)
-        {
-            HashFile(file, digest1, cf_md5);
-            HashFile(file, digest2, cf_sha1);
-
-            one = FileHashChanged(file, digest1, cf_error, cf_md5, attr, pp);
-            two = FileHashChanged(file, digest2, cf_error, cf_sha1, attr, pp);
-
-            if (one || two)
-            {
-                changed = true;
-            }
-        }
-    }
-    else
-    {
-        if (!DONTDO)
-        {
-            HashFile(file, digest1, attr.change.hash);
-
-            if (FileHashChanged(file, digest1, cf_error, attr.change.hash, attr, pp))
-            {
-                changed = true;
-            }
-        }
-    }
-
-    if (changed)
-    {
-        NewPersistentContext(pp->namespace, "checksum_alerts", CF_PERSISTENCE, cfpreserve);
-        LogHashChange(file, cf_file_content_changed, "Content changed", pp);
-    }
-
-    if (attr.change.report_diffs)
-    {
-        LogFileChange(file, changed, attr, pp, report_context);
-    }
-}
 
 /*********************************************************************/
 
@@ -1145,86 +425,6 @@ void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp
 /*********************************************************************/
 /* Level                                                             */
 /*********************************************************************/
-
-static int TransformFile(char *file, Attributes attr, Promise *pp)
-{
-    char comm[CF_EXPANDSIZE], line[CF_BUFSIZE];
-    FILE *pop = NULL;
-    int print = false;
-    int transRetcode = 0;
-
-    if (attr.transformer == NULL || file == NULL)
-    {
-        return false;
-    }
-
-    ExpandScalar(attr.transformer, comm);
-    CfOut(cf_inform, "", "I: Transforming: %s ", comm);
-
-    if (!IsExecutable(GetArg0(comm)))
-    {
-        cfPS(cf_inform, CF_FAIL, "", pp, attr, "I: Transformer %s %s failed", attr.transformer, file);
-        return false;
-    }
-
-    if (strncmp(comm, "/bin/echo", strlen("/bin/echo")) == 0)
-    {
-        print = true;
-    }
-
-    if (!DONTDO)
-    {
-        CfLock thislock = AcquireLock(comm, VUQNAME, CFSTARTTIME, attr, pp, false);
-
-        if (thislock.lock == NULL)
-        {
-            return false;
-        }
-
-        if ((pop = cf_popen(comm, "r")) == NULL)
-        {
-            cfPS(cf_inform, CF_FAIL, "", pp, attr, "I: Transformer %s %s failed", attr.transformer, file);
-            YieldCurrentLock(thislock);
-            return false;
-        }
-
-        while (!feof(pop))
-        {
-            if (CfReadLine(line, CF_BUFSIZE, pop) == -1)
-            {
-                FatalError("Error in CfReadLine");
-            }
-
-            if (print)
-            {
-                CfOut(cf_reporting, "", "%s", line);
-            }
-            else
-            {
-                CfOut(cf_inform, "", "%s", line);
-            }
-        }
-
-        transRetcode = cf_pclose(pop);
-
-        if (VerifyCommandRetcode(transRetcode, true, attr, pp))
-        {
-            CfOut(cf_inform, "", "-> Transformer %s => %s seemed to work ok", file, comm);
-        }
-        else
-        {
-            CfOut(cf_error, "", "-> Transformer %s => %s returned error", file, comm);
-        }
-
-        YieldCurrentLock(thislock);
-    }
-    else
-    {
-        CfOut(cf_error, "", " -> Need to transform file \"%s\" with \"%s\"", file, comm);
-    }
-
-    return true;
-}
 
 /*******************************************************************/
 
@@ -1449,28 +649,6 @@ int MakeParentDirectory(char *parentandchild, int force, const ReportContext *re
 }
 
 /**********************************************************************/
-
-static void TruncateFile(char *name)
-{
-    struct stat statbuf;
-    int fd;
-
-    if (cfstat(name, &statbuf) == -1)
-    {
-        CfDebug("cfengine: didn't find %s to truncate\n", name);
-    }
-    else
-    {
-        if ((fd = creat(name, 000)) == -1)      /* dummy mode ignored */
-        {
-            CfOut(cf_error, "creat", "Failed to create or truncate file %s\n", name);
-        }
-        else
-        {
-            close(fd);
-        }
-    }
-}
 
 /*********************************************************************/
 static char FileStateToChar(FileState status)
@@ -1697,90 +875,6 @@ static void DeleteDirectoryTree(char *path, Promise *pp, const ReportContext *re
 /* Unix-specific implementations of file functions                 */
 /*******************************************************************/
 
-static void VerifySetUidGid(char *file, struct stat *dstat, mode_t newperm, Promise *pp, Attributes attr)
-{
-    int amroot = true;
-
-    if (!IsPrivileged())
-    {
-        amroot = false;
-    }
-
-    if ((dstat->st_uid == 0) && (dstat->st_mode & S_ISUID))
-    {
-        if (newperm & S_ISUID)
-        {
-            if (!IsItemIn(VSETUIDLIST, file))
-            {
-                if (amroot)
-                {
-                    cfPS(cf_error, CF_WARN, "", pp, attr, "NEW SETUID root PROGRAM %s\n", file);
-                }
-
-                PrependItem(&VSETUIDLIST, file, NULL);
-            }
-        }
-        else
-        {
-            switch (attr.transaction.action)
-            {
-            case cfa_fix:
-
-                cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Removing setuid (root) flag from %s...\n\n", file);
-                break;
-
-            case cfa_warn:
-
-                if (amroot)
-                {
-                    cfPS(cf_error, CF_WARN, "", pp, attr, " !! WARNING setuid (root) flag on %s...\n\n", file);
-                }
-                break;
-            }
-        }
-    }
-
-    if (dstat->st_uid == 0 && (dstat->st_mode & S_ISGID))
-    {
-        if (newperm & S_ISGID)
-        {
-            if (!IsItemIn(VSETUIDLIST, file))
-            {
-                if (S_ISDIR(dstat->st_mode))
-                {
-                    /* setgid directory */
-                }
-                else
-                {
-                    if (amroot)
-                    {
-                        cfPS(cf_error, CF_WARN, "", pp, attr, " !! NEW SETGID root PROGRAM %s\n", file);
-                    }
-
-                    PrependItem(&VSETUIDLIST, file, NULL);
-                }
-            }
-        }
-        else
-        {
-            switch (attr.transaction.action)
-            {
-            case cfa_fix:
-
-                cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Removing setgid (root) flag from %s...\n\n", file);
-                break;
-
-            case cfa_warn:
-
-                cfPS(cf_inform, CF_WARN, "", pp, attr, " !! WARNING setgid (root) flag on %s...\n\n", file);
-                break;
-
-            default:
-                break;
-            }
-        }
-    }
-}
 
 /*****************************************************************************/
 
@@ -2104,265 +1198,9 @@ GidList *MakeGidList(char *gidnames)
 
 /*****************************************************************************/
 
-void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promise *pp,
-                          const ReportContext *report_context)
-{
-    mode_t newperm = dstat->st_mode, maskvalue;
-
-# if defined HAVE_CHFLAGS
-    u_long newflags;
-# endif
-
-    maskvalue = umask(0);       /* This makes the DEFAULT modes absolute */
-
-    newperm = (dstat->st_mode & 07777);
-
-    if ((attr.perms.plus != CF_SAMEMODE) && (attr.perms.minus != CF_SAMEMODE))
-    {
-        newperm |= attr.perms.plus;
-        newperm &= ~(attr.perms.minus);
-
-        CfDebug("VerifyFileAttributes(%s -> %" PRIoMAX ")\n", file, (uintmax_t)newperm);
-
-        /* directories must have x set if r set, regardless  */
-
-        if (S_ISDIR(dstat->st_mode))
-        {
-            if (attr.perms.rxdirs)
-            {
-                CfDebug("Directory...fixing x bits\n");
-
-                if (newperm & S_IRUSR)
-                {
-                    newperm |= S_IXUSR;
-                }
-
-                if (newperm & S_IRGRP)
-                {
-                    newperm |= S_IXGRP;
-                }
-
-                if (newperm & S_IROTH)
-                {
-                    newperm |= S_IXOTH;
-                }
-            }
-            else
-            {
-                CfOut(cf_verbose, "", "NB: rxdirs is set to false - x for r bits not checked\n");
-            }
-        }
-    }
-
-    VerifySetUidGid(file, dstat, newperm, pp, attr);
-
-# ifdef DARWIN
-    if (VerifyFinderType(file, dstat, attr, pp))
-    {
-        /* nop */
-    }
-# endif
-
-    if (VerifyOwner(file, pp, attr, dstat))
-    {
-        /* nop */
-    }
-
-    if (attr.havechange && S_ISREG(dstat->st_mode))
-    {
-        VerifyFileIntegrity(file, attr, pp, report_context);
-    }
-
-    if (attr.havechange)
-    {
-        VerifyFileChanges(file, dstat, attr, pp);
-    }
-
-    if (S_ISLNK(dstat->st_mode))        /* No point in checking permission on a link */
-    {
-        KillGhostLink(file, attr, pp);
-        umask(maskvalue);
-        return;
-    }
-
-    if (attr.acl.acl_entries)
-    {
-        VerifyACL(file, attr, pp);
-    }
-
-    VerifySetUidGid(file, dstat, dstat->st_mode, pp, attr);
-
-    if ((newperm & 07777) == (dstat->st_mode & 07777))  /* file okay */
-    {
-        CfDebug("File okay, newperm = %" PRIoMAX ", stat = %" PRIoMAX "\n", (uintmax_t)(newperm & 07777), (uintmax_t)(dstat->st_mode & 07777));
-        cfPS(cf_verbose, CF_NOP, "", pp, attr, " -> File permissions on %s as promised\n", file);
-    }
-    else
-    {
-        CfDebug("Trying to fix mode...newperm = %" PRIoMAX ", stat = %" PRIoMAX "\n", (uintmax_t)(newperm & 07777), (uintmax_t)(dstat->st_mode & 07777));
-
-        switch (attr.transaction.action)
-        {
-        case cfa_warn:
-
-            cfPS(cf_error, CF_WARN, "", pp, attr, " !! %s has permission %jo - [should be %jo]\n", file,
-                 (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
-            break;
-
-        case cfa_fix:
-
-            if (!DONTDO)
-            {
-                if (cf_chmod(file, newperm & 07777) == -1)
-                {
-                    CfOut(cf_error, "cf_chmod", "cf_chmod failed on %s\n", file);
-                    break;
-                }
-            }
-
-            cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Object %s had permission %jo, changed it to %jo\n", file,
-                 (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
-            break;
-
-        default:
-            FatalError("cfengine: internal error VerifyFileAttributes(): illegal file action\n");
-        }
-    }
-
-# if defined HAVE_CHFLAGS       /* BSD special flags */
-
-    newflags = (dstat->st_flags & CHFLAGS_MASK);
-    newflags |= attr.perms.plus_flags;
-    newflags &= ~(attr.perms.minus_flags);
-
-    if ((newflags & CHFLAGS_MASK) == (dstat->st_flags & CHFLAGS_MASK))  /* file okay */
-    {
-        CfDebug("BSD File okay, flags = %" PRIxMAX ", current = %" PRIxMAX "\n",
-                (uintmax_t)(newflags & CHFLAGS_MASK),
-                (uintmax_t)(dstat->st_flags & CHFLAGS_MASK));
-    }
-    else
-    {
-        CfDebug("BSD Fixing %s, newflags = %" PRIxMAX ", flags = %" PRIxMAX "\n",
-                file, (uintmax_t)(newflags & CHFLAGS_MASK),
-                (uintmax_t)(dstat->st_flags & CHFLAGS_MASK));
-
-        switch (attr.transaction.action)
-        {
-        case cfa_warn:
-
-            cfPS(cf_error, CF_WARN, "", pp, attr,
-                 " !! %s has flags %jo - [should be %jo]\n",
-                 file, (uintmax_t)(dstat->st_mode & CHFLAGS_MASK),
-                 (uintmax_t)(newflags & CHFLAGS_MASK));
-            break;
-
-        case cfa_fix:
-
-            if (!DONTDO)
-            {
-                if (chflags(file, newflags & CHFLAGS_MASK) == -1)
-                {
-                    cfPS(cf_error, CF_DENIED, "chflags", pp, attr, " !! Failed setting BSD flags %jx on %s\n", (uintmax_t)newflags,
-                         file);
-                    break;
-                }
-                else
-                {
-                    cfPS(cf_inform, CF_CHG, "", pp, attr, " -> %s had flags %jo, changed it to %jo\n", file,
-                         (uintmax_t)(dstat->st_flags & CHFLAGS_MASK),
-                         (uintmax_t)(newflags & CHFLAGS_MASK));
-                }
-            }
-
-            break;
-
-        default:
-            FatalError("cfengine: internal error VerifyFileAttributes() illegal file action\n");
-        }
-    }
-# endif
-
-    if (attr.touch)
-    {
-        if (utime(file, NULL) == -1)
-        {
-            cfPS(cf_inform, CF_DENIED, "utime", pp, attr, " !! Touching file %s failed", file);
-        }
-        else
-        {
-            cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Touching file %s", file);
-        }
-    }
-
-    umask(maskvalue);
-    CfDebug("VerifyFileAttributes(Done)\n");
-}
 
 /*****************************************************************************/
 
-void VerifyCopiedFileAttributes(char *file, struct stat *dstat, struct stat *sstat, Attributes attr,
-                                Promise *pp, const ReportContext *report_context)
-{
-    mode_t newplus, newminus;
-    uid_t save_uid;
-    gid_t save_gid;
-
-// If we get here, there is both a src and dest file
-
-    CfDebug("VerifyCopiedFile(%s,+%" PRIoMAX ",-%" PRIoMAX ")\n", file, (uintmax_t)attr.perms.plus, (uintmax_t)attr.perms.minus);
-
-    save_uid = (attr.perms.owners)->uid;
-    save_gid = (attr.perms.groups)->gid;
-
-    if (attr.copy.preserve)
-    {
-        CfOut(cf_verbose, "", " -> Attempting to preserve file permissions from the source: %jo",
-              (uintmax_t)(sstat->st_mode & 07777));
-
-        if ((attr.perms.owners)->uid == CF_SAME_OWNER)  /* Preserve uid and gid  */
-        {
-            (attr.perms.owners)->uid = sstat->st_uid;
-        }
-
-        if ((attr.perms.groups)->gid == CF_SAME_GROUP)
-        {
-            (attr.perms.groups)->gid = sstat->st_gid;
-        }
-
-// Will this preserve if no mode set?
-
-        newplus = (sstat->st_mode & 07777);
-        newminus = ~newplus & 07777;
-        attr.perms.plus = newplus;
-        attr.perms.minus = newminus;
-        VerifyFileAttributes(file, dstat, attr, pp, report_context);
-    }
-    else
-    {
-        if ((attr.perms.owners)->uid == CF_SAME_OWNER)  /* Preserve uid and gid  */
-        {
-            (attr.perms.owners)->uid = dstat->st_uid;
-        }
-
-        if ((attr.perms.groups)->gid == CF_SAME_GROUP)
-        {
-            (attr.perms.groups)->gid = dstat->st_gid;
-        }
-
-        if (attr.haveperms)
-        {
-            newplus = (dstat->st_mode & 07777) | attr.perms.plus;
-            newminus = ~(newplus & ~(attr.perms.minus)) & 07777;
-            attr.perms.plus = newplus;
-            attr.perms.minus = newminus;
-            VerifyFileAttributes(file, dstat, attr, pp, report_context);
-        }
-    }
-
-    (attr.perms.owners)->uid = save_uid;
-    (attr.perms.groups)->gid = save_gid;
-}
 
 /*******************************************************************/
 
@@ -2635,4 +1473,126 @@ int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, const P
 
     fclose(fp);
     return (true);
+}
+
+int FileSanityChecks(char *path, Attributes a, Promise *pp)
+{
+    if ((a.havelink) && (a.havecopy))
+    {
+        CfOut(cf_error, "",
+              " !! Promise constraint conflicts - %s file cannot both be a copy of and a link to the source", path);
+        PromiseRef(cf_error, pp);
+        return false;
+    }
+
+    if ((a.havelink) && (!a.link.source))
+    {
+        CfOut(cf_error, "", " !! Promise to establish a link at %s has no source", path);
+        PromiseRef(cf_error, pp);
+        return false;
+    }
+
+/* We can't do this verification during parsing as we did not yet read the body,
+ * so we can't distinguish between link and copy source. In post-verification
+ * all bodies are already expanded, so we don't have the information either */
+
+    if ((a.havecopy) && (a.copy.source) && (!FullTextMatch(CF_ABSPATHRANGE, a.copy.source)))
+    {
+        /* FIXME: somehow redo a PromiseRef to be able to embed it into a string */
+        CfOut(cf_error, "", " !! Non-absolute path in source attribute (have no invariant meaning): %s", a.copy.source);
+        PromiseRef(cf_error, pp);
+        FatalError("Bailing out");
+    }
+
+    if ((a.haveeditline) && (a.haveeditxml))
+    {
+        CfOut(cf_error, "", " !! Promise constraint conflicts - %s editing file as both line and xml makes no sense",
+              path);
+        PromiseRef(cf_error, pp);
+        return false;
+    }
+
+    if ((a.havedepthsearch) && (a.haveedit))
+    {
+        CfOut(cf_error, "", " !! Recursive depth_searches are not compatible with general file editing");
+        PromiseRef(cf_error, pp);
+        return false;
+    }
+
+    if ((a.havedelete) && ((a.create) || (a.havecopy) || (a.haveedit) || (a.haverename)))
+    {
+        CfOut(cf_error, "", " !! Promise constraint conflicts - %s cannot be deleted and exist at the same time", path);
+        PromiseRef(cf_error, pp);
+        return false;
+    }
+
+    if ((a.haverename) && ((a.create) || (a.havecopy) || (a.haveedit)))
+    {
+        CfOut(cf_error, "",
+              " !! Promise constraint conflicts - %s cannot be renamed/moved and exist there at the same time", path);
+        PromiseRef(cf_error, pp);
+        return false;
+    }
+
+    if ((a.havedelete) && (a.havedepthsearch) && (!a.haveselect))
+    {
+        CfOut(cf_error, "",
+              " !! Dangerous or ambiguous promise - %s specifies recursive deletion but has no file selection criteria",
+              path);
+        PromiseRef(cf_error, pp);
+        return false;
+    }
+
+    if ((a.haveselect) && (!a.select.result))
+    {
+        CfOut(cf_error, "", " !! File select constraint body promised no result (check body definition)");
+        PromiseRef(cf_error, pp);
+        return false;
+    }
+
+    if ((a.havedelete) && (a.haverename))
+    {
+        CfOut(cf_error, "", " !! File %s cannot promise both deletion and renaming", path);
+        PromiseRef(cf_error, pp);
+        return false;
+    }
+
+    if ((a.havecopy) && (a.havedepthsearch) && (a.havedelete))
+    {
+        CfOut(cf_inform, "",
+              " !! Warning: depth_search of %s applies to both delete and copy, but these refer to different searches (source/destination)",
+              pp->promiser);
+        PromiseRef(cf_inform, pp);
+    }
+
+    if ((a.transaction.background) && (a.transaction.audit))
+    {
+        CfOut(cf_error, "", " !! Auditing cannot be performed on backgrounded promises (this might change).");
+        PromiseRef(cf_error, pp);
+        return false;
+    }
+
+    if (((a.havecopy) || (a.havelink)) && (a.transformer))
+    {
+        CfOut(cf_error, "", " !! File object(s) %s cannot both be a copy of source and transformed simultaneously",
+              pp->promiser);
+        PromiseRef(cf_error, pp);
+        return false;
+    }
+
+    if ((a.haveselect) && (a.select.result == NULL))
+    {
+        CfOut(cf_error, "", " !! Missing file_result attribute in file_select body");
+        PromiseRef(cf_error, pp);
+        return false;
+    }
+
+    if ((a.havedepthsearch) && (a.change.report_diffs))
+    {
+        CfOut(cf_error, "", " !! Difference reporting is not allowed during a depth_search");
+        PromiseRef(cf_error, pp);
+        return false;
+    }
+
+    return true;
 }

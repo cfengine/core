@@ -123,7 +123,6 @@ void SummarizeValue(int xml, int html, int csv, int embed, char *stylesheet, cha
 void VerifyMeasurement(double *this, Attributes a, Promise *pp);
 void SetMeasurementPromises(Item **classlist);
 void LongHaul(time_t current);
-void LogFileChange(char *file, int change, Attributes a, Promise *pp, const ReportContext *report_context);
 void ReportPatches(PackageManager *list);
 void SummarizeSoftware(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web);
 void SummarizeUpdates(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web);
@@ -188,7 +187,6 @@ void ArgFree(char **args);
 /* files_copy.c */
 
 void *CopyFileSources(char *destination, Attributes attr, Promise *pp, const ReportContext *report_context);
-bool CopyRegularFileDiskReport(char *source, char *destination, Attributes attr, Promise *pp);
 bool CopyRegularFileDisk(char *source, char *destination, bool make_holes);
 void CheckForFileHoles(struct stat *sstat, Promise *pp);
 int FSWrite(char *new, int dd, char *buf, int towrite, int *last_write_made_hole, int n_read, Attributes attr,
@@ -340,7 +338,6 @@ bool IsProcessNameRunning(char *procNameRegex);
 
 /* recursion.c */
 
-int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promise *pp, const ReportContext *report_context);
 int SkipDirLinks(char *path, const char *lastnode, Recursion r);
 
 /* rlist.c */
@@ -395,7 +392,6 @@ void VerifyFilePromise(char *path, Promise *pp, const ReportContext *report_cont
 void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *path, Promise *ptr, const ReportContext *report_context),
                              const ReportContext *report_context);
 void *FindAndVerifyFilesPromises(Promise *pp, const ReportContext *report_context);
-int FileSanityChecks(char *path, Attributes a, Promise *pp);
 
 /* verify_interfaces.c */
 

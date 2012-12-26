@@ -28,7 +28,6 @@
 
 #include "cf3.defs.h"
 
-int VerifyFileLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp, const ReportContext *report_context);
 int CfCreateFile(char *file, Promise *pp, Attributes attr, const ReportContext *report_context);
 FILE *CreateEmptyStream(void);
 int ScheduleCopyOperation(char *destination, Attributes attr, Promise *pp, const ReportContext *report_context);
@@ -36,17 +35,15 @@ int ScheduleLinkChildrenOperation(char *destination, char *source, int rec, Attr
 int ScheduleLinkOperation(char *destination, char *source, Attributes attr, Promise *pp, const ReportContext *report_context);
 int ScheduleEditOperation(char *filename, Attributes attr, Promise *pp, const ReportContext *report_context);
 FileCopy *NewFileCopy(Promise *pp);
-void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promise *pp, const ReportContext *report_context);
 void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp, const ReportContext *report_context);
 int VerifyOwner(char *file, Promise *pp, Attributes attr, struct stat *statbuf);
-void VerifyCopiedFileAttributes(char *file, struct stat *dstat, struct stat *sstat, Attributes attr, Promise *pp, const ReportContext *report_context);
 int MoveObstruction(char *from, Attributes attr, Promise *pp, const ReportContext *report_context);
-void TouchFile(char *path, struct stat *sb, Attributes attr, Promise *pp);
 int MakeParentDirectory(char *parentandchild, int force, const ReportContext *report_context);
 int MakeParentDirectory2(char *parentandchild, int force, const ReportContext *report_context, bool enforce_promise);
 void RotateFiles(char *name, int number);
 void CreateEmptyFile(char *name);
 void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp);
+int FileSanityChecks(char *path, Attributes a, Promise *pp);
 
 #ifndef MINGW
 UidList *MakeUidList(char *uidnames);

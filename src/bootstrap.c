@@ -159,7 +159,7 @@ void CheckAutoBootstrap()
 
         char execstring[CF_BUFSIZE], buffer[CF_EXPANDSIZE];
         
-        snprintf(execstring, CF_BUFSIZE, "%s/cf-execd -F", CFWORKDIR);
+        snprintf(execstring, CF_BUFSIZE, "%s/cf-execd --once", CFWORKDIR);
         
         if (GetExecOutput(execstring, buffer, false))
         {

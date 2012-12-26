@@ -131,7 +131,6 @@ libpromises_la_SOURCES = \
         selfdiagnostic.c \
         sequence.c sequence.h \
         set.c set.h \
-        show.h \
         signals.c signals.h \
         sockaddr.c \
         sort.c sort.h \

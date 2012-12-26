@@ -29,8 +29,5 @@
 
 void VerifyProcessesPromise(Promise *pp);
 int LoadProcessTable(Item **procdata);
-int DoAllSignals(Item *siglist, Attributes a, Promise *pp);
-int GracefulTerminate(pid_t pid);
-void GetProcessColumnNames(char *proc, char **names, int *start, int *end);
 
 #endif

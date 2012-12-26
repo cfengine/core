@@ -27,7 +27,6 @@
 
 #include "env_context.h"
 #include "cfstream.h"
-#include "verify_processes.h"
 
 /* Prototypes */
 

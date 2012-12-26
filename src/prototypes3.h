@@ -319,6 +319,7 @@ int ExclusiveUnlockFile(int fd);
 
 int SelectProcess(char *procentry, char **names, int *start, int *end, Attributes a, Promise *pp);
 bool IsProcessNameRunning(char *procNameRegex);
+int FindPidMatches(Item *procdata, Item **killlist, Attributes a, Promise *pp);
 
 /* rlist.c */
 #include "rlist.h"
@@ -413,5 +414,9 @@ void VerifyStoragePromise(char *path, Promise *pp, const ReportContext *report_c
 /* verify_reports.c */
 
 void VerifyReportPromise(Promise *pp);
+
+/* misc */
+
+int GracefulTerminate(pid_t pid);
 
 #endif

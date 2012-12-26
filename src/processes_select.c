@@ -32,6 +32,10 @@
 #include "cfstream.h"
 #include "verify_processes.h"
 #include "string_lib.h"
+#include "item_lib.h"
+#include "pipes.h"
+#include "files_interfaces.h"
+#include "logging.h"
 
 static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char **names, char **line);
 static int SelectProcRegexMatch(char *name1, char *name2, char *regex, char **colNames, char **line);
@@ -39,6 +43,8 @@ static int SplitProcLine(char *proc, char **names, int *start, int *end, char **
 static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int GetProcColumnIndex(char *name1, char *name2, char **names);
+static void GetProcessColumnNames(char *proc, char **names, int *start, int *end);
+static int ExtractPid(char *psentry, char **names, int *start, int *end);
 
 /***************************************************************************/
 
@@ -165,6 +171,103 @@ int SelectProcess(char *procentry, char **names, int *start, int *end, Attribute
 
     return result;
 }
+
+int FindPidMatches(Item *procdata, Item **killlist, Attributes a, Promise *pp)
+{
+    Item *ip;
+    int pid = -1, matches = 0, i, s, e, promised_zero;
+    pid_t cfengine_pid = getpid();
+    char *names[CF_PROCCOLS];   /* ps headers */
+    int start[CF_PROCCOLS];
+    int end[CF_PROCCOLS];
+
+    if (procdata == NULL)
+    {
+        return 0;
+    }
+
+    GetProcessColumnNames(procdata->name, (char **) names, start, end);
+
+    for (ip = procdata->next; ip != NULL; ip = ip->next)
+    {
+        CF_OCCUR++;
+
+        if (BlockTextMatch(pp->promiser, ip->name, &s, &e))
+        {
+            if (NULL_OR_EMPTY(ip->name))
+            {
+                continue;
+            }
+
+            if (!SelectProcess(ip->name, names, start, end, a, pp))
+            {
+                continue;
+            }
+
+            pid = ExtractPid(ip->name, names, start, end);
+
+            if (pid == -1)
+            {
+                CfOut(cf_verbose, "", "Unable to extract pid while looking for %s\n", pp->promiser);
+                continue;
+            }
+
+            CfOut(cf_verbose, "", " ->  Found matching pid %d\n     (%s)", pid, ip->name);
+
+            matches++;
+
+            if (pid == 1)
+            {
+                if ((RlistLen(a.signals) == 1) && (IsStringIn(a.signals, "hup")))
+                {
+                    CfOut(cf_verbose, "", "(Okay to send only HUP to init)\n");
+                }
+                else
+                {
+                    continue;
+                }
+            }
+
+            if ((pid < 4) && (a.signals))
+            {
+                CfOut(cf_verbose, "", "Will not signal or restart processes 0,1,2,3 (occurred while looking for %s)\n",
+                      pp->promiser);
+                continue;
+            }
+
+            promised_zero = (a.process_count.min_range == 0) && (a.process_count.max_range == 0);
+
+            if ((a.transaction.action == cfa_warn) && promised_zero)
+            {
+                CfOut(cf_error, "", "Process alert: %s\n", procdata->name);     /* legend */
+                CfOut(cf_error, "", "Process alert: %s\n", ip->name);
+                continue;
+            }
+
+            if ((pid == cfengine_pid) && (a.signals))
+            {
+                CfOut(cf_verbose, "", " !! cf-agent will not signal itself!\n");
+                continue;
+            }
+
+            PrependItem(killlist, ip->name, "");
+            (*killlist)->counter = pid;
+        }
+    }
+
+// Free up allocated memory
+
+    for (i = 0; i < CF_PROCCOLS; i++)
+    {
+        if (names[i] != NULL)
+        {
+            free(names[i]);
+        }
+    }
+
+    return matches;
+}
+
 
 /***************************************************************************/
 /* Level                                                                   */
@@ -517,3 +620,247 @@ bool IsProcessNameRunning(char *procNameRegex)
 
     return matched;
 }
+
+
+static void GetProcessColumnNames(char *proc, char **names, int *start, int *end)
+{
+    char *sp, title[16];
+    int col, offset = 0;
+
+    for (col = 0; col < CF_PROCCOLS; col++)
+    {
+        start[col] = end[col] = -1;
+        names[col] = NULL;
+    }
+
+    col = 0;
+
+    for (sp = proc; *sp != '\0'; sp++)
+    {
+        offset = sp - proc;
+
+        if (isspace((int) *sp))
+        {
+            if (start[col] != -1)
+            {
+                CfDebug("End of %s is %d\n", title, offset - 1);
+                end[col++] = offset - 1;
+                if (col > CF_PROCCOLS - 1)
+                {
+                    CfOut(cf_error, "", "Column overflow in process table");
+                    break;
+                }
+            }
+            continue;
+        }
+
+        else if (start[col] == -1)
+        {
+            start[col] = offset;
+            sscanf(sp, "%15s", title);
+            CfDebug("Start of %s is %d\n", title, offset);
+            names[col] = xstrdup(title);
+            CfDebug("Col[%d]=%s\n", col, names[col]);
+        }
+    }
+
+    if (end[col] == -1)
+    {
+        CfDebug("End of %s is %d\n", title, offset);
+        end[col] = offset;
+    }
+}
+
+static const char *GetProcessOptions(void)
+{
+# ifdef HAVE_GETZONEID
+    zoneid_t zid;
+    char zone[ZONENAME_MAX];
+    static char psopts[CF_BUFSIZE];
+
+    zid = getzoneid();
+    getzonenamebyid(zid, zone, ZONENAME_MAX);
+
+    if (strcmp(zone, "global") == 0)
+    {
+        snprintf(psopts, CF_BUFSIZE, "%s,zone", VPSOPTS[VSYSTEMHARDCLASS]);
+        return psopts;
+    }
+# endif
+
+# ifdef LINUX
+    if (strncmp(VSYSNAME.release, "2.4", 3) == 0)
+    {
+        // No threads on 2.4 kernels
+        return "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,pri,rss,stime,time,args";
+    }
+
+# endif
+
+    return VPSOPTS[VSYSTEMHARDCLASS];
+}
+
+static int ExtractPid(char *psentry, char **names, int *start, int *end)
+{
+    char *sp;
+    int col, pid = -1, offset = 0;
+
+    for (col = 0; col < CF_PROCCOLS; col++)
+    {
+        if (strcmp(names[col], "PID") == 0)
+        {
+            if (col > 0)
+            {
+                offset = end[col - 1];
+            }
+            break;
+        }
+    }
+
+    for (sp = psentry + offset; *sp != '\0'; sp++)      /* if first field contains alpha, skip */
+    {
+        /* If start with alphanum then skip it till the first space */
+
+        if (isalnum((int) *sp))
+        {
+            while ((*sp != ' ') && (*sp != '\0'))
+            {
+                sp++;
+            }
+        }
+
+        while ((*sp == ' ') && (*sp == '\t'))
+        {
+            sp++;
+        }
+
+        sscanf(sp, "%d", &pid);
+
+        if (pid != -1)
+        {
+            break;
+        }
+    }
+
+    return pid;
+}
+
+static int ForeignZone(char *s)
+{
+// We want to keep the banner
+
+    if (strstr(s, "%CPU"))
+    {
+        return false;
+    }
+
+# ifdef HAVE_GETZONEID
+    zoneid_t zid;
+    char *sp, zone[ZONENAME_MAX];
+
+    zid = getzoneid();
+    getzonenamebyid(zid, zone, ZONENAME_MAX);
+
+    if (strcmp(zone, "global") == 0)
+    {
+        if (strcmp(s + strlen(s) - 6, "global") == 0)
+        {
+            *(s + strlen(s) - 6) = '\0';
+
+            for (sp = s + strlen(s) - 1; isspace(*sp); sp--)
+            {
+                *sp = '\0';
+            }
+
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+# endif
+    return false;
+}
+
+#ifndef __MINGW32__
+int LoadProcessTable(Item **procdata)
+{
+    FILE *prp;
+    char pscomm[CF_MAXLINKSIZE], vbuff[CF_BUFSIZE], *sp;
+    Item *rootprocs = NULL;
+    Item *otherprocs = NULL;
+
+    if (PROCESSTABLE)
+    {
+        CfOut(cf_verbose, "", " -> Reusing cached process state");
+        return true;
+    }
+
+    const char *psopts = GetProcessOptions();
+
+    snprintf(pscomm, CF_MAXLINKSIZE, "%s %s", VPSCOMM[VSYSTEMHARDCLASS], psopts);
+
+    CfOut(cf_verbose, "", "Observe process table with %s\n", pscomm);
+
+    if ((prp = cf_popen(pscomm, "r")) == NULL)
+    {
+        CfOut(cf_error, "popen", "Couldn't open the process list with command %s\n", pscomm);
+        return false;
+    }
+
+    while (!feof(prp))
+    {
+        memset(vbuff, 0, CF_BUFSIZE);
+        if (CfReadLine(vbuff, CF_BUFSIZE, prp) == -1)
+        {
+            FatalError("Error in CfReadLine");
+        }
+
+        for (sp = vbuff + strlen(vbuff) - 1; (sp > vbuff) && (isspace((int)*sp)); sp--)
+        {
+            *sp = '\0';
+        }
+
+        if (ForeignZone(vbuff))
+        {
+            continue;
+        }
+
+        AppendItem(procdata, vbuff, "");
+    }
+
+    cf_pclose(prp);
+
+/* Now save the data */
+
+    snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_procs", CFWORKDIR);
+    RawSaveItemList(*procdata, vbuff);
+
+    CopyList(&rootprocs, *procdata);
+    CopyList(&otherprocs, *procdata);
+
+    while (DeleteItemNotContaining(&rootprocs, "root"))
+    {
+    }
+
+    while (DeleteItemContaining(&otherprocs, "root"))
+    {
+    }
+
+    if (otherprocs)
+    {
+        PrependItem(&rootprocs, otherprocs->name, NULL);
+    }
+
+    snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_rootprocs", CFWORKDIR);
+    RawSaveItemList(rootprocs, vbuff);
+    DeleteItemList(rootprocs);
+
+    snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_otherprocs", CFWORKDIR);
+    RawSaveItemList(otherprocs, vbuff);
+    DeleteItemList(otherprocs);
+
+    return true;
+}
+#endif

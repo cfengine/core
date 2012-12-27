@@ -1192,7 +1192,7 @@ void RvalPrint(Writer *writer, Rval rval)
     {
     case CF_SCALAR:
     {
-        size_t buffer_size = strlen((const char *) rval.item) * 2;
+        size_t buffer_size = (strlen((const char *) rval.item) * 2) + 1;
         char *buffer = xcalloc(buffer_size, sizeof(char));
 
         EscapeQuotes((const char *) rval.item, buffer, buffer_size);

@@ -21,7 +21,7 @@ body server control
  maxconnections        => "100";
 
  !windows::
-  cfruncommand => "$(sys.cf_twin) -f $(sys.workdir)/inputs/failsafe/failsafe.cf && $(sys.cf_agent)";
+  cfruncommand => "$(sys.cf_twin) -f $(sys.workdir)/inputs/update.cf ; $(sys.cf_agent)";
 
 }
 

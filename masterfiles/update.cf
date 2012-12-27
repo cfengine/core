@@ -1,13 +1,13 @@
 ###############################################################################
 #
-#   failsafe.cf - Basic Failsafe Policy for Community
+#   update.cf - Basic Update Policy for Community
 #
 ###############################################################################
 
 body common control
 {
  bundlesequence => { "update" };
- version => "Community Failsafe.cf 3.4.0";
+ version => "Community Update.cf 3.4.1";
 }
 
 #############################################################################

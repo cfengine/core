@@ -23,7 +23,7 @@
 
 */
 
-#include "cf3.defs.h"
+#include "rlist.h"
 
 #include "files_names.h"
 #include "conversion.h"

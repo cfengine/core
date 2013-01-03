@@ -49,16 +49,6 @@ int ScheduleAgentOperations(Bundle *bp, const ReportContext *report_context);
 
 void AgentDiagnostic(void);
 
-/* cf_sql.c */
-
-int CfConnectDB(CfdbConn *cfdb, enum cfdbtype dbtype, char *remotehost, char *dbuser, char *passwd, char *db);
-void CfCloseDB(CfdbConn *cfdb);
-void CfVoidQueryDB(CfdbConn *cfdb, char *query);
-void CfNewQueryDB(CfdbConn *cfdb, char *query);
-char **CfFetchRow(CfdbConn *cfdb);
-char *CfFetchColumn(CfdbConn *cfdb, int col);
-void CfDeleteQuery(CfdbConn *cfdb);
-
 /* Mark connection as free */
 void ServerNotBusy(AgentConnection *conn);
 

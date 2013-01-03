@@ -23,14 +23,31 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_EXEC_TOOLS_H
-#define CFENGINE_EXEC_TOOLS_H
+#ifndef CFENGINE_SQL_H
+#define CFENGINE_SQL_H
 
-int IsExecutable(const char *file);
-int ShellCommandReturnsZero(const char *comm, int useshell);
-int GetExecOutput(const char *command, char *buffer, int useshell);
-void ActAsDaemon(int preserve);
-char **ArgSplitCommand(const char *comm);
-void ArgFree(char **args);
+#include "cf3.defs.h"
+
+typedef struct
+{
+    int connected;
+    int result;
+    int row;
+    unsigned int maxcolumns;
+    unsigned int maxrows;
+    int column;
+    char **rowdata;
+    char *blank;
+    enum cfdbtype type;
+    void *data;                 /* Generic pointer to RDBMS-specific data */
+} CfdbConn;
+
+int CfConnectDB(CfdbConn *cfdb, enum cfdbtype dbtype, char *remotehost, char *dbuser, char *passwd, char *db);
+void CfCloseDB(CfdbConn *cfdb);
+void CfVoidQueryDB(CfdbConn *cfdb, char *query);
+void CfNewQueryDB(CfdbConn *cfdb, char *query);
+char **CfFetchRow(CfdbConn *cfdb);
+char *CfFetchColumn(CfdbConn *cfdb, int col);
+void CfDeleteQuery(CfdbConn *cfdb);
 
 #endif

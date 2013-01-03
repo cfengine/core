@@ -187,7 +187,7 @@ endif
 
 cf_agent_SOURCES = \
         cf-agent.c \
-        cf_sql.c \
+        cf_sql.c cf_sql.h \
         nfs.c nfs.h \
         verify_files.c \
         verify_files_utils.c \

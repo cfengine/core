@@ -1685,20 +1685,6 @@ enum cfdbtype
     cfd_notype
 };
 
-typedef struct
-{
-    int connected;
-    int result;
-    int row;
-    unsigned int maxcolumns;
-    unsigned int maxrows;
-    int column;
-    char **rowdata;
-    char *blank;
-    enum cfdbtype type;
-    void *data;                 /* Generic pointer to RDBMS-specific data */
-} CfdbConn;
-
 /*************************************************************************/
 /* Threading container                                                   */
 /*************************************************************************/

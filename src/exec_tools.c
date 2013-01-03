@@ -34,7 +34,7 @@
 
 /********************************************************************/
 
-int GetExecOutput(char *command, char *buffer, int useshell)
+int GetExecOutput(const char *command, char *buffer, int useshell)
 /* Buffer initially contains whole exec string */
 {
     int offset = 0;

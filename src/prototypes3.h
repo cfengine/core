@@ -293,9 +293,6 @@ int SelectProcess(char *procentry, char **names, int *start, int *end, Attribute
 bool IsProcessNameRunning(char *procNameRegex);
 int FindPidMatches(Item *procdata, Item **killlist, Attributes a, Promise *pp);
 
-/* rlist.c */
-#include "rlist.h"
-
 /* selfdiagnostic.c */
 
 void SelfDiagnostic(void);

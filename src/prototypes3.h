@@ -176,7 +176,7 @@ void ArgFree(char **args);
 /* files_copy.c */
 
 void *CopyFileSources(char *destination, Attributes attr, Promise *pp, const ReportContext *report_context);
-bool CopyRegularFileDisk(char *source, char *destination, bool make_holes);
+bool CopyRegularFileDisk(const char *source, const char *destination, bool make_holes);
 void CheckForFileHoles(struct stat *sstat, Promise *pp);
 int FSWrite(char *new, int dd, char *buf, int towrite, int *last_write_made_hole, int n_read, Attributes attr,
             Promise *pp);
@@ -206,16 +206,6 @@ int ScheduleEditXmlOperations(char *filename, Bundle *bp, Attributes a, Promise 
 #ifdef HAVE_LIBXML2
 int XmlCompareToFile(xmlDocPtr doc, char *file, Attributes a, Promise *pp);
 #endif
-
-/* files_links.c */
-
-char VerifyLink(char *destination, char *source, Attributes attr, Promise *pp, const ReportContext *report_context);
-char VerifyAbsoluteLink(char *destination, char *source, Attributes attr, Promise *pp, const ReportContext *report_context);
-char VerifyRelativeLink(char *destination, char *source, Attributes attr, Promise *pp, const ReportContext *report_context);
-char VerifyHardLink(char *destination, char *source, Attributes attr, Promise *pp, const ReportContext *report_context);
-int KillGhostLink(char *name, Attributes attr, Promise *pp);
-int MakeHardLink(char *from, char *to, Attributes attr, Promise *pp);
-int ExpandLinks(char *dest, char *from, int level);
 
 /* files_properties.c */
 

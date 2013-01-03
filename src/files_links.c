@@ -23,7 +23,7 @@
 
 */
 
-#include "cf3.defs.h"
+#include "files_links.h"
 
 #include "promises.h"
 #include "files_names.h"
@@ -37,13 +37,13 @@
 #define CF_MAXLINKLEVEL 4
 
 #if !defined(__MINGW32__)
-static int MakeLink(char *from, char *to, Attributes attr, Promise *pp);
+static int MakeLink(const char *from, const char *to, Attributes attr, Promise *pp);
 #endif
-static char *AbsLinkPath(char *from, char *relto);
+static char *AbsLinkPath(const char *from, const char *relto);
 
 /*****************************************************************************/
 
-char VerifyLink(char *destination, char *source, Attributes attr, Promise *pp,
+char VerifyLink(char *destination, const char *source, Attributes attr, Promise *pp,
                 const ReportContext *report_context)
 #ifdef MINGW
 {
@@ -176,7 +176,7 @@ char VerifyLink(char *destination, char *source, Attributes attr, Promise *pp,
 
 /*****************************************************************************/
 
-char VerifyAbsoluteLink(char *destination, char *source, Attributes attr, Promise *pp,
+char VerifyAbsoluteLink(char *destination, const char *source, Attributes attr, Promise *pp,
                         const ReportContext *report_context)
 {
     char absto[CF_BUFSIZE];
@@ -226,7 +226,7 @@ char VerifyAbsoluteLink(char *destination, char *source, Attributes attr, Promis
 
 /*****************************************************************************/
 
-char VerifyRelativeLink(char *destination, char *source, Attributes attr, Promise *pp,
+char VerifyRelativeLink(char *destination, const char *source, Attributes attr, Promise *pp,
                         const ReportContext *report_context)
 {
     char *sp, *commonto, *commonfrom;
@@ -303,7 +303,7 @@ char VerifyRelativeLink(char *destination, char *source, Attributes attr, Promis
 
 /*****************************************************************************/
 
-char VerifyHardLink(char *destination, char *source, Attributes attr, Promise *pp,
+char VerifyHardLink(char *destination, const char *source, Attributes attr, Promise *pp,
                     const ReportContext *report_context)
 {
     char to[CF_BUFSIZE], absto[CF_BUFSIZE];
@@ -388,7 +388,7 @@ char VerifyHardLink(char *destination, char *source, Attributes attr, Promise *p
 /* Level                                                                     */
 /*****************************************************************************/
 
-int KillGhostLink(char *name, Attributes attr, Promise *pp)
+int KillGhostLink(const char *name, Attributes attr, const Promise *pp)
 #ifdef MINGW
 {
     CfOut(cf_verbose, "", "Windows does not support symbolic links (at KillGhostLink())");
@@ -449,7 +449,7 @@ int KillGhostLink(char *name, Attributes attr, Promise *pp)
 /*****************************************************************************/
 
 #if !defined(__MINGW32__)
-static int MakeLink(char *from, char *to, Attributes attr, Promise *pp)
+static int MakeLink(const char *from, const char *to, Attributes attr, Promise *pp)
 {
     if (DONTDO || (attr.transaction.action == cfa_warn))
     {
@@ -474,7 +474,7 @@ static int MakeLink(char *from, char *to, Attributes attr, Promise *pp)
 
 /*****************************************************************************/
 
-int MakeHardLink(char *from, char *to, Attributes attr, Promise *pp)
+int MakeHardLink(const char *from, const char *to, Attributes attr, const Promise *pp)
 #ifdef MINGW
 {                               // TODO: Implement ?
     CfOut(cf_verbose, "", "Hard links are not yet supported on Windows");
@@ -506,7 +506,7 @@ int MakeHardLink(char *from, char *to, Attributes attr, Promise *pp)
 
 /*********************************************************************/
 
-int ExpandLinks(char *dest, char *from, int level)      /* recursive */
+int ExpandLinks(char *dest, const char *from, int level)      /* recursive */
   /* Expand a path contaning symbolic links, up to 4 levels  */
   /* of symbolic links and then beam out in a hurry !        */
 #ifdef MINGW
@@ -516,7 +516,7 @@ int ExpandLinks(char *dest, char *from, int level)      /* recursive */
 }
 #else                           /* NOT MINGW */
 {
-    char *sp, buff[CF_BUFSIZE];
+    char buff[CF_BUFSIZE];
     char node[CF_MAXLINKSIZE];
     struct stat statbuf;
     int lastnode = false;
@@ -529,7 +529,7 @@ int ExpandLinks(char *dest, char *from, int level)      /* recursive */
         return false;
     }
 
-    sp = from;
+    const char *sp = from;
 
     while (*sp != '\0')
     {
@@ -637,11 +637,10 @@ int ExpandLinks(char *dest, char *from, int level)      /* recursive */
 
 /*********************************************************************/
 
-static char *AbsLinkPath(char *from, char *relto)
+static char *AbsLinkPath(const char *from, const char *relto)
 /* Take an abolute source and a relative destination object
    and find the absolute name of the to object */
 {
-    char *sp;
     int pop = 1;
     static char destination[CF_BUFSIZE];
 
@@ -652,6 +651,7 @@ static char *AbsLinkPath(char *from, char *relto)
 
     strcpy(destination, from);  /* reuse to save stack space */
 
+    const char *sp = NULL;
     for (sp = relto; *sp != '\0'; sp++)
     {
         if (strncmp(sp, "../", 3) == 0)

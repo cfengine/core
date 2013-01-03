@@ -648,9 +648,8 @@ int DeEscapeQuotedString(const char *from, char *to)
 
 /*********************************************************************/
 
-int CompressPath(char *dest, char *src)
+int CompressPath(char *dest, const char *src)
 {
-    char *sp;
     char node[CF_BUFSIZE];
     int nodelen;
     int rootlen;
@@ -662,7 +661,7 @@ int CompressPath(char *dest, char *src)
     rootlen = RootDirLength(src);
     strncpy(dest, src, rootlen);
 
-    for (sp = src + rootlen; *sp != '\0'; sp++)
+    for (const char *sp = src + rootlen; *sp != '\0'; sp++)
     {
         if (IsFileSep(*sp))
         {
@@ -750,7 +749,7 @@ bool IsFileOutsideDefaultRepository(const char *f)
 
 /*******************************************************************/
 
-static int UnixRootDirLength(char *f)
+static int UnixRootDirLength(const char *f)
 {
     if (IsFileSep(*f))
     {
@@ -808,7 +807,7 @@ static int NTRootDirLength(char *f)
 }
 #endif
 
-int RootDirLength(char *f)
+int RootDirLength(const char *f)
   /* Return length of Initial directory in path - */
 {
 #ifdef NT

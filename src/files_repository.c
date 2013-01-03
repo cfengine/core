@@ -91,7 +91,7 @@ bool GetRepositoryPath(const char *file, Attributes attr, char *destination)
 
 /*********************************************************************/
 
-int ArchiveToRepository(char *file, Attributes attr, Promise *pp, const ReportContext *report_context)
+int ArchiveToRepository(const char *file, Attributes attr, Promise *pp, const ReportContext *report_context)
  /* Returns true if the file was backup up and false if not */
 {
     char destination[CF_BUFSIZE];

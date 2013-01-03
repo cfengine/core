@@ -51,9 +51,9 @@ void CanonifyNameInPlace(char *str);
 void TransformNameInPlace(char *s, char from, char to);
 char *CanonifyChar(const char *str, char ch);
 const char *ReadLastNode(const char *str);
-int CompressPath(char *dest, char *src);
+int CompressPath(char *dest, const char *src);
 int IsAbsoluteFileName(const char *f);
 bool IsFileOutsideDefaultRepository(const char *f);
-int RootDirLength(char *f);
+int RootDirLength(const char *f);
 const char *GetSoftwareCacheFilename(char *buffer);
 #endif

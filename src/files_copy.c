@@ -62,7 +62,7 @@ void CheckForFileHoles(struct stat *sstat, Promise *pp)
 
 /*********************************************************************/
 
-bool CopyRegularFileDisk(char *source, char *destination, bool make_holes)
+bool CopyRegularFileDisk(const char *source, const char *destination, bool make_holes)
 {
     int sd, dd, buf_size;
     char *buf, *cp;

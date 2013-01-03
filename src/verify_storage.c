@@ -29,6 +29,7 @@
 #include "conversion.h"
 #include "files_interfaces.h"
 #include "files_operators.h"
+#include "files_links.h"
 #include "attributes.h"
 #include "cfstream.h"
 #include "transaction.h"

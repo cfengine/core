@@ -26,6 +26,7 @@
 #include "cfstream.h"
 #include "dir.h"
 #include "files_names.h"
+#include "files_links.h"
 #include "transaction.h"
 #include "instrumentation.h"
 #include "matching.h"

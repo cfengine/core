@@ -241,7 +241,6 @@ void CfHtmlHeader(Writer *writer, char *title, char *css, char *webdriver, char 
 void CfHtmlFooter(Writer *writer, char *footer);
 
 /* install.c */
-int RelevantBundle(const char *agent, const char *blocktype);
 Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *args, const char *source_path);
 Body *AppendBody(Policy *policy, const char *name, const char *type, Rlist *args, const char *source_path);
 SubType *AppendSubType(Bundle *bundle, char *typename);

@@ -39,34 +39,6 @@ static void DeleteSubTypes(SubType *tp);
 
 /*******************************************************************/
 
-int RelevantBundle(const char *agent, const char *blocktype)
-{
-    Item *ip;
-
-    if ((strcmp(agent, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0) || (strcmp(CF_COMMONC, blocktype) == 0))
-    {
-        return true;
-    }
-
-/* Here are some additional bundle types handled by cfAgent */
-
-    ip = SplitString("edit_line,edit_xml", ',');
-
-    if (strcmp(agent, CF_AGENTTYPES[AGENT_TYPE_AGENT]) == 0)
-    {
-        if (IsItemIn(ip, blocktype))
-        {
-            DeleteItemList(ip);
-            return true;
-        }
-    }
-
-    DeleteItemList(ip);
-    return false;
-}
-
-/*******************************************************************/
-
 Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *args,
                      const char *source_path)
 {

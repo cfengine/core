@@ -47,6 +47,7 @@
 #include "fncall.h"
 #include "args.h"
 #include "logging.h"
+#include "iteration.h"
 
 static void MapIteratorsFromScalar(const char *scope, Rlist **los, Rlist **lol, char *string, int level, const Promise *pp);
 static int Epimenides(const char *var, Rval rval, int level);

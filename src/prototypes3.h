@@ -240,14 +240,6 @@ int FullWrite(int desc, const char *ptr, size_t len);
 void CfHtmlHeader(Writer *writer, char *title, char *css, char *webdriver, char *banner);
 void CfHtmlFooter(Writer *writer, char *footer);
 
-/* iteration.c */
-
-Rlist *NewIterationContext(const char *scopeid, Rlist *listvars);
-void DeleteIterationContext(Rlist *lol);
-int IncrementIterationContext(Rlist *iterators);
-int EndOfIteration(Rlist *iterator);
-int NullIterators(Rlist *iterator);
-
 /* install.c */
 int RelevantBundle(const char *agent, const char *blocktype);
 Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *args, const char *source_path);

@@ -23,7 +23,7 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include "iteration.h"
 
 #include "scope.h"
 #include "unix.h"

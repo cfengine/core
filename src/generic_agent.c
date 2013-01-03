@@ -1428,7 +1428,7 @@ ReportContext *OpenCompilationReportFiles(const char *fname)
     snprintf(filename, CF_BUFSIZE - 1, "%s.html", fname);
     CfOut(cf_inform, "", "Summarizing promises as html to %s\n", filename);
 
-    if ((freport_text = fopen(filename, "w")) == NULL)
+    if ((freport_html = fopen(filename, "w")) == NULL)
     {
         FatalError("Could not write output log to %s", filename);
     }

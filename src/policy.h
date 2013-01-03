@@ -64,4 +64,13 @@ bool PolicyCheck(const Policy *policy, Sequence *errors);
 void PolicySetNameSpace(Policy *policy, char *namespace);
 char *CurrentNameSpace(Policy *policy);
 
+Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *args, const char *source_path);
+Body *AppendBody(Policy *policy, const char *name, const char *type, Rlist *args, const char *source_path);
+SubType *AppendSubType(Bundle *bundle, char *typename);
+Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *classes, char *bundle, char *bundletype, char *namespace);
+void DeleteBundles(Bundle *bp);
+void DeleteBodies(Body *bp);
+void DeletePromise(Promise *pp);
+void DeletePromises(Promise *pp);
+
 #endif

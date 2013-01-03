@@ -83,7 +83,6 @@ libpromises_la_SOURCES = \
         hashes.c hashes.h \
         hash_map.c hash_map_priv.h \
         html.c \
-        install.c \
         instrumentation.c instrumentation.h \
         item_lib.c item_lib.h \
         iteration.c iteration.h \

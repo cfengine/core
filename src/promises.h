@@ -32,8 +32,6 @@ Body *IsBody(Body *list, const char *namespace, const char *key);
 Bundle *IsBundle(Bundle *list, const char *key);
 Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp);
 Promise *ExpandDeRefPromise(const char *scopeid, Promise *pp);
-void DeletePromise(Promise *pp);
-void DeletePromises(Promise *pp);
 void PromiseRef(enum cfreport level, const Promise *pp);
 Promise *NewPromise(char *type, char *promiser);
 void HashPromise(char *salt, Promise *pp, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhashes type);

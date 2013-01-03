@@ -444,39 +444,6 @@ Bundle *IsBundle(Bundle *list, const char *key)
 }
 
 /*****************************************************************************/
-/* Cleanup                                                                   */
-/*****************************************************************************/
-
-void DeletePromises(Promise *pp)
-{
-    if (pp == NULL)
-    {
-        return;
-    }
-
-    if (pp->this_server != NULL)
-    {
-        ThreadLock(cft_policy);
-        free(pp->this_server);
-        ThreadUnlock(cft_policy);
-    }
-
-    if (pp->next != NULL)
-    {
-        DeletePromises(pp->next);
-    }
-
-    if (pp->ref_alloc == 'y')
-    {
-        ThreadLock(cft_policy);
-        free(pp->ref);
-        ThreadUnlock(cft_policy);
-    }
-
-    DeletePromise(pp);
-}
-
-/*****************************************************************************/
 
 Promise *NewPromise(char *typename, char *promiser)
 {
@@ -505,42 +472,6 @@ Promise *NewPromise(char *typename, char *promiser)
                               CF_SCALAR}, NULL, false);
 
     return pp;
-}
-
-/*****************************************************************************/
-
-void DeletePromise(Promise *pp)
-{
-    if (pp == NULL)
-    {
-        return;
-    }
-
-    CfDebug("DeletePromise(%s->[%c])\n", pp->promiser, pp->promisee.rtype);
-
-    ThreadLock(cft_policy);
-
-    if (pp->promiser != NULL)
-    {
-        free(pp->promiser);
-    }
-
-    if (pp->promisee.item != NULL)
-    {
-        DeleteRvalItem(pp->promisee);
-    }
-
-    free(pp->bundle);
-    free(pp->bundletype);
-    free(pp->classes);
-    free(pp->namespace);
-
-// ref and agentsubtype are only references, do not free
-
-    DeleteConstraintList(pp->conlist);
-
-    free((char *) pp);
-    ThreadUnlock(cft_policy);
 }
 
 /*****************************************************************************/

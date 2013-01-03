@@ -31,6 +31,7 @@
 #include "unix.h"
 #include "cfstream.h"
 #include "args.h"
+#include "evalfunction.h"
 
 #include <assert.h>
 

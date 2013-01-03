@@ -33,6 +33,7 @@
 #include "cfstream.h"
 #include "fncall.h"
 #include "logging.h"
+#include "evalfunction.h"
 
 /******************************************************************/
 /* Argument propagation                                           */

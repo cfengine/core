@@ -28,6 +28,7 @@
 #include "constraints.h"
 #include "conversion.h"
 #include "cfstream.h"
+#include "chflags.h"
 
 static void ShowAttributes(Attributes a);
 

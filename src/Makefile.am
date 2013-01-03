@@ -40,7 +40,7 @@ libpromises_la_SOURCES = \
         cf3.extern.h \
         cf3globals.c \
         cfstream.c cfstream.h \
-        chflags.c \
+        chflags.c chflags.h \
         classes.c \
         client_code.c client_code.h \
         client_protocol.c client_protocol.h \

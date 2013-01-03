@@ -71,10 +71,6 @@ void ConnectionsCleanup(void);
 
 void SetSkipIdentify(bool enabled);
 
-/* chflags.c */
-
-int ParseFlagString(Rlist *flags, u_long *plusmask, u_long *minusmask);
-
 /* comparray.c */
 
 int FixCompressedArrayValue(int i, char *value, CompressedArray **start);

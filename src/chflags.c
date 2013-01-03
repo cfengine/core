@@ -25,7 +25,7 @@
 
 /* BSD flags */
 
-#include "cf3.defs.h"
+#include "chflags.h"
 
 typedef struct
 {

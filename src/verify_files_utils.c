@@ -44,6 +44,7 @@
 #include "acl.h"
 #include "env_context.h"
 #include "vars.h"
+#include "exec_tools.h"
 
 #define CF_RECURSION_LIMIT 100
 

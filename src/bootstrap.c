@@ -32,6 +32,7 @@
 #include "files_interfaces.h"
 #include "cfstream.h"
 #include "logging.h"
+#include "exec_tools.h"
 
 /*
 

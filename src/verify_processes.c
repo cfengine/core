@@ -33,6 +33,7 @@
 #include "attributes.h"
 #include "cfstream.h"
 #include "transaction.h"
+#include "exec_tools.h"
 
 static void VerifyProcesses(Attributes a, Promise *pp);
 static int ProcessSanityChecks(Attributes a, Promise *pp);

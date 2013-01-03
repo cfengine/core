@@ -36,6 +36,7 @@
 #include "communication.h"
 #include "pipes.h"
 #include "logging.h"
+#include "exec_tools.h"
 
 #ifdef HAVE_SYS_UIO_H
 # include <sys/uio.h>

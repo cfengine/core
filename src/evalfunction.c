@@ -51,6 +51,7 @@
 #include "communication.h"
 #include "pipes.h"
 #include "logging.h"
+#include "exec_tools.h"
 
 #include <libgen.h>
 

@@ -37,6 +37,7 @@
 #include "transaction.h"
 #include "logging.h"
 #include "evalfunction.h"
+#include "exec_tools.h"
 
 static int ExecSanityChecks(Attributes a, Promise *pp);
 static void PreviewProtocolLine(char *line, char *comm);

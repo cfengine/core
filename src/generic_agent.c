@@ -50,6 +50,7 @@
 #include "client_code.h"
 #include "logging.h"
 #include "string_lib.h"
+#include "exec_tools.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"

@@ -40,6 +40,7 @@
 #include "cfstream.h"
 #include "signals.h"
 #include "transaction.h"
+#include "exec_tools.h"
 
 #include <math.h>
 

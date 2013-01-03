@@ -27,6 +27,7 @@
 
 #include "cfstream.h"
 #include "transaction.h"
+#include "exec_tools.h"
 
 #ifndef MINGW
 static int CfSetuid(uid_t uid, gid_t gid);

@@ -163,16 +163,6 @@ struct ServerConnectionState;
 
 int ReceiveCollectCall(struct ServerConnectionState *conn, char *sendbuffer);
 
-/* exec_tool.c */
-
-int IsExecutable(const char *file);
-int ShellCommandReturnsZero(const char *comm, int useshell);
-int GetExecOutput(char *command, char *buffer, int useshell);
-void ActAsDaemon(int preserve);
-char *ShEscapeCommand(char *s);
-char **ArgSplitCommand(const char *comm);
-void ArgFree(char **args);
-
 /* files_copy.c */
 
 void *CopyFileSources(char *destination, Attributes attr, Promise *pp, const ReportContext *report_context);

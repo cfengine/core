@@ -64,7 +64,7 @@ libpromises_la_SOURCES = \
         enterprise_stubs.c \
         env_context.c env_context.h \
         evalfunction.c evalfunction.h \
-        exec_tools.c \
+        exec_tools.c exec_tools.h \
         expand.c expand.h \
         files_copy.c \
         files_hashes.c files_hashes.h \

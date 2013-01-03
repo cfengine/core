@@ -49,6 +49,7 @@
 #include "args.h"
 #include "client_code.h"
 #include "communication.h"
+#include "net.h"
 #include "pipes.h"
 #include "logging.h"
 #include "exec_tools.h"

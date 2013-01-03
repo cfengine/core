@@ -112,7 +112,7 @@ libpromises_la_SOURCES = \
         mod_services.c mod_services.h \
         mod_storage.c mod_storage.h \
         modes.c \
-        net.c \
+        net.c net.h \
         policy.c policy.h \
         parser.c parser.h \
         parser_state.h \

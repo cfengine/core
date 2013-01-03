@@ -40,6 +40,7 @@
 #include "signals.h"
 #include "transaction.h"
 #include "logging.h"
+#include "net.h"
 
 //******************************************************************
 // GLOBAL STATE

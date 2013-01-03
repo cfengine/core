@@ -26,6 +26,7 @@
 #include "client_protocol.h"
 
 #include "communication.h"
+#include "net.h"
 #include "sysinfo.h"
 #include "promises.h"
 #include "lastseen.h"

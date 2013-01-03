@@ -209,15 +209,6 @@ void TexinfoManual(const char *source_dir, const char *output_file);
 
 int ParseModeString(const char *modestring, mode_t *plusmask, mode_t *minusmask);
 
-/* net.c */
-
-int SendTransaction(int sd, char *buffer, int len, char status);
-int ReceiveTransaction(int sd, char *buffer, int *more);
-int RecvSocketStream(int sd, char *buffer, int toget, int nothing);
-int SendSocketStream(int sd, char *buffer, int toget, int flags);
-
-int SetReceiveTimeout(int sd, const struct timeval *timeout);
-
 /* patches.c */
 
 int IsPrivileged(void);

@@ -29,6 +29,7 @@
 #include "constraints.h"
 #include "promises.h"
 #include "files_names.h"
+#include "files_edit.h"
 #include "vars.h"
 #include "item_lib.h"
 #include "sort.h"

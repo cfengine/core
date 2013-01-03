@@ -199,7 +199,7 @@ cf_agent_SOURCES = \
         verify_outputs.c \
         verify_services.c \
         verify_environments.c verify_environments.h \
-        files_edit.c \
+        files_edit.c files_edit.h \
         files_editline.c \
         files_editxml.c \
         vercmp_internal.c vercmp_internal.h \

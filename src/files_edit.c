@@ -23,7 +23,7 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include "files_edit.h"
 
 #include "env_context.h"
 #include "files_names.h"
@@ -35,7 +35,7 @@
 
 /*****************************************************************************/
 
-EditContext *NewEditContext(char *filename, Attributes a, Promise *pp)
+EditContext *NewEditContext(char *filename, Attributes a, const Promise *pp)
 {
     EditContext *ec;
 
@@ -165,7 +165,7 @@ void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportC
 /***************************************************************************/
 
 #ifdef HAVE_LIBXML2
-int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, Attributes a, Promise *pp)
+int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, Attributes a, const Promise *pp)
 {
     struct stat statbuf;
 
@@ -238,7 +238,7 @@ int SaveXmlDocAsFile(xmlDocPtr doc, const char *file, Attributes a, Promise *pp,
 
 /*********************************************************************/
 
-int AppendIfNoSuchLine(char *filename, char *line)
+int AppendIfNoSuchLine(const char *filename, const char *line)
 /* Appends line to the file with path filename if it is not already
    there. line should not contain newline.
    Returns true if the line is there on exit, false on error. */

@@ -33,6 +33,7 @@
 #include "files_names.h"
 #include "files_interfaces.h"
 #include "files_repository.h"
+#include "files_edit.h"
 #include "item_lib.h"
 #include "vars.h"
 #include "conversion.h"

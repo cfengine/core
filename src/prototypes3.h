@@ -181,19 +181,6 @@ void CheckForFileHoles(struct stat *sstat, Promise *pp);
 int FSWrite(char *new, int dd, char *buf, int towrite, int *last_write_made_hole, int n_read, Attributes attr,
             Promise *pp);
 
-/* files_edit.c */
-
-EditContext *NewEditContext(char *filename, Attributes a, Promise *pp);
-void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportContext *report_context);
-int SaveItemListAsFile(Item *liststart, const char *file, Attributes a, Promise *pp, const ReportContext *report_context);
-#ifdef HAVE_LIBXML2
-int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, Attributes a, Promise *pp);
-int SaveXmlDocAsFile(xmlDocPtr doc, const char *file, Attributes a, Promise *pp, const ReportContext *report_context);
-#endif
-int BeginSaveAsFile(const char *file, char *new, char *backup, struct stat *statbuf, Attributes a, Promise *pp);
-int FinishSaveAsFile(const char *file, char *new, char *backup, struct stat *statbuf, Attributes a, Promise *pp, const ReportContext *report_context);
-int AppendIfNoSuchLine(char *filename, char *line);
-
 /* files_editline.c */
 
 int ScheduleEditLineOperations(char *filename, Bundle *bp, Attributes a, Promise *pp, const ReportContext *report_context);

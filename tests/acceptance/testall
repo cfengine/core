@@ -117,12 +117,14 @@ curdir() {
   esac
 }
 
-DEFAGENT=$(dirname $(dirname $(curdir)))/src/cf-agent
+DEFAGENT=$(dirname $(dirname $(curdir)))/cf-agent/cf-agent
 AGENT=${AGENT:-${DEFAGENT}}
-CFKEY=$(dirname $(dirname $(curdir)))/src/cf-key
-CFSERVER=$(dirname $(dirname $(curdir)))/src/cf-serverd
+DEFCF_PROMISES=$(dirname $(dirname $(curdir)))/cf-promises/cf-promises
+CF_PROMISES=${CF_PROMISES:-${DEFCF_PROMISES}}
+CFKEY=$(dirname $(dirname $(curdir)))/cf-key/cf-key
+CFSERVER=$(dirname $(dirname $(curdir)))/cf-serverd/cf-serverd
 
-ln -sf $(dirname $(dirname $(curdir)))/src/cf-promises ~/.cfagent/bin/cf-promises
+ln -sf ${CF_PROMISES} ~/.cfagent/bin
 
 usage() {
   echo "testall [-q] [--gainroot=<command>] [--agent=<agent>] [--no-nova] [--staging] [--no-network] [<test> <test>...]"
@@ -184,7 +186,7 @@ runtest() {
     WORKDIR=$BASE_WORKDIR/$FLATNAME
     mkdir -p $WORKDIR/bin $WORKDIR/tmp
     ln -sf $AGENT $WORKDIR/bin
-    ln -sf $(dirname $AGENT)/cf-promises $WORKDIR/bin
+    ln -sf $CF_PROMISES $WORKDIR/bin
 
     echo "#!/bin/sh
 CFENGINE_TEST_OVERRIDE_WORKDIR=$WORKDIR

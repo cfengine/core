@@ -2,19 +2,17 @@ AM_CFLAGS = $(GCC_CFLAG) $(NOVA_CFLAGS) @CFLAGS@
 AM_YFLAGS = -d
 LDADD = libpromises.la
 
-# libcfpub
+.PRECIOUS: ../libutils/libutils.la
 
-.PRECIOUS: ../pub/libcfpub.la
-
-../pub/libcfpub.la:
-	$(MAKE) -C ../pub $(AM_MAKEFLAGS) libcfpub.la
+../libutils/libutils.la:
+	$(MAKE) -C ../libutils $(AM_MAKEFLAGS) libutils.la
 
 # libpromises
 
 projlib_LTLIBRARIES = libpromises.la
 
 libpromises_la_LDFLAGS = -version-info 1:0:0 -no-undefined
-libpromises_la_LIBADD = ../pub/libcfpub.la $(NOVA_LDADD)
+libpromises_la_LIBADD = ../libutils/libutils.la $(NOVA_LDADD)
 
 libpromises_la_CFLAGS = $(AM_CFLAGS)
 
@@ -24,16 +22,13 @@ libpromises_la_SOURCES = \
         cf3parse.y cf3parse.h \
         cf3lex.l \
         addr_lib.c addr_lib.h \
-        alloc.c alloc.h \
         alphalist.c alphalist.h \
         acl.c acl.h \
         acl_posix.c acl_posix.h \
         args.c args.h \
-        array_map.c array_map_priv.h \
         assoc.c assoc.h \
         atexit.c atexit.h \
         attributes.c attributes.h \
-        bool.h \
         bootstrap.c bootstrap.h \
         cf.events.h \
         cf3.defs.h \
@@ -46,8 +41,6 @@ libpromises_la_SOURCES = \
         client_protocol.c client_protocol.h \
         communication.c communication.h \
         comparray.c \
-        compiler.h \
-        config.h \
         constants.c \
         constraints.c constraints.h \
         conversion.c conversion.h \
@@ -81,7 +74,6 @@ libpromises_la_SOURCES = \
         generic_agent.c generic_agent.h \
         granules.c granules.h \
         hashes.c hashes.h \
-        hash_map.c hash_map_priv.h \
         html.c \
         instrumentation.c instrumentation.h \
         item_lib.c item_lib.h \
@@ -91,8 +83,6 @@ libpromises_la_SOURCES = \
         lastseen.c lastseen.h \
         logging.c logging.h \
         logic_expressions.c logic_expressions.h \
-        map.c map.h \
-        map_common.h \
         matching.c matching.h \
         misc_lib.c misc_lib.h \
         mod_access.c mod_access.h \
@@ -118,7 +108,6 @@ libpromises_la_SOURCES = \
         parser_state.h \
         patches.c \
         pipes.c pipes.h \
-        platform.h \
         proc_keyvalue.c proc_keyvalue.h \
         processes_select.c \
         promises.c promises.h \
@@ -127,12 +116,10 @@ libpromises_la_SOURCES = \
         rlist.c rlist.h \
         scope.c scope.h \
         selfdiagnostic.c \
-        sequence.c sequence.h \
-        set.c set.h \
         signals.c signals.h \
         sockaddr.c \
         sort.c sort.h \
-	statistics.c statistics.h \
+        statistics.c statistics.h \
         storage_tools.c \
         string_expressions.c string_expressions.h \
         string_lib.c string_lib.h \
@@ -160,127 +147,7 @@ endif
 BUILT_SOURCES = cf3parse.h
 
 # Automake need to be guided due to symlinking
-libpromises_la_DEPENDENCIES = ../pub/libcfpub.la $(NOVA_LDADD)
-
-sbin_PROGRAMS = \
-        cf-agent \
-        cf-execd \
-        cf-key \
-        cf-monitord \
-        cf-promises \
-        cf-report \
-        cf-runagent \
-        cf-serverd
-
-noinst_PROGRAMS = \
-        cf-gendoc
-
-if HAVE_NOVA
-if MONGO
-  sbin_PROGRAMS += cf-hub
-endif
-endif
-
-if HAVE_NOVA
-  sbin_PROGRAMS += cf-know
-endif
-
-cf_agent_SOURCES = \
-        cf-agent.c \
-        cf_sql.c cf_sql.h \
-        nfs.c nfs.h \
-        verify_files.c \
-        verify_files_utils.c \
-        verify_storage.c \
-        verify_exec.c \
-        verify_methods.c \
-        verify_interfaces.c \
-        verify_databases.c \
-        verify_outputs.c \
-        verify_services.c \
-        verify_environments.c verify_environments.h \
-        files_edit.c files_edit.h \
-        files_editline.c \
-        files_editxml.c \
-        vercmp_internal.c vercmp_internal.h \
-        vercmp.c vercmp.h \
-        verify_packages.c \
-        agentdiagnostic.c
-
-cf_agent_LDADD =
-if HAVE_NOVA
-cf_agent_LDADD += ../nova/src/libcfagent.la
-endif
-cf_agent_LDADD += libpromises.la \
-	$(LIBXML2_LDFLAGS) $(LIBXML2_LIBS) \
-	$(LIBVIRT_LDFLAGS) $(LIBVIRT_LIBS) \
-	$(POSTGRESQL_LDFLAGS) $(POSTGRESQL_LIBS) \
-	$(MYSQL_LDFLAGS) $(MYSQL_LIBS)
-
-cf_gendoc_SOURCES = \
-	cf-gendoc.c \
-        manual.c manual.h \
-        export_xml.c export_xml.h
-
-cf_serverd_SOURCES = \
-        cf-serverd.c \
-        cf-serverd-functions.c \
-        cf-serverd-functions.h \
-        server.c server.h \
-        server_transform.c \
-        enterprise_stubs_serverd.c
-
-cf_serverd_LDADD =
-if HAVE_NOVA
-cf_serverd_LDADD += ../nova/src/libcfserverd.la
-endif
-cf_serverd_LDADD += libpromises.la
-
-cf_monitord_SOURCES = \
-        verify_measurements.c \
-        env_monitor.c env_monitor.h \
-        monitoring.h \
-        mon_cpu.c \
-        mon_disk.c \
-        mon_entropy.c \
-        mon_load.c \
-        mon_network_sniffer.c \
-        mon_network.c \
-        mon_processes.c \
-        mon_temp.c \
-        cf-monitord.c
-
-cf_monitord_LDADD =
-if HAVE_NOVA
-cf_monitord_LDADD += ../nova/src/libcfmonitord.la
-endif
-cf_monitord_LDADD += libpromises.la
-
-cf_report_LDADD =
-if HAVE_NOVA
-cf_report_LDADD += ../nova/src/libcfreport.la
-endif
-cf_report_LDADD += libpromises.la
-
-cf_execd_SOURCES = \
-        cf-execd.c \
-        cf-execd-runner.c cf-execd-runner.h
-
-if HAVE_NOVA
-if MONGO
-cf_hub_SOURCES =
-
-cf_hub_LDADD = \
-        ../nova/src/libcfhub.la libpromises.la
-endif
-endif
-
-if HAVE_NOVA
-cf_know_SOURCES =
-
-cf_know_LDADD = \
-        ../nova/src/libcfknow.la libpromises.la
-endif
+libpromises_la_DEPENDENCIES = ../libutils/libutils.la $(NOVA_LDADD)
 
 CLEANFILES = *.gcno *.gcda
 
@@ -288,12 +155,6 @@ CLEANFILES = *.gcno *.gcda
 # Some basic clean ups
 #
 MOSTLYCLEANFILES = *~ *.orig *.rej
-
-#
-# Get everything removed down to where rebuilding requires:
-# "configure; make; make install"
-#
-DISTCLEANFILES = cflex.c cfparse.c cfparse.h
 
 #
 # Get everything removed down to where rebuilding requires:

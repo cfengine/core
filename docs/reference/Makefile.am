@@ -3,13 +3,13 @@ TEX_INCLUDEDIR=$(srcdir)/../tex-include
 .PRECIOUS: ../../src/cf-gendoc
 
 ../../src/cf-gendoc:
-	$(MAKE) -C ../../src $(AM_MAKEFLAGS) cf-gendoc
+	$(MAKE) -C ../../cf-gendoc $(AM_MAKEFLAGS) cf-gendoc
 
 cf3-Reference.texinfo: ../../src/cf-gendoc \
     generate_manual.cf \
     $(filter-out cf3-Reference.texinfo,$(wildcard *.texinfo)) \
     $(wildcard */*.texinfo)
-	$(AM_V_GEN)../../src/cf-gendoc -i . -o $@
+	$(AM_V_GEN)../../cf-gendoc/cf-gendoc -i . -o $@
 
 %.html: %.texinfo
 	$(AM_V_GEN)$(MAKEINFO) \

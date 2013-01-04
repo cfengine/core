@@ -19,10 +19,12 @@ endif
 
 endif
 
-.PRECIOUS: ../../src/%
+.PRECIOUS: ../../%/%
 
-../../src/%:
-	$(MAKE) -C ../../src $(AM_MAKEFLAGS) $<
+../../%/.doc-stamp:
+	echo $@
+	$(MAKE) -C $(dir $@) $(AM_MAKEFLAGS)
+	touch $@
 
-%.8 : ../../src/%
-	$(AM_V_GEN)$< -M > $@
+%.8 : ../../%/.doc-stamp
+	$(AM_V_GEN)$(dir $<)$(notdir $(patsubst %/,%,$(dir $<))) -M > $@

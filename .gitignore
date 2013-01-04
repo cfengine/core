@@ -55,38 +55,38 @@ docs/tools/build-stdlib.exe
 
 # binaries
 
-src/cf-agent
-src/cf-agent.exe
-src/cf-execd
-src/cf-execd.exe
-src/cf-hub
-src/cf-hub.exe
-src/cf-key
-src/cf-key.exe
-src/cf-know
-src/cf-know.exe
-src/cf-monitord
-src/cf-monitord.exe
-src/cf-promises
-src/cf-promises.exe
-src/cf-report
-src/cf-report.exe
-src/cf-runagent
-src/cf-runagent.exe
-src/cf-serverd
-src/cf-serverd.exe
-src/cf-gendoc
-src/cf-gendoc.exe
+cf-agent/cf-agent
+cf-agent/cf-agent.exe
+cf-execd/cf-execd
+cf-execd/cf-execd.exe
+cf-hub/cf-hub
+cf-hub/cf-hub.exe
+cf-key/cf-key
+cf-key/cf-key.exe
+cf-know/cf-know
+cf-know/cf-know.exe
+cf-monitord/cf-monitord
+cf-monitord/cf-monitord.exe
+cf-promises/cf-promises
+cf-promises/cf-promises.exe
+cf-report/cf-report
+cf-report/cf-report.exe
+cf-runagent/cf-runagent
+cf-runagent/cf-runagent.exe
+cf-serverd/cf-serverd
+cf-serverd/cf-serverd.exe
+cf-gendoc/cf-gendoc
+cf-gendoc/cf-gendoc.exe
 ext/rpmvercmp
 
 # autogen
 
-src/cf3lex.c
-src/cf3parse.c
-src/cf3parse.h
-src/cf3parse.output
-src/conf.h
-src/conf.h.in
+libpromises/cf3lex.c
+libpromises/cf3parse.c
+libpromises/cf3parse.h
+cf3parse.output
+libpromises/conf.h
+libpromises/conf.h.in
 
 # acceptance tests
 

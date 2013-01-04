@@ -30,7 +30,7 @@ vars:
 
 commands:
 
-   "$(cwd)/../../src/cf-serverd -Kf $(cwd)/16_cf-serverd/01_start/$(servers)",
+   "$(cwd)/../../cf-serverd/cf-serverd -Kf $(cwd)/16_cf-serverd/01_start/$(servers)",
        comment => "Start the server using file $(servers) as the input",
        contain => devnull,
        classes => if_repaired("repaired_$(servers)");

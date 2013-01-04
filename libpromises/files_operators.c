@@ -1367,7 +1367,7 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
 
 /*********************************************************************/
 
-bool SaveItemListCallback(const char *dest_filename, const char *orig_filename, void *param, Attributes a, Promise *pp)
+static bool SaveItemListCallback(const char *dest_filename, const char *orig_filename, void *param, Attributes a, Promise *pp)
 {
     Item *liststart = param, *ip;
     FILE *fp;

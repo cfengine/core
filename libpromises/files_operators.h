@@ -46,8 +46,6 @@ void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp
 int FileSanityChecks(char *path, Attributes a, Promise *pp);
 
 #ifndef MINGW
-UidList *MakeUidList(char *uidnames);
-GidList *MakeGidList(char *gidnames);
 void AddSimpleUidItem(UidList ** uidlist, uid_t uid, char *uidname);
 void AddSimpleGidItem(GidList ** gidlist, gid_t gid, char *gidname);
 #endif /* NOT MINGW */

@@ -36,6 +36,8 @@
 #include "attributes.h"
 #include "cfstream.h"
 #include "transaction.h"
+#include "logging.h"
+#include "generic_agent.h" // HashVariables
 
 static void GetReturnValue(char *scope, Promise *pp);
     

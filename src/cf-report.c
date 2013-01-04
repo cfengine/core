@@ -23,7 +23,7 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include "generic_agent.h"
 
 #include "env_context.h"
 #include "dir.h"

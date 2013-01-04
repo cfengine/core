@@ -42,6 +42,7 @@
 #include "transaction.h"
 #include "logging.h"
 #include "exec_tools.h"
+#include "policy.h"
 
 /** Entry points from VerifyPackagesPromise **/
 

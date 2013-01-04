@@ -41,6 +41,7 @@
 #include "cfstream.h"
 #include "transaction.h"
 #include "string_lib.h"
+#include "logging.h"
 
 /*****************************************************************************/
 

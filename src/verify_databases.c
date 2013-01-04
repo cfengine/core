@@ -33,6 +33,7 @@
 #include "string_lib.h"
 #include "transaction.h"
 #include "cf_sql.h"
+#include "logging.h"
 
 static int CheckDatabaseSanity(Attributes a, Promise *pp);
 static void VerifySQLPromise(Attributes a, Promise *pp);

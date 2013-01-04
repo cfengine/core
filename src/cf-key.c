@@ -23,7 +23,7 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include "generic_agent.h"
 
 #include "dbm_api.h"
 #include "lastseen.h"

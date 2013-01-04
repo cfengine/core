@@ -32,6 +32,8 @@
 #include "attributes.h"
 #include "cfstream.h"
 #include "transaction.h"
+#include "logging.h"
+#include "policy.h"
 
 #ifdef HAVE_LIBVIRT
 /*****************************************************************************/

@@ -53,6 +53,7 @@
 #include "pipes.h"
 #include "logging.h"
 #include "exec_tools.h"
+#include "policy.h"
 
 #include <libgen.h>
 

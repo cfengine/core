@@ -32,6 +32,7 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "transaction.h"
+#include "cfstream.h"
 
 #include <assert.h>
 
@@ -816,4 +817,58 @@ void DeletePromises(Promise *pp)
     }
 
     DeletePromise(pp);
+}
+
+/*******************************************************************/
+
+Bundle *GetBundle(const Policy *policy, const char *name, const char *agent)
+{
+
+    // We don't need to check for the namespace here, as it is prefixed to the name already
+
+    for (Bundle *bp = policy->bundles; bp != NULL; bp = bp->next)       /* get schedule */
+    {
+        if (strcmp(bp->name, name) == 0)
+        {
+            if (agent)
+            {
+                if ((strcmp(bp->type, agent) == 0) || (strcmp(bp->type, "common") == 0))
+                {
+                    return bp;
+                }
+                else
+                {
+                    CfOut(cf_verbose, "", "The bundle called %s is not of type %s\n", name, agent);
+                }
+            }
+            else
+            {
+                return bp;
+            }
+        }
+    }
+
+    return NULL;
+}
+
+/*******************************************************************/
+
+SubType *GetSubTypeForBundle(char *type, Bundle *bp)
+{
+    SubType *sp;
+
+    if (bp == NULL)
+    {
+        return NULL;
+    }
+
+    for (sp = bp->subtypes; sp != NULL; sp = sp->next)
+    {
+        if (strcmp(type, sp->name) == 0)
+        {
+            return sp;
+        }
+    }
+
+    return NULL;
 }

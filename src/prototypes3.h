@@ -190,8 +190,6 @@ int GetOwnerName(char *path, struct stat *lstatptr, char *owner, int ownerSz);
 
 int FullWrite(int desc, const char *ptr, size_t len);
 
-#include "generic_agent.h"
-
 /* html.c */
 
 void CfHtmlHeader(Writer *writer, char *title, char *css, char *webdriver, char *banner);

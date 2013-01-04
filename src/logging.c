@@ -33,6 +33,7 @@
 #include "cfstream.h"
 #include "string_lib.h"
 #include "transaction.h"
+#include "constraints.h"
 
 #define CF_VALUE_LOG      "cf_value.log"
 
@@ -336,6 +337,82 @@ void PromiseLog(char *s)
 
     fprintf(fout, "%" PRIdMAX ",%" PRIdMAX ": %s\n", (intmax_t)CFSTARTTIME, (intmax_t)now, s);
     fclose(fout);
+}
+
+/************************************************************************/
+
+void PromiseBanner(Promise *pp)
+{
+    char handle[CF_MAXVARSIZE];
+    const char *sp;
+
+    if ((sp = GetConstraintValue("handle", pp, CF_SCALAR)) || (sp = PromiseID(pp)))
+    {
+        strncpy(handle, sp, CF_MAXVARSIZE - 1);
+    }
+    else
+    {
+        strcpy(handle, "(enterprise only)");
+    }
+
+    CfOut(cf_verbose, "", "\n");
+    CfOut(cf_verbose, "", "    .........................................................\n");
+
+    if (VERBOSE || DEBUG)
+    {
+        printf("%s>     Promise's handle: %s\n", VPREFIX, handle);
+        printf("%s>     Promise made by: \"%s\"", VPREFIX, pp->promiser);
+    }
+
+    if (pp->promisee.item)
+    {
+        if (VERBOSE)
+        {
+            printf("\n%s>     Promise made to (stakeholders): ", VPREFIX);
+            ShowRval(stdout, pp->promisee);
+        }
+    }
+
+    if (VERBOSE)
+    {
+        printf("\n");
+    }
+
+    if (pp->ref)
+    {
+        CfOut(cf_verbose, "", "\n");
+        CfOut(cf_verbose, "", "    Comment:  %s\n", pp->ref);
+    }
+
+    CfOut(cf_verbose, "", "    .........................................................\n");
+    CfOut(cf_verbose, "", "\n");
+}
+
+/************************************************************************/
+
+void BannerSubBundle(Bundle *bp, Rlist *params)
+{
+    CfOut(cf_verbose, "", "\n");
+    CfOut(cf_verbose, "", "      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
+
+    if (VERBOSE || DEBUG)
+    {
+        printf("%s>       BUNDLE %s", VPREFIX, bp->name);
+    }
+
+    if (params && (VERBOSE || DEBUG))
+    {
+        printf("(");
+        ShowRlist(stdout, params);
+        printf(" )\n");
+    }
+    else
+    {
+        if (VERBOSE || DEBUG)
+            printf("\n");
+    }
+    CfOut(cf_verbose, "", "      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
+    CfOut(cf_verbose, "", "\n");
 }
 
 /************************************************************************/

@@ -73,4 +73,7 @@ void DeleteBodies(Body *bp);
 void DeletePromise(Promise *pp);
 void DeletePromises(Promise *pp);
 
+Bundle *GetBundle(const Policy *policy, const char *name, const char *agent);
+SubType *GetSubTypeForBundle(char *type, Bundle *bp);
+
 #endif

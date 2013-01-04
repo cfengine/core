@@ -44,6 +44,9 @@
 #include "transaction.h"
 #include "string_lib.h"
 #include "verify_files_utils.h"
+#include "logging.h"
+#include "generic_agent.h" // HashVariables
+
 
 static void LoadSetuid(Attributes a, Promise *pp);
 static void SaveSetuid(Attributes a, Promise *pp, const ReportContext *report_context);

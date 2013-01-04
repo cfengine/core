@@ -41,6 +41,7 @@
 #include "attributes.h"
 #include "cfstream.h"
 #include "transaction.h"
+#include "logging.h"
 
 #ifdef HAVE_PCRE_H
 # include <pcre.h>

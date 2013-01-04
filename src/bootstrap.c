@@ -33,6 +33,7 @@
 #include "cfstream.h"
 #include "logging.h"
 #include "exec_tools.h"
+#include "generic_agent.h" // PrintVersionBanner
 
 /*
 

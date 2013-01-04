@@ -37,6 +37,7 @@
 #include "communication.h"
 #include "transaction.h"
 #include "string_lib.h"
+#include "logging.h"
 
 static void ShowState(char *type);
 static void PrintFile(Attributes a, Promise *pp);

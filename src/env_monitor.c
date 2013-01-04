@@ -41,6 +41,7 @@
 #include "signals.h"
 #include "transaction.h"
 #include "exec_tools.h"
+#include "generic_agent.h" // WritePID
 
 #include <math.h>
 

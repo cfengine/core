@@ -31,5 +31,6 @@
 int VerifyFileLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp, const ReportContext *report_context);
 int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promise *pp,
                 const ReportContext *report_context);
+int CfCreateFile(char *file, Promise *pp, Attributes attr, const ReportContext *report_context);
 
 #endif

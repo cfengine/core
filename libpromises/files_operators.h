@@ -28,7 +28,6 @@
 
 #include "cf3.defs.h"
 
-int CfCreateFile(char *file, Promise *pp, Attributes attr, const ReportContext *report_context);
 FILE *CreateEmptyStream(void);
 int ScheduleCopyOperation(char *destination, Attributes attr, Promise *pp, const ReportContext *report_context);
 int ScheduleLinkChildrenOperation(char *destination, char *source, int rec, Attributes attr, Promise *pp, const ReportContext *report_context);

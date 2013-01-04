@@ -30,6 +30,5 @@
 
 void AddFilenameToListOfSuspicious(const char *filename);
 int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp);
-void SetSearchDevice(struct stat *sb, Promise *pp);
 
 #endif

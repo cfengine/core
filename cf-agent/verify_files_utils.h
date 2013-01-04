@@ -32,6 +32,7 @@ int VerifyFileLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp, co
 int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promise *pp,
                 const ReportContext *report_context);
 int CfCreateFile(char *file, Promise *pp, Attributes attr, const ReportContext *report_context);
+void SetSearchDevice(struct stat *sb, Promise *pp);
 
 int ScheduleCopyOperation(char *destination, Attributes attr, Promise *pp, const ReportContext *report_context);
 int ScheduleLinkChildrenOperation(char *destination, char *source, int rec, Attributes attr, Promise *pp, const ReportContext *report_context);

@@ -3455,3 +3455,9 @@ static int DeviceBoundary(struct stat *sb, Promise *pp)
         return true;
     }
 }
+
+void SetSearchDevice(struct stat *sb, Promise *pp)
+{
+    CfDebug("Registering root device as %" PRIdMAX "\n", (intmax_t) sb->st_dev);
+    pp->rootdevice = sb->st_dev;
+}

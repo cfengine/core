@@ -155,14 +155,3 @@ int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp)
           (unsigned int) (statbuf.st_mode));
     return true;
 }
-
-/********************************************************************/
-
-void SetSearchDevice(struct stat *sb, Promise *pp)
-{
-    CfDebug("Registering root device as %" PRIdMAX "\n", (intmax_t) sb->st_dev);
-    pp->rootdevice = sb->st_dev;
-}
-
-/********************************************************************/
-

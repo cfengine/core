@@ -165,7 +165,6 @@ int XmlCompareToFile(xmlDocPtr doc, char *file, Attributes a, Promise *pp);
 /* files_select.c */
 
 int SelectLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp);
-int GetOwnerName(char *path, struct stat *lstatptr, char *owner, int ownerSz);
 
 /* full_write.c */
 

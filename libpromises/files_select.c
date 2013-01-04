@@ -47,6 +47,7 @@ static int SelectExecRegexMatch(char *filename, char *crit, char *prog);
 static int SelectIsSymLinkTo(char *filename, Rlist *crit);
 static int SelectExecProgram(char *filename, char *command);
 static int SelectSizeMatch(size_t size, size_t min, size_t max);
+static int GetOwnerName(char *path, struct stat *lstatptr, char *owner, int ownerSz);
 
 #if defined HAVE_CHFLAGS
 static int SelectBSDMatch(struct stat *lstatptr, Rlist *bsdflags, Promise *pp);
@@ -519,7 +520,7 @@ static int SelectExecProgram(char *filename, char *command)
 /* Unix implementations                                            */
 /*******************************************************************/
 
-int GetOwnerName(char *path, struct stat *lstatptr, char *owner, int ownerSz)
+static int GetOwnerName(char *path, struct stat *lstatptr, char *owner, int ownerSz)
 {
     struct passwd *pw;
 

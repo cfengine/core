@@ -1305,6 +1305,32 @@ enum cfd_menu String2Menu(const char *s)
 /* Rlist to Uid/Gid lists                                                   */
 /****************************************************************************/
 
+static void AddSimpleUidItem(UidList ** uidlist, uid_t uid, char *uidname)
+{
+    UidList *ulp = xcalloc(1, sizeof(UidList));
+
+    ulp->uid = uid;
+
+    if (uid == CF_UNKNOWN_OWNER)        /* unknown user */
+    {
+        ulp->uidname = xstrdup(uidname);
+    }
+
+    if (*uidlist == NULL)
+    {
+        *uidlist = ulp;
+    }
+    else
+    {
+        UidList *u;
+
+        for (u = *uidlist; u->next != NULL; u = u->next)
+        {
+        }
+        u->next = ulp;
+    }
+}
+
 UidList *Rlist2UidList(Rlist *uidnames, const Promise *pp)
 {
     UidList *uidlist = NULL;
@@ -1328,6 +1354,32 @@ UidList *Rlist2UidList(Rlist *uidnames, const Promise *pp)
 }
 
 /*********************************************************************/
+
+static void AddSimpleGidItem(GidList ** gidlist, gid_t gid, char *gidname)
+{
+    GidList *glp = xcalloc(1, sizeof(GidList));
+
+    glp->gid = gid;
+
+    if (gid == CF_UNKNOWN_GROUP)        /* unknown group */
+    {
+        glp->gidname = xstrdup(gidname);
+    }
+
+    if (*gidlist == NULL)
+    {
+        *gidlist = glp;
+    }
+    else
+    {
+        GidList *g;
+
+        for (g = *gidlist; g->next != NULL; g = g->next)
+        {
+        }
+        g->next = glp;
+    }
+}
 
 GidList *Rlist2GidList(Rlist *gidnames, const Promise *pp)
 {

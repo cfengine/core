@@ -45,10 +45,6 @@ void CreateEmptyFile(char *name);
 void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp);
 int FileSanityChecks(char *path, Attributes a, Promise *pp);
 
-#ifndef MINGW
-void AddSimpleUidItem(UidList ** uidlist, uid_t uid, char *uidname);
-void AddSimpleGidItem(GidList ** gidlist, gid_t gid, char *gidname);
-#endif /* NOT MINGW */
 void LogHashChange(char *file, FileState status, char *msg, Promise *pp);
 
 typedef bool (*SaveCallbackFn)(const char *dest_filename, const char *orig_filename, void *param, Attributes a, Promise *pp);

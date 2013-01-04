@@ -1043,62 +1043,6 @@ int VerifyOwner(char *file, Promise *pp, Attributes attr, struct stat *sb)
     return false;
 }
 
-/*******************************************************************/
-
-void AddSimpleUidItem(UidList ** uidlist, uid_t uid, char *uidname)
-{
-    UidList *ulp = xcalloc(1, sizeof(UidList));
-
-    ulp->uid = uid;
-
-    if (uid == CF_UNKNOWN_OWNER)        /* unknown user */
-    {
-        ulp->uidname = xstrdup(uidname);
-    }
-
-    if (*uidlist == NULL)
-    {
-        *uidlist = ulp;
-    }
-    else
-    {
-        UidList *u;
-
-        for (u = *uidlist; u->next != NULL; u = u->next)
-        {
-        }
-        u->next = ulp;
-    }
-}
-
-/*******************************************************************/
-
-void AddSimpleGidItem(GidList ** gidlist, gid_t gid, char *gidname)
-{
-    GidList *glp = xcalloc(1, sizeof(GidList));
-
-    glp->gid = gid;
-
-    if (gid == CF_UNKNOWN_GROUP)        /* unknown group */
-    {
-        glp->gidname = xstrdup(gidname);
-    }
-
-    if (*gidlist == NULL)
-    {
-        *gidlist = glp;
-    }
-    else
-    {
-        GidList *g;
-
-        for (g = *gidlist; g->next != NULL; g = g->next)
-        {
-        }
-        g->next = glp;
-    }
-}
-
 #endif /* NOT MINGW */
 
 /*********************************************************************/

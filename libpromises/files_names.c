@@ -148,21 +148,6 @@ Returns true if so, false otherwise.
 
 /*********************************************************************/
 
-int EmptyString(char *s)
-{
-    char *sp;
-
-    for (sp = s; *sp != '\0'; sp++)
-    {
-        if (!isspace((int)*sp))
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 /*********************************************************************/
 
 char *JoinPath(char *path, const char *leaf)

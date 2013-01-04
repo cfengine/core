@@ -75,7 +75,9 @@ comment    #[^\n]*
 
 promises   bundle
 
-body       body
+body       body|attr
+
+main       main:
 
 nakedvar   [$@][(][a-zA-Z0-9_\[\]\200-\377.:]+[)]|[$@][{][a-zA-Z0-9_\[\]\200-\377.:]+[}]
 
@@ -83,9 +85,12 @@ id         [a-zA-Z0-9_\200-\377]+
 
 blockid    [a-zA-Z0-9_\200-\377]+[:][a-zA-Z0-9_\200-\377]+
 
-assign     =>
+assign     =>|=:
 
 arrow      ->
+
+doubledash  \-\-
+
 
 /*
  * Three types of quoted strings:
@@ -146,6 +151,16 @@ category   [a-zA-Z_]+:
                           return BODY;
                       }
 
+{main}               {
+                        if (P.currentclasses != NULL)
+                        {
+                            free(P.currentclasses);
+                            P.currentclasses = NULL;
+                        }
+                        P.line_pos += strlen(yytext);
+                        return MAIN;
+                     }
+
 {id}                  {
                           size_t token_length = strlen(yytext);
                           P.offsets.last_id = P.offsets.current - token_length;
@@ -175,6 +190,11 @@ category   [a-zA-Z_]+:
 {assign}              {
                           P.line_pos += strlen(yytext);
                           return ASSIGN;
+                      }
+
+{doubledash}         {
+                          P.line_pos += strlen(yytext);
+                          return DOUBLEDASH;
                       }
 
 {arrow}               {

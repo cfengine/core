@@ -79,6 +79,7 @@ static int VerifyOwner(char *file, Promise *pp, Attributes attr, struct stat *sb
 static int VerifyFinderType(char *file, struct stat *statbuf, Attributes a, Promise *pp);
 #endif
 static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp);
+static void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp, const ReportContext *report_context);
 
 #ifndef HAVE_NOVA
 static void LogFileChange(char *file, int change, Attributes a, Promise *pp, const ReportContext *report_context)
@@ -2558,7 +2559,7 @@ int ScheduleLinkChildrenOperation(char *destination, char *source, int recurse, 
     return true;
 }
 
-void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp, const ReportContext *report_context)
+static void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp, const ReportContext *report_context)
 {
     unsigned char digest1[EVP_MAX_MD_SIZE + 1];
     unsigned char digest2[EVP_MAX_MD_SIZE + 1];

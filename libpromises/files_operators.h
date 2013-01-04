@@ -29,12 +29,6 @@
 #include "cf3.defs.h"
 
 FILE *CreateEmptyStream(void);
-int ScheduleCopyOperation(char *destination, Attributes attr, Promise *pp, const ReportContext *report_context);
-int ScheduleLinkChildrenOperation(char *destination, char *source, int rec, Attributes attr, Promise *pp, const ReportContext *report_context);
-int ScheduleLinkOperation(char *destination, char *source, Attributes attr, Promise *pp, const ReportContext *report_context);
-int ScheduleEditOperation(char *filename, Attributes attr, Promise *pp, const ReportContext *report_context);
-FileCopy *NewFileCopy(Promise *pp);
-void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp, const ReportContext *report_context);
 int MoveObstruction(char *from, Attributes attr, Promise *pp, const ReportContext *report_context);
 int MakeParentDirectory(char *parentandchild, int force, const ReportContext *report_context);
 int MakeParentDirectory2(char *parentandchild, int force, const ReportContext *report_context, bool enforce_promise);

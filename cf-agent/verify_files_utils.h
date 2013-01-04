@@ -33,4 +33,9 @@ int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promis
                 const ReportContext *report_context);
 int CfCreateFile(char *file, Promise *pp, Attributes attr, const ReportContext *report_context);
 
+int ScheduleCopyOperation(char *destination, Attributes attr, Promise *pp, const ReportContext *report_context);
+int ScheduleLinkChildrenOperation(char *destination, char *source, int rec, Attributes attr, Promise *pp, const ReportContext *report_context);
+int ScheduleLinkOperation(char *destination, char *source, Attributes attr, Promise *pp, const ReportContext *report_context);
+int ScheduleEditOperation(char *filename, Attributes attr, Promise *pp, const ReportContext *report_context);
+
 #endif

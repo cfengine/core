@@ -23,7 +23,8 @@
 */
 
 #define ALLOC_IMPL
-#include "cf3.defs.h"
+#include "platform.h"
+#include "alloc.h"
 
 static void *CheckResult(void *ptr, const char *fn, bool check_result)
 {

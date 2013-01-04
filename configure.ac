@@ -9,7 +9,7 @@ dnl ##########################################################################
 AC_PREREQ(2.59)
 
 AC_INIT
-AC_CONFIG_SRCDIR([src/cf-promises.c])
+AC_CONFIG_SRCDIR([libpromises/generic_agent.c])
 AC_CANONICAL_TARGET
 
 dnl
@@ -32,7 +32,7 @@ AC_DEFINE(BUILD_YEAR, esyscmd([date +%Y | tr -d '\n']), "Software build year")
 
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
-AC_CONFIG_HEADERS([src/conf.h])
+AC_CONFIG_HEADERS([libutils/conf.h])
 
 dnl Libtool madness
 
@@ -686,7 +686,7 @@ dnl ######################################################################
 
 dnl To ensure conf.h is picked up via VPATH
 if test "$srcdir" != "."; then
-  CPPFLAGS="$CPPFLAGS -I`pwd`/src"
+  CPPFLAGS="$CPPFLAGS -I`pwd`/libpromises"
 fi
 
 case "$target_os" in
@@ -1018,7 +1018,17 @@ dnl ######################################################################
 
 AC_CONFIG_FILES([Makefile
 	pub/Makefile
-	src/Makefile
+	libutils/Makefile
+	libpromises/Makefile
+	cf-agent/Makefile
+	cf-promises/Makefile
+	cf-execd/Makefile
+	cf-gendoc/Makefile
+	cf-key/Makefile
+	cf-monitord/Makefile
+	cf-report/Makefile
+	cf-runagent/Makefile
+	cf-serverd/Makefile
 	ext/Makefile
 	docs/Makefile
 	docs/guides/Makefile

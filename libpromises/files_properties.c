@@ -166,15 +166,3 @@ void SetSearchDevice(struct stat *sb, Promise *pp)
 
 /********************************************************************/
 
-int DeviceBoundary(struct stat *sb, Promise *pp)
-{
-    if (sb->st_dev == pp->rootdevice)
-    {
-        return false;
-    }
-    else
-    {
-        CfOut(cf_verbose, "", "Device change from %jd to %jd\n", (intmax_t) pp->rootdevice, (intmax_t) sb->st_dev);
-        return true;
-    }
-}

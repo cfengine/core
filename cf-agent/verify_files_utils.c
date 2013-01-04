@@ -70,6 +70,7 @@ static int cf_stat(char *file, struct stat *buf, Attributes attr, Promise *pp);
 static int cf_readlink(char *sourcefile, char *linkbuf, int buffsize, Attributes attr, Promise *pp);
 static bool CopyRegularFileDiskReport(char *source, char *destination, Attributes attr, Promise *pp);
 static int SkipDirLinks(char *path, const char *lastnode, Recursion r);
+static int DeviceBoundary(struct stat *sb, Promise *pp);
 
 #ifndef __MINGW32__
 static void VerifySetUidGid(char *file, struct stat *dstat, mode_t newperm, Promise *pp, Attributes attr);
@@ -3440,4 +3441,17 @@ int CfCreateFile(char *file, Promise *pp, Attributes attr,
     }
 
     return true;
+}
+
+static int DeviceBoundary(struct stat *sb, Promise *pp)
+{
+    if (sb->st_dev == pp->rootdevice)
+    {
+        return false;
+    }
+    else
+    {
+        CfOut(cf_verbose, "", "Device change from %jd to %jd\n", (intmax_t) pp->rootdevice, (intmax_t) sb->st_dev);
+        return true;
+    }
 }

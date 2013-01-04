@@ -36,7 +36,6 @@ int ScheduleLinkOperation(char *destination, char *source, Attributes attr, Prom
 int ScheduleEditOperation(char *filename, Attributes attr, Promise *pp, const ReportContext *report_context);
 FileCopy *NewFileCopy(Promise *pp);
 void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp, const ReportContext *report_context);
-int VerifyOwner(char *file, Promise *pp, Attributes attr, struct stat *statbuf);
 int MoveObstruction(char *from, Attributes attr, Promise *pp, const ReportContext *report_context);
 int MakeParentDirectory(char *parentandchild, int force, const ReportContext *report_context);
 int MakeParentDirectory2(char *parentandchild, int force, const ReportContext *report_context, bool enforce_promise);

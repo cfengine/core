@@ -37,7 +37,7 @@ void AddFilenameToListOfSuspicious(const char *pattern)
     PrependItem(&SUSPICIOUSLIST, pattern, NULL);
 }
 
-bool SuspiciousFile(const char *filename)
+static bool SuspiciousFile(const char *filename)
 {
     return IsItemIn(SUSPICIOUSLIST, filename);
 }

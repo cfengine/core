@@ -2,19 +2,17 @@ AM_CFLAGS = $(GCC_CFLAG) $(NOVA_CFLAGS) @CFLAGS@
 AM_YFLAGS = -d
 LDADD = libpromises.la
 
-# libcfpub
+.PRECIOUS: ../libutils/libutils.la
 
-.PRECIOUS: ../pub/libcfpub.la
-
-../pub/libcfpub.la:
-	$(MAKE) -C ../pub $(AM_MAKEFLAGS) libcfpub.la
+../libutils/libutils.la:
+	$(MAKE) -C ../libutils $(AM_MAKEFLAGS) libutils.la
 
 # libpromises
 
 projlib_LTLIBRARIES = libpromises.la
 
 libpromises_la_LDFLAGS = -version-info 1:0:0 -no-undefined
-libpromises_la_LIBADD = ../pub/libcfpub.la $(NOVA_LDADD)
+libpromises_la_LIBADD = ../libutils/libutils.la $(NOVA_LDADD)
 
 libpromises_la_CFLAGS = $(AM_CFLAGS)
 
@@ -24,16 +22,13 @@ libpromises_la_SOURCES = \
         cf3parse.y cf3parse.h \
         cf3lex.l \
         addr_lib.c addr_lib.h \
-        alloc.c alloc.h \
         alphalist.c alphalist.h \
         acl.c acl.h \
         acl_posix.c acl_posix.h \
         args.c args.h \
-        array_map.c array_map_priv.h \
         assoc.c assoc.h \
         atexit.c atexit.h \
         attributes.c attributes.h \
-        bool.h \
         bootstrap.c bootstrap.h \
         cf.events.h \
         cf3.defs.h \
@@ -46,8 +41,6 @@ libpromises_la_SOURCES = \
         client_protocol.c client_protocol.h \
         communication.c communication.h \
         comparray.c \
-        compiler.h \
-        config.h \
         constants.c \
         constraints.c constraints.h \
         conversion.c conversion.h \
@@ -81,7 +74,6 @@ libpromises_la_SOURCES = \
         generic_agent.c generic_agent.h \
         granules.c granules.h \
         hashes.c hashes.h \
-        hash_map.c hash_map_priv.h \
         html.c \
         instrumentation.c instrumentation.h \
         item_lib.c item_lib.h \
@@ -91,8 +83,6 @@ libpromises_la_SOURCES = \
         lastseen.c lastseen.h \
         logging.c logging.h \
         logic_expressions.c logic_expressions.h \
-        map.c map.h \
-        map_common.h \
         matching.c matching.h \
         misc_lib.c misc_lib.h \
         mod_access.c mod_access.h \
@@ -118,7 +108,6 @@ libpromises_la_SOURCES = \
         parser_state.h \
         patches.c \
         pipes.c pipes.h \
-        platform.h \
         proc_keyvalue.c proc_keyvalue.h \
         processes_select.c \
         promises.c promises.h \
@@ -127,12 +116,10 @@ libpromises_la_SOURCES = \
         rlist.c rlist.h \
         scope.c scope.h \
         selfdiagnostic.c \
-        sequence.c sequence.h \
-        set.c set.h \
         signals.c signals.h \
         sockaddr.c \
         sort.c sort.h \
-	statistics.c statistics.h \
+        statistics.c statistics.h \
         storage_tools.c \
         string_expressions.c string_expressions.h \
         string_lib.c string_lib.h \
@@ -160,7 +147,7 @@ endif
 BUILT_SOURCES = cf3parse.h
 
 # Automake need to be guided due to symlinking
-libpromises_la_DEPENDENCIES = ../pub/libcfpub.la $(NOVA_LDADD)
+libpromises_la_DEPENDENCIES = ../libutils/libutils.la $(NOVA_LDADD)
 
 CLEANFILES = *.gcno *.gcda
 

@@ -17,7 +17,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-# include "../libpromises/conf.h"
+# include "../libutils/conf.h"
 #endif
 
 #include <sys/types.h>

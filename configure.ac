@@ -32,7 +32,7 @@ AC_DEFINE(BUILD_YEAR, esyscmd([date +%Y | tr -d '\n']), "Software build year")
 
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
-AC_CONFIG_HEADERS([libpromises/conf.h])
+AC_CONFIG_HEADERS([libutils/conf.h])
 
 dnl Libtool madness
 
@@ -1018,6 +1018,7 @@ dnl ######################################################################
 
 AC_CONFIG_FILES([Makefile
 	pub/Makefile
+	libutils/Makefile
 	libpromises/Makefile
 	cf-agent/Makefile
 	cf-promises/Makefile

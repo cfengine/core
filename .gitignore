@@ -85,8 +85,8 @@ libpromises/cf3lex.c
 libpromises/cf3parse.c
 libpromises/cf3parse.h
 cf3parse.output
-libpromises/conf.h
-libpromises/conf.h.in
+libutils/conf.h
+libutils/conf.h.in
 
 # acceptance tests
 

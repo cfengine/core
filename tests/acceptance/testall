@@ -55,6 +55,9 @@ fi
 GREP_OPTIONS=
 export GREP_OPTIONS
 
+#
+# Defaults (overriden by command-line arguments)
+#
 LOG=test.log
 SUMMARY=summary.log
 XML=test.xml

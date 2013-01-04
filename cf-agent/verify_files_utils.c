@@ -48,6 +48,8 @@
 #include "vars.h"
 #include "exec_tools.h"
 #include "comparray.h"
+#include "string_lib.h"
+#include "constraints.h"
 
 #define CF_RECURSION_LIMIT 100
 
@@ -76,6 +78,7 @@ static int VerifyOwner(char *file, Promise *pp, Attributes attr, struct stat *sb
 #ifdef DARWIN
 static int VerifyFinderType(char *file, struct stat *statbuf, Attributes a, Promise *pp);
 #endif
+static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp);
 
 #ifndef HAVE_NOVA
 static void LogFileChange(char *file, int change, Attributes a, Promise *pp, const ReportContext *report_context)
@@ -3208,3 +3211,153 @@ static int VerifyOwner(char *file, Promise *pp, Attributes attr, struct stat *sb
 }
 
 #endif /* NOT MINGW */
+
+static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp)
+{
+    struct stat cmpsb;
+    CF_DB *dbp;
+    char message[CF_BUFSIZE];
+    int ok = true;
+
+    if ((attr.change.report_changes != cfa_statschange) && (attr.change.report_changes != cfa_allchanges))
+    {
+        return;
+    }
+
+    if (!OpenDB(&dbp, dbid_filestats))
+    {
+        return;
+    }
+
+    if (!ReadDB(dbp, file, &cmpsb, sizeof(struct stat)))
+    {
+        if (!DONTDO)
+        {
+            WriteDB(dbp, file, sb, sizeof(struct stat));
+            CloseDB(dbp);
+            return;
+        }
+    }
+
+    if (cmpsb.st_mode != sb->st_mode)
+    {
+        ok = false;
+    }
+
+    if (cmpsb.st_uid != sb->st_uid)
+    {
+        ok = false;
+    }
+
+    if (cmpsb.st_gid != sb->st_gid)
+    {
+        ok = false;
+    }
+
+    if (cmpsb.st_dev != sb->st_dev)
+    {
+        ok = false;
+    }
+
+    if (cmpsb.st_ino != sb->st_ino)
+    {
+        ok = false;
+    }
+
+    if (cmpsb.st_mtime != sb->st_mtime)
+    {
+        ok = false;
+    }
+
+    if (ok)
+    {
+        CloseDB(dbp);
+        return;
+    }
+
+    if (EXCLAIM)
+    {
+        CfOut(cf_error, "", "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    }
+
+    if (cmpsb.st_mode != sb->st_mode)
+    {
+        snprintf(message, CF_BUFSIZE - 1, "ALERT: Permissions for %s changed %jo -> %jo", file,
+                 (uintmax_t)cmpsb.st_mode, (uintmax_t)sb->st_mode);
+        CfOut(cf_error, "", "%s", message);
+
+        char msg_temp[CF_MAXVARSIZE] = { 0 };
+        snprintf(msg_temp, sizeof(msg_temp), "Permission: %jo -> %jo",
+                 (uintmax_t)cmpsb.st_mode, (uintmax_t)sb->st_mode);
+
+        LogHashChange(file, cf_file_stats_changed, msg_temp, pp);
+    }
+
+    if (cmpsb.st_uid != sb->st_uid)
+    {
+        snprintf(message, CF_BUFSIZE - 1, "ALERT: owner for %s changed %jd -> %jd", file, (uintmax_t) cmpsb.st_uid,
+                 (uintmax_t) sb->st_uid);
+        CfOut(cf_error, "", "%s", message);
+
+        char msg_temp[CF_MAXVARSIZE] = { 0 };
+        snprintf(msg_temp, sizeof(msg_temp), "Owner: %jd -> %jd",
+                 (uintmax_t)cmpsb.st_uid, (uintmax_t)sb->st_uid);
+
+        LogHashChange(file, cf_file_stats_changed, msg_temp, pp);
+    }
+
+    if (cmpsb.st_gid != sb->st_gid)
+    {
+        snprintf(message, CF_BUFSIZE - 1, "ALERT: group for %s changed %jd -> %jd", file, (uintmax_t) cmpsb.st_gid,
+                 (uintmax_t) sb->st_gid);
+        CfOut(cf_error, "", "%s", message);
+
+        char msg_temp[CF_MAXVARSIZE] = { 0 };
+        snprintf(msg_temp, sizeof(msg_temp), "Group: %jd -> %jd",
+                 (uintmax_t)cmpsb.st_gid, (uintmax_t)sb->st_gid);
+
+        LogHashChange(file, cf_file_stats_changed, msg_temp, pp);
+    }
+
+    if (cmpsb.st_dev != sb->st_dev)
+    {
+        CfOut(cf_error, "", "ALERT: device for %s changed %jd -> %jd", file, (intmax_t) cmpsb.st_dev,
+              (intmax_t) sb->st_dev);
+    }
+
+    if (cmpsb.st_ino != sb->st_ino)
+    {
+        CfOut(cf_error, "", "ALERT: inode for %s changed %ju -> %ju", file, (uintmax_t) cmpsb.st_ino,
+              (uintmax_t) sb->st_ino);
+    }
+
+    if (cmpsb.st_mtime != sb->st_mtime)
+    {
+        char from[CF_MAXVARSIZE];
+        char to[CF_MAXVARSIZE];
+
+        strcpy(from, cf_ctime(&(cmpsb.st_mtime)));
+        strcpy(to, cf_ctime(&(sb->st_mtime)));
+        Chop(from, CF_MAXVARSIZE);
+        Chop(to, CF_MAXVARSIZE);
+        CfOut(cf_error, "", "ALERT: Last modified time for %s changed %s -> %s", file, from, to);
+    }
+
+    if (pp->ref)
+    {
+        CfOut(cf_error, "", "Preceding promise: %s", pp->ref);
+    }
+
+    if (EXCLAIM)
+    {
+        CfOut(cf_error, "", "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    }
+
+    if (attr.change.update && !DONTDO)
+    {
+        DeleteDB(dbp, file);
+        WriteDB(dbp, file, sb, sizeof(struct stat));
+    }
+
+    CloseDB(dbp);
+}

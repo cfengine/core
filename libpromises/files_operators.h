@@ -41,7 +41,6 @@ int MakeParentDirectory(char *parentandchild, int force, const ReportContext *re
 int MakeParentDirectory2(char *parentandchild, int force, const ReportContext *report_context, bool enforce_promise);
 void RotateFiles(char *name, int number);
 void CreateEmptyFile(char *name);
-void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp);
 int FileSanityChecks(char *path, Attributes a, Promise *pp);
 
 void LogHashChange(char *file, FileState status, char *msg, Promise *pp);

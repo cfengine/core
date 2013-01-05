@@ -28,7 +28,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-# include "../src/conf.h"
+# include "../libutils/conf.h"
 #endif
 
 #include <string.h>

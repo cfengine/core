@@ -834,32 +834,27 @@ HP_UX_AC=yes])
 
 AC_MSG_CHECKING(for GCC specific compile flags)
 if test x"$GCC" = "xyes" && test x"$HP_UX_AC" != x"yes"; then
-	GCC_CFLAG="-g -Wall"
+	CFLAGS="$CFLAGS -g -Wall"
 	CPPFLAGS="$CPPFLAGS -std=gnu99"
 	AC_MSG_RESULT(yes)
-	AC_SUBST(GCC_CFLAG)
 
         save_CFLAGS="$CFLAGS"
-        CFLAGS="$CFLAGS $GCC_CFLAG -Wno-pointer-sign"
+        CFLAGS="$CFLAGS -Wno-pointer-sign"
         AC_MSG_CHECKING(for -Wno-pointer-sign)
         AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main() {}])],
-          [AC_MSG_RESULT(yes)
-           GCC_CFLAG="$GCC_CFLAG -Wno-pointer-sign"],
-          [AC_MSG_RESULT(no)])
-        CFLAGS="$save_CFLAGS"
+          [AC_MSG_RESULT(yes)],
+          [AC_MSG_RESULT(no)
+           CFLAGS="$save_CFLAGS"])
 
         save_CFLAGS="$CFLAGS"
-        CFLAGS="$CFLAGS $GCC_CFLAG -Werror=implicit-function-declaration"
+        CFLAGS="$CFLAGS -Werror=implicit-function-declaration"
         AC_MSG_CHECKING(for -Werror=implicit-function-declaration)
         AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main() {}])],
-          [AC_MSG_RESULT(yes)
-           GCC_CFLAG="$GCC_CFLAG -Werror=implicit-function-declaration"],
-          [AC_MSG_RESULT(no)])
-        CFLAGS="$save_CFLAGS"
+          [AC_MSG_RESULT(yes)],
+          [AC_MSG_RESULT(no)
+           CFLAGS="$save_CFLAGS"])
 else 
-	GCC_CFLAG=""
 	AC_MSG_RESULT(no)
-	AC_SUBST(GCC_CFLAG)
 fi
 
 dnl #####################################################################
@@ -925,7 +920,7 @@ if test "x$use_coverage" = "xyes"; then
   changequote([,])
 
   dnl Add the special gcc flags
-  GCC_CFLAG="$GCC_CFLAG -O0 -fprofile-arcs -ftest-coverage"
+  CFLAGS="$CFLAGS -O0 -fprofile-arcs -ftest-coverage"
   LDFLAGS="$LDFLAGS -lgcov"
 fi
 

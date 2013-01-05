@@ -1,4 +1,4 @@
-AM_CFLAGS = $(GCC_CFLAG) $(NOVA_CFLAGS) @CFLAGS@  -I$(srcdir)/../libpromises
+AM_CFLAGS = $(NOVA_CFLAGS) @CFLAGS@  -I$(srcdir)/../libpromises
 
 sbin_PROGRAMS = cf-execd
 

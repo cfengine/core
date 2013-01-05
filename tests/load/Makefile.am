@@ -1,4 +1,4 @@
-AM_CFLAGS = $(NOVA_CFLAGS) $(GCC_CFLAG) -I$(srcdir)/../../libpromises -I../../libpromises
+AM_CFLAGS = $(NOVA_CFLAGS) -I$(srcdir)/../../libpromises -I../../libpromises
 
 EXTRA_DIST = run_db_load
 

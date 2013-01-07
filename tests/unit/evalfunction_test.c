@@ -68,18 +68,10 @@ static void test_hostinnetgroup_not_found(void **state)
 int main()
 {
     const UnitTest tests[] =
-{
+    {
         unit_test(test_hostinnetgroup_found),
         unit_test(test_hostinnetgroup_not_found),
     };
 
     return run_tests(tests);
-}
-
-// STUBS
-
-void __ProgrammingError(const char *file, int lineno, const char *format, ...)
-{
-    fail();
-    exit(42);
 }

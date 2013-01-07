@@ -19,7 +19,7 @@ How to add unit tests
       entry such as
 
       mystruct_test_SOURCES = $(MOCKERY_SOURCES) mystruct_test.c
-      mystruct_test_LDADD = ../../src/libpromises.la
+      mystruct_test_LDADD = ../../libpromises/libpromises.la
 
 
 3. We are using cmockery as our testing framework. Google for it and read/skim
@@ -78,7 +78,7 @@ How to add unit tests
    the function, so in Makefile.am, rather than linking against all of libpromises,
    you probably want to be more specific, for example
 
-   str_test_SOURCES = $(MOCKERY_SOURCES) str_test.c ../../src/string_lib.c
+   str_test_SOURCES = $(MOCKERY_SOURCES) str_test.c ../../libpromises/string_lib.c
    str_test_LDADD = ../../pub/libcfpub.la
 
    Finally, if you made some mocking functions and you think it will be useful to

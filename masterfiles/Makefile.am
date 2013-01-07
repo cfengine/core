@@ -1,8 +1,10 @@
 masterfilesdir = $(projdatadir)/CoreBase
-dist_masterfiles_DATA = $(srcdir)/promises.cf $(srcdir)/def.cf $(srcdir)/cf-sketch-runfile.cf
+dist_masterfiles_DATA = $(srcdir)/promises.cf $(srcdir)/def.cf $(srcdir)/cf-sketch-runfile.cf $(srcdir)/update.cf
 
-failsafedir = $(masterfilesdir)/failsafe
-dist_failsafe_DATA = $(srcdir)/failsafe/failsafe.cf
+#failsafedir = $(masterfilesdir)/failsafe
+#dist_failsafe_DATA = $(srcdir)/failsafe/failsafe.cf
+
+updatedir = $(masterfilesdir)/update
 
 librariesdir = $(masterfilesdir)/libraries/
 dist_libraries_DATA = $(srcdir)/libraries/cfengine_stdlib.cf

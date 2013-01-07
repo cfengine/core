@@ -17,6 +17,9 @@ bundle agent init
 {
 vars:
 	# All users except root, bin, and daemon
+    openbsd::
+	"users" slist => getusers("","0,1,3");
+    !openbsd::
 	"users" slist => getusers("","0,1,2");
 
 files:

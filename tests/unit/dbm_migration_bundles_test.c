@@ -169,6 +169,12 @@ int main()
 const char *DAY_TEXT[] = {};
 const char *MONTH_TEXT[] = {};
 
+void __ProgrammingError(const char *file, int lineno, const char *format, ...)
+{
+    fail();
+    exit(42);
+}
+
 void FatalError(char *s, ...)
 {
     fail();

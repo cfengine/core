@@ -9,7 +9,7 @@ dnl ##########################################################################
 AC_PREREQ(2.59)
 
 AC_INIT
-AC_CONFIG_SRCDIR([src/cf-promises.c])
+AC_CONFIG_SRCDIR([libpromises/generic_agent.c])
 AC_CANONICAL_TARGET
 
 dnl
@@ -32,7 +32,7 @@ AC_DEFINE(BUILD_YEAR, esyscmd([date +%Y | tr -d '\n']), "Software build year")
 
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
-AC_CONFIG_HEADERS([src/conf.h])
+AC_CONFIG_HEADERS([libutils/conf.h])
 
 dnl Libtool madness
 
@@ -686,7 +686,7 @@ dnl ######################################################################
 
 dnl To ensure conf.h is picked up via VPATH
 if test "$srcdir" != "."; then
-  CPPFLAGS="$CPPFLAGS -I`pwd`/src"
+  CPPFLAGS="$CPPFLAGS -I`pwd`/libpromises"
 fi
 
 case "$target_os" in
@@ -834,32 +834,27 @@ HP_UX_AC=yes])
 
 AC_MSG_CHECKING(for GCC specific compile flags)
 if test x"$GCC" = "xyes" && test x"$HP_UX_AC" != x"yes"; then
-	GCC_CFLAG="-g -Wall"
+	CFLAGS="$CFLAGS -g -Wall"
 	CPPFLAGS="$CPPFLAGS -std=gnu99"
 	AC_MSG_RESULT(yes)
-	AC_SUBST(GCC_CFLAG)
 
         save_CFLAGS="$CFLAGS"
-        CFLAGS="$CFLAGS $GCC_CFLAG -Wno-pointer-sign"
+        CFLAGS="$CFLAGS -Wno-pointer-sign"
         AC_MSG_CHECKING(for -Wno-pointer-sign)
         AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main() {}])],
-          [AC_MSG_RESULT(yes)
-           GCC_CFLAG="$GCC_CFLAG -Wno-pointer-sign"],
-          [AC_MSG_RESULT(no)])
-        CFLAGS="$save_CFLAGS"
+          [AC_MSG_RESULT(yes)],
+          [AC_MSG_RESULT(no)
+           CFLAGS="$save_CFLAGS"])
 
         save_CFLAGS="$CFLAGS"
-        CFLAGS="$CFLAGS $GCC_CFLAG -Werror=implicit-function-declaration"
+        CFLAGS="$CFLAGS -Werror=implicit-function-declaration"
         AC_MSG_CHECKING(for -Werror=implicit-function-declaration)
         AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main() {}])],
-          [AC_MSG_RESULT(yes)
-           GCC_CFLAG="$GCC_CFLAG -Werror=implicit-function-declaration"],
-          [AC_MSG_RESULT(no)])
-        CFLAGS="$save_CFLAGS"
+          [AC_MSG_RESULT(yes)],
+          [AC_MSG_RESULT(no)
+           CFLAGS="$save_CFLAGS"])
 else 
-	GCC_CFLAG=""
 	AC_MSG_RESULT(no)
-	AC_SUBST(GCC_CFLAG)
 fi
 
 dnl #####################################################################
@@ -925,7 +920,7 @@ if test "x$use_coverage" = "xyes"; then
   changequote([,])
 
   dnl Add the special gcc flags
-  GCC_CFLAG="$GCC_CFLAG -O0 -fprofile-arcs -ftest-coverage"
+  CFLAGS="$CFLAGS -O0 -fprofile-arcs -ftest-coverage"
   LDFLAGS="$LDFLAGS -lgcov"
 fi
 
@@ -1018,7 +1013,17 @@ dnl ######################################################################
 
 AC_CONFIG_FILES([Makefile
 	pub/Makefile
-	src/Makefile
+	libutils/Makefile
+	libpromises/Makefile
+	cf-agent/Makefile
+	cf-promises/Makefile
+	cf-execd/Makefile
+	cf-gendoc/Makefile
+	cf-key/Makefile
+	cf-monitord/Makefile
+	cf-report/Makefile
+	cf-runagent/Makefile
+	cf-serverd/Makefile
 	ext/Makefile
 	docs/Makefile
 	docs/guides/Makefile

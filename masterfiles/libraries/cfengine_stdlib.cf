@@ -1538,6 +1538,17 @@ update_hashes  => "yes";
 
 ##
 
+body changes all_changes
+# Generates diff report (Nova and above)
+{
+hash           => "sha256";
+report_changes => "all";
+report_diffs   => "true";
+update_hashes  => "yes";
+}
+
+##
+
 body changes diff_noupdate
 {
 hash           => "sha256";

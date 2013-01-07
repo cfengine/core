@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include "acl.h"
+#include "cf_acl.h"
 
 #include "acl_posix.h"
 #include "files_names.h"

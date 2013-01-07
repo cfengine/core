@@ -41,7 +41,7 @@
 #include "expand.h"
 #include "conversion.h"
 #include "pipes.h"
-#include "acl.h"
+#include "cf_acl.h"
 #include "env_context.h"
 #include "vars.h"
 #include "exec_tools.h"

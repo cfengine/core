@@ -130,8 +130,7 @@ libpromises_la_SOURCES = \
         unix.c unix.h \
         vars.c vars.h \
         verify_processes.c verify_processes.h \
-        verify_reports.c \
-        xml_writer.c xml_writer.h
+        verify_reports.c
 
 if !NT
 libpromises_la_SOURCES += \

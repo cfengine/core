@@ -84,7 +84,7 @@ set_domainname_test_LDADD = libstr.la
 str_test_SOURCES = str_test.c
 str_test_LDADD = libstr.la
 
-xml_writer_test_SOURCES = xml_writer_test.c ../../libpromises/xml_writer.c
+xml_writer_test_SOURCES = xml_writer_test.c ../../libutils/xml_writer.c
 xml_writer_test_LDADD = libtest.la libstr.la
 
 #

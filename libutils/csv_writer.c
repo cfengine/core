@@ -24,6 +24,8 @@
 
 #include "csv_writer.h"
 
+#include "alloc.h"
+
 struct CsvWriter_
 {
     Writer *w;

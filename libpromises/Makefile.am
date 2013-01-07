@@ -45,7 +45,6 @@ libpromises_la_SOURCES = \
         constraints.c constraints.h \
         conversion.c conversion.h \
         crypto.c crypto.h \
-        csv_writer.c csv_writer.h \
         dbm_api.c dbm_api.h dbm_lib.h dbm_lib.c dbm_priv.h \
         dbm_migration.c dbm_migration.h \
         dbm_migration_lastseen.c \

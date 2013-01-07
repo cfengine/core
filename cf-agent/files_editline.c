@@ -292,7 +292,10 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
             else
             {
                 //install independent promise line
-                StripTrailingNewline(buffer);
+                if (StripTrailingNewline(buffer) == -1)
+                {
+                    CfOut(cf_error, "", "StripTrailingNewline was called on an overlong string");
+                }
                 np = AppendPromise(tp, buffer, (Rval) { NULL, CF_NOPROMISEE }, context, bundlename, "edit_line", pp->namespace);
                 ConstraintAppendToPromise(np, "insert_type", (Rval) { xstrdup("preserve_block"), CF_SCALAR }, "any", false);
             }
@@ -1260,7 +1263,10 @@ static int InsertFileAtLocation(Item **start, Item *begin_ptr, Item *end_ptr, It
     {
         buf[0] = '\0';
         fgets(buf, CF_BUFSIZE, fin);
-        StripTrailingNewline(buf);
+        if (StripTrailingNewline(buf) == -1)
+        {
+            CfOut(cf_error, "", "StripTrailingNewline was called on an overlong string");
+        }
         
         if (feof(fin) && strlen(buf) == 0)
         {

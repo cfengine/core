@@ -24,10 +24,9 @@
 
 #include "cf3.defs.h"
 
-#include "logging.h"
 #include "writer.h"
-#include "cfstream.h"
 #include "misc_lib.h"
+#include "cfstream.h"
 
 #include <assert.h>
 
@@ -772,20 +771,21 @@ char *ScanPastChars(char *scanpast, char *input)
     return pos;
 }
 
-void StripTrailingNewline(char *str)
+int StripTrailingNewline(char *str)
 {
     char *c = str + strlen(str);
 
     if (c - str > CF_EXPANDSIZE)
     {
-        CfOut(cf_error, "", "StripTrailingNewline was called on an overlong string");
-        return;
+        return -1;
     }
 
     for (; (c >= str) && ((*c == '\0') || (*c == '\n')); --c)
     {
         *c = '\0';
     }
+
+    return 0;
 }
 
 void Chop(char *str)            /* remove trailing spaces */

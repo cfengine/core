@@ -73,7 +73,15 @@ char *EscapeCharCopy(const char *str, char to_escape, char escape_with);
 
 int StringInArray(char **array, char *string);
 char *ScanPastChars(char *scanpast, char *input);
-void StripTrailingNewline(char *str);
+
+/**
+ * @brief Strips the newline character off a string, in place
+ * @param str The string to strip
+ * @return 0 if successful, -1 if the input string was longer than allowed (CF_EXPANDSIZE).
+ */
+int StripTrailingNewline(char *str);
+
+
 void Chop(char *str);
 
 #endif

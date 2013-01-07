@@ -68,7 +68,7 @@ TESTS_ENVIRONMENT = DYLD_FORCE_FLAT_NAMESPACE=yes
 atexit_test_SOURCES = atexit_test.c
 atexit_test_LDADD = libtest.la libdb.la
 
-csv_writer_test_SOURCES = csv_writer_test.c ../../libpromises/csv_writer.c
+csv_writer_test_SOURCES = csv_writer_test.c ../../libutils/csv_writer.c
 csv_writer_test_LDADD = libtest.la libstr.la
 
 conversion_test_SOURCES = conversion_test.c ../../libpromises/conversion.c

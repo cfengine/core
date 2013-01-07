@@ -35,7 +35,7 @@
 
 typedef struct Writer_ Writer;
 
-#include "cf3.defs.h"
+#include "platform.h"
 #include "compiler.h"
 
 Writer *FileWriter(FILE *);

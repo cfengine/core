@@ -9,7 +9,7 @@ libtest_la_SOURCES = cmockery.c cmockery.h schema.h test.c test.h ../../libutils
 libtest_la_LIBADD = ../../pub/libcfpub.la
 
 check_LTLIBRARIES += libstr.la
-libstr_la_SOURCES = ../../libpromises/string_lib.c ../../libpromises/writer.c
+libstr_la_SOURCES = ../../libpromises/string_lib.c ../../libutils/writer.c
 libstr_la_LIBADD = libtest.la
 
 

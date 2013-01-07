@@ -22,10 +22,8 @@
   included file COSL.txt.
 */
 
-
-#include "cf3.defs.h"
-
 #include "acl.h"
+
 #include "acl_posix.h"
 #include "files_names.h"
 #include "promises.h"

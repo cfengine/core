@@ -131,7 +131,6 @@ libpromises_la_SOURCES = \
         vars.c vars.h \
         verify_processes.c verify_processes.h \
         verify_reports.c \
-        writer.c writer.h \
         xml_writer.c xml_writer.h
 
 if !NT

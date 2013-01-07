@@ -23,7 +23,8 @@ libutils_la_SOURCES = \
 	map.c map.h map_common.h \
 	array_map.c array_map_priv.h \
 	hash_map.c hash_map_priv.h \
-	misc_lib.c misc_lib.h
+	misc_lib.c misc_lib.h \
+	writer.c writer.h
 
 CLEANFILES = *.gcno *.gcda
 

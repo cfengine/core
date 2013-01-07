@@ -25,6 +25,8 @@
 #ifndef CFENGINE_ACL_H
 #define CFENGINE_ACL_H
 
+#include "cf3.defs.h"
+
 // Valid generic permissions
 #define CF_VALID_GPERMS "rwx"
 

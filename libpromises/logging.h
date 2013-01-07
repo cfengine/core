@@ -36,7 +36,4 @@ void PromiseBanner(Promise *pp);
 void BannerSubBundle(Bundle *bp, Rlist *params);
 void FatalError(char *s, ...) FUNC_ATTR_NORETURN FUNC_ATTR_PRINTF(1, 2);
 
-void __ProgrammingError(const char *file, int lineno, const char *format, ...) FUNC_ATTR_NORETURN;
-#define ProgrammingError(...) __ProgrammingError(__FILE__, __LINE__, __VA_ARGS__)
-
 #endif

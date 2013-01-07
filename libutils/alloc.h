@@ -71,4 +71,7 @@ void __error_unchecked_asprintf(void);
 void __error_unchecked_vasprintf(void);
 #endif
 
+void __ProgrammingError(const char *file, int lineno, const char *format, ...) FUNC_ATTR_NORETURN;
+#define ProgrammingError(...) __ProgrammingError(__FILE__, __LINE__, __VA_ARGS__)
+
 #endif

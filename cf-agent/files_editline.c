@@ -292,7 +292,7 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
             else
             {
                 //install independent promise line
-                if (StripTrailingNewline(buffer) == -1)
+                if (StripTrailingNewline(buffer, CF_EXPANDSIZE) == -1)
                 {
                     CfOut(cf_error, "", "StripTrailingNewline was called on an overlong string");
                 }
@@ -1263,7 +1263,7 @@ static int InsertFileAtLocation(Item **start, Item *begin_ptr, Item *end_ptr, It
     {
         buf[0] = '\0';
         fgets(buf, CF_BUFSIZE, fin);
-        if (StripTrailingNewline(buf) == -1)
+        if (StripTrailingNewline(buf, CF_EXPANDSIZE) == -1)
         {
             CfOut(cf_error, "", "StripTrailingNewline was called on an overlong string");
         }

@@ -747,11 +747,11 @@ char *ScanPastChars(char *scanpast, char *input)
     return pos;
 }
 
-int StripTrailingNewline(char *str)
+int StripTrailingNewline(char *str, size_t max_length)
 {
     char *c = str + strlen(str);
 
-    if (c - str > CF_EXPANDSIZE)
+    if (c - str > max_length)
     {
         return -1;
     }
@@ -764,14 +764,14 @@ int StripTrailingNewline(char *str)
     return 0;
 }
 
-int Chop(char *str) /* remove trailing spaces */
+int Chop(char *str, size_t max_length)
 {
     if ((str == NULL) || (strlen(str) == 0))
     {
         return 0;
     }
 
-    if (strlen(str) > CF_EXPANDSIZE)
+    if (strlen(str) > max_length)
     {
         return -1;
     }

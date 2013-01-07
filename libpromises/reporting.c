@@ -1081,7 +1081,7 @@ void ReportError(char *s)
     }
     else
     {
-        if (Chop(s) == -1)
+        if (Chop(s, CF_EXPANDSIZE) == -1)
         {
             CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
         }

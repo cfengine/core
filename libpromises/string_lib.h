@@ -75,15 +75,17 @@ char *ScanPastChars(char *scanpast, char *input);
 /**
  * @brief Strips the newline character off a string, in place
  * @param str The string to strip
- * @return 0 if successful, -1 if the input string was longer than allowed (CF_EXPANDSIZE).
+ * @param max_length Maximum length of input string
+ * @return 0 if successful, -1 if the input string was longer than allowed (max_length).
  */
-int StripTrailingNewline(char *str);
+int StripTrailingNewline(char *str, size_t max_length);
 
 /**
  * @brief Remove trailing spaces
  * @param str
+ * @param max_length Maximum length of input string
  * @return 0 if successful, -1 if Chop was called on a string that seemed to have no terminator
  */
-int Chop(char *str);
+int Chop(char *str, size_t max_length);
 
 #endif

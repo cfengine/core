@@ -73,7 +73,7 @@ static void VLog(FILE *fh, enum cfreport level, const char *errstr, const char *
     memset(output, 0, CF_BUFSIZE);
     vsnprintf(buffer, CF_BUFSIZE - 1, fmt, args);
 
-    if (Chop(buffer) == -1)
+    if (Chop(buffer, CF_EXPANDSIZE) == -1)
     {
         CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
     }
@@ -185,7 +185,7 @@ void cfPS(enum cfreport level, char status, char *errstr, const Promise *pp, Att
     vsnprintf(buffer, CF_BUFSIZE - 1, fmt, ap);
     va_end(ap);
 
-    if (Chop(buffer) == -1)
+    if (Chop(buffer, CF_EXPANDSIZE) == -1)
     {
         CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
     }

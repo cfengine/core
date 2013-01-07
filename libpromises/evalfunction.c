@@ -1485,7 +1485,7 @@ static FnCallResult FnCallGetFields(FnCall *fp, Rlist *finalargs)
     {
         line[0] = '\0';
         fgets(line, CF_BUFSIZE - 1, fin);
-        if (Chop(line) == -1)
+        if (Chop(line, CF_EXPANDSIZE) == -1)
         {
             CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
         }
@@ -1549,7 +1549,7 @@ static FnCallResult FnCallCountLinesMatching(FnCall *fp, Rlist *finalargs)
     {
         line[0] = '\0';
         fgets(line, CF_BUFSIZE - 1, fin);
-        if (Chop(line) == -1)
+        if (Chop(line, CF_EXPANDSIZE) == -1)
         {
             CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
         }
@@ -2664,7 +2664,7 @@ static FnCallResult FnCallRegLine(FnCall *fp, Rlist *finalargs)
         {
             line[0] = '\0';
             fgets(line, CF_BUFSIZE - 1, fin);
-            if (Chop(line) == -1)
+            if (Chop(line, CF_EXPANDSIZE) == -1)
             {
                 CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
             }

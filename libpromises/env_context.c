@@ -410,7 +410,7 @@ void NewClass(const char *oclass, const char *namespace)
     char canonclass[CF_MAXVARSIZE];
 
     strcpy(canonclass, oclass);
-    if (Chop(canonclass) == -1)
+    if (Chop(canonclass, CF_EXPANDSIZE) == -1)
     {
         CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
     }
@@ -508,7 +508,7 @@ void HardClass(const char *oclass)
     char class[CF_MAXVARSIZE];
 
     strcpy(class, oclass);
-    if (Chop(class) == -1)
+    if (Chop(class, CF_EXPANDSIZE) == -1)
     {
         CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
     }
@@ -590,7 +590,7 @@ void NewBundleClass(const char *class, const char *bundle, const char *namespace
         strncpy(copy, class, CF_MAXVARSIZE);
     }
 
-    if (Chop(copy) == -1)
+    if (Chop(copy, CF_EXPANDSIZE) == -1)
     {
         CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
     }

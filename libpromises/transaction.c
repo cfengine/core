@@ -635,7 +635,7 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *operator, c
 
     sprintf(buffer, "%s", cf_ctime(&tim));
 
-    if (Chop(buffer) == -1)
+    if (Chop(buffer, CF_EXPANDSIZE) == -1)
     {
         CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
     }

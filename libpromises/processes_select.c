@@ -551,7 +551,7 @@ static int SplitProcLine(char *proc, char **names, int *start, int *end, char **
             cols2[i][0] = '\0';
         }
 
-        if (Chop(cols2[i]) == -1)
+        if (Chop(cols2[i], CF_EXPANDSIZE) == -1)
         {
             CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
         }

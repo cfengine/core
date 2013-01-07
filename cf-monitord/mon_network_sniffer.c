@@ -186,7 +186,7 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
         return;
     }
 
-    if (Chop(arrival) == -1)
+    if (Chop(arrival, CF_EXPANDSIZE) == -1)
     {
         CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
     }

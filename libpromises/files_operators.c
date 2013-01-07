@@ -396,11 +396,11 @@ void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp
 
         strcpy(from, cf_ctime(&(cmpsb.st_mtime)));
         strcpy(to, cf_ctime(&(sb->st_mtime)));
-        if (Chop(from) == -1)
+        if (Chop(from, CF_EXPANDSIZE) == -1)
         {
             CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
         }
-        if (Chop(to) == -1)
+        if (Chop(to, CF_EXPANDSIZE) == -1)
         {
             CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
         }

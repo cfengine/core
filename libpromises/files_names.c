@@ -168,7 +168,7 @@ char *JoinPath(char *path, const char *leaf)
 {
     int len = strlen(leaf);
 
-    if (Chop(path) == -1)
+    if (Chop(path, CF_EXPANDSIZE) == -1)
     {
         CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
     }
@@ -191,7 +191,7 @@ char *JoinSuffix(char *path, char *leaf)
 {
     int len = strlen(leaf);
 
-    if (Chop(path) == -1)
+    if (Chop(path, CF_EXPANDSIZE) == -1)
     {
         CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
     }

@@ -94,7 +94,7 @@ void EndAudit(void)
             return;
         }
 
-        if (Chop(datestr) == -1)
+        if (Chop(datestr, CF_EXPANDSIZE) == -1)
         {
             CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
         }

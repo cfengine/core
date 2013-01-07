@@ -25,11 +25,16 @@
 #ifndef CFENGINE_MISC_LIB_H
 #define CFENGINE_MISC_LIB_H
 
+#include "compiler.h"
+
 /*
   In contrast to the standard C modulus operator (%), this gives
   you an unsigned modulus. So where -1 % 3 => -1,
   UnsignedModulus(-1, 3) => 2.
 */
 unsigned long UnsignedModulus(long dividend, long divisor);
+
+void __ProgrammingError(const char *file, int lineno, const char *format, ...) FUNC_ATTR_NORETURN;
+#define ProgrammingError(...) __ProgrammingError(__FILE__, __LINE__, __VA_ARGS__)
 
 #endif

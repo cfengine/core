@@ -30,6 +30,7 @@
 #include "item_lib.h"
 #include "matching.h"
 #include "logging.h"
+#include "misc_lib.h"
 
 /*******************************************************************/
 

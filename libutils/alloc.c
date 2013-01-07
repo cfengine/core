@@ -85,14 +85,3 @@ int xvasprintf(char **strp, const char *fmt, va_list ap)
     CheckResult(res == -1 ? NULL : *strp, "xvasprintf", true);
     return res;
 }
-
-void __ProgrammingError(const char *file, int lineno, const char *format, ...)
-{
-    va_list ap;
-    va_start(ap, format);
-    char *fmt = NULL;
-    xasprintf(&fmt, "%s:%d: ProgrammingError: %s", file, lineno, format);
-    fprintf(stdout, fmt, ap);
-    free(fmt);
-    exit(255);
-}

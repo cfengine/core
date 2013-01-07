@@ -27,6 +27,7 @@
 #include "logging.h"
 #include "writer.h"
 #include "cfstream.h"
+#include "misc_lib.h"
 
 #include <assert.h>
 

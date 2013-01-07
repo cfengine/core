@@ -38,6 +38,7 @@
 #include "logging.h"
 #include "string_lib.h"
 #include "evalfunction.h"
+#include "misc_lib.h"
 
 #ifdef HAVE_NOVA
 #include "nova-reporting.h"

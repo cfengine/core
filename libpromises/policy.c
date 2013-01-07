@@ -33,6 +33,7 @@
 #include "reporting.h"
 #include "transaction.h"
 #include "cfstream.h"
+#include "misc_lib.h"
 
 #include <assert.h>
 

@@ -1433,7 +1433,10 @@ static void PrependAuditFile(char *file)
     AUDITPTR->next = VAUDIT;
     AUDITPTR->filename = xstrdup(file);
     AUDITPTR->date = xstrdup(cf_ctime(&statbuf.st_mtime));
-    Chop(AUDITPTR->date);
+    if (Chop(AUDITPTR->date) == -1)
+    {
+        CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+    }
     AUDITPTR->version = NULL;
     VAUDIT = AUDITPTR;
 }

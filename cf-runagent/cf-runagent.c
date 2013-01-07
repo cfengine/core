@@ -397,7 +397,10 @@ static int HailServer(char *host, Attributes a, Promise *pp)
                     FatalError("EOF trying to read answer from terminal");
                 }
 
-                Chop(reply);
+                if (Chop(reply) == -1)
+                {
+                    CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+                }
 
                 if (strcmp(reply, "yes") == 0)
                 {

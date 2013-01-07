@@ -396,8 +396,14 @@ void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp
 
         strcpy(from, cf_ctime(&(cmpsb.st_mtime)));
         strcpy(to, cf_ctime(&(sb->st_mtime)));
-        Chop(from);
-        Chop(to);
+        if (Chop(from) == -1)
+        {
+            CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+        }
+        if (Chop(to) == -1)
+        {
+            CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+        }
         CfOut(cf_error, "", "ALERT: Last modified time for %s changed %s -> %s", file, from, to);
     }
 

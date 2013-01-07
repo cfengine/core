@@ -186,7 +186,10 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
         return;
     }
 
-    Chop(arrival);
+    if (Chop(arrival) == -1)
+    {
+        CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+    }
 
 /* Most hosts have only a few dominant services, so anomalies will
    show up even in the traffic without looking too closely. This

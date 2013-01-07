@@ -635,7 +635,10 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *operator, c
 
     sprintf(buffer, "%s", cf_ctime(&tim));
 
-    Chop(buffer);
+    if (Chop(buffer) == -1)
+    {
+        CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+    }
 
     fprintf(fp, "%s:%s:pid=%d:%s:%s\n", buffer, str, pid, operator, operand);
 

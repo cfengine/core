@@ -94,7 +94,10 @@ void EndAudit(void)
             return;
         }
 
-        Chop(datestr);
+        if (Chop(datestr) == -1)
+        {
+            CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+        }
         fprintf(fout, "%s,%.4lf,%.4lf,%.4lf\n", datestr, VAL_KEPT, VAL_REPAIRED, VAL_NOTKEPT);
         TrackValue(datestr, VAL_KEPT, VAL_REPAIRED, VAL_NOTKEPT);
         fclose(fout);

@@ -112,7 +112,10 @@ int GetExecOutput(const char *command, char *buffer, int useshell)
 
     if (offset > 0)
     {
-        Chop(buffer);
+        if (Chop(buffer) == -1)
+        {
+            CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+        }
     }
 
     CfDebug("GetExecOutput got: [%s]\n", buffer);

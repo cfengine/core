@@ -81,7 +81,11 @@ char *ScanPastChars(char *scanpast, char *input);
  */
 int StripTrailingNewline(char *str);
 
-
-void Chop(char *str);
+/**
+ * @brief Remove trailing spaces
+ * @param str
+ * @return 0 if successful, -1 if Chop was called on a string that seemed to have no terminator
+ */
+int Chop(char *str);
 
 #endif

@@ -24,9 +24,9 @@
 
 #include "cf3.defs.h"
 
+#include "alloc.h"
 #include "writer.h"
 #include "misc_lib.h"
-#include "cfstream.h"
 
 #include <assert.h>
 
@@ -38,6 +38,7 @@
 # include <pcre/pcre.h>
 #endif
 
+#define STRING_MATCH_OVECCOUNT 30
 
 char ToLower(char ch)
 {
@@ -353,8 +354,8 @@ static bool StringMatchInternal(const char *regex, const char *str, int *start, 
         return false;
     }
 
-    int ovector[OVECCOUNT] = { 0 };
-    int result = pcre_exec(pattern, NULL, str, strlen(str), 0, 0, ovector, OVECCOUNT);
+    int ovector[STRING_MATCH_OVECCOUNT] = { 0 };
+    int result = pcre_exec(pattern, NULL, str, strlen(str), 0, 0, ovector, STRING_MATCH_OVECCOUNT);
 
     if (result)
     {

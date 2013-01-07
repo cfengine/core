@@ -17,6 +17,7 @@ libutils_la_SOURCES = \
 	alloc.h alloc.c \
 	compiler.h \
 	sequence.c sequence.h \
+	set.c set.h \
 	platform.h \
 	bool.h \
 	map.c map.h map_common.h \

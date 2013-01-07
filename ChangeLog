@@ -2,12 +2,22 @@
 
        Bugfixes:
 
-       - fix potential segmentation fault when trimming network socket data
+       - Fixes to policies in masterfiles (see masterfiles/Changelog for details)
 
-       - fix potential segmentation fault when address-lookups in lastseen db failed
+       - Fixes for OpenBSD (GitHub #278)
+
+       - Do not canonify values specified in abortbundleclasses/abortclasses (Redmine #1786)
+
+       - Fix build issues on NetBSD, SLES 12.2
+
+       - Improve error message when libxml2 support is not compiled (Redmine #1799)
+
+       - fix potential segmentation fault when trimming network socket data (GitHub #233)
+
+       - fix potential segmentation fault when address-lookups in lastseen db failed (GitHub #233)
 
        - execute background promise serially when max_children was reached, rather
-         than skipping them
+         than skipping them (GitHub #233)
 
 3.4.1   (Bugfix and Stability release)
 

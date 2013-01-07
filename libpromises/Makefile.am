@@ -120,7 +120,6 @@ libpromises_la_SOURCES = \
         statistics.c statistics.h \
         storage_tools.c \
         string_expressions.c string_expressions.h \
-        string_lib.c string_lib.h \
         string_map.c string_map.h \
         syntax.c syntax.h \
         sysinfo.c sysinfo.h \

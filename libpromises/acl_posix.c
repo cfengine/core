@@ -30,6 +30,7 @@
 #include "files_names.h"
 #include "cfstream.h"
 #include "logging.h"
+#include "misc_lib.h"
 
 #ifdef HAVE_ACL_H
 # include <acl.h>

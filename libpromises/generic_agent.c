@@ -53,7 +53,7 @@
 #include "exec_tools.h"
 
 #ifdef HAVE_NOVA
-#include "nova-reporting.h"
+#include "nova_reporting.h"
 #else
 #include "reporting.h"
 #endif

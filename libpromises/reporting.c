@@ -41,7 +41,7 @@
 #include "misc_lib.h"
 
 #ifdef HAVE_NOVA
-#include "nova-reporting.h"
+#include "nova_reporting.h"
 #endif
 
 #include <assert.h>

@@ -63,8 +63,6 @@ bool IsStrCaseIn(const char *str, const char **strs);
 char **String2StringArray(char *str, char separator);
 void FreeStringArray(char **strs);
 
-char *Titleize(char *str);
-
 int SubStrnCopyChr(char *to, const char *from, int len, char sep);
 int CountChar(const char *string, char sp);
 void ReplaceChar(char *in, char *out, int outSz, char from, char to);

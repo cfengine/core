@@ -99,7 +99,6 @@ typedef enum
 
 typedef struct JsonElement_ JsonElement;
 
-#include "cf3.defs.h"
 #include "writer.h"
 
 typedef struct

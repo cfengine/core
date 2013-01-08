@@ -24,6 +24,7 @@
 
 #include "json.h"
 
+#include "alloc.h"
 #include "sequence.h"
 #include "string_lib.h"
 
@@ -750,7 +751,6 @@ JsonElement *JsonRealCreate(double value)
 {
     if (isnan(value) || !isfinite(value))
     {
-        CfDebug("Attempted to add NaN or inifinite value to JSON");
         value = 0.0;
     }
 

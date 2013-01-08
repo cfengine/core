@@ -22,19 +22,19 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_ACL_H
-#define CFENGINE_ACL_H
+#ifndef CFENGINE_MISC_LIB_H
+#define CFENGINE_MISC_LIB_H
 
-// Valid generic permissions
-#define CF_VALID_GPERMS "rwx"
+#include "compiler.h"
 
-// Native perms separators in mode
-#define CF_NATIVE_PERMS_SEP_START '('
-#define CF_NATIVE_PERMS_SEP_END ')'
+/*
+  In contrast to the standard C modulus operator (%), this gives
+  you an unsigned modulus. So where -1 % 3 => -1,
+  UnsignedModulus(-1, 3) => 2.
+*/
+unsigned long UnsignedModulus(long dividend, long divisor);
 
-#define CF_VALID_NPERMS_POSIX "rwx"
-#define CF_VALID_NPERMS_NTFS "drtxTwabBpcoD"
-
-void VerifyACL(char *file, Attributes a, Promise *pp);
+void __ProgrammingError(const char *file, int lineno, const char *format, ...) FUNC_ATTR_NORETURN;
+#define ProgrammingError(...) __ProgrammingError(__FILE__, __LINE__, __VA_ARGS__)
 
 #endif

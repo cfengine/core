@@ -30,6 +30,7 @@
 #include "bool.h"
 #include "logic_expressions.h"
 #include "logging.h"
+#include "misc_lib.h"
 
 #include <stdlib.h>
 

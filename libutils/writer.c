@@ -24,7 +24,8 @@
 
 #include "writer.h"
 
-#include "logging.h"
+#include "misc_lib.h"
+#include "alloc.h"
 
 typedef enum
 {

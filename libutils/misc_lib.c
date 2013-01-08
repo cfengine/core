@@ -24,7 +24,23 @@
 
 #include "misc_lib.h"
 
+#include "platform.h"
+#include "alloc.h"
+
+#include <stdarg.h>
+
 unsigned long UnsignedModulus(long dividend, long divisor)
 {
     return ((dividend % divisor) + divisor) % divisor;
+}
+
+void __ProgrammingError(const char *file, int lineno, const char *format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+    char *fmt = NULL;
+    xasprintf(&fmt, "%s:%d: ProgrammingError: %s", file, lineno, format);
+    fprintf(stdout, fmt, ap);
+    free(fmt);
+    exit(255);
 }

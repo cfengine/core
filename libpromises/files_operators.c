@@ -25,7 +25,7 @@
 
 #include "files_operators.h"
 
-#include "acl.h"
+#include "cf_acl.h"
 #include "env_context.h"
 #include "constraints.h"
 #include "promises.h"
@@ -396,8 +396,14 @@ void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp
 
         strcpy(from, cf_ctime(&(cmpsb.st_mtime)));
         strcpy(to, cf_ctime(&(sb->st_mtime)));
-        Chop(from);
-        Chop(to);
+        if (Chop(from, CF_EXPANDSIZE) == -1)
+        {
+            CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+        }
+        if (Chop(to, CF_EXPANDSIZE) == -1)
+        {
+            CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+        }
         CfOut(cf_error, "", "ALERT: Last modified time for %s changed %s -> %s", file, from, to);
     }
 

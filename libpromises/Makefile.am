@@ -23,7 +23,7 @@ libpromises_la_SOURCES = \
         cf3lex.l \
         addr_lib.c addr_lib.h \
         alphalist.c alphalist.h \
-        acl.c acl.h \
+        cf_acl.c cf_acl.h \
         acl_posix.c acl_posix.h \
         args.c args.h \
         assoc.c assoc.h \
@@ -45,7 +45,6 @@ libpromises_la_SOURCES = \
         constraints.c constraints.h \
         conversion.c conversion.h \
         crypto.c crypto.h \
-        csv_writer.c csv_writer.h \
         dbm_api.c dbm_api.h dbm_lib.h dbm_lib.c dbm_priv.h \
         dbm_migration.c dbm_migration.h \
         dbm_migration_lastseen.c \
@@ -84,7 +83,6 @@ libpromises_la_SOURCES = \
         logging.c logging.h \
         logic_expressions.c logic_expressions.h \
         matching.c matching.h \
-        misc_lib.c misc_lib.h \
         mod_access.c mod_access.h \
         mod_common.c \
         mod_databases.c mod_databases.h \
@@ -122,7 +120,6 @@ libpromises_la_SOURCES = \
         statistics.c statistics.h \
         storage_tools.c \
         string_expressions.c string_expressions.h \
-        string_lib.c string_lib.h \
         string_map.c string_map.h \
         syntax.c syntax.h \
         sysinfo.c sysinfo.h \
@@ -131,9 +128,7 @@ libpromises_la_SOURCES = \
         unix.c unix.h \
         vars.c vars.h \
         verify_processes.c verify_processes.h \
-        verify_reports.c \
-        writer.c writer.h \
-        xml_writer.c xml_writer.h
+        verify_reports.c
 
 if !NT
 libpromises_la_SOURCES += \

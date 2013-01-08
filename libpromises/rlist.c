@@ -35,6 +35,7 @@
 #include "string_lib.h"
 #include "transaction.h"
 #include "logging.h"
+#include "misc_lib.h"
 
 #include <assert.h>
 

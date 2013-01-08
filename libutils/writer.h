@@ -22,14 +22,41 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_MISC_LIB_H
-#define CFENGINE_MISC_LIB_H
+#ifndef CFENGINE_WRITER_H
+#define CFENGINE_WRITER_H
 
 /*
-  In contrast to the standard C modulus operator (%), this gives
-  you an unsigned modulus. So where -1 % 3 => -1,
-  UnsignedModulus(-1, 3) => 2.
-*/
-unsigned long UnsignedModulus(long dividend, long divisor);
+ * Abstract "writer".
+ *
+ * Writes passed data either to
+ *   passed FILE*, or
+ *   memory buffer
+ */
+
+typedef struct Writer_ Writer;
+
+#include "platform.h"
+#include "compiler.h"
+
+Writer *FileWriter(FILE *);
+Writer *StringWriter(void);
+
+size_t WriterWriteF(Writer *writer, const char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);
+size_t WriterWriteVF(Writer *writer, const char *fmt, va_list ap) FUNC_ATTR_PRINTF(2, 0);
+
+size_t WriterWrite(Writer *writer, const char *str);
+size_t WriterWriteLen(Writer *writer, const char *str, size_t len);
+size_t WriterWriteChar(Writer *writer, char c);
+
+size_t StringWriterLength(const Writer *writer);
+const char *StringWriterData(const Writer *writer);
+
+void WriterClose(Writer *writer);
+
+/* Returns modifiable string and destroys itself */
+char *StringWriterClose(Writer *writer);
+
+/* Returns the open file and destroys itself */
+FILE *FileWriterDetach(Writer *writer);
 
 #endif

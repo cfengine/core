@@ -369,42 +369,42 @@ static void test_escape_char_copy(void **state)
 static void test_chop_no_spaces(void **state)
 {
     char s[] = "abc";
-    Chop(s);
+    Chop(s, CF_EXPANDSIZE);
     assert_string_equal("abc", s);
 }
 
 static void test_chop_single_space(void **state)
 {
     char s[] = "abc ";
-    Chop(s);
+    Chop(s, CF_EXPANDSIZE);
     assert_string_equal("abc", s);
 }
 
 static void test_chop_two_spaces(void **state)
 {
     char s[] = "abc  ";
-    Chop(s);
+    Chop(s, CF_EXPANDSIZE);
     assert_string_equal("abc", s);
 }
 
 static void test_chop_empty(void **state)
 {
     char s[] = "";
-    Chop(s);
+    Chop(s, CF_EXPANDSIZE);
     assert_string_equal("", s);
 }
 
 static void test_chop_empty_single_space(void **state)
 {
     char s[] = " ";
-    Chop(s);
+    Chop(s, CF_EXPANDSIZE);
     assert_string_equal("", s);
 }
 
 static void test_chop_empty_two_spaces(void **state)
 {
     char s[] = "  ";
-    Chop(s);
+    Chop(s, CF_EXPANDSIZE);
     assert_string_equal("", s);
 }
 

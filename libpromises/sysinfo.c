@@ -374,7 +374,10 @@ void GetNameInfo3()
     CfOut(cf_verbose, "", "------------------------------------------------------------------------\n\n");
 
     snprintf(workbuf, CF_MAXVARSIZE, "%s", cf_ctime(&tloc));
-    Chop(workbuf);
+    if (Chop(workbuf, CF_EXPANDSIZE) == -1)
+    {
+        CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+    }
 
     NewScalar("sys", "date", workbuf, cf_str);
     NewScalar("sys", "cdate", CanonifyName(workbuf), cf_str);
@@ -647,7 +650,10 @@ void Get3Environment()
     }
 
     snprintf(value, CF_MAXVARSIZE - 1, "%s", cf_ctime(&statbuf.st_mtime));
-    Chop(value);
+    if (Chop(value, CF_EXPANDSIZE) == -1)
+    {
+        CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+    }
 
     DeleteVariable("mon", "env_time");
     NewScalar("mon", "env_time", value, cf_str);
@@ -2013,7 +2019,7 @@ static int VM_Version(void)
         if ((sp = strchr(buffer, '(')) != NULL)
         {
             *sp = 0;
-            Chop(buffer);
+            Chop(buffer, CF_EXPANDSIZE);
             HardClass(buffer);
         }
         sufficient = 1;
@@ -2134,7 +2140,7 @@ static FILE *ReadFirstLine(const char *filename, char *buf, int bufsize)
         return NULL;
     }
 
-    StripTrailingNewline(buf);
+    StripTrailingNewline(buf, CF_EXPANDSIZE);
 
     return fp;
 }

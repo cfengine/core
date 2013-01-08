@@ -22,41 +22,26 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_WRITER_H
-#define CFENGINE_WRITER_H
+#ifndef CFENGINE_CSV_WRITER_H
+#define CFENGINE_CSV_WRITER_H
 
 /*
- * Abstract "writer".
- *
- * Writes passed data either to
- *   passed FILE*, or
- *   memory buffer
+ * This writer implements CSV as in RFC 4180
  */
 
-typedef struct Writer_ Writer;
+#include "platform.h"
+#include "writer.h"
 
-#include "cf3.defs.h"
-#include "compiler.h"
+typedef struct CsvWriter_ CsvWriter;
 
-Writer *FileWriter(FILE *);
-Writer *StringWriter(void);
+CsvWriter *CsvWriterOpen(Writer *w);
 
-size_t WriterWriteF(Writer *writer, const char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);
-size_t WriterWriteVF(Writer *writer, const char *fmt, va_list ap) FUNC_ATTR_PRINTF(2, 0);
+void CsvWriterField(CsvWriter *csvw, const char *str);
+void CsvWriterFieldF(CsvWriter *csvw, const char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);
 
-size_t WriterWrite(Writer *writer, const char *str);
-size_t WriterWriteLen(Writer *writer, const char *str, size_t len);
-size_t WriterWriteChar(Writer *writer, char c);
+void CsvWriterNewRecord(CsvWriter *csvw);
 
-size_t StringWriterLength(const Writer *writer);
-const char *StringWriterData(const Writer *writer);
-
-void WriterClose(Writer *writer);
-
-/* Returns modifiable string and destroys itself */
-char *StringWriterClose(Writer *writer);
-
-/* Returns the open file and destroys itself */
-FILE *FileWriterDetach(Writer *writer);
+/* Does not close underlying Writer, but flushes all pending data */
+void CsvWriterClose(CsvWriter *csvw);
 
 #endif

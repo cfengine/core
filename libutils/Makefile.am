@@ -17,11 +17,17 @@ libutils_la_SOURCES = \
 	alloc.h alloc.c \
 	compiler.h \
 	sequence.c sequence.h \
+	set.c set.h \
+	string_lib.c string_lib.h \
 	platform.h \
 	bool.h \
 	map.c map.h map_common.h \
 	array_map.c array_map_priv.h \
-	hash_map.c hash_map_priv.h
+	hash_map.c hash_map_priv.h \
+	misc_lib.c misc_lib.h \
+	writer.c writer.h \
+	csv_writer.c csv_writer \
+	xml_writer.c writer.h
 
 CLEANFILES = *.gcno *.gcda
 

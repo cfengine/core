@@ -9,7 +9,7 @@ libtest_la_SOURCES = cmockery.c cmockery.h schema.h test.c test.h ../../libutils
 libtest_la_LIBADD = ../../pub/libcfpub.la
 
 check_LTLIBRARIES += libstr.la
-libstr_la_SOURCES = ../../libpromises/string_lib.c ../../libpromises/writer.c
+libstr_la_SOURCES = ../../libutils/string_lib.c ../../libutils/writer.c
 libstr_la_LIBADD = libtest.la
 
 
@@ -68,7 +68,7 @@ TESTS_ENVIRONMENT = DYLD_FORCE_FLAT_NAMESPACE=yes
 atexit_test_SOURCES = atexit_test.c
 atexit_test_LDADD = libtest.la libdb.la
 
-csv_writer_test_SOURCES = csv_writer_test.c ../../libpromises/csv_writer.c
+csv_writer_test_SOURCES = csv_writer_test.c ../../libutils/csv_writer.c
 csv_writer_test_LDADD = libtest.la libstr.la
 
 conversion_test_SOURCES = conversion_test.c ../../libpromises/conversion.c
@@ -84,7 +84,7 @@ set_domainname_test_LDADD = libstr.la
 str_test_SOURCES = str_test.c
 str_test_LDADD = libstr.la
 
-xml_writer_test_SOURCES = xml_writer_test.c ../../libpromises/xml_writer.c
+xml_writer_test_SOURCES = xml_writer_test.c ../../libutils/xml_writer.c
 xml_writer_test_LDADD = libtest.la libstr.la
 
 #

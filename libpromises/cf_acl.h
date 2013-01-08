@@ -22,26 +22,21 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_CSV_WRITER_H
-#define CFENGINE_CSV_WRITER_H
-
-/*
- * This writer implements CSV as in RFC 4180
- */
+#ifndef CFENGINE_ACL_H
+#define CFENGINE_ACL_H
 
 #include "cf3.defs.h"
-#include "writer.h"
 
-typedef struct CsvWriter_ CsvWriter;
+// Valid generic permissions
+#define CF_VALID_GPERMS "rwx"
 
-CsvWriter *CsvWriterOpen(Writer *w);
+// Native perms separators in mode
+#define CF_NATIVE_PERMS_SEP_START '('
+#define CF_NATIVE_PERMS_SEP_END ')'
 
-void CsvWriterField(CsvWriter *csvw, const char *str);
-void CsvWriterFieldF(CsvWriter *csvw, const char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);
+#define CF_VALID_NPERMS_POSIX "rwx"
+#define CF_VALID_NPERMS_NTFS "drtxTwabBpcoD"
 
-void CsvWriterNewRecord(CsvWriter *csvw);
-
-/* Does not close underlying Writer, but flushes all pending data */
-void CsvWriterClose(CsvWriter *csvw);
+void VerifyACL(char *file, Attributes a, Promise *pp);
 
 #endif

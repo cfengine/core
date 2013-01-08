@@ -32,6 +32,7 @@
 #include "transaction.h"
 #include "logging.h"
 #include "string_lib.h"
+#include "misc_lib.h"
 
 #include <stdarg.h>
 
@@ -71,7 +72,12 @@ static void VLog(FILE *fh, enum cfreport level, const char *errstr, const char *
 
     memset(output, 0, CF_BUFSIZE);
     vsnprintf(buffer, CF_BUFSIZE - 1, fmt, args);
-    Chop(buffer);
+
+    if (Chop(buffer, CF_EXPANDSIZE) == -1)
+    {
+        CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+    }
+
     AppendItem(&mess, buffer, NULL);
 
     if ((errstr == NULL) || (strlen(errstr) > 0))
@@ -178,7 +184,12 @@ void cfPS(enum cfreport level, char status, char *errstr, const Promise *pp, Att
     va_start(ap, fmt);
     vsnprintf(buffer, CF_BUFSIZE - 1, fmt, ap);
     va_end(ap);
-    Chop(buffer);
+
+    if (Chop(buffer, CF_EXPANDSIZE) == -1)
+    {
+        CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+    }
+
     AppendItem(&mess, buffer, NULL);
 
     if ((errstr == NULL) || (strlen(errstr) > 0))

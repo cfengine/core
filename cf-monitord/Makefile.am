@@ -19,7 +19,7 @@ cf_monitord_SOURCES = \
 
 cf_monitord_LDADD =
 if HAVE_NOVA
-cf_monitord_LDADD += ../nova/src/libcfmonitord.la
+cf_monitord_LDADD += ../nova/libcfmonitord/libcfmonitord.la
 endif
 cf_monitord_LDADD += ../libpromises/libpromises.la
 

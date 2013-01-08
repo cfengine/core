@@ -94,7 +94,10 @@ void EndAudit(void)
             return;
         }
 
-        Chop(datestr);
+        if (Chop(datestr, CF_EXPANDSIZE) == -1)
+        {
+            CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+        }
         fprintf(fout, "%s,%.4lf,%.4lf,%.4lf\n", datestr, VAL_KEPT, VAL_REPAIRED, VAL_NOTKEPT);
         TrackValue(datestr, VAL_KEPT, VAL_REPAIRED, VAL_NOTKEPT);
         fclose(fout);
@@ -432,17 +435,4 @@ void FatalError(char *s, ...)
 
     EndAudit();
     exit(1);
-}
-
-/************************************************************************/
-
-void __ProgrammingError(const char *file, int lineno, const char *format, ...)
-{
-    va_list ap;
-    va_start(ap, format);
-    char *fmt = NULL;
-    xasprintf(&fmt, "%s:%d: %s", file, lineno, format);
-    CfVOut(cf_error, "", fmt, ap);
-    free(fmt);
-    exit(255);
 }

@@ -38,9 +38,10 @@
 #include "logging.h"
 #include "string_lib.h"
 #include "evalfunction.h"
+#include "misc_lib.h"
 
 #ifdef HAVE_NOVA
-#include "nova-reporting.h"
+#include "nova_reporting.h"
 #endif
 
 #include <assert.h>
@@ -1080,7 +1081,10 @@ void ReportError(char *s)
     }
     else
     {
-        Chop(s);
+        if (Chop(s, CF_EXPANDSIZE) == -1)
+        {
+            CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+        }
         FatalError("Validation: %s\n", s);
     }
 }

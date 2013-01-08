@@ -22,11 +22,11 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include "platform.h"
 
-#include "logging.h"
+#include "alloc.h"
 #include "writer.h"
-#include "cfstream.h"
+#include "misc_lib.h"
 
 #include <assert.h>
 
@@ -38,6 +38,7 @@
 # include <pcre/pcre.h>
 #endif
 
+#define STRING_MATCH_OVECCOUNT 30
 
 char ToLower(char ch)
 {
@@ -353,8 +354,8 @@ static bool StringMatchInternal(const char *regex, const char *str, int *start, 
         return false;
     }
 
-    int ovector[OVECCOUNT] = { 0 };
-    int result = pcre_exec(pattern, NULL, str, strlen(str), 0, 0, ovector, OVECCOUNT);
+    int ovector[STRING_MATCH_OVECCOUNT] = { 0 };
+    int result = pcre_exec(pattern, NULL, str, strlen(str), 0, 0, ovector, STRING_MATCH_OVECCOUNT);
 
     if (result)
     {
@@ -463,31 +464,6 @@ bool IsStrCaseIn(const char *str, const char **strs)
         }
     }
     return false;
-}
-
-char *Titleize(char *str)
-{
-    static char buffer[CF_BUFSIZE];
-    int i;
-
-    if (str == NULL)
-    {
-        return NULL;
-    }
-
-    strcpy(buffer, str);
-
-    if (strlen(buffer) > 1)
-    {
-        for (i = 1; buffer[i] != '\0'; i++)
-        {
-            buffer[i] = ToLower(str[i]);
-        }
-    }
-
-    *buffer = ToUpper(*buffer);
-
-    return buffer;
 }
 
 int SubStrnCopyChr(char *to, const char *from, int len, char sep)
@@ -771,37 +747,39 @@ char *ScanPastChars(char *scanpast, char *input)
     return pos;
 }
 
-void StripTrailingNewline(char *str)
+int StripTrailingNewline(char *str, size_t max_length)
 {
     char *c = str + strlen(str);
 
-    if (c - str > CF_EXPANDSIZE)
+    if (c - str > max_length)
     {
-        CfOut(cf_error, "", "StripTrailingNewline was called on an overlong string");
-        return;
+        return -1;
     }
 
     for (; (c >= str) && ((*c == '\0') || (*c == '\n')); --c)
     {
         *c = '\0';
     }
+
+    return 0;
 }
 
-void Chop(char *str)            /* remove trailing spaces */
+int Chop(char *str, size_t max_length)
 {
     if ((str == NULL) || (strlen(str) == 0))
     {
-        return;
+        return 0;
     }
 
-    if (strlen(str) > CF_EXPANDSIZE)
+    if (strlen(str) > max_length)
     {
-        CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
-        return;
+        return -1;
     }
 
     for (int i = strlen(str) - 1; (i >= 0) && (isspace((int) str[i])); i--)
     {
         str[i] = '\0';
     }
+
+    return 0;
 }

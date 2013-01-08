@@ -33,6 +33,7 @@
 #include "scope.h"
 #include "cfstream.h"
 #include "logging.h"
+#include "misc_lib.h"
 
 #ifdef HAVE_PCRE_H
 # include <pcre.h>

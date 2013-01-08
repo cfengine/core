@@ -7,7 +7,7 @@ cf_agent_SOURCES = \
         cf_sql.c cf_sql.h \
         nfs.c nfs.h \
         verify_files.c \
-        verify_files_utils.c \
+        verify_files_utils.c verify_files_utils.h \
         verify_storage.c \
         verify_exec.c \
         verify_methods.c \
@@ -26,7 +26,7 @@ cf_agent_SOURCES = \
 
 LDADD =
 if HAVE_NOVA
-LDADD += ../nova/src/libcfagent.la
+LDADD += ../nova/libcfagent/libcfagent.la
 endif
 LDADD += ../libpromises/libpromises.la \
 	$(LIBXML2_LDFLAGS) $(LIBXML2_LIBS) \

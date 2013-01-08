@@ -55,16 +55,16 @@ docs/tools/build-stdlib.exe
 
 # binaries
 
+nova/cf-hub/cf-hub
+nova/cf-hub/cf-hub.exe
+nova/cf-know/cf-know
+nova/cf-know/cf-know.exe
 cf-agent/cf-agent
 cf-agent/cf-agent.exe
 cf-execd/cf-execd
 cf-execd/cf-execd.exe
-cf-hub/cf-hub
-cf-hub/cf-hub.exe
 cf-key/cf-key
 cf-key/cf-key.exe
-cf-know/cf-know
-cf-know/cf-know.exe
 cf-monitord/cf-monitord
 cf-monitord/cf-monitord.exe
 cf-promises/cf-promises

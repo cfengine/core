@@ -36,6 +36,8 @@
 #include "item_lib.h"
 #include "policy.h"
 
+int yylex(void);
+
 // FIX: remove
 #include "syntax.h"
 

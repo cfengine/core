@@ -32,10 +32,6 @@
 const char *Version(void);
 const char *NameVersion(void);
 
-/* cflex.l */
-
-int yylex(void);
-
 /* cfparse.y */
 
 void yyerror(const char *s);

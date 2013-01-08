@@ -32,6 +32,7 @@
 #include "item_lib.h"
 #include "assert.h"
 #include "files_interfaces.h"
+#include "files_properties.h"
 #include "cfstream.h"
 #include "logging.h"
 #include "string_lib.h"

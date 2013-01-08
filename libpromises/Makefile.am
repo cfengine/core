@@ -64,7 +64,7 @@ libpromises_la_SOURCES = \
         files_links.c files_links.h \
         files_names.c files_names.h \
         files_operators.c files_operators.h \
-        files_properties.c \
+        files_properties.c files_properties.h \
         files_repository.c files_repository.h \
         files_select.c \
         fncall.c fncall.h \

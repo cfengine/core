@@ -34,6 +34,7 @@
 #include "files_interfaces.h"
 #include "files_repository.h"
 #include "files_edit.h"
+#include "files_properties.h"
 #include "item_lib.h"
 #include "vars.h"
 #include "conversion.h"

@@ -174,13 +174,6 @@ int ScheduleEditXmlOperations(char *filename, Bundle *bp, Attributes a, Promise 
 int XmlCompareToFile(xmlDocPtr doc, char *file, Attributes a, Promise *pp);
 #endif
 
-/* files_properties.c */
-
-void AddFilenameToListOfSuspicious(const char *filename);
-int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp);
-void SetSearchDevice(struct stat *sb, Promise *pp);
-int DeviceBoundary(struct stat *sb, Promise *pp);
-
 /* files_select.c */
 
 int SelectLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp);

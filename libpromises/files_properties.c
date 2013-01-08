@@ -23,7 +23,7 @@
 
 */
 
-#include "cf3.defs.h"
+#include "files_properties.h"
 
 #include "files_names.h"
 #include "files_interfaces.h"

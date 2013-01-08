@@ -936,7 +936,7 @@ void JsonElementPrint(Writer *writer, JsonElement *element, size_t indent_level)
 // Parsing
 // *******************************************************************************************
 
-static JsonElement *JsonParseAsObject(const char **data);
+static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_out);
 
 static JsonElement *JsonParseAsBoolean(const char **data)
 {
@@ -977,12 +977,51 @@ static JsonElement *JsonParseAsNull(const char **data)
     return NULL;
 }
 
-static char *JsonParseAsString(const char **data)
+const char* JsonParseErrorToString(JsonParseError error)
+{
+    static const char *parse_errors[JSON_PARSE_ERROR_MAX] =
+    {
+        [JSON_PARSE_OK] = "Success",
+
+        [JSON_PARSE_ERROR_STRING_NO_DOUBLEQUOTE_START] = "Unable to parse json data as string, did not start with doublequote",
+        [JSON_PARSE_ERROR_STRING_NO_DOUBLEQUOTE_END] = "Unable to parse json data as string, did not end with doublequote",
+
+        [JSON_PARSE_ERROR_NUMBER_EXPONENT_NEGATIVE] = "Unable to parse json data as number, - not at the start or not after exponent",
+        [JSON_PARSE_ERROR_NUMBER_EXPONENT_POSITIVE] = "Unable to parse json data as number, + without preceding exponent",
+        [JSON_PARSE_ERROR_NUMBER_DUPLICATE_ZERO] = "Unable to parse json data as number, started with 0 before dot or exponent, duplicate 0 seen",
+        [JSON_PARSE_ERROR_NUMBER_NO_DIGIT] = "Unable to parse json data as number, dot not preceded by digit",
+        [JSON_PARSE_ERROR_NUMBER_EXPONENT_DUPLICATE] = "Unable to parse json data as number, duplicate exponent",
+        [JSON_PARSE_ERROR_NUMBER_EXPONENT_DIGIT] = "Unable to parse json data as number, exponent without preceding digit",
+        [JSON_PARSE_ERROR_NUMBER_EXPONENT_FOLLOW_LEADING_ZERO] = "Unable to parse json data as number, dot or exponent must follow leading 0",
+        [JSON_PARSE_ERROR_NUMBER_BAD_SYMBOL] = "Unable to parse json data as number, invalid symbol",
+        [JSON_PARSE_ERROR_NUMBER_DIGIT_END] = "Unable to parse json data as string, did not end with digit",
+
+        [JSON_PARSE_ERROR_ARRAY_START] = "Unable to parse json data as array, did not start with '['",
+        [JSON_PARSE_ERROR_ARRAY_END] = "Unable to parse json data as array, did not end with ']'",
+
+        [JSON_PARSE_ERROR_OBJECT_BAD_SYMBOL] = "Unable to parse json data as object, unrecognized token beginning entry",
+        [JSON_PARSE_ERROR_OBJECT_START] = "Unable to parse json data as object, did not start with '{'",
+        [JSON_PARSE_ERROR_OBJECT_END] = "Unable to parse json data as string, did not end with '}'",
+        [JSON_PARSE_ERROR_OBJECT_COLON] = "Unable to parse json data as object, ':' seen without having specified an l-value",
+        [JSON_PARSE_ERROR_OBJECT_COMMA] = "Unable to parse json data as object, ',' seen without having specified an r-value",
+        [JSON_PARSE_ERROR_OBJECT_ARRAY_LVAL] = "Unable to parse json data as object, array not allowed as l-value",
+        [JSON_PARSE_ERROR_OBJECT_OBJECT_LVAL] = "Unable to parse json data as object, object not allowed as l-value",
+        [JSON_PARSE_ERROR_OBJECT_OPEN_LVAL] = "Unable to parse json data as object, tried to close object having opened an l-value",
+
+        [JSON_PARSE_ERROR_INVALID_START] = "Unwilling to parse json data starting with invalid character",
+        [JSON_PARSE_ERROR_NO_DATA] = "No data"
+    };
+
+    assert(error < JSON_PARSE_ERROR_MAX);
+    return parse_errors[error];
+}
+
+static JsonParseError JsonParseAsString(const char **data, char **str_out)
 {
     if (**data != '"')
     {
-        CfDebug("Unable to parse json data as string, did not start with doublequote: %s", *data);
-        return NULL;
+        *str_out = NULL;
+        return JSON_PARSE_ERROR_STRING_NO_DOUBLEQUOTE_START;
     }
 
     Writer *writer = StringWriter();
@@ -991,7 +1030,8 @@ static char *JsonParseAsString(const char **data)
     {
         if (**data == '"' && *(*data - 1) != '\\')
         {
-            return StringWriterClose(writer);
+            *str_out = StringWriterClose(writer);
+            return JSON_PARSE_OK;
         }
 
         /* unescaping input strings */
@@ -1010,12 +1050,12 @@ static char *JsonParseAsString(const char **data)
         WriterWriteChar(writer, **data);
     }
 
-    CfDebug("Unable to parse json data as string, did not end with doublequote: %s", *data);
     WriterClose(writer);
-    return NULL;
+    *str_out = NULL;
+    return JSON_PARSE_ERROR_STRING_NO_DOUBLEQUOTE_END;
 }
 
-static JsonElement *JsonParseAsNumber(const char **data)
+static JsonParseError JsonParseAsNumber(const char **data, JsonElement **json_out)
 {
     Writer *writer = StringWriter();
 
@@ -1032,27 +1072,27 @@ static JsonElement *JsonParseAsNumber(const char **data)
         case '-':
             if (prev_char != 0 && prev_char != 'e' && prev_char != 'E')
             {
-                CfDebug("Unable to parse json data as number, - not at the start or not after exponent, %s", *data);
+                *json_out = NULL;
                 WriterClose(writer);
-                return NULL;
+                return JSON_PARSE_ERROR_NUMBER_EXPONENT_NEGATIVE;
             }
             break;
 
         case '+':
             if (prev_char != 'e' && prev_char != 'E')
             {
-                CfDebug("Unable to parse json data as number, + without preceding exponent, %s", *data);
+                *json_out = NULL;
                 WriterClose(writer);
-                return NULL;
+                return JSON_PARSE_ERROR_NUMBER_EXPONENT_POSITIVE;
             }
             break;
 
         case '0':
             if (zero_started && !seen_dot && !seen_exponent)
             {
-                CfDebug("Unable to parse json data as number, started with 0 before dot or exponent, duplicate 0 seen, %s", *data);
+                *json_out = NULL;
                 WriterClose(writer);
-                return NULL;
+                return JSON_PARSE_ERROR_NUMBER_DUPLICATE_ZERO;
             }
             if (prev_char == 0)
             {
@@ -1063,9 +1103,9 @@ static JsonElement *JsonParseAsNumber(const char **data)
         case '.':
             if (prev_char != '0' && !IsDigit(prev_char))
             {
-                CfDebug("Unable to parse json data as number, dot not preceded by digit, %s", *data);
+                *json_out = NULL;
                 WriterClose(writer);
-                return NULL;
+                return JSON_PARSE_ERROR_NUMBER_NO_DIGIT;
             }
             seen_dot = true;
             break;
@@ -1074,15 +1114,15 @@ static JsonElement *JsonParseAsNumber(const char **data)
         case 'E':
             if (seen_exponent)
             {
-                CfDebug("Unable to parse json data as number, duplicate exponent, %s", *data);
+                *json_out = NULL;
                 WriterClose(writer);
-                return NULL;
+                return JSON_PARSE_ERROR_NUMBER_EXPONENT_DUPLICATE;
             }
             else if (!IsDigit(prev_char) && prev_char != '0')
             {
-                CfDebug("Unable to parse json data as number, exponent without preceding digit, %s", *data);
+                *json_out = NULL;
                 WriterClose(writer);
-                return NULL;
+                return JSON_PARSE_ERROR_NUMBER_EXPONENT_DIGIT;
             }
             seen_exponent = true;
             break;
@@ -1090,16 +1130,16 @@ static JsonElement *JsonParseAsNumber(const char **data)
         default:
             if (zero_started && !seen_dot && !seen_exponent)
             {
-                CfDebug("Unable to parse json data as number, dot or exponent must follow leading 0: %s", *data);
+                *json_out = NULL;
                 WriterClose(writer);
-                return NULL;
+                return JSON_PARSE_ERROR_NUMBER_EXPONENT_FOLLOW_LEADING_ZERO;
             }
 
             if (!IsDigit(**data))
             {
-                CfDebug("Unable to parse json data as number, invalid symbol, %s", *data);
+                *json_out = NULL;
                 WriterClose(writer);
-                return NULL;
+                return JSON_PARSE_ERROR_NUMBER_BAD_SYMBOL;
             }
             break;
         }
@@ -1109,9 +1149,9 @@ static JsonElement *JsonParseAsNumber(const char **data)
 
     if (prev_char != '0' && !IsDigit(prev_char))
     {
-        CfDebug("Unable to parse json data as string, did not end with digit: %s", *data);
+        *json_out = NULL;
         WriterClose(writer);
-        return NULL;
+        return JSON_PARSE_ERROR_NUMBER_DIGIT_END;
     }
 
     // rewind 1 char so caller will see separator next
@@ -1119,20 +1159,22 @@ static JsonElement *JsonParseAsNumber(const char **data)
 
     if (seen_dot)
     {
-        return JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_REAL, StringWriterClose(writer));
+        *json_out = JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_REAL, StringWriterClose(writer));
+        return JSON_PARSE_OK;
     }
     else
     {
-        return JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_INTEGER, StringWriterClose(writer));
+        *json_out = JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_INTEGER, StringWriterClose(writer));
+        return JSON_PARSE_OK;
     }
 }
 
-static JsonElement *JsonParseAsArray(const char **data)
+static JsonParseError JsonParseAsArray(const char **data, JsonElement **json_out)
 {
     if (**data != '[')
     {
-        CfDebug("Unable to parse json data as array, did not start with '[': %s", *data);
-        return NULL;
+        *json_out = NULL;
+        return JSON_PARSE_ERROR_ARRAY_START;
     }
 
     JsonElement *array = JsonArrayCreate(DEFAULT_CONTAINER_CAPACITY);
@@ -1148,7 +1190,12 @@ static JsonElement *JsonParseAsArray(const char **data)
         {
         case '"':
             {
-                char *value = JsonParseAsString(data);
+                char *value = NULL;
+                JsonParseError err = JsonParseAsString(data, &value);
+                if (err != JSON_PARSE_OK)
+                {
+                    return err;
+                }
                 JsonArrayAppendString(array, value);
                 free(value);
             }
@@ -1156,12 +1203,14 @@ static JsonElement *JsonParseAsArray(const char **data)
 
         case '[':
             {
-                JsonElement *child_array = JsonParseAsArray(data);
-                if (!child_array)
+                JsonElement *child_array = NULL;
+                JsonParseError err = JsonParseAsArray(data, &child_array);
+                if (err != JSON_PARSE_OK)
                 {
                     JsonElementDestroy(array);
-                    return NULL;
+                    return err;
                 }
+                assert(child_array);
 
                 JsonArrayAppendArray(array, child_array);
             }
@@ -1169,12 +1218,14 @@ static JsonElement *JsonParseAsArray(const char **data)
 
         case '{':
             {
-                JsonElement *child_object = JsonParseAsObject(data);
-                if (!child_object)
+                JsonElement *child_object = NULL;
+                JsonParseError err = JsonParseAsObject(data, &child_object);
+                if (err != JSON_PARSE_OK)
                 {
                     JsonElementDestroy(array);
-                    return NULL;
+                    return err;
                 }
+                assert(child_object);
 
                 JsonArrayAppendObject(array, child_object);
             }
@@ -1184,17 +1235,21 @@ static JsonElement *JsonParseAsArray(const char **data)
             break;
 
         case ']':
-            return array;
+            *json_out = array;
+            return JSON_PARSE_OK;
 
         default:
             if (**data == '-' || **data == '0' || IsDigit(**data))
             {
-                JsonElement *child = JsonParseAsNumber(data);
-                if (!child)
+                JsonElement *child = NULL;
+                JsonParseError err = JsonParseAsNumber(data, &child);
+                if (err != JSON_PARSE_OK)
                 {
                     JsonElementDestroy(array);
-                    return NULL;
+                    return err;
                 }
+                assert(child);
+
                 _JsonArrayAppendPrimitive(array, child);
                 break;
             }
@@ -1213,23 +1268,23 @@ static JsonElement *JsonParseAsArray(const char **data)
                 break;
             }
 
-            CfDebug("Unable to parse json data as object, unrecognized token beginning entry: %s", *data);
+            *json_out = NULL;
             JsonElementDestroy(array);
-            return NULL;
+            return JSON_PARSE_ERROR_OBJECT_BAD_SYMBOL;
         }
     }
 
-    CfDebug("Unable to parse json data as array, did not end with ']': %s", *data);
+    *json_out = NULL;
     JsonElementDestroy(array);
-    return NULL;
+    return JSON_PARSE_ERROR_ARRAY_END;
 }
 
-static JsonElement *JsonParseAsObject(const char **data)
+static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_out)
 {
     if (**data != '{')
     {
-        CfDebug("Unable to parse json data as object, did not start with '{': %s", *data);
-        return NULL;
+        *json_out = NULL;
+        return JSON_PARSE_ERROR_ARRAY_START;
     }
 
     JsonElement *object = JsonObjectCreate(DEFAULT_CONTAINER_CAPACITY);
@@ -1247,13 +1302,15 @@ static JsonElement *JsonParseAsObject(const char **data)
         case '"':
             if (property_name != NULL)
             {
-                char *property_value = JsonParseAsString(data);
-                if (!property_value)
+                char *property_value = NULL;
+                JsonParseError err = JsonParseAsString(data, &property_value);
+                if (err != JSON_PARSE_OK)
                 {
                     free(property_name);
                     JsonElementDestroy(object);
-                    return NULL;
+                    return err;
                 }
+                assert(property_value);
 
                 JsonObjectAppendString(object, property_name, property_value);
                 free(property_value);
@@ -1262,44 +1319,46 @@ static JsonElement *JsonParseAsObject(const char **data)
             }
             else
             {
-                property_name = JsonParseAsString(data);
-                if (!property_name)
+                property_name = NULL;
+                JsonParseError err = JsonParseAsString(data, &property_name);
+                if (err != JSON_PARSE_OK)
                 {
                     JsonElementDestroy(object);
-                    return NULL;
+                    return err;
                 }
+                assert(property_name);
             }
             break;
 
         case ':':
             if (property_name == NULL)
             {
-                CfDebug("Unable to parse json data as object, ':' seen without having specified an l-value: %s", *data);
+                json_out = NULL;
                 free(property_name);
                 JsonElementDestroy(object);
-                return NULL;
+                return JSON_PARSE_ERROR_OBJECT_COLON;
             }
             break;
 
         case ',':
             if (property_name != NULL)
             {
-                CfDebug("Unable to parse json data as object, ',' seen without having specified an r-value: %s", *data);
                 free(property_name);
                 JsonElementDestroy(object);
-                return NULL;
+                return JSON_PARSE_ERROR_OBJECT_COMMA;
             }
             break;
 
         case '[':
             if (property_name != NULL)
             {
-                JsonElement *child_array = JsonParseAsArray(data);
-                if (!child_array)
+                JsonElement *child_array = NULL;
+                JsonParseError err = JsonParseAsArray(data, &child_array);
+                if (err != JSON_PARSE_OK)
                 {
                     free(property_name);
                     JsonElementDestroy(object);
-                    return NULL;
+                    return err;
                 }
 
                 JsonObjectAppendArray(object, property_name, child_array);
@@ -1308,22 +1367,22 @@ static JsonElement *JsonParseAsObject(const char **data)
             }
             else
             {
-                CfDebug("Unable to parse json data as object, array not allowed as l-value: %s", *data);
                 free(property_name);
                 JsonElementDestroy(object);
-                return NULL;
+                return JSON_PARSE_ERROR_OBJECT_ARRAY_LVAL;
             }
             break;
 
         case '{':
             if (property_name != NULL)
             {
-                JsonElement *child_object = JsonParseAsObject(data);
-                if (!child_object)
+                JsonElement *child_object = NULL;
+                JsonParseError err = JsonParseAsObject(data, &child_object);
+                if (err != JSON_PARSE_OK)
                 {
                     free(property_name);
                     JsonElementDestroy(object);
-                    return NULL;
+                    return err;
                 }
 
                 JsonObjectAppendObject(object, property_name, child_object);
@@ -1332,36 +1391,37 @@ static JsonElement *JsonParseAsObject(const char **data)
             }
             else
             {
-                CfDebug("Unable to parse json data as object, object not allowed as l-value: %s", *data);
+                *json_out = NULL;
                 free(property_name);
                 JsonElementDestroy(object);
-                return NULL;
+                return JSON_PARSE_ERROR_OBJECT_OBJECT_LVAL;
             }
             break;
 
         case '}':
             if (property_name != NULL)
             {
-                CfDebug("Unable to parse json data as object, tried to close object having opened an l-value: %s",
-                        *data);
+                *json_out = NULL;
                 free(property_name);
                 JsonElementDestroy(object);
-                return NULL;
+                return JSON_PARSE_ERROR_OBJECT_OPEN_LVAL;
             }
             free(property_name);
-            return object;
+            *json_out = object;
+            return JSON_PARSE_OK;
 
         default:
             if (property_name)
             {
                 if (**data == '-' || **data == '0' || IsDigit(**data))
                 {
-                    JsonElement *child = JsonParseAsNumber(data);
-                    if (!child)
+                    JsonElement *child = NULL;
+                    JsonParseError err = JsonParseAsNumber(data, &child);
+                    if (err != JSON_PARSE_OK)
                     {
                         free(property_name);
                         JsonElementDestroy(object);
-                        return NULL;
+                        return err;
                     }
                     _JsonObjectAppendPrimitive(object, property_name, child);
                     free(property_name);
@@ -1388,36 +1448,36 @@ static JsonElement *JsonParseAsObject(const char **data)
                 }
             }
 
-            CfDebug("Unable to parse json data as object, unrecognized token beginning entry: %s", *data);
+            *json_out = NULL;
             free(property_name);
             JsonElementDestroy(object);
-            return NULL;
+            return JSON_PARSE_ERROR_OBJECT_BAD_SYMBOL;
         }
     }
 
-    CfDebug("Unable to parse json data as string, did not end with '}': %s", *data);
+    *json_out = NULL;
     free(property_name);
     JsonElementDestroy(object);
-    return NULL;
+    return JSON_PARSE_ERROR_OBJECT_END;
 }
 
-JsonElement *JsonParse(const char **data)
+JsonParseError JsonParse(const char **data, JsonElement **json_out)
 {
     assert(data && *data);
     if (data == NULL || *data == NULL)
     {
-        return NULL;
+        return JSON_PARSE_ERROR_NO_DATA;
     }
 
     while (**data)
     {
         if (**data == '{')
         {
-            return JsonParseAsObject(data);
+            return JsonParseAsObject(data, json_out);
         }
         else if (**data == '[')
         {
-            return JsonParseAsArray(data);
+            return JsonParseAsArray(data, json_out);
         }
         else if (IsWhitespace(**data))
         {
@@ -1425,10 +1485,10 @@ JsonElement *JsonParse(const char **data)
         }
         else
         {
-            CfDebug("Unwilling to parse json data starting with invalid character: %c", **data);
-            return NULL;
+            *json_out = NULL;
+            return JSON_PARSE_ERROR_INVALID_START;
         }
     }
 
-    return NULL;
+    return JSON_PARSE_ERROR_NO_DATA;
 }

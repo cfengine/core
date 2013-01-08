@@ -26,7 +26,7 @@ cf_agent_SOURCES = \
 
 LDADD =
 if HAVE_NOVA
-LDADD += ../nova/src/libcfagent.la
+LDADD += ../nova/libcfagent/libcfagent.la
 endif
 LDADD += ../libpromises/libpromises.la \
 	$(LIBXML2_LDFLAGS) $(LIBXML2_LIBS) \

@@ -13,7 +13,7 @@ cf_serverd_SOURCES = \
 
 cf_serverd_LDADD =
 if HAVE_NOVA
-cf_serverd_LDADD += ../nova/src/libcfserverd.la
+cf_serverd_LDADD += ../nova/libcfserverd/libcfserverd.la
 endif
 cf_serverd_LDADD += ../libpromises/libpromises.la
 

@@ -5,7 +5,7 @@ sbin_PROGRAMS = \
 
 cf_report_LDADD =
 if HAVE_NOVA
-cf_report_LDADD += ../nova/src/libcfreport.la
+cf_report_LDADD += ../nova/libcfreport/libcfreport.la
 endif
 cf_report_LDADD += ../libpromises/libpromises.la
 

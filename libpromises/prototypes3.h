@@ -303,13 +303,6 @@ void SetPromiseOutputs(Promise *pp);
 void SetBundleOutputs(char *name);
 void ResetBundleOutputs(char *name);
 
-/* verify_packages.c */
-
-void VerifyPackagesPromise(Promise *pp);
-void ExecuteScheduledPackages(void);
-void CleanScheduledPackages(void);
-int PrependPackageItem(PackageItem ** list, const char *name, const char *version, const char *arch, Attributes a, Promise *pp);
-
 /* verify_services.c */
 
 void VerifyServicesPromise(Promise *pp, const ReportContext *report_context);

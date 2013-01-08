@@ -23,7 +23,7 @@
 
 */
 
-#include "cf3.defs.h"
+#include "verify_packages.h"
 
 #include "promises.h"
 #include "dir.h"

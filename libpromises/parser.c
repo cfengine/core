@@ -25,6 +25,8 @@
 #include "parser.h"
 #include "parser_state.h"
 
+int yyparse(void);
+
 struct ParserState P = { 0 };
 
 extern FILE *yyin;

@@ -35,7 +35,6 @@ const char *NameVersion(void);
 /* cfparse.y */
 
 void yyerror(const char *s);
-int yyparse(void);
 
 /* agent.c */
 

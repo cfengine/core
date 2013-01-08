@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include "platform.h"
 #include "atexit.h"
 
 #if defined(__MINGW32__)

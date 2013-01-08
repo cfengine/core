@@ -27,7 +27,6 @@ libpromises_la_SOURCES = \
         acl_posix.c acl_posix.h \
         args.c args.h \
         assoc.c assoc.h \
-        atexit.c atexit.h \
         attributes.c attributes.h \
         bootstrap.c bootstrap.h \
         cf.events.h \

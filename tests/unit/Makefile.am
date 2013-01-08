@@ -14,7 +14,7 @@ libstr_la_LIBADD = libtest.la
 
 
 check_LTLIBRARIES += libdb.la
-libdb_la_SOURCES = ../../libpromises/dbm_api.c ../../libpromises/dbm_quick.c ../../libpromises/dbm_tokyocab.c ../../libpromises/dbm_lib.c ../../libpromises/patches.c ../../libpromises/dbm_migration.c ../../libpromises/dbm_migration_lastseen.c ../../libpromises/dbm_migration_bundles.c ../../libpromises/atexit.c
+libdb_la_SOURCES = ../../libpromises/dbm_api.c ../../libpromises/dbm_quick.c ../../libpromises/dbm_tokyocab.c ../../libpromises/dbm_lib.c ../../libpromises/patches.c ../../libpromises/dbm_migration.c ../../libpromises/dbm_migration_lastseen.c ../../libpromises/dbm_migration_bundles.c ../../libutils/atexit.c
 libdb_la_LIBADD = libstr.la
 
 check_PROGRAMS = \

@@ -14,7 +14,8 @@ noinst_LTLIBRARIES = libutils.la
 libutils_la_LIBADD = ../pub/libcfpub.la
 
 libutils_la_SOURCES = \
-	alloc.h alloc.c \
+	alloc.c alloc.h \
+	atexit.c atexit.h \
 	compiler.h \
 	sequence.c sequence.h \
 	set.c set.h \

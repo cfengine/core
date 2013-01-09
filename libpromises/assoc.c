@@ -148,7 +148,7 @@ static void HashConvertToHuge(AssocHashTable *hashtable)
         /* This is a stripped down HugeHashInsertElement: it will fail on duplicate
          * elements or nearly-full hash table, or table with HASH_ENTRY_DELETED */
         CfAssoc *assoc = hashtable->array.values[i];
-        int bucket = GetHash(assoc->lval);
+        int bucket = GetHash(assoc->lval, CF_HASHTABLESIZE);
 
         for (;;)
         {
@@ -169,7 +169,7 @@ static void HashConvertToHuge(AssocHashTable *hashtable)
 
 static bool HugeHashInsertElement(AssocHashTable *hashtable, const char *element, Rval rval, enum cfdatatype dtype)
 {
-    int bucket = GetHash(element);
+    int bucket = GetHash(element, CF_HASHTABLESIZE);
     int i = bucket;
 
     do
@@ -247,7 +247,7 @@ bool HashInsertElement(AssocHashTable *hashtable, const char *element, Rval rval
 
 static bool HugeHashDeleteElement(AssocHashTable *hashtable, const char *element)
 {
-    int bucket = GetHash(element);
+    int bucket = GetHash(element, CF_HASHTABLESIZE);
     int i = bucket;
 
     do
@@ -323,7 +323,7 @@ bool HashDeleteElement(AssocHashTable *hashtable, const char *element)
 
 static CfAssoc *HugeHashLookupElement(AssocHashTable *hashtable, const char *element)
 {
-    int bucket = GetHash(element);
+    int bucket = GetHash(element, CF_HASHTABLESIZE);
     int i = bucket;
 
     do

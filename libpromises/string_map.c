@@ -24,6 +24,7 @@
 
 #include "string_map.h"
 
+#include "alloc.h"
 #include "hashes.h"
 #include "string_lib.h"
 

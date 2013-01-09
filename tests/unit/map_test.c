@@ -9,7 +9,7 @@
 
 #include "alloc.h"
 
-static unsigned int ConstHash(const void *key)
+static unsigned int ConstHash(const void *key, unsigned int max)
 {
     return 0;
 }

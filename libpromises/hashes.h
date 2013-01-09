@@ -26,15 +26,11 @@
 #ifndef CFENGINE_HASHES_H
 #define CFENGINE_HASHES_H
 
-#include "cf3.defs.h"
+#include "platform.h"
 
-#include "assoc.h"
-
-/* - specific hashes - */
-
-int RefHash(char *name);
-int ElfHash(char *key);
-int OatHash(const char *key);
-int GetHash(const char *name);
+int RefHash(char *name, unsigned int max);
+int ElfHash(char *key, unsigned int max);
+int OatHash(const char *key, unsigned int max);
+int GetHash(const char *key, unsigned int max);
 
 #endif

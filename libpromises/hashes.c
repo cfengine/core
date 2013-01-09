@@ -24,16 +24,15 @@
 
 #include "hashes.h"
 
-int GetHash(const char *name)
+int GetHash(const char *key, unsigned int max)
 {
-    return OatHash(name);
+    return OatHash(key, max);
 }
 
 /*****************************************************************************/
 
-int OatHash(const char *key)
+int OatHash(const char *key, unsigned int max)
 {
-    unsigned int hashtablesize = CF_HASHTABLESIZE;
     unsigned const char *p = key;
     unsigned h = 0;
     int i, len = strlen(key);
@@ -49,18 +48,19 @@ int OatHash(const char *key)
     h ^= (h >> 11);
     h += (h << 15);
 
-    return (h & (hashtablesize - 1));
+    return (h & (max - 1));
 }
 
 /*****************************************************************************/
 
-int RefHash(char *name)         // This function wants HASHTABLESIZE to be prime
+int RefHash(char *name, unsigned int max)         // This function wants max to be prime
 {
     int i, slot = 0;
+    unsigned int macro_alphabet_size = 61;
 
     for (i = 0; name[i] != '\0'; i++)
     {
-        slot = (CF_MACROALPHABET * slot + name[i]) % CF_HASHTABLESIZE;
+        slot = (macro_alphabet_size * slot + name[i]) % max;
     }
 
     return slot;
@@ -68,12 +68,11 @@ int RefHash(char *name)         // This function wants HASHTABLESIZE to be prime
 
 /*****************************************************************************/
 
-int ElfHash(char *key)
+int ElfHash(char *key, unsigned int max)
 {
     unsigned char *p = key;
     int len = strlen(key);
     unsigned h = 0, g;
-    unsigned int hashtablesize = CF_HASHTABLESIZE;
     int i;
 
     for (i = 0; i < len; i++)
@@ -89,5 +88,5 @@ int ElfHash(char *key)
         h &= ~g;
     }
 
-    return (h & (hashtablesize - 1));
+    return (h & (max - 1));
 }

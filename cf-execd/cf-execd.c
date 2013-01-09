@@ -313,7 +313,7 @@ static double GetSplay(void)
 
     snprintf(splay, CF_BUFSIZE, "%s+%s+%ju", VFQNAME, VIPADDRESS, (uintmax_t)getuid());
 
-    return ((double) GetHash(splay)) / CF_HASHTABLESIZE;
+    return ((double) GetHash(splay, CF_HASHTABLESIZE)) / CF_HASHTABLESIZE;
 }
 
 /*****************************************************************************/

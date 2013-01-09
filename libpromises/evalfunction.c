@@ -831,13 +831,13 @@ static FnCallResult FnCallSplayClass(FnCall *fp, Rlist *finalargs)
     if (policy == cfa_hourly)
     {
         /* 12 5-minute slots in hour */
-        int slot = GetHash(ScalarValue(finalargs)) * 12 / CF_HASHTABLESIZE;
+        int slot = GetHash(ScalarValue(finalargs), CF_HASHTABLESIZE) * 12 / CF_HASHTABLESIZE;
         snprintf(class, CF_MAXVARSIZE, "Min%02d_%02d", slot * 5, ((slot + 1) * 5) % 60);
     }
     else
     {
         /* 12*24 5-minute slots in day */
-        int dayslot = GetHash(ScalarValue(finalargs)) * 12 * 24 / CF_HASHTABLESIZE;
+        int dayslot = GetHash(ScalarValue(finalargs), CF_HASHTABLESIZE) * 12 * 24 / CF_HASHTABLESIZE;
         int hour = dayslot / 12;
         int slot = dayslot % 12;
 

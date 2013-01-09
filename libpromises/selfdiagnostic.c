@@ -340,17 +340,17 @@ static void TestHashEntropy(char *names, char *title)
         }
 
         clock_gettime(CLOCK_REALTIME, &start);
-        slot = RefHash(word);
+        slot = RefHash(word, CF_HASHTABLESIZE);
         clock_gettime(CLOCK_REALTIME, &stop);
         tot += (double) (stop.tv_sec - start.tv_sec) + (double) (stop.tv_nsec - start.tv_nsec);
 
         clock_gettime(CLOCK_REALTIME, &start);
-        eslot = ElfHash(word);
+        eslot = ElfHash(word, CF_HASHTABLESIZE);
         clock_gettime(CLOCK_REALTIME, &stop);
         etot += (double) (stop.tv_sec - start.tv_sec) + (double) (stop.tv_nsec - start.tv_nsec);
 
         clock_gettime(CLOCK_REALTIME, &start);
-        sslot = OatHash(word);
+        sslot = OatHash(word, CF_HASHTABLESIZE);
         clock_gettime(CLOCK_REALTIME, &stop);
         stot += (double) (stop.tv_sec - start.tv_sec) + (double) (stop.tv_nsec - start.tv_nsec);
 

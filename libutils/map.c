@@ -49,7 +49,7 @@ struct Map_
     };
 };
 
-static unsigned IdentityHashFn(const void *ptr)
+static unsigned IdentityHashFn(const void *ptr, unsigned int max)
 {
     return (unsigned)(uintptr_t)ptr;
 }

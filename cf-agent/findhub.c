@@ -1,4 +1,7 @@
 #include "findhub.h"
+#include "atexit.h"
+
+static void AtExitDlClose(void);
 
 bool isIPv6(const char *address)
 {
@@ -153,6 +156,10 @@ void ListHubs(void)
     spoll = NULL;
     list = NULL;
     hubcount = 0;
+    avahi_handle = NULL;
+
+    RegisterAtExitFunction(&AtExitDlClose);
+
     if (loadavahi() == 1)
     {
         printf("Avahi not found!!!\n");
@@ -202,4 +209,12 @@ int CountHubs()
 	}
 
 	return hubcount;
+}
+
+static void AtExitDlClose(void)
+{
+    if (avahi_handle != NULL)
+    {
+        dlclose(avahi_handle);
+    }
 }

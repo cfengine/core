@@ -19,6 +19,11 @@
        - execute background promise serially when max_children was reached, rather
          than skipping them (GitHub #233)
 
+       - fix segmentation fault in cf-promises when invoked with --reports (Redmine #1931)
+
+       - fix compilation with Sun Studio 12 (Redmine #1901)
+
+
 3.4.1   (Bugfix and Stability release)
 
         New feature/behavior:

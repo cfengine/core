@@ -40,6 +40,7 @@
 #include "item_lib.h"
 #include "conversion.h"
 #include "reporting.h"
+#include "xml_writer.h"
 
 void ThisAgentInit(void);
 GenericAgentConfig CheckOpts(int argc, char **argv);

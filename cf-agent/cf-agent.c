@@ -59,6 +59,10 @@
 #include "nfs.h"
 #include "processes_select.h"
 
+#ifdef LINUX
+#include "findhub.h"
+#endif
+
 #ifdef HAVE_NOVA
 #include "nova_reporting.h"
 #else
@@ -85,6 +89,7 @@ static bool VerifyBootstrap(void);
 static void KeepPromiseBundles(Policy *policy, Rlist *bundlesequence, const ReportContext *report_context);
 static void KeepPromises(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
 static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save_pr_repaired, int save_pr_notkept);
+static int AutomaticBootstrap();
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -138,6 +143,16 @@ int main(int argc, char *argv[])
     int ret = 0;
 
     GenericAgentConfig *config = CheckOpts(argc, argv);
+
+	if (NULL_OR_EMPTY(POLICY_SERVER))
+	{
+		int ret = AutomaticBootstrap();
+
+		if (ret != 0)
+		{
+			return 1;
+		}
+	}
 
     ReportContext *report_context = OpenReports("agent");
     Policy *policy = GenericInitialize("agent", config, report_context);
@@ -1466,4 +1481,61 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
     }
 
     return CF_NOP;
+}
+
+static int AutomaticBootstrap()
+{
+	ListHubs();
+
+	int hubcount = CountHubs();
+
+	switch(hubcount)
+	{
+	case 0:
+		printf("No hubs were found. Exiting.\n");
+		return -1;
+	case 1:
+		printf("Found hub installed on:"
+			   "Hostname: %s"
+			   "IP Address: %s",
+			   list->HP->Hostname,
+			   list->HP->IPAddress);
+	    strncpy(POLICY_SERVER, list->HP->IPAddress, CF_BUFSIZE);
+		CleanupList();
+        dlclose(avahi_handle);
+		break;
+	case 2:
+		if (strcmp(list->HP->Hostname, list->next->HP->Hostname) == 0)
+		{
+			printf("Found hub with two ip addresses\n");
+			printf("First:\n"
+				   "%s\n"
+				   "Second:\n"
+				   "%s\n",
+				   list->HP->IPAddress,
+				   list->next->HP->IPAddress);
+			strncpy(POLICY_SERVER, list->HP->IPAddress, CF_BUFSIZE);
+			CleanupList();
+            dlclose(avahi_handle);
+			break;
+		}
+		else
+		{
+			printf("Found two hubs registered in the network\n"
+				   "Please bootstrap manually using IP from the list below:");
+			PrintList();
+			CleanupList();
+            dlclose(avahi_handle);
+			return -2;
+		}
+
+	default:
+		printf("Found more than one hub registered in the network\n"
+			   "Please bootstrap manually using IP from the list below:");
+		PrintList();
+		CleanupList();
+        dlclose(avahi_handle);
+		return -3;
+	};
+	return 0;
 }

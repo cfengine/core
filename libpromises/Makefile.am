@@ -136,6 +136,11 @@ if CYGWIN
 libpromises_la_SOURCES += \
         unix_dir.c
 endif
+if LINUX
+libpromises_la_SOURCES += \
+		findhub.c findhub_priv.h findhub.h \
+		load_avahi.c load_avahi.h
+endif
 
 BUILT_SOURCES = cf3parse.h
 

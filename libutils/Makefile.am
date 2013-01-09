@@ -21,6 +21,7 @@ libutils_la_SOURCES = \
 	sequence.c sequence.h \
 	set.c set.h \
 	string_lib.c string_lib.h \
+	string_map.c string_map.h \
 	platform.h \
 	bool.h \
 	json.c json.h \

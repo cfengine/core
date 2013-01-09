@@ -17,6 +17,7 @@ libutils_la_SOURCES = \
 	alloc.c alloc.h \
 	atexit.c atexit.h \
 	compiler.h \
+	hashes.c hashes.h \
 	sequence.c sequence.h \
 	set.c set.h \
 	string_lib.c string_lib.h \

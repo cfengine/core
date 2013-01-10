@@ -39,7 +39,7 @@ libpromises_la_SOURCES = \
         client_code.c client_code.h \
         client_protocol.c client_protocol.h \
         communication.c communication.h \
-        comparray.c \
+        comparray.c comparray.h \
         constants.c \
         constraints.c constraints.h \
         conversion.c conversion.h \

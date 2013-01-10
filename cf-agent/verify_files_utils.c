@@ -47,6 +47,7 @@
 #include "env_context.h"
 #include "vars.h"
 #include "exec_tools.h"
+#include "comparray.h"
 
 #define CF_RECURSION_LIMIT 100
 

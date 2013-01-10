@@ -56,13 +56,6 @@ void ConnectionsCleanup(void);
 
 void SetSkipIdentify(bool enabled);
 
-/* comparray.c */
-
-int FixCompressedArrayValue(int i, char *value, CompressedArray **start);
-void DeleteCompressedArray(CompressedArray *start);
-int CompressedArrayElementExists(CompressedArray *start, int key);
-char *CompressedArrayValue(CompressedArray *start, int key);
-
 /* dtypes.c */
 
 int IsSocketType(char *s);

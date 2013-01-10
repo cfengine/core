@@ -1579,10 +1579,6 @@ static void SetAuditVersion()
     switch (GetVariable("control_common", "cfinputs_version", &rval))
     {
     case cf_str:
-        if (rval.rtype != CF_SCALAR)
-        {
-            yyerror("non-scalar version string");
-        }
         AUDITPTR->version = xstrdup((char *) rval.item);
         break;
 

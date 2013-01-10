@@ -24,6 +24,7 @@
 
 #include "verify_processes.h"
 
+#include "processes_select.h"
 #include "env_context.h"
 #include "promises.h"
 #include "vars.h"

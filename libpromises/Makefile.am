@@ -103,7 +103,7 @@ libpromises_la_SOURCES = \
         patches.c \
         pipes.c pipes.h \
         proc_keyvalue.c proc_keyvalue.h \
-        processes_select.c \
+        processes_select.c processes_select.h \
         promises.c promises.h \
         prototypes3.h \
         reporting.c reporting.h \

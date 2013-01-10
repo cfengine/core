@@ -52,6 +52,7 @@
 #include "signals.h"
 #include "logging.h"
 #include "nfs.h"
+#include "processes_select.h"
 
 #ifdef HAVE_NOVA
 #include "nova_reporting.h"

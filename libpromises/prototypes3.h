@@ -213,12 +213,6 @@ int LinkOrCopy(const char *from, const char *to, int sym);
 int ExclusiveLockFile(int fd);
 int ExclusiveUnlockFile(int fd);
 
-/* processes_select.c */
-
-int SelectProcess(char *procentry, char **names, int *start, int *end, Attributes a, Promise *pp);
-bool IsProcessNameRunning(char *procNameRegex);
-int FindPidMatches(Item *procdata, Item **killlist, Attributes a, Promise *pp);
-
 /* selfdiagnostic.c */
 
 void SelfDiagnostic(void);

@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include "processes_select.h"
 
 #include "env_context.h"
 #include "files_names.h"

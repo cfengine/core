@@ -1,20 +1,11 @@
 
 body common control
 {
-bundlesequence => { "access_rules" };
-}
+  bundlesequence => { "access_rules" };
+  inputs => { "../../default.cf.sub" };
 
-#######################################################
-
-bundle common c
-{
-vars:
-
-  "localhost_open"         string => "9876";
-  "localhost_deny_connect" string => "9877";
-  "lan_open"               string => "9878";
-  "lan_deny_connect"       string => "9879";
-  "localhost_noaccess"     string => "9880";
+nova_edition::
+  host_licenses_paid => "5";
 }
 
 #########################################################
@@ -24,7 +15,7 @@ vars:
 body server control 
 
 {
-port => "$(c.localhost_noaccess)";
+port => "9880";
 
 allowconnects         => { "127.0.0.1" , "::1" };
 allowallconnects      => { "127.0.0.1" , "::1" };

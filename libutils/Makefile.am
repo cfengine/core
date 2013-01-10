@@ -23,6 +23,7 @@ libutils_la_SOURCES = \
 	string_lib.c string_lib.h \
 	string_map.c string_map.h \
 	platform.h \
+	proc_keyvalue.c proc_keyvalue.h \
 	bool.h \
 	json.c json.h \
 	map.c map.h map_common.h \

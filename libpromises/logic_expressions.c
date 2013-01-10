@@ -22,9 +22,7 @@
   included file COSL.txt.
 */
 
-#ifdef HAVE_CONFIG_H
-# include <conf.h>
-#endif
+#include "platform.h"
 
 #include "cf3.defs.h"
 #include "bool.h"

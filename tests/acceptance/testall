@@ -126,6 +126,8 @@ DEFCF_PROMISES=$(dirname $(dirname $(curdir)))/cf-promises/cf-promises
 CF_PROMISES=${CF_PROMISES:-${DEFCF_PROMISES}}
 DEFCF_SERVERD=$(dirname $(dirname $(curdir)))/cf-serverd/cf-serverd
 CF_SERVERD=${CF_SERVERD:-${DEFCF_SERVERD}}
+DEFCF_KEY=$(dirname $(dirname $(curdir)))/cf-key/cf-key
+CF_KEY=${CF_KEY:-${DEFCF_KEY}}
 
 usage() {
   echo "testall [-q] [--gainroot=<command>] [--agent=<agent>] [--no-nova] [--staging] [--no-network] [<test> <test>...]"
@@ -189,6 +191,7 @@ runtest() {
     ln -sf $AGENT $WORKDIR/bin
     ln -sf $CF_PROMISES $WORKDIR/bin
     ln -sf $CF_SERVERD $WORKDIR/bin
+    ln -sf $CF_KEY $WORKDIR/bin
 
     echo "#!/bin/sh
 CFENGINE_TEST_OVERRIDE_WORKDIR=$WORKDIR

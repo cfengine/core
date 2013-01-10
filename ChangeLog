@@ -23,6 +23,7 @@
 
        - fix compilation with Sun Studio 12 (Redmine #1901)
 
+       - silence type-pun warning when building on HP-UX (GitHub #287)
 
 3.4.1   (Bugfix and Stability release)
 

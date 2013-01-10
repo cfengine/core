@@ -28,6 +28,7 @@
 #include "dir.h"
 #include "files_names.h"
 #include "files_links.h"
+#include "files_copy.h"
 #include "files_properties.h"
 #include "transaction.h"
 #include "instrumentation.h"

@@ -141,14 +141,6 @@ struct ServerConnectionState;
 
 int ReceiveCollectCall(struct ServerConnectionState *conn, char *sendbuffer);
 
-/* files_copy.c */
-
-void *CopyFileSources(char *destination, Attributes attr, Promise *pp, const ReportContext *report_context);
-bool CopyRegularFileDisk(const char *source, const char *destination, bool make_holes);
-void CheckForFileHoles(struct stat *sstat, Promise *pp);
-int FSWrite(char *new, int dd, char *buf, int towrite, int *last_write_made_hole, int n_read, Attributes attr,
-            Promise *pp);
-
 /* files_editline.c */
 
 int ScheduleEditLineOperations(char *filename, Bundle *bp, Attributes a, Promise *pp, const ReportContext *report_context);

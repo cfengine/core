@@ -32,6 +32,7 @@
 #include "files_operators.h"
 #include "files_hashes.h"
 #include "files_repository.h"
+#include "files_copy.h"
 #include "item_lib.h"
 #include "vars.h"
 #include "matching.h"

@@ -35,6 +35,7 @@
 #include "crypto.h"
 #include "cfstream.h"
 #include "files_hashes.h"
+#include "files_copy.h"
 #include "transaction.h"
 #include "logging.h"
 

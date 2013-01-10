@@ -23,7 +23,7 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include "files_copy.h"
 
 #include "files_names.h"
 #include "files_interfaces.h"

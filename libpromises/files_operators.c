@@ -35,6 +35,7 @@
 #include "files_interfaces.h"
 #include "files_hashes.h"
 #include "files_repository.h"
+#include "files_copy.h"
 #include "vars.h"
 #include "item_lib.h"
 #include "conversion.h"

@@ -30,6 +30,7 @@
 #include "verify_environments.h"
 #include "verify_processes.h"
 #include "verify_packages.h"
+#include "verify_outputs.h"
 #include "addr_lib.h"
 #include "files_names.h"
 #include "files_interfaces.h"

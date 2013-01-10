@@ -283,13 +283,6 @@ void VerifyMeasurementPromise(double *this, Promise *pp);
 void VerifyMethodsPromise(Promise *pp, const ReportContext *report_context);
 int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext *report_context);
 
-/* verify_outputs.c */
-
-void VerifyOutputsPromise(Promise *pp);
-void SetPromiseOutputs(Promise *pp);
-void SetBundleOutputs(char *name);
-void ResetBundleOutputs(char *name);
-
 /* verify_services.c */
 
 void VerifyServicesPromise(Promise *pp, const ReportContext *report_context);

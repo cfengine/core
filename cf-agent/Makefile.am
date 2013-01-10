@@ -19,6 +19,7 @@ cf_agent_SOURCES = \
         files_edit.c files_edit.h \
         files_editline.c \
         files_editxml.c \
+        files_select.c \
         vercmp_internal.c vercmp_internal.h \
         vercmp.c vercmp.h \
         verify_packages.c verify_packages.h \

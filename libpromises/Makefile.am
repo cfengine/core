@@ -66,7 +66,6 @@ libpromises_la_SOURCES = \
         files_operators.c files_operators.h \
         files_properties.c files_properties.h \
         files_repository.c files_repository.h \
-        files_select.c \
         fncall.c fncall.h \
         full_write.c \
         generic_agent.c generic_agent.h \

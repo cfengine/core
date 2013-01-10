@@ -23,8 +23,8 @@
   included file COSL.txt.
 */
 
-#ifndef COMMUNICATION_H
-#define COMMUNICATION_H
+#ifndef CFENGINE_COMMUNICATION_H
+#define CFENGINE_COMMUNICATION_H
 
 #include "cf3.defs.h"
 

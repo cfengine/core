@@ -22,8 +22,9 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
 #include "statistics.h"
+
+#include "platform.h"
 
 /**********************************************************************/
 

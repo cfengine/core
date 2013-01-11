@@ -34,6 +34,7 @@
 #include "fncall.h"
 #include "logging.h"
 #include "evalfunction.h"
+#include "misc_lib.h"
 
 /******************************************************************/
 /* Argument propagation                                           */
@@ -139,7 +140,7 @@ int MapBodyArgs(const char *scopeid, Rlist *give, const Rlist *take)
 
         default:
             /* Nothing else should happen */
-            FatalError("Software error: something not a scalar/function in argument literal");
+            ProgrammingError("Software error: something not a scalar/function in argument literal");
         }
     }
 

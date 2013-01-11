@@ -729,7 +729,8 @@ void yyerror(const char *s)
 
     if (ERRORCOUNT > 10)
     {
-        FatalError("Too many errors");
+        fprintf(stderr, "Too many errors");
+        exit(1);
     }
 }
 
@@ -742,7 +743,8 @@ static void fatal_yyerror(const char *s)
         sp++;
     }
 
-    FatalError("%s: %d,%d: Fatal error during parsing: %s, near token \'%.20s\'\n", P.filename, P.line_no, P.line_pos, s, sp ? sp : "NULL");
+    fprintf(stderr, "%s: %d,%d: Fatal error during parsing: %s, near token \'%.20s\'\n", P.filename, P.line_no, P.line_pos, s, sp ? sp : "NULL");
+    exit(1);
 }
 
 static void DebugBanner(const char *s)

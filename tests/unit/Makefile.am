@@ -55,6 +55,8 @@ check_PROGRAMS = \
 	scope_test \
 	conversion_test \
 	files_interfaces_test \
+	list_test \
+	refcount_test \
 	timeout_test \
 	connection_management_test
 
@@ -86,6 +88,10 @@ str_test_LDADD = libstr.la
 
 xml_writer_test_SOURCES = xml_writer_test.c ../../libutils/xml_writer.c
 xml_writer_test_LDADD = libtest.la libstr.la
+
+list_test_SOURCES = list_test.c ../../libutils/list.c
+
+refcount_test_SOURCES = refcount_test.c ../../libutils/refcount.c
 
 #
 # file_writer_test overrides fclose(3) which causes gcov to fail as gcov

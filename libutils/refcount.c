@@ -28,7 +28,9 @@
 void RefCountNew(RefCount **ref)
 {
     if (!ref)
+    {
         return;
+    }
     *ref = (RefCount *)malloc(sizeof(RefCount));
     (*ref)->user_count = 0;
     (*ref)->users = NULL;
@@ -37,7 +39,8 @@ void RefCountNew(RefCount **ref)
 
 void RefCountDestroy(RefCount **ref)
 {
-    if (ref && *ref) {
+    if (ref && *ref)
+    {
         // Don't destroy the refCount if it is still in use by somebody else.
         if ((*ref)->user_count > 1)
             return;
@@ -49,15 +52,20 @@ void RefCountDestroy(RefCount **ref)
 int RefCountAttach(RefCount *ref, void *owner)
 {
     if (!ref || !owner)
+    {
         return -1;
+    }
     ref->user_count++;
     RefCountNode *node = (RefCountNode *)malloc(sizeof(RefCountNode));
     node->next = NULL;
     node->user = owner;
-    if (ref->last) {
+    if (ref->last)
+    {
         ref->last->next = node;
         node->previous = ref->last;
-    } else {
+    }
+    else
+    {
         ref->users = node;
         node->previous = NULL;
     }
@@ -68,32 +76,46 @@ int RefCountAttach(RefCount *ref, void *owner)
 int RefCountDetach(RefCount *ref, void *owner)
 {
     if (!ref || !owner)
+    {
         return -1;
+    }
     RefCountNode *p = NULL;
     int found = 0;
     for (p = ref->users; p; p = p->next)
-        if (p->user == owner) {
+    {
+        if (p->user == owner)
+        {
             found = 1;
-            if (p->previous && p->next) {
+            if (p->previous && p->next)
+            {
                 p->previous->next = p->next;
                 p->next->previous = p->previous;
-            } else if (p->previous && !p->next) {
+            }
+            else if (p->previous && !p->next)
+            {
                 // Last node
                 p->previous->next = NULL;
                 ref->last = p->previous;
-            } else if (!p->previous && p->next) {
+            }
+            else if (!p->previous && p->next)
+            {
                 // First node
                 ref->users = p->next;
                 p->next->previous = NULL;
-            } else {
+            }
+            else
+            {
                 // Only one node, we cannot detach from ourselves.
                 return 0;
             }
             free(p);
             break;
         }
+    }
     if (!found)
+    {
         return -1;
+    }
     ref->user_count--;
     return ref->user_count;
 }
@@ -101,24 +123,34 @@ int RefCountDetach(RefCount *ref, void *owner)
 int RefCountIsShared(RefCount *ref)
 {
     if (!ref)
+    {
         return 0;
+    }
     if (ref->user_count == 0)
+    {
         return 0;
+    }
     return (ref->user_count != 1);
 }
 
 int RefCountIsEqual(RefCount *a, RefCount *b)
 {
     if (a == b)
+    {
         return 1;
-    if (a && b) {
+    }
+    if (a && b)
+    {
         // Compare the inner elements
-        if (a->user_count == b->user_count) {
+        if (a->user_count == b->user_count)
+        {
             RefCountNode *na = a->users;
             RefCountNode *nb = b->users;
             int equal = 1;
-            while (na && nb) {
-                if (na->user != nb->user) {
+            while (na && nb)
+            {
+                if (na->user != nb->user)
+                {
                     equal = 0;
                     break;
                 }

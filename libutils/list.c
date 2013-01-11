@@ -35,33 +35,50 @@
 static void ListDetach(List *list)
 {
     int shared = RefCountIsShared(list->ref_count);
-    if (shared) {
+    if (shared)
+    {
         /*
          * 1. Perform a deep copy (expensive!)
          * 2. Detach
          */
         ListNode *p = NULL, *q = NULL, *newList = NULL;
-        for (p = list->list; p; p = p->next) {
-            if (newList) {
+        for (p = list->list; p; p = p->next)
+        {
+            if (newList)
+            {
                 q->next = (ListNode *)malloc(sizeof(ListNode));
                 q->next->previous = q;
                 q->next->next = NULL;
                 q = q->next;
                 if (p->payload)
+                {
                     if (list->copy)
+                    {
                         list->copy(p->payload, &q->payload);
+                    }
                     else
+                    {
                         q->payload = p->payload;
-            } else {
+                    }
+                }
+            }
+            else
+            {
                 // First element
                 newList = (ListNode *)malloc(sizeof(ListNode));
                 newList->next = NULL;
                 newList->previous = NULL;
                 if (p->payload)
+                {
                     if (list->copy)
+                    {
                         list->copy(p->payload, &newList->payload);
+                    }
                     else
+                    {
                         newList->payload = p->payload;
+                    }
+                }
                 q = newList;
             }
         }
@@ -77,10 +94,14 @@ static void ListDetach(List *list)
 int ListNew(List **list, int (*compare)(void *, void *), void (*copy)(void *source, void **destination), void (*destroy)(void *))
 {
     if (!list)
+    {
         return -1;
+    }
     *list = (List *)malloc(sizeof(List));
     if (!(*list))
+    {
         return -1;
+    }
     (*list)->list = NULL;
     (*list)->first = NULL;
     (*list)->last = NULL;
@@ -97,13 +118,17 @@ int ListNew(List **list, int (*compare)(void *, void *), void (*copy)(void *sour
 int ListDestroy(List **list)
 {
     if (!list || !(*list))
+    {
         return 0;
+    }
     int shared = RefCountIsShared((*list)->ref_count);
-    if (!shared) {
+    if (!shared)
+    {
         // We are the only ones using the list, we can delete it.
         ListNode *node = NULL;
         ListNode *p = NULL;
-        for (node = (*list)->first; node; node = node->next) {
+        for (node = (*list)->first; node; node = node->next)
+        {
             if (p)
                 free(p);
             if ((*list)->destroy)
@@ -111,7 +136,9 @@ int ListDestroy(List **list)
             p = node;
         }
         if (p)
+        {
             free(p);
+        }
     }
     RefCountDetach((*list)->ref_count, (*list));
     free((*list));
@@ -133,7 +160,8 @@ int ListCopy(List *origin, List **destination)
     (*destination)->copy = origin->copy;
     (*destination)->compare = origin->compare;
     int result = RefCountAttach(origin->ref_count, (*destination));
-    if (result < 0) {
+    if (result < 0)
+    {
         free (*destination);
         return -1;
     }
@@ -145,16 +173,21 @@ int ListPrepend(List *list, void *payload)
 {
     ListNode *node = NULL;
     if (!list)
+    {
         return -1;
+    }
     ListDetach(list);
     node = (ListNode *)malloc(sizeof(ListNode));
     node->payload = payload;
     node->previous = NULL;
-    if (list->list) {
+    if (list->list)
+    {
         // We have elements
         node->next = list->list;
         list->list->previous = node;
-    } else {
+    }
+    else
+    {
         // First element
         node->next = NULL;
         list->last = node;
@@ -169,20 +202,26 @@ int ListAppend(List *list, void *payload)
 {
     ListNode *node = NULL;
     if (!list)
+    {
         return -1;
+    }
     ListDetach(list);
     node = (ListNode *)malloc(sizeof(ListNode));
-    if (!node) {
+    if (!node)
+    {
         // This is unlikely in Linux but other Unixes actually return NULL
         return -1;
     }
     node->next = NULL;
     node->payload = payload;
-    if (list->last) {
+    if (list->last)
+    {
         // We have elements
         node->previous = list->last;
         list->last->next = node;
-    } else {
+    }
+    else
+    {
         // First element
         node->previous = NULL;
         list->list = node;
@@ -196,19 +235,27 @@ int ListAppend(List *list, void *payload)
 int ListRemove(List *list, void *payload)
 {
     if (!list)
+    {
         return -1;
+    }
     ListNode *node = NULL;
     int found = 0;
-    for (node = list->list; node; node = node->next) {
+    for (node = list->list; node; node = node->next)
+    {
         if (!node->payload)
             continue;
-        if (list->compare) {
-            if (!list->compare(node->payload, payload)) {
+        if (list->compare)
+        {
+            if (!list->compare(node->payload, payload))
+            {
                 found = 1;
                 break;
             }
-        } else {
-            if (node->payload == payload) {
+        }
+        else
+        {
+            if (node->payload == payload)
+            {
                 found = 1;
                 break;
             }
@@ -219,14 +266,20 @@ int ListRemove(List *list, void *payload)
     ListDetach(list);
     node = NULL;
     // We need to find the node again since we have a new list
-    for (node = list->list; node; node = node->next) {
-        if (list->compare) {
-            if (!list->compare(node->payload, payload)) {
+    for (node = list->list; node; node = node->next)
+    {
+        if (list->compare)
+        {
+            if (!list->compare(node->payload, payload))
+            {
                 found = 1;
                 break;
             }
-        } else {
-            if (node->payload == payload) {
+        }
+        else
+        {
+            if (node->payload == payload)
+            {
                 found = 1;
                 break;
             }
@@ -235,27 +288,36 @@ int ListRemove(List *list, void *payload)
     /*
      * We found the node, we just need to change the pointers.
      */
-    if (node->next && node->previous) {
+    if (node->next && node->previous)
+    {
         // Middle of the list
         node->next->previous = node->previous;
         node->previous->next = node->next;
-    } else if (node->next) {
+    }
+    else if (node->next)
+    {
         // First element of the list
         list->list = node->next;
         list->first = node->next;
         node->next->previous = NULL;
-    } else if (node->previous) {
+    }
+    else if (node->previous)
+    {
         // Last element
         node->previous->next = NULL;
         list->last = node->previous;
-    } else {
+    }
+    else
+    {
         // Single element
         list->list = NULL;
         list->first = NULL;
         list->last = NULL;
     }
     if (list->destroy && node->payload)
+    {
         list->destroy(node->payload);
+    }
     free(node);
     list->node_count--;
     ChangeListState(list);
@@ -266,7 +328,9 @@ int ListRemove(List *list, void *payload)
 int ListCount(List *list)
 {
     if (!list)
+    {
         return -1;
+    }
     return list->node_count;
 }
 
@@ -276,9 +340,12 @@ int ListCount(List *list)
 int ListIteratorGet(List *list, ListIterator **iterator)
 {
     if (!list || !iterator)
+    {
         return -1;
+    }
     *iterator = (ListIterator *)malloc(sizeof(ListIterator));
-    if (!(*iterator)) {
+    if (!(*iterator))
+    {
         // This is unlikely in Linux but other Unixes actually return NULL
         return -1;
     }
@@ -292,7 +359,9 @@ int ListIteratorGet(List *list, ListIterator **iterator)
 int ListIteratorDestroy(ListIterator **iterator)
 {
     if (!iterator || !(*iterator))
+    {
         return 0;
+    }
     (*iterator)->current = NULL;
     free((*iterator));
     *iterator = NULL;
@@ -302,10 +371,14 @@ int ListIteratorDestroy(ListIterator **iterator)
 int ListIteratorFirst(ListIterator *iterator)
 {
     if (!iterator)
+    {
         return -1;
+    }
     if (IsIteratorValid(iterator))
+    {
         // The list has moved forward, the iterator is invalid now
         return -1;
+    }
     iterator->current = iterator->origin->first;
     return 0;
 }
@@ -313,10 +386,14 @@ int ListIteratorFirst(ListIterator *iterator)
 int ListIteratorLast(ListIterator *iterator)
 {
     if (!iterator)
+    {
         return -1;
+    }
     if (IsIteratorValid(iterator))
+    {
         // The list has moved forward, the iterator is invalid now
         return -1;
+    }
     iterator->current = iterator->origin->last;
     return 0;
 }
@@ -324,39 +401,59 @@ int ListIteratorLast(ListIterator *iterator)
 int ListIteratorNext(ListIterator *iterator)
 {
     if (!iterator)
+    {
         return -1;
+    }
     if (IsIteratorValid(iterator))
+    {
         // The list has moved forward, the iterator is invalid now
         return -1;
+    }
     // Ok, check if we are at the end
-    if (iterator->current && iterator->current->next) {
+    if (iterator->current && iterator->current->next)
+    {
         iterator->current = iterator->current->next;
-    } else
+    }
+    else
+    {
         return -1;
+    }
     return 0;
 }
 
 int ListIteratorPrevious(ListIterator *iterator)
 {
     if (!iterator)
+    {
         return -1;
+    }
     if (IsIteratorValid(iterator))
+    {
         // The list has moved forward, the iterator is invalid now
         return -1;
+    }
     // Ok, check if we are at the end
-    if (iterator->current && iterator->current->previous) {
+    if (iterator->current && iterator->current->previous)
+    {
         iterator->current = iterator->current->previous;
-    } else
+    }
+    else
+    {
         return -1;
+    }
     return 0;
 }
 
 void *ListIteratorData(const ListIterator *iterator)
 {
     if (!iterator)
+    {
         return NULL;
+    }
     if (IsIteratorValid(iterator))
+    {
         // The list has moved forward, the iterator is invalid now
         return NULL;
+    }
     return iterator->current->payload;
 }

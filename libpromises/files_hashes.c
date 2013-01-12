@@ -35,6 +35,7 @@
 static int ReadHash(CF_DB *dbp, enum cfhashes type, char *name, unsigned char digest[EVP_MAX_MD_SIZE + 1]);
 static int WriteHash(CF_DB *dbp, enum cfhashes type, char *name, unsigned char digest[EVP_MAX_MD_SIZE + 1]);
 static void DeleteHash(CF_DB *dbp, enum cfhashes type, char *name);
+static ChecksumValue *NewHashValue(unsigned char digest[EVP_MAX_MD_SIZE + 1]);
 static char *NewIndexKey(char type, char *name, int *size);
 static void DeleteIndexKey(char *key);
 static void DeleteHashValue(ChecksumValue *value);
@@ -555,7 +556,7 @@ static void DeleteIndexKey(char *key)
 
 /*****************************************************************************/
 
-ChecksumValue *NewHashValue(unsigned char digest[EVP_MAX_MD_SIZE + 1])
+static ChecksumValue *NewHashValue(unsigned char digest[EVP_MAX_MD_SIZE + 1])
 {
     ChecksumValue *chk_val;
 

@@ -31,7 +31,6 @@
 int FileHashChanged(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], int warnlevel, enum cfhashes type,
                     Attributes attr, Promise *pp);
 void PurgeHashes(char *file, Attributes attr, Promise *pp);
-ChecksumValue *NewHashValue(unsigned char digest[EVP_MAX_MD_SIZE + 1]);
 int CompareFileHashes(char *file1, char *file2, struct stat *sstat, struct stat *dstat, Attributes attr, Promise *pp);
 int CompareBinaryFiles(char *file1, char *file2, struct stat *sstat, struct stat *dstat, Attributes attr, Promise *pp);
 void HashFile(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhashes type);

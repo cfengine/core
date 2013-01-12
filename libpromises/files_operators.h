@@ -28,7 +28,6 @@
 
 #include "cf3.defs.h"
 
-FILE *CreateEmptyStream(void);
 int MoveObstruction(char *from, Attributes attr, Promise *pp, const ReportContext *report_context);
 int MakeParentDirectory(char *parentandchild, int force, const ReportContext *report_context);
 int MakeParentDirectory2(char *parentandchild, int force, const ReportContext *report_context, bool enforce_promise);

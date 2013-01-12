@@ -58,36 +58,6 @@ static bool DeleteDirectoryTree(const char *path);
 
 /*****************************************************************************/
 
-FILE *CreateEmptyStream()
-{
-    FILE *fp;
-
-    fp = fopen(NULLFILE, "r");
-
-    if (fp == NULL)
-    {
-        CfOut(cf_error, "", "!! Open of NULLFILE failed");
-        return NULL;
-    }
-
-// get to EOF
-    fgetc(fp);
-
-    if (!feof(fp))
-    {
-        CfOut(cf_error, "", "!! Could not create empty stream");
-        fclose(fp);
-        return NULL;
-    }
-
-    return fp;
-}
-
-/*****************************************************************************/
-
-
-/*****************************************************************************/
-
 int MoveObstruction(char *from, Attributes attr, Promise *pp, const ReportContext *report_context)
 {
     struct stat sb;

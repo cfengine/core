@@ -37,4 +37,7 @@ unsigned long UnsignedModulus(long dividend, long divisor);
 void __ProgrammingError(const char *file, int lineno, const char *format, ...) FUNC_ATTR_NORETURN;
 #define ProgrammingError(...) __ProgrammingError(__FILE__, __LINE__, __VA_ARGS__)
 
+void __UnexpectedError(const char *file, int lineno, const char *format, ...);
+#define UnexpectedError(...) __UnexpectedError(__FILE__, __LINE__, __VA_ARGS__)
+
 #endif

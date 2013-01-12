@@ -2315,7 +2315,7 @@ static void VerifyCopiedFileAttributes(char *file, struct stat *dstat, struct st
 #endif
 }
 
-void *CopyFileSources(char *destination, Attributes attr, Promise *pp, const ReportContext *report_context)
+static void *CopyFileSources(char *destination, Attributes attr, Promise *pp, const ReportContext *report_context)
 {
     char *source = attr.copy.source;
     char *server = pp->this_server;

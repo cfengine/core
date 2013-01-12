@@ -620,8 +620,8 @@ static void PurgeLocalFiles(Item *filelist, char *localdir, Attributes attr, Pro
     CloseDir(dirh);
 }
 
-void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes attr, Promise *pp,
-                         const ReportContext *report_context)
+static void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes attr, Promise *pp,
+                                const ReportContext *report_context)
 {
     struct stat sb, dsb;
     char newfrom[CF_BUFSIZE];

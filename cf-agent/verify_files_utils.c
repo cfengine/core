@@ -57,6 +57,7 @@
 static int TransformFile(char *file, Attributes attr, Promise *pp);
 static void VerifyName(char *path, struct stat *sb, Attributes attr, Promise *pp, const ReportContext *report_context);
 static void VerifyDelete(char *path, struct stat *sb, Attributes attr, Promise *pp);
+static void VerifyCopy(char *source, char *destination, Attributes attr, Promise *pp, const ReportContext *report_context);
 static void TouchFile(char *path, struct stat *sb, Attributes attr, Promise *pp);
 static void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promise *pp, const ReportContext *report_context);
 static int PushDirState(char *name, struct stat *sb);
@@ -834,8 +835,8 @@ static void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes
     CloseDir(dirh);
 }
 
-void VerifyCopy(char *source, char *destination, Attributes attr, Promise *pp,
-                const ReportContext *report_context)
+static void VerifyCopy(char *source, char *destination, Attributes attr, Promise *pp,
+                       const ReportContext *report_context)
 {
     Dir *dirh;
     char sourcefile[CF_BUFSIZE];

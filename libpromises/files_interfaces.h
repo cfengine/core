@@ -28,7 +28,6 @@
 
 #include "cf3.defs.h"
 
-void VerifyCopy(char *source, char *destination, Attributes attr, Promise *pp, const ReportContext *report_context);
 void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attributes attr, Promise *pp, const ReportContext *report_context);
 int cfstat(const char *path, struct stat *buf);
 int cf_lstat(char *file, struct stat *buf, Attributes attr, Promise *pp);

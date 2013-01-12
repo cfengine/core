@@ -73,6 +73,7 @@ static int cf_readlink(char *sourcefile, char *linkbuf, int buffsize, Attributes
 static bool CopyRegularFileDiskReport(char *source, char *destination, Attributes attr, Promise *pp);
 static int SkipDirLinks(char *path, const char *lastnode, Recursion r);
 static int DeviceBoundary(struct stat *sb, Promise *pp);
+static int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dstat, Attributes attr, Promise *pp, const ReportContext *report_context);
 
 #ifndef __MINGW32__
 static void VerifySetUidGid(char *file, struct stat *dstat, mode_t newperm, Promise *pp, Attributes attr);
@@ -1065,8 +1066,8 @@ void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attributes attr
 }
 #endif /* NOT MINGW */
 
-int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dstat, Attributes attr, Promise *pp,
-                    const ReportContext *report_context)
+static int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dstat, Attributes attr, Promise *pp,
+                           const ReportContext *report_context)
 {
     char backup[CF_BUFSIZE];
     char new[CF_BUFSIZE], *linkable;

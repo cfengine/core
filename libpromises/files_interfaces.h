@@ -31,7 +31,6 @@
 void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attributes attr, Promise *pp, const ReportContext *report_context);
 int cfstat(const char *path, struct stat *buf);
 int cf_lstat(char *file, struct stat *buf, Attributes attr, Promise *pp);
-int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dstat, Attributes attr, Promise *pp, const ReportContext *report_context);
 
 /**
  * @return Number of characters read, or -1 on error.

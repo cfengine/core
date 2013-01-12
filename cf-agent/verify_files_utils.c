@@ -74,6 +74,7 @@ static bool CopyRegularFileDiskReport(char *source, char *destination, Attribute
 static int SkipDirLinks(char *path, const char *lastnode, Recursion r);
 static int DeviceBoundary(struct stat *sb, Promise *pp);
 static int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dstat, Attributes attr, Promise *pp, const ReportContext *report_context);
+static void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attributes attr, Promise *pp, const ReportContext *report_context);
 
 #ifndef __MINGW32__
 static void VerifySetUidGid(char *file, struct stat *dstat, mode_t newperm, Promise *pp, Attributes attr);
@@ -952,8 +953,8 @@ static void VerifyCopy(char *source, char *destination, Attributes attr, Promise
     DeleteClientCache(attr, pp);
 }
 
-void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attributes attr, Promise *pp,
-              const ReportContext *report_context)
+static void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attributes attr, Promise *pp,
+                     const ReportContext *report_context)
 /* Link the file to the source, instead of copying */
 #ifdef MINGW
 {

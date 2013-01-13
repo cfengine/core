@@ -32,7 +32,7 @@
 #include "files_names.h"
 #include "files_hashes.h"
 #include "scope.h"
-#include "unix.h"
+#include "vars.h"
 #include "cfstream.h"
 #include "args.h"
 #include "transaction.h"

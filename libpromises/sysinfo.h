@@ -28,7 +28,6 @@
 #include "cf3.defs.h"
 
 void GetNameInfo3(void);
-void GetInterfacesInfo(AgentType ag);
 void Get3Environment(void);
 void BuiltinClasses(void);
 void OSClasses(void);

@@ -42,6 +42,7 @@
 #include "exec_tools.h"
 #include "generic_agent.h" // WritePID
 #include "files_lib.h"
+#include "unix.h"
 
 #include <math.h>
 

@@ -29,7 +29,7 @@
 #include "syntax.h"
 #include "reporting.h"
 #include "expand.h"
-#include "unix.h"
+#include "vars.h"
 #include "cfstream.h"
 #include "fncall.h"
 #include "logging.h"

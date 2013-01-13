@@ -28,7 +28,7 @@
 #include "env_context.h"
 #include "files_names.h"
 #include "expand.h"
-#include "unix.h"
+#include "vars.h"
 #include "cfstream.h"
 #include "args.h"
 #include "evalfunction.h"

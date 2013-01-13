@@ -30,7 +30,7 @@
 #include "constraints.h"
 #include "conversion.h"
 #include "reporting.h"
-#include "unix.h"
+#include "vars.h"
 #include "cfstream.h"
 #include "signals.h"
 

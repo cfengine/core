@@ -33,7 +33,7 @@
 #include "sort.h"
 #include "writer.h"
 #include "hashes.h"
-#include "unix.h"
+#include "vars.h"
 #include "cfstream.h"
 #include "logging.h"
 #include "string_lib.h"

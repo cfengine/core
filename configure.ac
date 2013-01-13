@@ -58,7 +58,8 @@ if test "x$with_pthreads" != x && test "x$with_pthreads" != "xyes" && test "x$wi
    CFLAGS="$CFLAGS -I$with_pthreads/include"
 fi
 
-ACX_PTHREAD
+ACX_PTHREAD([],
+            [AC_MSG_ERROR(pthread-compatible library is required to build CFEngine)])
 
 CC="$PTHREAD_CC"
 CFLAGS="$PTHREAD_CFLAGS $CFLAGS"

@@ -55,9 +55,7 @@ static int WINSERVICE = true;
 static Item *SCHEDULE;
 static int SPLAYTIME = 0;
 
-#if defined(HAVE_PTHREAD)
 static pthread_attr_t threads_attrs;
-#endif
 
 /*******************************************************************/
 
@@ -66,9 +64,7 @@ static void ThisAgentInit(void);
 static bool ScheduleRun(Policy **policy, ExecConfig *exec_config, const ReportContext *report_context);
 static void Apoptosis(void);
 
-#if defined(HAVE_PTHREAD)
 static bool LocalExecInThread(const ExecConfig *config);
-#endif
 
 void StartServer(Policy *policy, ExecConfig *config, const ReportContext *report_context);
 void KeepPromises(Policy *policy, ExecConfig *config);
@@ -425,11 +421,9 @@ void StartServer(Policy *policy, ExecConfig *config, const ReportContext *report
     Attributes dummyattr;
     CfLock thislock;
 
-#if defined(HAVE_PTHREAD)
     pthread_attr_init(&threads_attrs);
     pthread_attr_setdetachstate(&threads_attrs, PTHREAD_CREATE_DETACHED);
     pthread_attr_setstacksize(&threads_attrs, (size_t)2048*1024);
-#endif
 
     Banner("Starting executor");
     memset(&dummyattr, 0, sizeof(dummyattr));
@@ -514,15 +508,11 @@ void StartServer(Policy *policy, ExecConfig *config, const ReportContext *report
                 CfOut(cf_verbose, "", "Sleeping for splaytime %d seconds\n\n", SPLAYTIME);
                 sleep(SPLAYTIME);
 
-#if defined(HAVE_PTHREAD)
                 if (!LocalExecInThread(config))
                 {
                     CfOut(cf_inform, "", "Unable to run agent in thread, falling back to blocking execution");
-#endif
                     LocalExec(config);
-#if defined(HAVE_PTHREAD)
                 }
-#endif
             }
         }
 
@@ -532,7 +522,6 @@ void StartServer(Policy *policy, ExecConfig *config, const ReportContext *report
 
 /*****************************************************************************/
 
-#if defined(HAVE_PTHREAD)
 static void *LocalExecThread(void *param)
 {
 #if !defined(__MINGW32__)
@@ -565,7 +554,6 @@ static bool LocalExecInThread(const ExecConfig *config)
         return false;
     }
 }
-#endif
 
 /*****************************************************************************/
 /* Level                                                                     */

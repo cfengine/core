@@ -331,7 +331,6 @@ typedef int clockid_t;
 typedef int socklen_t;
 #endif
 
-#if defined(HAVE_PTHREAD)
 # define __USE_GNU 1
 
 # include <pthread.h>
@@ -346,8 +345,6 @@ typedef int socklen_t;
 # if !HAVE_DECL_PTHREAD_ATTR_SETSTACKSIZE
 int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize);
 # endif
-
-#endif
 
 #ifdef HAVE_SCHED_H
 # include <sched.h>

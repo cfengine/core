@@ -329,8 +329,6 @@ void FatalError(char *fmt, ...)
 }
 
 
-#if defined(HAVE_PTHREAD)
-
 pthread_mutex_t test_lock = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
 
 int ThreadLock(pthread_mutex_t *t)
@@ -358,7 +356,6 @@ int ThreadUnlock(pthread_mutex_t *t)
 }
 
 pthread_mutex_t *cft_dbhandle;
-#endif
 
 const char *DAY_TEXT[] = {};
 const char *MONTH_TEXT[] = {};

@@ -1413,7 +1413,6 @@ Adding new mutex:
 - define in cf3globals.c.
 */
 
-#if defined(HAVE_PTHREAD)
 extern pthread_mutex_t *cft_system;
 extern pthread_mutex_t *cft_count;
 extern pthread_mutex_t *cft_getaddr;
@@ -1425,7 +1424,6 @@ extern pthread_mutex_t *cft_report;
 extern pthread_mutex_t *cft_vscope;
 extern pthread_mutex_t *cft_server_keyseen;
 extern pthread_mutex_t *cft_server_children;
-#endif
 
 /************************************************************************************/
 

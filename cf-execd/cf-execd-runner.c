@@ -48,7 +48,6 @@ static int Dialogue(int sd, char *s);
 
 /******************************************************************************/
 
-#if defined(HAVE_PTHREAD)
 # if defined(__MINGW32__)
 
 static void *ThreadUniqueName(void)
@@ -64,14 +63,6 @@ static void *ThreadUniqueName(void)
 }
 
 # endif /* __MINGW32__ */
-#else /* HAVE_PTHREAD */
-
-static void *ThreadUniqueName(void)
-{
-    return NULL;
-}
-
-#endif /* HAVE_PTHREAD */
 
 static const char *TwinFilename(void)
 {

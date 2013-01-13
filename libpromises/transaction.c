@@ -446,10 +446,6 @@ void GetLockName(char *lockname, char *locktype, char *base, Rlist *params)
 
 /************************************************************************/
 
-#if defined(HAVE_PTHREAD)
-
-/************************************************************************/
-
 static void GetMutexName(const pthread_mutex_t *mutex, char *mutexname)
 {
     if (mutex >= cft_system && mutex <= cft_server_keyseen)
@@ -498,8 +494,6 @@ int ThreadUnlock(pthread_mutex_t *mutex)
 
     return true;
 }
-
-#endif
 
 /*****************************************************************************/
 /* Level                                                                     */

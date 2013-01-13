@@ -720,14 +720,12 @@ case "$target_os" in
         ;;
 
    qnx*)
-        AC_DEFINE(CFQNX, [], [QNX build])
         ;;
 
    openbsd*|obsd*)
         ;;
 
    gnu*)
-	AC_DEFINE(CFGNU, [], [GNU build])
         ;;
 
    sysv4.2MP|unix_sv*)

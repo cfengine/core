@@ -30,7 +30,6 @@
 #include "mod_access.h"
 #include "item_lib.h"
 #include "reporting.h"
-#include "files_operators.h"
 #include "cfstream.h"
 #include "logging.h"
 

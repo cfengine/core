@@ -326,25 +326,6 @@ int ShellCommandReturnsZero(const char *comm, int useshell)
 
 /*********************************************************************/
 
-void CreateEmptyFile(char *name)
-{
-    int tempfd;
-
-    if (unlink(name) == -1)
-    {
-        if (errno != ENOENT)
-        {
-            CfDebug("Unable to remove existing file %s: %s\n", name, strerror(errno));
-        }
-    }
-
-    if ((tempfd = open(name, O_CREAT | O_EXCL | O_WRONLY, 0600)) < 0)
-    {
-        CfOut(cf_error, "open", "Couldn't open a file %s\n", name);
-    }
-
-    close(tempfd);
-}
 
 /******************************************************************/
 

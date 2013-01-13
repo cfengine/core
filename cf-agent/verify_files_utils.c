@@ -51,6 +51,7 @@
 #include "comparray.h"
 #include "string_lib.h"
 #include "constraints.h"
+#include "files_lib.h"
 
 #define CF_RECURSION_LIMIT 100
 

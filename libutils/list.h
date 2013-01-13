@@ -60,11 +60,23 @@
   needs to allocate memory for the new element and then fill it with the proper data. It should be avoid moving
   pointers around, it should copy the content to the new element so the new element is not tied to the previous
   element.
+
+  The list can have many iterators, but only one mutable iterator at any given time. The difference between a normal
+  iterator and a mutable iterator is the fact that with normal iterators only additions can be performed to the list
+  without invalidating the iterator, while the mutable iterator allows any kind of change. Be aware that removing from
+  the list, either by using remove or via the mutable iterator will invalidate all the normal iterators.
   */
+typedef struct List List;
+struct ListMutableIterator {
+    unsigned int state;
+    ListNode *current;
+    List *origin;
+};
+typedef struct ListMutableIterator ListMutableIterator;
 struct List {
     // Number of nodes
     int node_count;
-    // Incremental number that keeps track of the state of the list
+    // Incremental number that keeps track of the state of the list, only used for light iterators
     unsigned int state;
     // Nodes
     ListNode *list;
@@ -80,15 +92,15 @@ struct List {
     void (*destroy)(void *element);
     // Reference counting
     RefCount *ref_count;
+    // Mutable iterator.
+    ListMutableIterator *iterator;
 };
-typedef struct List List;
 struct ListIterator {
     ListNode *current;
     List *origin;
     unsigned int state;
 };
 typedef struct ListIterator ListIterator;
-
 /**
   @brief Initialization of a linked list.
   @param list List to be initialized.
@@ -161,6 +173,7 @@ int ListCount(List *list);
 
 /**
   @brief Gets an iterator for a given linked list.
+
   This iterator will be invalid if data is removed from the list. It will still be valid
   after a new addition though.
   @param list Linked list
@@ -170,6 +183,7 @@ int ListCount(List *list);
 int ListIteratorGet(List *list, ListIterator **iterator);
 /**
   @brief Releases the memory associated with an iterator.
+
   This function exists only to free the memory associated with the iterator, there is no strong
   connection between the iterator and the list.
   @param iterator Iterator.
@@ -206,5 +220,71 @@ int ListIteratorPrevious(ListIterator *iterator);
   @return Pointer to the data or NULL if it was not possible.
   */
 void *ListIteratorData(const ListIterator *iterator);
+
+/**
+  @brief Creates a new mutable iterator.
+
+  A mutable iterator can be used for the same kind of operations as a normal iterator, but it can also be
+  used to add and remove elements while iterating over the list. Any removal operation will invalidate all
+  the normal iterators though.
+
+  Since there can be only one mutable iterator for a list at any given time, the creation of a second iterator
+  will fail.
+  @param iterator Iterator to be initialized.
+  @return 0 if the iterator was initialized, -1 if not.
+  */
+int ListMutableIteratorCreate(List *list, ListMutableIterator **iterator);
+/**
+  @brief Releases the memory associated with an iterator.
+
+  This function has to be called for mutable iterators, otherwise the list will think there is already one mutable
+  iterator and the creation of new mutable iterators will not be possible.
+  @param iterator Iterator.
+  @return 0 if released, -1 otherwise.
+  */
+int ListMutableIteratorDestroy(ListIterator **iterator);
+/**
+  @brief Moves the iterator to the first element of the list.
+  @param iterator Iterator.
+  @return 0 if it was possible to move, -1 otherwise.
+  */
+int ListMutableIteratorFirst(ListIterator *iterator);
+/**
+  @brief Moves the iterator to the last element of the list.
+  @param iterator Iterator.
+  @return 0 if it was possible to move, -1 otherwise.
+  */
+int ListMutableIteratorLast(ListIterator *iterator);
+/**
+  @brief Moves the iterator to the next element of the list.
+  @param iterator Iterator.
+  @return 0 if it was possible to move, -1 otherwise.
+  */
+int ListMutableIteratorNext(ListIterator *iterator);
+/**
+  @brief Moves the iterator to the previous element of the list.
+  @param iterator Iterator.
+  @return 0 if it was possible to move, -1 otherwise.
+  */
+int ListMutableIteratorPrevious(ListIterator *iterator);
+/**
+  @brief Returns the data associated with the current element.
+  @param iterator Iterator.
+  @return Pointer to the data or NULL if it was not possible.
+  */
+void *ListMutableIteratorData(const ListIterator *iterator);
+/**
+  @brief Removes the current element from the list.
+
+  After this operation all the normal iterators are invalid. The iterator might be pointing to the next element,
+  or in the case of removing the last element, to the previous element.
+
+  Although it is supported to remove elements from the list bypassing the iterator, i.e. calling ListRemove, this
+  might bring unintended side effects. The iterator might be moved to another element, therefore special care must
+  be taken when mixing removal both from the list and from the iterator.
+  @param iterator Iterator
+  @return 0 if removed, -1 otherwise.
+  */
+int ListMutableIteratorRemove(ListIterator *iterator);
 
 #endif // CFENGINE_LIST_H

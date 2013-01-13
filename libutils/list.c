@@ -232,7 +232,13 @@ int ListAppend(List *list, void *payload)
     return 0;
 }
 
-int ListRemove(List *list, void *payload)
+/*
+ * We split the code into several helper functions.
+ * These functions are not exported to the outside world
+ * since it does not make sense for them to be used in other
+ * places.
+ */
+static int ListFindNode(List *list, void *payload)
 {
     if (!list)
     {
@@ -261,35 +267,11 @@ int ListRemove(List *list, void *payload)
             }
         }
     }
-    if (!found)
-        return -1;
-    ListDetach(list);
-    node = NULL;
-    // We need to find the node again since we have a new list
-    for (node = list->list; node; node = node->next)
-    {
-        if (list->compare)
-        {
-            if (!list->compare(node->payload, payload))
-            {
-                found = 1;
-                break;
-            }
-        }
-        else
-        {
-            if (node->payload == payload)
-            {
-                found = 1;
-                break;
-            }
-        }
-    }
-    /*
-     * We found the node, we just need to change the pointers.
-     */
-    if (node->next && node->previous)
-    {
+    return found;
+}
+static void ListRemoveNode(List *list, ListNode *node)
+{
+    if (node->next && node->previous) {
         // Middle of the list
         node->next->previous = node->previous;
         node->previous->next = node->next;
@@ -314,13 +296,72 @@ int ListRemove(List *list, void *payload)
         list->first = NULL;
         list->last = NULL;
     }
+}
+static void ListUpdateMutableIterator(List *list, ListNode *node)
+{
+    if (!list->iterator)
+        return;
+    if (list->iterator->current == node) {
+        /*
+         * So lucky, it is the same node!
+         * Move the iterator so it is not dangling.
+         */
+    }
+}
+static void ListUpdateListState(List *list)
+{
+    list->node_count--;
+    ChangeListState(list);
+}
+
+int ListRemove(List *list, void *payload)
+{
+    if (!list || !payload)
+        return -1;
+    ListNode *node = NULL;
+    int found = ListFindNode(list, payload);
+    if (!found)
+        return -1;
+    /*
+     * This is a complicated matter. We could detach the list before
+     * we know that we have a new node, but that will mean that we
+     * might have copied the whole list without real reasons. On the
+     * other hand, it saves us a whole traversal of the list if we
+     * just do it.
+     */
+    ListDetach(list);
+    node = NULL;
+    /*
+     * We need to find the node again since we have a new list.
+     * In theory we don't have to worry about the existence of the node,
+     * since the list has not changed, it might have been copied but
+     * it is still the same as before.
+     */
+    for (node = list->list; node; node = node->next) {
+        if (list->compare) {
+            if (!list->compare(node->payload, payload)) {
+                found = 1;
+                break;
+            }
+        } else {
+            if (node->payload == payload) {
+                found = 1;
+                break;
+            }
+        }
+    }
+    ListRemoveNode(list, node);
     if (list->destroy && node->payload)
     {
         list->destroy(node->payload);
     }
+    /*
+     * Before deleting the node we have to update the mutable iterator.
+     * We might need to advance it!
+     */
+    ListUpdateMutableIterator(list, node);
     free(node);
-    list->node_count--;
-    ChangeListState(list);
+    ListUpdateListState(list);
     return 0;
 }
 
@@ -456,4 +497,109 @@ void *ListIteratorData(const ListIterator *iterator)
         return NULL;
     }
     return iterator->current->payload;
+}
+
+/*
+ * Mutable iterator operations
+ */
+int ListMutableIteratorCreate(List *list, ListMutableIterator **iterator)
+{
+    if (!list || !iterator)
+        return -1;
+    if (list->iterator)
+        // Only one iterator at a time
+        return -1;
+    *iterator = (ListMutableIterator *)malloc(sizeof(ListMutableIterator));
+    if (!(*iterator))
+        return -1;
+    (*iterator)->current = list->first;
+    (*iterator)->origin = list;
+    (*iterator)->state = list->state;
+    return 0;
+}
+
+int ListMutableIteratorDestroy(ListIterator **iterator)
+{
+    if (iterator && *iterator) {
+        (*iterator)->origin->iterator = NULL;
+        free (*iterator);
+        *iterator = NULL;
+    }
+    return 0;
+}
+
+int ListMutableIteratorFirst(ListIterator *iterator)
+{
+    if (!iterator)
+        return -1;
+    iterator->current = iterator->origin->first;
+    return 0;
+}
+
+int ListMutableIteratorLast(ListIterator *iterator)
+{
+    if (!iterator)
+        return -1;
+    iterator->current = iterator->origin->last;
+    return 0;
+}
+
+int ListMutableIteratorNext(ListIterator *iterator)
+{
+    if (!iterator)
+        return -1;
+    if (!iterator->current->next)
+        return -1;
+    iterator->current = iterator->current->next;
+    return 0;
+}
+
+int ListMutableIteratorPrevious(ListIterator *iterator)
+{
+    if (!iterator)
+        return -1;
+    if (!iterator->current->previous)
+        return -1;
+    iterator->current = iterator->current->previous;
+    return 0;
+}
+
+void *ListMutableIteratorData(const ListIterator *iterator)
+{
+    if (!iterator)
+        return NULL;
+    return iterator->current->payload;
+}
+
+int ListMutableIteratorRemove(ListIterator *iterator)
+{
+    if (!iterator)
+        return -1;
+    /*
+     * Removing an element is not as simple as it sounds. We need to inform the list
+     * and make sure we move out of the way.
+     */
+    ListNode *node = NULL;
+    if (iterator->current->next) {
+        /*
+         * We are not the last element, therefore we proceed as normal.
+         */
+        node = iterator->current->next;
+    } else {
+        /*
+         * We might be the last element or the only element on the list.
+         * If we are the only element we do not destroy the element otherwise the iterator
+         * would become invalid.
+         */
+        if (iterator->current->previous)
+            node = iterator->current->previous;
+        else
+            return -1;
+    }
+    if (iterator->origin->destroy)
+        iterator->origin->destroy(iterator->current->payload);
+    free (iterator->current);
+    iterator->current = node;
+    ListUpdateListState(iterator->origin);
+    return 0;
 }

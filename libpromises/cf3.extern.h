@@ -189,7 +189,7 @@ extern const char *DAY_TEXT[];
 extern const char *MONTH_TEXT[];
 extern const char *SHIFT_TEXT[];
 
-#if defined(_WIN32) && !defined(__CYGWIN__)
+#if defined(__MINGW32__)
 # define FILE_SEPARATOR '\\'
 # define FILE_SEPARATOR_STR "\\"
 #else

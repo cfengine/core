@@ -566,7 +566,7 @@ static void Apoptosis()
     char mypid[32];
     static char promiser_buf[CF_SMALLBUF];
 
-#if defined(__CYGWIN__) || defined(__MINGW32__)
+#if defined(_WIN32)
     return;
 #endif
 

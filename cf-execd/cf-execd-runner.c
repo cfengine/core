@@ -66,7 +66,7 @@ static void *ThreadUniqueName(void)
 
 static const char *TwinFilename(void)
 {
-#if defined(__CYGWIN__) || defined(__MINGW32__)
+#if defined(_WIN32)
     return "bin-twin/cf-agent.exe";
 #else
     return "bin/cf-twin";
@@ -75,7 +75,7 @@ static const char *TwinFilename(void)
 
 static const char *AgentFilename(void)
 {
-#if defined(__CYGWIN__) || defined(__MINGW32__)
+#if defined(_WIN32)
     return "bin/cf-agent.exe";
 #else
     return "bin/cf-agent";

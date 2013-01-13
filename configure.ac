@@ -718,33 +718,24 @@ case "$target_os" in
         ;;
    cray*)
         ;;
-
    qnx*)
         ;;
-
    openbsd*|obsd*)
         ;;
-
    gnu*)
         ;;
-
    sysv4.2MP|unix_sv*)
         ;;
-
    cygwin*)
         ;;
-
    mingw*)
         AC_DEFINE(MINGW, 1, [Native NT build])
         LIBS="$LIBS -liphlpapi -lws2_32 -lpsapi -lole32 -loleaut32 -luuid"
         ;;
-
    sco*)
         ;;
-
    darwin*)
         ;;
-
    *)
 	AC_MSG_ERROR(Unknown system type $target_os)
         ;;

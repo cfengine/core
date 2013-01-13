@@ -75,12 +75,12 @@ char *Item2String(Item *ip);
 int IsRealNumber(char *s);
 enum cfd_menu String2Menu(const char *s);
 
-#ifndef MINGW
+#ifndef __MINGW32__
 UidList *Rlist2UidList(Rlist *uidnames, const Promise *pp);
 GidList *Rlist2GidList(Rlist *gidnames, const Promise *pp);
 uid_t Str2Uid(char *uidbuff, char *copy, const Promise *pp);
 gid_t Str2Gid(char *gidbuff, char *copy, const Promise *pp);
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
 #ifdef HAVE_NOVA
 

@@ -30,7 +30,6 @@
 #include "mod_access.h"
 #include "item_lib.h"
 #include "reporting.h"
-#include "files_operators.h"
 #include "cfstream.h"
 #include "logging.h"
 
@@ -1299,7 +1298,7 @@ enum cfd_menu String2Menu(const char *s)
 /* Unix-only functions                                             */
 /*******************************************************************/
 
-#ifndef MINGW
+#ifndef __MINGW32__
 
 /****************************************************************************/
 /* Rlist to Uid/Gid lists                                                   */
@@ -1529,4 +1528,5 @@ gid_t Str2Gid(char *gidbuff, char *groupcopy, const Promise *pp)
 
     return gid;
 }
-#endif /* NOT MINGW */
+
+#endif /* !__MINGW32__ */

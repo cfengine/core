@@ -29,6 +29,7 @@
 #include "conversion.h"
 #include "files_interfaces.h"
 #include "files_operators.h"
+#include "files_lib.h"
 #include "files_links.h"
 #include "files_properties.h"
 #include "attributes.h"

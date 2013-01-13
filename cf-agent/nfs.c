@@ -28,6 +28,7 @@
 #include "files_names.h"
 #include "files_interfaces.h"
 #include "files_operators.h"
+#include "files_lib.h"
 #include "item_lib.h"
 #include "conversion.h"
 #include "matching.h"

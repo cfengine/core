@@ -154,7 +154,7 @@ int IdentifyAgent(int sd, char *localip, int family)
     }
 
 /* client always identifies as root on windows */
-#ifdef MINGW
+#ifdef __MINGW32__
     snprintf(uname, sizeof(uname), "%s", "root");
 #else
     GetCurrentUserName(uname, sizeof(uname));

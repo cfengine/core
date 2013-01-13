@@ -26,7 +26,7 @@
 #include "iteration.h"
 
 #include "scope.h"
-#include "unix.h"
+#include "vars.h"
 #include "cfstream.h"
 #include "fncall.h"
 

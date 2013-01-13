@@ -276,10 +276,8 @@ static void SpawnConnection(int sd_reply, char *ipaddr)
 {
     ServerConnectionState *conn;
 
-#if defined(HAVE_PTHREAD)
     pthread_t tid;
     pthread_attr_t threadattrs;
-#endif
 
     if ((conn = NewConn(sd_reply)) == NULL)
     {
@@ -289,8 +287,6 @@ static void SpawnConnection(int sd_reply, char *ipaddr)
     strncpy(conn->ipaddr, ipaddr, CF_MAX_IP_LEN - 1);
 
     CfOut(cf_verbose, "", "New connection...(from %s:sd %d)\n", conn->ipaddr, sd_reply);
-
-#if defined(HAVE_PTHREAD)
 
     CfOut(cf_verbose, "", "Spawning new thread...\n");
 
@@ -307,16 +303,6 @@ static void SpawnConnection(int sd_reply, char *ipaddr)
     }
 
     pthread_attr_destroy(&threadattrs);
-
-#else
-
-/* Can't fork here without getting a zombie unless we do some complex waiting? */
-
-    CfOut(cf_verbose, "", "Single threaded...\n");
-
-    HandleConnection(conn);
-
-#endif
 }
 
 /*********************************************************************/
@@ -337,14 +323,12 @@ static void *HandleConnection(ServerConnectionState *conn)
 {
     char output[CF_BUFSIZE];
 
-#if defined(HAVE_PTHREAD)
 # ifdef HAVE_PTHREAD_SIGMASK
     sigset_t sigmask;
 
     sigemptyset(&sigmask);
     pthread_sigmask(SIG_BLOCK, &sigmask, NULL);
 # endif
-#endif
 
     if (!ThreadLock(cft_server_children))
     {
@@ -1518,7 +1502,7 @@ bool ResolveFilename(const char *req_path, char *res_path)
 
     strlcpy(req_filename, ReadLastNode(req_path), CF_BUFSIZE);
 
-#if defined HAVE_REALPATH && !defined NT
+#if defined HAVE_REALPATH && !defined _WIN32
     if (realpath(req_dir, res_path) == NULL)
     {
         return false;

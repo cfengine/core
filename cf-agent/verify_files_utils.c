@@ -51,12 +51,14 @@
 #include "comparray.h"
 #include "string_lib.h"
 #include "constraints.h"
+#include "files_lib.h"
 
 #define CF_RECURSION_LIMIT 100
 
 static int TransformFile(char *file, Attributes attr, Promise *pp);
 static void VerifyName(char *path, struct stat *sb, Attributes attr, Promise *pp, const ReportContext *report_context);
 static void VerifyDelete(char *path, struct stat *sb, Attributes attr, Promise *pp);
+static void VerifyCopy(char *source, char *destination, Attributes attr, Promise *pp, const ReportContext *report_context);
 static void TouchFile(char *path, struct stat *sb, Attributes attr, Promise *pp);
 static void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promise *pp, const ReportContext *report_context);
 static int PushDirState(char *name, struct stat *sb);
@@ -72,12 +74,14 @@ static int cf_readlink(char *sourcefile, char *linkbuf, int buffsize, Attributes
 static bool CopyRegularFileDiskReport(char *source, char *destination, Attributes attr, Promise *pp);
 static int SkipDirLinks(char *path, const char *lastnode, Recursion r);
 static int DeviceBoundary(struct stat *sb, Promise *pp);
+static int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dstat, Attributes attr, Promise *pp, const ReportContext *report_context);
+static void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attributes attr, Promise *pp, const ReportContext *report_context);
 
 #ifndef __MINGW32__
 static void VerifySetUidGid(char *file, struct stat *dstat, mode_t newperm, Promise *pp, Attributes attr);
 static int VerifyOwner(char *file, Promise *pp, Attributes attr, struct stat *sb);
 #endif
-#ifdef DARWIN
+#ifdef __APPLE__
 static int VerifyFinderType(char *file, struct stat *statbuf, Attributes a, Promise *pp);
 #endif
 static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp);
@@ -620,8 +624,8 @@ static void PurgeLocalFiles(Item *filelist, char *localdir, Attributes attr, Pro
     CloseDir(dirh);
 }
 
-void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes attr, Promise *pp,
-                         const ReportContext *report_context)
+static void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes attr, Promise *pp,
+                                const ReportContext *report_context)
 {
     struct stat sb, dsb;
     char newfrom[CF_BUFSIZE];
@@ -834,8 +838,8 @@ void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes attr, 
     CloseDir(dirh);
 }
 
-void VerifyCopy(char *source, char *destination, Attributes attr, Promise *pp,
-                const ReportContext *report_context)
+static void VerifyCopy(char *source, char *destination, Attributes attr, Promise *pp,
+                       const ReportContext *report_context)
 {
     Dir *dirh;
     char sourcefile[CF_BUFSIZE];
@@ -950,8 +954,8 @@ void VerifyCopy(char *source, char *destination, Attributes attr, Promise *pp,
     DeleteClientCache(attr, pp);
 }
 
-void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attributes attr, Promise *pp,
-              const ReportContext *report_context)
+static void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attributes attr, Promise *pp,
+                     const ReportContext *report_context)
 /* Link the file to the source, instead of copying */
 #ifdef MINGW
 {
@@ -1064,8 +1068,8 @@ void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attributes attr
 }
 #endif /* NOT MINGW */
 
-int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dstat, Attributes attr, Promise *pp,
-                    const ReportContext *report_context)
+static int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dstat, Attributes attr, Promise *pp,
+                           const ReportContext *report_context)
 {
     char backup[CF_BUFSIZE];
     char new[CF_BUFSIZE], *linkable;
@@ -1077,7 +1081,7 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
     struct utimbuf timebuf;
 #endif
 
-#ifdef DARWIN
+#ifdef __APPLE__
 /* For later copy from new to dest */
     char *rsrcbuf;
     int rsrcbytesr;             /* read */
@@ -1150,7 +1154,7 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
         remote = true;
     }
 
-#ifdef DARWIN
+#ifdef __APPLE__
     if (strstr(dest, _PATH_RSRCFORKSPEC))
     {
         char *tmpstr = xstrndup(dest, CF_BUFSIZE);
@@ -1176,7 +1180,7 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
             return false;
         }
 
-#ifdef DARWIN
+#ifdef __APPLE__
     }
 #endif
 
@@ -1325,7 +1329,7 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
         }
     }
 
-#ifdef DARWIN
+#ifdef __APPLE__
     if (rsrcfork)
     {                           /* Can't just "mv" the resource fork, unfortunately */
         rsrcrd = open(new, O_RDONLY | O_BINARY);
@@ -1417,7 +1421,7 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
             return false;
         }
 
-#ifdef DARWIN
+#ifdef __APPLE__
     }
 #endif
 
@@ -1900,7 +1904,7 @@ void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promi
 
     VerifySetUidGid(file, dstat, newperm, pp, attr);
 
-# ifdef DARWIN
+# ifdef __APPLE__
     if (VerifyFinderType(file, dstat, attr, pp))
     {
         /* nop */
@@ -2315,7 +2319,7 @@ static void VerifyCopiedFileAttributes(char *file, struct stat *dstat, struct st
 #endif
 }
 
-void *CopyFileSources(char *destination, Attributes attr, Promise *pp, const ReportContext *report_context)
+static void *CopyFileSources(char *destination, Attributes attr, Promise *pp, const ReportContext *report_context)
 {
     char *source = attr.copy.source;
     char *server = pp->this_server;
@@ -2797,7 +2801,7 @@ static void VerifySetUidGid(char *file, struct stat *dstat, mode_t newperm, Prom
 }
 #endif
 
-#ifdef DARWIN
+#ifdef __APPLE__
 
 static int VerifyFinderType(char *file, struct stat *statbuf, Attributes a, Promise *pp)
 {                               /* Code modeled after hfstar's extract.c */

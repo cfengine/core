@@ -284,22 +284,22 @@ static void CreateFailSafe(char *name)
             " !windows::\n"
             "  \"$(sys.workdir)/inputs\" \n"
             "    handle => \"cfe_internal_bootstrap_update_files_sys_workdir_inputs_not_windows\",\n"
-#ifdef MINGW
+#ifdef __MINGW32__
             "    copy_from => u_scp(\"/var/cfengine/masterfiles\"),\n"
 #else
             "    copy_from => u_scp(\"%s/masterfiles\"),\n"
-#endif // MINGW
+#endif /* !__MINGW32__ */
             "    depth_search => u_recurse(\"inf\"),\n"
             "    classes => success(\"got_policy\");\n"
             "\n"
             "  windows::\n"
             "  \"$(sys.workdir)\\inputs\" \n"
             "    handle => \"cfe_internal_bootstrap_update_files_sys_workdir_inputs_windows\",\n"
-#ifdef MINGW
+#ifdef __MINGW32__
             "    copy_from => u_scp(\"/var/cfengine/masterfiles\"),\n"
 #else
             "    copy_from => u_scp(\"%s/masterfiles\"),\n"
-#endif // MINGW
+#endif /* !__MINGW32__ */
             "    depth_search => u_recurse(\"inf\"),\n"
             "    classes => success(\"got_policy\");\n\n"
             "\n"
@@ -404,11 +404,11 @@ static void CreateFailSafe(char *name)
             "body copy_from u_cp(from)\n"
             "{\n"
             "source          => \"$(from)\";\n"
-#ifdef MINGW
+#ifdef __MINGW32
             "compare         => \"digest\";\n" "copy_backup     => \"false\";\n" "}\n" "\n");
 #else
             "compare         => \"digest\";\n" "copy_backup     => \"false\";\n" "}\n" "\n", CFWORKDIR, CFWORKDIR);
-#endif // MINGW
+#endif /* !__MINGW32__ */
     fclose(fout);
 
     if (cf_chmod(name, S_IRUSR | S_IWUSR) == -1)

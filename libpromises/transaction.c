@@ -31,8 +31,8 @@
 #include "dbm_api.h"
 #include "files_names.h"
 #include "files_interfaces.h"
-#include "files_operators.h"
 #include "files_hashes.h"
+#include "files_lib.h"
 #include "item_lib.h"
 #include "expand.h"
 #include "atexit.h"
@@ -265,7 +265,7 @@ CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promi
                 {
                     CfOut(cf_error, "", "Illegal pid in corrupt lock %s - ignoring lock\n", cflock);
                 }
-#ifdef MINGW                    // killing processes with e.g. task manager does not allow for termination handling
+#ifdef __MINGW32__                    // killing processes with e.g. task manager does not allow for termination handling
                 else if (!NovaWin_IsProcessRunning(pid))
                 {
                     CfOut(cf_verbose, "",
@@ -274,7 +274,7 @@ CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promi
                     LogLockCompletion(cflog, pid, "Lock expired, process not running", cc_operator, cc_operand);
                     unlink(cflock);
                 }
-#endif /* MINGW */
+#endif /* __MINGW32__ */
                 else
                 {
                     CfOut(cf_verbose, "", "Trying to kill expired process, pid %d\n", pid);
@@ -446,10 +446,6 @@ void GetLockName(char *lockname, char *locktype, char *base, Rlist *params)
 
 /************************************************************************/
 
-#if defined(HAVE_PTHREAD)
-
-/************************************************************************/
-
 static void GetMutexName(const pthread_mutex_t *mutex, char *mutexname)
 {
     if (mutex >= cft_system && mutex <= cft_server_keyseen)
@@ -498,8 +494,6 @@ int ThreadUnlock(pthread_mutex_t *mutex)
 
     return true;
 }
-
-#endif
 
 /*****************************************************************************/
 /* Level                                                                     */

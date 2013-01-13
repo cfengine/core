@@ -36,12 +36,13 @@
 #include "expand.h"
 #include "scope.h"
 #include "sysinfo.h"
-#include "files_operators.h"
 #include "cfstream.h"
 #include "signals.h"
 #include "transaction.h"
 #include "exec_tools.h"
 #include "generic_agent.h" // WritePID
+#include "files_lib.h"
+#include "unix.h"
 
 #include <math.h>
 

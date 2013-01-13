@@ -695,7 +695,7 @@ static const char *GetProcessOptions(void)
     }
 # endif
 
-# ifdef LINUX
+# ifdef __linux__
     if (strncmp(VSYSNAME.release, "2.4", 3) == 0)
     {
         // No threads on 2.4 kernels

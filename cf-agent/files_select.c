@@ -36,6 +36,7 @@
 #include "promises.h"
 #include "logging.h"
 #include "exec_tools.h"
+#include "chflags.h"
 
 static int SelectTypeMatch(struct stat *lstatptr, Rlist *crit);
 static int SelectOwnerMatch(char *path, struct stat *lstatptr, Rlist *crit);

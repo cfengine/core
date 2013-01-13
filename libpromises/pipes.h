@@ -37,8 +37,8 @@ int cf_pclose_def(FILE *pfp, Attributes a, Promise *pp);
 bool PipeToPid(pid_t *pid, FILE *pp);
 int VerifyCommandRetcode(int retcode, int fallback, Attributes a, Promise *pp);
 
-#ifndef MINGW
+#ifndef __MINGW32__
 int cf_pwait(pid_t pid);
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
 #endif

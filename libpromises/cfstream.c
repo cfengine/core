@@ -28,7 +28,7 @@
 #include "files_names.h"
 #include "constraints.h"
 #include "item_lib.h"
-#include "unix.h"
+#include "vars.h"
 #include "transaction.h"
 #include "logging.h"
 #include "string_lib.h"

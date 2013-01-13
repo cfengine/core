@@ -32,12 +32,6 @@
 
 void ProcessSignalTerminate(pid_t pid);
 
-/*
- * Do not modify returned Rval, its contents may be constant and statically
- * allocated.
- */
-enum cfdatatype GetVariable(const char *scope, const char *lval, Rval *returnv);
-
 void DeleteVariable(const char *scope, const char *id);
 bool StringContainsVar(const char *s, const char *v);
 int DefinedVariable(char *name);

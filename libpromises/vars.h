@@ -34,4 +34,10 @@ void DeleteScalar(const char *scope, const char *lval);
 void NewList(const char *scope, const char *lval, void *rval, enum cfdatatype dt);
 void DefaultVarPromise(Promise *pp);
 
+/*
+ * Do not modify returned Rval, its contents may be constant and statically
+ * allocated.
+ */
+enum cfdatatype GetVariable(const char *scope, const char *lval, Rval *returnv);
+
 #endif

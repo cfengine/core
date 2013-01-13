@@ -693,13 +693,11 @@ fi
 case "$target_os" in
 
    solaris2.8|solaris2.9)
-	AC_DEFINE(SOLARIS, [], [Solaris build])
         AC_DEFINE(_XOPEN_SOURCE, 500, [UNIX 98])
         AC_DEFINE(__EXTENSIONS__, 1, [Extended UNIX 98 interfaces])
         LIBS="$LIBS -lelf -lsec"
         ;;
    solaris2.10|solaris2.11)
-        AC_DEFINE(SOLARIS, [], [Solaris build])
         AC_DEFINE(_XOPEN_SOURCE, 600, [SUSv3])
         AC_DEFINE(__EXTENSIONS__, 1, [Extended UNIX 98 interfaces])
         LIBS="$LIBS -lelf -lsec";;

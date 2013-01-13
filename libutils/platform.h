@@ -183,7 +183,7 @@ struct utsname
 # include <sys/systemcfg.h>
 #endif
 
-#ifdef SOLARIS
+#ifdef __sun
 # include <sys/statvfs.h>
 # undef nfstype
 

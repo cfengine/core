@@ -346,7 +346,7 @@ void GetNameInfo3()
  * solarisx86 is a historically defined class for Solaris on x86. We have to
  * define it manually now.
  */
-#ifdef SOLARIS
+#ifdef __sun
     if (strcmp(VSYSNAME.machine, "i86pc") == 0)
     {
         HardClass("solarisx86");
@@ -1019,7 +1019,7 @@ void OSClasses(void)
     SetFlavour("android");
 #endif
 
-#ifdef SOLARIS
+#ifdef __sun
     if (FullTextMatch("joyent.*", VSYSNAME.version))
     {
         HardClass("smartos");

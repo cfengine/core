@@ -660,7 +660,7 @@ int IsAbsoluteFileName(const char *f)
     {
     }
 
-#ifdef NT
+#ifdef _WIN32
     if (IsFileSep(f[off]) && IsFileSep(f[off + 1]))
     {
         return true;
@@ -696,7 +696,7 @@ static int UnixRootDirLength(const char *f)
     return 0;
 }
 
-#ifdef NT
+#ifdef _WIN32
 static int NTRootDirLength(char *f)
 {
     int len;
@@ -747,7 +747,7 @@ static int NTRootDirLength(char *f)
 int RootDirLength(const char *f)
   /* Return length of Initial directory in path - */
 {
-#ifdef NT
+#ifdef _WIN32
     return NTRootDirLength(f);
 #else
     return UnixRootDirLength(f);

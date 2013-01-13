@@ -42,7 +42,7 @@ static char *cf_format_strtimestamp(struct tm *tm, char *buf);
 /* We assume that s is at least MAX_FILENAME large.
  * MapName() is thread-safe, but the argument is modified. */
 
-#ifdef NT
+#ifdef _WIN32
 # if defined(__MINGW32__)
 
 char *MapNameCopy(const char *s)
@@ -115,7 +115,7 @@ char *MapName(char *s)
 # else/* !__MINGW32__ && !__CYGWIN__ */
 #  error Unknown NT-based compilation environment
 # endif/* __MINGW32__ || __CYGWIN__ */
-#else /* !NT */
+#else /* !_WIN32 */
 
 char *MapName(char *s)
 {
@@ -127,7 +127,7 @@ char *MapNameCopy(const char *s)
     return xstrdup(s);
 }
 
-#endif /* NT */
+#endif /* !_WIN32 */
 
 /*********************************************************/
 
@@ -302,7 +302,7 @@ int setegid(gid_t gid)
 
 int IsPrivileged()
 {
-#ifdef NT
+#ifdef _WIN32
     return true;
 #else
     return (getuid() == 0);

@@ -733,12 +733,10 @@ case "$target_os" in
 
    cygwin*)
         AC_DEFINE(CFCYG, 1, [Cygwin NT build])
-        AC_DEFINE(NT, [], [NT build])
         ;;
 
    mingw*)
         AC_DEFINE(MINGW, 1, [Native NT build])
-        AC_DEFINE(NT)
         LIBS="$LIBS -liphlpapi -lws2_32 -lpsapi -lole32 -loleaut32 -luuid"
         ;;
 

@@ -560,7 +560,7 @@ typedef struct
 /* File node separator (cygwin can use \ or / but prefer \ for communicating
  * with native windows commands). */
 
-#ifdef NT
+#ifdef _WIN32
 # define IsFileSep(c) ((c) == '\\' || (c) == '/')
 #else
 # define IsFileSep(c) ((c) == '/')

@@ -991,7 +991,7 @@ void OSClasses(void)
 
 #endif /* MINGW */
 
-#ifndef NT
+#ifndef _WIN32
     struct passwd *pw;
     if ((pw = getpwuid(getuid())) == NULL)
     {

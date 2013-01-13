@@ -1502,7 +1502,7 @@ bool ResolveFilename(const char *req_path, char *res_path)
 
     strlcpy(req_filename, ReadLastNode(req_path), CF_BUFSIZE);
 
-#if defined HAVE_REALPATH && !defined NT
+#if defined HAVE_REALPATH && !defined _WIN32
     if (realpath(req_dir, res_path) == NULL)
     {
         return false;

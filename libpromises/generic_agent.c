@@ -978,7 +978,7 @@ static void Cf3ParseFile(Policy *policy, char *filename, bool check_not_writable
         exit(1);
     }
 
-#ifndef NT
+#ifndef _WIN32
     if (check_not_writable_by_others && (statbuf.st_mode & (S_IWGRP | S_IWOTH)))
     {
         CfOut(cf_error, "", "File %s (owner %ju) is writable by others (security exception)", wfilename, (uintmax_t)statbuf.st_uid);

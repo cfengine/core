@@ -38,7 +38,7 @@
 
 #define _GNU_SOURCE 1
 
-#ifdef NT
+#ifdef _WIN32
 # define MAX_FILENAME 227
 # define WINVER 0x501
 #if defined(__CYGWIN__)
@@ -302,7 +302,7 @@ char *strsep(char **stringp, const char *delim);
 # include <netinet/tcp.h>
 # include <arpa/inet.h>
 # include <netdb.h>
-# if !defined __linux__ && !defined NT
+# if !defined __linux__ && !defined _WIN32
 #  include <sys/protosw.h>
 #  undef sgi
 #  include <net/route.h>

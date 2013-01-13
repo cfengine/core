@@ -129,7 +129,7 @@ Checks if the object pointed to by path exists and is a directory.
 Returns true if so, false otherwise.
 */
 {
-#ifdef MINGW
+#ifdef __MINGW32__
     return NovaWin_IsDir(path);
 #else
     struct stat sb;
@@ -143,7 +143,7 @@ Returns true if so, false otherwise.
     }
 
     return false;
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 }
 
 /*********************************************************************/

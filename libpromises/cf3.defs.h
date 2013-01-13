@@ -196,13 +196,13 @@ typedef struct
 
 /*****************************************************************************/
 
-#ifdef MINGW
+#ifdef __MINGW32__
 # define NULLFILE "nul"
 # define EXEC_SUFFIX ".exe"
 #else
 # define NULLFILE "/dev/null"
 # define EXEC_SUFFIX ""
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
 /*******************************************************************/
 /* Client server defines                                           */
@@ -492,9 +492,9 @@ typedef struct UidList_ UidList;
 
 struct UidList_
 {
-#ifdef MINGW                    // TODO: remove uid for NT ?
+#ifdef __MINGW32__  // TODO: remove uid for NT ?
     char sid[CF_MAXSIDSIZE];    /* Invalid sid indicates unset */
-#endif                          /* MINGW */
+#endif /* __MINGW32__ */
     uid_t uid;
     char *uidname;              /* when uid is -2 */
     UidList *next;
@@ -985,7 +985,7 @@ enum cfeditorder
 #define CF_NAKEDLRANGE "@[(][a-zA-Z0-9]+[)]"
 #define CF_ANYSTRING   ".*"
 
-#ifndef MINGW
+#ifndef __MINGW32__
 # define CF_ABSPATHRANGE   "\042?(/.*)"
 #else
 // can start with e.g. c:\... or "c:\...  |  unix (for Cygwin-style paths)

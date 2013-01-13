@@ -42,7 +42,7 @@
 
 int cfstat(const char *path, struct stat *buf)
 {
-#ifdef MINGW
+#ifdef __MINGW32__
     return NovaWin_stat(path, buf);
 #else
     return stat(path, buf);

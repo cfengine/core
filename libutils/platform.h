@@ -49,7 +49,7 @@
 # define MAX_FILENAME 254
 #endif
 
-#ifdef MINGW
+#ifdef __MINGW32__
 # include <winsock2.h>
 # include <windows.h>
 # include <accctrl.h>
@@ -159,7 +159,7 @@ struct utsname
 
 #include <signal.h>
 
-#ifdef MINGW
+#ifdef __MINGW32__
 # define LOG_LOCAL0      (16<<3)
 # define LOG_LOCAL1      (17<<3)
 # define LOG_LOCAL2      (18<<3)
@@ -171,7 +171,7 @@ struct utsname
 # define LOG_USER        (1<<3)
 # define LOG_DAEMON      (3<<3)
 
-#else /* NOT MINGW */
+#else /* !__MINGW32__ */
 # include <syslog.h>
 #endif
 
@@ -285,7 +285,7 @@ char *strsep(char **stringp, const char *delim);
 # include <sys/time.h>
 #endif
 
-#ifndef MINGW
+#ifndef __MINGW32__
 # include <pwd.h>
 # include <grp.h>
 #endif
@@ -294,7 +294,7 @@ char *strsep(char **stringp, const char *delim);
 # include <sys/sockio.h>
 #endif
 
-#ifndef MINGW
+#ifndef __MINGW32__
 # include <sys/socket.h>
 # include <sys/ioctl.h>
 # include <net/if.h>
@@ -377,7 +377,7 @@ void srand48(long seed);
 #if !HAVE_DECL_CLOCK_GETTIME
 int clock_gettime(clockid_t clock_id, struct timespec *tp);
 #endif
-#ifdef MINGW
+#ifdef __MINGW32__
 unsigned int alarm(unsigned int seconds);
 #endif
 #if !HAVE_DECL_REALPATH
@@ -477,7 +477,7 @@ char *strrstr(const char *haystack, const char *needle);
 /*  Windows                                                        */
 /*******************************************************************/
 
-#ifdef MINGW
+#ifdef __MINGW32__
 # define MAXHOSTNAMELEN 256     // always adequate: http://msdn.microsoft.com/en-us/library/ms738527(VS.85).aspx
 
 // as seen in in_addr struct in winsock.h
@@ -515,7 +515,7 @@ struct timespec
 };
 # endif/* NOT _TIMESPEC_DEFINED */
 
-#endif /* MINGW */
+#endif /* __MINGW32__ */
 
 #ifndef ERESTARTSYS
 # define ERESTARTSYS EINTR

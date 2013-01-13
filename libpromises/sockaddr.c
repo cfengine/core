@@ -35,7 +35,7 @@
 /* Note these functions are not thread safe                                  */
 /*****************************************************************************/
 
-#if defined(HAVE_GETADDRINFO) && defined(MINGW)
+#if defined(HAVE_GETADDRINFO) && defined(__MINGW32__)
 const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt)
 {
     if (af == AF_INET)
@@ -87,7 +87,7 @@ int inet_pton(int af, const char *src, void *dst)
     freeaddrinfo(ressave);
     return 0;
 }
-#endif /* HAVE_GETADDRINFO */
+#endif /* HAVE_GETADDRINFO && __MINGW32__ */
 
 /*****************************************************************************/
 

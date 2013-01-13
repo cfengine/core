@@ -979,7 +979,7 @@ void LogHashChange(char *file, FileState status, char *msg, Promise *pp)
     snprintf(fname, CF_BUFSIZE, "%s/state/%s", CFWORKDIR, CF_FILECHANGE_NEW);
     MapName(fname);
 
-#ifndef MINGW
+#ifndef __MINGW32__
     struct stat sb;
     if (cfstat(fname, &sb) != -1)
     {
@@ -988,7 +988,7 @@ void LogHashChange(char *file, FileState status, char *msg, Promise *pp)
             CfOut(cf_error, "", "File %s (owner %ju) is writable by others (security exception)", fname, (uintmax_t)sb.st_uid);
         }
     }
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
     if ((fp = fopen(fname, "a")) == NULL)
     {

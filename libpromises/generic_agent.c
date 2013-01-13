@@ -528,7 +528,7 @@ void InitializeGA(const ReportContext *report_context)
 
 /* On windows, use 'binary mode' as default for files */
 
-#ifdef MINGW
+#ifdef __MINGW32__
     _fmode = _O_BINARY;
 #endif
 
@@ -1163,13 +1163,13 @@ static void CheckWorkingDirectories(const ReportContext *report_context)
     }
     else
     {
-#ifndef MINGW
+#ifndef __MINGW32__
         if (statbuf.st_mode & 022)
         {
             CfOut(cf_error, "", "UNTRUSTED: State directory %s (mode %jo) was not private!\n", CFWORKDIR,
                   (uintmax_t)(statbuf.st_mode & 0777));
         }
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
     }
 
     CfOut(cf_verbose, "", "Checking integrity of the module directory\n");
@@ -1190,13 +1190,13 @@ static void CheckWorkingDirectories(const ReportContext *report_context)
     }
     else
     {
-#ifndef MINGW
+#ifndef __MINGW32__
         if (statbuf.st_mode & 022)
         {
             CfOut(cf_error, "", "UNTRUSTED: Module directory %s (mode %jo) was not private!\n", vbuff,
                   (uintmax_t)(statbuf.st_mode & 0777));
         }
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
     }
 
     CfOut(cf_verbose, "", "Checking integrity of the PKI directory\n");
@@ -1212,13 +1212,13 @@ static void CheckWorkingDirectories(const ReportContext *report_context)
     }
     else
     {
-#ifndef MINGW
+#ifndef __MINGW32__
         if (statbuf.st_mode & 077)
         {
             FatalError("UNTRUSTED: Private key directory %s%cppkeys (mode %jo) was not private!\n", CFWORKDIR,
                        FILE_SEPARATOR, (uintmax_t)(statbuf.st_mode & 0777));
         }
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
     }
 }
 

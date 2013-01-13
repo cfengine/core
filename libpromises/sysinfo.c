@@ -461,7 +461,7 @@ void GetNameInfo3()
 
 /* Windows special directories */
 
-#ifdef MINGW
+#ifdef __MINGW32__
     if (NovaWin_GetWinDir(workbuf, sizeof(workbuf)))
     {
         NewScalar("sys", "windir", workbuf, cf_str);
@@ -490,7 +490,7 @@ void GetNameInfo3()
 
 # endif
 
-#else /* NOT MINGW */
+#else /* !__MINGW32__ */
 
 // defs on Unix for manual-building purposes
 
@@ -499,7 +499,7 @@ void GetNameInfo3()
     NewScalar("sys", "winprogdir", "/dev/null", cf_str);
     NewScalar("sys", "winprogdir86", "/dev/null", cf_str);
 
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
     LoadSlowlyVaryingObservations();
     EnterpriseContext();
@@ -965,7 +965,7 @@ void OSClasses(void)
 
 #endif /* __CYGWIN__ */
 
-#ifdef MINGW
+#ifdef __MINGW32__
     HardClass(VSYSNAME.release); // code name - e.g. Windows Vista
     HardClass(VSYSNAME.version); // service pack number - e.g. Service Pack 3
 
@@ -989,7 +989,7 @@ void OSClasses(void)
 
     SetFlavour("windows");
 
-#endif /* MINGW */
+#endif /* __MINGW32__ */
 
 #ifndef _WIN32
     struct passwd *pw;

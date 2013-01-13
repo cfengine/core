@@ -43,7 +43,7 @@ void CheckForFileHoles(struct stat *sstat, Promise *pp)
         return;
     }
 
-#if !defined(MINGW)
+#if !defined(__MINGW32__)
     if (sstat->st_size > sstat->st_blocks * DEV_BSIZE)
 #else
 # ifdef HAVE_ST_BLOCKS

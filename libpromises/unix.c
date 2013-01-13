@@ -49,7 +49,7 @@
 #define CF_IFREQ 2048           /* Reportedly the largest size that does not segfault 32/64 bit */
 #define CF_IGNORE_INTERFACES "ignore_interfaces.rx"
 
-#ifndef MINGW
+#ifndef __MINGW32__
 
 # ifdef HAVE_STRUCT_SOCKADDR_SA_LEN
 #  ifdef _SIZEOF_ADDR_IFREQ
@@ -810,4 +810,4 @@ static bool IgnoreInterface(char *name)
 
 
 
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */

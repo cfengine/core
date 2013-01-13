@@ -40,7 +40,7 @@
 
 /************************************************************************/
 
-#ifndef MINGW
+#ifndef __MINGW32__
 
 off_t GetDiskUsage(char *file, enum cfsizes type)
 {
@@ -108,4 +108,4 @@ off_t GetDiskUsage(char *file, enum cfsizes type)
     }
 }
 
-#endif /* NOT MINGW */
+#endif /* __MINGW32__ */

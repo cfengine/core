@@ -29,7 +29,7 @@
 #include "transaction.h"
 #include "exec_tools.h"
 
-#ifndef MINGW
+#ifndef __MINGW32__
 static int CfSetuid(uid_t uid, gid_t gid);
 #endif
 
@@ -99,7 +99,7 @@ int VerifyCommandRetcode(int retcode, int fallback, Attributes a, Promise *pp)
     return result;
 }
 
-#ifndef MINGW
+#ifndef __MINGW32__
 
 /*****************************************************************************/
 
@@ -857,4 +857,4 @@ static int CfSetuid(uid_t uid, gid_t gid)
     return true;
 }
 
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */

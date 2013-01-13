@@ -223,9 +223,9 @@ AgentConnection *ServerConnection(char *server, Attributes attr, Promise *pp)
 {
     AgentConnection *conn;
 
-#ifndef MINGW
+#if !defined(__MINGW32__)
     signal(SIGPIPE, SIG_IGN);
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
 #if !defined(__MINGW32__)
     static sigset_t signal_mask;
@@ -247,11 +247,11 @@ AgentConnection *ServerConnection(char *server, Attributes attr, Promise *pp)
 
 /* username of the client - say root from Windows */
 
-#ifdef MINGW
+#ifdef __MINGW32__
     snprintf(conn->username, CF_SMALLBUF, "root");
 #else
     GetCurrentUserName(conn->username, CF_SMALLBUF);
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
     if (conn->sd == SOCKET_INVALID)
     {

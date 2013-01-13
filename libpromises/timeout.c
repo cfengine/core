@@ -292,7 +292,7 @@ static void AddTimeClass(time_t time)
 
 /*********************************************************************/
 
-#ifndef MINGW
+#ifndef __MINGW32__
 
 bool IsReadReady(int fd, int timeout_sec)
 {
@@ -329,4 +329,4 @@ bool IsReadReady(int fd, int timeout_sec)
     return false;
 }
 
-#endif  /* NOT MINGW */
+#endif  /* __MINGW32__ */

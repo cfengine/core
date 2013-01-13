@@ -262,7 +262,7 @@ char *strsep(char **stringp, const char *delim);
 # include <sys/vfs.h>
 #endif
 
-#ifdef hpux
+#ifdef __hpux
 # include <sys/dirent.h>
 #endif
 
@@ -561,7 +561,7 @@ struct timespec
 /* Some systems, like Sequents, return st_blksize of 0 on pipes. */
 # define ST_BLKSIZE(statbuf) ((statbuf).st_blksize > 0 \
                                ? (statbuf).st_blksize : DEV_BSIZE)
-# if defined(hpux) || defined(__hpux__) || defined(__hpux)
+# if defined(__hpux)
 /* HP-UX counts st_blocks in 1024-byte units.
    This loses when mixing HP-UX and BSD filesystems with NFS.  */
 #  define ST_NBLOCKS(statbuf) ((statbuf).st_blocks * 2)

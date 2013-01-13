@@ -1147,6 +1147,9 @@ typedef struct
 
 /*************************************************************************/
 
+// NOTE: Addition of "char *" members to the Promise_ structure requires
+// update of both NewPromises() and TestExpandPromise() to insure that the
+// pointers are initialized, in order to prevent null dereferences.
 struct Promise_
 {
     SubType *parent_subtype;

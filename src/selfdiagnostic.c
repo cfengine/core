@@ -223,16 +223,26 @@ void TestExpandVariables(const ReportContext *report_context)
     NewScope("control_common");
 
     printf("%d. Testing variable expansion\n", ++NR);
+//----------
+// The following section should be kept in sync with NewPromise:
+    pp.audit = NULL;
+    pp.bundle = "test_bundle";
+    pp.namespace = "default";
     pp.promiser = "the originator";
+
     pp.promisee = (Rval) {"the recipient with $(two)", CF_SCALAR};
+    pp.donep = &(pp.done);
+
+    pp.agentsubtype = "none";
+    pp.ref_alloc = 'n';
+    pp.has_subbundles = false;
+//---------------
+
     pp.classes = "proletariat";
     pp.offset.line = 12;
-    pp.audit = NULL;
     pp.conlist = NULL;
-    pp.agentsubtype = "none";
 
     pp.bundletype = "bundle_type";
-    pp.bundle = "test_bundle";
     pp.ref = "commentary";
     pp.agentsubtype = xstrdup("files");
     pp.done = false;
@@ -240,7 +250,6 @@ void TestExpandVariables(const ReportContext *report_context)
     pp.cache = NULL;
     pp.inode_cache = NULL;
     pp.this_server = NULL;
-    pp.donep = &(pp.done);
     pp.conn = NULL;
 
     args = SplitStringAsRList("$(administrator)", ',');

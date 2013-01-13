@@ -385,7 +385,7 @@ int MakeParentDirectory(char *parentandchild, int force, const ReportContext *re
     int rootlen;
     char Path_File_Separator;
 
-#ifdef DARWIN
+#ifdef __APPLE__
 /* Keeps track of if dealing w. resource fork */
     int rsrcfork;
 
@@ -405,7 +405,7 @@ int MakeParentDirectory(char *parentandchild, int force, const ReportContext *re
 
     strncpy(pathbuf, parentandchild, CF_BUFSIZE - 1);   /* local copy */
 
-#ifdef DARWIN
+#ifdef __APPLE__
     if (strstr(pathbuf, _PATH_RSRCFORKSPEC) != NULL)
     {
         rsrcfork = 1;
@@ -533,7 +533,7 @@ int MakeParentDirectory(char *parentandchild, int force, const ReportContext *re
             {
                 if (!S_ISDIR(statbuf.st_mode))
                 {
-#ifdef DARWIN
+#ifdef __APPLE__
                     /* Ck if rsrc fork */
                     if (rsrcfork)
                     {

@@ -234,13 +234,13 @@ size_t strlcat(char *destination, const char *source, size_t size);
 char *strsep(char **stringp, const char *delim);
 #endif
 
-#ifdef DARWIN
+#ifdef __APPLE__
 # include <sys/malloc.h>
 # include <sys/paths.h>
 #endif
 
 #ifdef HAVE_SYS_MALLOC_H
-# ifdef DARWIN
+# ifdef __APPLE__
 #  include <sys/malloc.h>
 #  include <sys/paths.h>
 # endif

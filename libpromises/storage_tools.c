@@ -79,7 +79,7 @@ off_t GetDiskUsage(char *file, enum cfsizes type)
     avail = buf.f_bavail * buf.f_frsize;
 # endif
 
-# if defined NETBSD || defined FREEBSD || defined OPENBSD || defined SUNOS || defined __hpux || defined DARWIN
+# if defined NETBSD || defined FREEBSD || defined OPENBSD || defined SUNOS || defined __hpux || defined __APPLE__
     used = (buf.f_blocks - buf.f_bfree) * buf.f_bsize;
     avail = buf.f_bavail * buf.f_bsize;
 # endif

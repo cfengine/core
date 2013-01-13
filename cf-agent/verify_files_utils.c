@@ -81,7 +81,7 @@ static void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attribut
 static void VerifySetUidGid(char *file, struct stat *dstat, mode_t newperm, Promise *pp, Attributes attr);
 static int VerifyOwner(char *file, Promise *pp, Attributes attr, struct stat *sb);
 #endif
-#ifdef DARWIN
+#ifdef __APPLE__
 static int VerifyFinderType(char *file, struct stat *statbuf, Attributes a, Promise *pp);
 #endif
 static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp);
@@ -1081,7 +1081,7 @@ static int CopyRegularFile(char *source, char *dest, struct stat sstat, struct s
     struct utimbuf timebuf;
 #endif
 
-#ifdef DARWIN
+#ifdef __APPLE__
 /* For later copy from new to dest */
     char *rsrcbuf;
     int rsrcbytesr;             /* read */
@@ -1154,7 +1154,7 @@ static int CopyRegularFile(char *source, char *dest, struct stat sstat, struct s
         remote = true;
     }
 
-#ifdef DARWIN
+#ifdef __APPLE__
     if (strstr(dest, _PATH_RSRCFORKSPEC))
     {
         char *tmpstr = xstrndup(dest, CF_BUFSIZE);
@@ -1180,7 +1180,7 @@ static int CopyRegularFile(char *source, char *dest, struct stat sstat, struct s
             return false;
         }
 
-#ifdef DARWIN
+#ifdef __APPLE__
     }
 #endif
 
@@ -1329,7 +1329,7 @@ static int CopyRegularFile(char *source, char *dest, struct stat sstat, struct s
         }
     }
 
-#ifdef DARWIN
+#ifdef __APPLE__
     if (rsrcfork)
     {                           /* Can't just "mv" the resource fork, unfortunately */
         rsrcrd = open(new, O_RDONLY | O_BINARY);
@@ -1421,7 +1421,7 @@ static int CopyRegularFile(char *source, char *dest, struct stat sstat, struct s
             return false;
         }
 
-#ifdef DARWIN
+#ifdef __APPLE__
     }
 #endif
 
@@ -1904,7 +1904,7 @@ void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promi
 
     VerifySetUidGid(file, dstat, newperm, pp, attr);
 
-# ifdef DARWIN
+# ifdef __APPLE__
     if (VerifyFinderType(file, dstat, attr, pp))
     {
         /* nop */
@@ -2801,7 +2801,7 @@ static void VerifySetUidGid(char *file, struct stat *dstat, mode_t newperm, Prom
 }
 #endif
 
-#ifdef DARWIN
+#ifdef __APPLE__
 
 static int VerifyFinderType(char *file, struct stat *statbuf, Attributes a, Promise *pp)
 {                               /* Code modeled after hfstar's extract.c */

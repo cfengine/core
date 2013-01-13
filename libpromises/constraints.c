@@ -502,7 +502,7 @@ gid_t GetGidConstraint(char *lval, const Promise *pp)
 #else
 {
     Constraint *cp;
-    int retval = CF_SAME_OWNER;
+    int retval = CF_SAME_GROUP;
     char buffer[CF_MAXVARSIZE];
 
     for (cp = pp->conlist; cp != NULL; cp = cp->next)

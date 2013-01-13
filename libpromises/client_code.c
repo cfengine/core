@@ -1576,7 +1576,7 @@ static int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockadd
 
             FD_ZERO(&myset);
 
-#if defined(HPuUX) && defined(__GNUC__)
+#if defined(__hpux) && defined(__GNUC__)
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 // HP-UX GCC type-pun warning on FD_SET() macro:
 // While the "fd_set" type is defined in /usr/include/sys/_fd_macros.h as a
@@ -1594,7 +1594,7 @@ static int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockadd
 // so it can be ignored.
 #endif
             FD_SET(conn->sd, &myset);
-#if defined(HPuUX) && defined(__GNUC__)
+#if defined(__hpux) && defined(__GNUC__)
 #pragma GCC diagnostic warning "-Wstrict-aliasing"
 #endif
 

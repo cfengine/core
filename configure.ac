@@ -704,8 +704,6 @@ case "$target_os" in
         AC_DEFINE(__EXTENSIONS__, 1, [Extended UNIX 98 interfaces])
         LIBS="$LIBS -lelf -lsec";;
    hpux*|hp-ux*) 
-
-	AC_DEFINE(HPuUX, [], [HP/UX build])
 	AC_CHECK_LIB(PW, main)
         ;;
    aix*)

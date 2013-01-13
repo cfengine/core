@@ -302,14 +302,14 @@ char *strsep(char **stringp, const char *delim);
 # include <netinet/tcp.h>
 # include <arpa/inet.h>
 # include <netdb.h>
-# if !defined LINUX && !defined NT
+# if !defined __linux__ && !defined NT
 #  include <sys/protosw.h>
 #  undef sgi
 #  include <net/route.h>
 # endif
 #endif
 
-#ifdef LINUX
+#ifdef __linux__
 # ifdef __GLIBC__
 #  include <net/route.h>
 #  include <netinet/in.h>

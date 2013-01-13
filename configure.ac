@@ -711,7 +711,6 @@ case "$target_os" in
         CPPFLAGS="$CPPFLAGS -w"
         ;;
    linux*)
-	AC_DEFINE(LINUX, [], [Linux build])
 	AC_CHECK_LIB(nss_nis, yp_get_default_domain)
         ;;
    freebsd*|dragonfly*)

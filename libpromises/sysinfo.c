@@ -49,7 +49,7 @@
 
 void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname, char *uqname, char *domain);
 
-#ifdef LINUX
+#ifdef __linux__
 static int Linux_Fedora_Version(void);
 static int Linux_Redhat_Version(void);
 static void Linux_Oracle_VM_Server_Version(void);
@@ -774,7 +774,7 @@ static void SetFlavour(const char *flavour)
 
 void OSClasses(void)
 {
-#ifdef LINUX
+#ifdef __linux__
     struct stat statbuf;
 
 /* Mandrake/Mandriva, Fedora and Oracle VM Server supply /etc/redhat-release, so
@@ -1048,7 +1048,7 @@ void OSClasses(void)
 
 /*********************************************************************************/
 
-#ifdef LINUX
+#ifdef __linux__
 static void Linux_Oracle_VM_Server_Version(void)
 {
     char relstring[CF_MAXVARSIZE];
@@ -2144,7 +2144,7 @@ static FILE *ReadFirstLine(const char *filename, char *buf, int bufsize)
 
     return fp;
 }
-#endif /* LINUX */
+#endif /* __linux__ */
 
 /******************************************************************/
 /* User info                                                      */
@@ -2211,7 +2211,7 @@ static void GetCPUInfo()
     char buf[CF_BUFSIZE];
     int count = 0;
 
-#ifdef LINUX
+#ifdef __linux__
     FILE *fp;
 
     if ((fp = fopen("/proc/stat", "r")) == NULL)
@@ -2233,7 +2233,7 @@ static void GetCPUInfo()
 
     fclose(fp);
     count--;
-#endif /* LINUX */
+#endif /* __linux__ */
 
 #ifdef HAVE_SYS_MPCTL_H
 // Itanium processors have Intel Hyper-Threading virtual-core capability,

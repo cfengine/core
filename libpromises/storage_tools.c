@@ -89,7 +89,7 @@ off_t GetDiskUsage(char *file, enum cfsizes type)
     avail = buf.f_bfree * (float) buf.f_bsize;
 # endif
 
-# if defined LINUX
+# if defined __linux__
     used = (buf.f_blocks - buf.f_bfree) * (float) buf.f_bsize;
     avail = buf.f_bavail * (float) buf.f_bsize;
 # endif

@@ -69,7 +69,7 @@ static int ExecSanityChecks(Attributes a, Promise *pp)
     }
 
 #ifdef MINGW
-    if (a.contain.umask != CF_UNDEFINED)        // TODO: Always true (077 != -1?, compare positive and negative number), make false when umask not set
+    if (a.contain.umask != (mode_t)CF_UNDEFINED)
     {
         CfOut(cf_verbose, "", "contain.umask is ignored on Windows");
     }
@@ -90,7 +90,7 @@ static int ExecSanityChecks(Attributes a, Promise *pp)
     }
 
 #else /* NOT MINGW */
-    if (a.contain.umask == CF_UNDEFINED)
+    if (a.contain.umask == (mode_t)CF_UNDEFINED)
     {
         a.contain.umask = 077;
     }

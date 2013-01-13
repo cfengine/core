@@ -44,7 +44,7 @@
 
 off_t GetDiskUsage(char *file, enum cfsizes type)
 {
-# if defined __sun || defined UNIXWARE || defined __OpenBSD__ || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
+# if defined __sun || defined sco || defined __OpenBSD__ || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
     struct statvfs buf;
 # else
     struct statfs buf;
@@ -54,13 +54,13 @@ off_t GetDiskUsage(char *file, enum cfsizes type)
 
     memset(&buf, 0, sizeof(buf));
 
-# if defined __sun || defined UNIXWARE || defined __OpenBSD__ || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
+# if defined __sun || defined sco || defined __OpenBSD__ || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
     if (statvfs(file, &buf) != 0)
     {
         CfOut(cf_error, "statvfs", "Couldn't get filesystem info for %s\n", file);
         return CF_INFINITY;
     }
-# elif defined SCO || defined CFCRAY || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
+# elif defined __SCO_DS || defined _CRAY || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
     if (statfs(file, &buf, sizeof(struct statfs), 0) != 0)
     {
         CfOut(cf_error, "statfs", "Couldn't get filesystem info for %s\n", file);
@@ -84,7 +84,7 @@ off_t GetDiskUsage(char *file, enum cfsizes type)
     avail = buf.f_bavail * buf.f_bsize;
 # endif
 
-# if defined _AIX || defined SCO || defined CFCRAY
+# if defined _AIX || defined __SCO_DS || defined _CRAY
     used = (buf.f_blocks - buf.f_bfree) * (float) buf.f_bsize;
     avail = buf.f_bfree * (float) buf.f_bsize;
 # endif

@@ -715,11 +715,8 @@ case "$target_os" in
    netbsd*)
         ;;
    unicos*)
-	AC_DEFINE(CFCRAY, [], [Cray build])
         ;;
-
    cray*)
-	AC_DEFINE(CFCRAY)
         ;;
 
    qnx*)
@@ -734,7 +731,6 @@ case "$target_os" in
         ;;
 
    sysv4.2MP|unix_sv*)
-	AC_DEFINE(UNIXWARE, [], [Unixware build])
         ;;
 
    cygwin*)
@@ -749,7 +745,6 @@ case "$target_os" in
         ;;
 
    sco*)
-        AC_DEFINE(SCO, [], [SCO build])
         ;;
 
    darwin*)

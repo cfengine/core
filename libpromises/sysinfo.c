@@ -922,7 +922,7 @@ void OSClasses(void)
 
     GetCPUInfo();
 
-#ifdef CFCYG
+#ifdef __CYGWIN__
 
     for (char *sp = VSYSNAME.sysname; *sp != '\0'; sp++)
     {
@@ -963,7 +963,7 @@ void OSClasses(void)
 
     NewScalar("sys", "crontab", "", cf_str);
 
-#endif /* CFCYG */
+#endif /* __CYGWIN__ */
 
 #ifdef MINGW
     HardClass(VSYSNAME.release); // code name - e.g. Windows Vista

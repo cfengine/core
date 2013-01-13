@@ -732,7 +732,6 @@ case "$target_os" in
         ;;
 
    cygwin*)
-        AC_DEFINE(CFCYG, 1, [Cygwin NT build])
         ;;
 
    mingw*)

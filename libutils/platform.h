@@ -175,7 +175,7 @@ struct utsname
 # include <syslog.h>
 #endif
 
-#ifdef AIX
+#ifdef _AIX
 # ifndef ps2
 #  include <sys/statfs.h>
 # endif

@@ -84,7 +84,7 @@ off_t GetDiskUsage(char *file, enum cfsizes type)
     avail = buf.f_bavail * buf.f_bsize;
 # endif
 
-# if defined AIX || defined SCO || defined CFCRAY
+# if defined _AIX || defined SCO || defined CFCRAY
     used = (buf.f_blocks - buf.f_bfree) * (float) buf.f_bsize;
     avail = buf.f_bfree * (float) buf.f_bsize;
 # endif

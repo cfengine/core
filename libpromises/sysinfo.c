@@ -263,7 +263,7 @@ void GetNameInfo3()
     struct sockaddr_in cin;
     unsigned char digest[EVP_MAX_MD_SIZE + 1];
 
-#ifdef AIX
+#ifdef _AIX
     char real_version[_SYS_NMLN];
 #endif
 #if defined(HAVE_SYSINFO) && (defined(SI_ARCHITECTURE) || defined(SI_PLATFORM))
@@ -285,7 +285,7 @@ void GetNameInfo3()
         memset(&VSYSNAME, 0, sizeof(VSYSNAME));
     }
 
-#ifdef AIX
+#ifdef _AIX
     snprintf(real_version, _SYS_NMLN, "%.80s.%.80s", VSYSNAME.version, VSYSNAME.release);
     strncpy(VSYSNAME.release, real_version, _SYS_NMLN);
 #endif

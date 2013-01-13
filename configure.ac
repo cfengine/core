@@ -705,7 +705,6 @@ case "$target_os" in
 	AC_CHECK_LIB(PW, main)
         ;;
    aix*)
-	AC_DEFINE(AIX, [], [AIX build])
         CPPFLAGS="$CPPFLAGS -w"
         ;;
    linux*)

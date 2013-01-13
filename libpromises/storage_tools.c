@@ -44,7 +44,7 @@
 
 off_t GetDiskUsage(char *file, enum cfsizes type)
 {
-# if defined __sun || defined UNIXWARE || defined OPENBSD || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
+# if defined __sun || defined UNIXWARE || defined __OpenBSD__ || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
     struct statvfs buf;
 # else
     struct statfs buf;
@@ -54,7 +54,7 @@ off_t GetDiskUsage(char *file, enum cfsizes type)
 
     memset(&buf, 0, sizeof(buf));
 
-# if defined __sun || defined UNIXWARE || defined OPENBSD || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
+# if defined __sun || defined UNIXWARE || defined __OpenBSD__ || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
     if (statvfs(file, &buf) != 0)
     {
         CfOut(cf_error, "statvfs", "Couldn't get filesystem info for %s\n", file);
@@ -79,7 +79,7 @@ off_t GetDiskUsage(char *file, enum cfsizes type)
     avail = buf.f_bavail * buf.f_frsize;
 # endif
 
-# if defined NETBSD || defined FREEBSD || defined OPENBSD || defined SUNOS || defined __hpux || defined __APPLE__
+# if defined __NetBSD__ || defined __FreeBSD__ || defined __OpenBSD__ || defined SUNOS || defined __hpux || defined __APPLE__
     used = (buf.f_blocks - buf.f_bfree) * buf.f_bsize;
     avail = buf.f_bavail * buf.f_bsize;
 # endif

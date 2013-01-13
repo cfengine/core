@@ -394,7 +394,7 @@ static void MailResult(const ExecConfig *config, char *file)
     struct sockaddr_in raddr;
     struct servent *server;
     struct stat statbuf;
-#if defined __linux__ || defined NETBSD || defined FREEBSD || defined OPENBSD
+#if defined __linux__ || defined __NetBSD__ || defined __FreeBSD__ || defined __OpenBSD__
     time_t now = time(NULL);
 #endif
     FILE *fp;
@@ -565,7 +565,7 @@ static void MailResult(const ExecConfig *config, char *file)
 
     send(sd, vbuff, strlen(vbuff), 0);
 
-#if defined __linux__ || defined NETBSD || defined FREEBSD || defined OPENBSD
+#if defined __linux__ || defined __NetBSD__ || defined __FreeBSD__ || defined __OpenBSD__
     strftime(vbuff, CF_BUFSIZE, "Date: %a, %d %b %Y %H:%M:%S %z\r\n", localtime(&now));
     send(sd, vbuff, strlen(vbuff), 0);
 #endif

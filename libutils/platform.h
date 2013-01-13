@@ -246,7 +246,7 @@ char *strsep(char **stringp, const char *delim);
 # endif
 #else
 # ifdef HAVE_MALLOC_H
-#  ifndef OPENBSD
+#  ifndef __OpenBSD__
 #   ifdef __FreeBSD__
 #    include <stdlib.h>
 #   else

@@ -711,10 +711,8 @@ case "$target_os" in
 	AC_CHECK_LIB(nss_nis, yp_get_default_domain)
         ;;
    freebsd*|dragonfly*)
-	AC_DEFINE(FREEBSD, [], [FreeBSD build])
         ;;
    netbsd*)
-	AC_DEFINE(NETBSD, [], [NetBSD build])
         ;;
    unicos*)
 	AC_DEFINE(CFCRAY, [], [Cray build])
@@ -729,7 +727,6 @@ case "$target_os" in
         ;;
 
    openbsd*|obsd*)
-	AC_DEFINE(OPENBSD, [], [OpenBSD build])
         ;;
 
    gnu*)

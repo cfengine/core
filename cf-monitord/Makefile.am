@@ -1,7 +1,15 @@
-AM_CFLAGS = $(NOVA_CFLAGS) @CFLAGS@ -I$(srcdir)/../libpromises
+sbin_PROGRAMS = cf-monitord
 
-sbin_PROGRAMS = \
-        cf-monitord
+AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises \
+	$(NOVA_CPPFLAGS)
+
+AM_CFLAGS = @CFLAGS@ \
+	$(NOVA_CFLAGS)
+
+cf_monitord_LDADD = ../libpromises/libpromises.la
+if HAVE_NOVA
+cf_monitord_LDADD += ../nova/libcfmonitord/libcfmonitord.la
+endif
 
 cf_monitord_SOURCES = \
         verify_measurements.c \
@@ -16,12 +24,6 @@ cf_monitord_SOURCES = \
         mon_processes.c \
         mon_temp.c \
         cf-monitord.c
-
-cf_monitord_LDADD =
-if HAVE_NOVA
-cf_monitord_LDADD += ../nova/libcfmonitord/libcfmonitord.la
-endif
-cf_monitord_LDADD += ../libpromises/libpromises.la
 
 CLEANFILES = *.gcno *.gcda
 

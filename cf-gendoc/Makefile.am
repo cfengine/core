@@ -1,9 +1,12 @@
-AM_CFLAGS = $(NOVA_CFLAGS) @CFLAGS@ -I$(srcdir)/../libpromises
+noinst_PROGRAMS = cf-gendoc
+
+AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises \
+	$(NOVA_CPPFLAGS)
+
+AM_CFLAGS = @CFLAGS@ \
+	$(NOVA_CFLAGS)
 
 LDADD = ../libpromises/libpromises.la
-
-noinst_PROGRAMS = \
-        cf-gendoc
 
 cf_gendoc_SOURCES = \
 	cf-gendoc.c \

@@ -1,39 +1,23 @@
-
-AM_CFLAGS = @CFLAGS@
-
-AM_CPPFLAGS = $(NOVA_CFLAGS)
-
 noinst_LTLIBRARIES = libcfpub.la
+
+AM_CPPFLAGS = @CPPFLAGS@ \
+	$(NOVA_CPPFLAGS)
+
+AM_CFLAGS = @CFLAGS@ \
+	$(NOVA_CFLAGS)
+
+libcfpub_la_LIBADD = $(LTLIBOBJS)
 
 libcfpub_la_SOURCES = \
 	getopt.c \
 	getopt1.c
 
-libcfpub_la_LIBADD = $(LTLIBOBJS)
-
 EXTRA_DIST = \
 	getopt.h
+
+CLEANFILES = *.gcno *.gcda
 
 #
 # Some basic clean ups
 #
 MOSTLYCLEANFILES = *~
-
-#
-# Get everything removed down to where rebuilding requires:
-# "make; make install"
-# 
-CLEANFILES = *.gcno *.gcda
-
-#
-# Get everything removed down to where rebuilding requires:
-# "configure; make; make install"
-#
-DISTCLEANFILES = 
-
-#
-# Get everything removed down to where rebuilding requires:
-# "aclocal; autoconf; autoheader; automake --add-missing"
-# "configure; make; make install"
-#
-MAINTAINERCLEANFILES = Makefile.in

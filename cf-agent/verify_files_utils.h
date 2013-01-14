@@ -39,4 +39,6 @@ int ScheduleLinkChildrenOperation(char *destination, char *source, int rec, Attr
 int ScheduleLinkOperation(char *destination, char *source, Attributes attr, Promise *pp, const ReportContext *report_context);
 int ScheduleEditOperation(char *filename, Attributes attr, Promise *pp, const ReportContext *report_context);
 
+int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dstat, Attributes attr, Promise *pp, const ReportContext *report_context);
+
 #endif

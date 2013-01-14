@@ -1,6 +1,31 @@
-AM_CFLAGS = $(NOVA_CFLAGS) @CFLAGS@ $(LIBACL_CFLAGS) $(LIBACL_CPPFLAGS) $(LIBXML2_CFLAGS) $(LIBXML2_CPPFLAGS) -I$(srcdir)/../libpromises
-
 sbin_PROGRAMS = cf-agent
+
+AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises \
+	$(NOVA_CPPFLAGS) \
+	$(LIBACL_CPPFLAGS) \
+	$(LIBXML_CPPFLAGS)
+
+AM_CFLAGS = @CFLAGS@ \
+	$(NOVA_CFLAGS) \
+	$(LIBACL_CFLAGS) \
+	$(LIBXML2_CFLAGS)
+
+AM_LDFLAGS = \
+	$(LIBVIRT_LDFLAGS) \
+	$(POSTGRESQL_LDFLAGS) \
+	$(MYSQL_LDFLAGS) \
+	$(LIBACL_LDFLAGS) \
+	$(LIBXML2_LDFLAGS)
+
+LDADD = ../libpromises/libpromises.la \
+	$(LIBVIRT_LIBS) \
+	$(POSTGRESQL_LIBS) \
+	$(MYSQL_LIBS) \
+	$(LIBACL_LIBS) \
+	$(LIBXML2_LIBS)
+if HAVE_NOVA
+LDADD += ../nova/libcfagent/libcfagent.la
+endif
 
 cf_agent_SOURCES = \
         cf-agent.c \
@@ -30,27 +55,9 @@ cf_agent_SOURCES = \
         verify_packages.c verify_packages.h \
         agentdiagnostic.c
 
-LDADD =
-if HAVE_NOVA
-LDADD += ../nova/libcfagent/libcfagent.la
-endif
-LDADD += ../libpromises/libpromises.la \
-	$(LIBXML2_LDFLAGS) $(LIBXML2_LIBS) \
-	$(LIBVIRT_LDFLAGS) $(LIBVIRT_LIBS) \
-	$(POSTGRESQL_LDFLAGS) $(POSTGRESQL_LIBS) \
-	$(MYSQL_LDFLAGS) $(MYSQL_LIBS) \
-	$(LIBACL_LDFLAGS) $(LIBACL_LIBS)
-
 CLEANFILES = *.gcno *.gcda
 
 #
 # Some basic clean ups
 #
 MOSTLYCLEANFILES = *~ *.orig *.rej
-
-#
-# Get everything removed down to where rebuilding requires:
-# "aclocal; autoconf; autoheader; automake --add-missing"
-# "configure; make; make install"
-#
-MAINTAINERCLEANFILES = Makefile.in conf.h.in stamp-h.in

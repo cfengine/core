@@ -1,22 +1,16 @@
-AM_CFLAGS = $(NOVA_CFLAGS) @CFLAGS@
-AM_YFLAGS = -d
-LDADD = libpromises.la
-
-.PRECIOUS: ../libutils/libutils.la
-
-../libutils/libutils.la:
-	$(MAKE) -C ../libutils $(AM_MAKEFLAGS) libutils.la
-
-# libpromises
-
 projlib_LTLIBRARIES = libpromises.la
 
-libpromises_la_LDFLAGS = -version-info 1:0:0 -no-undefined
+AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libutils \
+	$(NOVA_CPPFLAGS)
+
+AM_CFLAGS = @CFLAGS@ \
+	$(NOVA_CFLAGS)
+
+AM_YFLAGS = -d
+
+AM_LDFLAGS = -version-info 1:0:0 -no-undefined
+
 libpromises_la_LIBADD = ../libutils/libutils.la $(NOVA_LDADD)
-
-libpromises_la_CFLAGS = $(AM_CFLAGS)
-
-# Separate out a library. Note that cf3parse.y should be built before cf3lex.l
 
 libpromises_la_SOURCES = \
         cf3parse.y cf3parse.h \
@@ -129,9 +123,6 @@ endif
 
 BUILT_SOURCES = cf3parse.h
 
-# Automake need to be guided due to symlinking
-libpromises_la_DEPENDENCIES = ../libutils/libutils.la $(NOVA_LDADD)
-
 CLEANFILES = *.gcno *.gcda
 
 #
@@ -139,9 +130,12 @@ CLEANFILES = *.gcno *.gcda
 #
 MOSTLYCLEANFILES = *~ *.orig *.rej
 
-#
-# Get everything removed down to where rebuilding requires:
-# "aclocal; autoconf; autoheader; automake --add-missing"
-# "configure; make; make install"
-#
-MAINTAINERCLEANFILES = Makefile.in conf.h.in stamp-h.in
+# libutils dependency
+
+# Automake need to be guided due to symlinking
+DEPENDENCIES = ../libutils/libutils.la $(NOVA_LDADD)
+
+.PRECIOUS: ../libutils/libutils.la
+
+../libutils/libutils.la:
+	$(MAKE) -C ../libutils $(AM_MAKEFLAGS) libutils.la

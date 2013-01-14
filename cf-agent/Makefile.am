@@ -62,6 +62,14 @@ cf_agent_SOURCES = \
         verify_packages.c verify_packages.h \
         agentdiagnostic.c
 
+if HAVE_AVAHI_CLIENT
+if HAVE_AVAHI_COMMON
+cf_agent_SOURCES += \
+		findhub.c findhub_priv.h findhub.h \
+		load_avahi.c load_avahi.h
+endif
+endif
+
 CLEANFILES = *.gcno *.gcda
 
 #

@@ -59,7 +59,7 @@
 #include "nfs.h"
 #include "processes_select.h"
 
-#ifdef LINUX
+#ifdef HAVE_AVAHI_CLIENT_CLIENT_H || HAVE_AVAHI_COMMON_ADDRESS_H
 #include "findhub.h"
 #endif
 
@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
     int ret = 0;
 
     GenericAgentConfig *config = CheckOpts(argc, argv);
-
+#ifdef HAVE_AVAHI_CLIENT_CLIENT_H || HAVE_AVAHI_COMMON_ADDRESS_H
 	if (NULL_OR_EMPTY(POLICY_SERVER))
 	{
 		int ret = AutomaticBootstrap();
@@ -153,6 +153,7 @@ int main(int argc, char *argv[])
 			return 1;
 		}
 	}
+#endif
 
     ReportContext *report_context = OpenReports("agent");
     Policy *policy = GenericInitialize("agent", config, report_context);

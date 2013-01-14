@@ -191,6 +191,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             SelfDiagnostic();
             exit(0);
 		case 'A':
+#ifdef HAVE_AVAHI_CLIENT_CLIENT_H || HAVE_AVAHI_COMMON_ADDRESS_H
 			printf("Generating Avahi configuration file.\n");
 			fout = fopen("/etc/avahi/services/cfengine-hub.service","w+");
 			if (fout == NULL)
@@ -218,6 +219,9 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
 			cf_popen("/etc/init.d/avahi-daemon restart", "r");
 			printf("Avahi configuration file generated successfuly.\n");
 			exit(0);
+#else
+            printf("This option can only be used when avahi-daemon and libavahi are installed on the machine.\n");
+#endif
 
         default:
             Syntax("cf-serverd - cfengine's server agent", OPTIONS, HINTS, ID);

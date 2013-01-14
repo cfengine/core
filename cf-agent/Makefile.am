@@ -1,9 +1,11 @@
-AM_CFLAGS = $(NOVA_CFLAGS) @CFLAGS@ -I$(srcdir)/../libpromises
+AM_CFLAGS = $(NOVA_CFLAGS) @CFLAGS@ $(LIBACL_CFLAGS) $(LIBACL_CPPFLAGS) -I$(srcdir)/../libpromises
 
 sbin_PROGRAMS = cf-agent
 
 cf_agent_SOURCES = \
         cf-agent.c \
+        cf_acl.c cf_acl.h \
+        acl_posix.c acl_posix.h \
         cf_sql.c cf_sql.h \
         nfs.c nfs.h \
         verify_files.c \
@@ -36,7 +38,8 @@ LDADD += ../libpromises/libpromises.la \
 	$(LIBXML2_LDFLAGS) $(LIBXML2_LIBS) \
 	$(LIBVIRT_LDFLAGS) $(LIBVIRT_LIBS) \
 	$(POSTGRESQL_LDFLAGS) $(POSTGRESQL_LIBS) \
-	$(MYSQL_LDFLAGS) $(MYSQL_LIBS)
+	$(MYSQL_LDFLAGS) $(MYSQL_LIBS) \
+	$(LIBACL_LDFLAGS) $(LIBACL_LIBS)
 
 CLEANFILES = *.gcno *.gcda
 

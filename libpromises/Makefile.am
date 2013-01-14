@@ -23,8 +23,6 @@ libpromises_la_SOURCES = \
         cf3lex.l \
         addr_lib.c addr_lib.h \
         alphalist.c alphalist.h \
-        cf_acl.c cf_acl.h \
-        acl_posix.c acl_posix.h \
         args.c args.h \
         assoc.c assoc.h \
         attributes.c attributes.h \

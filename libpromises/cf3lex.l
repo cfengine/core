@@ -35,7 +35,7 @@
 #include "env_context.h"
 #include "parser_state.h"
 #include "files_names.h"
-#include "unix.h"
+#include "vars.h"
 
 /* yyinput/input are generated and unused */
 

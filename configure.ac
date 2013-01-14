@@ -58,7 +58,8 @@ if test "x$with_pthreads" != x && test "x$with_pthreads" != "xyes" && test "x$wi
    CFLAGS="$CFLAGS -I$with_pthreads/include"
 fi
 
-ACX_PTHREAD
+ACX_PTHREAD([],
+            [AC_MSG_ERROR(pthread-compatible library is required to build CFEngine)])
 
 CC="$PTHREAD_CC"
 CFLAGS="$PTHREAD_CFLAGS $CFLAGS"
@@ -692,78 +693,49 @@ fi
 case "$target_os" in
 
    solaris2.8|solaris2.9)
-	AC_DEFINE(SOLARIS, [], [Solaris build])
         AC_DEFINE(_XOPEN_SOURCE, 500, [UNIX 98])
         AC_DEFINE(__EXTENSIONS__, 1, [Extended UNIX 98 interfaces])
         LIBS="$LIBS -lelf -lsec"
         ;;
    solaris2.10|solaris2.11)
-        AC_DEFINE(SOLARIS, [], [Solaris build])
         AC_DEFINE(_XOPEN_SOURCE, 600, [SUSv3])
         AC_DEFINE(__EXTENSIONS__, 1, [Extended UNIX 98 interfaces])
         LIBS="$LIBS -lelf -lsec";;
    hpux*|hp-ux*) 
-
-	AC_DEFINE(HPuUX, [], [HP/UX build])
 	AC_CHECK_LIB(PW, main)
         ;;
    aix*)
-	AC_DEFINE(AIX, [], [AIX build])
         CPPFLAGS="$CPPFLAGS -w"
         ;;
    linux*)
-	AC_DEFINE(LINUX, [], [Linux build])
 	AC_CHECK_LIB(nss_nis, yp_get_default_domain)
         ;;
    freebsd*|dragonfly*)
-	AC_DEFINE(FREEBSD, [], [FreeBSD build])
         ;;
    netbsd*)
-	AC_DEFINE(NETBSD, [], [NetBSD build])
         ;;
    unicos*)
-	AC_DEFINE(CFCRAY, [], [Cray build])
         ;;
-
    cray*)
-	AC_DEFINE(CFCRAY)
         ;;
-
    qnx*)
-        AC_DEFINE(CFQNX, [], [QNX build])
         ;;
-
    openbsd*|obsd*)
-	AC_DEFINE(OPENBSD, [], [OpenBSD build])
         ;;
-
    gnu*)
-	AC_DEFINE(CFGNU, [], [GNU build])
         ;;
-
    sysv4.2MP|unix_sv*)
-	AC_DEFINE(UNIXWARE, [], [Unixware build])
         ;;
-
    cygwin*)
-        AC_DEFINE(CFCYG, 1, [Cygwin NT build])
-        AC_DEFINE(NT, [], [NT build])
         ;;
-
    mingw*)
         AC_DEFINE(MINGW, 1, [Native NT build])
-        AC_DEFINE(NT)
         LIBS="$LIBS -liphlpapi -lws2_32 -lpsapi -lole32 -loleaut32 -luuid"
         ;;
-
    sco*)
-        AC_DEFINE(SCO, [], [SCO build])
         ;;
-
    darwin*)
-        AC_DEFINE(DARWIN, [], [Darwin build])
         ;;
-
    *)
 	AC_MSG_ERROR(Unknown system type $target_os)
         ;;

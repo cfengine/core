@@ -42,7 +42,7 @@ static char *cf_format_strtimestamp(struct tm *tm, char *buf);
 /* We assume that s is at least MAX_FILENAME large.
  * MapName() is thread-safe, but the argument is modified. */
 
-#ifdef NT
+#ifdef _WIN32
 # if defined(__MINGW32__)
 
 char *MapNameCopy(const char *s)
@@ -115,7 +115,7 @@ char *MapName(char *s)
 # else/* !__MINGW32__ && !__CYGWIN__ */
 #  error Unknown NT-based compilation environment
 # endif/* __MINGW32__ || __CYGWIN__ */
-#else /* !NT */
+#else /* !_WIN32 */
 
 char *MapName(char *s)
 {
@@ -127,7 +127,7 @@ char *MapNameCopy(const char *s)
     return xstrdup(s);
 }
 
-#endif /* NT */
+#endif /* !_WIN32 */
 
 /*********************************************************/
 
@@ -192,13 +192,16 @@ int endnetgrent(void)
 /* UNAME is missing on some weird OSes                     */
 /***********************************************************/
 
+# ifdef __MINGW32__
+
 int uname(struct utsname *sys)
-# ifdef MINGW
 {
     return NovaWin_uname(sys);
 }
 
-# else                          /* NOT MINGW */
+# else /* !__MINGW32__ */
+
+int uname(struct utsname *sys)
 {
     char buffer[CF_BUFSIZE], *sp;
 
@@ -237,7 +240,7 @@ int uname(struct utsname *sys)
     return (0);
 }
 
-# endif/* NOT MINGW */
+# endif /* !__MINGW32__ */
 
 #endif /* NOT HAVE_UNAME */
 
@@ -302,7 +305,7 @@ int setegid(gid_t gid)
 
 int IsPrivileged()
 {
-#ifdef NT
+#ifdef _WIN32
     return true;
 #else
     return (getuid() == 0);
@@ -390,7 +393,7 @@ int cf_closesocket(int sd)
 {
     int res;
 
-#ifdef MINGW
+#ifdef __MINGW32__
     res = closesocket(sd);
 #else
     res = close(sd);
@@ -408,7 +411,7 @@ int cf_closesocket(int sd)
 
 int cf_mkdir(const char *path, mode_t mode)
 {
-#ifdef MINGW
+#ifdef __MINGW32__
     return NovaWin_mkdir(path, mode);
 #else
     return mkdir(path, mode);
@@ -419,7 +422,7 @@ int cf_mkdir(const char *path, mode_t mode)
 
 int cf_chmod(const char *path, mode_t mode)
 {
-#ifdef MINGW
+#ifdef __MINGW32__
     return NovaWin_chmod(path, mode);
 #else
     return chmod(path, mode);
@@ -430,7 +433,7 @@ int cf_chmod(const char *path, mode_t mode)
 
 int cf_rename(const char *oldpath, const char *newpath)
 {
-#ifdef MINGW
+#ifdef __MINGW32__
     return NovaWin_rename(oldpath, newpath);
 #else
     return rename(oldpath, newpath);
@@ -439,12 +442,12 @@ int cf_rename(const char *oldpath, const char *newpath)
 
 /*******************************************************************/
 
-#ifdef MINGW                    // FIXME: Timeouts ignored on windows for now...
+#ifdef __MINGW32__                    // FIXME: Timeouts ignored on windows for now...
 unsigned int alarm(unsigned int seconds)
 {
     return 0;
 }
-#endif /* MINGW */
+#endif /* __MINGW32__ */
 
 /*******************************************************************/
 
@@ -457,14 +460,14 @@ int LinkOrCopy(const char *from, const char *to, int sym)
  **/
 {
 
-#ifdef MINGW                    // only copy on Windows for now
+#ifdef __MINGW32__                    // only copy on Windows for now
 
     if (!CopyFile(from, to, TRUE))
     {
         return false;
     }
 
-#else /* NOT MINGW */
+#else /* !__MINGW32__ */
 
     if (sym)
     {
@@ -481,7 +484,7 @@ int LinkOrCopy(const char *from, const char *to, int sym)
         }
     }
 
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
     return true;
 }

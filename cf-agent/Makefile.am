@@ -19,6 +19,9 @@ cf_agent_SOURCES = \
         files_edit.c files_edit.h \
         files_editline.c \
         files_editxml.c \
+        files_links.c files_links.h \
+        files_operators.c files_operators.h \
+        files_repository.c files_repository.h \
         files_select.c \
         vercmp_internal.c vercmp_internal.h \
         vercmp.c vercmp.h \

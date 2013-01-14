@@ -212,7 +212,6 @@ int FullTextMatch(const char *regptr, const char *cmpptr)
     fail();
 }
 
-#if defined(HAVE_PTHREAD)
 pthread_mutex_t *cft_lock;
 pthread_mutex_t *cft_system;
 int ThreadLock(pthread_mutex_t *name)
@@ -224,7 +223,6 @@ int ThreadUnlock(pthread_mutex_t *name)
 {
     return true;
 }
-#endif
 
 void ShowFnCall(FILE *fout, const FnCall *fp)
 {

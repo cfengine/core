@@ -36,7 +36,7 @@
 #include "expand.h"
 #include "transaction.h"
 #include "scope.h"
-#include "unix.h"
+#include "vars.h"
 #include "attributes.h"
 #include "cfstream.h"
 #include "communication.h"

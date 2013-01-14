@@ -932,11 +932,15 @@ int ScheduleAgentOperations(Bundle *bp, const ReportContext *report_context)
 
 /*********************************************************************/
 
+#ifdef __MINGW32__
+
 static void CheckAgentAccess(Rlist *list)
-#ifdef MINGW
 {
 }
-#else                           /* NOT MINGW */
+
+#else
+
+static void CheckAgentAccess(Rlist *list)
 {
     Rlist *rp, *rp2;
     struct stat sb;
@@ -991,7 +995,7 @@ static void CheckAgentAccess(Rlist *list)
 
     FatalError("You are denied access to run this policy");
 }
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
 /*********************************************************************/
 
@@ -1182,13 +1186,13 @@ static int NewTypeContext(enum typesequence type)
 
     case kp_storage:
 
-#ifndef MINGW                   // TODO: Run if implemented on Windows
+#ifndef __MINGW32__                   // TODO: Run if implemented on Windows
         if (MOUNTEDFSLIST != NULL)
         {
             DeleteMountInfo(MOUNTEDFSLIST);
             MOUNTEDFSLIST = NULL;
         }
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
         break;
 
     default:
@@ -1223,7 +1227,7 @@ static void DeleteTypeContext(Policy *policy, enum typesequence type, const Repo
         break;
 
     case kp_storage:
-#ifndef MINGW
+#ifndef __MINGW32__
     {
         Attributes a = { {0} };
         CfOut(cf_verbose, "", " -> Number of changes observed in %s is %d\n", VFSTAB[VSYSTEMHARDCLASS], FSTAB_EDITS);
@@ -1245,7 +1249,7 @@ static void DeleteTypeContext(Policy *policy, enum typesequence type, const Repo
             MountAll();
         }
     }
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
         break;
 
     case kp_packages:
@@ -1310,11 +1314,11 @@ static void ClassBanner(enum typesequence type)
 /* Thread context                                             */
 /**************************************************************/
 
+#ifdef __MINGW32__
+
 static void ParallelFindAndVerifyFilesPromises(Promise *pp, const ReportContext *report_context)
 {
     int background = GetBooleanConstraint("background", pp);
-
-#ifdef MINGW
 
     if (background)
     {
@@ -1322,9 +1326,13 @@ static void ParallelFindAndVerifyFilesPromises(Promise *pp, const ReportContext 
     }
 
     FindAndVerifyFilesPromises(pp, report_context);
+}
 
-#else /* NOT MINGW */
+#else /* !__MINGW32__ */
 
+static void ParallelFindAndVerifyFilesPromises(Promise *pp, const ReportContext *report_context)
+{
+    int background = GetBooleanConstraint("background", pp);
     pid_t child = 1;
 
     if (background && (CFA_BACKGROUND < CFA_BACKGROUND_LIMIT))
@@ -1354,9 +1362,9 @@ static void ParallelFindAndVerifyFilesPromises(Promise *pp, const ReportContext 
     {
         FindAndVerifyFilesPromises(pp, report_context);
     }
-
-#endif /* NOT MINGW */
 }
+
+#endif /* !__MINGW32__ */
 
 /**************************************************************/
 

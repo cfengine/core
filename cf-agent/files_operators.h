@@ -28,19 +28,11 @@
 
 #include "cf3.defs.h"
 
-FILE *CreateEmptyStream(void);
 int MoveObstruction(char *from, Attributes attr, Promise *pp, const ReportContext *report_context);
-int MakeParentDirectory(char *parentandchild, int force, const ReportContext *report_context);
-int MakeParentDirectory2(char *parentandchild, int force, const ReportContext *report_context, bool enforce_promise);
-void RotateFiles(char *name, int number);
-void CreateEmptyFile(char *name);
-int FileSanityChecks(char *path, Attributes a, Promise *pp);
 
 void LogHashChange(char *file, FileState status, char *msg, Promise *pp);
 
 typedef bool (*SaveCallbackFn)(const char *dest_filename, const char *orig_filename, void *param, Attributes a, Promise *pp);
 int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attributes a, Promise *pp, const ReportContext *report_context);
-
-int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, const Promise *pp);
 
 #endif

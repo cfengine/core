@@ -31,6 +31,7 @@
 #include "transaction.h"
 #include "logging.h"
 #include "exec_tools.h"
+#include "unix.h"
 
 static const size_t QUEUESIZE = 50;
 int NO_FORK = false;

@@ -29,9 +29,7 @@
 #include "promises.h"
 #include "dir.h"
 #include "files_names.h"
-#include "files_operators.h"
 #include "files_hashes.h"
-#include "files_repository.h"
 #include "files_copy.h"
 #include "item_lib.h"
 #include "vars.h"
@@ -44,7 +42,7 @@
 
 int cfstat(const char *path, struct stat *buf)
 {
-#ifdef MINGW
+#ifdef __MINGW32__
     return NovaWin_stat(path, buf);
 #else
     return stat(path, buf);

@@ -447,12 +447,16 @@ mode_t GetOctalConstraint(const char *lval, const Promise *pp)
 
 /*****************************************************************************/
 
+#ifndef __MINGW32__
+
 uid_t GetUidConstraint(const char *lval, const Promise *pp)
-#ifdef MINGW
 {                               // we use sids on windows instead
     return CF_SAME_OWNER;
 }
-#else                           /* NOT MINGW */
+
+#else /* !__MINGW32__ */
+
+uid_t GetUidConstraint(const char *lval, const Promise *pp)
 {
     Constraint *cp;
     int retval = CF_SAME_OWNER;
@@ -490,19 +494,24 @@ uid_t GetUidConstraint(const char *lval, const Promise *pp)
 
     return retval;
 }
-#endif /* NOT MINGW */
+
+#endif /* !__MINGW32__ */
 
 /*****************************************************************************/
 
+#ifdef __MINGW32__
+
 gid_t GetGidConstraint(char *lval, const Promise *pp)
-#ifdef MINGW
 {                               // not applicable on windows: processes have no group
     return CF_SAME_GROUP;
 }
-#else
+
+#else /* !__MINGW32__ */
+
+gid_t GetGidConstraint(char *lval, const Promise *pp)
 {
     Constraint *cp;
-    int retval = CF_SAME_OWNER;
+    int retval = CF_SAME_GROUP;
     char buffer[CF_MAXVARSIZE];
 
     for (cp = pp->conlist; cp != NULL; cp = cp->next)
@@ -537,7 +546,7 @@ gid_t GetGidConstraint(char *lval, const Promise *pp)
 
     return retval;
 }
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
 /*****************************************************************************/
 

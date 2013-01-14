@@ -411,8 +411,16 @@ static FnCallResult FnCallIP2Host(FnCall *fp, Rlist *finalargs)
 
 /*********************************************************************/
 
+#ifdef __MINGW32__
+
 static FnCallResult FnCallGetUid(FnCall *fp, Rlist *finalargs)
-#ifndef MINGW
+{
+    return (FnCallResult) { FNCALL_FAILURE };
+}
+
+#else /* !__MINGW32__ */
+
+static FnCallResult FnCallGetUid(FnCall *fp, Rlist *finalargs)
 {
     struct passwd *pw;
 
@@ -430,16 +438,21 @@ static FnCallResult FnCallGetUid(FnCall *fp, Rlist *finalargs)
         return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
     }
 }
-#else                           /* MINGW */
-{
-    return (FnCallResult) { FNCALL_FAILURE };
-}
-#endif /* MINGW */
+
+#endif /* !__MINGW32__ */
 
 /*********************************************************************/
 
+#ifdef __MINGW32__
+
 static FnCallResult FnCallGetGid(FnCall *fp, Rlist *finalargs)
-#ifndef MINGW
+{
+    return (FnCallResult) { FNCALL_FAILURE };
+}
+
+#else /* !__MINGW32__ */
+
+static FnCallResult FnCallGetGid(FnCall *fp, Rlist *finalargs)
 {
     struct group *gr;
 
@@ -457,11 +470,8 @@ static FnCallResult FnCallGetGid(FnCall *fp, Rlist *finalargs)
         return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), CF_SCALAR } };
     }
 }
-#else                           /* MINGW */
-{
-    return (FnCallResult) { FNCALL_FAILURE };
-}
-#endif /* MINGW */
+
+#endif /* __MINGW32__ */
 
 /*********************************************************************/
 
@@ -2151,11 +2161,10 @@ static FnCallResult FnCallTranslatePath(FnCall *fp, Rlist *finalargs)
 
 /*********************************************************************/
 
+#if defined(__MINGW32__)
+
 static FnCallResult FnCallRegistryValue(FnCall *fp, Rlist *finalargs)
 {
-/* begin fn specific content */
-
-#if defined(__MINGW32__)
     char buffer[CF_BUFSIZE] = "";
 
     if (GetRegistryValue(ScalarValue(finalargs), ScalarValue(finalargs->next), buffer, sizeof(buffer)))
@@ -2166,10 +2175,17 @@ static FnCallResult FnCallRegistryValue(FnCall *fp, Rlist *finalargs)
     {
         return (FnCallResult) { FNCALL_FAILURE };
     }
-#else
     return (FnCallResult) { FNCALL_FAILURE };
-#endif
 }
+
+#else /* !__MINGW32__ */
+
+static FnCallResult FnCallRegistryValue(FnCall *fp, Rlist *finalargs)
+{
+    return (FnCallResult) { FNCALL_FAILURE };
+}
+
+#endif /* !__MINGW32__ */
 
 /*********************************************************************/
 
@@ -3634,6 +3650,7 @@ static FnCallResult FnCallDiskFree(FnCall *fp, Rlist *finalargs)
 }
 
 #if !defined(__MINGW32__)
+
 static FnCallResult FnCallUserExists(FnCall *fp, Rlist *finalargs)
 {
     char buffer[CF_BUFSIZE];

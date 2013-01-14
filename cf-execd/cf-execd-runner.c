@@ -48,7 +48,6 @@ static int Dialogue(int sd, char *s);
 
 /******************************************************************************/
 
-#if defined(HAVE_PTHREAD)
 # if defined(__MINGW32__)
 
 static void *ThreadUniqueName(void)
@@ -64,18 +63,10 @@ static void *ThreadUniqueName(void)
 }
 
 # endif /* __MINGW32__ */
-#else /* HAVE_PTHREAD */
-
-static void *ThreadUniqueName(void)
-{
-    return NULL;
-}
-
-#endif /* HAVE_PTHREAD */
 
 static const char *TwinFilename(void)
 {
-#if defined(__CYGWIN__) || defined(__MINGW32__)
+#if defined(_WIN32)
     return "bin-twin/cf-agent.exe";
 #else
     return "bin/cf-twin";
@@ -84,7 +75,7 @@ static const char *TwinFilename(void)
 
 static const char *AgentFilename(void)
 {
-#if defined(__CYGWIN__) || defined(__MINGW32__)
+#if defined(_WIN32)
     return "bin/cf-agent.exe";
 #else
     return "bin/cf-agent";
@@ -403,7 +394,7 @@ static void MailResult(const ExecConfig *config, char *file)
     struct sockaddr_in raddr;
     struct servent *server;
     struct stat statbuf;
-#if defined LINUX || defined NETBSD || defined FREEBSD || defined OPENBSD
+#if defined __linux__ || defined __NetBSD__ || defined __FreeBSD__ || defined __OpenBSD__
     time_t now = time(NULL);
 #endif
     FILE *fp;
@@ -574,7 +565,7 @@ static void MailResult(const ExecConfig *config, char *file)
 
     send(sd, vbuff, strlen(vbuff), 0);
 
-#if defined LINUX || defined NETBSD || defined FREEBSD || defined OPENBSD
+#if defined __linux__ || defined __NetBSD__ || defined __FreeBSD__ || defined __OpenBSD__
     strftime(vbuff, CF_BUFSIZE, "Date: %a, %d %b %Y %H:%M:%S %z\r\n", localtime(&now));
     send(sd, vbuff, strlen(vbuff), 0);
 #endif

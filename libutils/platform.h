@@ -38,7 +38,7 @@
 
 #define _GNU_SOURCE 1
 
-#ifdef NT
+#ifdef _WIN32
 # define MAX_FILENAME 227
 # define WINVER 0x501
 #if defined(__CYGWIN__)
@@ -49,7 +49,7 @@
 # define MAX_FILENAME 254
 #endif
 
-#ifdef MINGW
+#ifdef __MINGW32__
 # include <winsock2.h>
 # include <windows.h>
 # include <accctrl.h>
@@ -159,7 +159,7 @@ struct utsname
 
 #include <signal.h>
 
-#ifdef MINGW
+#ifdef __MINGW32__
 # define LOG_LOCAL0      (16<<3)
 # define LOG_LOCAL1      (17<<3)
 # define LOG_LOCAL2      (18<<3)
@@ -171,11 +171,11 @@ struct utsname
 # define LOG_USER        (1<<3)
 # define LOG_DAEMON      (3<<3)
 
-#else /* NOT MINGW */
+#else /* !__MINGW32__ */
 # include <syslog.h>
 #endif
 
-#ifdef AIX
+#ifdef _AIX
 # ifndef ps2
 #  include <sys/statfs.h>
 # endif
@@ -183,7 +183,7 @@ struct utsname
 # include <sys/systemcfg.h>
 #endif
 
-#ifdef SOLARIS
+#ifdef __sun
 # include <sys/statvfs.h>
 # undef nfstype
 
@@ -234,19 +234,19 @@ size_t strlcat(char *destination, const char *source, size_t size);
 char *strsep(char **stringp, const char *delim);
 #endif
 
-#ifdef DARWIN
+#ifdef __APPLE__
 # include <sys/malloc.h>
 # include <sys/paths.h>
 #endif
 
 #ifdef HAVE_SYS_MALLOC_H
-# ifdef DARWIN
+# ifdef __APPLE__
 #  include <sys/malloc.h>
 #  include <sys/paths.h>
 # endif
 #else
 # ifdef HAVE_MALLOC_H
-#  ifndef OPENBSD
+#  ifndef __OpenBSD__
 #   ifdef __FreeBSD__
 #    include <stdlib.h>
 #   else
@@ -262,7 +262,7 @@ char *strsep(char **stringp, const char *delim);
 # include <sys/vfs.h>
 #endif
 
-#ifdef hpux
+#ifdef __hpux
 # include <sys/dirent.h>
 #endif
 
@@ -285,7 +285,7 @@ char *strsep(char **stringp, const char *delim);
 # include <sys/time.h>
 #endif
 
-#ifndef MINGW
+#ifndef __MINGW32__
 # include <pwd.h>
 # include <grp.h>
 #endif
@@ -294,7 +294,7 @@ char *strsep(char **stringp, const char *delim);
 # include <sys/sockio.h>
 #endif
 
-#ifndef MINGW
+#ifndef __MINGW32__
 # include <sys/socket.h>
 # include <sys/ioctl.h>
 # include <net/if.h>
@@ -302,14 +302,14 @@ char *strsep(char **stringp, const char *delim);
 # include <netinet/tcp.h>
 # include <arpa/inet.h>
 # include <netdb.h>
-# if !defined LINUX && !defined NT
+# if !defined __linux__ && !defined _WIN32
 #  include <sys/protosw.h>
 #  undef sgi
 #  include <net/route.h>
 # endif
 #endif
 
-#ifdef LINUX
+#ifdef __linux__
 # ifdef __GLIBC__
 #  include <net/route.h>
 #  include <netinet/in.h>
@@ -331,7 +331,6 @@ typedef int clockid_t;
 typedef int socklen_t;
 #endif
 
-#if defined(HAVE_PTHREAD)
 # define __USE_GNU 1
 
 # include <pthread.h>
@@ -346,8 +345,6 @@ typedef int socklen_t;
 # if !HAVE_DECL_PTHREAD_ATTR_SETSTACKSIZE
 int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize);
 # endif
-
-#endif
 
 #ifdef HAVE_SCHED_H
 # include <sched.h>
@@ -380,7 +377,7 @@ void srand48(long seed);
 #if !HAVE_DECL_CLOCK_GETTIME
 int clock_gettime(clockid_t clock_id, struct timespec *tp);
 #endif
-#ifdef MINGW
+#ifdef __MINGW32__
 unsigned int alarm(unsigned int seconds);
 #endif
 #if !HAVE_DECL_REALPATH
@@ -480,7 +477,7 @@ char *strrstr(const char *haystack, const char *needle);
 /*  Windows                                                        */
 /*******************************************************************/
 
-#ifdef MINGW
+#ifdef __MINGW32__
 # define MAXHOSTNAMELEN 256     // always adequate: http://msdn.microsoft.com/en-us/library/ms738527(VS.85).aspx
 
 // as seen in in_addr struct in winsock.h
@@ -518,7 +515,7 @@ struct timespec
 };
 # endif/* NOT _TIMESPEC_DEFINED */
 
-#endif /* MINGW */
+#endif /* __MINGW32__ */
 
 #ifndef ERESTARTSYS
 # define ERESTARTSYS EINTR
@@ -564,7 +561,7 @@ struct timespec
 /* Some systems, like Sequents, return st_blksize of 0 on pipes. */
 # define ST_BLKSIZE(statbuf) ((statbuf).st_blksize > 0 \
                                ? (statbuf).st_blksize : DEV_BSIZE)
-# if defined(hpux) || defined(__hpux__) || defined(__hpux)
+# if defined(__hpux)
 /* HP-UX counts st_blocks in 1024-byte units.
    This loses when mixing HP-UX and BSD filesystems with NFS.  */
 #  define ST_NBLOCKS(statbuf) ((statbuf).st_blocks * 2)

@@ -61,11 +61,8 @@ libpromises_la_SOURCES = \
         files_hashes.c files_hashes.h \
         files_interfaces.c files_interfaces.h \
         files_lib.c files_lib.h \
-        files_links.c files_links.h \
         files_names.c files_names.h \
-        files_operators.c files_operators.h \
         files_properties.c files_properties.h \
-        files_repository.c files_repository.h \
         fncall.c fncall.h \
         full_write.c \
         generic_agent.c generic_agent.h \

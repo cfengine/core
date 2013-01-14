@@ -49,7 +49,7 @@
 #define CF_IFREQ 2048           /* Reportedly the largest size that does not segfault 32/64 bit */
 #define CF_IGNORE_INTERFACES "ignore_interfaces.rx"
 
-#ifndef MINGW
+#ifndef __MINGW32__
 
 # ifdef HAVE_STRUCT_SOCKADDR_SA_LEN
 #  ifdef _SIZEOF_ADDR_IFREQ
@@ -326,25 +326,6 @@ int ShellCommandReturnsZero(const char *comm, int useshell)
 
 /*********************************************************************/
 
-void CreateEmptyFile(char *name)
-{
-    int tempfd;
-
-    if (unlink(name) == -1)
-    {
-        if (errno != ENOENT)
-        {
-            CfDebug("Unable to remove existing file %s: %s\n", name, strerror(errno));
-        }
-    }
-
-    if ((tempfd = open(name, O_CREAT | O_EXCL | O_WRONLY, 0600)) < 0)
-    {
-        CfOut(cf_error, "open", "Couldn't open a file %s\n", name);
-    }
-
-    close(tempfd);
-}
 
 /******************************************************************/
 
@@ -829,4 +810,4 @@ static bool IgnoreInterface(char *name)
 
 
 
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */

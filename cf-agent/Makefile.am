@@ -1,4 +1,4 @@
-AM_CFLAGS = $(NOVA_CFLAGS) @CFLAGS@ $(LIBACL_CFLAGS) $(LIBACL_CPPFLAGS) -I$(srcdir)/../libpromises
+AM_CFLAGS = $(NOVA_CFLAGS) @CFLAGS@ $(LIBACL_CFLAGS) $(LIBACL_CPPFLAGS) $(LIBXML2_CFLAGS) $(LIBXML2_CPPFLAGS) -I$(srcdir)/../libpromises
 
 sbin_PROGRAMS = cf-agent
 

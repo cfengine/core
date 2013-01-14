@@ -730,7 +730,6 @@ case "$target_os" in
         ;;
    mingw*)
         AC_DEFINE(MINGW, 1, [Native NT build])
-        LIBS="$LIBS -liphlpapi -lws2_32 -lpsapi -lole32 -loleaut32 -luuid"
         ;;
    sco*)
         ;;

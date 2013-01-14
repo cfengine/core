@@ -1,15 +1,12 @@
-AM_CFLAGS = $(NOVA_CFLAGS) @CFLAGS@
-
-# libcfpub
-
-.PRECIOUS: ../pub/libcfpub.la
-
-../pub/libcfpub.la:
-	$(MAKE) -C ../pub $(AM_MAKEFLAGS) libcfpub.la
-
-# libutils
-
 noinst_LTLIBRARIES = libutils.la
+
+AM_CPPFLAGS = @CPPFLAGS@ \
+	$(NOVA_CPPFLAGS)
+
+AM_CFLAGS = @CFLAGS@ \
+	$(NOVA_CFLAGS)
+
+AM_LDFLAGS =
 
 libutils_la_LIBADD = ../pub/libcfpub.la
 
@@ -49,4 +46,11 @@ MOSTLYCLEANFILES = *~ *.orig *.rej
 # "aclocal; autoconf; autoheader; automake --add-missing"
 # "configure; make; make install"
 #
-MAINTAINERCLEANFILES = Makefile.in conf.h.in stamp-h.in
+MAINTAINERCLEANFILES = conf.h.in
+
+# libcfpub dependency
+
+.PRECIOUS: ../pub/libcfpub.la
+
+../pub/libcfpub.la:
+	$(MAKE) -C ../pub $(AM_MAKEFLAGS) libcfpub.la

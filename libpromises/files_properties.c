@@ -23,7 +23,7 @@
 
 */
 
-#include "cf3.defs.h"
+#include "files_properties.h"
 
 #include "files_names.h"
 #include "files_interfaces.h"
@@ -37,7 +37,7 @@ void AddFilenameToListOfSuspicious(const char *pattern)
     PrependItem(&SUSPICIOUSLIST, pattern, NULL);
 }
 
-bool SuspiciousFile(const char *filename)
+static bool SuspiciousFile(const char *filename)
 {
     return IsItemIn(SUSPICIOUSLIST, filename);
 }
@@ -154,27 +154,4 @@ int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp)
     CfOut(cf_verbose, "", "[%s] has size %ld and full mode %o\n", nodename, (unsigned long) (statbuf.st_size),
           (unsigned int) (statbuf.st_mode));
     return true;
-}
-
-/********************************************************************/
-
-void SetSearchDevice(struct stat *sb, Promise *pp)
-{
-    CfDebug("Registering root device as %" PRIdMAX "\n", (intmax_t) sb->st_dev);
-    pp->rootdevice = sb->st_dev;
-}
-
-/********************************************************************/
-
-int DeviceBoundary(struct stat *sb, Promise *pp)
-{
-    if (sb->st_dev == pp->rootdevice)
-    {
-        return false;
-    }
-    else
-    {
-        CfOut(cf_verbose, "", "Device change from %jd to %jd\n", (intmax_t) pp->rootdevice, (intmax_t) sb->st_dev);
-        return true;
-    }
 }

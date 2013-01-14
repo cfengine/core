@@ -9,7 +9,12 @@ mock_package_manager_LDADD = ../../libpromises/libpromises.la
 EXTRA_DIST = default.cf.sub testall
 
 TESTS = testall
-TESTS_ENVIRONMENT = env AGENT=`pwd`/../../cf-agent/cf-agent CF_PROMISES=`pwd`/../../cf-promises/cf-promises MOCK_PACKAGE_MANAGER=`pwd`/mock-package-manager
+TESTS_ENVIRONMENT = env \
+	AGENT=`pwd`/../../cf-agent/cf-agent \
+	CF_PROMISES=`pwd`/../../cf-promises/cf-promises \
+	CF_SERVERD=`pwd`/../../cf-serverd/cf-serverd \
+	CF_KEY=`pwd`/../../cf-key/cf-key \
+	MOCK_PACKAGE_MANAGER=`pwd`/mock-package-manager
 
 dist-hook:
 	tar -c -f - [0-9]* | tar -x -C $(distdir) -f -

@@ -33,7 +33,6 @@
 #include "files_lib.h"
 #include "files_names.h"
 #include "files_interfaces.h"
-#include "files_operators.h"
 #include "files_hashes.h"
 #include "parser.h"
 #include "dbm_api.h"
@@ -529,7 +528,7 @@ void InitializeGA(const ReportContext *report_context)
 
 /* On windows, use 'binary mode' as default for files */
 
-#ifdef MINGW
+#ifdef __MINGW32__
     _fmode = _O_BINARY;
 #endif
 
@@ -979,7 +978,7 @@ static void Cf3ParseFile(Policy *policy, char *filename, bool check_not_writable
         exit(1);
     }
 
-#ifndef NT
+#ifndef _WIN32
     if (check_not_writable_by_others && (statbuf.st_mode & (S_IWGRP | S_IWOTH)))
     {
         CfOut(cf_error, "", "File %s (owner %ju) is writable by others (security exception)", wfilename, (uintmax_t)statbuf.st_uid);
@@ -1164,13 +1163,13 @@ static void CheckWorkingDirectories(const ReportContext *report_context)
     }
     else
     {
-#ifndef MINGW
+#ifndef __MINGW32__
         if (statbuf.st_mode & 022)
         {
             CfOut(cf_error, "", "UNTRUSTED: State directory %s (mode %jo) was not private!\n", CFWORKDIR,
                   (uintmax_t)(statbuf.st_mode & 0777));
         }
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
     }
 
     CfOut(cf_verbose, "", "Checking integrity of the module directory\n");
@@ -1191,13 +1190,13 @@ static void CheckWorkingDirectories(const ReportContext *report_context)
     }
     else
     {
-#ifndef MINGW
+#ifndef __MINGW32__
         if (statbuf.st_mode & 022)
         {
             CfOut(cf_error, "", "UNTRUSTED: Module directory %s (mode %jo) was not private!\n", vbuff,
                   (uintmax_t)(statbuf.st_mode & 0777));
         }
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
     }
 
     CfOut(cf_verbose, "", "Checking integrity of the PKI directory\n");
@@ -1213,13 +1212,13 @@ static void CheckWorkingDirectories(const ReportContext *report_context)
     }
     else
     {
-#ifndef MINGW
+#ifndef __MINGW32__
         if (statbuf.st_mode & 077)
         {
             FatalError("UNTRUSTED: Private key directory %s%cppkeys (mode %jo) was not private!\n", CFWORKDIR,
                        FILE_SEPARATOR, (uintmax_t)(statbuf.st_mode & 0777));
         }
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
     }
 }
 
@@ -1579,10 +1578,6 @@ static void SetAuditVersion()
     switch (GetVariable("control_common", "cfinputs_version", &rval))
     {
     case cf_str:
-        if (rval.rtype != CF_SCALAR)
-        {
-            yyerror("non-scalar version string");
-        }
         AUDITPTR->version = xstrdup((char *) rval.item);
         break;
 

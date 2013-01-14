@@ -54,7 +54,7 @@ void CryptoInitialize()
         int seed = 0;
         RAND_bytes(s, 16);
         s[15] = '\0';
-        seed = ElfHash(s);
+        seed = ElfHash(s, CF_HASHTABLESIZE);
         srand48((long) seed);
 
         crypto_initialized = true;

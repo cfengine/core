@@ -28,10 +28,8 @@
 #include "platform.h"
 
 int IsNewerFileTree(char *dir, time_t reftime);
-int DeEscapeQuotedString(const char *in, char *out);
 int CompareCSVName(const char *s1, const char *s2);
 int IsDir(char *path);
-int EmptyString(char *s);
 char *JoinPath(char *path, const char *leaf);
 char *JoinSuffix(char *path, char *leaf);
 int JoinMargin(char *path, const char *leaf, char **nextFree, int bufsize, int margin);

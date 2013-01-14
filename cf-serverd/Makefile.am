@@ -1,7 +1,15 @@
-AM_CFLAGS = $(NOVA_CFLAGS) @CFLAGS@ -I$(srcdir)/../libpromises
+sbin_PROGRAMS = cf-serverd
 
-sbin_PROGRAMS = \
-        cf-serverd
+AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises \
+	$(NOVA_CPPFLAGS)
+
+AM_CFLAGS = @CFLAGS@ \
+	$(NOVA_CFLAGS)
+
+LDADD = ../libpromises/libpromises.la
+if HAVE_NOVA
+LDADD += ../nova/libcfserverd/libcfserverd.la
+endif
 
 cf_serverd_SOURCES = \
         cf-serverd.c \
@@ -10,12 +18,6 @@ cf_serverd_SOURCES = \
         server.c server.h \
         server_transform.c \
         enterprise_stubs_serverd.c
-
-cf_serverd_LDADD =
-if HAVE_NOVA
-cf_serverd_LDADD += ../nova/libcfserverd/libcfserverd.la
-endif
-cf_serverd_LDADD += ../libpromises/libpromises.la
 
 CLEANFILES = *.gcno *.gcda
 

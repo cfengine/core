@@ -4,7 +4,7 @@ MAKEFLAGS = $(if $(filter-out 0,$(V)),,--no-print-directory --quiet)
 
 LCOV_FLAGS = $(if $(filter-out 0,$(V)),,-q)
 
-SUBDIRS = pub libutils $(NOVA_LIB_SUBDIRS) libpromises $(NOVA_BIN_SUBDIRS) cf-agent cf-execd cf-gendoc cf-key cf-monitord cf-promises cf-report cf-runagent cf-serverd ext docs examples masterfiles tests $(ENTERPRISE_API_SUBDIR) $(CFMOD_SUBDIR) $(NOVA_DOC_SUBDIR)
+SUBDIRS = pub libutils $(NOVA_LIB_SUBDIRS) libpromises $(NOVA_BIN_SUBDIRS) cf-agent cf-execd cf-gendoc cf-key cf-monitord cf-promises cf-report cf-runagent cf-serverd ext docs examples masterfiles tests $(ENTERPRISE_API_SUBDIR) $(CFMOD_SUBDIR) $(NOVA_DOC_SUBDIR) $(NOVA_SUBDIR)
 
 DIST_SUBDIRS = pub libutils libpromises cf-agent cf-execd cf-gendoc cf-key cf-monitord cf-promises cf-report cf-runagent cf-serverd ext docs examples masterfiles tests
 

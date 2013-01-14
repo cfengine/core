@@ -23,11 +23,10 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include "files_copy.h"
 
 #include "files_names.h"
 #include "files_interfaces.h"
-#include "files_operators.h"
 #include "instrumentation.h"
 #include "cfstream.h"
 
@@ -44,7 +43,7 @@ void CheckForFileHoles(struct stat *sstat, Promise *pp)
         return;
     }
 
-#if !defined(MINGW)
+#if !defined(__MINGW32__)
     if (sstat->st_size > sstat->st_blocks * DEV_BSIZE)
 #else
 # ifdef HAVE_ST_BLOCKS
@@ -195,71 +194,5 @@ bool CopyRegularFileDisk(const char *source, const char *destination, bool make_
     close(dd);
 
     free(buf);
-    return true;
-}
-
-/*********************************************************************/
-
-int FSWrite(char *new, int dd, char *buf, int towrite, int *last_write_made_hole, int n_read, Attributes attr,
-            Promise *pp)
-{
-    int *intp;
-    char *cp;
-
-    intp = 0;
-
-    if (pp && (pp->makeholes))
-    {
-        buf[n_read] = 1;        /* Sentinel to stop loop.  */
-
-        /* Find first non-zero *word*, or the word with the sentinel.  */
-        intp = (int *) buf;
-
-        while (*intp++ == 0)
-        {
-        }
-
-        /* Find the first non-zero *byte*, or the sentinel.  */
-
-        cp = (char *) (intp - 1);
-
-        while (*cp++ == 0)
-        {
-        }
-
-        /* If we found the sentinel, the whole input block was zero,
-           and we can make a hole.  */
-
-        if (cp > buf + n_read)
-        {
-            /* Make a hole.  */
-
-            if (lseek(dd, (off_t) n_read, SEEK_CUR) < 0L)
-            {
-                CfOut(cf_error, "lseek", "lseek in EmbeddedWrite, dest=%s\n", new);
-                return false;
-            }
-
-            *last_write_made_hole = 1;
-        }
-        else
-        {
-            /* Clear to indicate that a normal write is needed. */
-            intp = 0;
-        }
-    }
-
-    if (intp == 0)
-    {
-        if (FullWrite(dd, buf, towrite) < 0)
-        {
-            CfOut(cf_error, "write", "Local disk write(%.256s) failed\n", new);
-            pp->conn->error = true;
-            return false;
-        }
-
-        *last_write_made_hole = 0;
-    }
-
     return true;
 }

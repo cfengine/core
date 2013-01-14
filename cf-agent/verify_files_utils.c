@@ -23,10 +23,13 @@
 */
 
 #include "verify_files_utils.h"
+
 #include "cfstream.h"
 #include "dir.h"
 #include "files_names.h"
 #include "files_links.h"
+#include "files_copy.h"
+#include "files_properties.h"
 #include "transaction.h"
 #include "instrumentation.h"
 #include "matching.h"
@@ -45,12 +48,17 @@
 #include "env_context.h"
 #include "vars.h"
 #include "exec_tools.h"
+#include "comparray.h"
+#include "string_lib.h"
+#include "constraints.h"
+#include "files_lib.h"
 
 #define CF_RECURSION_LIMIT 100
 
 static int TransformFile(char *file, Attributes attr, Promise *pp);
 static void VerifyName(char *path, struct stat *sb, Attributes attr, Promise *pp, const ReportContext *report_context);
 static void VerifyDelete(char *path, struct stat *sb, Attributes attr, Promise *pp);
+static void VerifyCopy(char *source, char *destination, Attributes attr, Promise *pp, const ReportContext *report_context);
 static void TouchFile(char *path, struct stat *sb, Attributes attr, Promise *pp);
 static void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promise *pp, const ReportContext *report_context);
 static int PushDirState(char *name, struct stat *sb);
@@ -65,13 +73,18 @@ static int cf_stat(char *file, struct stat *buf, Attributes attr, Promise *pp);
 static int cf_readlink(char *sourcefile, char *linkbuf, int buffsize, Attributes attr, Promise *pp);
 static bool CopyRegularFileDiskReport(char *source, char *destination, Attributes attr, Promise *pp);
 static int SkipDirLinks(char *path, const char *lastnode, Recursion r);
+static int DeviceBoundary(struct stat *sb, Promise *pp);
+static void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attributes attr, Promise *pp, const ReportContext *report_context);
 
 #ifndef __MINGW32__
 static void VerifySetUidGid(char *file, struct stat *dstat, mode_t newperm, Promise *pp, Attributes attr);
+static int VerifyOwner(char *file, Promise *pp, Attributes attr, struct stat *sb);
 #endif
-#ifdef DARWIN
+#ifdef __APPLE__
 static int VerifyFinderType(char *file, struct stat *statbuf, Attributes a, Promise *pp);
 #endif
+static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp);
+static void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp, const ReportContext *report_context);
 
 #ifndef HAVE_NOVA
 static void LogFileChange(char *file, int change, Attributes a, Promise *pp, const ReportContext *report_context)
@@ -610,8 +623,8 @@ static void PurgeLocalFiles(Item *filelist, char *localdir, Attributes attr, Pro
     CloseDir(dirh);
 }
 
-void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes attr, Promise *pp,
-                         const ReportContext *report_context)
+static void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes attr, Promise *pp,
+                                const ReportContext *report_context)
 {
     struct stat sb, dsb;
     char newfrom[CF_BUFSIZE];
@@ -824,8 +837,8 @@ void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes attr, 
     CloseDir(dirh);
 }
 
-void VerifyCopy(char *source, char *destination, Attributes attr, Promise *pp,
-                const ReportContext *report_context)
+static void VerifyCopy(char *source, char *destination, Attributes attr, Promise *pp,
+                       const ReportContext *report_context)
 {
     Dir *dirh;
     char sourcefile[CF_BUFSIZE];
@@ -940,8 +953,8 @@ void VerifyCopy(char *source, char *destination, Attributes attr, Promise *pp,
     DeleteClientCache(attr, pp);
 }
 
-void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attributes attr, Promise *pp,
-              const ReportContext *report_context)
+static void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attributes attr, Promise *pp,
+                     const ReportContext *report_context)
 /* Link the file to the source, instead of copying */
 #ifdef MINGW
 {
@@ -1067,7 +1080,7 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
     struct utimbuf timebuf;
 #endif
 
-#ifdef DARWIN
+#ifdef __APPLE__
 /* For later copy from new to dest */
     char *rsrcbuf;
     int rsrcbytesr;             /* read */
@@ -1140,7 +1153,7 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
         remote = true;
     }
 
-#ifdef DARWIN
+#ifdef __APPLE__
     if (strstr(dest, _PATH_RSRCFORKSPEC))
     {
         char *tmpstr = xstrndup(dest, CF_BUFSIZE);
@@ -1166,7 +1179,7 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
             return false;
         }
 
-#ifdef DARWIN
+#ifdef __APPLE__
     }
 #endif
 
@@ -1315,7 +1328,7 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
         }
     }
 
-#ifdef DARWIN
+#ifdef __APPLE__
     if (rsrcfork)
     {                           /* Can't just "mv" the resource fork, unfortunately */
         rsrcrd = open(new, O_RDONLY | O_BINARY);
@@ -1407,7 +1420,7 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
             return false;
         }
 
-#ifdef DARWIN
+#ifdef __APPLE__
     }
 #endif
 
@@ -1890,7 +1903,7 @@ void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promi
 
     VerifySetUidGid(file, dstat, newperm, pp, attr);
 
-# ifdef DARWIN
+# ifdef __APPLE__
     if (VerifyFinderType(file, dstat, attr, pp))
     {
         /* nop */
@@ -2305,7 +2318,7 @@ static void VerifyCopiedFileAttributes(char *file, struct stat *dstat, struct st
 #endif
 }
 
-void *CopyFileSources(char *destination, Attributes attr, Promise *pp, const ReportContext *report_context)
+static void *CopyFileSources(char *destination, Attributes attr, Promise *pp, const ReportContext *report_context)
 {
     char *source = attr.copy.source;
     char *server = pp->this_server;
@@ -2551,7 +2564,7 @@ int ScheduleLinkChildrenOperation(char *destination, char *source, int recurse, 
     return true;
 }
 
-void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp, const ReportContext *report_context)
+static void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp, const ReportContext *report_context)
 {
     unsigned char digest1[EVP_MAX_MD_SIZE + 1];
     unsigned char digest2[EVP_MAX_MD_SIZE + 1];
@@ -2787,7 +2800,7 @@ static void VerifySetUidGid(char *file, struct stat *dstat, mode_t newperm, Prom
 }
 #endif
 
-#ifdef DARWIN
+#ifdef __APPLE__
 
 static int VerifyFinderType(char *file, struct stat *statbuf, Attributes a, Promise *pp)
 {                               /* Code modeled after hfstar's extract.c */
@@ -3039,4 +3052,416 @@ static int SkipDirLinks(char *path, const char *lastnode, Recursion r)
     }
 
     return false;
+}
+
+#ifndef MINGW
+
+static int VerifyOwner(char *file, Promise *pp, Attributes attr, struct stat *sb)
+{
+    struct passwd *pw;
+    struct group *gp;
+    UidList *ulp;
+    GidList *glp;
+    short uidmatch = false, gidmatch = false;
+    uid_t uid = CF_SAME_OWNER;
+    gid_t gid = CF_SAME_GROUP;
+
+    CfDebug("VerifyOwner: %" PRIdMAX "\n", (uintmax_t) sb->st_uid);
+
+    for (ulp = attr.perms.owners; ulp != NULL; ulp = ulp->next)
+    {
+        if (ulp->uid == CF_SAME_OWNER || sb->st_uid == ulp->uid)        /* "same" matches anything */
+        {
+            uid = ulp->uid;
+            uidmatch = true;
+            break;
+        }
+    }
+
+    if (attr.perms.groups->next == NULL && attr.perms.groups->gid == CF_UNKNOWN_GROUP)  // Only one non.existent item
+    {
+        cfPS(cf_inform, CF_FAIL, "", pp, attr, " !! Unable to make file belong to an unknown group");
+    }
+
+    if (attr.perms.owners->next == NULL && attr.perms.owners->uid == CF_UNKNOWN_OWNER)  // Only one non.existent item
+    {
+        cfPS(cf_inform, CF_FAIL, "", pp, attr, " !! Unable to make file belong to an unknown user");
+    }
+
+    for (glp = attr.perms.groups; glp != NULL; glp = glp->next)
+    {
+        if (glp->gid == CF_SAME_GROUP || sb->st_gid == glp->gid)        /* "same" matches anything */
+        {
+            gid = glp->gid;
+            gidmatch = true;
+            break;
+        }
+    }
+
+    if (uidmatch && gidmatch)
+    {
+        return false;
+    }
+    else
+    {
+        if (!uidmatch)
+        {
+            for (ulp = attr.perms.owners; ulp != NULL; ulp = ulp->next)
+            {
+                if (attr.perms.owners->uid != CF_UNKNOWN_OWNER)
+                {
+                    uid = attr.perms.owners->uid;       /* default is first (not unknown) item in list */
+                    break;
+                }
+            }
+        }
+
+        if (!gidmatch)
+        {
+            for (glp = attr.perms.groups; glp != NULL; glp = glp->next)
+            {
+                if (attr.perms.groups->gid != CF_UNKNOWN_GROUP)
+                {
+                    gid = attr.perms.groups->gid;       /* default is first (not unknown) item in list */
+                    break;
+                }
+            }
+        }
+
+        switch (attr.transaction.action)
+        {
+        case cfa_fix:
+
+            if (uid == CF_SAME_OWNER && gid == CF_SAME_GROUP)
+            {
+                CfOut(cf_verbose, "", " -> Touching %s\n", file);
+            }
+            else
+            {
+                if (uid != CF_SAME_OWNER)
+                {
+                    CfDebug("(Change owner to uid %" PRIuMAX " if possible)\n", (uintmax_t)uid);
+                }
+
+                if (gid != CF_SAME_GROUP)
+                {
+                    CfDebug("Change group to gid %" PRIuMAX " if possible)\n", (uintmax_t)gid);
+                }
+            }
+
+            if (!DONTDO && S_ISLNK(sb->st_mode))
+            {
+# ifdef HAVE_LCHOWN
+                CfDebug("Using LCHOWN function\n");
+                if (lchown(file, uid, gid) == -1)
+                {
+                    CfOut(cf_inform, "lchown", " !! Cannot set ownership on link %s!\n", file);
+                }
+                else
+                {
+                    return true;
+                }
+# endif
+            }
+            else if (!DONTDO)
+            {
+                if (!uidmatch)
+                {
+                    cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Owner of %s was %ju, setting to %ju", file, (uintmax_t)sb->st_uid,
+                         (uintmax_t)uid);
+                }
+
+                if (!gidmatch)
+                {
+                    cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Group of %s was %ju, setting to %ju", file, (uintmax_t)sb->st_gid,
+                         (uintmax_t)gid);
+                }
+
+                if (!S_ISLNK(sb->st_mode))
+                {
+                    if (chown(file, uid, gid) == -1)
+                    {
+                        cfPS(cf_inform, CF_DENIED, "chown", pp, attr, " !! Cannot set ownership on file %s!\n", file);
+                    }
+                    else
+                    {
+                        return true;
+                    }
+                }
+            }
+            break;
+
+        case cfa_warn:
+
+            if ((pw = getpwuid(sb->st_uid)) == NULL)
+            {
+                CfOut(cf_error, "", "File %s is not owned by anybody in the passwd database\n", file);
+                CfOut(cf_error, "", "(uid = %ju,gid = %ju)\n", (uintmax_t)sb->st_uid, (uintmax_t)sb->st_gid);
+                break;
+            }
+
+            if ((gp = getgrgid(sb->st_gid)) == NULL)
+            {
+                cfPS(cf_error, CF_WARN, "", pp, attr, " !! File %s is not owned by any group in group database\n",
+                     file);
+                break;
+            }
+
+            cfPS(cf_error, CF_WARN, "", pp, attr, " !! File %s is owned by [%s], group [%s]\n", file, pw->pw_name,
+                 gp->gr_name);
+            break;
+        }
+    }
+
+    return false;
+}
+
+#endif /* NOT MINGW */
+
+static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp)
+{
+    struct stat cmpsb;
+    CF_DB *dbp;
+    char message[CF_BUFSIZE];
+    int ok = true;
+
+    if ((attr.change.report_changes != cfa_statschange) && (attr.change.report_changes != cfa_allchanges))
+    {
+        return;
+    }
+
+    if (!OpenDB(&dbp, dbid_filestats))
+    {
+        return;
+    }
+
+    if (!ReadDB(dbp, file, &cmpsb, sizeof(struct stat)))
+    {
+        if (!DONTDO)
+        {
+            WriteDB(dbp, file, sb, sizeof(struct stat));
+            CloseDB(dbp);
+            return;
+        }
+    }
+
+    if (cmpsb.st_mode != sb->st_mode)
+    {
+        ok = false;
+    }
+
+    if (cmpsb.st_uid != sb->st_uid)
+    {
+        ok = false;
+    }
+
+    if (cmpsb.st_gid != sb->st_gid)
+    {
+        ok = false;
+    }
+
+    if (cmpsb.st_dev != sb->st_dev)
+    {
+        ok = false;
+    }
+
+    if (cmpsb.st_ino != sb->st_ino)
+    {
+        ok = false;
+    }
+
+    if (cmpsb.st_mtime != sb->st_mtime)
+    {
+        ok = false;
+    }
+
+    if (ok)
+    {
+        CloseDB(dbp);
+        return;
+    }
+
+    if (EXCLAIM)
+    {
+        CfOut(cf_error, "", "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    }
+
+    if (cmpsb.st_mode != sb->st_mode)
+    {
+        snprintf(message, CF_BUFSIZE - 1, "ALERT: Permissions for %s changed %jo -> %jo", file,
+                 (uintmax_t)cmpsb.st_mode, (uintmax_t)sb->st_mode);
+        CfOut(cf_error, "", "%s", message);
+
+        char msg_temp[CF_MAXVARSIZE] = { 0 };
+        snprintf(msg_temp, sizeof(msg_temp), "Permission: %jo -> %jo",
+                 (uintmax_t)cmpsb.st_mode, (uintmax_t)sb->st_mode);
+
+        LogHashChange(file, cf_file_stats_changed, msg_temp, pp);
+    }
+
+    if (cmpsb.st_uid != sb->st_uid)
+    {
+        snprintf(message, CF_BUFSIZE - 1, "ALERT: owner for %s changed %jd -> %jd", file, (uintmax_t) cmpsb.st_uid,
+                 (uintmax_t) sb->st_uid);
+        CfOut(cf_error, "", "%s", message);
+
+        char msg_temp[CF_MAXVARSIZE] = { 0 };
+        snprintf(msg_temp, sizeof(msg_temp), "Owner: %jd -> %jd",
+                 (uintmax_t)cmpsb.st_uid, (uintmax_t)sb->st_uid);
+
+        LogHashChange(file, cf_file_stats_changed, msg_temp, pp);
+    }
+
+    if (cmpsb.st_gid != sb->st_gid)
+    {
+        snprintf(message, CF_BUFSIZE - 1, "ALERT: group for %s changed %jd -> %jd", file, (uintmax_t) cmpsb.st_gid,
+                 (uintmax_t) sb->st_gid);
+        CfOut(cf_error, "", "%s", message);
+
+        char msg_temp[CF_MAXVARSIZE] = { 0 };
+        snprintf(msg_temp, sizeof(msg_temp), "Group: %jd -> %jd",
+                 (uintmax_t)cmpsb.st_gid, (uintmax_t)sb->st_gid);
+
+        LogHashChange(file, cf_file_stats_changed, msg_temp, pp);
+    }
+
+    if (cmpsb.st_dev != sb->st_dev)
+    {
+        CfOut(cf_error, "", "ALERT: device for %s changed %jd -> %jd", file, (intmax_t) cmpsb.st_dev,
+              (intmax_t) sb->st_dev);
+    }
+
+    if (cmpsb.st_ino != sb->st_ino)
+    {
+        CfOut(cf_error, "", "ALERT: inode for %s changed %ju -> %ju", file, (uintmax_t) cmpsb.st_ino,
+              (uintmax_t) sb->st_ino);
+    }
+
+    if (cmpsb.st_mtime != sb->st_mtime)
+    {
+        char from[CF_MAXVARSIZE];
+        char to[CF_MAXVARSIZE];
+
+        strcpy(from, cf_ctime(&(cmpsb.st_mtime)));
+        strcpy(to, cf_ctime(&(sb->st_mtime)));
+        Chop(from, CF_MAXVARSIZE);
+        Chop(to, CF_MAXVARSIZE);
+        CfOut(cf_error, "", "ALERT: Last modified time for %s changed %s -> %s", file, from, to);
+    }
+
+    if (pp->ref)
+    {
+        CfOut(cf_error, "", "Preceding promise: %s", pp->ref);
+    }
+
+    if (EXCLAIM)
+    {
+        CfOut(cf_error, "", "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    }
+
+    if (attr.change.update && !DONTDO)
+    {
+        DeleteDB(dbp, file);
+        WriteDB(dbp, file, sb, sizeof(struct stat));
+    }
+
+    CloseDB(dbp);
+}
+
+int CfCreateFile(char *file, Promise *pp, Attributes attr,
+                 const ReportContext *report_context)
+{
+    int fd;
+
+    /* If name ends in /. then this is a directory */
+
+// attr.move_obstructions for MakeParentDirectory
+
+    if (!IsAbsoluteFileName(file))
+    {
+        cfPS(cf_inform, CF_FAIL, "creat", pp, attr,
+             " !! Cannot create a relative filename %s - has no invariant meaning\n", file);
+        return false;
+    }
+
+    if (strcmp(".", ReadLastNode(file)) == 0)
+    {
+        CfDebug("File object \"%s \"seems to be a directory\n", file);
+
+        if (!DONTDO && attr.transaction.action != cfa_warn)
+        {
+            if (!MakeParentDirectory(file, attr.move_obstructions, report_context))
+            {
+                cfPS(cf_inform, CF_FAIL, "creat", pp, attr, " !! Error creating directories for %s\n", file);
+                return false;
+            }
+
+            cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Created directory %s\n", file);
+        }
+        else
+        {
+            CfOut(cf_error, "", " !! Warning promised, need to create directory %s", file);
+            return false;
+        }
+    }
+    else
+    {
+        if (!DONTDO && attr.transaction.action != cfa_warn)
+        {
+            mode_t saveumask = umask(0);
+            mode_t filemode = 0600;     /* Decide the mode for filecreation */
+
+            if (GetConstraintValue("mode", pp, CF_SCALAR) == NULL)
+            {
+                /* Relying on umask is risky */
+                filemode = 0600;
+                CfOut(cf_verbose, "", " -> No mode was set, choose plain file default %ju\n", (uintmax_t)filemode);
+            }
+            else
+            {
+                filemode = attr.perms.plus & ~(attr.perms.minus);
+            }
+
+            MakeParentDirectory(file, attr.move_obstructions, report_context);
+
+            if ((fd = creat(file, filemode)) == -1)
+            {
+                cfPS(cf_inform, CF_FAIL, "creat", pp, attr, " !! Error creating file %s, mode = %ju\n", file, (uintmax_t)filemode);
+                umask(saveumask);
+                return false;
+            }
+            else
+            {
+                cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Created file %s, mode = %ju\n", file, (uintmax_t)filemode);
+                close(fd);
+                umask(saveumask);
+            }
+        }
+        else
+        {
+            CfOut(cf_error, "", " !! Warning promised, need to create file %s\n", file);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static int DeviceBoundary(struct stat *sb, Promise *pp)
+{
+    if (sb->st_dev == pp->rootdevice)
+    {
+        return false;
+    }
+    else
+    {
+        CfOut(cf_verbose, "", "Device change from %jd to %jd\n", (intmax_t) pp->rootdevice, (intmax_t) sb->st_dev);
+        return true;
+    }
+}
+
+void SetSearchDevice(struct stat *sb, Promise *pp)
+{
+    CfDebug("Registering root device as %" PRIdMAX "\n", (intmax_t) sb->st_dev);
+    pp->rootdevice = sb->st_dev;
 }

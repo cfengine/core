@@ -25,7 +25,7 @@
 #ifndef CFENGINE_PROC_KEYVALUE_H
 #define CFENGINE_PROC_KEYVALUE_H
 
-#include "cf3.defs.h"
+#include "platform.h"
 
 /*
  * Parser for line-oriented key-value formats found in Linux /proc filesystem.

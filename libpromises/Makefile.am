@@ -1,33 +1,24 @@
-AM_CFLAGS = $(NOVA_CFLAGS) @CFLAGS@
-AM_YFLAGS = -d
-LDADD = libpromises.la
-
-.PRECIOUS: ../libutils/libutils.la
-
-../libutils/libutils.la:
-	$(MAKE) -C ../libutils $(AM_MAKEFLAGS) libutils.la
-
-# libpromises
-
 projlib_LTLIBRARIES = libpromises.la
 
-libpromises_la_LDFLAGS = -version-info 1:0:0 -no-undefined
+AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libutils \
+	$(NOVA_CPPFLAGS)
+
+AM_CFLAGS = @CFLAGS@ \
+	$(NOVA_CFLAGS)
+
+AM_YFLAGS = -d
+
+AM_LDFLAGS = -version-info 1:0:0 -no-undefined
+
 libpromises_la_LIBADD = ../libutils/libutils.la $(NOVA_LDADD)
-
-libpromises_la_CFLAGS = $(AM_CFLAGS)
-
-# Separate out a library. Note that cf3parse.y should be built before cf3lex.l
 
 libpromises_la_SOURCES = \
         cf3parse.y cf3parse.h \
         cf3lex.l \
         addr_lib.c addr_lib.h \
         alphalist.c alphalist.h \
-        cf_acl.c cf_acl.h \
-        acl_posix.c acl_posix.h \
         args.c args.h \
         assoc.c assoc.h \
-        atexit.c atexit.h \
         attributes.c attributes.h \
         bootstrap.c bootstrap.h \
         cf.events.h \
@@ -40,7 +31,7 @@ libpromises_la_SOURCES = \
         client_code.c client_code.h \
         client_protocol.c client_protocol.h \
         communication.c communication.h \
-        comparray.c \
+        comparray.c comparray.h \
         constants.c \
         constraints.c constraints.h \
         conversion.c conversion.h \
@@ -62,22 +53,16 @@ libpromises_la_SOURCES = \
         files_hashes.c files_hashes.h \
         files_interfaces.c files_interfaces.h \
         files_lib.c files_lib.h \
-        files_links.c files_links.h \
         files_names.c files_names.h \
-        files_operators.c files_operators.h \
-        files_properties.c \
-        files_repository.c files_repository.h \
-        files_select.c \
+        files_properties.c files_properties.h \
         fncall.c fncall.h \
         full_write.c \
         generic_agent.c generic_agent.h \
         granules.c granules.h \
-        hashes.c hashes.h \
         html.c \
         instrumentation.c instrumentation.h \
         item_lib.c item_lib.h \
         iteration.c iteration.h \
-        json.c json.h \
         keyring.c keyring.h\
         lastseen.c lastseen.h \
         logging.c logging.h \
@@ -106,8 +91,7 @@ libpromises_la_SOURCES = \
         parser_state.h \
         patches.c \
         pipes.c pipes.h \
-        proc_keyvalue.c proc_keyvalue.h \
-        processes_select.c \
+        processes_select.c processes_select.h \
         promises.c promises.h \
         prototypes3.h \
         reporting.c reporting.h \
@@ -117,10 +101,8 @@ libpromises_la_SOURCES = \
         signals.c signals.h \
         sockaddr.c \
         sort.c sort.h \
-        statistics.c statistics.h \
         storage_tools.c \
         string_expressions.c string_expressions.h \
-        string_map.c string_map.h \
         syntax.c syntax.h \
         sysinfo.c sysinfo.h \
         timeout.c \
@@ -141,9 +123,6 @@ endif
 
 BUILT_SOURCES = cf3parse.h
 
-# Automake need to be guided due to symlinking
-libpromises_la_DEPENDENCIES = ../libutils/libutils.la $(NOVA_LDADD)
-
 CLEANFILES = *.gcno *.gcda
 
 #
@@ -151,9 +130,12 @@ CLEANFILES = *.gcno *.gcda
 #
 MOSTLYCLEANFILES = *~ *.orig *.rej
 
-#
-# Get everything removed down to where rebuilding requires:
-# "aclocal; autoconf; autoheader; automake --add-missing"
-# "configure; make; make install"
-#
-MAINTAINERCLEANFILES = Makefile.in conf.h.in stamp-h.in
+# libutils dependency
+
+# Automake need to be guided due to symlinking
+DEPENDENCIES = ../libutils/libutils.la $(NOVA_LDADD)
+
+.PRECIOUS: ../libutils/libutils.la
+
+../libutils/libutils.la:
+	$(MAKE) -C ../libutils $(AM_MAKEFLAGS) libutils.la

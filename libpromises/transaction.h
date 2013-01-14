@@ -42,13 +42,8 @@ CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promi
 void YieldCurrentLock(CfLock this);
 void GetLockName(char *lockname, char *locktype, char *base, Rlist *params);
 
-#if defined(HAVE_PTHREAD)
 int ThreadLock(pthread_mutex_t *name);
 int ThreadUnlock(pthread_mutex_t *name);
-#else
-# define ThreadLock(name) (1)
-# define ThreadUnlock(name) (1)
-#endif
 
 void PurgeLocks(void);
 int ShiftChange(void);

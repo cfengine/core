@@ -32,6 +32,7 @@
 #include "item_lib.h"
 #include "assert.h"
 #include "files_interfaces.h"
+#include "files_properties.h"
 #include "cfstream.h"
 #include "logging.h"
 #include "string_lib.h"
@@ -128,7 +129,7 @@ Checks if the object pointed to by path exists and is a directory.
 Returns true if so, false otherwise.
 */
 {
-#ifdef MINGW
+#ifdef __MINGW32__
     return NovaWin_IsDir(path);
 #else
     struct stat sb;
@@ -142,25 +143,10 @@ Returns true if so, false otherwise.
     }
 
     return false;
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 }
 
 /*********************************************************************/
-
-int EmptyString(char *s)
-{
-    char *sp;
-
-    for (sp = s; *sp != '\0'; sp++)
-    {
-        if (!isspace((int)*sp))
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
 
 /*********************************************************************/
 
@@ -597,61 +583,6 @@ const char *ReadLastNode(const char *str)
     }
 }
 
-/*****************************************************************************/
-
-int DeEscapeQuotedString(const char *from, char *to)
-{
-    char *cp;
-    const char *sp;
-    char start = *from;
-    int len = strlen(from);
-
-    if (len == 0)
-    {
-        return 0;
-    }
-
-    for (sp = from + 1, cp = to; (sp - from) < len; sp++, cp++)
-    {
-        if ((*sp == start))
-        {
-            *(cp) = '\0';
-
-            if (*(sp + 1) != '\0')
-            {
-                return (2 + (sp - from));
-            }
-
-            return 0;
-        }
-
-        if (*sp == '\\')
-        {
-            switch (*(sp + 1))
-            {
-            case '\n':
-                sp += 2;
-                break;
-
-            case ' ':
-                break;
-
-            case '\\':
-            case '\"':
-            case '\'':
-                sp++;
-                break;
-            }
-        }
-
-        *cp = *sp;
-    }
-
-    yyerror("Runaway string");
-    *(cp) = '\0';
-    return 0;
-}
-
 /*********************************************************************/
 
 int CompressPath(char *dest, const char *src)
@@ -729,7 +660,7 @@ int IsAbsoluteFileName(const char *f)
     {
     }
 
-#ifdef NT
+#ifdef _WIN32
     if (IsFileSep(f[off]) && IsFileSep(f[off + 1]))
     {
         return true;
@@ -765,7 +696,7 @@ static int UnixRootDirLength(const char *f)
     return 0;
 }
 
-#ifdef NT
+#ifdef _WIN32
 static int NTRootDirLength(char *f)
 {
     int len;
@@ -816,7 +747,7 @@ static int NTRootDirLength(char *f)
 int RootDirLength(const char *f)
   /* Return length of Initial directory in path - */
 {
-#ifdef NT
+#ifdef _WIN32
     return NTRootDirLength(f);
 #else
     return UnixRootDirLength(f);

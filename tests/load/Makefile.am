@@ -10,6 +10,6 @@ db_load_SOURCES = db_load.c
 db_load_LDADD = ../unit/libdb.la
 
 
-lastseen_load_SOURCES = lastseen_load.c $(srcdir)/../../libpromises/lastseen.c $(srcdir)/../../libpromises/statistics.c
+lastseen_load_SOURCES = lastseen_load.c $(srcdir)/../../libpromises/lastseen.c $(srcdir)/../../libutils/statistics.c
 lastseen_load_LDADD = ../unit/libdb.la
 

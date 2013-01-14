@@ -1,9 +1,12 @@
-AM_CFLAGS = $(NOVA_CFLAGS) @CFLAGS@ -I$(srcdir)/../libpromises
+sbin_PROGRAMS = cf-promises
+
+AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises \
+	$(NOVA_CPPFLAGS)
+
+AM_CFLAGS = @CFLAGS@ -I$(srcdir) \
+	$(NOVA_CFLAGS)
 
 LDADD = ../libpromises/libpromises.la
-
-sbin_PROGRAMS = \
-        cf-promises
 
 CLEANFILES = *.gcno *.gcda
 

@@ -20,44 +20,17 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
+
 */
 
-#include "cf3.defs.h"
-#include "statistics.h"
+#ifndef CFENGINE_HASHES_H
+#define CFENGINE_HASHES_H
 
-/**********************************************************************/
+#include "platform.h"
 
-double GAverage(double anew, double aold, double p)
-/* return convex mixture - p is the trust/confidence in the new value */
-{
-    return (p * anew + (1.0 - p) * aold);
-}
+int RefHash(char *name, unsigned int max);
+int ElfHash(char *key, unsigned int max);
+int OatHash(const char *key, unsigned int max);
+int GetHash(const char *key, unsigned int max);
 
-/*
- * expected(Q) = p*Q_new + (1-p)*expected(Q)
- * variance(Q) = p*(Q_new - expected(Q))^2 + (1-p)*variance(Q)
- */
-
-/**********************************************************************/
-
-QPoint QAverage(QPoint old, double new_q, double p)
-{
-    QPoint new = {
-        .q = new_q,
-    };
-
-    double devsquare = (new.q - old.expect) * (new.q - old.expect);
-
-    new.dq = new.q - old.q;
-    new.expect = GAverage(new.q, old.expect, p);
-    new.var = GAverage(devsquare, old.var, p);
-
-    return new;
-}
-
-/**********************************************************************/
-
-QPoint QDefinite(double q)
-{
-    return (QPoint) { .q = q, .dq = 0.0, .expect = q, .var = 0.0 };
-}
+#endif

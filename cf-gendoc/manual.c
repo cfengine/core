@@ -37,7 +37,7 @@
 #include "sort.h"
 #include "scope.h"
 #include "files_interfaces.h"
-#include "hashes.h"
+#include "assoc.h"
 #include "cfstream.h"
 
 extern char BUILD_DIR[CF_BUFSIZE];

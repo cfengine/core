@@ -55,6 +55,9 @@ fi
 GREP_OPTIONS=
 export GREP_OPTIONS
 
+#
+# Defaults (overriden by command-line arguments)
+#
 LOG=test.log
 SUMMARY=summary.log
 XML=test.xml
@@ -121,10 +124,10 @@ DEFAGENT=$(dirname $(dirname $(curdir)))/cf-agent/cf-agent
 AGENT=${AGENT:-${DEFAGENT}}
 DEFCF_PROMISES=$(dirname $(dirname $(curdir)))/cf-promises/cf-promises
 CF_PROMISES=${CF_PROMISES:-${DEFCF_PROMISES}}
-CFKEY=$(dirname $(dirname $(curdir)))/cf-key/cf-key
-CFSERVER=$(dirname $(dirname $(curdir)))/cf-serverd/cf-serverd
-
-ln -sf ${CF_PROMISES} ~/.cfagent/bin
+DEFCF_SERVERD=$(dirname $(dirname $(curdir)))/cf-serverd/cf-serverd
+CF_SERVERD=${CF_SERVERD:-${DEFCF_SERVERD}}
+DEFCF_KEY=$(dirname $(dirname $(curdir)))/cf-key/cf-key
+CF_KEY=${CF_KEY:-${DEFCF_KEY}}
 
 usage() {
   echo "testall [-q] [--gainroot=<command>] [--agent=<agent>] [--no-nova] [--staging] [--no-network] [<test> <test>...]"
@@ -187,13 +190,14 @@ runtest() {
     mkdir -p $WORKDIR/bin $WORKDIR/tmp
     ln -sf $AGENT $WORKDIR/bin
     ln -sf $CF_PROMISES $WORKDIR/bin
+    ln -sf $CF_SERVERD $WORKDIR/bin
+    ln -sf $CF_KEY $WORKDIR/bin
 
     echo "#!/bin/sh
 CFENGINE_TEST_OVERRIDE_WORKDIR=$WORKDIR
 TEMP=$WORKDIR/tmp
 export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP
 
-$CFKEY
 $AGENT $VERBOSE -Kf \"$TEST\" -D AUTO,DEBUG 2>&1
 " > $WORKDIR/runtest
     chmod +x $WORKDIR/runtest
@@ -349,19 +353,6 @@ else
 fi
 
 #
-# To do client server testing, we need to start some servers on different ports
-# This cannot be done inside the test framework, or we will lose all the state/ppkeys etc
-#
-
-echo ----------------------------------------------------------------------
-echo Preparing servers for comms testing - this can take a while...
-echo ----------------------------------------------------------------------
-
-SERVER_PREP=$(dirname $(dirname $(curdir)))/tests/acceptance/16_cf-serverd/01_start
-$AGENT -f $SERVER_PREP/cleanup_tests.srv -K
-$AGENT -f $SERVER_PREP/prepare_tests.srv -K
-
-#
 # Now run the tests
 #
 
@@ -418,12 +409,6 @@ END_TIME=$(unix_seconds)
   cat $XMLTMP >> $XML
 
   echo \<\/testsuite\> >> $XML
-
-echo ----------------------------------------------------------------------
-echo Cleaning up listening servers
-
-$AGENT -f $SERVER_PREP/cleanup_tests.srv
-echo ----------------------------------------------------------------------
 
 if [ "$FAILED_TESTS" -ne 0 ] || [ "$FAILED_TO_CRASH_TESTS" -ne 0 ]; then
   exit 1

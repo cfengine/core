@@ -22,14 +22,24 @@
   included file COSL.txt.
 */
 
-#include "string_map.h"
+/*
+ * This file exists as an implementation detail, none of the structs or
+ * methods defined here represent any kind of stable API and can be changed
+ * at any moment, without warning. Do not include this file in your projects.
+ *
+ * I mean it, if you include this file your code will break. That is not a
+ * threat, just a statement of facts.
+ */
 
-#include "hashes.h"
-#include "string_lib.h"
+#ifndef CFENGINE_LIST_P_H
+#define CFENGINE_LIST_P_H
 
-TYPED_MAP_DEFINE(String, char *, char *,
-                 (MapHashFn)&OatHash,
-                 (MapKeyEqualFn)&StringSafeEqual,
-                 &free,
-                 &free)
+struct ListNode {
+    void *payload;
+    struct ListNode *next;
+    struct ListNode *previous;
+};
 
+typedef struct ListNode ListNode;
+
+#endif // CFENGINE_LIST_P_H

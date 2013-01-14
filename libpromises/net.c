@@ -31,7 +31,7 @@
 
 static bool LastRecvTimedOut(void)
 {
-#ifndef MINGW
+#ifndef __MINGW32__
 	if ((errno == EAGAIN) || (errno == EWOULDBLOCK))
 	{
 		return true;
@@ -222,7 +222,7 @@ int SetReceiveTimeout(int fd, const struct timeval *tv)
      *     seconds on Linux. Thus it must be tested thoroughly on
      *     the affected platforms. */
 
-# ifdef LINUX
+# ifdef __linux__
 
     if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (char*)tv, sizeof(struct timeval)))
     {

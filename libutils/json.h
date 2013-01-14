@@ -62,9 +62,43 @@ typedef enum
     JSON_PRIMITIVE_TYPE_NULL
 } JsonPrimitiveType;
 
+typedef enum
+{
+    JSON_PARSE_OK = 0,
+
+    JSON_PARSE_ERROR_STRING_NO_DOUBLEQUOTE_START,
+    JSON_PARSE_ERROR_STRING_NO_DOUBLEQUOTE_END,
+
+    JSON_PARSE_ERROR_NUMBER_EXPONENT_NEGATIVE,
+    JSON_PARSE_ERROR_NUMBER_EXPONENT_POSITIVE,
+    JSON_PARSE_ERROR_NUMBER_DUPLICATE_ZERO,
+    JSON_PARSE_ERROR_NUMBER_NO_DIGIT,
+    JSON_PARSE_ERROR_NUMBER_EXPONENT_DUPLICATE,
+    JSON_PARSE_ERROR_NUMBER_EXPONENT_DIGIT,
+    JSON_PARSE_ERROR_NUMBER_EXPONENT_FOLLOW_LEADING_ZERO,
+    JSON_PARSE_ERROR_NUMBER_BAD_SYMBOL,
+    JSON_PARSE_ERROR_NUMBER_DIGIT_END,
+
+    JSON_PARSE_ERROR_ARRAY_START,
+    JSON_PARSE_ERROR_ARRAY_END,
+
+    JSON_PARSE_ERROR_OBJECT_BAD_SYMBOL,
+    JSON_PARSE_ERROR_OBJECT_START,
+    JSON_PARSE_ERROR_OBJECT_END,
+    JSON_PARSE_ERROR_OBJECT_COLON,
+    JSON_PARSE_ERROR_OBJECT_COMMA,
+    JSON_PARSE_ERROR_OBJECT_ARRAY_LVAL,
+    JSON_PARSE_ERROR_OBJECT_OBJECT_LVAL,
+    JSON_PARSE_ERROR_OBJECT_OPEN_LVAL,
+
+    JSON_PARSE_ERROR_INVALID_START,
+    JSON_PARSE_ERROR_NO_DATA,
+
+    JSON_PARSE_ERROR_MAX
+} JsonParseError;
+
 typedef struct JsonElement_ JsonElement;
 
-#include "cf3.defs.h"
 #include "writer.h"
 
 typedef struct
@@ -282,11 +316,13 @@ JsonElement *JsonArrayGetAsObject(JsonElement *array, size_t index);
 
 /**
   @brief Parse a string to create a JsonElement
-  @note Do not use in production code.
   @param data [in, out] Pointer to the string to parse
-  @returns A pointer to the parsed JsonElement, or NULL if unsuccessful.
+  @param json_out Resulting JSON object
+  @returns See JsonParseError and JsonParseErrorToString
   */
-JsonElement *JsonParse(const char **data);
+JsonParseError JsonParse(const char **data, JsonElement **json_out);
+
+const char* JsonParseErrorToString(JsonParseError error);
 
 /**
   @brief Remove key from the object

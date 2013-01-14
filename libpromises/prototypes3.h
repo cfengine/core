@@ -32,14 +32,9 @@
 const char *Version(void);
 const char *NameVersion(void);
 
-/* cflex.l */
-
-int yylex(void);
-
 /* cfparse.y */
 
 void yyerror(const char *s);
-int yyparse(void);
 
 /* agent.c */
 
@@ -60,13 +55,6 @@ void ConnectionsCleanup(void);
 /* client_protocol.c */
 
 void SetSkipIdentify(bool enabled);
-
-/* comparray.c */
-
-int FixCompressedArrayValue(int i, char *value, CompressedArray **start);
-void DeleteCompressedArray(CompressedArray *start);
-int CompressedArrayElementExists(CompressedArray *start, int key);
-char *CompressedArrayValue(CompressedArray *start, int key);
 
 /* dtypes.c */
 
@@ -153,14 +141,6 @@ struct ServerConnectionState;
 
 int ReceiveCollectCall(struct ServerConnectionState *conn, char *sendbuffer);
 
-/* files_copy.c */
-
-void *CopyFileSources(char *destination, Attributes attr, Promise *pp, const ReportContext *report_context);
-bool CopyRegularFileDisk(const char *source, const char *destination, bool make_holes);
-void CheckForFileHoles(struct stat *sstat, Promise *pp);
-int FSWrite(char *new, int dd, char *buf, int towrite, int *last_write_made_hole, int n_read, Attributes attr,
-            Promise *pp);
-
 /* files_editline.c */
 
 int ScheduleEditLineOperations(char *filename, Bundle *bp, Attributes a, Promise *pp, const ReportContext *report_context);
@@ -174,17 +154,9 @@ int ScheduleEditXmlOperations(char *filename, Bundle *bp, Attributes a, Promise 
 int XmlCompareToFile(xmlDocPtr doc, char *file, Attributes a, Promise *pp);
 #endif
 
-/* files_properties.c */
-
-void AddFilenameToListOfSuspicious(const char *filename);
-int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp);
-void SetSearchDevice(struct stat *sb, Promise *pp);
-int DeviceBoundary(struct stat *sb, Promise *pp);
-
 /* files_select.c */
 
 int SelectLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp);
-int GetOwnerName(char *path, struct stat *lstatptr, char *owner, int ownerSz);
 
 /* full_write.c */
 
@@ -232,12 +204,6 @@ void CloseNetwork(void);
 int LinkOrCopy(const char *from, const char *to, int sym);
 int ExclusiveLockFile(int fd);
 int ExclusiveUnlockFile(int fd);
-
-/* processes_select.c */
-
-int SelectProcess(char *procentry, char **names, int *start, int *end, Attributes a, Promise *pp);
-bool IsProcessNameRunning(char *procNameRegex);
-int FindPidMatches(Item *procdata, Item **killlist, Attributes a, Promise *pp);
 
 /* selfdiagnostic.c */
 
@@ -302,20 +268,6 @@ void VerifyMeasurementPromise(double *this, Promise *pp);
 
 void VerifyMethodsPromise(Promise *pp, const ReportContext *report_context);
 int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext *report_context);
-
-/* verify_outputs.c */
-
-void VerifyOutputsPromise(Promise *pp);
-void SetPromiseOutputs(Promise *pp);
-void SetBundleOutputs(char *name);
-void ResetBundleOutputs(char *name);
-
-/* verify_packages.c */
-
-void VerifyPackagesPromise(Promise *pp);
-void ExecuteScheduledPackages(void);
-void CleanScheduledPackages(void);
-int PrependPackageItem(PackageItem ** list, const char *name, const char *version, const char *arch, Attributes a, Promise *pp);
 
 /* verify_services.c */
 

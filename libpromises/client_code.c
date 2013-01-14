@@ -35,6 +35,7 @@
 #include "crypto.h"
 #include "cfstream.h"
 #include "files_hashes.h"
+#include "files_copy.h"
 #include "transaction.h"
 #include "logging.h"
 
@@ -67,6 +68,70 @@ static int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockadd
 #endif
 
 /*********************************************************************/
+
+static int FSWrite(char *new, int dd, char *buf, int towrite, int *last_write_made_hole, int n_read, Attributes attr,
+                   Promise *pp)
+{
+    int *intp;
+    char *cp;
+
+    intp = 0;
+
+    if (pp && (pp->makeholes))
+    {
+        buf[n_read] = 1;        /* Sentinel to stop loop.  */
+
+        /* Find first non-zero *word*, or the word with the sentinel.  */
+        intp = (int *) buf;
+
+        while (*intp++ == 0)
+        {
+        }
+
+        /* Find the first non-zero *byte*, or the sentinel.  */
+
+        cp = (char *) (intp - 1);
+
+        while (*cp++ == 0)
+        {
+        }
+
+        /* If we found the sentinel, the whole input block was zero,
+           and we can make a hole.  */
+
+        if (cp > buf + n_read)
+        {
+            /* Make a hole.  */
+
+            if (lseek(dd, (off_t) n_read, SEEK_CUR) < 0L)
+            {
+                CfOut(cf_error, "lseek", "lseek in EmbeddedWrite, dest=%s\n", new);
+                return false;
+            }
+
+            *last_write_made_hole = 1;
+        }
+        else
+        {
+            /* Clear to indicate that a normal write is needed. */
+            intp = 0;
+        }
+    }
+
+    if (intp == 0)
+    {
+        if (FullWrite(dd, buf, towrite) < 0)
+        {
+            CfOut(cf_error, "write", "Local disk write(%.256s) failed\n", new);
+            pp->conn->error = true;
+            return false;
+        }
+
+        *last_write_made_hole = 0;
+    }
+
+    return true;
+}
 
 void DetermineCfenginePort()
 {
@@ -158,9 +223,9 @@ AgentConnection *ServerConnection(char *server, Attributes attr, Promise *pp)
 {
     AgentConnection *conn;
 
-#ifndef MINGW
+#if !defined(__MINGW32__)
     signal(SIGPIPE, SIG_IGN);
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
 #if !defined(__MINGW32__)
     static sigset_t signal_mask;
@@ -182,11 +247,11 @@ AgentConnection *ServerConnection(char *server, Attributes attr, Promise *pp)
 
 /* username of the client - say root from Windows */
 
-#ifdef MINGW
+#ifdef __MINGW32__
     snprintf(conn->username, CF_SMALLBUF, "root");
 #else
     GetCurrentUserName(conn->username, CF_SMALLBUF);
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
     if (conn->sd == SOCKET_INVALID)
     {
@@ -1510,7 +1575,28 @@ static int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockadd
             socklen_t lon = sizeof(int);
 
             FD_ZERO(&myset);
+
+#if defined(__hpux) && defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+// HP-UX GCC type-pun warning on FD_SET() macro:
+// While the "fd_set" type is defined in /usr/include/sys/_fd_macros.h as a
+// struct of an array of "long" values in accordance with the XPG4 standard's
+// requirements, the macros for the FD operations "pretend it is an array of
+// int32_t's so the binary layout is the same for both Narrow and Wide
+// processes," as described in _fd_macros.h. In the FD_SET, FD_CLR, and
+// FD_ISSET macros at line 101, the result is cast to an "__fd_mask *" type,
+// which is defined as int32_t at _fd_macros.h:82.
+//
+// This conflict between the "long fds_bits[]" array in the XPG4-compliant
+// fd_set structure, and the cast to an int32_t - not long - pointer in the
+// macros, causes a type-pun warning if -Wstrict-aliasing is enabled.
+// The warning is merely a side effect of HP-UX working as designed,
+// so it can be ignored.
+#endif
             FD_SET(conn->sd, &myset);
+#if defined(__hpux) && defined(__GNUC__)
+#pragma GCC diagnostic warning "-Wstrict-aliasing"
+#endif
 
             /* now wait for connect, but no more than tvp.sec */
             res = select(conn->sd + 1, NULL, &myset, NULL, tvp);

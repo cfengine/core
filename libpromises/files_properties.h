@@ -20,57 +20,15 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
+
 */
 
+#ifndef CFENGINE_FILES_PROPERTIES_H
+#define CFENGINE_FILES_PROPERTIES_H
+
 #include "cf3.defs.h"
-#include "atexit.h"
 
-#if defined(__MINGW32__)
-
-typedef struct AtExitList
-{
-    AtExitFn fn;
-    struct AtExitList *next;
-} AtExitList;
-
-static pthread_mutex_t atexit_functions_mutex = PTHREAD_MUTEX_INITIALIZER;
-static AtExitList *atexit_functions;
-
-/* To be called externally only by Windows service implementation */
-
-void CallAtExitFunctions(void)
-{
-    pthread_mutex_lock(&atexit_functions_mutex);
-
-    AtExitList *p = atexit_functions;
-    while (p)
-    {
-        AtExitList *cur = p;
-        (cur->fn)();
-        p = cur->next;
-        free(cur);
-    }
-
-    atexit_functions = NULL;
-
-    pthread_mutex_unlock(&atexit_functions_mutex);
-}
+void AddFilenameToListOfSuspicious(const char *filename);
+int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp);
 
 #endif
-
-void RegisterAtExitFunction(AtExitFn fn)
-{
-#if defined(__MINGW32__)
-    pthread_mutex_lock(&atexit_functions_mutex);
-
-    AtExitList *p = xmalloc(sizeof(AtExitList));
-    p->fn = fn;
-    p->next = atexit_functions;
-
-    atexit_functions = p;
-
-    pthread_mutex_unlock(&atexit_functions_mutex);
-#endif
-
-    atexit(fn);
-}

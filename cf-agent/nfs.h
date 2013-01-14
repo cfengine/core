@@ -22,8 +22,8 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_MAP_COMMON_H
-#define CFENGINE_MAP_COMMON_H
+#ifndef CFENGINE_NFS_H
+#define CFENGINE_NFS_H
 
 #include "cf3.defs.h"
 

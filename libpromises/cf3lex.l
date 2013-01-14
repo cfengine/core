@@ -35,7 +35,7 @@
 #include "env_context.h"
 #include "parser_state.h"
 #include "files_names.h"
-#include "unix.h"
+#include "vars.h"
 
 char cf_linebuf[8192];
 int  cf_tokenpos;
@@ -58,6 +58,7 @@ int  cf_block_open=0;
 
 #define ParserDebug if (DEBUG) printf
 
+static int DeEscapeQuotedString(const char *from, char *to);
 
 int yywrap(void)
 {
@@ -501,5 +502,59 @@ edit_xml             {
                       }
 
 %%
+
+static int DeEscapeQuotedString(const char *from, char *to)
+{
+    char *cp;
+    const char *sp;
+    char start = *from;
+    int len = strlen(from);
+
+    if (len == 0)
+    {
+        return 0;
+    }
+
+    for (sp = from + 1, cp = to; (sp - from) < len; sp++, cp++)
+    {
+        if ((*sp == start))
+        {
+            *(cp) = '\0';
+
+            if (*(sp + 1) != '\0')
+            {
+                return (2 + (sp - from));
+            }
+
+            return 0;
+        }
+
+      if (*sp == '\\')
+      {
+            switch (*(sp + 1))
+            {
+            case '\n':
+                sp += 2;
+                break;
+
+            case ' ':
+                break;
+
+            case '\\':
+            case '\"':
+            case '\'':
+                sp++;
+                break;
+            }
+        }
+
+        *cp = *sp;
+    }
+
+    yyerror("Runaway string");
+    *(cp) = '\0';
+    return 0;
+}
+
 
 /* EOF */

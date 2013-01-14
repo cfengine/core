@@ -275,6 +275,21 @@ bool IsNumber(const char *s)
     return true;
 }
 
+bool EmptyString(const char *s)
+{
+    const char *sp;
+
+    for (sp = s; *sp != '\0'; sp++)
+    {
+        if (!isspace((int)*sp))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 /*********************************************************************/
 
 long StringToLong(const char *str)

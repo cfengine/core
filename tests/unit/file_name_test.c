@@ -31,7 +31,7 @@ static void test_get_parent_directory_copy(void **state)
 {
     char *out;
 
-#ifndef NT
+#ifndef _WIN32
 
     /* unix, will fail on windows because of IsFileSep */
 
@@ -51,7 +51,7 @@ static void test_get_parent_directory_copy(void **state)
     assert_string_equal(out, "/");
     free(out);
 
-#else  /* NT */
+#else  /* _WIN32 */
 
     /* windows, will fail on unix because of IsFileSep */
 
@@ -71,7 +71,7 @@ static void test_get_parent_directory_copy(void **state)
     assert_string_equal(out, "\\\\");
     free(out);
 
-#endif  /* __MINGW32__ */
+#endif  /* _WIN32 */
 }
 
 

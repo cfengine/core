@@ -392,7 +392,8 @@ static void test_array_iterator(void **state)
 static void test_parse_object_simple(void **state)
 {
     const char *data = OBJECT_SIMPLE;
-    JsonElement *obj = JsonParse(&data);
+    JsonElement *obj = NULL;
+    assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &obj));
 
     assert_string_equal(JsonObjectGetAsString(obj, "second"), "two");
     assert_string_equal(JsonObjectGetAsString(obj, "first"), "one");
@@ -411,7 +412,8 @@ static void test_parse_object_escaped(void **state)
 
     const char *json_string = StringWriterData(writer);
 
-    JsonElement *obj = JsonParse(&json_string);
+    JsonElement *obj = NULL;
+    assert_int_equal(JSON_PARSE_OK, JsonParse(&json_string, &obj));
 
     assert_int_not_equal(obj, NULL);
     assert_string_equal(JsonObjectGetAsString(obj, key), escaped_string);
@@ -423,7 +425,8 @@ static void test_parse_object_escaped(void **state)
 static void test_parse_array_simple(void **state)
 {
     const char *data = ARRAY_SIMPLE;
-    JsonElement *arr = JsonParse(&data);
+    JsonElement *arr = NULL;
+    assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &arr));
 
     assert_string_equal(JsonArrayGetAsString(arr, 1), "two");
     assert_string_equal(JsonArrayGetAsString(arr, 0), "one");
@@ -434,7 +437,8 @@ static void test_parse_array_simple(void **state)
 static void test_parse_object_compound(void **state)
 {
     const char *data = OBJECT_COMPOUND;
-    JsonElement *obj = JsonParse(&data);
+    JsonElement *obj = NULL;
+    assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &obj));
 
     assert_string_equal(JsonObjectGetAsString(obj, "first"), "one");
 
@@ -453,14 +457,16 @@ static void test_parse_object_diverse(void **state)
 {
     {
         const char *data = "{ \"a\": 1, \"b\": \"snookie\", \"c\": 1.0, \"d\": {}, \"e\": [], \"f\": true, \"g\": false, \"h\": null }";
-        JsonElement *json = JsonParse(&data);
+        JsonElement *json = NULL;
+        assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_true(json);
         JsonElementDestroy(json);
     }
 
     {
         const char *data = "{\"a\":1,\"b\":\"snookie\",\"c\":1.0,\"d\":{},\"e\":[],\"f\":true,\"g\":false,\"h\":null}";
-        JsonElement *json = JsonParse(&data);
+        JsonElement *json = NULL;
+        assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_true(json);
         JsonElementDestroy(json);
     }
@@ -469,7 +475,8 @@ static void test_parse_object_diverse(void **state)
 static void test_parse_array_object(void **state)
 {
     const char *data = ARRAY_OBJECT;
-    JsonElement *arr = JsonParse(&data);
+    JsonElement *arr = NULL;
+    assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &arr));
 
     JsonElement *first = JsonArrayGetAsObject(arr, 0);
 
@@ -481,7 +488,8 @@ static void test_parse_array_object(void **state)
 static void test_iterator_current(void **state)
 {
     const char *data = ARRAY_SIMPLE;
-    JsonElement *arr = JsonParse(&data);
+    JsonElement *arr = NULL;
+    assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &arr));
 
     JsonElement *json = JsonObjectCreate(1);
     JsonObjectAppendArray(json, "array", arr);
@@ -502,7 +510,8 @@ static void test_iterator_current(void **state)
 static void test_parse_empty(void **state)
 {
     const char *data = "";
-    JsonElement *json = JsonParse(&data);
+    JsonElement *json = NULL;
+    assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
 
     assert_false(json);
 }
@@ -511,77 +520,88 @@ static void test_parse_good_numbers(void **state)
 {
     {
         const char *data = "[0.1]";
-        JsonElement *json = JsonParse(&data);
+        JsonElement *json = NULL;
+        assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_true(json);
         JsonElementDestroy(json);
     }
 
     {
         const char *data = "[0.1234567890123456789]";
-        JsonElement *json = JsonParse(&data);
+        JsonElement *json = NULL;
+        assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_true(json);
         JsonElementDestroy(json);
     }
 
     {
         const char *data = "[0.1234e10]";
-        JsonElement *json = JsonParse(&data);
+        JsonElement *json = NULL;
+        assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_true(json);
         JsonElementDestroy(json);
     }
 
     {
         const char *data = "[0.1234e+10]";
-        JsonElement *json = JsonParse(&data);
+        JsonElement *json = NULL;
+        assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_true(json);
         JsonElementDestroy(json);
     }
 
     {
         const char *data = "[0.1234e-10]";
-        JsonElement *json = JsonParse(&data);
+        JsonElement *json = NULL;
+        assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_true(json);
         JsonElementDestroy(json);
     }
 
     {
         const char *data = "[1203e10]";
-        JsonElement *json = JsonParse(&data);
+        JsonElement *json = NULL;
+        assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_true(json);
         JsonElementDestroy(json);
     }
 
     {
         const char *data = "[1203e+10]";
-        JsonElement *json = JsonParse(&data);
+        JsonElement *json = NULL;
+        assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_true(json);
         JsonElementDestroy(json);
     }
 
     {
         const char *data = "[123e-10]";
-        JsonElement *json = JsonParse(&data);
+        JsonElement *json = NULL;
+        assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_true(json);
         JsonElementDestroy(json);
     }
 
     {
         const char *data = "[0e-10]";
-        JsonElement *json = JsonParse(&data);
+        JsonElement *json = NULL;
+        assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_true(json);
         JsonElementDestroy(json);
     }
 
     {
         const char *data = "[0.0e-10]";
-        JsonElement *json = JsonParse(&data);
+        JsonElement *json = NULL;
+        assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_true(json);
         JsonElementDestroy(json);
     }
 
     {
         const char *data = "[-0.0e-10]";
-        JsonElement *json = JsonParse(&data);
+        JsonElement *json = NULL;
+        assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_true(json);
         JsonElementDestroy(json);
     }
@@ -591,49 +611,58 @@ static void test_parse_bad_numbers(void **state)
 {
     {
         const char *data = "[01]";
-        assert_false(JsonParse(&data));
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
     }
 
     {
         const char *data = "[01.1]";
-        assert_false(JsonParse(&data));
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
     }
 
     {
         const char *data = "[1.]";
-        assert_false(JsonParse(&data));
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
     }
 
     {
         const char *data = "[e10]";
-        assert_false(JsonParse(&data));
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
     }
 
     {
         const char *data = "[-e10]";
-        assert_false(JsonParse(&data));
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
     }
 
     {
         const char *data = "[+2]";
-        assert_false(JsonParse(&data));
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
     }
 
     {
         const char *data = "[1e]";
-        assert_false(JsonParse(&data));
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
     }
 
     {
         const char *data = "[e10]";
-        assert_false(JsonParse(&data));
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
     }
 }
 
 static void test_parse_trim(void **state)
 {
     const char *data = "           []    ";
-    JsonElement *json = JsonParse(&data);
+    JsonElement *json = NULL;
+    assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
 
     assert_true(json);
 
@@ -643,7 +672,8 @@ static void test_parse_trim(void **state)
 static void test_parse_array_extra_closing(void **state)
 {
     const char *data = "  []]";
-    JsonElement *json = JsonParse(&data);
+    JsonElement *json = NULL;
+    assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
 
     assert_true(json);
 
@@ -654,14 +684,16 @@ static void test_parse_array_diverse(void **state)
 {
     {
         const char *data = "[1, \"snookie\", 1.0, {}, [], true, false, null ]";
-        JsonElement *json = JsonParse(&data);
+        JsonElement *json = NULL;
+        assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_true(json);
         JsonElementDestroy(json);
     }
 
     {
         const char *data = "[1,\"snookie\",1.0,{},[],true,false,null]";
-        JsonElement *json = JsonParse(&data);
+        JsonElement *json = NULL;
+        assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_true(json);
         JsonElementDestroy(json);
     }
@@ -670,7 +702,8 @@ static void test_parse_array_diverse(void **state)
 static void test_parse_bad_apple2(void **state)
 {
     const char *data = "][";
-    JsonElement *json = JsonParse(&data);
+    JsonElement *json = NULL;
+    assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
 
     assert_false(json);
 }
@@ -679,25 +712,29 @@ static void test_parse_object_garbage(void **state)
 {
     {
         const char *data = "{ \"first\": 1, garbage \"second\": 2 }";
-        JsonElement *json = JsonParse(&data);
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_false(json);
     }
 
     {
         const char *data = "{ \"first\": 1 garbage \"second\": 2 }";
-        JsonElement *json = JsonParse(&data);
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_false(json);
     }
 
     {
         const char *data = "{ \"first\": garbage, \"second\": 2 }";
-        JsonElement *json = JsonParse(&data);
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_false(json);
     }
 
     {
         const char *data = "{ \"first\": garbage \"second\": 2 }";
-        JsonElement *json = JsonParse(&data);
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_false(json);
     }
 }
@@ -706,13 +743,15 @@ static void test_parse_object_nested_garbage(void **state)
 {
     {
         const char *data = "{ \"first\": { garbage } }";
-        JsonElement *json = JsonParse(&data);
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_false(json);
     }
 
     {
         const char *data = "{ \"first\": [ garbage ] }";
-        JsonElement *json = JsonParse(&data);
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_false(json);
     }
 }
@@ -721,25 +760,29 @@ static void test_parse_array_garbage(void **state)
 {
     {
         const char *data = "[1, garbage]";
-        JsonElement *json = JsonParse(&data);
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_false(json);
     }
 
     {
         const char *data = "[1 garbage]";
-        JsonElement *json = JsonParse(&data);
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_false(json);
     }
 
     {
         const char *data = "[garbage]";
-        JsonElement *json = JsonParse(&data);
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_false(json);
     }
 
     {
         const char *data = "[garbage, 1]";
-        JsonElement *json = JsonParse(&data);
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_false(json);
     }
 }
@@ -748,13 +791,15 @@ static void test_parse_array_nested_garbage(void **state)
 {
     {
         const char *data = "[1, [garbage]]";
-        JsonElement *json = JsonParse(&data);
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_false(json);
     }
 
     {
         const char *data = "[1, { garbage }]";
-        JsonElement *json = JsonParse(&data);
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_false(json);
     }
 }

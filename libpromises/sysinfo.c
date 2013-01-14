@@ -49,7 +49,7 @@
 
 void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname, char *uqname, char *domain);
 
-#ifdef LINUX
+#ifdef __linux__
 static int Linux_Fedora_Version(void);
 static int Linux_Redhat_Version(void);
 static void Linux_Oracle_VM_Server_Version(void);
@@ -263,7 +263,7 @@ void GetNameInfo3()
     struct sockaddr_in cin;
     unsigned char digest[EVP_MAX_MD_SIZE + 1];
 
-#ifdef AIX
+#ifdef _AIX
     char real_version[_SYS_NMLN];
 #endif
 #if defined(HAVE_SYSINFO) && (defined(SI_ARCHITECTURE) || defined(SI_PLATFORM))
@@ -285,7 +285,7 @@ void GetNameInfo3()
         memset(&VSYSNAME, 0, sizeof(VSYSNAME));
     }
 
-#ifdef AIX
+#ifdef _AIX
     snprintf(real_version, _SYS_NMLN, "%.80s.%.80s", VSYSNAME.version, VSYSNAME.release);
     strncpy(VSYSNAME.release, real_version, _SYS_NMLN);
 #endif
@@ -346,7 +346,7 @@ void GetNameInfo3()
  * solarisx86 is a historically defined class for Solaris on x86. We have to
  * define it manually now.
  */
-#ifdef SOLARIS
+#ifdef __sun
     if (strcmp(VSYSNAME.machine, "i86pc") == 0)
     {
         HardClass("solarisx86");
@@ -461,7 +461,7 @@ void GetNameInfo3()
 
 /* Windows special directories */
 
-#ifdef MINGW
+#ifdef __MINGW32__
     if (NovaWin_GetWinDir(workbuf, sizeof(workbuf)))
     {
         NewScalar("sys", "windir", workbuf, cf_str);
@@ -490,7 +490,7 @@ void GetNameInfo3()
 
 # endif
 
-#else /* NOT MINGW */
+#else /* !__MINGW32__ */
 
 // defs on Unix for manual-building purposes
 
@@ -499,7 +499,7 @@ void GetNameInfo3()
     NewScalar("sys", "winprogdir", "/dev/null", cf_str);
     NewScalar("sys", "winprogdir86", "/dev/null", cf_str);
 
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
     LoadSlowlyVaryingObservations();
     EnterpriseContext();
@@ -774,7 +774,7 @@ static void SetFlavour(const char *flavour)
 
 void OSClasses(void)
 {
-#ifdef LINUX
+#ifdef __linux__
     struct stat statbuf;
 
 /* Mandrake/Mandriva, Fedora and Oracle VM Server supply /etc/redhat-release, so
@@ -922,7 +922,7 @@ void OSClasses(void)
 
     GetCPUInfo();
 
-#ifdef CFCYG
+#ifdef __CYGWIN__
 
     for (char *sp = VSYSNAME.sysname; *sp != '\0'; sp++)
     {
@@ -963,9 +963,9 @@ void OSClasses(void)
 
     NewScalar("sys", "crontab", "", cf_str);
 
-#endif /* CFCYG */
+#endif /* __CYGWIN__ */
 
-#ifdef MINGW
+#ifdef __MINGW32__
     HardClass(VSYSNAME.release); // code name - e.g. Windows Vista
     HardClass(VSYSNAME.version); // service pack number - e.g. Service Pack 3
 
@@ -989,9 +989,9 @@ void OSClasses(void)
 
     SetFlavour("windows");
 
-#endif /* MINGW */
+#endif /* __MINGW32__ */
 
-#ifndef NT
+#ifndef _WIN32
     struct passwd *pw;
     if ((pw = getpwuid(getuid())) == NULL)
     {
@@ -1019,7 +1019,7 @@ void OSClasses(void)
     SetFlavour("android");
 #endif
 
-#ifdef SOLARIS
+#ifdef __sun
     if (FullTextMatch("joyent.*", VSYSNAME.version))
     {
         HardClass("smartos");
@@ -1048,7 +1048,7 @@ void OSClasses(void)
 
 /*********************************************************************************/
 
-#ifdef LINUX
+#ifdef __linux__
 static void Linux_Oracle_VM_Server_Version(void)
 {
     char relstring[CF_MAXVARSIZE];
@@ -2144,7 +2144,7 @@ static FILE *ReadFirstLine(const char *filename, char *buf, int bufsize)
 
     return fp;
 }
-#endif /* LINUX */
+#endif /* __linux__ */
 
 /******************************************************************/
 /* User info                                                      */
@@ -2211,7 +2211,7 @@ static void GetCPUInfo()
     char buf[CF_BUFSIZE];
     int count = 0;
 
-#ifdef LINUX
+#ifdef __linux__
     FILE *fp;
 
     if ((fp = fopen("/proc/stat", "r")) == NULL)
@@ -2233,7 +2233,7 @@ static void GetCPUInfo()
 
     fclose(fp);
     count--;
-#endif /* LINUX */
+#endif /* __linux__ */
 
 #ifdef HAVE_SYS_MPCTL_H
 // Itanium processors have Intel Hyper-Threading virtual-core capability,

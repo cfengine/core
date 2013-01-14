@@ -44,7 +44,7 @@ HashMap *HashMapNew(MapHashFn hash_fn, MapKeyEqualFn equal_fn,
 
 static unsigned HashMapGetBucket(const HashMap *map, const void *key)
 {
-    return map->hash_fn(key) % HASHMAP_BUCKETS;
+    return map->hash_fn(key, HASHMAP_BUCKETS);
 }
 
 bool HashMapInsert(HashMap *map, void *key, void *value)

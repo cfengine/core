@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include "processes_select.h"
 
 #include "env_context.h"
 #include "files_names.h"
@@ -695,7 +695,7 @@ static const char *GetProcessOptions(void)
     }
 # endif
 
-# ifdef LINUX
+# ifdef __linux__
     if (strncmp(VSYSNAME.release, "2.4", 3) == 0)
     {
         // No threads on 2.4 kernels

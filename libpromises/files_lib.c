@@ -25,15 +25,21 @@
 #include "files_lib.h"
 
 #include "files_interfaces.h"
-#include "files_operators.h"
+#include "files_names.h"
+#include "files_copy.h"
 #include "item_lib.h"
 #include "cfstream.h"
+#include "logging.h"
+#include "promises.h"
+#include "matching.h"
+#include "dir.h"
 
 #include <assert.h>
 
 
 static Item *NextItem(const Item *ip);
 static int ItemListsEqual(const Item *list1, const Item *list2, int report, Attributes a, const Promise *pp);
+static bool DeleteDirectoryTree(const char *path);
 
 /*********************************************************************/
 
@@ -341,4 +347,659 @@ static Item *NextItem(const Item *ip)
     {
         return NULL;
     }
+}
+
+/**
+ * Like MakeParentDirectory, but honours warn-only and dry-run mode.
+ * We should eventually migrate to this function to avoid making changes
+ * in these scenarios.
+ **/
+
+int MakeParentDirectory2(char *parentandchild, int force, const ReportContext *report_context, bool enforce_promise)
+{
+    if(enforce_promise)
+    {
+        return MakeParentDirectory(parentandchild, force, report_context);
+    }
+
+    char *parent_dir = GetParentDirectoryCopy(parentandchild);
+
+    bool parent_exists = IsDir(parent_dir);
+
+    free(parent_dir);
+
+    return parent_exists;
+}
+
+/**
+ * Please consider using MakeParentDirectory2() instead.
+ **/
+
+int MakeParentDirectory(char *parentandchild, int force, const ReportContext *report_context)
+{
+    char *spc, *sp;
+    char currentpath[CF_BUFSIZE];
+    char pathbuf[CF_BUFSIZE];
+    struct stat statbuf;
+    mode_t mask;
+    int rootlen;
+    char Path_File_Separator;
+
+#ifdef __APPLE__
+/* Keeps track of if dealing w. resource fork */
+    int rsrcfork;
+
+    rsrcfork = 0;
+
+    char *tmpstr;
+#endif
+
+    CfDebug("Trying to create a parent directory for %s%s", parentandchild, force ? " (force applied)" : "");
+
+    if (!IsAbsoluteFileName(parentandchild))
+    {
+        CfOut(cf_error, "", "Will not create directories for a relative filename (%s). Has no invariant meaning\n",
+              parentandchild);
+        return false;
+    }
+
+    strncpy(pathbuf, parentandchild, CF_BUFSIZE - 1);   /* local copy */
+
+#ifdef __APPLE__
+    if (strstr(pathbuf, _PATH_RSRCFORKSPEC) != NULL)
+    {
+        rsrcfork = 1;
+    }
+#endif
+
+/* skip link name */
+/* This cast is necessary, as  you can't have (char* -> char*)
+   and (const char* -> const char*) functions in C */
+    sp = (char *) LastFileSeparator(pathbuf);
+
+    if (sp == NULL)
+    {
+        sp = pathbuf;
+    }
+    *sp = '\0';
+
+    DeleteSlash(pathbuf);
+
+    if (lstat(pathbuf, &statbuf) != -1)
+    {
+        if (S_ISLNK(statbuf.st_mode))
+        {
+            CfOut(cf_verbose, "", "INFO: %s is a symbolic link, not a true directory!\n", pathbuf);
+        }
+
+        if (force)              /* force in-the-way directories aside */
+        {
+            struct stat dir;
+
+            stat(pathbuf, &dir);
+
+            if (!S_ISDIR(dir.st_mode))  /* if the dir exists - no problem */
+            {
+                struct stat sbuf;
+
+                if (DONTDO)
+                {
+                    return true;
+                }
+
+                strcpy(currentpath, pathbuf);
+                DeleteSlash(currentpath);
+                strcat(currentpath, ".cf-moved");
+                CfOut(cf_inform, "", "Moving obstructing file/link %s to %s to make directory", pathbuf, currentpath);
+
+                /* If cfagent, remove an obstructing backup object */
+
+                if (lstat(currentpath, &sbuf) != -1)
+                {
+                    if (S_ISDIR(sbuf.st_mode))
+                    {
+                        DeleteDirectoryTree(currentpath);
+                    }
+                    else
+                    {
+                        if (unlink(currentpath) == -1)
+                        {
+                            CfOut(cf_inform, "unlink", "Couldn't remove file/link %s while trying to remove a backup\n",
+                                  currentpath);
+                        }
+                    }
+                }
+
+                /* And then move the current object out of the way... */
+
+                if (cf_rename(pathbuf, currentpath) == -1)
+                {
+                    CfOut(cf_inform, "cf_rename", "Warning. The object %s is not a directory.\n", pathbuf);
+                    return (false);
+                }
+            }
+        }
+        else
+        {
+            if (!S_ISLNK(statbuf.st_mode) && !S_ISDIR(statbuf.st_mode))
+            {
+                CfOut(cf_inform, "",
+                      "The object %s is not a directory. Cannot make a new directory without deleting it.", pathbuf);
+                return (false);
+            }
+        }
+    }
+
+/* Now we can make a new directory .. */
+
+    currentpath[0] = '\0';
+
+    rootlen = RootDirLength(parentandchild);
+    strncpy(currentpath, parentandchild, rootlen);
+
+    for (sp = parentandchild + rootlen, spc = currentpath + rootlen; *sp != '\0'; sp++)
+    {
+        if (!IsFileSep(*sp) && *sp != '\0')
+        {
+            *spc = *sp;
+            spc++;
+        }
+        else
+        {
+            Path_File_Separator = *sp;
+            *spc = '\0';
+
+            if (strlen(currentpath) == 0)
+            {
+            }
+            else if (cfstat(currentpath, &statbuf) == -1)
+            {
+                CfDebug("cfengine: Making directory %s, mode %" PRIoMAX "\n", currentpath, (uintmax_t)DEFAULTMODE);
+
+                if (!DONTDO)
+                {
+                    mask = umask(0);
+
+                    if (cf_mkdir(currentpath, DEFAULTMODE) == -1)
+                    {
+                        CfOut(cf_error, "cf_mkdir", "Unable to make directories to %s\n", parentandchild);
+                        umask(mask);
+                        return (false);
+                    }
+                    umask(mask);
+                }
+            }
+            else
+            {
+                if (!S_ISDIR(statbuf.st_mode))
+                {
+#ifdef __APPLE__
+                    /* Ck if rsrc fork */
+                    if (rsrcfork)
+                    {
+                        tmpstr = xmalloc(CF_BUFSIZE);
+                        strncpy(tmpstr, currentpath, CF_BUFSIZE);
+                        strncat(tmpstr, _PATH_FORKSPECIFIER, CF_BUFSIZE);
+
+                        /* Cfengine removed terminating slashes */
+                        DeleteSlash(tmpstr);
+
+                        if (strncmp(tmpstr, pathbuf, CF_BUFSIZE) == 0)
+                        {
+                            free(tmpstr);
+                            return (true);
+                        }
+                        free(tmpstr);
+                    }
+#endif
+
+                    CfOut(cf_error, "", "Cannot make %s - %s is not a directory! (use forcedirs=true)\n", pathbuf,
+                          currentpath);
+                    return (false);
+                }
+            }
+
+            /* *spc = FILE_SEPARATOR; */
+            *spc = Path_File_Separator;
+            spc++;
+        }
+    }
+
+    CfDebug("Directory for %s exists. Okay\n", parentandchild);
+    return (true);
+}
+
+int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, const Promise *pp)
+{
+    FILE *fp;
+    struct stat statbuf;
+    char line[CF_BUFSIZE], concat[CF_BUFSIZE];
+    int join = false;
+
+    if (cfstat(file, &statbuf) == -1)
+    {
+        CfOut(cf_verbose, "stat", " ** Information: the proposed file \"%s\" could not be loaded", file);
+        return false;
+    }
+
+    if (a.edits.maxfilesize != 0 && statbuf.st_size > a.edits.maxfilesize)
+    {
+        CfOut(cf_inform, "", " !! File %s is bigger than the limit edit.max_file_size = %jd > %d bytes\n", file,
+              (intmax_t) statbuf.st_size, a.edits.maxfilesize);
+        return (false);
+    }
+
+    if (!S_ISREG(statbuf.st_mode))
+    {
+        cfPS(cf_inform, CF_INTERPT, "", pp, a, "%s is not a plain file\n", file);
+        return false;
+    }
+
+    if ((fp = fopen(file, "r")) == NULL)
+    {
+        cfPS(cf_inform, CF_INTERPT, "fopen", pp, a, "Couldn't read file %s for editing\n", file);
+        return false;
+    }
+
+    memset(line, 0, CF_BUFSIZE);
+    memset(concat, 0, CF_BUFSIZE);
+
+    while (!feof(fp))
+    {
+        if (CfReadLine(line, CF_BUFSIZE - 1, fp) == -1)
+        {
+            FatalError("Error in CfReadLine");
+        }
+
+        if (a.edits.joinlines && *(line + strlen(line) - 1) == '\\')
+        {
+            join = true;
+        }
+        else
+        {
+            join = false;
+        }
+
+        if (join)
+        {
+            *(line + strlen(line) - 1) = '\0';
+            JoinSuffix(concat, line);
+        }
+        else
+        {
+            JoinSuffix(concat, line);
+
+            if (!feof(fp) || (strlen(concat) != 0))
+            {
+                AppendItem(liststart, concat, NULL);
+            }
+
+            concat[0] = '\0';
+            join = false;
+        }
+
+        line[0] = '\0';
+    }
+
+    fclose(fp);
+    return (true);
+}
+
+int FileSanityChecks(char *path, Attributes a, Promise *pp)
+{
+    if ((a.havelink) && (a.havecopy))
+    {
+        CfOut(cf_error, "",
+              " !! Promise constraint conflicts - %s file cannot both be a copy of and a link to the source", path);
+        PromiseRef(cf_error, pp);
+        return false;
+    }
+
+    if ((a.havelink) && (!a.link.source))
+    {
+        CfOut(cf_error, "", " !! Promise to establish a link at %s has no source", path);
+        PromiseRef(cf_error, pp);
+        return false;
+    }
+
+/* We can't do this verification during parsing as we did not yet read the body,
+ * so we can't distinguish between link and copy source. In post-verification
+ * all bodies are already expanded, so we don't have the information either */
+
+    if ((a.havecopy) && (a.copy.source) && (!FullTextMatch(CF_ABSPATHRANGE, a.copy.source)))
+    {
+        /* FIXME: somehow redo a PromiseRef to be able to embed it into a string */
+        CfOut(cf_error, "", " !! Non-absolute path in source attribute (have no invariant meaning): %s", a.copy.source);
+        PromiseRef(cf_error, pp);
+        FatalError("Bailing out");
+    }
+
+    if ((a.haveeditline) && (a.haveeditxml))
+    {
+        CfOut(cf_error, "", " !! Promise constraint conflicts - %s editing file as both line and xml makes no sense",
+              path);
+        PromiseRef(cf_error, pp);
+        return false;
+    }
+
+    if ((a.havedepthsearch) && (a.haveedit))
+    {
+        CfOut(cf_error, "", " !! Recursive depth_searches are not compatible with general file editing");
+        PromiseRef(cf_error, pp);
+        return false;
+    }
+
+    if ((a.havedelete) && ((a.create) || (a.havecopy) || (a.haveedit) || (a.haverename)))
+    {
+        CfOut(cf_error, "", " !! Promise constraint conflicts - %s cannot be deleted and exist at the same time", path);
+        PromiseRef(cf_error, pp);
+        return false;
+    }
+
+    if ((a.haverename) && ((a.create) || (a.havecopy) || (a.haveedit)))
+    {
+        CfOut(cf_error, "",
+              " !! Promise constraint conflicts - %s cannot be renamed/moved and exist there at the same time", path);
+        PromiseRef(cf_error, pp);
+        return false;
+    }
+
+    if ((a.havedelete) && (a.havedepthsearch) && (!a.haveselect))
+    {
+        CfOut(cf_error, "",
+              " !! Dangerous or ambiguous promise - %s specifies recursive deletion but has no file selection criteria",
+              path);
+        PromiseRef(cf_error, pp);
+        return false;
+    }
+
+    if ((a.haveselect) && (!a.select.result))
+    {
+        CfOut(cf_error, "", " !! File select constraint body promised no result (check body definition)");
+        PromiseRef(cf_error, pp);
+        return false;
+    }
+
+    if ((a.havedelete) && (a.haverename))
+    {
+        CfOut(cf_error, "", " !! File %s cannot promise both deletion and renaming", path);
+        PromiseRef(cf_error, pp);
+        return false;
+    }
+
+    if ((a.havecopy) && (a.havedepthsearch) && (a.havedelete))
+    {
+        CfOut(cf_inform, "",
+              " !! Warning: depth_search of %s applies to both delete and copy, but these refer to different searches (source/destination)",
+              pp->promiser);
+        PromiseRef(cf_inform, pp);
+    }
+
+    if ((a.transaction.background) && (a.transaction.audit))
+    {
+        CfOut(cf_error, "", " !! Auditing cannot be performed on backgrounded promises (this might change).");
+        PromiseRef(cf_error, pp);
+        return false;
+    }
+
+    if (((a.havecopy) || (a.havelink)) && (a.transformer))
+    {
+        CfOut(cf_error, "", " !! File object(s) %s cannot both be a copy of source and transformed simultaneously",
+              pp->promiser);
+        PromiseRef(cf_error, pp);
+        return false;
+    }
+
+    if ((a.haveselect) && (a.select.result == NULL))
+    {
+        CfOut(cf_error, "", " !! Missing file_result attribute in file_select body");
+        PromiseRef(cf_error, pp);
+        return false;
+    }
+
+    if ((a.havedepthsearch) && (a.change.report_diffs))
+    {
+        CfOut(cf_error, "", " !! Difference reporting is not allowed during a depth_search");
+        PromiseRef(cf_error, pp);
+        return false;
+    }
+
+    return true;
+}
+
+static bool DeleteDirectoryTreeInternal(const char *basepath, const char *path)
+{
+    Dir *dirh = OpenDirLocal(path);
+    const struct dirent *dirp;
+    bool failed = false;
+
+    if (dirh == NULL)
+    {
+        CfOut(cf_inform, "opendir",
+              "Unable to open directory %s during purge of directory tree %s",
+              path, basepath);
+        return false;
+    }
+
+    for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
+    {
+        if (!strcmp(dirp->d_name, ".") || !strcmp(dirp->d_name, ".."))
+        {
+            continue;
+        }
+
+        char subpath[CF_BUFSIZE];
+        snprintf(subpath, CF_BUFSIZE, "%s" FILE_SEPARATOR_STR "%s", path, dirp->d_name);
+
+        struct stat lsb;
+        if (lstat(subpath, &lsb) == -1)
+        {
+            CfOut(cf_verbose, "lstat",
+                  "Unable to stat file %s during purge of directory tree %s", path, basepath);
+            failed = true;
+        }
+        else
+        {
+            if (S_ISDIR(lsb.st_mode))
+            {
+                if (!DeleteDirectoryTreeInternal(basepath, subpath))
+                {
+                    failed = true;
+                }
+            }
+
+            if (unlink(subpath) == 1)
+            {
+                CfOut(cf_verbose, "unlink",
+                      "Unable to remove file %s during purge of directory tree %s",
+                      subpath, basepath);
+                failed = true;
+            }
+        }
+    }
+
+    CloseDir(dirh);
+    return failed;
+}
+
+static bool DeleteDirectoryTree(const char *path)
+{
+    return DeleteDirectoryTreeInternal(path, path);
+}
+
+void RotateFiles(char *name, int number)
+{
+    int i, fd;
+    struct stat statbuf;
+    char from[CF_BUFSIZE], to[CF_BUFSIZE];
+
+    if (IsItemIn(ROTATED, name))
+    {
+        return;
+    }
+
+    PrependItem(&ROTATED, name, NULL);
+
+    if (cfstat(name, &statbuf) == -1)
+    {
+        CfOut(cf_verbose, "", "No access to file %s\n", name);
+        return;
+    }
+
+    for (i = number - 1; i > 0; i--)
+    {
+        snprintf(from, CF_BUFSIZE, "%s.%d", name, i);
+        snprintf(to, CF_BUFSIZE, "%s.%d", name, i + 1);
+
+        if (cf_rename(from, to) == -1)
+        {
+            CfDebug("Rename failed in RotateFiles %s -> %s\n", name, from);
+        }
+
+        snprintf(from, CF_BUFSIZE, "%s.%d.gz", name, i);
+        snprintf(to, CF_BUFSIZE, "%s.%d.gz", name, i + 1);
+
+        if (cf_rename(from, to) == -1)
+        {
+            CfDebug("Rename failed in RotateFiles %s -> %s\n", name, from);
+        }
+
+        snprintf(from, CF_BUFSIZE, "%s.%d.Z", name, i);
+        snprintf(to, CF_BUFSIZE, "%s.%d.Z", name, i + 1);
+
+        if (cf_rename(from, to) == -1)
+        {
+            CfDebug("Rename failed in RotateFiles %s -> %s\n", name, from);
+        }
+
+        snprintf(from, CF_BUFSIZE, "%s.%d.bz", name, i);
+        snprintf(to, CF_BUFSIZE, "%s.%d.bz", name, i + 1);
+
+        if (cf_rename(from, to) == -1)
+        {
+            CfDebug("Rename failed in RotateFiles %s -> %s\n", name, from);
+        }
+
+        snprintf(from, CF_BUFSIZE, "%s.%d.bz2", name, i);
+        snprintf(to, CF_BUFSIZE, "%s.%d.bz2", name, i + 1);
+
+        if (cf_rename(from, to) == -1)
+        {
+            CfDebug("Rename failed in RotateFiles %s -> %s\n", name, from);
+        }
+    }
+
+    snprintf(to, CF_BUFSIZE, "%s.1", name);
+
+    if (CopyRegularFileDisk(name, to, false) == -1)
+    {
+        CfDebug("cfengine: copy failed in RotateFiles %s -> %s\n", name, to);
+        return;
+    }
+
+    cf_chmod(to, statbuf.st_mode);
+    chown(to, statbuf.st_uid, statbuf.st_gid);
+    cf_chmod(name, 0600);       /* File must be writable to empty .. */
+
+    if ((fd = creat(name, statbuf.st_mode)) == -1)
+    {
+        CfOut(cf_error, "creat", "Failed to create new %s in disable(rotate)\n", name);
+    }
+    else
+    {
+        chown(name, statbuf.st_uid, statbuf.st_gid);    /* NT doesn't have fchown */
+        fchmod(fd, statbuf.st_mode);
+        close(fd);
+    }
+}
+
+#ifndef __MINGW32__
+
+void CreateEmptyFile(char *name)
+{
+    int tempfd;
+
+    if (unlink(name) == -1)
+    {
+        if (errno != ENOENT)
+        {
+            CfDebug("Unable to remove existing file %s: %s\n", name, strerror(errno));
+        }
+    }
+
+    if ((tempfd = open(name, O_CREAT | O_EXCL | O_WRONLY, 0600)) < 0)
+    {
+        CfOut(cf_error, "open", "Couldn't open a file %s\n", name);
+    }
+
+    close(tempfd);
+}
+
+#endif
+
+static char FileStateToChar(FileState status)
+{
+    switch(status)
+    {
+    case cf_file_new:
+        return 'N';
+
+    case cf_file_removed:
+        return 'R';
+
+    case cf_file_content_changed:
+        return 'C';
+
+    case cf_file_stats_changed:
+        return 'S';
+
+    default:
+        FatalError("Invalid Filechange status supplied");
+    }
+}
+
+void LogHashChange(char *file, FileState status, char *msg, Promise *pp)
+{
+    FILE *fp;
+    char fname[CF_BUFSIZE];
+    time_t now = time(NULL);
+    mode_t perm = 0600;
+    static char prevFile[CF_MAXVARSIZE] = { 0 };
+
+// we might get called twice..
+    if (strcmp(file, prevFile) == 0)
+    {
+        return;
+    }
+
+    strlcpy(prevFile, file, CF_MAXVARSIZE);
+
+/* This is inefficient but we don't want to lose any data */
+
+    snprintf(fname, CF_BUFSIZE, "%s/state/%s", CFWORKDIR, CF_FILECHANGE_NEW);
+    MapName(fname);
+
+#ifndef __MINGW32__
+    struct stat sb;
+    if (cfstat(fname, &sb) != -1)
+    {
+        if (sb.st_mode & (S_IWGRP | S_IWOTH))
+        {
+            CfOut(cf_error, "", "File %s (owner %ju) is writable by others (security exception)", fname, (uintmax_t)sb.st_uid);
+        }
+    }
+#endif /* !__MINGW32__ */
+
+    if ((fp = fopen(fname, "a")) == NULL)
+    {
+        CfOut(cf_error, "fopen", "Could not write to the hash change log");
+        return;
+    }
+
+    const char *handle = PromiseID(pp);
+
+    fprintf(fp, "%ld,%s,%s,%c,%s\n", (long) now, handle, file, FileStateToChar(status), msg);
+    fclose(fp);
+
+    cf_chmod(fname, perm);
 }

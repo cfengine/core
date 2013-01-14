@@ -38,7 +38,7 @@
 #include "syntax.h"
 #include "item_lib.h"
 #include "conversion.h"
-#include "unix.h"
+#include "vars.h"
 #include "cfstream.h"
 #include "communication.h"
 #include "logging.h"

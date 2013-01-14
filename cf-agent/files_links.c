@@ -29,6 +29,7 @@
 #include "files_names.h"
 #include "files_interfaces.h"
 #include "files_operators.h"
+#include "files_lib.h"
 #include "transaction.h"
 #include "cfstream.h"
 #include "logging.h"
@@ -43,14 +44,19 @@ static char *AbsLinkPath(const char *from, const char *relto);
 
 /*****************************************************************************/
 
+#ifdef __MINGW32__
+
 char VerifyLink(char *destination, const char *source, Attributes attr, Promise *pp,
                 const ReportContext *report_context)
-#ifdef MINGW
 {
     CfOut(cf_verbose, "", "Windows does not support symbolic links (at VerifyLink())");
     return CF_FAIL;
 }
-#else                           /* NOT MINGW */
+
+#else
+
+char VerifyLink(char *destination, const char *source, Attributes attr, Promise *pp,
+                const ReportContext *report_context)
 {
     char to[CF_BUFSIZE], linkbuf[CF_BUFSIZE], absto[CF_BUFSIZE];
     struct stat sb;
@@ -172,7 +178,7 @@ char VerifyLink(char *destination, const char *source, Attributes attr, Promise 
         }
     }
 }
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
 /*****************************************************************************/
 
@@ -388,14 +394,18 @@ char VerifyHardLink(char *destination, const char *source, Attributes attr, Prom
 /* Level                                                                     */
 /*****************************************************************************/
 
+#ifdef __MINGW32__
+
 int KillGhostLink(const char *name, Attributes attr, const Promise *pp)
-#ifdef MINGW
 {
     CfOut(cf_verbose, "", "Windows does not support symbolic links (at KillGhostLink())");
     cfPS(cf_error, CF_FAIL, "", pp, attr, " !! Windows does not support killing link \"%s\"", name);
     return false;
 }
-#else                           /* NOT MINGW */
+
+#else                           /* !__MINGW32__ */
+
+int KillGhostLink(const char *name, Attributes attr, const Promise *pp)
 {
     char linkbuf[CF_BUFSIZE], tmp[CF_BUFSIZE];
     char linkpath[CF_BUFSIZE], *sp;
@@ -444,7 +454,7 @@ int KillGhostLink(const char *name, Attributes attr, const Promise *pp)
 
     return false;
 }
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
 /*****************************************************************************/
 
@@ -470,18 +480,22 @@ static int MakeLink(const char *from, const char *to, Attributes attr, Promise *
         }
     }
 }
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
 /*****************************************************************************/
 
+#ifdef __MINGW32__
+
 int MakeHardLink(const char *from, const char *to, Attributes attr, const Promise *pp)
-#ifdef MINGW
 {                               // TODO: Implement ?
     CfOut(cf_verbose, "", "Hard links are not yet supported on Windows");
     cfPS(cf_error, CF_FAIL, "link", pp, attr, " !! Couldn't (hard) link %s to %s\n", to, from);
     return false;
 }
-#else                           /* NOT MINGW */
+
+#else                           /* !__MINGW32__ */
+
+int MakeHardLink(const char *from, const char *to, Attributes attr, const Promise *pp)
 {
     if (DONTDO)
     {
@@ -502,19 +516,25 @@ int MakeHardLink(const char *from, const char *to, Attributes attr, const Promis
         }
     }
 }
-#endif /* NOT MINGW */
+
+#endif /* !__MINGW32__ */
 
 /*********************************************************************/
 
-int ExpandLinks(char *dest, const char *from, int level)      /* recursive */
-  /* Expand a path contaning symbolic links, up to 4 levels  */
-  /* of symbolic links and then beam out in a hurry !        */
-#ifdef MINGW
+/* Expand a path contaning symbolic links, up to 4 levels  */
+/* of symbolic links and then beam out in a hurry !        */
+
+#ifdef __MINGW32__
+
+int ExpandLinks(char *dest, const char *from, int level)
 {
     CfOut(cf_error, "", "!! Windows does not support symbolic links (at ExpandLinks(%s,%s))", dest, from);
     return false;
 }
-#else                           /* NOT MINGW */
+
+#else                           /* !__MINGW32__ */
+
+int ExpandLinks(char *dest, const char *from, int level)
 {
     char buff[CF_BUFSIZE];
     char node[CF_MAXLINKSIZE];
@@ -633,7 +653,7 @@ int ExpandLinks(char *dest, const char *from, int level)      /* recursive */
 
     return true;
 }
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
 /*********************************************************************/
 

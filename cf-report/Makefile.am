@@ -1,14 +1,15 @@
-AM_CFLAGS = $(NOVA_CFLAGS) @CFLAGS@ -I$(srcdir)/../libpromises
+sbin_PROGRAMS = cf-report
 
-sbin_PROGRAMS = \
-        cf-report
+AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises \
+	$(NOVA_CPPFLAGS)
 
-cf_report_LDADD =
+AM_CFLAGS = @CFLAGS@ \
+	$(NOVA_CFLAGS)
+
+LDADD = ../libpromises/libpromises.la
 if HAVE_NOVA
-cf_report_LDADD += ../nova/libcfreport/libcfreport.la
+LDADD += ../nova/libcfreport/libcfreport.la
 endif
-cf_report_LDADD += ../libpromises/libpromises.la
-
 
 CLEANFILES = *.gcno *.gcda
 

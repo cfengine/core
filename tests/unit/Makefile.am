@@ -14,7 +14,7 @@ libstr_la_LIBADD = libtest.la
 
 
 check_LTLIBRARIES += libdb.la
-libdb_la_SOURCES = ../../libpromises/dbm_api.c ../../libpromises/dbm_quick.c ../../libpromises/dbm_tokyocab.c ../../libpromises/dbm_lib.c ../../libpromises/patches.c ../../libpromises/dbm_migration.c ../../libpromises/dbm_migration_lastseen.c ../../libpromises/dbm_migration_bundles.c ../../libpromises/atexit.c
+libdb_la_SOURCES = ../../libpromises/dbm_api.c ../../libpromises/dbm_quick.c ../../libpromises/dbm_tokyocab.c ../../libpromises/dbm_lib.c ../../libpromises/patches.c ../../libpromises/dbm_migration.c ../../libpromises/dbm_migration_lastseen.c ../../libpromises/dbm_migration_bundles.c ../../libutils/atexit.c
 libdb_la_LIBADD = libstr.la
 
 check_PROGRAMS = \
@@ -55,6 +55,8 @@ check_PROGRAMS = \
 	scope_test \
 	conversion_test \
 	files_interfaces_test \
+	list_test \
+	refcount_test \
 	timeout_test \
 	connection_management_test
 
@@ -87,6 +89,10 @@ str_test_LDADD = libstr.la
 xml_writer_test_SOURCES = xml_writer_test.c ../../libutils/xml_writer.c
 xml_writer_test_LDADD = libtest.la libstr.la
 
+list_test_SOURCES = list_test.c ../../libutils/list.c
+
+refcount_test_SOURCES = refcount_test.c ../../libutils/refcount.c
+
 #
 # file_writer_test overrides fclose(3) which causes gcov to fail as gcov
 # instrumentation code uses fclose(3).
@@ -99,10 +105,10 @@ file_writer_test_LDLFAGS =
 db_test_SOURCES = db_test.c
 db_test_LDADD = libdb.la
 
-lastseen_test_SOURCES = lastseen_test.c ../../libpromises/lastseen.c ../../libpromises/statistics.c
+lastseen_test_SOURCES = lastseen_test.c ../../libpromises/lastseen.c ../../libutils/statistics.c
 lastseen_test_LDADD = libdb.la
 
-lastseen_migration_test_SOURCES = lastseen_migration_test.c ../../libpromises/lastseen.c ../../libpromises/statistics.c
+lastseen_migration_test_SOURCES = lastseen_migration_test.c ../../libpromises/lastseen.c ../../libutils/statistics.c
 lastseen_migration_test_LDADD = libdb.la
 
 dbm_migration_bundles_test_SOURCES = dbm_migration_bundles_test.c

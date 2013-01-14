@@ -536,12 +536,12 @@ FilePerms GetPermissionConstraints(const Promise *pp)
         PromiseRef(cf_error, pp);
     }
 
-#ifdef MINGW
+#ifdef __MINGW32__
     p.owners = NovaWin_Rlist2SidList((Rlist *) GetConstraintValue("owners", pp, CF_LIST));
-#else /* NOT MINGW */
+#else /* !__MINGW32__ */
     p.owners = Rlist2UidList((Rlist *) GetConstraintValue("owners", pp, CF_LIST), pp);
     p.groups = Rlist2GidList((Rlist *) GetConstraintValue("groups", pp, CF_LIST), pp);
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
     p.findertype = (char *) GetConstraintValue("findertype", pp, CF_SCALAR);
     p.rxdirs = GetBooleanConstraint("rxdirs", pp);

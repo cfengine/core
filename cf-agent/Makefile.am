@@ -36,6 +36,7 @@ endif
 cf_agent_SOURCES = \
         cf-agent.c \
         cf_acl.c cf_acl.h \
+        comparray.c comparray.h \
         acl_posix.c acl_posix.h \
         cf_sql.c cf_sql.h \
         nfs.c nfs.h \

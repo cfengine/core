@@ -68,7 +68,7 @@
   */
 typedef struct List List;
 struct ListMutableIterator {
-    unsigned int state;
+    int valid;
     ListNode *current;
     List *origin;
 };
@@ -176,6 +176,7 @@ int ListCount(List *list);
 
   This iterator will be invalid if data is removed from the list. It will still be valid
   after a new addition though.
+  @note After creation the iterator will be pointing to the first item of the list.
   @param list Linked list
   @param iterator Iterator.
   @return 0 if initialized, -1 otherwise.
@@ -186,6 +187,7 @@ int ListIteratorGet(List *list, ListIterator **iterator);
 
   This function exists only to free the memory associated with the iterator, there is no strong
   connection between the iterator and the list.
+  @note It is not possible to get an iterator for an empty list.
   @param iterator Iterator.
   @return 0 if released, -1 otherwise.
   */
@@ -230,49 +232,51 @@ void *ListIteratorData(const ListIterator *iterator);
 
   Since there can be only one mutable iterator for a list at any given time, the creation of a second iterator
   will fail.
+  @note After creation the iterator will be pointing to the first item of the list.
   @param iterator Iterator to be initialized.
   @return 0 if the iterator was initialized, -1 if not.
   */
-int ListMutableIteratorCreate(List *list, ListMutableIterator **iterator);
+int ListMutableIteratorGet(List *list, ListMutableIterator **iterator);
 /**
   @brief Releases the memory associated with an iterator.
 
   This function has to be called for mutable iterators, otherwise the list will think there is already one mutable
   iterator and the creation of new mutable iterators will not be possible.
+  @note It is not possible to get an iterator for an empty list.
   @param iterator Iterator.
   @return 0 if released, -1 otherwise.
   */
-int ListMutableIteratorDestroy(ListIterator **iterator);
+int ListMutableIteratorRelease(ListMutableIterator **iterator);
 /**
   @brief Moves the iterator to the first element of the list.
   @param iterator Iterator.
   @return 0 if it was possible to move, -1 otherwise.
   */
-int ListMutableIteratorFirst(ListIterator *iterator);
+int ListMutableIteratorFirst(ListMutableIterator *iterator);
 /**
   @brief Moves the iterator to the last element of the list.
   @param iterator Iterator.
   @return 0 if it was possible to move, -1 otherwise.
   */
-int ListMutableIteratorLast(ListIterator *iterator);
+int ListMutableIteratorLast(ListMutableIterator *iterator);
 /**
   @brief Moves the iterator to the next element of the list.
   @param iterator Iterator.
   @return 0 if it was possible to move, -1 otherwise.
   */
-int ListMutableIteratorNext(ListIterator *iterator);
+int ListMutableIteratorNext(ListMutableIterator *iterator);
 /**
   @brief Moves the iterator to the previous element of the list.
   @param iterator Iterator.
   @return 0 if it was possible to move, -1 otherwise.
   */
-int ListMutableIteratorPrevious(ListIterator *iterator);
+int ListMutableIteratorPrevious(ListMutableIterator *iterator);
 /**
   @brief Returns the data associated with the current element.
   @param iterator Iterator.
   @return Pointer to the data or NULL if it was not possible.
   */
-void *ListMutableIteratorData(const ListIterator *iterator);
+void *ListMutableIteratorData(const ListMutableIterator *iterator);
 /**
   @brief Removes the current element from the list.
 
@@ -285,6 +289,29 @@ void *ListMutableIteratorData(const ListIterator *iterator);
   @param iterator Iterator
   @return 0 if removed, -1 otherwise.
   */
-int ListMutableIteratorRemove(ListIterator *iterator);
+int ListMutableIteratorRemove(ListMutableIterator *iterator);
+/**
+  @brief Prepends element on front of the element pointed by the iterator.
 
+  An important clarification, the iterator still points to the same element after this operation. It is up to the user
+  to move the iterator to the prepended element.
+
+  All the light operators are still valid after this operation.
+  @param iterator Iterator
+  @param payload Element to be prepended.
+  @return 0 if prepended, -1 in case of error.
+  */
+int ListMutableIteratorPrepend(ListMutableIterator *iterator, void *payload);
+/**
+  @brief Appends element after the element pointed by the iterator.
+
+  An important clarification, the iterator still points to the same element after this operation. It is up to the user
+  to move the iterator to the appended element.
+
+  All the light operators are still valid after this operation.
+  @param iterator Iterator
+  @param payload Element to be appended.
+  @return 0 if appended, -1 in case of error.
+  */
+int ListMutableIteratorAppend(ListMutableIterator *iterator, void *payload);
 #endif // CFENGINE_LIST_H

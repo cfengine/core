@@ -36,7 +36,8 @@
 static void BufferDetach(Buffer *buffer)
 {
     int shared = RefCountIsShared(buffer->ref_count);
-    if (shared) {
+    if (shared)
+    {
         /*
          * We only detach from the main buffer and not copy.
          * We set the pointer to NULL and let the caller take care of the situation.
@@ -56,13 +57,17 @@ static void BufferDetach(Buffer *buffer)
 int BufferNew(Buffer **buffer)
 {
     if (!buffer)
+    {
         return -1;
+    }
     *buffer = (Buffer *)malloc(sizeof(Buffer));
     (*buffer)->capacity = DEFAULT_BUFFER_SIZE;
     (*buffer)->low_water_mark = DEFAULT_LOW_WATERMARK;
     (*buffer)->buffer = (char *)malloc((*buffer)->capacity);
     if (!(*buffer))
+    {
         return -1;
+    }
     (*buffer)->real_capacity = (*buffer)->capacity - (*buffer)->low_water_mark;
     (*buffer)->mode = CString;
     (*buffer)->chunk_size = DEFAULT_CHUNK_SIZE;
@@ -78,21 +83,30 @@ int BufferDestroy(Buffer **buffer)
 {
     // If already NULL don't bother.
     if (!buffer || !*buffer)
+    {
         return 0;
+    }
     /*
      * Here is how it goes, if we are shared then we cannot destroy the buffer
      * we simply detach from it. If we are not shared we need to destroy the buffer
      * and the RefCount.
      */
-    if (RefCountIsShared((*buffer)->ref_count)) {
+    if (RefCountIsShared((*buffer)->ref_count))
+    {
         int result = 0;
         result = RefCountDetach((*buffer)->ref_count, *buffer);
         if (result < 0)
+        {
             return -1;
-    } else {
+        }
+    }
+    else
+    {
         // We can destroy the buffer
         if ((*buffer)->buffer)
+        {
             free ((*buffer)->buffer);
+        }
         // Destroy the RefCount struct
         RefCountDestroy(&(*buffer)->ref_count);
     }
@@ -105,10 +119,14 @@ int BufferCopy(Buffer *source, Buffer **destination)
 {
     // Basically we copy the link to the array and mark the attachment
     if (!source || !destination)
+    {
         return -1;
+    }
     *destination = (Buffer *)malloc(sizeof(Buffer));
     if (!(*destination))
+    {
         return -1;
+    }
     (*destination)->capacity = source->capacity;
     (*destination)->mode = source->mode;
     (*destination)->low_water_mark = source->low_water_mark;
@@ -120,7 +138,9 @@ int BufferCopy(Buffer *source, Buffer **destination)
     int elements = 0;
     elements = RefCountAttach(source->ref_count, (*destination));
     if (elements < 0)
+    {
         return -1;
+    }
     (*destination)->ref_count = source->ref_count;
     return 0;
 }
@@ -135,20 +155,29 @@ int BufferEqual(Buffer *buffer1, Buffer *buffer2)
      * 3. Look at the content. For CString mode we stop at the first '\0'.
      */
     if (RefCountIsEqual(buffer1->ref_count, buffer2->ref_count))
+    {
         return 1;
+    }
     if (buffer1->mode != buffer2->mode)
+    {
         return 0;
+    }
     int mode = buffer1->mode;
-    if (buffer1->used == buffer2->used){
+    if (buffer1->used == buffer2->used)
+    {
         int i = 0;
         int equal = 1;
-        for (i = 0; (i < buffer1->used); i++) {
-            if (buffer1->buffer[i] != buffer2->buffer[i]) {
+        for (i = 0; (i < buffer1->used); i++)
+        {
+            if (buffer1->buffer[i] != buffer2->buffer[i])
+            {
                 equal = 0;
                 break;
             }
             if (('\0' == buffer1->buffer[i]) && (mode == CString))
+            {
                 break;
+            }
         }
         return equal;
     }
@@ -158,7 +187,9 @@ int BufferEqual(Buffer *buffer1, Buffer *buffer2)
 int BufferSet(Buffer *buffer, char *bytes, unsigned int length)
 {
     if (!buffer || !bytes)
+    {
         return -1;
+    }
     /*
      * The algorithm goes like this:
      * 1. Detach if shared.
@@ -182,25 +213,31 @@ int BufferSet(Buffer *buffer, char *bytes, unsigned int length)
     unsigned int capacity = buffer->capacity;
     unsigned int chunk_size = buffer->chunk_size;
     int allocated = 0;
-    while (length > capacity) {
+    while (length > capacity)
+    {
         /*
          * This case is easy, we just need to add more memory.
          */
         if (p)
+        {
             free (p);
+        }
         p = (char *)malloc(capacity + chunk_size);
-        if (!p) {
+        if (!p)
+        {
             /*
              * We couldn't allocate more memory, therefore we signal the error.
              * We reset everything to how it was before the detach.
              */
             RefCountDestroy(&buffer->ref_count);
             if (RefCountAttach(ref_count, buffer) < 0)
+            {
                 /*
                  * Too much, we cannot set things back.
                  * Should we abort? exit?
                  */
                 return -1;
+            }
             buffer->ref_count = ref_count;
             buffer->buffer = pre_data;
             buffer->capacity = pre_capacity;
@@ -211,7 +248,8 @@ int BufferSet(Buffer *buffer, char *bytes, unsigned int length)
         capacity += chunk_size;
         allocated = 1;
     }
-    if (allocated) {
+    if (allocated)
+    {
         buffer->buffer = p;
         buffer->capacity = capacity;
         buffer->real_capacity = buffer->capacity - buffer->low_water_mark;
@@ -222,21 +260,28 @@ int BufferSet(Buffer *buffer, char *bytes, unsigned int length)
      */
     buffer->used = 0;
     unsigned int i = 0;
-    for (i = 0; i < length; ++i) {
+    for (i = 0; i < length; ++i)
+    {
         buffer->buffer[i] = bytes[i];
         if ((buffer->mode == CString) && (bytes[i] == '\0'))
+        {
             break;
+        }
         buffer->used++;
     }
     if (buffer->mode == CString)
+    {
         buffer->buffer[buffer->used] = '\0';
+    }
     return buffer->used;
 }
 
 int BufferAppend(Buffer *buffer, char *bytes, unsigned int length)
 {
     if (!buffer || !bytes)
+    {
         return -1;
+    }
     /*
      * 1. Detach if shared.
      * 2. Check if we need more space and resize our internal buffer.
@@ -252,25 +297,31 @@ int BufferAppend(Buffer *buffer, char *bytes, unsigned int length)
     int allocated = 0;
     unsigned int capacity = buffer->capacity;
     unsigned int chunk_size = buffer->chunk_size;
-    while (length + pre_used > capacity) {
+    while (length + pre_used > capacity)
+    {
         /*
          * This case is easy, we just need to add more memory.
          */
         if (p)
+        {
             free (p);
+        }
         p = (char *)malloc(capacity + chunk_size);
-        if (!p) {
+        if (!p)
+        {
             /*
              * We couldn't allocate more memory, therefore we signal the error.
              * We set everything back to normal.
              */
             RefCountDestroy(&buffer->ref_count);
             if (RefCountAttach(ref_count, buffer) < 0)
+            {
                 /*
                  * Too much, we cannot set things back.
                  * Should we abort? exit?
                  */
                 return -1;
+            }
             buffer->ref_count = ref_count;
             buffer->buffer = pre_data;
             buffer->capacity = pre_capacity;
@@ -282,7 +333,8 @@ int BufferAppend(Buffer *buffer, char *bytes, unsigned int length)
         allocated = 1;
     }
     unsigned int i = 0;
-    if (allocated) {
+    if (allocated)
+    {
         /*
          * Copy the old data.
          * Although we know that if somebody used the proper functions there will be no '\0'
@@ -290,9 +342,11 @@ int BufferAppend(Buffer *buffer, char *bytes, unsigned int length)
          * the proper functions. Therefore we check if there are embedded '\0' and stop copying.
          */
         unsigned int used = 0;
-        for (i = 0; i < buffer->used; ++i) {
+        for (i = 0; i < buffer->used; ++i)
+        {
             p[i] = buffer->buffer[i];
-            if ((buffer->mode == CString) && (buffer->buffer[i] == '\0')) {
+            if ((buffer->mode == CString) && (buffer->buffer[i] == '\0'))
+            {
                 /*
                  * This is an error, fix the variables and return -1.
                  * In theory we could have checked this before allocating memory
@@ -300,11 +354,13 @@ int BufferAppend(Buffer *buffer, char *bytes, unsigned int length)
                  */
                 RefCountDestroy(&buffer->ref_count);
                 if (RefCountAttach(ref_count, buffer) < 0)
+                {
                     /*
                      * Too much, we cannot set things back.
                      * Should we abort? exit?
                      */
                     return -1;
+                }
                 buffer->ref_count = ref_count;
                 buffer->buffer = pre_data;
                 buffer->capacity = pre_capacity;
@@ -316,7 +372,9 @@ int BufferAppend(Buffer *buffer, char *bytes, unsigned int length)
             used++;
         }
         if (buffer->mode == CString)
+        {
             p[used] = '\0';
+        }
         buffer->buffer = p;
         buffer->used = used;
         buffer->capacity = capacity;
@@ -331,14 +389,19 @@ int BufferAppend(Buffer *buffer, char *bytes, unsigned int length)
      * when we do not detach and when we already have enough memory.
      */
     unsigned int beginning = buffer->used;
-    for (i = beginning; i < beginning + length; ++i) {
+    for (i = beginning; i < beginning + length; ++i)
+    {
         buffer->buffer[i] = bytes[i - beginning];
         if ((buffer->mode == CString) && (bytes[i - beginning] == '\0'))
+        {
             break;
+        }
         buffer->used++;
     }
     if (buffer->mode == CString)
+    {
         buffer->buffer[buffer->used] = '\0';
+    }
     return buffer->used;
 }
 
@@ -346,7 +409,8 @@ int BufferPrintf(Buffer *buffer, const char *format, ...)
 {
     va_list ap;
     va_start(ap, format);
-    if (!buffer || !format) {
+    if (!buffer || !format)
+    {
         va_end(ap);
         return -1;
     }
@@ -360,19 +424,22 @@ int BufferPrintf(Buffer *buffer, const char *format, ...)
     RefCount *ref_count = buffer->ref_count;
     int printed = 0;
     BufferDetach(buffer);
-    if (0 == buffer->capacity) {
+    if (0 == buffer->capacity)
+    {
         /*
          * The only way to find out if we were detached is by looking at the new capacity.
          * If we were shared, then no memory has been allocated and our capacity is 0.
          * Detach does not allocate memory, therefore we allocate the memory.
          */
         buffer->buffer = (char *)malloc(capacity);
-        if (!buffer->buffer) {
+        if (!buffer->buffer)
+        {
             /*
              * Reset to previous state and signal the error.
              */
             RefCountDestroy(&buffer->ref_count);
-            if (RefCountAttach(ref_count, buffer) < 0) {
+            if (RefCountAttach(ref_count, buffer) < 0)
+            {
                 /*
                  * Too much, we cannot set things back.
                  * Should we abort? exit?
@@ -401,19 +468,22 @@ int BufferPrintf(Buffer *buffer, const char *format, ...)
      * simply signaling the error.
      */
     printed = vsnprintf(buffer->buffer, buffer->capacity, format, ap);
-    if (printed > buffer->capacity) {
+    if (printed > buffer->capacity)
+    {
         /*
          * Tough love, discard the buffer and allocate more memory.
          */
         printed = -1;
         free (buffer->buffer);
         buffer->buffer = (char *)malloc(buffer->capacity + buffer->chunk_size);
-        if (!buffer->buffer) {
+        if (!buffer->buffer)
+        {
             /*
              * Reset to previous state and signal the error.
              */
             RefCountDestroy(&buffer->ref_count);
-            if (RefCountAttach(ref_count, buffer) < 0) {
+            if (RefCountAttach(ref_count, buffer) < 0)
+            {
                 /*
                  * Too much, we cannot set things back.
                  * Should we abort? exit?
@@ -431,8 +501,11 @@ int BufferPrintf(Buffer *buffer, const char *format, ...)
         buffer->capacity += buffer->chunk_size;
         buffer->real_capacity = buffer->capacity - buffer->low_water_mark;
         buffer->used = 0;
-    } else
+    }
+    else
+    {
         buffer->used = printed;
+    }
     va_end(ap);
     return printed;
 }
@@ -444,8 +517,11 @@ void BufferZero(Buffer *buffer)
      * 2. Mark used as zero.
      */
     if (!buffer)
+    {
         return;
-    if (RefCountIsShared(buffer->ref_count)) {
+    }
+    if (RefCountIsShared(buffer->ref_count))
+    {
         RefCountDetach(buffer->ref_count, buffer);
         buffer->buffer = (char *)malloc(buffer->capacity);
         RefCountNew(&buffer->ref_count);
@@ -457,30 +533,40 @@ void BufferZero(Buffer *buffer)
 unsigned int BufferSize(Buffer *buffer)
 {
     if (!buffer)
+    {
         return 0;
+    }
     return buffer->used;
 }
 
 const char *BufferData(Buffer *buffer)
 {
     if (!buffer)
+    {
         return NULL;
+    }
     return (const char *)buffer->buffer;
 }
 
 int BufferMode(Buffer *buffer)
 {
     if (!buffer)
+    {
         return -1;
+    }
     return buffer->mode;
 }
 
 void BufferSetMode(Buffer *buffer, int mode)
 {
     if (!buffer)
+    {
         return;
+    }
     if ((mode != CString) && (mode != ByteArray))
+    {
         return;
+    }
     buffer->mode = mode;
 }
 
@@ -490,14 +576,18 @@ void BufferSetMode(Buffer *buffer, int mode)
 unsigned int BufferLowWaterMark(Buffer *buffer)
 {
     if (!buffer)
+    {
         return 0;
+    }
     return buffer->low_water_mark;
 }
 
 void BufferSetLowWaterMark(Buffer *buffer, unsigned int low_water_mark)
 {
     if (!buffer || (buffer->low_water_mark >= buffer->capacity))
+    {
         return;
+    }
     buffer->low_water_mark = low_water_mark;
     buffer->real_capacity = buffer->capacity - buffer->low_water_mark;
 }
@@ -505,13 +595,17 @@ void BufferSetLowWaterMark(Buffer *buffer, unsigned int low_water_mark)
 unsigned int BufferChunkSize(Buffer *buffer)
 {
     if (!buffer)
+    {
         return 0;
+    }
     return buffer->chunk_size;
 }
 
 void BufferSetChunkSize(Buffer *buffer, unsigned int chunk_size)
 {
     if (!buffer || !chunk_size)
+    {
         return;
+    }
     buffer->chunk_size = chunk_size;
 }

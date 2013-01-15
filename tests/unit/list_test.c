@@ -454,6 +454,9 @@ static void test_iterator(void **state)
     assert_int_equal(list->node_count, 0);
     assert_int_equal(list->state, 0);
 
+    ListIterator *emptyListIterator = NULL;
+    assert_int_equal(-1, ListIteratorGet(list, &emptyListIterator));
+    assert_true(emptyListIterator == NULL);
     char element0[] = "this is a test string";
     char element1[] = "another test string";
     char element2[] = "yet another test string";
@@ -611,6 +614,177 @@ static void test_iterator(void **state)
     assert_int_equal(ListDestroy(&list), 0);
 }
 
+static void test_mutableIterator(void **state)
+{
+    List *list = NULL;
+    assert_int_equal(ListNew(&list, compareFunction, NULL, testDestroyer), 0);
+    assert_int_not_equal(list, NULL);
+    assert_int_equal(list->first, NULL);
+    assert_int_equal(list->list, NULL);
+    assert_int_equal(list->last, NULL);
+    assert_int_equal(list->node_count, 0);
+    assert_int_equal(list->state, 0);
+
+    ListMutableIterator *emptyListIterator = NULL;
+    assert_int_equal(-1, ListMutableIteratorGet(list, &emptyListIterator));
+    assert_true(emptyListIterator == NULL);
+    char element0[] = "this is a test string";
+    char element1[] = "another test string";
+    char element2[] = "yet another test string";
+    char element3[] = "and one more test string";
+    char element4[] = "prepended by iterator";
+    char element5[] = "appended by iterator";
+
+    // We add element0 to the list.
+    assert_int_equal(ListAppend(list, element0), 0);
+    // We add element1 to the list.
+    assert_int_equal(ListAppend(list, element1), 0);
+    // We add element2 to the list.
+    assert_int_equal(ListAppend(list, element2), 0);
+    // We add element3 to the list.
+    assert_int_equal(ListAppend(list, element3), 0);
+
+    // We use a light iterator to check that is valid
+    ListIterator *lightIterator = NULL;
+    assert_int_equal(0, ListIteratorGet(list, &lightIterator));
+    ListMutableIterator *iterator = NULL;
+    ListMutableIterator *secondIterator = NULL;
+    assert_int_equal(0, ListMutableIteratorGet(list, &iterator));
+    // The iterator should be pointing to the first element
+    assert_true(iterator->current == list->first);
+    // Trying to create a second iterator must fail
+    assert_int_equal(-1, ListMutableIteratorGet(list, &secondIterator));
+    // Loop through the list until we get to the last element and then back
+    assert_int_equal(0, ListMutableIteratorNext(iterator));
+    assert_int_equal(0, ListMutableIteratorNext(iterator));
+    assert_int_equal(0, ListMutableIteratorNext(iterator));
+    assert_int_equal(-1, ListMutableIteratorNext(iterator));
+    // and back
+    assert_int_equal(0, ListMutableIteratorPrevious(iterator));
+    assert_int_equal(0, ListMutableIteratorPrevious(iterator));
+    assert_int_equal(0, ListMutableIteratorPrevious(iterator));
+    assert_int_equal(-1, ListMutableIteratorPrevious(iterator));
+    // Jump to the last element
+    assert_int_equal(0, ListMutableIteratorLast(iterator));
+    // and back to the first element
+    assert_int_equal(0, ListMutableIteratorFirst(iterator));
+    // Prepend one element at the beginning of the list
+    assert_int_equal(0, ListMutableIteratorPrepend(iterator, (void *)element4));
+    assert_int_equal(5, list->node_count);
+    // The light iterator is still valid
+    assert_int_equal(list->state, lightIterator->state);
+    // It should be possible to go back one element now.
+    assert_int_equal(0, ListMutableIteratorPrevious(iterator));
+    // Check that the list and the iterator agree who is the first one.
+    assert_true(list->first == iterator->current);
+    // Append one element after the first element
+    assert_int_equal(0, ListMutableIteratorAppend(iterator, (void *)element5));
+    assert_int_equal(6, list->node_count);
+    // The light iterator is still valid
+    assert_int_equal(list->state, lightIterator->state);
+    // Iterate over the list until we get to the end and back
+    assert_int_equal(0, ListMutableIteratorNext(iterator));
+    assert_int_equal(0, ListMutableIteratorNext(iterator));
+    assert_int_equal(0, ListMutableIteratorNext(iterator));
+    assert_int_equal(0, ListMutableIteratorNext(iterator));
+    assert_int_equal(0, ListMutableIteratorNext(iterator));
+    assert_int_equal(-1, ListMutableIteratorNext(iterator));
+    // and back
+    assert_int_equal(0, ListMutableIteratorPrevious(iterator));
+    assert_int_equal(0, ListMutableIteratorPrevious(iterator));
+    assert_int_equal(0, ListMutableIteratorPrevious(iterator));
+    assert_int_equal(0, ListMutableIteratorPrevious(iterator));
+    assert_int_equal(0, ListMutableIteratorPrevious(iterator));
+    assert_int_equal(-1, ListMutableIteratorPrevious(iterator));
+    // Jump to the last element
+    assert_int_equal(0, ListMutableIteratorLast(iterator));
+    // and back to the first element
+    assert_int_equal(0, ListMutableIteratorFirst(iterator));
+    // And back to the last element
+    assert_int_equal(0, ListMutableIteratorLast(iterator));
+    // Append one element after the last element
+    assert_int_equal(0, ListMutableIteratorAppend(iterator, (void *)element5));
+    assert_int_equal(7, list->node_count);
+    // The light iterator is still valid
+    assert_int_equal(list->state, lightIterator->state);
+    // It should be possible to advance one position
+    assert_int_equal(0, ListMutableIteratorNext(iterator));
+    // Check that both the list and the iterator point to the same last element
+    assert_true(iterator->current == list->last);
+    // Prepend one element before the last element
+    assert_int_equal(0, ListMutableIteratorPrepend(iterator, (void *)element4));
+    assert_int_equal(8, list->node_count);
+    // The light iterator is still valid
+    assert_int_equal(list->state, lightIterator->state);
+    // Go back one element and remove the element
+    assert_int_equal(0, ListMutableIteratorPrevious(iterator));
+    // We should be located at element4
+    assert_string_equal(element4, (char *)iterator->current->payload);
+    // Remove the current element
+    assert_int_equal(0, ListMutableIteratorRemove(iterator));
+    // Check that the list agrees
+    assert_int_equal(7, list->node_count);
+    // We should be at element5 now, the last element of the list
+    assert_string_equal(element5, (char *)iterator->current->payload);
+    assert_true(iterator->current == list->last);
+    // The light iterator is invalid now
+    assert_true(lightIterator->state != list->state);
+    // Remove the last element, we should go back to element3
+    assert_int_equal(0, ListMutableIteratorRemove(iterator));
+    // Check that the list agrees
+    assert_int_equal(6, list->node_count);
+    // We should be at element3 now, the last element of the list
+    assert_string_equal(element3, (char *)iterator->current->payload);
+    assert_true(iterator->current == list->last);
+    // Jump to the first element of the list
+    assert_int_equal(0, ListMutableIteratorFirst(iterator));
+    // Remove the first element, we should end up in element5
+    assert_int_equal(0, ListMutableIteratorRemove(iterator));
+    // Check that the list agrees
+    assert_int_equal(5, list->node_count);
+    // We should be at element5 now, the first element of the list
+    assert_string_equal(element5, (char *)iterator->current->payload);
+    assert_true(iterator->current == list->first);
+    // Now remove element3, the last element of the list using the Remove function
+    assert_int_equal(0, ListRemove(list, (void *)element3));
+    assert_int_equal(4, list->node_count);
+    // We should be at element5 now, the first element of the list
+    assert_string_equal(element5, (char *)iterator->current->payload);
+    assert_true(iterator->current == list->first);
+    // Jump to the last element of the list
+    assert_int_equal(0, ListMutableIteratorLast(iterator));
+    // This should be element2
+    assert_string_equal(element2, (char *)iterator->current->payload);
+    // Move the iterator to the previous element, element1, and delete it. The iterator should move to element2.
+    assert_int_equal(0, ListMutableIteratorPrevious(iterator));
+    assert_int_equal(0, ListRemove(list, (void *)element1));
+    assert_int_equal(3, list->node_count);
+    assert_string_equal(element2, (char *)iterator->current->payload);
+    assert_true(iterator->current == list->last);
+    // Remove the last element of the list, the iterator should move to element0
+    assert_int_equal(0, ListRemove(list, (void *)element2));
+    assert_int_equal(2, list->node_count);
+    assert_string_equal(element0, (char *)iterator->current->payload);
+    assert_true(iterator->current == list->last);
+    // Jump to the first element
+    assert_int_equal(0, ListMutableIteratorFirst(iterator));
+    // Remove the first element, that should move the iterator to element0
+    assert_int_equal(0, ListRemove(list, (void *)element5));
+    assert_int_equal(1, list->node_count);
+    assert_string_equal(element0, (char *)iterator->current->payload);
+    assert_true(iterator->current == list->last);
+    assert_true(iterator->current == list->first);
+    // Finally try to remove the only element using the iterator, it should fail.
+    assert_int_equal(-1, ListMutableIteratorRemove(iterator));
+    // Remove the final element using the list and check that the iterator is invalid
+    assert_int_equal(0, ListRemove(list, (void *)element0));
+    assert_false(iterator->valid);
+    // Destroy the iterators and the list
+    assert_int_equal(0, ListMutableIteratorRelease(&iterator));
+    assert_int_equal(0, ListIteratorDestroy(&lightIterator));
+    assert_int_equal(0, ListDestroy(&list));
+}
+
 int main()
 {
     const UnitTest tests[] = {
@@ -622,6 +796,7 @@ int main()
         , unit_test(test_removeFromList)
         , unit_test(test_copyList)
         , unit_test(test_iterator)
+        , unit_test(test_mutableIterator)
     };
 
     return run_tests(tests);

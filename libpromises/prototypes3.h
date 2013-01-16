@@ -273,11 +273,6 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
 
 void VerifyServicesPromise(Promise *pp, const ReportContext *report_context);
 
-/* verify_storage.c */
-
-void *FindAndVerifyStoragePromises(Promise *pp, const ReportContext *report_context);
-void VerifyStoragePromise(char *path, Promise *pp, const ReportContext *report_context);
-
 /* verify_reports.c */
 
 void VerifyReportPromise(Promise *pp);

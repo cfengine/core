@@ -1306,7 +1306,7 @@ static bool SetAttributeInNode(char *rawname, char *rawvalue, xmlDocPtr doc, xml
     //set attribute in docnode
     cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Setting attribute \"%s\" in %s", pp->promiser,
           pp->this_server);
-    if ((attr = xmlNewProp(docnode, name, value)) == NULL)
+    if ((attr = xmlSetProp(docnode, name, value)) == NULL)
     {
         cfPS(cf_verbose, CF_INTERPT, "", pp, a,
              " !! Attribute was not successfully set in XML document");

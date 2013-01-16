@@ -23,6 +23,7 @@
 */
 
 #include "platform.h"
+#include "alloc.h"
 #include "atexit.h"
 
 #if defined(__MINGW32__)

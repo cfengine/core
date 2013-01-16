@@ -447,7 +447,7 @@ mode_t GetOctalConstraint(const char *lval, const Promise *pp)
 
 /*****************************************************************************/
 
-#ifndef __MINGW32__
+#ifdef __MINGW32__
 
 uid_t GetUidConstraint(const char *lval, const Promise *pp)
 {                               // we use sids on windows instead

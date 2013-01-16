@@ -48,7 +48,9 @@ static int SelectExecRegexMatch(char *filename, char *crit, char *prog);
 static int SelectIsSymLinkTo(char *filename, Rlist *crit);
 static int SelectExecProgram(char *filename, char *command);
 static int SelectSizeMatch(size_t size, size_t min, size_t max);
+#ifndef __MINGW32__
 static int GetOwnerName(char *path, struct stat *lstatptr, char *owner, int ownerSz);
+#endif
 
 #if defined HAVE_CHFLAGS
 static int SelectBSDMatch(struct stat *lstatptr, Rlist *bsdflags, Promise *pp);

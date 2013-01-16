@@ -30,8 +30,6 @@
 
 int MoveObstruction(char *from, Attributes attr, Promise *pp, const ReportContext *report_context);
 
-void LogHashChange(char *file, FileState status, char *msg, Promise *pp);
-
 typedef bool (*SaveCallbackFn)(const char *dest_filename, const char *orig_filename, void *param, Attributes a, Promise *pp);
 int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attributes a, Promise *pp, const ReportContext *report_context);
 

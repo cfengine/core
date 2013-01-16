@@ -452,13 +452,6 @@ typedef struct
 
 typedef struct CompressedArray_ CompressedArray;
 
-struct CompressedArray_
-{
-    int key;
-    char *value;
-    CompressedArray *next;
-};
-
 /*******************************************************************/
 
 typedef struct Audit_ Audit;

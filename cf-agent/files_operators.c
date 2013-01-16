@@ -166,63 +166,6 @@ static char FileStateToChar(FileState status)
         FatalError("Invalid Filechange status supplied");
     }
 }
-/*********************************************************************/
-void LogHashChange(char *file, FileState status, char *msg, Promise *pp)
-{
-    FILE *fp;
-    char fname[CF_BUFSIZE];
-    time_t now = time(NULL);
-    mode_t perm = 0600;
-    static char prevFile[CF_MAXVARSIZE] = { 0 };
-
-// we might get called twice..
-    if (strcmp(file, prevFile) == 0)
-    {
-        return;
-    }
-
-    strlcpy(prevFile, file, CF_MAXVARSIZE);
-
-/* This is inefficient but we don't want to lose any data */
-
-    snprintf(fname, CF_BUFSIZE, "%s/state/%s", CFWORKDIR, CF_FILECHANGE_NEW);
-    MapName(fname);
-
-#ifndef MINGW
-    struct stat sb;
-    if (cfstat(fname, &sb) != -1)
-    {
-        if (sb.st_mode & (S_IWGRP | S_IWOTH))
-        {
-            CfOut(cf_error, "", "File %s (owner %ju) is writable by others (security exception)", fname, (uintmax_t)sb.st_uid);
-        }
-    }
-#endif /* NOT MINGW */
-
-    if ((fp = fopen(fname, "a")) == NULL)
-    {
-        CfOut(cf_error, "fopen", "Could not write to the hash change log");
-        return;
-    }
-
-    const char *handle = PromiseID(pp);
-
-    fprintf(fp, "%ld,%s,%s,%c,%s\n", (long) now, handle, file, FileStateToChar(status), msg);
-    fclose(fp);
-
-    cf_chmod(fname, perm);
-}
-
-/*******************************************************************/
-
-
-/*******************************************************************/
-/* Level                                                           */
-/*******************************************************************/
-
-
-
-/*********************************************************************/
 
 int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attributes a, Promise *pp,
                        const ReportContext *report_context)

@@ -43,7 +43,7 @@ cf_agent_SOURCES = \
         verify_files.c \
         verify_files_utils.c verify_files_utils.h \
         verify_storage.c verify_storage.h \
-        verify_exec.c \
+        verify_exec.c verify_exec.h \
         verify_methods.c \
         verify_interfaces.c \
         verify_databases.c \

@@ -28,6 +28,7 @@
 #include "env_context.h"
 #include "constraints.h"
 #include "verify_environments.h"
+#include "verify_exec.h"
 #include "verify_processes.h"
 #include "verify_packages.h"
 #include "verify_outputs.h"

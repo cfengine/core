@@ -243,10 +243,6 @@ bool IsReadReady(int fd, int timeout_sec);
 
 void VerifyDatabasePromises(Promise *pp);
 
-/* verify_exec.c */
-
-void VerifyExecPromise(Promise *pp);
-
 /* verify_files.c */
 
 void VerifyFilePromise(char *path, Promise *pp, const ReportContext *report_context);

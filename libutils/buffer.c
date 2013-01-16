@@ -30,6 +30,22 @@
 #include "buffer.h"
 #include "refcount.h"
 
+static unsigned int general_memory_cap = DEFAULT_MEMORY_CAP;
+unsigned int BufferGeneralMemoryCap()
+{
+    return general_memory_cap;
+}
+
+void BufferSetGeneralMemoryCap(unsigned int cap)
+{
+    /*
+     * The cap cannot be set to zero, otherwise everything would fail.
+     */
+    if (cap == 0)
+        return;
+    general_memory_cap = cap;
+}
+
 int BufferNew(Buffer **buffer)
 {
     if (!buffer)
@@ -52,6 +68,7 @@ int BufferNew(Buffer **buffer)
     (*buffer)->used = 0;
     (*buffer)->beginning = 0;
     (*buffer)->end = 0;
+    (*buffer)->memory_cap = general_memory_cap;
     RefCountNew(&(*buffer)->ref_count);
     RefCountAttach((*buffer)->ref_count, (*buffer));
     return 0;
@@ -110,6 +127,7 @@ int BufferCopy(Buffer *source, Buffer **destination)
     (*destination)->used = source->used;
     (*destination)->beginning = source->beginning;
     (*destination)->end = source->end;
+    (*destination)->memory_cap = source->memory_cap;
     int elements = 0;
     elements = RefCountAttach(source->ref_count, (*destination));
     if (elements < 0)
@@ -127,7 +145,7 @@ int BufferEqual(Buffer *buffer1, Buffer *buffer2)
      * 1. First check the refcount elements, if they are the same
      * then the elements are the same.
      * 2. Look at the mode, even if the content is the same the interpretation might be different.
-     * 3. Look at the content. For CString mode we stop at the first '\0'.
+     * 3. Look at the content. For BUFFER_BEHAVIOR_CSTRING mode we stop at the first '\0'.
      */
     if (RefCountIsEqual(buffer1->ref_count, buffer2->ref_count))
     {
@@ -162,6 +180,10 @@ int BufferEqual(Buffer *buffer1, Buffer *buffer2)
 int BufferSet(Buffer *buffer, char *bytes, unsigned int length)
 {
     if (!buffer || !bytes)
+    {
+        return -1;
+    }
+    if (length > buffer->memory_cap)
     {
         return -1;
     }
@@ -224,7 +246,7 @@ int BufferSet(Buffer *buffer, char *bytes, unsigned int length)
         for (i = 0; i < buffer->used; ++i)
         {
             new_buffer[i] = buffer->buffer[i];
-            if ((buffer->buffer[i] == '\0') && (buffer->mode == CString))
+            if ((buffer->buffer[i] == '\0') && (buffer->mode == BUFFER_BEHAVIOR_CSTRING))
             {
                 break;
             }
@@ -261,12 +283,13 @@ int BufferSet(Buffer *buffer, char *bytes, unsigned int length)
     for (c = 0; c < length; ++c)
     {
         buffer->buffer[c] = bytes[c];
-        if ((buffer->mode == BUFFER_BEHAVIOR_CSTRING) && (bytes[i] == '\0'))
+        if ((bytes[c] == '\0') && (buffer->mode = BUFFER_BEHAVIOR_CSTRING))
         {
             break;
         }
         ++total;
     }
+    buffer->used = total;
     if (buffer->mode == BUFFER_BEHAVIOR_CSTRING)
     {
         buffer->buffer[buffer->used] = '\0';
@@ -277,6 +300,10 @@ int BufferSet(Buffer *buffer, char *bytes, unsigned int length)
 int BufferAppend(Buffer *buffer, char *bytes, unsigned int length)
 {
     if (!buffer || !bytes)
+    {
+        return -1;
+    }
+    if (length + buffer->used > buffer->memory_cap)
     {
         return -1;
     }
@@ -337,8 +364,8 @@ int BufferAppend(Buffer *buffer, char *bytes, unsigned int length)
         unsigned int used = 0;
         for (i = 0; i < buffer->used; ++i)
         {
-            p[i] = buffer->buffer[i];
-            if ((buffer->mode == BUFFER_BEHAVIOR_CSTRING) && (buffer->buffer[i] == '\0'))
+            new_buffer[i] = buffer->buffer[i];
+            if ((buffer->buffer[i] == '\0') && (buffer->mode == BUFFER_BEHAVIOR_CSTRING))
             {
                 break;
             }
@@ -362,13 +389,14 @@ int BufferAppend(Buffer *buffer, char *bytes, unsigned int length)
     unsigned int total = 0;
     for (c = 0; c < length; ++c)
     {
-        buffer->buffer[c] = bytes[c - beginning];
-        if ((buffer->mode == BUFFER_BEHAVIOR_CSTRING) && (bytes[i - beginning] == '\0'))
+        buffer->buffer[c + buffer->used] = bytes[c];
+        if ((bytes[c] == '\0') && (buffer->mode = BUFFER_BEHAVIOR_CSTRING))
         {
             break;
         }
         ++total;
     }
+    buffer->used += total;
     if (buffer->mode == BUFFER_BEHAVIOR_CSTRING)
     {
         buffer->buffer[buffer->used] = '\0';
@@ -455,7 +483,7 @@ int BufferPrintf(Buffer *buffer, const char *format, ...)
         for (i = 0; i < buffer->used; ++i)
         {
             new_buffer[i] = buffer->buffer[i];
-            if ((buffer->buffer[i] == '\0') && (buffer->mode == CString))
+            if ((buffer->buffer[i] == '\0') && (buffer->mode == BUFFER_BEHAVIOR_CSTRING))
             {
                 break;
             }
@@ -471,6 +499,14 @@ int BufferPrintf(Buffer *buffer, const char *format, ...)
          * Allocate a larger buffer and retry.
          * Don't forget to signal by returning 0.
          */
+        if (printed > buffer->memory_cap)
+        {
+            /*
+             * We would go over the memory_cap limit.
+             */
+            va_end(ap);
+            return -1;
+        }
         unsigned int required_blocks = (printed / DEFAULT_BUFFER_SIZE) + 1;
         void *p = NULL;
         p = realloc(buffer->buffer, required_blocks * DEFAULT_BUFFER_SIZE);
@@ -550,4 +586,22 @@ void BufferSetMode(Buffer *buffer, BufferBehavior mode)
         return;
     }
     buffer->mode = mode;
+}
+
+unsigned int BufferMemoryCap(Buffer *buffer)
+{
+    if (!buffer)
+    {
+        return 0;
+    }
+    return buffer->memory_cap;
+}
+
+void BufferSetMemoryCap(Buffer *buffer, unsigned int cap)
+{
+    if (!buffer || !cap)
+    {
+        return;
+    }
+    buffer->memory_cap = cap;
 }

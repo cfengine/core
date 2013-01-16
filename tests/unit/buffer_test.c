@@ -13,8 +13,6 @@ static void test_createBuffer(void **state)
     assert_true(buffer != NULL);
     assert_true(buffer->buffer != NULL);
     assert_int_equal(buffer->mode, BUFFER_BEHAVIOR_CSTRING);
-    assert_int_equal(buffer->low_water_mark, DEFAULT_LOW_WATERMARK);
-    assert_int_equal(buffer->chunk_size, DEFAULT_CHUNK_SIZE);
     assert_int_equal(buffer->capacity, DEFAULT_BUFFER_SIZE);
     assert_int_equal(buffer->used, 0);
     assert_int_equal(buffer->beginning, 0);
@@ -41,6 +39,8 @@ static void test_setBuffer(void **state)
     char element1[2 * DEFAULT_BUFFER_SIZE + 2];
     unsigned int element1size = 2 * DEFAULT_BUFFER_SIZE + 1;
     const char *element1pointer = NULL;
+    char element2[DEFAULT_MEMORY_CAP * 2];
+    unsigned int element2size = 2 * DEFAULT_MEMORY_CAP;
 
     Buffer *buffer = NULL;
     assert_int_equal(0, BufferNew(&buffer));
@@ -65,6 +65,16 @@ static void test_setBuffer(void **state)
     assert_string_equal(element1, buffer->buffer);
     assert_string_equal(element1, BufferData(buffer));
     assert_int_equal(DEFAULT_BUFFER_SIZE * 3, buffer->capacity);
+    /*
+     * A buffer that is so large that it will get rejected by our memory cap
+     */
+    BufferZero(buffer);
+    for (i = 0; i < element2size; ++i)
+    {
+        element2[i] = 'b';
+    }
+    element2[element2size - 1] = '\0';
+    assert_int_equal(-1, BufferSet(buffer, element2, element2size));
     // Negative cases
     assert_int_equal(-1, BufferSet(NULL, element0, element0size));
     assert_int_equal(-1, BufferSet(NULL, NULL, element0size));
@@ -143,6 +153,8 @@ static void test_appendBuffer(void **state)
     char element2[2 * DEFAULT_BUFFER_SIZE + 2];
     unsigned int element2size = 2 * DEFAULT_BUFFER_SIZE + 1;
     const char *element2pointer = NULL;
+    char element3[DEFAULT_MEMORY_CAP * 2];
+    unsigned int element3size = 2 * DEFAULT_MEMORY_CAP;
 
     Buffer *buffer = NULL;
     assert_int_equal(0, BufferNew(&buffer));
@@ -199,6 +211,16 @@ static void test_appendBuffer(void **state)
     assert_string_equal(longAppend, buffer->buffer);
     assert_string_equal(longAppend, BufferData(buffer));
     /*
+     * A buffer that is so large that it will get rejected by our memory cap
+     */
+    BufferZero(buffer);
+    for (i = 0; i < element3size; ++i)
+    {
+        element3[i] = 'b';
+    }
+    element3[element3size - 1] = '\0';
+    assert_int_equal(-1, BufferAppend(buffer, element3, element3size));
+    /*
      * Destroy the buffer and good night.
      */
     free(shortAppend);
@@ -225,6 +247,8 @@ static void test_printf(void **state)
     unsigned int double0charsize = strlen(double0char);
     char char0int0char1double0[] = "char0 123456789 char1 3.1415";
     unsigned int char0int0char1double0size = strlen(char0int0char1double0);
+    char element3[DEFAULT_MEMORY_CAP * 2];
+    unsigned int element3size = 2 * DEFAULT_MEMORY_CAP;
 
     Buffer *buffer = NULL;
     assert_int_equal(0, BufferNew(&buffer));
@@ -287,6 +311,16 @@ static void test_printf(void **state)
     assert_string_equal(char2, BufferData(buffer));
     assert_int_equal(char2size, buffer->used);
     assert_int_equal(char2size, BufferSize(buffer));
+    /*
+     * A buffer that is so large that it will get rejected by our memory cap
+     */
+    BufferZero(buffer);
+    for (i = 0; i < element3size; ++i)
+    {
+        element3[i] = 'b';
+    }
+    element3[element3size - 1] = '\0';
+    assert_int_equal(-1, BufferPrintf(buffer, "%s", element3));
 }
 
 int main()

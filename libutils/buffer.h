@@ -36,26 +36,42 @@
 
   If an error arises while doing something, we do everything we can to restore things to its previous state.
   Unfortunately not all errors are recoverable. Since we do not have a proper errno system, we just return -1.
+
+  For security reasons, there is a memory cap on each buffer. At creation time each buffer gets assigned a certain
+  amount of memory, can be checked via BufferGeneralMemoryCap(). This general cap can be raised or lowered by calling
+  BufferSetGeneralMemoryCap(unsigned int cap). After changing the cap, only newly allocated buffers will have the new cap
+  as default, all the previous buffers will have the old cap. This can be changed on a per instance basis.
   */
 
-typedef enum
-{
-    BUFFER_BEHAVIOR_CSTRING, //<! CString compatibility mode. A '\0' would be interpreted as end of the string, regardless of the size.
-    BUFFER_BEHAVIOR_BYTEARRAY, //<! Byte array mode. A '\0' has no meaning, only the size of the buffer is taken into consideration.
-} BufferBehavior;
+typedef enum {
+    BUFFER_BEHAVIOR_CSTRING //<! CString compatibility mode. A '\0' would be interpreted as end of the string, regardless of the size.
+    , BUFFER_BEHAVIOR_BYTEARRAY //<! Byte array mode. A '\0' has no meaning, only the size of the buffer is taken into consideration.
+} BufferBehavior ;
 
 #define DEFAULT_BUFFER_SIZE     4096
+#define DEFAULT_MEMORY_CAP      65535
 
 struct Buffer {
     char *buffer;
     int mode;
     unsigned int capacity;
     unsigned int used;
+    unsigned int memory_cap;
     unsigned int beginning; /*!< This is to be used in the future to trim characters in the front. */
     unsigned int end; /*!< This is to be used in the future to trim characters in the back. */
     RefCount *ref_count;
 };
 typedef struct Buffer Buffer;
+
+/**
+  @brief Returns the amount of memory that is used as a general memory cap.
+  @return Amount of memory in bytes used as a general memory cap.
+  */
+unsigned int BufferGeneralMemoryCap();
+/**
+  @brief Sets the new general memory cap.
+  */
+void BufferSetGeneralMemoryCap(unsigned int cap);
 
 /**
   @brief Buffer initialization routine.
@@ -170,5 +186,14 @@ void BufferSetMode(Buffer *buffer, BufferBehavior mode);
   @return A const char pointer to the data contained on the buffer.
   */
 const char *BufferData(Buffer *buffer);
+/**
+  @brief Returns the amount of memory that is used as a memory cap for this particular buffer instance.
+  @return Amount of memory in bytes used as a memory cap.
+  */
+unsigned int BufferMemoryCap(Buffer *buffer);
+/**
+  @brief Sets the new memory cap for this particular buffer instance.
+  */
+void BufferSetMemoryCap(Buffer *buffer, unsigned int cap);
 
 #endif // CFENGINE_BUFFER_H

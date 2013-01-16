@@ -16,7 +16,6 @@ static void test_createBuffer(void **state)
     assert_int_equal(buffer->low_water_mark, DEFAULT_LOW_WATERMARK);
     assert_int_equal(buffer->chunk_size, DEFAULT_CHUNK_SIZE);
     assert_int_equal(buffer->capacity, DEFAULT_BUFFER_SIZE);
-    assert_int_equal(buffer->real_capacity, DEFAULT_BUFFER_SIZE - DEFAULT_LOW_WATERMARK);
     assert_int_equal(buffer->used, 0);
     assert_int_equal(buffer->beginning, 0);
     assert_int_equal(buffer->end, 0);
@@ -281,58 +280,13 @@ static void test_printf(void **state)
         char2[i] = 'a';
     char2[char2size] = '\0';
     // The first time, the buffer is too small.
-    assert_int_equal(-1, BufferPrintf(buffer, "%s", char2));
-    // The second time the buffer is too small also.
-    assert_int_equal(-1, BufferPrintf(buffer, "%s", char2));
-    // The third time there is enough space
+    assert_int_equal(0, BufferPrintf(buffer, "%s", char2));
+    // The second time there is enough space
     assert_int_equal(char2size, BufferPrintf(buffer, "%s", char2));
     assert_string_equal(char2, buffer->buffer);
     assert_string_equal(char2, BufferData(buffer));
     assert_int_equal(char2size, buffer->used);
     assert_int_equal(char2size, BufferSize(buffer));
-}
-
-static void test_advancedAPI(void **state)
-{
-    Buffer *buffer = NULL;
-    assert_int_equal(0, BufferNew(&buffer));
-    assert_true(buffer != NULL);
-    assert_true(buffer->buffer != NULL);
-    assert_int_equal(buffer->mode, BUFFER_BEHAVIOR_CSTRING);
-    assert_int_equal(buffer->low_water_mark, DEFAULT_LOW_WATERMARK);
-    assert_int_equal(buffer->chunk_size, DEFAULT_CHUNK_SIZE);
-    assert_int_equal(buffer->capacity, DEFAULT_BUFFER_SIZE);
-    assert_int_equal(buffer->real_capacity, DEFAULT_BUFFER_SIZE - DEFAULT_LOW_WATERMARK);
-    assert_int_equal(buffer->used, 0);
-    /*
-     * We have a properly initialized buffer, let's play with the advanced API and change some values here and
-     * there.
-     * 1. chunk_size since it does not affect any other values.
-     * 2. low_water_mark since it affects real_capacity.
-     */
-    assert_int_equal(DEFAULT_CHUNK_SIZE, BufferChunkSize(buffer));
-    assert_int_equal(0, BufferChunkSize(NULL));
-    BufferSetChunkSize(NULL, 0);
-    BufferSetChunkSize(buffer, 0);
-    assert_int_equal(DEFAULT_CHUNK_SIZE, buffer->chunk_size);
-    BufferSetChunkSize(NULL, 8192);
-    BufferSetChunkSize(buffer, 2*DEFAULT_CHUNK_SIZE);
-    assert_int_equal(2*DEFAULT_CHUNK_SIZE, buffer->chunk_size);
-
-    assert_int_equal(DEFAULT_LOW_WATERMARK, BufferLowWaterMark(buffer));
-    assert_int_equal(0, BufferLowWaterMark(NULL));
-    BufferSetLowWaterMark(NULL, 0);
-    BufferSetLowWaterMark(buffer, 0);
-    assert_int_equal(0, buffer->low_water_mark);
-    assert_int_equal(buffer->capacity, buffer->real_capacity);
-    BufferSetLowWaterMark(buffer, 1024);
-    assert_int_equal(1024, buffer->low_water_mark);
-    assert_int_equal(DEFAULT_BUFFER_SIZE - 1024, buffer->real_capacity);
-    /*
-     * Destroy the buffer and good night.
-     */
-    assert_int_equal(0, BufferDestroy(&buffer));
-    assert_true(buffer == NULL);
 }
 
 int main()
@@ -345,7 +299,6 @@ int main()
         , unit_test(test_setBuffer)
         , unit_test(test_appendBuffer)
         , unit_test(test_printf)
-        , unit_test(test_advancedAPI)
     };
 
     return run_tests(tests);

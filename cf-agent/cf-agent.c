@@ -1487,7 +1487,7 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
 static int AutomaticBootstrap()
 {
 	List *foundhubs = ListHubs();
-    int hubcount = foundhubs->node_count;
+    int hubcount = ListCount(foundhubs);
     switch(hubcount)
 	{
 	case 0:
@@ -1495,17 +1495,38 @@ static int AutomaticBootstrap()
         ListDestroy(&foundhubs);
 		return -1;
 	case 1:
-		printf("Found hub installed on:"
-			   "Hostname: %s"
-			   "IP Address: %s",
-			   ((HostProperties*)foundhubs)->Hostname,
-			   ((HostProperties*)foundhubs)->IPAddress);
-	    strncpy(POLICY_SERVER, ((HostProperties*)foundhubs)->IPAddress, CF_BUFSIZE);
+	printf("Found hub installed on:"
+	       "Hostname: %s"
+	       "IP Address: %s",
+	       ((HostProperties*)foundhubs)->Hostname,
+	       ((HostProperties*)foundhubs)->IPAddress);
+	strncpy(POLICY_SERVER, ((HostProperties*)foundhubs)->IPAddress, CF_BUFSIZE);
         dlclose(avahi_handle);
-		break;
+	break;
 	case 2:
         printf("Found two hubs\n");
-        break;
+        ListIterator *i = NULL;
+        ListIteratorGet(foundhubs, &i);
+        HostProperties *host1 = (HostProperties *)i->current->payload;
+        ListIteratorNext(i)
+        HostProperties *host2 = (HostProperties *)i->current->payload;
+
+        if (strncmp(host1->Hostname, host2->Hostname, 4096) == 0)
+        {   
+            strncpy(POLICY_SERVER, host1->IPAddress, CF_BUFSIZE);
+            dlclose(avahi_handle);
+            break;
+        }
+        else
+        {
+	printf("Found more than one hub registered in the network\n"
+	       "Please bootstrap manually using IP from the list below:");
+    	PrintList(foundhubs);
+        dlclose(avahi_handle);
+        ListDestroy(&foundhubs);
+        return -3;
+        }
+
 	default:
 		printf("Found more than one hub registered in the network\n"
 			   "Please bootstrap manually using IP from the list below:");

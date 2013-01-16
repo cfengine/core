@@ -404,7 +404,7 @@ static void CreateFailSafe(char *name)
             "body copy_from u_cp(from)\n"
             "{\n"
             "source          => \"$(from)\";\n"
-#ifdef __MINGW32
+#ifdef __MINGW32__
             "compare         => \"digest\";\n" "copy_backup     => \"false\";\n" "}\n" "\n");
 #else
             "compare         => \"digest\";\n" "copy_backup     => \"false\";\n" "}\n" "\n", CFWORKDIR, CFWORKDIR);

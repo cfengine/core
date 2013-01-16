@@ -47,9 +47,9 @@ static int FileSystemMountedCorrectly(Rlist *list, char *name, char *options, At
 static int IsForeignFileSystem(struct stat *childstat, char *dir);
 #endif
 
-#ifndef MINGW
+#ifndef __MINGW32__
 static int VerifyMountPromise(char *file, Attributes a, Promise *pp, const ReportContext *report_context);
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
 /*****************************************************************************/
 
@@ -81,7 +81,7 @@ void VerifyStoragePromise(char *path, Promise *pp, const ReportContext *report_c
 
     CF_OCCUR++;
 
-#ifdef MINGW
+#ifdef __MINGW32__
     if (!a.havemount)
     {
         CfOut(cf_verbose, "", "storage.mount is not supported on Windows");
@@ -119,7 +119,7 @@ void VerifyStoragePromise(char *path, Promise *pp, const ReportContext *report_c
 
 /* Do mounts first */
 
-#ifndef MINGW
+#ifndef __MINGW32__
     if ((!MOUNTEDFSLIST) && (!LoadMountInfo(&MOUNTEDFSLIST)))
     {
         CfOut(cf_error, "", "Couldn't obtain a list of mounted filesystems - aborting\n");
@@ -131,7 +131,7 @@ void VerifyStoragePromise(char *path, Promise *pp, const ReportContext *report_c
     {
         VerifyMountPromise(path, a, pp, report_context);
     }
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
 /* Then check file system */
 
@@ -253,12 +253,12 @@ static int VerifyFreeSpace(char *file, Attributes a, Promise *pp)
 {
     struct stat statbuf;
 
-#ifdef MINGW
+#ifdef __MINGW32__
     if (!a.volume.check_foreign)
     {
         CfOut(cf_verbose, "", "storage.volume.check_foreign is not supported on Windows (checking every mount)");
     }
-#endif /* MINGW */
+#endif /* __MINGW32__ */
 
     if (cfstat(file, &statbuf) == -1)
     {
@@ -266,7 +266,7 @@ static int VerifyFreeSpace(char *file, Attributes a, Promise *pp)
         return true;
     }
 
-#ifndef MINGW
+#ifndef __MINGW32__
     if (!a.volume.check_foreign)
     {
         if (IsForeignFileSystem(&statbuf, file))
@@ -275,7 +275,7 @@ static int VerifyFreeSpace(char *file, Attributes a, Promise *pp)
             return true;
         }
     }
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
     if (a.volume.freespace < 0)
     {
@@ -494,4 +494,4 @@ static int VerifyMountPromise(char *name, Attributes a, Promise *pp, const Repor
     return true;
 }
 
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */

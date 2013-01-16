@@ -729,7 +729,6 @@ case "$target_os" in
    cygwin*)
         ;;
    mingw*)
-        AC_DEFINE(MINGW, 1, [Native NT build])
         ;;
    sco*)
         ;;

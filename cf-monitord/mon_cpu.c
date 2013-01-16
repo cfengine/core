@@ -27,7 +27,7 @@
 #include "monitoring.h"
 #include "cfstream.h"
 
-#if !defined(MINGW)
+#if !defined(__MINGW32__)
 
 /* Constants */
 
@@ -111,4 +111,4 @@ void MonCPUGatherData(double *cf_this)
     fclose(fp);
 }
 
-#endif /* !MINGW */
+#endif /* !__MINGW32__ */

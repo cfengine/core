@@ -145,13 +145,13 @@ int main(int argc, char *argv[])
 
     KeepPromises(policy, &exec_config);
 
-#ifdef MINGW
+#ifdef __MINGW32__
     if (WINSERVICE)
     {
         NovaWin_StartExecService();
     }
     else
-#endif /* MINGW */
+#endif /* __MINGW32__ */
     {
         StartServer(policy, &exec_config, report_context);
     }
@@ -460,14 +460,14 @@ void StartServer(Policy *policy, ExecConfig *config, const ReportContext *report
         strcpy(CFLOG, thislock.log ? thislock.log : "");
     }
 
-#ifdef MINGW
+#ifdef __MINGW32__
 
     if (!NO_FORK)
     {
         CfOut(cf_verbose, "", "Windows does not support starting processes in the background - starting in foreground");
     }
 
-#else /* NOT MINGW */
+#else /* !__MINGW32__ */
 
     if ((!NO_FORK) && (fork() != 0))
     {
@@ -480,7 +480,7 @@ void StartServer(Policy *policy, ExecConfig *config, const ReportContext *report
         ActAsDaemon(0);
     }
 
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
     WritePID("cf-execd.pid");
     signal(SIGINT, HandleSignalsForDaemon);
@@ -572,7 +572,7 @@ static void Apoptosis()
 
     CfOut(cf_verbose, "", " !! Programmed pruning of the scheduler cluster");
 
-#ifdef MINGW
+#ifdef __MINGW32__
     snprintf(promiser_buf, sizeof(promiser_buf), "cf-execd");     // using '\' causes regexp problems
 #else
     snprintf(promiser_buf, sizeof(promiser_buf), "%s/bin/cf-execd", CFWORKDIR);

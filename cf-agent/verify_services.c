@@ -99,7 +99,7 @@ static int ServicesSanityChecks(Attributes a, Promise *pp)
         return false;
     }
 
-#ifdef MINGW
+#ifdef __MINGW32__
 
     if (strcmp(a.service.service_type, "windows") != 0)
     {
@@ -109,7 +109,7 @@ static int ServicesSanityChecks(Attributes a, Promise *pp)
         return false;
     }
 
-#endif /* MINGW */
+#endif /* __MINGW32__ */
 
     return true;
 }
@@ -129,7 +129,7 @@ static void SetServiceDefaults(Attributes *a)
     }
 
 // default service type to "windows" on windows platforms
-#ifdef MINGW
+#ifdef __MINGW32__
     if (a->service.service_type == NULL)
     {
         a->service.service_type = "windows";
@@ -139,7 +139,7 @@ static void SetServiceDefaults(Attributes *a)
     {
         a->service.service_type = "bundle";
     }
-#endif /* MINGW */
+#endif /* __MINGW32__ */
 }
 
 /*****************************************************************************/
@@ -151,7 +151,7 @@ void VerifyServices(Attributes a, Promise *pp, const ReportContext *report_conte
     CfLock thislock;
 
     // allow to start Cfengine windows executor without license
-#ifdef MINGW
+#ifdef __MINGW32__
 
     if ((LICENSES == 0) && (strcmp(WINSERVICE_NAME, pp->promiser) != 0))
     {

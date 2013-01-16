@@ -252,14 +252,14 @@ void MonitorStartServer(const Policy *policy, const ReportContext *report_contex
     Attributes dummyattr;
     CfLock thislock;
 
-#ifdef MINGW
+#ifdef __MINGW32__
 
     if (!NO_FORK)
     {
         CfOut(cf_verbose, "", "Windows does not support starting processes in the background - starting in foreground");
     }
 
-#else /* NOT MINGW */
+#else /* !__MINGW32__ */
 
     if ((!NO_FORK) && (fork() != 0))
     {
@@ -272,7 +272,7 @@ void MonitorStartServer(const Policy *policy, const ReportContext *report_contex
         ActAsDaemon(0);
     }
 
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
     memset(&dummyattr, 0, sizeof(dummyattr));
     dummyattr.transaction.ifelapsed = 0;
@@ -316,14 +316,14 @@ static void GetQ(const Policy *policy, const ReportContext *report_context)
     ZeroArrivals();
 
     MonProcessesGatherData(CF_THIS);
-#ifndef MINGW
+#ifndef __MINGW32__
     MonCPUGatherData(CF_THIS);
     MonLoadGatherData(CF_THIS);
     MonDiskGatherData(CF_THIS);
     MonNetworkGatherData(CF_THIS);
     MonNetworkSnifferGatherData(CF_THIS);
     MonTempGatherData(CF_THIS);
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
     MonOtherGatherData(CF_THIS);
     GatherPromisedMeasures(policy, report_context);
 }

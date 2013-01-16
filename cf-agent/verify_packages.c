@@ -85,7 +85,7 @@ void VerifyPackagesPromise(Promise *pp)
 
     a = GetPackageAttributes(pp);
 
-#ifdef MINGW
+#ifdef __MINGW32__
 
     if(!a.packages.package_list_command)
     {
@@ -151,7 +151,7 @@ void VerifyPackagesPromise(Promise *pp)
 
 static int PackageSanityCheck(Attributes a, Promise *pp)
 {
-#ifndef MINGW  // Windows may use Win32 API for listing and parsing
+#ifndef __MINGW32__  // Windows may use Win32 API for listing and parsing
 
     if (a.packages.package_list_name_regex == NULL)
     {
@@ -176,7 +176,7 @@ static int PackageSanityCheck(Attributes a, Promise *pp)
     }
 
 
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
 
     if ((a.packages.package_list_command == NULL) && (a.packages.package_file_repositories == NULL))
@@ -560,7 +560,7 @@ static int VerifyInstalledPackages(PackageManager **all_mgrs, const char *defaul
         return true;
     }
 
-#ifdef MINGW
+#ifdef __MINGW32__
 
     if (strcmp(a.packages.package_list_command, PACKAGE_LIST_COMMAND_WINAPI) == 0)
     {
@@ -590,7 +590,7 @@ static int VerifyInstalledPackages(PackageManager **all_mgrs, const char *defaul
         }
     }
     
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
     ReportSoftware(INSTALLED_PACKAGE_LISTS);
 

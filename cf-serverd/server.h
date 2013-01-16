@@ -56,7 +56,7 @@ typedef struct ServerConnectionState
     unsigned char digest[EVP_MAX_MD_SIZE + 1];
     char hostname[CF_MAXVARSIZE];
     char username[CF_MAXVARSIZE];
-#ifdef MINGW
+#ifdef __MINGW32__
     char sid[CF_MAXSIDSIZE];    /* we avoid dynamically allocated buffers due to potential memory leaks */
 #else
     uid_t uid;

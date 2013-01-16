@@ -27,7 +27,7 @@
 
 #include "cf3.defs.h"
 
-#ifndef MINGW
+#ifndef __MINGW32__
 int LoadMountInfo(Rlist **list);
 void DeleteMountInfo(Rlist *list);
 int VerifyNotInFstab(char *name, Attributes a, Promise *pp);
@@ -35,6 +35,6 @@ int VerifyInFstab(char *name, Attributes a, Promise *pp);
 int VerifyMount(char *name, Attributes a, Promise *pp);
 int VerifyUnmount(char *name, Attributes a, Promise *pp);
 void MountAll(void);
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
 #endif

@@ -1276,14 +1276,14 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
         CfOut(cf_verbose, "", "Non-verified User ID seems to be %s (Using skipverify)\n", username);
         strncpy(conn->username, username, CF_MAXVARSIZE);
 
-#ifdef MINGW                    /* NT uses security identifier instead of uid */
+#ifdef __MINGW32__                    /* NT uses security identifier instead of uid */
 
         if (!NovaWin_UserNameToSid(username, (SID *) conn->sid, CF_MAXSIDSIZE, false))
         {
             memset(conn->sid, 0, CF_MAXSIDSIZE);        /* is invalid sid - discarded */
         }
 
-#else /* NOT MINGW */
+#else /* !__MINGW32__ */
 
         struct passwd *pw;
         if ((pw = getpwnam(username)) == NULL)  /* Keep this inside mutex */
@@ -1295,7 +1295,7 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
             conn->uid = pw->pw_uid;
         }
 
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
         return true;
     }
 
@@ -1434,13 +1434,13 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
 
     ThreadUnlock(cft_getaddr);
 
-# ifdef MINGW                   /* NT uses security identifier instead of uid */
+# ifdef __MINGW32__                   /* NT uses security identifier instead of uid */
     if (!NovaWin_UserNameToSid(username, (SID *) conn->sid, CF_MAXSIDSIZE, false))
     {
         memset(conn->sid, 0, CF_MAXSIDSIZE);    /* is invalid sid - discarded */
     }
 
-# else/* NOT MINGW */
+# else/* !__MINGW32__ */
     if ((pw = getpwnam(username)) == NULL)      /* Keep this inside mutex */
     {
         conn->uid = -2;
@@ -1449,7 +1449,7 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
     {
         conn->uid = pw->pw_uid;
     }
-# endif/* NOT MINGW */
+# endif/* !__MINGW32__ */
 
 #endif
 
@@ -1521,14 +1521,14 @@ bool ResolveFilename(const char *req_path, char *res_path)
 
 /* NT has case-insensitive path names */
 
-#ifdef MINGW
+#ifdef __MINGW32__
     int i;
 
     for (i = 0; i < strlen(res_path); i++)
     {
         res_path[i] = ToLower(res_path[i]);
     }
-#endif /* MINGW */
+#endif /* __MINGW32__ */
 
     return true;
 }
@@ -2401,7 +2401,7 @@ static int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilena
 
     memset(linkbuf, 0, CF_BUFSIZE);
 
-#ifndef MINGW                   // windows doesn't support symbolic links
+#ifndef __MINGW32__                   // windows doesn't support symbolic links
     if (S_ISLNK(statbuf.st_mode))
     {
         islink = true;
@@ -2421,7 +2421,7 @@ static int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilena
 
         cfst.cf_readlink = linkbuf;
     }
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
     if ((!islink) && (cfstat(filename, &statbuf) == -1))
     {
@@ -2488,7 +2488,7 @@ static int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilena
         cfst.cf_nlink = statbuf.st_nlink;
     }
 
-#if !defined(MINGW)
+#if !defined(__MINGW32__)
     if (statbuf.st_size > statbuf.st_blocks * DEV_BSIZE)
 #else
 # ifdef HAVE_ST_BLOCKS
@@ -3161,7 +3161,7 @@ static void RefuseAccess(ServerConnectionState *conn, char *sendbuffer, int size
 
 static int TransferRights(char *filename, int sd, ServerFileGetState *args, char *sendbuffer, struct stat *sb)
 {
-#ifdef MINGW
+#ifdef __MINGW32__
     SECURITY_DESCRIPTOR *secDesc;
     SID *ownerSid;
 

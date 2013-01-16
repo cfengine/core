@@ -125,7 +125,7 @@ static bool SyntaxCheckExec(Attributes a, Promise *pp)
         return false;
     }
 
-#ifdef MINGW
+#ifdef __MINGW32__
     if (a.contain.umask != (mode_t)CF_UNDEFINED)
     {
         CfOut(cf_verbose, "", "contain.umask is ignored on Windows");
@@ -146,12 +146,12 @@ static bool SyntaxCheckExec(Attributes a, Promise *pp)
         CfOut(cf_verbose, "", "contain.chroot is ignored on Windows");
     }
 
-#else /* NOT MINGW */
+#else /* !__MINGW32__ */
     if (a.contain.umask == (mode_t)CF_UNDEFINED)
     {
         a.contain.umask = 077;
     }
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
     return true;
 }
@@ -252,7 +252,7 @@ static ActionResult RepairExec(Attributes a, Promise *pp)
 
         if (a.transaction.background)
         {
-#ifdef MINGW
+#ifdef __MINGW32__
             outsourced = true;
 #else
             CfOut(cf_verbose, "", " -> Backgrounding job %s\n", cmdline);
@@ -271,7 +271,7 @@ static ActionResult RepairExec(Attributes a, Promise *pp)
                 SetTimeOut(a.contain.timeout);
             }
 
-#ifndef MINGW
+#ifndef __MINGW32__
             CfOut(cf_verbose, "", " -> (Setting umask to %jo)\n", (uintmax_t)a.contain.umask);
             maskval = umask(a.contain.umask);
 
@@ -279,7 +279,7 @@ static ActionResult RepairExec(Attributes a, Promise *pp)
             {
                 CfOut(cf_verbose, "", " !! Programming %s running with umask 0! Use umask= to set\n", cmdline);
             }
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
             if (a.contain.useshell)
             {
@@ -357,7 +357,7 @@ static ActionResult RepairExec(Attributes a, Promise *pp)
                     count++;
                 }
             }
-#ifdef MINGW
+#ifdef __MINGW32__
             if (outsourced)     // only get return value if we waited for command execution
             {
                 cf_pclose(pfp);
@@ -366,7 +366,7 @@ static ActionResult RepairExec(Attributes a, Promise *pp)
             {
                 cf_pclose_def(pfp, a, pp);
             }
-#else /* NOT MINGW */
+#else /* !__MINGW32__ */
             cf_pclose_def(pfp, a, pp);
 #endif
         }
@@ -388,19 +388,19 @@ static ActionResult RepairExec(Attributes a, Promise *pp)
         }
 
         CfOut(cf_inform, "", " -> Completed execution of %s\n", cmdline);
-#ifndef MINGW
+#ifndef __MINGW32__
         umask(maskval);
 #endif
 
         snprintf(eventname, CF_BUFSIZE - 1, "Exec(%s)", cmdline);
 
-#ifndef MINGW
+#ifndef __MINGW32__
         if ((a.transaction.background) && outsourced)
         {
             CfOut(cf_verbose, "", " -> Backgrounded command (%s) is done - exiting\n", cmdline);
             exit(0);
         }
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
         return ACTION_RESULT_OK;
     }

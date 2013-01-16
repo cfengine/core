@@ -2,9 +2,8 @@
 #define FINDHUB_H
 
 #include "findhub_priv.h"
-int hubcount;
-Hosts *list;
+#include "list.h"
 
-void ListHubs(void);
+List *ListHubs(void);
 
 #endif // FINDHUB_H

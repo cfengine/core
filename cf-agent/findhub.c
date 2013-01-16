@@ -1,7 +1,11 @@
 #include "findhub.h"
 #include "atexit.h"
+#include "string_lib.h"
+
+List *hublist = NULL; 
 
 static void AtExitDlClose(void);
+static int CompareHosts(void  *a, void *b);
 
 bool isIPv6(const char *address)
 {
@@ -80,6 +84,7 @@ void resolve_callback(AvahiServiceResolver *r,
                       AVAHI_GCC_UNUSED void* userdata
                       )
 {
+    HostProperties *hostprop = calloc(1, sizeof(HostProperties));
     assert(r);
     char a[AVAHI_ADDRESS_STR_MAX];
     switch(event)
@@ -90,72 +95,57 @@ void resolve_callback(AvahiServiceResolver *r,
 
     case AVAHI_RESOLVER_FOUND:
         avahi_address_snprint_ptr(a, sizeof(a), address);
-        AddHost(host_name, a, port);
+
+        strncpy(hostprop->Hostname, host_name, 4096);
+        strncpy(hostprop->IPAddress, a, AVAHI_ADDRESS_STR_MAX);
+        hostprop->Port = port;
+        ListAppend(hublist, hostprop);
         break;
     }
 
     avahi_service_resolver_free_ptr(r);
 }
 
-void AddHost(const char *hostname, const char *IPAddress, uint16_t port)
+void PrintList(List *list)
 {
-    HostProperties *hostprop = calloc(1,sizeof(HostProperties));
+    ListIterator *i = NULL;
 
-    strncpy(hostprop->Hostname, hostname, 4096);
-    strncpy(hostprop->IPAddress, IPAddress, 40);
-    hostprop->Port = port;
-
-    Hosts *tmp = calloc(1,sizeof(Hosts));
-
-    tmp->HP = hostprop;
-    tmp->next = list;
-    list = tmp;
-}
-
-void CleanupList(void)
-{
-    Hosts *tmp = NULL;
-
-    while (list != NULL)
+    if (ListIteratorGet(list, &i) != 0)
     {
-        free(list->HP);
-        tmp = list;
-        list = list->next;
-        free(tmp);
+        printf("Not able to get iterator\n");
+        return;
     }
 
-    free(list);
-}
-
-void PrintList(void)
-{
-    Hosts *tmp = list;
-
     printf("\n\n==============================================\n");
-    while (tmp != NULL)
+    
+    while (i)
     {
+        HostProperties *hostprop = (HostProperties *)i->current->payload;
+
         printf("CFEngine Hub:\n"
                "Hostname: %s\n"
                "IP Address: %s\n"
                "Port: %d\n",
-               tmp->HP->Hostname,
-               tmp->HP->IPAddress,
-               tmp->HP->Port);
+               hostprop->Hostname,
+               hostprop->IPAddress,
+               hostprop->Port);
         printf("==============================================\n");
-        tmp = tmp->next;
+        if (ListIteratorNext(i) == -1)
+            break;
     }
     printf("\n\n");
+    ListIteratorDestroy(&i);
 }
 
-void ListHubs(void)
+List *ListHubs(void)
 {
     AvahiClient *client = NULL;
     AvahiServiceBrowser *sb = NULL;
     int error;
 
+    ListNew(&hublist, &CompareHosts, NULL, &free);
+
     spoll = NULL;
-    list = NULL;
-    hubcount = 0;
     avahi_handle = NULL;
 
     RegisterAtExitFunction(&AtExitDlClose);
@@ -163,13 +153,18 @@ void ListHubs(void)
     if (loadavahi() == 1)
     {
         printf("Avahi not found!!!\n");
-        return;
+        return NULL;
     }
 
     if (!(spoll = avahi_simple_poll_new_ptr()))
     {
         fprintf(stderr, "Failed to create simple poll object. \n");
-        goto cleanup;
+
+        if (spoll)
+        {
+            avahi_simple_poll_free_ptr(spoll);
+        }
+        return NULL;
     }
 
     client = avahi_client_new_ptr(avahi_simple_poll_get_ptr(spoll), 0, client_callback, NULL, &error);
@@ -177,38 +172,51 @@ void ListHubs(void)
     if (!client)
     {
         fprintf(stderr, "Failed to create client: %s\n", avahi_strerror_ptr(error));
-        goto cleanup;
+        if (client)
+        {
+            avahi_client_free_ptr(client);
+        }
+
+        if (spoll)
+        {
+            avahi_simple_poll_free_ptr(spoll);
+        }
+
+        return NULL;
     }
 
     if (!(sb = avahi_service_browser_new_ptr(client, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, "_cfenginehub._tcp", NULL, 0, browse_callback, client)))
     {
         fprintf(stderr, "Failed to create service browser: %s\n", avahi_strerror_ptr(avahi_client_errno_ptr(client)));
-        goto cleanup;
+        
+        if (spoll)
+        {
+            avahi_simple_poll_free_ptr(spoll);
+        }
+
+        if (client)
+        {
+            avahi_client_free_ptr(client);
+        }
+
+        if (sb)
+        {
+            avahi_service_browser_free_ptr(sb);
+        }
+
+        return NULL;
     }
 
     avahi_simple_poll_loop_ptr(spoll);
-    goto cleanup;
-cleanup:
+
     if (sb)
         avahi_service_browser_free_ptr(sb);
     if (client)
         avahi_client_free_ptr(client);
     if (spoll)
         avahi_simple_poll_free_ptr(spoll);
-}
-
-int CountHubs()
-{
-	Hosts *tmp = list;
-	int hubcount = 0;
-
-	while (tmp != NULL)
-	{
-		++hubcount;
-		tmp = tmp->next;
-	}
-
-	return hubcount;
+    
+    return hublist;
 }
 
 static void AtExitDlClose(void)
@@ -217,4 +225,9 @@ static void AtExitDlClose(void)
     {
         dlclose(avahi_handle);
     }
+}
+
+static int CompareHosts(void *a, void *b)
+{
+    return StringSafeCompare(((HostProperties*)a)->Hostname, ((HostProperties*)b)->Hostname);
 }

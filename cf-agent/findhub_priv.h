@@ -2,13 +2,14 @@
 #define FINDHUB_PRIV_H
 
 #include "load_avahi.h"
+#include "list.h"
 
 AvahiSimplePoll *spoll;
 
 struct HostProperties_
 {
     char Hostname[4096];
-    char IPAddress[40];
+    char IPAddress[AVAHI_ADDRESS_STR_MAX];
     uint16_t Port;
 };
 
@@ -52,6 +53,6 @@ void client_callback(AvahiClient *c,
 bool isIPv6(const char *address);
 void AddHost(const char *hostname, const char *IPAddress, uint16_t port);
 void CleanupList(void);
-void PrintList(void);
+void PrintList(List *list);
 int CountHubs(void);
 #endif // FINDHUB_PRIV_H

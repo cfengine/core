@@ -23,7 +23,7 @@
 
 */
 
-#include "cf3.defs.h"
+#include "verify_storage.h"
 
 #include "dir.h"
 #include "conversion.h"

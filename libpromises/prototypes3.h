@@ -239,10 +239,6 @@ void SetReferenceTime(int setclasses);
 void SetStartTime(void);
 bool IsReadReady(int fd, int timeout_sec);
 
-/* verify_databases.c */
-
-void VerifyDatabasePromises(Promise *pp);
-
 /* verify_files.c */
 
 void VerifyFilePromise(char *path, Promise *pp, const ReportContext *report_context);

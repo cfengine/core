@@ -113,13 +113,13 @@ static void KeepHardClasses()
 #endif
 }
 
-GenericAgentConfig CheckOpts(int argc, char **argv)
+GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
     char ld_library_path[CF_BUFSIZE];
     int optindex = 0;
     int c;
-    GenericAgentConfig config = GenericAgentDefaultConfig(AGENT_TYPE_SERVER);
+    GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_SERVER);
 
     while ((c = getopt_long(argc, argv, "dvIKf:D:N:VSxLFMh", OPTIONS, &optindex)) != EOF)
     {
@@ -132,8 +132,7 @@ GenericAgentConfig CheckOpts(int argc, char **argv)
                 FatalError(" -f used but argument \"%s\" incorrect", optarg);
             }
 
-            SetInputFile(optarg);
-            MINUSF = true;
+            GenericAgentConfigSetInputFile(config, optarg);
             break;
 
         case 'd':
@@ -215,13 +214,13 @@ void ThisAgentInit(void)
 
 /*******************************************************************/
 
-void StartServer(Policy *policy, GenericAgentConfig config, const ReportContext *report_context)
+void StartServer(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
 {
     int sd = -1, sd_reply;
     fd_set rset;
     struct timeval timeout;
     int ret_val;
-    Promise *pp = NewPromise("server_cfengine", VINPUTFILE);
+    Promise *pp = NewPromise("server_cfengine", config->input_file);
     Attributes dummyattr = { {0} };
     CfLock thislock;
     time_t starttime = time(NULL), last_collect = 0;
@@ -532,22 +531,22 @@ int OpenReceiverChannel(void)
 /* Level 3                                                           */
 /*********************************************************************/
 
-void CheckFileChanges(Policy **policy, GenericAgentConfig config, const ReportContext *report_context)
+void CheckFileChanges(Policy **policy, GenericAgentConfig *config, const ReportContext *report_context)
 {
     if (EnterpriseExpiry())
     {
         CfOut(cf_error, "", "!! This enterprise license is invalid.");
     }
 
-    CfDebug("Checking file updates on %s\n", VINPUTFILE);
+    CfDebug("Checking file updates on %s\n", config->input_file);
 
-    if (NewPromiseProposals())
+    if (NewPromiseProposals(config->input_file))
     {
         CfOut(cf_verbose, "", " -> New promises detected...\n");
 
-        if (CheckPromises(AGENT_TYPE_SERVER, report_context))
+        if (CheckPromises(AGENT_TYPE_SERVER, config->input_file, report_context))
         {
-            CfOut(cf_inform, "", "Rereading config files %s..\n", VINPUTFILE);
+            CfOut(cf_inform, "", "Rereading config files %s..\n", config->input_file);
 
             /* Free & reload -- lock this to avoid access errors during reload */
 

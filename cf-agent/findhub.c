@@ -1,21 +1,13 @@
 #include "findhub.h"
 #include "atexit.h"
 #include "string_lib.h"
+#include "cfstream.h"
+#include "misc_lib.h"
 
 List *hublist = NULL; 
 
 static void AtExitDlClose(void);
 static int CompareHosts(void  *a, void *b);
-
-bool isIPv6(const char *address)
-{
-    if (strchr(address, ':') == NULL)
-    {
-        return false;
-    }
-
-    return true;
-}
 
 void client_callback(AvahiClient *c,
                      AvahiClientState state,
@@ -25,7 +17,7 @@ void client_callback(AvahiClient *c,
 
     if (state == AVAHI_CLIENT_FAILURE)
     {
-        fprintf(stderr, "Server connection failure: %s\n", avahi_strerror_ptr(avahi_client_errno_ptr(c)));
+        CfOut(cf_error, "", "Server connection failure %s", avahi_strerror_ptr(avahi_client_errno_ptr(c)));
         avahi_simple_poll_quit_ptr(spoll);
     }
 }
@@ -46,14 +38,14 @@ void browse_callback(AvahiServiceBrowser *b,
     switch(event)
     {
     case AVAHI_BROWSER_FAILURE:
-        fprintf(stderr, "Error: %s\n", avahi_strerror_ptr(avahi_client_errno_ptr(avahi_service_browser_get_client_ptr(b))));
+        CfOut(cf_error, "", "Avahi browser error: %s", avahi_strerror_ptr(avahi_client_errno_ptr(avahi_service_browser_get_client_ptr(b))));
         avahi_simple_poll_quit_ptr(spoll);
         return;
 
     case AVAHI_BROWSER_NEW:
         if (!(avahi_service_resolver_new_ptr(c, interface, protocol, name ,type, domain, AVAHI_PROTO_UNSPEC, 0, resolve_callback, c)))
         {
-            fprintf(stderr, "Failed to resolve service '%s': %s\n", name, avahi_strerror_ptr(avahi_client_errno_ptr(c)));
+            CfOut(cf_error, "", "Failed to resolve service: '%s': %s", name, avahi_strerror_ptr(avahi_client_errno_ptr(c)));
         }
         break;
 
@@ -84,13 +76,14 @@ void resolve_callback(AvahiServiceResolver *r,
                       AVAHI_GCC_UNUSED void* userdata
                       )
 {
-    HostProperties *hostprop = calloc(1, sizeof(HostProperties));
+    HostProperties *hostprop = xcalloc(1, sizeof(HostProperties));
     assert(r);
     char a[AVAHI_ADDRESS_STR_MAX];
     switch(event)
     {
     case AVAHI_RESOLVER_FAILURE:
-        fprintf(stderr, "(Resolver) Failed to resolve service '%s' of type '%s' in domain '%s': %s\n", name, type, domain, avahi_strerror_ptr(avahi_client_errno_ptr(avahi_service_resolver_get_client_ptr(r))));
+        CfOut(cf_error, "", "(Resolver) Failed to resolve service '%s' of type '%s' in domain '%s': %s",
+              name, type, domain, avahi_strerror_ptr(avahi_client_errno_ptr(avahi_service_resolver_get_client_ptr(r))));
         break;
 
     case AVAHI_RESOLVER_FOUND:
@@ -112,66 +105,65 @@ void PrintList(List *list)
 
     if (ListIteratorGet(list, &i) != 0)
     {
-        printf("Not able to get iterator\n");
+        ProgrammingError("Unable to get iterator for hub list");
         return;
     }
 
-    printf("\n\n==============================================\n");
-    
-    while (i)
+    do
     {
         HostProperties *hostprop = (HostProperties *)i->current->payload;
 
-        printf("CFEngine Hub:\n"
-               "Hostname: %s\n"
-               "IP Address: %s\n"
-               "Port: %d\n",
-               hostprop->Hostname,
-               hostprop->IPAddress,
-               hostprop->Port);
-        printf("==============================================\n");
-        if (ListIteratorNext(i) == -1)
-            break;
-    }
-    printf("\n\n");
+        CfOut(cf_reporting, "", "\nCFEngine Policy Server:\n"
+                                "Hostname: %s\n"
+                                "IP Address: %s\n"
+                                "Port: %d\n",
+                                hostprop->Hostname,
+                                hostprop->IPAddress,
+                                hostprop->Port);
+    } while (ListIteratorNext(i) != -1);
+
     ListIteratorDestroy(&i);
 }
 
-List *ListHubs(void)
+int ListHubs(List *list)
 {
     AvahiClient *client = NULL;
     AvahiServiceBrowser *sb = NULL;
     int error;
 
-    ListNew(&hublist, &CompareHosts, NULL, &free);
+    if (ListNew(&hublist, &CompareHosts, NULL, &free) < 0)
+    {
+        return -1;
+    }
 
     spoll = NULL;
     avahi_handle = NULL;
 
     RegisterAtExitFunction(&AtExitDlClose);
 
-    if (loadavahi() == 1)
+    if (loadavahi() == -1)
     {
-        printf("Avahi not found!!!\n");
-        return NULL;
+        CfOut(cf_error, "", "Avahi was not found");
+        return -1;
     }
 
     if (!(spoll = avahi_simple_poll_new_ptr()))
     {
-        fprintf(stderr, "Failed to create simple poll object. \n");
+        CfOut(cf_error, "", "Failed to create simple poll object.");
 
         if (spoll)
         {
             avahi_simple_poll_free_ptr(spoll);
         }
-        return NULL;
+        return -1;
     }
 
     client = avahi_client_new_ptr(avahi_simple_poll_get_ptr(spoll), 0, client_callback, NULL, &error);
 
     if (!client)
     {
-        fprintf(stderr, "Failed to create client: %s\n", avahi_strerror_ptr(error));
+        CfOut(cf_error, "", "Failed to create client %s", avahi_strerror_ptr(error));
+
         if (client)
         {
             avahi_client_free_ptr(client);
@@ -182,12 +174,12 @@ List *ListHubs(void)
             avahi_simple_poll_free_ptr(spoll);
         }
 
-        return NULL;
+        return -1;
     }
 
     if (!(sb = avahi_service_browser_new_ptr(client, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, "_cfenginehub._tcp", NULL, 0, browse_callback, client)))
     {
-        fprintf(stderr, "Failed to create service browser: %s\n", avahi_strerror_ptr(avahi_client_errno_ptr(client)));
+        CfOut(cf_error, "", "Failed to create service browser: %s", avahi_strerror_ptr(avahi_client_errno_ptr(client)));
         
         if (spoll)
         {
@@ -204,7 +196,7 @@ List *ListHubs(void)
             avahi_service_browser_free_ptr(sb);
         }
 
-        return NULL;
+        return -1;
     }
 
     avahi_simple_poll_loop_ptr(spoll);
@@ -216,7 +208,9 @@ List *ListHubs(void)
     if (spoll)
         avahi_simple_poll_free_ptr(spoll);
     
-    return hublist;
+    list = hublist;
+
+    return ListCount(list);
 }
 
 static void AtExitDlClose(void)

@@ -41,7 +41,7 @@
 /* seconds */
 #define RPCTIMEOUT 60
 
-#ifndef MINGW
+#ifndef __MINGW32__
 
 static void AugmentMountInfo(Rlist **list, char *host, char *source, char *mounton, char *options);
 static int MatchFSInFstab(char *match);
@@ -791,4 +791,4 @@ static void DeleteThisItem(Item **liststart, Item *entry)
     }
 }
 
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */

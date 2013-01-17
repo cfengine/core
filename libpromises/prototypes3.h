@@ -243,10 +243,6 @@ bool IsReadReady(int fd, int timeout_sec);
 
 void VerifyDatabasePromises(Promise *pp);
 
-/* verify_exec.c */
-
-void VerifyExecPromise(Promise *pp);
-
 /* verify_files.c */
 
 void VerifyFilePromise(char *path, Promise *pp, const ReportContext *report_context);
@@ -272,11 +268,6 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
 /* verify_services.c */
 
 void VerifyServicesPromise(Promise *pp, const ReportContext *report_context);
-
-/* verify_storage.c */
-
-void *FindAndVerifyStoragePromises(Promise *pp, const ReportContext *report_context);
-void VerifyStoragePromise(char *path, Promise *pp, const ReportContext *report_context);
 
 /* verify_reports.c */
 

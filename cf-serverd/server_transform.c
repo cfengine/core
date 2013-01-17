@@ -930,14 +930,14 @@ static void InstallServerAuthPath(char *path, Auth **list, Auth **listtop)
 {
     Auth *ptr;
 
-#ifdef MINGW
+#ifdef __MINGW32__
     int i;
 
     for (i = 0; path[i] != '\0'; i++)
     {
         path[i] = ToLower(path[i]);
     }
-#endif /* MINGW */
+#endif /* __MINGW32__ */
 
     ptr = xcalloc(1, sizeof(Auth));
 
@@ -962,14 +962,14 @@ Auth *GetAuthPath(char *path, Auth *list)
 {
     Auth *ap;
 
-#ifdef MINGW
+#ifdef __MINGW32__
     int i;
 
     for (i = 0; path[i] != '\0'; i++)
     {
         path[i] = ToLower(path[i]);
     }
-#endif /* MINGW */
+#endif /* __MINGW32__ */
 
     if (strlen(path) != 1)
     {

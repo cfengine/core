@@ -55,7 +55,7 @@ static int GetOwnerName(char *path, struct stat *lstatptr, char *owner, int owne
 #if defined HAVE_CHFLAGS
 static int SelectBSDMatch(struct stat *lstatptr, Rlist *bsdflags, Promise *pp);
 #endif
-#ifndef MINGW
+#ifndef __MINGW32__
 static int SelectGroupMatch(struct stat *lstatptr, Rlist *crit);
 #endif
 
@@ -67,7 +67,7 @@ int SelectLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp)
 
     InitAlphaList(&leaf_attr);
 
-#ifdef MINGW
+#ifdef __MINGW32__
     if (attr.select.issymlinkto != NULL)
     {
         CfOut(cf_verbose, "",
@@ -84,7 +84,7 @@ int SelectLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp)
     {
         CfOut(cf_verbose, "", "files_select.search_bsdflags is ignored on Windows");
     }
-#endif /* MINGW */
+#endif /* __MINGW32__ */
 
     if (!attr.haveselect)
     {
@@ -134,10 +134,10 @@ int SelectLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp)
         PrependAlphaList(&leaf_attr, "owner");
     }
 
-#ifdef MINGW
+#ifdef __MINGW32__
     PrependAlphaList(&leaf_attr, "group");
 
-#else /* NOT MINGW */
+#else /* !__MINGW32__ */
     if ((attr.select.groups) && (SelectGroupMatch(sb, attr.select.groups)))
     {
         PrependAlphaList(&leaf_attr, "group");
@@ -147,7 +147,7 @@ int SelectLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp)
     {
         PrependAlphaList(&leaf_attr, "group");
     }
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
     if (SelectModeMatch(sb, attr.select.perms))
     {
@@ -239,7 +239,7 @@ static int SelectTypeMatch(struct stat *lstatptr, Rlist *crit)
         PrependAlphaList(&leafattrib, "dir");
     }
 
-#ifndef MINGW
+#ifndef __MINGW32__
     if (S_ISLNK(lstatptr->st_mode))
     {
         PrependAlphaList(&leafattrib, "symlink");
@@ -264,7 +264,7 @@ static int SelectTypeMatch(struct stat *lstatptr, Rlist *crit)
     {
         PrependAlphaList(&leafattrib, "block");
     }
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
 #ifdef HAVE_DOOR_CREATE
     if (S_ISDOOR(lstatptr->st_mode))
@@ -295,11 +295,11 @@ static int SelectOwnerMatch(char *path, struct stat *lstatptr, Rlist *crit)
 
     InitAlphaList(&leafattrib);
 
-#ifndef MINGW                   // no uids on Windows
+#ifndef __MINGW32__                   // no uids on Windows
     char buffer[CF_SMALLBUF];
     snprintf(buffer, CF_SMALLBUF, "%jd", (uintmax_t) lstatptr->st_uid);
     PrependAlphaList(&leafattrib, buffer);
-#endif /* MINGW */
+#endif /* __MINGW32__ */
 
     gotOwner = GetOwnerName(path, lstatptr, ownerName, sizeof(ownerName));
 
@@ -328,14 +328,14 @@ static int SelectOwnerMatch(char *path, struct stat *lstatptr, Rlist *crit)
             return true;
         }
 
-#ifndef MINGW
+#ifndef __MINGW32__
         if (FullTextMatch((char *) rp->item, buffer))
         {
             CfDebug(" - ? Select owner match\n");
             DeleteAlphaList(&leafattrib);
             return true;
         }
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
     }
 
     DeleteAlphaList(&leafattrib);
@@ -471,7 +471,7 @@ static int SelectExecRegexMatch(char *filename, char *crit, char *prog)
 
 static int SelectIsSymLinkTo(char *filename, Rlist *crit)
 {
-#ifndef MINGW
+#ifndef __MINGW32__
     char buffer[CF_BUFSIZE];
     Rlist *rp;
 
@@ -490,7 +490,7 @@ static int SelectIsSymLinkTo(char *filename, Rlist *crit)
             return true;
         }
     }
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
     return false;
 }
 
@@ -517,7 +517,7 @@ static int SelectExecProgram(char *filename, char *command)
     }
 }
 
-#ifndef MINGW
+#ifndef __MINGW32__
 
 /*******************************************************************/
 /* Unix implementations                                            */
@@ -593,4 +593,4 @@ static int SelectGroupMatch(struct stat *lstatptr, Rlist *crit)
     return false;
 }
 
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */

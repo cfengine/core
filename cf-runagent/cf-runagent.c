@@ -159,7 +159,7 @@ int main(int argc, char *argv[])
         while (rp != NULL)
         {
 
-#ifdef MINGW
+#ifdef __MINGW32__
             if (BACKGROUND)
             {
                 CfOut(cf_verbose, "",
@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
                 }
             }
             else                /* serial */
-#endif /* MINGW */
+#endif /* __MINGW32__ */
             {
                 HailServer(rp->item, RUNATTR, pp);
                 rp = rp->next;
@@ -198,7 +198,7 @@ int main(int argc, char *argv[])
         }                       /* end while */
     }                           /* end if HOSTLIST */
 
-#ifndef MINGW
+#ifndef __MINGW32__
     if (BACKGROUND)
     {
         printf("Waiting for child processes to finish\n");
@@ -424,14 +424,14 @@ static int HailServer(char *host, Attributes a, Promise *pp)
 
 /* Continue */
 
-#ifdef MINGW
+#ifdef __MINGW32__
 
     CfOut(cf_inform, "", "...........................................................................\n");
     CfOut(cf_inform, "", " * Hailing %s : %u, with options \"%s\" (serial)\n", peer, a.copy.portnumber,
           REMOTE_AGENT_OPTIONS);
     CfOut(cf_inform, "", "...........................................................................\n");
 
-#else /* NOT MINGW */
+#else /* !__MINGW32__ */
 
     if (BACKGROUND)
     {
@@ -446,7 +446,7 @@ static int HailServer(char *host, Attributes a, Promise *pp)
         CfOut(cf_inform, "", "...........................................................................\n");
     }
 
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
     a.copy.servers = SplitStringAsRList(peer, '*');
 

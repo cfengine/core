@@ -20,21 +20,14 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
+
 */
 
-#ifndef CFENGINE_NFS_H
-#define CFENGINE_NFS_H
+#ifndef CFENGINE_VERIFY_EXEC_H
+#define CFENGINE_VERIFY_EXEC_H
 
 #include "cf3.defs.h"
 
-#ifndef __MINGW32__
-int LoadMountInfo(Rlist **list);
-void DeleteMountInfo(Rlist *list);
-int VerifyNotInFstab(char *name, Attributes a, Promise *pp);
-int VerifyInFstab(char *name, Attributes a, Promise *pp);
-int VerifyMount(char *name, Attributes a, Promise *pp);
-int VerifyUnmount(char *name, Attributes a, Promise *pp);
-void MountAll(void);
-#endif /* !__MINGW32__ */
+void VerifyExecPromise(Promise *pp);
 
 #endif

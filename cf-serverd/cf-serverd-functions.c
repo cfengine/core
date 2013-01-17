@@ -262,14 +262,14 @@ void StartServer(Policy *policy, GenericAgentConfig config, const ReportContext 
         CfOut(cf_verbose, "", "Listening for connections ...\n");
     }
 
-#ifdef MINGW
+#ifdef __MINGW32__
 
     if (!NO_FORK)
     {
         CfOut(cf_verbose, "", "Windows does not support starting processes in the background - starting in foreground");
     }
 
-#else /* NOT MINGW */
+#else /* !__MINGW32__ */
 
     if ((!NO_FORK) && (fork() != 0))
     {
@@ -281,12 +281,12 @@ void StartServer(Policy *policy, GenericAgentConfig config, const ReportContext 
         ActAsDaemon(sd);
     }
 
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
     WritePID("cf-serverd.pid");
 
 /* Andrew Stribblehill <ads@debian.org> -- close sd on exec */
-#ifndef MINGW
+#ifndef __MINGW32__
     fcntl(sd, F_SETFD, FD_CLOEXEC);
 #endif
 

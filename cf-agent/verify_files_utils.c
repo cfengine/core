@@ -164,13 +164,13 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
 
     CfDebug("CopyFile(%s,%s)\n", sourcefile, destfile);
 
-#ifdef MINGW
+#ifdef __MINGW32__
     if (attr.copy.copy_links != NULL)
     {
         CfOut(cf_verbose, "",
               "copy_from.copylink_patterns is ignored on Windows (source files cannot be symbolic links)");
     }
-#endif /* MINGW */
+#endif /* __MINGW32__ */
 
     attr.link.when_no_file = cfa_force;
 
@@ -217,7 +217,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
             else
             {
                 CfOut(cf_verbose, "", "Copy item %s marked for linking\n", sourcefile);
-#ifdef MINGW
+#ifdef __MINGW32__
                 CfOut(cf_verbose, "", "Links are not yet supported on Windows - copying %s instead\n", sourcefile);
 #else
                 LinkCopy(sourcefile, destfile, &ssb, attr, pp, report_context);
@@ -372,7 +372,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
         }
         else
         {
-#ifndef MINGW                   // only regular files on windows
+#ifndef __MINGW32__                   // only regular files on windows
             if (S_ISBLK(srcmode) || S_ISCHR(srcmode) || S_ISSOCK(srcmode))
             {
                 if (DONTDO)
@@ -387,7 +387,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
 
                 cfPS(cf_inform, CF_CHG, "mknod", pp, attr, " -> Created special file/device `%s'", destfile);
             }
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
         }
 
         if ((S_ISLNK(srcmode)) && (attr.copy.link_type != cfa_notlinked))
@@ -956,12 +956,12 @@ static void VerifyCopy(char *source, char *destination, Attributes attr, Promise
 static void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attributes attr, Promise *pp,
                      const ReportContext *report_context)
 /* Link the file to the source, instead of copying */
-#ifdef MINGW
+#ifdef __MINGW32__
 {
     CfOut(cf_verbose, "", "Windows does not support symbolic links");
     cfPS(cf_error, CF_FAIL, "", pp, attr, "Windows can't link \"%s\" to \"%s\"", sourcefile, destfile);
 }
-#else                           /* NOT MINGW */
+#else                           /* !__MINGW32__ */
 {
     char linkbuf[CF_BUFSIZE];
     const char *lastnode;
@@ -1065,7 +1065,7 @@ static void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attribut
         }
     }
 }
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
 int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dstat, Attributes attr, Promise *pp,
                     const ReportContext *report_context)
@@ -2968,7 +2968,7 @@ static int cf_stat(char *file, struct stat *buf, Attributes attr, Promise *pp)
     }
 }
 
-#ifndef MINGW
+#ifndef __MINGW32__
 
 static int cf_readlink(char *sourcefile, char *linkbuf, int buffsize, Attributes attr, Promise *pp)
  /* wrapper for network access */
@@ -3007,7 +3007,7 @@ static int cf_readlink(char *sourcefile, char *linkbuf, int buffsize, Attributes
     return -1;
 }
 
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
 static bool CopyRegularFileDiskReport(char *source, char *destination, Attributes attr, Promise *pp)
 // TODO: return error codes in CopyRegularFileDisk and print them to cfPS here
@@ -3054,7 +3054,7 @@ static int SkipDirLinks(char *path, const char *lastnode, Recursion r)
     return false;
 }
 
-#ifndef MINGW
+#ifndef __MINGW32__
 
 static int VerifyOwner(char *file, Promise *pp, Attributes attr, struct stat *sb)
 {
@@ -3216,7 +3216,7 @@ static int VerifyOwner(char *file, Promise *pp, Attributes attr, struct stat *sb
     return false;
 }
 
-#endif /* NOT MINGW */
+#endif /* !__MINGW32__ */
 
 static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp)
 {

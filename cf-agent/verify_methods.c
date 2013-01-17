@@ -23,7 +23,7 @@
 
 */
 
-#include "cf3.defs.h"
+#include "verify_methods.h"
 
 #include "env_context.h"
 #include "constraints.h"

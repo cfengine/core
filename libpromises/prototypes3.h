@@ -256,11 +256,6 @@ void VerifyInterfacesPromise(Promise *pp);
 
 void VerifyMeasurementPromise(double *this, Promise *pp);
 
-/* verify_methods.c */
-
-void VerifyMethodsPromise(Promise *pp, const ReportContext *report_context);
-int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext *report_context);
-
 /* verify_reports.c */
 
 void VerifyReportPromise(Promise *pp);

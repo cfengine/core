@@ -33,16 +33,17 @@ typedef struct
 {
     Rlist *bundlesequence;
     bool verify_promises;
+    char *input_file;
 } GenericAgentConfig;
 
-Policy *GenericInitialize(char *agents, GenericAgentConfig config, const ReportContext *report_context);
-void InitializeGA(const ReportContext *report_context);
+Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const ReportContext *report_context);
+void InitializeGA(GenericAgentConfig *config, const ReportContext *report_context);
 void Syntax(const char *comp, const struct option options[], const char *hints[], const char *id);
 void ManPage(const char *component, const struct option options[], const char *hints[], const char *id);
 void PrintVersionBanner(const char *component);
-int CheckPromises(AgentType ag, const ReportContext *report_context);
-Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig config, const ReportContext *report_context);
-int NewPromiseProposals(void);
+int CheckPromises(AgentType ag, const char *input_file, const ReportContext *report_context);
+Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config, const ReportContext *report_context);
+int NewPromiseProposals(const char *input_file);
 void CompilationReport(Policy *policy, char *fname);
 void HashVariables(Policy *policy, const char *name, const ReportContext *report_context);
 void HashControls(const Policy *policy);
@@ -57,11 +58,18 @@ void BannerBundle(Bundle *bp, Rlist *args);
 void BannerSubBundle(Bundle *bp, Rlist *args);
 void WritePID(char *filename);
 ReportContext *OpenCompilationReportFiles(const char *fname);
-GenericAgentConfig GenericAgentDefaultConfig(AgentType agent_type);
 void CheckLicenses(void);
 void ReloadPromises(AgentType ag);
-void SetInputFile(const char *filename);
 
 ReportContext *OpenReports(const char *agents);
 void CloseReports(const char *agents, ReportContext *report_context);
+
+
+
+GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type);
+void GenericAgentConfigDestroy(GenericAgentConfig *config);
+
+void GenericAgentConfigSetInputFile(GenericAgentConfig *config, const char *input_file);
+void GenericAgentConfigSetBundleSequence(GenericAgentConfig *config, const Rlist *bundlesequence);
+
 #endif

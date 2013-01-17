@@ -271,7 +271,7 @@ pthread_mutex_t *cft_output;
 char VIPADDRESS[18];
 RSA *PUBKEY;
 int DEBUG;
-int MINUSF;
+bool MINUSF;
 
 char *MapAddress(char *addr)
 {

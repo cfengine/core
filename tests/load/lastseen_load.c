@@ -100,7 +100,7 @@ void DeleteItemList(Item *item)
     exit(42);
 }
 
-int MINUSF;
+bool MINUSF;
 
 char *MapAddress(char *addr)
 {

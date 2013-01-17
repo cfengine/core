@@ -74,7 +74,7 @@ extern int PR_NOTKEPT;
 /*******************************************************************/
 
 static void ThisAgentInit(void);
-static GenericAgentConfig CheckOpts(int argc, char **argv);
+static GenericAgentConfig *CheckOpts(int argc, char **argv);
 static void CheckAgentAccess(Rlist *list);
 static void KeepAgentPromise(Promise *pp, const ReportContext *report_context);
 static int NewTypeContext(enum typesequence type);
@@ -83,7 +83,7 @@ static void ClassBanner(enum typesequence type);
 static void ParallelFindAndVerifyFilesPromises(Promise *pp, const ReportContext *report_context);
 static bool VerifyBootstrap(void);
 static void KeepPromiseBundles(Policy *policy, Rlist *bundlesequence, const ReportContext *report_context);
-static void KeepPromises(Policy *policy, GenericAgentConfig config, const ReportContext *report_context);
+static void KeepPromises(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
 static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save_pr_repaired, int save_pr_notkept);
 
 /*******************************************************************/
@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
 {
     int ret = 0;
 
-    GenericAgentConfig config = CheckOpts(argc, argv);
+    GenericAgentConfig *config = CheckOpts(argc, argv);
 
     ReportContext *report_context = OpenReports("agent");
     Policy *policy = GenericInitialize("agent", config, report_context);
@@ -145,11 +145,16 @@ int main(int argc, char *argv[])
     BeginAudit();
     KeepPromises(policy, config, report_context);
     CloseReports("agent", report_context);
-    NoteClassUsage(VHEAP, true);
-    NoteClassUsage(VHARDHEAP, true);
+
+    // only note class usage when default policy is run
+    if (!config->input_file)
+    {
+        NoteClassUsage(VHEAP, true);
+        NoteClassUsage(VHARDHEAP, true);
+    }
 #ifdef HAVE_NOVA
     Nova_NoteVarUsageDB();
-    Nova_TrackExecution();
+    Nova_TrackExecution(config->input_file);
 #endif
     PurgeLocks();
 
@@ -159,6 +164,7 @@ int main(int argc, char *argv[])
     }
 
     EndAudit();
+    GenericAgentConfigDestroy(config);
 
     return ret;
 }
@@ -167,13 +173,13 @@ int main(int argc, char *argv[])
 /* Level 1                                                         */
 /*******************************************************************/
 
-static GenericAgentConfig CheckOpts(int argc, char **argv)
+static GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
     char *sp;
     int optindex = 0;
     int c, alpha = false, v6 = false;
-    GenericAgentConfig config = GenericAgentDefaultConfig(AGENT_TYPE_AGENT);
+    GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_AGENT);
 
 /* Because of the MacOS linker we have to call this from each agent
    individually before Generic Initialize */
@@ -190,14 +196,14 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
                 FatalError(" -f used but argument \"%s\" incorrect", optarg);
             }
 
-            SetInputFile(optarg);
+            GenericAgentConfigSetInputFile(config, optarg);
             MINUSF = true;
             break;
 
         case 'b':
             if (optarg)
             {
-                config.bundlesequence = SplitStringAsRList(optarg, ',');
+                config->bundlesequence = SplitStringAsRList(optarg, ',');
                 CBUNDLESEQUENCE_STR = optarg;
             }
             break;
@@ -210,6 +216,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
         case 'B':
             BOOTSTRAP = true;
             MINUSF = true;
+            GenericAgentConfigSetInputFile(config, "promises.cf");
             IGNORELOCK = true;
             HardClass("bootstrap_mode");
             break;
@@ -356,12 +363,12 @@ static void ThisAgentInit(void)
 
 /*******************************************************************/
 
-static void KeepPromises(Policy *policy, GenericAgentConfig config, const ReportContext *report_context)
+static void KeepPromises(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
 {
     double efficiency, model;
 
     KeepControlPromises(policy);
-    KeepPromiseBundles(policy, config.bundlesequence, report_context);
+    KeepPromiseBundles(policy, config->bundlesequence, report_context);
 
 // TOPICS counts the number of currently defined promises
 // OCCUR counts the number of objects touched while verifying config

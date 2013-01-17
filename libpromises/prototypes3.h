@@ -261,10 +261,6 @@ void VerifyMeasurementPromise(double *this, Promise *pp);
 void VerifyMethodsPromise(Promise *pp, const ReportContext *report_context);
 int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext *report_context);
 
-/* verify_services.c */
-
-void VerifyServicesPromise(Promise *pp, const ReportContext *report_context);
-
 /* verify_reports.c */
 
 void VerifyReportPromise(Promise *pp);

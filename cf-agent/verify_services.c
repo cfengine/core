@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include "verify_services.h"
 
 #include "constraints.h"
 #include "promises.h"

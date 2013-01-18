@@ -239,10 +239,6 @@ void SetReferenceTime(int setclasses);
 void SetStartTime(void);
 bool IsReadReady(int fd, int timeout_sec);
 
-/* verify_databases.c */
-
-void VerifyDatabasePromises(Promise *pp);
-
 /* verify_files.c */
 
 void VerifyFilePromise(char *path, Promise *pp, const ReportContext *report_context);
@@ -259,15 +255,6 @@ void VerifyInterfacesPromise(Promise *pp);
 /* verify_measurements.c */
 
 void VerifyMeasurementPromise(double *this, Promise *pp);
-
-/* verify_methods.c */
-
-void VerifyMethodsPromise(Promise *pp, const ReportContext *report_context);
-int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext *report_context);
-
-/* verify_services.c */
-
-void VerifyServicesPromise(Promise *pp, const ReportContext *report_context);
 
 /* verify_reports.c */
 

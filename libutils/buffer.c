@@ -69,7 +69,7 @@ int BufferNew(Buffer **buffer)
         return -1;
     }
     (*buffer)->real_capacity = (*buffer)->capacity - (*buffer)->low_water_mark;
-    (*buffer)->mode = CString;
+    (*buffer)->mode = BUFFER_BEHAVIOR_CSTRING;
     (*buffer)->chunk_size = DEFAULT_CHUNK_SIZE;
     (*buffer)->used = 0;
     (*buffer)->beginning = 0;
@@ -174,7 +174,7 @@ int BufferEqual(Buffer *buffer1, Buffer *buffer2)
                 equal = 0;
                 break;
             }
-            if (('\0' == buffer1->buffer[i]) && (mode == CString))
+            if (('\0' == buffer1->buffer[i]) && (mode == BUFFER_BEHAVIOR_CSTRING))
             {
                 break;
             }
@@ -263,13 +263,13 @@ int BufferSet(Buffer *buffer, char *bytes, unsigned int length)
     for (i = 0; i < length; ++i)
     {
         buffer->buffer[i] = bytes[i];
-        if ((buffer->mode == CString) && (bytes[i] == '\0'))
+        if ((buffer->mode == BUFFER_BEHAVIOR_CSTRING) && (bytes[i] == '\0'))
         {
             break;
         }
         buffer->used++;
     }
-    if (buffer->mode == CString)
+    if (buffer->mode == BUFFER_BEHAVIOR_CSTRING)
     {
         buffer->buffer[buffer->used] = '\0';
     }
@@ -345,7 +345,7 @@ int BufferAppend(Buffer *buffer, char *bytes, unsigned int length)
         for (i = 0; i < buffer->used; ++i)
         {
             p[i] = buffer->buffer[i];
-            if ((buffer->mode == CString) && (buffer->buffer[i] == '\0'))
+            if ((buffer->mode == BUFFER_BEHAVIOR_CSTRING) && (buffer->buffer[i] == '\0'))
             {
                 /*
                  * This is an error, fix the variables and return -1.
@@ -371,7 +371,7 @@ int BufferAppend(Buffer *buffer, char *bytes, unsigned int length)
             }
             used++;
         }
-        if (buffer->mode == CString)
+        if (buffer->mode == BUFFER_BEHAVIOR_CSTRING)
         {
             p[used] = '\0';
         }
@@ -392,13 +392,13 @@ int BufferAppend(Buffer *buffer, char *bytes, unsigned int length)
     for (i = beginning; i < beginning + length; ++i)
     {
         buffer->buffer[i] = bytes[i - beginning];
-        if ((buffer->mode == CString) && (bytes[i - beginning] == '\0'))
+        if ((buffer->mode == BUFFER_BEHAVIOR_CSTRING) && (bytes[i - beginning] == '\0'))
         {
             break;
         }
         buffer->used++;
     }
-    if (buffer->mode == CString)
+    if (buffer->mode == BUFFER_BEHAVIOR_CSTRING)
     {
         buffer->buffer[buffer->used] = '\0';
     }
@@ -557,13 +557,13 @@ int BufferMode(Buffer *buffer)
     return buffer->mode;
 }
 
-void BufferSetMode(Buffer *buffer, int mode)
+void BufferSetMode(Buffer *buffer, BufferBehavior mode)
 {
     if (!buffer)
     {
         return;
     }
-    if ((mode != CString) && (mode != ByteArray))
+    if ((mode != BUFFER_BEHAVIOR_CSTRING) && (mode != BUFFER_BEHAVIOR_BYTEARRAY))
     {
         return;
     }

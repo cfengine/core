@@ -38,10 +38,12 @@
   Unfortunately not all errors are recoverable. Since we do not have a proper errno system, we just return -1.
   */
 
-enum BufferBehavior {
-    CString //<! CString compatibility mode. A '\0' would be interpreted as end of the string, regardless of the size.
-    , ByteArray //<! Byte array mode. A '\0' has no meaning, only the size of the buffer is taken into consideration.
-};
+typedef enum
+{
+    BUFFER_BEHAVIOR_CSTRING, //<! CString compatibility mode. A '\0' would be interpreted as end of the string, regardless of the size.
+    BUFFER_BEHAVIOR_BYTEARRAY, //<! Byte array mode. A '\0' has no meaning, only the size of the buffer is taken into consideration.
+} BufferBehavior;
+
 #define DEFAULT_BUFFER_SIZE     4096
 #define DEFAULT_CHUNK_SIZE      4096
 #define DEFAULT_LOW_WATERMARK   512
@@ -160,7 +162,7 @@ int BufferMode(Buffer *buffer);
   @param buffer The buffer to operate on.
   @param mode The new mode of operation.
   */
-void BufferSetMode(Buffer *buffer, int mode);
+void BufferSetMode(Buffer *buffer, BufferBehavior mode);
 /**
   @brief Provides a pointer to the internal data.
 

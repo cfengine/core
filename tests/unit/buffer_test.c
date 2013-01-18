@@ -12,7 +12,7 @@ static void test_createBuffer(void **state)
     assert_int_equal(0, BufferNew(&buffer));
     assert_true(buffer != NULL);
     assert_true(buffer->buffer != NULL);
-    assert_int_equal(buffer->mode, CString);
+    assert_int_equal(buffer->mode, BUFFER_BEHAVIOR_CSTRING);
     assert_int_equal(buffer->low_water_mark, DEFAULT_LOW_WATERMARK);
     assert_int_equal(buffer->chunk_size, DEFAULT_CHUNK_SIZE);
     assert_int_equal(buffer->capacity, DEFAULT_BUFFER_SIZE);
@@ -298,7 +298,7 @@ static void test_advancedAPI(void **state)
     assert_int_equal(0, BufferNew(&buffer));
     assert_true(buffer != NULL);
     assert_true(buffer->buffer != NULL);
-    assert_int_equal(buffer->mode, CString);
+    assert_int_equal(buffer->mode, BUFFER_BEHAVIOR_CSTRING);
     assert_int_equal(buffer->low_water_mark, DEFAULT_LOW_WATERMARK);
     assert_int_equal(buffer->chunk_size, DEFAULT_CHUNK_SIZE);
     assert_int_equal(buffer->capacity, DEFAULT_BUFFER_SIZE);

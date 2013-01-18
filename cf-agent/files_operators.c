@@ -142,30 +142,7 @@ int MoveObstruction(char *from, Attributes attr, Promise *pp, const ReportContex
     return true;
 }
 
-
-/**********************************************************************/
-
 /*********************************************************************/
-static char FileStateToChar(FileState status)
-{
-    switch(status)
-    {
-    case cf_file_new:
-        return 'N';
-
-    case cf_file_removed:
-        return 'R';
-
-    case cf_file_content_changed:
-        return 'C';
-
-    case cf_file_stats_changed:
-        return 'S';
-
-    default:
-        FatalError("Invalid Filechange status supplied");
-    }
-}
 
 int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attributes a, Promise *pp,
                        const ReportContext *report_context)

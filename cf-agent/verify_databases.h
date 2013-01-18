@@ -20,37 +20,14 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
+
 */
 
-#ifndef CFENGINE_CF_SERVERD_FUNCTIONS_H
-#define CFENGINE_CF_SERVERD_FUNCTIONS_H
+#ifndef CFENGINE_VERIFY_DATABASES_H
+#define CFENGINE_VERIFY_DATABASES_H
 
-#include "generic_agent.h"
-#include "server.h"
+#include "cf3.defs.h"
 
-#include "sysinfo.h"
-#include "env_context.h"
-#include "dir.h"
-#include "dbm_api.h"
-#include "lastseen.h"
-#include "crypto.h"
-#include "files_names.h"
-#include "vars.h"
-#include "promises.h"
-#include "item_lib.h"
-#include "conversion.h"
-#include "reporting.h"
+void VerifyDatabasePromises(Promise *pp);
 
-void ThisAgentInit(void);
-GenericAgentConfig *CheckOpts(int argc, char **argv);
-int OpenReceiverChannel(void);
-void CheckFileChanges(Policy **policy, GenericAgentConfig *config, const ReportContext *report_context);
-int InitServer(size_t queue_size);
-
-#if !defined(HAVE_GETADDRINFO)
-in_addr_t GetInetAddr(char *host);
 #endif
-
-void StartServer(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
-
-#endif // CFSERVERDFUNCTIONS_H

@@ -37,7 +37,7 @@
 /*****************************************************************************/
 
 static void ThisAgentInit(void);
-static GenericAgentConfig CheckOpts(int argc, char **argv);
+static GenericAgentConfig *CheckOpts(int argc, char **argv);
 static void KeepPromises(Policy *policy, const ReportContext *report_context);
 
 /*****************************************************************************/
@@ -96,7 +96,7 @@ static const char *HINTS[14] =
 
 int main(int argc, char *argv[])
 {
-    GenericAgentConfig config = CheckOpts(argc, argv);
+    GenericAgentConfig *config = CheckOpts(argc, argv);
 
     ReportContext *report_context = OpenReports("monitor");
     Policy *policy = GenericInitialize("monitor", config, report_context);
@@ -106,24 +106,25 @@ int main(int argc, char *argv[])
     MonitorStartServer(policy, report_context);
 
     ReportContextDestroy(report_context);
+    GenericAgentConfigDestroy(config);
     return 0;
 }
 
 /*******************************************************************/
 
-static GenericAgentConfig CheckOpts(int argc, char **argv)
+static GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
     int optindex = 0;
     int c;
-    GenericAgentConfig config = GenericAgentDefaultConfig(AGENT_TYPE_MONITOR);
+    GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_MONITOR);
 
     while ((c = getopt_long(argc, argv, "dvnIf:VSxHTKMFh", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
         case 'f':
-            SetInputFile(optarg);
+            GenericAgentConfigSetInputFile(config, optarg);
             MINUSF = true;
             break;
 

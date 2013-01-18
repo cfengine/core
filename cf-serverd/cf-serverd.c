@@ -26,7 +26,7 @@
 
 int main(int argc, char *argv[])
 {
-    GenericAgentConfig config = CheckOpts(argc, argv);
+    GenericAgentConfig *config = CheckOpts(argc, argv);
 
     ReportContext *report_context = OpenReports("server");
     Policy *policy = GenericInitialize("server", config, report_context);
@@ -37,5 +37,6 @@ int main(int argc, char *argv[])
     StartServer(policy, config, report_context);
 
     ReportContextDestroy(report_context);
+    GenericAgentConfigDestroy(config);
     return 0;
 }

@@ -59,14 +59,14 @@ static pthread_attr_t threads_attrs;
 
 /*******************************************************************/
 
-static GenericAgentConfig CheckOpts(int argc, char **argv);
+static GenericAgentConfig *CheckOpts(int argc, char **argv);
 static void ThisAgentInit(void);
-static bool ScheduleRun(Policy **policy, ExecConfig *exec_config, const ReportContext *report_context);
+static bool ScheduleRun(Policy **policy, GenericAgentConfig *config, ExecConfig *exec_config, const ReportContext *report_context);
 static void Apoptosis(void);
 
 static bool LocalExecInThread(const ExecConfig *config);
 
-void StartServer(Policy *policy, ExecConfig *config, const ReportContext *report_context);
+void StartServer(Policy *policy, GenericAgentConfig *config, ExecConfig *exec_config, const ReportContext *report_context);
 void KeepPromises(Policy *policy, ExecConfig *config);
 
 static ExecConfig *CopyExecConfig(const ExecConfig *config);
@@ -125,7 +125,7 @@ static const char *HINTS[sizeof(OPTIONS)/sizeof(OPTIONS[0])] =
 
 int main(int argc, char *argv[])
 {
-    GenericAgentConfig config = CheckOpts(argc, argv);
+    GenericAgentConfig *config = CheckOpts(argc, argv);
 
     ReportContext *report_context = OpenReports("executor");
     Policy *policy = GenericInitialize("executor", config, report_context);
@@ -153,10 +153,11 @@ int main(int argc, char *argv[])
     else
 #endif /* __MINGW32__ */
     {
-        StartServer(policy, &exec_config, report_context);
+        StartServer(policy, config, &exec_config, report_context);
     }
 
     ReportContextDestroy(report_context);
+    GenericAgentConfigDestroy(config);
 
     return 0;
 }
@@ -165,13 +166,13 @@ int main(int argc, char *argv[])
 /* Level 1                                                                   */
 /*****************************************************************************/
 
-static GenericAgentConfig CheckOpts(int argc, char **argv)
+static GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
     int optindex = 0;
     int c;
     char ld_library_path[CF_BUFSIZE];
-    GenericAgentConfig config = GenericAgentDefaultConfig(AGENT_TYPE_EXECUTOR);
+    GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_EXECUTOR);
 
     while ((c = getopt_long(argc, argv, "dvnKIf:D:N:VxL:hFOV1gMW", OPTIONS, &optindex)) != EOF)
     {
@@ -184,7 +185,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
                 FatalError(" -f used but argument \"%s\" incorrect", optarg);
             }
 
-            SetInputFile(optarg);
+            GenericAgentConfigSetInputFile(config, optarg);
             MINUSF = true;
             break;
 
@@ -412,7 +413,7 @@ void KeepPromises(Policy *policy, ExecConfig *config)
 /*****************************************************************************/
 
 /* Might be called back from NovaWin_StartExecService */
-void StartServer(Policy *policy, ExecConfig *config, const ReportContext *report_context)
+void StartServer(Policy *policy, GenericAgentConfig *config, ExecConfig *exec_config, const ReportContext *report_context)
 {
 #if !defined(__MINGW32__)
     time_t now = time(NULL);
@@ -496,22 +497,22 @@ void StartServer(Policy *policy, ExecConfig *config, const ReportContext *report
     {
         CfOut(cf_verbose, "", "Sleeping for splaytime %d seconds\n\n", SPLAYTIME);
         sleep(SPLAYTIME);
-        LocalExec(config);
+        LocalExec(exec_config);
         CloseLog();
     }
     else
     {
         while (!IsPendingTermination())
         {
-            if (ScheduleRun(&policy, config, report_context))
+            if (ScheduleRun(&policy, config, exec_config, report_context))
             {
                 CfOut(cf_verbose, "", "Sleeping for splaytime %d seconds\n\n", SPLAYTIME);
                 sleep(SPLAYTIME);
 
-                if (!LocalExecInThread(config))
+                if (!LocalExecInThread(exec_config))
                 {
                     CfOut(cf_inform, "", "Unable to run agent in thread, falling back to blocking execution");
-                    LocalExec(config);
+                    LocalExec(exec_config);
                 }
             }
         }
@@ -635,13 +636,13 @@ typedef enum
     RELOAD_FULL
 } Reload;
 
-static Reload CheckNewPromises(const ReportContext *report_context)
+static Reload CheckNewPromises(const char *input_file, const ReportContext *report_context)
 {
-    if (NewPromiseProposals())
+    if (NewPromiseProposals(input_file))
     {
         CfOut(cf_verbose, "", " -> New promises detected...\n");
 
-        if (CheckPromises(AGENT_TYPE_EXECUTOR, report_context))
+        if (CheckPromises(AGENT_TYPE_EXECUTOR, input_file, report_context))
         {
             return RELOAD_FULL;
         }
@@ -659,7 +660,7 @@ static Reload CheckNewPromises(const ReportContext *report_context)
     return RELOAD_ENVIRONMENT;
 }
 
-static bool ScheduleRun(Policy **policy, ExecConfig *exec_config, const ReportContext *report_context)
+static bool ScheduleRun(Policy **policy, GenericAgentConfig *config, ExecConfig *exec_config, const ReportContext *report_context)
 {
     Item *ip;
 
@@ -678,11 +679,11 @@ static bool ScheduleRun(Policy **policy, ExecConfig *exec_config, const ReportCo
      * FIXME: this logic duplicates the one from cf-serverd.c. Unify ASAP.
      */
 
-    if (CheckNewPromises(report_context) == RELOAD_FULL)
+    if (CheckNewPromises(config->input_file, report_context) == RELOAD_FULL)
     {
         /* Full reload */
 
-        CfOut(cf_inform, "", "Re-reading promise file %s..\n", VINPUTFILE);
+        CfOut(cf_inform, "", "Re-reading promise file %s..\n", config->input_file);
 
         DeleteAlphaList(&VHEAP);
         InitAlphaList(&VHEAP);
@@ -731,9 +732,7 @@ static bool ScheduleRun(Policy **policy, ExecConfig *exec_config, const ReportCo
 
         SetReferenceTime(true);
 
-        GenericAgentConfig config = {
-            .bundlesequence = NULL
-        };
+        GenericAgentConfigSetBundleSequence(config, NULL);
 
         *policy = ReadPromises(AGENT_TYPE_EXECUTOR, CF_EXECC, config, report_context);
         KeepPromises(*policy, exec_config);

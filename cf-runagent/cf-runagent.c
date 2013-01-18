@@ -43,7 +43,7 @@
 #include "string_lib.h"
 
 static void ThisAgentInit(void);
-static GenericAgentConfig CheckOpts(int argc, char **argv);
+static GenericAgentConfig *CheckOpts(int argc, char **argv);
 
 static int HailServer(char *host, Attributes a, Promise *pp);
 static int ParseHostname(char *hostname, char *new_hostname);
@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
     int pid;
 #endif
 
-    GenericAgentConfig config = CheckOpts(argc, argv);
+    GenericAgentConfig *config = CheckOpts(argc, argv);
     ReportContext *report_context = OpenReports("runagent");
 
     Policy *policy = GenericInitialize("runagent", config, report_context);
@@ -212,6 +212,8 @@ int main(int argc, char *argv[])
 #endif
 
     DeletePromise(pp);
+
+    GenericAgentConfigDestroy(config);
     ReportContextDestroy(report_context);
 
     return 0;
@@ -219,12 +221,12 @@ int main(int argc, char *argv[])
 
 /*******************************************************************/
 
-static GenericAgentConfig CheckOpts(int argc, char **argv)
+static GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
     int optindex = 0;
     int c;
-    GenericAgentConfig config = GenericAgentDefaultConfig(AGENT_TYPE_RUNAGENT);
+    GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_RUNAGENT);
 
     DEFINECLASSES[0] = '\0';
     SENDCLASSES[0] = '\0';
@@ -234,7 +236,7 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
         switch ((char) c)
         {
         case 'f':
-            SetInputFile(optarg);
+            GenericAgentConfigSetInputFile(config, optarg);
             MINUSF = true;
             break;
 

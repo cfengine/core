@@ -166,8 +166,7 @@ void NoteClassUsage(AlphaList baselist, int purge)
     double lastseen;
     double vtrue = 1.0;         /* end with a rough probability */
 
-/* Only do this for the default policy, too much "downgrading" otherwise */
-
+    /* Only do this for the default policy, too much "downgrading" otherwise */
     if (MINUSF)
     {
         return;

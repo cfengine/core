@@ -40,7 +40,7 @@
 static void GenerateManual(void);
 static void GenerateXml(void);
 
-static GenericAgentConfig CheckOpts(int argc, char **argv);
+static GenericAgentConfig *CheckOpts(int argc, char **argv);
 
 char SOURCE_DIR[CF_BUFSIZE];
 char OUTPUT_FILE[CF_BUFSIZE];
@@ -71,7 +71,7 @@ static const char *HINTS[] =
 
 int main(int argc, char *argv[])
 {
-    GenericAgentConfig config = CheckOpts(argc, argv);
+    GenericAgentConfig *config = CheckOpts(argc, argv);
 
     ReportContext *report_context = OpenReports("gendoc");
     GenericInitialize("gendoc", config, report_context);
@@ -86,15 +86,16 @@ int main(int argc, char *argv[])
     }
 
     ReportContextDestroy(report_context);
+    GenericAgentConfigDestroy(config);
     return 0;
 }
 
-static GenericAgentConfig CheckOpts(int argc, char **argv)
+static GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
     int optindex = 0;
     int c;
-    GenericAgentConfig config = GenericAgentDefaultConfig(AGENT_TYPE_GENDOC);
+    GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_GENDOC);
 
     getcwd(SOURCE_DIR, CF_BUFSIZE);
     snprintf(OUTPUT_FILE, CF_BUFSIZE, "%scf3-Reference.texinfo", SOURCE_DIR);

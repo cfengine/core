@@ -52,7 +52,7 @@
 #include <assert.h>
 
 static void ThisAgentInit(void);
-static GenericAgentConfig CheckOpts(int argc, char **argv);
+static GenericAgentConfig *CheckOpts(int argc, char **argv);
 
 static void KeepReportsControlPromises(Policy *policy);
 static void KeepReportsPromises(void);
@@ -293,7 +293,7 @@ char *CFRH[][2] =
 
 int main(int argc, char *argv[])
 {
-    GenericAgentConfig config = CheckOpts(argc, argv);
+    GenericAgentConfig *config = CheckOpts(argc, argv);
 
     ReportContext *report_context = OpenReports("reporter");
     Policy *policy = NULL;
@@ -308,7 +308,9 @@ int main(int argc, char *argv[])
     ThisAgentInit();
     KeepReportsControlPromises(policy);
     KeepReportsPromises();
+
     ReportContextDestroy(report_context);
+    GenericAgentConfigDestroy(config);
     return 0;
 }
 
@@ -318,19 +320,19 @@ int main(int argc, char *argv[])
 
 /*****************************************************************************/
 
-static GenericAgentConfig CheckOpts(int argc, char **argv)
+static GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
     int optindex = 0;
     int c;
-    GenericAgentConfig config = GenericAgentDefaultConfig(AGENT_TYPE_REPORT);
+    GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_REPORT);
 
     while ((c = getopt_long(argc, argv, "CghdvVf:st:ar:PXHLMIRSKE:x:i:1:p:k:c:qF:o:", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
         case 'f':
-            SetInputFile(optarg);
+            GenericAgentConfigSetInputFile(config, optarg);
             MINUSF = true;
             break;
 

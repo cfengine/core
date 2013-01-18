@@ -59,7 +59,6 @@ extern char VMONTH[];
 extern char VSHIFT[];
 
 extern const char *CLASSTEXT[];
-extern char VINPUTFILE[];
 extern int AUDIT;
 extern char PURGE;
 
@@ -90,7 +89,6 @@ extern int CFPARANOID;
 
 extern int DONTDO;
 extern int IGNORELOCK;
-extern int MINUSF;
 
 extern const char *VPSCOMM[];
 extern const char *VPSOPTS[];

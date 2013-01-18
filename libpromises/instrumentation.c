@@ -166,13 +166,6 @@ void NoteClassUsage(AlphaList baselist, int purge)
     double lastseen;
     double vtrue = 1.0;         /* end with a rough probability */
 
-/* Only do this for the default policy, too much "downgrading" otherwise */
-
-    if (MINUSF)
-    {
-        return;
-    }
-
     AlphaListIterator it = AlphaListIteratorInit(&baselist);
 
     for (ip = AlphaListIteratorNext(&it); ip != NULL; ip = AlphaListIteratorNext(&it))

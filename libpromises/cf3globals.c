@@ -158,7 +158,6 @@ char PURGE = 'n';
 
 int ERRORCOUNT = 0;
 char VPREFIX[CF_MAXVARSIZE] = { 0 };
-char VINPUTFILE[CF_BUFSIZE] = { 0 };
 
 char CONTEXTID[CF_MAXVARSIZE] = { 0 };
 char CFPUBKEYFILE[CF_BUFSIZE] = { 0 };
@@ -239,7 +238,6 @@ int VIFELAPSED = 1;
 int VEXPIREAFTER = 120;
 char BINDINTERFACE[CF_BUFSIZE] = { 0 };
 
-int MINUSF = false;
 int EXCLAIM = true;
 
 Item *VSETUIDLIST = NULL;

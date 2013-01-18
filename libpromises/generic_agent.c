@@ -66,14 +66,14 @@ extern char *CFH[][2];
 static void VerifyPromises(Policy *policy, Rlist *bundlesequence, const ReportContext *report_context);
 static void SetAuditVersion(void);
 static void CheckWorkingDirectories(const ReportContext *report_context);
-static void Cf3ParseFile(Policy *policy, char *filename, _Bool check_not_writable_by_others);
-static void Cf3ParseFiles(Policy *policy, bool check_not_writable_by_others, const ReportContext *report_context);
-static int MissingInputFile(void);
+static void Cf3ParseFile(Policy *policy, const char *filename, const char *input_file, bool check_not_writable_by_others);
+static void Cf3ParseFiles(Policy *policy, const char *input_file, bool check_not_writable_by_others, const ReportContext *report_context);
+static bool MissingInputFile(const char *input_file);
 static void CheckControlPromises(char *scope, char *agent, Constraint *controllist);
 static void CheckVariablePromises(char *scope, Promise *varlist);
 static void CheckCommonClassPromises(Promise *classlist, const ReportContext *report_context);
 static void PrependAuditFile(char *file);
-static char *InputLocation(char *filename);
+static char *InputLocation(const char *filename, const char *input_file);
 
 #if !defined(__MINGW32__)
 static void OpenLog(int facility);
@@ -116,7 +116,7 @@ void CheckLicenses(void)
 
 /*****************************************************************************/
 
-Policy *GenericInitialize(char *agents, GenericAgentConfig config, const ReportContext *report_context)
+Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const ReportContext *report_context)
 {
     AgentType ag = Agent2Type(agents);
     char vbuff[CF_BUFSIZE];
@@ -130,7 +130,7 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig config, const ReportC
     CF_DEFAULT_DIGEST_LEN = CF_MD5_LEN;
 #endif
 
-    InitializeGA(report_context);
+    InitializeGA(config, report_context);
 
     SetReferenceTime(true);
     SetStartTime();
@@ -200,7 +200,7 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig config, const ReportC
 
     if (ag != AGENT_TYPE_KEYGEN && ag != AGENT_TYPE_GENDOC)
     {
-        if (!MissingInputFile())
+        if (!MissingInputFile(config->input_file))
         {
             bool check_promises = false;
 
@@ -209,12 +209,12 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig config, const ReportC
                 check_promises = true;
                 CfOut(cf_verbose, "", " -> Reports mode is enabled, force-validating policy");
             }
-            if (IsFileOutsideDefaultRepository(VINPUTFILE))
+            if (IsFileOutsideDefaultRepository(config->input_file))
             {
                 check_promises = true;
                 CfOut(cf_verbose, "", " -> Input file is outside default repository, validating it");
             }
-            if (NewPromiseProposals())
+            if (NewPromiseProposals(config->input_file))
             {
                 check_promises = true;
                 CfOut(cf_verbose, "", " -> Input file is changed since last validation, validating it");
@@ -222,7 +222,7 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig config, const ReportC
 
             if (check_promises)
             {
-                ok = CheckPromises(ag, report_context);
+                ok = CheckPromises(ag, config->input_file, report_context);
                 if (BOOTSTRAP && !ok)
                 {
                     CfOut(cf_verbose, "", " -> Policy is not valid, but proceeding with bootstrap");
@@ -244,20 +244,20 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig config, const ReportC
         {
             CfOut(cf_error, "",
                   "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
-            SetInputFile("failsafe.cf");
+            GenericAgentConfigSetInputFile(config, "failsafe.cf");
             policy = ReadPromises(ag, agents, config, report_context);
         }
 
         if (SHOWREPORTS)
         {
-            CompilationReport(policy, VINPUTFILE);
+            CompilationReport(policy, config->input_file);
         }
 
         if (SHOW_PARSE_TREE)
         {
             Writer *writer = FileWriter(stdout);
 
-            PolicyPrintAsJson(writer, VINPUTFILE, policy->bundles, policy->bodies);
+            PolicyPrintAsJson(writer, config->input_file, policy->bundles, policy->bodies);
             WriterClose(writer);
         }
 
@@ -273,7 +273,7 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig config, const ReportC
 /* Level                                                                     */
 /*****************************************************************************/
 
-int CheckPromises(AgentType ag, const ReportContext *report_context)
+int CheckPromises(AgentType ag, const char *input_file, const ReportContext *report_context)
 {
     char cmd[CF_BUFSIZE], cfpromises[CF_MAXVARSIZE];
     char filename[CF_MAXVARSIZE];
@@ -302,17 +302,17 @@ int CheckPromises(AgentType ag, const ReportContext *report_context)
 
     snprintf(cmd, sizeof(cmd), "\"%s\" -f \"", cfpromises);
 
-    outsideRepo = IsFileOutsideDefaultRepository(VINPUTFILE);
+    outsideRepo = IsFileOutsideDefaultRepository(input_file);
 
     if (outsideRepo)
     {
-        strlcat(cmd, VINPUTFILE, CF_BUFSIZE);
+        strlcat(cmd, input_file, CF_BUFSIZE);
     }
     else
     {
         strlcat(cmd, CFWORKDIR, CF_BUFSIZE);
         strlcat(cmd, FILE_SEPARATOR_STR "inputs" FILE_SEPARATOR_STR, CF_BUFSIZE);
-        strlcat(cmd, VINPUTFILE, CF_BUFSIZE);
+        strlcat(cmd, input_file, CF_BUFSIZE);
     }
 
     strlcat(cmd, "\"", CF_BUFSIZE);
@@ -339,9 +339,9 @@ int CheckPromises(AgentType ag, const ReportContext *report_context)
 
         if (!outsideRepo)
         {
-            if (MINUSF)
+            if (input_file)
             {
-                snprintf(filename, CF_MAXVARSIZE, "%s/state/validated_%s", CFWORKDIR, CanonifyName(VINPUTFILE));
+                snprintf(filename, CF_MAXVARSIZE, "%s/state/validated_%s", CFWORKDIR, CanonifyName(input_file));
                 MapName(filename);
             }
             else
@@ -379,7 +379,7 @@ int CheckPromises(AgentType ag, const ReportContext *report_context)
 
 /*****************************************************************************/
 
-Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig config,
+Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config,
                      const ReportContext *report_context)
 {
     Rval retval;
@@ -405,7 +405,7 @@ Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig config,
 /* Parse the files*/
 
     Policy *policy = PolicyNew();
-    Cf3ParseFiles(policy, check_not_writable_by_others, report_context);
+    Cf3ParseFiles(policy, config->input_file, check_not_writable_by_others, report_context);
     {
         Sequence *errors = SequenceCreate(100, PolicyErrorDestroy);
         if (!PolicyCheck(policy, errors))
@@ -442,7 +442,7 @@ Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig config,
     WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_HTML], "<div id=\"reporttext\">\n");
     WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_HTML], "%s", CFH[cfx_promise][cfb]);
 
-    VerifyPromises(policy, config.bundlesequence, report_context);
+    VerifyPromises(policy, config->bundlesequence, report_context);
 
     WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_HTML], "%s", CFH[cfx_promise][cfe]);
 
@@ -480,7 +480,7 @@ void CloseLog(void)
 /* Level 1                                                         */
 /*******************************************************************/
 
-void InitializeGA(const ReportContext *report_context)
+void InitializeGA(GenericAgentConfig *config, const ReportContext *report_context)
 {
     int force = false;
     struct stat statbuf, sb;
@@ -606,9 +606,9 @@ void InitializeGA(const ReportContext *report_context)
 
     LoadSecretKeys();
 
-    if (!MINUSF)
+    if (!config->input_file)
     {
-        SetInputFile("promises.cf");
+        GenericAgentConfigSetInputFile(config, "promises.cf");
     }
 
     DetermineCfenginePort();
@@ -624,18 +624,18 @@ void InitializeGA(const ReportContext *report_context)
 
         if (!IsEnterprise() && cfstat(vbuff, &statbuf) == -1)
         {
-            SetInputFile("failsafe.cf");
+            GenericAgentConfigSetInputFile(config, "failsafe.cf");
         }
         else
         {
-            SetInputFile(vbuff);
+            GenericAgentConfigSetInputFile(config, vbuff);
         }
     }
 }
 
 /*******************************************************************/
 
-static void Cf3ParseFiles(Policy *policy, bool check_not_writable_by_others, const ReportContext *report_context)
+static void Cf3ParseFiles(Policy *policy, const char *input_file, bool check_not_writable_by_others, const ReportContext *report_context)
 {
     Rlist *rp, *sl;
 
@@ -645,7 +645,7 @@ static void Cf3ParseFiles(Policy *policy, bool check_not_writable_by_others, con
 
     PolicySetNameSpace(policy, "default");    
 
-    Cf3ParseFile(policy, VINPUTFILE, check_not_writable_by_others);
+    Cf3ParseFile(policy, input_file, input_file, check_not_writable_by_others);
 
     // Expand any lists in this list now
     HashVariables(policy, NULL, report_context);
@@ -673,13 +673,13 @@ static void Cf3ParseFiles(Policy *policy, bool check_not_writable_by_others, con
                 switch (returnval.rtype)
                 {
                 case CF_SCALAR:
-                    Cf3ParseFile(policy, (char *) returnval.item, check_not_writable_by_others);
+                    Cf3ParseFile(policy, (char *) returnval.item, input_file, check_not_writable_by_others);
                     break;
 
                 case CF_LIST:
                     for (sl = (Rlist *) returnval.item; sl != NULL; sl = sl->next)
                     {
-                        Cf3ParseFile(policy, (char *) sl->item, check_not_writable_by_others);
+                        Cf3ParseFile(policy, (char *) sl->item, input_file, check_not_writable_by_others);
                     }
                     break;
                 }
@@ -699,13 +699,13 @@ static void Cf3ParseFiles(Policy *policy, bool check_not_writable_by_others, con
 
 /*******************************************************************/
 
-static int MissingInputFile()
+static bool MissingInputFile(const char *input_file)
 {
     struct stat sb;
 
-    if (cfstat(InputLocation(VINPUTFILE), &sb) == -1)
+    if (cfstat(InputLocation(input_file, input_file), &sb) == -1)
     {
-        CfOut(cf_error, "stat", "There is no readable input file at %s", VINPUTFILE);
+        CfOut(cf_error, "stat", "There is no readable input file at %s", input_file);
         return true;
     }
 
@@ -714,7 +714,7 @@ static int MissingInputFile()
 
 /*******************************************************************/
 
-int NewPromiseProposals()
+int NewPromiseProposals(const char *input_file)
 {
     Rlist *rp, *sl;
     struct stat sb;
@@ -722,9 +722,9 @@ int NewPromiseProposals()
     char filename[CF_MAXVARSIZE];
     time_t validated_at;
 
-    if (MINUSF)
+    if (input_file)
     {
-        snprintf(filename, CF_MAXVARSIZE, "%s/state/validated_%s", CFWORKDIR, CanonifyName(VINPUTFILE));
+        snprintf(filename, CF_MAXVARSIZE, "%s/state/validated_%s", CFWORKDIR, CanonifyName(input_file));
         MapName(filename);
     }
     else
@@ -759,9 +759,9 @@ int NewPromiseProposals()
         return true;
     }
 
-    if (cfstat(InputLocation(VINPUTFILE), &sb) == -1)
+    if (cfstat(InputLocation(input_file, input_file), &sb) == -1)
     {
-        CfOut(cf_verbose, "stat", "There is no readable input file at %s", VINPUTFILE);
+        CfOut(cf_verbose, "stat", "There is no readable input file at %s", input_file);
         return true;
     }
 
@@ -800,7 +800,7 @@ int NewPromiseProposals()
                 {
                 case CF_SCALAR:
 
-                    if (cfstat(InputLocation((char *) returnval.item), &sb) == -1)
+                    if (cfstat(InputLocation((char *) returnval.item, input_file), &sb) == -1)
                     {
                         CfOut(cf_error, "stat", "Unreadable promise proposals at %s", (char *) returnval.item);
                         result = true;
@@ -818,7 +818,7 @@ int NewPromiseProposals()
 
                     for (sl = (Rlist *) returnval.item; sl != NULL; sl = sl->next)
                     {
-                        if (cfstat(InputLocation((char *) sl->item), &sb) == -1)
+                        if (cfstat(InputLocation((char *) sl->item, input_file), &sb) == -1)
                         {
                             CfOut(cf_error, "stat", "Unreadable promise proposals at %s", (char *) sl->item);
                             result = true;
@@ -958,14 +958,18 @@ void CloseReports(const char *agents, ReportContext *report_context)
 /* Level                                                           */
 /*******************************************************************/
 
-static void Cf3ParseFile(Policy *policy, char *filename, bool check_not_writable_by_others)
+/*
+ * The difference between filename and input_input file is that the latter is the file specified by -f or
+ * equivalently the file containing body common control. This will hopefully be squashed in later refactoring.
+ */
+static void Cf3ParseFile(Policy *policy, const char *filename, const char *input_file, bool check_not_writable_by_others)
 {
     struct stat statbuf;
     char wfilename[CF_BUFSIZE];
 
     PolicySetNameSpace(policy, "default");    
 
-    strncpy(wfilename, InputLocation(filename), CF_BUFSIZE);
+    strncpy(wfilename, InputLocation(filename, input_file), CF_BUFSIZE);
 
     if (cfstat(wfilename, &statbuf) == -1)
     {
@@ -1226,15 +1230,15 @@ static void CheckWorkingDirectories(const ReportContext *report_context)
 /* Level 2                                                         */
 /*******************************************************************/
 
-static char *InputLocation(char *filename)
+static char *InputLocation(const char *filename, const char *input_file)
 {
     static char wfilename[CF_BUFSIZE], path[CF_BUFSIZE];
 
-    if (MINUSF && (filename != VINPUTFILE) && IsFileOutsideDefaultRepository(VINPUTFILE)
+    if (input_file && (filename != input_file) && IsFileOutsideDefaultRepository(input_file)
         && !IsAbsoluteFileName(filename))
     {
         /* If -f assume included relative files are in same directory */
-        strncpy(path, VINPUTFILE, CF_BUFSIZE - 1);
+        strncpy(path, input_file, CF_BUFSIZE - 1);
         ChopLastNode(path);
         snprintf(wfilename, CF_BUFSIZE - 1, "%s%c%s", path, FILE_SEPARATOR, filename);
     }
@@ -1248,13 +1252,6 @@ static char *InputLocation(char *filename)
     }
 
     return MapName(wfilename);
-}
-
-/*******************************************************************/
-
-void SetInputFile(const char *name)
-{
-    strlcpy(VINPUTFILE, name, CF_BUFSIZE);
 }
 
 /*******************************************************************/
@@ -1912,13 +1909,35 @@ static bool VerifyBundleSequence(const Policy *policy, AgentType agent, Rlist *b
 
 /*******************************************************************/
 
-GenericAgentConfig GenericAgentDefaultConfig(AgentType agent_type)
+GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
 {
-    GenericAgentConfig config = { 0 };
+    GenericAgentConfig *config = xmalloc(sizeof(GenericAgentConfig));
 
-    config.bundlesequence = NULL;
-    config.verify_promises = true;
+    config->bundlesequence = NULL;
+    config->verify_promises = true;
+    config->input_file = NULL;
 
     return config;
+}
+
+void GenericAgentConfigDestroy(GenericAgentConfig *config)
+{
+    if (config)
+    {
+        DeleteRlist(config->bundlesequence);
+        free(config->input_file);
+    }
+}
+
+void GenericAgentConfigSetInputFile(GenericAgentConfig *config, const char *input_file)
+{
+    free(config->input_file);
+    config->input_file = SafeStringDuplicate(input_file);
+}
+
+void GenericAgentConfigSetBundleSequence(GenericAgentConfig *config, const Rlist *bundlesequence)
+{
+    DeleteRlist(config->bundlesequence);
+    config->bundlesequence = CopyRlist(bundlesequence);
 }
 

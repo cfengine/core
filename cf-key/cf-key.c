@@ -46,7 +46,7 @@ bool LICENSE_INSTALL = false;
 char LICENSE_SOURCE[MAX_FILENAME];
 const char *remove_keys_host;
 
-static GenericAgentConfig CheckOpts(int argc, char **argv);
+static GenericAgentConfig *CheckOpts(int argc, char **argv);
 
 static void ShowLastSeenHosts(void);
 static int RemoveKeys(const char *host);
@@ -92,7 +92,7 @@ static const char *HINTS[17] =
 
 int main(int argc, char *argv[])
 {
-    GenericAgentConfig config = CheckOpts(argc, argv);
+    GenericAgentConfig *config = CheckOpts(argc, argv);
 
     THIS_AGENT_TYPE = AGENT_TYPE_KEYGEN;
 
@@ -119,6 +119,7 @@ int main(int argc, char *argv[])
     KeepKeyPromises();
 
     ReportContextDestroy(report_context);
+    GenericAgentConfigDestroy(config);
     return 0;
 }
 
@@ -126,12 +127,12 @@ int main(int argc, char *argv[])
 /* Level                                                                     */
 /*****************************************************************************/
 
-static GenericAgentConfig CheckOpts(int argc, char **argv)
+static GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
     int optindex = 0;
     int c;
-    GenericAgentConfig config = GenericAgentDefaultConfig(AGENT_TYPE_KEYGEN);
+    GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_KEYGEN);
 
     while ((c = getopt_long(argc, argv, "dvf:VMsr:hl:", OPTIONS, &optindex)) != EOF)
     {

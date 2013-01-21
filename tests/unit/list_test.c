@@ -160,16 +160,16 @@ static void test_appendToList(void **state)
     // know that it works.
 }
 
-static int compareFunction(void *a, void *b)
+static int compareFunction(const void *a, const void *b)
 {
-    return strcmp((char *)a, (char *)b);
+    return strcmp(a, b);
 }
 
-static void copyFunction(void *s, void **d)
+static void copyFunction(const void *s, void **d)
 {
     if (!s || !d)
         return;
-    char *source = s;
+    const char *source = s;
     char **destination = (char **)d;
 
     *destination = strdup(source);

@@ -93,7 +93,7 @@ static void ListDetach(List *list)
     }
 }
 
-int ListNew(List **list, int (*compare)(void *, void *), void (*copy)(void *source, void **destination), void (*destroy)(void *))
+int ListNew(List **list, int (*compare)(const void *, const void *), void (*copy)(const void *source, void **destination), void (*destroy)(void *))
 {
     if (!list)
     {

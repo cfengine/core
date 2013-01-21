@@ -43,12 +43,21 @@ void ManPage(const char *component, const struct option options[], const char *h
 void PrintVersionBanner(const char *component);
 int CheckPromises(AgentType ag, const char *input_file, const ReportContext *report_context);
 Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config, const ReportContext *report_context);
-int NewPromiseProposals(const char *input_file);
+int NewPromiseProposals(const char *input_file, const Rlist *input_files);
 void CompilationReport(Policy *policy, char *fname);
 void HashVariables(Policy *policy, const char *name, const ReportContext *report_context);
 void HashControls(const Policy *policy);
 void CloseLog(void);
 Seq *ControlBodyConstraints(const Policy *policy, AgentType agent);
+
+/**
+ * @brief Conventience function for getting the effective list of input_files from common body control.
+ * @param policy Policy where inputs are specified
+ * @return Pointer to the Rlist in the DOM
+ */
+const Rlist *InputFiles(Policy *policy);
+
+
 void SetFacility(const char *retval);
 Bundle *GetBundle(const Policy *policy, const char *name, const char *agent);
 SubType *GetSubTypeForBundle(char *type, Bundle *bp);

@@ -1,4 +1,4 @@
-/* 
+/*
 
    Copyright (C) Cfengine AS
 
@@ -37,6 +37,7 @@
 #include "string_lib.h"
 #include "transaction.h"
 #include "logging.h"
+#include "misc_lib.h"
 
 static PromiseIdent *PromiseIdExists(char *namespace, char *handle);
 static void DeleteAllPromiseIdsRecurse(PromiseIdent *key);
@@ -104,6 +105,56 @@ Constraint *ConstraintAppendToBody(Body *body, const char *lval, Rval rval, cons
     SeqAppend(body->conlist, cp);
 
     return cp;
+}
+
+Seq *ConstraintGetFromBody(Body *body, const char *lval)
+{
+    Seq *matches = SeqNew(5, NULL);
+
+    for (size_t i = 0; i < SeqLength(body->conlist); i++)
+    {
+        Constraint *cp = SeqAt(body->conlist, i);
+        if (strcmp(cp->lval, lval) == 0)
+        {
+            SeqAppend(matches, cp);
+        }
+    }
+
+    return matches;
+}
+
+const char *ConstraintContext(const Constraint *cp)
+{
+    switch (cp->type)
+    {
+    case POLICY_ELEMENT_TYPE_BODY:
+        return cp->classes;
+
+    case POLICY_ELEMENT_TYPE_BUNDLE:
+        return cp->parent.promise->classes;
+
+    default:
+        ProgrammingError("Constraint had parent element type: %d", cp->type);
+        return NULL;
+    }
+}
+
+Constraint *EffectiveConstraint(Seq *constraints)
+{
+    for (size_t i = 0; i < SeqLength(constraints); i++)
+    {
+        Constraint *cp = SeqAt(constraints, i);
+
+        const char *context = ConstraintContext(cp);
+        const char *ns = NamespaceFromConstraint(cp);
+
+        if (IsDefinedClass(context, ns))
+        {
+            return cp;
+        }
+    }
+
+    return NULL;
 }
 
 /*****************************************************************************/

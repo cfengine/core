@@ -27,6 +27,6 @@
 
 #include "policy.h"
 
-Policy *ParserParseFile(Policy *policy, const char *path);
+Policy *ParserParseFile(const char *path);
 
 #endif

@@ -75,7 +75,7 @@ extern int PR_NOTKEPT;
 
 static void ThisAgentInit(void);
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
-static void CheckAgentAccess(Rlist *list);
+static void CheckAgentAccess(Rlist *list, const Rlist *input_files);
 static void KeepAgentPromise(Promise *pp, const ReportContext *report_context);
 static int NewTypeContext(enum typesequence type);
 static void DeleteTypeContext(Policy *policy, enum typesequence type, const ReportContext *report_context);
@@ -439,7 +439,7 @@ void KeepControlPromises(Policy *policy)
             if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_agentaccess].lval) == 0)
             {
                 ACCESSLIST = (Rlist *) retval.item;
-                CheckAgentAccess(ACCESSLIST);
+                CheckAgentAccess(ACCESSLIST, InputFiles(policy));
                 continue;
             }
 
@@ -958,16 +958,15 @@ static void CheckAgentAccess(Rlist *list)
 
 #else
 
-static void CheckAgentAccess(Rlist *list)
+static void CheckAgentAccess(Rlist *list, const Rlist *input_files)
 {
-    Rlist *rp, *rp2;
     struct stat sb;
     uid_t uid;
     int access = false;
 
     uid = getuid();
 
-    for (rp = list; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
         if (Str2Uid(rp->item, NULL, NULL) == uid)
         {
@@ -975,38 +974,35 @@ static void CheckAgentAccess(Rlist *list)
         }
     }
 
-    if (VINPUTLIST != NULL)
+    for (const Rlist *rp = input_files; rp != NULL; rp = rp->next)
     {
-        for (rp = VINPUTLIST; rp != NULL; rp = rp->next)
+        cfstat(rp->item, &sb);
+
+        if (ACCESSLIST)
         {
-            cfstat(rp->item, &sb);
-
-            if (ACCESSLIST)
+            for (const Rlist *rp2 = ACCESSLIST; rp2 != NULL; rp2 = rp2->next)
             {
-                for (rp2 = ACCESSLIST; rp2 != NULL; rp2 = rp2->next)
+                if (Str2Uid(rp2->item, NULL, NULL) == sb.st_uid)
                 {
-                    if (Str2Uid(rp2->item, NULL, NULL) == sb.st_uid)
-                    {
-                        access = true;
-                        break;
-                    }
-                }
-
-                if (!access)
-                {
-                    CfOut(cf_error, "", "File %s is not owned by an authorized user (security exception)",
-                          ScalarValue(rp));
-                    exit(1);
+                    access = true;
+                    break;
                 }
             }
-            else if (CFPARANOID && IsPrivileged())
+
+            if (!access)
             {
-                if (sb.st_uid != getuid())
-                {
-                    CfOut(cf_error, "", "File %s is not owned by uid %ju (security exception)", ScalarValue(rp),
-                          (uintmax_t)getuid());
-                    exit(1);
-                }
+                CfOut(cf_error, "", "File %s is not owned by an authorized user (security exception)",
+                      ScalarValue(rp));
+                exit(1);
+            }
+        }
+        else if (CFPARANOID && IsPrivileged())
+        {
+            if (sb.st_uid != getuid())
+            {
+                CfOut(cf_error, "", "File %s is not owned by uid %ju (security exception)", ScalarValue(rp),
+                      (uintmax_t)getuid());
+                exit(1);
             }
         }
     }

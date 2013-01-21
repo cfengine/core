@@ -541,7 +541,7 @@ void CheckFileChanges(Policy **policy, GenericAgentConfig *config, const ReportC
 
     CfDebug("Checking file updates on %s\n", config->input_file);
 
-    if (NewPromiseProposals(config->input_file))
+    if (NewPromiseProposals(config->input_file, InputFiles(*policy)))
     {
         CfOut(cf_verbose, "", " -> New promises detected...\n");
 
@@ -599,8 +599,6 @@ void CheckFileChanges(Policy **policy, GenericAgentConfig *config, const ReportC
             SV.attackerlist = NULL;
             SV.nonattackerlist = NULL;
             SV.multiconnlist = NULL;
-
-            VINPUTLIST = NULL;
 
             PolicyDestroy(*policy);
             *policy = NULL;

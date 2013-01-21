@@ -36,31 +36,42 @@
 
   If an error arises while doing something, we do everything we can to restore things to its previous state.
   Unfortunately not all errors are recoverable. Since we do not have a proper errno system, we just return -1.
+
+  For security reasons, there is a memory cap on each buffer. At creation time each buffer gets assigned a certain
+  amount of memory, can be checked via BufferGeneralMemoryCap(). This general cap can be raised or lowered by calling
+  BufferSetGeneralMemoryCap(unsigned int cap). After changing the cap, only newly allocated buffers will have the new cap
+  as default, all the previous buffers will have the old cap. This can be changed on a per instance basis.
   */
 
-typedef enum
-{
-    BUFFER_BEHAVIOR_CSTRING, //<! CString compatibility mode. A '\0' would be interpreted as end of the string, regardless of the size.
-    BUFFER_BEHAVIOR_BYTEARRAY, //<! Byte array mode. A '\0' has no meaning, only the size of the buffer is taken into consideration.
-} BufferBehavior;
+typedef enum {
+    BUFFER_BEHAVIOR_CSTRING //<! CString compatibility mode. A '\0' would be interpreted as end of the string, regardless of the size.
+    , BUFFER_BEHAVIOR_BYTEARRAY //<! Byte array mode. A '\0' has no meaning, only the size of the buffer is taken into consideration.
+} BufferBehavior ;
 
 #define DEFAULT_BUFFER_SIZE     4096
-#define DEFAULT_CHUNK_SIZE      4096
-#define DEFAULT_LOW_WATERMARK   512
+#define DEFAULT_MEMORY_CAP      65535
 
 struct Buffer {
     char *buffer;
     int mode;
-    unsigned int low_water_mark;
-    unsigned int chunk_size;
     unsigned int capacity;
-    unsigned int real_capacity;
     unsigned int used;
+    unsigned int memory_cap;
     unsigned int beginning; /*!< This is to be used in the future to trim characters in the front. */
     unsigned int end; /*!< This is to be used in the future to trim characters in the back. */
     RefCount *ref_count;
 };
 typedef struct Buffer Buffer;
+
+/**
+  @brief Returns the amount of memory that is used as a general memory cap.
+  @return Amount of memory in bytes used as a general memory cap.
+  */
+unsigned int BufferGeneralMemoryCap();
+/**
+  @brief Sets the new general memory cap.
+  */
+void BufferSetGeneralMemoryCap(unsigned int cap);
 
 /**
   @brief Buffer initialization routine.
@@ -98,6 +109,7 @@ int BufferEqual(Buffer *buffer1, Buffer *buffer2);
   happens first. In ByteArray mode length bytes are copied regardless of if there are '\0' or not.
   @note The content of the buffer are overwritten with the new content, it is not possible to access them afterwards.
   @note For complex data it is preferable to use Printf since that will make sure that all data is represented properly.
+  @note The data will be preserved if this operation fails, although it might be in a detached state.
   @param buffer Buffer to be used.
   @param bytes Collection of bytes to be copied into the buffer.
   @param length Length of the collection of bytes.
@@ -112,6 +124,7 @@ int BufferSet(Buffer *buffer, char *bytes, unsigned int length);
   account.
   @note There is a big difference between CString mode and ByteArray mode. In CString mode the final '\0' character will be
   overwritten and replaced with the content. In ByteArray mode there is no '\0', and therefore the last character is not replaced.
+  @note The data will be preserved if this operation fails, although it might be in a detached state.
   @param buffer The buffer to operate on.
   @param bytes The collection of bytes to be appended.
   @param length The length of the data.
@@ -125,9 +138,10 @@ int BufferAppend(Buffer *buffer, char *bytes, unsigned int length);
   sprintf/printf behaviors.
   @note This function can be used both in CString mode and in ByteArray mode. The only difference is the presence of the final '\0'
   character.
+  @note The data will be preserved if this operation fails, although it might be in a detached state.
   @param buffer
   @param format
-  @return The number of bytes written to the buffer or -1 if there was not enough space to printf in the buffer. The caller should try again.
+  @return The number of bytes written to the buffer or 0 if the operation needs to be retried. In case of error -1 is returned.
   */
 int BufferPrintf(Buffer *buffer, const char *format, ...);
 /**
@@ -172,39 +186,14 @@ void BufferSetMode(Buffer *buffer, BufferBehavior mode);
   @return A const char pointer to the data contained on the buffer.
   */
 const char *BufferData(Buffer *buffer);
-/*
- * Advanced API below
- */
 /**
-  @brief Returns the low_water_mark.
-  @param buffer Buffer
-  @return The low_water_mark for this buffer.
+  @brief Returns the amount of memory that is used as a memory cap for this particular buffer instance.
+  @return Amount of memory in bytes used as a memory cap.
   */
-unsigned int BufferLowWaterMark(Buffer *buffer);
+unsigned int BufferMemoryCap(Buffer *buffer);
 /**
-  @brief Sets the low_water_mark
-
-  The low_water_mark is the indicator for the buffer to allocate more memory. We use a lazy approach, where we tolerate using more memory
-  than what the low_water_mark allows as long as we do not exceed the buffer size. Next time we use the buffer to add stuff to it we will
-  trigger a memory allocation.
-  @param buffer Buffer
-  @param low_water_mark New low_water_mark
+  @brief Sets the new memory cap for this particular buffer instance.
   */
-void BufferSetLowWaterMark(Buffer *buffer, unsigned int low_water_mark);
-/**
-  @brief Returns the chunk_size.
-  @param buffer Buffer
-  @return The chunk_size for this buffer.
-  */
-unsigned int BufferChunkSize(Buffer *buffer);
-/**
-  @brief Sets the chunk_size
-
-  The chunk_size is the amount of memory requested by a new memory allocation. If the buffer needs to allocate more memory, it will do it
-  in chunks of "chunk_size". Consider increasing this value if you allocate large chunks of memory at a time to avoid multiple memory allocations.
-  @param buffer Buffer
-  @param low_water_mark New low_water_mark
-  */
-void BufferSetChunkSize(Buffer *buffer, unsigned int chunk_size);
+void BufferSetMemoryCap(Buffer *buffer, unsigned int cap);
 
 #endif // CFENGINE_BUFFER_H

@@ -1,16 +1,20 @@
 #include "load_avahi.h"
 #include "files_interfaces.h"
 
+#include <stdlib.h>
+
+static const char *paths[3] = {
+    "/usr/lib/x86_64-linux-gnu/libavahi-client.so.3",
+    "/usr/lib/libavahi-client.so.3",
+    "/usr/lib64/libavahi-client.so.3"
+};
+
+static const char *getavahipath();
+
 int loadavahi()
 {
-    char path[256] = { 0 };
-#if __x86_64__
-    snprintf(path, 256, "/usr/lib/x86_64-linux-gnu/libavahi-client.so");
-#endif
+    const char *path = getavahipath();
 
-#ifndef __x86_64__
-    snprintf(path, 256, "/usr/lib/libavahi-client.so");
-#endif
     avahi_handle = dlopen(path, RTLD_LAZY);
 
     if (!avahi_handle)
@@ -36,4 +40,25 @@ int loadavahi()
     avahi_service_browser_new_ptr = dlsym(avahi_handle, "avahi_service_browser_new");
 
     return 0;
+}
+
+static const char *getavahipath()
+{
+    const char *env = getenv("AVAHI_PATH");
+    struct stat sb;
+
+    if (cfstat(env, &sb) == 0)
+    {
+        return env;
+    }
+
+    for (int i = 0; i < 3; i++)
+    {
+        if (cfstat(paths[i], &sb) == 0)
+        {
+            return paths[i];
+        }
+    }
+
+    return NULL;
 }

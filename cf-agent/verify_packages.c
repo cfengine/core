@@ -513,7 +513,10 @@ static PackageItem *GetCachedPackageList(PackageManager *manager, const char *de
     while (!feof(fin))
     {
         line[0] = '\0';
-        fgets(line, CF_BUFSIZE - 1, fin);
+        if (fgets(line, CF_BUFSIZE, fin) == NULL)
+        {
+            UnexpectedError("Failed to read line %d from stream '%s'", name, linenumber+1);
+        }
         ++linenumber;
         int scancount = sscanf(line, "%250[^,],%250[^,],%250[^,],%250[^\n]", name, version, arch, mgr);
         if (scancount != 4)

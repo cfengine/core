@@ -37,6 +37,7 @@
 #include "pipes.h"
 #include "logging.h"
 #include "exec_tools.h"
+#include "misc_lib.h"
 
 #ifdef HAVE_SYS_UIO_H
 # include <sys/uio.h>
@@ -722,7 +723,10 @@ static void FindV6InterfacesInfo(void)
 
     while (!feof(pp))
     {
-        fgets(buffer, CF_BUFSIZE - 1, pp);
+        if (fgets(buffer, CF_BUFSIZE, pp) == NULL)
+        {
+            UnexpectedError("Failed to read line from stream");
+        }
 
         if (ferror(pp))         /* abortable */
         {

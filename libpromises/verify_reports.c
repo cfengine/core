@@ -38,6 +38,7 @@
 #include "transaction.h"
 #include "string_lib.h"
 #include "logging.h"
+#include "misc_lib.h"
 
 static void ShowState(char *type);
 static void PrintFile(Attributes a, Promise *pp);
@@ -142,7 +143,10 @@ static void PrintFile(Attributes a, Promise *pp)
     while ((!feof(fp)) && (lines < a.report.numlines))
     {
         buffer[0] = '\0';
-        fgets(buffer, CF_BUFSIZE, fp);
+        if (fgets(buffer, CF_BUFSIZE, fp) == NULL)
+        {
+            UnexpectedError("Failed to read line from stream");
+        }
         CfOut(cf_error, "", "R: %s", buffer);
         lines++;
     }
@@ -182,7 +186,10 @@ static void ShowState(char *type)
             buffer[0] = local[0] = remote[0] = '\0';
 
             memset(vbuff, 0, CF_BUFSIZE);
-            fgets(buffer, CF_BUFSIZE, fp);
+            if (fgets(buffer, CF_BUFSIZE, fp) == NULL)
+            {
+                UnexpectedError("Failed to read line from stream");
+            }
 
             if (strlen(buffer) > 0)
             {

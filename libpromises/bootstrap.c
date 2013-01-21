@@ -197,7 +197,10 @@ void SetPolicyServer(char *name)
 
     if ((fin = fopen(file, "r")) != NULL)
     {
-        fscanf(fin, "%1023s", fileContents);
+        if (fscanf(fin, "%1023s", fileContents) != 1)
+        {
+            CfDebug("Couldn't read string from policy_server.dat");
+        }
         fclose(fin);
     }
 

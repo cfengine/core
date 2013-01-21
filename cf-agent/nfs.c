@@ -37,6 +37,7 @@
 #include "pipes.h"
 #include "logging.h"
 #include "nfs.h"
+#include "misc_lib.h"
 
 /* seconds */
 #define RPCTIMEOUT 60
@@ -688,7 +689,10 @@ void MountAll()
         {
             if ((fd = creat("/etc/fstab", 0755)) > 0)
             {
-                write(fd, "#!/bin/sh\n\n", 10);
+                if (write(fd, "#!/bin/sh\n\n", 10) != 10)
+                {
+                    UnexpectedError("Failed to write to file '/etc/fstab'");
+                }
                 close(fd);
             }
             else

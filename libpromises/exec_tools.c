@@ -31,6 +31,7 @@
 #include "pipes.h"
 #include "logging.h"
 #include "string_lib.h"
+#include "misc_lib.h"
 #include "generic_agent.h" // CloseLog
 
 /********************************************************************/
@@ -160,7 +161,10 @@ void ActAsDaemon(int preserve)
         }
     }
 
-    chdir("/");
+    if (chdir("/"))
+    {
+        UnexpectedError("Failed to chdir into '/'");
+    }
 
 #ifdef HAVE_SYSCONF
     maxfd = sysconf(_SC_OPEN_MAX);

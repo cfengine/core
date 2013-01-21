@@ -114,7 +114,10 @@ void VerifyPackagesPromise(Promise *pp)
 
 // Start by reseting the root directory in case yum tries to glob regexs(!)
 
-    chdir("/");
+    if (chdir("/") != 0)
+    {
+        CfOut(cf_error, "", "Failed to chdir into '/'");
+    }
 
     char *default_arch = GetDefaultArch(a.packages.package_default_arch_command);
 

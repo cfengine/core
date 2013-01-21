@@ -258,7 +258,7 @@ int BufferSet(Buffer *buffer, char *bytes, unsigned int length)
     /*
      * Check if we have enough space, otherwise create a larger buffer
      */
-    if (length > buffer->capacity)
+    if (length >= buffer->capacity)
     {
         char *p = NULL;
         unsigned int required_blocks = (length / DEFAULT_BUFFER_SIZE) + 1;
@@ -371,7 +371,18 @@ int BufferAppend(Buffer *buffer, char *bytes, unsigned int length)
             }
             ++used;
         }
-        if (buffer->mode == BUFFER_BEHAVIOR_CSTRING)
+        buffer->buffer = new_buffer;
+        buffer->used = used;
+    }
+    /*
+     * Check if we have enough space, otherwise create a larger buffer
+     */
+    if (buffer->used + length >= buffer->capacity)
+    {
+        char *p = NULL;
+        unsigned int required_blocks = ((buffer->used + length)/ DEFAULT_BUFFER_SIZE) + 1;
+        p = (char *)realloc(buffer->buffer, required_blocks * DEFAULT_BUFFER_SIZE);
+        if (p == NULL)
         {
             /*
              * Allocation failed. We have the data, although in a detached state.
@@ -493,7 +504,7 @@ int BufferPrintf(Buffer *buffer, const char *format, ...)
         buffer->used = used;
     }
     printed = vsnprintf(buffer->buffer, buffer->capacity, format, ap);
-    if (printed > buffer->capacity)
+    if (printed >= buffer->capacity)
     {
         /*
          * Allocate a larger buffer and retry.

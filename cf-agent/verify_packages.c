@@ -43,6 +43,7 @@
 #include "logging.h"
 #include "exec_tools.h"
 #include "policy.h"
+#include "misc_lib.h"
 
 /** Entry points from VerifyPackagesPromise **/
 
@@ -508,11 +509,17 @@ static PackageItem *GetCachedPackageList(PackageManager *manager, const char *de
 
     snprintf(thismanager, CF_MAXVARSIZE - 1, "%s", ReadLastNode(GetArg0(manager->manager)));
 
+    int linenumber = 0;
     while (!feof(fin))
     {
         line[0] = '\0';
         fgets(line, CF_BUFSIZE - 1, fin);
-        sscanf(line, "%250[^,],%250[^,],%250[^,],%250[^\n]", name, version, arch, mgr);
+        ++linenumber;
+        int scancount = sscanf(line, "%250[^,],%250[^,],%250[^,],%250[^\n]", name, version, arch, mgr);
+        if (scancount != 4)
+        {
+            CfOut(cf_verbose, "", "Could only read %d values from line %d in '%s'", scancount, linenumber, name);
+        }
 
         /*
          * Transition to explicit default architecture, if package manager

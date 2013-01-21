@@ -779,9 +779,9 @@ static void InitIgnoreInterfaces()
     while (!feof(fin))
     {
         regex[0] = '\0';
-        fscanf(fin,"%s",regex);
-       
-        if (*regex != '\0')
+        int scanCount = fscanf(fin,"%s",regex);
+
+        if (scanCount != 0 && *regex != '\0')
         {
            IdempPrependRScalar(&IGNORE_INTERFACES,regex,CF_SCALAR);
         }

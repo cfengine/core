@@ -36,6 +36,7 @@
 #include "expand.h"
 #include "cfstream.h"
 #include "logging.h"
+#include "misc_lib.h"
 
 static void GenerateManual(void);
 static void GenerateXml(void);
@@ -97,7 +98,10 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_GENDOC);
 
-    getcwd(SOURCE_DIR, CF_BUFSIZE);
+    if (getcwd(SOURCE_DIR, CF_BUFSIZE) == NULL)
+    {
+        UnexpectedError("Failed to get the pathname to the current directory");
+    }
     snprintf(OUTPUT_FILE, CF_BUFSIZE, "%scf3-Reference.texinfo", SOURCE_DIR);
 
     while ((c = getopt_long(argc, argv, "hxi:o:", OPTIONS, &optindex)) != EOF)

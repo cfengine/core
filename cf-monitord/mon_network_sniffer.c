@@ -34,6 +34,7 @@
 #include "pipes.h"
 #include "signals.h"
 #include "string_lib.h"
+#include "misc_lib.h"
 
 /* Constants */
 
@@ -90,7 +91,13 @@ void MonNetworkSnifferOpen(void)
             }
 
             /* Skip first banner */
-            fgets(tcpbuffer, CF_BUFSIZE - 1, TCPPIPE);
+            if (fgets(tcpbuffer, CF_BUFSIZE - 1, TCPPIPE) == NULL)
+            {
+                UnexpectedError("Failed to read output from '%s'", CF_TCPDUMP_COMM);
+                cf_pclose(TCPPIPE);
+                TCPPIPE = NULL;
+                TCPDUMP = false;
+            }
         }
         else
         {
@@ -135,7 +142,14 @@ static void Sniff(long iteration, double *cf_this)
             break;
         }
 
-        fgets(tcpbuffer, CF_BUFSIZE - 1, TCPPIPE);
+        if (fgets(tcpbuffer, CF_BUFSIZE - 1, TCPPIPE) == NULL)
+        {
+            UnexpectedError("Unable to read data from tcpdump; closing pipe");
+            cf_pclose(TCPPIPE);
+            TCPPIPE = NULL;
+            TCPDUMP = false;
+            break;
+        }
 
         if (TCPPAUSE)
         {

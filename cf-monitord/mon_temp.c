@@ -131,7 +131,12 @@ static bool GetAcpi(double *cf_this)
             continue;
         }
 
-        fgets(buf, CF_BUFSIZE - 1, fp);
+        if (fgets(buf, CF_BUFSIZE - 1, fp) == NULL)
+        {
+            CfOut(cf_error, "", "Failed to read line from stream '%s'", path);
+            fclose(fp);
+            continue;
+        }
 
         sscanf(buf, "%*s %lf", &temp);
 

@@ -2248,19 +2248,23 @@ static void WriteHistograms()
     for (position = 0; position < CF_GRAINS; position++)
     {
         int position_read;
-        fscanf(fp, "%d ", &position_read);
-        if (position != position_read)
+        int scancount = fscanf(fp, "%d ", &position_read);
+        if ((scancount != 1) || (position != position_read))
         {
-            FatalError("Malformed data found in %s/state/historgrams, line %d", CFWORKDIR, position + 1);
+            CfOut(cf_error, "", "Malformed data found in %s/state/historgrams, line %d", CFWORKDIR, position + 1);
+            exit(1);
+            break;
         }
 
         for (i = 0; i < CF_OBSERVABLES; i++)
         {
             for (day = 0; day < 7; day++)
             {
-                fscanf(fp, "%d ", &(HISTOGRAM[i][day][position]));
+                if (fscanf(fp, "%d ", &(HISTOGRAM[i][day][position])) != 1)
+                {
+                    HISTOGRAM[i][day][position] = 0;
+                }
             }
-
             weekly[i][position] = 0;
         }
     }

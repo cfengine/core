@@ -30,7 +30,7 @@
 
 struct Policy_
 {
-    Sequence *bundles;
+    Seq *bundles;
     Body *bodies;
     char *current_namespace;
 };
@@ -60,7 +60,7 @@ typedef struct
 PolicyError *PolicyErrorNew(PolicyElementType type, const void *subject, const char *error_msg, ...);
 void PolicyErrorDestroy(PolicyError *error);
 void PolicyErrorWrite(Writer *writer, const PolicyError *error);
-bool PolicyCheck(const Policy *policy, Sequence *errors);
+bool PolicyCheck(const Policy *policy, Seq *errors);
 void PolicySetNameSpace(Policy *policy, char *namespace);
 char *CurrentNameSpace(Policy *policy);
 

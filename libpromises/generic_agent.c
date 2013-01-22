@@ -407,7 +407,7 @@ Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config,
     Policy *policy = PolicyNew();
     Cf3ParseFiles(policy, config->input_file, check_not_writable_by_others, report_context);
     {
-        Sequence *errors = SequenceCreate(100, PolicyErrorDestroy);
+        Seq *errors = SeqNew(100, PolicyErrorDestroy);
         if (!PolicyCheck(policy, errors))
         {
             Writer *writer = FileWriter(stderr);
@@ -418,7 +418,7 @@ Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config,
             WriterClose(writer);
         }
 
-        SequenceDestroy(errors);
+        SeqDestroy(errors);
     }
 
 /* Now import some web variables that are set in cf-know/control for the report options */
@@ -1384,9 +1384,9 @@ static void VerifyPromises(Policy *policy, Rlist *bundlesequence,
 
 /* Now look once through ALL the bundles themselves */
 
-    for (size_t i = 0; i < SequenceLength(policy->bundles); i++)
+    for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
-        Bundle *bp = SequenceAt(policy->bundles, i);
+        Bundle *bp = SeqAt(policy->bundles, i);
 
         scope = bp->name;
         THIS_BUNDLE = bp->name;
@@ -1778,9 +1778,9 @@ void HashVariables(Policy *policy, const char *name, const ReportContext *report
 
     CfOut(cf_verbose, "", "Initiate variable convergence...\n");
 
-    for (size_t i = 0; i < SequenceLength(policy->bundles); i++)
+    for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
-        Bundle *bp = SequenceAt(policy->bundles, i);
+        Bundle *bp = SeqAt(policy->bundles, i);
 
         if (name && strcmp(name, bp->name) != 0)
         {

@@ -45,10 +45,10 @@ typedef struct
     size_t length;
     size_t capacity;
     void (*ItemDestroy) (void *item);
-} Sequence;
+} Seq;
 
-#define SequenceAt(seq, i) seq->data[i]
-#define SequenceLength(seq) (seq->length)
+#define SeqAt(seq, i) seq->data[i]
+#define SeqLength(seq) (seq->length)
 
 /**
   @brief Create a new Sequence
@@ -56,13 +56,13 @@ typedef struct
   @param [in] ItemDestroy Optional item destructor to clean up memory when needed.
   @return A pointer to the created Sequence
   */
-Sequence *SequenceCreate(size_t initial_capacity, void (*ItemDestroy) ());
+Seq *SeqNew(size_t initial_capacity, void (*ItemDestroy) ());
 
 /**
   @brief Destroy an existing Sequence
   @param [in] seq The Sequence to destroy.
   */
-void SequenceDestroy(Sequence *seq);
+void SeqDestroy(Seq *seq);
 
 /**
   @brief
@@ -72,14 +72,14 @@ void SequenceDestroy(Sequence *seq);
   @retval 0 if the arguments are equal
   @retval 1 if the first argument is bigger than the second
   */
-typedef int (*SequenceItemComparator) (const void *, const void *, void *user_data);
+typedef int (*SeqItemComparator) (const void *, const void *, void *user_data);
 
 /**
   @brief Append a new item to the Sequence
   @param seq [in] The Sequence to append to.
   @param item [in] The item to append. Note that this item may be passed to the item destructor specified in the constructor.
   */
-void SequenceAppend(Sequence *seq, void *item);
+void SeqAppend(Seq *seq, void *item);
 
 /**
   @brief Linearly searches through the sequence and return the first item considered equal to the specified key.
@@ -88,12 +88,12 @@ void SequenceAppend(Sequence *seq, void *item);
   @param compare [in] Comparator function to use. An item matches if the function returns 0.
   @returns A pointer to the found item, or NULL if not found.
   */
-void *SequenceLookup(Sequence *seq, const void *key, SequenceItemComparator Compare);
+void *SeqLookup(Seq *seq, const void *key, SeqItemComparator Compare);
 
 /**
   @brief Linearly searches through the sequence and returns the index of the first matching object, or -1 if it doesn't exist.
   */
-ssize_t SequenceIndexOf(Sequence *seq, const void *key, SequenceItemComparator Compare);
+ssize_t SeqIndexOf(Seq *seq, const void *key, SeqItemComparator Compare);
 
 /**
   @brief Remove an inclusive range of items in the Sequence. A single item may be removed by specifiying start = end.
@@ -101,19 +101,19 @@ ssize_t SequenceIndexOf(Sequence *seq, const void *key, SequenceItemComparator C
   @param start [in] Index of the first element to remove
   @param end [in] Index of the last element to remove.
   */
-void SequenceRemoveRange(Sequence *seq, size_t start, size_t end);
+void SeqRemoveRange(Seq *seq, size_t start, size_t end);
 
 /**
   @brief Remove a single item in the sequence
   */
-void SequenceRemove(Sequence *seq, size_t index);
+void SeqRemove(Seq *seq, size_t index);
 
 /**
   @brief Sort a Sequence according to the given item comparator function
   @param compare [in] The comparator function used for sorting.
   @param user_data [in] Pointer passed to the comparator function
   */
-void SequenceSort(Sequence *seq, SequenceItemComparator compare, void *user_data);
+void SeqSort(Seq *seq, SeqItemComparator compare, void *user_data);
 
 /**
   @brief Remove an inclusive range of item handles in the Sequence. A single item may be removed by specifiying start = end.
@@ -121,16 +121,16 @@ void SequenceSort(Sequence *seq, SequenceItemComparator compare, void *user_data
   @param start [in] Index of the first element to remove
   @param end [in] Index of the last element to remove.
  */
-void SequenceSoftRemoveRange(Sequence *seq, size_t start, size_t end);
+void SeqSoftRemoveRange(Seq *seq, size_t start, size_t end);
 
 /**
   @brief Remove a single item handle from the sequence
   */
-void SequenceSoftRemove(Sequence *seq, size_t index);
+void SeqSoftRemove(Seq *seq, size_t index);
 
 /**
   @brief Reverses the order of the sequence
   */
-void SequenceReverse(Sequence *seq);
+void SeqReverse(Seq *seq);
 
 #endif

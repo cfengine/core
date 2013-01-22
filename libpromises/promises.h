@@ -31,7 +31,7 @@
 
 char *BodyName(const Promise *pp);
 Body *IsBody(Body *list, const char *namespace, const char *key);
-Bundle *IsBundle(Sequence *bundles, const char *key);
+Bundle *IsBundle(Seq *bundles, const char *key);
 Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp);
 Promise *ExpandDeRefPromise(const char *scopeid, Promise *pp);
 void PromiseRef(enum cfreport level, const Promise *pp);

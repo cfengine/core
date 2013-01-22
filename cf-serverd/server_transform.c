@@ -458,9 +458,9 @@ static void KeepContextBundles(Policy *policy, const ReportContext *report_conte
 
 /* Dial up the generic promise expansion with a callback */
 
-    for (size_t i = 0; i < SequenceLength(policy->bundles); i++)
+    for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
-        Bundle *bp = SequenceAt(policy->bundles, i);
+        Bundle *bp = SeqAt(policy->bundles, i);
 
         scope = bp->name;
         SetNewScope(bp->name);
@@ -502,9 +502,9 @@ static void KeepPromiseBundles(Policy *policy, const ReportContext *report_conte
 
 /* Dial up the generic promise expansion with a callback */
 
-    for (size_t i = 0; i < SequenceLength(policy->bundles); i++)
+    for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
-        Bundle *bp = SequenceAt(policy->bundles, i);
+        Bundle *bp = SeqAt(policy->bundles, i);
 
         scope = bp->name;
         SetNewScope(bp->name);

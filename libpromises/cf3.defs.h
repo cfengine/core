@@ -1077,7 +1077,6 @@ struct Bundle_
     char *namespace;
     Rlist *args;
     SubType *subtypes;
-    struct Bundle_ *next;
 
     char *source_path;
     SourceOffset offset;

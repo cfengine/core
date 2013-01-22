@@ -196,7 +196,6 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
     bp->name = xstrdup(bundlename);
     bp->type = xstrdup("edit_line");
     bp->args = NULL;
-    bp->next = NULL;
 
     tp = AppendSubType(bp, "insert_lines");
 

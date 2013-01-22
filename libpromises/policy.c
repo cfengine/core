@@ -51,10 +51,15 @@ static const char *POLICY_ERROR_SUBTYPE_INVALID = "%s is not a valid type catego
 
 //************************************************************************
 
+static void BundleDestroy(Bundle *bundle);
+
 Policy *PolicyNew(void)
 {
     Policy *policy = xcalloc(1, sizeof(Policy));
+
     policy->current_namespace = xstrdup("default");
+    policy->bundles = SequenceCreate(100, BundleDestroy);
+
     return policy;
 }
 
@@ -64,7 +69,7 @@ void PolicyDestroy(Policy *policy)
 {
     if (policy)
     {
-        DeleteBundles(policy->bundles);
+        SequenceDestroy(policy->bundles);
         DeleteBodies(policy->bodies);
         free(policy->current_namespace);
         free(policy);
@@ -271,10 +276,14 @@ bool PolicyCheck(const Policy *policy, Sequence *errors)
     bool success = true;
 
     // ensure bundle names are not duplicated
-    for (const Bundle *bp = policy->bundles; bp; bp = bp->next)
+    for (size_t i = 0; i < SequenceLength(policy->bundles); i++)
     {
-        for (const Bundle *bp2 = policy->bundles; bp2; bp2 = bp2->next)
+        Bundle *bp = SequenceAt(policy->bundles, i);
+
+        for (size_t j = 0; j < SequenceLength(policy->bundles); j++)
         {
+            Bundle *bp2 = SequenceAt(policy->bundles, j);
+
             if (bp != bp2 &&
                 StringSafeEqual(bp->name, bp2->name) &&
                 StringSafeEqual(bp->type, bp2->type))
@@ -287,8 +296,9 @@ bool PolicyCheck(const Policy *policy, Sequence *errors)
         }
     }
 
-    for (const Bundle *bp = policy->bundles; bp; bp = bp->next)
+    for (size_t i = 0; i < SequenceLength(policy->bundles); i++)
     {
+        Bundle *bp = SequenceAt(policy->bundles, i);
         success &= PolicyCheckBundle(bp, errors);
     }
 
@@ -468,30 +478,18 @@ Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *
     Bundle *bundle = xcalloc(1, sizeof(Bundle));
     bundle->parent_policy = policy;
 
-    if (policy->bundles == NULL)
-    {
-        policy->bundles = bundle;
-    }
-    else
-    {
-        Bundle *bp = NULL;
-        for (bp = policy->bundles; bp->next; bp = bp->next)
-        {
-        }
-
-        bp->next = bundle;
-    }
+    SequenceAppend(policy->bundles, bundle);
 
     if (strcmp(policy->current_namespace,"default") == 0)
-       {
-       bundle->name = xstrdup(name);
-       }
+    {
+        bundle->name = xstrdup(name);
+    }
     else
-       {
-       char fqname[CF_BUFSIZE];
-       snprintf(fqname,CF_BUFSIZE-1, "%s:%s",policy->current_namespace,name);
-       bundle->name = xstrdup(fqname);
-       }
+    {
+        char fqname[CF_BUFSIZE];
+        snprintf(fqname,CF_BUFSIZE-1, "%s:%s",policy->current_namespace,name);
+        bundle->name = xstrdup(fqname);
+    }
 
     bundle->type = xstrdup(type);
     bundle->namespace = xstrdup(policy->current_namespace);
@@ -695,33 +693,17 @@ static void DeleteSubTypes(SubType *tp)
     free(tp);
 }
 
-/*******************************************************************/
-
-void DeleteBundles(Bundle *bp)
+static void BundleDestroy(Bundle *bundle)
 {
-    if (bp == NULL)
+    if (bundle)
     {
-        return;
-    }
+        free(bundle->name);
+        free(bundle->type);
 
-    if (bp->next != NULL)
-    {
-        DeleteBundles(bp->next);
+        DeleteRlist(bundle->args);
+        DeleteSubTypes(bundle->subtypes);
+        free(bundle);
     }
-
-    if (bp->name != NULL)
-    {
-        free(bp->name);
-    }
-
-    if (bp->type != NULL)
-    {
-        free(bp->type);
-    }
-
-    DeleteRlist(bp->args);
-    DeleteSubTypes(bp->subtypes);
-    free(bp);
 }
 
 /*******************************************************************/
@@ -827,8 +809,10 @@ Bundle *GetBundle(const Policy *policy, const char *name, const char *agent)
 
     // We don't need to check for the namespace here, as it is prefixed to the name already
 
-    for (Bundle *bp = policy->bundles; bp != NULL; bp = bp->next)       /* get schedule */
+    for (size_t i = 0; i < SequenceLength(policy->bundles); i++)
     {
+        Bundle *bp = SequenceAt(policy->bundles, i);
+
         if (strcmp(bp->name, name) == 0)
         {
             if (agent)

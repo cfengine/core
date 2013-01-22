@@ -47,6 +47,9 @@ typedef struct
     void (*ItemDestroy) (void *item);
 } Sequence;
 
+#define SequenceAt(seq, i) seq->data[i]
+#define SequenceLength(seq) (seq->length)
+
 /**
   @brief Create a new Sequence
   @param [in] initial_capacity Size of initial buffer to allocate for item pointers.

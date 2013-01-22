@@ -1269,7 +1269,6 @@ void CompilationReport(Policy *policy, char *fname)
     ReportContext *compilation_report_context = OpenCompilationReportFiles(fname);
 #endif
 
-
     ShowPromises(compilation_report_context, REPORT_OUTPUT_TYPE_TEXT, policy->bundles, policy->bodies);
     ShowPromises(compilation_report_context, REPORT_OUTPUT_TYPE_HTML, policy->bundles, policy->bodies);
 
@@ -1311,7 +1310,6 @@ ReportContext *OpenCompilationReportFiles(const char *fname)
 static void VerifyPromises(Policy *policy, Rlist *bundlesequence,
                            const ReportContext *report_context)
 {
-    Bundle *bp;
     SubType *sp;
     Promise *pp;
     Body *bdp;
@@ -1364,7 +1362,7 @@ static void VerifyPromises(Policy *policy, Rlist *bundlesequence,
         {
         case CF_SCALAR:
 
-            if (!IGNORE_MISSING_BUNDLES && !IsCf3VarString(rp->item) && !IsBundle(policy->bundles, (char *) rp->item))
+            if (!IGNORE_MISSING_BUNDLES && !IsCf3VarString(rp->item) && !IsBundle(SequenceAt(policy->bundles, 0), (char *) rp->item))
             {
                 CfOut(cf_error, "", "Undeclared promise bundle \"%s()\" was referenced in a promise\n", (char *) rp->item);
                 ERRORCOUNT++;
@@ -1375,7 +1373,7 @@ static void VerifyPromises(Policy *policy, Rlist *bundlesequence,
 
             fp = (FnCall *) rp->item;
 
-            if (!IGNORE_MISSING_BUNDLES && !IsCf3VarString(fp->name) && !IsBundle(policy->bundles, fp->name))
+            if (!IGNORE_MISSING_BUNDLES && !IsCf3VarString(fp->name) && !IsBundle(SequenceAt(policy->bundles, 0), fp->name))
             {
                 CfOut(cf_error, "", "Undeclared promise bundle \"%s()\" was referenced in a promise\n", fp->name);
                 ERRORCOUNT++;
@@ -1386,8 +1384,10 @@ static void VerifyPromises(Policy *policy, Rlist *bundlesequence,
 
 /* Now look once through ALL the bundles themselves */
 
-    for (bp = policy->bundles; bp != NULL; bp = bp->next)       /* get schedule */
+    for (size_t i = 0; policy->bundles->length; i++)
     {
+        Bundle *bp = SequenceAt(policy->bundles, i);
+
         scope = bp->name;
         THIS_BUNDLE = bp->name;
 
@@ -1774,13 +1774,14 @@ void WritePID(char *filename)
 
 void HashVariables(Policy *policy, const char *name, const ReportContext *report_context)
 {
-    Bundle *bp;
     SubType *sp;
 
     CfOut(cf_verbose, "", "Initiate variable convergence...\n");
 
-    for (bp = policy->bundles; bp != NULL; bp = bp->next)       /* get schedule */
+    for (size_t i = 0; i < SequenceLength(policy->bundles); i++)
     {
+        Bundle *bp = SequenceAt(policy->bundles, i);
+
         if (name && strcmp(name, bp->name) != 0)
         {
             continue;

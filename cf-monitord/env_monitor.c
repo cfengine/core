@@ -1122,8 +1122,10 @@ static void GatherPromisedMeasures(const Policy *policy, const ReportContext *re
     Promise *pp;
     char *scope;
 
-    for (const Bundle *bp = policy->bundles; bp != NULL; bp = bp->next)       /* get schedule */
+    for (size_t i = 0; i < SequenceLength(policy->bundles); i++)
     {
+        const Bundle *bp = SequenceAt(policy->bundles, i);
+
         scope = bp->name;
         SetNewScope(bp->name);
 

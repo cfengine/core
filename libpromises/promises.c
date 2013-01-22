@@ -408,13 +408,14 @@ Body *IsBody(Body *list, const char *namespace, const char *key)
 
 /*******************************************************************/
 
-Bundle *IsBundle(Bundle *list, const char *key)
+Bundle *IsBundle(Sequence *bundles, const char *key)
 {
-    Bundle *bp;
     char fqname[CF_BUFSIZE];
 
-    for (bp = list; bp != NULL; bp = bp->next)
+    for (size_t i = 0; i < SequenceLength(bundles); i++)
     {
+        Bundle *bp = SequenceAt(bundles, i);
+
         if (strcmp(bp->namespace,"default") == 0)
         {
             if (strncmp(key,"default:",strlen("default:")) == 0)  // CF_NS == ':'

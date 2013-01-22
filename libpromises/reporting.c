@@ -83,8 +83,8 @@ static void ShowRange(const char *s, enum cfdatatype type);
 static void ShowBuiltinFunctions(void);
 static void ShowPromiseInReportText(const ReportContext *context, const char *version, const Promise *pp, int indent);
 static void ShowPromiseInReportHtml(const ReportContext *context, const char *version, const Promise *pp, int indent);
-static void ShowPromisesInReportText(const ReportContext *context, const Bundle *bundles, const Body *bodies);
-static void ShowPromisesInReportHtml(const ReportContext *context, const Bundle *bundles, const Body *bodies);
+static void ShowPromisesInReportText(const ReportContext *context, const Sequence *bundles, const Body *bodies);
+static void ShowPromisesInReportHtml(const ReportContext *context, const Sequence *bundles, const Body *bodies);
 
 /*******************************************************************/
 
@@ -205,7 +205,7 @@ static void ShowControlBodies()
 
 /*******************************************************************/
 
-void ShowPromises(const ReportContext *context, ReportOutputType type, const Bundle *bundles, const Body *bodies)
+void ShowPromises(const ReportContext *context, ReportOutputType type, const Sequence *bundles, const Body *bodies)
 {
     Writer *writer = context->report_writers[type];
     assert(writer);
@@ -233,7 +233,7 @@ void ShowPromises(const ReportContext *context, ReportOutputType type, const Bun
 
 /*******************************************************************/
 
-static void ShowPromisesInReportText(const ReportContext *context, const Bundle *bundles, const Body *bodies)
+static void ShowPromisesInReportText(const ReportContext *context, const Sequence *bundles, const Body *bodies)
 {
     assert(context);
     Writer *writer = context->report_writers[REPORT_OUTPUT_TYPE_TEXT];
@@ -245,8 +245,10 @@ static void ShowPromisesInReportText(const ReportContext *context, const Bundle 
 
     ReportBannerText(writer, "Promises");
 
-    for (const Bundle *bp = bundles; bp != NULL; bp = bp->next)
+    for (size_t i = 0; i < SequenceLength(bundles); i++)
     {
+        Bundle *bp = SequenceAt(bundles, i);
+
         WriterWriteF(writer, "Bundle %s in the context of %s\n\n", bp->name, bp->type);
         WriterWriteF(writer, "   ARGS:\n\n");
 
@@ -283,7 +285,7 @@ static void ShowPromisesInReportText(const ReportContext *context, const Bundle 
     }
 }
 
-static void ShowPromisesInReportHtml(const ReportContext *context, const Bundle *bundles, const Body *bodies)
+static void ShowPromisesInReportHtml(const ReportContext *context, const Sequence *bundles, const Body *bodies)
 {   
     assert(context);
     Writer *writer = context->report_writers[REPORT_OUTPUT_TYPE_HTML];
@@ -314,8 +316,10 @@ static void ShowPromisesInReportHtml(const ReportContext *context, const Bundle 
 
     WriterWriteF(writer, "<p>");
 
-    for (const Bundle *bp = bundles; bp != NULL; bp = bp->next)
+    for (size_t i = 0; i < SequenceLength(bundles); i++)
     {
+        Bundle *bp = SequenceAt(bundles, i);
+
         WriterWriteF(writer, "%s Bundle %s%s%s %s%s%s\n",
                 CFH[cfx_bundle][cfb],
                 CFH[cfx_blocktype][cfb], bp->type, CFH[cfx_blocktype][cfe],
@@ -367,7 +371,7 @@ static void ShowPromisesInReportHtml(const ReportContext *context, const Bundle 
     CfHtmlFooter(writer, FOOTER);
 }
 
-void ShowPromisesInReport(const ReportContext *context, ReportOutputType type, const Bundle *bundles, const Body *bodies)
+void ShowPromisesInReport(const ReportContext *context, ReportOutputType type, const Sequence *bundles, const Body *bodies)
 {
     switch (type)
     {

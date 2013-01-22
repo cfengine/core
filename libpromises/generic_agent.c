@@ -1362,7 +1362,7 @@ static void VerifyPromises(Policy *policy, Rlist *bundlesequence,
         {
         case CF_SCALAR:
 
-            if (!IGNORE_MISSING_BUNDLES && !IsCf3VarString(rp->item) && !IsBundle(SequenceAt(policy->bundles, 0), (char *) rp->item))
+            if (!IGNORE_MISSING_BUNDLES && !IsCf3VarString(rp->item) && !IsBundle(policy->bundles, (char *) rp->item))
             {
                 CfOut(cf_error, "", "Undeclared promise bundle \"%s()\" was referenced in a promise\n", (char *) rp->item);
                 ERRORCOUNT++;
@@ -1373,7 +1373,7 @@ static void VerifyPromises(Policy *policy, Rlist *bundlesequence,
 
             fp = (FnCall *) rp->item;
 
-            if (!IGNORE_MISSING_BUNDLES && !IsCf3VarString(fp->name) && !IsBundle(SequenceAt(policy->bundles, 0), fp->name))
+            if (!IGNORE_MISSING_BUNDLES && !IsCf3VarString(fp->name) && !IsBundle(policy->bundles, fp->name))
             {
                 CfOut(cf_error, "", "Undeclared promise bundle \"%s()\" was referenced in a promise\n", fp->name);
                 ERRORCOUNT++;
@@ -1384,7 +1384,7 @@ static void VerifyPromises(Policy *policy, Rlist *bundlesequence,
 
 /* Now look once through ALL the bundles themselves */
 
-    for (size_t i = 0; policy->bundles->length; i++)
+    for (size_t i = 0; i < SequenceLength(policy->bundles); i++)
     {
         Bundle *bp = SequenceAt(policy->bundles, i);
 

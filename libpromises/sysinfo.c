@@ -2231,13 +2231,12 @@ static void GetCPUInfo()
 
     while (!feof(fp))
     {
-        if (fgets(buf, CF_BUFSIZE, fp) == NULL)
+        if (fgets(buf, CF_BUFSIZE, fp))
         {
-            UnexpectedError("Failed to read line from stream");
-        }
-        if (strncmp(buf, "cpu", 3) == 0)
-        {
-            count++;
+            if (strncmp(buf, "cpu", 3) == 0)
+            {
+                count++;
+            }
         }
     }
 

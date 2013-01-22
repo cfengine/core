@@ -392,342 +392,348 @@ void KeepControlPromises(Policy *policy)
     Rval retval;
     Rlist *rp;
 
-    for (Constraint *cp = ControlBodyConstraints(policy, AGENT_TYPE_AGENT); cp != NULL; cp = cp->next)
+    Seq *constraints = ControlBodyConstraints(policy, AGENT_TYPE_AGENT);
+    if (constraints)
     {
-        if (IsExcluded(cp->classes, NULL))
+        for (size_t i = 0; i < SeqLength(constraints); i++)
         {
-            continue;
-        }
+            Constraint *cp = SeqAt(constraints, i);
 
-        if (GetVariable("control_common", cp->lval, &retval) != cf_notype)
-        {
-            /* Already handled in generic_agent */
-            continue;
-        }
-
-        if (GetVariable("control_agent", cp->lval, &retval) == cf_notype)
-        {
-            CfOut(cf_error, "", "Unknown lval %s in agent control body", cp->lval);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_maxconnections].lval) == 0)
-        {
-            CFA_MAXTHREADS = (int) Str2Int(retval.item);
-            CfOut(cf_verbose, "", "SET maxconnections = %d\n", CFA_MAXTHREADS);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_checksum_alert_time].lval) == 0)
-        {
-            CF_PERSISTENCE = (int) Str2Int(retval.item);
-            CfOut(cf_verbose, "", "SET checksum_alert_time = %d\n", CF_PERSISTENCE);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_agentfacility].lval) == 0)
-        {
-            SetFacility(retval.item);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_agentaccess].lval) == 0)
-        {
-            ACCESSLIST = (Rlist *) retval.item;
-            CheckAgentAccess(ACCESSLIST);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_refresh_processes].lval) == 0)
-        {
-            Rlist *rp;
-
-            if (VERBOSE)
+            if (IsExcluded(cp->classes, NULL))
             {
-                printf("%s> SET refresh_processes when starting: ", VPREFIX);
+                continue;
+            }
+
+            if (GetVariable("control_common", cp->lval, &retval) != cf_notype)
+            {
+                /* Already handled in generic_agent */
+                continue;
+            }
+
+            if (GetVariable("control_agent", cp->lval, &retval) == cf_notype)
+            {
+                CfOut(cf_error, "", "Unknown lval %s in agent control body", cp->lval);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_maxconnections].lval) == 0)
+            {
+                CFA_MAXTHREADS = (int) Str2Int(retval.item);
+                CfOut(cf_verbose, "", "SET maxconnections = %d\n", CFA_MAXTHREADS);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_checksum_alert_time].lval) == 0)
+            {
+                CF_PERSISTENCE = (int) Str2Int(retval.item);
+                CfOut(cf_verbose, "", "SET checksum_alert_time = %d\n", CF_PERSISTENCE);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_agentfacility].lval) == 0)
+            {
+                SetFacility(retval.item);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_agentaccess].lval) == 0)
+            {
+                ACCESSLIST = (Rlist *) retval.item;
+                CheckAgentAccess(ACCESSLIST);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_refresh_processes].lval) == 0)
+            {
+                Rlist *rp;
+
+                if (VERBOSE)
+                {
+                    printf("%s> SET refresh_processes when starting: ", VPREFIX);
+
+                    for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
+                    {
+                        printf(" %s", (char *) rp->item);
+                        PrependItem(&PROCESSREFRESH, rp->item, NULL);
+                    }
+
+                    printf("\n");
+                }
+
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_abortclasses].lval) == 0)
+            {
+                Rlist *rp;
+
+                CfOut(cf_verbose, "", "SET Abort classes from ...\n");
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
-                    printf(" %s", (char *) rp->item);
-                    PrependItem(&PROCESSREFRESH, rp->item, NULL);
+                    char name[CF_MAXVARSIZE] = "";
+
+                    strncpy(name, rp->item, CF_MAXVARSIZE - 1);
+
+                    AddAbortClass(name, cp->classes);
                 }
 
-                printf("\n");
+                continue;
             }
 
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_abortclasses].lval) == 0)
-        {
-            Rlist *rp;
-
-            CfOut(cf_verbose, "", "SET Abort classes from ...\n");
-
-            for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_abortbundleclasses].lval) == 0)
             {
-                char name[CF_MAXVARSIZE] = "";
+                Rlist *rp;
 
-                strncpy(name, rp->item, CF_MAXVARSIZE - 1);
+                CfOut(cf_verbose, "", "SET Abort bundle classes from ...\n");
 
-                AddAbortClass(name, cp->classes);
-            }
-
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_abortbundleclasses].lval) == 0)
-        {
-            Rlist *rp;
-
-            CfOut(cf_verbose, "", "SET Abort bundle classes from ...\n");
-
-            for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
-            {
-                char name[CF_MAXVARSIZE] = "";
-
-                strncpy(name, rp->item, CF_MAXVARSIZE - 1);
-
-                if (!IsItemIn(ABORTBUNDLEHEAP, name))
+                for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
-                    AppendItem(&ABORTBUNDLEHEAP, name, cp->classes);
+                    char name[CF_MAXVARSIZE] = "";
+
+                    strncpy(name, rp->item, CF_MAXVARSIZE - 1);
+
+                    if (!IsItemIn(ABORTBUNDLEHEAP, name))
+                    {
+                        AppendItem(&ABORTBUNDLEHEAP, name, cp->classes);
+                    }
                 }
+
+                continue;
             }
 
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_addclasses].lval) == 0)
-        {
-            Rlist *rp;
-
-            CfOut(cf_verbose, "", "-> Add classes ...\n");
-
-            for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_addclasses].lval) == 0)
             {
-                CfOut(cf_verbose, "", " -> ... %s\n", ScalarValue(rp));
-                NewClass(rp->item, NULL);
-            }
+                Rlist *rp;
 
-            continue;
-        }
+                CfOut(cf_verbose, "", "-> Add classes ...\n");
 
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_auditing].lval) == 0)
-        {
-            CfOut(cf_verbose, "", "This option does nothing and is retained for compatibility reasons");
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_alwaysvalidate].lval) == 0)
-        {
-            ALWAYS_VALIDATE = GetBoolean(retval.item);
-            CfOut(cf_verbose, "", "SET alwaysvalidate = %d\n", ALWAYS_VALIDATE);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_allclassesreport].lval) == 0)
-        {
-            ALLCLASSESREPORT = GetBoolean(retval.item);
-            CfOut(cf_verbose, "", "SET allclassesreport = %d\n", ALLCLASSESREPORT);
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_secureinput].lval) == 0)
-        {
-            CFPARANOID = GetBoolean(retval.item);
-            CfOut(cf_verbose, "", "SET secure input = %d\n", CFPARANOID);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_binarypaddingchar].lval) == 0)
-        {
-            PADCHAR = *(char *) retval.item;
-            CfOut(cf_verbose, "", "SET binarypaddingchar = %c\n", PADCHAR);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_bindtointerface].lval) == 0)
-        {
-            strncpy(BINDINTERFACE, retval.item, CF_BUFSIZE - 1);
-            CfOut(cf_verbose, "", "SET bindtointerface = %s\n", BINDINTERFACE);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_hashupdates].lval) == 0)
-        {
-            bool enabled = GetBoolean(retval.item);
-
-            SetChecksumUpdates(enabled);
-            CfOut(cf_verbose, "", "SET ChecksumUpdates %d\n", enabled);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_exclamation].lval) == 0)
-        {
-            EXCLAIM = GetBoolean(retval.item);
-            CfOut(cf_verbose, "", "SET exclamation %d\n", EXCLAIM);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_childlibpath].lval) == 0)
-        {
-            char output[CF_BUFSIZE];
-
-            snprintf(output, CF_BUFSIZE, "LD_LIBRARY_PATH=%s", (char *) retval.item);
-            if (putenv(xstrdup(output)) == 0)
-            {
-                CfOut(cf_verbose, "", "Setting %s\n", output);
-            }
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_defaultcopytype].lval) == 0)
-        {
-            DEFAULT_COPYTYPE = (char *) retval.item;
-            CfOut(cf_verbose, "", "SET defaultcopytype = %s\n", DEFAULT_COPYTYPE);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_fsinglecopy].lval) == 0)
-        {
-            SINGLE_COPY_LIST = (Rlist *) retval.item;
-            CfOut(cf_verbose, "", "SET file single copy list\n");
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_fautodefine].lval) == 0)
-        {
-            AUTO_DEFINE_LIST = (Rlist *) retval.item;
-            CfOut(cf_verbose, "", "SET file auto define list\n");
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_dryrun].lval) == 0)
-        {
-            DONTDO = GetBoolean(retval.item);
-            CfOut(cf_verbose, "", "SET dryrun = %c\n", DONTDO);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_inform].lval) == 0)
-        {
-            INFORM = GetBoolean(retval.item);
-            CfOut(cf_verbose, "", "SET inform = %c\n", INFORM);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_verbose].lval) == 0)
-        {
-            VERBOSE = GetBoolean(retval.item);
-            CfOut(cf_verbose, "", "SET inform = %c\n", VERBOSE);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_repository].lval) == 0)
-        {
-            SetRepositoryLocation(retval.item);
-            CfOut(cf_verbose, "", "SET repository = %s\n", ScalarRvalValue(retval));
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_skipidentify].lval) == 0)
-        {
-            bool enabled = GetBoolean(retval.item);
-
-            SetSkipIdentify(enabled);
-            CfOut(cf_verbose, "", "SET skipidentify = %d\n", (int) enabled);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_suspiciousnames].lval) == 0)
-        {
-
-            for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
-            {
-                AddFilenameToListOfSuspicious(ScalarValue(rp));
-                CfOut(cf_verbose, "", "-> Considering %s as suspicious file", ScalarValue(rp));
-            }
-
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_repchar].lval) == 0)
-        {
-            char c = *(char *) retval.item;
-
-            SetRepositoryChar(c);
-            CfOut(cf_verbose, "", "SET repchar = %c\n", c);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_mountfilesystems].lval) == 0)
-        {
-            CF_MOUNTALL = GetBoolean(retval.item);
-            CfOut(cf_verbose, "", "SET mountfilesystems = %d\n", CF_MOUNTALL);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_editfilesize].lval) == 0)
-        {
-            EDITFILESIZE = Str2Int(retval.item);
-            CfOut(cf_verbose, "", "SET EDITFILESIZE = %d\n", EDITFILESIZE);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_ifelapsed].lval) == 0)
-        {
-            VIFELAPSED = Str2Int(retval.item);
-            CfOut(cf_verbose, "", "SET ifelapsed = %d\n", VIFELAPSED);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_expireafter].lval) == 0)
-        {
-            VEXPIREAFTER = Str2Int(retval.item);
-            CfOut(cf_verbose, "", "SET ifelapsed = %d\n", VEXPIREAFTER);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_timeout].lval) == 0)
-        {
-            CONNTIMEOUT = Str2Int(retval.item);
-            CfOut(cf_verbose, "", "SET timeout = %jd\n", (intmax_t) CONNTIMEOUT);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_max_children].lval) == 0)
-        {
-            CFA_BACKGROUND_LIMIT = Str2Int(retval.item);
-            CfOut(cf_verbose, "", "SET MAX_CHILDREN = %d\n", CFA_BACKGROUND_LIMIT);
-            if (CFA_BACKGROUND_LIMIT > 10)
-            {
-                CfOut(cf_error, "", "Silly value for max_children in agent control promise (%d > 10)",
-                      CFA_BACKGROUND_LIMIT);
-                CFA_BACKGROUND_LIMIT = 1;
-            }
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_syslog].lval) == 0)
-        {
-            CfOut(cf_verbose, "", "SET syslog = %d\n", GetBoolean(retval.item));
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_environment].lval) == 0)
-        {
-            Rlist *rp;
-
-            CfOut(cf_verbose, "", "SET environment variables from ...\n");
-
-            for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
-            {
-                if (putenv(rp->item) != 0)
+                for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
-                    CfOut(cf_error, "putenv", "Failed to set environment variable %s", ScalarValue(rp));
+                    CfOut(cf_verbose, "", " -> ... %s\n", ScalarValue(rp));
+                    NewClass(rp->item, NULL);
                 }
+
+                continue;
             }
 
-            continue;
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_auditing].lval) == 0)
+            {
+                CfOut(cf_verbose, "", "This option does nothing and is retained for compatibility reasons");
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_alwaysvalidate].lval) == 0)
+            {
+                ALWAYS_VALIDATE = GetBoolean(retval.item);
+                CfOut(cf_verbose, "", "SET alwaysvalidate = %d\n", ALWAYS_VALIDATE);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_allclassesreport].lval) == 0)
+            {
+                ALLCLASSESREPORT = GetBoolean(retval.item);
+                CfOut(cf_verbose, "", "SET allclassesreport = %d\n", ALLCLASSESREPORT);
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_secureinput].lval) == 0)
+            {
+                CFPARANOID = GetBoolean(retval.item);
+                CfOut(cf_verbose, "", "SET secure input = %d\n", CFPARANOID);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_binarypaddingchar].lval) == 0)
+            {
+                PADCHAR = *(char *) retval.item;
+                CfOut(cf_verbose, "", "SET binarypaddingchar = %c\n", PADCHAR);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_bindtointerface].lval) == 0)
+            {
+                strncpy(BINDINTERFACE, retval.item, CF_BUFSIZE - 1);
+                CfOut(cf_verbose, "", "SET bindtointerface = %s\n", BINDINTERFACE);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_hashupdates].lval) == 0)
+            {
+                bool enabled = GetBoolean(retval.item);
+
+                SetChecksumUpdates(enabled);
+                CfOut(cf_verbose, "", "SET ChecksumUpdates %d\n", enabled);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_exclamation].lval) == 0)
+            {
+                EXCLAIM = GetBoolean(retval.item);
+                CfOut(cf_verbose, "", "SET exclamation %d\n", EXCLAIM);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_childlibpath].lval) == 0)
+            {
+                char output[CF_BUFSIZE];
+
+                snprintf(output, CF_BUFSIZE, "LD_LIBRARY_PATH=%s", (char *) retval.item);
+                if (putenv(xstrdup(output)) == 0)
+                {
+                    CfOut(cf_verbose, "", "Setting %s\n", output);
+                }
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_defaultcopytype].lval) == 0)
+            {
+                DEFAULT_COPYTYPE = (char *) retval.item;
+                CfOut(cf_verbose, "", "SET defaultcopytype = %s\n", DEFAULT_COPYTYPE);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_fsinglecopy].lval) == 0)
+            {
+                SINGLE_COPY_LIST = (Rlist *) retval.item;
+                CfOut(cf_verbose, "", "SET file single copy list\n");
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_fautodefine].lval) == 0)
+            {
+                AUTO_DEFINE_LIST = (Rlist *) retval.item;
+                CfOut(cf_verbose, "", "SET file auto define list\n");
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_dryrun].lval) == 0)
+            {
+                DONTDO = GetBoolean(retval.item);
+                CfOut(cf_verbose, "", "SET dryrun = %c\n", DONTDO);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_inform].lval) == 0)
+            {
+                INFORM = GetBoolean(retval.item);
+                CfOut(cf_verbose, "", "SET inform = %c\n", INFORM);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_verbose].lval) == 0)
+            {
+                VERBOSE = GetBoolean(retval.item);
+                CfOut(cf_verbose, "", "SET inform = %c\n", VERBOSE);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_repository].lval) == 0)
+            {
+                SetRepositoryLocation(retval.item);
+                CfOut(cf_verbose, "", "SET repository = %s\n", ScalarRvalValue(retval));
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_skipidentify].lval) == 0)
+            {
+                bool enabled = GetBoolean(retval.item);
+
+                SetSkipIdentify(enabled);
+                CfOut(cf_verbose, "", "SET skipidentify = %d\n", (int) enabled);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_suspiciousnames].lval) == 0)
+            {
+
+                for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
+                {
+                    AddFilenameToListOfSuspicious(ScalarValue(rp));
+                    CfOut(cf_verbose, "", "-> Considering %s as suspicious file", ScalarValue(rp));
+                }
+
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_repchar].lval) == 0)
+            {
+                char c = *(char *) retval.item;
+
+                SetRepositoryChar(c);
+                CfOut(cf_verbose, "", "SET repchar = %c\n", c);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_mountfilesystems].lval) == 0)
+            {
+                CF_MOUNTALL = GetBoolean(retval.item);
+                CfOut(cf_verbose, "", "SET mountfilesystems = %d\n", CF_MOUNTALL);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_editfilesize].lval) == 0)
+            {
+                EDITFILESIZE = Str2Int(retval.item);
+                CfOut(cf_verbose, "", "SET EDITFILESIZE = %d\n", EDITFILESIZE);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_ifelapsed].lval) == 0)
+            {
+                VIFELAPSED = Str2Int(retval.item);
+                CfOut(cf_verbose, "", "SET ifelapsed = %d\n", VIFELAPSED);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_expireafter].lval) == 0)
+            {
+                VEXPIREAFTER = Str2Int(retval.item);
+                CfOut(cf_verbose, "", "SET ifelapsed = %d\n", VEXPIREAFTER);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_timeout].lval) == 0)
+            {
+                CONNTIMEOUT = Str2Int(retval.item);
+                CfOut(cf_verbose, "", "SET timeout = %jd\n", (intmax_t) CONNTIMEOUT);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_max_children].lval) == 0)
+            {
+                CFA_BACKGROUND_LIMIT = Str2Int(retval.item);
+                CfOut(cf_verbose, "", "SET MAX_CHILDREN = %d\n", CFA_BACKGROUND_LIMIT);
+                if (CFA_BACKGROUND_LIMIT > 10)
+                {
+                    CfOut(cf_error, "", "Silly value for max_children in agent control promise (%d > 10)",
+                          CFA_BACKGROUND_LIMIT);
+                    CFA_BACKGROUND_LIMIT = 1;
+                }
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_syslog].lval) == 0)
+            {
+                CfOut(cf_verbose, "", "SET syslog = %d\n", GetBoolean(retval.item));
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_environment].lval) == 0)
+            {
+                Rlist *rp;
+
+                CfOut(cf_verbose, "", "SET environment variables from ...\n");
+
+                for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
+                {
+                    if (putenv(rp->item) != 0)
+                    {
+                        CfOut(cf_error, "putenv", "Failed to set environment variable %s", ScalarValue(rp));
+                    }
+                }
+
+                continue;
+            }
         }
     }
 

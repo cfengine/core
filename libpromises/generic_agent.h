@@ -48,7 +48,7 @@ void CompilationReport(Policy *policy, char *fname);
 void HashVariables(Policy *policy, const char *name, const ReportContext *report_context);
 void HashControls(const Policy *policy);
 void CloseLog(void);
-Constraint *ControlBodyConstraints(const Policy *policy, AgentType agent);
+Seq *ControlBodyConstraints(const Policy *policy, AgentType agent);
 void SetFacility(const char *retval);
 Bundle *GetBundle(const Policy *policy, const char *name, const char *agent);
 SubType *GetSubTypeForBundle(char *type, Bundle *bp);

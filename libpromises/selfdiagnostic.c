@@ -216,7 +216,6 @@ void TestExpandVariables(const ReportContext *report_context)
 {
     Promise pp = { 0 }, *pcopy;
     Rlist *args, *listvars = NULL, *scalarvars = NULL;
-    Constraint *cp;
     FnCall *fp;
 
     strcpy(CFWORKDIR, GetWorkDir());
@@ -264,8 +263,9 @@ void TestExpandVariables(const ReportContext *report_context)
         MapIteratorsFromRval("diagnostic", &scalarvars, &listvars, pp.promisee, NULL);
     }
 
-    for (cp = pcopy->conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(pcopy->conlist); i++)
     {
+        Constraint *cp = SeqAt(pcopy->conlist, i);
         MapIteratorsFromRval("diagnostic", &scalarvars, &listvars, cp->rval, NULL);
     }
 

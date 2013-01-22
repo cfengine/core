@@ -140,8 +140,11 @@ static bool PolicyCheckPromiseVars(const Promise *pp, Seq *errors)
     // ensure variables are declared with only one type.
     {
         char *data_type = NULL;
-        for (const Constraint *cp = pp->conlist; cp; cp = cp->next)
+
+        for (size_t i = 0; i < SeqLength(pp->conlist); i++)
         {
+            Constraint *cp = SeqAt(pp->conlist, i);
+
             if (IsDataType(cp->lval))
             {
                 if (data_type != NULL)
@@ -165,8 +168,10 @@ static bool PolicyCheckPromiseMethods(const Promise *pp, Seq *errors)
 {
     bool success = true;
 
-    for (const Constraint *cp = pp->conlist; cp; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
+        const Constraint *cp = SeqAt(pp->conlist, i);
+
         // ensure: if call and callee are resolved, then they have matching arity
         if (StringSafeEqual(cp->lval, "usebundle"))
         {
@@ -539,6 +544,7 @@ Body *AppendBody(Policy *policy, const char *name, const char *type, Rlist *args
     body->namespace = xstrdup(policy->current_namespace);
     body->args = CopyRlist(args);
     body->source_path = SafeStringDuplicate(source_path);
+    body->conlist = SeqNew(10, ConstraintDestroy);
 
     return body;
 }
@@ -655,6 +661,7 @@ Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *class
     pp->classes = spe;
     pp->donep = &(pp->done);
     pp->has_subbundles = false;
+    pp->conlist = SeqNew(10, ConstraintDestroy);
     pp->org_pp = NULL;
 
     pp->bundletype = xstrdup(bundletype);       /* cache agent,common,server etc */
@@ -709,7 +716,7 @@ static void BodyDestroy(Body *body)
         free(body->type);
 
         DeleteRlist(body->args);
-        DeleteConstraintList(body->conlist);
+        SeqDestroy(body->conlist);
         free(body);
     }
 }
@@ -744,7 +751,7 @@ void DeletePromise(Promise *pp)
 
 // ref and agentsubtype are only references, do not free
 
-    DeleteConstraintList(pp->conlist);
+    SeqDestroy(pp->conlist);
 
     free((char *) pp);
     ThreadUnlock(cft_policy);

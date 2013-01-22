@@ -1086,6 +1086,10 @@ struct Bundle_
 
 typedef struct Constraint_ Constraint;
 
+// TODO: remove eventually, all policy DOM objects should probably
+// just go into policy.h
+#include "sequence.h"
+
 struct Body_
 {
     Policy *parent_policy;
@@ -1094,7 +1098,8 @@ struct Body_
     char *name;
     char *namespace;
     Rlist *args;
-    Constraint *conlist;
+
+    Seq *conlist;
 
     char *source_path;
     SourceOffset offset;
@@ -1141,8 +1146,9 @@ struct Promise_
     Rval promisee;
     char *bundle;
     Audit *audit;
-    Constraint *conlist;
     Promise *next;
+
+    Seq *conlist;
 
     /* Runtime bus for private flags and work space */
 

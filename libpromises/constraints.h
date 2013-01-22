@@ -44,18 +44,18 @@ struct Constraint_
     Audit *audit;
 
     SourceOffset offset;
-    Constraint *next;
 };
+
+void ConstraintDestroy(Constraint *cp);
 
 Constraint *ConstraintAppendToPromise(Promise *promise, const char *lval, Rval rval, const char *classes, bool references_body);
 Constraint *ConstraintAppendToBody(Body *body, const char *lval, Rval rval, const char *classes, bool references_body);
 
 Constraint *GetConstraint(const Promise *promise, const char *lval);
-void DeleteConstraintList(Constraint *conlist);
-void EditScalarConstraint(Constraint *conlist, const char *lval, const char *rval);
+void EditScalarConstraint(Seq *conlist, const char *lval, const char *rval);
 void *GetConstraintValue(const char *lval, const Promise *promise, char type);
 int GetBooleanConstraint(const char *lval, const Promise *list);
-int GetRawBooleanConstraint(const char *lval, const Constraint *list);
+int GetRawBooleanConstraint(const char *lval, const Seq *constraints);
 int GetIntConstraint(const char *lval, const Promise *list);
 double GetRealConstraint(const char *lval, const Promise *list);
 mode_t GetOctalConstraint(const char *lval, const Promise *list);

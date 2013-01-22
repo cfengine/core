@@ -581,135 +581,140 @@ static void ThisAgentInit(void)
 
 static void KeepReportsControlPromises(Policy *policy)
 {
-    Constraint *cp;
     Rlist *rp;
     Rval retval;
 
-    for (cp = ControlBodyConstraints(policy, AGENT_TYPE_REPORT); cp != NULL; cp = cp->next)
+    Seq *constraints = ControlBodyConstraints(policy, AGENT_TYPE_REPORT);
+    if (constraints)
     {
-        if (IsExcluded(cp->classes, NULL))
+        for (size_t i = 0; i < SeqLength(constraints); i++)
         {
-            continue;
-        }
+            Constraint *cp = SeqAt(constraints, i);
 
-        if (GetVariable("control_reporter", cp->lval, &retval) == cf_notype)
-        {
-            CfOut(cf_error, "", "Unknown lval %s in report agent control body", cp->lval);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFRE_CONTROLBODY[cfre_builddir].lval) == 0)
-        {
-            strncpy(OUTPUTDIR, retval.item, CF_BUFSIZE);
-            CfOut(cf_verbose, "", "SET outputdir = %s\n", OUTPUTDIR);
-
-            if (cf_mkdir(OUTPUTDIR, 0755) == -1)
+            if (IsExcluded(cp->classes, NULL))
             {
-                CfOut(cf_verbose, "", "Writing to existing directory\n");
+                continue;
             }
 
-            if (chdir(OUTPUTDIR))
+            if (GetVariable("control_reporter", cp->lval, &retval) == cf_notype)
             {
-                CfOut(cf_error, "chdir", "Could not set the working directory to %s", OUTPUTDIR);
-                exit(0);
+                CfOut(cf_error, "", "Unknown lval %s in report agent control body", cp->lval);
+                continue;
             }
 
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFRE_CONTROLBODY[cfre_autoscale].lval) == 0)
-        {
-            NOSCALING = !GetBoolean(retval.item);
-            CfOut(cf_verbose, "", "SET autoscale = %d\n", NOSCALING);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFRE_CONTROLBODY[cfre_html_embed].lval) == 0)
-        {
-            EMBEDDED = GetBoolean(retval.item);
-            CfOut(cf_verbose, "", "SET html_embedding = %d\n", EMBEDDED);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFRE_CONTROLBODY[cfre_timestamps].lval) == 0)
-        {
-            TIMESTAMPS = GetBoolean(retval.item);
-            CfOut(cf_verbose, "", "SET timestamps = %d\n", TIMESTAMPS);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFRE_CONTROLBODY[cfre_errorbars].lval) == 0)
-        {
-            ERRORBARS = GetBoolean(retval.item);
-            CfOut(cf_verbose, "", "SET errorbars = %d\n", ERRORBARS);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFRE_CONTROLBODY[cfre_query_engine].lval) == 0)
-        {
-            strncpy(WEBDRIVER, retval.item, CF_MAXVARSIZE);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFRE_CONTROLBODY[cfre_aggregation_point].lval) == 0)
-        {
-            /* Ignore for backward compatibility */
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFRE_CONTROLBODY[cfre_htmlbanner].lval) == 0)
-        {
-            strncpy(BANNER, retval.item, CF_BUFSIZE - 1);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFRE_CONTROLBODY[cfre_htmlfooter].lval) == 0)
-        {
-            strncpy(FOOTER, retval.item, CF_BUFSIZE - 1);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFRE_CONTROLBODY[cfre_report_output].lval) == 0)
-        {
-            if (strcmp("html", retval.item) == 0)
+            if (strcmp(cp->lval, CFRE_CONTROLBODY[cfre_builddir].lval) == 0)
             {
-                HTML = true;
-            }
-            else if (strcmp("xml", retval.item) == 0)
-            {
-                XML = true;
-            }
-            else if (strcmp("csv", retval.item) == 0)
-            {
-                CSV = true;
-            }
-            continue;
-        }
+                strncpy(OUTPUTDIR, retval.item, CF_BUFSIZE);
+                CfOut(cf_verbose, "", "SET outputdir = %s\n", OUTPUTDIR);
 
-        if (strcmp(cp->lval, CFRE_CONTROLBODY[cfre_stylesheet].lval) == 0)
-        {
-            strncpy(STYLESHEET, retval.item, CF_MAXVARSIZE);
-            continue;
-        }
+                if (cf_mkdir(OUTPUTDIR, 0755) == -1)
+                {
+                    CfOut(cf_verbose, "", "Writing to existing directory\n");
+                }
 
-        if (strcmp(cp->lval, CFRE_CONTROLBODY[cfre_reports].lval) == 0)
-        {
-            for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
-            {
-                IdempPrependRScalar(&REPORTS, rp->item, CF_SCALAR);
-                CfOut(cf_inform, "", "Adding %s to the reports...\n", ScalarValue(rp));
-            }
-            continue;
-        }
+                if (chdir(OUTPUTDIR))
+                {
+                    CfOut(cf_error, "chdir", "Could not set the working directory to %s", OUTPUTDIR);
+                    exit(0);
+                }
 
-        if (strcmp(cp->lval, CFRE_CONTROLBODY[cfre_csv].lval) == 0)
-        {
-            for (rp = ListValue(retval.item); rp != NULL; rp = rp->next)
-            {
-                IdempPrependRScalar(&CSVLIST, rp->item, CF_SCALAR);
-                CfOut(cf_inform, "", "Adding %s to the csv2xml list...\n", ScalarValue(rp));
+                continue;
             }
-            continue;
+
+            if (strcmp(cp->lval, CFRE_CONTROLBODY[cfre_autoscale].lval) == 0)
+            {
+                NOSCALING = !GetBoolean(retval.item);
+                CfOut(cf_verbose, "", "SET autoscale = %d\n", NOSCALING);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFRE_CONTROLBODY[cfre_html_embed].lval) == 0)
+            {
+                EMBEDDED = GetBoolean(retval.item);
+                CfOut(cf_verbose, "", "SET html_embedding = %d\n", EMBEDDED);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFRE_CONTROLBODY[cfre_timestamps].lval) == 0)
+            {
+                TIMESTAMPS = GetBoolean(retval.item);
+                CfOut(cf_verbose, "", "SET timestamps = %d\n", TIMESTAMPS);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFRE_CONTROLBODY[cfre_errorbars].lval) == 0)
+            {
+                ERRORBARS = GetBoolean(retval.item);
+                CfOut(cf_verbose, "", "SET errorbars = %d\n", ERRORBARS);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFRE_CONTROLBODY[cfre_query_engine].lval) == 0)
+            {
+                strncpy(WEBDRIVER, retval.item, CF_MAXVARSIZE);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFRE_CONTROLBODY[cfre_aggregation_point].lval) == 0)
+            {
+                /* Ignore for backward compatibility */
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFRE_CONTROLBODY[cfre_htmlbanner].lval) == 0)
+            {
+                strncpy(BANNER, retval.item, CF_BUFSIZE - 1);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFRE_CONTROLBODY[cfre_htmlfooter].lval) == 0)
+            {
+                strncpy(FOOTER, retval.item, CF_BUFSIZE - 1);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFRE_CONTROLBODY[cfre_report_output].lval) == 0)
+            {
+                if (strcmp("html", retval.item) == 0)
+                {
+                    HTML = true;
+                }
+                else if (strcmp("xml", retval.item) == 0)
+                {
+                    XML = true;
+                }
+                else if (strcmp("csv", retval.item) == 0)
+                {
+                    CSV = true;
+                }
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFRE_CONTROLBODY[cfre_stylesheet].lval) == 0)
+            {
+                strncpy(STYLESHEET, retval.item, CF_MAXVARSIZE);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFRE_CONTROLBODY[cfre_reports].lval) == 0)
+            {
+                for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
+                {
+                    IdempPrependRScalar(&REPORTS, rp->item, CF_SCALAR);
+                    CfOut(cf_inform, "", "Adding %s to the reports...\n", ScalarValue(rp));
+                }
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFRE_CONTROLBODY[cfre_csv].lval) == 0)
+            {
+                for (rp = ListValue(retval.item); rp != NULL; rp = rp->next)
+                {
+                    IdempPrependRScalar(&CSVLIST, rp->item, CF_SCALAR);
+                    CfOut(cf_inform, "", "Adding %s to the csv2xml list...\n", ScalarValue(rp));
+                }
+                continue;
+            }
         }
     }
 

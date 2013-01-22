@@ -120,7 +120,6 @@ void ExpandPromise(AgentType agent, const char *scopeid, Promise *pp, void *fnpt
                    const ReportContext *report_context)
 {
     Rlist *listvars = NULL, *scalarvars = NULL;
-    Constraint *cp;
     Promise *pcopy;
 
     CfDebug("****************************************************\n");
@@ -146,8 +145,9 @@ void ExpandPromise(AgentType agent, const char *scopeid, Promise *pp, void *fnpt
         MapIteratorsFromRval(scopeid, &scalarvars, &listvars, pp->promisee, pp);
     }
 
-    for (cp = pcopy->conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(pcopy->conlist); i++)
     {
+        Constraint *cp = SeqAt(pcopy->conlist, i);
         MapIteratorsFromRval(scopeid, &scalarvars, &listvars, cp->rval, pp);
     }
 
@@ -1083,7 +1083,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
 {
     Constraint *cp, *cp_save = NULL;
     Attributes a = { {0} };
-    int i = 0, ok_redefine = false, drop_undefined = false;
+    int num_values = 0, ok_redefine = false, drop_undefined = false;
     Rlist *rp;
     Rval retval;
     Rval rval = { NULL, 'x' };  /* FIXME: why this needs to be initialized? */
@@ -1098,8 +1098,10 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
         return;
     }
 
-    for (cp = pp->conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
+        Constraint *cp = SeqAt(pp->conlist, i);
+
         if (strcmp(cp->lval, "comment") == 0)
         {
             continue;
@@ -1177,7 +1179,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
         }
         else if (IsDataType(cp->lval))
         {
-            i++;
+            num_values++;
             rval.item = cp->rval.item;
             cp_save = cp;
         }
@@ -1192,9 +1194,9 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
         return;
     }
 
-    if (i > 2)
+    if (num_values > 2)
     {
-        CfOut(cf_error, "", "Variable \"%s\" breaks its own promise with multiple values (code %d)", pp->promiser, i);
+        CfOut(cf_error, "", "Variable \"%s\" breaks its own promise with multiple values (code %d)", pp->promiser, num_values);
         PromiseRef(cf_error, pp);
         return;
     }
@@ -1511,9 +1513,7 @@ static int CompareRlist(Rlist *list1, Rlist *list2)
 /*******************************************************************/
 
 static void CheckRecursion(const ReportContext *report_context, Promise *pp)
-
 {
-    Constraint *cp;
     char *type;
     char *scope;
     Bundle *bp;
@@ -1528,8 +1528,10 @@ static void CheckRecursion(const ReportContext *report_context, Promise *pp)
        ParseServices(report_context, pp);
        }
 
-    for (cp = pp->conlist; cp != NULL; cp = cp->next)
-    {        
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
+    {
+        Constraint *cp = SeqAt(pp->conlist, i);
+
         if (strcmp("usebundle", cp->lval) == 0)
         {
             type = "agent";

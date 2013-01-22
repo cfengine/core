@@ -450,8 +450,10 @@ static void ShowPromiseInReportText(const ReportContext *context, const char *ve
                 pp->classes);
     }
 
-    for (const Constraint *cp = pp->conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
+        const Constraint *cp = SeqAt(pp->conlist, i);
+
         IndentText(writer, indent + 3);
         WriterWriteF(writer, "%10s => ", cp->lval);
 
@@ -551,8 +553,10 @@ static void ShowPromiseInReportHtml(const ReportContext *context, const char *ve
                 CFH[cfx_object][cfb], pp->promiser, CFH[cfx_object][cfe], pp->bundletype, pp->agentsubtype);
     }
 
-    for (const Constraint *cp = pp->conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
+        const Constraint *cp = SeqAt(pp->conlist, i);
+
         WriterWriteF(writer, "%s%s%s => ", CFH[cfx_lval][cfb], cp->lval, CFH[cfx_lval][cfe]);
 
         Policy *policy = PolicyFromPromise(pp);
@@ -819,8 +823,10 @@ static void ShowBodyText(Writer *writer, const Body *body, int indent)
     IndentText(writer, indent);
     WriterWriteF(writer, "{\n");
 
-    for (const Constraint *cp = body->conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(body->conlist); i++)
     {
+        const Constraint *cp = SeqAt(body->conlist, i);
+
         IndentText(writer, indent);
         WriterWriteF(writer, "%s => ", cp->lval);
         RvalPrint(writer, cp->rval);        /* literal */
@@ -867,8 +873,10 @@ static void ShowBodyHtml(Writer *writer, const Body *body, int indent)
         WriterWriteF(writer, ")");
     }
 
-    for (const Constraint *cp = body->conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(body->conlist); i++)
     {
+        const Constraint *cp = SeqAt(body->conlist, i);
+
         WriterWriteF(writer, "%s.....%s%s => ", CFH[cfx_lval][cfb], cp->lval, CFH[cfx_lval][cfe]);
 
         WriterWriteF(writer, "\'%s", CFH[cfx_rval][cfb]);

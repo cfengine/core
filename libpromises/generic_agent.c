@@ -69,7 +69,7 @@ static void CheckWorkingDirectories(const ReportContext *report_context);
 static void Cf3ParseFile(Policy *policy, const char *filename, const char *input_file, bool check_not_writable_by_others);
 static void Cf3ParseFiles(Policy *policy, const char *input_file, bool check_not_writable_by_others, const ReportContext *report_context);
 static bool MissingInputFile(const char *input_file);
-static void CheckControlPromises(char *scope, char *agent, Constraint *controllist);
+static void CheckControlPromises(char *scope, char *agent, Seq *controllist);
 static void CheckVariablePromises(char *scope, Promise *varlist);
 static void CheckCommonClassPromises(Promise *classlist, const ReportContext *report_context);
 static void PrependAuditFile(char *file);
@@ -1007,7 +1007,7 @@ static void Cf3ParseFile(Policy *policy, const char *filename, const char *input
 
 /*******************************************************************/
 
-Constraint *ControlBodyConstraints(const Policy *policy, AgentType agent)
+Seq *ControlBodyConstraints(const Policy *policy, AgentType agent)
 {
     for (size_t i = 0; i < SeqLength(policy->bodies); i++)
     {
@@ -1473,17 +1473,15 @@ static void CheckCommonClassPromises(Promise *classlist, const ReportContext *re
 
 /*******************************************************************/
 
-static void CheckControlPromises(char *scope, char *agent, Constraint *controllist)
+static void CheckControlPromises(char *scope, char *agent, Seq *controllist)
 {
-    Constraint *cp;
     const BodySyntax *bp = NULL;
     Rlist *rp;
-    int i = 0;
     Rval returnval;
 
     CfDebug("CheckControlPromises(%s)\n", agent);
 
-    for (i = 0; CF_ALL_BODIES[i].bs != NULL; i++)
+    for (int i = 0; CF_ALL_BODIES[i].bs != NULL; i++)
     {
         bp = CF_ALL_BODIES[i].bs;
 
@@ -1498,8 +1496,10 @@ static void CheckControlPromises(char *scope, char *agent, Constraint *controlli
         FatalError("Unknown agent");
     }
 
-    for (cp = controllist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(controllist); i++)
     {
+        Constraint *cp = SeqAt(controllist, i);
+
         if (IsExcluded(cp->classes, NULL))
         {
             continue;

@@ -1456,17 +1456,18 @@ static JsonElement *CreateContextAsJson(const char *name, size_t offset,
 
 /****************************************************************************/
 
-static JsonElement *ExportBodyClassesAsJson(Constraint *constraints)
+static JsonElement *ExportBodyClassesAsJson(Seq *constraints)
 {
     JsonElement *json_contexts = JsonArrayCreate(10);
     JsonElement *json_attributes = JsonArrayCreate(10);
     char *current_context = "any";
     size_t context_offset_start = -1;
     size_t context_offset_end = -1;
-    Constraint *cp = NULL;
 
-    for (cp = constraints; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(constraints); i++)
     {
+        Constraint *cp = SeqAt(constraints, i);
+
         JsonElement *json_attribute = JsonObjectCreate(10);
 
         JsonObjectAppendInteger(json_attribute, "offset", cp->offset.start);
@@ -1479,7 +1480,9 @@ static JsonElement *ExportBodyClassesAsJson(Constraint *constraints)
         JsonObjectAppendObject(json_attribute, "rval", ExportAttributeValueAsJson(cp->rval));
         JsonArrayAppendObject(json_attributes, json_attribute);
 
-        if (cp->next == NULL || strcmp(current_context, cp->next->classes) != 0)
+
+
+        if (i == (SeqLength(constraints) - 1) || strcmp(current_context, ((Constraint *)SeqAt(constraints, i + 1))->classes) != 0)
         {
             JsonArrayAppendObject(json_contexts,
                                   CreateContextAsJson(current_context,
@@ -1512,10 +1515,11 @@ static JsonElement *ExportBundleClassesAsJson(Promise *promises)
 
         {
             JsonElement *json_promise_attributes = JsonArrayCreate(10);
-            Constraint *cp = NULL;
 
-            for (cp = pp->conlist; cp != NULL; cp = cp->next)
+            for (size_t k = 0; k < SeqLength(pp->conlist); k++)
             {
+                Constraint *cp = SeqAt(pp->conlist, k);
+
                 JsonElement *json_attribute = JsonObjectCreate(10);
 
                 JsonObjectAppendInteger(json_attribute, "offset", cp->offset.start);
@@ -1734,15 +1738,16 @@ static void ArgumentsPrettyPrint(Writer *writer, Rlist *args)
 
 void BodyPrettyPrint(Writer *writer, Body *body)
 {
-    Constraint *cp = NULL;
     char *current_class = NULL;
 
     WriterWriteF(writer, "body %s %s", body->type, body->name);
     ArgumentsPrettyPrint(writer, body->args);
     WriterWrite(writer, "\n{");
 
-    for (cp = body->conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(body->conlist); i++)
     {
+        Constraint *cp = SeqAt(body->conlist, i);
+
         if (current_class == NULL || strcmp(cp->classes, current_class) != 0)
         {
             current_class = cp->classes;
@@ -1808,8 +1813,10 @@ void BundlePrettyPrint(Writer *writer, Bundle *bundle)
              }
              */
 
-            for (cp = pp->conlist; cp != NULL; cp = cp->next)
+            for (size_t k = 0; k < SeqLength(pp->conlist); k++)
             {
+                Constraint *cp = SeqAt(pp->conlist, k);
+
                 WriterWriteChar(writer, '\n');
                 IndentPrint(writer, 1);
                 AttributePrettyPrint(writer, cp, 3);

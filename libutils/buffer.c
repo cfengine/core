@@ -539,6 +539,121 @@ int BufferPrintf(Buffer *buffer, const char *format, ...)
     return printed;
 }
 
+int BufferVPrintf(Buffer *buffer, const char *format, va_list ap)
+{
+    if (!buffer || !format)
+    {
+        return -1;
+    }
+    int printed = 0;
+    /*
+     * We don't know how big of a buffer we will need. It might be that we have enough space
+     * or it might be that we don't have enough space. Unfortunately, we cannot reiterate over
+     * a va_list, so our only solution is to tell the caller to retry the call. We signal this
+     * by returning zero. Before doing that we increase the buffer to a suitable size.
+     * The tricky part is the implicit sharing and the reference counting, if we are not shared then
+     * everything is easy, however if we are shared then we need a different strategy.
+     */
+    if (RefCountIsShared(buffer->ref_count))
+    {
+        char *new_buffer = NULL;
+        new_buffer = (char *)malloc(buffer->capacity);
+        if (new_buffer == NULL)
+        {
+            /*
+             * Memory allocations do fail from time to time, even in Linux.
+             * Luckily we have not modified a thing, so just return -1.
+             */
+            return -1;
+        }
+        /*
+         * Make a local copy of the variables that are required to restore to normality.
+         */
+        RefCount *ref_count = buffer->ref_count;
+        /*
+         * We try to attach first, since it is more likely that Attach might fail than
+         * detach.
+         */
+        int result = 0;
+        buffer->ref_count = NULL;
+        RefCountNew(&buffer->ref_count);
+        result = RefCountAttach(buffer->ref_count, buffer);
+        if (result < 0)
+        {
+            /*
+             * Restore and signal the error.
+             */
+            free (new_buffer);
+            RefCountDestroy(&buffer->ref_count);
+            buffer->ref_count = ref_count;
+            return -1;
+        }
+        /*
+         * Detach. This operation might fail, although it is very rare.
+         */
+        result = RefCountDetach(ref_count, buffer);
+        if (result < 0)
+        {
+            /*
+             * The ref_count structure has not been modified, therefore
+             * we can reuse it.
+             * We need to destroy the other ref_count though.
+             */
+            free (new_buffer);
+            RefCountDestroy(&buffer->ref_count);
+            buffer->ref_count = ref_count;
+            return -1;
+        }
+        /*
+         * Ok, now we need to take care of the buffer.
+         */
+        unsigned int i = 0;
+        unsigned int used = 0;
+        for (i = 0; i < buffer->used; ++i)
+        {
+            new_buffer[i] = buffer->buffer[i];
+            if ((buffer->buffer[i] == '\0') && (buffer->mode == BUFFER_BEHAVIOR_CSTRING))
+            {
+                break;
+            }
+            ++used;
+        }
+        buffer->buffer = new_buffer;
+        buffer->used = used;
+    }
+    printed = vsnprintf(buffer->buffer, buffer->capacity, format, ap);
+    if (printed >= buffer->capacity)
+    {
+        /*
+         * Allocate a larger buffer and retry.
+         * Don't forget to signal by returning 0.
+         */
+        if (printed > buffer->memory_cap)
+        {
+            /*
+             * We would go over the memory_cap limit.
+             */
+            return -1;
+        }
+        unsigned int required_blocks = (printed / DEFAULT_BUFFER_SIZE) + 1;
+        void *p = NULL;
+        p = realloc(buffer->buffer, required_blocks * DEFAULT_BUFFER_SIZE);
+        if (p == NULL)
+        {
+            return -1;
+        }
+        buffer->buffer = (char *)p;
+        buffer->capacity = required_blocks * DEFAULT_BUFFER_SIZE;
+        buffer->used = 0;
+        printed = 0;
+    }
+    else
+    {
+        buffer->used = printed;
+    }
+    return printed;
+}
+
 void BufferZero(Buffer *buffer)
 {
     /*

@@ -452,6 +452,161 @@ static void test_printf(void **state)
     assert_int_equal(bp1->capacity, 2 * DEFAULT_BUFFER_SIZE);
 }
 
+static int test_vprintf_helper(Buffer *buffer, char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    int result = 0;
+    result = BufferVPrintf(buffer, fmt, ap);
+    va_end(ap);
+    return result;
+}
+
+static void test_vprintf(void **state)
+{
+    char char0[] = "char0";
+    unsigned int char0size = strlen(char0);
+    const char *char0pointer = NULL;
+    char char1[] = "char1";
+    unsigned int char1size = strlen(char1);
+    const char *char1pointer = NULL;
+    char char2[2 * DEFAULT_BUFFER_SIZE + 2];
+    unsigned int char2size = 2 * DEFAULT_BUFFER_SIZE + 1;
+    int int0 = 123456789;
+    char int0char[] = "123456789";
+    unsigned int int0charsize = strlen(int0char);
+    double double0 = 3.1415;
+    char double0char[] = "3.1415";
+    unsigned int double0charsize = strlen(double0char);
+    char char0int0char1double0[] = "char0 123456789 char1 3.1415";
+    unsigned int char0int0char1double0size = strlen(char0int0char1double0);
+    char element3[DEFAULT_MEMORY_CAP * 2];
+    unsigned int element3size = 2 * DEFAULT_MEMORY_CAP;
+
+    Buffer *buffer = NULL;
+    assert_int_equal(0, BufferNew(&buffer));
+    assert_true(buffer != NULL);
+    /*
+     * Print the first char and compare the result
+     */
+    assert_int_equal(char0size, test_vprintf_helper(buffer, "%s", char0));
+    char0pointer = buffer->buffer;
+    assert_string_equal(char0, buffer->buffer);
+    assert_string_equal(char0, BufferData(buffer));
+    assert_int_equal(char0size, buffer->used);
+    assert_int_equal(char0size, BufferSize(buffer));
+    /*
+     * Overwrite the first char with the second one
+     */
+    assert_int_equal(char1size, test_vprintf_helper(buffer, "%s", char1));
+    char1pointer = buffer->buffer;
+    assert_string_equal(char1, buffer->buffer);
+    assert_string_equal(char1, BufferData(buffer));
+    assert_int_equal(char1size, buffer->used);
+    assert_int_equal(char1size, BufferSize(buffer));
+    assert_true(char0pointer == char1pointer);
+    /*
+     * Try the int now
+     */
+    assert_int_equal(int0charsize, test_vprintf_helper(buffer, "%d", int0));
+    assert_string_equal(int0char, buffer->buffer);
+    assert_string_equal(int0char, BufferData(buffer));
+    assert_int_equal(int0charsize, buffer->used);
+    assert_int_equal(int0charsize, BufferSize(buffer));
+    /*
+     * Try the double now
+     */
+    assert_int_equal(double0charsize, test_vprintf_helper(buffer, "%.4f", double0));
+    assert_string_equal(double0char, buffer->buffer);
+    assert_string_equal(double0char, BufferData(buffer));
+    assert_int_equal(double0charsize, buffer->used);
+    assert_int_equal(double0charsize, BufferSize(buffer));
+    /*
+     * Try the combination now
+     */
+    assert_int_equal(char0int0char1double0size, test_vprintf_helper(buffer, "%s %d %s %.4f", char0, int0, char1, double0));
+    assert_string_equal(char0int0char1double0, buffer->buffer);
+    assert_string_equal(char0int0char1double0, BufferData(buffer));
+    assert_int_equal(char0int0char1double0size, buffer->used);
+    assert_int_equal(char0int0char1double0size, BufferSize(buffer));
+    /*
+     * Finally, try something larger than the default buffer and see if we get the right return value.
+     */
+    unsigned int i = 0;
+    for (i = 0; i < char2size; ++i)
+        char2[i] = 'a';
+    char2[char2size] = '\0';
+    // The first time, the buffer is too small.
+    assert_int_equal(0, test_vprintf_helper(buffer, "%s", char2));
+    // The second time there is enough space
+    assert_int_equal(char2size, test_vprintf_helper(buffer, "%s", char2));
+    assert_string_equal(char2, buffer->buffer);
+    assert_string_equal(char2, BufferData(buffer));
+    assert_int_equal(char2size, buffer->used);
+    assert_int_equal(char2size, BufferSize(buffer));
+    /*
+     * A buffer that is so large that it will get rejected by our memory cap
+     */
+    BufferZero(buffer);
+    for (i = 0; i < element3size; ++i)
+    {
+        element3[i] = 'b';
+    }
+    element3[element3size - 1] = '\0';
+    assert_int_equal(-1, test_vprintf_helper(buffer, "%s", element3));
+    /*
+     * Boundary checks, BUFFER_SIZE-1, BUFFER_SIZE and BUFFER_SIZE+1
+     */
+    Buffer *bm1 = NULL;
+    assert_int_equal(0, BufferNew(&bm1));
+    Buffer *be = NULL;
+    assert_int_equal(0, BufferNew(&be));
+    Buffer *bp1 = NULL;
+    assert_int_equal(0, BufferNew(&bp1));
+    /*
+     * The sizes are different for printf. If we have a size of X, then the string
+     * is of length X-1, and so forth.
+     */
+    char buffer_m1[DEFAULT_BUFFER_SIZE];
+    char buffer_0[DEFAULT_BUFFER_SIZE + 1];
+    char buffer_p1[DEFAULT_BUFFER_SIZE + 2];
+    unsigned int bm1_size = DEFAULT_BUFFER_SIZE - 1;
+    unsigned int be_size = DEFAULT_BUFFER_SIZE;
+    unsigned int bp1_size = DEFAULT_BUFFER_SIZE + 1;
+    for (i = 0; i < DEFAULT_BUFFER_SIZE - 1; ++i)
+    {
+        buffer_m1[i] = 'c';
+        buffer_0[i] = 'd';
+        buffer_p1[i] = 'e';
+    }
+    /*
+     * One shorter, that means the buffer remains the same size as before.
+     */
+    buffer_m1[DEFAULT_BUFFER_SIZE - 1] = '\0';
+    assert_int_equal(bm1_size, test_vprintf_helper(bm1, "%s", buffer_m1));
+    assert_string_equal(buffer_m1, bm1->buffer);
+    assert_int_equal(bm1->capacity, DEFAULT_BUFFER_SIZE);
+    /*
+     * Same size, it should allocate one more block.
+     * This means retrying the operation.
+     */
+    buffer_0[DEFAULT_BUFFER_SIZE] = '\0';
+    assert_int_equal(0, test_vprintf_helper(be, "%s", buffer_0));
+    assert_int_equal(be_size, test_vprintf_helper(be, "%s", buffer_0));
+    assert_string_equal(buffer_0, be->buffer);
+    assert_int_equal(be->capacity, 2 * DEFAULT_BUFFER_SIZE);
+    /*
+     * 1 more, it should allocate one more block
+     * This means retrying the operation.
+     */
+    buffer_p1[DEFAULT_BUFFER_SIZE] = 'e';
+    buffer_p1[DEFAULT_BUFFER_SIZE + 1] = '\0';
+    assert_int_equal(0, test_vprintf_helper(bp1, "%s", buffer_p1));
+    assert_int_equal(bp1_size, test_vprintf_helper(bp1, "%s", buffer_p1));
+    assert_string_equal(buffer_p1, bp1->buffer);
+    assert_int_equal(bp1->capacity, 2 * DEFAULT_BUFFER_SIZE);
+}
+
 int main()
 {
     const UnitTest tests[] = {
@@ -462,6 +617,7 @@ int main()
         , unit_test(test_setBuffer)
         , unit_test(test_appendBuffer)
         , unit_test(test_printf)
+        , unit_test(test_vprintf)
     };
 
     return run_tests(tests);

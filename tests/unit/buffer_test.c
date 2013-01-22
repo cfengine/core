@@ -444,6 +444,7 @@ static void test_printf(void **state)
      * 1 more, it should allocate one more block
      * This means retrying the operation.
      */
+    buffer_p1[DEFAULT_BUFFER_SIZE] = 'e';
     buffer_p1[DEFAULT_BUFFER_SIZE + 1] = '\0';
     assert_int_equal(0, BufferPrintf(bp1, "%s", buffer_p1));
     assert_int_equal(bp1_size, BufferPrintf(bp1, "%s", buffer_p1));

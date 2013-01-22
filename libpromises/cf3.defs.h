@@ -1095,7 +1095,6 @@ struct Body_
     char *namespace;
     Rlist *args;
     Constraint *conlist;
-    Body *next;
 
     char *source_path;
     SourceOffset offset;

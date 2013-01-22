@@ -31,7 +31,7 @@
 struct Policy_
 {
     Seq *bundles;
-    Body *bodies;
+    Seq *bodies;
     char *current_namespace;
 };
 

@@ -47,7 +47,7 @@ SubTypeSyntax SubTypeSyntaxLookup(const char *bundle_type, const char *subtype_n
 void SyntaxPrintAsJson(Writer *writer);
 
 /* print a parse tree of the given policy (bundles, bodies) */
-void PolicyPrintAsJson(Writer *writer, const char *filename, Seq *bundles, Body *bodies);
+void PolicyPrintAsJson(Writer *writer, const char *filename, Seq *bundles, Seq *bodies);
 
 /* print language elements using official formatting */
 void BodyPrettyPrint(Writer *writer, Body *body);

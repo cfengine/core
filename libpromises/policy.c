@@ -52,13 +52,16 @@ static const char *POLICY_ERROR_SUBTYPE_INVALID = "%s is not a valid type catego
 //************************************************************************
 
 static void BundleDestroy(Bundle *bundle);
+static void BodyDestroy(Body *body);
 
 Policy *PolicyNew(void)
 {
     Policy *policy = xcalloc(1, sizeof(Policy));
 
     policy->current_namespace = xstrdup("default");
+
     policy->bundles = SeqNew(100, BundleDestroy);
+    policy->bodies = SeqNew(100, BodyDestroy);
 
     return policy;
 }
@@ -70,7 +73,8 @@ void PolicyDestroy(Policy *policy)
     if (policy)
     {
         SeqDestroy(policy->bundles);
-        DeleteBodies(policy->bodies);
+        SeqDestroy(policy->bodies);
+
         free(policy->current_namespace);
         free(policy);
     }
@@ -304,11 +308,14 @@ bool PolicyCheck(const Policy *policy, Seq *errors)
 
     
     // ensure body names are not duplicated
-
-    for (const Body *bp = policy->bodies; bp; bp = bp->next)
+    for (size_t i = 0; i < SeqLength(policy->bodies); i++)
     {
-        for (const Body *bp2 = policy->bodies; bp2; bp2 = bp2->next)
+        const Body *bp = SeqAt(policy->bodies, i);
+
+        for (size_t j = 0; j < SeqLength(policy->bodies); j++)
         {
+            const Body *bp2 = SeqAt(policy->bodies, j);
+
             if (bp != bp2 &&
                 StringSafeEqual(bp->name, bp2->name) &&
                 StringSafeEqual(bp->type, bp2->type))
@@ -515,19 +522,7 @@ Body *AppendBody(Policy *policy, const char *name, const char *type, Rlist *args
     Body *body = xcalloc(1, sizeof(Body));
     body->parent_policy = policy;
 
-    if (policy->bodies == NULL)
-    {
-        policy->bodies = body;
-    }
-    else
-    {
-        Body *bp = NULL;
-        for (bp = policy->bodies; bp->next; bp = bp->next)
-        {
-        }
-
-        bp->next = body;
-    }
+    SeqAppend(policy->bodies, body);
 
     if (strcmp(policy->current_namespace,"default") == 0)
        {
@@ -706,33 +701,17 @@ static void BundleDestroy(Bundle *bundle)
     }
 }
 
-/*******************************************************************/
-
-void DeleteBodies(Body *bp)
+static void BodyDestroy(Body *body)
 {
-    if (bp == NULL)
+    if (body)
     {
-        return;
-    }
+        free(body->name);
+        free(body->type);
 
-    if (bp->next != NULL)
-    {
-        DeleteBodies(bp->next);
+        DeleteRlist(body->args);
+        DeleteConstraintList(body->conlist);
+        free(body);
     }
-
-    if (bp->name != NULL)
-    {
-        free(bp->name);
-    }
-
-    if (bp->type != NULL)
-    {
-        free(bp->type);
-    }
-
-    DeleteRlist(bp->args);
-    DeleteConstraintList(bp->conlist);
-    free(bp);
 }
 
 /*******************************************************************/

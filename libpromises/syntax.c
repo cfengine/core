@@ -1648,7 +1648,7 @@ static JsonElement *ExportBodyAsJson(Body *body)
 
 /****************************************************************************/
 
-void PolicyPrintAsJson(Writer *writer, const char *filename, Seq *bundles, Body *bodies)
+void PolicyPrintAsJson(Writer *writer, const char *filename, Seq *bundles, Seq *bodies)
 {
     JsonElement *json_policy = JsonObjectCreate(10);
 
@@ -1668,10 +1668,11 @@ void PolicyPrintAsJson(Writer *writer, const char *filename, Seq *bundles, Body 
 
     {
         JsonElement *json_bodies = JsonArrayCreate(10);
-        Body *bdp = NULL;
 
-        for (bdp = bodies; bdp != NULL; bdp = bdp->next)
+        for (size_t i = 0; i < SeqLength(bodies); i++)
         {
+            Body *bdp = SeqAt(bodies, i);
+
             JsonArrayAppendObject(json_bodies, ExportBodyAsJson(bdp));
         }
 

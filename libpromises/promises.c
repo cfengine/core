@@ -157,7 +157,7 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
 
         /* A body template reference could look like a scalar or fn to the parser w/w () */
         Policy *policy = PolicyFromPromise(pp);
-        Body *bodies = policy ? policy->bodies : NULL;
+        Seq *bodies = policy ? policy->bodies : NULL;
 
         switch (cp->rval.rtype)
         {
@@ -372,15 +372,15 @@ Promise *ExpandDeRefPromise(const char *scopeid, Promise *pp)
 
 /*******************************************************************/
 
-Body *IsBody(Body *list, const char *namespace, const char *key)
+Body *IsBody(Seq *bodies, const char *namespace, const char *key)
 {
     char fqname[CF_BUFSIZE];
 
-    for (Body *bp = list; bp != NULL; bp = bp->next)
+    for (size_t i = 0; i < SeqLength(bodies); i++)
     {
+        Body *bp = SeqAt(bodies, i);
 
-    // bp->namespace is where the body belongs, namespace is where we are now
-
+        // bp->namespace is where the body belongs, namespace is where we are now
         if (strchr(key, CF_NS) || strcmp(namespace,"default") == 0)
         {
             if (strncmp(key,"default:",strlen("default:")) == 0) // CF_NS == ':'

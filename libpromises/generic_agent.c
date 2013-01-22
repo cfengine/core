@@ -1009,8 +1009,10 @@ static void Cf3ParseFile(Policy *policy, const char *filename, const char *input
 
 Constraint *ControlBodyConstraints(const Policy *policy, AgentType agent)
 {
-    for (const Body *body = policy->bodies; body != NULL; body = body->next)
+    for (size_t i = 0; i < SeqLength(policy->bodies); i++)
     {
+        const Body *body = SeqAt(policy->bodies, i);
+
         if (strcmp(body->type, CF_AGENTTYPES[agent]) == 0)
         {
             if (strcmp(body->name, "control") == 0)
@@ -1312,15 +1314,16 @@ static void VerifyPromises(Policy *policy, Rlist *bundlesequence,
 {
     SubType *sp;
     Promise *pp;
-    Body *bdp;
     Rlist *rp;
     FnCall *fp;
     char *scope;
 
     if (REQUIRE_COMMENTS == CF_UNDEFINED)
     {
-        for (bdp = policy->bodies; bdp != NULL; bdp = bdp->next)        /* get schedule */
+        for (size_t i = 0; i < SeqLength(policy->bodies); i++)
         {
+            Body *bdp = SeqAt(policy->bodies, i);
+
             if ((strcmp(bdp->name, "control") == 0) && (strcmp(bdp->type, "common") == 0))
             {
                 REQUIRE_COMMENTS = GetRawBooleanConstraint("require_comments", bdp->conlist);
@@ -1817,13 +1820,14 @@ void HashVariables(Policy *policy, const char *name, const ReportContext *report
 
 void HashControls(const Policy *policy)
 {
-    Body *bdp;
     char buf[CF_BUFSIZE];
 
 /* Only control bodies need to be hashed like variables */
 
-    for (bdp = policy->bodies; bdp != NULL; bdp = bdp->next)    /* get schedule */
+    for (size_t i = 0; i < SeqLength(policy->bodies); i++)
     {
+        Body *bdp = SeqAt(policy->bodies, i);
+
         if (strcmp(bdp->name, "control") == 0)
         {
             snprintf(buf, CF_BUFSIZE, "%s_%s", bdp->name, bdp->type);

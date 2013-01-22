@@ -30,7 +30,7 @@
 #include "sequence.h"
 
 char *BodyName(const Promise *pp);
-Body *IsBody(Body *list, const char *namespace, const char *key);
+Body *IsBody(Seq *bodies, const char *namespace, const char *key);
 Bundle *IsBundle(Seq *bundles, const char *key);
 Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp);
 Promise *ExpandDeRefPromise(const char *scopeid, Promise *pp);

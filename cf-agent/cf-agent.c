@@ -1518,29 +1518,6 @@ static int AutomaticBootstrap()
         strncpy(POLICY_SERVER, ((HostProperties*)foundhubs)->IPAddress, CF_BUFSIZE);
         dlclose(avahi_handle);
         break;
-    case 2:
-        CfOut(cf_reporting, "", "Found two hubs");
-        ListIterator *i = NULL;
-        ListIteratorGet(foundhubs, &i);
-        HostProperties *host1 = (HostProperties *)ListIteratorData(i);
-        ListIteratorNext(i);
-        HostProperties *host2 = (HostProperties *)ListIteratorData(i);
-
-        if (strncmp(host1->Hostname, host2->Hostname, 4096) == 0)
-        {   
-            strncpy(POLICY_SERVER, host1->IPAddress, CF_BUFSIZE);
-            dlclose(avahi_handle);
-            break;
-        }
-        else
-        {
-            CfOut(cf_reporting, "", "Found more than one hub registered in the network.\n"
-                                                          "Please bootstrap manually using IP from the list below:");
-            PrintList(foundhubs);
-            dlclose(avahi_handle);
-            ListDestroy(&foundhubs);
-            return -1;
-        }
     default:
         CfOut(cf_reporting, "", "Found more than one hub registered in the network.\n"
                                                       "Please bootstrap manually using IP from the list below:");

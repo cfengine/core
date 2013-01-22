@@ -1,6 +1,6 @@
 SUBDIRS = data
 
-AM_CFLAGS = $(NOVA_CFLAGS) -I$(srcdir)/../../libpromises -DTESTDATADIR='"$(srcdir)/data"' -I$(srcdir)/../../cf-serverd
+AM_CFLAGS = $(NOVA_CFLAGS) -I$(srcdir)/../../libpromises -DTESTDATADIR='"$(srcdir)/data"' -I$(srcdir)/../../cf-serverd -I$(srcdir)/../../cf-agent
 
 LDADD = ../../libpromises/libpromises.la libtest.la
 
@@ -59,7 +59,8 @@ check_PROGRAMS = \
 	list_test \
 	buffer_test \
 	timeout_test \
-	connection_management_test
+	connection_management_test \
+    findhub_test
 
 TESTS = $(check_PROGRAMS)
 
@@ -95,6 +96,8 @@ list_test_SOURCES = list_test.c ../../libutils/list.c
 refcount_test_SOURCES = refcount_test.c ../../libutils/refcount.c
 
 buffer_test_SOURCES = buffer_test.c ../../libutils/buffer.c
+
+findhub_test_SOURCES = findhub_test.c ../../cf-agent/findhub.c ../../cf-agent/load_avahi.c
 
 #
 # file_writer_test overrides fclose(3) which causes gcov to fail as gcov

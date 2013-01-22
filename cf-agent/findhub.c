@@ -7,7 +7,7 @@
 List *hublist = NULL; 
 
 static void AtExitDlClose(void);
-static int CompareHosts(void  *a, void *b);
+static int CompareHosts(const void  *a, const void *b);
 
 void client_callback(AvahiClient *c,
                      AvahiClientState state,
@@ -111,7 +111,7 @@ void PrintList(List *list)
 
     do
     {
-        HostProperties *hostprop = (HostProperties *)i->current->payload;
+        HostProperties *hostprop = (HostProperties *)ListIteratorData(i);
 
         CfOut(cf_reporting, "", "\nCFEngine Policy Server:\n"
                                 "Hostname: %s\n"
@@ -221,7 +221,7 @@ static void AtExitDlClose(void)
     }
 }
 
-static int CompareHosts(void *a, void *b)
+static int CompareHosts(const void *a, const void *b)
 {
     return StringSafeCompare(((HostProperties*)a)->Hostname, ((HostProperties*)b)->Hostname);
 }

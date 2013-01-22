@@ -21,7 +21,7 @@ void (*avahi_simple_poll_quit_ptr)(AvahiSimplePoll *);
 char* (*avahi_address_snprint_ptr)(char *, size_t , const AvahiAddress *);
 int (*avahi_service_resolver_free_ptr)(AvahiServiceResolver *);
 int (*avahi_client_errno_ptr)(AvahiClient *);
-char* (*avahi_strerror_ptr)(int);
+const char* (*avahi_strerror_ptr)(int);
 AvahiServiceResolver* (*avahi_service_resolver_new_ptr)(AvahiClient *, AvahiIfIndex, AvahiProtocol, const char *, const char *, const char *, AvahiProtocol, AvahiLookupFlags, AvahiServiceResolverCallback, void *);
 AvahiClient* (*avahi_service_browser_get_client_ptr)(AvahiServiceBrowser *);
 AvahiClient* (*avahi_service_resolver_get_client_ptr)(AvahiServiceResolver *);

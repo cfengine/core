@@ -152,15 +152,15 @@ int main(int argc, char *argv[])
     GenericAgentConfig *config = CheckOpts(argc, argv);
 #ifdef HAVE_AVAHI_CLIENT_CLIENT_H
 #ifdef HAVE_AVAHI_COMMON_ADDRESS_H
-	if (NULL_OR_EMPTY(POLICY_SERVER))
-	{
-	    int ret = AutomaticBootstrap();
+    if (NULL_OR_EMPTY(POLICY_SERVER) && BOOTSTRAP)
+    {
+        int ret = AutomaticBootstrap();
 
-	    if (ret != 0)
-	    {
-		return 1;
-	    }
-	}
+        if (ret < 0)
+        {
+            return 1;
+        }
+    }
 #endif
 #endif
     ReportContext *report_context = OpenReports("agent");
@@ -1508,7 +1508,7 @@ static int AutomaticBootstrap()
     case 0:
         CfOut(cf_reporting, "", "No hubs were found. Exiting.");
         ListDestroy(&foundhubs);
-        return -2;
+        return -1;
     case 1:
         CfOut(cf_reporting, "", "Found hub installed on:"
                                                       "Hostname: %s"
@@ -1539,7 +1539,7 @@ static int AutomaticBootstrap()
             PrintList(foundhubs);
             dlclose(avahi_handle);
             ListDestroy(&foundhubs);
-            return -3;
+            return -1;
         }
     default:
         CfOut(cf_reporting, "", "Found more than one hub registered in the network.\n"
@@ -1547,7 +1547,7 @@ static int AutomaticBootstrap()
         PrintList(foundhubs);
         dlclose(avahi_handle);
         ListDestroy(&foundhubs);
-        return -4;
+        return -1;
     };
 
     ListDestroy(&foundhubs);

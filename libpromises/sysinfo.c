@@ -37,6 +37,7 @@
 #include "cfstream.h"
 #include "string_lib.h"
 #include "logging.h"
+#include "misc_lib.h"
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>
@@ -672,7 +673,10 @@ void Get3Environment()
         name[0] = '\0';
         value[0] = '\0';
 
-        fgets(class, CF_BUFSIZE - 1, fp);
+        if (fgets(class, CF_BUFSIZE, fp) == NULL)
+        {
+            UnexpectedError("Failed to read line from stream");
+        }
 
         if (feof(fp))
         {
@@ -1507,7 +1511,10 @@ static int Linux_Suse_Version(void)
 
     while (!feof(fp))
     {
-        fgets(vbuf, sizeof(vbuf), fp);
+        if (fgets(vbuf, sizeof(vbuf), fp) == NULL)
+        {
+            UnexpectedError("Failed to read line from stream");
+        }
 
         if (strncmp(vbuf, "VERSION", strlen("version")) == 0)
         {
@@ -2224,7 +2231,10 @@ static void GetCPUInfo()
 
     while (!feof(fp))
     {
-        fgets(buf, CF_BUFSIZE, fp);
+        if (fgets(buf, CF_BUFSIZE, fp) == NULL)
+        {
+            UnexpectedError("Failed to read line from stream");
+        }
         if (strncmp(buf, "cpu", 3) == 0)
         {
             count++;

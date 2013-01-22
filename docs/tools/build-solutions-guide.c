@@ -66,7 +66,12 @@ static void IncludeExampleFile(const char *examples_dir, const char *filename)
     {
         char line[2048];
 
-        fgets(line, 2048, example_fh);
+        if (fgets(line, 2047, example_fh) == NULL)
+        {
+            fprintf(stderr, "Unable to read line from file '%s' - aborting", path);
+            fclose(example_fh);
+            return;
+        }
         if (strstr(line, "COSL.txt"))
         {
             break;

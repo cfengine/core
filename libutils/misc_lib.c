@@ -44,3 +44,17 @@ void __ProgrammingError(const char *file, int lineno, const char *format, ...)
     free(fmt);
     exit(255);
 }
+
+/**
+  @brief Log unexpected runtime error to stderr, do not exit program.
+*/
+
+void __UnexpectedError(const char *file, int lineno, const char *format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+    char *fmt = NULL;
+    xasprintf(&fmt, "%s:%d: Unexpected Error: %s", file, lineno, format);
+    fprintf(stderr, fmt, ap);
+    free(fmt);
+}

@@ -57,6 +57,10 @@ int RefCountAttach(RefCount *ref, void *owner)
     }
     ref->user_count++;
     RefCountNode *node = (RefCountNode *)malloc(sizeof(RefCountNode));
+    if (node == NULL)
+    {
+        return -1;
+    }
     node->next = NULL;
     node->user = owner;
     if (ref->last)

@@ -74,6 +74,7 @@ static void CheckVariablePromises(char *scope, Promise *varlist);
 static void CheckCommonClassPromises(Promise *classlist, const ReportContext *report_context);
 static void PrependAuditFile(char *file);
 static char *InputLocation(const char *filename, const char *input_file);
+static void GenericAgentConfigTTYInteractive(GenericAgentConfig *config);
 
 #if !defined(__MINGW32__)
 static void OpenLog(int facility);
@@ -239,6 +240,10 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const Report
         if (ok)
         {
             policy = ReadPromises(ag, agents, config, report_context);
+        }
+        else if (config->tty_interactive)
+        {
+            FatalError("CFEngine was not able to get confirmation of promises from cf-promises, please verify input file\n");
         }
         else
         {
@@ -702,10 +707,13 @@ static void Cf3ParseFiles(Policy *policy, const char *input_file, bool check_not
 static bool MissingInputFile(const char *input_file)
 {
     struct stat sb;
+    char wfilename[CF_BUFSIZE];
 
-    if (cfstat(InputLocation(input_file, input_file), &sb) == -1)
+    strncpy(wfilename, InputLocation(input_file, input_file), CF_BUFSIZE);
+
+    if (cfstat(wfilename, &sb) == -1)
     {
-        CfOut(cf_error, "stat", "There is no readable input file at %s", input_file);
+        CfOut(cf_error, "stat", "There is no readable input file at %s", wfilename);
         return true;
     }
 
@@ -720,6 +728,7 @@ int NewPromiseProposals(const char *input_file)
     struct stat sb;
     int result = false;
     char filename[CF_MAXVARSIZE];
+    char wfilename[CF_BUFSIZE];
     time_t validated_at;
 
     if (MINUSF)
@@ -759,7 +768,9 @@ int NewPromiseProposals(const char *input_file)
         return true;
     }
 
-    if (cfstat(InputLocation(input_file, input_file), &sb) == -1)
+    strncpy(wfilename, InputLocation(input_file, input_file), CF_BUFSIZE);
+
+    if (cfstat(wfilename, &sb) == -1)
     {
         CfOut(cf_verbose, "stat", "There is no readable input file at %s", input_file);
         return true;
@@ -1916,6 +1927,7 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
     config->bundlesequence = NULL;
     config->verify_promises = true;
     config->input_file = NULL;
+    GenericAgentConfigTTYInteractive(config);
 
     return config;
 }
@@ -1941,3 +1953,14 @@ void GenericAgentConfigSetBundleSequence(GenericAgentConfig *config, const Rlist
     config->bundlesequence = CopyRlist(bundlesequence);
 }
 
+static void GenericAgentConfigTTYInteractive(GenericAgentConfig *config)
+{
+    if (isatty(0) && isatty(1))
+    {
+        config->tty_interactive = true;
+    }
+    else
+    {
+        config->tty_interactive = false;
+    }
+}

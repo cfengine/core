@@ -145,6 +145,21 @@ int BufferAppend(Buffer *buffer, char *bytes, unsigned int length);
   */
 int BufferPrintf(Buffer *buffer, const char *format, ...);
 /**
+  @brief Stores complex data on the buffer.
+
+  This function uses the same semantic and flags as printf. Internally it might or not call sprintf, so do not depend on obscure
+  sprintf/printf behaviors.
+
+  This function uses a va_list instead of variable arguments.
+  @note This function can be used both in CString mode and in ByteArray mode. The only difference is the presence of the final '\0'
+  character.
+  @note The data will be preserved if this operation fails, although it might be in a detached state.
+  @param buffer
+  @param format
+  @return The number of bytes written to the buffer or 0 if the operation needs to be retried. In case of error -1 is returned.
+  */
+int BufferVPrintf(Buffer *buffer, const char *format, va_list ap);
+/**
   @brief Clears the buffer.
 
   Clearing the buffer does not mean destroying the data. The data might be still present after this function is called, although

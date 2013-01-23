@@ -51,10 +51,10 @@ static void ParserStateReset()
     P.blocktype[0] = '\0';
 }
 
-Policy *ParserParseFile(Policy *policy, const char *path)
+Policy *ParserParseFile(const char *path)
 {
     ParserStateReset();
-    P.policy = policy;
+    P.policy = PolicyNew();
 
     strncpy(P.filename, path, CF_MAXVARSIZE);
 

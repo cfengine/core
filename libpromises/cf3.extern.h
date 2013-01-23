@@ -135,7 +135,6 @@ extern Item *EDIT_ANCHORS;
 extern Scope *VSCOPE;
 extern Audit *AUDITPTR;
 extern Audit *VAUDIT;
-extern Rlist *VINPUTLIST;
 extern Rlist *BODYPARTS;
 extern Rlist *SUBBUNDLES;
 extern Rlist *SINGLE_COPY_LIST;

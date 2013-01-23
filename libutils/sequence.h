@@ -82,6 +82,13 @@ typedef int (*SeqItemComparator) (const void *, const void *, void *user_data);
 void SeqAppend(Seq *seq, void *item);
 
 /**
+ * @brief Append a sequence to this sequence. Only copies pointers.
+ * @param seq Sequence to append to
+ * @param items Sequence to copy pointers from.
+ */
+void SeqAppendSeq(Seq *seq, const Seq *items);
+
+/**
   @brief Linearly searches through the sequence and return the first item considered equal to the specified key.
   @param seq [in] The Sequence to search.
   @param key [in] The item to compare against.

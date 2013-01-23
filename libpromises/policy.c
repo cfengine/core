@@ -66,7 +66,10 @@ Policy *PolicyNew(void)
     return policy;
 }
 
-/*************************************************************************/
+int PolicyCompare(const void *a, const void *b)
+{
+    return a - b;
+}
 
 void PolicyDestroy(Policy *policy)
 {
@@ -78,6 +81,55 @@ void PolicyDestroy(Policy *policy)
         free(policy->current_namespace);
         free(policy);
     }
+}
+
+Body *PolicyGetBody(Policy *policy, const char *ns, const char *type, const char *name)
+{
+    for (size_t i = 0; i < SeqLength(policy->bodies); i++)
+    {
+        Body *bp = SeqAt(policy->bodies, i);
+
+        if (strcmp(bp->type, type) == 0 && strcmp(bp->name, name) == 0)
+        {
+            // allow namespace to be optionally matched
+            if (ns && strcmp(bp->namespace, ns) != 0)
+            {
+                continue;
+            }
+
+            return bp;
+        }
+    }
+
+    return NULL;
+}
+
+Policy *PolicyMerge(Policy *a, Policy *b)
+{
+    Policy *result = PolicyNew();
+
+    SeqAppendSeq(result->bundles, a->bundles);
+    SeqAppendSeq(result->bundles, b->bundles);
+
+    for (size_t i = 0; i < SeqLength(result->bundles); i++)
+    {
+        Bundle *bp = SeqAt(result->bundles, i);
+        bp->parent_policy = result;
+    }
+
+    SeqAppendSeq(result->bodies, a->bodies);
+    SeqAppendSeq(result->bodies, b->bodies);
+
+    for (size_t i = 0; i < SeqLength(result->bodies); i++)
+    {
+        Body *bdp = SeqAt(result->bodies, i);
+        bdp->parent_policy = result;
+    }
+
+    free(a);
+    free(b);
+
+    return result;
 }
 
 /*************************************************************************/
@@ -92,11 +144,24 @@ void PolicySetNameSpace(Policy *policy, char *namespace)
     policy->current_namespace = xstrdup(namespace);
 }
 
-/*************************************************************************/
-
 char *CurrentNameSpace(Policy *policy)
 {
     return policy->current_namespace;
+}
+
+const char *NamespaceFromConstraint(const Constraint *cp)
+{
+    switch (cp->type)
+    {
+    case POLICY_ELEMENT_TYPE_BODY:
+        return cp->parent.body->namespace;
+
+    case POLICY_ELEMENT_TYPE_PROMISE:
+        return cp->parent.promise->parent_subtype->parent_bundle->namespace;
+
+    default:
+        ProgrammingError("Constraint has parent type: %d", cp->type);
+    }
 }
 
 /*************************************************************************/

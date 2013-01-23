@@ -104,7 +104,6 @@ double METER_REPAIRED[meter_endmark];
 /*****************************************************************************/
 
 Scope *VSCOPE = NULL;
-Rlist *VINPUTLIST = NULL;
 Rlist *BODYPARTS = NULL;
 Rlist *SUBBUNDLES = NULL;
 Rlist *ACCESSLIST = NULL;

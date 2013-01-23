@@ -472,11 +472,10 @@ void GetInterfacesInfo(AgentType ag)
         
         if (strstr(ifp->ifr_name, ":"))
         {
-            if (VSYSTEMHARDCLASS == linuxx)
-            {
-                CfOut(cf_verbose, "", "Skipping apparent virtual interface %d: %s\n", j + 1, ifp->ifr_name);
-                continue;
-            }
+#ifdef __linux__
+            CfOut(cf_verbose, "", "Skipping apparent virtual interface %d: %s\n", j + 1, ifp->ifr_name);
+            continue;
+#endif
         }
         else
         {
@@ -683,41 +682,28 @@ static void FindV6InterfacesInfo(void)
 
     CfOut(cf_verbose, "", "Trying to locate my IPv6 address\n");
 
-    switch (VSYSTEMHARDCLASS)
+#if defined(__CYGWIN__)
+    /* NT cannot do this */
+    return;
+#elif defined(__hpux)
+    if ((pp = cf_popen("/usr/sbin/ifconfig -a", "r")) == NULL)
     {
-    case cfnt:
-        /* NT cannot do this */
+        CfOut(cf_verbose, "", "Could not find interface info\n");
         return;
-
-    case hp:
-
-        if ((pp = cf_popen("/usr/sbin/ifconfig -a", "r")) == NULL)
-        {
-            CfOut(cf_verbose, "", "Could not find interface info\n");
-            return;
-        }
-
-        break;
-
-    case aix:
-
-        if ((pp = cf_popen("/etc/ifconfig -a", "r")) == NULL)
-        {
-            CfOut(cf_verbose, "", "Could not find interface info\n");
-            return;
-        }
-
-        break;
-
-    default:
-
-        if ((pp = cf_popen("/sbin/ifconfig -a", "r")) == NULL)
-        {
-            CfOut(cf_verbose, "", "Could not find interface info\n");
-            return;
-        }
-
     }
+#elif defined(_AIX)
+    if ((pp = cf_popen("/etc/ifconfig -a", "r")) == NULL)
+    {
+        CfOut(cf_verbose, "", "Could not find interface info\n");
+        return;
+    }
+#else
+    if ((pp = cf_popen("/sbin/ifconfig -a", "r")) == NULL)
+    {
+        CfOut(cf_verbose, "", "Could not find interface info\n");
+        return;
+    }
+#endif
 
 /* Don't know the output format of ifconfig on all these .. hope for the best*/
 

@@ -304,10 +304,9 @@ void AddSlash(char *str)
 // add root slash on Unix systems
     if (strlen(str) == 0)
     {
-        if ((VSYSTEMHARDCLASS != mingw) && (VSYSTEMHARDCLASS != cfnt))
-        {
-            strcpy(str, "/");
-        }
+#if !defined(_WIN32)
+        strcpy(str, "/");
+#endif
         return;
     }
 

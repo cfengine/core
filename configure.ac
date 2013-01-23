@@ -367,6 +367,11 @@ if test "x$with_libxml2" != xno; then
     ])
 fi
 
+dnl avahi
+
+AC_CHECK_HEADERS(avahi-client/client.h, AM_CONDITIONAL(HAVE_AVAHI_CLIENT, true), AM_CONDITIONAL(HAVE_AVAHI_CLIENT, false), [])
+AC_CHECK_HEADERS(avahi-common/address.h, AM_CONDITIONAL(HAVE_AVAHI_COMMON, true), AM_CONDITIONAL(HAVE_AVAHI_COMMON, false),[])
+
 dnl
 
 dnl ######################################################################

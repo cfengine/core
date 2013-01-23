@@ -52,7 +52,7 @@ static int ExtractPid(char *psentry, char **names, int *start, int *end);
 
 /***************************************************************************/
 
-int SelectProcess(char *procentry, char **names, int *start, int *end, Attributes a)
+static int SelectProcess(char *procentry, char **names, int *start, int *end, Attributes a)
 {
     AlphaList proc_attr;
     int result = true, i;

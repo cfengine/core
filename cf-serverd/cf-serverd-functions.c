@@ -480,15 +480,11 @@ int OpenReceiverChannel(void)
                 ThreadUnlock(cft_getaddr);
             }
 
-            if (VSYSTEMHARDCLASS == mingw || VSYSTEMHARDCLASS == openbsd || VSYSTEMHARDCLASS == freebsd
-                || VSYSTEMHARDCLASS == netbsd || VSYSTEMHARDCLASS == dragonfly)
-            {
-                continue;       /* *bsd doesn't map ipv6 addresses */
-            }
-            else
-            {
-                break;
-            }
+#if defined(__MINGW32__) || defined(__OpenBSD__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__DragonFly__)
+            continue;       /* *bsd doesn't map ipv6 addresses */
+#else
+            break;
+#endif
         }
 
         CfOut(cf_error, "bind", "Could not bind server address");

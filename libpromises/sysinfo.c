@@ -408,24 +408,21 @@ void GetNameInfo3()
     {
         snprintf(shortname, CF_MAXVARSIZE - 1, "%s", CanonifyName(components[i]));
 
-        if ((VSYSTEMHARDCLASS == mingw) || (VSYSTEMHARDCLASS == cfnt))
+#if defined(_WIN32)
+        // twin has own dir, and is named agent
+        if (i == 0)
         {
-            // twin has own dir, and is named agent
-            if (i == 0)
-            {
-                snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin-twin%ccf-agent.exe", CFWORKDIR, FILE_SEPARATOR,
-                         FILE_SEPARATOR);
-            }
-            else
-            {
-                snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin%c%s.exe", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR,
-                         components[i]);
-            }
+            snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin-twin%ccf-agent.exe", CFWORKDIR, FILE_SEPARATOR,
+                     FILE_SEPARATOR);
         }
         else
         {
-            snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin%c%s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, components[i]);
+            snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin%c%s.exe", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR,
+                     components[i]);
         }
+#else
+        snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin%c%s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, components[i]);
+#endif
 
         have_component[i] = false;
 
@@ -443,15 +440,12 @@ void GetNameInfo3()
     {
         snprintf(shortname, CF_MAXVARSIZE - 1, "%s", CanonifyName(components[0]));
 
-        if ((VSYSTEMHARDCLASS == mingw) || (VSYSTEMHARDCLASS == cfnt))
-        {
-            snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin%c%s.exe", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR,
-                     components[1]);
-        }
-        else
-        {
-            snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin%c%s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, components[1]);
-        }
+#if defined(_WIN32)
+        snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin%c%s.exe", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR,
+                 components[1]);
+#else
+        snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin%c%s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, components[1]);
+#endif
 
         if (cfstat(name, &sb) != -1)
         {

@@ -101,10 +101,9 @@ int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp)
 
     if ((strcmp("[", nodename) == 0) && (strcmp("/usr/bin", path) == 0))
     {
-        if (VSYSTEMHARDCLASS == linuxx)
-        {
+#if defined(__linux__)
             return true;
-        }
+#endif
     }
 
     for (sp = nodename; *sp != '\0'; sp++)

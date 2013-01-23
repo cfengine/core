@@ -51,14 +51,10 @@ void MonDiskGatherData(double *cf_this)
 
 /* Here would should have some detection based on OS type VSYSTEMHARDCLASS */
 
-    switch (VSYSTEMHARDCLASS)
-    {
-    default:
-        strcpy(accesslog, "/var/log/apache2/access_log");
-        strcpy(errorlog, "/var/log/apache2/error_log");
-        strcpy(syslog, "/var/log/syslog");
-        strcpy(messages, "/var/log/messages");
-    }
+    strcpy(accesslog, "/var/log/apache2/access_log");
+    strcpy(errorlog, "/var/log/apache2/error_log");
+    strcpy(syslog, "/var/log/syslog");
+    strcpy(messages, "/var/log/messages");
 
     cf_this[ob_webaccess] = GetFileGrowth(accesslog, ob_webaccess);
     CfOut(cf_verbose, "", "Webaccess = %.2lf%%\n", cf_this[ob_webaccess]);

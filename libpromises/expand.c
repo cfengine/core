@@ -31,6 +31,7 @@
 
 #include "expand.h"
 
+#include "misc_lib.h"
 #include "env_context.h"
 #include "constraints.h"
 #include "promises.h"
@@ -48,6 +49,7 @@
 #include "args.h"
 #include "logging.h"
 #include "iteration.h"
+#include "buffer.h"
 
 static void MapIteratorsFromScalar(const char *scope, Rlist **los, Rlist **lol, char *string, int level, const Promise *pp);
 static int Epimenides(const char *var, Rval rval, int level);
@@ -1206,24 +1208,66 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
     a.classes = GetClassDefinitionConstraints(pp);
 
     enum cfdatatype existing_var = GetVariable(scope, pp->promiser, &retval);
-
-    char qualified_scope[CF_MAXVARSIZE];
-
+    Buffer *qualified_scope = NULL;
+    int result = 0;
+    result = BufferNew(&qualified_scope);
+    if (result < 0)
+    {
+        /*
+         * Extremely seldom, but we better take care of this.
+         */
+        UnexpectedError("Buffer initialization problems");
+        return;
+    }
     if (strcmp(pp->namespace, "default") == 0)
-       {
-       strcpy(qualified_scope, scope);
-       }
+    {
+        result = BufferSet(qualified_scope, scope, strlen(scope));
+        if (result < 0)
+        {
+            /*
+             * Even though there will be no problems with memory allocation, there
+             * might be other problems.
+             */
+            UnexpectedError("Problems writing to buffer");
+            BufferDestroy(&qualified_scope);
+            return;
+        }
+    }
     else
-       {
-       if (strchr(scope, ':') == NULL)
-          {
-          snprintf(qualified_scope, CF_MAXVARSIZE, "%s:%s", pp->namespace, scope);
-          }
-       else
-          {
-          strcpy(qualified_scope, scope);
-          }
-       }
+    {
+        if (strchr(scope, ':') == NULL)
+        {
+            result = BufferPrintf(qualified_scope, "%s:%s", pp->namespace, scope);
+            if (result == 0)
+            {
+                result = BufferPrintf(qualified_scope, "%s:%s", pp->namespace, scope);
+            }
+            if (result < 0)
+            {
+                /*
+                 * Even though there will be no problems with memory allocation, there
+                 * might be other problems.
+                 */
+                UnexpectedError("Problems writing to buffer");
+                BufferDestroy(&qualified_scope);
+                return;
+            }
+        }
+        else
+        {
+            result = BufferSet(qualified_scope, scope, strlen(scope));
+            if (result < 0)
+            {
+                /*
+                 * Even though there will be no problems with memory allocation, there
+                 * might be other problems.
+                 */
+                UnexpectedError("Problems writing to buffer");
+                BufferDestroy(&qualified_scope);
+                return;
+            }
+        }
+    }
 
     if (rval.item != NULL)
     {
@@ -1232,10 +1276,11 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
         if (cp->rval.rtype == CF_FNCALL)
         {
             if (existing_var != cf_notype)
-               {
-               // Already did this
-               return;
-               }
+            {
+                // Already did this
+                BufferDestroy(&qualified_scope);
+                return;
+            }
 
             FnCallResult res = EvaluateFunctionCall(fp, pp);
 
@@ -1243,6 +1288,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
             {
                 /* We do not assign variables to failed fn calls */
                 DeleteRvalItem(res.rval);
+                BufferDestroy(&qualified_scope);
                 return;
             }
             else
@@ -1252,22 +1298,69 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
         }
         else
         {
-            char conv[CF_MAXVARSIZE];
-
+            Buffer *conv = NULL;
+            result = BufferNew(&conv);
+            if (result < 0)
+            {
+                /*
+                 * Even though there will be no problems with memory allocation, there
+                 * might be other problems.
+                 */
+                UnexpectedError("Problems initializating buffer");
+                BufferDestroy(&qualified_scope);
+                return;
+            }
             if (strcmp(cp->lval, "int") == 0)
             {
-                snprintf(conv, CF_MAXVARSIZE, "%ld", Str2Int(cp->rval.item));
-                rval = CopyRvalItem((Rval) {conv, cp->rval.rtype});
+                result = BufferPrintf(conv, "%ld", Str2Int(cp->rval.item));
+                if (result == 0)
+                {
+                    /*
+                     * Buffer needed to grow, retry
+                     */
+                    result = BufferPrintf(conv, "%ld", Str2Int(cp->rval.item));
+                }
+                if (result < 0)
+                {
+                    /*
+                     * Even though there will be no problems with memory allocation, there
+                     * might be other problems.
+                     */
+                    UnexpectedError("Problems writing to buffer");
+                    BufferDestroy(&qualified_scope);
+                    BufferDestroy(&conv);
+                    return;
+                }
+                rval = CopyRvalItem((Rval) {BufferData(conv), cp->rval.rtype});
             }
             else if (strcmp(cp->lval, "real") == 0)
             {
-                snprintf(conv, CF_MAXVARSIZE, "%lf", Str2Double(cp->rval.item));
-                rval = CopyRvalItem((Rval) {conv, cp->rval.rtype});
+                result = BufferPrintf(conv, "%lf", Str2Double(cp->rval.item));
+                if (result == 0)
+                {
+                    /*
+                     * Buffer needed to grow, retry
+                     */
+                    result = BufferPrintf(conv, "%lf", Str2Double(cp->rval.item));
+                }
+                if (result < 0)
+                {
+                    /*
+                     * Even though there will be no problems with memory allocation, there
+                     * might be other problems.
+                     */
+                    UnexpectedError("Problems writing to buffer");
+                    BufferDestroy(&conv);
+                    BufferDestroy(&qualified_scope);
+                    return;
+                }
+                rval = CopyRvalItem((Rval) {BufferData(conv), cp->rval.rtype});
             }
             else
             {
                 rval = CopyRvalItem(cp->rval);
             }
+            BufferDestroy(&conv);
         }
 
         if (Epimenides(pp->promiser, rval, 0))
@@ -1279,7 +1372,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
         {
             /* See if the variable needs recursively expanding again */
 
-            Rval returnval = EvaluateFinalRval(qualified_scope, rval, true, pp);
+            Rval returnval = EvaluateFinalRval(BufferData(qualified_scope), rval, true, pp);
 
             DeleteRvalItem(rval);
 
@@ -1291,14 +1384,13 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
         {
             if (ok_redefine)    /* only on second iteration, else we ignore broken promises */
             {
-                DeleteVariable(qualified_scope, pp->promiser);
+                DeleteVariable(BufferData(qualified_scope), pp->promiser);
             }
             else if ((THIS_AGENT_TYPE == AGENT_TYPE_COMMON) && (CompareRval(retval, rval) == false))
             {
                 switch (rval.rtype)
                 {
-                    char valbuf[CF_BUFSIZE];
-
+                char valbuf[CF_BUFSIZE];
                 case CF_SCALAR:
                     CfOut(cf_verbose, "", " !! Redefinition of a constant scalar \"%s\" (was %s now %s)",
                           pp->promiser, ScalarRvalValue(retval), ScalarRvalValue(rval));
@@ -1320,6 +1412,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
         {
             // Unexpanded variables, we don't do anything with
             DeleteRvalItem(rval);
+            BufferDestroy(&qualified_scope);
             return;
         }
 
@@ -1328,6 +1421,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
             CfOut(cf_error, "", " !! Variable identifier contains illegal characters");
             PromiseRef(cf_error, pp);
             DeleteRvalItem(rval);
+            BufferDestroy(&qualified_scope);
             return;
         }
 
@@ -1343,10 +1437,10 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
             }
         }
 
-        if (!AddVariableHash(qualified_scope, pp->promiser, rval, Typename2Datatype(cp->lval),
+        if (!AddVariableHash(BufferData(qualified_scope), pp->promiser, rval, Typename2Datatype(cp->lval),
                              cp->audit->filename, cp->offset.line))
         {
-            CfOut(cf_verbose, "", "Unable to converge %s.%s value (possibly empty or infinite regression)\n", qualified_scope, pp->promiser);
+            CfOut(cf_verbose, "", "Unable to converge %s.%s value (possibly empty or infinite regression)\n", BufferData(qualified_scope), pp->promiser);
             PromiseRef(cf_verbose, pp);
             cfPS(cf_noreport, CF_FAIL, "", pp, a, " !! Couldn't add variable %s", pp->promiser);
         }
@@ -1361,7 +1455,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
         CfOut(cf_error, "", " !! Rule from %s at/before line %zu\n", cp->audit->filename, cp->offset.line);
         cfPS(cf_noreport, CF_FAIL, "", pp, a, " !! Couldn't add variable %s", pp->promiser);
     }
-
+    BufferDestroy(&qualified_scope);
     DeleteRvalItem(rval);
 }
 

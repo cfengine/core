@@ -1238,10 +1238,6 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
         if (strchr(scope, ':') == NULL)
         {
             result = BufferPrintf(qualified_scope, "%s:%s", pp->namespace, scope);
-            if (result == 0)
-            {
-                result = BufferPrintf(qualified_scope, "%s:%s", pp->namespace, scope);
-            }
             if (result < 0)
             {
                 /*
@@ -1313,13 +1309,6 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
             if (strcmp(cp->lval, "int") == 0)
             {
                 result = BufferPrintf(conv, "%ld", Str2Int(cp->rval.item));
-                if (result == 0)
-                {
-                    /*
-                     * Buffer needed to grow, retry
-                     */
-                    result = BufferPrintf(conv, "%ld", Str2Int(cp->rval.item));
-                }
                 if (result < 0)
                 {
                     /*
@@ -1336,13 +1325,6 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
             else if (strcmp(cp->lval, "real") == 0)
             {
                 result = BufferPrintf(conv, "%lf", Str2Double(cp->rval.item));
-                if (result == 0)
-                {
-                    /*
-                     * Buffer needed to grow, retry
-                     */
-                    result = BufferPrintf(conv, "%lf", Str2Double(cp->rval.item));
-                }
                 if (result < 0)
                 {
                     /*

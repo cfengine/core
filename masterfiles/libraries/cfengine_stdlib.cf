@@ -2715,8 +2715,8 @@ vars:
   "stopcommand[udevmonitor]"  string => "/etc/init.d/udevmonitor stop";
   "pattern[udevmonitor]"      string => ".*udevadm.*monitor.*";
 
-  "startcommand[www]"     string => "/etc/init.d/httpd stop";
-  "stopcommand[www]"      string => "/etc/init.d/httpd stop";
+  "startcommand[www]"     string => "/etc/init.d/apache2 start";
+  "stopcommand[www]"      string => "/etc/init.d/apache2 stop";
   "pattern[www]"          string => ".*apache2.*";
 
 

@@ -258,69 +258,57 @@ static void VerifyEnvironments(Attributes a, Promise *pp)
 
     virInitialize();
 
-    switch (VSYSTEMHARDCLASS)
+#if defined(__linux__)
+    switch (Str2Hypervisors(a.env.type))
     {
-    case linuxx:
-
-        switch (Str2Hypervisors(a.env.type))
-        {
-        case cfv_virt_xen:
-        case cfv_virt_kvm:
-        case cfv_virt_esx:
-        case cfv_virt_vbox:
-        case cfv_virt_test:
-            VerifyVirtDomain(hyper_uri, envtype, a, pp);
-            break;
-        case cfv_virt_xen_net:
-        case cfv_virt_kvm_net:
-        case cfv_virt_esx_net:
-        case cfv_virt_test_net:
-            VerifyVirtNetwork(hyper_uri, envtype, a, pp);
-            break;
-        case cfv_ec2:
-            break;
-        case cfv_eucalyptus:
-            break;
-        default:
-            break;
-        }
+    case cfv_virt_xen:
+    case cfv_virt_kvm:
+    case cfv_virt_esx:
+    case cfv_virt_vbox:
+    case cfv_virt_test:
+        VerifyVirtDomain(hyper_uri, envtype, a, pp);
         break;
-
-    case darwin:
-        switch (Str2Hypervisors(a.env.type))
-        {
-        case cfv_virt_vbox:
-        case cfv_virt_test:
-            VerifyVirtDomain(hyper_uri, envtype, a, pp);
-            break;
-        case cfv_virt_xen_net:
-        case cfv_virt_kvm_net:
-        case cfv_virt_esx_net:
-        case cfv_virt_test_net:
-            VerifyVirtNetwork(hyper_uri, envtype, a, pp);
-            break;
-        default:
-            break;
-        }
+    case cfv_virt_xen_net:
+    case cfv_virt_kvm_net:
+    case cfv_virt_esx_net:
+    case cfv_virt_test_net:
+        VerifyVirtNetwork(hyper_uri, envtype, a, pp);
         break;
-
-    case solaris:
-
-        switch (Str2Hypervisors(a.env.type))
-        {
-        case cfv_zone:
-            VerifyZone(a, pp);
-            break;
-        default:
-            break;
-        }
-
+    case cfv_ec2:
         break;
-
+    case cfv_eucalyptus:
+        break;
     default:
-        CfOut(cf_verbose, "", " -> Unable to resolve an environment supervisor/monitor for this platform, aborting");
         break;
     }
+#elif defined(__APPLE__)
+    switch (Str2Hypervisors(a.env.type))
+    {
+    case cfv_virt_vbox:
+    case cfv_virt_test:
+        VerifyVirtDomain(hyper_uri, envtype, a, pp);
+        break;
+    case cfv_virt_xen_net:
+    case cfv_virt_kvm_net:
+    case cfv_virt_esx_net:
+    case cfv_virt_test_net:
+        VerifyVirtNetwork(hyper_uri, envtype, a, pp);
+        break;
+    default:
+        break;
+    }
+#elif defined(__sun)
+    switch (Str2Hypervisors(a.env.type))
+    {
+    case cfv_zone:
+        VerifyZone(a, pp);
+        break;
+    default:
+        break;
+    }
+#else
+    CfOut(cf_verbose, "", " -> Unable to resolve an environment supervisor/monitor for this platform, aborting");
+#endif
 }
 
 /*****************************************************************************/

@@ -58,6 +58,13 @@
 #include "logging.h"
 #include "nfs.h"
 #include "processes_select.h"
+#include "list.h"
+
+#ifdef HAVE_AVAHI_CLIENT_CLIENT_H
+#ifdef HAVE_AVAHI_COMMON_ADDRESS_H
+#include "findhub.h"
+#endif
+#endif
 
 #ifdef HAVE_NOVA
 #include "nova_reporting.h"
@@ -85,6 +92,11 @@ static bool VerifyBootstrap(void);
 static void KeepPromiseBundles(Policy *policy, Rlist *bundlesequence, const ReportContext *report_context);
 static void KeepPromises(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
 static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save_pr_repaired, int save_pr_notkept);
+#ifdef HAVE_AVAHI_CLIENT_CLIENT_H
+#ifdef HAVE_AVAHI_COMMON_ADDRESS_H
+static int AutomaticBootstrap();
+#endif
+#endif
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -138,7 +150,19 @@ int main(int argc, char *argv[])
     int ret = 0;
 
     GenericAgentConfig *config = CheckOpts(argc, argv);
+#ifdef HAVE_AVAHI_CLIENT_CLIENT_H
+#ifdef HAVE_AVAHI_COMMON_ADDRESS_H
+    if (NULL_OR_EMPTY(POLICY_SERVER) && BOOTSTRAP)
+    {
+        int ret = AutomaticBootstrap();
 
+        if (ret < 0)
+        {
+            return 1;
+        }
+    }
+#endif
+#endif
     ReportContext *report_context = OpenReports("agent");
     Policy *policy = GenericInitialize("agent", config, report_context);
     ThisAgentInit();
@@ -1467,3 +1491,45 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
 
     return CF_NOP;
 }
+
+#ifdef HAVE_AVAHI_CLIENT_CLIENT_H
+#ifdef HAVE_AVAHI_COMMON_ADDRESS_H
+static int AutomaticBootstrap()
+{
+    List *foundhubs = NULL;
+    int hubcount = ListHubs(&foundhubs);
+    
+    switch(hubcount)
+    {
+    case -1:
+        CfOut(cf_error, "", "Error while trying to find a Policy Server");
+        ListDestroy(&foundhubs);
+        return -1;
+    case 0:
+        CfOut(cf_reporting, "", "No hubs were found. Exiting.");
+        ListDestroy(&foundhubs);
+        return -1;
+    case 1:
+        CfOut(cf_reporting, "", "Found hub installed on:"
+                                                      "Hostname: %s"
+                                                      "IP Address: %s",
+                                                      ((HostProperties*)foundhubs)->Hostname,
+                                                      ((HostProperties*)foundhubs)->IPAddress);
+        strncpy(POLICY_SERVER, ((HostProperties*)foundhubs)->IPAddress, CF_BUFSIZE);
+        dlclose(avahi_handle);
+        break;
+    default:
+        CfOut(cf_reporting, "", "Found more than one hub registered in the network.\n"
+                                                      "Please bootstrap manually using IP from the list below:");
+        PrintList(foundhubs);
+        dlclose(avahi_handle);
+        ListDestroy(&foundhubs);
+        return -1;
+    };
+
+    ListDestroy(&foundhubs);
+
+    return 0;
+}
+#endif
+#endif

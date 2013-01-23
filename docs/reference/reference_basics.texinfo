@@ -2115,7 +2115,9 @@ first, followed by creation). The actual sequence continues for up to three
 iterations of the following, converging towards a final state:
 
 @verbatim
+   meta
    vars
+   defaults
    classes
    outputs
    interfaces

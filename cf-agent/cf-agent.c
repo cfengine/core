@@ -1497,7 +1497,7 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
 static int AutomaticBootstrap()
 {
     List *foundhubs = NULL;
-    int hubcount = ListHubs(foundhubs);
+    int hubcount = ListHubs(&foundhubs);
     
     switch(hubcount)
     {

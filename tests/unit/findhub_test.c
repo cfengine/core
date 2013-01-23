@@ -230,7 +230,7 @@ static void test_noHubsFound(void **state)
     
     hostcount = 0;
 
-    assert_int_equal(ListHubs(list), 0);
+    assert_int_equal(ListHubs(&list), 0);
     assert_int_not_equal(list, NULL);
 
     ListDestroy(&list);
@@ -242,7 +242,7 @@ static void test_oneHubFound(void **state)
 
     hostcount = 1;
 
-    assert_int_equal(ListHubs(list), 1);   
+    assert_int_equal(ListHubs(&list), 1);
     assert_int_not_equal(list, NULL);
     
     ListIterator *i = NULL;
@@ -263,7 +263,7 @@ static void test_multipleHubsFound(void **state)
 
     hostcount = 2;
 
-    assert_int_equal(ListHubs(list), 3);
+    assert_int_equal(ListHubs(&list), 3);
     assert_int_not_equal(list, NULL);
     
     ListIterator *i = NULL;
@@ -297,7 +297,7 @@ static void test_errorOccurred(void **state)
 
     hostcount = 4;
 
-    assert_int_equal(ListHubs(list), -1);
+    assert_int_equal(ListHubs(&list), -1);
 }
 
 int main()

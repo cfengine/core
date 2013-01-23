@@ -4,7 +4,7 @@
 #include "findhub_priv.h"
 #include "list.h"
 
-int ListHubs(List *list);
+int ListHubs(List **list);
 void PrintList(List *list);
 
 #endif // FINDHUB_H

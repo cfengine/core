@@ -125,7 +125,7 @@ void PrintList(List *list)
     ListIteratorDestroy(&i);
 }
 
-int ListHubs(List *list)
+int ListHubs(List **list)
 {
     AvahiClient *client = NULL;
     AvahiServiceBrowser *sb = NULL;
@@ -208,9 +208,9 @@ int ListHubs(List *list)
     if (spoll)
         avahi_simple_poll_free_ptr(spoll);
     
-    list = hublist;
+    *list = hublist;
 
-    return ListCount(list);
+    return ListCount(*list);
 }
 
 static void AtExitDlClose(void)

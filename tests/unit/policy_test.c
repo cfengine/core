@@ -7,8 +7,7 @@ static Seq *LoadAndCheck(const char *filename)
     char path[1024];
     sprintf(path, "%s/%s", TESTDATADIR, filename);
 
-    Policy *p = PolicyNew();
-    ParserParseFile(p, path);
+    Policy *p = ParserParseFile(path);
 
     Seq *errs = SeqNew(10, PolicyErrorDestroy);
     PolicyCheck(p, errs);

@@ -51,6 +51,24 @@ void ConstraintDestroy(Constraint *cp);
 Constraint *ConstraintAppendToPromise(Promise *promise, const char *lval, Rval rval, const char *classes, bool references_body);
 Constraint *ConstraintAppendToBody(Body *body, const char *lval, Rval rval, const char *classes, bool references_body);
 
+/**
+ * @brief A sequence of constraints matching the l-value.
+ * @param body Body to query
+ * @param lval l-value to match
+ * @return Sequence of pointers to the constraints. Destroying it does not alter the DOM.
+ */
+Seq *ConstraintGetFromBody(Body *body, const char *lval);
+
+const char *ConstraintContext(const Constraint *cp);
+
+/**
+ * @brief Returns the first effective constraint from a list of candidates, depending on evaluation state.
+ * @param constraints The list of potential candidates
+ * @return The effective constraint, or NULL if none are found.
+ */
+Constraint *EffectiveConstraint(Seq *constraints);
+
+
 Constraint *GetConstraint(const Promise *promise, const char *lval);
 void EditScalarConstraint(Seq *conlist, const char *lval, const char *rval);
 void *GetConstraintValue(const char *lval, const Promise *promise, char type);

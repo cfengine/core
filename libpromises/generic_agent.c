@@ -50,6 +50,8 @@
 #include "logging.h"
 #include "string_lib.h"
 #include "exec_tools.h"
+#include "list.h"
+#include "misc_lib.h"
 
 #ifdef HAVE_NOVA
 #include "nova_reporting.h"
@@ -66,8 +68,8 @@ extern char *CFH[][2];
 static void VerifyPromises(Policy *policy, Rlist *bundlesequence, const ReportContext *report_context);
 static void SetAuditVersion(void);
 static void CheckWorkingDirectories(const ReportContext *report_context);
-static void Cf3ParseFile(Policy *policy, const char *filename, const char *input_file, bool check_not_writable_by_others);
-static void Cf3ParseFiles(Policy *policy, const char *input_file, bool check_not_writable_by_others, const ReportContext *report_context);
+static Policy *Cf3ParseFile(const char *filename, const char *input_file, bool check_not_writable_by_others);
+static Policy *Cf3ParseFiles(const char *input_file, bool check_not_writable_by_others, const ReportContext *report_context);
 static bool MissingInputFile(const char *input_file);
 static void CheckControlPromises(char *scope, char *agent, Seq *controllist);
 static void CheckVariablePromises(char *scope, Promise *varlist);
@@ -214,7 +216,7 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const Report
                 check_promises = true;
                 CfOut(cf_verbose, "", " -> Input file is outside default repository, validating it");
             }
-            if (NewPromiseProposals(config->input_file))
+            if (NewPromiseProposals(config->input_file, NULL))
             {
                 check_promises = true;
                 CfOut(cf_verbose, "", " -> Input file is changed since last validation, validating it");
@@ -402,10 +404,7 @@ Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config,
 
     DeleteAllPromiseIds();      // in case we are re-reading, delete old handles
 
-/* Parse the files*/
-
-    Policy *policy = PolicyNew();
-    Cf3ParseFiles(policy, config->input_file, check_not_writable_by_others, report_context);
+    Policy *policy = Cf3ParseFiles(config->input_file, check_not_writable_by_others, report_context);
     {
         Seq *errors = SeqNew(100, PolicyErrorDestroy);
         if (!PolicyCheck(policy, errors))
@@ -635,66 +634,75 @@ void InitializeGA(GenericAgentConfig *config, const ReportContext *report_contex
 
 /*******************************************************************/
 
-static void Cf3ParseFiles(Policy *policy, const char *input_file, bool check_not_writable_by_others, const ReportContext *report_context)
+static Policy *Cf3ParseFiles(const char *input_file, bool check_not_writable_by_others, const ReportContext *report_context)
 {
-    Rlist *rp, *sl;
-
+    // TODO: remove PARSING
     PARSING = true;
 
     PROMISETIME = time(NULL);
 
-    PolicySetNameSpace(policy, "default");    
+    Policy *main_policy = Cf3ParseFile(input_file, input_file, check_not_writable_by_others);
 
-    Cf3ParseFile(policy, input_file, input_file, check_not_writable_by_others);
-
-    // Expand any lists in this list now
-    HashVariables(policy, NULL, report_context);
-    HashControls(policy);
-
-    if (VINPUTLIST != NULL)
+    // TODO: gather up in some PolicyCheckMain type function later
     {
-        for (rp = VINPUTLIST; rp != NULL; rp = rp->next)
+        Body *common_control = PolicyGetBody(main_policy, NULL, "common", "control");
+        if (!common_control)
         {
-            if (rp->type != CF_SCALAR)
-            {
-                CfOut(cf_error, "", "Non-file object in inputs list\n");
-            }
-            else
-            {
-                Rval returnval;
-
-                if (strcmp(rp->item, CF_NULL_VALUE) == 0)
-                {
-                    continue;
-                }
-
-                returnval = EvaluateFinalRval("sys", (Rval) {rp->item, rp->type}, true, NULL);
-
-                switch (returnval.rtype)
-                {
-                case CF_SCALAR:
-                    Cf3ParseFile(policy, (char *) returnval.item, input_file, check_not_writable_by_others);
-                    break;
-
-                case CF_LIST:
-                    for (sl = (Rlist *) returnval.item; sl != NULL; sl = sl->next)
-                    {
-                        Cf3ParseFile(policy, (char *) sl->item, input_file, check_not_writable_by_others);
-                    }
-                    break;
-                }
-
-                DeleteRvalItem(returnval);
-            }
-
-            HashVariables(policy, NULL, report_context);
-            HashControls(policy);
+            FatalError("Policy file is missing required body common control");
         }
     }
 
-    HashVariables(policy, NULL, report_context);
+    HashVariables(main_policy, NULL, report_context);
+    HashControls(main_policy);
+
+    for (const Rlist *rp = InputFiles(main_policy); rp; rp = rp->next)
+    {
+        // TODO: ad-hoc validation, necessary?
+        if (rp->type != CF_SCALAR)
+        {
+            CfOut(cf_error, "", "Non-file object in inputs list\n");
+        }
+        else
+        {
+            Rval returnval;
+
+            if (strcmp(rp->item, CF_NULL_VALUE) == 0)
+            {
+                continue;
+            }
+
+            returnval = EvaluateFinalRval("sys", (Rval) {rp->item, rp->type}, true, NULL);
+
+            switch (returnval.rtype)
+            {
+                case CF_SCALAR:
+                {
+                    Policy *policy = Cf3ParseFile(returnval.item, input_file, check_not_writable_by_others);
+                    main_policy = PolicyMerge(main_policy, policy);
+                }
+                break;
+
+                case CF_LIST:
+                for (const Rlist *sl = returnval.item; sl != NULL; sl = sl->next)
+                {
+                    Policy *policy = Cf3ParseFile(sl->item, input_file, check_not_writable_by_others);
+                    main_policy = PolicyMerge(main_policy, policy);
+                }
+                break;
+            }
+
+            DeleteRvalItem(returnval);
+        }
+
+        HashVariables(main_policy, NULL, report_context);
+        HashControls(main_policy);
+    }
+
+    HashVariables(main_policy, NULL, report_context);
 
     PARSING = false;
+
+    return main_policy;
 }
 
 /*******************************************************************/
@@ -714,9 +722,9 @@ static bool MissingInputFile(const char *input_file)
 
 /*******************************************************************/
 
-int NewPromiseProposals(const char *input_file)
+int NewPromiseProposals(const char *input_file, const Rlist *input_files)
 {
-    Rlist *rp, *sl;
+    Rlist *sl;
     struct stat sb;
     int result = false;
     char filename[CF_MAXVARSIZE];
@@ -784,25 +792,41 @@ int NewPromiseProposals(const char *input_file)
 
 // Check files in case there are any abs paths
 
-    if (VINPUTLIST != NULL)
+    for (const Rlist *rp = input_files; rp != NULL; rp = rp->next)
     {
-        for (rp = VINPUTLIST; rp != NULL; rp = rp->next)
+        if (rp->type != CF_SCALAR)
         {
-            if (rp->type != CF_SCALAR)
-            {
-                CfOut(cf_error, "", "Non file object %s in list\n", (char *) rp->item);
-            }
-            else
-            {
-                Rval returnval = EvaluateFinalRval("sys", (Rval) { rp->item, rp->type }, true, NULL);
+            CfOut(cf_error, "", "Non file object %s in list\n", (char *) rp->item);
+        }
+        else
+        {
+            Rval returnval = EvaluateFinalRval("sys", (Rval) { rp->item, rp->type }, true, NULL);
 
-                switch (returnval.rtype)
+            switch (returnval.rtype)
+            {
+            case CF_SCALAR:
+
+                if (cfstat(InputLocation((char *) returnval.item, input_file), &sb) == -1)
                 {
-                case CF_SCALAR:
+                    CfOut(cf_error, "stat", "Unreadable promise proposals at %s", (char *) returnval.item);
+                    result = true;
+                    break;
+                }
 
-                    if (cfstat(InputLocation((char *) returnval.item, input_file), &sb) == -1)
+                if (sb.st_mtime > PROMISETIME)
+                {
+                    result = true;
+                }
+
+                break;
+
+            case CF_LIST:
+
+                for (sl = (Rlist *) returnval.item; sl != NULL; sl = sl->next)
+                {
+                    if (cfstat(InputLocation((char *) sl->item, input_file), &sb) == -1)
                     {
-                        CfOut(cf_error, "stat", "Unreadable promise proposals at %s", (char *) returnval.item);
+                        CfOut(cf_error, "stat", "Unreadable promise proposals at %s", (char *) sl->item);
                         result = true;
                         break;
                     }
@@ -810,37 +834,18 @@ int NewPromiseProposals(const char *input_file)
                     if (sb.st_mtime > PROMISETIME)
                     {
                         result = true;
+                        break;
                     }
-
-                    break;
-
-                case CF_LIST:
-
-                    for (sl = (Rlist *) returnval.item; sl != NULL; sl = sl->next)
-                    {
-                        if (cfstat(InputLocation((char *) sl->item, input_file), &sb) == -1)
-                        {
-                            CfOut(cf_error, "stat", "Unreadable promise proposals at %s", (char *) sl->item);
-                            result = true;
-                            break;
-                        }
-
-                        if (sb.st_mtime > PROMISETIME)
-                        {
-                            result = true;
-                            break;
-                        }
-                    }
-
-                    break;
                 }
 
-                DeleteRvalItem(returnval);
+                break;
+            }
 
-                if (result)
-                {
-                    break;
-                }
+            DeleteRvalItem(returnval);
+
+            if (result)
+            {
+                break;
             }
         }
     }
@@ -962,12 +967,10 @@ void CloseReports(const char *agents, ReportContext *report_context)
  * The difference between filename and input_input file is that the latter is the file specified by -f or
  * equivalently the file containing body common control. This will hopefully be squashed in later refactoring.
  */
-static void Cf3ParseFile(Policy *policy, const char *filename, const char *input_file, bool check_not_writable_by_others)
+static Policy *Cf3ParseFile(const char *filename, const char *input_file, bool check_not_writable_by_others)
 {
     struct stat statbuf;
     char wfilename[CF_BUFSIZE];
-
-    PolicySetNameSpace(policy, "default");    
 
     strncpy(wfilename, InputLocation(filename, input_file), CF_BUFSIZE);
 
@@ -975,7 +978,7 @@ static void Cf3ParseFile(Policy *policy, const char *filename, const char *input
     {
         if (IGNORE_MISSING_INPUTS)
         {
-            return;
+            return PolicyNew();
         }
 
         CfOut(cf_error, "stat", "Can't stat file \"%s\" for parsing\n", wfilename);
@@ -1002,7 +1005,7 @@ static void Cf3ParseFile(Policy *policy, const char *filename, const char *input
         exit(1);
     }
 
-    ParserParseFile(policy, wfilename);
+    return ParserParseFile(wfilename);
 }
 
 /*******************************************************************/
@@ -1024,6 +1027,22 @@ Seq *ControlBodyConstraints(const Policy *policy, AgentType agent)
     }
 
     return NULL;
+}
+
+const Rlist *InputFiles(Policy *policy)
+{
+    Body *body_common_control = PolicyGetBody(policy, NULL, "common", "control");
+    if (!body_common_control)
+    {
+        ProgrammingError("Attempted to get input files from policy without body common control");
+        return NULL;
+    }
+
+    Seq *potential_inputs = ConstraintGetFromBody(body_common_control, "inputs");
+    Constraint *cp = EffectiveConstraint(potential_inputs);
+    SeqDestroy(potential_inputs);
+
+    return cp ? cp->rval.item : NULL;
 }
 
 /*******************************************************************/

@@ -418,12 +418,18 @@ static void test_printf(void **state)
     unsigned int bm1_size = DEFAULT_BUFFER_SIZE - 1;
     unsigned int be_size = DEFAULT_BUFFER_SIZE;
     unsigned int bp1_size = DEFAULT_BUFFER_SIZE + 1;
-    for (i = 0; i < DEFAULT_BUFFER_SIZE - 1; ++i)
-    {
-        buffer_m1[i] = 'c';
-        buffer_0[i] = 'd';
-        buffer_p1[i] = 'e';
-    }
+    /*
+     * Make sure the buffers are filled with 0.
+     */
+    memset(buffer_m1, '\0', DEFAULT_BUFFER_SIZE);
+    memset(buffer_0, '\0', DEFAULT_BUFFER_SIZE + 1);
+    memset(buffer_p1, '\0', DEFAULT_BUFFER_SIZE + 2);
+    /*
+     * Write something to the buffers
+     */
+    memset(buffer_m1, 'c', DEFAULT_BUFFER_SIZE);
+    memset(buffer_0, 'd', DEFAULT_BUFFER_SIZE + 1);
+    memset(buffer_p1, 'e', DEFAULT_BUFFER_SIZE + 2);
     /*
      * One shorter, that means the buffer remains the same size as before.
      */
@@ -444,7 +450,6 @@ static void test_printf(void **state)
      * 1 more, it should allocate one more block
      * This means retrying the operation.
      */
-    buffer_p1[DEFAULT_BUFFER_SIZE] = 'e';
     buffer_p1[DEFAULT_BUFFER_SIZE + 1] = '\0';
     assert_int_equal(0, BufferPrintf(bp1, "%s", buffer_p1));
     assert_int_equal(bp1_size, BufferPrintf(bp1, "%s", buffer_p1));
@@ -573,12 +578,18 @@ static void test_vprintf(void **state)
     unsigned int bm1_size = DEFAULT_BUFFER_SIZE - 1;
     unsigned int be_size = DEFAULT_BUFFER_SIZE;
     unsigned int bp1_size = DEFAULT_BUFFER_SIZE + 1;
-    for (i = 0; i < DEFAULT_BUFFER_SIZE - 1; ++i)
-    {
-        buffer_m1[i] = 'c';
-        buffer_0[i] = 'd';
-        buffer_p1[i] = 'e';
-    }
+    /*
+     * Make sure the buffers are filled with 0.
+     */
+    memset(buffer_m1, '\0', DEFAULT_BUFFER_SIZE);
+    memset(buffer_0, '\0', DEFAULT_BUFFER_SIZE + 1);
+    memset(buffer_p1, '\0', DEFAULT_BUFFER_SIZE + 2);
+    /*
+     * Write something to the buffers
+     */
+    memset(buffer_m1, 'c', DEFAULT_BUFFER_SIZE);
+    memset(buffer_0, 'd', DEFAULT_BUFFER_SIZE + 1);
+    memset(buffer_p1, 'e', DEFAULT_BUFFER_SIZE + 2);
     /*
      * One shorter, that means the buffer remains the same size as before.
      */
@@ -599,7 +610,6 @@ static void test_vprintf(void **state)
      * 1 more, it should allocate one more block
      * This means retrying the operation.
      */
-    buffer_p1[DEFAULT_BUFFER_SIZE] = 'e';
     buffer_p1[DEFAULT_BUFFER_SIZE + 1] = '\0';
     assert_int_equal(0, test_vprintf_helper(bp1, "%s", buffer_p1));
     assert_int_equal(bp1_size, test_vprintf_helper(bp1, "%s", buffer_p1));

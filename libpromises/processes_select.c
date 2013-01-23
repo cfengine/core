@@ -52,7 +52,7 @@ static int ExtractPid(char *psentry, char **names, int *start, int *end);
 
 /***************************************************************************/
 
-static int SelectProcess(char *procentry, char **names, int *start, int *end, Attributes a)
+static int SelectProcess(char *procentry, char **names, int *start, int *end, ProcessSelect a)
 {
     AlphaList proc_attr;
     int result = true, i;
@@ -62,11 +62,6 @@ static int SelectProcess(char *procentry, char **names, int *start, int *end, At
     CfDebug("SelectProcess(%s)\n", procentry);
 
     InitAlphaList(&proc_attr);
-
-    if (!a.haveselect)
-    {
-        return true;
-    }
 
     if (!SplitProcLine(procentry, names, start, end, column))
     {
@@ -81,7 +76,7 @@ static int SelectProcess(char *procentry, char **names, int *start, int *end, At
         }
     }
 
-    for (rp = a.process_select.owner; rp != NULL; rp = rp->next)
+    for (rp = a.owner; rp != NULL; rp = rp->next)
     {
         if (SelectProcRegexMatch("USER", "UID", (char *) rp->item, names, column))
         {
@@ -90,83 +85,71 @@ static int SelectProcess(char *procentry, char **names, int *start, int *end, At
         }
     }
 
-    if (SelectProcRangeMatch("PID", "PID", a.process_select.min_pid, a.process_select.max_pid, names, column))
+    if (SelectProcRangeMatch("PID", "PID", a.min_pid, a.max_pid, names, column))
     {
         PrependAlphaList(&proc_attr, "pid");
     }
 
-    if (SelectProcRangeMatch("PPID", "PPID", a.process_select.min_ppid, a.process_select.max_ppid, names, column))
+    if (SelectProcRangeMatch("PPID", "PPID", a.min_ppid, a.max_ppid, names, column))
     {
         PrependAlphaList(&proc_attr, "ppid");
     }
 
-    if (SelectProcRangeMatch("PGID", "PGID", a.process_select.min_pgid, a.process_select.max_pgid, names, column))
+    if (SelectProcRangeMatch("PGID", "PGID", a.min_pgid, a.max_pgid, names, column))
     {
         PrependAlphaList(&proc_attr, "pgid");
     }
 
-    if (SelectProcRangeMatch("VSZ", "SZ", a.process_select.min_vsize, a.process_select.max_vsize, names, column))
+    if (SelectProcRangeMatch("VSZ", "SZ", a.min_vsize, a.max_vsize, names, column))
     {
         PrependAlphaList(&proc_attr, "vsize");
     }
 
-    if (SelectProcRangeMatch("RSS", "RSS", a.process_select.min_rsize, a.process_select.max_rsize, names, column))
+    if (SelectProcRangeMatch("RSS", "RSS", a.min_rsize, a.max_rsize, names, column))
     {
         PrependAlphaList(&proc_attr, "rsize");
     }
 
     if (SelectProcTimeCounterRangeMatch
-        ("TIME", "TIME", a.process_select.min_ttime, a.process_select.max_ttime, names, column))
+        ("TIME", "TIME", a.min_ttime, a.max_ttime, names, column))
     {
         PrependAlphaList(&proc_attr, "ttime");
     }
 
     if (SelectProcTimeAbsRangeMatch
-        ("STIME", "START", a.process_select.min_stime, a.process_select.max_stime, names, column))
+        ("STIME", "START", a.min_stime, a.max_stime, names, column))
     {
         PrependAlphaList(&proc_attr, "stime");
     }
 
-    if (SelectProcRangeMatch("NI", "PRI", a.process_select.min_pri, a.process_select.max_pri, names, column))
+    if (SelectProcRangeMatch("NI", "PRI", a.min_pri, a.max_pri, names, column))
     {
         PrependAlphaList(&proc_attr, "priority");
     }
 
-    if (SelectProcRangeMatch("NLWP", "NLWP", a.process_select.min_thread, a.process_select.max_thread, names, column))
+    if (SelectProcRangeMatch("NLWP", "NLWP", a.min_thread, a.max_thread, names, column))
     {
         PrependAlphaList(&proc_attr, "threads");
     }
 
-    if (SelectProcRegexMatch("S", "STAT", a.process_select.status, names, column))
+    if (SelectProcRegexMatch("S", "STAT", a.status, names, column))
     {
         PrependAlphaList(&proc_attr, "status");
     }
 
-    if (SelectProcRegexMatch("CMD", "COMMAND", a.process_select.command, names, column))
+    if (SelectProcRegexMatch("CMD", "COMMAND", a.command, names, column))
     {
         PrependAlphaList(&proc_attr, "command");
     }
 
-    if (SelectProcRegexMatch("TTY", "TTY", a.process_select.tty, names, column))
+    if (SelectProcRegexMatch("TTY", "TTY", a.tty, names, column))
     {
         PrependAlphaList(&proc_attr, "tty");
     }
 
-    result = EvalProcessResult(a.process_select.process_result, &proc_attr);
-   
-    DeleteAlphaList(&proc_attr);
+    result = EvalProcessResult(a.process_result, &proc_attr);
 
-    if (result)
-    {
-        if (a.transaction.action == cfa_warn)
-        {
-            CfOut(cf_error, "", " !! Matched: %s\n", procentry);
-        }
-        else
-        {
-            CfOut(cf_inform, "", " !! Matched: %s\n", procentry);
-        }
-    }
+    DeleteAlphaList(&proc_attr);
 
     for (i = 0; column[i] != NULL; i++)
     {
@@ -203,9 +186,23 @@ int FindPidMatches(Item *procdata, Item **killlist, Attributes a, Promise *pp)
                 continue;
             }
 
-            if (!SelectProcess(ip->name, names, start, end, a))
+            if (a.haveselect)
             {
-                continue;
+                if (SelectProcess(ip->name, names, start, end, a.process_select))
+                {
+                    if (a.transaction.action == cfa_warn)
+                    {
+                        CfOut(cf_error, "", " !! Matched: %s\n", ip->name);
+                    }
+                    else
+                    {
+                        CfOut(cf_inform, "", " !! Matched: %s\n", ip->name);
+                    }
+                }
+                else
+                {
+                    continue;
+                }
             }
 
             pid = ExtractPid(ip->name, names, start, end);

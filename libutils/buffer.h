@@ -27,6 +27,7 @@
 
 #include <stdarg.h>
 #include "refcount.h"
+#include "compiler.h"
 
 /**
   @brief Buffer implementation
@@ -143,7 +144,7 @@ int BufferAppend(Buffer *buffer, char *bytes, unsigned int length);
   @param format
   @return The number of bytes written to the buffer or 0 if the operation needs to be retried. In case of error -1 is returned.
   */
-int BufferPrintf(Buffer *buffer, const char *format, ...);
+int BufferPrintf(Buffer *buffer, const char *format, ...) FUNC_ATTR_PRINTF(2, 3);
 /**
   @brief Stores complex data on the buffer.
 

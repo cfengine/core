@@ -1497,7 +1497,10 @@ static FnCallResult FnCallGetFields(FnCall *fp, Rlist *finalargs)
         line[0] = '\0';
         if (fgets(line, CF_BUFSIZE, fin) == NULL)
         {
-            UnexpectedError("Failed to read line from stream");
+            if (strlen(line))
+            {
+                UnexpectedError("Failed to read line from stream");
+            }
         }
         if (Chop(line, CF_EXPANDSIZE) == -1)
         {
@@ -1562,9 +1565,12 @@ static FnCallResult FnCallCountLinesMatching(FnCall *fp, Rlist *finalargs)
     while (!feof(fin))
     {
         line[0] = '\0';
-        if (fgets(line, CF_BUFSIZE, fin) != NULL)
+        if (fgets(line, CF_BUFSIZE, fin) == NULL)
         {
-            UnexpectedError("Failed to read line from stream");
+            if (strlen(line))
+            {
+                UnexpectedError("Failed to read line from stream");
+            }
         }
         if (Chop(line, CF_EXPANDSIZE) == -1)
         {
@@ -2688,7 +2694,10 @@ static FnCallResult FnCallRegLine(FnCall *fp, Rlist *finalargs)
             line[0] = '\0';
             if (fgets(line, CF_BUFSIZE, fin) == NULL)
             {
-                UnexpectedError("Failed to read line from stream");
+                if (strlen(line))
+                {
+                    UnexpectedError("Failed to read line from stream");
+                }
             }
             if (Chop(line, CF_EXPANDSIZE) == -1)
             {

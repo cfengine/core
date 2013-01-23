@@ -145,7 +145,10 @@ static void PrintFile(Attributes a, Promise *pp)
         buffer[0] = '\0';
         if (fgets(buffer, CF_BUFSIZE, fp) == NULL)
         {
-            UnexpectedError("Failed to read line from stream");
+            if (strlen(buffer))
+            {
+                UnexpectedError("Failed to read line from stream");
+            }
         }
         CfOut(cf_error, "", "R: %s", buffer);
         lines++;
@@ -188,7 +191,10 @@ static void ShowState(char *type)
             memset(vbuff, 0, CF_BUFSIZE);
             if (fgets(buffer, CF_BUFSIZE, fp) == NULL)
             {
-                UnexpectedError("Failed to read line from stream");
+                if (strlen(buffer))
+                {
+                    UnexpectedError("Failed to read line from stream");
+                }
             }
 
             if (strlen(buffer) > 0)

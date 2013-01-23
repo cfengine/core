@@ -709,9 +709,13 @@ static void FindV6InterfacesInfo(void)
 
     while (!feof(pp))
     {
+        buffer[0] = '\0';
         if (fgets(buffer, CF_BUFSIZE, pp) == NULL)
         {
-            UnexpectedError("Failed to read line from stream");
+            if (strlen(buffer))
+            {
+                UnexpectedError("Failed to read line from stream");
+            }
         }
 
         if (ferror(pp))         /* abortable */

@@ -669,7 +669,10 @@ void Get3Environment()
 
         if (fgets(class, CF_BUFSIZE, fp) == NULL)
         {
-            UnexpectedError("Failed to read line from stream");
+            if (strlen(class))
+            {
+                UnexpectedError("Failed to read line from stream");
+            }
         }
 
         if (feof(fp))
@@ -1505,9 +1508,13 @@ static int Linux_Suse_Version(void)
 
     while (!feof(fp))
     {
+        vbuf[0] = '\0';
         if (fgets(vbuf, sizeof(vbuf), fp) == NULL)
         {
-            UnexpectedError("Failed to read line from stream");
+            if (strlen(vbuf))
+            {
+                UnexpectedError("Failed to read line from stream");
+            }
         }
 
         if (strncmp(vbuf, "VERSION", strlen("version")) == 0)
@@ -2225,6 +2232,7 @@ static void GetCPUInfo()
 
     while (!feof(fp))
     {
+        buf[0] = '\0';
         if (fgets(buf, CF_BUFSIZE, fp))
         {
             if (strncmp(buf, "cpu", 3) == 0)

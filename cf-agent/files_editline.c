@@ -213,7 +213,10 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
         buffer[0] = '\0';
         if (fgets(buffer, CF_BUFSIZE, fp) == NULL)
         {
-            UnexpectedError("Failed to read line from stream");
+            if (strlen(buffer))
+            {
+                UnexpectedError("Failed to read line from stream");
+            }
         }
         lineno++;
    
@@ -1267,7 +1270,10 @@ static int InsertFileAtLocation(Item **start, Item *begin_ptr, Item *end_ptr, It
         buf[0] = '\0';
         if (fgets(buf, CF_BUFSIZE, fin) == NULL)
         {
-            UnexpectedError("Failed to read line from stream");
+            if (strlen(buf))
+            {
+                UnexpectedError("Failed to read line from stream");
+            }
         }
         if (StripTrailingNewline(buf, CF_EXPANDSIZE) == -1)
         {

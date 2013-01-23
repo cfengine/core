@@ -52,7 +52,7 @@ static int ExtractPid(char *psentry, char **names, int *start, int *end);
 
 /***************************************************************************/
 
-int SelectProcess(char *procentry, char **names, int *start, int *end, Attributes a, Promise *pp)
+int SelectProcess(char *procentry, char **names, int *start, int *end, Attributes a)
 {
     AlphaList proc_attr;
     int result = true, i;
@@ -203,7 +203,7 @@ int FindPidMatches(Item *procdata, Item **killlist, Attributes a, Promise *pp)
                 continue;
             }
 
-            if (!SelectProcess(ip->name, names, start, end, a, pp))
+            if (!SelectProcess(ip->name, names, start, end, a))
             {
                 continue;
             }

@@ -84,7 +84,7 @@ ssize_t CfReadLine(char *buff, size_t size, FILE *fp)
         return -1;
     }
 
-	if (fgets(buff, size, fp) == NULL)
+    if (fgets(buff, size, fp) == NULL)
     {
         *buff = '\0';           /* EOF */
         return 0;

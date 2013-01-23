@@ -381,9 +381,7 @@ static void test_printf(void **state)
     for (i = 0; i < char2size; ++i)
         char2[i] = 'a';
     char2[char2size] = '\0';
-    // The first time, the buffer is too small.
-    assert_int_equal(0, BufferPrintf(buffer, "%s", char2));
-    // The second time there is enough space
+    // The buffer should grow
     assert_int_equal(char2size, BufferPrintf(buffer, "%s", char2));
     assert_string_equal(char2, buffer->buffer);
     assert_string_equal(char2, BufferData(buffer));
@@ -442,7 +440,6 @@ static void test_printf(void **state)
      * This means retrying the operation.
      */
     buffer_0[DEFAULT_BUFFER_SIZE] = '\0';
-    assert_int_equal(0, BufferPrintf(be, "%s", buffer_0));
     assert_int_equal(be_size, BufferPrintf(be, "%s", buffer_0));
     assert_string_equal(buffer_0, be->buffer);
     assert_int_equal(be->capacity, 2 * DEFAULT_BUFFER_SIZE);
@@ -451,7 +448,6 @@ static void test_printf(void **state)
      * This means retrying the operation.
      */
     buffer_p1[DEFAULT_BUFFER_SIZE + 1] = '\0';
-    assert_int_equal(0, BufferPrintf(bp1, "%s", buffer_p1));
     assert_int_equal(bp1_size, BufferPrintf(bp1, "%s", buffer_p1));
     assert_string_equal(buffer_p1, bp1->buffer);
     assert_int_equal(bp1->capacity, 2 * DEFAULT_BUFFER_SIZE);
@@ -541,9 +537,7 @@ static void test_vprintf(void **state)
     for (i = 0; i < char2size; ++i)
         char2[i] = 'a';
     char2[char2size] = '\0';
-    // The first time, the buffer is too small.
-    assert_int_equal(0, test_vprintf_helper(buffer, "%s", char2));
-    // The second time there is enough space
+    // The buffer should resize itself
     assert_int_equal(char2size, test_vprintf_helper(buffer, "%s", char2));
     assert_string_equal(char2, buffer->buffer);
     assert_string_equal(char2, BufferData(buffer));
@@ -602,7 +596,6 @@ static void test_vprintf(void **state)
      * This means retrying the operation.
      */
     buffer_0[DEFAULT_BUFFER_SIZE] = '\0';
-    assert_int_equal(0, test_vprintf_helper(be, "%s", buffer_0));
     assert_int_equal(be_size, test_vprintf_helper(be, "%s", buffer_0));
     assert_string_equal(buffer_0, be->buffer);
     assert_int_equal(be->capacity, 2 * DEFAULT_BUFFER_SIZE);
@@ -611,7 +604,6 @@ static void test_vprintf(void **state)
      * This means retrying the operation.
      */
     buffer_p1[DEFAULT_BUFFER_SIZE + 1] = '\0';
-    assert_int_equal(0, test_vprintf_helper(bp1, "%s", buffer_p1));
     assert_int_equal(bp1_size, test_vprintf_helper(bp1, "%s", buffer_p1));
     assert_string_equal(buffer_p1, bp1->buffer);
     assert_int_equal(bp1->capacity, 2 * DEFAULT_BUFFER_SIZE);

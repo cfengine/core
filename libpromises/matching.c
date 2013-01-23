@@ -35,18 +35,6 @@
 #include "logging.h"
 #include "misc_lib.h"
 
-#ifdef HAVE_PCRE_H
-# include <pcre.h>
-#endif
-
-#ifdef HAVE_PCRE_PCRE_H
-# include <pcre/pcre.h>
-#endif
-
-/*********************************************************************/
-/* Wrappers                                                          */
-/*********************************************************************/
-
 static pcre *CompileRegExp(const char *regexp)
 {
     pcre *rx;

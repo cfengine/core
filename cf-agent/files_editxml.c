@@ -43,16 +43,6 @@
 #include "transaction.h"
 #include "logging.h"
 
-#ifdef HAVE_PCRE_H
-# include <pcre.h>
-#endif
-
-#ifdef HAVE_PCRE_PCRE_H
-# include <pcre/pcre.h>
-#endif
-
-/*****************************************************************************/
-
 enum editxmltypesequence
 {
     elx_vars,
@@ -2659,7 +2649,6 @@ static bool XPathHeadContainsPredicate(char *head, Attributes a, Promise *pp)
 static bool XPathVerifyBuildSyntax(const char* xpath, Attributes a, Promise *pp)
 /*verify that XPath does not specify position wrt sibling-axis (such as):[#] [last()] [position()] following-sibling:: preceding-sibling:: */
 {
-#ifdef HAVE_PCRE_H
     char regexp[CF_BUFSIZE] = {'\0'};
 
     //check for convergence
@@ -2682,10 +2671,6 @@ static bool XPathVerifyBuildSyntax(const char* xpath, Attributes a, Promise *pp)
              "Please refer to users manual for supported syntax specifications.", xpath);
         return false;
     }
-#else
-    CfOut(cf_verbose, "", " !! Cannot verify build syntax without PCRE\n");
-    return false;
-#endif
     return true;
 }
 
@@ -2694,7 +2679,6 @@ static bool XPathVerifyBuildSyntax(const char* xpath, Attributes a, Promise *pp)
 static bool XPathVerifyConvergence(const char* xpath, Attributes a, Promise *pp)
 /*verify that XPath does not specify position wrt sibling-axis (such as):[#] [last()] [position()] following-sibling:: preceding-sibling:: */
 {
-#ifdef HAVE_PCRE_H
     char regexp[CF_BUFSIZE] = {'\0'};
 
     //check in predicate
@@ -2712,10 +2696,6 @@ static bool XPathVerifyConvergence(const char* xpath, Attributes a, Promise *pp)
     {
         return false;
     }
-#else
-    CfOut(cf_verbose, "", " !! Cannot verify XPath expressions without PCRE\n");
-    return false;
-#endif
     return true;
 }
 
@@ -2734,7 +2714,6 @@ static bool ContainsRegex(const char* rawstring, const char* regex)
     const char *errorstr;
     int erroffset;
 
-#ifdef HAVE_PCRE_H
     pcre *rx = pcre_compile(regex, 0, &errorstr, &erroffset, NULL);
 
     if ((rc = pcre_exec(rx, NULL, rawstring, strlen(rawstring), 0, 0, ovector, OVECCOUNT)) >= 0)
@@ -2744,9 +2723,6 @@ static bool ContainsRegex(const char* rawstring, const char* regex)
     }
 
     pcre_free(rx);
-#else
-        CfOut(cf_verbose, "", " !! Cannot verify XPath expressions without PCRE\n");
-#endif
     return false;
 }
 

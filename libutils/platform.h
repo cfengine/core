@@ -142,6 +142,14 @@ struct utsname
 #include <openssl/bn.h>
 #include <errno.h>
 
+#ifdef HAVE_PCRE_H
+# include <pcre.h>
+#endif
+
+#ifdef HAVE_PCRE_PCRE_H
+# include <pcre/pcre.h>
+#endif
+
 #ifdef HAVE_DIRENT_H
 # include <dirent.h>
 #else

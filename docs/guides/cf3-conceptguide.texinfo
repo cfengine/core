@@ -115,7 +115,7 @@ CFEngine does not need reliable infrastructure. It works
 opportunistically in almost any environment, using few resources. It
 has few software dependencies.  So, not only does it work in all of the
 traditional fixed-plan scenarios, but it is capable of working in
-totally ad hoc deployment: an temporary incident room, a submarine
+totally ad hoc deployment: a temporary incident room, a submarine
 drifting on and off line, a satellite or a robot explorer.
 
 One could argue `well I don't need that kind of system, because my

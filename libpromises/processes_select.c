@@ -159,112 +159,120 @@ static int SelectProcess(char *procentry, char **names, int *start, int *end, Pr
     return result;
 }
 
-int FindPidMatches(Item *procdata, Item **killlist, Attributes a, Promise *pp)
+Item *SelectProcesses(const Item *processes, const char *process_name, ProcessSelect a, bool attrselect)
 {
-    Item *ip;
-    int pid = -1, matches = 0, i, s, e, promised_zero;
-    pid_t cfengine_pid = getpid();
-    char *names[CF_PROCCOLS];   /* ps headers */
+    Item *result = NULL;
+
+    if (processes == NULL)
+    {
+        return result;
+    }
+
+    char *names[CF_PROCCOLS];
     int start[CF_PROCCOLS];
     int end[CF_PROCCOLS];
 
-    if (procdata == NULL)
+    GetProcessColumnNames(processes->name, &names[0], start, end);
+
+    for (Item *ip = processes->next; ip != NULL; ip = ip->next)
     {
-        return 0;
-    }
+        int s, e;
 
-    GetProcessColumnNames(procdata->name, (char **) names, start, end);
-
-    for (ip = procdata->next; ip != NULL; ip = ip->next)
-    {
-        CF_OCCUR++;
-
-        if (BlockTextMatch(pp->promiser, ip->name, &s, &e))
+        if (BlockTextMatch(process_name, ip->name, &s, &e))
         {
             if (NULL_OR_EMPTY(ip->name))
             {
                 continue;
             }
 
-            if (a.haveselect)
+            if (attrselect && !SelectProcess(ip->name, names, start, end, a))
             {
-                if (SelectProcess(ip->name, names, start, end, a.process_select))
-                {
-                    if (a.transaction.action == cfa_warn)
-                    {
-                        CfOut(cf_error, "", " !! Matched: %s\n", ip->name);
-                    }
-                    else
-                    {
-                        CfOut(cf_inform, "", " !! Matched: %s\n", ip->name);
-                    }
-                }
-                else
-                {
-                    continue;
-                }
+                continue;
             }
 
-            pid = ExtractPid(ip->name, names, start, end);
+            pid_t pid = ExtractPid(ip->name, names, start, end);
 
             if (pid == -1)
             {
-                CfOut(cf_verbose, "", "Unable to extract pid while looking for %s\n", pp->promiser);
+                CfOut(cf_verbose, "", "Unable to extract pid while looking for %s\n", process_name);
                 continue;
             }
 
-            CfOut(cf_verbose, "", " ->  Found matching pid %d\n     (%s)", pid, ip->name);
-
-            matches++;
-
-            if (pid == 1)
-            {
-                if ((RlistLen(a.signals) == 1) && (IsStringIn(a.signals, "hup")))
-                {
-                    CfOut(cf_verbose, "", "(Okay to send only HUP to init)\n");
-                }
-                else
-                {
-                    continue;
-                }
-            }
-
-            if ((pid < 4) && (a.signals))
-            {
-                CfOut(cf_verbose, "", "Will not signal or restart processes 0,1,2,3 (occurred while looking for %s)\n",
-                      pp->promiser);
-                continue;
-            }
-
-            promised_zero = (a.process_count.min_range == 0) && (a.process_count.max_range == 0);
-
-            if ((a.transaction.action == cfa_warn) && promised_zero)
-            {
-                CfOut(cf_error, "", "Process alert: %s\n", procdata->name);     /* legend */
-                CfOut(cf_error, "", "Process alert: %s\n", ip->name);
-                continue;
-            }
-
-            if ((pid == cfengine_pid) && (a.signals))
-            {
-                CfOut(cf_verbose, "", " !! cf-agent will not signal itself!\n");
-                continue;
-            }
-
-            PrependItem(killlist, ip->name, "");
-            (*killlist)->counter = pid;
+            PrependItem(&result, ip->name, "");
+            result->counter = (int)pid;
         }
     }
 
-// Free up allocated memory
-
-    for (i = 0; i < CF_PROCCOLS; i++)
+    for (int i = 0; i < CF_PROCCOLS; i++)
     {
-        if (names[i] != NULL)
-        {
-            free(names[i]);
-        }
+        free(names[i]);
     }
+
+    return result;
+}
+
+int FindPidMatches(Item *procdata, Item **killlist, Attributes a, Promise *pp)
+{
+    int matches = 0;
+    pid_t cfengine_pid = getpid();
+
+    Item *matched = SelectProcesses(procdata, pp->promiser, a.process_select, a.haveselect);
+
+    for (Item *ip = matched; ip != NULL; ip = ip->next)
+    {
+        CF_OCCUR++;
+
+        if (a.transaction.action == cfa_warn)
+        {
+            CfOut(cf_error, "", " !! Matched: %s\n", ip->name);
+        }
+        else
+        {
+            CfOut(cf_inform, "", " !! Matched: %s\n", ip->name);
+        }
+
+        pid_t pid = ip->counter;
+
+        if (pid == 1)
+        {
+            if ((RlistLen(a.signals) == 1) && (IsStringIn(a.signals, "hup")))
+            {
+                CfOut(cf_verbose, "", "(Okay to send only HUP to init)\n");
+            }
+            else
+            {
+                continue;
+            }
+        }
+
+        if ((pid < 4) && (a.signals))
+        {
+            CfOut(cf_verbose, "", "Will not signal or restart processes 0,1,2,3 (occurred while looking for %s)\n",
+                  pp->promiser);
+            continue;
+        }
+
+        bool promised_zero = (a.process_count.min_range == 0) && (a.process_count.max_range == 0);
+
+        if ((a.transaction.action == cfa_warn) && promised_zero)
+        {
+            CfOut(cf_error, "", "Process alert: %s\n", procdata->name);     /* legend */
+            CfOut(cf_error, "", "Process alert: %s\n", ip->name);
+            continue;
+        }
+
+        if ((pid == cfengine_pid) && (a.signals))
+        {
+            CfOut(cf_verbose, "", " !! cf-agent will not signal itself!\n");
+            continue;
+        }
+
+        PrependItem(killlist, ip->name, "");
+        (*killlist)->counter = pid;
+        matches++;
+    }
+
+    DeleteItemList(matched);
 
     return matches;
 }

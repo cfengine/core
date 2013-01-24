@@ -364,10 +364,17 @@ int BufferAppend(Buffer *buffer, char *bytes, unsigned int length)
 
 int BufferPrintf(Buffer *buffer, const char *format, ...)
 {
+    /*
+     * We declare two lists, in case we need to reiterate over the list because the buffer was
+     * too small.
+     */
     va_list ap;
+    va_list aq;
     va_start(ap, format);
+    va_copy(aq, ap);
     if (!buffer || !format)
     {
+        va_end(aq);
         va_end(ap);
         return -1;
     }
@@ -404,6 +411,7 @@ int BufferPrintf(Buffer *buffer, const char *format, ...)
             free (new_buffer);
             RefCountDestroy(&buffer->ref_count);
             buffer->ref_count = ref_count;
+            va_end(aq);
             va_end(ap);
             return -1;
         }
@@ -421,6 +429,7 @@ int BufferPrintf(Buffer *buffer, const char *format, ...)
             free (new_buffer);
             RefCountDestroy(&buffer->ref_count);
             buffer->ref_count = ref_count;
+            va_end(aq);
             va_end(ap);
             return -1;
         }
@@ -441,18 +450,19 @@ int BufferPrintf(Buffer *buffer, const char *format, ...)
         buffer->buffer = new_buffer;
         buffer->used = used;
     }
-    printed = vsnprintf(buffer->buffer, buffer->capacity, format, ap);
+    printed = vsnprintf(buffer->buffer, buffer->capacity, format, aq);
     if (printed >= buffer->capacity)
     {
         /*
          * Allocate a larger buffer and retry.
-         * Don't forget to signal by returning 0.
+         * Now is when having a copy of the list pays off :-)
          */
         if (printed > buffer->memory_cap)
         {
             /*
              * We would go over the memory_cap limit.
              */
+            va_end(aq);
             va_end(ap);
             return -1;
         }
@@ -460,18 +470,22 @@ int BufferPrintf(Buffer *buffer, const char *format, ...)
         buffer->buffer = (char *)xrealloc(buffer->buffer, required_blocks * DEFAULT_BUFFER_SIZE);
         buffer->capacity = required_blocks * DEFAULT_BUFFER_SIZE;
         buffer->used = 0;
-        printed = 0;
+        printed = vsnprintf(buffer->buffer, buffer->capacity, format, ap);
+        buffer->used = printed;
     }
     else
     {
         buffer->used = printed;
     }
+    va_end(aq);
     va_end(ap);
     return printed;
 }
 
 int BufferVPrintf(Buffer *buffer, const char *format, va_list ap)
 {
+    va_list aq;
+    va_copy(aq, ap);
     if (!buffer || !format)
     {
         return -1;
@@ -544,12 +558,12 @@ int BufferVPrintf(Buffer *buffer, const char *format, va_list ap)
         buffer->buffer = new_buffer;
         buffer->used = used;
     }
-    printed = vsnprintf(buffer->buffer, buffer->capacity, format, ap);
+    printed = vsnprintf(buffer->buffer, buffer->capacity, format, aq);
     if (printed >= buffer->capacity)
     {
         /*
          * Allocate a larger buffer and retry.
-         * Don't forget to signal by returning 0.
+         * We use the copy of the list.
          */
         if (printed > buffer->memory_cap)
         {
@@ -562,7 +576,8 @@ int BufferVPrintf(Buffer *buffer, const char *format, va_list ap)
         buffer->buffer = (char *)xrealloc(buffer->buffer, required_blocks * DEFAULT_BUFFER_SIZE);
         buffer->capacity = required_blocks * DEFAULT_BUFFER_SIZE;
         buffer->used = 0;
-        printed = 0;
+        printed = vsnprintf(buffer->buffer, buffer->capacity, format, ap);
+        buffer->used = printed;
     }
     else
     {

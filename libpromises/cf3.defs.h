@@ -1113,8 +1113,8 @@ struct SubType_
     Bundle *parent_bundle;
 
     char *name;
+
     Promise *promiselist;
-    SubType *next;
 
     SourceOffset offset;
 };

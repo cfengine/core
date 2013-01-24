@@ -1823,7 +1823,7 @@ void BundlePrettyPrint(Writer *writer, Bundle *bundle)
             }
         }
 
-        if (promise_type->next != NULL)
+        if (i == (SeqLength(bundle->subtypes) - 1))
         {
             WriterWriteChar(writer, '\n');
         }

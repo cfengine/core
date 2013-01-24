@@ -259,8 +259,10 @@ static void ShowPromisesInReportText(const ReportContext *context, const Seq *bu
 
         WriterWriteF(writer, "   {\n");
 
-        for (const SubType *sp = bp->subtypes; sp != NULL; sp = sp->next)
+        for (size_t j = 0; j < SeqLength(bp->subtypes); j++)
         {
+            const SubType *sp = SeqAt(bp->subtypes, j);
+
             WriterWriteF(writer, "   TYPE: %s\n\n", sp->name);
 
             for (const Promise *pp = sp->promiselist; pp != NULL; pp = pp->next)
@@ -338,8 +340,10 @@ static void ShowPromisesInReportHtml(const ReportContext *context, const Seq *bu
 
         WriterWriteF(writer, "%s", CFH[cfx_promise][cfb]);
 
-        for (const SubType *sp = bp->subtypes; sp != NULL; sp = sp->next)
+        for (size_t j = 0; j < SeqLength(bp->subtypes); j++)
         {
+            const SubType *sp = SeqAt(bp->subtypes, j);
+
             WriterWriteF(writer, "%s", CFH[cfx_line][cfb]);
             WriterWriteF(writer, "%s", CFH[cfx_line][cfe]);
 

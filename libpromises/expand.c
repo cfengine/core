@@ -1594,7 +1594,6 @@ static void CheckRecursion(const ReportContext *report_context, Promise *pp)
     char *scope;
     Bundle *bp;
     FnCall *fp;
-    SubType *sbp;
     Promise *ppsub;
 
     // Check for recursion of bundles so that knowledge map will reflect these cases
@@ -1638,8 +1637,10 @@ static void CheckRecursion(const ReportContext *report_context, Promise *pp)
 
        if ((bp = GetBundle(PolicyFromPromise(pp), scope, type)))
        {
-           for (sbp = bp->subtypes; sbp != NULL; sbp = sbp->next)
+           for (size_t j = 0; j < SeqLength(bp->subtypes); j++)
            {
+               SubType *sbp = SeqAt(bp->subtypes, j);
+
                for (ppsub = sbp->promiselist; ppsub != NULL; ppsub = ppsub->next)
                {
                    ExpandPromise(AGENT_TYPE_COMMON, scope, ppsub, NULL, report_context);
@@ -1723,20 +1724,21 @@ static void ParseServices(const ReportContext *report_context, Promise *pp)
         return;
     }
 
-    SubType *sbp;
-    Promise *ppsub;
-    Bundle *bp;
+    Promise *ppsub = NULL;
+    Bundle *bp = NULL;
 
     if ((bp = GetBundle(PolicyFromPromise(pp), default_bundle->name, "agent")))
-       {
-       MapBodyArgs(bp->name, args, bp->args);
-           
-       for (sbp = bp->subtypes; sbp != NULL; sbp = sbp->next)
-          {
-          for (ppsub = sbp->promiselist; ppsub != NULL; ppsub = ppsub->next)
-             {
-             ExpandPromise(AGENT_TYPE_COMMON, bp->name, ppsub, NULL, report_context);
-             }
-          }
-       }
+    {
+        MapBodyArgs(bp->name, args, bp->args);
+
+        for (size_t i = 0; i < SeqLength(bp->subtypes); i++)
+        {
+            SubType *sbp = SeqAt(bp->subtypes, i);
+
+            for (ppsub = sbp->promiselist; ppsub != NULL; ppsub = ppsub->next)
+            {
+                ExpandPromise(AGENT_TYPE_COMMON, bp->name, ppsub, NULL, report_context);
+            }
+        }
+    }
 }

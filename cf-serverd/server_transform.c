@@ -457,7 +457,6 @@ void KeepControlPromises(Policy *policy)
 
 static void KeepContextBundles(Policy *policy, const ReportContext *report_context)
 {
-    SubType *sp;
     Promise *pp;
     char *scope;
 
@@ -477,8 +476,10 @@ static void KeepContextBundles(Policy *policy, const ReportContext *report_conte
             BannerBundle(bp, NULL);
             scope = bp->name;
 
-            for (sp = bp->subtypes; sp != NULL; sp = sp->next)  /* get schedule */
+            for (size_t j = 0; j < SeqLength(bp->subtypes); j++)
             {
+                SubType *sp = SeqAt(bp->subtypes, j);
+
                 if ((strcmp(sp->name, "vars") != 0) && (strcmp(sp->name, "classes") != 0))
                 {
                     continue;
@@ -501,7 +502,6 @@ static void KeepContextBundles(Policy *policy, const ReportContext *report_conte
 
 static void KeepPromiseBundles(Policy *policy, const ReportContext *report_context)
 {
-    SubType *sp;
     Promise *pp;
     char *scope;
 
@@ -521,8 +521,10 @@ static void KeepPromiseBundles(Policy *policy, const ReportContext *report_conte
             BannerBundle(bp, NULL);
             scope = bp->name;
 
-            for (sp = bp->subtypes; sp != NULL; sp = sp->next)  /* get schedule */
+            for (size_t j = 0; j < SeqLength(bp->subtypes); j++)
             {
+                SubType *sp = SeqAt(bp->subtypes, j);
+
                 if ((strcmp(sp->name, "access") != 0) && (strcmp(sp->name, "roles") != 0))
                 {
                     continue;

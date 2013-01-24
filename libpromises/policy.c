@@ -335,8 +335,9 @@ static bool PolicyCheckBundle(const Bundle *bundle, Seq *errors)
         }
     }
 
-    for (const SubType *type = bundle->subtypes; type; type = type->next)
+    for (size_t i = 0; i < SeqLength(bundle->subtypes); i++)
     {
+        const SubType *type = SeqAt(bundle->subtypes, i);
         success &= PolicyCheckSubType(type, errors);
     }
 
@@ -541,6 +542,16 @@ void PolicyErrorWrite(Writer *writer, const PolicyError *error)
 
 /*************************************************************************/
 
+static void SubTypeDestroy(SubType *subtype)
+{
+    if (subtype)
+    {
+        DeletePromises(subtype->promiselist);
+        free(subtype->name);
+        free(subtype);
+    }
+}
+
 Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *args,
                      const char *source_path)
 {
@@ -553,6 +564,7 @@ Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *
     CfDebug(")\n");
 
     Bundle *bundle = xcalloc(1, sizeof(Bundle));
+
     bundle->parent_policy = policy;
 
     SeqAppend(policy->bundles, bundle);
@@ -572,6 +584,7 @@ Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *
     bundle->namespace = xstrdup(policy->current_namespace);
     bundle->args = CopyRlist(args);
     bundle->source_path = SafeStringDuplicate(source_path);
+    bundle->subtypes = SeqNew(10, SubTypeDestroy);
 
     return bundle;
 }
@@ -614,12 +627,8 @@ Body *AppendBody(Policy *policy, const char *name, const char *type, Rlist *args
     return body;
 }
 
-/*******************************************************************/
-
 SubType *AppendSubType(Bundle *bundle, char *typename)
 {
-    SubType *tp, *lp;
-
     CfDebug("Appending new type section %s\n", typename);
 
     if (bundle == NULL)
@@ -627,31 +636,22 @@ SubType *AppendSubType(Bundle *bundle, char *typename)
         ProgrammingError("Attempt to add a type without a bundle");
     }
 
-    for (lp = bundle->subtypes; lp != NULL; lp = lp->next)
+    // TODO: review SeqLookup
+    for (size_t i = 0; i < SeqLength(bundle->subtypes); i++)
     {
-        if (strcmp(lp->name, typename) == 0)
+        SubType *existing = SeqAt(bundle->subtypes, i);
+        if (strcmp(existing->name, typename) == 0)
         {
-            return lp;
+            return existing;
         }
     }
 
-    tp = xcalloc(1, sizeof(SubType));
-
-    if (bundle->subtypes == NULL)
-    {
-        bundle->subtypes = tp;
-    }
-    else
-    {
-        for (lp = bundle->subtypes; lp->next != NULL; lp = lp->next)
-        {
-        }
-
-        lp->next = tp;
-    }
+    SubType *tp = xcalloc(1, sizeof(SubType));
 
     tp->parent_bundle = bundle;
     tp->name = xstrdup(typename);
+
+    SeqAppend(bundle->subtypes, tp);
 
     return tp;
 }
@@ -736,30 +736,6 @@ Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *class
     return pp;
 }
 
-/*******************************************************************/
-
-static void DeleteSubTypes(SubType *tp)
-{
-    if (tp == NULL)
-    {
-        return;
-    }
-
-    if (tp->next != NULL)
-    {
-        DeleteSubTypes(tp->next);
-    }
-
-    DeletePromises(tp->promiselist);
-
-    if (tp->name != NULL)
-    {
-        free(tp->name);
-    }
-
-    free(tp);
-}
-
 static void BundleDestroy(Bundle *bundle)
 {
     if (bundle)
@@ -768,7 +744,7 @@ static void BundleDestroy(Bundle *bundle)
         free(bundle->type);
 
         DeleteRlist(bundle->args);
-        DeleteSubTypes(bundle->subtypes);
+        SeqDestroy(bundle->subtypes);
         free(bundle);
     }
 }
@@ -891,15 +867,16 @@ Bundle *GetBundle(const Policy *policy, const char *name, const char *agent)
 
 SubType *GetSubTypeForBundle(char *type, Bundle *bp)
 {
-    SubType *sp;
-
+    // TODO: hiding error, remove and see what will crash
     if (bp == NULL)
     {
         return NULL;
     }
 
-    for (sp = bp->subtypes; sp != NULL; sp = sp->next)
+    for (size_t i = 0; i < SeqLength(bp->subtypes); i++)
     {
+        SubType *sp = SeqAt(bp->subtypes, i);
+
         if (strcmp(type, sp->name) == 0)
         {
             return sp;

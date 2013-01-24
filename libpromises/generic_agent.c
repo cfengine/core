@@ -1331,7 +1331,6 @@ ReportContext *OpenCompilationReportFiles(const char *fname)
 static void VerifyPromises(Policy *policy, Rlist *bundlesequence,
                            const ReportContext *report_context)
 {
-    SubType *sp;
     Promise *pp;
     Rlist *rp;
     FnCall *fp;
@@ -1413,8 +1412,10 @@ static void VerifyPromises(Policy *policy, Rlist *bundlesequence,
         scope = bp->name;
         THIS_BUNDLE = bp->name;
 
-        for (sp = bp->subtypes; sp != NULL; sp = sp->next)      /* get schedule */
+        for (size_t j = 0; j < SeqLength(bp->subtypes); j++)
         {
+            SubType *sp = SeqAt(bp->subtypes, j);
+
             for (pp = sp->promiselist; pp != NULL; pp = pp->next)
             {
                 ExpandPromise(AGENT_TYPE_COMMON, scope, pp, NULL, report_context);
@@ -1796,8 +1797,6 @@ void WritePID(char *filename)
 
 void HashVariables(Policy *policy, const char *name, const ReportContext *report_context)
 {
-    SubType *sp;
-
     CfOut(cf_verbose, "", "Initiate variable convergence...\n");
 
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
@@ -1817,8 +1816,10 @@ void HashVariables(Policy *policy, const char *name, const ReportContext *report
         // TODO: seems sketchy, investigate purpose.
         THIS_BUNDLE = bp->name;
 
-        for (sp = bp->subtypes; sp != NULL; sp = sp->next)      /* get schedule */
+        for (size_t j = 0; j < SeqLength(bp->subtypes); j++)
         {
+            SubType *sp = SeqAt(bp->subtypes, j);
+
             if (strcmp(sp->name, "vars") == 0)
             {
                 CheckVariablePromises(bp->name, sp->promiselist);

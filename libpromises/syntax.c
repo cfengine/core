@@ -1601,10 +1601,11 @@ static JsonElement *ExportBundleAsJson(Bundle *bundle)
 
     {
         JsonElement *json_promise_types = JsonArrayCreate(10);
-        SubType *sp = NULL;
 
-        for (sp = bundle->subtypes; sp != NULL; sp = sp->next)
+        for (size_t i = 0; i < SeqLength(bundle->subtypes); i++)
         {
+            const SubType *sp = SeqAt(bundle->subtypes, i);
+
             JsonElement *json_promise_type = JsonObjectCreate(10);
 
             JsonObjectAppendInteger(json_promise_type, "offset", sp->offset.start);
@@ -1774,14 +1775,13 @@ void BodyPrettyPrint(Writer *writer, Body *body)
 
 void BundlePrettyPrint(Writer *writer, Bundle *bundle)
 {
-    SubType *promise_type = NULL;
-
     WriterWriteF(writer, "bundle %s %s", bundle->type, bundle->name);
     ArgumentsPrettyPrint(writer, bundle->args);
     WriterWrite(writer, "\n{");
 
-    for (promise_type = bundle->subtypes; promise_type != NULL; promise_type = promise_type->next)
+    for (size_t i = 0; i < SeqLength(bundle->subtypes); i++)
     {
+        SubType *promise_type = SeqAt(bundle->subtypes, i);
         Promise *pp = NULL;
 
         WriterWriteF(writer, "\n%s:\n", promise_type->name);

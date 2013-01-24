@@ -30,13 +30,18 @@
 
 struct Policy_
 {
-    Bundle *bundles;
-    Body *bodies;
+    Seq *bundles;
+    Seq *bodies;
     char *current_namespace;
 };
 
 Policy *PolicyNew(void);
+int PolicyCompare(const void *a, const void *b);
 void PolicyDestroy(Policy *policy);
+
+Policy *PolicyMerge(Policy *a, Policy *b);
+
+Body *PolicyGetBody(Policy *policy, const char *ns, const char *type, const char *name);
 
 Policy *PolicyFromPromise(const Promise *promise);
 char *BundleQualifiedName(const Bundle *bundle);
@@ -60,7 +65,8 @@ typedef struct
 PolicyError *PolicyErrorNew(PolicyElementType type, const void *subject, const char *error_msg, ...);
 void PolicyErrorDestroy(PolicyError *error);
 void PolicyErrorWrite(Writer *writer, const PolicyError *error);
-bool PolicyCheck(const Policy *policy, Sequence *errors);
+bool PolicyCheck(const Policy *policy, Seq *errors);
+
 void PolicySetNameSpace(Policy *policy, char *namespace);
 char *CurrentNameSpace(Policy *policy);
 
@@ -68,12 +74,17 @@ Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *
 Body *AppendBody(Policy *policy, const char *name, const char *type, Rlist *args, const char *source_path);
 SubType *AppendSubType(Bundle *bundle, char *typename);
 Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *classes, char *bundle, char *bundletype, char *namespace);
-void DeleteBundles(Bundle *bp);
-void DeleteBodies(Body *bp);
+
+
+const char *NamespaceFromConstraint(const Constraint *cp);
+
+
+// TODO: legacy
 void DeletePromise(Promise *pp);
 void DeletePromises(Promise *pp);
-
 Bundle *GetBundle(const Policy *policy, const char *name, const char *agent);
 SubType *GetSubTypeForBundle(char *type, Bundle *bp);
+
+
 
 #endif

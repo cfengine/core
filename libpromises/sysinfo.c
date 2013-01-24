@@ -37,6 +37,7 @@
 #include "cfstream.h"
 #include "string_lib.h"
 #include "logging.h"
+#include "misc_lib.h"
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>
@@ -407,24 +408,21 @@ void GetNameInfo3()
     {
         snprintf(shortname, CF_MAXVARSIZE - 1, "%s", CanonifyName(components[i]));
 
-        if ((VSYSTEMHARDCLASS == mingw) || (VSYSTEMHARDCLASS == cfnt))
+#if defined(_WIN32)
+        // twin has own dir, and is named agent
+        if (i == 0)
         {
-            // twin has own dir, and is named agent
-            if (i == 0)
-            {
-                snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin-twin%ccf-agent.exe", CFWORKDIR, FILE_SEPARATOR,
-                         FILE_SEPARATOR);
-            }
-            else
-            {
-                snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin%c%s.exe", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR,
-                         components[i]);
-            }
+            snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin-twin%ccf-agent.exe", CFWORKDIR, FILE_SEPARATOR,
+                     FILE_SEPARATOR);
         }
         else
         {
-            snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin%c%s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, components[i]);
+            snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin%c%s.exe", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR,
+                     components[i]);
         }
+#else
+        snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin%c%s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, components[i]);
+#endif
 
         have_component[i] = false;
 
@@ -442,15 +440,12 @@ void GetNameInfo3()
     {
         snprintf(shortname, CF_MAXVARSIZE - 1, "%s", CanonifyName(components[0]));
 
-        if ((VSYSTEMHARDCLASS == mingw) || (VSYSTEMHARDCLASS == cfnt))
-        {
-            snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin%c%s.exe", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR,
-                     components[1]);
-        }
-        else
-        {
-            snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin%c%s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, components[1]);
-        }
+#if defined(_WIN32)
+        snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin%c%s.exe", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR,
+                 components[1]);
+#else
+        snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin%c%s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, components[1]);
+#endif
 
         if (cfstat(name, &sb) != -1)
         {
@@ -672,7 +667,13 @@ void Get3Environment()
         name[0] = '\0';
         value[0] = '\0';
 
-        fgets(class, CF_BUFSIZE - 1, fp);
+        if (fgets(class, CF_BUFSIZE, fp) == NULL)
+        {
+            if (strlen(class))
+            {
+                UnexpectedError("Failed to read line from stream");
+            }
+        }
 
         if (feof(fp))
         {
@@ -1507,7 +1508,14 @@ static int Linux_Suse_Version(void)
 
     while (!feof(fp))
     {
-        fgets(vbuf, sizeof(vbuf), fp);
+        vbuf[0] = '\0';
+        if (fgets(vbuf, sizeof(vbuf), fp) == NULL)
+        {
+            if (strlen(vbuf))
+            {
+                UnexpectedError("Failed to read line from stream");
+            }
+        }
 
         if (strncmp(vbuf, "VERSION", strlen("version")) == 0)
         {
@@ -2224,10 +2232,13 @@ static void GetCPUInfo()
 
     while (!feof(fp))
     {
-        fgets(buf, CF_BUFSIZE, fp);
-        if (strncmp(buf, "cpu", 3) == 0)
+        buf[0] = '\0';
+        if (fgets(buf, CF_BUFSIZE, fp))
         {
-            count++;
+            if (strncmp(buf, "cpu", 3) == 0)
+            {
+                count++;
+            }
         }
     }
 

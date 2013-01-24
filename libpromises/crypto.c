@@ -144,7 +144,10 @@ void LoadSecretKeys()
 
         if ((fp = fopen(name, "r")) != NULL)
         {
-            fscanf(fp, "%4095s", POLICY_SERVER);
+            if (fscanf(fp, "%4095s", POLICY_SERVER) != 1)
+            {
+                CfDebug("Couldn't read string from policy_server.dat");
+            }
             fclose(fp);
         }
     }

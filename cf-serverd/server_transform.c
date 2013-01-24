@@ -204,7 +204,6 @@ void Summarize()
 
 void KeepControlPromises(Policy *policy)
 {
-    Constraint *cp;
     Rval retval;
 
     CFD_MAXPROCESSES = 30;
@@ -222,207 +221,213 @@ void KeepControlPromises(Policy *policy)
 
 /* Now expand */
 
-    for (cp = ControlBodyConstraints(policy, AGENT_TYPE_SERVER); cp != NULL; cp = cp->next)
+    Seq *constraints = ControlBodyConstraints(policy, AGENT_TYPE_SERVER);
+    if (constraints)
     {
-        if (IsExcluded(cp->classes, NULL))
+        for (size_t i = 0; i < SeqLength(constraints); i++)
         {
-            continue;
-        }
+            Constraint *cp = SeqAt(constraints, i);
 
-        if (GetVariable("control_server", cp->lval, &retval) == cf_notype)
-        {
-            CfOut(cf_error, "", "Unknown lval %s in server control body", cp->lval);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_serverfacility].lval) == 0)
-        {
-            SetFacility(retval.item);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_denybadclocks].lval) == 0)
-        {
-            DENYBADCLOCKS = GetBoolean(retval.item);
-            CfOut(cf_verbose, "", "SET denybadclocks = %d\n", DENYBADCLOCKS);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_logencryptedtransfers].lval) == 0)
-        {
-            LOGENCRYPT = GetBoolean(retval.item);
-            CfOut(cf_verbose, "", "SET LOGENCRYPT = %d\n", LOGENCRYPT);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_logallconnections].lval) == 0)
-        {
-            SV.logconns = GetBoolean(retval.item);
-            CfOut(cf_verbose, "", "SET LOGCONNS = %d\n", LOGCONNS);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_maxconnections].lval) == 0)
-        {
-            CFD_MAXPROCESSES = (int) Str2Int(retval.item);
-            MAXTRIES = CFD_MAXPROCESSES / 3;
-            CfOut(cf_verbose, "", "SET maxconnections = %d\n", CFD_MAXPROCESSES);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_call_collect_interval].lval) == 0)
-        {
-            COLLECT_INTERVAL = (int) 60 * Str2Int(retval.item);
-            CfOut(cf_verbose, "", "SET call_collect_interval = %d (seconds)\n", COLLECT_INTERVAL);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_listen].lval) == 0)
-        {
-            SERVER_LISTEN = GetBoolean(retval.item);
-            CfOut(cf_verbose, "", "SET server listen = %s \n",
-                  (SERVER_LISTEN)? "true":"false");
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_collect_window].lval) == 0)
-        {
-            COLLECT_WINDOW = (int) Str2Int(retval.item);
-            CfOut(cf_verbose, "", "SET collect_window = %d (seconds)\n", COLLECT_INTERVAL);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_cfruncommand].lval) == 0)
-        {
-            strncpy(CFRUNCOMMAND, retval.item, CF_BUFSIZE - 1);
-            CfOut(cf_verbose, "", "SET cfruncommand = %s\n", CFRUNCOMMAND);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_allowconnects].lval) == 0)
-        {
-            Rlist *rp;
-
-            CfOut(cf_verbose, "", "SET Allowing connections from ...\n");
-
-            for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
+            if (IsExcluded(cp->classes, NULL))
             {
-                if (!IsItemIn(SV.nonattackerlist, rp->item))
-                {
-                    AppendItem(&SV.nonattackerlist, rp->item, cp->classes);
-                }
+                continue;
             }
 
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_denyconnects].lval) == 0)
-        {
-            Rlist *rp;
-
-            CfOut(cf_verbose, "", "SET Denying connections from ...\n");
-
-            for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
+            if (GetVariable("control_server", cp->lval, &retval) == cf_notype)
             {
-                if (!IsItemIn(SV.attackerlist, rp->item))
-                {
-                    AppendItem(&SV.attackerlist, rp->item, cp->classes);
-                }
+                CfOut(cf_error, "", "Unknown lval %s in server control body", cp->lval);
+                continue;
             }
 
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_skipverify].lval) == 0)
-        {
-            Rlist *rp;
-
-            CfOut(cf_verbose, "", "SET Skip verify connections from ...\n");
-
-            for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_serverfacility].lval) == 0)
             {
-                if (!IsItemIn(SV.skipverify, rp->item))
-                {
-                    AppendItem(&SV.skipverify, rp->item, cp->classes);
-                }
+                SetFacility(retval.item);
+                continue;
             }
 
-            continue;
-        }
-
-
-        if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_allowallconnects].lval) == 0)
-        {
-            Rlist *rp;
-
-            CfOut(cf_verbose, "", "SET Allowing multiple connections from ...\n");
-
-            for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_denybadclocks].lval) == 0)
             {
-                if (!IsItemIn(SV.multiconnlist, rp->item))
-                {
-                    AppendItem(&SV.multiconnlist, rp->item, cp->classes);
-                }
+                DENYBADCLOCKS = GetBoolean(retval.item);
+                CfOut(cf_verbose, "", "SET denybadclocks = %d\n", DENYBADCLOCKS);
+                continue;
             }
 
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_allowusers].lval) == 0)
-        {
-            Rlist *rp;
-
-            CfOut(cf_verbose, "", "SET Allowing users ...\n");
-
-            for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_logencryptedtransfers].lval) == 0)
             {
-                if (!IsItemIn(SV.allowuserlist, rp->item))
-                {
-                    AppendItem(&SV.allowuserlist, rp->item, cp->classes);
-                }
+                LOGENCRYPT = GetBoolean(retval.item);
+                CfOut(cf_verbose, "", "SET LOGENCRYPT = %d\n", LOGENCRYPT);
+                continue;
             }
 
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_trustkeysfrom].lval) == 0)
-        {
-            Rlist *rp;
-
-            CfOut(cf_verbose, "", "SET Trust keys from ...\n");
-
-            for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_logallconnections].lval) == 0)
             {
-                if (!IsItemIn(SV.trustkeylist, rp->item))
-                {
-                    AppendItem(&SV.trustkeylist, rp->item, cp->classes);
-                }
+                SV.logconns = GetBoolean(retval.item);
+                CfOut(cf_verbose, "", "SET LOGCONNS = %d\n", LOGCONNS);
+                continue;
             }
 
-            continue;
-        }
+            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_maxconnections].lval) == 0)
+            {
+                CFD_MAXPROCESSES = (int) Str2Int(retval.item);
+                MAXTRIES = CFD_MAXPROCESSES / 3;
+                CfOut(cf_verbose, "", "SET maxconnections = %d\n", CFD_MAXPROCESSES);
+                continue;
+            }
 
-        if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_portnumber].lval) == 0)
-        {
-            SHORT_CFENGINEPORT = (short) Str2Int(retval.item);
-            strncpy(STR_CFENGINEPORT, retval.item, 15);
-            CfOut(cf_verbose, "", "SET default portnumber = %u = %s = %s\n", (int) SHORT_CFENGINEPORT, STR_CFENGINEPORT,
-                  ScalarRvalValue(retval));
-            SHORT_CFENGINEPORT = htons((short) Str2Int(retval.item));
-            continue;
-        }
+            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_call_collect_interval].lval) == 0)
+            {
+                COLLECT_INTERVAL = (int) 60 * Str2Int(retval.item);
+                CfOut(cf_verbose, "", "SET call_collect_interval = %d (seconds)\n", COLLECT_INTERVAL);
+                continue;
+            }
 
-        if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_keyttl].lval) == 0)
-        {
-            CfOut(cf_verbose, "", "Ignoring deprecated option keycacheTTL");
-            continue;
-        }
+            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_listen].lval) == 0)
+            {
+                SERVER_LISTEN = GetBoolean(retval.item);
+                CfOut(cf_verbose, "", "SET server listen = %s \n",
+                      (SERVER_LISTEN)? "true":"false");
+                continue;
+            }
 
-        if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_bindtointerface].lval) == 0)
-        {
-            strncpy(BINDINTERFACE, retval.item, CF_BUFSIZE - 1);
-            CfOut(cf_verbose, "", "SET bindtointerface = %s\n", BINDINTERFACE);
-            continue;
+            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_collect_window].lval) == 0)
+            {
+                COLLECT_WINDOW = (int) Str2Int(retval.item);
+                CfOut(cf_verbose, "", "SET collect_window = %d (seconds)\n", COLLECT_INTERVAL);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_cfruncommand].lval) == 0)
+            {
+                strncpy(CFRUNCOMMAND, retval.item, CF_BUFSIZE - 1);
+                CfOut(cf_verbose, "", "SET cfruncommand = %s\n", CFRUNCOMMAND);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_allowconnects].lval) == 0)
+            {
+                Rlist *rp;
+
+                CfOut(cf_verbose, "", "SET Allowing connections from ...\n");
+
+                for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
+                {
+                    if (!IsItemIn(SV.nonattackerlist, rp->item))
+                    {
+                        AppendItem(&SV.nonattackerlist, rp->item, cp->classes);
+                    }
+                }
+
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_denyconnects].lval) == 0)
+            {
+                Rlist *rp;
+
+                CfOut(cf_verbose, "", "SET Denying connections from ...\n");
+
+                for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
+                {
+                    if (!IsItemIn(SV.attackerlist, rp->item))
+                    {
+                        AppendItem(&SV.attackerlist, rp->item, cp->classes);
+                    }
+                }
+
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_skipverify].lval) == 0)
+            {
+                Rlist *rp;
+
+                CfOut(cf_verbose, "", "SET Skip verify connections from ...\n");
+
+                for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
+                {
+                    if (!IsItemIn(SV.skipverify, rp->item))
+                    {
+                        AppendItem(&SV.skipverify, rp->item, cp->classes);
+                    }
+                }
+
+                continue;
+            }
+
+
+            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_allowallconnects].lval) == 0)
+            {
+                Rlist *rp;
+
+                CfOut(cf_verbose, "", "SET Allowing multiple connections from ...\n");
+
+                for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
+                {
+                    if (!IsItemIn(SV.multiconnlist, rp->item))
+                    {
+                        AppendItem(&SV.multiconnlist, rp->item, cp->classes);
+                    }
+                }
+
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_allowusers].lval) == 0)
+            {
+                Rlist *rp;
+
+                CfOut(cf_verbose, "", "SET Allowing users ...\n");
+
+                for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
+                {
+                    if (!IsItemIn(SV.allowuserlist, rp->item))
+                    {
+                        AppendItem(&SV.allowuserlist, rp->item, cp->classes);
+                    }
+                }
+
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_trustkeysfrom].lval) == 0)
+            {
+                Rlist *rp;
+
+                CfOut(cf_verbose, "", "SET Trust keys from ...\n");
+
+                for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
+                {
+                    if (!IsItemIn(SV.trustkeylist, rp->item))
+                    {
+                        AppendItem(&SV.trustkeylist, rp->item, cp->classes);
+                    }
+                }
+
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_portnumber].lval) == 0)
+            {
+                SHORT_CFENGINEPORT = (short) Str2Int(retval.item);
+                strncpy(STR_CFENGINEPORT, retval.item, 15);
+                CfOut(cf_verbose, "", "SET default portnumber = %u = %s = %s\n", (int) SHORT_CFENGINEPORT, STR_CFENGINEPORT,
+                      ScalarRvalValue(retval));
+                SHORT_CFENGINEPORT = htons((short) Str2Int(retval.item));
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_keyttl].lval) == 0)
+            {
+                CfOut(cf_verbose, "", "Ignoring deprecated option keycacheTTL");
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_bindtointerface].lval) == 0)
+            {
+                strncpy(BINDINTERFACE, retval.item, CF_BUFSIZE - 1);
+                CfOut(cf_verbose, "", "SET bindtointerface = %s\n", BINDINTERFACE);
+                continue;
+            }
         }
     }
 
@@ -458,8 +463,10 @@ static void KeepContextBundles(Policy *policy, const ReportContext *report_conte
 
 /* Dial up the generic promise expansion with a callback */
 
-    for (Bundle *bp = policy->bundles; bp != NULL; bp = bp->next)       /* get schedule */
+    for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
+        Bundle *bp = SeqAt(policy->bundles, i);
+
         scope = bp->name;
         SetNewScope(bp->name);
 
@@ -500,8 +507,10 @@ static void KeepPromiseBundles(Policy *policy, const ReportContext *report_conte
 
 /* Dial up the generic promise expansion with a callback */
 
-    for (Bundle *bp = policy->bundles; bp != NULL; bp = bp->next)       /* get schedule */
+    for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
+        Bundle *bp = SeqAt(policy->bundles, i);
+
         scope = bp->name;
         SetNewScope(bp->name);
 
@@ -607,7 +616,6 @@ static void KeepServerPromise(Promise *pp)
 
 void KeepFileAccessPromise(Promise *pp)
 {
-    Constraint *cp;
     Rlist *rp;
     Auth *ap, *dp;
 
@@ -629,8 +637,10 @@ void KeepFileAccessPromise(Promise *pp)
     ap = GetAuthPath(pp->promiser, VADMIT);
     dp = GetAuthPath(pp->promiser, VDENY);
 
-    for (cp = pp->conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
+        Constraint *cp = SeqAt(pp->conlist, i);
+
         if (!IsDefinedClass(cp->classes, pp->namespace))
         {
             continue;
@@ -682,7 +692,6 @@ void KeepFileAccessPromise(Promise *pp)
 
 void KeepLiteralAccessPromise(Promise *pp, char *type)
 {
-    Constraint *cp;
     Rlist *rp;
     Auth *ap = NULL, *dp = NULL;
     char *handle = GetConstraintValue("handle", pp, CF_SCALAR);
@@ -742,8 +751,10 @@ void KeepLiteralAccessPromise(Promise *pp, char *type)
         }
     }
     
-    for (cp = pp->conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
+        Constraint *cp = SeqAt(pp->conlist, i);
+
         if (!IsDefinedClass(cp->classes, pp->namespace))
         {
             continue;
@@ -795,7 +806,6 @@ void KeepLiteralAccessPromise(Promise *pp, char *type)
 
 void KeepQueryAccessPromise(Promise *pp, char *type)
 {
-    Constraint *cp;
     Rlist *rp;
     Auth *ap, *dp;
 
@@ -819,8 +829,10 @@ void KeepQueryAccessPromise(Promise *pp, char *type)
         ap->literal = true;
     }
 
-    for (cp = pp->conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
+        Constraint *cp = SeqAt(pp->conlist, i);
+
         if (!IsDefinedClass(cp->classes, pp->namespace))
         {
             continue;
@@ -872,7 +884,6 @@ void KeepQueryAccessPromise(Promise *pp, char *type)
 
 static void KeepServerRolePromise(Promise *pp)
 {
-    Constraint *cp;
     Rlist *rp;
     Auth *ap;
 
@@ -883,8 +894,10 @@ static void KeepServerRolePromise(Promise *pp)
 
     ap = GetAuthPath(pp->promiser, ROLES);
 
-    for (cp = pp->conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
+        Constraint *cp = SeqAt(pp->conlist, i);
+
         if (!IsDefinedClass(cp->classes, pp->namespace))
         {
             continue;

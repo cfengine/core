@@ -32,6 +32,7 @@
 #include "logging.h"
 #include "promises.h"
 #include "matching.h"
+#include "misc_lib.h"
 #include "dir.h"
 
 #include <assert.h>
@@ -898,7 +899,10 @@ void RotateFiles(char *name, int number)
     }
 
     cf_chmod(to, statbuf.st_mode);
-    chown(to, statbuf.st_uid, statbuf.st_gid);
+    if (chown(to, statbuf.st_uid, statbuf.st_gid))
+    {
+        UnexpectedError("Failed to chown %s", to);
+    }
     cf_chmod(name, 0600);       /* File must be writable to empty .. */
 
     if ((fd = creat(name, statbuf.st_mode)) == -1)
@@ -907,7 +911,10 @@ void RotateFiles(char *name, int number)
     }
     else
     {
-        chown(name, statbuf.st_uid, statbuf.st_gid);    /* NT doesn't have fchown */
+        if (chown(name, statbuf.st_uid, statbuf.st_gid))  /* NT doesn't have fchown */
+        {
+            UnexpectedError("Failed to chown %s", name);
+        }
         fchmod(fd, statbuf.st_mode);
         close(fd);
     }

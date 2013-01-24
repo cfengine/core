@@ -228,7 +228,10 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
 
     mask = umask(0);
     cf_chmod(file, statbuf.st_mode);    /* Restore file permissions etc */
-    chown(file, statbuf.st_uid, statbuf.st_gid);
+    if (chown(file, statbuf.st_uid, statbuf.st_gid) != 0)
+    {
+        CfOut(cf_error, "", "Failed to restore file permissions for '%s'\n", file);
+    }
     umask(mask);
 
 #ifdef WITH_SELINUX

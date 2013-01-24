@@ -47,6 +47,7 @@
 #include "verify_files_utils.h"
 #include "logging.h"
 #include "generic_agent.h" // HashVariables
+#include "misc_lib.h"
 
 
 static void LoadSetuid(Attributes a, Promise *pp);
@@ -312,7 +313,10 @@ void VerifyFilePromise(char *path, Promise *pp, const ReportContext *report_cont
         }
 
         ChopLastNode(basedir);
-        chdir(basedir);
+        if (chdir(basedir))
+        {
+            CfOut(cf_error, "", "Failed to chdir into '%s'\n", basedir);
+        }
     }
 
     if (exists && (!VerifyFileLeaf(path, &oslb, a, pp, report_context)))

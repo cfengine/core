@@ -2,15 +2,14 @@
 #include "policy.h"
 #include "parser.h"
 
-static Sequence *LoadAndCheck(const char *filename)
+static Seq *LoadAndCheck(const char *filename)
 {
     char path[1024];
     sprintf(path, "%s/%s", TESTDATADIR, filename);
 
-    Policy *p = PolicyNew();
-    ParserParseFile(p, path);
+    Policy *p = ParserParseFile(path);
 
-    Sequence *errs = SequenceCreate(10, PolicyErrorDestroy);
+    Seq *errs = SeqNew(10, PolicyErrorDestroy);
     PolicyCheck(p, errs);
 
     return errs;
@@ -18,50 +17,50 @@ static Sequence *LoadAndCheck(const char *filename)
 
 static void test_bundle_redefinition(void **state)
 {
-    Sequence *errs = LoadAndCheck("bundle_redefinition.cf");
+    Seq *errs = LoadAndCheck("bundle_redefinition.cf");
     assert_int_equal(2, errs->length);
 
-    SequenceDestroy(errs);
+    SeqDestroy(errs);
 }
 
 static void test_bundle_reserved_name(void **state)
 {
-    Sequence *errs = LoadAndCheck("bundle_reserved_name.cf");
+    Seq *errs = LoadAndCheck("bundle_reserved_name.cf");
     assert_int_equal(1, errs->length);
 
-    SequenceDestroy(errs);
+    SeqDestroy(errs);
 }
 
 static void test_body_redefinition(void **state)
 {
-    Sequence *errs = LoadAndCheck("body_redefinition.cf");
+    Seq *errs = LoadAndCheck("body_redefinition.cf");
     assert_int_equal(2, errs->length);
 
-    SequenceDestroy(errs);
+    SeqDestroy(errs);
 }
 
 static void test_subtype_invalid(void **state)
 {
-    Sequence *errs = LoadAndCheck("subtype_invalid.cf");
+    Seq *errs = LoadAndCheck("subtype_invalid.cf");
     assert_int_equal(1, errs->length);
 
-    SequenceDestroy(errs);
+    SeqDestroy(errs);
 }
 
 static void test_vars_multiple_types(void **state)
 {
-    Sequence *errs = LoadAndCheck("vars_multiple_types.cf");
+    Seq *errs = LoadAndCheck("vars_multiple_types.cf");
     assert_int_equal(1, errs->length);
 
-    SequenceDestroy(errs);
+    SeqDestroy(errs);
 }
 
 static void test_methods_invalid_arity(void **state)
 {
-    Sequence *errs = LoadAndCheck("methods_invalid_arity.cf");
+    Seq *errs = LoadAndCheck("methods_invalid_arity.cf");
     assert_int_equal(1, errs->length);
 
-    SequenceDestroy(errs);
+    SeqDestroy(errs);
 }
 
 static void test_util_bundle_qualified_name(void **state)

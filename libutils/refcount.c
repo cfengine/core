@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include <stdlib.h>
+#include "alloc.h"
 #include "refcount.h"
 
 void RefCountNew(RefCount **ref)
@@ -31,7 +31,7 @@ void RefCountNew(RefCount **ref)
     {
         return;
     }
-    *ref = (RefCount *)malloc(sizeof(RefCount));
+    *ref = (RefCount *)xmalloc(sizeof(RefCount));
     (*ref)->user_count = 0;
     (*ref)->users = NULL;
     (*ref)->last = NULL;
@@ -56,7 +56,7 @@ int RefCountAttach(RefCount *ref, void *owner)
         return -1;
     }
     ref->user_count++;
-    RefCountNode *node = (RefCountNode *)malloc(sizeof(RefCountNode));
+    RefCountNode *node = (RefCountNode *)xmalloc(sizeof(RefCountNode));
     node->next = NULL;
     node->user = owner;
     if (ref->last)

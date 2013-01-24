@@ -367,6 +367,11 @@ if test "x$with_libxml2" != xno; then
     ])
 fi
 
+dnl avahi
+
+AC_CHECK_HEADERS(avahi-client/client.h, AM_CONDITIONAL(HAVE_AVAHI_CLIENT, true), AM_CONDITIONAL(HAVE_AVAHI_CLIENT, false), [])
+AC_CHECK_HEADERS(avahi-common/address.h, AM_CONDITIONAL(HAVE_AVAHI_COMMON, true), AM_CONDITIONAL(HAVE_AVAHI_COMMON, false),[])
+
 dnl
 
 dnl ######################################################################
@@ -621,9 +626,6 @@ AC_CHECK_FUNCS(setsockopt)
 AC_CHECK_FUNCS(getaddrinfo)
 AC_CHECK_FUNCS(gethostent)
 
-AC_SEARCH_LIBS(door_create, door)
-AC_CHECK_FUNCS(door_create)
-
 AC_CHECK_FUNC(lchown, AC_DEFINE(HAVE_LCHOWN, 1, [Whether to use lchown(3) to change ownerships]))
 
 AC_CHECK_DECLS(pthread_attr_setstacksize, [], [], [[#include <pthread.h>]])
@@ -695,14 +697,12 @@ case "$target_os" in
    solaris2.8|solaris2.9)
         AC_DEFINE(_XOPEN_SOURCE, 500, [UNIX 98])
         AC_DEFINE(__EXTENSIONS__, 1, [Extended UNIX 98 interfaces])
-        LIBS="$LIBS -lelf -lsec"
         ;;
    solaris2.10|solaris2.11)
         AC_DEFINE(_XOPEN_SOURCE, 600, [SUSv3])
         AC_DEFINE(__EXTENSIONS__, 1, [Extended UNIX 98 interfaces])
-        LIBS="$LIBS -lelf -lsec";;
+        ;;
    hpux*|hp-ux*) 
-	AC_CHECK_LIB(PW, main)
         ;;
    aix*)
         CPPFLAGS="$CPPFLAGS -w"

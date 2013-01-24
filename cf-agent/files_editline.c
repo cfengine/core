@@ -42,6 +42,7 @@
 #include "transaction.h"
 #include "string_lib.h"
 #include "logging.h"
+#include "misc_lib.h"
 
 /*****************************************************************************/
 
@@ -196,7 +197,6 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
     bp->name = xstrdup(bundlename);
     bp->type = xstrdup("edit_line");
     bp->args = NULL;
-    bp->next = NULL;
 
     tp = AppendSubType(bp, "insert_lines");
 
@@ -211,7 +211,13 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
     while(!feof(fp))
     {
         buffer[0] = '\0';
-        fgets(buffer, CF_BUFSIZE-1, fp);
+        if (fgets(buffer, CF_BUFSIZE, fp) == NULL)
+        {
+            if (strlen(buffer))
+            {
+                UnexpectedError("Failed to read line from stream");
+            }
+        }
         lineno++;
    
         // Check closing syntax
@@ -1262,7 +1268,13 @@ static int InsertFileAtLocation(Item **start, Item *begin_ptr, Item *end_ptr, It
     while (!feof(fin))
     {
         buf[0] = '\0';
-        fgets(buf, CF_BUFSIZE, fin);
+        if (fgets(buf, CF_BUFSIZE, fin) == NULL)
+        {
+            if (strlen(buf))
+            {
+                UnexpectedError("Failed to read line from stream");
+            }
+        }
         if (StripTrailingNewline(buf, CF_EXPANDSIZE) == -1)
         {
             CfOut(cf_error, "", "StripTrailingNewline was called on an overlong string");

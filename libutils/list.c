@@ -22,6 +22,7 @@
   included file COSL.txt.
 */
 
+#include "alloc.h"
 #include "list.h"
 
 #define IsIteratorValid(iterator) \
@@ -48,7 +49,7 @@ static void ListDetach(List *list)
         {
             if (newList)
             {
-                q->next = (ListNode *)malloc(sizeof(ListNode));
+                q->next = (ListNode *)xmalloc(sizeof(ListNode));
                 q->next->previous = q;
                 q->next->next = NULL;
                 q = q->next;
@@ -67,7 +68,7 @@ static void ListDetach(List *list)
             else
             {
                 // First element
-                newList = (ListNode *)malloc(sizeof(ListNode));
+                newList = (ListNode *)xmalloc(sizeof(ListNode));
                 newList->next = NULL;
                 newList->previous = NULL;
                 if (p->payload)
@@ -93,17 +94,13 @@ static void ListDetach(List *list)
     }
 }
 
-int ListNew(List **list, int (*compare)(void *, void *), void (*copy)(void *source, void **destination), void (*destroy)(void *))
+int ListNew(List **list, int (*compare)(const void *, const void *), void (*copy)(const void *source, void **destination), void (*destroy)(void *))
 {
     if (!list)
     {
         return -1;
     }
-    *list = (List *)malloc(sizeof(List));
-    if (!(*list))
-    {
-        return -1;
-    }
+    *list = (List *)xmalloc(sizeof(List));
     (*list)->list = NULL;
     (*list)->first = NULL;
     (*list)->last = NULL;
@@ -153,7 +150,7 @@ int ListCopy(List *origin, List **destination)
 {
     if (!origin || !destination)
         return -1;
-    *destination = (List *)malloc(sizeof(List));
+    *destination = (List *)xmalloc(sizeof(List));
     (*destination)->list = origin->list;
     (*destination)->first = origin->first;
     (*destination)->last = origin->last;
@@ -180,7 +177,7 @@ int ListPrepend(List *list, void *payload)
         return -1;
     }
     ListDetach(list);
-    node = (ListNode *)malloc(sizeof(ListNode));
+    node = (ListNode *)xmalloc(sizeof(ListNode));
     node->payload = payload;
     node->previous = NULL;
     if (list->list)
@@ -209,12 +206,7 @@ int ListAppend(List *list, void *payload)
         return -1;
     }
     ListDetach(list);
-    node = (ListNode *)malloc(sizeof(ListNode));
-    if (!node)
-    {
-        // This is unlikely in Linux but other Unixes actually return NULL
-        return -1;
-    }
+    node = (ListNode *)xmalloc(sizeof(ListNode));
     node->next = NULL;
     node->payload = payload;
     if (list->last)
@@ -408,12 +400,7 @@ int ListIteratorGet(List *list, ListIterator **iterator)
 	{
         return -1;
 	}
-    *iterator = (ListIterator *)malloc(sizeof(ListIterator));
-    if (!(*iterator))
-    {
-        // This is unlikely in Linux but other Unixes actually return NULL
-        return -1;
-    }
+    *iterator = (ListIterator *)xmalloc(sizeof(ListIterator));
     (*iterator)->current = list->list;
     // Remaining only works in one direction, we need two variables for this.
     (*iterator)->origin = list;
@@ -536,9 +523,7 @@ int ListMutableIteratorGet(List *list, ListMutableIterator **iterator)
     // You cannot get an iterator for an empty list.
     if (!list->first)
         return -1;
-    *iterator = (ListMutableIterator *)malloc(sizeof(ListMutableIterator));
-    if (!(*iterator))
-        return -1;
+    *iterator = (ListMutableIterator *)xmalloc(sizeof(ListMutableIterator));
     (*iterator)->current = list->first;
     (*iterator)->origin = list;
     (*iterator)->valid = 1;
@@ -656,10 +641,7 @@ int ListMutableIteratorPrepend(ListMutableIterator *iterator, void *payload)
     if (IsMutableIteratorValid(iterator))
         return -1;
     ListNode *node = NULL;
-    node = (ListNode *)malloc(sizeof(ListNode));
-    if (!node) {
-        return -1;
-    }
+    node = (ListNode *)xmalloc(sizeof(ListNode));
     ListDetach(iterator->origin);
     node->payload = payload;
     if (iterator->current->previous) {
@@ -686,11 +668,7 @@ int ListMutableIteratorAppend(ListMutableIterator *iterator, void *payload)
     if (IsMutableIteratorValid(iterator))
         return -1;
     ListNode *node = NULL;
-    node = (ListNode *)malloc(sizeof(ListNode));
-    if (!node) {
-        // This is unlikely in Linux but other Unixes actually return NULL
-        return -1;
-    }
+    node = (ListNode *)xmalloc(sizeof(ListNode));
     ListDetach(iterator->origin);
     node->next = NULL;
     node->payload = payload;

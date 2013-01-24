@@ -52,7 +52,7 @@ static int ExtractPid(char *psentry, char **names, int *start, int *end);
 
 /***************************************************************************/
 
-int SelectProcess(char *procentry, char **names, int *start, int *end, Attributes a, Promise *pp)
+static int SelectProcess(char *procentry, char **names, int *start, int *end, ProcessSelect a)
 {
     AlphaList proc_attr;
     int result = true, i;
@@ -62,11 +62,6 @@ int SelectProcess(char *procentry, char **names, int *start, int *end, Attribute
     CfDebug("SelectProcess(%s)\n", procentry);
 
     InitAlphaList(&proc_attr);
-
-    if (!a.haveselect)
-    {
-        return true;
-    }
 
     if (!SplitProcLine(procentry, names, start, end, column))
     {
@@ -81,7 +76,7 @@ int SelectProcess(char *procentry, char **names, int *start, int *end, Attribute
         }
     }
 
-    for (rp = a.process_select.owner; rp != NULL; rp = rp->next)
+    for (rp = a.owner; rp != NULL; rp = rp->next)
     {
         if (SelectProcRegexMatch("USER", "UID", (char *) rp->item, names, column))
         {
@@ -90,83 +85,71 @@ int SelectProcess(char *procentry, char **names, int *start, int *end, Attribute
         }
     }
 
-    if (SelectProcRangeMatch("PID", "PID", a.process_select.min_pid, a.process_select.max_pid, names, column))
+    if (SelectProcRangeMatch("PID", "PID", a.min_pid, a.max_pid, names, column))
     {
         PrependAlphaList(&proc_attr, "pid");
     }
 
-    if (SelectProcRangeMatch("PPID", "PPID", a.process_select.min_ppid, a.process_select.max_ppid, names, column))
+    if (SelectProcRangeMatch("PPID", "PPID", a.min_ppid, a.max_ppid, names, column))
     {
         PrependAlphaList(&proc_attr, "ppid");
     }
 
-    if (SelectProcRangeMatch("PGID", "PGID", a.process_select.min_pgid, a.process_select.max_pgid, names, column))
+    if (SelectProcRangeMatch("PGID", "PGID", a.min_pgid, a.max_pgid, names, column))
     {
         PrependAlphaList(&proc_attr, "pgid");
     }
 
-    if (SelectProcRangeMatch("VSZ", "SZ", a.process_select.min_vsize, a.process_select.max_vsize, names, column))
+    if (SelectProcRangeMatch("VSZ", "SZ", a.min_vsize, a.max_vsize, names, column))
     {
         PrependAlphaList(&proc_attr, "vsize");
     }
 
-    if (SelectProcRangeMatch("RSS", "RSS", a.process_select.min_rsize, a.process_select.max_rsize, names, column))
+    if (SelectProcRangeMatch("RSS", "RSS", a.min_rsize, a.max_rsize, names, column))
     {
         PrependAlphaList(&proc_attr, "rsize");
     }
 
     if (SelectProcTimeCounterRangeMatch
-        ("TIME", "TIME", a.process_select.min_ttime, a.process_select.max_ttime, names, column))
+        ("TIME", "TIME", a.min_ttime, a.max_ttime, names, column))
     {
         PrependAlphaList(&proc_attr, "ttime");
     }
 
     if (SelectProcTimeAbsRangeMatch
-        ("STIME", "START", a.process_select.min_stime, a.process_select.max_stime, names, column))
+        ("STIME", "START", a.min_stime, a.max_stime, names, column))
     {
         PrependAlphaList(&proc_attr, "stime");
     }
 
-    if (SelectProcRangeMatch("NI", "PRI", a.process_select.min_pri, a.process_select.max_pri, names, column))
+    if (SelectProcRangeMatch("NI", "PRI", a.min_pri, a.max_pri, names, column))
     {
         PrependAlphaList(&proc_attr, "priority");
     }
 
-    if (SelectProcRangeMatch("NLWP", "NLWP", a.process_select.min_thread, a.process_select.max_thread, names, column))
+    if (SelectProcRangeMatch("NLWP", "NLWP", a.min_thread, a.max_thread, names, column))
     {
         PrependAlphaList(&proc_attr, "threads");
     }
 
-    if (SelectProcRegexMatch("S", "STAT", a.process_select.status, names, column))
+    if (SelectProcRegexMatch("S", "STAT", a.status, names, column))
     {
         PrependAlphaList(&proc_attr, "status");
     }
 
-    if (SelectProcRegexMatch("CMD", "COMMAND", a.process_select.command, names, column))
+    if (SelectProcRegexMatch("CMD", "COMMAND", a.command, names, column))
     {
         PrependAlphaList(&proc_attr, "command");
     }
 
-    if (SelectProcRegexMatch("TTY", "TTY", a.process_select.tty, names, column))
+    if (SelectProcRegexMatch("TTY", "TTY", a.tty, names, column))
     {
         PrependAlphaList(&proc_attr, "tty");
     }
 
-    result = EvalProcessResult(a.process_select.process_result, &proc_attr);
-   
-    DeleteAlphaList(&proc_attr);
+    result = EvalProcessResult(a.process_result, &proc_attr);
 
-    if (result)
-    {
-        if (a.transaction.action == cfa_warn)
-        {
-            CfOut(cf_error, "", " !! Matched: %s\n", procentry);
-        }
-        else
-        {
-            CfOut(cf_inform, "", " !! Matched: %s\n", procentry);
-        }
-    }
+    DeleteAlphaList(&proc_attr);
 
     for (i = 0; column[i] != NULL; i++)
     {
@@ -176,98 +159,120 @@ int SelectProcess(char *procentry, char **names, int *start, int *end, Attribute
     return result;
 }
 
-int FindPidMatches(Item *procdata, Item **killlist, Attributes a, Promise *pp)
+Item *SelectProcesses(const Item *processes, const char *process_name, ProcessSelect a, bool attrselect)
 {
-    Item *ip;
-    int pid = -1, matches = 0, i, s, e, promised_zero;
-    pid_t cfengine_pid = getpid();
-    char *names[CF_PROCCOLS];   /* ps headers */
+    Item *result = NULL;
+
+    if (processes == NULL)
+    {
+        return result;
+    }
+
+    char *names[CF_PROCCOLS];
     int start[CF_PROCCOLS];
     int end[CF_PROCCOLS];
 
-    if (procdata == NULL)
+    GetProcessColumnNames(processes->name, &names[0], start, end);
+
+    for (Item *ip = processes->next; ip != NULL; ip = ip->next)
     {
-        return 0;
-    }
+        int s, e;
 
-    GetProcessColumnNames(procdata->name, (char **) names, start, end);
-
-    for (ip = procdata->next; ip != NULL; ip = ip->next)
-    {
-        CF_OCCUR++;
-
-        if (BlockTextMatch(pp->promiser, ip->name, &s, &e))
+        if (BlockTextMatch(process_name, ip->name, &s, &e))
         {
             if (NULL_OR_EMPTY(ip->name))
             {
                 continue;
             }
 
-            if (!SelectProcess(ip->name, names, start, end, a, pp))
+            if (attrselect && !SelectProcess(ip->name, names, start, end, a))
             {
                 continue;
             }
 
-            pid = ExtractPid(ip->name, names, start, end);
+            pid_t pid = ExtractPid(ip->name, names, start, end);
 
             if (pid == -1)
             {
-                CfOut(cf_verbose, "", "Unable to extract pid while looking for %s\n", pp->promiser);
+                CfOut(cf_verbose, "", "Unable to extract pid while looking for %s\n", process_name);
                 continue;
             }
 
-            CfOut(cf_verbose, "", " ->  Found matching pid %d\n     (%s)", pid, ip->name);
-
-            matches++;
-
-            if (pid == 1)
-            {
-                if ((RlistLen(a.signals) == 1) && (IsStringIn(a.signals, "hup")))
-                {
-                    CfOut(cf_verbose, "", "(Okay to send only HUP to init)\n");
-                }
-                else
-                {
-                    continue;
-                }
-            }
-
-            if ((pid < 4) && (a.signals))
-            {
-                CfOut(cf_verbose, "", "Will not signal or restart processes 0,1,2,3 (occurred while looking for %s)\n",
-                      pp->promiser);
-                continue;
-            }
-
-            promised_zero = (a.process_count.min_range == 0) && (a.process_count.max_range == 0);
-
-            if ((a.transaction.action == cfa_warn) && promised_zero)
-            {
-                CfOut(cf_error, "", "Process alert: %s\n", procdata->name);     /* legend */
-                CfOut(cf_error, "", "Process alert: %s\n", ip->name);
-                continue;
-            }
-
-            if ((pid == cfengine_pid) && (a.signals))
-            {
-                CfOut(cf_verbose, "", " !! cf-agent will not signal itself!\n");
-                continue;
-            }
-
-            PrependItem(killlist, ip->name, "");
-            (*killlist)->counter = pid;
+            PrependItem(&result, ip->name, "");
+            result->counter = (int)pid;
         }
     }
 
-// Free up allocated memory
-
-    for (i = 0; i < CF_PROCCOLS; i++)
+    for (int i = 0; i < CF_PROCCOLS; i++)
     {
-        if (names[i] != NULL)
-        {
-            free(names[i]);
-        }
+        free(names[i]);
     }
+
+    return result;
+}
+
+int FindPidMatches(Item *procdata, Item **killlist, Attributes a, Promise *pp)
+{
+    int matches = 0;
+    pid_t cfengine_pid = getpid();
+
+    Item *matched = SelectProcesses(procdata, pp->promiser, a.process_select, a.haveselect);
+
+    for (Item *ip = matched; ip != NULL; ip = ip->next)
+    {
+        CF_OCCUR++;
+
+        if (a.transaction.action == cfa_warn)
+        {
+            CfOut(cf_error, "", " !! Matched: %s\n", ip->name);
+        }
+        else
+        {
+            CfOut(cf_inform, "", " !! Matched: %s\n", ip->name);
+        }
+
+        pid_t pid = ip->counter;
+
+        if (pid == 1)
+        {
+            if ((RlistLen(a.signals) == 1) && (IsStringIn(a.signals, "hup")))
+            {
+                CfOut(cf_verbose, "", "(Okay to send only HUP to init)\n");
+            }
+            else
+            {
+                continue;
+            }
+        }
+
+        if ((pid < 4) && (a.signals))
+        {
+            CfOut(cf_verbose, "", "Will not signal or restart processes 0,1,2,3 (occurred while looking for %s)\n",
+                  pp->promiser);
+            continue;
+        }
+
+        bool promised_zero = (a.process_count.min_range == 0) && (a.process_count.max_range == 0);
+
+        if ((a.transaction.action == cfa_warn) && promised_zero)
+        {
+            CfOut(cf_error, "", "Process alert: %s\n", procdata->name);     /* legend */
+            CfOut(cf_error, "", "Process alert: %s\n", ip->name);
+            continue;
+        }
+
+        if ((pid == cfengine_pid) && (a.signals))
+        {
+            CfOut(cf_verbose, "", " !! cf-agent will not signal itself!\n");
+            continue;
+        }
+
+        PrependItem(killlist, ip->name, "");
+        (*killlist)->counter = pid;
+        matches++;
+    }
+
+    DeleteItemList(matched);
 
     return matches;
 }

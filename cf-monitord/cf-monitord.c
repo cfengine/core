@@ -189,36 +189,41 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
 static void KeepPromises(Policy *policy, const ReportContext *report_context)
 {
-    Constraint *cp;
     Rval retval;
 
-    for (cp = ControlBodyConstraints(policy, AGENT_TYPE_MONITOR); cp != NULL; cp = cp->next)
+    Seq *constraints = ControlBodyConstraints(policy, AGENT_TYPE_MONITOR);
+    if (constraints)
     {
-        if (IsExcluded(cp->classes, NULL))
+        for (size_t i = 0; i < SeqLength(constraints); i++)
         {
-            continue;
-        }
+            Constraint *cp = SeqAt(constraints, i);
 
-        if (GetVariable("control_monitor", cp->lval, &retval) == cf_notype)
-        {
-            CfOut(cf_error, "", "Unknown lval %s in monitor control body", cp->lval);
-            continue;
-        }
+            if (IsExcluded(cp->classes, NULL))
+            {
+                continue;
+            }
 
-        if (strcmp(cp->lval, CFM_CONTROLBODY[cfm_histograms].lval) == 0)
-        {
-            /* Keep accepting this option for backward compatibility. */
-        }
+            if (GetVariable("control_monitor", cp->lval, &retval) == cf_notype)
+            {
+                CfOut(cf_error, "", "Unknown lval %s in monitor control body", cp->lval);
+                continue;
+            }
 
-        if (strcmp(cp->lval, CFM_CONTROLBODY[cfm_tcpdump].lval) == 0)
-        {
-            MonNetworkSnifferEnable(GetBoolean(retval.item));
-        }
+            if (strcmp(cp->lval, CFM_CONTROLBODY[cfm_histograms].lval) == 0)
+            {
+                /* Keep accepting this option for backward compatibility. */
+            }
 
-        if (strcmp(cp->lval, CFM_CONTROLBODY[cfm_forgetrate].lval) == 0)
-        {
-            sscanf(retval.item, "%lf", &FORGETRATE);
-            CfDebug("forget rate = %f\n", FORGETRATE);
+            if (strcmp(cp->lval, CFM_CONTROLBODY[cfm_tcpdump].lval) == 0)
+            {
+                MonNetworkSnifferEnable(GetBoolean(retval.item));
+            }
+
+            if (strcmp(cp->lval, CFM_CONTROLBODY[cfm_forgetrate].lval) == 0)
+            {
+                sscanf(retval.item, "%lf", &FORGETRATE);
+                CfDebug("forget rate = %f\n", FORGETRATE);
+            }
         }
     }
 }

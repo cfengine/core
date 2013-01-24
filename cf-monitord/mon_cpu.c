@@ -59,7 +59,11 @@ void MonCPUGatherData(double *cf_this)
 
     while (!feof(fp))
     {
-        fgets(buf, CF_BUFSIZE, fp);
+        if (fgets(buf, CF_BUFSIZE - 1, fp) == NULL)
+        {
+            CfOut(cf_error, "", "Failed to read line from stream");
+            break;
+        }
 
         sscanf(buf, "%s%ld%ld%ld%ld%ld%ld%ld", cpuname, &userticks, &niceticks, &systemticks, &idle, &iowait, &irq,
                &softirq);

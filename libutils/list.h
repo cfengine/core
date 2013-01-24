@@ -85,9 +85,9 @@ struct List {
     // Link to the last element
     ListNode *last;
     // This function is used to compare two elements
-    int (*compare)(void *a, void *b);
+    int (*compare)(const void *a, const void *b);
     // This function is used whenever there is need to perform a deep copy
-    void (*copy)(void *source, void **destination);
+    void (*copy)(const void *source, void **destination);
     // This function can be used to destroy the elements at destruction time
     void (*destroy)(void *element);
     // Reference counting
@@ -109,7 +109,7 @@ typedef struct ListIterator ListIterator;
   @param destroy Destroys an element.
   @return 0 if initialized, -1 otherwise.
   */
-int ListNew(List **list, int (*compare)(void *, void *), void (*copy)(void *source, void **destination), void (*destroy)(void *));
+int ListNew(List **list, int (*compare)(const void *, const void *), void (*copy)(const void *source, void **destination), void (*destroy)(void *));
 /**
   @brief Destroy a linked list.
   @param list List to be destroyed. It can be a NULL pointer.

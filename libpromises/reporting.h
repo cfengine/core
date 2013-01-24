@@ -27,17 +27,18 @@
 
 #include "cf3.defs.h"
 
+#include "sequence.h"
 #include "writer.h"
 
 ReportContext *ReportContextNew(void);
 bool ReportContextAddWriter(ReportContext *context, ReportOutputType type, Writer *writer);
 void ReportContextDestroy(ReportContext *context);
 
-void ShowPromises(const ReportContext *context, ReportOutputType type, const Bundle *bundles, const Body *bodies);
+void ShowPromises(const ReportContext *context, ReportOutputType type, const Seq *bundles, const Seq *bodies);
 void ShowPromise(const ReportContext *context, ReportOutputType type, const Promise *pp, int indent);
 void ShowScopedVariables(const ReportContext *context, ReportOutputType type);
 void ShowPromiseInReport(const ReportContext *context, ReportOutputType type, const char *version, const Promise *pp, int indent);
-void ShowPromisesInReport(const ReportContext *context, ReportOutputType type, const Bundle *bundles, const Body *bodies);
+void ShowPromisesInReport(const ReportContext *context, ReportOutputType type, const Seq *bundles, const Seq *bodies);
 void ShowContext(const ReportContext *report_context);
 
 // stdout only

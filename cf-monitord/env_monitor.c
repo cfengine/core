@@ -216,13 +216,21 @@ static void LoadHistogram(void)
 
     for (position = 0; position < CF_GRAINS; position++)
     {
-        fscanf(fp, "%d ", &position);
+        if (fscanf(fp, "%d ", &position) != 1)
+        {
+            CfOut(cf_error, "", "Format error in histogram file '%s' - aborting", filename);
+            break;
+        }
 
         for (i = 0; i < CF_OBSERVABLES; i++)
         {
             for (day = 0; day < 7; day++)
             {
-                fscanf(fp, "%lf ", &(HISTOGRAM[i][day][position]));
+                if (fscanf(fp, "%lf ", &(HISTOGRAM[i][day][position])) != 1)
+                {
+                    CfOut(cf_verbose, "fscanf", "Format error in histogram file '%s'", filename);
+                    HISTOGRAM[i][day][position] = 0;
+                }
 
                 if (HISTOGRAM[i][day][position] < 0)
                 {
@@ -1122,8 +1130,10 @@ static void GatherPromisedMeasures(const Policy *policy, const ReportContext *re
     Promise *pp;
     char *scope;
 
-    for (const Bundle *bp = policy->bundles; bp != NULL; bp = bp->next)       /* get schedule */
+    for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
+        const Bundle *bp = SeqAt(policy->bundles, i);
+
         scope = bp->name;
         SetNewScope(bp->name);
 

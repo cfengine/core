@@ -712,38 +712,12 @@ selection:             selection_id
                                }
                            }
                            
-                           if (strcmp(P.blockid,"control") == 0 && strcmp(P.blocktype,"common") == 0)
-                           {
-                               if (strcmp(P.lval,"inputs") == 0)
-                               {
-                                   if (IsDefinedClass(P.currentclasses, CurrentNameSpace(P.policy)))
-                                   {
-                                       if (VINPUTLIST == NULL)
-                                       {
-                                           if (P.rval.rtype == CF_LIST)
-                                           {
-                                               VINPUTLIST = P.rval.item;
-                                           }
-                                           else
-                                           {
-                                               parse_error("inputs promise must have a list as rvalue\n");
-                                           }
-                                       }
-                                       else
-                                       {
-                                           parse_error("Redefinition of input list (broken promise)\n");
-                                       }
-                                   }
-                               }
-                           }
-
                            P.rval = (Rval) { NULL, '\0' };
                         }
                      | error
                        {
                            parse_error("check previous statement, expected ';'\n");
                        }
-
 
 
 selection_id:          id

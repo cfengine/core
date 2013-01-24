@@ -31,9 +31,9 @@
 
 static const size_t EXPAND_FACTOR = 2;
 
-Sequence *SequenceCreate(size_t initialCapacity, void (ItemDestroy) (void *item))
+Seq *SeqNew(size_t initialCapacity, void (ItemDestroy) (void *item))
 {
-    Sequence *seq = xmalloc(sizeof(Sequence));
+    Seq *seq = xmalloc(sizeof(Seq));
 
     if (initialCapacity <= 0)
     {
@@ -48,7 +48,7 @@ Sequence *SequenceCreate(size_t initialCapacity, void (ItemDestroy) (void *item)
     return seq;
 }
 
-static void DestroyRange(Sequence *seq, size_t start, size_t end)
+static void DestroyRange(Seq *seq, size_t start, size_t end)
 {
     if (seq->ItemDestroy)
     {
@@ -59,7 +59,7 @@ static void DestroyRange(Sequence *seq, size_t start, size_t end)
     }
 }
 
-void SequenceDestroy(Sequence *seq)
+void SeqDestroy(Seq *seq)
 {
     if (seq)
     {
@@ -73,7 +73,7 @@ void SequenceDestroy(Sequence *seq)
     }
 }
 
-static void ExpandIfNeccessary(Sequence *seq)
+static void ExpandIfNeccessary(Seq *seq)
 {
     assert(seq->length <= seq->capacity);
 
@@ -84,7 +84,7 @@ static void ExpandIfNeccessary(Sequence *seq)
     }
 }
 
-void SequenceAppend(Sequence *seq, void *item)
+void SeqAppend(Seq *seq, void *item)
 {
     ExpandIfNeccessary(seq);
 
@@ -92,7 +92,15 @@ void SequenceAppend(Sequence *seq, void *item)
     ++(seq->length);
 }
 
-void SequenceRemoveRange(Sequence *seq, size_t start, size_t end)
+void SeqAppendSeq(Seq *seq, const Seq *items)
+{
+    for (size_t i = 0; i < SeqLength(items); i++)
+    {
+        SeqAppend(seq, SeqAt(items, i));
+    }
+}
+
+void SeqRemoveRange(Seq *seq, size_t start, size_t end)
 {
     assert(seq);
     assert(start >= 0);
@@ -111,12 +119,12 @@ void SequenceRemoveRange(Sequence *seq, size_t start, size_t end)
     seq->length -= end - start + 1;
 }
 
-void SequenceRemove(Sequence *seq, size_t index)
+void SeqRemove(Seq *seq, size_t index)
 {
-    SequenceRemoveRange(seq, index, index);
+    SeqRemoveRange(seq, index, index);
 }
 
-void *SequenceLookup(Sequence *seq, const void *key, SequenceItemComparator Compare)
+void *SeqLookup(Seq *seq, const void *key, SeqItemComparator Compare)
 {
     for (size_t i = 0; i < seq->length; i++)
     {
@@ -129,7 +137,7 @@ void *SequenceLookup(Sequence *seq, const void *key, SequenceItemComparator Comp
     return NULL;
 }
 
-ssize_t SequenceIndexOf(Sequence *seq, const void *key, SequenceItemComparator Compare)
+ssize_t SeqIndexOf(Seq *seq, const void *key, SeqItemComparator Compare)
 {
     for (size_t i = 0; i < seq->length; i++)
     {
@@ -151,7 +159,7 @@ static void Swap(void **l, void **r)
 }
 
 // adopted from http://rosettacode.org/wiki/Sorting_algorithms/Quicksort#C
-static void QuickSortRecursive(void **data, int n, SequenceItemComparator Compare, void *user_data, size_t maxterm)
+static void QuickSortRecursive(void **data, int n, SeqItemComparator Compare, void *user_data, size_t maxterm)
 {
     assert(maxterm < 1000);
 
@@ -186,12 +194,12 @@ static void QuickSortRecursive(void **data, int n, SequenceItemComparator Compar
     QuickSortRecursive(l, data + n - l, Compare, user_data, maxterm + 1);
 }
 
-void SequenceSort(Sequence *seq, SequenceItemComparator Compare, void *user_data)
+void SeqSort(Seq *seq, SeqItemComparator Compare, void *user_data)
 {
     QuickSortRecursive(seq->data, seq->length, Compare, user_data, 0);
 }
 
-void SequenceSoftRemoveRange(Sequence *seq, size_t start, size_t end)
+void SeqSoftRemoveRange(Seq *seq, size_t start, size_t end)
 {
     assert(seq);
     assert(start >= 0);
@@ -208,12 +216,12 @@ void SequenceSoftRemoveRange(Sequence *seq, size_t start, size_t end)
     seq->length -= end - start + 1;
 }
 
-void SequenceSoftRemove(Sequence *seq, size_t index)
+void SeqSoftRemove(Seq *seq, size_t index)
 {
-    SequenceSoftRemoveRange(seq, index, index);
+    SeqSoftRemoveRange(seq, index, index);
 }
 
-void SequenceReverse(Sequence *seq)
+void SeqReverse(Seq *seq)
 {
     for (size_t i = 0; i < (seq->length / 2); i++)
     {

@@ -83,8 +83,8 @@ static void ShowRange(const char *s, enum cfdatatype type);
 static void ShowBuiltinFunctions(void);
 static void ShowPromiseInReportText(const ReportContext *context, const char *version, const Promise *pp, int indent);
 static void ShowPromiseInReportHtml(const ReportContext *context, const char *version, const Promise *pp, int indent);
-static void ShowPromisesInReportText(const ReportContext *context, const Bundle *bundles, const Body *bodies);
-static void ShowPromisesInReportHtml(const ReportContext *context, const Bundle *bundles, const Body *bodies);
+static void ShowPromisesInReportText(const ReportContext *context, const Seq *bundles, const Seq *bodies);
+static void ShowPromisesInReportHtml(const ReportContext *context, const Seq *bundles, const Seq *bodies);
 
 /*******************************************************************/
 
@@ -205,7 +205,7 @@ static void ShowControlBodies()
 
 /*******************************************************************/
 
-void ShowPromises(const ReportContext *context, ReportOutputType type, const Bundle *bundles, const Body *bodies)
+void ShowPromises(const ReportContext *context, ReportOutputType type, const Seq *bundles, const Seq *bodies)
 {
     Writer *writer = context->report_writers[type];
     assert(writer);
@@ -233,7 +233,7 @@ void ShowPromises(const ReportContext *context, ReportOutputType type, const Bun
 
 /*******************************************************************/
 
-static void ShowPromisesInReportText(const ReportContext *context, const Bundle *bundles, const Body *bodies)
+static void ShowPromisesInReportText(const ReportContext *context, const Seq *bundles, const Seq *bodies)
 {
     assert(context);
     Writer *writer = context->report_writers[REPORT_OUTPUT_TYPE_TEXT];
@@ -245,8 +245,10 @@ static void ShowPromisesInReportText(const ReportContext *context, const Bundle 
 
     ReportBannerText(writer, "Promises");
 
-    for (const Bundle *bp = bundles; bp != NULL; bp = bp->next)
+    for (size_t i = 0; i < SeqLength(bundles); i++)
     {
+        Bundle *bp = SeqAt(bundles, i);
+
         WriterWriteF(writer, "Bundle %s in the context of %s\n\n", bp->name, bp->type);
         WriterWriteF(writer, "   ARGS:\n\n");
 
@@ -275,15 +277,17 @@ static void ShowPromisesInReportText(const ReportContext *context, const Bundle 
 
     WriterWriteF(writer, "\n\nAll Bodies\n\n");
 
-    for (const Body *bdp = bodies; bdp != NULL; bdp = bdp->next)
+    for (size_t i = 0; i < SeqLength(bodies); i++)
     {
+        const Body *bdp = SeqAt(bodies, i);
+
         ShowBodyText(writer, bdp, 3);
 
         WriterWriteF(writer, "\n");
     }
 }
 
-static void ShowPromisesInReportHtml(const ReportContext *context, const Bundle *bundles, const Body *bodies)
+static void ShowPromisesInReportHtml(const ReportContext *context, const Seq *bundles, const Seq *bodies)
 {   
     assert(context);
     Writer *writer = context->report_writers[REPORT_OUTPUT_TYPE_HTML];
@@ -314,8 +318,10 @@ static void ShowPromisesInReportHtml(const ReportContext *context, const Bundle 
 
     WriterWriteF(writer, "<p>");
 
-    for (const Bundle *bp = bundles; bp != NULL; bp = bp->next)
+    for (size_t i = 0; i < SeqLength(bundles); i++)
     {
+        Bundle *bp = SeqAt(bundles, i);
+
         WriterWriteF(writer, "%s Bundle %s%s%s %s%s%s\n",
                 CFH[cfx_bundle][cfb],
                 CFH[cfx_blocktype][cfb], bp->type, CFH[cfx_blocktype][cfe],
@@ -352,8 +358,10 @@ static void ShowPromisesInReportHtml(const ReportContext *context, const Bundle 
 
     WriterWriteF(writer, "<h1>All Bodies</h1>");
 
-    for (const Body *bdp = bodies; bdp != NULL; bdp = bdp->next)
+    for (size_t i = 0; i < SeqLength(bodies); i++)
     {
+        const Body *bdp = SeqAt(bodies, i);
+
         WriterWriteF(writer, "%s%s\n", CFH[cfx_line][cfb], CFH[cfx_block][cfb]);
         WriterWriteF(writer, "%s\n", CFH[cfx_promise][cfb]);
 
@@ -367,7 +375,7 @@ static void ShowPromisesInReportHtml(const ReportContext *context, const Bundle 
     CfHtmlFooter(writer, FOOTER);
 }
 
-void ShowPromisesInReport(const ReportContext *context, ReportOutputType type, const Bundle *bundles, const Body *bodies)
+void ShowPromisesInReport(const ReportContext *context, ReportOutputType type, const Seq *bundles, const Seq *bodies)
 {
     switch (type)
     {
@@ -442,8 +450,10 @@ static void ShowPromiseInReportText(const ReportContext *context, const char *ve
                 pp->classes);
     }
 
-    for (const Constraint *cp = pp->conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
+        const Constraint *cp = SeqAt(pp->conlist, i);
+
         IndentText(writer, indent + 3);
         WriterWriteF(writer, "%10s => ", cp->lval);
 
@@ -543,8 +553,10 @@ static void ShowPromiseInReportHtml(const ReportContext *context, const char *ve
                 CFH[cfx_object][cfb], pp->promiser, CFH[cfx_object][cfe], pp->bundletype, pp->agentsubtype);
     }
 
-    for (const Constraint *cp = pp->conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
+        const Constraint *cp = SeqAt(pp->conlist, i);
+
         WriterWriteF(writer, "%s%s%s => ", CFH[cfx_lval][cfb], cp->lval, CFH[cfx_lval][cfe]);
 
         Policy *policy = PolicyFromPromise(pp);
@@ -811,8 +823,10 @@ static void ShowBodyText(Writer *writer, const Body *body, int indent)
     IndentText(writer, indent);
     WriterWriteF(writer, "{\n");
 
-    for (const Constraint *cp = body->conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(body->conlist); i++)
     {
+        const Constraint *cp = SeqAt(body->conlist, i);
+
         IndentText(writer, indent);
         WriterWriteF(writer, "%s => ", cp->lval);
         RvalPrint(writer, cp->rval);        /* literal */
@@ -859,8 +873,10 @@ static void ShowBodyHtml(Writer *writer, const Body *body, int indent)
         WriterWriteF(writer, ")");
     }
 
-    for (const Constraint *cp = body->conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(body->conlist); i++)
     {
+        const Constraint *cp = SeqAt(body->conlist, i);
+
         WriterWriteF(writer, "%s.....%s%s => ", CFH[cfx_lval][cfb], cp->lval, CFH[cfx_lval][cfe]);
 
         WriterWriteF(writer, "\'%s", CFH[cfx_rval][cfb]);

@@ -1,6 +1,6 @@
 SUBDIRS = data
 
-AM_CFLAGS = $(NOVA_CFLAGS) -I$(srcdir)/../../libpromises -DTESTDATADIR='"$(srcdir)/data"' -I$(srcdir)/../../cf-serverd
+AM_CFLAGS = $(NOVA_CFLAGS) -I$(srcdir)/../../libpromises -DTESTDATADIR='"$(srcdir)/data"' -I$(srcdir)/../../cf-serverd -I$(srcdir)/../../cf-agent
 
 LDADD = ../../libpromises/libpromises.la libtest.la
 
@@ -61,6 +61,14 @@ check_PROGRAMS = \
 	timeout_test \
 	connection_management_test
 
+if HAVE_AVAHI_CLIENT
+if HAVE_AVAHI_COMMON
+check_PROGRAMS += \
+    findhub_test \
+    avahi_config_test
+endif
+endif
+
 TESTS = $(check_PROGRAMS)
 
 #
@@ -95,7 +103,15 @@ list_test_SOURCES = list_test.c ../../libutils/list.c
 refcount_test_SOURCES = refcount_test.c ../../libutils/refcount.c
 
 buffer_test_SOURCES = buffer_test.c ../../libutils/buffer.c
+if HAVE_AVAHI_CLIENT
+if HAVE_AVAHI_COMMON
 
+findhub_test_SOURCES = findhub_test.c ../../cf-agent/findhub.c ../../cf-agent/load_avahi.c
+
+avahi_config_test_SOURCES = avahi_config_test.c ../../cf-serverd/server.c ../../cf-serverd/enterprise_stubs_serverd.c ../../cf-serverd/server_transform.c
+
+endif
+endif
 #
 # file_writer_test overrides fclose(3) which causes gcov to fail as gcov
 # instrumentation code uses fclose(3).

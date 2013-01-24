@@ -500,7 +500,6 @@ static int HailServer(char *host, Attributes a, Promise *pp)
 
 void KeepControlPromises(Policy *policy)
 {
-    Constraint *cp;
     Rval retval;
 
     RUNATTR.copy.trustkey = false;
@@ -510,101 +509,107 @@ void KeepControlPromises(Policy *policy)
 
 /* Keep promised agent behaviour - control bodies */
 
-    for (cp = ControlBodyConstraints(policy, AGENT_TYPE_RUNAGENT); cp != NULL; cp = cp->next)
+    Seq *constraints = ControlBodyConstraints(policy, AGENT_TYPE_RUNAGENT);
+    if (constraints)
     {
-        if (IsExcluded(cp->classes, NULL))
+        for (size_t i = 0; i < SeqLength(constraints); i++)
         {
-            continue;
-        }
+            Constraint *cp = SeqAt(constraints, i);
 
-        if (GetVariable("control_runagent", cp->lval, &retval) == cf_notype)
-        {
-            CfOut(cf_error, "", "Unknown lval %s in runagent control body", cp->lval);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFR_CONTROLBODY[cfr_force_ipv4].lval) == 0)
-        {
-            RUNATTR.copy.force_ipv4 = GetBoolean(retval.item);
-            CfOut(cf_verbose, "", "SET force_ipv4 = %d\n", RUNATTR.copy.force_ipv4);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFR_CONTROLBODY[cfr_trustkey].lval) == 0)
-        {
-            RUNATTR.copy.trustkey = GetBoolean(retval.item);
-            CfOut(cf_verbose, "", "SET trustkey = %d\n", RUNATTR.copy.trustkey);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFR_CONTROLBODY[cfr_encrypt].lval) == 0)
-        {
-            RUNATTR.copy.encrypt = GetBoolean(retval.item);
-            CfOut(cf_verbose, "", "SET encrypt = %d\n", RUNATTR.copy.encrypt);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFR_CONTROLBODY[cfr_portnumber].lval) == 0)
-        {
-            RUNATTR.copy.portnumber = (short) Str2Int(retval.item);
-            CfOut(cf_verbose, "", "SET default portnumber = %u\n", (int) RUNATTR.copy.portnumber);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFR_CONTROLBODY[cfr_background].lval) == 0)
-        {
-            /*
-             * Only process this option if are is no -b or -i options specified on
-             * command line.
-             */
-            if (BACKGROUND || INTERACTIVE)
+            if (IsExcluded(cp->classes, NULL))
             {
-                CfOut(cf_error, "",
-                      "Warning: 'background_children' setting from 'body runagent control' is overriden by command-line option.");
-            }
-            else
-            {
-                BACKGROUND = GetBoolean(retval.item);
-            }
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFR_CONTROLBODY[cfr_maxchild].lval) == 0)
-        {
-            MAXCHILD = (short) Str2Int(retval.item);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFR_CONTROLBODY[cfr_output_to_file].lval) == 0)
-        {
-            OUTPUT_TO_FILE = GetBoolean(retval.item);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFR_CONTROLBODY[cfr_output_directory].lval) == 0)
-        {
-            if (IsAbsPath(retval.item))
-            {
-                strncpy(OUTPUT_DIRECTORY, retval.item, CF_BUFSIZE - 1);
-                CfOut(cf_verbose, "", "SET output direcory to = %s\n", OUTPUT_DIRECTORY);
-            }
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFR_CONTROLBODY[cfr_timeout].lval) == 0)
-        {
-            RUNATTR.copy.timeout = (short) Str2Int(retval.item);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFR_CONTROLBODY[cfr_hosts].lval) == 0)
-        {
-            if (HOSTLIST == NULL)       // Don't override if command line setting
-            {
-                HOSTLIST = retval.item;
+                continue;
             }
 
-            continue;
+            if (GetVariable("control_runagent", cp->lval, &retval) == cf_notype)
+            {
+                CfOut(cf_error, "", "Unknown lval %s in runagent control body", cp->lval);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFR_CONTROLBODY[cfr_force_ipv4].lval) == 0)
+            {
+                RUNATTR.copy.force_ipv4 = GetBoolean(retval.item);
+                CfOut(cf_verbose, "", "SET force_ipv4 = %d\n", RUNATTR.copy.force_ipv4);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFR_CONTROLBODY[cfr_trustkey].lval) == 0)
+            {
+                RUNATTR.copy.trustkey = GetBoolean(retval.item);
+                CfOut(cf_verbose, "", "SET trustkey = %d\n", RUNATTR.copy.trustkey);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFR_CONTROLBODY[cfr_encrypt].lval) == 0)
+            {
+                RUNATTR.copy.encrypt = GetBoolean(retval.item);
+                CfOut(cf_verbose, "", "SET encrypt = %d\n", RUNATTR.copy.encrypt);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFR_CONTROLBODY[cfr_portnumber].lval) == 0)
+            {
+                RUNATTR.copy.portnumber = (short) Str2Int(retval.item);
+                CfOut(cf_verbose, "", "SET default portnumber = %u\n", (int) RUNATTR.copy.portnumber);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFR_CONTROLBODY[cfr_background].lval) == 0)
+            {
+                /*
+                 * Only process this option if are is no -b or -i options specified on
+                 * command line.
+                 */
+                if (BACKGROUND || INTERACTIVE)
+                {
+                    CfOut(cf_error, "",
+                          "Warning: 'background_children' setting from 'body runagent control' is overriden by command-line option.");
+                }
+                else
+                {
+                    BACKGROUND = GetBoolean(retval.item);
+                }
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFR_CONTROLBODY[cfr_maxchild].lval) == 0)
+            {
+                MAXCHILD = (short) Str2Int(retval.item);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFR_CONTROLBODY[cfr_output_to_file].lval) == 0)
+            {
+                OUTPUT_TO_FILE = GetBoolean(retval.item);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFR_CONTROLBODY[cfr_output_directory].lval) == 0)
+            {
+                if (IsAbsPath(retval.item))
+                {
+                    strncpy(OUTPUT_DIRECTORY, retval.item, CF_BUFSIZE - 1);
+                    CfOut(cf_verbose, "", "SET output direcory to = %s\n", OUTPUT_DIRECTORY);
+                }
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFR_CONTROLBODY[cfr_timeout].lval) == 0)
+            {
+                RUNATTR.copy.timeout = (short) Str2Int(retval.item);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFR_CONTROLBODY[cfr_hosts].lval) == 0)
+            {
+                if (HOSTLIST == NULL)       // Don't override if command line setting
+                {
+                    HOSTLIST = retval.item;
+                }
+
+                continue;
+            }
         }
     }
 

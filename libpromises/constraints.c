@@ -1,4 +1,4 @@
-/* 
+/*
 
    Copyright (C) Cfengine AS
 
@@ -37,6 +37,7 @@
 #include "string_lib.h"
 #include "transaction.h"
 #include "logging.h"
+#include "misc_lib.h"
 
 static PromiseIdent *PromiseIdExists(char *namespace, char *handle);
 static void DeleteAllPromiseIdsRecurse(PromiseIdent *key);
@@ -80,27 +81,6 @@ static Constraint *ConstraintNew(const char *lval, Rval rval, const char *classe
 
 /*****************************************************************************/
 
-// FIX: every type having its own list logic
-static void ConstraintAppendToList(Constraint **conlist, Constraint *cp)
-{
-    Constraint *lp = NULL;
-
-    if (*conlist == NULL)
-    {
-        *conlist = cp;
-    }
-    else
-    {
-        for (lp = *conlist; lp->next != NULL; lp = lp->next)
-        {
-        }
-
-        lp->next = cp;
-    }
-}
-
-/*****************************************************************************/
-
 Constraint *ConstraintAppendToPromise(Promise *promise, const char *lval, Rval rval, const char *classes,
                                       bool references_body)
 {
@@ -108,7 +88,7 @@ Constraint *ConstraintAppendToPromise(Promise *promise, const char *lval, Rval r
     cp->type = POLICY_ELEMENT_TYPE_PROMISE;
     cp->parent.promise = promise;
 
-    ConstraintAppendToList(&promise->conlist, cp);
+    SeqAppend(promise->conlist, cp);
 
     return cp;
 }
@@ -122,19 +102,69 @@ Constraint *ConstraintAppendToBody(Body *body, const char *lval, Rval rval, cons
     cp->type = POLICY_ELEMENT_TYPE_BODY;
     cp->parent.body = body;
 
-    ConstraintAppendToList(&body->conlist, cp);
+    SeqAppend(body->conlist, cp);
 
     return cp;
 }
 
+Seq *ConstraintGetFromBody(Body *body, const char *lval)
+{
+    Seq *matches = SeqNew(5, NULL);
+
+    for (size_t i = 0; i < SeqLength(body->conlist); i++)
+    {
+        Constraint *cp = SeqAt(body->conlist, i);
+        if (strcmp(cp->lval, lval) == 0)
+        {
+            SeqAppend(matches, cp);
+        }
+    }
+
+    return matches;
+}
+
+const char *ConstraintContext(const Constraint *cp)
+{
+    switch (cp->type)
+    {
+    case POLICY_ELEMENT_TYPE_BODY:
+        return cp->classes;
+
+    case POLICY_ELEMENT_TYPE_BUNDLE:
+        return cp->parent.promise->classes;
+
+    default:
+        ProgrammingError("Constraint had parent element type: %d", cp->type);
+        return NULL;
+    }
+}
+
+Constraint *EffectiveConstraint(Seq *constraints)
+{
+    for (size_t i = 0; i < SeqLength(constraints); i++)
+    {
+        Constraint *cp = SeqAt(constraints, i);
+
+        const char *context = ConstraintContext(cp);
+        const char *ns = NamespaceFromConstraint(cp);
+
+        if (IsDefinedClass(context, ns))
+        {
+            return cp;
+        }
+    }
+
+    return NULL;
+}
+
 /*****************************************************************************/
 
-void EditScalarConstraint(Constraint *conlist, const char *lval, const char *rval)
+void EditScalarConstraint(Seq *conlist, const char *lval, const char *rval)
 {
-    Constraint *cp;
-
-    for (cp = conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(conlist); i++)
     {
+        Constraint *cp = SeqAt(conlist, i);
+
         if (strcmp(lval, cp->lval) == 0)
         {
             DeleteRvalItem(cp->rval);
@@ -144,23 +174,14 @@ void EditScalarConstraint(Constraint *conlist, const char *lval, const char *rva
     }
 }
 
-/*****************************************************************************/
-
-void DeleteConstraintList(Constraint *conlist)
+void ConstraintDestroy(Constraint *cp)
 {
-    Constraint *cp, *next;
-
-    CfDebug("DeleteConstraintList()\n");
-
-    for (cp = conlist; cp != NULL; cp = next)
+    if (cp)
     {
-        CfDebug("Delete lval = %s,%c\n", cp->lval, cp->rval.rtype);
-
-        next = cp->next;
-
         DeleteRvalItem(cp->rval);
         free(cp->lval);
         free(cp->classes);
+
         free(cp);
     }
 }
@@ -169,11 +190,12 @@ void DeleteConstraintList(Constraint *conlist)
 
 int GetBooleanConstraint(const char *lval, const Promise *pp)
 {
-    Constraint *cp;
     int retval = CF_UNDEFINED;
 
-    for (cp = pp->conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
+        Constraint *cp = SeqAt(pp->conlist, i);
+
         if (strcmp(cp->lval, lval) == 0)
         {
             if (IsDefinedClass(cp->classes, pp->namespace))
@@ -220,12 +242,14 @@ int GetBooleanConstraint(const char *lval, const Promise *pp)
 
 /*****************************************************************************/
 
-int GetRawBooleanConstraint(const char *lval, const Constraint *list)
+int GetRawBooleanConstraint(const char *lval, const Seq *constraints)
 {
     int retval = CF_UNDEFINED;
 
-    for (const Constraint *cp = list; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(constraints); i++)
     {
+        Constraint *cp = SeqAt(constraints, i);
+
         if (strcmp(cp->lval, lval) == 0)
         {
             if (IsDefinedClass(cp->classes, NULL))
@@ -274,8 +298,10 @@ int GetBundleConstraint(const char *lval, const Promise *pp)
 {
     int retval = CF_UNDEFINED;
 
-    for (const Constraint *cp = pp->conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
+        const Constraint *cp = SeqAt(pp->conlist, i);
+
         if (strcmp(cp->lval, lval) == 0)
         {
             if (IsDefinedClass(cp->classes, pp->namespace))
@@ -311,11 +337,12 @@ int GetBundleConstraint(const char *lval, const Promise *pp)
 
 int GetIntConstraint(const char *lval, const Promise *pp)
 {
-    Constraint *cp;
     int retval = CF_NOINT;
 
-    for (cp = pp->conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
+        Constraint *cp = SeqAt(pp->conlist, i);
+
         if (strcmp(cp->lval, lval) == 0)
         {
             if (IsDefinedClass(cp->classes, pp->namespace))
@@ -350,11 +377,12 @@ int GetIntConstraint(const char *lval, const Promise *pp)
 
 double GetRealConstraint(const char *lval, const Promise *pp)
 {
-    Constraint *cp;
     double retval = CF_NODOUBLE;
 
-    for (cp = pp->conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
+        Constraint *cp = SeqAt(pp->conlist, i);
+
         if (strcmp(cp->lval, lval) == 0)
         {
             if (IsDefinedClass(cp->classes, pp->namespace))
@@ -408,13 +436,14 @@ static mode_t Str2Mode(const char *s)
 
 mode_t GetOctalConstraint(const char *lval, const Promise *pp)
 {
-    Constraint *cp;
     mode_t retval = 077;
 
 // We could handle units here, like kb,b,mb
 
-    for (cp = pp->conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
+        Constraint *cp = SeqAt(pp->conlist, i);
+
         if (strcmp(cp->lval, lval) == 0)
         {
             if (IsDefinedClass(cp->classes, pp->namespace))
@@ -458,12 +487,13 @@ uid_t GetUidConstraint(const char *lval, const Promise *pp)
 
 uid_t GetUidConstraint(const char *lval, const Promise *pp)
 {
-    Constraint *cp;
     int retval = CF_SAME_OWNER;
     char buffer[CF_MAXVARSIZE];
 
-    for (cp = pp->conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
+        Constraint *cp = SeqAt(pp->conlist, i);
+
         if (strcmp(cp->lval, lval) == 0)
         {
             if (IsDefinedClass(cp->classes, pp->namespace))
@@ -510,12 +540,13 @@ gid_t GetGidConstraint(char *lval, const Promise *pp)
 
 gid_t GetGidConstraint(char *lval, const Promise *pp)
 {
-    Constraint *cp;
     int retval = CF_SAME_GROUP;
     char buffer[CF_MAXVARSIZE];
 
-    for (cp = pp->conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
+        Constraint *cp = SeqAt(pp->conlist, i);
+
         if (strcmp(cp->lval, lval) == 0)
         {
             if (IsDefinedClass(cp->classes, pp->namespace))
@@ -552,11 +583,12 @@ gid_t GetGidConstraint(char *lval, const Promise *pp)
 
 Rlist *GetListConstraint(const char *lval, const Promise *pp)
 {
-    Constraint *cp;
     Rlist *retval = NULL;
 
-    for (cp = pp->conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
+        Constraint *cp = SeqAt(pp->conlist, i);
+
         if (strcmp(cp->lval, lval) == 0)
         {
             if (IsDefinedClass(cp->classes, pp->namespace))
@@ -591,7 +623,7 @@ Rlist *GetListConstraint(const char *lval, const Promise *pp)
 
 Constraint *GetConstraint(const Promise *pp, const char *lval)
 {
-    Constraint *cp = NULL, *retval = NULL;
+    Constraint *retval = NULL;
 
     if (pp == NULL)
     {
@@ -603,8 +635,10 @@ Constraint *GetConstraint(const Promise *pp, const char *lval)
         CfOut(cf_error, "", " !! Self-diagnostic: Constraint type \"%s\" is not a registered type\n", lval);
     }
 
-    for (cp = pp->conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
+        Constraint *cp = SeqAt(pp->conlist, i);
+
         if (strcmp(cp->lval, lval) == 0)
         {
             if (IsDefinedClass(cp->classes, pp->namespace))
@@ -644,7 +678,6 @@ void *GetConstraintValue(const char *lval, const Promise *pp, char rtype)
 
 void ReCheckAllConstraints(Promise *pp)
 {
-    Constraint *cp;
     char *sp, *handle = GetConstraintValue("handle", pp, CF_SCALAR);
     PromiseIdent *prid;
     Item *ptr;
@@ -720,8 +753,9 @@ void ReCheckAllConstraints(Promise *pp)
         }
     }
 
-    for (cp = pp->conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
+        Constraint *cp = SeqAt(pp->conlist, i);
         PostCheckConstraint(pp->agentsubtype, pp->bundle, cp->lval, cp->rval);
     }
 

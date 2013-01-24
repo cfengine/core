@@ -37,6 +37,7 @@
 #include "pipes.h"
 #include "logging.h"
 #include "exec_tools.h"
+#include "misc_lib.h"
 
 #ifdef HAVE_SYS_UIO_H
 # include <sys/uio.h>
@@ -471,11 +472,10 @@ void GetInterfacesInfo(AgentType ag)
         
         if (strstr(ifp->ifr_name, ":"))
         {
-            if (VSYSTEMHARDCLASS == linuxx)
-            {
-                CfOut(cf_verbose, "", "Skipping apparent virtual interface %d: %s\n", j + 1, ifp->ifr_name);
-                continue;
-            }
+#ifdef __linux__
+            CfOut(cf_verbose, "", "Skipping apparent virtual interface %d: %s\n", j + 1, ifp->ifr_name);
+            continue;
+#endif
         }
         else
         {
@@ -682,47 +682,41 @@ static void FindV6InterfacesInfo(void)
 
     CfOut(cf_verbose, "", "Trying to locate my IPv6 address\n");
 
-    switch (VSYSTEMHARDCLASS)
+#if defined(__CYGWIN__)
+    /* NT cannot do this */
+    return;
+#elif defined(__hpux)
+    if ((pp = cf_popen("/usr/sbin/ifconfig -a", "r")) == NULL)
     {
-    case cfnt:
-        /* NT cannot do this */
+        CfOut(cf_verbose, "", "Could not find interface info\n");
         return;
-
-    case hp:
-
-        if ((pp = cf_popen("/usr/sbin/ifconfig -a", "r")) == NULL)
-        {
-            CfOut(cf_verbose, "", "Could not find interface info\n");
-            return;
-        }
-
-        break;
-
-    case aix:
-
-        if ((pp = cf_popen("/etc/ifconfig -a", "r")) == NULL)
-        {
-            CfOut(cf_verbose, "", "Could not find interface info\n");
-            return;
-        }
-
-        break;
-
-    default:
-
-        if ((pp = cf_popen("/sbin/ifconfig -a", "r")) == NULL)
-        {
-            CfOut(cf_verbose, "", "Could not find interface info\n");
-            return;
-        }
-
     }
+#elif defined(_AIX)
+    if ((pp = cf_popen("/etc/ifconfig -a", "r")) == NULL)
+    {
+        CfOut(cf_verbose, "", "Could not find interface info\n");
+        return;
+    }
+#else
+    if ((pp = cf_popen("/sbin/ifconfig -a", "r")) == NULL)
+    {
+        CfOut(cf_verbose, "", "Could not find interface info\n");
+        return;
+    }
+#endif
 
 /* Don't know the output format of ifconfig on all these .. hope for the best*/
 
     while (!feof(pp))
     {
-        fgets(buffer, CF_BUFSIZE - 1, pp);
+        buffer[0] = '\0';
+        if (fgets(buffer, CF_BUFSIZE, pp) == NULL)
+        {
+            if (strlen(buffer))
+            {
+                UnexpectedError("Failed to read line from stream");
+            }
+        }
 
         if (ferror(pp))         /* abortable */
         {
@@ -779,9 +773,9 @@ static void InitIgnoreInterfaces()
     while (!feof(fin))
     {
         regex[0] = '\0';
-        fscanf(fin,"%s",regex);
-       
-        if (*regex != '\0')
+        int scanCount = fscanf(fin,"%s",regex);
+
+        if (scanCount != 0 && *regex != '\0')
         {
            IdempPrependRScalar(&IGNORE_INTERFACES,regex,CF_SCALAR);
         }

@@ -2073,7 +2073,11 @@ int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promis
         CfDebug(" -> Direct file reference %s, no search implied\n", name);
         snprintf(basedir, sizeof(basedir), "%s", name);
         ChopLastNode(basedir);
-        chdir(basedir);
+        if (chdir(basedir))
+        {
+            CfOut(cf_error, "", "Failed to chdir into '%s'\n", basedir);
+            return false;
+        }
         return VerifyFileLeaf(name, sb, attr, pp, report_context);
     }
 

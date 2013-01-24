@@ -46,7 +46,7 @@ struct JsonElement_
         struct JsonContainer
         {
             JsonContainerType type;
-            Sequence *children;
+            Seq *children;
         } container;
         struct JsonPrimitive
         {
@@ -86,7 +86,7 @@ static JsonElement *JsonElementCreateContainer(JsonContainerType containerType, 
     JsonElementSetPropertyName(element, propertyName);
 
     element->container.type = containerType;
-    element->container.children = SequenceCreate(initialCapacity, JsonElementDestroy);
+    element->container.children = SeqNew(initialCapacity, JsonElementDestroy);
 
     return element;
 }
@@ -112,7 +112,7 @@ void JsonElementDestroy(JsonElement *element)
     {
     case JSON_ELEMENT_TYPE_CONTAINER:
         assert(element->container.children);
-        SequenceDestroy(element->container.children);
+        SeqDestroy(element->container.children);
         element->container.children = NULL;
         break;
 
@@ -304,7 +304,7 @@ void JsonSort(JsonElement *container, JsonComparator *Compare, void *user_data)
     assert(container);
     assert(container->type == JSON_ELEMENT_TYPE_CONTAINER);
 
-    SequenceSort(container->container.children, (SequenceItemComparator)Compare, user_data);
+    SeqSort(container->container.children, (SeqItemComparator)Compare, user_data);
 }
 
 JsonElement *JsonAt(const JsonElement *container, size_t index)
@@ -379,7 +379,7 @@ static void _JsonObjectAppendPrimitive(JsonElement *object, const char *key, Jso
 
     JsonElementSetPropertyName(child_primitive, key);
 
-    SequenceAppend(object->container.children, child_primitive);
+    SeqAppend(object->container.children, child_primitive);
 }
 
 void JsonObjectAppendString(JsonElement *object, const char *key, const char *value)
@@ -438,7 +438,7 @@ void JsonObjectAppendArray(JsonElement *object, const char *key, JsonElement *ar
     assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
 
     JsonElementSetPropertyName(array, key);
-    SequenceAppend(object->container.children, array);
+    SeqAppend(object->container.children, array);
 }
 
 void JsonObjectAppendObject(JsonElement *object, const char *key, JsonElement *childObject)
@@ -452,7 +452,7 @@ void JsonObjectAppendObject(JsonElement *object, const char *key, JsonElement *c
     assert(childObject->container.type == JSON_CONTAINER_TYPE_OBJECT);
 
     JsonElementSetPropertyName(childObject, key);
-    SequenceAppend(object->container.children, childObject);
+    SeqAppend(object->container.children, childObject);
 }
 
 static int JsonElementHasProperty(const void *propertyName, const void *jsonElement, void *_user_data)
@@ -482,7 +482,7 @@ static size_t JsonElementIndexInParentObject(JsonElement *parent, const char* ke
     assert(parent->container.type == JSON_CONTAINER_TYPE_OBJECT);
     assert(key);
 
-    return SequenceIndexOf(parent->container.children, key, CompareKeyToPropertyName);
+    return SeqIndexOf(parent->container.children, key, CompareKeyToPropertyName);
 }
 
 void JsonObjectRemoveKey(JsonElement *object, const char *key)
@@ -495,7 +495,7 @@ void JsonObjectRemoveKey(JsonElement *object, const char *key)
     size_t index = JsonElementIndexInParentObject(object, key);
     if (index != -1)
     {
-        SequenceRemove(object->container.children, index);
+        SeqRemove(object->container.children, index);
     }
 }
 
@@ -511,8 +511,8 @@ JsonElement *JsonObjectDetachKey(JsonElement *object, const char *key)
     size_t index = JsonElementIndexInParentObject(object, key);
     if (index != -1)
     {
-        detached = SequenceLookup(object->container.children, key, JsonElementHasProperty);
-        SequenceSoftRemove(object->container.children, index);
+        detached = SeqLookup(object->container.children, key, JsonElementHasProperty);
+        SeqSoftRemove(object->container.children, index);
     }
 
     return detached;
@@ -525,7 +525,7 @@ const char *JsonObjectGetAsString(JsonElement *object, const char *key)
     assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
     assert(key);
 
-    JsonElement *childPrimitive = SequenceLookup(object->container.children, key, JsonElementHasProperty);
+    JsonElement *childPrimitive = SeqLookup(object->container.children, key, JsonElementHasProperty);
 
     if (childPrimitive)
     {
@@ -544,7 +544,7 @@ JsonElement *JsonObjectGetAsObject(JsonElement *object, const char *key)
     assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
     assert(key);
 
-    JsonElement *childPrimitive = SequenceLookup(object->container.children, key, JsonElementHasProperty);
+    JsonElement *childPrimitive = SeqLookup(object->container.children, key, JsonElementHasProperty);
 
     if (childPrimitive)
     {
@@ -563,7 +563,7 @@ JsonElement *JsonObjectGetAsArray(JsonElement *object, const char *key)
     assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
     assert(key);
 
-    JsonElement *childPrimitive = SequenceLookup(object->container.children, key, JsonElementHasProperty);
+    JsonElement *childPrimitive = SeqLookup(object->container.children, key, JsonElementHasProperty);
 
     if (childPrimitive)
     {
@@ -582,7 +582,7 @@ JsonElement *JsonObjectGet(JsonElement *object, const char *key)
     assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
     assert(key);
 
-    return SequenceLookup(object->container.children, key, JsonElementHasProperty);
+    return SeqLookup(object->container.children, key, JsonElementHasProperty);
 }
 
 // *******************************************************************************************
@@ -603,7 +603,7 @@ static void _JsonArrayAppendPrimitive(JsonElement *array, JsonElement *child_pri
     assert(child_primitive);
     assert(child_primitive->type == JSON_ELEMENT_TYPE_PRIMITIVE);
 
-    SequenceAppend(array->container.children, child_primitive);
+    SeqAppend(array->container.children, child_primitive);
 }
 
 void JsonArrayAppendString(JsonElement *array, const char *value)
@@ -656,7 +656,7 @@ void JsonArrayAppendArray(JsonElement *array, JsonElement *childArray)
     assert(childArray->type == JSON_ELEMENT_TYPE_CONTAINER);
     assert(childArray->container.type == JSON_CONTAINER_TYPE_ARRAY);
 
-    SequenceAppend(array->container.children, childArray);
+    SeqAppend(array->container.children, childArray);
 }
 
 void JsonArrayAppendObject(JsonElement *array, JsonElement *object)
@@ -668,7 +668,7 @@ void JsonArrayAppendObject(JsonElement *array, JsonElement *object)
     assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
     assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
 
-    SequenceAppend(array->container.children, object);
+    SeqAppend(array->container.children, object);
 }
 
 void JsonArrayRemoveRange(JsonElement *array, size_t start, size_t end)
@@ -679,7 +679,7 @@ void JsonArrayRemoveRange(JsonElement *array, size_t start, size_t end)
     assert(end < array->container.children->length);
     assert(start <= end);
 
-    SequenceRemoveRange(array->container.children, start, end);
+    SeqRemoveRange(array->container.children, start, end);
 }
 
 const char *JsonArrayGetAsString(JsonElement *array, size_t index)
@@ -726,7 +726,7 @@ void JsonContainerReverse(JsonElement *array)
     assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
     assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
 
-    SequenceReverse(array->container.children);
+    SeqReverse(array->container.children);
 }
 
 // *******************************************************************************************

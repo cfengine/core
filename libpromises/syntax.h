@@ -26,7 +26,10 @@
 #define CFENGINE_SYNTAX_H
 
 #include "cf3.defs.h"
+
+#include "sequence.h"
 #include "writer.h"
+
 #include <stdio.h>
 
 int LvalWantsBody(char *stype, char *lval);
@@ -44,7 +47,7 @@ SubTypeSyntax SubTypeSyntaxLookup(const char *bundle_type, const char *subtype_n
 void SyntaxPrintAsJson(Writer *writer);
 
 /* print a parse tree of the given policy (bundles, bodies) */
-void PolicyPrintAsJson(Writer *writer, const char *filename, Bundle *bundles, Body *bodies);
+void PolicyPrintAsJson(Writer *writer, const char *filename, Seq *bundles, Seq *bodies);
 
 /* print language elements using official formatting */
 void BodyPrettyPrint(Writer *writer, Body *body);

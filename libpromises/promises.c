@@ -48,8 +48,7 @@ static void DereferenceComment(Promise *pp);
 char *BodyName(const Promise *pp)
 {
     char *name, *sp;
-    int i, size = 0;
-    Constraint *cp;
+    int size = 0;
 
 /* Return a type template for the promise body for lock-type identification */
 
@@ -64,8 +63,10 @@ char *BodyName(const Promise *pp)
         size += strlen(sp);
     }
 
-    for (i = 0, cp = pp->conlist; (i < 5) && cp != NULL; i++, cp = cp->next)
+    for (size_t i = 0; (i < 5) && i < SeqLength(pp->conlist); i++)
     {
+        Constraint *cp = SeqAt(pp->conlist, i);
+
         if (strcmp(cp->lval, "args") == 0)      /* Exception for args, by symmetry, for locking */
         {
             continue;
@@ -87,7 +88,6 @@ char *BodyName(const Promise *pp)
 Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
 {
     Promise *pcopy;
-    Constraint *cp, *scp;
     Rval returnval;
 
     if (pp->promisee.item)
@@ -143,21 +143,24 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
     pcopy->conn = pp->conn;
     pcopy->edcontext = pp->edcontext;
     pcopy->has_subbundles = pp->has_subbundles;
+    pcopy->conlist = SeqNew(10, ConstraintDestroy);
     pcopy->org_pp = pp;
 
     CfDebug("Copying promise constraints\n\n");
 
 /* No further type checking should be necessary here, already done by CheckConstraintTypeMatch */
 
-    for (cp = pp->conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
+        Constraint *cp = SeqAt(pp->conlist, i);
+
         Body *bp = NULL;
         FnCall *fp = NULL;
         char *bodyname = NULL;
 
         /* A body template reference could look like a scalar or fn to the parser w/w () */
         Policy *policy = PolicyFromPromise(pp);
-        Body *bodies = policy ? policy->bodies : NULL;
+        Seq *bodies = policy ? policy->bodies : NULL;
 
         switch (cp->rval.rtype)
         {
@@ -219,8 +222,10 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
                           bodyname, pp->offset.line, (pp->audit)->filename);
                 }
 
-                for (scp = bp->conlist; scp != NULL; scp = scp->next)
+                for (size_t k = 0; k < SeqLength(bp->conlist); k++)
                 {
+                    Constraint *scp = SeqAt(bp->conlist, k);
+
                     CfDebug("Doing arg-mapped sublval = %s (promises.c)\n", scp->lval);
                     returnval = ExpandPrivateRval("body", scp->rval);
                     ConstraintAppendToPromise(pcopy, scp->lval, returnval, scp->classes, false);
@@ -240,8 +245,10 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
                 }
                 else
                 {
-                    for (scp = bp->conlist; scp != NULL; scp = scp->next)
+                    for (size_t k = 0; k < SeqLength(bp->conlist); k++)
                     {
+                        Constraint *scp = SeqAt(bp->conlist, k);
+
                         CfDebug("Doing sublval = %s (promises.c)\n", scp->lval);
                         Rval newrv = CopyRvalItem(scp->rval);
 
@@ -263,7 +270,7 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
 
             Rval newrv = CopyRvalItem(cp->rval);
 
-            scp = ConstraintAppendToPromise(pcopy, cp->lval, newrv, cp->classes, false);
+            ConstraintAppendToPromise(pcopy, cp->lval, newrv, cp->classes, false);
         }
     }
 
@@ -275,7 +282,6 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
 Promise *ExpandDeRefPromise(const char *scopeid, Promise *pp)
 {
     Promise *pcopy;
-    Constraint *cp;
     Rval returnval, final;
 
     CfDebug("ExpandDerefPromise()\n");
@@ -324,12 +330,15 @@ Promise *ExpandDeRefPromise(const char *scopeid, Promise *pp)
     pcopy->this_server = pp->this_server;
     pcopy->conn = pp->conn;
     pcopy->edcontext = pp->edcontext;
+    pcopy->conlist = SeqNew(10, ConstraintDestroy);
     pcopy->org_pp = pp;
 
 /* No further type checking should be necessary here, already done by CheckConstraintTypeMatch */
 
-    for (cp = pp->conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
+        Constraint *cp = SeqAt(pp->conlist, i);
+
         Rval returnval;
 
         if (ExpectedDataType(cp->lval) == cf_bundle)
@@ -372,15 +381,15 @@ Promise *ExpandDeRefPromise(const char *scopeid, Promise *pp)
 
 /*******************************************************************/
 
-Body *IsBody(Body *list, const char *namespace, const char *key)
+Body *IsBody(Seq *bodies, const char *namespace, const char *key)
 {
     char fqname[CF_BUFSIZE];
 
-    for (Body *bp = list; bp != NULL; bp = bp->next)
+    for (size_t i = 0; i < SeqLength(bodies); i++)
     {
+        Body *bp = SeqAt(bodies, i);
 
-    // bp->namespace is where the body belongs, namespace is where we are now
-
+        // bp->namespace is where the body belongs, namespace is where we are now
         if (strchr(key, CF_NS) || strcmp(namespace,"default") == 0)
         {
             if (strncmp(key,"default:",strlen("default:")) == 0) // CF_NS == ':'
@@ -408,13 +417,14 @@ Body *IsBody(Body *list, const char *namespace, const char *key)
 
 /*******************************************************************/
 
-Bundle *IsBundle(Bundle *list, const char *key)
+Bundle *IsBundle(Seq *bundles, const char *key)
 {
-    Bundle *bp;
     char fqname[CF_BUFSIZE];
 
-    for (bp = list; bp != NULL; bp = bp->next)
+    for (size_t i = 0; i < SeqLength(bundles); i++)
     {
+        Bundle *bp = SeqAt(bundles, i);
+
         if (strcmp(bp->namespace,"default") == 0)
         {
             if (strncmp(key,"default:",strlen("default:")) == 0)  // CF_NS == ':'
@@ -458,6 +468,7 @@ Promise *NewPromise(char *typename, char *promiser)
     pp->bundle = xstrdup("cfe_internal_bundle_hardcoded");
     pp->namespace = xstrdup("default");
     pp->promiser = xstrdup(promiser);
+    pp->conlist = SeqNew(10, ConstraintDestroy);
 
     ThreadUnlock(cft_policy);
 
@@ -534,13 +545,11 @@ void HashPromise(char *salt, Promise *pp, unsigned char digest[EVP_MAX_MD_SIZE +
     EVP_MD_CTX context;
     int md_len;
     const EVP_MD *md = NULL;
-    Constraint *cp;
     Rlist *rp;
     FnCall *fp;
 
     char *noRvalHash[] = { "mtime", "atime", "ctime", NULL };
     int doHash;
-    int i;
 
     md = EVP_get_digestbyname(FileHashName(type));
 
@@ -567,16 +576,18 @@ void HashPromise(char *salt, Promise *pp, unsigned char digest[EVP_MAX_MD_SIZE +
         EVP_DigestUpdate(&context, salt, strlen(salt));
     }
 
-    for (cp = pp->conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
+        Constraint *cp = SeqAt(pp->conlist, i);
+
         EVP_DigestUpdate(&context, cp->lval, strlen(cp->lval));
 
         // don't hash rvals that change (e.g. times)
         doHash = true;
 
-        for (i = 0; noRvalHash[i] != NULL; i++)
+        for (int j = 0; noRvalHash[j] != NULL; j++)
         {
-            if (strcmp(cp->lval, noRvalHash[i]) == 0)
+            if (strcmp(cp->lval, noRvalHash[j]) == 0)
             {
                 doHash = false;
                 break;

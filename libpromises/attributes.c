@@ -1046,23 +1046,23 @@ EditDefaults GetEditDefaults(const Promise *pp)
 ContextConstraint GetContextConstraints(const Promise *pp)
 {
     ContextConstraint a;
-    Constraint *cp;
-    int i;
 
     a.nconstraints = 0;
     a.expression = NULL;
     a.persistent = GetIntConstraint("persistence", pp);
 
-    for (cp = pp->conlist; cp != NULL; cp = cp->next)
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
-        for (i = 0; CF_CLASSBODY[i].lval != NULL; i++)
+        Constraint *cp = SeqAt(pp->conlist, i);
+
+        for (int k = 0; CF_CLASSBODY[k].lval != NULL; k++)
         {
             if (strcmp(cp->lval, "persistence") == 0)
             {
                 continue;
             }
 
-            if (strcmp(cp->lval, CF_CLASSBODY[i].lval) == 0)
+            if (strcmp(cp->lval, CF_CLASSBODY[k].lval) == 0)
             {
                 a.expression = cp;
                 a.nconstraints++;

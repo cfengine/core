@@ -320,85 +320,91 @@ void KeepPromises(Policy *policy, ExecConfig *config)
 {
     bool schedule_is_specified = false;
 
-    for (Constraint *cp = ControlBodyConstraints(policy, AGENT_TYPE_EXECUTOR); cp != NULL; cp = cp->next)
+    Seq *constraints = ControlBodyConstraints(policy, AGENT_TYPE_EXECUTOR);
+    if (constraints)
     {
-        if (IsExcluded(cp->classes, NULL))
+        for (size_t i = 0; i < SeqLength(constraints); i++)
         {
-            continue;
-        }
+            Constraint *cp = SeqAt(constraints, i);
 
-        Rval retval;
-        if (GetVariable("control_executor", cp->lval, &retval) == cf_notype)
-        {
-            CfOut(cf_error, "", "Unknown lval %s in exec control body", cp->lval);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_mailfrom].lval) == 0)
-        {
-            free(config->mail_from_address);
-            config->mail_from_address = SafeStringDuplicate(retval.item);
-            CfDebug("mailfrom = %s\n", config->mail_from_address);
-        }
-
-        if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_mailto].lval) == 0)
-        {
-            free(config->mail_to_address);
-            config->mail_to_address = SafeStringDuplicate(retval.item);
-            CfDebug("mailto = %s\n", config->mail_to_address);
-        }
-
-        if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_smtpserver].lval) == 0)
-        {
-            free(config->mail_server);
-            config->mail_server = SafeStringDuplicate(retval.item);
-            CfDebug("smtpserver = %s\n", config->mail_server);
-        }
-
-        if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_execcommand].lval) == 0)
-        {
-            free(config->exec_command);
-            config->exec_command = SafeStringDuplicate(retval.item);
-            CfDebug("exec_command = %s\n", config->exec_command);
-        }
-
-        if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_agent_expireafter].lval) == 0)
-        {
-            config->agent_expireafter = Str2Int(retval.item);
-            CfDebug("agent_expireafter = %d\n", config->agent_expireafter);
-        }
-
-        if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_executorfacility].lval) == 0)
-        {
-            SetFacility(retval.item);
-            continue;
-        }
-
-        if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_mailmaxlines].lval) == 0)
-        {
-            config->mail_max_lines = Str2Int(retval.item);
-            CfDebug("maxlines = %d\n", config->mail_max_lines);
-        }
-
-        if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_splaytime].lval) == 0)
-        {
-            int time = Str2Int(ScalarRvalValue(retval));
-
-            SPLAYTIME = (int) (time * SECONDS_PER_MINUTE * GetSplay());
-        }
-
-        if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_schedule].lval) == 0)
-        {
-            CfDebug("Loading user-defined schedule...\n");
-            DeleteItemList(SCHEDULE);
-            SCHEDULE = NULL;
-            schedule_is_specified = true;
-
-            for (const Rlist *rp = retval.item; rp; rp = rp->next)
+            if (IsExcluded(cp->classes, NULL))
             {
-                if (!IsItemIn(SCHEDULE, rp->item))
+                continue;
+            }
+
+            Rval retval;
+            if (GetVariable("control_executor", cp->lval, &retval) == cf_notype)
+            {
+                CfOut(cf_error, "", "Unknown lval %s in exec control body", cp->lval);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_mailfrom].lval) == 0)
+            {
+                free(config->mail_from_address);
+                config->mail_from_address = SafeStringDuplicate(retval.item);
+                CfDebug("mailfrom = %s\n", config->mail_from_address);
+            }
+
+            if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_mailto].lval) == 0)
+            {
+                free(config->mail_to_address);
+                config->mail_to_address = SafeStringDuplicate(retval.item);
+                CfDebug("mailto = %s\n", config->mail_to_address);
+            }
+
+            if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_smtpserver].lval) == 0)
+            {
+                free(config->mail_server);
+                config->mail_server = SafeStringDuplicate(retval.item);
+                CfDebug("smtpserver = %s\n", config->mail_server);
+            }
+
+            if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_execcommand].lval) == 0)
+            {
+                free(config->exec_command);
+                config->exec_command = SafeStringDuplicate(retval.item);
+                CfDebug("exec_command = %s\n", config->exec_command);
+            }
+
+            if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_agent_expireafter].lval) == 0)
+            {
+                config->agent_expireafter = Str2Int(retval.item);
+                CfDebug("agent_expireafter = %d\n", config->agent_expireafter);
+            }
+
+            if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_executorfacility].lval) == 0)
+            {
+                SetFacility(retval.item);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_mailmaxlines].lval) == 0)
+            {
+                config->mail_max_lines = Str2Int(retval.item);
+                CfDebug("maxlines = %d\n", config->mail_max_lines);
+            }
+
+            if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_splaytime].lval) == 0)
+            {
+                int time = Str2Int(ScalarRvalValue(retval));
+
+                SPLAYTIME = (int) (time * SECONDS_PER_MINUTE * GetSplay());
+            }
+
+            if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_schedule].lval) == 0)
+            {
+                CfDebug("Loading user-defined schedule...\n");
+                DeleteItemList(SCHEDULE);
+                SCHEDULE = NULL;
+                schedule_is_specified = true;
+
+                for (const Rlist *rp = retval.item; rp; rp = rp->next)
                 {
-                    AppendItem(&SCHEDULE, rp->item, NULL);
+                    if (!IsItemIn(SCHEDULE, rp->item))
+                    {
+                        AppendItem(&SCHEDULE, rp->item, NULL);
+                    }
                 }
             }
         }
@@ -584,7 +590,7 @@ static void Apoptosis()
     pp.classes = "any";
     pp.offset.line = 0;
     pp.audit = NULL;
-    pp.conlist = NULL;
+    pp.conlist = SeqNew(100, ConstraintDestroy);
 
     pp.bundletype = "agent";
     pp.bundle = "exec_apoptosis";
@@ -620,10 +626,7 @@ static void Apoptosis()
 
     DeleteItemList(PROCESSTABLE);
 
-    if (pp.conlist)
-    {
-        DeleteConstraintList(pp.conlist);
-    }
+    SeqDestroy(pp.conlist);
 
     CfOut(cf_verbose, "", " !! Pruning complete");
 }
@@ -636,9 +639,9 @@ typedef enum
     RELOAD_FULL
 } Reload;
 
-static Reload CheckNewPromises(const char *input_file, const ReportContext *report_context)
+static Reload CheckNewPromises(const char *input_file, const Rlist *input_files, const ReportContext *report_context)
 {
-    if (NewPromiseProposals(input_file))
+    if (NewPromiseProposals(input_file, input_files))
     {
         CfOut(cf_verbose, "", " -> New promises detected...\n");
 
@@ -679,7 +682,7 @@ static bool ScheduleRun(Policy **policy, GenericAgentConfig *config, ExecConfig 
      * FIXME: this logic duplicates the one from cf-serverd.c. Unify ASAP.
      */
 
-    if (CheckNewPromises(config->input_file, report_context) == RELOAD_FULL)
+    if (CheckNewPromises(config->input_file, InputFiles(*policy), report_context) == RELOAD_FULL)
     {
         /* Full reload */
 
@@ -703,7 +706,6 @@ static bool ScheduleRun(Policy **policy, GenericAgentConfig *config, ExecConfig 
         POLICY_SERVER[0] = '\0';
 
         VNEGHEAP = NULL;
-        VINPUTLIST = NULL;
 
         PolicyDestroy(*policy);
         *policy = NULL;

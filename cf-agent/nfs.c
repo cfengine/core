@@ -37,6 +37,7 @@
 #include "pipes.h"
 #include "logging.h"
 #include "nfs.h"
+#include "misc_lib.h"
 
 /* seconds */
 #define RPCTIMEOUT 60
@@ -197,72 +198,48 @@ int LoadMountInfo(Rlist **list)
             return false;
         }
 
-        switch (VSYSTEMHARDCLASS)
+#if defined(__sun) || defined(__hpux)
+        if (IsAbsoluteFileName(buf3))
         {
-        case darwin:
-        case linuxx:
-        case unix_sv:
-        case freebsd:
-        case netbsd:
-        case openbsd:
-        case qnx:
-        case crayos:
-        case dragonfly:
-            if (IsAbsoluteFileName(buf1))
-            {
-                strcpy(host, "localhost");
-                strcpy(mounton, buf3);
-            }
-            else
-            {
-                sscanf(buf1, "%[^:]:%s", host, source);
-                strcpy(mounton, buf3);
-            }
-
-            break;
-        case solaris:
-
-        case hp:
-            if (IsAbsoluteFileName(buf3))
-            {
-                strcpy(host, "localhost");
-                strcpy(mounton, buf1);
-            }
-            else
-            {
-                sscanf(buf1, "%[^:]:%s", host, source);
-                strcpy(mounton, buf1);
-            }
-
-            break;
-        case aix:
-            /* skip header */
-
-            if (IsAbsoluteFileName(buf1))
-            {
-                strcpy(host, "localhost");
-                strcpy(mounton, buf2);
-            }
-            else
-            {
-                strcpy(host, buf1);
-                strcpy(source, buf1);
-                strcpy(mounton, buf3);
-            }
-            break;
-
-        case cfnt:
-            strcpy(mounton, buf2);
-            strcpy(host, buf1);
-            break;
-
-        case cfsco:
-            CfOut(cf_error, "", "Don't understand SCO mount format, no data");
-
-        default:
-            printf("cfengine software error: case %d = %s\n", VSYSTEMHARDCLASS, CLASSTEXT[VSYSTEMHARDCLASS]);
-            FatalError("System error in GetMountInfo - no such class!");
+            strcpy(host, "localhost");
+            strcpy(mounton, buf1);
         }
+        else
+        {
+            sscanf(buf1, "%[^:]:%s", host, source);
+            strcpy(mounton, buf1);
+        }
+#elif defined(_AIX)
+        /* skip header */
+
+        if (IsAbsoluteFileName(buf1))
+        {
+            strcpy(host, "localhost");
+            strcpy(mounton, buf2);
+        }
+        else
+        {
+            strcpy(host, buf1);
+            strcpy(source, buf1);
+            strcpy(mounton, buf3);
+        }
+#elif defined(__CYGWIN__)
+        strcpy(mounton, buf2);
+        strcpy(host, buf1);
+#elif defined(sco) || defined(__SCO_DS)
+        CfOut(cf_error, "", "Don't understand SCO mount format, no data");
+#else
+        if (IsAbsoluteFileName(buf1))
+        {
+            strcpy(host, "localhost");
+            strcpy(mounton, buf3);
+        }
+        else
+        {
+            sscanf(buf1, "%[^:]:%s", host, source);
+            strcpy(mounton, buf3);
+        }
+#endif
 
         CfDebug("GOT: host=%s, source=%s, mounton=%s\n", host, source, mounton);
 
@@ -383,56 +360,30 @@ int VerifyInFstab(char *name, Attributes a, Promise *pp)
     mountpt = name;
     fstype = a.mount.mount_type;
 
-    switch (VSYSTEMHARDCLASS)
-    {
-    case qnx:
-        snprintf(fstab, CF_BUFSIZE, "%s:%s \t %s %s\t%s 0 0", host, rmountpt, mountpt, fstype, opts);
-        break;
+#if defined(__QNX__) || defined(__QNXNTO__)
+    snprintf(fstab, CF_BUFSIZE, "%s:%s \t %s %s\t%s 0 0", host, rmountpt, mountpt, fstype, opts);
+#elif defined(_CRAY)
+    char fstype_upper[CF_BUFSIZE];
+    strlcpy(fstype_upper, fstype, CF_BUFSIZE);
+    ToUpperStrInplace(fstype_upper);
 
-    case crayos:
-    {
-        char fstype_upper[CF_BUFSIZE];
-        strlcpy(fstype_upper, fstype, CF_BUFSIZE);
-        ToUpperStrInplace(fstype_upper);
-
-        snprintf(fstab, CF_BUFSIZE, "%s:%s \t %s %s\t%s", host, rmountpt, mountpt, fstype_upper, opts);
-        break;
-    }
-    case hp:
-        snprintf(fstab, CF_BUFSIZE, "%s:%s %s \t %s \t %s 0 0", host, rmountpt, mountpt, fstype, opts);
-        break;
-    case aix:
-        snprintf(fstab, CF_BUFSIZE,
-                 "%s:\n\tdev\t= %s\n\ttype\t= %s\n\tvfs\t= %s\n\tnodename\t= %s\n\tmount\t= true\n\toptions\t= %s\n\taccount\t= false\n",
-                 mountpt, rmountpt, fstype, fstype, host, opts);
-        break;
-    case linuxx:
-        snprintf(fstab, CF_BUFSIZE, "%s:%s \t %s \t %s \t %s", host, rmountpt, mountpt, fstype, opts);
-        break;
-
-    case netbsd:
-    case openbsd:
-    case dragonfly:
-    case freebsd:
-        snprintf(fstab, CF_BUFSIZE, "%s:%s \t %s \t %s \t %s 0 0", host, rmountpt, mountpt, fstype, opts);
-        break;
-
-    case unix_sv:
-    case solaris:
-        snprintf(fstab, CF_BUFSIZE, "%s:%s - %s %s - yes %s", host, rmountpt, mountpt, fstype, opts);
-        break;
-
-    case cfnt:
-        snprintf(fstab, CF_BUFSIZE, "/bin/mount %s:%s %s", host, rmountpt, mountpt);
-        break;
-    case cfsco:
-        CfOut(cf_error, "", "Don't understand filesystem format on SCO, no data - please fix me");
-        break;
-
-    default:
-        free(opts);
-        return false;
-    }
+    snprintf(fstab, CF_BUFSIZE, "%s:%s \t %s %s\t%s", host, rmountpt, mountpt, fstype_upper, opts);
+    break;
+#elif defined(__hpux)
+    snprintf(fstab, CF_BUFSIZE, "%s:%s %s \t %s \t %s 0 0", host, rmountpt, mountpt, fstype, opts);
+#elif defined(_AIX)
+    snprintf(fstab, CF_BUFSIZE,
+             "%s:\n\tdev\t= %s\n\ttype\t= %s\n\tvfs\t= %s\n\tnodename\t= %s\n\tmount\t= true\n\toptions\t= %s\n\taccount\t= false\n",
+             mountpt, rmountpt, fstype, fstype, host, opts);
+#elif defined(__linux__)
+    snprintf(fstab, CF_BUFSIZE, "%s:%s \t %s \t %s \t %s", host, rmountpt, mountpt, fstype, opts);
+#elif defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__) || defined(__FreeBSD__)
+    snprintf(fstab, CF_BUFSIZE, "%s:%s \t %s \t %s \t %s 0 0", host, rmountpt, mountpt, fstype, opts);
+#elif defined(__sun) || defined(sco) || defined(__SCO_DS)
+    snprintf(fstab, CF_BUFSIZE, "%s:%s - %s %s - yes %s", host, rmountpt, mountpt, fstype, opts);
+#elif defined(__CYGWIN__)
+    snprintf(fstab, CF_BUFSIZE, "/bin/mount %s:%s %s", host, rmountpt, mountpt);
+#endif
 
     CfOut(cf_verbose, "", "Verifying %s in %s\n", mountpt, VFSTAB[VSYSTEMHARDCLASS]);
 
@@ -453,9 +404,8 @@ int VerifyInFstab(char *name, Attributes a, Promise *pp)
 int VerifyNotInFstab(char *name, Attributes a, Promise *pp)
 /* Ensure filesystem is NOT in fstab, and return no of changes */
 {
-    char regex[CF_BUFSIZE], aixcomm[CF_BUFSIZE], line[CF_BUFSIZE];
+    char regex[CF_BUFSIZE];
     char *host, *mountpt, *opts;
-    FILE *pfp;
     Item *ip;
 
     if (!FSTABLIST)
@@ -487,59 +437,55 @@ int VerifyNotInFstab(char *name, Attributes a, Promise *pp)
     {
         if (a.mount.editfstab)
         {
-            switch (VSYSTEMHARDCLASS)
+#if defined(_AIX)
+            FILE *pfp;
+            char line[CF_BUFSIZE], aixcomm[CF_BUFSIZE];
+
+            snprintf(aixcomm, CF_BUFSIZE, "/usr/sbin/rmnfsmnt -f %s", mountpt);
+
+            if ((pfp = cf_popen(aixcomm, "r")) == NULL)
             {
-            case aix:
+                cfPS(cf_error, CF_FAIL, "", pp, a, "Failed to invoke /usr/sbin/rmnfsmnt to edit fstab");
+                return 0;
+            }
 
-                snprintf(aixcomm, CF_BUFSIZE, "/usr/sbin/rmnfsmnt -f %s", mountpt);
-
-                if ((pfp = cf_popen(aixcomm, "r")) == NULL)
+            while (!feof(pfp))
+            {
+                if (CfReadLine(line, CF_BUFSIZE, pfp) == -1)
                 {
-                    cfPS(cf_error, CF_FAIL, "", pp, a, "Failed to invoke /usr/sbin/rmnfsmnt to edit fstab");
+                    FatalError("Error in CfReadLine");
+                }
+
+                if (line[0] == '#')
+                {
+                    continue;
+                }
+
+                if (strstr(line, "busy"))
+                {
+                    cfPS(cf_inform, CF_INTERPT, "", pp, a, "The device under %s cannot be removed from %s\n",
+                         mountpt, VFSTAB[VSYSTEMHARDCLASS]);
                     return 0;
                 }
-
-                while (!feof(pfp))
-                {
-                    if (CfReadLine(line, CF_BUFSIZE, pfp) == -1)
-                    {
-                        FatalError("Error in CfReadLine");
-                    }
-
-                    if (line[0] == '#')
-                    {
-                        continue;
-                    }
-
-                    if (strstr(line, "busy"))
-                    {
-                        cfPS(cf_inform, CF_INTERPT, "", pp, a, "The device under %s cannot be removed from %s\n",
-                             mountpt, VFSTAB[VSYSTEMHARDCLASS]);
-                        return 0;
-                    }
-                }
-
-                cf_pclose(pfp);
-
-                return 0;       /* ignore internal editing for aix , always returns 0 changes */
-                break;
-
-            default:
-
-                snprintf(regex, CF_BUFSIZE, ".*[\\s]+%s[\\s]+.*", mountpt);
-
-                for (ip = FSTABLIST; ip != NULL; ip = ip->next)
-                {
-                    if (FullTextMatch(regex, ip->name))
-                    {
-                        cfPS(cf_inform, CF_CHG, "", pp, a, "Deleting file system mounted on %s.\n", host);
-                        // Check host name matches too?
-                        DeleteThisItem(&FSTABLIST, ip);
-                        FSTAB_EDITS++;
-                    }
-                }
-                break;
             }
+
+            cf_pclose(pfp);
+
+            return 0;       /* ignore internal editing for aix , always returns 0 changes */
+#else
+            snprintf(regex, CF_BUFSIZE, ".*[\\s]+%s[\\s]+.*", mountpt);
+
+            for (ip = FSTABLIST; ip != NULL; ip = ip->next)
+            {
+                if (FullTextMatch(regex, ip->name))
+                {
+                    cfPS(cf_inform, CF_CHG, "", pp, a, "Deleting file system mounted on %s.\n", host);
+                    // Check host name matches too?
+                    DeleteThisItem(&FSTABLIST, ip);
+                    FSTAB_EDITS++;
+                }
+            }
+#endif
         }
     }
 
@@ -665,9 +611,7 @@ static int MatchFSInFstab(char *match)
 
 void MountAll()
 {
-    struct stat sb;
     char line[CF_BUFSIZE];
-    int fd;
     FILE *pp;
 
     if (DONTDO)
@@ -680,27 +624,32 @@ void MountAll()
         CfOut(cf_verbose, "", " -> Attempting to mount all filesystems.\n");
     }
 
-    if (VSYSTEMHARDCLASS == cfnt)
-    {
-        /* This is a shell script. Make sure it hasn't been compromised. */
+#if defined(__CYGWIN__)
+    /* This is a shell script. Make sure it hasn't been compromised. */
 
-        if (cfstat("/etc/fstab", &sb) == -1)
+    struct stat sb;
+
+    if (cfstat("/etc/fstab", &sb) == -1)
+    {
+        int fd;
+        if ((fd = creat("/etc/fstab", 0755)) > 0)
         {
-            if ((fd = creat("/etc/fstab", 0755)) > 0)
+            if (write(fd, "#!/bin/sh\n\n", 10) != 10)
             {
-                write(fd, "#!/bin/sh\n\n", 10);
-                close(fd);
+                UnexpectedError("Failed to write to file '/etc/fstab'");
             }
-            else
+            close(fd);
+        }
+        else
+        {
+            if (sb.st_mode & (S_IWOTH | S_IWGRP))
             {
-                if (sb.st_mode & (S_IWOTH | S_IWGRP))
-                {
-                    CfOut(cf_error, "", "File /etc/fstab was insecure. Cannot mount filesystems.\n");
-                    return;
-                }
+                CfOut(cf_error, "", "File /etc/fstab was insecure. Cannot mount filesystems.\n");
+                return;
             }
         }
     }
+#endif
 
     SetTimeOut(RPCTIMEOUT);
 

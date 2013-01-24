@@ -30,14 +30,6 @@
 
 #include <assert.h>
 
-#ifdef HAVE_PCRE_H
-# include <pcre.h>
-#endif
-
-#ifdef HAVE_PCRE_PCRE_H
-# include <pcre/pcre.h>
-#endif
-
 #define STRING_MATCH_OVECCOUNT 30
 
 char ToLower(char ch)

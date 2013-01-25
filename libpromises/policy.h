@@ -43,6 +43,13 @@ Policy *PolicyMerge(Policy *a, Policy *b);
 
 Body *PolicyGetBody(Policy *policy, const char *ns, const char *type, const char *name);
 
+/**
+ * @brief Check to see if a policy is runnable (contains body common control)
+ * @param policy Policy to check
+ * @return True if policy is runnable
+ */
+bool PolicyIsRunnable(const Policy *policy);
+
 Policy *PolicyFromPromise(const Promise *promise);
 char *BundleQualifiedName(const Bundle *bundle);
 

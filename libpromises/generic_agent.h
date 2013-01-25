@@ -32,8 +32,8 @@
 typedef struct
 {
     Rlist *bundlesequence;
-    bool verify_promises;
     char *input_file;
+    bool check_not_writable_by_others;
 } GenericAgentConfig;
 
 Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const ReportContext *report_context);

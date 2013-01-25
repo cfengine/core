@@ -104,6 +104,11 @@ Body *PolicyGetBody(Policy *policy, const char *ns, const char *type, const char
     return NULL;
 }
 
+bool PolicyIsRunnable(const Policy *policy)
+{
+    return PolicyGetBody(policy, NULL, "common", "control") != NULL;
+}
+
 Policy *PolicyMerge(Policy *a, Policy *b)
 {
     Policy *result = PolicyNew();

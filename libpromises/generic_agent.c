@@ -68,8 +68,8 @@ extern char *CFH[][2];
 static void VerifyPromises(Policy *policy, Rlist *bundlesequence, const ReportContext *report_context);
 static void SetAuditVersion(void);
 static void CheckWorkingDirectories(const ReportContext *report_context);
-static Policy *Cf3ParseFile(const char *filename, const char *input_file, bool check_not_writable_by_others);
-static Policy *Cf3ParseFiles(const char *input_file, bool check_not_writable_by_others, const ReportContext *report_context);
+static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filename);
+static Policy *Cf3ParseFiles(const GenericAgentConfig *config, const ReportContext *report_context);
 static bool MissingInputFile(const char *input_file);
 static void CheckControlPromises(char *scope, char *agent, Seq *controllist);
 static void CheckVariablePromises(char *scope, Seq *var_promises);
@@ -386,25 +386,15 @@ Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config,
 {
     Rval retval;
     char vbuff[CF_BUFSIZE];
-    bool check_not_writable_by_others = true;
 
-    switch (ag)
+    if (ag == AGENT_TYPE_KEYGEN)
     {
-    case AGENT_TYPE_COMMON:
-        check_not_writable_by_others = false;
-        break;
-
-    case AGENT_TYPE_KEYGEN:
         return NULL;
-
-    default:
-        check_not_writable_by_others = true;
-        break;
     }
 
     DeleteAllPromiseIds();      // in case we are re-reading, delete old handles
 
-    Policy *policy = Cf3ParseFiles(config->input_file, check_not_writable_by_others, report_context);
+    Policy *policy = Cf3ParseFiles(config, report_context);
     {
         Seq *errors = SeqNew(100, PolicyErrorDestroy);
         if (!PolicyCheck(policy, errors))
@@ -634,22 +624,18 @@ void InitializeGA(GenericAgentConfig *config, const ReportContext *report_contex
 
 /*******************************************************************/
 
-static Policy *Cf3ParseFiles(const char *input_file, bool check_not_writable_by_others, const ReportContext *report_context)
+static Policy *Cf3ParseFiles(const GenericAgentConfig *config, const ReportContext *report_context)
 {
     // TODO: remove PARSING
     PARSING = true;
 
     PROMISETIME = time(NULL);
 
-    Policy *main_policy = Cf3ParseFile(input_file, input_file, check_not_writable_by_others);
+    Policy *main_policy = Cf3ParseFile(config, config->input_file);
 
-    // TODO: gather up in some PolicyCheckMain type function later
+    if (!PolicyIsRunnable(main_policy))
     {
-        Body *common_control = PolicyGetBody(main_policy, NULL, "common", "control");
-        if (!common_control)
-        {
-            FatalError("Policy file is missing required body common control");
-        }
+        FatalError("Policy cannot be run because it is missing required body common control");
     }
 
     HashVariables(main_policy, NULL, report_context);
@@ -677,7 +663,7 @@ static Policy *Cf3ParseFiles(const char *input_file, bool check_not_writable_by_
             {
                 case CF_SCALAR:
                 {
-                    Policy *policy = Cf3ParseFile(returnval.item, input_file, check_not_writable_by_others);
+                    Policy *policy = Cf3ParseFile(config, returnval.item);
                     main_policy = PolicyMerge(main_policy, policy);
                 }
                 break;
@@ -685,7 +671,7 @@ static Policy *Cf3ParseFiles(const char *input_file, bool check_not_writable_by_
                 case CF_LIST:
                 for (const Rlist *sl = returnval.item; sl != NULL; sl = sl->next)
                 {
-                    Policy *policy = Cf3ParseFile(sl->item, input_file, check_not_writable_by_others);
+                    Policy *policy = Cf3ParseFile(config, sl->item);
                     main_policy = PolicyMerge(main_policy, policy);
                 }
                 break;
@@ -967,12 +953,12 @@ void CloseReports(const char *agents, ReportContext *report_context)
  * The difference between filename and input_input file is that the latter is the file specified by -f or
  * equivalently the file containing body common control. This will hopefully be squashed in later refactoring.
  */
-static Policy *Cf3ParseFile(const char *filename, const char *input_file, bool check_not_writable_by_others)
+static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filename)
 {
     struct stat statbuf;
     char wfilename[CF_BUFSIZE];
 
-    strncpy(wfilename, InputLocation(filename, input_file), CF_BUFSIZE);
+    strncpy(wfilename, InputLocation(filename, config->input_file), CF_BUFSIZE);
 
     if (cfstat(wfilename, &statbuf) == -1)
     {
@@ -986,7 +972,7 @@ static Policy *Cf3ParseFile(const char *filename, const char *input_file, bool c
     }
 
 #ifndef _WIN32
-    if (check_not_writable_by_others && (statbuf.st_mode & (S_IWGRP | S_IWOTH)))
+    if (config->check_not_writable_by_others && (statbuf.st_mode & (S_IWGRP | S_IWOTH)))
     {
         CfOut(cf_error, "", "File %s (owner %ju) is writable by others (security exception)", wfilename, (uintmax_t)statbuf.st_uid);
         exit(1);
@@ -1938,8 +1924,8 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
     GenericAgentConfig *config = xmalloc(sizeof(GenericAgentConfig));
 
     config->bundlesequence = NULL;
-    config->verify_promises = true;
     config->input_file = NULL;
+    config->check_not_writable_by_others = agent_type != AGENT_TYPE_COMMON;
 
     return config;
 }

@@ -212,12 +212,6 @@ void TestVariableScan(void);
 void TestExpandPromise(const ReportContext *report_context);
 void TestExpandVariables(const ReportContext *report_context);
 
-/* server_transform.c */
-
-void KeepControlPromises(Policy *policy);
-Auth *GetAuthPath(char *path, Auth *list);
-void Summarize(void);
-
 /* sockaddr.c */
 
 /* Not thread-safe */

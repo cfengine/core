@@ -24,6 +24,8 @@
 
 #include "cf-serverd-functions.h"
 
+#include "server_transform.h"
+
 int main(int argc, char *argv[])
 {
     GenericAgentConfig *config = CheckOpts(argc, argv);
@@ -31,7 +33,7 @@ int main(int argc, char *argv[])
     ReportContext *report_context = OpenReports("server");
     Policy *policy = GenericInitialize("server", config, report_context);
     ThisAgentInit();
-    KeepPromises(policy, report_context);
+    KeepPromises(policy, config, report_context);
     Summarize();
 
     StartServer(policy, config, report_context);

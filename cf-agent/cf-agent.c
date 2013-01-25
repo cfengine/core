@@ -83,13 +83,14 @@ extern int PR_NOTKEPT;
 static void ThisAgentInit(void);
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
 static void CheckAgentAccess(Rlist *list, const Rlist *input_files);
+static void KeepControlPromises(Policy *policy);
 static void KeepAgentPromise(Promise *pp, const ReportContext *report_context);
 static int NewTypeContext(enum typesequence type);
 static void DeleteTypeContext(Policy *policy, enum typesequence type, const ReportContext *report_context);
 static void ClassBanner(enum typesequence type);
 static void ParallelFindAndVerifyFilesPromises(Promise *pp, const ReportContext *report_context);
 static bool VerifyBootstrap(void);
-static void KeepPromiseBundles(Policy *policy, Rlist *bundlesequence, const ReportContext *report_context);
+static void KeepPromiseBundles(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
 static void KeepPromises(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
 static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save_pr_repaired, int save_pr_notkept);
 #ifdef HAVE_AVAHI_CLIENT_CLIENT_H
@@ -392,7 +393,7 @@ static void KeepPromises(Policy *policy, GenericAgentConfig *config, const Repor
     double efficiency, model;
 
     KeepControlPromises(policy);
-    KeepPromiseBundles(policy, config->bundlesequence, report_context);
+    KeepPromiseBundles(policy, config, report_context);
 
 // TOPICS counts the number of currently defined promises
 // OCCUR counts the number of objects touched while verifying config
@@ -791,7 +792,7 @@ void KeepControlPromises(Policy *policy)
 
 /*********************************************************************/
 
-static void KeepPromiseBundles(Policy *policy, Rlist *bundlesequence, const ReportContext *report_context)
+static void KeepPromiseBundles(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
 {
     Bundle *bp;
     Rlist *rp, *params;
@@ -800,19 +801,21 @@ static void KeepPromiseBundles(Policy *policy, Rlist *bundlesequence, const Repo
     Rval retval;
     int ok = true;
 
-    if (bundlesequence)
+    if (config->bundlesequence)
     {
         CfOut(cf_inform, "", " >> Using command line specified bundlesequence");
-        retval = (Rval) {bundlesequence, CF_LIST};
+        retval = (Rval) { config->bundlesequence, CF_LIST};
     }
     else if (GetVariable("control_common", "bundlesequence", &retval) == cf_notype)
     {
+        // TODO: somewhat frenzied way of telling user about an error
         CfOut(cf_error, "", " !! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         CfOut(cf_error, "", " !! No bundlesequence in the common control body");
         CfOut(cf_error, "", " !! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         exit(1);
     }
 
+    // TODO: should've been checked a long time ago, remove?
     if (retval.rtype != CF_LIST)
     {
         FatalError("Promised bundlesequence was not a list");
@@ -848,7 +851,7 @@ static void KeepPromiseBundles(Policy *policy, Rlist *bundlesequence, const Repo
             break;
         }
 
-        if (!IGNORE_MISSING_BUNDLES)
+        if (!config->ignore_missing_bundles)
         {
             if (!(GetBundle(policy, name, "agent") || (GetBundle(policy, name, "common"))))
             {

@@ -65,23 +65,22 @@ static char PIDFILE[CF_BUFSIZE];
 
 extern char *CFH[][2];
 
-static void VerifyPromises(Policy *policy, const Rlist *bundlesequence, const ReportContext *report_context);
+static void VerifyPromises(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
 static void SetAuditVersion(void);
 static void CheckWorkingDirectories(const ReportContext *report_context);
 static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filename);
-static Policy *Cf3ParseFiles(const GenericAgentConfig *config, const ReportContext *report_context);
+static Policy *Cf3ParseFiles(GenericAgentConfig *config, const ReportContext *report_context);
 static bool MissingInputFile(const char *input_file);
-static void CheckControlPromises(char *scope, char *agent, Seq *controllist);
+static void CheckControlPromises(GenericAgentConfig *config, char *scope, char *agent, Seq *controllist);
 static void CheckVariablePromises(char *scope, Seq *var_promises);
 static void CheckCommonClassPromises(Seq *class_promises, const ReportContext *report_context);
 static void PrependAuditFile(char *file);
 static char *InputLocation(const char *filename, const char *input_file);
-static void GenericAgentConfigTTYInteractive(GenericAgentConfig *config);
 
 #if !defined(__MINGW32__)
 static void OpenLog(int facility);
 #endif
-static bool VerifyBundleSequence(const Policy *policy);
+static bool VerifyBundleSequence(const Policy *policy, const GenericAgentConfig *config);
 
 /*****************************************************************************/
 
@@ -433,7 +432,7 @@ Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config,
     WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_HTML], "<div id=\"reporttext\">\n");
     WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_HTML], "%s", CFH[cfx_promise][cfb]);
 
-    VerifyPromises(policy, config->bundlesequence, report_context);
+    VerifyPromises(policy, config, report_context);
 
     WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_HTML], "%s", CFH[cfx_promise][cfe]);
 
@@ -626,7 +625,7 @@ void InitializeGA(GenericAgentConfig *config, const ReportContext *report_contex
 
 /*******************************************************************/
 
-static Policy *Cf3ParseFiles(const GenericAgentConfig *config, const ReportContext *report_context)
+static Policy *Cf3ParseFiles(GenericAgentConfig *config, const ReportContext *report_context)
 {
     // TODO: remove PARSING
     PARSING = true;
@@ -641,7 +640,7 @@ static Policy *Cf3ParseFiles(const GenericAgentConfig *config, const ReportConte
     }
 
     HashVariables(main_policy, NULL, report_context);
-    HashControls(main_policy);
+    HashControls(main_policy, config);
 
     for (const Rlist *rp = InputFiles(main_policy); rp; rp = rp->next)
     {
@@ -683,7 +682,7 @@ static Policy *Cf3ParseFiles(const GenericAgentConfig *config, const ReportConte
         }
 
         HashVariables(main_policy, NULL, report_context);
-        HashControls(main_policy);
+        HashControls(main_policy, config);
     }
 
     HashVariables(main_policy, NULL, report_context);
@@ -970,7 +969,7 @@ static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filena
 
     if (cfstat(wfilename, &statbuf) == -1)
     {
-        if (IGNORE_MISSING_INPUTS)
+        if (config->ignore_missing_inputs)
         {
             return PolicyNew();
         }
@@ -1317,7 +1316,7 @@ ReportContext *OpenCompilationReportFiles(const char *fname)
 
 /*******************************************************************/
 
-static void VerifyPromises(Policy *policy, const Rlist *bundlesequence, const ReportContext *report_context)
+static void VerifyPromises(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
 {
     if (REQUIRE_COMMENTS == CF_UNDEFINED)
     {
@@ -1366,7 +1365,7 @@ static void VerifyPromises(Policy *policy, const Rlist *bundlesequence, const Re
         {
         case CF_SCALAR:
 
-            if (!IGNORE_MISSING_BUNDLES && !IsCf3VarString(rp->item) && !IsBundle(policy->bundles, (char *) rp->item))
+            if (!config->ignore_missing_bundles && !IsCf3VarString(rp->item) && !IsBundle(policy->bundles, (char *) rp->item))
             {
                 CfOut(cf_error, "", "Undeclared promise bundle \"%s()\" was referenced in a promise\n", (char *) rp->item);
                 ERRORCOUNT++;
@@ -1377,7 +1376,7 @@ static void VerifyPromises(Policy *policy, const Rlist *bundlesequence, const Re
             {
                 const FnCall *fp = rp->item;
 
-                if (!IGNORE_MISSING_BUNDLES && !IsCf3VarString(fp->name) && !IsBundle(policy->bundles, fp->name))
+                if (!config->ignore_missing_bundles && !IsCf3VarString(fp->name) && !IsBundle(policy->bundles, fp->name))
                 {
                     CfOut(cf_error, "", "Undeclared promise bundle \"%s()\" was referenced in a promise\n", fp->name);
                     ERRORCOUNT++;
@@ -1409,12 +1408,12 @@ static void VerifyPromises(Policy *policy, const Rlist *bundlesequence, const Re
     }
 
     HashVariables(policy, NULL, report_context);
-    HashControls(policy);
+    HashControls(policy, config);
 
     /* Now look once through the sequences bundles themselves */
-    if (!bundlesequence)
+    if (!config->bundlesequence)
     {
-        if (!VerifyBundleSequence(policy))
+        if (!VerifyBundleSequence(policy, config))
         {
             FatalError("Errors in promise bundles");
         }
@@ -1480,7 +1479,7 @@ static void CheckCommonClassPromises(Seq *class_promises, const ReportContext *r
 
 /*******************************************************************/
 
-static void CheckControlPromises(char *scope, char *agent, Seq *controllist)
+static void CheckControlPromises(GenericAgentConfig *config, char *scope, char *agent, Seq *controllist)
 {
     const BodySyntax *bp = NULL;
     Rlist *rp;
@@ -1550,13 +1549,13 @@ static void CheckControlPromises(char *scope, char *agent, Seq *controllist)
         if (strcmp(cp->lval, CFG_CONTROLBODY[cfg_ignore_missing_inputs].lval) == 0)
         {
             CfOut(cf_verbose, "", "SET ignore_missing_inputs %s\n", ScalarRvalValue(cp->rval));
-            IGNORE_MISSING_INPUTS = GetBoolean(cp->rval.item);
+            config->ignore_missing_inputs = GetBoolean(cp->rval.item);
         }
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[cfg_ignore_missing_bundles].lval) == 0)
         {
             CfOut(cf_verbose, "", "SET ignore_missing_bundles %s\n", ScalarRvalValue(cp->rval));
-            IGNORE_MISSING_BUNDLES = GetBoolean(cp->rval.item);
+            config->ignore_missing_bundles = GetBoolean(cp->rval.item);
         }
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[cfg_goalpatterns].lval) == 0)
@@ -1825,7 +1824,7 @@ void HashVariables(Policy *policy, const char *name, const ReportContext *report
 
 /*******************************************************************/
 
-void HashControls(const Policy *policy)
+void HashControls(const Policy *policy, GenericAgentConfig *config)
 {
     char buf[CF_BUFSIZE];
 
@@ -1841,14 +1840,14 @@ void HashControls(const Policy *policy)
             CfDebug("Initiate control variable convergence...%s\n", buf);
             DeleteScope(buf);
             SetNewScope(buf);
-            CheckControlPromises(buf, bdp->type, bdp->conlist);
+            CheckControlPromises(config, buf, bdp->type, bdp->conlist);
         }
     }
 }
 
 /********************************************************************/
 
-static bool VerifyBundleSequence(const Policy *policy)
+static bool VerifyBundleSequence(const Policy *policy, const GenericAgentConfig *config)
 {
     Rlist *rp;
     char *name;
@@ -1894,7 +1893,7 @@ static bool VerifyBundleSequence(const Policy *policy)
             continue;
         }
 
-        if (!IGNORE_MISSING_BUNDLES && !GetBundle(policy, name, NULL))
+        if (!config->ignore_missing_bundles && !GetBundle(policy, name, NULL))
         {
             CfOut(cf_error, "", "Bundle \"%s\" listed in the bundlesequence is not a defined bundle\n", name);
             ok = false;
@@ -1913,7 +1912,11 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
     config->bundlesequence = NULL;
     config->input_file = NULL;
     config->check_not_writable_by_others = agent_type != AGENT_TYPE_COMMON;
-    GenericAgentConfigTTYInteractive(config);
+    config->ignore_missing_bundles = false;
+    config->ignore_missing_inputs = false;
+
+    // TODO: system state, perhaps pull out as param
+    config->tty_interactive = isatty(0) && isatty(1);
 
     return config;
 }
@@ -1937,16 +1940,4 @@ void GenericAgentConfigSetBundleSequence(GenericAgentConfig *config, const Rlist
 {
     DeleteRlist(config->bundlesequence);
     config->bundlesequence = CopyRlist(bundlesequence);
-}
-
-static void GenericAgentConfigTTYInteractive(GenericAgentConfig *config)
-{
-    if (isatty(0) && isatty(1))
-    {
-        config->tty_interactive = true;
-    }
-    else
-    {
-        config->tty_interactive = false;
-    }
 }

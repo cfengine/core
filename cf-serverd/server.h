@@ -28,6 +28,8 @@
 
 #include "cf3.defs.h"
 
+#include "generic_agent.h"
+
 //*******************************************************************
 // TYPES
 //*******************************************************************
@@ -82,7 +84,7 @@ int Nova_ReturnQueryData(ServerConnectionState *conn, char *menu);
 
 #endif
 
-void KeepPromises(Policy *policy, const ReportContext *report_context);
+void KeepPromises(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
 
 void ServerEntryPoint(int sd_reply, char *ipaddr, ServerAccess sv);
 void TryCollectCall(void);

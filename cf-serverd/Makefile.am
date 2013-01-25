@@ -16,7 +16,7 @@ cf_serverd_SOURCES = \
         cf-serverd-functions.c \
         cf-serverd-functions.h \
         server.c server.h \
-        server_transform.c \
+        server_transform.c server_transform.h \
         enterprise_stubs_serverd.c
 
 CLEANFILES = *.gcno *.gcda

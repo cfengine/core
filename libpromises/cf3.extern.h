@@ -171,7 +171,6 @@ extern const char *THIS_BUNDLE;
 extern AgentType THIS_AGENT_TYPE;
 extern int SHOWREPORTS;
 extern int SHOW_PARSE_TREE;
-extern int USE_GCC_BRIEF_FORMAT;
 extern time_t PROMISETIME;
 #define CF_LOCKHORIZON ((time_t)(SECONDS_PER_WEEK * 4))
 extern int LASTSEENEXPIREAFTER;

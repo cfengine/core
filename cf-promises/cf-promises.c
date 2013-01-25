@@ -60,7 +60,6 @@ static const struct option OPTIONS[] =
     {"analysis", no_argument, 0, 'a'},
     {"reports", no_argument, 0, 'r'},
     {"parse-tree", no_argument, 0, 'p'},
-    {"gcc-brief-format", no_argument, 0, 'g'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -208,10 +207,6 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case 'p':
             SHOW_PARSE_TREE = true;
-            break;
-
-        case 'g':
-            USE_GCC_BRIEF_FORMAT = true;
             break;
 
         default:

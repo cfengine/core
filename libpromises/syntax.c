@@ -1498,17 +1498,18 @@ static JsonElement *ExportBodyClassesAsJson(Seq *constraints)
 
 /****************************************************************************/
 
-static JsonElement *ExportBundleClassesAsJson(Promise *promises)
+static JsonElement *ExportBundleClassesAsJson(Seq *promises)
 {
     JsonElement *json_contexts = JsonArrayCreate(10);
     JsonElement *json_promises = JsonArrayCreate(10);
     char *current_context = "any";
     size_t context_offset_start = -1;
     size_t context_offset_end = -1;
-    Promise *pp = NULL;
 
-    for (pp = promises; pp != NULL; pp = pp->next)
+    for (size_t ppi = 0; ppi < SeqLength(promises); ppi++)
     {
+        Promise *pp = SeqAt(promises, ppi);
+
         JsonElement *json_promise = JsonObjectCreate(10);
 
         JsonObjectAppendInteger(json_promise, "offset", pp->offset.start);
@@ -1561,7 +1562,7 @@ static JsonElement *ExportBundleClassesAsJson(Promise *promises)
         }
         JsonArrayAppendObject(json_promises, json_promise);
 
-        if (pp->next == NULL || strcmp(current_context, pp->next->classes) != 0)
+        if (ppi == (SeqLength(promises) - 1) || strcmp(current_context, ((Promise *)SeqAt(promises, ppi + 1))->classes) != 0)
         {
             JsonArrayAppendObject(json_contexts,
                                   CreateContextAsJson(current_context,
@@ -1611,7 +1612,7 @@ static JsonElement *ExportBundleAsJson(Bundle *bundle)
             JsonObjectAppendInteger(json_promise_type, "offset", sp->offset.start);
             JsonObjectAppendInteger(json_promise_type, "offset-end", sp->offset.end);
             JsonObjectAppendString(json_promise_type, "name", sp->name);
-            JsonObjectAppendArray(json_promise_type, "classes", ExportBundleClassesAsJson(sp->promiselist));
+            JsonObjectAppendArray(json_promise_type, "classes", ExportBundleClassesAsJson(sp->promises));
 
             JsonArrayAppendObject(json_promise_types, json_promise_type);
         }
@@ -1782,12 +1783,12 @@ void BundlePrettyPrint(Writer *writer, Bundle *bundle)
     for (size_t i = 0; i < SeqLength(bundle->subtypes); i++)
     {
         SubType *promise_type = SeqAt(bundle->subtypes, i);
-        Promise *pp = NULL;
 
         WriterWriteF(writer, "\n%s:\n", promise_type->name);
 
-        for (pp = promise_type->promiselist; pp != NULL; pp = pp->next)
+        for (size_t ppi = 0; ppi < SeqLength(promise_type->promises); ppi++)
         {
+            Promise *pp = SeqAt(promise_type->promises, ppi);
             Constraint *cp = NULL;
             char *current_class = NULL;
 

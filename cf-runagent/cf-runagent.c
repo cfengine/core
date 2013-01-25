@@ -211,7 +211,7 @@ int main(int argc, char *argv[])
     }
 #endif
 
-    DeletePromise(pp);
+    PromiseDestroy(pp);
 
     GenericAgentConfigDestroy(config);
     ReportContextDestroy(report_context);

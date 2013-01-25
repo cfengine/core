@@ -912,7 +912,6 @@ int ScheduleAgentOperations(Bundle *bp, const ReportContext *report_context)
 // NB - this function can be called recursively through "methods"
 {
     SubType *sp;
-    Promise *pp;
     enum typesequence type;
     int pass;
     int save_pr_kept = PR_KEPT;
@@ -944,8 +943,10 @@ int ScheduleAgentOperations(Bundle *bp, const ReportContext *report_context)
                 continue;
             }
 
-            for (pp = sp->promiselist; pp != NULL; pp = pp->next)
+            for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {
+                Promise *pp = SeqAt(sp->promises, ppi);
+
                 SaveClassEnvironment();
 
                 if (pass == 1)  // Count the number of promises modelled for efficiency

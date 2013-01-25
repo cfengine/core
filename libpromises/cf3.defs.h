@@ -1113,8 +1113,7 @@ struct SubType_
     Bundle *parent_bundle;
 
     char *name;
-
-    Promise *promiselist;
+    Seq *promises;
 
     SourceOffset offset;
 };
@@ -1147,7 +1146,6 @@ struct Promise_
     Rval promisee;
     char *bundle;
     Audit *audit;
-    Promise *next;
 
     Seq *conlist;
 

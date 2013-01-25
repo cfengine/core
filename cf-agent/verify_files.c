@@ -212,7 +212,7 @@ void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *p
 
                     pcopy = ExpandDeRefPromise(CONTEXTID, pp);
                     (*fnptr) (nextbufferOrig, pcopy, report_context);
-                    DeletePromise(pcopy);
+                    PromiseDestroy(pcopy);
                 }
             }
 

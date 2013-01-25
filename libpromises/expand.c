@@ -159,7 +159,7 @@ void ExpandPromise(AgentType agent, const char *scopeid, Promise *pp, void *fnpt
     ExpandPromiseAndDo(agent, scopeid, pcopy, scalarvars, listvars, fnptr, report_context);
     PopThisScope();
 
-    DeletePromise(pcopy);
+    PromiseDestroy(pcopy);
     DeleteRlist(scalarvars);
     DeleteRlist(listvars);
 }
@@ -756,7 +756,7 @@ void ExpandPromiseAndDo(AgentType agent, const char *scopeid, Promise *pp, Rlist
            ConvergeVarHashPromise(namespace, pp, true);
            }
         
-        DeletePromise(pexp);
+        PromiseDestroy(pexp);
 
         /* End thread monitor */
     }
@@ -1594,7 +1594,6 @@ static void CheckRecursion(const ReportContext *report_context, Promise *pp)
     char *scope;
     Bundle *bp;
     FnCall *fp;
-    Promise *ppsub;
 
     // Check for recursion of bundles so that knowledge map will reflect these cases
 
@@ -1641,8 +1640,9 @@ static void CheckRecursion(const ReportContext *report_context, Promise *pp)
            {
                SubType *sbp = SeqAt(bp->subtypes, j);
 
-               for (ppsub = sbp->promiselist; ppsub != NULL; ppsub = ppsub->next)
+               for (size_t ppsubi = 0; ppsubi < SeqLength(sbp->promises); ppsubi++)
                {
+                   Promise *ppsub = SeqAt(sbp->promises, ppsubi);
                    ExpandPromise(AGENT_TYPE_COMMON, scope, ppsub, NULL, report_context);
                }
            }
@@ -1724,7 +1724,6 @@ static void ParseServices(const ReportContext *report_context, Promise *pp)
         return;
     }
 
-    Promise *ppsub = NULL;
     Bundle *bp = NULL;
 
     if ((bp = GetBundle(PolicyFromPromise(pp), default_bundle->name, "agent")))
@@ -1735,8 +1734,9 @@ static void ParseServices(const ReportContext *report_context, Promise *pp)
         {
             SubType *sbp = SeqAt(bp->subtypes, i);
 
-            for (ppsub = sbp->promiselist; ppsub != NULL; ppsub = ppsub->next)
+            for (size_t ppsubi = 0; ppsubi < SeqLength(sbp->promises); ppsubi++)
             {
+                Promise *ppsub = SeqAt(sbp->promises, ppsubi);
                 ExpandPromise(AGENT_TYPE_COMMON, bp->name, ppsub, NULL, report_context);
             }
         }

@@ -2044,7 +2044,7 @@ static void DeletePackageItems(PackageItem * pi)
         free(pi->name);
         free(pi->version);
         free(pi->arch);
-        DeletePromise(pi->pp);
+        PromiseDestroy(pi->pp);
         free(pi);
     }
 }

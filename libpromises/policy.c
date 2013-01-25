@@ -309,8 +309,9 @@ static bool PolicyCheckSubType(const SubType *subtype, Seq *errors)
         success = false;
     }
 
-    for (const Promise *pp = subtype->promiselist; pp; pp = pp->next)
+    for (size_t i = 0; i < SeqLength(subtype->promises); i++)
     {
+        const Promise *pp = SeqAt(subtype->promises, i);
         success &= PolicyCheckPromise(pp, errors);
     }
 
@@ -546,7 +547,27 @@ static void SubTypeDestroy(SubType *subtype)
 {
     if (subtype)
     {
-        DeletePromises(subtype->promiselist);
+        for (size_t i = 0; i < SeqLength(subtype->promises); i++)
+        {
+            Promise *pp = SeqAt(subtype->promises, i);
+
+            if (pp->this_server != NULL)
+            {
+                ThreadLock(cft_policy);
+                free(pp->this_server);
+                ThreadUnlock(cft_policy);
+            }
+            if (pp->ref_alloc == 'y')
+            {
+                ThreadLock(cft_policy);
+                free(pp->ref);
+                ThreadUnlock(cft_policy);
+            }
+        }
+
+        SeqDestroy(subtype->promises);
+
+
         free(subtype->name);
         free(subtype);
     }
@@ -650,6 +671,7 @@ SubType *AppendSubType(Bundle *bundle, char *typename)
 
     tp->parent_bundle = bundle;
     tp->name = xstrdup(typename);
+    tp->promises = SeqNew(10, PromiseDestroy);
 
     SeqAppend(bundle->subtypes, tp);
 
@@ -660,7 +682,6 @@ SubType *AppendSubType(Bundle *bundle, char *typename)
 
 Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *classes, char *bundle, char *bundletype, char *namespace)
 {
-    Promise *pp, *lp;
     char *sp = NULL, *spe = NULL;
     char output[CF_BUFSIZE];
 
@@ -674,7 +695,7 @@ Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *class
 
     CfDebug("Appending Promise from bundle %s %s if context %s\n", bundle, promiser, classes);
 
-    pp = xcalloc(1, sizeof(Promise));
+    Promise *pp = xcalloc(1, sizeof(Promise));
 
     sp = xstrdup(promiser);
 
@@ -704,18 +725,7 @@ Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *class
         }
     }
 
-    if (type->promiselist == NULL)
-    {
-        type->promiselist = pp;
-    }
-    else
-    {
-        for (lp = type->promiselist; lp->next != NULL; lp = lp->next)
-        {
-        }
-
-        lp->next = pp;
-    }
+    SeqAppend(type->promises, pp);
 
     pp->parent_subtype = type;
     pp->audit = AUDITPTR;
@@ -762,71 +772,31 @@ static void BodyDestroy(Body *body)
     }
 }
 
-/*******************************************************************/
 
-void DeletePromise(Promise *pp)
+void PromiseDestroy(Promise *pp)
 {
-    if (pp == NULL)
+    if (pp)
     {
-        return;
-    }
+        ThreadLock(cft_policy);
 
-    CfDebug("DeletePromise(%s->[%c])\n", pp->promiser, pp->promisee.rtype);
-
-    ThreadLock(cft_policy);
-
-    if (pp->promiser != NULL)
-    {
         free(pp->promiser);
-    }
 
-    if (pp->promisee.item != NULL)
-    {
-        DeleteRvalItem(pp->promisee);
-    }
+        if (pp->promisee.item)
+        {
+            DeleteRvalItem(pp->promisee);
+        }
 
-    free(pp->bundle);
-    free(pp->bundletype);
-    free(pp->classes);
-    free(pp->namespace);
+        free(pp->bundle);
+        free(pp->bundletype);
+        free(pp->classes);
+        free(pp->namespace);
 
-// ref and agentsubtype are only references, do not free
+        // ref and agentsubtype are only references, do not free
+        SeqDestroy(pp->conlist);
 
-    SeqDestroy(pp->conlist);
-
-    free((char *) pp);
-    ThreadUnlock(cft_policy);
-}
-
-/*******************************************************************/
-
-void DeletePromises(Promise *pp)
-{
-    if (pp == NULL)
-    {
-        return;
-    }
-
-    if (pp->this_server != NULL)
-    {
-        ThreadLock(cft_policy);
-        free(pp->this_server);
+        free((char *) pp);
         ThreadUnlock(cft_policy);
     }
-
-    if (pp->next != NULL)
-    {
-        DeletePromises(pp->next);
-    }
-
-    if (pp->ref_alloc == 'y')
-    {
-        ThreadLock(cft_policy);
-        free(pp->ref);
-        ThreadUnlock(cft_policy);
-    }
-
-    DeletePromise(pp);
 }
 
 /*******************************************************************/

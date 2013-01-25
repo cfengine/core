@@ -73,15 +73,14 @@ char *CurrentNameSpace(Policy *policy);
 Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *args, const char *source_path);
 Body *AppendBody(Policy *policy, const char *name, const char *type, Rlist *args, const char *source_path);
 SubType *AppendSubType(Bundle *bundle, char *typename);
-Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *classes, char *bundle, char *bundletype, char *namespace);
-
 
 const char *NamespaceFromConstraint(const Constraint *cp);
 
+Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *classes, char *bundle, char *bundletype, char *namespace);
+void PromiseDestroy(Promise *pp);
 
 // TODO: legacy
-void DeletePromise(Promise *pp);
-void DeletePromises(Promise *pp);
+
 Bundle *GetBundle(const Policy *policy, const char *name, const char *agent);
 SubType *GetSubTypeForBundle(char *type, Bundle *bp);
 

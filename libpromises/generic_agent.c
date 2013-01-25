@@ -72,8 +72,8 @@ static Policy *Cf3ParseFile(const char *filename, const char *input_file, bool c
 static Policy *Cf3ParseFiles(const char *input_file, bool check_not_writable_by_others, const ReportContext *report_context);
 static bool MissingInputFile(const char *input_file);
 static void CheckControlPromises(char *scope, char *agent, Seq *controllist);
-static void CheckVariablePromises(char *scope, Promise *varlist);
-static void CheckCommonClassPromises(Promise *classlist, const ReportContext *report_context);
+static void CheckVariablePromises(char *scope, Seq *var_promises);
+static void CheckCommonClassPromises(Seq *class_promises, const ReportContext *report_context);
 static void PrependAuditFile(char *file);
 static char *InputLocation(const char *filename, const char *input_file);
 
@@ -1331,7 +1331,6 @@ ReportContext *OpenCompilationReportFiles(const char *fname)
 static void VerifyPromises(Policy *policy, Rlist *bundlesequence,
                            const ReportContext *report_context)
 {
-    Promise *pp;
     Rlist *rp;
     FnCall *fp;
     char *scope;
@@ -1416,8 +1415,9 @@ static void VerifyPromises(Policy *policy, Rlist *bundlesequence,
         {
             SubType *sp = SeqAt(bp->subtypes, j);
 
-            for (pp = sp->promiselist; pp != NULL; pp = pp->next)
+            for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {
+                Promise *pp = SeqAt(sp->promises, ppi);
                 ExpandPromise(AGENT_TYPE_COMMON, scope, pp, NULL, report_context);
             }
         }
@@ -1464,29 +1464,28 @@ static void PrependAuditFile(char *file)
 /* Level 3                                                         */
 /*******************************************************************/
 
-static void CheckVariablePromises(char *scope, Promise *varlist)
+static void CheckVariablePromises(char *scope, Seq *var_promises)
 {
-    Promise *pp;
     int allow_redefine = false;
 
     CfDebug("CheckVariablePromises()\n");
 
-    for (pp = varlist; pp != NULL; pp = pp->next)
+    for (size_t i = 0; i < SeqLength(var_promises); i++)
     {
+        Promise *pp = SeqAt(var_promises, i);
         ConvergeVarHashPromise(scope, pp, allow_redefine);
     }
 }
 
 /*******************************************************************/
 
-static void CheckCommonClassPromises(Promise *classlist, const ReportContext *report_context)
+static void CheckCommonClassPromises(Seq *class_promises, const ReportContext *report_context)
 {
-    Promise *pp;
-
     CfOut(cf_verbose, "", " -> Checking common class promises...\n");
 
-    for (pp = classlist; pp != NULL; pp = pp->next)
+    for (size_t i = 0; i < SeqLength(class_promises); i++)
     {
+        Promise *pp = SeqAt(class_promises, i);
         ExpandPromise(AGENT_TYPE_AGENT, THIS_BUNDLE, pp, KeepClassContextPromise, report_context);
     }
 }
@@ -1822,14 +1821,14 @@ void HashVariables(Policy *policy, const char *name, const ReportContext *report
 
             if (strcmp(sp->name, "vars") == 0)
             {
-                CheckVariablePromises(bp->name, sp->promiselist);
+                CheckVariablePromises(bp->name, sp->promises);
             }
 
             // We must also set global classes here?
 
             if (strcmp(bp->type, "common") == 0 && strcmp(sp->name, "classes") == 0)
             {
-                CheckCommonClassPromises(sp->promiselist, report_context);
+                CheckCommonClassPromises(sp->promises, report_context);
             }
 
         }

@@ -152,7 +152,6 @@ int ScheduleEditXmlOperations(char *filename, Bundle *bp, Attributes a, Promise 
 {
     enum editxmltypesequence type;
     SubType *sp;
-    Promise *pp;
     char lockname[CF_BUFSIZE];
     const char *bp_stack = THIS_BUNDLE;
     CfLock thislock;
@@ -178,8 +177,9 @@ int ScheduleEditXmlOperations(char *filename, Bundle *bp, Attributes a, Promise 
             continue;
         }
 
-        for (pp = sp->promiselist; pp != NULL; pp = pp->next)
+        for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
         {
+            Promise *pp = SeqAt(sp->promises, ppi);
             pp->donep = false;
         }
     }
@@ -199,8 +199,10 @@ int ScheduleEditXmlOperations(char *filename, Bundle *bp, Attributes a, Promise 
             THIS_BUNDLE = bp->name;
             SetScope(bp->name);
 
-            for (pp = sp->promiselist; pp != NULL; pp = pp->next)
+            for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {
+                Promise *pp = SeqAt(sp->promises, ppi);
+
                 pp->edcontext = parentp->edcontext;
                 pp->this_server = filename;
                 pp->donep = &(pp->done);

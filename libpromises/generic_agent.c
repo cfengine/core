@@ -65,7 +65,7 @@ static char PIDFILE[CF_BUFSIZE];
 
 extern char *CFH[][2];
 
-static void VerifyPromises(Policy *policy, Rlist *bundlesequence, const ReportContext *report_context);
+static void VerifyPromises(Policy *policy, const Rlist *bundlesequence, const ReportContext *report_context);
 static void SetAuditVersion(void);
 static void CheckWorkingDirectories(const ReportContext *report_context);
 static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filename);
@@ -81,7 +81,7 @@ static void GenericAgentConfigTTYInteractive(GenericAgentConfig *config);
 #if !defined(__MINGW32__)
 static void OpenLog(int facility);
 #endif
-static bool VerifyBundleSequence(const Policy *policy, AgentType agent, Rlist *bundlesequence);
+static bool VerifyBundleSequence(const Policy *policy);
 
 /*****************************************************************************/
 
@@ -225,7 +225,14 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const Report
 
             if (check_promises)
             {
-                ok = CheckPromises(ag, config->input_file, report_context);
+                if ((ag != AGENT_TYPE_AGENT) && (ag != AGENT_TYPE_EXECUTOR) && (ag != AGENT_TYPE_SERVER))
+                {
+                    ok = true;
+                }
+                else
+                {
+                    ok = CheckPromises(config->input_file, report_context);
+                }
                 if (BOOTSTRAP && !ok)
                 {
                     CfOut(cf_verbose, "", " -> Policy is not valid, but proceeding with bootstrap");
@@ -255,7 +262,7 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const Report
             policy = ReadPromises(ag, agents, config, report_context);
         }
 
-        if (SHOWREPORTS)
+        if (SHOWREPORTS && (ag == AGENT_TYPE_COMMON))
         {
             CompilationReport(policy, config->input_file);
         }
@@ -280,18 +287,13 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const Report
 /* Level                                                                     */
 /*****************************************************************************/
 
-int CheckPromises(AgentType ag, const char *input_file, const ReportContext *report_context)
+int CheckPromises(const char *input_file, const ReportContext *report_context)
 {
     char cmd[CF_BUFSIZE], cfpromises[CF_MAXVARSIZE];
     char filename[CF_MAXVARSIZE];
     struct stat sb;
     int fd;
     bool outsideRepo = false;
-
-    if ((ag != AGENT_TYPE_AGENT) && (ag != AGENT_TYPE_EXECUTOR) && (ag != AGENT_TYPE_SERVER))
-    {
-        return true;
-    }
 
     CfOut(cf_verbose, "", " -> Verifying the syntax of the inputs...\n");
 
@@ -391,11 +393,6 @@ Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config,
 {
     Rval retval;
     char vbuff[CF_BUFSIZE];
-
-    if (ag == AGENT_TYPE_KEYGEN)
-    {
-        return NULL;
-    }
 
     DeleteAllPromiseIds();      // in case we are re-reading, delete old handles
 
@@ -1276,11 +1273,6 @@ static char *InputLocation(const char *filename, const char *input_file)
 
 void CompilationReport(Policy *policy, char *fname)
 {
-    if (THIS_AGENT_TYPE != AGENT_TYPE_COMMON)
-    {
-        return;
-    }
-
 #if defined(HAVE_NOVA)
     ReportContext *compilation_report_context = Nova_OpenCompilationReportFiles(fname);
 #else
@@ -1325,13 +1317,8 @@ ReportContext *OpenCompilationReportFiles(const char *fname)
 
 /*******************************************************************/
 
-static void VerifyPromises(Policy *policy, Rlist *bundlesequence,
-                           const ReportContext *report_context)
+static void VerifyPromises(Policy *policy, const Rlist *bundlesequence, const ReportContext *report_context)
 {
-    Rlist *rp;
-    FnCall *fp;
-    char *scope;
-
     if (REQUIRE_COMMENTS == CF_UNDEFINED)
     {
         for (size_t i = 0; i < SeqLength(policy->bodies); i++)
@@ -1346,7 +1333,7 @@ static void VerifyPromises(Policy *policy, Rlist *bundlesequence,
         }
     }
 
-    for (rp = BODYPARTS; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = BODYPARTS; rp != NULL; rp = rp->next)
     {
         char namespace[CF_BUFSIZE],name[CF_BUFSIZE];
         char fqname[CF_BUFSIZE];
@@ -1373,7 +1360,7 @@ static void VerifyPromises(Policy *policy, Rlist *bundlesequence,
 
 /* Check for undefined subbundles */
 
-    for (rp = SUBBUNDLES; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = SUBBUNDLES; rp != NULL; rp = rp->next)
     {
         switch (rp->type)
         {
@@ -1387,15 +1374,16 @@ static void VerifyPromises(Policy *policy, Rlist *bundlesequence,
             break;
 
         case CF_FNCALL:
-
-            fp = (FnCall *) rp->item;
-
-            if (!IGNORE_MISSING_BUNDLES && !IsCf3VarString(fp->name) && !IsBundle(policy->bundles, fp->name))
             {
-                CfOut(cf_error, "", "Undeclared promise bundle \"%s()\" was referenced in a promise\n", fp->name);
-                ERRORCOUNT++;
+                const FnCall *fp = rp->item;
+
+                if (!IGNORE_MISSING_BUNDLES && !IsCf3VarString(fp->name) && !IsBundle(policy->bundles, fp->name))
+                {
+                    CfOut(cf_error, "", "Undeclared promise bundle \"%s()\" was referenced in a promise\n", fp->name);
+                    ERRORCOUNT++;
+                }
+                break;
             }
-            break;
         }
     }
 
@@ -1405,7 +1393,7 @@ static void VerifyPromises(Policy *policy, Rlist *bundlesequence,
     {
         Bundle *bp = SeqAt(policy->bundles, i);
 
-        scope = bp->name;
+        const char *scope = bp->name;
         THIS_BUNDLE = bp->name;
 
         for (size_t j = 0; j < SeqLength(bp->subtypes); j++)
@@ -1424,9 +1412,12 @@ static void VerifyPromises(Policy *policy, Rlist *bundlesequence,
     HashControls(policy);
 
     /* Now look once through the sequences bundles themselves */
-    if (VerifyBundleSequence(policy, AGENT_TYPE_COMMON, bundlesequence) == false)
+    if (!bundlesequence)
     {
-        FatalError("Errors in promise bundles");
+        if (!VerifyBundleSequence(policy))
+        {
+            FatalError("Errors in promise bundles");
+        }
     }
 }
 
@@ -1857,23 +1848,13 @@ void HashControls(const Policy *policy)
 
 /********************************************************************/
 
-static bool VerifyBundleSequence(const Policy *policy, AgentType agent, Rlist *bundlesequence)
+static bool VerifyBundleSequence(const Policy *policy)
 {
     Rlist *rp;
     char *name;
     Rval retval;
     int ok = true;
     FnCall *fp;
-
-    if ((THIS_AGENT_TYPE != AGENT_TYPE_AGENT) && (THIS_AGENT_TYPE != AGENT_TYPE_KNOW) && (THIS_AGENT_TYPE != AGENT_TYPE_COMMON) && (THIS_AGENT_TYPE != AGENT_TYPE_GENDOC))
-    {
-        return true;
-    }
-
-    if (bundlesequence)
-    {
-        return true;
-    }
 
     if (GetVariable("control_common", "bundlesequence", &retval) == cf_notype)
     {
@@ -1884,11 +1865,6 @@ static bool VerifyBundleSequence(const Policy *policy, AgentType agent, Rlist *b
     if (retval.rtype != CF_LIST)
     {
         FatalError("Promised bundlesequence was not a list");
-    }
-
-    if ((agent != AGENT_TYPE_AGENT) && (agent != AGENT_TYPE_COMMON))
-    {
-        return true;
     }
 
     for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)

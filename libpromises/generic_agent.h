@@ -42,7 +42,7 @@ void InitializeGA(GenericAgentConfig *config, const ReportContext *report_contex
 void Syntax(const char *comp, const struct option options[], const char *hints[], const char *id);
 void ManPage(const char *component, const struct option options[], const char *hints[], const char *id);
 void PrintVersionBanner(const char *component);
-int CheckPromises(AgentType ag, const char *input_file, const ReportContext *report_context);
+int CheckPromises(const char *input_file, const ReportContext *report_context);
 Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config, const ReportContext *report_context);
 int NewPromiseProposals(const char *input_file, const Rlist *input_files);
 void CompilationReport(Policy *policy, char *fname);

@@ -644,7 +644,7 @@ static Reload CheckNewPromises(const char *input_file, const Rlist *input_files,
     {
         CfOut(cf_verbose, "", " -> New promises detected...\n");
 
-        if (CheckPromises(AGENT_TYPE_EXECUTOR, input_file, report_context))
+        if (CheckPromises(input_file, report_context))
         {
             return RELOAD_FULL;
         }

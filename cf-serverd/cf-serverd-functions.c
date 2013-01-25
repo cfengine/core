@@ -564,7 +564,7 @@ void CheckFileChanges(Policy **policy, GenericAgentConfig *config, const ReportC
     {
         CfOut(cf_verbose, "", " -> New promises detected...\n");
 
-        if (CheckPromises(AGENT_TYPE_SERVER, config->input_file, report_context))
+        if (CheckPromises(config->input_file, report_context))
         {
             CfOut(cf_inform, "", "Rereading config files %s..\n", config->input_file);
 

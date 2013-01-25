@@ -1126,8 +1126,6 @@ static double RejectAnomaly(double new, double average, double variance, double 
 
 static void GatherPromisedMeasures(const Policy *policy, const ReportContext *report_context)
 {
-    SubType *sp;
-    Promise *pp;
     char *scope;
 
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
@@ -1139,10 +1137,13 @@ static void GatherPromisedMeasures(const Policy *policy, const ReportContext *re
 
         if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_MONITOR]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
         {
-            for (sp = bp->subtypes; sp != NULL; sp = sp->next)  /* get schedule */
+            for (size_t j = 0; j < SeqLength(bp->subtypes); j++)
             {
-                for (pp = sp->promiselist; pp != NULL; pp = pp->next)
+                SubType *sp = SeqAt(bp->subtypes, j);
+
+                for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
+                    Promise *pp = SeqAt(sp->promises, ppi);
                     ExpandPromise(AGENT_TYPE_MONITOR, scope, pp, KeepMonitorPromise, report_context);
                 }
             }

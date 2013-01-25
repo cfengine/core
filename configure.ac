@@ -645,6 +645,13 @@ AC_CHECK_MEMBERS([struct sockaddr.sa_len], , , [
 AC_CHECK_MEMBERS([struct ifreq.ifr_hwaddr],,, [
 #include <sys/ioctl.h>
 #include <net/if.h>])
+
+dnl BSD uses sys/sysctl.h for CPU counting
+AC_CHECK_HEADERS(sys/sysctl.h, [], [], [AC_INCLUDES_DEFAULT
+#ifdef HAVE_SYS_PARAM_H
+# include <sys/param.h>
+#endif
+])
    
 dnl #######################################################################
 dnl Newer BSD systems don't have a compatible rtentry - use ortentry

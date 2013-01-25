@@ -457,8 +457,6 @@ void KeepControlPromises(Policy *policy)
 
 static void KeepContextBundles(Policy *policy, const ReportContext *report_context)
 {
-    SubType *sp;
-    Promise *pp;
     char *scope;
 
 /* Dial up the generic promise expansion with a callback */
@@ -477,8 +475,10 @@ static void KeepContextBundles(Policy *policy, const ReportContext *report_conte
             BannerBundle(bp, NULL);
             scope = bp->name;
 
-            for (sp = bp->subtypes; sp != NULL; sp = sp->next)  /* get schedule */
+            for (size_t j = 0; j < SeqLength(bp->subtypes); j++)
             {
+                SubType *sp = SeqAt(bp->subtypes, j);
+
                 if ((strcmp(sp->name, "vars") != 0) && (strcmp(sp->name, "classes") != 0))
                 {
                     continue;
@@ -488,8 +488,9 @@ static void KeepContextBundles(Policy *policy, const ReportContext *report_conte
                 SetScope(scope);
                 AugmentScope(scope, bp->namespace, NULL, NULL);
 
-                for (pp = sp->promiselist; pp != NULL; pp = pp->next)
+                for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
+                    Promise *pp = SeqAt(sp->promises, ppi);
                     ExpandPromise(AGENT_TYPE_SERVER, scope, pp, KeepServerPromise, report_context);
                 }
             }
@@ -501,8 +502,6 @@ static void KeepContextBundles(Policy *policy, const ReportContext *report_conte
 
 static void KeepPromiseBundles(Policy *policy, const ReportContext *report_context)
 {
-    SubType *sp;
-    Promise *pp;
     char *scope;
 
 /* Dial up the generic promise expansion with a callback */
@@ -521,8 +520,10 @@ static void KeepPromiseBundles(Policy *policy, const ReportContext *report_conte
             BannerBundle(bp, NULL);
             scope = bp->name;
 
-            for (sp = bp->subtypes; sp != NULL; sp = sp->next)  /* get schedule */
+            for (size_t j = 0; j < SeqLength(bp->subtypes); j++)
             {
+                SubType *sp = SeqAt(bp->subtypes, j);
+
                 if ((strcmp(sp->name, "access") != 0) && (strcmp(sp->name, "roles") != 0))
                 {
                     continue;
@@ -532,8 +533,9 @@ static void KeepPromiseBundles(Policy *policy, const ReportContext *report_conte
                 SetScope(scope);
                 AugmentScope(scope, bp->namespace, NULL, NULL);
 
-                for (pp = sp->promiselist; pp != NULL; pp = pp->next)
+                for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
+                    Promise *pp = SeqAt(sp->promises, ppi);
                     ExpandPromise(AGENT_TYPE_SERVER, scope, pp, KeepServerPromise, report_context);
                 }
             }

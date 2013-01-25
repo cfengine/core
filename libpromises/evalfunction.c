@@ -1858,7 +1858,7 @@ static FnCallResult FnCallSelectServers(FnCall *fp, Rlist *finalargs)
         DeleteAgentConn(conn);
     }
 
-    DeletePromise(pp);
+    PromiseDestroy(pp);
 
 /* Return the subset that is alive and responding correctly */
 

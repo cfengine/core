@@ -182,7 +182,6 @@ void TestExpandPromise(const ReportContext *report_context)
     pp.ref = "commentary";
     pp.agentsubtype = NULL;
     pp.done = false;
-    pp.next = NULL;
     pp.cache = NULL;
     pp.inode_cache = NULL;
     pp.this_server = NULL;
@@ -207,7 +206,7 @@ void TestExpandPromise(const ReportContext *report_context)
         ShowPromise(report_context, REPORT_OUTPUT_TYPE_TEXT, pcopy, 6);
         ShowPromise(report_context, REPORT_OUTPUT_TYPE_HTML, pcopy, 6);
     }
-    DeletePromise(pcopy);
+    PromiseDestroy(pcopy);
 }
 
 /*****************************************************************************/
@@ -238,7 +237,6 @@ void TestExpandVariables(const ReportContext *report_context)
     pp.ref = "commentary";
     pp.agentsubtype = xstrdup("files");
     pp.done = false;
-    pp.next = NULL;
     pp.cache = NULL;
     pp.inode_cache = NULL;
     pp.this_server = NULL;

@@ -154,7 +154,7 @@ const BodySyntax CFG_CONTROLBODY[] =
     {"require_comments", cf_opts, CF_BOOL, "Warn about promises that do not have comment documentation", "false"},
     {"host_licenses_paid", cf_int, CF_VALRANGE,
      "The number of licenses that you promise to have paid for by setting this value (legally binding for commercial license)",
-     "0"},
+     "25"},
     {"site_classes", cf_clist, CF_CLASSRANGE,
      "A list of classes that will represent geographical site locations for hosts. These should be defined elsewhere in the configuration in a classes promise."},
     {"syslog_host", cf_str, CF_IPRANGE,

@@ -1498,17 +1498,18 @@ static JsonElement *ExportBodyClassesAsJson(Seq *constraints)
 
 /****************************************************************************/
 
-static JsonElement *ExportBundleClassesAsJson(Promise *promises)
+static JsonElement *ExportBundleClassesAsJson(Seq *promises)
 {
     JsonElement *json_contexts = JsonArrayCreate(10);
     JsonElement *json_promises = JsonArrayCreate(10);
     char *current_context = "any";
     size_t context_offset_start = -1;
     size_t context_offset_end = -1;
-    Promise *pp = NULL;
 
-    for (pp = promises; pp != NULL; pp = pp->next)
+    for (size_t ppi = 0; ppi < SeqLength(promises); ppi++)
     {
+        Promise *pp = SeqAt(promises, ppi);
+
         JsonElement *json_promise = JsonObjectCreate(10);
 
         JsonObjectAppendInteger(json_promise, "offset", pp->offset.start);
@@ -1561,7 +1562,7 @@ static JsonElement *ExportBundleClassesAsJson(Promise *promises)
         }
         JsonArrayAppendObject(json_promises, json_promise);
 
-        if (pp->next == NULL || strcmp(current_context, pp->next->classes) != 0)
+        if (ppi == (SeqLength(promises) - 1) || strcmp(current_context, ((Promise *)SeqAt(promises, ppi + 1))->classes) != 0)
         {
             JsonArrayAppendObject(json_contexts,
                                   CreateContextAsJson(current_context,
@@ -1601,16 +1602,17 @@ static JsonElement *ExportBundleAsJson(Bundle *bundle)
 
     {
         JsonElement *json_promise_types = JsonArrayCreate(10);
-        SubType *sp = NULL;
 
-        for (sp = bundle->subtypes; sp != NULL; sp = sp->next)
+        for (size_t i = 0; i < SeqLength(bundle->subtypes); i++)
         {
+            const SubType *sp = SeqAt(bundle->subtypes, i);
+
             JsonElement *json_promise_type = JsonObjectCreate(10);
 
             JsonObjectAppendInteger(json_promise_type, "offset", sp->offset.start);
             JsonObjectAppendInteger(json_promise_type, "offset-end", sp->offset.end);
             JsonObjectAppendString(json_promise_type, "name", sp->name);
-            JsonObjectAppendArray(json_promise_type, "classes", ExportBundleClassesAsJson(sp->promiselist));
+            JsonObjectAppendArray(json_promise_type, "classes", ExportBundleClassesAsJson(sp->promises));
 
             JsonArrayAppendObject(json_promise_types, json_promise_type);
         }
@@ -1774,20 +1776,19 @@ void BodyPrettyPrint(Writer *writer, Body *body)
 
 void BundlePrettyPrint(Writer *writer, Bundle *bundle)
 {
-    SubType *promise_type = NULL;
-
     WriterWriteF(writer, "bundle %s %s", bundle->type, bundle->name);
     ArgumentsPrettyPrint(writer, bundle->args);
     WriterWrite(writer, "\n{");
 
-    for (promise_type = bundle->subtypes; promise_type != NULL; promise_type = promise_type->next)
+    for (size_t i = 0; i < SeqLength(bundle->subtypes); i++)
     {
-        Promise *pp = NULL;
+        SubType *promise_type = SeqAt(bundle->subtypes, i);
 
         WriterWriteF(writer, "\n%s:\n", promise_type->name);
 
-        for (pp = promise_type->promiselist; pp != NULL; pp = pp->next)
+        for (size_t ppi = 0; ppi < SeqLength(promise_type->promises); ppi++)
         {
+            Promise *pp = SeqAt(promise_type->promises, ppi);
             Constraint *cp = NULL;
             char *current_class = NULL;
 
@@ -1823,7 +1824,7 @@ void BundlePrettyPrint(Writer *writer, Bundle *bundle)
             }
         }
 
-        if (promise_type->next != NULL)
+        if (i == (SeqLength(bundle->subtypes) - 1))
         {
             WriterWriteChar(writer, '\n');
         }

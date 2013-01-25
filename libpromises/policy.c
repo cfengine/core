@@ -104,6 +104,11 @@ Body *PolicyGetBody(Policy *policy, const char *ns, const char *type, const char
     return NULL;
 }
 
+bool PolicyIsRunnable(const Policy *policy)
+{
+    return PolicyGetBody(policy, NULL, "common", "control") != NULL;
+}
+
 Policy *PolicyMerge(Policy *a, Policy *b)
 {
     Policy *result = PolicyNew();
@@ -309,8 +314,9 @@ static bool PolicyCheckSubType(const SubType *subtype, Seq *errors)
         success = false;
     }
 
-    for (const Promise *pp = subtype->promiselist; pp; pp = pp->next)
+    for (size_t i = 0; i < SeqLength(subtype->promises); i++)
     {
+        const Promise *pp = SeqAt(subtype->promises, i);
         success &= PolicyCheckPromise(pp, errors);
     }
 
@@ -335,8 +341,9 @@ static bool PolicyCheckBundle(const Bundle *bundle, Seq *errors)
         }
     }
 
-    for (const SubType *type = bundle->subtypes; type; type = type->next)
+    for (size_t i = 0; i < SeqLength(bundle->subtypes); i++)
     {
+        const SubType *type = SeqAt(bundle->subtypes, i);
         success &= PolicyCheckSubType(type, errors);
     }
 
@@ -541,6 +548,36 @@ void PolicyErrorWrite(Writer *writer, const PolicyError *error)
 
 /*************************************************************************/
 
+static void SubTypeDestroy(SubType *subtype)
+{
+    if (subtype)
+    {
+        for (size_t i = 0; i < SeqLength(subtype->promises); i++)
+        {
+            Promise *pp = SeqAt(subtype->promises, i);
+
+            if (pp->this_server != NULL)
+            {
+                ThreadLock(cft_policy);
+                free(pp->this_server);
+                ThreadUnlock(cft_policy);
+            }
+            if (pp->ref_alloc == 'y')
+            {
+                ThreadLock(cft_policy);
+                free(pp->ref);
+                ThreadUnlock(cft_policy);
+            }
+        }
+
+        SeqDestroy(subtype->promises);
+
+
+        free(subtype->name);
+        free(subtype);
+    }
+}
+
 Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *args,
                      const char *source_path)
 {
@@ -553,6 +590,7 @@ Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *
     CfDebug(")\n");
 
     Bundle *bundle = xcalloc(1, sizeof(Bundle));
+
     bundle->parent_policy = policy;
 
     SeqAppend(policy->bundles, bundle);
@@ -572,6 +610,7 @@ Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *
     bundle->namespace = xstrdup(policy->current_namespace);
     bundle->args = CopyRlist(args);
     bundle->source_path = SafeStringDuplicate(source_path);
+    bundle->subtypes = SeqNew(10, SubTypeDestroy);
 
     return bundle;
 }
@@ -614,12 +653,8 @@ Body *AppendBody(Policy *policy, const char *name, const char *type, Rlist *args
     return body;
 }
 
-/*******************************************************************/
-
 SubType *AppendSubType(Bundle *bundle, char *typename)
 {
-    SubType *tp, *lp;
-
     CfDebug("Appending new type section %s\n", typename);
 
     if (bundle == NULL)
@@ -627,31 +662,23 @@ SubType *AppendSubType(Bundle *bundle, char *typename)
         ProgrammingError("Attempt to add a type without a bundle");
     }
 
-    for (lp = bundle->subtypes; lp != NULL; lp = lp->next)
+    // TODO: review SeqLookup
+    for (size_t i = 0; i < SeqLength(bundle->subtypes); i++)
     {
-        if (strcmp(lp->name, typename) == 0)
+        SubType *existing = SeqAt(bundle->subtypes, i);
+        if (strcmp(existing->name, typename) == 0)
         {
-            return lp;
+            return existing;
         }
     }
 
-    tp = xcalloc(1, sizeof(SubType));
-
-    if (bundle->subtypes == NULL)
-    {
-        bundle->subtypes = tp;
-    }
-    else
-    {
-        for (lp = bundle->subtypes; lp->next != NULL; lp = lp->next)
-        {
-        }
-
-        lp->next = tp;
-    }
+    SubType *tp = xcalloc(1, sizeof(SubType));
 
     tp->parent_bundle = bundle;
     tp->name = xstrdup(typename);
+    tp->promises = SeqNew(10, PromiseDestroy);
+
+    SeqAppend(bundle->subtypes, tp);
 
     return tp;
 }
@@ -660,7 +687,6 @@ SubType *AppendSubType(Bundle *bundle, char *typename)
 
 Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *classes, char *bundle, char *bundletype, char *namespace)
 {
-    Promise *pp, *lp;
     char *sp = NULL, *spe = NULL;
     char output[CF_BUFSIZE];
 
@@ -674,7 +700,7 @@ Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *class
 
     CfDebug("Appending Promise from bundle %s %s if context %s\n", bundle, promiser, classes);
 
-    pp = xcalloc(1, sizeof(Promise));
+    Promise *pp = xcalloc(1, sizeof(Promise));
 
     sp = xstrdup(promiser);
 
@@ -704,18 +730,7 @@ Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *class
         }
     }
 
-    if (type->promiselist == NULL)
-    {
-        type->promiselist = pp;
-    }
-    else
-    {
-        for (lp = type->promiselist; lp->next != NULL; lp = lp->next)
-        {
-        }
-
-        lp->next = pp;
-    }
+    SeqAppend(type->promises, pp);
 
     pp->parent_subtype = type;
     pp->audit = AUDITPTR;
@@ -736,30 +751,6 @@ Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *class
     return pp;
 }
 
-/*******************************************************************/
-
-static void DeleteSubTypes(SubType *tp)
-{
-    if (tp == NULL)
-    {
-        return;
-    }
-
-    if (tp->next != NULL)
-    {
-        DeleteSubTypes(tp->next);
-    }
-
-    DeletePromises(tp->promiselist);
-
-    if (tp->name != NULL)
-    {
-        free(tp->name);
-    }
-
-    free(tp);
-}
-
 static void BundleDestroy(Bundle *bundle)
 {
     if (bundle)
@@ -768,7 +759,7 @@ static void BundleDestroy(Bundle *bundle)
         free(bundle->type);
 
         DeleteRlist(bundle->args);
-        DeleteSubTypes(bundle->subtypes);
+        SeqDestroy(bundle->subtypes);
         free(bundle);
     }
 }
@@ -786,71 +777,31 @@ static void BodyDestroy(Body *body)
     }
 }
 
-/*******************************************************************/
 
-void DeletePromise(Promise *pp)
+void PromiseDestroy(Promise *pp)
 {
-    if (pp == NULL)
+    if (pp)
     {
-        return;
-    }
+        ThreadLock(cft_policy);
 
-    CfDebug("DeletePromise(%s->[%c])\n", pp->promiser, pp->promisee.rtype);
-
-    ThreadLock(cft_policy);
-
-    if (pp->promiser != NULL)
-    {
         free(pp->promiser);
-    }
 
-    if (pp->promisee.item != NULL)
-    {
-        DeleteRvalItem(pp->promisee);
-    }
+        if (pp->promisee.item)
+        {
+            DeleteRvalItem(pp->promisee);
+        }
 
-    free(pp->bundle);
-    free(pp->bundletype);
-    free(pp->classes);
-    free(pp->namespace);
+        free(pp->bundle);
+        free(pp->bundletype);
+        free(pp->classes);
+        free(pp->namespace);
 
-// ref and agentsubtype are only references, do not free
+        // ref and agentsubtype are only references, do not free
+        SeqDestroy(pp->conlist);
 
-    SeqDestroy(pp->conlist);
-
-    free((char *) pp);
-    ThreadUnlock(cft_policy);
-}
-
-/*******************************************************************/
-
-void DeletePromises(Promise *pp)
-{
-    if (pp == NULL)
-    {
-        return;
-    }
-
-    if (pp->this_server != NULL)
-    {
-        ThreadLock(cft_policy);
-        free(pp->this_server);
+        free((char *) pp);
         ThreadUnlock(cft_policy);
     }
-
-    if (pp->next != NULL)
-    {
-        DeletePromises(pp->next);
-    }
-
-    if (pp->ref_alloc == 'y')
-    {
-        ThreadLock(cft_policy);
-        free(pp->ref);
-        ThreadUnlock(cft_policy);
-    }
-
-    DeletePromise(pp);
 }
 
 /*******************************************************************/
@@ -891,15 +842,16 @@ Bundle *GetBundle(const Policy *policy, const char *name, const char *agent)
 
 SubType *GetSubTypeForBundle(char *type, Bundle *bp)
 {
-    SubType *sp;
-
+    // TODO: hiding error, remove and see what will crash
     if (bp == NULL)
     {
         return NULL;
     }
 
-    for (sp = bp->subtypes; sp != NULL; sp = sp->next)
+    for (size_t i = 0; i < SeqLength(bp->subtypes); i++)
     {
+        SubType *sp = SeqAt(bp->subtypes, i);
+
         if (strcmp(type, sp->name) == 0)
         {
             return sp;

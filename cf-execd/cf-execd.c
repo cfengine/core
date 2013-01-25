@@ -445,7 +445,7 @@ void StartServer(Policy *policy, GenericAgentConfig *config, ExecConfig *exec_co
 
         if (thislock.lock == NULL)
         {
-            DeletePromise(pp);
+            PromiseDestroy(pp);
             return;
         }
 
@@ -597,7 +597,6 @@ static void Apoptosis()
     pp.ref = "Programmed death";
     pp.agentsubtype = "processes";
     pp.done = false;
-    pp.next = NULL;
     pp.cache = NULL;
     pp.inode_cache = NULL;
     pp.this_server = NULL;

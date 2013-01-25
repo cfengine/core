@@ -51,7 +51,7 @@ static void IncludeExampleFile(const char *examples_dir, const char *filename)
 {
     char path[2048];
 
-    snprintf(path, 2048, "%s/%s", examples_dir, filename);
+    snprintf(path, sizeof(path), "%s/%s", examples_dir, filename);
 
     FILE *example_fh = fopen(path, "r");
 
@@ -65,16 +65,14 @@ static void IncludeExampleFile(const char *examples_dir, const char *filename)
     while (!feof(example_fh))
     {
         char line[2048];
+        line[0] = '\0';
 
-        if (fgets(line, 2047, example_fh) == NULL)
+        if (fgets(line, sizeof(line), example_fh) != NULL)
         {
-            fprintf(stderr, "Unable to read line from file '%s' - aborting", path);
-            fclose(example_fh);
-            return;
-        }
-        if (strstr(line, "COSL.txt"))
-        {
-            break;
+            if (strstr(line, "COSL.txt"))
+            {
+                break;
+            }
         }
     }
 
@@ -105,7 +103,7 @@ static void Manual(const char *examples_dir)
     {
         char line[2048];
 
-        if (fgets(line, 2048, stdin) == NULL)
+        if (fgets(line, sizeof(line), stdin) == NULL)
         {
             if (ferror(stdin))
             {

@@ -142,7 +142,7 @@ void VerifyEnvironmentsPromise(Promise *pp)
 
         pexp = ExpandDeRefPromise("this", pp);
         VerifyEnvironments(a, pp);
-        DeletePromise(pexp);
+        PromiseDestroy(pexp);
     }
 
     YieldCurrentLock(thislock);

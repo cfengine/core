@@ -32,8 +32,9 @@
 typedef struct
 {
     Rlist *bundlesequence;
-    bool verify_promises;
     char *input_file;
+    bool check_not_writable_by_others;
+    bool tty_interactive;       //agent is running interactively, via tty/terminal interface
 } GenericAgentConfig;
 
 Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const ReportContext *report_context);
@@ -72,8 +73,6 @@ void ReloadPromises(AgentType ag);
 
 ReportContext *OpenReports(const char *agents);
 void CloseReports(const char *agents, ReportContext *report_context);
-
-
 
 GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type);
 void GenericAgentConfigDestroy(GenericAgentConfig *config);

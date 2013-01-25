@@ -43,6 +43,13 @@ Policy *PolicyMerge(Policy *a, Policy *b);
 
 Body *PolicyGetBody(Policy *policy, const char *ns, const char *type, const char *name);
 
+/**
+ * @brief Check to see if a policy is runnable (contains body common control)
+ * @param policy Policy to check
+ * @return True if policy is runnable
+ */
+bool PolicyIsRunnable(const Policy *policy);
+
 Policy *PolicyFromPromise(const Promise *promise);
 char *BundleQualifiedName(const Bundle *bundle);
 
@@ -73,15 +80,14 @@ char *CurrentNameSpace(Policy *policy);
 Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *args, const char *source_path);
 Body *AppendBody(Policy *policy, const char *name, const char *type, Rlist *args, const char *source_path);
 SubType *AppendSubType(Bundle *bundle, char *typename);
-Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *classes, char *bundle, char *bundletype, char *namespace);
-
 
 const char *NamespaceFromConstraint(const Constraint *cp);
 
+Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *classes, char *bundle, char *bundletype, char *namespace);
+void PromiseDestroy(Promise *pp);
 
 // TODO: legacy
-void DeletePromise(Promise *pp);
-void DeletePromises(Promise *pp);
+
 Bundle *GetBundle(const Policy *policy, const char *name, const char *agent);
 SubType *GetSubTypeForBundle(char *type, Bundle *bp);
 

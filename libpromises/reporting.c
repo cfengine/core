@@ -259,12 +259,15 @@ static void ShowPromisesInReportText(const ReportContext *context, const Seq *bu
 
         WriterWriteF(writer, "   {\n");
 
-        for (const SubType *sp = bp->subtypes; sp != NULL; sp = sp->next)
+        for (size_t j = 0; j < SeqLength(bp->subtypes); j++)
         {
+            const SubType *sp = SeqAt(bp->subtypes, j);
+
             WriterWriteF(writer, "   TYPE: %s\n\n", sp->name);
 
-            for (const Promise *pp = sp->promiselist; pp != NULL; pp = pp->next)
+            for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {
+                const Promise *pp = SeqAt(sp->promises, ppi);
                 ShowPromise(context, REPORT_OUTPUT_TYPE_TEXT, pp, 6);
             }
         }
@@ -338,13 +341,16 @@ static void ShowPromisesInReportHtml(const ReportContext *context, const Seq *bu
 
         WriterWriteF(writer, "%s", CFH[cfx_promise][cfb]);
 
-        for (const SubType *sp = bp->subtypes; sp != NULL; sp = sp->next)
+        for (size_t j = 0; j < SeqLength(bp->subtypes); j++)
         {
+            const SubType *sp = SeqAt(bp->subtypes, j);
+
             WriterWriteF(writer, "%s", CFH[cfx_line][cfb]);
             WriterWriteF(writer, "%s", CFH[cfx_line][cfe]);
 
-            for (const Promise *pp = sp->promiselist; pp != NULL; pp = pp->next)
+            for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {
+                const Promise *pp = SeqAt(sp->promises, ppi);
                 ShowPromise(context, REPORT_OUTPUT_TYPE_HTML, pp, 6);
             }
         }

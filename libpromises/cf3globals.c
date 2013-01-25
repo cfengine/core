@@ -31,7 +31,6 @@
 
 int SHOWREPORTS = false;
 int SHOW_PARSE_TREE = false;
-int USE_GCC_BRIEF_FORMAT = false;
 
 /*****************************************************************************/
 /* operational state                                                         */

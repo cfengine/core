@@ -48,6 +48,13 @@
 # include <sys/mpctl.h>
 #endif
 
+// BSD: sysctl(3) to get kern.boottime, CPU count, etc.
+// See http://www.unix.com/man-page/FreeBSD/3/sysctl/
+#ifdef HAVE_SYS_SYSCTL_H
+#include <sys/param.h>
+#include <sys/sysctl.h>
+#endif
+
 void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname, char *uqname, char *domain);
 
 #ifdef __linux__
@@ -2216,35 +2223,31 @@ const char *GetWorkDir(void)
 
 static void GetCPUInfo()
 {
-    char buf[CF_BUFSIZE];
+#if defined(MINGW) || defined(NT)
+    CfOut(cf_verbose, "", "!! cpu count not implemented on Windows platform\n");
+    return;
+#else
+    char buf[CF_SMALLBUF] = "1_cpu";
     int count = 0;
+#endif
 
-#ifdef __linux__
-    FILE *fp;
+    // http://preview.tinyurl.com/c9l2sh - StackOverflow on cross-platform CPU counting
+#if defined(HAVE_SYSCONF) && defined(_SC_NPROCESSORS_ONLN)
+    // Linux, AIX, Solaris, Darwin >= 10.4
+    count = (int)sysconf(_SC_NPROCESSORS_ONLN);
+#endif
 
-    if ((fp = fopen("/proc/stat", "r")) == NULL)
+#if defined(HAVE_SYS_SYSCTL_H) && defined(HW_NCPU)
+    // BSD-derived platforms
+    int mib[2] = { CTL_HW, HW_NCPU };
+    size_t len;
+
+    len = sizeof(count);
+    if(sysctl(mib, 2, &count, &len, NULL, 0) < 0)
     {
-        CfOut(cf_verbose, "", "Unable to read /proc/stat cpu data\n");
-        return;
+        CfOut(cf_error, "sysctl", "!! failed to get cpu count: %s\n", strerror(errno));
     }
-
-    CfOut(cf_verbose, "", "Reading /proc/stat utilization data -------\n");
-
-    while (!feof(fp))
-    {
-        buf[0] = '\0';
-        if (fgets(buf, CF_BUFSIZE, fp))
-        {
-            if (strncmp(buf, "cpu", 3) == 0)
-            {
-                count++;
-            }
-        }
-    }
-
-    fclose(fp);
-    count--;
-#endif /* __linux__ */
+#endif
 
 #ifdef HAVE_SYS_MPCTL_H
 // Itanium processors have Intel Hyper-Threading virtual-core capability,
@@ -2270,24 +2273,18 @@ static void GetCPUInfo()
 
     if (count < 1)
     {
-        CfOut(cf_verbose, "", " !! CPU detection makes no sense: got %d\n", count);
+        CfOut(cf_verbose, "", " !! invalid processor count: %d\n", count);
+        return;
     }
-    else
-    {
-        CfOut(cf_verbose, "", "-> Found %d cpu cores\n", count);
-    }
+    CfOut(cf_verbose, "", "-> Found %d processor%s\n", count, count > 1 ? "s" : "");
 
-    switch (count)
-    {
-    case 1:
-        HardClass("1_cpu");
+    if (count == 1) {
+        HardClass(buf);  // "1_cpu" from init - change if buf is ever used above
         NewScalar("sys", "cpus", "1", cf_str);
-        break;
-    default:
-        snprintf(buf, CF_MAXVARSIZE, "%d_cpus", count);
+    } else {
+        snprintf(buf, CF_SMALLBUF, "%d_cpus", count);
         HardClass(buf);
-        snprintf(buf, CF_MAXVARSIZE, "%d", count);
+        snprintf(buf, CF_SMALLBUF, "%d", count);
         NewScalar("sys", "cpus", buf, cf_str);
     }
-
 }

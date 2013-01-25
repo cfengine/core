@@ -65,14 +65,14 @@ void VerifyExecPromise(Promise *pp)
 
     if (!SyntaxCheckExec(a, pp))
     {
-        cfPS(cf_error, CF_FAIL, "", pp, a, "%s", "");
+        // cfPS(cf_error, CF_FAIL, "", pp, a, "");
         DeleteScalar("this", "promiser");
         return;
     }
 
     if (PromiseKeptExec(a, pp))
     {
-        cfPS(cf_inform, CF_NOP, "", pp, a, "%s", "");
+        // cfPS(cf_inform, CF_NOP, "", pp, a, "");
         DeleteScalar("this", "promiser");
         return;
     }
@@ -83,7 +83,7 @@ void VerifyExecPromise(Promise *pp)
 
     if (thislock.lock == NULL)
     {
-        cfPS(cf_inform, CF_FAIL, "", pp, a, "%s", "");
+        // cfPS(cf_inform, CF_FAIL, "", pp, a, "");
         DeleteScalar("this", "promiser");
         return;
     }
@@ -93,15 +93,15 @@ void VerifyExecPromise(Promise *pp)
     switch (RepairExec(a, pp))
     {
     case ACTION_RESULT_OK:
-        cfPS(cf_inform, CF_CHG, "", pp, a, "%s", "");
+        // cfPS(cf_inform, CF_CHG, "", pp, a, "");
         break;
 
     case ACTION_RESULT_TIMEOUT:
-        cfPS(cf_error, CF_TIMEX, "", pp, a, "%s", "");
+        // cfPS(cf_error, CF_TIMEX, "", pp, a, "");
         break;
 
     case ACTION_RESULT_FAILED:
-        cfPS(cf_inform, CF_FAIL, "", pp, a, "%s", "");
+        // cfPS(cf_inform, CF_FAIL, "", pp, a, "");
         break;
 
     default:

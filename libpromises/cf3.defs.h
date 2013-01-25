@@ -1068,6 +1068,10 @@ typedef struct
     size_t context;
 } SourceOffset;
 
+// TODO: remove eventually, all policy DOM objects should probably
+// just go into policy.h
+#include "sequence.h"
+
 struct Bundle_
 {
     Policy *parent_policy;
@@ -1076,7 +1080,8 @@ struct Bundle_
     char *name;
     char *namespace;
     Rlist *args;
-    SubType *subtypes;
+
+    Seq *subtypes;
 
     char *source_path;
     SourceOffset offset;
@@ -1085,10 +1090,6 @@ struct Bundle_
 /*************************************************************************/
 
 typedef struct Constraint_ Constraint;
-
-// TODO: remove eventually, all policy DOM objects should probably
-// just go into policy.h
-#include "sequence.h"
 
 struct Body_
 {
@@ -1112,8 +1113,7 @@ struct SubType_
     Bundle *parent_bundle;
 
     char *name;
-    Promise *promiselist;
-    SubType *next;
+    Seq *promises;
 
     SourceOffset offset;
 };
@@ -1146,7 +1146,6 @@ struct Promise_
     Rval promisee;
     char *bundle;
     Audit *audit;
-    Promise *next;
 
     Seq *conlist;
 

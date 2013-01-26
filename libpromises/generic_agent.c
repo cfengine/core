@@ -269,14 +269,6 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const Report
             CompilationReport(policy, config->input_file);
         }
 
-        if (SHOW_PARSE_TREE)
-        {
-            Writer *writer = FileWriter(stdout);
-
-            PolicyPrintAsJson(writer, config->input_file, policy->bundles, policy->bodies);
-            WriterClose(writer);
-        }
-
         CheckLicenses();
     }
 

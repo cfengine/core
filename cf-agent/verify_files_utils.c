@@ -55,6 +55,8 @@
 
 #define CF_RECURSION_LIMIT 100
 
+static Rlist *AUTO_DEFINE_LIST;
+
 static int TransformFile(char *file, Attributes attr, Promise *pp);
 static void VerifyName(char *path, struct stat *sb, Attributes attr, Promise *pp, const ReportContext *report_context);
 static void VerifyDelete(char *path, struct stat *sb, Attributes attr, Promise *pp);
@@ -92,6 +94,11 @@ static void LogFileChange(char *file, int change, Attributes a, Promise *pp, con
     CfOut(cf_verbose, "", "Logging file differences requires version Nova or above");
 }
 #endif
+
+void SetFileAutoDefineList(Rlist *auto_define_list)
+{
+    AUTO_DEFINE_LIST = auto_define_list;
+}
 
 int VerifyFileLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp,
                    const ReportContext *report_context)

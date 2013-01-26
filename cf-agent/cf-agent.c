@@ -36,6 +36,7 @@
 #include "verify_outputs.h"
 #include "verify_services.h"
 #include "verify_storage.h"
+#include "verify_files_utils.h"
 #include "addr_lib.h"
 #include "files_names.h"
 #include "files_interfaces.h"
@@ -652,7 +653,7 @@ void KeepControlPromises(Policy *policy)
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_fautodefine].lval) == 0)
             {
-                AUTO_DEFINE_LIST = (Rlist *) retval.item;
+                SetFileAutoDefineList(ListRvalValue(retval));
                 CfOut(cf_verbose, "", "SET file auto define list\n");
                 continue;
             }

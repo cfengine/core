@@ -53,7 +53,7 @@ static int IsBracketed(const char *s);
 
 /*****************************************************************************/
 
-AlphaList VHANDLES;
+static AlphaList VHANDLES;
 AlphaList VHEAP;
 AlphaList VHARDHEAP;
 AlphaList VADDCLASSES;

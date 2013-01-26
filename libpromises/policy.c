@@ -840,7 +840,7 @@ Bundle *GetBundle(const Policy *policy, const char *name, const char *agent)
 
 /*******************************************************************/
 
-SubType *GetSubTypeForBundle(char *type, Bundle *bp)
+SubType *GetSubTypeForBundle(const char *type, Bundle *bp)
 {
     // TODO: hiding error, remove and see what will crash
     if (bp == NULL)

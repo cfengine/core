@@ -214,5 +214,4 @@ char BINDINTERFACE[CF_BUFSIZE] = { 0 };
 
 bool MINUSF = false;
 
-Item *VSETUIDLIST = NULL;
 enum classes VSYSTEMHARDCLASS;

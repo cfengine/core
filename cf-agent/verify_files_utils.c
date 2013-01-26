@@ -57,6 +57,8 @@
 
 static Rlist *AUTO_DEFINE_LIST;
 
+Item *VSETUIDLIST;
+
 static int TransformFile(char *file, Attributes attr, Promise *pp);
 static void VerifyName(char *path, struct stat *sb, Attributes attr, Promise *pp, const ReportContext *report_context);
 static void VerifyDelete(char *path, struct stat *sb, Attributes attr, Promise *pp);

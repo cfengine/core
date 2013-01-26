@@ -73,8 +73,6 @@ extern enum classes VSYSTEMHARDCLASS;
 extern char VFQNAME[];
 extern char VUQNAME[];
 
-extern Item *VSETUIDLIST;
-
 extern int DEBUG;
 
 extern int PARSING;

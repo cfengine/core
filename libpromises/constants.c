@@ -274,24 +274,3 @@ const char *OBS[CF_OBSERVABLES][2] =
 
 /*****************************************************************/
 
-char *AGENT_TYPESEQUENCE[] =
-{
-    "meta",
-    "vars",
-    "defaults",
-    "classes",                  /* Maelstrom order 2 */
-    "outputs",
-    "interfaces",
-    "files",
-    "packages",
-    "guest_environments",
-    "methods",
-    "processes",
-    "services",
-    "commands",
-    "storage",
-    "databases",
-    "reports",
-    NULL
-};
-

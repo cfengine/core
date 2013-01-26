@@ -103,7 +103,6 @@ double METER_REPAIRED[meter_endmark];
 Scope *VSCOPE = NULL;
 Rlist *BODYPARTS = NULL;
 Rlist *SUBBUNDLES = NULL;
-Rlist *ACCESSLIST = NULL;
 
 Rlist *SINGLE_COPY_LIST = NULL;
 Rlist *AUTO_DEFINE_LIST = NULL;

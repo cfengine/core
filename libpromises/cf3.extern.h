@@ -138,7 +138,6 @@ extern Rlist *SUBBUNDLES;
 extern Rlist *SINGLE_COPY_LIST;
 extern Rlist *AUTO_DEFINE_LIST;
 extern Rlist *SINGLE_COPY_CACHE;
-extern Rlist *ACCESSLIST;
 extern PromiseIdent *PROMISE_ID_LIST;
 extern Item *DONELIST;
 extern char *CBUNDLESEQUENCE_STR;

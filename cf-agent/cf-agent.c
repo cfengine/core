@@ -76,6 +76,8 @@ extern int PR_KEPT;
 extern int PR_REPAIRED;
 extern int PR_NOTKEPT;
 
+static Rlist *ACCESSLIST;
+
 /*******************************************************************/
 /* Agent specific variables                                        */
 /*******************************************************************/

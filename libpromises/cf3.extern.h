@@ -101,12 +101,6 @@ extern const char *OBS[CF_OBSERVABLES][2];
 extern const char *CF_DIGEST_TYPES[10][2];
 extern const int CF_DIGEST_SIZES[10];
 
-/* Windows version constants */
-
-extern unsigned int WINVER_MAJOR;
-extern unsigned int WINVER_MINOR;
-extern unsigned int WINVER_BUILD;
-
 extern int REQUIRE_COMMENTS;
 extern int FIPS_MODE;
 extern char POLICY_SERVER[CF_BUFSIZE];

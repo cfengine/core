@@ -88,6 +88,27 @@ static int CFA_BACKGROUND_LIMIT = 1;
 
 static Item *PROCESSREFRESH;
 
+static const char *AGENT_TYPESEQUENCE[] =
+{
+    "meta",
+    "vars",
+    "defaults",
+    "classes",                  /* Maelstrom order 2 */
+    "outputs",
+    "interfaces",
+    "files",
+    "packages",
+    "guest_environments",
+    "methods",
+    "processes",
+    "services",
+    "commands",
+    "storage",
+    "databases",
+    "reports",
+    NULL
+};
+
 /*******************************************************************/
 /* Agent specific variables                                        */
 /*******************************************************************/

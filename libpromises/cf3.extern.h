@@ -138,8 +138,6 @@ extern int CSV;
 extern const char *CF_DATATYPES[];
 extern const char *CF_AGENTTYPES[];
 
-extern const char *AGENT_TYPESEQUENCE[];
-
 extern int CFA_MAXTHREADS;
 extern const char *THIS_BUNDLE;
 extern AgentType THIS_AGENT_TYPE;

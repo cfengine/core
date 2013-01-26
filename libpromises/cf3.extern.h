@@ -150,8 +150,6 @@ extern int LASTSEENEXPIREAFTER;
 extern char *DEFAULT_COPYTYPE;
 extern Item *PROCESSTABLE;
 
-extern int CF_MOUNTALL;
-
 extern const char *DAY_TEXT[];
 extern const char *MONTH_TEXT[];
 extern const char *SHIFT_TEXT[];

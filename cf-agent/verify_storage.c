@@ -39,6 +39,7 @@
 #include "logging.h"
 
 Rlist *MOUNTEDFSLIST;
+int CF_MOUNTALL;
 
 static void FindStoragePromiserObjects(Promise *pp, const ReportContext *report_context);
 static int VerifyFileSystem(char *name, Attributes a, Promise *pp);

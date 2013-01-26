@@ -29,6 +29,7 @@
 #include "cf3.defs.h"
 
 extern Rlist *MOUNTEDFSLIST;
+extern int CF_MOUNTALL;
 
 void *FindAndVerifyStoragePromises(Promise *pp, const ReportContext *report_context);
 void VerifyStoragePromise(char *path, Promise *pp, const ReportContext *report_context);

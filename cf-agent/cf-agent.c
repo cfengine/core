@@ -623,8 +623,7 @@ void KeepControlPromises(Policy *policy)
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_exclamation].lval) == 0)
             {
-                EXCLAIM = GetBoolean(retval.item);
-                CfOut(cf_verbose, "", "SET exclamation %d\n", EXCLAIM);
+                CfOut(cf_verbose, "", "exclamation control is deprecated and does not do anything\n");
                 continue;
             }
 

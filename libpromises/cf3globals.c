@@ -224,7 +224,6 @@ int VEXPIREAFTER = 120;
 char BINDINTERFACE[CF_BUFSIZE] = { 0 };
 
 bool MINUSF = false;
-int EXCLAIM = true;
 
 Item *VSETUIDLIST = NULL;
 enum classes VSYSTEMHARDCLASS;

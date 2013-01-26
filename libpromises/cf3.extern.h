@@ -82,7 +82,6 @@ extern int DEBUG;
 extern int PARSING;
 
 extern int VERBOSE;
-extern int EXCLAIM;
 extern int INFORM;
 
 extern int CFPARANOID;

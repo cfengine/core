@@ -3292,11 +3292,6 @@ static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Prom
         return;
     }
 
-    if (EXCLAIM)
-    {
-        CfOut(cf_error, "", "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-    }
-
     if (cmpsb.st_mode != sb->st_mode)
     {
         snprintf(message, CF_BUFSIZE - 1, "ALERT: Permissions for %s changed %jo -> %jo", file,
@@ -3363,11 +3358,6 @@ static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Prom
     if (pp->ref)
     {
         CfOut(cf_error, "", "Preceding promise: %s", pp->ref);
-    }
-
-    if (EXCLAIM)
-    {
-        CfOut(cf_error, "", "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     }
 
     if (attr.change.update && !DONTDO)

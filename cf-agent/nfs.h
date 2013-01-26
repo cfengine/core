@@ -27,6 +27,9 @@
 
 #include "cf3.defs.h"
 
+extern int FSTAB_EDITS;
+extern Item *FSTABLIST;
+
 #ifndef __MINGW32__
 int LoadMountInfo(Rlist **list);
 void DeleteMountInfo(Rlist *list);

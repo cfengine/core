@@ -74,14 +74,12 @@ PromiseIdent *PROMISE_ID_LIST = NULL;
 Item *PROCESSTABLE = NULL;
 Item *PROCESSREFRESH = NULL;
 Item *ROTATED = NULL;
-Item *FSTABLIST = NULL;
 Item *DONELIST = NULL;
 
 char *CBUNDLESEQUENCE_STR;
 
 int EDIT_MODEL = false;
 int CF_MOUNTALL = false;
-int FSTAB_EDITS;
 int BOOTSTRAP = false;
 
 /*****************************************************************************/

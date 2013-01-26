@@ -153,7 +153,6 @@ extern int CSV;
 
 extern const char *CF_DATATYPES[];
 extern const char *CF_AGENTTYPES[];
-extern int FSTAB_EDITS;
 
 extern int CFA_MAXTHREADS;
 extern const char *THIS_BUNDLE;
@@ -166,7 +165,6 @@ extern int LASTSEENEXPIREAFTER;
 extern char *DEFAULT_COPYTYPE;
 extern Item *PROCESSTABLE;
 extern Item *PROCESSREFRESH;
-extern Item *FSTABLIST;
 extern Rlist *MOUNTEDFSLIST;
 
 extern int CF_MOUNTALL;

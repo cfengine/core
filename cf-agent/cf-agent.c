@@ -82,6 +82,9 @@ static bool ALWAYS_VALIDATE;
 
 static Rlist *ACCESSLIST;
 
+static int CFA_BACKGROUND = 0;
+static int CFA_BACKGROUND_LIMIT = 1;
+
 static const char *AGENT_TYPESEQUENCE[] =
 {
     "meta",
@@ -215,7 +218,7 @@ int main(int argc, char *argv[])
         ret = 1;
     }
 
-    EndAudit();
+    EndAudit(CFA_BACKGROUND);
     GenericAgentConfigDestroy(config);
 
     return ret;

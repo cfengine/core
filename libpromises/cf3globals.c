@@ -49,8 +49,6 @@ struct utsname VSYSNAME;
 int XML = false;
 
 int CFA_MAXTHREADS = 10;
-int CFA_BACKGROUND = 0;
-int CFA_BACKGROUND_LIMIT = 1;
 int AM_BACKGROUND_PROCESS = false;
 int CF_PERSISTENCE = 10;
 

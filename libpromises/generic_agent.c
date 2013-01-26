@@ -63,8 +63,6 @@ static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT;
 
 static char PIDFILE[CF_BUFSIZE];
 
-extern char *CFH[][2];
-
 static void VerifyPromises(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
 static void SetAuditVersion(void);
 static void CheckWorkingDirectories(const ReportContext *report_context);
@@ -118,7 +116,7 @@ void CheckLicenses(void)
 
 /*****************************************************************************/
 
-Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const ReportContext *report_context)
+Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const ReportContext *report_context, bool force_validation)
 {
     AgentType ag = Agent2Type(agents);
     char vbuff[CF_BUFSIZE];
@@ -221,6 +219,11 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const Report
                 check_promises = true;
                 CfOut(cf_verbose, "", " -> Input file is changed since last validation, validating it");
             }
+            if (force_validation)
+            {
+                check_promises = true;
+                CfOut(cf_verbose, "", " -> always_validate is set, forcing policy validation");
+            }
 
             if (check_promises)
             {
@@ -264,14 +267,6 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const Report
         if (SHOWREPORTS && (ag == AGENT_TYPE_COMMON))
         {
             CompilationReport(policy, config->input_file);
-        }
-
-        if (SHOW_PARSE_TREE)
-        {
-            Writer *writer = FileWriter(stdout);
-
-            PolicyPrintAsJson(writer, config->input_file, policy->bundles, policy->bodies);
-            WriterClose(writer);
         }
 
         CheckLicenses();
@@ -429,12 +424,11 @@ Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config,
 
     ShowContext(report_context);
 
-    WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_HTML], "<div id=\"reporttext\">\n");
-    WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_HTML], "%s", CFH[cfx_promise][cfb]);
+    ReportHtmlPromiseBegin(report_context->report_writers[REPORT_OUTPUT_TYPE_HTML]);
 
     VerifyPromises(policy, config, report_context);
 
-    WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_HTML], "%s", CFH[cfx_promise][cfe]);
+    ReportHtmlPromiseEnd(report_context->report_writers[REPORT_OUTPUT_TYPE_HTML]);
 
     if (ag != AGENT_TYPE_COMMON)
     {
@@ -852,7 +846,7 @@ int NewPromiseProposals(const char *input_file, const Rlist *input_files)
         result = true;
     }
 
-    return result | ALWAYS_VALIDATE;
+    return result;
 }
 
 /*******************************************************************/

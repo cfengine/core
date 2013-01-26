@@ -62,7 +62,7 @@ void BeginAudit()
 
 /*****************************************************************************/
 
-void EndAudit(void)
+void EndAudit(int background_tasks)
 {
     if (!END_AUDIT_REQUIRED)
     {
@@ -122,7 +122,7 @@ void EndAudit(void)
     }
     else
     {
-        LogTotalCompliance(sp);
+        LogTotalCompliance(sp, background_tasks);
     }
 }
 
@@ -433,6 +433,6 @@ void FatalError(char *s, ...)
         CfOut(cf_error, "", "Fatal CFEngine error: %s", buf);
     }
 
-    EndAudit();
+    EndAudit(0);
     exit(1);
 }

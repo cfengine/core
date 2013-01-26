@@ -53,7 +53,7 @@ static int IsBracketed(const char *s);
 
 /*****************************************************************************/
 
-AlphaList VHANDLES;
+static AlphaList VHANDLES;
 AlphaList VHEAP;
 AlphaList VHARDHEAP;
 AlphaList VADDCLASSES;
@@ -1607,28 +1607,25 @@ int VarClassExcluded(Promise *pp, char **classes)
 
 /*******************************************************************/
 
-void SaveClassEnvironment()
+void SaveClassEnvironment(void)
 {
-    if (ALLCLASSESREPORT)
+    char file[CF_BUFSIZE];
+    FILE *fp;
+
+    snprintf(file, CF_BUFSIZE, "%s/state/allclasses.txt", CFWORKDIR);
+    if ((fp = fopen(file, "w")) == NULL)
     {
-        char file[CF_BUFSIZE];
-        FILE *fp;
-
-        snprintf(file, CF_BUFSIZE, "%s/state/allclasses.txt", CFWORKDIR);
-        if ((fp = fopen(file, "w")) == NULL)
-        {
-            CfOut(cf_inform, "", "Could not open allclasses cache file");
-            return;
-        }
-
-        Writer *writer = FileWriter(fp);
-
-        ListAlphaList(writer, VHARDHEAP, '\n');
-        ListAlphaList(writer, VHEAP, '\n');
-        ListAlphaList(writer, VADDCLASSES, '\n');
-
-        WriterClose(writer);
+        CfOut(cf_inform, "", "Could not open allclasses cache file");
+        return;
     }
+
+    Writer *writer = FileWriter(fp);
+
+    ListAlphaList(writer, VHARDHEAP, '\n');
+    ListAlphaList(writer, VHEAP, '\n');
+    ListAlphaList(writer, VADDCLASSES, '\n');
+
+    WriterClose(writer);
 }
 
 /**********************************************************************/

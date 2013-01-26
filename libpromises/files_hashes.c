@@ -71,21 +71,11 @@ int FileHashChanged(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], i
             {
                 CfDebug("Found cryptohash for %s in database but it didn't match\n", filename);
 
-                if (EXCLAIM)
-                {
-                    CfOut(warnlevel, "", "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                }
-
                 CfOut(warnlevel, "", "ALERT: Hash (%s) for %s changed!", FileHashName(type), filename);
 
                 if (pp->ref)
                 {
                     CfOut(warnlevel, "", "Preceding promise: %s", pp->ref);
-                }
-
-                if (EXCLAIM)
-                {
-                    CfOut(warnlevel, "", "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                 }
 
                 if (attr.change.update)
@@ -129,7 +119,7 @@ int FileHashChanged(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], i
 
 int CompareFileHashes(char *file1, char *file2, struct stat *sstat, struct stat *dstat, Attributes attr, Promise *pp)
 {
-    static unsigned char digest1[EVP_MAX_MD_SIZE + 1], digest2[EVP_MAX_MD_SIZE + 1];
+    unsigned char digest1[EVP_MAX_MD_SIZE + 1], digest2[EVP_MAX_MD_SIZE + 1];
     int i;
 
     CfDebug("CompareFileHashes(%s,%s)\n", file1, file2);

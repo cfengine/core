@@ -100,7 +100,7 @@ void TrackValue(char *date, double kept, double repaired, double notkept)
 {
 }
 
-void LogTotalCompliance(const char *version)
+void LogTotalCompliance(const char *version, int background_tasks)
 {
     double total = (double) (PR_KEPT + PR_NOTKEPT + PR_REPAIRED) / 100.0;
 
@@ -108,7 +108,7 @@ void LogTotalCompliance(const char *version)
 
     snprintf(string, CF_BUFSIZE,
              "Outcome of version %s (" CF_AGENTC "-%d): Promises observed to be kept %.0f%%, Promises repaired %.0f%%, Promises not repaired %.0f\%%",
-             version, CFA_BACKGROUND,
+             version, background_tasks,
              (double) PR_KEPT / total,
              (double) PR_REPAIRED / total,
              (double) PR_NOTKEPT / total);

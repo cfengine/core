@@ -38,7 +38,6 @@ extern Audit *AUDITPTR;
 extern Audit *VAUDIT;
 
 extern char CONTEXTID[];
-extern char PADCHAR;
 extern Item *IPADDRESSES;
 
 extern char STR_CFENGINEPORT[16];
@@ -60,7 +59,6 @@ extern char VSHIFT[];
 
 extern const char *CLASSTEXT[];
 extern int AUDIT;
-extern char PURGE;
 
 extern int ERRORCOUNT;
 extern time_t CFSTARTTIME;
@@ -75,17 +73,12 @@ extern enum classes VSYSTEMHARDCLASS;
 extern char VFQNAME[];
 extern char VUQNAME[];
 
-extern Item *VSETUIDLIST;
-
 extern int DEBUG;
 
 extern int PARSING;
 
 extern int VERBOSE;
-extern int EXCLAIM;
 extern int INFORM;
-
-extern int CFPARANOID;
 
 extern int DONTDO;
 extern int IGNORELOCK;
@@ -104,17 +97,9 @@ extern const char *OBS[CF_OBSERVABLES][2];
 extern const char *CF_DIGEST_TYPES[10][2];
 extern const int CF_DIGEST_SIZES[10];
 
-/* Windows version constants */
-
-extern unsigned int WINVER_MAJOR;
-extern unsigned int WINVER_MINOR;
-extern unsigned int WINVER_BUILD;
-
 extern int REQUIRE_COMMENTS;
 extern int FIPS_MODE;
 extern char POLICY_SERVER[CF_BUFSIZE];
-extern int ALWAYS_VALIDATE;
-extern bool ALLCLASSESREPORT;
 extern int LICENSES;
 extern int AM_NOVA;
 extern char EXPIRY[CF_SMALLBUF];
@@ -125,7 +110,6 @@ extern char FOOTER[CF_BUFSIZE];
 extern char STYLESHEET[CF_BUFSIZE];
 extern int CF_TOPICS;
 extern int CF_OCCUR;
-extern int CF_EDGES;
 extern enum cfhashes CF_DEFAULT_DIGEST;
 extern int CF_DEFAULT_DIGEST_LEN;
 extern Item *EDIT_ANCHORS;
@@ -135,22 +119,15 @@ extern Audit *AUDITPTR;
 extern Audit *VAUDIT;
 extern Rlist *BODYPARTS;
 extern Rlist *SUBBUNDLES;
-extern Rlist *SINGLE_COPY_LIST;
-extern Rlist *AUTO_DEFINE_LIST;
-extern Rlist *SINGLE_COPY_CACHE;
-extern Rlist *ACCESSLIST;
 extern PromiseIdent *PROMISE_ID_LIST;
 extern Item *DONELIST;
 extern char *CBUNDLESEQUENCE_STR;
 extern Item *ROTATED;
-extern double FORGETRATE;
 extern Rlist *GOALS;
 
 extern Rlist *CF_STCK;
 extern int EDIT_MODEL;
 extern int CF_STCKFRAME;
-extern int CFA_BACKGROUND;
-extern int CFA_BACKGROUND_LIMIT;
 extern int AM_BACKGROUND_PROCESS;
 extern int CF_PERSISTENCE;
 extern int LOOKUP;
@@ -160,25 +137,16 @@ extern int CSV;
 
 extern const char *CF_DATATYPES[];
 extern const char *CF_AGENTTYPES[];
-extern int FSTAB_EDITS;
-
-extern char *AGENT_TYPESEQUENCE[];
 
 extern int CFA_MAXTHREADS;
 extern const char *THIS_BUNDLE;
 extern AgentType THIS_AGENT_TYPE;
 extern int SHOWREPORTS;
-extern int SHOW_PARSE_TREE;
 extern time_t PROMISETIME;
 #define CF_LOCKHORIZON ((time_t)(SECONDS_PER_WEEK * 4))
 extern int LASTSEENEXPIREAFTER;
 extern char *DEFAULT_COPYTYPE;
 extern Item *PROCESSTABLE;
-extern Item *PROCESSREFRESH;
-extern Item *FSTABLIST;
-extern Rlist *MOUNTEDFSLIST;
-
-extern int CF_MOUNTALL;
 
 extern const char *DAY_TEXT[];
 extern const char *MONTH_TEXT[];

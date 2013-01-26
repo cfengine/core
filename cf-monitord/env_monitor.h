@@ -25,6 +25,8 @@
 #ifndef CFENGINE_ENV_MONITOR_H
 #define CFENGINE_ENV_MONITOR_H
 
+extern double FORGETRATE;
+
 void MonitorInitialize(void);
 void MonitorStartServer(const Policy *policy, const ReportContext *report_context);
 

@@ -36,6 +36,7 @@
 #include "verify_outputs.h"
 #include "verify_services.h"
 #include "verify_storage.h"
+#include "verify_files_utils.h"
 #include "addr_lib.h"
 #include "files_names.h"
 #include "files_interfaces.h"
@@ -75,6 +76,38 @@
 extern int PR_KEPT;
 extern int PR_REPAIRED;
 extern int PR_NOTKEPT;
+
+static bool ALLCLASSESREPORT;
+static bool ALWAYS_VALIDATE;
+static bool CFPARANOID = false;
+
+static Rlist *ACCESSLIST;
+
+static int CFA_BACKGROUND = 0;
+static int CFA_BACKGROUND_LIMIT = 1;
+
+static Item *PROCESSREFRESH;
+
+static const char *AGENT_TYPESEQUENCE[] =
+{
+    "meta",
+    "vars",
+    "defaults",
+    "classes",                  /* Maelstrom order 2 */
+    "outputs",
+    "interfaces",
+    "files",
+    "packages",
+    "guest_environments",
+    "methods",
+    "processes",
+    "services",
+    "commands",
+    "storage",
+    "databases",
+    "reports",
+    NULL
+};
 
 /*******************************************************************/
 /* Agent specific variables                                        */
@@ -165,7 +198,7 @@ int main(int argc, char *argv[])
 #endif
 #endif
     ReportContext *report_context = OpenReports("agent");
-    Policy *policy = GenericInitialize("agent", config, report_context);
+    Policy *policy = GenericInitialize("agent", config, report_context, ALWAYS_VALIDATE);
     ThisAgentInit();
     BeginAudit();
     KeepPromises(policy, config, report_context);
@@ -188,7 +221,7 @@ int main(int argc, char *argv[])
         ret = 1;
     }
 
-    EndAudit();
+    EndAudit(CFA_BACKGROUND);
     GenericAgentConfigDestroy(config);
 
     return ret;
@@ -325,7 +358,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             exit(0);
 
         case 'x':
-            AgentDiagnostic();
+            CfOut(cf_error, "", "Self-diagnostic functionality is retired");
             exit(0);
 
         case 'r':
@@ -570,8 +603,7 @@ void KeepControlPromises(Policy *policy)
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_binarypaddingchar].lval) == 0)
             {
-                PADCHAR = *(char *) retval.item;
-                CfOut(cf_verbose, "", "SET binarypaddingchar = %c\n", PADCHAR);
+                CfOut(cf_verbose, "", "binarypaddingchar is obsolete and does nothing\n");
                 continue;
             }
 
@@ -593,8 +625,7 @@ void KeepControlPromises(Policy *policy)
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_exclamation].lval) == 0)
             {
-                EXCLAIM = GetBoolean(retval.item);
-                CfOut(cf_verbose, "", "SET exclamation %d\n", EXCLAIM);
+                CfOut(cf_verbose, "", "exclamation control is deprecated and does not do anything\n");
                 continue;
             }
 
@@ -626,7 +657,7 @@ void KeepControlPromises(Policy *policy)
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_fautodefine].lval) == 0)
             {
-                AUTO_DEFINE_LIST = (Rlist *) retval.item;
+                SetFileAutoDefineList(ListRvalValue(retval));
                 CfOut(cf_verbose, "", "SET file auto define list\n");
                 continue;
             }
@@ -950,7 +981,10 @@ int ScheduleAgentOperations(Bundle *bp, const ReportContext *report_context)
             {
                 Promise *pp = SeqAt(sp->promises, ppi);
 
-                SaveClassEnvironment();
+                if (ALLCLASSESREPORT)
+                {
+                    SaveClassEnvironment();
+                }
 
                 if (pass == 1)  // Count the number of promises modelled for efficiency
                 {

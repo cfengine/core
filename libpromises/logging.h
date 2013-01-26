@@ -29,7 +29,7 @@
 #include "cf3.defs.h"
 
 void BeginAudit(void);
-void EndAudit(void);
+void EndAudit(int background_tasks);
 void ClassAuditLog(const Promise *pp, Attributes attr, char status, char *reason);
 void PromiseLog(char *s);
 void PromiseBanner(Promise *pp);

@@ -59,8 +59,7 @@ cf_agent_SOURCES = \
         files_select.c \
         vercmp_internal.c vercmp_internal.h \
         vercmp.c vercmp.h \
-        verify_packages.c verify_packages.h \
-        agentdiagnostic.c
+        verify_packages.c verify_packages.h
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON

@@ -208,7 +208,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'x':
-            SelfDiagnostic();
+            CfOut(cf_error, "", "Self-diagnostic functionality is retired.");
             exit(0);
 
         case 'a':

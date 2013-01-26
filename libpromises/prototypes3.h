@@ -205,13 +205,6 @@ int LinkOrCopy(const char *from, const char *to, int sym);
 int ExclusiveLockFile(int fd);
 int ExclusiveUnlockFile(int fd);
 
-/* selfdiagnostic.c */
-
-void SelfDiagnostic(void);
-void TestVariableScan(void);
-void TestExpandPromise(const ReportContext *report_context);
-void TestExpandVariables(const ReportContext *report_context);
-
 /* sockaddr.c */
 
 /* Not thread-safe */

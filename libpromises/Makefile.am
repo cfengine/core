@@ -96,7 +96,6 @@ libpromises_la_SOURCES = \
         reporting.c reporting.h \
         rlist.c rlist.h \
         scope.c scope.h \
-        selfdiagnostic.c \
         signals.c signals.h \
         sockaddr.c \
         sort.c sort.h \

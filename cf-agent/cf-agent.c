@@ -76,6 +76,8 @@ extern int PR_KEPT;
 extern int PR_REPAIRED;
 extern int PR_NOTKEPT;
 
+static bool ALLCLASSESREPORT;
+
 static Rlist *ACCESSLIST;
 
 static const char *AGENT_TYPESEQUENCE[] =
@@ -973,7 +975,10 @@ int ScheduleAgentOperations(Bundle *bp, const ReportContext *report_context)
             {
                 Promise *pp = SeqAt(sp->promises, ppi);
 
-                SaveClassEnvironment();
+                if (ALLCLASSESREPORT)
+                {
+                    SaveClassEnvironment();
+                }
 
                 if (pass == 1)  // Count the number of promises modelled for efficiency
                 {

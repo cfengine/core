@@ -44,7 +44,6 @@ int REQUIRE_COMMENTS = CF_UNDEFINED;
 int LOOKUP = false;
 int FIPS_MODE = false;
 int ALWAYS_VALIDATE = false;
-bool ALLCLASSESREPORT = false;
 
 struct utsname VSYSNAME;
 

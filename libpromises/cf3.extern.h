@@ -59,7 +59,6 @@ extern char VSHIFT[];
 
 extern const char *CLASSTEXT[];
 extern int AUDIT;
-extern char PURGE;
 
 extern int ERRORCOUNT;
 extern time_t CFSTARTTIME;

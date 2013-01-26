@@ -121,8 +121,6 @@ extern Audit *AUDITPTR;
 extern Audit *VAUDIT;
 extern Rlist *BODYPARTS;
 extern Rlist *SUBBUNDLES;
-extern Rlist *SINGLE_COPY_LIST;
-extern Rlist *SINGLE_COPY_CACHE;
 extern PromiseIdent *PROMISE_ID_LIST;
 extern Item *DONELIST;
 extern char *CBUNDLESEQUENCE_STR;

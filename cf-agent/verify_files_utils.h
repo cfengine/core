@@ -29,6 +29,7 @@
 #include "cf3.defs.h"
 
 extern Item *VSETUIDLIST;
+extern Rlist *SINGLE_COPY_LIST;
 
 void SetFileAutoDefineList(Rlist *auto_define_list);
 

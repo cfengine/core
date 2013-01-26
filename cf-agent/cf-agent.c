@@ -85,6 +85,8 @@ static Rlist *ACCESSLIST;
 static int CFA_BACKGROUND = 0;
 static int CFA_BACKGROUND_LIMIT = 1;
 
+static Item *PROCESSREFRESH;
+
 static const char *AGENT_TYPESEQUENCE[] =
 {
     "meta",

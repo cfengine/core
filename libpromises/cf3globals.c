@@ -71,7 +71,6 @@ int CF_OCCUR = 0;               // objects
 Rlist *MOUNTEDFSLIST = NULL;
 PromiseIdent *PROMISE_ID_LIST = NULL;
 Item *PROCESSTABLE = NULL;
-Item *PROCESSREFRESH = NULL;
 Item *ROTATED = NULL;
 Item *DONELIST = NULL;
 

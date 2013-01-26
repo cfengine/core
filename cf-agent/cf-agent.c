@@ -79,6 +79,7 @@ extern int PR_NOTKEPT;
 
 static bool ALLCLASSESREPORT;
 static bool ALWAYS_VALIDATE;
+static bool CFPARANOID = false;
 
 static Rlist *ACCESSLIST;
 

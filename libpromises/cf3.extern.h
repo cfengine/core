@@ -80,8 +80,6 @@ extern int PARSING;
 extern int VERBOSE;
 extern int INFORM;
 
-extern int CFPARANOID;
-
 extern int DONTDO;
 extern int IGNORELOCK;
 extern bool MINUSF;

@@ -68,7 +68,6 @@ int CSV = false;
 int CF_TOPICS = 0;              // objects
 int CF_OCCUR = 0;               // objects
 
-Rlist *MOUNTEDFSLIST = NULL;
 PromiseIdent *PROMISE_ID_LIST = NULL;
 Item *PROCESSTABLE = NULL;
 Item *ROTATED = NULL;

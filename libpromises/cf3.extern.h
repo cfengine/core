@@ -149,7 +149,6 @@ extern time_t PROMISETIME;
 extern int LASTSEENEXPIREAFTER;
 extern char *DEFAULT_COPYTYPE;
 extern Item *PROCESSTABLE;
-extern Rlist *MOUNTEDFSLIST;
 
 extern int CF_MOUNTALL;
 

@@ -38,6 +38,8 @@
 #include "nfs.h"
 #include "logging.h"
 
+Rlist *MOUNTEDFSLIST;
+
 static void FindStoragePromiserObjects(Promise *pp, const ReportContext *report_context);
 static int VerifyFileSystem(char *name, Attributes a, Promise *pp);
 static int VerifyFreeSpace(char *file, Attributes a, Promise *pp);
